@@ -62,6 +62,14 @@ Options: (a) accept — document intent + defeat screen hint; (b) soften
 floor 1–2 pools (fewer elites / weaker species) as the tutorial ramp;
 (c) gate floor 1 at realmLevel 2–3 so first entry is pre-cultivated.
 
+**RULED 2026-09-14 (user): option (a) — keep the curve, add the hint.**
+Shipped: `CombatDefeatPanel` now shows a progression hint on every
+defeat — "tu luyện thêm tầng" when the player sits at/below the stage's
+`requiredRealmLevel`, "trang bị/đan dược/cảm ngộ" when above it
+(`combat.defeat.hintCultivate` / `hintGear`, both locales, parity-guarded,
+2 new tests). B3 carries the proof obligation that the cultivate-then-
+fight ramp actually works end-to-end.
+
 ## Finding B2-2 (HIGH, defers to B3): difficulty rests entirely on the auxiliary power stack
 
 Sweep result: NAKED and GEARED both lose **all 30 floors**. Round counts

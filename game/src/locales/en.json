@@ -624,7 +624,9 @@
       "title": "☠ DEFEAT",
       "retry": "Rematch",
       "retryCountdown": "{duration}",
-      "returnHome": "Return to Cave"
+      "returnHome": "Return to Cave",
+      "hintCultivate": "Your cultivation is still lacking — refine a few more levels, then return stronger.",
+      "hintGear": "Not enough power to breach this realm — enhance your gear, take pills, or gain insight before the rematch."
     },
     "offline": {
       "title": "CLOSED-DOOR RETREAT ENDED",

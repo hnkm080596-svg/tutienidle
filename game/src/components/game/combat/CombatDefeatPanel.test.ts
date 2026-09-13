@@ -15,7 +15,7 @@ import { i18n } from '@/i18n'
 
 interface MockGameManager {
   getBattleRewardSummary: ReturnType<typeof vi.fn>
-  getStage: ReturnType<typeof vi.fn>
+  catalogOps: { getStage: ReturnType<typeof vi.fn> }
   eventBus: { emit: ReturnType<typeof vi.fn>; on: ReturnType<typeof vi.fn>; off: ReturnType<typeof vi.fn> }
 }
 
@@ -30,7 +30,7 @@ function makeGameManager(): MockGameManager {
       spiritStone: 0,
       items: [],
     })),
-    getStage: vi.fn(() => undefined),
+    catalogOps: { getStage: vi.fn(() => undefined) },
     eventBus,
   }
 }
@@ -133,6 +133,41 @@ describe('CombatDefeatPanel — 9.6 10s auto-return-home fallback', () => {
 
     expect(exitSpy).toHaveBeenCalledOnce()
     expect(gm.eventBus.emit).toHaveBeenCalledTimes(1)
+
+    panel.unmount()
+  })
+})
+
+// B2-1 ruling (2026-09-14, user decision "giữ nguyên + hint"): floor 1
+// intentionally cannot be cleared on first entry — the defeat panel
+// carries the cultivate-then-fight hint instead of a retune. Hint
+// switches copy by whether the player sits at/below the stage's
+// required realm level (cultivation gate) vs above it (gear gap).
+describe('CombatDefeatPanel — B2-1 progression hint', () => {
+  it('player at/below requiredRealmLevel → cultivate hint', async () => {
+    const gm = makeGameManager()
+    gm.catalogOps.getStage.mockReturnValue({ id: 'mortal_dong_1', requiredRealmLevel: 5 })
+    const panel = mountPanel(gm)
+    panel.ui.selectedStageId = 'mortal_dong_1'
+    await nextTick()
+
+    const t = (i18n.global as unknown as { t: (k: string) => string }).t
+    expect(panel.container.textContent).toContain(t('combat.defeat.hintCultivate'))
+
+    panel.unmount()
+  })
+
+  it('player above requiredRealmLevel → gear/power hint', async () => {
+    const gm = makeGameManager()
+    // Player store defaults to mortal realmLevel 1 — a stage gating at
+    // level 0/undefined means the loss is not a cultivation gap.
+    gm.catalogOps.getStage.mockReturnValue({ id: 'mortal_dong_1', requiredRealmLevel: 0 })
+    const panel = mountPanel(gm)
+    panel.ui.selectedStageId = 'mortal_dong_1'
+    await nextTick()
+
+    const t = (i18n.global as unknown as { t: (k: string) => string }).t
+    expect(panel.container.textContent).toContain(t('combat.defeat.hintGear'))
 
     panel.unmount()
   })

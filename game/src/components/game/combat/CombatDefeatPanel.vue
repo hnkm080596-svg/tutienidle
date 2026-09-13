@@ -5,6 +5,7 @@ import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
 import { formatDuration } from '@/core/format/formatDuration'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
@@ -38,10 +39,21 @@ const RETURN_COUNTDOWN_SECONDS = 10
 
 const gameManager = useGameManager()
 const ui = useUiStore()
+const player = usePlayerStore()
 const { t } = useI18n()
 const { startBattle, exitCombatToHome } = useBattleActions()
 
 const summary = computed(() => gameManager.getBattleRewardSummary())
+
+// B2-1 ruling (2026-09-14): floor 1 stays un-winnable on first entry by
+// design — the hint tells the player WHY. At/below the stage's realm
+// gate the answer is "cultivate more levels"; above it, gear/pills/
+// insight are the gap.
+const isCultivationGap = computed(() => {
+  const stage = ui.selectedStageId ? gameManager.catalogOps.getStage(ui.selectedStageId) : undefined
+
+  return stage?.requiredRealmLevel !== undefined && player.realmLevel <= stage.requiredRealmLevel
+})
 
 const hasAnyReward = computed(() =>
   summary.value.techniqueInsight > 0 || summary.value.skillInsight > 0 || summary.value.artifactInsight > 0 || summary.value.spiritStone > 0 || summary.value.items.length > 0,
@@ -105,6 +117,10 @@ onMounted(() => {
 
     <RewardList v-if="hasAnyReward" :summary="summary" class="combat-defeat-panel__rewards scrollfade" />
 
+    <p class="combat-defeat-panel__hint">
+      {{ t(isCultivationGap ? 'combat.defeat.hintCultivate' : 'combat.defeat.hintGear') }}
+    </p>
+
     <div class="combat-defeat-panel__actions">
       <GameButton
         class="combat-defeat-panel__retry"
@@ -150,6 +166,13 @@ onMounted(() => {
 
 .combat-defeat-panel__rewards {
   margin-bottom: 20px;
+}
+
+.combat-defeat-panel__hint {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-style: italic;
 }
 
 .combat-defeat-panel__actions {
