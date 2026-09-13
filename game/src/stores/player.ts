@@ -308,7 +308,7 @@ export const usePlayerStore = defineStore('player', {
 
     // Chỉ merge phần PlayerData vào store — phần còn lại của save
     // (skill/technique/inventory/exploration) trả nguyên trong
-    // `save` để App.vue tự gọi gameManager.restoreFromSave(), vì
+    // `save` để App.vue tự gọi gameManager.saveOps.restoreFromSave(), vì
     // store không nên biết về GameManager.
     load() {
       const outcome = loadGame()

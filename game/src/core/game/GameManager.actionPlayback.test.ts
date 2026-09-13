@@ -63,8 +63,8 @@ function battleReady(): { gameManager: GameManager; combatSource: ManualClockSou
   gameManager.setCombatClockSource(combatSource)
   const player = createPlayer()
 
-  gameManager.registerSkillTemplates([createBasicSkill()])
-  gameManager.learnSkill('basic_test')
+  gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+  gameManager.progressionOps.learnSkill('basic_test')
   gameManager.skillSystem.equipToSlot('basic_test', 0)
 
   gameManager.startBattle(player, createDummy())

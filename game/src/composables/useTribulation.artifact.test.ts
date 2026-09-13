@@ -29,9 +29,9 @@ function winFoundationTribulation(player: ReturnType<typeof usePlayerStore>, gam
     }
     return total + chapter.tank!.durationSeconds + 2
   }, 0)
-  gameManager.update(totalSeconds)
+  gameManager.tickOps.update(totalSeconds)
 
-  expect(gameManager.getActiveTribulation()?.state).toBe('victory')
+  expect(gameManager.tribulationDirector.getState()?.state).toBe('victory')
 }
 
 describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉnh (doc §4)', () => {

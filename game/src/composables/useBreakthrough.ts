@@ -31,7 +31,7 @@ export function useBreakthrough(gameManagerOverride?: GameManager) {
 
   function breakthrough(): boolean {
     const result: BreakthroughOutcomeResult =
-      gameManager.breakthroughWithConsequences(player)
+      gameManager.realmAdvanceOps.breakthroughWithConsequences(player)
 
     if (result.kind === 'failure') {
       return false

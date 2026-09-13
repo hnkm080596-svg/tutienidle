@@ -92,7 +92,7 @@ function onUpgrade() {
     return
   }
 
-  if (gameManager.tryUpgradeArtifactGrade(player.$state)) {
+  if (gameManager.realmAdvanceOps.tryUpgradeArtifactGrade(player.$state)) {
     bumpState()
   }
 }
@@ -102,7 +102,7 @@ function onSelectPath(path: ArtifactPath) {
     return
   }
 
-  if (gameManager.setArtifactPath(player.$state, path)) {
+  if (gameManager.realmAdvanceOps.setArtifactPath(player.$state, path)) {
     bumpState()
   }
 }

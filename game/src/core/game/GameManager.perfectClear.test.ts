@@ -57,11 +57,11 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
 
-    gameManager.registerEnemyTemplates([DUMMY_ENEMY])
-    gameManager.registerStages([stageDef])
+    gameManager.catalogOps.registerEnemyTemplates([DUMMY_ENEMY])
+    gameManager.catalogOps.registerStages([stageDef])
     gameManager.setActivePlayer(player)
 
-    gameManager.startStage(player, stats, stageDef, false)
+    gameManager.turnBattleOps.startStage(player, stats, stageDef, false)
 
     return { gameManager, player, stageDef, combatSource }
   }
@@ -119,7 +119,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     // be 0 in a synchronous test loop - assert the RECORD, not the value.
     expect(player.perfectClearStageIds).toContain('perfect_stage')
 
-    gameManager.startStage(player, stats, stageDef, false)
+    gameManager.turnBattleOps.startStage(player, stats, stageDef, false)
 
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
@@ -199,10 +199,10 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
         ],
       }
 
-      gameManager.registerEnemyTemplates([DUMMY_ENEMY])
-      gameManager.registerStages([stageDef])
+      gameManager.catalogOps.registerEnemyTemplates([DUMMY_ENEMY])
+      gameManager.catalogOps.registerStages([stageDef])
       gameManager.setActivePlayer(player)
-      gameManager.startStage(player, stats, stageDef, false)
+      gameManager.turnBattleOps.startStage(player, stats, stageDef, false)
 
       return { gameManager, player, stageDef, combatSource }
     }

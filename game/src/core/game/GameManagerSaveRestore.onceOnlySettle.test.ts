@@ -40,12 +40,12 @@ describe('GameManagerSaveRestore — once-only offline settle (R10, S4)', () => 
     const player = createDefaultPlayer()
     manager.setActivePlayer(player)
 
-    const settleSpy = vi.spyOn(manager, 'settleAutoFarmOffline')
+    const settleSpy = vi.spyOn(manager.turnBattleOps.autoFarmOps, 'settleAutoFarmOffline')
 
     const save = baseSave({ player: { ...player, lastSavedAt: Date.now() - 10_000_000 } })
 
-    manager.restoreFromSave(save)
-    manager.restoreFromSave(save)
+    manager.saveOps.restoreFromSave(save)
+    manager.saveOps.restoreFromSave(save)
 
     expect(settleSpy).toHaveBeenCalledTimes(1)
   })
@@ -55,13 +55,13 @@ describe('GameManagerSaveRestore — once-only offline settle (R10, S4)', () => 
     const player = createDefaultPlayer()
     manager.setActivePlayer(player)
 
-    const settleSpy = vi.spyOn(manager, 'settleAutoFarmOffline')
+    const settleSpy = vi.spyOn(manager.turnBattleOps.autoFarmOps, 'settleAutoFarmOffline')
 
     const saveA = baseSave({ player: { ...player, lastSavedAt: Date.now() - 10_000_000 } })
     const saveB = baseSave({ player: { ...player, name: 'different-name', lastSavedAt: Date.now() - 10_000_000 } })
 
-    manager.restoreFromSave(saveA)
-    manager.restoreFromSave(saveB)
+    manager.saveOps.restoreFromSave(saveA)
+    manager.saveOps.restoreFromSave(saveB)
 
     expect(settleSpy).toHaveBeenCalledTimes(2)
   })

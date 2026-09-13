@@ -102,7 +102,7 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
 
     // Pattern GameManager.repeatStage.test.ts — Linh Thạch credit vào
     // MaterialBag cần registry; skill Trảm chiếm slot 0 để player đánh.
-    gameManager.registerMaterials([SPIRIT_STONE_MATERIAL])
+    gameManager.catalogOps.registerMaterials([SPIRIT_STONE_MATERIAL])
     const enemy = defineEnemy({
       id: 'victory_dummy',
       name: 'Repeat Dummy',
@@ -132,14 +132,14 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
 
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
     expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
 
     // KHÔNG auto-repeat — mục tiêu là state 'victory' cuối cùng.
-    expect(gameManager.startStage(player, stats, stage)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
     // Turn-Based Wave Redesign (2026-09-06) — bootstrap enemy bị discard
     // (spawn đồng loạt qua telegraph): ngay sau startStage CHƯA có enemy
     // sống — pending telegraph materialize ở các tick kế tiếp.

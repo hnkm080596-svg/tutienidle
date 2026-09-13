@@ -39,8 +39,8 @@ function harnessWithFarm() {
   const gameManager = new GameManager()
   const player = createDefaultPlayer()
 
-  gameManager.registerEnemyTemplates([OFFLINE_DUMMY])
-  gameManager.registerStages([OFFLINE_STAGE])
+  gameManager.catalogOps.registerEnemyTemplates([OFFLINE_DUMMY])
+  gameManager.catalogOps.registerStages([OFFLINE_STAGE])
 
   return { gameManager, player }
 }
@@ -59,7 +59,7 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
       lastCheckedMs: Date.now() - 120_000,
     }
 
-    gameManager.settleAutoFarmOffline(player, 120)
+    gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 120)
 
     expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThanOrEqual(
       Date.now() - 120_000 + 100_000 - 1000,
@@ -69,7 +69,7 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
   it('KHÔNG có autoFarmStage → no-op an toàn', () => {
     const { gameManager, player } = harnessWithFarm()
 
-    expect(() => gameManager.settleAutoFarmOffline(player, 120)).not.toThrow()
+    expect(() => gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 120)).not.toThrow()
   })
 
   it('elapsed không đủ 1 cycle → không settle, lastCheckedMs giữ nguyên', () => {
@@ -84,7 +84,7 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
       lastCheckedMs,
     }
 
-    gameManager.settleAutoFarmOffline(player, 10)
+    gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 10)
 
     expect(player.autoFarmStage?.lastCheckedMs).toBe(lastCheckedMs)
   })
@@ -106,7 +106,7 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
         lastCheckedMs: startMs,
       }
 
-      gameManager.settleAutoFarmOffline(player, 3 * 24 * 60 * 60) // 3 ngày
+      gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 3 * 24 * 60 * 60) // 3 ngày
 
       // Cap 24h / 50s = 1728 cycles — KHÔNG phải 3 ngày/50s = 5184.
       // lastCheckedMs tiến đúng 1728*50s = 86_400_000ms (= cap 24h).
@@ -129,7 +129,7 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
         lastCheckedMs: startMs,
       }
 
-      gameManager.settleAutoFarmOffline(player, 24 * 60 * 60)
+      gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 24 * 60 * 60)
 
       // 24h / 0.5s = 172_800 cycles vẫn roll — nhưng theo cap 24h nên
       // lastCheckedMs tiến ĐÚNG 24h (= startMs + 24h, trước hiện tại).
@@ -150,7 +150,7 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
         lastCheckedMs,
       }
 
-      expect(() => gameManager.settleAutoFarmOffline(player, 120)).not.toThrow()
+      expect(() => gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 120)).not.toThrow()
       expect(player.autoFarmStage?.lastCheckedMs).toBe(lastCheckedMs)
     })
   })

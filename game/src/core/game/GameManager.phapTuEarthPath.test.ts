@@ -12,9 +12,9 @@ import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 function setup() {
   const gameManager = new GameManager()
 
-  gameManager.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
-  gameManager.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
 
   return gameManager
 }
@@ -27,21 +27,21 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree)', () => {
 
     player.skillInsight = 5
 
-    expect(gameManager.purchaseNode('minor_earth_intensity', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_intensity', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('tho_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('tho_linh_ngo', player)).toBe(true)
     expect(gameManager.skillManager.get('tho_cau_thuat')?.unlocked).toBe(true)
     expect(player.skillInsight).toBe(3)
 
-    expect(gameManager.purchaseNode('minor_earth_intensity', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_earth_haste', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_earth_impact', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_haste', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_impact', player)).toBe(true)
 
     expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     // Thổ Nguyên +2 Thổ Lực; Thổ Tốc +3% speed (turn-based conversion
@@ -50,7 +50,7 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree)', () => {
     expect(finalStats.earthPower).toBeGreaterThanOrEqual(2)
     expect(finalStats.speed).toBeGreaterThanOrEqual(100.03)
 
-    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+    const runtimeStats = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     expect(runtimeStats.skillImpactPercent).toBeGreaterThanOrEqual(0.02)
   })
@@ -63,15 +63,15 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'qi_refining'
 
-    expect(gameManager.purchaseNode('tho_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_earth_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('tho_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('tho_truc_co_dinh_tho', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('tho_truc_co_dinh_tho', player)).toBe(false)
 
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('tho_truc_co_dinh_tho', player)).toBe(true)
-    expect(gameManager.purchaseNode('tho_truc_co_tho_the', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('tho_truc_co_dinh_tho', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('tho_truc_co_tho_the', player)).toBe(false)
   })
 
   it('Thổ Trúc Cơ Pure: specialization chỉ mở sau Thổ Thế; earthAoeRadius qua runtime stats', () => {
@@ -82,31 +82,31 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('tho_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_earth_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('tho_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_earth_aoe', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_aoe', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('tho_truc_co_tho_the', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('tho_truc_co_tho_the', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_earth_aoe', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_aoe', player)).toBe(true)
 
     // Nâng Chấn Vực lên level 5: radius 1 + 0.25×4 = 2 ô.
     for (let i = 0; i < 4; i++) {
-      expect(gameManager.upgradeNode('minor_earth_aoe', player)).toBe(true)
+      expect(gameManager.progressionOps.upgradeNode('minor_earth_aoe', player)).toBe(true)
     }
 
-    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+    const runtimeStats = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     // Thổ Thế keystone +5% skill impact; Chấn Vực cấp radius ≥ 2.
     expect(runtimeStats.skillImpactPercent).toBeGreaterThanOrEqual(0.05)
     expect(runtimeStats.earthAoeRadius).toBeGreaterThanOrEqual(2)
 
-    expect(gameManager.purchaseNode('minor_earth_heart', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_heart', player)).toBe(true)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     expect(finalStats.earthPower).toBeGreaterThanOrEqual(3)
@@ -120,16 +120,16 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('tho_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_earth_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('tho_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_intensity', player)).toBe(true)
 
-    const runtimeBefore = gameManager.getSkillRuntimeStats(player)
+    const runtimeBefore = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     expect(runtimeBefore.thoTheGainPerCast).toBe(0)
 
-    expect(gameManager.purchaseNode('tho_truc_co_tho_the', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('tho_truc_co_tho_the', player)).toBe(true)
 
-    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+    const runtimeStats = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     // Keystone "Thổ Thế" phải cấp nền gain per-cast (pattern Tụ Hỏa của
     // Hỏa — không có stat này thì currentThoThe không bao giờ tăng).
@@ -144,17 +144,17 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('tho_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_earth_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('tho_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_earth_reaction_effect', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_reaction_effect', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('tho_truc_co_dinh_tho', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_earth_reaction_effect', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('tho_truc_co_dinh_tho', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_earth_reaction_effect', player)).toBe(true)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     expect(finalStats.reactionEffectPercent).toBeGreaterThanOrEqual(0.2)

@@ -253,7 +253,7 @@ describe('DongFuCommandWheel', () => {
   })
 
   it('building chưa xây → shortcut mở popover qua shared authority', async () => {
-    gameManager.registerBuildings([
+    gameManager.catalogOps.registerBuildings([
       {
         id: 'pill_room',
         name: 'Đan Phòng',

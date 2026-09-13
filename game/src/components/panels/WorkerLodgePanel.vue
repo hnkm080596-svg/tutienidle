@@ -46,7 +46,7 @@ const instance = computed(() => {
 const template = computed(() => {
   stateVersion.value
 
-  return gameManager.getBuildingDefinitions().find((entry) => entry.id === BUILDING_ID)
+  return gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === BUILDING_ID)
 })
 
 const capacity = computed(() => getWorkerCapacityForLevel(instance.value?.level ?? 0))

@@ -103,8 +103,8 @@ describe('CombatClock — chunking invariant + no world-tick catch-up for combat
     gameManager.setCombatClockSource(combatSource)
     const player = createAttackerPlayer()
 
-    gameManager.registerSkillTemplates([createBasicSkill()])
-    gameManager.learnSkill('basic_test')
+    gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+    gameManager.progressionOps.learnSkill('basic_test')
     gameManager.skillSystem.equipToSlot('basic_test', 0)
 
     gameManager.startBattle(player, createStubbornEnemy())
@@ -169,7 +169,7 @@ describe('CombatClock — chunking invariant + no world-tick catch-up for combat
 
     // Máy ngủ nhiều giờ rồi resume: GameClock trả về deltaSeconds cực lớn.
     // Cultivation/production/auto-farm vẫn nhận nó; combat thì không.
-    expect(() => gameManager.update(6 * 60 * 60)).not.toThrow()
+    expect(() => gameManager.tickOps.update(6 * 60 * 60)).not.toThrow()
 
     expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(turnsBefore)
     expect(gameManager.getTurnBattle()!.enemies[0]!.entity.alive).toBe(true)

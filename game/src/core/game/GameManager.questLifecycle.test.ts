@@ -12,7 +12,7 @@ import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 
 function makeManager(): { manager: GameManager; player: PlayerData } {
   const manager = new GameManager()
-  manager.registerQuests(QUESTS)
+  manager.catalogOps.registerQuests(QUESTS)
   const player = createDefaultPlayer()
   manager.setActivePlayer(player)
   return { manager, player }
@@ -24,7 +24,7 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
 
     // No getActiveQuests() call anywhere in this test. The first update
     // tick is the boot-time reconciliation trigger.
-    manager.update(1)
+    manager.tickOps.update(1)
 
     manager.questSystem.onEnemyDefeated(
       manager.questRegistry,
@@ -38,7 +38,7 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
 
   it('daily rollover mid-session repopulates the board without UI', () => {
     const { manager, player } = makeManager()
-    manager.update(1)
+    manager.tickOps.update(1)
     expect(manager.questManager.getProgress('daily_kill_bandit_15')).toBeDefined()
 
     // Simulate the next wall-clock day: checkAndResetDaily accepts a
@@ -56,7 +56,7 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
     // Reset clears the daily entry...
     expect(manager.questManager.getProgress('daily_kill_bandit_15')).toBeUndefined()
     // ...and the lifecycle reconciliation rebuilds today's board.
-    manager.reconcileQuestLifecycle()
+    manager.tickOps.reconcileQuestLifecycle()
     expect(manager.questManager.getProgress('daily_kill_bandit_15')).toBeDefined()
     expect(manager.questManager.getProgress('daily_kill_bandit_15')!.progress).toBe(0)
   })
@@ -80,16 +80,16 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
     }
 
     const fresh = new GameManager()
-    fresh.registerQuests(QUESTS)
+    fresh.catalogOps.registerQuests(QUESTS)
     fresh.setActivePlayer(createDefaultPlayer())
-    fresh.restoreFromSave(save)
+    fresh.saveOps.restoreFromSave(save)
 
     expect(fresh.questManager.getActive().length).toBeGreaterThan(0)
   })
 
   it('realm transition unlocks new quests on the next tick', () => {
     const { manager, player } = makeManager()
-    manager.update(1)
+    manager.tickOps.update(1)
 
     const lockedBefore = manager.questManager.getProgress(
       QUESTS.find((q) => q.requiredRealmId === 'foundation_establishment')!.id,
@@ -97,8 +97,8 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
     expect(lockedBefore).toBeUndefined()
 
     player.realmId = 'foundation_establishment'
-    manager.markQuestRealmTransition()
-    manager.update(1)
+    manager.tickOps.markQuestRealmTransition()
+    manager.tickOps.update(1)
 
     const unlockedIds = manager.questRegistry
       .getAll()

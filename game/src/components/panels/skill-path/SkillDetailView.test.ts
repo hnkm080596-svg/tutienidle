@@ -20,8 +20,8 @@ function mountDetail(skill: Skill | null) {
   const pinia = createPinia()
   const manager = new GameManager()
 
-  manager.registerSkillTemplates(SKILLS)
-  manager.registerBuffs(buffs)
+  manager.catalogOps.registerSkillTemplates(SKILLS)
+  manager.catalogOps.registerBuffs(buffs)
 
   const version = ref(0)
   const app = createApp({ render: () => h(SkillDetailView, { skill }) })

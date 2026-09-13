@@ -37,7 +37,7 @@ export function triggerBreakthroughAction(
   gameManager: GameManager,
   presentation?: GamePresentation | null,
 ): boolean | Promise<boolean> {
-  if (!gameManager.canTriggerBreakthrough(player.$state)) {
+  if (!gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state)) {
     return false
   }
 
@@ -132,7 +132,7 @@ export function checkTribulationOutcomeAction(
   gameManager: GameManager,
   presentation?: GamePresentation | null,
 ): boolean {
-  const active = gameManager.getActiveTribulation()
+  const active = gameManager.tribulationDirector.getState()
 
   if (!active) {
     return false
@@ -157,7 +157,7 @@ export function checkTribulationOutcomeAction(
 
   presentOutcome(result)
 
-  gameManager.clearActiveTribulation()
+  gameManager.tribulationDirector.clear()
   useUiStore().exitTribulationScene()
 
   if (presentation) {

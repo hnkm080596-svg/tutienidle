@@ -53,7 +53,7 @@ const nextCost = computed(() => {
     return null
   }
 
-  return gameManager.getNextNodeCost(props.node.id, player.$state) ?? null
+  return gameManager.progressionOps.getNextNodeCost(props.node.id, player.$state) ?? null
 })
 
 const upgradable = computed(() => {

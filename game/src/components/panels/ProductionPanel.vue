@@ -95,7 +95,7 @@ const rows = computed<SiteRow[]>(() => {
 
   void nowMs.value
 
-  return gameManager.getProductionViews(nowMs.value).map((view) => {
+  return gameManager.buildingOps.getProductionViews(nowMs.value).map((view) => {
     const cycleRemainingMs = view.cycleRemainingMs ?? 0
 
     const totalMs = view.cycleTotalMs ?? 1
@@ -150,13 +150,13 @@ const rows = computed<SiteRow[]>(() => {
 })
 
 function start(siteId: string) {
-  if (gameManager.startProductionCycle(siteId, player.$state)) {
+  if (gameManager.buildingOps.startProductionCycle(siteId, player.$state)) {
     bumpState()
   }
 }
 
 function toggleAuto(row: SiteRow) {
-  gameManager.setProductionAutoRestart(row.siteId, !row.autoRestart)
+  gameManager.buildingOps.setProductionAutoRestart(row.siteId, !row.autoRestart)
 
   bumpState()
 }
@@ -166,7 +166,7 @@ function upgradeCostRows(siteId: string, level: number) {
 
   // R9 (AR-23): the domain quote owns costs + gate; the panel only
   // renders it (old duplicated gate/cost logic removed).
-  const quote = gameManager.quoteProductionUpgrade(siteId, player.$state)
+  const quote = gameManager.buildingOps.quoteProductionUpgrade(siteId, player.$state)
 
   if (!quote.cost) {
     return []
@@ -202,11 +202,11 @@ function canUpgrade(siteId: string, level: number): boolean {
   // domain quote (level parameter kept for row wiring).
   void level
 
-  return gameManager.quoteProductionUpgrade(siteId, player.$state).upgradable
+  return gameManager.buildingOps.quoteProductionUpgrade(siteId, player.$state).upgradable
 }
 
 function upgrade(siteId: string) {
-  if (gameManager.upgradeProductionSite(siteId, player.$state)) {
+  if (gameManager.buildingOps.upgradeProductionSite(siteId, player.$state)) {
     bumpState()
   }
 }
@@ -227,7 +227,7 @@ function setWorkerMode(mode: 'auto' | 'manual') {
   if (mode === 'auto') {
     // Về auto: xóa mọi assignment manual.
     for (const row of rows.value) {
-      gameManager.assignWorkers(row.siteId, undefined)
+      gameManager.buildingOps.assignWorkers(row.siteId, undefined)
     }
 
     bumpState()
@@ -235,7 +235,7 @@ function setWorkerMode(mode: 'auto' | 'manual') {
 }
 
 function assign(row: SiteRow, count: number) {
-  gameManager.assignWorkers(row.siteId, count)
+  gameManager.buildingOps.assignWorkers(row.siteId, count)
 
   bumpState()
 }
@@ -256,16 +256,16 @@ const linMachStored = computed(() => {
   }
 
   return Math.floor(
-    gameManager.getBuildingStoredAmount(outpostInstance.value.instanceId, nowMs.value / 1000),
+    gameManager.buildingOps.getBuildingStoredAmount(outpostInstance.value.instanceId, nowMs.value / 1000),
   )
 })
 
 const linMachCapacity = computed(() =>
-  outpostInstance.value ? gameManager.getBuildingCapacity(outpostInstance.value.instanceId) : 0,
+  outpostInstance.value ? gameManager.buildingOps.getBuildingCapacity(outpostInstance.value.instanceId) : 0,
 )
 
 const linMachRatePerMinute = computed(() =>
-  outpostInstance.value ? gameManager.getBuildingRatePerMinute(outpostInstance.value.instanceId) : 0,
+  outpostInstance.value ? gameManager.buildingOps.getBuildingRatePerMinute(outpostInstance.value.instanceId) : 0,
 )
 
 const linMachOutputName = computed(() => {
@@ -281,7 +281,7 @@ function collectLinMach() {
     return
   }
 
-  gameManager.collectBuilding(outpostInstance.value.instanceId, player.$state, nowMs.value / 1000)
+  gameManager.buildingOps.collectBuilding(outpostInstance.value.instanceId, player.$state, nowMs.value / 1000)
 
   bumpState()
 }

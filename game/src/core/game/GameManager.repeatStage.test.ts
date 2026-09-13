@@ -16,7 +16,7 @@ describe('GameManager continuous repeat stage', () => {
     gameManager.setCombatClockSource(combatSource)
 
     // Plan Workstream F — Linh Thạch credit vào MaterialBag, cần registry.
-    gameManager.registerMaterials([SPIRIT_STONE_MATERIAL])
+    gameManager.catalogOps.registerMaterials([SPIRIT_STONE_MATERIAL])
     const enemy = defineEnemy({
       id: 'repeat_dummy',
       name: 'Repeat Dummy',
@@ -46,9 +46,9 @@ describe('GameManager continuous repeat stage', () => {
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
 
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
     // Execution policy rework (plan §8.6) — Trảm chiếm slot mặc định 0.
     expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
@@ -59,7 +59,7 @@ describe('GameManager continuous repeat stage', () => {
     // (syncLegacyBattleState/grant flow) — tương đương boot flow thật.
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.startStage(player, stats, stage, true)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage, true)).toBe(true)
 
     // Plan Workstream F — Linh Thạch credit vào MaterialBag.
     const spiritStoneBalance = () => gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL.id)
@@ -70,7 +70,7 @@ describe('GameManager continuous repeat stage', () => {
 
     expect(spiritStoneBalance()).toBeGreaterThanOrEqual(2)
     expect(gameManager.getBattle()?.state).toBe('fighting')
-    expect(gameManager.getStageProgress()).not.toBeNull()
+    expect(gameManager.turnBattleOps.getStageProgress()).not.toBeNull()
     expect(player.completedStageIds).toContain(stage.id)
     // Drop-system (2026-09-12): mortal table pays 1-2 stone per kill, so
     // kill count no longer equals particle count — >=1 proves the
@@ -92,16 +92,16 @@ describe('GameManager continuous repeat stage', () => {
     const player = createDefaultPlayer()
     const stats = calculateStats(player.baseStats, [])
 
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
 
-    expect(gameManager.startStage(player, stats, stage)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
     // Intro (2026-09-07 plan Task 4) is the first wait phase - abandoning
     // during it keeps the exact same semantics the countdown phase had.
     expect(gameManager.getBattle()?.state).toBe('intro')
     expect(gameManager.abandonBattle()).toBe(true)
     expect(gameManager.getBattle()?.state).toBe('defeat')
-    expect(gameManager.getStageProgress()).toBeNull()
-    expect(gameManager.startStage(player, stats, stage)).toBe(true)
+    expect(gameManager.turnBattleOps.getStageProgress()).toBeNull()
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
   })
 })

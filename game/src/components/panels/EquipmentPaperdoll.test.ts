@@ -32,7 +32,7 @@ function mountPaperdoll(prepare?: (manager: GameManager) => void) {
   const pinia = createPinia()
   const manager = new GameManager()
   const version = ref(0)
-  manager.registerEquipment(equipment)
+  manager.catalogOps.registerEquipment(equipment)
   prepare?.(manager)
 
   const app = createApp({ render: () => h(EquipmentPaperdoll) })

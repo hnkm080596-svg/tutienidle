@@ -89,7 +89,7 @@ describe('Inventory — sort per-tab + Linh Thạch material (plan Workstream E/
   let mounted: ReturnType<typeof mountSections>
 
   function seedMaterials() {
-    gameManager.registerMaterials([SPIRIT_STONE, HERB_A, HERB_B, ORE])
+    gameManager.catalogOps.registerMaterials([SPIRIT_STONE, HERB_A, HERB_B, ORE])
 
     gameManager.materialBag.add(gameManager.materialRegistry.get('herb_a'), 3)
     gameManager.materialBag.add(gameManager.materialRegistry.get('herb_b'), 1)

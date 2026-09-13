@@ -15,9 +15,9 @@ import { buildGameSave } from '../../services/save/SaveSystem'
 
 function makeManager(player?: PlayerData): { manager: GameManager; player: PlayerData } {
   const manager = new GameManager()
-  manager.registerMaterials(materials)
-  manager.registerEquipment(equipment)
-  manager.registerAffixes(affixes)
+  manager.catalogOps.registerMaterials(materials)
+  manager.catalogOps.registerEquipment(equipment)
+  manager.catalogOps.registerAffixes(affixes)
   const resolved = player ?? createDefaultPlayer()
   manager.setActivePlayer(resolved)
   return { manager, player: resolved }
@@ -48,23 +48,23 @@ describe('QA R9 - wash ticket save boundary', () => {
     manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 100)
 
     // Paid preview leaves a pending ticket in the session.
-    const preview = manager.previewWashItem(instance.instanceId)
+    const preview = manager.equipmentOps.previewWashItem(instance.instanceId)
     expect(preview.ok).toBe(true)
 
     // Snapshot + restore into a FRESH manager (boot path).
     const save = buildGameSave(player, manager)
 
     const fresh = new GameManager()
-    fresh.registerMaterials(materials)
-    fresh.registerEquipment(equipment)
-    fresh.registerAffixes(affixes)
+    fresh.catalogOps.registerMaterials(materials)
+    fresh.catalogOps.registerEquipment(equipment)
+    fresh.catalogOps.registerAffixes(affixes)
     fresh.setActivePlayer(createDefaultPlayer())
-    fresh.restoreFromSave(save)
+    fresh.saveOps.restoreFromSave(save)
 
     // The fresh session has NO pending ticket: commit by the old id
     // must fail instead of silently applying a roll the player paid for
     // in a different session (and whose display copy they cannot see).
-    const commit = fresh.commitWashItem(instance.instanceId, preview.ticketId!)
+    const commit = fresh.equipmentOps.commitWashItem(instance.instanceId, preview.ticketId!)
     expect(commit.ok).toBe(false)
     expect(commit.reason).toBe('no_pending_wash')
     vi.restoreAllMocks()

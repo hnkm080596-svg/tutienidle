@@ -59,9 +59,9 @@ function harness() {
   player.perfectClearStageIds.push(FARM_STAGE.id)
   player.perfectClearSeconds[FARM_STAGE.id] = 100 // cycleSeconds = 50
 
-  gameManager.registerEnemyTemplates([FARM_ENEMY])
-  gameManager.registerStages([FARM_STAGE])
-  gameManager.registerMaterials([PROBE_MATERIAL])
+  gameManager.catalogOps.registerEnemyTemplates([FARM_ENEMY])
+  gameManager.catalogOps.registerStages([FARM_STAGE])
+  gameManager.catalogOps.registerMaterials([PROBE_MATERIAL])
   gameManager.setActivePlayer(player)
 
   return { gameManager, player }
@@ -94,10 +94,10 @@ describe('rollAutoFarmCycleReward runs on the idle channel', () => {
     const loot = (gameManager as unknown as { battleLoot: BattleLootSystem }).battleLoot
     const setChannel = vi.spyOn(loot, 'setChannel')
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
     vi.setSystemTime(new Date('2026-09-04T10:01:00Z')) // 60s -> 1 cycle
-    gameManager.update(0.1)
+    gameManager.tickOps.update(0.1)
 
     const calls = setChannel.mock.calls.map((call) => call[0])
     expect(calls[0]).toBe('idle')
@@ -121,11 +121,11 @@ describe('rollAutoFarmCycleReward runs on the idle channel', () => {
       throw new Error('simulated grant failure')
     })
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
     vi.setSystemTime(new Date('2026-09-04T10:01:00Z')) // 60s -> 1 cycle
     try {
-      gameManager.update(0.1)
+      gameManager.tickOps.update(0.1)
     } catch {
       // the simulated failure may or may not propagate through update();
       // either way the channel must already be restored.
@@ -171,10 +171,10 @@ describe('rollAutoFarmCycleReward runs on the idle channel', () => {
       ],
     }
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
     vi.setSystemTime(new Date('2026-09-04T10:01:00Z')) // 60s -> 1 cycle
-    gameManager.update(0.1)
+    gameManager.tickOps.update(0.1)
 
     // 1 cycle x totalEnemyCount 2 kills; FARM_STAGE has no requiredRealmId,
     // so the exp anchor falls back to enemy.realmId 'mortal' -> 2 per kill.

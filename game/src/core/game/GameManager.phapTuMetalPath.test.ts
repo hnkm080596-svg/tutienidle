@@ -12,9 +12,9 @@ import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 function setup() {
   const gameManager = new GameManager()
 
-  gameManager.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
-  gameManager.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
 
   return gameManager
 }
@@ -27,21 +27,21 @@ describe('GameManager — Pháp Tu MetalPath (Kim Node Tree)', () => {
 
     player.skillInsight = 5
 
-    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_intensity', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_linh_ngo', player)).toBe(true)
     expect(gameManager.skillManager.get('diem_kim_thuat')?.unlocked).toBe(true)
     expect(player.skillInsight).toBe(3)
 
-    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_burst', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_bleed_damage', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_burst', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_bleed_damage', player)).toBe(true)
 
     expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     // Kim Khí +2 Kim Lực; Huyết Bạo +3% cast speed; Huyết Ấn +4% potency.
@@ -58,15 +58,15 @@ describe('GameManager — Pháp Tu MetalPath (Kim Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'qi_refining'
 
-    expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('kim_truc_co_huyet_dan', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('kim_truc_co_huyet_dan', player)).toBe(false)
 
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('kim_truc_co_huyet_dan', player)).toBe(true)
-    expect(gameManager.purchaseNode('kim_truc_co_kim_the', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('kim_truc_co_huyet_dan', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_truc_co_kim_the', player)).toBe(false)
   })
 
   it('Kim Trúc Cơ Pure: specialization chỉ mở sau Kim Thế; kimTheMaxStacks qua runtime stats', () => {
@@ -77,26 +77,26 @@ describe('GameManager — Pháp Tu MetalPath (Kim Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_metal_channeling', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_channeling', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('kim_truc_co_kim_the', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_channeling', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_truc_co_kim_the', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_channeling', player)).toBe(true)
 
     // Nâng Kim Uyển lên level 3 (+1 tầng ở cấp 1, +3 tầng ở cấp 5).
-    expect(gameManager.upgradeNode('minor_metal_channeling', player)).toBe(true)
-    expect(gameManager.upgradeNode('minor_metal_channeling', player)).toBe(true)
+    expect(gameManager.progressionOps.upgradeNode('minor_metal_channeling', player)).toBe(true)
+    expect(gameManager.progressionOps.upgradeNode('minor_metal_channeling', player)).toBe(true)
 
-    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+    const runtimeStats = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     // Kim Thế keystone +1; Kim Uyển level 3: 1 + 0.5×2 = 2 → tổng ≥ 3.
     expect(runtimeStats.kimTheMaxStacksBonus).toBeGreaterThanOrEqual(3)
 
-    expect(gameManager.purchaseNode('minor_metal_shatter', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_shatter', player)).toBe(true)
 
-    const runtimeAfterShatter = gameManager.getSkillRuntimeStats(player)
+    const runtimeAfterShatter = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     // Huyết Phá level 1: 0.005.
     expect(
@@ -112,16 +112,16 @@ describe('GameManager — Pháp Tu MetalPath (Kim Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_intensity', player)).toBe(true)
 
-    const runtimeBefore = gameManager.getSkillRuntimeStats(player)
+    const runtimeBefore = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     expect(runtimeBefore.kimTheGainPerProc).toBe(0)
 
-    expect(gameManager.purchaseNode('kim_truc_co_kim_the', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_truc_co_kim_the', player)).toBe(true)
 
-    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+    const runtimeStats = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     // Keystone "Kim Thế" phải cấp nền gain per-proc (pattern Tụ Hỏa của
     // Hỏa — không có stat này thì currentKimThe không bao giờ tăng).
@@ -136,18 +136,18 @@ describe('GameManager — Pháp Tu MetalPath (Kim Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
-    expect(gameManager.purchaseNode('kim_truc_co_kim_the', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_truc_co_kim_the', player)).toBe(true)
 
-    const runtimeBefore = gameManager.getSkillRuntimeStats(player)
+    const runtimeBefore = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     expect(runtimeBefore.huyetPhaGainPerProc).toBe(0)
     expect(runtimeBefore.huyetPhaBurstDamage).toBe(0)
 
-    expect(gameManager.purchaseNode('minor_metal_shatter', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_shatter', player)).toBe(true)
 
-    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+    const runtimeStats = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     // Node "Huyết Phá" cấp CẢ HAI stat cùng lúc — charge không burst thì
     // chạm ngưỡng chỉ reset về 0 mà không damage (xem
@@ -164,17 +164,17 @@ describe('GameManager — Pháp Tu MetalPath (Kim Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_metal_reaction_effect', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_reaction_effect', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('kim_truc_co_huyet_dan', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_reaction_effect', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kim_truc_co_huyet_dan', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_metal_reaction_effect', player)).toBe(true)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     expect(finalStats.reactionEffectPercent).toBeGreaterThanOrEqual(0.2)

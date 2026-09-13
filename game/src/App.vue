@@ -242,28 +242,28 @@ const entryStage = bootFlow.stage
 const bootError = ref('')
 let introHandle: number | undefined
 
-gameManager.registerMaterials(materials)
-gameManager.registerSkillTemplates(SKILLS)
-gameManager.registerTechniqueTemplates(TECHNIQUES)
-gameManager.registerEnemyTemplates(ENEMIES)
-gameManager.registerStages(STAGES)
-gameManager.registerZones(zones)
-gameManager.registerEquipment(equipment)
-gameManager.registerAffixes(affixes)
-gameManager.registerPills(pills)
+gameManager.catalogOps.registerMaterials(materials)
+gameManager.catalogOps.registerSkillTemplates(SKILLS)
+gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+gameManager.catalogOps.registerEnemyTemplates(ENEMIES)
+gameManager.catalogOps.registerStages(STAGES)
+gameManager.catalogOps.registerZones(zones)
+gameManager.catalogOps.registerEquipment(equipment)
+gameManager.catalogOps.registerAffixes(affixes)
+gameManager.catalogOps.registerPills(pills)
 // Buff KHÔNG phải Phù/Trận legacy — SkillEffectSystem resolve effect
 // 'buff'/'debuff' qua buffRegistry.get() (THROW khi thiếu); bỏ dòng
 // này làm registry rỗng và crash giữa trận (fix review 2026-08-26).
 // Skill buff-carrying Kiếm Tu cũ đã chuyển node (spec 2026-08-29),
 // registry vẫn cần cho buff hệ khác (Thổ Giáp/Độ Kiếp...).
-gameManager.registerBuffs(buffs)
-gameManager.registerTalismans(talismans)
-gameManager.registerFormations(formations)
-gameManager.registerAlchemyRecipes(alchemyRecipes)
-gameManager.registerBuildings(buildings)
-gameManager.registerProgressionNodes(PHAP_TU_NODES)
-gameManager.registerProgressionNodes(KIEM_TU_NODES)
-gameManager.registerQuests(QUESTS)
+gameManager.catalogOps.registerBuffs(buffs)
+gameManager.catalogOps.registerTalismans(talismans)
+gameManager.catalogOps.registerFormations(formations)
+gameManager.catalogOps.registerAlchemyRecipes(alchemyRecipes)
+gameManager.catalogOps.registerBuildings(buildings)
+gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+gameManager.catalogOps.registerQuests(QUESTS)
 
 const { breakthrough } = useBreakthrough(gameManager)
 
@@ -386,7 +386,7 @@ function tick() {
   if (simulatedDelta > 0) {
     // GameManager luôn được update trước, để battle (nếu có) và
     // buff/skill cooldown luôn chạy đúng nhịp thời gian thực.
-    gameManager.update(simulatedDelta)
+    gameManager.tickOps.update(simulatedDelta)
 
     // Beta Phase 4 (Notification/UX) — rút toast phát sinh TRONG
     // GameManager (hiện chỉ loot, xem GameManager.grantItemDrops())
@@ -455,7 +455,7 @@ function tick() {
     // thật sự đổi, không còn recompute 10 lần/giây. Đây là lý do
     // bumpState() bên dưới CỐ Ý giữ nguyên (chạy mỗi tick cho đồng hồ/
     // resource counter): stat đã được tách hẳn khỏi stateVersion.
-    player.setExternalModifiers(gameManager.getAggregatedModifiers(player.$state))
+    player.setExternalModifiers(gameManager.effectOps.getAggregatedModifiers(player.$state))
   }
 
   bumpState()
@@ -475,10 +475,10 @@ async function bootGame(createNewCharacter = false) {
     onRestoreOk: (offline) => {
       // Fix (2026-08-20) — grant "Trảm" save cũ (idempotent).
       if (!gameManager.skillManager.has('tram')) {
-        gameManager.learnSkill('tram')
-        gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
+        gameManager.progressionOps.learnSkill('tram')
+        gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
       } else if (!gameManager.skillManager.getEquippedInSlot(0)) {
-        gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
+        gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
       }
 
       // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài.
@@ -491,10 +491,10 @@ async function bootGame(createNewCharacter = false) {
     },
     onNewCharacter: () => {
       // Nhân vật mới: học sẵn tâm pháp + skill + grant khởi đầu.
-      gameManager.learnTechnique('tu_linh_quyet')
-      gameManager.equipTechnique('tu_linh_quyet')
-      gameManager.learnSkill('tram')
-      gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
+      gameManager.realmAdvanceOps.learnTechnique('tu_linh_quyet')
+      gameManager.realmAdvanceOps.equipTechnique('tu_linh_quyet')
+      gameManager.progressionOps.learnSkill('tram')
+      gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
 
       for (const buildingId of ['teleport_array', 'gathering_outpost']) {
         const instance = {
@@ -505,7 +505,7 @@ async function bootGame(createNewCharacter = false) {
         }
 
         gameManager.buildingManager.add(instance)
-        gameManager.refreshAutoWorkerCapacity(player.$state, instance)
+        gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, instance)
       }
 
       // Starter pack đủ xây 3 base (Linh Tuyền/Khí Đường/Đan Phòng) —
@@ -521,8 +521,8 @@ async function bootGame(createNewCharacter = false) {
 
       // 3 nguồn Thanh Vân tự chạy + autoRestart.
       for (const definition of gameManager.productionSystem.getSiteDefinitions()) {
-        gameManager.setProductionAutoRestart(definition.siteId, true)
-        gameManager.startProductionCycle(definition.siteId, player.$state)
+        gameManager.buildingOps.setProductionAutoRestart(definition.siteId, true)
+        gameManager.buildingOps.startProductionCycle(definition.siteId, player.$state)
       }
 
       gameManager.setActivePlayer(player.$state)

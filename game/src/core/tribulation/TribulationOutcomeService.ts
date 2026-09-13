@@ -147,10 +147,10 @@ export class TribulationOutcomeService {
     // R8.1 (AR-09): realm transition may unlock quests; tell the lifecycle
     // owner to reconcile on the next tick. The domain stays the activation
     // authority (A7).
-    gameManager.markQuestRealmTransition()
+    gameManager.tickOps.markQuestRealmTransition()
 
-    gameManager.unequipAllEquipment()
-    player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+    gameManager.equipmentOps.unequipAllEquipment()
+    player.setEquipmentModifiers(gameManager.equipmentOps.getEquipmentModifiers())
 
     // Spec dot-pha-loi-kiep SS4.2/SS4.4: foundation grade recorded on
     // entry; highestFoundationAchieved feeds the foundation passive.
@@ -158,12 +158,12 @@ export class TribulationOutcomeService {
       player.highestFoundationAchieved = active.grade
     }
 
-    gameManager.syncRealmPassive(player)
-    gameManager.syncRealmStatPassive(player)
+    gameManager.realmAdvanceOps.syncRealmPassive(player)
+    gameManager.realmAdvanceOps.syncRealmStatPassive(player)
 
     // Cultivation-path realm rewards (technique/artifact kit grants) are
     // idempotent and owned by GameManager; the service only sequences.
-    gameManager.grantCultivationPathRealmReward(player, player.realmId)
+    gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)
 
     // Spec SS4.3/SS4.4: Great Dao victory converts the penalty talent into
     // the permanent reward talent.
@@ -271,7 +271,7 @@ export class TribulationOutcomeService {
 
     // Task 9b (fix round 2): debuff duration scaling reads the player's
     // REAL gear — the caller threads finalStats, same as startTribulation().
-    gameManager.applyPersistentBuff(KIEP_THUONG_DEBUFF, playerStats)
+    gameManager.effectOps.applyPersistentBuff(KIEP_THUONG_DEBUFF, playerStats)
 
     // Spec SS4.3: losing a Great Dao attempt closes the opportunity
     // FOREVER; later grade rolls cap at Thien Dao (BreakthroughGrades).
@@ -315,8 +315,8 @@ export class TribulationOutcomeService {
     targetRealmId: string,
     playerStats: Stats,
   ): boolean {
-    gameManager.unequipAllEquipment()
-    player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+    gameManager.equipmentOps.unequipAllEquipment()
+    player.setEquipmentModifiers(gameManager.equipmentOps.getEquipmentModifiers())
 
     return gameManager.startTribulation(player as PlayerData, playerStats, targetRealmId)
   }

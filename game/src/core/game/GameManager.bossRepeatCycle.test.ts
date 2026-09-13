@@ -58,8 +58,8 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
       spawnIntervalSeconds: 0,
     }
 
-    gameManager.registerEnemyTemplates([bossTemplate, mobTemplate])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([bossTemplate, mobTemplate])
+    gameManager.catalogOps.registerStages([stage])
 
     const player = createDefaultPlayer()
     const stats = calculateStats(player.baseStats, [])
@@ -68,7 +68,7 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
 
     // repeatContinuously = true — bật đúng feature auto-repeat-farm thật
     // (GameManager.ts update() loop, gated bởi turnBattleRepeatContinuously).
-    expect(gameManager.startStage(player, stats, stage, true)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage, true)).toBe(true)
 
     const seenEnemyIds: string[] = []
 

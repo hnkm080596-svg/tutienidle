@@ -38,7 +38,7 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
     player.cultivation = 0 // below requirement -> canBreakthrough false
 
     const service = new BreakthroughOutcomeService()
-    const result = service.breakthrough(player, gameManager)
+    const result = service.breakthrough(player, gameManager.realmAdvanceOps)
 
     expect(result.kind).toBe('failure')
     expect(player.realmLevel).toBe(1)
@@ -53,7 +53,7 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
     const pointsBefore = player.attributePoints
 
     const service = new BreakthroughOutcomeService()
-    const result = service.breakthrough(player, gameManager)
+    const result = service.breakthrough(player, gameManager.realmAdvanceOps)
 
     expect(result.kind).toBe('success')
     if (result.kind !== 'success') throw new Error('unreachable')
@@ -74,7 +74,7 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
     addCultivation(player.$state, player.cultivationRequired)
 
     const service = new BreakthroughOutcomeService()
-    const result = service.breakthrough(player, gameManager)
+    const result = service.breakthrough(player, gameManager.realmAdvanceOps)
 
     expect(result.kind).toBe('failure')
     expect(player.realmLevel).toBe(maxLevel)
@@ -85,11 +85,11 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
     const player = usePlayerStore()
     addCultivation(player.$state, player.cultivationRequired)
 
-    const syncPassive = vi.spyOn(gameManager, 'syncRealmPassive')
-    const syncStatPassive = vi.spyOn(gameManager, 'syncRealmStatPassive')
+    const syncPassive = vi.spyOn(gameManager.realmAdvanceOps, 'syncRealmPassive')
+    const syncStatPassive = vi.spyOn(gameManager.realmAdvanceOps, 'syncRealmStatPassive')
 
     const service = new BreakthroughOutcomeService()
-    service.breakthrough(player, gameManager)
+    service.breakthrough(player, gameManager.realmAdvanceOps)
 
     expect(syncPassive).toHaveBeenCalledTimes(1)
     expect(syncStatPassive).toHaveBeenCalledTimes(1)
@@ -104,13 +104,13 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
     const service = new BreakthroughOutcomeService()
 
     // Failure first: artifact untouched.
-    const failed = service.breakthrough(player, gameManager)
+    const failed = service.breakthrough(player, gameManager.realmAdvanceOps)
     expect(failed.kind).toBe('failure')
     expect(player.artifact.realmLevel).toBe(1)
 
     // Success: the artifact realm-level advance runs (doc SS5.1 banked release).
     addCultivation(player.$state, player.cultivationRequired)
-    const success = service.breakthrough(player, gameManager)
+    const success = service.breakthrough(player, gameManager.realmAdvanceOps)
     expect(success.kind).toBe('success')
     if (success.kind !== 'success') throw new Error('unreachable')
     // advanceArtifactRealmLevel releases banked tiers as the player levels;
@@ -131,7 +131,7 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
     }
 
     const service = new BreakthroughOutcomeService()
-    const result = service.breakthrough(player, gameManager)
+    const result = service.breakthrough(player, gameManager.realmAdvanceOps)
 
     expect(result.kind).toBe('success')
     if (result.kind !== 'success') throw new Error('unreachable')

@@ -47,7 +47,7 @@ export function registerEnemySpawnDebug(deps: EnemySpawnDebugDeps): void {
         return 'battle already in progress'
       }
 
-      const template = deps.gameManager.getEnemyTemplate(enemyId)
+      const template = deps.gameManager.catalogOps.getEnemyTemplate(enemyId)
 
       if (!template) {
         return `enemy template not found: ${enemyId}`

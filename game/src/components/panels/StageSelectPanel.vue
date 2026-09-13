@@ -45,7 +45,7 @@ const zones = computed(() => gameManager.zoneRegistry.getAll())
 function isZoneUnlocked(zoneId: string): boolean {
   const zone = zones.value.find(candidate => candidate.id === zoneId)
   const firstStageId = zone?.stageIds[0]
-  return Boolean(firstStageId && gameManager.isStageUnlocked(firstStageId, player.$state))
+  return Boolean(firstStageId && gameManager.catalogOps.isStageUnlocked(firstStageId, player.$state))
 }
 
 // Luyện Khí tầng 1-10 content pass — gate MỊN hơn isZoneUnlocked (chỉ
@@ -54,7 +54,7 @@ function isZoneUnlocked(zoneId: string): boolean {
 // cảnh giới này (vd đã lên Trúc Cơ), tầng gate coi như hết ý nghĩa,
 // Stage mở tự do để farm lại.
 function isStageUnlocked(stage: (typeof stagesInZone.value)[number]): boolean {
-  return gameManager.isStageUnlocked(stage.id, player.$state)
+  return gameManager.catalogOps.isStageUnlocked(stage.id, player.$state)
 }
 
 const selectedZoneId = ref<string | null>(zones.value[0]?.id ?? null)
@@ -69,7 +69,7 @@ const stagesInZone = computed(() => {
   }
 
   return selectedZone.value.stageIds
-    .map(stageId => gameManager.getStage(stageId))
+    .map(stageId => gameManager.catalogOps.getStage(stageId))
     .filter((stage): stage is NonNullable<typeof stage> => stage !== undefined)
 })
 
@@ -127,14 +127,14 @@ const stageNodes = computed(() => visibleStages.value.map((stage, index) => ({
   stage,
   isLast: index === visibleStages.value.length - 1,
   enemies: stage.enemyPool
-    .map(entry => gameManager.getEnemyTemplate(entry.enemyId)?.name ?? entry.enemyId),
+    .map(entry => gameManager.catalogOps.getEnemyTemplate(entry.enemyId)?.name ?? entry.enemyId),
 })))
 
 const selectedEncounters = computed(() => {
   if (!selectedStage.value) return []
 
   return selectedStage.value.enemyPool.map((entry) => {
-    const enemy = gameManager.getEnemyTemplate(entry.enemyId)
+    const enemy = gameManager.catalogOps.getEnemyTemplate(entry.enemyId)
     return {
       id: entry.enemyId,
       name: enemy?.name ?? entry.enemyId,
@@ -149,7 +149,7 @@ const selectedEncounters = computed(() => {
 const selectedBoss = computed(() => {
   const bossId = selectedStage.value?.bossEnemyId
   if (!bossId) return null
-  return gameManager.getEnemyTemplate(bossId)
+  return gameManager.catalogOps.getEnemyTemplate(bossId)
 })
 
 const ARCHETYPE_LABEL_KEYS: Record<string, string> = {
@@ -195,7 +195,7 @@ function start() {
   // gọi startAutoFarm trực tiếp (roll reward theo wall-clock, không
   // hoạt ảnh) — khác mọi mode khác đều qua startSelectedStage.
   if (mode.value === 'perfect_farm') {
-    gameManager.startAutoFarm(player.$state, selectedStage.value.id)
+    gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player.$state, selectedStage.value.id)
     ui.leftPanelMode = null
     return
   }

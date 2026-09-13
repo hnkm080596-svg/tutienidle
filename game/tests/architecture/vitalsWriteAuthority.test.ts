@@ -76,9 +76,9 @@ const ALLOWED: AllowedFile[] = [
       'Mind-tribulation ghost HP snapshot restore (own director entity, not battle participants) — tribulation has its own time/outcome handling.',
   },
   {
-    path: 'src/core/game/GameManagerTurnBattleOps.ts',
+    path: 'src/core/game/GameManagerAutoFarmOps.ts',
     contract:
-      'Wave-spawn dead-spawn (post-merge 5718137e): pre-defeated reward-shim entities spawn with alive=false before entering the reward stream — entity construction-time flag, not battle resolution. Sole write is `entity.alive = false` at spawn.',
+      'Wave-spawn dead-spawn (post-merge 5718137e; moved to GameManagerAutoFarmOps during the large-file split): pre-defeated reward-shim entities spawn with alive=false before entering the reward stream — entity construction-time flag, not battle resolution. Sole write is `entity.alive = false` at spawn.',
   },
 ]
 

@@ -43,7 +43,7 @@ onUnmounted(() => {
 const recipes = computed<AlchemyRecipe[]>(() => {
   stateVersion.value
 
-  return gameManager.getAlchemyRecipes().filter((recipe) => recipe.realmId === player.realmId)
+  return gameManager.alchemyOps.getAlchemyRecipes().filter((recipe) => recipe.realmId === player.realmId)
 })
 
 const currentGradeLabel = computed(() => {
@@ -114,7 +114,7 @@ const preview = computed(() => {
     return null
   }
 
-  return gameManager.previewAlchemyOutcome(selectedRecipe.value.id, selectedHerbId.value)
+  return gameManager.alchemyOps.previewAlchemyOutcome(selectedRecipe.value.id, selectedHerbId.value)
 })
 
 /** Gỗ nhiên liệu theo biến thể thảo đã chọn (gp123 6E): `<realm>_wood_<age>`
@@ -161,7 +161,7 @@ const jobs = computed(() => {
 
   void nowMs.value
 
-  return gameManager.getAlchemyJobs().map((job) => {
+  return gameManager.alchemyOps.getAlchemyJobs().map((job) => {
     const remainingMs = Math.max(0, job.completesAtMs - nowMs.value)
 
     const totalSeconds = Math.max(1, Math.ceil((job.completesAtMs - job.startedAtMs) / 1000))
@@ -187,7 +187,7 @@ function startJob() {
     return
   }
 
-  const result = gameManager.startAlchemyJob(selectedRecipe.value.id, selectedHerbId.value, player.$state)
+  const result = gameManager.alchemyOps.startAlchemyJob(selectedRecipe.value.id, selectedHerbId.value, player.$state)
 
   if (!result.ok) {
     console.warn('start alchemy failed:', result.reason)
@@ -197,7 +197,7 @@ function startJob() {
 }
 
 function cancelJob(jobId: string) {
-  gameManager.cancelAlchemyJob(jobId)
+  gameManager.alchemyOps.cancelAlchemyJob(jobId)
 
   bumpState()
 }

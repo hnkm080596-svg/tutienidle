@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 //
 // Regression (review 2026-08-26): App.vue từng bị xóa mất lệnh
-// gameManager.registerBuffs(buffs) — buffRegistry rỗng tại runtime trong
+// gameManager.catalogOps.registerBuffs(buffs) — buffRegistry rỗng tại runtime trong
 // khi SkillEffectSystem resolve effect 'buff'/'debuff' qua
 // buffRegistry.get() (THROW khi thiếu) và ReactionManager resolve
 // appliesBuffId cùng cách → cast skill/reaction đầu tiên crash giữa

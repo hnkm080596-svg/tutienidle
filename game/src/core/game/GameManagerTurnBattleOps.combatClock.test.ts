@@ -19,7 +19,7 @@ describe('combat runs on CombatClock, not the world tick', () => {
     const stateBefore = manager.getTurnBattle()?.state
     const introBefore = manager.getTurnBattle()?.introTurnsRemaining
 
-    manager.update(1)
+    manager.tickOps.update(1)
 
     expect(manager.getTurnBattle()?.state).toBe(stateBefore)
     expect(manager.getTurnBattle()?.introTurnsRemaining).toBe(introBefore)

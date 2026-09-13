@@ -6,7 +6,7 @@
 // TỒN TẠI, ESLint không kêu (script setup: mọi top-level function coi
 // như "có thể" dùng ở template nên linter không thể khẳng định orphan),
 // và toàn bộ 2651 unit test vẫn xanh vì test gọi thẳng
-// gameManager.update() chứ không đi qua App.vue. Kết quả: game đứng
+// gameManager.tickOps.update() chứ không đi qua App.vue. Kết quả: game đứng
 // hình vô thời hạn trong browser thật, zero console error (hàm không
 // bao giờ chạy thì không thể throw). Xem
 // .superpowers/sdd/2026-09-05-combat-art-roster-tranphap/freeze-rootcause.md

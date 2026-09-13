@@ -55,10 +55,10 @@ function makeActive(
 /** Drive an active tribulation to completion by answering every question. */
 function driveToCompletion(gameManager: GameManager) {
   let guard = 0
-  while (gameManager.getActiveTribulation()?.state === 'ongoing' && guard++ < 5000) {
-    gameManager.update(1)
-    const q = gameManager.getActiveTribulation()!.currentQuestion
-    if (q) gameManager.answerTribulationQuestion(q.correctAnswerIndex)
+  while (gameManager.tribulationDirector.getState()?.state === 'ongoing' && guard++ < 5000) {
+    gameManager.tickOps.update(1)
+    const q = gameManager.tribulationDirector.getState()!.currentQuestion
+    if (q) gameManager.tribulationDirector.answerQuestion(q.correctAnswerIndex)
   }
 }
 
@@ -86,14 +86,14 @@ describe('TribulationOutcomeService — victory parity', () => {
 
   it('foundation_establishment victory: realm/level reset, unequip-all, foundation recorded, talent converted, passives synced', () => {
     const gameManager = new GameManager()
-    gameManager.registerPills(pills)
+    gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12
     player.bodyRefinementCompletedTiers = 6
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
-    gameManager.chooseCultivationPath('phap_tu', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     player.openedMeridianIds = MERIDIANS.map((m: { id: string }) => m.id)
@@ -102,10 +102,10 @@ describe('TribulationOutcomeService — victory parity', () => {
     const stats = createBaseStats({ maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
     expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
     driveToCompletion(gameManager)
-    expect(gameManager.getActiveTribulation()!.state).toBe('victory')
+    expect(gameManager.tribulationDirector.getState()!.state).toBe('victory')
 
     const service = new TribulationOutcomeService()
-    const result = service.resolveVictory(player, gameManager, gameManager.getActiveTribulation()!)
+    const result = service.resolveVictory(player, gameManager, gameManager.tribulationDirector.getState()!)
 
     expect(result.kind).toBe('victory')
     expect(result.realmEntered).toBe('foundation_establishment')
@@ -126,7 +126,7 @@ describe('TribulationOutcomeService — victory parity', () => {
 
   it('quest realm-transition flag is marked on realm entry', () => {
     const gameManager = new GameManager()
-    gameManager.registerPills(pills)
+    gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
     player.realmId = 'qi_refining'
     player.openedMeridianIds = MERIDIANS.map((m: { id: string }) => m.id)
@@ -136,7 +136,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     driveToCompletion(gameManager)
 
     const service = new TribulationOutcomeService()
-    const result = service.resolveVictory(player, gameManager, gameManager.getActiveTribulation()!)
+    const result = service.resolveVictory(player, gameManager, gameManager.tribulationDirector.getState()!)
 
     expect(result.questRealmTransitionMarked).toBe(true)
   })

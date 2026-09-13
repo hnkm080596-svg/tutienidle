@@ -14,9 +14,9 @@ import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
 function createRegisteredManager(): GameManager {
   const manager = new GameManager()
 
-  manager.registerMaterials(materials)
-  manager.registerEquipment(equipment)
-  manager.registerAffixes(affixes)
+  manager.catalogOps.registerMaterials(materials)
+  manager.catalogOps.registerEquipment(equipment)
+  manager.catalogOps.registerAffixes(affixes)
 
   return manager
 }
@@ -55,7 +55,7 @@ function managerState(manager: GameManager): {
 } {
   return {
     save: structuredClone(buildGameSave(createDefaultPlayer(), manager)),
-    equipmentModifiers: structuredClone(manager.getEquipmentModifiers()),
+    equipmentModifiers: structuredClone(manager.equipmentOps.getEquipmentModifiers()),
   }
 }
 
@@ -94,7 +94,7 @@ describe('App save restore coordinator', () => {
 
       const playerRestore = vi.spyOn(player, 'restoreFromSave')
       const setActivePlayer = vi.spyOn(manager, 'setActivePlayer')
-      const managerRestore = vi.spyOn(manager, 'restoreFromSave')
+      const managerRestore = vi.spyOn(manager.saveOps, 'restoreFromSave')
       const playerBefore = JSON.stringify(player.$state)
       const managersBefore = managerState(manager)
       let result: ReturnType<typeof restoreGameSession> | undefined
@@ -127,7 +127,7 @@ describe('App save restore coordinator', () => {
       zoneId: 'thanh_van_dong',
       icon: '/equipment/boot-restore.png',
     })
-    expect(manager.getEquipmentModifiers().length).toBeGreaterThan(0)
-    expect(player.modifiers).toEqual(manager.getEquipmentModifiers())
+    expect(manager.equipmentOps.getEquipmentModifiers().length).toBeGreaterThan(0)
+    expect(player.modifiers).toEqual(manager.equipmentOps.getEquipmentModifiers())
   })
 })

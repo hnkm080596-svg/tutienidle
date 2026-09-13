@@ -135,8 +135,8 @@ let gameManager: GameManager
 beforeEach(() => {
   gameManager = new GameManager()
 
-  gameManager.registerMaterials([UPGRADE_MATERIAL])
-  gameManager.registerBuildings(
+  gameManager.catalogOps.registerMaterials([UPGRADE_MATERIAL])
+  gameManager.catalogOps.registerBuildings(
     gameBuildings.map((building) => building.id === PILL_ROOM_DEF.id ? PILL_ROOM_DEF : building),
   )
 })
@@ -318,7 +318,7 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
   it('Linh Tuyền đã xây mở LeftPanel thay vì popover trung tâm', async () => {
     const springManager = new GameManager()
 
-    springManager.registerBuildings([{
+    springManager.catalogOps.registerBuildings([{
       id: 'chi_hien_quan',
       name: 'Linh Tuyền',
       category: 'resource',
@@ -423,8 +423,8 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
   it('Linh Tuyền có sản lượng claim được → badge ready', () => {
     const springManager = new GameManager()
 
-    springManager.registerMaterials([UPGRADE_MATERIAL])
-    springManager.registerBuildings([{
+    springManager.catalogOps.registerMaterials([UPGRADE_MATERIAL])
+    springManager.catalogOps.registerBuildings([{
       id: 'chi_hien_quan',
       name: 'Linh Tuyền',
       category: 'resource',

@@ -56,7 +56,7 @@ function refight() {
     return
   }
 
-  const stage = gameManager.getStage(ui.selectedStageId)
+  const stage = gameManager.catalogOps.getStage(ui.selectedStageId)
 
   if (!stage) {
     return

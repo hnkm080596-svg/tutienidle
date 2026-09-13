@@ -8,7 +8,7 @@ export { HERO_COLUMN, HERO_LANE_INDEX }
 
 export const HIT_RECOIL_PX = 6
 export const ATTACK_LUNGE_PX = 8
-export const ATTACK_LUNGE_DURATION_MS = 75
+export const ATTACK_LUNGE_DURATION_MS = 350 // was 75 -- too fast to observe (2026-09-07 playtest)
 export const HIT_RECOIL_DURATION_MS = 65
 
 /** DoT text flush 3 lần/giây (plan §7.2) — cửa sổ gom 333,33ms. */
@@ -95,3 +95,7 @@ export const CHARACTER_WIDTH_RATIO = 0.45
 // Sàn thời lượng 1 đoạn nội suy — tránh chia gần 0 nếu 2 lần cập nhật vị
 // trí liên tiếp tới quá sát nhau (combat-position-interpolation).
 export const MIN_SEGMENT_DURATION_MS = 16
+
+// Trần thời lượng 1 đoạn nội suy — snapshot trễ nhất vẫn về target trong
+// khung này, tránh một đoạn nội suy dài bất thường.
+export const MAX_SEGMENT_DURATION_MS = 200

@@ -212,7 +212,7 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
   })
 
   function seedAll() {
-    gameManager.registerMaterials([WOOD, ORE, ESSENCE, OTHER, HERB_DECADE, HERB_CENTURY])
+    gameManager.catalogOps.registerMaterials([WOOD, ORE, ESSENCE, OTHER, HERB_DECADE, HERB_CENTURY])
     gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_wood_decade'), 3)
     gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_ore_decade'), 2)
     gameManager.materialBag.add(gameManager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 5)
@@ -272,7 +272,7 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
   })
 
   it('gộp thảo theo họ: 1 ô duy nhất với badge realm + niên đại, tooltip vẫn đủ dữ liệu', async () => {
-    gameManager.registerMaterials([HERB_DECADE, HERB_CENTURY, HERB_OTHER_FAMILY, HERB_LEGACY])
+    gameManager.catalogOps.registerMaterials([HERB_DECADE, HERB_CENTURY, HERB_OTHER_FAMILY, HERB_LEGACY])
     gameManager.materialBag.add(gameManager.materialRegistry.get(HERB_DECADE.id), 4)
     gameManager.materialBag.add(gameManager.materialRegistry.get(HERB_CENTURY.id), 7)
     gameManager.materialBag.add(gameManager.materialRegistry.get(HERB_OTHER_FAMILY.id), 2)
@@ -296,7 +296,7 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
   })
 
   it('gộp quáng theo realm: 2 bậc tuổi cùng realm collapse về 1 ô, badge hiện bậc cao nhất', async () => {
-    gameManager.registerMaterials([ORE_HOANG, ORE_HUYEN])
+    gameManager.catalogOps.registerMaterials([ORE_HOANG, ORE_HUYEN])
     gameManager.materialBag.add(gameManager.materialRegistry.get(ORE_HOANG.id), 3)
     gameManager.materialBag.add(gameManager.materialRegistry.get(ORE_HUYEN.id), 5)
 

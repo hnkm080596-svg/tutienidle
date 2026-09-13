@@ -63,9 +63,9 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     player.cultivationPath = 'phap_tu'
     player.nodeLevels['lap_dao_thuan_wood'] = 1
 
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerEnemyTemplates([makeDummyEnemy()])
-    gameManager.registerStages([stageFixture()])
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerEnemyTemplates([makeDummyEnemy()])
+    gameManager.catalogOps.registerStages([stageFixture()])
     gameManager.setActivePlayer(player)
 
     const stats = calculateStats(player.baseStats, player.modifiers)
@@ -73,7 +73,7 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     // non-stage battles (startBattleWithPlayer) intentionally run a
     // registry-less engine where applySkillAilments no-ops.
     expect(
-      gameManager.startStage(player, stats, gameManager.getStage('status_vfx_stage')!, false),
+      gameManager.turnBattleOps.startStage(player, stats, gameManager.catalogOps.getStage('status_vfx_stage')!, false),
     ).toBe(true)
 
     // Advance until the first doc_chuong hit lands trung_doc (chance 1.0)
@@ -107,13 +107,13 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     // observation must emit attach or the icon can never spawn.
     player.formationLoadout = { formationId: 'cuu_cung_tran', assignments: [] }
 
-    gameManager.registerEnemyTemplates([makeDummyEnemy()])
-    gameManager.registerStages([stageFixture()])
+    gameManager.catalogOps.registerEnemyTemplates([makeDummyEnemy()])
+    gameManager.catalogOps.registerStages([stageFixture()])
     gameManager.setActivePlayer(player)
 
     const stats = calculateStats(player.baseStats, player.modifiers)
     expect(
-      gameManager.startStage(player, stats, gameManager.getStage('status_vfx_stage')!, false),
+      gameManager.turnBattleOps.startStage(player, stats, gameManager.catalogOps.getStage('status_vfx_stage')!, false),
     ).toBe(true)
 
     for (let i = 0; i < 300 && attached.length === 0; i++) {

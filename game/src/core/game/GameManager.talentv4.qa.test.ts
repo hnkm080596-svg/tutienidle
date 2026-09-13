@@ -27,19 +27,19 @@ import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
 function makeWiredManager(): GameManager {
   const manager = new GameManager()
 
-  manager.registerMaterials(materials)
-  manager.registerSkillTemplates(SKILLS)
-  manager.registerTechniqueTemplates(TECHNIQUES)
-  manager.registerEnemyTemplates(ENEMIES)
-  manager.registerStages(STAGES)
-  manager.registerZones(zones)
-  manager.registerEquipment(equipment)
-  manager.registerAffixes(affixes)
-  manager.registerPills(pills)
-  manager.registerTalismans(talismans)
-  manager.registerBuffs(buffs)
-  manager.registerBuildings(buildings)
-  manager.registerProgressionNodes(KIEM_TU_NODES)
+  manager.catalogOps.registerMaterials(materials)
+  manager.catalogOps.registerSkillTemplates(SKILLS)
+  manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+  manager.catalogOps.registerEnemyTemplates(ENEMIES)
+  manager.catalogOps.registerStages(STAGES)
+  manager.catalogOps.registerZones(zones)
+  manager.catalogOps.registerEquipment(equipment)
+  manager.catalogOps.registerAffixes(affixes)
+  manager.catalogOps.registerPills(pills)
+  manager.catalogOps.registerTalismans(talismans)
+  manager.catalogOps.registerBuffs(buffs)
+  manager.catalogOps.registerBuildings(buildings)
+  manager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 
   return manager
 }
@@ -85,7 +85,7 @@ describe('QA talent v4 M1 — invariant wiring', () => {
 
     player.selectedTalentIds = ['kiem_quang']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     // STAGES[0] requires the qi_refining realm — a fresh default player
     // (mortal) would be rejected by isStageUnlocked. Register a
@@ -110,12 +110,12 @@ describe('QA talent v4 M1 — invariant wiring', () => {
       statsInput: { maxHp: 500, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
-    manager.registerEnemyTemplates([enemy])
-    manager.registerStages([stage])
+    manager.catalogOps.registerEnemyTemplates([enemy])
+    manager.catalogOps.registerStages([stage])
 
     const stats = calculateStats(player.baseStats, player.modifiers)
 
-    expect(manager.startStage(player, stats, stage)).toBe(true)
+    expect(manager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
 
     const bus = manager.eventBus
 
@@ -190,7 +190,7 @@ describe('QA talent v4 M1 — invariant wiring', () => {
 
     for (const talentId of talentIds) {
       player.selectedTalentIds = [talentId]
-      manager.syncTalentCombatPassive(player)
+      manager.progressionOps.syncTalentCombatPassive(player)
 
       const active = manager.skillManager.getAll().filter((skill) =>
         TALENT_PASSIVE_SKILLS.some((template) => template.id === skill.id),
@@ -213,7 +213,7 @@ describe('QA A0 � B?t T? Th? cleanse/grant on the LIVE turn-based pool', () =>
     player.realmId = 'mortal'
     player.realmLevel = 1
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const enemy = ENEMIES[0]!
     const stats = calculateStats(player.baseStats, player.modifiers)

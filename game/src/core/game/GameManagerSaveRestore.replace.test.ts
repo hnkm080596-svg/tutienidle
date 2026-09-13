@@ -41,8 +41,8 @@ const PILL_A: Pill = {
 
 function makeManager(): GameManager {
   const manager = new GameManager()
-  manager.registerMaterials([MATERIAL_A, MATERIAL_B])
-  manager.registerPills([PILL_A])
+  manager.catalogOps.registerMaterials([MATERIAL_A, MATERIAL_B])
+  manager.catalogOps.registerPills([PILL_A])
   return manager
 }
 
@@ -74,7 +74,7 @@ describe('GameManagerSaveRestore — replacement semantics (R10, S3)', () => {
     // Pre-seed the live bag with a stack the save does NOT mention.
     manager.materialBag.add(manager.materialRegistry.get('r10_replace_material_b'), 30)
 
-    manager.restoreFromSave(baseSave(player, { materials: [{ materialId: 'r10_replace_material_a', amount: 5 }] }))
+    manager.saveOps.restoreFromSave(baseSave(player, { materials: [{ materialId: 'r10_replace_material_a', amount: 5 }] }))
 
     expect(manager.materialBag.getAmount('r10_replace_material_a')).toBe(5)
     // Pre-existing, unrelated stack must be gone — replaced, not merged.
@@ -89,7 +89,7 @@ describe('GameManagerSaveRestore — replacement semantics (R10, S3)', () => {
 
     manager.pillBag.add(manager.pillRegistry.get('r10_replace_pill_a'), 7)
 
-    manager.restoreFromSave(baseSave(player, { pills: [] }))
+    manager.saveOps.restoreFromSave(baseSave(player, { pills: [] }))
 
     expect(manager.pillBag.getAmount('r10_replace_pill_a')).toBe(0)
     expect(manager.pillBag.getAll()).toHaveLength(0)
@@ -105,8 +105,8 @@ describe('GameManagerSaveRestore — replacement semantics (R10, S3)', () => {
       pills: [{ pillId: 'r10_replace_pill_a', amount: 3 }],
     })
 
-    manager.restoreFromSave(save)
-    manager.restoreFromSave(save)
+    manager.saveOps.restoreFromSave(save)
+    manager.saveOps.restoreFromSave(save)
 
     expect(manager.materialBag.getAmount('r10_replace_material_a')).toBe(12)
     expect(manager.pillBag.getAmount('r10_replace_pill_a')).toBe(3)

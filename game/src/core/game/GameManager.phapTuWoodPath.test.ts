@@ -13,9 +13,9 @@ import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 function setup() {
   const gameManager = new GameManager()
 
-  gameManager.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
-  gameManager.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
 
   return gameManager
 }
@@ -28,22 +28,22 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree)', () => {
 
     player.skillInsight = 5
 
-    expect(gameManager.purchaseNode('minor_wood_intensity', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_intensity', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('moc_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('moc_linh_ngo', player)).toBe(true)
     expect(gameManager.skillManager.get('doc_chuong')?.unlocked).toBe(true)
     // Root tốn 2 Skill Point.
     expect(player.skillInsight).toBe(3)
 
-    expect(gameManager.purchaseNode('minor_wood_intensity', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_wood_duration', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_wood_threshold', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_duration', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_threshold', player)).toBe(true)
 
     expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     // Độc Nguyên +2 Mộc Lực; Độc Tức +4% duration; Độc Mạch +3% cast speed.
@@ -60,15 +60,15 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'qi_refining'
 
-    expect(gameManager.purchaseNode('moc_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_wood_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('moc_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('moc_truc_co_doc_dan', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('moc_truc_co_doc_dan', player)).toBe(false)
 
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('moc_truc_co_doc_dan', player)).toBe(true)
-    expect(gameManager.purchaseNode('moc_truc_co_doc_can', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('moc_truc_co_doc_dan', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('moc_truc_co_doc_can', player)).toBe(false)
   })
 
   it('Mộc Trúc Cơ Pure: specialization chỉ mở sau Mộc Thế', () => {
@@ -79,20 +79,20 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('moc_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_wood_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('moc_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_wood_heart', player)).toBe(false)
-    expect(gameManager.purchaseNode('minor_wood_duration_chung', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_heart', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_duration_chung', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('moc_truc_co_doc_can', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('moc_truc_co_doc_can', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_wood_heart', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_wood_duration_chung', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_heart', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_duration_chung', player)).toBe(true)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     // Độc Linh +3 Mộc Lực/cấp; Độc Trưởng +3% duration/cấp.
@@ -108,17 +108,17 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('moc_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_wood_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('moc_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_wood_reaction_effect', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_reaction_effect', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('moc_truc_co_doc_dan', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_wood_reaction_effect', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('moc_truc_co_doc_dan', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_reaction_effect', player)).toBe(true)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     // Độc Dẫn 0.15 + Cộng Độc level 1: 0.05.
@@ -133,15 +133,15 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree)', () => {
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('moc_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_wood_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('moc_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_wood_channeling', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_channeling', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('moc_truc_co_doc_can', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_wood_channeling', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('moc_truc_co_doc_can', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_wood_channeling', player)).toBe(true)
 
-    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+    const runtimeStats = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     // Mộc Thế keystone +1 tầng, Độc Uyển level 1 +1 tầng.
     expect(runtimeStats.poisonRootMaxStacks).toBeGreaterThanOrEqual(2)

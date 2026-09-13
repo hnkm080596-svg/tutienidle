@@ -63,7 +63,7 @@ const entries = computed<EquipmentEntry[]>(() => {
     // Audit fix 2026-08-31 — equipmentRegistry.get() THROW với itemId
     // lạ (data edit/save lệch) từng chết cả panel qua ErrorBoundary;
     // getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts).
-    const template = gameManager.getEquipmentTemplate(instance.itemId)
+    const template = gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)
 
     const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
 
@@ -126,7 +126,7 @@ const entries = computed<EquipmentEntry[]>(() => {
               instance,
               template,
               gameManager.affixRegistry,
-              instance.equipped ? gameManager.getSlotState(instance.slot) : null,
+              instance.equipped ? gameManager.equipmentOps.getSlotState(instance.slot) : null,
               gameManager.zoneRegistry,
               equippedComparison,
               gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),

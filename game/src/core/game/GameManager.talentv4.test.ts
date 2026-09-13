@@ -28,19 +28,19 @@ import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
 function makeWiredManager(): GameManager {
   const manager = new GameManager()
 
-  manager.registerMaterials(materials)
-  manager.registerSkillTemplates(SKILLS)
-  manager.registerTechniqueTemplates(TECHNIQUES)
-  manager.registerEnemyTemplates(ENEMIES)
-  manager.registerStages(STAGES)
-  manager.registerZones(zones)
-  manager.registerEquipment(equipment)
-  manager.registerAffixes(affixes)
-  manager.registerPills(pills)
-  manager.registerTalismans(talismans)
-  manager.registerBuffs(buffs)
-  manager.registerBuildings(buildings)
-  manager.registerProgressionNodes(KIEM_TU_NODES)
+  manager.catalogOps.registerMaterials(materials)
+  manager.catalogOps.registerSkillTemplates(SKILLS)
+  manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+  manager.catalogOps.registerEnemyTemplates(ENEMIES)
+  manager.catalogOps.registerStages(STAGES)
+  manager.catalogOps.registerZones(zones)
+  manager.catalogOps.registerEquipment(equipment)
+  manager.catalogOps.registerAffixes(affixes)
+  manager.catalogOps.registerPills(pills)
+  manager.catalogOps.registerTalismans(talismans)
+  manager.catalogOps.registerBuffs(buffs)
+  manager.catalogOps.registerBuildings(buildings)
+  manager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 
   return manager
 }
@@ -52,7 +52,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     player.selectedTalentIds = ['kiem_quang']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const granted = manager.skillManager.get('talent_passive_kiem_quang')
 
@@ -67,7 +67,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     player.selectedTalentIds = ['pham_cot']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const talentPassiveIds = TALENT_PASSIVE_SKILLS.map((skill) => skill.id)
 
@@ -80,14 +80,14 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     player.selectedTalentIds = ['kiem_quang']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     expect(manager.skillManager.getAll().filter((skill) => skill.id === 'talent_passive_kiem_quang')).toHaveLength(1)
 
     // Đổi talent (save edit scenario) — passive cũ bị revoke.
     player.selectedTalentIds = ['vo_anh']
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     expect(manager.skillManager.get('talent_passive_kiem_quang')).toBeUndefined()
     expect(manager.skillManager.get('talent_passive_vo_anh')).toBeDefined()
@@ -99,7 +99,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     player.selectedTalentIds = ['can_than']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     expect(manager.skillManager.get('talent_passive_can_than')).toBeDefined()
     expect(manager.skillManager.get('talent_passive_can_than_phi')).toBeDefined()
@@ -113,7 +113,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
     player.realmId = 'mortal'
     player.realmLevel = 1
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const enemy = ENEMIES[0]!
     const stats = calculateStats(player.baseStats, player.modifiers)
@@ -155,7 +155,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     player.selectedTalentIds = ['hap_linh']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const enemy = ENEMIES[0]!
     const stats = calculateStats(player.baseStats, player.modifiers)

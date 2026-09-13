@@ -132,7 +132,7 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
   // telegraph maps too — stub the minimum shape the method reads.
   scene.turnCountdownSpawnVfxHandles = new Map()
   scene.entityVisual = new CombatEntityVisualLifecycle(scene as unknown as CombatScene)
-  scene.resetTelegraphState = () => {}
+  scene._telegraph = { reset: () => {} }
   scene.dyingIds = new Set()
   scene.playerDying = false
   scene.playerSpawnHandle = undefined

@@ -34,11 +34,11 @@ function buildStartedGameManager(): { gameManager: GameManager; combatSource: Ma
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 
-  gameManager.registerEnemyTemplates([enemy])
-  gameManager.registerStages([stageFixture('intro_stage', 'intro_dummy')])
+  gameManager.catalogOps.registerEnemyTemplates([enemy])
+  gameManager.catalogOps.registerStages([stageFixture('intro_stage', 'intro_dummy')])
   gameManager.setActivePlayer(player)
 
-  expect(gameManager.startStage(player, stats, gameManager.getStage('intro_stage')!, false)).toBe(true)
+  expect(gameManager.turnBattleOps.startStage(player, stats, gameManager.catalogOps.getStage('intro_stage')!, false)).toBe(true)
 
   return { gameManager, combatSource }
 }

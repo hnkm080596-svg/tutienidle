@@ -44,9 +44,9 @@ const BUILDING: Building = {
 
 function makeManager(): GameManager {
   const manager = new GameManager()
-  manager.registerMaterials([MATERIAL])
-  manager.registerPills([PILL])
-  manager.registerBuildings([BUILDING])
+  manager.catalogOps.registerMaterials([MATERIAL])
+  manager.catalogOps.registerPills([PILL])
+  manager.catalogOps.registerBuildings([BUILDING])
   return manager
 }
 
@@ -82,7 +82,7 @@ describe('GameManagerSaveRestore — preflight registry drift coverage (R10, S4)
 
     const save = baseSave({ materials: [{ materialId: 'removed_material_id', amount: 10 }] })
 
-    expect(() => manager.restoreFromSave(save)).toThrow('Unknown material in save: removed_material_id')
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow('Unknown material in save: removed_material_id')
     // Preflight rejection must leave the live bag untouched.
     expect(manager.materialBag.getAmount('r10_preflight_material')).toBe(5)
   })
@@ -94,7 +94,7 @@ describe('GameManagerSaveRestore — preflight registry drift coverage (R10, S4)
 
     const save = baseSave({ pills: [{ pillId: 'removed_pill_id', amount: 1 }] })
 
-    expect(() => manager.restoreFromSave(save)).toThrow('Unknown pill in save: removed_pill_id')
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow('Unknown pill in save: removed_pill_id')
   })
 
   it('rejects an unknown building reference before any owner mutation', () => {
@@ -106,6 +106,6 @@ describe('GameManagerSaveRestore — preflight registry drift coverage (R10, S4)
       buildings: [{ instanceId: 'inst-1', buildingId: 'removed_building_id', level: 1, lastCollectedAt: 0 }],
     })
 
-    expect(() => manager.restoreFromSave(save)).toThrow('Unknown building in save: removed_building_id')
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow('Unknown building in save: removed_building_id')
   })
 })

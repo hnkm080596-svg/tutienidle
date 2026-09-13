@@ -37,7 +37,7 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
     const player = createDefaultPlayer()
     const stats = createBaseStats()
 
-    gameManager.registerEquipment([TEST_EQUIPMENT])
+    gameManager.catalogOps.registerEquipment([TEST_EQUIPMENT])
 
     const enemy = defineEnemy({
       id: 'random_drop_test_enemy',

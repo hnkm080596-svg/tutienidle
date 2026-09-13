@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Chieu Mo tab (companion-gacha Task 9, 2026-09-12) - the companion
 // gacha pull surface inside WorkerLodgePanel. Presentation only: calls
-// gameManager.pullCompanion() and renders the returned
+// gameManager.companionOps.pullCompanion() and renders the returned
 // PullCompanionResult verbatim - never re-rolls or re-derives the
 // outcome (A7).
 import { computed, ref } from 'vue'
@@ -56,7 +56,7 @@ function onPull() {
   pullInFlight.value = true
 
   try {
-    const result = gameManager.pullCompanion()
+    const result = gameManager.companionOps.pullCompanion()
 
     if (!result.ok) {
       useNotificationStore().push(

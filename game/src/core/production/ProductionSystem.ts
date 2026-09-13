@@ -31,6 +31,11 @@ import {
 } from './ProductionBalance'
 import { HERB_AGES } from './ProductionTypes'
 import { allocateWorkerSlots } from './WorkerAllocator'
+import { buildProductionCycle as buildCycle } from './ProductionCycles'
+import {
+  settleProductionOffline,
+  type ProductionOfflineDeps,
+} from './ProductionOffline'
 
 /** Một giao dịch settle đã xảy ra — dùng cho notification UI (§9.1). */
 export interface ProductionSettlementEvent {
@@ -65,34 +70,7 @@ export interface ProductionSystemDeps {
   grottoHerbs: readonly GrottoHerbDefinition[]
 }
 
-let cycleCounter = 0
 
-function nextCycleId(siteId: string): string {
-  cycleCounter += 1
-
-  return `cycle_${siteId}_${Date.now().toString(36)}_${cycleCounter}`
-}
-
-function buildCycle(
-  siteId: string,
-  collectionRealmId: string,
-  siteLevelAtStart: number,
-  baseSeconds: number,
-  nowMs: number,
-): ProductionCycle {
-  const seconds = computeCycleSeconds(baseSeconds, siteLevelAtStart)
-
-  return {
-    cycleId: nextCycleId(siteId),
-    siteId,
-    collectionRealmId,
-    siteLevelAtStart,
-    rewardTableVersion: REWARD_TABLE_VERSION,
-    rollSeed: Math.floor(Math.random() * 0x7fffffff),
-    startedAtMs: nowMs,
-    completesAtMs: nowMs + seconds * 1000,
-  }
-}
 
 export class ProductionSystem {
   private readonly deps: ProductionSystemDeps
@@ -427,213 +405,31 @@ export class ProductionSystem {
       workerAssignments?: Map<string, number>
     } = {},
   ): number {
-    let budgetRemainingMs = PRODUCTION_OFFLINE_CAP_SECONDS * 1000
-
-    let settled = 0
-
-    let guard = 0
-
-    while (guard < 5000) {
-      guard += 1
-
-      // Tìm cycle hoàn thành SỚM NHẤT trong quá khứ của nowMs.
-      let targetState: ProductionSiteState | undefined
-
-      let targetCycle: ProductionCycle | undefined
-
-      for (const state of this.states.values()) {
-        const cycle = state.activeCycle
-
-        if (!cycle || cycle.completesAtMs > nowMs) {
-          continue
-        }
-
-        if (!targetCycle || cycle.completesAtMs < targetCycle.completesAtMs) {
-          targetState = state
-
-          targetCycle = cycle
-        }
-      }
-
-      if (!targetState || !targetCycle) {
-        break
-      }
-
-      const durationMs = Math.max(0, targetCycle.completesAtMs - targetCycle.startedAtMs)
-
-      if (durationMs > budgetRemainingMs) {
-        break
-      }
-
-      budgetRemainingMs -= durationMs
-
-      targetState.activeCycle = undefined
-
-      this.grantCycleRewards(targetCycle, bag, registry)
-
-      settled += 1
-
-      if (targetState.autoRestart && this.canStart(targetCycle.siteId)) {
-        this.startCycle(targetCycle.siteId, currentRealmId, targetCycle.completesAtMs)
-      }
-    }
-
-    // Huỷ backlog manual hết ngân sách (xem JSDoc).
-    for (const state of this.states.values()) {
-      const cycle = state.activeCycle
-
-      if (!cycle || cycle.completesAtMs > nowMs) {
-        continue
-      }
-
-      state.activeCycle = undefined
-
-      if (state.autoRestart) {
-        this.startCycle(state.siteId, currentRealmId, nowMs)
-      }
-    }
-
-    settled += this.settleWorkersOffline(
+    return settleProductionOffline(
+      this.offlineDeps(),
       bag,
       registry,
       currentRealmId,
       nowMs,
-      budgetRemainingMs,
-      Math.floor(options.workerCapacity ?? 0),
-      options.offlineSinceMs,
-      options.workerAssignments,
+      options,
     )
-
-    return settled
   }
 
-  /**
-   * Offline settle cho worker cycles (T3) — chia ngân sách còn lại sau
-   * manual settle. Mỗi site có slot worker chạy các chuỗi cycle song song
-   * nối tiếp nhau trong cửa sổ [offlineSinceMs, nowMs], mỗi cycle một
-   * seed riêng. Cycle dở dang vượt nowMs được giữ lại cho tickWorkers
-   * online; cycle hoàn thành mà hết ngân sách bị forfeit.
-   *
-   * Chi-hien-quan (2026-09-02): `workerAssignments` — cùng phân bổ manual
-   * của tickWorkers để OFFLINE KHỚP ONLINE (spec §6).
-   */
-  private settleWorkersOffline(
-    bag: MaterialBag,
-    registry: MaterialRegistry,
-    currentRealmId: string,
-    nowMs: number,
-    budgetRemainingMs: number,
-    workerCapacity: number,
-    offlineSinceMs?: number,
-    workerAssignments?: Map<string, number>,
-  ): number {
-    if (workerCapacity <= 0 || budgetRemainingMs <= 0) {
-      return 0
+  /** Deps injection cho ProductionOffline.ts — cùng pattern washDeps()/refineDeps(). */
+  private offlineDeps(): ProductionOfflineDeps {
+    return {
+      states: this.states,
+
+      getSiteDefinition: (siteId) => this.getSiteDefinition(siteId),
+
+      canStart: (siteId) => this.canStart(siteId),
+
+      startCycle: (siteId, collectionRealmId, nowMs) =>
+        this.startCycle(siteId, collectionRealmId, nowMs),
+
+      grantCycleRewards: (cycle, bag, registry) =>
+        this.grantCycleRewards(cycle, bag, registry),
     }
-
-    // R7 (AR-07): the SAME pure allocator as tickWorkers - online and
-    // offline settlement share one distribution rule (manual first,
-    // remainder round-robins unassigned sites, leftover idle).
-    const activeStates = [...this.states.values()].filter((state) => state.autoRestart)
-
-    if (activeStates.length === 0) {
-      return 0
-    }
-
-    const slotsBySite = allocateWorkerSlots(
-      activeStates.map((state) => state.siteId),
-      workerAssignments ?? new Map<string, number>(),
-      workerCapacity,
-    )
-
-    for (const state of activeStates) {
-      state.activeWorkerSlots = slotsBySite.get(state.siteId) ?? 0
-    }
-
-    let settled = 0
-
-    let budgetMs = budgetRemainingMs
-
-    for (const state of activeStates) {
-      const slots = slotsBySite.get(state.siteId) ?? 0
-
-      if (slots <= 0 || budgetMs <= 0) {
-        continue
-      }
-
-      const definition = this.getSiteDefinition(state.siteId)
-
-      const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]
-
-      if (!definition || !baseSeconds) {
-        continue
-      }
-
-      const cycleMs = computeCycleSeconds(baseSeconds, state.level) * 1000
-
-      if (cycleMs <= 0) {
-        continue
-      }
-
-      state.workerCycles ??= []
-
-      // 1) Settle cycle dở dang từ save hoàn thành trước nowMs, trong ngân sách.
-      const kept: ProductionCycle[] = []
-
-      let lastCompleteMs = offlineSinceMs ?? nowMs
-
-      const pending = [...state.workerCycles].sort((a, b) => a.completesAtMs - b.completesAtMs)
-
-      for (const cycle of pending) {
-        if (cycle.completesAtMs > nowMs) {
-          kept.push(cycle)
-
-          continue
-        }
-
-        const durationMs = Math.max(0, cycle.completesAtMs - cycle.startedAtMs)
-
-        if (durationMs > budgetMs) {
-          continue
-        }
-
-        budgetMs -= durationMs
-
-        this.grantCycleRewards(cycle, bag, registry)
-
-        settled += 1
-
-        lastCompleteMs = Math.max(lastCompleteMs, cycle.completesAtMs)
-      }
-
-      state.workerCycles = kept
-
-      // 2) Chạy nối tiếp các cycle mới trong cửa sổ offline còn lại —
-      // `slots` chuỗi song song từ lastCompleteMs tới nowMs, tổng thời
-      // gian sản xuất bị chặn bởi ngân sách còn lại. Mỗi cycle một seed
-      // riêng (buildCycle).
-      const windowMs = Math.max(0, nowMs - lastCompleteMs)
-
-      const cyclesInWindow = Math.floor((windowMs * slots) / cycleMs)
-
-      const affordableCycles = Math.floor(budgetMs / cycleMs)
-
-      const newCycles = Math.max(0, Math.min(affordableCycles, cyclesInWindow))
-
-      for (let index = 0; index < newCycles; index++) {
-        const startMs = nowMs - (index + 1) * cycleMs
-
-        const cycle = buildCycle(state.siteId, currentRealmId, state.level, baseSeconds, startMs)
-
-        budgetMs -= cycleMs
-
-        this.grantCycleRewards(cycle, bag, registry)
-
-        settled += 1
-      }
-    }
-
-    return settled
   }
 
   /** Cộng reward của một cycle vào Bag + ghi settle event (dùng chung mọi đường settle). */
@@ -828,9 +624,3 @@ export class ProductionSystem {
 // =========================
 // Helpers nội bộ
 // =========================
-
-/**
- * Version bảng reward hiện hành — bump khi đổi balance data để cycle
- * đang chạy vẫn roll theo bảng cũ (snapshot §4.1).
- */
-const REWARD_TABLE_VERSION = 1

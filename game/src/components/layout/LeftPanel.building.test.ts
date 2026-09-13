@@ -47,8 +47,8 @@ function mountSpringPanel() {
   const stateVersion = ref(0)
 
   document.body.appendChild(container)
-  gameManager.registerMaterials([WOOD])
-  gameManager.registerBuildings([SPRING])
+  gameManager.catalogOps.registerMaterials([WOOD])
+  gameManager.catalogOps.registerBuildings([SPRING])
   gameManager.buildingManager.add({
     instanceId: 'spring_instance',
     buildingId: SPRING.id,

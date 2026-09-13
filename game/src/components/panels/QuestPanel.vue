@@ -33,7 +33,7 @@ function targetLabel(quest: Quest): string {
   }
 
   const enemyId = quest.condition.enemyId
-  const enemyName = enemyId ? gameManager.getEnemyTemplate(enemyId)?.name ?? enemyId : t('panels.quest.anyEnemy')
+  const enemyName = enemyId ? gameManager.catalogOps.getEnemyTemplate(enemyId)?.name ?? enemyId : t('panels.quest.anyEnemy')
 
   return enemyName
 }
@@ -41,11 +41,11 @@ function targetLabel(quest: Quest): string {
 const rows = computed<QuestRow[]>(() => {
   stateVersion.value
 
-  return gameManager.getActiveQuests().map(({ quest, progress }) => ({
+  return gameManager.questOps.getActiveQuests().map(({ quest, progress }) => ({
     quest,
     progress,
     targetLabel: targetLabel(quest),
-    canClaim: gameManager.canClaimQuest(quest.id),
+    canClaim: gameManager.questOps.canClaimQuest(quest.id),
   }))
 })
 
@@ -55,7 +55,7 @@ const groups = computed(() => [
 ])
 
 function onClaim(questId: string) {
-  if (gameManager.claimQuest(questId)) {
+  if (gameManager.questOps.claimQuest(questId)) {
     bumpState()
   }
 }

@@ -12,15 +12,15 @@ describe('GameManager — Technique.combatModifiers (+2 attackRange Pháp Tu)', 
   it('Đại Ngũ Hành equipped → tổng hợp ĐÚNG MỘT modifier +2 attackRange', () => {
     const gameManager = new GameManager()
 
-    gameManager.registerTechniqueTemplates(TECHNIQUES)
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const player = createDefaultPlayer()
 
-    gameManager.learnTechnique('dai_ngu_hanh_chan_quyet')
-    gameManager.equipTechnique('dai_ngu_hanh_chan_quyet')
+    gameManager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_chan_quyet')
+    gameManager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
 
-    const modifiers = gameManager.getAggregatedModifiers(player)
+    const modifiers = gameManager.effectOps.getAggregatedModifiers(player)
     const rangeModifiers = modifiers.filter((modifier) => modifier.stat === 'attackRange')
 
     expect(rangeModifiers).toHaveLength(1)
@@ -44,22 +44,22 @@ describe('GameManager — Technique.combatModifiers (+2 attackRange Pháp Tu)', 
   it('chưa equip tâm pháp nào → KHÔNG có bonus attackRange', () => {
     const gameManager = new GameManager()
 
-    gameManager.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
 
     const player = createDefaultPlayer()
 
     // Tụ Linh Quyết (tu luyện) không khai combatModifiers — nhưng equip
     // nó để chứng minh bonus chỉ đến từ tâm pháp CÓ khai field này.
-    gameManager.learnTechnique('tu_linh_quyet')
-    gameManager.equipTechnique('tu_linh_quyet')
+    gameManager.realmAdvanceOps.learnTechnique('tu_linh_quyet')
+    gameManager.realmAdvanceOps.equipTechnique('tu_linh_quyet')
 
     const rangeModifiers = gameManager
-      .getAggregatedModifiers(player)
+      .effectOps.getAggregatedModifiers(player)
       .filter((modifier) => modifier.stat === 'attackRange')
 
     expect(rangeModifiers).toHaveLength(0)
 
-    const stats = calculateStats(player.baseStats, gameManager.getAggregatedModifiers(player))
+    const stats = calculateStats(player.baseStats, gameManager.effectOps.getAggregatedModifiers(player))
 
     expect(stats.attackRange).toBe(5)
   })
@@ -67,9 +67,9 @@ describe('GameManager — Technique.combatModifiers (+2 attackRange Pháp Tu)', 
   it('bonus KHÔNG nằm trong tierEffects — không scale theo tier, không cộng hai lần', () => {
     const gameManager = new GameManager()
 
-    gameManager.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
 
-    gameManager.learnTechnique('dai_ngu_hanh_chan_quyet')
+    gameManager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_chan_quyet')
 
     const technique = gameManager.techniqueManager.get('dai_ngu_hanh_chan_quyet')!
 
@@ -78,15 +78,15 @@ describe('GameManager — Technique.combatModifiers (+2 attackRange Pháp Tu)', 
       expect('attackRange' in tierEffect).toBe(false)
     }
 
-    gameManager.equipTechnique('dai_ngu_hanh_chan_quyet')
+    gameManager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
 
     // Nạp nhiều lần kinh nghiệm (tier tăng) — modifier vẫn đúng MỘT entry
     // flat 2 qua aggregation path duy nhất.
-    gameManager.gainEquippedTechniqueInsight(1000)
+    gameManager.rewardOps.gainEquippedTechniqueInsight(1000)
 
     const player = createDefaultPlayer()
     const rangeModifiers = gameManager
-      .getAggregatedModifiers(player)
+      .effectOps.getAggregatedModifiers(player)
       .filter((modifier) => modifier.stat === 'attackRange')
 
     expect(rangeModifiers).toHaveLength(1)

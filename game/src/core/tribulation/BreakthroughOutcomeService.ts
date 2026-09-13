@@ -25,7 +25,7 @@
  * (probe evidence 2026-09-11). Core stays Pinia-free (structural typing).
  */
 import type { PlayerData } from '../player/Player'
-import type { GameManager } from '../game/GameManager'
+import type { TechniqueManager } from '../technique/TechniqueManager'
 import { advanceArtifactRealmLevel } from '../artifact/ArtifactProgression'
 import { ARTIFACT_ID_BY_CULTIVATION_PATH } from '../artifact/Artifact'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
@@ -57,12 +57,24 @@ export type BreakthroughPlayerWriter = PlayerData & {
   breakthrough: () => boolean
 }
 
+/**
+ * Narrow consequence contract (A6) - satisfied by
+ * GameManagerRealmAdvanceOps. Previously the whole GameManager.
+ */
+export interface BreakthroughConsequencesContext {
+  readonly techniqueManager: TechniqueManager
+  syncRealmPassive(player: PlayerData): void
+  syncRealmStatPassive(player: PlayerData): void
+  learnTechnique(techniqueId: string): boolean
+  equipTechnique(techniqueId: string): boolean
+}
+
 export class BreakthroughOutcomeService {
   /**
    * Attempt a minor-realm breakthrough and apply the full consequence set
    * on success. Failure performs no writes (domain breakthrough() guards).
    */
-  breakthrough(player: BreakthroughPlayerWriter, gameManager: GameManager): BreakthroughOutcomeResult {
+  breakthrough(player: BreakthroughPlayerWriter, context: BreakthroughConsequencesContext): BreakthroughOutcomeResult {
     const realmIdBefore = player.realmId
 
     // Domain authority for the level-up itself (canBreakthrough gate,
@@ -75,8 +87,8 @@ export class BreakthroughOutcomeService {
 
     // Realm passive sync runs after EVERY success (idempotent; same
     // sequencing the Vue composable used).
-    gameManager.syncRealmPassive(player)
-    gameManager.syncRealmStatPassive(player)
+    context.syncRealmPassive(player)
+    context.syncRealmStatPassive(player)
 
     let artifactTouched = false
     // Banked artifact tier release on every success (doc SS5.1) — the
@@ -94,11 +106,11 @@ export class BreakthroughOutcomeService {
       // evidence-based decision (A12). The technique grant duplicates
       // grantCultivationPathRealmReward's phap_tu branch by design.
       if (player.cultivationPath === 'phap_tu' && player.realmId === 'foundation_establishment') {
-        const inheritedInsight = gameManager.techniqueManager.getEquipped()?.insight ?? 0
-        gameManager.learnTechnique('dai_ngu_hanh_quyet_truc_co')
-        const nextTechnique = gameManager.techniqueManager.get('dai_ngu_hanh_quyet_truc_co')
+        const inheritedInsight = context.techniqueManager.getEquipped()?.insight ?? 0
+        context.learnTechnique('dai_ngu_hanh_quyet_truc_co')
+        const nextTechnique = context.techniqueManager.get('dai_ngu_hanh_quyet_truc_co')
         if (nextTechnique) nextTechnique.insight = Math.max(nextTechnique.insight ?? 0, inheritedInsight)
-        gameManager.equipTechnique('dai_ngu_hanh_quyet_truc_co')
+        context.equipTechnique('dai_ngu_hanh_quyet_truc_co')
       }
 
       if (player.realmId === 'foundation_establishment' && !player.artifact) {

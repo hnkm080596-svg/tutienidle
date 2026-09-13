@@ -103,7 +103,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     expect(session).toBeDefined()
     expect(session.kind).toBe('tribulation')
 
-    const trib = gameManager.getActiveTribulation()!
+    const trib = gameManager.tribulationDirector.getState()!
     expect(trib).toBeDefined()
     expect(trib.state).toBe('ongoing')
 
@@ -112,16 +112,16 @@ describe('Tribulation routing integration (Task 11)', () => {
     const strikesBefore = trib.lightningStrikesTaken
 
     // Advance 30 seconds while held: nothing changes!
-    gameManager.update(30)
+    gameManager.tickOps.update(30)
 
-    const tribDuringHold = gameManager.getActiveTribulation()!
+    const tribDuringHold = gameManager.tribulationDirector.getState()!
     expect(tribDuringHold.hp).toBe(hpBefore)
     expect(tribDuringHold.questionSecondsLimit).toBe(questionLimit)
     expect(tribDuringHold.lightningStrikesTaken).toBe(strikesBefore)
     expect(tribDuringHold.state).toBe('ongoing')
 
     // Answering question while held is rejected
-    expect(gameManager.answerTribulationQuestion(0)).toBe(false)
+    expect(gameManager.tribulationDirector.answerQuestion(0)).toBe(false)
 
     // Reveal and release
     phaserAdapter.reportReady({
@@ -135,7 +135,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     expect(coordinator.getSnapshot().currentRoute).toBe('tribulation')
 
     // Now answering question is accepted
-    expect(gameManager.answerTribulationQuestion(0)).toBe(true)
+    expect(gameManager.tribulationDirector.answerQuestion(0)).toBe(true)
   })
 
   it('rejected breakthrough attempt during battle does not unequip player gear', async () => {
@@ -145,7 +145,7 @@ describe('Tribulation routing integration (Task 11)', () => {
       setEquipmentModifiers: vi.fn(),
     } as any
 
-    const unequipSpy = vi.spyOn(gameManager, 'unequipAllEquipment')
+    const unequipSpy = vi.spyOn(gameManager.equipmentOps, 'unequipAllEquipment')
 
     // Simulate active battle
     vi.spyOn(gameManager, 'getBattle').mockReturnValue({
@@ -167,7 +167,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     gameManager.setPresentationMode('headless')
     gameManager.startTribulation(player, calculateStats(player.baseStats, []), 'qi_refining')
 
-    const active = gameManager.getActiveTribulation()!
+    const active = gameManager.tribulationDirector.getState()!
     expect(active).toBeDefined()
 
     // Force victory
@@ -184,7 +184,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     // First check settles
     const firstCheck = checkTribulationOutcomeAction(playerStoreMock, gameManager, presentation)
     expect(firstCheck).toBe(true)
-    expect(gameManager.getActiveTribulation()).toBeNull()
+    expect(gameManager.tribulationDirector.getState()).toBeNull()
 
     // Second check is safe no-op
     const secondCheck = checkTribulationOutcomeAction(playerStoreMock, gameManager, presentation)

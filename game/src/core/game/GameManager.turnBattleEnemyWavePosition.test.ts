@@ -25,7 +25,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
 
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const mob = defineEnemy({
       id: 'wave_position_mob',
@@ -58,8 +58,8 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
       spawnIntervalSeconds: 0,
     }
 
-    gameManager.registerEnemyTemplates([mob])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([mob])
+    gameManager.catalogOps.registerStages([stage])
 
     expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
     expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
@@ -67,7 +67,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 999 }, [])
 
-    expect(gameManager.startStage(player, stats, stage)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
 
     // id -> x (column) tại lần đầu thấy id đó trong turn battle.
     const seenAtSpawn = new Map<string, number>()

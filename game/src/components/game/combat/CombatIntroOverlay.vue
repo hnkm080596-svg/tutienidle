@@ -23,7 +23,7 @@ const visible = computed(() => {
 
 // Same zone/stage accessor CombatTopBar.vue uses - no second source of
 // truth for stage/zone naming (plan Task 4 interface requirement).
-const stage = computed(() => ui.selectedStageId ? gameManager.getStage(ui.selectedStageId) : undefined)
+const stage = computed(() => ui.selectedStageId ? gameManager.catalogOps.getStage(ui.selectedStageId) : undefined)
 
 const zoneName = computed(() => {
   if (!ui.selectedZoneId) {

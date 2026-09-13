@@ -31,15 +31,15 @@ describe('boss stage — GameManager.buildTurnBattle wave config never allows a 
       spawnIntervalSeconds: 0,
     }
 
-    gameManager.registerEnemyTemplates([bossTemplate, regularTemplate])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([bossTemplate, regularTemplate])
+    gameManager.catalogOps.registerStages([stage])
 
     const player = createDefaultPlayer()
     const stats = calculateStats(player.baseStats, [])
 
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
 
     expect(gameManager.getTurnBattle()!.wave?.totalEnemyCount).toBe(1)
   })

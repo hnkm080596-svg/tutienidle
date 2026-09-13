@@ -48,8 +48,8 @@ function harness(stage: Stage = FARM_STAGE) {
   player.perfectClearStageIds.push(stage.id)
   player.perfectClearSeconds[stage.id] = 100 // cycleSeconds = 50
 
-  gameManager.registerEnemyTemplates([DUMMY])
-  gameManager.registerStages([stage])
+  gameManager.catalogOps.registerEnemyTemplates([DUMMY])
+  gameManager.catalogOps.registerStages([stage])
   gameManager.setActivePlayer(player)
 
   return { gameManager, player }
@@ -66,14 +66,14 @@ describe('GameManager — auto-farm start/stop exclusivity', () => {
 
     player.perfectClearStageIds.length = 0
 
-    expect(gameManager.startAutoFarm(player, 'farm_stage')).toBe(false)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, 'farm_stage')).toBe(false)
     expect(player.autoFarmStage).toBeNull()
   })
 
   it('startAutoFarm thành công với stage đã Hoàn Mỹ + đặt autoFarmStage', () => {
     const { gameManager, player } = harness()
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
     expect(player.autoFarmStage?.stageId).toBe(FARM_STAGE.id)
     expect(typeof player.autoFarmStage?.lastCheckedMs).toBe('number')
   })
@@ -82,20 +82,20 @@ describe('GameManager — auto-farm start/stop exclusivity', () => {
     const { gameManager, player } = harness()
     const stats = calculateStats({ ...player.baseStats }, [])
 
-    gameManager.startStage(player, stats, FARM_STAGE, false)
+    gameManager.turnBattleOps.startStage(player, stats, FARM_STAGE, false)
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(false)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(false)
   })
 
   it('stopAutoFarm clear autoFarmStage + giải phóng StageManager slot', () => {
     const { gameManager, player } = harness()
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
-    gameManager.stopAutoFarm(player)
+    gameManager.turnBattleOps.autoFarmOps.stopAutoFarm(player)
 
     expect(player.autoFarmStage).toBeNull()
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
   })
 })
 
@@ -106,13 +106,13 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
 
     const { gameManager, player } = harness()
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
     // Trôi 60s = 1 full cycle (cycleSeconds 50 → half 50s? KHÔNG —
     // spec: cycle = perfectClearSeconds/2 = 50s → 60s = 1 cycle + 10s dư).
     vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
 
-    gameManager.update(0.1)
+    gameManager.tickOps.update(0.1)
 
     // 1 cycle hoàn thành → reward roll cho totalEnemyCount quái × spiritStone 5.
     const summary = gameManager.getBattleRewardSummary()
@@ -128,11 +128,11 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
 
     const { gameManager, player } = harness()
 
-    gameManager.startAutoFarm(player, FARM_STAGE.id)
+    gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)
 
     vi.setSystemTime(new Date('2026-09-04T10:05:00Z'))
 
-    gameManager.update(0.1)
+    gameManager.tickOps.update(0.1)
 
     expect(gameManager.getTurnBattle()).toBeNull()
   })
@@ -149,11 +149,11 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
 
     const { gameManager, player } = harness(TAGGED_FARM_STAGE)
 
-    expect(gameManager.startAutoFarm(player, TAGGED_FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, TAGGED_FARM_STAGE.id)).toBe(true)
 
     // 60s elapsed = 1 full cycle (cycle = perfectClearSeconds/2 = 50s).
     vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
-    gameManager.update(0.1)
+    gameManager.tickOps.update(0.1)
 
     expect(pickSpy).toHaveBeenCalled()
     for (const result of pickSpy.mock.results) {

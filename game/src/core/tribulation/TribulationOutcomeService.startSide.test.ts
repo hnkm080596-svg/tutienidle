@@ -25,7 +25,7 @@ describe('TribulationOutcomeService — start-side prep parity', () => {
 
   it('startTribulationPrepared: unequip-all + modifier sync BEFORE the session opens', () => {
     const gameManager = new GameManager()
-    gameManager.registerPills(pills)
+    gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
     player.realmId = 'qi_refining'
@@ -45,7 +45,7 @@ describe('TribulationOutcomeService — start-side prep parity', () => {
       gameManager.equipmentSlotManager,
       gameManager.affixRegistry,
     )
-    player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+    player.setEquipmentModifiers(gameManager.equipmentOps.getEquipmentModifiers())
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(true)
 
     const service = new TribulationOutcomeService()
@@ -62,7 +62,7 @@ describe('TribulationOutcomeService — start-side prep parity', () => {
     expect(gameManager.equipmentBag.getEquipped()).toHaveLength(0)
     // Modifier sync happened at START time (before any outcome exists).
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(false)
-    expect(gameManager.getActiveTribulation()).not.toBeNull()
+    expect(gameManager.tribulationDirector.getState()).not.toBeNull()
   })
 
   it('startTribulationPrepared fails cleanly when the domain refuses (unknown realm, no state change)', () => {
@@ -81,6 +81,6 @@ describe('TribulationOutcomeService — start-side prep parity', () => {
     )
 
     expect(started).toBe(false)
-    expect(gameManager.getActiveTribulation()).toBeNull()
+    expect(gameManager.tribulationDirector.getState()).toBeNull()
   })
 })

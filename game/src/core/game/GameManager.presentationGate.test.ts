@@ -79,11 +79,11 @@ function startGatedStage(gameManager: GameManager): void {
   const stage = stageFixture('gate_stage')
   stage.enemyPool = [{ enemyId: enemy.id, weight: 1 }]
 
-  gameManager.registerEnemyTemplates([enemy])
-  gameManager.registerStages([stage])
+  gameManager.catalogOps.registerEnemyTemplates([enemy])
+  gameManager.catalogOps.registerStages([stage])
   gameManager.setActivePlayer(player)
 
-  if (!gameManager.startStage(player, stats, stage, false)) {
+  if (!gameManager.turnBattleOps.startStage(player, stats, stage, false)) {
     throw new Error('startGatedStage fixture failed to start its stage')
   }
 }
@@ -122,8 +122,8 @@ function battleReady(): { gameManager: GameManager; combatSource: ManualClockSou
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   const player = createPlaybackPlayer()
-  gameManager.registerSkillTemplates([createBasicSkill()])
-  gameManager.learnSkill('basic_test')
+  gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+  gameManager.progressionOps.learnSkill('basic_test')
   gameManager.skillSystem.equipToSlot('basic_test', 0)
   gameManager.startBattle(player, defineEnemy({
     id: 'playback_dummy', name: 'Playback Dummy', level: 1, realmId: 'mortal', lane: 'ground',
@@ -190,8 +190,8 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     })
     const stage = stageFixture('session_stage')
     stage.enemyPool = [{ enemyId: enemy.id, weight: 1 }]
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
     gameManager.setPresentationMode(mode)
 
@@ -203,7 +203,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     const events: unknown[] = []
     gameManager.eventBus.on('presentation_session_started', (e) => events.push(e))
 
-    const started = gameManager.startStage(player, stats, stage, false)
+    const started = gameManager.turnBattleOps.startStage(player, stats, stage, false)
     expect(started).toBe(true)
 
     const session = gameManager.getCurrentPresentationSession()!
@@ -237,7 +237,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
 
   it('headless startStage allocates session without being held', () => {
     const { gameManager, player, stats, stage, combatSource } = createStartedManager('headless')
-    expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
 
     const session = gameManager.getCurrentPresentationSession()!
     expect(session).toBeDefined()
@@ -256,9 +256,9 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
 
     // Registered stage with level requirement above player level fails
     const lockedStage: Stage = { ...stage, id: 'locked_stage', requiredRealmId: 'mortal', requiredRealmLevel: 99 }
-    gameManager.registerStages([lockedStage])
+    gameManager.catalogOps.registerStages([lockedStage])
 
-    const started = gameManager.startStage(player, stats, lockedStage, false)
+    const started = gameManager.turnBattleOps.startStage(player, stats, lockedStage, false)
     expect(started).toBe(false)
 
     expect(gameManager.getCurrentPresentationSession()).toBeNull()
@@ -267,7 +267,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
 
   it('fresh startStage increments session ID and invalidates old hold tokens', () => {
     const { gameManager, player, stats, stage } = createStartedManager('interactive')
-    gameManager.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stats, stage, false)
     const session1 = gameManager.getCurrentPresentationSession()!
     const port = gameManager.getPresentationPort()
     const hold1 = port.hold(session1)!
@@ -276,7 +276,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     expect(gameManager.abandonBattle()).toBe(true)
 
     // Fresh start on same manager
-    gameManager.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stats, stage, false)
     const session2 = gameManager.getCurrentPresentationSession()!
 
     expect(session2.sessionId).toBeGreaterThan(session1.sessionId)
@@ -286,7 +286,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
 
   it('abandonBattle invalidates the current session', () => {
     const { gameManager, player, stats, stage } = createStartedManager('interactive')
-    gameManager.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stats, stage, false)
     const session = gameManager.getCurrentPresentationSession()!
     expect(session).toBeDefined()
 
@@ -305,8 +305,8 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     })
     const stage = stageFixture('session_stage_nested')
     stage.enemyPool = [{ enemyId: enemy.id, weight: 1 }]
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
 
     const events: unknown[] = []
@@ -318,7 +318,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     events.length = 0
 
     // startStage has nested startBattle call, but must publish exactly ONE session
-    gameManager.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stats, stage, false)
     expect(events).toHaveLength(1)
   })
 })

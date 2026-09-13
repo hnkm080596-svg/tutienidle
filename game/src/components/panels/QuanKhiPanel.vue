@@ -29,7 +29,7 @@ const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
 const cooldownSeconds = computed(() => {
   stateVersion.value
-  return gameManager.getTribulationCooldownSeconds()
+  return gameManager.tribulationDirector.getCooldownSeconds()
 })
 
 // Liệt kê TẤT CẢ path trong CULTIVATION_PATH_KITS thay vì hardcode 1 —
@@ -65,7 +65,7 @@ function confirmChoosePath() {
   const kit = CULTIVATION_PATH_KITS[pathId]
 
   const realmIdBefore = player.realmId
-  if (gameManager.chooseCultivationPath(pathId, player.$state)) {
+  if (gameManager.realmAdvanceOps.chooseCultivationPath(pathId, player.$state)) {
     bumpState()
 
     // Nghi Lễ Nhập Môn — chọn path VỪA LÀ hành động đột phá Phàm Nhân

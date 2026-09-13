@@ -59,7 +59,7 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
     player.selectedTalentIds = ['pha_giap']
     player.realmId = 'qi_refining'
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const stats = calculateStats(player.baseStats, player.modifiers)
 
@@ -91,7 +91,7 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
     player.selectedTalentIds = ['pha_giap']
     player.realmId = 'qi_refining'
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const stats = calculateStats(player.baseStats, player.modifiers)
 
@@ -118,7 +118,7 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
     player.selectedTalentIds = ['pha_giap']
     player.realmId = 'qi_refining'
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const stats = calculateStats(player.baseStats, player.modifiers)
 
