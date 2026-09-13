@@ -1,5 +1,5 @@
 // TranPhapCombatPreviewScene (Battlefield Slot spec, 2026-09-06) — thay
-// TranPhapPreviewScene (2026-09-06, Hỗn Độn Trận visual test tooling):
+// TranPhapPreviewScene (2026-09-06, formation combat preview tooling):
 // scene Phaser RIÊNG (Phaser.Game riêng, TextureManager riêng — không có
 // nguy cơ đụng key dù dùng lại ĐÚNG PLACEHOLDER_SHEET_KEY), nhưng giờ
 // implements CombatGridViewHost và dùng ĐÚNG CombatGridView mà combat

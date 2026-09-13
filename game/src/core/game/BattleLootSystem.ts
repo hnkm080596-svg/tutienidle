@@ -173,11 +173,11 @@ export class BattleLootSystem {
   }
 
   /**
-   * Nhiều quái có thể chết cùng lúc/liên tục (wave) — quét TOÀN BỘ
+   * Nhiều quái có thể chết cùng lúc/liên tục (wave) -- quét TOÀN BỘ
    * `enemies` mỗi tick, cấp thưởng cho con nào vừa chết mà chưa
    * xử lý (rewardGranted là cờ chống lặp thưởng), rồi dọn khỏi mảng
    * in-place. Không còn gate theo battle.state === 'victory' như model
-   * 1v1 cũ — quái chết giữa chừng lúc battle vẫn 'fighting' vẫn phải
+   * 1v1 cũ -- quái chết giữa chừng lúc battle vẫn 'fighting' vẫn phải
    * cấp thưởng ngay, không đợi cả trận kết thúc.
    *
    * `healTarget` (F3, 2026-09-13) is the entity heal-on-kill applies to:
@@ -201,7 +201,7 @@ export class BattleLootSystem {
       // ngoài nhánh receiver để kill nào cũng hồi, kể cả trận không loot.
       // Đi qua combatSystem.applyHealing() để phát 'entity_vitals_changed'
       // (HUD máu cập nhật), không mutate thẳng currentHp như trước.
-      // healTarget = null là opt-out có chủ đích (auto-farm idle).
+      // healTarget = null is a deliberate opt-out (auto-farm idle).
       const healOnKillPercent = this.player
         ? getHealOnKillMaxHpPercent(this.player.selectedTalentIds)
         : 0
@@ -397,9 +397,9 @@ export class BattleLootSystem {
       this.deps.enemySystem.despawn(battleEnemy.entity.id)
     }
 
-    // Dọn quái đã chết + đã cấp thưởng khỏi mảng — tránh phình vô hạn
+    // Dọn quái đã chết + đã cấp thưởng khỏi mảng -- tránh phình vô hạn
     // qua nhiều wave trong cùng 1 stage. In-place splice: the same
-    // postcondition the old `battle.enemies = filter(alive)` gave — sau
+    // postcondition the old `battle.enemies = filter(alive)` gave -- sau
     // bước này `enemies` chỉ còn quái đang sống, nên "còn quái không" =
     // check .length.
     for (let i = enemies.length - 1; i >= 0; i--) {

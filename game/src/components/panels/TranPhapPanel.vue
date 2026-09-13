@@ -214,7 +214,7 @@ function close() {
   ui.closeHomeOverlays()
 }
 
-// --- Hỗn Độn Trận visual test tooling (2026-09-06) --------------------
+// --- Formation combat preview tooling (2026-09-06) --------------------
 // Lớp hiển thị Phaser (TranPhapPreviewScene, Task 4) vẽ NGAY BÊN DƯỚI
 // lưới CSS/overlay kéo-thả ở trên — thuần hiển thị (sprite animate tại
 // từng ô đã gán), KHÔNG phải drop target. Overlay HTML phía trên vẫn là

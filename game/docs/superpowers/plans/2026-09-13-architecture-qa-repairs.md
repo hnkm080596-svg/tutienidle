@@ -46,32 +46,32 @@ scene never deactivated → soft-lock until reload.
 
 ### Tasks
 
-- [ ] **1.1 Wire the presentation object through the real call site.** In
+- [x] **1.1 Wire the presentation object through the real call site.** In
   `App.vue` `tick()`, change the call to
   `checkTribulationOutcomeAction(player, gameManager, presentation)`
   (`presentation` already exists at App.vue:167). No other behavior change —
   the `presentation` branch already implements the intended contract
   (behind-curtain outcome + route home + next-tick retry on rejection).
 
-- [ ] **1.2 Confirm the audit repro flips green.**
+- [x] **1.2 Confirm the audit repro flips green.**
   `npx vitest run src/presentation/tribulationRouting.test.ts` — the
   `REPRO: production outcome check …` case must now pass, proving the exact
   production signature routes home. Keep the test (rename `REPRO:` prefix to a
   normal name if preferred, but do not delete).
 
-- [ ] **1.3 Add a static wiring guard (P13 class).** New
+- [x] **1.3 Add a static wiring guard (P13 class).** New
   `tests/architecture/tribulationOutcomeWiring.test.ts`, modeled on
   `paidRandomContract.test.ts`: read `src/App.vue` source and assert the
   `checkTribulationOutcomeAction(` call site passes a third argument
   (regex on the call expression, comment-stripped). This is the cheap guard
   that would have caught the regression.
 
-- [ ] **1.4 Retire the dead composable path.** `useTribulation()` returns
+- [x] **1.4 Retire the dead composable path.** `useTribulation()` returns
   `checkTribulationOutcome` with zero callers — remove that key from the
   returned object (keep `triggerBreakthrough`). Grep first to prove no
   consumer exists.
 
-- [ ] **1.5 Manual sanity (optional, P14):** run the app, force a tribulation
+- [x] **1.5 Manual sanity (optional, P14):** run the app, force a tribulation
   outcome via the debug seam, confirm return to home. If no fast-forward seam
   exists, defer to Wave 4's e2e spec — do not add debug surface here.
 
@@ -87,7 +87,7 @@ persisted but never shape-validated.
 
 ### Tasks
 
-- [ ] **2.1 Align the online guard with the offline one.** In `tickAutoFarm`,
+- [x] **2.1 Align the online guard with the offline one.** In `tickAutoFarm`,
   replace the `undefined`-only check with the same predicate
   `settleAutoFarmOffline` uses:
   `cycleSeconds === undefined || !(cycleSeconds > 0) || !Number.isFinite(cycleSeconds)`
@@ -95,14 +95,14 @@ persisted but never shape-validated.
   cleanly with it — a duplicated one-liner is acceptable (A9 prefers a shared
   rule; weigh readability).
 
-- [ ] **2.2 Also guard `autoFarm.lastCheckedMs`** (same block): if not finite
+- [x] **2.2 Also guard `autoFarm.lastCheckedMs`** (same block): if not finite
   or negative, reset to `Date.now()` — a NaN marker must recover, not freeze
   the feature silently.
 
-- [ ] **2.3 Confirm both audit repros flip green.**
+- [x] **2.3 Confirm both audit repros flip green.**
   `npx vitest run src/core/game/GameManager.autoFarmAdversarial.test.ts`.
 
-- [ ] **2.4 (optional, defense-in-depth) Add `perfectClearSeconds` value
+- [x] **2.4 (optional, defense-in-depth) Add `perfectClearSeconds` value
   validation to `saveShapeValidation.ts`**: record must be a finite positive
   number per stage id, and the id should exist in `perfectClearStageIds`-shape
   rules already present. Only if the validator already has a numeric-record
@@ -127,7 +127,7 @@ Order inside the wave is free; each item is independent.
   behavior delta: with heal-on-kill talent, auto-farm stops emitting phantom
   vitals events for a dead enemy — confirm no test asserts those events.
 
-- [ ] **3.2 F4 — formation commit through a validating owner.** Add
+- [x] **3.2 F4 — formation commit through a validating owner.** Add
   `gameManager.<ops>.setFormationLoadout(player, loadout)` (home:
   `GameManagerTurnBattleOps` or a small dedicated ops — follow existing ops
   naming) that validates: formation id exists in `TRAN_PHAP_FORMATIONS`, every
@@ -139,7 +139,7 @@ Order inside the wave is free; each item is independent.
   reject out-of-pattern cell, dedupe, accept a legal loadout, stale-draft
   resync.
 
-- [ ] **3.3 Retire dead presentation residue** (each removal needs a
+- [x] **3.3 Retire dead presentation residue** (each removal needs a
   consumer-absence grep recorded in the commit message):
   - `syncLegacyBattleState` dep + call sites (`CombatAnimationRuntime.ts:294,323`,
     `GameManagerTurnBattlePresentationOps.ts:73`) — remove the dep entirely.
@@ -152,18 +152,18 @@ Order inside the wave is free; each item is independent.
 
 ## Wave 4 — Coverage gaps (prevents this class of escape)
 
-- [ ] **4.1 Tribulation e2e spec** (`tests/e2e/tribulation-flow.spec.ts`):
+- [x] **4.1 Tribulation e2e spec** (`tests/e2e/tribulation-flow.spec.ts`):
   boot → create character → open breakthrough flow → enter tribulation →
   fast-forward to outcome (existing debug hooks if any; otherwise a minimal,
   clearly-marked dev-only seam — scope carefully) → assert route returns home
   and home chrome is visible. This is the P13 wiring oracle F1 lacked.
-- [ ] **4.2 Repair `standing-slot-panel.spec.ts`** (pre-existing rot): the spec
+- [x] **4.2 Repair `standing-slot-panel.spec.ts`** (pre-existing rot): the spec
   waits for a removed test-only "Hỗn Độn Trận" formation and a `__grant-test`
   button. Either restore a dev-gated test formation + grant hook, or rewrite
   the spec against the real formation with the most open cells and real
   companions via a save-seed helper. Choose whichever is smaller; the goal is
   a working drag-drop oracle, not the old fixture.
-- [ ] **4.3 i18n key parity guard**: test that every `t('...')`/template key
+- [x] **4.3 i18n key parity guard**: test that every `t('...')`/template key
   used in `src/**` exists in both `vi` and `en` locale files (the e2e console
   showed `panels.stageSelect.*`, `panels.wheel.aria.group`,
   `onboarding.auth.eyebrow` missing in both). Fix the currently-missing keys

@@ -164,7 +164,6 @@ export function checkTribulationOutcomeAction(
     return true
   }
 
-
   if (presentation) {
     // Every visible effect of the outcome (realm/penalty writes reflecting
     // in home UI, announcement overlay, standalone panel, tribulation exit)

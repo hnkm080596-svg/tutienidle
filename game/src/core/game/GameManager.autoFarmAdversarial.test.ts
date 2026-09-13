@@ -100,7 +100,7 @@ function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
 }
 
 describe('Adversarial — online auto-farm tick invariants', () => {
-  it('REPRO: cycleSeconds = 0 (malformed save) -> should roll ZERO cycles, but loops unboundedly', () => {
+  it('rejects cycleSeconds = 0 without rolling reward cycles', () => {
     const processDefeatedEnemies = vi.fn(() => {
       // Safety cap so the buggy path terminates the test instead of hanging:
       // elapsedMs / 0 = Infinity completedCycles, so the loop never stops on
@@ -119,7 +119,7 @@ describe('Adversarial — online auto-farm tick invariants', () => {
     expect(processDefeatedEnemies.mock.calls.length).toBe(0)
   })
 
-  it('REPRO: cycleSeconds = NaN (malformed save) -> lastCheckedMs poisoned to NaN, auto-farm dead forever', () => {
+  it('rejects non-finite cycleSeconds without poisoning lastCheckedMs', () => {
     const processDefeatedEnemies = vi.fn()
     const ops = buildAutoFarmOps(processDefeatedEnemies)
     const player = createDefaultPlayer()
