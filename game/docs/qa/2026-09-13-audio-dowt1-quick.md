@@ -75,3 +75,9 @@ No `Confirmed` defects. Notes:
 ## Pre-existing Failures
 
 None.
+
+---
+
+*Live-browser follow-up (main checkout, Edge 140, localhost:5196): guest boot → character creation → settings panel — "Âm Thanh" section renders; toggle off→on works (volume slider disables when off); `settings-audio-volume` fill(30) → `localStorage["tutienidle.audio.v1"] = {"enabled":true,"masterVolume":0.3}`; 0 console errors. Audible output not verifiable headlessly — residual is perceptual QA on a real user machine.*
+
+*Verdict updated: PASS WITH GAPS (UI wiring + persistence live-verified; audible output check deferred to real-device play). Suggested next stage: live play with audio on, then the final P6 adversarial deep QA at release-readiness.*
