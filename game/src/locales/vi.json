@@ -100,6 +100,10 @@
         "unpurchasedCost": "{cost} Cảm Ngộ",
         "upgradeCost": "Nâng cấp · {cost} Cảm Ngộ",
         "otherBranch": "Khác"
+      },
+      "branchLabels": {
+        "lapDao": "Lập Đạo",
+        "thuan": "Thuần · {element}"
       }
     },
     "skillPath": {
