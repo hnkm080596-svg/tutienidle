@@ -46,7 +46,7 @@ const emit = defineEmits<{
 
 const activeOption = computed(() => props.sortOptions.find((option) => option.value === props.activeMode))
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const sortButtonLabel = computed(() => {
   if (!activeOption.value || props.activeMode === 'default') {

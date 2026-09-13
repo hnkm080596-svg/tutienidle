@@ -13,7 +13,7 @@ import type { QuestProgress } from '@/core/quest/QuestProgress'
 const ui = useUiStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 interface QuestRow {
   quest: Quest

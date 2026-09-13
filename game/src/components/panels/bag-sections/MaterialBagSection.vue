@@ -31,7 +31,7 @@ import type { BagCell } from './BagCell'
 import type { Material, MaterialCategory } from '@/core/material/Material'
 import type { GradedItemTooltipContent } from '@/composables/useTooltip'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 // Thứ tự cố định cho sort theo Phân loại/Nguồn (asc).
 const CATEGORY_ORDER: MaterialCategory[] = [

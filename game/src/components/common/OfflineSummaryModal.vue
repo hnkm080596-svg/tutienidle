@@ -26,7 +26,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ close: [] }>()
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const panelRef = ref<HTMLElement | null>(null)
 useDialogFocus(panelRef, ref(true), { onEscape: () => emit('close') })

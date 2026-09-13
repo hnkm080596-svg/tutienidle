@@ -28,7 +28,7 @@ import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import GameButton from '@/components/common/GameButton.vue'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const player = usePlayerStore()
 

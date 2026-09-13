@@ -38,7 +38,7 @@ const RETURN_COUNTDOWN_SECONDS = 10
 
 const gameManager = useGameManager()
 const ui = useUiStore()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 const { startBattle, exitCombatToHome } = useBattleActions()
 
 const summary = computed(() => gameManager.getBattleRewardSummary())

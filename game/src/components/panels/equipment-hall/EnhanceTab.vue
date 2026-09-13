@@ -26,7 +26,7 @@ import { MAX_SLOT_ENHANCE_LEVEL } from '@/core/equipment/EnhanceCurve'
 import { useEquippedRows } from './useEquippedRows'
 import { formatAffixValue } from './equipmentHallDisplay'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const player = usePlayerStore()
 

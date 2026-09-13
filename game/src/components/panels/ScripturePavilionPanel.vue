@@ -11,7 +11,7 @@ import { useUiStore } from '@/stores/ui'
 
 const ui = useUiStore()
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const tabs = computed(() => [
   { id: 'technique' as const, label: t('panels.scripture.tabs.technique') },

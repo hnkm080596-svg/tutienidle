@@ -12,7 +12,7 @@ withDefaults(defineProps<Props>(), { isLast: false })
 
 defineEmits<{ (e: 'next'): void; (e: 'skip'): void }>()
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 </script>
 
 <template>

@@ -5,7 +5,7 @@ import MenuBackground from './MenuBackground.vue'
 import MenuLogo from './MenuLogo.vue'
 import MenuButton from './MenuButton.vue'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const emit = defineEmits<{
   start: []

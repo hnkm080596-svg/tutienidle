@@ -14,7 +14,7 @@ import ThemeSwitcher from '@/components/settings/ThemeSwitcher.vue'
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const notification = useNotificationStore()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá bằng
 // pending-action: mở ConfirmModal, hành động thật chỉ chạy khi

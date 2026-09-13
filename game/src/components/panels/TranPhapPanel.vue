@@ -48,7 +48,7 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const selectedFormationId = ref<string | null>(player.formationLoadout?.formationId ?? null)
 

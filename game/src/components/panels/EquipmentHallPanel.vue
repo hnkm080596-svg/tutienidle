@@ -32,7 +32,7 @@ import './equipment-hall/qi-hall.css'
 // roll áp thẳng không cho xem trước rồi mới quyết định). Cường Hóa là
 // phép tính XÁC ĐỊNH (không random) nên cột "sau" chỉ hiển thị kết quả
 // tính trước, không cần cơ chế giữ/bỏ.
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const TABS = [
   { id: 'enhance', label: t('panels.equipmentHall.tabs.enhance') },

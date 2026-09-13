@@ -22,7 +22,7 @@ import NotificationBadge from '@/components/common/NotificationBadge.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const stageActive = useStageActive()
 

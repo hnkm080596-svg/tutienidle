@@ -25,7 +25,7 @@ const COUNTDOWN_SECONDS = 3
 const gameManager = useGameManager()
 const ui = useUiStore()
 const player = usePlayerStore()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 const { startBattle, exitCombatToHome } = useBattleActions()
 
 const summary = computed(() => gameManager.getBattleRewardSummary())
