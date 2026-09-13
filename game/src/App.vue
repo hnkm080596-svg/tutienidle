@@ -18,6 +18,8 @@ import { CompositeRenderer, createVueRouteAdapter } from './presentation/VueRout
 import { GamePresentationCoordinator } from './presentation/GamePresentationCoordinator'
 import { createGamePresentation } from './presentation/createGamePresentation'
 import { bindPresentationActive } from './presentation/bindPresentationActive'
+import { bindCombatAudio } from './presentation/audio/combatAudioBinding'
+import { useAudioStore } from './stores/audio'
 import { RafClockSource } from './presentation/clock/RafClockSource'
 import { MainProcessClockSource } from './presentation/clock/MainProcessClockSource'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
@@ -176,6 +178,15 @@ const routeAdapter = createVueRouteAdapter(coordinator, compositeRenderer)
 // combat session is attached. CombatScene must never assert this for
 // itself (self-report is the pattern the coordinator design rejected).
 const unbindPresentationActive = bindPresentationActive(coordinator, gameManager)
+
+// Audio: domain combat events -> SFX (observation only, A7). Bound at module
+// scope next to the other event-bus bindings; store handles enabled/volume.
+const unbindCombatAudio = bindCombatAudio(gameManager.eventBus)
+
+// Autoplay policy: unlock AudioContext on the first pointer gesture anywhere
+// (Phaser canvas clicks never reach GameButton). `once` keeps it one-shot.
+const unlockAudioOnFirstGesture = () => useAudioStore().unlock()
+window.addEventListener('pointerdown', unlockAudioOnFirstGesture, { once: true })
 
 provide(PHASER_SCENE_ADAPTER_KEY, phaserSceneAdapter)
 provide(ASSET_BUNDLE_MANAGER_KEY, assetBundleManager)
@@ -619,6 +630,8 @@ onUnmounted(() => {
   presentation.dispose()
   routeAdapter.dispose()
   unbindPresentationActive()
+  unbindCombatAudio()
+  window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
   phaserSceneAdapter.dispose()
   assetBundleManager.dispose()
 })

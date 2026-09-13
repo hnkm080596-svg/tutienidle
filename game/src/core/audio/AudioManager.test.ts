@@ -1,16 +1,16 @@
-// AudioManager.test.ts — unit tests cho AudioManager (Tone.js-based).
+// AudioManager.test.ts — unit tests for AudioManager (Tone.js-based).
 //
-// Mock Tone.js để verify:
-//   1. unlock() gọi Tone.start(), chờ Reverb.ready rồi mới bật unlocked.
-//   2. play(id) gọi đúng triggerAttackRelease signature theo engine:
+// Tone.js is mocked to verify:
+//   1. unlock() calls Tone.start(), awaits Reverb.ready, then sets unlocked.
+//   2. play(id) uses the correct triggerAttackRelease signature per engine:
 //      - Monophonic (metal/fm/am/membrane): (note, duration, time?, velocity?)
-//      - NoiseSynth: (duration, time?, velocity?) — KHÔNG có note!
-//   3. Cooldown per-id: play cùng id 2 lần sát nhau → chỉ phát 1 lần
-//      (chống spam khi combat events bắn nhiều lần mỗi tick).
-//   4. Context suspended → play() gọi resume() (tab-switch recovery).
-//   5. setEnabled(false) → mute. setMasterVolume clamp [0,1].
-//   6. initChain fail giữa chừng → dispose node đã tạo, retry không leak.
-//   7. resetAudioManagerForTest() dispose mọi node.
+//      - NoiseSynth: (duration, time?, velocity?) — NO note!
+//   3. Per-id cooldown: playing the same id twice in quick succession fires
+//      once (anti-spam when combat events fire many times per tick).
+//   4. Suspended context → play() calls resume() (tab-switch recovery).
+//   5. setEnabled(false) → mute. setMasterVolume clamps to [0,1].
+//   6. initChain failing midway disposes created nodes; retry does not leak.
+//   7. resetAudioManagerForTest() disposes every node.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -45,11 +45,11 @@ vi.mock('tone', () => {
 
   const __meta = {
     synths: [] as ReturnType<typeof createSynthFields>[],
-    /** getContext() trả lazy singleton — test đổi .state để mô phỏng tab suspend. */
+    /** getContext() returns a lazy singleton — tests flip .state to simulate a suspended tab. */
     ctx: null as null | { state: string; resume: ReturnType<typeof vi.fn> },
-    /** makeNode() throw khi đã tạo đủ số node này (mô phỏng init fail giữa chừng). */
+    /** makeNode() throws once this many nodes exist (simulates mid-init failure). */
     failCreateAfter: null as null | number,
-    /** Nếu set, Reverb.ready = promise này (test giữ pending để tạo race). */
+    /** When set, Reverb.ready = this promise (tests hold it pending to create a race). */
     reverbReady: null as null | Promise<void>,
   }
 
@@ -85,7 +85,7 @@ vi.mock('tone', () => {
       }
       return __meta.ctx
     }),
-    // function thường (không arrow) để `new X()` hoạt động.
+    // Plain functions (not arrows) so `new X()` works.
     MetalSynth: vi.fn(function () { return makeNode() }),
     FMSynth: vi.fn(function () { return makeNode() }),
     AMSynth: vi.fn(function () { return makeNode() }),
@@ -134,7 +134,7 @@ afterEach(() => {
 async function unlockedManager() {
   const mgr = AudioManager.getInstance()
   mgr.unlock()
-  // Drain microtask: Tone.start().then → await reverb.ready → set unlocked.
+  // Drain microtasks: Tone.start().then → await reverb.ready → set unlocked.
   await vi.waitFor(() => expect(mgr.isUnlocked()).toBe(true))
   return mgr
 }
@@ -145,19 +145,19 @@ function triggeredSynths(): MockNode[] {
 
 describe('AudioManager (Tone.js-based)', () => {
   // ── unlock lifecycle ──────────────────────────────────────────────
-  it('unlock() gọi Tone.start() và chỉ bật unlocked sau khi chain sẵn sàng', async () => {
+  it('unlock() calls Tone.start() and only sets unlocked after the chain is ready', async () => {
     const mgr = await unlockedManager()
     expect(mgr.isUnlocked()).toBe(true)
     expect(Tone.start).toHaveBeenCalledTimes(1)
   })
 
-  it('unlock() KHÔNG bật unlocked đồng bộ (chờ async chain ready)', () => {
+  it('unlock() does NOT set unlocked synchronously (waits for the async chain)', () => {
     const mgr = AudioManager.getInstance()
     mgr.unlock()
     expect(mgr.isUnlocked()).toBe(false)
   })
 
-  it('unlock() idempotent — gọi nhiều lần chỉ start 1 lần', async () => {
+  it('unlock() is idempotent — repeated calls only start once', async () => {
     const mgr = AudioManager.getInstance()
     mgr.unlock()
     mgr.unlock()
@@ -166,18 +166,18 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(Tone.start).toHaveBeenCalledTimes(1)
   })
 
-  it('unlock() fail (Tone không init được) → unlocked=false, không throw', async () => {
-    meta.failCreateAfter = 0 // node đầu tiên throw ngay
+  it('unlock() failure (Tone cannot init) → unlocked=false, no throw', async () => {
+    meta.failCreateAfter = 0 // first node throws immediately
     const mgr = AudioManager.getInstance()
     mgr.unlock()
     await vi.waitFor(() => expect(mgr.isUnlocked()).toBe(false))
   })
 
-  it('unlock() fail giữa chừng → dispose node đã tạo (không leak)', async () => {
-    meta.failCreateAfter = 2 // Gain + Filter tạo xong, Reverb throw
+  it('unlock() failing midway → disposes created nodes (no leak)', async () => {
+    meta.failCreateAfter = 2 // Gain + Filter created, Reverb throws
     const mgr = AudioManager.getInstance()
     mgr.unlock()
-    // Chờ async path chạy xong: 2 node partial phải được dispose.
+    // Wait for the async path to settle: both partial nodes must be disposed.
     await vi.waitFor(() => {
       expect(meta.synths[0]!.dispose).toHaveBeenCalled()
       expect(meta.synths[1]!.dispose).toHaveBeenCalled()
@@ -186,7 +186,7 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(meta.synths).toHaveLength(2)
   })
 
-  it('unlock() retry SAU khi fail → tạo chain mới thành công, node cũ đã dispose', async () => {
+  it('unlock() retry AFTER failure → builds a new chain, old nodes disposed', async () => {
     meta.failCreateAfter = 2
     const mgr = AudioManager.getInstance()
     mgr.unlock()
@@ -198,12 +198,12 @@ describe('AudioManager (Tone.js-based)', () => {
     mgr.unlock()
     await vi.waitFor(() => expect(mgr.isUnlocked()).toBe(true))
 
-    // 2 node của lần fail phải được dispose.
+    // The 2 nodes from the failed attempt must be disposed.
     expect(meta.synths[0]!.dispose).toHaveBeenCalled()
     expect(meta.synths[1]!.dispose).toHaveBeenCalled()
   })
 
-  // ── B1: triggerAttackRelease signature theo engine ────────────────
+  // ── B1: triggerAttackRelease signature per engine ────────────────
   it('play(uiClick) [metal] → triggerAttackRelease(note, duration, undefined, velocity)', async () => {
     const mgr = await unlockedManager()
 
@@ -214,18 +214,18 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledWith('A3', '16n', undefined, 0.3)
   })
 
-  it('play(toastError) [noise] → triggerAttackRelease(duration, undefined, velocity) — KHÔNG có note arg', async () => {
+  it('play(toastError) [noise] → triggerAttackRelease(duration, undefined, velocity) — NO note arg', async () => {
     const mgr = await unlockedManager()
 
     mgr.play('toastError')
 
     const fired = triggeredSynths()
     expect(fired).toHaveLength(1)
-    // NoiseSynth signature: (duration, time?, velocity?) — arg 1 là DURATION.
+    // NoiseSynth signature: (duration, time?, velocity?) — arg 1 is DURATION.
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledWith('16n', undefined, 0.3)
   })
 
-  it('play(combatAttack) [noise] → cùng signature noise đúng', async () => {
+  it('play(combatAttack) [noise] → same correct noise signature', async () => {
     const mgr = await unlockedManager()
 
     mgr.play('combatAttack')
@@ -243,8 +243,8 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledWith('E5', '8n', undefined, 0.4)
   })
 
-  // ── B3: cooldown chống spam ───────────────────────────────────────
-  it('play cùng id 2 lần sát nhau → chỉ phát 1 lần (cooldown)', async () => {
+  // ── B3: anti-spam cooldown ───────────────────────────────────────
+  it('same id played twice in quick succession → fires once (cooldown)', async () => {
     vi.useFakeTimers()
     const mgr = await unlockedManager()
 
@@ -257,7 +257,7 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledTimes(1)
   })
 
-  it('play cùng id sau khi cooldown trôi qua → phát lại', async () => {
+  it('same id after the cooldown elapses → fires again', async () => {
     vi.useFakeTimers()
     const mgr = await unlockedManager()
 
@@ -269,7 +269,7 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledTimes(2)
   })
 
-  it('play 2 id khác nhau sát nhau → cả 2 đều phát (cooldown per-id)', async () => {
+  it('two different ids in quick succession → both fire (per-id cooldown)', async () => {
     vi.useFakeTimers()
     const mgr = await unlockedManager()
 
@@ -283,23 +283,23 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(totalCalls).toBe(2)
   })
 
-  // ── B4: context suspended recovery ────────────────────────────────
-  it('play() khi AudioContext suspended → gọi ctx.resume()', async () => {
+  // ── B4: suspended-context recovery ────────────────────────────────
+  it('play() while AudioContext suspended → calls ctx.resume()', async () => {
     const mgr = await unlockedManager()
-    // Đảm bảo ctx đã được tạo (play lần 1 gọi getContext).
+    // Ensure the ctx exists (first play calls getContext).
     mgr.play('uiClick')
     const ctx = meta.ctx!
     ctx.state = 'suspended'
     ctx.resume.mockClear()
 
     vi.useFakeTimers()
-    vi.advanceTimersByTime(200) // vượt cooldown
+    vi.advanceTimersByTime(200) // past the cooldown
     mgr.play('combatKill')
     expect(ctx.resume).toHaveBeenCalled()
   })
 
   // ── mute / volume ─────────────────────────────────────────────────
-  it('play() KHÔNG trigger khi setEnabled(false)', async () => {
+  it('play() does NOT trigger while setEnabled(false)', async () => {
     const mgr = await unlockedManager()
     mgr.setEnabled(false)
 
@@ -307,13 +307,13 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(triggeredSynths()).toHaveLength(0)
   })
 
-  it('play() KHÔNG trigger khi chưa unlock', () => {
+  it('play() does NOT trigger before unlock', () => {
     const mgr = AudioManager.getInstance()
     mgr.play('uiClick')
     expect(triggeredSynths()).toHaveLength(0)
   })
 
-  it('setMasterVolume clamp về [0,1]', async () => {
+  it('setMasterVolume clamps to [0,1]', async () => {
     const mgr = await unlockedManager()
     mgr.setMasterVolume(1.5)
     expect(mgr.getMasterVolume()).toBe(1)
@@ -323,7 +323,7 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(mgr.getMasterVolume()).toBe(0.5)
   })
 
-  it('resetAudioManagerForTest() dispose nodes + reset singleton', async () => {
+  it('resetAudioManagerForTest() disposes nodes + resets the singleton', async () => {
     const mgr = await unlockedManager()
     mgr.play('uiClick')
     const nodes = [...meta.synths]
@@ -337,10 +337,10 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(AudioManager.getInstance().isUnlocked()).toBe(false)
   })
 
-  // ── Race: dispose() trong lúc unlock() đang pending ───────────────
-  it('dispose() khi unlock() đang pending → không bật ready, chain dở dang bị dispose', async () => {
-    // Giữ Reverb.ready pending để buildChain kẹt ở await — mô phỏng
-    // window thời gian giữa "tạo node" và "chain sẵn sàng".
+  // ── Race: dispose() while unlock() is pending ───────────────
+  it('dispose() during a pending unlock() → never sets ready, partial chain is disposed', async () => {
+    // Hold Reverb.ready pending so buildChain stalls at its await —
+    // simulating the window between "nodes created" and "chain ready".
     let releaseReady: () => void = () => {}
     meta.reverbReady = new Promise<void>((resolve) => {
       releaseReady = resolve
@@ -348,25 +348,26 @@ describe('AudioManager (Tone.js-based)', () => {
 
     const mgr = AudioManager.getInstance()
     mgr.unlock()
-    // buildChain đã tạo Gain + Filter + Reverb (3 node) rồi await ready.
+    // buildChain has created Gain + Filter + Reverb (3 nodes), now awaiting ready.
     await vi.waitFor(() => expect(meta.synths.length).toBeGreaterThanOrEqual(3))
     const reverbNode = meta.synths[2]!
 
     mgr.dispose()
     expect(mgr.isUnlocked()).toBe(false)
 
-    // Release ready → continuation của unlock() resume. Phải FLUSH hết
-    // microtask queue để continuation chạy xong rồi mới assert (nếu không,
-    // test pass giả vì timing chứ không phải vì code đúng).
+    // Release ready → unlock()'s continuation resumes. Must FLUSH the
+    // microtask queue before asserting (otherwise the test passes on
+    // timing, not on correct code).
     releaseReady()
     await new Promise((r) => setTimeout(r, 0))
     await vi.waitFor(() => expect(reverbNode.dispose).toHaveBeenCalled())
 
-    // Instance đã dispose KHÔNG được bật lại ready khi continuation chạy.
+    // The disposed instance must NOT flip back to ready when the
+    // continuation runs.
     expect(mgr.isUnlocked()).toBe(false)
   })
 
-  it('Tất cả SoundId play được, không throw', async () => {
+  it('every SoundId can play without throwing', async () => {
     const mgr = await unlockedManager()
 
     const ids = [

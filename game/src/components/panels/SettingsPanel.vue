@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
+import { useAudioStore } from '@/stores/audio'
 import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
@@ -14,6 +15,7 @@ import ThemeSwitcher from '@/components/settings/ThemeSwitcher.vue'
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const notification = useNotificationStore()
+const audio = useAudioStore()
 const { t } = useI18n()
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá bằng
@@ -189,6 +191,37 @@ function handleReset() {
       <ThemeSwitcher />
     </section>
 
+    <!-- Audio — on/off + master volume (0-100%). Persisted via useAudioStore. -->
+    <section class="settings-panel__audio" :aria-label="t('panels.settings.sections.audioAria')">
+      <h4>{{ t('panels.settings.sections.audio') }}</h4>
+
+      <div class="settings-panel__audio-row">
+        <Chip
+          class="settings-panel__audio-toggle"
+          :active="audio.enabled"
+          :aria-pressed="audio.enabled"
+          data-testid="settings-audio-toggle"
+          @click="audio.setEnabled(!audio.enabled)"
+        >
+          {{ audio.enabled ? t('panels.settings.audio.on') : t('panels.settings.audio.off') }}
+        </Chip>
+
+        <label class="settings-panel__audio-volume">
+          {{ t('panels.settings.audio.volume') }}
+          <input
+            type="range"
+            min="0"
+            max="100"
+            :value="Math.round(audio.masterVolume * 100)"
+            :disabled="!audio.enabled"
+            data-testid="settings-audio-volume"
+            @input="audio.setMasterVolume(Number(($event.target as HTMLInputElement).value) / 100)"
+          />
+          <span class="settings-panel__audio-volume-value">{{ Math.round(audio.masterVolume * 100) }}%</span>
+        </label>
+      </div>
+    </section>
+
     <p v-if="lastSavedLabel" class="settings-panel__hint">{{ t('panels.settings.hints.savedAt', { time: lastSavedLabel }) }}</p>
 
     <ConfirmModal
@@ -301,5 +334,51 @@ function handleReset() {
 .settings-panel__theme h4 {
   margin: 0 0 8px;
   color: var(--paper-text);
+}
+
+/* Audio — on/off + master volume. */
+.settings-panel__audio {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--paper-line);
+}
+
+.settings-panel__audio h4 {
+  margin: 0 0 8px;
+  color: var(--paper-text);
+}
+
+.settings-panel__audio-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.settings-panel__audio-toggle {
+  padding: 0 var(--space-4);
+  border-color: var(--paper-line);
+  color: var(--paper-text);
+  font-size: var(--text-sm);
+  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
+}
+
+.settings-panel__audio-volume {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--paper-text);
+}
+
+.settings-panel__audio-volume input[type='range'] {
+  width: 140px;
+  accent-color: var(--gold);
+}
+
+.settings-panel__audio-volume-value {
+  min-width: 3ch;
+  text-align: right;
+  color: var(--paper-text-soft);
 }
 </style>

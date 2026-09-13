@@ -445,7 +445,14 @@
         "uiScaleAria": "Cỡ chữ giao diện",
         "uiScale": "Cỡ Chữ Giao Diện",
         "themeAria": "Giao diện",
-        "theme": "Giao Diện"
+        "theme": "Giao Diện",
+        "audioAria": "Âm thanh",
+        "audio": "Âm Thanh"
+      },
+      "audio": {
+        "on": "Bật",
+        "off": "Tắt",
+        "volume": "Âm lượng"
       }
     },
     "technique": {

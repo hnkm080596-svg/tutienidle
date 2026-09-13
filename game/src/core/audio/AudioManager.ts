@@ -1,34 +1,36 @@
-// AudioManager — singleton phát SFX bằng Tone.js synthesis.
+// AudioManager — singleton SFX playback via Tone.js synthesis.
 //
-// Lý do dùng Tone.js (thay vì Web Audio API thuần):
-//   - Synth engine mạnh (FMSynth, AMSynth, MetalSynth, MembraneSynth) tạo
-//     được âm thanh tu-tiên chất lượng cao mà oscillator thuần không làm được
-//     (vd. tiếng cồng gõ, chuông gỗ, bell ringing với tail tự nhiên).
-//   - Filter + Reverb sẵn — lowpass cắt harmonics chói, reverb tạo "vọng".
-//   - 0 asset bundle, 0 file âm thanh bên ngoài, 0 phụ thuộc bạn phải tải.
+// Why Tone.js (instead of raw Web Audio API):
+//   - Strong synth engines (FMSynth, AMSynth, MetalSynth, MembraneSynth)
+//     produce quality cultivation-genre sounds that plain oscillators
+//     cannot (gong strikes, wooden bells, ringing with natural tails).
+//   - Built-in Filter + Reverb — lowpass cuts harsh harmonics, reverb
+//     adds the "ethereal" tail.
+//   - 0 asset bundles, 0 external audio files, 0 downloads.
 //
 // API:
 //   - getInstance()       → singleton
-//   - unlock()            → gọi Tone.start() (autoplay policy); idempotent
-//   - play(id)            → phát 1 sound (cooldown per-id chống spam)
-//   - setEnabled(false)   → mute toàn bộ
+//   - unlock()            → calls Tone.start() (autoplay policy); idempotent
+//   - play(id)            → plays one sound (per-id cooldown anti-spam)
+//   - setEnabled(false)   → mutes everything
 //   - setMasterVolume(v)  → 0..1
 //
-// Bug-fix pass 2026-09-06 (P15 systematic debugging):
-//   B1  NoiseSynth.triggerAttackRelease KHÔNG nhận note — signature là
-//       (duration, time?, velocity?). Code cũ truyền recipe.note ("16n")
-//       làm arg 1 → duration bị shift sai. Nay tách theo engine.
-//   B2  Reverb cần await .ready (offline IR generation) trước khi phát
-//       tiếng đầu tiên; code cũ set unlocked đồng bộ → sound đầu tiên
-//       không có tail. Nay unlock() async-chain: start → init → ready.
-//   B3  Combat events (hit/damage) bắn nhiều lần mỗi tick → cùng sound
-//       id phát chồng gây "noise wall". Nay cooldown per-id 60ms.
-//   B4  Tab bị suspend (autoplay policy re-engage) → play() im lặng.
-//       Nay play() kiểm tra ctx.state và resume() nếu suspended.
-//   B5  initChain fail giữa chừng leak node đã tạo; retry tạo chain mới
-//       chồng lên. Nay dispose partial chain + dispose toàn bộ ở reset.
-//   B6  unlock() fail rồi gọi lại bị chặn vĩnh viễn (startInFlight).
-//       Nay retry được sau khi fail.
+// Bug-fix pass 2026-09-06 (systematic debugging):
+//   B1  NoiseSynth.triggerAttackRelease does NOT take a note — signature is
+//       (duration, time?, velocity?). Old code passed recipe.note ("16n")
+//       as arg 1 → duration shifted wrong. Now split per engine.
+//   B2  Reverb needs await .ready (offline IR generation) before the first
+//       sound; old code set unlocked synchronously → first sound had no
+//       tail. Now unlock() async-chains: start → init → ready.
+//   B3  Combat events (hit/damage) fire many times per tick → same sound
+//       id stacking into a "noise wall". Now per-id 60ms cooldown.
+//   B4  Suspended tab (autoplay policy re-engaged) → play() went silent.
+//       Now play() checks ctx.state and resume()s when suspended.
+//   B5  initChain failing midway leaked already-created nodes; retry
+//       stacked a new chain on top. Now disposes partial chain + full
+//       dispose on reset.
+//   B6  unlock() failing once blocked retries forever (startInFlight).
+//       Now retry is allowed after failure.
 
 import * as Tone from 'tone'
 
@@ -52,12 +54,12 @@ export type SoundId =
   | 'battleVictory'
   | 'battleDefeat'
 
-// Công thức cho mỗi sound — engine kind + note + duration.
+// Recipe per sound — engine kind + note + duration.
 type SynthEngine = 'metal' | 'fm' | 'am' | 'membrane' | 'noise'
 
 interface SoundRecipe {
   engine: SynthEngine
-  // note dạng Tone.js notation: "C4", "A3", v.v. Bỏ qua với engine 'noise'.
+  // Tone.js note notation: "C4", "A3", etc. Ignored for engine 'noise'.
   note: string
   duration: string // "8n" "16n" "0.05" — Tone.js time notation
   // velocity 0..1 (default 1)
@@ -75,7 +77,7 @@ interface SoundRecipe {
 }
 
 const SOUND_LIBRARY: Record<SoundId, SoundRecipe> = {
-  // UI — tiếng "cồng gõ" tu-tiên: MetalSynth, pitch trầm, decay ngắn.
+  // UI — cultivation-genre gong taps: MetalSynth, low pitch, short decay.
   uiClick: {
     engine: 'metal',
     note: 'A3',
@@ -104,7 +106,7 @@ const SOUND_LIBRARY: Record<SoundId, SoundRecipe> = {
     },
   },
 
-  // Toast — chuông/bell tu-tiên: FMSynth harmonicity cao (3-5) tạo bell.
+  // Toast — cultivation bells: FMSynth with high harmonicity (3-5).
   toastLoot: {
     engine: 'fm',
     note: 'E5',
@@ -200,7 +202,7 @@ const SOUND_LIBRARY: Record<SoundId, SoundRecipe> = {
     },
   },
 
-  // Battle — horn/fanfare (chuông trầm + tail dài)
+  // Battle — horn/fanfare (low bell + long tail)
   battleStart: {
     engine: 'fm',
     note: 'A3',
@@ -227,17 +229,18 @@ const SOUND_LIBRARY: Record<SoundId, SoundRecipe> = {
 }
 
 /**
- * Cooldown per-id (ms). Combat events (hit/damage) có thể bắn nhiều lần
- * mỗi tick — phát chồng cùng 1 sound gây "noise wall" khó chịu. 60ms đủ
- * để gộp các event cùng frame mà vẫn nghe rời rạc giữa các đòn đánh.
+ * Per-id cooldown (ms). Combat events (hit/damage) can fire many times
+ * per tick — stacking the same sound makes a "noise wall". 60ms merges
+ * same-frame events while keeping distinct hits audible.
  */
 const MIN_GAP_MS = 60
 
 type AnySynth = Tone.MetalSynth | Tone.FMSynth | Tone.AMSynth | Tone.MembraneSynth | Tone.NoiseSynth
 
 /**
- * Tạo synth theo engine + áp envelope/params. Tách khỏi class để dễ đọc;
- * hành vi giống hệt switch cũ (default envelope khác nhau theo engine).
+ * Builds a synth per engine + applies envelope/params. Kept out of the
+ * class for readability; identical behavior to the old switch
+ * (per-engine default envelopes).
  */
 function createSynth(recipe: SoundRecipe): AnySynth {
   const env = recipe.params?.envelope
@@ -294,7 +297,7 @@ function createSynth(recipe: SoundRecipe): AnySynth {
 class AudioManagerImpl {
   private enabled = true
   private masterVolume = 0.7
-  /** 'idle' | 'pending' | 'ready' — unlock() chỉ chạy khi idle; unlocked ≡ (state==='ready'). */
+  /** 'idle' | 'pending' | 'ready' — unlock() only runs while idle; unlocked ≡ (state==='ready'). */
   private unlockState: 'idle' | 'pending' | 'ready' = 'idle'
 
   private synthCache = new Map<SoundId, AnySynth>()
@@ -306,10 +309,11 @@ class AudioManagerImpl {
   private reverb: Tone.Reverb | null = null
 
   /**
-   * Generation counter — mỗi lần dispose() tăng lên 1. Callback async của
-   * unlock() so sánh gen lúc bắt đầu vs sau await: khác nghĩa là instance
-   * đã bị dispose giữa chừng → chain vừa tạo là RÁC, phải dispose ngay
-   * và KHÔNG bật 'ready' (chống race dispose-vs-pending-unlock).
+   * Generation counter — incremented on every dispose(). unlock()'s async
+   * continuation compares the generation captured at start vs after await:
+   * a mismatch means the instance was disposed mid-flight → the chain just
+   * built is GARBAGE, dispose it immediately and do NOT set 'ready'
+   * (dispose-vs-pending-unlock race guard).
    */
   private generation = 0
 
@@ -318,9 +322,9 @@ class AudioManagerImpl {
   }
 
   /**
-   * Gọi Tone.start() để vượt autoplay policy. PHẢI được gọi trong user
-   * gesture (vd. click button đầu tiên). Idempotent khi pending/ready;
-   * retry được nếu lần trước fail.
+   * Calls Tone.start() to satisfy the autoplay policy. MUST be called
+   * inside a user gesture (e.g. first button click). Idempotent while
+   * pending/ready; retry allowed after failure.
    */
   unlock(): void {
     if (this.unlockState !== 'idle') return
@@ -331,26 +335,26 @@ class AudioManagerImpl {
       async () => {
         try {
           await this.buildChain()
-          // Race guard: nếu dispose() chạy trong lúc buildChain await
-          // (gen tăng), chain vừa tạo là RÁC — dispose ngay, KHÔNG bật
-          // 'ready' trên instance đã chết.
+          // Race guard: if dispose() ran while buildChain awaited (gen
+          // bumped), the chain just built is GARBAGE — dispose now, do NOT
+          // set 'ready' on a dead instance.
           if (this.generation !== gen) {
             this.disposeChain()
             return
           }
           this.unlockState = 'ready'
         } catch {
-          // B5: dispose partial chain (vd. Reverb throw sau khi Gain+Filter
-          // đã tạo) — không leak node.
+          // B5: dispose the partial chain (e.g. Reverb threw after
+          // Gain+Filter were created) — no leaked nodes.
           this.disposeChain()
-          // B6: về idle để user retry được (chỉ nếu chưa bị dispose).
+          // B6: back to idle so the user can retry (unless disposed).
           if (this.generation === gen) {
             this.unlockState = 'idle'
           }
         }
       },
       () => {
-        // Tone.start() reject (vd. không có user gesture) — cho retry.
+        // Tone.start() rejected (e.g. no user gesture) — allow retry.
         if (this.generation === gen) {
           this.unlockState = 'idle'
         }
@@ -359,9 +363,10 @@ class AudioManagerImpl {
   }
 
   /**
-   * Tạo chain Gain → Filter → Reverb. Mỗi node được gán vào field NGAY sau
-   * khi tạo thành công, nên nếu node sau throw thì disposeChain() vẫn dọn
-   * được các node trước (B5). Await Reverb.ready (B2 — offline IR).
+   * Builds the Gain → Filter → Reverb chain. Each node is assigned to its
+   * field right after construction so a later throw still lets
+   * disposeChain() clean up the earlier nodes (B5). Awaits Reverb.ready
+   * (B2 — offline IR generation).
    */
   private async buildChain(): Promise<void> {
     const master = new Tone.Gain(this.masterVolume).toDestination()
@@ -378,9 +383,9 @@ class AudioManagerImpl {
 
   private disposeChain(): void {
     // Reverse order: reverb → lowpass → master.
-    try { this.reverb?.dispose() } catch { /* đã dispose */ }
-    try { this.lowpass?.dispose() } catch { /* đã dispose */ }
-    try { this.master?.dispose() } catch { /* đã dispose */ }
+    try { this.reverb?.dispose() } catch { /* already disposed */ }
+    try { this.lowpass?.dispose() } catch { /* already disposed */ }
+    try { this.master?.dispose() } catch { /* already disposed */ }
     this.reverb = null
     this.lowpass = null
     this.master = null
@@ -406,21 +411,21 @@ class AudioManagerImpl {
   }
 
   /**
-   * Phát sound theo id. Không throw nếu sound chưa unlock hoặc Tone chưa sẵn
-   * (vd. SSR/test môi trường) — chỉ no-op.
+   * Plays a sound by id. Does not throw when audio is not unlocked or Tone
+   * is unavailable (SSR/test environments) — silent no-op.
    */
   play(id: SoundId): void {
     if (!this.enabled) return
     if (this.unlockState !== 'ready') return
 
     try {
-      // B4: tab bị suspend → resume trước khi phát (không throw nếu fail).
+      // B4: suspended tab → resume before playing (no throw on failure).
       const ctx = Tone.getContext()
       if (ctx.state === 'suspended') {
         void ctx.resume()
       }
 
-      // B3: cooldown per-id chống spam.
+      // B3: per-id anti-spam cooldown.
       const now = Date.now()
       const last = this.lastPlayAt.get(id) ?? 0
       if (now - last < MIN_GAP_MS) return
@@ -432,14 +437,14 @@ class AudioManagerImpl {
 
       this.triggerSynth(synth, recipe)
     } catch {
-      // Tone.js chưa sẵn sàng (vd. thiếu AudioContext trong jsdom/test) — silent no-op.
+      // Tone.js not ready (e.g. no AudioContext in jsdom/test) — silent no-op.
     }
   }
 
   /**
-   * B1: NoiseSynth.triggerAttackRelease có signature (duration, time?,
-   * velocity?) — KHÔNG có note. Các synth Monophonic (metal/fm/am/membrane)
-   * có (note, duration, time?, velocity?). Truyền sai → duration bị shift.
+   * B1: NoiseSynth.triggerAttackRelease signature is (duration, time?,
+   * velocity?) — NO note. Monophonic synths (metal/fm/am/membrane) take
+   * (note, duration, time?, velocity?). Wrong args shift the duration.
    */
   private triggerSynth(synth: AnySynth, recipe: SoundRecipe): void {
     const velocity = recipe.velocity ?? 0.5
@@ -469,17 +474,18 @@ class AudioManagerImpl {
 
     const synth = createSynth(recipe)
 
-    // Route synth → reverb → lowpass → master → destination
+    // Route: synth → reverb → lowpass → master → destination
     synth.connect(this.reverb)
 
     this.synthCache.set(id, synth)
     return synth
   }
 
-  /** Dọn toàn bộ Tone nodes + cache — gọi ở reset/test teardown. */
+  /** Disposes all Tone nodes + caches — called on reset/test teardown. */
   dispose(): void {
-    // Tăng generation TRƯỚC khi dọn: mọi unlock() pending sẽ thấy gen
-    // lệch ở continuation và tự hủy chain rác thay vì bật 'ready'.
+    // Bump generation BEFORE cleanup: any pending unlock() sees the gen
+    // mismatch in its continuation and self-disposes the garbage chain
+    // instead of setting 'ready'.
     this.generation++
     for (const synth of this.synthCache.values()) {
       synth.dispose()

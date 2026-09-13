@@ -3,10 +3,9 @@ import { computed } from 'vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import type { InkWashUiAssetId } from '@/assets/inkWashUi'
 import { AudioManager } from '@/core/audio/AudioManager'
-// Shared chrome primitive (UI/UX rework Giai đoạn A) — thay button
-// hand-roll (mỗi panel tự khai background/color/border riêng) bằng 1
-// component dùng chung, tái dùng token --gold/--jade/--crimson/--tap-*
-// có sẵn trong theme.css.
+// Shared chrome primitive (UI/UX rework phase A) — replaces hand-rolled
+// buttons (each panel declaring its own background/color/border) with one
+// component reusing the --gold/--jade/--crimson/--tap-* tokens in theme.css.
 const props = withDefaults(defineProps<{
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
@@ -15,7 +14,7 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   loading?: boolean
   type?: 'button' | 'submit'
-  /** Khi false (mặc định true), button KHÔNG kêu uiClick khi click. */
+  /** When false (default true), the button does NOT play uiClick on click. */
   sound?: boolean
 }>(), {
   variant: 'primary',
@@ -30,15 +29,15 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{ click: [MouseEvent] }>()
 
-// Dùng AudioManager singleton trực tiếp (không qua Pinia store) để
-// GameButton mount được trong test đơn vị mà không cần setup Pinia
-// active. SettingsPanel + components cần reactive state sẽ dùng
-// useAudioStore để đọc/ghi enabled + volume.
+// Direct AudioManager singleton (not the Pinia store) so GameButton can
+// mount in unit tests without an active Pinia. SettingsPanel and other
+// components needing reactive state use useAudioStore for
+// enabled + volume.
 const audio = AudioManager.getInstance()
 
-// Centralized click handler — phát uiClick SFX + unlock AudioContext lần
-// đầu (autoplay policy yêu cầu user gesture). Click thật của component
-// cha vẫn được phát ra qua emit('click').
+// Centralized click handler — plays uiClick SFX + unlocks the AudioContext
+// on the first click (autoplay policy requires a user gesture). The real
+// parent click still fires via emit('click').
 function handleClick(event: MouseEvent) {
   audio.unlock()
   if (props.sound) {
@@ -48,8 +47,8 @@ function handleClick(event: MouseEvent) {
 }
 
 const sliceAsset = computed<InkWashUiAssetId | undefined>(() => {
-  // border-image (InkNineSlice) không theo border-radius — nút circle
-  // dùng viền CSS thường (.game-button--circle) thay vì asset chữ nhật.
+  // border-image (InkNineSlice) does not follow border-radius — circle
+  // buttons use a plain CSS border (.game-button--circle) instead.
   if (props.shape === 'circle') return undefined
   switch (props.variant) {
     case 'secondary': return 'button-s-ink'
