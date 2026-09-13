@@ -130,7 +130,10 @@ function foundationBeast(params: {
     statsInput: {
       maxHp: Math.round(hp * mult.hp),
       attack: Math.round(atk * mult.atk),
-      attackSpeed: 1.6,
+      // Speed band ruling (2026-09-13): highest realm sits at the top of
+      // the band, 1.2 (~1.2x player base 100) - speed grows only a small
+      // fraction vs HP/ATK, not x2/x3 like legacy data (see Enemies.test).
+      attackSpeed: 1.2,
       attackRangeRanks: params.archetype === 'melee' ? 1 : 5,
       criticalRate: 0.08,
       criticalDamage: 2,

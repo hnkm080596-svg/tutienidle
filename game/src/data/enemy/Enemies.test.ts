@@ -25,6 +25,20 @@ const FOUNDATION_IDS = [
   'foundation_ferocious_flood_dragon_whelp',
 ]
 
+describe('enemy speed band (turn-based parity rule)', () => {
+  // Balance ruling (2026-09-13, B3 fix): attackSpeed is authored on the new
+  // 0.8-2.5 attacks/sec scale -> speed = x100. Speed is a high-leverage stat
+  // and may only grow a small fraction vs the other stats - the whole roster
+  // stays in the parity band around player base 100 (80..130), never x2/x3
+  // like the legacy data (authored 3-7 -> speed 120-250).
+  it('moi enemy co speed trong band 80-130 (khong vuot ~1.3x player base)', () => {
+    for (const enemy of ENEMIES) {
+      expect(enemy.stats.speed, `${enemy.id} speed ${enemy.stats.speed}`).toBeGreaterThanOrEqual(80)
+      expect(enemy.stats.speed, `${enemy.id} speed ${enemy.stats.speed}`).toBeLessThanOrEqual(130)
+    }
+  })
+})
+
 describe('foundation enemy data', () => {
   it('có đủ 20 enemy foundation (10 loài + 10 Hung)', () => {
     const foundation = ENEMIES.filter((enemy) => enemy.id.startsWith('foundation_'))

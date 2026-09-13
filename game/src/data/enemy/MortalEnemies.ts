@@ -24,7 +24,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 200,
       attack: 20,
-      attackSpeed: 5,
+      attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -63,7 +63,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 350,
       attack: 35,
-      attackSpeed: 5,
+      attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -115,7 +115,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 150,
       attack: 25,
-      attackSpeed: 7,
+      attackSpeed: 1.2,
       attackRangeRanks: 5,
       criticalRate: 0.12,
       criticalDamage: 2,
@@ -154,7 +154,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 450,
       attack: 30,
-      attackSpeed: 3,
+      attackSpeed: 1.0,
       attackRangeRanks: 5,
       criticalRate: 0.02,
       criticalDamage: 1.5,
@@ -200,7 +200,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 235,
       attack: 23,
-      attackSpeed: 5,
+      attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.07,
       criticalDamage: 2.1,
@@ -224,7 +224,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 375,
       attack: 32,
-      attackSpeed: 5,
+      attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.08,
       criticalDamage: 2,
@@ -251,7 +251,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 275,
       attack: 27,
-      attackSpeed: 6,
+      attackSpeed: 1.15,
       attackRangeRanks: 5,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -276,7 +276,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 440,
       attack: 38,
-      attackSpeed: 4,
+      attackSpeed: 1.05,
       attackRangeRanks: 1,
       criticalRate: 0.04,
       criticalDamage: 1.8,
@@ -303,7 +303,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 320,
       attack: 31,
-      attackSpeed: 6,
+      attackSpeed: 1.15,
       attackRangeRanks: 5,
       criticalRate: 0.12,
       criticalDamage: 2.1,
@@ -328,7 +328,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 515,
       attack: 43,
-      attackSpeed: 4,
+      attackSpeed: 1.05,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 1.9,
@@ -354,7 +354,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 375,
       attack: 36,
-      attackSpeed: 6,
+      attackSpeed: 1.15,
       attackRangeRanks: 1,
       criticalRate: 0.15,
       criticalDamage: 2.2,
@@ -379,7 +379,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 600,
       attack: 50,
-      attackSpeed: 3,
+      attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.02,
       criticalDamage: 1.6,
@@ -405,7 +405,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 440,
       attack: 41,
-      attackSpeed: 6,
+      attackSpeed: 1.15,
       attackRangeRanks: 1,
       criticalRate: 0.17,
       criticalDamage: 2.3,
@@ -430,7 +430,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 705,
       attack: 57,
-      attackSpeed: 3,
+      attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.03,
       criticalDamage: 1.7,
@@ -457,7 +457,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 515,
       attack: 47,
-      attackSpeed: 7,
+      attackSpeed: 1.2,
       attackRangeRanks: 5,
       criticalRate: 0.14,
       criticalDamage: 2.2,
@@ -483,7 +483,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 825,
       attack: 66,
-      attackSpeed: 3,
+      attackSpeed: 1.0,
       attackRangeRanks: 5,
       criticalRate: 0.03,
       criticalDamage: 1.6,
@@ -510,7 +510,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 600,
       attack: 55,
-      attackSpeed: 7,
+      attackSpeed: 1.2,
       attackRangeRanks: 5,
       criticalRate: 0.16,
       criticalDamage: 2.3,
@@ -536,7 +536,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 960,
       attack: 77,
-      attackSpeed: 3,
+      attackSpeed: 1.0,
       attackRangeRanks: 5,
       criticalRate: 0.04,
       criticalDamage: 1.7,
@@ -563,7 +563,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 700,
       attack: 63,
-      attackSpeed: 4,
+      attackSpeed: 1.05,
       attackRangeRanks: 5,
       criticalRate: 0.08,
       criticalDamage: 1.9,
@@ -589,7 +589,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 1125,
       attack: 88,
-      attackSpeed: 4,
+      attackSpeed: 1.05,
       attackRangeRanks: 5,
       criticalRate: 0.06,
       criticalDamage: 2,
@@ -616,7 +616,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 825,
       attack: 73,
-      attackSpeed: 4,
+      attackSpeed: 1.05,
       attackRangeRanks: 5,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -648,7 +648,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 1320,
       attack: 102,
-      attackSpeed: 4,
+      attackSpeed: 1.05,
       attackRangeRanks: 5,
       criticalRate: 0.08,
       criticalDamage: 2.2,
@@ -695,7 +695,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 60,
       attack: 6,
-      attackSpeed: 5,
+      attackSpeed: 0.95,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -719,7 +719,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 96,
       attack: 8,
-      attackSpeed: 5,
+      attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -744,7 +744,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 70,
       attack: 7,
-      attackSpeed: 5,
+      attackSpeed: 0.95,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -768,7 +768,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 112,
       attack: 10,
-      attackSpeed: 5,
+      attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -793,7 +793,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 82,
       attack: 8,
-      attackSpeed: 5,
+      attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -817,7 +817,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 131,
       attack: 11,
-      attackSpeed: 5,
+      attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -842,7 +842,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 96,
       attack: 9,
-      attackSpeed: 5,
+      attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -866,7 +866,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 154,
       attack: 13,
-      attackSpeed: 5,
+      attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -891,7 +891,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 112,
       attack: 11,
-      attackSpeed: 5,
+      attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -915,7 +915,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 179,
       attack: 15,
-      attackSpeed: 5,
+      attackSpeed: 0.9,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -940,7 +940,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 132,
       attack: 12,
-      attackSpeed: 5,
+      attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -964,7 +964,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 211,
       attack: 17,
-      attackSpeed: 5,
+      attackSpeed: 0.9,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -989,7 +989,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 154,
       attack: 14,
-      attackSpeed: 5,
+      attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -1013,7 +1013,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 246,
       attack: 20,
-      attackSpeed: 5,
+      attackSpeed: 0.95,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -1038,7 +1038,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 180,
       attack: 16,
-      attackSpeed: 5,
+      attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -1062,7 +1062,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 288,
       attack: 22,
-      attackSpeed: 5,
+      attackSpeed: 0.95,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -1087,7 +1087,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 211,
       attack: 19,
-      attackSpeed: 5,
+      attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -1111,7 +1111,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 338,
       attack: 27,
-      attackSpeed: 5,
+      attackSpeed: 0.9,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
@@ -1136,7 +1136,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 247,
       attack: 22,
-      attackSpeed: 5,
+      attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -1166,7 +1166,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     statsInput: {
       maxHp: 395,
       attack: 31,
-      attackSpeed: 5,
+      attackSpeed: 0.9,
       attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2,
