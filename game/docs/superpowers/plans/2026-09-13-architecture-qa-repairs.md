@@ -115,7 +115,7 @@ Order inside the wave is free; each item is independent.
 
 ### Tasks
 
-- [ ] **3.1 F3 — honest reward input for idle kills.** `BattleLootSystem.
+- [x] **3.1 F3 — honest reward input for idle kills.** `BattleLootSystem.
   processDefeatedEnemies` reads `battle.player` only for the heal-on-kill
   target; talents/drops already read the session `this.player`. Introduce a
   narrow input contract (e.g.

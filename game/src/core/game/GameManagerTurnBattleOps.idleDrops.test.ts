@@ -136,6 +136,51 @@ describe('rollAutoFarmCycleReward runs on the idle channel', () => {
     expect(calls[calls.length - 1]).toBe('active')
   })
 
+  // F3 (2026-09-13): the idle cycle must hand BattleLootSystem an honest
+  // reward input - the pending-enemy entries plus an explicit null heal
+  // target - instead of fabricating a Battle whose `player` is a dead
+  // enemy standing in for the player.
+  it('passes an honest reward input: pending-enemy entries + null heal target, no fabricated Battle', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T10:00:00Z'))
+
+    const { gameManager, player } = harness()
+    const loot = (gameManager as unknown as { battleLoot: BattleLootSystem }).battleLoot
+
+    // Snapshot the arguments BEFORE processDefeatedEnemies prunes the
+    // dead entries out of the array, then delegate so rewards still flow.
+    const original = loot.processDefeatedEnemies.bind(loot)
+    let observed: {
+      enemies: { entity: { alive?: boolean }; rewardGranted: boolean }[]
+      healTarget: unknown
+      stage: unknown
+    } | null = null
+    vi.spyOn(loot, 'processDefeatedEnemies').mockImplementation(
+      (enemies, healTarget, stage) => {
+        observed = { enemies: [...enemies], healTarget, stage }
+        return original(enemies, healTarget, stage)
+      },
+    )
+
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+
+    vi.setSystemTime(new Date('2026-09-04T10:01:00Z')) // 60s -> 1 cycle
+    gameManager.tickOps.update(0.1)
+
+    expect(observed).not.toBeNull()
+    expect(Array.isArray(observed!.enemies)).toBe(true)
+    expect(observed!.enemies.length).toBeGreaterThan(0)
+    expect(observed!.healTarget).toBeNull()
+    expect(observed!.stage).toMatchObject({ id: FARM_STAGE.id })
+
+    for (const entry of observed!.enemies) {
+      // A plain { entity, rewardGranted } entry - not a Battle, no
+      // `player` field, entity genuinely dead.
+      expect(entry).not.toHaveProperty('player')
+      expect(entry.entity.alive).toBe(false)
+    }
+  })
+
   // companion-gacha Task 7: auto-farm funnels through
   // processDefeatedEnemies, so formation-assigned companions gain battle
   // EXP on the idle channel with no second path (A9).

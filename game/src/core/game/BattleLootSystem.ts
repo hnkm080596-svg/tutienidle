@@ -1,4 +1,4 @@
-import type { Battle } from '../battle/Battle'
+import type { CombatEntity } from '../combat/CombatEntity'
 import type { EventBus } from '../events/EventBus'
 import { randomInt } from '../reward/DropRoll'
 import { getSkillInsightReward } from '../reward/SkillInsightBalance'
@@ -55,6 +55,18 @@ import type { QuestRegistry } from '../quest/QuestRegistry'
 import type { QuestManager } from '../quest/QuestManager'
 import type { CombatSystem } from '../combat/CombatSystem'
 import type { HiddenBeastSystem } from './HiddenBeastSystem'
+
+/**
+ * One enemy awaiting reward processing: the entity plus its once-only
+ * grant flag. Deliberately narrower than BattleEnemy (no combat
+ * timers/buffs) and than Battle (no player/state) so non-battle reward
+ * paths - the auto-farm idle roll - hand over honest inputs instead of
+ * fabricating a whole Battle (F3, 2026-09-13).
+ */
+export interface RewardPendingEnemy {
+  entity: CombatEntity
+  rewardGranted: boolean
+}
 
 export interface BattleLootSystemDeps {
   eventBus: EventBus
@@ -162,14 +174,23 @@ export class BattleLootSystem {
 
   /**
    * Nhiều quái có thể chết cùng lúc/liên tục (wave) — quét TOÀN BỘ
-   * battle.enemies mỗi tick, cấp thưởng cho con nào vừa chết mà chưa
-   * xử lý (rewardGranted là cờ chống lặp thưởng), rồi dọn khỏi mảng.
-   * Không còn gate theo battle.state === 'victory' như model 1v1 cũ —
-   * quái chết giữa chừng lúc battle vẫn 'fighting' vẫn phải cấp
-   * thưởng ngay, không đợi cả trận kết thúc.
+   * `enemies` mỗi tick, cấp thưởng cho con nào vừa chết mà chưa
+   * xử lý (rewardGranted là cờ chống lặp thưởng), rồi dọn khỏi mảng
+   * in-place. Không còn gate theo battle.state === 'victory' như model
+   * 1v1 cũ — quái chết giữa chừng lúc battle vẫn 'fighting' vẫn phải
+   * cấp thưởng ngay, không đợi cả trận kết thúc.
+   *
+   * `healTarget` (F3, 2026-09-13) is the entity heal-on-kill applies to:
+   * a real battle passes its live player entity; the auto-farm idle
+   * channel passes null (no player entity is fighting) instead of
+   * standing a dead enemy in as `player`.
    */
-  processDefeatedEnemies(battle: Battle, stageOverride?: Stage) {
-    for (const battleEnemy of battle.enemies) {
+  processDefeatedEnemies(
+    enemies: RewardPendingEnemy[],
+    healTarget: CombatEntity | null,
+    stageOverride?: Stage,
+  ) {
+    for (const battleEnemy of enemies) {
       if (battleEnemy.entity.alive || battleEnemy.rewardGranted) {
         continue
       }
@@ -180,15 +201,16 @@ export class BattleLootSystem {
       // ngoài nhánh receiver để kill nào cũng hồi, kể cả trận không loot.
       // Đi qua combatSystem.applyHealing() để phát 'entity_vitals_changed'
       // (HUD máu cập nhật), không mutate thẳng currentHp như trước.
+      // healTarget = null là opt-out có chủ đích (auto-farm idle).
       const healOnKillPercent = this.player
         ? getHealOnKillMaxHpPercent(this.player.selectedTalentIds)
         : 0
 
-      if (healOnKillPercent > 0 && battle.player.currentHp > 0) {
+      if (healOnKillPercent > 0 && healTarget !== null && healTarget.currentHp > 0) {
         this.deps.combatSystem.applyHealing(
-          battle.player,
-          battle.player.maxHp * healOnKillPercent,
-          battle.player.id,
+          healTarget,
+          healTarget.maxHp * healOnKillPercent,
+          healTarget.id,
           'healing',
         )
       }
@@ -376,9 +398,16 @@ export class BattleLootSystem {
     }
 
     // Dọn quái đã chết + đã cấp thưởng khỏi mảng — tránh phình vô hạn
-    // qua nhiều wave trong cùng 1 stage. Sau bước này battle.enemies
-    // chỉ còn quái đang sống, nên "còn quái không" = check .length.
-    battle.enemies = battle.enemies.filter((battleEnemy) => battleEnemy.entity.alive)
+    // qua nhiều wave trong cùng 1 stage. In-place splice: the same
+    // postcondition the old `battle.enemies = filter(alive)` gave — sau
+    // bước này `enemies` chỉ còn quái đang sống, nên "còn quái không" =
+    // check .length.
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const entry = enemies[i]
+      if (entry && !entry.entity.alive) {
+        enemies.splice(i, 1)
+      }
+    }
   }
 
   private giveReward(receiver: RewardReceiver, reward: Reward) {

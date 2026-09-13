@@ -1,4 +1,3 @@
-import type { Battle } from '../battle/Battle'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { EventBus } from '../events/EventBus'
 import type { PlayerData } from '../player/Player'
@@ -68,20 +67,19 @@ export class GameManagerBattleRewardOps {
       return
     }
 
-    // Slice 6 cutover: build a Battle-shape shim from TurnBattle so
-    // processDefeatedEnemies handles bounty/heal-on-kill/talent exactly like
-    // the old system without modifying BattleLootSystem.
-    const shimEnemies = turnBattle.enemies.map((enemy) => ({
+    // Slice 6 cutover, F3 honest contract: TurnBattle entries map onto
+    // the narrow reward input (entity + rewardGranted flag) and the
+    // heal-on-kill target is the live party's first member - the same
+    // entity the old Battle shim exposed as `battle.player`.
+    const pendingEnemies = turnBattle.enemies.map((enemy) => ({
       entity: enemy.entity,
       rewardGranted: this.rewardsGranted.has(enemy.entity.id),
     }))
 
-    const shimBattle = {
-      player: turnBattle.players[0]?.entity,
-      enemies: shimEnemies,
-    } as unknown as Battle
-
-    this.deps.battleLoot.processDefeatedEnemies(shimBattle)
+    this.deps.battleLoot.processDefeatedEnemies(
+      pendingEnemies,
+      turnBattle.players[0]?.entity ?? null,
+    )
 
     for (const enemyId of killedIds) {
       this.rewardsGranted.add(enemyId)
