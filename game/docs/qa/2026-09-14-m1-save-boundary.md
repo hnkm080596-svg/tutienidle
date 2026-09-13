@@ -128,6 +128,25 @@ Post-fix run: **46/46 green** in the four files.
   asset fetch/timeout tests, `autoFarmOffline` 5s timeout) re-ran green
   in isolation (59/59).
 
+## Review round 1
+
+- **Minor (fixed):** `equipmentSystem.invalidatePendingOperationTickets()`
+  ran after the equipment re-add loop, leaving a window where a pending
+  wash ticket (bound by `instanceId` string) could observe a
+  half-replaced bag and commit onto a same-id restored object. Moved
+  adjacent to `equipmentBag.clear()` (`GameManagerSaveRestore.ts`), so
+  tickets die in the same synchronous stretch the old set dies in.
+- **Dedicated fault-injection test: not added — window closed by
+  construction.** With the invalidation adjacent to `clear()`, no
+  statement exists between them to fault-inject into; any earlier throw
+  precedes the clear (bag still intact, ticket still legitimately live
+  for that set), and any later throw already has both the clear and the
+  invalidation applied. The existing pending wash/refine invalidation
+  tests in `GameManagerSaveRestore.boundary.test.ts` pin the end-state.
+- Re-verified: `npm run type-check` PASS; scoped
+  `npx vitest run src/core/game/GameManagerSaveRestore src/services/save
+  src/stores` — 30 files / 318 tests green.
+
 ## Remaining concerns
 
 - `player.load()` still calls `store.restoreFromSave` directly (not the

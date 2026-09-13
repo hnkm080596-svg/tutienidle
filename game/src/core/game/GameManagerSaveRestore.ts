@@ -231,6 +231,14 @@ export class GameManagerSaveRestore {
     this.deps.pillBag.clear()
     this.deps.equipmentBag.clear()
 
+    // M1 (ARCH-001, hook for M2/ARCH-011) — pending paid-op tickets
+    // (equipment wash/refine) were bound to pre-restore item objects and
+    // must die WITH the old set: a ticket's instanceId string can silently
+    // re-resolve to a restored object, so the invalidation runs adjacent
+    // to clear() — no window exists where a stale ticket observes a
+    // replaced (or half-replaced) bag.
+    this.deps.equipmentSystem.invalidatePendingOperationTickets()
+
     // 9.8 — add() tràn stack trả lượng bị mất; gom MỖI LOẠI material
     // một event duy nhất (cả 2 loop materials + auto-dissolve rewards).
     const restoreOverflows = new Map<string, number>()
@@ -299,12 +307,6 @@ export class GameManagerSaveRestore {
         message: `Túi đầy — tự Hóa Luyện ${restoredAutoDissolved.length} món thành Tinh Hoa`,
       })
     }
-
-    // M1 (ARCH-001, hook for M2/ARCH-011) — the item set was just
-    // replaced wholesale: pending paid-op tickets (equipment wash/refine)
-    // were bound to pre-restore item objects and must not commit onto
-    // the restored set.
-    this.deps.equipmentSystem.invalidatePendingOperationTickets()
 
     // MASTER SPEC Mục XVI (Phase 9) — slot state (enhance) PHẢI nạp
     // trước refreshModifiers() bên dưới.
