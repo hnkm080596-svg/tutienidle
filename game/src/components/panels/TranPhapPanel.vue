@@ -97,8 +97,8 @@ function slotStyle(row: number, column: number): Record<string, string> {
   })
 
   // The hover beam's ::before cannot read the element's own clip-path, so the
-  // same polygon is re-published as an inheritable custom property.
-  style['--slot-clip'] = style.clipPath!
+  // same polygon is re-published as the shared beam layer's clip variable.
+  style['--fx-beam-clip'] = style.clipPath!
 
   return style
 }
@@ -313,7 +313,7 @@ watch(currentAssignments, (assignments) => {
               <div
                 v-for="column in STANDING_SLOT_COUNT"
                 :key="`${row}-${column}`"
-                :class="['tran-phap-panel__cell', `tran-phap-panel__cell--${slotStateAt(row - 1, column - 1)}`]"
+                :class="['tran-phap-panel__cell', `tran-phap-panel__cell--${slotStateAt(row - 1, column - 1)}`, 'fx-border-beam', 'fx-border-beam--clip', { 'fx-border-beam--active': slotStateAt(row - 1, column - 1) === 'hover' }]"
                 :style="slotStyle(row - 1, column - 1)"
                 :draggable="!!assignmentAt(row - 1, column - 1)"
                 @dragstart="(event) => { const occupant = assignmentAt(row - 1, column - 1); if (occupant) (event as DragEvent).dataTransfer?.setData('text/plain', occupant.combatantId) }"
@@ -324,6 +324,7 @@ watch(currentAssignments, (assignments) => {
                 @click="() => { const occupant = assignmentAt(row - 1, column - 1); if (occupant) removeAssignment(occupant.combatantId) }"
               >
                 {{ assignmentAt(row - 1, column - 1)?.combatantId ?? '' }}
+                <span class="fx-border-beam__fx" aria-hidden="true" />
               </div>
             </template>
           </div>
@@ -476,52 +477,12 @@ watch(currentAssignments, (assignments) => {
 .tran-phap-panel__cell--hover {
   opacity: 1;
   background: rgba(76, 175, 80, 0.45);
-}
-
-/* Border beam (2026-09-14): two azure spots orbiting the slot edge on hover.
-   The cells are clip-path trapezoids, so a rectangular border/mask trick
-   cannot follow them — instead ::before paints a rotating two-wedge conic
-   gradient clipped to the SAME polygon (via the inherited --slot-clip var),
-   and ::after re-covers the interior on a slightly smaller box, leaving only
-   a ring along the trapezoid's edge. Hover only applies to empty enabled
-   slots (slotStateAt priority), so the ::after fill never hides an occupant
-   label. Without @property support the gradient holds a static two-spot glow
-   instead of spinning — a graceful degrade, not a break. */
-@property --tran-phap-beam-angle {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-
-.tran-phap-panel__cell--hover::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  clip-path: var(--slot-clip);
-  background: conic-gradient(
-    from var(--tran-phap-beam-angle),
-    transparent 0%,
-    var(--azure, #5b9bd5) 7%,
-    transparent 14%,
-    transparent 50%,
-    var(--azure, #5b9bd5) 57%,
-    transparent 64%
-  );
-  animation: tran-phap-beam-spin 2.4s linear infinite;
-}
-
-.tran-phap-panel__cell--hover::after {
-  content: '';
-  position: absolute;
-  inset: 7%;
-  clip-path: var(--slot-clip);
-  background: rgba(76, 175, 80, 0.45);
-}
-
-@keyframes tran-phap-beam-spin {
-  to {
-    --tran-phap-beam-angle: 1turn;
-  }
+  /* Shared border-beam (theme.css .fx-border-beam--clip): the beam ring is
+     produced by ::before clipped to --fx-beam-clip; this var gives ::after
+     the interior fill to cover, leaving only the trapezoid's edge ring.
+     'hover' only applies to empty enabled slots (slotStateAt priority), so
+     the fill never hides an occupant label. */
+  --fx-beam-fill: rgba(76, 175, 80, 0.45);
 }
 
 .tran-phap-panel__formation-list {

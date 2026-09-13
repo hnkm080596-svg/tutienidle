@@ -458,3 +458,94 @@
   mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
   mask-position: center top;
 }
+
+/* ============================================================
+   BORDER BEAM — 2 tia sáng (--fx-beam-color, mặc định azure) quay
+   quanh mép ô. Dùng chung cho MỌI slot surface:
+
+   Gắn class `fx-border-beam` lên ô + một child
+   `<span class="fx-border-beam__fx" aria-hidden="true">` — beam
+   vẽ trên layer riêng đó nên KHÔNG BAO GIỜ đụng ::before/::after
+   sẵn có của ô. Ring mặc định trace border-box (mask-composite
+   content-box → chỉ chừa vành viền, theo cả border-radius).
+
+   Ô bị clip-path (vd ô trận pháp hình thang): thêm modifier
+   `fx-border-beam--clip`, set `--fx-beam-clip: polygon(...)` và
+   `--fx-beam-fill: <màu ruột ô>` — __fx gradient clip theo
+   polygon, __fx::after thu nhỏ phủ lại ruột chỉ chừa vành mép.
+   (Ring mask chỉ trace được border-box, không theo clip-path.)
+
+   Trigger: mặc định beam mờ dần khi :hover (trừ ô aria-disabled);
+   consumer muốn beam theo state riêng (vd drag-hover của trận
+   pháp) thì bật class `fx-border-beam--active`.
+
+   Tùy biến per-surface qua custom props: --fx-beam-color,
+   --fx-beam-width (bề dày vành, mặc định 2px), --fx-beam-duration
+   (mặc định 2.4s/vòng), --fx-beam-inset (độ thu của ::after ở
+   mode clip, mặc định 7%). Browser thiếu @property → hiện glow
+   tĩnh 2 mỏm thay vì quay — degrade nhẹ, không vỡ.
+   ============================================================ */
+@property --fx-beam-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.fx-border-beam {
+  position: relative;
+}
+
+.fx-border-beam > .fx-border-beam__fx {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--fx-beam-width, 2px);
+  background: conic-gradient(
+    from var(--fx-beam-angle),
+    transparent 0%,
+    var(--fx-beam-color, var(--azure, #5b9bd5)) 7%,
+    transparent 14%,
+    transparent 50%,
+    var(--fx-beam-color, var(--azure, #5b9bd5)) 57%,
+    transparent 64%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  animation: fx-border-beam-spin var(--fx-beam-duration, 2.4s) linear infinite;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.fx-border-beam:hover:not([aria-disabled='true']) > .fx-border-beam__fx,
+.fx-border-beam--active > .fx-border-beam__fx {
+  opacity: 1;
+}
+
+/* --clip variant: polygon-shaped slots. Ring mask chỉ trace được
+   border-box, nên ô clip-path vẽ full gradient qua polygon rồi
+   __fx::after thu nhỏ phủ lại ruột — chừa vành beam sát MÉP THẬT. */
+.fx-border-beam--clip > .fx-border-beam__fx {
+  padding: 0;
+  border-radius: 0;
+  -webkit-mask: none;
+  mask: none;
+  clip-path: var(--fx-beam-clip);
+}
+
+.fx-border-beam--clip > .fx-border-beam__fx::after {
+  content: '';
+  position: absolute;
+  inset: var(--fx-beam-inset, 7%);
+  clip-path: var(--fx-beam-clip);
+  background: var(--fx-beam-fill, transparent);
+}
+
+@keyframes fx-border-beam-spin {
+  to {
+    --fx-beam-angle: 1turn;
+  }
+}
