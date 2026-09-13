@@ -359,8 +359,6 @@ export const usePlayerStore = defineStore('player', {
 
       const offline = calculateOfflineProgress(offlineSeconds, save.player.cultivationPerSecond)
 
-      lastRestoredPayloads.set(this, { identity: payloadIdentity, offline })
-
       // R10 (AR-12, S4 follow-up) — deep-clone before assigning: a plain
       // Object.assign shallow-copies nested fields (baseStats, modifiers,
       // ...), so this.baseStats becomes the SAME object as
@@ -372,7 +370,25 @@ export const usePlayerStore = defineStore('player', {
       // out from under it and wrongly treat it as a new payload). A
       // restore input must be treated as a value, same principle as
       // buildGameSave's snapshot-is-a-value fix (S1).
-      Object.assign(this, structuredClone(save.player))
+      //
+      // M1 (ARCH-001) — the player slice is REPLACE semantics, not merge:
+      // overlay the payload onto createDefaultPlayer() so fields the save
+      // does not declare reset to defaults instead of keeping the previous
+      // session's values, then drop state keys the result does not have
+      // (any dynamic $state key outside PlayerData would otherwise survive
+      // a restore — a plain assign only overwrites, never removes).
+      const restoredPlayer: PlayerData = {
+        ...createDefaultPlayer(),
+        ...structuredClone(save.player),
+      }
+
+      for (const key of Object.keys(this.$state)) {
+        if (!(key in restoredPlayer)) {
+          Reflect.deleteProperty(this.$state, key)
+        }
+      }
+
+      Object.assign(this, restoredPlayer)
 
       // Node level (plan §6.1) — save cũ giữa v46 thiếu object này;
       // thiếu = chưa lĩnh ngộ node nào, KHÔNG được để undefined kẹo
@@ -430,6 +446,12 @@ export const usePlayerStore = defineStore('player', {
       // blind Object.assign() ở trên: nghề không khớp, thiếu state dù
       // đủ gate, grade/path sai enum, realm/level/EXP vượt trần.
       normalizeArtifactProgress(this)
+
+      // M1 (ARCH-001) — commit the payload identity only AFTER the whole
+      // apply succeeded: a mid-restore throw leaves it uncommitted so a
+      // retry with the same payload re-applies instead of being skipped
+      // by the guard above.
+      lastRestoredPayloads.set(this, { identity: payloadIdentity, offline })
 
       return offline
     },

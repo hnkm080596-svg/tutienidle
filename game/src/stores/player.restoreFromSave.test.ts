@@ -103,4 +103,53 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.nodeLevels).toEqual({})
     expect(player.baseStats.attackRange).toBeGreaterThan(0)
   })
+
+  // M1 (ARCH-001) — the player slice is REPLACE semantics too: fields the
+  // payload does not declare must reset to defaults instead of keeping the
+  // previous session's values (a bare Object.assign merge leaked them).
+  it('fields absent from the payload reset to defaults — no stale optional state survives a restore', () => {
+    const player = usePlayerStore()
+
+    // Simulate a previous session that set every optional field.
+    player.cultivationPath = 'kiem_tu'
+    player.kiemTuRoute = 'bat_kiem'
+    player.artifact = { artifactId: 'a', tier: 1, exp: 5 } as never
+    player.highestFoundationAchieved = 'great_dao' as never
+    player.formationLoadout = { formationId: 'f', assignments: [{ row: 0, column: 0, combatantId: 'c' }] }
+    player.autoFarmStage = { stageId: 's', lastCheckedMs: 1 }
+    player.companions = [{ companionId: 'c', constellation: 0 } as never]
+
+    const save = buildMinimalSave({}) // declares none of the above
+    player.restoreFromSave(save)
+
+    expect(player.cultivationPath).toBeUndefined()
+    expect(player.kiemTuRoute).toBeUndefined()
+    expect(player.artifact).toBeUndefined()
+    expect(player.highestFoundationAchieved).toBeUndefined()
+    expect(player.formationLoadout).toBeNull()
+    expect(player.autoFarmStage).toBeNull()
+    expect(player.companions).toEqual([])
+  })
+
+  // M1 (ARCH-001) — identity commits only AFTER the whole apply succeeds:
+  // a throw mid-restore must leave the payload uncommitted so a retry with
+  // the same payload re-applies instead of being skipped by the guard.
+  it('a failure before apply completes does not commit identity — the same payload retries cleanly', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({ name: 'retry-me' })
+
+    const cloneSpy = vi.spyOn(globalThis, 'structuredClone').mockImplementationOnce(() => {
+      throw new Error('injected clone failure')
+    })
+
+    expect(() => player.restoreFromSave(save)).toThrow('injected clone failure')
+    expect(player.name).toBe('Vô Danh') // pre-apply failure changed nothing
+    cloneSpy.mockRestore()
+
+    const result = player.restoreFromSave(save)
+    expect(player.name).toBe('retry-me')
+
+    // Identity committed on success — a third call converges via the guard.
+    expect(player.restoreFromSave(save)).toEqual(result)
+  })
 })

@@ -24,6 +24,15 @@ export class SkillManager {
     return [...this.skills]
   }
 
+  /**
+   * M1 (ARCH-001) — session-restore boundary: replace the whole learned
+   * set with a DETACHED copy of the payload. The input is a value —
+   * mutating it afterwards must not leak into live state (A3).
+   */
+  restore(skills: Skill[]) {
+    this.skills = skills.map((skill) => structuredClone(skill))
+  }
+
   getActiveSkills() {
     return this.skills.filter(
       skill =>

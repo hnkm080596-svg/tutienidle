@@ -298,6 +298,17 @@ export function discardWashTicket(
 }
 
 /**
+ * M1 (ARCH-001) — unconditional invalidation for session restore: the
+ * item set is being replaced wholesale, so whatever pending paid ticket
+ * exists dies with the old set (its instanceId binding can silently
+ * resolve to a different restored object). Distinct from
+ * discardWashTicket(), which is the ticketId-scoped UI cancel path.
+ */
+export function invalidatePendingWashTicket(slot: WashPendingSlotAccessor): void {
+  slot.set(null)
+}
+
+/**
  * Xem trước Tẩy Luyện (UI "giữ/bỏ") — roll + validate + TRỪ COST giống
  * hệt washAffixes(), nhưng KHÔNG ghi affixes mới vào instance. Trả
  * TICKET cho UI; affixes hiển thị đọc qua getWashPreviewAffixes() —

@@ -247,6 +247,17 @@ export function discardRefinePreview(
   }
 }
 
+/**
+ * M1 (ARCH-001) — unconditional invalidation for session restore: the
+ * item set is being replaced wholesale, so whatever pending paid preview
+ * exists dies with the old set (its instance binding can silently
+ * resolve to a different restored object). Distinct from
+ * discardRefinePreview(), which is the instanceId-scoped UI cancel path.
+ */
+export function invalidatePendingRefinePreview(deps: RefineDeps): void {
+  deps.refinePendingSlot.set(null)
+}
+
 /** Chốt đúng một lần payload do previewRefineValues/refineAffixValues vừa tạo. */
 export function commitRefineValues(
   instanceId: string,

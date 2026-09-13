@@ -369,6 +369,13 @@ export function createDefaultPlayer(): PlayerData {
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
     artifact: undefined,
 
+    // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
+    // cultivationPath ở trên: TribulationOutcomeService gán field này
+    // qua store proxy, không phải qua player.$state — key thiếu ở đây
+    // thì write rơi ra ngoài $state, không bao giờ vào save và không bị
+    // restore reset (M1, ARCH-001).
+    highestFoundationAchieved: undefined,
+
     // PHẢI khai báo tường minh (rỗng, không undefined) — cùng lý do
     // Pinia toRefs() snapshot ở trên: sink của SkillSystem ghi field
     // con (`skillCastCounts[skillId] = ...`) sau khi store đã khởi

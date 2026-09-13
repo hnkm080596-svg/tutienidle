@@ -205,16 +205,38 @@ export type RestoreGameSessionResult =
  * R10 (AR-12) - whole-payload restore identity. A partial fingerprint
  * (lastSavedAt|cultivation) is not proof that a payload is unchanged:
  * two DIFFERENT saves can share those two fields and the old guard
- * restored the wrong (first) payload. The hash covers the whole save
- * EXCEPT player.lastSavedAt, so re-saving identical content with a new
- * timestamp still converges on retry.
+ * restored the wrong (first) payload.
+ *
+ * M1 (ARCH-001) — the identity covers EVERY declared GameSave slice, not
+ * just materials/quests: a pills-only change (or any other single-slice
+ * difference) is a different payload and must re-run restore. The ONLY
+ * documented exclusion stays `player.lastSavedAt` — re-saving identical
+ * content with a new timestamp still converges on retry. Absent optional
+ * slices hash as `null` and are distinguished from present-but-empty
+ * ones (`[]`), since presence-vs-absence is itself a payload difference.
  */
 export function computeRestoreIdentity(save: GameSave): string {
   const { lastSavedAt: _excluded, ...playerWithoutTimestamp } = save.player
 
   void _excluded
 
-  return JSON.stringify([save.version, playerWithoutTimestamp, save.materials, save.quests ?? null])
+  return JSON.stringify([
+    save.version,
+    playerWithoutTimestamp,
+    save.techniques,
+    save.skills,
+    save.materials,
+    save.equipment,
+    save.pills,
+    save.talismans,
+    save.formations,
+    save.buildings,
+    save.equipmentSlots,
+    save.productionSites ?? null,
+    save.alchemyJobs ?? null,
+    save.quests ?? null,
+    save.decompose ?? null,
+  ])
 }
 
 export interface ProductionCycleSave {
