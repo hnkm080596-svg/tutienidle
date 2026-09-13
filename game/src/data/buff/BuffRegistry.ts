@@ -1,5 +1,4 @@
-import type { BuffDefinition } from '../../core/buff/BuffTypes'
-import type { BuffEffectTemplate, BuffDefinitionCatalog } from '../../core/buff/BuffTypes'
+import type { BuffDefinition, BuffEffectTemplate, BuffDefinitionCatalog } from '../../core/buff/BuffTypes'
 import { buffs as LIVE_BUFFS } from './buffs'
 
 // Completion plan Task 13 — migrate 46 real BuffDefinition entries sang
