@@ -7,7 +7,8 @@ import type { TalentDefinition } from '@/core/talent/Talent'
 //
 // M1 (plan 2026-09-03-talent-catalog-v4-m1-combat): 11 talent chiến đấu
 // (5 công + 5 thủ + Bất Tử Th thể) + Phàm Cốt easter egg. M2 thêm 5 tu
-// luyện, M3 thêm 2 sản xuất (+ 2 PARKED Trận Tâm/Phù Văn).
+// luyện. M3 thêm 2 sản xuất (Trận Tâm/Phù Văn vẫn PARKED — chờ rework
+// Trận/Phù nhận trigger/uses).
 //
 // Mô tả theo template 3 phần (spec §9): câu hình ảnh / cơ chế bằng số /
 // chi phí đối trọng. Số liệu first-pass — chờ playtest (spec §5).
@@ -190,9 +191,35 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
     tags: ['resource', 'mechanic'],
     effects: [{ kind: 'insight_per_cultivation', cultivationPerInsight: 2000 }],
   },
+  // ==================== M3 — SẢN XUẤT (2, spec §4.2) ====================
+  {
+    id: 'hoa_hau_thong_than',
+    name: 'Hỏa Hầu Thông Thần',
+    description: 'Lửa trong lò nghe theo nhịp tim ngươi. Mỗi mẻ đan thành công cho ra gấp đôi số viên (×2); đan ngươi dùng có hiệu quả tăng thêm một nửa (50%). Ngược lại: mỗi mẻ luyện tốn gấp đôi gỗ nhiên liệu và gấp đôi Linh Thạch — lò đôi, giá đôi.',
+    rarity: 'dia',
+    weight: 12,
+    tags: ['crafting', 'mechanic'],
+    effects: [
+      {
+        kind: 'alchemy_double_pill',
+        yieldMultiplier: 2,
+        potencyMultiplier: 1.5,
+        costMultiplier: 2,
+      },
+    ],
+  },
+  {
+    id: 'bach_luyen_thanh_khi',
+    name: 'Bách Luyện Thành Khí',
+    description: 'Người thường tôi trăm lần mới thành — lò của ngươi không biết chữ hỏng. Cường Hóa không bao giờ thất bại (tỉ lệ thành công luôn 100%). Ngược lại: mỗi lần rèn tốn ×3 nguyên liệu và ×3 Linh Thạch so với người thường — chắc chắn thì trả giá đắt.',
+    rarity: 'dia',
+    weight: 12,
+    tags: ['crafting', 'mechanic'],
+    effects: [{ kind: 'enhance_guaranteed', costMultiplier: 3 }],
+  },
 ]
 
-// PARKED (spec §4.2 — M3 sản xuất) — Trận Tâm/Phù Văn cần mở Trận/Phù
+// PARKED (spec §4.2) — Trận Tâm/Phù Văn cần mở Trận/Phù
 // nhận trigger/uses (hiện là modifier-item tĩnh, xem data/formation/
 // formations.ts + core/talisman/Talisman.ts). weight 0 — không roll.
 export const PARKED_TALENTS: TalentDefinition[] = [
@@ -216,135 +243,10 @@ export const PARKED_TALENTS: TalentDefinition[] = [
   },
 ]
 
-// M2 PENDING (spec §4.3) — M2 shipped 2026-09-14: all five cultivation
-// talents moved into the roll pool. Array kept (empty) so references in
-// tests/docs resolve; remove entirely once no reader remains.
-export const M2_PENDING_TALENTS: TalentDefinition[] = []
-
-// RETIRED v4 (spec §4.4) — 13 talent v3 rời pool roll. getTalentDefinition
-// vẫn resolve được để save cũ hiển thị đúng tên (TALENTS_BY_ID gồm cả
-// mảng này), nhưng collectTalentEffects chỉ đọc id ĐẦU nên save edit chứa
-// id retired + id mới cũng không cộng dồn effect. Không migration
-// (development phase).
-export const RETIRED_V4_TALENTS: TalentDefinition[] = [
-  {
-    id: 'tien_thien_dao_the',
-    name: 'Tiên Thiên Đạo Thể',
-    description: '(Đã nghỉ — catalog v3) Sinh ra đã gần Đạo, linh khí thiên hạ tự tìm về.',
-    rarity: 'di',
-    weight: 0,
-    tags: ['cultivation'],
-    effects: [],
-  },
-  {
-    id: 'nghich_thien',
-    name: 'Nghịch Thiên',
-    description: '(Đã nghỉ — catalog v3) Đốt mệnh mà đi, nhanh hơn người một bước.',
-    rarity: 'thien',
-    weight: 0,
-    tags: ['risk_reward', 'cultivation'],
-    effects: [],
-  },
-  {
-    id: 'dai_tri_nhuoc_ngu',
-    name: 'Đại Trí Nhược Ngu',
-    description: '(Đã nghỉ — catalog v3) Người khác tu một, ngươi ngộ mười.',
-    rarity: 'dia',
-    weight: 0,
-    tags: ['risk_reward', 'resource'],
-    effects: [],
-  },
-  {
-    id: 'phan_phac',
-    name: 'Phản Phác',
-    description: '(Đã nghỉ — catalog v3) Vạn pháp quy tông, sinh khắc tuần hoàn không dứt.',
-    rarity: 'linh',
-    weight: 0,
-    tags: ['element', 'mechanic'],
-    effects: [],
-  },
-  {
-    id: 'huyet_chien',
-    name: 'Huyết Chiến',
-    description: '(Đã nghỉ — catalog v3) Càng đánh càng hăng, máu địch là thuốc của ngươi.',
-    rarity: 'linh',
-    weight: 0,
-    tags: ['combat', 'defense'],
-    effects: [],
-  },
-  {
-    id: 'luyen_the_ky_tai',
-    name: 'Luyện Thể Kỳ Tài',
-    description: '(Đã nghỉ — catalog v3) Thể phách trời ban, rèn một được hai.',
-    rarity: 'linh',
-    weight: 0,
-    tags: ['cultivation', 'defense'],
-    effects: [],
-  },
-  {
-    id: 'tu_bao',
-    name: 'Tụ Bảo',
-    description: '(Đã nghỉ — catalog v3) Tay chạm vào đâu, Linh Thạch tụ về đó.',
-    rarity: 'pham',
-    weight: 0,
-    tags: ['resource'],
-    effects: [],
-  },
-  {
-    id: 'co_duyen',
-    name: 'Cơ Duyên',
-    description: '(Đã nghỉ — catalog v3) Hữu duyên thiên lý năng tương ngộ.',
-    rarity: 'pham',
-    weight: 0,
-    tags: ['resource'],
-    effects: [],
-  },
-  {
-    id: 'dan_duyen',
-    name: 'Đan Duyên',
-    description: '(Đã nghỉ — catalog v3) Lò lửa nghe tay, đan dược nể mặt.',
-    rarity: 'pham',
-    weight: 0,
-    tags: ['crafting'],
-    effects: [],
-  },
-  {
-    id: 'bat_khuat',
-    name: 'Bất Khuất',
-    description: '(Đã nghỉ — catalog v3 PARKED) Khi thấp hơn 35% sinh lực, giảm 12% sát thương nhận vào.',
-    rarity: 'dia',
-    weight: 0,
-    tags: ['defense'],
-    effects: [],
-  },
-  {
-    id: 'duoc_duyen',
-    name: 'Dược Duyên',
-    description: '(Đã nghỉ — catalog v3 PARKED) Hiệu quả đan dược tăng 12%.',
-    rarity: 'linh',
-    weight: 0,
-    tags: ['crafting'],
-    effects: [],
-  },
-  {
-    id: 'dao_phap_tu_nhien',
-    name: 'Đạo Pháp Tự Nhiên',
-    description: '(Đã nghỉ — catalog v3 PARKED) Mỗi lần đột phá nhận thêm một điểm thuộc tính.',
-    rarity: 'thien',
-    weight: 0,
-    tags: ['cultivation', 'mechanic'],
-    effects: [],
-  },
-  {
-    id: 'vo_cau_dao_the',
-    name: 'Vô Cấu Đạo Thể',
-    description: '(Đã nghỉ — catalog v3 PARKED) Không nhận điểm thuộc tính tự do; mọi chỉ số chính tăng theo cảnh giới.',
-    rarity: 'di',
-    weight: 0,
-    tags: ['mechanic', 'risk_reward'],
-    effects: [],
-  },
-]
+// RETIRED v4 (spec §4.4) — 13 id catalog v3 da go khoi catalog hoan
+// toan: getTalentDefinition tra undefined -> save cu bo qua an toan
+// (collectTalentEffects doc effect rong, CharacterPanel filter
+// undefined). Khong migration (development phase).
 
 // Phần thưởng Đại Đạo Trúc Cơ (spec dot-pha-loi-kiep §4.4) — KHÔNG thuộc
 // pool roll (chỉ đạt được qua chuyển hóa từ pham_cot khi thắng kiếp
@@ -362,15 +264,13 @@ export const GREAT_DAO_REWARD_TALENTS: TalentDefinition[] = [
   },
 ]
 
-// BY_ID phủ cả catalog lẫn PARKED lẫn RETIRED lẫn GREAT_DAO_REWARD để
-// save cũ chọn trúng thiên phú retired vẫn resolve được definition khi
-// hiển thị.
+// BY_ID phủ catalog + PARKED + GREAT_DAO_REWARD. Id retired (§4.4) KHÔNG
+// resolve — save cũ chứa id retired được bỏ qua an toàn tại mọi consumer
+// (collectTalentEffects đọc effect rỗng, UI filter undefined).
 const TALENTS_BY_ID = new Map(
   [
     ...CHARACTER_CREATION_TALENTS,
     ...PARKED_TALENTS,
-    ...M2_PENDING_TALENTS,
-    ...RETIRED_V4_TALENTS,
     ...GREAT_DAO_REWARD_TALENTS,
   ].map(talent => [talent.id, talent]),
 )

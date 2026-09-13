@@ -3,20 +3,37 @@ import type { TalentRarity } from '../../core/talent/Talent'
 import {
   CHARACTER_CREATION_TALENTS,
   PARKED_TALENTS,
-  RETIRED_V4_TALENTS,
   getTalentDefinition,
   rollCharacterCreationTalents,
 } from './Talents'
 import { TALENT_PASSIVE_SKILLS } from '../skill/TalentPassives'
 import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 
-// Catalog v4 (spec 2026-09-03-talent-catalog-v4-design.md) — M1 combat:
-// pool roll = 11 talent combat + Phàm Cốt (easter egg). M2 thêm tu
-// luyện, M3 thêm sản xuất (2 active + 2 PARKED). 13 id v3 retired.
+// Catalog v4 (spec 2026-09-03-talent-catalog-v4-design.md) — pool roll:
+// 11 combat + 5 tu luyện M2 + 2 sản xuất M3 + Phàm Cốt (easter egg).
+// 13 id v3 retired — không còn resolve (spec §4.4).
+
+// 13 id catalog v3 đã retire (spec §4.4) — giữ list ở test để khóa hành
+// vi "không resolve", không để dữ liệu chết lọt lại catalog.
+const RETIRED_V4_TALENT_IDS = [
+  'tien_thien_dao_the',
+  'nghich_thien',
+  'dai_tri_nhuoc_ngu',
+  'phan_phac',
+  'huyet_chien',
+  'luyen_the_ky_tai',
+  'tu_bao',
+  'co_duyen',
+  'dan_duyen',
+  'bat_khuat',
+  'duoc_duyen',
+  'dao_phap_tu_nhien',
+  'vo_cau_dao_the',
+]
 
 describe('catalog v4 invariants (M1 combat)', () => {
-  it('đúng 17 thiên phú tham gia roll (11 combat + 5 tu luyện M2 + Phàm Cốt)', () => {
-    expect(CHARACTER_CREATION_TALENTS).toHaveLength(17)
+  it('đúng 19 thiên phú tham gia roll (11 combat + 5 tu luyện M2 + 2 sản xuất M3 + Phàm Cốt)', () => {
+    expect(CHARACTER_CREATION_TALENTS).toHaveLength(19)
   })
 
   it('id duy nhất, weight dương, có effect thật', () => {
@@ -100,14 +117,40 @@ describe('catalog v4 invariants (M1 combat)', () => {
     expect(phamCot!.weight).toBe(1)
   })
 
-  it('13 id v3 retired — không thuộc pool roll nhưng vẫn resolve cho save cũ', () => {
-    expect(RETIRED_V4_TALENTS).toHaveLength(13)
-
+  it('13 id v3 retired — không thuộc pool roll VÀ không resolve (spec §4.4, save cũ bỏ qua an toàn)', () => {
     const poolIds = new Set(CHARACTER_CREATION_TALENTS.map((talent) => talent.id))
 
-    for (const retired of RETIRED_V4_TALENTS) {
-      expect(poolIds.has(retired.id)).toBe(false)
-      expect(getTalentDefinition(retired.id)).toBeDefined()
+    for (const retiredId of RETIRED_V4_TALENT_IDS) {
+      expect(poolIds.has(retiredId)).toBe(false)
+      expect(getTalentDefinition(retiredId)).toBeUndefined()
+    }
+  })
+
+  it('M3 sản xuất — 2 talent active trong pool với effect đúng kind + counter-cost', () => {
+    const hoaHau = getTalentDefinition('hoa_hau_thong_than')
+    const bachLuyen = getTalentDefinition('bach_luyen_thanh_khi')
+
+    expect(hoaHau).toBeDefined()
+    expect(bachLuyen).toBeDefined()
+
+    expect(hoaHau!.effects).toEqual([
+      {
+        kind: 'alchemy_double_pill',
+        yieldMultiplier: 2,
+        potencyMultiplier: 1.5,
+        costMultiplier: 2,
+      },
+    ])
+    expect(bachLuyen!.effects).toEqual([
+      { kind: 'enhance_guaranteed', costMultiplier: 3 },
+    ])
+
+    for (const talent of [hoaHau!, bachLuyen!]) {
+      expect(
+        CHARACTER_CREATION_TALENTS.some((entry) => entry.id === talent.id),
+        `talent ${talent.id} phải tham gia roll`,
+      ).toBe(true)
+      expect(talent.tags.includes('crafting')).toBe(true)
     }
   })
 
@@ -161,7 +204,7 @@ describe('rollCharacterCreationTalents', () => {
   it('không bao giờ roll ra thiên phú parked hay retired', () => {
     const excludedIds = new Set([
       ...PARKED_TALENTS.map((talent) => talent.id),
-      ...RETIRED_V4_TALENTS.map((talent) => talent.id),
+      ...RETIRED_V4_TALENT_IDS,
     ])
 
     for (let index = 0; index < 50; index++) {

@@ -181,6 +181,10 @@ export class PillSystem {
     pill: Pill,
     player: PlayerData,
     random: () => number = Math.random,
+    // M3 (talent v4 §4.2) — Hoa Hau Thong Than: scales numeric pill
+    // magnitudes (cultivation %, insight, regen rate). Indivisible grants
+    // (a main-stat POINT) are not scaled.
+    potencyMultiplier = 1,
   ): { mainStat?: MainStatKey; timedEffect?: PersistentTimedEffect } {
     let mainStat: MainStatKey | undefined
     let timedEffect: PersistentTimedEffect | undefined
@@ -230,7 +234,7 @@ export class PillSystem {
 
               stat: 'manaRegenPerSecond',
 
-              flat: effect.mpPerSecond ?? 0,
+              flat: (effect.mpPerSecond ?? 0) * potencyMultiplier,
             },
           ],
         }
@@ -243,14 +247,15 @@ export class PillSystem {
         // addCultivation để giữ cap tầng.
         const required = getRequiredCultivation(player.realmId, player.realmLevel)
 
-        addCultivation(player, Math.floor(required * (effect.cultivationPercent ?? 0)))
+        addCultivation(player, Math.floor(required * (effect.cultivationPercent ?? 0) * potencyMultiplier))
 
         continue
       }
 
       if (effect.type === 'skill_insight') {
         // Cảm Ngộ = skillInsight + lifetime counter, cùng transaction.
-        const amount = effect.value ?? 0
+        // potency rounds to the nearest whole insight point.
+        const amount = Math.round((effect.value ?? 0) * potencyMultiplier)
 
         player.skillInsight += amount
         player.totalSkillInsightGained += amount

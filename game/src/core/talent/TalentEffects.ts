@@ -112,18 +112,6 @@ export function getBodyRefinementProgressMultiplier(selectedTalentIds: readonly 
   return 1 + sumPercent(selectedTalentIds, 'body_refinement_progress')
 }
 
-export function getAlchemySuccessBonusPercentPoints(selectedTalentIds: readonly string[] | undefined): number {
-  let points = 0
-
-  for (const effect of collectTalentEffects(selectedTalentIds)) {
-    if (effect.kind === 'alchemy_success_bonus') {
-      points += effect.percentPoints
-    }
-  }
-
-  return points
-}
-
 export function getSurviveLethalUsesPerBattle(selectedTalentIds: readonly string[] | undefined): number {
   let uses = 0
 
@@ -221,6 +209,45 @@ export function getNodeCostFreeChance(selectedTalentIds: readonly string[] | und
   }
 
   return Math.min(1, chance)
+}
+
+// ==================== M3 — nhóm sản xuất (spec §4.2) ====================
+
+/**
+ * Hoa Hau Thong Than — alchemy double-pill rule pack: yield x2 at settle,
+ * potency +50% at pill consumption, cost x2 (fuel wood + spirit stone) at
+ * startJob. undefined when the talent is absent.
+ */
+export function getAlchemyDoublePill(
+  selectedTalentIds: readonly string[] | undefined,
+): { yieldMultiplier: number; potencyMultiplier: number; costMultiplier: number } | undefined {
+  for (const effect of collectTalentEffects(selectedTalentIds)) {
+    if (effect.kind === 'alchemy_double_pill') {
+      return {
+        yieldMultiplier: effect.yieldMultiplier,
+        potencyMultiplier: effect.potencyMultiplier,
+        costMultiplier: effect.costMultiplier,
+      }
+    }
+  }
+
+  return undefined
+}
+
+/**
+ * Bach Luyen Thanh Khi — enhance always succeeds; each attempt pays
+ * costMultiplier materials + spirit stone. undefined when absent.
+ */
+export function getEnhanceGuarantee(
+  selectedTalentIds: readonly string[] | undefined,
+): { costMultiplier: number } | undefined {
+  for (const effect of collectTalentEffects(selectedTalentIds)) {
+    if (effect.kind === 'enhance_guaranteed') {
+      return { costMultiplier: effect.costMultiplier }
+    }
+  }
+
+  return undefined
 }
 
 /** Pha Giap carry — the bound passive's stacks partially persist across battles. */

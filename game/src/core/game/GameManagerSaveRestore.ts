@@ -19,7 +19,7 @@ import { ProductionSystem } from '../production/ProductionSystem'
 import type { ProductionSiteState } from '../production/ProductionTypes'
 import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
-import { getAlchemySuccessBonusPercentPoints } from '../talent/TalentEffects'
+import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
@@ -386,7 +386,9 @@ export class GameManagerSaveRestore {
       (pillId) =>
         this.deps.pillRegistry.has(pillId) ? this.deps.pillRegistry.get(pillId) : undefined,
       Date.now(),
-      getAlchemySuccessBonusPercentPoints(this.deps.getActivePlayer()?.selectedTalentIds ?? []),
+      0,
+      // M3 — Hoa Hau Thong Than: x2 pill yield applies to offline settle too.
+      getAlchemyDoublePill(this.deps.getActivePlayer()?.selectedTalentIds)?.yieldMultiplier ?? 1,
     )
 
     // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:

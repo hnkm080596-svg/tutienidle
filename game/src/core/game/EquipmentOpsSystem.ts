@@ -19,6 +19,7 @@ import { BuildingManager } from '../building/BuildingManager'
 import { BuildingSystem } from '../building/BuildingSystem'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
+import { getEnhanceGuarantee } from '../talent/TalentEffects'
 
 export interface EquipmentOpsSystemDeps {
   equipmentSystem: EquipmentSystem
@@ -36,6 +37,10 @@ export interface EquipmentOpsSystemDeps {
   // cung cấp closure vì hook thật cần questSystem/questRegistry/questManager,
   // những state không thuộc phạm vi trang bị.
   notifyQuestMaterialGained: (materialId: string, amount: number) => void
+  // Talent policy reads the active player per call (same pattern as
+  // GameManagerBuildingOps) — enhance guarantee follows the CURRENT
+  // selectedTalentIds, not a snapshot.
+  getActivePlayer: () => PlayerData | undefined
 }
 
 /**
@@ -64,6 +69,20 @@ export class EquipmentOpsSystem {
 
     this.deps.equipmentSystem.setCostDiscountPercent(
       this.deps.buildingSystem.getCraftModifiers(instance, template).equipmentCostDiscountPercent / 100,
+    )
+  }
+
+  /**
+   * M3 (spec §4.2) — Bach Luyen Thanh Khi: enhance policy (never fail +
+   * x3 cost) synced per call, same pattern as syncEquipmentCostDiscount.
+   */
+  private syncEnhancePolicy() {
+    const guarantee = getEnhanceGuarantee(this.deps.getActivePlayer()?.selectedTalentIds)
+
+    this.deps.equipmentSystem.setEnhancePolicy(
+      guarantee
+        ? { alwaysSucceed: true, costMultiplier: guarantee.costMultiplier }
+        : { alwaysSucceed: false, costMultiplier: 1 },
     )
   }
 
@@ -133,6 +152,7 @@ export class EquipmentOpsSystem {
   /** Cường Hóa gắn SLOT — slot trống vẫn nâng được (slot-level rework). */
   enhanceSlot(slot: EquipmentSlot, player: PlayerData): { ok: boolean; reason?: string } {
     this.syncEquipmentCostDiscount()
+    this.syncEnhancePolicy()
 
     return this.deps.equipmentSystem.enhance(
       slot,
@@ -153,6 +173,7 @@ export class EquipmentOpsSystem {
 
   getEnhanceCost(slot: EquipmentSlot, realmId: string) {
     this.syncEquipmentCostDiscount()
+    this.syncEnhancePolicy()
 
     return this.deps.equipmentSystem.getEnhanceCost(
       slot,
@@ -169,6 +190,7 @@ export class EquipmentOpsSystem {
 
   getEnhanceSpiritStoneCost(slot: EquipmentSlot, realmId: string): number {
     this.syncEquipmentCostDiscount()
+    this.syncEnhancePolicy()
 
     return this.deps.equipmentSystem.getEnhanceSpiritStoneCost(
       slot,

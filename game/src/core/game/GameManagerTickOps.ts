@@ -11,7 +11,7 @@ import type { QuestManager } from '../quest/QuestManager'
 import type { QuestRegistry } from '../quest/QuestRegistry'
 import type { QuestSystem } from '../quest/QuestSystem'
 import type { PassiveSystem } from '../skill/PassiveSystem'
-import { getAlchemySuccessBonusPercentPoints } from '../talent/TalentEffects'
+import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { TribulationDirector } from '../tribulation/TribulationDirector'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
 import type { NotificationQueue } from './NotificationQueue'
@@ -181,15 +181,16 @@ export class GameManagerTickOps {
         })
       }
 
-      // Đan Phòng settle (§8.3). Thiên phú Đan Duyên cộng điểm % thành
-      // đan (plan §6) — đọc từ activePlayer mỗi tick, đổi talent là có hiệu lực.
+      // Đan Phòng settle (§8.3). M3 — Hoa Hau Thong Than: x2 pill yield
+      // per successful job — read from activePlayer each tick.
       this.deps.alchemySystem.tick(
         Date.now(),
         this.deps.pillBag,
         (pillId) =>
           this.deps.pillRegistry.has(pillId) ? this.deps.pillRegistry.get(pillId) : undefined,
         Math.random,
-        getAlchemySuccessBonusPercentPoints(activePlayer.selectedTalentIds),
+        0,
+        getAlchemyDoublePill(activePlayer.selectedTalentIds)?.yieldMultiplier ?? 1,
       )
 
       for (const event of this.deps.alchemySystem.drainSettlementEvents()) {

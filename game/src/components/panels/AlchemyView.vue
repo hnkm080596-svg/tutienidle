@@ -114,7 +114,12 @@ const preview = computed(() => {
     return null
   }
 
-  return gameManager.alchemyOps.previewAlchemyOutcome(selectedRecipe.value.id, selectedHerbId.value)
+  return gameManager.alchemyOps.previewAlchemyOutcome(
+    selectedRecipe.value.id,
+    selectedHerbId.value,
+    undefined,
+    player.$state,
+  )
 })
 
 /** Gỗ nhiên liệu theo biến thể thảo đã chọn (gp123 6E): `<realm>_wood_<age>`
@@ -145,7 +150,7 @@ const fuelWoodRow = computed(() => {
 
     owned: gameManager.materialBag.getAmount(woodId),
 
-    amount: recipe.fuelWoodAmount,
+    amount: preview.value?.fuelWoodAmount ?? recipe.fuelWoodAmount,
   }
 })
 
@@ -153,7 +158,7 @@ const fuelWoodRow = computed(() => {
 const spiritStoneRow = computed(() => ({
   owned: gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID),
 
-  amount: selectedRecipe.value?.spiritStoneCost ?? 0,
+  amount: preview.value?.spiritStoneCost ?? selectedRecipe.value?.spiritStoneCost ?? 0,
 }))
 
 const jobs = computed(() => {
@@ -244,7 +249,7 @@ function cancelJob(jobId: string) {
 
         <p class="alchemy-detail__outcome">
           Chắc chắn {{ preview.guaranteedPills }} viên,
-          {{ preview.extraPillChance }}% thêm 1 viên
+          {{ preview.extraPillChance }}% thêm {{ preview.extraPillYield }} viên
         </p>
 
         <!-- Bỏ "— Đan Phòng cấp N" (2026-08-30, bug report: trùng lặp

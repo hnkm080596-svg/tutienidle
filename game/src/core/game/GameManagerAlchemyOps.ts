@@ -12,6 +12,7 @@ import {
 } from '../alchemy/AlchemySystem'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { getRealmTier } from '../realm/RealmTierMap'
+import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 
 export interface GameManagerAlchemyOpsDeps {
@@ -61,7 +62,7 @@ export class GameManagerAlchemyOps {
   startAlchemyJob(
     recipeId: string,
     herbMaterialId: string,
-    _player: PlayerData,
+    player: PlayerData,
   ): { ok: boolean; reason?: string } {
     const recipe = this.deps.alchemyRecipesById.get(recipeId)
 
@@ -80,6 +81,11 @@ export class GameManagerAlchemyOps {
 
     const maxSlots = this.deps.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
 
+    // M3 (spec §4.2) — Hoa Hau Thong Than counter-cost: x2 fuel wood +
+    // spirit stone per job. The multiplier is forwarded so the reserve
+    // check inside startJob validates the scaled price.
+    const costMultiplier = getAlchemyDoublePill(player.selectedTalentIds)?.costMultiplier ?? 1
+
     const started = this.deps.alchemySystem.startJob(
       recipe,
 
@@ -96,14 +102,17 @@ export class GameManagerAlchemyOps {
       Date.now(),
 
       maxSlots,
+
+      costMultiplier,
     )
 
     // Bugfix (review 2026-08-26) — Linh Thạch được CHECK ở startJob
     // nhưng chưa từng được TRỪ: luyện đan miễn phí. Trừ sau khi reserve
     // nguyên liệu thành công (all-or-nothing như mọi sink khác).
-    // Plan Workstream F — trừ trên MaterialBag.
-    if (started.ok && recipe.spiritStoneCost > 0) {
-      this.deps.materialBag.remove(spiritStoneId, recipe.spiritStoneCost)
+    // Plan Workstream F — trừ trên MaterialBag. Trừ đúng số startJob đã
+    // validate (single formula — scaled cost trả về trong result).
+    if (started.ok && started.spiritStoneCost) {
+      this.deps.materialBag.remove(spiritStoneId, started.spiritStoneCost)
     }
 
     return started
@@ -113,17 +122,32 @@ export class GameManagerAlchemyOps {
     return this.deps.alchemySystem.cancelJob(jobId)
   }
 
-  /** Preview tổng tỷ lệ thành + guaranteed + chance viên cộng thêm (§9.3). */
+  /**
+   * Preview tổng tỷ lệ thành + guaranteed + chance viên cộng thêm (§9.3).
+   * M3 — truyền `player` để preview phản ánh Hoa Hau Thong Than (cost x2,
+   * yield x2) giống hệt startJob/tick sẽ charge/pay (AR-23 parity).
+   */
   previewAlchemyOutcome(
     recipeId: string,
     herbMaterialId: string,
     roomLevel = Math.max(1, this.getAlchemyRoomLevel()),
+    player?: PlayerData,
   ): {
     totalPercent: number
 
     guaranteedPills: number
 
     extraPillChance: number
+
+    extraPillYield: number
+
+    yieldMultiplier: number
+
+    costMultiplier: number
+
+    fuelWoodAmount: number
+
+    spiritStoneCost: number
 
     durationSeconds: number
   } | null {
@@ -146,12 +170,33 @@ export class GameManagerAlchemyOps {
       recipe,
     )
 
+    const effect = player ? getAlchemyDoublePill(player.selectedTalentIds) : undefined
+
+    const yieldMultiplier = effect?.yieldMultiplier ?? 1
+
+    const costMultiplier = effect?.costMultiplier ?? 1
+
+    const baseGuaranteed = Math.floor(totalPercent / 100)
+
     return {
       totalPercent,
 
-      guaranteedPills: Math.floor(totalPercent / 100),
+      guaranteedPills: Math.floor(baseGuaranteed * yieldMultiplier),
 
       extraPillChance: totalPercent % 100,
+
+      // So vien cong them khi roll trung — khop voi floor((g+1)*y)-floor(g*y).
+      extraPillYield:
+        Math.floor((baseGuaranteed + 1) * yieldMultiplier) -
+        Math.floor(baseGuaranteed * yieldMultiplier),
+
+      yieldMultiplier,
+
+      costMultiplier,
+
+      fuelWoodAmount: Math.ceil(recipe.fuelWoodAmount * Math.max(1, costMultiplier)),
+
+      spiritStoneCost: Math.ceil(recipe.spiritStoneCost * Math.max(1, costMultiplier)),
 
       durationSeconds: alchemySecondsFor(recipe, roomLevel),
     }
