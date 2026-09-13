@@ -224,6 +224,61 @@ describe('Tribulation routing integration (Task 11)', () => {
     expect(secondCheck).toBe(false)
   })
 
+  it('REPRO: production outcome check (no presentation arg, as App.vue calls it) leaves the route stranded on tribulation', async () => {
+    const fakeGame = {
+      scene: {
+        isActive: () => true,
+        start: vi.fn(),
+        stop: vi.fn(),
+        getScene: vi.fn(() => null),
+      },
+    } as any
+    phaserAdapter.setGame(fakeGame)
+
+    // Same headless entry dance as the duplicate-outcome test above.
+    gameManager.setPresentationMode('headless')
+    gameManager.startTribulation(player, calculateStats(player.baseStats, []), 'qi_refining')
+
+    await vi.waitFor(() => {
+      expect(vueAdapter.phase.value).toBe('awaiting-ready')
+    })
+    const entrySession = gameManager.getCurrentPresentationSession()!
+    phaserAdapter.reportReady({
+      transitionId: vueAdapter.transitionId.value,
+      sessionId: entrySession.sessionId,
+    })
+    vueAdapter.reportVueReady(vueAdapter.transitionId.value)
+    await vi.waitFor(() => {
+      expect(coordinator.getSnapshot().phase).toBe('idle')
+      expect(coordinator.getSnapshot().currentRoute).toBe('tribulation')
+    })
+
+    const active = gameManager.tribulationDirector.getState()!
+    active.state = 'victory'
+
+    const playerStoreMock = {
+      $state: player,
+      realmId: 'mortal',
+      realmLevel: 10,
+      cultivation: 1000,
+      selectedTalentIds: [],
+    } as any
+
+    // This is the exact call signature App.vue:451 uses in production:
+    // no presentation argument, so no request({target:'home'}) is ever
+    // issued. The outcome is applied (director cleared), but the
+    // coordinator's route can never leave 'tribulation' - home chrome
+    // stays hidden, the overlay renders nothing (active === null), and
+    // the TribulationScene is never deactivated. Soft-lock until reload.
+    const handled = checkTribulationOutcomeAction(playerStoreMock, gameManager)
+    expect(handled).toBe(true)
+    expect(gameManager.tribulationDirector.getState()).toBeNull()
+
+    await vi.waitFor(() => {
+      expect(coordinator.getSnapshot().currentRoute).toBe('home')
+    })
+  })
+
   it('stale READY is rejected by phaserAdapter', () => {
     const readyAccepted = phaserAdapter.reportReady({
       transitionId: 9999, // Stale transition

@@ -1,5 +1,6 @@
-﻿import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it, vi } from 'vitest'
 import { GameManager } from './GameManager'
+import { GameManagerAutoFarmOps } from './GameManagerAutoFarmOps'
 import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
 
@@ -73,5 +74,65 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
     player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs: Date.now() - 60_000 }
 
     expect(() => gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, Number.POSITIVE_INFINITY)).not.toThrow()
+  })
+})
+
+// tickAutoFarm (ONLINE path) lacks the cycleSeconds guards that
+// settleAutoFarmOffline (OFFLINE path) has: the offline path rejects
+// `!(cycleSeconds > 0) || !Number.isFinite(cycleSeconds)` up front, the
+// online path only checks `undefined`. saveShapeValidation never inspects
+// perfectClearSeconds, so a malformed save carries the poison straight
+// into the tick loop.
+function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
+  return new GameManagerAutoFarmOps({
+    stageManager: { get: () => null, start: () => true, stop: () => {} } as any,
+    stageTemplates: { get: () => STAGE } as any,
+    battleLoot: {
+      beginBattle: vi.fn(),
+      setChannel: vi.fn(),
+      setSession: vi.fn(),
+      processDefeatedEnemies,
+    } as any,
+    stageWaves: { pickEnemyForTurnSpawn: () => null } as any,
+    enemySystem: { spawn: vi.fn() } as any,
+    buildPlayerRewardReceiver: () => ({}) as any,
+  })
+}
+
+describe('Adversarial — online auto-farm tick invariants', () => {
+  it('REPRO: cycleSeconds = 0 (malformed save) -> should roll ZERO cycles, but loops unboundedly', () => {
+    const processDefeatedEnemies = vi.fn(() => {
+      // Safety cap so the buggy path terminates the test instead of hanging:
+      // elapsedMs / 0 = Infinity completedCycles, so the loop never stops on
+      // its own. A correct implementation rolls ZERO cycles for this state.
+      if (processDefeatedEnemies.mock.calls.length > 10) {
+        throw new Error('safety cap: loop exceeded 10 iterations')
+      }
+    })
+    const ops = buildAutoFarmOps(processDefeatedEnemies)
+    const player = createDefaultPlayer()
+    player.perfectClearStageIds.push('adv_stage')
+    player.perfectClearSeconds['adv_stage'] = 0
+    player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs: Date.now() - 60_000 }
+
+    expect(() => ops.tickAutoFarm(player)).not.toThrow()
+    expect(processDefeatedEnemies.mock.calls.length).toBe(0)
+  })
+
+  it('REPRO: cycleSeconds = NaN (malformed save) -> lastCheckedMs poisoned to NaN, auto-farm dead forever', () => {
+    const processDefeatedEnemies = vi.fn()
+    const ops = buildAutoFarmOps(processDefeatedEnemies)
+    const player = createDefaultPlayer()
+    player.perfectClearStageIds.push('adv_stage')
+    player.perfectClearSeconds['adv_stage'] = NaN
+    player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs: Date.now() - 60_000 }
+
+    ops.tickAutoFarm(player)
+
+    // NaN <= 0 is false, so the loop body is skipped but the poison write
+    // `lastCheckedMs += NaN * NaN` still lands: every future tick derives
+    // elapsedMs = now - NaN = NaN -> completedCycles NaN -> auto-farm
+    // silently stops paying out forever, with no error.
+    expect(Number.isFinite(player.autoFarmStage!.lastCheckedMs)).toBe(true)
   })
 })
