@@ -1,23 +1,23 @@
 /**
- * i18n key parity guard (P16) — every locale key a source file can feed to
+ * i18n key parity guard (P16) -- every locale key a source file can feed to
  * vue-i18n must resolve in BOTH `src/locales/vi.json` and `src/locales/en.json`.
  *
  * Origin: the 2026-09-13 whole-codebase audit observed "missing key" warnings
  * in BOTH locales on the e2e console (`panels.stageSelect.*`,
  * `panels.wheel.aria.group`, `onboarding.auth.eyebrow`, ...). Those keys were
- * never actually absent from the locale files — the warnings come from
+ * never actually absent from the locale files -- the warnings come from
  * `useI18n({ useScope: 'local' })` called WITHOUT a `messages` option. Such a
  * call builds a local composer with an empty message table; every t() lookup
  * misses locally ("Not found '<key>' in 'vi'/'en' locale messages") and only
  * then falls back through the fallback chain to the root messages. The text
  * resolves, but two console warnings fire per key per call. Verified live:
  * the same keys warn under `{ useScope: 'local' }` and resolve silently under
- * bare `useI18n()` (global scope) — identical output, zero warnings.
+ * bare `useI18n()` (global scope) -- identical output, zero warnings.
  *
  * Scope decision (LOCAL-AWARE):
  * - Components that pass `messages:` to useI18n carry their own key table
  *   (PresentationTransitionOverlay). Their t() literals are checked against
- *   the component-local vi/en blocks — a global-fallback hit would still
+ *   the component-local vi/en blocks -- a global-fallback hit would still
  *   emit the missing-key warning, so "exists globally" is not enough there.
  * - Everywhere else (bare useI18n(), explicit global scope, i18n.global.t,
  *   $t) keys resolve against the global registry: literal must exist in both
@@ -25,14 +25,19 @@
  *
  * What is scanned:
  *  1. String-literal first arguments of t()/te()/tm()/rt()/$t() calls in any
- *     src/** file (.ts + .vue, templates included — `{{ t('x') }}` and
+ *     src/** file (.ts + .vue, templates included -- `{{ t('x') }}` and
  *     `:attr="t('x')"` are the same call shape).
  *  2. ANY string literal whose text starts with a known top-level locale
- *     namespace (`panels.`, `combat.`, `announce.`, ...) — catches keys fed
+ *     namespace (`panels.`, `combat.`, `announce.`, ...) -- catches keys fed
  *     indirectly: descriptor maps (titleKey/bodyKey, OP_LABEL_KEYS,
  *     useBagFilter key tables), messageKey payloads, test expectations.
- *  3. useI18n option shapes: `useScope: 'local'` without `messages` is the
- *     warning-generating defect shape and is forbidden outright.
+ *  3. useI18n call shapes, fail-closed: in vue-i18n 11, ANY non-empty
+ *     options object without `useScope: 'global'` defaults to local scope,
+ *     so the ban is not the literal text `useScope: 'local'` but every
+ *     non-empty call that lacks an inline `messages` literal --
+ *     `useI18n({ inheritLocale: true })`, `useI18n(optsVar)`, a `messages`
+ *     bound to a non-literal, `useScope: 'parent'` (unverifiable target)
+ *     all produce or hide the same empty-table warning hole.
  *  4. A `messages:` block must keep vi/en leaf parity itself.
  *
  * Known boundaries (documented, not silently skipped):
@@ -42,12 +47,12 @@
  * - A literal containing `${...}` is dynamic: the guard proves at least one
  *   matching path exists in both locales, not that every runtime value maps
  *   to a leaf. Partial coverage by construction.
- * - Literals ending mid-path (`'skillResource.'`) are prefixes, not keys —
+ * - Literals ending mid-path (`'skillResource.'`) are prefixes, not keys --
  *   excluded by requiring non-empty dot-separated segments.
- * - A key path that resolves to a branch (object) counts as "exists" — te()/
+ * - A key path that resolves to a branch (object) counts as "exists" -- te()/
  *   tm() legitimately resolve branches.
  * - The scan is regex/tokenizer-based (no Vue SFC compiler): t() is assumed
- *   to be the i18n translator everywhere under src/ — a same-named local
+ *   to be the i18n translator everywhere under src/ -- a same-named local
  *   helper would surface as a loud missing-key failure, never silently pass.
  * - `d()`/`n()` (datetime/number format keys) are a different message space
  *   and are not used under src/ today; not scanned.
@@ -64,7 +69,7 @@ const LOCALES_DIR = join(SRC_DIR, 'locales')
 const VI_MESSAGES = JSON.parse(readFileSync(join(LOCALES_DIR, 'vi.json'), 'utf8')) as unknown
 const EN_MESSAGES = JSON.parse(readFileSync(join(LOCALES_DIR, 'en.json'), 'utf8')) as unknown
 
-/** Every node path — branches included; a path "exists" if it resolves at all. */
+/** Every node path -- branches included; a path "exists" if it resolves at all. */
 function collectPaths(node: unknown, prefix = '', out = new Set<string>()): Set<string> {
   if (node === null || typeof node !== 'object') {
     if (prefix) out.add(prefix)
@@ -188,38 +193,91 @@ interface LocalMessages {
   en: Set<string>
 }
 
+interface I18nAnalysis {
+  /** Merged vi/en leaf sets across the file's inline `messages` blocks; null when none. */
+  local: LocalMessages | null
+  /**
+   * Warning-generating or unverifiable useI18n call shapes. Fail-closed:
+   * anything the scan cannot prove safe is a problem, never a silent skip.
+   */
+  problems: string[]
+}
+
 /**
- * Per-file local message tables: every useI18n options object that carries
- * `messages:` contributes its vi/en leaf sets. Files without them return
- * null and resolve t() against the global registry only.
+ * Classify every useI18n(...) call in a source file.
+ *
+ * vue-i18n 11 scope semantics: bare useI18n() returns the GLOBAL composer;
+ * ANY non-empty options object without useScope:'global' builds a local
+ * composer. A local composer without `messages` owns an EMPTY message table:
+ * every t() lookup misses it, prints "Not found '<key>' in 'vi'/'en' locale
+ * messages", then falls back to root -- the exact console signature the audit
+ * saw. The same hole hides behind `useI18n({ inheritLocale: true })`,
+ * `useI18n({ missingWarn: false })`, `useI18n(optsVar)`, etc., so the rule is
+ * "non-empty args must either scope global or carry an inline messages
+ * literal", not "the literal text useScope:'local' is banned".
  */
-function localMessagesOf(src: string): LocalMessages | null {
+function analyzeI18n(src: string): I18nAnalysis {
   const local: LocalMessages = { vi: new Set(), en: new Set() }
+  const problems: string[] = []
   let found = false
   for (const call of src.matchAll(/useI18n\s*\(/g)) {
     const openParen = src.indexOf('(', call.index!)
     const closeParen = balancedEnd(src, openParen, '(', ')')
-    if (closeParen === -1) continue
-    const args = src.slice(openParen + 1, closeParen)
-    const msgMatch = /\bmessages\s*:\s*\{/.exec(args)
-    if (!msgMatch) continue
-    const blockOpen = args.indexOf('{', msgMatch.index)
-    const blockClose = balancedEnd(args, blockOpen, '{', '}')
-    if (blockClose === -1) continue
-    const block = args.slice(blockOpen, blockClose + 1)
+    if (closeParen === -1) {
+      problems.push('useI18n(...) call does not balance -- cannot classify')
+      continue
+    }
+    const args = src.slice(openParen + 1, closeParen).trim()
+    if (args === '') continue // useI18n() -> global composer, always safe
+    if (/\buseScope\s*:\s*['"]global['"]/.test(args)) continue // explicit global scope
+    if (/\buseScope\s*:\s*['"]parent['"]/.test(args)) {
+      problems.push(
+        `useI18n(${args.slice(0, 60)}) -- useScope 'parent' resolves to a composer this scan cannot verify`,
+      )
+      continue
+    }
+    const msgMatch = /\bmessages\s*:/.exec(args)
+    if (!msgMatch) {
+      // Includes useScope:'local' without messages and every other
+      // non-empty option/variable -- all default to the empty local table.
+      problems.push(
+        `useI18n(${args.slice(0, 60)}) -- non-empty options default to local scope without messages (empty-table warnings)`,
+      )
+      continue
+    }
+    const valueIdx = msgMatch.index + msgMatch[0].length + args.slice(msgMatch.index + msgMatch[0].length).search(/\S/)
+    if (args[valueIdx] !== '{') {
+      problems.push(
+        `useI18n(${args.slice(0, 60)}) -- messages is not an inline object literal; the local table cannot be verified`,
+      )
+      continue
+    }
+    const blockClose = balancedEnd(args, valueIdx, '{', '}')
+    if (blockClose === -1) {
+      problems.push('useI18n messages block does not balance -- cannot parse local table')
+      continue
+    }
+    const block = args.slice(valueIdx, blockClose + 1)
     for (const locale of ['vi', 'en'] as const) {
-      const locMatch = new RegExp(`\\b${locale}\\s*:\\s*\\{`).exec(block)
-      if (!locMatch) continue
-      const locOpen = block.indexOf('{', locMatch.index)
+      const locMatch = new RegExp(`\\b${locale}\\s*:`).exec(block)
+      if (!locMatch) continue // missing locale table -> its keys fail the local-resolution test loudly
+      const locOpen = locMatch.index + locMatch[0].length + block.slice(locMatch.index + locMatch[0].length).search(/\S/)
+      if (block[locOpen] !== '{') {
+        problems.push(`useI18n messages.${locale} is not an inline object literal -- cannot verify`)
+        continue
+      }
       const locClose = balancedEnd(block, locOpen, '{', '}')
-      if (locClose === -1) continue
+      if (locClose === -1) {
+        problems.push(`useI18n messages.${locale} block does not balance`)
+        continue
+      }
       for (const leaf of objectLiteralLeafPaths(block.slice(locOpen, locClose + 1))) {
         local[locale].add(leaf)
       }
     }
     found = true
   }
-  return found ? local : null
+  return { local: found ? local : null, problems }
 }
 
 /** t()/te()/tm()/rt()/$t() call with a string-literal first argument. */
@@ -247,15 +305,14 @@ function keyExists(key: string, paths: Set<string>): boolean {
   return false
 }
 
-const FILES = srcCorpus(SRC_DIR).map((f) => ({
-  ...f,
-  clean: uncommented(f.text),
-  local: localMessagesOf(uncommented(f.text)),
-}))
+const FILES = srcCorpus(SRC_DIR).map((f) => {
+  const clean = uncommented(f.text)
+  return { ...f, clean, i18n: analyzeI18n(clean) }
+})
 
 describe('i18n key parity (P16)', () => {
   it(
-    'has a corpus and real locale registries — a vacuous scan proves nothing',
+    'has a corpus and real locale registries -- a vacuous scan proves nothing',
     () => {
       expect(FILES.length).toBeGreaterThan(100)
       expect(VI_PATHS.size).toBeGreaterThan(500)
@@ -274,13 +331,13 @@ describe('i18n key parity (P16)', () => {
           const key = m[3]!
           const globalCall = isGlobalCall(file.clean, m.index!)
           // Local-messages components: a key is covered when it exists in
-          // both local tables OR both global tables (root fallback exists —
+          // both local tables OR both global tables (root fallback exists --
           // though the fallback still warns; the next test pins that).
-          const ok = globalCall || !file.local
+          const ok = globalCall || !file.i18n.local
             ? keyExists(key, VI_PATHS) && keyExists(key, EN_PATHS)
-            : (keyExists(key, file.local.vi) || keyExists(key, VI_PATHS)) &&
-              (keyExists(key, file.local.en) || keyExists(key, EN_PATHS))
-          if (!ok) violations.push(`${file.fromSrc} → ${key}`)
+            : (keyExists(key, file.i18n.local.vi) || keyExists(key, VI_PATHS)) &&
+              (keyExists(key, file.i18n.local.en) || keyExists(key, EN_PATHS))
+          if (!ok) violations.push(`${file.fromSrc} -> ${key}`)
         }
       }
       expect(violations).toEqual([])
@@ -289,16 +346,16 @@ describe('i18n key parity (P16)', () => {
   )
 
   it(
-    'a component-local key actually resolves locally — a global-only key inside a local-messages file still prints the missing-key warning',
+    'a component-local key actually resolves locally -- a global-only key inside a local-messages file still prints the missing-key warning',
     () => {
       const violations: string[] = []
       for (const file of FILES) {
-        if (!file.local) continue
+        if (!file.i18n.local) continue
         for (const m of file.clean.matchAll(T_CALL)) {
           const key = m[3]!
           if (isGlobalCall(file.clean, m.index!)) continue
-          if (!keyExists(key, file.local.vi) || !keyExists(key, file.local.en)) {
-            violations.push(`${file.fromSrc} → ${key} (absent from this file's local messages)`)
+          if (!keyExists(key, file.i18n.local.vi) || !keyExists(key, file.i18n.local.en)) {
+            violations.push(`${file.fromSrc} -> ${key} (absent from this file's local messages)`)
           }
         }
       }
@@ -318,7 +375,7 @@ describe('i18n key parity (P16)', () => {
           if (!literal.includes('.') || !NAMESPACE_RE.test(literal.split('.')[0]!)) continue
           if (!KEY_SHAPE.test(literal)) continue
           if (!keyExists(literal, VI_PATHS) || !keyExists(literal, EN_PATHS)) {
-            violations.push(`${file.fromSrc} → ${literal}`)
+            violations.push(`${file.fromSrc} -> ${literal}`)
           }
         }
       }
@@ -328,18 +385,12 @@ describe('i18n key parity (P16)', () => {
   )
 
   it(
-    "no useI18n({ useScope: 'local' }) without messages — the empty local table is what printed 'missing key' warnings for every key in e2e",
+    'no warning-generating or unverifiable useI18n call shape -- the empty local table is what printed missing-key warnings for every key in e2e',
     () => {
       const offenders: string[] = []
       for (const file of FILES) {
-        for (const call of file.clean.matchAll(/useI18n\s*\(/g)) {
-          const openParen = file.clean.indexOf('(', call.index!)
-          const closeParen = balancedEnd(file.clean, openParen, '(', ')')
-          if (closeParen === -1) continue
-          const args = file.clean.slice(openParen + 1, closeParen)
-          const isLocal = /\buseScope\s*:\s*['"]local['"]/.test(args)
-          const hasMessages = /\bmessages\s*:/.test(args)
-          if (isLocal && !hasMessages) offenders.push(file.fromSrc)
+        for (const problem of file.i18n.problems) {
+          offenders.push(`${file.fromSrc} -> ${problem}`)
         }
       }
       expect(offenders).toEqual([])
@@ -352,13 +403,59 @@ describe('i18n key parity (P16)', () => {
     () => {
       const violations: string[] = []
       for (const file of FILES) {
-        if (!file.local) continue
-        const onlyVi = [...file.local.vi].filter((k) => !file.local!.en.has(k))
-        const onlyEn = [...file.local.en].filter((k) => !file.local!.vi.has(k))
-        for (const k of [...onlyVi, ...onlyEn]) violations.push(`${file.fromSrc} → ${k}`)
+        if (!file.i18n.local) continue
+        const onlyVi = [...file.i18n.local.vi].filter((k) => !file.i18n.local!.en.has(k))
+        const onlyEn = [...file.i18n.local.en].filter((k) => !file.i18n.local!.vi.has(k))
+        for (const k of [...onlyVi, ...onlyEn]) violations.push(`${file.fromSrc} -> ${k}`)
       }
       expect(violations).toEqual([])
     },
     SCAN_TIMEOUT,
   )
+})
+
+/**
+ * Positive controls for analyzeI18n -- the fixtures are synthetic source
+ * strings, not scanned corpus (the guard only walks src/**). FN is spelled
+ * via a constant so this file's own text never contains the literal call
+ * shape the corpus scan looks for.
+ */
+const FN = 'useI18n'
+const call = (args: string) => `const { t } = ${FN}(${args})`
+
+describe('analyzeI18n -- useI18n call-shape classification', () => {
+  it('flags every non-empty options shape that defaults to the empty local table', () => {
+    for (const src of [
+      call(`{ useScope: 'local' }`),
+      call('{ inheritLocale: true }'),
+      call('{ missingWarn: false }'),
+      call('optsVar'),
+      call(`{ useScope: 'parent' }`),
+    ]) {
+      expect(analyzeI18n(src).problems.length, src).toBeGreaterThan(0)
+    }
+  })
+
+  it('flags messages bound to a non-literal -- unverifiable, never a silent skip', () => {
+    expect(analyzeI18n(call('{ messages: SOME_CONST }')).problems.length).toBeGreaterThan(0)
+    expect(
+      analyzeI18n(call(`{ messages: { vi: LOCALES, en: LOCALES } }`)).problems.length,
+    ).toBeGreaterThan(0)
+  })
+
+  it('accepts the global-scope shapes', () => {
+    for (const src of [call(''), call(`{ useScope: 'global' }`)]) {
+      expect(analyzeI18n(src).problems, src).toEqual([])
+    }
+  })
+
+  it('parses an inline messages block into local vi/en leaf sets', () => {
+    const src = call(
+      `{ useScope: 'local', messages: { vi: { a: 'x', deep: { b: 'y' } }, en: { a: 'x', deep: { b: 'y' } } } }`,
+    )
+    const result = analyzeI18n(src)
+    expect(result.problems).toEqual([])
+    expect([...result.local!.vi].sort()).toEqual(['a', 'deep.b'])
+    expect([...result.local!.en].sort()).toEqual(['a', 'deep.b'])
+  })
 })
