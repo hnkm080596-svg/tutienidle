@@ -128,10 +128,19 @@ code review. (These must run last — they certify the final state.)
       dead-write cleanup candidates, cloud-save live check → D2).
 
 ### Wave D — Release readiness
-- [ ] D1. Distribution: pick web vs Electron; run `dist:win` (or web
+- [~] D1. Distribution: pick web vs Electron; run `dist:win` (or web
       build) end-to-end; verify the artifact boots and saves. Resolve
       the electron-winstaller/allow-scripts install block if Electron
       is chosen.
+      — packaging verified 2026-09-14: `npm run build` green;
+      `electron-builder --win` produced `release/Tien Hiep Idle Setup
+      0.0.0.exe` (NSIS, 655MB) + `win-unpacked/Tien Hiep Idle.exe`;
+      exe launches, window renders dist/index.html, writes userData.
+      Two env-only pitfalls hit during verification: Windows Defender
+      write-scan locks `win-unpacked.tmp` renames (retry after ~5min or
+      add exclusion), and a shell-local `ELECTRON_RUN_AS_NODE=1` made
+      every launch run as plain Node (unset → app boots normally).
+      AWAITING RULING: ship web-only, Electron, or both for beta.
 - [ ] D2. Cloud save: decide Supabase-prod vs local-only for beta;
       wire chosen config; verify save/load through the shipped path.
 - [ ] D3. Tutorial ruling (static-only vs deferred) — record decision.
