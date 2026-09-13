@@ -11,12 +11,12 @@ import type { SignatureDrop } from '../../core/drop/DropTable'
 // Kim(7-8)->Thủy(9-10) và cấu trúc 2 loài/tầng (1 thường + 1
 // boss-eligible, tầng chẵn tiền tố "Hung ") của Luyện Khí + Phàm Nhân,
 // nhưng CÔNG THỨC RIÊNG (first pass, playtest chỉnh):
-//   beastHP(T)   = round(450 * 1.2^(T-1))
+//   beastHP(T)   = round(450 * 1.15^(T-1))
 //   beastATK(T)  = round(42  * 1.15^(T-1))
 //   armor        = 18 + 2T
 // Loài boss-eligible (2nd loài mỗi hành, luôn là bossEnemyId của
 // Stage) = ×1.6 HP / ×1.4 ATK / ×1.3 armor, CÙNG T — vẫn
-// PRE-multiplier (applyBossMultiplier tự nhân thêm ×7/×1.6 lúc spawn
+// PRE-multiplier (applyBossMultiplier tự nhân thêm ×7/×2.0 lúc spawn
 // boss thật, không tự cộng dồn ở đây). attackSpeed author theo thang
 // mới (0.8-2.5 đòn/giây, xem EnemyStatInput.normalizeEnemyAttackSpeed).
 // Không material mới (tránh material chết không ai tiêu) — chỉ rơi
@@ -100,7 +100,7 @@ function foundationBeast(params: {
   // threaded to defineEnemy() unchanged, resolved by resolveDrops.
   signatureDrops?: SignatureDrop[]
 }) {
-  const hp = Math.round(450 * 1.2 ** (params.t - 1))
+  const hp = Math.round(450 * 1.15 ** (params.t - 1))
   const atk = Math.round(42 * 1.15 ** (params.t - 1))
   const armor = 18 + 2 * params.t
 

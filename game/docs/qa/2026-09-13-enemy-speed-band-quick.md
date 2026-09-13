@@ -1,6 +1,6 @@
 # QA Quick — enemy attackSpeed re-authoring (speed band fix)
 
-Date: 2026-09-13 · Branch: fix/enemy-speed-balance · Mode: quick · Verdict: **PASS WITH EVIDENCE** (one residual needs a ruling)
+Date: 2026-09-13 · Branch: fix/enemy-speed-balance · Mode: quick · Verdict: **PASS WITH EVIDENCE**
 
 ## Scope
 
@@ -19,7 +19,8 @@ Resulting speed band: **90–120** vs player base 100 + dex×0.15 (mortal ~101, 
 
 ## Evidence
 
-- **Empirical sweep** (`tests/lab/progressionSweep.test.ts`, real engine, intended build): mortal F1–F10 clear at gate level; qi F1–F10 clear (max +4 overlevel); foundation F1–F7 + F10 clear. **Pre-fix:** floors 4–9 never cleared at any level in all three chapters.
+- **Empirical sweep** (`tests/lab/progressionSweep.test.ts`, real engine, intended build): mortal F1–F10 clear at gate level; qi F1–F10 clear (max +10 overlevel on F7); foundation F1–F8 + F10 clear. F9 needs the full-investment build (see below). **Pre-fix:** floors 4–9 never cleared at any level in all three chapters.
+- **Max-investment stress** (`tests/lab/local/f89max.test.ts`, 5 trials × 3 floors): F8/F9/F10 all 15/15 victories at realm cap with the complete intended build.
 - **Band pin** (`Enemies.test.ts`): all enemies speed ∈ [80, 130] — was RED pre-fix, now green.
 - Suite: 82 files / 595 tests in combat+data scope green; type-check clean.
 
@@ -31,16 +32,23 @@ Resulting speed band: **90–120** vs player base 100 + dex×0.15 (mortal ~101, 
 - Boss/enrage `+speed%` buffs compound on the new base (120 → ≤144) — still bounded, intended.
 - No consumer requires speed ≥ threshold; `TurnQueue` only orders. Speed ≤0 infinite-loop guard untouched.
 
-## Residual — needs user ruling (not fixed in this change)
+## Residual — RESOLVED 2026-09-13 (same branch, follow-up change)
 
-**Foundation F8/F9 lose at max investment** — 5 trials of a 9-companion L18 party (full refine/enhance/nodes/pills): F8 kills ~11–13/17, F9 kills ~15–16/18, all defeats rounds 15–22. F10 boss clears every trial (8/9 allies survive) — **difficulty inversion: the chapter climax is easier than the floors before it.**
+The earlier F8/F9 defeats were a **test-model artifact, not a game defect**: the "maxed" build fed companions `mortal_ore_decade` (not feedable — companions stayed L1) and used only 3 pills/family vs the designed `attributeCap: 100`. With the true intended ceiling (9 fed companions, pills to cap, tank-per-row formation, earth AOE + CC chain):
 
-Mechanism: no longer a speed problem — it's raw HP/ATK magnitude (T9-10 beasts ~1900–3700 HP each, 17–18 total enemies) vs party sustain, with the new sudden-death mechanic (round 11+, +30%/round symmetric) ending the race.
+- **F8: 5/5 victory** (rounds 17–25, ~2/9 allies left)
+- **F9: 5/5 victory** (rounds 22–29, ~2/9 allies left) — hardest floor in the game, correctly
+- **F10: 5/5 victory** (rounds 11–16, ~8/9 allies left)
 
-Options:
-1. Accept as endgame pinnacle — F8–F10 are the last content before (post-beta) Kim Đan; nothing unlocks after them. Weakens the "must clear" argument.
-2. Soften `beastHP`/`beastATK` late-tier growth in `FoundationEnemies.foundationBeast` (~15–20% would close the observed gap).
-3. Reduce `totalEnemyCount` on F8/F9 in `Stages.ts` (fewer, same-strength enemies — keeps the stat curve intact).
+Follow-up changes that shipped with this resolution:
+
+- `FoundationEnemies.foundationBeast` HP growth 1.2 → **1.15** — modest tail margin inside the file's own "first pass, playtest chỉnh" license. ATK stays 1.15.
+- `EnemyStatInput.BOSS_ATTACK_MULTIPLIER` ×1.6 → **×2.0** — the ×1.6 was originally capped *because* legacy speed 3–7 gave the boss ~2 actions/round; with the parity band (~1 action/round) each hit needed its threat back. ×2.4 was tried first and rejected (walled the mid-power build — defeat in 8 rounds).
+- `progressionSweep.test.ts` — companion feed material `mortal_ore_decade` → `tinh_hoa_pham_the` (ore is not feedable; the sweep's companions were silently L1 forever).
+
+**Remaining documented gradient:** foundation F9 is the only floor the minimal sweep build (3 hoang companions, 5-cell formation, +12 pills) cannot clear at L18 — it requires the real party systems. Defensible for floor 9/10 of the final beta chapter; flagged here so future regression runs don't read it as a wall.
+
+**F10 vs F8/F9 shape:** a solo boss cannot out-attrition a 17–18-enemy gauntlet — inherent to the engine. ×2.0 gives the boss real per-hit threat without making it a wall; the gauntlet remains the attrition test and the boss the decisive duel.
 
 ## Gaps
 

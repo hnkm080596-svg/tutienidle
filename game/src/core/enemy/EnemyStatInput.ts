@@ -211,11 +211,13 @@ export function applyEliteMultiplier(stats: Stats): Stats {
   }
 }
 
-// Boss dùng phần lớn power budget cho thời gian giao chiến và phòng thủ.
-// Attack chỉ ×1.6 vì boss sống lâu; hệ số ×3 cũ khiến tổng áp lực tăng quá
-// mạnh, đặc biệt với enemy data legacy có tốc đánh 3-7.
+// Boss spends most of its power budget on engagement time and defense.
+// Attack x2.0 (2026-09-13, up from x1.6): x1.6 was set when legacy speed
+// 3-7 gave the boss ~2 actions/round, so each hit had to stay small. With
+// speed re-authored to the parity band (~1 action/round), the boss needs
+// heavier hits or floor 10 stays easier than floors 8-9 before it.
 const BOSS_MAX_HP_MULTIPLIER = 7
-const BOSS_ATTACK_MULTIPLIER = 1.6
+const BOSS_ATTACK_MULTIPLIER = 2.0
 const BOSS_DEFENSE_MULTIPLIER = 1.2
 const BOSS_ACCURACY_MULTIPLIER = 1.15
 const BOSS_RESISTANCE_BONUS = 15

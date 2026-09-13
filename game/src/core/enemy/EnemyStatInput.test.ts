@@ -61,7 +61,7 @@ describe('enemy combat stat normalization', () => {
     const boss = applyBossMultiplier(baseEnemyStats())
 
     expect(boss.maxHp).toBe(700)
-    expect(boss.attack).toBe(32)
+    expect(boss.attack).toBe(40)
     expect(boss.defense).toBe(12)
     expect(boss.accuracyRating).toBeCloseTo(92)
     expect(boss.criticalAvoidance).toBe(0.15)

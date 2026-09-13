@@ -175,8 +175,8 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
   }
   for (const companion of lab.player.companions) {
     for (let batch = 0; batch < 40; batch++) {
-      lab.cheat.addMaterial('mortal_ore_decade', 1_000)
-      const fed = lab.manager.companionOps.feedCompanion(companion.instanceId, 'mortal_ore_decade', 1_000)
+      lab.cheat.addMaterial('tinh_hoa_pham_the', 1_000)
+      const fed = lab.manager.companionOps.feedCompanion(companion.instanceId, 'tinh_hoa_pham_the', 1_000)
       if (!fed.ok || fed.levelsGained === 0) break
     }
   }
