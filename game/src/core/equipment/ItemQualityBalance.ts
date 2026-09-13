@@ -1,5 +1,5 @@
 import type { AffixPool } from './Affix'
-import type { ItemQuality } from '../item/ItemQuality'
+import { ITEM_QUALITY_ORDER, type ItemQuality } from '../item/ItemQuality'
 
 export const ITEM_QUALITY_DROP_WEIGHT: Record<ItemQuality, number> = {
   hoang: 75,
@@ -81,3 +81,26 @@ export const ITEM_QUALITY_AFFIX_SLOTS: Record<ItemQuality, ItemQualityAffixSlots
 // vẫn random, không phải item cố định. Chuyển từ EquipmentRarity.ts
 // (item-grade-quality-rework Task 22).
 export const ITEM_QUALITY_EXALTED_AFFIX_CHANCE = 0.15
+
+/**
+ * Applied AFTER rollItemQuality(), never instead of it (spec E5).
+ *
+ * The quality ladder is rolled at fixed weights and that roll stays owned by
+ * this system; a drop only ever nudges the result. Only equipment has a
+ * quality ladder at all, so this is the single place a stacked kill can turn
+ * into a better item. (large-file-split: moved from EquipmentSystem.ts —
+ * pure function over ITEM_QUALITY_ORDER, sống cùng bảng balance.)
+ */
+export function applyQualityBonusSteps(quality: ItemQuality, steps: number): ItemQuality {
+  if (steps <= 0) {
+    return quality
+  }
+
+  const index = ITEM_QUALITY_ORDER.indexOf(quality)
+
+  if (index < 0) {
+    return quality
+  }
+
+  return ITEM_QUALITY_ORDER[Math.min(ITEM_QUALITY_ORDER.length - 1, index + steps)]!
+}

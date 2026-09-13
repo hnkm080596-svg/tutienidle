@@ -9,6 +9,8 @@
 // validator đòi, và ngược lại).
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { REALMS } from '../../data/realms/realm'
+import { COMPANIONS } from '../../data/companion/Companions'
+import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgression'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
 import { createBaseStats } from '../../core/stats/StatBlock'
@@ -191,6 +193,19 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.nodeLevels', message: 'phải là object' })
   }
 
+  // Talent v4 M2 (v61) — 5 field mới: ngân tu vi tràn (Hải Nạp), tầng
+  // Lôi Kiếp, ledger mua node miễn phí (Vấn Đạo), tầng Phá Giáp mang
+  // sang trận sau + cảnh giới lúc bank.
+  requireNonNegativeNumber(player, 'cultivationOvercharge', 'player', issues)
+  requireNonNegativeNumber(player, 'tribulationBonusStacks', 'player', issues)
+  if (!isObject(player.nodeFreePurchaseRecord)) {
+    issues.push({ path: 'player.nodeFreePurchaseRecord', message: 'phải là object' })
+  }
+  requireNonNegativeNumber(player, 'phaGiapCarryStacks', 'player', issues)
+  if (player.phaGiapCarryRealmId !== null && typeof player.phaGiapCarryRealmId !== 'string') {
+    issues.push({ path: 'player.phaGiapCarryRealmId', message: 'phải là string hoặc null' })
+  }
+
   // Spec dot-pha-loi-kiep §6.1 — 4 field v54 (Bát Mạch, cửa sổ quái ẩn,
   // snapshot hoàn hảo, mất vĩnh viễn Đại Đào).
   requireArray(player, 'openedMeridianIds', 'player', issues)
@@ -206,6 +221,113 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // tính ra NaN (review 2026-08-28 bug #2). Save hiện hành bắt buộc có.
   if (!isFiniteNumber(player.lastSavedAt)) {
     issues.push({ path: 'player.lastSavedAt', message: 'phải là number hữu hạn' })
+  }
+
+  // v60 companion gacha - pity counter and Duyen Phan currency. A NaN
+  // here would poison every later pull/exchange result.
+  requireNonNegativeNumber(player, 'companionPullsSinceRare', 'player', issues)
+  requireNonNegativeNumber(player, 'duyenPhan', 'player', issues)
+
+  const companions = requireArray(player, 'companions', 'player', issues)
+
+  if (companions) {
+    validateCompanionEntries(companions, 'player.companions', issues)
+  }
+}
+
+/**
+ * CompanionInstance entries (v60 schema). realmLevel is REJECTED when
+ * outside 1..realm.maxLevel - malformed progression data must fail loud
+ * like the rest of this validator, not be silently clamped.
+ */
+function validateCompanionEntries(
+  entries: unknown[],
+  path: string,
+  issues: ShapeIssue[],
+) {
+  // Domain invariant: 1 instance per definitionId, and instanceId is the
+  // identity key every consumer first-matches on (findIndex). A duplicated
+  // id in a corrupted save loads state consumers treat as impossible -
+  // same dedupe rationale as the equipment instanceId check below.
+  const seenInstanceIds = new Set<string>()
+  const seenDefinitionIds = new Set<string>()
+
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i]
+    const entryPath = `${path}[${i}]`
+
+    if (!isObject(entry)) {
+      issues.push({ path: entryPath, message: 'phải là object' })
+
+      continue
+    }
+
+    requireNonEmptyString(entry, 'instanceId', entryPath, issues)
+    requireNonEmptyString(entry, 'definitionId', entryPath, issues)
+
+    if (typeof entry.instanceId === 'string' && entry.instanceId.trim().length > 0) {
+      if (seenInstanceIds.has(entry.instanceId)) {
+        issues.push({ path: `${entryPath}.instanceId`, message: 'bị trùng với companion entry khác' })
+      } else {
+        seenInstanceIds.add(entry.instanceId)
+      }
+    }
+
+    if (typeof entry.definitionId === 'string' && entry.definitionId.trim().length > 0) {
+      if (seenDefinitionIds.has(entry.definitionId)) {
+        issues.push({ path: `${entryPath}.definitionId`, message: 'bị trùng với companion entry khác' })
+      } else {
+        seenDefinitionIds.add(entry.definitionId)
+      }
+
+      // An owned companion whose definitionId is absent from the roster
+      // loads as permanently inert dead state (every consumer silently
+      // skips it) - fail loud like an unknown realmId.
+      if (!COMPANIONS.some((definition) => definition.id === entry.definitionId)) {
+        issues.push({
+          path: `${entryPath}.definitionId`,
+          message: 'không tồn tại trong roster companion',
+        })
+      }
+    }
+
+    const realm =
+      typeof entry.realmId === 'string'
+        ? REALMS.find((candidate) => candidate.id === entry.realmId)
+        : undefined
+
+    if (!realm) {
+      issues.push({
+        path: `${entryPath}.realmId`,
+        message: 'không tồn tại trong danh sách cảnh giới',
+      })
+    }
+
+    if (
+      !isFiniteNumber(entry.realmLevel) ||
+      !Number.isInteger(entry.realmLevel) ||
+      entry.realmLevel < 1 ||
+      (realm !== undefined && entry.realmLevel > realm.maxLevel)
+    ) {
+      issues.push({
+        path: `${entryPath}.realmLevel`,
+        message: 'phải là số nguyên trong khoảng 1..maxLevel của cảnh giới',
+      })
+    }
+
+    requireNonNegativeNumber(entry, 'exp', entryPath, issues)
+
+    if (
+      !isFiniteNumber(entry.constellationRank) ||
+      !Number.isInteger(entry.constellationRank) ||
+      entry.constellationRank < 0 ||
+      entry.constellationRank > MAX_CONSTELLATION_RANK
+    ) {
+      issues.push({
+        path: `${entryPath}.constellationRank`,
+        message: `phải là số nguyên 0..${MAX_CONSTELLATION_RANK}`,
+      })
+    }
   }
 }
 
@@ -486,6 +608,24 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   if (parsed.quests !== undefined && !isObject(parsed.quests)) {
     issues.push({ path: '.quests', message: 'phải là object hoặc vắng mặt' })
+  }
+
+  // R7 (AR-08) - decompose slice is optional; when present it must be
+  // an object with a non-negative finite workers number (restore
+  // re-clamps; malformed input is rejected instead of crashing boot).
+  if (parsed.decompose !== undefined) {
+    if (!isObject(parsed.decompose)) {
+      issues.push({ path: '.decompose', message: 'phải là object hoặc vắng mặt' })
+    } else {
+      const decompose = parsed.decompose as Record<string, unknown>
+      const settings = decompose.settings
+
+      if (!isObject(settings) || !Number.isFinite((settings as { workers?: unknown }).workers)) {
+        issues.push({ path: '.decompose.settings.workers', message: 'phải là số hữu hạn' })
+      } else if ((settings as { workers: number }).workers < 0) {
+        issues.push({ path: '.decompose.settings.workers', message: 'không được âm' })
+      }
+    }
   }
 
   if (techniques) {

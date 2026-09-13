@@ -8,7 +8,7 @@ import {
   DONG_FU_BUILDING_ART,
   dongFuBuildingAssetUrls,
   dongFuSeasonOverlayUrl,
-} from '@/game/support/DongFuBuildingArt'
+} from '@/presentation/background/DongFuBuildingArt'
 
 const runtimeFiles = DONG_FU_BUILDING_ART.flatMap((entry) =>
   Object.values(dongFuBuildingAssetUrls(entry)).map((url) => ({ entry, url })),

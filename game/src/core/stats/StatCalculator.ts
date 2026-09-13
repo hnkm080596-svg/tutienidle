@@ -1,5 +1,5 @@
 import type { StatType } from './StatTypes'
-import type { Stats } from './StatBlock'
+import type { BaseStats, Stats } from './StatBlock'
 
 export type ModifierSourceType =
   | 'realm'
@@ -273,12 +273,24 @@ function runPipeline(base: Stats, modifiers: StatModifier[]): Stats {
  * player.ts) tự động nhận cả 2 sửa đổi (Increased + Attribute) mà
  * không cần sửa gì thêm.
  */
-export function calculateStats(baseStats: Stats, modifiers: StatModifier[]): Stats {
+export function calculateStats(baseStats: BaseStats, modifiers: StatModifier[]): Stats {
   const pass1 = runPipeline(baseStats, modifiers)
 
   const attributeModifiers = deriveAttributeModifiers(pass1)
 
   return runPipeline(baseStats, [...modifiers, ...attributeModifiers])
+}
+
+/**
+ * Effective battle stats (R2 / AR-02): fold TEMPORARY battle modifiers
+ * (turn buffs) on top of an ALREADY-RESOLVED base. Runs the pipeline
+ * exactly once and never re-derives attribute bonuses — the input must
+ * be calculateStats() output (or an equivalent already-normalized stat
+ * snapshot). calculateStats() remains the only attribute-derivation
+ * owner; this function is the resolved→effective boundary.
+ */
+export function calculateEffectiveStats(resolvedBase: Stats, tempModifiers: StatModifier[]): Stats {
+  return runPipeline(resolvedBase, tempModifiers)
 }
 
 export function addStack(modifier: StatModifier, amount = 1) {

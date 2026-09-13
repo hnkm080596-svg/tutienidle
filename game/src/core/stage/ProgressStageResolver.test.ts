@@ -13,7 +13,7 @@ const stages: Stage[] = [5, 6, 10].map(floor => ({
   requiredRealmId: 'mortal',
   requiredRealmLevel: floor,
   enemyPool: [],
-  totalEnemyCount: 1,
+  totalEnemyCount: 1, waves: [1],
   spawnIntervalSeconds: 0,
 }))
 
@@ -25,7 +25,7 @@ const zone: Zone = {
 
 function setup() {
   const gameManager = new GameManager()
-  gameManager.registerStages(stages)
+  gameManager.catalogOps.registerStages(stages)
   gameManager.zoneRegistry.register(zone)
   return gameManager
 }

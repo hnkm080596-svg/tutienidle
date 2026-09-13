@@ -84,14 +84,14 @@ describe('StatusTooltip (buff bar)', () => {
     tooltip = new StatusTooltip(scene as never)
   })
 
-  it('show debuff → 2 text: tên + "×3 · 8s" (ceil 7.4)', () => {
+  it('show debuff → 2 text: tên + "×3 · 8 lượt" (ceil 7.4, turn count — Phase A6)', () => {
     tooltip.show(100, 100, 'enemy:bong:src', makeData())
 
     const texts = scene.children.filter((child) => child.text !== '')
 
     expect(texts).toHaveLength(2)
     expect(texts[0]!.text).toBe('Bỏng')
-    expect(texts[1]!.text).toBe('×3 · 8s')
+    expect(texts[1]!.text).toBe('×3 · 8 lượt')
   })
 
   it('show permanent → "×3 · vĩnh viễn" (không giây)', () => {

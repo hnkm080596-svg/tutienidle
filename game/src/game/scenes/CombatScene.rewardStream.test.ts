@@ -8,7 +8,9 @@
 // - clearSceneState dá»n sáº¡ch gourd + caches (khÃ´ng rÃ² rá»‰ qua shutdown).
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
-import { PLAYER_VISUAL_PROFILES } from '../support/PlayerVisualProfiles'
+import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
+import type { CombatScene } from './CombatScene'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import {
   computeGourdPlacement,
   resolveGourdMouth,
@@ -57,6 +59,12 @@ function makeEntitySprite(x: number, y: number, displayHeight = 64) {
     columnFloat: 1,
     shadow: undefined,
     healthBar: undefined,
+    // Spec C body anchors read personWidth/personHeight (Task 3/5), not
+    // displayWidth/displayHeight -- set them so bodyAnchorScreen() has real
+    // numbers to work with instead of falling back to scene.characterHeight
+    // (unset in these bare-mode fixtures).
+    personWidth: 48,
+    personHeight: displayHeight,
   }
 }
 
@@ -73,14 +81,17 @@ function createScene() {
   scene.canvasHeight = 800
 
   scene.sprites = new Map()
-  scene.interpolations = new Map()
-  scene.castBars = new Map()
   scene.statuses = new Map()
   scene.dyingIds = new Set()
   scene.spawnVfxHandles = new Map()
-  scene.materializingIds = new Set()
   scene.playerSpawnHandle = undefined
-  scene.playerMaterialized = true
+  scene.entityVisual = new CombatEntityVisualLifecycle(scene as unknown as CombatScene)
+
+  // Task 9 fix round (Finding 1) — clearSceneState() now also tears down the
+  // party countdown telegraph; bare-mode scenes don't get the class-field
+  // initializers construct mode gives, so this file needs the same explicit
+  // stub already given to spawnVfxHandles/entityVisual above.
+  scene.turnCountdownSpawnVfxHandles = new Map()
 
   // Body-anchor/reward state (plan fields).
   scene.playerProfileId = 'mortal'
@@ -160,8 +171,10 @@ describe('CombatScene â€” reward stream Ä‘iá»ƒm phÃ¡t (plan Â§7.1
 
     const point = scene.resolveRewardSourcePoint('enemy_1')
 
+    // Spec C: 'centre' = footY - personHeight / 2, same rule for every
+    // entity -- no more enemy-only neutral-anchor ratio.
     expect(point?.x).toBeCloseTo(500, 5)
-    expect(point?.y).toBeCloseTo(400 - 0.1 * 64, 5)
+    expect(point?.y).toBeCloseTo(400 - 64 / 2, 5)
   })
 
   it('audit P0-3: Ä‘iá»ƒm phÃ¡t enemy KHÃ”NG Ä‘á»•i khi Player visual profile Ä‘á»•i', () => {
@@ -180,12 +193,14 @@ describe('CombatScene â€” reward stream Ä‘iá»ƒm phÃ¡t (plan Â§7.1
     expect(after.x).toBeCloseTo(before.x, 5)
     expect(after.y).toBeCloseTo(before.y, 5)
 
-    // Äá»‘i chá»©ng: Player DÃ™NG catalog anchor chest cá»§a profile.
+    // Spec C: player and enemy now go through the SAME rule (bodyAnchorScreen
+    // 'centre'), so a player-sized sprite at a different foot point lands on
+    // the value the formula predicts -- not on a different rule entirely.
     scene.sprites.set('player', makeEntitySprite(200, 300))
 
     const playerPoint = scene.resolveRewardSourcePoint('player')!
 
-    expect(playerPoint.y).not.toBeCloseTo(after.y, 3)
+    expect(playerPoint).toEqual({ x: 200, y: 300 - 64 / 2 })
   })
 
   it('má»©c 2: sprite Ä‘Ã£ bá»‹ dá»n â†’ dÃ¹ng last-known screen cache', () => {
@@ -325,6 +340,10 @@ describe('CombatScene â€” essence stream (2026-08-30, tinh hoa tuÃ´n chá
 
     playerSprite.rect.x = 50
     playerSprite.rect.y = 60
+    // footY is what bodyAnchorScreen() reads for the anchor's y (production
+    // keeps it synced every frame via positionSprite()); update it here too so
+    // this fixture's manual teleport is a faithful stand-in.
+    playerSprite.footY = 60
 
     state.progress = 1
 
@@ -334,11 +353,12 @@ describe('CombatScene â€” essence stream (2026-08-30, tinh hoa tuÃ´n chá
 
     const lastCall = setPositionCalls.at(-1)!
 
-    // ÄÃ­ch = chest anchor cá»§a player profile mortal táº¡i (50, 60) â€”
-    // KHÃ”NG pháº£i vá»‹ trÃ­ cÅ© (300, 400) hay miá»‡ng há»“ lÃ´. Chest anchor
-    // lá»‡ch nháº¹ so vá»›i tÃ¢m sprite (profile offset) â†’ dung sai 5px.
-    expect(Math.abs(lastCall.args[0] as number - 50)).toBeLessThan(5)
-    expect(Math.abs(lastCall.args[1] as number - 60)).toBeLessThan(30)
+    // Dich = bodyAnchorScreen 'centre' of the player sprite, live-resolved
+    // at the teleported foot point (50, 60) -- NOT the old position
+    // (300, 400) and not the gourd mouth. centre.y = footY - personHeight/2
+    // = 60 - 64/2 = 28.
+    expect(lastCall.args[0]).toBeCloseTo(50, 5)
+    expect(lastCall.args[1]).toBeCloseTo(28, 5)
   })
 
   it('khÃ´ng resolve Ä‘Æ°á»£c nguá»“n â†’ phÃ¡t arrival NGAY (khÃ´ng káº¹t tinh hoa)', () => {

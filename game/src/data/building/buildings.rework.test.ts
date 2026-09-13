@@ -19,7 +19,7 @@ describe('building 9-tier scaffold', () => {
   it('cấp Kim Đan+ dùng Linh Mộc/Linh Khoáng phân phẩm (linh mạch Khai Vật Đường)', () => {
     const outpost = buildings.find(entry => entry.id === 'gathering_outpost')!
     expect(outpost.upgradeCost[3]?.map(cost => cost.materialId)).toEqual([
-      'golden_core_wood_huyen', 'golden_core_ore_huyen',
+      'golden_core_wood_century', 'golden_core_ore_century',
     ])
   })
 })

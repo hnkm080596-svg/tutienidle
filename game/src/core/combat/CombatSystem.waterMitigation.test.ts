@@ -16,7 +16,7 @@ function deterministicRandom(): void {
 }
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id',
@@ -60,7 +60,7 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
 
     const combat = new CombatSystem(new EventBus())
 
-    const source = createCombatant({ id: 'source', type: 'player', stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 } })
+    const source = createCombatant({ id: 'source', type: 'player', stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }) })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
@@ -73,13 +73,13 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
 
     const combat = new CombatSystem(new EventBus())
 
-    const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }
+    const sourceStats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 })
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
 
     const withoutMitigation = createCombatant({ id: 'target_a', currentHp: 100000, maxHp: 100000 })
     const rawResult = combat.resolveActionHit(source, withoutMitigation, { kind: 'physical', multiplier: 1 }, false)
 
-    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, blockChance: 0 }
+    const targetStats = createBaseStats({ evasionRate: 0, dexterity: 0, blockChance: 0 })
     const target = createCombatant({ id: 'target_b', stats: targetStats, skillStats: { ...createSkillRuntimeStats(), thuyThePercent: 0.1 }, currentHp: 100000, maxHp: 100000 })
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
@@ -93,10 +93,10 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
 
     const combat = new CombatSystem(new EventBus())
 
-    const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100000 }
+    const sourceStats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100000 })
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
 
-    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, blockChance: 0 }
+    const targetStats = createBaseStats({ evasionRate: 0, dexterity: 0, blockChance: 0 })
     const target = createCombatant({ id: 'target', stats: targetStats, skillStats: { ...createSkillRuntimeStats(), thuyThePercent: 5 }, currentHp: 1000000, maxHp: 1000000 })
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)

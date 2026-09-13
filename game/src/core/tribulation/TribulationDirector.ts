@@ -1,3 +1,9 @@
+import {
+  PresentationSession,
+  type PresentationMode,
+  type SessionPresentationPort,
+  type SessionRef,
+} from '../presentation/PresentationSession'
 import type { PlayerData } from '../player/Player'
 import type { Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -11,6 +17,7 @@ import {
   type TribulationChapterProfile,
 } from '../../data/tribulation/TribulationChapters'
 import { TRIBULATION_MIND_QUESTIONS, type MindQuestion } from '../../data/tribulation/TribulationMindQuestions'
+import { getTribulationIntensityMultiplier } from '../talent/TalentEffects'
 
 // TribulationDirector (spec dot-pha-loi-kiep §5) — runtime lôi kiếp
 // MỚI thay TribulationSystem: KHÔNG đi qua BattleSystem, không quái
@@ -89,9 +96,42 @@ export class TribulationDirector {
   private tank: TankRuntime | null = null
   private mindFailStacks = 0
   private mindCorrectLightningReduction = 0
+  // Talent v4 M2 — Loi Kiep: snapshot of the player's tribulation
+  // intensity multiplier, captured at start() so the whole kiếp obeys
+  // the talent that was held when it began (neutral 1 otherwise).
+  private lightningTalentMultiplier = 1
+  private readonly presentationSession: PresentationSession
+  private presentationMode: PresentationMode = 'headless'
 
-  constructor(private readonly deps: { eventBus: EventBus }) {
+  constructor(private readonly deps: { eventBus: EventBus; sessionAllocator?: { allocate(): number } }) {
     this.vitals = new EntityVitalsSystem(deps.eventBus)
+    this.presentationSession = new PresentationSession(deps.sessionAllocator)
+  }
+
+  getCurrentPresentationSession(): SessionRef | null {
+    return this.presentationSession.getCurrentSession()
+  }
+
+  getPresentationPort(): SessionPresentationPort {
+    return this.presentationSession
+  }
+
+  setPresentationMode(mode: PresentationMode): void {
+    this.presentationMode = mode
+  }
+
+  getPresentationSnapshot(sessionId: number): { sessionId: number; state: ActiveTribulationState } | null {
+    const current = this.presentationSession.getCurrentSession()
+    if (!current || current.sessionId !== sessionId || current.kind !== 'tribulation') {
+      return null
+    }
+    if (!this.active) {
+      return null
+    }
+    return {
+      sessionId,
+      state: { ...this.active, hp: this.snapshotHp },
+    }
   }
 
   /**
@@ -135,6 +175,9 @@ export class TribulationDirector {
     } as CombatEntity
     this.mindFailStacks = 0
     this.mindCorrectLightningReduction = 0
+    this.lightningTalentMultiplier = getTribulationIntensityMultiplier(
+      player.selectedTalentIds,
+    )
 
     this.active = {
       targetRealmId,
@@ -152,6 +195,13 @@ export class TribulationDirector {
       maxHp,
     }
 
+    const sessionId = this.presentationSession.allocate()
+    const session: SessionRef = { kind: 'tribulation', sessionId }
+    this.presentationSession.begin(session, this.presentationMode)
+    if (this.presentationMode === 'interactive') {
+      this.presentationSession.hold(session)
+    }
+
     this.enterChapter(0)
 
     this.deps.eventBus.emit('tribulation_started', {
@@ -160,6 +210,8 @@ export class TribulationDirector {
       chapterIndex: 0,
       kind: chapters[0]!.kind,
     })
+
+    this.deps.eventBus.emit('presentation_session_started', session)
 
     return true
   }
@@ -170,6 +222,10 @@ export class TribulationDirector {
    * trong vòng lặp đóng — không chia nhỏ fixed-step (floating point).
    */
   update(deltaSeconds: number) {
+    if (this.presentationSession.isBlocking()) {
+      return
+    }
+
     const active = this.active
 
     if (!active || active.state !== 'ongoing') {
@@ -208,7 +264,7 @@ export class TribulationDirector {
     }
   }
 
-  private tickMind(step: number, chapter: TribulationChapterProfile) {
+  private tickMind(step: number, _chapter: TribulationChapterProfile) {
     const active = this.active!
     const mind = this.mind!
 
@@ -271,6 +327,10 @@ export class TribulationDirector {
 
   /** Trả lời câu hiện tại — true nếu câu được xử lý (đúng/sai đều tính). */
   answerQuestion(answerIndex: number): boolean {
+    if (this.presentationSession.isBlocking()) {
+      return false
+    }
+
     const active = this.active
     const mind = this.mind
 
@@ -375,7 +435,14 @@ export class TribulationDirector {
     // Buff đúng câu: -% damage lôi (kháng lôi gộp, spec §5.3)
     const reduction = Math.min(0.8, this.mindCorrectLightningReduction)
 
-    const raw = this.snapshotMaxHp * maxHpPercent * multiplier * mitigation * takenMultiplier * (1 - reduction)
+    const raw =
+      this.snapshotMaxHp *
+      maxHpPercent *
+      multiplier *
+      this.lightningTalentMultiplier *
+      mitigation *
+      takenMultiplier *
+      (1 - reduction)
 
     const applied = this.vitals.applyDamage(this.ghost!, raw, 'heavenly_tribulation', 'tribulation')
     this.snapshotHp = Math.max(0, this.snapshotHp - applied)
@@ -475,6 +542,10 @@ export class TribulationDirector {
   }
 
   clear() {
+    const session = this.presentationSession.getCurrentSession()
+    if (session) {
+      this.presentationSession.end(session)
+    }
     this.active = null
     this.mind = null
     this.tank = null

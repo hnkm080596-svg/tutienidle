@@ -1,6 +1,7 @@
 import { usePlayerStore } from '../stores/player'
 import { useGameManager } from './useGameState'
 import type { GameManager } from '../core/game/GameManager'
+import type { CombatClockBridge } from '../presentation/clock/MainProcessClockSource'
 
 // Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
 // (2026-08-24) — cầu nối renderer ↔ main process, CHỈ tồn tại khi chạy
@@ -22,6 +23,11 @@ export interface ElectronBridgeAPI {
   onSystemResume(callback: (timestamp: number) => void): void
   onBeforeQuitFlush(callback: () => void): void
   notifyFlushComplete(): void
+  // Task 7 (2026-09-10) — main-process clock host bridge, consumed by
+  // MainProcessClockSource (src/presentation/clock/). Shape must match
+  // CombatClockBridge exactly; kept as that imported type rather than
+  // redeclared here so the two cannot drift.
+  combatClock: CombatClockBridge
 }
 
 declare global {

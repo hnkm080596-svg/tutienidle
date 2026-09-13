@@ -30,7 +30,7 @@ const MOCK_ROW = 6
 const MOCK_COLUMN = 3
 
 function createPlayer(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 50, speed: 100, criticalRate: 0 }
+  const stats = createBaseStats({ attack: 50, speed: 100, criticalRate: 0 })
 
   return {
     id: 'player', name: 'Player', type: 'player', baseStats: stats, stats,
@@ -44,7 +44,7 @@ function createPlayer(): CombatEntity {
 function createBasicSkill(): Skill {
   return {
     id: 'basic_test', name: 'Basic', description: '', type: 'active', level: 1, maxLevel: 10,
-    cooldown: 0, remainingCooldown: 0, cost: 0, target: 'enemy',
+    cooldown: 0, cost: 0, target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
     execution: { kind: 'attack_speed' }, resourceType: 'none',
     unlocked: true, equipped: true, loadoutSlot: 0, loadoutSlots: [0],
@@ -64,8 +64,8 @@ describe('GameManager.buildTurnBattle — reads DEFAULT_PARTY_FORMATION when no 
     const gameManager = new GameManager()
     const player = createPlayer()
 
-    gameManager.registerSkillTemplates([createBasicSkill()])
-    gameManager.learnSkill('basic_test')
+    gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+    gameManager.progressionOps.learnSkill('basic_test')
     gameManager.skillSystem.equipToSlot('basic_test', 0)
     gameManager.startBattle(player, createDummy())
 
@@ -90,6 +90,8 @@ const TEST_COMPANION_DEFINITION = {
   id: 'test_companion_for_formation',
   name: 'Formation Test Companion',
   grade: 'hoang' as const,
+  growthRate: 0.05,
+  unlockThresholds: {},
   baseStats: { maxHp: 100, attack: 10, speed: 100 },
   basic: {
     id: 'test_companion_for_formation_basic',
@@ -112,8 +114,8 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
       const playerEntity = createPlayer()
       const playerData = createDefaultPlayer()
 
-      gameManager.registerSkillTemplates([createBasicSkill()])
-      gameManager.learnSkill('basic_test')
+      gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+      gameManager.progressionOps.learnSkill('basic_test')
       gameManager.skillSystem.equipToSlot('basic_test', 0)
 
       // formationLoadout phải set TRƯỚC setActivePlayer/startBattle —
@@ -127,7 +129,16 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
           { row: 1, column: 1, combatantId: 'test_companion_for_formation' },
         ],
       }
-      playerData.companions = [{ definitionId: 'test_companion_for_formation', level: 1, exp: 0 }]
+      playerData.companions = [
+        {
+          instanceId: 'formation_test_instance',
+          definitionId: 'test_companion_for_formation',
+          realmId: 'mortal',
+          realmLevel: 1,
+          exp: 0,
+          constellationRank: 0,
+        },
+      ]
 
       gameManager.setActivePlayer(playerData)
       gameManager.startBattle(playerEntity, createDummy())
@@ -149,7 +160,7 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
   })
 })
 
-// Review Task 19 (finding Important) — TURN_BUFF_REGISTRY.get() throw nếu
+// Review Task 19 (finding Important) — BUFF_REGISTRY.get() throw nếu
 // definitionId của trận pháp không resolve được (gõ sai id, hoặc buff chưa
 // kịp thêm vào buffs.ts). Trước fix này, throw đó văng thẳng ra khỏi
 // buildTurnBattle() và làm SẬP CẢ TRẬN ĐẤU. Test này xác nhận trận vẫn
@@ -164,7 +175,7 @@ const TEST_FORMATION_WITH_MISSING_BUFF: TranPhapDefinition = {
 }
 
 describe('GameManager.buildTurnBattle — formation buff definitionId không resolve được', () => {
-  it('không throw, trận vẫn build bình thường khi TURN_BUFF_REGISTRY.get() thất bại', () => {
+  it('không throw, trận vẫn build bình thường khi BUFF_REGISTRY.get() thất bại', () => {
     // TRAN_PHAP_FORMATIONS rỗng ở giai đoạn này của plan (nội dung roster
     // ship sau) — đẩy tạm 1 definition test-only vào mảng, giống pattern
     // COMPANIONS ở test phía trên.
@@ -175,8 +186,8 @@ describe('GameManager.buildTurnBattle — formation buff definitionId không res
       const playerEntity = createPlayer()
       const playerData = createDefaultPlayer()
 
-      gameManager.registerSkillTemplates([createBasicSkill()])
-      gameManager.learnSkill('basic_test')
+      gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+      gameManager.progressionOps.learnSkill('basic_test')
       gameManager.skillSystem.equipToSlot('basic_test', 0)
 
       playerData.formationLoadout = {

@@ -30,14 +30,14 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e1', 'pill_regen', 10_000, [
         { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'maxHp', flat: 50, percent: 0.1 },
       ]),
     )
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e2', 'pill_regen', 20_000, [
         { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'maxHp', flat: 80, percent: 0.15 },
@@ -60,14 +60,14 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e1', 'pill_regen', 20_000, [
         { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'attack', flat: 100, percent: 0.2 },
       ]),
     )
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e2', 'pill_regen', 30_000, [
         { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'attack', flat: 40, percent: 0.05 },
@@ -90,14 +90,14 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
 
     // Bug audit P0-1: hai percent khác nhau từng được coi là 2 modifier
     // riêng và cộng dồn trong pipeline.
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e1', 'pill_buff', 10_000, [
         { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'attack', percent: 0.1 },
       ]),
     )
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e2', 'pill_buff', 12_000, [
         { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'attack', percent: 0.3 },
@@ -116,14 +116,14 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e1', 'pill_buff', 10_000, [
         { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'attack', tag: 'fire', percent: 0.1 },
       ]),
     )
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e2', 'pill_buff', 12_000, [
         { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'attack', tag: 'physical', percent: 0.2 },
@@ -142,14 +142,14 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e1', 'pill_regen', 10_000, [
         { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'maxHp', flat: 50 },
       ]),
     )
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e2', 'elixir_might', 15_000, [
         { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'maxHp', flat: 30 },
@@ -163,14 +163,14 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e1', 'group_mult', 10_000, [
         { id: 'm1', sourceId: 'e1', sourceType: 'buff', stat: 'criticalDamage', multiplier: 1.5 },
       ]),
     )
 
-    gameManager.applyTimedEffect(
+    gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e2', 'group_mult', 12_000, [
         { id: 'm2', sourceId: 'e2', sourceType: 'buff', stat: 'criticalDamage', multiplier: 1.25 },

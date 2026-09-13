@@ -4,13 +4,13 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { CombatEntity } from '../../combat/CombatEntity'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 
 // Future Systems Task 9 — party (multi player-side unit): 1 ATB queue
 // chung, thua khi TOÀN BỘ party chết, opposingSide đối diện toàn party.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
@@ -30,7 +30,7 @@ function makeParticipant(
 ): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }
@@ -86,7 +86,7 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
   })
 
   it('1 party member chết → trận vẫn fighting (member còn sống tiếp tục)', () => {
-    const { battle, memberA, enemy } = partyBattle()
+    const { battle, memberA } = partyBattle()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
     // memberA (10 HP) bị enemy giết qua vài lượt — ép enemy attack lớn.

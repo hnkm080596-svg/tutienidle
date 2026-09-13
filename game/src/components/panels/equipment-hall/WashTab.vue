@@ -19,13 +19,13 @@ import { useEquippedRows, useHallSlotRows, useItemRenState, type HallSlotRow } f
 import { affixDisplayLabel, tierClass } from './equipmentHallDisplay'
 import { HALL_SELECTION_KEY } from './hallSelection'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const gameManager = useGameManager()
 
 const { stateVersion } = useStateVersion()
 
-const { washPreview, washCommit } = useEquipmentActions()
+const { washPreview, washPreviewAffixes, washDiscard, washCommit } = useEquipmentActions()
 
 const feedback = useActionFeedbackStore()
 
@@ -49,7 +49,13 @@ const selectedRow = computed(
 
 // Preview đang chờ "giữ/bỏ" (2026-08-30 spec) — LOCAL (v-if unmount tự
 // reset khi đổi tab, giữ đúng semantics switchTab() cũ).
-const pendingWashAffixes = ref<RolledAffix[] | null>(null)
+// R9 (AR-21): chỉ giữ TICKET ID + display copy; affixes authoritative
+// nằm trong domain — UI không thể fabricate kết quả commit.
+const pendingWashTicket = ref<string | null>(null)
+
+const pendingWashAffixes = computed<RolledAffix[]>(() =>
+  pendingWashTicket.value ? washPreviewAffixes(pendingWashTicket.value) ?? [] : [],
+)
 
 function selectHallSlotForAction(row: HallSlotRow) {
   if (row.equippedRow) {
@@ -58,13 +64,21 @@ function selectHallSlotForAction(row: HallSlotRow) {
     clearSelection()
   }
 
-  pendingWashAffixes.value = null
+  discardPendingTicket()
+}
+
+function discardPendingTicket() {
+  if (pendingWashTicket.value) {
+    washDiscard(pendingWashTicket.value)
+  }
+
+  pendingWashTicket.value = null
 }
 
 const washCost = computed(() => {
   stateVersion.value
 
-  return gameManager.getWashCost(selectedRow.value?.quality ?? ITEM_QUALITY_ORDER[0]!)
+  return gameManager.equipmentOps.getWashCost(selectedRow.value?.quality ?? ITEM_QUALITY_ORDER[0]!)
 })
 
 const washSpiritStoneCostName = computed(() =>
@@ -106,25 +120,27 @@ function doWashPreview() {
     return
   }
 
-  const affixes = washPreview(selectedRow.value.instanceId)
+  // A new preview replaces the old ticket (and its paid roll is forfeited,
+  // same as the old local-state behavior: re-roll pays again).
+  const ticketId = washPreview(selectedRow.value.instanceId)
 
-  if (affixes) {
-    pendingWashAffixes.value = affixes
+  if (ticketId) {
+    pendingWashTicket.value = ticketId
   }
 }
 
 function doWashKeep() {
-  if (!selectedRow.value || !pendingWashAffixes.value) {
+  if (!selectedRow.value || !pendingWashTicket.value) {
     return
   }
 
-  if (washCommit(selectedRow.value.instanceId, pendingWashAffixes.value)) {
-    pendingWashAffixes.value = null
+  if (washCommit(selectedRow.value.instanceId, pendingWashTicket.value)) {
+    pendingWashTicket.value = null
   }
 }
 
 const pendingWashAffixDisplay = computed(() =>
-  (pendingWashAffixes.value ?? []).map((rolled, index) => ({
+  pendingWashAffixes.value.map((rolled, index) => ({
     index,
 
     label: affixDisplayLabel(rolled, gameManager.affixRegistry),
@@ -260,7 +276,7 @@ const washRenAfter = computed(() =>
           {{ t('panels.equipmentHall.buttons.washPreview') }}
         </GameButton>
 
-        <GameButton v-if="pendingWashAffixes" size="lg" variant="secondary" @click="doWashKeep">
+        <GameButton v-if="pendingWashTicket" size="lg" variant="secondary" @click="doWashKeep">
           {{ t('panels.equipmentHall.buttons.keep') }}
         </GameButton>
       </div>
@@ -270,201 +286,3 @@ const washRenAfter = computed(() =>
   </section>
 </template>
 
-<style scoped>
-.qi-hall__body {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.qi-hall__split {
-  flex-direction: row;
-  gap: 14px;
-}
-
-.qi-hall__split-left {
-  flex: 0 0 84px;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding-right: 10px;
-  border-right: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 22%, transparent);
-}
-
-.qi-hall__split-right {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 0 4%;
-}
-
-.qi-hall__slot-grid {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: repeat(6, 1fr);
-  gap: 4px;
-}
-
-.qi-hall__slot {
-  min-width: 0;
-}
-
-.qi-hall__preview-card {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 12px;
-  overflow-y: auto;
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--paper-50) 70%, transparent);
-}
-
-.qi-hall__col-title {
-  margin: 0 0 8px;
-  padding-left: 10px;
-  border-left: 3px solid var(--paper-eyebrow);
-  font: 700 var(--text-title) var(--font-display);
-  color: var(--paper-text);
-}
-
-.qi-hall__compare-table {
-  width: 100%;
-  margin: 0;
-  border-collapse: collapse;
-  font-size: var(--text-md);
-}
-
-.qi-hall__compare-table th,
-.qi-hall__compare-table td {
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--paper-line);
-  text-align: left;
-  color: var(--paper-text);
-  font-variant-numeric: tabular-nums;
-}
-
-.qi-hall__compare-table thead th {
-  padding-top: 4px;
-  padding-bottom: 8px;
-  font: 700 var(--text-sm) var(--font-body);
-  color: var(--paper-eyebrow);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-bottom: 2px solid color-mix(in srgb, var(--paper-eyebrow) 35%, var(--paper-line));
-}
-
-.qi-hall__compare-table thead th:not(:first-child) {
-  text-align: center;
-}
-
-.qi-hall__compare-table tbody th {
-  font: 600 var(--text-md) var(--font-display);
-  letter-spacing: 0.01em;
-}
-
-.qi-hall__compare-table tbody tr:nth-child(even) {
-  background: color-mix(in srgb, var(--mineral-gold) 5%, transparent);
-}
-
-.qi-hall__compare-table tbody td:not(.qi-hall__compare-arrow) {
-  text-align: center;
-  font-size: var(--text-lg);
-}
-
-.qi-hall__compare-table td.qi-hall__compare-arrow {
-  width: 28px;
-  padding: 9px 2px;
-  text-align: center;
-  color: color-mix(in srgb, var(--paper-eyebrow) 55%, var(--paper-text-soft));
-  font-size: var(--text-lg);
-  border-bottom-color: transparent;
-}
-
-.qi-hall__empty {
-  margin: 0;
-  padding: 12px;
-  border: 1px dashed var(--paper-line);
-  color: var(--paper-text-soft);
-  font-size: var(--text-sm);
-  text-align: center;
-}
-
-.qi-hall__empty--centered {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.qi-hall__owned {
-  margin-left: auto;
-  color: var(--paper-text-soft);
-}
-
-.qi-hall__costline {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--paper-text-soft);
-}
-
-.qi-hall__info-row {
-  flex: 0 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 16px;
-  padding: 6px 0;
-  border-top: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 22%, transparent);
-}
-
-.qi-hall__button-row {
-  flex: 0 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.qi-hall__button-row .game-button {
-  min-width: 120px;
-}
-
-.qi-hall__tier-1 { color: var(--affix-tier-1); }
-.qi-hall__tier-2 { color: var(--affix-tier-2); }
-.qi-hall__tier-3 { color: var(--affix-tier-3); }
-.qi-hall__tier-4 { color: var(--affix-tier-4); }
-.qi-hall__tier-5 {
-  color: transparent;
-  background: var(--rank-gradient-10);
-  background-clip: text;
-  -webkit-background-clip: text;
-  font-weight: 700;
-}
-
-@container overlay-panel (max-width: 760px) {
-  .qi-hall__split { flex-direction: column; }
-  .qi-hall__split-left {
-    flex: 0 0 auto;
-    flex-direction: row;
-    padding-right: 0;
-    padding-bottom: 8px;
-    border-right: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 22%, transparent);
-  }
-  .qi-hall__slot-grid { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); grid-template-rows: none; }
-}
-</style>

@@ -33,7 +33,7 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const artifactId = computed(() => {
   stateVersion.value
@@ -92,7 +92,7 @@ function onUpgrade() {
     return
   }
 
-  if (gameManager.tryUpgradeArtifactGrade(player.$state)) {
+  if (gameManager.realmAdvanceOps.tryUpgradeArtifactGrade(player.$state)) {
     bumpState()
   }
 }
@@ -102,7 +102,7 @@ function onSelectPath(path: ArtifactPath) {
     return
   }
 
-  if (gameManager.setArtifactPath(player.$state, path)) {
+  if (gameManager.realmAdvanceOps.setArtifactPath(player.$state, path)) {
     bumpState()
   }
 }

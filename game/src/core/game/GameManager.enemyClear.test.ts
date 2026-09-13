@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import type { EnemyDefinition } from '../enemy/Enemy'
@@ -33,7 +34,7 @@ const MINIMAL_STATS_INPUT = {
 }
 
 function createPlayer(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0 }
+  const stats = createBaseStats({ attack: 0 })
 
   return {
     id: 'player',
@@ -96,10 +97,12 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
 
   it('victory KHÔNG clear đột ngột — enemy chết dần qua despawn flow bình thường, không sót', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
 
     // Pattern GameManager.repeatStage.test.ts — Linh Thạch credit vào
     // MaterialBag cần registry; skill Trảm chiếm slot 0 để player đánh.
-    gameManager.registerMaterials([SPIRIT_STONE_MATERIAL])
+    gameManager.catalogOps.registerMaterials([SPIRIT_STONE_MATERIAL])
     const enemy = defineEnemy({
       id: 'victory_dummy',
       name: 'Repeat Dummy',
@@ -123,27 +126,30 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
       description: '',
       floor: 1,
       enemyPool: [{ enemyId: enemy.id, weight: 1 }],
-      totalEnemyCount: 1,
+      totalEnemyCount: 1, waves: [1],
       spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
 
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
     expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
 
     // KHÔNG auto-repeat — mục tiêu là state 'victory' cuối cùng.
-    expect(gameManager.startStage(player, stats, stage)).toBe(true)
-    expect(gameManager.enemySystem.getAliveEnemies().length).toBeGreaterThan(0)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
+    // Turn-Based Wave Redesign (2026-09-06) — bootstrap enemy bị discard
+    // (spawn đồng loạt qua telegraph): ngay sau startStage CHƯA có enemy
+    // sống — pending telegraph materialize ở các tick kế tiếp.
+    expect(gameManager.enemySystem.getAliveEnemies().length).toBe(0)
 
     // Đập quái tới victory (pattern update loop của repeatStage test).
     let reachedVictory = false
 
     for (let index = 0; index < 300; index++) {
-      gameManager.update(0.05)
+      combatSource.advance(COMBAT_STEP_SECONDS)
 
       if (gameManager.getBattle()?.state === 'victory') {
         reachedVictory = true

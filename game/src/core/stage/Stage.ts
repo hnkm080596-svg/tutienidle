@@ -3,10 +3,10 @@ export interface StageEnemyEntry {
 
   weight: number
 
-  // 0..1 — cơ hội lần spawn đó là bản Elite (buff stat + rewards
-  // riêng, xem core/enemy/EnemyStatInput.ts's applyEliteMultiplier()
-  // và Enemy.eliteRewards) thay vì bản thường. Mặc định 0 (không có
-  // Elite) — tối giản, chỉ đủ để Phá Cảnh Tâm Pháp có nguồn rơi thật.
+  // 0..1 — chance to attach the tinh_anh tag to that spawn (spec v3 B9):
+  // stat buff via applyEliteMultiplier (core/enemy/EnemyStatInput.ts),
+  // applied through applyEnemyTags (core/enemy/EnemyTag.ts) on the active
+  // channel only. Default 0 (never tagged).
   eliteChance?: number
 }
 
@@ -37,6 +37,16 @@ export interface Stage {
   // Tổng số quái phải spawn hết (và đánh chết hết) để thắng màn.
   totalEnemyCount: number
 
+  /**
+   * Turn-Based Wave Redesign (2026-09-06) — số quái spawn ĐỒNG THỜI mỗi
+   * wave, theo thứ tự. sum(waves) PHẢI bằng totalEnemyCount (test bất
+   * biến enforce điều này cho mọi stage — xem EffectiveWaves.test.ts).
+   * Stage floor 10 (solo boss) vẫn khai waves bình thường (dữ liệu thô,
+   * không override) — effectiveWaves() mới là hàm áp override thành [1],
+   * y hệt cách effectiveTotalEnemyCount() đã làm cho totalEnemyCount.
+   */
+  waves: number[]
+
   // Nhịp spawn mặc định — quái mới spawn theo nhịp này SONG SONG với
   // quái đang sống (không đợi chết mới spawn tiếp), xem
   // GameManager.updateStageProgress(). Sân trống quái giữa chừng thì
@@ -50,9 +60,10 @@ export interface Stage {
   // GameManager.pickEnemyForSpawn().
   bossEnemyId?: string
 
-  // Auto-farm Hoàn Mỹ (2026-09-04 spec) — số turn tối đa để đạt điều
-  // kiện "Hoàn Mỹ" (kết hợp với ngưỡng HP đội mất <=75%, hardcode ở
-  // GameManager). undefined = stage này chưa định nghĩa ngưỡng, không
+  // Auto-farm Hoàn Mỹ (2026-09-04 spec) — số ROUND tối đa để đạt điều
+  // kiện "Hoàn Mỹ" (spec v3 D1: every party member alive at victory;
+  // the count is battle.roundsElapsed - ATB rounds, NOT actor actions;
+  // the HP-loss threshold was removed). undefined = stage này chưa định nghĩa ngưỡng, không
   // bao giờ đạt Hoàn Mỹ (an toàn — không mở khoá auto-farm ngoài ý
   // muốn cho stage chưa balance). Content work, set theo từng stage.
   perfectClearTurnLimit?: number

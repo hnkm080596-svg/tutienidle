@@ -4,7 +4,7 @@ import type { ZoneRegistry } from '../stage/ZoneRegistry'
 import type { NameSegment } from '../item/NameSegment'
 import { composeItemQualityNameSegments } from '../item/ItemQuality'
 import { PROFESSION_GRADE_NAMES } from '../profession/ProfessionGrade'
-import { professionGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { professionGradeRank } from '../profession/slotRank'
 
 // Tên vật phẩm ghép động (Rework P6, Task 21) — 2 TRỤC riêng biệt, mỗi
 // phần tô màu riêng theo ĐÚNG thang rank của trục đó:

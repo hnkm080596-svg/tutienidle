@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { calculateStats, type StatModifier } from './StatCalculator'
+import { calculateStats, calculateEffectiveStats, type StatModifier } from './StatCalculator'
 import { createBaseStats } from './StatBlock'
-import { STAT_METADATA, clampStatValue, isPercentStat } from './StatMetadata'
+import { STAT_METADATA, isPercentStat } from './StatMetadata'
 import type { Stats } from './StatBlock'
 
 // Turn-based stat conversion (2026-09-04) — adversarial QA probes cho
@@ -106,11 +106,43 @@ describe('Adversarial QA — stat turn-based conversion invariants', () => {
     // calculateStats gọi deriveAttributeModifiers nội bộ — kết quả cuối
     // phải chứa ĐỦ 5 attribute dẫn xuất đúng, trong đó Thân Pháp/Dexterity
     // nhắm 'speed', Thần Thức/Intelligence KHÔNG nhắm gì đã retire.
-    const base: Stats = createBaseStats()
+    const base = createBaseStats()
     const result = calculateStats(base, [])
     // Thân Pháp 1: speed 100.15, accuracy +1.5, evasion +1.0, crit +0.05%.
     expect(result.accuracyRating).toBeCloseTo(100 + 1.5, 5)
     expect(result.evasionRate).toBeCloseTo(5 + 1, 5)
     expect(result.criticalRate).toBeCloseTo(0.05 * (1 + 0.0005), 5)
+  })
+})
+
+describe('calculateEffectiveStats (R2 resolved→effective boundary)', () => {
+  // Audit AR-02 probe: strength 100 + attack 10 raw → calculateStats
+  // resolves to attack 70 (10 + 100×0.6). Feeding that resolved snapshot
+  // back into calculateStats re-derived +60 (130). The effective boundary
+  // must fold temp modifiers onto 70 without re-deriving.
+  const RAW = createBaseStats({ strength: 100, attack: 10 })
+
+  const ATTACK_BUFF: StatModifier = {
+    id: 'b1',
+    sourceId: 'buff',
+    sourceType: 'buff',
+    stat: 'attack',
+    percent: 0.5,
+  }
+
+  it('does NOT re-derive attribute bonuses from an already-resolved base', () => {
+    const resolved = calculateStats(RAW, [])
+    expect(resolved.attack).toBe(70)
+
+    // +50% applied to 70 once = 105. The old double-derivation path
+    // yielded 130 (re-derived +60 then folded the buff).
+    const effective = calculateEffectiveStats(resolved, [ATTACK_BUFF])
+    expect(effective.attack).toBe(105)
+  })
+
+  it('resolved base passes through unchanged with no temp modifiers', () => {
+    const resolved = calculateStats(RAW, [])
+
+    expect(calculateEffectiveStats(resolved, [])).toEqual(resolved)
   })
 })

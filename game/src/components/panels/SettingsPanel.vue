@@ -14,7 +14,7 @@ import ThemeSwitcher from '@/components/settings/ThemeSwitcher.vue'
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const notification = useNotificationStore()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá bằng
 // pending-action: mở ConfirmModal, hành động thật chỉ chạy khi
@@ -118,7 +118,10 @@ function handleImportFile(event: Event) {
         if (ok) {
           window.location.reload()
         } else {
-          window.alert(t('panels.settings.errors.invalidSaveFile'))
+          // UI-007 (Task 5) — window.alert native → toast store (in-game
+          // feedback, tự biến mất, không chặn luồng; giữ import input
+          // reset để retry ngay).
+          notification.push('error', t('panels.settings.errors.invalidSaveFile'))
         }
       }
 

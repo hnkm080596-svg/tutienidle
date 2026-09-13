@@ -12,8 +12,8 @@ import {
   dongFuSeasonOverlayUrl,
   type DongFuBuildingArtEntry,
   type DongFuBuildingId,
-} from '@/game/support/DongFuBuildingArt'
-import type { ThanhVanVariant } from '@/game/support/ThanhVanArt'
+} from '@/presentation/background/DongFuBuildingArt'
+import type { ThanhVanVariant } from '@/presentation/background/BackgroundVariant'
 import DongFuBuildingSprite from './DongFuBuildingSprite.vue'
 
 interface SceneBuilding {
@@ -30,7 +30,7 @@ const gameManager = useGameManager()
 const stageActive = useStageActive()
 const navigation = useBuildingNavigation()
 const ui = useUiStore()
-const definitions = computed(() => gameManager.getBuildingDefinitions())
+const definitions = computed(() => gameManager.buildingOps.getBuildingDefinitions())
 const reducedMotion = ref(false)
 const assetErrors = ref<Set<DongFuBuildingId>>(new Set())
 

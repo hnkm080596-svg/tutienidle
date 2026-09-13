@@ -1,22 +1,29 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, defineAsyncComponent, inject, reactive, watch } from 'vue'
+import type { StandalonePanel } from '@/presentation/contracts/panelIds'
 import MainScene from '../game/MainScene.vue'
+import RouteMount from '../game/RouteMount.vue'
 import CombatSceneOverlay from '../game/combat/CombatSceneOverlay.vue'
 import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay.vue'
-import HomeResourceStrip from '../game/HomeResourceStrip.vue'
+import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
 import DongFuCommandWheel from '../game/DongFuCommandWheel.vue'
 import BuildingDetailPopover from '../game/BuildingDetailPopover.vue'
 import LeftPanel from './LeftPanel.vue'
 import RightPanel from './RightPanel.vue'
 import FunctionOverlayPanel from './FunctionOverlayPanel.vue'
-import SkillPathPanel from '../panels/SkillPathPanel.vue'
-import TechniquePanel from '../panels/TechniquePanel.vue'
-import RealmPanel from '../panels/RealmPanel.vue'
-import LuyenThePanel from '../panels/LuyenThePanel.vue'
-import QuanKhiPanel from '../panels/QuanKhiPanel.vue'
-import QuestPanel from '../panels/QuestPanel.vue'
-import ArtifactPanel from '../panels/ArtifactPanel.vue'
-import TranPhapPanel from '../panels/TranPhapPanel.vue'
+// Standalone overlay panels load lazily: the module is fetched on first
+// open (v-if below), then the component stays mounted so OverlayPanel's
+// close transition and panel-internal state keep working exactly as with
+// the old static imports.
+const SkillPathPanel = defineAsyncComponent(() => import('../panels/SkillPathPanel.vue'))
+const TechniquePanel = defineAsyncComponent(() => import('../panels/TechniquePanel.vue'))
+const RealmPanel = defineAsyncComponent(() => import('../panels/RealmPanel.vue'))
+const LuyenThePanel = defineAsyncComponent(() => import('../panels/LuyenThePanel.vue'))
+const QuanKhiPanel = defineAsyncComponent(() => import('../panels/QuanKhiPanel.vue'))
+const QuestPanel = defineAsyncComponent(() => import('../panels/QuestPanel.vue'))
+const ArtifactPanel = defineAsyncComponent(() => import('../panels/ArtifactPanel.vue'))
+const TranPhapPanel = defineAsyncComponent(() => import('../panels/TranPhapPanel.vue'))
+const CompanionPanel = defineAsyncComponent(() => import('../panels/CompanionPanel.vue'))
 import Tooltip from '../common/Tooltip.vue'
 import ToastContainer from '../common/ToastContainer.vue'
 import ActionFeedbackLog from '../common/ActionFeedbackLog.vue'
@@ -37,7 +44,7 @@ const offlineSummary = useOfflineSummaryStore()
 // wheel (trigger = nhân vật tu luyện giữa màn hình) hoặc hotspot
 // building. Canvas Phaser tự thích ứng theo container (ResizeObserver
 // trong PhaserCanvas.vue + các scene đã handle 'resize'); khoảng
-// reserved combat được đồng bộ qua game/support/combatInsets.ts.
+// reserved combat được đồng bộ qua presentation/geometry/combatInsets.ts.
 const ui = useUiStore()
 
 // Combat UI Redesign — Combat Scene chiếm TOÀN màn hình, thay hẳn
@@ -45,8 +52,37 @@ const ui = useUiStore()
 // trong DongFuScene để art công trình nằm đúng phía sau nhân vật.
 // MainScene (Phaser canvas) vẫn LUÔN mount (tự chuyển scene nội bộ,
 // xem MainScene.vue), chỉ DOM chrome xung quanh nó ẩn/hiện theo cờ này.
+const routeAdapter = inject(VUE_ROUTE_ADAPTER_KEY, null)
+
+// Scene visibility follows the coordinator route. The ui store flags stay only
+// as the fallback for standalone tests that mount without a coordinator.
 const isCombatSceneActive = useCombatSceneActive()
-const isFullSceneActive = computed(() => isCombatSceneActive.value || ui.isTribulationSceneActive)
+const isTribulationSceneActive = computed(() =>
+  routeAdapter
+    ? routeAdapter.activeRoute.value === 'tribulation'
+    : ui.isTribulationSceneActive,
+)
+const isFullSceneActive = computed(
+  () => isCombatSceneActive.value || isTribulationSceneActive.value,
+)
+
+// Lazy-once mount set: a standalone panel mounts (and its chunk loads) the
+// first time it is opened, then stays mounted for the session so the close
+// transition and component state behave identically to static imports.
+const mountedStandalone = reactive(new Set<Exclude<StandalonePanel, null>>())
+watch(
+  () => ui.standalonePanel,
+  (panel) => {
+    if (panel) mountedStandalone.add(panel)
+  },
+  { immediate: true },
+)
+
+/** Which route this Vue tree is currently standing in for (mount witness). */
+const mountedGameRoute = computed<'home' | 'combat' | 'tribulation'>(() => {
+  const route = routeAdapter?.activeRoute.value
+  return route === 'combat' || route === 'tribulation' ? route : 'home'
+})
 
 // Bấm khoảng trống giữa màn hình (MainScene — cảnh Phaser, không phải
 // panel/icon/popover nào) tự đóng panel chức năng đang mở. Gắn THẲNG
@@ -64,8 +100,6 @@ function closeSidePanels() {
       <MainScene @click="closeSidePanels" />
 
       <template v-if="!isFullSceneActive">
-        <HomeResourceStrip />
-
         <!-- Shared popover authority (plan Workstream C) — CHỈ MỘT
              BuildingDetailPopover cho CẢ hotspot lẫn command wheel,
              điều khiển qua ui.activeBuildingPopoverId. -->
@@ -80,21 +114,23 @@ function closeSidePanels() {
         <!-- Kỹ Năng/Tâm Pháp (2026-08-20) — tách khỏi LeftPanel thành
              overlay toàn màn hình độc lập (ui.standalonePanel), cùng
              pattern BreakthroughRequirementPanel bên dưới. -->
-        <SkillPathPanel />
+        <SkillPathPanel v-if="mountedStandalone.has('skill')" />
 
-        <TechniquePanel />
+        <TechniquePanel v-if="mountedStandalone.has('technique')" />
 
-        <RealmPanel />
+        <RealmPanel v-if="mountedStandalone.has('realm')" />
 
-        <LuyenThePanel />
+        <LuyenThePanel v-if="mountedStandalone.has('luyen_the')" />
 
-        <QuanKhiPanel />
+        <QuanKhiPanel v-if="mountedStandalone.has('quan_khi')" />
 
-        <QuestPanel />
+        <QuestPanel v-if="mountedStandalone.has('quest')" />
 
-        <ArtifactPanel />
+        <ArtifactPanel v-if="mountedStandalone.has('artifact')" />
 
-        <TranPhapPanel />
+        <TranPhapPanel v-if="mountedStandalone.has('tran_phap')" />
+
+        <CompanionPanel v-if="mountedStandalone.has('companion')" />
 
         <!-- Command wheel nhiều tầng — trigger là nhân vật tu luyện
              giữa Động Phủ (DongFuScene.vue). -->
@@ -102,7 +138,7 @@ function closeSidePanels() {
       </template>
 
       <CombatSceneOverlay v-if="isCombatSceneActive" />
-      <TribulationSceneOverlay v-else-if="ui.isTribulationSceneActive" />
+      <TribulationSceneOverlay v-else-if="isTribulationSceneActive" />
 
       <Tooltip />
 
@@ -122,6 +158,8 @@ function closeSidePanels() {
       <BreakthroughRequirementPanel />
 
       <TutorialOverlay />
+
+      <RouteMount :route="mountedGameRoute" />
     </div>
   </div>
 </template>

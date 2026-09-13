@@ -20,9 +20,9 @@ describe('GameManager wash transaction', () => {
 
     const manager = new GameManager()
     const player = createDefaultPlayer()
-    manager.registerMaterials(materials)
-    manager.registerEquipment(equipment)
-    manager.registerAffixes(affixes)
+    manager.catalogOps.registerMaterials(materials)
+    manager.catalogOps.registerEquipment(equipment)
+    manager.catalogOps.registerAffixes(affixes)
 
     const instance = makeInstance({
       instanceId: 'wash-transaction-item',
@@ -41,18 +41,18 @@ describe('GameManager wash transaction', () => {
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
     })
     manager.equipmentBag.add(instance)
-    expect(manager.equipItem(instance.instanceId, player)).toEqual({ ok: true })
+    expect(manager.equipmentOps.equipItem(instance.instanceId, player)).toEqual({ ok: true })
 
     const essence = manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID)
     const spiritStone = manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID)
-    const oreId = 'qi_refining_ore_huyen'
+    const oreId = 'qi_refining_ore_century'
     const ore = manager.materialRegistry.get(oreId)
     manager.materialBag.add(essence, 9)
     manager.materialBag.add(spiritStone, 100)
     manager.materialBag.add(ore, 7)
 
     const modifierIdsBefore = manager
-      .getEquipmentModifiers()
+      .equipmentOps.getEquipmentModifiers()
       .filter((modifier) => modifier.sourceId === instance.instanceId)
       .map((modifier) => modifier.id)
       .sort()
@@ -62,18 +62,20 @@ describe('GameManager wash transaction', () => {
     ])
     const mainStatBefore = structuredClone(instance.mainStat)
 
-    const preview = manager.previewWashItem(instance.instanceId)
+    const preview = manager.equipmentOps.previewWashItem(instance.instanceId)
 
     expect(preview.ok).toBe(true)
-    expect(preview.affixes).toHaveLength(3)
+    // R9 (AR-21): display copy read through the ticket read model.
+    const previewAffixes = manager.equipmentOps.getWashPreviewAffixes(preview.ticketId!)!.affixes
+    expect(previewAffixes).toHaveLength(3)
     expect(instance.affixes).toEqual([{ affixId: 'suffix_accuracy', tier: 1, value: 3 }])
     expect(instance.forgeUsesRemaining).toBe(19)
     expect(manager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
     expect(manager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(0)
     expect(manager.materialBag.getAmount(oreId)).toBe(7)
-    expect(manager.getEquipmentModifiers().map((modifier) => modifier.id).sort()).toEqual(modifierIdsBefore)
+    expect(manager.equipmentOps.getEquipmentModifiers().map((modifier) => modifier.id).sort()).toEqual(modifierIdsBefore)
 
-    expect(manager.commitWashItem(instance.instanceId, preview.affixes ?? []).ok).toBe(true)
+    expect(manager.equipmentOps.commitWashItem(instance.instanceId, preview.ticketId!).ok).toBe(true)
     expect(instance.mainStat).toEqual(mainStatBefore)
     expect(instance.forgeUsesRemaining).toBe(19)
     const committedAffixes = structuredClone(instance.affixes)
@@ -85,7 +87,7 @@ describe('GameManager wash transaction', () => {
     ].sort()
     expect(
       manager
-        .getEquipmentModifiers()
+        .equipmentOps.getEquipmentModifiers()
         .filter((modifier) => modifier.sourceId === instance.instanceId)
         .map((modifier) => modifier.id)
         .sort(),
@@ -100,10 +102,10 @@ describe('GameManager wash transaction', () => {
     }
 
     const restoredManager = new GameManager()
-    restoredManager.registerMaterials(materials)
-    restoredManager.registerEquipment(equipment)
-    restoredManager.registerAffixes(affixes)
-    restoredManager.restoreFromSave(validated.normalizedSave as ReturnType<typeof buildGameSave>)
+    restoredManager.catalogOps.registerMaterials(materials)
+    restoredManager.catalogOps.registerEquipment(equipment)
+    restoredManager.catalogOps.registerAffixes(affixes)
+    restoredManager.saveOps.restoreFromSave(validated.normalizedSave as ReturnType<typeof buildGameSave>)
 
     const restoredInstance = restoredManager.equipmentBag.get(instance.instanceId)
     expect(restoredInstance).toMatchObject({
@@ -116,10 +118,50 @@ describe('GameManager wash transaction', () => {
     expect(restoredManager.materialBag.getAmount(oreId)).toBe(7)
     expect(
       restoredManager
-        .getEquipmentModifiers()
+        .equipmentOps.getEquipmentModifiers()
         .filter((modifier) => modifier.sourceId === instance.instanceId)
         .map((modifier) => modifier.id)
         .sort(),
     ).toEqual(committedModifierIds)
+  })
+
+  // R9 (AR-21) regression - the audit's executed counterexample: the
+  // public GameManager.commitWashItem must NOT accept caller-fabricated
+  // affixes. Without a domain-issued ticket every commit fails and the
+  // instance is untouched.
+  it('commit without a domain ticket rejects fabricated affixes at the public API', () => {
+    const manager = new GameManager()
+    const _player = createDefaultPlayer()
+    manager.catalogOps.registerMaterials(materials)
+    manager.catalogOps.registerEquipment(equipment)
+    manager.catalogOps.registerAffixes(affixes)
+
+    const instance = makeInstance({
+      instanceId: 'wash-fabricated-item',
+      itemId: 'base_kiem',
+      equipped: false,
+      quality: 'dia',
+      forgeUsesTotal: 20,
+      forgeUsesRemaining: 20,
+      mainStat: {
+        id: 'wash-main',
+        sourceId: 'wash-fabricated-item',
+        sourceType: 'equipment',
+        stat: 'attack',
+        flat: 12,
+      },
+      affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
+    })
+    manager.equipmentBag.add(instance)
+
+    const before = structuredClone(instance.affixes)
+    const forgeBefore = instance.forgeUsesRemaining
+
+    const result = manager.equipmentOps.commitWashItem(instance.instanceId, 'fabricated-ticket-id')
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('no_pending_wash')
+    expect(instance.affixes).toEqual(before)
+    expect(instance.forgeUsesRemaining).toBe(forgeBefore)
   })
 })

@@ -17,10 +17,10 @@ export const QUESTS: Quest[] = [
     cadence: 'once',
   },
   {
-    id: 'collect_qi_refining_ore_hoang_1',
+    id: 'collect_qi_refining_ore_decade_1',
     name: 'Thu Thập Thập Niên Linh Khoáng',
     description: 'Nộp 3 Thập Niên Linh Khoáng để nhận thưởng.',
-    condition: { kind: 'collect', materialId: 'qi_refining_ore_hoang', amount: 3 },
+    condition: { kind: 'collect', materialId: 'qi_refining_ore_decade', amount: 3 },
     reward: { reward: { spiritStone: 30 } },
     cadence: 'once',
   },
@@ -46,6 +46,18 @@ export const QUESTS: Quest[] = [
     description: 'Đánh bại 15 Sơn Tặc bất kỳ khu vực nào.',
     condition: { kind: 'kill', enemyId: 'bandit', amount: 15 },
     reward: { reward: { cultivation: 200 } },
+    cadence: 'daily',
+  },
+
+  // Companion gacha (Task 6, 2026-09-12) - daily Chieu Hien Lenh income
+  // alongside the floor-10 boss signatureDrops. Kill-generic (enemyId
+  // omitted) so the quest is completable on any stage.
+  {
+    id: 'daily_chieu_hien_lenh',
+    name: '[Hàng Ngày] Chiêu Hiền Chi Lễ',
+    description: 'Đánh bại 20 địch nhân bất kỳ để nhận 1 Chiêu Hiền Lệnh.',
+    condition: { kind: 'kill', amount: 20 },
+    reward: { itemDrops: [{ kind: 'material', itemId: 'chieu_hien_lenh', amount: 1 }] },
     cadence: 'daily',
   },
 
@@ -77,7 +89,7 @@ export const QUESTS: Quest[] = [
     id: 'collect_foundation_ore_30',
     name: 'Thu Thập Linh Khoáng Hậu Sơn',
     description: 'Nộp 30 Thập Niên Linh Khoáng thu được từ yêu thú hậu sơn.',
-    condition: { kind: 'collect', materialId: 'qi_refining_ore_hoang', amount: 30 },
+    condition: { kind: 'collect', materialId: 'qi_refining_ore_decade', amount: 30 },
     reward: { reward: { cultivation: 4000 } },
     cadence: 'once',
     requiredRealmId: 'foundation_establishment',

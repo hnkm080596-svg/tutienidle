@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
-import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { EnemyDefinition } from '../enemy/Enemy'
@@ -23,8 +22,8 @@ const MINIMAL_STATS_INPUT = {
   armor: 0,
 }
 
-function createPlayerEntity(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0 }
+function _createPlayerEntity(): CombatEntity {
+  const stats = createBaseStats({ attack: 0 })
 
   return {
     id: 'player',
@@ -55,7 +54,7 @@ function createPlayerEntity(): CombatEntity {
   }
 }
 
-function enemyDefinition(): EnemyDefinition {
+function _enemyDefinition(): EnemyDefinition {
   return {
     id: 'target_dummy',
     name: 'Bia Tập',
@@ -70,8 +69,8 @@ function enemyDefinition(): EnemyDefinition {
 function setup() {
   const gameManager = new GameManager()
 
-  gameManager.registerSkillTemplates(SKILLS)
-  gameManager.registerProgressionNodes(KIEM_TU_NODES)
+  gameManager.catalogOps.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 
   return gameManager
 }
@@ -86,7 +85,7 @@ function setupMortalWithPathReady(tramTotalCasts: number) {
   player.skillCastCounts = { tram: tramTotalCasts }
   player.skillLevels = { tram: tramTotalCasts >= 10000 ? 3 : tramTotalCasts >= 1000 ? 2 : 1 }
 
-  gameManager.learnSkill('tram')
+  gameManager.progressionOps.learnSkill('tram')
   gameManager.skillSystem.equipToSlot('tram', 0)
 
   return { gameManager, player }
@@ -96,7 +95,7 @@ describe('GameManager — Kiếm Tu route chốt vĩnh viễn lúc chọn path',
   it('tram < Lv3 → route Kiếm Trận, slot 0 = Lưỡng Nghi, tram tháo khỏi loadout', () => {
     const { gameManager, player } = setupMortalWithPathReady(999)
 
-    expect(gameManager.chooseCultivationPath('kiem_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
     expect(player.kiemTuRoute).toBe('kiem_tran')
     expect(gameManager.skillManager.getEquippedInSlot(0)?.id).toBe('kiem_tran_luong_nghi')
     expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
@@ -106,7 +105,7 @@ describe('GameManager — Kiếm Tu route chốt vĩnh viễn lúc chọn path',
   it('tram ≥ Lv3 (10.000 trảm) → route Bạt Kiếm, slot 0 = Bạt Kiếm Thức, tram tháo', () => {
     const { gameManager, player } = setupMortalWithPathReady(10000)
 
-    expect(gameManager.chooseCultivationPath('kiem_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
     expect(player.kiemTuRoute).toBe('bat_kiem')
     expect(gameManager.skillManager.getEquippedInSlot(0)?.id).toBe('bat_kiem_thuat')
     expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
@@ -119,7 +118,7 @@ describe('GameManager — Kiếm Tu route chốt vĩnh viễn lúc chọn path',
 
   it('setKiemTuRoute KHÔNG còn tồn tại — route vĩnh viễn sau khi chọn', () => {
     const { gameManager, player } = setupMortalWithPathReady(999)
-    gameManager.chooseCultivationPath('kiem_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)
 
     expect(
       (gameManager as unknown as { setKiemTuRoute?: unknown }).setKiemTuRoute,
@@ -129,7 +128,7 @@ describe('GameManager — Kiếm Tu route chốt vĩnh viễn lúc chọn path',
   it('chọn phap_tu → kiemTuRoute vẫn undefined', () => {
     const { gameManager, player } = setupMortalWithPathReady(10000)
 
-    expect(gameManager.chooseCultivationPath('phap_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player)).toBe(true)
     expect(player.kiemTuRoute).toBeUndefined()
   })
 
@@ -142,10 +141,10 @@ describe('GameManager — Kiếm Tu route chốt vĩnh viễn lúc chọn path',
     player.realmId = 'foundation_establishment'
 
     // Chain thật: Lưỡng Nghi (root, cost 0) mua trước → Tam Tài thay slot 0
-    expect(gameManager.purchaseNode('kiem_tran_luong_nghi', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kiem_tran_luong_nghi', player)).toBe(true)
     expect(gameManager.skillManager.getEquippedInSlot(0)?.id).toBe('kiem_tran_luong_nghi')
 
-    expect(gameManager.purchaseNode('kiem_tran_tam_tai', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('kiem_tran_tam_tai', player)).toBe(true)
     expect(gameManager.skillManager.getEquippedInSlot(0)?.id).toBe('kiem_tran_tam_tai')
     expect(gameManager.skillManager.get('kiem_tran_luong_nghi')!.equipped).toBe(false)
   })

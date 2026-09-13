@@ -1,6 +1,9 @@
 import type { StatType } from '../stats/StatTypes'
 import type { ElementType } from '../element/ElementType'
 
+// R4 (AR-19) — Canonical Buff & Status Types.
+// Consolidates turn-based and persistent buff shapes under one authority.
+
 export type BuffPolarity = 'buff' | 'debuff'
 
 export type BuffStackMode = 'stack' | 'refresh' | 'replace'
@@ -18,23 +21,11 @@ export interface StatModifierEffect {
 
 export interface DotEffectTemplate {
   type: 'dot'
-  // Ratio against source Power (ATK or elemental Power depending on
-  // `element`) — resolved into a snapshotted `damagePerSecond` number by
-  // BuffSystem.apply(), exactly like AilmentTemplate.dpsRatio did.
   dpsRatio: number
   element?: ElementType | 'physical'
-  // Mộc Tu "Độc Căn" DoT scaling — ported verbatim from
-  // AilmentTemplate.poisonRootPercentPerStack/poisonRootMaxStacks/
-  // poisonRootThresholdBonusPercent (static, not resolved — copied as-is
-  // onto the runtime effect).
   poisonRootPercentPerStack?: number
   poisonRootMaxStacks?: number
   poisonRootThresholdBonusPercent?: number
-  // Kiếm Tu (Vạn Kiếm Triều Tông) — "bỏ qua 10%-90% giáp/kháng theo cảnh
-  // giới" — ported verbatim from AilmentTemplate.armorIgnorePercentByRealm
-  // (AilmentRegistry.ts). Apply-time-only, consumed once inside
-  // BuffSystem.calculateDamagePerSecond() (same as `dpsRatio` itself) — does
-  // NOT survive onto the resolved runtime DotEffect.
   armorIgnorePercentByRealm?: boolean
 }
 
@@ -49,19 +40,88 @@ export interface OnHitProcEffect {
   appliesBuffId: string
 }
 
-export type BuffEffectTemplate = StatModifierEffect | DotEffectTemplate | CcEffect | OnHitProcEffect
+export interface ReactiveTriggerEffect {
+  type: 'reactiveTrigger'
+  trigger: 'onCastBegin' | 'onImpactLanded'
+  chance: number
+  appliesDefinitionId?: string
+  queuesFollowUp?: boolean
+}
+
+export interface GaugeDeltaEffect {
+  type: 'gaugeDelta'
+  percentOfMax: number
+}
+
+export type BuffEffectTemplate =
+  | StatModifierEffect
+  | DotEffectTemplate
+  | CcEffect
+  | OnHitProcEffect
+  | GaugeDeltaEffect
+  | ReactiveTriggerEffect
 
 // --- Runtime shapes (Buff.effects) ---
 
 export interface DotEffect {
   type: 'dot'
-  // Resolved once at apply time (source.stats snapshot) — see
-  // BuffSystem.apply(). NOT re-read from source every tick.
-  damagePerSecond: number
+  damagePerTurn?: number
+  damagePerSecond?: number
   element?: ElementType | 'physical'
   poisonRootPercentPerStack?: number
   poisonRootMaxStacks?: number
   poisonRootThresholdBonusPercent?: number
 }
 
-export type BuffEffect = StatModifierEffect | DotEffect | CcEffect | OnHitProcEffect
+export type BuffEffect =
+  | StatModifierEffect
+  | DotEffect
+  | CcEffect
+  | OnHitProcEffect
+  | GaugeDeltaEffect
+  | ReactiveTriggerEffect
+
+export interface BuffDefinition {
+  id: string
+  name: string
+  description?: string
+  polarity: BuffPolarity
+  hidden?: boolean
+
+  duration: number
+  maxStacks?: number
+  stackMode: BuffStackMode
+
+  convertsToId?: string
+  convertsAfterContinuousTurns?: number
+  convertsAfterContinuousSeconds?: number
+
+  effects: BuffEffectTemplate[]
+}
+
+export interface Buff {
+  id: string
+  sourceId: string
+  targetId: string
+  polarity: BuffPolarity
+  hidden?: boolean
+
+  duration: number
+  remainingTurns: number
+  remainingTime?: number
+  stacks: number
+  maxStacks?: number
+  stackMode: BuffStackMode
+
+  continuousTurns?: number
+  continuousSeconds?: number
+  convertsToId?: string
+  convertsAfterContinuousTurns?: number
+  convertsAfterContinuousSeconds?: number
+
+  effects: BuffEffect[]
+}
+
+export interface BuffDefinitionCatalog {
+  get(id: string): BuffDefinition
+}

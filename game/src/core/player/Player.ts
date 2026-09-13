@@ -1,5 +1,5 @@
 import type { StatModifier } from '../stats/StatCalculator'
-import { createBaseStats, type Stats } from '../stats/StatBlock'
+import { createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
 import {
@@ -28,10 +28,15 @@ export interface PlayerData {
   cultivation: number
   cultivationPerSecond: number
 
+  // Hai Nap talent (talent-catalog-v4 §4.3) — cultivation that would
+  // overflow past the current level cap banks here and pours into the
+  // next tier on breakthrough. Owned by CultivationSystem.
+  cultivationOvercharge: number
+
   /** Pool nhân công tự động dùng chung cho mọi ProductionSite. */
   autoWorkerCapacity: number
 
-  baseStats: Stats
+  baseStats: BaseStats
 
   // Modifier "tĩnh", gắn trực tiếp với nhân vật: equipment, talent,
   // reincarnation... Người chơi tự thêm/bớt qua các hành động rõ ràng
@@ -197,11 +202,17 @@ export interface PlayerData {
   // compat read-only, luôn đồng bộ = các id có level >= 1.
   nodeLevels: Record<string, number>
 
+  // Van Dao talent (talent-catalog-v4 §4.3) — nodeId -> times a node
+  // purchase or upgrade went free via the talent roll. Kept after the
+  // talent is removed so refund accounting stays honest.
+  nodeFreePurchaseRecord: Record<string, number>
+
   // Màn chỉ mở tuần tự: thắng một màn mới mở màn kế tiếp.
   completedStageIds: string[]
 
   // Auto-farm Hoàn Mỹ (2026-09-04 spec) — stage đã đạt điều kiện "Hoàn
-  // Mỹ" (HP đội mất <=75% + turn < stage.perfectClearTurnLimit). Ghi 1
+  // Mỹ" (spec v3 D1: all party alive at victory + roundsElapsed <
+  // stage.perfectClearTurnLimit - rounds, not actor actions). Ghi 1
   // LẦN lúc đạt lần đầu, không cập nhật lại sau đó.
   perfectClearStageIds: string[]
 
@@ -233,6 +244,17 @@ export interface PlayerData {
   // nhân vật chưa từng có cơ hội chọn.
   breakthroughGrade: number
 
+  // Loi Kiep talent (talent-catalog-v4 §4.3) — permanent +10% all
+  // attributes per successful tribulation while the talent is held.
+  // Owned by TribulationOutcomeService's victory path.
+  tribulationBonusStacks: number
+
+  // Pha Giap talent M2 carry (talent-catalog-v4 §4.3) — half the Pha
+  // Giap passive's metalPenetration stacks bank at battle end and
+  // re-seed the next battle; resets when realmId changes.
+  phaGiapCarryStacks: number
+  phaGiapCarryRealmId: string | null
+
   // Idempotency guard cho Realm Passive theo cảnh giới (Nhập Đạo/Kiến
   // Cơ/...) — cùng pattern unlockedRealmEnhancements, key = realmId
   // vừa bước vào. Xem core/realm/RealmPassiveSystem.ts.
@@ -259,7 +281,7 @@ export interface PlayerData {
 
   // Kiếm Tu (2026-08-28) — mirror của Skill.totalExperience/level cho
   // TỪNG skill (key = skillId), ghi mỗi lần cast trong
-  // SkillSystem.gainCastExperience() qua sink (xem
+  // SkillSystem.recordCast() qua sink (xem
   // GameManager's skillSystem.setCastCountSink()). Tồn tại VÌ
   // NodeSystem.hasPrerequisite() chỉ nhận PlayerData — không có
   // SkillManager để tra totalExperience/level trực tiếp. Skill instance
@@ -275,6 +297,14 @@ export interface PlayerData {
   // data/companion/Companions.ts) — đây là field mới DUY NHẤT feature
   // này cần trên PlayerData.
   companions: CompanionInstance[]
+
+  // Companion Gacha (2026-09-12) - pity counter: pulls since the last
+  // grade >= 'dia' result (reset on dia/thien/tien, see CompanionGacha).
+  companionPullsSinceRare: number
+
+  // Companion Gacha (2026-09-12) - Duyen Phan exchange currency, earned
+  // from duplicate pulls on constellation-maxed companions.
+  duyenPhan: number
 
   // Trận Pháp (2026-09-05) — trận pháp đang active + vị trí gán từng ô.
   // null = người chơi chưa từng cấu hình trận pháp nào; buildTurnBattle()
@@ -355,16 +385,21 @@ export function createDefaultPlayer(): PlayerData {
     skillInsight: 0,
     totalSkillInsightGained: 0,
     cultivationInsightAccumulator: 0,
+    cultivationOvercharge: 0,
     attributePoints: 0,
     unlockedElements: [],
     equippedElements: [],
     purchasedNodeIds: [],
     nodeLevels: {},
+    nodeFreePurchaseRecord: {},
 
     bodyRefinementCompletedTiers: 0,
     bodyRefinementCurrentTierProgress: 0,
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
+    tribulationBonusStacks: 0,
+    phaGiapCarryStacks: 0,
+    phaGiapCarryRealmId: null,
 
     persistentTimedEffects: [],
 
@@ -372,6 +407,8 @@ export function createDefaultPlayer(): PlayerData {
     combatAiStrategy: DEFAULT_COMBAT_AI_STRATEGY,
 
     companions: [],
+    companionPullsSinceRare: 0,
+    duyenPhan: 0,
 
     formationLoadout: null,
 
@@ -432,6 +469,10 @@ export function playerToCombatEntity(
     currentThoThe: 0,
 
     currentKimThe: 0,
+
+    // Phase A3 (2026-09-07) — Pháp Tu Thế pool (Thuần-path ultimate
+    // resource). Same pattern as the other current*The pools.
+    currentThe: 0,
 
     timeSinceLastBleedProc: 0,
 

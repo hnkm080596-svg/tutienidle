@@ -12,7 +12,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
   it('node có unlocksSkillIds thì learnSkill() từng skill thật, dùng data skill có sẵn', () => {
     const gameManager = new GameManager()
 
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const node: ProgressionNode = {
       id: 'unlock_tru_tien',
@@ -22,7 +22,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       effect: { unlocksSkillIds: ['tru_tien_kiem_tran'] },
     }
 
-    gameManager.registerProgressionNodes([node])
+    gameManager.catalogOps.registerProgressionNodes([node])
 
     const player = createDefaultPlayer()
 
@@ -30,7 +30,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
 
     expect(gameManager.skillManager.has('tru_tien_kiem_tran')).toBe(false)
 
-    expect(gameManager.purchaseNode('unlock_tru_tien', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('unlock_tru_tien', player)).toBe(true)
 
     expect(gameManager.skillManager.has('tru_tien_kiem_tran')).toBe(true)
     // learn() KHÔNG tự equip — đúng tinh thần "học" khác "trang bị".
@@ -43,14 +43,14 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
-    expect(() => gameManager.purchaseNode('unknown_node', player)).not.toThrow()
-    expect(gameManager.purchaseNode('unknown_node', player)).toBe(false)
+    expect(() => gameManager.progressionOps.purchaseNode('unknown_node', player)).not.toThrow()
+    expect(gameManager.progressionOps.purchaseNode('unknown_node', player)).toBe(false)
   })
 
   it('không đủ skillInsight thì purchaseNode() trả false, không learnSkill()', () => {
     const gameManager = new GameManager()
 
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const node: ProgressionNode = {
       id: 'unlock_expensive',
@@ -60,13 +60,13 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       effect: { unlocksSkillIds: ['tru_tien_kiem_tran'] },
     }
 
-    gameManager.registerProgressionNodes([node])
+    gameManager.catalogOps.registerProgressionNodes([node])
 
     const player = createDefaultPlayer()
 
     player.skillInsight = 5
 
-    expect(gameManager.purchaseNode('unlock_expensive', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('unlock_expensive', player)).toBe(false)
     expect(gameManager.skillManager.has('tru_tien_kiem_tran')).toBe(false)
     expect(player.skillInsight).toBe(5)
   })
@@ -85,7 +85,6 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       level: 1,
       maxLevel: 10,
       cooldown: 1,
-      remainingCooldown: 0,
       cost: 0,
       target: 'enemy' as const,
       effects: [],
@@ -103,7 +102,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
   it('node có selectsSpecialization → mua xong skill.selectedSpecializationId đổi', () => {
     const gameManager = new GameManager()
 
-    gameManager.registerSkillTemplates([specSkillTemplate()])
+    gameManager.catalogOps.registerSkillTemplates([specSkillTemplate()])
 
     const node: ProgressionNode = {
       id: 'test_spec_node',
@@ -116,20 +115,20 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       },
     }
 
-    gameManager.registerProgressionNodes([node])
+    gameManager.catalogOps.registerProgressionNodes([node])
 
     const player = createDefaultPlayer()
 
     player.skillInsight = 5
 
-    expect(gameManager.purchaseNode('test_spec_node', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('test_spec_node', player)).toBe(true)
     expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBe('hoa_long')
   })
 
   it('node selectsSpecialization specialization không tồn tại → vẫn mua được, không đổi', () => {
     const gameManager = new GameManager()
 
-    gameManager.registerSkillTemplates([specSkillTemplate()])
+    gameManager.catalogOps.registerSkillTemplates([specSkillTemplate()])
 
     const node: ProgressionNode = {
       id: 'test_spec_node_bad',
@@ -142,13 +141,13 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       },
     }
 
-    gameManager.registerProgressionNodes([node])
+    gameManager.catalogOps.registerProgressionNodes([node])
 
     const player = createDefaultPlayer()
 
     player.skillInsight = 5
 
-    expect(gameManager.purchaseNode('test_spec_node_bad', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('test_spec_node_bad', player)).toBe(true)
     expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBeUndefined()
   })
 })

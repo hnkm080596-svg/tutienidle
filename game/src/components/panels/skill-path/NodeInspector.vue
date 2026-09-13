@@ -22,7 +22,7 @@ import { getActiveSkillResourceStats } from '@/core/skill/SkillResourceStatLabel
 import type { ActiveSkillResourceStat } from '@/core/skill/SkillResourceStatLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const props = defineProps<{
   node: ProgressionNode | null
@@ -53,7 +53,7 @@ const nextCost = computed(() => {
     return null
   }
 
-  return gameManager.getNextNodeCost(props.node.id, player.$state) ?? null
+  return gameManager.progressionOps.getNextNodeCost(props.node.id, player.$state) ?? null
 })
 
 const upgradable = computed(() => {

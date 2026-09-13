@@ -1,21 +1,39 @@
 import { describe, expect, it } from 'vitest'
+import type { TalentRarity } from '../../core/talent/Talent'
 import {
   CHARACTER_CREATION_TALENTS,
   PARKED_TALENTS,
-  RETIRED_V4_TALENTS,
   getTalentDefinition,
   rollCharacterCreationTalents,
 } from './Talents'
 import { TALENT_PASSIVE_SKILLS } from '../skill/TalentPassives'
-import { buffs } from '../buff/buffs'
+import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 
-// Catalog v4 (spec 2026-09-03-talent-catalog-v4-design.md) — M1 combat:
-// pool roll = 11 talent combat + Phàm Cốt (easter egg). M2 thêm tu
-// luyện, M3 thêm sản xuất (2 active + 2 PARKED). 13 id v3 retired.
+// Catalog v4 (spec 2026-09-03-talent-catalog-v4-design.md) — pool roll:
+// 11 combat + 5 tu luyện M2 + 2 sản xuất M3 + Phàm Cốt (easter egg).
+// 13 id v3 retired — không còn resolve (spec §4.4).
+
+// 13 id catalog v3 đã retire (spec §4.4) — giữ list ở test để khóa hành
+// vi "không resolve", không để dữ liệu chết lọt lại catalog.
+const RETIRED_V4_TALENT_IDS = [
+  'tien_thien_dao_the',
+  'nghich_thien',
+  'dai_tri_nhuoc_ngu',
+  'phan_phac',
+  'huyet_chien',
+  'luyen_the_ky_tai',
+  'tu_bao',
+  'co_duyen',
+  'dan_duyen',
+  'bat_khuat',
+  'duoc_duyen',
+  'dao_phap_tu_nhien',
+  'vo_cau_dao_the',
+]
 
 describe('catalog v4 invariants (M1 combat)', () => {
-  it('đúng 12 thiên phú tham gia roll (11 combat + Phàm Cốt)', () => {
-    expect(CHARACTER_CREATION_TALENTS).toHaveLength(12)
+  it('đúng 19 thiên phú tham gia roll (11 combat + 5 tu luyện M2 + 2 sản xuất M3 + Phàm Cốt)', () => {
+    expect(CHARACTER_CREATION_TALENTS).toHaveLength(19)
   })
 
   it('id duy nhất, weight dương, có effect thật', () => {
@@ -25,6 +43,53 @@ describe('catalog v4 invariants (M1 combat)', () => {
     for (const talent of CHARACTER_CREATION_TALENTS) {
       expect(talent.weight).toBeGreaterThan(0)
       expect(talent.effects.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('ngân sách power (spec §4.1 §5) — 5 công + 5 thủ + Bất Tử Thể giữ, weight đúng thang rarity', () => {
+    // Thang weight cũ (spec §4 dòng đầu): di w1 / thiên w4 / địa w12 /
+    // linh w28 / phàm w55. Mỗi talent map đúng rarity của nó.
+    const WEIGHT_BY_RARITY: Record<TalentRarity, number> = {
+      di: 1,
+      thien: 4,
+      dia: 12,
+      linh: 28,
+      pham: 55,
+    }
+
+    for (const talent of CHARACTER_CREATION_TALENTS) {
+      expect(talent.weight).toBe(WEIGHT_BY_RARITY[talent.rarity])
+    }
+
+    // Đúng cơ cấu 11 combat (5 công + 5 thủ + Bất Tử Thể) + Phàm Cốt.
+    const combatIds = [
+      'kiem_quang',
+      'pha_giap',
+      'tat_phong',
+      'trong_kich',
+      'hap_linh',
+      'thach_giap',
+      'vo_anh',
+      'can_than',
+      'ho_the',
+      'thu_phat',
+      'bat_tu_the',
+    ]
+
+    // Thẻ phân loại UI theo quy ước sẵn có: nhóm công mang 'combat',
+    // nhóm thủ mang 'defense' (metadata, không thuộc ngân sách §5).
+    for (const id of combatIds) {
+      const talent = getTalentDefinition(id)
+
+      expect(talent, `talent ${id} phải thuộc pool M1`).toBeDefined()
+      expect(
+        CHARACTER_CREATION_TALENTS.some((entry) => entry.id === id),
+        `talent ${id} phải tham gia roll`,
+      ).toBe(true)
+      expect(
+        talent!.tags.includes('combat') || talent!.tags.includes('defense'),
+        `talent ${id} phải mang tag combat/defense`,
+      ).toBe(true)
     }
   })
 
@@ -52,14 +117,40 @@ describe('catalog v4 invariants (M1 combat)', () => {
     expect(phamCot!.weight).toBe(1)
   })
 
-  it('13 id v3 retired — không thuộc pool roll nhưng vẫn resolve cho save cũ', () => {
-    expect(RETIRED_V4_TALENTS).toHaveLength(13)
-
+  it('13 id v3 retired — không thuộc pool roll VÀ không resolve (spec §4.4, save cũ bỏ qua an toàn)', () => {
     const poolIds = new Set(CHARACTER_CREATION_TALENTS.map((talent) => talent.id))
 
-    for (const retired of RETIRED_V4_TALENTS) {
-      expect(poolIds.has(retired.id)).toBe(false)
-      expect(getTalentDefinition(retired.id)).toBeDefined()
+    for (const retiredId of RETIRED_V4_TALENT_IDS) {
+      expect(poolIds.has(retiredId)).toBe(false)
+      expect(getTalentDefinition(retiredId)).toBeUndefined()
+    }
+  })
+
+  it('M3 sản xuất — 2 talent active trong pool với effect đúng kind + counter-cost', () => {
+    const hoaHau = getTalentDefinition('hoa_hau_thong_than')
+    const bachLuyen = getTalentDefinition('bach_luyen_thanh_khi')
+
+    expect(hoaHau).toBeDefined()
+    expect(bachLuyen).toBeDefined()
+
+    expect(hoaHau!.effects).toEqual([
+      {
+        kind: 'alchemy_double_pill',
+        yieldMultiplier: 2,
+        potencyMultiplier: 1.5,
+        costMultiplier: 2,
+      },
+    ])
+    expect(bachLuyen!.effects).toEqual([
+      { kind: 'enhance_guaranteed', costMultiplier: 3 },
+    ])
+
+    for (const talent of [hoaHau!, bachLuyen!]) {
+      expect(
+        CHARACTER_CREATION_TALENTS.some((entry) => entry.id === talent.id),
+        `talent ${talent.id} phải tham gia roll`,
+      ).toBe(true)
+      expect(talent.tags.includes('crafting')).toBe(true)
     }
   })
 
@@ -68,12 +159,10 @@ describe('catalog v4 invariants (M1 combat)', () => {
     expect(PARKED_TALENTS.every((talent) => talent.weight === 0)).toBe(true)
   })
 
-  it('mọi passiveConvertsTo.buffId tham chiếu tồn tại trong BuffRegistry data', () => {
-    const buffIds = new Set(buffs.map((buff) => buff.id))
-
+  it('mọi passiveConvertsTo.buffId tham chiếu tồn tại trong BUFF_REGISTRY (registry runtime consult lúc Phase A2 cutover)', () => {
     for (const skill of TALENT_PASSIVE_SKILLS) {
       if (skill.passiveConvertsTo) {
-        expect(buffIds.has(skill.passiveConvertsTo.buffId)).toBe(true)
+        expect(() => BUFF_REGISTRY.get(skill.passiveConvertsTo!.buffId)).not.toThrow()
       }
     }
   })
@@ -115,7 +204,7 @@ describe('rollCharacterCreationTalents', () => {
   it('không bao giờ roll ra thiên phú parked hay retired', () => {
     const excludedIds = new Set([
       ...PARKED_TALENTS.map((talent) => talent.id),
-      ...RETIRED_V4_TALENTS.map((talent) => talent.id),
+      ...RETIRED_V4_TALENT_IDS,
     ])
 
     for (let index = 0; index < 50; index++) {

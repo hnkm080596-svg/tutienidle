@@ -5,8 +5,13 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 import { GAUGE_MAX } from './ActionGauge'
+import { defineEnemy, enemyToCombatEntity } from '../../enemy/Enemy'
+import { toTurnBattleParticipant } from '../../game/TurnBattleAdapter'
+import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { PHAP_TU_BASICS } from '../../../data/skill/TurnBasicAttacks'
+import { TurnReactionManager } from './TurnReactionManager'
 
 // Fixture giá»‘ng há»‡t quy Æ°á»›c Ä‘Ã£ dÃ¹ng trong ActionTargetingSystem.test.ts â€”
 // selectTarget chá»‰ Ä‘á»c id/x/row/alive, khÃ´ng cáº§n Stats Ä‘áº§y Ä‘á»§.
@@ -25,7 +30,7 @@ function participant(
   speed = 10,
   priority = 0,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 describe('selectTarget', () => {
@@ -64,7 +69,7 @@ describe('selectTarget', () => {
 // Fixture giá»‘ng há»‡t quy Æ°á»›c CombatSystem.damageFloor.test.ts â€” cáº§n Stats
 // Ä‘áº§y Ä‘á»§ vÃ¬ runToCompletion gá»i tháº­t CombatSystem.resolveActionHit().
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id',
@@ -100,7 +105,7 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 describe('TurnBattleSystem.runToCompletion', () => {
@@ -108,13 +113,13 @@ describe('TurnBattleSystem.runToCompletion', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -136,13 +141,13 @@ describe('TurnBattleSystem.runToCompletion', () => {
       type: 'player',
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
 
     const battle: TurnBattle = {
@@ -162,7 +167,7 @@ describe('TurnBattleSystem.runToCompletion', () => {
       id: 'player',
       type: 'player',
       row: 4,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 50 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 50 }),
     })
     const near = createCombatant({
       id: 'near',
@@ -170,7 +175,7 @@ describe('TurnBattleSystem.runToCompletion', () => {
       x: 1,
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
     const far = createCombatant({
       id: 'far',
@@ -178,7 +183,7 @@ describe('TurnBattleSystem.runToCompletion', () => {
       x: 5,
       currentHp: 10,
       maxHp: 10,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -202,13 +207,13 @@ describe('TurnBattleSystem.runToCompletion', () => {
       type: 'player',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 }),
     })
 
     const battle: TurnBattle = {
@@ -241,13 +246,13 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -270,13 +275,13 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -299,13 +304,13 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -321,19 +326,19 @@ describe('TurnBattleSystem.resolveNextStep', () => {
   })
 })
 
-import { TurnBuffSystem } from './TurnBuffSystem'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 
-class FixtureBuffRegistry implements TurnBuffRegistry {
-  private readonly definitions = new Map<string, TurnBuffDefinition>()
+class FixtureBuffRegistry implements BuffDefinitionCatalog {
+  private readonly definitions = new Map<string, BuffDefinition>()
 
-  constructor(definitions: TurnBuffDefinition[]) {
+  constructor(definitions: BuffDefinition[]) {
     for (const definition of definitions) {
       this.definitions.set(definition.id, definition)
     }
   }
 
-  get(id: string): TurnBuffDefinition {
+  get(id: string): BuffDefinition {
     const definition = this.definitions.get(id)
 
     if (!definition) {
@@ -344,7 +349,7 @@ class FixtureBuffRegistry implements TurnBuffRegistry {
   }
 }
 
-const STUN_DEFINITION: TurnBuffDefinition = {
+const STUN_DEFINITION: BuffDefinition = {
   id: 'fixture_stun',
   name: 'Fixture Stun',
   polarity: 'debuff',
@@ -358,19 +363,19 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
 
     const registry = new FixtureBuffRegistry([STUN_DEFINITION])
-    new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
+    new BuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
 
     const battle: TurnBattle = {
       players: [playerParticipant],
@@ -389,19 +394,19 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
 
     const registry = new FixtureBuffRegistry([STUN_DEFINITION])
-    new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
+    new BuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
 
     const battle: TurnBattle = {
       players: [playerParticipant],
@@ -421,13 +426,13 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -444,7 +449,7 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
   })
 })
 
-const BURN_DEFINITION: TurnBuffDefinition = {
+const BURN_DEFINITION: BuffDefinition = {
   id: 'fixture_burn',
   name: 'Fixture Burn',
   polarity: 'debuff',
@@ -458,13 +463,13 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -499,13 +504,13 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -535,7 +540,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
       id: 'player',
       type: 'player',
       row: 4,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyA = createCombatant({
       id: 'enemyA',
@@ -543,7 +548,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
       x: 1,
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
     const enemyB = createCombatant({
       id: 'enemyB',
@@ -551,7 +556,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
       x: 2,
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -584,13 +589,13 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -622,13 +627,13 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -650,13 +655,13 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -682,13 +687,13 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -714,13 +719,13 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -735,7 +740,7 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
   })
 })
 
-const ENRAGE_DEFINITION: TurnBuffDefinition = {
+const ENRAGE_DEFINITION: BuffDefinition = {
   id: 'fixture_enrage',
   name: 'Fixture Enrage',
   polarity: 'buff',
@@ -749,13 +754,13 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -784,13 +789,13 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -818,13 +823,13 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -851,13 +856,13 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -879,67 +884,79 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
 
     expect(bossTrigger.firedAlready).toBe(false)
   })
-})
 
-describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
-  it('spawns the next wave enemy once the arena is empty, but does not win yet', () => {
+  it('fires real production boss enrage content (mortal_crocodile_enrage) after 60 turns', () => {
+    // Player must survive ~600 boss turns while dealing no damage, so it
+    // gets a huge HP pool and zero attack. NOTE: totalTurnsElapsed only
+    // increments when an actor actually acts, and gauge build-up means the
+    // speed-100 boss acts roughly once every 10 resolveNextStep calls —
+    // hence the 650-call loop (60 boss turns + margin), not the naive 61.
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
-    })
-    const enemyA = createCombatant({
-      id: 'enemyA',
-      currentHp: 1,
-      maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
-    })
-
-    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
-    const battle: TurnBattle = {
-      players: [makeParticipant('player', player, 10, 0)],
-      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
-      state: 'fighting',
-      wave,
-    }
-
-    const spawnEnemy = (): TurnBattleParticipant => {
-      const enemyB = createCombatant({
-        id: 'enemyB',
-        currentHp: 1_000_000,
-        maxHp: 1_000_000,
-        stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
-      })
-
-      return makeParticipant('enemyB', enemyB, 10, 2)
-    }
-
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
-    system.resolveNextStep(battle)
-
-    expect(battle.enemies).toHaveLength(2)
-    expect(battle.enemies[1]!.id).toBe('enemyB')
-    expect(wave.spawnedCount).toBe(2)
-    expect(battle.state).toBe('fighting')
-  })
-
-  it('does not spawn while an enemy is still alive', () => {
-    const player = createCombatant({
-      id: 'player',
-      type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 },
-    })
-    const enemyA = createCombatant({
-      id: 'enemyA',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
-    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const bossEnemy = defineEnemy({
+      id: 'test_boss',
+      name: 'Test Boss',
+      level: 1,
+      realmId: 'mortal',
+      lane: 'ground',
+      statsInput: {
+        maxHp: 1_000_000,
+        attack: 10,
+        attackSpeed: 1,
+        attackRangeRanks: 1,
+        criticalRate: 0,
+        criticalDamage: 1.5,
+        armor: 0,
+        evasionRate: 0,
+      },
+      rewards: { techniqueInsight: 1, spiritStone: 1 },
+      bossTrigger: { afterTurns: 60, buffDefinitionId: 'mortal_crocodile_enrage' },
+    })
+
+    const basicSkill: TurnSkillDefinition = {
+      id: 'fixture_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical' as const, multiplier: 1 },
+      targeting: { shape: 'single' as const },
+    }
+
+    const enemyParticipant = toTurnBattleParticipant(enemyToCombatEntity(bossEnemy), 1, basicSkill)
+
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
-      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
+
+    for (let i = 0; i < 650; i++) {
+      system.resolveNextStep(battle)
+    }
+
+    expect(enemyParticipant.bossTrigger?.firedAlready).toBe(true)
+    expect(enemyParticipant.buffs.getAll().some((buff) => buff.id === 'mortal_crocodile_enrage')).toBe(true)
+  })
+})
+
+describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
+  it('spawns an entire wave as pending telegraphs once the arena is empty, not one at a time', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+    })
+
+    const wave = { totalEnemyCount: 3, spawnedCount: 0, waves: [3], waveIndex: 0, pendingEnemySpawns: [] }
+    const battle: TurnBattle = {
+      players: [makeParticipant('player', player, 10, 0)],
+      enemies: [],
       state: 'fighting',
       wave,
     }
@@ -948,110 +965,124 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
     const spawnEnemy = (): TurnBattleParticipant => {
       spawnCalls += 1
 
-      const enemyB = createCombatant({
-        id: 'enemyB',
-        currentHp: 1,
-        maxHp: 1,
-        stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      const enemy = createCombatant({
+        id: `enemy${spawnCalls}`,
+        currentHp: 10,
+        maxHp: 10,
+        stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
       })
 
-      return makeParticipant('enemyB', enemyB, 10, 2)
+      return makeParticipant(`enemy${spawnCalls}`, enemy, 10, 1)
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
-    system.resolveNextStep(battle)
 
-    expect(spawnCalls).toBe(0)
-    expect(wave.spawnedCount).toBe(1)
-    expect(battle.enemies).toHaveLength(1)
+    system.tickPacing(battle)
+
+    expect(spawnCalls).toBe(3)
+    expect(wave.spawnedCount).toBe(3)
+    expect(wave.waveIndex).toBe(1)
+    expect(wave.pendingEnemySpawns).toHaveLength(3)
+    expect(battle.enemies).toHaveLength(0)
   })
 
-  it('reaches victory via isStageComplete once every wave enemy has spawned and died', () => {
+  it('materializes a pending enemy into battle.enemies only after its telegraph ticks reach 0', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
-    const enemyA = createCombatant({
-      id: 'enemyA',
-      currentHp: 1,
-      maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    const enemy = createCombatant({
+      id: 'enemy1',
+      currentHp: 10,
+      maxHp: 10,
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
+    const pendingParticipant = makeParticipant('enemy1', enemy, 10, 1)
 
-    const wave = { totalEnemyCount: 1, spawnedCount: 1 }
+    const wave = {
+      totalEnemyCount: 1,
+      spawnedCount: 1,
+      waves: [1],
+      waveIndex: 1,
+      pendingEnemySpawns: [{ participant: pendingParticipant, ticksRemaining: 2, totalTicks: 8 }],
+    }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
-      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      enemies: [],
       state: 'fighting',
       wave,
     }
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20)
-    system.resolveNextStep(battle)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    expect(battle.state).toBe('victory')
+    system.tickPacing(battle)
+    expect(battle.enemies).toHaveLength(0)
+    expect(wave.pendingEnemySpawns[0]!.ticksRemaining).toBe(1)
+
+    system.tickPacing(battle)
     expect(battle.enemies).toHaveLength(1)
+    expect(battle.enemies[0]!.id).toBe('enemy1')
+    expect(wave.pendingEnemySpawns).toHaveLength(0)
   })
 
-  it('does not declare victory until every wave enemy has spawned and died (multi-step)', () => {
+  it('does not start wave 2 until wave 1 is both dead AND fully materialized (no pending left)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
-    })
-    const enemyA = createCombatant({
-      id: 'enemyA',
-      currentHp: 1,
-      maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
-    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const wave = { totalEnemyCount: 2, spawnedCount: 1, waves: [1, 1], waveIndex: 1, pendingEnemySpawns: [] }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
-      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      enemies: [],
       state: 'fighting',
       wave,
     }
 
+    let spawnCalls = 0
     const spawnEnemy = (): TurnBattleParticipant => {
-      const enemyB = createCombatant({
-        id: 'enemyB',
-        currentHp: 1,
-        maxHp: 1,
-        stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      spawnCalls += 1
+
+      const enemy = createCombatant({
+        id: `enemy${spawnCalls}`,
+        currentHp: 10,
+        maxHp: 10,
+        stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
       })
 
-      return makeParticipant('enemyB', enemyB, 10, 2)
+      return makeParticipant(`enemy${spawnCalls}`, enemy, 10, 1)
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
 
-    // Step 1: player kills enemyA. Arena empties -> enemyB spawns this same
-    // step, but enemyB is alive so victory does not fire yet.
-    system.resolveNextStep(battle)
-    expect(battle.state).toBe('fighting')
-    expect(battle.enemies).toHaveLength(2)
+    // Arena empty, waveIndex=1 < waveCount=2 -> wave 2 starts immediately
+    // (nothing from wave 1 was ever pushed into battle.enemies here, so
+    // this simulates "wave 1 already fully cleared before this tick").
+    system.tickPacing(battle)
 
-    // Step 2: player (same speed, lower priority, wins the tie) kills
-    // enemyB. Arena empties, spawnedCount already equals totalEnemyCount ->
-    // no further spawn, victory fires.
-    system.resolveNextStep(battle)
-    expect(battle.state).toBe('victory')
+    expect(spawnCalls).toBe(1)
+    expect(wave.waveIndex).toBe(2)
+    expect(wave.pendingEnemySpawns).toHaveLength(1)
+
+    // waveIndex now 2 === waveCount 2 -> no further wave starts even
+    // though arena is still empty (pending just queued, not yet alive).
+    system.tickPacing(battle)
+    expect(spawnCalls).toBe(1)
   })
 
   it('behaves exactly like Slices 1-4 when wave is not set (no regression)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1067,37 +1098,39 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
     expect(battle.enemies).toHaveLength(1)
   })
 
-  it('does not throw and does not spawn when wave is set but no spawnEnemy factory was provided', () => {
+  it('freezes and resets gauges when the arena is empty but more enemies are coming', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
-    })
-    const enemyA = createCombatant({
-      id: 'enemyA',
-      currentHp: 1,
-      maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
-    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
-      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      enemies: [],
       state: 'fighting',
-      wave,
+      wave: {
+        totalEnemyCount: 3,
+        spawnedCount: 1,
+        waves: [3],
+        waveIndex: 1,
+        pendingEnemySpawns: [
+          { participant: makeParticipant('enemy1', createCombatant({ id: 'enemy1' }), 10, 1), ticksRemaining: 5, totalTicks: 8 },
+        ],
+      },
     }
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20)
+    battle.players[0]!.actionGauge = GAUGE_MAX - 1
 
-    expect(() => system.resolveNextStep(battle)).not.toThrow()
-    expect(battle.enemies).toHaveLength(1)
-    expect(wave.spawnedCount).toBe(1)
-    expect(battle.state).toBe('fighting')
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    const ready = system.tickPacing(battle)
+
+    expect(ready).toBeNull()
+    expect(battle.players[0]!.actionGauge).toBe(0)
   })
-})
 
-const LONG_STUN_DEFINITION: TurnBuffDefinition = {
+const LONG_STUN_DEFINITION: BuffDefinition = {
   id: 'fixture_long_stun',
   name: 'Fixture Long Stun',
   polarity: 'debuff',
@@ -1111,13 +1144,13 @@ describe('TurnBattleSystem.resolveNextStep Bï¿½ Th? (CC-lock guard)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1140,7 +1173,7 @@ describe('TurnBattleSystem.resolveNextStep Bï¿½ Th? (CC-lock guard)', () => {
     // Applied ONCE ï¿½ duration 100 means it cannot expire within this
     // test's turn count, so every subsequent player turn stays hard-CC'd
     // without needing to reason about Slice 3's tick/expiry ordering.
-    new TurnBuffSystem(playerParticipant.buffs).apply(LONG_STUN_DEFINITION, enemyEntity, player, registry)
+    new BuffSystem(playerParticipant.buffs).apply(LONG_STUN_DEFINITION, enemyEntity, player, registry)
 
     return { player, playerParticipant, enemyEntity, enemyParticipant, battle, registry }
   }
@@ -1179,13 +1212,13 @@ describe('TurnBattleSystem.resolveNextStep Bï¿½ Th? (CC-lock guard)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1220,13 +1253,13 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0, defense: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0, defense: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1314,7 +1347,7 @@ describe('TurnBattleSystem multi-target death-mid-resolution hardening', () => {
       id: 'player',
       type: 'player',
       row: 4,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999999 }),
     })
     const enemyA = createCombatant({
       id: 'enemyA',
@@ -1322,7 +1355,7 @@ describe('TurnBattleSystem multi-target death-mid-resolution hardening', () => {
       x: 1,
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
     const enemyB = createCombatant({
       id: 'enemyB',
@@ -1330,7 +1363,7 @@ describe('TurnBattleSystem multi-target death-mid-resolution hardening', () => {
       x: 2,
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1362,13 +1395,13 @@ describe('TurnBattleSystem hpRegenPerTurn', () => {
       type: 'player',
       currentHp: 50,
       maxHp: 100,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, hpRegenPerTurn: 10 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, hpRegenPerTurn: 10 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1389,13 +1422,13 @@ describe('TurnBattleSystem hpRegenPerTurn', () => {
       type: 'player',
       currentHp: 95,
       maxHp: 100,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, hpRegenPerTurn: 10 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, hpRegenPerTurn: 10 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1416,13 +1449,13 @@ describe('TurnBattleSystem countdown phase (unified flow)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0 }),
     })
 
     return {
@@ -1493,13 +1526,13 @@ describe('TurnBattleSystem.peekNextActor', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1521,13 +1554,13 @@ describe('TurnBattleSystem.peekNextActor', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1547,12 +1580,12 @@ describe('TurnBattleSystem.peekNextActor', () => {
       id: 'player',
       type: 'player',
       alive: false,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       alive: false,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1572,13 +1605,13 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1600,13 +1633,13 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1646,7 +1679,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
       id: 'enemy',
       currentHp: 10_000,
       maxHp: 10_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1715,7 +1748,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
       id: 'enemy',
       currentHp: 10_000,
       maxHp: 10_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1758,13 +1791,13 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1792,13 +1825,13 @@ describe('TurnBattleSystem special role â€” Reaction Path double-cast', () 
       id: 'player',
       type: 'player',
       currentMp: 100,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100, maxMp: 100 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100, maxMp: 100 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1809,6 +1842,7 @@ describe('TurnBattleSystem special role â€” Reaction Path double-cast', () 
         cooldownTurns: 4,
         resourceType: 'mana',
         resourceCost: 10,
+        compositePicks: { poolType: 'reaction_path', count: 2 },
         damage: { kind: 'physical', multiplier: 0 },
         targeting: { shape: 'single' },
       },
@@ -1870,13 +1904,13 @@ describe('TurnBattleSystem gauge-delta buff (one-shot)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1894,7 +1928,7 @@ describe('TurnBattleSystem gauge-delta buff (one-shot)', () => {
       state: 'fighting',
     }
 
-    const registry: TurnBuffRegistry = {
+    const registry: BuffDefinitionCatalog = {
       get: (id) => {
         if (id !== 'fixture_haste') throw new Error(`unknown buff ${id}`)
         return {
@@ -1940,13 +1974,13 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -2036,13 +2070,13 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -2066,13 +2100,13 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -2099,13 +2133,13 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -2124,5 +2158,142 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
 
     expect(readyActor?.id).toBe('player')
     expect(battle.totalTurnsElapsed).toBe(1)
+  })
+})
+})
+
+describe('TurnBattleSystem appliesAilment (Phase A1)', () => {
+  const AILMENT_DEF: BuffDefinition = {
+    id: 'fixture_ailment',
+    name: 'Fixture Ailment',
+    polarity: 'debuff',
+    duration: 5,
+    stackMode: 'refresh',
+    effects: [{ type: 'dot', dpsRatio: 0.1, element: 'physical' }],
+  }
+
+  function ailmentBattle(chance: number) {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }),
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+    })
+
+    const playerParticipant = makeParticipant('player', player, 100, 0)
+    playerParticipant.basic = {
+      id: 'fixture_ailment_skill',
+      cooldownTurns: 0,
+      damage: { kind: 'physical' as const, multiplier: 1 },
+      targeting: { shape: 'single' as const },
+      appliesAilment: { buffDefinitionId: 'fixture_ailment', chance },
+    }
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 1, 1)
+
+    const battle: TurnBattle = {
+      players: [playerParticipant],
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    return { battle, playerParticipant, enemyParticipant }
+  }
+
+  it('applies the ailment buff to the target on a successful chance roll', () => {
+    const { battle, enemyParticipant } = ailmentBattle(1)
+
+    const registry = new FixtureBuffRegistry([AILMENT_DEF])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    system.resolveNextStep(battle) // player acts first (priority 0)
+
+    expect(enemyParticipant.buffs.hasAny('fixture_ailment')).toBe(true)
+  })
+
+  it('does not apply the ailment when the chance roll fails', () => {
+    const { battle, enemyParticipant } = ailmentBattle(0)
+
+    const registry = new FixtureBuffRegistry([AILMENT_DEF])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    system.resolveNextStep(battle)
+
+    expect(enemyParticipant.buffs.hasAny('fixture_ailment')).toBe(false)
+  })
+
+  it('does not throw when appliesAilment is set but no registry was provided', () => {
+    const { battle, enemyParticipant } = ailmentBattle(1)
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(() => system.resolveNextStep(battle)).not.toThrow()
+    expect(enemyParticipant.buffs.hasAny('fixture_ailment')).toBe(false)
+  })
+})
+
+describe('TurnBattleSystem Phase A1 end-to-end � real production reaction content', () => {
+  it('real production content: H?a (hoa_cau_thuat) then Th?y T� C�ng triggers B?c Hoi', () => {
+    const eventBus = new EventBus()
+    const combatSystem = new CombatSystem(eventBus)
+    const reactionManager = new TurnReactionManager(eventBus)
+
+    const firePlayer = createCombatant({
+      id: 'fire_player',
+      type: 'player',
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }),
+    })
+    const target = createCombatant({
+      id: 'target',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+    })
+
+    const firePlayerParticipant = makeParticipant('fire_player', firePlayer, 100, 0)
+    firePlayerParticipant.basic = PHAP_TU_BASICS.fire
+
+    const enemyParticipant = makeParticipant('target', target, 1, 1)
+
+    const battle: TurnBattle = {
+      players: [firePlayerParticipant],
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(combatSystem, 10, BUFF_REGISTRY, undefined, undefined, reactionManager)
+
+    const reactionEvents: unknown[] = []
+    eventBus.on('reaction', (event) => reactionEvents.push(event))
+
+    // Force the second ailment (Th?y side of "B?c Hoi") � this test proves
+    // the WIRING works end-to-end with real data, not re-testing RNG.
+    // te_cong only lasts 4 turns, so refresh it while polling: otherwise a
+    // late bong hit (~6% of runs at 0.5 chance) finds no Thuy ailment and
+    // the reaction never fires. The reaction consumes both ailments on
+    // trigger, so poll on the reaction event, not on bong persisting.
+    const applyTeCong = () =>
+      new BuffSystem(enemyParticipant.buffs).apply(
+        BUFF_REGISTRY.get('te_cong'),
+        firePlayer,
+        target,
+        BUFF_REGISTRY,
+      )
+
+    // hoa_cau_thuat's ailment chance is 0.5 � loop until a fire hit lands
+    // with overwhelming probability (matches this file's convention of
+    // looping enough iterations for chance-based content).
+    for (let i = 0; i < 50; i++) {
+      if (reactionEvents.length > 0) break
+      applyTeCong()
+      system.resolveNextStep(battle)
+    }
+
+    expect(reactionEvents.length).toBeGreaterThan(0)
   })
 })

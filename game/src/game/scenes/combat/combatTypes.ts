@@ -25,6 +25,22 @@ export interface EntitySprite {
    */
   sourceSize?: { w: number; h: number }
 
+  /**
+   * How much of its authored box this sprite's art fills (Spec C §4.1).
+   *
+   * Undefined for a Rectangle fallback and for the Tran Phap preview panel,
+   * where it defaults to a full box — those cases have no trimmed art.
+   */
+  extent?: { x: number; y: number; w: number; h: number }
+
+  /**
+   * The character's size on screen, as resolved by Spec C §4.3 — NOT the
+   * sprite's box. Task 4's anchors read these, and storing them here is what
+   * stops the two halves computing them differently.
+   */
+  personWidth?: number
+  personHeight?: number
+
   // Combat AI rework (plan §12.1) + enemy art x2 (2026-08-26) — player
   // sprite ×2, enemy PNG ×2 (fallback Rectangle ×1).
   sizeMultiplier: number
@@ -35,6 +51,18 @@ export interface EntitySprite {
   // scale/geometry mà projection ghi mỗi frame.
   shadow?: Phaser.GameObjects.Ellipse
   boost: { value: number }
+
+  /**
+   * Spec B §4.3 — procedural idle motion for a `kind: 'static'` entity.
+   *
+   * A PLAIN OBJECT tweened separately from `rect`, for the same reason `boost`
+   * is: `positionSprite()` writes the sprite's position from the projection
+   * every frame, so a tween on `rect.y` would be overwritten within a frame.
+   * The projection reads this offset instead.
+   *
+   * Absent on animated entities, which move because their frames do.
+   */
+  idle?: { offsetY: number }
   footY: number
   columnFloat: number
 }

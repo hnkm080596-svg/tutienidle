@@ -31,7 +31,6 @@ function talentPassive(
     level: 1,
     maxLevel: 1,
     cooldown: 0,
-    remainingCooldown: 0,
     target: 'self',
     effects: [],
     passiveTrigger: trigger,

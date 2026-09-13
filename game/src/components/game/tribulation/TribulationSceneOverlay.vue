@@ -8,7 +8,7 @@ import GameButton from '@/components/common/GameButton.vue'
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
-const active = computed(() => { stateVersion.value; return gameManager.getActiveTribulation() })
+const active = computed(() => { stateVersion.value; return gameManager.tribulationDirector.getState() })
 const hp = computed(() => active.value?.hp ?? 0)
 const maxHp = computed(() => active.value?.maxHp ?? 1)
 const chapterProgress = computed(() => `${(active.value?.chapterIndex ?? 0) + 1} / ${active.value?.chaptersTotal ?? 1}`)
@@ -23,7 +23,7 @@ const resultText = computed(() =>
 )
 
 function answer(index: number) {
-  gameManager.answerTribulationQuestion(index)
+  gameManager.tribulationDirector.answerQuestion(index)
 }
 </script>
 

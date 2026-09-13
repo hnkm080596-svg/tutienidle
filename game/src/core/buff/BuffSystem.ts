@@ -1,60 +1,45 @@
-import type { Buff } from './Buff'
-import type { BuffDefinition } from './BuffDefinition'
-import { BuffPool } from './BuffPool'
-import type { StatModifier } from '../stats/StatCalculator'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { CombatSystem } from '../combat/CombatSystem'
-import type { BuffRegistry } from './BuffRegistry'
-import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 import { getArmorMitigationPercent } from '../combat/Armor'
 import { getResistanceMitigationPercent } from '../combat/Resistance'
 import { elementalBasePower } from '../combat/ElementDamageCalculator'
-import type { BuffEffectTemplate } from './BuffTypes'
+import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
+import type { StatModifier } from '../stats/StatCalculator'
+import { BuffPool } from './BuffPool'
+import type {
+  Buff,
+  BuffDefinition,
+  BuffEffectTemplate,
+  BuffDefinitionCatalog,
+} from './BuffTypes'
 
-// Trần % giảm duration buff/debuff nhận vào — tránh ailmentResistPercent
-// cao vô hạn triệt tiêu hoàn toàn debuff (ported verbatim từ
-// AilmentSystem.AILMENT_RESIST_CAP).
+// R4 (AR-19) — Canonical BuffSystem.
+// Single authoritative buff system for the project. Turn-native by
+// construction, with updateTime() support for out-of-battle persistent buffs.
+
 const AILMENT_RESIST_CAP = 0.75
 
-// "Độc Mạch" minor — ngưỡng "≥3 tầng Độc Căn" (ported verbatim từ
-// AilmentSystem.POISON_ROOT_THRESHOLD_STACKS).
 const POISON_ROOT_THRESHOLD_STACKS = 3
 
-/**
- * 1 BuffSystem bọc 1 BuffPool — pool CỦA 1 ENTITY (target), y hệt
- * AilmentSystem/AilmentManager trước đây. Absorbs AilmentSystem's DoT-
- * scaling/CC/conversion-chain logic verbatim, generalized to iterate
- * `effects[]` (thay vì field cứng damagePerSecond/ccEffect/statModifiers
- * trên Ailment) và index theo `(id, sourceId)` (thay vì id đơn — xem
- * BuffPool.ts) để nhiều nguồn cùng áp 1 buff/debuff id không còn giẫm
- * lên nhau.
- */
 export class BuffSystem {
   constructor(private readonly pool: BuffPool) {}
 
-  /**
-   * DoT: snapshot damagePerSecond NGAY lúc áp dụng (Power của nguồn, đã
-   * trừ mitigation của đích tại thời điểm này, NHÂN thêm
-   * ailmentPotencyPercent của nguồn) — không đọc lại stats mỗi tick, rẻ
-   * và ổn định dù nguồn/đích có buff đổi giữa chừng. Duration cũng bị
-   * giảm theo ailmentResistPercent của đích ngay tại đây (snapshot 1
-   * lần, không đọc lại mỗi tick). `registry` chỉ cần cho `convertsToId`
-   * (Hàn Khí -> Đóng Băng) — optional vì phần lớn buff/debuff không cần
-   * chain.
-   */
-  apply(definition: BuffDefinition, source: CombatEntity, target: CombatEntity, registry?: BuffRegistry) {
-    const resolvedEffects = definition.effects.map((effect) =>
-      effect.type === 'dot'
-        ? {
-            type: 'dot' as const,
-            damagePerSecond: this.calculateDamagePerSecond(effect, source, target),
-            element: effect.element,
-            poisonRootPercentPerStack: effect.poisonRootPercentPerStack,
-            poisonRootMaxStacks: effect.poisonRootMaxStacks,
-            poisonRootThresholdBonusPercent: effect.poisonRootThresholdBonusPercent,
-          }
-        : effect,
-    )
+  apply(definition: BuffDefinition, source: CombatEntity, target: CombatEntity, registry?: BuffDefinitionCatalog) {
+    const resolvedEffects = definition.effects.map((effect) => {
+      if (effect.type === 'dot') {
+        const dmg = this.calculateDamagePerTurn(effect, source, target)
+        return {
+          type: 'dot' as const,
+          damagePerTurn: dmg,
+          damagePerSecond: dmg,
+          element: effect.element,
+          poisonRootPercentPerStack: effect.poisonRootPercentPerStack,
+          poisonRootMaxStacks: effect.poisonRootMaxStacks,
+          poisonRootThresholdBonusPercent: effect.poisonRootThresholdBonusPercent,
+        }
+      }
+      return effect
+    })
 
     const resistMultiplier = 1 - Math.min(AILMENT_RESIST_CAP, Math.max(0, target.stats.ailmentResistPercent))
     const duration = definition.duration * resistMultiplier * (1 + source.stats.ailmentDurationPercent)
@@ -69,13 +54,15 @@ export class BuffSystem {
         polarity: definition.polarity,
         hidden: definition.hidden,
         duration,
+        remainingTurns: duration,
         remainingTime: duration,
         stacks: 1,
         maxStacks: this.resolveMaxStacks(definition, source),
         stackMode: definition.stackMode,
+        continuousTurns: 0,
         continuousSeconds: 0,
         convertsToId: definition.convertsToId,
-        convertsAfterContinuousSeconds: definition.convertsAfterContinuousSeconds,
+        convertsAfterContinuousTurns: definition.convertsAfterContinuousTurns ?? definition.convertsAfterContinuousSeconds,
         effects: resolvedEffects,
       })
       return
@@ -84,10 +71,6 @@ export class BuffSystem {
     this.handleExisting(existing, definition, source, target, duration, resolvedEffects, registry)
   }
 
-  // Trần stack của 1 buff definition trên 1 entity — `definition.maxStacks`
-  // là nền, `source.skillStats.maxStacksBonusByBuffId[definition.id]` (nếu
-  // có) cộng thêm (node "Độc Chướng" +1 trần Trúng Độc — Pháp Tu Thuần
-  // Hệ E-2, 2026-09-03). Không truyền skillStats = y hệt hành vi cũ.
   private resolveMaxStacks(definition: BuffDefinition, source: CombatEntity): number | undefined {
     if (definition.maxStacks === undefined) {
       return undefined
@@ -105,7 +88,7 @@ export class BuffSystem {
     target: CombatEntity,
     duration: number,
     resolvedEffects: Buff['effects'],
-    registry?: BuffRegistry,
+    registry?: BuffDefinitionCatalog,
   ) {
     switch (definition.stackMode) {
       case 'stack': {
@@ -126,11 +109,13 @@ export class BuffSystem {
         }
 
         existing.stacks = nextStacks
+        existing.remainingTurns = duration
         existing.remainingTime = duration
         break
       }
 
       case 'refresh':
+        existing.remainingTurns = duration
         existing.remainingTime = duration
         break
 
@@ -139,6 +124,7 @@ export class BuffSystem {
         this.pool.add({
           ...existing,
           duration,
+          remainingTurns: duration,
           remainingTime: duration,
           effects: resolvedEffects,
         })
@@ -146,64 +132,44 @@ export class BuffSystem {
     }
   }
 
-  // Mộc Tu Trúc Cơ Pure ("Độc Căn" major + "Độc Uyên"/"Độc Mạch" minor) —
-  // "Poison càng lâu càng mạnh": số tầng Độc Căn = số giây buff này đã
-  // LIÊN TỤC active trên đúng target (continuousSeconds, KHÔNG reset khi
-  // 'stack' re-apply — xem Buff.ts), trần ở poisonRootMaxStacks.
-  // undefined/0 = hệ số 1 (không đổi hành vi cho buff/nguồn chưa mua
-  // "Độc Căn").
-  private getPoisonRootMultiplier(effect: Extract<Buff['effects'][number], { type: 'dot' }>, continuousSeconds: number): number {
+  private getPoisonRootMultiplier(
+    effect: Extract<Buff['effects'][number], { type: 'dot' }>,
+    continuousTurns: number,
+  ): number {
     if (!effect.poisonRootMaxStacks) {
       return 1
     }
 
-    const rootStacks = Math.min(effect.poisonRootMaxStacks, Math.floor(continuousSeconds))
+    const rootStacks = Math.min(effect.poisonRootMaxStacks, Math.floor(continuousTurns))
     const thresholdBonus =
       rootStacks >= POISON_ROOT_THRESHOLD_STACKS ? (effect.poisonRootThresholdBonusPercent ?? 0) : 0
 
     return 1 + (effect.poisonRootPercentPerStack ?? 0) * rootStacks + thresholdBonus
   }
 
-  private calculateDamagePerSecond(
+  private calculateDamagePerTurn(
     effect: Extract<BuffEffectTemplate, { type: 'dot' }>,
     source: CombatEntity,
     target: CombatEntity,
   ): number {
     const ratio = effect.dpsRatio ?? 1
 
-    // Kiếm Tu (Vạn Kiếm Triều Tông) — "bỏ qua 10%-90% giáp/kháng theo cảnh
-    // giới": realmIndex 0 (Luyện Khí) -> 10%, realmIndex 8 (Kiếp Lôi/
-    // tribulation, realm cuối) -> 90% — ported verbatim from
-    // AilmentSystem.calculateDamagePerSecond().
     const armorIgnoreMultiplier = effect.armorIgnorePercentByRealm
       ? 1 - Math.min(0.9, 0.1 + source.realmIndex * 0.1)
       : 1
 
     if (!effect.element || effect.element === 'physical') {
-      // T5.4 (merge 2026-09-02) — armor mitigation K-scale theo realmIndex
-      // của đích (giống master's port vào AilmentSystem cũ trước khi xoá).
-      // Không truyền = mất cân bằng DoT vật lý late-game (giáp target
-      // realm cao giảm gần như toàn bộ DoT).
       const power = source.stats.attack
       const mitigation =
         getArmorMitigationPercent(target.stats.defense, target.realmIndex) * armorIgnoreMultiplier
       return Math.max(0, power * ratio * (1 - mitigation)) * (1 + source.stats.ailmentPotencyPercent)
     }
 
-    // combat-skill-flow-element-power-dot-plan.md §3.2 — DoT nguyên tố
-    // snapshot CÙNG nguồn Skill Power với direct hit: (ATK + Power hệ),
-    // qua đúng helper elementalBasePower() để 2 pipeline không thể lệch.
     const power = elementalBasePower(source, effect.element)
     const resistance = target.stats[`${effect.element}Resistance`]
     const penetration = source.stats[`${effect.element}Penetration`]
     const mitigation = getResistanceMitigationPercent(resistance, penetration) * armorIgnoreMultiplier
 
-    // Kim Tu Trúc Cơ Pure ("Kim Thế" major + "Huyết Lưu" minor) — CHỈ
-    // nhân cho DoT element 'metal' (Xuất Huyết/Huyết Độc), KHÔNG qua
-    // ailmentPotencyPercent chung — tránh build lai (vd Kim+Mộc) tự buff
-    // nhầm DoT hành khác chỉ vì có Kim Thế. currentKimThe đọc trực tiếp
-    // (KHÔNG qua StatModifier pipeline — đây là 1 counter runtime,
-    // không phải stat tĩnh).
     const kimTheMultiplier =
       effect.element === 'metal'
         ? 1 +
@@ -214,61 +180,151 @@ export class BuffSystem {
     return Math.max(0, power * ratio * (1 - mitigation)) * (1 + source.stats.ailmentPotencyPercent) * kimTheMultiplier
   }
 
+  private convert(buff: Buff, registry: BuffDefinitionCatalog, target: CombatEntity, source?: CombatEntity) {
+    const nextDefinition = registry.get(buff.convertsToId!)
+
+    this.pool.removeInstance(buff.id, buff.sourceId)
+
+    const resistMultiplier = 1 - Math.min(AILMENT_RESIST_CAP, Math.max(0, target.stats.ailmentResistPercent))
+    const duration = nextDefinition.duration * resistMultiplier * (1 + (source?.stats.ailmentDurationPercent ?? 0))
+
+    this.pool.removeInstance(nextDefinition.id, buff.sourceId)
+
+    this.pool.add({
+      id: nextDefinition.id,
+      sourceId: buff.sourceId,
+      targetId: buff.targetId,
+      polarity: nextDefinition.polarity,
+      hidden: nextDefinition.hidden,
+      duration,
+      remainingTurns: duration,
+      remainingTime: duration,
+      stacks: 1,
+      maxStacks: nextDefinition.maxStacks,
+      stackMode: nextDefinition.stackMode,
+      continuousTurns: 0,
+      continuousSeconds: 0,
+      convertsToId: nextDefinition.convertsToId,
+      convertsAfterContinuousTurns: nextDefinition.convertsAfterContinuousTurns ?? nextDefinition.convertsAfterContinuousSeconds,
+      effects: nextDefinition.effects.map((effect) =>
+        effect.type === 'dot' ? { ...effect, damagePerTurn: 0 } : effect,
+      ),
+    })
+  }
+
   /**
-   * Hết hạn + tick DoT — gọi mỗi tick từ BattleSystem, NGAY SAU khi
-   * stats hiệu lực vừa recompute (updateStatsFromModifiers()), TRƯỚC
-   * các bước attack timer/movement bên dưới đọc stats đó. `combatSystem`
-   * lo cả DOT RES/DamageEvent/Poison Recovery (xem
-   * CombatSystem.applyDotDamage()) — hàm này chỉ còn tính RAW damage
-   * (trước DOT RES). `registry` optional — chỉ cần khi có buff nào đó
-   * thật sự cần chuyển hoá theo thời gian (Pháp Tu Thủy Tu, xem
-   * convert()); không truyền vẫn an toàn (buff loại này đơn giản không
-   * bao giờ chuyển hoá). `resolveSource` optional — trả về CombatEntity
-   * của `buff.sourceId` nếu còn tồn tại trong trận; không truyền = Kim
-   * Thế penetration/Poison Recovery không kích hoạt (source coi như
-   * undefined), DOT RES phía target vẫn hoạt động bình thường vì không
-   * cần source.
+   * Universal buff update.
+   * - Turn battle: update(target, combatSystem, registry?, resolveSource?) — deltaSeconds = 1.
+   * - Wall clock with target/combat: update(deltaSeconds, target, combatSystem, registry?, resolveSource?).
+   * - Persistent out-of-battle: update(deltaSeconds) — decrements duration without combat.
    */
   update(
     deltaSeconds: number,
+    target?: CombatEntity,
+    combatSystem?: CombatSystem,
+    registry?: BuffDefinitionCatalog,
+    resolveSource?: (sourceId: string) => CombatEntity | undefined,
+  ): void
+  update(
     target: CombatEntity,
     combatSystem: CombatSystem,
-    registry?: BuffRegistry,
+    registry?: BuffDefinitionCatalog,
     resolveSource?: (sourceId: string) => CombatEntity | undefined,
-  ) {
+  ): void
+  update(
+    targetOrDelta: CombatEntity | number,
+    targetOrCombat?: CombatEntity | CombatSystem,
+    combatOrRegistry?: CombatSystem | BuffDefinitionCatalog,
+    registryOrResolve?: BuffDefinitionCatalog | ((sourceId: string) => CombatEntity | undefined),
+    resolveSourceParam?: (sourceId: string) => CombatEntity | undefined,
+  ): void {
+    let deltaSeconds = 1
+    let target: CombatEntity | undefined
+    let combatSystem: CombatSystem | undefined
+    let registry: BuffDefinitionCatalog | undefined
+    let resolveSource: ((sourceId: string) => CombatEntity | undefined) | undefined
+
+    if (typeof targetOrDelta === 'number') {
+      deltaSeconds = targetOrDelta
+      if (targetOrCombat && typeof targetOrCombat === 'object' && 'stats' in targetOrCombat) {
+        target = targetOrCombat as CombatEntity
+        combatSystem = combatOrRegistry as CombatSystem | undefined
+        registry = registryOrResolve as BuffDefinitionCatalog | undefined
+        resolveSource = resolveSourceParam
+      } else {
+        this.updateTime(targetOrDelta)
+        return
+      }
+    } else {
+      target = targetOrDelta
+      combatSystem = targetOrCombat as CombatSystem | undefined
+      registry = combatOrRegistry as BuffDefinitionCatalog | undefined
+      resolveSource = registryOrResolve as ((sourceId: string) => CombatEntity | undefined) | undefined
+    }
+
+    if (!combatSystem || !target) return
+
     const expired: Buff[] = []
 
     for (const buff of this.pool.getAll()) {
-      buff.continuousSeconds += deltaSeconds
+      if (!this.pool.hasInstance(buff)) {
+        continue
+      }
+
+      buff.continuousTurns = (buff.continuousTurns ?? 0) + deltaSeconds
+      buff.continuousSeconds = (buff.continuousSeconds ?? 0) + deltaSeconds
+
+      const continuous = buff.continuousSeconds ?? buff.continuousTurns
+      const convertsThreshold = buff.convertsAfterContinuousSeconds ?? buff.convertsAfterContinuousTurns
 
       if (
         registry &&
         buff.convertsToId &&
-        buff.convertsAfterContinuousSeconds !== undefined &&
-        buff.continuousSeconds >= buff.convertsAfterContinuousSeconds
+        convertsThreshold !== undefined &&
+        continuous >= convertsThreshold
       ) {
         this.convert(buff, registry, target, resolveSource?.(buff.sourceId))
         continue
       }
 
       for (const effect of buff.effects) {
-        if (effect.type === 'dot' && effect.damagePerSecond && target.alive) {
-          const rawDamage =
-            effect.damagePerSecond * buff.stacks * this.getPoisonRootMultiplier(effect, buff.continuousSeconds) * deltaSeconds
+        if (!this.pool.hasInstance(buff)) {
+          break
+        }
 
-          combatSystem.applyDotDamage({
-            sourceId: buff.sourceId,
-            source: resolveSource?.(buff.sourceId),
-            target,
-            rawDamage,
-            element: effect.element,
-            effectId: buff.id,
-          })
+        if (effect.type === 'dot' && target.alive) {
+          const dotRate = effect.damagePerSecond ?? effect.damagePerTurn
+          if (dotRate) {
+            const rawDamage =
+              dotRate * buff.stacks * this.getPoisonRootMultiplier(effect, continuous) * deltaSeconds
+
+            combatSystem.applyDotDamage({
+              sourceId: buff.sourceId,
+              source: resolveSource?.(buff.sourceId),
+              target,
+              rawDamage,
+              element: effect.element,
+              effectId: buff.id,
+            })
+
+            if (!this.pool.hasInstance(buff)) {
+              break
+            }
+          }
         }
       }
 
-      buff.remainingTime -= deltaSeconds
-      if (buff.remainingTime <= 0) {
+      if (!this.pool.hasInstance(buff)) {
+        continue
+      }
+
+      buff.remainingTurns -= deltaSeconds
+      if (buff.remainingTime !== undefined) {
+        buff.remainingTime -= deltaSeconds
+      }
+
+      const rem = buff.remainingTime ?? buff.remainingTurns
+      if (rem <= 0) {
         expired.push(buff)
       }
     }
@@ -279,60 +335,43 @@ export class BuffSystem {
   }
 
   /**
-   * Làm Chậm giữ liên tục đủ lâu -> Đóng Băng (Pháp Tu Thủy Tu). Xây
-   * instance MỚI trực tiếp từ definition đích thay vì gọi lại apply() —
-   * apply() cần 1 `source: CombatEntity` sống để snapshot DoT, nhưng
-   * update() chỉ có `target` (không giữ tham chiếu nguồn gây buff).
-   * Buff đích ở use-case này (Đóng Băng) là CC thuần, không có DoT nên
-   * không cần snapshot damagePerSecond — xây thẳng an toàn. Duration
-   * VẪN phải qua cùng công thức kháng cự như apply(): giảm theo
-   * ailmentResistPercent của đích (+ ailmentDurationPercent của nguồn
-   * nếu nguồn còn trong trận).
+   * Wall-clock / seconds-based update for out-of-battle persistent buffs
+   * (e.g. GameManager.tick() decrementing Kiếp Thương debuff duration).
    */
-  private convert(buff: Buff, registry: BuffRegistry, target: CombatEntity, source?: CombatEntity) {
-    const nextDefinition = registry.get(buff.convertsToId!)
+  updateTime(deltaSeconds: number): void {
+    const expired: Buff[] = []
 
-    this.pool.removeInstance(buff.id, buff.sourceId)
+    for (const buff of this.pool.getAll()) {
+      if (buff.remainingTurns !== undefined) {
+        buff.remainingTurns -= deltaSeconds
+      }
+      if (buff.remainingTime !== undefined) {
+        buff.remainingTime -= deltaSeconds
+      }
 
-    const resistMultiplier = 1 - Math.min(AILMENT_RESIST_CAP, Math.max(0, target.stats.ailmentResistPercent))
-    const duration = nextDefinition.duration * resistMultiplier * (1 + (source?.stats.ailmentDurationPercent ?? 0))
+      const rem = buff.remainingTurns ?? buff.remainingTime ?? 0
+      if (rem <= 0) {
+        expired.push(buff)
+      }
+    }
 
-    // Dedupe: nếu đích ĐÃ có sẵn buff đích từ CÙNG nguồn (vd Đóng Băng
-    // từ cùng nguồn), add thẳng tạo 2 instance cùng (id, sourceId) —
-    // removeInstance lọc theo (id, sourceId) sẽ xoá CẢ HAI khi 1 cái
-    // hết hạn. Remove instance cũ trước để thế chỗ.
-    this.pool.removeInstance(nextDefinition.id, buff.sourceId)
-
-    this.pool.add({
-      id: nextDefinition.id,
-      sourceId: buff.sourceId,
-      targetId: buff.targetId,
-      polarity: nextDefinition.polarity,
-      hidden: nextDefinition.hidden,
-      duration,
-      remainingTime: duration,
-      stacks: 1,
-      maxStacks: nextDefinition.maxStacks,
-      stackMode: nextDefinition.stackMode,
-      continuousSeconds: 0,
-      convertsToId: nextDefinition.convertsToId,
-      convertsAfterContinuousSeconds: nextDefinition.convertsAfterContinuousSeconds,
-      effects: nextDefinition.effects.map((effect) =>
-        effect.type === 'dot' ? { ...effect, damagePerSecond: 0 } : effect,
-      ),
-    })
+    for (const buff of expired) {
+      this.pool.removeInstance(buff.id, buff.sourceId)
+    }
   }
 
-  /**
-   * Buff effect 'statModifier' (Làm Chậm/Hàn Khí/Cuồng Bạo/Suy Nhược/Uy
-   * Áp) biểu diễn được bằng StatModifier — hoà chung pool Increased với
-   * buff/equipment khác trên CÙNG stat (xem
-   * StatCalculator.calculateStats()), không cần code riêng trong
-   * BattleSystem. Choáng/Đóng Băng/Trói Chân đọc qua
-   * isStunned()/isFrozen()/isRooted() thay vì modifier (không diễn tả
-   * được bằng số nhân/cộng đơn thuần — cần CHẶN HẲN hành động/di
-   * chuyển).
-   */
+  isStunned(): boolean {
+    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'stun'))
+  }
+
+  isFrozen(): boolean {
+    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'freeze'))
+  }
+
+  isRooted(): boolean {
+    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'root'))
+  }
+
   getActiveModifiers(): StatModifier[] {
     const modifiers: StatModifier[] = []
 
@@ -355,95 +394,90 @@ export class BuffSystem {
     return modifiers
   }
 
-  isStunned(): boolean {
-    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'stun'))
-  }
-
-  isFrozen(): boolean {
-    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'freeze'))
-  }
-
-  // Thổ Tu ("Trói Chân") — Root: CHỈ chặn resolveMovement() (xem
-  // BattleSystem.ts), KHÔNG tính vào isIncapacitated() — target vẫn
-  // attack/cast bình thường.
-  isRooted(): boolean {
-    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'root'))
-  }
-
-  /**
-   * Thổ Tu (Thạch Hóa) — gọi bởi BattleSystem NGAY SAU 1 đòn XÁC NHẬN
-   * TRÚNG (không dodged) lên chính entity sở hữu pool này. Quét MỌI
-   * buff đang active có khai onHitProc (field TỔNG QUÁT, không riêng gì
-   * Thạch Hóa), roll ĐỘC LẬP cho từng buff (1 target có thể có nhiều
-   * nguồn on-hit-proc cùng lúc), rồi áp `appliesBuffId` nếu thắng roll.
-   * `target` = entity sở hữu pool này (self, cần truyền lại để apply()
-   * ghi đúng targetId); `source` = kẻ VỪA đánh trúng (chủ nhân của buff
-   * MỚI sinh ra, vd Choáng sourceId = người đánh).
-   */
-  rollOnHitEffects(source: CombatEntity, target: CombatEntity, registry: BuffRegistry) {
+  rollOnHitEffects(source: CombatEntity, target: CombatEntity, registry: BuffDefinitionCatalog) {
     for (const buff of this.pool.getAll()) {
       for (const effect of buff.effects) {
         if (effect.type === 'onHitProc' && Math.random() < effect.chance) {
-          this.apply(registry.get(effect.appliesBuffId), source, target, registry)
+          const definition = registry.get(effect.appliesBuffId)
+          this.apply(definition, source, target, registry)
         }
       }
     }
   }
 
-  // Pháp Tu — Detonate (SkillEffect.consumesAilmentId) — "cash in" số
-  // stack hiện có của 1 buff/debuff (vd Bỏng) cho 1 skill burst. Không
-  // truyền sourceId = tổng stacks trên MỌI nguồn (vd multi-source
-  // poison), truyền sourceId = đúng 1 instance của nguồn đó.
+  rollReactiveTrigger(
+    target: CombatEntity,
+    triggerEvent: 'onCastBegin' | 'onImpactLanded',
+    registry: BuffDefinitionCatalog,
+  ): { firedFollowUp: boolean } {
+    let firedFollowUp = false
+
+    for (const buff of this.pool.getAll()) {
+      for (const effect of buff.effects) {
+        if (effect.type === 'reactiveTrigger' && effect.trigger === triggerEvent) {
+          if (Math.random() < effect.chance) {
+            if (effect.appliesDefinitionId) {
+              const definition = registry.get(effect.appliesDefinitionId)
+              this.apply(definition, target, target, registry)
+            }
+
+            if (effect.queuesFollowUp) {
+              firedFollowUp = true
+            }
+          }
+        }
+      }
+    }
+
+    return { firedFollowUp }
+  }
+
   getStacks(id: string, sourceId?: string): number {
     if (sourceId !== undefined) {
       return this.pool.getFromSource(id, sourceId)?.stacks ?? 0
     }
-    return this.pool.getAllById(id).reduce((sum, buff) => sum + buff.stacks, 0)
+    return this.pool.getAllById(id).reduce((sum, b) => sum + b.stacks, 0)
   }
 
   getFromSource(id: string, sourceId: string): Buff | undefined {
     return this.pool.getFromSource(id, sourceId)
   }
 
-  getAllById(id: string): Buff[] {
-    return this.pool.getAllById(id)
-  }
-
-  // Combat Rework Phase 6 (Pháp Tu Reaction) — liệt kê MỌI buff/debuff
-  // id đang active trên entity sở hữu pool này, để ReactionManager quét
-  // tìm cặp khớp ELEMENT_REACTIONS.
   getActiveIds(): string[] {
-    return this.pool.getAll().map((buff) => buff.id)
+    return Array.from(new Set(this.pool.getAll().map((b) => b.id)))
   }
 
-  // Bản sao theo lịch sử của BuffPool.getAll() — cần cho các consumer
-  // quét TOÀN BỘ instance (vd SkillEffectSystem's 'remove_buff' lọc
-  // theo polarity/count) mà không đụng tới pool nội bộ.
   getAll(): Buff[] {
     return this.pool.getAll()
   }
 
-  remove(id: string, sourceId: string): void {
-    this.pool.removeInstance(id, sourceId)
+  getAllById(id: string): Buff[] {
+    return this.pool.getAllById(id)
+  }
+
+  remove(id: string, sourceId?: string): void {
+    if (sourceId !== undefined) {
+      this.pool.removeInstance(id, sourceId)
+      return
+    }
+
+    this.pool.removeAllById(id)
   }
 
   removeAllById(id: string): void {
     this.pool.removeAllById(id)
   }
 
-  // Thủy Tu Trúc Cơ Reaction ("Dẫn Lưu") — dùng khi ReactionManager
-  // quyết định GIỮ LẠI 1 buff/debuff (gia hạn thêm giây) thay vì xoá nó
-  // như hành vi mặc định (no-op nếu buff không còn active). Invariant
-  // "Reaction không được mutate debuff cũ": KHÔNG sửa trực tiếp field
-  // remainingTime trên instance đang có, mà xoá hẳn rồi tạo 1 instance
-  // MỚI (spread field cũ + remainingTime cộng thêm).
-  renewWithExtension(id: string, sourceId: string, extraSeconds: number): void {
+  renewWithExtension(id: string, sourceId: string, addedDuration: number): void {
     const existing = this.pool.getFromSource(id, sourceId)
-    if (!existing) {
-      return
-    }
 
-    this.pool.removeInstance(id, sourceId)
-    this.pool.add({ ...existing, remainingTime: existing.remainingTime + extraSeconds })
+    if (existing) {
+      if (existing.remainingTurns !== undefined) {
+        existing.remainingTurns += addedDuration
+      }
+      if (existing.remainingTime !== undefined) {
+        existing.remainingTime += addedDuration
+      }
+    }
   }
 }

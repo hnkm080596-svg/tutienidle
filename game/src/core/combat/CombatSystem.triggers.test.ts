@@ -9,7 +9,7 @@ import type { CombatEntity } from './CombatEntity'
 import type { Skill } from '../skill/Skill'
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0 }
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0 })
   return {
     id: 'id',
     name: 'name',
@@ -50,7 +50,6 @@ function makeKillSkill(): Skill {
     level: 1,
     maxLevel: 1,
     cooldown: 0,
-    remainingCooldown: 0,
     target: 'enemy',
     effects: [],
     triggers: [

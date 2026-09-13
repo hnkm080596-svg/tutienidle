@@ -44,7 +44,7 @@ export function useBuildingNavigation() {
   const ui = useUiStore()
 
   function getBuildingPresentation(buildingId: string): BuildingPresentation {
-    const template = gameManager.getBuildingDefinitions().find((entry) => entry.id === buildingId)
+    const template = gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === buildingId)
 
     const instance = gameManager.buildingManager.getByBuildingId(buildingId)
 
@@ -77,7 +77,7 @@ export function useBuildingNavigation() {
    *   (upgradeCost[level], cùng luật cost index với BuildingSystem.upgrade()).
    */
   function getBuildingStatus(buildingId: string): BuildingBadgeStatus {
-    const template = gameManager.getBuildingDefinitions().find((entry) => entry.id === buildingId)
+    const template = gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === buildingId)
 
     const instance = gameManager.buildingManager.getByBuildingId(buildingId)
 
@@ -86,14 +86,14 @@ export function useBuildingNavigation() {
     }
 
     if (template.producesMaterialId) {
-      const stored = gameManager.getBuildingStoredAmount(instance.instanceId, Date.now() / 1000)
+      const stored = gameManager.buildingOps.getBuildingStoredAmount(instance.instanceId, Date.now() / 1000)
 
       if (stored >= 1) {
         return 'ready'
       }
     }
 
-    if (template.id === 'pill_room' && gameManager.getAlchemyJobs().length > 0) {
+    if (template.id === 'pill_room' && gameManager.alchemyOps.getAlchemyJobs().length > 0) {
       return 'active'
     }
 

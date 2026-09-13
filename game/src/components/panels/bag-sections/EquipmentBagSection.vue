@@ -11,7 +11,7 @@ import { compareNumber, compareText, stableSort, withDirection } from '@/composa
 import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { itemQualityRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import { compareProfessionGrades } from '@/core/profession/ProfessionGrade'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
@@ -63,7 +63,7 @@ const entries = computed<EquipmentEntry[]>(() => {
     // Audit fix 2026-08-31 — equipmentRegistry.get() THROW với itemId
     // lạ (data edit/save lệch) từng chết cả panel qua ErrorBoundary;
     // getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts).
-    const template = gameManager.getEquipmentTemplate(instance.itemId)
+    const template = gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)
 
     const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
 
@@ -126,9 +126,10 @@ const entries = computed<EquipmentEntry[]>(() => {
               instance,
               template,
               gameManager.affixRegistry,
-              instance.equipped ? gameManager.getSlotState(instance.slot) : null,
+              instance.equipped ? gameManager.equipmentOps.getSlotState(instance.slot) : null,
               gameManager.zoneRegistry,
               equippedComparison,
+              gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
             )
           : undefined,
 

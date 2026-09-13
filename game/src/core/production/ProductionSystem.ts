@@ -18,11 +18,10 @@ import type {
 } from './ProductionTypes'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
-  FOREST_WOOD_AMOUNTS_BY_TIER_INDEX,
   GROTTO_HERB_AMOUNT,
   HERB_AGE_WEIGHTS,
-  ORE_QUALITY_AMOUNTS,
-  ORE_QUALITY_WEIGHTS,
+  MATERIAL_AGE_AMOUNTS,
+  MATERIAL_AGE_WEIGHTS,
   PRODUCTION_OFFLINE_CAP_SECONDS,
   computeCycleSeconds,
   getSiteSpeedMultiplier,
@@ -30,7 +29,13 @@ import {
   mulberry32,
   rollWeightedIndex,
 } from './ProductionBalance'
-import { HERB_AGES, ORE_QUALITIES } from './ProductionTypes'
+import { HERB_AGES } from './ProductionTypes'
+import { allocateWorkerSlots } from './WorkerAllocator'
+import { buildProductionCycle as buildCycle } from './ProductionCycles'
+import {
+  settleProductionOffline,
+  type ProductionOfflineDeps,
+} from './ProductionOffline'
 
 /** Một giao dịch settle đã xảy ra — dùng cho notification UI (§9.1). */
 export interface ProductionSettlementEvent {
@@ -65,34 +70,7 @@ export interface ProductionSystemDeps {
   grottoHerbs: readonly GrottoHerbDefinition[]
 }
 
-let cycleCounter = 0
 
-function nextCycleId(siteId: string): string {
-  cycleCounter += 1
-
-  return `cycle_${siteId}_${Date.now().toString(36)}_${cycleCounter}`
-}
-
-function buildCycle(
-  siteId: string,
-  collectionRealmId: string,
-  siteLevelAtStart: number,
-  baseSeconds: number,
-  nowMs: number,
-): ProductionCycle {
-  const seconds = computeCycleSeconds(baseSeconds, siteLevelAtStart)
-
-  return {
-    cycleId: nextCycleId(siteId),
-    siteId,
-    collectionRealmId,
-    siteLevelAtStart,
-    rewardTableVersion: REWARD_TABLE_VERSION,
-    rollSeed: Math.floor(Math.random() * 0x7fffffff),
-    startedAtMs: nowMs,
-    completesAtMs: nowMs + seconds * 1000,
-  }
-}
 
 export class ProductionSystem {
   private readonly deps: ProductionSystemDeps
@@ -257,6 +235,59 @@ export class ProductionSystem {
     return true
   }
 
+  /**
+   * R9 (AR-23) - authoritative upgrade quote: the operation's own read
+   * model for costs/gate/affordability. Presentation renders this instead
+   * of reproducing the gate logic (ProductionPanel duplicate removed).
+   */
+  quoteSiteUpgrade(
+    siteId: string,
+    bag: MaterialBag,
+    currentRealmTier?: number,
+  ): {
+    upgradable: boolean
+    reasons: Array<'max_level' | 'no_cost' | 'realm_gate' | 'missing_wood' | 'missing_spirit_stone'>
+    cost: { woodMaterialId: string; woodAmount: number; spiritStone: number; spiritStoneId: string } | undefined
+  } {
+    const definition = this.getSiteDefinition(siteId)
+
+    const state = this.states.get(siteId)
+
+    const reasons: Array<'max_level' | 'no_cost' | 'realm_gate' | 'missing_wood' | 'missing_spirit_stone'> = []
+
+    if (!definition || !state || state.level >= definition.maxLevel) {
+      return { upgradable: false, reasons: ['max_level'], cost: undefined }
+    }
+
+    const cost = definition.upgradeCosts[state.level - 1]
+
+    if (!cost) {
+      return { upgradable: false, reasons: ['no_cost'], cost: undefined }
+    }
+
+    const targetLevel = state.level + 1
+
+    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(targetLevel)
+
+    if (currentRealmTier !== undefined && currentRealmTier < targetLevel) {
+      reasons.push('realm_gate')
+    }
+
+    if (!bag.has(cost.woodMaterialId, cost.woodAmount)) {
+      reasons.push('missing_wood')
+    }
+
+    if (!bag.has(spiritStoneId, cost.spiritStone)) {
+      reasons.push('missing_spirit_stone')
+    }
+
+    return {
+      upgradable: reasons.length === 0,
+      reasons,
+      cost: { woodMaterialId: cost.woodMaterialId, woodAmount: cost.woodAmount, spiritStone: cost.spiritStone, spiritStoneId },
+    }
+  }
+
   // =========================
   // Tick & offline settle (§4.3)
   // =========================
@@ -315,29 +346,18 @@ export class ProductionSystem {
 
     const assignmentMap = assignments ?? new Map<string, number>()
 
-    // 1) Manual sites (thứ tự Map): min(assigned, capacity còn lại).
-    let remaining = Math.floor(capacity)
-    const manualSites: typeof activeStates = []
+    // R7 (AR-07): one allocation rule - the shared pure allocator.
+    // Manual sites first (min(assigned, remaining)); remainder
+    // round-robins UNASSIGNED sites; leftover capacity stays idle
+    // instead of crashing (no zero-eligible-site exception).
+    const slotsBySite = allocateWorkerSlots(
+      activeStates.map(state => state.siteId),
+      assignmentMap,
+      capacity,
+    )
 
     for (const state of activeStates) {
-      const assigned = assignmentMap.get(state.siteId)
-
-      if (assigned === undefined || remaining <= 0) {
-        continue
-      }
-
-      const slots = Math.min(Math.max(0, Math.floor(assigned)), remaining)
-
-      state.activeWorkerSlots = slots
-      remaining -= slots
-      manualSites.push(state)
-    }
-
-    // 2) Phần dư → round-robin cho sites auto không assignment.
-    const autoSites = activeStates.filter((state) => !assignmentMap.has(state.siteId))
-
-    for (let index = 0; index < remaining; index++) {
-      autoSites[index % autoSites.length]!.activeWorkerSlots++
+      state.activeWorkerSlots = slotsBySite.get(state.siteId) ?? 0
     }
 
     for (const state of activeStates) {
@@ -385,231 +405,31 @@ export class ProductionSystem {
       workerAssignments?: Map<string, number>
     } = {},
   ): number {
-    let budgetRemainingMs = PRODUCTION_OFFLINE_CAP_SECONDS * 1000
-
-    let settled = 0
-
-    let guard = 0
-
-    while (guard < 5000) {
-      guard += 1
-
-      // Tìm cycle hoàn thành SỚM NHẤT trong quá khứ của nowMs.
-      let targetState: ProductionSiteState | undefined
-
-      let targetCycle: ProductionCycle | undefined
-
-      for (const state of this.states.values()) {
-        const cycle = state.activeCycle
-
-        if (!cycle || cycle.completesAtMs > nowMs) {
-          continue
-        }
-
-        if (!targetCycle || cycle.completesAtMs < targetCycle.completesAtMs) {
-          targetState = state
-
-          targetCycle = cycle
-        }
-      }
-
-      if (!targetState || !targetCycle) {
-        break
-      }
-
-      const durationMs = Math.max(0, targetCycle.completesAtMs - targetCycle.startedAtMs)
-
-      if (durationMs > budgetRemainingMs) {
-        break
-      }
-
-      budgetRemainingMs -= durationMs
-
-      targetState.activeCycle = undefined
-
-      this.grantCycleRewards(targetCycle, bag, registry)
-
-      settled += 1
-
-      if (targetState.autoRestart && this.canStart(targetCycle.siteId)) {
-        this.startCycle(targetCycle.siteId, currentRealmId, targetCycle.completesAtMs)
-      }
-    }
-
-    // Huỷ backlog manual hết ngân sách (xem JSDoc).
-    for (const state of this.states.values()) {
-      const cycle = state.activeCycle
-
-      if (!cycle || cycle.completesAtMs > nowMs) {
-        continue
-      }
-
-      state.activeCycle = undefined
-
-      if (state.autoRestart) {
-        this.startCycle(state.siteId, currentRealmId, nowMs)
-      }
-    }
-
-    settled += this.settleWorkersOffline(
+    return settleProductionOffline(
+      this.offlineDeps(),
       bag,
       registry,
       currentRealmId,
       nowMs,
-      budgetRemainingMs,
-      Math.floor(options.workerCapacity ?? 0),
-      options.offlineSinceMs,
-      options.workerAssignments,
+      options,
     )
-
-    return settled
   }
 
-  /**
-   * Offline settle cho worker cycles (T3) — chia ngân sách còn lại sau
-   * manual settle. Mỗi site có slot worker chạy các chuỗi cycle song song
-   * nối tiếp nhau trong cửa sổ [offlineSinceMs, nowMs], mỗi cycle một
-   * seed riêng. Cycle dở dang vượt nowMs được giữ lại cho tickWorkers
-   * online; cycle hoàn thành mà hết ngân sách bị forfeit.
-   *
-   * Chi-hien-quan (2026-09-02): `workerAssignments` — cùng phân bổ manual
-   * của tickWorkers để OFFLINE KHỚP ONLINE (spec §6).
-   */
-  private settleWorkersOffline(
-    bag: MaterialBag,
-    registry: MaterialRegistry,
-    currentRealmId: string,
-    nowMs: number,
-    budgetRemainingMs: number,
-    workerCapacity: number,
-    offlineSinceMs?: number,
-    workerAssignments?: Map<string, number>,
-  ): number {
-    if (workerCapacity <= 0 || budgetRemainingMs <= 0) {
-      return 0
+  /** Deps injection cho ProductionOffline.ts — cùng pattern washDeps()/refineDeps(). */
+  private offlineDeps(): ProductionOfflineDeps {
+    return {
+      states: this.states,
+
+      getSiteDefinition: (siteId) => this.getSiteDefinition(siteId),
+
+      canStart: (siteId) => this.canStart(siteId),
+
+      startCycle: (siteId, collectionRealmId, nowMs) =>
+        this.startCycle(siteId, collectionRealmId, nowMs),
+
+      grantCycleRewards: (cycle, bag, registry) =>
+        this.grantCycleRewards(cycle, bag, registry),
     }
-
-    // Phân bổ slot — manual assignment trước (giống tickWorkers), phần dư
-    // round-robin: offline khớp online.
-    const activeStates = [...this.states.values()].filter((state) => state.autoRestart)
-
-    if (activeStates.length === 0) {
-      return 0
-    }
-
-    const slotsBySite = new Map<string, number>()
-
-    for (const state of activeStates) {
-      slotsBySite.set(state.siteId, 0)
-    }
-
-    let remaining = workerCapacity
-
-    if (workerAssignments) {
-      for (const state of activeStates) {
-        const assigned = workerAssignments.get(state.siteId)
-
-        if (assigned === undefined || remaining <= 0) {
-          continue
-        }
-
-        const slots = Math.min(Math.max(0, Math.floor(assigned)), remaining)
-
-        slotsBySite.set(state.siteId, slots)
-        remaining -= slots
-      }
-    }
-
-    for (let index = 0; index < remaining; index++) {
-      const state = activeStates[index % activeStates.length]!
-
-      slotsBySite.set(state.siteId, (slotsBySite.get(state.siteId) ?? 0) + 1)
-    }
-
-    let settled = 0
-
-    let budgetMs = budgetRemainingMs
-
-    for (const state of activeStates) {
-      const slots = slotsBySite.get(state.siteId) ?? 0
-
-      if (slots <= 0 || budgetMs <= 0) {
-        continue
-      }
-
-      const definition = this.getSiteDefinition(state.siteId)
-
-      const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]
-
-      if (!definition || !baseSeconds) {
-        continue
-      }
-
-      const cycleMs = computeCycleSeconds(baseSeconds, state.level) * 1000
-
-      if (cycleMs <= 0) {
-        continue
-      }
-
-      state.workerCycles ??= []
-
-      // 1) Settle cycle dở dang từ save hoàn thành trước nowMs, trong ngân sách.
-      const kept: ProductionCycle[] = []
-
-      let lastCompleteMs = offlineSinceMs ?? nowMs
-
-      const pending = [...state.workerCycles].sort((a, b) => a.completesAtMs - b.completesAtMs)
-
-      for (const cycle of pending) {
-        if (cycle.completesAtMs > nowMs) {
-          kept.push(cycle)
-
-          continue
-        }
-
-        const durationMs = Math.max(0, cycle.completesAtMs - cycle.startedAtMs)
-
-        if (durationMs > budgetMs) {
-          continue
-        }
-
-        budgetMs -= durationMs
-
-        this.grantCycleRewards(cycle, bag, registry)
-
-        settled += 1
-
-        lastCompleteMs = Math.max(lastCompleteMs, cycle.completesAtMs)
-      }
-
-      state.workerCycles = kept
-
-      // 2) Chạy nối tiếp các cycle mới trong cửa sổ offline còn lại —
-      // `slots` chuỗi song song từ lastCompleteMs tới nowMs, tổng thời
-      // gian sản xuất bị chặn bởi ngân sách còn lại. Mỗi cycle một seed
-      // riêng (buildCycle).
-      const windowMs = Math.max(0, nowMs - lastCompleteMs)
-
-      const cyclesInWindow = Math.floor((windowMs * slots) / cycleMs)
-
-      const affordableCycles = Math.floor(budgetMs / cycleMs)
-
-      const newCycles = Math.max(0, Math.min(affordableCycles, cyclesInWindow))
-
-      for (let index = 0; index < newCycles; index++) {
-        const startMs = nowMs - (index + 1) * cycleMs
-
-        const cycle = buildCycle(state.siteId, currentRealmId, state.level, baseSeconds, startMs)
-
-        budgetMs -= cycleMs
-
-        this.grantCycleRewards(cycle, bag, registry)
-
-        settled += 1
-      }
-    }
-
-    return settled
   }
 
   /** Cộng reward của một cycle vào Bag + ghi settle event (dùng chung mọi đường settle). */
@@ -659,16 +479,32 @@ export class ProductionSystem {
     }
 
     if (definition.kind === 'forest') {
-      const entry = this.deps.forestRewards.find((reward) => reward.realmId === tierRealmId)
+      const pool = this.deps.forestRewards.filter((reward) => reward.realmId === tierRealmId)
+
+      if (pool.length === 0) {
+        return []
+      }
+
+      const ageIndex = rollWeightedIndex(
+        HERB_AGES.map((age) => MATERIAL_AGE_WEIGHTS[age]),
+        random,
+      )
+
+      const age = HERB_AGES[ageIndex] ?? 'decade'
+
+      const entry = pool.find((reward) => reward.age === age)
 
       if (!entry) {
         return []
       }
 
-      const amount =
-        entry.amount > 0 ? entry.amount : (FOREST_WOOD_AMOUNTS_BY_TIER_INDEX[tierIndex] ?? 1)
-
-      return [{ materialId: entry.materialId, amount }]
+      return [
+        {
+          materialId: entry.materialId,
+          amount: entry.amount > 0 ? entry.amount : MATERIAL_AGE_AMOUNTS[age],
+          detail: age,
+        },
+      ]
     }
 
     if (definition.kind === 'mine') {
@@ -678,14 +514,14 @@ export class ProductionSystem {
         return []
       }
 
-      const qualityIndex = rollWeightedIndex(
-        ORE_QUALITIES.map((quality) => ORE_QUALITY_WEIGHTS[quality]),
+      const ageIndex = rollWeightedIndex(
+        HERB_AGES.map((age) => MATERIAL_AGE_WEIGHTS[age]),
         random,
       )
 
-      const quality = ORE_QUALITIES[qualityIndex] ?? 'hoang'
+      const age = HERB_AGES[ageIndex] ?? 'decade'
 
-      const entry = pool.find((reward) => reward.quality === quality)
+      const entry = pool.find((reward) => reward.age === age)
 
       if (!entry) {
         return []
@@ -694,8 +530,8 @@ export class ProductionSystem {
       return [
         {
           materialId: entry.materialId,
-          amount: ORE_QUALITY_AMOUNTS[quality],
-          detail: quality,
+          amount: MATERIAL_AGE_AMOUNTS[age],
+          detail: age,
         },
       ]
     }
@@ -788,9 +624,3 @@ export class ProductionSystem {
 // =========================
 // Helpers nội bộ
 // =========================
-
-/**
- * Version bảng reward hiện hành — bump khi đổi balance data để cycle
- * đang chạy vẫn roll theo bảng cũ (snapshot §4.1).
- */
-const REWARD_TABLE_VERSION = 1

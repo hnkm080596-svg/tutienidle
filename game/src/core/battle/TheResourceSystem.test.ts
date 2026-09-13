@@ -10,7 +10,6 @@ import {
 } from './TheResourceSystem'
 import { MAX_THE } from '../combat/CombatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { BuffPool } from '../buff/BuffPool'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
@@ -137,7 +136,7 @@ describe('E-7 — buff Thế Mãn (the_man_<el>)', () => {
       effects: [],
     })
 
-    const stats = { ...createBaseStats(), attack: 0, evasionRate: 0, dexterity: 0 }
+    const stats = createBaseStats({ attack: 0, evasionRate: 0, dexterity: 0 })
     const player = {
       id: 'player',
       type: 'player',
@@ -146,7 +145,7 @@ describe('E-7 — buff Thế Mãn (the_man_<el>)', () => {
       currentHp: stats.maxHp,
       maxHp: stats.maxHp,
       alive: true,
-    } as CombatEntity
+    } as unknown as CombatEntity
 
     return { buffs, registry, player }
   }

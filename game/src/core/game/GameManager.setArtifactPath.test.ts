@@ -21,7 +21,7 @@ const MINIMAL_STATS_INPUT = {
 }
 
 function createPlayerEntity(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0 }
+  const stats = createBaseStats({ attack: 0 })
 
   return {
     id: 'player',
@@ -67,7 +67,7 @@ describe('GameManager.setArtifactPath (doc §7.1)', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
-    expect(gameManager.setArtifactPath(player, 'attack')).toBe(false)
+    expect(gameManager.realmAdvanceOps.setArtifactPath(player, 'attack')).toBe(false)
   })
 
   it('không có battle -> đổi được ngay', () => {
@@ -75,7 +75,7 @@ describe('GameManager.setArtifactPath (doc §7.1)', () => {
     const player = createDefaultPlayer()
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
 
-    expect(gameManager.setArtifactPath(player, 'defense')).toBe(true)
+    expect(gameManager.realmAdvanceOps.setArtifactPath(player, 'defense')).toBe(true)
     expect(player.artifact.selectedPath).toBe('defense')
   })
 
@@ -84,22 +84,22 @@ describe('GameManager.setArtifactPath (doc §7.1)', () => {
     const player = createDefaultPlayer()
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
 
-    gameManager.setArtifactPath(player, 'attack')
-    gameManager.setArtifactPath(player, 'control')
+    gameManager.realmAdvanceOps.setArtifactPath(player, 'attack')
+    gameManager.realmAdvanceOps.setArtifactPath(player, 'control')
 
     expect(player.artifact.selectedPath).toBe('control')
   })
 
-  it('chặn đổi hướng khi battle đang countdown/fighting', () => {
+  it('chặn đổi hướng khi battle đang intro/countdown/fighting', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
 
-    gameManager.registerEnemyTemplates([defineEnemy(enemyDefinition())])
+    gameManager.catalogOps.registerEnemyTemplates([defineEnemy(enemyDefinition())])
     gameManager.startBattle(createPlayerEntity(), defineEnemy(enemyDefinition()))
 
-    expect(gameManager.getBattle()?.state).toBe('countdown')
-    expect(gameManager.setArtifactPath(player, 'attack')).toBe(false)
+    expect(gameManager.getBattle()?.state).toBe('intro')
+    expect(gameManager.realmAdvanceOps.setArtifactPath(player, 'attack')).toBe(false)
     expect(player.artifact.selectedPath).toBeUndefined()
   })
 })

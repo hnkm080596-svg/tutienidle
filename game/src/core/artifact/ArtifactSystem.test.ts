@@ -11,7 +11,7 @@ import { onArtifactHitResolved, updateArtifactActivation, type ArtifactSystemDep
 import { buffs } from '../../data/buff/buffs'
 
 function createCombatEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0, attackRange: 10, woodPower: 100, firePower: 100 }
+  const stats = createBaseStats({ attack: 0, attackRange: 10, woodPower: 100, firePower: 100 })
 
   return {
     id,
@@ -89,8 +89,6 @@ function createBattle(overrides: Partial<Battle> = {}): Battle {
     playerBuffs: new BuffPool(),
     elapsedSeconds: 0,
     pendingSummons: [],
-    lavaZones: [],
-    swordZones: [],
     pendingEnemySpawns: [],
     ...overrides,
   }
@@ -148,7 +146,7 @@ describe('ArtifactSystem.updateArtifactActivation — acceptance §15.3', () => 
     // Player "bị stun" — playerBuffs có ccEffect stun — nhưng
     // updateArtifactActivation() KHÔNG được đọc field này ở đâu cả.
     battle.playerBuffs.add({
-      id: 'choang', sourceId: 'enemy_1', targetId: 'player', polarity: 'debuff', duration: 1, remainingTime: 1, stacks: 1, stackMode: 'refresh', continuousSeconds: 0, effects: [{ type: 'cc', ccEffect: 'stun' }],
+      id: 'choang', sourceId: 'enemy_1', targetId: 'player', polarity: 'debuff', duration: 1, remainingTurns: 1, remainingTime: 1, stacks: 1, stackMode: 'refresh', continuousTurns: 0, continuousSeconds: 0, effects: [{ type: 'cc', ccEffect: 'stun' }],
     })
     const deps = createDeps()
 

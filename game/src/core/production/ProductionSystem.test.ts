@@ -130,7 +130,7 @@ describe('ProductionSystem — cycle lifecycle (plan §4)', () => {
   it('nâng level giữa cycle không đổi deadline của cycle đang chạy', () => {
     const { bag, registry } = createBag()
 
-    bag.add(registry.get('qi_refining_wood'), 50)
+    bag.add(registry.get('qi_refining_wood_decade'), 50)
 
     // Plan Workstream F — Linh Thạch là MATERIAL trong bag.
     bag.add(SPIRIT_STONE_MATERIAL, 5000)
@@ -392,7 +392,7 @@ describe('ProductionSystem — cycle lifecycle (plan §4)', () => {
 })
 
 describe('Reward rolls — phân bố (sanity thống kê)', () => {
-  it('mine: phẩm hoang chiếm đa phần, tien hiếm nhất (engine enforce thứ tự)', () => {
+  it('mine: tuổi decade chiếm đa phần, thuong_co hiếm nhất (engine enforce thứ tự, 6E C2)', () => {
     const system = createSystem()
 
     const counts = new Map<string, number>()
@@ -414,11 +414,11 @@ describe('Reward rolls — phân bố (sanity thống kê)', () => {
       }
     }
 
-    const hoang = counts.get('hoang') ?? 0
+    const decade = counts.get('decade') ?? 0
 
-    const tien = counts.get('tien') ?? 0
+    const thuongCo = counts.get('thuong_co') ?? 0
 
-    expect(hoang).toBeGreaterThan(tien * 5)
+    expect(decade).toBeGreaterThan(thuongCo * 5)
   })
 
   it('grotto: niên đại decade phổ biến hơn myriad_year', () => {
@@ -464,7 +464,8 @@ describe('Reward rolls — phân bố (sanity thống kê)', () => {
       }
 
       for (const reward of system.rollRewards(cycle)) {
-        if (reward.materialId === 'foundation_establishment_wood') {
+        // Gỗ giờ roll theo tuổi (6E C2) — đếm MỌI biến thể Trúc Cơ.
+        if (reward.materialId.startsWith('foundation_establishment_wood_')) {
           highTierPicks += 1
         }
       }

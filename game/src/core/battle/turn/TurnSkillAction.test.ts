@@ -12,7 +12,7 @@ import {
 import type { TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 
 function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats()
@@ -109,7 +109,7 @@ function participant(overrides: Partial<TurnBattleParticipant> = {}): TurnBattle
     priority: 0,
     actionGauge: 0,
     alive: true,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
     ...overrides,
   }
 }
@@ -308,5 +308,27 @@ describe('selectRandomDistinctElementPair', () => {
 
     expect(() => selectRandomDistinctElementPair(single)).toThrow()
     expect(() => selectRandomDistinctElementPair([])).toThrow()
+  })
+})
+
+describe('the resource type (Phase A3)', () => {
+  it('gates on currentThe reaching the resource cost', () => {
+    const theEntity = entity({ currentThe: 40 })
+    const theSkill = skill({ resourceType: 'the', resourceCost: 100 })
+
+    expect(hasResourceFor(theEntity, theSkill)).toBe(false)
+
+    theEntity.currentThe = 100
+
+    expect(hasResourceFor(theEntity, theSkill)).toBe(true)
+  })
+
+  it('consumes the full pool on cast, matching legacy consumeTheForUlt reset-to-zero', () => {
+    const theEntity = entity({ currentThe: 100 })
+    const theSkill = skill({ resourceType: 'the', resourceCost: 100 })
+
+    consumeResourceFor(theEntity, theSkill)
+
+    expect(theEntity.currentThe).toBe(0)
   })
 })

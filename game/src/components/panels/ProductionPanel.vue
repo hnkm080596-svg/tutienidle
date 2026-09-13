@@ -18,7 +18,7 @@ import { formatDuration } from '@/core/format/formatDuration'
 // Động Thiên với level + speed, trạng thái idle/producing, đồng hồ
 // cycle, trọng số realm tier đã chuẩn hoá, toggle Auto. Nút Start chỉ
 // xuất hiện khi idle; KHÔNG có nút Claim — hoàn thành tự gửi Bag (§4.3).
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const KIND_META: Record<string, { labelKey: 'forest' | 'mine' | 'grotto'; sigil: string }> = {
   forest: { labelKey: 'forest', sigil: '木' },
@@ -95,7 +95,7 @@ const rows = computed<SiteRow[]>(() => {
 
   void nowMs.value
 
-  return gameManager.getProductionViews(nowMs.value).map((view) => {
+  return gameManager.buildingOps.getProductionViews(nowMs.value).map((view) => {
     const cycleRemainingMs = view.cycleRemainingMs ?? 0
 
     const totalMs = view.cycleTotalMs ?? 1
@@ -150,13 +150,13 @@ const rows = computed<SiteRow[]>(() => {
 })
 
 function start(siteId: string) {
-  if (gameManager.startProductionCycle(siteId, player.$state)) {
+  if (gameManager.buildingOps.startProductionCycle(siteId, player.$state)) {
     bumpState()
   }
 }
 
 function toggleAuto(row: SiteRow) {
-  gameManager.setProductionAutoRestart(row.siteId, !row.autoRestart)
+  gameManager.buildingOps.setProductionAutoRestart(row.siteId, !row.autoRestart)
 
   bumpState()
 }
@@ -164,24 +164,25 @@ function toggleAuto(row: SiteRow) {
 function upgradeCostRows(siteId: string, level: number) {
   stateVersion.value
 
-  const costs = gameManager.getProductionUpgradeCost(siteId) ?? []
+  // R9 (AR-23): the domain quote owns costs + gate; the panel only
+  // renders it (old duplicated gate/cost logic removed).
+  const quote = gameManager.buildingOps.quoteProductionUpgrade(siteId, player.$state)
 
-  const cost = costs[level - 1]
-  const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(level + 1)
-
-  if (!cost) {
+  if (!quote.cost) {
     return []
   }
 
+  const spiritStoneId = quote.cost.spiritStoneId
+
   return [
     {
-      label: gameManager.materialRegistry.has(cost.woodMaterialId)
-        ? gameManager.materialRegistry.get(cost.woodMaterialId).name
-        : cost.woodMaterialId,
+      label: gameManager.materialRegistry.has(quote.cost.woodMaterialId)
+        ? gameManager.materialRegistry.get(quote.cost.woodMaterialId).name
+        : quote.cost.woodMaterialId,
 
-      owned: gameManager.materialBag.getAmount(cost.woodMaterialId),
+      owned: gameManager.materialBag.getAmount(quote.cost.woodMaterialId),
 
-      amount: cost.woodAmount,
+      amount: quote.cost.woodAmount,
     },
     {
       label: gameManager.materialRegistry.has(spiritStoneId)
@@ -191,19 +192,21 @@ function upgradeCostRows(siteId: string, level: number) {
       // Plan Workstream F — Linh Thạch đọc từ MaterialBag.
       owned: gameManager.materialBag.getAmount(spiritStoneId),
 
-      amount: cost.spiritStone,
+      amount: quote.cost.spiritStone,
     },
   ]
 }
 
 function canUpgrade(siteId: string, level: number): boolean {
-  const rowsForCost = upgradeCostRows(siteId, level)
+  // R9 (AR-23): parity with the authoritative upgradeSite gate via the
+  // domain quote (level parameter kept for row wiring).
+  void level
 
-  return level + 1 <= getRealmTier(player.realmId) && rowsForCost.every((entry) => entry.owned >= entry.amount)
+  return gameManager.buildingOps.quoteProductionUpgrade(siteId, player.$state).upgradable
 }
 
 function upgrade(siteId: string) {
-  if (gameManager.upgradeProductionSite(siteId, player.$state)) {
+  if (gameManager.buildingOps.upgradeProductionSite(siteId, player.$state)) {
     bumpState()
   }
 }
@@ -224,7 +227,7 @@ function setWorkerMode(mode: 'auto' | 'manual') {
   if (mode === 'auto') {
     // Về auto: xóa mọi assignment manual.
     for (const row of rows.value) {
-      gameManager.assignWorkers(row.siteId, undefined)
+      gameManager.buildingOps.assignWorkers(row.siteId, undefined)
     }
 
     bumpState()
@@ -232,7 +235,7 @@ function setWorkerMode(mode: 'auto' | 'manual') {
 }
 
 function assign(row: SiteRow, count: number) {
-  gameManager.assignWorkers(row.siteId, count)
+  gameManager.buildingOps.assignWorkers(row.siteId, count)
 
   bumpState()
 }
@@ -253,16 +256,16 @@ const linMachStored = computed(() => {
   }
 
   return Math.floor(
-    gameManager.getBuildingStoredAmount(outpostInstance.value.instanceId, nowMs.value / 1000),
+    gameManager.buildingOps.getBuildingStoredAmount(outpostInstance.value.instanceId, nowMs.value / 1000),
   )
 })
 
 const linMachCapacity = computed(() =>
-  outpostInstance.value ? gameManager.getBuildingCapacity(outpostInstance.value.instanceId) : 0,
+  outpostInstance.value ? gameManager.buildingOps.getBuildingCapacity(outpostInstance.value.instanceId) : 0,
 )
 
 const linMachRatePerMinute = computed(() =>
-  outpostInstance.value ? gameManager.getBuildingRatePerMinute(outpostInstance.value.instanceId) : 0,
+  outpostInstance.value ? gameManager.buildingOps.getBuildingRatePerMinute(outpostInstance.value.instanceId) : 0,
 )
 
 const linMachOutputName = computed(() => {
@@ -278,7 +281,7 @@ function collectLinMach() {
     return
   }
 
-  gameManager.collectBuilding(outpostInstance.value.instanceId, player.$state, nowMs.value / 1000)
+  gameManager.buildingOps.collectBuilding(outpostInstance.value.instanceId, player.$state, nowMs.value / 1000)
 
   bumpState()
 }

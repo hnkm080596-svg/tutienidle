@@ -1,7 +1,8 @@
-import type { BattleSystem } from '../battle/legacy/BattleSystem'
 import type { EventBus } from '../events/EventBus'
-import { enemyToCombatEntity, createEliteVariant, createBossVariant } from '../enemy/Enemy'
+import { createBossVariant } from '../enemy/Enemy'
 import type { Enemy } from '../enemy/Enemy'
+import { applyEnemyTags } from '../enemy/EnemyTag'
+import { ENEMY_TAGS } from '../../data/enemy/EnemyTags'
 import { rollChance } from '../reward/DropRoll'
 import type { PlayerData } from '../player/Player'
 import type { Stats } from '../stats/StatBlock'
@@ -15,7 +16,6 @@ import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 
 export interface StageWaveSystemDeps {
   eventBus: EventBus
-  battleSystem: BattleSystem
   enemySystem: EnemySystem
   stageManager: StageManager
   stageSystem: StageSystem
@@ -79,100 +79,11 @@ export class StageWaveSystem {
     return true
   }
 
-  /**
-   * Gọi mỗi tick (sau grantBattleRewardIfNeeded() — cần battle.enemies
-   * đã được dọn quái chết trước khi đếm "còn sống bao nhiêu").
-   */
-  update(deltaSeconds: number) {
-    const active = this.deps.stageManager.get()
-
-    if (!active) {
-      return
-    }
-
-    const battle = this.deps.battleSystem.getBattle()
-
-    // Player chết (battle.state 'defeat') — BattleSystem.checkBattleEnd()
-    // chỉ tự set 'defeat', KHÔNG tự dừng stage (không nên biết về
-    // Stage, xem class doc). Phải dừng stageManager ở ĐÂY, không thì
-    // active không bao giờ về null, khoá cứng nút "Chiến Đấu" vĩnh viễn.
-    if (!battle || battle.state === 'defeat') {
-      this.stopRepeat()
-
-      return
-    }
-
-    if (battle.state !== 'fighting') {
-      return
-    }
-
-    const stage = this.deps.stageTemplates.get(active.stageId)
-
-    if (!stage) {
-      return
-    }
-
-    // "Còn trên sân" = quái ĐANG ĐÁNH + quái ĐANG TELEGRAPH (pending):
-    // thiếu pendingCount thì wave sau được đặt lịch ồ ạt (sân "trống" giả
-    // khi quái chưa materialize) và trận kết thúc sớm khi telegraph còn
-    // chạy (migration spawn telegraph 2026-08-24).
-    const aliveCount = battle.enemies.length + battle.pendingEnemySpawns.length
-
-    if (active.spawnedCount >= effectiveTotalEnemyCount(stage)) {
-      if (aliveCount === 0) {
-        if (
-          this.activeStagePlayer &&
-          !this.activeStagePlayer.completedStageIds.includes(stage.id)
-        ) {
-          this.activeStagePlayer.completedStageIds.push(stage.id)
-        }
-
-        if (this.repeatStageContinuously && this.deps.stageManager.restartCycle(stage)) {
-          // Giữ nguyên Battle/player HP, resource, cooldown và reward summary;
-          // cycle mới chỉ khởi động lại bộ đếm spawn của stage.
-          return
-        }
-
-        battle.state = 'victory'
-
-        this.deps.stageManager.stop()
-
-        // Chỉ chạy tới đây đúng 1 lần — tick kế battle.state đã là
-        // 'victory' (!== 'fighting'), hàm này return sớm ở trên.
-        this.deps.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
-      }
-
-      return
-    }
-
-    active.spawnCountdown -= deltaSeconds
-
-    // Sân trống quái giữa chừng thì spawn ngay (không đợi hết nhịp) —
-    // tránh "chết thời gian" khi player out-DPS nhịp spawn mặc định.
-    if (active.spawnCountdown > 0 && aliveCount > 0) {
-      return
-    }
-
-    const nextEnemyTemplate = this.pickEnemyForSpawn(
-      stage,
-      active.spawnedCount === effectiveTotalEnemyCount(stage) - 1,
-    )
-
-    if (!nextEnemyTemplate) {
-      return
-    }
-
-    const nextEnemyEntity = enemyToCombatEntity(this.deps.enemySystem.spawn(nextEnemyTemplate))
-
-    // Luồng mới (plan §5.2): ĐẶT LỊCH spawn (telegraph 0.75–1.4s) thay vì
-    // materialize ngay tại cột 16. Overlap hợp lệ nên queue LUÔN thành
-    // công — không còn retry "hết chỗ" (spawnedCount tăng ngay).
-    this.deps.battleSystem.queueEnemySpawn(battle, nextEnemyEntity)
-
-    active.spawnedCount++
-
-    active.spawnCountdown = stage.spawnIntervalSeconds
-  }
+  // C1 (2026-09-08) — the legacy real-time spawn loop (update()) and
+  // resolveBossSummons() are REMOVED: neither was called from any prod
+  // caller since the Slice 6 cutover (turn-based wave spawning lives in
+  // TurnBattleSystem.tickPacing via the spawnEnemy factory). The live
+  // surface is start/stopRepeat/getProgress/pickEnemyForTurnSpawn below.
 
   // Người chơi CHỦ ĐỘNG thoát trận giữa chừng / player chết — dừng stage
   // và tắt auto-repeat. Phần thưởng đã kiếm được KHÔNG mất (loot cấp theo
@@ -182,7 +93,14 @@ export class StageWaveSystem {
     this.repeatStageContinuously = false
   }
 
-  getProgress(): { spawned: number; total: number; alive: number } | null {
+  // Phase A0 (2026-09-07) — the `alive` field is REMOVED from this shape:
+  // it used to read the legacy battleSystem's enemy list, which is always
+  // empty during real turn-based gameplay (HUD counter stuck at 0).
+  // GameManager.getStageProgress() now composes the live count itself from
+  // this.turnBattle.enemies. resolveBossSummons() below still reads
+  // battleSystem for pendingSummons (separate, currently-dead code path —
+  // out of scope per the A0 spec).
+  getProgress(): { spawned: number; total: number } | null {
     const active = this.deps.stageManager.get()
 
     if (!active) {
@@ -203,54 +121,26 @@ export class StageWaveSystem {
       // để quyết định victory (xem update() ở trên), không thì stage
       // Boss hiện "1/5" thay vì "1/1" dù trận đã thắng.
       total: effectiveTotalEnemyCount(stage),
-
-      alive: this.deps.battleSystem.getBattle()?.enemies.length ?? 0,
     }
-  }
-
-  /**
-   * Combat Rework Phase 4 (Boss Mechanics) — rút Battle.pendingSummons
-   * (BattleSystem đẩy vào khi 1 TribulationPhase.summonEnemyIds trigger,
-   * xem BattleSystem.updateTribulationPhases()) rồi spawn thật, cùng
-   * pattern update() dùng cho wave spawn — đây là nơi DUY NHẤT biết tra
-   * Enemy template theo id (enemyTemplates), BattleSystem không nên biết.
-   */
-  resolveBossSummons() {
-    const battle = this.deps.battleSystem.getBattle()
-
-    if (!battle || battle.pendingSummons.length === 0) {
-      return
-    }
-
-    // Spawn qua telegraph queue như quái thường; overlap hợp lệ nên
-    // luôn schedule được (plan §5.2).
-    for (const enemyId of battle.pendingSummons) {
-      const template = this.deps.enemyTemplates.get(enemyId)
-
-      if (!template) {
-        continue
-      }
-
-      const summonedEntity = enemyToCombatEntity(this.deps.enemySystem.spawn(template))
-
-      this.deps.battleSystem.queueEnemySpawn(battle, summonedEntity)
-    }
-
-    battle.pendingSummons = []
   }
 
   /**
    * Roll 1 entry trong enemyPool theo weight, tra template, rồi roll
-   * riêng `eliteChance` của ĐÚNG entry đó — trúng thì trả bản Elite
-   * (buff stat + eliteRewards nếu có, xem
-   * core/enemy/Enemy.createEliteVariant()) thay vì bản thường. Dùng
-   * chung cho quái ĐẦU (start) lẫn quái spawn giữa chừng (update).
+   * riêng `eliteChance` của ĐÚNG entry đó — trúng thì gắn tag tinh_anh
+   * lên bản spawn (stat/prefix/flag qua applyEnemyTags, xem
+   * core/enemy/EnemyTag.ts) thay vì trả bản thường. `eliteChance` nghĩa
+   * mới (spec v3 B9): chance to attach the tinh_anh tag. Dùng chung cho
+   * quái ĐẦU (start) lẫn quái spawn giữa chừng (update).
    *
    * `isFinalSpawn` — Core Loop Foundation checklist (Mục BOSS): lượt
    * spawn CUỐI của stage có bossEnemyId LUÔN LÀ Boss, bỏ qua roll
-   * enemyPool/eliteChance hoàn toàn (Boss KHÔNG ngẫu nhiên như Elite).
+   * enemyPool cho phần template (Boss KHÔNG ngẫu nhiên như tag).
+   *
+   * `options.allowTags` — spec v3 D5: tag chỉ roll ở kênh ACTIVE; idle
+   * (auto-farm cycle) pass `allowTags: false` nên không bao giờ gắn tag.
+   * Boss vẫn áp unconditional ở cả 2 kênh (D4).
    */
-  private pickEnemyForSpawn(stage: Stage, isFinalSpawn: boolean): Enemy | undefined {
+  private pickEnemyForSpawn(stage: Stage, isFinalSpawn: boolean, options?: { allowTags?: boolean }): Enemy | undefined {
     const floor = stage.floor ?? stage.requiredRealmLevel
 
     // Các chapter có thể tạm tái dùng encounter pool của chapter trước.
@@ -266,7 +156,19 @@ export class StageWaveSystem {
       const bossTemplate = this.deps.enemyTemplates.get(stage.bossEnemyId)
 
       if (bossTemplate) {
-        return applyStageRealm(createBossVariant(bossTemplate))
+        const boss = createBossVariant(bossTemplate)
+
+        // Spec v3 section 2.2 — active floor 10 can still stack the
+        // tinh_anh tag ON TOP of the boss variant (~10% boss+tinh_anh).
+        // The chance comes from the boss species' own pool entry (the
+        // builder authors bossEnemyId === the elite pool species); idle
+        // never rolls (allowTags: false).
+        const bossEntry = stage.enemyPool.find(poolEntry => poolEntry.enemyId === stage.bossEnemyId)
+        if (options?.allowTags !== false && bossEntry?.eliteChance && rollChance(bossEntry.eliteChance)) {
+          return applyStageRealm(applyEnemyTags(boss, ['tinh_anh'], ENEMY_TAGS))
+        }
+
+        return applyStageRealm(boss)
       }
     }
 
@@ -277,8 +179,10 @@ export class StageWaveSystem {
       return undefined
     }
 
-    if (entry.eliteChance && rollChance(entry.eliteChance)) {
-      return applyStageRealm(createEliteVariant(template))
+    // Tag roll — ACTIVE only (spec v3 D5): eliteChance is the chance to
+    // attach the tinh_anh tag; idle passes allowTags: false.
+    if (options?.allowTags !== false && entry.eliteChance && rollChance(entry.eliteChance)) {
+      return applyStageRealm(applyEnemyTags(template, ['tinh_anh'], ENEMY_TAGS))
     }
 
     // Quái ẩn trà trộn (spec dot-pha-loi-kiep §4.1c) — chỉ stage Luyện
@@ -299,10 +203,11 @@ export class StageWaveSystem {
   /**
    * Slice 6 cutover (Completion Task 8): public wrapper cho TurnBattle's
    * spawnEnemy factory — dùng chung nguyên logic roll thật (boss-at-10 +
-   * pool roll + elite chance + hidden beast + realm override). KHÔNG đổi
-   * logic, chỉ expose pickEnemyForSpawn cho adapter ngoài.
+   * pool roll + tag roll + hidden beast + realm override). KHÔNG đổi
+   * logic, chỉ expose pickEnemyForSpawn cho adapter ngoài. `allowTags`
+   * mặc định true (active); idle (auto-farm) truyền false (spec v3 D5).
    */
-  pickEnemyForTurnSpawn(stage: Stage, isFinalSpawn: boolean): Enemy | undefined {
-    return this.pickEnemyForSpawn(stage, isFinalSpawn)
+  pickEnemyForTurnSpawn(stage: Stage, isFinalSpawn: boolean, options?: { allowTags?: boolean }): Enemy | undefined {
+    return this.pickEnemyForSpawn(stage, isFinalSpawn, options)
   }
 }

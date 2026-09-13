@@ -5,8 +5,8 @@ import type { Buff } from './Buff'
 function makeBuff(overrides: Partial<Buff> = {}): Buff {
   return {
     id: 'test_buff', sourceId: 'source_1', targetId: 'target_1',
-    polarity: 'debuff', duration: 5, remainingTime: 5, stacks: 1,
-    stackMode: 'refresh', continuousSeconds: 0, effects: [],
+    polarity: 'debuff', duration: 5, remainingTurns: 5, remainingTime: 5, stacks: 1,
+    stackMode: 'refresh', continuousTurns: 0, continuousSeconds: 0, effects: [],
     ...overrides,
   }
 }
@@ -82,5 +82,15 @@ describe('BuffPool', () => {
     pool.add(makeBuff())
     pool.clear()
     expect(pool.getAll()).toHaveLength(0)
+  })
+
+  it('clearCcEffects removes every active buff carrying a cc effect', () => {
+    pool.add(makeBuff({ id: 'stun_buff', effects: [{ type: 'cc', ccEffect: 'stun' }] }))
+    pool.add(makeBuff({ id: 'stat_buff', effects: [{ type: 'statModifier', stat: 'attack', flat: 10 }] }))
+
+    expect(pool.getAll()).toHaveLength(2)
+    pool.clearCcEffects()
+    expect(pool.getAll()).toHaveLength(1)
+    expect(pool.getAll()[0]!.id).toBe('stat_buff')
   })
 })

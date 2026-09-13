@@ -17,7 +17,7 @@ describe('GameManager — facade TribulationDirector', () => {
 
     expect(gameManager.startTribulation(player, createBaseStats(), 'qi_refining')).toBe(true)
 
-    const active = gameManager.getActiveTribulation()
+    const active = gameManager.tribulationDirector.getState()
     expect(active).not.toBeNull()
     expect(active!.grade).toBe('human')
     expect(active!.chaptersTotal).toBe(2)
@@ -28,7 +28,7 @@ describe('GameManager — facade TribulationDirector', () => {
     const gameManager = new GameManager()
     // Đăng ký pills data thật để PillBag add/has Trúc Cơ Đan hoạt động
     // (GameManager trần chưa register gì — pattern các test khác).
-    gameManager.registerPills(pills)
+    gameManager.catalogOps.registerPills(pills)
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.realmLevel = 12
@@ -36,15 +36,15 @@ describe('GameManager — facade TribulationDirector', () => {
 
     // KHÔNG có Trúc Cơ Đan trong túi → human
     expect(gameManager.startTribulation(player, createBaseStats(), 'foundation_establishment')).toBe(true)
-    expect(gameManager.getActiveTribulation()!.grade).toBe('human')
-    gameManager.clearActiveTribulation()
+    expect(gameManager.tribulationDirector.getState()!.grade).toBe('human')
+    gameManager.tribulationDirector.clear()
 
     // Có Trúc Cơ Đan → earth
     const trucCoDan = gameManager.pillRegistry.get('truc_co_dan')
     expect(trucCoDan).toBeDefined()
     gameManager.pillBag.add(trucCoDan!, 1)
     expect(gameManager.startTribulation(player, createBaseStats(), 'foundation_establishment')).toBe(true)
-    expect(gameManager.getActiveTribulation()!.grade).toBe('earth')
+    expect(gameManager.tribulationDirector.getState()!.grade).toBe('earth')
   })
 
   it('answerTribulationQuestion xử lý câu hỏi (đúng → true, state câu kế)', () => {
@@ -54,15 +54,15 @@ describe('GameManager — facade TribulationDirector', () => {
     player.realmLevel = 12
 
     gameManager.startTribulation(player, createBaseStats(), 'qi_refining')
-    const q = gameManager.getActiveTribulation()!.currentQuestion!
-    expect(gameManager.answerTribulationQuestion(q.correctAnswerIndex)).toBe(true)
-    expect(gameManager.answerTribulationQuestion(0)).toBe(false) // đang nghỉ giữa câu
+    const q = gameManager.tribulationDirector.getState()!.currentQuestion!
+    expect(gameManager.tribulationDirector.answerQuestion(q.correctAnswerIndex)).toBe(true)
+    expect(gameManager.tribulationDirector.answerQuestion(0)).toBe(false) // đang nghỉ giữa câu
   })
 
   it('unknown realm → start false', () => {
     const gameManager = new GameManager()
     expect(gameManager.startTribulation(createDefaultPlayer(), createBaseStats(), 'golden_core')).toBe(false)
-    expect(gameManager.getActiveTribulation()).toBeNull()
+    expect(gameManager.tribulationDirector.getState()).toBeNull()
   })
 
   it('update() chạy chương kiếp qua Director — hết kiếp sống sót thì state victory', () => {
@@ -78,13 +78,13 @@ describe('GameManager — facade TribulationDirector', () => {
     gameManager.startTribulation(player, stats, 'qi_refining')
 
     let guard = 0
-    while (gameManager.getActiveTribulation()?.state === 'ongoing' && guard++ < 2000) {
-      gameManager.update(1)
-      const q = gameManager.getActiveTribulation()!.currentQuestion
-      if (q) gameManager.answerTribulationQuestion(q.correctAnswerIndex)
+    while (gameManager.tribulationDirector.getState()?.state === 'ongoing' && guard++ < 2000) {
+      gameManager.tickOps.update(1)
+      const q = gameManager.tribulationDirector.getState()!.currentQuestion
+      if (q) gameManager.tribulationDirector.answerQuestion(q.correctAnswerIndex)
     }
 
-    expect(gameManager.getActiveTribulation()!.state).toBe('victory')
+    expect(gameManager.tribulationDirector.getState()!.state).toBe('victory')
   })
 
   it('KHÔNG còn craftBreakthroughToken/canCraftBreakthroughToken (Đột Phá Lệnh đã dỡ)', () => {

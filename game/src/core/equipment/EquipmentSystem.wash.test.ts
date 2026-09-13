@@ -30,10 +30,10 @@ const TEMPLATE: Equipment = {
   grade: 1,
   maxEnhanceLevel: 10,
   mainStats: [{ stat: 'attack', min: 10, max: 20 }],
-  enhanceCost: [{ materialId: 'qi_refining_ore_huyen', amount: 1 }],
+  enhanceCost: [{ materialId: 'qi_refining_ore_century', amount: 1 }],
 }
 
-const ENHANCE_ORE = materials.find((m) => m.id === 'qi_refining_ore_huyen')!
+const ENHANCE_ORE = materials.find((m) => m.id === 'qi_refining_ore_century')!
 
 function setup() {
   const system = new EquipmentSystem()
@@ -415,9 +415,11 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
 
     expect(preview.ok).toBe(true)
     expect(instance.forgeUsesRemaining).toBe(before - 1)
+    // R9 (AR-21): commit consumes the ticket; affixes stay domain-owned.
+    expect(preview.ticketId).toBeDefined()
     expect(ctx.system.commitWashAffixes(
       instance.instanceId,
-      preview.affixes ?? [],
+      preview.ticketId!,
       ctx.bag,
       ctx.slotManager,
       ctx.affixRegistry,
@@ -589,7 +591,7 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     expect(
       ctx.system.commitWashAffixes(
         ctx.instance.instanceId,
-        preview.affixes ?? [],
+        preview.ticketId!,
         ctx.bag,
         ctx.slotManager,
         ctx.testRegistry,

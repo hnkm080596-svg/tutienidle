@@ -19,18 +19,66 @@ import { isCellInShape, type AoeShapeSpec } from './AoeShape'
  * so future content-mapping from real Skill objects is a straight field
  * copy, not a redesign — see design spec §3.
  */
+export interface TurnSkillAilmentApplication {
+  buffDefinitionId: string
+  chance: number
+  stacks?: number
+}
+
 export interface TurnSkillDefinition {
   id: string
   cooldownTurns: number
+  /**
+   * R3 (AR-03) — Explicit target scope. Defaults to 'enemy'.
+   * 'self' targets the caster without dealing damage.
+   */
+  targetScope?: 'enemy' | 'self'
   resourceType?: SkillResourceType
   resourceCost?: number
-  damage: ActionDamageInfo
+  damage?: ActionDamageInfo
   targeting: ActionTargeting
+  /**
+   * R3 (AR-18) — Generic composite action policy. Replaces hardcoded
+   * content ID checks in the turn engine.
+   */
+  compositePicks?: {
+    poolType: 'reaction_path'
+    count: number
+  }
   appliesBuff?: { definitionId: string; target: 'self' | 'target' }
+  /**
+   * Phase A1 (2026-09-07) — chance-gated ailment application, checked
+   * against TurnReactionManager after applying. Deliberately separate
+   * from appliesBuff (unconditional, no reaction check) — different
+   * semantics, do not merge the two fields.
+   */
+  appliesAilment?: TurnSkillAilmentApplication
+  /**
+   * R3 (AR-03) — Multiple ailment applications on landed hit.
+   */
+  appliesAilments?: TurnSkillAilmentApplication[]
+  // Phase A3 — Pháp Tu Detonate: consume the target's stacks of this
+  // ailment for bonus true damage (bypasses armor/resistance), then
+  // clear them. Ported from legacy SkillEffect.consumesAilmentId/
+  // damagePerStack. Only meaningful together with damagePerStack.
+  consumesAilmentId?: string
+  damagePerStack?: number
+  // Phase A3 — Thổ Tu "tự nổ khiên": consume the SOURCE's entire
+  // currentWard for bonus true damage, then zero it. Ported from legacy
+  // SkillEffect.consumesWardForDamage/damagePerWardPoint. Only meaningful
+  // together with damagePerWardPoint.
+  consumesWardForDamage?: boolean
+  damagePerWardPoint?: number
+  /** R3 (AR-03) — Leech healing: heals caster for % of final damage dealt. */
+  healPercentOfDamage?: number
   /** Future Systems Task 7 — skill charge N lượt (Thế) rồi tự resolve (Trảm). */
   chargeTurns?: number
   /** Action Playback (2026-09-05) — VFX preset cho action_impact. undefined = fallback preset mặc định (Task 4). */
   presetId?: CombatVfxPresetId
+  /** Spec §7.1 — may this skill be answered by a counter? Defaults to false. */
+  counterable?: boolean
+  /** Spec §7.1 — which skill this actor counters with. Defaults to null. */
+  counterSkillId?: string | null
 }
 
 export interface TurnSkillSlot {
@@ -40,11 +88,12 @@ export interface TurnSkillSlot {
 
 const RESOURCE_FIELD: Record<
   Exclude<SkillResourceType, 'none'>,
-  'currentMp' | 'currentSwordIntent' | 'currentMomentum'
+  'currentMp' | 'currentSwordIntent' | 'currentMomentum' | 'currentThe'
 > = {
   mana: 'currentMp',
   sword_intent: 'currentSwordIntent',
   momentum: 'currentMomentum',
+  the: 'currentThe',
 }
 
 /**
@@ -60,7 +109,9 @@ export function hasResourceFor(entity: CombatEntity, skill: TurnSkillDefinition)
 
   const field = RESOURCE_FIELD[skill.resourceType]
 
-  return entity[field] >= skill.resourceCost
+  // currentThe is optional on CombatEntity — an uninitialized pool reads as
+  // undefined, which correctly blocks the cast (undefined >= cost is false).
+  return (entity[field] ?? 0) >= skill.resourceCost
 }
 
 export function consumeResourceFor(entity: CombatEntity, skill: TurnSkillDefinition): void {
@@ -76,7 +127,7 @@ export function consumeResourceFor(entity: CombatEntity, skill: TurnSkillDefinit
 export interface SelectedAction {
   skillId: string
   skill: TurnSkillDefinition | null
-  damage: ActionDamageInfo
+  damage?: ActionDamageInfo
   targeting: ActionTargeting
   slot: TurnSkillSlot | null
 }
@@ -88,7 +139,7 @@ const FALLBACK_TARGETING: ActionTargeting = { shape: 'single' }
 /**
  * Ticks special/ultimate cooldowns down by 1, floored at 0 — cooldown
  * counts the ACTOR's own turns (this rework's "tick at the holder's own
- * turn" convention, already used by TurnBuffSystem). Call once per actor
+ * turn" convention, already used by BuffSystem). Call once per actor
  * per turn, BEFORE selectAction().
  */
 export function tickCooldowns(participant: TurnBattleParticipant): void {

@@ -15,9 +15,9 @@ import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 function setup() {
   const gameManager = new GameManager()
 
-  gameManager.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
-  gameManager.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
 
   return gameManager
 }
@@ -29,10 +29,10 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
 
     player.realmLevel = 12
 
-    expect(gameManager.chooseCultivationPath('phap_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player)).toBe(true)
 
-    const first = gameManager.getAggregatedModifiers(player)
-    const second = gameManager.getAggregatedModifiers(player)
+    const first = gameManager.effectOps.getAggregatedModifiers(player)
+    const second = gameManager.effectOps.getAggregatedModifiers(player)
     const finalStats = calculateStats(player.baseStats, first)
 
     expect(player.modifiers.filter(modifier => modifier.sourceId === 'phap_tu')).toEqual([])
@@ -50,7 +50,7 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
 
     player.realmLevel = 12
 
-    expect(gameManager.chooseCultivationPath('phap_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player)).toBe(true)
 
     const hoaCauThuat = gameManager.skillManager.get('hoa_cau_thuat')
 
@@ -72,13 +72,13 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
 
     player.realmLevel = 12
 
-    expect(gameManager.chooseCultivationPath('phap_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player)).toBe(true)
 
     player.skillInsight = 2
 
-    expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('thuy_linh_ngo', player)).toBe(true)
 
-    expect(gameManager.setSkillLoadoutSlot(player, 1, 'thuy_tien_thuat')).toBe(true)
+    expect(gameManager.progressionOps.setSkillLoadoutSlot(player, 1, 'thuy_tien_thuat')).toBe(true)
 
     expect(gameManager.skillManager.get('thuy_tien_thuat')?.loadoutSlot).toBe(1)
     expect(gameManager.skillManager.get('hoa_cau_thuat')?.loadoutSlot).toBe(0)
@@ -93,21 +93,21 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
     player.skillInsight = 3
 
     // Chưa có root — chặn.
-    expect(gameManager.purchaseNode('minor_fire_intensity', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_intensity', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('hoa_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('hoa_linh_ngo', player)).toBe(true)
     expect(player.skillInsight).toBe(3)
 
     // Mỗi growth level 1 tốn đúng 1 Cảm Ngộ.
-    expect(gameManager.purchaseNode('minor_fire_intensity', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_fire_burn', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_fire_haste', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_burn', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_haste', player)).toBe(true)
 
     expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     // Hỏa Linh +2 Hỏa Lực/cấp; Xích Viêm potency 4%; Tật Hỏa cast speed 3%.
@@ -123,19 +123,19 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
 
     player.skillInsight = 50
 
-    expect(gameManager.purchaseNode('hoa_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_fire_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('hoa_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_intensity', player)).toBe(true)
 
     // Nâng thêm 2 lần: tổng level 3, cost 1 + 1 + 1.
-    expect(gameManager.upgradeNode('minor_fire_intensity', player)).toBe(true)
-    expect(gameManager.upgradeNode('minor_fire_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.upgradeNode('minor_fire_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.upgradeNode('minor_fire_intensity', player)).toBe(true)
 
-    expect(gameManager.getNodeLevel('minor_fire_intensity', player)).toBe(3)
+    expect(gameManager.progressionOps.getNodeLevel('minor_fire_intensity', player)).toBe(3)
     expect(player.skillInsight).toBe(47)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     // Nền gốc ~0.5 + node 3 cấp × 2 = 6 → tổng ≥ 6.5; assert phần NODE
@@ -151,16 +151,16 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
     player.skillInsight = 20
     player.realmId = 'qi_refining'
 
-    expect(gameManager.purchaseNode('hoa_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_fire_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('hoa_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_intensity', player)).toBe(true)
 
     // Chưa tới Trúc Cơ — keystone chặn dù đã có Power.
-    expect(gameManager.purchaseNode('hoa_truc_co_dan_hoa', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('hoa_truc_co_dan_hoa', player)).toBe(false)
 
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('hoa_truc_co_dan_hoa', player)).toBe(true)
-    expect(gameManager.purchaseNode('hoa_truc_co_tu_hoa', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('hoa_truc_co_dan_hoa', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('hoa_truc_co_tu_hoa', player)).toBe(false)
   })
 
   it('Specialization CHẶN nếu chưa chọn keystone cha; sau đó mở', () => {
@@ -171,17 +171,17 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('hoa_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_fire_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('hoa_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_fire_reaction_effect', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_reaction_effect', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('hoa_truc_co_dan_hoa', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_fire_reaction_effect', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('hoa_truc_co_dan_hoa', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_reaction_effect', player)).toBe(true)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(player),
+      ...gameManager.effectOps.getAggregatedModifiers(player),
     ])
 
     expect(finalStats.elementApplicationPercent).toBeGreaterThanOrEqual(0.15)
@@ -196,22 +196,22 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
     player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.purchaseNode('hoa_linh_ngo', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_fire_intensity', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('hoa_linh_ngo', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_fire_channeling', player)).toBe(false)
-    expect(gameManager.purchaseNode('minor_fire_retention', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_channeling', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_retention', player)).toBe(false)
 
-    expect(gameManager.purchaseNode('hoa_truc_co_tu_hoa', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_fire_channeling', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('hoa_truc_co_tu_hoa', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_channeling', player)).toBe(true)
 
     // Nâng Hỏa Mạch lên level 3 (+2% mỗi cấp → 0.06).
-    expect(gameManager.upgradeNode('minor_fire_channeling', player)).toBe(true)
-    expect(gameManager.upgradeNode('minor_fire_channeling', player)).toBe(true)
+    expect(gameManager.progressionOps.upgradeNode('minor_fire_channeling', player)).toBe(true)
+    expect(gameManager.progressionOps.upgradeNode('minor_fire_channeling', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_fire_retention', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('minor_fire_retention', player)).toBe(true)
 
-    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+    const runtimeStats = gameManager.progressionOps.getSkillRuntimeStats(player)
 
     // Tụ Hỏa flat 1 + Hỏa Mạch level 3 (0.02 + 0.02×2).
     expect(runtimeStats.hoaTheGainPerCast).toBeCloseTo(1.06, 5)

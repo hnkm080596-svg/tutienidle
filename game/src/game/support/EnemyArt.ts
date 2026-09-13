@@ -8,8 +8,13 @@
 
 export const ENEMY_SOURCE_SIZE = { w: 1254, h: 1254 }
 
-/** Template id dạng underscore, sắp DÀI TRƯỚC để prefix match đúng. */
-const MORTAL_ENEMY_TEXTURE_IDS = [
+/**
+ * CANONICAL enemy template-id list (R12/AR-30) — the only enumeration.
+ * CombatPreload, CombatPresentationCatalogue and AssetBundleCatalog all
+ * consume this array; adding a mortal enemy texture is a one-place edit.
+ * Sorted LONGEST-FIRST so prefix matching below stays correct.
+ */
+export const MORTAL_ENEMY_TEMPLATE_IDS = [
   'mortal_ferocious_wild_boar',
   'mortal_ferocious_water_wolf',
   'mortal_ferocious_savage_tiger',
@@ -33,7 +38,7 @@ const MORTAL_ENEMY_TEXTURE_IDS = [
 ] as const
 
 const TEXTURE_KEY_BY_ID = new Map<string, string>(
-  MORTAL_ENEMY_TEXTURE_IDS.map((templateId) => [
+  MORTAL_ENEMY_TEMPLATE_IDS.map((templateId) => [
     templateId,
 
     `${templateId.replaceAll('_', '-')}-v1`,
@@ -46,7 +51,7 @@ const TEXTURE_KEY_BY_ID = new Map<string, string>(
  * caller fallback Rectangle màu như cũ.
  */
 export function resolveEnemyTextureKey(enemyId: string): string | undefined {
-  for (const templateId of MORTAL_ENEMY_TEXTURE_IDS) {
+  for (const templateId of MORTAL_ENEMY_TEMPLATE_IDS) {
     if (enemyId === templateId || enemyId.startsWith(`${templateId}_`)) {
       return TEXTURE_KEY_BY_ID.get(templateId)!
     }

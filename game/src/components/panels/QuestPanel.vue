@@ -13,7 +13,7 @@ import type { QuestProgress } from '@/core/quest/QuestProgress'
 const ui = useUiStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 interface QuestRow {
   quest: Quest
@@ -33,7 +33,7 @@ function targetLabel(quest: Quest): string {
   }
 
   const enemyId = quest.condition.enemyId
-  const enemyName = enemyId ? gameManager.getEnemyTemplate(enemyId)?.name ?? enemyId : t('panels.quest.anyEnemy')
+  const enemyName = enemyId ? gameManager.catalogOps.getEnemyTemplate(enemyId)?.name ?? enemyId : t('panels.quest.anyEnemy')
 
   return enemyName
 }
@@ -41,11 +41,11 @@ function targetLabel(quest: Quest): string {
 const rows = computed<QuestRow[]>(() => {
   stateVersion.value
 
-  return gameManager.getActiveQuests().map(({ quest, progress }) => ({
+  return gameManager.questOps.getActiveQuests().map(({ quest, progress }) => ({
     quest,
     progress,
     targetLabel: targetLabel(quest),
-    canClaim: gameManager.canClaimQuest(quest.id),
+    canClaim: gameManager.questOps.canClaimQuest(quest.id),
   }))
 })
 
@@ -55,7 +55,7 @@ const groups = computed(() => [
 ])
 
 function onClaim(questId: string) {
-  if (gameManager.claimQuest(questId)) {
+  if (gameManager.questOps.claimQuest(questId)) {
     bumpState()
   }
 }
@@ -102,7 +102,7 @@ function close() {
 </template>
 
 <style scoped>
-.quest-panel { display: flex; flex-direction: column; gap: 20px; padding: 16px 18px; }
+.quest-panel { display: flex; flex-direction: column; gap: 20px; height: 100%; min-height: 0; padding: 16px 18px; overflow-y: auto; }
 .quest-panel__section-title { margin: 0 0 10px; color: var(--paper-eyebrow); font: 700 var(--text-md) var(--font-display); letter-spacing: .04em; }
 .quest-panel__list { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .quest-panel__card { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: var(--ink-800); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); }

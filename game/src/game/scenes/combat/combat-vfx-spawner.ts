@@ -7,7 +7,8 @@
 import Phaser from 'phaser'
 
 import type { ActionImpactEvent, BattlePositionsEvent } from '@/core/battle/BattleEvents'
-import type { GridPosition } from '@/core/battle/BattleGrid'
+import type { GridPosition, LaneIndex } from '@/core/battle/BattleGrid'
+import type { EnemySpawnVfxPresetId } from '@/core/battle/CombatAction'
 import {
   spawnActionImpactVfx,
   type ActionImpactVfxHandle,
@@ -15,7 +16,7 @@ import {
 import { spawnEnemySpawnVfx } from '@/game/support/EnemySpawnVfx'
 import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
 import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
-import type { PlayerBodyAnchorId } from '@/game/support/PlayerVisualProfiles'
+import type { BodyAnchorId } from '@/presentation/geometry/combatBodyAnchors'
 import {
   DEPTH_OVERLAY_UI,
   DEPTH_UPRIGHT_VFX,
@@ -47,6 +48,23 @@ interface StatusEntry {
   remainingTime?: number
   icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc
   stackLabel: Phaser.GameObjects.Text
+}
+
+// Turn-Based Wave Redesign (2026-09-06) — subset của BattlePositionsEvent
+// mà reconcileSpawnVfx() thực sự đọc. BattlePositionsEvent thỏa mãn cấu
+// trúc này (TypeScript structural typing) — legacy call site hiện có
+// (CombatScene.reconcileSpawnVfx()) KHÔNG cần thay đổi gì. Turn-based
+// combat tự dựng object shape này từ TurnBattleEntitySnapshotEvent
+// (CombatScene.onTurnBattleEntitySnapshot(), Task 7).
+export interface SpawnVfxSnapshot {
+  spawningEnemies?: {
+    id: string
+    row: LaneIndex
+    column: number
+    progress: number
+    isBoss: boolean
+    presetId: EnemySpawnVfxPresetId
+  }[]
 }
 
 export class CombatVfxSpawner {
@@ -455,7 +473,7 @@ export class CombatVfxSpawner {
    * (flash ngắn + fade-in sprite) và dọn handle. Flat mode bỏ qua (renderer
    * legacy giữ hành vi cũ).
    */
-  reconcileSpawnVfx(event: BattlePositionsEvent) {
+  reconcileSpawnVfx(event: SpawnVfxSnapshot) {
     if (!this.scene.isPerspective) {
       return
     }
@@ -495,7 +513,7 @@ export class CombatVfxSpawner {
       }
 
       this.scene.spawnVfxHandles.delete(id)
-      this.scene.materializingIds.add(id)
+      this.scene.entityVisual.markMaterializing(id)
       entry.handle.complete()
     }
   }
@@ -509,11 +527,7 @@ export class CombatVfxSpawner {
     const sprite = this.scene.sprites.get(PLAYER_ID)
 
     if (!event.playerMaterialized) {
-      this.scene.playerMaterialized = false
-
-      if (sprite) {
-        sprite.rect.setVisible(false)
-      }
+      this.scene.entityVisual.hidePlayer(sprite)
 
       // Telegraph tại projected cell (4,1) — chỉ perspective vẽ VFX.
       if (this.scene.isPerspective && event.playerSpawn && this.scene.projection) {
@@ -543,12 +557,7 @@ export class CombatVfxSpawner {
     this.scene.playerSpawnHandle?.complete()
     this.scene.playerSpawnHandle = undefined
 
-    if (!this.scene.playerMaterialized && sprite) {
-      sprite.rect.setVisible(true)
-      this.playMaterializeFadeIn(sprite)
-    }
-
-    this.scene.playerMaterialized = true
+    this.scene.entityVisual.materializePlayer(sprite)
   }
 
   /**
@@ -592,22 +601,22 @@ export class CombatVfxSpawner {
 
     graphics.clear()
 
-    const colors: Record<PlayerBodyAnchorId, number> = {
-      head: 0xffffff,
-      chest: 0x00ffff,
-      castHand: 0xff8800,
-      offHand: 0x0088ff,
-      feet: 0xff00ff,
+    const colors: Record<BodyAnchorId, number> = {
+      top: 0xffffff,
+      centre: 0x00ffff,
+      front: 0xff8800,
+      back: 0x0088ff,
+      bottom: 0xff00ff,
     }
 
-    for (const anchorId of Object.keys(colors) as PlayerBodyAnchorId[]) {
-      const point = this.scene.getPlayerBodyAnchorScreen(anchorId)
+    for (const id of Object.keys(colors) as BodyAnchorId[]) {
+      const point = this.scene.bodyAnchorScreen(PLAYER_ID, id)
 
       if (!point) {
         continue
       }
 
-      graphics.fillStyle(colors[anchorId]!, 0.9)
+      graphics.fillStyle(colors[id]!, 0.9)
 
       graphics.fillCircle(point.x, point.y, 3)
     }

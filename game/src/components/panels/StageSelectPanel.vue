@@ -3,24 +3,30 @@
 // nút "Chiến Đấu" trực tiếp cũ. 3 lựa chọn theo đúng thứ tự người
 // dùng mô tả: Địa Giới (map lớn) → Màn (trong Địa Giới đó) → chế độ
 // (Lặp Lại Khiêu Chiến / Tự Động Thám Hiểm) → Bắt Đầu.
-import { computed, ref, watch } from 'vue'
+import { computed, inject, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore, type BattleRunMode } from '@/stores/ui'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
+import { ASSET_BUNDLE_MANAGER_KEY } from '@/presentation/PresentationContracts'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const player = usePlayerStore()
 const ui = useUiStore()
 const gameManager = useGameManager()
 const { startSelectedStage } = useBattleActions()
+const assetManager = inject(ASSET_BUNDLE_MANAGER_KEY, null)
+
+onMounted(() => {
+  assetManager?.prefetch(['combat']).catch(() => {})
+})
 
 // Combat UI Redesign mục 4/15 — Chọn Ải là nơi DUY NHẤT cấu hình Auto
 // Battle TRƯỚC trận (Combat Scene giờ chiếm toàn màn hình, không còn
@@ -39,7 +45,7 @@ const zones = computed(() => gameManager.zoneRegistry.getAll())
 function isZoneUnlocked(zoneId: string): boolean {
   const zone = zones.value.find(candidate => candidate.id === zoneId)
   const firstStageId = zone?.stageIds[0]
-  return Boolean(firstStageId && gameManager.isStageUnlocked(firstStageId, player.$state))
+  return Boolean(firstStageId && gameManager.catalogOps.isStageUnlocked(firstStageId, player.$state))
 }
 
 // Luyện Khí tầng 1-10 content pass — gate MỊN hơn isZoneUnlocked (chỉ
@@ -48,7 +54,7 @@ function isZoneUnlocked(zoneId: string): boolean {
 // cảnh giới này (vd đã lên Trúc Cơ), tầng gate coi như hết ý nghĩa,
 // Stage mở tự do để farm lại.
 function isStageUnlocked(stage: (typeof stagesInZone.value)[number]): boolean {
-  return gameManager.isStageUnlocked(stage.id, player.$state)
+  return gameManager.catalogOps.isStageUnlocked(stage.id, player.$state)
 }
 
 const selectedZoneId = ref<string | null>(zones.value[0]?.id ?? null)
@@ -63,7 +69,7 @@ const stagesInZone = computed(() => {
   }
 
   return selectedZone.value.stageIds
-    .map(stageId => gameManager.getStage(stageId))
+    .map(stageId => gameManager.catalogOps.getStage(stageId))
     .filter((stage): stage is NonNullable<typeof stage> => stage !== undefined)
 })
 
@@ -121,14 +127,14 @@ const stageNodes = computed(() => visibleStages.value.map((stage, index) => ({
   stage,
   isLast: index === visibleStages.value.length - 1,
   enemies: stage.enemyPool
-    .map(entry => gameManager.getEnemyTemplate(entry.enemyId)?.name ?? entry.enemyId),
+    .map(entry => gameManager.catalogOps.getEnemyTemplate(entry.enemyId)?.name ?? entry.enemyId),
 })))
 
 const selectedEncounters = computed(() => {
   if (!selectedStage.value) return []
 
   return selectedStage.value.enemyPool.map((entry) => {
-    const enemy = gameManager.getEnemyTemplate(entry.enemyId)
+    const enemy = gameManager.catalogOps.getEnemyTemplate(entry.enemyId)
     return {
       id: entry.enemyId,
       name: enemy?.name ?? entry.enemyId,
@@ -143,7 +149,7 @@ const selectedEncounters = computed(() => {
 const selectedBoss = computed(() => {
   const bossId = selectedStage.value?.bossEnemyId
   if (!bossId) return null
-  return gameManager.getEnemyTemplate(bossId)
+  return gameManager.catalogOps.getEnemyTemplate(bossId)
 })
 
 const ARCHETYPE_LABEL_KEYS: Record<string, string> = {
@@ -189,7 +195,7 @@ function start() {
   // gọi startAutoFarm trực tiếp (roll reward theo wall-clock, không
   // hoạt ảnh) — khác mọi mode khác đều qua startSelectedStage.
   if (mode.value === 'perfect_farm') {
-    gameManager.startAutoFarm(player.$state, selectedStage.value.id)
+    gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player.$state, selectedStage.value.id)
     ui.leftPanelMode = null
     return
   }
@@ -275,7 +281,6 @@ function start() {
 
         <div class="stage-select__encounter-summary">
           <span><strong>{{ selectedStage.totalEnemyCount }}</strong> {{ t('panels.stageSelect.labels.enemiesSuffix') }}</span>
-          <span>{{ t('panels.stageSelect.labels.spawnIntervalPrefix') }} <strong>{{ selectedStage.spawnIntervalSeconds }}s</strong></span>
           <span v-if="selectedBoss" class="is-boss">{{ t('panels.stageSelect.labels.bossNamePrefix') }} <strong>{{ selectedBoss.name }}</strong></span>
         </div>
 

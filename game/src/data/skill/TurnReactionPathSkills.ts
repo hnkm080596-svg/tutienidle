@@ -1,5 +1,5 @@
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
-import type { TurnBuffDefinition } from '../../core/battle/turn/TurnBuffTypes'
+import type { BuffDefinition } from '../../core/buff/BuffTypes'
 import { PHAP_TU_BASICS } from './TurnBasicAttacks'
 
 // Future Systems Task 4 (2026-09-04) — Pháp Tu Reaction Path (hidden
@@ -17,7 +17,7 @@ import { PHAP_TU_BASICS } from './TurnBasicAttacks'
 // id này và thay bằng 2 pick từ pool (Task 5).
 //
 // `reaction_empowerment` buff: structurally-correct but functionally-inert
-// — `reactionEffectPercent` chưa được TurnBuffSystem's statModifier
+// — `reactionEffectPercent` chưa được BuffSystem's statModifier
 // pipeline tiêu thụ cho turn reaction damage (chờ reaction turn-cutover
 // thật, xem roadmap dòng ReactionManager). Số liệu giữ nguyên hệ sống
 // (reactionEffectPercent tồn tại từ hệ sống).
@@ -37,6 +37,7 @@ export const PHAP_TU_REACTION_SPECIAL: TurnSkillDefinition = {
   cooldownTurns: 4,
   resourceType: 'mana',
   resourceCost: 20,
+  compositePicks: { poolType: 'reaction_path', count: 2 },
   damage: { kind: 'physical', multiplier: 0 },
   targeting: { shape: 'single' },
 }
@@ -46,12 +47,12 @@ export const PHAP_TU_REACTION_ULTIMATE: TurnSkillDefinition = {
   cooldownTurns: 6,
   resourceType: 'mana',
   resourceCost: 30,
-  damage: { kind: 'physical', multiplier: 0 },
+  targetScope: 'self',
   targeting: { shape: 'single' },
   appliesBuff: { definitionId: 'reaction_empowerment', target: 'self' },
 }
 
-export const REACTION_EMPOWERMENT_BUFF: TurnBuffDefinition = {
+export const REACTION_EMPOWERMENT_BUFF: BuffDefinition = {
   id: 'reaction_empowerment',
   name: 'Cộng Minh Phản Ứng',
   description: 'Cường hóa sát thương phản ứng nguyên tố N lượt (số liệu tune khi reaction turn-cutover).',

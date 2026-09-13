@@ -1,5 +1,9 @@
 export type BattleState =
   | 'idle'
+  // Intro/transition phase (2026-09-07 plan Task 4) - curtain + zone/stage
+  // reveal BEFORE the countdown (turn-based flow only). Same "wait phase"
+  // contract as countdown: no combat logic, battle is still in progress.
+  | 'intro'
   // Countdown 3 giây trước trận (2026-08-22) — quái đầu tiên đã spawn +
   // vị trí đã emit (xem BattleSystem.start()), nhưng movement/attack/
   // spawn-tiếp-theo bị đóng băng cho tới khi đếm về 0 (xem
@@ -15,6 +19,8 @@ export type BattleState =
 // không cộng tu vi passive...), khác hẳn việc kiểm tra riêng
 // 'fighting' để gate combat logic thật (xem BattleSystem.update()).
 // undefined (chưa có Battle nào) coi như KHÔNG đang diễn ra.
+// 'intro' (2026-09-07 plan Task 4) is a wait phase in the same sense -
+// same in-progress contract as countdown.
 export function isBattleInProgress(state: BattleState | undefined): boolean {
-  return state === 'fighting' || state === 'countdown'
+  return state === 'fighting' || state === 'countdown' || state === 'intro'
 }

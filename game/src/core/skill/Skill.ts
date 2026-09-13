@@ -14,19 +14,20 @@ export { SKILL_RESOURCE_STAT_KEYS } from './SkillRuntimeStats'
 export type { SkillResourceStatKey } from './SkillRuntimeStats'
 
 /**
- * Skill execution policy (plan §8.1) — cơ chế timing DUY NHẤT của active
- * skill auto-cast. Runtime CHỈ đọc field này (không fallback từ
- * castTime/path). Mỗi policy tự khai ý nghĩa:
+ * Skill execution policy (plan §8.1) — authored timing semantics of the
+ * legacy real-time auto-cast engine. The turn engine does NOT consume
+ * this field (turn cadence lives on TurnSkillDefinition.cooldownTurns /
+ * chargeTurns); it remains authored data preserved by save-restore
+ * backfill. Kinds:
  * - `attack_speed`: cadence theo Attack Speed (× multiplier), không ICD,
- *   không CDR, không cast time. Timer theo TỪNG SLOT
- *   (CombatEntity.skillCadenceRemainingBySlot).
+ *   không CDR, không cast time.
  * - `cooldown`: resolve tức thời, timer = skill.cooldown, chịu CDR.
  * - `cast_time`: niệm trước khi thi triển; cast time chịu Cast Speed,
  *   cooldown commit lúc BẮT ĐẦU niệm, chịu CDR.
  * - `attack_speed_cast`: vừa niệm vừa có nhịp tái dùng theo Attack Speed;
  *   không chịu CDR.
  * - `channel`: TỤ LỰC liên tục, không cooldown, không cast time; mỗi
- *   `tickSeconds` gây 1 phát (xem BattleSystem.updateChanneling()).
+ *   `tickSeconds` gây 1 phát.
  */
 export type SkillExecutionPolicy =
   | {
@@ -77,9 +78,10 @@ export interface Skill extends Partial<SkillRuntimeStats> {
 
   requiredRealmLevel?: number
 
+  // Authored cooldown in seconds — the turn engine consumes it as
+  // cooldownTurns via SkillToTurnSkillConverter; runtime cooldown state
+  // lives on TurnSkillSlot.remainingCooldownTurns (no Skill-side clock).
   cooldown: number
-
-  remainingCooldown: number
 
   // Cast Time (2026-08-21) — giây "niệm" TRƯỚC KHI hiệu ứng thi triển.
   // Skill execution policy rework (plan §8) — field này CHỈ còn là dữ
@@ -127,11 +129,8 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // getLoadoutSkills().
   loadoutSlot?: number
 
-  // A learned technique can occupy multiple loadout slots. Cooldowns live
-  // on slot instances so duplicate spells recharge independently.
+  // A learned technique can occupy multiple loadout slots.
   loadoutSlots?: number[]
-
-  remainingCooldownBySlot?: Record<number, number>
 
   // Bắt buộc khi type === 'passive' — xem PassiveSystem.
   passiveTrigger?: PassiveTrigger
@@ -160,11 +159,10 @@ export interface Skill extends Partial<SkillRuntimeStats> {
 
   equipped: boolean
 
-  // "Nộ kỹ tạm thời chưa ra mắt" (2026-08-15, áp dụng mọi path) —
-  // chặn CAST cứng bất kể unlocked/equipped/cooldown/resource, xem
-  // SkillSystem.canUse(). Vẫn học/trang bị được bình thường (để build
-  // hiện đủ trên UI), chỉ tạm khoá quyền dùng — gỡ field này khi nội
-  // dung thật sự phát hành.
+  // "Nộ kỹ tạm thời chưa ra mắt" (2026-08-15) — reserved flag; the
+  // real-time cast gate that read it was retired with SkillSystem's
+  // legacy cast APIs (9.5 #9). Data stays authored-able for UI badges
+  // (isUnreleased prop on CombatSkillSlot).
   unreleased?: boolean
 
   // Kiếm Tu (2026-08-15) — Ngự Kiếm Thuật (basic) đánh trúng thì +1

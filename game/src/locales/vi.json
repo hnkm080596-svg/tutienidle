@@ -220,7 +220,6 @@
         "floorPrefix": "Tầng {floor}",
         "boss": "BOSS",
         "enemiesSuffix": "quái",
-        "spawnIntervalPrefix": "Mỗi",
         "bossNamePrefix": "Boss:",
         "levelPrefix": "Lv.{level}",
         "eliteChance": "{percent}% Tinh Anh"
@@ -266,6 +265,10 @@
       "note": "Tinh Hoa Phàm Thể từ quái tự bay về và nạp tiến độ — không cần thao tác.",
       "tierLock": "Khóa — cần Phàm Nhân tầng {level}",
       "empty": "Đã hoàn thành toàn bộ Luyện Thể."
+    },
+    "tranPhap": {
+      "title": "Trận Pháp",
+      "confirm": "Lưu Trận Pháp"
     },
     "bag": {
       "title": "Kho Vật",
@@ -326,7 +329,8 @@
           "decade": "Thập Niên",
           "century": "Bách Niên",
           "millennium": "Thiên Niên",
-          "myriadYear": "Vạn Niên"
+          "myriadYear": "Vạn Niên",
+          "thuongCo": "Thượng Cổ"
         },
         "realms": {
           "mortal": "Phàm Nhân",
@@ -343,24 +347,8 @@
       }
     },
     "vendor": {
-      "cards": {
-        "spiritStone": "Linh Thạch",
-        "wood": "Linh Mộc",
-        "ore": "Linh Khoáng"
-      },
-      "sections": {
-        "tier": "Đổi Phẩm",
-        "tierRealm": "Đổi Phẩm (theo Cảnh Giới)"
-      },
-      "stone": {
-        "upTrung": "{ratio} Hạ → 1 Trung",
-        "upThuong": "{ratio} Trung → 1 Thượng"
-      },
-      "tierConvert": "{ratio} → 1",
-      "empty": {
-        "wood": "Chưa có Linh Mộc để đổi phẩm.",
-        "ore": "Chưa có Linh Khoáng để đổi phẩm."
-      },
+      "gateNotBelow": "Chỉ thu mua vật phẩm có phẩm thấp hơn cảnh giới hiện tại",
+      "sellRejected": "Không bán được vật phẩm này.",
       "sell": {
         "title": "Hóa Bán",
         "rate": "Bán nguyên liệu dư thừa lấy Linh Thạch theo phẩm hiện hành.",
@@ -495,15 +483,124 @@
     "decompose": {
       "labels": {
         "gradeFilter": "Phẩm khoáng",
-        "qualityFilter": "Chất khoáng",
+        "ageFilter": "Tuổi khoáng",
         "workers": "Nhân công"
       },
       "select": {
         "allGrades": "Mọi phẩm",
-        "allQualities": "Mọi chất"
+        "allAges": "Mọi tuổi"
       },
       "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt"
     }
+  },
+  "workerLodge": {
+    "tabs": {
+      "nhanCong": "Nhân Công",
+      "chieuMo": "Chiêu Mộ",
+      "duyenPhan": "Đổi Duyên Phận"
+    },
+    "nhanCong": {
+      "title": "Nhân công",
+      "capacitySuffix": "hiền sĩ theo về",
+      "nextLevel": "Cấp {level}: {count} nhân công",
+      "maxLevel": "Cấp tối đa",
+      "hint": "Nhân công được phân bổ vào các nguồn khai thác ở panel Sản Xuất."
+    }
+  },
+  "chieuMo": {
+    "tokens": "{name}: {count}",
+    "pity": "Bảo hiểm: {count}/{max}",
+    "pull": "Chiêu Mộ (1 {token})",
+    "errors": {
+      "missingToken": "Không có {token}.",
+      "noActivePlayer": "Chưa có dữ liệu người chơi."
+    },
+    "result": {
+      "new": "Đồng đội mới!",
+      "constellationUp": "Trùng → Cung Mệnh +1 (C{rank})",
+      "constellationMaxed": "Trùng — Cung Mệnh đã tối đa → +{bonus} Duyên Phận",
+      "pity": "Bảo hiểm kích hoạt"
+    }
+  },
+  "duyenPhan": {
+    "balance": "Duyên Phận: {count}",
+    "cost": "{cost} Duyên Phận",
+    "constellationBadge": "C{rank}",
+    "exchange": "Đổi",
+    "reason": {
+      "constellationMaxed": "Cung Mệnh đã đạt tối đa (C{max})",
+      "insufficientDuyenPhan": "Không đủ Duyên Phận (cần {cost})"
+    },
+    "errors": {
+      "unknownDefinition": "Đồng đội không tồn tại.",
+      "constellationMaxed": "Cung Mệnh đã đạt tối đa.",
+      "insufficientDuyenPhan": "Không đủ Duyên Phận.",
+      "noActivePlayer": "Chưa có dữ liệu người chơi."
+    },
+    "empty": "Chưa có đồng đội nào để đổi."
+  },
+  "companion": {
+    "title": "Đồng Đội",
+    "empty": "Chưa có đồng đội nào — chiêu mộ tại Chiêu Hiền Quán.",
+    "constellationBadge": "C{rank}",
+    "realmLine": "{realm} · Tầng {level}",
+    "stats": {
+      "maxHp": "Sinh Mệnh",
+      "attack": "Công Kích",
+      "speed": "Tốc Độ"
+    },
+    "exp": {
+      "value": "{exp}/{required}",
+      "maxed": "Đã đạt trần cảnh giới"
+    },
+    "constellation": {
+      "title": "Cung Mệnh",
+      "unlocked": "Đã mở",
+      "locked": "Chưa mở",
+      "noPerks": "Đồng đội này chưa có perk Cung Mệnh."
+    },
+    "perks": {
+      "statFlat": "{stat} +{value}",
+      "statPercent": "{stat} +{value}%",
+      "cooldown": "hồi {turns} lượt",
+      "damage": "sát thương +{percent}%",
+      "heal": "hồi {percent}% sát thương",
+      "skillOverride": "Cường hóa {slot} ({detail})"
+    },
+    "skills": {
+      "title": "Kỹ Năng",
+      "slots": {
+        "basic": "Cơ Bản",
+        "special": "Đặc Biệt",
+        "ultimate": "Tuyệt Kỹ"
+      },
+      "unlocked": "Đã mở",
+      "locked": "Khoá",
+      "unlockAt": "Mở tại {realm} tầng {level}",
+      "absent": "—",
+      "cooldownTag": "Hồi {turns} lượt"
+    },
+    "feed": {
+      "title": "Nuôi",
+      "materialOption": "{name} x{count} (+{exp} EXP)",
+      "materialAria": "Nguyên liệu nuôi đồng đội",
+      "countAria": "Số lượng nguyên liệu",
+      "button": "Nuôi",
+      "maxedReason": "Đã đạt trần cảnh giới người chơi — đột phá để nuôi tiếp.",
+      "noMaterial": "Kho nguyên liệu trống.",
+      "success": "+{exp} EXP · lên {levels} tầng",
+      "successNoLevel": "+{exp} EXP",
+      "breakthrough": "Phá cảnh → {realm}",
+      "errors": {
+        "unknownInstance": "Đồng đội không tồn tại.",
+        "unknownMaterial": "Nguyên liệu không hợp lệ.",
+        "notFeedable": "Nguyên liệu này không thể nuôi đồng đội.",
+        "levelMaxed": "Đồng đội đã đạt trần cảnh giới.",
+        "insufficientMaterial": "Không đủ nguyên liệu.",
+        "noActivePlayer": "Chưa có dữ liệu người chơi."
+      }
+    },
+    "formationHint": "Gán đồng đội vào ô trận tại panel Trận Pháp (bánh lệnh → Trận)."
   },
   "combat": {
     "victory": {
@@ -554,6 +651,14 @@
       "countdown": {
         "go": "Xuất Trận!"
       },
+      "pause": {
+        "title": "Trận đấu tạm dừng",
+        "body": "Trận chỉ diễn ra khi bạn đang xem.",
+        "action": "Tiếp tục"
+      },
+      "intro": {
+        "entering": "Vào Trận"
+      },
       "exitConfirm": {
         "message": "Thoát trận và về Động Phủ? Trận đấu hiện tại sẽ bị huỷ.",
         "stay": "Ở Lại",
@@ -561,6 +666,11 @@
       },
       "topBar": {
         "enemiesSuffix": "quái"
+      },
+      "turnStrip": {
+        "upcoming": "Lượt tới",
+        "round": "Hiệp {current}",
+        "roundWithLimit": "Hiệp {current}/{limit}"
       }
     }
   },
@@ -754,6 +864,36 @@
       "description": "Cộng thêm vào trần Thế tối đa; Ultimate chỉ nổ khi đạt trần mới này."
     }
   },
+  "announce": {
+    "tribulation": {
+      "quanKhi": {
+        "title": "QUÁN KHÍ THÀNH CÔNG",
+        "body": "Đạo hữu đã vượt lôi kiếp — hãy chọn con đường tu luyện để bước vào Luyện Khí kỳ."
+      },
+      "foundation": {
+        "title": "★ {label} TRÚC CƠ ★",
+        "body": "Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào Trúc Cơ kỳ."
+      },
+      "realm": {
+        "title": "★ {realm} ★",
+        "body": "Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào {realm}."
+      },
+      "defeatGreatDao": {
+        "title": "Đại Đạo Đoạn Tuyệt",
+        "body": "Nghịch thiên bất thành — cơ duyên Đại Đạo Chi Cơ đã vĩnh viễn đóng lại. Lần tới tối đa là Thiên Đạo."
+      },
+      "defeat": {
+        "title": "Độ Kiếp Thất Bại",
+        "body": "Kiếp Thương còn vương lại — hãy dưỡng thương rồi thử lại."
+      }
+    },
+    "breakthrough": {
+      "major": {
+        "title": "{realm}",
+        "body": "Đạo hữu đã đột phá đại cảnh giới, tu vi tăng vọt."
+      }
+    }
+  },
   "tribulation": {
     "stillEquipped": {
       "title": "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi",
@@ -809,14 +949,9 @@
       "job_slots_full": "Lò đang bận",
       "wrong_herb": "Sai Linh Thảo — đan phương chỉ nhận đúng một loại thảo",
       "missing_herb": "Không đủ Linh Thảo",
-      "missing_fuel_wood": "Không đủ Gỗ nhiên liệu đạt cảnh giới yêu cầu",
+      "missing_fuel_wood": "Không đủ Gỗ nhiên liệu cùng cảnh giới và cùng tuổi với Linh Thảo đã chọn",
       "missing_spirit_stone": "Không đủ Linh Thạch"
     }
-  },
-  "resourceStrip": {
-    "show": "Hiện tài nguyên",
-    "hide": "Ẩn dải tài nguyên",
-    "spiritStones": "Linh Thạch"
   },
   "layout": {
     "functionOverlay": {
@@ -850,7 +985,8 @@
         "decade": "Thập Niên",
         "century": "Bách Niên",
         "millennium": "Thiên Niên",
-        "myriadYear": "Vạn Niên"
+        "myriadYear": "Vạn Niên",
+        "thuongCo": "Thượng Cổ"
       },
       "quality": {
         "hoang": "Thập Niên",

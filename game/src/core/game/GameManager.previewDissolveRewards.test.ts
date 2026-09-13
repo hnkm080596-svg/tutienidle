@@ -14,7 +14,7 @@ describe('GameManager.previewDissolveRewards', () => {
       makeInstance({ instanceId: 'qi-huyen', grade: 'bat_pham', quality: 'huyen' }),
     )
 
-    expect(gameManager.previewDissolveRewards(['mortal-hoang', 'qi-huyen'])).toEqual([
+    expect(gameManager.equipmentOps.previewDissolveRewards(['mortal-hoang', 'qi-huyen'])).toEqual([
       {
         materialId: LUYEN_KHI_TINH_HOA_ID,
         minAmount: 3,

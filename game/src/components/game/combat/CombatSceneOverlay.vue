@@ -17,12 +17,13 @@ import { nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 import CombatTopBar from './CombatTopBar.vue'
 import CombatResultModal from './CombatResultModal.vue'
 import CombatCountdownOverlay from './CombatCountdownOverlay.vue'
+import CombatIntroOverlay from './CombatIntroOverlay.vue'
 import CombatAiPanel from './CombatAiPanel.vue'
 import CombatSkillDockPanel from './CombatSkillDockPanel.vue'
 import TurnOrderStrip from './TurnOrderStrip.vue'
 import BattleLogPanel from './BattleLogPanel.vue'
 import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
-import { publishTopBarHeight, resetCombatInsets } from '@/game/support/combatInsets'
+import { publishTopBarHeight, resetCombatInsets } from '@/presentation/geometry/combatInsets'
 
 const rootRef = ref<HTMLElement | null>(null)
 
@@ -118,6 +119,8 @@ onUnmounted(() => {
     <CombatExitConfirmModal />
 
     <CombatResultModal />
+
+    <CombatIntroOverlay />
 
     <CombatCountdownOverlay />
   </div>

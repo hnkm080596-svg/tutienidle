@@ -112,18 +112,6 @@ export function getBodyRefinementProgressMultiplier(selectedTalentIds: readonly 
   return 1 + sumPercent(selectedTalentIds, 'body_refinement_progress')
 }
 
-export function getAlchemySuccessBonusPercentPoints(selectedTalentIds: readonly string[] | undefined): number {
-  let points = 0
-
-  for (const effect of collectTalentEffects(selectedTalentIds)) {
-    if (effect.kind === 'alchemy_success_bonus') {
-      points += effect.percentPoints
-    }
-  }
-
-  return points
-}
-
 export function getSurviveLethalUsesPerBattle(selectedTalentIds: readonly string[] | undefined): number {
   let uses = 0
 
@@ -150,4 +138,127 @@ export function getHealOnKillMaxHpPercent(selectedTalentIds: readonly string[] |
   }
 
   return percent
+}
+
+// ==================== M2 — nhóm tu luyện (spec §4.3) ====================
+
+/** Hai Nap — cultivation overflow banks into cultivationOvercharge. */
+export function hasCultivationOverflowBank(selectedTalentIds: readonly string[] | undefined): boolean {
+  return collectTalentEffects(selectedTalentIds).some(
+    (effect) => effect.kind === 'cultivation_overflow_bank',
+  )
+}
+
+/**
+ * Hau Tich Bat Phat — per-realm-level cultivation rate curve:
+ * max(0.01, 1 + startOffset + perRealmLevel * (realmLevel - 1)).
+ * Returns 1 (neutral) when the talent is absent.
+ */
+export function getCultivationRampMultiplier(
+  selectedTalentIds: readonly string[] | undefined,
+  realmLevel: number,
+): number {
+  let multiplier = 1
+
+  for (const effect of collectTalentEffects(selectedTalentIds)) {
+    if (effect.kind === 'cultivation_ramp') {
+      multiplier = Math.max(
+        0.01,
+        1 + effect.startOffset + effect.perRealmLevel * (realmLevel - 1),
+      )
+    }
+  }
+
+  return multiplier
+}
+
+/** Loi Kiep — lightning damage multiplier while the talent is held. */
+export function getTribulationIntensityMultiplier(selectedTalentIds: readonly string[] | undefined): number {
+  let multiplier = 1
+
+  for (const effect of collectTalentEffects(selectedTalentIds)) {
+    if (effect.kind === 'tribulation_challenge') {
+      multiplier = Math.max(multiplier, effect.intensityMultiplier)
+    }
+  }
+
+  return multiplier
+}
+
+/** Loi Kiep — permanent all-attribute percent granted per victory (0 when absent). */
+export function getTribulationVictoryStatPercent(selectedTalentIds: readonly string[] | undefined): number {
+  let percent = 0
+
+  for (const effect of collectTalentEffects(selectedTalentIds)) {
+    if (effect.kind === 'tribulation_challenge') {
+      percent += effect.victoryAllStatsPercent
+    }
+  }
+
+  return percent
+}
+
+/** Van Dao — chance a node purchase/upgrade waives its insight cost. */
+export function getNodeCostFreeChance(selectedTalentIds: readonly string[] | undefined): number {
+  let chance = 0
+
+  for (const effect of collectTalentEffects(selectedTalentIds)) {
+    if (effect.kind === 'node_cost_free_chance') {
+      chance = Math.max(chance, effect.chance)
+    }
+  }
+
+  return Math.min(1, chance)
+}
+
+// ==================== M3 — nhóm sản xuất (spec §4.2) ====================
+
+/**
+ * Hoa Hau Thong Than — alchemy double-pill rule pack: yield x2 at settle,
+ * potency +50% at pill consumption, cost x2 (fuel wood + spirit stone) at
+ * startJob. undefined when the talent is absent.
+ */
+export function getAlchemyDoublePill(
+  selectedTalentIds: readonly string[] | undefined,
+): { yieldMultiplier: number; potencyMultiplier: number; costMultiplier: number } | undefined {
+  for (const effect of collectTalentEffects(selectedTalentIds)) {
+    if (effect.kind === 'alchemy_double_pill') {
+      return {
+        yieldMultiplier: effect.yieldMultiplier,
+        potencyMultiplier: effect.potencyMultiplier,
+        costMultiplier: effect.costMultiplier,
+      }
+    }
+  }
+
+  return undefined
+}
+
+/**
+ * Bach Luyen Thanh Khi — enhance always succeeds; each attempt pays
+ * costMultiplier materials + spirit stone. undefined when absent.
+ */
+export function getEnhanceGuarantee(
+  selectedTalentIds: readonly string[] | undefined,
+): { costMultiplier: number } | undefined {
+  for (const effect of collectTalentEffects(selectedTalentIds)) {
+    if (effect.kind === 'enhance_guaranteed') {
+      return { costMultiplier: effect.costMultiplier }
+    }
+  }
+
+  return undefined
+}
+
+/** Pha Giap carry — the bound passive's stacks partially persist across battles. */
+export function getPassiveStackCarry(
+  selectedTalentIds: readonly string[] | undefined,
+): { passiveSkillId: string; fraction: number } | undefined {
+  for (const effect of collectTalentEffects(selectedTalentIds)) {
+    if (effect.kind === 'passive_stack_carry') {
+      return { passiveSkillId: effect.passiveSkillId, fraction: effect.fraction }
+    }
+  }
+
+  return undefined
 }

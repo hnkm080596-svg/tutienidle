@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
@@ -20,7 +21,7 @@ const ENEMY_STATS_INPUT = {
 }
 
 function createPlayer(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 50, speed: 100, criticalRate: 0 }
+  const stats = createBaseStats({ attack: 50, speed: 100, criticalRate: 0 })
 
   return {
     id: 'player',
@@ -58,7 +59,6 @@ function createBasicSkill(): Skill {
     level: 1,
     maxLevel: 10,
     cooldown: 0,
-    remainingCooldown: 0,
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
@@ -83,52 +83,58 @@ function createDummyEnemy() {
   })
 }
 
-function startManualBattle(): GameManager {
+// Combat runs on its own CombatClock now; these tests step it directly.
+function startManualBattle(): { gameManager: GameManager; combatSource: ManualClockSource } {
   const gameManager = new GameManager()
+  const combatSource = new ManualClockSource()
+  gameManager.setCombatClockSource(combatSource)
   const player = createPlayer()
 
-  gameManager.registerSkillTemplates([createBasicSkill()])
-  gameManager.learnSkill('basic_test')
+  gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+  gameManager.progressionOps.learnSkill('basic_test')
   gameManager.skillSystem.equipToSlot('basic_test', 0)
 
   gameManager.startBattle(player, createDummyEnemy())
 
   for (let i = 0; i < 30; i++) {
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
   }
 
   gameManager.getTurnBattle()!.enemies[0]!.entity.x = 2
   gameManager.getTurnBattle()!.players[0]!.entity.x = 0
 
-  return gameManager
+  return { gameManager, combatSource }
 }
 
 describe('GameManager — manual mode pause-on-player-turn (Slice 7)', () => {
   it('bật manual mode → khi gauge player đầy, engine pause chờ choice (không tự resolve tiếp các lượt sau)', () => {
-    const gameManager = startManualBattle()
+    const { gameManager, combatSource } = startManualBattle()
 
     gameManager.setBattleManualMode(true)
 
     const turnsBefore = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
 
-    // Pacing mới (2026-09-05): tick đầu đủ gauge → resolve turn đầu NGAY
-    // (đó là tick "player tới lượt"), các tick kế tiếp PAUSE chờ choice —
-    // tổng turns sau 50 ticks phải đứng yên ở đúng turn đầu.
+    // Turn token (2026-09-10): the step that fills the gauge CLAIMS the
+    // token into AWAITING_INPUT and resolves nothing - tickPacing no longer
+    // resolves a turn in any mode. The player's turn is genuinely still
+    // pending, so totalTurnsElapsed has not moved, and the clock is frozen so
+    // the rest of the batch is dropped rather than spent.
     for (let i = 0; i < 50; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
-    expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(turnsBefore + 1)
+    expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(turnsBefore)
+    expect(gameManager.getCombatClockState()).toBe('frozen')
   })
 
   it('submitTurnChoice basic → engine resume, dùng skill được chọn, sau đó tới lượt enemy tự chạy', () => {
-    const gameManager = startManualBattle()
+    const { gameManager, combatSource } = startManualBattle()
 
     gameManager.setBattleManualMode(true)
 
     for (let i = 0; i < 50; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
@@ -148,7 +154,7 @@ describe('GameManager — manual mode pause-on-player-turn (Slice 7)', () => {
     // Sau submit, engine peek tiếp → pause lại chờ choice kế (manual mode
     // vẫn bật). 10 tick không resolve thêm gì khi pause.
     for (let i = 0; i < 10; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
@@ -156,10 +162,10 @@ describe('GameManager — manual mode pause-on-player-turn (Slice 7)', () => {
   })
 
   it('auto mode (mặc định) KHÔNG pause bao giờ', () => {
-    const gameManager = startManualBattle()
+    const { gameManager, combatSource } = startManualBattle()
 
     for (let i = 0; i < 50; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(false)
@@ -167,7 +173,7 @@ describe('GameManager — manual mode pause-on-player-turn (Slice 7)', () => {
   })
 
   it('submit khi KHÔNG pause → false (no-op an toàn)', () => {
-    const gameManager = startManualBattle()
+    const { gameManager } = startManualBattle()
 
     expect(gameManager.submitTurnChoice('basic')).toBe(false)
   })

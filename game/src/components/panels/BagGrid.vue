@@ -11,7 +11,7 @@ import TabBar from '@/components/common/TabBar.vue'
 // Hành Trang (2026-08-25, resource-professions-rework plan §10.1) —
 // Phù/Trận khai tử: còn 3 tab (Trang Bị/Nguyên Liệu/Đan Dược), bỏ hẳn
 // luồng pending-select phù/trận liên-panel.
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const ui = useUiStore()
 const gameManager = useGameManager()

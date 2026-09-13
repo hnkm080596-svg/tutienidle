@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { TribulationDirector } from './TribulationDirector'
-import { createDefaultPlayer, playerToCombatEntity, type PlayerData } from '../player/Player'
+import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import { createBaseStats, type Stats } from '../stats/StatBlock'
 import { EventBus } from '../events/EventBus'
 import { MERIDIANS } from '../../data/realm/Meridians'
@@ -32,7 +32,7 @@ function createGreatDaoReadyPlayer(): PlayerData {
 
 // Stats test: HP 5000, def 0 (mitigation 100/100 = 1), regen 0
 function testStats(): Stats {
-  return { ...createBaseStats(), maxHp: 5000, defense: 0, hpRegenPerSecond: 0 } as Stats
+  return createBaseStats({ maxHp: 5000, defense: 0 }) as Stats
 }
 
 function snapshotHp(director: TribulationDirector): number {
@@ -195,8 +195,8 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
   it('defense mitigates lôi: def 900 → damage giảm còn 1/10 (100/(100+900))', () => {
     const lowDefDirector = makeDirector().director
     const highDefDirector = makeDirector().director
-    const lowStats = { ...createBaseStats(), maxHp: 5000, defense: 0, hpRegenPerSecond: 0 } as Stats
-    const highStats = { ...createBaseStats(), maxHp: 5000, defense: 900, hpRegenPerSecond: 0 } as Stats
+    const lowStats = createBaseStats({ maxHp: 5000, defense: 0 }) as Stats
+    const highStats = createBaseStats({ maxHp: 5000, defense: 900 }) as Stats
     lowDefDirector.start(readyPlayer(), lowStats, false, 'qi_refining')
     highDefDirector.start(readyPlayer(), highStats, false, 'qi_refining')
     for (const d of [lowDefDirector, highDefDirector]) {

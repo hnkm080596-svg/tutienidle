@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
@@ -55,13 +56,15 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     vi.spyOn(Math, 'random').mockImplementation(mulberry32(MVP_LOOP_SEED))
 
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
 
-    gameManager.registerTechniqueTemplates(TECHNIQUES)
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     // Route-lock Kiếm Tu (spec 2026-08-29) — chooseCultivationPath giờ
     // purchaseNode('kiem_tran_luong_nghi') cho route Kiếm Trận nên PHẢI
     // đăng ký cây node (game thật đăng ký KIEM_TU_NODES qua App.vue).
-    gameManager.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 
     const enrageBuff: BuffDefinition = {
       id: 'mvp_test_enrage',
@@ -129,7 +132,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       enrage: { afterSeconds: 1, buff: enrageBuff },
     })
 
-    gameManager.registerEnemyTemplates([mob, boss])
+    gameManager.catalogOps.registerEnemyTemplates([mob, boss])
 
     const stage: Stage = {
       id: 'mvp_test_stage',
@@ -137,12 +140,12 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       description: '',
       floor: 10,
       enemyPool: [{ enemyId: 'mvp_test_mob', weight: 1 }],
-      totalEnemyCount: 2,
+      totalEnemyCount: 2, waves: [2],
       spawnIntervalSeconds: 0.1,
       bossEnemyId: 'mvp_test_boss',
     }
 
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerStages([stage])
 
     const player = createDefaultPlayer()
 
@@ -151,7 +154,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // Nghi Kiếm Trận (2 kiếm) — đúng 1 active skill duy nhất của route,
     // thay bộ 3 skill kit cũ.
     player.realmLevel = 12
-    expect(gameManager.chooseCultivationPath('kiem_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
 
     // Spawn telegraph (2026-08-24): quái materialize trễ hơn (0.75–1.4s)
     // khiến trận dài thêm ~2-3s, realm pressure tích lũy thêm — cộng
@@ -168,10 +171,10 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
+      ...gameManager.effectOps.getAggregatedModifiers(),
     ])
 
-    expect(gameManager.startStage(player, finalStats, stage)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, finalStats, stage)).toBe(true)
 
     let sawBossSpawn = false
     let sawMobSpawn = false
@@ -182,7 +185,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // buff, sẽ thiết kế lại bằng BossTurnTriggers khi content thật tới) —
     // chỉ giữ assertions core: spawn qua wave + victory + loop terminate.
     for (let i = 0; i < 4000 && isBattleInProgress(gameManager.getBattle()?.state); i++) {
-      gameManager.update(0.05)
+      combatSource.advance(COMBAT_STEP_SECONDS)
 
       const battle = gameManager.getBattle()
 

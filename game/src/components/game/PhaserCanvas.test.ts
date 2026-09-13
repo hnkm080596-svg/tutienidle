@@ -28,6 +28,10 @@ import PhaserCanvas from './PhaserCanvas.vue'
 
 // Scene modules import 'phaser' ở top-level (extends Phaser.Scene) —
 // mock hẳn ra để test không phụ thuộc runtime WebGL/canvas thật.
+vi.mock('@/game/scenes/AssetLoaderScene', () => ({
+  AssetLoaderScene: class {},
+  ASSET_LOADER_SCENE_KEY: 'AssetLoaderScene',
+}))
 vi.mock('@/game/scenes/MainScene', () => ({ MainScene: class {} }))
 vi.mock('@/game/scenes/CombatScene', () => ({ CombatScene: class {} }))
 vi.mock('@/game/scenes/TribulationScene', () => ({ TribulationScene: class {} }))
@@ -43,9 +47,20 @@ const { gameCtor, phaserMockState } = vi.hoisted(() => ({
 
 vi.mock('phaser', () => {
   class FakeGame {
-    registry = { set: vi.fn() }
+    // A real Phaser registry reads as well as writes, and the host now
+    // validates its own seeding through it (PresentationGate.assertGateSeeded).
+    // A write-only fake made setupGame() fail with "registry.get is not a
+    // function" before it reached the error this suite is actually about.
+    private readonly registryStore = new Map<string, unknown>()
+    registry = {
+      set: vi.fn((key: string, value: unknown) => void this.registryStore.set(key, value)),
+      get: vi.fn((key: string) => this.registryStore.get(key)),
+    }
     scale = { resize: vi.fn() }
+    // A real Phaser.Game has an event emitter; the host subscribes 'ready' on it.
+    events = { once: vi.fn(), emit: vi.fn(), on: vi.fn(), off: vi.fn() }
     destroy = vi.fn()
+    scene = { getScene: vi.fn(() => null) }
 
     constructor(config: unknown) {
       gameCtor(config)

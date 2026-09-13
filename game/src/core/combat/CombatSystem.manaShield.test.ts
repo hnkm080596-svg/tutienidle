@@ -8,7 +8,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   // dexterity:0/evasionRate:0 — hit chance 100% đảm bảo, cùng lý do đã
   // ghi trong BattleSystem.kiemTu.test.ts (calculateStats() tự cộng
   // thêm evasionRate dẫn xuất từ dexterity).
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id',
@@ -45,7 +45,7 @@ describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
   it('manaShieldPercent=0 (mặc định) — không đổi hành vi cũ, toàn bộ damage vào HP', () => {
     const combat = new CombatSystem(new EventBus())
 
-    const source = createCombatant({ id: 'source', type: 'player', stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 } })
+    const source = createCombatant({ id: 'source', type: 'player', stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }) })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000, currentMp: 500 })
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
@@ -58,10 +58,10 @@ describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
   it('mana đủ che — đúng % damage chuyển sang mana theo tỉ lệ 1:1, còn lại vào HP', () => {
     const combat = new CombatSystem(new EventBus())
 
-    const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }
+    const sourceStats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 })
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
 
-    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, manaShieldPercent: 0.5, maxMp: 500 }
+    const targetStats = createBaseStats({ evasionRate: 0, dexterity: 0, manaShieldPercent: 0.5, maxMp: 500 })
     const target = createCombatant({ id: 'target', stats: targetStats, currentHp: 1000, maxHp: 1000, currentMp: 500 })
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
@@ -76,10 +76,10 @@ describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
   it('mana KHÔNG đủ che — cạn mana về 0, phần thiếu tràn ngược lại HP (không ăn free)', () => {
     const combat = new CombatSystem(new EventBus())
 
-    const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1000 }
+    const sourceStats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1000 })
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
 
-    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, manaShieldPercent: 1, maxMp: 10 }
+    const targetStats = createBaseStats({ evasionRate: 0, dexterity: 0, manaShieldPercent: 1, maxMp: 10 })
     // Mana rất ít so với damage sắp nhận — không đủ che hết dù
     // manaShieldPercent=100%.
     const target = createCombatant({ id: 'target', stats: targetStats, currentHp: 1000, maxHp: 1000, currentMp: 10 })
@@ -95,10 +95,10 @@ describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
   it('Ward hấp thụ TRƯỚC — Mana Shield chỉ tính trên phần damage CÒN LẠI sau Ward', () => {
     const combat = new CombatSystem(new EventBus())
 
-    const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }
+    const sourceStats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 })
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
 
-    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, manaShieldPercent: 0.5, wardMax: 1000, maxMp: 500 }
+    const targetStats = createBaseStats({ evasionRate: 0, dexterity: 0, manaShieldPercent: 0.5, wardMax: 1000, maxMp: 500 })
     const target = createCombatant({
       id: 'target',
       stats: targetStats,

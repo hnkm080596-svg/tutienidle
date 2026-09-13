@@ -12,6 +12,8 @@
 //   (generation token vÃ´ hiá»‡u callback cÅ©).
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
+import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
+import type { CombatScene } from './CombatScene'
 import combatSceneSource from './CombatScene.ts?raw'
 import { PLAYER_TEXTURE_KEY, queueCombatAssets } from '../support/CombatPreload'
 import { peekThanhVanVariant, thanhVanLoadList } from '../support/ThanhVanArt'
@@ -125,13 +127,14 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
   // Audit fix 2026-08-31 â€” onBattleStart giá» cÃ²n dá»n status VFX icons.
   scene.statuses = new Map()
   scene.sprites = new Map()
-  scene.interpolations = new Map()
-  scene.castBars = new Map()
   scene.spawnVfxHandles = new Map()
-  scene.materializingIds = new Set()
+  // R14.4 (QA Task 9 follow-up): onBattleStart now clears the countdown
+  // telegraph maps too — stub the minimum shape the method reads.
+  scene.turnCountdownSpawnVfxHandles = new Map()
+  scene.entityVisual = new CombatEntityVisualLifecycle(scene as unknown as CombatScene)
+  scene._telegraph = { reset: () => {} }
   scene.dyingIds = new Set()
   scene.playerDying = false
-  scene.playerMaterialized = true
   scene.playerSpawnHandle = undefined
   scene.sys = { isActive: () => true }
   scene.scene = {}
@@ -154,9 +157,9 @@ describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', ()
         image(key: string) {
           queued.push(key)
         },
-        // Task 9 (2026-09-05) — queueCombatAssets giờ CŨNG load spritesheet
+        // Task 9 (2026-09-05) — queueCombatAssets giờ CŨNG load atlas
         // placeholder cho từng entity; stub no-op để không throw.
-        spritesheet() {},
+        atlas() {},
       },
     } as never
 

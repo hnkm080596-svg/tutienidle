@@ -37,7 +37,6 @@ function makeHarness(options: {
     level: 1,
     maxLevel: 1,
     cooldown: 0,
-    remainingCooldown: 0,
     target: 'self',
     effects: [],
     unlocked: true,
@@ -186,7 +185,6 @@ describe('PassiveSystem — E2 passiveCondition + passiveConvertsTo (spec talent
       level: 1,
       maxLevel: 1,
       cooldown: 0,
-      remainingCooldown: 0,
       target: 'self',
       effects: [],
       unlocked: true,
@@ -197,7 +195,7 @@ describe('PassiveSystem — E2 passiveCondition + passiveConvertsTo (spec talent
     }
 
     const bus = new EventBus()
-    const legacy = new PassiveSystem(
+    const _legacy = new PassiveSystem(
       bus,
       { getPassiveSkills: () => [skill] } as unknown as SkillManager,
       { getEffectiveSkill: (input: Skill) => input } as unknown as SkillSystem,

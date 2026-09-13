@@ -24,4 +24,14 @@
 // v58 (2026-09-05, tran-phap spec): 1 field mới — formationLoadout
 // (FormationLoadout | null, Trận Pháp đang active + vị trí từng
 // combatant). Save v57 bị từ chối (dev phase, không migration).
-export const CURRENT_SAVE_VERSION = 58 as const
+// v59 (2026-09-06, gp123 6E task C2 — unification of the age axes):
+// material wood/ore đổi id sang trục tuổi thống nhất —
+// `<realm>_wood_<age>` / `<realm>_ore_<age>` (age decade..thuong_co);
+// plain `<realm>_wood` và hậu tố phẩm cũ hoang..tien KHÔNG TỒN TẠI nữa
+// (meta profession.quality → profession.age). Save v58 bị từ chối (dev
+// phase, không migration).
+// v60: companion gacha (instanceId/realmId/constellationRank, pity counter, duyenPhan)
+// v61 (2026-09-14, B4 talent v4 M2): cultivationOvercharge,
+// tribulationBonusStacks, nodeFreePurchaseRecord, phaGiapCarryStacks,
+// phaGiapCarryRealmId. Save v60 bị từ chối (dev phase, không migration).
+export const CURRENT_SAVE_VERSION = 61 as const

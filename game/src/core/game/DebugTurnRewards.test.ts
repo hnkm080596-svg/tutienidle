@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
@@ -6,8 +7,8 @@ import { calculateStats } from '../stats/StatCalculator'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-function debugEntity(): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, attack: 100 }
+function _debugEntity(): CombatEntity {
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, attack: 100 })
   return {
     id: 'dbg_player', name: 'Dbg', type: 'player', baseStats: stats, stats,
     currentHp: 100, maxHp: 100, currentMp: 0,
@@ -17,9 +18,15 @@ function debugEntity(): CombatEntity {
   } as CombatEntity
 }
 
+// Combat left the world tick (2026-09-10 combat-turn-mechanism spec): the
+// battle runs on its own CombatClock, so the calls that used to drive it
+// through update() step a ManualClockSource instead. update() still owns
+// cultivation, production and auto-farm and keeps its own cadence.
 describe('debug turn battle rewards', () => {
   it('kill enemy manually -> grantTurnBattleRewards fires', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
     const enemy = defineEnemy({
@@ -33,7 +40,7 @@ describe('debug turn battle rewards', () => {
     })
 
     gameManager.startBattleWithPlayer(player, stats, enemy)
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
     const tb = gameManager.getTurnBattle()
     console.log('turnBattle null?', tb === null, 'enemies=', tb?.enemies.length, 'state=', tb?.state)
@@ -44,7 +51,7 @@ describe('debug turn battle rewards', () => {
       tb.enemies[0].entity.alive = false
     }
 
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
     const tb2 = gameManager.getTurnBattle()
     console.log('after update state=', tb2?.state, 'player.skillInsight=', player.skillInsight)

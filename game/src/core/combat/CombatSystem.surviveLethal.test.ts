@@ -5,17 +5,22 @@ import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 import type { EntityVitalsChangedEvent } from './EntityVitalsSystem'
+// Phase A0 (2026-09-07) — full cutover to turn-based buff types: the
+// survive-lethal session now operates on the LIVE BuffPool during
+// real (turn-based) gameplay. The v4 describe block below builds its
+// fixtures with BuffSystem/BuffPool and BUFF_REGISTRY
+// accordingly.
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
-import { BuffRegistry } from '../buff/BuffRegistry'
+import type { BuffDefinitionCatalog } from '../buff/BuffTypes'
 import { TU_SINH_NGO_BUFF } from '../../data/buff/buffs'
-import type { BuffDefinition } from '../buff/BuffDefinition'
+import type { BuffDefinition } from '../buff/BuffTypes'
 
 // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — hook tại
 // CombatSystem.killIfDead(), điểm DUY NHẤT tuyên bố chết của mọi đường
 // damage. Entity pattern mirror CombatSystem.manaShield.test.ts.
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id',
@@ -48,7 +53,12 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 interface SessionShape {
   guard: SurviveLethalGuard
   playerEntityId: string
-  surviveEffects?: { buffSystem: BuffSystem; registry: BuffRegistry }
+  surviveEffects?: {
+    buffSystem: BuffSystem
+    registry: BuffDefinitionCatalog
+    grantBuffId?: string
+    cleanseDebuffs?: boolean
+  }
 }
 
 function createSession(talentIds: string[]): SessionShape {
@@ -192,11 +202,16 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
     effects: [{ type: 'statModifier', stat: 'attack', percent: -0.15 }],
   }
 
-  function makeRegistry(): BuffRegistry {
-    const registry = new BuffRegistry()
-    registry.register(trungDoc)
-    registry.register(kiepThuong)
-    registry.register(TU_SINH_NGO_BUFF)
+  function makeRegistry(): BuffDefinitionCatalog {
+    const registry: BuffDefinitionCatalog = {
+      get: (id) => {
+        if (id === 'trung_doc') return trungDoc
+        if (id === 'kiep_thuong') return kiepThuong
+        if (id === 'tu_sinh_ngo') return TU_SINH_NGO_BUFF as BuffDefinition
+        throw new Error(`unknown fixture buff id: ${id}`)
+      },
+    }
+
     return registry
   }
 
@@ -207,7 +222,7 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
     const buffs = new BuffSystem(pool)
 
     const session = createSession(['bat_tu_the'])
-    session.surviveEffects = { buffSystem: buffs, registry }
+    session.surviveEffects = { buffSystem: buffs, registry, grantBuffId: 'tu_sinh_ngo' }
     combat.setSurviveLethalSession(session)
 
     const player = createCombatant({ id: 'player', type: 'player', currentHp: 10, maxHp: 1000 })
@@ -270,5 +285,51 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
 
     expect(player.alive).toBe(false)
     expect(pool.getAllById('trung_doc')).toHaveLength(1)
+  })
+
+  it('AR-18: applies custom grantBuffId and respects cleanseDebuffs policy', () => {
+    const customBuff: BuffDefinition = {
+      id: 'custom_phoenix_buff',
+      name: 'Custom Phoenix',
+      polarity: 'buff',
+      duration: 5,
+      stackMode: 'refresh',
+      effects: [{ type: 'statModifier', stat: 'attack', percent: 0.5 }],
+    }
+    const registry: BuffDefinitionCatalog = {
+      get: (id) => {
+        if (id === 'trung_doc') return trungDoc
+        if (id === 'custom_phoenix_buff') return customBuff
+        throw new Error(`unknown fixture buff id: ${id}`)
+      },
+    }
+    const combat = new CombatSystem(new EventBus())
+    const pool = new BuffPool()
+    const buffs = new BuffSystem(pool)
+
+    const session: SessionShape = {
+      ...createSession(['bat_tu_the']),
+      surviveEffects: {
+        buffSystem: buffs,
+        registry,
+        grantBuffId: 'custom_phoenix_buff',
+        cleanseDebuffs: false,
+      },
+    }
+    combat.setSurviveLethalSession(session)
+
+    const player = createCombatant({ id: 'player', type: 'player', currentHp: 10, maxHp: 1000 })
+    const enemy = createCombatant({ id: 'enemy_1', currentHp: 100, maxHp: 100 })
+
+    buffs.apply(trungDoc, enemy, player, registry)
+
+    combat.applyDirectDamage(player, 9999, 'enemy_1')
+
+    expect(player.alive).toBe(true)
+    expect(player.currentHp).toBe(1)
+    // cleanseDebuffs: false -> debuff must NOT be cleansed
+    expect(pool.getAllById('trung_doc')).toHaveLength(1)
+    // custom buff applied instead of tu_sinh_ngo
+    expect(pool.getFromSource('custom_phoenix_buff', 'player')).toBeDefined()
   })
 })

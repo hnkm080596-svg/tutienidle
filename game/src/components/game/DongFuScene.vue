@@ -18,12 +18,10 @@ import { useStageActive } from '@/composables/useStageActive'
 import {
   dongFuLayerList,
   type DongFuLayerDescriptor,
-} from '@/game/support/DongFuArt'
-import { preloadDongFuStack } from '@/game/support/DongFuStackLoader'
-import {
-  peekThanhVanVariant,
-  type ThanhVanVariant,
-} from '@/game/support/ThanhVanArt'
+} from '@/presentation/background/DongFuArt'
+import { preloadDongFuStack } from '@/presentation/background/DongFuStackLoader'
+import { peekThanhVanVariant } from '@/presentation/background/ThanhVanBackdropArt'
+import type { ThanhVanVariant } from '@/presentation/background/BackgroundVariant'
 import { useUiStore } from '@/stores/ui'
 import HomeBuildingIcons from './HomeBuildingIcons.vue'
 import PlayerPortrait from '../common/PlayerPortrait.vue'

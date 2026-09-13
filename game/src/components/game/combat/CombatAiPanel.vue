@@ -35,7 +35,7 @@ const current = computed<CombatAiStrategy>(() => {
 })
 
 function select(strategy: CombatAiStrategy) {
-  if (!gameManager.setCombatAiStrategy(player.$state, strategy)) {
+  if (!gameManager.progressionOps.setCombatAiStrategy(player.$state, strategy)) {
     return
   }
 

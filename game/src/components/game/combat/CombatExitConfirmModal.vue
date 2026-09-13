@@ -3,17 +3,21 @@
 // CombatControlBar (L173-182 + confirmExit L47-55): scene exit-zone
 // (canvas) emit 'combat_exit_request' → modal này mở; logic confirm
 // giữ NGUYÊN (abandonBattle → manual → exitCombatScene →
-// combat_scene_exit). Gate: chỉ Stage (Tribulation có flow riêng).
+// combat_scene_exit) - now runs inside the closed curtain via
+// useBattleActions.exitCombatToHome. Gate: Stage only (Tribulation has
+// its own flow).
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { useGameManager } from '@/composables/useGameState'
+import { useBattleActions } from '@/composables/useBattleActions'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import GameButton from '@/components/common/GameButton.vue'
 
 const { t } = useI18n()
 const ui = useUiStore()
 const gameManager = useGameManager()
+const { exitCombatToHome } = useBattleActions()
 
 const visible = ref(false)
 const cardRef = ref<HTMLElement | null>(null)
@@ -35,11 +39,11 @@ function onExitRequest() {
 }
 
 function confirmExit() {
-  gameManager.abandonBattle()
-
-  ui.battleRunMode = 'manual'
-  ui.exitCombatScene()
-  gameManager.eventBus.emit('combat_scene_exit', undefined)
+  // Abandon + UI teardown run inside the closed curtain (abandonBattle
+  // self-guards when the battle already ended on its own mid-close - the
+  // exit still stands). The modal itself closes right away as click
+  // feedback.
+  exitCombatToHome({ abandon: true })
 
   visible.value = false
 }

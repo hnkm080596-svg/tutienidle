@@ -65,9 +65,9 @@ export function createDefaultEquipmentOperationCostCatalog(): EquipmentOperation
 
       realmId,
 
-      // Sink Quáng Thập Niên (`ore_hoang`) + Linh Thạch — scale theo enhance level.
+      // Sink Quáng Thập Niên (`ore_decade`, gp123 6E C2) + Linh Thạch — scale theo enhance level.
       cost: {
-        materials: [{ materialId: `${realmId}_ore_hoang`, amount: 2 }],
+        materials: [{ materialId: `${realmId}_ore_decade`, amount: 2 }],
 
         spiritStone: 50,
       },

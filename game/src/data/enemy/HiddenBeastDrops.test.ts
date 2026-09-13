@@ -15,7 +15,7 @@ describe('Quái ẩn + Yêu Đan + Thiên Địa Chi Kiều (spec dot-pha-loi-ki
 
   it('Huyết Mông rơi Thiên Địa Chi Kiều 5%', () => {
     const beast = ENEMIES.find((e) => e.id === 'huyet_mong')!
-    const drop = beast.rewards.itemDrops?.find((d) => d.itemId === 'thien_dia_chi_kieu')
+    const drop = beast.signatureDrops?.find((d) => d.itemId === 'thien_dia_chi_kieu')
     expect(drop).toBeDefined()
     expect(drop!.chance).toBe(0.05)
   })
@@ -26,12 +26,13 @@ describe('Quái ẩn + Yêu Đan + Thiên Địa Chi Kiều (spec dot-pha-loi-ki
     expect(ids.has('thien_dia_chi_kieu')).toBe(true)
   })
 
-  it('Hung Giao Xà (boss LK t10) rơi Yêu Đan 100% qua bossRewards', () => {
+  it('Hung Giao Xà (boss LK t10) rơi Yêu Đan 100% qua signatureDrops', () => {
     const boss = ENEMIES.find((e) => e.id === 'ferocious_flood_serpent')!
-    const drop = boss.bossRewards?.itemDrops?.find((d) => d.itemId === 'yeu_dan_hung_giao')
+    const drop = boss.signatureDrops?.find((d) => d.itemId === 'yeu_dan_hung_giao')
     expect(drop).toBeDefined()
     expect(drop!.chance).toBe(1)
-    expect(drop!.amount).toBe(1)
+    expect(drop!.amount).toEqual({ min: 1, max: 1 })
+    expect(drop!.requiresModifier).toBe('boss')
   })
 
   it('recipe Thông Mạch Đan + Trúc Cơ Đan tồn tại, nguyên liệu chính là Yêu Đan', () => {

@@ -16,6 +16,14 @@ import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 
 let bag: MaterialBag
 
+// R7 (AR-08): capacity is now a dynamic command, not a constructor
+// option — old fixtures migrate to updateCapacity.
+function createSystemWithCapacity(capacity: number, cycleSeconds = 30): DecomposeSystem {
+  const system = new DecomposeSystem(bag, { cycleSeconds })
+  system.updateCapacity(capacity)
+  return system
+}
+
 function addOre(id: string, amount: number): void {
   const material = materials.find((entry) => entry.id === id)
 
@@ -31,28 +39,28 @@ beforeEach(() => {
 })
 
 describe('DecomposeSystem — settings (Task 14)', () => {
-  it('defaults: gradeFilter/qualityFilter = all, workers = 0', () => {
-    const system = new DecomposeSystem(bag, { autoWorkerCapacity: 6 })
+  it('defaults: gradeFilter/ageFilter = all, workers = 0', () => {
+    const system = createSystemWithCapacity(6)
 
     expect(system.getSettings()).toEqual({
       gradeFilter: 'all',
-      qualityFilter: 'all',
+      ageFilter: 'all',
       workers: 0,
     })
   })
 
   it('setSetting: patch một phần; workers clamp theo capacity', () => {
-    const system = new DecomposeSystem(bag, { autoWorkerCapacity: 6 })
+    const system = createSystemWithCapacity(6)
 
     system.setSetting({ workers: 99 })
 
     expect(system.getSettings().workers).toBe(6)
 
-    system.setSetting({ gradeFilter: 'luc_pham', qualityFilter: 'dia' })
+    system.setSetting({ gradeFilter: 'luc_pham', ageFilter: 'millennium' })
 
     expect(system.getSettings()).toEqual({
       gradeFilter: 'luc_pham',
-      qualityFilter: 'dia',
+      ageFilter: 'millennium',
       workers: 6,
     })
   })
@@ -60,21 +68,21 @@ describe('DecomposeSystem — settings (Task 14)', () => {
 
 describe('DecomposeSystem — cycle + output (Task 14)', () => {
   it('workers 0 → tick không tiêu thụ, không output', () => {
-    addOre('mortal_ore_hoang', 100)
+    addOre('mortal_ore_decade', 100)
 
-    const system = new DecomposeSystem(bag, { autoWorkerCapacity: 6, cycleSeconds: 30 })
+    const system = createSystemWithCapacity(6)
 
     system.tick(0)
     system.tick(30_000)
 
     expect(system.drainOutput()).toHaveLength(0)
-    expect(bag.getAmount('mortal_ore_hoang')).toBe(100)
+    expect(bag.getAmount('mortal_ore_decade')).toBe(100)
   })
 
   it('chu kỳ chưa đủ → chưa output; đủ 30s → output đúng công thức (Hoang+Cửu+1 worker)', () => {
-    addOre('mortal_ore_hoang', 100)
+    addOre('mortal_ore_decade', 100)
 
-    const system = new DecomposeSystem(bag, { autoWorkerCapacity: 6, cycleSeconds: 30 })
+    const system = createSystemWithCapacity(6)
 
     system.setSetting({ workers: 1 })
 
@@ -92,9 +100,9 @@ describe('DecomposeSystem — cycle + output (Task 14)', () => {
   })
 
   it('tuyến tính theo nhân công: Địa chất + 3 workers = 12/lượt (Cửu phẩm base 1 × chất 4 × 3)', () => {
-    addOre('mortal_ore_dia', 100)
+    addOre('mortal_ore_millennium', 100)
 
-    const system = new DecomposeSystem(bag, { autoWorkerCapacity: 6, cycleSeconds: 30 })
+    const system = createSystemWithCapacity(6)
 
     system.setSetting({ workers: 3 })
 
@@ -107,9 +115,9 @@ describe('DecomposeSystem — cycle + output (Task 14)', () => {
   })
 
   it('phẩm cao nhân thêm: Tiên phẩm (base 5.5) + Hoang chất + 2 workers = 11', () => {
-    addOre('tribulation_ore_hoang', 100)
+    addOre('tribulation_ore_decade', 100)
 
-    const system = new DecomposeSystem(bag, { autoWorkerCapacity: 6, cycleSeconds: 30 })
+    const system = createSystemWithCapacity(6)
 
     system.setSetting({ workers: 2 })
 
@@ -123,39 +131,39 @@ describe('DecomposeSystem — cycle + output (Task 14)', () => {
   })
 
   it('tiêu thụ khoáng mỗi lượt = workers × 2 (nếu đủ tồn)', () => {
-    addOre('mortal_ore_hoang', 100)
+    addOre('mortal_ore_decade', 100)
 
-    const system = new DecomposeSystem(bag, { autoWorkerCapacity: 6, cycleSeconds: 30 })
+    const system = createSystemWithCapacity(6)
 
     system.setSetting({ workers: 3 })
 
     system.tick(0)
     system.tick(30_000)
 
-    expect(bag.getAmount('mortal_ore_hoang')).toBe(100 - 6)
+    expect(bag.getAmount('mortal_ore_decade')).toBe(100 - 6)
   })
 
   it('filter phẩm/chất: chỉ tiêu thụ khoáng khớp; sai filter không chạy', () => {
-    addOre('mortal_ore_hoang', 50)
-    addOre('qi_refining_ore_huyen', 50)
+    addOre('mortal_ore_decade', 50)
+    addOre('qi_refining_ore_century', 50)
 
-    const system = new DecomposeSystem(bag, { autoWorkerCapacity: 6, cycleSeconds: 30 })
+    const system = createSystemWithCapacity(6)
 
-    system.setSetting({ workers: 1, gradeFilter: 'cuu_pham', qualityFilter: 'hoang' })
+    system.setSetting({ workers: 1, gradeFilter: 'cuu_pham', ageFilter: 'decade' })
 
     system.tick(0)
     system.tick(30_000)
 
-    // Chỉ mortal_ore_hoang (Cửu phẩm/Hoang) khớp: -2 khoáng, +1 tinh hoa.
-    expect(bag.getAmount('mortal_ore_hoang')).toBe(48)
-    expect(bag.getAmount('qi_refining_ore_huyen')).toBe(50)
+    // Chỉ mortal_ore_decade (Cửu phẩm/Hoang) khớp: -2 khoáng, +1 tinh hoa.
+    expect(bag.getAmount('mortal_ore_decade')).toBe(48)
+    expect(bag.getAmount('qi_refining_ore_century')).toBe(50)
     expect(system.drainOutput()).toEqual([{ materialId: LUYEN_KHI_TINH_HOA_ID, amount: 1 }])
   })
 
   it('khoáng cạn: chạy với phần lẻ còn lại — consumed thực tế quyết định output (ceil fairness)', () => {
-    addOre('mortal_ore_hoang', 1)
+    addOre('mortal_ore_decade', 1)
 
-    const system = new DecomposeSystem(bag, { autoWorkerCapacity: 6, cycleSeconds: 30 })
+    const system = createSystemWithCapacity(6)
 
     system.setSetting({ workers: 3 })
 
@@ -168,13 +176,13 @@ describe('DecomposeSystem — cycle + output (Task 14)', () => {
 
     expect(output).toHaveLength(1)
     expect(output[0]!.amount).toBe(1)
-    expect(bag.getAmount('mortal_ore_hoang')).toBe(0)
+    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
   })
 
   it('multi-cycle tích lũy qua drainOutput (drain xóa hàng đợi)', () => {
-    addOre('mortal_ore_hoang', 100)
+    addOre('mortal_ore_decade', 100)
 
-    const system = new DecomposeSystem(bag, { autoWorkerCapacity: 6, cycleSeconds: 30 })
+    const system = createSystemWithCapacity(6)
 
     system.setSetting({ workers: 1 })
 

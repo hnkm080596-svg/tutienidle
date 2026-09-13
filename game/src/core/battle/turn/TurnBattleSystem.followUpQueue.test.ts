@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
 
-const COUNTER_DEF: TurnBuffDefinition = {
+const COUNTER_DEF: BuffDefinition = {
   id: 'react_counter',
   name: 'Counter Stance',
   polarity: 'buff',
@@ -17,12 +17,12 @@ const COUNTER_DEF: TurnBuffDefinition = {
   effects: [{ type: 'reactiveTrigger', trigger: 'onImpactLanded', chance: 1, queuesFollowUp: true }],
 }
 
-class Registry implements TurnBuffRegistry {
-  private readonly defs = new Map<string, TurnBuffDefinition>()
-  constructor(defs: TurnBuffDefinition[]) {
+class Registry implements BuffDefinitionCatalog {
+  private readonly defs = new Map<string, BuffDefinition>()
+  constructor(defs: BuffDefinition[]) {
     for (const d of defs) this.defs.set(d.id, d)
   }
-  get(id: string): TurnBuffDefinition {
+  get(id: string): BuffDefinition {
     const d = this.defs.get(id)
     if (!d) throw new Error(`missing buff: ${id}`)
     return d
@@ -30,7 +30,7 @@ class Registry implements TurnBuffRegistry {
 }
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
@@ -44,7 +44,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }
@@ -52,11 +52,11 @@ function makeParticipant(id: string, entity: CombatEntity, speed: number, priori
 function fixture() {
   const player = createCombatant({
     id: 'player', type: 'player', row: 4,
-    stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 100 },
+    stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 100 }),
   })
   const enemyEntity = createCombatant({
     id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000,
-    stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 10, attack: 0 },
+    stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 10, attack: 0 }),
   })
 
   const playerParticipant = makeParticipant('player', player, 100, 0)
@@ -64,7 +64,7 @@ function fixture() {
   const registry = new Registry([COUNTER_DEF])
   const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, registry)
 
-  new TurnBuffSystem(enemyParticipant.buffs).apply(COUNTER_DEF, player, enemyEntity, registry)
+  new BuffSystem(enemyParticipant.buffs).apply(COUNTER_DEF, player, enemyEntity, registry)
 
   const battle: TurnBattle = {
     players: [playerParticipant],

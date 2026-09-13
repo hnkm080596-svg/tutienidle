@@ -22,23 +22,25 @@ import { pills } from '../../data/pill/pills'
 import { talismans } from '../../data/talisman/talismans'
 import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
+import { BuffSystem } from '../buff/BuffSystem'
+import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 function makeWiredManager(): GameManager {
   const manager = new GameManager()
 
-  manager.registerMaterials(materials)
-  manager.registerSkillTemplates(SKILLS)
-  manager.registerTechniqueTemplates(TECHNIQUES)
-  manager.registerEnemyTemplates(ENEMIES)
-  manager.registerStages(STAGES)
-  manager.registerZones(zones)
-  manager.registerEquipment(equipment)
-  manager.registerAffixes(affixes)
-  manager.registerPills(pills)
-  manager.registerTalismans(talismans)
-  manager.registerBuffs(buffs)
-  manager.registerBuildings(buildings)
-  manager.registerProgressionNodes(KIEM_TU_NODES)
+  manager.catalogOps.registerMaterials(materials)
+  manager.catalogOps.registerSkillTemplates(SKILLS)
+  manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+  manager.catalogOps.registerEnemyTemplates(ENEMIES)
+  manager.catalogOps.registerStages(STAGES)
+  manager.catalogOps.registerZones(zones)
+  manager.catalogOps.registerEquipment(equipment)
+  manager.catalogOps.registerAffixes(affixes)
+  manager.catalogOps.registerPills(pills)
+  manager.catalogOps.registerTalismans(talismans)
+  manager.catalogOps.registerBuffs(buffs)
+  manager.catalogOps.registerBuildings(buildings)
+  manager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 
   return manager
 }
@@ -50,7 +52,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     player.selectedTalentIds = ['kiem_quang']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const granted = manager.skillManager.get('talent_passive_kiem_quang')
 
@@ -65,7 +67,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     player.selectedTalentIds = ['pham_cot']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const talentPassiveIds = TALENT_PASSIVE_SKILLS.map((skill) => skill.id)
 
@@ -78,14 +80,14 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     player.selectedTalentIds = ['kiem_quang']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     expect(manager.skillManager.getAll().filter((skill) => skill.id === 'talent_passive_kiem_quang')).toHaveLength(1)
 
     // Đổi talent (save edit scenario) — passive cũ bị revoke.
     player.selectedTalentIds = ['vo_anh']
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     expect(manager.skillManager.get('talent_passive_kiem_quang')).toBeUndefined()
     expect(manager.skillManager.get('talent_passive_vo_anh')).toBeDefined()
@@ -97,7 +99,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     player.selectedTalentIds = ['can_than']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     expect(manager.skillManager.get('talent_passive_can_than')).toBeDefined()
     expect(manager.skillManager.get('talent_passive_can_than_phi')).toBeDefined()
@@ -111,7 +113,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
     player.realmId = 'mortal'
     player.realmLevel = 1
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const enemy = ENEMIES[0]!
     const stats = calculateStats(player.baseStats, player.modifiers)
@@ -126,6 +128,25 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     expect(passive).toBeDefined()
     expect(manager.surviveLethalGuard.getRemainingUses()).toBe(1)
+
+    // Phase A0 (2026-09-07) — surviveEffects phải trỏ vào LIVE turn-based
+    // pool của player (không còn legacy battleSystem pool chết). Kiểm
+    // chứng hành vi thật: áp debuff lên pool turn-based, đòn chí mạng
+    // → debuff bị tẩy + Tử Sinh Ngộ xuất hiện trên CÙNG pool đó.
+    const playerParticipant = manager.getTurnBattle()!.players[0]!
+
+    new BuffSystem(playerParticipant.buffs).apply(
+      BUFF_REGISTRY.get('bong'),
+      playerParticipant.entity,
+      playerParticipant.entity,
+      BUFF_REGISTRY,
+    )
+
+    manager.combatSystem.applyDirectDamage(playerParticipant.entity, 999_999, 'enemy_1')
+
+    expect(playerParticipant.entity.currentHp).toBe(1)
+    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'bong')).toBe(false)
+    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'tu_sinh_ngo')).toBe(true)
   })
 
   it('PassiveSystem hpReader — nối battle player entity (đọc được HP ratio trong trận)', () => {
@@ -134,7 +155,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     player.selectedTalentIds = ['hap_linh']
     manager.setActivePlayer(player)
-    manager.syncTalentCombatPassive(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
 
     const enemy = ENEMIES[0]!
     const stats = calculateStats(player.baseStats, player.modifiers)

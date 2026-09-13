@@ -25,17 +25,17 @@ const COUNTDOWN_SECONDS = 3
 const gameManager = useGameManager()
 const ui = useUiStore()
 const player = usePlayerStore()
-const { t } = useI18n({ useScope: 'local' })
-const { startBattle } = useBattleActions()
+const { t } = useI18n()
+const { startBattle, exitCombatToHome } = useBattleActions()
 
 const summary = computed(() => gameManager.getBattleRewardSummary())
 
-function refight(): boolean {
+function refight(): boolean | Promise<boolean> {
   if (!ui.selectedStageId) {
     return false
   }
 
-  const stage = gameManager.getStage(ui.selectedStageId)
+  const stage = gameManager.catalogOps.getStage(ui.selectedStageId)
 
   if (!stage) {
     return false
@@ -49,8 +49,9 @@ function retryNow() {
 }
 
 function continueToStageSelect() {
-  ui.exitCombatScene()
-  gameManager.eventBus.emit('combat_scene_exit', undefined)
+  // Teardown runs inside the closed curtain - the victory panel stays on
+  // screen until the swap behind it is ready (useBattleActions).
+  exitCombatToHome()
 }
 
 const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryCountdown(COUNTDOWN_SECONDS, () => {
@@ -68,7 +69,7 @@ const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryC
     if (resolution.status === 'ready') {
       const nextStageId = resolution.stage.id
 
-      if (!gameManager.isStageUnlocked(nextStageId, player.$state)) {
+      if (!gameManager.catalogOps.isStageUnlocked(nextStageId, player.$state)) {
         // Có màn kế tiếp nhưng progression hiện tại chưa mở nó (vd thắng 1.5
         // khi mới ở cảnh giới tầng 5). Kết thúc auto bằng UI thủ công thay vì
         // gọi startStage() thất bại rồi kẹt modal victory ở countdown 0s.

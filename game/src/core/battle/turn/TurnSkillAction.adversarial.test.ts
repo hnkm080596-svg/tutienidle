@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   selectAction,
   tickCooldowns,
@@ -11,12 +11,12 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 
 // QA adversarial probes (2026-09-04 quick review) — Slice 2 skill actions.
 
 function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 })
 
   return {
     id: 'id',
@@ -64,7 +64,7 @@ function participant(overrides: Partial<TurnBattleParticipant> = {}): TurnBattle
     priority: 0,
     actionGauge: 0,
     alive: true,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
     ...overrides,
   }
 }
@@ -119,9 +119,9 @@ describe('Slice 2 adversarial (QA probes)', () => {
   })
 
   it('INV-S2-5: multi-target AOE qua resolveNextStep — mọi target bị hit, step report đủ targetIds', () => {
-    const playerEntity = entity({ id: 'player', type: 'player' as never, x: 1, row: 2, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 50 } })
-    const enemyA = entity({ id: 'enemyA', x: 2, row: 2, currentHp: 100, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
-    const enemyB = entity({ id: 'enemyB', x: 2, row: 3, currentHp: 100, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
+    const playerEntity = entity({ id: 'player', type: 'player' as never, x: 1, row: 2, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 50 }) })
+    const enemyA = entity({ id: 'enemyA', x: 2, row: 2, currentHp: 100, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
+    const enemyB = entity({ id: 'enemyB', x: 2, row: 3, currentHp: 100, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
 
     const playerParticipant = participant({ id: 'player', entity: playerEntity, speed: 100, priority: 0 })
     playerParticipant.special = {
@@ -149,8 +149,8 @@ describe('Slice 2 adversarial (QA probes)', () => {
   })
 
   it('INV-S2-6: special bị xào cooldown vẫn nhảy sang basic — combat không dừng', () => {
-    const playerEntity = entity({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 } })
-    const enemy = entity({ id: 'enemy', currentHp: 5, maxHp: 5, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
+    const playerEntity = entity({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 }) })
+    const enemy = entity({ id: 'enemy', currentHp: 5, maxHp: 5, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
 
     const playerParticipant = participant({ id: 'player', entity: playerEntity, speed: 10, priority: 0 })
     playerParticipant.basic = skill({ id: 'basic_skill', damage: { kind: 'physical', multiplier: 2 } })

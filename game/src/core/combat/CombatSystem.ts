@@ -1,6 +1,6 @@
 import type { CombatEntity } from './CombatEntity'
 
-import { calculateBaseDamage, applyMultiplierAndCritical } from './DamageCalculator'
+import { calculateBaseDamage, applyMultiplierAndCritical, calculateScalingBonus } from './DamageCalculator'
 import { calculateSkillBaseDamage } from './ElementDamageCalculator'
 import { getRealmPressureMultiplier } from './RealmPressure'
 import { getHitChance } from './Accuracy'
@@ -22,6 +22,7 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
 import { ReactionManager } from '../element/ReactionManager'
+import type { BuffDefinitionCatalog } from '../buff/BuffTypes'
 
 // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX, 2026-08-21) — trần %
 // giảm sát thương từ thuyThePercent, cùng tinh thần ARMOR_CAP (Armor.
@@ -54,6 +55,13 @@ const DOT_RESISTANCE_FLOOR = -1
  * bước không đổi kết quả cuối (phép nhân giao hoán) — chỉ thứ tự
  * SỰ KIỆN/emit mới theo đúng accuracy→dodge→block như yêu cầu.
  */
+export interface SurviveEffectsPolicy {
+  buffSystem: BuffSystem
+  registry: BuffDefinitionCatalog
+  grantBuffId?: string
+  cleanseDebuffs?: boolean
+}
+
 export class CombatSystem {
   readonly vitals: EntityVitalsSystem
 
@@ -62,15 +70,13 @@ export class CombatSystem {
   // không bảo vệ (trận Độ Kiếp, trận không có PlayerData, hoặc không có
   // thiên phú). GameManager set/reset mỗi lần bắt đầu trận.
   //
-  // v4 (spec 2026-09-03 §4.1): surviveEffects mở rộng cho Bất Tử Th thể
-  // — khi guard cứu sống: tẩy mọi debuff trên player + áp Tử Sinh Ngộ.
-  // buffSystem/registry là pool + registry của PLAYER trong trận hiện
-  // tại (GameManager set từ battle.playerBuffs), optional để mọi session
-  // cũ/wiring ngoài trận không đổi hành vi.
+  // v4 (spec 2026-09-03 §4.1): surviveEffects mở rộng cho Bất Tử Thể
+  // — khi guard cứu sống: tẩy debuff trên player + áp buff sống sót (mặc định Tử Sinh Ngộ).
+  // R4 (AR-18): SurviveEffectsPolicy là cấu hình declarative, không hardcode 'tu_sinh_ngo'.
   private surviveLethalSession: {
     playerEntityId: string
     guard: SurviveLethalGuard
-    surviveEffects?: { buffSystem: BuffSystem; registry: BuffRegistry }
+    surviveEffects?: SurviveEffectsPolicy
   } | null = null
 
   // Trigger/Action rework Task 10 (2026-08-31 spec) — onKill firing.
@@ -84,7 +90,7 @@ export class CombatSystem {
   private readonly skillTriggerRunner = new SkillTriggerRunner()
 
   constructor(
-    private readonly eventBus: EventBus,
+    readonly eventBus: EventBus,
     private readonly skillManager?: SkillManager,
     private readonly buffRegistry?: BuffRegistry,
     private readonly reactionManager?: ReactionManager,
@@ -96,7 +102,7 @@ export class CombatSystem {
     session: {
       playerEntityId: string
       guard: SurviveLethalGuard
-      surviveEffects?: { buffSystem: BuffSystem; registry: BuffRegistry }
+      surviveEffects?: SurviveEffectsPolicy
     } | null,
   ): void {
     this.surviveLethalSession = session
@@ -126,17 +132,40 @@ export class CombatSystem {
     return this.vitals.applyHealing(target, amount, reason, sourceId)
   }
 
+  /**
+   * Authoritative ward spend (R1 / AR-01): mutation belongs to the vitals
+   * owner; CombatSystem exposes the typed entry point so orchestrators do
+   * not write entity fields directly.
+   */
+  spendWard(target: CombatEntity, amount: number, reason: VitalsChangeReason = 'ward_spend', sourceId?: string) {
+    return this.vitals.spendWard(target, amount, reason, sourceId)
+  }
+
   resolveActionHit(
     source: CombatEntity,
     target: CombatEntity,
     damage: ActionDamageInfo,
-    critical = false,
+    critical?: boolean,
   ): DamageResult {
     if (!this.rollHit(source, target)) {
       return this.resolveDodge(source, target, damage.kind)
     }
 
-    const effectiveMultiplier = damage.multiplier * getRealmPressureMultiplier(source, target)
+    const isCritical = critical !== undefined ? critical : this.rollCritical(source, target)
+
+    // R3 re-audit (AR-03 gap) — authored per-skill scaling (attributeScaling/
+    // manaScalingRatio/swordIntentDamageRatio, carried on ActionDamageInfo.
+    // scaling since the converter used to drop them) plus the general
+    // skillDamagePercent stat (equipment/node/Kiếm Ý tier), which previously
+    // had no live consumer in the turn engine at all — same formula
+    // SkillEffectSystem.apply() used for the older, non-turn execution path.
+    const scalingBonus = calculateScalingBonus(source, damage.scaling)
+
+    const effectiveMultiplier =
+      damage.multiplier *
+      (1 + scalingBonus) *
+      (1 + clampStatValue('skillDamagePercent', source.stats.skillDamagePercent)) *
+      getRealmPressureMultiplier(source, target)
 
     // Chance to Ignore Resistance — roll 1 LẦN/đòn (khác Penetration phẳng,
     // đây là "bỏ qua hoàn toàn" mitigation của đòn đó nếu trúng).
@@ -146,7 +175,7 @@ export class CombatSystem {
       ? calculateSkillBaseDamage(source, target, damage.components, ignoreResistance)
       : calculateBaseDamage(source, target, damage.kind, ignoreResistance)
 
-    const afterCrit = applyMultiplierAndCritical(baseDamage, effectiveMultiplier, critical, source.stats.criticalDamage)
+    const afterCrit = applyMultiplierAndCritical(baseDamage, effectiveMultiplier, isCritical, source.stats.criticalDamage)
 
     const blocked = this.rollBlock(target)
 
@@ -178,7 +207,7 @@ export class CombatSystem {
 
       damageType: damage.kind,
 
-      critical,
+      critical: isCritical,
 
       dodged: false,
 
@@ -191,7 +220,7 @@ export class CombatSystem {
       targetKilled: target.currentHp <= finalDamage,
     }
 
-    return this.resolveAttack(source, target, result, critical, blocked)
+    return this.resolveAttack(source, target, result, isCritical, blocked)
   }
 
   private rollHit(source: CombatEntity, target: CombatEntity): boolean {
@@ -486,19 +515,22 @@ export class CombatSystem {
       const effects = surviveSession.surviveEffects
 
       if (effects) {
-        for (const buff of effects.buffSystem.getAll()) {
-          if (buff.polarity === 'debuff' && buff.targetId === entity.id) {
-            effects.buffSystem.remove(buff.id, buff.sourceId)
+        if (effects.cleanseDebuffs !== false) {
+          for (const buff of effects.buffSystem.getAll()) {
+            if (buff.polarity === 'debuff' && buff.targetId === entity.id) {
+              effects.buffSystem.remove(buff.id, buff.sourceId)
+            }
           }
         }
 
-        const tuSinhNgo = effects.registry.get('tu_sinh_ngo')
+        const grantId = effects.grantBuffId
 
-        if (tuSinhNgo) {
-          // Player vừa tự cứu mình — source của Tử Sinh Ngộ chính là
-          // player (không phải kẻ đánh), để các nhánh clean-up theo
-          // source không nhầm lẫn.
-          effects.buffSystem.apply(tuSinhNgo, entity, entity, effects.registry)
+        if (grantId) {
+          const grantBuff = effects.registry.get(grantId)
+
+          if (grantBuff) {
+            effects.buffSystem.apply(grantBuff, entity, entity, effects.registry)
+          }
         }
       }
 
@@ -568,7 +600,7 @@ export class CombatSystem {
   // dependencies — injected via the constructor (2026-09-01 review fix)
   // and used for real here when provided; skip firing entirely if either
   // is missing rather than constructing an empty throwaway registry
-  // (BuffRegistry.get() THROWS on a miss, so an empty throwaway registry
+  // (BuffDefinitionCatalog.get() THROWS on a miss, so an empty throwaway registry
   // would crash killIfDead() mid-battle-tick the first time a bound
   // action looked one up — not silently no-op).
   //

@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
-import { KIEM_BAR_READER_KEY, type KiemBarReader } from '@/game/support/kiemBarBridge'
+import { KIEM_BAR_READER_KEY, type KiemBarReader } from '@/presentation/bridges/kiemBarBridge'
 
 interface FakeHud {
   hpCalls: Array<{ current: number; max: number }>

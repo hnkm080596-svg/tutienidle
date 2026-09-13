@@ -6,7 +6,7 @@
 // TỒN TẠI, ESLint không kêu (script setup: mọi top-level function coi
 // như "có thể" dùng ở template nên linter không thể khẳng định orphan),
 // và toàn bộ 2651 unit test vẫn xanh vì test gọi thẳng
-// gameManager.update() chứ không đi qua App.vue. Kết quả: game đứng
+// gameManager.tickOps.update() chứ không đi qua App.vue. Kết quả: game đứng
 // hình vô thời hạn trong browser thật, zero console error (hàm không
 // bao giờ chạy thì không thể throw). Xem
 // .superpowers/sdd/2026-09-05-combat-art-roster-tranphap/freeze-rootcause.md
@@ -47,6 +47,7 @@ import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { parse as parseSFC } from '@vue/compiler-sfc'
 import { describe, expect, it } from 'vitest'
+import { bindPresentationActive } from './presentation/bindPresentationActive'
 
 const APP_VUE_PATH = fileURLToPath(new URL('./App.vue', import.meta.url))
 const LIFECYCLE_TS_PATH = fileURLToPath(new URL('./composables/useAppLifecycle.ts', import.meta.url))
@@ -279,6 +280,12 @@ const INTENTIONALLY_UNWIRED_LIFECYCLE_MEMBERS: Record<string, string> = {
   // nguyên của interval, chỉ useAppLifecycle.test.ts assert qua đây.
   getTickHandle: 'Debug/test-only getter — chỉ useAppLifecycle.test.ts đọc để assert interval handle tồn tại/bị clear.',
   getAutosaveHandle: 'Debug/test-only getter — chỉ useAppLifecycle.test.ts đọc để assert interval handle tồn tại/bị clear.',
+  // R5 (AR-14 / Law A7) — investBodyRefinement() auto-invests directly in
+  // domain tick and is no longer gated on presentation particle arrival or
+  // the 2,000ms headless timeout fallback.
+  consumeEssenceArrival: 'R5 (AR-14 / Law A7): investBodyRefinement() auto-invests directly in domain tick and is no longer gated on presentation arrival.',
+  isEssenceHeadlessTimedOut: 'R5 (AR-14 / Law A7): progression no longer waits for a 2,000ms headless presentation timeout fallback.',
+  clearEssenceEmitted: 'R5 (AR-14 / Law A7): retired along with essence arrival gating.',
 }
 
 describe('useAppLifecycle() exports have a consumer in App.vue', () => {
@@ -333,5 +340,25 @@ describe('useAppLifecycle() exports have a consumer in App.vue', () => {
         `INTENTIONALLY_UNWIRED_LIFECYCLE_MEMBERS kèm lý do rõ ràng — ` +
         `KHÔNG được lặng lẽ bỏ qua.`,
     ).toBe(true)
+  })
+})
+
+// --- RC-3: presentationActive has exactly one owner (bindPresentationActive) ---
+
+describe('bindPresentationActive — presentationActive has exactly one owner', () => {
+  it('activates combat playback exactly when the combat route is committed', () => {
+    const calls: boolean[] = []
+    const gameManager = { setPresentationActive: (v: boolean) => calls.push(v) }
+    const listeners: Array<(s: any) => void> = []
+    const coordinator = { subscribe: (l: (s: any) => void) => { listeners.push(l); return () => {} } }
+
+    bindPresentationActive(coordinator as any, gameManager as any)
+
+    listeners[0]!({ currentRoute: 'home', currentSession: null })
+    listeners[0]!({ currentRoute: 'combat', currentSession: { kind: 'combat', sessionId: 1 } })
+    listeners[0]!({ currentRoute: 'combat', currentSession: { kind: 'combat', sessionId: 1 } })
+    listeners[0]!({ currentRoute: 'home', currentSession: null })
+
+    expect(calls).toEqual([false, true, false])
   })
 })

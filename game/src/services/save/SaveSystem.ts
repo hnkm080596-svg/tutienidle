@@ -1,15 +1,21 @@
 import type { PlayerData } from '../../core/player/Player'
 import type { GameManager } from '../../core/game/GameManager'
-import type { Technique } from '../../core/technique/Technique'
-import type { Skill } from '../../core/skill/Skill'
-import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
-import type { BuildingInstance } from '../../core/building/BuildingInstance'
-import type { EquipmentSlotState } from '../../core/equipment/EquipmentSlotState'
-import type { QuestManagerState } from '../../core/quest/QuestManager'
-import type { OfflineResult } from '../../core/idle/OfflineProgressSystem'
-import type { StatModifier } from '../../core/stats/StatCalculator'
+import type {
+  AlchemyJobSave,
+  GameSave,
+  GameSessionPlayerOwner,
+  ProductionCycleSave,
+  ProductionSiteStateSave,
+  RestoreGameSessionResult,
+} from './saveTypes'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
+
+// large-file-split — save-shape interfaces (GameSave, stack saves,
+// production/alchemy save states, restore contract) live in
+// saveTypes.ts; re-exported so existing `from './SaveSystem'` imports
+// keep working unchanged.
+export * from './saveTypes'
 
 // Re-export cho mọi consumer cũ (SupabaseCharacterCreationService, tests...)
 // — nguồn sự thật của version nằm ở saveVersion.ts để tránh circular
@@ -193,8 +199,8 @@ export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 // vòng kinh tế "Địa Giới → Lâm/Quáng/Động Thiên → Bag"):
 // - materials: map cặp raw/processed cũ về material TRỰC TIẾP mới theo
 //   bảng quy đổi cố định (không parse tên ID ngoài pattern đã chốt):
-//   wood_*_raw/processed → `<realm>_wood`; ore_*_raw/processed →
-//   `<realm>_ore_hoang`; herb_*_raw/processed → thảo Động Thiên decade
+//   wood_*_raw/processed → `<realm>_wood_decade`; ore_*_raw/processed →
+//   `<realm>_ore_decade` (gp123 6E C2: trục tuổi thống nhất); herb_*_raw/processed → thảo Động Thiên decade
 //   đầu tiên của realm tương ứng (không xác định được đan phương cũ).
 // - Phù/Trận legacy KHAI TỬ (§10.1): talismans/formations trong Bag +
 //   socket trên slot quy đổi thành Linh Thạch theo bảng compensation
@@ -253,193 +259,6 @@ export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 /** Settings phát sự kiện này để App dừng autosave trước khi xóa save. */
 export const SAVE_RESET_REQUEST_EVENT = 'tien-hiep:reset-save-requested'
 
-export interface MaterialStackSave {
-  materialId: string
-
-  amount: number
-}
-
-export interface PillStackSave {
-  pillId: string
-
-  amount: number
-}
-
-export interface TalismanStackSave {
-  talismanId: string
-
-  amount: number
-}
-
-export interface FormationStackSave {
-  formationId: string
-
-  amount: number
-}
-
-// version 2: mở rộng từ { version, player } (chỉ lưu PlayerData) —
-// trước đây skill/technique đã học, 4 loại inventory, và thám hiểm
-// đang chạy đều mất khi reload. Manager nào lưu id thay vì full
-// object (materials/pills/talismans) đều resolve lại qua registry
-// tương ứng lúc restore — xem GameManager.restoreFromSave().
-// version 3: thêm formations (FormationBag) — socketedFormation
-// trên equipment instance tự động đi theo `equipment` sẵn có,
-// không cần field riêng.
-// version 4: thêm crafts (CraftingManager) — lượt craft Đan/Phù/
-// Trận đang chạy, nguyên liệu đã trừ nên phải lưu lại tiến độ,
-// không thì reload giữa chừng sẽ mất trắng nguyên liệu đã tiêu.
-// version 5: tái cấu trúc toàn bộ hệ thống stat (nền Last Epoch) —
-// PlayerData.baseStats đổi hẳn shape (bỏ magicAttack/magicDefense/
-// elementAffinity, thêm attribute + cơ chế mới). Save cũ (version <5)
-// không tương thích, KHÔNG viết migration (đổi quá sâu, không đáng —
-// save cũ tự động bị coi như không tồn tại, xem loadGame()).
-// version 6: hoàn thiện stat (Mana Regen/CDR/Crit Avoidance/Chance
-// Ignore Resistance/Ailment Resist & Potency, tag-hierarchy Increased)
-// + hệ thống Tâm Pháp 3 tầng (Tu Luyện/Chiến Đấu/Phá Cảnh — Technique
-// đổi hẳn shape sang discriminated union, xem core/technique/Technique.ts).
-// PlayerData thêm totalMonstersKilled/unlockedRealmEnhancements. Save
-// cũ (version <6) KHÔNG tương thích, không viết migration — cùng lý do
-// version 5, save cũ tự động bị coi như không tồn tại.
-// version 7: MASTER SPEC Economy Phase 4 — thêm Building (Farm/Mine/
-// Smelter...), lưu buildings: BuildingInstance[] (xem
-// core/building/*). Save cũ (version <7) KHÔNG tương thích, không
-// viết migration — cùng lý do các version trước.
-// version 8: MASTER SPEC Mục XVI (Economy Phase 9) — Cường Hóa/Khắc
-// Trận/Yểm Phù chuyển từ EquipmentInstance sang EquipmentSlotState
-// (gắn theo SLOT, không theo item cụ thể — xem core/equipment/
-// EquipmentSlotState.ts), lưu equipmentSlots: EquipmentSlotState[].
-// EquipmentInstance trong save không còn 3 field enhanceLevel/
-// socketedFormation/bonusSubstatSlots. Save cũ (version <8) KHÔNG
-// tương thích, không viết migration — cùng lý do các version trước.
-// version 9: Core Loop Foundation checklist (Mục AFFIX/RARITY) —
-// EquipmentInstance đổi `substats: StatModifier[]` thành
-// `affixes: RolledAffix[]` (xem core/equipment/RolledAffix.ts) + thêm
-// field `rarity: EquipmentRarity` (xem core/equipment/EquipmentRarity.ts).
-// EquipmentSlotState đổi tên `bonusSubstatSlots` -> `bonusAffixSlots`
-// (cùng ý nghĩa).
-// version 10: Đột Phá Trúc Cơ (Phase 1) — xoá PlayerData.pillUsageCount
-// + Pill.usageLimit, thay bằng trần theo cảnh giới (RealmData.attributeCap,
-// xem PillSystem.canUse()).
-// version 11: Đột Phá Trúc Cơ (Phase 5) — thêm
-// PlayerData.highestFoundationAchieved (mục 16 spec `breakthrough`).
-// version 12: Home Hub (Phase 2) — thêm EquipmentSlotState.appliedTalismanIds
-// (badge Phù Viện, xem GameManager.applyTalisman()).
-// version 13: Beta Phase 4 (Tutorial) — thêm PlayerData.hasSeenTutorial.
-// version 14: BUILDing spec (Building System rework) — ActiveCraft
-// (crafts: ActiveCraft[]) đổi field: thêm craftId bắt buộc (xem
-// core/recipe/CraftingManager.ts — hỗ trợ nhiều lượt craft song song
-// cùng resultType, trước đây định danh bằng resultType nên chỉ 1
-// lượt/loại). buildings: BuildingInstance[] giờ có thể chứa 4
-// building crafting_station mới (pill_room/formation_altar/
-// talisman_institute/equipment_hall — trước đây 4 panel này KHÔNG
-// gắn Building nào, giờ bắt buộc xây trước khi dùng, xem
-// BuildingConstructionGate.vue).
-// version 15: Equipment Rework — equipment: EquipmentInstance[] đổi
-// field: `rarity` giờ là 1 trong 4 giá trị mới (vo_duyen/tieu_duyen/
-// ky_duyen/thien_duyen, bỏ hẳn 'normal'/'magic'/'rare'/'exalted'/
-// 'unique' cũ), `refineLevel` bị XOÁ thay bằng `forgePoints` (xem
-// core/equipment/EquipmentSystem.ts's forge()/refine()). Equipment
-// template (đăng ký lúc bootstrap, không nằm trong save) mất
-// `fixedAffixes`, thêm `forgeCost`.
-// version 16: Thám Hiểm rework — player: PlayerData thêm
-// isCultivating (cổng thủ công tu luyện, xem stores/player.ts's
-// toggleCultivating()). Save cũ (version <16) KHÔNG tương thích,
-// không viết migration — cùng lý do các version trước.
-// version 17: Naming-principles pass ("nguyen li dat ten") —
-// equipment: EquipmentInstance[]'s `rarity` đổi hẳn value set — 5 bậc
-// Ngũ Phẩm mới (hoang_pham/huyen_pham/dia_pham/thien_pham/tien_pham,
-// xem core/item/Pham.ts) thay 4 bậc "Duyên" cũ (vo_duyen/tieu_duyen/
-// ky_duyen/thien_duyen). Pill/Talisman/Formation template (đăng ký lúc
-// bootstrap, không nằm trong save) đổi `grade: number` -> `grade: ItemGrade`
-// — không ảnh hưởng save vì đó là template, chỉ liệt kê ở đây để dễ
-// tra cứu.
-// version 18: "EquipemtnQuality&rarity" + "tunghematandsuch" pass —
-// equipment: EquipmentInstance[] thêm field BẮT BUỘC MỚI
-// `forgePotential: number` (0-100, Tiềm Năng Rèn — xem
-// core/equipment/EquipmentSystem.ts's rollForgePotential()). materials:
-// MaterialStackSave[] có thể tham chiếu id material MỚI (yeu_dan_qi_refining/
-// yeu_huyet_qi_refining/yeu_cot_qi_refining/bui_cot/tinh_luyen_cot/...) —
-// save cũ tham chiếu id ĐÃ XOÁ (wolf-fang/wolf-hide/demon-core/13
-// material trophy tầng 1-10) sẽ bị MaterialRegistry bỏ qua khi restore
-// (registry.has() guard có sẵn, không throw) nhưng coi là KHÔNG tương
-// thích ở đây vì stat/economy đã đổi quá nhiều để tự động migrate.
-// version 19: Pháp Tu profession-tier ladder — player: PlayerData thêm
-// field TUỲ CHỌN `cultivationPath?: CultivationPathId` (xem
-// core/player/CultivationPathKit.ts). Optional nên về mặt dữ liệu save
-// cũ vẫn đọc được (undefined = Phàm Nhân, đúng default hiện tại của
-// MỌI nhân vật) — vẫn bump version theo đúng convention "mỗi thay đổi
-// schema đều bump" đã áp dụng nhất quán từ version 11 trở đi, để
-// CURRENT_SAVE_VERSION luôn phản ánh đúng shape PlayerData hiện hành.
-// version 20: Tâm Pháp hợp nhất — techniques: Technique[] đổi HẲN
-// shape (3 loại cultivation/combat/breakthrough với field riêng từng
-// loại -> 1 interface phẳng duy nhất, mọi field vai trò cụ thể giờ
-// optional, xem core/technique/Technique.ts). Save cũ (version <20)
-// có `technique.type`/`minorBreakthroughGrant`/`majorRealmEnhancements`
-// KHÔNG khớp shape mới — không viết migration, cùng convention mọi
-// version trước.
-// version 21: Kiếm Tu — player: PlayerData thêm field BẮT BUỘC MỚI
-// `totalCultivationGained: number` (đếm tu vi suốt đời — sau này nguồn
-// tier Kiếm Ý chuyển sang bossKillCount, xem KiemYSystem.ts). Save cũ
-// thiếu field này — không viết migration, cùng convention mọi version
-// trước.
-// version 53 (2026-08-29, kiem-the-kiem-y spec): thêm
-// `bossKillCount: number` (tầng Kiếm Ý vĩnh viễn theo boss diệt);
-// kiemTuRoute chốt vĩnh viễn lúc chọn path; gỡ skill Kiếm Tu cũ (mỗi
-// route 1 active skill); gỡ rage. Chi tiết xem saveVersion.ts.
-// version 54 (2026-08-29, dot-pha-loi-kiep spec): thêm 4 field BẮT
-// BUỘC `openedMeridianIds: string[]` (Bát Mạch đã thông),
-// `luyenKhiKillsSinceBeast: number` (cửa sổ quái ẩn),
-// `mortalPerfectionAchieved: boolean` (snapshot hoàn hảo Phàm Nhân),
-// `greatDaoOpportunityLost: boolean` (mất vĩnh viễn Đại Đạo). Gỡ Đột
-// Phá Lệnh (token materials) + quái Kiếp. Save v53 bị từ chối (dev
-// phase, không migration). Chi tiết xem saveVersion.ts.
-export interface GameSave {
-  version: typeof CURRENT_SAVE_VERSION
-
-  player: PlayerData
-
-  techniques: Technique[]
-
-  skills: Skill[]
-
-  materials: MaterialStackSave[]
-
-  equipment: EquipmentInstance[]
-
-  pills: PillStackSave[]
-
-  /** v44: luôn rỗng — Phù legacy đã khai tử, quy đổi Linh Thạch (§10.1). */
-  talismans: TalismanStackSave[]
-
-  /** v44: luôn rỗng — Trận legacy đã khai tử, quy đổi Linh Thạch (§10.1). */
-  formations: FormationStackSave[]
-
-  buildings: BuildingInstance[]
-
-  equipmentSlots: EquipmentSlotState[]
-
-  /** v44: state ba nguồn Lâm/Quáng/Động Thiên (plan §4). */
-  productionSites?: ProductionSiteStateSave[]
-
-  /** v44: job luyện đan đang chạy (plan §8.2). */
-  alchemyJobs?: AlchemyJobSave[]
-
-  /** v51: state Quest System (active progress + completedOnceIds + daily reset mốc). */
-  quests?: QuestManagerState
-}
-
-export interface GameSessionPlayerOwner {
-  readonly $state: PlayerData
-
-  restoreFromSave(save: GameSave): OfflineResult
-
-  setEquipmentModifiers(modifiers: StatModifier[]): void
-}
-
-export type RestoreGameSessionResult =
-  | { status: 'ok'; offline: OfflineResult }
-  | { status: 'rejected'; message: string }
-
 /**
  * Exact App restore order. Registry drift is rejected before Pinia, active-player,
  * or manager state can mutate; valid saves then restore through the existing owners.
@@ -450,7 +269,7 @@ export function restoreGameSession(
   save: GameSave,
 ): RestoreGameSessionResult {
   try {
-    gameManager.preflightSaveRegistryReferences(save)
+    gameManager.saveOps.preflightSaveRegistryReferences(save)
   } catch (error: unknown) {
     return {
       status: 'rejected',
@@ -462,7 +281,7 @@ export function restoreGameSession(
 
   gameManager.setActivePlayer(player.$state)
 
-  const equipmentModifiers = gameManager.restoreFromSave(save)
+  const equipmentModifiers = gameManager.saveOps.restoreFromSave(save)
 
   player.setEquipmentModifiers(equipmentModifiers)
 
@@ -470,63 +289,29 @@ export function restoreGameSession(
 }
 
 /** Shape persist của một ProductionCycle — khớp core/production. */
-export interface ProductionCycleSave {
-  cycleId: string
-
-  siteId: string
-
-  collectionRealmId: string
-
-  siteLevelAtStart: number
-
-  rewardTableVersion: number
-
-  rollSeed: number
-
-  startedAtMs: number
-
-  completesAtMs: number
-}
-
-/** Shape persist của ProductionSiteState — khớp core/production. */
-export interface ProductionSiteStateSave {
-  siteId: string
-
-  level: number
-
-  autoRestart: boolean
-
-  activeCycle?: ProductionCycleSave
-
-  // 2026-08-28 (economy-ecosystem-plan T3) — worker cycle dở dang trước
-  // đây KHÔNG được persist: mất trắng tiến trình mỗi lần reload và worker
-  // không sản xuất offline. Giờ lưu lại để settleOffline chạy tiếp trong cap.
-  workerCycles?: ProductionCycleSave[]
-}
-
-/** Shape persist của ActiveAlchemyJob — khớp core/alchemy. */
-export interface AlchemyJobSave {
-  jobId: string
-
-  recipeId: string
-
-  pillId: string
-
-  herbMaterialId: string
-
-  startedAtMs: number
-
-  completesAtMs: number
-
-  roomLevelAtStart: number
-}
-
 export function buildGameSave(player: PlayerData, gameManager: GameManager): GameSave {
   return {
     version: CURRENT_SAVE_VERSION,
 
     player: {
-      ...player,
+      // R10 (AR-12): the snapshot must be a VALUE - deep-detach the
+      // player (nested baseStats/modifiers/flags alias the live store
+      // under a plain spread, so mutating live state after build used
+      // to change the "saved" payload).
+      //
+      // JSON round-trip, NOT structuredClone: the real caller is a Pinia
+      // store's reactive state, and structuredClone has no concept of
+      // Proxy exotic objects at ANY nesting depth - it throws
+      // DataCloneError the moment it meets one, including a nested field
+      // Vue only wrapped in a Proxy lazily after some earlier getter/
+      // computed touched it during actual gameplay (not reproducible from
+      // a freshly-constructed player in isolation - toRaw() alone was not
+      // sufficient either, since it only unwraps the outermost proxy).
+      // JSON.stringify/parse reads through Proxies transparently via
+      // normal property access, at any depth - and this object is going
+      // to be JSON.stringify'd again by writeGameSave() for localStorage
+      // regardless, so this changes no on-disk behavior.
+      ...JSON.parse(JSON.stringify(player)),
 
       lastSavedAt: Date.now(),
     },
@@ -573,6 +358,10 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
     alchemyJobs: gameManager.alchemySystem.getJobs(),
 
     quests: structuredClone(gameManager.questManager.getState()),
+
+    // R7 (AR-08) - detached decompose snapshot (getSaveState returns a
+    // value copy; structuredClone keeps it independent of live state).
+    decompose: structuredClone(gameManager.decomposeSystem.getSaveState()),
   }
 }
 

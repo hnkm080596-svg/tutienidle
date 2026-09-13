@@ -24,7 +24,7 @@ const error = ref('')
 const creating = ref(false)
 const attributes = ref<CharacterCreationPayload['attributes']>({ strength: 0, dexterity: 0, intelligence: 0, attunement: 0, vitality: 0 })
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const attributeLabels = computed<Record<keyof CharacterCreationPayload['attributes'], { name: string; hint: string }>>(() => ({
   strength: { name: t('onboarding.creation.attributes.strength.name'), hint: t('onboarding.creation.attributes.strength.hint') },
@@ -38,6 +38,7 @@ const pointsLeft = computed(() => 5 - pointsSpent.value)
 const validName = computed(() => isValidCharacterName(name.value))
 
 function toggleTalent(talent: TalentDefinition) {
+  if (rolling.value) return
   const index = selectedTalentIds.value.indexOf(talent.id)
   if (index >= 0) selectedTalentIds.value.splice(index, 1)
   else selectedTalentIds.value = [talent.id]
@@ -67,8 +68,9 @@ async function finish() {
   if (!validation.ok) { error.value = validation.message; return }
   creating.value = true
   const result = await characterCreationService.createCharacter(payload)
-  creating.value = false
-  if (!result.ok) { error.value = result.message; return }
+  if (!result.ok) { creating.value = false; error.value = result.message; return }
+  // Keep `creating` until unmount - the boot/save work that follows runs while
+  // this screen is still displayed under the closing curtain.
   emit('complete', payload)
 }
 
@@ -102,10 +104,10 @@ onMounted(() => { void reroll() })
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
       <div class="panel-heading"><div><p class="kicker">{{ t('onboarding.creation.talentStep.kicker') }}</p><h2>{{ t('onboarding.creation.talentStep.title') }}</h2></div><strong>{{ t('onboarding.creation.talentStep.selected', { count: selectedTalentIds.length }) }}</strong></div>
-      <p v-if="rolling" class="loading-roll">{{ t('onboarding.creation.talentStep.rolling') }}</p>
+      <p v-if="rolling && talents.length === 0" class="loading-roll">{{ t('onboarding.creation.talentStep.rolling') }}</p>
       <p v-else-if="error && talents.length === 0" class="loading-roll">{{ error }}</p>
-      <div v-else class="talent-grid">
-        <button v-for="talent in talents" :key="talent.id" type="button" class="talent-card" :data-testid="`creation-talent-${talent.id}`" :class="[`talent-tier-${talent.rarity}`, { selected: selectedTalentIds.includes(talent.id) }]" @click="toggleTalent(talent)">
+      <div v-else class="talent-grid" :class="{ 'is-rolling': rolling }" :aria-busy="rolling">
+        <button v-for="talent in talents" :key="talent.id" type="button" class="talent-card" :data-testid="`creation-talent-${talent.id}`" :class="[`talent-tier-${talent.rarity}`, { selected: selectedTalentIds.includes(talent.id) }]" :disabled="rolling" @click="toggleTalent(talent)">
           <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span><h3>{{ talent.name }}</h3><p>{{ talent.description }}</p><small>{{ talent.tags[0] }}</small>
         </button>
       </div>
@@ -134,7 +136,8 @@ onMounted(() => { void reroll() })
 .creation-panel { position: relative; isolation: isolate; max-width: 1120px; margin: auto; box-sizing: border-box; border-radius: 0; padding: clamp(52px,5vw,68px) clamp(30px,5vw,64px); background: transparent; box-shadow: none; }
 .creation-panel > :not(.ink-nine-slice) { position: relative; z-index: 3; }
 .creation-panel h2 { margin: 5px 0 8px; font: 600 var(--text-display) var(--font-display); }.creation-panel>p:not(.kicker) { color: var(--paper-text-soft, #5e5a50); }.name-step { max-width: 560px; text-align: center; }.name-step label { display: grid; gap: 8px; margin: 24px 0 8px; text-align: left; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }.name-step input { padding: 15px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); color: var(--paper-text, #211f1a); font: 600 var(--text-panel-title) var(--font-display); text-align: center; outline: none; }.name-step input:focus { border-color: var(--cinnabar, #b54432); }.name-step small { display: block; margin-bottom: 28px; color: var(--text-muted); }.name-step small.valid { color: var(--jade); }
-.panel-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 18px; }.panel-heading strong { color: var(--cinnabar, #b54432); font-size: var(--text-xs); }.talent-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }.talent-card { position: relative; min-height: 128px; padding: 15px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); color: var(--paper-text, #211f1a); text-align: left; cursor: pointer; transition: transform .15s,border-color .15s; }.talent-card:hover { transform: translateY(-2px); }.talent-card.selected { border-color: var(--cinnabar, #b54432); box-shadow: inset 0 0 0 1px var(--cinnabar, #b54432); }.talent-card__rarity { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .13em; }.talent-card h3 { margin: 7px 0; font: 600 var(--text-md) var(--font-display); }.talent-card p { margin: 0 0 8px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); line-height: 1.5; }.talent-card small { color: var(--text-muted); }.talent-tier-pham .talent-card__rarity{color:var(--rank-color-1)}.talent-tier-linh .talent-card__rarity{color:var(--rank-color-3)}.talent-tier-dia .talent-card__rarity{color:var(--rank-color-5)}.talent-tier-thien .talent-card__rarity{color:var(--rank-color-7)}.talent-tier-di .talent-card__rarity{color:var(--rank-color-8)}
+.panel-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 18px; }.panel-heading strong { color: var(--cinnabar, #b54432); font-size: var(--text-xs); }.talent-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }.talent-card { position: relative; min-height: 128px; padding: 15px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); color: var(--paper-text, #211f1a); text-align: left; cursor: pointer; transition: transform .15s,border-color .15s; }.talent-card:hover { transform: translateY(-2px); }.talent-card.selected { border-color: var(--cinnabar, #b54432); box-shadow: inset 0 0 0 1px var(--cinnabar, #b54432); }.talent-card__rarity { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .13em; }.talent-card h3 { margin: 7px 0; font: 600 var(--text-md) var(--font-display); }.talent-card p { margin: 0 0 8px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); line-height: 1.5; }.talent-card small { color: var(--text-muted); }
+.talent-grid.is-rolling { opacity: .45; pointer-events: none; }.talent-tier-pham .talent-card__rarity{color:var(--rank-color-1)}.talent-tier-linh .talent-card__rarity{color:var(--rank-color-3)}.talent-tier-dia .talent-card__rarity{color:var(--rank-color-5)}.talent-tier-thien .talent-card__rarity{color:var(--rank-color-7)}.talent-tier-di .talent-card__rarity{color:var(--rank-color-8)}
 .panel-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; }.attribute-step { max-width: 700px; }.points { padding: 8px 12px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 20px; }.attribute-list { display: grid; gap: 8px; }.attribute-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); }.attribute-row>div:first-child { display: grid; gap: 3px; }.attribute-row small { color: var(--text-muted); }.counter { display: flex; align-items: center; gap: 16px; }.counter button { min-width: var(--tap-min); min-height: var(--tap-min); border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 50%; background: var(--paper-50, #f5f0e4); color: var(--paper-text, #211f1a); cursor: pointer; }.counter span { min-width: 18px; text-align: center; font-weight: 700; }.creation-summary { display: flex; justify-content: center; gap: 22px; margin-top: 20px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }
 .loading-roll { min-height: min(380px, 50vh); display: grid; place-items: center; color: var(--cinnabar, #b54432); font-family: var(--font-display); }.creation-error { margin: 14px 0 0; color: var(--crimson); text-align: center; font-size: var(--text-xs); }
 @media(max-width:760px){.talent-grid{grid-template-columns:1fr 1fr}.creation-header{grid-template-columns:1fr auto}.creation-header>div{grid-column:1/-1;grid-row:1}.creation-header button{grid-row:2}.creation-header span{grid-row:2}.panel-heading{align-items:start}.creation-summary{flex-wrap:wrap}}

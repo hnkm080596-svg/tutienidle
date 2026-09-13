@@ -2,10 +2,11 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import type { Stats } from '../stats/StatBlock'
 import type { EnemyLane } from '../battle/BattleLane'
 import type { EnemyStatInput } from './EnemyStatInput'
-import { normalizeEnemyStats, applyEliteMultiplier, applyBossMultiplier } from './EnemyStatInput'
+import { normalizeEnemyStats, applyBossMultiplier } from './EnemyStatInput'
 import type { EnemyArchetype } from './EnemyArchetype'
 import type { TribulationPhase, BossEnrage } from './TribulationPhase'
 import type { CombatVfxPresetId } from '../battle/CombatAction'
+import type { SignatureDrop } from '../drop/DropTable'
 import { getRealmIndex } from '../realm/realmSystem'
 
 export type { EnemyLane }
@@ -29,19 +30,6 @@ export interface EnemySpecialAttack {
   windupSeconds?: number
 }
 
-export interface EnemyItemDrop {
-  kind: 'material' | 'equipment' | 'pill' | 'technique'
-
-  itemId: string
-
-  // Dùng cho material/pill (số lượng cộng vào stack). Equipment luôn
-  // tạo đúng 1 instance mỗi lần rớt, bỏ qua field này.
-  amount?: number
-
-  // 1.0 = 100%
-  chance: number
-}
-
 export interface EnemyReward {
   // Cảm ngộ Tâm Pháp — CHỈ vào tâm pháp đang trang bị (undefined/hết
   // trần thì mất trắng, xem GameManager.gainEquippedTechniqueInsight()).
@@ -59,8 +47,6 @@ export interface EnemyReward {
   // tu vi, nên EnemyReward không có cultivation. Quest reward vẫn dùng
   // Reward.cultivation (core/reward/Reward.ts) — đó là đường riêng.
   spiritStone: number
-
-  itemDrops?: EnemyItemDrop[]
 }
 
 export interface Enemy {
@@ -85,16 +71,9 @@ export interface Enemy {
 
   rewards: EnemyReward
 
-  // Rewards dùng khi quái spawn dưới dạng Elite (roll trúng
-  // eliteChance, xem GameManager.updateStageProgress()) — thường thêm
-  // itemDrops chứa Phá Cảnh Tâm Pháp (kind 'technique'). Không khai
-  // thì Elite vẫn dùng `rewards` thường (chỉ buff stat, không đổi
-  // thưởng).
-  eliteRewards?: EnemyReward
-
   // Cờ đánh dấu bản Elite ("Tinh Anh") — buff vừa phải, spawn NGẪU
   // NHIÊN theo eliteChance (xem Stage.StageEnemyEntry). Chỉ true khi
-  // tạo qua createEliteVariant().
+  // tag tinh_anh được gắn qua applyEnemyTags() (core/enemy/EnemyTag.ts).
   isElite?: boolean
 
   // Core Loop Foundation checklist (Mục BOSS) — tier RIÊNG, tách hẳn
@@ -102,10 +81,6 @@ export interface Enemy {
   // ngẫu nhiên (đặt CỐ ĐỊNH qua Stage.bossEnemyId, luôn là quái CUỐI
   // của stage) — chỉ true khi tạo qua createBossVariant().
   isBoss?: boolean
-
-  // Rewards dùng khi quái spawn dưới dạng Boss — không khai thì dùng
-  // eliteRewards ?? rewards (fallback chain, xem createBossVariant()).
-  bossRewards?: EnemyReward
 
   // Core Loop Foundation checklist (Mục MONSTER) — nhãn hành vi nhẹ
   // (không phải AI đầy đủ), xem EnemyArchetype.ts + BattleSystem.ts's
@@ -116,6 +91,11 @@ export interface Enemy {
   // quái cùng chủ đề để có bộ material riêng (Wolf → Beast Fang/Hide/
   // Core). Thuần label, không ảnh hưởng combat/stats.
   family?: string
+
+  // Drop-system (2026-09-12): per-enemy named drops (rare/narrative
+  // items) resolved as their own layer by resolveDrops — never scaled
+  // by the family/stage pool. Replaces hand-placed itemDrops lines.
+  signatureDrops?: SignatureDrop[]
 
   // Đột Phá Trúc Cơ (Phase 4) — quái Kiếp (Nhân/Địa/Thiên/Đại Đạo Kiếp,
   // xem data/enemy/Tribulations.ts) leo thang sức mạnh giữa trận qua
@@ -128,6 +108,13 @@ export interface Enemy {
   // TribulationPhase.ts's BossEnrage. CHỈ Boss cần khai, quái thường
   // để trống.
   enrage?: BossEnrage
+
+  // Turn-based boss enrage (Phase A2, 2026-09-07) — static config only;
+  // TurnBattleAdapter.toTurnBattleParticipant() turns this into a live
+  // TurnBossTrigger (adds firedAlready: false) on spawn. Separate from
+  // the legacy `enrage`/`tribulationPhases` fields above, which remain
+  // consumed only by battle/legacy/BattleSystem and are untouched here.
+  bossTrigger?: { afterTurns: number; buffDefinitionId: string }
 
   // Thể Tu (Combat Rework Phase 7) — thanh Break, xem CombatEntity.ts.
   // CHỈ Boss/quái lớn cần khai, quái thường để trống.
@@ -159,17 +146,22 @@ export interface EnemyDefinition {
 
   rewards: EnemyReward
 
-  eliteRewards?: EnemyReward
-
-  bossRewards?: EnemyReward
-
   archetype?: EnemyArchetype
 
   family?: string
 
+  // Threaded to Enemy.signatureDrops by defineEnemy(); elite/boss
+  // variants inherit it via object spread.
+  signatureDrops?: SignatureDrop[]
+
   tribulationPhases?: TribulationPhase[]
 
   enrage?: BossEnrage
+
+  // Turn-based boss enrage (Phase A2, 2026-09-07) — same shape as the
+  // Enemy interface's bossTrigger; threaded through defineEnemy() and
+  // enemyToCombatEntity() unchanged.
+  bossTrigger?: { afterTurns: number; buffDefinitionId: string }
 
   breakGaugeMax?: number
 
@@ -206,11 +198,15 @@ export function defineEnemy(definition: EnemyDefinition): Enemy {
 
     family: definition.family,
 
+    signatureDrops: definition.signatureDrops,
+
     archetype: definition.archetype,
 
     tribulationPhases: definition.tribulationPhases,
 
     enrage: definition.enrage,
+
+    bossTrigger: definition.bossTrigger,
 
     breakGaugeMax: definition.breakGaugeMax,
 
@@ -227,37 +223,6 @@ export function defineEnemy(definition: EnemyDefinition): Enemy {
     alive: true,
 
     rewards: definition.rewards,
-
-    eliteRewards: definition.eliteRewards,
-
-    bossRewards: definition.bossRewards,
-  }
-}
-
-const ELITE_NAME_PREFIX = 'Tinh Anh '
-
-/**
- * Biến 1 Enemy TEMPLATE thành bản Elite (buff stat cố định + đổi
- * rewards nếu có eliteRewards) — gọi lúc SPAWN (GameManager.
- * updateStageProgress()), không đụng tới template gốc trong registry.
- */
-export function createEliteVariant(enemy: Enemy): Enemy {
-  const stats = applyEliteMultiplier(enemy.stats)
-
-  return {
-    ...enemy,
-
-    name: ELITE_NAME_PREFIX + enemy.name,
-
-    stats,
-
-    currentHp: stats.maxHp,
-
-    maxHp: stats.maxHp,
-
-    rewards: enemy.eliteRewards ?? enemy.rewards,
-
-    isElite: true,
   }
 }
 
@@ -282,8 +247,6 @@ export function createBossVariant(enemy: Enemy): Enemy {
     currentHp: stats.maxHp,
 
     maxHp: stats.maxHp,
-
-    rewards: enemy.bossRewards ?? enemy.eliteRewards ?? enemy.rewards,
 
     isBoss: true,
   }
@@ -363,6 +326,8 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
     tribulationPhases: enemy.tribulationPhases,
 
     enrage: enemy.enrage,
+
+    bossTrigger: enemy.bossTrigger,
 
     breakGaugeMax: enemy.breakGaugeMax,
 

@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import type { EventBus } from '@/core/events/EventBus'
-import { queueCombatAssets } from '@/game/support/CombatPreload'
+import { readOptionalGate } from '@/presentation/gate/PresentationGate'
 
 const GROUND_COLOR = 0x1c1712
 const SKY_COLOR = 0x11141c
@@ -49,7 +49,7 @@ import {
   getCultivateTexture,
   resolvePlayerVisualProfileId,
   type PlayerVisualProfileId,
-} from '@/game/support/PlayerVisualProfiles'
+} from '@/presentation/art/PlayerVisualProfiles'
 
 interface ResizeSize {
   width: number
@@ -93,17 +93,13 @@ export class MainScene extends Phaser.Scene {
   private player?: PlayerSprite
 
   private eventBus?: EventBus
-  private battleStartHandler = () => this.onBattleStart()
-  private tribulationStartHandler = () => this.scene.start('TribulationScene')
   private cultivationHandler = (event: CultivationStateEvent) => this.onCultivationChanged(event)
   private playerVisualProfileHandler = () => {
     if (!this.player) {
       return
     }
 
-    const registryProfileId = this.registry.get('playerVisualProfileId') as
-      | PlayerVisualProfileId
-      | undefined
+    const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
 
     if (registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]) {
       this.player.profileId = registryProfileId
@@ -148,12 +144,15 @@ export class MainScene extends Phaser.Scene {
   }
 
   preload() {
-    // Eager-load toàn bộ texture combat (thanh-van variant phiên + gourd +
-    // 20 art quái + player profiles) NGAY LÚC BOOT — CombatScene.start()
-    // lần ĐẦU (ngay sau 'battle_start') sẽ có loader queue rỗng, create()
-    // chạy gần như tức thời nên không bỏ lỡ phase spawn telegraph
-    // (fix "lần đầu vào combat không thấy spawn animation", 2026-08-26).
-    queueCombatAssets(this)
+    // Eager combat preload removed (Task 13). Assets are ensured by AssetBundleManager before scene activation.
+  }
+
+  private initTransitionId = 0
+
+  init(data?: { transitionId?: number }): void {
+    if (data?.transitionId) {
+      this.initTransitionId = data.transitionId
+    }
   }
 
   create() {
@@ -166,9 +165,7 @@ export class MainScene extends Phaser.Scene {
 
     // Player visual profile (plan §4.3) — static texture theo profile;
     // KHÔNG còn animation atlas idle/cultivate ở scene này.
-    const registryProfileId = this.registry.get('playerVisualProfileId') as
-      | PlayerVisualProfileId
-      | undefined
+    const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
 
     const profileId =
       registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]
@@ -185,6 +182,9 @@ export class MainScene extends Phaser.Scene {
     this.scale.on('resize', this.resizeHandler)
 
     this.subscribeCombatEvents()
+
+    const adapter = readOptionalGate(this.registry, 'sceneAdapter')
+    adapter?.reportReady({ transitionId: this.initTransitionId })
 
     this.events.once('shutdown', this.shutdownHandler)
   }
@@ -274,7 +274,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private subscribeCombatEvents() {
-    const eventBus = this.registry.get('eventBus') as EventBus | undefined
+    const eventBus = readOptionalGate(this.registry, 'eventBus')
 
     if (!eventBus) {
       return
@@ -282,8 +282,6 @@ export class MainScene extends Phaser.Scene {
 
     this.eventBus = eventBus
 
-    eventBus.on<void>('battle_start', this.battleStartHandler)
-    eventBus.on<void>('tribulation_started', this.tribulationStartHandler)
     eventBus.on<CultivationStateEvent>('cultivation_changed', this.cultivationHandler)
     // Player visual profile bridge (plan §4.2) — đổi hình thái áp dụng
     // texture NGAY cho pose đang hiển thị.
@@ -295,8 +293,6 @@ export class MainScene extends Phaser.Scene {
       return
     }
 
-    this.eventBus.off<void>('battle_start', this.battleStartHandler)
-    this.eventBus.off<void>('tribulation_started', this.tribulationStartHandler)
     this.eventBus.off<CultivationStateEvent>('cultivation_changed', this.cultivationHandler)
     this.eventBus.off('player_visual_profile_changed', this.playerVisualProfileHandler)
   }
@@ -317,13 +313,5 @@ export class MainScene extends Phaser.Scene {
 
     this.updateSpriteDisplaySize()
     this.positionPlayer()
-  }
-
-  // Combat UI Redesign — 1 trận thật sự bắt đầu (kể cả Auto tự nối
-  // trận) — Home Scene không còn tự vẽ combat nữa, chuyển hẳn quyền
-  // render qua CombatScene (xem class doc). Phaser tự stop() scene này
-  // khi start() scene khác.
-  private onBattleStart() {
-    this.scene.start('CombatScene')
   }
 }

@@ -182,9 +182,9 @@ export interface CombatEntity {
 
   alive: boolean
 
-  // Cờ Elite ("Tinh Anh") cho Combat HUD (thanh máu luôn hiện) — xem
-  // core/enemy/Enemy.ts's createEliteVariant(). Player luôn falsy
-  // (không set trong playerToCombatEntity()).
+  // Cờ Elite ("Tinh Anh") cho Combat HUD (thanh máu luôn hiện) — set
+  // khi tag tinh_anh gắn qua applyEnemyTags (core/enemy/EnemyTag.ts).
+  // Player luôn falsy (không set trong playerToCombatEntity()).
   isElite?: boolean
 
   // Core Loop Foundation checklist (Mục BOSS) — tier RIÊNG, tách hẳn
@@ -206,10 +206,16 @@ export interface CombatEntity {
   // TribulationPhase.ts's BossEnrage, BattleSystem.updateEnrage().
   enrage?: BossEnrage
 
+  // Turn-based boss enrage (Phase A2, 2026-09-07) — see Enemy.ts's
+  // bossTrigger for the full comment; threaded here unchanged via
+  // enemyToCombatEntity(), read by TurnBattleAdapter.toTurnBattleParticipant().
+  bossTrigger?: { afterTurns: number; buffDefinitionId: string }
+
   // Combat Balance Pass (2026-08-29, plan §3.6) — action đặc biệt data-
   // driven thay basic attack cứng (xem core/enemy/Enemy.ts's
   // EnemySpecialAttack). Thread từ Enemy qua enemyToCombatEntity(), đọc
-  // tại BattleSystem.fireEnemyAttack(). undefined = quái chỉ basic attack.
+  // tại TurnBattleSystem.declareActorAction() (everyNth counter).
+  // undefined = quái chỉ basic attack.
   specialAttacks?: EnemySpecialAttack[]
 
   // Thể Tu (Combat Rework Phase 7) — thanh máu phụ CHỐNG PHÁ, tách
@@ -222,35 +228,6 @@ export interface CombatEntity {
   breakGaugeMax?: number
 
   currentBreakGauge?: number
-
-  // Cast Time (2026-08-21) — entity đang "niệm" 1 skill có Skill.castTime
-  // > 0 (xem BattleSystem.updateCasting()). undefined = không casting
-  // (mọi entity mặc định — factory functions KHÔNG cần set, giống
-  // currentHuyetPha/totalMaxHpReductionPercent). castTimeRemaining đếm
-  // ngược về 0 thì hiệu ứng thi triển thật (resolveSkillEffects()),
-  // castTimeTotal giữ NGUYÊN suốt quá trình niệm — chỉ dùng để UI vẽ %
-  // tiến độ (castTimeRemaining / castTimeTotal), không ảnh hưởng logic.
-  castingSkillId?: string
-  castTimeRemaining?: number
-  castTimeTotal?: number
-
-  // Cast Time rework (review 2026-08-26, plan §8.5) — id target GỐC lúc
-  // bắt đầu niệm; completion validate ĐÚNG target này (còn sống + còn
-  // trong tầm), không re-target sang enemy khác.
-  castTargetId?: string
-
-  // Cast transaction (combat-skill-flow-element-power-dot-plan.md §4.1) —
-  // slot của lần niệm SNAPSHOT trực tiếp lúc bắt đầu, không tra ngược
-  // loadout lúc hoàn tất: đổi loadout giữa chừng không làm thất lạc
-  // cooldown của lần cast đang chạy. Runtime-only, undefined = không cast.
-  castingSlotIndex?: number
-
-  // Skill execution policy rework (plan §4.4/§8.2) — cadence Attack
-  // Speed THEO TỪNG SLOT cho policy 'attack_speed'/'attack_speed_cast'
-  // (skill có policy 'cooldown' dùng remainingCooldownBySlot của Skill,
-  // chịu CDR — hai clock ĐỘC LẬP, không double-apply). Runtime-only:
-  // KHÔNG persist, reset khi trận bắt đầu. undefined/0 = slot sẵn sàng.
-  skillCadenceRemainingBySlot?: Record<number, number>
 
   // Kiếm Tu Bạt Kiếm — trạng thái tụ lực (reset mỗi kỳ sau mỗi phát
   // quạt; tuLucActive=false khi chết/khống chế cứng).

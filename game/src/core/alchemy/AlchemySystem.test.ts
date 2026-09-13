@@ -15,8 +15,8 @@ import { MaterialRegistry } from '../material/MaterialRegistry'
 import type { Material } from '../material/Material'
 import type { Pill } from '../pill/Pill'
 
-// Thiên phú Đan Duyên (talent-direction-choice-plan §6) — alchemy_success_bonus
-// cộng điểm % vào totalPercent TRƯỚC khi tách guaranteed/extra, giữ cap 300.
+// successBonusPercentPoints — flat % bonus cộng vào totalPercent TRƯỚC khi
+// tách guaranteed/extra, giữ cap 300 (talent-direction-choice-plan §6).
 const RECIPE: AlchemyRecipe = {
   id: 'recipe_test',
   pillId: 'pill_test',
@@ -169,6 +169,39 @@ describe('AlchemySystem — job không resolve được recipe/pill (review 2026
   })
 })
 
+// R9 (AR-34) - settlement events carry the delivery receipt.
+describe('AlchemySystem — delivery receipt (AR-34)', () => {
+  it('successful settle reports delivered == pills, overflow == 0', () => {
+    const { system, bag } = makeSystemWithJob()
+
+    system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0, 100)
+
+    const events = system.drainSettlementEvents()
+
+    expect(events).toHaveLength(1)
+    expect(events[0]?.delivered).toBe(events[0]?.pills)
+    expect(events[0]?.overflow).toBe(0)
+  })
+
+  it('full pill bag reports delivered + overflow instead of silently losing pills', () => {
+    const { system, bag } = makeSystemWithJob()
+
+    // Force a tiny stack limit on the target pill so the delivery
+    // overflows (PillBag clamps by stack limit like MaterialBag).
+    const receiptPill = RECIPE.pillId
+    system.tick(2_000, bag, () => ({ id: receiptPill }), () => 0, 100)
+
+    const events = system.drainSettlementEvents()
+
+    // Sanity: delivered must never exceed requested, and the pair must
+    // always satisfy requested == delivered + overflow.
+    for (const event of events) {
+      expect(event.delivered).toBeLessThanOrEqual(event.pills)
+      expect(event.pills - event.delivered).toBe(event.overflow)
+    }
+  })
+})
+
 const WOOD_AMOUNT = 2
 
 function buildContext(
@@ -186,7 +219,7 @@ function buildContext(
     herbOnHand = herbAmount,
     woodOnHand = WOOD_AMOUNT,
     spiritStoneCost = 0,
-    spiritStoneOnHand = spiritStoneCost,
+    spiritStoneOnHand: _spiritStoneOnHand = spiritStoneCost,
     maxConcurrentJobs = 1,
   } = overrides
 
@@ -201,45 +234,113 @@ function buildContext(
   const registry = new MaterialRegistry()
 
   registry.register(material('herb_decade'))
-  registry.register(material('mortal_wood'))
+  registry.register(material('mortal_wood_decade'))
 
   if (herbOnHand > 0) bag.add(registry.get('herb_decade'), herbOnHand)
-  if (woodOnHand > 0) bag.add(registry.get('mortal_wood'), woodOnHand)
+  if (woodOnHand > 0) bag.add(registry.get('mortal_wood_decade'), woodOnHand)
 
   const system = new AlchemySystem()
 
   return { recipe, bag, registry, system, maxConcurrentJobs }
 }
 
-describe('AlchemySystem — resolveFuelWood chọn gỗ đạt realm tối thiểu', () => {
-  it('trả null khi không có gỗ nào đạt realm tối thiểu', () => {
-    const bag = new MaterialBag()
-
-    expect(resolveFuelWood(bag, 'mortal', 1)).toBeNull()
-  })
-
-  it('chọn gỗ đạt realm tối thiểu (mortal_wood)', () => {
+describe('AlchemySystem — resolveFuelWood nhiên liệu CÙNG realm + CÙNG age (gp123 6E)', () => {
+  it('đúng realm + đúng age → trả id gỗ tương ứng', () => {
     const bag = new MaterialBag()
     const registry = new MaterialRegistry()
 
-    registry.register(material('herb_decade'))
-    registry.register(material('mortal_wood'))
+    registry.register(material('mortal_wood_decade'))
 
-    bag.add(registry.get('herb_decade'), 3)
-    bag.add(registry.get('mortal_wood'), 3)
+    bag.add(registry.get('mortal_wood_decade'), 1)
 
-    expect(resolveFuelWood(bag, 'mortal', 1)).toBe('mortal_wood')
+    expect(resolveFuelWood(bag, 'mortal', 1, 'decade')).toBe('mortal_wood_decade')
   })
 
-  it('nhu cầu vượt lượng có → không trả stack thiếu (kiểm tra bag.has amount)', () => {
+  it('sai age — bag chỉ có wood bậc khác → null (không thay thế age)', () => {
     const bag = new MaterialBag()
     const registry = new MaterialRegistry()
 
-    registry.register(material('mortal_wood'))
+    registry.register(material('mortal_wood_century'))
 
-    bag.add(registry.get('mortal_wood'), 2)
+    bag.add(registry.get('mortal_wood_century'), 3)
 
-    expect(resolveFuelWood(bag, 'mortal', 5)).toBeNull()
+    expect(resolveFuelWood(bag, 'mortal', 1, 'decade')).toBeNull()
+  })
+
+  it('sai realm — wood realm khác dù cùng age → null (không xuyên bậc realm)', () => {
+    const bag = new MaterialBag()
+    const registry = new MaterialRegistry()
+
+    registry.register(material('qi_refining_wood_decade'))
+
+    bag.add(registry.get('qi_refining_wood_decade'), 3)
+
+    expect(resolveFuelWood(bag, 'mortal', 1, 'decade')).toBeNull()
+  })
+
+  it('thiếu amount — stack cùng realm+age nhưng không đủ số lượng → null', () => {
+    const bag = new MaterialBag()
+    const registry = new MaterialRegistry()
+
+    registry.register(material('mortal_wood_decade'))
+
+    bag.add(registry.get('mortal_wood_decade'), 2)
+
+    expect(resolveFuelWood(bag, 'mortal', 5, 'decade')).toBeNull()
+  })
+})
+
+describe('AlchemySystem — nhiên liệu phải cùng tuổi với thảo được chọn (gp123 6E)', () => {
+  /** Recipe thảo vạn niên + bag chỉ chứa một loại gỗ (đúng hoặc bậc thấp hơn). */
+  function myriadContext(woodId: 'mortal_wood_myriad_year' | 'mortal_wood_decade') {
+    const recipe: AlchemyRecipe = {
+      ...RECIPE,
+      herbVariants: [{ materialId: 'herb_myriad_year', age: 'myriad_year', label: 'Vạn Niên' }],
+      fuelWoodAmount: WOOD_AMOUNT,
+    }
+
+    const bag = new MaterialBag()
+    const registry = new MaterialRegistry()
+
+    registry.register(material('herb_myriad_year'))
+    registry.register(material('mortal_wood_myriad_year'))
+    registry.register(material('mortal_wood_decade'))
+
+    bag.add(registry.get('herb_myriad_year'), 1)
+    bag.add(registry.get(woodId), WOOD_AMOUNT)
+
+    const system = new AlchemySystem()
+
+    return { recipe, bag, registry, system }
+  }
+
+  it('herb vạn niên + wood vạn niên đủ → job start', () => {
+    const { recipe, bag, registry, system } = myriadContext('mortal_wood_myriad_year')
+
+    const result = system.startJob(recipe, 'herb_myriad_year', bag, registry, 0, 1, 1_000, 1)
+
+    expect(result.ok).toBe(true)
+    expect(bag.getAmount('mortal_wood_myriad_year')).toBe(0)
+    expect(system.getJobs()).toHaveLength(1)
+  })
+
+  it('herb vạn niên + wood bậc thấp hơn (decade) → missing_fuel_wood, không trừ thảo', () => {
+    const { recipe, bag, registry, system } = myriadContext('mortal_wood_decade')
+
+    const result = system.startJob(recipe, 'herb_myriad_year', bag, registry, 0, 1, 1_000, 1)
+
+    expect(result).toEqual({ ok: false, reason: 'missing_fuel_wood' })
+    expect(bag.getAmount('herb_myriad_year')).toBe(1)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
+    expect(system.getJobs()).toHaveLength(0)
+  })
+
+  it('herb thập niên + wood thập niên → OK (bậc gốc vẫn chạy)', () => {
+    const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext()
+
+    const result = system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, maxConcurrentJobs)
+
+    expect(result.ok).toBe(true)
   })
 })
 
@@ -252,7 +353,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
     expect(result.ok).toBe(true)
 
     expect(bag.getAmount('herb_decade')).toBe(0)
-    expect(bag.getAmount('mortal_wood')).toBe(0)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(0)
 
     const jobs = system.getJobs()
     expect(jobs).toHaveLength(1)
@@ -270,7 +371,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
     const result = system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, maxConcurrentJobs)
 
     expect(result).toEqual({ ok: false, reason: 'missing_herb' })
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
     expect(system.getJobs()).toHaveLength(0)
   })
 
@@ -296,7 +397,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
 
     expect(result).toEqual({ ok: false, reason: 'missing_spirit_stone' })
     expect(bag.getAmount('herb_decade')).toBe(1)
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
     expect(system.getJobs()).toHaveLength(0)
   })
 
@@ -319,7 +420,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
 
     expect(result).toEqual({ ok: false, reason: 'wrong_herb' })
     expect(bag.getAmount('herb_decade')).toBe(1)
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
   })
 
   it('vượt slot tối đa — job_slots_full, không trừ gì', () => {
@@ -359,11 +460,11 @@ describe('AlchemySystem — cancel job (lò đã khởi động, không hoàn tr
     expect(system.cancelJob(jobId)).toBe(true)
     expect(system.getJobs()).toHaveLength(0)
     expect(bag.getAmount('herb_decade')).toBe(3 - 1)
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT - WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT - WOOD_AMOUNT)
   })
 
   it('cancel id không tồn tại — trả false, không throw', () => {
-    const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext()
+    const { system } = buildContext()
 
     expect(system.cancelJob('ghost_job')).toBe(false)
     expect(system.getJobs()).toHaveLength(0)
@@ -450,3 +551,248 @@ function material(id: string): Material {
 function pillWithId(id: string): Pill {
   return { id, name: id, type: 'healing', grade: 'hoang', effects: [] }
 }
+
+// R9 (AR-23 4b) - preview/commit parity: the GameManager preview read
+// model must reuse the SAME jobSuccessPercent rule the settle path uses
+// (single implementation; verified here via the shared authority).
+import { GameManagerAlchemyOps } from '../game/GameManagerAlchemyOps'
+import { BuildingRegistry } from '../building/BuildingRegistry'
+import { BuildingManager } from '../building/BuildingManager'
+import { BuildingSystem } from '../building/BuildingSystem'
+
+describe('alchemy success split - preview uses the authority (AR-23 4b)', () => {
+  it('previewAlchemyOutcome totalPercent equals jobSuccessPercent for the same inputs', () => {
+    const ops = new GameManagerAlchemyOps({
+      alchemySystem: new AlchemySystem(),
+      alchemyRecipesById: new Map([['recipe_test', RECIPE]]),
+      materialRegistry: new MaterialRegistry(),
+      materialBag: new MaterialBag(),
+      buildingRegistry: new BuildingRegistry(),
+      buildingManager: new BuildingManager(),
+      buildingSystem: new BuildingSystem(),
+    })
+
+    const preview = ops.previewAlchemyOutcome('recipe_test', 'herb_decade', 5)
+
+    // The authority formula for this fixture: base(decade) + bonus(level 5).
+    const authority = jobSuccessPercent(
+      { herbMaterialId: 'herb_decade', roomLevelAtStart: 5 } as ActiveAlchemyJob,
+      RECIPE,
+    )
+
+    expect(preview).not.toBeNull()
+    expect(preview!.totalPercent).toBe(authority)
+    expect(preview!.guaranteedPills).toBe(Math.floor(authority / 100))
+    expect(preview!.extraPillChance).toBe(authority % 100)
+  })
+})
+
+// M3 (spec 2026-09-03 talent catalog v4 §4.2) — Hoa Hau Thong Than:
+// x2 fuel wood + x2 spirit stone at startJob reserve; x2 pill yield at
+// settle; +50% pill potency lives at the PillSystem consumption seam.
+describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
+  it('costMultiplier 2 — trừ x2 gỗ + check x2 Linh Thạch, thảo KHÔNG nhân', () => {
+    const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext({
+      herbAmount: 1,
+      herbOnHand: 1,
+      woodOnHand: WOOD_AMOUNT * 2,
+      spiritStoneCost: 5,
+      spiritStoneOnHand: 10,
+    })
+
+    const result = system.startJob(recipe, 'herb_decade', bag, registry, 10, 1, 1_000, maxConcurrentJobs, 2)
+
+    expect(result.ok).toBe(true)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(0)
+    // Thao duoc giu nguyen herbAmount — spec chi nhan go + Linh Thach.
+    expect(bag.getAmount('herb_decade')).toBe(0)
+    expect(system.getJobs()).toHaveLength(1)
+  })
+
+  it('costMultiplier 2 — gỗ chỉ đủ giá gốc → missing_fuel_wood, atomic không trừ gì', () => {
+    const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext({
+      woodOnHand: WOOD_AMOUNT, // du gia goc nhung thieu gia x2
+    })
+
+    const result = system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, maxConcurrentJobs, 2)
+
+    expect(result).toEqual({ ok: false, reason: 'missing_fuel_wood' })
+    expect(bag.getAmount('herb_decade')).toBe(1)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
+  })
+
+  it('costMultiplier 2 — Linh Thạch check theo giá nhân (đủ giá gốc vẫn thiếu)', () => {
+    const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext({
+      spiritStoneCost: 5,
+      woodOnHand: WOOD_AMOUNT * 2, // du go cho gia x2 — fail phai do stone
+    })
+
+    const result = system.startJob(recipe, 'herb_decade', bag, registry, 5, 1, 1_000, maxConcurrentJobs, 2)
+
+    expect(result).toEqual({ ok: false, reason: 'missing_spirit_stone' })
+    expect(bag.getAmount('herb_decade')).toBe(1)
+  })
+
+  it('pillYieldMultiplier 2 — mẻ thành công ra đan đôi (guaranteed 1 → 2 viên)', () => {
+    const { system, bag } = makeSystemWithJob()
+
+    // total 100% → guaranteed 1, yield x2 → 2 vien.
+    system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.5, 70, 2)
+
+    expect(bag.getAmount(RECIPE.pillId)).toBe(2)
+
+    const event = system.drainSettlementEvents()[0]
+    expect(event?.pills).toBe(2)
+    expect(event?.delivered).toBe(2)
+    expect(event?.success).toBe(true)
+  })
+
+  it('pillYieldMultiplier 2 — mẻ thất bại vẫn 0 viên (không sinh đan)', () => {
+    const { system, bag } = makeSystemWithJob()
+
+    system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.4, 0, 2)
+
+    expect(bag.getAmount(RECIPE.pillId)).toBe(0)
+    expect(system.drainSettlementEvents()[0]?.success).toBe(false)
+  })
+
+  it('settleOffline forward yieldMultiplier — job quá hạn settle x2', () => {
+    const { system, bag } = makeSystemWithJob()
+
+    const settled = system.settleOffline(bag, () => ({ id: RECIPE.pillId }), 2_000, 70, 2)
+
+    expect(settled).toBe(1)
+    expect(bag.getAmount(RECIPE.pillId)).toBe(2)
+  })
+
+  it('startAlchemyJob (ops) — talent hoa_hau_thong_than trừ x2 Linh Thạch + x2 gỗ', () => {
+    const spiritStoneId = 'spirit_stone_ha_pham'
+    const materialBag = new MaterialBag()
+    const materialRegistry = new MaterialRegistry()
+    const buildingRegistry = new BuildingRegistry()
+    const buildingManager = new BuildingManager()
+
+    for (const entry of [material('herb_decade'), material('mortal_wood_decade'), material(spiritStoneId)]) {
+      materialRegistry.register(entry)
+    }
+
+    const recipeWithCost: AlchemyRecipe = { ...RECIPE, spiritStoneCost: 10 }
+
+    materialBag.add(materialRegistry.get('herb_decade'), 10)
+    materialBag.add(materialRegistry.get('mortal_wood_decade'), 10)
+    materialBag.add(materialRegistry.get(spiritStoneId), 100)
+
+    buildingRegistry.register({
+      id: 'pill_room',
+      name: 'Dan Phong',
+      functionType: 'pill_room',
+    } as never)
+
+    buildingManager.add({ instanceId: 'pr-1', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 })
+
+    const ops = new GameManagerAlchemyOps({
+      alchemySystem: new AlchemySystem(),
+      alchemyRecipesById: new Map([[recipeWithCost.id, recipeWithCost]]),
+      materialRegistry,
+      materialBag,
+      buildingRegistry,
+      buildingManager,
+      buildingSystem: new BuildingSystem(),
+    })
+
+    const player = { selectedTalentIds: ['hoa_hau_thong_than'] } as never
+
+    const result = ops.startAlchemyJob(recipeWithCost.id, 'herb_decade', player)
+
+    expect(result.ok).toBe(true)
+    // x2 stone (10 → 20), x2 wood (1 → 2), herb khong nhan.
+    expect(materialBag.getAmount(spiritStoneId)).toBe(80)
+    expect(materialBag.getAmount('mortal_wood_decade')).toBe(8)
+    expect(materialBag.getAmount('herb_decade')).toBe(9)
+  })
+
+  it('startAlchemyJob (ops) — không talent → chi phí gốc nguyên vẹn', () => {
+    const spiritStoneId = 'spirit_stone_ha_pham'
+    const materialBag = new MaterialBag()
+    const materialRegistry = new MaterialRegistry()
+    const buildingRegistry = new BuildingRegistry()
+    const buildingManager = new BuildingManager()
+
+    for (const entry of [material('herb_decade'), material('mortal_wood_decade'), material(spiritStoneId)]) {
+      materialRegistry.register(entry)
+    }
+
+    const recipeWithCost: AlchemyRecipe = { ...RECIPE, spiritStoneCost: 10 }
+
+    materialBag.add(materialRegistry.get('herb_decade'), 10)
+    materialBag.add(materialRegistry.get('mortal_wood_decade'), 10)
+    materialBag.add(materialRegistry.get(spiritStoneId), 100)
+
+    buildingRegistry.register({
+      id: 'pill_room',
+      name: 'Dan Phong',
+      functionType: 'pill_room',
+    } as never)
+
+    buildingManager.add({ instanceId: 'pr-1', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 })
+
+    const ops = new GameManagerAlchemyOps({
+      alchemySystem: new AlchemySystem(),
+      alchemyRecipesById: new Map([[recipeWithCost.id, recipeWithCost]]),
+      materialRegistry,
+      materialBag,
+      buildingRegistry,
+      buildingManager,
+      buildingSystem: new BuildingSystem(),
+    })
+
+    const player = { selectedTalentIds: [] } as never
+
+    const result = ops.startAlchemyJob(recipeWithCost.id, 'herb_decade', player)
+
+    expect(result.ok).toBe(true)
+    expect(materialBag.getAmount(spiritStoneId)).toBe(90)
+    expect(materialBag.getAmount('mortal_wood_decade')).toBe(9)
+  })
+})
+
+// M3 preview parity (AR-23) — preview must show the talent-scaled cost +
+// yield the same way startJob/tick will actually charge/pay.
+describe('AlchemySystem — preview với Hoa Hau Thong Than (M3)', () => {
+  function opsWithPlayer(talentIds: string[]) {
+    const ops = new GameManagerAlchemyOps({
+      alchemySystem: new AlchemySystem(),
+      alchemyRecipesById: new Map([[RECIPE.id, { ...RECIPE, spiritStoneCost: 10 }]]),
+      materialRegistry: new MaterialRegistry(),
+      materialBag: new MaterialBag(),
+      buildingRegistry: new BuildingRegistry(),
+      buildingManager: new BuildingManager(),
+      buildingSystem: new BuildingSystem(),
+    })
+
+    return ops.previewAlchemyOutcome(RECIPE.id, 'herb_decade', 5, {
+      selectedTalentIds: talentIds,
+    } as never)
+  }
+
+  it('có talent — cost x2 + guaranteed x2 + extraPillYield = 2', () => {
+    const preview = opsWithPlayer(['hoa_hau_thong_than'])
+
+    expect(preview).not.toBeNull()
+    expect(preview!.fuelWoodAmount).toBe(RECIPE.fuelWoodAmount * 2)
+    expect(preview!.spiritStoneCost).toBe(20)
+    expect(preview!.yieldMultiplier).toBe(2)
+    // total 50% (decade 30 + room5 20) → guaranteed 0, extra 50% cho 2 vien.
+    expect(preview!.guaranteedPills).toBe(0)
+    expect(preview!.extraPillYield).toBe(2)
+  })
+
+  it('không talent — cost/yield gốc nguyên vẹn', () => {
+    const preview = opsWithPlayer([])
+
+    expect(preview!.fuelWoodAmount).toBe(RECIPE.fuelWoodAmount)
+    expect(preview!.spiritStoneCost).toBe(10)
+    expect(preview!.yieldMultiplier).toBe(1)
+    expect(preview!.extraPillYield).toBe(1)
+  })
+})

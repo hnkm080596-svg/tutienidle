@@ -50,7 +50,7 @@ const upgradeCost = computed(() => {
     return undefined
   }
 
-  return gameManager.getSkillUpgradeInsightCost(props.skill.id)
+  return gameManager.progressionOps.getSkillUpgradeInsightCost(props.skill.id)
 })
 
 const canUpgrade = computed(() => {
@@ -64,7 +64,7 @@ function onUpgrade() {
     return
   }
 
-  if (gameManager.upgradeSkill(props.skill.id, player.$state)) {
+  if (gameManager.progressionOps.upgradeSkill(props.skill.id, player.$state)) {
     bumpState()
   }
 }

@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { Battle } from '../battle/Battle'
-import type { BattleEnemy } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Enemy } from '../enemy/Enemy'
 import { createEmptyBattleRewardSummary } from '../reward/BattleRewardSummary'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import type { PlayerData } from '../player/Player'
-import { BattleLootSystem, type BattleLootSystemDeps } from './BattleLootSystem'
+import {
+  BattleLootSystem,
+  type BattleLootSystemDeps,
+  type RewardPendingEnemy,
+} from './BattleLootSystem'
 
 // P2 fix (2026-08-24) — beginTribulation() phải reset receiver + summary.
 // Unit test mức BattleLootSystem: chứng minh gate `if (this.receiver)`
@@ -15,12 +17,11 @@ import { BattleLootSystem, type BattleLootSystemDeps } from './BattleLootSystem'
 // enemy/summon — không chảy reward qua session cũ), trong khi despawn
 // vẫn chạy bình thường.
 
-function createDeadEnemy(id: string): BattleEnemy {
+function createDeadEnemy(id: string): RewardPendingEnemy {
   return {
     entity: { alive: false, id } as CombatEntity,
-    attackTimer: 0,
     rewardGranted: false,
-  } as BattleEnemy
+  }
 }
 
 function createStubDeps() {
@@ -79,7 +80,7 @@ describe('BattleLootSystem.beginTribulation — reset session battle-scoped', ()
 
     loot.beginTribulation({ name: 'người-độ-kiếp' } as PlayerData)
 
-    loot.processDefeatedEnemies({ enemies: [createDeadEnemy('kiep')] } as unknown as Battle)
+    loot.processDefeatedEnemies([createDeadEnemy('kiep')], null)
 
     expect(give).not.toHaveBeenCalled()
     expect(despawn).toHaveBeenCalledWith('kiep')
@@ -91,10 +92,13 @@ describe('BattleLootSystem.beginTribulation — reset session battle-scoped', ()
     const { deps, give } = createStubDeps()
     const loot = new BattleLootSystem(deps)
 
-    const player = { name: 'player' } as PlayerData
+    // companions is a required PlayerData field (companion-gacha Task 7
+    // reads it per kill) - the stub must carry it even though this test
+    // only cares about the receiver gate.
+    const player = { name: 'player', companions: [] } as unknown as PlayerData
     loot.setSession({} as RewardReceiver, player)
 
-    loot.processDefeatedEnemies({ enemies: [createDeadEnemy('stage-mob')] } as unknown as Battle)
+    loot.processDefeatedEnemies([createDeadEnemy('stage-mob')], null)
 
     // Gate receiver hoạt động thật — chứng minh test trên có ý nghĩa.
     expect(give).toHaveBeenCalledTimes(1)

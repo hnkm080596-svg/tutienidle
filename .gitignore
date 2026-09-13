@@ -48,9 +48,23 @@ Thumbs.db
 # Isolated agent worktrees
 .agent-worktrees/
 
+# =========================
+# Personal tooling / scratch — not project code, never commit
+# =========================
+opencode-gemini-auth/
+.gemini/
+fixed_skills_full.txt
+
+# Archived spec/plan docs (shipped work) — kept on disk for reference, untracked
+docs/archive/
+
 # Python tooling caches
 __pycache__/
 *.py[cod]
 
 # Superpowers SDD artifacts
 .superpowers/
+
+# playwright-cli scratch output (snapshots/screenshots from P14 checks)
+.playwright-cli/
+game/.playwright-cli/

@@ -1,14 +1,31 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide, ref } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
 import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
 import { GameManager } from './core/game/GameManager'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from './composables/useGameState'
+import {
+  PHASER_SCENE_ADAPTER_KEY,
+  ASSET_BUNDLE_MANAGER_KEY,
+  VUE_ROUTE_ADAPTER_KEY,
+  GAME_PRESENTATION_KEY,
+  type CurtainPort,
+} from './presentation/PresentationContracts'
+import { PhaserSceneAdapter } from './presentation/PhaserSceneAdapter'
+import { AssetBundleManager } from './presentation/assets/AssetBundleManager'
+import { CompositeRenderer, createVueRouteAdapter } from './presentation/VueRouteAdapter'
+import { GamePresentationCoordinator } from './presentation/GamePresentationCoordinator'
+import { createGamePresentation } from './presentation/createGamePresentation'
+import { bindPresentationActive } from './presentation/bindPresentationActive'
+import { RafClockSource } from './presentation/clock/RafClockSource'
+import { MainProcessClockSource } from './presentation/clock/MainProcessClockSource'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
+import { registerEnemySpawnDebug } from './core/dev/enemySpawnDebug'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
+import { useCombatPause } from './composables/useCombatPause'
 import { useNotificationStore } from './stores/notification'
 import { useI18n } from 'vue-i18n'
 import { useOfflineSummaryStore } from './stores/offlineSummary'
@@ -16,6 +33,9 @@ import { useSaveIssueStore } from './stores/saveIssue'
 import { savePersistedUiAutomationFlags } from './stores/uiFlagsPersistence'
 import { useAppLifecycle } from './composables/useAppLifecycle'
 import GameRoot from './components/layout/GameRoot.vue'
+import RouteMount from './components/game/RouteMount.vue'
+import PresentationTransitionOverlay from './components/game/PresentationTransitionOverlay.vue'
+import CombatPauseOverlay from './components/game/combat/CombatPauseOverlay.vue'
 import LoadingScreen from './components/common/LoadingScreen.vue'
 import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
@@ -89,13 +109,84 @@ const saveIssue = useSaveIssueStore()
 // Home. Set true ở cuối onMounted() sau khi mọi thứ (load save/đăng
 // ký data/tick loop) đã sẵn sàng.
 const isBooted = ref(false)
-// MainMenu overlay — TẠM VÔ HIỆU HÓA (mặc định ẩn). Luồng boot hiện
-// hành là auth-first (AuthEntryScreen), e2e tests khóa contract đó.
-// MainMenu che AuthEntryScreen (fixed overlay z-1000) khiến luồng cũ
-// không dùng được. Task 8 của plan online-foundation thay thế cả
-// MainMenu lẫn AuthEntryScreen bằng WelcomeAuthScreen hợp nhất — khi
-// đó xoá luôn state này, không đầu tư thêm cho MainMenu.
-const showMainMenu = ref(false)
+// GameClock chỉ đo thời gian (pure clock). GameManager chỉ điều
+// phối các system. Việc "mỗi giây thì làm gì" là trách nhiệm của
+// vòng lặp tick() dưới đây — nơi duy nhất biết cả 2 bên.
+const clock = new GameClock()
+const gameManager = new GameManager()
+
+// Real app renders: every combat/tribulation session starts HELD and only
+// ticks after the coordinator has revealed it (READY -> attach -> curtain
+// open -> release). Headless instances (tests/tools) stay unheld.
+gameManager.setPresentationMode('interactive')
+
+// Combat counts on its OWN clock, not on the 1 Hz world interval below.
+// The world tick would deliver a three-second countdown to Phaser as three
+// bursts of ten 0.1s steps inside one frame; on the render cadence the same
+// countdown arrives one step at a time, in step with what is drawn.
+//
+// Task 7: under Electron, window.electronAPI.combatClock is the main-process
+// host (immune to Chromium's rAF throttling) — prefer it when present. Plain
+// web builds have no window.electronAPI and keep the RAF-driven fallback.
+// The engine only ever sees the ClockSource interface either way.
+const combatClockSource = window.electronAPI
+  ? new MainProcessClockSource(window.electronAPI.combatClock)
+  : new RafClockSource()
+gameManager.setCombatClockSource(combatClockSource)
+
+// Presentation coordinator & adapters (Task 5-12, AGENTS.md P17)
+const phaserSceneAdapter = new PhaserSceneAdapter()
+const assetBundleManager = new AssetBundleManager()
+const compositeRenderer = new CompositeRenderer(phaserSceneAdapter)
+
+// The overlay IS the curtain. Before it was mounted the coordinator held a
+// no-op stub, so nothing ever covered the screen during a scene swap and the
+// close/open deadlines measured nothing.
+const transitionOverlayRef = ref<{
+  close: (id: number, signal: AbortSignal) => Promise<void>
+  open: (id: number, signal: AbortSignal) => Promise<void>
+} | null>(null)
+
+const curtainPort: CurtainPort = {
+  close: async (id, signal) => {
+    await transitionOverlayRef.value?.close(id, signal)
+  },
+  open: async (id, signal) => {
+    await transitionOverlayRef.value?.open(id, signal)
+  },
+}
+const coordinator = new GamePresentationCoordinator({
+  sessionPort: gameManager.getPresentationPort(),
+  renderer: compositeRenderer,
+  curtain: curtainPort,
+  assets: assetBundleManager,
+  initialRoute: 'boot',
+  initialBootSubphase: 'intro',
+  initialShowMainMenu: false,
+})
+const presentation = createGamePresentation({
+  coordinator,
+  eventBus: gameManager.eventBus,
+  getCurrentSession: () => gameManager.getCurrentPresentationSession(),
+})
+const routeAdapter = createVueRouteAdapter(coordinator, compositeRenderer)
+
+// RC-3: presentationActive has exactly ONE owner — the coordinator, via this
+// binding. It is true only while the COMMITTED route is combat and the
+// combat session is attached. CombatScene must never assert this for
+// itself (self-report is the pattern the coordinator design rejected).
+const unbindPresentationActive = bindPresentationActive(coordinator, gameManager)
+
+provide(PHASER_SCENE_ADAPTER_KEY, phaserSceneAdapter)
+provide(ASSET_BUNDLE_MANAGER_KEY, assetBundleManager)
+provide(VUE_ROUTE_ADAPTER_KEY, routeAdapter)
+provide(GAME_PRESENTATION_KEY, presentation)
+
+// MainMenu overlay state synced with coordinator snapshot
+const showMainMenu = computed({
+  get: () => routeAdapter.showMainMenu.value,
+  set: (val: boolean) => coordinator.setShowMainMenu(val),
+})
 
 function handleMenuStart() {
   showMainMenu.value = false
@@ -105,47 +196,96 @@ function handleMenuStart() {
 function handleMenuSettings() {
   ui.leftPanelMode = 'settings'
 }
-const bootFlow = useBootFlow()
+
+// A failed tribulation transition with a breakthrough ALREADY in progress
+// offers RETRY ONLY: there is no domain cancel-tribulation command, and
+// inventing a penalty-free way home would silently rewrite the outcome of a
+// breakthrough already in progress. That only applies once a tribulation
+// session actually exists, though - a behindCurtain tribulation request that
+// failed before ever producing one (the domain declined at the door; see
+// GamePresentationCoordinator's Task 2 closed-curtain window) has no
+// breakthrough to protect, so Back is safe there. Kind-scoped so a lingering
+// combat session can never be misread as an active tribulation (same
+// footgun useTribulation.ts's kind-scoped read guards against).
+function hasActiveTribulationToProtect(): boolean {
+  return gameManager.getCurrentPresentationSession('tribulation') !== null
+}
+
+const canRecoverToHome = computed(() => {
+  const failedTarget = routeAdapter.error.value?.failedRequest.target
+  return failedTarget !== 'tribulation' || !hasActiveTribulationToProtect()
+})
+
+function onTransitionRetry() {
+  void presentation.coordinator.retry()
+}
+
+function onTransitionBack() {
+  const failed = routeAdapter.error.value?.failedRequest
+
+  if (!failed || (failed.target === 'tribulation' && hasActiveTribulationToProtect())) {
+    return
+  }
+
+  // Returning home from a failed combat entry goes through the domain owner
+  // first - the battle must be abandoned, not merely hidden. The teardown
+  // (abandon + error dismissal) runs inside the closed-curtain window so the
+  // error shell stays mounted - and nothing else changes - until the curtain
+  // has fully covered the previous screen.
+  const abandonFailedCombat = failed.target === 'combat'
+
+  void coordinator.request({
+    target: 'home',
+    behindCurtain: () => {
+      if (abandonFailedCombat) {
+        gameManager.abandonBattle()
+      }
+
+      coordinator.clearError()
+
+      return true
+    },
+  })
+}
+
+const bootFlow = useBootFlow(coordinator, routeAdapter)
 const entryStage = bootFlow.stage
 const bootError = ref('')
 let introHandle: number | undefined
 
-// GameClock chỉ đo thời gian (pure clock). GameManager chỉ điều
-// phối các system. Việc "mỗi giây thì làm gì" là trách nhiệm của
-// vòng lặp tick() dưới đây — nơi duy nhất biết cả 2 bên.
-const clock = new GameClock()
-const gameManager = new GameManager()
-
-// Defect Task 3 (2026-09-05) — boot-race gate: real app WILL mount a Phaser
-// presentation layer (PhaserCanvas async bootstrap). Combat ticking pauses
-// until CombatScene mounts (setPresentationActive(true) → markReady) or the
-// 15s safety-net trips (Phaser bootstrap failure fallback).
-gameManager.expectPresentationLayer()
-
-gameManager.registerMaterials(materials)
-gameManager.registerSkillTemplates(SKILLS)
-gameManager.registerTechniqueTemplates(TECHNIQUES)
-gameManager.registerEnemyTemplates(ENEMIES)
-gameManager.registerStages(STAGES)
-gameManager.registerZones(zones)
-gameManager.registerEquipment(equipment)
-gameManager.registerAffixes(affixes)
-gameManager.registerPills(pills)
+gameManager.catalogOps.registerMaterials(materials)
+gameManager.catalogOps.registerSkillTemplates(SKILLS)
+gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+gameManager.catalogOps.registerEnemyTemplates(ENEMIES)
+gameManager.catalogOps.registerStages(STAGES)
+gameManager.catalogOps.registerZones(zones)
+gameManager.catalogOps.registerEquipment(equipment)
+gameManager.catalogOps.registerAffixes(affixes)
+gameManager.catalogOps.registerPills(pills)
 // Buff KHÔNG phải Phù/Trận legacy — SkillEffectSystem resolve effect
 // 'buff'/'debuff' qua buffRegistry.get() (THROW khi thiếu); bỏ dòng
 // này làm registry rỗng và crash giữa trận (fix review 2026-08-26).
 // Skill buff-carrying Kiếm Tu cũ đã chuyển node (spec 2026-08-29),
 // registry vẫn cần cho buff hệ khác (Thổ Giáp/Độ Kiếp...).
-gameManager.registerBuffs(buffs)
-gameManager.registerTalismans(talismans)
-gameManager.registerFormations(formations)
-gameManager.registerAlchemyRecipes(alchemyRecipes)
-gameManager.registerBuildings(buildings)
-gameManager.registerProgressionNodes(PHAP_TU_NODES)
-gameManager.registerProgressionNodes(KIEM_TU_NODES)
-gameManager.registerQuests(QUESTS)
+gameManager.catalogOps.registerBuffs(buffs)
+gameManager.catalogOps.registerTalismans(talismans)
+gameManager.catalogOps.registerFormations(formations)
+gameManager.catalogOps.registerAlchemyRecipes(alchemyRecipes)
+gameManager.catalogOps.registerBuildings(buildings)
+gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+gameManager.catalogOps.registerQuests(QUESTS)
 
 const { breakthrough } = useBreakthrough(gameManager)
+
+// Task 8 (A11, spec §6.1) — an unwatched battle pauses visibly and resumes
+// only on Continue; returning to the tab is not consent to resume. Gated on
+// getCombatClockState() !== 'stopped' so the overlay never appears outside
+// combat (no battle mounted == nothing to pause).
+const { isPaused: isCombatPaused, continueBattle, dispose: disposeCombatPause } = useCombatPause(
+  gameManager,
+  { isCombatActive: () => gameManager.getCombatClockState() !== 'stopped' },
+)
 
 // Cầu nối reactivity chung cho các panel đọc bag/equipment — xem
 // composables/useGameState.ts. tick() tự tăng mỗi giây; các action
@@ -257,7 +397,7 @@ function tick() {
   if (simulatedDelta > 0) {
     // GameManager luôn được update trước, để battle (nếu có) và
     // buff/skill cooldown luôn chạy đúng nhịp thời gian thực.
-    gameManager.update(simulatedDelta)
+    gameManager.tickOps.update(simulatedDelta)
 
     // Beta Phase 4 (Notification/UX) — rút toast phát sinh TRONG
     // GameManager (hiện chỉ loot, xem GameManager.grantItemDrops())
@@ -300,35 +440,21 @@ function tick() {
       breakthrough()
     }
 
-    // === Tinh hoa tuôn chảy (2026-08-30) ===
-    // 1. essenceArrivalSeen → stream hoàn tất → invest ngay.
-    // 2. essenceEmitted lâu quá chưa thấy arrival → headless → invest
-    //    (CombatScene không chạy, hoặc bail vì thiếu nguồn).
-    // 3. Cả hai đều drain qua investBodyRefinement() — tự gate.
-    // State sống trong lifecycle composable (handlers đăng ký một lần);
-    // tick đọc + reset qua getter/setter expose.
-    if (lifecycle.consumeEssenceArrival()) {
-      const consumed = gameManager.investBodyRefinement(player.$state)
-
-      if (consumed > 0) {
-        bumpState()
-      }
-    }
-
-    if (lifecycle.isEssenceHeadlessTimedOut()) {
-      lifecycle.clearEssenceEmitted()
-      const consumed = gameManager.investBodyRefinement(player.$state)
-
-      if (consumed > 0) {
-        bumpState()
-      }
-    }
+    // R5 (AR-14) + F7 (QA-2026-09-09-RR7): Body refinement auto-invest is
+    // owned by GameManager.update() (domain authority, exactly-once per
+    // tick). App must not call it again; bumpState() below refreshes the UI.
 
     // Đột Phá Trúc Cơ — phản ứng thắng/thua Độ Kiếp NGAY (battle
     // Tribulation không qua Stage/Combat Scene result modal nào cả, xem
     // useTribulation.ts's resolveVictory/resolveDefeat + World
     // Announcement — đây vẫn là luồng kết quả DUY NHẤT cho Tribulation).
-    checkTribulationOutcomeAction(player, gameManager)
+    //
+    // F1 fix (2026-09-13): `presentation` is required - without it the
+    // outcome is applied but the coordinator never issues
+    // request({ target: 'home' }), so the route soft-locks on
+    // 'tribulation' until reload. Guarded by
+    // tests/architecture/tribulationOutcomeWiring.test.ts.
+    checkTribulationOutcomeAction(player, gameManager, presentation)
 
     // Combat UI Redesign — Auto-refight (thắng/thua Stage thì tự đánh
     // tiếp) KHÔNG còn chạy tức thời ở tick() nữa: CombatVictoryPanel.vue
@@ -346,7 +472,7 @@ function tick() {
     // thật sự đổi, không còn recompute 10 lần/giây. Đây là lý do
     // bumpState() bên dưới CỐ Ý giữ nguyên (chạy mỗi tick cho đồng hồ/
     // resource counter): stat đã được tách hẳn khỏi stateVersion.
-    player.setExternalModifiers(gameManager.getAggregatedModifiers(player.$state))
+    player.setExternalModifiers(gameManager.effectOps.getAggregatedModifiers(player.$state))
   }
 
   bumpState()
@@ -366,10 +492,10 @@ async function bootGame(createNewCharacter = false) {
     onRestoreOk: (offline) => {
       // Fix (2026-08-20) — grant "Trảm" save cũ (idempotent).
       if (!gameManager.skillManager.has('tram')) {
-        gameManager.learnSkill('tram')
-        gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
+        gameManager.progressionOps.learnSkill('tram')
+        gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
       } else if (!gameManager.skillManager.getEquippedInSlot(0)) {
-        gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
+        gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
       }
 
       // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài.
@@ -382,10 +508,10 @@ async function bootGame(createNewCharacter = false) {
     },
     onNewCharacter: () => {
       // Nhân vật mới: học sẵn tâm pháp + skill + grant khởi đầu.
-      gameManager.learnTechnique('tu_linh_quyet')
-      gameManager.equipTechnique('tu_linh_quyet')
-      gameManager.learnSkill('tram')
-      gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
+      gameManager.realmAdvanceOps.learnTechnique('tu_linh_quyet')
+      gameManager.realmAdvanceOps.equipTechnique('tu_linh_quyet')
+      gameManager.progressionOps.learnSkill('tram')
+      gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
 
       for (const buildingId of ['teleport_array', 'gathering_outpost']) {
         const instance = {
@@ -396,13 +522,14 @@ async function bootGame(createNewCharacter = false) {
         }
 
         gameManager.buildingManager.add(instance)
-        gameManager.refreshAutoWorkerCapacity(player.$state, instance)
+        gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, instance)
       }
 
-      // Starter pack đủ xây 3 base (Linh Tuyền/Khí Đường/Đan Phòng).
+      // Starter pack đủ xây 3 base (Linh Tuyền/Khí Đường/Đan Phòng) —
+      // id theo trục tuổi thống nhất (gp123 6E C2).
       for (const [materialId, amount] of [
-        ['mortal_wood', 15],
-        ['mortal_ore_hoang', 6],
+        ['mortal_wood_decade', 15],
+        ['mortal_ore_decade', 6],
       ] as const) {
         if (gameManager.materialRegistry.has(materialId)) {
           gameManager.materialBag.add(gameManager.materialRegistry.get(materialId), amount)
@@ -411,8 +538,8 @@ async function bootGame(createNewCharacter = false) {
 
       // 3 nguồn Thanh Vân tự chạy + autoRestart.
       for (const definition of gameManager.productionSystem.getSiteDefinitions()) {
-        gameManager.setProductionAutoRestart(definition.siteId, true)
-        gameManager.startProductionCycle(definition.siteId, player.$state)
+        gameManager.buildingOps.setProductionAutoRestart(definition.siteId, true)
+        gameManager.buildingOps.startProductionCycle(definition.siteId, player.$state)
       }
 
       gameManager.setActivePlayer(player.$state)
@@ -423,6 +550,11 @@ async function bootGame(createNewCharacter = false) {
     // No-op ngay nếu không chạy trong Electron (window.electronAPI không
     // tồn tại ở bản web) — xem composables/useElectronBridge.ts.
     useElectronBridge(gameManager)
+
+    // Dev-only console helpers (spec v3 B5) - registered here so BOTH
+    // new-character and restored-save entries get them; the function
+    // itself early-returns outside import.meta.env.DEV.
+    registerEnemySpawnDebug({ gameManager, player: player.$state, getStats: () => player.finalStats })
 
     isBooted.value = true
     lifecycle.startAutosave()
@@ -444,6 +576,8 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
   }
 
   await bootGame(true)
+  // R10 (AR-12): buildGameSave() owns making player.$state's reactive
+  // Pinia proxy safe to snapshot — callers just pass it through.
   const result = await cloudSaveCoordinator.save(buildGameSave(player.$state, gameManager))
   if (result.status !== 'ok') {
     bootError.value =
@@ -468,15 +602,25 @@ onUnmounted(() => {
   }
 
   clock.stop()
+  disposeCombatPause()
 
   if (introHandle) {
     clearTimeout(introHandle)
   }
 
   // Remediation Task 5 — symmetric cleanup: event-bus handlers, DOM
-  // listeners, tick + autosave intervals (idempotent, gọi lại an toàn).
+  // listeners, tick + autosave intervals (idempotent, gọi lại một cách an toàn).
   lifecycle.stopAll()
   window.removeEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
+
+  // Presentation teardown: aborts any in-flight transition and drops every
+  // subscription, so a late READY/asset callback cannot mount or commit into
+  // a disposed app (matters on HMR too, which unmounts this component).
+  presentation.dispose()
+  routeAdapter.dispose()
+  unbindPresentationActive()
+  phaserSceneAdapter.dispose()
+  assetBundleManager.dispose()
 })
 </script>
 
@@ -484,8 +628,8 @@ onUnmounted(() => {
   <!-- MainMenu overlay tạm (Task 8 online-foundation sẽ thay thế):
        hiện từ lúc mount phủ trên intro/auth, đóng vĩnh viễn khi
        bootGame() chạy — qua nút "Bắt đầu tu luyện" hoặc auth flow.
-       z-index 1000 (MainMenu.vue .main-menu-overlay) phủ LoadingScreen
-       3s đầu; user thấy menu thay vì màn loading. -->
+       Layer: OVERLAY_LAYERS.mainMenu (MainMenu.vue tự bind) phủ
+       LoadingScreen 3s đầu; user thấy menu thay vì màn loading. -->
   <Transition>
     <MainMenu
       v-if="showMainMenu"
@@ -495,32 +639,58 @@ onUnmounted(() => {
     />
   </Transition>
 
-  <LoadingScreen v-if="entryStage === 'intro'" />
+  <RouteMount v-if="entryStage === 'intro'" route="boot">
+    <LoadingScreen />
+  </RouteMount>
 
-  <AuthEntryScreen v-else-if="entryStage === 'auth'" @authenticated="onAuthenticated" />
+  <RouteMount v-else-if="entryStage === 'auth'" route="auth">
+    <AuthEntryScreen @authenticated="onAuthenticated" />
+  </RouteMount>
 
-  <CharacterCreationScreen
-    v-else-if="entryStage === 'character'"
-    @back="bootFlow.showAuth"
-    @complete="onCharacterCreated"
-  />
+  <RouteMount v-else-if="entryStage === 'character'" route="character">
+    <CharacterCreationScreen
+      @back="bootFlow.showAuth"
+      @complete="onCharacterCreated"
+    />
+  </RouteMount>
 
   <SaveIncompatibleScreen v-else-if="saveIssue.status" />
 
-  <main v-else-if="entryStage === 'error'" class="boot-error">
-    <h1>Không thể khởi động</h1>
-    <p>{{ bootError }}</p>
-    <button type="button" @click="bootFlow.showAuth">Trở về đăng nhập</button>
-  </main>
+  <RouteMount v-else-if="entryStage === 'error'" route="error">
+    <main class="boot-error">
+      <h1>Không thể khởi động</h1>
+      <p>{{ bootError }}</p>
+      <button type="button" @click="bootFlow.showAuth">Trở về đăng nhập</button>
+    </main>
+  </RouteMount>
 
   <ErrorBoundary v-else>
-    <!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot (loading_save /
-         initializing), SAU KHI MainMenu đã đóng. -->
+    <!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot (intro, hoặc khi
+         transition vào game chưa entered), SAU KHI MainMenu đã đóng. -->
     <LoadingScreen v-if="!isBooted" />
 
     <!-- GameRoot chỉ hiện khi boot xong -->
     <GameRoot v-if="isBooted" />
   </ErrorBoundary>
+
+  <!-- Task 8 (A11) — the unwatched pause. Data-driven by useCombatPause()
+       (visibilitychange -> freezeCombat('tab-hidden')), NOT the curtain
+       above: separate owner (the battle vs. the presentation coordinator),
+       separate z-layer (OVERLAY_LAYERS.combatPause < curtain so the
+       curtain can always cover it), neither may drive the other. -->
+  <CombatPauseOverlay v-if="isCombatPaused" @continue="continueBattle" />
+
+  <!-- Curtain/loading/error cover lives ABOVE every entry branch so cold boot
+       and boot failures are covered too, not just in-game transitions. -->
+  <PresentationTransitionOverlay
+    ref="transitionOverlayRef"
+    :phase="routeAdapter.phase.value"
+    :is-locked="routeAdapter.isLocked.value"
+    :error="routeAdapter.error.value"
+    :can-return-home="canRecoverToHome"
+    @retry="onTransitionRetry"
+    @back="onTransitionBack"
+  />
 
   <ErrorScreen />
 </template>
@@ -569,7 +739,8 @@ body {
 .main-menu-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  /* No z-index here — the component binds OVERLAY_LAYERS.mainMenu itself
+     so the app-level overlay order has a single source. */
 }
 
 .v-enter-active,

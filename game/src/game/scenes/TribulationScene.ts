@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import type { EventBus } from '@/core/events/EventBus'
+import { readOptionalGate } from '@/presentation/gate/PresentationGate'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -28,7 +29,6 @@ export class TribulationScene extends Phaser.Scene {
     // phản ánh trạng thái CUỐI của event, không chỉ chiều chết.
     if (event.entityId === 'player') this.player?.setAlpha(event.killed ? 0.35 : 1)
   }
-  private exitHandler = () => this.scene.start('MainScene')
   private resizeHandler = (gameSize: ResizeSize) => {
     this.viewportFrame?.setSize(Math.max(0, gameSize.width - 24), Math.max(0, gameSize.height - 24))
   }
@@ -38,8 +38,20 @@ export class TribulationScene extends Phaser.Scene {
     this.unsubscribe()
   }
 
+  private initTransitionId = 0
+  private initSessionId?: number
+
   constructor() {
     super('TribulationScene')
+  }
+
+  init(data?: { transitionId?: number; sessionId?: number }): void {
+    if (data?.transitionId) {
+      this.initTransitionId = data.transitionId
+    }
+    if (data?.sessionId) {
+      this.initSessionId = data.sessionId
+    }
   }
 
   preload() {
@@ -79,16 +91,22 @@ export class TribulationScene extends Phaser.Scene {
       .play(CULTIVATE_KEY)
       .setDisplaySize(128, 132)
 
-    const bus = this.registry.get('eventBus') as EventBus | undefined
+    const bus = readOptionalGate(this.registry, 'eventBus')
     if (bus) {
       this.eventBus = bus
       bus.on('tribulation_lightning', this.lightningHandler)
       bus.on<CombatEvent>('damage', this.damageHandler)
       bus.on<EntityVitalsChangedEvent>('entity_vitals_changed', this.vitalsHandler)
-      bus.on('tribulation_scene_exit', this.exitHandler)
     }
 
     this.scale.on('resize', this.resizeHandler)
+
+    const adapter = readOptionalGate(this.registry, 'sceneAdapter')
+    adapter?.reportReady({
+      transitionId: this.initTransitionId,
+      sessionId: this.initSessionId,
+    })
+
     this.events.once('shutdown', this.shutdownHandler)
   }
 
@@ -119,6 +137,5 @@ export class TribulationScene extends Phaser.Scene {
     this.eventBus?.off('tribulation_lightning', this.lightningHandler)
     this.eventBus?.off<CombatEvent>('damage', this.damageHandler)
     this.eventBus?.off<EntityVitalsChangedEvent>('entity_vitals_changed', this.vitalsHandler)
-    this.eventBus?.off('tribulation_scene_exit', this.exitHandler)
   }
 }

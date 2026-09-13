@@ -14,6 +14,18 @@ const isElectron = Boolean(process.env.ELECTRON)
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Port per-checkout (2026-09-07) — standing-slot worktree dùng 5175
+  // (master 5173, UITemp 5174): chạy song song nhiều dev server không xung
+  // đột port (vite otherwise auto-increment, nhưng Playwright baseURL cần
+  // port cố định biết trước). Env override vẫn được: npm run dev -- --port 5999.
+  server: {
+    port: Number(process.env.DEV_PORT ?? 5175),
+    strictPort: false,
+  },
+  preview: {
+    port: Number(process.env.DEV_PORT ?? 5175),
+    strictPort: false,
+  },
   // Asset URL tương đối — bắt buộc để index.html load đúng qua file://
   // khi Electron đóng gói (electron-builder). Không ảnh hưởng dev server/
   // vite preview, cả 2 vẫn phục vụ qua http bình thường.
@@ -69,6 +81,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    // Architecture/meta guards live under tests/ (kept out of app source);
+    // e2e specs (*.spec.ts, Playwright) are unaffected.
+    include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
   },
 })

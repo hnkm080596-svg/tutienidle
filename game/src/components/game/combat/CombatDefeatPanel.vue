@@ -38,8 +38,8 @@ const RETURN_COUNTDOWN_SECONDS = 10
 
 const gameManager = useGameManager()
 const ui = useUiStore()
-const { t } = useI18n({ useScope: 'local' })
-const { startBattle } = useBattleActions()
+const { t } = useI18n()
+const { startBattle, exitCombatToHome } = useBattleActions()
 
 const summary = computed(() => gameManager.getBattleRewardSummary())
 
@@ -54,7 +54,7 @@ function refight() {
     return
   }
 
-  const stage = gameManager.getStage(ui.selectedStageId)
+  const stage = gameManager.catalogOps.getStage(ui.selectedStageId)
 
   if (!stage) {
     return
@@ -80,9 +80,10 @@ function retryNow() {
 
 function returnHome() {
   clearTimers()
-  ui.battleRunMode = 'manual'
-  ui.exitCombatScene()
-  gameManager.eventBus.emit('combat_scene_exit', undefined)
+  // Teardown (run-mode reset, dismissed flag, scene-exit event) runs inside
+  // the closed curtain - the defeat panel stays on screen until the swap
+  // behind it is ready (useBattleActions).
+  exitCombatToHome()
 }
 
 onMounted(() => {

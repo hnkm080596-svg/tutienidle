@@ -1,8 +1,9 @@
 import type { EventBus } from '../../events/EventBus'
 import type { GridPosition, CellArea } from '../BattleGrid'
 import { entityGridPosition } from '../BattleGrid'
-import type { CombatVfxPresetId, ActionTargetingShape } from '../CombatAction'
-import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
+import type { CombatVfxPresetId, ActionTargetingShape, EnemySpawnVfxPresetId } from '../CombatAction'
+import type { TurnBattle, TurnBattleParticipant, PendingEnemySpawn, TurnBattleState } from './TurnBattleSystem'
+import { COUNTDOWN_TOTAL_TICKS } from './TurnBattleConstants'
 
 // Action Playback Task 4 (2026-09-05) — presentation event emitter cho
 // turn-based combat. GameManager là SOLE caller (Task 6), CombatScene là
@@ -31,8 +32,8 @@ export function emitTurnCastStart(
   skillId: string,
   targetIds: string[],
 ): void {
-  eventBus.emit('attack', {
-    type: 'attack',
+  eventBus.emit('turn_cast_start', {
+    type: 'turn_cast_start',
     sourceId,
     targetId: targetIds[0],
     skillId,
@@ -97,6 +98,51 @@ export interface TurnBattleEntityVisualState {
 export interface TurnBattleEntitySnapshotEvent {
   players: TurnBattleEntityVisualState[]
   enemies: TurnBattleEntityVisualState[]
+  /** Turn-Based Wave Redesign (2026-09-06) — quái đang telegraph, CHƯA vào battle.enemies. */
+  pendingEnemySpawns: PendingSpawnVisualState[]
+  /**
+   * Battle phase at snapshot time. Needed because `countdownProgress` ===
+   * undefined carries TWO different meanings — 'intro' (countdown has not
+   * started yet: keep combatants HIDDEN) vs 'fighting'/terminal (countdown
+   * finished: REVEAL) — and presentation must not infer it itself (A7:
+   * the engine is the authority).
+   */
+  phase: TurnBattleState
+  /** Chỉ có mặt khi battle.state === 'countdown'; 0→1 hết 3s countdown. */
+  countdownProgress?: number
+}
+
+/** Turn-Based Wave Redesign (2026-09-06) — trạng thái hiển thị của 1 quái đang telegraph. */
+export interface PendingSpawnVisualState {
+  id: string
+  row: number
+  column: number
+  isBoss: boolean
+  /** 0 = vừa queue, 1 = sắp materialize (tick kế tiếp vào battle.enemies). */
+  progress: number
+  presetId: EnemySpawnVfxPresetId
+}
+
+function toPendingSpawnVisualState(pending: PendingEnemySpawn): PendingSpawnVisualState {
+  const position = entityGridPosition(pending.participant.entity)
+  const entity = pending.participant.entity
+
+  let presetId: EnemySpawnVfxPresetId = 'enemy_spawn'
+
+  if (entity.isBoss) {
+    presetId = 'boss_spawn'
+  } else if (entity.isElite) {
+    presetId = 'elite_spawn'
+  }
+
+  return {
+    id: pending.participant.id,
+    row: position.row,
+    column: position.column,
+    isBoss: entity.isBoss ?? false,
+    progress: 1 - pending.ticksRemaining / pending.totalTicks,
+    presetId,
+  }
 }
 
 function toVisualState(participant: TurnBattleParticipant): TurnBattleEntityVisualState {
@@ -118,14 +164,24 @@ function toVisualState(participant: TurnBattleParticipant): TurnBattleEntityVisu
   }
 }
 
+export function buildTurnBattleEntitySnapshot(battle: TurnBattle): TurnBattleEntitySnapshotEvent {
+  return {
+    players: battle.players.map(toVisualState),
+    enemies: battle.enemies.map(toVisualState),
+    pendingEnemySpawns: (battle.wave?.pendingEnemySpawns ?? []).map(toPendingSpawnVisualState),
+    phase: battle.state,
+    countdownProgress:
+      battle.state === 'countdown' && battle.countdownTurnsRemaining !== undefined
+        ? 1 - battle.countdownTurnsRemaining / COUNTDOWN_TOTAL_TICKS
+        : undefined,
+  }
+}
+
 // Combat Art Pipeline (2026-09-05) — thay thế bridge 'positions' đã chết của
 // legacy real-time engine (legacy/BattleSystem.ts không còn được tick cho
 // turn-based combat). Đọc TRỰC TIẾP từ TurnBattle.players/enemies mỗi fixed
 // step trong lúc 'fighting' — không phụ thuộc emitPositions()/update() của
 // legacy engine. GameManager gọi hàm này (Task 5 sẽ nối CombatScene nghe).
 export function emitTurnBattleEntitySnapshot(eventBus: EventBus, battle: TurnBattle): void {
-  eventBus.emit('turn_battle_entity_snapshot', {
-    players: battle.players.map(toVisualState),
-    enemies: battle.enemies.map(toVisualState),
-  })
+  eventBus.emit('turn_battle_entity_snapshot', buildTurnBattleEntitySnapshot(battle))
 }

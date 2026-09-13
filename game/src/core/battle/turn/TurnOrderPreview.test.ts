@@ -5,14 +5,14 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { CombatEntity } from '../../combat/CombatEntity'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 
 // Slice 7 extension (Completion Task 11) — turn-order preview: trả N actor
 // kế tiếp theo gauge-fill order mà KHÔNG mutate battle thật (so gauge
 // before/after phải không đổi), và battle log: 1 entry/resolveActorTurn.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
@@ -32,7 +32,7 @@ function makeParticipant(
 ): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }
@@ -91,13 +91,13 @@ describe('battle log (resolveActorTurn)', () => {
       id: 'player',
       type: 'player',
       row: 4,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {

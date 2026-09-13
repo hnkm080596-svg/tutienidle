@@ -1,6 +1,7 @@
 // Alchemy (2026-08-25, resource-professions-rework plan §8) — Đan Phòng
-// mới: mỗi đan phương nhận ĐÚng một Linh Thảo riêng (có niên đại) +
+// mới: mỗi đan phương nhận ĐÚNG một Linh Thảo riêng (có niên đại) +
 // Gỗ nhiên liệu + Linh Thạch. Không còn Recipe/CraftingSystem cho đan.
+// gp123 6E: nhiên liệu phải CÙNG realm + CÙNG age với thảo được chọn.
 //
 // §8.2: snapshot recipe/nguyên liệu/level phòng lúc bắt đầu; nguyên liệu
 // reserve/trừ atomically lúc start để không dùng một stack cho nhiều job.
@@ -10,8 +11,7 @@
 import type { PillBag } from '../pill/PillBag'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
-import { SUPPORTED_PROFESSION_REALMS } from '../profession/ProfessionMaterial'
-import { REALM_TIERS } from '../realm/RealmTierMap'
+import type { HerbAge } from '../production/ProductionTypes'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
 import { mulberry32 } from '../production/ProductionBalance'
 
@@ -20,8 +20,8 @@ export interface AlchemyHerbVariant {
   /** Material id đầy đủ (kèm hậu tố niên đại hoặc biến thể legacy). */
   materialId: string
 
-  /** Khóa tra HERB_AGE_BASE_SUCCESS_PERCENT. */
-  age: 'decade' | 'century' | 'millennium' | 'myriad_year'
+  /** Khóa tra HERB_AGE_BASE_SUCCESS_PERCENT — trục HerbAge 5 bậc (6E C1). */
+  age: HerbAge
 
   /** Nhãn hiển thị biến thể (vd "Bách Niên"). */
   label: string
@@ -45,7 +45,10 @@ export interface AlchemyRecipe {
 
   herbAmount: number
 
-  /** Realm TỐI THIỂU của gỗ nhiên liệu — gỗ cao hơn KHÔNG tăng tỷ lệ (MVP §8.1). */
+  /**
+   * Realm của gỗ nhiên liệu (gp123 6E) — gỗ phải CÙNG realm này VÀ
+   * CÙNG age với thảo được chọn (resolveFuelWood).
+   */
   fuelWoodRealmId: string
 
   fuelWoodAmount: number
@@ -88,6 +91,12 @@ export interface AlchemySettlementEvent {
   pills: number
 
   success: boolean
+
+  /** R9 (AR-34) receipt - amount that actually entered the pill bag. */
+  delivered: number
+
+  /** R9 (AR-34) receipt - amount lost to a full pill bag (0 = fit). */
+  overflow: number
 }
 
 export function jobSuccessPercent(
@@ -101,8 +110,8 @@ export function jobSuccessPercent(
 
   const bonus = alchemyRoomSuccessBonus(job.roomLevelAtStart)
 
-  // Thiên phú Đan Duyên — cộng điểm % trước khi tách guaranteed/extra,
-  // giữ cap 300 (plan §6).
+  // Optional flat percent-point bonus (content sources may pass one) —
+  // added before the guaranteed/extra split, cap 300 preserved (plan §6).
   return Math.min(base + bonus + successBonusPercentPoints, 300)
 }
 
@@ -144,41 +153,21 @@ function nextJobId(): string {
 }
 
 /**
- * Chọn stack gỗ nhiên liệu rẻ nhất đạt realm tối thiểu (realm index
- * tăng dần theo SUPPORTED_PROFESSION_REALMS).
+ * Nhiên liệu lò (gp123 6E — design rule): gỗ phải CÙNG realm với recipe
+ * VÀ CÙNG age với thảo được chọn — KHÔNG cheapest-first scan, không
+ * xuyên realm, không thay thế age. Chỉ chấp nhận
+ * `<realmId>_wood_<requiredAge>`; thiếu → null (job từ chối
+ * `missing_fuel_wood`).
  */
 export function resolveFuelWood(
   bag: MaterialBag,
-  minRealmId: string,
+  realmId: string,
   amount: number,
+  requiredAge: AlchemyHerbVariant['age'],
 ): string | null {
-  const minIndex = SUPPORTED_PROFESSION_REALMS.indexOf(minRealmId)
-  const realmIndex = REALM_TIERS.findIndex(realmId => realmId === minRealmId)
+  const candidate = `${realmId}_wood_${requiredAge}`
 
-  if (minIndex < 0 && realmIndex < 0) {
-    return null
-  }
-
-  if (realmIndex >= SUPPORTED_PROFESSION_REALMS.length) {
-    const qualities = ['hoang', 'huyen', 'dia', 'thien', 'tien'] as const
-    for (let index = realmIndex; index < REALM_TIERS.length; index++) {
-      for (const quality of qualities) {
-        const candidate = `${REALM_TIERS[index]}_wood_${quality}`
-        if (bag.has(candidate, amount)) return candidate
-      }
-    }
-    return null
-  }
-
-  for (let index = minIndex; index < SUPPORTED_PROFESSION_REALMS.length; index++) {
-    const candidate = `${SUPPORTED_PROFESSION_REALMS[index]}_wood`
-
-    if (bag.has(candidate, amount)) {
-      return candidate
-    }
-  }
-
-  return null
+  return bag.has(candidate, amount) ? candidate : null
 }
 
 export class AlchemySystem {
@@ -219,7 +208,10 @@ export class AlchemySystem {
     roomLevel: number,
     nowMs: number,
     maxConcurrentJobs: number,
-  ): { ok: boolean; reason?: string } {
+    // M3 (talent v4 §4.2) — Hoa Hau Thong Than counter-cost: multiplies
+    // fuel wood + spirit stone requirements; herb/specials stay base.
+    costMultiplier = 1,
+  ): { ok: boolean; reason?: string; spiritStoneCost?: number } {
     if (this.jobs.length >= Math.max(1, maxConcurrentJobs)) {
       return { ok: false, reason: 'job_slots_full' }
     }
@@ -234,7 +226,15 @@ export class AlchemySystem {
       return { ok: false, reason: 'wrong_herb' }
     }
 
-    const woodId = resolveFuelWood(bag, recipe.fuelWoodRealmId, recipe.fuelWoodAmount)
+    // Counter-cost is a surcharge — clamp >= 1 so bad data can't make jobs free.
+    const costScale = Math.max(1, costMultiplier)
+
+    const fuelWoodAmount = Math.ceil(recipe.fuelWoodAmount * costScale)
+    const spiritStoneCost = Math.ceil(recipe.spiritStoneCost * costScale)
+
+    // 6E — nhiên liệu CÙNG age với thảo đã chọn (variant luôn có age
+    // theo type — post-C2 mọi thảo đều `profession.age`).
+    const woodId = resolveFuelWood(bag, recipe.fuelWoodRealmId, fuelWoodAmount, variant.age)
 
     if (!woodId) {
       return { ok: false, reason: 'missing_fuel_wood' }
@@ -244,7 +244,7 @@ export class AlchemySystem {
       return { ok: false, reason: 'missing_herb' }
     }
 
-    if (spiritStone < recipe.spiritStoneCost) {
+    if (spiritStone < spiritStoneCost) {
       return { ok: false, reason: 'missing_spirit_stone' }
     }
 
@@ -259,7 +259,7 @@ export class AlchemySystem {
     // Reserve atomic — trừ toàn bộ sau khi mọi check pass.
     bag.remove(herbMaterialId, recipe.herbAmount)
 
-    bag.remove(woodId, recipe.fuelWoodAmount)
+    bag.remove(woodId, fuelWoodAmount)
 
     for (const special of recipe.specialIngredients ?? []) {
       bag.remove(special.materialId, special.amount)
@@ -275,7 +275,8 @@ export class AlchemySystem {
       roomLevelAtStart: roomLevel,
     })
 
-    return { ok: true }
+    // Caller deducts exactly the cost validated here — single formula.
+    return { ok: true, spiritStoneCost }
   }
 
   /** Huỷ job — nguyên liệu đã đốt không hoàn trả (lò đã khởi động). */
@@ -298,6 +299,8 @@ export class AlchemySystem {
     resolvePill: (pillId: string) => { id: string } | undefined,
     random: () => number = Math.random,
     successBonusPercentPoints = 0,
+    // M3 — Hoa Hau Thong Than: successful jobs yield pills x multiplier.
+    pillYieldMultiplier = 1,
   ): void {
     const remaining: ActiveAlchemyJob[] = []
 
@@ -318,7 +321,14 @@ export class AlchemySystem {
         // không có event nào (review 2026-08-28). Giờ phát event thất bại để
         // UI thông báo; nguyên liệu đã đốt KHÔNG hoàn trả (job coi như luyện
         // thất bại — đúng semantic §8.3, không tạo refund exploit).
-        this.pendingEvents.push({ jobId: job.jobId, pillId: job.pillId, pills: 0, success: false })
+        this.pendingEvents.push({
+          jobId: job.jobId,
+          pillId: job.pillId,
+          pills: 0,
+          success: false,
+          delivered: 0,
+          overflow: 0,
+        })
 
         continue
       }
@@ -335,11 +345,32 @@ export class AlchemySystem {
         pills += 1
       }
 
+      pills = Math.floor(pills * Math.max(0, pillYieldMultiplier))
+
       if (pills > 0) {
-        pillBag.add(pill as Parameters<typeof pillBag.add>[0], pills)
+        const overflow = pillBag.add(pill as Parameters<typeof pillBag.add>[0], pills)
+
+        // R9 (AR-34): surface the delivery receipt instead of ignoring it.
+        this.pendingEvents.push({
+          jobId: job.jobId,
+          pillId: job.pillId,
+          pills,
+          success: pills > 0,
+          delivered: pills - overflow,
+          overflow,
+        })
+
+        continue
       }
 
-      this.pendingEvents.push({ jobId: job.jobId, pillId: job.pillId, pills, success: pills > 0 })
+      this.pendingEvents.push({
+        jobId: job.jobId,
+        pillId: job.pillId,
+        pills,
+        success: pills > 0,
+        delivered: 0,
+        overflow: 0,
+      })
     }
 
     this.jobs = remaining
@@ -351,10 +382,11 @@ export class AlchemySystem {
     resolvePill: (pillId: string) => { id: string } | undefined,
     nowMs: number = Date.now(),
     successBonusPercentPoints = 0,
+    pillYieldMultiplier = 1,
   ): number {
     const before = this.jobs.length
 
-    this.tick(nowMs, pillBag, resolvePill, Math.random, successBonusPercentPoints)
+    this.tick(nowMs, pillBag, resolvePill, Math.random, successBonusPercentPoints, pillYieldMultiplier)
 
     return before - this.jobs.length
   }

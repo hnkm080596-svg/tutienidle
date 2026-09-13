@@ -162,11 +162,11 @@ function drinkPill(pillId: string) {
         return
       }
 
-      gameManager.applyPersistentBuff(definition, player.finalStats)
+      gameManager.effectOps.applyPersistentBuff(definition, player.finalStats)
     },
   }
 
-  const result = gameManager.usePillDetailed(pillId, target, player.$state)
+  const result = gameManager.pillOps.usePillDetailed(pillId, target, player.$state)
 
   if (result.ok) {
     bumpState()

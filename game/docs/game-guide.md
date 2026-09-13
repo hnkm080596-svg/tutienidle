@@ -29,7 +29,7 @@ Trong chiến đấu, `RealmPressure` so chênh lệch **đại cảnh giới**.
 
 Thiên Phú là quyết định chọn hướng Đạo duy nhất lúc tạo nhân vật: roll 9 thẻ, chọn đúng 1, giữ cả đời (`CharacterCreationService.ts`, catalog `src/data/talent/Talents.ts`, spec `docs/specs/2026-09-03-talent-catalog-v4-design.md`). Mỗi thiên phú là một ngoại lệ của luật chơi — không có talent cộng chỉ số thuần; mọi talent cùng một ngân sách sức mạnh (~+20-30% công suất cuối Trúc Cơ) nhưng khác HÌNH DẠNG: rủi ro cao được thưởng cao hơn, đầu tư nông nghiệp/ rèn đan được công suất theo đúng phần bỏ ra, còn talent "nhàn" cho giá trị nhỏ nhưng ổn định. Mọi lợi thế đều có chi phí đối trọng ghi rõ trong mô tả.
 
-Catalog v4 chia 3 nhóm (M1 ship nhóm chiến đấu; tu luyện + sản xuất ở các milestone sau):
+Catalog v4 chia 3 nhóm (M1 chiến đấu, M2 tu luyện, M3 sản xuất — cả ba đã ship; Trận Tâm/Phù Văn parked đợi Trận/Phù có trigger/uses):
 
 **Chiến đấu (11 talent)** — mỗi talent nuôi đúng 1 chỉ số bằng nhịp "tích → ngưỡng → bùng nổ → tích lại" trên engine buff/passive có sẵn:
 
@@ -46,6 +46,19 @@ Catalog v4 chia 3 nhóm (M1 ship nhóm chiến đấu; tu luyện + sản xuất
 - **Bất Tử Thể**: mỗi trận 1 lần đòn chí mạng không chết (giữ 1 HP), tẩy sạch debuff + Tử Sinh Ngộ 10s (+30% sát thương cuối, +20% né chí mạng). Độ Kiếp là nghi lễ thật — không áp dụng.
 
 Easter egg **Phàm Cốt** (Dị, hiếm): −75% tốc độ tu luyện cả đời — gate bí ẩn của Đại Đạo Trúc Cơ; thắng kiếp Đại Đạo chuyển hóa thành Phàm Nhân Chi Cốt (+75% tốc tu vĩnh viễn).
+
+**Tu luyện (5 talent, M2)** — bẻ luật tiến trình tầng/Cảm Ngộ:
+
+- **Hậu Tích Bạt Phát**: tầng một mỗi cảnh giới chậm hơn một nửa, mỗi tiểu tầng sau nhanh thêm 10% — càng sâu càng vượt người thường.
+- **Lôi Kiếp**: lôi kiếp mạnh gấp đôi, nhưng mỗi lần độ kiếp thắng toàn thân chỉ số +10% vĩnh viễn.
+- **Vấn Đạo**: 50% lĩnh ngộ node miễn phí Cảm Ngộ + Cảm Ngộ chiến đấu ×2; đổi lại nguồn Cảm Ngộ cơ bản mỗi trận ít hơn.
+- **Hải Nạp**: tu vi tràn qua cửa ải không mất — dồn vào vực ngầm, tự rót sang tầng kế khi đột phá.
+- **Ngộ Đạo**: mỗi 2.000 tu vi tích lũy đổi thành 1 Cảm Ngộ — kể cả tu vi ngoại tuyến.
+
+**Sản xuất (2 talent, M3)** — đầu tư vòng sản xuất lấy công suất, đều có phụ phí đối trọng:
+
+- **Hỏa Hầu Thông Thần**: mỗi mẻ đan thành công ra ×2 viên + đan uống hiệu quả +50%; ngược lại mỗi mẻ tốn ×2 gỗ nhiên liệu và ×2 Linh Thạch.
+- **Bách Luyện Thành Khí**: Cường Hóa không bao giờ thất bại; ngược lại mỗi lần rèn tốn ×3 nguyên liệu và ×3 Linh Thạch.
 
 Effect được tiêu thụ qua getter tập trung tại `src/core/talent/TalentEffects.ts`; talent chiến đấu cấp hidden passive (`data/skill/TalentPassives.ts`) do GameManager grant/revoke; save edit chứa nhiều id chỉ đọc id ĐẦU (không cộng dồn). Thiên phú đã chọn hiển thị trong panel Nhân Vật.
 
@@ -90,7 +103,7 @@ Quy tắc về phẩm chất, độ hiếm, affix, set, đặt tên, túi đồ 
 
 ## Công trình, chế tác và khai thác
 
-Địa Giới Thanh Vân (`src/core/production/ProductionCatalog.ts`) có đúng 3 nguồn khai thác, mỗi nguồn 1 site, level riêng (tối đa 9, giữ level khi đột phá, nâng bằng Gỗ cùng realm + Linh Thạch): **Thanh Vân Lâm** (gỗ), **Huyền Thiết Quảng** (linh khoáng 3 realm × 5 phẩm), **Thanh Vân Động Thiên** (linh thảo — mỗi đan phương có đúng 1 thảo riêng). Khai thác là job theo thời gian; worker tự động điều phối qua building Điều Phối Nhân Công.
+Địa Giới Thanh Vân (`src/core/production/ProductionCatalog.ts`) có đúng 3 nguồn khai thác, mỗi nguồn 1 site, level riêng (tối đa 9, giữ level khi đột phá, nâng bằng Gỗ cùng realm + Linh Thạch): **Thanh Vân Lâm** (gỗ), **Huyền Thiết Quảng** (linh khoáng — mỗi loại theo 5 bậc tuổi Thập Niên → Thượng Cổ, trục tuổi thống nhất với linh thảo theo gp123 6E), **Thanh Vân Động Thiên** (linh thảo — mỗi đan phương có đúng 1 thảo riêng). Khai thác là job theo thời gian; worker tự động điều phối qua building Điều Phối Nhân Công.
 
 `BuildingSystem` (`src/data/building/buildings.ts`) quản lý xây/nâng/tích trữ/thu hoạch 5 building:
 

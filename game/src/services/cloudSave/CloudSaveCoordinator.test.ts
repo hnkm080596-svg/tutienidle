@@ -13,6 +13,7 @@ function mockService(
   let loadIndex = 0
   let saveIndex = 0
   const service: CloudSaveService = {
+    capability: 'local-only',
     async load() {
       const next = loadResults[Math.min(loadIndex, loadResults.length - 1)]!
       loadIndex += 1
@@ -32,6 +33,7 @@ describe('CloudSaveCoordinator', () => {
   it('uses loaded revision for the next write and advances after success', async () => {
     const writes: number[] = []
     const service: CloudSaveService = {
+      capability: 'local-only',
       async load() {
         return { status: 'ok', save: snapshot, revision: 4, discardedEquipmentCount: 2 }
       },

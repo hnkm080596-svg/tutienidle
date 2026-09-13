@@ -2,9 +2,9 @@ import type { Stage, StageEnemyEntry } from './Stage'
 import { weightedRandom } from '../reward/DropRoll'
 
 export class StageSystem {
-  // Trả nguyên StageEnemyEntry (không chỉ enemyId) — GameManager cần
-  // đọc `eliteChance` của entry vừa roll trúng để quyết có spawn bản
-  // Elite hay không (xem GameManager.updateStageProgress()).
+  // Returns the whole StageEnemyEntry (not just enemyId) - the spawn
+  // pick reads `eliteChance` of the rolled entry to decide whether to
+  // attach the tinh_anh tag (see StageWaveSystem.pickEnemyForSpawn).
   pickNextEnemyEntry(stage: Stage): StageEnemyEntry {
     return weightedRandom(stage.enemyPool.map(entry => ({ value: entry, weight: entry.weight })))
   }

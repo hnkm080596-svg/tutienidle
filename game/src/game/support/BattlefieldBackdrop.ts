@@ -17,7 +17,7 @@ import {
   PERSPECTIVE_STRENGTH,
   PERSPECTIVE_SIDE_MARGIN,
   type BattleGridProjection,
-} from './BattleGridProjection'
+} from '@/presentation/geometry/BattleGridProjection'
 
 /** Đất mở rộng ra ngoài lưới (hệ số trên nửa bề rộng cạnh gần). */
 const GROUND_EXTEND = 1.35

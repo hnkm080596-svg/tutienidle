@@ -18,7 +18,7 @@ import {
 function setup(playerOverrides: Partial<PlayerData> = {}) {
   const gameManager = new GameManager()
 
-  gameManager.registerMaterials([SPIRIT_STONE_MATERIAL, SPIRIT_STONE_TRUNG_PHAM_MATERIAL])
+  gameManager.catalogOps.registerMaterials([SPIRIT_STONE_MATERIAL, SPIRIT_STONE_TRUNG_PHAM_MATERIAL])
 
   const player = createDefaultPlayer()
 
@@ -33,7 +33,7 @@ describe('GameManager.activateTuLinhTran — economy-fixes-sinks-plan §3.2 B1',
 
     gameManager.materialBag.add(SPIRIT_STONE_MATERIAL, 10)
 
-    const result = gameManager.activateTuLinhTran(player)
+    const result = gameManager.effectOps.activateTuLinhTran(player)
 
     expect(result.ok).toBe(false)
     expect(result.reason).toBe('missing_spirit_stone')
@@ -51,7 +51,7 @@ describe('GameManager.activateTuLinhTran — economy-fixes-sinks-plan §3.2 B1',
     const now = 1_000_000
     const cost = getTuLinhTranCost(player.realmId, 0)
 
-    const result = gameManager.activateTuLinhTran(player, now)
+    const result = gameManager.effectOps.activateTuLinhTran(player, now)
 
     expect(result.ok).toBe(true)
     expect(gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(10_000 - cost.amount)
@@ -75,12 +75,12 @@ describe('GameManager.activateTuLinhTran — economy-fixes-sinks-plan §3.2 B1',
 
     const now = 1_000_000
 
-    expect(gameManager.activateTuLinhTran(player, now).ok).toBe(true)
+    expect(gameManager.effectOps.activateTuLinhTran(player, now).ok).toBe(true)
 
     const costAfterFirst = getTuLinhTranCost(player.realmId, 1)
     const balanceBeforeSecond = gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
 
-    expect(gameManager.activateTuLinhTran(player, now).ok).toBe(true)
+    expect(gameManager.effectOps.activateTuLinhTran(player, now).ok).toBe(true)
 
     expect(gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(
       balanceBeforeSecond - costAfterFirst.amount,
@@ -101,19 +101,19 @@ describe('GameManager.activateTuLinhTran — economy-fixes-sinks-plan §3.2 B1',
 
     const now = 1_000_000
 
-    expect(gameManager.activateTuLinhTran(player, now).ok).toBe(true)
+    expect(gameManager.effectOps.activateTuLinhTran(player, now).ok).toBe(true)
 
     // Đủ lâu để effect đầu hết hạn.
     const afterExpiry = now + TU_LINH_TRAN_DURATION_MS + 1
 
-    gameManager.tickTimedEffects(player, afterExpiry)
+    gameManager.effectOps.tickTimedEffects(player, afterExpiry)
 
     expect(player.persistentTimedEffects).toHaveLength(0)
 
     const baselineCost = getTuLinhTranCost(player.realmId, 0)
     const balanceBefore = gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
 
-    const result = gameManager.activateTuLinhTran(player, afterExpiry)
+    const result = gameManager.effectOps.activateTuLinhTran(player, afterExpiry)
 
     expect(result.ok).toBe(true)
     expect(gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(
@@ -130,7 +130,7 @@ describe('GameManager.activateTuLinhTran — economy-fixes-sinks-plan §3.2 B1',
 
     expect(cost.materialId).toBe(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)
 
-    const result = gameManager.activateTuLinhTran(player)
+    const result = gameManager.effectOps.activateTuLinhTran(player)
 
     expect(result.ok).toBe(true)
     expect(gameManager.materialBag.getAmount(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)).toBe(

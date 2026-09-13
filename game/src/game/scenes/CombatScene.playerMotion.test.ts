@@ -17,10 +17,6 @@ interface TweenConfig {
 
 interface TestableCombatScene {
   sprites: Map<string, MotionSprite>
-  interpolations: Map<
-    string,
-    { fromX: number; toX: number; segmentStart: number; segmentDuration: number }
-  >
   time: { now: number }
   tweens: {
     killTweensOf: ReturnType<typeof vi.fn>
@@ -40,7 +36,6 @@ function createScene() {
     ['player', player],
     ['enemy', enemy],
   ])
-  scene.interpolations = new Map()
   scene.time = { now: 0 }
   scene.tweens = {
     killTweensOf: vi.fn(),
@@ -68,7 +63,7 @@ describe('CombatScene player motion feedback', () => {
     expect(scene.tweens.killTweensOf).toHaveBeenCalledWith(player)
     expect(tween.targets).toBe(player)
     expect(tween.offsetX).toBe(8)
-    expect(tween.duration).toBe(75)
+    expect(tween.duration).toBe(350)
     expect(tween.yoyo).toBe(true)
 
     player.offsetX = 8

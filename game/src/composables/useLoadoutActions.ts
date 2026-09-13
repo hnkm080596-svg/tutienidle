@@ -28,17 +28,17 @@ export function useLoadoutActions() {
     // GameManager.chooseCultivationPath(), gọi thẳng equipTechnique()/
     // GameManager không qua đây nữa. Đã gỡ 2 wrapper action tương ứng.
 
-    unequipSkill: (skillId: string) => withBump(gameManager.unequipSkill(skillId)),
+    unequipSkill: (skillId: string) => withBump(gameManager.progressionOps.unequipSkill(skillId)),
 
     // PLAN HOÀN CHỈNH mục 8/12 — thay hẳn equipSkill(skillId) cũ (theo
     // category cố định). skillId null = dọn trống slot đó.
     setSkillLoadoutSlot: (slotIndex: number, skillId: string | null) =>
-      withBump(gameManager.setSkillLoadoutSlot(player.$state, slotIndex, skillId)),
+      withBump(gameManager.progressionOps.setSkillLoadoutSlot(player.$state, slotIndex, skillId)),
 
     // Core Loop Foundation checklist (Mục SKILL) — "behavior-changing
     // node".
     selectSkillSpecialization: (skillId: string, specializationId: string) =>
-      withBump(gameManager.selectSkillSpecialization(skillId, specializationId)),
+      withBump(gameManager.progressionOps.selectSkillSpecialization(skillId, specializationId)),
 
     // Pháp Tu Redesign (magicpath) — Element Loadout là action CỦA
     // Pinia store (pure PlayerData, không cần registry — xem
@@ -49,15 +49,15 @@ export function useLoadoutActions() {
     unequipElement: (element: ElementType) => withBump(player.unequipElement(element)),
 
     // Node Tree — GameManager method (unlocksSkillIds cần skillTemplates).
-    purchaseNode: (nodeId: string) => withBump(gameManager.purchaseNode(nodeId, player.$state)),
+    purchaseNode: (nodeId: string) => withBump(gameManager.progressionOps.purchaseNode(nodeId, player.$state)),
 
     // Node level (plan §6.2) — nâng node đã lĩnh ngộ lên +1 cấp.
-    upgradeNode: (nodeId: string) => withBump(gameManager.upgradeNode(nodeId, player.$state)),
+    upgradeNode: (nodeId: string) => withBump(gameManager.progressionOps.upgradeNode(nodeId, player.$state)),
 
     // Reset development một nhánh (plan §6.10) — hoàn Cảm Ngộ đã tiêu;
     // bump vô điều kiện (reset về 0 level cũng là thay đổi state UI).
     devResetBranch: (branchTag: string) => {
-      gameManager.devResetBranch(branchTag, player.$state)
+      gameManager.progressionOps.devResetBranch(branchTag, player.$state)
 
       bumpState()
 
@@ -66,6 +66,6 @@ export function useLoadoutActions() {
 
     // PLAN HOÀN CHỈNH mục 2 — Main Stat allocation, hồ điểm riêng biệt
     // hoàn toàn với Skill Point/Node Tree ở trên.
-    allocateAttributePoint: (stat: MainStatKey) => withBump(gameManager.allocateAttributePoint(player.$state, stat)),
+    allocateAttributePoint: (stat: MainStatKey) => withBump(gameManager.progressionOps.allocateAttributePoint(player.$state, stat)),
   }
 }

@@ -18,7 +18,7 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 // pass, các概率 khác đều false). Kết quả: damage 100% xác định giữa các run.
 
 function mk(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
   return {
     id: 'x', name: 'x', type: 'enemy', baseStats: stats, stats,
     currentHp: 1_000_000, maxHp: 1_000_000, currentMp: 0,
@@ -42,8 +42,8 @@ describe('debug damage scaling pipeline', () => {
     const combat = new CombatSystem(new EventBus())
 
     const run = (multiplier: number): number => {
-      const source = mk({ id: 'src', stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100 } })
-      const target = mk({ id: 'tgt', stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, defense: 0 } })
+      const source = mk({ id: 'src', stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100 }) })
+      const target = mk({ id: 'tgt', stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, defense: 0 }) })
       const before = target.currentHp
       combat.resolveActionHit(source, target, { kind: 'physical', multiplier })
       return before - target.currentHp

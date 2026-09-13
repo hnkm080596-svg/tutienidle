@@ -24,6 +24,11 @@ const props = withDefaults(defineProps<{
   skill?: Skill
   emptyLabel?: string
 
+  // Bảng 9.5 #5 (2026-09-07) — label hiển thị override (tên skill thật
+  // từ TurnSkillDisplayMeta). undefined = fallback skill?.name →
+  // emptyLabel → 'Trống' như cũ. Không đụng tooltip riêng (tooltipOverride).
+  displayLabel?: string
+
   // Thời gian còn lại/tổng của "vòng phủ" đang hiện — cooldown thật
   // (policy cooldown/cast_time) hoặc cadence Attack Speed (policy
   // attack_speed), tuỳ call site. Turn-based: SỐ LƯỢT.
@@ -71,7 +76,7 @@ function onClick() {
   }
 }
 
-const label = computed(() => props.skill?.name ?? props.emptyLabel ?? 'Trống')
+const label = computed(() => props.displayLabel ?? props.skill?.name ?? props.emptyLabel ?? 'Trống')
 
 const slotState = computed<SlotPresentationState>(() => {
   if (props.isLocked) {

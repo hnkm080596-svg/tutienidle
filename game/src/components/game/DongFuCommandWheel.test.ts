@@ -14,7 +14,7 @@ import DongFuCommandWheel from './DongFuCommandWheel.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
-import { getCommandWheelOrbitDirection } from '@/game/support/commandWheelOrbit'
+import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
 import { i18n } from '@/i18n'
 
 function mountWheel(gameManager: GameManager) {
@@ -144,6 +144,23 @@ describe('DongFuCommandWheel', () => {
     expect(slot).not.toBeNull()
   })
 
+  // Companion Roster (companion-gacha Task 10, 2026-09-12) - SHIPPED:
+  // companion_roster renders with no realm gate and opens CompanionPanel
+  // (standalonePanel 'companion'), closing the wheel like every shortcut.
+  it('slot Đồng Đội render và mở standalonePanel companion', async () => {
+    await mounted.open()
+
+    const slot = mounted.slot('companion_roster')
+
+    expect(slot).not.toBeNull()
+
+    slot!.click()
+    await nextTick()
+
+    expect(mounted.ui.standalonePanel).toBe('companion')
+    expect(mounted.ui.isCommandWheelOpen).toBe(false)
+  })
+
   // Bản Mệnh Pháp Bảo (2026-08-27) — SHIPPED: slot render ngay (khác
   // talisman_slot vẫn future) nhưng disabled trước Trúc Cơ, xem
   // commandWheelCatalog.ts's phap_bao.disabledReason().
@@ -236,7 +253,7 @@ describe('DongFuCommandWheel', () => {
   })
 
   it('building chưa xây → shortcut mở popover qua shared authority', async () => {
-    gameManager.registerBuildings([
+    gameManager.catalogOps.registerBuildings([
       {
         id: 'pill_room',
         name: 'Đan Phòng',

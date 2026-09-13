@@ -55,6 +55,34 @@ export class MaterialBag {
     return amount - stored
   }
 
+  /**
+   * R9 (AR-22) - preflight how much of `amount` fits WITHOUT mutating.
+   * The exchange owner (e.g. VendorSystem) checks this BEFORE any
+   * debit/credit so a failed compound trade leaves all balances
+   * unchanged (A9: failed exchanges preserve all involved balances).
+   */
+  canAcceptAmount(
+    material: Material,
+    amount: number,
+  ): number {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return 0
+    }
+
+    const limit = material.stackLimit ?? MAX_STACK_AMOUNT
+
+    const existing =
+      this.materials.get(
+        material.id,
+      )
+
+    if (!existing) {
+      return Math.min(amount, limit)
+    }
+
+    return Math.max(0, Math.min(amount, limit - existing.amount))
+  }
+
 
   remove(
     materialId: string,

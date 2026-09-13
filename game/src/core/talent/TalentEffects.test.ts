@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   collectTalentEffects,
-  getAlchemySuccessBonusPercentPoints,
+  getAlchemyDoublePill,
+  getEnhanceGuarantee,
   getBodyRefinementProgressMultiplier,
   getCultivationSpeedMultiplier,
   getCultivationSpeedPercent,
@@ -35,6 +36,36 @@ describe('collectTalentEffects', () => {
   it('id retired resolve được nhưng KHÔNG còn effect (an toàn save cũ)', () => {
     expect(collectTalentEffects(['nghich_thien'])).toEqual([])
     expect(collectTalentEffects(['tu_bao'])).toEqual([])
+  })
+})
+
+describe('M3 — production talent getters (spec 2026-09-03 §4.2)', () => {
+  it('Hỏa Hầu Thông Thần — trả bộ multiplier đan đôi/potency/chi phí', () => {
+    expect(getAlchemyDoublePill(['hoa_hau_thong_than'])).toEqual({
+      yieldMultiplier: 2,
+      potencyMultiplier: 1.5,
+      costMultiplier: 2,
+    })
+  })
+
+  it('không có talent đan → undefined (hành vi mặc định nguyên vẹn)', () => {
+    expect(getAlchemyDoublePill([])).toBeUndefined()
+    expect(getAlchemyDoublePill(undefined)).toBeUndefined()
+    expect(getAlchemyDoublePill(['kiem_quang'])).toBeUndefined()
+  })
+
+  it('Bách Luyện Thành Khí — trả costMultiplier của cường hóa bảo đảm', () => {
+    expect(getEnhanceGuarantee(['bach_luyen_thanh_khi'])).toEqual({ costMultiplier: 3 })
+  })
+
+  it('không có talent khí → undefined', () => {
+    expect(getEnhanceGuarantee([])).toBeUndefined()
+    expect(getEnhanceGuarantee(['hoa_hau_thong_than'])).toBeUndefined()
+  })
+
+  it('quy tắc 1 talent/nhân vật — id thứ hai trong save edit không kích hoạt', () => {
+    expect(getAlchemyDoublePill(['kiem_quang', 'hoa_hau_thong_than'])).toBeUndefined()
+    expect(getEnhanceGuarantee(['kiem_quang', 'bach_luyen_thanh_khi'])).toBeUndefined()
   })
 })
 
@@ -81,7 +112,6 @@ describe('getter còn hiệu lực với kind v3 được giữ', () => {
     expect(getSpiritStoneGainMultiplier(['tu_bao'])).toBe(1)
     expect(getEquipmentDropChanceMultiplier(['co_duyen'])).toBe(1)
     expect(getBodyRefinementProgressMultiplier(['luyen_the_ky_tai'])).toBe(1)
-    expect(getAlchemySuccessBonusPercentPoints(['dan_duyen'])).toBe(0)
     expect(getReactionKeepChance(['phan_phac'])).toBe(0)
     expect(getHealOnKillMaxHpPercent(['huyet_chien'])).toBe(0)
   })

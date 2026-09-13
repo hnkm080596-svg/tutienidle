@@ -3,11 +3,12 @@ import { skillResourceTypeLabel, SKILL_RESOURCE_TYPE_LABELS } from './SkillResou
 
 describe('SkillResourceLabels', () => {
   describe('SKILL_RESOURCE_TYPE_LABELS', () => {
-    it('covers all three resource types', () => {
-      expect(Object.keys(SKILL_RESOURCE_TYPE_LABELS)).toHaveLength(3)
+    it('covers all four resource types (Phase A3 added the)', () => {
+      expect(Object.keys(SKILL_RESOURCE_TYPE_LABELS)).toHaveLength(4)
       expect(SKILL_RESOURCE_TYPE_LABELS.mana).toBe('Linh Lực')
       expect(SKILL_RESOURCE_TYPE_LABELS.sword_intent).toBe('Kiếm Ý')
       expect(SKILL_RESOURCE_TYPE_LABELS.momentum).toBe('Đà Thế')
+      expect(SKILL_RESOURCE_TYPE_LABELS.the).toBe('Thế')
     })
   })
 

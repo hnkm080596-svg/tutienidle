@@ -51,9 +51,9 @@ beforeEach(() => {
 function createBootedGameManager(): GameManager {
   const gameManager = new GameManager()
 
-  gameManager.registerMaterials(materials)
-  gameManager.registerEquipment(equipment)
-  gameManager.registerAffixes(affixes)
+  gameManager.catalogOps.registerMaterials(materials)
+  gameManager.catalogOps.registerEquipment(equipment)
+  gameManager.catalogOps.registerAffixes(affixes)
 
   return gameManager
 }
@@ -130,5 +130,52 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     if (outcome.status === 'ok') {
       expect(outcome.save.quests).toEqual(questsSnapshotBeforeMutation)
     }
+  })
+
+  it('R7 (AR-08): decompose state survives save/load without double-settling', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1_725_160_000_000)
+
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+    player.autoWorkerCapacity = 5
+
+    gameManager.decomposeSystem.updateCapacity(5)
+    gameManager.decomposeSystem.setSetting({ workers: 3, ageFilter: 'decade' })
+    gameManager.decomposeSystem.tick(Date.now()) // start the cycle timer
+
+    const save = buildGameSave(player, gameManager)
+    const decomposeSnapshot = structuredClone(save.decompose)
+
+    // Mutating the live system after buildGameSave must not leak into
+    // the built save (same reason quests uses structuredClone).
+    gameManager.decomposeSystem.setSetting({ workers: 1 })
+    expect(save.decompose).toEqual(decomposeSnapshot)
+
+    const writeResult = writeGameSave(save)
+    expect(writeResult).toEqual({ status: 'ok' })
+
+    const outcome = loadGame()
+    expect(outcome.status).toBe('ok')
+    if (outcome.status !== 'ok') {
+      return
+    }
+    expect(outcome.save.decompose).toEqual(decomposeSnapshot)
+
+    // Restore into a FRESH manager: settings + timer come back; workers
+    // clamp to the fresh manager's live capacity (0) - no resurrected
+    // workforce; settling the same instant awards nothing new.
+    const fresh = createBootedGameManager()
+    const freshPlayer = createDefaultPlayer()
+    fresh.setActivePlayer(freshPlayer)
+    const restoredModifiers = fresh.saveOps.restoreFromSave(outcome.save as ReturnType<typeof buildGameSave>)
+    expect(Array.isArray(restoredModifiers)).toBe(true)
+    expect(fresh.decomposeSystem.getSettings()).toEqual({
+      gradeFilter: 'all',
+      ageFilter: 'decade',
+      workers: 0, // clamped: fresh manager has no CHQ -> capacity 0
+    })
+
+    // No offline window elapsed (same mocked instant) - no double award.
+    expect(fresh.decomposeSystem.drainOutput()).toEqual([])
   })
 })

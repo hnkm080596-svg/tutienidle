@@ -11,20 +11,22 @@ import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets } from './TurnSkillAction'
 import type { TurnSkillDefinition, TurnSkillSlot, TurnSkillSlotRole, SelectedAction } from './TurnSkillAction'
 import type { ActionDamageInfo } from '../ActionImpactSystem'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import type { TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
 import { isTurnTriggerReady } from './BossTurnTriggers'
-import { shouldSpawnNextEnemy, isStageComplete } from './WaveSpawnTrigger'
+import { shouldStartNextWave, isStageComplete } from './WaveSpawnTrigger'
 import { scaleActionDamage } from '../ActionImpactSystem'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import type { BattleLogEntry } from './TurnOrderPreview'
 import { selectRandomDistinctElementPair } from './TurnSkillAction'
-import { REACTION_PATH_SPECIAL_ID } from '../../../data/skill/TurnReactionPathSkills'
 import { refundGauge, GAUGE_MAX } from './ActionGauge'
-import type { TurnBuffDefinition } from './TurnBuffTypes'
+import { TurnReactionManager } from './TurnReactionManager'
+import { MAX_THE, THE_GAIN_PER_LINK, THE_GAIN_PER_FINISHER } from '../../combat/CombatTypes'
+import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
+import type { BuffDefinition } from '../../buff/BuffTypes'
 
 /**
  * Future Systems Task 6 — gauge-delta effect: bắn 1 LẦN ngay khi buff
@@ -32,7 +34,7 @@ import type { TurnBuffDefinition } from './TurnBuffTypes'
  * (refundGauge đã clamp [0, GAUGE_MAX]). Không phải tick liên tục.
  */
 function applyGaugeDeltaEffects(
-  definition: TurnBuffDefinition,
+  definition: BuffDefinition,
   participant: TurnBattleParticipant,
 ): void {
   for (const effect of definition.effects) {
@@ -53,7 +55,36 @@ export interface TurnBossTrigger {
   firedAlready: boolean
 }
 
-export type TurnBattleState = 'countdown' | 'fighting' | 'victory' | 'defeat'
+export interface PendingEnemySpawn {
+  /** Đã build đầy đủ (roll template/elite/boss xong) — chỉ chờ hết telegraph. */
+  participant: TurnBattleParticipant
+  ticksRemaining: number
+  totalTicks: number
+}
+
+// Turn-Based Wave Redesign (2026-09-06) — quy đổi TRỰC TIẾP từ
+// SPAWN_TELEGRAPH_SECONDS của legacy/BattleSystem.ts (0.75s/1.0s/1.4s)
+// sang tick (0.1s/tick, khớp BATTLE_FIXED_STEP mà GameManager gọi
+// tickPacing() mỗi lần) để giữ đúng cảm giác thời gian người chơi đã quen.
+const SPAWN_TELEGRAPH_TICKS = {
+  normal: 8,
+  elite: 10,
+  boss: 14,
+} as const
+
+function spawnTelegraphTicks(entity: Pick<CombatEntity, 'isBoss' | 'isElite'>): number {
+  if (entity.isBoss) {
+    return SPAWN_TELEGRAPH_TICKS.boss
+  }
+
+  if (entity.isElite) {
+    return SPAWN_TELEGRAPH_TICKS.elite
+  }
+
+  return SPAWN_TELEGRAPH_TICKS.normal
+}
+
+export type TurnBattleState = 'intro' | 'countdown' | 'fighting' | 'victory' | 'defeat'
 
 export interface TurnBattleParticipant {
   id: string
@@ -62,7 +93,7 @@ export interface TurnBattleParticipant {
   priority: number
   actionGauge: number
   alive: boolean
-  buffs: TurnBuffPool
+  buffs: BuffPool
   consecutiveHardCcTurns: number
   baTheTriggeredAtTurn?: number
   basic?: TurnSkillDefinition
@@ -73,6 +104,15 @@ export interface TurnBattleParticipant {
   /** Future Systems Task 7 — charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */
   chargingTurnsRemaining?: number
   pendingChargedSkillId?: string
+  /**
+   * Phase A3 (2026-09-07) — 1-based counter of this enemy's own actions,
+   * ported from BattleEnemy.specialAttackCounter (Battle.ts) with the same
+   * everyNth semantics as legacy EnemyAttackSystem.fireEnemyAttack():
+   * when counter % everyNth === 0, the special attack's damageMultiplier
+   * replaces the basic attack's for that action. Runtime-only, never
+   * resets mid-battle. undefined coerces to 0.
+   */
+  specialAttackCounter?: number
 }
 
 export interface TurnBattle {
@@ -85,6 +125,12 @@ export interface TurnBattle {
   enemies: TurnBattleParticipant[]
   state: TurnBattleState
   totalTurnsElapsed?: number
+  /** Completed ATB rounds. A round completes when every participant that is
+   * alive at that moment has declared at least one action since the previous
+   * round boundary; newly spawned enemies join the current round. */
+  roundsElapsed?: number
+  /** Participant ids that have acted in the current (incomplete) round. */
+  actedThisRound?: string[]
   /**
    * Countdown phase (flow: Countdown → Spawn → Gauge combat → Wave →
    * Result) — số lượt-pacing còn lại trước khi state chuyển 'fighting'.
@@ -93,9 +139,23 @@ export interface TurnBattle {
    * `tickCountdown()`), enemies đã spawn đứng yên chờ.
    */
   countdownTurnsRemaining?: number
+  /**
+   * Intro phase (2026-09-07 plan Task 4) - curtain/zone-reveal transition
+   * BEFORE the countdown. Number of pacing ticks remaining before state
+   * flips to 'countdown'. GameManager's pacing loop decrements it via
+   * tickIntro(); no combat logic (gauge, pacing, targeting) may run while
+   * this phase is active - identical contract to countdownTurnsRemaining.
+   */
+  introTurnsRemaining?: number
   wave?: {
     totalEnemyCount: number
     spawnedCount: number
+    /** effectiveWaves(stage) snapshot, taken once at battle start. */
+    waves: number[]
+    /** 0-based index into `waves` — which wave is currently spawning/active. */
+    waveIndex: number
+    /** Quái đã spawn (dạng pending) nhưng CHƯA vào trận thật (battle.enemies). */
+    pendingEnemySpawns: PendingEnemySpawn[]
   }
   /**
    * Slice 7 extension (Completion Task 11) — battle log: 1 entry mỗi lượt
@@ -213,9 +273,18 @@ export class TurnBattleSystem {
   constructor(
     private readonly combat: CombatSystem,
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
-    private readonly registry?: TurnBuffRegistry,
-    private readonly spawnEnemy?: () => TurnBattleParticipant,
+    private readonly registry?: BuffDefinitionCatalog,
+    private readonly spawnEnemy?: (occupiedSlots?: Set<string>) => TurnBattleParticipant,
     private readonly reactionPathPool?: readonly TurnSkillDefinition[],
+    // Phase A1 (2026-09-07) — optional collaborator, same pattern as
+    // registry/spawnEnemy above; consumers no-op safely when absent.
+    private readonly reactionManager?: TurnReactionManager,
+    // 9.5 #9 — committed-cast notification. Fires once per action that
+    // actually commits (same point as commitAction): normal casts and
+    // charge-initiation count; charge ticks/resolve, CC-blocked turns and
+    // markerNoPool placeholders do not. Generic over actors — consumers
+    // filter to the participants they care about.
+    private readonly onSkillCast?: (actor: TurnBattleParticipant, skillId: string) => void,
   ) {}
 
   // Action Playback Task 3 — gauge-delta deferral chuyển từ local vars
@@ -223,12 +292,24 @@ export class TurnBattleSystem {
   // completeAction tiêu thụ — 2 phase tách nhau qua GameManager khi
   // presentationActive, nên state phải sống trên instance).
   private pendingGaugeDeltaTargets: TurnBattleParticipant[] = []
-  private pendingGaugeDeltaDefinition: TurnBuffDefinition | undefined
+  private pendingGaugeDeltaDefinition: BuffDefinition | undefined
 
   // Defect-fix Task 1 (2026-09-05) — bridge dequeueFollowUpActor() →
   // declareActorAction(): set ngay trước khi trả bypass actor, đọc 1 lần
   // trong declare để populate TurnDeclaredAction.isFollowUpBypass rồi clear.
   private pendingFollowUpBypassActorId: string | null = null
+
+  /**
+   * R1 (AR-01) test seam — production wiring goes through
+   * GameManager.setSurviveLethalSession on the shared CombatSystem; this
+   * delegation lets engine-level tests exercise the survive-lethal
+   * interception without touching the private combat collaborator.
+   */
+  setSurviveLethalSessionForTest(
+    session: { playerEntityId: string; guard: SurviveLethalGuard } | null,
+  ): void {
+    this.combat.setSurviveLethalSession(session)
+  }
 
   /**
    * Defect-fix Task 1 — shared bởi tickPacing() và peekNextActor():
@@ -268,6 +349,31 @@ export class TurnBattleSystem {
     this.pendingFollowUpBypassActorId = queued.id
 
     return queued
+  }
+
+  /**
+   * Intro phase pacing (2026-09-07 plan Task 4, flow: Intro -> Countdown ->
+   * Spawn -> Gauge combat -> Wave -> Result): decrement introTurnsRemaining
+   * by 1 per call. Reaching 0 flips state to 'countdown'. Called from
+   * GameManager's pacing loop on the fixed step; NO combat logic runs
+   * during the intro phase (gauges frozen, resolveNextStep untouched) -
+   * same wait-phase contract as tickCountdown() below.
+   */
+  tickIntro(battle: TurnBattle): TurnBattleState {
+    if (battle.state !== 'intro') {
+      return battle.state
+    }
+
+    const remaining = (battle.introTurnsRemaining ?? 0) - 1
+
+    if (remaining <= 0) {
+      battle.introTurnsRemaining = 0
+      battle.state = 'countdown'
+    } else {
+      battle.introTurnsRemaining = remaining
+    }
+
+    return battle.state
   }
 
   /**
@@ -311,6 +417,87 @@ export class TurnBattleSystem {
       return null
     }
 
+    // Turn-Based Wave Redesign (2026-09-06) — wave-batch spawn/telegraph
+    // chạy MỖI tick (không gate sau completeAction như cơ chế 1-quái-lần
+    // trước đây): pending telegraph đếm ngược → materialize khi hết; sân
+    // trống + hết pending + còn wave → queue cả wave mới đồng loạt.
+    // Pending telegraph decrement KHÔNG phụ thuộc spawnEnemy factory —
+    // materialize là việc hệ thống (đã build xong participant), chỉ wave-
+    // start MỚI cần factory. Test 2 của plan chạy tickPacing không factory
+    // mà vẫn kỳ vọng pending đếm ngược — đúng ngữ nghĩa này.
+    if (battle.wave) {
+      const stillPending: PendingEnemySpawn[] = []
+
+      for (const pending of battle.wave.pendingEnemySpawns) {
+        const ticksRemaining = pending.ticksRemaining - 1
+
+        if (ticksRemaining <= 0) {
+          battle.enemies.push(pending.participant)
+        } else {
+          stillPending.push({ ...pending, ticksRemaining })
+        }
+      }
+
+      battle.wave.pendingEnemySpawns = stillPending
+
+      const aliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+
+      if (
+        this.spawnEnemy &&
+        shouldStartNextWave(
+          aliveEnemyCount,
+          battle.wave.pendingEnemySpawns.length,
+          battle.wave.waveIndex,
+          battle.wave.waves.length,
+        )
+      ) {
+        const waveSize = battle.wave.waves[battle.wave.waveIndex]!
+        // Within-wave standing-slot dedupe (2026-09-07 bugfix) -- one set
+        // shared across this wave-batch's spawns so enemies spawned in the
+        // same wave claim distinct slots when the wave fits within the
+        // 9-slot pool (see EnemySpawnPlacement.ts). A later wave starts a
+        // fresh set, so it may reuse a slot vacated by an earlier wave's
+        // dead enemy -- that is intended, not a bug.
+        const occupiedSlots = new Set<string>()
+
+        for (let index = 0; index < waveSize; index++) {
+          const participant = this.spawnEnemy(occupiedSlots)
+          const totalTicks = spawnTelegraphTicks(participant.entity)
+
+          battle.wave.pendingEnemySpawns.push({ participant, ticksRemaining: totalTicks, totalTicks })
+          battle.wave.spawnedCount += 1
+        }
+
+        battle.wave.waveIndex += 1
+      }
+    }
+
+    const livingEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+
+    if (livingEnemyCount === 0) {
+      const pendingCount = battle.wave?.pendingEnemySpawns.length ?? 0
+      const waveIndex = battle.wave?.waveIndex ?? 0
+      const waveCount = battle.wave?.waves.length ?? 0
+      const spawnedCount = battle.wave?.spawnedCount ?? 0
+      const totalEnemyCount = battle.wave?.totalEnemyCount ?? 0
+
+      const moreComing = pendingCount > 0 || waveIndex < waveCount
+
+      if (moreComing) {
+        for (const participant of [...battle.players, ...battle.enemies]) {
+          participant.actionGauge = 0
+        }
+
+        return null
+      }
+
+      if (isStageComplete(spawnedCount, totalEnemyCount, livingEnemyCount, pendingCount)) {
+        battle.state = 'victory'
+
+        return null
+      }
+    }
+
     // Defect-fix Task 1 — follow-up/counter queue TRƯỚC gauge order: queue
     // là production path duy nhất đọc (peekNextActor không chạy trong loop).
     const followUpActor = this.dequeueFollowUpActor(battle)
@@ -329,6 +516,9 @@ export class TurnBattleSystem {
 
     for (const participant of allParticipants) {
       participant.alive = participant.entity.alive
+      // R2 (AR-05): sync the speed cache from its owner before pacing so
+      // buffs applied/expired during the previous turn take effect now.
+      participant.speed = participant.entity.stats.speed
     }
 
     const living = allParticipants.filter((actor) => actor.alive)
@@ -393,6 +583,9 @@ export class TurnBattleSystem {
 
     for (const participant of allParticipants) {
       participant.alive = participant.entity.alive
+      // R2 (AR-05): sync the speed cache from its owner before pacing so
+      // buffs applied/expired during the previous turn take effect now.
+      participant.speed = participant.entity.stats.speed
     }
 
     const resolved = resolveNextTurn(allParticipants)
@@ -413,7 +606,25 @@ export class TurnBattleSystem {
   ): TurnDeclaredAction {
     battle.totalTurnsElapsed = (battle.totalTurnsElapsed ?? 0) + 1
 
-    const actorBuffSystem = new TurnBuffSystem(actor.buffs)
+    // Round tracking (spec v3 D1 revision, 2026-09-12): a round completes
+    // when every participant alive AT THIS MOMENT has declared an action
+    // since the last boundary. Reads entity.alive - the participant.alive
+    // cache is only synced inside the pacing loop, not here. A mid-round
+    // spawn joins the current round (it is in alive and must act before
+    // the boundary). totalTurnsElapsed stays a raw actor-action counter.
+    const acted = (battle.actedThisRound ??= [])
+    if (!acted.includes(actor.id)) {
+      acted.push(actor.id)
+    }
+    const aliveNow = [...battle.players, ...battle.enemies].filter(
+      (participant) => participant.entity.alive,
+    )
+    if (aliveNow.length > 0 && aliveNow.every((participant) => acted.includes(participant.id))) {
+      battle.roundsElapsed = (battle.roundsElapsed ?? 0) + 1
+      battle.actedThisRound = []
+    }
+
+    const actorBuffSystem = new BuffSystem(actor.buffs)
 
     // Future Systems Task 7 — charge state (Thế→Trảm). Charging takes
     // precedence: KHÔNG đụng CC counter Bá Thể (đã bất động tự nhiên,
@@ -504,10 +715,23 @@ export class TurnBattleSystem {
       }
     }
 
-    actorBuffSystem.update(actor.entity, this.combat, this.registry)
+    // R3 (AR-06) — provide source entity resolver so elemental penetration
+    // and Mộc Tu poison recovery operate with authoritative source context.
+    const resolveSource = (sourceId: string): CombatEntity | undefined => {
+      const participant =
+        battle.players.find((p) => p.id === sourceId) ??
+        battle.enemies.find((e) => e.id === sourceId)
+      return participant?.entity
+    }
 
-    if (actor.entity.stats.hpRegenPerTurn > 0) {
-      actor.entity.currentHp = Math.min(actor.entity.maxHp, actor.entity.currentHp + actor.entity.stats.hpRegenPerTurn)
+    actorBuffSystem.update(actor.entity, this.combat, this.registry, resolveSource)
+
+    if (actor.entity.stats.hpRegenPerTurn > 0 && actor.entity.currentHp < actor.entity.maxHp) {
+      // R1 (AR-01) — regeneration is a vitals mutation: go through the
+      // vitals authority so healing events stay uniform. The full-HP guard
+      // skips a no-op healing event every turn (previous raw write only
+      // clamped silently); mutation itself is still authority-owned.
+      this.combat.applyHealing(actor.entity, actor.entity.stats.hpRegenPerTurn, actor.entity.id, 'regen')
     }
 
     if (actor.resources) {
@@ -520,11 +744,25 @@ export class TurnBattleSystem {
       this.registry &&
       isTurnTriggerReady({ afterTurns: actor.bossTrigger.afterTurns }, battle.totalTurnsElapsed ?? 0)
     ) {
-      const definition = this.registry.get(actor.bossTrigger.buffDefinitionId)
+      // Phase A2 (2026-09-07) — BuffDefinitionCatalog.get() THROWS on an
+      // unknown id, and bossTrigger data is now populated for real
+      // enemies (content drift / renamed buff id would crash the whole
+      // battle tick). Skip the buff gracefully instead — same
+      // try/catch skip pattern as GameManager's formation-buff lookup.
+      // firedAlready stays false so a corrected id can still fire later.
+      let definition: BuffDefinition | undefined
 
-      new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+      try {
+        definition = this.registry.get(actor.bossTrigger.buffDefinitionId)
+      } catch {
+        definition = undefined
+      }
 
-      actor.bossTrigger.firedAlready = true
+      if (definition) {
+        new BuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+
+        actor.bossTrigger.firedAlready = true
+      }
     }
 
     let action: SelectedAction | null = null
@@ -544,13 +782,44 @@ export class TurnBattleSystem {
       tickCooldowns(actor)
 
       // Stats recompute (Completion Task 4): fold statModifier buffs đang
-      // active vào entity stats TRƯỚC khi chọn/hành động — luôn tính TỪ
-      // baseStats để không double-apply các recompute trước đó.
-      actor.entity.stats = recomputeEffectiveStats(actor.entity.baseStats ?? actor.entity.stats, actor.buffs)
+      // active vào entity stats TRƯỚC khi chọn/hành động. R2 (AR-02):
+      // baseStats giữ RESOLVED base (build từ player.finalStats / enemy
+      // normalization — attribute đã derive đúng 1 lần); effective stats
+      // chỉ fold buff tạm thời, KHÔNG derive lại attribute.
+      actor.entity.stats = recomputeEffectiveStats(actor.entity.baseStats, actor.buffs)
+
+      // R2 (AR-05): participant.speed is a read-only cache of effective
+      // combat speed — refresh it at every recompute (owner: entity.stats).
+      actor.speed = actor.entity.stats.speed
 
       action = forcedSkillSlot
         ? selectForcedAction(actor, forcedSkillSlot)
         : selectAction(actor)
+
+      // Phase A3 (2026-09-07) — enemy specialAttacks reader, ported from
+      // legacy EnemyAttackSystem.fireEnemyAttack()'s everyNth semantics:
+      // 1-based counter on the actor's OWN actions; when
+      // counter % everyNth === 0 the matching special attack's
+      // damageMultiplier replaces the basic attack's damage (presetId
+      // carries for presentation). Only applies to plain basic attacks
+      // (slot null) — explicit skills (special/ultimate slots) are never
+      // replaced. Counter never resets mid-battle; undefined coerces to 0.
+      if (!action.slot && actor.entity.specialAttacks?.length) {
+        const attackCount = (actor.specialAttackCounter ?? 0) + 1
+
+        actor.specialAttackCounter = attackCount
+
+        const specialAttack = actor.entity.specialAttacks.find(
+          (candidate) => attackCount % candidate.everyNth === 0,
+        )
+
+        if (specialAttack) {
+          action = {
+            ...action,
+            damage: { kind: 'physical', multiplier: specialAttack.damageMultiplier },
+          }
+        }
+      }
 
       const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
 
@@ -562,26 +831,37 @@ export class TurnBattleSystem {
         actor.pendingChargedSkillId = action.skillId
       }
 
-      opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
-      const primaryTarget = selectTarget(actor, opposingSide)
+      const targetScope = action.skill?.targetScope ?? 'enemy'
 
-      if (primaryTarget && !isChargeInit) {
-        affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
+      if (targetScope === 'self') {
+        affected = [actor]
+        scaledDamage = null
+      } else {
+        opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
+        const primaryTarget = selectTarget(actor, opposingSide)
 
-        const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
-        suddenDeathMultiplierCaptured = suddenDeathMultiplier
-        scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
+        if (primaryTarget && !isChargeInit) {
+          affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
 
-        // Future Systems Task 5 — Reaction Path marker: capture picks tại
-        // declare; hits áp tại applyActionImpact (Action Playback defer).
-        if (action.skillId === REACTION_PATH_SPECIAL_ID && this.reactionPathPool) {
-          reactionPathPicks = selectRandomDistinctElementPair([...this.reactionPathPool])
-          isReactionPath = true
-        } else if (action.skillId === REACTION_PATH_SPECIAL_ID) {
-          // Marker equipped nhưng pool chưa inject — placeholder damage
-          // vô nghĩa, bỏ qua hit hoàn toàn (không crash, không hit).
-          markerNoPool = true
-          scaledDamage = null
+          if (action.damage) {
+            const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
+            suddenDeathMultiplierCaptured = suddenDeathMultiplier
+            scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
+          }
+
+          // R3 (AR-18) — Generic composite action policy.
+          const isReactionComposite =
+            action.skill?.compositePicks?.poolType === 'reaction_path'
+
+          if (isReactionComposite && this.reactionPathPool) {
+            reactionPathPicks = selectRandomDistinctElementPair([...this.reactionPathPool])
+            isReactionPath = true
+          } else if (isReactionComposite) {
+            // Marker equipped nhưng pool chưa inject — placeholder damage
+            // vô nghĩa, bỏ qua hit hoàn toàn (không crash, không hit).
+            markerNoPool = true
+            scaledDamage = null
+          }
         }
       }
     }
@@ -646,7 +926,7 @@ export class TurnBattleSystem {
     if (declared.isCharging && declared.chargeResolved) {
       const chargedSkill = declared.chargedSkill
 
-      if (chargedSkill) {
+      if (chargedSkill && chargedSkill.damage) {
         const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
 
         const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
@@ -659,19 +939,44 @@ export class TurnBattleSystem {
 
           if (!targetParticipant || !targetParticipant.entity.alive) continue
 
-          this.combat.resolveActionHit(actor.entity, targetParticipant.entity, chargedDamage)
-          targetIds.push(target)
+          const hitResult = this.combat.resolveActionHit(actor.entity, targetParticipant.entity, chargedDamage)
+
+          if (!hitResult.dodged) {
+            targetIds.push(target)
+          }
         }
       }
 
       return { targetIds }
     }
 
+    // 9.5 #9 — charge-init commits its cast HERE, not in the
+    // affected-gated block below: enemy-targeted charge skills collect
+    // targets only at resolve time, so `affected` stays empty at declare
+    // and the block below never ran for them — their cooldown/resource
+    // were never committed (dead isChargeInit branch). The charge-resolve
+    // turn returns early above and never reaches this point.
+    if (declared.action && !declared.markerNoPool && (declared.action.skill?.chargeTurns ?? 0) > 0) {
+      commitAction(actor.entity, declared.action)
+      this.onSkillCast?.(actor, declared.action.skillId)
+    }
+
     if (declared.action && declared.affected.length > 0 && !declared.markerNoPool) {
       const action = declared.action
 
+      // R5 (AR-14) — Emit authoritative gameplay 'attack' event on action commit,
+      // ensuring passive listeners receive events identically in headless and presentation modes.
+      this.combat.eventBus.emit('attack', {
+        type: 'attack',
+        sourceId: actor.id,
+        targetId: declared.affected[0]?.id ?? actor.id,
+        skillId: declared.skillId,
+      })
+
       if (declared.isReactionPath && declared.reactionPathPicks) {
         for (const pickedSkill of declared.reactionPathPicks) {
+          if (!pickedSkill.damage) continue
+
           const pickedDamage = declared.suddenDeathMultiplier === 1
             ? pickedSkill.damage
             : scaleActionDamage(pickedSkill.damage, declared.suddenDeathMultiplier)
@@ -679,23 +984,74 @@ export class TurnBattleSystem {
           for (const target of declared.affected) {
             if (!target.entity.alive) continue
 
-            this.combat.resolveActionHit(actor.entity, target.entity, pickedDamage)
-            targetIds.push(target.id)
+            const hitResult = this.combat.resolveActionHit(actor.entity, target.entity, pickedDamage)
+
+            if (!hitResult.dodged) {
+              targetIds.push(target.id)
+
+              if (this.registry) {
+                this.applySkillAilments(actor, target, pickedSkill)
+              }
+            }
           }
         }
       } else if (declared.scaledDamage) {
         for (const target of declared.affected) {
           if (!target.entity.alive) continue
 
-          this.combat.resolveActionHit(actor.entity, target.entity, declared.scaledDamage)
-          targetIds.push(target.id)
+          const hitResult = this.combat.resolveActionHit(actor.entity, target.entity, declared.scaledDamage)
+
+          // AR-04: downstream on-hit effects, debuffs and consume triggers
+          // require a landed hit — dodged attacks bypass all of them.
+          if (!hitResult.dodged) {
+            targetIds.push(target.id)
+
+            // R3 (AR-03) — Leech healing: heals caster for % of final damage dealt.
+            if (action.skill?.healPercentOfDamage && hitResult.finalDamage > 0) {
+              this.combat.applyHealing(
+                actor.entity,
+                hitResult.finalDamage * action.skill.healPercentOfDamage,
+                actor.entity.id,
+                'leech',
+              )
+            }
+
+          // Phase A3 — consume-for-damage (Pháp Tu Detonate / Thổ Tu ward
+          // burst). Orchestration only: reads/clears state through
+          // BuffSystem's own API (getAllById/removeAllById); the HP and
+          // Ward mutations go through the authoritative damage/vitals
+          // pipeline (R1 / AR-01) so death, survive-lethal and vitals
+          // events stay exactly-once and uniform. True damage = direct
+          // HP damage via the authority, matching the reaction pipeline's
+          // applyModifiedDirectDamage bypass semantics at this resolution
+          // layer. Deliberately NOT registry-gated: these consume the
+          // skill's OWN authored fields, no registry content involved.
+          const skill = action.skill
+
+          if (skill?.consumesAilmentId && skill.damagePerStack) {
+            const stacks = new BuffSystem(target.buffs).getStacks(skill.consumesAilmentId)
+
+            if (stacks > 0) {
+              this.combat.applyDirectDamage(target.entity, stacks * skill.damagePerStack, actor.entity.id)
+              new BuffSystem(target.buffs).removeAllById(skill.consumesAilmentId)
+            }
+          }
+
+          if (skill?.consumesWardForDamage && skill.damagePerWardPoint) {
+            const ward = actor.entity.currentWard
+
+            if (ward > 0) {
+              this.combat.applyDirectDamage(target.entity, ward * skill.damagePerWardPoint, actor.entity.id)
+              this.combat.spendWard(actor.entity, ward, 'ward_spend', actor.entity.id)
+            }
+          }
 
           if (this.registry) {
-            new TurnBuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
+            new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
 
             // Action Playback Task 5 — onImpactLanded counter trigger trên
             // TARGET bị hit; queuesFollowUp → battle.queuedFollowUpActorId.
-            const { firedFollowUp } = new TurnBuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry)
+            const { firedFollowUp } = new BuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry)
 
             if (firedFollowUp) {
               // Defect-fix Task 1 — FIFO queue: AOE hit trigger counter trên
@@ -703,39 +1059,81 @@ export class TurnBattleSystem {
               battle.queuedFollowUpActorIds = battle.queuedFollowUpActorIds ?? []
               battle.queuedFollowUpActorIds.push(target.id)
             }
+
+            // Phase A1 (2026-09-07) / R3 (AR-03) — chance-gated ailment application,
+            // then reaction check against the just-applied id.
+            this.applySkillAilments(actor, target, action)
           }
         }
       }
+    } else if (action.skill?.targetScope !== 'self') {
+      // Non-damaging action targeting enemies (e.g. pure debuff skill like doc_chuong)
+      for (const target of declared.affected) {
+        if (!target.entity.alive) continue
+        targetIds.push(target.id)
 
-      const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
+        this.applySkillAilments(actor, target, action)
+      }
+    }
 
-      if (isChargeInit) {
-        // Charge-init: không hit — vẫn commit cooldown/resource (giá
-        // cast của lượt bắt đầu Thế).
+      // Charge-init is committed in the pre-block above (it cannot rely
+      // on `affected` — empty for enemy-targeted charge skills). Only
+      // non-charge casts commit here.
+      if ((action.skill?.chargeTurns ?? 0) === 0) {
         commitAction(actor.entity, action)
-      } else {
-        commitAction(actor.entity, action)
+        this.onSkillCast?.(actor, action.skillId)
+
+        // Phase A3 — Thế Thuần Hệ gain, simplified from legacy's
+        // chain-link-position rule (no turn-based chain state exists —
+        // see the A3 spec's Global Constraints). Fires once per landed
+        // action from special/ultimate slots only; basic attacks do not
+        // generate Thế. Capped at MAX_THE. Runs AFTER commitAction so an
+        // ultimate's pool consumption (100 → 0) is already reflected —
+        // the finisher gain lands on the post-cast pool, mirroring
+        // legacy's gain-after-consume ordering. Deliberately NOT inside
+        // the registry gate: Thế gain is engine-native resource accrual,
+        // not buff-registry content.
+        if (action.slot && action.slot === actor.special) {
+          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_LINK)
+        } else if (action.slot && action.slot === actor.ultimate) {
+          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_FINISHER)
+        }
 
         if (action.skill?.appliesBuff && this.registry) {
-          const definition = this.registry.get(action.skill.appliesBuff.definitionId)
+          // Skip an unresolvable buff id gracefully (renamed/drifted content
+          // must not crash the tick) — same try/catch pattern as the
+          // bossTrigger lookup above.
+          let definition: BuffDefinition | undefined
 
-          // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
-          // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
-          if (action.skill.appliesBuff.target === 'self') {
-            new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
-            this.pendingGaugeDeltaTargets = [actor]
-          } else {
-            const targets: TurnBattleParticipant[] = []
-
-            for (const target of declared.affected) {
-              new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
-              targets.push(target)
-            }
-
-            this.pendingGaugeDeltaTargets = targets
+          try {
+            definition = this.registry.get(action.skill.appliesBuff.definitionId)
+          } catch {
+            definition = undefined
           }
 
-          this.pendingGaugeDeltaDefinition = definition
+          if (definition) {
+            // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
+            // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
+            if (action.skill.appliesBuff.target === 'self') {
+              new BuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+              this.pendingGaugeDeltaTargets = [actor]
+            } else {
+              const targets: TurnBattleParticipant[] = []
+
+              for (const target of declared.affected) {
+                new BuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+                targets.push(target)
+              }
+
+              this.pendingGaugeDeltaTargets = targets
+            }
+
+            this.pendingGaugeDeltaDefinition = definition
+          }
+        }
+
+        if (action.skill?.targetScope === 'self') {
+          targetIds.push(actor.id)
         }
       }
     }
@@ -768,22 +1166,14 @@ export class TurnBattleSystem {
       this.pendingGaugeDeltaDefinition = undefined
     }
 
-    if (battle.wave && this.spawnEnemy) {
-      const aliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
-
-      if (shouldSpawnNextEnemy(battle.wave.spawnedCount, battle.wave.totalEnemyCount, aliveEnemyCount)) {
-        battle.enemies.push(this.spawnEnemy())
-        battle.wave.spawnedCount += 1
-      }
-    }
-
-    const finalAliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+    const currentAliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+    const currentPendingCount = battle.wave?.pendingEnemySpawns.length ?? 0
 
     if (battle.players.every((member) => !member.entity.alive)) {
       battle.state = 'defeat'
     } else if (
       battle.wave
-        ? isStageComplete(battle.wave.spawnedCount, battle.wave.totalEnemyCount, finalAliveEnemyCount)
+        ? isStageComplete(battle.wave.spawnedCount, battle.wave.totalEnemyCount, currentAliveEnemyCount, currentPendingCount)
         : battle.enemies.every((enemy) => !enemy.entity.alive)
     ) {
       battle.state = 'victory'
@@ -825,6 +1215,12 @@ export class TurnBattleSystem {
    * (auto mode, runToCompletion(), mọi test cũ).
    */
   resolveNextStep(battle: TurnBattle): TurnStepResult {
+    // Intro phase (2026-09-07 plan Task 4): combat has not started - safe
+    // no-op, same wait-phase contract as the countdown branch below.
+    if (battle.state === 'intro') {
+      return { state: 'intro', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
+    }
+
     // Countdown phase: combat chưa bắt đầu — no-op an toàn (gauge không
     // chạy, không ai hành động; GameManager tick countdown qua
     // tickCountdown() thay vì gọi method này).
@@ -861,6 +1257,58 @@ export class TurnBattleSystem {
 
     battle.state = 'defeat'
     return battle.state
+  }
+
+  /**
+   * R3 (AR-03) — Chance-gated ailment application supporting multiple ailments
+   * and multi-stack application. Shares reaction triggering across damaging
+   * and non-damaging skill execution paths.
+   */
+  private applySkillAilments(
+    actor: TurnBattleParticipant,
+    target: TurnBattleParticipant,
+    actionOrSkill: SelectedAction | TurnSkillDefinition,
+  ): void {
+    if (!this.registry) return
+
+    const skill = 'skill' in actionOrSkill ? actionOrSkill.skill : actionOrSkill
+    if (!skill) return
+
+    const ailments =
+      skill.appliesAilments ??
+      (skill.appliesAilment ? [skill.appliesAilment] : [])
+
+    for (const ailment of ailments) {
+      if (Math.random() < ailment.chance) {
+        // Skip an unresolvable ailment id gracefully — same try/catch
+        // pattern as the bossTrigger lookup in declareActorAction.
+        let definition: BuffDefinition | undefined
+
+        try {
+          definition = this.registry.get(ailment.buffDefinitionId)
+        } catch {
+          definition = undefined
+        }
+
+        if (definition) {
+          const stackCount = ailment.stacks ?? 1
+
+          for (let s = 0; s < stackCount; s++) {
+            new BuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+          }
+
+          this.reactionManager?.checkAndTrigger(
+            target.buffs,
+            ailment.buffDefinitionId,
+            actor.entity,
+            target.entity,
+            this.combat,
+            this.registry,
+            actor.buffs,
+          )
+        }
+      }
+    }
   }
 
   private suddenDeathDamageMultiplier(totalTurnsElapsed: number): number {

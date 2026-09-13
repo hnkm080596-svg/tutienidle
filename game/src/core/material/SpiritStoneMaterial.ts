@@ -65,19 +65,11 @@ export function getSpiritStoneMaterialIdForEnhanceLevel(level: number): string {
 // quy đổi 1 CHIỀU LÊN — 100 Hạ → 1 Trung, 100 Trung → 1 Thượng. Không
 // có chiều ngược để giữ sink (Linh Thạch thượng phẩm không bị tháo ra
 // lại thành 100 hạ phẩm bypass chi phí).
+// gp123 6G (2026-09-06):getNextSpiritStoneMaterialId đã bị XÓA cùng API
+// quy đổi (GameManager.convertSpiritStonesUp/convertMaterialTier) —
+// thu mua theo gate phẩm thay thế. SPIRIT_STONE_CONVERSION_RATIO giữ
+// lại: TuLinhTranBalance vẫn dùng làm hệ số quy đổi giá (xem
+// core/economy/TuLinhTranBalance.ts).
 // =========================
 
 export const SPIRIT_STONE_CONVERSION_RATIO = 100
-
-/** Id phẩm kế tiếp (cao hơn); undefined nếu đã là phẩm cao nhất. */
-export function getNextSpiritStoneMaterialId(materialId: string): string | undefined {
-  if (materialId === SPIRIT_STONE_MATERIAL_ID) {
-    return SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID
-  }
-
-  if (materialId === SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID) {
-    return SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID
-  }
-
-  return undefined
-}

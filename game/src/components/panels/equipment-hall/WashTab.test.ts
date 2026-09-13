@@ -42,9 +42,9 @@ function mountTab(prepare?: (manager: GameManager) => void) {
   const pinia = createPinia()
   const manager = new GameManager()
   const version = ref(0)
-  manager.registerMaterials(materials)
-  manager.registerEquipment(equipment)
-  manager.registerAffixes(affixes)
+  manager.catalogOps.registerMaterials(materials)
+  manager.catalogOps.registerEquipment(equipment)
+  manager.catalogOps.registerAffixes(affixes)
   manager.equipmentBag.add(equipmentInstance('equipped', true))
   manager.equipmentBag.add(equipmentInstance('in-bag', false))
   prepare?.(manager)
@@ -115,7 +115,7 @@ describe('WashTab — Tẩy Luyện', () => {
 
   it('card so sánh Trước ⇒ Sau hiện khi chọn item ở Tẩy Luyện — Điểm Rèn ở dòng chú thích, bảng theo từng dòng phụ (2026-08-30: bọc gọn 1 card, Điểm Rèn không còn là 1 hàng bảng)', async () => {
     const mounted = mountTab((manager) => {
-      const ore = materials.find((m) => m.id === 'qi_refining_ore_huyen')!
+      const ore = materials.find((m) => m.id === 'qi_refining_ore_century')!
       manager.materialBag.add(ore, 100)
       manager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
     })

@@ -1,9 +1,11 @@
 // ProfessionValidators (2026-08-25, resource-professions-rework plan
 // §5/§6) — validate metadata nghề TRÊN TỪNG material (boot validator)
 // và toàn catalog (data-integrity test). KHÔNG còn cặp raw|processed.
-import type { OreQuality } from '../production/ProductionTypes'
-import { HERB_AGES, ORE_QUALITIES } from '../production/ProductionTypes'
-import { isHerbProfessionMeta, isOreProfessionMeta } from './ProfessionMaterial'
+// gp123 6E task C2: gỗ/khoáng dùng trục tuổi thống nhất — id
+// `<realm>_wood_<age>` / `<realm>_ore_<age>` (plain wood + phẩm
+// hoang..tien đã xóa).
+import { HERB_AGES } from '../production/ProductionTypes'
+import { isHerbProfessionMeta, isProfessionResourceMeta } from './ProfessionMaterial'
 import { SUPPORTED_PROFESSION_REALMS, type ProfessionMaterialMeta } from './ProfessionMaterial'
 import { REALM_TIERS } from '../realm/RealmTierMap'
 
@@ -27,31 +29,16 @@ export function validateProfessionMaterialEntry(
   }
 
   switch (meta.resourceKind) {
-    case 'wood': {
-      if (meta.quality !== undefined && !ORE_QUALITIES.includes(meta.quality as OreQuality)) {
-        return `${materialId}: gỗ có phẩm không hợp lệ (hoang..tien)`
-      }
-
-      const expected = meta.quality
-        ? `${meta.realmId}_wood_${meta.quality}`
-        : `${meta.realmId}_wood`
-
-      if (materialId !== expected) {
-        return `${materialId}: id gỗ phải là "${expected}"`
-      }
-
-      return null
-    }
-
+    case 'wood':
     case 'ore': {
-      if (!isOreProfessionMeta(meta)) {
-        return `${materialId}: quáng thiếu phẩm hợp lệ (hoang..tien)`
+      if (!isProfessionResourceMeta(meta)) {
+        return `${materialId}: ${meta.resourceKind} thiếu age hợp lệ (decade..thuong_co)`
       }
 
-      const expected = `${meta.realmId}_ore_${meta.quality}`
+      const expected = `${meta.realmId}_${meta.resourceKind}_${meta.age}`
 
       if (materialId !== expected) {
-        return `${materialId}: id quáng phải là "${expected}"`
+        return `${materialId}: id ${meta.resourceKind} phải là "${expected}"`
       }
 
       return null
@@ -82,9 +69,9 @@ export function validateProfessionMaterialEntry(
 
 /**
  * Validate TOÀN BỘ catalog nghề — data-integrity test:
- * - Đủ 3 gỗ, đủ 15 quáng (3 realm × 5 phẩm), đủ thảo cho mọi đan phương.
- * - Thảo cùng đan phương có ĐỦ 4 niên đại, mỗi cặp (recipe, age) duy nhất.
- * - Thứ tự xác suất phẩm giảm dần được enforce ở ProductionCatalog.
+ * - Đủ gỗ + đủ khoáng (mọi realm × 5 tuổi), đủ thảo cho mọi đan phương.
+ * - Thảo cùng đan phương có ĐỦ 5 tuổi, mỗi cặp (recipe, age) duy nhất.
+ * - Thứ tự xác suất tuổi giảm dần được enforce ở ProductionCatalog.
  */
 export function validateProfessionMaterialCatalog(
   entries: Array<{ id: string; profession?: ProfessionMaterialMeta }>,
@@ -113,9 +100,9 @@ export function validateProfessionMaterialCatalog(
     const meta = entry.profession
 
     if (meta.resourceKind === 'wood') {
-      woods.add(meta.realmId)
+      woods.add(`${meta.realmId}:${meta.age}`)
     } else if (meta.resourceKind === 'ore') {
-      ores.add(`${meta.realmId}:${meta.quality}`)
+      ores.add(`${meta.realmId}:${meta.age}`)
     } else if (meta.resourceKind === 'herb') {
       const ages = herbRecipes.get(meta.pillRecipeId!) ?? new Set<string>()
 
@@ -126,13 +113,13 @@ export function validateProfessionMaterialCatalog(
   }
 
   for (const realmId of SUPPORTED_PROFESSION_REALMS) {
-    if (!woods.has(realmId)) {
-      errors.push(`catalog: thiếu gỗ cho realm ${realmId}`)
-    }
+    for (const age of HERB_AGES) {
+      if (!woods.has(`${realmId}:${age}`)) {
+        errors.push(`catalog: thiếu gỗ ${realmId}/${age}`)
+      }
 
-    for (const quality of ORE_QUALITIES) {
-      if (!ores.has(`${realmId}:${quality}`)) {
-        errors.push(`catalog: thiếu quáng ${realmId}/${quality}`)
+      if (!ores.has(`${realmId}:${age}`)) {
+        errors.push(`catalog: thiếu quáng ${realmId}/${age}`)
       }
     }
   }
@@ -144,10 +131,6 @@ export function validateProfessionMaterialCatalog(
       }
     }
   }
-
-  // Phẩm phải giảm dần trọng số — re-export check từ ProductionCatalog
-  // qua contract riêng để test không phụ thuộc vòng import ngược.
-  void ORE_QUALITIES
 
   return { valid: errors.length === 0, errors }
 }

@@ -13,14 +13,16 @@ import { EquipmentSlotManager } from '../equipment/EquipmentSlotManager'
 import { AffixRegistry } from '../equipment/AffixRegistry'
 import { BuildingManager } from '../building/BuildingManager'
 import type { BuildingInstance } from '../building/BuildingInstance'
+import { BuildingRegistry } from '../building/BuildingRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { ProductionSystem } from '../production/ProductionSystem'
 import type { ProductionSiteState } from '../production/ProductionTypes'
+import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
-import { getAlchemySuccessBonusPercentPoints } from '../talent/TalentEffects'
+import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
-import type { GameSave } from '../../services/save/SaveSystem'
+import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { TemplateRegistry } from './TemplateRegistry'
@@ -39,6 +41,7 @@ export interface GameManagerSaveRestoreDeps {
   equipmentSystem: EquipmentSystem
   equipmentSlotManager: EquipmentSlotManager
   affixRegistry: AffixRegistry
+  buildingRegistry: BuildingRegistry
   buildingManager: BuildingManager
   questManager: QuestManager
   productionSystem: ProductionSystem
@@ -55,6 +58,13 @@ export interface GameManagerSaveRestoreDeps {
   // Auto-farm Task 5 (2026-09-04) — offline catch-up closure (logic sống
   // trên GameManager, SaveRestore chỉ gọi lại — cùng pattern trên).
   settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
+  // R7 (AR-08) - decompose restore + shared delivery closure (online
+  // tick and offline settle use the SAME delivery/overflow path).
+  decomposeSystem: DecomposeSystem
+  deliverDecomposeOutput: (entry: DecomposeOutputEntry) => void
+  // R8.1 (AR-09) - quest lifecycle reconciliation command (logic lives
+  // on GameManager; restore triggers it at the right boundary).
+  reconcileQuestLifecycle: () => void
 }
 
 /**
@@ -69,6 +79,14 @@ export interface GameManagerSaveRestoreDeps {
  */
 export class GameManagerSaveRestore {
   constructor(private readonly deps: GameManagerSaveRestoreDeps) {}
+
+  // R10 (AR-12, S4) — once-only settle: the identical payload hash as the
+  // last APPLIED restore (see computeRestoreIdentity) converges instead of
+  // re-running the full restore + offline settlement a second time. Scoped
+  // per GameManagerSaveRestore instance (one per GameManager/session),
+  // mirroring the store-level guard in stores/player.ts — same concept,
+  // separate tracker per restore owner.
+  private lastAppliedPayloadHash: string | undefined
 
   /**
    * Validate registry-backed save references without mutating any restore owner.
@@ -86,6 +104,34 @@ export class GameManagerSaveRestore {
         }
       }
     }
+
+    // R10 (AR-12, S4) — materials/pills/buildings previously had no
+    // preflight coverage at all: the restore loops silently dropped an
+    // unknown ID via `if (registry.has(id)) ...` instead of rejecting.
+    // Per the project's established registry-drift principle (learned-
+    // defects QA-2026-09-01-013), silently filtering an owned current
+    // entry is data loss, not recovery — hard-fail before any owner
+    // mutation, same contract equipment already had. Skills/techniques
+    // are intentionally NOT included here: an unknown template there
+    // keeps the save's own object as-authored by design (see the restore
+    // loops below), not a registry-drift rejection case.
+    for (const entry of save.materials) {
+      if (!this.deps.materialRegistry.has(entry.materialId)) {
+        throw new Error(`Unknown material in save: ${entry.materialId}`)
+      }
+    }
+
+    for (const entry of save.pills) {
+      if (!this.deps.pillRegistry.has(entry.pillId)) {
+        throw new Error(`Unknown pill in save: ${entry.pillId}`)
+      }
+    }
+
+    for (const instance of save.buildings) {
+      if (!this.deps.buildingRegistry.has(instance.buildingId)) {
+        throw new Error(`Unknown building in save: ${instance.buildingId}`)
+      }
+    }
   }
 
   /**
@@ -99,6 +145,18 @@ export class GameManagerSaveRestore {
    */
   restoreFromSave(save: GameSave): StatModifier[] {
     this.preflightSaveRegistryReferences(save)
+
+    // R10 (AR-12, S4) — converge on a repeated identical payload (boot
+    // retry, reload race): skip re-applying and re-settling entirely,
+    // return the already-current modifiers. A genuinely different payload
+    // (even sharing lastSavedAt|cultivation) always runs the full restore.
+    const payloadIdentity = computeRestoreIdentity(save)
+
+    if (payloadIdentity === this.lastAppliedPayloadHash) {
+      return this.deps.equipmentSystem.getModifiers()
+    }
+
+    this.lastAppliedPayloadHash = payloadIdentity
 
     for (const technique of save.techniques) {
       if (!this.deps.techniqueManager.has(technique.id)) {
@@ -152,6 +210,15 @@ export class GameManagerSaveRestore {
 
       this.deps.skillManager.add(skill)
     }
+
+    // R10 (AR-12, S3) — restore is REPLACEMENT, not additive: clear the
+    // live bag before applying the save's materials/pills, matching
+    // buildings/production sites/quests/decompose (already replace, see
+    // R7/R8.1). Without this, a live-session restore into a nonempty bag
+    // (boot retry, reload race) would merge saved amounts on top of
+    // whatever was already there instead of replacing it.
+    this.deps.materialBag.clear()
+    this.deps.pillBag.clear()
 
     // 9.8 — add() tràn stack trả lượng bị mất; gom MỖI LOẠI material
     // một event duy nhất (cả 2 loop materials + auto-dissolve rewards).
@@ -261,6 +328,14 @@ export class GameManagerSaveRestore {
 
     const offlinePlayer = this.deps.getActivePlayer()
 
+    // R7 (AR-08) - decompose: re-supply live capacity FIRST (CHQ
+    // formula beats any stale saved value), THEN restore processing
+    // state so saved workers clamp against the real ceiling, settle
+    // the offline window under the shared cap concept, and deliver
+    // output through the SAME delivery/overflow path as the tick.
+    this.deps.decomposeSystem.updateCapacity(offlinePlayer?.autoWorkerCapacity ?? 0)
+    this.deps.decomposeSystem.restore(save.decompose)
+
     if (offlinePlayer) {
       const elapsedOfflineSeconds = Math.max(
         0,
@@ -277,11 +352,24 @@ export class GameManagerSaveRestore {
           offlinePlayer.realmId,
           Date.now(),
           {
-            workerCapacity: offlinePlayer.autoWorkerCapacity ?? 0,
+            workerCapacity: Math.max(
+              0,
+              (offlinePlayer.autoWorkerCapacity ?? 0) -
+                this.deps.decomposeSystem.getSettings().workers,
+            ),
             offlineSinceMs: save.player.lastSavedAt ?? Date.now(),
             workerAssignments: this.deps.getWorkerAssignments(),
           },
         )
+
+        this.deps.decomposeSystem.settleOffline(
+          Date.now(),
+          save.player.lastSavedAt ?? Date.now(),
+        )
+
+        for (const entry of this.deps.decomposeSystem.drainOutput()) {
+          this.deps.deliverDecomposeOutput(entry)
+        }
 
         // Auto-farm Task 5 (2026-09-04) — NGOẠI LỆ DUY NHẤT combat nhận
         // reward offline: roll các chu kỳ auto-farm đã trôi trong cửa sổ
@@ -298,8 +386,16 @@ export class GameManagerSaveRestore {
       (pillId) =>
         this.deps.pillRegistry.has(pillId) ? this.deps.pillRegistry.get(pillId) : undefined,
       Date.now(),
-      getAlchemySuccessBonusPercentPoints(this.deps.getActivePlayer()?.selectedTalentIds ?? []),
+      0,
+      // M3 — Hoa Hau Thong Than: x2 pill yield applies to offline settle too.
+      getAlchemyDoublePill(this.deps.getActivePlayer()?.selectedTalentIds)?.yieldMultiplier ?? 1,
     )
+
+    // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:
+    // restore converges the active set to current eligibility BEFORE
+    // the first tick runs. Placed LAST so the restored player realm is
+    // final when unlock evaluation runs.
+    this.deps.reconcileQuestLifecycle()
 
     return this.deps.equipmentSystem.getModifiers()
   }

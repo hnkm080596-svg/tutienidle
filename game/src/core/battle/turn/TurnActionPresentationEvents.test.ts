@@ -6,9 +6,11 @@ import {
   emitTurnActionImpact,
   emitTurnStandbyComplete,
   emitTurnBattleEntitySnapshot,
+  buildTurnBattleEntitySnapshot,
   type TurnBattleEntitySnapshotEvent,
 } from './TurnActionPresentationEvents'
-import { TurnBuffPool } from './TurnBuffPool'
+import { COUNTDOWN_TOTAL_TICKS } from '@/core/game/GameManager'
+import { BuffPool } from '../../buff/BuffPool'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { createBaseStats } from '../../stats/StatBlock'
@@ -16,7 +18,7 @@ import { createBaseStats } from '../../stats/StatBlock'
 // Fixture helpers — copy y hệt shape dùng trong TurnBattleSystem.followUpQueue.test.ts
 // (per-file fixture convention của test suite này).
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
@@ -30,7 +32,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
   }
 }
 
@@ -49,10 +51,10 @@ describe('TurnActionPresentationEvents', () => {
     expect(handler).toHaveBeenCalledWith({ actorId: 'player-1' })
   })
 
-  it('emitTurnCastStart emits attack với CombatScenePayload shape (sourceId/targetId/skillId)', () => {
+  it('emitTurnCastStart emits turn_cast_start với CombatScenePayload shape (sourceId/targetId/skillId)', () => {
     const bus = new EventBus()
     const handler = vi.fn()
-    bus.on('attack', handler)
+    bus.on('turn_cast_start', handler)
 
     emitTurnCastStart(bus, 'player-1', 'basic_attack', ['enemy-1', 'enemy-2'])
 
@@ -168,6 +170,187 @@ describe('TurnActionPresentationEvents', () => {
       emitTurnBattleEntitySnapshot(eventBus, battle)
 
       expect(received[0]!.players[0]!.isBoss).toBe(false)
+    })
+  })
+
+  describe('emitTurnBattleEntitySnapshot — pendingEnemySpawns (Turn-Based Wave Redesign, 2026-09-06)', () => {
+    it('maps battle.wave.pendingEnemySpawns into progress-based visual state', () => {
+      const eventBus = new EventBus()
+      const enemy = createCombatant({ id: 'enemy1', row: 3, x: 8 })
+      const participant = makeParticipant('enemy1', enemy, 10, 1)
+
+      const battle: TurnBattle = {
+        players: [],
+        enemies: [],
+        state: 'fighting',
+        wave: {
+          totalEnemyCount: 1,
+          spawnedCount: 1,
+          waves: [1],
+          waveIndex: 1,
+          pendingEnemySpawns: [{ participant, ticksRemaining: 2, totalTicks: 8 }],
+        },
+      }
+
+      let received: TurnBattleEntitySnapshotEvent | undefined
+
+      eventBus.on('turn_battle_entity_snapshot', (event) => {
+        received = event as TurnBattleEntitySnapshotEvent
+      })
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received!.pendingEnemySpawns).toHaveLength(1)
+      expect(received!.pendingEnemySpawns[0]!.id).toBe('enemy1')
+      expect(received!.pendingEnemySpawns[0]!.progress).toBeCloseTo(1 - 2 / 8, 6)
+      expect(received!.pendingEnemySpawns[0]!.presetId).toBe('enemy_spawn')
+    })
+
+    it('empty array when battle.wave is undefined (no regression for non-wave battles)', () => {
+      const eventBus = new EventBus()
+      const battle: TurnBattle = { players: [], enemies: [], state: 'fighting' }
+
+      let received: TurnBattleEntitySnapshotEvent | undefined
+
+      eventBus.on('turn_battle_entity_snapshot', (event) => {
+        received = event as TurnBattleEntitySnapshotEvent
+      })
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received!.pendingEnemySpawns).toEqual([])
+    })
+
+    it('maps boss pending spawn to boss_spawn preset', () => {
+      const eventBus = new EventBus()
+      const boss = createCombatant({ id: 'boss1', isBoss: true })
+      const participant = makeParticipant('boss1', boss, 10, 1)
+
+      const battle: TurnBattle = {
+        players: [],
+        enemies: [],
+        state: 'fighting',
+        wave: {
+          totalEnemyCount: 1,
+          spawnedCount: 1,
+          waves: [1],
+          waveIndex: 1,
+          pendingEnemySpawns: [{ participant, ticksRemaining: 14, totalTicks: 14 }],
+        },
+      }
+
+      let received: TurnBattleEntitySnapshotEvent | undefined
+
+      eventBus.on('turn_battle_entity_snapshot', (event) => {
+        received = event as TurnBattleEntitySnapshotEvent
+      })
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received!.pendingEnemySpawns[0]!.presetId).toBe('boss_spawn')
+      expect(received!.pendingEnemySpawns[0]!.isBoss).toBe(true)
+    })
+  })
+
+  describe('emitTurnBattleEntitySnapshot — countdownProgress', () => {
+    it('present and correctly computed while state is countdown', () => {
+      const eventBus = new EventBus()
+      const battle: TurnBattle = {
+        players: [],
+        enemies: [],
+        state: 'countdown',
+        countdownTurnsRemaining: 15,
+      }
+
+      let received: TurnBattleEntitySnapshotEvent | undefined
+
+      eventBus.on('turn_battle_entity_snapshot', (event) => {
+        received = event as TurnBattleEntitySnapshotEvent
+      })
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received!.countdownProgress).toBeCloseTo(1 - 15 / COUNTDOWN_TOTAL_TICKS, 6)
+    })
+
+    it('undefined once state is fighting', () => {
+      const eventBus = new EventBus()
+      const battle: TurnBattle = { players: [], enemies: [], state: 'fighting' }
+
+      let received: TurnBattleEntitySnapshotEvent | undefined
+
+      eventBus.on('turn_battle_entity_snapshot', (event) => {
+        received = event as TurnBattleEntitySnapshotEvent
+      })
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received!.countdownProgress).toBeUndefined()
+    })
+  })
+
+  describe('buildTurnBattleEntitySnapshot (Task 4 pure snapshot builder)', () => {
+    it('produces identical payload to emitTurnBattleEntitySnapshot at same state', () => {
+      const eventBus = new EventBus()
+      let emitted: TurnBattleEntitySnapshotEvent | undefined
+      eventBus.on('turn_battle_entity_snapshot', (e) => {
+        emitted = e as TurnBattleEntitySnapshotEvent
+      })
+
+      const battle: TurnBattle = {
+        players: [makeParticipant('player', createCombatant({ id: 'player', name: 'Hero', row: 4, x: 1, currentHp: 90, maxHp: 100 }), 100, 0)],
+        enemies: [makeParticipant('enemy', createCombatant({ id: 'enemy', name: 'Monster', row: 2, x: 5, currentHp: 40, maxHp: 50 }), 80, 1)],
+        state: 'countdown',
+        countdownTurnsRemaining: 20,
+      }
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+      const built = buildTurnBattleEntitySnapshot(battle)
+
+      expect(emitted).toEqual(built)
+    })
+
+    it('returns detached arrays and objects — mutating snapshot does not affect TurnBattle', () => {
+      const battle: TurnBattle = {
+        players: [makeParticipant('player', createCombatant({ id: 'player', name: 'Hero', row: 4, x: 1, currentHp: 90, maxHp: 100 }), 100, 0)],
+        enemies: [makeParticipant('enemy', createCombatant({ id: 'enemy', name: 'Monster', row: 2, x: 5, currentHp: 40, maxHp: 50 }), 80, 1)],
+        state: 'fighting',
+      }
+
+      const snapshot = buildTurnBattleEntitySnapshot(battle)
+      snapshot.players.push({
+        id: 'fake_player',
+        name: 'Fake',
+        row: 0,
+        column: 0,
+        currentHp: 10,
+        maxHp: 10,
+        alive: true,
+        isBoss: false,
+      })
+      snapshot.enemies[0]!.currentHp = 9999
+
+      expect(battle.players).toHaveLength(1)
+      expect(battle.enemies[0]!.entity.currentHp).toBe(40)
+    })
+
+    it('is a pure query with zero side effects: no ticks, no mutations, no events', () => {
+      const battle: TurnBattle = {
+        players: [makeParticipant('player', createCombatant({ id: 'player', name: 'Hero', row: 4, x: 1 }), 100, 0)],
+        enemies: [],
+        state: 'intro',
+        introTurnsRemaining: 20,
+        countdownTurnsRemaining: 30,
+        totalTurnsElapsed: 5,
+      }
+
+      const snapshot1 = buildTurnBattleEntitySnapshot(battle)
+      const snapshot2 = buildTurnBattleEntitySnapshot(battle)
+
+      expect(snapshot1).toEqual(snapshot2)
+      expect(battle.introTurnsRemaining).toBe(20)
+      expect(battle.countdownTurnsRemaining).toBe(30)
+      expect(battle.totalTurnsElapsed).toBe(5)
     })
   })
 })

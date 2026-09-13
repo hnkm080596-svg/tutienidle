@@ -17,7 +17,6 @@ import type { ItemQuality } from '../item/ItemQuality'
 import {
   ITEM_QUALITY_AFFIX_TIER,
   ITEM_QUALITY_FORGE_USES,
-  ITEM_QUALITY_SUBSTATS_RANGE,
   ITEM_QUALITY_UNLOCKED_POOLS,
 } from './ItemQualityBalance'
 import { affixes } from '../../data/equipment/affixes'
@@ -40,10 +39,10 @@ const TEMPLATE: Equipment = {
   grade: 1,
   maxEnhanceLevel: 10,
   mainStats: [{ stat: 'attack', min: 10, max: 20 }],
-  enhanceCost: [{ materialId: 'qi_refining_ore_huyen', amount: 1 }],
+  enhanceCost: [{ materialId: 'qi_refining_ore_century', amount: 1 }],
 }
 
-const ENHANCE_ORE = materials.find((m) => m.id === 'qi_refining_ore_huyen')!
+const ENHANCE_ORE = materials.find((m) => m.id === 'qi_refining_ore_century')!
 
 describe('equipment stat unit invariants', () => {
   it('roll affix thập phân không bị ép thành 1', () => {

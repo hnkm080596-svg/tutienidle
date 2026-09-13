@@ -15,7 +15,7 @@ describe('TurnReactionPathSkills', () => {
 
     const elements = new Set(
       REACTION_PATH_POOL.flatMap((skill) => {
-        if (skill.damage.kind !== 'elemental') {
+        if (!skill.damage || skill.damage.kind !== 'elemental') {
           return []
         }
 

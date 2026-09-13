@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
 
 // Action Playback Task 5 — reactiveTrigger buff effect:
 //   onCastBegin    — roll khi actor bắt đầu cast (punish-on-cast); nếu áp
@@ -14,7 +14,7 @@ import { TurnBuffSystem } from './TurnBuffSystem'
 //   onImpactLanded — roll trên TARGET bị hit (counter); queuesFollowUp
 //                    đặt battle.queuedFollowUpActorId (counter-turn)
 
-const STUN_DEF: TurnBuffDefinition = {
+const STUN_DEF: BuffDefinition = {
   id: 'react_stun',
   name: 'Punish Stun',
   polarity: 'debuff',
@@ -23,7 +23,7 @@ const STUN_DEF: TurnBuffDefinition = {
   effects: [{ type: 'cc', ccEffect: 'stun' }],
 }
 
-const COUNTER_DEF: TurnBuffDefinition = {
+const COUNTER_DEF: BuffDefinition = {
   id: 'react_counter',
   name: 'Counter Stance',
   polarity: 'buff',
@@ -32,7 +32,7 @@ const COUNTER_DEF: TurnBuffDefinition = {
   effects: [{ type: 'reactiveTrigger', trigger: 'onImpactLanded', chance: 1, queuesFollowUp: true }],
 }
 
-const PUNISH_DEF: TurnBuffDefinition = {
+const PUNISH_DEF: BuffDefinition = {
   id: 'react_punish',
   name: 'Punish Stance',
   polarity: 'buff',
@@ -41,14 +41,14 @@ const PUNISH_DEF: TurnBuffDefinition = {
   effects: [{ type: 'reactiveTrigger', trigger: 'onCastBegin', chance: 1, appliesDefinitionId: 'react_stun' }],
 }
 
-class Registry implements TurnBuffRegistry {
-  private readonly defs = new Map<string, TurnBuffDefinition>()
+class Registry implements BuffDefinitionCatalog {
+  private readonly defs = new Map<string, BuffDefinition>()
 
-  constructor(defs: TurnBuffDefinition[]) {
+  constructor(defs: BuffDefinition[]) {
     for (const d of defs) this.defs.set(d.id, d)
   }
 
-  get(id: string): TurnBuffDefinition {
+  get(id: string): BuffDefinition {
     const d = this.defs.get(id)
 
     if (!d) throw new Error(`missing buff: ${id}`)
@@ -58,7 +58,7 @@ class Registry implements TurnBuffRegistry {
 }
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
@@ -78,23 +78,23 @@ function makeParticipant(
 ): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }
 
-function fixture(targetBuffs: TurnBuffDefinition[], actorBuffs: TurnBuffDefinition[] = []) {
+function fixture(targetBuffs: BuffDefinition[], actorBuffs: BuffDefinition[] = []) {
   const player = createCombatant({
     id: 'player',
     type: 'player',
     row: 4,
-    stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 100 },
+    stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 100 }),
   })
   const enemyEntity = createCombatant({
     id: 'enemy',
     currentHp: 1_000_000,
     maxHp: 1_000_000,
-    stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 },
+    stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 }),
   })
 
   const playerParticipant = makeParticipant('player', player, 100, 0)
@@ -109,20 +109,20 @@ function fixture(targetBuffs: TurnBuffDefinition[], actorBuffs: TurnBuffDefiniti
     state: 'fighting',
   }
 
-  // Pre-apply reactiveTrigger buffs trực tiếp qua TurnBuffSystem (mô phỏng
+  // Pre-apply reactiveTrigger buffs trực tiếp qua BuffSystem (mô phỏng
   // buff đã active trước lượt này).
   for (const def of actorBuffs ?? []) {
-    new TurnBuffSystem(playerParticipant.buffs).apply(def, player, player, registry)
+    new BuffSystem(playerParticipant.buffs).apply(def, player, player, registry)
   }
 
   for (const def of targetBuffs) {
-    new TurnBuffSystem(enemyParticipant.buffs).apply(def, player, enemyEntity, registry)
+    new BuffSystem(enemyParticipant.buffs).apply(def, player, enemyEntity, registry)
   }
 
   return { battle, system, registry, player, enemyEntity }
 }
 
-describe('TurnBuffSystem — reactiveTrigger effect', () => {
+describe('BuffSystem — reactiveTrigger effect', () => {
   it('onCastBegin: roll trúng → áp appliesDefinitionId buff lên actor, CC-check sau đó block turn (ccBlocked=true, 0 hit)', () => {
     const { battle, system, enemyEntity } = fixture([STUN_DEF], [PUNISH_DEF])
 
@@ -152,7 +152,7 @@ describe('TurnBuffSystem — reactiveTrigger effect', () => {
   })
 
   it('chance=0 không bao giờ fire', () => {
-    const NO_FIRE: TurnBuffDefinition = {
+    const NO_FIRE: BuffDefinition = {
       id: 'react_none',
       name: 'No Fire',
       polarity: 'buff',

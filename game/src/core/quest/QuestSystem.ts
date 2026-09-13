@@ -41,17 +41,19 @@ function dayBucket(ms: number): number {
  */
 export class QuestSystem {
   /**
-   * Lazily activate mọi quest 'once' chưa hoàn thành + mọi quest
-   * 'daily' đang trong rotation hôm nay (đã checkAndResetDaily trước
-   * đó), tạo QuestProgress qua manager.ensureActive() khi cần.
+   * R8.1 (AR-09) - lifecycle command: activate every eligible quest
+   * exactly once. Triggers: boot/restore, daily rollover, realm unlock
+   * transition. Idempotent. NOT a query - reads never call this.
+   *
+   * Preserved semantics: counting starts from activation; no
+   * retroactive credit for kills/collects before activation; 'once'
+   * quests never reappear after completion.
    */
-  getActiveQuests(
+  reconcileActiveQuests(
     registry: QuestRegistry,
     manager: QuestManager,
     player: PlayerData,
-  ): { quest: Quest; progress: QuestProgress }[] {
-    const result: { quest: Quest; progress: QuestProgress }[] = []
-
+  ): void {
     for (const quest of registry.getAll()) {
       if (!isUnlocked(quest, player)) {
         continue
@@ -61,7 +63,33 @@ export class QuestSystem {
         continue
       }
 
-      result.push({ quest, progress: manager.ensureActive(quest) })
+      manager.ensureActive(quest)
+    }
+  }
+
+  /**
+   * R8.1 (AR-09) - read-only projection: NO side effects. Activation
+   * belongs to reconcileActiveQuests; a query must never mutate quest
+   * state (AGENTS.md A3/A7 query purity). Returns quests that ALREADY
+   * have active progress only.
+   */
+  getActiveQuests(
+    registry: QuestRegistry,
+    manager: QuestManager,
+    // Kept in the signature to mirror reconcileActiveQuests (same query
+    // shape for callers); the pure read does not consume player state.
+    _player: PlayerData,
+  ): { quest: Quest; progress: QuestProgress }[] {
+    const result: { quest: Quest; progress: QuestProgress }[] = []
+
+    for (const quest of registry.getAll()) {
+      const progress = manager.getProgress(quest.id)
+
+      if (!progress) {
+        continue
+      }
+
+      result.push({ quest, progress })
     }
 
     return result
@@ -163,7 +191,24 @@ export class QuestSystem {
       }
 
       if (drop.kind === 'pill' && bags.pillRegistry.has(drop.itemId)) {
-        bags.pillBag.add(bags.pillRegistry.get(drop.itemId), amount)
+        // R9 (AR-34) - pill drops surface the delivery receipt too: quest
+        // rewards must not silently lose pills to a full bag.
+        const pillTemplate = bags.pillRegistry.get(drop.itemId)
+        const pillOverflow = bags.pillBag.add(pillTemplate, amount)
+
+        if (pillOverflow > 0 && bags.notifications) {
+          const pillOverflowEvent: NotificationEvent = {
+            kind: 'warning',
+
+            message: `Túi đan đầy - mất ${pillOverflow} ${pillTemplate.name}`,
+
+            messageKey: 'bag.overflow',
+
+            messageParams: { amount: String(pillOverflow), name: pillTemplate.name },
+          }
+
+          bags.notifications.push(pillOverflowEvent)
+        }
       }
     }
 

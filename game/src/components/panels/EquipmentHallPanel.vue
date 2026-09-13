@@ -18,6 +18,7 @@ import RefineTab from './equipment-hall/RefineTab.vue'
 import DissolveTab from './equipment-hall/DissolveTab.vue'
 import DecomposeTab from './equipment-hall/DecomposeTab.vue'
 import { HALL_SELECTION_KEY } from './equipment-hall/hallSelection'
+import './equipment-hall/qi-hall.css'
 
 // Khí Đường (2026-08-25, resource-professions-rework plan §7/§9.2) —
 // bốn tab ĐÚNG contract: Cường Hóa (slot), Tẩy Luyện (identity substat
@@ -31,7 +32,7 @@ import { HALL_SELECTION_KEY } from './equipment-hall/hallSelection'
 // roll áp thẳng không cho xem trước rồi mới quyết định). Cường Hóa là
 // phép tính XÁC ĐỊNH (không random) nên cột "sau" chỉ hiển thị kết quả
 // tính trước, không cần cơ chế giữ/bỏ.
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const TABS = [
   { id: 'enhance', label: t('panels.equipmentHall.tabs.enhance') },
@@ -129,23 +130,10 @@ provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection
   background: transparent;
 }
 
-/* Phần thân của mỗi tab con (Enhance/Wash/Refine/Dissolve tự mang class
-   này trong template của CHÍNH nó — Vue scoped CSS không xuyên qua
-   children nên style thật của .qi-hall__body/.qi-hall__decompose sống ở
-   từng *Tab.vue; khối này chỉ còn phục vụ DecomposeTab wrapper trực
-   tiếp render tại shell). */
-.qi-hall__body {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.qi-hall__decompose {
-  gap: 8px;
-}
+/* The `.qi-hall__*` tab-body vocabulary (body/split/decompose included —
+   this shell's own DecomposeTab wrapper also uses it) lives in the shared
+   unscoped sheet ./equipment-hall/qi-hall.css, imported above. Keeping any
+   of those selectors scoped here would re-open the specificity war on
+   child tab roots (equal (0,2,0), bundle order decides) — see the sheet
+   header and tests/architecture/qiHallLayoutOwnership.test.ts. */
 </style>

@@ -7,7 +7,7 @@ defineProps<{
   summary: BattleRewardSummary
 }>()
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 </script>
 
 <template>

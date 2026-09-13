@@ -15,19 +15,19 @@ export function resolveNextProgressStage(
   zoneId: string,
   currentStageId: string,
 ): ProgressStageResolution {
-  const nextStageId = gameManager.getNextStageInZone(zoneId, currentStageId)
+  const nextStageId = gameManager.catalogOps.getNextStageInZone(zoneId, currentStageId)
 
   if (!nextStageId) {
-    return gameManager.getStage(currentStageId) ? { status: 'complete' } : { status: 'invalid' }
+    return gameManager.catalogOps.getStage(currentStageId) ? { status: 'complete' } : { status: 'invalid' }
   }
 
-  const stage = gameManager.getStage(nextStageId)
+  const stage = gameManager.catalogOps.getStage(nextStageId)
 
   if (!stage) {
     return { status: 'invalid' }
   }
 
-  return gameManager.isStageUnlocked(nextStageId, player)
+  return gameManager.catalogOps.isStageUnlocked(nextStageId, player)
     ? { status: 'ready', stage }
     : { status: 'locked', stage }
 }

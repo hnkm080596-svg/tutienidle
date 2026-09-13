@@ -5,6 +5,7 @@ import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
+import { StageWaveSystem } from './StageWaveSystem'
 
 // Auto-farm spec Task 4 — cycle reward roll (online tick, KHÔNG chạy trận
 // thật KHÔNG hoạt ảnh). Seed perfectClear* trực tiếp (record flow là việc
@@ -22,20 +23,33 @@ const FARM_STAGE: Stage = {
   description: '',
   floor: 1,
   enemyPool: [{ enemyId: DUMMY.id, weight: 1 }],
-  totalEnemyCount: 2,
+  totalEnemyCount: 2, waves: [2],
   spawnIntervalSeconds: 0,
 }
 
-function harness() {
+// Spec v3 D5 (2026-09-11) — same farm stage shape but the pool entry
+// carries eliteChance: without the allowTags:false gate a forced hit
+// would tag the idle spawn.
+const TAGGED_FARM_STAGE: Stage = {
+  id: 'farm_tagged_stage',
+  name: 'Farm Tagged Stage',
+  description: '',
+  floor: 1,
+  enemyPool: [{ enemyId: DUMMY.id, weight: 1, eliteChance: 0.1 }],
+  totalEnemyCount: 2, waves: [2],
+  spawnIntervalSeconds: 0,
+}
+
+function harness(stage: Stage = FARM_STAGE) {
   const gameManager = new GameManager()
   const player = createDefaultPlayer()
 
   // Seed perfect-clear state trực tiếp (bypass Task 3 record).
-  player.perfectClearStageIds.push(FARM_STAGE.id)
-  player.perfectClearSeconds[FARM_STAGE.id] = 100 // cycleSeconds = 50
+  player.perfectClearStageIds.push(stage.id)
+  player.perfectClearSeconds[stage.id] = 100 // cycleSeconds = 50
 
-  gameManager.registerEnemyTemplates([DUMMY])
-  gameManager.registerStages([FARM_STAGE])
+  gameManager.catalogOps.registerEnemyTemplates([DUMMY])
+  gameManager.catalogOps.registerStages([stage])
   gameManager.setActivePlayer(player)
 
   return { gameManager, player }
@@ -43,6 +57,7 @@ function harness() {
 
 afterEach(() => {
   vi.useRealTimers()
+  vi.restoreAllMocks()
 })
 
 describe('GameManager — auto-farm start/stop exclusivity', () => {
@@ -51,14 +66,14 @@ describe('GameManager — auto-farm start/stop exclusivity', () => {
 
     player.perfectClearStageIds.length = 0
 
-    expect(gameManager.startAutoFarm(player, 'farm_stage')).toBe(false)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, 'farm_stage')).toBe(false)
     expect(player.autoFarmStage).toBeNull()
   })
 
   it('startAutoFarm thành công với stage đã Hoàn Mỹ + đặt autoFarmStage', () => {
     const { gameManager, player } = harness()
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
     expect(player.autoFarmStage?.stageId).toBe(FARM_STAGE.id)
     expect(typeof player.autoFarmStage?.lastCheckedMs).toBe('number')
   })
@@ -67,20 +82,20 @@ describe('GameManager — auto-farm start/stop exclusivity', () => {
     const { gameManager, player } = harness()
     const stats = calculateStats({ ...player.baseStats }, [])
 
-    gameManager.startStage(player, stats, FARM_STAGE, false)
+    gameManager.turnBattleOps.startStage(player, stats, FARM_STAGE, false)
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(false)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(false)
   })
 
   it('stopAutoFarm clear autoFarmStage + giải phóng StageManager slot', () => {
     const { gameManager, player } = harness()
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
-    gameManager.stopAutoFarm(player)
+    gameManager.turnBattleOps.autoFarmOps.stopAutoFarm(player)
 
     expect(player.autoFarmStage).toBeNull()
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
   })
 })
 
@@ -91,13 +106,13 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
 
     const { gameManager, player } = harness()
 
-    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
     // Trôi 60s = 1 full cycle (cycleSeconds 50 → half 50s? KHÔNG —
     // spec: cycle = perfectClearSeconds/2 = 50s → 60s = 1 cycle + 10s dư).
     vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
 
-    gameManager.update(0.1)
+    gameManager.tickOps.update(0.1)
 
     // 1 cycle hoàn thành → reward roll cho totalEnemyCount quái × spiritStone 5.
     const summary = gameManager.getBattleRewardSummary()
@@ -113,12 +128,39 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
 
     const { gameManager, player } = harness()
 
-    gameManager.startAutoFarm(player, FARM_STAGE.id)
+    gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)
 
     vi.setSystemTime(new Date('2026-09-04T10:05:00Z'))
 
-    gameManager.update(0.1)
+    gameManager.tickOps.update(0.1)
 
     expect(gameManager.getTurnBattle()).toBeNull()
+  })
+
+  // Spec v3 D5 — the idle channel passes allowTags:false: a forced
+  // eliteChance hit must NOT tag the spawn (no 'Tinh Anh ' prefix, no
+  // isElite flag). Spied on the prototype to observe the picked
+  // templates rollAutoFarmCycleReward consumed.
+  it('idle auto-farm spawn never carries the tinh_anh tag even when the roll would hit', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T10:00:00Z'))
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const pickSpy = vi.spyOn(StageWaveSystem.prototype, 'pickEnemyForTurnSpawn')
+
+    const { gameManager, player } = harness(TAGGED_FARM_STAGE)
+
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, TAGGED_FARM_STAGE.id)).toBe(true)
+
+    // 60s elapsed = 1 full cycle (cycle = perfectClearSeconds/2 = 50s).
+    vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
+    gameManager.tickOps.update(0.1)
+
+    expect(pickSpy).toHaveBeenCalled()
+    for (const result of pickSpy.mock.results) {
+      const template = result.value
+      if (!template) continue
+      expect(template.name.startsWith('Tinh Anh')).toBe(false)
+      expect(template.isElite).toBeFalsy()
+    }
   })
 })

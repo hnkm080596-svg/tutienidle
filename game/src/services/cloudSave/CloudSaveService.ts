@@ -17,7 +17,16 @@ export type CloudSaveWriteResult =
   | { status: 'conflict'; currentRevision: number }
   | { status: 'unavailable'; message: string; retryable: boolean }
 
+// R10 (AR-15, local scope, S5) — explicit adapter boundary. Only
+// 'local-only' exists today: single-key localStorage, non-atomic
+// (last-writer-wins) revision compare-and-swap, no remote transport. A
+// future remote/cloud adapter is a SEPARATE product with its own explicit
+// scope (auth/session boundary, real transactional writes) — it must not
+// be introduced by quietly branching inside this factory. See BOUNDS.md.
+export type CloudSaveCapability = 'local-only'
+
 export interface CloudSaveService {
+  readonly capability: CloudSaveCapability
   load(): Promise<CloudSaveLoadResult>
   save(save: GameSave, expectedRevision: number): Promise<CloudSaveWriteResult>
 }

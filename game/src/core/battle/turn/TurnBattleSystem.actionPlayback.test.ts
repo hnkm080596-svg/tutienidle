@@ -1,18 +1,17 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
-import type { CombatVfxPresetId } from '../CombatAction'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 
 // Action Playback Task 3 — equivalence tests cho split
 // resolveActorTurn() → declareActorAction() / applyActionImpact() /
 // completeAction(). Mọi test pin hành vi PHẢI GIỮ NGUYÊN của wrapper cũ.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
@@ -32,7 +31,7 @@ function makeParticipant(
 ): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }
@@ -42,13 +41,13 @@ function battleFixture() {
     id: 'player',
     type: 'player',
     row: 4,
-    stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 },
+    stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 }),
   })
   const enemyEntity = createCombatant({
     id: 'enemy',
     currentHp: 1_000_000,
     maxHp: 1_000_000,
-    stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 },
+    stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 }),
   })
 
   const battle: TurnBattle = {
@@ -113,13 +112,13 @@ describe('TurnBattleSystem — declareActorAction/applyActionImpact/completeActi
       id: 'player',
       type: 'player',
       row: 4,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -162,13 +161,13 @@ describe('TurnBattleSystem — playback edge cases (Remediation Task 7)', () => 
       id: 'player',
       type: 'player',
       row: 4,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 1, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 },
+      stats: createBaseStats({ evasionRate: 1, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 }),
     })
 
     const battle: TurnBattle = {

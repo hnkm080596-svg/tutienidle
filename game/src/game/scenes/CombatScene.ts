@@ -1,5 +1,11 @@
 ﻿import Phaser from 'phaser'
+import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
 import type { EventBus } from '@/core/events/EventBus'
+import {
+  readOptionalGate,
+  writeGate,
+  type DomainCommandPort,
+} from '@/presentation/gate/PresentationGate'
 import type {
   BattlePositionsEvent,
   BattleEndEvent,
@@ -18,32 +24,34 @@ import {
   HERO_LANE_INDEX,
   type LaneIndex,
 } from '@/core/battle/BattleLane'
-import { getCombatInsets, getFallbackCombatInsets } from '@/game/support/combatInsets'
+import { getCombatInsets, getFallbackCombatInsets } from '@/presentation/geometry/combatInsets'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
-import { readKiemBar } from '@/game/support/kiemBarBridge'
+import { readKiemBar } from '@/presentation/bridges/kiemBarBridge'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
   type BattlefieldGeometrySnapshot,
   type BattleGridProjection,
-} from '@/game/support/BattleGridProjection'
+} from '@/presentation/geometry/BattleGridProjection'
 import {
   getBattlefieldRenderMode,
   type BattlefieldRenderMode,
-} from '@/game/support/BattlefieldRenderMode'
+} from '@/presentation/geometry/BattlefieldRenderMode'
 import { spawnActionImpactVfx, toVector2Points } from '@/game/support/ActionImpactVfx'
-import {
-  spawnEnemySpawnVfx,
-  type EnemySpawnVfxHandle,
-} from '@/game/support/EnemySpawnVfx'
-import { enemyTextureUrl, resolveEnemyTextureKey } from '@/game/support/EnemyArt'
+import type { EnemySpawnVfxHandle } from '@/game/support/EnemySpawnVfx'
+
 import {
   PLAYER_VISUAL_PROFILES,
   resolvePlayerVisualProfileId,
-  type PlayerBodyAnchorId,
   type PlayerVisualProfile,
   type PlayerVisualProfileId,
-} from '@/game/support/PlayerVisualProfiles'
+} from '@/presentation/art/PlayerVisualProfiles'
+import {
+  bodyAnchor,
+  type AnchorPoint,
+  type BodyAnchorId,
+  type BodyBox,
+} from '@/presentation/geometry/combatBodyAnchors'
 import {
   GOURD_MOUTH_ANCHOR,
   GOURD_PLACEHOLDER_SIZE,
@@ -77,76 +85,70 @@ import {
   type ThanhVanVariant,
 } from '@/game/support/ThanhVanArt'
 import { attachThanhVanBackdrop, type ThanhVanBackdropHandle } from '@/game/support/ThanhVanBackdrop'
-import { queueCombatAssets, allCombatAnimationSets } from '@/game/support/CombatPreload'
-import {
-  combatAnimationKey,
-  type CombatAnimationName,
-  type CombatAnimationSet,
-} from '@/game/support/CombatAnimationSet'
+import { queueCombatAssets, animatedCombatAnimationSets } from '@/game/support/CombatPreload'
+import type {
+  CombatAnimationCatalogue,
+  CombatAnimationName,
+} from '@/presentation/art/CombatEntityPresentation'
+
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { CombatHealEvent, EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { CombatDamageText } from './combat/combat-damage-text'
 import { CombatCastBar } from './combat/combat-cast-bar'
 import { CombatGridView } from './combat/combat-grid-view'
-import { CombatVfxSpawner } from './combat/combat-vfx-spawner'
+import { CombatVfxSpawner, type SpawnVfxSnapshot } from './combat/combat-vfx-spawner'
 import { CombatRewardGourd } from './combat/combat-reward-gourd'
 import { CombatEssenceStream } from './combat/combat-essence-stream'
 import { CombatPositionInterpolation } from './combat/combat-position-interpolation'
 import { CombatPlayerVisual } from './combat/combat-player-visual'
-import { BUFF_ATTACH_COLOR, DEBUFF_ATTACH_COLOR } from './combat/combatConstants'
+import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
+import { CombatTelegraph } from './combat/combat-telegraph'
+import { CombatAnimationPlayback } from './combat/combat-animation-playback'
+import { CombatActionFeedback } from './combat/combat-action-feedback'
+import {
+  BUFF_ATTACH_COLOR,
+  DEBUFF_ATTACH_COLOR,
+  MIN_SEGMENT_DURATION_MS,
+  PLAYER_COLOR,
+  PLAYER_ID,
+  DOT_TEXT_FLUSH_INTERVAL_MS,
+  DAMAGE_DEALT_COLOR,
+  DAMAGE_TAKEN_COLOR,
+  CAST_BAR_BG_COLOR,
+  CAST_BAR_FILL_COLOR,
+  CAST_BAR_HEIGHT,
+  CAST_BAR_OFFSET_Y,
+  LANE_DIVIDER_COLOR,
+  PERSPECTIVE_GRID_COLOR,
+  PERSPECTIVE_GRID_ALPHA,
+  PERSPECTIVE_BORDER_COLOR,
+  PERSPECTIVE_BORDER_ALPHA,
+  SHADOW_WIDTH_RATIO,
+  SHADOW_HEIGHT_RATIO,
+  CHARACTER_WIDTH_RATIO,
+} from './combat/combatConstants'
 import type { PositionInterpolation } from './combat/combatTypes'
-import { planCombatantSpriteReconciliation } from './combat/combat-entity-reconciliation'
+import type { CombatGridViewHost } from './combat/CombatGridViewHost'
+import { CombatSnapshotReconcile } from './combat/combat-snapshot-reconcile'
 import type { TurnBattleEntitySnapshotEvent } from '@/core/battle/turn/TurnActionPresentationEvents'
 
 export { formatDotDamageText } from './combat/combatTextFormat'
 
-const PLAYER_COLOR = 0x4a90d9
-const ENEMY_COLOR = 0xd94a4a
+
 
 // Top-down 5-lane (2026-08-22) Ã¢â€ â€™ 2.5D migration (2026-08-24): 'flat' giÃ¡Â»Â¯
 // nguyÃƒÂªn palette legacy sau feature flag (BattlefieldRenderMode.ts);
 // 'perspective' chuyÃ¡Â»Æ’n sang BattlefieldBackdrop + lÃ†Â°Ã¡Â»â€ºi phÃ¡Â»â€˜i cÃ¡ÂºÂ£nh rÃ¡ÂºÂ¥t nhÃ¡ÂºÂ¡t
 // Ã„â€˜Ã¡Â»Æ’ texture Ã„â€˜Ã¡ÂºÂ¥t lÃƒÂ m chÃƒÂ­nh, trÃƒÂ¡nh lÃ¡Â»â„¢ cÃ¡ÂºÂ£m giÃƒÂ¡c bÃƒÂ n cÃ¡Â»Â 10 lane.
 const ARENA_COLOR = 0x14161c
-const LANE_DIVIDER_COLOR = 0x2a2d38
-const PERSPECTIVE_GRID_COLOR = 0x8a94ad
-const PERSPECTIVE_GRID_ALPHA = 0.14
-const PERSPECTIVE_BORDER_COLOR = 0xaeb9d4
-const PERSPECTIVE_BORDER_ALPHA = 0.3
-
-// BÃƒÂ³ng ellipse dÃ†Â°Ã¡Â»â€ºi chÃƒÂ¢n Ã¢â‚¬â€ dÃ¡ÂºÂ¹t theo trÃ¡Â»Â¥c sÃƒÂ¢u, Ã„â€˜Ã¡ÂºÂ­m vÃ¡Â»Â«a Ã„â€˜Ã¡Â»Æ’ tÃƒÂ¡ch unit khÃ¡Â»Âi
-// mÃ¡ÂºÂ·t Ã„â€˜Ã¡ÂºÂ¥t; luÃƒÂ´n nÃ¡ÂºÂ±m Ã¡Â»Å¸ lÃ¡Â»â€ºp ENTITY_SHADOW dÃ†Â°Ã¡Â»â€ºi MÃ¡Â»Å’I sprite.
-const SHADOW_WIDTH_RATIO = 1.12
-const SHADOW_HEIGHT_RATIO = 0.34
-
-// Combat uses the static mortal artwork. MainScene keeps its existing atlas;
-// the scenes intentionally use separate texture keys and presentations.
-// Key/URL sÃ¡Â»â€˜ng Ã¡Â»Å¸ support/CombatPreload.ts (dÃƒÂ¹ng chung 2 scene Ã¢â‚¬â€ fix spawn
-// animation lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u, xem file Ã„â€˜ÃƒÂ³).
-const PLAYER_SOURCE_SIZE = { w: 1244, h: 1264 }
-
-const ATTACK_LUNGE_PX = 8
-const HIT_RECOIL_PX = 6
-const ATTACK_LUNGE_DURATION_MS = 75
-const HIT_RECOIL_DURATION_MS = 65
 
 /** DoT text flush 3 lÃ¡ÂºÂ§n/giÃƒÂ¢y (plan Ã‚Â§7.2) Ã¢â‚¬â€ cÃ¡Â»Â­a sÃ¡Â»â€¢ gom 333,33ms. */
-const DOT_TEXT_FLUSH_INTERVAL_MS = 1000 / 3
-
-const HIT_FLASH_COLOR = 0xff6b6b
-const CRITICAL_FLASH_COLOR = 0xffffff
-const CAST_GLOW_COLOR = 0xffffff
 
 // Cast Time (2026-08-21) Ã¢â‚¬â€ cast bar hiÃ¡Â»â€¡n phÃƒÂ­a TRÃƒÅ N Ã„â€˜Ã¡ÂºÂ§u unit (Ã„â€˜Ã¡Â»â€˜i xÃ¡Â»Â©ng
 // vÃ¡Â»â€ºi label tÃƒÂªn hiÃ¡Â»â€¡n phÃƒÂ­a dÃ†Â°Ã¡Â»â€ºi), mÃƒÂ u vÃƒÂ ng tÃƒÂ¡ch hÃ¡ÂºÂ³n khÃ¡Â»Âi mÃ¡Â»Âi mÃƒÂ u sÃ¡Â»â€˜ nÃ¡ÂºÂ£y
 // (Ã„â€˜Ã¡Â»Â/trÃ¡ÂºÂ¯ng/vÃƒÂ ng chÃƒÂ³i cÃ¡Â»Â§a ChÃƒÂ­ MÃ¡ÂºÂ¡ng) Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng lÃ¡ÂºÂ«n Ã¢â‚¬â€ dÃƒÂ¹ng CÃƒâ„¢NG gold nhÃ¡ÂºÂ¡t
 // hÃ†Â¡n CRITICAL_DAMAGE_COLOR.
-const CAST_BAR_BG_COLOR = 0x1c1712
-const CAST_BAR_FILL_COLOR = 0xf4c542
-const CAST_BAR_HEIGHT = 5
-const CAST_BAR_OFFSET_Y = 10
-const CAST_NAME_COLOR = '#f4c542'
 
 // NÃ¡ÂºÂ£y sÃ¡Â»â€˜ sÃƒÂ¡t thÃ†Â°Ã†Â¡ng (spec CombatUIredesign mÃ¡Â»Â¥c 10 Ã¢â‚¬â€ "Damage thÃƒÂ´ng
 // thÃ†Â°Ã¡Â»Âng vÃ¡ÂºÂ«n hiÃ¡Â»Æ’n thÃ¡Â»â€¹ trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p trÃƒÂªn enemy") Ã¢â‚¬â€ cÃƒÂ¹ng nguÃ¡Â»â€œn dÃ¡Â»Â¯ liÃ¡Â»â€¡u
@@ -155,12 +157,9 @@ const CAST_NAME_COLOR = '#f4c542'
 // vÃƒÂ¬ Vue vÃ¡ÂºÂ½ thanh mÃƒÂ¡u) Ã¢â‚¬â€ 1 event, 2 cÃƒÂ¡ch thÃ¡Â»Æ’ hiÃ¡Â»â€¡n trÃ¡Â»Â±c quan song song.
 // Ã„ÂÃ¡Â»Â cho sÃƒÂ¡t thÃ†Â°Ã†Â¡ng NHÃ¡ÂºÂ¬N vÃƒÂ o (target lÃƒÂ  player), trÃ¡ÂºÂ¯ng cho sÃƒÂ¡t thÃ†Â°Ã†Â¡ng
 // GÃƒâ€šY RA (target lÃƒÂ  quÃƒÂ¡i), vÃƒÂ ng riÃƒÂªng cho Ã„â€˜ÃƒÂ²n ChÃƒÂ­ MÃ¡ÂºÂ¡ng bÃ¡ÂºÂ¥t kÃ¡Â»Æ’ chiÃ¡Â»Âu.
-const DAMAGE_DEALT_COLOR = '#f4f4f0'
-const DAMAGE_TAKEN_COLOR = '#ff6b6b'
 // TÃ¡Â»â€° lÃ¡Â»â€¡ theo CHIÃ¡Â»â‚¬U CAO 1 HÃƒâ‚¬NG lane (khÃƒÂ´ng phÃ¡ÂºÂ£i cÃ¡ÂºÂ£ battlefield nhÃ†Â° side-
 // view cÃ…Â©) Ã¢â‚¬â€ 5 lane top-down (2026-08-22), nhÃƒÂ¢n vÃ¡ÂºÂ­t phÃ¡ÂºÂ£i nhÃ¡Â»Â hÃ†Â¡n hÃ¡ÂºÂ³n
 // hÃƒÂ ng cÃ¡Â»Â§a nÃƒÂ³ Ã„â€˜Ã¡Â»Æ’ cÃƒÂ²n chÃ¡Â»Â«a lÃ¡Â»Â trÃƒÂªn/dÃ†Â°Ã¡Â»â€ºi, khÃƒÂ´ng Ã„â€˜ÃƒÂ¨ hÃƒÂ ng kÃ¡ÂºÂ¿ bÃƒÂªn.
-const CHARACTER_WIDTH_RATIO = 0.45 // tỉ lệ so với chiều cao nhân vật
 
 // Combat AI rework (plan Ã‚Â§12.1) Ã¢â‚¬â€ avatar Player LÃ¡Â»Å¡N GÃ¡ÂºÂ¤P Ã„ÂÃƒâ€I enemy: chÃ¡Â»â€°
 // nhÃƒÂ¢n lÃƒÂªn PLAYER sprite, khÃƒÂ´ng Ã„â€˜Ã¡Â»Â¥ng enemy/VFX footprint. KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc cuÃ¡Â»â€˜i
@@ -174,11 +173,6 @@ const CHARACTER_WIDTH_RATIO = 0.45 // tỉ lệ so với chiều cao nhân vật
 // thay layout side-view cÃ…Â© cÃƒÂ³ layout side-view cÃ…Â©) Ã¢â‚¬â€ chÃ¡Â»Â«a 1
 // lÃ¡Â»Â nhÃ¡Â»Â Ã„â€˜Ã¡Â»Æ’ sprite khÃƒÂ´ng bÃ¡Â»â€¹ cÃ¡ÂºÂ¯t viÃ¡Â»Ân trÃƒÂ¡i.
 
-// Trần thời lượng 1 đoạn nội suy — catch-up sau khi trễ lâu không tạo
-// đoạn nội suy dài bất thường (sàn MIN_SEGMENT_DURATION_MS ở combatConstants).
-const MAX_SEGMENT_DURATION_MS = 200
-
-const PLAYER_ID = 'player'
 
 // Audit P0-3 Ã¢â‚¬â€ anchor THÃƒâ€šN TRUNG TÃƒÂNH cho enemy reward particle,
 // chuÃ¡ÂºÂ©n hoÃƒÂ¡ theo bounds cÃ¡Â»Â§a chÃƒÂ­nh sprite enemy (0.5, ~0.4 tÃ¡Â»Â« chÃƒÂ¢n).
@@ -227,6 +221,22 @@ interface EntitySprite {
    */
   sourceSize?: { w: number; h: number }
 
+  // How much of its authored box this sprite's art fills (Spec C §4.1) --
+  // duplicated from combatTypes.ts's EntitySprite (see the note above on why
+  // this local interface mirrors that one); combat-grid-view.ts writes this
+  // field onto objects stored in `sprites`, which is typed against THIS
+  // interface, so it must declare the field too (final whole-branch review,
+  // Finding 2).
+  extent?: { x: number; y: number; w: number; h: number }
+
+  // The character's size on screen, as resolved by Spec C section 4.3 -- NOT
+  // the sprite's box. bodyBoxFor() reads these; combat-grid-view.ts's sizing
+  // methods write them (declared on combatTypes.ts's EntitySprite, the type
+  // that module imports -- this local interface mirrors the same shape
+  // since `sprites` here is typed against it instead).
+  personWidth?: number
+  personHeight?: number
+
   // Combat AI rework (plan Ã‚Â§12.1) + enemy art x2 (2026-08-26) Ã¢â‚¬â€ player
   // sprite Ãƒâ€”2, enemy PNG Ãƒâ€”2 (fallback Rectangle Ãƒâ€”1).
   sizeMultiplier: number
@@ -270,7 +280,7 @@ interface CastBarSprite {
  * MainScene.ts, xem ghi chÃƒÂº Ã¡Â»Å¸ Ã„â€˜ÃƒÂ³ cho lÃƒÂ½ do kÃ¡Â»Â¹ thuÃ¡ÂºÂ­t (nÃ¡Â»â„¢i suy vÃ¡Â»â€¹ trÃƒÂ­,
  * animation rÃ¡Â»Âi rÃ¡ÂºÂ¡c...).
  */
-export class CombatScene extends Phaser.Scene {
+export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // ui-discoverability-refactor-plan.md Ã‚Â§3.2 Ã¢â‚¬â€ module tÃƒÂ¡ch khÃ¡Â»Âi god-class,
   // khÃ¡Â»Å¸i tÃ¡ÂºÂ¡o LAZY (Object.create(CombatScene.prototype) trong test KHÃƒâ€NG
   // chÃ¡ÂºÂ¡y field initializer Ã¢â‚¬â€ getter an toÃƒÂ n cho cÃ¡ÂºÂ£ test lÃ¡ÂºÂ«n runtime).
@@ -314,7 +324,9 @@ export class CombatScene extends Phaser.Scene {
 
   private _gridView?: CombatGridView
 
-  private get gridView(): CombatGridView {
+  // Public: CombatEntityVisualLifecycle applies visibility decisions
+  // through the grid view, which owns the sprite parts.
+  get gridView(): CombatGridView {
     this._gridView ??= new CombatGridView(this)
 
     return this._gridView
@@ -322,10 +334,21 @@ export class CombatScene extends Phaser.Scene {
 
   private _vfxSpawner?: CombatVfxSpawner
 
-  private get vfxSpawner(): CombatVfxSpawner {
+  // Internal (module boundary — combat-action-feedback/snapshot-reconcile
+  // drive VFX spawns through this owner).
+  get vfxSpawner(): CombatVfxSpawner {
     this._vfxSpawner ??= new CombatVfxSpawner(this)
 
     return this._vfxSpawner
+  }
+
+  // Action feedback + ack pacing (Wave-3 split) — lazy như các module trên.
+  private _actionFeedback?: CombatActionFeedback
+
+  private get actionFeedback(): CombatActionFeedback {
+    this._actionFeedback ??= new CombatActionFeedback(this)
+
+    return this._actionFeedback
   }
 
   private _rewardGourd?: CombatRewardGourd
@@ -340,10 +363,21 @@ export class CombatScene extends Phaser.Scene {
   // Player/body-anchor, cùng pattern lazy getter với các module trên.
   private _positionInterp?: CombatPositionInterpolation
 
-  private get positionInterp(): CombatPositionInterpolation {
-    this._positionInterp ??= new CombatPositionInterpolation(this)
+  // Internal (module boundary — combat-animation-playback deletes entries).
+  get positionInterp(): CombatPositionInterpolation {
+    this._positionInterp ??= new CombatPositionInterpolation(() => this.time.now)
 
     return this._positionInterp
+  }
+
+  // Animation playback + death sequence (Wave-3 split) — lazy như các
+  // module trên.
+  private _animationPlayback?: CombatAnimationPlayback
+
+  private get animationPlayback(): CombatAnimationPlayback {
+    this._animationPlayback ??= new CombatAnimationPlayback(this)
+
+    return this._animationPlayback
   }
 
   private _playerVisual?: CombatPlayerVisual
@@ -353,15 +387,46 @@ export class CombatScene extends Phaser.Scene {
 
     return this._playerVisual
   }
+
+  // Countdown telegraph chase (Wave-3 split) — lazy như các module trên.
+  private _telegraph?: CombatTelegraph
+
+  // Internal (module boundary — combat-snapshot-reconcile drives the chase).
+  get telegraph(): CombatTelegraph {
+    this._telegraph ??= new CombatTelegraph(this)
+
+    return this._telegraph
+  }
+
+  // Snapshot→sprite reconcile (Wave-3 split) — lazy như các module trên.
+  private _snapshotReconcile?: CombatSnapshotReconcile
+
+  private get snapshotReconcile(): CombatSnapshotReconcile {
+    this._snapshotReconcile ??= new CombatSnapshotReconcile(this)
+
+    return this._snapshotReconcile
+  }
+
+  // Entity Visual Lifecycle (roadmap "CombatScene rule") - one owner of
+  // per-combatant sprite visibility state (pending / materializing /
+  // visible + the legacy player materialized flag). Eager field: pure
+  // state container, safe to construct before Phaser systems exist.
+  readonly entityVisual = new CombatEntityVisualLifecycle(this)
   // ChÃ¡Â»â€° tÃ¡Â»â€œn tÃ¡ÂºÂ¡i Ã¡Â»Å¸ chÃ¡ÂºÂ¿ Ã„â€˜Ã¡Â»â„¢ 'flat' (renderer legacy cÃ¡ÂºÂ§n nÃ¡Â»Ân phÃ¡ÂºÂ³ng Ã„â€˜Ã¡ÂºÂ·c);
   // 'perspective' thay bÃ¡ÂºÂ±ng BattlefieldBackdrop hÃ¡Â»â„¢i tÃ¡Â»Â¥ hÃ¡ÂºÂ­u cÃ¡ÂºÂ£nh.
-  arenaRect?: Phaser.GameObjects.Rectangle
+  // Battlefield Slot (2026-09-06) — required-property `| undefined` để
+  // thoả CombatGridViewHost (ngữ nghĩa giữ nguyên, CombatGridView tự guard).
+  arenaRect: Phaser.GameObjects.Rectangle | undefined
 
   // Projection layer Ã¢â‚¬â€ nguÃ¡Â»â€œn DUY NHÃ¡ÂºÂ¤T cho mÃ¡Â»Âi quy Ã„â€˜Ã¡Â»â€¢i gridÃ¢â€ â€screen kÃ¡Â»Æ’ cÃ¡ÂºÂ£
   // flat (2 mode cÃƒÂ¹ng interface BattleGridProjection nÃƒÂªn phÃ¡ÂºÂ§n cÃƒÂ²n lÃ¡ÂºÂ¡i cÃ¡Â»Â§a
   // scene khÃƒÂ´ng cÃ¡ÂºÂ§n biÃ¡ÂºÂ¿t mode Ã„â€˜ang chÃ¡ÂºÂ¡y).
   private renderMode: BattlefieldRenderMode = getBattlefieldRenderMode()
-  projection?: BattleGridProjection
+  // Battlefield Slot (2026-09-06) — khai báo required-property kiểu
+  // `| undefined` (thay `?:`) để thoả CombatGridViewHost: ngữ nghĩa giống
+  // hệt (có lúc undefined), chỉ khác chỗ interface yêu cầu property luôn
+  // TỒN TẠI trên type (CombatGridView tự guard trước khi đọc).
+  projection: BattleGridProjection | undefined
   private backdrop?: BattlefieldBackdropHandle
 
   /** Variant Thanh VÃƒÂ¢n Ã„â€˜ang dÃƒÂ¹ng (season/time, override qua localStorage). */
@@ -381,11 +446,22 @@ export class CombatScene extends Phaser.Scene {
 
   /** true khi nÃ¡Â»Ân lÃƒÂ  art modular Ã¢â‚¬â€ grid lines/border khÃƒÂ´ng vÃ¡ÂºÂ½ Ã„â€˜ÃƒÂ¨ lÃƒÂªn art. */
   usingArtBackdrop = false
-  gridGraphics?: Phaser.GameObjects.Graphics
+  // Battlefield Slot (2026-09-06) — required-property `| undefined` để
+  // thoả CombatGridViewHost (ngữ nghĩa giữ nguyên, CombatGridView tự guard).
+  gridGraphics: Phaser.GameObjects.Graphics | undefined
 
   sprites = new Map<string, EntitySprite>()
-  interpolations = new Map<string, PositionInterpolation>()
-  castBars = new Map<string, CastBarSprite>()
+
+  // R5 (AR-29) / S3 — encapsulated helpers own their maps. Scene exposes
+  // read-only views; mutation goes through the helpers' owned
+  // setInterpolationTarget/snap/delete/clear and cast-bar API.
+  get interpolations(): ReadonlyMap<string, PositionInterpolation> {
+    return this.positionInterp.interpolations
+  }
+
+  get castBars(): ReadonlyMap<string, CastBarSprite> {
+    return this.castBar.castBars
+  }
 
   // Combat Grid Rework Ã¢â‚¬â€ DOT VFX theo (targetId + ailmentId), bÃƒÂ¡m target.
   statuses = new Map<
@@ -403,30 +479,57 @@ export class CombatScene extends Phaser.Scene {
     }
   >()
 
-  private dyingIds = new Set<string>()
-  private playerDying = false
+  // Internal (module boundary — combat/combat-animation-playback.ts owns the
+  // death sequence; reconcile reads these to skip in-flight deaths).
+  dyingIds = new Set<string>()
+  playerDying = false
 
   // Combat Art Pipeline Task 5 (2026-09-05) — id sprite ĐÃ BIẾT theo phe,
   // riêng cho luồng 'turn_battle_entity_snapshot' (KHÔNG dùng chung với
   // reconcileEnemySprites()/this.sprites — nếu dùng chung, side này có thể
   // xóa nhầm sprite của side kia vì cả hai đều lưu chung trong `this.sprites`).
   // Cập nhật lại sau mỗi lần planCombatantSpriteReconciliation() chạy.
-  private knownTurnBattlePlayerIds = new Set<string>()
-  private knownTurnBattleEnemyIds = new Set<string>()
+  // Internal (module boundary — combat-snapshot-reconcile owns the sets).
+  knownTurnBattlePlayerIds = new Set<string>()
+  knownTurnBattleEnemyIds = new Set<string>()
 
   // Spawn telegraph (2026-08-24) Ã¢â‚¬â€ VFX handle theo pending enemy id:
   // reconcile tÃ¡Â»Â« SNAPSHOT positions.spawningEnemies (id biÃ¡ÂºÂ¿n mÃ¡ÂºÂ¥t =
   // materialize Ã¢â€ â€™ flash + fade-in enemy sprite). Flat mode khÃƒÂ´ng chÃ¡ÂºÂ¡y
   // (renderer legacy giÃ¡Â»Â¯ nguyÃƒÂªn hÃƒÂ nh vi cÃ…Â©).
   spawnVfxHandles = new Map<string, { handle: EnemySpawnVfxHandle; progress: number }>()
-  materializingIds = new Set<string>()
+  // The materialize marks that used to sit here moved to entityVisual
+  // (combat-entity-visual-lifecycle.ts), the one visibility-state owner.
+
+  // Party countdown telegraph (Turn-Based Wave Redesign, 2026-09-06) —
+  // handle riêng cho player + companion lúc đếm 3→2→1, TÁCH KHỎI
+  // spawnVfxHandles (dành cho enemy wave telegraph) vì lifecycle khác hẳn:
+  // mọi thành viên party materialize CÙNG LÚC theo 1 countdownProgress
+  // chung, không phải từng id một như enemy. KHÔNG đụng
+  // reconcilePlayerSpawn() (dành riêng cho legacy real-time, single-id) —
+  // xem spec §6b lý do tách biệt hoàn toàn.
+  turnCountdownSpawnVfxHandles = new Map<string, EnemySpawnVfxHandle>()
+  // Pre-combat gating ids moved to entityVisual (pending set).
+
+  // Task 9 (telegraph interpolation) — countdownProgress from the snapshot is
+  // a TARGET, not a frame to paint. The chase state (target/shown/segment/
+  // snapshotAt) lives inside combat/combat-telegraph.ts; the read-only
+  // passthroughs below exist for existing observers (same pattern as
+  // castBars/interpolations).
+  get telegraphTarget(): number {
+    return this.telegraph.target
+  }
+
+  get telegraphShown(): number {
+    return this.telegraph.shown
+  }
 
   // Player spawn telegraph (plan Ã‚Â§12.2) Ã¢â‚¬â€ handle DUY NHÃ¡ÂºÂ¤T cho telegraph
-  // cÃ¡Â»Â§a avatar (preset 'player_spawn'); playerMaterialized false = KHÃƒâ€NG
+  // cÃ¡Â»Â§a avatar (preset 'player_spawn'); entityVisual.playerMaterialized false = KHÃƒâ€NG
   // hiÃ¡Â»â€¡n Player sprite. Pending telegraph vÃƒÂ  materialized sprite loÃ¡ÂºÂ¡i
   // trÃ¡Â»Â« nhau Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng render hai lÃ¡ÂºÂ§n.
   playerSpawnHandle?: EnemySpawnVfxHandle
-  playerMaterialized = true
+  // The playerMaterialized flag moved to entityVisual.playerMaterialized.
 
   // ================= Player visual profile (body-anchor plan Ã‚Â§4) ======
   // Profile hiÃ¡Â»â€¡n hÃƒÂ nh Ã¢â‚¬â€ Ã„â€˜Ã¡Â»Âc tÃ¡Â»Â« Phaser registry lÃƒÂºc create() vÃƒÂ  cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t
@@ -489,17 +592,12 @@ export class CombatScene extends Phaser.Scene {
   private debugAnchorHandler = () => this.drawDebugBodyAnchors()
   // Action Playback Task 7 (2026-09-05) — GameManager bridge (set trong
   // subscribeCombatEvents từ registry; scene KHÔNG import trực tiếp).
-  private gameManagerRef?: {
-    setPresentationActive: (active: boolean) => void
-    acknowledgeTurnReady: () => void
-    acknowledgeActionImpact: () => void
-    acknowledgeActionComplete: (token?: string) => void
-    getPendingPlaybackToken: () => string | null
-  }
+  // Internal (module boundary — combat-action-feedback paces engine acks).
+  gameManagerRef?: DomainCommandPort
 
   private getCombatEventBindings(): Array<[string, (event: any) => void]> {
     return [
-      ['attack', (event: CombatScenePayload) => this.onAttack(event)],
+      ['turn_cast_start', (event: CombatScenePayload) => this.onAttack(event)],
       ['critical', (event: CombatScenePayload) => this.onCritical(event)],
       ['hit', (event: CombatScenePayload) => this.onHit(event)],
       ['dodge', (event: CombatScenePayload) => this.onDodge(event)],
@@ -507,7 +605,6 @@ export class CombatScene extends Phaser.Scene {
       ['cast_start', (event: CombatScenePayload) => this.onCastStart(event)],
       ['cast_complete', (event: CombatScenePayload) => this.onCastComplete(event)],
       ['death', (event: CombatScenePayload) => this.onDeath(event)],
-      ['battle_start', () => this.onBattleStart()],
       [
         'player_visual_profile_changed',
         (event: CombatScenePayload) => {
@@ -525,7 +622,6 @@ export class CombatScene extends Phaser.Scene {
       ],
       ['player_teleported', (event: PlayerTeleportedEvent) => this.onPlayerTeleported(event)],
       ['battle_end', () => this.onBattleEnd()],
-      ['combat_scene_exit', () => this.onExit()],
       ['damage', (event: CombatEvent) => this.onDamageNumber(event)],
       // 6A-T2 (2026-09-01) — floating kill/heal.
       [
@@ -571,9 +667,11 @@ export class CombatScene extends Phaser.Scene {
   private gridTop = 0
   private cellSize = 0
 
-  private pendingPositions?: BattlePositionsEvent
-  private pendingCadence?: number
-  private lastSnapshotAt?: number
+  // Internal (module boundary — combat-snapshot-reconcile coalesces
+  // 'positions' events; update() consumes pendingPositions once per frame).
+  pendingPositions?: BattlePositionsEvent
+  pendingCadence?: number
+  lastSnapshotAt?: number
 
   private canvasWidth = 0
   private canvasHeight = 0
@@ -590,10 +688,25 @@ export class CombatScene extends Phaser.Scene {
   }
 
   preload() {
-    // ToÃƒÂ n bÃ¡Â»â„¢ texture combat dÃƒÂ¹ng chung 1 helper vÃ¡Â»â€ºi MainScene (eager
-    // preload lÃƒÂºc boot Ã¢â‚¬â€ fix "lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u vÃƒÂ o combat khÃƒÂ´ng thÃ¡ÂºÂ¥y spawn
-    // animation", xem support/CombatPreload.ts).
+    // TRANSITIONAL net. AssetBundleManager now ensures the 'combat' bundle
+    // before this scene is ever activated, and AssetBundleCatalog's parity
+    // test pins its enumeration to this helper's queued keys - so in a correct
+    // run this queue is empty and Phaser skips it. It stays until the live
+    // browser pass (P14) confirms cold combat entry renders every texture;
+    // removing it earlier would trade a proven path for an unverified one.
     queueCombatAssets(this)
+  }
+
+  private initTransitionId = 0
+  private initSessionId?: number
+
+  init(data?: { transitionId?: number; sessionId?: number }): void {
+    if (data?.transitionId) {
+      this.initTransitionId = data.transitionId
+    }
+    if (data?.sessionId) {
+      this.initSessionId = data.sessionId
+    }
   }
 
   create() {
@@ -616,22 +729,20 @@ export class CombatScene extends Phaser.Scene {
     // registry TRÃ†Â¯Ã¡Â»Å¡C khi dÃ¡Â»Â±ng sprite Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng bÃ¡Â»Â lÃ¡Â»Â¡ trÃ¡ÂºÂ¡ng thÃƒÂ¡i khi scene
     // khÃ¡Â»Å¸i Ã„â€˜Ã¡Â»â„¢ng; cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t vÃ¡Â»Â sau qua event
     // 'player_visual_profile_changed' (subscribeCombatEvents).
-    const registryProfileId = this.registry.get('playerVisualProfileId') as
-      | PlayerVisualProfileId
-      | undefined
+    const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
 
     if (registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]) {
       this.applyPlayerVisualProfile(registryProfileId)
     }
 
-    // Combat Art Pipeline Task 9 (2026-09-05) — đăng ký animation placeholder
-    // cho MỌI entity combat (player theo mọi profile + enemy theo mọi
-    // template Mortal), CÙNG danh sách allCombatAnimationSets() mà
-    // queueCombatAssets() (preload()) dùng để load spritesheet — 2 nơi
-    // không bao giờ lệch key. preload() → loader COMPLETE → create() là thứ
+    // Spec B §3.2 (2026-09-11) — register animations for ANIMATED entities
+    // only. This used to walk every combat entity; enemies are `kind: 'static'`
+    // now, and registering their clips would leave a loaded gun beside
+    // playCombatAnimation(). Same list queueCombatAssets() (preload()) loads
+    // the atlas from, so the two can never name different keys. preload() → loader COMPLETE → create() là thứ
     // tự chuẩn của Phaser Scene nên texture các sheetKey này đã sẵn sàng.
-    for (const { entityKey, animationSet } of allCombatAnimationSets()) {
-      this.registerCombatAnimations(entityKey, animationSet)
+    for (const { entityKey, clips } of animatedCombatAnimationSets()) {
+      this.registerCombatAnimations(entityKey, clips)
     }
 
     // Reward gourd (plan Ã‚Â§6 + Ã‚Â§8) Ã¢â‚¬â€ art thÃ¡ÂºÂ­t nÃ¡ÂºÂ¿u texture sÃ¡ÂºÂµn sÃƒÂ ng,
@@ -657,9 +768,15 @@ export class CombatScene extends Phaser.Scene {
     // nhau. QuÃƒÂ¡i tÃ¡Â»â€ºi qua 'positions' Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn nhÃ†Â° bÃƒÂ¬nh thÃ†Â°Ã¡Â»Âng.
     const player = this.getOrCreateSprite(PLAYER_ID, PLAYER_COLOR, 'Player', HERO_LANE_INDEX)
 
-    player.rect.setVisible(false)
+    this.entityVisual.hidePlayer(player)
 
-    this.playerMaterialized = false
+    // Spec B §4.5/§6 B7 (2026-09-11) — `idle` finally has a call site. It was
+    // built for every entity and never played in combat at all (§2.3): the
+    // player stood on a single frozen frame between turns. This is the default
+    // state, played the moment the sprite exists, and the one every other clip
+    // returns to.
+    this.playCombatAnimation(player, PLAYER_ID, 'idle')
+
     this.snapInterpolationTarget(PLAYER_ID, HERO_COLUMN)
     this.positionSprite(player, HERO_COLUMN)
 
@@ -669,7 +786,6 @@ export class CombatScene extends Phaser.Scene {
     // chÃ¡ÂºÂ¡y mÃ¡Â»â€”i resize). events.once Ã„â€˜Ã¡ÂºÂ£m bÃ¡ÂºÂ£o shutdown handler tÃ¡Â»Â± gÃ¡Â»Â¡.
     this.scale.on('resize', this.resizeHandler)
 
-
     this.subscribeCombatEvents()
 
     // 6A-T4 — HUD player trong canvas (HP/MP/Kiếm) — tạo một lần cho
@@ -677,23 +793,34 @@ export class CombatScene extends Phaser.Scene {
     this.ensurePlayerHud()
     this._playerHud?.setVisible(this.inBattle)
 
-    // Late-join replay (fix spawn animation lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u, 2026-08-26): nÃ¡ÂºÂ¿u
-    // scene start MUÃ¡Â»ËœN so vÃ¡Â»â€ºi battle_start, phÃƒÂ¡t lÃ¡ÂºÂ¡i snapshot positions
-    // mÃ¡Â»â€ºi nhÃ¡ÂºÂ¥t tÃ¡Â»Â« registry (bridge trong PhaserCanvas.vue) Ã„â€˜Ã¡Â»Æ’ reconcile
-    // telegraph/spawn theo Ã„â€˜ÃƒÂºng phase Ã„â€˜ang chÃ¡ÂºÂ¡y. Snapshot stale (>2s)
-    // bÃ¡Â»Â qua Ã¢â‚¬â€ trÃ¡ÂºÂ­n kÃ¡ÂºÂ¿ tiÃ¡ÂºÂ¿p tÃ¡Â»Â± cÃƒÂ³ snapshot tÃ†Â°Ã†Â¡i trong ~100ms.
-    const snapshot = this.registry.get('lastBattlePositionsSnapshot') as
-      | { event: BattlePositionsEvent; at: number }
-      | undefined
+    // Initial snapshot reconciliation via GameManager query (Task 4/10)
+    const gameManager = readOptionalGate(this.registry, 'gameManager')
 
-    if (snapshot && performance.now() - snapshot.at < 2000) {
-      this.onPositions(snapshot.event)
+    if (this.initSessionId && gameManager?.getCombatPresentationSnapshot) {
+      const initialSnapshot = gameManager.getCombatPresentationSnapshot(this.initSessionId)
+      if (initialSnapshot) {
+        this.onTurnBattleEntitySnapshot(initialSnapshot.entities)
+      }
+    } else {
+      // Fallback for standalone/legacy tests that don't supply sessionId
+      const snapshot = readOptionalGate(this.registry, 'lastBattlePositionsSnapshot')
+
+      if (snapshot && performance.now() - snapshot.at < 2000) {
+        this.onPositions(snapshot.event)
+      }
     }
 
-    // VÃƒÂ²ng Ã„â€˜Ã¡Â»Âi background (2026-08-26): KHÃƒâ€NG rotate Ã¡Â»Å¸ Ã„â€˜ÃƒÂ¢y nÃ¡Â»Â¯a Ã¢â‚¬â€ trÃ¡ÂºÂ­n
-    // Ã„â€˜Ã¡ÂºÂ§u dÃƒÂ¹ng Ã„â€˜ÃƒÂºng preset Ã„â€˜ÃƒÂ£ preload lÃƒÂºc boot; variant kÃ¡ÂºÂ¿ tiÃ¡ÂºÂ¿p Ã„â€˜Ã†Â°Ã¡Â»Â£c
-    // chÃ¡Â»Ân + load + swap tÃ¡ÂºÂ¡i battle_end (xem onBattleEnd()).
     this.inBattle = true
+
+    // Report READY to adapter
+    const adapter = readOptionalGate(this.registry, 'sceneAdapter')
+    adapter?.reportReady({
+      transitionId: this.initTransitionId,
+      sessionId: this.initSessionId,
+    })
+
+    // Apply resume playback if re-attaching to an in-flight action
+    this.applyResumePlayback(gameManager?.preparePresentationResume?.())
 
     this.events.once('shutdown', this.shutdownHandler)
   }
@@ -710,7 +837,7 @@ export class CombatScene extends Phaser.Scene {
     this.clearSceneState()
   }
 
-  update() {
+  update(_time: number, delta: number) {
     for (const [id, sprite] of this.sprites) {
       const visualX = this.getInterpolatedX(id)
 
@@ -765,6 +892,13 @@ export class CombatScene extends Phaser.Scene {
 
     // 9.4 - Kiem bar (Kiem The / Kiem Y tam) poll MOI frame.
     this.pollKiemBar()
+
+    // Task 9 — party countdown telegraph chases its snapshot target on
+    // Phaser's own render clock, independent of how often CombatClock
+    // happens to publish a new countdownProgress (game/docs/superpowers/
+    // specs/2026-09-10-combat-realtime-turn-authority-design.md §5.2a,
+    // §4.4 frame-rate independence).
+    this.telegraph.advance()
   }
 
   // 9.4 — Kiếm bar poll mỗi frame từ reader đăng ký trong PhaserCanvas
@@ -784,7 +918,7 @@ export class CombatScene extends Phaser.Scene {
    * Depth sort entity sprite theo projected foot Y (gÃ¡ÂºÂ§n Ã„â€˜ÃƒÂ¨ xa). min/max
    * lÃƒÂ  BIÃƒÅ N CÃ¡Â»Â Ã„ÂÃ¡Â»Å NH cÃ¡Â»Â§a mÃ¡ÂºÂ·t Ã„â€˜Ã†Â°Ã¡Â»Âng (entityFootMinY/MaxY Ã„â€˜Ã¡ÂºÂ·t tÃ¡Â»Â«
    * projection.bounds() mÃ¡Â»â€”i layout) Ã¢â‚¬â€ KHÃƒâ€NG tÃƒÂ­nh lÃ¡ÂºÂ¡i tÃ¡Â»Â« tÃ¡ÂºÂ­p entity Ã„â€˜ang
-   * sÃ¡Â»â€˜ng: spawn/death cÃ¡Â»Â§a 1 entity khÃƒÂ´ng remap depth cÃ¡Â»Â§a entity khÃƒÂ¡c vÃƒÂ 
+   * sÃ¡Â»â€˜ng: spawn/death cÃ¡Â»Â§a 1 entity khÃƒÂ´ng remap depth cÃ¡Â»Â§a entity khÃƒÂ¡c vÃƒÂ
    * upright VFX (chÃ¡Â»â€˜t depth lÃƒÂºc spawn) luÃƒÂ´n cÃƒÂ¹ng thÃ†Â°Ã¡Â»â€ºc vÃ¡Â»â€ºi entity.
    */
   entityFootMinY = 0
@@ -915,7 +1049,7 @@ export class CombatScene extends Phaser.Scene {
 
     // Snapshot hÃƒÂ¬nh hÃ¡Â»Âc cho e2e/visual gate Ã¢â‚¬â€ assertion bÃ¡Â»â€˜ cÃ¡Â»Â¥c (tÃ¡Â»â€° lÃ¡Â»â€¡
     // horizon, min road height) Ã„â€˜Ã¡Â»Âc tÃ¡Â»Â« Ã„â€˜ÃƒÂ¢y thay vÃƒÂ¬ Ã„â€˜o pixel.
-    this.game.registry.set('battlefieldGeometry', {
+    writeGate(this.game.registry, 'battlefieldGeometry', {
       viewportWidth: width,
       viewportHeight: height,
       topInset: viewport.topInset,
@@ -990,12 +1124,41 @@ export class CombatScene extends Phaser.Scene {
   }
 
   /**
-   * Body anchor → screen point (plan §5.2). One-shot VFX gọi đúng lúc
-   * spawn; sustained VFX gọi lại mỗi frame để bám tay khi bob/lunge/
-   * recoil (transform snapshot đọc live).
+   * Spec C §4.2 — a body anchor in screen space, for any entity.
+   *
+   * Replaces getPlayerBodyAnchorScreen(), which could only answer for the
+   * player and read a hand-authored table describing the profile's static PNG
+   * rather than the art actually on screen.
+   *
+   * Works for a Rectangle fallback as well as a Sprite: the anchors describe a
+   * notional body standing in a cell, and a Rectangle stands in one too.
    */
-  getPlayerBodyAnchorScreen(anchorId: PlayerBodyAnchorId): { x: number; y: number } | undefined {
-    return this.playerVisual.getPlayerBodyAnchorScreen(anchorId)
+  bodyAnchorScreen(entityId: string, id: BodyAnchorId): AnchorPoint | undefined {
+    const box = this.bodyBoxFor(entityId)
+
+    return box ? bodyAnchor(id, box) : undefined
+  }
+
+  private bodyBoxFor(entityId: string): BodyBox | undefined {
+    const sprite = this.sprites.get(entityId)
+
+    if (!sprite) {
+      return undefined
+    }
+
+    // Fall back to the character baseline when the grid view has not sized this
+    // sprite yet (first frame after spawn). Better an anchor at the default body
+    // size than none at all.
+    const personHeight = sprite.personHeight ?? this.characterHeight
+    const personWidth = sprite.personWidth ?? this.characterWidth
+
+    return {
+      footX: sprite.rect.x,
+      footY: sprite.footY,
+      personWidth,
+      personHeight,
+      facing: entityId === PLAYER_ID ? 'right' : 'left',
+    }
   }
 
   /**
@@ -1010,7 +1173,7 @@ export class CombatScene extends Phaser.Scene {
   /**
    * VÃ¡ÂºÂ½ lÃ†Â°Ã¡Â»â€ºi lane qua projection Ã¢â‚¬â€ cÃ¡ÂºÂ£ 2 mode dÃƒÂ¹ng chung 1 code path:
    * flat tÃ¡Â»Â± cho ra ÃƒÂ´ vuÃƒÂ´ng Ã„â€˜Ã¡Â»Âu khÃ¡Â»â€ºp renderer cÃ…Â©; perspective cho lÃ†Â°Ã¡Â»â€ºi
-   * hÃ¡Â»â„¢i tÃ¡Â»Â¥ vÃ¡Â»Â hÃ¡ÂºÂ­u cÃ¡ÂºÂ£nh vÃ¡Â»â€ºi vÃ¡ÂºÂ¡ch RÃ¡ÂºÂ¤T NHÃ¡ÂºÂ T (texture Ã„â€˜Ã¡ÂºÂ¥t trong backdrop lÃƒÂ 
+   * hÃ¡Â»â„¢i tÃ¡Â»Â¥ vÃ¡Â»Â hÃ¡ÂºÂ­u cÃ¡ÂºÂ£nh vÃ¡Â»â€ºi vÃ¡ÂºÂ¡ch RÃ¡ÂºÂ¤T NHÃ¡ÂºÂ T (texture Ã„â€˜Ã¡ÂºÂ¥t trong backdrop lÃƒÂ
    * chÃƒÂ­nh, trÃƒÂ¡nh cÃ¡ÂºÂ£m giÃƒÂ¡c bÃƒÂ n cÃ¡Â»Â). KHÃƒâ€NG bake vÃƒÂ o background.
    */
   redrawGridLines() {
@@ -1018,7 +1181,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   // Rectangle (enemy) cÃ¡ÂºÂ§n width/height + updateDisplayOrigin() (mutate
-  // geometry trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p); Sprite (player) cÃ¡ÂºÂ§n setDisplaySize() vÃ¡Â»â€ºi TÃ¡Â»Ë† LÃ¡Â»â€ 
+  // geometry trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p); Sprite (player) cÃ¡ÂºÂ§n setDisplaySize() vÃ¡Â»â€ºi TÃ¡Â»Ë† LÃ¡Â»â€
   // Ã„ÂÃƒÅ¡NG cÃ¡Â»Â§a artwork gÃ¡Â»â€˜c (playerSourceSize theo profile hiÃ¡Â»â€¡n hÃƒÂ nh Ã¢â‚¬â€
   // body-anchor plan Ã‚Â§4.3),
   // nÃ¡ÂºÂ¿u khÃƒÂ´ng nhÃƒÂ¢n vÃ¡ÂºÂ­t sÃ¡ÂºÂ½ mÃƒÂ©o hÃƒÂ¬nh khi ÃƒÂ©p cÃƒÂ¹ng characterWidth/Height
@@ -1048,6 +1211,15 @@ export class CombatScene extends Phaser.Scene {
   // Internal (module boundary).
   entityHeadY(sprite: EntitySprite): number {
     return this.gridView.entityHeadY(sprite)
+  }
+
+  // CombatGridViewHost (Battlefield Slot spec §1) — combat thật KHÔNG BAO
+  // GIỜ fallback sang texture khác cho enemy ngoài batch Mortal (giữ
+  // nguyên Rectangle như trước fix này) — chỉ panel Trận Pháp
+  // (TranPhapCombatPreviewScene) override hàm này để trả về sheet
+  // placeholder dùng chung.
+  fallbackSpriteTextureKey(_id: string): string | undefined {
+    return undefined
   }
 
   trackSourceScreenPosition(id: string, sprite: EntitySprite) {
@@ -1094,22 +1266,9 @@ export class CombatScene extends Phaser.Scene {
    * beginDeathSequence() cũ đóng cửa nhầm sprite mới sau này. Đơn giản hơn
    * beginDeathSequence(): không cần chờ gì cả, huỷ NGAY.
    */
+  // Internal (module boundary — combat-animation-playback).
   private forceFinalizeDeath(id: string): void {
-    const sprite = this.sprites.get(id)
-
-    this.dyingIds.delete(id)
-
-    if (!sprite) {
-      return
-    }
-
-    this.tweens.killTweensOf(sprite.rect)
-    this.tweens.killTweensOf(sprite)
-    this.tweens.killTweensOf(sprite.boost)
-
-    this.destroyEntitySprite(sprite)
-    this.sprites.delete(id)
-    this.interpolations.delete(id)
+    this.animationPlayback.forceFinalizeDeath(id)
   }
 
   updateEnemyHealthBar(sprite: EntitySprite, currentHp: number, maxHp: number) {
@@ -1130,19 +1289,9 @@ export class CombatScene extends Phaser.Scene {
   // `entityKey` không dùng trực tiếp trong thân hàm (mỗi clip đã tự mang
   // đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và
   // để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).
-  private registerCombatAnimations(_entityKey: string, animationSet: CombatAnimationSet): void {
-    for (const clip of Object.values(animationSet)) {
-      if (this.anims.exists(clip.key)) {
-        continue
-      }
-
-      this.anims.create({
-        key: clip.key,
-        frames: this.anims.generateFrameNumbers(clip.sheetKey, { start: 0, end: clip.frameCount - 1 }),
-        frameRate: clip.frameRate,
-        repeat: clip.repeat,
-      })
-    }
+  // Internal (module boundary — combat-animation-playback).
+  private registerCombatAnimations(entityKey: string, clips: CombatAnimationCatalogue): void {
+    this.animationPlayback.registerCombatAnimations(entityKey, clips)
   }
 
   /**
@@ -1153,12 +1302,21 @@ export class CombatScene extends Phaser.Scene {
    * animation set nào (enemy ngoài batch Mortal, vẫn Rectangle) — caller
    * PHẢI guard trước khi gọi sprite.play().
    */
+  // Internal (module boundary — combat-animation-playback).
   private entityAnimationKeyPrefix(actorId: string): string | undefined {
-    if (actorId === PLAYER_ID) {
-      return this.playerProfile.combatTextureKey
-    }
+    return this.animationPlayback.entityAnimationKeyPrefix(actorId)
+  }
 
-    return resolveEnemyTextureKey(actorId)
+  /**
+   * Spec B §3.2 — is this entity's art ANIMATED, or a still image?
+   *
+   * One question, asked of the catalogue, in the one place that plays clips.
+   * A static entity is not a degraded animated one: it has no clips at all, and
+   * asking for one is a no-op rather than a fallback.
+   */
+  // Internal (module boundary — combat-animation-playback).
+  private isAnimatedEntity(entityKey: string): boolean {
+    return this.animationPlayback.isAnimatedEntity(entityKey)
   }
 
   /**
@@ -1166,29 +1324,20 @@ export class CombatScene extends Phaser.Scene {
    * 'sprite') VÀ clip đó đã được registerCombatAnimations() đăng ký —
    * no-op an toàn cho Rectangle fallback (enemy ngoài batch) hoặc clip
    * chưa/không tồn tại (test fixture không stub this.anims đầy đủ).
+   *
+   * Spec B §3.2 (2026-09-11) — AND the entity's art is animated. Before this,
+   * an enemy taking its turn played the 32-frame placeholder, which SWAPPED its
+   * texture from its own Mortal PNG to a numbered stick figure for the length of
+   * the clip. Enemies are static now; their motion is the bob in
+   * `combat-grid-view.ts`.
    */
-  private playCombatAnimation(
+  // Internal (module boundary — combat-animation-playback).
+  playCombatAnimation(
     sprite: EntitySprite,
     actorId: string | undefined,
     name: CombatAnimationName,
   ): void {
-    if (sprite.kind !== 'sprite' || actorId === undefined) {
-      return
-    }
-
-    const prefix = this.entityAnimationKeyPrefix(actorId)
-
-    if (!prefix) {
-      return
-    }
-
-    const key = combatAnimationKey(prefix, name)
-
-    if (!this.anims.exists(key)) {
-      return
-    }
-
-    ;(sprite.rect as Phaser.GameObjects.Sprite).play(key)
+    this.animationPlayback.playCombatAnimation(sprite, actorId, name)
   }
 
   private clearSceneState() {
@@ -1206,7 +1355,21 @@ export class CombatScene extends Phaser.Scene {
     }
 
     this.spawnVfxHandles.clear()
-    this.materializingIds.clear()
+    this.entityVisual.clear()
+
+    // Task 9 fix round (Finding 1) — the party countdown telegraph has its
+    // own handle map/pending-ids set, separate from spawnVfxHandles above,
+    // and was never cleared here. Phaser reuses the Scene instance across
+    // stop/restart, so leaving this out let a player who left mid-countdown
+    // and re-entered combat carry a leaked handle plus a stale non-zero
+    // telegraphShown into the next battle — exactly what telegraph.reset()
+    // exists to prevent on a normal countdown-end flush.
+    for (const handle of this.turnCountdownSpawnVfxHandles.values()) {
+      handle.destroy()
+    }
+
+    this.turnCountdownSpawnVfxHandles.clear()
+    this.telegraph.reset()
 
     // 6A-T4/T5 — HUD dọn khi scene shutdown (battle_end KHÔNG destroy —
     // chỉ shutdown mới hủy; restart scene tạo lại).
@@ -1215,11 +1378,11 @@ export class CombatScene extends Phaser.Scene {
 
     this.playerSpawnHandle?.destroy()
     this.playerSpawnHandle = undefined
-    this.playerMaterialized = true
+    this.entityVisual.markPlayerMaterialized()
 
     this.sprites.clear()
-    this.interpolations.clear()
-    this.castBars.clear()
+    this.positionInterp.clear()
+    this.castBar.clear()
     this.dyingIds.clear()
     this.playerDying = false
 
@@ -1280,128 +1443,24 @@ export class CombatScene extends Phaser.Scene {
     return this.positionInterp.getInterpolatedX(id)
   }
 
+  // Internal (module boundary — combat-snapshot-reconcile).
   reconcileEnemySprites(enemies: BattlePositionsEvent['enemies']) {
-    const currentIds = new Set(enemies.map((enemy) => enemy.id))
-
-    for (const enemy of enemies) {
-      if (this.sprites.has(enemy.id)) {
-        continue
-      }
-
-      const sprite = this.getOrCreateSprite(enemy.id, ENEMY_COLOR, enemy.name, enemy.row, enemy)
-
-      // VÃ¡Â»Â«a materialize tÃ¡Â»Â« telegraph Ã¢â‚¬â€ fade-in + scale 0.7Ã¢â€ â€™1 (bÃƒÂ³ng/mÃƒÂ¡u/
-      // tÃƒÂªn chÃ¡Â»â€° hiÃ¡Â»â€¡n tÃ¡Â»Â« khoÃ¡ÂºÂ£nh khÃ¡ÂºÂ¯c nÃƒÂ y, Ã„â€˜ÃƒÂºng spec spawn mÃ¡Â»â€ºi).
-      if (this.materializingIds.has(enemy.id)) {
-        this.materializingIds.delete(enemy.id)
-        this.playMaterializeFadeIn(sprite)
-      }
-    }
-
-    for (const [id, sprite] of this.sprites) {
-      if (id === PLAYER_ID || currentIds.has(id) || this.dyingIds.has(id)) {
-        continue
-      }
-
-      this.destroyEntitySprite(sprite)
-      this.sprites.delete(id)
-      this.interpolations.delete(id)
-    }
+    this.snapshotReconcile.reconcileEnemySprites(enemies)
   }
 
-  // Combat Art Pipeline Task 5 (2026-09-05) — thay thế snapshot ĐÔNG CỨNG
-  // (chỉ seed một lần từ 'positions' của legacy engine lúc battle start) bằng
-  // dữ liệu SỐNG mỗi fixed step từ turn engine (xem TurnActionPresentationEvents.ts).
-  // Tổng quát hoá đúng tinh thần reconcileEnemySprites() cho CẢ HAI phe.
+  // Internal (module boundary — combat-snapshot-reconcile).
   private onTurnBattleEntitySnapshot(event: TurnBattleEntitySnapshotEvent) {
-    this.reconcileCombatantSprites('player', event.players, PLAYER_COLOR)
-    this.reconcileCombatantSprites('enemy', event.enemies, ENEMY_COLOR)
+    this.snapshotReconcile.onTurnBattleEntitySnapshot(event)
   }
 
-  private reconcileCombatantSprites(
-    side: 'player' | 'enemy',
-    states: TurnBattleEntitySnapshotEvent['players'],
-    color: number,
-  ) {
-    const knownIds =
-      side === 'player' ? this.knownTurnBattlePlayerIds : this.knownTurnBattleEnemyIds
-    const actions = planCombatantSpriteReconciliation(knownIds, states)
-
-    for (const action of actions) {
-      if (action.type === 'create') {
-        // Fix round 1 (Task 5 review, Important) — dùng name/isBoss THẬT từ
-        // schema (TurnActionPresentationEvents.toVisualState()) thay vì
-        // hardcode false/id. Đây chính là đường tạo sprite ĐẦU TIÊN cho enemy
-        // các wave sau wave 1 (getOrCreateSprite no-op nếu id đã có trong
-        // this.sprites) — hardcode isBoss:false ở đây từng làm mất luôn HP
-        // bar boss (1.45x width + BOSS_HP_FILL_COLOR, xem combat-grid-view.ts)
-        // cho đúng những boss mà task này sinh ra để fix.
-        // `action.state.row` đến từ entityGridPosition() — nguồn DUY NHẤT
-        // sản xuất LaneIndex hợp lệ cho luồng turn-based này, nên cast an
-        // toàn ở biên; không thêm runtime validation (per brief).
-        const sprite = this.getOrCreateSprite(
-          action.state.id,
-          color,
-          action.state.name,
-          action.state.row as LaneIndex,
-          { currentHp: action.state.currentHp, maxHp: action.state.maxHp, isBoss: action.state.isBoss },
-        )
-
-        this.snapInterpolationTarget(action.state.id, action.state.column)
-        this.positionSprite(sprite, action.state.column, action.state.id)
-        continue
-      }
-
-      if (action.type === 'update') {
-        const sprite = this.sprites.get(action.state.id)
-
-        if (!sprite) {
-          continue
-        }
-
-        // `action.state.row` — cùng trust boundary như nhánh 'create' ở trên
-        // (entityGridPosition() là nguồn duy nhất).
-        sprite.row = action.state.row as LaneIndex
-        this.snapInterpolationTarget(action.state.id, action.state.column)
-        this.positionSprite(sprite, action.state.column, action.state.id)
-        this.updateEnemyHealthBar(sprite, action.state.currentHp, action.state.maxHp)
-        continue
-      }
-
-      // 'remove' — id alive:false hoặc biến mất khỏi snapshot mà KHÔNG đi
-      // qua event 'death' riêng (race/fallback). Nếu onDeath() đang chạy
-      // death sequence cho id này (dyingIds/playerDying) thì BỎ QUA — sequence
-      // đó tự lo xóa sprite khi xong, chạy thêm ở đây là double-destroy.
-      const isDying = action.id === PLAYER_ID ? this.playerDying : this.dyingIds.has(action.id)
-
-      if (isDying) {
-        continue
-      }
-
-      const sprite = this.sprites.get(action.id)
-
-      if (!sprite) {
-        continue
-      }
-
-      // Combat Art Pipeline Task 9 (2026-09-05) — đi qua CÙNG death sequence
-      // với onDeath() (phát '-death' + hoãn destroy tới khi animation/tween
-      // xong) thay vì xóa ngay, để entity chết theo đường fallback này cũng
-      // được chơi animation chết đầy đủ (spec §9).
-      this.beginDeathSequence(sprite, action.id)
-    }
-
-    const nextKnownIds = new Set(states.map((state) => state.id))
-
-    if (side === 'player') {
-      this.knownTurnBattlePlayerIds = nextKnownIds
-    } else {
-      this.knownTurnBattleEnemyIds = nextKnownIds
-    }
+  // Internal (module boundary — combat-snapshot-reconcile).
+  private reconcileTurnCountdownSpawn(event: TurnBattleEntitySnapshotEvent) {
+    this.snapshotReconcile.reconcileTurnCountdownSpawn(event)
   }
+
 
   private subscribeCombatEvents() {
-    const eventBus = this.registry.get('eventBus') as EventBus | undefined
+    const eventBus = readOptionalGate(this.registry, 'eventBus')
 
     if (!eventBus) {
       return
@@ -1419,17 +1478,7 @@ export class CombatScene extends Phaser.Scene {
     // VFX tween complete) thay vì resolve instant headless.
     // Remediation Task 1+2 — bridge cũng expose token getter; ack từ VFX
     // completion gắn token để stale callback bị engine từ chối.
-    this.gameManagerRef = this.registry.get('gameManager') as
-      | {
-          setPresentationActive: (active: boolean) => void
-          acknowledgeTurnReady: () => void
-          acknowledgeActionImpact: () => void
-          acknowledgeActionComplete: (token?: string) => void
-          getPendingPlaybackToken: () => string | null
-        }
-      | undefined
-
-    this.gameManagerRef?.setPresentationActive(true)
+    this.gameManagerRef = readOptionalGate(this.registry, 'gameManager')
   }
 
   private unsubscribeCombatEvents() {
@@ -1443,10 +1492,6 @@ export class CombatScene extends Phaser.Scene {
 
     this.boundHandlers = []
     this.eventBus = undefined
-
-    // Action Playback Task 7 — headless drain mọi pending phase (trận không
-    // treo nếu scene unmount giữa turn).
-    this.gameManagerRef?.setPresentationActive(false)
     this.gameManagerRef = undefined
   }
 
@@ -1513,56 +1558,14 @@ export class CombatScene extends Phaser.Scene {
   // 1 frame chÃ¡Â»â€° giÃ¡Â»Â¯ snapshot MÃ¡Â»Å¡I NHÃ¡ÂºÂ¤T, apply Ã„ÂÃƒÅ¡NG MÃ¡Â»ËœT lÃ¡ÂºÂ§n trong update().
   // Cadence = khoÃ¡ÂºÂ£ng cÃƒÂ¡ch giÃ¡Â»Â¯a 2 SNAPSHOT (lastSnapshotAt), clamp
   // [MIN_SEGMENT_DURATION_MS, MAX_SEGMENT_DURATION_MS].
+  // Internal (module boundary — combat-snapshot-reconcile).
   private onPositions(event: BattlePositionsEvent) {
-    const now = this.time.now
-
-    // 6A-T5 — HUD HP fast-path từ positions (khi chưa có vitals event).
-    this.playerHud?.updateHp(event.playerCurrentHp, event.playerMaxHp)
-
-    if (this.lastSnapshotAt !== undefined) {
-      this.pendingCadence = Math.min(
-        MAX_SEGMENT_DURATION_MS,
-        Math.max(50, now - this.lastSnapshotAt),
-      )
-    }
-
-    this.lastSnapshotAt = now
-    this.pendingPositions = event
+    this.snapshotReconcile.onPositions(event)
   }
 
+  // Internal (module boundary — combat-snapshot-reconcile).
   private applyPendingPositions(event: BattlePositionsEvent) {
-    // Spawn VFX reconcile TRÃ†Â¯Ã¡Â»Å¡C enemy sprites: id rÃ¡Â»Âi spawningEnemies =
-    // materialize xong Ã¢â€ â€™ Ã„â€˜ÃƒÂ¡nh dÃ¡ÂºÂ¥u Ã„â€˜Ã¡Â»Æ’ sprite mÃ¡Â»â€ºi tÃ¡ÂºÂ¡o dÃ†Â°Ã¡Â»â€ºi Ã„â€˜ÃƒÂ¢y fade-in.
-    this.reconcileSpawnVfx(event)
-
-    // Player spawn reconcile (plan Ã‚Â§12.2): playerMaterialized false =
-    // Ã¡ÂºÂ©n sprite; playerSpawn hiÃ¡Â»â€¡n = vÃ¡ÂºÂ½ telegraph tÃ¡ÂºÂ¡i projected cell;
-    // telegraph biÃ¡ÂºÂ¿n mÃ¡ÂºÂ¥t = materialize Ã¢â€ â€™ hiÃ¡Â»â€¡n sprite vÃ¡Â»â€ºi fade-in.
-    this.reconcilePlayerSpawn(event)
-
-    this.reconcileEnemySprites(event.enemies)
-
-    // Grid fallback cache (plan Ã‚Â§7.1 mÃ¡Â»Â©c 3) Ã¢â‚¬â€ ÃƒÂ´ cuÃ¡Â»â€˜i cÃƒÂ¹ng theo snapshot
-    // positions, dÃƒÂ¹ng khi cÃ¡ÂºÂ£ sprite lÃ¡ÂºÂ«n screen cache Ã„â€˜ÃƒÂ£ mÃ¡ÂºÂ¥t.
-    for (const enemy of event.enemies) {
-      this.trackSourceGridPosition(enemy.id, enemy.row, enemy.x)
-    }
-
-    const playerSprite = this.sprites.get(PLAYER_ID)
-
-    if (playerSprite && playerSprite.row !== event.playerRow) {
-      // Teleport qua snapshot (fallback khi lÃ¡Â»Â¡ miss event riÃƒÂªng):
-      // snap tÃ¡Â»Â©c thÃ¡Â»Âi, KHÃƒâ€NG tween qua hÃƒÂ ng trung gian.
-      playerSprite.row = event.playerRow
-      this.snapInterpolationTarget(PLAYER_ID, event.playerX)
-      this.positionSprite(playerSprite, event.playerX)
-    }
-
-    this.setInterpolationTarget(PLAYER_ID, event.playerX, this.pendingCadence, this.lastSnapshotAt)
-
-    for (const enemy of event.enemies) {
-      this.setInterpolationTarget(enemy.id, enemy.x, this.pendingCadence, this.lastSnapshotAt)
-    }
+    this.snapshotReconcile.applyPendingPositions(event)
   }
 
   /**
@@ -1575,12 +1578,14 @@ export class CombatScene extends Phaser.Scene {
   }
 
   /**
-   * Reconcile telegraph spawn VFX theo SNAPSHOT (khÃƒÂ´ng event tÃ¡Â»Â©c thÃ¡Â»Âi):
-   * id mÃ¡Â»â€ºi Ã¢â€ â€™ tÃ¡ÂºÂ¡o handle; id cÃƒÂ²n Ã¢â€ â€™ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t progress; id MÃ¡ÂºÂ¤T Ã¢â€ â€™ materialize
-   * (flash ngÃ¡ÂºÂ¯n + fade-in sprite) vÃƒÂ  dÃ¡Â»Ân handle. Flat mode bÃ¡Â»Â qua (renderer
-   * legacy giÃ¡Â»Â¯ hÃƒÂ nh vi cÃ…Â©).
+   * Reconcile telegraph spawn VFX theo SNAPSHOT (không event tức thời):
+   * id mới → tạo handle; id còn → cập nhật progress; id MẤT → materialize
+   * (flash ngắn + fade-in sprite) và dọn handle. Flat mode bỏ qua (renderer
+   * legacy giữ hành vi cũ). Turn-Based Wave Redesign (2026-09-06) — kiểu
+   * tham số narrow xuống SpawnVfxSnapshot (subset BattlePositionsEvent);
+   * turn-based snapshot path gọi qua đúng delegate này.
    */
-  reconcileSpawnVfx(event: BattlePositionsEvent) {
+  reconcileSpawnVfx(event: SpawnVfxSnapshot) {
     this.vfxSpawner.reconcileSpawnVfx(event)
   }
 
@@ -1597,7 +1602,6 @@ export class CombatScene extends Phaser.Scene {
   // presentation tÃ¡ÂºÂ¡i chÃ¡Â»â€”. ViÃ¡Â»â€¡c cÃƒÂ²n lÃ¡ÂºÂ¡i Ã¡Â»Å¸ Ã„â€˜ÃƒÂ¢y: chÃ¡Â»Ân + load trÃ†Â°Ã¡Â»â€ºc variant
   // nÃ¡Â»Ân cho trÃ¡ÂºÂ­n KÃ¡ÂºÂ¾ TIÃ¡ÂºÂ¾P vÃƒÂ  dÃ¡Â»Ân DoT accumulator.
   onBattleEnd() {
-
     // 6A-T5 — HUD theo dõi battle end.
     this._playerHud?.setVisible(false)
     this.inBattle = false
@@ -1653,47 +1657,9 @@ export class CombatScene extends Phaser.Scene {
     this.vfxSpawner.playTeleportVfx(_from, to)
   }
 
-  // NgÃ†Â°Ã¡Â»Âi chÃ†Â¡i bÃ¡ÂºÂ¥m "TiÃ¡ÂºÂ¿p TÃ¡Â»Â¥c"/"VÃ¡Â»Â Ã„ÂÃ¡Â»â„¢ng PhÃ¡Â»Â§" (CombatResultModal.vue) Ã¢â‚¬â€
-  // quay lÃ¡ÂºÂ¡i Home Scene.
-  private onExit() {
-    this.scene.start('MainScene')
-  }
-
+  // Internal (module boundary — combat-action-feedback).
   onAttack(event: CombatScenePayload) {
-    const attacker = this.spriteFor(event.sourceId)
-
-    if (attacker) {
-      const isPlayer = event.sourceId === PLAYER_ID
-      const dx = isPlayer ? ATTACK_LUNGE_PX : -ATTACK_LUNGE_PX
-
-      // Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-cast' TRƯỚC
-      // tween lunge (đòn đánh niệm/vung trước khi lao vào), cạnh tween vị
-      // trí hiện có (không thay thế).
-      this.playCombatAnimation(attacker, event.sourceId, 'cast')
-
-      this.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
-
-      // Action Playback Task 7 (2026-09-05) — impact frame tại midpoint
-      // lunge: damage áp đúng lúc đòn "trúng" trên màn hình (spec §4.3).
-      if (this.gameManagerRef && this.isActionPlaybackActive()) {
-        this.time.delayedCall(ATTACK_LUNGE_DURATION_MS / 2, () => {
-          this.gameManagerRef?.acknowledgeActionImpact()
-        })
-      }
-    } else if (this.gameManagerRef && this.isActionPlaybackActive()) {
-      // Defect Task 5 (2026-09-05) — không có sprite (late-join miss/cleanup
-      // race) — ack ngay để engine không treo vĩnh viễn ở
-      // pendingDeclaredAction (cùng fallback pattern với onTurnReady()).
-      this.gameManagerRef.acknowledgeActionImpact()
-    }
-  }
-
-  /**
-   * Action Playback Task 7 — presentationActive đang bật? Dùng registry
-   * gameManagerRef presence làm proxy (set/unmount cùng subscribe lifecycle).
-   */
-  private isActionPlaybackActive(): boolean {
-    return this.gameManagerRef !== undefined
+    this.actionFeedback.onAttack(event)
   }
 
   playHorizontalImpulse(sprite: EntitySprite, distance: number, duration: number) {
@@ -1703,7 +1669,7 @@ export class CombatScene extends Phaser.Scene {
   // NÃ¡ÂºÂ£y sÃ¡Â»â€˜ sÃƒÂ¡t thÃ†Â°Ã†Â¡ng Ã¢â‚¬â€ dÃƒÂ¹ng CHUNG event 'damage' mÃƒÂ  CombatStatusBar.vue
   // Ã„â€˜Ã¡Â»Âc Ã„â€˜Ã¡Â»Æ’ vÃ¡ÂºÂ½ thanh HP (xem ghi chÃƒÂº DAMAGE_*_COLOR Ã„â€˜Ã¡ÂºÂ§u file), nÃƒÂªn sÃ¡Â»â€˜
   // nÃ¡ÂºÂ£y lÃƒÂªn LUÃƒâ€N khÃ¡Â»â€ºp vÃ¡Â»â€ºi thanh mÃƒÂ¡u vÃ¡Â»Â«a hÃ¡Â»Â¥t, khÃƒÂ´ng lÃ¡Â»â€¡ch nhÃ¡Â»â€¹p. ChÃ¡ÂºÂ¡y cho
-  // CÃ¡ÂºÂ¢ 2 chiÃ¡Â»Âu Ã¢â‚¬â€ target lÃƒÂ  quÃƒÂ¡i (player gÃƒÂ¢y sÃƒÂ¡t thÃ†Â°Ã†Â¡ng) hay target lÃƒÂ 
+  // CÃ¡ÂºÂ¢ 2 chiÃ¡Â»Âu Ã¢â‚¬â€ target lÃƒÂ  quÃƒÂ¡i (player gÃƒÂ¢y sÃƒÂ¡t thÃ†Â°Ã†Â¡ng) hay target lÃƒÂ
   // player (quÃƒÂ¡i gÃƒÂ¢y sÃƒÂ¡t thÃ†Â°Ã†Â¡ng) Ã„â€˜Ã¡Â»Âu qua Ã„â€˜ÃƒÂºng 1 handler nÃƒÂ y.
   //
   // DoT presentation (combat-skill-flow-element-power-dot-plan.md Ã‚Â§7) Ã¢â‚¬â€
@@ -1717,7 +1683,6 @@ export class CombatScene extends Phaser.Scene {
   /** BÃ¡Â»â„¢ gom DoT Ã¢â‚¬â€ khÃƒÂ³a `targetId|effectId|sourceId`, cÃ¡Â»Â­a sÃ¡Â»â€¢ 1/3 giÃƒÂ¢y. */
   // Internal (module boundary).
   dotAccumulators = new Map<string, { value: number; nextFlushAt: number }>()
-
 
   /** Flush cÃƒÂ¡c bucket Ã„â€˜ÃƒÂ£ Ã„â€˜Ã¡ÂºÂ¿n hÃ¡ÂºÂ¡n Ã¢â‚¬â€ MÃ¡Â»â€“I KHÃƒâ€œA Ã„â€˜ÃƒÂºng 1 text (Ã‚Â§7.2). */
   private flushDueDotTexts() {
@@ -1770,81 +1735,24 @@ export class CombatScene extends Phaser.Scene {
     this.damageText.showDotDamageNumber(sprite, value, color)
   }
 
+  // Internal (module boundary — combat-action-feedback).
   onCritical(event: CombatScenePayload) {
-    const target = this.spriteFor(event.targetId)
-
-    if (!target) {
-      return
-    }
-
-    // Pop qua boost object Ã¢â‚¬â€ projection ghi kÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc mÃ¡Â»â€”i frame nÃƒÂªn
-    // tween scale trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p sÃ¡ÂºÂ½ bÃ¡Â»â€¹ ghi Ã„â€˜ÃƒÂ¨; boost nhÃƒÂ¢n vÃƒÂ o kÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc cuÃ¡Â»â€˜i
-    // Ã¡Â»Å¸ applyEntityDepthScale() (perspective) / setScale (flat).
-    this.tweens.killTweensOf(target.boost)
-    target.boost.value = 1
-
-    this.tweens.add({
-      targets: target.boost,
-      value: 1.25,
-      duration: 90,
-      yoyo: true,
-      ease: 'Quad.easeOut',
-    })
-
-    this.flashColor(target, CRITICAL_FLASH_COLOR, 120)
-    this.showFloatingText(target, 'Chí Mạng!', '#ffd54f')
+    this.actionFeedback.onCritical(event)
   }
 
+  // Internal (module boundary — combat-action-feedback).
   onHit(event: CombatScenePayload) {
-    const target = this.spriteFor(event.targetId)
-
-    if (!target) {
-      return
-    }
-
-    this.flashColor(target, HIT_FLASH_COLOR, 100)
-
-    const isPlayer = event.targetId === PLAYER_ID
-    const recoilX = isPlayer ? -HIT_RECOIL_PX : HIT_RECOIL_PX
-
-    this.playHorizontalImpulse(target, recoilX, HIT_RECOIL_DURATION_MS)
+    this.actionFeedback.onHit(event)
   }
 
+  // Internal (module boundary — combat-action-feedback).
   onDodge(event: CombatScenePayload) {
-    const dodger = this.spriteFor(event.targetId)
-
-    if (!dodger) {
-      return
-    }
-
-    const isPlayer = event.targetId === PLAYER_ID
-    const dx = isPlayer ? -18 : 18
-
-    this.playHorizontalImpulse(dodger, dx, 130)
-
-    this.tweens.add({
-      targets: dodger.rect,
-      alpha: 0.55,
-      duration: 130,
-      yoyo: true,
-      ease: 'Quad.easeOut',
-    })
-
-    this.showFloatingText(dodger, 'Né!', '#8be9fd')
+    this.actionFeedback.onDodge(event)
   }
 
+  // Internal (module boundary — combat-action-feedback).
   onCast(event: CombatScenePayload) {
-    const caster = this.spriteFor(event.sourceId)
-
-    if (!caster) {
-      return
-    }
-
-    this.flashColor(caster, CAST_GLOW_COLOR, 160)
-
-    if (event.skillName) {
-      this.showFloatingText(caster, event.skillName, CAST_NAME_COLOR)
-    }
+    this.actionFeedback.onCast(event)
   }
 
   // Cast Time (2026-08-21) Ã¢â‚¬â€ skill cÃƒÂ³ Skill.castTime > 0 (xem
@@ -1857,10 +1765,9 @@ export class CombatScene extends Phaser.Scene {
     this.castBar.onCastStart(event)
   }
 
+  // Internal (module boundary — combat-action-feedback).
   onCastComplete(event: CombatScenePayload) {
-    if (event.sourceId) {
-      this.destroyCastBar(event.sourceId)
-    }
+    this.actionFeedback.onCastComplete(event)
   }
 
   positionCastBar(sprite: EntitySprite, castBar: CastBarSprite) {
@@ -1872,19 +1779,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   onDeath(event: CombatScenePayload) {
-    const id = event.targetId
-
-    if (!id) {
-      return
-    }
-
-    const sprite = this.sprites.get(id)
-
-    if (!sprite) {
-      return
-    }
-
-    this.beginDeathSequence(sprite, id)
+    this.animationPlayback.onDeath(event)
   }
 
   /**
@@ -1901,96 +1796,10 @@ export class CombatScene extends Phaser.Scene {
    * quả, xem onBattleEnd) — chỉ tween/animation chạy, isPlayer chặn nhánh
    * destroy trong finalize().
    */
-  private beginDeathSequence(sprite: EntitySprite, id: string): void {
-    const isPlayer = id === PLAYER_ID
-
-    if (isPlayer) {
-      this.playerDying = true
-    } else {
-      this.dyingIds.add(id)
-    }
-
-    // DoT accumulator — xóa bucket của target chết.
-    for (const key of [...this.dotAccumulators.keys()]) {
-      if (key.split('|')[0] === id) {
-        this.dotAccumulators.delete(key)
-      }
-    }
-
-    this.destroyCastBar(id)
-
-    this.tweens.killTweensOf(sprite.rect)
-    this.tweens.killTweensOf(sprite)
-    this.tweens.killTweensOf(sprite.boost)
-    sprite.offsetX = 0
-
-    let tweenDone = false
-    let animDone = true
-
-    const finalize = () => {
-      if (!tweenDone || !animDone) {
-        return
-      }
-
-      // isPlayer: không destroy (xem doc). Identity check chặn double-
-      // destroy/orphan khi id này đã bị forceFinalizeDeath() dọn sớm (tái
-      // xuất hiện giữa lúc animation/tween cũ còn chạy, xem getOrCreateSprite()).
-      if (isPlayer || this.sprites.get(id) !== sprite) {
-        return
-      }
-
-      this.destroyEntitySprite(sprite)
-      this.sprites.delete(id)
-      this.dyingIds.delete(id)
-      this.interpolations.delete(id)
-    }
-
-    if (sprite.kind === 'sprite') {
-      const prefix = this.entityAnimationKeyPrefix(id)
-      const deathKey = prefix ? combatAnimationKey(prefix, 'death') : undefined
-
-      if (deathKey && this.anims.exists(deathKey)) {
-        animDone = false
-
-        const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
-
-        gameSprite.play(deathKey)
-        gameSprite.once(
-          Phaser.Animations.Events.ANIMATION_COMPLETE,
-          (anim: Phaser.Animations.Animation) => {
-            if (anim.key !== deathKey) {
-              return
-            }
-
-            animDone = true
-            finalize()
-          },
-        )
-      }
-    }
-
-    this.tweens.add({
-      targets: sprite.rect,
-      rotation: Math.PI / 2,
-      alpha: 0,
-      duration: 500,
-      ease: 'Quad.easeIn',
-      onComplete: () => {
-        tweenDone = true
-        finalize()
-      },
-    })
-
-    this.tweens.add({
-      targets: [
-        sprite.label,
-        sprite.shadow,
-        sprite.healthBar?.background,
-        sprite.healthBar?.fill,
-      ].filter(Boolean),
-      alpha: 0,
-      duration: 500,
-    })
+  // Internal (module boundary — combat-animation-playback owns the death
+  // sequence; scene delegate kept for reconcile fallback + test seams).
+  beginDeathSequence(sprite: EntitySprite, id: string): void {
+    this.animationPlayback.beginDeathSequence(sprite, id)
   }
 
   // TrÃ¡ÂºÂ­n mÃ¡Â»â€ºi bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u TRONG LÃƒÅ¡C scene nÃƒÂ y vÃ¡ÂºÂ«n Ã„â€˜ang active (Auto-refight
@@ -2030,11 +1839,15 @@ export class CombatScene extends Phaser.Scene {
     if (player) {
       this.resetVisual(player)
 
+      // resetVisual restores transform/alpha but not animation state — a
+      // death clip frozen on its last frame would carry into the new
+      // battle. Replay the default state the same way create() does.
+      this.playCombatAnimation(player, PLAYER_ID, 'idle')
+
       // TrÃ¡ÂºÂ­n mÃ¡Â»â€ºi = Player lÃ¡ÂºÂ¡i Ã„â€˜i qua telegraph spawn (plan Ã‚Â§12.2): Ã¡ÂºÂ©n
       // sprite tÃ¡Â»â€ºi khi snapshot bÃƒÂ¡o materialize, snap vÃ¡Â»Â cÃ¡Â»â„¢t cÃ¡Â»â€¢ng.
-      player.rect.setVisible(false)
+      this.entityVisual.hidePlayer(player)
 
-      this.playerMaterialized = false
       this.snapInterpolationTarget(PLAYER_ID, HERO_COLUMN)
       this.positionSprite(player, HERO_COLUMN)
     }
@@ -2052,7 +1865,21 @@ export class CombatScene extends Phaser.Scene {
     }
 
     this.spawnVfxHandles.clear()
-    this.materializingIds.clear()
+    this.entityVisual.clear()
+
+    // QA 2026-09-10 Task 9 follow-up (R14.4 guard): the party countdown
+    // telegraph handle map was NOT cleared here — the old reasoning relied
+    // on the turn engine always publishing a flush snapshot before combat
+    // proper, a cross-system invariant enforced nowhere. A forced start
+    // that skips that snapshot would carry a leaked handle and stale
+    // telegraph progress into the new battle. Clear it here, same as
+    // shutdown does.
+    for (const handle of this.turnCountdownSpawnVfxHandles.values()) {
+      handle.destroy()
+    }
+
+    this.turnCountdownSpawnVfxHandles.clear()
+    this.telegraph.reset()
 
     for (const [id, sprite] of this.sprites) {
       if (id === PLAYER_ID) {
@@ -2061,13 +1888,57 @@ export class CombatScene extends Phaser.Scene {
 
       this.destroyEntitySprite(sprite)
       this.sprites.delete(id)
-      this.interpolations.delete(id)
+      this.positionInterp.delete(id)
     }
 
     this.dyingIds.clear()
 
-    for (const id of [...this.castBars.keys()]) {
-      this.destroyCastBar(id)
+    this.castBar.clear()
+  }
+
+  /**
+   * Rebinds an active CombatScene to a new domain session without destroying the scene or Game.
+   * Resets visual state, reconciles with the session's initial snapshot, and reports READY.
+   */
+  rebindSession(context: { transitionId: number; sessionId?: number }): void {
+    this.initTransitionId = context.transitionId
+    this.initSessionId = context.sessionId
+
+    this.onBattleStart()
+
+    const gameManager = readOptionalGate(this.registry, 'gameManager')
+
+    if (context.sessionId && gameManager?.getCombatPresentationSnapshot) {
+      const snapshot = gameManager.getCombatPresentationSnapshot(context.sessionId)
+      if (snapshot) {
+        this.onTurnBattleEntitySnapshot(snapshot.entities)
+      }
+    }
+
+    const adapter = readOptionalGate(this.registry, 'sceneAdapter')
+    adapter?.reportReady(context)
+
+    this.applyResumePlayback(gameManager?.preparePresentationResume?.())
+  }
+
+  private applyResumePlayback(resume: ResumePlayback | null | undefined): void {
+    if (!resume) {
+      return
+    }
+
+    if (resume.phase === 'ready') {
+      this.onTurnReady({ actorId: resume.actorId })
+    } else if (resume.phase === 'cast') {
+      this.onAttack({
+        sourceId: resume.actorId,
+        skillId: resume.skillId,
+        targetId: resume.targetIds[0],
+      })
+    } else if (resume.phase === 'complete') {
+      const token = resume.token
+      this.time.delayedCall(50, () => {
+        this.gameManagerRef?.acknowledgeActionComplete(token)
+      })
     }
   }
 
@@ -2086,19 +1957,9 @@ export class CombatScene extends Phaser.Scene {
    * no-op ở GameManager, chặn cross-battle mutation. Không spawn được VFX
    * (projection miss) → ack ngay để engine không treo.
    */
+  // Internal (module boundary — combat-action-feedback).
   private onActionImpact(event: ActionImpactEvent) {
-    const token = this.gameManagerRef?.getPendingPlaybackToken() ?? null
-    const acknowledge = () => {
-      if (token !== null) {
-        this.gameManagerRef?.acknowledgeActionComplete(token)
-      }
-    }
-
-    const handle = this.vfxSpawner.onActionImpact(event, acknowledge)
-
-    if (!handle) {
-      acknowledge()
-    }
+    this.actionFeedback.onActionImpact(event)
   }
 
   /**
@@ -2107,38 +1968,9 @@ export class CombatScene extends Phaser.Scene {
    * machine bước 1 → 2). Placeholder visual đơn giản theo plan (không
    * designed visual — polish sau).
    */
+  // Internal (module boundary — combat-action-feedback).
   private onTurnReady(event: { actorId: string }) {
-    const sprite = this.spriteFor(event.actorId)
-
-    if (!sprite) {
-      // Không có sprite (late-join miss) — ack ngay để engine không treo.
-      this.gameManagerRef?.acknowledgeTurnReady()
-      return
-    }
-
-    // Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-ready' CẠNH pulse
-    // scale hiện có (không thay thế).
-    this.playCombatAnimation(sprite, event.actorId, 'ready')
-
-    // Pulse đơn giản: scale bump rồi trở lại (tween trên rect/sprite GameObject
-    // — EntitySprite wrapper không expose scale, projection ghi mỗi frame).
-    const visual = sprite.rect
-
-    this.tweens.killTweensOf(visual)
-
-    this.tweens.add({
-      targets: visual,
-      scaleX: 1.15,
-      scaleY: 1.15,
-      duration: 90,
-      yoyo: true,
-      ease: 'Quad.easeOut',
-      onComplete: () => {
-        visual.setScale(1)
-
-        this.gameManagerRef?.acknowledgeTurnReady()
-      },
-    })
+    this.actionFeedback.onTurnReady(event)
   }
 
   /**
@@ -2146,18 +1978,9 @@ export class CombatScene extends Phaser.Scene {
    * event (completeAction ĐÃ chạy trước khi event tới) — presentation-only
    * bookkeeping, KHÔNG ack gì (không còn wait-gate).
    */
+  // Internal (module boundary — combat-action-feedback).
   private onTurnStandbyComplete(event: { actorId: string }) {
-    const sprite = this.spriteFor(event.actorId)
-
-    if (sprite) {
-      // Combat Art Pipeline Task 9 (2026-09-05) — quay lại clip '-standby'
-      // (idle-adjacent) khi kết thúc lượt.
-      this.playCombatAnimation(sprite, event.actorId, 'standby')
-
-      this.tweens.killTweensOf(sprite.rect)
-
-      sprite.rect.setScale(1)
-    }
+    this.actionFeedback.onTurnStandbyComplete(event)
   }
 
   /**
@@ -2173,30 +1996,12 @@ export class CombatScene extends Phaser.Scene {
   // Buff bar (2026-09-02) — floating text tên hiệu ứng CHỈ lần đầu
   // attach theo (targetId:buffId) — 2 nguồn cùng buff id chỉ floating 1
   // lần; stack tăng không floating lại. Clear ở 2 cleanup sites.
-  private floatedStatusKeys = new Set<string>()
+  // Internal (module boundary — combat-action-feedback owns attach-float dedup).
+  floatedStatusKeys = new Set<string>()
 
+  // Internal (module boundary — combat-action-feedback).
   private onStatusAttached(event: StatusVfxAttachedEvent) {
-    const statusKey = `${event.targetId}:${event.dotType}`
-    // Optional chaining defensive: field initializer KHÔNG chạy với
-    // Object.create(prototype) trong test (xem ghi chú class header) —
-    // undefined coi như "chưa floating lần nào".
-    const firstOnTarget = this.floatedStatusKeys?.has(statusKey) !== true
-
-    this.floatedStatusKeys?.add(statusKey)
-
-    if (firstOnTarget && event.buffName) {
-      const sprite = this.spriteFor(event.targetId)
-
-      if (sprite) {
-        this.showFloatingText(
-          sprite,
-          event.buffName,
-          event.polarity === 'buff' ? BUFF_ATTACH_COLOR : DEBUFF_ATTACH_COLOR,
-        )
-      }
-    }
-
-    this.vfxSpawner.onStatusAttached(event)
+    this.actionFeedback.onStatusAttached(event)
   }
 
   private onStatusUpdated(event: StatusVfxUpdatedEvent) {
@@ -2206,7 +2011,6 @@ export class CombatScene extends Phaser.Scene {
   private onStatusRemoved(event: StatusVfxRemovedEvent) {
     this.vfxSpawner.onStatusRemoved(event)
   }
-
 
   updateStatusIconPositions() {
     this.vfxSpawner.updateStatusIconPositions()
@@ -2321,8 +2125,3 @@ export class CombatScene extends Phaser.Scene {
     this.redrawGridLines()
   }
 }
-
-
-
-
-

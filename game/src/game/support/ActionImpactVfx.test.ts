@@ -4,7 +4,7 @@
 // trong instance, không phải thêm GameObject.
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { createBattleGridProjection } from './BattleGridProjection'
+import { createBattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 import { computeUprightRadius, spawnActionImpactVfx } from './ActionImpactVfx'
 import { COMBAT_VFX_PRESETS } from '@/data/vfx/CombatVfxPresets'
 

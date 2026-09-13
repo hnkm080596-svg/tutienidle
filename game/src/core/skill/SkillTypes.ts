@@ -25,9 +25,9 @@ export type SkillEffectType =
 // MAX_SWORD_INTENT (spec 2026-08-29-kiem-the-kiem-y: gộp thành Kiếm Ý
 // tạm route Bạt Kiếm). 'momentum' (Thể Tu) — pool RIÊNG 0-100, xem
 // CombatEntity.currentMomentum/CombatTypes.ts's MAX_MOMENTUM. Skill
-// có cost theo momentum thì canUse() TỰ CHẶN cho tới khi Momentum đầy,
-// scheduler auto-cast thống nhất của BattleSystem (plan §8.4) TỰ bắn
-// ngay khi đủ — không cần logic "auto-swap đòn kế tiếp" riêng.
+// có cost theo momentum thì hasResourceFor() (TurnSkillAction.ts) TỰ
+// CHẶN cho tới khi Momentum đủ — engine selectAction rơi về slot/basic
+// sẵn sàng thay vì "auto-swap đòn kế tiếp" riêng.
 // 'rage' ĐÃ GỠ (spec mục 5.4 — Phá Thiên Nhất Kích chuyển thành node,
 // không còn consumer nào).
 export type SkillResourceType =
@@ -35,6 +35,10 @@ export type SkillResourceType =
   | 'mana'
   | 'sword_intent'
   | 'momentum'
+  // Phase A3 (2026-09-07) — Pháp Tu Thế pool (CombatEntity.currentThe),
+  // gates Thuần-path ultimates. Turn-based gating reuses the generic
+  // RESOURCE_FIELD mechanism (TurnSkillAction.ts) — no new code path.
+  | 'the'
 
 // Điều kiện tích stack cho passiveModifiers — mỗi passive tự chọn
 // 1 trigger, không dùng chung một cơ chế (xem PassiveSystem).

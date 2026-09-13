@@ -21,7 +21,7 @@ import EmptyState from '@/components/common/primitives/EmptyState.vue'
 const ui = useUiStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const equippedTechnique = computed(() => {
   stateVersion.value

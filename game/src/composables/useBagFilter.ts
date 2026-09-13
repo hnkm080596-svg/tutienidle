@@ -39,30 +39,18 @@ const AGE_LABEL_KEYS: Record<string, string> = {
   century: 'bag.filter.age.century',
   millennium: 'bag.filter.age.millennium',
   myriad_year: 'bag.filter.age.myriadYear',
+  thuong_co: 'bag.filter.age.thuongCo',
 }
 
 export function ageLabelKey(age: string | undefined): string | null {
   return (age && AGE_LABEL_KEYS[age]) || null
 }
 
-// Quáng/Gỗ phân phẩm DÙNG NHÃN TUỔI thống nhất với Linh Thảo (spec
-// 2026-08-30-unify-material-quality-names-design.md — id quality giữ
-// nguyên `hoang..tien`, chỉ nhãn hiển thị đổi sang hệ tuổi). Vẫn gộp
-// theo "họ" gỗ/quáng resourceKind+realmId, badge hiện bậc cao nhất đang
-// sở hữu.
-const QUALITY_LABEL_KEYS: Record<string, string> = {
-  hoang: 'bag.filter.quality.hoang',
-  huyen: 'bag.filter.quality.huyen',
-  dia: 'bag.filter.quality.dia',
-  thien: 'bag.filter.quality.thien',
-  tien: 'bag.filter.quality.tien',
-}
-
-export function qualityLabelKey(quality: string | undefined): string | null {
-  return (quality && QUALITY_LABEL_KEYS[quality]) || null
-}
-
-const QUALITY_ORDER = ['hoang', 'huyen', 'dia', 'thien', 'tien']
+// gp123 6E (task C2): Gỗ/Quáng dùng CÙNG trục tuổi với Linh Thảo — id
+// `<realm>_wood_<age>` / `<realm>_ore_<age>`. Hệ nhãn chất cũ
+// (QUALITY_LABEL_KEYS/DATA_QUALITY_LABELS/qualityRank) đã bị xóa cùng
+// id phẩm hoang..tien. Vẫn gộp theo "họ" gỗ/quáng resourceKind+realmId,
+// badge hiện bậc tuổi cao nhất đang sở hữu.
 
 const REALM_NAME_BY_ID: Readonly<Record<string, string>> = Object.fromEntries(
   REALMS.map((realm) => [realm.id, realm.name]),
@@ -87,52 +75,40 @@ export function ageRank(age: string | undefined): number {
     case 'century': return 1
     case 'millennium': return 2
     case 'myriad_year': return 3
+    case 'thuong_co': return 4
     default: return -1
   }
 }
 
-/** Số phẩm hoang..tien để chọn badge/đại diện "cao nhất" — như ageRank nhưng cho Gỗ/Quáng. */
-export function qualityRank(quality: string | undefined): number {
-  if (!quality) return -1
-
-  return QUALITY_ORDER.indexOf(quality)
-}
-
 /**
- * Rank biến thể DÙNG CHUNG cho mọi kiểu họ gộp (thảo theo niên đại, gỗ/
- * quáng theo phẩm) — biến thể "cao nhất" làm đại diện icon/tooltip và
- * badge. Material không có age/quality (vd. gỗ mặc định không phẩm) xếp
- * thấp nhất (-1), giống hành vi ageRank cũ.
+ * Rank biến thể DÙNG CHUNG cho mọi kiểu họ gộp (thảo/gỗ/quáng theo tuổi)
+ * — biến thể "cao nhất" làm đại diện icon/tooltip và badge. Material
+ * không có age (vd. material legacy) xếp thấp nhất (-1).
  */
 export function variantRank(material: Material): number {
   const meta = material.profession
 
-  if (meta?.age !== undefined) return ageRank(meta.age)
-  if (meta?.quality !== undefined) return qualityRank(meta.quality)
-
-  return -1
+  return meta?.age !== undefined ? ageRank(meta.age) : -1
 }
 
-/** Prefix tuổi/chất của tên material ("Thập Niên Linh Mộc" → "Thập Niên") — tên data GỐC vi, dùng để strip prefix khi hiện tên gốc họ. */
+/** Prefix tuổi của tên material ("Thập Niên Linh Mộc" → "Thập Niên") — tên data GỐC vi, dùng để strip prefix khi hiện tên gốc họ. */
 function variantLabel(material: Material): string | undefined {
   const meta = material.profession
 
-  if (meta?.age !== undefined) return dataAgeLabel(meta.age, material.years)
-  if (meta?.quality !== undefined) return dataQualityLabel(meta.quality)
-
-  return undefined
+  return meta?.age !== undefined ? dataAgeLabel(meta.age, material.years) : undefined
 }
 
 // ===== Bảng nhãn DATA (vi gốc) — KHÔNG phải UI label: tên material trong
 // registry có dạng "<Tuổi> <Tên gốc>" (materials.ts), variantLabel chỉ
-// dùng để tách prefix đó (baseNameFor). Nhãn HIỂN THỊ cho user đi qua
-// locale key (ageLabelKey/qualityLabelKey + t() ở consumer). =====
+// dùng để tách prefix đó. Nhãn HIỂN THỊ cho user đi qua locale key
+// (ageLabelKey + t() ở consumer). =====
 
 const DATA_AGE_LABELS: Record<string, string> = {
   decade: 'Thập Niên',
   century: 'Bách Niên',
   millennium: 'Thiên Niên',
   myriad_year: 'Vạn Niên',
+  thuong_co: 'Thượng Cổ',
 }
 
 function dataAgeLabel(age: string, years: number | undefined): string | undefined {
@@ -141,18 +117,6 @@ function dataAgeLabel(age: string, years: number | undefined): string | undefine
   }
 
   return years !== undefined ? `${years} năm` : undefined
-}
-
-const DATA_QUALITY_LABELS: Record<string, string> = {
-  hoang: 'Thập Niên',
-  huyen: 'Bách Niên',
-  dia: 'Thiên Niên',
-  thien: 'Vạn Niên',
-  tien: 'Thượng Cổ',
-}
-
-function dataQualityLabel(quality: string): string | undefined {
-  return DATA_QUALITY_LABELS[quality]
 }
 
 /**
@@ -251,9 +215,7 @@ function badgeFor(family: HerbFamilyGroup): string {
 
   const meta = best.variant.material.profession
 
-  const badgeKey = meta?.age !== undefined
-    ? ageLabelKey(meta.age)
-    : qualityLabelKey(meta?.quality)
+  const badgeKey = ageLabelKey(meta?.age)
 
   const realmName = realmLabel(family.realmId)
 

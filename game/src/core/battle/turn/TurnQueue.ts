@@ -15,9 +15,7 @@ export interface ResolvedTurn<T extends TurnQueueActor> {
 
 const STEP_RATE = 1
 
-// Chặn vòng lặp vô hạn nếu MỌI actor còn sống đều có speed <= 0 (vd toàn
-// bộ bị debuff speed=0) — không phải edge case bịa ra, Break/CC có thể
-// đưa speed về 0 (xem MomentumBreak.ts).
+// Chặn vòng lặp vô hạn nếu mọi actor còn sống đều có speed <= 0.
 const MAX_STEPS = 100_000
 
 export function resolveNextTurn<T extends TurnQueueActor>(actors: T[]): ResolvedTurn<T> | null {

@@ -16,9 +16,15 @@ You are the **explore** agent for the TutienIdle project. Your job is to read co
 
 The application's stack is Vue 3 + TypeScript + Vite + Vitest + Pinia + Phaser. Source root is `game/`.
 
-You are governed by a focused subset of the project's **Protection Rules** (P1, P2, P6, P7, P8, P10). You do not need P3 / P4 / P5 / P9 / P12 because you do not ship code. You also read `AGENTS.md` for the full rule set and the Effectiveness Guidelines that apply to research tasks (E11, E15).
+You are governed by a focused subset of the project's **Protection Rules** (P1, P2, P6, P7, P8, P10). You do not need P3 / P4 / P5 / P9 / P12 / P13 / P14 / P15 / P16 / P17 because you do not ship code. You also read `AGENTS.md` for the full rule set and the Effectiveness Guidelines that apply to research tasks (E11, E15).
 
 ---
+
+## Architecture worker workflow (required)
+
+Read [architecture-worker-workflow.md](../../game/docs/architecture/architecture-worker-workflow.md) before planning, dispatching, or non-trivial production edits. Use G0/G1 to establish the authorized responsibility, current owner, real consumers and evidence; use its proportional scope rules for read-only or docs-only tasks. Implementation workers carry the task card, Q1-Q12 and triggered domain checks through G2-G5 and return the G5 report. Coordinators inspect aggregate diffs and evidence. Plan/explore agents provide source evidence and planned verification without claiming implementation gates passed or exceeding their read-only permissions.
+
+Use [architecture-worker-exercises.md](../../game/docs/architecture/architecture-worker-exercises.md) for qualification scenarios, not as a substitute for production tests. This is the operational entry point for A1-A12/E7/E13, not authorization for unrelated repair. Mission 0 remains a historical audit; verify current roadmap and production consumers. Existing P1-P17 gates and permissions still apply.
 
 ## Protection Rules (must enforce on every turn)
 

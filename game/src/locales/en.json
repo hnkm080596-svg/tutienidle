@@ -220,7 +220,6 @@
         "floorPrefix": "Floor {floor}",
         "boss": "BOSS",
         "enemiesSuffix": "enemies",
-        "spawnIntervalPrefix": "Every",
         "bossNamePrefix": "Boss:",
         "levelPrefix": "Lv.{level}",
         "eliteChance": "{percent}% Elite"
@@ -266,6 +265,10 @@
       "note": "Mortal Body Essence from defeated enemies flows back and feeds progress automatically — no action needed.",
       "tierLock": "Locked — requires Mortal floor {level}",
       "empty": "All Body Refinement tiers completed."
+    },
+    "tranPhap": {
+      "title": "Formation",
+      "confirm": "Save Formation"
     },
     "bag": {
       "title": "Inventory",
@@ -326,7 +329,8 @@
           "decade": "Decade",
           "century": "Century",
           "millennium": "Millennium",
-          "myriadYear": "Myriad Year"
+          "myriadYear": "Myriad Year",
+          "thuongCo": "Primeval"
         },
         "realms": {
           "mortal": "Mortal",
@@ -343,24 +347,8 @@
       }
     },
     "vendor": {
-      "cards": {
-        "spiritStone": "Spirit Stones",
-        "wood": "Spirit Wood",
-        "ore": "Spirit Ore"
-      },
-      "sections": {
-        "tier": "Grade Conversion",
-        "tierRealm": "Grade Conversion (realm)"
-      },
-      "stone": {
-        "upTrung": "{ratio} Lesser → 1 Medium",
-        "upThuong": "{ratio} Medium → 1 Greater"
-      },
-      "tierConvert": "{ratio} → 1",
-      "empty": {
-        "wood": "No Spirit Wood to convert.",
-        "ore": "No Spirit Ore to convert."
-      },
+      "gateNotBelow": "Only items of a grade below your current realm can be sold",
+      "sellRejected": "This item cannot be sold.",
       "sell": {
         "title": "Liquidate",
         "rate": "Sell surplus materials for Spirit Stones at current grade rates.",
@@ -495,15 +483,124 @@
     "decompose": {
       "labels": {
         "gradeFilter": "Ore grade",
-        "qualityFilter": "Ore quality",
+        "ageFilter": "Ore age",
         "workers": "Workers"
       },
       "select": {
         "allGrades": "All grades",
-        "allQualities": "All qualities"
+        "allAges": "All ages"
       },
       "estimate": "≈ {amount} essence / cycle"
     }
+  },
+  "workerLodge": {
+    "tabs": {
+      "nhanCong": "Workers",
+      "chieuMo": "Recruit",
+      "duyenPhan": "Duyen Phan Exchange"
+    },
+    "nhanCong": {
+      "title": "Workers",
+      "capacitySuffix": "sages have joined",
+      "nextLevel": "Level {level}: {count} workers",
+      "maxLevel": "Max level",
+      "hint": "Workers are assigned to extraction sites in the Production panel."
+    }
+  },
+  "chieuMo": {
+    "tokens": "{name}: {count}",
+    "pity": "Pity: {count}/{max}",
+    "pull": "Recruit (1 {token})",
+    "errors": {
+      "missingToken": "No {token} available.",
+      "noActivePlayer": "No active player data."
+    },
+    "result": {
+      "new": "New companion!",
+      "constellationUp": "Duplicate → Constellation +1 (C{rank})",
+      "constellationMaxed": "Duplicate — Constellation already maxed → +{bonus} Duyen Phan",
+      "pity": "Pity triggered"
+    }
+  },
+  "duyenPhan": {
+    "balance": "Duyen Phan: {count}",
+    "cost": "{cost} Duyen Phan",
+    "constellationBadge": "C{rank}",
+    "exchange": "Exchange",
+    "reason": {
+      "constellationMaxed": "Constellation already maxed (C{max})",
+      "insufficientDuyenPhan": "Not enough Duyen Phan (need {cost})"
+    },
+    "errors": {
+      "unknownDefinition": "Unknown companion.",
+      "constellationMaxed": "Constellation already maxed.",
+      "insufficientDuyenPhan": "Not enough Duyen Phan.",
+      "noActivePlayer": "No active player data."
+    },
+    "empty": "No companions available to exchange."
+  },
+  "companion": {
+    "title": "Companions",
+    "empty": "No companions yet — recruit at the Chieu Hien Quan.",
+    "constellationBadge": "C{rank}",
+    "realmLine": "{realm} · Floor {level}",
+    "stats": {
+      "maxHp": "HP",
+      "attack": "Attack",
+      "speed": "Speed"
+    },
+    "exp": {
+      "value": "{exp}/{required}",
+      "maxed": "Realm cap reached"
+    },
+    "constellation": {
+      "title": "Constellation",
+      "unlocked": "Unlocked",
+      "locked": "Locked",
+      "noPerks": "This companion has no constellation perks."
+    },
+    "perks": {
+      "statFlat": "{stat} +{value}",
+      "statPercent": "{stat} +{value}%",
+      "cooldown": "{turns}-turn cooldown",
+      "damage": "damage +{percent}%",
+      "heal": "heal {percent}% of damage",
+      "skillOverride": "Empower {slot} ({detail})"
+    },
+    "skills": {
+      "title": "Skills",
+      "slots": {
+        "basic": "Basic",
+        "special": "Special",
+        "ultimate": "Ultimate"
+      },
+      "unlocked": "Unlocked",
+      "locked": "Locked",
+      "unlockAt": "Unlocks at {realm} floor {level}",
+      "absent": "—",
+      "cooldownTag": "{turns}-turn cooldown"
+    },
+    "feed": {
+      "title": "Feed",
+      "materialOption": "{name} x{count} (+{exp} EXP)",
+      "materialAria": "Feed material",
+      "countAria": "Material amount",
+      "button": "Feed",
+      "maxedReason": "At the player realm cap — break through to keep feeding.",
+      "noMaterial": "Material bag is empty.",
+      "success": "+{exp} EXP · +{levels} floors",
+      "successNoLevel": "+{exp} EXP",
+      "breakthrough": "Breakthrough → {realm}",
+      "errors": {
+        "unknownInstance": "Unknown companion.",
+        "unknownMaterial": "Invalid material.",
+        "notFeedable": "This material cannot be fed to companions.",
+        "levelMaxed": "Companion is at the realm cap.",
+        "insufficientMaterial": "Not enough material.",
+        "noActivePlayer": "No active player data."
+      }
+    },
+    "formationHint": "Assign companions to formation slots in the Formation panel (command wheel → Tran)."
   },
   "combat": {
     "victory": {
@@ -554,6 +651,14 @@
       "countdown": {
         "go": "To Battle!"
       },
+      "pause": {
+        "title": "Battle paused",
+        "body": "The battle only runs while you are watching.",
+        "action": "Continue"
+      },
+      "intro": {
+        "entering": "Entering Battle"
+      },
       "exitConfirm": {
         "message": "Leave the battle and return to the Cave? The current battle will be abandoned.",
         "stay": "Stay",
@@ -561,6 +666,11 @@
       },
       "topBar": {
         "enemiesSuffix": "enemies"
+      },
+      "turnStrip": {
+        "upcoming": "Next up",
+        "round": "Round {current}",
+        "roundWithLimit": "Round {current}/{limit}"
       }
     }
   },
@@ -754,6 +864,36 @@
       "description": "Added to the maximum The cap; the Ultimate only fires at this new cap."
     }
   },
+  "announce": {
+    "tribulation": {
+      "quanKhi": {
+        "title": "QI COMMUNION SUCCESS",
+        "body": "You have weathered the lightning tribulation — choose a cultivation path to enter Qi Refining."
+      },
+      "foundation": {
+        "title": "★ {label} FOUNDATION ESTABLISHMENT ★",
+        "body": "You have passed the Tribulation and formally entered Foundation Establishment."
+      },
+      "realm": {
+        "title": "★ {realm} ★",
+        "body": "You have passed the Tribulation and formally entered {realm}."
+      },
+      "defeatGreatDao": {
+        "title": "Great Dao Foreclosed",
+        "body": "Defiance has failed — the Great Dao opportunity is forever closed. The next attempt caps at Heavenly Dao."
+      },
+      "defeat": {
+        "title": "Tribulation Failed",
+        "body": "Tribulation wounds linger — recover, then try again."
+      }
+    },
+    "breakthrough": {
+      "major": {
+        "title": "{realm}",
+        "body": "You have broken through a major realm; your cultivation surges."
+      }
+    }
+  },
   "tribulation": {
     "stillEquipped": {
       "title": "Tribulation is also a trial of the self — nothing can aid you",
@@ -809,14 +949,9 @@
       "job_slots_full": "The furnace is busy",
       "wrong_herb": "Wrong Spirit Herb — a recipe accepts exactly one herb type",
       "missing_herb": "Not enough Spirit Herb",
-      "missing_fuel_wood": "Not enough fuel wood of the required realm",
+      "missing_fuel_wood": "Not enough fuel wood matching the herb's realm and age",
       "missing_spirit_stone": "Not enough Spirit Stones"
     }
-  },
-  "resourceStrip": {
-    "show": "Show resources",
-    "hide": "Hide resource strip",
-    "spiritStones": "Spirit Stones"
   },
   "layout": {
     "functionOverlay": {
@@ -850,7 +985,8 @@
         "decade": "Decade",
         "century": "Century",
         "millennium": "Millennium",
-        "myriadYear": "Myriad Year"
+        "myriadYear": "Myriad Year",
+        "thuongCo": "Primeval"
       },
       "quality": {
         "hoang": "Decade",

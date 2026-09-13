@@ -15,12 +15,12 @@ import {
 import type { ElementType } from '../core/element/ElementType'
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
-import { buildGameSave, loadGame, type GameSave } from '../services/save/SaveSystem'
+import { buildGameSave, computeRestoreIdentity, loadGame, type GameSave } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { PLAYER_BASE_RANGE_RANKS } from '@/core/stats/StatBlock'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
-import { getCultivationSpeedMultiplier, getInsightPerCultivation } from '@/core/talent/TalentEffects'
+import { getCultivationRampMultiplier, getCultivationSpeedMultiplier, getInsightPerCultivation } from '@/core/talent/TalentEffects'
 import { calculateStats, type StatModifier } from '@/core/stats/StatCalculator'
 import { getKiemYDamageMultipliers, getKiemYTier } from '@/core/player/KiemYSystem'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
@@ -160,7 +160,11 @@ export const usePlayerStore = defineStore('player', {
       // nhưng không bao giờ về 0/âm.
       this.cultivationPerSecond =
         BASE_CULTIVATION_PER_SECOND *
-        Math.max(0.01, getCultivationSpeedMultiplier(this.selectedTalentIds))
+        Math.max(0.01, getCultivationSpeedMultiplier(this.selectedTalentIds)) *
+        // M2 — Hau Tich Bat Phat: per-realm-level ramp (neutral 1 when
+        // absent). Multiplied into the saved rate so the offline grant
+        // (cultivationPerSecond * elapsed) inherits the same curve.
+        getCultivationRampMultiplier(this.selectedTalentIds, this.realmLevel)
 
       // Tụ Linh Trận (economy-fixes-sinks-plan §3.2 B1, 2026-08-29) —
       // cộng dồn % từ các effect tu_linh_tran đang active (thường chỉ 1
@@ -294,12 +298,17 @@ export const usePlayerStore = defineStore('player', {
       // (vì file lưu mốc thời gian cũ hơn thời điểm save thật).
       this.lastSavedAt = Date.now()
 
-      return cloudSaveCoordinator.save(buildGameSave(this, gameManager))
+      // R10 (AR-12): this.$state is a live reactive Pinia proxy —
+      // buildGameSave() owns making a detached-value snapshot safe from
+      // that (JSON round-trip, not structuredClone, since structuredClone
+      // cannot handle Proxy objects at any nesting depth). Callers just
+      // pass the state through.
+      return cloudSaveCoordinator.save(buildGameSave(this.$state, gameManager))
     },
 
     // Chỉ merge phần PlayerData vào store — phần còn lại của save
     // (skill/technique/inventory/exploration) trả nguyên trong
-    // `save` để App.vue tự gọi gameManager.restoreFromSave(), vì
+    // `save` để App.vue tự gọi gameManager.saveOps.restoreFromSave(), vì
     // store không nên biết về GameManager.
     load() {
       const outcome = loadGame()
@@ -314,12 +323,11 @@ export const usePlayerStore = defineStore('player', {
     },
 
     restoreFromSave(save: GameSave) {
-      // QA-002 idempotency — payload-identity guard (pattern
-      // lastExternalModifiers): cùng save gọi lại = no-op (chống
-      // double-credit offline cultivation + double Object.assign). Save
-      // KHÁC (boot retry/recovery) vẫn áp đầy đủ. Non-reactive, không
-      // persist (dev phase — không migration).
-      const payloadIdentity = `${save.player.lastSavedAt}|${save.player.cultivation}`
+      // R10 (AR-12) — payload-identity guard: WHOLE-payload hash (qua
+      // computeRestoreIdentity — exclude lastSavedAt), không còn
+      // fingerprint 2-field. Cùng save gọi lại = no-op; save KHÁC (dù
+      // cùng lastSavedAt|cultivation) áp đầy đủ.
+      const payloadIdentity = computeRestoreIdentity(save)
       const previousRestore = lastRestoredPayloads.get(this)
 
       if (previousRestore !== undefined && previousRestore.identity === payloadIdentity) {
@@ -336,7 +344,18 @@ export const usePlayerStore = defineStore('player', {
 
       lastRestoredPayloads.set(this, { identity: payloadIdentity, offline })
 
-      Object.assign(this, save.player)
+      // R10 (AR-12, S4 follow-up) — deep-clone before assigning: a plain
+      // Object.assign shallow-copies nested fields (baseStats, modifiers,
+      // ...), so this.baseStats becomes the SAME object as
+      // save.player.baseStats. A later in-place store mutation (e.g.
+      // this.baseStats.attackRange below) then leaked back into the
+      // caller's `save` object — corrupting it for any later reuse (the
+      // payload-identity guard above included: a second restoreFromSave
+      // call with the SAME `save` reference would see a hash that changed
+      // out from under it and wrongly treat it as a new payload). A
+      // restore input must be treated as a value, same principle as
+      // buildGameSave's snapshot-is-a-value fix (S1).
+      Object.assign(this, structuredClone(save.player))
 
       // Node level (plan §6.1) — save cũ giữa v46 thiếu object này;
       // thiếu = chưa lĩnh ngộ node nào, KHÔNG được để undefined kẹo
@@ -360,14 +379,35 @@ export const usePlayerStore = defineStore('player', {
       // chảy qua StatModifier) nên ép về đúng baseline hiện hành.
       this.baseStats.attackRange = PLAYER_BASE_RANGE_RANKS
 
-      this.cultivation += offline.cultivation
+      // Route the offline grant through addCultivation() — same
+      // clamp-at-required rule as before (the old `+=` then
+      // Math.min was a copy of that rule), plus the M2 Hai Nap
+      // overflow bank.
+      const cultivationBefore = this.cultivation + this.cultivationOvercharge
 
-      // Cùng luật "không tích lũy dư quá mức cần đột phá" như
-      // addCultivation() (xem CultivationSystem.ts) — save cũ (trước
-      // khi luật này có) hoặc offline progress dồn nhiều có thể đẩy
-      // cultivation vượt ngưỡng, phải chặn lại ở đây vì Object.assign
-      // gán thẳng, không đi qua addCultivation().
-      this.cultivation = Math.min(this.cultivation, this.cultivationRequired)
+      addCultivation(this, offline.cultivation)
+
+      const offlineGained =
+        this.cultivation + this.cultivationOvercharge - cultivationBefore
+
+      // M2 — Ngo Dao (spec §4.3 row 20): the insight_per_cultivation
+      // accumulator settles the offline grant too, through the SAME
+      // threshold/counters as the online cultivate() path.
+      const offlineInsightThreshold = getInsightPerCultivation(this.selectedTalentIds)
+
+      if (
+        offlineInsightThreshold !== undefined &&
+        offlineInsightThreshold > 0 &&
+        offlineGained > 0
+      ) {
+        this.cultivationInsightAccumulator += offlineGained
+
+        while (this.cultivationInsightAccumulator >= offlineInsightThreshold) {
+          this.cultivationInsightAccumulator -= offlineInsightThreshold
+          this.skillInsight += 1
+          this.totalSkillInsightGained += 1
+        }
+      }
 
       // Bản Mệnh Pháp Bảo (doc §10.2) — sửa mọi invariant sai ngay sau
       // blind Object.assign() ở trên: nghề không khớp, thiếu state dù

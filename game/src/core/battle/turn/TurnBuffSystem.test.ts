@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import { TurnBuffPool } from './TurnBuffPool'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffSystem } from '../../buff/BuffSystem'
+import { BuffPool } from '../../buff/BuffPool'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { CombatSystem } from '../../combat/CombatSystem'
 import { createBaseStats } from '../../stats/StatBlock'
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
   const { stats: _overrideStats, ...restOverrides } = overrides
   return {
     id: 'id',
@@ -41,13 +41,13 @@ function makeCombatSystem(): CombatSystem {
   return { applyDotDamage: vi.fn() } as unknown as CombatSystem
 }
 
-describe('TurnBuffSystem.apply — fresh instance', () => {
-  it('creates a TurnBuff with remainingTurns === resolved duration', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+describe('BuffSystem.apply — fresh instance', () => {
+  it('creates a Buff with remainingTurns === resolved duration', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
-    const definition: TurnBuffDefinition = {
+    const definition: BuffDefinition = {
       id: 'test_buff', name: 'Test', polarity: 'debuff',
       duration: 5, stackMode: 'refresh', effects: [],
     }
@@ -63,11 +63,11 @@ describe('TurnBuffSystem.apply — fresh instance', () => {
   })
 
   it('duration shrinks with target.stats.ailmentResistPercent', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
-    const target = makeEntity({ id: 'target_1', stats: { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ailmentResistPercent: 0.5 } })
-    const definition: TurnBuffDefinition = {
+    const target = makeEntity({ id: 'target_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ailmentResistPercent: 0.5 }) })
+    const definition: BuffDefinition = {
       id: 'test_buff', name: 'Test', polarity: 'debuff',
       duration: 10, stackMode: 'refresh', effects: [],
     }
@@ -78,13 +78,13 @@ describe('TurnBuffSystem.apply — fresh instance', () => {
   })
 })
 
-describe('TurnBuffSystem.apply — stack modes', () => {
+describe('BuffSystem.apply — stack modes', () => {
   it("stackMode 'stack' increments stacks and refreshes remainingTurns, capped at maxStacks", () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
-    const definition: TurnBuffDefinition = {
+    const definition: BuffDefinition = {
       id: 'test_buff', name: 'Test', polarity: 'debuff',
       duration: 3, maxStacks: 2, stackMode: 'stack', effects: [],
     }
@@ -99,11 +99,11 @@ describe('TurnBuffSystem.apply — stack modes', () => {
   })
 
   it("stackMode 'refresh' resets remainingTurns without changing stacks", () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
-    const definition: TurnBuffDefinition = {
+    const definition: BuffDefinition = {
       id: 'test_buff', name: 'Test', polarity: 'debuff',
       duration: 4, stackMode: 'refresh', effects: [],
     }
@@ -118,16 +118,16 @@ describe('TurnBuffSystem.apply — stack modes', () => {
   })
 
   it("stackMode 'replace' swaps effects and resets remainingTurns", () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
-    const first: TurnBuffDefinition = {
+    const first: BuffDefinition = {
       id: 'test_buff', name: 'Test', polarity: 'debuff',
       duration: 4, stackMode: 'replace',
       effects: [{ type: 'statModifier', stat: 'attack', flat: 1 }],
     }
-    const second: TurnBuffDefinition = {
+    const second: BuffDefinition = {
       ...first,
       effects: [{ type: 'statModifier', stat: 'attack', flat: 2 }],
     }
@@ -140,20 +140,20 @@ describe('TurnBuffSystem.apply — stack modes', () => {
   })
 
   it("stackMode 'stack' at maxStacks with convertsToId + registry converts instead of just capping", () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
-    const slow: TurnBuffDefinition = {
+    const slow: BuffDefinition = {
       id: 'slow', name: 'Slow', polarity: 'debuff',
       duration: 3, maxStacks: 2, stackMode: 'stack', convertsToId: 'frozen', effects: [],
     }
-    const frozen: TurnBuffDefinition = {
+    const frozen: BuffDefinition = {
       id: 'frozen', name: 'Frozen', polarity: 'debuff',
       duration: 2, stackMode: 'refresh',
       effects: [{ type: 'cc', ccEffect: 'freeze' }],
     }
-    const registry: TurnBuffRegistry = {
+    const registry: BuffDefinitionCatalog = {
       get: (id) => (id === 'slow' ? slow : frozen),
     }
 
@@ -171,20 +171,20 @@ describe('TurnBuffSystem.apply — stack modes', () => {
   })
 
   it("stackMode 'stack' at maxStacks: convert xảy ra đúng tại apply chạm maxStacks (parity với BuffSystem.ts)", () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
-    const slow: TurnBuffDefinition = {
+    const slow: BuffDefinition = {
       id: 'slow2', name: 'Slow', polarity: 'debuff',
       duration: 3, maxStacks: 2, stackMode: 'stack', convertsToId: 'frozen2', effects: [],
     }
-    const frozen: TurnBuffDefinition = {
+    const frozen: BuffDefinition = {
       id: 'frozen2', name: 'Frozen', polarity: 'debuff',
       duration: 2, stackMode: 'refresh',
       effects: [{ type: 'cc', ccEffect: 'freeze' }],
     }
-    const registry: TurnBuffRegistry = {
+    const registry: BuffDefinitionCatalog = {
       get: (id) => (id === 'slow2' ? slow : frozen),
     }
 
@@ -201,13 +201,13 @@ describe('TurnBuffSystem.apply — stack modes', () => {
   })
 })
 
-describe('TurnBuffSystem — DoT resolution at apply time', () => {
+describe('BuffSystem — DoT resolution at apply time', () => {
   it('resolves dpsRatio into a snapshotted damagePerTurn using source.stats.attack for physical element', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
-    const source = makeEntity({ id: 'source_1', stats: { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, attack: 100, ailmentPotencyPercent: 0 } })
-    const target = makeEntity({ id: 'target_1', stats: { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, defense: 0 } })
-    const definition: TurnBuffDefinition = {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = makeEntity({ id: 'source_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, attack: 100, ailmentPotencyPercent: 0 }) })
+    const target = makeEntity({ id: 'target_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, defense: 0 }) })
+    const definition: BuffDefinition = {
       id: 'bleed', name: 'Bleed', polarity: 'debuff',
       duration: 3, stackMode: 'refresh',
       effects: [{ type: 'dot', dpsRatio: 0.5 }],
@@ -222,10 +222,10 @@ describe('TurnBuffSystem — DoT resolution at apply time', () => {
   })
 })
 
-describe('TurnBuffSystem.update — turn tick', () => {
+describe('BuffSystem.update — turn tick', () => {
   it('one update() call decrements remainingTurns by 1 and increments continuousTurns by 1', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
     system.apply(
@@ -242,8 +242,8 @@ describe('TurnBuffSystem.update — turn tick', () => {
   })
 
   it('buff is removed from the pool once remainingTurns reaches 0', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
     system.apply(
@@ -259,8 +259,8 @@ describe('TurnBuffSystem.update — turn tick', () => {
   })
 
   it('a dot effect calls combatSystem.applyDotDamage with damagePerTurn * stacks, no deltaSeconds factor', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
     system.apply(
@@ -296,19 +296,19 @@ describe('TurnBuffSystem.update — turn tick', () => {
   })
 
   it('continuousTurns reaching convertsAfterContinuousTurns triggers conversion to the target definition', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
-    const slow: TurnBuffDefinition = {
+    const slow: BuffDefinition = {
       id: 'slow', name: 'Slow', polarity: 'debuff', duration: 10, stackMode: 'refresh',
       convertsToId: 'frozen', convertsAfterContinuousTurns: 2, effects: [],
     }
-    const frozen: TurnBuffDefinition = {
+    const frozen: BuffDefinition = {
       id: 'frozen', name: 'Frozen', polarity: 'debuff', duration: 2, stackMode: 'refresh',
       effects: [{ type: 'cc', ccEffect: 'freeze' }],
     }
-    const registry: TurnBuffRegistry = { get: (id) => (id === 'slow' ? slow : frozen) }
+    const registry: BuffDefinitionCatalog = { get: (id) => (id === 'slow' ? slow : frozen) }
 
     system.apply(slow, source, target, registry)
     system.update(target, makeCombatSystem(), registry, () => source)
@@ -319,10 +319,10 @@ describe('TurnBuffSystem.update — turn tick', () => {
   })
 })
 
-describe('TurnBuffSystem — CC checks', () => {
+describe('BuffSystem — CC checks', () => {
   it('isStunned() is true only while a cc:stun effect is active on the pool', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
 
@@ -339,8 +339,8 @@ describe('TurnBuffSystem — CC checks', () => {
   })
 
   it('isFrozen() is true only while a cc:freeze effect is active on the pool', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
 
@@ -355,9 +355,9 @@ describe('TurnBuffSystem — CC checks', () => {
   })
 })
 
-describe('TurnBuffSystem ported BuffSystem methods', () => {
+describe('BuffSystem ported BuffSystem methods', () => {
   function portedEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-    const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+    const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
     const { stats: _drop, ...rest } = overrides
     return {
       id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
@@ -369,32 +369,32 @@ describe('TurnBuffSystem ported BuffSystem methods', () => {
     } as CombatEntity
   }
 
-  const ATTACK_MODIFIER_DEF: TurnBuffDefinition = {
+  const ATTACK_MODIFIER_DEF: BuffDefinition = {
     id: 'port_attack_up', name: 'Attack Up', polarity: 'buff', duration: 3, maxStacks: 5, stackMode: 'stack',
     effects: [{ type: 'statModifier', stat: 'attack', flat: 50 }],
   }
 
-  const ROOT_DEF: TurnBuffDefinition = {
+  const ROOT_DEF: BuffDefinition = {
     id: 'port_root', name: 'Root', polarity: 'debuff', duration: 3, stackMode: 'refresh',
     effects: [{ type: 'cc', ccEffect: 'root' }],
   }
 
-  const PROC_DEF: TurnBuffDefinition = {
+  const PROC_DEF: BuffDefinition = {
     id: 'port_proc', name: 'Proc', polarity: 'debuff', duration: 3, maxStacks: 1, stackMode: 'refresh',
     effects: [{ type: 'onHitProc', chance: 1, appliesBuffId: 'port_proc_result' }],
   }
 
-  const PROC_RESULT_DEF: TurnBuffDefinition = {
+  const PROC_RESULT_DEF: BuffDefinition = {
     id: 'port_proc_result', name: 'ProcResult', polarity: 'debuff', duration: 2, stackMode: 'refresh',
     effects: [{ type: 'dot', dpsRatio: 1, element: 'physical' }],
   }
 
   it('getActiveModifiers: folds statModifier effects into StatModifier[] with buff provenance + stacks', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = portedEntity({ id: 'src' })
     const target = portedEntity({ id: 'tgt' })
-    const registry: TurnBuffRegistry = { get: (id) => (id === 'port_attack_up' ? ATTACK_MODIFIER_DEF : ATTACK_MODIFIER_DEF) }
+    const registry: BuffDefinitionCatalog = { get: (id) => (id === 'port_attack_up' ? ATTACK_MODIFIER_DEF : ATTACK_MODIFIER_DEF) }
 
     system.apply(ATTACK_MODIFIER_DEF, source, target, registry)
     system.apply(ATTACK_MODIFIER_DEF, source, target, registry) // stacks -> 2
@@ -411,11 +411,11 @@ describe('TurnBuffSystem ported BuffSystem methods', () => {
   })
 
   it('isRooted: true only while a cc:root effect is active', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = portedEntity({ id: 'src' })
     const target = portedEntity({ id: 'tgt' })
-    const registry: TurnBuffRegistry = { get: (id) => (id === 'port_root' ? ROOT_DEF : ROOT_DEF) }
+    const registry: BuffDefinitionCatalog = { get: (id) => (id === 'port_root' ? ROOT_DEF : ROOT_DEF) }
 
     expect(system.isRooted()).toBe(false)
 
@@ -425,11 +425,11 @@ describe('TurnBuffSystem ported BuffSystem methods', () => {
   })
 
   it('rollOnHitEffects: rolls chance per onHitProc buff and applies the resulting buff on hit', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = portedEntity({ id: 'src' })
     const target = portedEntity({ id: 'tgt' })
-    const registry: TurnBuffRegistry = {
+    const registry: BuffDefinitionCatalog = {
       get: (id) => (id === 'port_proc' ? PROC_DEF : PROC_RESULT_DEF),
     }
 
@@ -443,16 +443,16 @@ describe('TurnBuffSystem ported BuffSystem methods', () => {
   })
 
   it('getStacks: t?ng stacks tr�n m?i ngu?n khi kh�ng truy?n sourceId, d�ng 1 ngu?n khi truy?n', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const sourceA = portedEntity({ id: 'src_a' })
     const sourceB = portedEntity({ id: 'src_b' })
     const target = portedEntity({ id: 'tgt' })
-    const stackDef: TurnBuffDefinition = {
+    const stackDef: BuffDefinition = {
       id: 'port_stack', name: 'Stack', polarity: 'debuff', duration: 5, maxStacks: 5, stackMode: 'stack',
       effects: [],
     }
-    const registry: TurnBuffRegistry = { get: () => stackDef }
+    const registry: BuffDefinitionCatalog = { get: () => stackDef }
 
     system.apply(stackDef, sourceA, target, registry)
     system.apply(stackDef, sourceA, target, registry)
@@ -462,5 +462,123 @@ describe('TurnBuffSystem ported BuffSystem methods', () => {
     expect(system.getStacks('port_stack', 'src_a')).toBe(2)
     expect(system.getStacks('port_stack', 'src_b')).toBe(1)
     expect(system.getStacks('missing', 'src_a')).toBe(0)
+  })
+})
+
+describe('BuffSystem port additions for ReactionManager (Phase A1)', () => {
+  const A_DEF: BuffDefinition = {
+    id: 'fixture_a', name: 'Fixture A', polarity: 'buff', duration: 5, stackMode: 'refresh',
+    effects: [{ type: 'statModifier', stat: 'attack', flat: 10 }],
+  }
+  const B_DEF: BuffDefinition = {
+    id: 'fixture_b', name: 'Fixture B', polarity: 'buff', duration: 5, stackMode: 'refresh',
+    effects: [],
+  }
+
+  function portedEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
+    const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
+    const { stats: _drop, ...rest } = overrides
+    return {
+      id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
+      currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
+      currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
+      timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+      currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+      ...rest,
+    } as CombatEntity
+  }
+
+  it('getActiveIds returns the id of every active buff instance', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = portedEntity({ id: 'src' })
+    const target = portedEntity({ id: 'tgt' })
+
+    system.apply(A_DEF, source, target)
+    system.apply(B_DEF, source, target)
+
+    expect(system.getActiveIds().sort()).toEqual(['fixture_a', 'fixture_b'])
+  })
+
+  it('remove deletes only the matching (id, sourceId) instance', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = portedEntity({ id: 'src' })
+    const target = portedEntity({ id: 'tgt' })
+
+    system.apply(A_DEF, source, target)
+    system.remove('fixture_a', source.id)
+
+    expect(system.getActiveIds()).toEqual([])
+  })
+
+  it('renewWithExtension adds to remainingTurns without resetting stacks/other fields', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = portedEntity({ id: 'src' })
+    const target = portedEntity({ id: 'tgt' })
+
+    system.apply(A_DEF, source, target)
+    system.renewWithExtension('fixture_a', source.id, 3)
+
+    const buff = pool.getFromSource('fixture_a', source.id)
+    expect(buff?.remainingTurns).toBe(8)
+  })
+
+  it('renewWithExtension is a no-op when no matching instance exists', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+
+    expect(() => system.renewWithExtension('nonexistent', 'nobody', 3)).not.toThrow()
+    expect(pool.getAll()).toEqual([])
+  })
+})
+
+describe('getAll / remove (Phase A0)', () => {
+  const A_DEF: BuffDefinition = {
+    id: 'a0_bong', name: 'A0 Bong', polarity: 'debuff', duration: 5, stackMode: 'refresh',
+    effects: [{ type: 'dot', dpsRatio: 1, element: 'fire' }],
+  }
+  const B_DEF: BuffDefinition = {
+    id: 'a0_te_cong', name: 'A0 Te Cong', polarity: 'debuff', duration: 5, stackMode: 'refresh',
+    effects: [],
+  }
+
+  function portedEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
+    const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
+    const { stats: _drop, ...rest } = overrides
+    return {
+      id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
+      currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
+      currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
+      timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+      currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+      ...rest,
+    } as CombatEntity
+  }
+
+  it('getAll returns every active buff instance', () => {
+    const pool = new BuffPool()
+    const buffs = new BuffSystem(pool)
+    const sourceA = portedEntity({ id: 'src_a' })
+    const target = portedEntity({ id: 'tgt' })
+
+    buffs.apply(A_DEF, sourceA, target)
+    buffs.apply(B_DEF, sourceA, target)
+
+    expect(buffs.getAll().map((b) => b.id).sort()).toEqual(['a0_bong', 'a0_te_cong'])
+  })
+
+  it('remove deletes exactly the (id, sourceId) instance', () => {
+    const pool = new BuffPool()
+    const buffs = new BuffSystem(pool)
+    const sourceA = portedEntity({ id: 'src_a' })
+    const target = portedEntity({ id: 'tgt' })
+
+    buffs.apply(A_DEF, sourceA, target)
+
+    buffs.remove('a0_bong', sourceA.id)
+
+    expect(buffs.getAll()).toHaveLength(0)
   })
 })

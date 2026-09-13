@@ -160,12 +160,12 @@ describe('getMainStatCap + allocateAttributePoint — trần theo cảnh giới'
     player.attributePoints = 100
     player.baseStats.strength = getMainStatCap('mortal') - 1
 
-    expect(gameManager.allocateAttributePoint(player, 'strength')).toBe(true)
+    expect(gameManager.progressionOps.allocateAttributePoint(player, 'strength')).toBe(true)
     expect(player.baseStats.strength).toBe(getMainStatCap('mortal'))
 
     const pointsBefore = player.attributePoints
 
-    expect(gameManager.allocateAttributePoint(player, 'strength')).toBe(false)
+    expect(gameManager.progressionOps.allocateAttributePoint(player, 'strength')).toBe(false)
     expect(player.baseStats.strength).toBe(getMainStatCap('mortal'))
     expect(player.attributePoints).toBe(pointsBefore)
   })
@@ -178,7 +178,7 @@ describe('getMainStatCap + allocateAttributePoint — trần theo cảnh giới'
     player.attributePoints = 0
     player.baseStats.strength = 1
 
-    expect(gameManager.allocateAttributePoint(player, 'strength')).toBe(false)
+    expect(gameManager.progressionOps.allocateAttributePoint(player, 'strength')).toBe(false)
     expect(player.baseStats.strength).toBe(1)
   })
 })

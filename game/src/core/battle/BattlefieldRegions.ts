@@ -40,3 +40,21 @@ export function centerOfRegion(region: BattlefieldUsableRegion): GridPosition {
     column: Math.floor((region.columnMin + region.columnMax) / 2),
   }
 }
+
+export const STANDING_SLOT_COUNT = 3
+
+// Merge each old 2x2 block into one standing slot, anchored at the first
+// physical row/column of the pair (offsets 0, 2, 4 across a 6-wide
+// region). Distance/AOE math is untouched -- it only ever consumes the
+// resolved GridPosition, same as it already does via
+// resolvePartyFormation()/resolveEnemySpawnPosition().
+export function standingSlotPosition(
+  region: BattlefieldUsableRegion,
+  slotRow: number,
+  slotColumn: number,
+): GridPosition {
+  return {
+    row: (region.rowMin + slotRow * 2) as LaneIndex,
+    column: region.columnMin + slotColumn * 2,
+  }
+}

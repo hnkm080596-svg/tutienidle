@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
@@ -9,7 +9,7 @@ import { createBaseStats } from '../../stats/StatBlock'
 // QA adversarial probes (2026-09-04 quick review) — Slice 5 wave/stage.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 })
 
   return {
     id: 'id',
@@ -45,15 +45,15 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 describe('Slice 5 adversarial (QA probes)', () => {
   it('INV-S5-1: maxTurns cap vẫn hoạt động với wave spawn loop — không treo vô hạn', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 } })
-    const enemyA = createCombatant({ id: 'enemyA', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 }) })
+    const enemyA = createCombatant({ id: 'enemyA', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 }) })
 
-    const wave = { totalEnemyCount: 50, spawnedCount: 1 }
+    const wave = { totalEnemyCount: 50, waves: [50], spawnedCount: 1, waveIndex: 0, pendingEnemySpawns: [] }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
@@ -64,7 +64,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
     let spawnCount = 0
     const spawnEnemy = (): TurnBattleParticipant => {
       spawnCount += 1
-      const e = createCombatant({ id: `spawned_${spawnCount}`, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 } })
+      const e = createCombatant({ id: `spawned_${spawnCount}`, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 }) })
       return makeParticipant(e.id, e, 10, spawnCount + 1)
     }
 
@@ -76,11 +76,11 @@ describe('Slice 5 adversarial (QA probes)', () => {
     expect(battle.enemies.length).toBeLessThanOrEqual(6)
   })
 
-  it('INV-S5-2: spawned enemy có TurnBuffPool riêng (không share pool với enemy cũ)', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 } })
-    const enemyA = createCombatant({ id: 'enemyA', currentHp: 1, maxHp: 1, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
+  it('INV-S5-2: spawned enemy có BuffPool riêng (không share pool với enemy cũ)', () => {
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }) })
+    const enemyA = createCombatant({ id: 'enemyA', currentHp: 1, maxHp: 1, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
 
-    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1, waveIndex: 0, pendingEnemySpawns: [] }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
@@ -88,29 +88,34 @@ describe('Slice 5 adversarial (QA probes)', () => {
       wave,
     }
 
-    let spawnedPool: TurnBuffPool | undefined
+    let spawnedPool: BuffPool | undefined
     const spawnEnemy = (): TurnBattleParticipant => {
-      const spawned = makeParticipant('enemyB', createCombatant({ id: 'enemyB', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } }), 10, 2)
+      const spawned = makeParticipant('enemyB', createCombatant({ id: 'enemyB', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) }), 10, 2)
       spawnedPool = spawned.buffs
       return spawned
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
-    system.resolveNextStep(battle)
+    // Turn-Based Wave Redesign (2026-09-06) — spawn chuyển sang tickPacing:
+    // giết enemyA (sân trống, waveIndex 0 < 1, spawnedCount 1 < 2) rồi
+    // tickPacing → wave mới queue qua telegraph → spawnEnemy chạy.
+    enemyA.alive = false
+    battle.enemies = []
+    system.tickPacing(battle)
 
-    const enemyAParticipant = battle.enemies[0]!
+    const enemyAParticipant = { buffs: new BuffPool() }
     expect(spawnedPool).toBeDefined()
     expect(spawnedPool).not.toBe(enemyAParticipant.buffs)
   })
 
   it('INV-S5-3: wave totalEnemyCount=0 với spawnedCount=0 — isStageComplete true ngay khi sân trống', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 }) })
 
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [],
       state: 'fighting',
-      wave: { totalEnemyCount: 0, spawnedCount: 0 },
+      wave: { totalEnemyCount: 0, waves: [], spawnedCount: 0, waveIndex: 0, pendingEnemySpawns: [] },
     }
 
     const step = new TurnBattleSystem(new CombatSystem(new EventBus()), 20).resolveNextStep(battle)

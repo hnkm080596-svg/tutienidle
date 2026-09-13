@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
+import { defineEnemy } from '../enemy/Enemy'
+import type { Stage } from '../stage/Stage'
 import { ENEMIES } from '../../data/enemy/Enemies'
 import { buildings } from '../../data/building/buildings'
 import { SKILLS } from '../../data/skill/Skills'
@@ -16,6 +18,8 @@ import { pills } from '../../data/pill/pills'
 import { talismans } from '../../data/talisman/talismans'
 import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
+import { BuffSystem } from '../buff/BuffSystem'
+import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 // QA quick-mode adversarial checks (spec 2026-09-03 talent catalog v4
 // M1) — reproduction/invariant tests cho các hypothesis rủi ro cao nhất
@@ -23,41 +27,41 @@ import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
 function makeWiredManager(): GameManager {
   const manager = new GameManager()
 
-  manager.registerMaterials(materials)
-  manager.registerSkillTemplates(SKILLS)
-  manager.registerTechniqueTemplates(TECHNIQUES)
-  manager.registerEnemyTemplates(ENEMIES)
-  manager.registerStages(STAGES)
-  manager.registerZones(zones)
-  manager.registerEquipment(equipment)
-  manager.registerAffixes(affixes)
-  manager.registerPills(pills)
-  manager.registerTalismans(talismans)
-  manager.registerBuffs(buffs)
-  manager.registerBuildings(buildings)
-  manager.registerProgressionNodes(KIEM_TU_NODES)
+  manager.catalogOps.registerMaterials(materials)
+  manager.catalogOps.registerSkillTemplates(SKILLS)
+  manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+  manager.catalogOps.registerEnemyTemplates(ENEMIES)
+  manager.catalogOps.registerStages(STAGES)
+  manager.catalogOps.registerZones(zones)
+  manager.catalogOps.registerEquipment(equipment)
+  manager.catalogOps.registerAffixes(affixes)
+  manager.catalogOps.registerPills(pills)
+  manager.catalogOps.registerTalismans(talismans)
+  manager.catalogOps.registerBuffs(buffs)
+  manager.catalogOps.registerBuildings(buildings)
+  manager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 
   return manager
 }
 
 describe('QA talent v4 M1 — invariant wiring', () => {
   it('INV-2: buffApplier với battle đang chạy — buff bùng nổ vào pool ĐÚNG player, không crash khi battle null', () => {
+    // Phase A2 cutover (2026-09-07): buffApplier giờ nhắm turn-based
+    // battle (legacy battleSystem không chạy trong gameplay thật —
+    // xem spec Phase A2). Test này giữ 2 bất biến: no-crash ngoài trận
+    // và buff bùng nổ vào pool ĐÚNG player trong trận (INV-2b kiểm
+    // chứng sâu hơn qua startStage).
     const manager = makeWiredManager()
     const player = createDefaultPlayer()
 
     player.selectedTalentIds = ['kiem_quang']
     manager.setActivePlayer(player)
 
-    // Ngoài trận: buffApplier không crash (battle null → no-op an toàn).
-    // Truy cập gián tiếp qua passiveSystem.tick — nhưng buffApplier chỉ
-    // chạy từ passiveConvertsTo; ngoài trận không có event nên gọi trực
-    // tiếp không được. Kiểm chứng bằng trận thật bên dưới + no-crash ở
-    // đây qua tick.
+    // Ngoài trận: buffApplier không crash (turnBattle null → no-op an toàn).
     expect(() => manager.passiveSystem.tick(1)).not.toThrow()
 
     // Trong trận: player được grant passive; crit event → stack; đủ 10
-    // tầng → buff kiem_vuc phải nằm trong battle.playerBuffs (pool
-    // ĐÚNG), không phải pool ngoài trận.
+    // tầng → buff kiem_vuc phải nằm trong pool của turn-based player.
     const enemy = ENEMIES[0]!
     const stats = calculateStats(player.baseStats, player.modifiers)
 
@@ -69,11 +73,60 @@ describe('QA talent v4 M1 — invariant wiring', () => {
       bus.emit('critical', { type: 'critical', sourceId: 'player', targetId: 'enemy_1' })
     }
 
-    const battle = manager.battleSystem.getBattle()!
-    const kiemVuc = battle.playerBuffs.getFromSource('kiem_vuc', 'player')
+    const turnPlayer = manager.getTurnBattle()?.players[0]
 
-    expect(kiemVuc).toBeDefined()
-    expect(kiemVuc!.stacks).toBe(1)
+    expect(turnPlayer).toBeDefined()
+    expect(turnPlayer!.buffs.hasAny('kiem_vuc')).toBe(true)
+  })
+
+  it('INV-2b (turn-based): buffApplier applies to the real turn-based player pool, not just the legacy one', () => {
+    const manager = makeWiredManager()
+    const player = createDefaultPlayer()
+
+    player.selectedTalentIds = ['kiem_quang']
+    manager.setActivePlayer(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
+
+    // STAGES[0] requires the qi_refining realm — a fresh default player
+    // (mortal) would be rejected by isStageUnlocked. Register a
+    // realm-free stage fixture instead (same pattern as
+    // GameManager.stageRestart.test.ts).
+    const stage: Stage = {
+      id: 'qa_inv2b_stage',
+      name: 'QA INV-2b Stage',
+      description: '',
+      floor: 1,
+      enemyPool: [{ enemyId: 'restart_dummy', weight: 1 }],
+      totalEnemyCount: 1,
+      waves: [1],
+      spawnIntervalSeconds: 0,
+    }
+    const enemy = defineEnemy({
+      id: 'restart_dummy',
+      name: 'Dummy',
+      level: 1,
+      realmId: 'mortal',
+      lane: 'ground',
+      statsInput: { maxHp: 500, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
+    })
+    manager.catalogOps.registerEnemyTemplates([enemy])
+    manager.catalogOps.registerStages([stage])
+
+    const stats = calculateStats(player.baseStats, player.modifiers)
+
+    expect(manager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
+
+    const bus = manager.eventBus
+
+    for (let i = 0; i < 10; i++) {
+      bus.emit('critical', { type: 'critical', sourceId: 'player', targetId: 'enemy_1' })
+    }
+
+    const turnPlayer = manager.getTurnBattle()?.players[0]
+
+    expect(turnPlayer).toBeDefined()
+    expect(turnPlayer!.buffs.hasAny('kiem_vuc')).toBe(true)
   })
 
   it('INV-3: 2 trận liên tiếp — stack passive reset, buff bùng trận trước KHÔNG kẹt pool trận sau', () => {
@@ -86,19 +139,18 @@ describe('QA talent v4 M1 — invariant wiring', () => {
     const enemy = ENEMIES[0]!
     const stats = calculateStats(player.baseStats, player.modifiers)
 
-    // Trận 1: kích Kiếm Vực.
+    // Battle 1: trigger Kiếm Vực (Phase A2 cutover — assert on the
+    // turn-based pool).
     manager.startBattleWithPlayer(player, stats, enemy)
     for (let i = 0; i < 10; i++) {
       manager.eventBus.emit('critical', { type: 'critical', sourceId: 'player', targetId: 'enemy_1' })
     }
-    expect(manager.battleSystem.getBattle()!.playerBuffs.getFromSource('kiem_vuc', 'player')).toBeDefined()
+    expect(manager.getTurnBattle()!.players[0]!.buffs.hasAny('kiem_vuc')).toBe(true)
 
-    // Trận 2: pool mới — Kiếm Vực không kẹt lại, stack modifier reset.
+    // Battle 2: fresh pool — Kiếm Vực must not leak, stack modifier reset.
     manager.startBattleWithPlayer(player, stats, enemy)
 
-    const battle2 = manager.battleSystem.getBattle()!
-
-    expect(battle2.playerBuffs.getFromSource('kiem_vuc', 'player')).toBeUndefined()
+    expect(manager.getTurnBattle()!.players[0]!.buffs.hasAny('kiem_vuc')).toBe(false)
 
     const passive = manager.skillManager.get('talent_passive_kiem_quang')!
 
@@ -138,7 +190,7 @@ describe('QA talent v4 M1 — invariant wiring', () => {
 
     for (const talentId of talentIds) {
       player.selectedTalentIds = [talentId]
-      manager.syncTalentCombatPassive(player)
+      manager.progressionOps.syncTalentCombatPassive(player)
 
       const active = manager.skillManager.getAll().filter((skill) =>
         TALENT_PASSIVE_SKILLS.some((template) => template.id === skill.id),
@@ -149,5 +201,45 @@ describe('QA talent v4 M1 — invariant wiring', () => {
 
       expect(active).toHaveLength(expected)
     }
+  })
+})
+
+describe('QA A0 � B?t T? Th? cleanse/grant on the LIVE turn-based pool', () => {
+  it('A0: Bat Tu The cleanse + Tu Sinh Ngo grant land on the LIVE turn-based pool', () => {
+    const manager = makeWiredManager()
+    const player = createDefaultPlayer()
+
+    player.selectedTalentIds = ['bat_tu_the']
+    player.realmId = 'mortal'
+    player.realmLevel = 1
+    manager.setActivePlayer(player)
+    manager.progressionOps.syncTalentCombatPassive(player)
+
+    const enemy = ENEMIES[0]!
+    const stats = calculateStats(player.baseStats, player.modifiers)
+
+    manager.startBattleWithPlayer(player, stats, enemy)
+
+    const turnBattle = manager.getTurnBattle()!
+    const playerParticipant = turnBattle.players[0]!
+
+    // Seed a real debuff directly on the live turn-based pool (matching
+    // how a real enemy hit would have applied it).
+    new BuffSystem(playerParticipant.buffs).apply(
+      BUFF_REGISTRY.get('bong'),
+      playerParticipant.entity,
+      playerParticipant.entity,
+      BUFF_REGISTRY,
+    )
+
+    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'bong')).toBe(true)
+
+    // Force a lethal hit through the real production damage path.
+    manager.combatSystem.applyDirectDamage(playerParticipant.entity, 999_999, 'enemy_1')
+
+    expect(playerParticipant.entity.alive).toBe(true)
+    expect(playerParticipant.entity.currentHp).toBe(1)
+    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'bong')).toBe(false)
+    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'tu_sinh_ngo')).toBe(true)
   })
 })

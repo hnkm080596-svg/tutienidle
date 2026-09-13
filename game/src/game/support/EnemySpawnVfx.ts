@@ -15,7 +15,7 @@ import type {
   PlayerSpawnVfxPresetId,
 } from '@/core/battle/CombatAction'
 import { DEPTH_GROUND_VFX } from './BattleLayers'
-import type { BattleGridProjection } from './BattleGridProjection'
+import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 
 /** Preset spawn telegraph — quái theo cấp bậc + preset riêng cho Player. */
 export type SpawnVfxPresetId = EnemySpawnVfxPresetId | PlayerSpawnVfxPresetId

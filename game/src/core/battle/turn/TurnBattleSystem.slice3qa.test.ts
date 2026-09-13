@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
@@ -11,7 +11,7 @@ import { createBaseStats } from '../../stats/StatBlock'
 // QA adversarial probes (2026-09-04 quick review) — Slice 3 buff/CC wiring.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 })
 
   return {
     id: 'id',
@@ -47,41 +47,44 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
-class FixtureRegistry implements TurnBuffRegistry {
-  private readonly defs = new Map<string, TurnBuffDefinition>()
+class FixtureRegistry implements BuffDefinitionCatalog {
+  private readonly defs = new Map<string, BuffDefinition>()
 
-  constructor(defs: TurnBuffDefinition[]) {
+  constructor(defs: BuffDefinition[]) {
     for (const d of defs) this.defs.set(d.id, d)
   }
 
-  get(id: string): TurnBuffDefinition {
+  get(id: string): BuffDefinition {
     const d = this.defs.get(id)
     if (!d) throw new Error(`missing fixture: ${id}`)
     return d
   }
 }
 
-const STUN: TurnBuffDefinition = {
+const STUN: BuffDefinition = {
   id: 'qa_stun', name: 'Stun', polarity: 'debuff', duration: 2, stackMode: 'refresh',
   effects: [{ type: 'cc', ccEffect: 'stun' }],
 }
 
-const BURN: TurnBuffDefinition = {
+const BURN: BuffDefinition = {
   id: 'qa_burn', name: 'Burn', polarity: 'debuff', duration: 3, stackMode: 'refresh',
   effects: [{ type: 'dot', dpsRatio: 1, element: 'physical' }],
 }
 
 describe('Slice 3 adversarial (QA probes)', () => {
   it('INV-S3-1: stun duration-2 block đúng 2 lượt rồi hết (CC check trước tick)', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 } })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
+    // R2 (AR-05): effective speed lives on entity.stats — the participant
+    // speed cache is synced from it. Fixtures must set speed there (the
+    // adapter copies entity.stats.speed into participant.speed).
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10, speed: 10 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, speed: 5 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     const registry = new FixtureRegistry([STUN])
-    new TurnBuffSystem(playerP.buffs).apply(STUN, enemy, player, registry)
+    new BuffSystem(playerP.buffs).apply(STUN, enemy, player, registry)
 
     const battle: TurnBattle = {
       players: [playerP],
@@ -104,14 +107,14 @@ describe('Slice 3 adversarial (QA probes)', () => {
   })
 
   it('INV-S3-2: DoT tick tại lượt HOLDER gây damage lên holder (không lên source)', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     const enemyP = makeParticipant('enemy', enemy, 5, 1)
 
     const registry = new FixtureRegistry([BURN])
-    new TurnBuffSystem(enemyP.buffs).apply(BURN, player, enemy, registry)
+    new BuffSystem(enemyP.buffs).apply(BURN, player, enemy, registry)
 
     const battle: TurnBattle = { players: [playerP], enemies: [enemyP], state: 'fighting' }
     const hpBefore = enemy.currentHp
@@ -124,14 +127,14 @@ describe('Slice 3 adversarial (QA probes)', () => {
   })
 
   it('INV-S3-3: buff tick tiếp trên holder đã chết? — resolveNextTurn không chọn dead, buff giữ nguyên', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 } })
-    const dying = createCombatant({ id: 'dying', currentHp: 1, maxHp: 1, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }) })
+    const dying = createCombatant({ id: 'dying', currentHp: 1, maxHp: 1, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     const dyingP = makeParticipant('dying', dying, 5, 1)
 
     const registry = new FixtureRegistry([BURN])
-    new TurnBuffSystem(dyingP.buffs).apply(BURN, player, dying, registry)
+    new BuffSystem(dyingP.buffs).apply(BURN, player, dying, registry)
 
     const battle: TurnBattle = { players: [playerP], enemies: [dyingP], state: 'fighting' }
 
@@ -143,16 +146,16 @@ describe('Slice 3 adversarial (QA probes)', () => {
   })
 
   it('INV-S3-4: CC blocked vẫn bị DoT của chính buff đó tick (stun không dừng dot pool processing)', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
-    const stunDot: TurnBuffDefinition = {
+    const stunDot: BuffDefinition = {
       id: 'qa_stun_dot', name: 'StunDot', polarity: 'debuff', duration: 2, stackMode: 'refresh',
       effects: [{ type: 'cc', ccEffect: 'stun' }, { type: 'dot', dpsRatio: 1, element: 'physical' }],
     }
     const registry = new FixtureRegistry([stunDot])
-    new TurnBuffSystem(playerP.buffs).apply(stunDot, enemy, player, registry)
+    new BuffSystem(playerP.buffs).apply(stunDot, enemy, player, registry)
 
     const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
     const hpBefore = player.currentHp
@@ -164,9 +167,9 @@ describe('Slice 3 adversarial (QA probes)', () => {
     expect(player.currentHp).toBeLessThan(hpBefore)
   })
 
-  it('INV-S3-5: self-buff dot tự gây damage cho chính mình qua TurnBuffSystem (combat mock)', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 } })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
+  it('INV-S3-5: self-buff dot tự gây damage cho chính mình qua BuffSystem (combat mock)', () => {
+    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     playerP.basic = {
