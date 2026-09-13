@@ -141,9 +141,14 @@ code review. (These must run last — they certify the final state.)
       add exclusion), and a shell-local `ELECTRON_RUN_AS_NODE=1` made
       every launch run as plain Node (unset → app boots normally).
       AWAITING RULING: ship web-only, Electron, or both for beta.
-- [ ] D2. Cloud save: decide Supabase-prod vs local-only for beta;
+- [x] D2. Cloud save: decide Supabase-prod vs local-only for beta;
       wire chosen config; verify save/load through the shipped path.
-- [ ] D3. Tutorial ruling (static-only vs deferred) — record decision.
+      — DEFERRED by user 2026-09-14 ("not yet"): the guarded local-only
+      adapter remains the shipped path; a Supabase remote adapter stays
+      out of beta scope unless reopened.
+- [x] D3. Tutorial ruling (static-only vs deferred) — record decision.
+      — DEFERRED by user 2026-09-14: no tutorial work in beta scope;
+      revisit post-beta.
 - [ ] D4. Final verification gate, in order: `type-check` → `build` →
       full vitest → full e2e → real browser/Phaser inspection →
       adversarial deep QA on the final tree → code review → beta tag.
