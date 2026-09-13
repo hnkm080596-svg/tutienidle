@@ -4,6 +4,7 @@ import { ManualClockSource, COMBAT_STEP_SECONDS } from '@/core/battle/turn/Comba
 import { GameManager } from '../core/game/GameManager'
 import { createDefaultPlayer } from '../core/player/Player'
 import { calculateStats } from '../core/stats/StatCalculator'
+import { asBaseStats } from '../core/stats/StatBlock'
 import type { Stage } from '../core/stage/Stage'
 import { ENEMIES } from '../data/enemy/Enemies'
 import { STAGES } from '../data/stage/Stages'
@@ -86,7 +87,7 @@ describe('Admitted session handoff (ARCH-004 / L03)', () => {
 
   async function enterCombat(): Promise<SessionRef> {
     const startPromise = presentation.runAdmitted('combat', () => {
-      const started = gameManager.turnBattleOps.startStage(player, stats, mortalStage, false)
+      const started = gameManager.turnBattleOps.startStage(player, mortalStage, false)
       if (!started) return null
       const session = gameManager.getCurrentPresentationSession('combat')
       return session ? { target: 'combat', session } : null
@@ -129,6 +130,9 @@ describe('Admitted session handoff (ARCH-004 / L03)', () => {
 
   function playerStoreMock() {
     return {
+      // Pinia flattens $state fields onto the store instance; the M7
+      // ambient resolver reads baseStats/modifiers off the store directly.
+      ...player,
       $state: player,
       finalStats: stats,
       realmId: player.realmId,
@@ -149,13 +153,19 @@ describe('Admitted session handoff (ARCH-004 / L03)', () => {
     gameManager.catalogOps.registerEquipment(equipment)
     gameManager.catalogOps.registerAffixes(affixes)
 
-    player = createDefaultPlayer()
+    const basePlayer = createDefaultPlayer()
+    // ARCH-002 (M7): startStage resolves stats internally — patch the RAW
+    // baseStats so the resolved snapshot keeps the guaranteed-kill attack.
+    player = {
+      ...basePlayer,
+      baseStats: asBaseStats({ ...basePlayer.baseStats, attack: 1_000_000, speed: 100 }),
+    }
     player.realmLevel = 12 // mortal Quan Khi breakthrough gate
     player.cultivation = 0
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('tram')
     gameManager.progressionOps.setSkillLoadoutSlot(player, 0, 'tram')
-    stats = calculateStats({ ...player.baseStats, attack: 1_000_000, speed: 100 }, [])
+    stats = calculateStats({ ...player.baseStats }, [])
     gameManager.setPresentationMode('interactive')
 
     mortalStage = STAGES.find((s) => s.id === 'mortal_dong_1')!

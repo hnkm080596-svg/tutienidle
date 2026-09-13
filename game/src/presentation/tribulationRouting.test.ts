@@ -82,6 +82,9 @@ describe('Tribulation routing integration (Task 11)', () => {
     phaserAdapter.setGame(fakeGame)
 
     const playerStore = {
+      // Pinia flattens $state fields onto the store instance; the M7
+      // ambient resolver reads baseStats/modifiers off the store directly.
+      ...player,
       $state: player,
       finalStats: calculateStats(player.baseStats, []),
       realmId: player.realmId,
@@ -205,6 +208,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     active.state = 'victory'
 
     const playerStoreMock = {
+      ...player,
       $state: player,
       realmId: 'mortal',
       realmLevel: 10,
@@ -260,6 +264,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     active.state = 'victory'
 
     const playerStoreMock = {
+      ...player,
       $state: player,
       realmId: 'mortal',
       realmLevel: 10,
