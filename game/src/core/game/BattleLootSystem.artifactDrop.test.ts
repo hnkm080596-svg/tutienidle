@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Battle } from '../battle/Battle'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
-import { createBattle, createDeadEnemy, createLootTestSetup } from './battleLootTestSetup'
+import { createDeadEnemy, createLootTestSetup } from './battleLootTestSetup'
 
 // Bản Mệnh Pháp Bảo (doc §6/§5.2) — drop-system (2026-09-12): Đoán Bảo
 // Thạch không còn roll riêng có gate realm trong grantArtifactStoneDrop —
@@ -89,9 +88,9 @@ describe('BattleLootSystem — Đoán Bảo Thạch drop (doc §6)', () => {
 
     const battleEnemy = createDeadEnemy('mob')
 
-    loot.processDefeatedEnemies(createBattle([battleEnemy]))
+    loot.processDefeatedEnemies([battleEnemy], null)
     // giả lập entity vẫn còn trong mảng do caller quên filter — rewardGranted đã true
-    loot.processDefeatedEnemies({ enemies: [battleEnemy] } as unknown as Battle)
+    loot.processDefeatedEnemies([battleEnemy], null)
 
     expect(materialBag.getAmount('doan_bao_thach')).toBe(1)
   })

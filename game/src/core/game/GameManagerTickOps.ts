@@ -62,7 +62,9 @@ export class GameManagerTickOps {
    * R8.1 (AR-09) - set by the realm-transition writer; consumed and
    * cleared by the next update tick. Lifecycle-owned quest
    * reconciliation must run even though realm changes currently happen
-   * outside this manager (tribulation outcomes live in Vue until R8.2).
+   * outside this manager (R8.2 moved tribulation outcomes into core:
+   * TribulationOutcomeService marks the transition via
+   * markQuestRealmTransition()).
    */
   private questRealmReconcileNeeded = false
 

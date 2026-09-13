@@ -17,7 +17,7 @@ import DuyenPhanTab from './worker-lodge/DuyenPhanTab.vue'
 
 const BUILDING_ID = 'chi_hien_quan'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const gameManager = useGameManager()
 

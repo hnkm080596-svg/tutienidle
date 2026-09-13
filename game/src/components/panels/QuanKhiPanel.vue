@@ -21,7 +21,7 @@ import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const ui = useUiStore()
 const player = usePlayerStore()

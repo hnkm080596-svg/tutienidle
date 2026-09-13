@@ -1804,6 +1804,26 @@ Each enforcement rule should protect a real regression class discovered by Missi
    contracts add slices as needed.
 ```
 
+```text
+✅+ 2026-09-13 (branch fix/architecture-qa-repairs) — 2026-09-13 deep-audit
+   repair waves reported back (plan docs/superpowers/plans/
+   2026-09-13-architecture-qa-repairs.md):
+   - F1 tribulation-route wiring fixed: App.vue tick() passes
+     `presentation`, so the behind-curtain outcome branch runs in
+     production; pinned by tests/architecture/tribulationOutcomeWiring.
+     test.ts + e2e oracle tests/e2e/tribulation-flow.spec.ts (route
+     returns home). Plan item 1.5 manual sanity folded into that spec.
+   - Dead-emit residue retired (R13 scope): 'tribulation_scene_exit'
+     emit + dead useTribulation `checkTribulationOutcome` return key.
+   - Verified LIVE, kept: ui.combatOrigin (CombatResultModal/
+     CombatExitConfirmModal readers), ui.isTribulationSceneActive +
+     enter/exitTribulationScene, ui.combatSceneDismissed (no-adapter
+     fallbacks useStageActive/useCombatSceneActive/GameRoot).
+   - The 2026-09-11 i18n local-scope known issue above is RESOLVED:
+     messageless `useScope: 'local'` callers moved to global scope;
+     guarded by tests/architecture/i18nKeyParity.test.ts.
+```
+
 
 ---
 

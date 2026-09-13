@@ -16,7 +16,7 @@ import Chip from '@/components/common/primitives/Chip.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const player = usePlayerStore()
 const ui = useUiStore()

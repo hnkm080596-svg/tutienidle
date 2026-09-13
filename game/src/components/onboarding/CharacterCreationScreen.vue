@@ -24,7 +24,7 @@ const error = ref('')
 const creating = ref(false)
 const attributes = ref<CharacterCreationPayload['attributes']>({ strength: 0, dexterity: 0, intelligence: 0, attunement: 0, vitality: 0 })
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const attributeLabels = computed<Record<keyof CharacterCreationPayload['attributes'], { name: string; hint: string }>>(() => ({
   strength: { name: t('onboarding.creation.attributes.strength.name'), hint: t('onboarding.creation.attributes.strength.hint') },

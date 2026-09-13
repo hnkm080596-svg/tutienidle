@@ -19,7 +19,7 @@ import { useEquippedRows, useHallSlotRows, useItemRenState, type HallSlotRow } f
 import { affixDisplayLabel, tierClass } from './equipmentHallDisplay'
 import { HALL_SELECTION_KEY } from './hallSelection'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const gameManager = useGameManager()
 

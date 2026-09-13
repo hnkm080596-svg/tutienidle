@@ -14,7 +14,7 @@ defineProps<{
 
 const emit = defineEmits<{ close: [] }>()
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 </script>
 
 <template>

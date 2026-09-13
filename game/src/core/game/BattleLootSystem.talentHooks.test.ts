@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { CombatEntity } from '../combat/CombatEntity'
-import { createBattle, createDeadEnemy, createLootTestSetup } from './battleLootTestSetup'
+import { createDeadEnemy, createLootTestSetup } from './battleLootTestSetup'
 
 // Talent catalog v4 (spec 2026-09-03 §4.4) — 4 hook loot của v3 (Tụ
 // Bảo/Đại Trí Nhược Ngu/Cơ Duyên/Huyết Chiến) đã RETIRED: id vẫn
@@ -62,11 +62,11 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
 
   it('máu không đổi khi quái chết', () => {
     const { loot } = createLootTestSetup({ realmId: 'qi_refining', stage: QI_REFINING_STAGE })
-    const battle = createBattle([createDeadEnemy('mob')], { currentHp: 500, maxHp: 1000 })
+    const healTarget = { alive: true, currentHp: 500, maxHp: 1000 } as CombatEntity
 
-    loot.processDefeatedEnemies(battle)
+    loot.processDefeatedEnemies([createDeadEnemy('mob')], healTarget)
 
-    expect(battle.player.currentHp).toBe(500)
+    expect(healTarget.currentHp).toBe(500)
   })
 
   it('pool draw vào material — equipment không rơi', () => {
@@ -156,14 +156,15 @@ describe('BattleLootSystem — talent v3 retired KHÔNG còn bonus (spec v4 §4.
       talentIds: ['huyet_chien'],
       stage: QI_REFINING_STAGE,
     })
-    const battle = createBattle([createDeadEnemy('mob')], {
+    const healTarget = {
+      alive: true,
       currentHp: 500,
       maxHp: 1000,
-    } as Partial<CombatEntity>)
+    } as CombatEntity
 
-    loot.processDefeatedEnemies(battle)
+    loot.processDefeatedEnemies([createDeadEnemy('mob')], healTarget)
 
-    expect(battle.player.currentHp).toBe(500)
+    expect(healTarget.currentHp).toBe(500)
     expect(applyHealing).not.toHaveBeenCalled()
   })
 

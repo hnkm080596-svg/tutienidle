@@ -14,7 +14,7 @@ const password = ref('')
 const submitting = ref(false)
 const error = ref('')
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const validId = computed(() => isValidLoginId(loginId.value))
 const canSubmit = computed(() => validId.value && isValidPassword(password.value) && !submitting.value)

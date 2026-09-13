@@ -1,11 +1,14 @@
 import { vi } from 'vitest'
-import type { Battle, BattleEnemy } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Enemy, EnemyReward } from '../enemy/Enemy'
 import type { SignatureDrop } from '../drop/DropTable'
 import type { Stage } from '../stage/Stage'
 import type { RewardReceiver } from '../reward/RewardSystem'
-import { BattleLootSystem, type BattleLootSystemDeps } from './BattleLootSystem'
+import {
+  BattleLootSystem,
+  type BattleLootSystemDeps,
+  type RewardPendingEnemy,
+} from './BattleLootSystem'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import type { EquipmentInstance } from '../equipment/EquipmentInstance'
@@ -21,23 +24,16 @@ import { createDefaultPlayer } from '../player/Player'
 export function createDeadEnemy(
   id: string,
   entity: Partial<CombatEntity> = {},
-): BattleEnemy {
+): RewardPendingEnemy {
   return {
     entity: { alive: false, id, isBoss: false, isElite: false, ...entity } as CombatEntity,
-    attackTimer: 0,
     rewardGranted: false,
-  } as BattleEnemy
+  }
 }
 
-export function createBattle(
-  enemies: BattleEnemy[],
-  playerEntity: Partial<CombatEntity> = {},
-): Battle {
-  return {
-    enemies,
-    player: { alive: true, currentHp: 100, maxHp: 100, ...playerEntity } as CombatEntity,
-  } as unknown as Battle
-}
+// F3 (2026-09-13): the old createBattle() helper is gone - the reward
+// input is the entries array itself plus an explicit heal target, so
+// tests pass those directly instead of fabricating a Battle.
 
 export interface LootTestStage {
   stageId: string
@@ -165,7 +161,7 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
   loot.setSession({} as RewardReceiver, player)
 
   const killEnemy = (entity: Partial<CombatEntity> = {}, id = 'mob') =>
-    loot.processDefeatedEnemies(createBattle([createDeadEnemy(id, entity)]))
+    loot.processDefeatedEnemies([createDeadEnemy(id, entity)], null)
 
   return {
     loot,

@@ -17,7 +17,7 @@ import { ITEM_GRADE_LABELS } from '@/core/item/ItemGrade'
 import { materialLabel } from '@/core/presentation/labels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const player = usePlayerStore()
 

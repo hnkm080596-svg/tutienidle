@@ -154,7 +154,7 @@ This is a Windows environment where Vietnamese-diacritic comments have repeatedl
 
 The only place Vietnamese should appear in this codebase is user-facing UI/UX content, and even that must go through the i18n gateway (`vue-i18n`, `useI18n()` + locale resources) rather than hardcoded string literals.
 
-- Do not add new hardcoded Vietnamese string literals in `.vue` templates/scripts or `.ts` files. Add an i18n key and reference it via `t('...')`, following the existing `useI18n({ useScope: 'local' })` pattern (e.g. `BagGrid.vue`).
+- Do not add new hardcoded Vietnamese string literals in `.vue` templates/scripts or `.ts` files. Add an i18n key and reference it via `t('...')` from `useI18n()` (global scope). `useScope: 'local'` is only for components that define their own `messages` (e.g. `PresentationTransitionOverlay.vue`) — messageless local scope emits spurious missing-key warnings.
 - Code comments are governed by P15, not this rule.
 - Scope discipline: governs new code / files you substantially touch, not a mandate to retrofit the pre-existing backlog of hardcoded Vietnamese strings elsewhere (stay in scope, P10).
 - Data-driven Vietnamese content in `data/**` (naming systems, lore) is a pre-existing accepted convention distinct from UI chrome strings — not targeted by this rule unless a task specifically calls for it.

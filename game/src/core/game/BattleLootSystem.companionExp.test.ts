@@ -3,7 +3,7 @@ import type { CompanionInstance } from '../../data/companion/Companions'
 import type { PlayerData } from '../player/Player'
 import type { Stage } from '../stage/Stage'
 import { companionBattleExpPerKill } from '../companion/CompanionProgression'
-import { createBattle, createDeadEnemy, createLootTestSetup } from './battleLootTestSetup'
+import { createDeadEnemy, createLootTestSetup } from './battleLootTestSetup'
 
 // Companion battle EXP (companion-gacha spec section 7, 2026-09-12): each
 // companion assigned in the resolved party formation gains
@@ -185,8 +185,10 @@ describe('BattleLootSystem - companion battle EXP', () => {
     assignFormation(player, 'test_companion_1')
 
     // Same entry point and call shape as
-    // GameManagerTurnBattleOps.rollAutoFarmCycleReward: a dead-enemies shim
-    // plus the farmed stage as stageOverride. No second exp path exists.
+    // GameManagerAutoFarmOps.rollAutoFarmCycleReward: dead-enemy entries,
+    // a null heal target (the idle channel has no live player entity -
+    // F3) and the farmed stage as stageOverride. No second exp path
+    // exists.
     const farmStage: Stage = {
       id: 'idle_farm_stage',
       name: 'Idle Farm Stage',
@@ -199,7 +201,7 @@ describe('BattleLootSystem - companion battle EXP', () => {
       spawnIntervalSeconds: 0,
     }
 
-    loot.processDefeatedEnemies(createBattle([createDeadEnemy('mob')]), farmStage)
+    loot.processDefeatedEnemies([createDeadEnemy('mob')], null, farmStage)
 
     // golden_core index 3 -> 2 * (3 + 1) = 8: the stage override anchors
     // the exp realm, not the mortal enemy.

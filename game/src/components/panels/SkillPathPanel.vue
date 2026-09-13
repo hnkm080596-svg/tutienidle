@@ -32,7 +32,7 @@ import type { ElementType } from '@/core/element/ElementType'
 import type { Skill } from '@/core/skill/Skill'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()

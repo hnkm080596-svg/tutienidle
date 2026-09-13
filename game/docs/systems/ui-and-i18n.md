@@ -32,7 +32,7 @@ Hai union tách biệt (sống ở presentation vì đây là chỗ 2 layer gặ
 ## i18n
 
 - `src/i18n/index.ts`: `createI18n({ legacy: false, locale: 'vi', fallbackLocale: 'en' })`, schema từ `vi.json`. `locales/{vi,en}.json`.
-- **Vi là locale chính**, en fallback. Text UI tiếng Việt đi qua `t('...')` (`useI18n({ useScope: 'local' })` — P16), không hardcode trong template; `data/**` content giữ nguyên tiếng Việt.
+- **Vi là locale chính**, en fallback. Text UI tiếng Việt đi qua `t('...')` (`useI18n()` — global scope; `useScope: 'local'` chỉ khi component tự định nghĩa `messages` — P16), không hardcode trong template; `data/**` content giữ nguyên tiếng Việt.
 - `core/i18n/termGlossary.ts` — `TERMS`: bảng thuật ngữ chuẩn chống trôi từ ngữ (Cấp=level skill/node/công trình, Tầng=tầng cảnh giới 1-18, Bậc=bậc xếp loại, Sát Thương/ST, Chỉ Số, Công Kích, Phòng Thủ, Cảnh Giới, Phẩm). Chuỗi mới tra bảng trước khi viết; `term(key)` accessor.
 
 ## Format — `core/format/`

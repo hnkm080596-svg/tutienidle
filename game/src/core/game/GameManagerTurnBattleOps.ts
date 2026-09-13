@@ -37,12 +37,12 @@ import { REACTION_PATH_POOL } from '../../data/skill/TurnReactionPathSkills'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffTypes'
-import type { PlayerData } from '../player/Player'
+import type { FormationLoadout, PlayerData } from '../player/Player'
 import { playerToCombatEntity } from '../player/Player'
 import { getKiemYPermanent } from '../player/KiemYSystem'
 import type { Stats } from '../stats/StatBlock'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
-import { resolvePartyFormation } from './FormationPlacement'
+import { commitFormationLoadout, resolvePartyFormation } from './FormationPlacement'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
 import { companionToCombatEntity } from '../companion/CompanionCombat'
 import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
@@ -718,6 +718,18 @@ export class GameManagerTurnBattleOps {
   /** TurnBattle cast to the read-only Battle shape legacy consumers expect. */
   getBattle(): Battle | null {
     return (this.turnBattle as unknown as Battle) ?? null
+  }
+
+  /**
+   * F4 (architecture-qa-repairs) - validating owner for the Tran Phap
+   * loadout commit. TranPhapPanel routes its draft here instead of writing
+   * player.formationLoadout directly; the validation rules live in
+   * FormationPlacement.commitFormationLoadout, next to the
+   * resolvePartyFormation() consumer whose assumptions they guard.
+   * Returns false without mutating the player when the draft is invalid.
+   */
+  setFormationLoadout(player: PlayerData, loadout: FormationLoadout): boolean {
+    return commitFormationLoadout(player, loadout)
   }
 
   // --- Battle start -------------------------------------------------------

@@ -160,11 +160,9 @@ export function checkTribulationOutcomeAction(
 
     gameManager.tribulationDirector.clear()
     useUiStore().exitTribulationScene()
-    gameManager.eventBus.emit('tribulation_scene_exit', undefined)
 
     return true
   }
-
 
   if (presentation) {
     // Every visible effect of the outcome (realm/penalty writes reflecting
@@ -196,6 +194,5 @@ export function useTribulation() {
 
   return {
     triggerBreakthrough: () => triggerBreakthroughAction(player, gameManager, presentation),
-    checkTribulationOutcome: () => checkTribulationOutcomeAction(player, gameManager, presentation),
   }
 }

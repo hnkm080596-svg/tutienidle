@@ -20,7 +20,7 @@ import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
 

@@ -18,7 +18,7 @@ import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 const player = usePlayerStore()
 const ui = useUiStore()
 const { allocateAttributePoint } = useLoadoutActions()

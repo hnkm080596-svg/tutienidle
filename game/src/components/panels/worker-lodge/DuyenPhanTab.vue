@@ -35,7 +35,7 @@ interface GradeGroup {
   rows: ExchangeRow[]
 }
 
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const player = usePlayerStore()
 

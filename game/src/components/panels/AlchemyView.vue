@@ -16,7 +16,7 @@ import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profe
 // N viên, X% thêm 1 viên" (không dùng cụm ">100%").
 // i18n (task 2.2 lô 1) — chuỗi UI qua t(); REASON_LABELS cũ (dead const,
 // zero consumers) trích thành alchemy.reason.* trong locales.
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const player = usePlayerStore()
 

@@ -18,7 +18,7 @@ import { formatDuration } from '@/core/format/formatDuration'
 // Động Thiên với level + speed, trạng thái idle/producing, đồng hồ
 // cycle, trọng số realm tier đã chuẩn hoá, toggle Auto. Nút Start chỉ
 // xuất hiện khi idle; KHÔNG có nút Claim — hoàn thành tự gửi Bag (§4.3).
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 
 const KIND_META: Record<string, { labelKey: 'forest' | 'mine' | 'grotto'; sigil: string }> = {
   forest: { labelKey: 'forest', sigil: '木' },

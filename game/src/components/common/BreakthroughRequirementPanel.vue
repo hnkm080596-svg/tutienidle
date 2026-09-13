@@ -7,7 +7,7 @@ import GameButton from '@/components/common/GameButton.vue'
 
 // Task 9.1 — panel xác nhận đơn giản: cảnh báo "không thể mặc trang bị
 // khi độ kiếp" + 2 nút. Auto-unequip do triggerBreakthrough() lo.
-const { t } = useI18n({ useScope: 'local' })
+const { t } = useI18n()
 const store = useBreakthroughRequirementStore()
 const { triggerBreakthrough } = useTribulation()
 
