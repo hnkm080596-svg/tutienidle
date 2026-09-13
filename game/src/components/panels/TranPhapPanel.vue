@@ -19,7 +19,7 @@
 // does not exist), same OverlayPanel pattern as every other standalone
 // panel (SkillPathPanel.vue, ArtifactPanel.vue...). Opened via the
 // command wheel slot 'formation_slot' (game/support/commandWheelCatalog.ts).
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
@@ -263,8 +263,19 @@ watch(
 )
 
 // Bootstrap only while the panel is actually open — the container ref lives
-// inside OverlayPanel's slot, so it exists in the DOM only then, and this
-// component's own onMounted (which runs once at GameRoot boot) is too early.
+// inside OverlayPanel's slot, so it exists in the DOM only then.
+//
+// GameRoot mounts this component LAZILY on first open (mountedStandalone +
+// defineAsyncComponent), so by the time setup runs, standalonePanel is
+// already 'tran_phap' and the watch below never sees a false->true edge for
+// that first open. onMounted therefore performs the first open's work: the
+// ref is bound by then because OverlayPanel renders its slot with open
+// already true.
+onMounted(() => {
+  syncDraftFromLoadout()
+  previewRegion.start()
+})
+
 watch(
   () => ui.standalonePanel === 'tran_phap',
   (isOpen) => {
