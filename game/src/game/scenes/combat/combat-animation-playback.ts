@@ -204,6 +204,7 @@ export class CombatAnimationPlayback {
 
     let tweenDone = false
     let animDone = true
+    let deathClipPlaying = false
 
     const finalize = () => {
       if (!tweenDone || !animDone) {
@@ -234,6 +235,7 @@ export class CombatAnimationPlayback {
 
       if (deathKey && scene.anims.exists(deathKey)) {
         animDone = false
+        deathClipPlaying = true
 
         const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
 
@@ -252,17 +254,25 @@ export class CombatAnimationPlayback {
       }
     }
 
-    scene.tweens.add({
-      targets: sprite.rect,
-      rotation: Math.PI / 2,
-      alpha: 0,
-      duration: 500,
-      ease: 'Quad.easeIn',
-      onComplete: () => {
-        tweenDone = true
-        finalize()
-      },
-    })
+    // A playing death clip IS the body visual — the generic fall/fade tween
+    // below is the death visual only for entities with no clip. Running both
+    // at once rotates and fades the sprite mid-clip and hides the animation
+    // the player is supposed to see.
+    if (deathClipPlaying) {
+      tweenDone = true
+    } else {
+      scene.tweens.add({
+        targets: sprite.rect,
+        rotation: Math.PI / 2,
+        alpha: 0,
+        duration: 500,
+        ease: 'Quad.easeIn',
+        onComplete: () => {
+          tweenDone = true
+          finalize()
+        },
+      })
+    }
 
     scene.tweens.add({
       targets: [

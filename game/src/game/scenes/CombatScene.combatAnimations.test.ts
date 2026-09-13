@@ -370,7 +370,7 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     expect(scene.dyingIds.has('enemy-1')).toBe(false)
   })
 
-  it('an ANIMATED enemy (promoted, §9 criterion 7) plays -death at once, but destroy waits for BOTH the tween AND ANIMATION_COMPLETE', () => {
+  it('an ANIMATED enemy (promoted, §9 criterion 7) plays -death at once - the clip is the body visual: no fall/fade tween, destroy waits for ANIMATION_COMPLETE only', () => {
     PROMOTED.set('mortal-wild-boar-v1', 'animated')
 
     const scene = createScene()
@@ -389,14 +389,15 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
 
     expect(gameSprite.playCalls).toEqual([combatAnimationKey('mortal-wild-boar-v1', 'death')])
 
-    const mainTweenOnComplete = tweenConfigs[0]!.onComplete as () => void
-
-    // Tween xong TRÆ¯á»šC â€” animation váº«n Ä‘ang cháº¡y â†’ CHÆ¯A destroy.
-    mainTweenOnComplete()
+    // The generic rotate/fade tween must NOT run on the body while a real
+    // clip plays - it would rotate the sprite mid-clip and hide the death
+    // animation. The only tween added is the accessory fade (label/shadow/
+    // health bar), which carries no onComplete gate.
+    expect(tweenConfigs.every((config) => config.onComplete === undefined)).toBe(true)
     expect(scene._gridView.destroyEntitySprite).not.toHaveBeenCalled()
     expect(scene.sprites.has('mortal_wild_boar_1')).toBe(true)
 
-    // Animation xong SAU â€” Cáº¢ 2 tÃ­n hiá»‡u Ä‘Ã£ Ä‘á»§ â†’ destroy Ä‘Ãºng 1 láº§n.
+    // Destroy is gated by ANIMATION_COMPLETE alone.
     gameSprite.emit('animationcomplete', { key: combatAnimationKey('mortal-wild-boar-v1', 'death') })
 
     expect(scene._gridView.destroyEntitySprite).toHaveBeenCalledTimes(1)
@@ -408,7 +409,7 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     PROMOTED.set('mortal-wild-boar-v1', 'animated')
 
     const scene = createScene()
-    const { tweens, tweenConfigs } = stubTweensCapturingOnComplete()
+    const { tweens } = stubTweensCapturingOnComplete()
 
     scene.tweens = tweens
     scene.anims = { exists: () => true }
@@ -420,7 +421,6 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     scene._gridView = { destroyEntitySprite: vi.fn() }
 
     scene.beginDeathSequence(sprite, 'mortal_wild_boar_1')
-    ;(tweenConfigs[0]!.onComplete as () => void)()
 
     gameSprite.emit('animationcomplete', { key: 'some-other-clip' })
 
@@ -429,7 +429,7 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
 
   it('player â€” KHÃ”NG BAO GIá»œ destroy dÃ¹ cáº£ tween láº«n animation Ä‘á»u xong (giá»¯ vá»‹ trÃ­ cuá»‘i dÆ°á»›i overlay káº¿t quáº£)', () => {
     const scene = createScene()
-    const { tweens, tweenConfigs } = stubTweensCapturingOnComplete()
+    const { tweens } = stubTweensCapturingOnComplete()
 
     scene.tweens = tweens
     scene.anims = { exists: () => true }
@@ -443,13 +443,48 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     scene.beginDeathSequence(sprite, PLAYER_ID)
 
     expect(scene.playerDying).toBe(true)
-    ;(tweenConfigs[0]!.onComplete as () => void)()
     gameSprite.emit('animationcomplete', {
       key: combatAnimationKey(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'death'),
     })
 
     expect(scene._gridView.destroyEntitySprite).not.toHaveBeenCalled()
     expect(scene.sprites.has(PLAYER_ID)).toBe(true)
+  })
+
+  it('reset after player death - onBattleStart() replays idle so the corpse frame does not carry into the new battle', () => {
+    const scene = createScene()
+    const { tweens } = stubTweensCapturingOnComplete()
+
+    scene.tweens = tweens
+    scene.anims = { exists: () => true }
+    scene.statuses = new Map()
+    scene.backdropGeneration = 0
+    scene.spawnVfxHandles = new Map()
+    scene.turnCountdownSpawnVfxHandles = new Map()
+    scene.entityVisual = { hidePlayer: vi.fn(), clear: vi.fn(), markPlayerMaterialized: vi.fn() }
+    scene._telegraph = { reset: vi.fn() }
+    scene._castBar = { clear: vi.fn(), destroyCastBar: vi.fn() }
+    scene._vfxSpawner = { statusTooltip: undefined }
+    scene._positionInterp = { snapInterpolationTarget: vi.fn(), delete: vi.fn(), clear: vi.fn(), interpolations: new Map() }
+    scene._gridView = { destroyEntitySprite: vi.fn(), resetVisual: vi.fn(), positionSprite: vi.fn() }
+
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.sprites.set(PLAYER_ID, sprite)
+
+    scene.beginDeathSequence(sprite, PLAYER_ID)
+
+    expect(gameSprite.playCalls).toEqual([
+      combatAnimationKey(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'death'),
+    ])
+
+    scene.onBattleStart()
+
+    expect(gameSprite.playCalls.at(-1)).toBe(
+      combatAnimationKey(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'idle'),
+    )
+    expect(scene.playerDying).toBe(false)
   })
 })
 

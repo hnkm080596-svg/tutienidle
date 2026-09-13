@@ -12,9 +12,16 @@ import {
   type DynamicRegionModules,
 } from './useDynamicRegion'
 
+interface FakeScene {
+  sys: { settings: { status: number } }
+  events: { once: (name: string, fn: () => void) => void }
+  fireCreate: () => void
+}
+
 interface FakeGame {
   registry: { get: (k: string) => unknown; set: (k: string, v: unknown) => void }
   scale: { resize: ReturnType<typeof vi.fn> }
+  scene: { scenes: FakeScene[] }
   events: {
     once: (name: string, fn: () => void) => void
     emit: ReturnType<typeof vi.fn>
@@ -25,6 +32,31 @@ interface FakeGame {
 const trace: string[] = []
 let readyCallbacks: Array<() => void> = []
 let observers: Array<{ disconnect: ReturnType<typeof vi.fn> }> = []
+let games: FakeGame[] = []
+
+function makeFakeScene(started: boolean): FakeScene {
+  const createCallbacks: Array<() => void> = []
+
+  const scene: FakeScene = {
+    // Phaser boots only scenes queued to start (autoStart/active): init()
+    // runs inside bootQueue, so by the time 'ready' listeners run a started
+    // scene sits at INIT(1)+ with create() still pending on its loader. A
+    // scene never started stays PENDING(0) and its create() may never run
+    // at all (e.g. a dormant combat scene waiting on a later scene.start()).
+    sys: { settings: { status: started ? 1 : 0 } },
+    events: {
+      once: (name: string, fn: () => void) => {
+        if (name === 'create') createCallbacks.push(fn)
+      },
+    },
+    fireCreate: () => {
+      scene.sys.settings.status = 5
+      createCallbacks.splice(0).forEach((fn) => fn())
+    },
+  }
+
+  return scene
+}
 
 function makeFakePhaser() {
   return {
@@ -39,11 +71,35 @@ function makeFakePhaser() {
 
       scale = { resize: vi.fn() }
 
+      // Real Phaser instantiates scenes inside bootQueue (a 'ready'
+      // listener) — the fake mirrors that: instances exist once 'ready'
+      // listeners run, but their create() stays pending until tests fire it.
+      scene: { scenes: FakeScene[] }
+
       events = {
         once: (name: string, fn: () => void) => {
-          if (name === 'ready') readyCallbacks.push(fn)
+          if (name === 'ready') {
+            readyCallbacks.push(() => {
+              this.scene = {
+                scenes: this.pendingScenes.map((entry) =>
+                  makeFakeScene(
+                    !(entry !== null && typeof entry === 'object' && 'dormant' in entry),
+                  ),
+                ),
+              }
+              fn()
+            })
+          }
         },
         emit: vi.fn(),
+      }
+
+      private readonly pendingScenes: unknown[]
+
+      constructor(config: { scene?: unknown[] }) {
+        this.pendingScenes = config.scene ?? []
+        this.scene = { scenes: [] }
+        games.push(this as unknown as FakeGame)
       }
 
       destroy = vi.fn(() => trace.push('destroy'))
@@ -77,6 +133,7 @@ beforeEach(() => {
   trace.length = 0
   readyCallbacks = []
   observers = []
+  games = []
 
   vi.stubGlobal(
     'ResizeObserver',
@@ -190,6 +247,115 @@ describe('useDynamicRegion', () => {
     readyCallbacks[0]!()
 
     expect(onReady).not.toHaveBeenCalled()
+  })
+
+  it('queues dispatches until scenes have run create(), then replays in order', async () => {
+    const { region } = mountWith(() =>
+      useDynamicRegion({
+        container: container(),
+        load: async () => ({ Phaser: makeFakePhaser(), scenes: [class {} as never] }),
+      }),
+    )
+
+    region.start()
+    await vi.waitFor(() => expect(games).toHaveLength(1))
+
+    const game = games[0]!
+
+    region.dispatch('evt', 'first')
+    readyCallbacks[0]!() // game 'ready' — scene create() still pending
+    region.dispatch('evt', 'second')
+
+    expect(game.events.emit).not.toHaveBeenCalled()
+
+    game.scene.scenes[0]!.fireCreate()
+
+    expect(game.events.emit.mock.calls).toEqual([
+      ['evt', 'first'],
+      ['evt', 'second'],
+    ])
+
+    region.dispatch('evt', 'third')
+
+    expect(game.events.emit.mock.calls).toHaveLength(3)
+  })
+
+  it('onReady waits for scene create(), not just game ready', async () => {
+    const onReady = vi.fn()
+
+    const { region } = mountWith(() =>
+      useDynamicRegion({
+        container: container(),
+        load: async () => ({ Phaser: makeFakePhaser(), scenes: [class {} as never] }),
+        onReady,
+      }),
+    )
+
+    region.start()
+    await vi.waitFor(() => expect(readyCallbacks).toHaveLength(1))
+
+    readyCallbacks[0]!()
+
+    expect(onReady).not.toHaveBeenCalled()
+
+    games[0]!.scene.scenes[0]!.fireCreate()
+
+    expect(onReady).toHaveBeenCalledTimes(1)
+  })
+
+  it('a scene registered but never started (PENDING) does not block region readiness', async () => {
+    const onReady = vi.fn()
+
+    const { region } = mountWith(() =>
+      useDynamicRegion({
+        container: container(),
+        load: async () => ({
+          Phaser: makeFakePhaser(),
+          scenes: [class {} as never, { dormant: true } as never],
+        }),
+        onReady,
+      }),
+    )
+
+    region.start()
+    await vi.waitFor(() => expect(readyCallbacks).toHaveLength(1))
+
+    readyCallbacks[0]!()
+
+    // Only the started scene gates readiness; its create() completes it.
+    games[0]!.scene.scenes[0]!.fireCreate()
+
+    expect(onReady).toHaveBeenCalledTimes(1)
+
+    // A late create() from the dormant scene (scene.start() later on) is
+    // harmless — the region is already ready and dispatches pass through.
+    games[0]!.scene.scenes[1]!.fireCreate()
+
+    region.dispatch('evt', 'after')
+
+    expect(games[0]!.events.emit).toHaveBeenCalledWith('evt', 'after')
+  })
+
+  it('a teardown before scene create drops the queue with the generation', async () => {
+    const { region } = mountWith(() =>
+      useDynamicRegion({
+        container: container(),
+        load: async () => ({ Phaser: makeFakePhaser(), scenes: [class {} as never] }),
+      }),
+    )
+
+    region.start()
+    await vi.waitFor(() => expect(games).toHaveLength(1))
+
+    const game = games[0]!
+
+    region.dispatch('evt', 'first')
+    readyCallbacks[0]!()
+    region.destroy()
+
+    game.scene.scenes[0]!.fireCreate()
+
+    expect(game.events.emit).not.toHaveBeenCalled()
   })
 
   it('runs the seed cleanup at teardown', async () => {
