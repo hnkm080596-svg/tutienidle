@@ -86,10 +86,16 @@ const hoveredCell = ref<{ row: number; column: number } | null>(null)
 const slotBridge = createProjectionBridge(createFormationProjection())
 
 function slotStyle(row: number, column: number): Record<string, string> {
-  return formationSlotStyle(slotBridge, row, column, {
+  const style = formationSlotStyle(slotBridge, row, column, {
     width: FORMATION_CANVAS_WIDTH,
     height: FORMATION_CANVAS_HEIGHT,
   })
+
+  // The hover beam's ::before cannot read the element's own clip-path, so the
+  // same polygon is re-published as an inheritable custom property.
+  style['--slot-clip'] = style.clipPath!
+
+  return style
 }
 
 // The stack keeps the canvas's aspect ratio and shrinks to whatever height the
@@ -428,6 +434,52 @@ watch(currentAssignments, (assignments) => {
 .tran-phap-panel__cell--hover {
   opacity: 1;
   background: rgba(76, 175, 80, 0.45);
+}
+
+/* Border beam (2026-09-14): two azure spots orbiting the slot edge on hover.
+   The cells are clip-path trapezoids, so a rectangular border/mask trick
+   cannot follow them — instead ::before paints a rotating two-wedge conic
+   gradient clipped to the SAME polygon (via the inherited --slot-clip var),
+   and ::after re-covers the interior on a slightly smaller box, leaving only
+   a ring along the trapezoid's edge. Hover only applies to empty enabled
+   slots (slotStateAt priority), so the ::after fill never hides an occupant
+   label. Without @property support the gradient holds a static two-spot glow
+   instead of spinning — a graceful degrade, not a break. */
+@property --tran-phap-beam-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.tran-phap-panel__cell--hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: var(--slot-clip);
+  background: conic-gradient(
+    from var(--tran-phap-beam-angle),
+    transparent 0%,
+    var(--azure, #5b9bd5) 7%,
+    transparent 14%,
+    transparent 50%,
+    var(--azure, #5b9bd5) 57%,
+    transparent 64%
+  );
+  animation: tran-phap-beam-spin 2.4s linear infinite;
+}
+
+.tran-phap-panel__cell--hover::after {
+  content: '';
+  position: absolute;
+  inset: 7%;
+  clip-path: var(--slot-clip);
+  background: rgba(76, 175, 80, 0.45);
+}
+
+@keyframes tran-phap-beam-spin {
+  to {
+    --tran-phap-beam-angle: 1turn;
+  }
 }
 
 .tran-phap-panel__formation-list {

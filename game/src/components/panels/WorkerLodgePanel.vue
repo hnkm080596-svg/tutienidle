@@ -96,7 +96,9 @@ const nextCapacity = computed(() => {
 
 <style scoped>
 .worker-lodge-panel {
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
   padding: 18px;
   color: var(--paper-text);
   background:

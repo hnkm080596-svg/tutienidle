@@ -1839,6 +1839,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     if (player) {
       this.resetVisual(player)
 
+      // resetVisual restores transform/alpha but not animation state — a
+      // death clip frozen on its last frame would carry into the new
+      // battle. Replay the default state the same way create() does.
+      this.playCombatAnimation(player, PLAYER_ID, 'idle')
+
       // TrÃ¡ÂºÂ­n mÃ¡Â»â€ºi = Player lÃ¡ÂºÂ¡i Ã„â€˜i qua telegraph spawn (plan Ã‚Â§12.2): Ã¡ÂºÂ©n
       // sprite tÃ¡Â»â€ºi khi snapshot bÃƒÂ¡o materialize, snap vÃ¡Â»Â cÃ¡Â»â„¢t cÃ¡Â»â€¢ng.
       this.entityVisual.hidePlayer(player)
