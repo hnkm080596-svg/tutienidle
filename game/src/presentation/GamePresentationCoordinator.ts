@@ -155,8 +155,9 @@ export class GamePresentationCoordinator {
 
   /**
    * Re-runs the failed request under a fresh transition generation. The domain
-   * session must still be the current one - a changed/ended session rejects,
-   * because retry never re-issues the domain start command.
+   * session recorded on the failed request must still be the live session of
+   * its own kind - a changed/ended session rejects, because retry never
+   * re-issues the domain start command.
    */
   async retry(): Promise<TransitionResult> {
     const failed = this.error?.failedRequest
@@ -170,36 +171,23 @@ export class GamePresentationCoordinator {
       // must hold unconditionally - re-invoking behindCurtain here would run
       // the domain command a second time (e.g. startStage()/startTribulation()
       // again) completely outside runAdmitted's admission/compensate wiring.
-      // The ONLY way to retry such a request without doing that is to resume
-      // the session its command already produced and held before the failure,
-      // as a plain request with no behindCurtain attached. If no session was
-      // ever produced (the command declined, or never got the chance to run),
-      // there is nothing to resume - retry rejects, and the caller must make a
-      // fresh attempt through runAdmitted (which re-checks canEnter and
-      // re-wraps compensate) rather than through this method.
-      if (failed.target !== 'combat' && failed.target !== 'tribulation') {
-        return { status: 'rejected', transitionId: this.currentTransitionId }
-      }
-
-      const produced = this.sessionPort.getCurrentSession()
-
-      if (!produced || produced.kind !== failed.target) {
-        return { status: 'rejected', transitionId: this.currentTransitionId }
-      }
-
-      this.clearError()
-
-      return this.request({ target: failed.target, session: produced })
+      // When a session command DID succeed before the failure, the error
+      // already records the session-bound request (see executeTransition's
+      // preparedRequest), so a failedRequest that still carries behindCurtain
+      // is one whose command never delivered a session to this transition -
+      // there is nothing to resume, and the caller must make a fresh attempt
+      // through runAdmitted (which re-checks canEnter and re-wraps compensate)
+      // rather than through this method.
+      return { status: 'rejected', transitionId: this.currentTransitionId }
     }
 
     if ('session' in failed) {
-      const current = this.sessionPort.getCurrentSession()
-
-      if (
-        !current ||
-        current.sessionId !== failed.session.sessionId ||
-        current.kind !== failed.session.kind
-      ) {
+      // Identity-scoped liveness check: the recorded session must still be the
+      // live session of its own kind. An ambient unscoped getCurrentSession()
+      // can return a DIFFERENT kind's session (a retained terminal combat
+      // session sitting at Home beside an active tribulation) and reject a
+      // still-valid retry - or resume under the wrong identity entirely.
+      if (!this.sessionPort.isCurrentSession(failed.session)) {
         return { status: 'rejected', transitionId: this.currentTransitionId }
       }
     }
@@ -286,15 +274,23 @@ export class GamePresentationCoordinator {
     let holdToken: PresentationHold | null = null
     let priorDeactivated = false
 
+    const isSessionRoute = request.target === 'combat' || request.target === 'tribulation'
+
     // When behindCurtain is set, no session exists yet - the domain command
     // produces it inside the closed-curtain window (see below). Any session
-    // field on the request in that case is unused; adoption happens only
-    // after the command runs.
+    // field on the request in that case is adopted only after the command runs.
     const sessionInRequest = !request.behindCurtain && 'session' in request ? request.session : null
     this.targetSession = sessionInRequest
     this.targetRoute = request.target
     this.notify()
     let curtainClosed = false
+    let adoptedSession: SessionRef | null = sessionInRequest
+    // The request that reaches asset/renderer preparation - and is recorded
+    // as failedRequest on error. For a session route it is rebound to the
+    // ADOPTED session (the one the domain command accepted), never the
+    // sessionless original; that bound shape is also what retry() can resume
+    // without re-running the domain command.
+    let preparedRequest: RouteRequest = request
 
     try {
       // Step 1: acquire hold if session requested
@@ -322,34 +318,53 @@ export class GamePresentationCoordinator {
       this.checkAborted(signal)
 
       // Step 2b: run the domain command behind the closed curtain, then adopt
-      // the session it produces. A combat/tribulation refight against a live
+      // the session it accepted. A combat/tribulation refight against a live
       // renderer must never reset visibly - this is why the command runs here
       // instead of before the transition was requested.
-      if (request.behindCurtain && !request.behindCurtain()) {
-        throw new Error('Domain command rejected inside the closed-curtain window')
+      if (request.behindCurtain) {
+        const curtainResult = request.behindCurtain()
+
+        if (!curtainResult) {
+          throw new Error('Domain command rejected inside the closed-curtain window')
+        }
+
+        if (typeof curtainResult === 'object') {
+          // The accepted RouteRequest carries the session the domain command
+          // committed to (ARCH-004). Adopt THAT identity - never an ambient
+          // re-query of session state, where an unrelated retained session of
+          // another kind (a terminal combat battle still held at Home) can
+          // shadow the session just produced.
+          if (curtainResult.target !== request.target) {
+            throw new Error('Domain command accepted a different route than the admitted target')
+          }
+          adoptedSession = 'session' in curtainResult ? curtainResult.session : null
+        } else if ('session' in request) {
+          // A { session, behindCurtain } request whose companion work returned
+          // true: the session supplied up front is the produced one.
+          adoptedSession = request.session
+        }
       }
 
-      // Only session routes adopt a produced session here. behindCurtain on
-      // other targets is pure domain work (combat-exit teardown on the way
-      // home, tribulation outcome resolution, error-shell cleanup) - there is
-      // no session to adopt, and whatever session that work just ended must
-      // not be mistaken for a produced one.
-      if (
-        request.behindCurtain &&
-        (request.target === 'combat' || request.target === 'tribulation')
-      ) {
-        const produced = this.sessionPort.getCurrentSession()
-
-        if (!produced || produced.kind !== request.target) {
+      // Only session routes adopt a session here. behindCurtain on other
+      // targets is pure domain work (combat-exit teardown on the way home,
+      // tribulation outcome resolution, error-shell cleanup) - there is no
+      // session to adopt, and whatever session that work just ended must not
+      // be mistaken for a produced one.
+      if (isSessionRoute) {
+        if (!adoptedSession || adoptedSession.kind !== request.target) {
           throw new Error('Domain command produced no session for the target route')
         }
 
-        this.targetSession = produced
-        holdToken = this.sessionPort.hold(produced)
-
         if (!holdToken) {
-          throw new Error(`Failed to acquire hold for session ${produced.sessionId}`)
+          this.targetSession = adoptedSession
+          holdToken = this.sessionPort.hold(adoptedSession)
+
+          if (!holdToken) {
+            throw new Error(`Failed to acquire hold for session ${adoptedSession.sessionId}`)
+          }
         }
+
+        preparedRequest = { target: request.target, session: adoptedSession }
       }
 
       this.checkAborted(signal)
@@ -359,7 +374,7 @@ export class GamePresentationCoordinator {
       this.notify()
 
       await this.withTimeout(
-        this.assets.ensureFor(request, signal),
+        this.assets.ensureFor(preparedRequest, signal),
         DEADLINES.assets,
         'Asset loading timed out',
         signal,
@@ -395,7 +410,7 @@ export class GamePresentationCoordinator {
       this.notify()
 
       await this.withTimeout(
-        this.renderer.prepare(request, transitionId, signal),
+        this.renderer.prepare(preparedRequest, transitionId, signal),
         DEADLINES.prepareReady,
         'Renderer readiness timed out',
         signal,
@@ -498,7 +513,9 @@ export class GamePresentationCoordinator {
       this.targetRoute = null
       this.error = {
         message,
-        failedRequest: request,
+        // The session-bound prepared request, not the sessionless original:
+        // retry() must resume the identity the command was committed under.
+        failedRequest: preparedRequest,
         availableRenderer: priorDeactivated ? null : this.currentRoute,
       }
       this.notify()

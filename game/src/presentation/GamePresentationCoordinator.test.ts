@@ -596,7 +596,7 @@ describe('GamePresentationCoordinator', () => {
       target: 'combat',
       behindCurtain: () => {
         commandCalls += 1
-        return false
+        return null // declined - the command accepted no RouteRequest
       },
     })
 

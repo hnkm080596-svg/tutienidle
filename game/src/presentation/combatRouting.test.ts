@@ -119,11 +119,9 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
         isActive: (key: string) => activeScenes.has(key),
         start: vi.fn((key: string, data?: any) => {
           activeScenes.add(key)
-          // Scene reports ready
-          phaserAdapter.reportReady({
-            transitionId: data?.transitionId,
-            sessionId: data?.sessionId,
-          })
+          // Scene reports ready, echoing its init payload
+          // (transitionId + sessionId + gameGeneration).
+          phaserAdapter.reportReady(data)
         }),
         stop: vi.fn((key: string) => activeScenes.delete(key)),
         getScene: vi.fn(() => null),
@@ -179,7 +177,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
       scene: {
         isActive: () => true,
         start: vi.fn((key, data: any) => {
-          phaserAdapter.reportReady({ transitionId: data.transitionId, sessionId: data.sessionId })
+          phaserAdapter.reportReady(data)
         }),
         stop: vi.fn(),
         getScene: vi.fn(() => null),
@@ -229,7 +227,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
       scene: {
         isActive: () => true,
         start: vi.fn((key, data: any) => {
-          phaserAdapter.reportReady({ transitionId: data.transitionId, sessionId: data.sessionId })
+          phaserAdapter.reportReady(data)
         }),
         stop: vi.fn(),
         getScene: vi.fn(() => null),
@@ -272,7 +270,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
       scene: {
         isActive: (key: string) => key === 'CombatScene',
         start: vi.fn((key, data: any) => {
-          phaserAdapter.reportReady({ transitionId: data.transitionId, sessionId: data.sessionId })
+          phaserAdapter.reportReady(data)
         }),
         stop: vi.fn(),
         getScene: vi.fn(() => ({
@@ -316,7 +314,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
       scene: {
         isActive: () => true,
         start: vi.fn((key, data: any) => {
-          phaserAdapter.reportReady({ transitionId: data.transitionId, sessionId: data.sessionId })
+          phaserAdapter.reportReady(data)
         }),
         stop: vi.fn(),
         getScene: vi.fn(() => null),

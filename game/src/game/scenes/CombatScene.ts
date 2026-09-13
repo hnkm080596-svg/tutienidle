@@ -698,14 +698,14 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private initTransitionId = 0
   private initSessionId?: number
+  private initGameGeneration = 0
 
-  init(data?: { transitionId?: number; sessionId?: number }): void {
-    if (data?.transitionId) {
-      this.initTransitionId = data.transitionId
-    }
-    if (data?.sessionId) {
-      this.initSessionId = data.sessionId
-    }
+  init(data?: { transitionId?: number; sessionId?: number; gameGeneration?: number }): void {
+    // Assign unconditionally: a (re)start without data must reset the READY
+    // identity echo, never leak the previous session's.
+    this.initTransitionId = data?.transitionId ?? 0
+    this.initSessionId = data?.sessionId
+    this.initGameGeneration = data?.gameGeneration ?? 0
   }
 
   create() {
@@ -816,6 +816,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     adapter?.reportReady({
       transitionId: this.initTransitionId,
       sessionId: this.initSessionId,
+      gameGeneration: this.initGameGeneration,
     })
 
     // Apply resume playback if re-attaching to an in-flight action
@@ -1899,9 +1900,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
    * Rebinds an active CombatScene to a new domain session without destroying the scene or Game.
    * Resets visual state, reconciles with the session's initial snapshot, and reports READY.
    */
-  rebindSession(context: { transitionId: number; sessionId?: number }): void {
+  rebindSession(context: { transitionId: number; sessionId?: number; gameGeneration: number }): void {
     this.initTransitionId = context.transitionId
     this.initSessionId = context.sessionId
+    this.initGameGeneration = context.gameGeneration
 
     this.onBattleStart()
 

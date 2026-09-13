@@ -27,7 +27,20 @@ export type PresentationHold = Readonly<{
 }>
 
 export interface SessionPresentationPort {
+  /**
+   * Recovery query: "any active session of any kind". Retained for the
+   * buffered presentation_session_started recovery path only - it is NOT an
+   * identity source for a transition that already knows which session it
+   * committed to (that identity arrives on the accepted RouteRequest).
+   */
   getCurrentSession(): SessionRef | null
+  /**
+   * Identity-scoped liveness check: is THIS exact session (kind + id) still
+   * the live session of its own kind? retry() validates a recorded
+   * failedRequest through this instead of an ambient unscoped read, which can
+   * return a DIFFERENT kind's retained session.
+   */
+  isCurrentSession(session: SessionRef): boolean
   hold(session: SessionRef): PresentationHold | null
   attach(token: PresentationHold): boolean
   release(token: PresentationHold): boolean
@@ -59,6 +72,14 @@ export class PresentationSession implements SessionPresentationPort {
 
   getCurrentSession(): SessionRef | null {
     return this.currentSession
+  }
+
+  isCurrentSession(session: SessionRef): boolean {
+    return (
+      this.currentSession !== null &&
+      this.currentSession.sessionId === session.sessionId &&
+      this.currentSession.kind === session.kind
+    )
   }
 
   getMode(): PresentationMode {
