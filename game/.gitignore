@@ -38,6 +38,9 @@ coverage
 # Vitest
 __screenshots__/
 
+# Lab experiments (personal scratch, see tests/lab/README.md)
+/tests/lab/local/
+
 # Vite
 *.timestamp-*-*.mjs
 

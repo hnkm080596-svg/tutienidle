@@ -11,6 +11,8 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "test": "vitest run",
+    "lab": "vitest run tests/lab",
+    "lab:watch": "vitest tests/lab",
     "test:e2e": "playwright test",
     "check:bundle-split": "node scripts/check-bundle-split.mjs",
     "lint": "eslint .",
