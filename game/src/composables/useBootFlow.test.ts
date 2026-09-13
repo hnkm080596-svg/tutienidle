@@ -35,7 +35,7 @@ function createFlow() {
 
 describe('useBootFlow', () => {
   it('moves through the online bootstrap stages, each gated on its screen mounting', async () => {
-    const { flow, autoMount } = createFlow()
+    const { flow, coordinator, autoMount } = createFlow()
 
     expect(flow.stage.value).toBe('intro')
 
@@ -44,16 +44,19 @@ describe('useBootFlow', () => {
     await vi.waitFor(() => expect(flow.stage.value).toBe('auth'))
     void auth
 
-    // Subphases are not routes: no transition, no curtain, immediate.
+    // Subphases are bookkeeping only: the mounted screen must not change
+    // until the curtain is closed, so the auth screen stays displayed while
+    // the save loads - the coordinator still records the subphase.
     flow.startSaveLoad()
-    expect(flow.stage.value).toBe('loading_save')
+    expect(flow.stage.value).toBe('auth')
+    expect(coordinator.getSnapshot().bootSubphase).toBe('loading_save')
 
     flow.requireCharacter()
     autoMount('character')
     await vi.waitFor(() => expect(flow.stage.value).toBe('character'))
 
     flow.startInitializing()
-    expect(flow.stage.value).toBe('initializing')
+    expect(flow.stage.value).toBe('character')
 
     flow.enterGame()
     autoMount('home')
@@ -106,6 +109,74 @@ describe('useBootFlow', () => {
     // Falling back to 'character' here would unmount GameRoot and destroy the
     // Phaser game the retry is about to need.
     expect(flow.stage.value).toBe('game')
+  })
+
+  it('does not promote to the game branch while the curtain is still closing', async () => {
+    let releaseClose: () => void = () => {}
+    const closeLatch = new Promise<void>((resolve) => {
+      releaseClose = resolve
+    })
+
+    const phaserAdapter = new PhaserSceneAdapter()
+    const compositeRenderer = new CompositeRenderer(phaserAdapter)
+    const coordinator = new GamePresentationCoordinator({
+      sessionPort: new PresentationSession(),
+      renderer: compositeRenderer,
+      curtain: { close: () => closeLatch, open: async () => {} },
+      assets: { ensureFor: async () => {} },
+      initialRoute: 'auth',
+    })
+    const routeAdapter = createVueRouteAdapter(coordinator, compositeRenderer)
+    const flow = useBootFlow(coordinator, routeAdapter)
+
+    expect(flow.stage.value).toBe('auth')
+
+    flow.enterGame()
+    await vi.waitFor(() => expect(coordinator.getSnapshot().phase).toBe('closing'))
+
+    // The target route is already published, but the mounted screen must
+    // not swap until the curtain has finished closing over it.
+    expect(coordinator.getSnapshot().targetRoute).toBe('home')
+    expect(flow.stage.value).toBe('auth')
+
+    releaseClose()
+    compositeRenderer.markRouteMounted('home')
+    await vi.waitFor(() => expect(flow.stage.value).toBe('game'))
+  })
+
+  it('keeps the current screen through the close animation of a non-game target', async () => {
+    let releaseClose: () => void = () => {}
+    const closeLatch = new Promise<void>((resolve) => {
+      releaseClose = resolve
+    })
+
+    const phaserAdapter = new PhaserSceneAdapter()
+    const compositeRenderer = new CompositeRenderer(phaserAdapter)
+    const coordinator = new GamePresentationCoordinator({
+      sessionPort: new PresentationSession(),
+      renderer: compositeRenderer,
+      curtain: { close: () => closeLatch, open: async () => {} },
+      assets: { ensureFor: async () => {} },
+      initialRoute: 'auth',
+    })
+    const routeAdapter = createVueRouteAdapter(coordinator, compositeRenderer)
+    const flow = useBootFlow(coordinator, routeAdapter)
+
+    // The save-load subphase no longer swaps the screen: auth stays
+    // displayed until the curtain covers the transition.
+    flow.startSaveLoad()
+    expect(flow.stage.value).toBe('auth')
+
+    flow.requireCharacter()
+    await vi.waitFor(() => expect(coordinator.getSnapshot().phase).toBe('closing'))
+    expect(flow.stage.value).toBe('auth')
+
+    // The coordinator clears the subphase when the target mounts behind the
+    // curtain, so the creation screen stands in before the reveal.
+    releaseClose()
+    compositeRenderer.markRouteMounted('character')
+    await vi.waitFor(() => expect(flow.stage.value).toBe('character'))
+    expect(coordinator.getSnapshot().bootSubphase).toBeNull()
   })
 
   it('a game route wins over a stale boot subphase', async () => {

@@ -625,4 +625,68 @@ describe('GamePresentationCoordinator', () => {
     coordinator.setShowMainMenu(true)
     expect(received?.showMainMenu).toBe(false)
   })
+
+  it('runs behindCurtain on a non-session target after curtain close, requiring no session', async () => {
+    // combat -> home teardown (abandon + scene-exit bookkeeping) rides the
+    // same closed-curtain window as combat entry. It must NOT be forced to
+    // produce a session - 'home' has none - and it must not run while the
+    // curtain is still travelling.
+    const closeDef = deferred()
+    curtain.close = vi.fn(() => {
+      callLog.push('curtain.close')
+      return closeDef.promise
+    })
+
+    const coordinator = createCoordinator({ initialRoute: 'combat' })
+    let workCalls = 0
+
+    const requestPromise = coordinator.request({
+      target: 'home',
+      behindCurtain: () => {
+        workCalls += 1
+        callLog.push('behindCurtain')
+        return true
+      },
+    })
+
+    await flushTicks()
+    // Curtain is still closing: the domain work has not run yet.
+    expect(workCalls).toBe(0)
+    expect(callLog).toEqual(['curtain.close'])
+
+    closeDef.resolve()
+    const result = await requestPromise
+
+    expect(result.status).toBe('entered')
+    expect(workCalls).toBe(1)
+    expect(coordinator.getSnapshot().currentRoute).toBe('home')
+    // Work ran strictly between close and open.
+    expect(callLog.indexOf('behindCurtain')).toBeGreaterThan(callLog.indexOf('curtain.close'))
+    expect(callLog.indexOf('behindCurtain')).toBeLessThan(callLog.indexOf('curtain.open'))
+  })
+
+  it('never short-circuits a behindCurtain request as unchanged on the same route', async () => {
+    // isUnchanged() skips a transition when target === currentRoute - but a
+    // request carrying domain work has work that has never run, so it must
+    // still close, execute, and reopen.
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    let workCalls = 0
+
+    const result = await coordinator.request({
+      target: 'home',
+      behindCurtain: () => {
+        workCalls += 1
+        return true
+      },
+    })
+
+    expect(result.status).toBe('entered')
+    expect(workCalls).toBe(1)
+    expect(callLog).toEqual([
+      'curtain.close',
+      'assets.ensureFor',
+      'renderer.prepare',
+      'curtain.open',
+    ])
+  })
 })

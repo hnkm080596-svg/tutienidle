@@ -162,13 +162,42 @@ describe('Tribulation routing integration (Task 11)', () => {
     expect(unequipSpy).not.toHaveBeenCalled()
   })
 
-  it('duplicate outcome check after clear is no-op and does not double-settle', () => {
+  it('duplicate outcome check after clear is no-op and does not double-settle', async () => {
+    const fakeGame = {
+      scene: {
+        isActive: () => true,
+        start: vi.fn(),
+        stop: vi.fn(),
+        getScene: vi.fn(() => null),
+      },
+    } as any
+    phaserAdapter.setGame(fakeGame)
+
     // Start in headless mode
     gameManager.setPresentationMode('headless')
     gameManager.startTribulation(player, calculateStats(player.baseStats, []), 'qi_refining')
 
     const active = gameManager.getActiveTribulation()!
     expect(active).toBeDefined()
+
+    // The session-started event kicked off the home -> tribulation entry
+    // transition; it is still in-flight here, and an outcome request issued
+    // now would be rejected. In the real app the tick loop retries the
+    // pending outcome until it lands - the test drives entry to completion
+    // first (same readiness dance as the interactive-hold test above).
+    await vi.waitFor(() => {
+      expect(vueAdapter.phase.value).toBe('awaiting-ready')
+    })
+    const entrySession = gameManager.getCurrentPresentationSession()!
+    phaserAdapter.reportReady({
+      transitionId: vueAdapter.transitionId.value,
+      sessionId: entrySession.sessionId,
+    })
+    vueAdapter.reportVueReady(vueAdapter.transitionId.value)
+    await vi.waitFor(() => {
+      expect(coordinator.getSnapshot().phase).toBe('idle')
+      expect(coordinator.getSnapshot().currentRoute).toBe('tribulation')
+    })
 
     // Force victory
     active.state = 'victory'
@@ -181,10 +210,15 @@ describe('Tribulation routing integration (Task 11)', () => {
       selectedTalentIds: [],
     } as any
 
-    // First check settles
+    // First check issues the home transition; the outcome work itself runs
+    // inside the closed-curtain window, so the clear lands after the mocked
+    // curtain resolves - a few microtasks, not synchronously.
     const firstCheck = checkTribulationOutcomeAction(playerStoreMock, gameManager, presentation)
     expect(firstCheck).toBe(true)
-    expect(gameManager.getActiveTribulation()).toBeNull()
+
+    await vi.waitFor(() => {
+      expect(gameManager.getActiveTribulation()).toBeNull()
+    })
 
     // Second check is safe no-op
     const secondCheck = checkTribulationOutcomeAction(playerStoreMock, gameManager, presentation)

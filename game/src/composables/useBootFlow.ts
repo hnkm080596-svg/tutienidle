@@ -2,7 +2,7 @@ import { computed, type ComputedRef } from 'vue'
 import type { GamePresentationCoordinator } from '@/presentation/GamePresentationCoordinator'
 import type { VueRouteAdapter } from '@/presentation/VueRouteAdapter'
 
-export type BootStage = 'intro' | 'auth' | 'loading_save' | 'character' | 'initializing' | 'game' | 'error'
+export type BootStage = 'intro' | 'auth' | 'character' | 'game' | 'error'
 
 export interface BootFlow {
   readonly stage: ComputedRef<BootStage>
@@ -23,7 +23,11 @@ const GAME_ROUTES = new Set(['home', 'combat', 'tribulation'])
  * second writable route that can disagree with what is actually rendered.
  *
  * loading_save/initializing stay boot SUBPHASES rather than routes, so loading
- * a save after auth does not pay for a second full curtain transition.
+ * a save after auth does not pay for a second full curtain transition. They
+ * also no longer swap the visible screen: the subphase is bookkeeping only,
+ * and the mounted screen must not change until the curtain is closed - the
+ * save load runs while the auth/character screen the user just used is still
+ * displayed, then the route transition covers the swap.
  */
 export function useBootFlow(
   coordinator: GamePresentationCoordinator,
@@ -38,16 +42,23 @@ export function useBootFlow(
     // change, so leaving the game does not unmount early - and a FAILED game
     // transition keeps the host mounted so retry reuses it instead of
     // destroying and recreating the whole Phaser.Game.
+    //
+    // The targetRoute signal only counts once the curtain is CLOSED (phase
+    // 'loading' onward): the coordinator publishes it at transition start,
+    // and promoting while the panels are still sliding shut swaps the
+    // mounted screen mid-animation - the scene visibly changes before the
+    // curtain has finished closing. Post-close promotion still precedes
+    // every step that needs the host: ensureFor's waitForLoaderScene and
+    // the adapter's waitForGameReady already wait for it asynchronously.
+    const curtainClosed =
+      routeAdapter.phase.value !== 'idle' && routeAdapter.phase.value !== 'closing'
     const pendingGameRoute =
-      routeAdapter.targetRoute.value ?? routeAdapter.error.value?.failedRequest.target ?? null
+      (curtainClosed ? routeAdapter.targetRoute.value : null) ??
+      routeAdapter.error.value?.failedRequest.target ??
+      null
 
     if (GAME_ROUTES.has(route) || (pendingGameRoute !== null && GAME_ROUTES.has(pendingGameRoute))) {
       return 'game'
-    }
-
-    const subphase = routeAdapter.bootSubphase.value
-    if (subphase === 'loading_save' || subphase === 'initializing') {
-      return subphase
     }
 
     switch (route) {
@@ -64,26 +75,26 @@ export function useBootFlow(
 
   return {
     stage,
+    // No setBootSubphase(null) ahead of these requests: the coordinator
+    // clears it itself when the target mounts behind the closed curtain
+    // (executeTransition step 5). Clearing it here would flip the stage
+    // while the curtain is still open or mid-close.
     showAuth: () => {
-      coordinator.setBootSubphase(null)
       void coordinator.request({ target: 'auth' })
     },
     startSaveLoad: () => {
       coordinator.setBootSubphase('loading_save')
     },
     requireCharacter: () => {
-      coordinator.setBootSubphase(null)
       void coordinator.request({ target: 'character' })
     },
     startInitializing: () => {
       coordinator.setBootSubphase('initializing')
     },
     enterGame: () => {
-      coordinator.setBootSubphase(null)
       void coordinator.request({ target: 'home' })
     },
     fail: () => {
-      coordinator.setBootSubphase(null)
       void coordinator.request({ target: 'error' })
     },
   }

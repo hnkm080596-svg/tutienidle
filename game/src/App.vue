@@ -228,13 +228,24 @@ function onTransitionBack() {
   }
 
   // Returning home from a failed combat entry goes through the domain owner
-  // first - the battle must be abandoned, not merely hidden.
-  if (failed.target === 'combat') {
-    gameManager.abandonBattle()
-  }
+  // first - the battle must be abandoned, not merely hidden. The teardown
+  // (abandon + error dismissal) runs inside the closed-curtain window so the
+  // error shell stays mounted - and nothing else changes - until the curtain
+  // has fully covered the previous screen.
+  const abandonFailedCombat = failed.target === 'combat'
 
-  coordinator.clearError()
-  void coordinator.request({ target: 'home' })
+  void coordinator.request({
+    target: 'home',
+    behindCurtain: () => {
+      if (abandonFailedCombat) {
+        gameManager.abandonBattle()
+      }
+
+      coordinator.clearError()
+
+      return true
+    },
+  })
 }
 
 const bootFlow = useBootFlow(coordinator, routeAdapter)
@@ -648,8 +659,8 @@ onUnmounted(() => {
   </RouteMount>
 
   <ErrorBoundary v-else>
-    <!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot (loading_save /
-         initializing), SAU KHI MainMenu đã đóng. -->
+    <!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot (intro, hoặc khi
+         transition vào game chưa entered), SAU KHI MainMenu đã đóng. -->
     <LoadingScreen v-if="!isBooted" />
 
     <!-- GameRoot chỉ hiện khi boot xong -->

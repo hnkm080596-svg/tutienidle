@@ -5,11 +5,11 @@
 // Mount theo pattern CombatExitConfirmModal.test.ts (createApp + h +
 // provide mock GameManager, KHÔNG @vue/test-utils).
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { createApp, h, nextTick } from 'vue'
+import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
 import { useUiStore } from '@/stores/ui'
-import { GAME_MANAGER_KEY } from '@/composables/useGameState'
+import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
 
 function t(key: string): string {
@@ -52,6 +52,9 @@ function mountModal(gm: MockGameManager) {
   app.use(createPinia())
   app.use(i18n)
   app.provide(GAME_MANAGER_KEY, gm as unknown as import('@/core/game/GameManager').GameManager)
+  // useBattleActions (exitCombatToHome) resolves useStateVersion at setup.
+  app.provide(STATE_VERSION_KEY, ref(0))
+  app.provide(BUMP_STATE_KEY, () => {})
 
   app.mount(container)
 

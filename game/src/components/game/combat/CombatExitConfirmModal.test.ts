@@ -6,11 +6,11 @@
 // Mount theo pattern project (createApp + h + provide, KHÔNG
 // @vue/test-utils — chưa cài).
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { createApp, h, nextTick } from 'vue'
+import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
 import { useUiStore } from '@/stores/ui'
-import { GAME_MANAGER_KEY } from '@/composables/useGameState'
+import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
 
 // i18n (2.2 lô 2) — component dùng t() nên mount phải cài i18n; assert
@@ -62,6 +62,9 @@ function mountModal(gm: MockGameManager, origin: 'stage' | 'tribulation' | null 
   // Cast mock thành GameManager — provide typed chặt GameManager;
   // mock đủ shape modal cần (eventBus.on/off/emit, abandonBattle).
   app.provide(GAME_MANAGER_KEY, gm as unknown as import('@/core/game/GameManager').GameManager)
+  // useBattleActions (exitCombatToHome) resolves useStateVersion at setup.
+  app.provide(STATE_VERSION_KEY, ref(0))
+  app.provide(BUMP_STATE_KEY, () => {})
 
   app.mount(container)
 
