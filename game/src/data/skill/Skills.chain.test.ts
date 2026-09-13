@@ -115,8 +115,8 @@ describe('Data chuỗi thần thoại 3-skill (Future Systems Task 1)', () => {
   // liệu §2.5, không mượn buff hành khác (bang_giap = Thủy, kim_giap = Kim).
   it('dia_tru variants dùng buff riêng dia_tru_bich/dia_tru_thu, không mượn buff hành khác', () => {
     const diaTru = SKILLS.find((s) => s.id === 'dia_tru_thua_thien')!
-    const bich = diaTru.specializations?.find((s) => s.id === 'dia_tru_bich')!
-    const thu = diaTru.specializations?.find((s) => s.id === 'dia_tru_thu')!
+    const bich = diaTru.specializations!.find((s) => s.id === 'dia_tru_bich')!
+    const thu = diaTru.specializations!.find((s) => s.id === 'dia_tru_thu')!
 
     expect(bich.effectsOverride).toEqual([{ type: 'buff', buffId: 'dia_tru_bich' }])
     expect(thu.effectsOverride).toEqual([{ type: 'buff', buffId: 'dia_tru_thu' }])

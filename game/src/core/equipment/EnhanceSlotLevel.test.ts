@@ -285,7 +285,7 @@ describe('EquipmentSystem — Bach Luyen Thanh Khi (M3 spec §4.2)', () => {
   })
 
   it('không policy — hành vi gốc nguyên vẹn (fallback 40, fail theo rate)', () => {
-    const { system, bag, registry, materialBag, slotManager, player } = setup({
+    const { system, bag, registry, slotManager, player } = setup({
       random: () => 0.999,
     })
 

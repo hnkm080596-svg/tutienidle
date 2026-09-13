@@ -48,7 +48,7 @@ interface SimResult {
   enemyLine: string
 }
 
-function runFloor(lab: Lab, stage: Stage, floor: number): SimResult {
+function runFloor(lab: Lab, stage: Stage): SimResult {
   const stats = lab.stats()
   const started = lab.manager.turnBattleOps.startStage(lab.player, stats, stage, false)
   if (!started) {
@@ -131,7 +131,7 @@ describe('balance sweep — all chapter floors vs player models', () => {
         const lab = createLab()
         lab.useRealData()
         buildPlayer(lab, realmId, floor, geared, stageList, stageIndex)
-        const r = runFloor(lab, stage, floor)
+        const r = runFloor(lab, stage)
         rows.push(
           `${stage.id}\tF${floor}\t${geared ? 'GEARED' : 'NAKED '}\t${r.state}\trounds=${r.rounds}\thp=${r.hpPct}%` +
             `\t| P ${r.playerLine}\t| E ${r.enemyLine}`,

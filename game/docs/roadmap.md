@@ -1906,6 +1906,34 @@ R14 Architecture Enforcement
 | 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ✅ DONE 2026-09-14 — dead modules deleted (ChainStateSystem/BounceChain/ChannelQueue/TrueShot/useCadenceSmoothing/AcquisitionReceipt/WuxingRelations/themePhaserSync+phaserThemeBridge/termGlossary); syncLegacyBattleState hook removed; TurnBuff* alias layer retired to canonical core/buff/* |
 | 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | ✅ DONE 2026-09-14 — Slices 1-3 (R1/R2/R8.1/AR-33/A6, combat-contract, R8.2 ownership, asset containment, catalog/preload parity, ACK-token, paid-random, stat-type brand) + Slice 4 guards for the R11-R13 contracts (canonicalBuffSurface, enemyArtEnumeration, sceneHelperBoundaries). Every roadmap-listed guard now has its contract enforced |
 
+## 0.8a. Architecture Repair Program (ARCH-2026-09-14)
+
+The 2026-09-14 whole-project engineering audit ([report](qa/2026-09-14-full-project-engineering-audit.md), task card `qa/2026-09-14-full-project-audit-task-card.md`, reviewer + runtime-evidence docs alongside) established that several R-mission contracts above are still violated in live production paths. Verdict: **REPAIR BEFORE MAJOR FEATURES** — the content freeze in §0.9 stays in force for the duration of this program.
+
+Execution program doc: `docs/architecture/2026-09-14-arch-repair-program.md`. Program branch `arch/repair-2026-09`; each mission runs in its own `.agent-worktrees/` worktree with a full G0-G5 worker card; wave order serializes same-file missions.
+
+| Wave | Mission | Findings | Status |
+|---|---|---|---|
+| 0 | Program setup + lint baseline (24 errors) | hygiene | IN PROGRESS |
+| 1 | M1 — Save value boundary | ARCH-001 | PENDING |
+| 1 | M3 — Preserve admitted session | ARCH-004 | PENDING |
+| 1 | M5 — Unique tribulation terminal | ARCH-006 (half) | PENDING |
+| 1 | M7 — Stat assembly/refresh | ARCH-002 | PENDING |
+| 1 | M11 — Per-lane offline production | ARCH-007 | PENDING |
+| 2 | M2 — Wash ticket binds item lifetime | ARCH-011 | PENDING (after M1) |
+| 2 | M6 — Domain-owned outcome settlement | ARCH-006 (half) | PENDING (after M3+M5) |
+| 2 | M4 — Boot/host lifecycle | ARCH-013 + lifecycle | PENDING (after M3) |
+| 2 | M8 — Combat resources & phases (per-turn MP/Ward regen, user-locked) | ARCH-003 + ARCH-010 + C05 | PENDING (after M7) |
+| 3 | M9 — Buff target/ingredient identity | ARCH-009 | PENDING (after M8) |
+| 3 | M12 — UI/event consumers + receipts | ARCH-005 + ARCH-012 + ARCH-014 | PENDING (after M3/M8) |
+| 3 | E2E baseline repair (5 failing specs) | baseline | PENDING |
+| 4 | M10 — Authored-execution parity (Hoi Xuan Dan retired per user ruling) | ARCH-008 | PENDING (after M8+M9) |
+| 4 | M13 — Retire proven compatibility debt | audit §I | PENDING (after M3/M8/M12) |
+| 4 | perfectClear feasibility quarantine (`it.fails`, playtest debt per user ruling) | baseline | PENDING |
+| 5 | Convergence: full gates + audit-repro regression matrix + deep QA + master merge | all | PENDING |
+
+| — | M14 — Remote contract reconciliation (one-talent client vs three-talent SQL/RPC) | ARCH-015 | PARKED pre-remote-rollout (user ruling) |
+
 ---
 
 # 0.9. Content freeze during foundation repair
