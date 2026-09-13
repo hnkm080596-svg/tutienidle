@@ -133,6 +133,20 @@ export class CombatSystem {
   }
 
   /**
+   * M8 (ARCH-003) — per-turn HP/MP/Ward regeneration entry point. The
+   * turn engine supplies already-decided per-turn deltas; the vitals
+   * authority owns clamping, the dead-entity boundary, and the single
+   * 'regen' vitals event.
+   */
+  applyTurnRegen(
+    target: CombatEntity,
+    deltas: { hp?: number; mp?: number; ward?: number },
+    sourceId?: string,
+  ): { hp: number; mp: number; ward: number } {
+    return this.vitals.applyTurnRegen(target, deltas, sourceId)
+  }
+
+  /**
    * Authoritative ward spend (R1 / AR-01): mutation belongs to the vitals
    * owner; CombatSystem exposes the typed entry point so orchestrators do
    * not write entity fields directly.

@@ -84,6 +84,14 @@ export class EntityVitalsSystem {
   }
 
   applyHealing(target: CombatEntity, amount: number, reason: VitalsChangeReason, sourceId?: string) {
+    // M8 (ARCH-010) — dead entities reject ordinary healing: no
+    // resurrection policy exists, so a heal landing after the death flag
+    // (e.g. a post-status-phase heal on a DoT-killed actor) must not
+    // silently un-kill or emit a phantom vitals event.
+    if (!target.alive) {
+      return 0
+    }
+
     const hpBefore = target.currentHp
     const wardBefore = target.currentWard
     const mpBefore = target.currentMp
@@ -105,6 +113,55 @@ export class EntityVitalsSystem {
     }
 
     return target.currentHp - hpBefore
+  }
+
+  /**
+   * M8 (ARCH-003) — authoritative per-turn resource regeneration.
+   * The turn engine (the only production caller) decides WHICH pools
+   * regenerate and with what amounts — including the Ward delay gate —
+   * once per entity turn; this owner clamps every pool to its live
+   * ceiling and emits a single 'regen' vitals event carrying all three
+   * before/after views. Dead entities regen nothing (same boundary as
+   * applyHealing's dead rejection). No-op calls emit nothing, matching
+   * the previous full-HP skip that kept 'regen' events off every tick.
+   */
+  applyTurnRegen(
+    target: CombatEntity,
+    deltas: { hp?: number; mp?: number; ward?: number },
+    sourceId?: string,
+  ): { hp: number; mp: number; ward: number } {
+    const applied = { hp: 0, mp: 0, ward: 0 }
+
+    if (!target.alive) {
+      return applied
+    }
+
+    const hpBefore = target.currentHp
+    const wardBefore = target.currentWard
+    const mpBefore = target.currentMp
+
+    if ((deltas.hp ?? 0) > 0) {
+      target.currentHp = Math.min(target.maxHp, target.currentHp + deltas.hp!)
+      applied.hp = target.currentHp - hpBefore
+    }
+
+    if ((deltas.mp ?? 0) > 0) {
+      target.currentMp = Math.min(target.stats.maxMp, target.currentMp + deltas.mp!)
+      applied.mp = target.currentMp - mpBefore
+    }
+
+    if ((deltas.ward ?? 0) > 0) {
+      target.currentWard = Math.min(target.stats.wardMax, target.currentWard + deltas.ward!)
+      applied.ward = target.currentWard - wardBefore
+    }
+
+    if (applied.hp > 0 || applied.mp > 0 || applied.ward > 0) {
+      // `amount` keeps the existing 'regen' contract (the HP portion);
+      // mp/ward movement is observable through the before/after fields.
+      this.emit(target, 'regen', applied.hp, hpBefore, wardBefore, mpBefore, sourceId)
+    }
+
+    return applied
   }
 
   emitCurrent(target: CombatEntity, reason: VitalsChangeReason, amount: number, before: {
