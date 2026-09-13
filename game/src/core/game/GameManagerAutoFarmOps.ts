@@ -13,6 +13,17 @@ import type { BattleLootSystem } from './BattleLootSystem'
 import type { StageWaveSystem } from './StageWaveSystem'
 
 /**
+ * Shared cycleSeconds guard (F2): a persisted perfectClearSeconds entry is
+ * usable only when it is a finite number > 0. A malformed 0/NaN/Infinity
+ * value must no-op BOTH the online tick and the offline settle - 0 turns
+ * completedCycles into Infinity (unbounded reward loop), NaN poisons
+ * lastCheckedMs forever.
+ */
+function isValidCycleSeconds(cycleSeconds: number | undefined): cycleSeconds is number {
+  return cycleSeconds !== undefined && cycleSeconds > 0 && Number.isFinite(cycleSeconds)
+}
+
+/**
  * Auto-farm wall-clock cycle loop (spec 2026-09-04-stage-auto-farm, Task 4).
  * Extracted from GameManagerTurnBattleOps (Wave-2 large-file split); moved
  * verbatim.
@@ -95,7 +106,7 @@ export class GameManagerAutoFarmOps {
 
     const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
 
-    if (cycleSeconds === undefined || !(cycleSeconds > 0) || !Number.isFinite(cycleSeconds)) {
+    if (!isValidCycleSeconds(cycleSeconds)) {
       return
     }
 
@@ -139,12 +150,19 @@ export class GameManagerAutoFarmOps {
 
     const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
 
-    if (cycleSeconds === undefined) {
+    if (!isValidCycleSeconds(cycleSeconds)) {
       return
     }
 
-    const cycleMs = (cycleSeconds / 2) * 1000
     const now = Date.now()
+
+    // A non-finite/negative persisted lastCheckedMs must recover, not
+    // freeze the feature silently: NaN makes every later elapsedMs NaN.
+    if (!Number.isFinite(autoFarm.lastCheckedMs) || autoFarm.lastCheckedMs < 0) {
+      autoFarm.lastCheckedMs = now
+    }
+
+    const cycleMs = (cycleSeconds / 2) * 1000
     const elapsedMs = now - autoFarm.lastCheckedMs
     const completedCycles = Math.floor(elapsedMs / cycleMs)
 
