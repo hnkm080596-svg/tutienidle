@@ -160,7 +160,6 @@ export function checkTribulationOutcomeAction(
 
     gameManager.tribulationDirector.clear()
     useUiStore().exitTribulationScene()
-    gameManager.eventBus.emit('tribulation_scene_exit', undefined)
 
     return true
   }
