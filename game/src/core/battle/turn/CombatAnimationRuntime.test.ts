@@ -69,16 +69,13 @@ function fixture() {
     totalTurnsElapsed: 0,
   }
 
-  const syncLegacyBattleState = vi.fn()
-
   const runtime = new CombatAnimationRuntime({
     getTurnBattleSystem: () => turnBattleSystem,
     eventBus,
     getBattle: () => battle,
-    syncLegacyBattleState,
   })
 
-  return { runtime, battle, player, enemy, eventBus, syncLegacyBattleState }
+  return { runtime, battle, player, enemy, eventBus }
 }
 
 describe('CombatAnimationRuntime', () => {
@@ -87,7 +84,6 @@ describe('CombatAnimationRuntime', () => {
       getTurnBattleSystem: () => ({}) as never,
       eventBus: { emit: vi.fn() } as never,
       getBattle: () => null,
-      syncLegacyBattleState: vi.fn(),
     })
 
     expect(runtime.getAnimationState('player')).toBe('idle')
@@ -135,8 +131,8 @@ describe('CombatAnimationRuntime', () => {
     expect(events).toContain('action_impact')
   })
 
-  it('acknowledgeActionComplete → clears pending phase, emits turn_standby_complete, syncs legacy state', () => {
-    const { runtime, player, eventBus, syncLegacyBattleState } = fixture()
+  it('acknowledgeActionComplete → clears pending phase, emits turn_standby_complete', () => {
+    const { runtime, player, eventBus } = fixture()
 
     const events: string[] = []
     eventBus.on('turn_standby_complete', () => events.push('turn_standby_complete'))
@@ -150,7 +146,6 @@ describe('CombatAnimationRuntime', () => {
     expect(runtime.getAnimationState('player')).toBe('idle')
     expect(runtime.isActionPlaybackWaiting()).toBe(false)
     expect(events).toContain('turn_standby_complete')
-    expect(syncLegacyBattleState).toHaveBeenCalled()
   })
 
   it('acknowledgeTurnReady with a stale token is a no-op', () => {
@@ -348,7 +343,6 @@ describe('CombatAnimationRuntime', () => {
       getTurnBattleSystem: () => turnBattleSystem,
       eventBus,
       getBattle: () => battle,
-      syncLegacyBattleState: vi.fn(),
     })
 
     // Reassign to a brand-new instance AFTER the runtime was constructed —
@@ -489,7 +483,6 @@ describe('CombatAnimationRuntime', () => {
         getTurnBattleSystem: () => turnBattleSystem,
         eventBus,
         getBattle: () => battle,
-        syncLegacyBattleState: vi.fn(),
         isSessionBlocking: () => blocking,
       })
 

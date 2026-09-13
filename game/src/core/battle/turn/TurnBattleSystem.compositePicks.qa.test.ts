@@ -3,7 +3,7 @@ import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '.
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
@@ -63,7 +63,7 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new TurnBuffPool(),
+    buffs: new BuffPool(),
     consecutiveHardCcTurns: 0,
   }
 }

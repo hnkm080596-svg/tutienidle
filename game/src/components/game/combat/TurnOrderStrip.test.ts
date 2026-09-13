@@ -10,9 +10,9 @@ import TurnOrderStrip from './TurnOrderStrip.vue'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
 import { createBaseStats } from '@/core/stats/StatBlock'
-import { TurnBuffPool } from '@/core/battle/turn/TurnBuffPool'
-import { TurnBuffSystem } from '@/core/battle/turn/TurnBuffSystem'
-import { TURN_BUFF_REGISTRY } from '@/data/buff/TurnBuffRegistry'
+import { BuffPool } from '@/core/buff/BuffPool'
+import { BuffSystem } from '@/core/buff/BuffSystem'
+import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import type { TurnBattle, TurnBattleParticipant } from '@/core/battle/turn/TurnBattleSystem'
 import type { CombatEntity } from '@/core/combat/CombatEntity'
 
@@ -55,7 +55,7 @@ function makeParticipant(id: string): TurnBattleParticipant {
     priority: 0,
     actionGauge: 0,
     alive: true,
-    buffs: new TurnBuffPool(),
+    buffs: new BuffPool(),
     consecutiveHardCcTurns: 0,
   }
 }
@@ -66,24 +66,24 @@ function makeBattleFixture() {
   enemy.entity.type = 'enemy'
 
   // Seed: 1 debuff (2 stacks), 1 buff, 1 hidden buff on the player.
-  const buffs = new TurnBuffSystem(player.buffs)
+  const buffs = new BuffSystem(player.buffs)
   const source = player.entity
 
-  buffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, player.entity, TURN_BUFF_REGISTRY)
-  buffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, player.entity, TURN_BUFF_REGISTRY)
+  buffs.apply(BUFF_REGISTRY.get('bong'), source, player.entity, BUFF_REGISTRY)
+  buffs.apply(BUFF_REGISTRY.get('bong'), source, player.entity, BUFF_REGISTRY)
 
-  const buffDef = TURN_BUFF_REGISTRY.get('bong')
+  const buffDef = BUFF_REGISTRY.get('bong')
 
   buffs.apply(
     { ...buffDef, id: 'a6_hidden', name: 'Hidden Buff', hidden: true, duration: 5, stackMode: 'refresh', effects: [] },
     source,
     player.entity,
-    TURN_BUFF_REGISTRY,
+    BUFF_REGISTRY,
   )
 
-  const khaiSon = TURN_BUFF_REGISTRY.get('khai_son')
+  const khaiSon = BUFF_REGISTRY.get('khai_son')
 
-  buffs.apply(khaiSon, source, player.entity, TURN_BUFF_REGISTRY)
+  buffs.apply(khaiSon, source, player.entity, BUFF_REGISTRY)
 
   const battle: TurnBattle = {
     players: [player],

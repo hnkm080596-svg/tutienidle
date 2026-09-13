@@ -69,7 +69,7 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     gameManager.setActivePlayer(player)
 
     const stats = calculateStats(player.baseStats, player.modifiers)
-    // Stage battles construct the engine WITH TURN_BUFF_REGISTRY —
+    // Stage battles construct the engine WITH BUFF_REGISTRY —
     // non-stage battles (startBattleWithPlayer) intentionally run a
     // registry-less engine where applySkillAilments no-ops.
     expect(

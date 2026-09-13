@@ -70,7 +70,6 @@ export class GameManagerTurnBattlePresentationOps {
       getTurnBattleSystem: deps.getTurnBattleSystem,
       eventBus: deps.eventBus,
       getBattle: deps.getBattle,
-      syncLegacyBattleState: () => {},
       isSessionBlocking: () => this.session.isBlocking(),
       stepCompletionSink: {
         onReady: () => this.deps.settleStep('ready'),

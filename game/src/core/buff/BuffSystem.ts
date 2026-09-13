@@ -10,7 +10,7 @@ import type {
   Buff,
   BuffDefinition,
   BuffEffectTemplate,
-  BuffRegistry,
+  BuffDefinitionCatalog,
 } from './BuffTypes'
 
 // R4 (AR-19) — Canonical BuffSystem.
@@ -24,7 +24,7 @@ const POISON_ROOT_THRESHOLD_STACKS = 3
 export class BuffSystem {
   constructor(private readonly pool: BuffPool) {}
 
-  apply(definition: BuffDefinition, source: CombatEntity, target: CombatEntity, registry?: BuffRegistry) {
+  apply(definition: BuffDefinition, source: CombatEntity, target: CombatEntity, registry?: BuffDefinitionCatalog) {
     const resolvedEffects = definition.effects.map((effect) => {
       if (effect.type === 'dot') {
         const dmg = this.calculateDamagePerTurn(effect, source, target)
@@ -88,7 +88,7 @@ export class BuffSystem {
     target: CombatEntity,
     duration: number,
     resolvedEffects: Buff['effects'],
-    registry?: BuffRegistry,
+    registry?: BuffDefinitionCatalog,
   ) {
     switch (definition.stackMode) {
       case 'stack': {
@@ -180,7 +180,7 @@ export class BuffSystem {
     return Math.max(0, power * ratio * (1 - mitigation)) * (1 + source.stats.ailmentPotencyPercent) * kimTheMultiplier
   }
 
-  private convert(buff: Buff, registry: BuffRegistry, target: CombatEntity, source?: CombatEntity) {
+  private convert(buff: Buff, registry: BuffDefinitionCatalog, target: CombatEntity, source?: CombatEntity) {
     const nextDefinition = registry.get(buff.convertsToId!)
 
     this.pool.removeInstance(buff.id, buff.sourceId)
@@ -222,26 +222,26 @@ export class BuffSystem {
     deltaSeconds: number,
     target?: CombatEntity,
     combatSystem?: CombatSystem,
-    registry?: BuffRegistry,
+    registry?: BuffDefinitionCatalog,
     resolveSource?: (sourceId: string) => CombatEntity | undefined,
   ): void
   update(
     target: CombatEntity,
     combatSystem: CombatSystem,
-    registry?: BuffRegistry,
+    registry?: BuffDefinitionCatalog,
     resolveSource?: (sourceId: string) => CombatEntity | undefined,
   ): void
   update(
     targetOrDelta: CombatEntity | number,
     targetOrCombat?: CombatEntity | CombatSystem,
-    combatOrRegistry?: CombatSystem | BuffRegistry,
-    registryOrResolve?: BuffRegistry | ((sourceId: string) => CombatEntity | undefined),
+    combatOrRegistry?: CombatSystem | BuffDefinitionCatalog,
+    registryOrResolve?: BuffDefinitionCatalog | ((sourceId: string) => CombatEntity | undefined),
     resolveSourceParam?: (sourceId: string) => CombatEntity | undefined,
   ): void {
     let deltaSeconds = 1
     let target: CombatEntity | undefined
     let combatSystem: CombatSystem | undefined
-    let registry: BuffRegistry | undefined
+    let registry: BuffDefinitionCatalog | undefined
     let resolveSource: ((sourceId: string) => CombatEntity | undefined) | undefined
 
     if (typeof targetOrDelta === 'number') {
@@ -249,7 +249,7 @@ export class BuffSystem {
       if (targetOrCombat && typeof targetOrCombat === 'object' && 'stats' in targetOrCombat) {
         target = targetOrCombat as CombatEntity
         combatSystem = combatOrRegistry as CombatSystem | undefined
-        registry = registryOrResolve as BuffRegistry | undefined
+        registry = registryOrResolve as BuffDefinitionCatalog | undefined
         resolveSource = resolveSourceParam
       } else {
         this.updateTime(targetOrDelta)
@@ -258,7 +258,7 @@ export class BuffSystem {
     } else {
       target = targetOrDelta
       combatSystem = targetOrCombat as CombatSystem | undefined
-      registry = combatOrRegistry as BuffRegistry | undefined
+      registry = combatOrRegistry as BuffDefinitionCatalog | undefined
       resolveSource = registryOrResolve as ((sourceId: string) => CombatEntity | undefined) | undefined
     }
 
@@ -394,7 +394,7 @@ export class BuffSystem {
     return modifiers
   }
 
-  rollOnHitEffects(source: CombatEntity, target: CombatEntity, registry: BuffRegistry) {
+  rollOnHitEffects(source: CombatEntity, target: CombatEntity, registry: BuffDefinitionCatalog) {
     for (const buff of this.pool.getAll()) {
       for (const effect of buff.effects) {
         if (effect.type === 'onHitProc' && Math.random() < effect.chance) {
@@ -408,7 +408,7 @@ export class BuffSystem {
   rollReactiveTrigger(
     target: CombatEntity,
     triggerEvent: 'onCastBegin' | 'onImpactLanded',
-    registry: BuffRegistry,
+    registry: BuffDefinitionCatalog,
   ): { firedFollowUp: boolean } {
     let firedFollowUp = false
 

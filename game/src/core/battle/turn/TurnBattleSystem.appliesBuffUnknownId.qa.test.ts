@@ -4,15 +4,15 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 
 // Roadmap 9.5 #12 follow-up (flagged 2026-09-07, activated 2026-09-14):
 // TurnBattleSystem calls registry.get() UNGUARDED in two places that read
 // CONTENT-DERIVED ids — skill.appliesBuff.definitionId (the Reaction Path
 // ultimate path, now live via reaction_path_unlock_* keystones) and
-// appliesAilments[].buffDefinitionId. MapTurnBuffRegistry.get THROWS on an
+// appliesAilments[].buffDefinitionId. MapBuffRegistry.get THROWS on an
 // unknown id, so a renamed/drifted buff id crashes every fixed-step tick
 // with no error isolation upstream in GameManager's updateBattleFixedStep.
 //
@@ -51,10 +51,10 @@ function createCombatant(id: string): CombatEntity {
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
-const OTHER_DEFINITION: TurnBuffDefinition = {
+const OTHER_DEFINITION: BuffDefinition = {
   id: 'unrelated_buff',
   name: 'Unrelated Buff',
   polarity: 'buff',
@@ -63,12 +63,12 @@ const OTHER_DEFINITION: TurnBuffDefinition = {
   effects: [],
 }
 
-class SingleEntryRegistry implements TurnBuffRegistry {
-  constructor(private readonly definition: TurnBuffDefinition) {}
+class SingleEntryRegistry implements BuffDefinitionCatalog {
+  constructor(private readonly definition: BuffDefinition) {}
 
-  get(id: string): TurnBuffDefinition {
+  get(id: string): BuffDefinition {
     if (id !== this.definition.id) {
-      throw new Error(`TurnBuffRegistry: unknown buff id "${id}"`)
+      throw new Error(`BuffDefinitionCatalog: unknown buff id "${id}"`)
     }
 
     return this.definition

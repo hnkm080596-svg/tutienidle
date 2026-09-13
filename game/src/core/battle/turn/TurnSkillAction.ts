@@ -139,7 +139,7 @@ const FALLBACK_TARGETING: ActionTargeting = { shape: 'single' }
 /**
  * Ticks special/ultimate cooldowns down by 1, floored at 0 — cooldown
  * counts the ACTOR's own turns (this rework's "tick at the holder's own
- * turn" convention, already used by TurnBuffSystem). Call once per actor
+ * turn" convention, already used by BuffSystem). Call once per actor
  * per turn, BEFORE selectAction().
  */
 export function tickCooldowns(participant: TurnBattleParticipant): void {

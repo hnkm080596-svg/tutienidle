@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { toTurnBuffDefinition, TURN_BUFF_REGISTRY } from './TurnBuffRegistry'
+import { toBuffDefinition, BUFF_REGISTRY } from './BuffRegistry'
 import type { BuffDefinition } from '../../core/buff/BuffDefinition'
 import { buffs as LIVE_BUFFS } from './buffs'
 
 // Completion plan Task 13 — migrate 46 real BuffDefinition →
-// TurnBuffDefinition. No-rebalance: duration GIỮ NGUYÊN SỐ (giây → lượt),
+// BuffDefinition. No-rebalance: duration GIỮ NGUYÊN SỐ (giây → lượt),
 // convertsAfterContinuousSeconds → convertsAfterContinuousTurns, mọi effect
-// field khác copy nguyên vẹn (TurnBuffTypes effect shapes 1:1 với BuffTypes).
+// field khác copy nguyên vẹn (BuffTypes effect shapes 1:1 với BuffTypes).
 
 const SAMPLE: BuffDefinition = {
   id: 'sample_buff',
@@ -25,9 +25,9 @@ const SAMPLE: BuffDefinition = {
   ],
 }
 
-describe('toTurnBuffDefinition', () => {
+describe('toBuffDefinition', () => {
   it('converts duration/converts fields seconds→turns, keeps the SAME number', () => {
-    const converted = toTurnBuffDefinition(SAMPLE)
+    const converted = toBuffDefinition(SAMPLE)
 
     expect(converted.duration).toBe(6)
     expect(converted.convertsToId).toBe('other')
@@ -36,13 +36,13 @@ describe('toTurnBuffDefinition', () => {
   })
 
   it('copies effects array verbatim (effect template shapes are 1:1)', () => {
-    const converted = toTurnBuffDefinition(SAMPLE)
+    const converted = toBuffDefinition(SAMPLE)
 
     expect(converted.effects).toEqual(SAMPLE.effects)
   })
 
   it('copies id/name/description/polarity/hidden/stackMode/maxStacks', () => {
-    const converted = toTurnBuffDefinition({
+    const converted = toBuffDefinition({
       ...SAMPLE,
       hidden: true,
       maxStacks: 5,
@@ -59,12 +59,12 @@ describe('toTurnBuffDefinition', () => {
   })
 })
 
-describe('TURN_BUFF_REGISTRY completeness', () => {
-  it('every live BuffDefinition id has a converted TurnBuffDefinition entry', () => {
+describe('BUFF_REGISTRY completeness', () => {
+  it('every live BuffDefinition id has a converted BuffDefinition entry', () => {
     expect(LIVE_BUFFS.length).toBeGreaterThan(40)
 
     for (const live of LIVE_BUFFS) {
-      const definition = TURN_BUFF_REGISTRY.get(live.id)
+      const definition = BUFF_REGISTRY.get(live.id)
 
       expect(definition, `missing turn buff: ${live.id}`).toBeDefined()
       expect(definition.duration).toBe(live.duration)

@@ -22,8 +22,7 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
 import { ReactionManager } from '../element/ReactionManager'
-import type { TurnBuffRegistry } from '../battle/turn/TurnBuffTypes'
-import type { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
+import type { BuffDefinitionCatalog } from '../buff/BuffTypes'
 
 // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX, 2026-08-21) — trần %
 // giảm sát thương từ thuyThePercent, cùng tinh thần ARMOR_CAP (Armor.
@@ -57,8 +56,8 @@ const DOT_RESISTANCE_FLOOR = -1
  * SỰ KIỆN/emit mới theo đúng accuracy→dodge→block như yêu cầu.
  */
 export interface SurviveEffectsPolicy {
-  buffSystem: TurnBuffSystem
-  registry: TurnBuffRegistry
+  buffSystem: BuffSystem
+  registry: BuffDefinitionCatalog
   grantBuffId?: string
   cleanseDebuffs?: boolean
 }
@@ -601,7 +600,7 @@ export class CombatSystem {
   // dependencies — injected via the constructor (2026-09-01 review fix)
   // and used for real here when provided; skip firing entirely if either
   // is missing rather than constructing an empty throwaway registry
-  // (BuffRegistry.get() THROWS on a miss, so an empty throwaway registry
+  // (BuffDefinitionCatalog.get() THROWS on a miss, so an empty throwaway registry
   // would crash killIfDead() mid-battle-tick the first time a bound
   // action looked one up — not silently no-op).
   //

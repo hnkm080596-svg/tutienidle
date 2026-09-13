@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
@@ -47,24 +47,24 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
-class FixtureRegistry implements TurnBuffRegistry {
-  private readonly defs = new Map<string, TurnBuffDefinition>()
+class FixtureRegistry implements BuffDefinitionCatalog {
+  private readonly defs = new Map<string, BuffDefinition>()
 
-  constructor(defs: TurnBuffDefinition[]) {
+  constructor(defs: BuffDefinition[]) {
     for (const d of defs) this.defs.set(d.id, d)
   }
 
-  get(id: string): TurnBuffDefinition {
+  get(id: string): BuffDefinition {
     const d = this.defs.get(id)
     if (!d) throw new Error(`missing fixture: ${id}`)
     return d
   }
 }
 
-const ENRAGE: TurnBuffDefinition = {
+const ENRAGE: BuffDefinition = {
   id: 'qa_enrage', name: 'Enrage', polarity: 'buff', duration: 999, stackMode: 'refresh',
   effects: [{ type: 'dot', dpsRatio: 0.1, element: 'physical' }],
 }
@@ -92,12 +92,12 @@ describe('Slice 4 adversarial (QA probes)', () => {
     const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
-    const stun: TurnBuffDefinition = {
+    const stun: BuffDefinition = {
       id: 'qa_stun', name: 'Stun', polarity: 'debuff', duration: 5, stackMode: 'refresh',
       effects: [{ type: 'cc', ccEffect: 'stun' }],
     }
     const registry = new FixtureRegistry([stun])
-    new TurnBuffSystem(playerP.buffs).apply(stun, enemy, player, registry)
+    new BuffSystem(playerP.buffs).apply(stun, enemy, player, registry)
 
     const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
 

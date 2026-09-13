@@ -41,7 +41,6 @@ export class CombatAnimationRuntime {
       getTurnBattleSystem: () => TurnBattleSystem
       eventBus: EventBus
       getBattle: () => TurnBattle | null
-      syncLegacyBattleState: () => void
       isSessionBlocking?: () => boolean
       /**
        * Combat Turn Mechanism (2026-09-10 spec section 4.1a) — the runtime
@@ -291,8 +290,6 @@ export class CombatAnimationRuntime {
       presetId: declared.action?.skill?.presetId,
     })
 
-    this.deps.syncLegacyBattleState()
-
     this.deps.stepCompletionSink?.onImpact()
   }
 
@@ -319,8 +316,6 @@ export class CombatAnimationRuntime {
     this.deps.getTurnBattleSystem().completeAction(battle, actor, declared, targetIds)
 
     emitTurnStandbyComplete(this.deps.eventBus, actor.id)
-
-    this.deps.syncLegacyBattleState()
 
     this.deps.stepCompletionSink?.onComplete()
   }

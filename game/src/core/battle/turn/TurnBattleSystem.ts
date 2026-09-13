@@ -11,9 +11,9 @@ import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets } from './TurnSkillAction'
 import type { TurnSkillDefinition, TurnSkillSlot, TurnSkillSlotRole, SelectedAction } from './TurnSkillAction'
 import type { ActionDamageInfo } from '../ActionImpactSystem'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import type { TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
 import { isTurnTriggerReady } from './BossTurnTriggers'
@@ -26,7 +26,7 @@ import { refundGauge, GAUGE_MAX } from './ActionGauge'
 import { TurnReactionManager } from './TurnReactionManager'
 import { MAX_THE, THE_GAIN_PER_LINK, THE_GAIN_PER_FINISHER } from '../../combat/CombatTypes'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
-import type { TurnBuffDefinition } from './TurnBuffTypes'
+import type { BuffDefinition } from '../../buff/BuffTypes'
 
 /**
  * Future Systems Task 6 — gauge-delta effect: bắn 1 LẦN ngay khi buff
@@ -34,7 +34,7 @@ import type { TurnBuffDefinition } from './TurnBuffTypes'
  * (refundGauge đã clamp [0, GAUGE_MAX]). Không phải tick liên tục.
  */
 function applyGaugeDeltaEffects(
-  definition: TurnBuffDefinition,
+  definition: BuffDefinition,
   participant: TurnBattleParticipant,
 ): void {
   for (const effect of definition.effects) {
@@ -93,7 +93,7 @@ export interface TurnBattleParticipant {
   priority: number
   actionGauge: number
   alive: boolean
-  buffs: TurnBuffPool
+  buffs: BuffPool
   consecutiveHardCcTurns: number
   baTheTriggeredAtTurn?: number
   basic?: TurnSkillDefinition
@@ -273,7 +273,7 @@ export class TurnBattleSystem {
   constructor(
     private readonly combat: CombatSystem,
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
-    private readonly registry?: TurnBuffRegistry,
+    private readonly registry?: BuffDefinitionCatalog,
     private readonly spawnEnemy?: (occupiedSlots?: Set<string>) => TurnBattleParticipant,
     private readonly reactionPathPool?: readonly TurnSkillDefinition[],
     // Phase A1 (2026-09-07) — optional collaborator, same pattern as
@@ -292,7 +292,7 @@ export class TurnBattleSystem {
   // completeAction tiêu thụ — 2 phase tách nhau qua GameManager khi
   // presentationActive, nên state phải sống trên instance).
   private pendingGaugeDeltaTargets: TurnBattleParticipant[] = []
-  private pendingGaugeDeltaDefinition: TurnBuffDefinition | undefined
+  private pendingGaugeDeltaDefinition: BuffDefinition | undefined
 
   // Defect-fix Task 1 (2026-09-05) — bridge dequeueFollowUpActor() →
   // declareActorAction(): set ngay trước khi trả bypass actor, đọc 1 lần
@@ -624,7 +624,7 @@ export class TurnBattleSystem {
       battle.actedThisRound = []
     }
 
-    const actorBuffSystem = new TurnBuffSystem(actor.buffs)
+    const actorBuffSystem = new BuffSystem(actor.buffs)
 
     // Future Systems Task 7 — charge state (Thế→Trảm). Charging takes
     // precedence: KHÔNG đụng CC counter Bá Thể (đã bất động tự nhiên,
@@ -744,13 +744,13 @@ export class TurnBattleSystem {
       this.registry &&
       isTurnTriggerReady({ afterTurns: actor.bossTrigger.afterTurns }, battle.totalTurnsElapsed ?? 0)
     ) {
-      // Phase A2 (2026-09-07) — TurnBuffRegistry.get() THROWS on an
+      // Phase A2 (2026-09-07) — BuffDefinitionCatalog.get() THROWS on an
       // unknown id, and bossTrigger data is now populated for real
       // enemies (content drift / renamed buff id would crash the whole
       // battle tick). Skip the buff gracefully instead — same
       // try/catch skip pattern as GameManager's formation-buff lookup.
       // firedAlready stays false so a corrected id can still fire later.
-      let definition: TurnBuffDefinition | undefined
+      let definition: BuffDefinition | undefined
 
       try {
         definition = this.registry.get(actor.bossTrigger.buffDefinitionId)
@@ -759,7 +759,7 @@ export class TurnBattleSystem {
       }
 
       if (definition) {
-        new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+        new BuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
 
         actor.bossTrigger.firedAlready = true
       }
@@ -1018,7 +1018,7 @@ export class TurnBattleSystem {
 
           // Phase A3 — consume-for-damage (Pháp Tu Detonate / Thổ Tu ward
           // burst). Orchestration only: reads/clears state through
-          // TurnBuffSystem's own API (getAllById/removeAllById); the HP and
+          // BuffSystem's own API (getAllById/removeAllById); the HP and
           // Ward mutations go through the authoritative damage/vitals
           // pipeline (R1 / AR-01) so death, survive-lethal and vitals
           // events stay exactly-once and uniform. True damage = direct
@@ -1029,11 +1029,11 @@ export class TurnBattleSystem {
           const skill = action.skill
 
           if (skill?.consumesAilmentId && skill.damagePerStack) {
-            const stacks = new TurnBuffSystem(target.buffs).getStacks(skill.consumesAilmentId)
+            const stacks = new BuffSystem(target.buffs).getStacks(skill.consumesAilmentId)
 
             if (stacks > 0) {
               this.combat.applyDirectDamage(target.entity, stacks * skill.damagePerStack, actor.entity.id)
-              new TurnBuffSystem(target.buffs).removeAllById(skill.consumesAilmentId)
+              new BuffSystem(target.buffs).removeAllById(skill.consumesAilmentId)
             }
           }
 
@@ -1047,11 +1047,11 @@ export class TurnBattleSystem {
           }
 
           if (this.registry) {
-            new TurnBuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
+            new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
 
             // Action Playback Task 5 — onImpactLanded counter trigger trên
             // TARGET bị hit; queuesFollowUp → battle.queuedFollowUpActorId.
-            const { firedFollowUp } = new TurnBuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry)
+            const { firedFollowUp } = new BuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry)
 
             if (firedFollowUp) {
               // Defect-fix Task 1 — FIFO queue: AOE hit trigger counter trên
@@ -1103,7 +1103,7 @@ export class TurnBattleSystem {
           // Skip an unresolvable buff id gracefully (renamed/drifted content
           // must not crash the tick) — same try/catch pattern as the
           // bossTrigger lookup above.
-          let definition: TurnBuffDefinition | undefined
+          let definition: BuffDefinition | undefined
 
           try {
             definition = this.registry.get(action.skill.appliesBuff.definitionId)
@@ -1115,13 +1115,13 @@ export class TurnBattleSystem {
             // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
             // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
             if (action.skill.appliesBuff.target === 'self') {
-              new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+              new BuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
               this.pendingGaugeDeltaTargets = [actor]
             } else {
               const targets: TurnBattleParticipant[] = []
 
               for (const target of declared.affected) {
-                new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+                new BuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
                 targets.push(target)
               }
 
@@ -1282,7 +1282,7 @@ export class TurnBattleSystem {
       if (Math.random() < ailment.chance) {
         // Skip an unresolvable ailment id gracefully — same try/catch
         // pattern as the bossTrigger lookup in declareActorAction.
-        let definition: TurnBuffDefinition | undefined
+        let definition: BuffDefinition | undefined
 
         try {
           definition = this.registry.get(ailment.buffDefinitionId)
@@ -1294,7 +1294,7 @@ export class TurnBattleSystem {
           const stackCount = ailment.stacks ?? 1
 
           for (let s = 0; s < stackCount; s++) {
-            new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+            new BuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
           }
 
           this.reactionManager?.checkAndTrigger(

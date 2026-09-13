@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
 
 // 9.5 #9 — cast counting revived on the turn engine. The engine fires
 // onSkillCast(actor, skillId) once per COMMITTED action (same point as
@@ -15,15 +15,15 @@ import { TurnBuffSystem } from './TurnBuffSystem'
 // it reports every actor's cast; consumers (GameManagerTurnBattleOps)
 // filter to the primary player.
 
-const STUN_DEF: TurnBuffDefinition = {
+const STUN_DEF: BuffDefinition = {
   id: 'stun', name: 'Stun', polarity: 'debuff', duration: 10, stackMode: 'refresh',
   effects: [{ type: 'cc', ccEffect: 'stun' }],
 }
 
-class Registry implements TurnBuffRegistry {
-  private readonly defs = new Map<string, TurnBuffDefinition>()
-  constructor(defs: TurnBuffDefinition[]) { for (const d of defs) this.defs.set(d.id, d) }
-  get(id: string): TurnBuffDefinition {
+class Registry implements BuffDefinitionCatalog {
+  private readonly defs = new Map<string, BuffDefinition>()
+  constructor(defs: BuffDefinition[]) { for (const d of defs) this.defs.set(d.id, d) }
+  get(id: string): BuffDefinition {
     const d = this.defs.get(id)
     if (!d) throw new Error(`missing buff: ${id}`)
     return d
@@ -50,7 +50,7 @@ function makeParticipant(
 ): TurnBattleParticipant {
   return {
     id, entity: combatEntity, speed, priority, actionGauge: 0,
-    alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }
@@ -102,7 +102,7 @@ describe('TurnBattleSystem.onSkillCast — committed-cast callback', () => {
   it('CC-blocked (stun) → KHÔNG bắn (cast không xảy ra)', () => {
     const { battle, playerParticipant } = fixture()
     const registry = new Registry([STUN_DEF])
-    new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEF, playerParticipant.entity, playerParticipant.entity, registry)
+    new BuffSystem(playerParticipant.buffs).apply(STUN_DEF, playerParticipant.entity, playerParticipant.entity, registry)
 
     const onSkillCast = vi.fn()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, registry, undefined, undefined, undefined, onSkillCast)

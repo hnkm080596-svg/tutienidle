@@ -5,9 +5,9 @@ import {
   diffAndEmitTurnStatusVfx,
   type TurnStatusSnapshotEntry,
 } from './TurnStatusPresentationEvents'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
-import type { TurnBuff } from './TurnBuffTypes'
+import type { Buff } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { createBaseStats } from '../../stats/StatBlock'
 import type {
@@ -18,7 +18,7 @@ import type {
 
 // Phase A6 (9.5 #7) — turn-based status presentation feed. Fixture shape
 // copied from TurnActionPresentationEvents.test.ts (per-file fixture
-// convention of this suite); buff fixture shape from TurnBuffPool.test.ts.
+// convention of this suite); buff fixture shape from BuffPool.test.ts.
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
   return {
@@ -34,11 +34,11 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 function makeParticipant(id: string, entity: CombatEntity): TurnBattleParticipant {
   return {
     id, entity, speed: 100, priority: 0, actionGauge: 0, alive: entity.alive,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
   }
 }
 
-function makeBuff(overrides: Partial<TurnBuff> = {}): TurnBuff {
+function makeBuff(overrides: Partial<Buff> = {}): Buff {
   return {
     id: 'test_buff',
     sourceId: 'source_1',
@@ -116,7 +116,7 @@ describe('diffAndEmitTurnStatusVfx', () => {
       polarity: 'debuff',
       permanent: false,
     })
-    // buffName resolves through TURN_BUFF_REGISTRY for a known id.
+    // buffName resolves through BUFF_REGISTRY for a known id.
     expect(events.attached[0]!.buffName).toBeTruthy()
     expect(events.attached[0]!.buffName).not.toBe('trung_doc')
   })

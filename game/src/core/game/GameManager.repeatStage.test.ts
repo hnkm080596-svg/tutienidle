@@ -56,7 +56,7 @@ describe('GameManager continuous repeat stage', () => {
     gameManager.eventBus.on<BattleRewardParticleEvent>('reward_particle', event => rewardParticles.push(event))
 
     // Slice 6 cutover: turn engine pacing đọc battle-context qua activePlayer
-    // (syncLegacyBattleState/grant flow) — tương đương boot flow thật.
+    // — tương đương boot flow thật.
     gameManager.setActivePlayer(player)
 
     expect(gameManager.turnBattleOps.startStage(player, stats, stage, true)).toBe(true)

@@ -141,8 +141,8 @@ describe('QA probe â€” manual mode adversarial (Slice 7)', () => {
 // ---------------------------------------------------------------------------
 // Smoke-test regression (browser runtime evidence 2026-09-04): sau victory,
 // "Đánh Lại" no-op vĩnh viễn — StageManager.active không được stop sau Slice
-// 6 cutover (StageWaveSystem.update() return sớm vì syncLegacyBattleState()
-// set legacy.state='victory' trực tiếp). startStage() → stageManager.start()
+// 6 cutover (StageWaveSystem.update() return sớm khi battle state đã
+// 'victory'). startStage() → stageManager.start()
 // return false → refight im lặng thất bại.
 // ---------------------------------------------------------------------------
 

@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest'
 // summon KHÃ”NG migrate nguyÃªn b?n sang turn-based. Khi c?n hi?u ?ng
 // tuong t?, thi?t k? b?ng primitive dÃ£ cÃ³: BossTurnTriggers
 // (afterTurns ? t? Ã¡p buff, dÃ£ cÃ³ test riÃªng t?i
-// core/battle/turn/BossTurnTriggers.test.ts) + TurnBuffSystem dot â€”
+// core/battle/turn/BossTurnTriggers.test.ts) + BuffSystem dot â€”
 // vi?c n?i dung boss th?t lÃ  vi?c thi?t k? riÃªng trong tuong lai.
 //
 // ToÃ n b? n?i dung cu c?a file nÃ y n?m trong git history

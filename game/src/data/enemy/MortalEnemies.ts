@@ -640,7 +640,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     archetype: 'caster',
     family: 'flood_serpent',
     // Phase A2 (2026-09-07) — turn-based enrage trigger; buff resolves
-    // through TURN_BUFF_REGISTRY at spawn (see TurnBattleAdapter).
+    // through BUFF_REGISTRY at spawn (see TurnBattleAdapter).
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'qi_refining_serpent_enrage' },
     // Phase A3 Task 5 — periodic heavy attack (every 4th own action),
     // multiplier proportional to realm tier; playtesting starting points.
@@ -1158,7 +1158,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     lane: 'ground',
     family: 'crocodile',
     // Phase A2 (2026-09-07) — turn-based enrage trigger; buff resolves
-    // through TURN_BUFF_REGISTRY at spawn (see TurnBattleAdapter).
+    // through BUFF_REGISTRY at spawn (see TurnBattleAdapter).
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'mortal_crocodile_enrage' },
     // Phase A3 Task 5 — periodic heavy attack (every 4th own action),
     // multiplier proportional to realm tier; playtesting starting points.

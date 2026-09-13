@@ -160,7 +160,7 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
   })
 })
 
-// Review Task 19 (finding Important) — TURN_BUFF_REGISTRY.get() throw nếu
+// Review Task 19 (finding Important) — BUFF_REGISTRY.get() throw nếu
 // definitionId của trận pháp không resolve được (gõ sai id, hoặc buff chưa
 // kịp thêm vào buffs.ts). Trước fix này, throw đó văng thẳng ra khỏi
 // buildTurnBattle() và làm SẬP CẢ TRẬN ĐẤU. Test này xác nhận trận vẫn
@@ -175,7 +175,7 @@ const TEST_FORMATION_WITH_MISSING_BUFF: TranPhapDefinition = {
 }
 
 describe('GameManager.buildTurnBattle — formation buff definitionId không resolve được', () => {
-  it('không throw, trận vẫn build bình thường khi TURN_BUFF_REGISTRY.get() thất bại', () => {
+  it('không throw, trận vẫn build bình thường khi BUFF_REGISTRY.get() thất bại', () => {
     // TRAN_PHAP_FORMATIONS rỗng ở giai đoạn này của plan (nội dung roster
     // ship sau) — đẩy tạm 1 definition test-only vào mảng, giống pattern
     // COMPANIONS ở test phía trên.

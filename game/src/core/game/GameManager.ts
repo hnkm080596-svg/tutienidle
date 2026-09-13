@@ -164,9 +164,7 @@ import type {
 import type { TokenState } from '../battle/turn/TurnToken'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
 import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
-import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
-import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
-import type { TurnBuffDefinition } from '../battle/turn/TurnBuffTypes'
+import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE } from '../../data/skill/TurnReactionPathSkills'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { toTurnSkillDefinition } from './SkillToTurnSkillConverter'
@@ -260,10 +258,10 @@ export class GameManager {
         return
       }
 
-      let definition: TurnBuffDefinition | undefined
+      let definition: BuffDefinition | undefined
 
       try {
-        definition = TURN_BUFF_REGISTRY.get(buffId)
+        definition = BUFF_REGISTRY.get(buffId)
       } catch {
         definition = undefined
       }
@@ -272,7 +270,7 @@ export class GameManager {
         return
       }
 
-      new TurnBuffSystem(player.buffs).apply(definition, player.entity, player.entity, TURN_BUFF_REGISTRY)
+      new BuffSystem(player.buffs).apply(definition, player.entity, player.entity, BUFF_REGISTRY)
     },
     // hpReader — player entity's HP ratio in the current turn-based
     // battle; undefined outside battle (passiveCondition treats this as

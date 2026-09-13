@@ -7,12 +7,12 @@ import { ENEMIES } from '../../../data/enemy/Enemies'
 import { toTurnBattleParticipant } from '../../game/TurnBattleAdapter'
 import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE, REACTION_PATH_POOL } from '../../../data/skill/TurnReactionPathSkills'
 import { GENERIC_PHYSICAL_BASIC } from '../../../data/skill/TurnBasicAttacks'
-import { TURN_BUFF_REGISTRY } from '../../../data/buff/TurnBuffRegistry'
+import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
 function setup(skill: TurnSkillDefinition) {
   const bus = new EventBus()
-  const system = new TurnBattleSystem(new CombatSystem(bus), 10, TURN_BUFF_REGISTRY, undefined, REACTION_PATH_POOL)
+  const system = new TurnBattleSystem(new CombatSystem(bus), 10, BUFF_REGISTRY, undefined, REACTION_PATH_POOL)
   const source = enemyToCombatEntity(structuredClone(ENEMIES[0]!))
   source.id = 'source'
   source.type = 'player'

@@ -1,11 +1,11 @@
 import type { EventBus } from '../../events/EventBus'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
-import type { TurnBuffPolarity } from './TurnBuffTypes'
-import { TURN_BUFF_REGISTRY } from '../../../data/buff/TurnBuffRegistry'
+import type { BuffPolarity } from '../../buff/BuffTypes'
+import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 
 // Phase A6 (9.5 #7, 2026-09-12) — turn-based port of the legacy
 // BattleSystem.snapshotStatuses()/emitStatusVfxDiff() pair (retired at
-// C1), reading TurnBuffPool instead of BuffPool. Reuses the SAME
+// C1), reading BuffPool instead of BuffPool. Reuses the SAME
 // status_vfx_* event names and payload field names so CombatVfxSpawner/
 // CombatScene/StatusTooltip need zero structural changes; the tooltip
 // renders the duration number as a turn count (see
@@ -19,7 +19,7 @@ export interface TurnStatusSnapshotEntry {
   dotType: string
   stacks: number
   remainingTurns: number
-  polarity: TurnBuffPolarity
+  polarity: BuffPolarity
   permanent: boolean
 }
 
@@ -59,7 +59,7 @@ export function snapshotTurnStatuses(battle: TurnBattle): Map<string, TurnStatus
 
 function buffNameFor(id: string): string {
   try {
-    return TURN_BUFF_REGISTRY.get(id).name
+    return BUFF_REGISTRY.get(id).name
   } catch {
     return id
   }

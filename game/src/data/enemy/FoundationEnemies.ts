@@ -379,7 +379,7 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     enrage: FLOOD_DRAGON_ENRAGE,
     // Phase A2 (2026-09-07) — turn-based twin of the legacy `enrage`
     // above (same 60-turn magnitude); kept alongside until roadmap C1
-    // removes the legacy engine. Buff resolves via TURN_BUFF_REGISTRY.
+    // removes the legacy engine. Buff resolves via BUFF_REGISTRY.
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'foundation_dragon_enrage' },
     // Combat Balance Pass (2026-08-29, plan §3.6) — boss mẫu có action
     // đặc biệt data-driven: mỗi đòn thứ 4 là "Nuốt Sóng" — đòn nước nặng

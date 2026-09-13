@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import { TurnBuffPool } from './TurnBuffPool'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffSystem } from '../../buff/BuffSystem'
+import { BuffPool } from '../../buff/BuffPool'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { CombatSystem } from '../../combat/CombatSystem'
 import { createBaseStats } from '../../stats/StatBlock'
 
-// QA adversarial probes (2026-09-04 quick review) — TurnBuffSystem.
+// QA adversarial probes (2026-09-04 quick review) — BuffSystem.
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
@@ -43,10 +43,10 @@ function makeCombatSystem(): CombatSystem {
   return { applyDotDamage: vi.fn() } as unknown as CombatSystem
 }
 
-describe('TurnBuffSystem adversarial (QA probes)', () => {
+describe('BuffSystem adversarial (QA probes)', () => {
   it('INV-TB-1: target chết — DoT KHÔNG tick nhưng remainingTurns vẫn giảm', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1', alive: false })
     const combat = makeCombatSystem()
@@ -65,22 +65,22 @@ describe('TurnBuffSystem adversarial (QA probes)', () => {
   })
 
   it('INV-TB-2: convert giữa update loop không làm mất buff khác — iteration qua snapshot an toàn', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
-    const slow: TurnBuffDefinition = {
+    const slow: BuffDefinition = {
       id: 'slow', name: 'Slow', polarity: 'debuff', duration: 5, stackMode: 'refresh',
       convertsToId: 'frozen', convertsAfterContinuousTurns: 1, effects: [],
     }
-    const frozen: TurnBuffDefinition = {
+    const frozen: BuffDefinition = {
       id: 'frozen', name: 'Frozen', polarity: 'debuff', duration: 5, stackMode: 'refresh',
       effects: [{ type: 'cc', ccEffect: 'freeze' }],
     }
-    const other: TurnBuffDefinition = {
+    const other: BuffDefinition = {
       id: 'other', name: 'Other', polarity: 'debuff', duration: 5, stackMode: 'refresh', effects: [],
     }
-    const registry: TurnBuffRegistry = { get: (id) => (id === 'slow' ? slow : id === 'frozen' ? frozen : other) }
+    const registry: BuffDefinitionCatalog = { get: (id) => (id === 'slow' ? slow : id === 'frozen' ? frozen : other) }
 
     system.apply(slow, source, target, registry)
     system.apply(other, source, target, registry)
@@ -94,11 +94,11 @@ describe('TurnBuffSystem adversarial (QA probes)', () => {
   })
 
   it('INV-TB-3: ailmentResistPercent > cap 0.75 bị clamp — duration không âm', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ailmentResistPercent: 5 }) })
-    const definition: TurnBuffDefinition = {
+    const definition: BuffDefinition = {
       id: 'test', name: 'Test', polarity: 'debuff', duration: 4, stackMode: 'refresh', effects: [],
     }
 
@@ -110,14 +110,14 @@ describe('TurnBuffSystem adversarial (QA probes)', () => {
   })
 
   it('INV-TB-4: maxStacksBonus từ skillStats cộng vào maxStacks', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({
       id: 'source_1',
       skillStats: { maxStacksBonusByBuffId: { test: 2 } } as unknown as CombatEntity['skillStats'],
     })
     const target = makeEntity({ id: 'target_1' })
-    const definition: TurnBuffDefinition = {
+    const definition: BuffDefinition = {
       id: 'test', name: 'Test', polarity: 'debuff',
       duration: 3, maxStacks: 2, stackMode: 'stack', effects: [],
     }
@@ -130,11 +130,11 @@ describe('TurnBuffSystem adversarial (QA probes)', () => {
   })
 
   it('INV-TB-5: refresh không đổi stacks (chỉ reset remainingTurns)', () => {
-    const pool = new TurnBuffPool()
-    const system = new TurnBuffSystem(pool)
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
-    const definition: TurnBuffDefinition = {
+    const definition: BuffDefinition = {
       id: 'test', name: 'Test', polarity: 'debuff',
       duration: 3, maxStacks: 5, stackMode: 'refresh', effects: [],
     }

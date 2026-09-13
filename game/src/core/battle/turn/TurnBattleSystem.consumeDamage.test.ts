@@ -6,17 +6,17 @@ import { EventBus } from '../../events/EventBus'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import type { TurnBuffDefinition } from './TurnBuffTypes'
+import type { BuffDefinition } from '../../buff/BuffTypes'
 
 // Phase A3 (2026-09-07) — consume-for-damage skill effects (Pháp Tu
 // Detonate / Thổ Tu ward burst), ported from legacy SkillEffect's
 // consumesAilmentId/damagePerStack and consumesWardForDamage/
 // damagePerWardPoint. Orchestration lives in TurnBattleSystem's
 // per-target hit loop; stack state is read/cleared ONLY through
-// TurnBuffSystem/TurnBuffPool's own API.
+// BuffSystem/BuffPool's own API.
 
 function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
@@ -51,11 +51,11 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 const REGISTRY = {
-  get: (id: string): TurnBuffDefinition => {
+  get: (id: string): BuffDefinition => {
     if (id === 'qa_dot') {
       return { id, name: 'QA Dot', polarity: 'debuff', duration: 5, maxStacks: 5, stackMode: 'stack', effects: [{ type: 'dot', dpsRatio: 0.1, element: 'fire' }] }
     }
@@ -120,7 +120,7 @@ function battleWith(actorSkill: TurnSkillDefinition, seedTarget: (p: TurnBattleP
 describe('consume-for-damage skill effects (Phase A3)', () => {
   it('consumesAilmentId: applies stacks × damagePerStack as true damage, then clears the ailment', () => {
     const { battle, enemyParticipant, system } = battleWith(DETONATE, (target) => {
-      const buffs = new TurnBuffSystem(target.buffs)
+      const buffs = new BuffSystem(target.buffs)
       const source = createCombatant('player')
       // 3 stacks of the ailment on the target.
       buffs.apply(REGISTRY.get('qa_dot'), source, target.entity, REGISTRY)
@@ -192,7 +192,7 @@ describe('consume-for-damage skill effects (Phase A3)', () => {
 
     it('lethal ailment-consumption bonus completes death through the same authority', () => {
       const { battle, enemyParticipant, system, eventBus } = battleWith(DETONATE, (target) => {
-        const buffs = new TurnBuffSystem(target.buffs)
+        const buffs = new BuffSystem(target.buffs)
         const source = createCombatant('player')
         buffs.apply(REGISTRY.get('qa_dot'), source, target.entity, REGISTRY)
         buffs.apply(REGISTRY.get('qa_dot'), source, target.entity, REGISTRY)

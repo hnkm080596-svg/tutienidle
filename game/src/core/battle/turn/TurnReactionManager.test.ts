@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { TurnReactionManager } from './TurnReactionManager'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
+import { BuffPool } from '../../buff/BuffPool'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import { createSkillRuntimeStats } from '../../skill/SkillRuntimeStats'
-import { TURN_BUFF_REGISTRY } from '../../../data/buff/TurnBuffRegistry'
+import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import type { CombatEntity } from '../../combat/CombatEntity'
 
 // Phase A1 (2026-09-07) — turn-based port of ReactionManager.test.ts.
 // Type substitution table per the implementation plan: BuffSystem ->
-// TurnBuffSystem, BuffPool -> TurnBuffPool, BuffRegistry ->
-// TURN_BUFF_REGISTRY (production registry already contains all 11
+// BuffSystem, BuffPool -> BuffPool, BuffRegistry ->
+// BUFF_REGISTRY (production registry already contains all 11
 // reaction buffs), spawnLavaZone parameter deleted entirely (the
 // turn-based engine has no zone system — zone-as-DoT-buff was decided
 // instead; see roadmap mục 9.3).
@@ -57,17 +57,17 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
 
     const reactionEvents: unknown[] = []
     eventBus.on('reaction', (event) => reactionEvents.push(event))
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('te_cong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('te_cong'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(target.currentHp).toBe(1000 - 70)
     expect(targetBuffs.getActiveIds()).toEqual([])
@@ -82,13 +82,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('te_cong'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('te_cong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'bong', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'bong', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(target.currentHp).toBe(1000 - 70)
     expect(targetBuffs.getActiveIds()).toEqual([])
@@ -102,12 +102,12 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('trung_doc'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('trung_doc'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'trung_doc', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'trung_doc', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(target.currentHp).toBe(1000)
     expect(targetBuffs.getActiveIds()).toEqual(['trung_doc'])
@@ -121,13 +121,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'bong', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'bong', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(target.currentHp).toBe(1000)
     expect(targetBuffs.getActiveIds()).toEqual(['bong'])
@@ -144,13 +144,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
 
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('te_cong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('te_cong'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, BUFF_REGISTRY)
 
     // Combat Balance Pass (2026-08-29) — baseDamage 60 + power
     // (attack 10 × 0.5 = 5) = 65, then × (1 + 0.5) = 97.5.
@@ -165,13 +165,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('te_cong'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('trung_doc'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('te_cong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('trung_doc'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'trung_doc', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'trung_doc', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(target.currentHp).toBe(1000 - 75)
     expect(targetBuffs.getActiveIds()).toEqual([])
@@ -188,17 +188,17 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
 
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('te_cong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('te_cong'), source, target)
 
     const remainingBefore = targetBuffs.getActiveIds().includes('te_cong')
 
     expect(remainingBefore).toBe(true)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(target.currentHp).toBe(1000 - 70)
     // 'bong' is consumed as usual, 'te_cong' is KEPT (renewed, not removed).
@@ -213,13 +213,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 2000, maxHp: 2000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('trung_doc'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('trung_doc'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'trung_doc', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'trung_doc', source, target, combatSystem, BUFF_REGISTRY)
 
     // percentOfTargetCurrentHp 0.1 × 2000 = 200 (baseDamage 0).
     expect(target.currentHp).toBe(2000 - 200)
@@ -234,13 +234,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('thach_hoa'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('thach_hoa'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'bong', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'bong', source, target, combatSystem, BUFF_REGISTRY)
 
     // baseDamage 0 — HP unchanged immediately; the damage comes from the new DoT.
     expect(target.currentHp).toBe(1000)
@@ -258,13 +258,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
 
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('thach_hoa'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('te_cong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('thach_hoa'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('te_cong'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(targetBuffs.getActiveIds()).toEqual(['troi_chan'])
     expect(targetBuffs.isRooted()).toBe(true)
@@ -284,14 +284,14 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('thach_hoa'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('trung_doc'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('thach_hoa'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('trung_doc'), source, target)
 
-    const sourceBuffPool = new TurnBuffPool()
-    const sourceBuffs = new TurnBuffSystem(sourceBuffPool)
+    const sourceBuffPool = new BuffPool()
+    const sourceBuffs = new BuffSystem(sourceBuffPool)
 
     reactionManager.checkAndTrigger(
       targetBuffPool,
@@ -299,7 +299,7 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
       source,
       target,
       combatSystem,
-      TURN_BUFF_REGISTRY,
+      BUFF_REGISTRY,
       sourceBuffPool,
     )
 
@@ -320,13 +320,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('chay_mau'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('chay_mau'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'bong', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'bong', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(target.currentHp).toBe(1000 - 95)
     expect(target.maxHp).toBe(970)
@@ -341,13 +341,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000000, maxHp: 1000000, totalMaxHpReductionPercent: 0.29 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('chay_mau'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('chay_mau'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'bong', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'bong', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(target.totalMaxHpReductionPercent).toBeCloseTo(0.3, 5)
     expect(target.maxHp).toBeCloseTo(1000000 * 0.99, 0)
@@ -361,13 +361,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('chay_mau'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('trung_doc'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('chay_mau'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('trung_doc'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'trung_doc', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'trung_doc', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(targetBuffs.getActiveIds()).toEqual(['huyet_doc'])
   })
@@ -380,13 +380,13 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const targetBuffPool = new TurnBuffPool()
-    const targetBuffs = new TurnBuffSystem(targetBuffPool)
+    const targetBuffPool = new BuffPool()
+    const targetBuffs = new BuffSystem(targetBuffPool)
 
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target)
-    targetBuffs.apply(TURN_BUFF_REGISTRY.get('te_cong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('bong'), source, target)
+    targetBuffs.apply(BUFF_REGISTRY.get('te_cong'), source, target)
 
-    reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, TURN_BUFF_REGISTRY)
+    reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(targetBuffs.getActiveIds()).toEqual([])
   })

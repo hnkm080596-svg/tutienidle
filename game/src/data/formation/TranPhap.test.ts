@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { TURN_BUFF_REGISTRY } from '../buff/TurnBuffRegistry'
+import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 import { TRAN_PHAP_FORMATIONS } from './TranPhap'
 
 // B2 (2026-09-14) — production Tran Phap content contract. The mechanism
 // shipped earlier (spec 2026-09-05); these tests pin the authored roster:
 // distinct headcounts, unique cells, and every formation buff must resolve
-// through TURN_BUFF_REGISTRY (runtime only skips on unknown id — a typo'd
+// through BUFF_REGISTRY (runtime only skips on unknown id — a typo'd
 // definitionId would silently cost the buff, so it is pinned here instead).
 describe('Tran Phap content file', () => {
   it('every formation cell is within the local 3x3 standing-slot space (0-2)', () => {
@@ -33,15 +33,15 @@ describe('Tran Phap content file', () => {
     }
   })
 
-  it('every formation buff.definitionId resolves in TURN_BUFF_REGISTRY', () => {
+  it('every formation buff.definitionId resolves in BUFF_REGISTRY', () => {
     for (const formation of TRAN_PHAP_FORMATIONS) {
-      expect(() => TURN_BUFF_REGISTRY.get(formation.buff.definitionId)).not.toThrow()
+      expect(() => BUFF_REGISTRY.get(formation.buff.definitionId)).not.toThrow()
     }
   })
 
   it('formation buffs are battle-long party buffs (duration Infinity, polarity buff)', () => {
     for (const formation of TRAN_PHAP_FORMATIONS) {
-      const buff = TURN_BUFF_REGISTRY.get(formation.buff.definitionId)
+      const buff = BUFF_REGISTRY.get(formation.buff.definitionId)
 
       expect(buff.polarity).toBe('buff')
       expect(buff.duration).toBe(Infinity)

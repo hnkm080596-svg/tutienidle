@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
 
-const COUNTER_DEF: TurnBuffDefinition = {
+const COUNTER_DEF: BuffDefinition = {
   id: 'react_counter',
   name: 'Counter Stance',
   polarity: 'buff',
@@ -17,12 +17,12 @@ const COUNTER_DEF: TurnBuffDefinition = {
   effects: [{ type: 'reactiveTrigger', trigger: 'onImpactLanded', chance: 1, queuesFollowUp: true }],
 }
 
-class Registry implements TurnBuffRegistry {
-  private readonly defs = new Map<string, TurnBuffDefinition>()
-  constructor(defs: TurnBuffDefinition[]) {
+class Registry implements BuffDefinitionCatalog {
+  private readonly defs = new Map<string, BuffDefinition>()
+  constructor(defs: BuffDefinition[]) {
     for (const d of defs) this.defs.set(d.id, d)
   }
-  get(id: string): TurnBuffDefinition {
+  get(id: string): BuffDefinition {
     const d = this.defs.get(id)
     if (!d) throw new Error(`missing buff: ${id}`)
     return d
@@ -44,7 +44,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }
@@ -64,7 +64,7 @@ function fixture() {
   const registry = new Registry([COUNTER_DEF])
   const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, registry)
 
-  new TurnBuffSystem(enemyParticipant.buffs).apply(COUNTER_DEF, player, enemyEntity, registry)
+  new BuffSystem(enemyParticipant.buffs).apply(COUNTER_DEF, player, enemyEntity, registry)
 
   const battle: TurnBattle = {
     players: [playerParticipant],
