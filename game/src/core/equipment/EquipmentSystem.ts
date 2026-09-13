@@ -142,7 +142,8 @@ export class EquipmentSystem {
    * not commit onto the restored set (a stale wash ticket would overwrite
    * freshly-restored affixes — see QA-R9-001's cross-session ticket
    * finding). GameManagerSaveRestore calls this on every applied payload;
-   * M2 (ARCH-011) builds the per-item lifetime binding on this boundary.
+   * M2 (ARCH-011) additionally binds each issued ticket to its item's
+   * exact-object/membership/snapshot lifetime inside EquipmentWash.ts.
    */
   invalidatePendingOperationTickets(): void {
     // Writes stay inside the domain owner modules (R14 paid-random

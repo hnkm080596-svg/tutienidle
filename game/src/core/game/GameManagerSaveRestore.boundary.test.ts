@@ -553,6 +553,38 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     })
   })
 
+  // M2 (ARCH-011 / AUD-E02) — the E02 loop through the real restore path:
+  // the payload carries the SAME instanceId but a different affix shape.
+  // Restore replaces the bag with a detached clone (different object, new
+  // membership generation), so the pre-restore paid roll must not land on
+  // the restored item even if the ticket itself were still reachable.
+  it('a pre-restore wash ticket cannot overwrite a restored same-id item with a different shape', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    const live = savedItem('wash-boundary-item')
+    manager.equipmentBag.add(live)
+    manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 9)
+    manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 100)
+
+    const preview = manager.equipmentOps.previewWashItem('wash-boundary-item')
+    expect(preview.ok).toBe(true)
+
+    const restoredShape = [{ affixId: 'prefix_max_hp', tier: 2, value: 40 }]
+    const replacement = savedItem('wash-boundary-item')
+    replacement.affixes = structuredClone(restoredShape)
+    manager.saveOps.restoreFromSave(baseSave(player, { equipment: [replacement] }))
+
+    const restored = manager.equipmentBag.get('wash-boundary-item')
+    expect(restored).toBeDefined()
+    expect(restored).not.toBe(live)
+
+    expect(manager.equipmentOps.commitWashItem('wash-boundary-item', preview.ticketId!)).toEqual({
+      ok: false,
+      reason: 'no_pending_wash',
+    })
+    expect(restored!.affixes).toEqual(restoredShape)
+  })
+
   it('a session restore clears a pending refine preview — commit rejects invalid_refine_preview', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
