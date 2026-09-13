@@ -26,6 +26,7 @@
     "@floating-ui/vue": "^2.0.1",
     "phaser": "^4.2.1",
     "pinia": "^4.0.2",
+    "tone": "^15.1.22",
     "vue": "rc",
     "vue-i18n": "^11.4.10",
     "vue-router": "^5.2.0"

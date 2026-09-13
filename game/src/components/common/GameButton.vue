@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import type { InkWashUiAssetId } from '@/assets/inkWashUi'
+import { AudioManager } from '@/core/audio/AudioManager'
 // Shared chrome primitive (UI/UX rework Giai đoạn A) — thay button
 // hand-roll (mỗi panel tự khai background/color/border riêng) bằng 1
 // component dùng chung, tái dùng token --gold/--jade/--crimson/--tap-*
@@ -14,6 +15,8 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   loading?: boolean
   type?: 'button' | 'submit'
+  /** Khi false (mặc định true), button KHÔNG kêu uiClick khi click. */
+  sound?: boolean
 }>(), {
   variant: 'primary',
   size: 'md',
@@ -22,9 +25,27 @@ const props = withDefaults(defineProps<{
   disabled: false,
   loading: false,
   type: 'button',
+  sound: true,
 })
 
-defineEmits<{ click: [MouseEvent] }>()
+const emit = defineEmits<{ click: [MouseEvent] }>()
+
+// Dùng AudioManager singleton trực tiếp (không qua Pinia store) để
+// GameButton mount được trong test đơn vị mà không cần setup Pinia
+// active. SettingsPanel + components cần reactive state sẽ dùng
+// useAudioStore để đọc/ghi enabled + volume.
+const audio = AudioManager.getInstance()
+
+// Centralized click handler — phát uiClick SFX + unlock AudioContext lần
+// đầu (autoplay policy yêu cầu user gesture). Click thật của component
+// cha vẫn được phát ra qua emit('click').
+function handleClick(event: MouseEvent) {
+  audio.unlock()
+  if (props.sound) {
+    audio.play('uiClick')
+  }
+  emit('click', event)
+}
 
 const sliceAsset = computed<InkWashUiAssetId | undefined>(() => {
   // border-image (InkNineSlice) không theo border-radius — nút circle
@@ -51,7 +72,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
     :class="[`game-button--${variant}`, `game-button--${size}`, `game-button--${shape}`, { 'is-loading': loading, 'has-accent': accentVar !== undefined }]"
     :style="accentVar ? { '--button-accent': accentVar } : undefined"
     :disabled="disabled || loading"
-    @click="$emit('click', $event)"
+    @click="handleClick"
   >
     <InkNineSlice v-if="sliceAsset" :asset-id="sliceAsset" :layer="sliceLayer" :tint-var="sliceTint" />
     <span v-if="loading" class="game-button__spinner" aria-hidden="true" />
