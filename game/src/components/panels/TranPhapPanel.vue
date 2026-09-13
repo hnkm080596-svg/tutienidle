@@ -8,8 +8,12 @@
 // exactly (both read the same constant).
 // Mapping local slots onto PLAYER_SIDE_REGION absolutes happens in
 // FormationPlacement.localCellToAbsolute() at battle build time -- this
-// panel only reads/writes PlayerData.formationLoadout and never touches
-// the real battlefield coordinate system.
+// panel never touches the real battlefield coordinate system.
+// F4 (architecture-qa-repairs): the draft is committed through the
+// validating owner gameManager.turnBattleOps.setFormationLoadout() instead
+// of writing player.formationLoadout directly, and a watch on
+// player.formationLoadout keeps the draft from going stale against
+// external writes (save restore, other writers).
 //
 // Gating uses ui.standalonePanel (NOT player.standalonePanel - that flag
 // does not exist), same OverlayPanel pattern as every other standalone
@@ -19,7 +23,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
-import { useStateVersion } from '@/composables/useGameState'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { TRAN_PHAP_FORMATIONS } from '@/data/formation/TranPhap'
 import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
@@ -42,6 +46,7 @@ import type { SlotState } from '@/presentation/contracts/SlotState'
 
 const ui = useUiStore()
 const player = usePlayerStore()
+const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
 const { t } = useI18n({ useScope: 'local' })
 
@@ -174,14 +179,32 @@ function removeAssignment(combatantId: string) {
   currentAssignments.value = currentAssignments.value.filter((a) => a.combatantId !== combatantId)
 }
 
+// Re-seed the local draft from the committed loadout. Copies each
+// assignment so the draft never shares references with player state
+// (before this, the draft ref held the store's array directly).
+function syncDraftFromLoadout() {
+  const loadout = player.formationLoadout
+
+  selectedFormationId.value = loadout?.formationId ?? null
+  currentAssignments.value = loadout?.assignments.map((a) => ({ ...a })) ?? []
+}
+
 function onConfirm() {
   if (!selectedFormation.value) {
     return
   }
 
-  player.formationLoadout = {
+  // F4 - the commit goes through the validating owner. A stale draft (e.g.
+  // a companion released while the panel was open) is rejected and the
+  // draft resyncs to whatever is actually committed.
+  const committed = gameManager.turnBattleOps.setFormationLoadout(player.$state, {
     formationId: selectedFormation.value.id,
     assignments: currentAssignments.value,
+  })
+
+  if (!committed) {
+    syncDraftFromLoadout()
+    return
   }
 
   bumpState()
@@ -232,6 +255,13 @@ const previewRegion = useDynamicRegion({
   },
 })
 
+// F4 - external writes (save restore, another writer) replace
+// formationLoadout wholesale; resync the draft so it cannot go stale.
+watch(
+  () => player.formationLoadout,
+  () => syncDraftFromLoadout(),
+)
+
 // Bootstrap only while the panel is actually open — the container ref lives
 // inside OverlayPanel's slot, so it exists in the DOM only then, and this
 // component's own onMounted (which runs once at GameRoot boot) is too early.
@@ -239,6 +269,7 @@ watch(
   () => ui.standalonePanel === 'tran_phap',
   (isOpen) => {
     if (isOpen) {
+      syncDraftFromLoadout()
       previewRegion.start()
     } else {
       previewRegion.destroy()
