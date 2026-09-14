@@ -25,6 +25,9 @@ const generatedRecipes: AlchemyRecipe[] = REALM_TIERS.flatMap((realmId, tierInde
     fuelWoodAmount: 2 + Math.floor(tierIndex / 2),
     spiritStoneCost: Math.round(50 * Math.pow(2, tierIndex)),
     baseDurationSeconds: Math.round(600 * Math.pow(1.45, tierIndex)),
+    // M10 (ARCH-008) — retired families (Hoi Xuan Dan) keep their recipes
+    // resolvable for in-flight settle, but new jobs are rejected.
+    ...(family.retired === true ? { retired: true } : {}),
   })),
 )
 

@@ -63,6 +63,14 @@ export interface AlchemyRecipe {
    * generated theo PILL_FAMILIES, không có nguyên liệu phụ.
    */
   specialIngredients?: { materialId: string; amount: number }[]
+
+  /**
+   * M10 (ARCH-008) — retired pill family (Hoi Xuan Dan): the recipe stays
+   * resolvable so in-flight jobs from old saves settle normally, but a new
+   * job is rejected with reason 'retired' and the recipe is hidden from
+   * the craft list.
+   */
+  retired?: boolean
 }
 
 export interface ActiveAlchemyJob {
@@ -217,6 +225,12 @@ export class AlchemySystem {
     // fuel wood + spirit stone requirements; herb/specials stay base.
     costMultiplier = 1,
   ): { ok: boolean; reason?: string; spiritStoneCost?: number } {
+    // M10 (ARCH-008) — retired pill families (Hoi Xuan Dan) cannot start
+    // new jobs; in-flight jobs still settle via the resolvable recipe.
+    if (recipe.retired === true) {
+      return { ok: false, reason: 'retired' }
+    }
+
     if (this.jobs.length >= Math.max(1, maxConcurrentJobs)) {
       return { ok: false, reason: 'job_slots_full' }
     }

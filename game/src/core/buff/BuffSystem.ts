@@ -25,7 +25,18 @@ const POISON_ROOT_THRESHOLD_STACKS = 3
 export class BuffSystem {
   constructor(private readonly pool: BuffPool) {}
 
-  apply(definition: BuffDefinition, source: CombatEntity, target: CombatEntity, registry?: BuffDefinitionCatalog) {
+  /**
+   * M10 (ARCH-008) — `durationOverride` replaces the registry's authored
+   * duration as the pre-resist base (SkillEffect.duration semantics from
+   * the legacy effect system). undefined keeps `definition.duration`.
+   */
+  apply(
+    definition: BuffDefinition,
+    source: CombatEntity,
+    target: CombatEntity,
+    registry?: BuffDefinitionCatalog,
+    durationOverride?: number,
+  ) {
     const resolvedEffects = definition.effects.map((effect) => {
       if (effect.type === 'dot') {
         const dmg = this.calculateDamagePerTurn(effect, source, target)
@@ -43,7 +54,7 @@ export class BuffSystem {
     })
 
     const resistMultiplier = 1 - Math.min(AILMENT_RESIST_CAP, Math.max(0, target.stats.ailmentResistPercent))
-    const duration = definition.duration * resistMultiplier * (1 + source.stats.ailmentDurationPercent)
+    const duration = (durationOverride ?? definition.duration) * resistMultiplier * (1 + source.stats.ailmentDurationPercent)
 
     const existing = this.pool.getFromSource(definition.id, source.id)
 

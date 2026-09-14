@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { toTurnSkillDefinition } from './SkillToTurnSkillConverter'
+import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
 import { SKILLS } from '../../data/skill/Skills'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillManager } from '../skill/SkillManager'
@@ -209,6 +209,87 @@ describe('toTurnSkillDefinition', () => {
       const turnSkill = toTurnSkillDefinition(skill, effective)
 
       expect(turnSkill.healPercentOfDamage).toBe(0.4)
+    })
+
+    it('carries the authored buff duration override (duong_linh_tuyen spec: 8)', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'thanh_tuyen_duong_linh')!)
+      manager.add(skill)
+
+      skillSystem.selectSpecialization(skill.id, 'duong_linh_tuyen')
+      const effective = skillSystem.getEffectiveSkill(manager.get(skill.id)!)
+      const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
+
+      // M10 (ARCH-008) — the spec's authored duration:8 must survive
+      // conversion; without it the registry default 6 silently wins.
+      expect(turnSkill.appliesBuff).toEqual({ definitionId: 'thanh_tuyen', target: 'self', duration: 8 })
+    })
+
+    it('converts trigger-migrated tram (onCast -> dealDamage) into damage, preserving the cast-scaled value', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'tram')!)
+      skill.totalExperience = 10_000 // L3 — flat bonus floor(10000/10) = 1000
+      manager.add(skill)
+
+      const effective = skillSystem.getEffectiveSkill(skill)
+      const turnSkill = toTurnSkillDefinition(skill, effective)
+
+      expect(turnSkill.id).toBe('tram')
+      expect(turnSkill.damage).toEqual({ kind: 'physical', multiplier: 1001, scaling: undefined })
+    })
+
+    it('throws on trigger kits that do not fit the single onCast -> dealDamage shape', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'tram')!)
+      skill.triggers = [
+        {
+          trigger: 'onCast',
+          actions: [
+            { type: 'dealDamage', value: 1 },
+            { type: 'grantResource', pool: 'swordIntent', amount: 1 },
+          ],
+        },
+      ]
+      manager.add(skill)
+
+      const effective = skillSystem.getEffectiveSkill(skill)
+
+      expect(() => toTurnSkillDefinition(skill, effective)).toThrow(/Unsupported trigger kit/)
+    })
+
+    it('collectUnsupportedSkillSemantics reports authored fields the engine cannot execute', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+
+      // diem_kim_thuat debuff carries proc-grant counters with no
+      // turn-engine consumer.
+      const metal = structuredClone(SKILLS.find((s) => s.id === 'diem_kim_thuat')!)
+      manager.add(metal)
+
+      const metalReport = collectUnsupportedSkillSemantics(
+        metal,
+        skillSystem.getEffectiveSkill(metal),
+      )
+
+      expect(metalReport).toContain('effect.grantsKimThePerProc')
+      expect(metalReport).toContain('effect.grantsHuyetPhaPerProc')
+
+      // tho_cau_thuat carries the per-cast grant + area-behavior flags.
+      const earth = structuredClone(SKILLS.find((s) => s.id === 'tho_cau_thuat')!)
+      const earthReport = collectUnsupportedSkillSemantics(
+        earth,
+        skillSystem.getEffectiveSkill(earth),
+      )
+
+      expect(earthReport).toContain('effect.earthPureAreaBehavior')
+      expect(earthReport).toContain('skill.grantsThoThePerCast')
+
+      // A clean kit reports nothing.
+      const tram = structuredClone(SKILLS.find((s) => s.id === 'tram')!)
+      expect(collectUnsupportedSkillSemantics(tram, skillSystem.getEffectiveSkill(tram))).toEqual([])
     })
 
     it('fails explicitly with an Error on unsupported effect types', () => {

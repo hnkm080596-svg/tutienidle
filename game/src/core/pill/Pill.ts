@@ -33,4 +33,11 @@ export interface Pill {
   professionGrade?: ProfessionGrade
 
   effects: PillEffect[]
+
+  /**
+   * M10 (ARCH-008) — retired family (Hoi Xuan Dan): the item still resolves
+   * for bag display / old saves, but consumption is rejected explicitly
+   * (usePillDetailed -> 'retired'). Never silently inert.
+   */
+  retired?: boolean
 }

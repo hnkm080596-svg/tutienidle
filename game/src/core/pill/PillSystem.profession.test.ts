@@ -43,7 +43,10 @@ function setup() {
   return { gameManager, player }
 }
 
-const REGEN_PILL = 'hoi_xuan_dan_mortal'
+// M10 (ARCH-008) — hoi_xuan_dan retired; hoi_linh_dan keeps the regen
+// profession-pill path covered (realm gate still fires before its
+// phap_tu gate, so the wrong_realm test is unaffected).
+const REGEN_PILL = 'hoi_linh_dan_mortal'
 const PERMANENT_PILL = 'to_cot_dan_mortal'
 const CULTIVATION_PILL = 'tu_linh_dan_mortal'
 
@@ -125,18 +128,21 @@ describe('Pill nghề — gate + atomic consumption', () => {
   })
 })
 
-// Gameplay fixes (2026-09-05): hpRegenPerTurn pill modifier REMOVED per user request —
-// uong thuoc nhan HP regen vo nghia trong turn engine. 2 test pin cu (regen stat tang
-// trong combat + stack policy HP/s) da retire cung tinh nang. MP regen pill giu nguyen.
-describe('Regen timed effect — hpRegen pill REMOVED (user request 2026-09-05)', () => {
-  it('uong Hoi Xuan Dan KHONG con cap modifier hpRegenPerTurn', async () => {
+// M10 (ARCH-008, user-locked 2026-09-14): Hoi Xuan Dan RETIRED — the pill
+// is no longer consumable at all (reason 'retired', bag item kept). The
+// earlier hpRegenPerTurn-stripping tests retired with the mechanic
+// (2026-09-05); this pins the retired state instead of a silent no-op.
+describe('Hoi Xuan Dan — retired family (ARCH-008 / M10)', () => {
+  it('usePillDetailed rejects with reason retired — no consume, no timed effect', async () => {
     const { gameManager, player } = setup()
-    await registerPill(gameManager, REGEN_PILL)
-    gameManager.pillOps.usePillDetailed(REGEN_PILL, pillTarget(), player)
-    const effects = player.persistentTimedEffects
-    const hpModifiers = effects.flatMap((e) => e.modifiers).filter((m) => m.stat === 'hpRegenPerTurn')
-    expect(hpModifiers).toHaveLength(0)
-    expect(effects.length).toBeGreaterThan(0)
+    await registerPill(gameManager, 'hoi_xuan_dan_mortal')
+
+    const result = gameManager.pillOps.usePillDetailed('hoi_xuan_dan_mortal', pillTarget(), player)
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('retired')
+    expect(gameManager.pillBag.has('hoi_xuan_dan_mortal', 1)).toBe(true)
+    expect(player.persistentTimedEffects).toHaveLength(0)
   })
 })
 // M3 (spec 2026-09-03 talent catalog v4 §4.2) — Hoa Hau Thong Than: dan

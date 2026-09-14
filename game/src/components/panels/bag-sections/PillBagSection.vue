@@ -183,9 +183,11 @@ function drinkPill(pillId: string) {
         ? 'Cả 5 chỉ số chính đã đạt trần cảnh giới.'
         : result.reason === 'requires_phap_tu'
           ? 'Đan dược hồi Linh Lực chỉ dùng được cho Pháp Tu.'
-          : result.reason === 'cap'
-            ? 'Chỉ số liên quan đã đạt trần cảnh giới.'
-            : 'Không thể dùng đan dược.'
+          : result.reason === 'retired'
+            ? 'Đan dược này đã ngừng lưu hành — hiệu ứng cũ không còn được hỗ trợ.'
+            : result.reason === 'cap'
+              ? 'Chỉ số liên quan đã đạt trần cảnh giới.'
+              : 'Không thể dùng đan dược.'
 
   useNotificationStore().push('warning', reasonText)
 }

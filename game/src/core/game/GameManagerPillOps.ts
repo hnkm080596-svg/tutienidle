@@ -37,7 +37,7 @@ export class GameManagerPillOps {
     random: () => number = Math.random,
   ): {
     ok: boolean
-    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap'
+    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap' | 'retired'
     mainStat?: MainStatKey
   } {
     if (!this.deps.pillBag.has(pillId, 1)) {
@@ -45,6 +45,13 @@ export class GameManagerPillOps {
     }
 
     const pill = this.deps.pillRegistry.get(pillId)
+
+    // M10 (ARCH-008) — retired families (Hoi Xuan Dan) are unavailable:
+    // explicit rejection, pill stays in the bag. Retired trumps every
+    // other gate so the player sees the real reason.
+    if (pill.retired === true) {
+      return { ok: false, reason: 'retired' }
+    }
 
     // Exact-realm gate for profession pills (plan §5.2).
     if (pill.realmId && pill.realmId !== player.realmId) {

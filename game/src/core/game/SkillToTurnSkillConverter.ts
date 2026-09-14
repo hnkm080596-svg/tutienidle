@@ -19,8 +19,96 @@ import type { StatType } from '../stats/StatTypes'
 // - Leech healing (healPercentOfDamage) is preserved.
 // - Fails explicitly with an Error on unsupported effect types or invalid
 //   configurations — never silently degrades to physical ×1 attack.
+//
+// M10 (ARCH-008) — two extensions:
+// - `appliesBuff.duration` carries the authored effect-level duration
+//   override (duong_linh_tuyen: 8 turns instead of the registry's 6).
+// - Trigger-migrated skills (tram) express their strike as a single
+//   onCast -> dealDamage binding instead of a 'damage' effect; that exact
+//   shape converts to `damage`. Anything richer throws — the engine has
+//   no trigger runtime.
+// - Field-level authored data the engine cannot execute (proc-grant
+//   counters, multi-hit, zone spawning, spread, ...) is REPORTED through
+//   collectUnsupportedSkillSemantics() — never silently dropped (A8).
 
 const SUPPORTED_EFFECT_TYPES = new Set(['damage', 'debuff', 'buff', 'add_stack'])
+
+const UNSUPPORTED_EFFECT_FIELDS = [
+  'grantsKimThePerProc',
+  'grantsHuyetPhaPerProc',
+  'earthPureAreaBehavior',
+  'hitCountByRealm',
+  'hitCount',
+  'realmDamageRatio',
+  'skillExperienceRatio',
+  'spreadsAilmentId',
+  'spreadStackPercent',
+  'spreadRefreshesPrimary',
+  'stacksPerAffectedTarget',
+  'grantsSwordZone',
+  'grantsZone',
+  'zoneElement',
+  'swordZoneCharges',
+  'swordZoneTickInterval',
+  'swordZoneDamageRatio',
+] as const
+
+const UNSUPPORTED_SKILL_FIELDS = [
+  'grantsHoaThePerCast',
+  'grantsThoThePerCast',
+  'breakDamagePerHit',
+] as const
+
+const UNSUPPORTED_DEAL_DAMAGE_FIELDS = [
+  'realmDamageRatio',
+  'skillExperienceRatio',
+  'hitCountByRealm',
+  'knockbackDistance',
+] as const
+
+/**
+ * M10 (ARCH-008) — lists authored fields on the resolved skill that the
+ * turn engine cannot execute. Callers report these (warn/log) instead of
+ * discovering them silently. Keys are stable dotted paths.
+ */
+export function collectUnsupportedSkillSemantics(skill: Skill, effective: EffectiveSkill): string[] {
+  const unsupported = new Set<string>()
+
+  const skillRecord = skill as unknown as Record<string, unknown>
+  for (const field of UNSUPPORTED_SKILL_FIELDS) {
+    if (skillRecord[field] !== undefined) {
+      unsupported.add(`skill.${field}`)
+    }
+  }
+
+  for (const effect of effective.effects) {
+    const record = effect as unknown as Record<string, unknown>
+    for (const field of UNSUPPORTED_EFFECT_FIELDS) {
+      if (record[field] !== undefined) {
+        unsupported.add(`effect.${field}`)
+      }
+    }
+  }
+
+  for (const binding of effective.triggers ?? []) {
+    if (binding.trigger !== 'onCast') {
+      unsupported.add(`trigger.${binding.trigger}`)
+    }
+    for (const action of binding.actions) {
+      if (action.type !== 'dealDamage') {
+        unsupported.add(`trigger.action.${action.type}`)
+        continue
+      }
+      for (const field of UNSUPPORTED_DEAL_DAMAGE_FIELDS) {
+        if (action[field] !== undefined) {
+          unsupported.add(`trigger.dealDamage.${field}`)
+        }
+      }
+    }
+  }
+
+  return [...unsupported]
+}
 
 export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): TurnSkillDefinition {
   // Validate that all effects in the effective skill are supported
@@ -57,8 +145,15 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
     } else {
       damage = { kind: 'physical', multiplier: damageEffect.value ?? 1, scaling }
     }
-  } else if (!isSelf && !effective.effects.some(isDebuffEffect)) {
-    throw new Error(`Unsupported: non-self skill "${skill.id}" has neither damage nor debuff effects`)
+  } else {
+    // M10 (ARCH-008) — trigger-migrated skills (tram) express their strike
+    // as onCast -> dealDamage rather than a 'damage' effect. Only the
+    // exact single-binding/single-action shape converts; richer kits throw.
+    damage = resolveTriggerDamage(skill, effective)
+
+    if (!damage && !isSelf && !effective.effects.some(isDebuffEffect)) {
+      throw new Error(`Unsupported: non-self skill "${skill.id}" has neither damage nor debuff effects`)
+    }
   }
 
   const targeting: ActionTargeting = isSelf
@@ -97,6 +192,10 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
     turnSkill.appliesBuff = {
       definitionId: buffEffect.buffId,
       target: isSelf ? 'self' : 'target',
+      // M10 (ARCH-008) — authored duration override (e.g. duong_linh_tuyen
+      // spec: 8) must reach BuffSystem.apply; without it the registry
+      // default silently wins (5.988 instead of 7.984 under resist 0.998).
+      ...(buffEffect.duration !== undefined ? { duration: buffEffect.duration } : {}),
     }
   }
 
@@ -136,6 +235,54 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
   }
 
   return turnSkill
+}
+
+/**
+ * M10 (ARCH-008) — converts a trigger-migrated strike (tram's onCast ->
+ * dealDamage) into ActionDamageInfo. Strict shape: exactly one onCast
+ * binding with exactly one dealDamage action. Returns undefined when the
+ * skill declares no triggers at all; throws on any richer shape — the
+ * engine has no trigger runtime, so degrading would silently corrupt.
+ */
+function resolveTriggerDamage(skill: Skill, effective: EffectiveSkill): ActionDamageInfo | undefined {
+  const triggers = effective.triggers
+
+  if (!triggers || triggers.length === 0) {
+    return undefined
+  }
+
+  const [binding] = triggers
+
+  if (!binding || triggers.length !== 1 || binding.trigger !== 'onCast' || binding.actions.length !== 1) {
+    throw new Error(
+      `Unsupported trigger kit for skill "${skill.id}": turn combat executes ` +
+        'exactly one onCast binding with a single dealDamage action',
+    )
+  }
+
+  const action = binding.actions[0]!
+
+  if (action.type !== 'dealDamage') {
+    throw new Error(`Unsupported trigger action "${action.type}" for skill "${skill.id}"`)
+  }
+
+  const scaling = action.attributeScaling || action.manaScalingRatio || action.swordIntentDamageRatio
+    ? {
+        attributeScaling: action.attributeScaling,
+        manaScalingRatio: action.manaScalingRatio,
+        swordIntentDamageRatio: action.swordIntentDamageRatio,
+      }
+    : undefined
+
+  if (action.components && action.components.length > 0) {
+    return { kind: 'elemental', components: action.components, multiplier: action.value ?? 1, scaling }
+  }
+
+  if (action.damageType === 'primordial') {
+    return { kind: 'primordial', multiplier: action.value ?? 1, scaling }
+  }
+
+  return { kind: 'physical', multiplier: action.value ?? 1, scaling }
 }
 
 function isDamageEffect(effect: SkillEffect): effect is SkillEffect & {

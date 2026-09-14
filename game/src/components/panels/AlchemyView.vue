@@ -43,7 +43,10 @@ onUnmounted(() => {
 const recipes = computed<AlchemyRecipe[]>(() => {
   stateVersion.value
 
-  return gameManager.alchemyOps.getAlchemyRecipes().filter((recipe) => recipe.realmId === player.realmId)
+  // M10 (ARCH-008) — retired pill families (Hoi Xuan Dan) are hidden from
+  // the craft list entirely; startJob still rejects them defensively.
+  return gameManager.alchemyOps.getAlchemyRecipes()
+    .filter((recipe) => recipe.realmId === player.realmId && recipe.retired !== true)
 })
 
 const currentGradeLabel = computed(() => {

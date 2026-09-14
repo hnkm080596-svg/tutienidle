@@ -157,7 +157,7 @@ import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentati
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE } from '../../data/skill/TurnReactionPathSkills'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
-import { toTurnSkillDefinition } from './SkillToTurnSkillConverter'
+import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
 
 /**
  * GameManager là orchestrator (2026-08-24 refactor — tách business logic
@@ -711,7 +711,7 @@ export class GameManager {
       bankPassiveCarry: (player) => this.passiveSystem.bankBattleCarryStacks(player),
       seedPassiveCarry: (player) => this.passiveSystem.seedBattleCarryStacks(player),
       buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
-      getPhapTuThuanElement: () => this.progressionOps.getPhapTuThuanElement(),
+      resolvePlayerBasicAttack: (player) => this.resolvePlayerBasicAttack(player),
       resolvePlayerSpecialUltimate: (player) => this.resolvePlayerSpecialUltimate(player),
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
     })
@@ -796,10 +796,55 @@ export class GameManager {
   }
 
   /**
-   * Ch?n basic attack theo cultivation path c?a player (Completion Task 5
-   * mapping ï¿½ 8 builds). Chua ch?n d?o/Th? Tu = generic physical.
+   * M10 (ARCH-008) — the production basic resolves through the canonical
+   * Skill -> TurnSkillDefinition pipeline (SkillSystem.getEffectiveSkill
+   * + toTurnSkillDefinition), so authored level/cast scaling, damage
+   * components and ailments reach the real turn engine. Mirrors
+   * resolvePlayerSpecialUltimate()'s path.
+   *
+   * The static TurnBasicAttacks map remains the fallback when the authored
+   * basic isn't learned (phap_tu element not picked yet) or fails strict
+   * conversion. The basic slot is cadence-free by design (every-turn
+   * swing), so converted output is normalized to cooldownTurns 0 and no
+   * resource cost.
+   *
+   * Mortal/pham_nhan players resolve to learned `tram` (auto-granted at
+   * creation): the engine reports its casts as 'tram', which is what feeds
+   * skillCastCounts and the bat_kiem route gate at path choice. The_tu
+   * keeps the authored generic-melee mapping.
    */
   private resolvePlayerBasicAttack(player: PlayerData): TurnSkillDefinition {
+    const authoredBasicId = this.authoredBasicSkillId(player)
+    const skill = authoredBasicId ? this.skillManager.get(authoredBasicId) : undefined
+
+    if (skill) {
+      const effective = this.skillSystem.getEffectiveSkill(skill)
+      const unsupported = collectUnsupportedSkillSemantics(skill, effective)
+
+      if (unsupported.length > 0) {
+        console.warn(
+          `[GameManager] basic "${skill.id}" executes partially — ` +
+            `unsupported authored semantics: ${unsupported.join(', ')}`,
+        )
+      }
+
+      try {
+        const converted = toTurnSkillDefinition(skill, effective)
+
+        return {
+          ...converted,
+          cooldownTurns: 0,
+          resourceType: 'none',
+          resourceCost: undefined,
+        }
+      } catch (error) {
+        console.warn(
+          `[GameManager] basic "${skill.id}" rejected by strict converter — falling back to static build basic:`,
+          error instanceof Error ? error.message : error,
+        )
+      }
+    }
+
     if (player.cultivationPath === 'kiem_tu') {
       return BASIC_ATTACKS_BY_BUILD.kiem_tu!
     }
@@ -810,6 +855,32 @@ export class GameManager {
     }
 
     return GENERIC_PHYSICAL_BASIC
+  }
+
+  /**
+   * M10 (ARCH-008) — which authored Skill backs this build's basic. Any
+   * future non-elemental path (e.g. a revived the_tu) authors generic
+   * melee — no skill — until its kit is authored.
+   */
+  private authoredBasicSkillId(player: PlayerData): string | undefined {
+    if (player.cultivationPath === 'kiem_tu') {
+      return 'tram'
+    }
+
+    if (player.cultivationPath === 'phap_tu') {
+      const element = this.progressionOps.getPhapTuThuanElement() ?? 'fire'
+
+      return CHAIN_SKILL_IDS[element]?.[0]
+    }
+
+    // Future path ids (none exist in CultivationPathId today) author
+    // generic melee, not tram.
+    if (player.cultivationPath !== undefined) {
+      return undefined
+    }
+
+    // Mortal / pham_nhan — tram is the creation-granted basic skill.
+    return 'tram'
   }
 
   /**

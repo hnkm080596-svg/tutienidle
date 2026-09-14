@@ -31,7 +31,7 @@ import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 import { effectiveWaves } from '../stage/EffectiveWaves'
 import type { Stage } from '../stage/Stage'
 
-import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { REACTION_PATH_POOL } from '../../data/skill/TurnReactionPathSkills'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
@@ -56,7 +56,7 @@ import type { EnemyManager } from '../enemy/EnemyManager'
 import type { CombatSystem } from '../combat/CombatSystem'
 import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import type { RewardReceiver } from '../reward/RewardSystem'
-import type { ElementType } from '../element/ElementType'
+
 import type { TemplateRegistry } from './TemplateRegistry'
 import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
 
@@ -232,7 +232,9 @@ export class GameManagerTurnBattleOps {
     bankPassiveCarry: (player: PlayerData) => void
     seedPassiveCarry: (player: PlayerData) => void
     buildPlayerRewardReceiver: (player: PlayerData) => RewardReceiver
-    getPhapTuThuanElement: () => ElementType | undefined
+    // M10 (ARCH-008) — canonical basic resolution lives in GameManager
+    // (it owns skillManager/skillSystem); this ops consumes the result.
+    resolvePlayerBasicAttack: (player: PlayerData) => TurnSkillDefinition
     // Resolve special/ultimate via the Skill converter + effective skill.
     resolvePlayerSpecialUltimate: (
       player: PlayerData,
@@ -902,19 +904,6 @@ export class GameManagerTurnBattleOps {
 
   // --- Turn-battle construction (moved verbatim from GameManager) ----------
 
-  private resolvePlayerBasicAttack(player: PlayerData): TurnSkillDefinition {
-    if (player.cultivationPath === 'kiem_tu') {
-      return BASIC_ATTACKS_BY_BUILD.kiem_tu!
-    }
-
-    if (player.cultivationPath === 'phap_tu') {
-      const element = this.deps.getPhapTuThuanElement() ?? 'fire'
-      return BASIC_ATTACKS_BY_BUILD[`phap_tu_${element}`] ?? GENERIC_PHYSICAL_BASIC
-    }
-
-    return GENERIC_PHYSICAL_BASIC
-  }
-
   /**
    * Bug fix (2026-09-06, user report) - mid-battle wave spawns must go
    * through resolveEnemySpawnPosition() exactly like the first enemy in
@@ -954,7 +943,7 @@ export class GameManagerTurnBattleOps {
     const playerParticipant = toTurnBattleParticipant(
       playerEntity,
       0,
-      playerPath ? this.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
+      playerPath ? this.deps.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
       playerPath?.cultivationPath,
       playerPath ? this.deps.resolvePlayerSpecialUltimate(playerPath) : undefined,
     )

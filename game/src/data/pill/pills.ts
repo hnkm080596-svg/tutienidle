@@ -56,6 +56,9 @@ export function buildTieredPills(): Pill[] {
     professionGrade: getProfessionGradeForRealm(realmId),
     icon: `/assets/pills/${family.id}.png`,
     effects: buildEffects(family, tierIndex),
+    // M10 (ARCH-008) — retired families keep their generated pills so old
+    // saves' bag entries resolve, but carry the retirement marker.
+    ...(family.retired === true ? { retired: true } : {}),
   })))
 }
 

@@ -70,6 +70,12 @@ export class GameManagerAlchemyOps {
       return { ok: false, reason: 'not_found' }
     }
 
+    // M10 (ARCH-008) — retired recipe reports 'retired' regardless of room
+    // state so the caller sees the real reason, not a room-level miss.
+    if (recipe.retired === true) {
+      return { ok: false, reason: 'retired' }
+    }
+
     const instance = this.deps.buildingManager.getByBuildingId('pill_room')
 
     if (!instance) {

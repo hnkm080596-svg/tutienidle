@@ -45,7 +45,13 @@ export interface TurnSkillDefinition {
     poolType: 'reaction_path'
     count: number
   }
-  appliesBuff?: { definitionId: string; target: 'self' | 'target' }
+  /**
+   * M10 (ARCH-008) — `duration` carries the authored SkillEffect.duration
+   * override through the converter (e.g. duong_linh_tuyen spec: 8 instead
+   * of the buff definition's registry default). undefined = registry
+   * default, unchanged behavior.
+   */
+  appliesBuff?: { definitionId: string; target: 'self' | 'target'; duration?: number }
   /**
    * Phase A1 (2026-09-07) — chance-gated ailment application, checked
    * against TurnReactionManager after applying. Deliberately separate

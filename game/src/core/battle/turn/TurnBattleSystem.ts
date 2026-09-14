@@ -1290,7 +1290,13 @@ export class TurnBattleSystem {
             // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
             // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
             if (action.skill.appliesBuff.target === 'self') {
-              new BuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+              new BuffSystem(actor.buffs).apply(
+                definition,
+                actor.entity,
+                actor.entity,
+                this.registry,
+                action.skill.appliesBuff.duration,
+              )
               this.pendingGaugeDeltaTargets = [actor]
               // ARCH-002 (M7) — statModifier buffs are effective NOW, not
               // at the actor's next turn (kim_giap counter-read class).
@@ -1299,7 +1305,13 @@ export class TurnBattleSystem {
               const targets: TurnBattleParticipant[] = []
 
               for (const target of declared.affected) {
-                new BuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+                new BuffSystem(target.buffs).apply(
+                  definition,
+                  actor.entity,
+                  target.entity,
+                  this.registry,
+                  action.skill.appliesBuff.duration,
+                )
                 targets.push(target)
                 this.refreshParticipantStats(target)
               }
