@@ -6,7 +6,7 @@ import { useAudioStore } from './audio'
 import { AudioManager, resetAudioManagerForTest } from '@/core/audio/AudioManager'
 
 // Node environment — minimal localStorage polyfill (same pattern as
-// themeStore.test.ts / SaveSystem.test.ts).
+// SaveSystem.test.ts).
 class MemoryStorage implements Storage {
   private store = new Map<string, string>()
   get length() { return this.store.size }

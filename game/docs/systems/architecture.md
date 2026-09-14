@@ -18,7 +18,7 @@ Primitive        (StatBlock, BuffPool, MaterialBag, EquipmentInstance, CombatClo
 
 - `src/core/` — toàn bộ domain logic. Plain TypeScript, **không** import Vue/Phaser/Pinia, test được headless (Vitest).
 - `src/data/` — định nghĩa nội dung tĩnh (enemy, stage, skill, pill, material, building, node tree…).
-- `src/stores/` — Pinia: `player.ts` (PlayerData — nguồn sự thật state người chơi phía UI), `ui.ts`, `notification.ts`, `offlineSummary.ts`, `error.ts`, `themeStore.ts`, `saveIssue.ts`, `worldAnnouncement.ts`, `actionFeedback.ts`, `breakthroughRequirement.ts`.
+- `src/stores/` — Pinia: `player.ts` (PlayerData — nguồn sự thật state người chơi phía UI), `ui.ts`, `notification.ts`, `offlineSummary.ts`, `error.ts`, `saveIssue.ts`, `worldAnnouncement.ts`, `actionFeedback.ts`, `breakthroughRequirement.ts`.
 - `src/composables/` — adapter Vue: chỉ đọc state, phát command, điều phối presentation. Không chứa rule.
 - `src/game/scenes/` + `src/game/` — Phaser renderer + adapter. Không quyết định outcome.
 - `src/services/` — save (`services/save/`), auth (`services/auth/`), cloud save (`services/cloudSave/`), character creation (`services/character/`).

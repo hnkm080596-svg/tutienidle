@@ -2,15 +2,10 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
 import './assets/theme.css'
-import '@/assets/themes/ink-minimal.css'
-import '@/assets/themes/landscape-shanshui.css'
-import '@/assets/themes/xianxia-glow.css'
-import '@/assets/themes/classical-imperial.css'
 import App from './App.vue'
 import router from './router'
 import { vTooltip } from './directives/tooltip'
 import { useErrorStore } from './stores/error'
-import { useThemeStore } from './stores/themeStore'
 import { initUiScale } from './composables/uiScale'
 import { i18n } from './i18n'
 
@@ -35,12 +30,5 @@ app.directive('tooltip', vTooltip)
 app.config.errorHandler = err => {
   useErrorStore(pinia).report(err instanceof Error ? err.message : String(err))
 }
-
-// Theme redesign (Task 1.5) — áp <html data-theme> TRƯỚC app.mount() để
-// Vue render với đúng biến CSS từ đầu, không bị flash theme mặc định
-// rồi mới swap. Truyền `pinia` thẳng vì chạy NGOÀI context setup()
-// component (giống useErrorStore ở trên) — không có "active pinia"
-// ngầm định.
-useThemeStore(pinia).applyToDocument()
 
 app.mount('#app')
