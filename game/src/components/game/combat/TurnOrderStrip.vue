@@ -9,6 +9,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
+import { useStateVersion } from '@/composables/useGameState'
 import { buffDisplayName } from '@/core/buff/BuffNames'
 import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import { GAUGE_MAX } from '@/core/battle/turn/ActionGauge'
@@ -17,10 +18,23 @@ import type { TurnBattleParticipant } from '@/core/battle/turn/TurnBattleSystem'
 
 const { t } = useI18n()
 const { isBattleFighting, upcomingActors, battle, roundsElapsed, activeStage } = useTurnBattleInfo()
+// ARCH-005 (M12): derived projections read the version signal directly —
+// `battle` resolves to the same in-place-mutated object forever, so a
+// computed chained on it never re-invalidates (same rule as
+// useTurnBattleInfo/useTurnCombatManual).
+const { stateVersion } = useStateVersion()
 
-const visible = computed(() => isBattleFighting.value)
+const visible = computed(() => {
+  stateVersion.value
 
-const partyMembers = computed(() => battle.value?.players ?? [])
+  return isBattleFighting.value
+})
+
+const partyMembers = computed(() => {
+  stateVersion.value
+
+  return battle.value?.players ?? []
+})
 
 // Combat speed gauge (2026-09-12) — ATB fill on every combatant chip:
 // actionGauge / GAUGE_MAX as an integer percent, clamped (a ready actor can

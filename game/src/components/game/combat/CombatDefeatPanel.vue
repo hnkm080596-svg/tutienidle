@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useGameManager } from '@/composables/useGameState'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
@@ -43,7 +43,15 @@ const player = usePlayerStore()
 const { t } = useI18n()
 const { startBattle, exitCombatToHome } = useBattleActions()
 
-const summary = computed(() => gameManager.getBattleRewardSummary())
+// ARCH-005 (M12): same in-place-mutated summary object every call — the
+// version signal is the only invalidation channel for it.
+const { stateVersion } = useStateVersion()
+
+const summary = computed(() => {
+  stateVersion.value
+
+  return gameManager.getBattleRewardSummary()
+})
 
 // B2-1 ruling (2026-09-14): floor 1 stays un-winnable on first entry by
 // design — the hint tells the player WHY. At/below the stage's realm
@@ -55,9 +63,11 @@ const isCultivationGap = computed(() => {
   return stage?.requiredRealmLevel !== undefined && player.realmLevel <= stage.requiredRealmLevel
 })
 
-const hasAnyReward = computed(() =>
-  summary.value.techniqueInsight > 0 || summary.value.skillInsight > 0 || summary.value.artifactInsight > 0 || summary.value.spiritStone > 0 || summary.value.items.length > 0,
-)
+const hasAnyReward = computed(() => {
+  stateVersion.value
+
+  return summary.value.techniqueInsight > 0 || summary.value.skillInsight > 0 || summary.value.artifactInsight > 0 || summary.value.spiritStone > 0 || summary.value.items.length > 0
+})
 
 const isAutoRetrying = ref(false)
 

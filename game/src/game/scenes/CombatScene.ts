@@ -601,8 +601,19 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       ['hit', (event: CombatScenePayload) => this.onHit(event)],
       ['dodge', (event: CombatScenePayload) => this.onDodge(event)],
       ['cast', (event: CombatScenePayload) => this.onCast(event)],
-      ['cast_start', (event: CombatScenePayload) => this.onCastStart(event)],
-      ['cast_complete', (event: CombatScenePayload) => this.onCastComplete(event)],
+      // ARCH-014 (M12) — retired bindings: 'cast_start', 'cast_complete',
+      // 'positions' and 'player_teleported' have NO live producer anywhere
+      // in the production graph (the legacy real-time BattleSystem that
+      // emitted them was deleted; the turn engine has no cast-time or
+      // teleport mechanism). Equivalent behavior is already covered:
+      // positions -> 'turn_battle_entity_snapshot' reconcile +
+      // getCombatPresentationSnapshot() late-join; teleports/column moves
+      // -> the same snapshot path (snapInterpolationTarget). Of the kept
+      // handler methods only onPositions still has callers — create()'s
+      // 'lastBattlePositionsSnapshot' gate fallback (below) and the
+      // positionSmoothing/hudWiring/turnCountdownSpawn tests invoke it
+      // directly. onCastStart/onCastComplete/onPlayerTeleported are fully
+      // dead retained seams — parked for a future cleanup mission.
       ['death', (event: CombatScenePayload) => this.onDeath(event)],
       [
         'player_visual_profile_changed',
@@ -614,12 +625,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
           }
         },
       ],
-      ['positions', (event: BattlePositionsEvent) => this.onPositions(event)],
       [
         'turn_battle_entity_snapshot',
         (event: TurnBattleEntitySnapshotEvent) => this.onTurnBattleEntitySnapshot(event),
       ],
-      ['player_teleported', (event: PlayerTeleportedEvent) => this.onPlayerTeleported(event)],
       ['battle_end', () => this.onBattleEnd()],
       ['damage', (event: CombatEvent) => this.onDamageNumber(event)],
       // 6A-T2 (2026-09-01) — floating kill/heal.
@@ -1618,6 +1627,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
    * snap NGAY tÃ¡Â»â€ºi projected position mÃ¡Â»â€ºi (khÃƒÂ´ng tween qua hÃƒÂ ng trung gian),
    * cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t depth/scale/label/cast bar/status icon ngay, rÃ¡Â»â€œi gÃ¡Â»Âi hook
    * placeholder VFX.
+   *
+   * ARCH-014 (M12): the 'player_teleported' binding was retired — no live
+   * producer (turn engine moves entities via 'turn_battle_entity_snapshot'
+   * reconcile, which snaps interpolation targets). Kept as legacy seam.
    */
   private onPlayerTeleported(event: PlayerTeleportedEvent) {
     const sprite = this.sprites.get(PLAYER_ID)
@@ -1761,11 +1774,16 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // TÃƒÅ N skill lÃƒÂªn (khÃƒÂ¡c 'cast' cÃ…Â© chÃ¡Â»â€° flash mÃƒÂ u, khÃƒÂ´ng hiÃ¡Â»â€¡n chÃ¡Â»Â¯) Ã„â€˜Ã¡Â»Æ’
   // ngÃ†Â°Ã¡Â»Âi chÃ†Â¡i biÃ¡ÂºÂ¿t unit Ã„â€˜ang niÃ¡Â»â€¡m chiÃƒÂªu gÃƒÂ¬. Skill castTime=0 (MÃ¡Â»Å’I
   // skill hiÃ¡Â»â€¡n cÃƒÂ³) khÃƒÂ´ng emit event nÃƒÂ y Ã¢â‚¬â€ vÃ¡ÂºÂ«n dÃƒÂ¹ng Ã„â€˜ÃƒÂºng 'cast' cÃ…Â©.
+  //
+  // ARCH-014 (M12): the 'cast_start'/'cast_complete' EventBus bindings were
+  // retired — no live producer exists (turn engine has no cast-time phase).
+  // The handlers stay as the legacy/test seam over CombatCastBar.
   private onCastStart(event: CombatScenePayload) {
     this.castBar.onCastStart(event)
   }
 
-  // Internal (module boundary — combat-action-feedback).
+  // Internal (module boundary — combat-action-feedback; 'cast_complete'
+  // binding retired ARCH-014 — no live producer; kept as legacy seam).
   onCastComplete(event: CombatScenePayload) {
     this.actionFeedback.onCastComplete(event)
   }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useGameManager } from '@/composables/useGameState'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
@@ -28,7 +28,16 @@ const player = usePlayerStore()
 const { t } = useI18n()
 const { startBattle, exitCombatToHome } = useBattleActions()
 
-const summary = computed(() => gameManager.getBattleRewardSummary())
+// ARCH-005 (M12): getBattleRewardSummary() returns the same in-place-
+// mutated summary object every call — without a direct version read this
+// computed evaluates once and caches forever.
+const { stateVersion } = useStateVersion()
+
+const summary = computed(() => {
+  stateVersion.value
+
+  return gameManager.getBattleRewardSummary()
+})
 
 function refight(): boolean | Promise<boolean> {
   if (!ui.selectedStageId) {

@@ -9,7 +9,6 @@ import {
 import { PRIMARY_SCENE_ROUTES } from '@/presentation/PhaserSceneAdapter'
 import { useGameManager } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
-import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 import { writeGate, type GateRegistry } from '@/presentation/gate/PresentationGate'
 import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
 import type { PlayerVisualProfileId } from '@/presentation/art/PlayerVisualProfiles'
@@ -70,20 +69,18 @@ function seedRegion(registry: GateRegistry): () => void {
     writeGate(registry, 'bundleManager', bundleManager)
   }
 
-  // Late-join replay (fix spawn animation lần đầu, lớp bảo hiểm thứ 2 bên cạnh
-  // eager preload) — giữ snapshot 'positions' MỚI NHẤT trong registry để
-  // CombatScene.create() start muộn có thể fast-forward thay vì đứng ngoài
-  // phase spawn telegraph. Clear khi trận kết thúc/thoát để không phát lại
-  // snapshot STALE của trận cũ.
+  // Late-join replay seam (legacy): 'lastBattlePositionsSnapshot' let a
+  // late-starting CombatScene fast-forward the spawn telegraph phase.
+  // ARCH-014 (M12): the 'positions' event has NO live producer (the legacy
+  // real-time BattleSystem that emitted it was deleted), so the cache
+  // listener is retired. The gate + CombatScene.create() fallback stay as
+  // the standalone/legacy-test seam; the clears remain so anything that
+  // still writes the gate (tests, restored paths) cannot leak a stale
+  // snapshot into the next battle.
   const clearPositionsSnapshot = () => {
     writeGate(registry, 'lastBattlePositionsSnapshot', undefined)
   }
 
-  const positionsHandler = (event: BattlePositionsEvent) => {
-    writeGate(registry, 'lastBattlePositionsSnapshot', { event, at: performance.now() })
-  }
-
-  gameManager.eventBus.on<BattlePositionsEvent>('positions', positionsHandler)
   gameManager.eventBus.on<void>('battle_end', clearPositionsSnapshot)
   gameManager.eventBus.on<void>('combat_scene_exit', clearPositionsSnapshot)
 
@@ -121,7 +118,6 @@ function seedRegion(registry: GateRegistry): () => void {
   return () => {
     stopProfileWatch()
 
-    gameManager.eventBus.off<BattlePositionsEvent>('positions', positionsHandler)
     gameManager.eventBus.off<void>('battle_end', clearPositionsSnapshot)
     gameManager.eventBus.off<void>('combat_scene_exit', clearPositionsSnapshot)
   }

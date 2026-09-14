@@ -782,6 +782,15 @@ export class GameManagerTurnBattleOps {
     this.deps.resetPassiveStacks()
     this.deps.combatSystem.setSurviveLethalSession(null)
 
+    // ARCH-014 (M12, review round 1) — a fresh battle owns a fresh terminal
+    // once-guard: without this reset a NON-STAGE battle (devtools spawn /
+    // tribulation launch) started after any terminal would inherit
+    // battleEndEmitted=true, so its victory/defeat would never publish
+    // battle_end AND a later abandon would be swallowed by emitAbandonEnd's
+    // guard. Idempotent; startStage re-resets below and restartTurnBattleCycle
+    // re-resets on auto-repeat.
+    this.rewardOps.resetRewardState()
+
     this.turnBattle = this.buildTurnBattle(player, [enemyEntity])
 
     // ARCH-002 (M7) — fold construction-time buffs (formation Tran Phap)
@@ -1267,14 +1276,16 @@ export class GameManagerTurnBattleOps {
     this.deps.stageWaves.stopRepeat()
 
     // M2 — Pha Giap carry: retreat also banks (plan Slice 6 — battle end
-    // regardless of outcome). turnBattleEndEmitted is NOT set here: the
-    // clock is stopped below so the terminal never re-runs, and the bank
-    // is an overwrite anyway.
+    // regardless of outcome).
     if (this.playerDataForTurnBattle) {
       this.deps.bankPassiveCarry(this.playerDataForTurnBattle)
     }
 
-    this.deps.eventBus.emit('battle_end', { type: 'battle_end', state: 'defeat' })
+    // ARCH-014 (M12) — ONE terminal publisher: rewardOps owns every
+    // 'battle_end' emission (victory, natural defeat, abandon). The shared
+    // once-guard both publishes and stamps the flag, so a duplicate
+    // terminal can never slip through if the clock were ever restarted.
+    this.rewardOps.emitAbandonEnd()
 
     // Audit fix 2026-08-31 - surviving enemies + pending spawns are dropped
     // without a victory flow; clear here exactly where the battle is

@@ -172,15 +172,31 @@ export class GameManagerTickOps {
           ? this.deps.materialRegistry.get(event.materialId)
           : undefined
 
+        // ARCH-012 (M12) — the settle event is a RECEIPT: `amount` is the
+        // rolled/request quantity, `overflow` is what the bag clamp lost.
+        // The toast must show DELIVERED (amount - overflow), and the lost
+        // part surfaces through the shared bag.overflow notification —
+        // never claim the full amount when the bag was full.
+        const overflow = event.overflow ?? 0
+        const delivered = event.amount - overflow
+
         // Collect-quest hook (review 2026-08-28) — production settle là
         // nguồn material chính của collect-quest. Chỉ tính lượng thật sự
         // vào túi (trừ overflow).
-        this.deps.notifyQuestMaterialGained(event.materialId, event.amount - (event.overflow ?? 0))
+        this.deps.notifyQuestMaterialGained(event.materialId, delivered)
 
-        this.deps.notifications.push({
-          kind: 'loot',
-          message: `${material?.name ?? event.materialId} +${event.amount}`,
-        })
+        if (delivered > 0) {
+          this.deps.notifications.push({
+            kind: 'loot',
+            message: `${material?.name ?? event.materialId} +${delivered}`,
+          })
+        }
+
+        if (overflow > 0) {
+          this.deps.notifications.push(
+            createBagOverflowEvent(material?.name ?? event.materialId, overflow),
+          )
+        }
       }
 
       // Đan Phòng settle (§8.3). M3 — Hoa Hau Thong Than: x2 pill yield
@@ -200,12 +216,29 @@ export class GameManagerTickOps {
           ? this.deps.pillRegistry.get(event.pillId)
           : undefined
 
-        this.deps.notifications.push({
-          kind: 'craft',
-          message: event.success
-            ? `${pill?.name ?? event.pillId} x${event.pills}`
-            : `Luyện ${pill?.name ?? event.pillId} thất bại`,
-        })
+        // ARCH-012 (M12) — receipt fields: `pills` = generated, `delivered`
+        // = actually added to the PillBag, `overflow` = lost to the stack
+        // clamp. Toast DELIVERED and surface the loss through bag.overflow;
+        // a fully-overflowed success must not claim "x N" that never landed.
+        if (event.success) {
+          if (event.delivered > 0) {
+            this.deps.notifications.push({
+              kind: 'craft',
+              message: `${pill?.name ?? event.pillId} x${event.delivered}`,
+            })
+          }
+
+          if (event.overflow > 0) {
+            this.deps.notifications.push(
+              createBagOverflowEvent(pill?.name ?? event.pillId, event.overflow),
+            )
+          }
+        } else {
+          this.deps.notifications.push({
+            kind: 'craft',
+            message: `Luyện ${pill?.name ?? event.pillId} thất bại`,
+          })
+        }
       }
 
       // Task 14 (rework P4) - Decompose cycle: ore -> refined essence.

@@ -43,6 +43,33 @@ export class GameManagerBattleRewardOps {
     this.battleEndEmitted = false
   }
 
+  /**
+   * ARCH-014 (M12) — the ONLY 'battle_end' publication site for a stage
+   * battle. Exactly once per cycle via the battleEndEmitted flag:
+   * victory and natural defeat arrive through grantTurnBattleRewards(),
+   * player abandon arrives through emitAbandonEnd() (called from
+   * turnBattleOps.abandonBattle). Presentation consumers (combat audio,
+   * CombatScene.onBattleEnd, the PhaserCanvas snapshot cache) must
+   * observe exactly one terminal event per ended battle.
+   */
+  private publishBattleEnd(state: 'victory' | 'defeat'): void {
+    this.deps.eventBus.emit('battle_end', { type: 'battle_end', state })
+  }
+
+  /**
+   * Abandon terminal: abandonBattle() decided the defeat already; this
+   * publishes it through the same once-guard so a settle that ran earlier
+   * in the same frame can never produce a second terminal event.
+   */
+  emitAbandonEnd(): void {
+    if (this.battleEndEmitted) {
+      return
+    }
+
+    this.battleEndEmitted = true
+    this.publishBattleEnd('defeat')
+  }
+
   grantBattleRewardIfNeeded() {
     // Rewards are read from TurnBattle (the only engine).
     if (this.deps.getTurnBattle()) {
@@ -109,9 +136,13 @@ export class GameManagerBattleRewardOps {
         this.deps.stageWaves.stopRepeat()
       }
 
-      if (turnBattle.state === 'victory') {
-        this.deps.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
+      // ARCH-014 (M12) — publish the terminal fact for EVERY outcome,
+      // not just victory: natural defeat used to set the once-flag
+      // without emitting, so audio/scene/cache consumers never ran on a
+      // loss. Per-outcome policy below stays victory-only.
+      this.publishBattleEnd(turnBattle.state)
 
+      if (turnBattle.state === 'victory') {
         this.recordPerfectClearIfEligible(turnBattle)
 
         // Stage completion: push completedStageIds exactly once per stage

@@ -9,16 +9,29 @@
 // bù look, log vẫn đầy đủ khi bung. Long message tự wrap (UI-006).
 import { computed, ref } from 'vue'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
+import { useStateVersion } from '@/composables/useGameState'
 
 const MAX_VISIBLE = 30
 
 const { isBattleFighting, logEntries } = useTurnBattleInfo()
+// ARCH-005 (M12): battle.log is append-only MUTATED in place — logEntries
+// resolves to the same array reference on every version bump, so a
+// computed chained on it alone is never re-invalidated (log panel could
+// stay hidden/frozen while entries accumulate). Read the version signal
+// directly in every derived projection.
+const { stateVersion } = useStateVersion()
 
 const collapsed = ref(false)
 
-const visible = computed(() => isBattleFighting.value && logEntries.value.length > 0)
+const visible = computed(() => {
+  stateVersion.value
+
+  return isBattleFighting.value && logEntries.value.length > 0
+})
 
 const recentEntries = computed(() => {
+  stateVersion.value
+
   const entries = logEntries.value
 
   return entries.slice(Math.max(0, entries.length - MAX_VISIBLE))

@@ -8,6 +8,13 @@ import type { TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
  * reactivity giữa turn-based engine (GameManager/TurnBattle) và Vue cho
  * manual UI. Cầu nối duy nhất là stateVersion (App.vue tick + bumpState)
  * như các composable combat khác — KHÔNG setInterval/rAF riêng.
+ *
+ * ARCH-005 (M12): EVERY derived computed below reads stateVersion.value
+ * directly — the engine mutates the TurnBattle object in place, so
+ * `battle` resolves to the same reference forever and a computed
+ * chained on it is never invalidated again after first eval (the skill
+ * bar stayed invisible in live combat; 2026-09-14 audit). Same rule as
+ * useTurnBattleInfo.
  */
 export function useTurnCombatManual() {
   const gameManager = useGameManager()
@@ -19,7 +26,11 @@ export function useTurnCombatManual() {
     return gameManager.getTurnBattle()
   })
 
-  const isBattleFighting = computed(() => battle.value?.state === 'fighting')
+  const isBattleFighting = computed(() => {
+    stateVersion.value
+
+    return battle.value?.state === 'fighting'
+  })
 
   const isAwaitingChoice = computed(() => {
     stateVersion.value
@@ -46,6 +57,8 @@ export function useTurnCombatManual() {
   })
 
   const slots = computed<Record<TurnSkillSlotRole, TurnSkillPresentationEntry | null>>(() => {
+    stateVersion.value
+
     const entry = presentation.value
 
     return {
@@ -56,6 +69,8 @@ export function useTurnCombatManual() {
   })
 
   const slotList = computed<TurnSkillPresentationEntry[]>(() => {
+    stateVersion.value
+
     const entry = presentation.value
 
     if (!entry) {
