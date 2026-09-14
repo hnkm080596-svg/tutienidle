@@ -9,8 +9,12 @@ import { createDefaultPlayer } from '../player/Player'
 import type { PlayerData } from '../player/Player'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 import type { Material } from '../material/Material'
+import { materials } from '../../data/materials/materials'
 import type { Building } from '../building/Building'
 import type { Quest } from '../quest/Quest'
+import type { Pill } from '../pill/Pill'
+import type { AlchemyRecipe, ActiveAlchemyJob } from '../alchemy/AlchemySystem'
+import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
 
 const OVERFLOW_MATERIAL: Material = {
   id: 'mat_overflow_test',
@@ -124,5 +128,220 @@ describe('GameManager — bag overflow surfacing (9.8)', () => {
       amount: '200',
       name: 'Vật Liệu Tràn Test',
     })
+  })
+})
+
+// ARCH-012 (M12) — production/alchemy settle events are RECEIPTS
+// (amount/overflow, pills/delivered/overflow). The notification adapter in
+// GameManagerTickOps must surface DELIVERED quantity and route the lost
+// part through the shared bag.overflow notification — before the fix it
+// toasted the rolled amount even when the bag absorbed nothing.
+describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', () => {
+  it('production cycle vào bag ĐẦY → cap giữ nguyên, KHÔNG có loot toast, bag.overflow ghi lượng mất, quest progress = 0', () => {
+    const manager = new GameManager()
+    const player: PlayerData = createDefaultPlayer()
+
+    // Real material data — the cycle roll resolves a real materialId and
+    // grantCycleRewards skips unregistered ids entirely.
+    manager.catalogOps.registerMaterials(materials)
+    manager.setActivePlayer(player)
+    manager.tickOps.reconcileQuestLifecycle()
+
+    const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId
+
+    // Backdate so the cycle is already complete on the next update tick.
+    expect(
+      manager.productionSystem.startCycle(siteId, player.realmId, Date.now() - 86_400_000),
+    ).toBe(true)
+
+    const cycle = manager.productionSystem.getState(siteId)!.activeCycle!
+    const rewards = manager.productionSystem.rollRewards(cycle)
+
+    expect(rewards.length).toBeGreaterThan(0)
+
+    // Deterministic seed -> the SAME rewards the settle will grant. Fill
+    // every rolled material's stack to its cap so delivery clamps to 0.
+    const rolled = rewards.map((reward) => {
+      const material = manager.materialRegistry.get(reward.materialId)
+      const limit = material.stackLimit ?? MAX_STACK_AMOUNT
+
+      manager.materialBag.add(material, limit)
+
+      return { reward, material, limit }
+    })
+
+    const collectQuest: Quest = {
+      id: 'prod_collect_overflow',
+      name: 'Thu thập (production overflow)',
+      description: 'collect-quest over the first rolled material',
+      condition: { kind: 'collect', materialId: rolled[0]!.reward.materialId, amount: 5 },
+      reward: {},
+      cadence: 'once',
+    }
+    manager.catalogOps.registerQuests([collectQuest])
+    manager.tickOps.reconcileQuestLifecycle()
+
+    manager.tickOps.update(1)
+
+    for (const { reward, limit } of rolled) {
+      expect(manager.materialBag.getAmount(reward.materialId)).toBe(limit)
+    }
+
+    const events = manager.drainNotifications()
+    const overflowEvents = events.filter((event) => event.messageKey === 'bag.overflow')
+
+    expect(overflowEvents).toHaveLength(rolled.length)
+
+    for (const { reward, material } of rolled) {
+      const evt = overflowEvents.find(
+        (event) => event.messageParams?.name === material.name,
+      )
+
+      expect(evt, `overflow event for ${reward.materialId}`).toBeDefined()
+      expect(evt!.kind).toBe('warning')
+      expect(evt!.messageParams?.amount).toBe(String(reward.amount))
+
+      // No loot toast may claim a delivery the bag never accepted.
+      expect(
+        events.some(
+          (event) => event.kind === 'loot' && (event.message ?? '').includes(material.name),
+        ),
+      ).toBe(false)
+    }
+
+    // The collect-quest counted only DELIVERED quantity -> still 0.
+    expect(manager.questManager.getProgress('prod_collect_overflow')?.progress ?? 0).toBe(0)
+  })
+
+  it('production cycle vào bag TRỐNG → loot toast +N đúng delivered, không overflow event, quest progress = amount', () => {
+    const manager = new GameManager()
+    const player: PlayerData = createDefaultPlayer()
+
+    manager.catalogOps.registerMaterials(materials)
+    manager.setActivePlayer(player)
+    manager.tickOps.reconcileQuestLifecycle()
+
+    const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId
+
+    expect(
+      manager.productionSystem.startCycle(siteId, player.realmId, Date.now() - 86_400_000),
+    ).toBe(true)
+
+    const cycle = manager.productionSystem.getState(siteId)!.activeCycle!
+    const rewards = manager.productionSystem.rollRewards(cycle)
+
+    expect(rewards.length).toBeGreaterThan(0)
+
+    const collectQuest: Quest = {
+      id: 'prod_collect_clean',
+      name: 'Thu thập (production clean)',
+      description: 'collect-quest over the first rolled material',
+      condition: { kind: 'collect', materialId: rewards[0]!.materialId, amount: 9999 },
+      reward: {},
+      cadence: 'once',
+    }
+    manager.catalogOps.registerQuests([collectQuest])
+    manager.tickOps.reconcileQuestLifecycle()
+
+    manager.tickOps.update(1)
+
+    const events = manager.drainNotifications()
+
+    for (const reward of rewards) {
+      const material = manager.materialRegistry.get(reward.materialId)
+
+      expect(manager.materialBag.getAmount(reward.materialId)).toBe(reward.amount)
+      expect(
+        events.some(
+          (event) =>
+            event.kind === 'loot' &&
+            event.message === `${material.name} +${reward.amount}`,
+        ),
+      ).toBe(true)
+    }
+
+    expect(events.filter((event) => event.messageKey === 'bag.overflow')).toHaveLength(0)
+    expect(manager.questManager.getProgress('prod_collect_clean')?.progress).toBe(
+      rewards[0]!.amount,
+    )
+  })
+
+  it('alchemy jobs vào PillBag sát cap → toast x<delivered>, bag.overflow cho phần mất, job hỏng vẫn báo thất bại', () => {
+    const OVERFLOW_PILL: Pill = {
+      id: 'pill_overflow_test',
+      name: 'Đan Tràn Test',
+      type: 'healing',
+      grade: 'hoang',
+      effects: [],
+    }
+    const OVERFLOW_RECIPE: AlchemyRecipe = {
+      id: 'recipe_overflow_test',
+      pillId: 'pill_overflow_test',
+      realmId: 'mortal',
+      // 'myriad_year' base success 100% -> each job deterministically yields
+      // exactly 1 pill (no Math.random dependency in this test).
+      herbVariants: [{ materialId: 'test_herb_myriad', age: 'myriad_year', label: 'Vạn Niên' }],
+      herbAmount: 1,
+      fuelWoodRealmId: 'mortal',
+      fuelWoodAmount: 1,
+      spiritStoneCost: 0,
+      baseDurationSeconds: 1,
+    }
+
+    const makeJob = (jobId: string, recipeId = OVERFLOW_RECIPE.id): ActiveAlchemyJob => ({
+      jobId,
+      recipeId,
+      pillId: OVERFLOW_PILL.id,
+      herbMaterialId: 'test_herb_myriad',
+      startedAtMs: 0,
+      completesAtMs: 1, // already due on the first update tick
+      roomLevelAtStart: 1,
+    })
+
+    const manager = new GameManager()
+    const player: PlayerData = createDefaultPlayer()
+
+    manager.catalogOps.registerPills([OVERFLOW_PILL])
+    manager.catalogOps.registerAlchemyRecipes([OVERFLOW_RECIPE])
+    manager.setActivePlayer(player)
+
+    // One free slot left: job 1 delivers its pill, job 2 loses its pill.
+    manager.pillBag.add(OVERFLOW_PILL, MAX_STACK_AMOUNT - 1)
+
+    manager.alchemySystem.restoreJobs([
+      makeJob('job_ok_1'),
+      makeJob('job_ok_2'),
+      // Deterministic failure: the recipe id resolves to nothing -> the
+      // system emits success:false instead of silently dropping the job.
+      makeJob('job_broken_recipe', 'recipe_missing'),
+    ])
+
+    manager.tickOps.update(1)
+
+    expect(manager.pillBag.getAmount(OVERFLOW_PILL.id)).toBe(MAX_STACK_AMOUNT)
+
+    const events = manager.drainNotifications()
+
+    // Exactly ONE delivered toast (x1), not two — job 2 delivered nothing.
+    const successToasts = events.filter(
+      (event) => event.kind === 'craft' && event.message === `${OVERFLOW_PILL.name} x1`,
+    )
+    expect(successToasts).toHaveLength(1)
+
+    const overflowEvents = events.filter((event) => event.messageKey === 'bag.overflow')
+    expect(overflowEvents).toHaveLength(1)
+    expect(overflowEvents[0]!.kind).toBe('warning')
+    expect(overflowEvents[0]!.messageParams).toEqual({
+      amount: '1',
+      name: OVERFLOW_PILL.name,
+    })
+
+    // Failure notification preserved for the unresolvable-recipe job.
+    expect(
+      events.some(
+        (event) =>
+          event.kind === 'craft' && event.message === `Luyện ${OVERFLOW_PILL.name} thất bại`,
+      ),
+    ).toBe(true)
   })
 })

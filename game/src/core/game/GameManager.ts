@@ -1166,8 +1166,11 @@ export class GameManager {
    * Người chơi CHỦ ĐỘNG thoát trận giữa chừng (nút "Thoát Trận" ở
    * CombatControlBar.vue, có xác nhận trước khi gọi tới đây) — TÁI
    * DÙNG luồng 'defeat' sẵn có thay vì dựng 1 BattleState/UI mới:
-   * chỉ set battle.state + emit 'battle_end' giống hệt
-   * BattleSystem.checkBattleEnd() làm khi player chết.
+   * chỉ set battle.state = 'defeat' rồi publish 'battle_end' QUA
+   * rewardOps.emitAbandonEnd() — cùng once-guard với terminal tự
+   * nhiên (victory/defeat) nên mỗi trận phát đúng MỘT lần
+   * (ARCH-014, M12; trước đó abandon tự emit, còn natural defeat
+   * im lặng không tới audio/scene/cache).
    * updateStageProgress() TỰ dừng stageManager ở tick kế tiếp khi thấy
    * state 'defeat' (xem ghi chú ở đó) — không cần tự dọn gì thêm ở
    * đây. Phần thưởng đã kiếm được (grantBattleRewardIfNeeded() chạy

@@ -233,18 +233,18 @@ describe('PhaserCanvas — bootstrap error boundary (Task 4)', () => {
 
     expect(instance.bootError).toContain('ResizeObserver.observe thất bại')
 
-    // setupGame() đã kịp new Phaser.Game() thành công + đăng ký 3
-    // EventBus handler (positions/battle_end/combat_scene_exit qua
-    // positionsCleanup) + set window.__tutienPhaserGame + tạo
-    // resizeObserver TRƯỚC khi observe() throw — catch phải dọn HẾT:
-    // off() lại đúng 3 handler, disconnect() resizeObserver, VÀ reset
-    // window.__tutienPhaserGame về undefined (code review Task 4
-    // finding 1 — trước fix, global này bị bỏ sót, để lại tham chiếu
-    // mồ côi tới 1 Phaser.Game đã destroy cho tooling e2e/visual-gate
-    // đọc registry qua đó).
+    // setupGame() đã kịp new Phaser.Game() thành công + đăng ký 2
+    // EventBus handler (battle_end/combat_scene_exit — ARCH-014 retired
+    // the dead 'positions' listener: no live producer) + set
+    // window.__tutienPhaserGame + tạo resizeObserver TRƯỚC khi observe()
+    // throw — catch phải dọn HẾT: off() lại đúng 2 handler, disconnect()
+    // resizeObserver, VÀ reset window.__tutienPhaserGame về undefined
+    // (code review Task 4 finding 1 — trước fix, global này bị bỏ sót,
+    // để lại tham chiếu mồ côi tới 1 Phaser.Game đã destroy cho tooling
+    // e2e/visual-gate đọc registry qua đó).
     expect(gameCtor).toHaveBeenCalledOnce()
-    expect(gm.eventBus.on).toHaveBeenCalledTimes(3)
-    expect(gm.eventBus.off).toHaveBeenCalledTimes(3)
+    expect(gm.eventBus.on).toHaveBeenCalledTimes(2)
+    expect(gm.eventBus.off).toHaveBeenCalledTimes(2)
     expect(resizeObserverDisconnect).toHaveBeenCalledTimes(1)
     expect((window as { __tutienPhaserGame?: unknown }).__tutienPhaserGame).toBeUndefined()
   })
