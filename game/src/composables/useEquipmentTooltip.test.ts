@@ -112,9 +112,9 @@ describe('buildEquipmentTooltip', () => {
   })
 
   // Naming rework (2026-09-14): Pham renders as the "Canh gioi" meta
-  // line under the title; Chat lives on the name segments — the old
+  // line under the title; Chat lives on the name segments - the old
   // "Phan Loai" section is redundant and gone.
-  it('hiển thị gradeLine "Cảnh giới: ..." cho Phẩm, không còn section Phân Loại', () => {
+  it('shows gradeLine "Cảnh giới: ..." for Pham; the Phân Loại section is gone', () => {
     const { affixRegistry } = setup()
     const equipment = instance({ grade: 'bat_pham', quality: 'dia' })
     const template: Equipment = {
@@ -136,9 +136,10 @@ describe('buildEquipmentTooltip', () => {
     expect(tooltip.sections[0]?.label).toBe('Chỉ Số Chính')
   })
 
-  // Item-info-card spec §3 — advancedSections merged into sections:
-  // range/delta live on the rows themselves, no Alt-revealed second list.
-  it('ranges render inline in sections — advancedSections is gone', () => {
+  // Item-info-card spec section 3 - advancedSections merged into
+  // sections: range/delta live on the rows themselves, no Alt-revealed
+  // second list.
+  it('ranges render inline in sections - advancedSections is gone', () => {
     const { affixRegistry } = setup()
     const equipment = instance({
       grade: 'cuu_pham', realmLevel: 1,
@@ -156,14 +157,14 @@ describe('buildEquipmentTooltip', () => {
     expect(mainRow.value).toBe('+14')
     expect(mainRow.range).toMatch(/^\[.+–.+\]$/)
 
-    // Affix rows carry their tier range inline too (prefix_max_hp t1 = 10–20).
+    // Affix rows carry their tier range inline too (prefix_max_hp t1 = 10-20).
     const affixRow = content.sections.find(section => section.label.startsWith('Chỉ Số Phụ'))?.rows[0]
     expect(affixRow?.range).toBe('[10–20]')
 
     expect('advancedSections' in content).toBe(false)
   })
 
-  // Item-info-card spec §4 — ONE compare context drives both the paired
+  // Item-info-card spec section 4 - ONE compare context drives both the paired
   // card (compareWith) and the inline delta markers on the candidate's
   // rows; the equipped card itself never nests another compare.
   it('compare context emits compareWith (equipped card) + delta fields on rows', () => {
@@ -222,7 +223,7 @@ describe('buildEquipmentTooltip', () => {
     expect(missingRow?.deltaTone).toBe('negative')
   })
 
-  // Item-info-card spec §2 — single title color on the Chat ramp:
+  // Item-info-card spec section 2 - single title color on the Chat ramp:
   // quality rank 1-5 spread onto odd steps 1-3-5-7-9 of the 10-step
   // --rank-color scale; 'tien' upgrades to the rainbow tone.
   it('title payload: nameColorVar = --rank-color-(2*qualityRank-1), tien => rainbow tone', () => {
@@ -239,7 +240,7 @@ describe('buildEquipmentTooltip', () => {
     expect(content.nameTone).toBe('tien')
   })
 
-  // Item-info-card spec §3 — the card's static SlotView header binds the
+  // Item-info-card spec section 3 - the card's static SlotView header binds the
   // same signal set the bag cell carries (seal rank + Chat edge + aria
   // with the grade word).
   it('slotPreview carries the cell signal set (seal rank + chat edge + aria with grade)', () => {

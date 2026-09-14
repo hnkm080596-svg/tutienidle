@@ -9,7 +9,7 @@ export type NotificationKind = 'loot' | 'craft' | 'upgrade' | 'error' | 'warning
 export interface LootNotificationPresentation {
   icon?: string
 
-  // Composed display name, single color (item-info-card spec §2).
+  // Composed display name, single color (item-info-card spec section 2).
   name: string
 
   nameColorVar?: string
@@ -17,7 +17,7 @@ export interface LootNotificationPresentation {
   // 'tien' => rainbow (max-rank gradient).
   nameTone?: string
 
-  // Muted "· Ngu Pham" suffix after the name.
+  // Muted middle-dot "{grade}" suffix after the name (e.g. ". Ngu Pham").
   gradeLabel?: string
 
   amountLabel?: string

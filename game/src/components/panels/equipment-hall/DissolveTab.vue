@@ -47,8 +47,8 @@ interface DissolveCandidate {
 
   name: string
 
-  // spec §5b — "{name}, {grade}" so aria includes Pham (seal is a
-  // decorative glyph; screen readers get the grade through this label).
+  // spec section 5b - "{name}, {grade}" so aria includes Pham (the seal
+  // is a decorative glyph; screen readers get the grade via this label).
   accessibleLabel: string
 
   grade: EquipmentInstance['grade']
@@ -110,8 +110,9 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
     .map((instance) => {
       const template = gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)
 
-      // Compare context (item-info-card spec §4) — candidates are always
-      // unequipped, so the counterpart is whatever is worn in that slot.
+      // Compare context (item-info-card spec section 4) - candidates are
+      // always unequipped, so the counterpart is whatever is worn in that
+      // slot.
       const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
       const equippedTemplate = equippedComparison
         ? gameManager.equipmentOps.getEquipmentTemplate(equippedComparison.itemId)
@@ -140,7 +141,7 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
               instance,
               template,
               gameManager.affixRegistry,
-              // Candidates are unequipped — the slot enhance level belongs
+              // Candidates are unequipped - the slot enhance level belongs
               // to the worn item, never to this card (null, not
               // getSlotState(instance.slot)).
               null,

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// No @vue/test-utils in this project — tests mount the real SFC via
+// No @vue/test-utils in this project - tests mount the real SFC via
 // createApp/h (same pattern as SlotView.test.ts). The v-tooltip
 // directive must be registered because ItemCardBody's static SlotView
 // still binds it (with an undefined value in static mode).
@@ -93,7 +93,7 @@ const gradedContent: GradedItemTooltipContent = {
   sections: [{ label: 'Thông Tin', rows: [{ label: 'Phân Loại', value: 'Linh Thảo' }] }],
 }
 
-describe('ItemCardBody — static SlotView header (spec §3)', () => {
+describe('ItemCardBody - static SlotView header (spec section 3)', () => {
   it('binds slotPreview onto a static SlotView: span role=img, seal, accessibleLabel passthrough', () => {
     const container = mountCard(equipmentContent)
     const slot = container.querySelector('.item-card__slot') as HTMLElement
@@ -120,8 +120,8 @@ describe('ItemCardBody — static SlotView header (spec §3)', () => {
   })
 })
 
-describe('ItemCardBody — single-color title (spec §2)', () => {
-  it('applies nameColorVar to the whole title — no per-segment spans', () => {
+describe('ItemCardBody - single-color title (spec section 2)', () => {
+  it('applies nameColorVar to the whole title - no per-segment spans', () => {
     const container = mountCard(equipmentContent)
     const title = container.querySelector('.item-card__title') as HTMLElement
 
@@ -139,7 +139,7 @@ describe('ItemCardBody — single-color title (spec §2)', () => {
   })
 })
 
-describe('ItemCardBody — stat rows (range/delta/tier)', () => {
+describe('ItemCardBody - stat rows (range/delta/tier)', () => {
   it('renders range muted inline and delta with its tone class', () => {
     const container = mountCard(equipmentContent)
 
@@ -172,7 +172,7 @@ describe('ItemCardBody — stat rows (range/delta/tier)', () => {
   })
 })
 
-describe('ItemCardBody — owned count rule', () => {
+describe('ItemCardBody - owned count rule', () => {
   it('ownedCount > 0 renders "Sở hữu: N"; 0 and absent render nothing', () => {
     const owned = mountCard({ ...gradedContent, ownedCount: 4 })
     expect(owned.textContent).toContain('Sở hữu: 4')
@@ -185,7 +185,7 @@ describe('ItemCardBody — owned count rule', () => {
   })
 })
 
-describe('Tooltip — equipment compare pair (spec §4)', () => {
+describe('Tooltip - equipment compare pair (spec section 4)', () => {
   it('renders equipped card LEFT + hovered card RIGHT, each role=group with i18n aria-label', async () => {
     mountTooltipApp()
     const owner = document.createElement('button')
@@ -213,7 +213,7 @@ describe('Tooltip — equipment compare pair (spec §4)', () => {
     expect(groups.item(1).querySelector('.item-card__eyebrow')?.textContent).toBe('Vật Phẩm Đang Xem')
   })
 
-  it('equipment without compareWith renders a single card — no pair, no group roles', async () => {
+  it('equipment without compareWith renders a single card - no pair, no group roles', async () => {
     mountTooltipApp()
     const owner = document.createElement('button')
     document.body.appendChild(owner)

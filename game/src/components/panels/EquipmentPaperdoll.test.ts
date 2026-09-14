@@ -69,8 +69,9 @@ describe('EquipmentPaperdoll — registry miss an toàn', () => {
 
     expect(slots).toHaveLength(6)
 
-    // Slot weapon đang mặc item lạ — aria-label fallback itemId thô +
-    // hậu tố Phẩm (accessibleLabel spec §5b: "{name}, {grade}").
+    // Weapon slot wearing a foreign item - aria-label falls back to the
+    // raw itemId + Pham suffix (accessibleLabel spec section 5b:
+    // "{name}, {grade}").
     const weapon = mounted.container.querySelector<HTMLElement>('.paperdoll__slot[aria-label="nonexistent_item, Cửu Phẩm"]')
 
     expect(weapon).not.toBeNull()
@@ -79,8 +80,8 @@ describe('EquipmentPaperdoll — registry miss an toàn', () => {
   })
 })
 
-describe('EquipmentPaperdoll — slot labels qua i18n (P16)', () => {
-  it('6 slot dùng key panels.bag.paperdoll.slots.* thay vì hardcode', () => {
+describe('EquipmentPaperdoll - slot labels via i18n (P16)', () => {
+  it('6 slots use panels.bag.paperdoll.slots.* keys instead of hardcode', () => {
     const mounted = mountPaperdoll()
 
     const keys = ['helmet', 'necklace', 'ring', 'weapon', 'armor', 'boots']
@@ -95,8 +96,8 @@ describe('EquipmentPaperdoll — slot labels qua i18n (P16)', () => {
   })
 })
 
-describe('EquipmentPaperdoll — item-info-card cell contract', () => {
-  it('filled slot aria-label is "{name}, {grade}" (spec §5b); equipped-only tooltip has NO compareWith (spec §4)', async () => {
+describe('EquipmentPaperdoll - item-info-card cell contract', () => {
+  it('filled slot aria-label is "{name}, {grade}" (spec section 5b); equipped-only tooltip has NO compareWith (spec section 4)', async () => {
     const mounted = mountPaperdoll((manager) => {
       manager.equipmentBag.add(equipmentInstance('worn', 'base_kiem'))
     })
@@ -107,7 +108,7 @@ describe('EquipmentPaperdoll — item-info-card cell contract', () => {
 
     expect(slot).not.toBeNull()
 
-    // Equipped-only surface: the worn item IS the compare counterpart —
+    // Equipped-only surface: the worn item IS the compare counterpart -
     // no paired card on its own tooltip (item-info-card task 6).
     slot!.dispatchEvent(new Event('pointerenter', { bubbles: true }))
 

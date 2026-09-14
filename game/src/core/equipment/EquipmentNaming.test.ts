@@ -5,7 +5,7 @@ import type { Equipment } from './Equipment'
 import { ZoneRegistry } from '../stage/ZoneRegistry'
 
 // Naming rework (2026-09-14 user ruling + item-info-card spec):
-// segment shape [Chat, name] — text structure ONLY. The display color
+// segment shape [Chat, name] - text structure ONLY. The display color
 // moved to the tooltip/toast payload (nameColorVar), and the Pham
 // label renders as the tooltip "Canh gioi" line, not a name segment.
 
@@ -23,7 +23,7 @@ function setup() {
 }
 
 describe('composeEquipmentNameSegments', () => {
-  it('cuu_pham (bậc thấp nhất) + hoang (chất thấp nhất) — 2 segment {text} [Chat ngắn, tên]', () => {
+  it('cuu_pham (lowest grade) + hoang (lowest quality) - 2-segment {text} shape [short Chat, name]', () => {
     const { zoneRegistry } = setup()
     const instance = makeInstance({ grade: 'cuu_pham', quality: 'hoang' })
 
@@ -35,7 +35,7 @@ describe('composeEquipmentNameSegments', () => {
     ])
   })
 
-  it('tien_pham (bậc cao nhất, rank 10) + tien (chất cao nhất) — cùng shape {text}, không đổi', () => {
+  it('tien_pham (highest grade, rank 10) + tien (highest quality) - same {text} shape, unchanged', () => {
     const { zoneRegistry } = setup()
     const instance = makeInstance({ grade: 'tien_pham', quality: 'tien' })
 
@@ -47,7 +47,7 @@ describe('composeEquipmentNameSegments', () => {
     ])
   })
 
-  it('trường hợp lệch bậc (grade cao, quality thấp) — Chat theo quality, tên theo template', () => {
+  it('mismatched tiers (high grade, low quality) - Chat follows quality, name follows template', () => {
     const { zoneRegistry } = setup()
     const instance = makeInstance({ grade: 'ngu_pham', quality: 'huyen' })
 
@@ -69,7 +69,7 @@ describe('composeEquipmentNameSegments', () => {
     expect(segments[1]?.text).toBe('- Thanh Vân Thanh Vân Kiếm')
   })
 
-  it('composeEquipmentDisplayName nối 2 segment bằng khoảng trắng → "Hoàng - Thanh Vân Kiếm"', () => {
+  it('composeEquipmentDisplayName joins the 2 segments with a space -> "Hoàng - Thanh Vân Kiếm"', () => {
     const { zoneRegistry } = setup()
     const instance = makeInstance({ grade: 'cuu_pham', quality: 'hoang' })
 

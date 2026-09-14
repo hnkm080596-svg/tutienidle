@@ -12,7 +12,7 @@ const { content, reference } = useTooltip()
 const floating = ref<HTMLElement | null>(null)
 const open = computed(() => content.value !== null)
 
-// Item-info-card spec §3: equipment + the graded kinds
+// Item-info-card spec section 3: equipment + the graded kinds
 // (material/pill/talisman/formation) all render through the shared
 // ItemCardBody skeleton.
 const cardContent = computed<GradedItemTooltipContent | EquipmentTooltipContent | null>(() => {
@@ -31,9 +31,9 @@ const cardContent = computed<GradedItemTooltipContent | EquipmentTooltipContent 
   }
 })
 
-// Compare pair (spec §4): the hovered equipment carries its equipped
-// counterpart as compareWith — the tooltip renders two cards side by
-// side, equipped LEFT, hovered RIGHT.
+// Compare pair (spec section 4): the hovered equipment carries its
+// equipped counterpart as compareWith - the tooltip renders two cards
+// side by side, equipped LEFT, hovered RIGHT.
 const comparePair = computed(() => {
   const value = content.value
   return value?.kind === 'equipment' && value.compareWith !== undefined
@@ -41,8 +41,8 @@ const comparePair = computed(() => {
     : null
 })
 
-// Technique keeps its own header + the shared flat section loop —
-// spec §3 leaves the technique kind unchanged.
+// Technique keeps its own header + the shared flat section loop -
+// spec section 3 leaves the technique kind unchanged.
 const techniqueContent = computed<TechniqueTooltipContent | null>(() =>
   content.value?.kind === 'technique' ? content.value : null,
 )
@@ -60,7 +60,7 @@ function maxWidthForKind(kind: string | undefined): number {
 }
 
 // Element banner tooltips use the element's own painted banner as the
-// background layer instead of the paper InkNineSlice (Ngũ Hành
+// background layer instead of the paper InkNineSlice (Ngu Hanh
 // formation redesign, 2026-09-15).
 const elementBannerUrl = computed(() =>
   content.value?.kind === 'element'
@@ -81,7 +81,7 @@ const { floatingStyles } = useFloating(reference, floating, {
       padding: 12,
       apply({ availableWidth, availableHeight, elements }) {
         Object.assign(elements.floating.style, {
-          // A compare pair is two ~380px cards + gap — raise the cap so
+          // A compare pair is two ~380px cards + gap - raise the cap so
           // flip/shift see the real footprint (clamped by availableWidth).
           maxWidth: `${Math.min(comparePair.value ? 800 : maxWidthForKind(content.value?.kind), availableWidth)}px`,
           maxHeight: `${availableHeight}px`,
@@ -91,7 +91,7 @@ const { floatingStyles } = useFloating(reference, floating, {
   ],
 })
 
-// Pair group labels — i18n via the module import (tests mount this
+// Pair group labels - i18n via the module import (tests mount this
 // component through bare createApp without the i18n plugin).
 const equippedLabel = computed(() => i18n.global.t('panels.bag.tooltip.compare.equipped'))
 const viewingLabel = computed(() => i18n.global.t('panels.bag.tooltip.compare.viewing'))
@@ -112,7 +112,7 @@ const qualityAccentColor = computed(() => {
 })
 
 // Item aura (2026-09-14 ruling): bag item tooltips get a soft outer
-// glow tinted by the item's own rank color — equipment by Chat
+// glow tinted by the item's own rank color - equipment by Chat
 // (--grade-*), pills/talismans/formations by gradeKey, materials by
 // their Pham rank on the 10-step ramp. Only item kinds carry an aura;
 // building/technique/plain tooltips stay unlit.
@@ -151,7 +151,7 @@ function hideBrokenImage(event: Event) {
           <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
         </template>
         <div class="tooltip__content">
-        <!-- Compare pair (spec §4): equipped card LEFT, hovered card
+        <!-- Compare pair (spec section 4): equipped card LEFT, hovered card
              RIGHT; each is a role=group with its own aria-label so
              screen readers can tell the two cards apart. -->
         <div v-if="comparePair" class="tooltip__pair">
@@ -225,7 +225,7 @@ function hideBrokenImage(event: Event) {
 }
 /* Paper family -> dark surface equivalents. The tooltip teleports to
    <body> so it never inherits the .ink-drawer remap, while its
-   surface-m-paper layer is dark navy — without this, --paper-* light-
+   surface-m-paper layer is dark navy - without this, --paper-* light-
    paper inks render dark-on-dark (invisible stat values). Element
    banners keep the real paper inks: their art is cream. */
 .tooltip:not(.tooltip--element) {
@@ -235,7 +235,7 @@ function hideBrokenImage(event: Event) {
   --paper-line: var(--surface-line);
 }
 .tooltip::before { content: ''; position: absolute; z-index: 4; inset: 12px auto 12px 5px; width: 2px; background: var(--tooltip-accent); opacity: .72; }
-/* Item aura — soft outer glow in the item's own rank color (bag item
+/* Item aura - soft outer glow in the item's own rank color (bag item
    tooltips only, see itemAuraColor). color-mix keeps it translucent. */
 .tooltip--aura { box-shadow: 0 0 20px color-mix(in srgb, var(--tooltip-aura) 38%, transparent), 0 0 6px color-mix(in srgb, var(--tooltip-aura) 26%, transparent); }
 .tooltip__content { position: relative; z-index: 3; }
@@ -264,11 +264,11 @@ function hideBrokenImage(event: Event) {
 .tooltip__building-status { margin: 5px 0 0; color: var(--jade); font-size: var(--text-xs); }
 .tooltip__building-status--locked { color: var(--paper-text-muted, #8f897c); }
 
-/* Element banner tooltip (Ngũ Hành formation redesign) — the element's
+/* Element banner tooltip (Ngu Hanh formation redesign) - the element's
    painted banner is the background layer; the stat line lives on a
    content layer inset into the CLEAR paper zone of each banner. The
    covers differ (icon medallion top-left, element art hugging edges),
-   so every element gets its own inset measured on the art — text can
+   so every element gets its own inset measured on the art - text can
    never be covered. No title: the banner art carries the identity.
    Fixed width + per-element aspect-ratio = art scales, never distorts. */
 .tooltip--element { width: 300px; padding: 0; overflow: hidden; }

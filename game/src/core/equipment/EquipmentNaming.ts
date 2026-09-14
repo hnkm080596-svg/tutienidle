@@ -4,7 +4,7 @@ import type { ZoneRegistry } from '../stage/ZoneRegistry'
 import type { NameSegment } from '../item/NameSegment'
 import { ITEM_QUALITY_SHORT_LABELS } from '../item/ItemQuality'
 
-// Composed name "{Chat} - {Name}". Structure owner only — display
+// Composed name "{Chat} - {Name}". Structure owner only - display
 // color is the payload's nameColorVar (item-info-card spec 2026-09-14).
 // Pham no longer leads the name; it renders as the tooltip "Canh gioi"
 // line instead. Used by tooltips (useEquipmentTooltip.ts), slot

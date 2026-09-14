@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-// item-info-card task 6 (2026-09-14) — equipment bag cells: aria-label
-// carries the Pham word (spec §5b) and the tooltip of an UNEQUIPPED
-// candidate carries compareWith when a worn counterpart exists
-// (spec §4 paired compare cards).
+// item-info-card task 6 (2026-09-14) - equipment bag cells: aria-label
+// carries the Pham word (spec section 5b) and the tooltip of an
+// UNEQUIPPED candidate carries compareWith when a worn counterpart
+// exists (spec section 4 paired compare cards).
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createApp, h, ref } from 'vue'
 import { createPinia } from 'pinia'
@@ -57,7 +57,7 @@ function mountSection(prepare?: (manager: GameManager) => void) {
   return { container, manager, unmount: () => app.unmount() }
 }
 
-// jsdom has no ResizeObserver — useBagGridLayout observes the grid on
+// jsdom has no ResizeObserver - useBagGridLayout observes the grid on
 // mount; stub per InventorySort.test.ts pattern.
 beforeEach(() => {
   window.ResizeObserver = window.ResizeObserver || (class {
@@ -69,8 +69,8 @@ beforeEach(() => {
   } as never)
 })
 
-describe('EquipmentBagSection — item-info-card cell contract', () => {
-  it('cell aria-label is "{name}, {grade}" so Pham is readable without color (spec §5b)', () => {
+describe('EquipmentBagSection - item-info-card cell contract', () => {
+  it('cell aria-label is "{name}, {grade}" so Pham is readable without color (spec section 5b)', () => {
     const mounted = mountSection((manager) => {
       manager.equipmentBag.add(equipmentInstance('in-bag', false))
     })
@@ -83,7 +83,7 @@ describe('EquipmentBagSection — item-info-card cell contract', () => {
     mounted.unmount()
   })
 
-  it('candidate tooltip carries compareWith when the slot has a worn counterpart (spec §4)', () => {
+  it('candidate tooltip carries compareWith when the slot has a worn counterpart (spec section 4)', () => {
     const mounted = mountSection((manager) => {
       manager.equipmentBag.add(equipmentInstance('worn', true))
       manager.equipmentBag.add(equipmentInstance('candidate', false))
@@ -97,7 +97,7 @@ describe('EquipmentBagSection — item-info-card cell contract', () => {
 
     expect(content?.kind).toBe('equipment')
     expect(content?.compareWith?.name).toContain('Kiếm')
-    // The equipped card never nests its own pair (spec §4).
+    // The equipped card never nests its own pair (spec section 4).
     expect(content?.compareWith && 'compareWith' in content.compareWith).toBe(false)
 
     useTooltip().dismissTooltip()

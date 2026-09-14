@@ -21,7 +21,7 @@ describe('ItemQuality contracts', () => {
     expect(Object.values(ITEM_QUALITY_LABELS).every((label) => !label.includes('Phẩm'))).toBe(true)
   })
 
-  it('short labels are the tier word only — used as the "Chat - Name" name prefix (2026-09-14 ruling)', () => {
+  it('short labels are the tier word only - used as the "Chat - Name" name prefix (2026-09-14 ruling)', () => {
     expect(ITEM_QUALITY_ORDER.map((quality) => ITEM_QUALITY_SHORT_LABELS[quality])).toEqual([
       'Hoàng',
       'Huyền',

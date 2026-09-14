@@ -5,11 +5,11 @@ import { isMaxRankTone } from '@/core/profession/slotRank'
 import { i18n } from '@/i18n'
 import type { EquipmentTooltipContent, GradedItemTooltipContent } from '@/composables/useTooltip'
 
-// Item card body (item-info-card spec 2026-09-14 §3) — ONE card
+// Item card body (item-info-card spec 2026-09-14 section 3) - ONE card
 // skeleton shared by the equipment kind and the graded kinds
 // (material/pill/talisman/formation). The header binds the source
 // cell's own SlotView props (payload.slotPreview) onto a static
-// SlotView, so the card preview IS the slot — seal stamp, Chat edge
+// SlotView, so the card preview IS the slot - seal stamp, Chat edge
 // and badges included. Cultivation structure = letter-spaced eyebrow
 // labels + hairline dividers + diamond affix markers on the existing
 // dark-ink surface (NOT a paper-white card).
@@ -25,7 +25,8 @@ const props = defineProps<{
 const slotLabel = computed(() => (props.content.kind === 'equipment' ? props.content.slotLabel : undefined))
 const gradeBadge = computed(() => (props.content.kind !== 'equipment' ? props.content.gradeLabel : undefined))
 
-// Spec §2: one color for the whole name (the item's quality identity).
+// Spec section 2: one color for the whole name (the item's quality
+// identity).
 // A max-rank nameTone upgrades it to the rainbow gradient and beats
 // nameColorVar.
 const rainbowTitle = computed(() => isMaxRankTone(props.content.nameTone))
@@ -33,11 +34,11 @@ const titleStyle = computed(() =>
   !rainbowTitle.value && props.content.nameColorVar ? { color: `var(${props.content.nameColorVar})` } : undefined,
 )
 
-// "So huu: N" — graded kinds only, and ONLY when the player owns at
+// "So huu: N" - graded kinds only, and ONLY when the player owns at
 // least one (spec: never renders "So huu: 0"). i18n goes through the
 // module import, not useI18n(), because tests mount this component
 // via bare createApp without the plugin.
-const ownedLabel = computed(() => {
+const ownedBadge = computed(() => {
   if (props.content.kind === 'equipment') return undefined
   const owned = props.content.ownedCount ?? 0
   return owned > 0 ? i18n.global.t('panels.bag.tooltip.owned', { count: owned }) : undefined
@@ -74,10 +75,10 @@ function hideBrokenImage(event: Event) {
       <div class="item-card__heading">
         <p class="item-card__title" :class="{ 'item-card__title--max-rank': rainbowTitle }" :style="titleStyle">{{ content.name }}</p>
         <p v-if="content.gradeLine" class="item-card__meta">{{ content.gradeLine }}</p>
-        <div v-if="slotLabel || gradeBadge || ownedLabel" class="item-card__badges">
+        <div v-if="slotLabel || gradeBadge || ownedBadge" class="item-card__badges">
           <span v-if="slotLabel" class="item-card__badge">{{ slotLabel }}</span>
           <span v-if="gradeBadge" class="item-card__badge">{{ gradeBadge }}</span>
-          <span v-if="ownedLabel" class="item-card__badge item-card__badge--muted">{{ ownedLabel }}</span>
+          <span v-if="ownedBadge" class="item-card__badge item-card__badge--muted">{{ ownedBadge }}</span>
         </div>
       </div>
     </header>
@@ -101,7 +102,7 @@ function hideBrokenImage(event: Event) {
 </template>
 
 <style scoped>
-/* Dark-ink card body — inherits the .tooltip paper->surface var remap,
+/* Dark-ink card body - inherits the .tooltip paper->surface var remap,
    so the same tokens stay legible on the dark surface. */
 .item-card {
   color: var(--paper-text, #211f1a);
@@ -167,7 +168,7 @@ function hideBrokenImage(event: Event) {
 .item-card__badge--muted { color: var(--paper-text-muted, #8f897c); }
 
 /* Eyebrow section label + hairline divider (cultivation structure on
-   the dark ink skin — the divider IS the brush stroke, no extra art). */
+   the dark ink skin - the divider IS the brush stroke, no extra art). */
 .item-card__section {
   margin-top: 10px;
   padding-top: 7px;
@@ -200,15 +201,15 @@ function hideBrokenImage(event: Event) {
 .item-card__delta--muted { color: var(--paper-text-muted, #8f897c); }
 .item-card__row-detail { grid-column: 1/-1; color: var(--paper-text-muted, #8f897c); }
 
-/* Row tones — same palette the old flat tooltip rows used. */
+/* Row tones - same palette the old flat tooltip rows used. */
 .item-card__row--positive .item-card__row-value { color: var(--jade); }
 .item-card__row--negative .item-card__row-value { color: var(--crimson); }
 .item-card__row--warning .item-card__row-value { color: var(--mineral-gold, #b79653); }
 .item-card__row--muted { color: var(--paper-text-muted, #8f897c); }
 .item-card__row--special .item-card__row-value { color: var(--affix-exalted); }
 
-/* Affix tier chips — the old tier colors move from the row label to
-   the T{n} chip (spec §3). Tier 5 keeps the max-rank rainbow. */
+/* Affix tier chips - the old tier colors move from the row label to
+   the T{n} chip (spec section 3). Tier 5 keeps the max-rank rainbow. */
 .item-card__row--tier-1 .item-card__tier { color: var(--affix-tier-1); }
 .item-card__row--tier-2 .item-card__tier { color: var(--affix-tier-2); }
 .item-card__row--tier-3 .item-card__tier { color: var(--affix-tier-3); }

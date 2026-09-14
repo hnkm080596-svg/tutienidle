@@ -138,8 +138,9 @@ describe('DissolveTab — Hóa Luyện', () => {
 
     await nextTick()
 
-    // Ứng viên Hóa Luyện render không throw — item lạ hiện itemId thô
-    // + hậu tố Phẩm (accessibleLabel spec §5b: "{name}, {grade}").
+    // Dissolve candidates render without throw - a foreign item shows
+    // its raw itemId + Pham suffix (accessibleLabel spec section 5b:
+    // "{name}, {grade}").
     const dissolveSlots = mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')
 
     expect(dissolveSlots.length).toBeGreaterThan(0)

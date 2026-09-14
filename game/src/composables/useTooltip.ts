@@ -21,12 +21,14 @@ export interface TooltipStatRow {
 
   detail?: string
 
-  // "[min–max]" — rendered muted, inline after value (item-info-card
-  // spec §3; replaces the old Alt-revealed advancedSections values).
+  // "[min-max]" - rendered muted, inline after value (item-info-card
+  // spec section 3; replaces the old Alt-revealed advancedSections
+  // values).
   range?: string
 
-  // "▲ +2" — compare marker rendered after range (spec §4); only
-  // emitted when the builder received a compare context.
+  // "up-arrow +2" - compare marker rendered after range (spec
+  // section 4); only emitted when the builder received a compare
+  // context.
   delta?: string
 
   deltaTone?: 'positive' | 'negative' | 'muted'
@@ -36,7 +38,7 @@ export interface TooltipStatRow {
   tier?: number
 
   // Arbitrary token color for the value (e.g. '--rank-color-5' for a
-  // Pham/Chat text — rule: any grade/quality text carries its set
+  // Pham/Chat text - rule: any grade/quality text carries its set
   // color). tone/tier styles win when both are absent.
   colorVar?: string
 }
@@ -81,18 +83,20 @@ export interface TechniqueTooltipContent {
 export interface GradedItemTooltipContent {
   kind: 'material' | 'pill' | 'talisman' | 'formation'
 
-  // FULL display name — composed "Chat - Name" where the item kind
+  // FULL display name - composed "Chat - Name" where the item kind
   // composes one (pills); materials carry their plain name.
   name: string
 
-  // Single title color (item-info-card spec §2) — replaces per-segment
-  // colors; nameTone below overrides it for the max-rank rainbow.
+  // Single title color (item-info-card spec section 2) - replaces
+  // per-segment colors; nameTone below overrides it for the max-rank
+  // rainbow.
   nameColorVar?: string
 
   // 'tien' => rainbow title (max-rank gradient), beats nameColorVar.
   nameTone?: string
 
-  // Static SlotView header props bag (spec §3) — see SlotTypes.ts.
+  // Static SlotView header props bag (spec section 3) - see
+  // SlotTypes.ts.
   slotPreview?: SlotPreviewProps
 
   imagePath?: string
@@ -101,14 +105,14 @@ export interface GradedItemTooltipContent {
 
   gradeKey?: string
 
-  // Pham rank on the 10-step profession ramp (materials) — feeds the
+  // Pham rank on the 10-step profession ramp (materials) - feeds the
   // tooltip aura color via --rank-color-N when gradeKey is absent
   // (2026-09-14 aura ruling).
   gradeRank?: number
 
   gradeLine?: string
 
-  // "So huu: N" — renders ONLY when > 0 (spec: never renders
+  // "So huu: N" - renders ONLY when > 0 (spec: never renders
   // "So huu: 0"); undefined outside the bag surface.
   ownedCount?: number
 
@@ -138,7 +142,7 @@ export interface EquipmentTooltipContent {
 
   qualityKey: string
 
-  // "Canh gioi: {Pham} ({realm})" — the Pham axis rendered as the meta
+  // "Canh gioi: {Pham} ({realm})" - the Pham axis rendered as the meta
   // line under the title (2026-09-14 ruling). Replaces the old
   // "Phan Loai" section rows.
   gradeLine?: string
@@ -147,9 +151,9 @@ export interface EquipmentTooltipContent {
 
   sections: TooltipSection[]
 
-  // Paired compare card (spec §4): the equipped counterpart's own
-  // single-card payload, built by the same builder with NO compare
-  // context — recursion stops at depth 1.
+  // Paired compare card (spec section 4): the equipped counterpart's
+  // own single-card payload, built by the same builder with NO compare
+  // context - recursion stops at depth 1.
   compareWith?: Omit<EquipmentTooltipContent, 'compareWith'>
 }
 
@@ -187,7 +191,7 @@ export interface ElementTooltipContent {
   // banner mechanism.
   element: ElementType | 'primordial'
 
-  // Accessible name only — banner art already carries the element's
+  // Accessible name only - banner art already carries the element's
   // identity, so the title is NOT rendered (user ruling 2026-09-15).
   title: string
 

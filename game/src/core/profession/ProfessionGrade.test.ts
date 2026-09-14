@@ -81,7 +81,7 @@ describe('ProfessionGrade — mapping realm → phẩm nghề', () => {
 
 // Seal ordinals for the slot corner stamp (item-info-card spec
 // 2026-09-14): one ordinal per grade, index = rank - 1.
-describe('ProfessionGrade — seal ordinals', () => {
+describe('ProfessionGrade - seal ordinals', () => {
   it('seal ordinals match PROFESSION_GRADE_NAMES order (Pham suffix stripped, uppercased)', () => {
     PROFESSION_GRADE_ORDER.forEach((grade, index) => {
       const expected = PROFESSION_GRADE_NAMES[grade].replace(' Phẩm', '').toUpperCase()

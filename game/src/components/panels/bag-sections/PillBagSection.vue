@@ -114,7 +114,7 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 
   // Same naming model as equipment (2026-09-14): the title is the FULL
   // composed "{Chat} - {Name}" string; the single display color rides
-  // the payload (spec §2 — Pham ramp when the pill carries
+  // the payload (spec section 2 - Pham ramp when the pill carries
   // professionGrade, Chat --grade-* fallback otherwise).
   const displayName = composeItemGradeNameSegments(pill.name, pill.grade)
     .map((segment) => segment.text)
@@ -132,8 +132,8 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 
     nameTone: pill.grade === 'tien' ? 'tien' : undefined,
 
-    // Static SlotView header (spec §3): the same signal set the bag
-    // cell binds — Pham seal (professionGrade), Chat edge (grade),
+    // Static SlotView header (spec section 3): the same signal set the
+    // bag cell binds - Pham seal (professionGrade), Chat edge (grade),
     // grade word in aria (professionGrade is optional on Pill).
     slotPreview: {
       icon: pill.icon,
@@ -254,17 +254,18 @@ const entries = computed<PillEntry[]>(() => {
 
         label: stack.pill.name,
 
-        // "{Name}, {Pham}" aria override (spec §5b) — professionGrade is
-        // optional on Pill, so the grade word is gated on it.
+        // "{Name}, {Pham}" aria override (spec section 5b) -
+        // professionGrade is optional on Pill, so the grade word is
+        // gated on it.
         accessibleLabel: stack.pill.professionGrade
           ? `${displayName}, ${gradeLabel(stack.pill.professionGrade)}`
           : displayName,
 
-        // "{Chat} - {Name}" — text structure only (item-info-card spec
+        // "{Chat} - {Name}" - text structure only (item-info-card spec
         // 2026-09-14); display color lives on the tooltip payload.
         nameSegments: composeItemGradeNameSegments(stack.pill.name, stack.pill.grade),
 
-        // Unified slot language: Pham -> underlay, Chat (grade) -> frame/
+        // Unified slot language: Pham -> seal, Chat (grade) -> frame/
         // aura. Pills now feed BOTH axes like equipment (rank >= dia gets
         // the quality beam).
         equipmentQualityRank: stack.pill.professionGrade

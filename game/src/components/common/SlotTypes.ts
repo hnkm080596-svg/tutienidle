@@ -16,7 +16,7 @@ export interface SlotPresentationState {
   comparison?: SlotComparison
 }
 
-// Slot Variant (2026-09-15 ruling, consolidated spec) — backdrop/hover
+// Slot Variant (2026-09-15 ruling, consolidated spec) - backdrop/hover
 // art is a per-PLACE modification, declared via the `variant` prop
 // instead of scattered --slot-* overrides in consumers (one owner:
 // SlotView).
@@ -25,10 +25,10 @@ export interface SlotPresentationState {
 //               inv-slot-backdrop.png + bright sheen hover
 //               bag-slot-hover.png ("cell select").
 //   equipment = ONLY the 6 worn equipment slots (paperdoll): frosted
-//               glass slot-backdrop.png ("empty" — reads faintly on
+//               glass slot-backdrop.png ("empty" - reads faintly on
 //               the dark backdrop) + pale gold frame hover
 //               slot-frame-hover.png ("click").
-// Hover art always fits the cell edge exactly (inset 0, 100% 100%) —
+// Hover art always fits the cell edge exactly (inset 0, 100% 100%) -
 // no inset/offset; the frame border comes from the art, not extra CSS.
 // equip-slot-backdrop.png (stray metal rim) + equip-slot-hover.png
 // (black 293x134 banner cut from the wrong region) were removed.
@@ -45,7 +45,7 @@ export interface SlotBadge {
 }
 
 // Props snapshot a tooltip card's static SlotView header binds verbatim
-// (item-info-card spec §3) — builders emit this bag, ItemCardBody does
+// (item-info-card spec section 3) - builders emit this bag, ItemCardBody does
 // `v-bind="content.slotPreview"` onto a `static` SlotView so the card
 // preview IS the slot (seal + Chat edge included).
 export interface SlotPreviewProps {

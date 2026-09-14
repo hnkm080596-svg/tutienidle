@@ -62,10 +62,10 @@ export function getEquipmentComparisonTone(
   return positive > negative ? 'upgrade' : 'downgrade'
 }
 
-// Compare context (item-info-card spec §4): the equipped counterpart a
-// candidate is compared against. Drives BOTH the inline delta fields on
-// stat rows AND the compareWith paired-card payload — one source so the
-// markers and the card can never disagree.
+// Compare context (item-info-card spec section 4): the equipped
+// counterpart a candidate is compared against. Drives BOTH the inline
+// delta fields on stat rows AND the compareWith paired-card payload -
+// one source so the markers and the card can never disagree.
 export interface EquipmentCompareContext {
   instance: EquipmentInstance
 
@@ -110,7 +110,7 @@ export function buildEquipmentTooltip(
       : undefined
   })()
 
-  // Delta fields (spec §4) — computed up front so every stat row can
+  // Delta fields (spec section 4) - computed up front so every stat row can
   // spread { delta, deltaTone }; empty when there is no real compare
   // (no context, or the candidate IS the equipped item).
   const hasCompare = compare !== undefined && compare.instance.instanceId !== instance.instanceId
@@ -143,8 +143,8 @@ export function buildEquipmentTooltip(
       label: 'Chỉ Số Chính',
 
       // Rolled+realm-scaled value (instance.mainStat); range renders
-      // muted inline after it (spec §3 — advancedSections is gone,
-      // range/delta now live on the row itself).
+      // muted inline after it (spec section 3 - advancedSections is
+      // gone, range/delta now live on the row itself).
       rows: [{
         label: statLabel(instance.mainStat.stat),
         value: `+${mainStatValue}`,
@@ -165,7 +165,7 @@ export function buildEquipmentTooltip(
 
     return {
       // The tooltip always calls a stat by its canonical StatLabels
-      // name — affix names are literary (e.g. "Chuan Xac") and could be
+      // name - affix names are literary (e.g. "Chuan Xac") and could be
       // misread as a different stat than accuracyRating.
       label: statLabel(affix.stat),
 
@@ -181,7 +181,7 @@ export function buildEquipmentTooltip(
     }
   })
 
-  // Stats the equipped counterpart has but the candidate lacks — muted
+  // Stats the equipped counterpart has but the candidate lacks - muted
   // "+0" rows in the SAME affix section carrying the negative delta.
   for (const [stat] of comparedStats) {
     if (candidateStats.has(stat)) continue
@@ -229,13 +229,13 @@ export function buildEquipmentTooltip(
 
     // Single title color on the Chat ramp: quality rank (1-5) spread
     // onto odd steps 1-3-5-7-9 of the 10-step --rank-color scale
-    // (spec §2); 'tien' upgrades to the rainbow tone.
+    // (spec section 2); 'tien' upgrades to the rainbow tone.
     nameColorVar: `--rank-color-${itemQualityRank(instance.quality) * 2 - 1}`,
 
     nameTone: instance.quality === 'tien' ? 'tien' : undefined,
 
-    // Static SlotView header (spec §3): the same signal set the bag
-    // cell binds — seal rank (Pham), Chat edge (quality), aria with
+    // Static SlotView header (spec section 3): the same signal set the
+    // bag cell binds - seal rank (Pham), Chat edge (quality), aria with
     // the grade word a color-blind reader needs.
     slotPreview: {
       icon: instance.icon ?? template.icon,
@@ -257,10 +257,10 @@ export function buildEquipmentTooltip(
 
     sections,
 
-    // The equipped counterpart card — built WITHOUT a compare context
+    // The equipped counterpart card - built WITHOUT a compare context
     // so the recursion stops at depth 1. The key is omitted entirely
     // (not set to undefined) so 'compareWith' in the inner card is
-    // false — spec §4 forbids nested pairs.
+    // false - spec section 4 forbids nested pairs.
     ...(hasCompare
       ? {
           compareWith: buildEquipmentTooltip(

@@ -68,7 +68,7 @@ const entries = computed<EquipmentEntry[]>(() => {
 
     const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
 
-    // Compare context (item-info-card spec §4) — the equipped
+    // Compare context (item-info-card spec section 4) - the equipped
     // counterpart's template is resolved the same safe way as the
     // candidate's; a registry miss just drops the compare pair.
     const equippedTemplate = equippedComparison
@@ -114,8 +114,8 @@ const entries = computed<EquipmentEntry[]>(() => {
 
         label: displayName,
 
-        // spec §5b — aria gồm cả Phẩm (seal chỉ là glyph trang trí,
-        // screen reader đọc grade qua label này).
+        // spec section 5b - aria includes the Pham word (the seal is a
+        // decorative glyph; screen readers get the grade via this label).
         accessibleLabel: `${displayName}, ${gradeLabel(instance.grade)}`,
 
         nameSegments,
@@ -266,8 +266,8 @@ watch(
 .bag-section__slot {
   width: 100%;
   aspect-ratio: 1 / 1;
-  /* Art lives on the SlotView `variant` prop (default `item` —
-     inventory art — here); consumers no longer override --slot-*
+  /* Art lives on the SlotView `variant` prop (default `item` -
+     inventory art - here); consumers no longer override --slot-*
      art vars directly. */
 }
 </style>

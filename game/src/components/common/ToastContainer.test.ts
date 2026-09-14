@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 //
-// Loot toast name pattern (item-info-card spec §2 / Task 7): the toast
-// renders ONE text-only pattern — the composed name in the payload's
-// single color var (max-rank tone upgrades to the rainbow class) plus a
-// muted middle-dot grade suffix. No per-segment coloring. Mounted via
-// createApp/h (no @vue/test-utils in this project, same pattern as
-// ItemCardBody.test.ts); the component teleports to <body>, so
-// assertions query document.body.
+// Loot toast name pattern (item-info-card spec section 2 / Task 7): the
+// toast renders ONE text-only pattern - the composed name in the
+// payload's single color var (max-rank tone upgrades to the rainbow
+// class) plus a muted middle-dot grade suffix. No per-segment coloring.
+// Mounted via createApp/h (no @vue/test-utils in this project, same
+// pattern as ItemCardBody.test.ts); the component teleports to <body>,
+// so assertions query document.body.
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 import { createPinia } from 'pinia'
@@ -52,7 +52,7 @@ function nameSpan(): HTMLElement | null {
   return document.body.querySelector<HTMLElement>('.toast-item__name > span')
 }
 
-describe('ToastContainer — loot name pattern (item-info-card spec §2)', () => {
+describe('ToastContainer - loot name pattern (item-info-card spec section 2)', () => {
   it('applies the payload nameColorVar as the single name color', async () => {
     await pushLoot({
       name: 'Thanh Vân Kiếm',
@@ -65,7 +65,7 @@ describe('ToastContainer — loot name pattern (item-info-card spec §2)', () =>
     expect(name?.getAttribute('style')).toContain('color: var(--rank-color-9)')
   })
 
-  it('renders the grade as a muted middle-dot suffix — separate span, no name color', async () => {
+  it('renders the grade as a muted middle-dot suffix - separate span, no name color', async () => {
     await pushLoot({
       name: 'Thanh Vân Kiếm',
       nameColorVar: '--rank-color-9',
@@ -74,7 +74,7 @@ describe('ToastContainer — loot name pattern (item-info-card spec §2)', () =>
 
     const grade = document.body.querySelector<HTMLElement>('.toast-item__grade')
     expect(grade?.textContent?.trim()).toBe('· Ngũ Phẩm')
-    // Muted styling lives on the scoped class — the suffix must not
+    // Muted styling lives on the scoped class - the suffix must not
     // inherit an inline color from the payload.
     expect(grade?.getAttribute('style') ?? '').not.toContain('color:')
     expect(nameSpan()?.textContent).not.toContain('Ngũ Phẩm')

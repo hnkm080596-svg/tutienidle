@@ -24,7 +24,7 @@ const { unequip } = useEquipmentActions()
 // Lưới 3 cột × 2 hàng (thay lục giác quanh sprite cũ — khối Equipment
 // giờ chỉ chiếm 30% chiều cao panel, cố định cho Hành Trang/Tứ Nghệ,
 // xem LeftPanel.vue) — không còn sprite nhân vật ở giữa.
-// Slot labels go through i18n (panels.bag.paperdoll.slots.*) — P16.
+// Slot labels go through i18n (panels.bag.paperdoll.slots.*) - P16.
 const SLOT_LAYOUT: { slot: EquipmentSlot }[] = [
   { slot: 'helmet' },
   { slot: 'necklace' },
@@ -69,8 +69,8 @@ function itemName(instance: EquipmentInstance): string {
   return gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)?.name ?? instance.itemId
 }
 
-// spec §5b — aria gồm cả Phẩm (seal chỉ là glyph trang trí, screen
-// reader đọc grade qua label này).
+// spec section 5b - aria includes the Pham word (the seal is a
+// decorative glyph; screen readers get the grade via this label).
 function itemAccessibleLabel(instance: EquipmentInstance): string {
   return `${itemName(instance)}, ${gradeLabel(instance.grade)}`
 }
@@ -131,9 +131,9 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
           gameManager.affixRegistry,
           gameManager.equipmentOps.getSlotState(entry.slot),
           gameManager.zoneRegistry,
-          // No compare context (item-info-card spec §4): the paperdoll
-          // renders only EQUIPPED items — an equipped item IS the
-          // compare counterpart, never a candidate for one.
+          // No compare context (item-info-card spec section 4): the
+          // paperdoll renders only EQUIPPED items - an equipped item IS
+          // the compare counterpart, never a candidate for one.
           undefined,
           gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
         )
@@ -249,7 +249,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   aspect-ratio: 1;
 }
 
-/* Paperdoll slots use variant="equipment" — the 6 worn slots get the
+/* Paperdoll slots use variant="equipment" - the 6 worn slots get the
    "empty" glass tile + "click" select frame (SlotVariant registry).
    Quality aura (rarityRank >= 3) still rides on top. Empty slots stay
    bare: no silhouette art. */

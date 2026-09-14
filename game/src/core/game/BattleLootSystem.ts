@@ -472,7 +472,7 @@ export class BattleLootSystem {
       this.pushLootNotification(`+1 ${template.name}`, {
         icon: instance.icon ?? template.icon,
         name: composeEquipmentDisplayName(instance, template, this.deps.zoneRegistry),
-        // Single-color name on the Chat ramp (spec §2): quality rank
+        // Single-color name on the Chat ramp (spec section 2): quality rank
         // spread onto odd steps of the 10-step --rank-color scale.
         nameColorVar: `--rank-color-${itemQualityRank(instance.quality) * 2 - 1}`,
         nameTone: instance.quality === 'tien' ? 'tien' : undefined,
@@ -553,7 +553,7 @@ export class BattleLootSystem {
 
             this.pushLootNotification(`+${amount} ${pill.name}`, {
               icon: pill.icon,
-              // Full "{Chat} - {Name}" display name (spec §2); color =
+              // Full "{Chat} - {Name}" display name (spec section 2); color =
               // Pham ramp when the pill carries professionGrade, else
               // the Chat --grade-* var. professionGrade is optional on
               // Pill, so the grade suffix is gated on it.

@@ -111,7 +111,7 @@ describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)',
     unmount()
   })
 
-  it('equipment 2 trục: seal theo Phẩm (equipmentQualityRank), KHÔNG theo Chất (rarityRank)', () => {
+  it('equipment 2 axes: seal follows Pham (equipmentQualityRank), NOT Chat (rarityRank)', () => {
     const { button, unmount } = mountSlot({
       item: { id: 1 },
       label: 'X',
@@ -134,7 +134,7 @@ describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)',
     empty.unmount()
   })
 
-  it('rarityRank (Chất, thang 5) tô khung theo dải --grade-*: rank r -> --rank-color-(2r-1)', () => {
+  it('rarityRank (Chat, 5-step scale) tints the frame via the --grade-* ramp: rank r -> --rank-color-(2r-1)', () => {
     for (const [rank, ramp] of [[1, 1], [3, 5], [5, 9]] as const) {
       const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: rank })
       expect(button.style.getPropertyValue('--slot-rarity-color')).toBe(`var(--rank-color-${ramp})`)
@@ -155,7 +155,7 @@ describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)',
   })
 })
 
-describe('SlotView — static presentation mode (item-info-card 2026-09-14)', () => {
+describe('SlotView - static presentation mode (item-info-card 2026-09-14)', () => {
   it('static mode: renders span role=img, no button, no tooltip emission, no click', () => {
     const onClick = vi.fn()
     const { container, unmount } = mountSlot({
@@ -313,7 +313,7 @@ describe('SlotView — badge/marker/comparison/amount/caption', () => {
     unmount()
   })
 
-  it('amount render; nametag caption đã bỏ — tên nằm trong tooltip (user ruling)', () => {
+  it('amount renders; nametag caption removed - the name lives in the tooltip (user ruling)', () => {
     const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Linh Thạch', amount: 42 })
 
     expect(button.querySelector('.slot-view__amount')?.textContent).toContain('42')
@@ -322,12 +322,12 @@ describe('SlotView — badge/marker/comparison/amount/caption', () => {
   })
 })
 
-describe('SlotView — Chat aura (equipment quality indicator, user art pass)', () => {
+describe('SlotView - Chat aura (equipment quality indicator, user art pass)', () => {
   // User ruling: the old hover-only blue beam becomes a persistent
-  // quality indicator — only equipment with ItemQuality Dia (rank 3 on
+  // quality indicator - only equipment with ItemQuality Dia (rank 3 on
   // the 5-step scale) and above shows it; each tier gets the rank color.
-  // Materials on the 10-step scale are NOT equipment Chat — no aura.
-  it('trang bị Chất Địa (rarityRank = 3) — vòng sáng TĨNH tô màu grade ramp, không beam quay', () => {
+  // Materials on the 10-step scale are NOT equipment Chat - no aura.
+  it('equipment Chat Dia (rarityRank = 3) - STATIC glow ring tinted by the grade ramp, no rotating beam', () => {
     const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: 3 })
 
     expect(button.classList.contains('slot-view--quality-fx-3')).toBe(true)
@@ -340,7 +340,7 @@ describe('SlotView — Chat aura (equipment quality indicator, user art pass)', 
     unmount()
   })
 
-  it('trang bị Chất Thiên/Tiên (rarityRank 4-5) — beam thường trực tô màu grade ramp', () => {
+  it('equipment Chat Thien/Tien (rarityRank 4-5) - persistent beam tinted by the grade ramp', () => {
     for (const [rank, ramp] of [[4, 7], [5, 9]] as const) {
       const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: rank })
 
@@ -351,7 +351,7 @@ describe('SlotView — Chat aura (equipment quality indicator, user art pass)', 
     }
   })
 
-  it('trang bị dưới Địa (rarityRank 1-2) — KHÔNG có indicator', () => {
+  it('equipment below Dia (rarityRank 1-2) - NO indicator', () => {
     for (const rank of [1, 2]) {
       const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: rank })
 
@@ -360,7 +360,7 @@ describe('SlotView — Chat aura (equipment quality indicator, user art pass)', 
     }
   })
 
-  it('material thang 10 (rarityRankScale=10) rank >= 3 vẫn KHÔNG có aura — không phải Chất trang bị', () => {
+  it('material on the 10-step scale (rarityRankScale=10) rank >= 3 still has NO aura - not equipment Chat', () => {
     const { button, unmount } = mountSlot({
       item: { id: 1 },
       label: 'X',
@@ -372,14 +372,14 @@ describe('SlotView — Chat aura (equipment quality indicator, user art pass)', 
     unmount()
   })
 
-  it('slot trống không aura dù rarityRank được truyền', () => {
+  it('empty slot shows no aura even when rarityRank is passed', () => {
     const { button, unmount } = mountSlot({ item: null, label: 'X', rarityRank: 5 })
 
     expect(button.classList.contains('fx-border-beam--active')).toBe(false)
     unmount()
   })
 
-  it('hover-frame layer (slot-frame-hover.png) luôn có trong DOM, CSS điều khiển hiển thị', () => {
+  it('hover-frame layer (slot-frame-hover.png) is always in the DOM, CSS controls visibility', () => {
     const { button, unmount } = mountSlot({ item: null, label: 'X' })
 
     expect(button.querySelector('.slot-view__hover-frame')).not.toBeNull()

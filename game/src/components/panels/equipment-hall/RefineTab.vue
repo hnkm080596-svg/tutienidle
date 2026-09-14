@@ -250,7 +250,7 @@ const refineRenAfter = computed(() =>
           v-for="row in hallSlotRows"
           :key="row.slot"
           class="qi-hall__slot"
-                    :item="row.equippedRow?.instance ?? null"
+          :item="row.equippedRow?.instance ?? null"
           :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
           :accessible-label="row.equippedRow?.accessibleLabel"
           :name-segments="row.equippedRow?.nameSegments"

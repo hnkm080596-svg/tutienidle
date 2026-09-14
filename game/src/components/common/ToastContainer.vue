@@ -68,7 +68,7 @@ onBeforeUnmount(() => {
 })
 
 // The "Chat - Name" naming model (2026-09-14) embeds the dash inside the
-// composed name ("Chat - Name") — strip the prefix when deriving a
+// composed name ("Chat - Name") - strip the prefix when deriving a
 // monogram so the glyph starts with the item's own letter.
 function lastNameText(name: string): string {
   const dashIndex = name.indexOf(' - ')
@@ -110,7 +110,8 @@ function lastNameText(name: string): string {
             <div class="toast-item__content">
               <span class="toast-item__eyebrow">Nhận được</span>
               <!-- Single-color name + muted grade suffix (item-info-card
-                   spec §2): 'tien' tone upgrades to the rainbow class. -->
+                   spec section 2): 'tien' tone upgrades to the rainbow
+                   class. -->
               <span class="toast-item__name">
                 <span
                   :class="{ 'toast-item__segment--max-rank': isMaxRankTone(toast.loot.nameTone) }"
@@ -246,13 +247,13 @@ function lastNameText(name: string): string {
   white-space: nowrap;
 }
 
-/* Muted Pham suffix after the loot name (item-info-card spec §2). */
+/* Muted Pham suffix after the loot name (item-info-card spec section 2). */
 .toast-item__grade {
   color: var(--paper-text-muted);
   font-weight: 400;
 }
 
-/* Max-rank (tien) name — rainbow gradient text, replaces nameColorVar. */
+/* Max-rank (tien) name - rainbow gradient text, replaces nameColorVar. */
 .toast-item__segment--max-rank {
   color: transparent;
   background: var(--rank-gradient-10);

@@ -34,9 +34,9 @@ describe('useTooltip owner lifecycle', () => {
   })
 
   // Item-info-card payload contract (Tasks 3-4): the new fields round-
-  // trip through the queue untouched — slotPreview, single-color name,
+  // trip through the queue untouched - slotPreview, single-color name,
   // ownedCount, row range/delta.
-  it('chấp nhận payload contract mới (slotPreview/nameColorVar/ownedCount/range/delta)', () => {
+  it('accepts the new payload contract (slotPreview/nameColorVar/ownedCount/range/delta)', () => {
     vi.useFakeTimers()
     const owner = document.createElement('button')
     const tooltip = useTooltip()
@@ -68,8 +68,8 @@ describe('useTooltip owner lifecycle', () => {
   })
 
   // Compare pair contract (Task 5): an equipment payload may carry one
-  // equipped counterpart card — the pair stops at depth 1 by type.
-  it('chấp nhận equipment compareWith (equipped counterpart, non-recursive)', () => {
+  // equipped counterpart card - the pair stops at depth 1 by type.
+  it('accepts equipment compareWith (equipped counterpart, non-recursive)', () => {
     vi.useFakeTimers()
     const owner = document.createElement('button')
     const tooltip = useTooltip()

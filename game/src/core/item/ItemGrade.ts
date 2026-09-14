@@ -21,7 +21,7 @@ export const ITEM_GRADE_LABELS: Record<ItemGrade, string> = {
 }
 
 // Short tier word for the "Chat - Name" name prefix (same ruling as
-// ItemQuality.ITEM_QUALITY_SHORT_LABELS — the two axes intentionally
+// ItemQuality.ITEM_QUALITY_SHORT_LABELS - the two axes intentionally
 // keep parallel label tables, see the header comment above).
 export const ITEM_GRADE_SHORT_LABELS: Record<ItemGrade, string> = {
   hoang: 'Hoàng',
@@ -32,7 +32,7 @@ export const ITEM_GRADE_SHORT_LABELS: Record<ItemGrade, string> = {
 }
 
 // Name composition (2026-09-14 ruling): "{Chat} - {Name}". Structure
-// only — the display color lives on the tooltip/toast payload
+// only - the display color lives on the tooltip/toast payload
 // (nameColorVar), not per segment (item-info-card spec).
 export function composeItemGradeNameSegments(name: string, grade: ItemGrade): NameSegment[] {
   return [
