@@ -602,3 +602,145 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     })
   })
 })
+
+// Stat-key migration (stat-system-reimagined rename pass) — saves written
+// before the rename keep legacy stat keys inside techniques[]/skills[]
+// entries. tierEffects/combatModifiers/passiveModifiers/specializations
+// are authored data: restore re-derives them from the registered template
+// (same contract as name/description), so legacy keys can't stay inert.
+describe('stat-key migration on techniques[]/skills[] restore', () => {
+  it('legacy technique tierEffects.attackFlat re-derives mightFlat from the template', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+
+    // Pre-rename save shape: tu_linh_quyet persisted attackFlat instead
+    // of mightFlat across every tier.
+    const legacy = structuredClone(
+      TECHNIQUES.find((technique) => technique.id === 'tu_linh_quyet')!,
+    )
+    legacy.unlocked = true
+    legacy.equipped = true
+    for (const effect of Object.values(legacy.tierEffects ?? {})) {
+      const record = effect as { attackFlat?: number; mightFlat?: number }
+      record.attackFlat = record.mightFlat
+      delete record.mightFlat
+    }
+    expect(
+      (legacy.tierEffects!.so_nhap as { attackFlat?: number }).attackFlat,
+    ).toBe(15)
+
+    manager.saveOps.restoreFromSave(baseSave(player, { techniques: [legacy] }))
+
+    const restored = manager.techniqueManager.get('tu_linh_quyet')!
+    expect(restored.tierEffects!.so_nhap).toEqual({
+      mightFlat: 15,
+      defenseFlat: 15,
+      hpRegenFlat: 1,
+      mpRegenFlat: 0.5,
+    })
+    expect(restored.tierEffects!.vien_man).toEqual({
+      mightFlat: 70,
+      defenseFlat: 70,
+      hpRegenFlat: 3,
+      mpRegenFlat: 2,
+    })
+
+    // End-to-end: the might bonus reaches the aggregated modifiers again
+    // (insight 0 -> so_nhap tier -> +15 might from the template).
+    const modifiers = manager.effectOps.getAggregatedModifiers(player)
+    expect(modifiers).toContainEqual(
+      expect.objectContaining({ stat: 'might', flat: 15 }),
+    )
+  })
+
+  it('legacy skill passiveModifiers stat:"attack" re-derives stat:"might" from the template', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+
+    const legacy = structuredClone(
+      SKILLS.find((skill) => skill.id === 'passive_linh_khi_cam_ung')!,
+    )
+    ;(legacy.passiveModifiers![0] as { stat: string }).stat = 'attack'
+    legacy.unlocked = true
+    legacy.equipped = true
+
+    manager.saveOps.restoreFromSave(baseSave(player, { skills: [legacy] }))
+
+    const restored = manager.skillManager.get('passive_linh_khi_cam_ung')!
+    expect(restored.passiveModifiers![0]!.stat).toBe('might')
+    // The scaled passive aggregation emits the remapped stat again.
+    expect(manager.skillSystem.getScaledPassiveModifiers()).toContainEqual(
+      expect.objectContaining({ stat: 'might' }),
+    )
+  })
+
+  it('entries with no registered template keep the save object with legacy stat keys remapped', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+
+    const orphanTechnique: Technique = {
+      id: 'removed_technique',
+      name: 'Removed technique',
+      description: 'template gone from the catalog',
+      unlocked: true,
+      equipped: false,
+      tierEffects: { so_nhap: { mightFlat: undefined, defenseFlat: 3 } },
+      combatModifiers: [
+        {
+          id: 'removed_technique:ward',
+          sourceId: 'removed_technique',
+          sourceType: 'technique',
+          stat: 'wardRegenPerSecond' as never,
+          flat: 4,
+        },
+      ],
+    }
+    // Simulate the legacy field name on the saved object.
+    ;(orphanTechnique.tierEffects!.so_nhap as { attackFlat?: number }).attackFlat = 9
+    delete (orphanTechnique.tierEffects!.so_nhap as { mightFlat?: number }).mightFlat
+
+    const orphanSkill = structuredClone(SAVED_SKILL)
+    ;(orphanSkill as { id: string }).id = 'removed_skill'
+    orphanSkill.passiveModifiers = [
+      {
+        id: 'removed_skill:p1',
+        sourceId: 'removed_skill',
+        sourceType: 'skill',
+        stat: 'attack' as never,
+        flat: 6,
+      },
+    ]
+    orphanSkill.specializations = [
+      {
+        id: 'spec_a',
+        name: 'Spec A',
+        passiveModifiersOverride: [
+          {
+            id: 'removed_skill:s1',
+            sourceId: 'removed_skill',
+            sourceType: 'skill',
+            stat: 'manaRegenPerSecond' as never,
+            flat: 2,
+          },
+        ],
+      },
+    ]
+
+    manager.saveOps.restoreFromSave(
+      baseSave(player, { techniques: [orphanTechnique], skills: [orphanSkill] }),
+    )
+
+    const technique = manager.techniqueManager.get('removed_technique')!
+    expect(
+      (technique.tierEffects!.so_nhap as { attackFlat?: number }).attackFlat,
+    ).toBeUndefined()
+    expect(technique.tierEffects!.so_nhap!.mightFlat).toBe(9)
+    expect(technique.combatModifiers![0]!.stat).toBe('wardRegenPerTurn')
+
+    const skill = manager.skillManager.get('removed_skill')!
+    expect(skill.passiveModifiers![0]!.stat).toBe('might')
+    expect(skill.specializations![0]!.passiveModifiersOverride![0]!.stat).toBe(
+      'manaRegenPerTurn',
+    )
+  })
+})

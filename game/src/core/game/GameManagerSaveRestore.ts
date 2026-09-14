@@ -1,7 +1,7 @@
 import { SkillManager } from '../skill/SkillManager'
 import type { Skill } from '../skill/Skill'
 import { TechniqueManager } from '../technique/TechniqueManager'
-import type { Technique } from '../technique/Technique'
+import type { Technique, TechniqueTierEffect } from '../technique/Technique'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import { PillRegistry } from '../pill/PillRegistry'
@@ -22,6 +22,7 @@ import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
+import { migrateStatModifier } from '../stats/statKeyMigration'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
@@ -177,6 +178,16 @@ export class GameManagerSaveRestore {
       if (template) {
         technique.name = template.name
         technique.description = template.description
+
+        // Stat-key migration (stat-system-reimagined rename pass) —
+        // tierEffects/combatModifiers are authored data and the template
+        // is their authority, same contract as name/description above.
+        // Re-deriving keeps a save frozen with pre-rename keys
+        // (attackFlat, stat:'attack') from silently staying inert.
+        technique.tierEffects = structuredClone(template.tierEffects)
+        technique.combatModifiers = structuredClone(template.combatModifiers)
+      } else {
+        migrateLegacyTechniqueStatKeys(technique)
       }
 
       return technique
@@ -214,6 +225,17 @@ export class GameManagerSaveRestore {
       if (template) {
         skill.name = template.name
         skill.description = template.description
+
+        // Stat-key migration (stat-system-reimagined rename pass) —
+        // passiveModifiers/specializations are authored data owned by
+        // the template; re-derive so legacy stat keys ('attack',
+        // '*RegenPerSecond') frozen in the save don't stay inert.
+        // selectedSpecializationId lives on the instance (progression)
+        // and is untouched.
+        skill.passiveModifiers = structuredClone(template.passiveModifiers)
+        skill.specializations = structuredClone(template.specializations)
+      } else {
+        migrateLegacySkillStatKeys(skill)
       }
 
       return skill
@@ -425,4 +447,30 @@ export class GameManagerSaveRestore {
 
     return this.deps.equipmentSystem.getModifiers()
   }
+}
+
+// Stat-key migration (stat-system-reimagined rename pass) — for save
+// entries whose id has NO registered template the saved object stays
+// authoritative by design (see preflightSaveRegistryReferences), so the
+// legacy key names are remapped in place. With a template present these
+// fields are re-derived instead (see the restore loops above).
+function migrateLegacyTechniqueStatKeys(technique: Technique): void {
+  for (const effect of Object.values(technique.tierEffects ?? {})) {
+    const record = effect as TechniqueTierEffect & { attackFlat?: number }
+
+    if (record.attackFlat !== undefined) {
+      record.mightFlat ??= record.attackFlat
+      delete record.attackFlat
+    }
+  }
+
+  technique.combatModifiers = technique.combatModifiers?.map(migrateStatModifier)
+}
+
+function migrateLegacySkillStatKeys(skill: Skill): void {
+  skill.passiveModifiers = skill.passiveModifiers?.map(migrateStatModifier)
+  skill.specializations = skill.specializations?.map((specialization) => ({
+    ...specialization,
+    passiveModifiersOverride: specialization.passiveModifiersOverride?.map(migrateStatModifier),
+  }))
 }
