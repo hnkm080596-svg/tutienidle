@@ -39,14 +39,9 @@ export const PLAYER_HUD_MP_COLOR = 0x4a90d9
 export const PLAYER_HUD_KIEM_COLOR = 0xd4a72c
 export const PLAYER_HUD_LABEL_COLOR = '#f4f4f0'
 
-export const CAST_GLOW_COLOR = 0xffffff
-
-// Cast Time (2026-08-21) — cast bar hiện phía TRÊN đầu unit.
-export const CAST_BAR_BG_COLOR = 0x1c1712
-export const CAST_BAR_FILL_COLOR = 0xf4c542
-export const CAST_BAR_HEIGHT = 5
+// M13: cast-bar creation path retired with the 'cast'/'cast_start'
+// producers — only OFFSET_Y remains, used by positionCastBar cleanup.
 export const CAST_BAR_OFFSET_Y = 10
-export const CAST_NAME_COLOR = '#f4c542'
 
 export const ENEMY_HP_BG_COLOR = 0x241b1b
 export const ENEMY_HP_FILL_COLOR = 0xc94b4b

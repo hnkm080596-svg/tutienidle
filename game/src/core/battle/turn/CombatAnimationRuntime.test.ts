@@ -72,7 +72,7 @@ function fixture() {
   const runtime = new CombatAnimationRuntime({
     getTurnBattleSystem: () => turnBattleSystem,
     eventBus,
-    getBattle: () => battle,
+    getTurnBattle: () => battle,
   })
 
   return { runtime, battle, player, enemy, eventBus }
@@ -83,7 +83,7 @@ describe('CombatAnimationRuntime', () => {
     const runtime = new CombatAnimationRuntime({
       getTurnBattleSystem: () => ({}) as never,
       eventBus: { emit: vi.fn() } as never,
-      getBattle: () => null,
+      getTurnBattle: () => null,
     })
 
     expect(runtime.getAnimationState('player')).toBe('idle')
@@ -342,7 +342,7 @@ describe('CombatAnimationRuntime', () => {
     const runtime = new CombatAnimationRuntime({
       getTurnBattleSystem: () => turnBattleSystem,
       eventBus,
-      getBattle: () => battle,
+      getTurnBattle: () => battle,
     })
 
     // Reassign to a brand-new instance AFTER the runtime was constructed —
@@ -482,7 +482,7 @@ describe('CombatAnimationRuntime', () => {
       const runtime = new CombatAnimationRuntime({
         getTurnBattleSystem: () => turnBattleSystem,
         eventBus,
-        getBattle: () => battle,
+        getTurnBattle: () => battle,
         isSessionBlocking: () => blocking,
       })
 

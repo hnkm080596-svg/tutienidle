@@ -150,7 +150,7 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
     for (let index = 0; index < 300; index++) {
       combatSource.advance(COMBAT_STEP_SECONDS)
 
-      if (gameManager.getBattle()?.state === 'victory') {
+      if (gameManager.getTurnBattle()?.state === 'victory') {
         reachedVictory = true
 
         break

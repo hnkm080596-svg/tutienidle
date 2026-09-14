@@ -116,12 +116,12 @@ describe('Admitted session handoff (ARCH-004 / L03)', () => {
     // do) - the terminal session must still be retained once we route home.
     for (
       let n = 0;
-      n < 10_000 && !['victory', 'defeat'].includes(gameManager.getBattle()?.state ?? '');
+      n < 10_000 && !['victory', 'defeat'].includes(gameManager.getTurnBattle()?.state ?? '');
       n++
     ) {
       combatSource.advance(COMBAT_STEP_SECONDS)
     }
-    expect(gameManager.getBattle()?.state).toBe('victory')
+    expect(gameManager.getTurnBattle()?.state).toBe('victory')
 
     await goHome()
     expect(gameManager.getCurrentPresentationSession('combat')).toEqual(combatSession)

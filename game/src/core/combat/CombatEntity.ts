@@ -73,7 +73,7 @@ export interface CombatEntity {
   // KILL trong phiên farm (không decay), reset về 0 khi bắn Ultimate.
   // Optional — cùng precedent currentKiemThe: chỉ Pháp Tu đã chốt
   // Thuần mới có ý nghĩa, mọi fixture/path khác đọc qua `?? 0`
-  // (xem core/battle/TheResourceSystem.ts).
+  // (TheResourceSystem retired M13 — gains live in TurnBattleSystem).
   currentThe?: number
 
   // Thể Tu (Combat Rework Phase 7) — Momentum CHIẾN ĐẤU, cùng mô hình

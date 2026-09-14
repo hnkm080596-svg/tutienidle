@@ -10,9 +10,6 @@ import { EventBus } from '../events/EventBus'
 import { CombatSystem } from '../combat/CombatSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-import type { Battle } from '../battle/Battle'
-import { ActionImpactSystem } from '../battle/ActionImpactSystem'
-
 
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
@@ -25,7 +22,6 @@ import { NodeRegistry } from '../progression/NodeRegistry'
 
 import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
-import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { PassiveSystem } from '../skill/PassiveSystem'
 import type { Skill } from '../skill/Skill'
 
@@ -212,11 +208,11 @@ export class GameManager {
   // sống sót battle-scoped; combatSystem.killIfDead() là điểm tiêu thụ.
   readonly surviveLethalGuard = new SurviveLethalGuard()
 
-  readonly actionImpact = new ActionImpactSystem({
-    eventBus: this.eventBus,
-    rollCritical: (s, t) => this.combatSystem.rollCritical(s, t),
-  })
-
+  // M13: the ActionImpactSystem/SkillEffectSystem INSTANCES here served
+  // only the retired legacy engine helpers (EnemyAttackSystem,
+  // SkillEffectResolver). The classes themselves stay live (turn engine
+  // uses scaleActionDamage/ActionDamageInfo; SkillTriggerRunner keeps the
+  // SkillEffectContext contract) — only these orphaned fields are gone.
   readonly buffPool = new BuffPool()
   readonly buffSystem = new BuffSystem(this.buffPool)
   readonly buffRegistry = new BuffRegistry()
@@ -231,7 +227,6 @@ export class GameManager {
           : `${skill.name} tang ${levelsGained} c?p, d?t c?p ${skill.level}`,
     })
   })
-  readonly skillEffectSystem = new SkillEffectSystem()
   readonly passiveSystem = new PassiveSystem(
     this.eventBus,
     this.skillManager,
@@ -284,7 +279,8 @@ export class GameManager {
   // =========================
   // TURN-BASED COMBAT — engine duy nhất điều khiển combat (C1 2026-09-08:
   // legacy real-time BattleSystem + mirror Battle object đã XOÁ cùng
-  // battle/legacy/; mọi consumer đọc getBattle() → TurnBattle cast).
+  // battle/legacy/. M13 2026-09-14: the getBattle() `as unknown as Battle`
+  // cast is retired — consumers read getTurnBattle() (TurnBattle | null)).
   // C2 (2026-09-08): runtime lifecycle (TurnBattle construction, fixed-step
   // driving loop, rewards, auto-farm) moved verbatim into
   // GameManagerTurnBattleOps - the methods below are thin delegates keeping
@@ -506,7 +502,7 @@ export class GameManager {
       breakthroughOutcomeService: this.breakthroughOutcomeService,
       progressionOps: this.progressionOps,
       // Deferred closures - turnBattleOps/activePlayer are assigned later.
-      getBattle: () => this.getBattle(),
+      getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
       // Deferred closure - tickOps is assigned later in this constructor.
       markQuestRealmTransition: () => this.tickOps.markQuestRealmTransition(),
     })
@@ -1110,16 +1106,6 @@ export class GameManager {
    */
   startBattleWithPlayer(player: PlayerData, enemy: Enemy) {
     this.turnBattleOps.startBattleWithPlayer(player, enemy)
-  }
-
-  /**
-   * getBattle() returns the TurnBattle (cast to the Battle shape its
-   * read-only consumers expect: state/player/enemies). C1: the legacy
-   * fallback branch is gone — null when no turn battle (tribulation side
-   * never creates one).
-   */
-  getBattle(): Battle | null {
-    return this.turnBattleOps.getBattle()
   }
 
   /**

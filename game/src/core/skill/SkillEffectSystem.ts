@@ -1,3 +1,9 @@
+// [M13 STATUS: TRANSITIONAL] Legacy skill-effect executor. Reachable
+// only through the dormant CombatSystem.fireKillTriggers ->
+// SkillTriggerRunner path (gated by an optional reactionManager dep that
+// GameManager never injects) and tests. SkillEffectContext remains a
+// live type contract for that chain; the turn engine uses
+// TurnSkillAction/TurnBattleSystem instead.
 import type { SkillEffect } from './SkillEffect'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { getSkillRuntimeStat } from './SkillRuntimeStats'

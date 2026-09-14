@@ -1,3 +1,8 @@
+// [M13 STATUS: PARKED] Content anchor for the blocked zone-as-dot
+// cutover (see the header below): the turn engine does not yet apply
+// these definitions, and they are NOT registered in data/buff/buffs.ts.
+// Only the module test consumes them. Kept deliberately per the
+// mission's parked-modules rule.
 import type { BuffDefinition } from '../../core/buff/BuffTypes'
 
 // Completion plan Task 7 Step 1 — 2 dot buff definition thay zone-as-dot:
@@ -21,7 +26,7 @@ import type { BuffDefinition } from '../../core/buff/BuffTypes'
 // reaction/skill-effect thật) — không có call site nào để swap. Definition
 // này là neo chuẩn cho lúc content migration thật wire reaction vào turn
 // engine: lúc đó chỉ cần apply() 2 definition này thay spawn zone (xem
-// roadmap dòng "SkillEffectResolver/SkillEffectSystem conversion").
+// roadmap dòng "skill-effect conversion" (SkillEffectResolver retired M13)).
 
 export const DUNG_NHAM_BURN_DEFINITION: BuffDefinition = {
   id: 'dung_nham_burn',

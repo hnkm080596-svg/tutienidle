@@ -21,7 +21,7 @@ describe('GameManager — facade TribulationDirector', () => {
     expect(active).not.toBeNull()
     expect(active!.grade).toBe('human')
     expect(active!.chaptersTotal).toBe(2)
-    expect(gameManager.getBattle()).toBeNull()
+    expect(gameManager.getTurnBattle()).toBeNull()
   })
 
   it('startTribulation Trúc Cơ (đủ Địa Đạo): grade earth; thiếu đan → human', () => {

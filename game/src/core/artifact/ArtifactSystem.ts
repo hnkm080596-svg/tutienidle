@@ -1,3 +1,9 @@
+// [M13 STATUS: TRANSITIONAL - DORMANT] Legacy real-time artifact combat
+// runtime (activation cycle over Battle.artifactRuntime). The turn
+// engine never creates artifactRuntime, so updateArtifactActivation and
+// the HUD presentation above it are unreachable; artifact progression
+// (path/grade ops in GameManagerRealmAdvanceOps) is live and unrelated.
+// Kept as the reference implementation for a future turn-based port.
 // Bản Mệnh Pháp Bảo — combat "subgun" (doc §8-11). Action nền + 3
 // hướng Công/Thủ/Khống, đọc/ghi qua Battle.artifactRuntime. Không tự
 // giữ state ngoài Battle (runtime-only, xem ArtifactRuntime.ts).

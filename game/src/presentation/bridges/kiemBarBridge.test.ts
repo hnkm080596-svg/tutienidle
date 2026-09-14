@@ -5,8 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import { MAX_KIEM_THE } from '@/core/combat/CombatTypes'
 import { kiemYTempMaxFor } from '@/core/battle/KiemTuResourceSystem'
-import type { Battle } from '@/core/battle/Battle'
-import type { BattleState } from '@/core/battle/BattleTypes'
+import type { TurnBattle, TurnBattleState } from '@/core/battle/turn/TurnBattleSystem'
 import type { GameManager } from '@/core/game/GameManager'
 import {
   KIEM_BAR_READER_KEY,
@@ -16,15 +15,17 @@ import {
   type KiemBarPlayerState,
 } from '@/presentation/bridges/kiemBarBridge'
 
+// M13: TurnBattle shape — Kiem Tu pools live on the player-side
+// participant's CombatEntity (players[0].entity), not a flat .player.
 function fakeBattle(
-  state: BattleState,
-  player: { currentKiemThe?: number; currentKiemYTemp?: number },
-): Battle {
-  return { state, player } as unknown as Battle
+  state: TurnBattleState,
+  entity: { currentKiemThe?: number; currentKiemYTemp?: number },
+): TurnBattle {
+  return { state, players: [{ entity }], enemies: [] } as unknown as TurnBattle
 }
 
-function makeReader(battle: Battle | null, player: KiemBarPlayerState) {
-  const gameManager = { getBattle: () => battle } as unknown as GameManager
+function makeReader(battle: TurnBattle | null, player: KiemBarPlayerState) {
+  const gameManager = { getTurnBattle: () => battle } as unknown as GameManager
 
   return makeKiemBarReader(gameManager, () => player)
 }
@@ -81,8 +82,8 @@ describe('makeKiemBarReader — 9.4 Kiếm bar mapping', () => {
     expect(reader()).toBeNull()
   })
 
-  it('battle không diễn ra (victory/defeat/idle) → null', () => {
-    for (const state of ['victory', 'defeat', 'idle'] as const) {
+  it('battle không diễn ra (victory/defeat) → null', () => {
+    for (const state of ['victory', 'defeat'] as const) {
       const reader = makeReader(
         fakeBattle(state, { currentKiemThe: 30 }),
         { kiemTuRoute: 'kiem_tran', bossKillCount: 0 },

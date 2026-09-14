@@ -35,6 +35,6 @@ export function useStageActive() {
       return true
     }
 
-    return gameManager.stageManager.get() !== null || isBattleInProgress(gameManager.getBattle()?.state)
+    return gameManager.stageManager.get() !== null || isBattleInProgress(gameManager.getTurnBattle()?.state)
   })
 }

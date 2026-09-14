@@ -1,3 +1,5 @@
+// [M13 STATUS: PARKED] Content validator for the unbuilt world-map
+// feature. Only consumer is its test; kept deliberately.
 import { getHexDistance, hexCoordinateKey } from './HexCoordinate'
 import type { WorldMapDefinition, WorldMapSpriteDefinition } from './WorldMap'
 

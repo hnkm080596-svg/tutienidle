@@ -2,7 +2,7 @@
 // icon hướng; hành của phát kế; counter activation thứ năm hoặc stack
 // khống chế trên target hiện tại." HUD CHỈ đọc runtime, không cho đổi
 // hướng/nâng phẩm (đúng doc — không có action nào ở đây).
-import type { Battle } from '../battle/Battle'
+import type { ArtifactRuntime } from './ArtifactRuntime'
 import type { ElementType } from '../element/ElementType'
 import { getArtifactCycleSeconds } from './ArtifactSystem'
 
@@ -27,13 +27,15 @@ const EMPTY_STATE: ArtifactCombatPresentationState = {
   activationsUntilFifth: FIFTH_ACTIVATION_INTERVAL,
 }
 
+// M13: narrowed from `Battle | null` — the builder only ever read
+// `battle.artifactRuntime`. TurnBattle has no such field (artifact combat
+// is a legacy real-time feature pending a turn-based port), so callers
+// pass the runtime directly.
 export function buildArtifactCombatPresentation(
-  battle: Battle | null,
+  runtime: ArtifactRuntime | null | undefined,
   primaryTargetId?: string,
 ): ArtifactCombatPresentationState {
-  const runtime = battle?.artifactRuntime
-
-  if (!battle || !runtime) {
+  if (!runtime) {
     return EMPTY_STATE
   }
 

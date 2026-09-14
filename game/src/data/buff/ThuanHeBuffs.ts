@@ -134,9 +134,10 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
   },
 
   // Node Thế Mãn (spec §4/E-7) — engine ÁP/GỠ theo trạng thái Thế đầy
-  // (TheResourceSystem.updateTheManBuff / UltimateSystem trigger reset).
+  // (E-7 sync was TheResourceSystem.updateTheManBuff — retired M13, not
+  // yet ported to the turn engine / UltimateSystem trigger reset).
   // duration Infinity: buff KHÔNG tự hết hạn; id phải khớp chính xác
-  // theManBuffId(element) = `the_man_<element>` (TheResourceSystem.ts).
+  // theManBuffId(element) = `the_man_<element>` (was TheResourceSystem.ts).
   {
     id: 'the_man_fire',
     name: 'Thế Mãn (Hỏa)',

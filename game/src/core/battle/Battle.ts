@@ -1,3 +1,9 @@
+// [M13 STATUS: TRANSITIONAL] Legacy real-time Battle/BattleEnemy
+// contract. The turn engine owns TurnBattle (battle/turn/); this file
+// remains only for dormant legacy-typed APIs (ArtifactSystem,
+// ActionImpactSystem scheduling methods, ActionTargetingSystem helpers)
+// and their tests. M13 removed the GameManager.getBattle()
+// `as unknown as Battle` cast - no live consumer sees this shape.
 import type { CombatEntity } from '../combat/CombatEntity'
 
 import type { BattleState } from './BattleTypes'
@@ -68,14 +74,6 @@ export interface Battle {
   // state==='countdown', xem BattleSystem.update(). undefined ở mọi
   // state khác.
   countdownSecondsRemaining?: number
-
-  // Fix (2026-09-06) — GameManager.getBattle() trả `turnBattle as unknown
-  // as Battle` khi có trận turn-based (xem GameManager.ts). Engine đó
-  // đếm ngược countdown bằng SỐ LƯỢT pacing (countdownTurnsRemaining,
-  // TurnBattleSystem.ts), không phải giây thật như legacy BattleSystem.ts
-  // — khai field ở đây để CombatCountdownOverlay.vue đọc được cả 2 shape
-  // qua đúng 1 type, không phải cast ngầm.
-  countdownTurnsRemaining?: number
 
   /**
    * Teleport AI (plan §7.3) — internal cooldown (ICD) của Player: đúng

@@ -1,3 +1,5 @@
+// [M13 STATUS: PARKED] World-map contract types for the unbuilt feature.
+// No production importer; kept deliberately (not dead debt).
 import type { HexCoordinate } from './HexCoordinate'
 
 export interface PixelRectangle {

@@ -245,7 +245,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Drive battle to defeat or victory
     gameManager.abandonBattle()
-    expect(gameManager.getBattle()?.state).toBe('defeat')
+    expect(gameManager.getTurnBattle()?.state).toBe('defeat')
 
     // Terminal result dismissal requests Home
     const pHome = coordinator.request({ target: 'home' })
@@ -255,7 +255,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
     expect(coordinator.getSnapshot().currentRoute).toBe('home')
 
     // Battle object remains queryable (not destroyed or erased)
-    expect(gameManager.getBattle()?.state).toBe('defeat')
+    expect(gameManager.getTurnBattle()?.state).toBe('defeat')
   })
 
   it('rejected abandon stays in combat', async () => {

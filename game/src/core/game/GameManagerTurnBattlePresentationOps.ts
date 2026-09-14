@@ -55,7 +55,7 @@ export class GameManagerTurnBattlePresentationOps {
       // capturing by value would freeze the runtime onto the first
       // registry-less instance.
       getTurnBattleSystem: () => TurnBattleSystem
-      getBattle: () => TurnBattle | null
+      getTurnBattle: () => TurnBattle | null
       // The clock's 'not-revealed' freeze reason re-evaluates after every
       // session transition (owned by the scheduling core).
       syncOffScreenFreeze: () => void
@@ -68,7 +68,7 @@ export class GameManagerTurnBattlePresentationOps {
     this.runtime = new CombatAnimationRuntime({
       getTurnBattleSystem: deps.getTurnBattleSystem,
       eventBus: deps.eventBus,
-      getBattle: deps.getBattle,
+      getTurnBattle: deps.getTurnBattle,
       isSessionBlocking: () => this.session.isBlocking(),
       stepCompletionSink: {
         onReady: () => this.deps.settleStep('ready'),
@@ -134,7 +134,7 @@ export class GameManagerTurnBattlePresentationOps {
       return null
     }
 
-    const battle = this.deps.getBattle()
+    const battle = this.deps.getTurnBattle()
 
     if (!battle) {
       return null

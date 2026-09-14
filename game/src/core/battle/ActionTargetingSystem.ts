@@ -1,3 +1,10 @@
+// [M13 STATUS: PARTIAL] Mixed liveness module: `areaFor` is live
+// (imported by battle/turn/TurnSkillAction); the Battle-typed helpers
+// (selectAttackableTarget, selectPrimaryTargetForEnemy,
+// canEnemyReachGate, collectAffected, findBattleEnemy) serve only the
+// dormant ArtifactSystem and tests now that EnemyAttackSystem and
+// SkillEffectResolver are retired (M13). Do not extend the
+// Battle-typed API; new turn-side targeting belongs in battle/turn/.
 // Combat Grid Rework — chọn primary target + thu thập vùng ảnh hưởng
 // hoàn toàn theo đơn vị GRID (cột/hàng). Pure functions, không state.
 //

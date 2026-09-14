@@ -432,7 +432,7 @@ function tick() {
     // tính tiến độ qua startedAt/collect(), không phụ thuộc vào nhánh
     // này. Tu vi vẫn tăng cả trong combat; isCultivating là trạng thái kinh tế
     // (luôn bật), còn event cultivation_changed chỉ điều khiển pose hình ảnh.
-    const battleBeforeAuto = gameManager.getBattle()
+    const battleBeforeAuto = gameManager.getTurnBattle()
     const isFighting = battleBeforeAuto !== null && isBattleInProgress(battleBeforeAuto.state)
 
     // Cultivation progresses alongside combat. Fighting only controls the

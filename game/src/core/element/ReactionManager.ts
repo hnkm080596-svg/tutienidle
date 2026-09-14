@@ -1,3 +1,13 @@
+// [M13 STATUS: TRANSITIONAL - PRODUCTION-UNREACHABLE] Legacy reaction
+// owner for the real-time engine. The turn engine's owner is
+// battle/turn/TurnReactionManager.ts. Nothing instantiates this class in
+// production: CombatSystem receives it as an OPTIONAL dep GameManager
+// never passes, and its other consumers (SkillEffectSystem,
+// SkillActionRegistry via SkillEffectContext) sit on the same dormant
+// legacy trigger path. Retained (not deleted) because it is still the
+// declared type of SkillEffectContext.reactionManager and carries real
+// reaction-math test coverage; M9 noted a legacy identity defect here.
+// Deleting it requires first unwinding the SkillEffectContext contract -
 import type { CombatEntity } from '../combat/CombatEntity'
 import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 import type { CombatSystem } from '../combat/CombatSystem'

@@ -1,3 +1,5 @@
+// [M13 STATUS: PARKED] Flat-top axial layout math for the unbuilt
+// world-map feature. No production importer; kept deliberately.
 import type { HexCoordinate } from './HexCoordinate'
 
 const SQRT_THREE = Math.sqrt(3)

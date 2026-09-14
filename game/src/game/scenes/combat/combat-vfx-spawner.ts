@@ -561,29 +561,6 @@ export class CombatVfxSpawner {
   }
 
   /**
-   * Hook placeholder VFX teleport (plan §2.5 — đợt này KHÔNG tự thiết kế
-   * VFX): flash alpha ngắn làm tín hiệu trực quan tối thiểu; thay bằng
-   * hiệu ứng thật ở đợt sau qua cùng điểm neo from/to này.
-   */
-  playTeleportVfx(_from: GridPosition, to: GridPosition) {
-    const projection = this.scene.projection
-    const sprite = this.scene.sprites.get(PLAYER_ID)
-
-    if (!projection || !sprite || !this.scene.isPerspective) {
-      return
-    }
-
-    void to
-
-    this.scene.tweens.add({
-      targets: sprite.rect,
-      alpha: { from: 0.35, to: 1 },
-      duration: 140,
-      ease: 'Quad.easeOut',
-    })
-  }
-
-  /**
    * Debug mode (plan §5.4) — dev-only, bật qua
    * localStorage['debug.playerBodyAnchors']='1'; vẽ chấm màu tại từng
    * body anchor mỗi frame. Không có UI production nào đụng tới.

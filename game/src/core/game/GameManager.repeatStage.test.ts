@@ -69,7 +69,7 @@ describe('GameManager continuous repeat stage', () => {
     }
 
     expect(spiritStoneBalance()).toBeGreaterThanOrEqual(2)
-    expect(gameManager.getBattle()?.state).toBe('fighting')
+    expect(gameManager.getTurnBattle()?.state).toBe('fighting')
     expect(gameManager.turnBattleOps.getStageProgress()).not.toBeNull()
     expect(player.completedStageIds).toContain(stage.id)
     // Drop-system (2026-09-12): mortal table pays 1-2 stone per kill, so
@@ -97,9 +97,9 @@ describe('GameManager continuous repeat stage', () => {
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
     // Intro (2026-09-07 plan Task 4) is the first wait phase - abandoning
     // during it keeps the exact same semantics the countdown phase had.
-    expect(gameManager.getBattle()?.state).toBe('intro')
+    expect(gameManager.getTurnBattle()?.state).toBe('intro')
     expect(gameManager.abandonBattle()).toBe(true)
-    expect(gameManager.getBattle()?.state).toBe('defeat')
+    expect(gameManager.getTurnBattle()?.state).toBe('defeat')
     expect(gameManager.turnBattleOps.getStageProgress()).toBeNull()
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
   })
