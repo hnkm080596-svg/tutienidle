@@ -11,8 +11,7 @@
 //     --rank-color-10/--rank-gradient-10 in assets/theme.css).
 //   - "Quality" = ItemQuality (5 steps, Hoang -> Tien) maps 1:1 onto
 //     rank 1-5 on a separate axis (never spread 1-3-5-7-9; see
-//     ItemQuality.composeItemQualityNameSegments for the canonical
-//     composition).
+//     ItemQuality.ITEM_QUALITY_SHORT_LABELS for the name prefix).
 // ItemGrade.ts (the old 1-3-5-7-9 axis) stays for Pill/Talisman/Formation
 // content and is unrelated to the equipment-only axes here.
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '@/core/item/ItemQuality'
@@ -29,8 +28,9 @@ export function professionGradeRank(grade: ProfessionGrade): number {
   return PROFESSION_GRADE_ORDER.indexOf(grade) + 1
 }
 
-// For NameSegment.tone consumers that only see a plain string and cannot
-// import the typed orders: checks the max rank of BOTH axes.
+// For consumers that only see a plain grade/quality key string (e.g.
+// Tooltip's qualityKey/gradeKey badge checks) and cannot import the
+// typed orders: checks the max rank of BOTH axes.
 export function isMaxRankTone(tone?: string): boolean {
   if (!tone) return false
 

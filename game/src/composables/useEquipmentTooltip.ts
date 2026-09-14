@@ -7,12 +7,13 @@ import { getEffectiveAffixValue, GLOBAL_MAX_AFFIXES, MAIN_STAT_REALM_SCALE } fro
 import { ITEM_QUALITY_AFFIX_SLOTS, ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '@/core/equipment/ItemQualityBalance'
 import { getGlobalCultivationLevel } from '@/core/realm/realmSystem'
 import { realmFromGrade } from '@/core/profession/ProfessionGrade'
-import { composeEquipmentDisplayName, composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
+import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
+import { composeEquipmentDisplayName } from '@/core/equipment/EquipmentNaming'
 import { EQUIPMENT_SLOT_LABELS } from '@/core/equipment/EquipmentTypes'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
-import { equipmentQualityLabel, gradeLabel, realmLabel } from '@/core/presentation/labels'
+import { gradeLabel, realmLabel } from '@/core/presentation/labels'
 import type { SlotComparison } from '@/components/common/SlotTypes'
-import type { EquipmentTooltipContent, TooltipSection } from './useTooltip'
+import type { EquipmentTooltipContent, TooltipSection, TooltipStatRow } from './useTooltip'
 
 // Dùng chung bởi buildEquipmentTooltip (build rows "So với trang bị
 // đang mặc") VÀ getEquipmentComparisonTone (Slot Revamp mục 17.7 —
@@ -61,6 +62,20 @@ export function getEquipmentComparisonTone(
   return positive > negative ? 'upgrade' : 'downgrade'
 }
 
+// Compare context (item-info-card spec section 4): the equipped
+// counterpart a candidate is compared against. Drives BOTH the inline
+// delta fields on stat rows AND the compareWith paired-card payload -
+// one source so the markers and the card can never disagree.
+export interface EquipmentCompareContext {
+  instance: EquipmentInstance
+
+  template: Equipment
+
+  slotState: EquipmentSlotState | null
+
+  mainStatRangeQuote?: { min: number; max: number }
+}
+
 // Tooltip Equipment có cấu trúc (2026-08-15) — loại CUỐI trong đợt
 // "tooltip theo từng loại item" (Technique/Pill/Talisman/Formation/
 // Equipment). Build TỪ ĐÚNG EquipmentInstance + Equipment template
@@ -80,7 +95,7 @@ export function buildEquipmentTooltip(
   affixRegistry: AffixRegistry,
   slotState: EquipmentSlotState | null,
   zoneRegistry: ZoneRegistry,
-  comparedInstance?: EquipmentInstance,
+  compare?: EquipmentCompareContext,
   mainStatRangeQuote?: { min: number; max: number },
 ): EquipmentTooltipContent {
   const mainStatValue = formatStat(instance.mainStat.stat, instance.mainStat.flat ?? 0)
@@ -95,14 +110,47 @@ export function buildEquipmentTooltip(
       : undefined
   })()
 
+  // Delta fields (spec section 4) - computed up front so every stat row can
+  // spread { delta, deltaTone }; empty when there is no real compare
+  // (no context, or the candidate IS the equipped item).
+  const hasCompare = compare !== undefined && compare.instance.instanceId !== instance.instanceId
+  const deltas = hasCompare
+    ? computeEquipmentStatDeltas(instance, compare.instance, affixRegistry)
+    : []
+  const deltaByStat = new Map(deltas.map(entry => [entry.stat, entry.delta]))
+  const comparedStats = hasCompare ? statValuesByStat(compare.instance, affixRegistry) : new Map<string, number>()
+  const candidateStats = statValuesByStat(instance, affixRegistry)
+
+  function deltaFields(stat: string): { delta?: string; deltaTone?: 'positive' | 'negative' | 'muted' } {
+    const delta = deltaByStat.get(stat)
+    if (delta === undefined) return {}
+    const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '•'
+    return {
+      delta: `${arrow} ${delta >= 0 ? '+' : ''}${formatStat(stat as EquipmentInstance['mainStat']['stat'], delta)}`,
+      deltaTone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'muted',
+    }
+  }
+
+  // R9 (AR-23 4c): range from the domain quote when supplied; the inline
+  // fallback above now owns the legacy path for callers without a
+  // system handle.
+  const effectiveMainRange = effectiveMainRangeValues
+    ? `[${formatStat(instance.mainStat.stat, effectiveMainRangeValues.min)}–${formatStat(instance.mainStat.stat, effectiveMainRangeValues.max)}]`
+    : '[—]'
+
   const sections: TooltipSection[] = [
     {
       label: 'Chỉ Số Chính',
 
-      // Giá trị thật đã roll+scale theo cảnh giới lúc rớt (instance.mainStat)
-      // — phạm vi gốc trong ngoặc là range tương ứng trên TEMPLATE,
-      // CHƯA scale, chỉ để tham khảo tương đối giữa các item cùng loại.
-      rows: [{ label: statLabel(instance.mainStat.stat), value: `+${mainStatValue}` }],
+      // Rolled+realm-scaled value (instance.mainStat); range renders
+      // muted inline after it (spec section 3 - advancedSections is
+      // gone, range/delta now live on the row itself).
+      rows: [{
+        label: statLabel(instance.mainStat.stat),
+        value: `+${mainStatValue}`,
+        range: effectiveMainRange,
+        ...deltaFields(instance.mainStat.stat),
+      }],
     },
   ]
 
@@ -110,28 +158,45 @@ export function buildEquipmentTooltip(
   const bonusAffixSlots = slotState?.bonusAffixSlots ?? 0
   const affixCapacity = Math.min(GLOBAL_MAX_AFFIXES, rarityAffixCap.prefix + rarityAffixCap.suffix + bonusAffixSlots)
 
-  if (instance.affixes.length > 0 || affixCapacity > 0) {
-    sections.push({
-      label: `Chỉ Số Phụ (${instance.affixes.length}/${affixCapacity})`,
+  const affixRows: TooltipStatRow[] = instance.affixes.map(rolled => {
+    const affix = affixRegistry.get(rolled.affixId)
+    const tier = affix.tiers.find(candidate => candidate.tier === rolled.tier)
+    const value = getEffectiveAffixValue(rolled, affix)
 
-      rows: instance.affixes.map(rolled => {
-        const affix = affixRegistry.get(rolled.affixId)
-        const value = getEffectiveAffixValue(rolled, affix)
+    return {
+      // The tooltip always calls a stat by its canonical StatLabels
+      // name - affix names are literary (e.g. "Chuan Xac") and could be
+      // misread as a different stat than accuracyRating.
+      label: statLabel(affix.stat),
 
-        return {
-          // Tooltip luôn gọi một stat bằng tên chuẩn trong StatLabels. Tên
-          // affix mang tính văn phong (ví dụ "Chuẩn Xác") dễ bị hiểu nhầm là
-          // một stat khác với accuracyRating ("Độ chính xác").
-          label: statLabel(affix.stat),
+      value: `+${formatStat(affix.stat, value)}`,
 
-          value: `+${formatStat(affix.stat, value)}`,
+      range: tier ? `[${formatStat(affix.stat, tier.min)}–${formatStat(affix.stat, tier.max)}]` : undefined,
 
-          tier: rolled.tier,
+      tier: rolled.tier,
 
-          tone: affix.pool === 'supreme' ? 'special' as const : 'default' as const,
-        }
-      }),
+      tone: affix.pool === 'supreme' ? 'special' as const : 'default' as const,
+
+      ...deltaFields(affix.stat),
+    }
+  })
+
+  // Stats the equipped counterpart has but the candidate lacks - muted
+  // "+0" rows in the SAME affix section carrying the negative delta.
+  for (const [stat] of comparedStats) {
+    if (candidateStats.has(stat)) continue
+    const typedStat = stat as EquipmentInstance['mainStat']['stat']
+    affixRows.push({
+      label: statLabel(typedStat),
+      value: `+${formatStat(typedStat, 0)}`,
+      tone: 'muted',
+      tier: 0,
+      ...deltaFields(typedStat),
     })
+  }
+
+  if (affixRows.length > 0 || affixCapacity > 0) {
+    sections.push({ label: `Chỉ Số Phụ (${instance.affixes.length}/${affixCapacity})`, rows: affixRows })
   }
 
   const forgeRows: { label: string; value: string }[] = []
@@ -155,84 +220,30 @@ export function buildEquipmentTooltip(
   // Phù/Trận legacy đã khai tử (plan §10.1) — không còn socket rows.
 
   const instanceRealmId = realmFromGrade(instance.grade)
-
-  // Rework P6 (item-grade-quality-rework, Task 21) — hiển thị RÕ 2
-  // trục riêng biệt của item, tránh lẫn lộn Phẩm (ProfessionGrade,
-  // theo đại cảnh giới) với Chất (ItemQuality, độ hiếm roll). Đặt SAU
-  // "Rèn" để sections[0] (Chỉ Số Chính) giữ nguyên vị trí — advancedSections
-  // dưới đây tự nhặt lại section này qua filter loại "Chỉ Số Chính"/"Chỉ Số Phụ".
-  sections.push({
-    label: 'Phân Loại',
-
-    rows: [
-      { label: 'Phẩm', value: `${gradeLabel(instance.grade)} (${realmLabel(instanceRealmId)})` },
-      { label: 'Chất', value: equipmentQualityLabel(instance.quality) },
-    ],
-  })
-
-  const deltas = comparedInstance && comparedInstance.instanceId !== instance.instanceId
-    ? computeEquipmentStatDeltas(instance, comparedInstance, affixRegistry)
-    : []
-  const deltaByStat = new Map(deltas.map(entry => [entry.stat, entry.delta]))
-  const comparedStats = comparedInstance ? statValuesByStat(comparedInstance, affixRegistry) : new Map<string, number>()
-  const candidateStats = statValuesByStat(instance, affixRegistry)
-
-  const appendDelta = (stat: EquipmentInstance['mainStat']['stat'], value: string) => {
-    const delta = deltaByStat.get(stat)
-    if (delta === undefined) return { value }
-    const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '•'
-    return {
-      value: `${value}  ${arrow} ${delta >= 0 ? '+' : ''}${formatStat(stat, delta)}`,
-      tone: delta > 0 ? 'positive' as const : delta < 0 ? 'negative' as const : 'muted' as const,
-    }
-  }
-
-  // R9 (AR-23 4c): range from the domain quote when supplied; the inline
-  // fallback above (lines ~90) now owns the legacy path for callers
-  // without a system handle.
-  const effectiveMainRange = effectiveMainRangeValues
-    ? `[${formatStat(instance.mainStat.stat, effectiveMainRangeValues.min)}–${formatStat(instance.mainStat.stat, effectiveMainRangeValues.max)}]`
-    : '[—]'
-  const advancedMain = appendDelta(instance.mainStat.stat, `+${mainStatValue} ${effectiveMainRange}`)
-
-  const advancedAffixRows = instance.affixes.map(rolled => {
-    const affix = affixRegistry.get(rolled.affixId)
-    const tier = affix.tiers.find(candidate => candidate.tier === rolled.tier)
-    const value = getEffectiveAffixValue(rolled, affix)
-    const range = tier ? ` [${formatStat(affix.stat, tier.min)}–${formatStat(affix.stat, tier.max)}]` : ''
-    const compared = appendDelta(affix.stat, `+${formatStat(affix.stat, value)}${range}`)
-
-    return {
-      label: statLabel(affix.stat),
-      value: compared.value,
-      tone: compared.tone ?? (affix.pool === 'supreme' ? 'special' as const : 'default' as const),
-      tier: rolled.tier,
-    }
-  })
-
-  for (const [stat] of comparedStats) {
-    if (candidateStats.has(stat)) continue
-    const typedStat = stat as EquipmentInstance['mainStat']['stat']
-    const compared = appendDelta(typedStat, `+${formatStat(typedStat, 0)}`)
-    advancedAffixRows.push({ label: statLabel(typedStat), value: compared.value, tone: compared.tone ?? 'muted', tier: 0 })
-  }
-
-  const advancedSections: TooltipSection[] = [
-    { label: 'Chỉ Số Chính', rows: [{ label: statLabel(instance.mainStat.stat), ...advancedMain }] },
-  ]
-  if (advancedAffixRows.length > 0 || affixCapacity > 0) {
-    advancedSections.push({ label: `Chỉ Số Phụ (${instance.affixes.length}/${affixCapacity})`, rows: advancedAffixRows })
-  }
-  advancedSections.push(...sections.filter(section => section.label !== 'Chỉ Số Chính' && !section.label.startsWith('Chỉ Số Phụ')))
+  const displayName = composeEquipmentDisplayName(instance, template, zoneRegistry)
 
   return {
     kind: 'equipment',
 
-    // Vật phẩm không còn tên riêng (2026-08-15) — tiêu đề tooltip ghép
-    // đủ Phẩm/Set/Địa Giới + từ loại, xem EquipmentNaming.ts.
-    name: composeEquipmentDisplayName(instance, template, zoneRegistry),
+    name: displayName,
 
-    nameSegments: composeEquipmentNameSegments(instance, template, zoneRegistry),
+    // Single title color on the Chat ramp: quality rank (1-5) spread
+    // onto odd steps 1-3-5-7-9 of the 10-step --rank-color scale
+    // (spec section 2); 'tien' upgrades to the rainbow tone.
+    nameColorVar: `--rank-color-${itemQualityRank(instance.quality) * 2 - 1}`,
+
+    nameTone: instance.quality === 'tien' ? 'tien' : undefined,
+
+    // Static SlotView header (spec section 3): the same signal set the
+    // bag cell binds - seal rank (Pham), Chat edge (quality), aria with
+    // the grade word a color-blind reader needs.
+    slotPreview: {
+      icon: instance.icon ?? template.icon,
+      label: displayName,
+      accessibleLabel: `${displayName}, ${gradeLabel(instance.grade)}`,
+      equipmentQualityRank: professionGradeRank(instance.grade),
+      rarityRank: itemQualityRank(instance.quality),
+    },
 
     imagePath: instance.icon ?? template.icon,
 
@@ -240,10 +251,28 @@ export function buildEquipmentTooltip(
 
     qualityKey: instance.quality,
 
+    gradeLine: `Cảnh giới: ${gradeLabel(instance.grade)} (${realmLabel(instanceRealmId)})`,
+
     description: template.description,
 
     sections,
 
-    advancedSections,
+    // The equipped counterpart card - built WITHOUT a compare context
+    // so the recursion stops at depth 1. The key is omitted entirely
+    // (not set to undefined) so 'compareWith' in the inner card is
+    // false - spec section 4 forbids nested pairs.
+    ...(hasCompare
+      ? {
+          compareWith: buildEquipmentTooltip(
+            compare.instance,
+            compare.template,
+            affixRegistry,
+            compare.slotState,
+            zoneRegistry,
+            undefined,
+            compare.mainStatRangeQuote,
+          ),
+        }
+      : {}),
   }
 }

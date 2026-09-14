@@ -1,17 +1,8 @@
-// Tên vật phẩm ghép động (2026-08-15) — mỗi phần tên (Phẩm/Set/Địa
-// Giới+Tên gốc) tô MÀU RIÊNG, cách nhau dấu "·" khi hiển thị (xem
-// SlotView.vue's `nameSegments` prop). Dùng chung cho Equipment (xem
-// EquipmentNaming.ts) VÀ Pill/Talisman/Formation (composeItemGradeNameSegments
-// bên dưới) — cùng 1 shape, khác số lượng segment theo loại item.
+// Composed item name segments (item-info-card spec 2026-09-14): text
+// structure ONLY - the single display color now lives on the tooltip /
+// toast payload (nameColorVar/nameTone), not per segment. Used by
+// SlotView's nameSegments prop (aria + opt-in caption), EquipmentNaming
+// and ItemGrade compose functions.
 export interface NameSegment {
   text: string
-
-  // Tên biến CSS custom property (vd '--grade-hoang_pham'),
-  // KHÔNG phải giá trị màu — SlotView tự bọc var(...). undefined =
-  // dùng màu chữ mặc định (--text-primary).
-  colorVar?: string
-
-  // Semantic key cho hiệu ứng không thể biểu diễn bằng một màu đơn (vd
-  // Rarity Tiên dùng gradient bảy màu). Component render quyết định CSS.
-  tone?: string
 }

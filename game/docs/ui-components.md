@@ -1,7 +1,7 @@
 # UI Components — Đặc tả toàn bộ giao diện
 
 > Cập nhật: 2026-08-29 (sau ink-wash nine-slice refactor)
-> Nguồn sự thật về màu: `game/src/assets/theme.css` — theme **"Mực và Giấy Trắng"**
+> Nguồn sự thật về màu: `game/src/assets/theme.css` — theme **"Mực và Giấy Trắng"** (theme duy nhất; hệ chọn-6-theme cũ — `assets/themes/`, `themeStore`, `useTheme`, `ThemeSwitcher`, `ThemedIcon`/`iconRegistry` — đã dọn 2026-09-15)
 
 ## Tổng quan
 
@@ -233,22 +233,30 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 ### SlotView
 
 - **Đường dẫn**: `game/src/components/common/SlotView.vue` (+ `SlotTypes.ts`)
-- **Chức năng**: Ô item generic — icon PNG/monogram chữ, tint màu theo Quality rank (1–9), chip Phẩm, glyph validation ✓/✕/!, marker ● đang mặc/NEW, mũi tên so sánh ▲/▼, badge, số lượng xN, caption tên nhiều màu, veil khóa 🔒/disabled ⊘/spinner.
-- **Props**: `item` (null = trống), `icon`, `nameSegments`, `equipmentQualityRank` (1–9), `rarityRank`, `state` (5 trục semantic), `badges`, `amount`...
-- **Màu sắc**: surface trống `--slot-surface` (`--ink-900`) / có item `--slot-surface-raised` (`--ink-800`); viền theo `--slot-quality-color` (`--rank-color-N`); rank 9 glow + gradient 7 màu; valid `--jade`, invalid `--crimson`.
-- **Đặc tả**: aspect-ratio 1:1, radius `--radius-sm`; icon 84%; glyph 13px top-left; chip 8px top-right; hover icon `translateY(-1px)`; dùng `aria-disabled` (giữ tooltip).
+- **Chức năng**: Ô item generic — backdrop theo variant, icon PNG/monogram chữ, **dấu triện Phẩm góc** (seal ordinal CỬU…TIÊN, viền `--seal-rim` = `--rank-color-N`; thay underlay wash cũ — item-info-card 2026-09-14), khung/tint/aura theo Chất (`--slot-rarity-color`, thang 5 ánh xạ `--rank-color-(2r-1)` = dải `--grade-*`; thang 10 = direct), aura beam thường trực từ Chất Địa+, glyph validation ✓/✕/!, marker ● đang mặc/NEW, mũi tên so sánh ▲/▼, badge, số lượng xN, caption tên (segments chỉ mang text — màu tên sống trên payload tooltip `nameColorVar`/`nameTone`), veil khóa 🔒/disabled ⊘/spinner, hover frame.
+- **Variants** (`variant` prop — một owner duy nhất cho art nền/hover, KHÔNG override `--slot-*` rải rác trong consumer). Art map theo consolidated spec 2026-09-15: `item` (default — MỌI ô chứa item: bag tabs + picker Khí Đường + codex/combat; nền `inv-slot-backdrop.png` tile tối phẳng + hover `bag-slot-hover.png` "cell select" sheen sáng), `equipment` (ĐÚNG 6 ô mặc paperdoll; nền `slot-backdrop.png` kính mờ "empty" + hover `slot-frame-hover.png` khung vàng "click"). Hover art luôn `inset: 0` + `100% 100%` (fit đúng ô, không offset); khung do art đảm nhiệm. Nametag caption đã bỏ — tên trong tooltip; `label`/`nameSegments` vẫn feed tooltip + aria-label. `equip-slot-backdrop.png`/`equip-slot-hover.png` (art trích sai) đã gỡ.
+- **Props**: `item` (null = trống), `icon`, `label`, `accessibleLabel` (ghi đè aria-label — "Tên, Phẩm"), `nameSegments` (caption "{Chất} - {Tên}", text-only), `equipmentQualityRank` (Phẩm 1–10 → seal), `rarityRank` + `rarityRankScale` (Chất 5 bậc / material 10 bậc), `state` (5 trục semantic), `badges`, `amount`, `variant`, `static` (chế độ tĩnh: span + `role="img"`, tắt tooltip/hover/fx — header card dùng qua payload `slotPreview`, xem `SlotPreviewProps` trong `SlotTypes.ts`)...
+- **Màu sắc**: Phẩm → seal góc viền `--rank-color-1..10`; Chất → viền/tint/beam theo vị trí `--grade-*` (1/3/5/7/9 trên ramp); Chất Tiên (rank 5) thêm gradient `--rank-gradient-10` viền trên; valid `--jade`, invalid `--crimson`.
+- **Đặc tả**: aspect-ratio 1:1, radius `--radius-sm`; icon 84%; glyph 13px top-left; hover icon `translateY(-1px)` + hover art theo variant (sheen `bag-slot-hover.png` cho item, khung `slot-frame-hover.png` cho equipment); fallback nền `--surface-900` phẳng (KHÔNG dùng `--slot-surface` — var đó resolve cream ngay tại `:root`, lọt qua art trong suốt thành ô xám); dùng `aria-disabled` (giữ tooltip).
 
 ### Tooltip
 
 - **Đường dẫn**: `game/src/components/common/Tooltip.vue`
-- **Chức năng**: Tooltip global (Teleport + Floating UI) — kind: technique / graded item (Phẩm) / equipment (giữ Alt = advanced) / building / plain; accent động theo rank.
-- **Màu sắc**: viền trái 3px accent (`--rank-color-N` → `--tooltip-accent`); nền gradient mực pha accent 12%; row tones: positive `--jade`, negative `--crimson`, warning `--chrome-100`, special `--affix-exalted`; tier 5 chữ gradient 7 màu.
+- **Chức năng**: Tooltip global (Teleport + Floating UI) — kind: technique / graded item (Phẩm) / equipment / building / **element** (banner art của hành làm nền `banner-{element}.png`, KHÔNG title — art tự nhận diện; dòng stats trên lớp content `inset` riêng từng hành vào vùng giấy trống của banner đó; `element: 'primordial'` = Hỗn Nguyên dùng banner giấy trống) / plain; accent động theo rank. Item tooltips render qua **ItemCardBody**: title "{Chất} - {Tên}" tô 1 màu qua `nameColorVar` (`nameTone: 'tien'` → rainbow gradient thắng), meta `gradeLine` "Cảnh giới: …" phẳng (`gradeLineColorVar` đã bỏ), sections mang `range` `[min–max]` + `delta` ▲/▼ inline (Alt-reveal `advancedSections` đã bỏ). Equipment có `compareWith` → cặp card cạnh nhau "Đang Mặc" / "Vật Phẩm Đang Xem" (độ sâu 1, không đệ quy).
+- **Màu sắc**: viền trái 3px accent (`--tooltip-accent` = `--grade-*` theo Chất cho equipment, `--grade-*`/`--rank-color-N` theo trục item cho graded kinds); **aura item** = glow ngoài `--tooltip-aura` (chỉ kind item — equipment theo Chất, pill/talisman/formation theo `gradeKey`, material theo `gradeRank`); nền gradient mực pha accent 12%; row tones: positive `--jade`, negative `--crimson`, warning `--chrome-100`, special `--affix-exalted`; tier 5 chữ gradient 7 màu. Tooltip teleport ra `<body>` nên `.tooltip` tự remap `--paper-*` → `--surface-*` (giống `.ink-drawer`) — mực giấy sáng `#211f1a` trên nền mực navy = tối-trên-tối; `.tooltip--element` giữ mực giấy thật vì banner art là giấy kem.
 - **Đặc tả**: max-width plain 240 / rich 320 / equipment 380px; icon-shell 54px; fade 35/30ms; prefers-reduced-motion.
+
+### ItemCardBody
+
+- **Đường dẫn**: `game/src/components/common/ItemCardBody.vue`
+- **Chức năng**: Skeleton thẻ item dùng chung cho mọi kind có `sections` (equipment/graded/technique) — eyebrow (nhãn cặp so sánh), header (SlotView `static` từ `slotPreview`, fallback icon-shell), title + meta `gradeLine` + badges (slot/phẩm/"Sở hữu: N" — chỉ khi `ownedCount` > 0), các section chỉ số (row: label + value + `range` + `delta` + `tier` gem ◆/T n + `colorVar`), description. Consumer KHÔNG tự ghép tên màu hay section — chỉ truyền `TooltipContent`.
+- **Props**: `content` (TooltipContent item), `eyebrow` (nhãn "Đang Mặc"/"Vật Phẩm Đang Xem" của cặp so sánh).
+- **Đặc tả**: màu title = `content.nameColorVar` (1 màu duy nhất; `nameTone: 'tien'` → class rainbow `item-card__title--max-rank`); row tier kèm `aria-label` "label, bậc N: value".
 
 ### ToastContainer
 
 - **Đường dẫn**: `game/src/components/common/ToastContainer.vue`
-- **Chức năng**: Toast neo góc trên phải (Teleport) — toast loot icon + eyebrow "NHẬN ĐƯỢC" + tên nhiều màu + số lượng; số toast theo chiều cao màn hình.
+- **Chức năng**: Toast neo góc trên phải (Teleport) — toast loot icon + eyebrow "NHẬN ĐƯỢC" + tên 1 màu (`nameColorVar`; `nameTone: 'tien'` → rainbow) + suffix phẩm mờ "· Ngũ Phẩm" + số lượng; số toast theo chiều cao màn hình.
 - **Màu sắc**: nền `--ink-900` 96% alpha; viền trái 3px màu kind — loot `--jade`, craft/warning `--chrome-300`, save `--azure`, error `--crimson`.
 - **Đặc tả**: `top/right: 24px; z-1500`; toast max-width 160px font `--text-xs`; enter slide `translateX(56px)` 0.4s.
 

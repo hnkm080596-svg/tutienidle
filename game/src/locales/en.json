@@ -170,18 +170,20 @@
         "talents": "Innate Talents"
       },
       "actions": {
-        "quanKhi": "Quán Khí"
+        "quanKhi": "Quán Khí",
+        "details": "Details"
       },
       "labels": {
         "combatPower": "Combat Power",
         "realmFloor": "Floor",
+        "detailsTitle": "Detailed Attributes",
         "attributePointsRemaining": "{count} points remaining",
         "max": "MAX"
       },
       "tooltips": {
         "elementStat": "Power {power} · Resistance {resistance} · Penetration {penetration}",
         "primordialTitle": "Primordial",
-        "primordialDescription": "Ignores all defenses."
+        "primordialStat": "Power {power} · Ignores all defenses."
       }
     },
     "quanKhi": {
@@ -283,6 +285,16 @@
         "material": "Materials",
         "pill": "Pills"
       },
+      "paperdoll": {
+        "slots": {
+          "helmet": "Helm",
+          "necklace": "Necklace",
+          "ring": "Ring",
+          "weapon": "Weapon",
+          "armor": "Armor",
+          "boots": "Boots"
+        }
+      },
       "search": {
         "materialPlaceholder": "Search materials...",
         "materialAria": "Search materials by name"
@@ -308,6 +320,10 @@
       "tooltip": {
         "section": "Info",
         "owned": "Owned: {count}",
+        "compare": {
+          "equipped": "Equipped",
+          "viewing": "Viewing Item"
+        },
         "category": "Category",
         "source": "Main Source",
         "realm": "Realm",
@@ -448,8 +464,6 @@
       "sections": {
         "uiScaleAria": "Interface font size",
         "uiScale": "Interface Font Size",
-        "themeAria": "Appearance",
-        "theme": "Appearance",
         "audioAria": "Audio",
         "audio": "Audio"
       },

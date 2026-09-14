@@ -216,6 +216,7 @@ const washRenAfter = computed(() =>
           class="qi-hall__slot"
           :item="row.equippedRow?.instance ?? null"
           :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
+          :accessible-label="row.equippedRow?.accessibleLabel"
           :name-segments="row.equippedRow?.nameSegments"
           :icon="row.equippedRow?.icon"
           :equipment-quality-rank="row.equippedRow?.gradeRank"

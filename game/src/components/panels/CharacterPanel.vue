@@ -6,10 +6,9 @@ import { useUiStore } from '@/stores/ui'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
 import GameButton from '../common/GameButton.vue'
-import InkNineSlice from '../common/primitives/InkNineSlice.vue'
 import type { Stats } from '@/core/stats/StatBlock'
 import { formatNumber } from '@/core/format/NumberFormatter'
-import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
+import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
 import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
@@ -71,31 +70,15 @@ const realm = computed(() => getCurrentRealm(player.realmId))
 // BASE_STAT_LABELS/StatCategory trích ra @/core/stats/StatLabels.ts
 // (2026-08-15, tooltip Tâm Pháp dùng chung).
 
-const STAT_CATEGORY_KEYS: Record<StatCategory, string> = {
-  combat: 'panels.character.sections.combat',
-  survival: 'panels.character.sections.survival',
-  special: 'panels.character.sections.special',
-  attribute: 'panels.character.sections.attribute',
-  defense_advanced: 'panels.character.sections.defenseAdvanced',
-}
-
-const STAT_CATEGORY_ORDER: StatCategory[] = ['combat', 'survival', 'special', 'attribute', 'defense_advanced']
-
-const statGroups = computed(() =>
-  STAT_CATEGORY_ORDER.map(category => ({
-    category,
-
-    label: t(STAT_CATEGORY_KEYS[category]),
-
-    stats: BASE_STAT_LABELS.filter(stat => stat.category === category),
-  })),
+// Attribute first — the five main stats are the interactive core of the
+// sheet (point allocation) and render as the meridian figure below.
+// The other categories (combat/survival/special/defense_advanced) live
+// in the detail card beside the drawer (CharacterDetailCard.vue,
+// toggle = panels.character.actions.details) — the panel keeps just
+// the meridian + Ngu Hanh chips so the drawer stays compact.
+const attributeStats = computed(() =>
+  BASE_STAT_LABELS.filter(stat => stat.category === 'attribute'),
 )
-
-// WS3 Redesign Character Panel (2026-08-24) — chỉ số chia TAB thay vì
-// xếp 5 nhóm + Ngũ Hành + đan dược liên tiếp khiến mọi thứ phải nhỏ lại.
-// 4 tab: Thuộc Tính (attribute, có nút +) | Chiến Đấu (combat+special)
-// | Phòng Thủ & Sinh Tồn (defense_advanced+survival) | Ngũ Hành & Khác
-// (chips + hiệu ứng đan dược vĩnh viễn).
 
 // PLAN HOÀN CHỈNH mục 4 — UI Stat Cap: KHÔNG hiện "24/30", chỉ hiện số
 // + chữ "MAX" (vàng) ngay bên dưới khi ĐẦY. Trần tính trên baseStats
@@ -117,6 +100,41 @@ function isMainStatCapped(key: MainStatKey): boolean {
 function allocate(key: MainStatKey) {
   allocateAttributePoint(key)
 }
+
+// Meridian node anchors — dot positions on stat-meridian-figure.png
+// (904x1024 stance art): head = intelligence, chest = vitality,
+// dantian = attunement, extended left fist = strength, grounded right
+// foot = dexterity. Percent coords so the block scales with panel
+// width without distorting the art; `side` decides which way the info
+// card extends. Bands are staggered so no two cards share a row:
+// strength's card drops BELOW the fist dot into the empty space under
+// the extended arm (extending right from y=12% would collide with the
+// head card).
+const MERIDIAN_NODE_POSITIONS: Record<MainStatKey, { x: number; y: number; side: 'left' | 'right' | 'below' | 'above' }> = {
+  intelligence: { x: 57, y: 10, side: 'right' },
+  vitality: { x: 51, y: 40, side: 'right' },
+  attunement: { x: 52, y: 54, side: 'below' },
+  strength: { x: 8, y: 14, side: 'left' },
+  dexterity: { x: 8, y: 92, side: 'above' },
+}
+
+function meridianNode(key: string): { style: { left: string; top: string }; modifier: string } {
+  const pos = MERIDIAN_NODE_POSITIONS[key as MainStatKey] ?? { x: 50, y: 50, side: 'right' }
+  const modifier =
+    pos.side === 'left' ? 'meridian__node--left'
+    : pos.side === 'below' ? 'meridian__node--below'
+    : pos.side === 'above' ? 'meridian__node--above'
+    : ''
+  return {
+    style: { left: `${pos.x}%`, top: `${pos.y}%` },
+    modifier,
+  }
+}
+
+// Bound dynamically on purpose: a literal src="/assets/..." in the
+// template is rewritten to a file import by @vitejs/plugin-vue, which
+// breaks jsdom mounts (CharacterPanel.meridian.test.ts).
+const MERIDIAN_FIGURE_SRC = '/assets/ui/stat-meridian-figure.png'
 
 // Không còn "Hướng" (ElementAffinity đã xoá — vai trò khuếch đại
 // Power giờ do Linh Căn/Attunement đảm nhiệm, xem StatCalculator.ts)
@@ -140,6 +158,15 @@ const elementRows = computed(() =>
 // Hỗn Nguyên (Void) — chỉ có Power, bỏ qua Armor/Resistance hoàn
 // toàn nên không có cột Kháng/Xuyên như 5 hành thường.
 const PRIMORDIAL_COLOR = 'var(--el-primordial)'
+
+// Static src="/..." gets rewritten to an import by the vite plugin and
+// breaks under jsdom — bind dynamically like the element discs above.
+const primordialDiscUrl = '/assets/ui/elements/el-primordial.png'
+
+// 3 concentric formation rings from the same sprite sheet - the formation base layer.
+const formationRingUrl = '/assets/ui/elements/el-formation-ring.png'
+const formationOrbsUrl = '/assets/ui/elements/el-formation-orbs.png'
+const formationStarUrl = '/assets/ui/elements/el-formation-star.png'
 
 // "Chiến Lực" — chỉ số tổng hợp THUẦN HIỂN THỊ (không dùng ở đâu khác
 // trong game logic/combat thật), lấy cảm hứng từ số "Mastery" tổng
@@ -184,8 +211,6 @@ const pillPermanentRows = computed(() => {
 
 <template>
   <section class="character-panel">
-    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
     <!-- Tu vi và Đột Phá thuộc hoàn toàn về panel Cảnh Giới. Nhân Vật
          chỉ giữ nhận diện, chiến lực và chỉ số để tránh lặp UI. -->
     <div class="character-panel__header">
@@ -233,74 +258,101 @@ const pillPermanentRows = computed(() => {
           class="talent-block"
           :class="`talent-tier-${talent.rarity}`"
         >
-          <span class="talent-block__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span>
-          <span class="talent-block__name">{{ talent.name }}</span>
-          <p class="talent-block__description">{{ talent.description }}</p>
+          <span class="talent-block__content">
+            <span class="talent-block__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span>
+            <span class="talent-block__name">{{ talent.name }}</span>
+            <span class="talent-block__description">{{ talent.description }}</span>
+          </span>
         </div>
       </div>
     </div>
 
     <div class="character-panel__body scrollfade">
-        <div v-for="group in statGroups" :key="group.category" class="stat-group">
+        <div class="stat-group">
         <h4 class="stat-group__title stat-group__title--static">
-          {{ group.label }}
-          <template v-if="group.category === 'attribute' && player.attributePoints > 0">({{ t('panels.character.labels.attributePointsRemaining', { count: player.attributePoints }) }})</template>
+          <span>
+            {{ t('panels.character.sections.attribute') }}
+            <template v-if="player.attributePoints > 0">({{ t('panels.character.labels.attributePointsRemaining', { count: player.attributePoints }) }})</template>
+          </span>
+
+          <!-- Toggle the detail card docked to the drawer's right edge
+               (rendered by LeftPanel). -->
+          <button
+            type="button"
+            class="character-panel__details-btn"
+            :class="{ 'character-panel__details-btn--open': ui.characterDetailOpen }"
+            @click="ui.toggleCharacterDetail()"
+          >{{ t('panels.character.actions.details') }}</button>
         </h4>
 
-        <ul class="stat-list">
-          <li v-for="stat in group.stats" :key="stat.key" v-tooltip="stat.description">
-            <span>{{ stat.label }}</span>
+        <!-- Meridian figure (user art pass) — the five main stats sit
+             on the martial art instead of a list. The dot lands on the
+             body point, the card extends sideways; allocate (+)/MAX
+             behavior identical to the old list rows. -->
+        <div class="meridian">
+          <img class="meridian__figure" :src="MERIDIAN_FIGURE_SRC" alt="" aria-hidden="true" />
 
-            <!-- PLAN HOÀN CHỈNH mục 2/4 — chỉ Main Stat (category
-                 'attribute') mới có nút +/nhãn MAX, mọi stat khác giữ
-                 nguyên hiển thị chỉ-đọc như cũ. -->
-            <span v-if="isMainStat(stat.key)" class="stat-list__main-stat">
-              <span class="stat-list__value-col">
-                <span>{{ formatStat(stat.key, player.finalStats[stat.key]) }}</span>
-                <span v-if="isMainStatCapped(stat.key as MainStatKey)" class="stat-list__max">{{ t('panels.character.labels.max') }}</span>
+          <div
+            v-for="stat in attributeStats"
+            :key="stat.key"
+            class="meridian__node"
+            :class="meridianNode(stat.key).modifier"
+            :data-stat="stat.key"
+            :style="meridianNode(stat.key).style"
+            v-tooltip="stat.description"
+          >
+            <span class="meridian__node-dot" aria-hidden="true" />
+            <span class="meridian__node-card">
+              <span class="meridian__node-label">{{ stat.label }}</span>
+              <span class="meridian__node-row">
+                <span class="meridian__node-value-col">
+                  <span class="meridian__node-value">{{ formatStat(stat.key, player.finalStats[stat.key]) }}</span>
+                  <span v-if="isMainStat(stat.key) && isMainStatCapped(stat.key as MainStatKey)" class="meridian__node-max">{{ t('panels.character.labels.max') }}</span>
+                </span>
+                <GameButton
+                  v-if="isMainStat(stat.key) && player.attributePoints > 0 && !isMainStatCapped(stat.key as MainStatKey)"
+                  class="meridian__node-allocate"
+                  shape="circle"
+                  size="sm"
+                  :aria-label="stat.label"
+                  @click="allocate(stat.key as MainStatKey)"
+                >
+                  +
+                </GameButton>
               </span>
-
-              <GameButton
-                v-if="player.attributePoints > 0 && !isMainStatCapped(stat.key as MainStatKey)"
-                class="stat-list__allocate"
-                shape="circle"
-                size="sm"
-                @click="allocate(stat.key as MainStatKey)"
-              >
-                +
-              </GameButton>
             </span>
-
-            <span v-else>{{ formatStat(stat.key, player.finalStats[stat.key]) }}</span>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
       <div class="stat-group">
         <h4 class="stat-group__title stat-group__title--static">{{ t('panels.character.sections.elements') }}</h4>
 
-        <div class="element-chips">
+        <div class="element-wheel">
+          <img class="element-wheel__ring element-wheel__ring--orbs" :src="formationOrbsUrl" alt="" aria-hidden="true" />
+          <img class="element-wheel__ring element-wheel__ring--band" :src="formationRingUrl" alt="" aria-hidden="true" />
+          <img class="element-wheel__ring element-wheel__ring--inner" :src="formationStarUrl" alt="" aria-hidden="true" />
+          <svg class="element-wheel__star" viewBox="0 0 100 100" aria-hidden="true">
+            <polygon class="element-wheel__star-line" points="50,15 73,76 14,40 86,40 27,76" />
+          </svg>
           <div
             v-for="row in elementRows"
             :key="row.element"
-            class="element-chip"
+            class="element-node"
             :data-element="row.element"
-            :class="`element-chip--${row.element}`"
-            :style="{ '--chip-color': row.color }"
-            v-tooltip="{ title: row.label, description: t('panels.character.tooltips.elementStat', { power: Math.round(row.power), resistance: Math.round(row.resistance), penetration: Math.round(row.penetration) }) }"
+            :class="`element-node--${row.element}`"
+            :style="{ '--node-color': row.color }"
+            v-tooltip="{ kind: 'element', element: row.element, title: row.label, description: t('panels.character.tooltips.elementStat', { power: Math.round(row.power), resistance: Math.round(row.resistance), penetration: Math.round(row.penetration) }) }"
           >
-            <span class="element-chip__dot" />
-            <span class="element-chip__label">{{ row.label }}</span>
-            <span class="element-chip__value">{{ formatNumber(Math.round(row.power)) }}</span>
+            <img class="element-node__disc" :src="`/assets/ui/elements/el-${row.element}.png`" :alt="row.label" />
           </div>
 
           <div
-            class="element-chip"
-            :style="{ '--chip-color': PRIMORDIAL_COLOR }"
-            v-tooltip="{ title: t('panels.character.tooltips.primordialTitle'), description: t('panels.character.tooltips.primordialDescription') }"
+            class="element-node element-node--primordial"
+            :style="{ '--node-color': PRIMORDIAL_COLOR }"
+            v-tooltip="{ kind: 'element', element: 'primordial', title: t('panels.character.tooltips.primordialTitle'), description: t('panels.character.tooltips.primordialStat', { power: formatNumber(Math.round(player.finalStats.primordialPower)) }) }"
           >
-            <span class="element-chip__dot" />
-            <span class="element-chip__label">{{ t('panels.character.tooltips.primordialTitle') }}</span>
-            <span class="element-chip__value">{{ formatNumber(Math.round(player.finalStats.primordialPower)) }}</span>
+            <img class="element-node__disc" :src="primordialDiscUrl" :alt="t('panels.character.tooltips.primordialTitle')" />
+            <span class="element-node__core">{{ formatNumber(Math.round(player.finalStats.primordialPower)) }}</span>
           </div>
         </div>
       </div>
@@ -316,19 +368,14 @@ const pillPermanentRows = computed(() => {
 
 <style scoped>
 .character-panel {
-  position: relative;
-  isolation: isolate;
   height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* Surface is owned by the drawer (.ink-drawer) — the panel itself
+     stays transparent; --paper-* reads resolve to the dark remap. */
   color: var(--paper-text);
   font-family: var(--font-body);
-}
-
-.character-panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
 }
 
 .character-panel__header {
@@ -438,7 +485,7 @@ const pillPermanentRows = computed(() => {
   margin-top: var(--space-1);
   padding: 3px 10px;
   background: var(--paper-100);
-  color: var(--cinnabar);
+  color: var(--mineral-gold);
   border: 1px solid var(--mineral-gold);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
@@ -468,38 +515,66 @@ const pillPermanentRows = computed(() => {
   color: var(--paper-eyebrow);
 }
 
-/* Thẻ nổi bật — nền sáng nhất trong header + viền đồng dày bên trái
-   nhuộm theo tier, tách hẳn khỏi các dòng thông tin còn lại thay vì
-   chìm thành 1 khối mực như trước. */
+/* Talent card (user art pass) - the card IS the paper scroll art
+   (talent-card-scroll.png, 486x830 portrait): the block keeps the
+   image ratio via aspect-ratio so free scaling never distorts; no
+   separate CSS frame - the gilt frame is baked into the art (the old
+   CSS border created a second frame misaligned with the painted one).
+   Text sits on the blank paper area up top (entirely inside the
+   painted gilt frame - the mountain/bird region below is a VERY faint
+   wash, text reads fine over it). Dark ink (--ink-*) because the paper
+   is light - --paper-* tokens are remapped dark by .ink-drawer. Hover
+   swaps to the brighter variant. */
 .talent-block {
   position: relative;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--frame-outer);
-  border-left: 4px solid var(--talent-tier-color, var(--mineral-gold));
-  border-radius: var(--radius-md);
-  background: linear-gradient(175deg, var(--paper-50), var(--paper-50));
-  box-shadow: 0 2px 8px rgba(20, 16, 8, 0.12);
+  width: min(58%, 196px);
+  aspect-ratio: 486 / 830;
+  margin-inline: auto;
+  background: url('/assets/ui/talent-card-scroll.png') center / 100% 100% no-repeat;
 }
 
+.talent-block:hover {
+  background-image: url('/assets/ui/talent-card-scroll-hover.png');
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 40%, transparent));
+}
+
+.talent-block__content {
+  position: absolute;
+  /* Full painted-frame interior: x 14-86%, y 9-93% (measured on the
+     486x830 art — the paper is blank to the bottom frame, the
+     mountain/bird wash is faint enough to read over). */
+  inset: 10% 15% 9%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Rarity label sits on the cream scroll — blend the tier color toward
+   ink so it keeps its hue but stays legible on the light art. */
 .talent-block__rarity {
   font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.13em;
+  color: color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 55%, var(--ink-900));
 }
 
 .talent-block__name {
   display: block;
-  margin: 4px 0 2px;
+  margin: 4px 0 3px;
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--paper-text);
+  color: var(--ink-700);
 }
 
 .talent-block__description {
-  margin: 0;
-  color: var(--paper-text-soft);
+  /* No line-clamp — the content box already fills the paper, so the
+     full description flows over the faint wash instead of cutting
+     mid-sentence. */
+  color: color-mix(in srgb, var(--ink-700) 82%, transparent);
   font-size: var(--text-xs);
   line-height: 1.5;
 }
@@ -509,12 +584,6 @@ const pillPermanentRows = computed(() => {
 .talent-tier-dia { --talent-tier-color: var(--rank-color-5); }
 .talent-tier-thien { --talent-tier-color: var(--rank-color-7); }
 .talent-tier-di { --talent-tier-color: var(--rank-color-8); }
-
-.talent-tier-pham .talent-block__rarity { color: var(--rank-color-1); }
-.talent-tier-linh .talent-block__rarity { color: var(--rank-color-3); }
-.talent-tier-dia .talent-block__rarity { color: var(--rank-color-5); }
-.talent-tier-thien .talent-block__rarity { color: var(--rank-color-7); }
-.talent-tier-di .talent-block__rarity { color: var(--rank-color-8); }
 
 /* WS3 — section Trang Bị độc lập dưới header, paperdoll dùng trọn
    chiều rộng panel. */
@@ -578,6 +647,32 @@ const pillPermanentRows = computed(() => {
   cursor: default;
 }
 
+/* Button opening the detail stat card docked beside the drawer (LeftPanel). */
+.character-panel__details-btn {
+  flex: 0 0 auto;
+  padding: 2px 10px;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-sm);
+  background: var(--paper-100);
+  color: var(--paper-text-soft);
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.character-panel__details-btn:hover {
+  color: var(--mineral-gold);
+  border-color: var(--mineral-gold);
+}
+
+.character-panel__details-btn--open {
+  color: var(--mineral-gold);
+  border-color: var(--mineral-gold);
+  background: color-mix(in srgb, var(--mineral-gold) 12%, var(--paper-100));
+}
+
 .stat-list {
   list-style: none;
   margin: 0;
@@ -590,7 +685,7 @@ const pillPermanentRows = computed(() => {
   align-items: center;
   gap: var(--space-2);
   padding: 7px 0;
-  border-bottom: 1px solid var(--ink-line-soft);
+  border-bottom: 1px solid var(--paper-line);
   font-size: var(--text-md);
 }
 
@@ -598,112 +693,245 @@ const pillPermanentRows = computed(() => {
   color: var(--paper-text-soft);
 }
 
-.stat-list li > span:last-child,
-.stat-list__main-stat {
+.stat-list li > span:last-child {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: var(--paper-text);
 }
 
-.stat-list__main-stat {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
+/* ============================================================
+   MERIDIAN FIGURE — five main stats anchored on the martial art
+   (user art pass). The dot marks the body point; the info card
+   extends sideways (never clips: --left modifier mirrors it).
+   ============================================================ */
+
+/* Height-driven width cap: the 904x1024 figure keeps aspect (0.8828),
+   so capping width by viewport height keeps all five node cards inside
+   the first drawer viewport on short screens while wide screens still
+   get the full-width figure. */
+.meridian {
+  position: relative;
+  /* Detail stats moved to the side card — the figure now shares the
+     drawer with just Ngu Hanh, so it shrinks to keep the whole block
+     inside one viewport (user feedback: card was too big). */
+  width: min(100%, calc(30vh * 0.8828), 300px);
+  /* aspect-ratio holds the block height even if the figure 404s or is
+     still loading — without it the 0x0 node anchors collapse to the
+     section top and all five cards stack on each other. */
+  aspect-ratio: 904 / 1024;
+  margin-inline: auto;
+  container-type: inline-size;
+  container-name: meridian;
 }
 
-.stat-list__value-col {
+/* The jade figure is inherently dark (avg luminance ~35) — a faint
+   cool moon-glow behind it lifts the silhouette off the dark drawer
+   without changing the art itself. */
+.meridian::before {
+  content: '';
+  position: absolute;
+  inset: 4% 8%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--azure, #7fb4c7) 16%, transparent),
+    transparent 72%
+  );
+  pointer-events: none;
+}
+
+.meridian__figure {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.meridian__node {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.meridian__node-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--mineral-gold);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--ink-950) 55%, transparent),
+    0 0 7px var(--mineral-gold);
+}
+
+/* Compact vertical card (label over value+button) — ~80px wide so the
+   five callouts fit in staggered bands around the figure without
+   overlapping each other (horizontal cards were ~65% of block width
+   and collided). */
+.meridian__node-card {
+  position: absolute;
+  left: 12px;
+  top: 0;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 8px;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--paper-100) 82%, transparent);
+  white-space: nowrap;
+}
+
+.meridian__node-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.meridian__node--left .meridian__node-card {
+  left: auto;
+  right: 12px;
+}
+
+.meridian__node--below .meridian__node-card {
+  left: 0;
+  top: 12px;
+  transform: none;
+}
+
+.meridian__node--above .meridian__node-card {
+  left: 0;
+  top: auto;
+  bottom: 12px;
+  transform: none;
+}
+
+.meridian__node-label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  color: var(--paper-text-soft);
+}
+
+.meridian__node-value-col {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   line-height: 1.15;
-  font-size: var(--text-lg);
 }
 
-/* PLAN HOÀN CHỈNH mục 4 — "MAX" màu vàng, nằm NGAY DƯỚI giá trị,
-   KHÔNG hiện dạng X/Y hay dòng "Max: Y" riêng. */
-.stat-list__max {
+.meridian__node-value {
+  font-size: var(--text-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--paper-text);
+}
+
+.meridian__node-max {
   font-size: var(--text-xs);
   font-weight: 700;
   color: var(--gold-700);
 }
 
-.stat-list__allocate {
-  flex: 0 0 auto;
-  font-size: var(--text-body);
-  line-height: 1;
-}
-
-/* Fit-refactor đợt 3 — pentagram scale theo bề rộng panel thật (container
-   query nội bộ) thay vì px cứng 310px. Thiết kế gốc 310px giữ nguyên tỉ lệ
-   ngũ giác, chỉ co giãn toàn khối. */
-.element-chips {
+/* Element wheel - the Ngu Hanh formation: a gilt formation ring as the
+   base, a plain pentagram linking 5 vertices (no arrows - the game
+   dropped the generating/overcoming cycle), 5 element medallions on
+   the pentagon points, the Hon Nguyen taiji at center holding Power.
+   No caption text - the art medallion identifies the element itself;
+   detail lives in the hover banner tooltip. Square block scales
+   with the drawer (aspect-ratio keeps proportions, no distortion). */
+.element-wheel {
   position: relative;
-  width: 100%;
-  max-width: 310px;
-  height: clamp(180px, 34vh, 260px);
+  width: min(100%, 290px);
+  aspect-ratio: 1;
   margin: 0 auto;
-  container-type: inline-size;
-  container-name: element-chips;
 }
 
-.element-chip {
+.element-wheel__ring {
   position: absolute;
+  left: 50%;
+  top: 50%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* 3 concentric formation rings from the same sprite sheet: the orb
+   ring frames the pentagon outside the discs, the star-chart band
+   passes under the disc circle, the thin star ring encircles the
+   taiji. */
+.element-wheel__ring--orbs { width: 96%; opacity: 0.45; }
+.element-wheel__ring--band { width: 80%; opacity: 0.5; }
+.element-wheel__ring--inner { width: 56%; opacity: 0.5; }
+
+.element-wheel__star {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.element-wheel__star-line {
+  fill: none;
+  stroke: var(--mineral-gold, #b79653);
+  stroke-width: 0.55;
+  opacity: 0.45;
+}
+
+.element-node {
+  position: absolute;
+  width: 26%;
+  transform: translate(-50%, -50%);
+  cursor: default;
+}
+
+.element-node__disc {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--node-color) 45%, transparent));
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.element-node:hover .element-node__disc {
+  transform: scale(1.07);
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--node-color) 70%, transparent));
+}
+
+/* Pentagon points — disc centers match the star polygon vertices. */
+.element-node--fire { left: 50%; top: 15%; }
+.element-node--earth { left: 86%; top: 40%; }
+.element-node--metal { left: 73%; top: 76%; }
+.element-node--water { left: 27%; top: 76%; }
+.element-node--wood { left: 14%; top: 40%; }
+
+.element-node--primordial {
+  left: 50%;
+  top: 50%;
   width: 28%;
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 6px;
-  border-radius: var(--radius-sm);
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
-  font-size: var(--text-sm);
 }
 
-.element-chip--fire { left: 50%; top: 0; transform: translateX(-50%); }
-.element-chip--wood { left: 5%; top: 24%; }
-.element-chip--earth { right: 5%; top: 24%; }
-.element-chip--water { left: 20%; bottom: 6%; }
-.element-chip--metal { right: 20%; bottom: 6%; }
-.element-chip--wind { left: calc(50% - 30% - 2%); top: 43%; }
-.element-chip--lightning { right: calc(50% - 30% - 2%); top: 43%; }
-.element-chip:not([data-element]) { left: 50%; top: 60%; transform: translateX(-50%); }
-
-/* Panel hẹp: chip 28% < 86px gốc → thu label, giãn chip chiếm trọn để
-   chữ vẫn đọc được (floor --text-xs đã có từ token). */
-@container element-chips (max-width: 260px) {
-  .element-chip { width: 40%; }
-  .element-chip--water { left: 5%; bottom: 2%; }
-  .element-chip--metal { right: 5%; bottom: 2%; }
-  .element-chip--wind { left: 8%; top: 55%; }
-  .element-chip--lightning { right: 8%; top: 55%; }
-}
-
-.element-chip__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--chip-color);
-  box-shadow: 0 0 6px var(--chip-color);
-  flex: 0 0 auto;
-}
-
-.element-chip__label {
-  flex: 1;
-  min-width: 0;
-  color: var(--chip-color);
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.element-chip__value {
-  min-width: 0;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Hon Nguyen Power - seal chip centered on the taiji (the disc is
+   half black/half white, a bare number can't read on both halves). */
+.element-node__core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 7px;
+  border: 1px solid color-mix(in srgb, var(--mineral-gold, #b79653) 60%, transparent);
+  border-radius: 999px;
+  background: rgba(16, 14, 10, 0.78);
+  color: var(--gold-300, #ffd54f);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
 
 .pill-usage {

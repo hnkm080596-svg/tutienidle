@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SlotView from '../common/SlotView.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
@@ -8,11 +9,13 @@ import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
+import { gradeLabel } from '@/core/presentation/labels'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge } from '@/components/common/SlotTypes'
 
+const { t } = useI18n()
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
@@ -21,13 +24,14 @@ const { unequip } = useEquipmentActions()
 // Lưới 3 cột × 2 hàng (thay lục giác quanh sprite cũ — khối Equipment
 // giờ chỉ chiếm 30% chiều cao panel, cố định cho Hành Trang/Tứ Nghệ,
 // xem LeftPanel.vue) — không còn sprite nhân vật ở giữa.
-const SLOT_LAYOUT: { slot: EquipmentSlot; label: string }[] = [
-  { slot: 'helmet', label: 'Mũ' },
-  { slot: 'necklace', label: 'Vòng cổ' },
-  { slot: 'ring', label: 'Nhẫn' },
-  { slot: 'weapon', label: 'Vũ khí' },
-  { slot: 'armor', label: 'Giáp' },
-  { slot: 'boots', label: 'Giày' },
+// Slot labels go through i18n (panels.bag.paperdoll.slots.*) - P16.
+const SLOT_LAYOUT: { slot: EquipmentSlot }[] = [
+  { slot: 'helmet' },
+  { slot: 'necklace' },
+  { slot: 'ring' },
+  { slot: 'weapon' },
+  { slot: 'armor' },
+  { slot: 'boots' },
 ]
 
 const equippedBySlot = computed<Record<EquipmentSlot, EquipmentInstance | undefined>>(() => {
@@ -63,6 +67,12 @@ const enhanceLevelBySlot = computed<Record<EquipmentSlot, number>>(() => {
 // fallback hiển thị itemId thô (pattern Task 13 EquipmentBagSection).
 function itemName(instance: EquipmentInstance): string {
   return gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)?.name ?? instance.itemId
+}
+
+// spec section 5b - aria includes the Pham word (the seal is a
+// decorative glyph; screen readers get the grade via this label).
+function itemAccessibleLabel(instance: EquipmentInstance): string {
+  return `${itemName(instance)}, ${gradeLabel(instance.grade)}`
 }
 
 function itemDescription(instance: EquipmentInstance): string | undefined {
@@ -121,6 +131,9 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
           gameManager.affixRegistry,
           gameManager.equipmentOps.getSlotState(entry.slot),
           gameManager.zoneRegistry,
+          // No compare context (item-info-card spec section 4): the
+          // paperdoll renders only EQUIPPED items - an equipped item IS
+          // the compare counterpart, never a candidate for one.
           undefined,
           gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
         )
@@ -183,8 +196,10 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
       <div class="paperdoll__slot-wrap">
         <SlotView
           class="paperdoll__slot"
+          variant="equipment"
           :item="equippedBySlot[entry.slot] ?? null"
-          :label="equippedBySlot[entry.slot] ? itemName(equippedBySlot[entry.slot]!) : entry.label"
+          :label="equippedBySlot[entry.slot] ? itemName(equippedBySlot[entry.slot]!) : t(`panels.bag.paperdoll.slots.${entry.slot}`)"
+          :accessible-label="equippedBySlot[entry.slot] ? itemAccessibleLabel(equippedBySlot[entry.slot]!) : undefined"
           :name-segments="nameSegmentsBySlot[entry.slot]"
           :description="
             equippedBySlot[entry.slot] ? itemDescription(equippedBySlot[entry.slot]!) : undefined
@@ -205,8 +220,10 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 .paperdoll {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: 6px;
+  grid-auto-rows: min-content;
+  gap: 8px;
+  align-content: center;
+  justify-items: center;
   height: 100%;
   padding: 6px;
   box-sizing: border-box;
@@ -218,6 +235,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
   min-height: 0;
   min-width: 0;
 }
@@ -227,11 +245,14 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  max-width: 90%;
+  width: 100%;
   aspect-ratio: 1;
 }
 
+/* Paperdoll slots use variant="equipment" - the 6 worn slots get the
+   "empty" glass tile + "click" select frame (SlotVariant registry).
+   Quality aura (rarityRank >= 3) still rides on top. Empty slots stay
+   bare: no silhouette art. */
 .paperdoll__slot {
   width: 100%;
 }

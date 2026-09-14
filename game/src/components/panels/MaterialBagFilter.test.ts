@@ -20,6 +20,7 @@ import { useUiStore } from '@/stores/ui'
 import type { Material } from '@/core/material/Material'
 import type { HerbAge } from '@/core/production/ProductionTypes'
 import { vTooltip } from '@/directives/tooltip'
+import { useTooltip } from '@/composables/useTooltip'
 import { i18n } from '@/i18n'
 import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 
@@ -165,9 +166,11 @@ function mountSection(gameManager: GameManager) {
     container,
 
     // Grid luôn đủ pageSize ô (ô đệm rỗng) — chỉ đếm ô có nội dung.
+    // Nametag caption removed 2026-09-15 — name lives on aria-label;
+    // badges/amount still render as text.
     slotLabels: () =>
       Array.from(container.querySelectorAll('.bag-section__grid .bag-section__slot'))
-        .map((el) => el.textContent ?? '')
+        .map((el) => `${el.getAttribute('aria-label') ?? ''} ${el.textContent ?? ''}`.trim())
         .filter((label) => label !== ''),
 
     setSearch: (value: string) => {
@@ -288,9 +291,14 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
     expect(labels[1]).toContain('Hồi Xuân Thảo')
     expect(labels[2]).toContain('Linh Thảo Lạ')
 
-    // Badge realm/niên đại rộng nhất trong họ (Bách Niên > Thập Niên).
-    expect(labels[0]).toContain('Phàm Nhân')
-    expect(labels[0]).toContain('Bách Niên')
+    // Badge picks the widest realm/age in the family (Bach Nien > Thap
+    // Nien) - nametag caption removed, the info lives in the slot tooltip.
+    const firstSlot = mounted.container.querySelector<HTMLElement>('.bag-section__grid .bag-section__slot')
+    firstSlot!.dispatchEvent(new Event('pointerenter', { bubbles: true }))
+    const tip = JSON.stringify(useTooltip().content.value)
+    expect(tip).toContain('Phàm Nhân')
+    expect(tip).toContain('Bách Niên')
+    useTooltip().dismissTooltip()
 
     mounted.unmount()
   })
@@ -306,7 +314,12 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
 
     expect(labels).toHaveLength(1)
     expect(labels[0]).toContain('Linh Khoáng')
-    expect(labels[0]).toContain('Bách Niên')
+
+    // "Bach Nien" badge - nametag removed, verified via tooltip.
+    const slot = mounted.container.querySelector<HTMLElement>('.bag-section__grid .bag-section__slot')
+    slot!.dispatchEvent(new Event('pointerenter', { bubbles: true }))
+    expect(JSON.stringify(useTooltip().content.value)).toContain('Bách Niên')
+    useTooltip().dismissTooltip()
 
     mounted.unmount()
   })

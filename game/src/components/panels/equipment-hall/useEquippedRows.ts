@@ -10,6 +10,7 @@ import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
+import { gradeLabel } from '@/core/presentation/labels'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 
@@ -21,6 +22,10 @@ export interface EquippedRow {
   slot: EquipmentSlot
 
   name: string
+
+  // spec section 5b - "{name}, {grade}" so aria includes Pham (the seal
+  // is a decorative glyph; screen readers get the grade through this label).
+  accessibleLabel: string
 
   quality: EquipmentInstance['quality']
 
@@ -71,6 +76,8 @@ export function useEquippedRows() {
 
         name: template?.name ?? instance.itemId,
 
+        accessibleLabel: `${template?.name ?? instance.itemId}, ${gradeLabel(instance.grade)}`,
+
         quality: instance.quality,
 
         affixCount: instance.affixes.length,
@@ -93,6 +100,9 @@ export function useEquippedRows() {
               gameManager.affixRegistry,
               gameManager.equipmentOps.getSlotState(instance.slot),
               gameManager.zoneRegistry,
+              // No compare context (item-info-card spec section 4): these
+              // rows ARE the equipped items - an equipped item is the
+              // compare counterpart, never a candidate for one.
               undefined,
               gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
             )

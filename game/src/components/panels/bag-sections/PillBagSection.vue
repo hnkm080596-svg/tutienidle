@@ -15,8 +15,10 @@ import type { Pill } from '@/core/pill/Pill'
 import type { BagCell } from './BagCell'
 import type { GradedItemTooltipContent, TooltipSection } from '@/composables/useTooltip'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
-import { ITEM_GRADE_LABELS } from '@/core/item/ItemGrade'
-import { compareProfessionGrades, PROFESSION_GRADE_NAMES } from '@/core/profession/ProfessionGrade'
+import { ITEM_GRADE_ORDER, composeItemGradeNameSegments } from '@/core/item/ItemGrade'
+import { compareProfessionGrades, realmFromGrade } from '@/core/profession/ProfessionGrade'
+import { professionGradeRank } from '@/core/profession/slotRank'
+import { gradeLabel, realmLabel } from '@/core/presentation/labels'
 
 const ui = useUiStore()
 
@@ -110,20 +112,49 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 
   const sections: TooltipSection[] = rows.length > 0 ? [{ label: 'Hiệu Ứng', rows }] : []
 
+  // Same naming model as equipment (2026-09-14): the title is the FULL
+  // composed "{Chat} - {Name}" string; the single display color rides
+  // the payload (spec section 2 - Pham ramp when the pill carries
+  // professionGrade, Chat --grade-* fallback otherwise).
+  const displayName = composeItemGradeNameSegments(pill.name, pill.grade)
+    .map((segment) => segment.text)
+    .join(' ')
+  const phamRank = pill.professionGrade !== undefined
+    ? professionGradeRank(pill.professionGrade)
+    : undefined
+
   return {
     kind: 'pill',
 
-    name: pill.name,
+    name: displayName,
+
+    nameColorVar: phamRank !== undefined ? `--rank-color-${phamRank}` : `--grade-${pill.grade}`,
+
+    nameTone: pill.grade === 'tien' ? 'tien' : undefined,
+
+    // Static SlotView header (spec section 3): the same signal set the
+    // bag cell binds - Pham seal (professionGrade), Chat edge (grade),
+    // grade word in aria (professionGrade is optional on Pill).
+    slotPreview: {
+      icon: pill.icon,
+      label: displayName,
+      accessibleLabel: pill.professionGrade
+        ? `${displayName}, ${gradeLabel(pill.professionGrade)}`
+        : displayName,
+      equipmentQualityRank: phamRank,
+      rarityRank: ITEM_GRADE_ORDER.indexOf(pill.grade) + 1,
+    },
 
     imagePath: pill.icon,
 
-    gradeLabel: pill.professionGrade
-      ? PROFESSION_GRADE_NAMES[pill.professionGrade]
-      : ITEM_GRADE_LABELS[pill.grade],
+    gradeLine: pill.professionGrade
+      ? `Cảnh giới: ${gradeLabel(pill.professionGrade)} (${realmLabel(realmFromGrade(pill.professionGrade))})`
+      : undefined,
 
     gradeKey: pill.grade,
 
-    ownedLabel: `Sở hữu: ${owned}`,
+    // Spec: "So huu: N" renders only when the player owns at least one.
+    ownedCount: owned > 0 ? owned : undefined,
 
     description: pill.description,
 
@@ -210,38 +241,53 @@ const SORT_OPTIONS: Array<BagSortOption & { value: PillSortMode }> = [
 const entries = computed<PillEntry[]>(() => {
   stateVersion.value
 
-  return gameManager.pillBag.getAll().map((stack) => ({
-    pill: stack.pill,
+  return gameManager.pillBag.getAll().map((stack) => {
+    const displayName = composeItemGradeNameSegments(stack.pill.name, stack.pill.grade)
+      .map((segment) => segment.text)
+      .join(' ')
 
-    amount: stack.amount,
-
-    cell: {
-      key: stack.pill.id,
-
-      label: stack.pill.name,
-
-      nameSegments: [
-        {
-          text: stack.pill.professionGrade
-            ? PROFESSION_GRADE_NAMES[stack.pill.professionGrade]
-            : ITEM_GRADE_LABELS[stack.pill.grade],
-          colorVar: `--grade-${stack.pill.grade}`,
-          tone: stack.pill.grade,
-        },
-        { text: stack.pill.name },
-      ],
-
-      description: stack.pill.description,
+    return {
+      pill: stack.pill,
 
       amount: stack.amount,
 
-      tooltip: buildTooltip(stack.pill, stack.amount),
+      cell: {
+        key: stack.pill.id,
 
-      icon: stack.pill.icon,
+        label: stack.pill.name,
 
-      onClick: () => drinkPill(stack.pill.id),
-    },
-  }))
+        // "{Name}, {Pham}" aria override (spec section 5b) -
+        // professionGrade is optional on Pill, so the grade word is
+        // gated on it.
+        accessibleLabel: stack.pill.professionGrade
+          ? `${displayName}, ${gradeLabel(stack.pill.professionGrade)}`
+          : displayName,
+
+        // "{Chat} - {Name}" - text structure only (item-info-card spec
+        // 2026-09-14); display color lives on the tooltip payload.
+        nameSegments: composeItemGradeNameSegments(stack.pill.name, stack.pill.grade),
+
+        // Unified slot language: Pham -> seal, Chat (grade) -> frame/
+        // aura. Pills now feed BOTH axes like equipment (rank >= dia gets
+        // the quality beam).
+        equipmentQualityRank: stack.pill.professionGrade
+          ? professionGradeRank(stack.pill.professionGrade)
+          : undefined,
+
+        rarityRank: ITEM_GRADE_ORDER.indexOf(stack.pill.grade) + 1,
+
+        description: stack.pill.description,
+
+        amount: stack.amount,
+
+        tooltip: buildTooltip(stack.pill, stack.amount),
+
+        icon: stack.pill.icon,
+
+        onClick: () => drinkPill(stack.pill.id),
+      },
+    }
+  })
 })
 
 // Tiêu chí Đan Dược (plan Workstream E) — phẩm đan/loại hiệu ứng/số
@@ -342,7 +388,10 @@ const activeTimedEffects = computed(() => {
         class="bag-section__slot"
         :item="cell"
         :label="cell?.label"
+        :accessible-label="cell?.accessibleLabel"
         :name-segments="cell?.nameSegments"
+        :equipment-quality-rank="cell?.equipmentQualityRank"
+        :rarity-rank="cell?.rarityRank"
         :description="cell?.description"
         :amount="cell?.amount"
         :tooltip="cell?.tooltip"

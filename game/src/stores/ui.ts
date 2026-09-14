@@ -120,6 +120,11 @@ export const useUiStore = defineStore('ui', {
 
     characterOverlayOpen: false,
 
+    // Detail stat card - small card docked at the right edge of the
+    // Character drawer (LeftPanel), toggled by a button in
+    // CharacterPanel. Transient per session, NOT persisted to save.
+    characterDetailOpen: false,
+
     // Command wheel (dong-fu-command-wheel plan) — mở/đóng bằng click
     // nhân vật tu luyện giữa Động Phủ; Escape/click vùng trống đóng.
     // Transient theo phiên, KHÔNG lưu save.
@@ -215,6 +220,7 @@ export const useUiStore = defineStore('ui', {
         this.closeHomeOverlays()
         this.characterOverlayOpen = !shouldClose
         if (this.characterOverlayOpen) this.activeBagTab = 'equipment'
+        else this.characterDetailOpen = false
         return
       }
       const shouldClose = this.leftPanelMode === mode
@@ -244,10 +250,15 @@ export const useUiStore = defineStore('ui', {
       this.standalonePanel = panel
     },
 
+    toggleCharacterDetail() {
+      this.characterDetailOpen = !this.characterDetailOpen
+    },
+
     /** Đóng toàn bộ chrome/overlay của Động Phủ khi click nền chính. */
     closeHomeOverlays() {
       this.leftPanelMode = null
       this.characterOverlayOpen = false
+      this.characterDetailOpen = false
       this.standalonePanel = null
       this.activeBuildingPopoverId = null
       this.isCommandWheelOpen = false

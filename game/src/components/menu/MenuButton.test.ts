@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 //
-// Project không có @vue/test-utils (xem ThemeSwitcher.test.ts dùng createApp/h).
-// Brief yêu cầu không thêm dependency mới, nên mount bằng API công khai của
-// Vue, vẫn render đúng SFC thật qua @vitejs/plugin-vue đã cấu hình sẵn.
+// Project has no @vue/test-utils - mount via createApp/h.
+// The brief disallows new dependencies, so mount through Vue's public
+// API; the real SFC still renders via the preconfigured @vitejs/plugin-vue.
 import { describe, it, expect } from 'vitest'
 import { createApp, h } from 'vue'
 import MenuButton from './MenuButton.vue'

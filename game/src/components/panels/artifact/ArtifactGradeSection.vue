@@ -8,10 +8,12 @@ import StatRow from '@/components/common/primitives/StatRow.vue'
 
 const props = defineProps<{
   gradeLabel: string
+  gradeColorVar?: string
   multiplierPercentLabel: string
   stoneAmount: number
   upgradeCost?: number
   nextGradeLabel?: string
+  nextGradeColorVar?: string
   disabled: boolean
 }>()
 
@@ -24,7 +26,7 @@ const canAfford = computed(() =>
 
 <template>
   <div class="artifact-grade">
-    <StatRow label="Phẩm">{{ gradeLabel }}</StatRow>
+    <StatRow label="Phẩm"><span :style="gradeColorVar ? { color: gradeColorVar } : undefined">{{ gradeLabel }}</span></StatRow>
 
     <StatRow label="Hệ số hiệu quả">{{ multiplierPercentLabel }}</StatRow>
 
@@ -37,7 +39,7 @@ const canAfford = computed(() =>
         :disabled="disabled || !canAfford"
         @click="emit('upgrade')"
       >
-        Nâng Phẩm lên {{ nextGradeLabel }} ({{ formatNumber(upgradeCost) }} đá)
+        Nâng Phẩm lên <span :style="nextGradeColorVar ? { color: nextGradeColorVar } : undefined">{{ nextGradeLabel }}</span> ({{ formatNumber(upgradeCost) }} đá)
       </GameButton>
 
       <p v-if="disabled" class="artifact-grade__hint">Chỉ nâng phẩm được ngoài combat.</p>

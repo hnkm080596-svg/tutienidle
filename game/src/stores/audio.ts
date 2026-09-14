@@ -4,7 +4,7 @@
 //
 // AudioManager remains a Vue-free singleton (directly unit-testable);
 // the store owns no logic — only state mirroring + localStorage
-// persistence (same pattern as themeStore).
+// persistence to localStorage.
 
 import { defineStore } from 'pinia'
 import { AudioManager, type SoundId } from '@/core/audio/AudioManager'

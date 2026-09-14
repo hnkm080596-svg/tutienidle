@@ -89,7 +89,7 @@ describe('NotificationQueue — push/drain', () => {
       message: 'Hạ gục Quỷ Lang',
       loot: {
         icon: '/icons/sword.png',
-        nameSegments: [{ text: 'Kiểm Đao' }],
+        name: 'Kiểm Đao',
         amountLabel: 'x1',
       },
     }
@@ -98,7 +98,7 @@ describe('NotificationQueue — push/drain', () => {
 
     expect(queue.drain()[0]!.loot).toEqual({
       icon: '/icons/sword.png',
-      nameSegments: [{ text: 'Kiểm Đao' }],
+      name: 'Kiểm Đao',
       amountLabel: 'x1',
     })
   })

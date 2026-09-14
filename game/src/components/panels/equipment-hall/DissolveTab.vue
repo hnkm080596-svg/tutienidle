@@ -18,7 +18,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { usePanelPagination } from '@/composables/usePanelPagination'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
-import { materialLabel, equipmentQualityLabel } from '@/core/presentation/labels'
+import { materialLabel, equipmentQualityLabel, gradeLabel } from '@/core/presentation/labels'
 import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
 import { PROFESSION_GRADE_ORDER, PROFESSION_GRADE_NAMES } from '@/core/profession/ProfessionGrade'
 import { canUseItemGrade } from '@/core/equipment/canUseItem'
@@ -46,6 +46,10 @@ interface DissolveCandidate {
   instanceId: string
 
   name: string
+
+  // spec section 5b - "{name}, {grade}" so aria includes Pham (the seal
+  // is a decorative glyph; screen readers get the grade via this label).
+  accessibleLabel: string
 
   grade: EquipmentInstance['grade']
 
@@ -106,10 +110,20 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
     .map((instance) => {
       const template = gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)
 
+      // Compare context (item-info-card spec section 4) - candidates are
+      // always unequipped, so the counterpart is whatever is worn in that
+      // slot.
+      const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
+      const equippedTemplate = equippedComparison
+        ? gameManager.equipmentOps.getEquipmentTemplate(equippedComparison.itemId)
+        : undefined
+
       return {
         instanceId: instance.instanceId,
 
         name: template?.name ?? instance.itemId,
+
+        accessibleLabel: `${template?.name ?? instance.itemId}, ${gradeLabel(instance.grade)}`,
 
         grade: instance.grade,
 
@@ -127,9 +141,19 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
               instance,
               template,
               gameManager.affixRegistry,
-              gameManager.equipmentOps.getSlotState(instance.slot),
+              // Candidates are unequipped - the slot enhance level belongs
+              // to the worn item, never to this card (null, not
+              // getSlotState(instance.slot)).
+              null,
               gameManager.zoneRegistry,
-              undefined,
+              equippedComparison && equippedTemplate
+                ? {
+                    instance: equippedComparison,
+                    template: equippedTemplate,
+                    slotState: gameManager.equipmentOps.getSlotState(equippedComparison.slot),
+                    mainStatRangeQuote: gameManager.equipmentSystem.quoteMainStatRange(equippedComparison, gameManager.equipmentRegistry),
+                  }
+                : undefined,
               gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
             )
           : undefined,
@@ -223,7 +247,12 @@ function doDissolve() {
       <select v-model="dissolveFilterGrade">
         <option value="any">{{ t('panels.equipmentHall.select.anyProfessionGrade') }}</option>
 
-        <option v-for="grade in PROFESSION_GRADE_ORDER" :key="grade" :value="grade">
+        <option
+          v-for="grade in PROFESSION_GRADE_ORDER"
+          :key="grade"
+          :value="grade"
+          :style="{ color: `var(--rank-color-${professionGradeRank(grade)})` }"
+        >
           {{ PROFESSION_GRADE_NAMES[grade] }}
         </option>
       </select>
@@ -233,7 +262,12 @@ function doDissolve() {
       <select v-model="dissolveFilterQuality">
         <option value="any">{{ t('panels.equipmentHall.select.anyQuality') }}</option>
 
-        <option v-for="quality in ITEM_QUALITY_ORDER" :key="quality" :value="quality">
+        <option
+          v-for="quality in ITEM_QUALITY_ORDER"
+          :key="quality"
+          :value="quality"
+          :style="{ color: `var(--grade-${quality})` }"
+        >
           {{ equipmentQualityLabel(quality) }}
         </option>
       </select>
@@ -269,6 +303,7 @@ function doDissolve() {
           class="qi-hall__slot"
           :item="{ id: candidate.instanceId }"
           :label="candidate.name"
+          :accessible-label="candidate.accessibleLabel"
           :name-segments="candidate.nameSegments"
           :icon="candidate.icon"
           :equipment-quality-rank="candidate.gradeRank"

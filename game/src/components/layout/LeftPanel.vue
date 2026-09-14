@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useUiStore } from '@/stores/ui'
 import CharacterPanel from '../panels/CharacterPanel.vue'
+import CharacterDetailCard from '../panels/CharacterDetailCard.vue'
 
 const ui = useUiStore()
 
@@ -15,12 +16,20 @@ const ui = useUiStore()
 
 <template>
   <Transition name="panel-slide-left">
-    <div v-if="ui.characterOverlayOpen" class="left-panel dark-drawer-fill">
+    <div v-if="ui.characterOverlayOpen" class="left-panel ink-drawer">
       <div class="left-panel__content left-panel__content--full">
         <div class="left-panel__view">
           <CharacterPanel />
         </div>
       </div>
+
+      <!-- Detail stat card - docked to the drawer's right edge, opened
+           via the "Chi Tiet" button in CharacterPanel. It is a child of
+           .left-panel so it slides in/out with the panel (transform
+           transition). -->
+      <Transition name="stats-card-fade">
+        <CharacterDetailCard v-if="ui.characterDetailOpen" class="left-panel__detail" />
+      </Transition>
     </div>
   </Transition>
 </template>
@@ -32,16 +41,55 @@ const ui = useUiStore()
    v-if trên chính div này (thay vì chỉ trên nội dung con) để cả khối
    panel (nền + border) cùng trượt vào/ra, không chỉ phần nội dung. */
 .left-panel {
-  /* KHÔNG set width/height:100% — vị trí/kích thước thật đã do
-     .game-root__left-panel (position:absolute; top:0; bottom:72px)
-     quyết định. height:100% ở đây từng đè lên bottom:72px (over-
-     constrained, browser bỏ qua bottom) khiến panel cao tràn hết
-     100vh, lấn xuống dưới cả bottom bar. */
-  border-right: 1px solid var(--frame-outer);
+  /* Do NOT set width/height:100% - real position/size is owned by
+     .game-root__left-panel (position:absolute; top:0; bottom:72px).
+     height:100% here used to override bottom:72px (over-constrained,
+     browser ignored bottom) making the panel spill to full 100vh and
+     over the bottom bar. The frame ring is now owned by .ink-drawer
+     (border-image) - do NOT declare a separate border here. */
   box-shadow: var(--surface-shadow-deep);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* overflow: visible - the detail card docked at the right edge
+     (left:100%) gets clipped under hidden; the inner scroll region
+     already clips itself via .left-panel__view (overflow-y: auto). */
+  overflow: visible;
+}
+
+/* Detail stat card - docked flush to the drawer's right edge, spanning
+   nearly the full panel height. position:absolute anchors to
+   .left-panel (position set by .game-root__left-panel). */
+.left-panel__detail {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 0;
+  bottom: 72px;
+}
+
+/* Narrow viewport (drawer near/full width, see GameRoot media queries):
+   no room on the right - the card overlays drawer content instead of
+   docking beside it. (width auto lives in the card's own style - the
+   parent's scoped style cannot win width on the child component root.) */
+@media (max-width: 900px) {
+  .left-panel__detail {
+    left: 8px;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+  }
+}
+
+.stats-card-fade-enter-active,
+.stats-card-fade-leave-active {
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.stats-card-fade-enter-from,
+.stats-card-fade-leave-to {
+  transform: translateX(-8px);
+  opacity: 0;
 }
 
 /* Equipment CHỈ hiện cho Hành Trang/Tứ Nghệ, cố định 30% — phần còn

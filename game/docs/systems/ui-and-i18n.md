@@ -16,18 +16,18 @@ Hai union tách biệt (sống ở presentation vì đây là chỗ 2 layer gặ
 
 ## Component
 
-- `components/common/` — primitive: `GamePanel`, `GameButton`, `TabBar`, `Tooltip`, `ToastContainer`, `ConfirmModal`, `OverlayPanel`, `SlotView`, `LoadingScreen`, `ErrorScreen`, `SaveIncompatibleScreen`, `OfflineSummaryModal`, `TutorialOverlay`, `WorldAnnouncementOverlay`, `ActionFeedbackLog`, `InkWashBackdrop`, `SceneHeader`, `PlayerPortrait`, `NotificationBadge`, `ThemedIcon`, `BreakthroughRequirementPanel`, `dialogFocus*` (a11y), `primitives/`.
+- `components/common/` — primitive: `GamePanel`, `GameButton`, `TabBar`, `Tooltip`, `ToastContainer`, `ConfirmModal`, `OverlayPanel`, `SlotView`, `LoadingScreen`, `ErrorScreen`, `SaveIncompatibleScreen`, `OfflineSummaryModal`, `TutorialOverlay`, `WorldAnnouncementOverlay`, `ActionFeedbackLog`, `InkWashBackdrop`, `SceneHeader`, `PlayerPortrait`, `NotificationBadge`, `BreakthroughRequirementPanel`, `dialogFocus*` (a11y), `primitives/`.
 - `components/panels/` — feature panel theo hệ thống: `CharacterPanel`, `InventoryPanel` + `BagGrid`, `EquipmentPaperdoll`, `EquipmentHallPanel`, `PillRoomPanel`, `AlchemyView`, `ProductionPanel`, `WorkerLodgePanel`, `VendorPanel`, `QuestPanel`, `StageSelectPanel`, `RealmPanel`, `TechniquePanel`, `ScripturePavilionPanel`, `SkillPathPanel`, `LuyenThePanel`, `QuanKhiPanel`, `ArtifactPanel`, `TranPhapPanel`, `SettingsPanel`, `BuildingConstructionGate`, `LoreCodexModal`; subfolder `artifact/`, `bag-sections/`, `equipment-hall/`, `loadout-sections/`, `scripture/`, `skill-path/`.
 
 ## Store (`stores/`, Pinia)
 
 - `player.ts` — facade phía Vue đọc/ghép `PlayerData` (finalStats, cultivationSpeed, aiStrategy, artifact, ngoDao, save/restore...).
 - `ui.ts` + `uiFlagsPersistence.ts` — panel đang mở, combat input mode, flag UI persist.
-- `notification.ts` — toast queue phía Vue; `actionFeedback.ts`, `worldAnnouncement.ts`, `offlineSummary.ts`, `saveIssue.ts`, `error.ts`, `breakthroughRequirement.ts`, `themeStore.ts`.
+- `notification.ts` — toast queue phía Vue; `actionFeedback.ts`, `worldAnnouncement.ts`, `offlineSummary.ts`, `saveIssue.ts`, `error.ts`, `breakthroughRequirement.ts`.
 
 ## NotificationQueue → toast
 
-`core/game/NotificationQueue.ts` — hàng đợi toast phát sinh **trong core** (loot, skill upgrade, bag overflow...): `push`/`drain`. `App.vue` tick rút qua `GameManager.drainNotifications()` → đẩy vào `stores/notification.ts`. Toast sinh sẵn ở Vue layer gọi thẳng store, không qua queue. Event type thuần ở `core/notification/NotificationEvent.ts` (kind/message/messageKey/messageParams — `messageKey` cho i18n, `message` làm fallback tiếng Việt); `core/notification/bagOverflow.ts` helper.
+`core/game/NotificationQueue.ts` — hàng đợi toast phát sinh **trong core** (loot, skill upgrade, bag overflow...): `push`/`drain`. `App.vue` tick rút qua `GameManager.drainNotifications()` → đẩy vào `stores/notification.ts`. Toast sinh sẵn ở Vue layer gọi thẳng store, không qua queue. Event type thuần ở `core/notification/NotificationEvent.ts` (kind/message/messageKey/messageParams — `messageKey` cho i18n, `message` làm fallback tiếng Việt; loot toast mang `loot` presentation payload: `name`/`nameColorVar`/`nameTone`/`gradeLabel`/`accentColorVar`); `core/notification/bagOverflow.ts` helper.
 
 ## i18n
 

@@ -1,22 +1,26 @@
 <script setup lang="ts" generic="T">
 import { computed, ref, watch } from 'vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { PROFESSION_GRADE_SEAL_ORDINALS } from '@/core/profession/ProfessionGrade'
 import type { TooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
-import type { SlotBadge, SlotPresentationState } from './SlotTypes'
+import type { SlotBadge, SlotPresentationState, SlotVariant } from './SlotTypes'
 
-// Slot Revamp — CSS-only presentation (tooltip-revamp-plan.md mục 17).
-// PNG DUY NHẤT được phép là icon riêng của item (prop `icon`); mọi
-// backdrop/frame/badge/glow khác giờ do CSS đảm nhiệm. Xem SlotTypes.ts
-// cho 5 trục semantic (availability/interaction/validation/marker/
-// comparison) — KHÔNG dùng danh sách boolean rời rạc.
+// Slot presentation (tooltip-revamp-plan.md section 17 + user art pass
+// 2026-09). Art layers: backdrop per variant (SlotTypes.ts SlotVariant
+// - 'item' uses the flat dark tile inv-slot-backdrop.png, 'equipment'
+// cells use the frosted-glass slot-backdrop.png), item `icon` prop on
+// top, hover art per variant fitted to the cell edge (inset 0), and the
+// shared fx-border-beam repurposed as a persistent quality aura for
+// equipment Chat Dia+. See SlotTypes.ts for the 5 semantic axes
+// (availability/interaction/validation/marker/comparison) - NOT a list
+// of loose booleans.
 //
-// InkNineSlice frame-s-slot ĐÃ BỎ (2026-08-30) — brush ink-wash lặp lại
-// trên MỌI slot (paperdoll + toàn bộ lưới Kho Vật, hàng chục ô/màn) tạo
-// cảm giác rối/loạn khi xếp thành lưới dày đặc, khác hẳn mục đích gốc
-// của frame ink-wash (viền trang trí cho panel LỚN, không phải lặp lại
-// trên từng ô nhỏ). Viền quay lại CSS đơn giản `.slot-view` (border 1px
-// + quality-color) như trước ink-wash refactor.
+// InkNineSlice frame-s-slot REMOVED (2026-08-30) - the brush ink-wash
+// repeated on EVERY slot (paperdoll + the whole Kho Vat grid, dozens of
+// cells per screen) felt noisy/cluttered in a dense grid, far from the
+// frame's original purpose (a decorative border for a LARGE panel, not
+// a repeated per-cell ornament).
 const props = defineProps<{
   /** Item mà Slot đang chứa. null = slot trống — filled/empty suy trực
    * tiếp từ đây, KHÔNG có prop `hasItem` riêng. */
@@ -32,19 +36,22 @@ const props = defineProps<{
 
   amount?: number
 
-  /** Tên ghép động nhiều đoạn tô màu riêng (Phẩm/Set/Địa Giới) — ưu
-   * tiên HƠN `label` (chuỗi đơn) nếu có truyền vào. */
+  /** Composed name segments - text structure only (item-info-card spec
+   * 2026-09-14); the single display color lives on the tooltip payload.
+   * Takes priority over the plain `label` when provided. */
   nameSegments?: NameSegment[]
 
-  /** Rank chuẩn hoá 1-10 (professionGradeRank, xem
-   * core/profession/slotRank.ts) — SlotView KHÔNG biết ID
-   * domain như 'cuu_pham'/'tien_pham'. Hiện thành chấm nhỏ góc phải
-   * (tín hiệu PHỤ — Chất/Tiềm Năng Rèn đang luyện). */
+  /** Normalized rank 1-10 (professionGradeRank, see
+   * core/profession/slotRank.ts) - SlotView does NOT know domain ids
+   * like 'cuu_pham'/'tien_pham'. The PHAM axis (realm grade) - renders
+   * as a corner seal stamp carrying the Vietnamese grade ordinal
+   * (item-info-card spec 2026-09-14, replaces the underlay wash). */
   equipmentQualityRank?: number
 
-  /** Rank chuẩn hoá 1-5 (itemQualityRank, 5 bậc Phẩm Hoàng→Tiên ánh xạ
-   * 1:1). Tín hiệu CHÍNH — quyết định khung/glow của cả ô (2026-08-30,
-   * theo đúng quy ước "Phẩm = khung, Chất = chữ/badge phụ"). */
+  /** Normalized rank 1-5 (itemQualityRank, the 5 Chat tiers Hoang->Tien
+   * mapped 1:1). The CHAT axis - decides the cell's frame/tint/aura,
+   * colored via the --grade-* ramp (rank r -> --rank-color-(2r-1)) to
+   * match the item name color. */
   rarityRank?: number
 
   /** Trần (max) của thang `rarityRank` — mặc định 5 (itemQualityRank,
@@ -64,6 +71,21 @@ const props = defineProps<{
 
   /** Tên truy cập — mặc định dùng `label` nếu không truyền riêng. */
   accessibleLabel?: string
+
+  /** Show the name caption under the cell - OFF by default (2026-09-15
+   * ruling: nametag removed from item/equipment cells, the name lives in
+   * the tooltip). Places where the label is primary content (e.g.
+   * combat skill names) opt in via this prop. */
+  showLabel?: boolean
+
+  /** Where the slot is used - decides the backdrop + hover art (see
+   * SlotVariant in SlotTypes.ts). Default 'item' (dark tile + bright
+   * hover frame). */
+  variant?: SlotVariant
+
+  /** Presentation-only render (tooltip card header): root becomes a
+   * span role=img, tooltip/click/hover suppressed. */
+  static?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -90,35 +112,63 @@ function onIconError() {
   failedIconSrc.value = props.icon ?? null
 }
 
-// Rework P6 (Task 20) — 2 trục rank độc lập, mỗi trục có TRẦN riêng:
-// equipmentQualityRank (chip phụ) nhận professionGradeRank 1-10 (Cửu
-// Phẩm→Tiên Phẩm); rarityRank (khung/glow chính) nhận itemQualityRank
-// 1-5 (Hoàng→Tiên). clampRank chỉ chặn giá trị ngoài biên hợp lệ chung
-// (1-10) — SlotView không biết trần THẬT của từng trục nên "max" được
-// tính riêng ở dưới theo đúng trần của từng prop.
+// Rework P6 (Task 20) - 2 independent rank axes, each with its OWN
+// ceiling: equipmentQualityRank (Pham seal) takes professionGradeRank
+// 1-10 (Cuu Pham -> Tien Pham); rarityRank (main frame/glow) takes
+// itemQualityRank 1-5 (Hoang -> Tien). clampRank only bounds values to
+// the shared valid range (1-10) - SlotView does not know each axis's
+// REAL ceiling, so "max" is computed per-prop below.
 function clampRank(rank: number | undefined): number | undefined {
   if (rank === undefined) return undefined
   return Math.min(10, Math.max(1, Math.round(rank)))
 }
 
-const qualityColor = computed(() => {
-  const rank = clampRank(props.equipmentQualityRank)
-  return rank ? `var(--rank-color-${rank})` : undefined
-})
-
+// Chat color rides the shared ramp at the --grade-* positions
+// (hoang/huyen/dia/thien/tien = rank 1/3/5/7/9) so the slot frame, tint
+// and beam match the item-name prefix exactly. Scale-10 callers
+// (materials) keep the direct 1:1 ramp position - their single axis IS
+// the Pham rank.
 const rarityColor = computed(() => {
   const rank = clampRank(props.rarityRank)
-  return rank ? `var(--rank-color-${rank})` : undefined
+  if (!rank) return undefined
+  return `var(--rank-color-${(props.rarityRankScale ?? 5) === 5 ? rank * 2 - 1 : rank})`
 })
 
-// Trần professionGradeRank = 10 (Tiên Phẩm).
-const isMaxRank = computed(() => clampRank(props.equipmentQualityRank) === 10)
+// Seal stamp (item-info-card spec 2026-09-14): the Pham axis renders as
+// a corner seal carrying the Vietnamese grade ordinal - replaces the
+// underlay wash. Same rank source as before: equipmentQualityRank
+// (equipment/pills), or rarityRank when fed on the 10-step scale
+// (materials). Chat stays on the rarity edge + aura.
+const sealRank = computed(() => {
+  const gradeRank = clampRank(props.equipmentQualityRank)
+  if (gradeRank) return gradeRank
+  if ((props.rarityRankScale ?? 5) === 10) return clampRank(props.rarityRank)
+  return undefined
+})
+const sealOrdinal = computed(() => (sealRank.value ? PROFESSION_GRADE_SEAL_ORDINALS[sealRank.value - 1] : undefined))
+const sealColor = computed(() => (sealRank.value ? `var(--rank-color-${sealRank.value})` : undefined))
 // Trần itemQualityRank = 5 (Tiên Chất) — KHÔNG còn 9 (model cũ rải
 // 1-3-5-7-9 đã bỏ, xem normalizeSlotRank.ts). rarityRankScale cho phép
 // caller feed 1 thang rank KHÁC (vd Material professionRankOf 1-10) vào
 // cùng prop `rarityRank` mà vẫn so đúng trần của thang đó — mặc định 5
 // giữ nguyên hành vi mọi caller equipment hiện có (Fix 1, final review).
 const isMaxRarityRank = computed(() => clampRank(props.rarityRank) === (props.rarityRankScale ?? 5))
+
+// Quality aura (user art pass 2026-09): the repurposed border-beam is no
+// longer a hover effect - it is the persistent Chat indicator for
+// equipment (itemQualityRank, 5-step scale). Only Dia (rank 3) and above
+// show it, each tier tinted by its rank color. Materials feeding
+// professionRankOf (rarityRankScale = 10) are NOT equipment Chat - no
+// aura. Empty slots never show it either.
+const qualityAuraTier = computed(() => {
+  const rank = clampRank(props.rarityRank)
+  if (!filled.value || (props.rarityRankScale ?? 5) !== 5 || rank === undefined || rank < 3) {
+    return 0
+  }
+  // Clamp to the declared 5-step scale - a caller feeding an out-of-
+  // contract rank must not fabricate unstyled fx-6..10 tiers.
+  return Math.min(rank, 5)
+})
 
 // ============================================================
 // PRECEDENCE (mục 17.2) — locked chặn interaction+validation; disabled
@@ -159,6 +209,7 @@ const validationGlyph = computed(() => {
 // vẫn phải giữ được focus/hover để tooltip giải thích điều kiện (mục
 // 17.4/17.5), native `disabled` sẽ chặn luôn cả việc đó.
 function handleClick() {
+  if (props.static) return
   if (isBlocked.value) return
   emit('click')
 }
@@ -169,26 +220,37 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 </script>
 
 <template>
-  <button
-    type="button"
-    class="slot-view fx-border-beam"
+  <component
+    :is="props.static ? 'span' : 'button'"
+    :type="props.static ? undefined : 'button'"
+    class="slot-view"
     :class="[
+      `slot-view--${props.variant ?? 'item'}`,
       filled ? 'slot-view--filled' : 'slot-view--empty',
       showSelected ? 'slot-view--selected' : '',
       veil !== 'none' ? `slot-view--veil-${veil}` : '',
       validation !== 'neutral' ? `slot-view--validation-${validation}` : '',
       isMaxRarityRank ? 'slot-view--max-rank' : '',
+      qualityAuraTier > 0 ? `slot-view--quality-fx-${qualityAuraTier}` : '',
+      qualityAuraTier >= 4 ? 'fx-border-beam fx-border-beam--active' : '',
+      props.static ? 'slot-view--static' : '',
     ]"
     :style="{
-      '--slot-quality-color': qualityColor,
+      '--seal-rim': sealColor,
       '--slot-rarity-color': rarityColor,
+      '--fx-beam-color': qualityAuraTier > 0 ? rarityColor : undefined,
     }"
-    :aria-disabled="isBlocked ? 'true' : undefined"
-    :aria-busy="showProcessing ? 'true' : undefined"
+    :role="props.static ? 'img' : undefined"
+    :aria-disabled="props.static ? undefined : isBlocked ? 'true' : undefined"
+    :aria-busy="props.static ? undefined : showProcessing ? 'true' : undefined"
     :aria-label="accessibleLabel ?? label"
-    v-tooltip="tooltipContent"
+    v-tooltip="props.static ? undefined : tooltipContent"
     @click="handleClick"
   >
+    <!-- layer 1.5: Pham seal - crimson corner stamp, Vietnamese grade
+         ordinal (replaces the underlay wash). -->
+    <span v-if="filled && sealOrdinal" class="slot-view__seal" aria-hidden="true">{{ sealOrdinal }}</span>
+
     <!-- layer 2: icon / monogram fallback -->
     <span class="slot-view__icon-wrap">
       <img v-if="showIcon" class="slot-view__item-icon" :src="icon" :alt="label || ''" @error="onIconError" />
@@ -198,9 +260,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     <!-- layer 4: validation glyph (màu KHÔNG phải tín hiệu duy nhất) -->
     <span v-if="validation !== 'neutral'" class="slot-view__validation-glyph" aria-hidden="true">{{ validationGlyph }}</span>
 
-    <!-- layer 6: quality chip (Chất — tín hiệu phụ) + marker + comparison + custom badges -->
-    <span v-if="filled && equipmentQualityRank !== undefined" class="slot-view__quality-chip" :class="{ 'slot-view__quality-chip--max': isMaxRank }" aria-hidden="true" />
-
+    <!-- layer 6: marker + comparison + custom badges -->
     <span v-if="marker === 'equipped'" class="slot-view__marker slot-view__marker--equipped" aria-hidden="true">●</span>
     <span v-else-if="marker === 'new'" class="slot-view__marker slot-view__marker--new" aria-hidden="true">NEW</span>
 
@@ -212,21 +272,33 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
       {{ badge.text }}
     </span>
 
-    <!-- layer 7: amount + caption -->
+    <!-- layer 7: amount + opt-in caption (nametag off by default -
+         user ruling: names live in the tooltip; combat skill slots
+         opt back in via showLabel since the skill name is content) -->
     <span v-if="amount !== undefined" class="slot-view__amount">x{{ formatNumber(amount) }}</span>
 
-    <span v-if="nameSegments && nameSegments.length > 0" class="slot-view__caption">
-      <template v-for="(segment, index) in nameSegments" :key="index">
-        <span v-if="index > 0" class="slot-view__caption-dot"> · </span>
-        <span :data-name-tone="segment.tone" :style="{ color: segment.colorVar ? `var(${segment.colorVar})` : undefined }">{{ segment.text }}</span>
-      </template>
-    </span>
+    <template v-if="showLabel">
+      <span v-if="nameSegments && nameSegments.length > 0" class="slot-view__caption">
+        <template v-for="(segment, index) in nameSegments" :key="index">
+          <span v-if="index > 0" class="slot-view__caption-dot"> · </span>
+          <span>{{ segment.text }}</span>
+        </template>
+      </span>
 
-    <span v-else-if="label" class="slot-view__caption">{{ label }}</span>
+      <span v-else-if="label" class="slot-view__caption">{{ label }}</span>
+    </template>
 
-    <!-- layer 7.5: border-beam fx — ::before/::after của slot-view đã bận
-         (max-rank bar + rarity tint) nên beam vẽ qua layer riêng; shared
-         class trong theme.css, chỉ hiện khi hover. -->
+    <!-- layer 7.2: hover art - variant-owned (item = white sheen,
+         equipment (6 worn slots) = pale-gold select frame). Replaces the
+         old border-color hover affordance. Always in the DOM; CSS
+         drives visibility. -->
+    <span class="slot-view__hover-frame" aria-hidden="true" />
+
+    <!-- layer 7.5: border-beam fx - the slot-view ::before/::after are
+         busy (max-rank bar + rarity tint) so the beam paints via its own
+         layer; shared class in theme.css. No longer a hover effect -
+         only lights up with fx-border-beam(--active) when
+         qualityAuraTier >= 4. -->
     <span class="fx-border-beam__fx" aria-hidden="true" />
 
     <!-- layer 8: locked/disabled/processing veil -->
@@ -235,7 +307,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
       <span v-else-if="veil === 'disabled'" class="slot-view__veil-glyph">⊘</span>
       <span v-else class="slot-view__spinner" />
     </span>
-  </button>
+  </component>
 </template>
 
 <style scoped>
@@ -254,18 +326,32 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   padding: 0;
   border: 1px solid var(--slot-border);
   border-radius: var(--radius-sm);
-  background: var(--slot-surface);
+  /* Inventory backdrop ("archive base" plain dark tile) - default for
+     every item slot. Flat --surface-900 fallback (NOT the :root-resolved
+     --slot-surface gradient, which bakes cream paper vars and shows
+     through the translucent arts as a light-gray fill). Square art on
+     a square slot -> cover never distorts. Per-place art lives behind
+     the `variant` prop (SlotTypes.ts), not consumer CSS overrides. */
+  background:
+    var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
+    var(--surface-900);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   cursor: pointer;
   overflow: hidden;
   isolation: isolate;
+  /* container-type so the seal + crowding rule scale with the CELL edge
+     (cqw), not the viewport. inline-size only - height stays free for
+     aspect-ratio. */
+  container-type: inline-size;
   transition: border-color 35ms linear, box-shadow 35ms linear, background-color 35ms linear;
 }
 
 .slot-view--filled {
-  background: var(--slot-surface-raised);
+  background:
+    var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
+    var(--surface-900);
   border-color: var(--slot-rarity-color, var(--ink-line));
   box-shadow: var(--slot-shadow), 0 0 8px var(--slot-rarity-color, transparent);
 }
@@ -375,6 +461,32 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 /* ============================================================
+   4.5 QUALITY AURA - itemQualityRank >= 3 (Dia+) carries a persistent
+   edge signal; per user art direction each tier differs: Dia = static
+   ring (cheapest - no per-frame repaint on the common tier), Thien =
+   slow beam, Tien = fast bright beam. Color always --fx-beam-color
+   (rank token). Materials (rarityRankScale=10) never reach this.
+   ============================================================ */
+
+.slot-view--quality-fx-3 {
+  box-shadow:
+    var(--slot-shadow),
+    inset 0 0 0 1.5px var(--fx-beam-color),
+    0 0 6px color-mix(in srgb, var(--fx-beam-color) 45%, transparent);
+}
+
+.slot-view--quality-fx-4 {
+  --fx-beam-duration: 3.6s;
+  --fx-beam-width: 2px;
+}
+
+.slot-view--quality-fx-5 {
+  --fx-beam-duration: 1.5s;
+  --fx-beam-width: 3px;
+  filter: drop-shadow(0 0 4px var(--fx-beam-color));
+}
+
+/* ============================================================
    5. HOVER / FOCUS / SELECTED — selected thắng hover nhưng không
    che validation (ring validation ở trên là box-shadow riêng, ring
    selected bên dưới là outline riêng — 2 kênh khác nhau, không đè).
@@ -385,8 +497,38 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   transform: translateY(-1px);
 }
 
-.slot-view:hover:not([aria-disabled='true']) {
-  border-color: var(--slot-hover);
+/* Hover affordance = variant-owned art (item sheen / select frame) -
+   no more border-color swap or hover beam. Focus-visible keeps the
+   outline for keyboard users (frame shows too - same signal as hover). */
+.slot-view__hover-frame {
+  position: absolute;
+  inset: var(--slot-hover-inset, 0%);
+  z-index: 7;
+  background: var(--slot-hover-image, url('/assets/ui/Slot/bag-slot-hover.png')) center / var(--slot-hover-fit, 100% 100%) no-repeat;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.slot-view:hover:not([aria-disabled='true']) > .slot-view__hover-frame,
+.slot-view:focus-visible > .slot-view__hover-frame {
+  opacity: 1;
+}
+
+/* Variant art (SlotVariant registry - one owner for per-place slot
+   modifications; user ruling 2026-09-15):
+   - item (default, every bag slot + hall pickers): "archive base"
+     plain dark tile as bg + "cell select" white sheen on hover.
+   - equipment (the 6 worn slots): "empty" glass tile + "click"
+     pale-gold frame on hover. Both layers fit the cell exactly -
+     inset 0, 100% 100%. */
+.slot-view--item {
+  --slot-hover-image: url('/assets/ui/Slot/bag-slot-hover.png');
+}
+
+.slot-view--equipment {
+  --slot-bg-image: url('/assets/ui/Slot/slot-backdrop.png');
+  --slot-hover-image: url('/assets/ui/Slot/slot-frame-hover.png');
 }
 
 .slot-view:focus-visible {
@@ -400,24 +542,61 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 /* ============================================================
-   6. RARITY CHIP / MARKER / COMPARISON / BADGES
+   5.5 PHAM SEAL - crimson corner stamp carrying the Vietnamese grade
+   ordinal (item-info-card spec 2026-09-14, replaces the transparent
+   underlay wash). Sized in cqw so it scales with the cell edge.
    ============================================================ */
 
-.slot-view__quality-chip {
+.slot-view__seal {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  z-index: 6;
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background: var(--slot-quality-color, var(--text-muted));
+  top: 3%;
+  left: 3%;
+  z-index: 5;
+  box-sizing: border-box;
+  width: 36cqw;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 1cqw;
+  background: color-mix(in srgb, #7d2a24 88%, transparent);
+  border: 1px solid var(--seal-rim, var(--rank-color-2));
+  border-radius: 1px;
+  color: #efe6d2;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13cqw;
+  line-height: 1;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
   pointer-events: none;
 }
 
-.slot-view__quality-chip--max {
-  background: var(--rank-gradient-10);
+/* Crowding rule (spec section 1): under ~48px cells the glance signals
+   that duplicate the compare card pair disappear first. Seal + amount
+   are the cell minimum - never hidden. */
+@container (max-width: 47px) {
+  .slot-view__comparison,
+  .slot-view__marker {
+    display: none;
+  }
 }
+
+/* Static presentation mode (tooltip card header): non-interactive
+   span render - no hover art, no beam fx, no icon lift. */
+.slot-view--static {
+  cursor: default;
+}
+.slot-view--static .slot-view__hover-frame,
+.slot-view--static .fx-border-beam__fx {
+  display: none;
+}
+.slot-view--static .slot-view__item-icon,
+.slot-view--static .slot-view__monogram {
+  transform: none;
+}
+
+/* ============================================================
+   6. MARKER / COMPARISON / BADGES
+   ============================================================ */
 
 .slot-view__marker {
   position: absolute;
@@ -509,6 +688,10 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   pointer-events: none;
 }
 
+/* Nametag caption hidden by default (user ruling 2026-09-15) - slot
+   names live in the tooltip; `label`/`nameSegments` props still feed
+   tooltip + aria-label. `showLabel` opts back in for contexts where
+   the name IS the slot content (combat skill bar). */
 .slot-view__caption {
   position: relative;
   flex: 0 0 auto;
@@ -523,14 +706,6 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   text-overflow: ellipsis;
   z-index: 6;
   pointer-events: none;
-}
-
-.slot-view__caption [data-name-tone='tien'] {
-  color: transparent !important;
-  background: var(--rank-gradient-10);
-  background-clip: text;
-  -webkit-background-clip: text;
-  font-weight: 700;
 }
 
 /* ============================================================

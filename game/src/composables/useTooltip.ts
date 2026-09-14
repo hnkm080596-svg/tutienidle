@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
-import type { NameSegment } from '@/core/item/NameSegment'
+import type { ElementType } from '@/core/element/ElementType'
+import type { SlotPreviewProps } from '@/components/common/SlotTypes'
 
 // Dạng cũ, DÙNG CHUNG cho tuyệt đại đa số v-tooltip hiện có trong
 // game (chỉ tiêu đề + mô tả 1 dòng) — `kind` optional để mọi object
@@ -20,9 +21,26 @@ export interface TooltipStatRow {
 
   detail?: string
 
+  // "[min-max]" - rendered muted, inline after value (item-info-card
+  // spec section 3; replaces the old Alt-revealed advancedSections
+  // values).
+  range?: string
+
+  // "up-arrow +2" - compare marker rendered after range (spec
+  // section 4); only emitted when the builder received a compare
+  // context.
+  delta?: string
+
+  deltaTone?: 'positive' | 'negative' | 'muted'
+
   tone?: 'default' | 'muted' | 'positive' | 'negative' | 'warning' | 'special'
 
   tier?: number
+
+  // Arbitrary token color for the value (e.g. '--rank-color-5' for a
+  // Pham/Chat text - rule: any grade/quality text carries its set
+  // color). tone/tier styles win when both are absent.
+  colorVar?: string
 }
 
 export interface TooltipSection {
@@ -65,7 +83,21 @@ export interface TechniqueTooltipContent {
 export interface GradedItemTooltipContent {
   kind: 'material' | 'pill' | 'talisman' | 'formation'
 
+  // FULL display name - composed "Chat - Name" where the item kind
+  // composes one (pills); materials carry their plain name.
   name: string
+
+  // Single title color (item-info-card spec section 2) - replaces
+  // per-segment colors; nameTone below overrides it for the max-rank
+  // rainbow.
+  nameColorVar?: string
+
+  // 'tien' => rainbow title (max-rank gradient), beats nameColorVar.
+  nameTone?: string
+
+  // Static SlotView header props bag (spec section 3) - see
+  // SlotTypes.ts.
+  slotPreview?: SlotPreviewProps
 
   imagePath?: string
 
@@ -73,9 +105,16 @@ export interface GradedItemTooltipContent {
 
   gradeKey?: string
 
-  // "Sở hữu: N" — CHỈ có ý nghĩa khi hiện trong túi đồ (có bag stack
-  // thật), undefined nếu hiện ở nơi khác (vd khi chưa sở hữu cái nào).
-  ownedLabel?: string
+  // Pham rank on the 10-step profession ramp (materials) - feeds the
+  // tooltip aura color via --rank-color-N when gradeKey is absent
+  // (2026-09-14 aura ruling).
+  gradeRank?: number
+
+  gradeLine?: string
+
+  // "So huu: N" - renders ONLY when > 0 (spec: never renders
+  // "So huu: 0"); undefined outside the bag surface.
+  ownedCount?: number
 
   description?: string
 
@@ -91,11 +130,11 @@ export interface EquipmentTooltipContent {
 
   name: string
 
-  // Workstream C (gameplay-ui-feedback-responsive-cleanup-plan.md §6) —
-  // tên ghép giữ màu RIÊNG cho từng segment (Rarity/Quality), thay vì
-  // tô toàn bộ tiêu đề theo 1 màu Quality duy nhất. `name` (chuỗi phẳng)
-  // vẫn giữ lại cho alt text/icon fallback.
-  nameSegments: NameSegment[]
+  nameColorVar?: string
+
+  nameTone?: string
+
+  slotPreview?: SlotPreviewProps
 
   imagePath?: string
 
@@ -103,11 +142,19 @@ export interface EquipmentTooltipContent {
 
   qualityKey: string
 
+  // "Canh gioi: {Pham} ({realm})" - the Pham axis rendered as the meta
+  // line under the title (2026-09-14 ruling). Replaces the old
+  // "Phan Loai" section rows.
+  gradeLine?: string
+
   description?: string
 
   sections: TooltipSection[]
 
-  advancedSections?: TooltipSection[]
+  // Paired compare card (spec section 4): the equipped counterpart's
+  // own single-card payload, built by the same builder with NO compare
+  // context - recursion stops at depth 1.
+  compareWith?: Omit<EquipmentTooltipContent, 'compareWith'>
 }
 
 // Tooltip Building (Động Phủ UI redesign) — công trình trong Home
@@ -130,12 +177,34 @@ export interface BuildingTooltipContent {
   isBuilt?: boolean
 }
 
+// Five Elements tooltip (2026-09-15 formation redesign) - hovering an
+// element medallion shows that element's own banner art as the
+// background (banner-{element}.png cut from the sprite sheet) instead
+// of the default InkNineSlice paper frame. Text sits on a separate
+// content layer with a fixed inset into the banner's clear paper zone
+// so the art never covers it.
+export interface ElementTooltipContent {
+  kind: 'element'
+
+  // 'primordial' = Hon Nguyen (taiji center) - the blank paper banner
+  // cut from the base of sheet 2; not an element, but shares the same
+  // banner mechanism.
+  element: ElementType | 'primordial'
+
+  // Accessible name only - banner art already carries the element's
+  // identity, so the title is NOT rendered (user ruling 2026-09-15).
+  title: string
+
+  description?: string
+}
+
 export type TooltipContent =
   | PlainTooltipContent
   | TechniqueTooltipContent
   | GradedItemTooltipContent
   | EquipmentTooltipContent
   | BuildingTooltipContent
+  | ElementTooltipContent
 
 // State module-level (không phải Pinia) — chỉ 1 tooltip hiển thị
 // tại 1 thời điểm trong toàn game, không cần theo dõi lịch sử/persist.

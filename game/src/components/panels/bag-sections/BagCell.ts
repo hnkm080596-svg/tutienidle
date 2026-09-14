@@ -11,6 +11,11 @@ export interface BagCell {
 
   label: string
 
+  // Accessible name override (item-info-card spec section 5b) - "Name, Pham"
+  // so the grade is readable without color; SlotView binds it onto
+  // aria-label in place of `label`.
+  accessibleLabel?: string
+
   description?: string
 
   amount?: number
@@ -45,7 +50,9 @@ export interface BagCell {
   // `icon`.
   icon?: string
 
-  // Tên ghép động, nhiều đoạn tô màu riêng (2026-08-15) — ưu tiên HƠN
-  // `label` nếu có, xem SlotView.vue's prop `nameSegments`.
+  // Composed name shown as the slot caption (2026-08-15) - wins over
+  // `label` when present, see SlotView.vue's prop `nameSegments`.
+  // Segments carry text only; name color lives on the tooltip payload
+  // (item-info-card refactor).
   nameSegments?: NameSegment[]
 }

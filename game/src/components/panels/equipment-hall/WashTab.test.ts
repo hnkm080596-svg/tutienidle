@@ -81,12 +81,13 @@ describe('WashTab — Tẩy Luyện', () => {
 
     expect(washSlots).toHaveLength(6)
 
-    // Slot weapon (đang mặc 'equipped') hiện tên item — 5 slot còn lại
-    // trống, dùng nhãn tên slot mặc định (Mũ/Giáp/Giày/Dây Chuyền/Nhẫn).
+    // The weapon slot (worn 'equipped') shows the item name + Pham
+    // suffix (accessibleLabel spec section 5b: "{name}, {grade}") - the
+    // other 5 slots are empty and use their default slot-name labels.
     const labels = Array.from(washSlots).map((el) => el.getAttribute('aria-label'))
 
-    expect(labels).toContain('Kiếm')
-    expect(labels.filter((label) => label === 'Kiếm')).toHaveLength(1)
+    expect(labels).toContain('Kiếm, Cửu Phẩm')
+    expect(labels.filter((label) => label === 'Kiếm, Cửu Phẩm')).toHaveLength(1)
 
     mounted.unmount()
   })

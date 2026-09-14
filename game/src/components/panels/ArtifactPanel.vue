@@ -15,7 +15,7 @@ import ArtifactExperienceBar from './artifact/ArtifactExperienceBar.vue'
 import ArtifactGradeSection from './artifact/ArtifactGradeSection.vue'
 import ArtifactPathCards from './artifact/ArtifactPathCards.vue'
 import { ARTIFACTS } from '@/data/artifact/Artifacts'
-import { ARTIFACT_ID_BY_CULTIVATION_PATH, ARTIFACT_GRADE_LABELS, ARTIFACT_PATH_ORDER } from '@/core/artifact/Artifact'
+import { ARTIFACT_ID_BY_CULTIVATION_PATH, ARTIFACT_GRADE_LABELS, ARTIFACT_GRADE_ORDER, ARTIFACT_PATH_ORDER } from '@/core/artifact/Artifact'
 import type { ArtifactPath } from '@/core/artifact/Artifact'
 import {
   DOAN_BAO_THACH_MATERIAL_ID,
@@ -73,6 +73,15 @@ const expStatus = computed(() =>
 
 const gradeLabel = computed(() => (artifact.value ? ARTIFACT_GRADE_LABELS[artifact.value.grade] : ''))
 
+// Artifact Pham is a 5-step axis — same ramp positions the Chat
+// 5-step uses (--rank-color-1/3/5/7/9) so grade text matches item
+// colors (user ruling: every Pham/Chat text carries its set color).
+const gradeColorVar = computed(() =>
+  artifact.value
+    ? `var(--rank-color-${ARTIFACT_GRADE_ORDER.indexOf(artifact.value.grade) * 2 + 1})`
+    : undefined,
+)
+
 const multiplierPercentLabel = computed(() =>
   artifact.value
     ? `×${formatStat('artifactGradeMultiplier', getArtifactGradeMultiplier(artifact.value.grade))}`
@@ -86,6 +95,12 @@ const upgradeCost = computed(() =>
 )
 
 const nextGradeLabel = computed(() => (nextGrade.value ? ARTIFACT_GRADE_LABELS[nextGrade.value] : undefined))
+
+const nextGradeColorVar = computed(() =>
+  nextGrade.value
+    ? `var(--rank-color-${ARTIFACT_GRADE_ORDER.indexOf(nextGrade.value) * 2 + 1})`
+    : undefined,
+)
 
 function onUpgrade() {
   if (!player.artifact) {
@@ -131,6 +146,7 @@ function close() {
         :name="definition.name"
         :cultivation-path-label="cultivationPathLabel"
         :grade-label="gradeLabel"
+        :grade-color-var="gradeColorVar"
       />
 
       <ArtifactExperienceBar
@@ -142,10 +158,12 @@ function close() {
 
       <ArtifactGradeSection
         :grade-label="gradeLabel"
+        :grade-color-var="gradeColorVar"
         :multiplier-percent-label="multiplierPercentLabel"
         :stone-amount="stoneAmount"
         :upgrade-cost="upgradeCost"
         :next-grade-label="nextGradeLabel"
+        :next-grade-color-var="nextGradeColorVar"
         :disabled="!canChange"
         @upgrade="onUpgrade"
       />

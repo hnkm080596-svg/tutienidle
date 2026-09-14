@@ -11,6 +11,7 @@ import { compareNumber, compareText, stableSort, withDirection } from '@/composa
 import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
+import { gradeLabel } from '@/core/presentation/labels'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import { compareProfessionGrades } from '@/core/profession/ProfessionGrade'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
@@ -67,6 +68,13 @@ const entries = computed<EquipmentEntry[]>(() => {
 
     const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
 
+    // Compare context (item-info-card spec section 4) - the equipped
+    // counterpart's template is resolved the same safe way as the
+    // candidate's; a registry miss just drops the compare pair.
+    const equippedTemplate = equippedComparison
+      ? gameManager.equipmentOps.getEquipmentTemplate(equippedComparison.itemId)
+      : undefined
+
     // Registry miss → hiển thị itemId thô thay vì chết cả màn hình
     // (pattern EquipmentHallPanel.vue:126 `template?.name ?? instance.itemId`).
     const displayName = template?.name ?? instance.itemId
@@ -106,6 +114,10 @@ const entries = computed<EquipmentEntry[]>(() => {
 
         label: displayName,
 
+        // spec section 5b - aria includes the Pham word (the seal is a
+        // decorative glyph; screen readers get the grade via this label).
+        accessibleLabel: `${displayName}, ${gradeLabel(instance.grade)}`,
+
         nameSegments,
 
         description: template?.description,
@@ -128,7 +140,14 @@ const entries = computed<EquipmentEntry[]>(() => {
               gameManager.affixRegistry,
               instance.equipped ? gameManager.equipmentOps.getSlotState(instance.slot) : null,
               gameManager.zoneRegistry,
-              equippedComparison,
+              equippedComparison && equippedTemplate
+                ? {
+                    instance: equippedComparison,
+                    template: equippedTemplate,
+                    slotState: gameManager.equipmentOps.getSlotState(equippedComparison.slot),
+                    mainStatRangeQuote: gameManager.equipmentSystem.quoteMainStatRange(equippedComparison, gameManager.equipmentRegistry),
+                  }
+                : undefined,
               gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
             )
           : undefined,
@@ -198,6 +217,7 @@ watch(
         class="bag-section__slot"
         :item="cell"
         :label="cell?.label"
+        :accessible-label="cell?.accessibleLabel"
         :name-segments="cell?.nameSegments"
         :description="cell?.description"
         :amount="cell?.amount"
@@ -246,5 +266,8 @@ watch(
 .bag-section__slot {
   width: 100%;
   aspect-ratio: 1 / 1;
+  /* Art lives on the SlotView `variant` prop (default `item` -
+     inventory art - here); consumers no longer override --slot-*
+     art vars directly. */
 }
 </style>

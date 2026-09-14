@@ -2,9 +2,9 @@
 import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { useNotificationStore } from '@/stores/notification'
 import type { NotificationKind } from '@/core/notification/NotificationEvent'
-import { isMaxRankTone } from '@/core/profession/slotRank'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { AudioManager, type SoundId } from '@/core/audio/AudioManager'
+import { isMaxRankTone } from '@/core/profession/slotRank'
 
 const notification = useNotificationStore()
 
@@ -66,6 +66,14 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateMaxVisible)
 })
+
+// The "Chat - Name" naming model (2026-09-14) embeds the dash inside the
+// composed name ("Chat - Name") - strip the prefix when deriving a
+// monogram so the glyph starts with the item's own letter.
+function lastNameText(name: string): string {
+  const dashIndex = name.indexOf(' - ')
+  return dashIndex === -1 ? name : name.slice(dashIndex + 3)
+}
 </script>
 
 <template>
@@ -85,12 +93,12 @@ onBeforeUnmount(() => {
           <button
             type="button"
             class="toast-item__dismiss"
-            :aria-label="`Đóng thông báo: ${toast.loot?.nameSegments.at(-1)?.text ?? toast.message ?? ''}`"
+            :aria-label="`Đóng thông báo: ${toast.loot ? toast.loot.name : toast.message ?? ''}`"
             @click="notification.dismiss(toast.id)"
           >×</button>
           <template v-if="toast.loot">
             <div class="toast-item__icon-shell">
-              <span class="toast-item__icon-fallback">{{ toast.loot.nameSegments.at(-1)?.text.charAt(0) }}</span>
+              <span class="toast-item__icon-fallback">{{ lastNameText(toast.loot.name).charAt(0) }}</span>
               <img
                 v-if="toast.loot.icon"
                 class="toast-item__icon"
@@ -101,14 +109,15 @@ onBeforeUnmount(() => {
             </div>
             <div class="toast-item__content">
               <span class="toast-item__eyebrow">Nhận được</span>
+              <!-- Single-color name + muted grade suffix (item-info-card
+                   spec section 2): 'tien' tone upgrades to the rainbow
+                   class. -->
               <span class="toast-item__name">
-                <template v-for="(segment, index) in toast.loot.nameSegments" :key="`${index}-${segment.text}`">
-                  <span v-if="index > 0" class="toast-item__separator"> · </span>
-                  <span
-                    :class="{ 'toast-item__segment--max-rank': isMaxRankTone(segment.tone) }"
-                    :style="segment.colorVar ? { color: `var(${segment.colorVar})` } : undefined"
-                  >{{ segment.text }}</span>
-                </template>
+                <span
+                  :class="{ 'toast-item__segment--max-rank': isMaxRankTone(toast.loot.nameTone) }"
+                  :style="toast.loot.nameColorVar && !isMaxRankTone(toast.loot.nameTone) ? { color: `var(${toast.loot.nameColorVar})` } : undefined"
+                >{{ toast.loot.name }}</span>
+                <span v-if="toast.loot.gradeLabel" class="toast-item__grade">· {{ toast.loot.gradeLabel }}</span>
               </span>
             </div>
             <strong v-if="toast.loot.amountLabel" class="toast-item__amount">{{ toast.loot.amountLabel }}</strong>
@@ -238,12 +247,15 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-.toast-item__separator {
+/* Muted Pham suffix after the loot name (item-info-card spec section 2). */
+.toast-item__grade {
   color: var(--paper-text-muted);
+  font-weight: 400;
 }
 
+/* Max-rank (tien) name - rainbow gradient text, replaces nameColorVar. */
 .toast-item__segment--max-rank {
-  color: transparent !important;
+  color: transparent;
   background: var(--rank-gradient-10);
   background-clip: text;
   -webkit-background-clip: text;

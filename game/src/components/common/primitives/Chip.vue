@@ -62,11 +62,13 @@ const isTab = computed(() => attrs.role === 'tab')
   border-color: var(--paper-line);
 }
 
-/* Tab "mở" — sáng nhất trong nhóm + viền đồng, nổi hẳn khỏi nền panel
-   thay vì hoà lẫn màu trang. */
+/* "Open" tab - brightest in the group + brass border, lifted clear off
+   the panel background instead of blending into the page color.
+   color-mix instead of hard hex + --paper-text keeps the chip correct
+   when the drawer remaps paper -> surface (.ink-drawer). */
 .chip.is-active {
-  background: var(--chip-active-bg, linear-gradient(175deg, var(--paper-50), #fffdf7));
-  color: var(--ink-950);
+  background: var(--chip-active-bg, linear-gradient(175deg, var(--paper-50), color-mix(in srgb, var(--paper-50) 82%, white)));
+  color: var(--paper-text);
   border-color: var(--mineral-gold);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--mineral-gold) 35%, transparent),
