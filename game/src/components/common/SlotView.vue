@@ -36,8 +36,9 @@ const props = defineProps<{
 
   amount?: number
 
-  /** Tên ghép động nhiều đoạn tô màu riêng (Phẩm/Set/Địa Giới) — ưu
-   * tiên HƠN `label` (chuỗi đơn) nếu có truyền vào. */
+  /** Composed name segments — text structure only (item-info-card spec
+   * 2026-09-14); the single display color lives on the tooltip payload.
+   * Takes priority over the plain `label` when provided. */
   nameSegments?: NameSegment[]
 
   /** Normalized rank 1-10 (professionGradeRank, see
@@ -277,7 +278,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
       <span v-if="nameSegments && nameSegments.length > 0" class="slot-view__caption">
         <template v-for="(segment, index) in nameSegments" :key="index">
           <span v-if="index > 0" class="slot-view__caption-dot"> · </span>
-          <span :data-name-tone="segment.tone" :style="{ color: segment.colorVar ? `var(${segment.colorVar})` : undefined }">{{ segment.text }}</span>
+          <span>{{ segment.text }}</span>
         </template>
       </span>
 
@@ -701,14 +702,6 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   text-overflow: ellipsis;
   z-index: 6;
   pointer-events: none;
-}
-
-.slot-view__caption [data-name-tone='tien'] {
-  color: transparent !important;
-  background: var(--rank-gradient-10);
-  background-clip: text;
-  -webkit-background-clip: text;
-  font-weight: 700;
 }
 
 /* ============================================================

@@ -2,7 +2,6 @@
 import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { useNotificationStore } from '@/stores/notification'
 import type { NotificationKind } from '@/core/notification/NotificationEvent'
-import { isMaxRankTone } from '@/core/profession/slotRank'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { AudioManager, type SoundId } from '@/core/audio/AudioManager'
 
@@ -66,6 +65,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateMaxVisible)
 })
+
+// The "Chat - Name" naming model (2026-09-14) embeds the dash inside the
+// name segment ("- Thanh Van Kiem") — strip it when deriving a monogram
+// or aria-label so neither starts with '-'.
+function lastNameText(segments: { text: string }[]): string {
+  return segments.at(-1)?.text.replace(/^-\s*/, '') ?? ''
+}
 </script>
 
 <template>
@@ -85,12 +91,12 @@ onBeforeUnmount(() => {
           <button
             type="button"
             class="toast-item__dismiss"
-            :aria-label="`Đóng thông báo: ${toast.loot?.nameSegments.at(-1)?.text ?? toast.message ?? ''}`"
+            :aria-label="`Đóng thông báo: ${toast.loot ? lastNameText(toast.loot.nameSegments) : toast.message ?? ''}`"
             @click="notification.dismiss(toast.id)"
           >×</button>
           <template v-if="toast.loot">
             <div class="toast-item__icon-shell">
-              <span class="toast-item__icon-fallback">{{ toast.loot.nameSegments.at(-1)?.text.charAt(0) }}</span>
+              <span class="toast-item__icon-fallback">{{ lastNameText(toast.loot.nameSegments).charAt(0) }}</span>
               <img
                 v-if="toast.loot.icon"
                 class="toast-item__icon"
@@ -101,15 +107,10 @@ onBeforeUnmount(() => {
             </div>
             <div class="toast-item__content">
               <span class="toast-item__eyebrow">Nhận được</span>
-              <span class="toast-item__name">
-                <template v-for="(segment, index) in toast.loot.nameSegments" :key="`${index}-${segment.text}`">
-                  <span v-if="index > 0" class="toast-item__separator"> · </span>
-                  <span
-                    :class="{ 'toast-item__segment--max-rank': isMaxRankTone(segment.tone) }"
-                    :style="segment.colorVar ? { color: `var(${segment.colorVar})` } : undefined"
-                  >{{ segment.text }}</span>
-                </template>
-              </span>
+              <!-- Plain joined name for now (item-info-card spec
+                   2026-09-14, transitional) — a later task replaces the
+                   payload with name/nameColorVar/gradeLabel. -->
+              <span class="toast-item__name">{{ toast.loot.nameSegments.map((s) => s.text).join(' ') }}</span>
             </div>
             <strong v-if="toast.loot.amountLabel" class="toast-item__amount">{{ toast.loot.amountLabel }}</strong>
           </template>
@@ -236,17 +237,6 @@ onBeforeUnmount(() => {
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.toast-item__separator {
-  color: var(--paper-text-muted);
-}
-
-.toast-item__segment--max-rank {
-  color: transparent !important;
-  background: var(--rank-gradient-10);
-  background-clip: text;
-  -webkit-background-clip: text;
 }
 
 .toast-item__amount {

@@ -97,11 +97,14 @@ const AGE_LABELS = computed<Record<string, string>>(() => ({
 function buildTooltip(material: Material, owned: number): GradedItemTooltipContent {
   const realmId = material.profession?.realmId
   const realmText = realmId ? REALM_LABELS.value[realmId] : undefined
+  const rank = professionRankOf(material)
 
   const rows = [
     { label: t('panels.bag.tooltip.category'), value: CATEGORY_LABELS.value[material.category] },
     { label: t('panels.bag.tooltip.source'), value: SOURCE_LABELS.value[material.sourceType] },
-    ...(realmText ? [{ label: t('panels.bag.tooltip.realm'), value: realmText }] : []),
+    // Realm text IS the material's Pham axis — carry its rank color
+    // (user ruling: every Pham/Chat text shows in its set color).
+    ...(realmText ? [{ label: t('panels.bag.tooltip.realm'), value: realmText, colorVar: rank !== undefined ? `--rank-color-${rank}` : undefined }] : []),
   ]
 
   if (material.profession?.age) {
@@ -119,6 +122,9 @@ function buildTooltip(material: Material, owned: number): GradedItemTooltipConte
     kind: 'material',
     name: material.name,
     imagePath: material.icon,
+    // Pham rank (10-step ramp) — feeds the tooltip aura color; materials
+    // have no Chat axis so gradeKey stays unset (2026-09-14 ruling).
+    gradeRank: professionRankOf(material),
     ownedLabel: t('panels.bag.tooltip.owned', { count: owned }),
     description: material.description,
     sections: [{ label: t('panels.bag.tooltip.section'), rows }],
@@ -161,17 +167,11 @@ function professionRankOf(material: Material): number | undefined {
   return grade ? professionGradeRank(grade) : undefined
 }
 
-// Tên material tô màu phẩm realm qua NameSegment — dùng cho mọi ô có
-// material (single + family).
-function materialNameSegments(material: Material, trailing?: { text: string; colorVar: string }) {
-  const rank = professionRankOf(material)
-
-  const segments = [
-    {
-      text: material.name,
-      colorVar: rank === undefined ? undefined : `--rank-color-${rank}`,
-    },
-  ]
+// Material name segments — text structure only (item-info-card spec
+// 2026-09-14); display color lives on the tooltip payload. Used for
+// every material cell (single + family).
+function materialNameSegments(material: Material, trailing?: { text: string }) {
+  const segments = [{ text: material.name }]
 
   return trailing ? [...segments, trailing] : segments
 }
@@ -280,10 +280,7 @@ function familyCell(item: FilteredMaterial): BagCell {
 
     rarityRankScale: 10,
 
-    nameSegments: [
-      { text: baseLabel, colorVar: baseRank === undefined ? undefined : `--rank-color-${baseRank}` },
-      ...(badge ? [{ text: badge, colorVar: '--text-muted' }] : []),
-    ],
+    nameSegments: [{ text: baseLabel }, ...(badge ? [{ text: badge }] : [])],
   }
 }
 

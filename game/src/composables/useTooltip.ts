@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import type { NameSegment } from '@/core/item/NameSegment'
+import type { ElementType } from '@/core/element/ElementType'
 
 // Dạng cũ, DÙNG CHUNG cho tuyệt đại đa số v-tooltip hiện có trong
 // game (chỉ tiêu đề + mô tả 1 dòng) — `kind` optional để mọi object
@@ -23,6 +24,11 @@ export interface TooltipStatRow {
   tone?: 'default' | 'muted' | 'positive' | 'negative' | 'warning' | 'special'
 
   tier?: number
+
+  // Arbitrary token color for the value (e.g. '--rank-color-5' for a
+  // Pham/Chat text — rule: any grade/quality text carries its set
+  // color). tone/tier styles win when both are absent.
+  colorVar?: string
 }
 
 export interface TooltipSection {
@@ -73,6 +79,21 @@ export interface GradedItemTooltipContent {
 
   gradeKey?: string
 
+  // Pham rank on the 10-step profession ramp (materials) — feeds the
+  // tooltip aura color via --rank-color-N when gradeKey is absent
+  // (2026-09-14 aura ruling).
+  gradeRank?: number
+
+  // "{Chat} - {Name}" title segments — text structure only
+  // (item-info-card spec 2026-09-14); the single display color is the
+  // payload's nameColorVar (added by the spec's payload task).
+  // Optional so existing callers keep the plain-name header.
+  nameSegments?: NameSegment[]
+
+  gradeLine?: string
+
+  gradeLineColorVar?: string
+
   // "Sở hữu: N" — CHỈ có ý nghĩa khi hiện trong túi đồ (có bag stack
   // thật), undefined nếu hiện ở nơi khác (vd khi chưa sở hữu cái nào).
   ownedLabel?: string
@@ -91,10 +112,11 @@ export interface EquipmentTooltipContent {
 
   name: string
 
-  // Workstream C (gameplay-ui-feedback-responsive-cleanup-plan.md §6) —
-  // tên ghép giữ màu RIÊNG cho từng segment (Rarity/Quality), thay vì
-  // tô toàn bộ tiêu đề theo 1 màu Quality duy nhất. `name` (chuỗi phẳng)
-  // vẫn giữ lại cho alt text/icon fallback.
+  // Composed "{Chat} - {Name}" title segments — text structure only
+  // (item-info-card spec 2026-09-14); the single display color is the
+  // payload's nameColorVar (added by the spec's payload task). `name`
+  // (flat string) stays for alt text/icon fallback and the plain
+  // title render.
   nameSegments: NameSegment[]
 
   imagePath?: string
@@ -102,6 +124,15 @@ export interface EquipmentTooltipContent {
   slotLabel: string
 
   qualityKey: string
+
+  // "Canh gioi: {Pham} ({realm})" — the Pham axis rendered as the meta
+  // line under the title (2026-09-14 ruling); Chat stays on the name
+  // segments. Replaces the old "Phan Loai" section rows.
+  gradeLine?: string
+
+  // Pham color var for gradeLine (e.g. '--rank-color-3') — keeps the
+  // line on the same ramp as the slot underlay.
+  gradeLineColorVar?: string
 
   description?: string
 
@@ -130,12 +161,32 @@ export interface BuildingTooltipContent {
   isBuilt?: boolean
 }
 
+// Tooltip Ngũ Hành (2026-09-15 formation redesign) — hover vào
+// medallion hành hiện banner art riêng của hành đó làm nền
+// (banner-{element}.png trích từ sprite sheet), thay khung giấy
+// InkNineSlice mặc định. Text nằm trên lớp content riêng với inset
+// định sẵn trong vùng giấy của banner — không bị art đè.
+export interface ElementTooltipContent {
+  kind: 'element'
+
+  // 'primordial' = Hỗn Nguyên (taiji tâm) — banner giấy trống trích từ
+  // đáy sheet 2, không phải hành nhưng dùng chung cơ chế banner.
+  element: ElementType | 'primordial'
+
+  // Accessible name only — banner art already carries the element's
+  // identity, so the title is NOT rendered (user ruling 2026-09-15).
+  title: string
+
+  description?: string
+}
+
 export type TooltipContent =
   | PlainTooltipContent
   | TechniqueTooltipContent
   | GradedItemTooltipContent
   | EquipmentTooltipContent
   | BuildingTooltipContent
+  | ElementTooltipContent
 
 // State module-level (không phải Pinia) — chỉ 1 tooltip hiển thị
 // tại 1 thời điểm trong toàn game, không cần theo dõi lịch sử/persist.

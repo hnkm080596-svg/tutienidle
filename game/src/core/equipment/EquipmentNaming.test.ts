@@ -4,12 +4,10 @@ import { makeInstance } from './EquipmentInstance.fixture'
 import type { Equipment } from './Equipment'
 import { ZoneRegistry } from '../stage/ZoneRegistry'
 
-// Rework P6 (item-grade-quality-rework, Task 21 fix round) — code review
-// flagged composeEquipmentNameSegments as having only INDIRECT coverage
-// (useEquipmentTooltip.test.ts's tooltip.name.toContain('Địa') check,
-// which doesn't verify segment count/order/colorVar/tone). This file adds
-// direct coverage of the 3-segment shape [grade, quality, name] this
-// function actually produces (verified against the current implementation).
+// Naming rework (2026-09-14 user ruling + item-info-card spec):
+// segment shape [Chat, name] — text structure ONLY. The display color
+// moved to the tooltip/toast payload (nameColorVar), and the Pham
+// label renders as the tooltip "Canh gioi" line, not a name segment.
 
 const TEMPLATE: Equipment = {
   id: 'test_sword',
@@ -25,73 +23,40 @@ function setup() {
 }
 
 describe('composeEquipmentNameSegments', () => {
-  it('cuu_pham (bậc thấp nhất) + hoang (chất thấp nhất) — 3 segment [grade, quality, name], mỗi trục 1 namespace màu riêng', () => {
+  it('cuu_pham (bậc thấp nhất) + hoang (chất thấp nhất) — 2 segment {text} [Chat ngắn, tên]', () => {
     const { zoneRegistry } = setup()
     const instance = makeInstance({ grade: 'cuu_pham', quality: 'hoang' })
 
     const segments = composeEquipmentNameSegments(instance, TEMPLATE, zoneRegistry)
 
-    expect(segments).toHaveLength(3)
-
-    expect(segments[0]).toMatchObject({
-      text: 'Cửu Phẩm',
-      colorVar: '--rank-color-1',
-      tone: 'cuu_pham',
-    })
-
-    // Fix 2 (final review) — quality dùng --grade-* (namespace riêng),
-    // KHÔNG còn --rank-color-N như grade segment ở trên (spec §5.8).
-    expect(segments[1]).toMatchObject({
-      text: 'Hoàng Chất',
-      colorVar: '--grade-hoang',
-      tone: 'hoang',
-    })
-
-    expect(segments[2]).toMatchObject({ text: 'Thanh Vân Kiếm' })
+    expect(segments).toEqual([
+      { text: 'Hoàng' },
+      { text: '- Thanh Vân Kiếm' },
+    ])
   })
 
-  it('tien_pham (bậc cao nhất, rank 10) + tien (chất cao nhất) — colorVar tách đúng namespace riêng, không lẫn nhau', () => {
+  it('tien_pham (bậc cao nhất, rank 10) + tien (chất cao nhất) — cùng shape {text}, không đổi', () => {
     const { zoneRegistry } = setup()
     const instance = makeInstance({ grade: 'tien_pham', quality: 'tien' })
 
     const segments = composeEquipmentNameSegments(instance, TEMPLATE, zoneRegistry)
 
-    expect(segments).toHaveLength(3)
-
-    expect(segments[0]).toMatchObject({
-      text: 'Tiên Phẩm',
-      colorVar: '--rank-color-10',
-      tone: 'tien_pham',
-    })
-
-    expect(segments[1]).toMatchObject({
-      text: 'Tiên Chất',
-      colorVar: '--grade-tien',
-      tone: 'tien',
-    })
+    expect(segments).toEqual([
+      { text: 'Tiên' },
+      { text: '- Thanh Vân Kiếm' },
+    ])
   })
 
-  it('trường hợp lệch bậc (grade cao, quality thấp) — mỗi segment tô màu theo ĐÚNG namespace của trục nó, không rơi vào thang của trục kia', () => {
+  it('trường hợp lệch bậc (grade cao, quality thấp) — Chat theo quality, tên theo template', () => {
     const { zoneRegistry } = setup()
-    // Phẩm nghề cao (ngu_pham, rank 5 trên thang 10 bậc, --rank-color-5)
-    // nhưng Chất thấp (huyen, --grade-huyen) — 2 trục độc lập, 2 namespace
-    // màu khác nhau, không suy ra lẫn nhau (đúng ý đồ tách trục của
-    // Task 20/21 + Fix 2 final review).
     const instance = makeInstance({ grade: 'ngu_pham', quality: 'huyen' })
 
     const segments = composeEquipmentNameSegments(instance, TEMPLATE, zoneRegistry)
 
-    expect(segments[0]).toMatchObject({
-      text: 'Ngũ Phẩm',
-      colorVar: '--rank-color-5',
-      tone: 'ngu_pham',
-    })
-
-    expect(segments[1]).toMatchObject({
-      text: 'Huyền Chất',
-      colorVar: '--grade-huyen',
-      tone: 'huyen',
-    })
+    expect(segments).toEqual([
+      { text: 'Huyền' },
+      { text: '- Thanh Vân Kiếm' },
+    ])
   })
 
   it('ghép tiền tố Địa Giới khi instance có zoneId đã đăng ký trong ZoneRegistry', () => {
@@ -101,13 +66,13 @@ describe('composeEquipmentNameSegments', () => {
 
     const segments = composeEquipmentNameSegments(instance, TEMPLATE, zoneRegistry)
 
-    expect(segments[2]?.text).toBe('Thanh Vân Thanh Vân Kiếm')
+    expect(segments[1]?.text).toBe('- Thanh Vân Thanh Vân Kiếm')
   })
 
-  it('composeEquipmentDisplayName nối cả 3 segment bằng " · "', () => {
+  it('composeEquipmentDisplayName nối 2 segment bằng khoảng trắng → "Hoàng - Thanh Vân Kiếm"', () => {
     const { zoneRegistry } = setup()
     const instance = makeInstance({ grade: 'cuu_pham', quality: 'hoang' })
 
-    expect(composeEquipmentDisplayName(instance, TEMPLATE, zoneRegistry)).toBe('Cửu Phẩm · Hoàng Chất · Thanh Vân Kiếm')
+    expect(composeEquipmentDisplayName(instance, TEMPLATE, zoneRegistry)).toBe('Hoàng - Thanh Vân Kiếm')
   })
 })

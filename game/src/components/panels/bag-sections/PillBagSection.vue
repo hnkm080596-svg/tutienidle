@@ -15,8 +15,10 @@ import type { Pill } from '@/core/pill/Pill'
 import type { BagCell } from './BagCell'
 import type { GradedItemTooltipContent, TooltipSection } from '@/composables/useTooltip'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
-import { ITEM_GRADE_LABELS } from '@/core/item/ItemGrade'
-import { compareProfessionGrades, PROFESSION_GRADE_NAMES } from '@/core/profession/ProfessionGrade'
+import { ITEM_GRADE_ORDER, composeItemGradeNameSegments } from '@/core/item/ItemGrade'
+import { compareProfessionGrades, realmFromGrade } from '@/core/profession/ProfessionGrade'
+import { professionGradeRank } from '@/core/profession/slotRank'
+import { gradeLabel, realmLabel } from '@/core/presentation/labels'
 
 const ui = useUiStore()
 
@@ -117,9 +119,20 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 
     imagePath: pill.icon,
 
-    gradeLabel: pill.professionGrade
-      ? PROFESSION_GRADE_NAMES[pill.professionGrade]
-      : ITEM_GRADE_LABELS[pill.grade],
+    // Same naming model as equipment slots (2026-09-14): title =
+    // "{Chat} - {Name}", the Pham axis drops to the "Canh gioi" meta
+    // line. Structure only — the display color lives on the payload
+    // (item-info-card spec). The old gradeLabel badge is redundant
+    // with both, so it is gone.
+    nameSegments: composeItemGradeNameSegments(pill.name, pill.grade),
+
+    gradeLine: pill.professionGrade
+      ? `Cảnh giới: ${gradeLabel(pill.professionGrade)} (${realmLabel(realmFromGrade(pill.professionGrade))})`
+      : undefined,
+
+    gradeLineColorVar: pill.professionGrade
+      ? `--rank-color-${professionGradeRank(pill.professionGrade)}`
+      : undefined,
 
     gradeKey: pill.grade,
 
@@ -218,16 +231,18 @@ const entries = computed<PillEntry[]>(() => {
 
       label: stack.pill.name,
 
-      nameSegments: [
-        {
-          text: stack.pill.professionGrade
-            ? PROFESSION_GRADE_NAMES[stack.pill.professionGrade]
-            : ITEM_GRADE_LABELS[stack.pill.grade],
-          colorVar: `--grade-${stack.pill.grade}`,
-          tone: stack.pill.grade,
-        },
-        { text: stack.pill.name },
-      ],
+      // "{Chat} - {Name}" — text structure only (item-info-card spec
+      // 2026-09-14); display color lives on the tooltip payload.
+      nameSegments: composeItemGradeNameSegments(stack.pill.name, stack.pill.grade),
+
+      // Unified slot language: Pham -> underlay, Chat (grade) -> frame/
+      // aura. Pills now feed BOTH axes like equipment (rank >= dia gets
+      // the quality beam).
+      equipmentQualityRank: stack.pill.professionGrade
+        ? professionGradeRank(stack.pill.professionGrade)
+        : undefined,
+
+      rarityRank: ITEM_GRADE_ORDER.indexOf(stack.pill.grade) + 1,
 
       description: stack.pill.description,
 
@@ -341,6 +356,8 @@ const activeTimedEffects = computed(() => {
         :item="cell"
         :label="cell?.label"
         :name-segments="cell?.nameSegments"
+        :equipment-quality-rank="cell?.equipmentQualityRank"
+        :rarity-rank="cell?.rarityRank"
         :description="cell?.description"
         :amount="cell?.amount"
         :tooltip="cell?.tooltip"

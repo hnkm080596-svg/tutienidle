@@ -472,8 +472,7 @@ export class BattleLootSystem {
         amountLabel: '+1',
         // Fix 2 follow-up (final review, optional minor) — dùng
         // --grade-${quality} thay vì tự tính lại rank-color-N (dup logic
-        // ITEM_QUALITY_ORDER.indexOf), nhất quán với quality segment của
-        // composeEquipmentNameSegments.
+        // ITEM_QUALITY_ORDER.indexOf).
         accentColorVar: `--grade-${instance.quality}`,
       })
       this.addBattleRewardItem('equipment', template.id, template.name, 1)
