@@ -106,6 +106,13 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
     .map((instance) => {
       const template = gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)
 
+      // Compare context (item-info-card spec §4) — candidates are always
+      // unequipped, so the counterpart is whatever is worn in that slot.
+      const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
+      const equippedTemplate = equippedComparison
+        ? gameManager.equipmentOps.getEquipmentTemplate(equippedComparison.itemId)
+        : undefined
+
       return {
         instanceId: instance.instanceId,
 
@@ -127,9 +134,19 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
               instance,
               template,
               gameManager.affixRegistry,
-              gameManager.equipmentOps.getSlotState(instance.slot),
+              // Candidates are unequipped — the slot enhance level belongs
+              // to the worn item, never to this card (null, not
+              // getSlotState(instance.slot)).
+              null,
               gameManager.zoneRegistry,
-              undefined,
+              equippedComparison && equippedTemplate
+                ? {
+                    instance: equippedComparison,
+                    template: equippedTemplate,
+                    slotState: gameManager.equipmentOps.getSlotState(equippedComparison.slot),
+                    mainStatRangeQuote: gameManager.equipmentSystem.quoteMainStatRange(equippedComparison, gameManager.equipmentRegistry),
+                  }
+                : undefined,
               gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
             )
           : undefined,
@@ -223,7 +240,12 @@ function doDissolve() {
       <select v-model="dissolveFilterGrade">
         <option value="any">{{ t('panels.equipmentHall.select.anyProfessionGrade') }}</option>
 
-        <option v-for="grade in PROFESSION_GRADE_ORDER" :key="grade" :value="grade">
+        <option
+          v-for="grade in PROFESSION_GRADE_ORDER"
+          :key="grade"
+          :value="grade"
+          :style="{ color: `var(--rank-color-${professionGradeRank(grade)})` }"
+        >
           {{ PROFESSION_GRADE_NAMES[grade] }}
         </option>
       </select>
@@ -233,7 +255,12 @@ function doDissolve() {
       <select v-model="dissolveFilterQuality">
         <option value="any">{{ t('panels.equipmentHall.select.anyQuality') }}</option>
 
-        <option v-for="quality in ITEM_QUALITY_ORDER" :key="quality" :value="quality">
+        <option
+          v-for="quality in ITEM_QUALITY_ORDER"
+          :key="quality"
+          :value="quality"
+          :style="{ color: `var(--grade-${quality})` }"
+        >
           {{ equipmentQualityLabel(quality) }}
         </option>
       </select>
