@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 /**
  * UI/UX QA remediation (Task 10, 2026-09-07) — reduced motion: với

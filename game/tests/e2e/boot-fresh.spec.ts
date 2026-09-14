@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 /**
  * E2E lifecycle spec 1/3 (tech-debt-test-coverage-plan.md §3.3) — boot
