@@ -267,7 +267,7 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, BUFF_REGISTRY)
 
     expect(targetBuffs.getActiveIds()).toEqual(['troi_chan'])
-    expect(targetBuffs.isRooted()).toBe(true)
+    expect(targetBuffs.isRooted('target')).toBe(true)
 
     // Turn-based conversion (2026-09-04 policy: seconds -> turns, number
     // preserved): troi_chan duration 2.5 turns, extend adds 0.5 × 2.5

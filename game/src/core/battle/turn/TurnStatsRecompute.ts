@@ -5,7 +5,10 @@
 // set (passive stacks, persistent pool, timed/socket mods) supplied by the
 // battle ops provider — see TurnBattleSystem.liveStatModifiers. The provider
 // returns modifiers only; this function stays the single resolved->effective
-// assembly site (calculateEffectiveStats, no attribute re-derivation).
+// assembly site (calculateEffectiveStats — M9: live moves of the 5 main
+// stats additionally derive their DELTA into the attribute-derived stats,
+// so e.g. a live attunement stack grows elemental power mid-battle without
+// double-deriving the resolved base).
 import type { Stats } from '../../stats/StatBlock'
 import { calculateEffectiveStats, type StatModifier } from '../../stats/StatCalculator'
 import type { BuffPool } from '../../buff/BuffPool'

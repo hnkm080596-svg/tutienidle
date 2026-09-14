@@ -768,7 +768,8 @@ export class TurnBattleSystem {
     if (isCharging) {
       ccBlocked = false
     } else {
-      const hardCcActive = actorBuffSystem.isStunned() || actorBuffSystem.isFrozen()
+      const hardCcActive =
+        actorBuffSystem.isStunned(actor.entity.id) || actorBuffSystem.isFrozen(actor.entity.id)
 
       if (hardCcActive && actor.consecutiveHardCcTurns >= 3) {
         actor.buffs.clearCcEffects()
@@ -1203,7 +1204,10 @@ export class TurnBattleSystem {
           }
 
           if (this.registry) {
-            new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
+            // ARCH-009 (M9) — proc definitions are read from the ACTOR's
+            // pool, but the resulting buff belongs to the HIT VICTIM's
+            // pool (sourceId = actor, targetId = victim).
+            new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry)
 
             // Action Playback Task 5 — onImpactLanded counter trigger trên
             // TARGET bị hit; queuesFollowUp → battle.queuedFollowUpActorId.

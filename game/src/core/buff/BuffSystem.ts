@@ -8,6 +8,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import { BuffPool } from './BuffPool'
 import type {
   Buff,
+  BuffCcEffect,
   BuffDefinition,
   BuffEffectTemplate,
   BuffDefinitionCatalog,
@@ -360,16 +361,33 @@ export class BuffSystem {
     }
   }
 
-  isStunned(): boolean {
-    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'stun'))
+  /**
+   * ARCH-009 (M9) — target-scoped CC queries. A buff's cc effect applies
+   * to buff.targetId, NOT to the pool holder: after the proc-routing fix
+   * every buff lands in its victim's pool, but a misrouted/legacy instance
+   * whose targetId points elsewhere must not control this holder. Callers
+   * pass the entity id they are asking about.
+   */
+  isStunned(targetId: string): boolean {
+    return this.hasActiveCc(targetId, 'stun')
   }
 
-  isFrozen(): boolean {
-    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'freeze'))
+  isFrozen(targetId: string): boolean {
+    return this.hasActiveCc(targetId, 'freeze')
   }
 
-  isRooted(): boolean {
-    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'root'))
+  isRooted(targetId: string): boolean {
+    return this.hasActiveCc(targetId, 'root')
+  }
+
+  private hasActiveCc(targetId: string, ccEffect: BuffCcEffect): boolean {
+    return this.pool
+      .getAll()
+      .some(
+        (buff) =>
+          buff.targetId === targetId &&
+          buff.effects.some((effect) => effect.type === 'cc' && effect.ccEffect === ccEffect),
+      )
   }
 
   getActiveModifiers(): StatModifier[] {
@@ -394,12 +412,26 @@ export class BuffSystem {
     return modifiers
   }
 
-  rollOnHitEffects(source: CombatEntity, target: CombatEntity, registry: BuffDefinitionCatalog) {
+  /**
+   * ARCH-009 (M9) — proc'd effects belong to the HIT VICTIM's pool, not
+   * the holder's. `this.pool` only supplies the holder's proc definitions;
+   * the resulting buff applies through `targetBuffs` so its targetId is
+   * the victim and it ticks/cc's on the victim's side. sourceId stays the
+   * entity that landed the hit (`source`).
+   */
+  rollOnHitEffects(
+    source: CombatEntity,
+    target: CombatEntity,
+    targetBuffs: BuffPool,
+    registry: BuffDefinitionCatalog,
+  ) {
+    const targetBuffSystem = new BuffSystem(targetBuffs)
+
     for (const buff of this.pool.getAll()) {
       for (const effect of buff.effects) {
         if (effect.type === 'onHitProc' && Math.random() < effect.chance) {
           const definition = registry.get(effect.appliesBuffId)
-          this.apply(definition, source, target, registry)
+          targetBuffSystem.apply(definition, source, target, registry)
         }
       }
     }

@@ -9,6 +9,16 @@ import type { ElementType } from './ElementType'
  * nền, hoặc sau này nhiều hành/trận theo kế hoạch gộp path) — engine
  * chỉ cần 2 ailment hành khác nhau CÙNG có mặt trên target, bất kể
  * nguồn nào áp ra chúng.
+ *
+ * ARCH-009 (M9) — consumption contract: a reaction consumes the EXACT
+ * ingredient instances that matched — the just-applied instance
+ * (newBuffId, triggering source) plus the matched existing instance by
+ * its own (id, sourceId). Ingredient identity is per-source: a 'bong'
+ * applied by the player and a 'bong' applied by a companion are two
+ * distinct ingredients. When several sources supply a valid existing
+ * ingredient, the OLDEST applied instance is consumed (buff pool
+ * insertion order), so one fire DoT can never be spent by two different
+ * water hits.
  */
 export interface ElementReactionDefinition {
   name: string
