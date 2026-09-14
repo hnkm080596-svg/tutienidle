@@ -17,7 +17,6 @@ function entity(id: string, x: number, row: number, hp = 100): CombatEntity {
     currentHp: hp,
     maxHp: 100,
     alive: true,
-    stats: { attackRange: 2 },
   } as unknown as CombatEntity
 }
 

@@ -307,9 +307,11 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
 
     const modifiers = sourceBuffs.getActiveModifiers()
 
-    expect(modifiers).toHaveLength(2)
+    // Task 3 (D18-retire): doc_the's poisonRecoveryPercent modifier
+    // retired with the stat — only Sát Thương Độc remains; the heal
+    // half returns as a Task-4 buff-trigger query.
+    expect(modifiers).toHaveLength(1)
     expect(modifiers).toContainEqual(expect.objectContaining({ stat: 'ailmentPotencyPercent', percent: 0.05, stacks: 1 }))
-    expect(modifiers).toContainEqual(expect.objectContaining({ stat: 'poisonRecoveryPercent', percent: 0.02, stacks: 1 }))
   })
 
   it('Kim (Chảy Máu) + Hỏa (Bỏng) khớp cặp "Thiêu Huyết" — trừ currentHp thường + trừ VĨNH VIỄN % maxHp', () => {

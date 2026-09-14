@@ -15,7 +15,6 @@ const ENEMY_STATS = {
   maxHp: 10_000_000,
   might: 0,
   attackSpeed: 1,
-  attackRangeRanks: 9,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,
@@ -152,7 +151,7 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
     gameManager.setCombatClockSource(combatSource)
     const enemy = defineEnemy({
       id: 'refight_dummy', name: 'Refight Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage: Stage = {
@@ -196,7 +195,7 @@ describe('Future Systems Task 10 — party manual pause', () => {
     gameManager.setCombatClockSource(combatSource)
     const enemy = defineEnemy({
       id: 'party_dummy', name: 'Party Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 10_000_000, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 10_000_000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage: Stage = {
@@ -252,7 +251,7 @@ describe('Gameplay fixes — refight chain', () => {
     gameManager.setCombatClockSource(combatSource)
     const enemy = defineEnemy({
       id: 'refight3_dummy', name: 'Refight3', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage: Stage = {

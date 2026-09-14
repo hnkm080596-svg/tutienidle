@@ -17,7 +17,7 @@ import { calculateOfflineProgress, type OfflineResult } from '../core/idle/Offli
 import { calculateOfflineTime } from '../core/idle/GameClock'
 import { buildGameSave, computeRestoreIdentity, loadGame, type GameSave } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
-import { asBaseStats, createBaseStats, PLAYER_BASE_RANGE_RANKS } from '@/core/stats/StatBlock'
+import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import {
   migrateStatModifier,
   migrateStatRecordKeys,
@@ -350,8 +350,8 @@ export const usePlayerStore = defineStore('player', {
       // R10 (AR-12, S4 follow-up) — deep-clone before assigning: a plain
       // Object.assign shallow-copies nested fields (baseStats, modifiers,
       // ...), so this.baseStats becomes the SAME object as
-      // save.player.baseStats. A later in-place store mutation (e.g.
-      // this.baseStats.attackRange below) then leaked back into the
+      // save.player.baseStats. A later in-place store mutation then
+      // leaked back into the
       // caller's `save` object — corrupting it for any later reuse (the
       // payload-identity guard above included: a second restoreFromSave
       // call with the SAME `save` reference would see a hash that changed
@@ -424,14 +424,6 @@ export const usePlayerStore = defineStore('player', {
       this.combatAiStrategy = isCombatAiStrategy(save.player.combatAiStrategy)
         ? save.player.combatAiStrategy
         : DEFAULT_COMBAT_AI_STRATEGY
-
-      // Balance pass 2026-08-26 — repair save CŨ: baseStats được snapshot
-      // nguyên trạng vào save, nên nhân vật tạo ở bản base range 1/9 giữ
-      // mãi giá trị cũ và KHÔNG BAO GIỜ với tới quái (triệu chứng "vẫn
-      // tele nhưng 0 sát thương, nhấp nháy teleport"). attackRange là
-      // baseline THUỘC CODE (không có đường đầu tư trực tiếp — bonus chỉ
-      // chảy qua StatModifier) nên ép về đúng baseline hiện hành.
-      this.baseStats.attackRange = PLAYER_BASE_RANGE_RANKS
 
       // Route the offline grant through addCultivation() — same
       // clamp-at-required rule as before (the old `+=` then

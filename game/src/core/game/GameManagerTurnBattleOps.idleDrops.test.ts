@@ -32,7 +32,6 @@ const FARM_ENEMY = defineEnemy({
     maxHp: 10,
     might: 0,
     attackSpeed: 1,
-    attackRangeRanks: 1,
     criticalRate: 0,
     criticalDamage: 1.5,
     armor: 0,

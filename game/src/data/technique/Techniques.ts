@@ -38,25 +38,15 @@ export const TECHNIQUES: Technique[] = [
     // maxMp — xem Technique.ts's TechniqueTierEffect) 0.5→0.75→1.5→2,
     // giá trị Đại Thành đã chốt lại với user (doc gốc ghi nhầm 0.1%).
     tierEffects: {
-      so_nhap: { maxMpPercent: 0.03, manaRegenPercent: 0.005, hpRegenFlat: 0.5, mpRegenFlat: 0.5 },
-      tieu_thanh: { maxMpPercent: 0.04, manaRegenPercent: 0.0075, hpRegenFlat: 0.75, mpRegenFlat: 0.75 },
-      dai_thanh: { maxMpPercent: 0.05, manaRegenPercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
-      vien_man: { maxMpPercent: 0.1, manaRegenPercent: 0.02, hpRegenFlat: 2, mpRegenFlat: 2 },
+      so_nhap: { maxMpIncreasePercent: 0.03, manaRegenIncreasePercent: 0.005, hpRegenFlat: 0.5, mpRegenFlat: 0.5 },
+      tieu_thanh: { maxMpIncreasePercent: 0.04, manaRegenIncreasePercent: 0.0075, hpRegenFlat: 0.75, mpRegenFlat: 0.75 },
+      dai_thanh: { maxMpIncreasePercent: 0.05, manaRegenIncreasePercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
+      vien_man: { maxMpIncreasePercent: 0.1, manaRegenIncreasePercent: 0.02, hpRegenFlat: 2, mpRegenFlat: 2 },
     },
 
-    // Combat-gate-teleport-autocast plan §2.4/§9 — tâm pháp Pháp Tu cộng
-    // CỐ ĐỊNH +2 attackRange (không phụ thuộc tier): range nền thực tế
-    // của Pháp Tu = base 1 + 2 = 3. Chỉ hiệu lực khi equipped; tổng hợp
-    // qua ĐÚNG MỘT đường GameManager.getAggregatedModifiers().
-    combatModifiers: [
-      {
-        id: 'technique:dai_ngu_hanh_chan_quyet:attack_range',
-        sourceId: 'dai_ngu_hanh_chan_quyet',
-        sourceType: 'technique',
-        stat: 'attackRange',
-        flat: 2,
-      },
-    ],
+    // Task 3 (D16): the fixed +2 range combat modifier retired with the
+    // attackRange stat — reach is now action targeting, not a character
+    // stat, so this technique grants no combatModifiers.
 
     unlocked: false,
 
@@ -72,14 +62,11 @@ export const TECHNIQUES: Technique[] = [
     requiredRealmId: 'foundation_establishment',
     resourceLabel: 'Pháp Lực',
     tierEffects: {
-      so_nhap: { maxMpPercent: 0.05, manaRegenPercent: 0.01, hpRegenFlat: 1, mpRegenFlat: 1 },
-      tieu_thanh: { maxMpPercent: 0.07, manaRegenPercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
-      dai_thanh: { maxMpPercent: 0.1, manaRegenPercent: 0.025, hpRegenFlat: 2.5, mpRegenFlat: 2.5 },
-      vien_man: { maxMpPercent: 0.15, manaRegenPercent: 0.04, hpRegenFlat: 4, mpRegenFlat: 4 },
+      so_nhap: { maxMpIncreasePercent: 0.05, manaRegenIncreasePercent: 0.01, hpRegenFlat: 1, mpRegenFlat: 1 },
+      tieu_thanh: { maxMpIncreasePercent: 0.07, manaRegenIncreasePercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
+      dai_thanh: { maxMpIncreasePercent: 0.1, manaRegenIncreasePercent: 0.025, hpRegenFlat: 2.5, mpRegenFlat: 2.5 },
+      vien_man: { maxMpIncreasePercent: 0.15, manaRegenIncreasePercent: 0.04, hpRegenFlat: 4, mpRegenFlat: 4 },
     },
-    combatModifiers: [
-      { id: 'technique:dai_ngu_hanh_quyet_truc_co:attack_range', sourceId: 'dai_ngu_hanh_quyet_truc_co', sourceType: 'technique', stat: 'attackRange', flat: 2 },
-    ],
     unlocked: false,
     equipped: false,
   },

@@ -93,7 +93,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.cultivationPerSecond).toBe(20) // Object.assign của save2 đã chạy
   })
 
-  it('guard không phá normalization: nodeLevels fallback + attackRange vẫn chạy', () => {
+  it('guard không phá normalization: nodeLevels fallback vẫn chạy', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({})
     save.player.nodeLevels = undefined as never // simulate save cũ thiếu field
@@ -101,7 +101,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     player.restoreFromSave(save)
 
     expect(player.nodeLevels).toEqual({})
-    expect(player.baseStats.attackRange).toBeGreaterThan(0)
+    expect(player.baseStats.might).toBeGreaterThan(0)
   })
 
   // Stat-key migration (stat-system-reimagined rename pass) — saves
@@ -148,10 +148,10 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.baseStats.might).toBe(10)
     expect(player.baseStats.defense).toBe(7)
     expect('attack' in player.baseStats).toBe(false)
-    // Retired keys drop their SAVED value; while StatType still declares
-    // them the createBaseStats() baseline fills the key back in.
-    expect(player.baseStats.maxMpPercent).toBe(0)
-    expect(player.baseStats.attackRange).toBeGreaterThan(0)
+    // Task 3: retired keys are gone from StatType entirely — the saved
+    // value drops AND no baseline key fills back in.
+    expect('maxMpPercent' in player.baseStats).toBe(false)
+    expect('attackRange' in player.baseStats).toBe(false)
 
     expect(player.modifiers.map((modifier) => modifier.stat)).toEqual([
       'might',

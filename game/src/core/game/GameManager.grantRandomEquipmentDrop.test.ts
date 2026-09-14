@@ -45,7 +45,7 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
       lane: 'ground',
       statsInput: {
         maxHp: 1, might: 0, attackSpeed: 1,
-        attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0,
+        criticalRate: 0, criticalDamage: 1.5, armor: 0,
       },
       // KHÔNG khai signatureDrops — cô lập đúng đường equipment_any của
       // stage pool (quái thường = 1 pool draw → đúng 1 món).

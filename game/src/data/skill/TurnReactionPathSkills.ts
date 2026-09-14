@@ -59,5 +59,7 @@ export const REACTION_EMPOWERMENT_BUFF: BuffDefinition = {
   polarity: 'buff',
   duration: 4,
   stackMode: 'refresh',
-  effects: [{ type: 'statModifier', stat: 'reactionEffectPercent', percent: 0.25 }],
+  // Task 3 (D19): reactionEffectPercent is a phap_tu-domain stat —
+  // tag the credential now (inert until Task 7 populates STAT_DOMAIN).
+  effects: [{ type: 'statModifier', stat: 'reactionEffectPercent', percent: 0.25, domain: 'phap_tu' }],
 }

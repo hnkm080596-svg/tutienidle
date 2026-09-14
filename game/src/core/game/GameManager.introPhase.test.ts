@@ -30,7 +30,7 @@ function buildStartedGameManager(): { gameManager: GameManager; combatSource: Ma
 
   const enemy = defineEnemy({
     id: 'intro_dummy', name: 'Intro Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-    statsInput: { maxHp: 500, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+    statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 

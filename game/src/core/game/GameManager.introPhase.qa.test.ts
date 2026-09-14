@@ -35,7 +35,7 @@ function buildGameManager(): {
 
   const enemy = defineEnemy({
     id: 'qa_intro_dummy', name: 'QA Intro Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-    statsInput: { maxHp: 500, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+    statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 

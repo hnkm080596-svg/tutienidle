@@ -3,8 +3,8 @@ import { formatStat, statLabel } from './StatLabels'
 
 describe('formatStat', () => {
   it('formatStat percent stats as % with 1 decimal', () => {
-    expect(formatStat('maxMpPercent', 0.15)).toBe('15.0%')
-    expect(formatStat('manaRegenPercent', 0.05)).toBe('5.0%')
+    expect(formatStat('skillDamagePercent', 0.15)).toBe('15.0%')
+    expect(formatStat('ailmentPotencyPercent', 0.05)).toBe('5.0%')
     expect(formatStat('realmPassivePercent', 0.10)).toBe('10.0%')
     expect(formatStat('affixDeltaPercent', 0.05)).toBe('5.0%')
     expect(formatStat('cultivationPercent', 0.05)).toBe('5.0%')
@@ -49,8 +49,8 @@ describe('formatStat', () => {
 
 describe('statLabel', () => {
   it('returns label for format-adopted stat keys', () => {
-    expect(statLabel('maxMpPercent')).toBe('Linh lực tối đa (Tâm Pháp)')
-    expect(statLabel('manaRegenPercent')).toBe('Hồi Linh lực (Tâm Pháp)')
+    expect(statLabel('skillDamagePercent')).toBe('Sát thương kỹ năng')
+    expect(statLabel('ailmentPotencyPercent')).toBe('Uy lực dị thường')
     expect(statLabel('realmPassivePercent')).toBe('Cộng % Cảnh Giới')
     expect(statLabel('affixDeltaPercent')).toBe('Tăng Trưởng Affix')
     expect(statLabel('productionSpeedMultiplier')).toBe('Hệ số tốc độ')

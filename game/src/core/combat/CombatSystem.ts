@@ -21,6 +21,7 @@ import type { SkillEffectContext } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
+import { dotRecoveryTriggers } from './DotRecovery'
 import { ReactionManager } from '../element/ReactionManager'
 import type { BuffDefinitionCatalog } from '../buff/BuffTypes'
 
@@ -488,9 +489,16 @@ export class CombatSystem {
     // Mộc Tu (Plans/PoisonPath/EarthPath, Phase 11) — Poison Recovery:
     // CHỈ DoT element 'wood' (Trúng Độc), hồi theo damage THẬT SỰ đã
     // trừ (sau DOT RES) — nguồn phải còn sống, người đã chết/rời trận
-    // không hồi được gì.
-    if (source?.alive && element === 'wood' && source.stats.poisonRecoveryPercent > 0) {
-      this.applyHealing(source, finalDamage * source.stats.poisonRecoveryPercent, source.id, 'leech')
+    // không hồi được gì. Task 3 (D18-retire): the poisonRecoveryPercent
+    // stat retired; the trigger now queries the source's buff effects
+    // via dotRecoveryTriggers() — stub returns 0 until Task 4 lands the
+    // real trigger, so Doc Can's poison heal is intentionally inert.
+    if (source?.alive && element === 'wood') {
+      const recovery = dotRecoveryTriggers(source)
+
+      if (recovery > 0) {
+        this.applyHealing(source, finalDamage * recovery, source.id, 'leech')
+      }
     }
 
     this.killIfDead(target, sourceId)

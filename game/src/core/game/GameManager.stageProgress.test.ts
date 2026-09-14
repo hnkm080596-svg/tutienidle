@@ -24,7 +24,6 @@ function makeEnemy(id: string, maxHp: number) {
       maxHp,
       might: 0,
       attackSpeed: 1,
-      attackRangeRanks: 9,
       criticalRate: 0,
       criticalDamage: 1.5,
       armor: 0,

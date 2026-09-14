@@ -34,7 +34,7 @@ describe('debug turn battle rewards', () => {
       level: 1,
       realmId: 'mortal',
       lane: 'ground',
-      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 5, spiritStone: 2 },
     })
 

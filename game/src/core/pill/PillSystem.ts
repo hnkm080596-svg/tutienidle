@@ -235,6 +235,10 @@ export class PillSystem {
               stat: 'manaRegenPerTurn',
 
               flat: (effect.mpPerSecond ?? 0) * potencyMultiplier,
+
+              // Task 3 (D17): MP pool stat — phap_tu credential so the
+              // Task-7 domain gate keeps accepting this grant.
+              domain: 'phap_tu',
             },
           ],
         }

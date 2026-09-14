@@ -41,7 +41,6 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'reactionEffectPercent', label: 'Hiệu Ứng Phản Ứng', description: 'Tăng % sát thương khi Phản Ứng Nguyên Tố kích hoạt.', category: 'special' },
   { key: 'ailmentDurationPercent', label: 'Thời Lượng Dị Thường', description: 'Tăng % thời lượng mọi dị thường mình gây ra.', category: 'special' },
   { key: 'dotResistancePercent', label: 'Kháng DoT', description: 'Giảm thẳng % sát thương nhận từ mọi hiệu ứng DoT (Bỏng/Trúng Độc/Chảy Máu...).', category: 'defense_advanced' },
-  { key: 'poisonRecoveryPercent', label: 'Hồi Sinh Lực Từ Độc', description: 'Hồi % sát thương Trúng Độc gây ra về Khí huyết bản thân.', category: 'special' },
 
   { key: 'strength', label: 'Căn Cốt', description: 'Cộng thẳng Công kích + Phòng ngự.', category: 'attribute' },
   { key: 'dexterity', label: 'Thân Pháp', description: 'Cộng Tốc Độ (Thân Pháp), Độ chính xác, Tỉ lệ né, Tỉ lệ bạo kích.', category: 'attribute' },
@@ -63,7 +62,7 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'ailmentPotencyPercent', label: 'Uy lực dị thường', description: 'Tăng % hiệu lực (sát thương/giây) của dị thường mình gây ra.', category: 'defense_advanced' },
 ]
 
-// i18n refactor 2026-08-31 — 7 stat key MỚI không thuộc CharacterPanel
+// i18n refactor 2026-08-31 — các stat key không thuộc CharacterPanel
 // stat table (đó là các stat per-entity, vd maxHp/attackSpeed); đây là
 // các giá trị "kỹ thuật" hiện qua formatStat() ở UI rải rác
 // (tooltip tầng Tâm Pháp, bảng Đặc Quyền Cảnh Giới, badge Δ affix
@@ -74,8 +73,6 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
 //   2. statLabel() vẫn trả về label người-đọc-được qua lookup bổ
 //      sung.
 const FORMAT_ADOPTED_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
-  maxMpPercent: 'Linh lực tối đa (Tâm Pháp)',
-  manaRegenPercent: 'Hồi Linh lực (Tâm Pháp)',
   realmPassivePercent: 'Cộng % Cảnh Giới',
   affixDeltaPercent: 'Tăng Trưởng Affix',
   productionSpeedMultiplier: 'Hệ số tốc độ',

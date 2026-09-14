@@ -13,12 +13,12 @@ describe('boss stage — GameManager.buildTurnBattle wave config never allows a 
 
     const bossTemplate = defineEnemy({
       id: 'test_boss_solo', name: 'Test Boss', level: 1, realmId: 'mortal', lane: 'ground', isBoss: true,
-      statsInput: { maxHp: 1000, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 1000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const regularTemplate = defineEnemy({
       id: 'test_regular_should_not_spawn', name: 'Regular', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
 

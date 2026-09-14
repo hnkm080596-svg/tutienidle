@@ -15,8 +15,6 @@ function _makeEnemyData(): Enemy {
   const stats = {
     ...createBaseStats(),
     might: 0,
-    attackRange: 0,
-    movementSpeed: 0,
   }
 
   return {

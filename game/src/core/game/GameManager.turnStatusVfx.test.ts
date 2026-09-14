@@ -17,7 +17,6 @@ const ENEMY_STATS_INPUT = {
   maxHp: 10_000_000,
   might: 0,
   attackSpeed: 1,
-  attackRangeRanks: 9,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
 import { CombatSystem } from '../../combat/CombatSystem'
+import { dotRecoveryTriggers } from '../../combat/DotRecovery'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BuffPool } from '../../buff/BuffPool'
@@ -11,7 +12,8 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 // AR-06 QA Probes:
 // Turn DoT omits its source context if resolveSource is not passed to
 // actorBuffSystem.update(). CombatSystem.applyDotDamage needs source to
-// apply elemental penetration and poisonRecoveryPercent leech healing.
+// apply elemental penetration and the (Task 3: inert until Task 4)
+// dotRecoveryTriggers poison-recovery hook.
 
 const POISON_BUFF: BuffDefinition = {
   id: 'qa_poison',
@@ -85,19 +87,22 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
 }
 
 describe('AR-06: Turn DoT source context', () => {
-  it('supplies living source to DoT tick, enabling poisonRecoveryPercent healing', () => {
+  it('supplies living source to DoT tick; poison-recovery hook inert until Task 4', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
     const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
-    // Player is the source of the poison, with 50% poison recovery and missing HP.
+    // Player is the source of the poison, with missing HP. Task 3:
+    // dotRecoveryTriggers is an inert stub (returns 0), so the source
+    // context reaches the tick but no healing happens yet.
     const player = makeEntity('player', {
       currentHp: 500,
       maxHp: 1000,
-      stats: createBaseStats({ speed: 10, poisonRecoveryPercent: 0.5 }),
+      stats: createBaseStats({ speed: 10 }),
     })
 
-    // Enemy has poison applied to its buff pool and is faster (speed 100 vs 10).
+    // Enemy has poison applied to its buff pool and is faster (speed
+    // 100 vs 10).
     const enemy = makeEntity('enemy', {
       currentHp: 10_000,
       maxHp: 10_000,
@@ -117,11 +122,13 @@ describe('AR-06: Turn DoT source context', () => {
 
     const hpBefore = player.currentHp
 
-    // Resolve enemy turn: enemy ticks poison -> takes DoT damage -> player heals 50% of damage.
+    // Resolve enemy turn: enemy ticks poison -> takes DoT damage. The
+    // recovery trigger is inert (0) until Task 4, so the source can
+    // only lose HP (the enemy's own counterattack), never gain it.
     system.resolveNextStep(battle)
 
-    // With resolveSource, enemy takes DoT and player heals via poisonRecoveryPercent.
-    expect(player.currentHp).toBeGreaterThan(hpBefore)
+    expect(dotRecoveryTriggers(player)).toBe(0)
+    expect(player.currentHp).toBeLessThanOrEqual(hpBefore)
     expect(enemy.currentHp).toBeLessThan(10_000)
   })
 

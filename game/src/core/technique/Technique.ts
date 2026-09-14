@@ -17,18 +17,21 @@ export type TechniqueTier = 'so_nhap' | 'tieu_thanh' | 'dai_thanh' | 'vien_man'
 // (Công/Phòng phẳng) và Đại Ngũ Hành (%Linh lực tối đa + %Hồi Linh)
 // dùng field khác nhau; Kiếm Tu/Thể Tu (chưa thiết kế, mục 5.3) để
 // tierEffects rỗng — kiến trúc vẫn hỗ trợ sẵn không cần đổi type.
-// manaRegenPercent là % TĂNG THÊM lên stat manaRegenPerTurn (Increased,
-// cùng pipeline percent chuẩn của StatCalculator.ts) — KHÔNG phải %
-// của maxMp (tránh phụ thuộc vòng vào giá trị maxMp chưa tính xong lúc
-// gộp modifier, xem GameManager.getTechniqueTierModifiers()).
+// manaRegenIncreasePercent là % TĂNG THÊM lên stat manaRegenPerTurn
+// (Increased, cùng pipeline percent chuẩn của StatCalculator.ts) —
+// KHÔNG phải % của maxMp (tránh phụ thuộc vòng vào giá trị maxMp chưa
+// tính xong lúc gộp modifier, xem GameManager.getTechniqueTierModifiers
+// ()). stat-system-reimagined Task 3 (D17): the old bespoke stat keys
+// (maxMpPercent/manaRegenPercent) retired — these are plain authoring
+// fields that emit percent modifiers on the live stats.
 export interface TechniqueTierEffect {
   mightFlat?: number
 
   defenseFlat?: number
 
-  maxMpPercent?: number
+  maxMpIncreasePercent?: number
 
-  manaRegenPercent?: number
+  manaRegenIncreasePercent?: number
 
   // Yêu cầu 2026-08-26 — Tâm pháp cộng thêm 2 chỉ số MẶC ĐỊNH HP/lượt và
   // MP/lượt: flat TỰU TRỰC lên stats hpRegenPerTurn/manaRegenPerTurn
@@ -116,10 +119,11 @@ export interface Technique {
 
   // Combat-gate-teleport-autocast plan §9 — modifier chiến đấu CỐ ĐỊNH
   // (không theo tier) chỉ có hiệu lực khi technique đang EQUIPPED.
-  // Ví dụ: Đại Ngũ Hành Chân Quyết cộng +2 attackRange cho Pháp Tu.
   // KHÔNG đưa bonus này vào tierEffects và KHÔNG scale theo tier; tổng
   // hợp DUY NHẤT qua GameManager.getAggregatedModifiers() để không
-  // double-apply (plan §19 rủi ro 9).
+  // double-apply (plan §19 rủi ro 9). (Task 3, D16: the old +2 range
+  // grant retired with the attackRange stat — no technique currently
+  // declares combatModifiers.)
   combatModifiers?: StatModifier[]
 
   unlocked: boolean

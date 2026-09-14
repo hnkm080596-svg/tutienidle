@@ -44,7 +44,6 @@ export function startAStage(
       maxHp: 1_000_000,
       might: 0,
       attackSpeed: 1,
-      attackRangeRanks: 9,
       criticalRate: 0,
       criticalDamage: 1.5,
       armor: 0,

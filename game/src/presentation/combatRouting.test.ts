@@ -64,7 +64,6 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
         maxHp: 500,
         might: 0,
         attackSpeed: 1,
-        attackRangeRanks: 9,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,

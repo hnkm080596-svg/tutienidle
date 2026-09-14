@@ -415,6 +415,7 @@ export class BuffSystem {
             flat: effect.flat,
             percent: effect.percent,
             stacks: buff.stacks,
+            domain: effect.domain,
           })
         }
       }

@@ -1,6 +1,6 @@
 import type { Technique } from '@/core/technique/Technique'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '@/core/technique/TechniqueTier'
-import { statLabel, formatStat } from '@/core/stats/StatLabels'
+import { statLabel } from '@/core/stats/StatLabels'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { COMBAT_TECHNIQUE_TYPES } from '@/data/technique/CombatTechniqueTypes'
 import type { TooltipSection } from './useTooltip'
@@ -65,12 +65,16 @@ export function buildTechniqueSections(
       combatRows.push({ label: 'Phòng ngự', value: `+${tierEffect.defenseFlat}` })
     }
 
-    if (tierEffect.maxMpPercent !== undefined) {
-      combatRows.push({ label: 'Linh lực tối đa', value: `+${formatStat('maxMpPercent', tierEffect.maxMpPercent)}` })
+    // Task 3 (D17): the tier fields are plain authoring percents that
+    // become {stat, percent, domain:'phap_tu'} modifiers — display them
+    // as % directly (the retired bespoke stat keys no longer exist to
+    // feed formatStat()).
+    if (tierEffect.maxMpIncreasePercent !== undefined) {
+      combatRows.push({ label: 'Linh lực tối đa', value: `+${(tierEffect.maxMpIncreasePercent * 100).toFixed(1)}%` })
     }
 
-    if (tierEffect.manaRegenPercent !== undefined) {
-      combatRows.push({ label: 'Hồi Linh lực', value: `+${formatStat('manaRegenPercent', tierEffect.manaRegenPercent)}/s` })
+    if (tierEffect.manaRegenIncreasePercent !== undefined) {
+      combatRows.push({ label: 'Hồi Linh lực', value: `+${(tierEffect.manaRegenIncreasePercent * 100).toFixed(1)}%` })
     }
   }
 

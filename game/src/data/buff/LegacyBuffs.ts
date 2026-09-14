@@ -52,7 +52,9 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
   // data/progression/PhapTuNodes.ts's WOOD_TRUC_CO_PURE) — 2 tên trước
   // đây bị đảo ngược. Phase 11 — "+2% HP Recovery từ Poison Damage"/tầng
   // (từng bị hoãn ở EarthPath vì DoT tick chưa resolve được entity
-  // NGUỒN) giờ làm thật, xem CombatSystem.applyDotDamage().
+  // NGUỒN). Task 3 (D18-retire): stat đó đã retire — nửa hồi máu của
+  // Độc Căn giờ INERT cho tới khi Task 4 re-author nó thành buff-trigger
+  // query (dotRecoveryTriggers, xem CombatSystem.applyDotDamage()).
   {
     id: 'doc_the',
 
@@ -77,14 +79,6 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
 
         percent: 0.05,
       },
-
-      {
-        type: 'statModifier',
-
-        stat: 'poisonRecoveryPercent',
-
-        percent: 0.02,
-      },
     ],
   },
 
@@ -104,6 +98,9 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
         type: 'statModifier',
         stat: 'manaRegenPerTurn',
         flat: 5,
+        // Task 3 (D17): MP pool stat — declare the phap_tu credential so
+        // the Task-7 domain gate keeps accepting this grant.
+        domain: 'phap_tu',
       },
     ],
   },

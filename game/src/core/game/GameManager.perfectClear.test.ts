@@ -29,7 +29,6 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       maxHp: 1,
       might: 0,
       attackSpeed: 1,
-      attackRangeRanks: 1,
       criticalRate: 0,
       criticalDamage: 1.5,
       armor: 0,

@@ -399,11 +399,11 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
     const modifiers = sourceBuffs.getActiveModifiers()
 
     // Plans/magicpathgeneral Phase 7/8/11 — buff 'doc_the' ("Độc Căn",
-    // đổi tên từ "Độc Thế") giờ có 2 modifier: Sát Thương Độc (như cũ)
-    // + Poison Recovery (mới, xem data/buff/buffs.ts).
-    expect(modifiers).toHaveLength(2)
+    // đổi tên từ "Độc Thế") cấp Sát Thương Độc. Task 3 (D18-retire):
+    // the poisonRecoveryPercent modifier retired with the stat — the
+    // heal half returns as a Task-4 buff-trigger query.
+    expect(modifiers).toHaveLength(1)
     expect(modifiers).toContainEqual(expect.objectContaining({ stat: 'ailmentPotencyPercent', percent: 0.05, stacks: 1 }))
-    expect(modifiers).toContainEqual(expect.objectContaining({ stat: 'poisonRecoveryPercent', percent: 0.02, stacks: 1 }))
   })
 
   // Plans/KimPath mục 5/6 (2026-08-21) — 2 reaction Kim mới.

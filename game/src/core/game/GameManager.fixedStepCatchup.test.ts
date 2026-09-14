@@ -21,7 +21,6 @@ const ATTACKER_STATS_INPUT = {
   maxHp: 500,
   might: 50,
   attackSpeed: 2, // interval = 1 / attackSpeed = 0.5s
-  attackRangeRanks: 9,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,

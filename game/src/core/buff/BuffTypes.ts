@@ -1,4 +1,5 @@
 import type { StatType } from '../stats/StatTypes'
+import type { StatDomain } from '../stats/StatDomain'
 import type { ElementType } from '../element/ElementType'
 
 // R4 (AR-19) — Canonical Buff & Status Types.
@@ -17,6 +18,11 @@ export interface StatModifierEffect {
   stat: StatType
   percent?: number
   flat?: number
+  // stat-system-reimagined Task 3 — forwarded onto the emitted
+  // StatModifier so a buff targeting a domain-gated stat (e.g. MP pool
+  // stats gated to 'phap_tu' once STAT_DOMAIN activates in Task 7)
+  // declares its credential at authoring time.
+  domain?: StatDomain
 }
 
 export interface DotEffectTemplate {

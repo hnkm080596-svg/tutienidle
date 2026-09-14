@@ -29,14 +29,14 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     return buffs.find((b) => b.id === id)
   }
 
-  it('thanh_tuyen — buff 6s refresh, manaRegenPerTurn +8 flat + manaRegenPercent +0.10', () => {
+  it('thanh_tuyen — buff 6s refresh, manaRegenPerTurn +8 flat + +10% (phap_tu domain, Task 3)', () => {
     const b = byId('thanh_tuyen')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 8 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPercent', percent: 0.1 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 8, domain: 'phap_tu' })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerTurn', percent: 0.1, domain: 'phap_tu' })
   })
 
   it('bang_giap — buff 6s refresh, wardMax +50 + wardRegenPerTurn +5', () => {
@@ -101,9 +101,10 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
   // Engine áp/gỡ THEO ID qua theManBuffId() (TheResourceSystem, retired M13) —
   // id phải khớp chính xác `the_man_<element>`.
   it('the_man_<el> ×5 — buff duration Infinity, engine-gỡ, effects theo bảng §4', () => {
-    const expected: Record<string, { type: 'statModifier'; stat: string; flat?: number; percent?: number }[]> = {
+    const expected: Record<string, { type: 'statModifier'; stat: string; flat?: number; percent?: number; domain?: 'phap_tu' }[]> = {
       the_man_fire: [{ type: 'statModifier', stat: 'ailmentPotencyPercent', percent: 0.15 }],
-      the_man_water: [{ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 6 }],
+      // Task 3: MP-pool grant carries the phap_tu domain credential.
+      the_man_water: [{ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 6, domain: 'phap_tu' }],
       the_man_wood: [{ type: 'statModifier', stat: 'ailmentDurationPercent', percent: 0.2 }],
       the_man_metal: [{ type: 'statModifier', stat: 'criticalRate', percent: 0.08 }],
       the_man_earth: [{ type: 'statModifier', stat: 'defense', percent: 0.1 }],
@@ -124,7 +125,7 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     const ngungLo = byId('ngung_lo')!
     const khaiSon = byId('khai_son')!
 
-    expect(ngungLo.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 5 })
+    expect(ngungLo.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 5, domain: 'phap_tu' })
     expect(khaiSon.effects).toContainEqual({ type: 'statModifier', stat: 'defense', percent: 0.08 })
   })
 
@@ -192,13 +193,16 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     })
   })
 
-  it('doc_the — duration Infinity (permanent) + maxStacks/statModifier percent port nguyên vẹn', () => {
+  // Task 3 (D18-retire): the poisonRecoveryPercent modifier retired
+  // with the stat — Doc Can's heal half is inert until Task 4
+  // re-authors it as a buff-trigger query (dotRecoveryTriggers).
+  it('doc_the — duration Infinity (permanent) + maxStacks/ailmentPotency percent port nguyên vẹn', () => {
     const docThe = buffs.find((b) => b.id === 'doc_the')!
 
     expect(docThe.duration).toBe(Infinity)
     expect(docThe.maxStacks).toBe(5)
     expect(docThe.stackMode).toBe('stack')
     expect(docThe.effects).toContainEqual({ type: 'statModifier', stat: 'ailmentPotencyPercent', percent: 0.05 })
-    expect(docThe.effects).toContainEqual({ type: 'statModifier', stat: 'poisonRecoveryPercent', percent: 0.02 })
+    expect(docThe.effects).toHaveLength(1)
   })
 })

@@ -27,7 +27,6 @@ describe('GameManager continuous repeat stage', () => {
         maxHp: 1,
         might: 0,
         attackSpeed: 1,
-        attackRangeRanks: 1,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,
@@ -82,7 +81,7 @@ describe('GameManager continuous repeat stage', () => {
     const gameManager = new GameManager()
     const enemy = defineEnemy({
       id: 'countdown_dummy', name: 'Countdown Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 10, might: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 10, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage: Stage = {

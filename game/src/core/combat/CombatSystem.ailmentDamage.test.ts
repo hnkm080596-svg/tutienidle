@@ -104,13 +104,17 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
     expect(damageEvents[0]).toMatchObject({ sourceId: 'source', targetId: 'target', effectId: 'bong' })
   })
 
-  it('poisonRecoveryPercent hồi máu NGUỒN theo % damage DoT element wood đã trừ — CHỈ wood, không phải fire', () => {
+  // stat-system-reimagined Task 3 (D18-retire) — poisonRecoveryPercent
+  // retired from StatType; CombatSystem now queries dotRecoveryTriggers()
+  // which is an inert stub (returns 0) until Task 4 re-authors poison
+  // recovery as a buff-trigger query. The wood-only wiring stays:
+  // the trigger is only consulted for wood DoT ticks.
+  it('wood DoT consults the inert dotRecoveryTriggers hook — source heals 0 until Task 4 re-authors it', () => {
     const eventBus = new EventBus()
     const combatSystem = new CombatSystem(eventBus)
 
     const source = createCombatant({ id: 'source', type: 'player', currentHp: 500, maxHp: 1000 })
 
-    source.stats.poisonRecoveryPercent = 0.5
     source.stats.woodPower = 10
     source.stats.firePower = 10
 
@@ -120,20 +124,13 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
 
     const resolveSource = (id: string) => (id === source.id ? source : undefined)
 
-    // Trúng Độc (wood) — phải hồi máu nguồn.
+    // Trúng Độc (wood) — the trigger hook runs but returns 0: target
+    // takes damage, source does NOT heal.
     ailmentSystem.apply(getTemplate('trung_doc'), source, target)
     ailmentSystem.update(1, target, combatSystem, undefined, resolveSource)
 
-    expect(source.currentHp).toBeGreaterThan(500)
-
-    const hpAfterWood = source.currentHp
-
-    // Bỏng (fire) — KHÔNG được hồi máu nguồn dù cùng nguồn/cùng stat.
-    const ailmentSystem2 = new BuffSystem(new BuffPool())
-    ailmentSystem2.apply(getTemplate('bong'), source, target)
-    ailmentSystem2.update(1, target, combatSystem, undefined, resolveSource)
-
-    expect(source.currentHp).toBe(hpAfterWood)
+    expect(target.currentHp).toBeLessThan(1000)
+    expect(source.currentHp).toBe(500)
   })
 
   it('kimTheDotResistancePenetrationPercentPerStack chỉ xuyên kháng DoT element metal, không ảnh hưởng DoT khác', () => {

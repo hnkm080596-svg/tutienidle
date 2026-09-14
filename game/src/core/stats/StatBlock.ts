@@ -25,20 +25,10 @@ export function asBaseStats(stats: Stats): BaseStats {
   return stats as BaseStats
 }
 
-// Player KHÔNG còn tower tầm bắn vô hạn (combat-gate-teleport-autocast
-// plan §2.4 + balance pass 2026-08-26): avatar tấn công dùng Chebyshev
-// quanh ô đang đứng. Base range = 5 — khớp trần attackRange quái
-// (MAX_ENEMY_ATTACK_RANGE_RANKS = 5): quái dừng bắn xa nhất ở cột 1+5=6,
-// Player với tới cột ≤6 nên mọi trận đều có thể chiến thắng. Tâm pháp
-// Đại Ngũ Hành Chân Quyết cộng thêm +2 qua Technique.combatModifiers
-// (Pháp Tu range nền = 7).
-//
-// BASELINE THUỘC CODE, không thuộc progression: baseStats.attackRange
-// KHÔNG bao giờ được người chơi đầu tư trực tiếp (bonus range chỉ chảy
-// qua StatModifier — tâm pháp/trang bị), nên load save CŨ có thể ép về
-// đúng baseline này (xem stores/player.ts's restoreFromSave).
-export const PLAYER_BASE_RANGE_RANKS = 5
-
+// stat-system-reimagined Task 3 (D16) -- attackRange / PLAYER_BASE_RANGE_RANKS
+// retired: reach is a skill/action-targeting concern, not a character
+// stat. The old teleport-autocast battle path that consumed them is
+// dormant; the live turn engine resolves reach from action targeting.
 export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
   return {
     might: 10,
@@ -53,11 +43,6 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     // là chọn đơn vị dễ đọc, GAUGE_MAX=1000 không quan tâm độ lớn tuyệt
     // đối, chỉ quan tâm tỉ lệ speed giữa các actor.
     speed: 100,
-
-    // Avatar Player tấn công bằng Chebyshev range quanh ô đang đứng
-    // (plan §2.3/§2.4) — base 1; enemy dùng chung Stats shape với
-    // attackRange đo tới CỘNG CỔNG (canEnemyReachGate).
-    attackRange: PLAYER_BASE_RANGE_RANKS,
 
     criticalRate: 0.05,
     criticalDamage: 1.5,
@@ -110,11 +95,7 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     reactionEffectPercent: 0,
     ailmentDurationPercent: 0,
     dotResistancePercent: 0,
-    poisonRecoveryPercent: 0,
 
-    // Technique tier effect modifiers (i18n refactor 2026-08-31).
-    maxMpPercent: 0,
-    manaRegenPercent: 0,
     // Realm passive stat modifier (useRealmStatPassives).
     realmPassivePercent: 0,
     // Equipment enhancement delta % (EquipmentHallPanel).

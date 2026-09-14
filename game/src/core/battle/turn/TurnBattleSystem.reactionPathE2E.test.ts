@@ -45,7 +45,7 @@ function makeAwakenedBattle() {
     level: 1,
     realmId: 'mortal',
     lane: 'ground',
-    statsInput: { maxHp: 5_000, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+    statsInput: { maxHp: 5_000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
   const stage = makeStage('a4_e2e_stage', enemy.id)

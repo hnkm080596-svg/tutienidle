@@ -92,7 +92,6 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
         maxHp: 1000,
         might: 0,
         attackSpeed: 1,
-        attackRangeRanks: 5,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,

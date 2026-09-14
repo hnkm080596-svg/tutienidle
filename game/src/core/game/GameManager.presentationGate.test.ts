@@ -72,7 +72,7 @@ function startGatedStage(gameManager: GameManager): void {
   player.baseStats = asBaseStats({ ...player.baseStats, might: 100, speed: 100  })
   const enemy = defineEnemy({
     id: 'gate_dummy', name: 'Gate Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-    statsInput: { maxHp: 500, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+    statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
   const stage = stageFixture('gate_stage')
@@ -91,7 +91,7 @@ function startGatedStage(gameManager: GameManager): void {
 // --- Defect Task 4: setPresentationActive(false) respects manual choice ---
 
 const ENEMY_STATS = {
-  maxHp: 1_000_000, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0,
+  maxHp: 1_000_000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0,
 }
 
 function createPlaybackPlayer(): CombatEntity {
@@ -184,7 +184,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     player.baseStats = asBaseStats({ ...player.baseStats, might: 100, speed: 100  })
     const enemy = defineEnemy({
       id: 'session_dummy', name: 'Session Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 500, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage = stageFixture('session_stage')
@@ -299,7 +299,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
     const enemy = defineEnemy({
       id: 'session_dummy2', name: 'Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 500, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage = stageFixture('session_stage_nested')

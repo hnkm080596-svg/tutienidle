@@ -9,7 +9,6 @@ export type StatType =
   | 'maxHp'
   | 'maxMp'
   | 'speed'
-  | 'attackRange'
   | 'criticalRate'
   | 'criticalDamage'
   // Đổi ý nghĩa từ xác suất (0..1) sang LE-style Rating (số mở, đấu
@@ -92,19 +91,11 @@ export type StatType =
   // application chance, stack, tick rate" — DOT RES CHỈ đứng giữa raw
   // damage và final damage). Nền 0.
   | 'dotResistancePercent'
-  // Plans/magicpathgeneral Phase 11 (2026-08-21) — Poison Recovery:
-  // khi 1 tick DoT element 'wood' (Trúng Độc) gây damage, hồi lại %
-  // này của damage THẬT SỰ đã trừ (SAU dotResistancePercent) về HP
-  // NGUỒN đã gây ra DoT đó — xem CombatSystem.applyDotDamage().
-  // Nguồn cấp đầu tiên: buff "Độc Căn" (Thổ+Mộc Reaction Reward, xem
-  // data/buff/buffs.ts — hoàn thành phần "+2% HP Recovery từ Poison
-  // Damage"/tầng từng bị hoãn ở PoisonPath/EarthPath vì DoT tick trước
-  // đây chưa resolve được entity NGUỒN). Nền 0.
-  | 'poisonRecoveryPercent'
+  // stat-system-reimagined Task 3 (D16/D17) -- poisonRecoveryPercent,
+  // maxMpPercent and manaRegenPercent retired: poison recovery becomes a
+  // buff-effect trigger read (dotRecoveryTriggers, CombatSystem), and
+  // MP % grants are plain percent modifiers on maxMp/manaRegenPerTurn.
 
-  // Technique tier effects (2026-08-31 refactor) — percent of maxMp/manaRegen.
-  | 'maxMpPercent'
-  | 'manaRegenPercent'
   // Realm passive stat modifiers.
   | 'realmPassivePercent'
   // Equipment enhancement delta (percent change per affix row).

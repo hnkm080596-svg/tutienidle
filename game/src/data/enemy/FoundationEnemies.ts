@@ -134,7 +134,6 @@ function foundationBeast(params: {
       // the band, 1.2 (~1.2x player base 100) - speed grows only a small
       // fraction vs HP/ATK, not x2/x3 like legacy data (see Enemies.test).
       attackSpeed: 1.2,
-      attackRangeRanks: params.archetype === 'melee' ? 1 : 5,
       criticalRate: 0.08,
       criticalDamage: 2,
       armor: Math.round(armor * mult.armor),

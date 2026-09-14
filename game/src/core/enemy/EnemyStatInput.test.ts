@@ -2,17 +2,16 @@ import { describe, expect, it } from 'vitest'
 import {
   applyBossMultiplier,
   applyEliteMultiplier,
-  MAX_ENEMY_ATTACK_RANGE_RANKS,
   normalizeEnemyAttackSpeed,
   normalizeEnemyStats,
 } from './EnemyStatInput'
+import { createBaseStats } from '../stats/StatBlock'
 
 function baseEnemyStats() {
   return normalizeEnemyStats({
     maxHp: 100,
     might: 20,
     attackSpeed: 5,
-    attackRangeRanks: 2,
     criticalRate: 0.05,
     criticalDamage: 1.5,
     armor: 10,
@@ -29,12 +28,14 @@ describe('enemy combat stat normalization', () => {
     expect(normalizeEnemyAttackSpeed(0.2)).toBe(0.8)
   })
 
-  it('go board: data author truc tiep theo rank, khong heuristic', () => {
-    expect(baseEnemyStats().attackRange).toBe(2)
-  })
-
-  it('balance pass: attackRangeRanks > 5 bị clamp về trần 5 — quái luôn đứng trong tầm Player', () => {
-    const clamped = normalizeEnemyStats({
+  // stat-system-reimagined Task 3 (D16/D17) -- attackRange is retired:
+  // reach is a skill/action-targeting concern, not a character stat.
+  // EnemyStatInput no longer declares a range-rank field; a stale
+  // authored field is ignored by normalization, and neither the
+  // normalized enemy Stats nor the player createBaseStats() record
+  // carries attackRange.
+  it('stale range-rank authored input is ignored -- output has no attackRange key', () => {
+    const legacyAuthored = {
       maxHp: 100,
       might: 20,
       attackSpeed: 1,
@@ -42,10 +43,15 @@ describe('enemy combat stat normalization', () => {
       criticalRate: 0,
       criticalDamage: 1.5,
       armor: 0,
-    })
+    }
 
-    expect(MAX_ENEMY_ATTACK_RANGE_RANKS).toBe(5)
-    expect(clamped.attackRange).toBe(5)
+    const stats = normalizeEnemyStats(legacyAuthored)
+
+    expect('attackRange' in stats).toBe(false)
+  })
+
+  it('createBaseStats() output has no attackRange key', () => {
+    expect('attackRange' in createBaseStats()).toBe(false)
   })
 
   it('Elite ưu tiên độ bền hơn burst damage', () => {

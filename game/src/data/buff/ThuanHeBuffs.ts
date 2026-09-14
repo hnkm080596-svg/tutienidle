@@ -16,9 +16,12 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     polarity: 'buff',
     duration: 6,
     stackMode: 'refresh',
+    // Task 3 (D17): the bespoke manaRegenPercent stat retired — the +10%
+    // is now a percent modifier on the live manaRegenPerTurn stat, and
+    // both MP-pool grants carry domain:'phap_tu' for the Task-7 gate.
     effects: [
-      { type: 'statModifier', stat: 'manaRegenPerTurn', flat: 8 },
-      { type: 'statModifier', stat: 'manaRegenPercent', percent: 0.1 },
+      { type: 'statModifier', stat: 'manaRegenPerTurn', flat: 8, domain: 'phap_tu' },
+      { type: 'statModifier', stat: 'manaRegenPerTurn', percent: 0.1, domain: 'phap_tu' },
     ],
   },
 
@@ -154,7 +157,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     polarity: 'buff',
     duration: Infinity,
     stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 6 }],
+    effects: [{ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 6, domain: 'phap_tu' }],
   },
   {
     id: 'the_man_wood',
