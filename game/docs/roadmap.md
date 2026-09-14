@@ -1914,25 +1914,45 @@ Execution program doc: `docs/architecture/2026-09-14-arch-repair-program.md`. Pr
 
 | Wave | Mission | Findings | Status |
 |---|---|---|---|
-| 0 | Program setup + lint baseline (24 errors) | hygiene | IN PROGRESS |
-| 1 | M1 — Save value boundary | ARCH-001 | PENDING |
-| 1 | M3 — Preserve admitted session | ARCH-004 | PENDING |
-| 1 | M5 — Unique tribulation terminal | ARCH-006 (half) | PENDING |
-| 1 | M7 — Stat assembly/refresh | ARCH-002 | PENDING |
-| 1 | M11 — Per-lane offline production | ARCH-007 | PENDING |
-| 2 | M2 — Wash ticket binds item lifetime | ARCH-011 | PENDING (after M1) |
-| 2 | M6 — Domain-owned outcome settlement | ARCH-006 (half) | PENDING (after M3+M5) |
-| 2 | M4 — Boot/host lifecycle | ARCH-013 + lifecycle | PENDING (after M3) |
-| 2 | M8 — Combat resources & phases (per-turn MP/Ward regen, user-locked) | ARCH-003 + ARCH-010 + C05 | PENDING (after M7) |
-| 3 | M9 — Buff target/ingredient identity | ARCH-009 | PENDING (after M8) |
-| 3 | M12 — UI/event consumers + receipts | ARCH-005 + ARCH-012 + ARCH-014 | PENDING (after M3/M8) |
-| 3 | E2E baseline repair (5 failing specs) | baseline | PENDING |
-| 4 | M10 — Authored-execution parity (Hoi Xuan Dan retired per user ruling) | ARCH-008 | PENDING (after M8+M9) |
-| 4 | M13 — Retire proven compatibility debt | audit §I | PENDING (after M3/M8/M12) |
-| 4 | perfectClear feasibility quarantine (`it.fails`, playtest debt per user ruling) | baseline | PENDING |
-| 5 | Convergence: full gates + audit-repro regression matrix + deep QA + master merge | all | PENDING |
+| 0 | Program setup + lint baseline (24 errors) | hygiene | DONE (b00ac6dc, merged 81c30e04) |
+| 1 | M1 — Save value boundary | ARCH-001 | DONE (9a958d5d, merged 935108d6) |
+| 1 | M3 — Preserve admitted session | ARCH-004 | DONE (88ed4052, merged bb63be26) |
+| 1 | M5 — Unique tribulation terminal | ARCH-006 (half) | DONE (89a02161, merged 08785d80) |
+| 1 | M7 — Stat assembly/refresh | ARCH-002 | DONE (c8a22e07, merged 6f27ffc7) |
+| 1 | M11 — Per-lane offline production | ARCH-007 | DONE (55a2c9f2, merged a9813206) |
+| 2 | M2 — Wash ticket binds item lifetime | ARCH-011 | DONE (339cde4a, merged 7d0a6c2b) |
+| 2 | M6 — Domain-owned outcome settlement | ARCH-006 (half) | DONE (53889a9a, merged 205c9e61) |
+| 2 | M4 — Boot/host lifecycle | ARCH-013 + lifecycle | DONE (0d0ce01d, merged d59509be) |
+| 2 | M8 — Combat resources & phases (per-turn MP/Ward regen, user-locked) | ARCH-003 + ARCH-010 + C05 | DONE (22b9ec54, merged 28c1f378) |
+| 3 | M9 — Buff target/ingredient identity | ARCH-009 | DONE (157f7722, merged e5169c53) |
+| 3 | M12 — UI/event consumers + receipts | ARCH-005 + ARCH-012 + ARCH-014 | DONE (dd4dc5fe, merged 93b5c984) |
+| 3 | E2E baseline repair (5 failing specs) | baseline | DONE (merged 51a56bb6; suite 19/19) |
+| 4 | M10 — Authored-execution parity (Hoi Xuan Dan retired per user ruling) | ARCH-008 | DONE (6f30f5cc, merged) |
+| 4 | M13 — Retire proven compatibility debt | audit §I | DONE (61bce275, merged) |
+| 4 | perfectClear feasibility quarantine (`it.fails`, playtest debt per user ruling) | baseline | DONE (c5b1eb66; debt doc `docs/qa/2026-09-14-perfectclear-debt.md`) |
+| 5 | Convergence: full gates + audit-repro regression matrix + deep QA + master merge | all | IN PROGRESS — full gates green (type-check, build, 3927+4expfail, lint 0 err); audit-repro matrix below; awaiting user ruling on master merge |
 
 | — | M14 — Remote contract reconciliation (one-talent client vs three-talent SQL/RPC) | ARCH-015 | PARKED pre-remote-rollout (user ruling) |
+
+### Audit-finding regression matrix (merged state, arch/repair-2026-09)
+
+| Finding | Mission | Regression coverage (merged) |
+|---|---|---|
+| ARCH-001 save boundary | M1 | `SaveSystem.snapshotIsolation`, `SaveSystem.restoreIdentity`, `player.restoreFromSave`, `GameManagerSaveRestore.boundary/onceOnlySettle/preflight` |
+| ARCH-002 stat refresh | M7 | `GameManager.statRefresh.test.ts` |
+| ARCH-003 MP/Ward regen | M8 | `TurnBattleSystem.turnRegen`, `GameManager.turnRegenStage` |
+| ARCH-004 session identity | M3 | `presentation/sessionHandoff`, `presentation/tribulationRouting` |
+| ARCH-005 Vue bridge | M12 | `turnCombatReactivity`, `GameManager.battleEndPublication`; consumer `useTurnCombatManual` |
+| ARCH-006 tribulation terminal | M5+M6 | `TribulationOutcomeSettlement`, `TribulationOutcomeService`, `TribulationDirector.terminal` |
+| ARCH-007 offline production | M11 | `ProductionSystem.offlineParity` |
+| ARCH-008 authored parity | M10 | `GameManager.authoredParity`, `SkillToTurnSkillConverter` |
+| ARCH-009 buff identity | M9 | `TurnBuffIdentity`, `TurnBuffSystem(.adversarial)`, `dotSource.qa` |
+| ARCH-010 DoT-dead actor | M8 | `TurnBattleSystem.chargeCcInteraction`, `TurnBattleSystem.turnRegen` |
+| ARCH-011 wash binding | M2 | `EquipmentWash.pending` + wash commit tests |
+| ARCH-012 receipts | M12 | `GameManager.overflowSurfacing`, `NotificationQueue` |
+| ARCH-013 boot lifecycle | M4 | `useAppLifecycle`, `PhaserCanvas`, `AssetBundleManager`, `useElectronBridge` |
+| ARCH-014 event migration | M12 | `GameManager.battleEndPublication` (natural-defeat producer + listener sweep) |
+| ARCH-015 remote contract | M14 | PARKED — deferred per user ruling |
 
 ---
 
