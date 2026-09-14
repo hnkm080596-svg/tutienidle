@@ -157,26 +157,27 @@
      EquipmentQuality.ts (module TS tương ứng, XOÁ HẲN ở Task 22, đã
      merge). Không còn consumer nào tham chiếu 9 vars này. */
 
-  /* --grade-* — namespace màu VĨNH VIỄN cho trục "Phẩm" vật phẩm, dùng
-     bởi 2 nơi:
-       1. Đan/Phù/Trận (Pill/Talisman/Formation) qua ItemGrade.ts's
-          composeItemGradeNameSegments (PillBagSection.vue v.v.).
-       2. Equipment's "Chất" (ItemQuality.ts's
-          composeItemQualityNameSegments, Fix 2 final review
-          item-grade-quality-rework) — trước đó hàm này lỡ tô
-          --rank-color-1..5 trùng dải với EquipmentNaming.ts's Phẩm Nghề
-          segment (--rank-color-1..10), vi phạm spec §5.8 ("dải màu chất
-          riêng biệt với phẩm — 2 dải không trùng màu tránh nhầm").
-          --grade-* vốn đã là dải riêng, tách khỏi thang 10 bậc
-          --rank-color-1..10 (Phẩm Nghề, xem composables/slots/
-          normalizeSlotRank.ts) — dùng lại đúng mục đích của nó.
-     Naming-principles pass (2026-08-14, "nguyen li dat ten") — 5 bậc
-     Ngũ Phẩm Hoàng/Huyền/Địa/Thiên/Tiên, màu escalate rõ rệt để nhận
-     diện nhanh: đồng(hoang)/tím thẫm(huyen)/lục bích(dia)/vàng kim
-     (thien)/trắng-kim rực rỡ(tien, DÙNG LẠI hex đỉnh cầu vồng cũ
-     --rank-color-9 — cùng ý niệm "đỉnh phong" dù khác trục). Hệ 5 bậc
-     rải đều lên 1–3–5–7–9 CỐ Ý để không trùng bất kỳ giá trị nào trên
-     thang 10 bậc liền kề --rank-color-1..10. */
+  /* --grade-* - permanent color namespace for the item "Pham" axis, used
+     by 2 places:
+       1. Pill/Talisman/Formation via ItemGrade.ts's
+          composeItemGradeNameSegments (PillBagSection.vue etc.).
+       2. Equipment's "Chat" (ItemQuality.ts's short labels used in
+          EquipmentNaming.ts's Chat-name segment, Fix 2 final review
+          item-grade-quality-rework) - previously code mistakenly painted
+          --rank-color-1..5, overlapping EquipmentNaming.ts's Pham Nghe
+          segment (--rank-color-1..10), violating spec 5.8 ("chat color
+          ramp is separate from pham - the two ramps must not share
+          colors to avoid confusion"). --grade-* was already a separate
+          ramp off the 10-step --rank-color-1..10 scale (Pham Nghe, see
+          composables/slots/normalizeSlotRank.ts) - reused for exactly
+          its intended purpose.
+     Naming-principles pass (2026-08-14, "nguyen li dat ten") - 5 tiers
+     Ngu Pham Hoang/Huyen/Dia/Thien/Tien, sharply escalating colors for
+     quick recognition: copper(hoang)/dark violet(huyen)/jade(dia)/gold
+     (thien)/radiant white-gold(tien, REUSING the old rainbow-peak hex
+     --rank-color-9 - same "pinnacle" notion on a different axis). The
+     5-tier ramp lands on 1-3-5-7-9 BY DESIGN so it never collides with
+     any value on the adjacent 10-step --rank-color-1..10 scale. */
   --grade-hoang: var(--rank-color-1);
   --grade-huyen: var(--rank-color-3);
   --grade-dia: var(--rank-color-5);
@@ -436,6 +437,80 @@
     var(--surface-grain) 0 0 / 160px 160px repeat,
     var(--surface-raised-bg);
   color: var(--surface-text);
+}
+
+/* INK DRAWER (user art pass 2026-09) — shared surface of the two HUD
+   drawers (LeftPanel/RightPanel). Two art layers:
+   - border-image ring from panel-drawer-ink.png (no `fill` — only the
+     authored thin frame lands in the border, undistorted);
+   - interior = panel-drawer-bg.png (dragon rising on the left edge,
+     cloud bank + seal ornament on the right) painted with `cover`,
+     anchored per drawer via --ink-drawer-bg-pos so the left drawer
+     keeps the dragon and the right drawer keeps the ornament.
+   The class also remaps the paper token family onto the dark surface
+   palette so paper-oriented primitives (Chip, StatRow, panel
+   internals) render legibly on the dark art with zero per-component
+   edits — ONE owner for the drawer surface contract (roadmap R11).
+   Guard: tests/architecture/inkDrawerSurface.test.ts. */
+.ink-drawer {
+  --ink-drawer-frame: 14px;
+  border: var(--ink-drawer-frame) solid transparent;
+  border-image: url('/assets/ui/panel-drawer-ink.png') 16 / var(--ink-drawer-frame);
+  background:
+    url('/assets/ui/panel-drawer-bg.png') var(--ink-drawer-bg-pos, left center) / cover no-repeat,
+    var(--surface-950);
+  color: var(--surface-text);
+
+  /* Paper family -> dark surface equivalents (descendants unchanged). */
+  --paper-50: var(--surface-600);
+  --paper-100: var(--surface-700);
+  --paper-200: var(--surface-800);
+  --paper-text: var(--surface-text);
+  --paper-text-soft: var(--surface-text-soft);
+  --paper-text-muted: var(--surface-text-muted);
+  --paper-eyebrow: var(--surface-eyebrow);
+  --paper-line: var(--surface-line);
+  --paper-line-soft: var(--surface-line-soft);
+  --paper-grain: var(--surface-grain);
+}
+
+/* INK DIVIDER (user art pass 2026-09) — shared section separator: a
+   soft white glow strip (divider-glow.png) plus a bright segment that
+   sweeps left -> right -> left (animation-direction: alternate).
+   Reusable anywhere a section break is needed — ONE owner, same rule
+   as .ink-drawer. */
+.ink-divider {
+  position: relative;
+  flex: 0 0 auto;
+  height: 10px;
+  overflow: hidden;
+  background: url('/assets/ui/divider-glow.png') center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+.ink-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -6%;
+  width: 34%;
+  height: 3px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface-text) 90%, transparent), transparent);
+  animation: ink-divider-sweep 4.8s ease-in-out infinite alternate;
+}
+
+@keyframes ink-divider-sweep {
+  from { left: -6%; }
+  to { left: 72%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-divider::after {
+    animation: none;
+    left: 33%;
+  }
 }
 
 /* Ẩn thanh scrollbar trên toàn app — mọi panel vẫn kéo/scroll được
