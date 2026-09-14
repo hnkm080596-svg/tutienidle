@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
 
@@ -12,11 +12,19 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  *    legacy controls KHÔNG còn xuất hiện.
  * 3. Refight không crash, không ErrorScreen.
  *
- * Note pacing: trận Tầng 1 kết thúc nhanh (~0.6s fighting sau countdown
- * 3s < 1 stateVersion tick 1s) nên TurnCombatSkillBar/turn-order strip có
- * thể không kịp render trước khi trận xong — assertion chấp nhận b HEẾ
- * slot HUD (render ngay khi battle mount) thay vì bar (cần fighting state
- * render window).
+ * Pacing note (2026-09-14 baseline repair, measured): a stage-1 battle is
+ * no longer "quick" — the turn engine runs real-time on the combat clock
+ * (0.1s steps, RAF source) and the pipeline waits for Phaser acks each
+ * phase, so one actor turn costs ~1.8s wall-clock. A full stage-1 battle
+ * (~65-70 turns, multi-wave) measured ~118-133s; two battles back to back
+ * plus setup need ~260-280s, which the old 210s test cap could never
+ * contain — that arithmetic, not a stall and not ARCH-005 reactivity, was
+ * the audit's "second battle result" failure (the result modal renders
+ * correctly the moment the domain reaches victory/defeat). New budget:
+ * 180s per battle (same ~1.35x headroom create-to-combat already gives
+ * the same battle shape), 420s test cap. TurnCombatSkillBar/turn-order
+ * strip can still miss their short render window, so the spec keeps
+ * asserting the HUD slots (rendered at battle mount) rather than the bar.
  *
  * Outcome (fix round 1, freeze-fix review, 2026-09-06): trận Tầng 1 CÓ
  * THỂ kết thúc Thắng hoặc Thua (giống create-to-combat.spec.ts đã ghi
@@ -27,7 +35,11 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  */
 test.describe('Slice 7 — turn combat HUD', () => {
   test('battle runs, combat slots render, legacy controls gone, refight works', async ({ page }) => {
-    test.setTimeout(210_000)
+    // Two sequential real-time battles: ~135s worst measured each + setup
+    // (see header pacing note). 420s covers 2 x 180s asserts + ~40s of
+    // setup/assert slack; the per-assert budgets bound each battle, the
+    // cap bounds their sum.
+    test.setTimeout(420_000)
 
     await bootToGuestHome(page)
     await createCharacterThroughUi(page, 'E2E Turn HUD')
@@ -85,7 +97,7 @@ test.describe('Slice 7 — turn combat HUD', () => {
     // legitimately end either way, see note above).
     const victory = page.locator('.combat-victory-panel')
     const defeat = page.locator('.combat-defeat-panel')
-    await expect(victory.or(defeat)).toBeVisible({ timeout: 120_000 })
+    await expect(victory.or(defeat)).toBeVisible({ timeout: 180_000 })
 
     // Snapshot events phải chảy (engine ↔ scene wiring sống) — gồm cả
     // fighting phase (countdownProgress undefined) nhiều tick.
@@ -119,7 +131,7 @@ test.describe('Slice 7 — turn combat HUD', () => {
     // nhìn (gameplay thật, xem comment Task 11 ở trên — wiring đã được
     // assert bằng event probe ở trận 1).
     await expect(victory.or(defeat)).toBeVisible({
-      timeout: 120_000,
+      timeout: 180_000,
     })
 
     // No error boundary triggered.
