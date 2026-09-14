@@ -7,6 +7,9 @@ import { GameManager } from '@/core/game/GameManager'
 import { equipment } from '@/data/equipment/equipment'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { vTooltip } from '@/directives/tooltip'
+import { i18n } from '@/i18n'
+import { useTooltip } from '@/composables/useTooltip'
+import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
 
 function equipmentInstance(instanceId: string, itemId: string) {
@@ -37,6 +40,7 @@ function mountPaperdoll(prepare?: (manager: GameManager) => void) {
 
   const app = createApp({ render: () => h(EquipmentPaperdoll) })
   app.use(pinia)
+  app.use(i18n)
   app.directive('tooltip', vTooltip)
   app.provide(GAME_MANAGER_KEY, manager)
   app.provide(STATE_VERSION_KEY, version)
@@ -65,11 +69,54 @@ describe('EquipmentPaperdoll — registry miss an toàn', () => {
 
     expect(slots).toHaveLength(6)
 
-    // Slot weapon đang mặc item lạ — caption fallback itemId thô.
-    const weapon = mounted.container.querySelector<HTMLElement>('.paperdoll__slot[aria-label="nonexistent_item"]')
+    // Slot weapon đang mặc item lạ — aria-label fallback itemId thô +
+    // hậu tố Phẩm (accessibleLabel spec §5b: "{name}, {grade}").
+    const weapon = mounted.container.querySelector<HTMLElement>('.paperdoll__slot[aria-label="nonexistent_item, Cửu Phẩm"]')
 
     expect(weapon).not.toBeNull()
 
+    mounted.unmount()
+  })
+})
+
+describe('EquipmentPaperdoll — slot labels qua i18n (P16)', () => {
+  it('6 slot dùng key panels.bag.paperdoll.slots.* thay vì hardcode', () => {
+    const mounted = mountPaperdoll()
+
+    const keys = ['helmet', 'necklace', 'ring', 'weapon', 'armor', 'boots']
+    const labels = [...mounted.container.querySelectorAll('.paperdoll__slot')]
+      .map(slot => slot.getAttribute('aria-label'))
+
+    for (const key of keys) {
+      expect(labels).toContain(i18n.global.t(`panels.bag.paperdoll.slots.${key}`))
+    }
+
+    mounted.unmount()
+  })
+})
+
+describe('EquipmentPaperdoll — item-info-card cell contract', () => {
+  it('filled slot aria-label is "{name}, {grade}" (spec §5b); equipped-only tooltip has NO compareWith (spec §4)', async () => {
+    const mounted = mountPaperdoll((manager) => {
+      manager.equipmentBag.add(equipmentInstance('worn', 'base_kiem'))
+    })
+
+    await nextTick()
+
+    const slot = mounted.container.querySelector<HTMLElement>('.paperdoll__slot[aria-label="Kiếm, Cửu Phẩm"]')
+
+    expect(slot).not.toBeNull()
+
+    // Equipped-only surface: the worn item IS the compare counterpart —
+    // no paired card on its own tooltip (item-info-card task 6).
+    slot!.dispatchEvent(new Event('pointerenter', { bubbles: true }))
+
+    const content = useTooltip().content.value as EquipmentTooltipContent | null
+
+    expect(content?.kind).toBe('equipment')
+    expect(content && 'compareWith' in content).toBe(false)
+
+    useTooltip().dismissTooltip()
     mounted.unmount()
   })
 })

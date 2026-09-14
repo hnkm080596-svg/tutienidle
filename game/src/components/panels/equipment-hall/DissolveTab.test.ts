@@ -138,13 +138,14 @@ describe('DissolveTab — Hóa Luyện', () => {
 
     await nextTick()
 
-    // Ứng viên Hóa Luyện render không throw — item lạ hiện itemId thô.
+    // Ứng viên Hóa Luyện render không throw — item lạ hiện itemId thô
+    // + hậu tố Phẩm (accessibleLabel spec §5b: "{name}, {grade}").
     const dissolveSlots = mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')
 
     expect(dissolveSlots.length).toBeGreaterThan(0)
 
     const ghost = Array.from(dissolveSlots).find(
-      (el) => el.getAttribute('aria-label') === 'nonexistent_item',
+      (el) => el.getAttribute('aria-label') === 'nonexistent_item, Cửu Phẩm',
     )
 
     expect(ghost).toBeDefined()

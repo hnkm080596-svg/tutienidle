@@ -18,7 +18,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { usePanelPagination } from '@/composables/usePanelPagination'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
-import { materialLabel, equipmentQualityLabel } from '@/core/presentation/labels'
+import { materialLabel, equipmentQualityLabel, gradeLabel } from '@/core/presentation/labels'
 import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
 import { PROFESSION_GRADE_ORDER, PROFESSION_GRADE_NAMES } from '@/core/profession/ProfessionGrade'
 import { canUseItemGrade } from '@/core/equipment/canUseItem'
@@ -46,6 +46,10 @@ interface DissolveCandidate {
   instanceId: string
 
   name: string
+
+  // spec §5b — "{name}, {grade}" so aria includes Pham (seal is a
+  // decorative glyph; screen readers get the grade through this label).
+  accessibleLabel: string
 
   grade: EquipmentInstance['grade']
 
@@ -117,6 +121,8 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
         instanceId: instance.instanceId,
 
         name: template?.name ?? instance.itemId,
+
+        accessibleLabel: `${template?.name ?? instance.itemId}, ${gradeLabel(instance.grade)}`,
 
         grade: instance.grade,
 
@@ -296,6 +302,7 @@ function doDissolve() {
           class="qi-hall__slot"
           :item="{ id: candidate.instanceId }"
           :label="candidate.name"
+          :accessible-label="candidate.accessibleLabel"
           :name-segments="candidate.nameSegments"
           :icon="candidate.icon"
           :equipment-quality-rank="candidate.gradeRank"

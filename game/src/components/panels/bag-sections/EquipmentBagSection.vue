@@ -11,6 +11,7 @@ import { compareNumber, compareText, stableSort, withDirection } from '@/composa
 import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
+import { gradeLabel } from '@/core/presentation/labels'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import { compareProfessionGrades } from '@/core/profession/ProfessionGrade'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
@@ -113,6 +114,10 @@ const entries = computed<EquipmentEntry[]>(() => {
 
         label: displayName,
 
+        // spec §5b — aria gồm cả Phẩm (seal chỉ là glyph trang trí,
+        // screen reader đọc grade qua label này).
+        accessibleLabel: `${displayName}, ${gradeLabel(instance.grade)}`,
+
         nameSegments,
 
         description: template?.description,
@@ -212,6 +217,7 @@ watch(
         class="bag-section__slot"
         :item="cell"
         :label="cell?.label"
+        :accessible-label="cell?.accessibleLabel"
         :name-segments="cell?.nameSegments"
         :description="cell?.description"
         :amount="cell?.amount"
