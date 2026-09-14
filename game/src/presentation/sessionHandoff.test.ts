@@ -155,10 +155,10 @@ describe('Admitted session handoff (ARCH-004 / L03)', () => {
 
     const basePlayer = createDefaultPlayer()
     // ARCH-002 (M7): startStage resolves stats internally — patch the RAW
-    // baseStats so the resolved snapshot keeps the guaranteed-kill attack.
+    // baseStats so the resolved snapshot keeps the guaranteed-kill might.
     player = {
       ...basePlayer,
-      baseStats: asBaseStats({ ...basePlayer.baseStats, attack: 1_000_000, speed: 100 }),
+      baseStats: asBaseStats({ ...basePlayer.baseStats, might: 1_000_000, speed: 100 }),
     }
     player.realmLevel = 12 // mortal Quan Khi breakthrough gate
     player.cultivation = 0

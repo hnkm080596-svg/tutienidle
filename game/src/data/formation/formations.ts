@@ -39,7 +39,7 @@ export const formations: Formation[] = REALM_IDS.flatMap((realmId) =>
         realmId === 'mortal' ? 'cuu_pham' : realmId === 'qi_refining' ? 'bat_pham' : 'that_pham',
       allowedSlots: ALL_SLOTS,
       modifiers: [
-        modifier(`${id}_attack`, id, 'attack', Math.round(6 * scale)),
+        modifier(`${id}_attack`, id, 'might', Math.round(6 * scale)),
         modifier(`${id}_crit`, id, 'criticalRate', Number((0.02 * scale).toFixed(4))),
       ],
     }

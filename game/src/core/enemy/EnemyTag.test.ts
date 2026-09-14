@@ -19,7 +19,7 @@ const BASE = defineEnemy({
   lane: 'ground',
   statsInput: {
     maxHp: 440,
-    attack: 38,
+    might: 38,
     attackSpeed: 1.6,
     attackRangeRanks: 1,
     criticalRate: 0.08,

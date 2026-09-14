@@ -29,7 +29,7 @@ const TEMPLATE: Equipment = {
   slot: 'weapon',
   grade: 1,
   maxEnhanceLevel: 10,
-  mainStats: [{ stat: 'attack', min: 10, max: 20 }],
+  mainStats: [{ stat: 'might', min: 10, max: 20 }],
   enhanceCost: [{ materialId: 'qi_refining_ore_century', amount: 1 }],
 }
 
@@ -67,10 +67,10 @@ function manualInstance(overrides: Partial<EquipmentInstance> = {}): EquipmentIn
     grade: 'bat_pham',
     quality: 'hoang',
     mainStat: {
-      id: 'roll-main-attack',
+      id: 'roll-main-might',
       sourceId: 'roll-main',
       sourceType: 'equipment',
-      stat: 'attack',
+      stat: 'might',
       flat: 15,
     },
     forgeUsesRemaining: 0,
@@ -349,9 +349,9 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
         id: `wash-decoy-${quality}`,
         name: 'Wash decoy',
         // Decoy non-locked phải hợp lệ ở boots nhưng khác stat compatible
-        // (criticalRate ở weapon) — dùng wardRegenPerSecond (boots substat)
+        // (criticalRate ở weapon) — dùng wardRegenPerTurn (boots substat)
         // vì castSpeedPercent cũ đã retire (2026-09-04).
-        stat: lockedPool ? 'criticalDamage' : 'wardRegenPerSecond',
+        stat: lockedPool ? 'criticalDamage' : 'wardRegenPerTurn',
         kind: 'prefix',
         pool: lockedPool ?? expectedPool,
         slots: lockedPool ? ['weapon'] : ['boots'],
@@ -475,9 +475,9 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     incompatibleRegistry.register({
       id: 'wash-incompatible-only',
       name: 'Wash incompatible only',
-      // (2026-09-04) castSpeedPercent cũ retire — dùng wardRegenPerSecond
+      // (2026-09-04) castSpeedPercent cũ retire — dùng wardRegenPerTurn
       // (boots substat) giữ ý "hợp lệ boots, không hợp lệ weapon".
-      stat: 'wardRegenPerSecond',
+      stat: 'wardRegenPerTurn',
       kind: 'prefix',
       pool: 'basic',
       slots: ['boots'],
@@ -561,7 +561,7 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
 
     expect(sourceModifierIds(ctx)).toEqual([
       `${ctx.instance.instanceId}:accuracyRating`,
-      `${ctx.instance.instanceId}:attack`,
+      `${ctx.instance.instanceId}:might`,
     ])
 
     expect(
@@ -569,8 +569,8 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     ).toBe(true)
     expect(ctx.instance.affixes).toEqual([{ affixId: ctx.newAffix.id, tier: 1, value: 1 }])
     expect(sourceModifierIds(ctx)).toEqual([
-      `${ctx.instance.instanceId}:attack`,
       `${ctx.instance.instanceId}:criticalRate`,
+      `${ctx.instance.instanceId}:might`,
     ])
   })
 
@@ -598,8 +598,8 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
       ).ok,
     ).toBe(true)
     expect(sourceModifierIds(ctx)).toEqual([
-      `${ctx.instance.instanceId}:attack`,
       `${ctx.instance.instanceId}:criticalRate`,
+      `${ctx.instance.instanceId}:might`,
     ])
   })
 

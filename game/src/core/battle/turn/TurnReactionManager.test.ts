@@ -39,7 +39,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -153,7 +153,7 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
     reactionManager.checkAndTrigger(targetBuffPool, 'te_cong', source, target, combatSystem, BUFF_REGISTRY)
 
     // Combat Balance Pass (2026-08-29) — baseDamage 60 + power
-    // (attack 10 × 0.5 = 5) = 65, then × (1 + 0.5) = 97.5.
+    // (might 10 × 0.5 = 5) = 65, then × (1 + 0.5) = 97.5.
     expect(target.currentHp).toBe(1000 - 105)
   })
 

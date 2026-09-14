@@ -40,17 +40,17 @@ describe('domain gate (D10)', () => {
     // outcome to the same modifier without a domain. Compared pairwise
     // so attribute derivation can never make the assertion drift.
     const tagged = calculateStats(base, [
-      mod({ stat: 'attack', domain: 'phap_tu', flat: 5 }),
+      mod({ stat: 'might', domain: 'phap_tu', flat: 5 }),
       mod({ stat: 'firePower', domain: 'phap_tu', flat: 7 }),
     ])
     const untagged = calculateStats(base, [
-      mod({ stat: 'attack', flat: 5 }),
+      mod({ stat: 'might', flat: 5 }),
       mod({ stat: 'firePower', flat: 7 }),
     ])
 
-    expect(tagged.attack).toBe(untagged.attack)
+    expect(tagged.might).toBe(untagged.might)
     expect(tagged.firePower).toBe(untagged.firePower)
-    expect(untagged.attack).toBeGreaterThan(base.attack)
+    expect(untagged.might).toBeGreaterThan(base.might)
     expect(untagged.firePower).toBeGreaterThan(base.firePower)
     expect(domainViolations).toHaveLength(0)
   })
@@ -115,12 +115,12 @@ describe('domain gate (D10)', () => {
     STAT_DOMAIN[GATED_STAT] = GATED_DOMAIN
 
     const accepted = applyDomainGate(
-      [mod({ stat: 'attack', flat: 5 }), mod({ stat: GATED_STAT, flat: 50 })],
+      [mod({ stat: 'might', flat: 5 }), mod({ stat: GATED_STAT, flat: 50 })],
       false,
     )
 
     expect(accepted).toHaveLength(1)
-    expect(accepted[0]?.stat).toBe('attack')
+    expect(accepted[0]?.stat).toBe('might')
     expect(domainViolations).toHaveLength(1)
     expect(domainViolations[0]?.modifier.stat).toBe(GATED_STAT)
     expect(domainViolations[0]?.statDomain).toBe(GATED_DOMAIN)

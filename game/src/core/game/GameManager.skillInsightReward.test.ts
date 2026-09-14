@@ -16,7 +16,7 @@ function makeEnemy(techniqueInsight: number) {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: {
-      maxHp: 1, attack: 0, attackSpeed: 1,
+      maxHp: 1, might: 0, attackSpeed: 1,
       attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0,
     },
     rewards: { techniqueInsight, spiritStone: 0 },

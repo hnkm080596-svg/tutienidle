@@ -149,7 +149,7 @@ const combatPower = computed(() => {
   const stats = player.finalStats
 
   return Math.round(
-    stats.attack * 2 +
+    stats.might * 2 +
     stats.defense * 1.5 +
     stats.maxHp * 0.1 +
     stats.maxMp * 0.05 +

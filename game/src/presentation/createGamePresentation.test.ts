@@ -153,7 +153,7 @@ describe('createGamePresentation and runAdmitted', () => {
   it('integrates with real GameManager: notification plus returned request cause exactly one transition', async () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
     const enemy = defineEnemy({
       id: 'admit_dummy',
       name: 'Dummy',
@@ -162,7 +162,7 @@ describe('createGamePresentation and runAdmitted', () => {
       lane: 'ground',
       statsInput: {
         maxHp: 500,
-        attack: 0,
+        might: 0,
         attackSpeed: 1,
         attackRangeRanks: 9,
         criticalRate: 0,
@@ -212,7 +212,7 @@ describe('createGamePresentation and runAdmitted', () => {
   it('observes external accepted session start through notification bridge without runAdmitted', async () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
     const enemy = defineEnemy({
       id: 'ext_dummy',
       name: 'Dummy',
@@ -221,7 +221,7 @@ describe('createGamePresentation and runAdmitted', () => {
       lane: 'ground',
       statsInput: {
         maxHp: 500,
-        attack: 0,
+        might: 0,
         attackSpeed: 1,
         attackRangeRanks: 9,
         criticalRate: 0,
@@ -349,11 +349,11 @@ describe('createGamePresentation and runAdmitted', () => {
   it('kind-scoped session query keeps a lingering combat session out of a tribulation request', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
     const enemy = defineEnemy({
       id: 'kind_dummy', name: 'Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: {
-        maxHp: 500, attack: 0, attackSpeed: 1, attackRangeRanks: 9,
+        maxHp: 500, might: 0, attackSpeed: 1, attackRangeRanks: 9,
         criticalRate: 0, criticalDamage: 1.5, armor: 0,
       },
       rewards: { techniqueInsight: 0, spiritStone: 0 },

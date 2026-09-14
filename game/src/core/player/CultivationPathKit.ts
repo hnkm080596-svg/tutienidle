@@ -69,7 +69,7 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
         id: 'phap_tu_linh_luc_regen',
         sourceId: 'phap_tu',
         sourceType: 'realm',
-        stat: 'manaRegenPerSecond',
+        stat: 'manaRegenPerTurn',
         flat: 2,
       },
       {

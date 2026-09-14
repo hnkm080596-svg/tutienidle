@@ -34,7 +34,7 @@ export const TECHNIQUES: Technique[] = [
     resourceLabel: 'Pháp Lực',
 
     // PLAN HOÀN CHỈNH mục 5.2 — Đại Ngũ Hành: %Linh lực tối đa
-    // 3→4→5→10, %Hồi Linh (Increased manaRegenPerSecond, KHÔNG phải %
+    // 3→4→5→10, %Hồi Linh (Increased manaRegenPerTurn, KHÔNG phải %
     // maxMp — xem Technique.ts's TechniqueTierEffect) 0.5→0.75→1.5→2,
     // giá trị Đại Thành đã chốt lại với user (doc gốc ghi nhầm 0.1%).
     tierEffects: {
@@ -216,10 +216,10 @@ export const TECHNIQUES: Technique[] = [
     // +15/+25/+35/+70 theo đúng 4 tier, giữ NGUYÊN giá trị doc yêu cầu
     // để tiếp tục balance sau (không tự ý làm tròn/đổi).
     tierEffects: {
-      so_nhap: { attackFlat: 15, defenseFlat: 15, hpRegenFlat: 1, mpRegenFlat: 0.5 },
-      tieu_thanh: { attackFlat: 25, defenseFlat: 25, hpRegenFlat: 1.5, mpRegenFlat: 0.75 },
-      dai_thanh: { attackFlat: 35, defenseFlat: 35, hpRegenFlat: 2, mpRegenFlat: 1.5 },
-      vien_man: { attackFlat: 70, defenseFlat: 70, hpRegenFlat: 3, mpRegenFlat: 2 },
+      so_nhap: { mightFlat: 15, defenseFlat: 15, hpRegenFlat: 1, mpRegenFlat: 0.5 },
+      tieu_thanh: { mightFlat: 25, defenseFlat: 25, hpRegenFlat: 1.5, mpRegenFlat: 0.75 },
+      dai_thanh: { mightFlat: 35, defenseFlat: 35, hpRegenFlat: 2, mpRegenFlat: 1.5 },
+      vien_man: { mightFlat: 70, defenseFlat: 70, hpRegenFlat: 3, mpRegenFlat: 2 },
     },
 
     unlocked: false,

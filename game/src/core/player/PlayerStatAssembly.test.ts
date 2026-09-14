@@ -11,7 +11,7 @@ function makeModifier(overrides: Partial<StatModifier> = {}): StatModifier {
     id: 'test_modifier',
     sourceId: 'test_source',
     sourceType: 'equipment',
-    stat: 'attack',
+    stat: 'might',
     ...overrides,
   }
 }
@@ -22,8 +22,8 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
 
     const result = calculateStats(base, [makeModifier({ flat: 15 })])
 
-    // attribute-derived: strength 1 × 0.6 = +0.6 attack ở pass 2.
-    expect(result.attack).toBeCloseTo(25.6, 5)
+    // attribute-derived: strength 1 × 0.6 = +0.6 might ở pass 2.
+    expect(result.might).toBeCloseTo(25.6, 5)
   })
 
   it('percent cộng dồn cùng pool RỒI mới nhân 1 lần (không compound)', () => {
@@ -35,7 +35,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
     ])
 
     // (10 + 0.6) × (1 + 0.2 + 0.2) = 10.6 × 1.4 = 14.84.
-    expect(result.attack).toBeCloseTo(14.84, 5)
+    expect(result.might).toBeCloseTo(14.84, 5)
   })
 
   it('multiplier (More) nhân TUẦN TỰ từng cái', () => {
@@ -47,7 +47,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
     ])
 
     // (10 + 0.6) × 1.2 × 1.2 = 15.264.
-    expect(result.attack).toBeCloseTo(15.264, 5)
+    expect(result.might).toBeCloseTo(15.264, 5)
   })
 
   it('flat + percent + multiplier kết hợp đúng thứ tự Added → Increased → More', () => {
@@ -60,7 +60,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
     ])
 
     // (10 + 10 + 0.6) × (1 + 0.5) × 2 = 20.6 × 1.5 × 2 = 61.8.
-    expect(result.attack).toBeCloseTo(61.8, 5)
+    expect(result.might).toBeCloseTo(61.8, 5)
   })
 
   it('percent tách tag: mỗi tag là 1 pool Increased RIÊNG nhân độc lập', () => {
@@ -73,7 +73,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
 
     // (10 + 0.6) × (1 + 0.2) × (1 + 0.2) = 10.6 × 1.2 × 1.2 = 15.264,
     // KHÔNG phải 10.6 × 1.4.
-    expect(result.attack).toBeCloseTo(15.264, 5)
+    expect(result.might).toBeCloseTo(15.264, 5)
   })
 
   it('stacks nhân vào flat/percent và lặp lại multiplier', () => {
@@ -85,7 +85,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
     ])
 
     // (10 + 0.6 + 15) × (1 + 0.3) = 25.6 × 1.3 = 33.28.
-    expect(result.attack).toBeCloseTo(33.28, 5)
+    expect(result.might).toBeCloseTo(33.28, 5)
   })
 
   it('attribute dẫn xuất: tăng vitality → maxHp/hpRegen phái sinh', () => {
@@ -105,7 +105,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
     const result = calculateStats(base, [])
 
     expect(result.maxHp).toBeCloseTo(108, 5) // vitality 1 × 8
-    expect(result.attack).toBeCloseTo(10.6, 5) // strength 1 × 0.6
+    expect(result.might).toBeCloseTo(10.6, 5) // strength 1 × 0.6
     expect(result.defense).toBeCloseTo(5.4, 5) // strength 1 × 0.4
   })
 })
@@ -132,7 +132,7 @@ describe('clampStatValue — tôn trọng min/max trong StatMetadata', () => {
   })
 
   it('stat không có metadata (flat, không trần) trả về nguyên giá trị', () => {
-    expect(clampStatValue('attack', -100)).toBe(-100)
+    expect(clampStatValue('might', -100)).toBe(-100)
     expect(clampStatValue('maxHp', 12345)).toBe(12345)
     expect(clampStatValue('firePower', 999)).toBe(999)
   })

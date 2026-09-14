@@ -63,14 +63,14 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
     gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e1', 'pill_regen', 20_000, [
-        { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'attack', flat: 100, percent: 0.2 },
+        { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'might', flat: 100, percent: 0.2 },
       ]),
     )
 
     gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e2', 'pill_regen', 30_000, [
-        { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'attack', flat: 40, percent: 0.05 },
+        { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'might', flat: 40, percent: 0.05 },
       ]),
     )
 
@@ -93,14 +93,14 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
     gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e1', 'pill_buff', 10_000, [
-        { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'attack', percent: 0.1 },
+        { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'might', percent: 0.1 },
       ]),
     )
 
     gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e2', 'pill_buff', 12_000, [
-        { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'attack', percent: 0.3 },
+        { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'might', percent: 0.3 },
       ]),
     )
 
@@ -119,14 +119,14 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
     gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e1', 'pill_buff', 10_000, [
-        { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'attack', tag: 'fire', percent: 0.1 },
+        { id: 'm1', sourceId: 'e1', sourceType: 'pill', stat: 'might', tag: 'fire', percent: 0.1 },
       ]),
     )
 
     gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e2', 'pill_buff', 12_000, [
-        { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'attack', tag: 'physical', percent: 0.2 },
+        { id: 'm2', sourceId: 'e2', sourceType: 'pill', stat: 'might', tag: 'physical', percent: 0.2 },
       ]),
     )
 

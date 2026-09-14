@@ -22,7 +22,7 @@ function makeEnemy(id: string, maxHp: number) {
     lane: 'ground',
     statsInput: {
       maxHp,
-      attack: 0,
+      might: 0,
       attackSpeed: 1,
       attackRangeRanks: 9,
       criticalRate: 0,
@@ -59,7 +59,7 @@ describe('getStageProgress alive count (A0 fix)', () => {
     gameManager.catalogOps.registerStages([stage])
 
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 0  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 0  })
 
     gameManager.setActivePlayer(player)
     expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)

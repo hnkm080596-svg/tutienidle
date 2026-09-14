@@ -165,7 +165,7 @@ describe('loadGame — shape validation (save-shape-validation-plan.md)', () => 
       equipped: true,
       grade: 'cuu_pham',
       quality: 'hoang',
-      mainStat: { stat: 'attack', flat: 1 },
+      mainStat: { stat: 'might', flat: 1 },
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
       forgeUsesTotal: 6,
       forgeUsesRemaining: 6,
@@ -197,7 +197,7 @@ describe('loadGame — shape validation (save-shape-validation-plan.md)', () => 
       equipped: false,
       realmId: 'mortal',
       rarity: 'hoang',
-      mainStat: { stat: 'attack', flat: 1 },
+      mainStat: { stat: 'might', flat: 1 },
       affixes: [],
       forgePoints: 0,
     }]
@@ -307,7 +307,7 @@ describe('importSaveRaw', () => {
       equipped: false,
       realmId: 'mortal',
       rarity: 'hoang',
-      mainStat: { stat: 'attack', flat: 1 },
+      mainStat: { stat: 'might', flat: 1 },
       affixes: [],
       forgePoints: 0,
     }]
@@ -346,7 +346,7 @@ describe('importSaveRaw', () => {
       equipped: false,
       realmId: 'mortal',
       rarity: 'hoang',
-      mainStat: { stat: 'attack', flat: 1 },
+      mainStat: { stat: 'might', flat: 1 },
       affixes: [],
       forgePoints: 0,
     }]
@@ -378,7 +378,7 @@ describe('importSaveRaw', () => {
       equipped: false,
       realmId: 'mortal',
       rarity: 'hoang',
-      mainStat: { stat: 'attack', flat: 1 },
+      mainStat: { stat: 'might', flat: 1 },
       affixes: [],
       forgePoints: 0,
     }]

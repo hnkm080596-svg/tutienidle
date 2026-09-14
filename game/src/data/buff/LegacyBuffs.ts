@@ -102,7 +102,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     effects: [
       {
         type: 'statModifier',
-        stat: 'manaRegenPerSecond',
+        stat: 'manaRegenPerTurn',
         flat: 5,
       },
     ],
@@ -395,7 +395,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     effects: [
       {
         type: 'statModifier',
-        stat: 'attack',
+        stat: 'might',
         percent: -0.2,
       },
     ],

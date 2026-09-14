@@ -2,7 +2,7 @@ import type { Equipment, EquipmentStatRange } from '@/core/equipment/Equipment'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 
 const MAIN_STATS: Record<EquipmentSlot, readonly EquipmentStatRange[]> = {
-  weapon: [{ stat: 'attack', min: 12, max: 20 }],
+  weapon: [{ stat: 'might', min: 12, max: 20 }],
   helmet: [{ stat: 'maxHp', min: 18, max: 30 }],
   armor: [{ stat: 'defense', min: 12, max: 20 }],
   boots: [{ stat: 'evasionRate', min: 12, max: 20 }],

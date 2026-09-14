@@ -29,24 +29,24 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     return buffs.find((b) => b.id === id)
   }
 
-  it('thanh_tuyen — buff 6s refresh, manaRegenPerSecond +8 flat + manaRegenPercent +0.10', () => {
+  it('thanh_tuyen — buff 6s refresh, manaRegenPerTurn +8 flat + manaRegenPercent +0.10', () => {
     const b = byId('thanh_tuyen')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerSecond', flat: 8 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 8 })
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPercent', percent: 0.1 })
   })
 
-  it('bang_giap — buff 6s refresh, wardMax +50 + wardRegenPerSecond +5', () => {
+  it('bang_giap — buff 6s refresh, wardMax +50 + wardRegenPerTurn +5', () => {
     const b = byId('bang_giap')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 50 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerSecond', flat: 5 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerTurn', flat: 5 })
   })
 
   it('hoi_luu — buff 4s refresh, leechPercent +0.20', () => {
@@ -77,14 +77,14 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'thornsPercent', flat: 0.15 })
   })
 
-  it('dia_tru — buff 6s refresh, wardMax +60 + wardRegenPerSecond +6 + thornsPercent +0.10', () => {
+  it('dia_tru — buff 6s refresh, wardMax +60 + wardRegenPerTurn +6 + thornsPercent +0.10', () => {
     const b = byId('dia_tru')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 60 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerSecond', flat: 6 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerTurn', flat: 6 })
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'thornsPercent', flat: 0.1 })
   })
 
@@ -103,7 +103,7 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
   it('the_man_<el> ×5 — buff duration Infinity, engine-gỡ, effects theo bảng §4', () => {
     const expected: Record<string, { type: 'statModifier'; stat: string; flat?: number; percent?: number }[]> = {
       the_man_fire: [{ type: 'statModifier', stat: 'ailmentPotencyPercent', percent: 0.15 }],
-      the_man_water: [{ type: 'statModifier', stat: 'manaRegenPerSecond', flat: 6 }],
+      the_man_water: [{ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 6 }],
       the_man_wood: [{ type: 'statModifier', stat: 'ailmentDurationPercent', percent: 0.2 }],
       the_man_metal: [{ type: 'statModifier', stat: 'criticalRate', percent: 0.08 }],
       the_man_earth: [{ type: 'statModifier', stat: 'defense', percent: 0.1 }],
@@ -124,21 +124,21 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     const ngungLo = byId('ngung_lo')!
     const khaiSon = byId('khai_son')!
 
-    expect(ngungLo.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerSecond', flat: 5 })
+    expect(ngungLo.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 5 })
     expect(khaiSon.effects).toContainEqual({ type: 'statModifier', stat: 'defense', percent: 0.08 })
   })
 
   // Review round 1 (Finding 1) — biến thể Thổ C không được mượn buff
   // hành khác (bang_giap/kim_giap → sai số liệu + đụng tên đa hành):
   // buff riêng theo đúng bảng §2.5.
-  it('dia_tru_bich — buff 6s refresh, wardMax +100 + wardRegenPerSecond +8, KHÔNG thorns', () => {
+  it('dia_tru_bich — buff 6s refresh, wardMax +100 + wardRegenPerTurn +8, KHÔNG thorns', () => {
     const b = byId('dia_tru_bich')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 100 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerSecond', flat: 8 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerTurn', flat: 8 })
     expect(b.effects.some((e) => e.type === 'statModifier' && e.stat === 'thornsPercent')).toBe(false)
   })
 

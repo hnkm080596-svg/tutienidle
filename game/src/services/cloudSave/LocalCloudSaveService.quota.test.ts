@@ -136,7 +136,7 @@ describe('LocalCloudSaveService.load — equipment discard counter', () => {
       equipped: false,
       realmId: 'mortal',
       rarity: 'hoang',
-      mainStat: { stat: 'attack', flat: 1 },
+      mainStat: { stat: 'might', flat: 1 },
       affixes: [],
       forgePoints: 0,
     }

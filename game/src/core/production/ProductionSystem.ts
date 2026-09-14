@@ -606,9 +606,9 @@ export class ProductionSystem {
 
         state: ProductionSiteState
 
-        speedMultiplier: number
+        productionSpeedMultiplier: number
 
-        nextSpeedMultiplier?: number
+        nextProductionSpeedMultiplier?: number
 
         cycleRemainingMs?: number
 
@@ -626,8 +626,8 @@ export class ProductionSystem {
     const view = {
       definition,
       state,
-      speedMultiplier: getSiteSpeedMultiplier(state.level),
-      nextSpeedMultiplier:
+      productionSpeedMultiplier: getSiteSpeedMultiplier(state.level),
+      nextProductionSpeedMultiplier:
         state.level < definition.maxLevel ? getSiteSpeedMultiplier(state.level + 1) : undefined,
       cycleRemainingMs: undefined as number | undefined,
       cycleTotalMs: undefined as number | undefined,

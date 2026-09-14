@@ -153,7 +153,7 @@ export interface CombatEntity {
   // TurnBattleSystem. Unit changed seconds -> holder-turns in M8
   // (ARCH-003); the legacy seconds-based gate lived in the retired
   // engine's updateRegen.
-  timeSinceLastHitTaken: number
+  turnsSinceLastHitLanded: number
 
   // Vị trí (0-based) trong REALMS — dùng để tính Realm Pressure giữa
   // 2 bên combat (xem RealmPressure.ts). Cùng ý nghĩa với

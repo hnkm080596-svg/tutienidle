@@ -36,7 +36,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
       statsInput: {
         // HP cực thấp — chết nhanh để wave spawn nhiều lượt trong ít tick.
         maxHp: 1,
-        attack: 0,
+        might: 0,
         attackSpeed: 1,
         attackRangeRanks: 999999,
         criticalRate: 0,
@@ -65,7 +65,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
     expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
 
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 999  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 999  })
 
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
 
@@ -86,7 +86,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
       }
     }
 
-    // Phải quan sát được ít nhất quái #1 và #2 (wave 5 con, HP=1, attack=999
+    // Phải quan sát được ít nhất quái #1 và #2 (wave 5 con, HP=1, might=999
     // — thừa thời gian để spawn tối thiểu 2 con trong 400 tick).
     expect(seenAtSpawn.size).toBeGreaterThanOrEqual(2)
 

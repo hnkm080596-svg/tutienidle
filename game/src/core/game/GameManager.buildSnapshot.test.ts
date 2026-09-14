@@ -14,7 +14,7 @@ const TEST_WEAPON: Equipment = {
   slot: 'weapon',
   grade: 1,
   maxEnhanceLevel: 10,
-  mainStats: [{ stat: 'attack', min: 50, max: 50 }],
+  mainStats: [{ stat: 'might', min: 50, max: 50 }],
 }
 
 function manualWeaponInstance() {
@@ -23,7 +23,7 @@ function manualWeaponInstance() {
     itemId: TEST_WEAPON.id,
     grade: 'bat_pham',
     quality: 'hoang',
-    mainStat: { id: 'roll-main-attack', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 50 },
+    mainStat: { id: 'roll-main-might', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 50 },
     forgeUsesRemaining: 0,
   })
 }
@@ -37,7 +37,7 @@ function createTestEnemy() {
     lane: 'ground',
     statsInput: {
       maxHp: 100,
-      attack: 1,
+      might: 1,
       attackSpeed: 1,
       attackRangeRanks: 9,
       criticalRate: 0,
@@ -68,7 +68,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     const attackBeforeAnyBuild = calculateStats(player.baseStats, [
       ...player.modifiers,
       ...gameManager.effectOps.getAggregatedModifiers(),
-    ]).attack
+    ]).might
 
     // --- Class: chọn Kiếm Tu (path THẬT đã ship, không phải fixture)
     // — tự cấp Tâm Pháp (Technique) + 3 skill cố định.
@@ -78,9 +78,9 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     const attackAfterClass = calculateStats(player.baseStats, [
       ...player.modifiers,
       ...gameManager.effectOps.getAggregatedModifiers(),
-    ]).attack
+    ]).might
 
-    // --- Equipment: trang bị vũ khí +50 attack (static modifier, KHÔNG
+    // --- Equipment: trang bị vũ khí +50 might (static modifier, KHÔNG
     // qua getAggregatedModifiers() — đi vào player.modifiers riêng,
     // đúng kiến trúc thật, xem stores/player.ts's finalStats).
     gameManager.equipmentBag.add(manualWeaponInstance())
@@ -92,7 +92,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     const attackAfterEquipment = calculateStats(player.baseStats, [
       ...player.modifiers,
       ...gameManager.effectOps.getAggregatedModifiers(),
-    ]).attack
+    ]).might
 
     expect(attackAfterEquipment).toBeGreaterThanOrEqual(attackAfterClass + 50)
 
@@ -116,11 +116,11 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
       ...gameManager.effectOps.getAggregatedModifiers(),
     ])
 
-    expect(finalStats.attack).toBeGreaterThan(attackBeforeAnyBuild)
+    expect(finalStats.might).toBeGreaterThan(attackBeforeAnyBuild)
 
     gameManager.startBattleWithPlayer(player, createTestEnemy())
 
-    expect(gameManager.getTurnBattle()!.players[0]!.entity.stats.attack).toBe(finalStats.attack)
+    expect(gameManager.getTurnBattle()!.players[0]!.entity.stats.might).toBe(finalStats.might)
   })
 
   it('giữ nguyên skill runtime stats trong trận và chỉ nhận thay đổi ở trận kế tiếp', () => {

@@ -41,7 +41,7 @@ export const PLAYER_BASE_RANGE_RANKS = 5
 
 export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
   return {
-    attack: 10,
+    might: 10,
     defense: 5,
 
     maxHp: 100,
@@ -92,13 +92,13 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     enduranceThreshold: 10,
     endurancePercent: 0.7,
     wardMax: 0,
-    wardRegenPerSecond: 0,
+    wardRegenPerTurn: 0,
     wardBreakDamagePercent: 0,
     manaShieldPercent: 0,
     leechPercent: 0,
     thornsPercent: 0,
     hpRegenPerTurn: 0,
-    manaRegenPerSecond: 0,
+    manaRegenPerTurn: 0,
     finalDamagePercent: 0,
     finalDamageReductionPercent: 0,
     criticalAvoidance: 0,
@@ -120,7 +120,7 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     // Equipment enhancement delta % (EquipmentHallPanel).
     affixDeltaPercent: 0,
     // Production speed multiplier.
-    speedMultiplier: 1,
+    productionSpeedMultiplier: 1,
     // Artifact grade multiplier.
     artifactGradeMultiplier: 1,
     // Pill cultivation percent.

@@ -7,13 +7,13 @@ import { asBaseStats, createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 
 function _debugEntity(): CombatEntity {
-  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, attack: 100 })
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, might: 100 })
   return {
     id: 'dbg_player', name: 'Dbg', type: 'player', baseStats: stats, stats,
     currentHp: 100, maxHp: 100, currentMp: 0,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-    currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+    currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
   } as CombatEntity
 }
 
@@ -27,14 +27,14 @@ describe('debug turn battle rewards', () => {
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
     const enemy = defineEnemy({
       id: 'dbg_enemy',
       name: 'Dbg Enemy',
       level: 1,
       realmId: 'mortal',
       lane: 'ground',
-      statsInput: { maxHp: 1, attack: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 5, spiritStone: 2 },
     })
 

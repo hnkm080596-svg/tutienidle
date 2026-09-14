@@ -151,7 +151,7 @@ function savedItem(instanceId = 'saved-item'): ReturnType<typeof makeInstance> {
       id: `${instanceId}-main`,
       sourceId: instanceId,
       sourceType: 'equipment',
-      stat: 'attack',
+      stat: 'might',
       flat: 12,
     },
     affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],

@@ -221,7 +221,7 @@ const MAX_FOLLOW_UP_CHAIN_DEPTH = 4
  * M8 (ARCH-003) — Ward delayed-regen gate in TURN units. Legacy
  * BattleSystem measured WARD_REGEN_DELAY_SECONDS = 3 on the wall clock;
  * the turn engine preserves the same numeric intent against the actor's
- * own turn cadence: `timeSinceLastHitTaken` counts the holder's turns
+ * own turn cadence: `turnsSinceLastHitLanded` counts the holder's turns
  * (incremented once per declare, reset to 0 by CombatSystem on every
  * landed hit) and Ward regen resumes once 3 turns pass unhit. `Infinity`
  * (never hit) regenerates from the first turn, matching legacy.
@@ -840,24 +840,22 @@ export class TurnBattleSystem {
 
     // M8 (ARCH-003) — per-turn HP/MP/Ward regeneration through the vitals
     // authority, AFTER the status tick and liveness boundary above (a
-    // lethal DoT leaves no regen). This is the ONE normalization point
-    // for the legacy `*RegenPerSecond` stat names: authored content keeps
-    // its legacy fields and the turn engine applies them once per entity
-    // turn — the same cadence family as hpRegenPerTurn (R1/AR-01 already
-    // routed HP regen through the vitals authority). Ward keeps its
-    // delayed-regen intent: timeSinceLastHitTaken advances on the
+    // lethal DoT leaves no regen). The *RegenPerTurn stats tick once per
+    // entity turn — the same cadence family as hpRegenPerTurn (R1/AR-01
+    // already routed HP regen through the vitals authority). Ward keeps
+    // its delayed-regen intent: turnsSinceLastHitLanded advances on the
     // holder's own turn cadence and CombatSystem resets it to 0 on every
     // landed hit.
-    actor.entity.timeSinceLastHitTaken += 1
+    actor.entity.turnsSinceLastHitLanded += 1
 
     this.combat.applyTurnRegen(
       actor.entity,
       {
         hp: actor.entity.stats.hpRegenPerTurn,
-        mp: actor.entity.stats.manaRegenPerSecond,
+        mp: actor.entity.stats.manaRegenPerTurn,
         ward:
-          actor.entity.timeSinceLastHitTaken >= WARD_REGEN_DELAY_TURNS
-            ? actor.entity.stats.wardRegenPerSecond
+          actor.entity.turnsSinceLastHitLanded >= WARD_REGEN_DELAY_TURNS
+            ? actor.entity.stats.wardRegenPerTurn
             : 0,
       },
       actor.entity.id,

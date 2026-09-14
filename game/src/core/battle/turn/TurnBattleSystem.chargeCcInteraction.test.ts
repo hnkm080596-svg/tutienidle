@@ -30,7 +30,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-    currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+    currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
   } as CombatEntity
 }
@@ -39,7 +39,7 @@ describe('TurnBattleSystem — charging actor is immune to the CC counter side-e
   it('consecutiveHardCcTurns stays 0 across charging+stunned turns (no premature Bá Thể clear)', () => {
     const player = createCombatant({
       id: 'player', type: 'player', row: 4,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 100 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, might: 100 }),
     })
     const enemyEntity = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000 })
 

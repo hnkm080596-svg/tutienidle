@@ -376,7 +376,7 @@ function close() {
 
           <div class="companion-panel__stats">
             <span>{{ t('companion.stats.maxHp') }} {{ formatNumber(selectedStats.maxHp) }}</span>
-            <span>{{ t('companion.stats.attack') }} {{ formatNumber(selectedStats.attack) }}</span>
+            <span>{{ t('companion.stats.might') }} {{ formatNumber(selectedStats.might) }}</span>
             <span>{{ t('companion.stats.speed') }} {{ formatNumber(selectedStats.speed) }}</span>
           </div>
 

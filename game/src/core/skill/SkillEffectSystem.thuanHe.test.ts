@@ -40,7 +40,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -355,7 +355,7 @@ describe("SkillEffectSystem — E-5: 'grantsZone' tổng quát (element)", () =>
   it('grantsZone + zoneElement fire → spawnSwordZone nhận element fire, công thức damage/tick giữ nguyên', () => {
     const system = new SkillEffectSystem()
     const source = createCombatant({ id: 'source', type: 'player', realmIndex: 0 })
-    source.stats.attack = 100
+    source.stats.might = 100
     const target = createCombatant({ id: 'target', x: 8, row: 2 })
     const spawnSwordZone = vi.fn()
     const ctx = createContext({ spawnSwordZone })
@@ -384,7 +384,7 @@ describe("SkillEffectSystem — E-5: 'grantsZone' tổng quát (element)", () =>
       columnRadius: 1,
       charges: 6,
       tickInterval: 1,
-      // finalMultiplier 2 × ratio 0.5 × attack 100 = 100 — công thức cũ.
+      // finalMultiplier 2 × ratio 0.5 × might 100 = 100 — công thức cũ.
       damagePerTick: 100,
       element: 'fire',
     })

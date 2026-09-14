@@ -54,7 +54,7 @@ describe('foundation enemy data', () => {
     const foundation = ENEMIES.filter((enemy) => enemy.id.startsWith('foundation_'))
     for (const enemy of foundation) {
       expect(enemy.stats.maxHp).toBeGreaterThan(0)
-      expect(enemy.stats.attack).toBeGreaterThan(0)
+      expect(enemy.stats.might).toBeGreaterThan(0)
       expect(enemy.stats.speed).toBeGreaterThanOrEqual(80)
       expect(enemy.stats.speed).toBeLessThanOrEqual(250)
     }
@@ -64,7 +64,7 @@ describe('foundation enemy data', () => {
     const t1 = ENEMIES.find((enemy) => enemy.id === 'foundation_wood_ape')!
     const t10 = ENEMIES.find((enemy) => enemy.id === 'foundation_ferocious_mist_shark')!
     expect(t10.stats.maxHp).toBeGreaterThan(t1.stats.maxHp)
-    expect(t10.stats.attack).toBeGreaterThan(t1.stats.attack)
+    expect(t10.stats.might).toBeGreaterThan(t1.stats.might)
   })
 })
 
@@ -86,7 +86,7 @@ describe('foundation_floor_10 boss', () => {
     const t9 = ENEMIES.find((enemy) => enemy.id === 'foundation_flood_dragon_whelp')!
     const t10 = ENEMIES.find((enemy) => enemy.id === 'foundation_ferocious_flood_dragon_whelp')!
     expect(t10.stats.maxHp).toBeGreaterThan(t9.stats.maxHp)
-    expect(t10.stats.attack).toBeGreaterThan(t9.stats.attack)
+    expect(t10.stats.might).toBeGreaterThan(t9.stats.might)
   })
 })
 describe('Phase A2 boss enrage content', () => {
@@ -105,13 +105,13 @@ describe('Phase A2 boss enrage content', () => {
     expect(() => BUFF_REGISTRY.get(boss!.bossTrigger!.buffDefinitionId)).not.toThrow()
   })
 
-  it('each boss enrage buff is a permanent +attack/+speed statModifier', () => {
+  it('each boss enrage buff is a permanent +might/+speed statModifier', () => {
     for (const id of bossIds) {
       const boss = ENEMIES.find((enemy) => enemy.id === id)
       const definition = BUFF_REGISTRY.get(boss!.bossTrigger!.buffDefinitionId)
 
       expect(definition.duration).toBe(Infinity)
-      expect(definition.effects.some((effect) => effect.type === 'statModifier' && effect.stat === 'attack')).toBe(true)
+      expect(definition.effects.some((effect) => effect.type === 'statModifier' && effect.stat === 'might')).toBe(true)
       expect(definition.effects.some((effect) => effect.type === 'statModifier' && effect.stat === 'speed')).toBe(true)
     }
   })

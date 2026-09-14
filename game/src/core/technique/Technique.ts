@@ -17,12 +17,12 @@ export type TechniqueTier = 'so_nhap' | 'tieu_thanh' | 'dai_thanh' | 'vien_man'
 // (Công/Phòng phẳng) và Đại Ngũ Hành (%Linh lực tối đa + %Hồi Linh)
 // dùng field khác nhau; Kiếm Tu/Thể Tu (chưa thiết kế, mục 5.3) để
 // tierEffects rỗng — kiến trúc vẫn hỗ trợ sẵn không cần đổi type.
-// manaRegenPercent là % TĂNG THÊM lên stat manaRegenPerSecond (Increased,
+// manaRegenPercent là % TĂNG THÊM lên stat manaRegenPerTurn (Increased,
 // cùng pipeline percent chuẩn của StatCalculator.ts) — KHÔNG phải %
 // của maxMp (tránh phụ thuộc vòng vào giá trị maxMp chưa tính xong lúc
 // gộp modifier, xem GameManager.getTechniqueTierModifiers()).
 export interface TechniqueTierEffect {
-  attackFlat?: number
+  mightFlat?: number
 
   defenseFlat?: number
 
@@ -31,7 +31,7 @@ export interface TechniqueTierEffect {
   manaRegenPercent?: number
 
   // Yêu cầu 2026-08-26 — Tâm pháp cộng thêm 2 chỉ số MẶC ĐỊNH HP/lượt và
-  // MP/s: flat TỰU TRỰC lên stats hpRegenPerTurn/manaRegenPerSecond
+  // MP/lượt: flat TỰU TRỰC lên stats hpRegenPerTurn/manaRegenPerTurn
   // (không phải percent — giá trị tuyệt đối hồi theo tier).
   hpRegenFlat?: number
 

@@ -1,7 +1,7 @@
 import type { CombatEntity } from './CombatEntity'
 import type { ElementType } from '../element/ElementType'
 import type { SkillDamageComponent } from '../skill/SkillDamageComponent'
-import { baseAttackPlusPower, calculateBaseDamage } from './DamageCalculator'
+import { baseMightPlusPower, calculateBaseDamage } from './DamageCalculator'
 import { getResistanceMitigationPercent } from './Resistance'
 
 /**
@@ -21,7 +21,7 @@ import { getResistanceMitigationPercent } from './Resistance'
  * nhất để hai pipeline không thể lệch công thức về sau.
  */
 export function elementalBasePower(source: CombatEntity, element: ElementType): number {
-  return baseAttackPlusPower(source.stats.attack, source.stats[`${element}Power`])
+  return baseMightPlusPower(source.stats.might, source.stats[`${element}Power`])
 }
 
 export function calculateElementComponentDamage(

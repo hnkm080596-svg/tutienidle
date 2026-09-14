@@ -41,7 +41,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -199,7 +199,7 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
   const kiepThuong: BuffDefinition = {
     id: 'kiep_thuong', name: 'Kiếp Thương', polarity: 'debuff',
     duration: 60, stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'attack', percent: -0.15 }],
+    effects: [{ type: 'statModifier', stat: 'might', percent: -0.15 }],
   }
 
   function makeRegistry(): BuffDefinitionCatalog {
@@ -294,7 +294,7 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
       polarity: 'buff',
       duration: 5,
       stackMode: 'refresh',
-      effects: [{ type: 'statModifier', stat: 'attack', percent: 0.5 }],
+      effects: [{ type: 'statModifier', stat: 'might', percent: 0.5 }],
     }
     const registry: BuffDefinitionCatalog = {
       get: (id) => {

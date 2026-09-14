@@ -83,10 +83,10 @@ export interface Lab {
     /** Patch player.baseStats (applies to the NEXT battle; use the live
      *  patch below for an in-flight one). Returns new finalStats. */
     setBaseStats(patch: Partial<Stats>): Stats
-    /** attack = 1e9 through the real damage pipeline - both for the next
+    /** might = 1e9 through the real damage pipeline - both for the next
      *  startStage and any battle already in flight. */
     oneHitKill(): void
-    /** Massive attack + survivability for both pending and live battles. */
+    /** Massive might + survivability for both pending and live battles. */
     godMode(): void
     setRealm(realmId: string, realmLevel?: number): void
     grantCultivation(amount: number): void
@@ -103,7 +103,7 @@ export function createLab(): Lab {
   manager.setActivePlayer(player)
 
   // Stat patch remembered across startStage: the shared fixture bakes
-  // attack/speed=100 into the spawned entity, so cheats applied before a
+  // might/speed=100 into the spawned entity, so cheats applied before a
   // battle starts must be re-applied to the live entity afterwards.
   let liveStatPatch: Partial<Stats> = {}
   const applyLivePatch = () => {
@@ -169,7 +169,7 @@ export function createLab(): Lab {
         realm: `${player.realmId} lv${player.realmLevel}`,
         cultivation: player.cultivation,
         stats: {
-          attack: finalStats.attack,
+          might: finalStats.might,
           maxHp: finalStats.maxHp,
           speed: finalStats.speed,
           defense: finalStats.defense,
@@ -235,14 +235,14 @@ export function createLab(): Lab {
       },
 
       oneHitKill(): void {
-        player.baseStats.attack = ONE_HIT_ATTACK
-        liveStatPatch = { ...liveStatPatch, attack: ONE_HIT_ATTACK }
+        player.baseStats.might = ONE_HIT_ATTACK
+        liveStatPatch = { ...liveStatPatch, might: ONE_HIT_ATTACK }
         applyLivePatch()
       },
 
       godMode(): void {
         const patch: Partial<Stats> = {
-          attack: ONE_HIT_ATTACK,
+          might: ONE_HIT_ATTACK,
           maxHp: ONE_HIT_ATTACK,
           defense: ONE_HIT_ATTACK,
           speed: 10_000,

@@ -68,7 +68,7 @@ const dealDamage: ActionExecutor<Extract<SkillAction, { type: 'dealDamage' }>> =
     (action.realmDamageRatio ? action.realmDamageRatio * source.realmIndex : 0) +
     (action.manaScalingRatio ? action.manaScalingRatio * source.stats.maxMp : 0) +
     (action.skillExperienceRatio
-      ? (action.skillExperienceRatio * (ctx.skillExperience ?? 0)) / Math.max(1, source.stats.attack)
+      ? (action.skillExperienceRatio * (ctx.skillExperience ?? 0)) / Math.max(1, source.stats.might)
       : 0)
 
   const finalMultiplier = (action.value ?? 1) * (1 + scalingBonus) * (1 + source.stats.skillDamagePercent)
@@ -240,7 +240,7 @@ const spawnZone: ActionExecutor<Extract<SkillAction, { type: 'spawnZone' }>> = (
       columnRadius: 1,
       charges: action.charges,
       tickInterval: action.tickInterval,
-      damagePerTick: action.damageRatio * source.stats.attack,
+      damagePerTick: action.damageRatio * source.stats.might,
     })
   } else if (action.zoneKind === 'lava' && ctx.spawnLavaZone) {
     ctx.spawnLavaZone({
@@ -251,7 +251,7 @@ const spawnZone: ActionExecutor<Extract<SkillAction, { type: 'spawnZone' }>> = (
       columnRadius: 1,
       duration: action.charges * action.tickInterval,
       tickInterval: action.tickInterval,
-      damagePerTick: action.damageRatio * source.stats.attack,
+      damagePerTick: action.damageRatio * source.stats.might,
       element: 'fire',
     })
   }

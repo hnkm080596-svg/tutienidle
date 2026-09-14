@@ -115,28 +115,28 @@ describe('Adversarial QA — stat turn-based conversion invariants', () => {
 })
 
 describe('calculateEffectiveStats (R2 resolved→effective boundary)', () => {
-  // Audit AR-02 probe: strength 100 + attack 10 raw → calculateStats
-  // resolves to attack 70 (10 + 100×0.6). Feeding that resolved snapshot
+  // Audit AR-02 probe: strength 100 + might 10 raw → calculateStats
+  // resolves to might 70 (10 + 100×0.6). Feeding that resolved snapshot
   // back into calculateStats re-derived +60 (130). The effective boundary
   // must fold temp modifiers onto 70 without re-deriving.
-  const RAW = createBaseStats({ strength: 100, attack: 10 })
+  const RAW = createBaseStats({ strength: 100, might: 10 })
 
-  const ATTACK_BUFF: StatModifier = {
+  const MIGHT_BUFF: StatModifier = {
     id: 'b1',
     sourceId: 'buff',
     sourceType: 'buff',
-    stat: 'attack',
+    stat: 'might',
     percent: 0.5,
   }
 
   it('does NOT re-derive attribute bonuses from an already-resolved base', () => {
     const resolved = calculateStats(RAW, [])
-    expect(resolved.attack).toBe(70)
+    expect(resolved.might).toBe(70)
 
     // +50% applied to 70 once = 105. The old double-derivation path
     // yielded 130 (re-derived +60 then folded the buff).
-    const effective = calculateEffectiveStats(resolved, [ATTACK_BUFF])
-    expect(effective.attack).toBe(105)
+    const effective = calculateEffectiveStats(resolved, [MIGHT_BUFF])
+    expect(effective.might).toBe(105)
   })
 
   it('resolved base passes through unchanged with no temp modifiers', () => {

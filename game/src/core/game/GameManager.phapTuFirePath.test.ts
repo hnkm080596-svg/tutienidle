@@ -39,7 +39,7 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
     expect(first.filter(modifier => modifier.sourceId === 'phap_tu')).toHaveLength(3)
     expect(second).toEqual(first)
     expect(finalStats.maxMp).toBe(100)
-    expect(finalStats.manaRegenPerSecond).toBe(2)
+    expect(finalStats.manaRegenPerTurn).toBe(2)
     expect(finalStats.manaShieldPercent).toBeCloseTo(0.25, 5)
   })
 

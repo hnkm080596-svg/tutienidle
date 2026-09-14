@@ -12,7 +12,7 @@ import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 // nâng phẩm.
 const MINIMAL_STATS_INPUT = {
   maxHp: 100,
-  attack: 0,
+  might: 0,
   attackSpeed: 1,
   attackRangeRanks: 999999,
   criticalRate: 0,
@@ -21,7 +21,7 @@ const MINIMAL_STATS_INPUT = {
 }
 
 function createPlayerEntity(): CombatEntity {
-  const stats = createBaseStats({ attack: 0 })
+  const stats = createBaseStats({ might: 0 })
 
   return {
     id: 'player',
@@ -42,7 +42,7 @@ function createPlayerEntity(): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,

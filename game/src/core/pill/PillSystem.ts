@@ -232,7 +232,7 @@ export class PillSystem {
 
               sourceType: 'pill',
 
-              stat: 'manaRegenPerSecond',
+              stat: 'manaRegenPerTurn',
 
               flat: (effect.mpPerSecond ?? 0) * potencyMultiplier,
             },

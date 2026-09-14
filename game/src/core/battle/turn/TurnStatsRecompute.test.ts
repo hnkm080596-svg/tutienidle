@@ -9,8 +9,8 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 
 // R2 (AR-02) — recomputeEffectiveStats now treats its first argument as an
 // ALREADY-RESOLVED base (attribute derivation happened exactly once when
-// the entity was built). Fixture mirrors the audit probe: raw attack 10 +
-// strength 100 resolves to attack 70; an in-battle +50% attack buff must
+// the entity was built). Fixture mirrors the audit probe: raw might 10 +
+// strength 100 resolves to might 70; an in-battle +50% might buff must
 // fold onto 70 (=105), not re-derive strength (+60) first (=130).
 
 function qaEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
@@ -21,7 +21,7 @@ function qaEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-    currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+    currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...rest,
   } as CombatEntity
 }
@@ -44,7 +44,7 @@ const ATTACK_UP_DEFINITION: BuffDefinition = {
   polarity: 'buff',
   duration: 3,
   stackMode: 'refresh',
-  effects: [{ type: 'statModifier', stat: 'attack', flat: 50 }],
+  effects: [{ type: 'statModifier', stat: 'might', flat: 50 }],
 }
 
 function makePoolWithAttackBuff(percent: number, stacks: number): BuffPool {
@@ -56,7 +56,7 @@ function makePoolWithAttackBuff(percent: number, stacks: number): BuffPool {
     duration: 5,
     maxStacks: 5,
     stackMode: 'stack',
-    effects: [{ type: 'statModifier', stat: 'attack', percent }],
+    effects: [{ type: 'statModifier', stat: 'might', percent }],
   }
   const registry: BuffDefinitionCatalog = {
     get: (id: string): BuffDefinition => {
@@ -85,17 +85,17 @@ function makePoolWithAttackBuff(percent: number, stacks: number): BuffPool {
 
 describe('recomputeEffectiveStats (R2 effective boundary)', () => {
   it('folds buff modifiers onto the RESOLVED base without re-deriving attributes', () => {
-    const raw = createBaseStats({ strength: 100, attack: 10 })
+    const raw = createBaseStats({ strength: 100, might: 10 })
     const resolved = calculateStats(raw, [])
-    expect(resolved.attack).toBe(70)
+    expect(resolved.might).toBe(70)
 
     // 2 stacks × +50% increased pool → 70 × (1 + 0.5 + 0.5) = 140.
     const effective = recomputeEffectiveStats(resolved, makePoolWithAttackBuff(0.5, 2))
-    expect(effective.attack).toBe(140)
+    expect(effective.might).toBe(140)
   })
 
   it('no buffs: effective equals resolved base exactly', () => {
-    const raw = createBaseStats({ strength: 100, attack: 10 })
+    const raw = createBaseStats({ strength: 100, might: 10 })
     const resolved = calculateStats(raw, [])
 
     expect(recomputeEffectiveStats(resolved, new BuffPool())).toEqual(resolved)
@@ -106,8 +106,8 @@ describe('recomputeEffectiveStats', () => {
   it('folds active statModifier buff effects into the resolved base via the effective pipeline', () => {
     // R2: the input is a RESOLVED base — attribute derivation must NOT
     // run again, so the old strength-derivation expectations (+0.6) are
-    // gone. Resolved attack 100 + flat buff 50 = 150 exactly.
-    const base = createBaseStats({ attack: 100 })
+    // gone. Resolved might 100 + flat buff 50 = 150 exactly.
+    const base = createBaseStats({ might: 100 })
     const pool = new BuffPool()
     const registry = new FixtureBuffRegistry([ATTACK_UP_DEFINITION])
     const source = qaEntity({ id: 'src' })
@@ -117,26 +117,26 @@ describe('recomputeEffectiveStats', () => {
 
     const effective = recomputeEffectiveStats(base, pool)
 
-    expect(effective.attack).toBeCloseTo(150, 5)
+    expect(effective.might).toBeCloseTo(150, 5)
   })
 
   it('returns resolved base unchanged when no statModifier buffs are active', () => {
     // R2: no re-derivation — the resolved snapshot comes back untouched.
-    const base = createBaseStats({ attack: 100 })
+    const base = createBaseStats({ might: 100 })
     const pool = new BuffPool()
 
     const effective = recomputeEffectiveStats(base, pool)
 
-    expect(effective.attack).toBeCloseTo(100, 5)
+    expect(effective.might).toBeCloseTo(100, 5)
   })
 
   it('percent statModifier folds multiplicatively with the resolved base', () => {
     // R2: (100 resolved) × (1 + 0.5) = 150 — attribute derivation no
     // longer inflates the base before the percent fold.
-    const base = createBaseStats({ attack: 100 })
+    const base = createBaseStats({ might: 100 })
     const percentDef: BuffDefinition = {
       id: 'fixture_attack_percent', name: 'Pct', polarity: 'buff', duration: 3, stackMode: 'refresh',
-      effects: [{ type: 'statModifier', stat: 'attack', percent: 0.5 }],
+      effects: [{ type: 'statModifier', stat: 'might', percent: 0.5 }],
     }
     const pool = new BuffPool()
     const registry = new FixtureBuffRegistry([percentDef])
@@ -145,6 +145,6 @@ describe('recomputeEffectiveStats', () => {
 
     const effective = recomputeEffectiveStats(base, pool)
 
-    expect(effective.attack).toBeCloseTo(150, 5)
+    expect(effective.might).toBeCloseTo(150, 5)
   })
 })

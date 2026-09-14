@@ -25,7 +25,7 @@ describe('GameManager continuous repeat stage', () => {
       lane: 'ground',
       statsInput: {
         maxHp: 1,
-        attack: 0,
+        might: 0,
         attackSpeed: 1,
         attackRangeRanks: 1,
         criticalRate: 0,
@@ -44,7 +44,7 @@ describe('GameManager continuous repeat stage', () => {
       spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
@@ -82,7 +82,7 @@ describe('GameManager continuous repeat stage', () => {
     const gameManager = new GameManager()
     const enemy = defineEnemy({
       id: 'countdown_dummy', name: 'Countdown Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 10, attack: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 10, might: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage: Stage = {

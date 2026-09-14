@@ -34,7 +34,7 @@ export function companionToCombatEntity(instance: CompanionInstance, definition:
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: getRealmIndex(instance.realmId),
     x: 0, // sẽ bị ghi đè bởi vị trí ô mà FormationLoadout/DEFAULT resolve cho companion này (Part C)
     row: 4,

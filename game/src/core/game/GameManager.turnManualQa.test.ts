@@ -13,7 +13,7 @@ import type { Stage } from '../stage/Stage'
 
 const ENEMY_STATS = {
   maxHp: 10_000_000,
-  attack: 0,
+  might: 0,
   attackSpeed: 1,
   attackRangeRanks: 9,
   criticalRate: 0,
@@ -22,14 +22,14 @@ const ENEMY_STATS = {
 }
 
 function createPlayer(): CombatEntity {
-  const stats = createBaseStats({ attack: 50, speed: 100, criticalRate: 0 })
+  const stats = createBaseStats({ might: 50, speed: 100, criticalRate: 0 })
 
   return {
     id: 'player', name: 'Player', type: 'player', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-    currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
+    currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
   }
 }
 
@@ -152,7 +152,7 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
     gameManager.setCombatClockSource(combatSource)
     const enemy = defineEnemy({
       id: 'refight_dummy', name: 'Refight Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 1, attack: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage: Stage = {
@@ -161,7 +161,7 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
       totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
@@ -196,7 +196,7 @@ describe('Future Systems Task 10 — party manual pause', () => {
     gameManager.setCombatClockSource(combatSource)
     const enemy = defineEnemy({
       id: 'party_dummy', name: 'Party Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 10_000_000, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 10_000_000, might: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage: Stage = {
@@ -205,7 +205,7 @@ describe('Future Systems Task 10 — party manual pause', () => {
       totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 50  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 50  })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
@@ -252,7 +252,7 @@ describe('Gameplay fixes — refight chain', () => {
     gameManager.setCombatClockSource(combatSource)
     const enemy = defineEnemy({
       id: 'refight3_dummy', name: 'Refight3', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 1, attack: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage: Stage = {
@@ -261,7 +261,7 @@ describe('Gameplay fixes — refight chain', () => {
       totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100, speed: 100  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100, speed: 100  })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])

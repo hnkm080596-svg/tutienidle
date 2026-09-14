@@ -5,10 +5,10 @@ import { DUNG_NHAM_BURN_DEFINITION, KIEM_TRAN_BURN_DEFINITION } from './ZoneDotB
 // definition thay Lava Zone (Dung Nham reaction) / Sword Zone (Kiếm Trận
 // keystone). dpsRatio quy đổi từ công thức hệ sống (Task 6 survey):
 //   - Dung Nham: spawnLavaZone damagePerTick 20 CỐ ĐỊNH (ElementReaction.ts),
-//     không attack-scaling → baseline attack 10 (StatBlock.ts) → 20/10 = 2.0
+//     không might-scaling → baseline might 10 (StatBlock.ts) → 20/10 = 2.0
 //     (damage/tick tại baseline giữ nguyên 20).
-//   - Kiếm Trận: spawnSwordZone damagePerTick = multiplier × 0.3 × attack
-//     (SkillEffectSystem) → dpsRatio 0.3 1:1 (đã attack-scaled sẵn).
+//   - Kiếm Trận: spawnSwordZone damagePerTick = multiplier × 0.3 × might
+//     (SkillEffectSystem) → dpsRatio 0.3 1:1 (đã might-scaled sẵn).
 // Duration giữ nguyên SỐ (no-rebalance policy): 6s tick 1s = 6 lượt;
 // charges 3 = 3 lượt.
 

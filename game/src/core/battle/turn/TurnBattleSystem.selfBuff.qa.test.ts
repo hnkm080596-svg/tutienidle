@@ -31,7 +31,7 @@ const REGISTRY: BuffDefinitionCatalog = {
 }
 
 function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = createBaseStats({ attack: 100, ...overrides.stats })
+  const stats = createBaseStats({ might: 100, ...overrides.stats })
   const entity = {
     id,
     name: id,
@@ -52,7 +52,7 @@ function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEn
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,

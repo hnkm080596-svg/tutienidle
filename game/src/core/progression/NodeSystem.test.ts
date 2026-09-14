@@ -28,7 +28,7 @@ function minorNode(overrides: Partial<ProgressionNode> = {}): ProgressionNode {
     name: 'Test Minor',
     type: 'minor',
     insightCost: 1,
-    effect: { statModifiers: [{ id: 'test_mod', sourceId: 'test_minor', sourceType: 'talent', stat: 'attack', flat: 5 }] },
+    effect: { statModifiers: [{ id: 'test_mod', sourceId: 'test_minor', sourceType: 'talent', stat: 'might', flat: 5 }] },
     ...overrides,
   }
 }
@@ -42,7 +42,7 @@ function powerNode(overrides: Partial<ProgressionNode> = {}): ProgressionNode {
     upgradeCost: { base: 1, perLevel: 3 },
 
     effect: {
-      statModifiers: [{ id: 'test_power:attack', sourceId: 'test_power', sourceType: 'talent', stat: 'attack', flat: 2, perLevelFlat: 2 }],
+      statModifiers: [{ id: 'test_power:might', sourceId: 'test_power', sourceType: 'talent', stat: 'might', flat: 2, perLevelFlat: 2 }],
     },
 
     ...overrides,

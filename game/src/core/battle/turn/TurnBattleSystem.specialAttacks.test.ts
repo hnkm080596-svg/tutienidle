@@ -41,7 +41,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -85,7 +85,7 @@ function bossBattle() {
     lane: 'ground',
     statsInput: {
       maxHp: 1_000_000,
-      attack: 10,
+      might: 10,
       attackSpeed: 1,
       attackRangeRanks: 9,
       criticalRate: 0,

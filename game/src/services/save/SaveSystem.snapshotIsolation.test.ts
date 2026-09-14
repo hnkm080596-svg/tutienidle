@@ -192,18 +192,18 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
     const gameManager = createBootedGameManager()
     const reactivePlayer = reactive(createDefaultPlayer())
 
-    reactivePlayer.modifiers.push({ id: 'x', sourceId: 'x', sourceType: 'attribute', stat: 'attack', flat: 1 })
-    reactivePlayer.externalModifiers.push({ id: 'y', sourceId: 'y', sourceType: 'attribute', stat: 'attack', flat: 1 })
+    reactivePlayer.modifiers.push({ id: 'x', sourceId: 'x', sourceType: 'attribute', stat: 'might', flat: 1 })
+    reactivePlayer.externalModifiers.push({ id: 'y', sourceId: 'y', sourceType: 'attribute', stat: 'might', flat: 1 })
 
     // Force Vue to lazily wrap nested modifier objects in their own
     // reactive Proxies, matching what reading `finalStats` does live.
-    void reactivePlayer.baseStats.attack
+    void reactivePlayer.baseStats.might
     for (const modifier of reactivePlayer.modifiers) void modifier.flat
     for (const modifier of reactivePlayer.externalModifiers) void modifier.flat
 
     expect(() => buildGameSave(reactivePlayer, gameManager)).not.toThrow()
 
     const save = buildGameSave(reactivePlayer, gameManager)
-    expect(save.player.modifiers).toEqual([{ id: 'x', sourceId: 'x', sourceType: 'attribute', stat: 'attack', flat: 1 }])
+    expect(save.player.modifiers).toEqual([{ id: 'x', sourceId: 'x', sourceType: 'attribute', stat: 'might', flat: 1 }])
   })
 })

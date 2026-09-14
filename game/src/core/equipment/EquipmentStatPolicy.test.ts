@@ -12,13 +12,13 @@ import { affixes } from '../../data/equipment/affixes'
 
 describe('EquipmentStatPolicy', () => {
   it('mỗi slot chỉ nhận main stat thuộc bản sắc của slot', () => {
-    expect(isValidEquipmentMainStat('weapon', 'attack')).toBe(true)
+    expect(isValidEquipmentMainStat('weapon', 'might')).toBe(true)
     expect(isValidEquipmentMainStat('helmet', 'maxHp')).toBe(true)
     expect(isValidEquipmentMainStat('armor', 'defense')).toBe(true)
     expect(isValidEquipmentMainStat('boots', 'evasionRate')).toBe(true)
     expect(isValidEquipmentMainStat('ring', 'criticalDamage')).toBe(true)
     expect(isValidEquipmentMainStat('necklace', 'speed')).toBe(true)
-    expect(isValidEquipmentMainStat('boots', 'attack')).toBe(false)
+    expect(isValidEquipmentMainStat('boots', 'might')).toBe(false)
   })
 
   it('không cho main stat xuất hiện lại trong substat pool', () => {
@@ -76,7 +76,7 @@ describe('EquipmentStatPolicy', () => {
       assertValidEquipmentMainStats({
         id: 'invalid_range',
         slot: 'weapon',
-        mainStats: [{ stat: 'attack', ...range }],
+        mainStats: [{ stat: 'might', ...range }],
       }),
     ).toThrow(/Invalid main stat range/)
   })

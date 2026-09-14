@@ -38,7 +38,7 @@ const TEMPLATE: Equipment = {
   slot: 'weapon',
   grade: 1,
   maxEnhanceLevel: 10,
-  mainStats: [{ stat: 'attack', min: 10, max: 20 }],
+  mainStats: [{ stat: 'might', min: 10, max: 20 }],
   enhanceCost: [{ materialId: 'qi_refining_ore_century', amount: 1 }],
 }
 
@@ -95,10 +95,10 @@ function manualInstance(overrides: Partial<EquipmentInstance> = {}): EquipmentIn
     grade: 'bat_pham',
     quality: 'hoang',
     mainStat: {
-      id: 'roll-main-attack',
+      id: 'roll-main-might',
       sourceId: 'roll-main',
       sourceType: 'equipment',
-      stat: 'attack',
+      stat: 'might',
       flat: 15,
     },
     forgeUsesRemaining: 0,
@@ -107,7 +107,7 @@ function manualInstance(overrides: Partial<EquipmentInstance> = {}): EquipmentIn
 }
 
 const PRODUCTION_SLOT_CASES = [
-  ['weapon', 'attack', 'prefix', 3, 2, 0.99],
+  ['weapon', 'might', 'prefix', 3, 2, 0.99],
   ['helmet', 'maxHp', 'suffix', 1, 4, 0],
   ['armor', 'defense', 'prefix', 1, 4, 0],
   ['boots', 'evasionRate', 'suffix', 0, 5, 0],
@@ -668,7 +668,7 @@ describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment
       vi.spyOn(Math, 'random').mockImplementation(() => rolls.shift() ?? 0.99)
       const template: Equipment = {
         ...TEMPLATE,
-        mainStats: [{ stat: 'attack', min: 100, max: 100 }],
+        mainStats: [{ stat: 'might', min: 100, max: 100 }],
       }
 
       const instance = system.createInstance(template, player, affixRegistry)

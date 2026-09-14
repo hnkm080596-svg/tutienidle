@@ -17,7 +17,7 @@ const TEST_WEAPON: Equipment = {
   slot: 'weapon',
   grade: 1,
   maxEnhanceLevel: 10,
-  mainStats: [{ stat: 'attack', min: 1, max: 1 }],
+  mainStats: [{ stat: 'might', min: 1, max: 1 }],
 }
 
 function registeredManager(): GameManager {

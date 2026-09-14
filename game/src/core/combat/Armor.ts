@@ -1,7 +1,7 @@
 // Đường cong giảm dần kiểu Last Epoch — thay hẳn công thức trừ thẳng
-// "attack - defense" cũ (dễ vô hiệu hoàn toàn hoặc vô dụng tuỳ chênh
+// "might - defense" cũ (dễ vô hiệu hoàn toàn hoặc vô dụng tuỳ chênh
 // lệch, không mượt xuyên suốt game). Dùng cho damage type 'physical'
-// (attack vs defense) — Hỗn Nguyên (primordial) KHÔNG đi qua đây
+// (might vs defense) — Hỗn Nguyên (primordial) KHÔNG đi qua đây
 // (bỏ qua Armor hoàn toàn theo đúng yêu cầu).
 //
 // T5.4 (2026-09-01, user-approved phương án A): K scale theo

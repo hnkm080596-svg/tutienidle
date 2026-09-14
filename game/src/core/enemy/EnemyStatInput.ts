@@ -13,9 +13,9 @@ import type { Stats } from '../stats/StatBlock'
 export interface EnemyStatInput {
   maxHp: number
 
-  hpRegenPerSecond?: number
+  hpRegenPerTurn?: number
 
-  attack: number
+  might: number
 
   attackSpeed: number
 
@@ -49,7 +49,7 @@ export interface EnemyStatInput {
     thornsPercent?: number
     leechPercent?: number
     wardMax?: number
-    wardRegenPerSecond?: number
+    wardRegenPerTurn?: number
     enduranceThreshold?: number
     endurancePercent?: number
     primordialPower?: number
@@ -97,12 +97,12 @@ export function normalizeEnemyAttackSpeed(authoredAttackSpeed: number): number {
 
 export function normalizeEnemyStats(input: EnemyStatInput): Stats {
   return {
-    attack: input.attack,
+    might: input.might,
     defense: input.armor,
 
     maxHp: input.maxHp,
     // Quái không có Linh Lực (MP là tài nguyên riêng của Pháp Tu) — vì
-    // vậy manaShieldPercent/manaRegenPerSecond không thể author được ở
+    // vậy manaShieldPercent/manaRegenPerTurn không thể author được ở
     // EnemyStatInput.special (không có pool MP để hấp thụ/hồi vào).
     maxMp: 0,
 
@@ -136,13 +136,13 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     enduranceThreshold: input.special?.enduranceThreshold ?? 0,
     endurancePercent: input.special?.endurancePercent ?? 0,
     wardMax: input.special?.wardMax ?? 0,
-    wardRegenPerSecond: input.special?.wardRegenPerSecond ?? 0,
+    wardRegenPerTurn: input.special?.wardRegenPerTurn ?? 0,
     wardBreakDamagePercent: input.special?.wardBreakDamagePercent ?? 0,
     manaShieldPercent: 0,
     leechPercent: input.special?.leechPercent ?? 0,
     thornsPercent: input.special?.thornsPercent ?? 0,
-    hpRegenPerTurn: input.hpRegenPerSecond ?? 0,
-    manaRegenPerSecond: 0,
+    hpRegenPerTurn: input.hpRegenPerTurn ?? 0,
+    manaRegenPerTurn: 0,
     finalDamagePercent: 0,
     finalDamageReductionPercent: 0,
     criticalAvoidance: input.special?.criticalAvoidance ?? 0,
@@ -162,7 +162,7 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     manaRegenPercent: 0,
     realmPassivePercent: 0,
     affixDeltaPercent: 0,
-    speedMultiplier: 1,
+    productionSpeedMultiplier: 1,
     artifactGradeMultiplier: 1,
     cultivationPercent: 0,
 
@@ -196,7 +196,7 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
 // Elite tăng thời gian giao chiến nhưng chỉ tăng vừa phải sát thương; thêm
 // Armor/Accuracy để khác quái thường mà không tạo burst bất ngờ.
 const ELITE_MAX_HP_MULTIPLIER = 2.5
-const ELITE_ATTACK_MULTIPLIER = 1.35
+const ELITE_MIGHT_MULTIPLIER = 1.35
 const ELITE_DEFENSE_MULTIPLIER = 1.15
 const ELITE_ACCURACY_MULTIPLIER = 1.1
 
@@ -205,7 +205,7 @@ export function applyEliteMultiplier(stats: Stats): Stats {
     ...stats,
 
     maxHp: stats.maxHp * ELITE_MAX_HP_MULTIPLIER,
-    attack: stats.attack * ELITE_ATTACK_MULTIPLIER,
+    might: stats.might * ELITE_MIGHT_MULTIPLIER,
     defense: stats.defense * ELITE_DEFENSE_MULTIPLIER,
     accuracyRating: stats.accuracyRating * ELITE_ACCURACY_MULTIPLIER,
   }
@@ -217,7 +217,7 @@ export function applyEliteMultiplier(stats: Stats): Stats {
 // speed re-authored to the parity band (~1 action/round), the boss needs
 // heavier hits or floor 10 stays easier than floors 8-9 before it.
 const BOSS_MAX_HP_MULTIPLIER = 7
-const BOSS_ATTACK_MULTIPLIER = 2.0
+const BOSS_MIGHT_MULTIPLIER = 2.0
 const BOSS_DEFENSE_MULTIPLIER = 1.2
 const BOSS_ACCURACY_MULTIPLIER = 1.15
 const BOSS_RESISTANCE_BONUS = 15
@@ -228,7 +228,7 @@ export function applyBossMultiplier(stats: Stats): Stats {
     ...stats,
 
     maxHp: stats.maxHp * BOSS_MAX_HP_MULTIPLIER,
-    attack: stats.attack * BOSS_ATTACK_MULTIPLIER,
+    might: stats.might * BOSS_MIGHT_MULTIPLIER,
     defense: stats.defense * BOSS_DEFENSE_MULTIPLIER,
     accuracyRating: stats.accuracyRating * BOSS_ACCURACY_MULTIPLIER,
     criticalAvoidance: Math.max(stats.criticalAvoidance, BOSS_CRITICAL_AVOIDANCE),

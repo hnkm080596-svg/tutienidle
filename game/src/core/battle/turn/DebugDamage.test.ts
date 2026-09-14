@@ -24,7 +24,7 @@ function mk(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: 1_000_000, maxHp: 1_000_000, currentMp: 0,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-    currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+    currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
   } as CombatEntity
 }
@@ -42,8 +42,8 @@ describe('debug damage scaling pipeline', () => {
     const combat = new CombatSystem(new EventBus())
 
     const run = (multiplier: number): number => {
-      const source = mk({ id: 'src', stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100 }) })
-      const target = mk({ id: 'tgt', stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, defense: 0 }) })
+      const source = mk({ id: 'src', stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 100 }) })
+      const target = mk({ id: 'tgt', stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0, defense: 0 }) })
       const before = target.currentHp
       combat.resolveActionHit(source, target, { kind: 'physical', multiplier })
       return before - target.currentHp

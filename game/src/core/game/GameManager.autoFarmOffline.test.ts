@@ -15,7 +15,7 @@ const OFFLINE_DUMMY = defineEnemy({
   lane: 'ground',
   statsInput: {
     maxHp: 10,
-    attack: 0,
+    might: 0,
     attackSpeed: 1,
     attackRangeRanks: 1,
     criticalRate: 0,

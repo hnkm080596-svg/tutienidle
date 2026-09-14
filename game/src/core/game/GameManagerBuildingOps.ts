@@ -281,9 +281,9 @@ export class GameManagerBuildingOps {
 
         state: view.state,
 
-        speedMultiplier: view.speedMultiplier,
+        productionSpeedMultiplier: view.productionSpeedMultiplier,
 
-        nextSpeedMultiplier: view.nextSpeedMultiplier,
+        nextProductionSpeedMultiplier: view.nextProductionSpeedMultiplier,
 
         cycleRemainingMs: view.cycleRemainingMs,
 

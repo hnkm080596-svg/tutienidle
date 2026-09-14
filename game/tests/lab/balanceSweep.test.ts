@@ -65,8 +65,8 @@ function runFloor(lab: Lab, stage: Stage): SimResult {
     state: battle?.state ?? '?',
     rounds: battle?.roundsElapsed ?? '?',
     hpPct: me ? Math.round((me.entity.currentHp / me.entity.maxHp) * 100) : 0,
-    playerLine: `hp=${stats.maxHp} atk=${stats.attack.toFixed(1)} def=${stats.defense.toFixed(1)} spd=${stats.speed.toFixed(1)}`,
-    enemyLine: `hp=${foe?.entity.maxHp ?? '?'} atk=${foe?.entity.stats.attack ?? '?'} def=${foe?.entity.stats.defense ?? '?'} spd=${foe?.entity.stats.speed ?? '?'}`,
+    playerLine: `hp=${stats.maxHp} atk=${stats.might.toFixed(1)} def=${stats.defense.toFixed(1)} spd=${stats.speed.toFixed(1)}`,
+    enemyLine: `hp=${foe?.entity.maxHp ?? '?'} atk=${foe?.entity.stats.might ?? '?'} def=${foe?.entity.stats.defense ?? '?'} spd=${foe?.entity.stats.speed ?? '?'}`,
   }
 }
 

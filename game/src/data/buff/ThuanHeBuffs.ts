@@ -17,7 +17,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     duration: 6,
     stackMode: 'refresh',
     effects: [
-      { type: 'statModifier', stat: 'manaRegenPerSecond', flat: 8 },
+      { type: 'statModifier', stat: 'manaRegenPerTurn', flat: 8 },
       { type: 'statModifier', stat: 'manaRegenPercent', percent: 0.1 },
     ],
   },
@@ -32,7 +32,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     stackMode: 'refresh',
     effects: [
       { type: 'statModifier', stat: 'wardMax', flat: 50 },
-      { type: 'statModifier', stat: 'wardRegenPerSecond', flat: 5 },
+      { type: 'statModifier', stat: 'wardRegenPerTurn', flat: 5 },
     ],
   },
 
@@ -84,7 +84,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     stackMode: 'refresh',
     effects: [
       { type: 'statModifier', stat: 'wardMax', flat: 60 },
-      { type: 'statModifier', stat: 'wardRegenPerSecond', flat: 6 },
+      { type: 'statModifier', stat: 'wardRegenPerTurn', flat: 6 },
       { type: 'statModifier', stat: 'thornsPercent', flat: 0.1 },
     ],
   },
@@ -114,7 +114,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     stackMode: 'refresh',
     effects: [
       { type: 'statModifier', stat: 'wardMax', flat: 100 },
-      { type: 'statModifier', stat: 'wardRegenPerSecond', flat: 8 },
+      { type: 'statModifier', stat: 'wardRegenPerTurn', flat: 8 },
     ],
   },
 
@@ -154,7 +154,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     polarity: 'buff',
     duration: Infinity,
     stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'manaRegenPerSecond', flat: 6 }],
+    effects: [{ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 6 }],
   },
   {
     id: 'the_man_wood',

@@ -17,7 +17,7 @@ export const BOSS_BUFFS: BuffDefinition[] = [
     duration: Infinity,
     stackMode: 'replace',
     effects: [
-      { type: 'statModifier', stat: 'attack', percent: 0.5 },
+      { type: 'statModifier', stat: 'might', percent: 0.5 },
       { type: 'statModifier', stat: 'speed', percent: 0.2 },
     ],
   },
@@ -29,7 +29,7 @@ export const BOSS_BUFFS: BuffDefinition[] = [
     duration: Infinity,
     stackMode: 'replace',
     effects: [
-      { type: 'statModifier', stat: 'attack', percent: 0.5 },
+      { type: 'statModifier', stat: 'might', percent: 0.5 },
       { type: 'statModifier', stat: 'speed', percent: 0.2 },
     ],
   },
@@ -41,7 +41,7 @@ export const BOSS_BUFFS: BuffDefinition[] = [
     duration: Infinity,
     stackMode: 'replace',
     effects: [
-      { type: 'statModifier', stat: 'attack', percent: 0.5 },
+      { type: 'statModifier', stat: 'might', percent: 0.5 },
       { type: 'statModifier', stat: 'speed', percent: 0.2 },
     ],
   },

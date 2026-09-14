@@ -40,7 +40,7 @@ const FLOOD_DRAGON_PHASES: TribulationPhase[] = [
       duration: Infinity,
       stackMode: 'replace' as const,
       effects: [
-        { type: 'statModifier' as const, stat: 'attack' as const, percent: 0.3 },
+        { type: 'statModifier' as const, stat: 'might' as const, percent: 0.3 },
         { type: 'statModifier' as const, stat: 'speed' as const, percent: 0.1 },
       ],
     },
@@ -56,7 +56,7 @@ const FLOOD_DRAGON_PHASES: TribulationPhase[] = [
       duration: Infinity,
       stackMode: 'replace' as const,
       effects: [
-        { type: 'statModifier' as const, stat: 'attack' as const, percent: 0.25 },
+        { type: 'statModifier' as const, stat: 'might' as const, percent: 0.25 },
         { type: 'statModifier' as const, stat: 'criticalRate' as const, percent: 0.15 },
       ],
     },
@@ -74,7 +74,7 @@ const FLOOD_DRAGON_ENRAGE: BossEnrage = {
     duration: Infinity,
     stackMode: 'replace' as const,
     effects: [
-      { type: 'statModifier' as const, stat: 'attack' as const, percent: 0.5 },
+      { type: 'statModifier' as const, stat: 'might' as const, percent: 0.5 },
       { type: 'statModifier' as const, stat: 'speed' as const, percent: 0.2 },
     ],
   },
@@ -129,7 +129,7 @@ function foundationBeast(params: {
     signatureDrops: params.signatureDrops,
     statsInput: {
       maxHp: Math.round(hp * mult.hp),
-      attack: Math.round(atk * mult.atk),
+      might: Math.round(atk * mult.atk),
       // Speed band ruling (2026-09-13): highest realm sits at the top of
       // the band, 1.2 (~1.2x player base 100) - speed grows only a small
       // fraction vs HP/ATK, not x2/x3 like legacy data (see Enemies.test).

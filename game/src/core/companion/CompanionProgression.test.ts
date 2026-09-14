@@ -29,7 +29,7 @@ function makeInstance(overrides: Partial<CompanionInstance> = {}): CompanionInst
   }
 }
 
-const BASE_STATS = { maxHp: 100, attack: 10, speed: 100 }
+const BASE_STATS = { maxHp: 100, might: 10, speed: 100 }
 
 function makeDefinition(overrides: Partial<CompanionDefinition> = {}): CompanionDefinition {
   return {
@@ -214,7 +214,7 @@ describe('companionStatsAt', () => {
     // qi_refining tier 3 = 18 mortal tiers + 3 = global level 21.
     const stats = companionStatsAt(definition, makeInstance({ realmId: 'qi_refining', realmLevel: 3 }))
 
-    expect(stats).toEqual({ maxHp: 200, attack: 20, speed: 100 })
+    expect(stats).toEqual({ maxHp: 200, might: 20, speed: 100 })
   })
 
   it('speed does not scale with level', () => {
@@ -229,12 +229,12 @@ describe('companionStatsAt', () => {
       makeInstance({ realmId: 'qi_refining', realmLevel: 3, constellationRank: 3 }),
     )
 
-    expect(stats).toEqual({ maxHp: 260, attack: 26, speed: 130 })
+    expect(stats).toEqual({ maxHp: 260, might: 26, speed: 130 })
   })
 
   it('stat perks apply flat first then percent, only when atRank <= constellationRank', () => {
     const withPerk = makeDefinition({
-      constellationPerks: [{ atRank: 2, kind: 'stat', stat: 'attack', flat: 5, percent: 50 }],
+      constellationPerks: [{ atRank: 2, kind: 'stat', stat: 'might', flat: 5, percent: 50 }],
     })
 
     // Rank 3: 10 x 2 (growth) x 1.3 (constellation) = 26 -> +5 -> x1.5 = 46.5 -> 47.
@@ -242,14 +242,14 @@ describe('companionStatsAt', () => {
       withPerk,
       makeInstance({ realmId: 'qi_refining', realmLevel: 3, constellationRank: 3 }),
     )
-    expect(atRank3.attack).toBe(47)
+    expect(atRank3.might).toBe(47)
 
     // Rank 1 below atRank 2: perk inactive, 10 x 2 x 1.1 = 22.
     const atRank1 = companionStatsAt(
       withPerk,
       makeInstance({ realmId: 'qi_refining', realmLevel: 3, constellationRank: 1 }),
     )
-    expect(atRank1.attack).toBe(22)
+    expect(atRank1.might).toBe(22)
   })
 
   it('speed takes authored stat perks despite ignoring level growth', () => {

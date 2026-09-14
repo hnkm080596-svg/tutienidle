@@ -151,7 +151,7 @@ export class GameManagerPersistentEffectOps {
    * technique at its CURRENT tier (getTechniqueTier(), now computed from
    * techniqueExperience - the technique's own XP bar, see
    * TechniqueTier.ts). manaRegenPercent deliberately maps into percent OF
-   * the manaRegenPerSecond stat (standard Increased, see
+   * the manaRegenPerTurn stat (standard Increased, see
    * StatCalculator.ts's runPipeline) instead of %maxMp - %maxMp would
    * create a dependency cycle (maxMp is not computed yet at this merge
    * step).
@@ -170,13 +170,13 @@ export class GameManagerPersistentEffectOps {
 
     const modifiers: StatModifier[] = []
 
-    if (effect.attackFlat !== undefined) {
+    if (effect.mightFlat !== undefined) {
       modifiers.push({
-        id: `technique-tier:${technique!.id}:attack`,
+        id: `technique-tier:${technique!.id}:might`,
         sourceId: technique!.id,
         sourceType: 'technique',
-        stat: 'attack',
-        flat: effect.attackFlat,
+        stat: 'might',
+        flat: effect.mightFlat,
       })
     }
 
@@ -205,13 +205,13 @@ export class GameManagerPersistentEffectOps {
         id: `technique-tier:${technique!.id}:manaRegen`,
         sourceId: technique!.id,
         sourceType: 'technique',
-        stat: 'manaRegenPerSecond',
+        stat: 'manaRegenPerTurn',
         percent: effect.manaRegenPercent,
       })
     }
 
-    // Requirement 2026-08-26 - default HP/s & MP/s of the technique: flat
-    // directly onto the 2 per-second regen stats, applied to EVERY
+    // Requirement 2026-08-26 - default HP/turn & MP/turn of the technique: flat
+    // directly onto the 2 per-turn regen stats, applied to EVERY
     // technique declaring tierEffects.
     if (effect.hpRegenFlat !== undefined) {
       modifiers.push({
@@ -228,7 +228,7 @@ export class GameManagerPersistentEffectOps {
         id: `technique-tier:${technique!.id}:mpRegen`,
         sourceId: technique!.id,
         sourceType: 'technique',
-        stat: 'manaRegenPerSecond',
+        stat: 'manaRegenPerTurn',
         flat: effect.mpRegenFlat,
       })
     }
@@ -473,7 +473,7 @@ export class GameManagerPersistentEffectOps {
       currentKimThe: 0,
       timeSinceLastBleedProc: 0,
       currentWard: 0,
-      timeSinceLastHitTaken: Infinity,
+      turnsSinceLastHitLanded: Infinity,
       realmIndex: 0,
       x: 0,
       row: HERO_LANE_INDEX,

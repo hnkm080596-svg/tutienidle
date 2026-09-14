@@ -20,7 +20,7 @@ export function makeInstance(
       id: 'test-sword-main-stat',
       sourceId: 'test-sword',
       sourceType: 'equipment',
-      stat: 'attack',
+      stat: 'might',
       flat: 1,
     },
     affixes: [],

@@ -11,10 +11,9 @@ import { buffs as LIVE_BUFFS } from './buffs'
 // viễn) giữ nguyên — BuffSystem.update() trừ remainingTurns mỗi lượt
 // holder, Infinity không bao giờ <= 0 → sống vĩnh viễn, khớp semantics hệ sống.
 //
-// Stats per-second (`manaRegenPerSecond`, `wardRegenPerSecond`) giữ nguyên
-// key — chúng là statModifier entries áp qua recomputeEffectiveStats()
-// (Completion Task 4); đổi key là việc Stat System toàn cục, không thuộc
-// converter này.
+// Regen stats (`manaRegenPerTurn`, `wardRegenPerTurn`) pass through as
+// statModifier entries applied via recomputeEffectiveStats()
+// (Completion Task 4).
 
 export function toBuffDefinition(live: BuffDefinition): BuffDefinition {
   const effects: BuffEffectTemplate[] = live.effects.map((effect: BuffEffectTemplate) => effect)

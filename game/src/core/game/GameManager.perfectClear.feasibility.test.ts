@@ -27,7 +27,7 @@ describe('perfect clear feasibility on a real floor shape', () => {
     lane: 'ground',
     statsInput: {
       maxHp: 1,
-      attack: 0,
+      might: 0,
       attackSpeed: 1,
       attackRangeRanks: 1,
       criticalRate: 0,
@@ -37,7 +37,7 @@ describe('perfect clear feasibility on a real floor shape', () => {
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 
-  // Multi-hit variant: 3000 HP dummy vs player attack 1000 -> ~3 landed
+  // Multi-hit variant: 3000 HP dummy vs player might 1000 -> ~3 landed
   // hits per enemy (armor/weakness aside) - measures rounds when kills
   // take real effort instead of one-shots.
   const TANKY = defineEnemy({
@@ -48,7 +48,7 @@ describe('perfect clear feasibility on a real floor shape', () => {
     lane: 'ground',
     statsInput: {
       maxHp: 3000,
-      attack: 0,
+      might: 0,
       attackSpeed: 1,
       attackRangeRanks: 1,
       criticalRate: 0,
@@ -80,7 +80,7 @@ describe('perfect clear feasibility on a real floor shape', () => {
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
     player.realmLevel = 10
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: playerAttack  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: playerAttack  })
 
     gameManager.catalogOps.registerEnemyTemplates([species])
     gameManager.catalogOps.registerStages([stageDef])
@@ -160,7 +160,7 @@ describe('perfect clear feasibility on a real floor shape', () => {
   // See docs/qa/2026-09-14-full-project-engineering-audit.md (perfect-clear
   // feasibility) and the arch-repair program ledger.
   for (const floor of [1, 5, 9, 10]) {
-    it.fails(`multi-hit floor ${floor} (3000 HP foes, attack 1000 = ~3 hits per kill): rounds at victory vs the fixed limit`, () => {
+    it.fails(`multi-hit floor ${floor} (3000 HP foes, might 1000 = ~3 hits per kill): rounds at victory vs the fixed limit`, () => {
       pinRandom(floor)
       const stageDef = builtFloor(floor, TANKY)
       const { gameManager, player, combatSource } = harness(stageDef, TANKY, 1000)

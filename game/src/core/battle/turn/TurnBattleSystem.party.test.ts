@@ -17,7 +17,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-    currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+    currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
   } as CombatEntity
 }
@@ -89,8 +89,8 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
     const { battle, memberA } = partyBattle()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    // memberA (10 HP) bị enemy giết qua vài lượt — ép enemy attack lớn.
-    battle.enemies[0]!.entity.stats.attack = 10_000
+    // memberA (10 HP) bị enemy giết qua vài lượt — ép enemy might lớn.
+    battle.enemies[0]!.entity.stats.might = 10_000
 
     for (let i = 0; i < 30 && memberA.alive; i++) {
       system.resolveNextStep(battle)
@@ -110,7 +110,7 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
     const { battle, memberA, memberB, enemy } = partyBattle()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    battle.enemies[0]!.entity.stats.attack = 10_000
+    battle.enemies[0]!.entity.stats.might = 10_000
 
     // memberB (1M HP) dies via Sudden Death escalation — which counts ATB
     // rounds (D2 contract), not raw actions: ~3 actions per round here, so
@@ -129,9 +129,9 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
     const { battle, memberA, memberB } = partyBattle()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    // Enemy attack lớn — đòn enemy phải CÓ THỂ trúng memberB (players[1]),
+    // Enemy might lớn — đòn enemy phải CÓ THỂ trúng memberB (players[1]),
     // không chỉ memberA.
-    battle.enemies[0]!.entity.stats.attack = 5
+    battle.enemies[0]!.entity.stats.might = 5
 
     const hpBBefore = memberB.currentHp
     const hpABefore = memberA.currentHp

@@ -28,7 +28,7 @@ describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
 
   // Important #3 review fix — dead `skillExperienceRatio: 1/18` từ
   // maxLevel 18 cũ vẫn còn trên effect damage của tram, cộng thêm 1 lớp
-  // % (skillExperienceRatio * totalExperience / attack, xem
+  // % (skillExperienceRatio * totalExperience / might, xem
   // SkillEffectSystem.ts's apply()) ĐÈ LÊN flat bonus trên — double-scale
   // ngoài spec §2 ("Huy Kiếm là skill DUY NHẤT đi bằng flat, không %").
   it('action dealDamage của tram KHÔNG còn skillExperienceRatio (flat-only, spec §2)', () => {

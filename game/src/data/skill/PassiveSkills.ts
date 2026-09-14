@@ -36,7 +36,7 @@ export const PASSIVE_SKILLS: Skill[] = [
         sourceId: 'passive_linh_khi_cam_ung',
         sourceType: 'skill',
 
-        stat: 'attack',
+        stat: 'might',
 
         percent: 0.005,
 
@@ -217,7 +217,7 @@ export const PASSIVE_SKILLS: Skill[] = [
         sourceId: 'passive_hoa_than_chi_uy',
         sourceType: 'skill',
 
-        stat: 'attack',
+        stat: 'might',
 
         percent: 0.02,
 

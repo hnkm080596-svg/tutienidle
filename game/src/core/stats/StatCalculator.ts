@@ -62,7 +62,7 @@ export interface StatModifier {
 // hiện có (equipment/technique/buff/pill), calculateStats() tự động
 // quy đổi ra bonus mỗi lần tính lại. Số liệu dưới đây là khởi điểm
 // hợp lý, cần tinh chỉnh qua playtest, không phải số chốt cứng.
-const ATTRIBUTE_ATTACK_PER_POINT = 0.6
+const ATTRIBUTE_MIGHT_PER_POINT = 0.6
 const ATTRIBUTE_DEFENSE_PER_POINT = 0.4
 // Turn-based conversion (2026-09-04) — quy đổi thuần đơn vị từ
 // ATTRIBUTE_ATTACK_SPEED_PERCENT_PER_POINT cũ (0.0015): base 1→100 và
@@ -134,7 +134,7 @@ const ATTRIBUTE_ELEMENT_TAG_PERCENT_PER_POINT = 0.001
 // (calculateEffectiveStats live-modifier delta pass).
 function deriveAttributeModifiers(finalized: Pick<Stats, MainStatKey>): StatModifier[] {
   const modifiers: StatModifier[] = [
-    flatAttributeModifier('strength', 'attack', finalized.strength * ATTRIBUTE_ATTACK_PER_POINT),
+    flatAttributeModifier('strength', 'might', finalized.strength * ATTRIBUTE_MIGHT_PER_POINT),
     flatAttributeModifier('strength', 'defense', finalized.strength * ATTRIBUTE_DEFENSE_PER_POINT),
 
     flatAttributeModifier(
@@ -280,7 +280,7 @@ function runPipeline(base: Stats, modifiers: StatModifier[]): Stats {
  * 2 lượt: lượt 1 tính đủ mọi modifier THẬT (equipment/technique/buff/
  * ...) để CHỐT giá trị 5 attribute; lượt 2 dẫn xuất bonus từ attribute
  * đã chốt rồi hoà CHUNG vào đúng pool Added/Increased của stat đích
- * (vd attribute-derived +attack hoà chung pool với +attack từ trang
+ * (vd attribute-derived +might hoà chung pool với +might từ trang
  * bị, % tăng tốc đánh từ Dexterity hoà chung pool % từ buff...) —
  * chữ ký hàm KHÔNG đổi nên mọi call site hiện có (BattleSystem, store
  * player.ts) tự động nhận cả 2 sửa đổi (Increased + Attribute) mà

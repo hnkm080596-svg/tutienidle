@@ -27,7 +27,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     lane: 'ground',
     statsInput: {
       maxHp: 1,
-      attack: 0,
+      might: 0,
       attackSpeed: 1,
       attackRangeRanks: 1,
       criticalRate: 0,
@@ -55,7 +55,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
 
     gameManager.catalogOps.registerEnemyTemplates([DUMMY_ENEMY])
     gameManager.catalogOps.registerStages([stageDef])
@@ -102,7 +102,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
 
   it('không overwrite perfectClearSeconds khi đạt Hoàn Mỹ lần 2', () => {
     const { gameManager, player, stageDef, combatSource } = harness(stage({ perfectClearTurnLimit: 50 }))
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
 
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
@@ -147,7 +147,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       grade: 'hoang',
       growthRate: 0.05,
       unlockThresholds: {},
-      baseStats: { maxHp: 100, attack: 10, speed: 100 },
+      baseStats: { maxHp: 100, might: 10, speed: 100 },
       basic: {
         id: 'pc_test_companion_basic',
         cooldownTurns: 0,
@@ -176,7 +176,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       const combatSource = new ManualClockSource()
       gameManager.setCombatClockSource(combatSource)
       const player = createDefaultPlayer()
-      player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
+      player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
 
       // formationLoadout + companions must be set BEFORE
       // setActivePlayer/startStage - buildTurnBattle reads the live

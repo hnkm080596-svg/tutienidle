@@ -42,7 +42,7 @@ function computeEquipmentStatDeltas(
 
 // Tổng hợp delta nhiều stat khác thang đo (percent lẫn flat) thành 1
 // tone duy nhất — đếm số stat tăng/giảm thay vì cộng dồn giá trị thô
-// (không thể cộng %crit với flat attack có ý nghĩa), khớp cách
+// (không thể cộng %crit với flat might có ý nghĩa), khớp cách
 // buildEquipmentTooltip() đã tô tone từng dòng.
 export function getEquipmentComparisonTone(
   instance: EquipmentInstance,

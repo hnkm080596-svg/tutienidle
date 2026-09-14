@@ -4,7 +4,7 @@ export type StatType =
   // Core — bỏ magicAttack/magicDefense (gộp vào tổng hợp 5 hành, xem
   // ElementDamageCalculator.ts — không còn skill/enemy nào dùng damage
   // type 'magic' riêng nữa).
-  | 'attack'
+  | 'might'
   | 'defense'
   | 'maxHp'
   | 'maxMp'
@@ -35,7 +35,7 @@ export type StatType =
   | 'enduranceThreshold'
   | 'endurancePercent'
   | 'wardMax'
-  | 'wardRegenPerSecond'
+  | 'wardRegenPerTurn'
   // Pháp Tu (Thổ Tu, 2026-08-15) — % wardMax phản thành damage vào
   // NGUỒN khi Hộ Thuẫn của mình vừa vỡ hẳn (currentWard chạm 0), xem
   // CombatSystem.ts's resolveAttack(). Tách khỏi thornsPercent (đó là
@@ -50,7 +50,7 @@ export type StatType =
   | 'leechPercent'
   | 'thornsPercent'
   | 'hpRegenPerTurn'
-  | 'manaRegenPerSecond'
+  | 'manaRegenPerTurn'
   | 'finalDamagePercent'
   | 'finalDamageReductionPercent'
   | 'criticalAvoidance'
@@ -110,7 +110,7 @@ export type StatType =
   // Equipment enhancement delta (percent change per affix row).
   | 'affixDeltaPercent'
   // Production speed multiplier.
-  | 'speedMultiplier'
+  | 'productionSpeedMultiplier'
   // Artifact grade multiplier.
   | 'artifactGradeMultiplier'
   // Pill cultivation percent (relative to realm tier requirement).

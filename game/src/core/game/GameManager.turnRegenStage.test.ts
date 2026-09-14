@@ -47,7 +47,7 @@ function makeEnemy() {
     lane: 'ground',
     statsInput: {
       maxHp: 10_000_000,
-      attack: 0,
+      might: 0,
       attackSpeed: 1,
       attackRangeRanks: 9,
       criticalRate: 0,

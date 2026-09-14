@@ -57,8 +57,8 @@ export function buildTechniqueSections(
   ]
 
   if (tierEffect) {
-    if (tierEffect.attackFlat !== undefined) {
-      combatRows.push({ label: 'Công kích', value: `+${tierEffect.attackFlat}` })
+    if (tierEffect.mightFlat !== undefined) {
+      combatRows.push({ label: 'Công kích', value: `+${tierEffect.mightFlat}` })
     }
 
     if (tierEffect.defenseFlat !== undefined) {

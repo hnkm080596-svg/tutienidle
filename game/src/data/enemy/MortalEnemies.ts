@@ -23,7 +23,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
     statsInput: {
       maxHp: 200,
-      attack: 20,
+      might: 20,
       attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -62,7 +62,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
     statsInput: {
       maxHp: 350,
-      attack: 35,
+      might: 35,
       attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.1,
@@ -114,7 +114,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
     statsInput: {
       maxHp: 150,
-      attack: 25,
+      might: 25,
       attackSpeed: 1.2,
       attackRangeRanks: 5,
       criticalRate: 0.12,
@@ -153,7 +153,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
     statsInput: {
       maxHp: 450,
-      attack: 30,
+      might: 30,
       attackSpeed: 1.0,
       attackRangeRanks: 5,
       criticalRate: 0.02,
@@ -199,7 +199,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'wolf',
     statsInput: {
       maxHp: 235,
-      attack: 23,
+      might: 23,
       attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.07,
@@ -223,7 +223,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'forest_fiend',
     statsInput: {
       maxHp: 375,
-      attack: 32,
+      might: 32,
       attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.08,
@@ -250,7 +250,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'flame_fox',
     statsInput: {
       maxHp: 275,
-      attack: 27,
+      might: 27,
       attackSpeed: 1.15,
       attackRangeRanks: 5,
       criticalRate: 0.1,
@@ -275,7 +275,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'magma_boar',
     statsInput: {
       maxHp: 440,
-      attack: 38,
+      might: 38,
       attackSpeed: 1.05,
       attackRangeRanks: 1,
       criticalRate: 0.04,
@@ -302,7 +302,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'flame_fox',
     statsInput: {
       maxHp: 320,
-      attack: 31,
+      might: 31,
       attackSpeed: 1.15,
       attackRangeRanks: 5,
       criticalRate: 0.12,
@@ -327,7 +327,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'magma_boar',
     statsInput: {
       maxHp: 515,
-      attack: 43,
+      might: 43,
       attackSpeed: 1.05,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -353,7 +353,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'sand_lynx',
     statsInput: {
       maxHp: 375,
-      attack: 36,
+      might: 36,
       attackSpeed: 1.15,
       attackRangeRanks: 1,
       criticalRate: 0.15,
@@ -378,7 +378,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'rock_bear',
     statsInput: {
       maxHp: 600,
-      attack: 50,
+      might: 50,
       attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.02,
@@ -404,7 +404,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'sand_lynx',
     statsInput: {
       maxHp: 440,
-      attack: 41,
+      might: 41,
       attackSpeed: 1.15,
       attackRangeRanks: 1,
       criticalRate: 0.17,
@@ -429,7 +429,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'rock_bear',
     statsInput: {
       maxHp: 705,
-      attack: 57,
+      might: 57,
       attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.03,
@@ -456,7 +456,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'blade_hawk',
     statsInput: {
       maxHp: 515,
-      attack: 47,
+      might: 47,
       attackSpeed: 1.2,
       attackRangeRanks: 5,
       criticalRate: 0.14,
@@ -482,7 +482,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'metal_beetle',
     statsInput: {
       maxHp: 825,
-      attack: 66,
+      might: 66,
       attackSpeed: 1.0,
       attackRangeRanks: 5,
       criticalRate: 0.03,
@@ -509,7 +509,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'blade_hawk',
     statsInput: {
       maxHp: 600,
-      attack: 55,
+      might: 55,
       attackSpeed: 1.2,
       attackRangeRanks: 5,
       criticalRate: 0.16,
@@ -535,7 +535,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'metal_beetle',
     statsInput: {
       maxHp: 960,
-      attack: 77,
+      might: 77,
       attackSpeed: 1.0,
       attackRangeRanks: 5,
       criticalRate: 0.04,
@@ -562,7 +562,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'pool_toad',
     statsInput: {
       maxHp: 700,
-      attack: 63,
+      might: 63,
       attackSpeed: 1.05,
       attackRangeRanks: 5,
       criticalRate: 0.08,
@@ -588,7 +588,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'flood_serpent',
     statsInput: {
       maxHp: 1125,
-      attack: 88,
+      might: 88,
       attackSpeed: 1.05,
       attackRangeRanks: 5,
       criticalRate: 0.06,
@@ -615,7 +615,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'pool_toad',
     statsInput: {
       maxHp: 825,
-      attack: 73,
+      might: 73,
       attackSpeed: 1.05,
       attackRangeRanks: 5,
       criticalRate: 0.1,
@@ -647,7 +647,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
     statsInput: {
       maxHp: 1320,
-      attack: 102,
+      might: 102,
       attackSpeed: 1.05,
       attackRangeRanks: 5,
       criticalRate: 0.08,
@@ -694,7 +694,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'boar',
     statsInput: {
       maxHp: 60,
-      attack: 6,
+      might: 6,
       attackSpeed: 0.95,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -718,7 +718,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'bandit',
     statsInput: {
       maxHp: 96,
-      attack: 8,
+      might: 8,
       attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.1,
@@ -743,7 +743,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'boar',
     statsInput: {
       maxHp: 70,
-      attack: 7,
+      might: 7,
       attackSpeed: 0.95,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -767,7 +767,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'bandit',
     statsInput: {
       maxHp: 112,
-      attack: 10,
+      might: 10,
       attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.1,
@@ -792,7 +792,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'dog',
     statsInput: {
       maxHp: 82,
-      attack: 8,
+      might: 8,
       attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -816,7 +816,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'tiger',
     statsInput: {
       maxHp: 131,
-      attack: 11,
+      might: 11,
       attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.1,
@@ -841,7 +841,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'dog',
     statsInput: {
       maxHp: 96,
-      attack: 9,
+      might: 9,
       attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -865,7 +865,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'tiger',
     statsInput: {
       maxHp: 154,
-      attack: 13,
+      might: 13,
       attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.1,
@@ -890,7 +890,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'lynx',
     statsInput: {
       maxHp: 112,
-      attack: 11,
+      might: 11,
       attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -914,7 +914,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'ox',
     statsInput: {
       maxHp: 179,
-      attack: 15,
+      might: 15,
       attackSpeed: 0.9,
       attackRangeRanks: 1,
       criticalRate: 0.1,
@@ -939,7 +939,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'lynx',
     statsInput: {
       maxHp: 132,
-      attack: 12,
+      might: 12,
       attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -963,7 +963,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'ox',
     statsInput: {
       maxHp: 211,
-      attack: 17,
+      might: 17,
       attackSpeed: 0.9,
       attackRangeRanks: 1,
       criticalRate: 0.1,
@@ -988,7 +988,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'fox',
     statsInput: {
       maxHp: 154,
-      attack: 14,
+      might: 14,
       attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -1012,7 +1012,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'boar',
     statsInput: {
       maxHp: 246,
-      attack: 20,
+      might: 20,
       attackSpeed: 0.95,
       attackRangeRanks: 1,
       criticalRate: 0.1,
@@ -1037,7 +1037,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'fox',
     statsInput: {
       maxHp: 180,
-      attack: 16,
+      might: 16,
       attackSpeed: 1.1,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -1061,7 +1061,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'boar',
     statsInput: {
       maxHp: 288,
-      attack: 22,
+      might: 22,
       attackSpeed: 0.95,
       attackRangeRanks: 1,
       criticalRate: 0.1,
@@ -1086,7 +1086,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'wolf',
     statsInput: {
       maxHp: 211,
-      attack: 19,
+      might: 19,
       attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -1110,7 +1110,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'crocodile',
     statsInput: {
       maxHp: 338,
-      attack: 27,
+      might: 27,
       attackSpeed: 0.9,
       attackRangeRanks: 1,
       criticalRate: 0.1,
@@ -1135,7 +1135,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'wolf',
     statsInput: {
       maxHp: 247,
-      attack: 22,
+      might: 22,
       attackSpeed: 1.0,
       attackRangeRanks: 1,
       criticalRate: 0.05,
@@ -1165,7 +1165,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2, presetId: 'water_surge' }],
     statsInput: {
       maxHp: 395,
-      attack: 31,
+      might: 31,
       attackSpeed: 0.9,
       attackRangeRanks: 1,
       criticalRate: 0.1,

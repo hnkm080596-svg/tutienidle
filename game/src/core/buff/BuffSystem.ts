@@ -171,7 +171,7 @@ export class BuffSystem {
       : 1
 
     if (!effect.element || effect.element === 'physical') {
-      const power = source.stats.attack
+      const power = source.stats.might
       const mitigation =
         getArmorMitigationPercent(target.stats.defense, target.realmIndex) * armorIgnoreMultiplier
       return Math.max(0, power * ratio * (1 - mitigation)) * (1 + source.stats.ailmentPotencyPercent)

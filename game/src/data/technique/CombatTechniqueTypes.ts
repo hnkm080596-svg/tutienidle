@@ -26,7 +26,7 @@ export const COMBAT_TECHNIQUE_TYPES: CombatTechniqueTypeConfig[] = [
 
     mainStats: ['criticalRate', 'criticalDamage'],
 
-    substatPool: ['attack', 'speed', 'criticalAvoidance'],
+    substatPool: ['might', 'speed', 'criticalAvoidance'],
   },
 
   {
@@ -46,7 +46,7 @@ export const COMBAT_TECHNIQUE_TYPES: CombatTechniqueTypeConfig[] = [
 
     mainStats: ['speed', 'accuracyRating'],
 
-    substatPool: ['attack'],
+    substatPool: ['might'],
   },
 
   {
@@ -56,6 +56,6 @@ export const COMBAT_TECHNIQUE_TYPES: CombatTechniqueTypeConfig[] = [
 
     mainStats: ['leechPercent', 'hpRegenPerTurn'],
 
-    substatPool: ['maxHp', 'wardMax', 'wardRegenPerSecond'],
+    substatPool: ['maxHp', 'wardMax', 'wardRegenPerTurn'],
   },
 ]

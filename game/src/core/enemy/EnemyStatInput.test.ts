@@ -10,7 +10,7 @@ import {
 function baseEnemyStats() {
   return normalizeEnemyStats({
     maxHp: 100,
-    attack: 20,
+    might: 20,
     attackSpeed: 5,
     attackRangeRanks: 2,
     criticalRate: 0.05,
@@ -36,7 +36,7 @@ describe('enemy combat stat normalization', () => {
   it('balance pass: attackRangeRanks > 5 bị clamp về trần 5 — quái luôn đứng trong tầm Player', () => {
     const clamped = normalizeEnemyStats({
       maxHp: 100,
-      attack: 20,
+      might: 20,
       attackSpeed: 1,
       attackRangeRanks: 9,
       criticalRate: 0,
@@ -52,7 +52,7 @@ describe('enemy combat stat normalization', () => {
     const elite = applyEliteMultiplier(baseEnemyStats())
 
     expect(elite.maxHp).toBe(250)
-    expect(elite.attack).toBe(27)
+    expect(elite.might).toBe(27)
     expect(elite.defense).toBeCloseTo(11.5)
     expect(elite.accuracyRating).toBeCloseTo(88)
   })
@@ -61,7 +61,7 @@ describe('enemy combat stat normalization', () => {
     const boss = applyBossMultiplier(baseEnemyStats())
 
     expect(boss.maxHp).toBe(700)
-    expect(boss.attack).toBe(40)
+    expect(boss.might).toBe(40)
     expect(boss.defense).toBe(12)
     expect(boss.accuracyRating).toBeCloseTo(92)
     expect(boss.criticalAvoidance).toBe(0.15)

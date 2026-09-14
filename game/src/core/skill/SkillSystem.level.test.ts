@@ -109,7 +109,7 @@ describe('SkillSystem.getEffectiveSkill level scaling', () => {
         id: 'passive-test',
         sourceId: 'test_skill',
         sourceType: 'skill',
-        stat: 'attack',
+        stat: 'might',
         flat: 10,
         percent: 0.1,
         perLevelFlat: 2,

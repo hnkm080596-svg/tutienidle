@@ -96,7 +96,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       // gate "không bắn quái offscreen" sẽ khoá cứng cả 2 phía.
       statsInput: {
         maxHp: 20,
-        attack: 0,
+        might: 0,
         attackSpeed: 1,
         attackRangeRanks: 7,
         criticalRate: 0,
@@ -115,7 +115,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       // attackRange thật, cùng lý do đã ghi ở mob phía trên (2026-08-22).
       statsInput: {
         maxHp: 15,
-        attack: 0,
+        might: 0,
         attackSpeed: 1,
         attackRangeRanks: 7,
         criticalRate: 0,

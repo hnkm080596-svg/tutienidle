@@ -31,7 +31,7 @@ function makeEntity(id: string): CombatEntity {
   // EFFECTIVE maxHp, so the old default (100) silently turned this
   // "immortal" target into a 100-hp one that a random ~5% crit (143)
   // killed, dropping the second composite pick's hit (~2-5% flake).
-  const stats = createBaseStats({ attack: 100, accuracyRating: 9999, evasionRate: 0, maxHp: 1_000_000 })
+  const stats = createBaseStats({ might: 100, accuracyRating: 9999, evasionRate: 0, maxHp: 1_000_000 })
   return {
     id,
     name: id,
@@ -52,7 +52,7 @@ function makeEntity(id: string): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,

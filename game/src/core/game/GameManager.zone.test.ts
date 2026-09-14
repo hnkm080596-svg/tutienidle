@@ -64,7 +64,7 @@ describe('GameManager.registerEquipment — startup validation', () => {
     const gameManager = new GameManager()
     expect(() => gameManager.catalogOps.registerEquipment([{
       id: 'bad_boots', name: 'Sai', slot: 'boots', grade: 1, maxEnhanceLevel: 1,
-      mainStats: [{ stat: 'attack', min: 1, max: 2 }],
+      mainStats: [{ stat: 'might', min: 1, max: 2 }],
     }])).toThrow(/Invalid main stat/)
   })
 })

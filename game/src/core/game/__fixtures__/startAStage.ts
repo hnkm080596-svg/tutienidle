@@ -14,7 +14,7 @@ import type { GameManager } from '../GameManager'
  * ManualClockSource before the battle starts.
  *
  * Deliberately minimal and deterministic: one enemy, one wave, no rewards,
- * enemy attack 0 so nothing ends the battle by accident, player speed 100 so
+ * enemy might 0 so nothing ends the battle by accident, player speed 100 so
  * a gauge fills in ten fighting steps.
  */
 export function startAStage(
@@ -27,11 +27,11 @@ export function startAStage(
   const basePlayer = createDefaultPlayer()
   // ARCH-002 (M7): startStage resolves stats internally — patch the RAW
   // baseStats at construction so the resolved snapshot keeps the
-  // documented attack/speed (object-literal form: the R14.3a guard forbids
+  // documented might/speed (object-literal form: the R14.3a guard forbids
   // post-creation baseStats assignments in src/).
   const player: PlayerData = {
     ...basePlayer,
-    baseStats: asBaseStats({ ...basePlayer.baseStats, attack: 100, speed: 100 }),
+    baseStats: asBaseStats({ ...basePlayer.baseStats, might: 100, speed: 100 }),
   }
 
   const enemy = defineEnemy({
@@ -42,7 +42,7 @@ export function startAStage(
     lane: 'ground',
     statsInput: {
       maxHp: 1_000_000,
-      attack: 0,
+      might: 0,
       attackSpeed: 1,
       attackRangeRanks: 9,
       criticalRate: 0,

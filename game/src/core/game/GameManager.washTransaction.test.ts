@@ -35,7 +35,7 @@ describe('GameManager wash transaction', () => {
         id: 'wash-main',
         sourceId: 'wash-transaction-item',
         sourceType: 'equipment',
-        stat: 'attack',
+        stat: 'might',
         flat: 12,
       },
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
@@ -58,7 +58,7 @@ describe('GameManager wash transaction', () => {
       .sort()
     expect(modifierIdsBefore).toEqual([
       `${instance.instanceId}:accuracyRating`,
-      `${instance.instanceId}:attack`,
+      `${instance.instanceId}:might`,
     ])
     const mainStatBefore = structuredClone(instance.mainStat)
 
@@ -80,7 +80,7 @@ describe('GameManager wash transaction', () => {
     expect(instance.forgeUsesRemaining).toBe(19)
     const committedAffixes = structuredClone(instance.affixes)
     const committedModifierIds = [
-      `${instance.instanceId}:attack`,
+      `${instance.instanceId}:might`,
       ...committedAffixes.map(
         (rolled) => `${instance.instanceId}:${manager.affixRegistry.get(rolled.affixId).stat}`,
       ),
@@ -147,7 +147,7 @@ describe('GameManager wash transaction', () => {
         id: 'wash-main',
         sourceId: 'wash-fabricated-item',
         sourceType: 'equipment',
-        stat: 'attack',
+        stat: 'might',
         flat: 12,
       },
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],

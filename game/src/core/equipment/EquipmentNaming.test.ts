@@ -16,7 +16,7 @@ const TEMPLATE: Equipment = {
   name: 'Thanh Vân Kiếm',
   slot: 'weapon',
   grade: 1,
-  mainStats: [{ stat: 'attack', min: 8, max: 12 }],
+  mainStats: [{ stat: 'might', min: 8, max: 12 }],
   maxEnhanceLevel: 10,
 }
 

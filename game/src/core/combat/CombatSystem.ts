@@ -352,9 +352,9 @@ export class CombatSystem {
 
     // Pháp Tu (Thổ Tu, 2026-08-15) — reset đồng hồ "chưa bị đánh" MỖI
     // LẦN thật sự trúng đòn (kể cả khi bị block/không có ward) —
-    // wardRegenPerSecond chỉ hồi sau khi mốc này đủ lâu, xem
+    // wardRegenPerTurn chỉ hồi sau khi mốc này đủ lâu, xem
     // BattleSystem.updateRegen().
-    target.timeSinceLastHitTaken = 0
+    target.turnsSinceLastHitLanded = 0
 
     // Ward hấp thụ TRƯỚC currentHp — phần dư (nếu ward không đủ hoặc
     // không có) mới thật sự trừ máu.

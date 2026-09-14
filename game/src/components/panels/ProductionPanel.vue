@@ -73,9 +73,9 @@ interface SiteRow {
 
   maxLevel: number
 
-  speedMultiplier: number
+  productionSpeedMultiplier: number
 
-  nextSpeedMultiplier?: number
+  nextProductionSpeedMultiplier?: number
 
   autoRestart: boolean
 
@@ -129,9 +129,9 @@ const rows = computed<SiteRow[]>(() => {
 
       maxLevel: view.definition.maxLevel,
 
-      speedMultiplier: view.speedMultiplier,
+      productionSpeedMultiplier: view.productionSpeedMultiplier,
 
-      nextSpeedMultiplier: view.nextSpeedMultiplier,
+      nextProductionSpeedMultiplier: view.nextProductionSpeedMultiplier,
 
       autoRestart: view.state.autoRestart,
 
@@ -392,10 +392,10 @@ function collectLinMach() {
           <div class="site-card__stats">
             <span>{{ t('panels.production.level', { level: row.level, max: row.maxLevel }) }}</span>
 
-            <span>×{{ formatStat('speedMultiplier', row.speedMultiplier) }} {{ t('panels.production.speedSuffix') }}</span>
+            <span>×{{ formatStat('productionSpeedMultiplier', row.productionSpeedMultiplier) }} {{ t('panels.production.speedSuffix') }}</span>
 
-            <span v-if="row.nextSpeedMultiplier">
-              {{ t('panels.production.nextSpeedPrefix') }}{{ formatStat('speedMultiplier', row.nextSpeedMultiplier) }}
+            <span v-if="row.nextProductionSpeedMultiplier">
+              {{ t('panels.production.nextSpeedPrefix') }}{{ formatStat('productionSpeedMultiplier', row.nextProductionSpeedMultiplier) }}
             </span>
 
             <span>{{ t('panels.production.workers', { count: row.activeWorkerSlots }) }}</span>

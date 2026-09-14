@@ -11,14 +11,14 @@ describe('formatStat', () => {
   })
 
   it('formatStat multiplier stats as 2-decimal number', () => {
-    expect(formatStat('speedMultiplier', 1.25)).toBe('1.25')
+    expect(formatStat('productionSpeedMultiplier', 1.25)).toBe('1.25')
     expect(formatStat('artifactGradeMultiplier', 1.12)).toBe('1.12')
     expect(formatStat('artifactGradeMultiplier', 1)).toBe('1')
   })
 
   it('formatStat rounds multiplier to 2 decimal places', () => {
-    expect(formatStat('speedMultiplier', 1.256)).toBe('1.26')
-    expect(formatStat('speedMultiplier', 1.254)).toBe('1.25')
+    expect(formatStat('productionSpeedMultiplier', 1.256)).toBe('1.26')
+    expect(formatStat('productionSpeedMultiplier', 1.254)).toBe('1.25')
   })
 
   it('criticalDamage displays as % while staying a multiplier in formulas — bug 2026-09-01', () => {
@@ -42,7 +42,7 @@ describe('formatStat', () => {
   })
 
   it('formatStat existing flat stat keys use formatNumber', () => {
-    expect(formatStat('attack', 1250)).toBe('1,250')
+    expect(formatStat('might', 1250)).toBe('1,250')
     expect(formatStat('maxHp', 0)).toBe('0')
   })
 })
@@ -53,7 +53,7 @@ describe('statLabel', () => {
     expect(statLabel('manaRegenPercent')).toBe('Hồi Linh lực (Tâm Pháp)')
     expect(statLabel('realmPassivePercent')).toBe('Cộng % Cảnh Giới')
     expect(statLabel('affixDeltaPercent')).toBe('Tăng Trưởng Affix')
-    expect(statLabel('speedMultiplier')).toBe('Hệ số tốc độ')
+    expect(statLabel('productionSpeedMultiplier')).toBe('Hệ số tốc độ')
     expect(statLabel('artifactGradeMultiplier')).toBe('Hệ số Pháp Bảo')
     expect(statLabel('cultivationPercent')).toBe('Tu Vi (Đan Dược)')
   })

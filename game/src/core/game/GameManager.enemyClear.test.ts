@@ -24,7 +24,7 @@ import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
 
 const MINIMAL_STATS_INPUT = {
   maxHp: 100,
-  attack: 0,
+  might: 0,
   attackSpeed: 1,
   attackRangeRanks: 999999,
   criticalRate: 0,
@@ -33,7 +33,7 @@ const MINIMAL_STATS_INPUT = {
 }
 
 function createPlayer(): CombatEntity {
-  const stats = createBaseStats({ attack: 0 })
+  const stats = createBaseStats({ might: 0 })
 
   return {
     id: 'player',
@@ -54,7 +54,7 @@ function createPlayer(): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -110,7 +110,7 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
       lane: 'ground',
       statsInput: {
         maxHp: 1,
-        attack: 0,
+        might: 0,
         attackSpeed: 1,
         attackRangeRanks: 1,
         criticalRate: 0,
@@ -129,7 +129,7 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
       spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
-    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])

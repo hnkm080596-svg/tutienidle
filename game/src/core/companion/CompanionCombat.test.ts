@@ -9,7 +9,7 @@ const TEST_DEFINITION: CompanionDefinition = {
   grade: 'hoang',
   growthRate: 0.05,
   unlockThresholds: {},
-  baseStats: { maxHp: 100, attack: 10, speed: 100 },
+  baseStats: { maxHp: 100, might: 10, speed: 100 },
   basic: { id: 'test_companion_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
 }
 
@@ -18,7 +18,7 @@ const TEST_DEFINITION: CompanionDefinition = {
 const PERKED_DEFINITION: CompanionDefinition = {
   ...TEST_DEFINITION,
   id: 'test_companion_perked',
-  constellationPerks: [{ atRank: 1, kind: 'stat', stat: 'attack', percent: 50 }],
+  constellationPerks: [{ atRank: 1, kind: 'stat', stat: 'might', percent: 50 }],
 }
 
 function makeInstance(overrides: Partial<CompanionInstance> = {}): CompanionInstance {
@@ -40,7 +40,7 @@ describe('companionToCombatEntity', () => {
     expect(entity.id).toBe('test_companion')
     expect(entity.alive).toBe(true)
     expect(entity.currentHp).toBe(entity.maxHp)
-    expect(entity.stats.attack).toBe(TEST_DEFINITION.baseStats.attack)
+    expect(entity.stats.might).toBe(TEST_DEFINITION.baseStats.might)
   })
 
   it('sets realmIndex from getRealmIndex(instance.realmId)', () => {
@@ -56,7 +56,7 @@ describe('companionToCombatEntity', () => {
     // mortal/5 -> globalLevel 5 -> growth = 1 + 0.05 * 4 = 1.2 (speed ignores growth).
     const leveled = companionToCombatEntity(makeInstance({ realmLevel: 5 }), TEST_DEFINITION)
 
-    expect(leveled.stats.attack).toBe(12)
+    expect(leveled.stats.might).toBe(12)
     expect(leveled.stats.maxHp).toBe(120)
     expect(leveled.stats.speed).toBe(100)
 
@@ -64,20 +64,20 @@ describe('companionToCombatEntity', () => {
     // speed is not Math.round'ed by companionStatsAt - compare approximately.
     const ranked = companionToCombatEntity(makeInstance({ constellationRank: 2 }), TEST_DEFINITION)
 
-    expect(ranked.stats.attack).toBe(12)
+    expect(ranked.stats.might).toBe(12)
     expect(ranked.stats.maxHp).toBe(120)
     expect(ranked.stats.speed).toBeCloseTo(120)
   })
 
   it('applies constellation stat perks on top of the multiplier', () => {
-    // rank 2: attack = 10 * 1.2 (constellation) then perk percent +50 -> 18.
+    // rank 2: might = 10 * 1.2 (constellation) then perk percent +50 -> 18.
     const ranked = companionToCombatEntity(makeInstance({ constellationRank: 2 }), PERKED_DEFINITION)
 
-    expect(ranked.stats.attack).toBe(18)
+    expect(ranked.stats.might).toBe(18)
 
     // rank 0: perk atRank 1 not met, no constellation bonus either.
     const unranked = companionToCombatEntity(makeInstance(), PERKED_DEFINITION)
 
-    expect(unranked.stats.attack).toBe(10)
+    expect(unranked.stats.might).toBe(10)
   })
 })

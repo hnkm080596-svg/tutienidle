@@ -104,6 +104,64 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.baseStats.attackRange).toBeGreaterThan(0)
   })
 
+  // Stat-key migration (stat-system-reimagined rename pass) — saves
+  // written under the old key names must come back with renamed keys,
+  // retired keys dropped, and modifier stat fields remapped.
+  it('save cũ với stat key cũ → migrate sang key mới, key retired bị drop', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      baseStats: { attack: 10, attackRange: 1, maxMpPercent: 0.2, defense: 7 },
+      modifiers: [
+        {
+          id: 'm1',
+          sourceId: 's1',
+          sourceType: 'equipment',
+          stat: 'attack',
+          flat: 5,
+        },
+        {
+          id: 'm2',
+          sourceId: 's2',
+          sourceType: 'equipment',
+          stat: 'manaRegenPerSecond',
+          flat: 1,
+        },
+      ],
+      persistentTimedEffects: [
+        {
+          id: 'fx1',
+          modifiers: [
+            {
+              id: 'fx1_m',
+              sourceId: 'fx1',
+              sourceType: 'pill',
+              stat: 'speedMultiplier',
+              percent: 10,
+            },
+          ],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    expect(player.baseStats.might).toBe(10)
+    expect(player.baseStats.defense).toBe(7)
+    expect('attack' in player.baseStats).toBe(false)
+    // Retired keys drop their SAVED value; while StatType still declares
+    // them the createBaseStats() baseline fills the key back in.
+    expect(player.baseStats.maxMpPercent).toBe(0)
+    expect(player.baseStats.attackRange).toBeGreaterThan(0)
+
+    expect(player.modifiers.map((modifier) => modifier.stat)).toEqual([
+      'might',
+      'manaRegenPerTurn',
+    ])
+    expect(player.persistentTimedEffects[0]!.modifiers[0]!.stat).toBe(
+      'productionSpeedMultiplier',
+    )
+  })
+
   // M1 (ARCH-001) — the player slice is REPLACE semantics too: fields the
   // payload does not declare must reset to defaults instead of keeping the
   // previous session's values (a bare Object.assign merge leaked them).

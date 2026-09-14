@@ -532,7 +532,7 @@ export function playerToCombatEntity(
     // Vô cực — "chưa từng bị đánh" lúc trận vừa bắt đầu, để Ward có
     // thể hồi ngay từ đầu trận thay vì phải chờ 1 khoảng WARD_REGEN_
     // DELAY_SECONDS giả tạo dù chưa hề ăn đòn nào (xem CombatEntity.ts).
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
 
     realmIndex: getRealmIndex(player.realmId),
 
