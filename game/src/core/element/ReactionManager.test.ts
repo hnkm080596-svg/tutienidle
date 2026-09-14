@@ -355,7 +355,7 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
     reactionManager.checkAndTrigger(targetBuffs, 'te_cong', source, target, combatSystem, createBuffRegistry())
 
     expect(targetBuffs.getActiveIds()).toEqual(['troi_chan'])
-    expect(targetBuffs.isRooted()).toBe(true)
+    expect(targetBuffs.isRooted('target')).toBe(true)
 
     // troi_chan baseline duration 2.5s × (1 + 0.5) = 3.75s — extendRemaining
     // cộng thêm phần dư (0.5 × 2.5 = 1.25s) lên TRÊN remainingTime gốc.

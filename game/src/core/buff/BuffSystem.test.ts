@@ -735,20 +735,27 @@ describe('BuffSystem — on-hit proc / Thạch Hóa (ported from AilmentSystem.o
     expect(onHitEffect).toMatchObject({ chance: 0.5, appliesBuffId: 'choang' })
   })
 
+  // ARCH-009 (M9): `pool` = the HOLDER's pool (the entity about to land
+  // a hit, carrying thach_hoa); `targetPool` = the struck VICTIM's pool.
+  // Proc results must land in targetPool with sourceId=hitter,
+  // targetId=victim.
   it('không có buff on-hit-proc nào active — rollOnHitEffects() không áp gì cả', () => {
     const pool = new BuffPool()
+    const targetPool = new BuffPool()
     const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source', type: 'player' })
     const target = makeEntity({ id: 'target' })
     const registry = makeRegistry()
 
-    system.rollOnHitEffects(source, target, registry)
+    system.rollOnHitEffects(source, target, targetPool, registry)
 
     expect(system.getActiveIds()).toEqual([])
+    expect(new BuffSystem(targetPool).getActiveIds()).toEqual([])
   })
 
-  it('buff on-hit-proc active với onHitChance=1 (biên trên) — LUÔN áp appliesBuffId', () => {
+  it('buff on-hit-proc active với onHitChance=1 (biên trên) — LUÔN áp appliesBuffId lên pool của ĐÍCH bị đánh', () => {
     const pool = new BuffPool()
+    const targetPool = new BuffPool()
     const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source', type: 'player' })
     const target = makeEntity({ id: 'target' })
@@ -764,16 +771,28 @@ describe('BuffSystem — on-hit proc / Thạch Hóa (ported from AilmentSystem.o
       ],
     }
 
-    system.apply(thachHoaChance1, source, target, registry)
+    // thach_hoa sits on the HOLDER (the entity about to strike) - the
+    // target applied it on an earlier turn.
+    system.apply(thachHoaChance1, target, source, registry)
 
-    system.rollOnHitEffects(source, target, registry)
+    system.rollOnHitEffects(source, target, targetPool, registry)
 
-    expect(system.getActiveIds().sort()).toEqual(['choang', 'thach_hoa'])
-    expect(system.isStunned()).toBe(true)
+    // Holder keeps thach_hoa; choang lands in the victim's pool with
+    // correct identity.
+    expect(system.getActiveIds()).toEqual(['thach_hoa'])
+    const targetSystem = new BuffSystem(targetPool)
+    expect(targetSystem.getActiveIds()).toEqual(['choang'])
+    expect(targetPool.getFromSource('choang', 'source')).toMatchObject({
+      sourceId: 'source',
+      targetId: 'target',
+    })
+    expect(targetSystem.isStunned('target')).toBe(true)
+    expect(system.isStunned('source')).toBe(false)
   })
 
   it('onHitChance=0 (biên dưới) — KHÔNG BAO GIỜ áp dù buff vẫn active', () => {
     const pool = new BuffPool()
+    const targetPool = new BuffPool()
     const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source', type: 'player' })
     const target = makeEntity({ id: 'target' })
@@ -787,18 +806,21 @@ describe('BuffSystem — on-hit proc / Thạch Hóa (ported from AilmentSystem.o
       ],
     }
 
-    system.apply(thachHoaChance0, source, target, registry)
+    system.apply(thachHoaChance0, target, source, registry)
 
     for (let i = 0; i < 20; i++) {
-      system.rollOnHitEffects(source, target, registry)
+      system.rollOnHitEffects(source, target, targetPool, registry)
     }
 
     expect(system.getActiveIds()).toEqual(['thach_hoa'])
-    expect(system.isStunned()).toBe(false)
+    expect(new BuffSystem(targetPool).getActiveIds()).toEqual([])
+    expect(system.isStunned('source')).toBe(false)
+    expect(new BuffSystem(targetPool).isStunned('target')).toBe(false)
   })
 
   it('Choáng vừa proc sourceId = kẻ VỪA đánh trúng (source truyền vào rollOnHitEffects), KHÔNG phải sourceId gốc của Thạch Hóa', () => {
     const pool = new BuffPool()
+    const targetPool = new BuffPool()
     const system = new BuffSystem(pool)
     const originalCaster = makeEntity({ id: 'original_caster', type: 'player' })
     const laterAttacker = makeEntity({ id: 'later_attacker' })
@@ -813,28 +835,34 @@ describe('BuffSystem — on-hit proc / Thạch Hóa (ported from AilmentSystem.o
       ],
     }
 
-    // thach_hoa được nguồn A áp lên, nhưng lần TRÚNG ĐÒN kích Choáng lại
-    // đến từ nguồn B (vd 1 skill/entity khác đánh trúng target đang
-    // mang Thạch Hóa) — Choáng phải mang sourceId của B.
-    system.apply(thachHoaChance1, originalCaster, target, registry)
+    // thach_hoa was applied to laterAttacker by source A, but the HIT
+    // that procs choang comes from laterAttacker itself - choang must
+    // carry laterAttacker's sourceId and land in the target's pool.
+    system.apply(thachHoaChance1, originalCaster, laterAttacker, registry)
 
-    system.rollOnHitEffects(laterAttacker, target, registry)
+    system.rollOnHitEffects(laterAttacker, target, targetPool, registry)
 
-    expect(system.getActiveIds()).toContain('choang')
-    expect(pool.getFromSource('choang', 'later_attacker')).toBeDefined()
+    expect(system.getActiveIds()).toEqual(['thach_hoa'])
+    expect(targetPool.getFromSource('choang', 'later_attacker')).toMatchObject({
+      sourceId: 'later_attacker',
+      targetId: 'target',
+    })
+    expect(targetPool.getFromSource('choang', 'original_caster')).toBeUndefined()
   })
 
   it('buff không khai onHitProc (vd Bỏng thường) — rollOnHitEffects() bỏ qua, không crash', () => {
     const pool = new BuffPool()
+    const targetPool = new BuffPool()
     const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source', type: 'player' })
     const target = makeEntity({ id: 'target' })
     const registry = makeRegistry()
 
-    system.apply(bong, source, target, registry)
+    system.apply(bong, target, source, registry)
 
-    expect(() => system.rollOnHitEffects(source, target, registry)).not.toThrow()
+    expect(() => system.rollOnHitEffects(source, target, targetPool, registry)).not.toThrow()
     expect(system.getActiveIds()).toEqual(['bong'])
+    expect(new BuffSystem(targetPool).getActiveIds()).toEqual([])
   })
 })
 
@@ -877,13 +905,13 @@ describe('BuffSystem — conversion chain, Làm Chậm -> Đóng Băng (ported f
     system.apply(lamCham, source, target, registry)
     system.update(2, target, combatSystem, registry)
 
-    expect(system.isFrozen()).toBe(true)
+    expect(system.isFrozen('target')).toBe(true)
 
     system.update(1.5, target, combatSystem, registry)
-    expect(system.isFrozen()).toBe(true)
+    expect(system.isFrozen('target')).toBe(true)
 
     system.update(1, target, combatSystem, registry)
-    expect(system.isFrozen()).toBe(false)
+    expect(system.isFrozen('target')).toBe(false)
   })
 
   it('target kháng 50% — Đóng Băng chỉ còn 1s', () => {
@@ -897,13 +925,13 @@ describe('BuffSystem — conversion chain, Làm Chậm -> Đóng Băng (ported f
     system.apply(lamCham, source, target, registry)
     system.update(2, target, combatSystem, registry)
 
-    expect(system.isFrozen()).toBe(true)
+    expect(system.isFrozen('target')).toBe(true)
 
     system.update(0.5, target, combatSystem, registry)
-    expect(system.isFrozen()).toBe(true)
+    expect(system.isFrozen('target')).toBe(true)
 
     system.update(1, target, combatSystem, registry)
-    expect(system.isFrozen()).toBe(false)
+    expect(system.isFrozen('target')).toBe(false)
   })
 
   it('nguồn có ailmentDurationPercent +50% — nhân thêm sau kháng cự (1.5s)', () => {
@@ -918,13 +946,13 @@ describe('BuffSystem — conversion chain, Làm Chậm -> Đóng Băng (ported f
     system.apply(lamCham, source, target, registry)
     system.update(2, target, combatSystem, registry, resolveSource)
 
-    expect(system.isFrozen()).toBe(true)
+    expect(system.isFrozen('target')).toBe(true)
 
     system.update(1, target, combatSystem, registry, resolveSource)
-    expect(system.isFrozen()).toBe(true)
+    expect(system.isFrozen('target')).toBe(true)
 
     system.update(1, target, combatSystem, registry, resolveSource)
-    expect(system.isFrozen()).toBe(false)
+    expect(system.isFrozen('target')).toBe(false)
   })
 })
 

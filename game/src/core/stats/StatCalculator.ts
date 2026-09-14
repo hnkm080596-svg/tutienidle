@@ -1,4 +1,5 @@
-import type { StatType } from './StatTypes'
+import type { MainStatKey, StatType } from './StatTypes'
+import { MAIN_STAT_KEYS } from './StatTypes'
 import type { BaseStats, Stats } from './StatBlock'
 
 export type ModifierSourceType =
@@ -119,7 +120,11 @@ function percentAttributeModifier(
 // này, không lẫn vào pool tổng quát) — minh hoạ tag-hierarchy Increased.
 const ATTRIBUTE_ELEMENT_TAG_PERCENT_PER_POINT = 0.001
 
-function deriveAttributeModifiers(finalized: Stats): StatModifier[] {
+// Parameter narrowed to the 5 main stats (M9): this function only reads
+// attribute values, so callers may pass either a full Stats snapshot
+// (calculateStats pass 2) or a per-stat DELTA object
+// (calculateEffectiveStats live-modifier delta pass).
+function deriveAttributeModifiers(finalized: Pick<Stats, MainStatKey>): StatModifier[] {
   const modifiers: StatModifier[] = [
     flatAttributeModifier('strength', 'attack', finalized.strength * ATTRIBUTE_ATTACK_PER_POINT),
     flatAttributeModifier('strength', 'defense', finalized.strength * ATTRIBUTE_DEFENSE_PER_POINT),
@@ -283,14 +288,52 @@ export function calculateStats(baseStats: BaseStats, modifiers: StatModifier[]):
 
 /**
  * Effective battle stats (R2 / AR-02): fold TEMPORARY battle modifiers
- * (turn buffs) on top of an ALREADY-RESOLVED base. Runs the pipeline
- * exactly once and never re-derives attribute bonuses — the input must
- * be calculateStats() output (or an equivalent already-normalized stat
- * snapshot). calculateStats() remains the only attribute-derivation
- * owner; this function is the resolved→effective boundary.
+ * (turn buffs, live passive/persistent/timed modifiers) on top of an
+ * ALREADY-RESOLVED base. The input must be calculateStats() output (or
+ * an equivalent already-normalized stat snapshot) — calculateStats()
+ * remains the only full attribute-derivation owner.
+ *
+ * ARCH-009-adjacent retained debt (M7 -> M9): live modifiers may move
+ * the 5 main stats mid-battle (e.g. passive_dai_thua_dao_tam stacking
+ * attunement on every landed hit). The resolved base already carries
+ * the derivation of ITS OWN attribute values, so re-running
+ * deriveAttributeModifiers() on the effective attribute totals would
+ * double-count the base. Instead we derive ONLY the DELTA:
+ *
+ *   effective  = runPipeline(resolvedBase, tempModifiers)
+ *   delta[i]   = effective[main_i] - resolvedBase[main_i]
+ *   result     = runPipeline(effective, deriveAttributeModifiers(delta))
+ *
+ * The derived delta folds AFTER the temp-modifier pools (Added into
+ * Added, per-tag Increased into its own tag pool) — equivalent to the
+ * menu view's single-pass derivation up to pool-fold ordering: the
+ * delta's tag pools multiply the already-folded result instead of
+ * merging into the same tag sum, so the battle value diverges from the
+ * menu value in ONE direction (below it for positive deltas in the
+ * authored range). The divergence is bounded, not sub-percent:
+ * ~1% at moderate deltas, ~3.3% at the authored cap (50 stacks x
+ * attunement 100), ~5% at attunement 200/cap — documented in the M9
+ * report. A live main-stat modifier that nets to zero changes nothing.
  */
 export function calculateEffectiveStats(resolvedBase: Stats, tempModifiers: StatModifier[]): Stats {
-  return runPipeline(resolvedBase, tempModifiers)
+  const effective = runPipeline(resolvedBase, tempModifiers)
+
+  const attributeDelta = {} as Pick<Stats, MainStatKey>
+  let hasDelta = false
+
+  for (const key of MAIN_STAT_KEYS) {
+    const delta = effective[key] - resolvedBase[key]
+    attributeDelta[key] = delta
+    if (delta !== 0) {
+      hasDelta = true
+    }
+  }
+
+  if (!hasDelta) {
+    return effective
+  }
+
+  return runPipeline(effective, deriveAttributeModifiers(attributeDelta))
 }
 
 export function addStack(modifier: StatModifier, amount = 1) {

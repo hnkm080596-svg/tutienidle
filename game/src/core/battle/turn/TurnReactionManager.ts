@@ -45,12 +45,19 @@ export class TurnReactionManager {
   ) {
     const targetBuffSystem = new BuffSystem(targetBuffs)
 
-    for (const existingId of targetBuffSystem.getActiveIds()) {
-      if (existingId === newBuffId) {
+    // ARCH-009 (M9) — match on the ingredient INSTANCE, not just the buff
+    // id: `existing` keeps its real sourceId so consumption removes the
+    // exact ingredient that matched (a bong applied by the player is not
+    // the same ingredient as one applied by a companion). When several
+    // sources supply a valid ingredient, the OLDEST applied instance is
+    // consumed — BuffPool preserves insertion order, so the scan below
+    // hits it first.
+    for (const existing of targetBuffs.getAll()) {
+      if (existing.id === newBuffId) {
         continue
       }
 
-      const reaction = ELEMENT_REACTIONS[newBuffId]?.[existingId] ?? ELEMENT_REACTIONS[existingId]?.[newBuffId]
+      const reaction = ELEMENT_REACTIONS[newBuffId]?.[existing.id] ?? ELEMENT_REACTIONS[existing.id]?.[newBuffId]
 
       if (!reaction) {
         continue
@@ -90,7 +97,10 @@ export class TurnReactionManager {
         }
       }
 
-      const existingSourceId = source.id
+      // Consume the matched ingredient by ITS real (id, sourceId) — never
+      // reconstructed from the triggering caster (ARCH-009/AUD-C08).
+      const existingId = existing.id
+      const existingSourceId = existing.sourceId
 
       if (reaction.appliesBuffId && sourceBuffs && buffRegistry) {
         targetBuffs.removeInstance(existingId, existingSourceId)
@@ -113,19 +123,22 @@ export class TurnReactionManager {
           )
         }
       } else {
-        const keptBuffId =
-          reaction.keepsAilmentId === existingId
-            ? existingId
-            : reaction.keepsAilmentId === newBuffId
-              ? newBuffId
-              : undefined
+        const keptIsExisting = reaction.keepsAilmentId === existingId
+        const keptBuffId = keptIsExisting
+          ? existingId
+          : reaction.keepsAilmentId === newBuffId
+            ? newBuffId
+            : undefined
 
         const extensionSeconds = getSkillRuntimeStat(source, 'waterReactionExtensionSeconds')
         if (keptBuffId && extensionSeconds > 0) {
-          const otherBuffId = keptBuffId === existingId ? newBuffId : existingId
-
-          targetBuffSystem.remove(otherBuffId, source.id)
-          targetBuffSystem.renewWithExtension(keptBuffId, source.id, extensionSeconds)
+          if (keptIsExisting) {
+            targetBuffs.removeInstance(newBuffId, source.id)
+            targetBuffSystem.renewWithExtension(existingId, existingSourceId, extensionSeconds)
+          } else {
+            targetBuffs.removeInstance(existingId, existingSourceId)
+            targetBuffSystem.renewWithExtension(newBuffId, source.id, extensionSeconds)
+          }
         } else if (reactionKeepChance > 0 && Math.random() < reactionKeepChance) {
           // Keep-both roll succeeded: no mutation, further reactions possible.
         } else {

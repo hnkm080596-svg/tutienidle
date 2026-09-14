@@ -320,13 +320,14 @@ describe('BuffSystem.update — turn tick', () => {
 })
 
 describe('BuffSystem — CC checks', () => {
-  it('isStunned() is true only while a cc:stun effect is active on the pool', () => {
+  it('isStunned(targetId) is true only while a cc:stun effect aimed at that entity is active on the pool', () => {
     const pool = new BuffPool()
     const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
     const target = makeEntity({ id: 'target_1' })
+    const bystander = makeEntity({ id: 'bystander' })
 
-    expect(system.isStunned()).toBe(false)
+    expect(system.isStunned('target_1')).toBe(false)
 
     system.apply(
       { id: 'stun', name: 'Stun', polarity: 'debuff', duration: 1, stackMode: 'refresh', effects: [{ type: 'cc', ccEffect: 'stun' }] },
@@ -334,11 +335,14 @@ describe('BuffSystem — CC checks', () => {
       target,
     )
 
-    expect(system.isStunned()).toBe(true)
-    expect(system.isFrozen()).toBe(false)
+    // ARCH-009 (M9): the query is target-scoped — the stun aims at
+    // 'target_1', so a query for a different entity must not see it.
+    expect(system.isStunned('target_1')).toBe(true)
+    expect(system.isFrozen('target_1')).toBe(false)
+    expect(system.isStunned(bystander.id)).toBe(false)
   })
 
-  it('isFrozen() is true only while a cc:freeze effect is active on the pool', () => {
+  it('isFrozen(targetId) is true only while a cc:freeze effect aimed at that entity is active on the pool', () => {
     const pool = new BuffPool()
     const system = new BuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
@@ -350,8 +354,9 @@ describe('BuffSystem — CC checks', () => {
       target,
     )
 
-    expect(system.isFrozen()).toBe(true)
-    expect(system.isStunned()).toBe(false)
+    expect(system.isFrozen('target_1')).toBe(true)
+    expect(system.isStunned('target_1')).toBe(false)
+    expect(system.isFrozen('source_1')).toBe(false)
   })
 })
 
@@ -417,11 +422,13 @@ describe('BuffSystem ported BuffSystem methods', () => {
     const target = portedEntity({ id: 'tgt' })
     const registry: BuffDefinitionCatalog = { get: (id) => (id === 'port_root' ? ROOT_DEF : ROOT_DEF) }
 
-    expect(system.isRooted()).toBe(false)
+    expect(system.isRooted('tgt')).toBe(false)
 
     system.apply(ROOT_DEF, source, target, registry)
 
-    expect(system.isRooted()).toBe(true)
+    expect(system.isRooted('tgt')).toBe(true)
+    // ARCH-009 (M9): a cc buff aimed at 'tgt' must not count for 'src'.
+    expect(system.isRooted('src')).toBe(false)
   })
 
   it('rollOnHitEffects: rolls chance per onHitProc buff and applies the resulting buff on hit', () => {
@@ -433,13 +440,21 @@ describe('BuffSystem ported BuffSystem methods', () => {
       get: (id) => (id === 'port_proc' ? PROC_DEF : PROC_RESULT_DEF),
     }
 
-    // 'port_proc' dang active TR�N TARGET (target b? d�nh buff c� onHitProc,
-    // k? d�nh source roll proc -> target d�nh port_proc_result).
-    system.apply(PROC_DEF, source, target, registry)
+    // ARCH-009 (M9): 'port_proc' sits on the HOLDER ('src'), so apply it
+    // with source='tgt'/target='src'; the proc result must land in the
+    // VICTIM pool (targetPool) with sourceId='src', targetId='tgt'.
+    const targetPool = new BuffPool()
 
-    system.rollOnHitEffects(source, target, registry)
+    system.apply(PROC_DEF, target, source, registry)
 
-    expect(pool.hasAny('port_proc_result')).toBe(true)
+    system.rollOnHitEffects(source, target, targetPool, registry)
+
+    expect(pool.hasAny('port_proc_result')).toBe(false)
+    expect(targetPool.hasAny('port_proc_result')).toBe(true)
+    expect(targetPool.getFromSource('port_proc_result', 'src')).toMatchObject({
+      sourceId: 'src',
+      targetId: 'tgt',
+    })
   })
 
   it('getStacks: t?ng stacks tr�n m?i ngu?n khi kh�ng truy?n sourceId, d�ng 1 ngu?n khi truy?n', () => {

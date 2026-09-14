@@ -8,6 +8,7 @@ import type { Stage } from '../stage/Stage'
 import type { BuffDefinition } from '../buff/BuffTypes'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
+import { PASSIVE_SKILLS } from '../../data/skill/PassiveSkills'
 
 // ARCH-002 (M7) — regression coverage for the stat-refresh / battle-reset
 // repair, driven through the real GameManager entry paths (no internal
@@ -445,5 +446,124 @@ describe('ARCH-002 M7 — resolved base provenance', () => {
     clock.advance(COMBAT_STEP_SECONDS)
 
     expect(participant.entity.stats.speed).toBeCloseTo(entrySpeed * 1.02, 4)
+  })
+})
+
+describe('M9 retained M7 debt — live attunement stacks re-derive elemental power (passive_dai_thua_dao_tam)', () => {
+  it('10 hit-stacked attunement stacks raise effective firePower/waterPower mid-battle via delta derivation', () => {
+    const manager = new GameManager()
+    const clock = new ManualClockSource()
+    manager.setCombatClockSource(clock)
+
+    // attunement 100 keeps the derived delta large enough to assert
+    // against float noise (default 1 would yield ~0.075 power/stack-step).
+    const player = makePlayer()
+    player.baseStats = asBaseStats({ ...player.baseStats, attunement: 100 })
+    manager.setActivePlayer(player)
+
+    // Learn + equip the REAL passive through the same collection the
+    // production learn path fills (realm-gate bypassed — the test targets
+    // the stack/live-modifier channel, not the unlock gate).
+    const template = PASSIVE_SKILLS.find((skill) => skill.id === 'passive_dai_thua_dao_tam')!
+    manager.skillManager.add({ ...structuredClone(template), unlocked: true, equipped: true })
+
+    manager.startBattleWithPlayer(player, makeEnemy())
+    advanceUntilFighting(manager, clock)
+
+    const participant = manager.getTurnBattle()!.players[0]!
+    const baseAttunement = participant.entity.baseStats.attunement
+    const baseFirePower = participant.entity.baseStats.firePower
+    const baseWaterPower = participant.entity.baseStats.waterPower
+
+    expect(baseAttunement).toBeCloseTo(100, 4)
+    // Resolved base already carries full derivation of its own
+    // attunement: (0 + 100*0.5) * (1 + 100*0.001) = 55.
+    expect(baseFirePower).toBeCloseTo(55, 4)
+    expect(participant.entity.stats.firePower).toBeCloseTo(baseFirePower, 6)
+
+    // 10 landed hits -> 10 stacks of +1.5% attunement each (+15%).
+    for (let i = 0; i < 10; i++) {
+      manager.eventBus.emit('hit', { type: 'hit', sourceId: 'player', targetId: 'e' })
+    }
+    clock.advance(COMBAT_STEP_SECONDS)
+
+    const effectiveAttunement = participant.entity.stats.attunement
+    expect(effectiveAttunement).toBeCloseTo(baseAttunement * 1.15, 4)
+
+    // ARCH-009-adjacent retained debt: the delta (15 attunement) derives
+    // flat +7.5 and tagged +1.5% per element, folded ON TOP of the
+    // resolved base — powers move in-battle without re-deriving the base.
+    const delta = effectiveAttunement - baseAttunement
+    const expectedFire = (baseFirePower + delta * 0.5) * (1 + delta * 0.001)
+
+    expect(participant.entity.stats.firePower).toBeCloseTo(expectedFire, 4)
+    expect(participant.entity.stats.firePower).toBeGreaterThan(baseFirePower)
+    expect(participant.entity.stats.waterPower).toBeCloseTo(
+      (baseWaterPower + delta * 0.5) * (1 + delta * 0.001),
+      4,
+    )
+
+    // Parity with the menu view (single-pass full derivation): the
+    // delta-fold differs only by pool-fold ordering (<2% here).
+    const menuEquivalent = resolvePlayerFinalStats(
+      player,
+      manager.effectOps.getAggregatedModifiers(player),
+    )
+    expect(participant.entity.stats.firePower / menuEquivalent.firePower).toBeGreaterThan(0.98)
+
+    // Push to the authored stack cap (50 stacks x +1.5% = +75%
+    // attunement): the delta-fold divergence stays bounded and
+    // one-directional — below the menu single-pass value (~3.3% at
+    // attunement 100), never above it.
+    for (let i = 10; i < 50; i++) {
+      manager.eventBus.emit('hit', { type: 'hit', sourceId: 'player', targetId: 'e' })
+    }
+    clock.advance(COMBAT_STEP_SECONDS)
+
+    const capDelta = baseAttunement * 0.75
+    expect(participant.entity.stats.attunement).toBeCloseTo(baseAttunement + capDelta, 4)
+    expect(participant.entity.stats.firePower).toBeCloseTo(
+      (baseFirePower + capDelta * 0.5) * (1 + capDelta * 0.001),
+      4,
+    )
+
+    const menuAtCap = resolvePlayerFinalStats(
+      player,
+      manager.effectOps.getAggregatedModifiers(player),
+    )
+    const capRatio = participant.entity.stats.firePower / menuAtCap.firePower
+    expect(capRatio).toBeLessThan(1)
+    expect(capRatio).toBeGreaterThan(0.96)
+  })
+
+  it('a live attunement modifier that nets to zero leaves powers untouched (no spurious derivation)', () => {
+    const manager = new GameManager()
+    const clock = new ManualClockSource()
+    manager.setCombatClockSource(clock)
+
+    const player = makePlayer()
+    manager.setActivePlayer(player)
+
+    manager.startBattleWithPlayer(player, makeEnemy())
+    advanceUntilFighting(manager, clock)
+
+    const participant = manager.getTurnBattle()!.players[0]!
+    const statsBefore = { ...participant.entity.stats }
+
+    // Non-main-stat live modifier: no main-stat delta -> powers must be
+    // bit-identical to the previous effective view.
+    player.persistentTimedEffects.push({
+      id: 'test_live_attack',
+      sourceItemId: 'test',
+      appliedAtMs: Date.now(),
+      expiresAtMs: Date.now() + 60_000,
+      modifiers: [
+        { id: 'test_live_attack', sourceId: 'test', sourceType: 'pill', stat: 'attack', percent: 0.5 },
+      ],
+    })
+    clock.advance(COMBAT_STEP_SECONDS)
+
+    expect(participant.entity.stats.firePower).toBeCloseTo(statsBefore.firePower, 8)
+    expect(participant.entity.stats.attack).toBeCloseTo(statsBefore.attack * 1.5, 4)
   })
 })
