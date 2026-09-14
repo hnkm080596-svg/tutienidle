@@ -3,7 +3,6 @@ import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClo
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
 
@@ -120,7 +119,3 @@ describe('QA quick — intro phase adversarial probes (2026-09-07 Task 4)', () =
     expect(gameManager.getTurnBattle()?.countdownTurnsRemaining).toBe(30)
   })
 })
-
-function stats0(player: ReturnType<typeof createDefaultPlayer>) {
-  return calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
-}

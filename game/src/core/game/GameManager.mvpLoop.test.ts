@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import { defineEnemy } from '../enemy/Enemy'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
@@ -168,11 +167,6 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // Kiếm Tu range nền 5 với tới cột ≤10 nên vẫn bắn được kiter; fixture
     // cộng thêm range để bài test không phụ thuộc biên.
     player.baseStats.attackRange += 8
-
-    const finalStats = calculateStats(player.baseStats, [
-      ...player.modifiers,
-      ...gameManager.effectOps.getAggregatedModifiers(),
-    ])
 
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
 
