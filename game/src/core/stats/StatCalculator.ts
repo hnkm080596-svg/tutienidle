@@ -1,6 +1,7 @@
 import type { MainStatKey, StatType } from './StatTypes'
 import { MAIN_STAT_KEYS } from './StatTypes'
 import type { BaseStats, Stats } from './StatBlock'
+import { applyDomainGate, type StatDomain } from './StatDomain'
 
 export type ModifierSourceType =
   | 'realm'
@@ -32,6 +33,13 @@ export interface StatModifier {
   // xem runPipeline()). KHÔNG khai = rơi vào pool chung (untagged),
   // hành vi giữ nguyên như trước khi có field này.
   tag?: string
+
+  // D10 domain gate: the domain this modifier claims to belong to
+  // (authorial intent - see StatDomain.ts). Absent = universal intent:
+  // may move universal stats but never a gated one. Optional on
+  // purpose: existing content compiles and behaves unchanged while
+  // STAT_DOMAIN is empty.
+  domain?: StatDomain
 
   flat?: number
 
@@ -279,11 +287,15 @@ function runPipeline(base: Stats, modifiers: StatModifier[]): Stats {
  * không cần sửa gì thêm.
  */
 export function calculateStats(baseStats: BaseStats, modifiers: StatModifier[]): Stats {
-  const pass1 = runPipeline(baseStats, modifiers)
+  // D10: the domain gate runs before any pipeline work; with an empty
+  // STAT_DOMAIN registry every modifier passes through unchanged.
+  const accepted = applyDomainGate(modifiers)
+
+  const pass1 = runPipeline(baseStats, accepted)
 
   const attributeModifiers = deriveAttributeModifiers(pass1)
 
-  return runPipeline(baseStats, [...modifiers, ...attributeModifiers])
+  return runPipeline(baseStats, [...accepted, ...attributeModifiers])
 }
 
 /**
@@ -316,7 +328,11 @@ export function calculateStats(baseStats: BaseStats, modifiers: StatModifier[]):
  * report. A live main-stat modifier that nets to zero changes nothing.
  */
 export function calculateEffectiveStats(resolvedBase: Stats, tempModifiers: StatModifier[]): Stats {
-  const effective = runPipeline(resolvedBase, tempModifiers)
+  // D10: same delivery gate as calculateStats - a universal/absent-domain
+  // temp modifier can never move a gated stat mid-battle either.
+  const accepted = applyDomainGate(tempModifiers)
+
+  const effective = runPipeline(resolvedBase, accepted)
 
   const attributeDelta = {} as Pick<Stats, MainStatKey>
   let hasDelta = false
