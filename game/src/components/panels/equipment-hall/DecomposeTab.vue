@@ -15,6 +15,7 @@ import {
   PROFESSION_GRADE_ORDER,
   PROFESSION_GRADE_NAMES,
 } from '@/core/profession/ProfessionGrade'
+import { professionGradeRank } from '@/core/profession/slotRank'
 import { HERB_AGES } from '@/core/production/ProductionTypes'
 import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
 
@@ -87,7 +88,12 @@ function onWorkersInput(event: Event) {
         <select :value="settingsMirror.gradeFilter" @change="onGradeChange">
           <option value="all">{{ t('panels.decompose.select.allGrades') }}</option>
 
-          <option v-for="grade in PROFESSION_GRADE_ORDER" :key="grade" :value="grade">
+          <option
+            v-for="grade in PROFESSION_GRADE_ORDER"
+            :key="grade"
+            :value="grade"
+            :style="{ color: `var(--rank-color-${professionGradeRank(grade)})` }"
+          >
             {{ PROFESSION_GRADE_NAMES[grade] }}
           </option>
         </select>

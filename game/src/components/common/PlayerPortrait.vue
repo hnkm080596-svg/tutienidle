@@ -54,6 +54,7 @@ const portraitHeight = computed(() =>
   >
     <span v-if="animated && variant === 'cultivate'" class="player-portrait__aura" aria-hidden="true" />
     <span v-if="animated && variant === 'cultivate'" class="player-portrait__qi-ring" aria-hidden="true" />
+    <span v-if="variant === 'portrait'" class="player-portrait__taiji" aria-hidden="true" />
 
     <img
       class="player-portrait__image"
@@ -80,6 +81,61 @@ const portraitHeight = computed(() =>
   width: auto;
   display: block;
   user-select: none;
+}
+
+/* ================= Portrait - circular disc + taiji ring ============
+   User art pass: avatar sits on a circular disc; a black/white dual
+   arc (yin-yang sweep) orbits the rim. The ring band is cut out of a
+   conic-gradient with a mask so the two arcs stay translucent and the
+   disc rim keeps contrast under both. */
+.player-portrait--portrait {
+  aspect-ratio: 1;
+}
+
+.player-portrait--portrait::before {
+  content: '';
+  position: absolute;
+  inset: 4%;
+  z-index: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 34%, var(--surface-600), var(--surface-800) 62%, var(--surface-950) 92%);
+  box-shadow:
+    inset 0 0 0 1px var(--surface-line),
+    0 0 14px rgba(0, 0, 0, 0.4);
+}
+
+.player-portrait--portrait .player-portrait__image {
+  height: 92%;
+  margin: 4% auto 0;
+}
+
+.player-portrait__taiji {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.9) 60deg,
+    transparent 120deg,
+    transparent 180deg,
+    rgba(8, 8, 12, 0.95) 240deg,
+    transparent 300deg,
+    transparent 360deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  animation: player-portrait-taiji-spin 10s linear infinite;
+  pointer-events: none;
+  /* Ambient white halo keeps the dark arc readable against the dark
+     drawer behind the disc rim. */
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
+}
+
+@keyframes player-portrait-taiji-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ================= Chuyển động tu luyện (chỉ cultivate) ============= */
@@ -149,6 +205,10 @@ const portraitHeight = computed(() =>
   .player-portrait__qi-ring {
     animation: none;
     opacity: 0.5;
+  }
+
+  .player-portrait__taiji {
+    animation: none;
   }
 }
 </style>

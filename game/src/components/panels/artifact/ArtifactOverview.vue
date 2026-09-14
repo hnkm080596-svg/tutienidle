@@ -7,6 +7,7 @@ defineProps<{
   name: string
   cultivationPathLabel: string
   gradeLabel: string
+  gradeColorVar?: string
 }>()
 </script>
 
@@ -16,7 +17,9 @@ defineProps<{
 
     <div class="artifact-overview__text">
       <h3 class="artifact-overview__name">{{ name }}</h3>
-      <p class="artifact-overview__meta">{{ cultivationPathLabel }} · {{ gradeLabel }}</p>
+      <p class="artifact-overview__meta">
+        {{ cultivationPathLabel }} · <span :style="gradeColorVar ? { color: gradeColorVar } : undefined">{{ gradeLabel }}</span>
+      </p>
     </div>
   </div>
 </template>

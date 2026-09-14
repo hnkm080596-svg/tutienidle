@@ -137,6 +137,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
     <SlotView
       :item="skill ?? null"
       :label="label"
+      show-label
       :tooltip="tooltip"
       :state="slotState"
     />

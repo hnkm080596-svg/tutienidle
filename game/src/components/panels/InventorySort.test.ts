@@ -72,7 +72,9 @@ function mountSections(gameManager: GameManager) {
 
     materialSlotLabels: () =>
       Array.from(container.querySelectorAll('.bag-section:first-child .bag-section__slot')).map(
-        (el) => el.textContent ?? '',
+        // Nametag caption removed 2026-09-15 — the item name now lives
+        // on aria-label; badges/amount still render as text.
+        (el) => `${el.getAttribute('aria-label') ?? ''} ${el.textContent ?? ''}`.trim(),
       ),
 
     unmount: () => {

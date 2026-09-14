@@ -67,6 +67,8 @@
 
 .qi-hall__slot {
   min-width: 0;
+  /* Slot art comes from SlotView's `variant` prop — hall pickers use
+     the default `item` (inventory) art, not --slot-* overrides here. */
 }
 
 /* Card wrapping the compare table — shared by Enhance/Wash/Refine

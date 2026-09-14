@@ -9,6 +9,7 @@ import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
+import { professionGradeRank } from '@/core/profession/slotRank'
 
 // Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —
 // thay RecipeCraftingView: mỗi đan phương nhận ĐÚNG MỘT Linh Thảo
@@ -46,10 +47,16 @@ const recipes = computed<AlchemyRecipe[]>(() => {
   return gameManager.alchemyOps.getAlchemyRecipes().filter((recipe) => recipe.realmId === player.realmId)
 })
 
-const currentGradeLabel = computed(() => {
-  const grade = getProfessionGradeForRealm(player.realmId)
-  return grade ? PROFESSION_GRADE_NAMES[grade] : 'Chưa xác định'
-})
+const currentGrade = computed(() => getProfessionGradeForRealm(player.realmId))
+
+const currentGradeLabel = computed(() =>
+  currentGrade.value ? PROFESSION_GRADE_NAMES[currentGrade.value] : 'Chưa xác định',
+)
+
+// Pham text carries its rank color everywhere it appears (user ruling).
+const currentGradeColor = computed(() =>
+  currentGrade.value ? `var(--rank-color-${professionGradeRank(currentGrade.value)})` : undefined,
+)
 
 const selectedRecipeId = ref<string | null>(null)
 
@@ -213,7 +220,7 @@ function cancelJob(jobId: string) {
     <div class="alchemy-view__recipes scrollfade">
       <section class="alchemy-group">
         <p class="alchemy-group__eyebrow">Đan lô hiện tại</p>
-        <h4 class="alchemy-group__title">{{ currentGradeLabel }}</h4>
+        <h4 class="alchemy-group__title" :style="{ color: currentGradeColor }">{{ currentGradeLabel }}</h4>
 
         <button
           v-for="(recipe, index) in recipes"
@@ -241,7 +248,7 @@ function cancelJob(jobId: string) {
       <header class="alchemy-detail__header">
         <span>ĐAN PHƯƠNG</span>
         <h3>{{ gameManager.pillRegistry.get(selectedRecipe.pillId).name }}</h3>
-        <small>{{ currentGradeLabel }}</small>
+        <small :style="{ color: currentGradeColor }">{{ currentGradeLabel }}</small>
       </header>
       <!-- §9.3: preview thời gian + tỷ lệ tổng + guaranteed + chance cộng -->
       <section v-if="preview" class="alchemy-detail__block">
