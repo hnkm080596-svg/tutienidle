@@ -170,18 +170,20 @@
         "talents": "Thiên Phú"
       },
       "actions": {
-        "quanKhi": "Quán Khí"
+        "quanKhi": "Quán Khí",
+        "details": "Chi Tiết"
       },
       "labels": {
         "combatPower": "Chiến Lực",
         "realmFloor": "Tầng",
+        "detailsTitle": "Thuộc Tính Chi Tiết",
         "attributePointsRemaining": "còn {count} điểm",
         "max": "MAX"
       },
       "tooltips": {
         "elementStat": "Power {power} · Kháng {resistance} · Xuyên {penetration}",
         "primordialTitle": "Hỗn Nguyên",
-        "primordialDescription": "Bỏ qua mọi phòng thủ."
+        "primordialStat": "Power {power} · Bỏ qua mọi phòng thủ."
       }
     },
     "quanKhi": {
@@ -283,6 +285,16 @@
         "material": "Nguyên Liệu",
         "pill": "Đan Dược"
       },
+      "paperdoll": {
+        "slots": {
+          "helmet": "Mũ",
+          "necklace": "Vòng cổ",
+          "ring": "Nhẫn",
+          "weapon": "Vũ khí",
+          "armor": "Giáp",
+          "boots": "Giày"
+        }
+      },
       "search": {
         "materialPlaceholder": "Tìm nguyên liệu...",
         "materialAria": "Tìm nguyên liệu theo tên"
@@ -308,6 +320,10 @@
       "tooltip": {
         "section": "Thông Tin",
         "owned": "Sở hữu: {count}",
+        "compare": {
+          "equipped": "Đang Mặc",
+          "viewing": "Vật Phẩm Đang Xem"
+        },
         "category": "Phân loại",
         "source": "Nguồn chính",
         "realm": "Cảnh giới",
@@ -448,8 +464,6 @@
       "sections": {
         "uiScaleAria": "Cỡ chữ giao diện",
         "uiScale": "Cỡ Chữ Giao Diện",
-        "themeAria": "Giao diện",
-        "theme": "Giao Diện",
         "audioAria": "Âm thanh",
         "audio": "Âm Thanh"
       },

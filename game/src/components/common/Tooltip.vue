@@ -3,18 +3,50 @@ import { computed, ref } from 'vue'
 import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/vue'
 import { useTooltip } from '@/composables/useTooltip'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import ItemCardBody from '@/components/common/ItemCardBody.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
-import { isMaxRankTone } from '@/core/profession/slotRank'
 import { i18n } from '@/i18n'
 
 const { content, reference } = useTooltip()
 const floating = ref<HTMLElement | null>(null)
 const open = computed(() => content.value !== null)
 
-// advancedSections is gone (item-info-card spec §3) — range/delta now
-// live on the rows themselves; the Alt-inspect mode is dead.
-const visibleSections = computed(() => richContent.value?.sections ?? [])
+// Item-info-card spec §3: equipment + the graded kinds
+// (material/pill/talisman/formation) all render through the shared
+// ItemCardBody skeleton.
+const cardContent = computed<GradedItemTooltipContent | EquipmentTooltipContent | null>(() => {
+  const value = content.value
+  if (!value) return null
+
+  switch (value.kind) {
+    case 'material':
+    case 'pill':
+    case 'talisman':
+    case 'formation':
+    case 'equipment':
+      return value
+    default:
+      return null
+  }
+})
+
+// Compare pair (spec §4): the hovered equipment carries its equipped
+// counterpart as compareWith — the tooltip renders two cards side by
+// side, equipped LEFT, hovered RIGHT.
+const comparePair = computed(() => {
+  const value = content.value
+  return value?.kind === 'equipment' && value.compareWith !== undefined
+    ? { equipped: value.compareWith, candidate: value }
+    : null
+})
+
+// Technique keeps its own header + the shared flat section loop —
+// spec §3 leaves the technique kind unchanged.
+const techniqueContent = computed<TechniqueTooltipContent | null>(() =>
+  content.value?.kind === 'technique' ? content.value : null,
+)
+const visibleSections = computed(() => techniqueContent.value?.sections ?? [])
 
 // Cap density theo từng loại tooltip (mục 5 tooltip-revamp-plan.md) —
 // khớp với .tooltip/--rich/--detailed ở CSS bên dưới. size() chỉ
@@ -49,7 +81,9 @@ const { floatingStyles } = useFloating(reference, floating, {
       padding: 12,
       apply({ availableWidth, availableHeight, elements }) {
         Object.assign(elements.floating.style, {
-          maxWidth: `${Math.min(maxWidthForKind(content.value?.kind), availableWidth)}px`,
+          // A compare pair is two ~380px cards + gap — raise the cap so
+          // flip/shift see the real footprint (clamped by availableWidth).
+          maxWidth: `${Math.min(comparePair.value ? 800 : maxWidthForKind(content.value?.kind), availableWidth)}px`,
           maxHeight: `${availableHeight}px`,
         })
       },
@@ -57,27 +91,10 @@ const { floatingStyles } = useFloating(reference, floating, {
   ],
 })
 
-const gradedContent = computed<GradedItemTooltipContent | null>(() => {
-  const value = content.value
-  return value && (value.kind === 'material' || value.kind === 'pill' || value.kind === 'talisman' || value.kind === 'formation') ? value : null
-})
-
-const richContent = computed<TechniqueTooltipContent | GradedItemTooltipContent | EquipmentTooltipContent | null>(() => {
-  const value = content.value
-  if (!value) return null
-
-  switch (value.kind) {
-    case 'technique':
-    case 'material':
-    case 'pill':
-    case 'talisman':
-    case 'formation':
-    case 'equipment':
-      return value
-    default:
-      return null
-  }
-})
+// Pair group labels — i18n via the module import (tests mount this
+// component through bare createApp without the i18n plugin).
+const equippedLabel = computed(() => i18n.global.t('panels.bag.tooltip.compare.equipped'))
+const viewingLabel = computed(() => i18n.global.t('panels.bag.tooltip.compare.viewing'))
 
 // Quality/Pham → 1 màu accent qua namespace --grade-* (5 vars riêng,
 // rải 1-3-5-7-9 trên thang --rank-color, xem assets/theme.css) — KHÔNG
@@ -110,20 +127,6 @@ const itemAuraColor = computed(() => {
   return undefined
 })
 
-const isMaxQualityRank = computed(() =>
-  content.value?.kind === 'equipment' && isMaxRankTone(content.value.qualityKey),
-)
-
-const rarityAccentColor = computed(() => {
-  const gradeKey = gradedContent.value?.gradeKey
-  return gradeKey ? `var(--grade-${gradeKey})` : undefined
-})
-
-const isMaxPhamRank = computed(() => {
-  const gradeKey = gradedContent.value?.gradeKey
-  return gradeKey ? isMaxRankTone(gradeKey) : false
-})
-
 function hideBrokenImage(event: Event) {
   const image = event.currentTarget
   if (image instanceof HTMLImageElement) image.hidden = true
@@ -139,7 +142,7 @@ function hideBrokenImage(event: Event) {
         ref="floating"
         role="tooltip"
         class="tooltip"
-        :class="[content.kind ? `tooltip--${content.kind}` : 'tooltip--plain', content.kind === 'element' ? `tooltip--element-${content.element}` : '', content.kind === 'equipment' ? 'tooltip--detailed' : '', content.kind && content.kind !== 'plain' ? 'tooltip--rich' : '', isMaxQualityRank ? 'tooltip--max-quality-rank' : '', itemAuraColor ? 'tooltip--aura' : '']"
+        :class="[content.kind ? `tooltip--${content.kind}` : 'tooltip--plain', content.kind === 'element' ? `tooltip--element-${content.element}` : '', content.kind === 'equipment' ? 'tooltip--detailed' : '', content.kind && content.kind !== 'plain' ? 'tooltip--rich' : '', itemAuraColor ? 'tooltip--aura' : '']"
         :style="{ ...floatingStyles, '--tooltip-accent': qualityAccentColor ?? itemAuraColor, '--tooltip-aura': itemAuraColor, zIndex: OVERLAY_LAYERS.tooltip }"
       >
         <img v-if="elementBannerUrl" class="tooltip__banner" :src="elementBannerUrl" alt="" aria-hidden="true" />
@@ -148,54 +151,28 @@ function hideBrokenImage(event: Event) {
           <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
         </template>
         <div class="tooltip__content">
-        <header v-if="content.kind === 'technique'" class="tooltip__header">
-          <div class="tooltip__icon-shell">
-            <span class="tooltip__icon-fallback">{{ content.name.charAt(0) }}</span>
-            <img v-if="content.imagePath" class="tooltip__icon" :src="content.imagePath" :alt="content.name" @error="hideBrokenImage" />
+        <!-- Compare pair (spec §4): equipped card LEFT, hovered card
+             RIGHT; each is a role=group with its own aria-label so
+             screen readers can tell the two cards apart. -->
+        <div v-if="comparePair" class="tooltip__pair">
+          <div class="tooltip__card" role="group" :aria-label="equippedLabel">
+            <ItemCardBody :content="comparePair.equipped" :eyebrow="equippedLabel" />
           </div>
-          <div class="tooltip__heading">
-            <p class="tooltip__title">{{ content.name }}</p>
-            <p class="tooltip__meta">{{ [content.levelLabel, content.elementLabel].filter(Boolean).join(' · ') }}</p>
+          <div class="tooltip__card" role="group" :aria-label="viewingLabel">
+            <ItemCardBody :content="comparePair.candidate" :eyebrow="viewingLabel" />
           </div>
-        </header>
+        </div>
 
-        <header v-else-if="gradedContent" class="tooltip__header">
-          <div class="tooltip__icon-shell">
-            <span class="tooltip__icon-fallback">{{ gradedContent.name.charAt(0) }}</span>
-            <img v-if="gradedContent.imagePath" class="tooltip__icon" :src="gradedContent.imagePath" :alt="gradedContent.name" @error="hideBrokenImage" />
-          </div>
-          <div class="tooltip__heading">
-            <p class="tooltip__title">{{ gradedContent.name }}</p>
-            <p
-              v-if="gradedContent.gradeLine"
-              class="tooltip__meta"
-            >{{ gradedContent.gradeLine }}</p>
-            <div class="tooltip__badges">
-              <span
-                v-if="gradedContent.gradeLabel"
-                class="tooltip__badge tooltip__badge--rarity"
-                :class="{ 'tooltip__badge--max-rank': isMaxPhamRank }"
-                :style="rarityAccentColor ? { color: rarityAccentColor } : undefined"
-              >{{ gradedContent.gradeLabel }}</span>
-              <span v-if="(gradedContent.ownedCount ?? 0) > 0" class="tooltip__badge tooltip__badge--muted">{{ i18n.global.t('panels.bag.tooltip.owned', { count: gradedContent.ownedCount }) }}</span>
-            </div>
-          </div>
-        </header>
+        <ItemCardBody v-else-if="cardContent" :content="cardContent" />
 
-        <header v-else-if="content.kind === 'equipment'" class="tooltip__header">
+        <header v-else-if="techniqueContent" class="tooltip__header">
           <div class="tooltip__icon-shell">
-            <span class="tooltip__icon-fallback">{{ content.name.charAt(0) }}</span>
-            <img v-if="content.imagePath" class="tooltip__icon" :src="content.imagePath" :alt="content.name" @error="hideBrokenImage" />
+            <span class="tooltip__icon-fallback">{{ techniqueContent.name.charAt(0) }}</span>
+            <img v-if="techniqueContent.imagePath" class="tooltip__icon" :src="techniqueContent.imagePath" :alt="techniqueContent.name" @error="hideBrokenImage" />
           </div>
           <div class="tooltip__heading">
-            <p class="tooltip__title">{{ content.name }}</p>
-            <p
-              v-if="content.gradeLine"
-              class="tooltip__meta"
-            >{{ content.gradeLine }}</p>
-            <div class="tooltip__badges">
-              <span class="tooltip__badge">{{ content.slotLabel }}</span>
-            </div>
+            <p class="tooltip__title">{{ techniqueContent.name }}</p>
+            <p class="tooltip__meta">{{ [techniqueContent.levelLabel, techniqueContent.elementLabel].filter(Boolean).join(' · ') }}</p>
           </div>
         </header>
 
@@ -220,8 +197,8 @@ function hideBrokenImage(event: Event) {
           <p v-if="content.description" class="tooltip__description">{{ content.description }}</p>
         </template>
 
-        <template v-if="richContent">
-          <p v-if="richContent.description" class="tooltip__description tooltip__description--rich">{{ richContent.description }}</p>
+        <template v-if="techniqueContent">
+          <p v-if="techniqueContent.description" class="tooltip__description tooltip__description--rich">{{ techniqueContent.description }}</p>
           <section v-for="section in visibleSections" :key="section.label" class="tooltip__section">
             <p class="tooltip__section-label">{{ section.label }}</p>
             <div v-for="row in section.rows" :key="row.label" class="tooltip__section-row" :class="[row.tone ? `tooltip__section-row--${row.tone}` : '', row.tier ? `tooltip__section-row--tier-${row.tier}` : '']" :aria-label="row.tier ? `${row.label}, bậc ${row.tier}: ${row.value}` : undefined">
@@ -267,16 +244,14 @@ function hideBrokenImage(event: Event) {
 .tooltip__header { display: flex; align-items: center; gap: 10px; }
 .tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 42%, var(--paper-line, rgba(42,41,36,.42))); border-radius: 2px; background: color-mix(in srgb, var(--paper-100, #ebe3d2) 82%, transparent); overflow: hidden; }
 .tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 84%, transparent); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 var(--text-panel-title) var(--font-display); }
+.tooltip__pair { display: flex; gap: 12px; }
+.tooltip__card { min-width: 0; flex: 1 1 0; }
 .tooltip__heading { min-width: 0; }
 /* Title trước đây thừa hưởng font-size 12px của .tooltip gốc — cùng cỡ
    với meta/description, chỉ khác weight/family (2026-08-30 frontend-
    design pass: tiêu đề tooltip cần tách bậc rõ khỏi nội dung). */
 .tooltip__title { margin: 0 0 3px; color: var(--paper-text, #211f1a); font-family: var(--font-display); font-size: var(--text-md); font-weight: 700; line-height: 1.25; }
 .tooltip__meta { margin: 0; color: var(--paper-text-muted, #8f897c); font-size: var(--text-xs); }
-.tooltip__badges { display: flex; flex-wrap: wrap; gap: 4px; } .tooltip__badge { padding: 1px 5px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 999px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }
-.tooltip__badge--quality { border-color: color-mix(in srgb, var(--tooltip-accent) 55%, var(--paper-line, rgba(42,41,36,.42))); color: var(--tooltip-accent); } .tooltip__badge--rarity { color: var(--paper-text, #211f1a); } .tooltip__badge--muted { color: var(--paper-text-muted, #8f897c); }
-.tooltip--max-quality-rank .tooltip__badge--quality,
-.tooltip__badge--rarity.tooltip__badge--max-rank { color: transparent; background: var(--rank-gradient-10); background-clip: text; -webkit-background-clip: text; font-weight: 700; }
 .tooltip__description { margin: 3px 0 0; color: var(--paper-text-soft, #5e5a50); line-height: 1.45; } .tooltip__description--rich { margin-top: 9px; }
 .tooltip__section { margin-top: 10px; padding-top: 7px; border-top: 1px solid color-mix(in srgb, var(--tooltip-accent) 18%, var(--paper-line, rgba(42,41,36,.42))); }
 .tooltip__section-label { margin: 0 0 5px; color: color-mix(in srgb, var(--tooltip-accent) 76%, var(--paper-text, #211f1a)); font-size: var(--text-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }

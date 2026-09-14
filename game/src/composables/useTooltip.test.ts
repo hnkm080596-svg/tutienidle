@@ -66,4 +66,37 @@ describe('useTooltip owner lifecycle', () => {
     expect(shown).not.toHaveProperty('ownedLabel')
     expect(shown).not.toHaveProperty('gradeLineColorVar')
   })
+
+  // Compare pair contract (Task 5): an equipment payload may carry one
+  // equipped counterpart card — the pair stops at depth 1 by type.
+  it('chấp nhận equipment compareWith (equipped counterpart, non-recursive)', () => {
+    vi.useFakeTimers()
+    const owner = document.createElement('button')
+    const tooltip = useTooltip()
+
+    const equipped = {
+      kind: 'equipment' as const,
+      name: 'Địa - Hắc Thiết Kiếm',
+      nameColorVar: '--rank-color-5',
+      slotLabel: 'Vũ Khí',
+      qualityKey: 'dia',
+      sections: [],
+    }
+
+    tooltip.showTooltip(
+      {
+        ...equipped,
+        name: 'Hoàng - Thanh Vân Kiếm',
+        compareWith: equipped,
+      },
+      owner,
+    )
+
+    const shown = tooltip.content.value
+    expect(shown?.kind).toBe('equipment')
+    if (shown?.kind === 'equipment') {
+      expect(shown.compareWith?.name).toBe('Địa - Hắc Thiết Kiếm')
+      expect(shown.compareWith && 'compareWith' in shown.compareWith).toBe(false)
+    }
+  })
 })
