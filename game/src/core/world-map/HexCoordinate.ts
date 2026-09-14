@@ -1,3 +1,6 @@
+// [M13 STATUS: PARKED] Hex-grid primitive for the unbuilt world-map feature.
+// No production importer; kept deliberately (not dead debt). See
+// docs/qa/2026-09-14-m13-retirement.md.
 export interface HexCoordinate {
   q: number
   r: number

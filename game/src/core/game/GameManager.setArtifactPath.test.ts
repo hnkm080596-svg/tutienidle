@@ -98,7 +98,7 @@ describe('GameManager.setArtifactPath (doc §7.1)', () => {
     gameManager.catalogOps.registerEnemyTemplates([defineEnemy(enemyDefinition())])
     gameManager.startBattle(createPlayerEntity(), defineEnemy(enemyDefinition()))
 
-    expect(gameManager.getBattle()?.state).toBe('intro')
+    expect(gameManager.getTurnBattle()?.state).toBe('intro')
     expect(gameManager.realmAdvanceOps.setArtifactPath(player, 'attack')).toBe(false)
     expect(player.artifact.selectedPath).toBeUndefined()
   })

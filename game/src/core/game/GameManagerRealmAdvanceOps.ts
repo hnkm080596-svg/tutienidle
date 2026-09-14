@@ -1,6 +1,6 @@
 import type { ArtifactPath } from '../artifact/Artifact'
 import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
-import type { Battle } from '../battle/Battle'
+import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { CultivationPathId } from '../player/CultivationPathKit'
@@ -55,7 +55,7 @@ export class GameManagerRealmAdvanceOps {
       materialBag: MaterialBag
       breakthroughOutcomeService: BreakthroughOutcomeService
       progressionOps: GameManagerProgressionOps
-      getBattle: () => Battle | null
+      getTurnBattle: () => TurnBattle | null
       markQuestRealmTransition: () => void
     },
   ) {
@@ -269,7 +269,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getBattle()
+    const battle = this.deps.getTurnBattle()
 
     if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
       return false
@@ -291,7 +291,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getBattle()
+    const battle = this.deps.getTurnBattle()
 
     if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
       return false

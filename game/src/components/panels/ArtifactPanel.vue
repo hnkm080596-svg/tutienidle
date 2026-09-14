@@ -50,7 +50,7 @@ const cultivationPathLabel = computed(() =>
 const canChange = computed(() => {
   stateVersion.value
 
-  return !isBattleInProgress(gameManager.getBattle()?.state)
+  return !isBattleInProgress(gameManager.getTurnBattle()?.state)
 })
 
 const stoneAmount = computed(() => {

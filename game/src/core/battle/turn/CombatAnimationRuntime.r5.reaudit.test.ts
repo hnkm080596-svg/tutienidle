@@ -72,7 +72,7 @@ function fixture() {
   const runtime = new CombatAnimationRuntime({
     getTurnBattleSystem: () => turnBattleSystem,
     eventBus,
-    getBattle: () => battle,
+    getTurnBattle: () => battle,
   })
 
   return { runtime, battle, player, enemy, eventBus, turnBattleSystem }

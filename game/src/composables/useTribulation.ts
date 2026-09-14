@@ -44,7 +44,7 @@ export function triggerBreakthroughAction(
     return false
   }
 
-  const battle = gameManager.getBattle()
+  const battle = gameManager.getTurnBattle()
   if (battle && isBattleInProgress(battle.state)) {
     return false
   }

@@ -1,3 +1,8 @@
+// [M13 STATUS: PARKED] Bat Mach (Meridian) progression. PlayerData.
+// openedMeridianIds is LIVE persisted state (read by BreakthroughGrades
+// and save validation), but investThongMachDan/applyMeridianModifiers
+// have no production caller yet - the Thong Mach Dan UI/gateway is not
+// wired. Kept deliberately; only its own test exercises it.
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
 import { MERIDIANS } from '../../data/realm/Meridians'

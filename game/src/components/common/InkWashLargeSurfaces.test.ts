@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, type App } from 'vue'
-import GamePanel from './GamePanel.vue'
 import OverlayPanel from './OverlayPanel.vue'
 import confirmSource from './ConfirmModal.vue?raw'
 import victorySource from '@/components/game/combat/CombatVictoryPanel.vue?raw'
@@ -25,17 +24,11 @@ afterEach(() => {
   }
 })
 
+// M13: the GamePanel mounting case was dropped with the component (zero
+// template/tooling consumers). The XL surface/frame pairing contract it
+// exercised is still pinned below through the live OverlayPanel shell
+// plus the raw-source assertions on the ceremonial panels.
 describe('ink-wash large surfaces', () => {
-  it('uses M paper plus L frame for regular panels and XL pair for ornate panels', () => {
-    const regular = mount(GamePanel, {})
-    const ornate = mount(GamePanel, { variant: 'ornate' })
-
-    expect(regular.querySelector('[data-ink-slice="surface-m-paper"]')).not.toBeNull()
-    expect(regular.querySelector('[data-ink-slice="frame-l-landscape"]')).not.toBeNull()
-    expect(ornate.querySelector('[data-ink-slice="surface-xl-paper-scroll"]')).not.toBeNull()
-    expect(ornate.querySelector('[data-ink-slice="frame-xl-ceremony"]')).not.toBeNull()
-  })
-
   it('keeps OverlayPanel dialog and the click-outside close path around the XL shell', () => {
     const onClose = vi.fn()
     const container = mount(OverlayPanel, { open: true, title: 'Đối thoại', onClose })

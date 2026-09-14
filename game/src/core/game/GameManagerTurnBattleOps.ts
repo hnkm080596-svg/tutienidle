@@ -1,5 +1,4 @@
 import type { SessionRef } from '../presentation/PresentationSession'
-import type { Battle } from '../battle/Battle'
 import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import {
@@ -267,7 +266,7 @@ export class GameManagerTurnBattleOps {
       sessionAllocator: deps.sessionAllocator,
       eventBus: deps.eventBus,
       getTurnBattleSystem: () => this.turnBattleSystem,
-      getBattle: () => this.turnBattle,
+      getTurnBattle: () => this.turnBattle,
       syncOffScreenFreeze: () => this.syncOffScreenFreeze(),
       settleStep: (signal) => this.settleStep(signal),
     })
@@ -748,11 +747,6 @@ export class GameManagerTurnBattleOps {
     return this.activeStageForTurnBattle
   }
 
-
-  /** TurnBattle cast to the read-only Battle shape legacy consumers expect. */
-  getBattle(): Battle | null {
-    return (this.turnBattle as unknown as Battle) ?? null
-  }
 
   /**
    * F4 (architecture-qa-repairs) - validating owner for the Tran Phap

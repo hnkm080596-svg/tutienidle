@@ -181,10 +181,9 @@ describe('Tribulation routing integration (Task 11)', () => {
     const unequipSpy = vi.spyOn(gameManager.equipmentOps, 'unequipAllEquipment')
 
     // Simulate active battle
-    vi.spyOn(gameManager, 'getBattle').mockReturnValue({
+    vi.spyOn(gameManager, 'getTurnBattle').mockReturnValue({
       state: 'fighting',
-      id: 'mock_battle',
-      player: {} as any,
+      players: [],
       enemies: [],
     } as any)
 

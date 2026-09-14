@@ -104,7 +104,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
     gameManager.startBattleWithPlayer(player, enemy)
     combatSource.advance(3) // Bỏ qua countdown + telegraph spawn.
 
-    const battle = gameManager.getBattle()!
+    const battle = gameManager.getTurnBattle()!
 
     battle.enemies[0]!.entity.x = 2
     battle.enemies[0]!.entity.row = HERO_LANE_INDEX

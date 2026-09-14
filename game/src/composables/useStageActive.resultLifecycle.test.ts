@@ -14,8 +14,7 @@ import {
   STATE_VERSION_KEY,
 } from '@/composables/useGameState'
 import type { GameManager } from '@/core/game/GameManager'
-import type { Battle } from '@/core/battle/Battle'
-import type { BattleState } from '@/core/battle/BattleTypes'
+import type { TurnBattle, TurnBattleState } from '@/core/battle/turn/TurnBattleSystem'
 import type { Stage } from '@/core/stage/Stage'
 import { useUiStore } from '@/stores/ui'
 import { useStageActive } from '@/composables/useStageActive'
@@ -24,7 +23,7 @@ import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
 interface FakeGameManagerOptions {
   activeStage: boolean
 
-  battleState: BattleState | null
+  battleState: TurnBattleState | null
 }
 
 function createHarness(options: FakeGameManagerOptions) {
@@ -37,8 +36,8 @@ function createHarness(options: FakeGameManagerOptions) {
       get: () => (current.activeStage ? ({ stageId: 's' } as never) : null),
     },
 
-    getBattle: (): Pick<Battle, 'state' | 'mode'> | null =>
-      current.battleState === null ? null : ({ state: current.battleState, mode: 'stage' } as never),
+    getTurnBattle: (): Pick<TurnBattle, 'state'> | null =>
+      current.battleState === null ? null : ({ state: current.battleState } as never),
   } as unknown as GameManager
 
   const container = document.createElement('div')

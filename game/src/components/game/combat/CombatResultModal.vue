@@ -21,7 +21,7 @@ const outcome = computed(() => {
     return null
   }
 
-  const state = gameManager.getBattle()?.state
+  const state = gameManager.getTurnBattle()?.state
 
   return state === 'victory' || state === 'defeat' ? state : null
 })

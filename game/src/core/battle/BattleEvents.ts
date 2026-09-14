@@ -17,7 +17,7 @@ import type { ArtifactId } from '../artifact/Artifact'
  * Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
  * §11) — attribution AN TOÀN cho 1 action_impact, để renderer chọn
  * VFX đúng nguồn và summary ghi đúng damage artifact. Threading hiện
- * CHỈ thật sự set ở nhánh 'artifact' (ArtifactSystem.ts) — basic
+ * CHỈ thật sự set ở nhánh 'artifact' (ArtifactSystem.ts — dormant, M13) — basic
  * attack/skill/enemy vẫn nhận diện qua field cũ (HitResolveOptions.
  * skillId, sourceId so với battle.player.id) nên KHÔNG cần backfill
  * origin cho các nhánh đó ngay bây giờ; union đủ 4 kind để mở rộng
@@ -93,15 +93,6 @@ export interface BattlePositionsEvent {
     isBoss: boolean
     presetId: EnemySpawnVfxPresetId
   }[]
-}
-
-/** Teleport AI (plan §7.3) — phát TRƯỚC attack/cast cùng tick để renderer
- * snap sprite ngay và gắn VFX sau này qua hook placeholder. */
-export interface PlayerTeleportedEvent {
-  type: 'player_teleported'
-  sourceId: string
-  from: GridPosition
-  to: GridPosition
 }
 
 export interface BattleEndEvent {

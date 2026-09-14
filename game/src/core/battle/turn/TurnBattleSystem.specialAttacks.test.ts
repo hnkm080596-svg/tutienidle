@@ -11,7 +11,7 @@ import { BuffPool } from '../../buff/BuffPool'
 
 // Phase A3 Task 5 (2026-09-07) — turn-based reader for
 // CombatEntity.specialAttacks (enemy periodic heavy attack). Legacy
-// semantics (EnemyAttackSystem.fireEnemyAttack): 1-based counter per
+// semantics (EnemyAttackSystem.fireEnemyAttack — retired M13): 1-based counter per
 // enemy, incremented on each of ITS OWN attacks; when
 // counter % everyNth === 0 the special attack replaces the basic attack
 // (damageMultiplier swap, presetId carried for presentation). Counter

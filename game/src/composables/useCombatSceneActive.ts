@@ -27,8 +27,8 @@ export function useCombatSceneActive() {
       return false
     }
 
-    const battle = gameManager.getBattle()
-
-    return battle !== null && battle.state !== 'idle'
+    // M13: TurnBattleState has no 'idle' — a non-null TurnBattle is an
+    // active combat session (idle meant "no battle" on the legacy engine).
+    return gameManager.getTurnBattle() !== null
   })
 }

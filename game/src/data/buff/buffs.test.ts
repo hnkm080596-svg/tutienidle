@@ -98,7 +98,7 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'defense', percent: 0.06 })
   })
 
-  // Engine áp/gỡ THEO ID qua theManBuffId() (TheResourceSystem.ts) —
+  // Engine áp/gỡ THEO ID qua theManBuffId() (TheResourceSystem, retired M13) —
   // id phải khớp chính xác `the_man_<element>`.
   it('the_man_<el> ×5 — buff duration Infinity, engine-gỡ, effects theo bảng §4', () => {
     const expected: Record<string, { type: 'statModifier'; stat: string; flat?: number; percent?: number }[]> = {

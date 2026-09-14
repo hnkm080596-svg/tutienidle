@@ -18,7 +18,7 @@ const ui = useUiStore()
 const visible = computed(() => {
   stateVersion.value
 
-  return gameManager.getBattle()?.state === 'intro'
+  return gameManager.getTurnBattle()?.state === 'intro'
 })
 
 // Same zone/stage accessor CombatTopBar.vue uses - no second source of

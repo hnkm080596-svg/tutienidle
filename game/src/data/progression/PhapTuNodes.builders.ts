@@ -512,7 +512,7 @@ export function buildThuanBranch(element: ElementType): ProgressionNode[] {
     prerequisites: [{ kind: 'node', nodeId: `truong_the_${element}` }],
     // Engine (E-7) ÁP/GỠ buff the_man_<el> theo trạng thái Thế đầy —
     // unlocksSkillIds chỉ để UI hiển thị "nội dung mở khoá" (buff là
-    // data/buff, không phải skill; xem TheResourceSystem.updateTheManBuff).
+    // data/buff, không phải skill; E-7 sync chưa port sang turn engine).
     effect: { unlocksSkillIds: [`the_man_${element}`] },
     branchTag: tag,
   })

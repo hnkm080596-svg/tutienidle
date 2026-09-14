@@ -184,10 +184,10 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // chế real-time KHÔNG migrate (Deep Review §2 — boss chỉ là quái +
     // buff, sẽ thiết kế lại bằng BossTurnTriggers khi content thật tới) —
     // chỉ giữ assertions core: spawn qua wave + victory + loop terminate.
-    for (let i = 0; i < 4000 && isBattleInProgress(gameManager.getBattle()?.state); i++) {
+    for (let i = 0; i < 4000 && isBattleInProgress(gameManager.getTurnBattle()?.state); i++) {
       combatSource.advance(COMBAT_STEP_SECONDS)
 
-      const battle = gameManager.getBattle()
+      const battle = gameManager.getTurnBattle()
 
       const bossEntry = battle?.enemies.find((enemy) =>
         enemy.entity.id.startsWith('mvp_test_boss_'),
@@ -205,7 +205,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // COMBAT + PLAYER + ENEMY: trận phải THẮNG thật (không phải hết tick
     // mà vẫn 'fighting' — nghĩa là Damage Engine/Targeting/Wave spawn/
     // Death của TOÀN BỘ vòng lặp turn-based hoạt động đúng).
-    expect(gameManager.getBattle()!.state).toBe('victory')
+    expect(gameManager.getTurnBattle()!.state).toBe('victory')
 
     // BOSS: quái Boss thật đã spawn (wave spawn floor-10 boss-final hoạt
     // động trong turn-based flow).

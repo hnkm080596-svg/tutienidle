@@ -1,3 +1,8 @@
+// [M13 STATUS: TRANSITIONAL] Legacy trigger dispatcher. Sole caller is
+// CombatSystem.fireKillTriggers, which early-returns unless a
+// reactionManager was injected - GameManager never injects one, so this
+// is production-unreachable today. Kept: test-covered seam for the
+// trigger/action contract (SkillActionRegistry).
 import type { OnHitContext, TriggerBinding, TriggerContextMap, TriggerType } from './SkillTrigger'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from './Skill'

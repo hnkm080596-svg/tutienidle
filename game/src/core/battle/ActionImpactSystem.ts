@@ -1,3 +1,10 @@
+// [M13 STATUS: PARTIAL] Mixed liveness module: `ActionDamageInfo` and
+// `scaleActionDamage` are live turn-engine contracts (TurnBattleSystem,
+// TurnSkillAction, SkillToTurnSkillConverter). The class instance API
+// (scheduleBasic/fireSkillHit/beginSkillBatch/endSkillBatch over the
+// legacy Battle) is dormant - its only callers were retired M13; the
+// GameManager field is gone. Retained for ArtifactSystem deps and
+// tests.
 // Combat Grid Rework — hệ impact THỐNG NHẤT:
 // - Basic attack (player/enemy): schedule với windupSeconds, tick đếm
 //   ngược, hết giờ → snapshot anchor cell (on_impact) → resolve từng hit.

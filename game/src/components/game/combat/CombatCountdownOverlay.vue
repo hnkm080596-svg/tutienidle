@@ -15,37 +15,30 @@ const { t } = useI18n()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
-// KHÔNG chain qua 1 computed trung gian trả về object Battle (mutate-in-
+// KHÔNG chain qua 1 computed trung gian trả về object TurnBattle (mutate-in-
 // place, LUÔN cùng 1 reference) — Vue coi "giá trị không đổi" theo
 // Object.is() nên sẽ KHÔNG lan truyền xuống computed phụ thuộc dù field
 // bên trong object đã đổi thật (bug thật đã gặp: số đếm đứng yên ở "3").
-// Mỗi computed dưới đây tự đọc thẳng gameManager.getBattle() + tự khai
+// Mỗi computed dưới đây tự đọc thẳng gameManager.getTurnBattle() + tự khai
 // stateVersion.value làm dependency riêng, trả về PRIMITIVE (boolean/số)
 // để Vue so sánh đúng giá trị.
 const visible = computed(() => {
   stateVersion.value
 
-  return gameManager.getBattle()?.state === 'countdown'
+  return gameManager.getTurnBattle()?.state === 'countdown'
 })
 
-// Fix (2026-09-06) — countdownSecondsRemaining chỉ tồn tại trên trận
-// legacy (BattleSystem.ts, giây thật). Trận turn-based (TurnBattleSystem.ts
-// — đường DUY NHẤT còn dùng cho Stage) đếm bằng countdownTurnsRemaining,
-// đơn vị LƯỢT pacing dài BATTLE_FIXED_STEP_SECONDS = 0.1s (GameManager.ts)
-// — thiếu nhánh này khiến overlay đọc field không tồn tại → luôn 0 →
-// nhảy thẳng "Xuất Trận!" thay vì đếm 3, 2, 1. Ưu tiên field giây thật
-// (legacy) nếu có, quy đổi /10 khi chỉ có field lượt (turn-based).
+// TurnBattleSystem đếm countdown bằng countdownTurnsRemaining, đơn vị
+// LƯỢT pacing dài BATTLE_FIXED_STEP_SECONDS = 0.1s (GameManager.ts) —
+// quy đổi /10 ra giây hiển thị. (M13: nhánh countdownSecondsRemaining
+// của engine real-time đã xoá — TurnBattle không có field đó.)
 const countdownSeconds = computed(() => {
   stateVersion.value
 
-  const battle = gameManager.getBattle()
+  const battle = gameManager.getTurnBattle()
 
   if (!battle) {
     return 0
-  }
-
-  if (battle.countdownSecondsRemaining !== undefined) {
-    return battle.countdownSecondsRemaining
   }
 
   return (battle.countdownTurnsRemaining ?? 0) / 10

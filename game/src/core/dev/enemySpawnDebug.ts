@@ -39,7 +39,7 @@ export function registerEnemySpawnDebug(deps: EnemySpawnDebugDeps): void {
 
   window.__tutienEnemySpawnDebug = {
     spawnEnemy(enemyId: string, tags: string[] = []) {
-      const battle = deps.gameManager.getBattle()
+      const battle = deps.gameManager.getTurnBattle()
 
       if (battle && isBattleInProgress(battle.state)) {
         return 'battle already in progress'

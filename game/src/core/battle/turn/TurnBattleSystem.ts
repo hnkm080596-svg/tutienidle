@@ -108,7 +108,8 @@ export interface TurnBattleParticipant {
   /**
    * Phase A3 (2026-09-07) — 1-based counter of this enemy's own actions,
    * ported from BattleEnemy.specialAttackCounter (Battle.ts) with the same
-   * everyNth semantics as legacy EnemyAttackSystem.fireEnemyAttack():
+   * everyNth semantics as legacy EnemyAttackSystem.fireEnemyAttack()
+   * (module retired M13 — semantics ported here):
    * when counter % everyNth === 0, the special attack's damageMultiplier
    * replaces the basic attack's for that action. Runtime-only, never
    * resets mid-battle. undefined coerces to 0.
@@ -924,7 +925,8 @@ export class TurnBattleSystem {
         : selectAction(actor)
 
       // Phase A3 (2026-09-07) — enemy specialAttacks reader, ported from
-      // legacy EnemyAttackSystem.fireEnemyAttack()'s everyNth semantics:
+      // legacy EnemyAttackSystem.fireEnemyAttack()'s everyNth semantics
+      // (module retired M13 — ported here):
       // 1-based counter on the actor's OWN actions; when
       // counter % everyNth === 0 the matching special attack's
       // damageMultiplier replaces the basic attack's damage (presetId

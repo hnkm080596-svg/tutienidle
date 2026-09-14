@@ -141,10 +141,10 @@ function drinkPill(pillId: string) {
     addCultivation: (amount) => addCultivation(player.$state, amount),
 
     heal: (amount) => {
-      const battle = gameManager.getBattle()
+      const battleEntity = gameManager.getTurnBattle()?.players[0]?.entity
 
-      if (battle && battle.player.alive) {
-        gameManager.combatSystem.applyHealing(battle.player, amount, battle.player.id, 'healing')
+      if (battleEntity?.alive) {
+        gameManager.combatSystem.applyHealing(battleEntity, amount, battleEntity.id, 'healing')
       }
     },
 
@@ -154,10 +154,10 @@ function drinkPill(pillId: string) {
     // sống nên đi qua applyPersistentBuff() (đúng pattern Kiếp Thương
     // debuff dùng, xem GameManager.ts).
     applyBuff: (definition) => {
-      const battle = gameManager.getBattle()
+      const battleEntity = gameManager.getTurnBattle()?.players[0]?.entity
 
-      if (battle && battle.player.alive) {
-        gameManager.buffSystem.apply(definition, battle.player, battle.player, gameManager.buffRegistry)
+      if (battleEntity?.alive) {
+        gameManager.buffSystem.apply(definition, battleEntity, battleEntity, gameManager.buffRegistry)
 
         return
       }

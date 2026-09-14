@@ -80,7 +80,8 @@ export interface NodeEffect {
   // Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 4) — on-hit
   // effect của kiếm trận: mỗi hit kiếm trận/ult TTKT roll tỉ lệ độc lập
   // theo cấp node (3%/level, max 15% ở Lv5), hiệu ứng chạy qua modifier
-  // pipeline + damage engine (KiemTranOnHitSystem).
+  // pipeline + damage engine (KiemTranOnHitSystem — retired M13; on-hit
+  // consumer not yet ported to the turn engine).
   onHitEffect?: {
     kind: OnHitEffectKind
     baseChancePercent: number

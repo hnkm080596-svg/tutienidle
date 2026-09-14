@@ -81,7 +81,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
         }
       }
 
-      if (gameManager.getBattle()?.state === 'victory' || gameManager.getBattle()?.state === 'defeat') {
+      if (gameManager.getTurnBattle()?.state === 'victory' || gameManager.getTurnBattle()?.state === 'defeat') {
         break
       }
     }

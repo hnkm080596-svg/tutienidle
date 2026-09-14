@@ -37,10 +37,10 @@ export class CombatAnimationRuntime {
       // spawnEnemy factory). Capturing the instance by value at
       // construction time would silently freeze every acknowledge*/
       // submitTurnChoice call onto the FIRST (registry-less) instance
-      // forever — same live-reference requirement as getBattle() below.
+      // forever — same live-reference requirement as getTurnBattle() below.
       getTurnBattleSystem: () => TurnBattleSystem
       eventBus: EventBus
-      getBattle: () => TurnBattle | null
+      getTurnBattle: () => TurnBattle | null
       isSessionBlocking?: () => boolean
       /**
        * Combat Turn Mechanism (2026-09-10 spec section 4.1a) — the runtime
@@ -153,7 +153,7 @@ export class CombatAnimationRuntime {
   /** Rời CombatScene giữa chừng — hoàn tất pending phases ngay lập tức
    * (headless path) để trận không bị treo. */
   handlePresentationDeactivated(): void {
-    const battle = this.deps.getBattle()
+    const battle = this.deps.getTurnBattle()
     const turnBattleSystem = this.deps.getTurnBattleSystem()
 
     if (this.pendingReadyActor && battle) {
@@ -216,7 +216,7 @@ export class CombatAnimationRuntime {
       return
     }
 
-    const battle = this.deps.getBattle()
+    const battle = this.deps.getTurnBattle()
 
     if (!this.pendingReadyActor || !battle) {
       return
@@ -249,7 +249,7 @@ export class CombatAnimationRuntime {
       return
     }
 
-    const battle = this.deps.getBattle()
+    const battle = this.deps.getTurnBattle()
 
     if (!this.pendingDeclaredAction || !battle) {
       return
@@ -304,7 +304,7 @@ export class CombatAnimationRuntime {
       return
     }
 
-    const battle = this.deps.getBattle()
+    const battle = this.deps.getTurnBattle()
 
     if (!this.pendingImpact || !battle) {
       return
@@ -329,7 +329,7 @@ export class CombatAnimationRuntime {
       return false
     }
 
-    const battle = this.deps.getBattle()
+    const battle = this.deps.getTurnBattle()
 
     if (!this.awaitedManualActor || !battle) {
       return false

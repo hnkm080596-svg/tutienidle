@@ -14,8 +14,6 @@ import {
   ATTACK_LUNGE_DURATION_MS,
   ATTACK_LUNGE_PX,
   BUFF_ATTACH_COLOR,
-  CAST_GLOW_COLOR,
-  CAST_NAME_COLOR,
   CRITICAL_FLASH_COLOR,
   DEBUFF_ATTACH_COLOR,
   HIT_FLASH_COLOR,
@@ -129,27 +127,6 @@ export class CombatActionFeedback {
     })
 
     scene.showFloatingText(dodger, 'Né!', '#8be9fd')
-  }
-
-  onCast(event: CombatScenePayload) {
-    const scene = this.scene
-    const caster = scene.spriteFor(event.sourceId)
-
-    if (!caster) {
-      return
-    }
-
-    scene.flashColor(caster, CAST_GLOW_COLOR, 160)
-
-    if (event.skillName) {
-      scene.showFloatingText(caster, event.skillName, CAST_NAME_COLOR)
-    }
-  }
-
-  onCastComplete(event: CombatScenePayload) {
-    if (event.sourceId) {
-      this.scene.destroyCastBar(event.sourceId)
-    }
   }
 
   /**

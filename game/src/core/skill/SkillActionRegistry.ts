@@ -1,3 +1,6 @@
+// [M13 STATUS: TRANSITIONAL] Legacy trigger-action executors, invoked
+// only by SkillTriggerRunner on the dormant legacy trigger path (see
+// its header). Retained for the test-covered action contract.
 import type { ActionRuntimeContext, SkillAction, SkillActionType } from './SkillAction'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'

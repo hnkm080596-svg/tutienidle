@@ -51,7 +51,7 @@ export function makeKiemBarReader(
   getPlayer: () => KiemBarPlayerState,
 ): KiemBarReader {
   return () => {
-    const battle = gameManager.getBattle()
+    const battle = gameManager.getTurnBattle()
 
     if (!battle || !isBattleInProgress(battle.state)) {
       return null
@@ -64,15 +64,23 @@ export function makeKiemBarReader(
       return null
     }
 
+    // TurnBattle participant shape — the human player's CombatEntity is
+    // players[0].entity (Kiem Tu pools live on CombatEntity, M13).
+    const battleEntity = battle.players[0]?.entity
+
+    if (!battleEntity) {
+      return null
+    }
+
     if (route === 'kiem_tran') {
-      const current = battle.player.currentKiemThe ?? 0
+      const current = battleEntity.currentKiemThe ?? 0
 
       return { current, max: MAX_KIEM_THE, label: 'Kiếm Thế' }
     }
 
     // bat_kiem — Kiếm Ý tạm = vĩnh viễn (đầu trận) + tích trong trận.
     const kiemYPermanent = getKiemYPermanent(player.bossKillCount)
-    const current = (battle.player.currentKiemYTemp ?? 0) + kiemYPermanent
+    const current = (battleEntity.currentKiemYTemp ?? 0) + kiemYPermanent
     const max = kiemYTempMaxFor(kiemYPermanent)
     const tier = getKiemYTierForPermanent(kiemYPermanent)
 

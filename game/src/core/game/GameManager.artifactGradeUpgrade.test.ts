@@ -107,7 +107,7 @@ describe('GameManager.tryUpgradeArtifactGrade (doc §5.3)', () => {
     gameManager.materialBag.add(gameManager.materialRegistry.get('doan_bao_thach'), 10)
 
     gameManager.startBattle(createPlayerEntity(), defineEnemy(enemyDefinition()))
-    expect(gameManager.getBattle()?.state).toBe('intro')
+    expect(gameManager.getTurnBattle()?.state).toBe('intro')
 
     expect(gameManager.realmAdvanceOps.tryUpgradeArtifactGrade(player)).toBe(false)
     expect(player.artifact.grade).toBe('pham')
