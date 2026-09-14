@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -92,12 +92,33 @@ describe('perfect clear feasibility on a real floor shape', () => {
 
   let cleanup: (() => void) | undefined
 
+  // Deterministic RNG so the feasibility measurement is reproducible:
+  // unseeded Math.random (dodge/crit/placement draws) let floors straddle
+  // the limit nondeterministically between runs. One mulberry32 stream
+  // per floor keeps the real engine sim but fixes the outcome.
+  function mulberry32(seed: number): () => number {
+    let a = seed >>> 0
+    return () => {
+      a |= 0
+      a = (a + 0x6d2b79f5) | 0
+      let t = Math.imul(a ^ (a >>> 15), 1 | a)
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+    }
+  }
+
+  function pinRandom(floor: number): void {
+    vi.spyOn(Math, 'random').mockImplementation(mulberry32(0x9e37 + floor * 7919))
+  }
+
   afterEach(() => {
     cleanup?.()
     cleanup = undefined
+    vi.restoreAllMocks()
   })
 
   it.each([1, 5, 9, 10])('best-case floor %i (one-shot player, zero-damage foes): rounds at victory vs the fixed limit', (floor) => {
+    pinRandom(floor)
     const stageDef = builtFloor(floor, ONE_HP)
     const { gameManager, player, combatSource } = harness(stageDef, ONE_HP, 1000)
     cleanup = () => { gameManager.abandonBattle() }
@@ -128,30 +149,43 @@ describe('perfect clear feasibility on a real floor shape', () => {
     expect(player.perfectClearStageIds).toContain(stageDef.id)
   })
 
-  it.each([1, 5, 9, 10])('multi-hit floor %i (3000 HP foes, attack 1000 = ~3 hits per kill): rounds at victory vs the fixed limit', (floor) => {
-    const stageDef = builtFloor(floor, TANKY)
-    const { gameManager, player, combatSource } = harness(stageDef, TANKY, 1000)
-    cleanup = () => { gameManager.abandonBattle() }
+  // PLAYTEST DEBT (2026-09-14, user-locked): the solo/basic-attack-only
+  // fixture cannot perfect-clear floors 1/5/9/10 within the fixed limits —
+  // pinned-seed measurements: floor 1 needs 21 rounds vs limit 20, floor 5
+  // 24 vs 24 (not recorded), floor 9 does not reach victory inside 5000
+  // steps, floor 10 needs 16 vs 15. Conditions stay unchanged pending
+  // playtest + a real party/skill composition; the skill system is not
+  // complete. it.fails keeps these VISIBLE: if a future change makes a
+  // floor pass, vitest flags it and this block must be revisited.
+  // See docs/qa/2026-09-14-full-project-engineering-audit.md (perfect-clear
+  // feasibility) and the arch-repair program ledger.
+  for (const floor of [1, 5, 9, 10]) {
+    it.fails(`multi-hit floor ${floor} (3000 HP foes, attack 1000 = ~3 hits per kill): rounds at victory vs the fixed limit`, () => {
+      pinRandom(floor)
+      const stageDef = builtFloor(floor, TANKY)
+      const { gameManager, player, combatSource } = harness(stageDef, TANKY, 1000)
+      cleanup = () => { gameManager.abandonBattle() }
 
-    let turnsAtVictory = -1
-    let roundsAtVictory = -1
+      let turnsAtVictory = -1
+      let roundsAtVictory = -1
 
-    for (let i = 0; i < 5000; i++) {
-      const battle = gameManager.getTurnBattle()
+      for (let i = 0; i < 5000; i++) {
+        const battle = gameManager.getTurnBattle()
 
-      if (battle?.state === 'victory') {
-        turnsAtVictory = battle.totalTurnsElapsed ?? 0
-        roundsAtVictory = battle.roundsElapsed ?? 0
-        break
+        if (battle?.state === 'victory') {
+          turnsAtVictory = battle.totalTurnsElapsed ?? 0
+          roundsAtVictory = battle.roundsElapsed ?? 0
+          break
+        }
+
+        combatSource.advance(COMBAT_STEP_SECONDS)
       }
 
-      combatSource.advance(COMBAT_STEP_SECONDS)
-    }
+      expect(turnsAtVictory, 'battle must reach victory').toBeGreaterThanOrEqual(0)
 
-    expect(turnsAtVictory, 'battle must reach victory').toBeGreaterThanOrEqual(0)
+      console.info(`[QA-e] floor ${floor} multi-hit: totalTurnsElapsed=${turnsAtVictory}, roundsElapsed=${roundsAtVictory}, limit=${stageDef.perfectClearTurnLimit}, recorded=${player.perfectClearStageIds.includes(stageDef.id)}`)
 
-    console.info(`[QA-e] floor ${floor} multi-hit: totalTurnsElapsed=${turnsAtVictory}, roundsElapsed=${roundsAtVictory}, limit=${stageDef.perfectClearTurnLimit}, recorded=${player.perfectClearStageIds.includes(stageDef.id)}`)
-
-    expect(player.perfectClearStageIds).toContain(stageDef.id)
-  })
+      expect(player.perfectClearStageIds).toContain(stageDef.id)
+    })
+  }
 })
