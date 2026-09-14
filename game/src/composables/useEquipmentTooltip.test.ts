@@ -6,6 +6,9 @@ import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
 import type { Equipment } from '@/core/equipment/Equipment'
 import { ZoneRegistry } from '@/core/stage/ZoneRegistry'
+import { composeEquipmentDisplayName } from '@/core/equipment/EquipmentNaming'
+import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
+import { gradeLabel } from '@/core/presentation/labels'
 
 function instance(overrides: Partial<EquipmentInstance> = {}): EquipmentInstance {
   return makeInstance({
@@ -108,10 +111,10 @@ describe('buildEquipmentTooltip', () => {
       .toEqual(['Tỉ lệ bạo kích', 'Độ chính xác'])
   })
 
-  // Rework P6 (item-grade-quality-rework, Task 21) — tooltip phải hiển
-  // thị RÕ 2 trục tách biệt: Phẩm (ProfessionGrade, theo đại cảnh giới)
-  // và Chất (ItemQuality, độ hiếm roll) — không còn gộp lẫn như model cũ.
-  it('hiển thị section Phân Loại với dòng Phẩm (kèm Cảnh Giới) và dòng Chất', () => {
+  // Naming rework (2026-09-14): Pham renders as the "Canh gioi" meta
+  // line under the title; Chat lives on the name segments — the old
+  // "Phan Loai" section is redundant and gone.
+  it('hiển thị gradeLine "Cảnh giới: ..." cho Phẩm, không còn section Phân Loại', () => {
     const { affixRegistry } = setup()
     const equipment = instance({ grade: 'bat_pham', quality: 'dia' })
     const template: Equipment = {
@@ -125,42 +128,132 @@ describe('buildEquipmentTooltip', () => {
 
     const tooltip = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry())
 
-    const classificationSection = tooltip.sections.find(section => section.label === 'Phân Loại')
-    expect(classificationSection).toBeDefined()
+    expect(tooltip.gradeLine).toContain('Bát Phẩm')
+    expect(tooltip.gradeLine).toContain('Luyện Khí')
+    expect(tooltip.sections.some(section => section.label === 'Phân Loại')).toBe(false)
 
-    const gradeRow = classificationSection?.rows.find(row => row.label === 'Phẩm')
-    expect(gradeRow?.value).toContain('Bát Phẩm')
-    expect(gradeRow?.value).toContain('Luyện Khí')
-
-    const qualityRow = classificationSection?.rows.find(row => row.label === 'Chất')
-    expect(qualityRow?.value).toBe('Địa Chất')
-
-    // sections[0] (Chỉ Số Chính) không được xê dịch bởi section mới.
+    // sections[0] (Chi So Chinh) keeps its position.
     expect(tooltip.sections[0]?.label).toBe('Chỉ Số Chính')
   })
 
-  it('hides range/comparison by default and keeps effective range plus delta inline for Alt mode', () => {
+  // Item-info-card spec §3 — advancedSections merged into sections:
+  // range/delta live on the rows themselves, no Alt-revealed second list.
+  it('ranges render inline in sections — advancedSections is gone', () => {
     const { affixRegistry } = setup()
-    const candidate = instance({
-      instanceId: 'candidate', grade: 'cuu_pham', realmLevel: 1,
+    const equipment = instance({
+      grade: 'cuu_pham', realmLevel: 1,
       mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 14 },
-    })
-    const equipped = instance({
-      instanceId: 'equipped', grade: 'cuu_pham', realmLevel: 1,
-      mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 },
+      affixes: [{ affixId: 'prefix_max_hp', tier: 1, value: 15 }],
     })
     const template: Equipment = {
       id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
       mainStats: [{ stat: 'attack', min: 12, max: 20 }], maxEnhanceLevel: 10,
     }
-    const tooltip = buildEquipmentTooltip(
-      candidate, template, affixRegistry, null,
-      new ZoneRegistry(), equipped,
-    )
 
-    expect(tooltip.sections[0]?.rows[0]?.value).toBe('+14')
-    expect(tooltip.sections.some(section => section.label.startsWith('So với'))).toBe(false)
-    expect(tooltip.advancedSections?.[0]?.rows[0]?.value).toContain('[13–21]')
-    expect(tooltip.advancedSections?.[0]?.rows[0]?.value).toContain('▲ +4')
+    const content = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry())
+
+    const mainRow = content.sections[0]!.rows[0]!
+    expect(mainRow.value).toBe('+14')
+    expect(mainRow.range).toMatch(/^\[.+–.+\]$/)
+
+    // Affix rows carry their tier range inline too (prefix_max_hp t1 = 10–20).
+    const affixRow = content.sections.find(section => section.label.startsWith('Chỉ Số Phụ'))?.rows[0]
+    expect(affixRow?.range).toBe('[10–20]')
+
+    expect('advancedSections' in content).toBe(false)
+  })
+
+  // Item-info-card spec §4 — ONE compare context drives both the paired
+  // card (compareWith) and the inline delta markers on the candidate's
+  // rows; the equipped card itself never nests another compare.
+  it('compare context emits compareWith (equipped card) + delta fields on rows', () => {
+    const { affixRegistry } = setup()
+    const zoneRegistry = new ZoneRegistry()
+    const equipped = instance({
+      instanceId: 'equipped', grade: 'cuu_pham', realmLevel: 1,
+      mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 },
+    })
+    const candidate = instance({
+      instanceId: 'candidate', grade: 'cuu_pham', realmLevel: 1,
+      mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 14 },
+    })
+    const template: Equipment = {
+      id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
+      mainStats: [{ stat: 'attack', min: 12, max: 20 }], maxEnhanceLevel: 10,
+    }
+
+    const content = buildEquipmentTooltip(candidate, template, affixRegistry, null, zoneRegistry, {
+      instance: equipped, template, slotState: null,
+    })
+
+    expect(content.compareWith?.name).toBe(composeEquipmentDisplayName(equipped, template, zoneRegistry))
+    expect(content.compareWith && 'compareWith' in content.compareWith).toBe(false)
+
+    const deltaRow = content.sections.flatMap(section => section.rows).find(row => row.delta)
+    expect(deltaRow?.delta).toMatch(/[▲▼]/)
+    expect(deltaRow?.delta).toContain('+4')
+    expect(deltaRow?.deltaTone).toMatch(/positive|negative/)
+  })
+
+  // Stats only on the equipped counterpart render as muted "+0" rows in
+  // the SAME affix section (no separate advanced list), carrying the
+  // negative delta.
+  it('equipped-only stats land as muted rows in the affix section', () => {
+    const { affixRegistry } = setup()
+    const zoneRegistry = new ZoneRegistry()
+    const equipped = instance({
+      instanceId: 'equipped',
+      affixes: [{ affixId: 'prefix_max_hp', tier: 1, value: 20 }],
+    })
+    const candidate = instance({ instanceId: 'candidate' })
+    const template: Equipment = {
+      id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
+      mainStats: [{ stat: 'attack', min: 8, max: 12 }], maxEnhanceLevel: 10,
+    }
+
+    const content = buildEquipmentTooltip(candidate, template, affixRegistry, null, zoneRegistry, {
+      instance: equipped, template, slotState: null,
+    })
+
+    const affixSection = content.sections.find(section => section.label.startsWith('Chỉ Số Phụ'))
+    const missingRow = affixSection?.rows.find(row => row.tone === 'muted')
+    expect(missingRow?.label).toBe('Khí huyết')
+    expect(missingRow?.delta).toContain('▼')
+    expect(missingRow?.deltaTone).toBe('negative')
+  })
+
+  // Item-info-card spec §2 — single title color on the Chat ramp:
+  // quality rank 1-5 spread onto odd steps 1-3-5-7-9 of the 10-step
+  // --rank-color scale; 'tien' upgrades to the rainbow tone.
+  it('title payload: nameColorVar = --rank-color-(2*qualityRank-1), tien => rainbow tone', () => {
+    const { affixRegistry } = setup()
+    const tienInstance = instance({ quality: 'tien' })
+    const template: Equipment = {
+      id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
+      mainStats: [{ stat: 'attack', min: 8, max: 12 }], maxEnhanceLevel: 10,
+    }
+
+    const content = buildEquipmentTooltip(tienInstance, template, affixRegistry, null, new ZoneRegistry())
+
+    expect(content.nameColorVar).toBe('--rank-color-9')
+    expect(content.nameTone).toBe('tien')
+  })
+
+  // Item-info-card spec §3 — the card's static SlotView header binds the
+  // same signal set the bag cell carries (seal rank + Chat edge + aria
+  // with the grade word).
+  it('slotPreview carries the cell signal set (seal rank + chat edge + aria with grade)', () => {
+    const { affixRegistry } = setup()
+    const equipment = instance()
+    const template: Equipment = {
+      id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
+      mainStats: [{ stat: 'attack', min: 8, max: 12 }], maxEnhanceLevel: 10,
+    }
+
+    const content = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry())
+
+    expect(content.slotPreview?.equipmentQualityRank).toBe(professionGradeRank(equipment.grade))
+    expect(content.slotPreview?.rarityRank).toBe(itemQualityRank(equipment.quality))
+    expect(content.slotPreview?.accessibleLabel).toContain(gradeLabel(equipment.grade))
   })
 })

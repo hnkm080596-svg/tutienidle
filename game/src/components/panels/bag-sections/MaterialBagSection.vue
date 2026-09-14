@@ -121,11 +121,28 @@ function buildTooltip(material: Material, owned: number): GradedItemTooltipConte
   return {
     kind: 'material',
     name: material.name,
+
+    // Single title color = the material's Pham rank color (spec §2) —
+    // materials have no Chat axis so the Pham ramp is the name color.
+    nameColorVar: rank !== undefined ? `--rank-color-${rank}` : undefined,
+
+    // Static SlotView header (spec §3): same signals the bag cell
+    // binds — Pham seal via the 10-step rarity scale, realm in aria.
+    slotPreview: {
+      icon: material.icon,
+      label: material.name,
+      accessibleLabel: realmText ? `${material.name}, ${realmText}` : material.name,
+      rarityRank: rank,
+      rarityRankScale: 10,
+    },
+
     imagePath: material.icon,
     // Pham rank (10-step ramp) — feeds the tooltip aura color; materials
     // have no Chat axis so gradeKey stays unset (2026-09-14 ruling).
-    gradeRank: professionRankOf(material),
-    ownedLabel: t('panels.bag.tooltip.owned', { count: owned }),
+    gradeRank: rank,
+    // Spec: "So huu: N" renders only when the player owns at least one —
+    // never emit a zero count.
+    ownedCount: owned > 0 ? owned : undefined,
     description: material.description,
     sections: [{ label: t('panels.bag.tooltip.section'), rows }],
   }
@@ -176,6 +193,15 @@ function materialNameSegments(material: Material, trailing?: { text: string }) {
   return trailing ? [...segments, trailing] : segments
 }
 
+// Cell aria override (spec §5b): "{name}, {realm}" so the Pham axis is
+// readable without color — the realm text is the material's Pham axis.
+function materialAccessibleLabel(name: string, material: Material): string {
+  const realmId = material.profession?.realmId
+  const realmText = realmId ? REALM_LABELS.value[realmId] : undefined
+
+  return realmText ? `${name}, ${realmText}` : name
+}
+
 const entries = computed<MaterialEntry[]>(() => {
   stateVersion.value
 
@@ -188,6 +214,8 @@ const entries = computed<MaterialEntry[]>(() => {
       key: stack.material.id,
 
       label: stack.material.name,
+
+      accessibleLabel: materialAccessibleLabel(stack.material.name, stack.material),
 
       description: stack.material.description,
 
@@ -268,6 +296,8 @@ function familyCell(item: FilteredMaterial): BagCell {
 
     label: baseLabel,
 
+    accessibleLabel: materialAccessibleLabel(baseLabel, material),
+
     description: material.description,
 
     amount: item.amount,
@@ -344,6 +374,7 @@ const cells = computed<BagCell[]>(() => {
       : {
           key: item.material.id,
           label: item.material.name,
+          accessibleLabel: materialAccessibleLabel(item.material.name, item.material),
           description: item.material.description,
           amount: item.amount,
           icon: item.material.icon,
@@ -398,6 +429,7 @@ watch([searchQuery, activeGroup], () => resetPage())
         class="bag-section__slot"
         :item="cell"
         :label="cell?.label"
+        :accessible-label="cell?.accessibleLabel"
         :description="cell?.description"
         :amount="cell?.amount"
         :icon="cell?.icon"

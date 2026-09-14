@@ -1,6 +1,6 @@
 import { ref, shallowRef } from 'vue'
-import type { NameSegment } from '@/core/item/NameSegment'
 import type { ElementType } from '@/core/element/ElementType'
+import type { SlotPreviewProps } from '@/components/common/SlotTypes'
 
 // Dạng cũ, DÙNG CHUNG cho tuyệt đại đa số v-tooltip hiện có trong
 // game (chỉ tiêu đề + mô tả 1 dòng) — `kind` optional để mọi object
@@ -20,6 +20,16 @@ export interface TooltipStatRow {
   value: string
 
   detail?: string
+
+  // "[min–max]" — rendered muted, inline after value (item-info-card
+  // spec §3; replaces the old Alt-revealed advancedSections values).
+  range?: string
+
+  // "▲ +2" — compare marker rendered after range (spec §4); only
+  // emitted when the builder received a compare context.
+  delta?: string
+
+  deltaTone?: 'positive' | 'negative' | 'muted'
 
   tone?: 'default' | 'muted' | 'positive' | 'negative' | 'warning' | 'special'
 
@@ -71,7 +81,19 @@ export interface TechniqueTooltipContent {
 export interface GradedItemTooltipContent {
   kind: 'material' | 'pill' | 'talisman' | 'formation'
 
+  // FULL display name — composed "Chat - Name" where the item kind
+  // composes one (pills); materials carry their plain name.
   name: string
+
+  // Single title color (item-info-card spec §2) — replaces per-segment
+  // colors; nameTone below overrides it for the max-rank rainbow.
+  nameColorVar?: string
+
+  // 'tien' => rainbow title (max-rank gradient), beats nameColorVar.
+  nameTone?: string
+
+  // Static SlotView header props bag (spec §3) — see SlotTypes.ts.
+  slotPreview?: SlotPreviewProps
 
   imagePath?: string
 
@@ -84,19 +106,11 @@ export interface GradedItemTooltipContent {
   // (2026-09-14 aura ruling).
   gradeRank?: number
 
-  // "{Chat} - {Name}" title segments — text structure only
-  // (item-info-card spec 2026-09-14); the single display color is the
-  // payload's nameColorVar (added by the spec's payload task).
-  // Optional so existing callers keep the plain-name header.
-  nameSegments?: NameSegment[]
-
   gradeLine?: string
 
-  gradeLineColorVar?: string
-
-  // "Sở hữu: N" — CHỈ có ý nghĩa khi hiện trong túi đồ (có bag stack
-  // thật), undefined nếu hiện ở nơi khác (vd khi chưa sở hữu cái nào).
-  ownedLabel?: string
+  // "So huu: N" — renders ONLY when > 0 (spec: never renders
+  // "So huu: 0"); undefined outside the bag surface.
+  ownedCount?: number
 
   description?: string
 
@@ -112,12 +126,11 @@ export interface EquipmentTooltipContent {
 
   name: string
 
-  // Composed "{Chat} - {Name}" title segments — text structure only
-  // (item-info-card spec 2026-09-14); the single display color is the
-  // payload's nameColorVar (added by the spec's payload task). `name`
-  // (flat string) stays for alt text/icon fallback and the plain
-  // title render.
-  nameSegments: NameSegment[]
+  nameColorVar?: string
+
+  nameTone?: string
+
+  slotPreview?: SlotPreviewProps
 
   imagePath?: string
 
@@ -126,19 +139,18 @@ export interface EquipmentTooltipContent {
   qualityKey: string
 
   // "Canh gioi: {Pham} ({realm})" — the Pham axis rendered as the meta
-  // line under the title (2026-09-14 ruling); Chat stays on the name
-  // segments. Replaces the old "Phan Loai" section rows.
+  // line under the title (2026-09-14 ruling). Replaces the old
+  // "Phan Loai" section rows.
   gradeLine?: string
-
-  // Pham color var for gradeLine (e.g. '--rank-color-3') — keeps the
-  // line on the same ramp as the slot underlay.
-  gradeLineColorVar?: string
 
   description?: string
 
   sections: TooltipSection[]
 
-  advancedSections?: TooltipSection[]
+  // Paired compare card (spec §4): the equipped counterpart's own
+  // single-card payload, built by the same builder with NO compare
+  // context — recursion stops at depth 1.
+  compareWith?: Omit<EquipmentTooltipContent, 'compareWith'>
 }
 
 // Tooltip Building (Động Phủ UI redesign) — công trình trong Home

@@ -1,45 +1,20 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/vue'
 import { useTooltip } from '@/composables/useTooltip'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
 import { isMaxRankTone } from '@/core/profession/slotRank'
+import { i18n } from '@/i18n'
 
 const { content, reference } = useTooltip()
 const floating = ref<HTMLElement | null>(null)
 const open = computed(() => content.value !== null)
-const isInspectModifierHeld = ref(false)
 
-function updateInspectModifier(event: KeyboardEvent) {
-  isInspectModifierHeld.value = event.altKey
-}
-
-function clearInspectModifier() {
-  isInspectModifierHeld.value = false
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', updateInspectModifier)
-  window.addEventListener('keyup', updateInspectModifier)
-  window.addEventListener('blur', clearInspectModifier)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', updateInspectModifier)
-  window.removeEventListener('keyup', updateInspectModifier)
-  window.removeEventListener('blur', clearInspectModifier)
-})
-
-const visibleSections = computed(() => {
-  const value = richContent.value
-  if (!value) return []
-  if (value.kind === 'equipment' && isInspectModifierHeld.value) {
-    return value.advancedSections ?? value.sections
-  }
-  return value.sections
-})
+// advancedSections is gone (item-info-card spec §3) — range/delta now
+// live on the rows themselves; the Alt-inspect mode is dead.
+const visibleSections = computed(() => richContent.value?.sections ?? [])
 
 // Cap density theo từng loại tooltip (mục 5 tooltip-revamp-plan.md) —
 // khớp với .tooltip/--rich/--detailed ở CSS bên dưới. size() chỉ
@@ -194,7 +169,6 @@ function hideBrokenImage(event: Event) {
             <p
               v-if="gradedContent.gradeLine"
               class="tooltip__meta"
-              :style="gradedContent.gradeLineColorVar ? { color: `var(${gradedContent.gradeLineColorVar})` } : undefined"
             >{{ gradedContent.gradeLine }}</p>
             <div class="tooltip__badges">
               <span
@@ -203,7 +177,7 @@ function hideBrokenImage(event: Event) {
                 :class="{ 'tooltip__badge--max-rank': isMaxPhamRank }"
                 :style="rarityAccentColor ? { color: rarityAccentColor } : undefined"
               >{{ gradedContent.gradeLabel }}</span>
-              <span v-if="gradedContent.ownedLabel" class="tooltip__badge tooltip__badge--muted">{{ gradedContent.ownedLabel }}</span>
+              <span v-if="(gradedContent.ownedCount ?? 0) > 0" class="tooltip__badge tooltip__badge--muted">{{ i18n.global.t('panels.bag.tooltip.owned', { count: gradedContent.ownedCount }) }}</span>
             </div>
           </div>
         </header>
@@ -218,7 +192,6 @@ function hideBrokenImage(event: Event) {
             <p
               v-if="content.gradeLine"
               class="tooltip__meta"
-              :style="content.gradeLineColorVar ? { color: `var(${content.gradeLineColorVar})` } : undefined"
             >{{ content.gradeLine }}</p>
             <div class="tooltip__badges">
               <span class="tooltip__badge">{{ content.slotLabel }}</span>

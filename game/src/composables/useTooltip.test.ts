@@ -32,4 +32,38 @@ describe('useTooltip owner lifecycle', () => {
     expect(tooltip.content.value).toEqual({ title: 'B' })
     expect(tooltip.reference.value).toBe(second)
   })
+
+  // Item-info-card payload contract (Tasks 3-4): the new fields round-
+  // trip through the queue untouched — slotPreview, single-color name,
+  // ownedCount, row range/delta.
+  it('chấp nhận payload contract mới (slotPreview/nameColorVar/ownedCount/range/delta)', () => {
+    vi.useFakeTimers()
+    const owner = document.createElement('button')
+    const tooltip = useTooltip()
+
+    tooltip.showTooltip(
+      {
+        kind: 'material',
+        name: 'Linh Thảo',
+        nameColorVar: '--rank-color-5',
+        slotPreview: {
+          icon: '/icons/herb.png',
+          label: 'Linh Thảo',
+          accessibleLabel: 'Linh Thảo, Luyện Khí',
+          rarityRank: 5,
+          rarityRankScale: 10,
+        },
+        gradeRank: 5,
+        ownedCount: 3,
+        sections: [{ label: 'Thông Tin', rows: [{ label: 'Loại', value: 'Thảo', range: '[1–2]', delta: '▲ +1', deltaTone: 'positive' }] }],
+      },
+      owner,
+    )
+
+    const shown = tooltip.content.value
+    expect(shown?.kind).toBe('material')
+    expect(shown).not.toHaveProperty('nameSegments')
+    expect(shown).not.toHaveProperty('ownedLabel')
+    expect(shown).not.toHaveProperty('gradeLineColorVar')
+  })
 })

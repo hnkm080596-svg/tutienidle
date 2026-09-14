@@ -11,6 +11,11 @@ export interface BagCell {
 
   label: string
 
+  // Accessible name override (item-info-card spec §5b) — "Name, Pham"
+  // so the grade is readable without color; SlotView binds it onto
+  // aria-label in place of `label`.
+  accessibleLabel?: string
+
   description?: string
 
   amount?: number

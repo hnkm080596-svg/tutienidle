@@ -6,12 +6,19 @@
 // notificationStore, không cần type này.
 export type NotificationKind = 'loot' | 'craft' | 'upgrade' | 'error' | 'warning' | 'save'
 
-import type { NameSegment } from '../item/NameSegment'
-
 export interface LootNotificationPresentation {
   icon?: string
 
-  nameSegments: NameSegment[]
+  // Composed display name, single color (item-info-card spec §2).
+  name: string
+
+  nameColorVar?: string
+
+  // 'tien' => rainbow (max-rank gradient).
+  nameTone?: string
+
+  // Muted "· Ngu Pham" suffix after the name.
+  gradeLabel?: string
 
   amountLabel?: string
 

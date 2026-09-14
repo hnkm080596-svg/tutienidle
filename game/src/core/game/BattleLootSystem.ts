@@ -24,7 +24,10 @@ import {
 } from '../reward/BattleRewardSummary'
 import { composeItemGradeNameSegments, type ItemGrade } from '../item/ItemGrade'
 import type { ItemQuality } from '../item/ItemQuality'
-import { composeEquipmentNameSegments } from '../equipment/EquipmentNaming'
+import { composeEquipmentDisplayName } from '../equipment/EquipmentNaming'
+import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
+import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
+import { gradeLabel } from '../presentation/labels'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import type { PlayerData } from '../player/Player'
 
@@ -468,7 +471,12 @@ export class BattleLootSystem {
 
       this.pushLootNotification(`+1 ${template.name}`, {
         icon: instance.icon ?? template.icon,
-        nameSegments: composeEquipmentNameSegments(instance, template, this.deps.zoneRegistry),
+        name: composeEquipmentDisplayName(instance, template, this.deps.zoneRegistry),
+        // Single-color name on the Chat ramp (spec §2): quality rank
+        // spread onto odd steps of the 10-step --rank-color scale.
+        nameColorVar: `--rank-color-${itemQualityRank(instance.quality) * 2 - 1}`,
+        nameTone: instance.quality === 'tien' ? 'tien' : undefined,
+        gradeLabel: gradeLabel(instance.grade),
         amountLabel: '+1',
         // Fix 2 follow-up (final review, optional minor) — dùng
         // --grade-${quality} thay vì tự tính lại rank-color-N (dup logic
@@ -510,9 +518,19 @@ export class BattleLootSystem {
               this.emitRewardParticle(sourceId, 'item', 0x6fbf73)
             }
 
+            // Material Pham axis = profession realm -> grade -> rank on
+            // the 10-step scale (same lookup MaterialBagSection uses);
+            // no profession meta => no name color / grade suffix.
+            const materialGrade = material.profession?.realmId
+              ? getProfessionGradeForRealm(material.profession.realmId)
+              : undefined
+            const materialRank = materialGrade ? professionGradeRank(materialGrade) : undefined
+
             this.pushLootNotification(`+${amount} ${material.name}`, {
               icon: material.icon,
-              nameSegments: [{ text: material.name }],
+              name: material.name,
+              nameColorVar: materialRank !== undefined ? `--rank-color-${materialRank}` : undefined,
+              gradeLabel: materialGrade ? gradeLabel(materialGrade) : undefined,
               amountLabel: `+${amount}`,
               accentColorVar: '--jade',
             })
@@ -535,7 +553,18 @@ export class BattleLootSystem {
 
             this.pushLootNotification(`+${amount} ${pill.name}`, {
               icon: pill.icon,
-              nameSegments: composeItemGradeNameSegments(pill.name, pill.grade),
+              // Full "{Chat} - {Name}" display name (spec §2); color =
+              // Pham ramp when the pill carries professionGrade, else
+              // the Chat --grade-* var. professionGrade is optional on
+              // Pill, so the grade suffix is gated on it.
+              name: composeItemGradeNameSegments(pill.name, pill.grade)
+                .map((segment) => segment.text)
+                .join(' '),
+              nameColorVar: pill.professionGrade
+                ? `--rank-color-${professionGradeRank(pill.professionGrade)}`
+                : `--grade-${pill.grade}`,
+              nameTone: pill.grade === 'tien' ? 'tien' : undefined,
+              gradeLabel: pill.professionGrade ? gradeLabel(pill.professionGrade) : undefined,
               amountLabel: `+${amount}`,
               accentColorVar: `--grade-${pill.grade}`,
             })
@@ -567,7 +596,7 @@ export class BattleLootSystem {
             this.emitRewardParticle(sourceId, 'item', 0xffd54f)
             this.pushLootNotification(`Học được: ${template.name}`, {
               icon: template.icon,
-              nameSegments: [{ text: template.name }],
+              name: template.name,
               amountLabel: 'Học được',
               accentColorVar: '--gold-500',
             })
@@ -586,7 +615,7 @@ export class BattleLootSystem {
         kind: 'warning',
         message,
         loot: {
-          nameSegments: [{ text: message }],
+          name: message,
           amountLabel: 'Túi đầy',
           accentColorVar: '--crimson',
         },
@@ -661,7 +690,7 @@ export class BattleLootSystem {
     }
 
     this.pushLootNotification(`Túi đầy — tự Hóa Luyện ${autoDissolved.length} món thành Tinh Hoa`, {
-      nameSegments: [{ text: 'Tự Hóa Luyện' }],
+      name: 'Tự Hóa Luyện',
       amountLabel: `-${autoDissolved.length}`,
       accentColorVar: '--jade',
     })

@@ -67,6 +67,13 @@ const entries = computed<EquipmentEntry[]>(() => {
 
     const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
 
+    // Compare context (item-info-card spec §4) — the equipped
+    // counterpart's template is resolved the same safe way as the
+    // candidate's; a registry miss just drops the compare pair.
+    const equippedTemplate = equippedComparison
+      ? gameManager.equipmentOps.getEquipmentTemplate(equippedComparison.itemId)
+      : undefined
+
     // Registry miss → hiển thị itemId thô thay vì chết cả màn hình
     // (pattern EquipmentHallPanel.vue:126 `template?.name ?? instance.itemId`).
     const displayName = template?.name ?? instance.itemId
@@ -128,7 +135,14 @@ const entries = computed<EquipmentEntry[]>(() => {
               gameManager.affixRegistry,
               instance.equipped ? gameManager.equipmentOps.getSlotState(instance.slot) : null,
               gameManager.zoneRegistry,
-              equippedComparison,
+              equippedComparison && equippedTemplate
+                ? {
+                    instance: equippedComparison,
+                    template: equippedTemplate,
+                    slotState: gameManager.equipmentOps.getSlotState(equippedComparison.slot),
+                    mainStatRangeQuote: gameManager.equipmentSystem.quoteMainStatRange(equippedComparison, gameManager.equipmentRegistry),
+                  }
+                : undefined,
               gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
             )
           : undefined,
@@ -246,5 +260,8 @@ watch(
 .bag-section__slot {
   width: 100%;
   aspect-ratio: 1 / 1;
+  /* Art lives on the SlotView `variant` prop (default `item` —
+     inventory art — here); consumers no longer override --slot-*
+     art vars directly. */
 }
 </style>
