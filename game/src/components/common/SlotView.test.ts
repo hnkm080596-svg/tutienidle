@@ -83,8 +83,9 @@ describe('SlotView — empty/filled + icon fallback', () => {
 })
 
 describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)', () => {
-  // Trục Phẩm hiện là con dấu góc (seal stamp) mang chữ phẩm Việt —
-  // thay lớp underlay trong suốt (item-info-card spec 2026-09-14).
+  // The Pham axis renders as a corner seal stamp carrying the
+  // Vietnamese grade ordinal (item-info-card spec 2026-09-14) -
+  // replaces the transparent underlay wash.
   it('Pham renders as a corner seal with the Vietnamese grade ordinal', () => {
     const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Kiếm', equipmentQualityRank: 5 })
     const seal = button.querySelector('.slot-view__seal')
