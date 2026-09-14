@@ -7,6 +7,7 @@ import {
   PROFESSION_GRADE_BY_REALM,
   PROFESSION_GRADE_NAMES,
   PROFESSION_GRADE_ORDER,
+  PROFESSION_GRADE_SEAL_ORDINALS,
   compareProfessionGrades,
   getProfessionGradeForRealm,
   getRealmIdForProfessionGrade,
@@ -75,5 +76,16 @@ describe('ProfessionGrade — mapping realm → phẩm nghề', () => {
     expect(Object.keys(PROFESSION_GRADE_NAMES)).toHaveLength(10)
     expect(PROFESSION_GRADE_NAMES.cuu_pham).toBe('Cửu Phẩm')
     expect(PROFESSION_GRADE_NAMES.tien_pham).toBe('Tiên Phẩm')
+  })
+})
+
+// Seal ordinals for the slot corner stamp (item-info-card spec
+// 2026-09-14): one ordinal per grade, index = rank - 1.
+describe('ProfessionGrade — seal ordinals', () => {
+  it('seal ordinals match PROFESSION_GRADE_NAMES order (Pham suffix stripped, uppercased)', () => {
+    PROFESSION_GRADE_ORDER.forEach((grade, index) => {
+      const expected = PROFESSION_GRADE_NAMES[grade].replace(' Phẩm', '').toUpperCase()
+      expect(PROFESSION_GRADE_SEAL_ORDINALS[index]).toBe(expected)
+    })
   })
 })
