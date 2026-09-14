@@ -161,16 +161,18 @@ export interface BuildingTooltipContent {
   isBuilt?: boolean
 }
 
-// Tooltip Ngũ Hành (2026-09-15 formation redesign) — hover vào
-// medallion hành hiện banner art riêng của hành đó làm nền
-// (banner-{element}.png trích từ sprite sheet), thay khung giấy
-// InkNineSlice mặc định. Text nằm trên lớp content riêng với inset
-// định sẵn trong vùng giấy của banner — không bị art đè.
+// Five Elements tooltip (2026-09-15 formation redesign) - hovering an
+// element medallion shows that element's own banner art as the
+// background (banner-{element}.png cut from the sprite sheet) instead
+// of the default InkNineSlice paper frame. Text sits on a separate
+// content layer with a fixed inset into the banner's clear paper zone
+// so the art never covers it.
 export interface ElementTooltipContent {
   kind: 'element'
 
-  // 'primordial' = Hỗn Nguyên (taiji tâm) — banner giấy trống trích từ
-  // đáy sheet 2, không phải hành nhưng dùng chung cơ chế banner.
+  // 'primordial' = Hon Nguyen (taiji center) - the blank paper banner
+  // cut from the base of sheet 2; not an element, but shares the same
+  // banner mechanism.
   element: ElementType | 'primordial'
 
   // Accessible name only — banner art already carries the element's

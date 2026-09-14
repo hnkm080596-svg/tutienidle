@@ -26,11 +26,12 @@ export function composeEquipmentNameSegments(
   ]
 }
 
-// Tên đầy đủ dạng CHUỖI PHẲNG (không màu) — dùng cho chỗ chỉ nhận
-// string, vd tiêu đề tooltip (useEquipmentTooltip.ts). Từ vật phẩm
-// KHÔNG còn tên riêng (2026-08-15) nên bản thân `template.name` một
-// mình (vd "Kiếm") không đủ mô tả — ghép đủ cả 2 segment mới đúng tên
-// hiển thị thật.
+// Flat-string form of the full composed name (no segments) - for
+// consumers that only take a string, e.g. the tooltip title
+// (useEquipmentTooltip.ts). Items no longer carry unique names
+// (2026-08-15), so `template.name` alone (e.g. "Kiem") is not
+// descriptive enough - both segments must be joined for the real
+// display name.
 export function composeEquipmentDisplayName(
   instance: EquipmentInstance,
   template: Equipment,

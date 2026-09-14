@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
-  composeItemQualityNameSegments,
   ITEM_QUALITY_LABELS,
   ITEM_QUALITY_ORDER,
+  ITEM_QUALITY_SHORT_LABELS,
 } from './ItemQuality'
 
 describe('ItemQuality contracts', () => {
@@ -21,10 +21,13 @@ describe('ItemQuality contracts', () => {
     expect(Object.values(ITEM_QUALITY_LABELS).every((label) => !label.includes('Phẩm'))).toBe(true)
   })
 
-  it('composes a quality name with the --grade-* namespace, distinct from the --rank-color-1..10 grade ramp (spec §5.8)', () => {
-    expect(composeItemQualityNameSegments('Thanh kiếm', 'thien')).toEqual([
-      { text: 'Thiên Chất', colorVar: '--grade-thien', tone: 'thien' },
-      { text: 'Thanh kiếm' },
+  it('short labels are the tier word only — used as the "Chat - Name" name prefix (2026-09-14 ruling)', () => {
+    expect(ITEM_QUALITY_ORDER.map((quality) => ITEM_QUALITY_SHORT_LABELS[quality])).toEqual([
+      'Hoàng',
+      'Huyền',
+      'Địa',
+      'Thiên',
+      'Tiên',
     ])
   })
 })
