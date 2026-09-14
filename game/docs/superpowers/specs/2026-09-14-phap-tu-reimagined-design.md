@@ -479,7 +479,7 @@ Thế Mãn nodes (The is spent, not a sustained state).
 |---|---|
 | Per-element The (Hoa/Kim/Tho The, Huyet Pha) + `SkillRuntimeStats` The fields (`hoaTheGainPerCast`, `kimThe*`, `huyetPha*`, `thoThe*`, `thuyThe*`, `poisonRoot*`, `earthAoe*`…) | retired — the fields already sit in `UNSUPPORTED_*_FIELDS`; remove from converter lists + runtime stats |
 | Element Loadout (`ElementLoadout`, `canEquipElement`, slot table) | retired — hien is mono-element, An is all-elements-by-random |
-| Chain POSITION machinery (`ChainStateSystem`, link/finisher gain rules, `setChainDefinition`) | retired — `CHAIN_SKILL_IDS` stays unchanged as slot data; only the link-position logic dies |
+| Chain POSITION machinery (`ChainStateSystem`, link/finisher gain rules, `setChainDefinition`) | retired — the per-element `[basic, special, ultimate]` table stays as slot data but is RENAMED `PHAP_TU_KIT_IDS` (chain concept dead, name must not imply otherwise); only the link-position logic dies |
 | `phap_tu_reaction_special`/`_ultimate` + `reaction_empowerment` buff + `compositePicks.poolType 'reaction_path'` | replaced by the An kit + `phap_tu` domain `reactionEffectPercent` |
 | `AdjacencySystem` stub / Da Phap adjacency | superseded by An |
 | `skillImpactPercent` (no consumer) | retired with the tree rework |
@@ -598,9 +598,23 @@ loadouts, unlock lists, or `skillCastCounts` seeds.
 
 - Route coefficient table (§4) is topology-fixed, numbers-tunable —
   balance pass owns final values; implementers do not invent new axes.
-- `Cong Minh`'s exact payoff (potency amp vs zone buff) is marked
-  tunable in §6 — pick the simpler readable effect first, expand only
-  if playtest wants more.
+- `Cong Minh` v1 is potency+duration amp only (user ruling — a zone or
+  self-buff is a different mechanic with different owner/state/VFX,
+  not a coefficient; anything richer needs its own spec).
+- The `dot` route's bonuses COMPOUND (chance×stacks×potency×duration,
+  then detonate spends the remainder) — `directMultiplier 0.85` alone
+  is probably not the full tradeoff. Balance methodology is pinned:
+  measure damage-per-action over 5/10/20-turn windows, never judge on
+  a single cast.
+- The hidden path must be DISCOVERABLE, not a wiki trap: no locked
+  card tease, but at least one in-game hint exists (NPC/lore/tutorial
+  line of the form "one who pushes Linh Bao to its limit before the
+  Initiation Ritual may see a road others cannot") — hidden, not
+  unadvertised-forever.
+- `CHAIN_SKILL_IDS` is renamed `PHAP_TU_KIT_IDS` in the kill-list
+  pass — the data stays `[basic, special, ultimate]` per element but
+  the chain CONCEPT is dead; keeping "CHAIN" in the name invites
+  future agents to design around a retired system.
 - `huy_quyen` ships data + cast-leveling now but unlocks nothing until
   the The Tu path exists — it is deliberately pre-seeded (P7) and must
   not gate anything yet.
