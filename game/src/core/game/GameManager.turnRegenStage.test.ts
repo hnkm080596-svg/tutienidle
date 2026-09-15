@@ -4,7 +4,7 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { asBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
-import { SKILLS } from '../../data/skill/Skills'
+import { SKILLS, PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
 import type { Stage } from '../stage/Stage'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { EntityVitalsChangedEvent } from '../combat/EntityVitalsSystem'
@@ -99,6 +99,11 @@ function buildHarness(element: 'water' | 'earth', playerSpeed: number): Harness 
   const specialId = element === 'water' ? 'thanh_tuyen_duong_linh' : 'dia_tru_thua_thien'
   const template = SKILLS.find((skill) => skill.id === specialId)!
   gameManager.skillManager.add({ ...template, unlocked: true })
+  // The committed element's basic is required at battle build (round-3
+  // fail-fast: missing required basic throws, no melee substitute).
+  expect(
+    gameManager.progressionOps.learnSkill(PHAP_TU_KIT_IDS[element][0]),
+  ).toBe(true)
 
   return {
     gameManager,

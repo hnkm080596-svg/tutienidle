@@ -6,6 +6,7 @@ import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClo
 import { isBattleInProgress } from '../battle/BattleTypes'
 import { defineEnemy } from '../enemy/Enemy'
 import { asBaseStats } from '../stats/StatBlock'
+import { SKILLS } from '../../data/skill/Skills'
 import type { Stage } from '../stage/Stage'
 import {
   aggregateNodeStatModifiers,
@@ -279,6 +280,11 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     expect(gameManager.progressionOps.switchRoute('no', player)).toBe(true)
     expect(player.phapTu.route).toBe('no')
 
+    // The committed element's basic must be learned — round-3 fail-fast
+    // throws when a required basic is missing.
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    expect(gameManager.progressionOps.learnSkill('hoa_cau_thuat')).toBe(true)
+
     gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('route_stage')!, false)
 
     expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
@@ -303,6 +309,10 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     ])
     gameManager.catalogOps.registerStages([stageFixture('route_stage', 'route_probe')])
     gameManager.setActivePlayer(player)
+
+    // Required basic for the committed element (round-3 fail-fast).
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    expect(gameManager.progressionOps.learnSkill('hoa_cau_thuat')).toBe(true)
 
     gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('route_stage')!, false)
 

@@ -284,6 +284,56 @@ describe('TurnReactionManager — Cong Minh (sinh pair rule)', () => {
 
     expect(dotDamage(pool, 'bong', 'src')).toBeCloseTo(baseDot * (1 + CONG_MINH_AMP), 5)
   })
+
+  it('does NOT contaminate the canonical BuffDefinition — runtime effects are detached from the registry', () => {
+    // Review round-3 (HIGH): non-dot effects were shared by reference
+    // into BUFF_REGISTRY, so scaleBuffPotency wrote -0.45/0.75 back into
+    // the canonical thach_hoa template — permanently poisoning every
+    // future instance in the session.
+    const { reactionManager, combatSystem } = makeHarness()
+    const source = createCombatant({ id: 'src', type: 'player' })
+    const target = createCombatant({ id: 'tgt', currentHp: 100_000, maxHp: 100_000 })
+
+    const canonicalEvasion = () =>
+      BUFF_REGISTRY.get('thach_hoa').effects.find(
+        (e) => e.type === 'statModifier' && e.stat === 'evasionRate',
+      )!
+    const canonicalProc = () =>
+      BUFF_REGISTRY.get('thach_hoa').effects.find((e) => e.type === 'onHitProc')!
+
+    const pool = new BuffPool()
+    const buffs = new BuffSystem(pool)
+    buffs.apply(BUFF_REGISTRY.get('bong'), source, target)
+    buffs.apply(BUFF_REGISTRY.get('thach_hoa'), source, target)
+    reactionManager.checkAndTrigger(pool, 'thach_hoa', source, target, combatSystem, BUFF_REGISTRY)
+
+    // Runtime instance amplified...
+    const child = pool.getFromSource('thach_hoa', 'src')!
+    expect(child.effects).toContainEqual(
+      expect.objectContaining({ type: 'statModifier', percent: -0.3 * (1 + CONG_MINH_AMP) }),
+    )
+    // ...but the canonical template must stay authored.
+    expect(canonicalEvasion()).toMatchObject({ percent: -0.3 })
+    expect(canonicalProc()).toMatchObject({ chance: 0.5 })
+
+    // A fresh instance starts from the AUTHORED values, not the
+    // amplified ones.
+    pool.removeInstance('thach_hoa', 'src')
+    buffs.apply(BUFF_REGISTRY.get('thach_hoa'), source, target)
+    const fresh = pool.getFromSource('thach_hoa', 'src')!
+    expect(fresh.effects).toContainEqual(
+      expect.objectContaining({ type: 'statModifier', percent: -0.3 }),
+    )
+    expect(fresh.effects).toContainEqual(
+      expect.objectContaining({ type: 'onHitProc', chance: 0.5 }),
+    )
+
+    // And that fresh instance consumes its own one-time amplification.
+    reactionManager.checkAndTrigger(pool, 'thach_hoa', source, target, combatSystem, BUFF_REGISTRY)
+    expect(fresh.effects).toContainEqual(
+      expect.objectContaining({ type: 'statModifier', percent: -0.3 * (1 + CONG_MINH_AMP) }),
+    )
+  })
 })
 
 describe('TurnReactionManager — two-phase order and dead-pair skip', () => {

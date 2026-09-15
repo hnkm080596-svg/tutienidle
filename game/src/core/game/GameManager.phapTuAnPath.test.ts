@@ -308,4 +308,33 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
 
     expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
   })
+
+  it('phap_tu: committed element but basic NOT learned → throws instead of generic melee', () => {
+    // Review round-3 (MEDIUM): converter rejection throws, but a MISSING
+    // required basic silently degraded to GENERIC_PHYSICAL_BASIC —
+    // stripping the path's kit. A committed element implies the basic
+    // was granted (selectPhapTuElement); absent = corrupt state.
+    const { gameManager, player } = phapTuPlayerReady()
+
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+  })
+
+  it('phap_tu_an: missing van_phap_tuy_tam → throws instead of generic melee', () => {
+    const { gameManager, player } = makeManager()
+    gameManager.setActivePlayer(player)
+    // Path state without the ritual grant — required kit skill absent.
+    player.cultivationPath = 'phap_tu_an'
+
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+  })
+
+  it('kiem_tu: missing tram still resolves its authored static basic (legitimate fallback)', () => {
+    const { gameManager, player } = makeManager()
+    gameManager.setActivePlayer(player)
+    player.cultivationPath = 'kiem_tu'
+
+    gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))
+
+    expect(gameManager.getTurnBattle()!.players[0]!.basic?.id).toBe('tram')
+  })
 })

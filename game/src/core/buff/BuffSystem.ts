@@ -92,7 +92,11 @@ export class BuffSystem {
           element: effect.element,
         }
       }
-      return effect
+      // Detach from the registry template — runtime mutations
+      // (scaleBuffPotency/Cong Minh) must never write back into the
+      // canonical BuffDefinition. All BuffEffectTemplate fields are
+      // primitives, so a shallow spread is a complete clone.
+      return { ...effect }
     })
 
     const resistMultiplier = 1 - Math.min(AILMENT_RESIST_CAP, Math.max(0, target.stats.ailmentResistPercent))
@@ -229,7 +233,7 @@ export class BuffSystem {
       convertsToId: nextDefinition.convertsToId,
       convertsAfterContinuousTurns: nextDefinition.convertsAfterContinuousTurns ?? nextDefinition.convertsAfterContinuousSeconds,
       effects: nextDefinition.effects.map((effect) =>
-        effect.type === 'dot' ? { ...effect, damagePerTurn: 0 } : effect,
+        effect.type === 'dot' ? { ...effect, damagePerTurn: 0 } : { ...effect },
       ),
     })
   }

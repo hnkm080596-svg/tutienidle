@@ -180,6 +180,8 @@ describe('ARCH-008 — authored buff duration rides appliesBuff.duration', () =>
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('thanh_tuyen_duong_linh')
     gameManager.progressionOps.selectSkillSpecialization('thanh_tuyen_duong_linh', 'duong_linh_tuyen')
+    // Required basic for the committed element (round-3 fail-fast).
+    gameManager.progressionOps.learnSkill('thuy_tien_thuat')
 
     gameManager.startBattleWithPlayer(player, makeDummyEnemy('parity_water'))
 
