@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import type { ProgressionNode } from './ProgressionNode'
 import { createDefaultPlayer } from '../player/Player'
 import { GameManager } from '../game/GameManager'
-import { ManualClockSource } from '../battle/turn/CombatClock'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
+import { isBattleInProgress } from '../battle/BattleTypes'
 import { defineEnemy } from '../enemy/Enemy'
 import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
@@ -281,6 +282,38 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('route_stage')!, false)
 
     expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
+    expect(player.phapTu.route).toBe('no')
+  })
+
+  it('allows switching after the battle reaches a terminal state', () => {
+    const gameManager = new GameManager()
+    const clock = new ManualClockSource()
+    gameManager.setCombatClockSource(clock)
+    const player = createDefaultPlayer()
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100, speed: 100 })
+    player.cultivationPath = 'phap_tu'
+    player.phapTu = { element: 'fire', route: 'dot' }
+
+    gameManager.catalogOps.registerEnemyTemplates([
+      defineEnemy({
+        id: 'route_probe', name: 'Probe', level: 1, realmId: 'mortal', lane: 'ground',
+        statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+        rewards: { techniqueInsight: 0, spiritStone: 0 },
+      }),
+    ])
+    gameManager.catalogOps.registerStages([stageFixture('route_stage', 'route_probe')])
+    gameManager.setActivePlayer(player)
+
+    gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('route_stage')!, false)
+
+    for (let i = 0; i < 4000 && isBattleInProgress(gameManager.getTurnBattle()?.state); i++) {
+      clock.advance(COMBAT_STEP_SECONDS)
+    }
+
+    // The TurnBattle object is retained after terminal state — the gate
+    // must look at battle state, not object existence.
+    expect(gameManager.getTurnBattle()?.state).toBe('victory')
+    expect(gameManager.progressionOps.switchRoute('no', player)).toBe(true)
     expect(player.phapTu.route).toBe('no')
   })
 

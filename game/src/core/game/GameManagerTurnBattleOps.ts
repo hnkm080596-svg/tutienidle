@@ -1,5 +1,6 @@
 import type { SessionRef } from '../presentation/PresentationSession'
 import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
+import { isBattleInProgress } from '../battle/BattleTypes'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import {
   TurnBattleSystem,
@@ -742,6 +743,16 @@ export class GameManagerTurnBattleOps {
 
   getTurnBattle(): TurnBattle | null {
     return this.turnBattle
+  }
+
+  /**
+   * Whether a turn battle is actively in progress (intro/countdown/
+   * fighting). The TurnBattle object is retained after victory/defeat so
+   * consumers can read the terminal result — callers that need an
+   * in-combat gate must use this query, not `getTurnBattle() !== null`.
+   */
+  isTurnBattleInProgress(): boolean {
+    return this.turnBattle !== null && isBattleInProgress(this.turnBattle.state)
   }
 
   /**

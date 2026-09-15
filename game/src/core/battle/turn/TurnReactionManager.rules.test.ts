@@ -229,6 +229,61 @@ describe('TurnReactionManager — Cong Minh (sinh pair rule)', () => {
     expect(child.remainingTurns).toBeCloseTo(beforeTurns * (1 + CONG_MINH_AMP), 5)
     expect(reactionEvents).toEqual([expect.objectContaining({ name: 'cong_minh', damage: 0 })])
   })
+
+  it('amps a child INSTANCE at most once — re-applying the parent must not compound potency or duration', () => {
+    // Review round-2 (MEDIUM): refresh/stack keep the same Buff instance,
+    // so a repeat sinh event would re-scale already-amplified effects
+    // (x1.5 -> x2.25 -> x3.375...). Rule: one Cong Minh amplification
+    // per ailment instance — potency AND duration consumed together.
+    const { reactionManager, combatSystem, reactionEvents } = makeHarness()
+    const source = createCombatant({ id: 'src', type: 'player' })
+    const target = createCombatant({ id: 'tgt', currentHp: 100_000, maxHp: 100_000 })
+
+    const pool = new BuffPool()
+    const buffs = new BuffSystem(pool)
+    buffs.apply(BUFF_REGISTRY.get('bong'), source, target) // fire incumbent
+    buffs.apply(BUFF_REGISTRY.get('trung_doc'), source, target) // wood newcomer
+
+    const baseDot = dotDamage(pool, 'bong', 'src')
+
+    reactionManager.checkAndTrigger(pool, 'trung_doc', source, target, combatSystem, BUFF_REGISTRY)
+
+    const ampedDot = dotDamage(pool, 'bong', 'src')
+    const ampedTurns = pool.getFromSource('bong', 'src')!.remainingTurns
+    expect(ampedDot).toBeCloseTo(baseDot * (1 + CONG_MINH_AMP), 5)
+
+    // Re-apply the wood parent — the SAME fire instance pairs again.
+    buffs.apply(BUFF_REGISTRY.get('trung_doc'), source, target)
+    reactionManager.checkAndTrigger(pool, 'trung_doc', source, target, combatSystem, BUFF_REGISTRY)
+
+    expect(dotDamage(pool, 'bong', 'src')).toBeCloseTo(ampedDot, 5)
+    expect(pool.getFromSource('bong', 'src')!.remainingTurns).toBeCloseTo(ampedTurns, 5)
+    // No phantom reaction — the event means "the child was amplified".
+    expect(reactionEvents).toHaveLength(1)
+  })
+
+  it('amps a NEW child instance again — the once-per-instance bound is not global', () => {
+    const { reactionManager, combatSystem } = makeHarness()
+    const source = createCombatant({ id: 'src', type: 'player' })
+    const target = createCombatant({ id: 'tgt', currentHp: 100_000, maxHp: 100_000 })
+
+    const pool = new BuffPool()
+    const buffs = new BuffSystem(pool)
+    buffs.apply(BUFF_REGISTRY.get('bong'), source, target)
+    buffs.apply(BUFF_REGISTRY.get('trung_doc'), source, target)
+    reactionManager.checkAndTrigger(pool, 'trung_doc', source, target, combatSystem, BUFF_REGISTRY)
+
+    // Fresh instance replaces the amplified one — it may consume its
+    // own one-time amplification.
+    pool.removeInstance('bong', 'src')
+    buffs.apply(BUFF_REGISTRY.get('bong'), source, target)
+    buffs.apply(BUFF_REGISTRY.get('trung_doc'), source, target)
+
+    const baseDot = dotDamage(pool, 'bong', 'src')
+    reactionManager.checkAndTrigger(pool, 'trung_doc', source, target, combatSystem, BUFF_REGISTRY)
+
+    expect(dotDamage(pool, 'bong', 'src')).toBeCloseTo(baseDot * (1 + CONG_MINH_AMP), 5)
+  })
 })
 
 describe('TurnReactionManager — two-phase order and dead-pair skip', () => {

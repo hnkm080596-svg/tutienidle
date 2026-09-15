@@ -136,6 +136,55 @@ describe('validateGameSaveShape — player', () => {
   })
 })
 
+describe('validateGameSaveShape — phapTu atomic (element ↔ route)', () => {
+  // Review round-2 (LOW): writers commit {element, route} atomically, so a
+  // half-set pair is corrupt. The validator must enforce the invariant,
+  // not just each field's type.
+  it.each([
+    [{ element: null, route: 'no' }],
+    [{ element: 'fire', route: null }],
+  ])('từ chối cặp lệch %j', (phapTu) => {
+    const save = validSave()
+
+    ;(save.player as Record<string, unknown>).cultivationPath = 'phap_tu'
+    ;(save.player as Record<string, unknown>).phapTu = phapTu
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.phapTu')
+  })
+
+  it('chấp nhận {null, null} và cặp hợp lệ trên phap_tu', () => {
+    for (const phapTu of [
+      { element: null, route: null },
+      { element: 'fire', route: 'dot' },
+    ]) {
+      const save = validSave()
+
+      ;(save.player as Record<string, unknown>).cultivationPath = 'phap_tu'
+      ;(save.player as Record<string, unknown>).phapTu = phapTu
+
+      expect(validateGameSaveShape(save).ok).toBe(true)
+    }
+  })
+
+  it.each([['phap_tu_an'], ['kiem_tu']])(
+    'từ chối route/element state trên %s — chỉ phap_tu thường sở hữu nó',
+    (path) => {
+      const save = validSave()
+
+      ;(save.player as Record<string, unknown>).cultivationPath = path
+      ;(save.player as Record<string, unknown>).phapTu = { element: 'fire', route: 'dot' }
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.phapTu')
+    },
+  )
+})
+
 describe('validateGameSaveShape — arrays bắt buộc', () => {
   it.each([
     'techniques',

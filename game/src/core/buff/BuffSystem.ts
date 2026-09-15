@@ -27,8 +27,19 @@ const AILMENT_RESIST_CAP = 0.75
  * clamp at 1. Sign is preserved — a debuff's -0.3 deepens to -0.45 at
  * x1.5, a buff's +0.3 strengthens to +0.45. Duration is NOT touched here
  * (callers own their own duration policy — Cong Minh amps it separately).
+ *
+ * Once per INSTANCE: the buff's potencyAmplified flag marks the consumed
+ * amplification — refresh/stack keep the instance, so without it repeat
+ * events compound (x1.5 -> x2.25 -> ...). Returns false when the instance
+ * was already amplified so callers can skip the rest of their amp path.
  */
-export function scaleBuffPotency(buff: Buff, factor: number): void {
+export function scaleBuffPotency(buff: Buff, factor: number): boolean {
+  if (buff.potencyAmplified) {
+    return false
+  }
+
+  buff.potencyAmplified = true
+
   for (const effect of buff.effects) {
     switch (effect.type) {
       case 'dot':
@@ -51,6 +62,8 @@ export function scaleBuffPotency(buff: Buff, factor: number): void {
         break
     }
   }
+
+  return true
 }
 
 

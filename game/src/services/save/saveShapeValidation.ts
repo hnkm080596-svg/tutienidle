@@ -216,6 +216,24 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     ) {
       issues.push({ path: 'player.phapTu.route', message: "phải là 'dot' | 'no' | null" })
     }
+
+    // Atomic-pair invariant: writers commit {element, route} together
+    // (selectPhapTuElement), so a half-set pair is always corrupt — and
+    // only ordinary phap_tu owns the state at all (phap_tu_an, kiem_tu,
+    // mortal must stay {null, null} or route stats leak cross-path).
+    const hasElement = player.phapTu.element !== null
+    const hasRoute = player.phapTu.route !== null
+    if (hasElement !== hasRoute) {
+      issues.push({
+        path: 'player.phapTu',
+        message: 'element và route phải cùng null hoặc cùng đã chọn (commit nguyên tử)',
+      })
+    } else if (hasElement && player.cultivationPath !== 'phap_tu') {
+      issues.push({
+        path: 'player.phapTu',
+        message: "element/route chỉ thuộc path 'phap_tu' thường",
+      })
+    }
   }
 
   // Talent v4 M2 (v61) — 5 field mới: ngân tu vi tràn (Hải Nạp), tầng

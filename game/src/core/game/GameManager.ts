@@ -529,7 +529,7 @@ export class GameManager {
       skillManager: this.skillManager,
       getActivePlayer: () => this.activePlayer,
       // Lazy read — turnBattleOps is constructed after progressionOps.
-      getTurnBattle: () => this.turnBattleOps?.getTurnBattle() ?? null,
+      isTurnBattleInProgress: () => this.turnBattleOps?.isTurnBattleInProgress() ?? false,
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({
@@ -848,11 +848,12 @@ export class GameManager {
    * components and ailments reach the real turn engine. Mirrors
    * resolvePlayerSpecialUltimate()'s path.
    *
-   * The static TurnBasicAttacks map remains the fallback when the authored
-   * basic isn't learned (phap_tu element not picked yet) or fails strict
-   * conversion. The basic slot is cadence-free by design (every-turn
-   * swing), so converted output is normalized to cooldownTurns 0 and no
-   * resource cost.
+   * Unlearned/missing authored basics degrade to GENERIC_PHYSICAL_BASIC —
+   * honest "no skill" melee. Converter REJECTION is different: phap_tu /
+   * phap_tu_an rethrow (authored-data defect must surface), while
+   * kiem_tu falls back to its authored static TurnSkillDefinition. The
+   * basic slot is cadence-free by design (every-turn swing), so converted
+   * output is normalized to cooldownTurns 0 and no resource cost.
    *
    * Mortal/pham_nhan players resolve to learned `tram` (auto-granted at
    * creation): the engine reports its casts as 'tram', which is what feeds
@@ -901,6 +902,17 @@ export class GameManager {
           resourceCost: undefined,
         }
       } catch (error) {
+        // Review round-2 (LOW): phap paths have no static fallback — the
+        // PHAP_TU_BASICS table was a second authority that drifted from
+        // authored skills. A converter rejection is an authored-data
+        // defect; fail loudly instead of silently running wrong gameplay.
+        if (
+          player.cultivationPath === 'phap_tu' ||
+          player.cultivationPath === 'phap_tu_an'
+        ) {
+          throw error
+        }
+
         console.warn(
           `[GameManager] basic "${skill.id}" rejected by strict converter — falling back to static build basic:`,
           error instanceof Error ? error.message : error,
@@ -910,14 +922,6 @@ export class GameManager {
 
     if (player.cultivationPath === 'kiem_tu') {
       return BASIC_ATTACKS_BY_BUILD.kiem_tu!
-    }
-
-    if (player.cultivationPath === 'phap_tu') {
-      const element = this.progressionOps.getPhapTuElement()
-
-      return element
-        ? (BASIC_ATTACKS_BY_BUILD[`phap_tu_${element}`] ?? GENERIC_PHYSICAL_BASIC)
-        : GENERIC_PHYSICAL_BASIC
     }
 
     return GENERIC_PHYSICAL_BASIC

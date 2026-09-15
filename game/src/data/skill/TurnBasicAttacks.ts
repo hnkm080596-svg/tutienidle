@@ -25,10 +25,17 @@ export const KIEM_TU_BASIC: TurnSkillDefinition = {
 // (ailmentChance): fire 0.5, water 0.5, wood 1.0, metal 0.4, earth 1.0.
 // These make elemental reactions (TurnReactionManager) reachable in real
 // turn-based combat.
+//
+// TEST FIXTURES ONLY — production Phap Tu basics resolve through the
+// canonical Skill -> TurnSkillDefinition converter (GameManager
+// resolvePlayerBasicAttack / resolveAnElementBasicPool); this static copy
+// is not an authority and must not re-enter a production path (it has no
+// authored manaScalingRatio/attributeScaling). doc_chuong mirrors the
+// authored shape: ailment-only, no direct damage.
 export const PHAP_TU_BASICS: Record<'fire' | 'water' | 'wood' | 'metal' | 'earth', TurnSkillDefinition> = {
   fire: { id: 'hoa_cau_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'fire', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'bong', chance: 0.5 } },
   water: { id: 'thuy_tien_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'water', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'te_cong', chance: 0.5 } },
-  wood: { id: 'doc_chuong', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'wood', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'trung_doc', chance: 1 } },
+  wood: { id: 'doc_chuong', cooldownTurns: 0, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'trung_doc', chance: 1 } },
   metal: { id: 'diem_kim_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'metal', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'chay_mau', chance: 0.4 } },
   earth: { id: 'tho_cau_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'earth', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'thach_hoa', chance: 1 } },
 }
@@ -43,11 +50,6 @@ export const GENERIC_PHYSICAL_BASIC: TurnSkillDefinition = {
 
 export const BASIC_ATTACKS_BY_BUILD: Record<string, TurnSkillDefinition> = {
   kiem_tu: KIEM_TU_BASIC,
-  phap_tu_fire: PHAP_TU_BASICS.fire,
-  phap_tu_water: PHAP_TU_BASICS.water,
-  phap_tu_wood: PHAP_TU_BASICS.wood,
-  phap_tu_metal: PHAP_TU_BASICS.metal,
-  phap_tu_earth: PHAP_TU_BASICS.earth,
   the_tu: GENERIC_PHYSICAL_BASIC,
   pham_nhan: GENERIC_PHYSICAL_BASIC,
 }
@@ -65,13 +67,12 @@ export const THUY_GIAP_LONG_WATER_SURGE: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
+// Builds whose basic is authored HERE as a static TurnSkillDefinition.
+// Phap Tu paths are deliberately absent: their basics convert from the
+// authored Skill at battle build (single authority — fail-fast on
+// converter rejection, no static substitute).
 export const REQUIRED_BUILD_IDS = [
   'kiem_tu',
-  'phap_tu_fire',
-  'phap_tu_water',
-  'phap_tu_wood',
-  'phap_tu_metal',
-  'phap_tu_earth',
   'the_tu',
   'pham_nhan',
 ] as const
