@@ -90,6 +90,7 @@ describe('switchRoute', () => {
   it('refunds 75% of actual paid and clears route-tagged levels', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
+    player.cultivationPath = 'phap_tu'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1')) // cost 2
@@ -109,6 +110,7 @@ describe('switchRoute', () => {
   it('switching A->B->A pays the tax twice', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
+    player.cultivationPath = 'phap_tu'
     player.phapTu = { element: 'fire', route: 'dot' }
     const start = player.skillInsight
 
@@ -126,6 +128,7 @@ describe('switchRoute', () => {
   it('untagged nodes keep their levels across a switch', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
+    player.cultivationPath = 'phap_tu'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('shared_1'))
@@ -140,6 +143,7 @@ describe('switchRoute', () => {
   it('respects nodeFreePurchaseRecord — waived insight is not refunded', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
+    player.cultivationPath = 'phap_tu'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1'))
@@ -155,6 +159,37 @@ describe('switchRoute', () => {
     expect(player.skillInsight).toBe(before)
     expect(player.nodeFreePurchaseRecord['dot_spec_1']).toBeUndefined()
   })
+
+  // Review fix (HIGH-2) — switchRoute is the ONLY remaining writer of
+  // phapTu.route (selectPhapTuElement already guards path + null
+  // fields). Without the same commitment gate here, a pre-commit call
+  // would stamp route onto {element: null}, permanently poisoning
+  // selectPhapTuElement — and a non-phap_tu player's dirty route state
+  // would leak universal route stats.
+  it('rejects when no element+route is committed — never writes route', () => {
+    const player = createDefaultPlayer()
+    player.cultivationPath = 'phap_tu'
+    player.phapTu = { element: null, route: null }
+
+    expect(switchRoute(player, registry, 'dot')).toBe(0)
+    expect(player.phapTu).toEqual({ element: null, route: null })
+  })
+
+  it('rejects a non-phap_tu player even with committed phapTu state', () => {
+    const player = createDefaultPlayer()
+    player.cultivationPath = 'phap_tu_an'
+    player.phapTu = { element: null, route: null }
+
+    expect(switchRoute(player, registry, 'dot')).toBe(0)
+    expect(player.phapTu.route).toBeNull()
+
+    // Dirty state that cannot exist via production writes must not be
+    // re-routed either.
+    player.cultivationPath = 'kiem_tu'
+    player.phapTu = { element: 'fire', route: 'dot' }
+    expect(switchRoute(player, registry, 'no')).toBe(0)
+    expect(player.phapTu.route).toBe('dot')
+  })
 })
 
 // Task 16 — the respec confirm dialog's "regain X, lose Y" numbers come
@@ -164,6 +199,7 @@ describe('previewRouteSwitch', () => {
   it('matches switchRoute refund and forfeited math exactly', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
+    player.cultivationPath = 'phap_tu'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1')) // cost 2
@@ -186,6 +222,7 @@ describe('previewRouteSwitch', () => {
   it('waived insight (nodeFreePurchaseRecord) is excluded from the preview', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
+    player.cultivationPath = 'phap_tu'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1'))
@@ -245,5 +282,22 @@ describe('GameManagerProgressionOps.switchRoute', () => {
 
     expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
     expect(player.phapTu.route).toBe('no')
+  })
+
+  it('rejects uncommitted / non-phap_tu players even out of combat', () => {
+    const gameManager = new GameManager()
+    const player = createDefaultPlayer()
+
+    // Path chosen but element+route not yet committed — there is no
+    // route to switch FROM; writing one would poison selectPhapTuElement.
+    player.cultivationPath = 'phap_tu'
+    player.phapTu = { element: null, route: null }
+    expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
+    expect(player.phapTu).toEqual({ element: null, route: null })
+
+    // Hidden path never owns ordinary route state.
+    player.cultivationPath = 'phap_tu_an'
+    expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
+    expect(player.phapTu).toEqual({ element: null, route: null })
   })
 })

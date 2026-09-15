@@ -62,6 +62,13 @@ export function toTurnBattleParticipant(
       buildId !== undefined && CULTIVATION_PATH_STAT_DOMAINS[buildId] !== undefined
         ? new Set<StatDomain>(CULTIVATION_PATH_STAT_DOMAINS[buildId])
         : undefined,
+    // Review fix (MED-3) — wuxing reaction initiation belongs to the
+    // phap_tu stat domain (phap_tu + phap_tu_an both map to it; spec §6:
+    // "the domain gate already permits" a future mixed-element hien).
+    // Companions/enemies pass no buildId -> false.
+    canInitiateWuxingReactions:
+      buildId !== undefined &&
+      (CULTIVATION_PATH_STAT_DOMAINS[buildId]?.includes('phap_tu') ?? false),
   }
 
   const special =

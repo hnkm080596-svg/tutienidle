@@ -316,6 +316,19 @@ export class GameManagerProgressionOps {
       return false
     }
 
+    // Review fix (HIGH-2): switching requires the atomic
+    // (element, route) commit on the normal phap_tu path — otherwise
+    // there is no committed route to switch FROM. The domain function
+    // enforces the same invariant; the op must not report success for
+    // a rejected write.
+    if (
+      player.cultivationPath !== 'phap_tu' ||
+      player.phapTu.element === null ||
+      player.phapTu.route === null
+    ) {
+      return false
+    }
+
     switchRouteSystem(player, this.deps.nodeRegistry, route)
 
     return true

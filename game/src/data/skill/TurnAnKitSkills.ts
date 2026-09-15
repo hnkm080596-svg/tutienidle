@@ -9,12 +9,15 @@
 // - ngo_dao_hon_don (dao passive, no button): `multicast` attached to the
 //   An basic — each basic execution may chain extra casts, depth-capped.
 //
-// The pool reuses PHAP_TU_BASICS — the pick lands the SAME payload a
-// phap_tu element basic would (spec S7: damage type + ailment from the
-// picked def).
+// The element pool is NOT authored here (review fix, HIGH-1): a static
+// duplicate of the five basics had already drifted from the authored
+// Skills (doc_chuong is ailment-only; the duplicate gave it a hit, and
+// no entry carried authored manaScalingRatio/attributeScaling).
+// GameManager builds the pool through the canonical
+// SkillSystem.getEffectiveSkill -> toTurnSkillDefinition pipeline and
+// injects it — one source of truth for "what a phap_tu basic does".
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
 import { MAX_MULTICAST } from '../../core/battle/turn/TurnSkillAction'
-import { PHAP_TU_BASICS } from './TurnBasicAttacks'
 
 /** Spec: da_phap_lien_tuyen fires the basic X times (X = 3 baseline). */
 export const AN_SPECIAL_FIRES = 3
@@ -22,28 +25,21 @@ export const AN_SPECIAL_FIRES = 3
 /** Spec: ngo_dao_hon_don multicast baseline 25%. */
 export const AN_MULTICAST_CHANCE = 0.25
 
-/** The uniform composite pool — all five element-basic payloads. */
-export const AN_ELEMENT_BASIC_POOL: readonly TurnSkillDefinition[] = [
-  PHAP_TU_BASICS.fire,
-  PHAP_TU_BASICS.water,
-  PHAP_TU_BASICS.wood,
-  PHAP_TU_BASICS.metal,
-  PHAP_TU_BASICS.earth,
-]
-
 /**
  * van_phap_tuy_tam — the composite pick that makes each cast land a
  * random element. `multicastOwned` = the player holds ngo_dao_hon_don
  * (granted at the ritual via innateSkillId): the dao passive expresses
- * as the `multicast` field on the basic def.
+ * as the `multicast` field on the basic def. `elementPool` is the
+ * GameManager-built canonical conversion of the five authored basics.
  */
 export function applyAnKitToBasic(
   def: TurnSkillDefinition,
   multicastOwned: boolean,
+  elementPool: readonly TurnSkillDefinition[],
 ): TurnSkillDefinition {
   return {
     ...def,
-    compositePicks: { poolType: 'element_basic', count: 1, pool: AN_ELEMENT_BASIC_POOL },
+    compositePicks: { poolType: 'element_basic', count: 1, pool: elementPool },
     ...(multicastOwned
       ? { multicast: { chance: AN_MULTICAST_CHANCE, maxExtraCasts: MAX_MULTICAST } }
       : {}),
@@ -55,10 +51,13 @@ export function applyAnKitToBasic(
  * the EXTRA executions after the original: AN_SPECIAL_FIRES - 1 repeats
  * + the original = exactly AN_SPECIAL_FIRES fires per cast.
  */
-export function applyAnKitToSpecial(def: TurnSkillDefinition): TurnSkillDefinition {
+export function applyAnKitToSpecial(
+  def: TurnSkillDefinition,
+  elementPool: readonly TurnSkillDefinition[],
+): TurnSkillDefinition {
   return {
     ...def,
-    compositePicks: { poolType: 'element_basic', count: 1, pool: AN_ELEMENT_BASIC_POOL },
+    compositePicks: { poolType: 'element_basic', count: 1, pool: elementPool },
     repeatCasts: AN_SPECIAL_FIRES - 1,
   }
 }

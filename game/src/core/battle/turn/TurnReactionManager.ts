@@ -22,6 +22,7 @@
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { CombatSystem } from '../../combat/CombatSystem'
 import type { BuffPool } from '../../buff/BuffPool'
+import { scaleBuffPotency } from '../../buff/BuffSystem'
 import type { Buff, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { ElementType } from '../../element/ElementType'
 import type { EventBus } from '../../events/EventBus'
@@ -101,11 +102,11 @@ export class TurnReactionManager {
       const child =
         sinhBeneficiary(newcomerElement, element) === newcomerElement ? newcomer : incumbent
 
-      for (const effect of child.effects) {
-        if (effect.type !== 'dot') continue
-        if (effect.damagePerTurn !== undefined) effect.damagePerTurn *= 1 + CONG_MINH_AMP
-        if (effect.damagePerSecond !== undefined) effect.damagePerSecond *= 1 + CONG_MINH_AMP
-      }
+      // Review fix (MED-4) — "potency" is every numeric magnitude
+      // carrier on the child (buff-domain primitive), not only DoT
+      // fields: a non-DoT child like Thach Hoa (statModifier +
+      // onHitProc) now gains real potency, not just duration.
+      scaleBuffPotency(child, 1 + CONG_MINH_AMP)
       child.remainingTurns *= 1 + CONG_MINH_AMP
       if (child.remainingTime !== undefined) child.remainingTime *= 1 + CONG_MINH_AMP
 

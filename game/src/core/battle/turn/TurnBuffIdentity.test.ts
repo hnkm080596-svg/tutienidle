@@ -221,7 +221,7 @@ describe('ARCH-009 (M9) — target-scoped CC queries', () => {
 })
 
 describe('ARCH-009 (M9) — reaction consumes the exact matched ingredient instances (AUD-C08)', () => {
-  it('engine path: player fire basic + companion water basic x2 — bong is consumed once and cannot feed a second reaction', () => {
+  it('engine path: flagged player + companion water — companion cannot initiate, player water consumes bong exactly once', () => {
     const eventBus = new EventBus()
     const { system } = makeEngine(eventBus)
 
@@ -233,7 +233,11 @@ describe('ARCH-009 (M9) — reaction consumes the exact matched ingredient insta
       stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
+    // Review fix (MED-3): reaction initiation is the phap_tu-domain
+    // capability flag. The player's fixture carries it (adapter stamps
+    // it from CULTIVATION_PATH_STAT_DOMAINS); the companion does not.
     const player = makeParticipant('player', playerEntity, 10, 0, PHAP_TU_BASICS.fire)
+    player.canInitiateWuxingReactions = true
     const companion = makeParticipant('companion', companionEntity, 10, 1, PHAP_TU_BASICS.water)
     const enemy = makeParticipant('enemy', enemyEntity, 10, 2)
 
@@ -254,19 +258,30 @@ describe('ARCH-009 (M9) — reaction consumes the exact matched ingredient insta
     system.resolveActorTurn(battle, player)
     expect(enemy.buffs.getFromSource('bong', 'player')).toBeDefined()
 
-    // Companion lands thuy_tien_thuat: te_cong applies, Boc Hoi fires and
-    // consumes BOTH ingredients — the player's bong by its real sourceId.
+    // Companion lands thuy_tien_thuat: te_cong applies but CANNOT
+    // initiate — player-side membership alone no longer fires Boc Hoi.
     system.resolveActorTurn(battle, companion)
+    expect(reactionEvents).toHaveLength(0)
+    expect(enemy.buffs.getFromSource('te_cong', 'companion')).toBeDefined()
+    expect(enemy.buffs.getFromSource('bong', 'player')).toBeDefined()
+
+    // Player lands a water hit: the flagged newcomer's te_cong pairs
+    // with the incumbent bong — Boc Hoi consumes the incumbent bong AND
+    // the newcomer instance itself (companion's te_cong, applied first,
+    // is not an ingredient of this pair and stays).
+    player.basic = PHAP_TU_BASICS.water
+    system.resolveActorTurn(battle, player)
     expect(reactionEvents).toHaveLength(1)
     expect(enemy.buffs.getFromSource('bong', 'player')).toBeUndefined()
-    expect(enemy.buffs.getFromSource('te_cong', 'companion')).toBeUndefined()
+    expect(enemy.buffs.getFromSource('te_cong', 'player')).toBeUndefined()
+    expect(enemy.buffs.getFromSource('te_cong', 'companion')).toBeDefined()
 
-    // Companion lands a SECOND water hit: te_cong reapplies but there is
+    // Player lands a SECOND water hit: te_cong reapplies but there is
     // no bong left — the old bug replayed the reaction off the player's
     // lingering bong instance.
-    system.resolveActorTurn(battle, companion)
+    system.resolveActorTurn(battle, player)
     expect(reactionEvents).toHaveLength(1)
-    expect(enemy.buffs.getFromSource('te_cong', 'companion')).toBeDefined()
+    expect(enemy.buffs.getFromSource('te_cong', 'player')).toBeDefined()
     expect(new BuffSystem(enemy.buffs).getActiveIds()).toEqual(['te_cong'])
   })
 

@@ -110,6 +110,15 @@ export interface TurnBattleParticipant {
    * entity gaining attunement mid-battle never emits phap_tu MP deltas.
    */
   activeDomains?: ReadonlySet<StatDomain>
+  /**
+   * Review fix (MED-3) — wuxing reaction INITIATION is an explicit
+   * capability, not player-side membership: stamped by the adapter for
+   * participants owning the phap_tu stat domain (spec §6/D21 — the
+   * domain gate is what permits a future mixed-element hien route).
+   * Companions/enemies/non-phap_tu players never carry it; their
+   * ailments still participate as incumbents.
+   */
+  canInitiateWuxingReactions?: boolean
   /** Future Systems Task 7 — charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */
   chargingTurnsRemaining?: number
   pendingChargedSkillId?: string
@@ -1200,10 +1209,12 @@ export class TurnBattleSystem {
       return { targetIds }
     }
 
-    // Task 12 (spec §6, INV-8/D21) — only PLAYER-SIDE ailment
-    // applications may INITIATE reaction resolution; enemy ailments
-    // participate as incumbents but never trigger.
-    const actorInitiatesReactions = battle.players.includes(actor)
+    // Task 12 (spec §6, INV-8/D21) + review fix (MED-3) — only
+    // phap_tu-domain participants may INITIATE reaction resolution.
+    // Player-side membership is NOT the authority: companions and
+    // non-phap_tu players share the players array but cannot trigger;
+    // enemy ailments participate as incumbents but never initiate.
+    const actorInitiatesReactions = actor.canInitiateWuxingReactions === true
 
     // Charge-resolve turn: hits apply từ chargedSkill capture tại declare
     // (pendingChargedSkillId đã clear ở declare — đọc declared.chargedSkill).

@@ -208,6 +208,13 @@ export function applyRouteToTurnSkill(turnSkill: TurnSkillDefinition, profile: R
  * enter getLiveBattleModifiers().
  */
 export function getRouteStatModifiers(player: PlayerData): StatModifier[] {
+  // Review fix (HIGH-2): route bonuses are universal stats — gate on the
+  // owning path so leaked/dirty phapTu.route state on phap_tu_an or
+  // kiem_tu players cannot inject crit/ailment modifiers.
+  if (player.cultivationPath !== 'phap_tu') {
+    return []
+  }
+
   return resolveRouteProfile(player.phapTu).statModifiers
 }
 

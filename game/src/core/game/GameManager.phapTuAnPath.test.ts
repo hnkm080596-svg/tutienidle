@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GameManager } from './GameManager'
+import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { getOfferableCultivationPaths } from '../player/CultivationPathSystem'
 import { SKILLS } from '../../data/skill/Skills'
@@ -8,6 +8,8 @@ import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { CULTIVATION_PATH_STAT_DOMAINS } from '../stats/StatDomain'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
+import { defineEnemy } from '../enemy/Enemy'
 
 // Phap Tu Reimagined (Task 7) — phap_tu_an is a first-class
 // CultivationPathId offered ONLY inside the initiation ritual, gated by
@@ -108,5 +110,149 @@ describe('phap_tu_an — ritual offer gate', () => {
     // Kit statModifiers are domain:'phap_tu' — the path must claim that
     // domain or every gated stat (maxMp/manaShieldPercent/...) rejects.
     expect(CULTIVATION_PATH_STAT_DOMAINS['phap_tu_an']).toContain('phap_tu')
+  })
+})
+
+// P14 review fix (HIGH-1 + integration gap) — the An composite pool must
+// be the CANONICAL Skill -> TurnSkillDefinition conversion of the five
+// authored basics, not a hand-duplicated static table. The static pool
+// had already drifted: authored doc_chuong is ailment-only (0 direct
+// damage) while the duplicate gave wood an elemental hit, and none of
+// the five carried authored manaScalingRatio/attributeScaling. These
+// tests drive the REAL production path — ritual -> startBattleWithPlayer
+// -> resolved participant — the same chain the browser pass crashed on.
+describe('phap_tu_an — battle build resolves the canonical element pool', () => {
+  function anPlayerReady() {
+    const { gameManager, player } = makeManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    gameManager.setActivePlayer(player)
+    player.skillCastCounts = { linh_bao: LING_BAO_L3 }
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(true)
+    return { gameManager, player, combatSource }
+  }
+
+  function spawnDummy(gameManager: GameManager) {
+    const enemy = defineEnemy({
+      id: 'an_dummy',
+      name: 'An Dummy',
+      level: 1,
+      realmId: 'mortal',
+      lane: 'ground',
+      statsInput: {
+        maxHp: 1_000_000,
+        might: 0,
+        attackSpeed: 1,
+        criticalRate: 0,
+        criticalDamage: 1.5,
+        armor: 0,
+        evasionRate: 0, // deterministic hits — see actionPlayback harness note
+      },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
+    })
+    return enemy
+  }
+
+  it('basic composite pool = authored basics through the canonical converter (wood deals NO direct damage)', () => {
+    const { gameManager, player } = anPlayerReady()
+
+    gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))
+
+    const pool = gameManager.getTurnBattle()!.players[0]!.basic!.compositePicks!.pool
+
+    // Five authored basics, converted — ids are the authored skill ids.
+    expect(pool.map((entry) => entry.id).sort()).toEqual(
+      ['diem_kim_thuat', 'doc_chuong', 'hoa_cau_thuat', 'tho_cau_thuat', 'thuy_tien_thuat'].sort(),
+    )
+
+    // The drift bug: authored doc_chuong is 0 direct damage + guaranteed
+    // Trung Doc. The converted pool entry must carry no damage payload.
+    const wood = pool.find((entry) => entry.id === 'doc_chuong')!
+    expect(wood.damage).toBeUndefined()
+    expect(wood.appliesAilment?.buffDefinitionId ?? wood.appliesAilments?.[0]?.buffDefinitionId).toBe(
+      'trung_doc',
+    )
+
+    // Authored scaling survives conversion — hoa_cau_thuat carries
+    // manaScalingRatio + attunement attributeScaling.
+    const fire = pool.find((entry) => entry.id === 'hoa_cau_thuat')!
+    expect(fire.damage?.scaling?.manaScalingRatio).toBe(0.001)
+    expect(fire.damage?.scaling?.attributeScaling).toEqual([
+      { attributes: ['attunement'], ratioPerPoint: 0.004 },
+    ])
+  })
+
+  it('special composite pool uses the same canonical basics (repeatCasts preserved)', () => {
+    const { gameManager, player } = anPlayerReady()
+
+    gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))
+
+    const special = gameManager.getTurnBattle()!.players[0]!.special!.skill
+    expect(special.id).toBe('da_phap_lien_tuyen')
+    expect(special.repeatCasts).toBe(2)
+    expect(special.compositePicks!.pool.map((entry) => entry.id)).toContain('doc_chuong')
+  })
+
+  it('a real An battle progresses past startup and lands the picked payloads', () => {
+    const { gameManager, player, combatSource } = anPlayerReady()
+
+    gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))
+
+    // intro + countdown to fighting, then let turns resolve.
+    for (let i = 0; i < INTRO_TOTAL_TICKS + 30 + 300; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+    }
+
+    const battle = gameManager.getTurnBattle()!
+    expect(battle.state === 'fighting' || battle.state === 'victory').toBe(true)
+    expect(battle.totalTurnsElapsed ?? 0).toBeGreaterThan(0)
+
+    // Every pick produces a visible effect: fire/water/metal/earth carry
+    // authored damage, wood always applies trung_doc (chance 1).
+    const enemy = battle.enemies[0]!.entity
+    const tookDamage = enemy.currentHp < enemy.maxHp
+    const hasAilments = battle.enemies[0]!.buffs.getAll().length > 0
+    expect(tookDamage || hasAilments).toBe(true)
+  })
+
+  it('full production path: ritual -> startStage -> wave spawn -> resolved actions (review QA gap)', () => {
+    // The browser pass crashed exactly here: unit tests built battles
+    // directly, so the chooseCultivationPath -> stage -> spawn ->
+    // composite-resolution chain was never exercised headlessly.
+    const { gameManager, player, combatSource } = anPlayerReady()
+
+    gameManager.catalogOps.registerEnemyTemplates([spawnDummy(gameManager)])
+    gameManager.catalogOps.registerStages([
+      {
+        id: 'an_stage',
+        name: 'An Stage',
+        description: '',
+        floor: 1,
+        enemyPool: [{ enemyId: 'an_dummy', weight: 1 }],
+        totalEnemyCount: 1,
+        waves: [1],
+        spawnIntervalSeconds: 0,
+      },
+    ])
+
+    const stage = gameManager.catalogOps.getStage('an_stage')!
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
+
+    // intro + countdown + spawn telegraph + several resolved turns.
+    for (let i = 0; i < INTRO_TOTAL_TICKS + 300 + 600; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+    }
+
+    const battle = gameManager.getTurnBattle()!
+    expect(battle.state === 'fighting' || battle.state === 'victory').toBe(true)
+    expect(battle.totalTurnsElapsed ?? 0).toBeGreaterThan(0)
+
+    // The participant was built through the REAL adapter chain —
+    // canonical composite pool, repeatCasts, and the phap_tu-domain
+    // reaction capability all stamped by production code.
+    const participant = battle.players[0]!
+    expect(participant.basic?.compositePicks?.pool).toHaveLength(5)
+    expect(participant.special?.skill.repeatCasts).toBe(2)
+    expect(participant.canInitiateWuxingReactions).toBe(true)
   })
 })
