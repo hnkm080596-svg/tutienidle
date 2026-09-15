@@ -152,7 +152,7 @@ import type {
   FreezeReason,
 } from '../battle/turn/CombatClock'
 import type { TokenState } from '../battle/turn/TurnToken'
-import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
+import type { TurnSkillDefinition, ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE } from '../../data/skill/TurnReactionPathSkills'
@@ -1140,8 +1140,8 @@ export class GameManager {
    * UI submit choice cho lượt đang pause. Trả false nếu không có pause
    * (no-op an toàn — choice bị bỏ, không crash).
    */
-  submitTurnChoice(role: TurnSkillSlotRole): boolean {
-    return this.turnBattleOps.submitTurnChoice(role)
+  submitTurnChoice(choice: ForcedTurnChoice): boolean {
+    return this.turnBattleOps.submitTurnChoice(choice)
   }
 
   /**

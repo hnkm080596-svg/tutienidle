@@ -18,7 +18,7 @@ import { TurnPipeline } from '../battle/turn/TurnPipeline'
 export type { ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
 import { BuffSystem } from '../buff/BuffSystem'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
-import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
+import type { TurnSkillDefinition, ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
 import {
   diffAndEmitTurnStatusVfx,
@@ -1050,6 +1050,13 @@ export class GameManagerTurnBattleOps {
     this.rewardOps.resetRewardState()
     this.presentationOps.runtime.resetPendingState()
 
+    // Kiem Tu Reimagined Task 2 — auto-repeat reuses player participants,
+    // so battle-scoped provider state (Kiem Pho cursor/cast log) must be
+    // reset explicitly or it leaks into the next cycle.
+    for (const participant of previous.players) {
+      participant.dynamicBasic?.resetForBattle?.()
+    }
+
     this.turnBattle = {
       players: previous.players,
       enemies: [],
@@ -1354,9 +1361,9 @@ export class GameManagerTurnBattleOps {
    * pipeline an auto turn does, starting at the impact step because the ready
    * and cast phases have just happened.
    */
-  submitTurnChoice(role: TurnSkillSlotRole): boolean {
+  submitTurnChoice(choice: ForcedTurnChoice): boolean {
     const actor = this.presentationOps.runtime.getAwaitedManualActor()
-    const accepted = this.presentationOps.runtime.submitTurnChoice(role)
+    const accepted = this.presentationOps.runtime.submitTurnChoice(choice)
 
     if (!accepted || !actor) {
       return accepted

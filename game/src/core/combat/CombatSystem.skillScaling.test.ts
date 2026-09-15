@@ -75,14 +75,14 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
     })
     const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: createBaseStats({ evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 }) })
 
-    const withoutScaling = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const withoutScaling = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
     const target2 = createCombatant({ id: 'target2', currentHp: 100000, maxHp: 100000, stats: createBaseStats({ evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 }) })
     const withScaling = combat.resolveActionHit(
       source,
       target2,
       { kind: 'physical', multiplier: 1, scaling: { attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }] } },
-      false,
+      { critical: false },
     )
 
     // ratioPerPoint 0.004 × attunement 50 = 0.2 bonus multiplier.
@@ -103,7 +103,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
       source,
       target,
       { kind: 'physical', multiplier: 1, scaling: { manaScalingRatio: 0.001 } },
-      false,
+      { critical: false },
     )
 
     // baseDamage 100 × (1 + 0.001×200) = 120.
@@ -125,7 +125,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
       source,
       target,
       { kind: 'physical', multiplier: 1, scaling: { swordIntentDamageRatio: 0.0002 } },
-      false,
+      { critical: false },
     )
 
     // baseDamage 100 × (1 + 0.0002×500) = 110.
@@ -142,7 +142,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
     })
     const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: createBaseStats({ evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 }) })
 
-    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
     // baseDamage 100 × (1 + 0.5) = 150.
     expect(result.finalDamage).toBeCloseTo(150, 5)

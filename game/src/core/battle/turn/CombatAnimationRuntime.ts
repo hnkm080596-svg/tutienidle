@@ -1,5 +1,5 @@
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant, type TurnDeclaredAction } from './TurnBattleSystem'
-import type { TurnSkillSlotRole } from './TurnSkillAction'
+import type { ForcedTurnChoice } from './TurnSkillAction'
 import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandbyComplete } from './TurnActionPresentationEvents'
 import type { EventBus } from '../../events/EventBus'
 import type { CombatAnimationName } from '../CombatAnimationTypes'
@@ -324,7 +324,7 @@ export class CombatAnimationRuntime {
    * UI submit choice cho lượt đang pause. Trả false nếu không có pause
    * (no-op an toàn — choice bị bỏ, không crash).
    */
-  submitTurnChoice(role: TurnSkillSlotRole): boolean {
+  submitTurnChoice(choice: ForcedTurnChoice): boolean {
     if (this.deps.isSessionBlocking?.()) {
       return false
     }
@@ -343,7 +343,7 @@ export class CombatAnimationRuntime {
     // itself when no renderer is attached, so a manual turn takes exactly the
     // same path as an auto one from here on. Resolving inline would give
     // turn-end a second owner, which is the defect the turn spec removes.
-    const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor, role)
+    const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor, choice)
     this.pendingDeclaredAction = { actor, declared }
 
     emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))

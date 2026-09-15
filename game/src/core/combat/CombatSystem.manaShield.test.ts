@@ -48,7 +48,7 @@ describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
     const source = createCombatant({ id: 'source', type: 'player', stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 100 }) })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000, currentMp: 500 })
 
-    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
     expect(result.manaShieldAbsorbed).toBe(0)
     expect(target.currentMp).toBe(500)
@@ -64,7 +64,7 @@ describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
     const targetStats = createBaseStats({ evasionRate: 0, dexterity: 0, manaShieldPercent: 0.5, maxMp: 500 })
     const target = createCombatant({ id: 'target', stats: targetStats, currentHp: 1000, maxHp: 1000, currentMp: 500 })
 
-    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
     const expectedManaShield = result.finalDamage * 0.5
 
@@ -84,7 +84,7 @@ describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
     // manaShieldPercent=100%.
     const target = createCombatant({ id: 'target', stats: targetStats, currentHp: 1000, maxHp: 1000, currentMp: 10 })
 
-    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
     // Chỉ che được đúng bằng lượng mana đang có, không hơn.
     expect(result.manaShieldAbsorbed).toBe(10)
@@ -108,7 +108,7 @@ describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
       currentWard: 1000,
     })
 
-    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
     // Ward thừa sức che HẾT đòn này -> không còn gì cho Mana Shield xử lý.
     expect(result.wardAbsorbed).toBe(result.finalDamage)

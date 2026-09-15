@@ -57,6 +57,29 @@ export interface HitResolveOptions {
 
   /** Bản Mệnh Pháp Bảo — attribution cho applyActionHit dispatch milestone. */
   origin?: CombatActionOrigin
+
+  /**
+   * Kiem Tu Reimagined Task 2 — skip the accuracy/evasion roll entirely.
+   * Domain providers (e.g. Ngu Kiem Dao phi kiem) decide this; the engine
+   * only executes the flag.
+   */
+  guaranteedHit?: boolean
+
+  /**
+   * Resolved armor policy for PHYSICAL hits — the caller has already made
+   * its roll; the calculator only executes it. `armorBypass` drops the
+   * mitigation term to 0; `armorPierceFraction` (0..1) multiplies the
+   * mitigation down by that fraction. Ignored for elemental/primordial
+   * (no armor term exists there).
+   */
+  armorBypass?: boolean
+  armorPierceFraction?: number
+
+  /**
+   * Resolved per-hit damage scale (e.g. execute threshold roll result),
+   * multiplied into the skill multiplier before crit.
+   */
+  damageMultiplier?: number
 }
 
 export type ResolveOneHitFn = (

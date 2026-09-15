@@ -30,12 +30,15 @@ export function calculateBaseDamage(
   target: CombatEntity,
   damageType: 'physical' | 'primordial',
   ignoreResistance = false,
+  armorPierceFraction = 0,
 ): number {
   switch (damageType) {
     case 'physical': {
       const raw = source.stats.might
 
-      const mitigation = ignoreResistance ? 0 : getArmorMitigationPercent(target.stats.defense, target.realmIndex)
+      const mitigation = ignoreResistance
+        ? 0
+        : getArmorMitigationPercent(target.stats.defense, target.realmIndex) * (1 - armorPierceFraction)
 
       return Math.max(0, raw * (1 - mitigation))
     }

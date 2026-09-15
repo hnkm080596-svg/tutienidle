@@ -4,9 +4,9 @@
 // existing ActionGauge.ts/TurnQueue.ts one-concern-per-file pattern.
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { SkillResourceType } from '../../skill/SkillTypes'
-import type { ActionDamageInfo } from '../ActionImpactSystem'
+import type { ActionDamageInfo, HitResolveOptions } from '../ActionImpactSystem'
 import type { ActionTargeting, CombatVfxPresetId } from '../CombatAction'
-import type { TurnBattleParticipant } from './TurnBattleSystem'
+import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 import { areaFor } from '../ActionTargetingSystem'
 import { entityGridPosition, type GridPosition } from '../BattleGrid'
 import { isCellInShape, type AoeShapeSpec } from './AoeShape'
@@ -85,7 +85,65 @@ export interface TurnSkillDefinition {
   counterable?: boolean
   /** Spec §7.1 — which skill this actor counters with. Defaults to null. */
   counterSkillId?: string | null
+  /**
+   * Kiem Tu Reimagined Task 2 — multi-instance hit contract (Ngu Kiem Dao
+   * phi kiem). The turn engine resolves `count` INDEPENDENT landed-hit
+   * pipelines per target through resolveDeclaredHit, stopping early when
+   * the target dies. `perInstanceOptions` is called per (instance, live
+   * target) so the provider can resolve execute/crit/armor rolls against
+   * the CURRENT target state (not a declare-time snapshot).
+   */
+  instances?: {
+    count: number
+    perInstanceOptions?: (instanceIndex: number, target: CombatEntity) => Partial<HitResolveOptions>
+  }
 }
+
+/**
+ * Kiem Tu Reimagined Task 2 — post-resolution context handed to a
+ * participant's dynamicBasic provider once the action's own hits have
+ * landed. `resolvedSkillId` is the id of the definition that actually
+ * executed (Hien: the OrbId of the cast orb) — never inferred from
+ * provider closure state. `resolveBuff` is the generic channel combo
+ * `appliesBuff` content routes through; the provider returns extra hit
+ * definitions the engine executes as additive declared impacts.
+ */
+export interface DynamicBasicCastContext {
+  battle: TurnBattle
+  actor: TurnBattleParticipant
+  resolvedSkillId: string
+  landedTargetIds: string[]
+  resolveBuff: (target: TurnBattleParticipant, buff: { definitionId: string; duration?: number }) => void
+}
+
+/**
+ * Path-specific basic-attack owner (Kiem Pho preset loop / Ngự Kiem Dao).
+ * Attached to TurnBattleParticipant.dynamicBasic; when present it OWNS
+ * the basic slot — participant.basic becomes inert.
+ */
+export interface DynamicBasicProvider {
+  /** Auto path — resolves the definition for the next auto basic cast. */
+  resolveBasic(participant: TurnBattleParticipant): TurnSkillDefinition
+  /** Definitions the manual UI may legitimately submit. */
+  manualOptions?(): readonly TurnSkillDefinition[]
+  /**
+   * Manual submit path — validate defId against manualOptions() and return
+   * the matching definition, or null to fall back to normal selection.
+   * Must NOT advance auto-path state (cursor).
+   */
+  resolveManualPick?(defId: string): TurnSkillDefinition | null
+  /** Battle boundary reset (auto-repeat reuses participants). */
+  resetForBattle?(): void
+  /**
+   * Fires once per resolved committed action of this actor (after the
+   * action's own hits). Returns extra declared-impact definitions (combo
+   * payloads) the engine executes through the same landed-hit pipeline.
+   */
+  onCastResolved?(ctx: DynamicBasicCastContext): readonly TurnSkillDefinition[]
+}
+
+/** Manual submit choice — a slot role or a dynamic-basic definition pick. */
+export type ForcedTurnChoice = TurnSkillSlotRole | { kind: 'dynamic_basic'; defId: string }
 
 export interface TurnSkillSlot {
   skill: TurnSkillDefinition
@@ -169,6 +227,34 @@ function slotAction(slot: TurnSkillSlot): SelectedAction {
 }
 
 /**
+ * Basic-slot resolution — the dynamicBasic provider OWNS the slot when
+ * present (Kiem Tu Reimagined Task 2): participant.basic is inert for
+ * those actors. Falls back to the static basic, then the hardcoded
+ * Slice-1 fallback attack.
+ */
+function basicAction(participant: TurnBattleParticipant): SelectedAction {
+  const def = participant.dynamicBasic?.resolveBasic(participant) ?? participant.basic
+
+  if (def) {
+    return {
+      skillId: def.id,
+      skill: def,
+      damage: def.damage,
+      targeting: def.targeting,
+      slot: null,
+    }
+  }
+
+  return {
+    skillId: 'basic_attack',
+    skill: null,
+    damage: FALLBACK_BASIC_ATTACK,
+    targeting: FALLBACK_TARGETING,
+    slot: null,
+  }
+}
+
+/**
  * Priority: ultimate (off cooldown + affordable) -> special (same) ->
  * basic (no cooldown/cost by construction) -> hardcoded fallback basic
  * attack when the participant has no `basic` set at all (Slice 1
@@ -191,23 +277,7 @@ export function selectAction(participant: TurnBattleParticipant): SelectedAction
     return slotAction(participant.special)
   }
 
-  if (participant.basic) {
-    return {
-      skillId: participant.basic.id,
-      skill: participant.basic,
-      damage: participant.basic.damage,
-      targeting: participant.basic.targeting,
-      slot: null,
-    }
-  }
-
-  return {
-    skillId: 'basic_attack',
-    skill: null,
-    damage: FALLBACK_BASIC_ATTACK,
-    targeting: FALLBACK_TARGETING,
-    slot: null,
-  }
+  return basicAction(participant)
 }
 
 /**
@@ -226,15 +296,21 @@ export type TurnSkillSlotRole = 'basic' | 'special' | 'ultimate'
  */
 export function selectForcedAction(
   participant: TurnBattleParticipant,
-  role: TurnSkillSlotRole,
+  forced: ForcedTurnChoice,
 ): SelectedAction {
-  if (role === 'basic') {
-    if (participant.basic) {
+  // Kiem Tu Reimagined Task 2 — a dynamic_basic pick travels the SAME
+  // manual-submit channel as slot roles; the provider validates the id
+  // against its own manualOptions (invalid -> normal selection). Manual
+  // picks never advance the provider's auto cursor.
+  if (typeof forced === 'object') {
+    const picked = participant.dynamicBasic?.resolveManualPick?.(forced.defId) ?? null
+
+    if (picked) {
       return {
-        skillId: participant.basic.id,
-        skill: participant.basic,
-        damage: participant.basic.damage,
-        targeting: participant.basic.targeting,
+        skillId: picked.id,
+        skill: picked,
+        damage: picked.damage,
+        targeting: picked.targeting,
         slot: null,
       }
     }
@@ -242,7 +318,15 @@ export function selectForcedAction(
     return selectAction(participant)
   }
 
-  const slot = role === 'special' ? participant.special : participant.ultimate
+  if (forced === 'basic') {
+    if (participant.basic || participant.dynamicBasic) {
+      return basicAction(participant)
+    }
+
+    return selectAction(participant)
+  }
+
+  const slot = forced === 'special' ? participant.special : participant.ultimate
 
   if (
     slot &&
