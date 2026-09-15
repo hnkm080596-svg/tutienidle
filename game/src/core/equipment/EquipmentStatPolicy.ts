@@ -116,7 +116,11 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
   },
   necklace: {
     tendency: 'Utility',
-    mainStats: ['speed'],
+    // stat-system-reimagined Task 11 (D1/INV-15): speed must never be
+    // the only desirable roll in its pool. Rivals stay outside the
+    // substat list (mains never reappear there), so the defensive
+    // mains are defense/evasionRate rather than wardMax/maxHp.
+    mainStats: ['speed', 'defense', 'evasionRate'],
     substats: [
       'wardMax',
       'wardRegenPerTurn',

@@ -59,6 +59,17 @@ export interface GaugeDeltaEffect {
   percentOfMax: number
 }
 
+// stat-system-reimagined Task 4 (D18) -- authored DoT-recovery trigger on
+// the SOURCE's own buff (Doc Can). When a DoT tick of a matching element
+// lands, the living source heals healPercent * stacks of the damage dealt;
+// the heal then scales with the source's healingEffectivenessPercent.
+// Element omitted = recovers from any DoT element.
+export interface DotRecoveryEffect {
+  type: 'dotRecovery'
+  element?: ElementType | 'physical'
+  healPercent: number
+}
+
 export type BuffEffectTemplate =
   | StatModifierEffect
   | DotEffectTemplate
@@ -66,6 +77,7 @@ export type BuffEffectTemplate =
   | OnHitProcEffect
   | GaugeDeltaEffect
   | ReactiveTriggerEffect
+  | DotRecoveryEffect
 
 // --- Runtime shapes (Buff.effects) ---
 
@@ -86,6 +98,7 @@ export type BuffEffect =
   | OnHitProcEffect
   | GaugeDeltaEffect
   | ReactiveTriggerEffect
+  | DotRecoveryEffect
 
 export interface BuffDefinition {
   id: string

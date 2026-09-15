@@ -1,5 +1,6 @@
 import type { CombatEntity } from './CombatEntity'
 import type { EventBus } from '../events/EventBus'
+import { clampStatValue } from '../stats/StatMetadata'
 
 export type VitalsChangeReason = 'damage' | 'dot' | 'thorns' | 'ward_break' | 'healing' | 'leech' | 'regen' | 'reaction' | 'heavenly_tribulation' | 'survive_lethal' | 'ward_spend' | 'stat_refresh'
 
@@ -95,7 +96,13 @@ export class EntityVitalsSystem {
     const hpBefore = target.currentHp
     const wardBefore = target.currentWard
     const mpBefore = target.currentMp
-    const applied = Math.max(0, amount)
+    // stat-system-reimagined Task 4 (D18/INV-13) — receiver-side heal
+    // amplification: every HP restore EXCEPT damage-derived leech scales
+    // with the receiver's healingEffectivenessPercent. Leech output stays
+    // hpDamage * leechPercent, bitwise.
+    const effectiveness =
+      reason === 'leech' ? 0 : clampStatValue('healingEffectivenessPercent', target.stats.healingEffectivenessPercent)
+    const applied = Math.max(0, amount * (1 + effectiveness))
 
     target.currentHp = Math.min(target.maxHp, target.currentHp + applied)
     this.emit(target, reason, applied, hpBefore, wardBefore, mpBefore, sourceId)
@@ -141,7 +148,12 @@ export class EntityVitalsSystem {
     const mpBefore = target.currentMp
 
     if ((deltas.hp ?? 0) > 0) {
-      target.currentHp = Math.min(target.maxHp, target.currentHp + deltas.hp!)
+      // D18/INV-13 — hpRegenPerTurn ticks are HP restores (not
+      // damage-derived), so the receiver's healingEffectivenessPercent
+      // amplifies them. The mp/ward legs are not HP and never scale.
+      const scaled =
+        deltas.hp! * (1 + clampStatValue('healingEffectivenessPercent', target.stats.healingEffectivenessPercent))
+      target.currentHp = Math.min(target.maxHp, target.currentHp + scaled)
       applied.hp = target.currentHp - hpBefore
     }
 

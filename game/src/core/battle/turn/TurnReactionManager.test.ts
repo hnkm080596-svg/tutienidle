@@ -307,9 +307,9 @@ describe('TurnReactionManager (Phase A1 port of ReactionManager)', () => {
 
     const modifiers = sourceBuffs.getActiveModifiers()
 
-    // Task 3 (D18-retire): doc_the's poisonRecoveryPercent modifier
-    // retired with the stat — only Sát Thương Độc remains; the heal
-    // half returns as a Task-4 buff-trigger query.
+    // Task 4 (D18): doc_the's heal half is an authored 'dotRecovery'
+    // trigger effect — not a statModifier, so getActiveModifiers still
+    // reports only the Sát Thương Độc modifier.
     expect(modifiers).toHaveLength(1)
     expect(modifiers).toContainEqual(expect.objectContaining({ stat: 'ailmentPotencyPercent', percent: 0.05, stacks: 1 }))
   })

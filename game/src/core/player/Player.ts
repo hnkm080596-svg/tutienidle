@@ -1,4 +1,5 @@
-import { calculateStats, type StatModifier } from '../stats/StatCalculator'
+import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
+import { getPhapTuAttunementStatModifiers } from './CultivationPathSystem'
 import { createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import { getKiemYDamageMultipliers, getKiemYTier } from './KiemYSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -455,11 +456,23 @@ export function resolvePlayerFinalStats(
     )
   }
 
-  return calculateStats(player.baseStats, [
+  const allModifiers = [
     ...player.modifiers,
     ...externalModifiers,
     ...kiemYModifiers,
-  ])
+  ]
+
+  // D12 ordering contract (spec section 5): the Phap Tu system reads the
+  // resolved attribute totals and emits its gated MP modifiers BEFORE
+  // calculateStats runs -- the totals read is not a second attribute
+  // derivation (INV-6), and the emitted modifiers are the ONLY
+  // attunement->MP channel (INV-10).
+  const phapTuModifiers = getPhapTuAttunementStatModifiers(
+    player,
+    resolveAttributeTotals(player.baseStats, allModifiers),
+  )
+
+  return calculateStats(player.baseStats, [...allModifiers, ...phapTuModifiers])
 }
 
 /**

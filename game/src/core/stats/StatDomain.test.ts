@@ -9,12 +9,15 @@ import {
   domainViolations,
 } from './StatDomain'
 
-// Task 1 (D10) -- domain gate infrastructure. STAT_DOMAIN starts EMPTY
-// in production code; each test that needs a gated stat registers a
-// temporary entry and afterEach restores the empty registry.
+// Task 1 (D10) -- domain gate infrastructure. Task 7 populated
+// STAT_DOMAIN/DOMAIN_SOURCE_WHITELIST with the real phap_tu gate; tests
+// that register temporary entries restore the production registry after
+// each run (a bare `delete` would strip the real registration).
 
 const GATED_STAT = 'maxMp'
 const GATED_DOMAIN = 'phap_tu'
+
+const PRODUCTION_STAT_DOMAIN = { ...STAT_DOMAIN }
 
 function mod(partial: Partial<StatModifier> & Pick<StatModifier, 'stat'>): StatModifier {
   return {
@@ -26,7 +29,10 @@ function mod(partial: Partial<StatModifier> & Pick<StatModifier, 'stat'>): StatM
 }
 
 afterEach(() => {
-  delete STAT_DOMAIN[GATED_STAT]
+  for (const key of Object.keys(STAT_DOMAIN)) {
+    delete STAT_DOMAIN[key as keyof typeof STAT_DOMAIN]
+  }
+  Object.assign(STAT_DOMAIN, PRODUCTION_STAT_DOMAIN)
   clearDomainViolations()
   vi.unstubAllEnvs()
   vi.restoreAllMocks()
@@ -94,16 +100,16 @@ describe('domain gate (D10)', () => {
     expect(accepted.maxMp).toBe(50)
   })
 
-  it('empty STAT_DOMAIN gates nothing -- absent or foreign domain still applies', () => {
+  it('ungated stats accept absent or foreign domains regardless of the phap_tu gate', () => {
     const base = createBaseStats()
 
     const result = calculateStats(base, [
-      mod({ stat: GATED_STAT, flat: 33 }),
-      mod({ stat: 'wardMax', domain: 'kiem_tu', flat: 10 }),
+      mod({ stat: 'wardMax', flat: 33 }),
+      mod({ stat: 'might', domain: 'kiem_tu', flat: 10 }),
     ])
 
-    expect(result.maxMp).toBe(33)
-    expect(result.wardMax).toBe(10)
+    expect(result.wardMax).toBe(33)
+    expect(result.might).toBeGreaterThan(base.might)
     expect(domainViolations).toHaveLength(0)
   })
 
@@ -136,7 +142,49 @@ describe('domain gate (D10)', () => {
     expect(domainViolations).toHaveLength(1)
   })
 
-  it('DOMAIN_SOURCE_WHITELIST starts empty', () => {
-    expect(DOMAIN_SOURCE_WHITELIST).toEqual({})
+  it('Task 7: the real phap_tu gate is populated -- MP/reaction stats are gated', () => {
+    expect(STAT_DOMAIN.maxMp).toBe('phap_tu')
+    expect(STAT_DOMAIN.manaRegenPerTurn).toBe('phap_tu')
+    expect(STAT_DOMAIN.manaShieldPercent).toBe('phap_tu')
+    expect(STAT_DOMAIN.reactionEffectPercent).toBe('phap_tu')
+  })
+
+  it('Task 7: DOMAIN_SOURCE_WHITELIST declares the phap_tu emitters', () => {
+    const entries = DOMAIN_SOURCE_WHITELIST.phap_tu ?? []
+    const files = entries.map((e) => e.file)
+
+    expect(files).toContain('data/progression/PhapTu*')
+    expect(files).toContain('data/realm/RealmPassives.ts')
+    expect(files).toContain('data/technique/Techniques.ts')
+    expect(files).toContain('data/buff/BossBuffs.ts')
+  })
+
+  it('Task 9 (D15): meta stats are gated to their owning domain', () => {
+    expect(STAT_DOMAIN.productionSpeedMultiplier).toBe('production')
+    expect(STAT_DOMAIN.cultivationPercent).toBe('cultivation')
+    expect(STAT_DOMAIN.affixDeltaPercent).toBe('equipment_meta')
+    expect(STAT_DOMAIN.artifactGradeMultiplier).toBe('artifact')
+    expect(STAT_DOMAIN.realmPassivePercent).toBe('realm')
+  })
+
+  it('Task 9: a production-domain modifier still delivers productionSpeedMultiplier', () => {
+    const base = createBaseStats()
+
+    const result = calculateStats(base, [
+      mod({ stat: 'productionSpeedMultiplier', domain: 'production', flat: 0.5 }),
+    ])
+
+    expect(result.productionSpeedMultiplier).toBeCloseTo(1.5, 6)
+  })
+
+  it('Task 9: an untagged or foreign-domain meta modifier is rejected', () => {
+    const base = createBaseStats()
+
+    expect(() =>
+      calculateStats(base, [mod({ stat: 'cultivationPercent', flat: 0.5 })]),
+    ).toThrow(/domain/i)
+    expect(() =>
+      calculateStats(base, [mod({ stat: 'realmPassivePercent', domain: 'phap_tu', flat: 0.5 })]),
+    ).toThrow(/domain/i)
   })
 })

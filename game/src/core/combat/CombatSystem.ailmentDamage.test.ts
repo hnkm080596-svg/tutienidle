@@ -104,12 +104,10 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
     expect(damageEvents[0]).toMatchObject({ sourceId: 'source', targetId: 'target', effectId: 'bong' })
   })
 
-  // stat-system-reimagined Task 3 (D18-retire) — poisonRecoveryPercent
-  // retired from StatType; CombatSystem now queries dotRecoveryTriggers()
-  // which is an inert stub (returns 0) until Task 4 re-authors poison
-  // recovery as a buff-trigger query. The wood-only wiring stays:
-  // the trigger is only consulted for wood DoT ticks.
-  it('wood DoT consults the inert dotRecoveryTriggers hook — source heals 0 until Task 4 re-authors it', () => {
+  // stat-system-reimagined Task 4 (D18) — CombatSystem queries
+  // dotRecoveryTriggers() for authored 'dotRecovery' buff effects on the
+  // source; a source carrying none heals 0 on any DoT tick.
+  it('wood DoT consults dotRecoveryTriggers — source without a recovery buff heals 0', () => {
     const eventBus = new EventBus()
     const combatSystem = new CombatSystem(eventBus)
 
@@ -124,8 +122,8 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
 
     const resolveSource = (id: string) => (id === source.id ? source : undefined)
 
-    // Trúng Độc (wood) — the trigger hook runs but returns 0: target
-    // takes damage, source does NOT heal.
+    // Trúng Độc (wood) — the trigger hook runs but the source carries
+    // no dotRecovery buff: target takes damage, source does NOT heal.
     ailmentSystem.apply(getTemplate('trung_doc'), source, target)
     ailmentSystem.update(1, target, combatSystem, undefined, resolveSource)
 

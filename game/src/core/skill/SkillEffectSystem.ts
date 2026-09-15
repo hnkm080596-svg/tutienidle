@@ -380,6 +380,9 @@ export class SkillEffectSystem {
               ctx.combatSystem.applyDotDamage({
                 sourceId: source.id,
                 source,
+                // Task 4 (D18) — authored dotRecovery triggers on the
+                // source's own buffs apply to the burst's element too.
+                sourceBuffs: ctx.sourceBuffs.getAll(),
                 target,
                 rawDamage: burstDamage,
                 element: 'metal',

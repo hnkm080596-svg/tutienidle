@@ -48,6 +48,12 @@ export type StatType =
   | 'manaShieldPercent'
   | 'leechPercent'
   | 'thornsPercent'
+  // stat-system-reimagined Task 4 (D18) -- receiver-side amplification of
+  // HP restores that are NOT damage-derived: hpRegenPerTurn ticks, direct
+  // heal effects, authored recovery triggers (dotRecovery). NEVER scales
+  // leech (hpDamage * leechPercent is leech's sole lever), ward/MP regen,
+  // or shield absorb.
+  | 'healingEffectivenessPercent'
   | 'hpRegenPerTurn'
   | 'manaRegenPerTurn'
   | 'finalDamagePercent'

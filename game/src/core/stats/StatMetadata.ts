@@ -33,6 +33,7 @@ export const STAT_METADATA: Partial<Record<StatType, StatMetadata>> = {
   dotResistancePercent: { unit: 'percent', min: -1, max: 0.75 },
   wardBreakDamagePercent: { unit: 'percent', min: 0 },
   thornsPercent: { unit: 'percent', min: 0 },
+  healingEffectivenessPercent: { unit: 'percent', min: 0 },
 
   // Realm passive stat modifier % (useRealmStatPassives).
   realmPassivePercent: { unit: 'percent' },

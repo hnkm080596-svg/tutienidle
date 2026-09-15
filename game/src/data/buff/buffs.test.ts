@@ -193,16 +193,17 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     })
   })
 
-  // Task 3 (D18-retire): the poisonRecoveryPercent modifier retired
-  // with the stat — Doc Can's heal half is inert until Task 4
-  // re-authors it as a buff-trigger query (dotRecoveryTriggers).
-  it('doc_the — duration Infinity (permanent) + maxStacks/ailmentPotency percent port nguyên vẹn', () => {
+  // stat-system-reimagined Task 4 (D18): the poisonRecoveryPercent stat
+  // retired — Doc Can's heal half is re-authored as a 'dotRecovery'
+  // trigger effect on the buff itself (dotRecoveryTriggers query).
+  it('doc_the — duration Infinity (permanent) + maxStacks/ailmentPotency percent + authored dotRecovery trigger', () => {
     const docThe = buffs.find((b) => b.id === 'doc_the')!
 
     expect(docThe.duration).toBe(Infinity)
     expect(docThe.maxStacks).toBe(5)
     expect(docThe.stackMode).toBe('stack')
     expect(docThe.effects).toContainEqual({ type: 'statModifier', stat: 'ailmentPotencyPercent', percent: 0.05 })
-    expect(docThe.effects).toHaveLength(1)
+    expect(docThe.effects).toContainEqual({ type: 'dotRecovery', element: 'wood', healPercent: 0.02 })
+    expect(docThe.effects).toHaveLength(2)
   })
 })

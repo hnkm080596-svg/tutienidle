@@ -10,9 +10,9 @@ describe('equipment data — invariants', () => {
 
   it('mọi main stat tuân theo slot policy', () => {
     for (const item of equipment) {
-      // Turn-based conversion (2026-09-04) — necklace mất castSpeedPercent
-      // (retire) nên chỉ còn 1 main stat (speed), ring vẫn 2.
-      expect(item.mainStats).toHaveLength(item.slot === 'ring' ? 2 : 1)
+      // stat-system-reimagined Task 11 (D1/INV-15) — necklace main pool
+      // là 3 cạnh tranh (speed vs maxHp/wardMax); ring vẫn 2 crit.
+      expect(item.mainStats).toHaveLength(item.slot === 'ring' ? 2 : item.slot === 'necklace' ? 3 : 1)
       for (const range of item.mainStats) {
         expect(EQUIPMENT_SLOT_STAT_POLICY[item.slot].mainStats).toContain(range.stat)
         expect(range.min).toBeLessThanOrEqual(range.max)

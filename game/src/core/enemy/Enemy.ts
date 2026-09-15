@@ -2,7 +2,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import type { Stats } from '../stats/StatBlock'
 import type { EnemyLane } from '../battle/BattleLane'
 import type { EnemyStatInput } from './EnemyStatInput'
-import { normalizeEnemyStats, applyBossMultiplier } from './EnemyStatInput'
+import { normalizeEnemyStats, applyBossMultiplier, assertEnemyDamageSurface } from './EnemyStatInput'
 import type { EnemyArchetype } from './EnemyArchetype'
 import type { TribulationPhase, BossEnrage } from './TribulationPhase'
 import type { CombatVfxPresetId } from '../battle/CombatAction'
@@ -183,6 +183,12 @@ export interface EnemyDefinition {
  * lần.
  */
 export function defineEnemy(definition: EnemyDefinition): Enemy {
+  // stat-system-reimagined Task 10 (D21/INV-14) -- reaction-tagged
+  // buff ids and gated-stat modifier channels are rejected at the
+  // authoring boundary; statsInput itself is gated inside
+  // normalizeEnemyStats().
+  assertEnemyDamageSurface(definition)
+
   const stats = normalizeEnemyStats(definition.statsInput)
 
   return {

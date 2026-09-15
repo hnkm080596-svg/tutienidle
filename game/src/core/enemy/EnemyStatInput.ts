@@ -1,5 +1,9 @@
 import type { ElementType } from '../element/ElementType'
 import type { Stats } from '../stats/StatBlock'
+import type { StatType } from '../stats/StatTypes'
+import { STAT_DOMAIN } from '../stats/StatDomain'
+import type { BuffDefinition } from '../buff/BuffTypes'
+import type { EnemyDefinition } from './Enemy'
 
 /**
  * Shape AUTHORING gọn cho quái thường (~13-14 field) — Last Epoch
@@ -57,6 +61,15 @@ export interface EnemyStatInput {
     wardBreakDamagePercent?: number
     skillDamagePercent?: number
     dotResistancePercent?: number
+
+    // stat-system-reimagined Task 10 (D9, spec section 5) -- declared
+    // BASE slots for an enemy Phap Tu boss ("MP shield + hit + DoT",
+    // D21). Base values are not modifier delivery, so the domain gate
+    // does not apply here; reactionEffectPercent stays invalid enemy
+    // input (no base slot exists for it).
+    maxMp?: number
+    manaShieldPercent?: number
+    manaRegenPerTurn?: number
   }
 }
 
@@ -84,16 +97,127 @@ export function normalizeEnemyAttackSpeed(authoredAttackSpeed: number): number {
   return Math.min(MAX_ENEMY_ATTACK_SPEED, Math.max(MIN_ENEMY_ATTACK_SPEED, converted))
 }
 
+// --- stat-system-reimagined Task 10: enemy input gate (D9/D21, INV-8/14) ---
+
+const REACTION_ID_PATTERN = /reaction/i
+
+// The `special` slots that are allowed to carry gated stats -- the MP
+// trio is legitimate BASE authoring for an enemy Phap Tu boss. Every
+// other gated stat (reactionEffectPercent, meta stats, future gated
+// keys) is rejected wherever it appears on the input.
+const ENEMY_GATED_BASE_KEYS: ReadonlySet<string> = new Set<string>([
+  'maxMp',
+  'manaShieldPercent',
+  'manaRegenPerTurn',
+])
+
+function gatedKeysOf(record: object): StatType[] {
+  return Object.keys(record).filter(
+    (key): key is StatType => STAT_DOMAIN[key as StatType] !== undefined,
+  )
+}
+
+/**
+ * Runtime guard for cast/JSON payloads that bypass the type shape
+ * (compile-time typing already rejects declared-shape violations).
+ * Throws on the first violation -- same fail-fast policy as the
+ * calculateStats domain gate in dev/test.
+ */
+export function assertEnemyStatInputAllowed(input: EnemyStatInput): void {
+  const topLevel = input as unknown as Record<string, unknown>
+  const special = (input.special ?? {}) as Record<string, unknown>
+
+  for (const key of gatedKeysOf(topLevel)) {
+    throw new Error(
+      `[EnemyStatInput] gated stat "${key}" is invalid enemy input -- ` +
+        'gated stats have no top-level base slot (reactionEffectPercent is never valid on enemies)',
+    )
+  }
+
+  for (const key of gatedKeysOf(special)) {
+    if (!ENEMY_GATED_BASE_KEYS.has(key)) {
+      throw new Error(
+        `[EnemyStatInput] gated stat "${key}" is invalid enemy input -- ` +
+          'only the MP trio may be authored as base values (reactionEffectPercent is never valid on enemies)',
+      )
+    }
+  }
+
+  // Enemies have no StatModifier channel: buffs embedded on the
+  // definition are gated separately by assertEnemyDamageSurface().
+  if (Array.isArray(topLevel['modifiers']) && topLevel['modifiers'].length > 0) {
+    throw new Error(
+      '[EnemyStatInput] modifiers channel is invalid enemy input -- ' +
+        'enemy stat deltas are authored via embedded definition buffs, never raw modifiers',
+    )
+  }
+}
+
+/**
+ * Definition-surface gate (D21/INV-14): enemies resolve hit + DoT as
+ * outgoing damage only, so no reaction-tagged buff/skill id may hang
+ * off an enemy definition, and embedded buffs (tribulation/enrage) may
+ * not deliver gated stats through their statModifier effects -- base
+ * `special` slots are the only channel. `bossTrigger` references a
+ * catalog buff by id, so only its id can be checked here.
+ */
+export function assertEnemyDamageSurface(
+  definition: Pick<EnemyDefinition, 'bossTrigger' | 'tribulationPhases' | 'enrage'>,
+): void {
+  const buffs: BuffDefinition[] = []
+  if (definition.bossTrigger) {
+    if (REACTION_ID_PATTERN.test(definition.bossTrigger.buffDefinitionId)) {
+      throw new Error(
+        `[EnemyStatInput] reaction-tagged buffDefinitionId "${definition.bossTrigger.buffDefinitionId}" ` +
+          'is invalid on an enemy definition -- reactions are player-path-exclusive (D21)',
+      )
+    }
+  }
+  for (const phase of definition.tribulationPhases ?? []) {
+    buffs.push(phase.buff)
+  }
+  if (definition.enrage) {
+    buffs.push(definition.enrage.buff)
+  }
+
+  for (const buff of buffs) {
+    const chainedIds = [buff.id, buff.convertsToId]
+    for (const effect of buff.effects) {
+      if (effect.type === 'statModifier' && STAT_DOMAIN[effect.stat] !== undefined) {
+        throw new Error(
+          `[EnemyStatInput] embedded buff "${buff.id}" delivers gated stat "${effect.stat}" ` +
+            'through a modifier channel -- use a declared special base slot instead',
+        )
+      }
+      if (effect.type === 'onHitProc') {
+        chainedIds.push(effect.appliesBuffId)
+      }
+      if (effect.type === 'reactiveTrigger') {
+        chainedIds.push(effect.appliesDefinitionId)
+      }
+    }
+    for (const id of chainedIds) {
+      if (id !== undefined && REACTION_ID_PATTERN.test(id)) {
+        throw new Error(
+          `[EnemyStatInput] reaction-tagged buff/definition id "${id}" on enemy buff "${buff.id}" ` +
+            'is invalid -- reactions are player-path-exclusive (D21)',
+        )
+      }
+    }
+  }
+}
+
 export function normalizeEnemyStats(input: EnemyStatInput): Stats {
+  assertEnemyStatInputAllowed(input)
+
   return {
     might: input.might,
     defense: input.armor,
 
     maxHp: input.maxHp,
-    // Quái không có Linh Lực (MP là tài nguyên riêng của Pháp Tu) — vì
-    // vậy manaShieldPercent/manaRegenPerTurn không thể author được ở
-    // EnemyStatInput.special (không có pool MP để hấp thụ/hồi vào).
-    maxMp: 0,
+    // Quái thường không có Linh Lực (MP là tài nguyên riêng của Pháp
+    // Tu); boss Pháp Tu author BASE qua special.maxMp (D9/D21).
+    maxMp: input.special?.maxMp ?? 0,
 
     // Gameplay fixes (2026-09-05) — turn-based pacing: hệ sống author
     // attackSpeed theo ĐÒN/GIÂY (0.8-2.5 đòn/s) → turn engine cần gauge
@@ -122,11 +246,14 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     wardMax: input.special?.wardMax ?? 0,
     wardRegenPerTurn: input.special?.wardRegenPerTurn ?? 0,
     wardBreakDamagePercent: input.special?.wardBreakDamagePercent ?? 0,
-    manaShieldPercent: 0,
+    manaShieldPercent: input.special?.manaShieldPercent ?? 0,
     leechPercent: input.special?.leechPercent ?? 0,
     thornsPercent: input.special?.thornsPercent ?? 0,
+    // D18 — enemies have no authored healing-effectiveness channel yet;
+    // the stat exists on Stats but stays 0 until a real source needs it.
+    healingEffectivenessPercent: 0,
     hpRegenPerTurn: input.hpRegenPerTurn ?? 0,
-    manaRegenPerTurn: 0,
+    manaRegenPerTurn: input.special?.manaRegenPerTurn ?? 0,
     finalDamagePercent: 0,
     finalDamageReductionPercent: 0,
     criticalAvoidance: input.special?.criticalAvoidance ?? 0,

@@ -1,6 +1,7 @@
 import type { Stats } from './StatBlock'
 import type { StatModifier } from './StatCalculator'
 import type { StatType } from './StatTypes'
+import { STAT_DOMAIN } from './StatDomain'
 
 // Save payloads written before the stat-system-reimagined rename pass
 // persist stat records (baseStats) under the OLD key names. RENAME maps
@@ -62,9 +63,22 @@ export function migrateStatModifierStat(stat: string): string {
 }
 
 // Same migration for a typed StatModifier — returns the input unchanged
-// (same reference) when its stat already uses a current key.
+// (same reference) when neither key nor domain needs a touch.
 export function migrateStatModifier(modifier: StatModifier): StatModifier {
-  const stat = migrateStatModifierStat(modifier.stat)
+  const stat = migrateStatModifierStat(modifier.stat) as StatType
 
-  return stat === modifier.stat ? modifier : { ...modifier, stat: stat as StatType }
+  // QA-2026-09-14-001: saves persisted before the domain tag existed can
+  // carry modifiers on now-gated stats (timed MP regen, production
+  // speed). Backfill the stat's OWNING domain so a legit legacy payload
+  // restores its intended grant instead of tripping applyDomainGate. A
+  // persisted modifier predates the gate — it was legal when written.
+  // A saved wrong-domain tag is NOT rewritten (that is tamper surface,
+  // not legacy shape).
+  const domain = modifier.domain ?? STAT_DOMAIN[stat]
+
+  if (stat === modifier.stat && domain === modifier.domain) {
+    return modifier
+  }
+
+  return { ...modifier, stat, ...(domain === undefined ? {} : { domain }) }
 }

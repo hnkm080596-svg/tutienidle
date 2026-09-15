@@ -82,6 +82,7 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     manaShieldPercent: 0,
     leechPercent: 0,
     thornsPercent: 0,
+    healingEffectivenessPercent: 0,
     hpRegenPerTurn: 0,
     manaRegenPerTurn: 0,
     finalDamagePercent: 0,

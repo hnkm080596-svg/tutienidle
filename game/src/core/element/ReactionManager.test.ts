@@ -399,9 +399,9 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
     const modifiers = sourceBuffs.getActiveModifiers()
 
     // Plans/magicpathgeneral Phase 7/8/11 — buff 'doc_the' ("Độc Căn",
-    // đổi tên từ "Độc Thế") cấp Sát Thương Độc. Task 3 (D18-retire):
-    // the poisonRecoveryPercent modifier retired with the stat — the
-    // heal half returns as a Task-4 buff-trigger query.
+    // đổi tên từ "Độc Thế") cấp Sát Thương Độc. Task 4 (D18): the heal
+    // half is an authored 'dotRecovery' trigger effect — not a
+    // statModifier, so getActiveModifiers still reports one modifier.
     expect(modifiers).toHaveLength(1)
     expect(modifiers).toContainEqual(expect.objectContaining({ stat: 'ailmentPotencyPercent', percent: 0.05, stacks: 1 }))
   })

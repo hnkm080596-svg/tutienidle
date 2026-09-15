@@ -98,6 +98,11 @@ export function stat(
 
     stat: statKey as StatModifier['stat'],
 
+    // Task 7 (D19): every Phap Tu node emission carries the phap_tu
+    // credential -- universal-stat grants still apply normally (INV-9),
+    // and the gated reactionEffectPercent grants pass the domain gate.
+    domain: 'phap_tu' as const,
+
     ...(flat !== undefined ? { flat } : {}),
 
     ...(perLevelFlat !== undefined ? { perLevelFlat } : {}),

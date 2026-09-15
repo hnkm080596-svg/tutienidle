@@ -20,7 +20,9 @@ export interface StatLabelEntry {
 // sách — player là tower cố định, không di chuyển, stat này chỉ còn ý
 // nghĩa cho quái.
 export const BASE_STAT_LABELS: StatLabelEntry[] = [
-  { key: 'might', label: 'Công kích', description: 'Sát thương vật lý cơ bản gây ra khi tấn công.', category: 'combat' },
+  // stat-system-reimagined Task 12 (D14): attack -> might, label = Sức mạnh
+  // (universal damage base, not "basic attack").
+  { key: 'might', label: 'Sức mạnh', description: 'Nền sát thương chung cho mọi loại damage — vật lý, ngũ hành và hỗn nguyên.', category: 'combat' },
   { key: 'defense', label: 'Phòng ngự (Giáp)', description: 'Giảm % sát thương vật lý phải nhận theo đường cong (Armor) — càng cao càng giảm dần, có trần.', category: 'combat' },
   { key: 'speed', label: 'Thân Pháp (Tốc Độ)', description: 'Tốc độ lấp đầy thanh hành động — càng cao càng sớm được ra đòn trong chiến đấu theo lượt.', category: 'combat' },
 
@@ -42,9 +44,9 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'ailmentDurationPercent', label: 'Thời Lượng Dị Thường', description: 'Tăng % thời lượng mọi dị thường mình gây ra.', category: 'special' },
   { key: 'dotResistancePercent', label: 'Kháng DoT', description: 'Giảm thẳng % sát thương nhận từ mọi hiệu ứng DoT (Bỏng/Trúng Độc/Chảy Máu...).', category: 'defense_advanced' },
 
-  { key: 'strength', label: 'Căn Cốt', description: 'Cộng thẳng Công kích + Phòng ngự.', category: 'attribute' },
-  { key: 'dexterity', label: 'Thân Pháp', description: 'Cộng Tốc Độ (Thân Pháp), Độ chính xác, Tỉ lệ né, Tỉ lệ bạo kích.', category: 'attribute' },
-  { key: 'intelligence', label: 'Thần Thức', description: 'Cộng Kháng dị thường và ST bạo kích.', category: 'attribute' },
+  { key: 'strength', label: 'Căn Cốt', description: 'Cộng thẳng Sức mạnh + Phòng ngự.', category: 'attribute' },
+  { key: 'dexterity', label: 'Thân Pháp', description: 'Cộng Độ chính xác, Tỉ lệ né và Tỉ lệ bạo kích.', category: 'attribute' },
+  { key: 'intelligence', label: 'Thần Thức', description: 'Cộng Kháng dị thường, Uy lực dị thường và ST bạo kích.', category: 'attribute' },
   { key: 'attunement', label: 'Linh Căn', description: 'Cộng đều Power cả 6 hành (Ngũ Hành + Hỗn Nguyên).', category: 'attribute' },
   { key: 'vitality', label: 'Thể Chất', description: 'Cộng Khí huyết tối đa, Hồi khí huyết, Ngưỡng Kiên Cường.', category: 'attribute' },
 
@@ -57,6 +59,7 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'wardRegenPerTurn', label: 'Hồi Hộ Thuẫn', description: 'Hộ Thuẫn hồi mỗi lượt (sau khi không bị đánh trúng đủ lâu).', category: 'defense_advanced' },
   { key: 'wardBreakDamagePercent', label: 'Khiên Nổ', description: 'Khi Hộ Thuẫn vừa vỡ hẳn, phản % dung lượng Hộ Thuẫn tối đa thành sát thương vào kẻ tấn công.', category: 'defense_advanced' },
   { key: 'leechPercent', label: 'Hút máu', description: 'Hồi máu theo % sát thương gây ra.', category: 'defense_advanced' },
+  { key: 'healingEffectivenessPercent', label: 'Hiệu quả hồi phục', description: 'Tăng % máu hồi được từ hồi phục tự nhiên, skill hồi máu và hiệu ứng hồi phục có sẵn — không ảnh hưởng Hút máu.', category: 'defense_advanced' },
   { key: 'thornsPercent', label: 'Phản đòn', description: 'Đối phương tự nhận lại % sát thương gây cho mình khi đánh trúng.', category: 'defense_advanced' },
   { key: 'ailmentResistPercent', label: 'Kháng dị thường', description: 'Giảm % thời lượng mọi hiệu ứng dị thường (DoT/khống chế) nhận vào.', category: 'defense_advanced' },
   { key: 'ailmentPotencyPercent', label: 'Uy lực dị thường', description: 'Tăng % hiệu lực (sát thương/giây) của dị thường mình gây ra.', category: 'defense_advanced' },
