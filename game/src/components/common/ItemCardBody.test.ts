@@ -103,13 +103,13 @@ describe('ItemCardBody - static SlotView header (spec section 3)', () => {
     expect(slot.getAttribute('role')).toBe('img')
     expect(slot.getAttribute('aria-label')).toBe('Hoàng - Thanh Vân Kiếm, Ngũ Phẩm')
     // The seal + Chat edge ride along from the same props the cell binds.
-    expect(slot.querySelector('.slot-view__seal')?.textContent).toBe('NGŨ')
+    expect(slot.querySelector('.slot-view__seal')?.textContent).toBe('五')
     expect(container.querySelector('button.slot-view')).toBeNull()
   })
 
   it('material scale-10 slotPreview feeds the seal through rarityRank', () => {
     const container = mountCard(gradedContent)
-    expect(container.querySelector('.slot-view__seal')?.textContent).toBe('NGŨ')
+    expect(container.querySelector('.slot-view__seal')?.textContent).toBe('五')
   })
 
   it('falls back to the icon shell when slotPreview is absent', () => {

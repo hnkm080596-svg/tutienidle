@@ -79,13 +79,16 @@ describe('ProfessionGrade — mapping realm → phẩm nghề', () => {
   })
 })
 
-// Seal ordinals for the slot corner stamp (item-info-card spec
-// 2026-09-14): one ordinal per grade, index = rank - 1.
-describe('ProfessionGrade - seal ordinals', () => {
-  it('seal ordinals match PROFESSION_GRADE_NAMES order (Pham suffix stripped, uppercased)', () => {
-    PROFESSION_GRADE_ORDER.forEach((grade, index) => {
-      const expected = PROFESSION_GRADE_NAMES[grade].replace(' Phẩm', '').toUpperCase()
-      expect(PROFESSION_GRADE_SEAL_ORDINALS[index]).toBe(expected)
+// Seal glyphs for the slot corner stamp (item-info-card spec
+// 2026-09-14, seal art pass 2026-09-15): Han numerals 9..1 for the
+// nine grades, then the immortal mark - index = rank - 1.
+describe('ProfessionGrade - seal glyphs', () => {
+  it('one Han seal glyph per grade, in PROFESSION_GRADE_ORDER', () => {
+    const expected = ['九', '八', '七', '六', '五', '四', '三', '二', '一', '仙']
+
+    expect(PROFESSION_GRADE_SEAL_ORDINALS).toHaveLength(PROFESSION_GRADE_ORDER.length)
+    expected.forEach((glyph, index) => {
+      expect(PROFESSION_GRADE_SEAL_ORDINALS[index]).toBe(glyph)
     })
   })
 })

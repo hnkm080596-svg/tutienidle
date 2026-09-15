@@ -84,30 +84,29 @@ describe('SlotView — empty/filled + icon fallback', () => {
 
 describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)', () => {
   // The Pham axis renders as a corner seal stamp carrying the
-  // Vietnamese grade ordinal (item-info-card spec 2026-09-14) -
+  // Han grade glyph (item-info-card spec 2026-09-14) -
   // replaces the transparent underlay wash.
-  it('Pham renders as a corner seal with the Vietnamese grade ordinal', () => {
+  it('Pham renders as a corner seal with the Han grade glyph', () => {
     const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Kiếm', equipmentQualityRank: 5 })
     const seal = button.querySelector('.slot-view__seal')
 
     expect(seal).not.toBeNull()
-    expect(seal?.textContent).toBe('NGŨ')
+    expect(seal?.textContent).toBe('五')
     expect(seal?.getAttribute('aria-hidden')).toBe('true')
     unmount()
   })
 
-  it('seal rim follows --rank-color-N of the Pham rank', () => {
+  it('seal glyph for rank 10 is the immortal mark', () => {
     const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Kiếm', equipmentQualityRank: 10 })
 
-    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('TIÊN')
-    expect(button.getAttribute('style')).toContain('--seal-rim: var(--rank-color-10)')
+    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('仙')
     unmount()
   })
 
   it('material scale-10 rank feeds the seal through rarityRank', () => {
     const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Thảo', rarityRank: 3, rarityRankScale: 10 })
 
-    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('THẤT')
+    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('七')
     unmount()
   })
 
@@ -119,8 +118,7 @@ describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)',
       rarityRank: 5,
     })
 
-    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('BÁT')
-    expect(button.style.getPropertyValue('--seal-rim')).toBe('var(--rank-color-2)')
+    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('八')
     unmount()
   })
 
@@ -263,7 +261,7 @@ describe('SlotView — precedence (mục 17.2)', () => {
     button.click()
     expect(onClick).not.toHaveBeenCalled()
     expect(button.getAttribute('aria-busy')).toBe('true')
-    expect(button.style.getPropertyValue('--seal-rim')).toBe('var(--rank-color-5)')
+    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('五')
     unmount()
   })
 

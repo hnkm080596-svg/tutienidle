@@ -28,10 +28,12 @@ export interface SlotPresentationState {
 //               glass slot-backdrop.png ("empty" - reads faintly on
 //               the dark backdrop) + pale gold frame hover
 //               slot-frame-hover.png ("click").
-// Hover art always fits the cell edge exactly (inset 0, 100% 100%) -
-// no inset/offset; the frame border comes from the art, not extra CSS.
-// equip-slot-backdrop.png (stray metal rim) + equip-slot-hover.png
-// (black 293x134 banner cut from the wrong region) were removed.
+// Item hover fits the cell edge exactly (inset 0, 100% 100%); the
+// equipment gold frame bakes ~2-3% transparent padding into its PNG
+// edges, so it overshoots via --slot-hover-inset: -4% to land the
+// bright stroke on the slot border. equip-slot-backdrop.png (stray
+// metal rim) + equip-slot-hover.png (black 293x134 banner cut from
+// the wrong region) were removed.
 export type SlotVariant = 'item' | 'equipment'
 
 // Badge nhỏ ở layer 6 (mục 17.3) — thay cho các span tự absolute-

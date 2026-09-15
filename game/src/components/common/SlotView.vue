@@ -10,7 +10,7 @@ import type { SlotBadge, SlotPresentationState, SlotVariant } from './SlotTypes'
 // 2026-09). Art layers: backdrop per variant (SlotTypes.ts SlotVariant
 // - 'item' uses the flat dark tile inv-slot-backdrop.png, 'equipment'
 // cells use the frosted-glass slot-backdrop.png), item `icon` prop on
-// top, hover art per variant fitted to the cell edge (inset 0), and the
+// top, hover art per variant (per-variant inset), and the
 // shared fx-border-beam repurposed as a persistent quality aura for
 // equipment Chat Dia+. See SlotTypes.ts for the 5 semantic axes
 // (availability/interaction/validation/marker/comparison) - NOT a list
@@ -44,7 +44,7 @@ const props = defineProps<{
   /** Normalized rank 1-10 (professionGradeRank, see
    * core/profession/slotRank.ts) - SlotView does NOT know domain ids
    * like 'cuu_pham'/'tien_pham'. The PHAM axis (realm grade) - renders
-   * as a corner seal stamp carrying the Vietnamese grade ordinal
+   * as a corner seal stamp carrying the Han grade glyph
    * (item-info-card spec 2026-09-14, replaces the underlay wash). */
   equipmentQualityRank?: number
 
@@ -134,11 +134,12 @@ const rarityColor = computed(() => {
   return `var(--rank-color-${(props.rarityRankScale ?? 5) === 5 ? rank * 2 - 1 : rank})`
 })
 
-// Seal stamp (item-info-card spec 2026-09-14): the Pham axis renders as
-// a corner seal carrying the Vietnamese grade ordinal - replaces the
-// underlay wash. Same rank source as before: equipmentQualityRank
-// (equipment/pills), or rarityRank when fed on the 10-step scale
-// (materials). Chat stays on the rarity edge + aura.
+// Seal stamp (item-info-card spec 2026-09-14, seal art pass
+// 2026-09-15): the Pham axis renders as a carved seal frame + Han
+// grade glyph - replaces the underlay wash. Same rank source as
+// before: equipmentQualityRank (equipment/pills), or rarityRank when
+// fed on the 10-step scale (materials). Chat stays on the rarity
+// edge + aura.
 const sealRank = computed(() => {
   const gradeRank = clampRank(props.equipmentQualityRank)
   if (gradeRank) return gradeRank
@@ -146,7 +147,6 @@ const sealRank = computed(() => {
   return undefined
 })
 const sealOrdinal = computed(() => (sealRank.value ? PROFESSION_GRADE_SEAL_ORDINALS[sealRank.value - 1] : undefined))
-const sealColor = computed(() => (sealRank.value ? `var(--rank-color-${sealRank.value})` : undefined))
 // Trần itemQualityRank = 5 (Tiên Chất) — KHÔNG còn 9 (model cũ rải
 // 1-3-5-7-9 đã bỏ, xem normalizeSlotRank.ts). rarityRankScale cho phép
 // caller feed 1 thang rank KHÁC (vd Material professionRankOf 1-10) vào
@@ -236,7 +236,6 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
       props.static ? 'slot-view--static' : '',
     ]"
     :style="{
-      '--seal-rim': sealColor,
       '--slot-rarity-color': rarityColor,
       '--fx-beam-color': qualityAuraTier > 0 ? rarityColor : undefined,
     }"
@@ -247,8 +246,8 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     v-tooltip="props.static ? undefined : tooltipContent"
     @click="handleClick"
   >
-    <!-- layer 1.5: Pham seal - crimson corner stamp, Vietnamese grade
-         ordinal (replaces the underlay wash). -->
+    <!-- layer 1.5: Pham seal - carved seal-frame art + Han grade
+         glyph (replaces the underlay wash). -->
     <span v-if="filled && sealOrdinal" class="slot-view__seal" aria-hidden="true">{{ sealOrdinal }}</span>
 
     <!-- layer 2: icon / monogram fallback -->
@@ -520,8 +519,9 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
    - item (default, every bag slot + hall pickers): "archive base"
      plain dark tile as bg + "cell select" white sheen on hover.
    - equipment (the 6 worn slots): "empty" glass tile + "click"
-     pale-gold frame on hover. Both layers fit the cell exactly -
-     inset 0, 100% 100%. */
+     pale-gold frame on hover. The gold frame art bakes ~2-3%
+     transparent padding into its edges, so the layer overshoots the
+     cell by 4% to land its bright stroke on the slot border. */
 .slot-view--item {
   --slot-hover-image: url('/assets/ui/Slot/bag-slot-hover.png');
 }
@@ -529,6 +529,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 .slot-view--equipment {
   --slot-bg-image: url('/assets/ui/Slot/slot-backdrop.png');
   --slot-hover-image: url('/assets/ui/Slot/slot-frame-hover.png');
+  --slot-hover-inset: -4%;
 }
 
 .slot-view:focus-visible {
@@ -542,9 +543,10 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 /* ============================================================
-   5.5 PHAM SEAL - crimson corner stamp carrying the Vietnamese grade
-   ordinal (item-info-card spec 2026-09-14, replaces the transparent
-   underlay wash). Sized in cqw so it scales with the cell edge.
+   5.5 PHAM SEAL - carved seal stamp (seal-frame.png art, user art
+   pass 2026-09-15) + Han grade glyph in seal-paste vermillion
+   (item-info-card spec 2026-09-14, replaces the transparent underlay
+   wash). Sized in cqw so it scales with the cell edge.
    ============================================================ */
 
 .slot-view__seal {
@@ -553,20 +555,20 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   left: 3%;
   z-index: 5;
   box-sizing: border-box;
-  width: 36cqw;
+  width: 30cqw;
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  padding: 1cqw;
-  background: color-mix(in srgb, #7d2a24 88%, transparent);
-  border: 1px solid var(--seal-rim, var(--rank-color-2));
-  border-radius: 1px;
-  color: #efe6d2;
-  font-family: var(--font-display);
+  background: url('/assets/ui/Slot/seal-frame.png') center / contain no-repeat;
+  /* Seal-paste vermillion, lifted one step from the frame ink
+     (#950100) so the thin strokes stay legible on the dark tile. */
+  color: #d13a24;
+  font-family: 'Kaiti SC', 'KaiTi', 'STKaiti', 'TW-Kai', 'DFKai-SB',
+    'AR PL KaitiM GB', 'Noto Serif CJK SC', var(--font-display);
   font-weight: 700;
-  font-size: 13cqw;
+  font-size: 15cqw;
   line-height: 1;
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.45);
   pointer-events: none;
 }
 

@@ -62,11 +62,13 @@ export const PROFESSION_GRADE_NAMES: Readonly<Record<ProfessionGrade, string>> =
   tien_pham: 'Tiên Phẩm',
 }
 
-// Seal ordinals for the cell stamp (item-info-card spec 2026-09-14):
-// the Vietnamese grade word only, "Pham" elided as the shared suffix.
-// Index order matches PROFESSION_GRADE_ORDER - seal rank = index + 1.
+// Seal glyphs for the cell stamp (item-info-card spec 2026-09-14, seal
+// art pass 2026-09-15): single Han characters rendered calligraphically
+// inside the carved seal-frame art - 9..1 for the nine grades, then the
+// immortal mark. Index order matches PROFESSION_GRADE_ORDER - seal
+// rank = index + 1.
 export const PROFESSION_GRADE_SEAL_ORDINALS = [
-  'CỬU', 'BÁT', 'THẤT', 'LỤC', 'NGŨ', 'TỨ', 'TAM', 'NHỊ', 'NHẤT', 'TIÊN',
+  '九', '八', '七', '六', '五', '四', '三', '二', '一', '仙',
 ] as const
 
 export function isProfessionGrade(value: unknown): value is ProfessionGrade {
