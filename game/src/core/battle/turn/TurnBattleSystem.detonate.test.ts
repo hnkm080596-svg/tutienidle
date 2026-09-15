@@ -134,6 +134,9 @@ function harness(root: TurnSkillDefinition, thePool = 100, maxThe?: number) {
   })
 
   const player = makeParticipant('player', playerEntity, 100, 0)
+  // Review fix (MED-3) — detonate seeds ailments that must still
+  // initiate reactions; the fixture models a phap_tu participant.
+  player.canInitiateWuxingReactions = true
   player.ultimate = { skill: root, remainingCooldownTurns: 0 }
   const enemy = makeParticipant('enemy', enemyEntity, 1, 1)
 

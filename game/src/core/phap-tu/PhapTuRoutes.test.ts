@@ -205,4 +205,21 @@ describe('route stat modifiers aggregation', () => {
       expect.objectContaining({ sourceId: 'phap_tu', id: expect.stringContaining('route') }),
     )
   })
+
+  it('non-phap_tu path with a committed route -> no route modifiers (dirty-state defense)', () => {
+    // Review fix (HIGH-2): criticalRate/criticalDamage/ailmentPotency are
+    // universal stats — a route value that leaked onto a phap_tu_an or
+    // kiem_tu player must not reach the aggregators.
+    const gameManager = new GameManager()
+    const player = createDefaultPlayer()
+    player.cultivationPath = 'phap_tu_an'
+    player.phapTu = { element: 'fire', route: 'no' }
+
+    expect(gameManager.effectOps.getAggregatedModifiers(player)).not.toContainEqual(
+      expect.objectContaining({ sourceId: 'phap_tu', id: expect.stringContaining('route') }),
+    )
+    expect(gameManager.effectOps.getBattleBaseModifiers(player)).not.toContainEqual(
+      expect.objectContaining({ sourceId: 'phap_tu', id: expect.stringContaining('route') }),
+    )
+  })
 })

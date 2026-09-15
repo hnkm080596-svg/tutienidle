@@ -141,6 +141,7 @@ import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
 import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
 import { applyAnKitToBasic, applyAnKitToSpecial } from '../../data/skill/TurnAnKitSkills'
+import { ELEMENT_ORDER } from '../element/ElementLabels'
 
 
 
@@ -886,7 +887,11 @@ export class GameManager {
         // ngo_dao_hon_don dao passive (granted at the ritual).
         const resolved =
           player.cultivationPath === 'phap_tu_an'
-            ? applyAnKitToBasic(converted, this.skillManager.has('ngo_dao_hon_don'))
+            ? applyAnKitToBasic(
+                converted,
+                this.skillManager.has('ngo_dao_hon_don'),
+                this.resolveAnElementBasicPool(),
+              )
             : converted
 
         return {
@@ -951,6 +956,27 @@ export class GameManager {
   }
 
   /**
+   * Review fix (HIGH-1) — the An composite pool is the CANONICAL
+   * conversion of the five authored element basics (PHAP_TU_KIT_IDS[el][0]
+   * templates through getEffectiveSkill + toTurnSkillDefinition), not a
+   * static duplicate table. A missing/invalid template throws here —
+   * authoring errors must surface loudly at battle build, never silently
+   * shrink the pick pool.
+   */
+  private resolveAnElementBasicPool(): TurnSkillDefinition[] {
+    return ELEMENT_ORDER.map((element) => {
+      const templateId = PHAP_TU_KIT_IDS[element][0]
+      const template = this.skillTemplates.get(templateId)
+
+      if (!template) {
+        throw new Error(`An kit element pool: skill template "${templateId}" is not registered`)
+      }
+
+      return toTurnSkillDefinition(template, this.skillSystem.getEffectiveSkill(template))
+    })
+  }
+
+  /**
    * Phase A3 (2026-09-07) — resolve the player's special/ultimate
    * TurnSkillDefinitions for Pháp Tu builds, via the
    * Skill→TurnSkillDefinition converter. Specialization resolution is
@@ -974,6 +1000,7 @@ export class GameManager {
         special: specialSkill
           ? applyAnKitToSpecial(
               toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill)),
+              this.resolveAnElementBasicPool(),
             )
           : undefined,
       }

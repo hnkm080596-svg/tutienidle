@@ -430,7 +430,18 @@ export function switchRoute(
 ): number {
   const oldRoute = player.phapTu.route
 
-  if (oldRoute === route) {
+  // Review fix (HIGH-2): this is the only writer of phapTu.route besides
+  // the atomic (element, route) commit in selectPhapTuElement — it needs
+  // the same commitment gate. Without it a pre-commit call stamps route
+  // onto {element: null} and permanently poisons selectPhapTuElement's
+  // null-check invariant; a non-phap_tu player's dirty route state would
+  // also leak universal route stats via getRouteStatModifiers.
+  if (
+    player.cultivationPath !== 'phap_tu' ||
+    player.phapTu.element === null ||
+    oldRoute === null ||
+    oldRoute === route
+  ) {
     return 0
   }
 
@@ -510,7 +521,13 @@ export function previewRouteSwitch(
 
   const preview: RouteSwitchPreview = { refund: 0, forfeited: 0, resetNodeCount: 0 }
 
-  if (oldRoute === null) {
+  // Same gate as switchRoute (HIGH-2) — never preview a switch the
+  // domain would reject.
+  if (
+    player.cultivationPath !== 'phap_tu' ||
+    player.phapTu.element === null ||
+    oldRoute === null
+  ) {
     return preview
   }
 

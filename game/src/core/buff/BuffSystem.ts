@@ -19,6 +19,40 @@ import type {
 
 const AILMENT_RESIST_CAP = 0.75
 
+/**
+ * Review fix (MED-4) — generic potency amplification for a live Buff.
+ * Scales EVERY numeric magnitude carrier on the buff's effects, not just
+ * DoT fields: statModifier flat/percent, onHitProc and reactiveTrigger
+ * proc chances, gaugeDelta percent, dotRecovery heal. Chance-type fields
+ * clamp at 1. Sign is preserved — a debuff's -0.3 deepens to -0.45 at
+ * x1.5, a buff's +0.3 strengthens to +0.45. Duration is NOT touched here
+ * (callers own their own duration policy — Cong Minh amps it separately).
+ */
+export function scaleBuffPotency(buff: Buff, factor: number): void {
+  for (const effect of buff.effects) {
+    switch (effect.type) {
+      case 'dot':
+        if (effect.damagePerTurn !== undefined) effect.damagePerTurn *= factor
+        if (effect.damagePerSecond !== undefined) effect.damagePerSecond *= factor
+        break
+      case 'statModifier':
+        if (effect.percent !== undefined) effect.percent *= factor
+        if (effect.flat !== undefined) effect.flat *= factor
+        break
+      case 'onHitProc':
+      case 'reactiveTrigger':
+        effect.chance = Math.min(1, effect.chance * factor)
+        break
+      case 'gaugeDelta':
+        effect.percentOfMax *= factor
+        break
+      case 'dotRecovery':
+        effect.healPercent *= factor
+        break
+    }
+  }
+}
+
 
 export class BuffSystem {
   constructor(private readonly pool: BuffPool) {}

@@ -200,6 +200,35 @@ describe('TurnReactionManager — Cong Minh (sinh pair rule)', () => {
     expect(dotDamage(pool, 'trung_doc', 'src')).toBeCloseTo(docDot, 5)
     expect(target.currentHp).toBe(100_000)
   })
+
+  it('amps a NON-DoT child — statModifier percent and onHitProc chance both scale (Fire->Earth / Thach Hoa)', () => {
+    // Review fix (MED-4): "potency" is every numeric magnitude carrier
+    // on the child, not just DoT fields — otherwise Fire->Earth Cong
+    // Minh duration-amps Thach Hoa while leaving -evasionRate and the
+    // Choang proc at base strength.
+    const { reactionManager, combatSystem, reactionEvents } = makeHarness()
+    const source = createCombatant({ id: 'src', type: 'player' })
+    const target = createCombatant({ id: 'tgt', currentHp: 100_000, maxHp: 100_000 })
+
+    const pool = new BuffPool()
+    const buffs = new BuffSystem(pool)
+    buffs.apply(BUFF_REGISTRY.get('bong'), source, target) // fire incumbent
+    buffs.apply(BUFF_REGISTRY.get('thach_hoa'), source, target) // earth newcomer — child
+
+    const child = pool.getFromSource('thach_hoa', 'src')!
+    const beforeTurns = child.remainingTurns
+
+    reactionManager.checkAndTrigger(pool, 'thach_hoa', source, target, combatSystem, BUFF_REGISTRY)
+
+    expect(child.effects).toContainEqual(
+      expect.objectContaining({ type: 'statModifier', stat: 'evasionRate', percent: -0.3 * (1 + CONG_MINH_AMP) }),
+    )
+    expect(child.effects).toContainEqual(
+      expect.objectContaining({ type: 'onHitProc', chance: 0.5 * (1 + CONG_MINH_AMP), appliesBuffId: 'choang' }),
+    )
+    expect(child.remainingTurns).toBeCloseTo(beforeTurns * (1 + CONG_MINH_AMP), 5)
+    expect(reactionEvents).toEqual([expect.objectContaining({ name: 'cong_minh', damage: 0 })])
+  })
 })
 
 describe('TurnReactionManager — two-phase order and dead-pair skip', () => {
@@ -352,7 +381,7 @@ describe('player-origin gate — enemies participate as incumbents, never initia
     expect(player.buffs.hasAny('te_cong')).toBe(true)
   })
 
-  it('an enemy-ORIGIN incumbent on the enemy + a player metal application resolves normally', () => {
+  it('an enemy-ORIGIN incumbent on the enemy + a phap_tu player metal application resolves normally', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
     const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, new TurnReactionManager(eventBus))
@@ -360,7 +389,10 @@ describe('player-origin gate — enemies participate as incumbents, never initia
     const playerEntity = createCombatant({ id: 'player', type: 'player' })
     const enemyEntity = createCombatant({ id: 'enemy', currentHp: 1_000_000, stats: createBaseStats({ might: 0 }) })
 
+    // Review fix (MED-3): initiation authority is the explicit
+    // phap_tu-domain capability flag, not player-side membership.
     const player = makeParticipant('player', playerEntity, 10, 0, PHAP_TU_BASICS.metal)
+    player.canInitiateWuxingReactions = true
     const enemy = makeParticipant('enemy', enemyEntity, 10, 1)
 
     // Enemy-origin fire incumbent sitting on the enemy (e.g. a boss
@@ -378,5 +410,36 @@ describe('player-origin gate — enemies participate as incumbents, never initia
     expect(reactionEvents).toHaveLength(1)
     expect(enemy.buffs.hasAny('bong')).toBe(false)
     expect(enemy.buffs.hasAny('chay_mau')).toBe(false)
+  })
+
+  it('a player-side participant WITHOUT the capability never initiates — even against an enemy incumbent', () => {
+    // Review fix (MED-3): companions, mortal actors, kiem_tu — anything
+    // sharing the players array without the phap_tu domain — must not
+    // trigger reactions. Spec §6: the pair check is a phap_tu-domain
+    // capability, not a party-membership inference.
+    const eventBus = new EventBus()
+    const combat = new CombatSystem(eventBus)
+    const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, new TurnReactionManager(eventBus))
+
+    const companionEntity = createCombatant({ id: 'companion', type: 'player' })
+    const enemyEntity = createCombatant({ id: 'enemy', currentHp: 1_000_000, stats: createBaseStats({ might: 0 }) })
+
+    const companion = makeParticipant('companion', companionEntity, 10, 0, PHAP_TU_BASICS.metal)
+    const enemy = makeParticipant('enemy', enemyEntity, 10, 1)
+
+    new BuffSystem(enemy.buffs).apply(BUFF_REGISTRY.get('bong'), enemyEntity, enemyEntity, BUFF_REGISTRY)
+
+    const battle: TurnBattle = { players: [companion], enemies: [enemy], state: 'fighting' }
+    const reactionEvents: unknown[] = []
+    eventBus.on('reaction', (event) => reactionEvents.push(event))
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.2)
+
+    system.resolveActorTurn(battle, companion)
+
+    expect(reactionEvents).toHaveLength(0)
+    // The ailment still lands — only reaction INITIATION is gated.
+    expect(enemy.buffs.hasAny('chay_mau')).toBe(true)
+    expect(enemy.buffs.hasAny('bong')).toBe(true)
   })
 })

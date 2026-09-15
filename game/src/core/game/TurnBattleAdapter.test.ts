@@ -66,6 +66,16 @@ describe('toTurnBattleParticipant adapter', () => {
 
     expect(participant.activeDomains).toBeUndefined()
   })
+
+  // Review fix (MED-3) — reaction initiation is a capability derived
+  // from phap_tu-domain ownership, not player-side membership: both
+  // phap_tu paths flag; kiem_tu/enemies/companions never do.
+  it('phap_tu-domain participants can initiate wuxing reactions; others cannot', () => {
+    expect(toTurnBattleParticipant(entity(), 0, BASIC, 'phap_tu').canInitiateWuxingReactions).toBe(true)
+    expect(toTurnBattleParticipant(entity(), 0, BASIC, 'phap_tu_an').canInitiateWuxingReactions).toBe(true)
+    expect(toTurnBattleParticipant(entity(), 0, BASIC, 'kiem_tu').canInitiateWuxingReactions).toBe(false)
+    expect(toTurnBattleParticipant(entity(), 0, BASIC).canInitiateWuxingReactions).toBe(false)
+  })
 })
 
 

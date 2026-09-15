@@ -2270,6 +2270,9 @@ describe('TurnBattleSystem Phase A1 end-to-end � real production reaction cont
 
     const firePlayerParticipant = makeParticipant('fire_player', firePlayer, 100, 0)
     firePlayerParticipant.basic = PHAP_TU_BASICS.fire
+    // Review fix (MED-3) — the fixture models a phap_tu participant;
+    // reaction initiation needs the explicit capability flag.
+    firePlayerParticipant.canInitiateWuxingReactions = true
 
     const enemyParticipant = makeParticipant('target', target, 1, 1)
 
