@@ -105,21 +105,23 @@ export class EntityVitalsSystem {
     const applied = Math.max(0, amount * (1 + effectiveness))
 
     target.currentHp = Math.min(target.maxHp, target.currentHp + applied)
+    const actualHealing = target.currentHp - hpBefore
     this.emit(target, reason, applied, hpBefore, wardBefore, mpBefore, sourceId)
 
     // 6A (2026-09-01) — event 'heal' cho floating "+N" xanh trong
     // CombatScene. CHỈ healing/leech (nguồn có ý nghĩa hiển thị),
-    // KHÔNG regen (spam mỗi tick) và amount > 0.
-    if (applied > 0 && (reason === 'healing' || reason === 'leech')) {
+    // KHÔNG regen (spam mỗi tick) và actual > 0 — the float shows the
+    // HP really gained post-clamp, never the pre-clamp attempt.
+    if (actualHealing > 0 && (reason === 'healing' || reason === 'leech')) {
       this.eventBus.emit<CombatHealEvent>('heal', {
         type: 'heal',
         sourceId,
         targetId: target.id,
-        value: applied,
+        value: actualHealing,
       })
     }
 
-    return target.currentHp - hpBefore
+    return actualHealing
   }
 
   /**

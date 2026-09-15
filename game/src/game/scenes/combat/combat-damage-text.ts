@@ -68,7 +68,7 @@ export class CombatDamageText {
       this.scene.dotAccumulators.set(key, bucket)
     }
 
-    bucket.value += event.value ?? 0
+    bucket.value += event.hpDamage ?? event.value ?? 0
   }
 
   /** Flush cÃ¡c bucket Ä‘Ã£ Ä‘áº¿n háº¡n â€” Má»–I KHÃ“A Ä‘Ãºng 1 text (Â§7.2). */

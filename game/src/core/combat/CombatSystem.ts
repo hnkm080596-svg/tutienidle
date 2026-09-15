@@ -523,7 +523,10 @@ export class CombatSystem {
     // apply here; ward/MP shield/leech/thorns never see DoT either.
     const finalDamage = Math.max(0, rawDamage * (1 - mitigation))
 
-    this.vitals.applyDamage(target, finalDamage, 'dot', sourceId)
+    // hpDamage contract (review 2026-09-15): DoT has no absorb layers,
+    // but the 0-clamp still applies — an overkill tick reports only the
+    // HP the target actually had.
+    const actualHpDamage = this.vitals.applyDamage(target, finalDamage, 'dot', sourceId)
 
     this.eventBus.emit('damage', {
       type: 'damage',
@@ -534,8 +537,7 @@ export class CombatSystem {
 
       value: finalDamage,
 
-      // DoT has no absorb layers — hpDamage equals the applied value.
-      hpDamage: finalDamage,
+      hpDamage: actualHpDamage,
 
       damageType: 'elemental',
 
@@ -544,15 +546,16 @@ export class CombatSystem {
 
     // stat-system-reimagined Task 4 (D18) — authored DoT recovery: buff
     // effects of type 'dotRecovery' on the SOURCE heal it for a fraction
-    // of the damage THẬT SỰ đã trừ (sau DOT RES). The element match is
-    // authored on the effect (Doc Can = 'wood'), not hardcoded here —
+    // of the damage THẬT SỰ đã trừ (sau DOT RES và HP clamp — overkill
+    // ticks cannot recover more than the target lost). The element match
+    // is authored on the effect (Doc Can = 'wood'), not hardcoded here —
     // dead/absent sources recover nothing. Reason 'healing', not 'leech':
     // this is an authored recovery trigger that DOES scale with the
     // source's healingEffectivenessPercent, unlike damage-derived leech.
     const recovery = dotRecoveryTriggers(source, element, sourceBuffs)
 
     if (source && recovery > 0) {
-      this.applyHealing(source, finalDamage * recovery, source.id, 'healing')
+      this.applyHealing(source, actualHpDamage * recovery, source.id, 'healing')
     }
 
     this.killIfDead(target, sourceId)

@@ -64,11 +64,13 @@ function createTextHarness() {
     },
     entityHeadY: (sprite: { headY: number }) => sprite.headY,
     spriteFor: (id?: string) => (id === 'e1' ? { id: 'e1', headY: 42, rect: { x: 100 } } : undefined),
+    dotAccumulators: new Map<string, { value: number; nextFlushAt: number }>(),
+    time: { now: 0 },
   }
 
   const damageText = new CombatDamageText(fakeScene as unknown as CombatScene)
 
-  return { damageText, texts, tweens }
+  return { damageText, texts, tweens, fakeScene }
 }
 
 describe('CombatDamageText — kill + heal floating (6A-T2)', () => {
@@ -109,6 +111,21 @@ describe('CombatDamageText — kill + heal floating (6A-T2)', () => {
 
     expect(texts).toHaveLength(1)
     expect(texts[0]!.text).toBe('-35')
+  })
+
+  it('DoT accumulator sums hpDamage — an overkill tick adds the HP actually lost', () => {
+    const { damageText, fakeScene } = createTextHarness()
+
+    damageText.handleDamageEvent({
+      type: 'damage',
+      targetId: 'e1',
+      sourceId: 's1',
+      value: 100,
+      hpDamage: 5,
+      effectId: 'trung_doc',
+    })
+
+    expect(fakeScene.dotAccumulators.get('e1|trung_doc|s1')?.value).toBe(5)
   })
 
   it('handleDamageEvent shows nothing on a fully absorbed hit (hpDamage 0)', () => {

@@ -207,6 +207,44 @@ describe('healingEffectivenessPercent (INV-13)', () => {
     expect(source.currentHp).toBeCloseTo(510, 5)
   })
 
+  it('dotRecovery scales on actual HP lost — an overkill tick cannot recover more than the target had', () => {
+    const eventBus = new EventBus()
+    const combat = new CombatSystem(eventBus)
+
+    const source = createCombatant({ id: 'source', type: 'player', currentHp: 100, maxHp: 1000 })
+    const target = createCombatant({ id: 'target', currentHp: 5, maxHp: 10_000 })
+
+    const sourceBuffs = makeBuffPoolWith(DOT_RECOVERY, source, 1)
+
+    combat.applyDotDamage({
+      sourceId: source.id,
+      source,
+      sourceBuffs,
+      target,
+      rawDamage: 100,
+      element: 'wood',
+      effectId: 'qa_wood_dot',
+    })
+
+    expect(target.currentHp).toBe(0)
+    // 0.25 x 5 actual HP lost = 1.25 — not 0.25 x 100 post-resist.
+    expect(source.currentHp).toBeCloseTo(101.25, 5)
+  })
+
+  it("'heal' event reports the actual HP gained post-clamp, not the attempted amount", () => {
+    const eventBus = new EventBus()
+    const combat = new CombatSystem(eventBus)
+    const heals: Array<{ value: number }> = []
+    eventBus.on('heal', (e) => heals.push(e as (typeof heals)[number]))
+
+    const entity = createCombatant({ currentHp: 99, maxHp: 100 })
+
+    combat.applyHealing(entity, 100, 'src', 'healing')
+
+    expect(heals).toHaveLength(1)
+    expect(heals[0]?.value).toBe(1)
+  })
+
   it('non-matching element DoT does not feed a wood-scoped recovery trigger', () => {
     const combat = new CombatSystem(new EventBus())
 

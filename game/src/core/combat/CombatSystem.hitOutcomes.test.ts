@@ -245,6 +245,24 @@ describe('DoT closed economy (D13/INV-4)', () => {
     expect(resisted.currentHp).toBeCloseTo(10_000 - 75, 5)
   })
 
+  it('overkill DoT: event hpDamage is the HP actually lost, not the post-resist value', () => {
+    const bus = new EventBus()
+    const combat = new CombatSystem(bus)
+    const events: Array<{ value?: number; hpDamage?: number }> = []
+    bus.on('damage', (e) => events.push(e as (typeof events)[number]))
+
+    const source = attacker()
+    const target = dotTarget()
+    target.currentHp = 5
+
+    combat.applyDotDamage({ sourceId: source.id, source, target, rawDamage: 100, element: 'wood', effectId: 'qa' })
+
+    expect(target.currentHp).toBe(0)
+    expect(events).toHaveLength(1)
+    expect(events[0]?.value).toBe(100)
+    expect(events[0]?.hpDamage).toBe(5)
+  })
+
   it('DoT never touches turnsSinceLastHitLanded, ward, or thorns/leech', () => {
     const combat = new CombatSystem(new EventBus())
     const source = attacker()
