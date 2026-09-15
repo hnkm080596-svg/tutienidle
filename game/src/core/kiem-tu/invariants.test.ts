@@ -32,6 +32,7 @@ import {
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM, unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
+import { turnSkillDisplayMetaOf } from '../../data/skill/TurnSkillDisplayMeta'
 import { GameManager } from '../game/GameManager'
 import { ManualClockSource } from '../battle/turn/CombatClock'
 import { CombatSystem } from '../combat/CombatSystem'
@@ -223,6 +224,14 @@ describe('INV-2 — preset shape + cursor bounds', () => {
     expect([...KIEM_PHO_ORB_IDS].sort()).toEqual(Object.keys(ORB_UNLOCK_REALM).sort())
     expect([...KIEM_PHO_ORB_IDS].sort()).toEqual(Object.keys(KIEM_PHO_ORBS).sort())
   })
+
+  it('every orb has a display meta (preset strip + picker readout)', () => {
+    // Same drift class one layer over — the hand-authored meta map in
+    // TurnSkillDisplayMeta must cover every orb the catalog offers.
+    for (const orbId of KIEM_PHO_ORB_IDS) {
+      expect(turnSkillDisplayMetaOf(orbId), `missing display meta for ${orbId}`).toBeDefined()
+    }
+  })
 })
 
 describe('INV-3/4/6 — combo determinism + suffix-free table + realm gating', () => {
@@ -292,26 +301,31 @@ describe('INV-7 — hardcore discovery', () => {
     expect(seen.size).toBe(KIEM_PHO_COMBOS.length)
   })
 
-  it('grep-guard: no presentation-layer file imports the combo table', () => {
-    // The K11 discovery contract binds EVERY layer that could surface
-    // combo data — dirs plus App.vue itself (a composable importing the
-    // table is still a leak).
-    for (const dir of ['presentation', 'components', 'game', 'composables', 'stores']) {
-      const root = join(srcRoot, dir)
-      for (const file of listSourceFiles(root)) {
-        const source = readFileSync(file, 'utf-8')
-        expect(
-          /KiemPhoCombos|KIEM_PHO_COMBOS/.test(source),
-          `${file} reads the combo table — discovery must stay blind`,
-        ).toBe(false)
+  it('grep-guard: nothing outside the owner seam reads the combo table', () => {
+    // K11's discovery contract binds EVERY layer — scan all of src,
+    // allowlisting the only legitimate referencers: the table itself,
+    // the matcher/provider that own and inject it, and the display-meta
+    // lookup (id-keyed name flash IS the discovery signal, not
+    // enumeration). A new referencer must be allowlisted deliberately.
+    const ALLOWED_REFERENCERS = [
+      'src/data/skill/KiemPhoCombos.ts',
+      'src/data/skill/TurnSkillDisplayMeta.ts',
+      'src/core/kiem-tu/KiemPhoProvider.ts',
+      'src/core/kiem-tu/KiemPhoSystem.ts',
+    ]
+    const violations: string[] = []
+
+    for (const file of listSourceFiles(srcRoot)) {
+      const rel = file.replace(/\\/g, '/')
+      if (rel.endsWith('.test.ts')) continue
+      if (ALLOWED_REFERENCERS.some((allowed) => rel.endsWith(allowed))) continue
+      const source = stripComments(readFileSync(file, 'utf-8'))
+      if (/KiemPhoCombos|KIEM_PHO_COMBOS/.test(source)) {
+        violations.push(rel)
       }
     }
 
-    const appVue = join(srcRoot, 'App.vue')
-    expect(
-      /KiemPhoCombos|KIEM_PHO_COMBOS/.test(readFileSync(appVue, 'utf-8')),
-      'App.vue reads the combo table — discovery must stay blind',
-    ).toBe(false)
+    expect(violations).toEqual([])
   })
 })
 
