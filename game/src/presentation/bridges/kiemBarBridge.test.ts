@@ -44,7 +44,7 @@ function makeReader(battle: TurnBattle | null, player: KiemBarPlayerState) {
 }
 
 function hienPlayer(preset: OrbId[] = ['orb_dam', 'orb_chem']): KiemBarPlayerState {
-  return { kiemTu: { ...freshKiemTuState(), mode: 'hien', preset } }
+  return { realmId: 'golden_core', kiemTu: { ...freshKiemTuState(), mode: 'hien', preset } }
 }
 
 describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
@@ -95,16 +95,30 @@ describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
   })
 
   it('player without kiemTu (not Kiem Tu) → null', () => {
-    const reader = makeReader(fakeBattle('fighting', fakeProvider()), {})
+    const reader = makeReader(fakeBattle('fighting', fakeProvider()), { realmId: 'golden_core' })
 
     expect(reader()).toBeNull()
   })
 
-  it('ngu mode → null until Task 8 wires the forgeCost readout', () => {
-    const kiemTu: KiemTuState = { ...freshKiemTuState(), mode: 'ngu' }
-    const reader = makeReader(fakeBattle('fighting', fakeProvider()), { kiemTu })
+  it('ngu mode → Kiem Y / forgeCost(realm) progress + sword count label', () => {
+    const kiemTu: KiemTuState = {
+      ...freshKiemTuState(),
+      mode: 'ngu',
+      kiemY: 5_000,
+      kiemDaoCount: 3,
+      kiemDaoBase: 1.9,
+    }
+    // golden_core = realmIndex 3 → forgeCost(3) = 16_899.
+    const reader = makeReader(fakeBattle('fighting'), { realmId: 'golden_core', kiemTu })
 
-    expect(reader()).toBeNull()
+    expect(reader()).toEqual({
+      current: 5_000,
+      max: 16_899,
+      label: 'Kiếm Ý · 3 kiếm',
+      mode: 'ngu',
+      kiemDaoCount: 3,
+      kiemDaoBase: 1.9,
+    })
   })
 })
 

@@ -19,6 +19,8 @@
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { OrbId, KiemTuState } from '@/core/kiem-tu/KiemTuState'
 import { isKiemPhoProviderHandle } from '@/core/kiem-tu/KiemPhoProvider'
+import { forgeCost } from '@/core/kiem-tu/NguKiemDao'
+import { getRealmIndex } from '@/core/realm/realmSystem'
 import type { GameManager } from '@/core/game/GameManager'
 import {
   readOptionalGate,
@@ -36,6 +38,9 @@ export interface KiemBarSnapshot {
   cursor?: number
   nextOrb?: OrbId
   log?: readonly OrbId[]
+  /** Ngu readout: live flying swords + permanent base multiplier. */
+  kiemDaoCount?: number
+  kiemDaoBase?: number
 }
 
 export type KiemBarReader = () => KiemBarSnapshot | null
@@ -46,6 +51,7 @@ export const KIEM_BAR_READER_KEY = 'kiemBarReader' as const
  * (bridge tách khỏi Vue để CombatScene/PhaserCanvas không kéo store). */
 export interface KiemBarPlayerState {
   kiemTu?: KiemTuState
+  realmId: string
 }
 
 /**
@@ -65,7 +71,8 @@ export function makeKiemBarReader(
       return null
     }
 
-    const kiemTu = getPlayer().kiemTu
+    const player = getPlayer()
+    const kiemTu = player.kiemTu
 
     if (!kiemTu) {
       return null
@@ -92,8 +99,18 @@ export function makeKiemBarReader(
       }
     }
 
-    // ngu — Task 8 wires the Kiem Y / forgeCost progress readout.
-    return null
+    // ngu (Task 8) — bar = Kiem Y progress toward the next forge at the
+    // CURRENT realm's forgeCost; label carries the live sword count.
+    const realmIndex = getRealmIndex(player.realmId)
+
+    return {
+      current: kiemTu.kiemY,
+      max: realmIndex >= 1 ? forgeCost(realmIndex) : 1,
+      label: `Kiếm Ý · ${kiemTu.kiemDaoCount} kiếm`,
+      mode: 'ngu',
+      kiemDaoCount: kiemTu.kiemDaoCount,
+      kiemDaoBase: kiemTu.kiemDaoBase,
+    }
   }
 }
 

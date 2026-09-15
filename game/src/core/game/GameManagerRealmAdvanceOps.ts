@@ -5,6 +5,7 @@ import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData } from '../player/Player'
 import type { CultivationPathId } from '../player/CultivationPathKit'
 import { freshKiemTuState, MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
+import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
 import { grantCultivationPathRealmReward as grantPathRealmReward } from '../player/CultivationPathSystem'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
@@ -70,6 +71,19 @@ export class GameManagerRealmAdvanceOps {
       learnTechnique: techniqueId => this.learnTechnique(techniqueId),
       equipTechnique: techniqueId => this.equipTechnique(techniqueId),
     })
+  }
+
+  /**
+   * Kiem Tu Reimagined (spec K15) — Ngu Kiem Dao breakthrough merge.
+   * Call ONCE per major-realm advance, AFTER the realmId write: the
+   * forged swords fold into kiemDaoBase and the live count resets to 1
+   * (banked Kiem Y carries into the new realm's forgeCost). No-op for
+   * hien / non-kiem-tu players.
+   */
+  applyKiemTuRealmTransition(player: PlayerData): void {
+    if (player.kiemTu?.mode === 'ngu') {
+      applyBreakthroughMerge(player.kiemTu)
+    }
   }
 
   /**
@@ -234,6 +248,9 @@ export class GameManagerRealmAdvanceOps {
 
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)
+      // Kiem Tu Reimagined — ngu merge (no-op for hien; ngu cannot exist
+      // at mortal, so this is a contract-covering call, not a hot path).
+      this.applyKiemTuRealmTransition(player)
     }
 
     return true
