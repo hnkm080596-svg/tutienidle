@@ -153,4 +153,14 @@ export interface ProgressionNode {
   // Nhãn nhóm THUẦN HIỂN THỊ (vd 'fire', 'kiem_tu_core') — không ảnh
   // hưởng logic mua/prerequisite, chỉ để UI vẽ đúng nhánh cây.
   branchTag?: string
+
+  // Phap Tu Reimagined — route membership: node only has effect while
+  // the player's phapTu.route matches (aggregators skip inactive-route
+  // nodes; INV-19 forbids shared nodes depending on route-tagged ones).
+  routeTag?: 'dot' | 'no'
+
+  // Phap Tu Reimagined — element-branch membership for the normal
+  // Phap Tu tree; a node with elementTag belongs to that element's
+  // branch and is purchasable only while phapTu.element matches.
+  elementTag?: ElementType
 }

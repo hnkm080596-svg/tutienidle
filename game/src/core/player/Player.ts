@@ -13,6 +13,7 @@ import type { RewardReceiver } from '../reward/RewardSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { FoundationType } from '../breakthrough/FoundationType'
 import type { CultivationPathId } from './CultivationPathKit'
+import { createPhapTuState, type PhapTuState } from '../phap-tu/PhapTuState'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ElementType } from '../element/ElementType'
 import type { ArtifactProgress } from '../artifact/Artifact'
@@ -105,6 +106,14 @@ export interface PlayerData {
   // path) là NGOẠI LỆ duy nhất, xem CharacterPanel.vue's
   // canChooseCultivationPath.
   cultivationPath?: CultivationPathId
+
+  // Phap Tu Reimagined (spec 2026-09-14) — persistent path-choice
+  // authority for the normal Phap Tu path: { element, route } commit
+  // atomically via selectPhapTuElement(). Present from character
+  // creation (both null until the ritual + atomic pick); phap_tu_an
+  // holders carry the same inert shape — their path id, not this
+  // state, is what matters.
+  phapTu: PhapTuState
 
   // Kiếm Tu route (spec 2026-08-29-kiem-the-kiem-y mục 1) — chốt VĨNH
   // VIỄN trong chooseCultivationPath() theo tram Lv3 (10.000 trảm →
@@ -362,6 +371,10 @@ export function createDefaultPlayer(): PlayerData {
     // player.$state sau này (bug thật đã gặp: technique/skill equip
     // đúng nhưng UI gate không tự chuyển vì thiếu dòng này).
     cultivationPath: undefined,
+
+    // Required (non-optional) field — present from creation; both
+    // members stay null until the ritual + atomic element/route pick.
+    phapTu: createPhapTuState(),
 
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).

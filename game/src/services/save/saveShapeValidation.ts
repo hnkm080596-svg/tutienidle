@@ -197,6 +197,27 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.nodeLevels', message: 'phải là object' })
   }
 
+  // Phap Tu Reimagined — required PlayerData.phapTu: { element, route },
+  // both nullable until the atomic pick; a missing/garbage object would
+  // crash selectPhapTuElement/resolveRouteProfile reads downstream.
+  if (!isObject(player.phapTu)) {
+    issues.push({ path: 'player.phapTu', message: 'phải là object' })
+  } else {
+    if (
+      player.phapTu.element !== null &&
+      !['wood', 'fire', 'earth', 'metal', 'water'].includes(player.phapTu.element as string)
+    ) {
+      issues.push({ path: 'player.phapTu.element', message: 'phải là ElementType hoặc null' })
+    }
+    if (
+      player.phapTu.route !== null &&
+      player.phapTu.route !== 'dot' &&
+      player.phapTu.route !== 'no'
+    ) {
+      issues.push({ path: 'player.phapTu.route', message: "phải là 'dot' | 'no' | null" })
+    }
+  }
+
   // Talent v4 M2 (v61) — 5 field mới: ngân tu vi tràn (Hải Nạp), tầng
   // Lôi Kiếp, ledger mua node miễn phí (Vấn Đạo), tầng Phá Giáp mang
   // sang trận sau + cảnh giới lúc bank.
