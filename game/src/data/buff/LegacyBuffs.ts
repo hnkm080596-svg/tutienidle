@@ -141,6 +141,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
   // Hỏa Cầu cũ — chấp nhận theo N1 (dev phase, không migration).
   {
     id: 'bong',
+    element: 'fire',
     name: 'Bỏng',
     polarity: 'debuff',
     duration: 4,
@@ -159,6 +160,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
   // 6->5, dpsRatio 0.15->0.2 ("Poison Damage: 20% Skill Power/tick").
   {
     id: 'trung_doc',
+    element: 'wood',
     name: 'Trúng Độc',
     polarity: 'debuff',
     duration: 5,
@@ -177,6 +179,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
   // Plans/KimPath mục 3 (2026-08-21) — maxStacks 3->5.
   {
     id: 'chay_mau',
+    element: 'metal',
     name: 'Chảy Máu',
     polarity: 'debuff',
     duration: 5,
@@ -193,6 +196,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
 
   {
     id: 'te_cong',
+    element: 'water',
     name: 'Tê Cóng',
     polarity: 'debuff',
     duration: 4,
@@ -208,6 +212,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
 
   {
     id: 'hoai_tu',
+    element: 'earth',
     name: 'Hoại Tử',
     polarity: 'debuff',
     duration: 8,
@@ -228,6 +233,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
   // onHitProc), đúng brief mục Step 3.
   {
     id: 'thach_hoa',
+    element: 'earth',
     name: 'Thạch Hóa',
     polarity: 'debuff',
     duration: 4,
@@ -249,6 +255,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
   // Plans/EarthPath mục VI — "Trói Chân": Root.
   {
     id: 'troi_chan',
+    element: 'earth',
     name: 'Trói Chân',
     polarity: 'debuff',
     duration: 2.5,
@@ -264,6 +271,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
   // Plans/EarthPath mục V — "Dung Nham".
   {
     id: 'dung_nham',
+    element: 'fire',
     name: 'Dung Nham',
     polarity: 'debuff',
     duration: 4,
@@ -281,6 +289,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
   // Độc + Chảy Máu.
   {
     id: 'huyet_doc',
+    element: 'metal',
     name: 'Huyết Độc',
     polarity: 'debuff',
     duration: 5,

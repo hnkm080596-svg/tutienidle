@@ -107,6 +107,12 @@ export interface BuffDefinition {
   polarity: BuffPolarity
   hidden?: boolean
 
+  // Phap Tu Reimagined Task 5 — the ELEMENT this ailment belongs to
+  // (definition-level identity for the Sinh/Khac reaction engine).
+  // Distinct from the per-effect `element` fields inside effects (those
+  // describe a DoT's damage type). Untagged = non-elemental buff.
+  element?: ElementType
+
   duration: number
   maxStacks?: number
   stackMode: BuffStackMode

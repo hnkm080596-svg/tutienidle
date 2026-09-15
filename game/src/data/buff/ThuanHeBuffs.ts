@@ -55,6 +55,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
   // (2.5s → 4s), chỉ dùng cho biến thể này.
   {
     id: 'cau_mang_can',
+    element: 'wood',
     name: 'Câu Mang Căn',
     description: 'Rễ Câu Mang quấn chặt — không thể di chuyển.',
     polarity: 'debuff',
