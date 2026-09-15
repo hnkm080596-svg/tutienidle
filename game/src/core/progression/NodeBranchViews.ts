@@ -21,12 +21,19 @@ export const LAP_DAO_BRANCH_TAG = 'lap_dao'
  */
 export const HIDDEN_BRANCH_TAGS: readonly string[] = ['da_phap']
 
+/** Kiem Tu Reimagined (spec §6) — one kiem-tu tree, two branchTags:
+ *  'kiem_pho' holds the orb branches, 'ngu_kiem' the hidden root +
+ *  Ngu branch. Both views render BOTH tags — visibility inside the
+ *  tree is governed by revealWhen (kiem_tu_an) and the kiemTuMode
+ *  display filter in NodeTreePanel (opposite-mode nodes hidden). */
+const KIEM_TU_VIEW_TAGS = ['kiem_pho', 'ngu_kiem'] as const
+
 /**
  * The branchTags a tree view for `viewTag` must render.
  * - Element view (`fire`, ...): the element branch, the shared Lập Đạo
  *   gate, and that element's Thuan sub-branch.
- * - Anything else (kiem_tran/bat_kiem routes, future tags): pass-through
- *   single-tag view.
+ * - Kiem Tu view (`kiem_pho`/`ngu_kiem`): the whole kiem-tu tree.
+ * - Anything else: pass-through single-tag view.
  * - A HIDDEN tag as the view itself renders nothing.
  */
 export function viewBranchTags(viewTag: string): readonly string[] {
@@ -37,6 +44,10 @@ export function viewBranchTags(viewTag: string): readonly string[] {
   if (ELEMENT_TAG_SET.has(viewTag)) {
     const element = viewTag as ElementType
     return [viewTag, LAP_DAO_BRANCH_TAG, `thuan_${element}`]
+  }
+
+  if ((KIEM_TU_VIEW_TAGS as readonly string[]).includes(viewTag)) {
+    return KIEM_TU_VIEW_TAGS
   }
 
   return [viewTag]

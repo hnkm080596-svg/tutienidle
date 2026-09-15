@@ -1,6 +1,7 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { SkillResourceStatKey } from '../skill/Skill'
+import type { OrbId } from '../kiem-tu/KiemTuState'
 
 /**
  * Skill rework (2026-08-21) — bonus nhắm THẲNG 1 field trên object
@@ -55,6 +56,12 @@ export type NodePrerequisite =
   // `level` VÀ tích lũy `count` cast (đọc PlayerData.skillCastCounts,
   // mirror Skill.totalExperience — nguồn sự thật save).
   | { kind: 'skillCastCount'; skillId: string; level?: number; count?: number }
+  // Kiem Tu Reimagined (spec K20) — Cuu Cung preflight: holds only while
+  // the player is in ngu mode AND kiemDaoCount < kiemDaoCap(realmIndex).
+  // Evaluated inside canPurchaseNode, so a capped sword pool blocks the
+  // purchase BEFORE insight is deducted — including the Y-grant outer
+  // nodes (no Y may accumulate past cap).
+  | { kind: 'kiemDaoBelowCap' }
 
 /**
  * Những gì 1 node THẬT SỰ làm khi mua — optional field, không phải
@@ -100,6 +107,40 @@ export interface NodeEffect {
   // GameManagerProgressionOps.purchaseNode; mode-switch nodes are
   // non-refundable and devResetBranch skips them.
   kiemTuModeSwitch?: 'ngu'
+
+  // Kiem Tu Reimagined (spec §6, Cuu Cung) — lump Kiem Y granted ONCE
+  // at purchase through gainKiemY() (the domain owner — conversion and
+  // the cap rule live there; nodes never touch player.kiemTu).
+  kiemYGrant?: number
+
+  // Kiem Tu Reimagined (spec §5.4, Trung Cung) — direct +N kiemDaoCount
+  // at purchase through grantKiemDao() (clamped at the realm cap; the
+  // kiemDaoBelowCap prereq should already have blocked a capped buy).
+  kiemDaoGrant?: number
+
+  // Kiem Tu Reimagined (spec §5.2 Roll Cascade) — purchasing unlocks
+  // one cascade slot; the Ngu provider reads these via
+  // collectKiemDaoCascadeUnlocks (effect-driven — node id is free).
+  cascadeUnlock?: 'a' | 'e' | 'd'
+
+  // Kiem Tu Reimagined (spec §4.2) — DATA form of a combo capstone.
+  // KiemPhoNodeModifiers converts purchased nodes carrying this field
+  // into KiemPhoComboModifier hooks at battle-build time; it is the
+  // ONLY channel through which a node may alter a combo.
+  kiemTuComboModifier?: {
+    // matches(combo): combo pattern contains >= count of `orb`.
+    minOrbCount: { orb: OrbId; count: number }
+    // Multiplies the combo's bonus damage by (1 + x) — no-op on
+    // damage-less combos.
+    bonusDamageMultiplier?: number
+    // Attaches a buff/ailment application to the combo; if the combo
+    // already applies the same definition the stacks MERGE (add).
+    appliesBuff?: { definitionId: string; target: 'self' | 'target'; stacks?: number }
+    // Adds stacks to the combo's existing appliesBuff (no-op without one).
+    bonusAilmentStacks?: number
+    // Deterministic apply order — ascending, nodeId tiebreak. Default 0.
+    priority?: number
+  }
 }
 
 /** 9 loại on-hit kiếm trận (spec mục 4) — mở theo cấp trận 2→9. */

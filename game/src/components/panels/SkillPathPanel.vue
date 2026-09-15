@@ -47,10 +47,11 @@ const showTree = computed(() => player.cultivationPath === 'phap_tu' || player.c
 // ---- Nhánh phap_tu (Hành -> Node Tree) ----
 const selectedBranch = ref<ElementType>('fire')
 
-// ---- Nhánh kiem_tu (spec 2026-08-29-kiem-the-kiem-y mục 1) — route
-// chốt VĨNH VIỄN lúc chọn path (tram Lv3 → bat_kiem, chưa →
-// kiem_tran), KHÔNG còn toggle đổi cây — hiển thị ĐÚNG 1 branch theo
-// route. Cây ẩn "Kiếm Tâm Ẩn" placeholder đã gỡ cùng cơ chế. ----
+// ---- Nhánh kiem_tu (Kiem Tu Reimagined spec §6) — ONE tree, two
+// branchTags rendered together: 'kiem_pho' (orb branches) + 'ngu_kiem'
+// (hidden root + Ngu branch). Node-level visibility is mode-filtered
+// inside NodeTreePanel — this tag only selects WHICH view; the re-
+// imagined tree replaces the retired kiem_tran/bat_kiem route split. ----
 
 const selectedNode = ref<ProgressionNode | null>(null)
 const selectedNodePurchased = ref(false)
@@ -136,7 +137,11 @@ const selectedSkillHasTree = computed(() => {
 })
 
 const treeBranchTag = computed<string>(() =>
-  player.cultivationPath === 'kiem_tu' ? (player.kiemTuRoute ?? 'kiem_tran') : selectedBranch.value,
+  player.cultivationPath === 'kiem_tu'
+    ? player.kiemTu?.mode === 'ngu'
+      ? 'ngu_kiem'
+      : 'kiem_pho'
+    : selectedBranch.value,
 )
 
 function onSelectSkill(skill: Skill) {

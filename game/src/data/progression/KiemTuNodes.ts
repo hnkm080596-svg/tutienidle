@@ -1,38 +1,39 @@
 import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 import type { StatModifier } from '../../core/stats/StatCalculator'
+import type { OrbId } from '../../core/kiem-tu/KiemTuState'
+import { REALMS } from '../realms/realm'
+import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 
-// Kiếm Tu — 2 cây node (2026-08-28, xem
-// .superpowers/sdd/2026-08-28-kiem-tu-tu-luc/task-5-brief.md):
+// Kiem Tu Reimagined (spec 2026-09-15 §6) — the tree after the legacy
+// Kiem Tran / Bat Kiem retirement:
 //
-//   Cây Kiếm Trận (branchTag 'kiem_tran') — 9 trận, mỗi trận là 1 keystone
-//   unlock 1 skill chiêu trận riêng (kiem_tran_*), chain theo realm TĂNG DẦN
-//   + node trận liền trước. Lưỡng Nghi (Luyện Khí) và Tam Tài (Trúc Cơ) là
-//   2 trận trong-scope (đúng plan §3.5/spec §3.5); Tứ Tượng→Vô Cực CHAIN +
-//   GATE đầy đủ ở data nhưng chưa cần đảm bảo reachable ở bản này (realm
-//   cao hơn thực tế đã có trong game, xem data/realms/realm.ts, nên gate
-//   vẫn hợp lệ — chỉ là chưa ai chơi tới đó).
+//   branchTag 'kiem_pho' — 5 orb branches (hien). Each branch: 5
+//   growth nodes realm-gated to the orb's own unlock realm (spec K13)
+//   + 1 keystone capstone carrying effect.kiemTuComboModifier — the
+//   ONLY channel a node may alter a combo (spec §4.2). All tagged
+//   kiemTuMode 'hien' — inert and unpurchasable once mode flips.
 //
-//   Cây Bạt Kiếm (branchTag 'bat_kiem') — root `bat_kiem_an` gate bởi
-//   NodeSystem prerequisite `skillCastCount` (Task 2): Huy Kiếm (`tram`)
-//   đạt Lv3 VÀ tích lũy 9999 lần cast. Growth CHỈ được phép buff sát
-//   thương/phòng thủ trong lúc tụ lực — TUYỆT ĐỐI không đụng tickSeconds
-//   (spec §4.3): BattleSystem.updateChanneling()/setChannelTickSeconds()
-//   coi tickSeconds là dữ liệu UI-driven (Task 7's slider 3-9s), KHÔNG có
-//   field runtime nào cho node cộng vào — nếu cho node chỉnh trần x thì
-//   phải thêm field mới vào SkillRuntimeStats.ts (core engine, ngoài phạm
-//   vi task data-only này) nên growth Bạt Kiếm CHỦ ĐỘNG tránh hẳn hướng đó,
-//   dùng statModifiers CHỈ NHẮM stat nhân vật CÓ THẬT — skillDamagePercent
-//   (khuếch đại chính effect 'damage' của Bạt Kiếm Thuật, xem
-//   StatTypes.ts's ghi chú "Kiếm Tu... % khuếch đại TOÀN BỘ effect damage
-//   của skill chủ động"), wardMax/finalDamageReductionPercent/
-//   ailmentResistPercent (sống sót + giảm khả năng bị Choáng/Thạch Hóa/
-//   Trói Chân ngắt tụ lực giữa chừng, xem isChannelInterrupted()). Không
-//   field nào trong nhóm này có thể LÀM GIẢM tickSeconds — hài hòa cả quy
-//   tắc "không node giảm thời gian tụ" (constraint hard) lẫn "ưu tiên stat
-//   có thật, chỉ phát minh field mới nếu bất khả kháng" (ở đây khả kháng —
-//   không phát minh gì).
+//   branchTag 'ngu_kiem' — the hidden root kiem_tu_an (Task 10), then
+//   the ngu branch: 3 cascade unlock nodes (a/e/d), 3 per-instance
+//   growth nodes (generic statModifiers — every phi kiem instance runs
+//   the standard damage pipeline so player stats scale all of them),
+//   and the Cuu Cung 3x3: 8 realm-gated kiemYGrant outers feeding
+//   trung_cung's +1 kiemDaoGrant. All 9 Cuu Cung nodes carry the
+//   kiemDaoBelowCap prereq — a capped pool rejects the buy BEFORE
+//   insight moves (spec K20).
+//
+// Compile-compat: TRAN_SEQUENCE / getFormationSwordCount stay exported —
+// KiemTranSkills.ts still imports them until Task 12 retires producer +
+// consumer together.
 
-function stat(nodeId: string, statKey: StatModifier['stat'], flat?: number, perLevelFlat?: number): StatModifier {
+function stat(
+  nodeId: string,
+  statKey: StatModifier['stat'],
+  flat?: number,
+  perLevelFlat?: number,
+  percent?: number,
+  perLevelPercent?: number,
+): StatModifier {
   return {
     id: `node:${nodeId}:${statKey}`,
     sourceId: nodeId,
@@ -40,16 +41,15 @@ function stat(nodeId: string, statKey: StatModifier['stat'], flat?: number, perL
     stat: statKey,
     ...(flat !== undefined ? { flat } : {}),
     ...(perLevelFlat !== undefined ? { perLevelFlat } : {}),
+    ...(percent !== undefined ? { percent } : {}),
+    ...(perLevelPercent !== undefined ? { perLevelPercent } : {}),
   }
 }
 
-// ───────────────────────── Cây Kiếm Trận ─────────────────────────
+// ───────────────────── Compile-compat legacy export ─────────────────────
+// TODO(Task 12): delete together with KiemTranSkills.ts + its Skills.ts
+// wiring — producer and consumer die in the same change.
 
-// Exported (không chỉ dùng nội bộ file này) — Skills.ts's 9 `kiem_tran_*`
-// skill entries generate THẲNG từ bảng này (Task 5 review fix, 2026-08-28)
-// để tránh định nghĩa lại chuỗi id/name/realmId/swordCount lần 2.
-// `skillDescription` optional — mặc định suy công thức chung, Vô Cực override
-// riêng (dòng chữ khác hẳn, không phải lỗi copy-paste).
 export const TRAN_SEQUENCE: Array<{
   id: string
   name: string
@@ -66,423 +66,173 @@ export const TRAN_SEQUENCE: Array<{
   { id: 'kiem_tran_that_tinh', name: 'Thất Tinh Kiếm Trận', realmId: 'void_refinement', skillId: 'kiem_tran_that_tinh', swordCount: 7 },
   { id: 'kiem_tran_bat_quai', name: 'Bát Quái Kiếm Trận', realmId: 'body_integration', skillId: 'kiem_tran_bat_quai', swordCount: 8 },
   { id: 'kiem_tran_cuu_cung', name: 'Cửu Cung Kiếm Trận', realmId: 'mahayana', skillId: 'kiem_tran_cuu_cung', swordCount: 9 },
-  // swordCount + damage/ratio scaling ĐẠT TRẦN ở Cửu Cung (9 kiếm) — Vô Cực
-  // (đại cảnh giới cuối) CHỦ ĐỘNG dùng lại đúng swordCount/số liệu, chỉ khác
-  // biệt bằng realm gate cao hơn + flavor text riêng (vòng tròn vô tận), không
-  // phải lỗi copy-paste thiếu tăng tiến — 9 thanh kiếm đã là giới hạn thiết kế.
   { id: 'kiem_tran_vo_cuc', name: 'Vô Cực Kiếm Trận', realmId: 'tribulation', skillId: 'kiem_tran_vo_cuc', swordCount: 9, skillDescription: 'Bày Vô Cực Kiếm Trận, 9 thanh phi kiếm hợp thành vòng tròn vô tận chém liên hoàn.' },
 ]
 
-const KIEM_TRAN_KEYSTONES: ProgressionNode[] = TRAN_SEQUENCE.map((entry, index) => ({
-  id: entry.id,
-  name: entry.name,
-  description: `Bày ${entry.name} — mở khoá chiêu thức ${entry.name}, dùng chung ${entry.swordCount} thanh phi kiếm.`,
-  type: 'major',
-  role: 'keystone',
-  // Lưỡng Nghi (Luyện Khí) miễn phí — vào scope y hệt root Ngũ Hành trong
-  // PhapTuNodes.ts (rootCost 0 cho hành mở sẵn lúc chọn path). Từ Tam Tài
-  // trở đi tốn 2 Cảm Ngộ mỗi trận, cùng mức với keystone Trúc Cơ Pháp Tu.
-  insightCost: index === 0 ? 0 : 2,
-  prerequisites: [
-    { kind: 'realm', realmId: entry.realmId },
-    ...(index > 0 ? [{ kind: 'node' as const, nodeId: TRAN_SEQUENCE[index - 1]!.id }] : []),
-  ],
-  effect: { unlocksSkillIds: [entry.skillId] },
-  branchTag: 'kiem_tran',
-}))
+// ───────────────────────── Orb branches (hien) ─────────────────────────
 
-// Growth phụ Kiếm Trận — gắn sau node đầu (Lưỡng Nghi) để mở sớm, chỉ dùng
-// stat CÓ THẬT trong StatTypes.ts (metalPower/attackSpeed/skillDamagePercent
-// — xem PhapTuNodes.ts's "power nền"/"minor_metal_heart" cho tiền lệ dùng
-// đúng những field này).
-const KIEM_TRAN_GROWTH: ProgressionNode[] = [
-  {
-    id: 'minor_tran_kim_luc',
-    name: 'Trận Kim Lực',
-    description: '+3 Kim Lực mỗi cấp (cấp 5 = +15).',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'kiem_tran_luong_nghi' }],
-    effect: { statModifiers: [stat('minor_tran_kim_luc', 'metalPower', 3, 3)] },
-    branchTag: 'kiem_tran',
-  },
-  {
-    id: 'minor_tran_kiem_toc',
-    name: 'Kiếm Tốc',
-    description: '+2% Tốc Độ Ra Đòn mỗi cấp (cấp 5 = +10%).',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'kiem_tran_luong_nghi' }],
-    effect: {
-      statModifiers: [{
-        id: 'node:minor_tran_kiem_toc:speed',
-        sourceId: 'minor_tran_kiem_toc',
-        sourceType: 'talent',
-        stat: 'speed',
-        percent: 0.02,
-        perLevelPercent: 0.02,
-      }],
-    },
-    branchTag: 'kiem_tran',
-  },
-  {
-    id: 'minor_tran_kiem_uy',
-    name: 'Kiếm Uy',
-    description: '+3% Sát Thương Kỹ Năng Chủ Động mỗi cấp (cấp 5 = +15%).',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'kiem_tran_luong_nghi' }],
-    effect: {
-      statModifiers: [{
-        id: 'node:minor_tran_kiem_uy:skillDamagePercent',
-        sourceId: 'minor_tran_kiem_uy',
-        sourceType: 'talent',
-        stat: 'skillDamagePercent',
-        percent: 0.03,
-        perLevelPercent: 0.03,
-      }],
-    },
-    branchTag: 'kiem_tran',
-  },
-]
-
-// ───────────────────────── Cây Bạt Kiếm ─────────────────────────
-
-const BAT_KIEM_ROOT: ProgressionNode = {
-  id: 'bat_kiem_an',
-  name: 'Bạt Kiếm Ấn',
-  description:
-    'Lĩnh ngộ Bạt Kiếm Ấn sau khi Huy Kiếm đạt cấp 3 và tích lũy đủ 9999 lần xuất chiêu — mở khoá Bạt Kiếm Thuật.',
-  type: 'major',
-  role: 'root',
-  insightCost: 2,
-  prerequisites: [{ kind: 'skillCastCount', skillId: 'tram', level: 3, count: 9999 }],
-  effect: { unlocksSkillIds: ['bat_kiem_thuat'] },
-  branchTag: 'bat_kiem',
+interface OrbGrowthSpec {
+  name: string
+  description: string
+  modifier: StatModifier
 }
 
-const BAT_KIEM_GROWTH: ProgressionNode[] = [
-  {
-    id: 'minor_bat_kiem_uy',
-    name: 'Bạt Kiếm Uy',
-    description: '+3% Sát Thương Kỹ Năng Chủ Động mỗi cấp (cấp 5 = +15%) — khuếch đại thẳng Bạt Kiếm Thức.',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: {
-      statModifiers: [{
-        id: 'node:minor_bat_kiem_uy:skillDamagePercent',
-        sourceId: 'minor_bat_kiem_uy',
-        sourceType: 'talent',
-        stat: 'skillDamagePercent',
-        percent: 0.03,
-        perLevelPercent: 0.03,
-      }],
-    },
-    branchTag: 'bat_kiem',
-  },
-  {
-    id: 'minor_bat_kiem_ho_the',
-    name: 'Bạt Kiếm Hộ Thể',
-    description: '+20 Hộ Thuẫn tối đa mỗi cấp (cấp 5 = +100) — trụ vững trong lúc tụ lực.',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: { statModifiers: [stat('minor_bat_kiem_ho_the', 'wardMax', 20, 20)] },
-    branchTag: 'bat_kiem',
-  },
-  {
-    id: 'minor_bat_kiem_kien_nhan',
-    name: 'Bạt Kiếm Kiên Nhẫn',
-    description: '+3% Kháng Dị Thường mỗi cấp (cấp 5 = +15%) — khó bị Choáng/Thạch Hóa/Trói Chân ngắt tụ lực hơn.',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: {
-      statModifiers: [{
-        id: 'node:minor_bat_kiem_kien_nhan:ailmentResistPercent',
-        sourceId: 'minor_bat_kiem_kien_nhan',
-        sourceType: 'talent',
-        stat: 'ailmentResistPercent',
-        percent: 0.03,
-        perLevelPercent: 0.03,
-      }],
-    },
-    branchTag: 'bat_kiem',
-  },
-  {
-    id: 'minor_bat_kiem_kien_nhan_2',
-    name: 'Bạt Kiếm Bất Động',
-    description: '+2% Giảm Sát Thương Cuối mỗi cấp (cấp 5 = +10%) — chịu đòn tốt hơn trong lúc đứng yên tụ lực.',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: {
-      statModifiers: [{
-        id: 'node:minor_bat_kiem_kien_nhan_2:finalDamageReductionPercent',
-        sourceId: 'minor_bat_kiem_kien_nhan_2',
-        sourceType: 'talent',
-        stat: 'finalDamageReductionPercent',
-        percent: 0.02,
-        perLevelPercent: 0.02,
-      }],
-    },
-    branchTag: 'bat_kiem',
-  },
-]
-
-// Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 3.3/3.4) —
-// node công năng kiếm ý BK. NHỮNG node này thay keystone bat_kiem_thuc
-// đã dỡ (route vĩnh viễn chốt ở Quán Khí, không còn gate đổi route).
-
-// Tỉ lệ đỡ + hiệu quả đỡ theo tầng kiếm ý vĩnh viễn (spec mục 3.3 —
-// mọi công năng scale theo TẦNG, mở bằng node).
-const BAT_KIEM_KIEM_Y_NODES: ProgressionNode[] = [
-  {
-    id: 'bat_kiem_do_don',
-    name: 'Kiếm Ý Đỡ Đòn',
-    description: 'Mỗi tầng Kiếm Ý vĩnh viễn +1% tỉ lệ đỡ đòn và +2% hiệu quả đỡ — đòn trúng bớt đau.',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: {
-      statModifiers: [
-        { id: 'node:bat_kiem_do_don:blockChance', sourceId: 'bat_kiem_do_don', sourceType: 'talent', stat: 'blockChance', percent: 0.01, perLevelPercent: 0.01 },
-        { id: 'node:bat_kiem_do_don:blockEffectiveness', sourceId: 'bat_kiem_do_don', sourceType: 'talent', stat: 'blockEffectiveness', percent: 0.02, perLevelPercent: 0.02 },
-      ],
-    },
-    branchTag: 'bat_kiem',
-  },
-  {
-    id: 'bat_kiem_hoi_sinh',
-    name: 'Kiếm Ý Bất Tử',
-    description: 'Khi HP về 0, tiêu hao 100 Kiếm Ý tạm (ưu tiên tạm trước) để hồi sinh 1 lần mỗi trận với 50% HP.',
-    type: 'major',
-    role: 'keystone',
-    insightCost: 2,
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: { unlocksSkillIds: [] },
-    branchTag: 'bat_kiem',
-  },
-  {
-    id: 'bat_kiem_amp_hoi_phuc',
-    name: 'Bạt Kiếm Phẫn Nộ',
-    description: 'Hồi phục hệ số khuếch đại khi gánh đòn: +10% mỗi cấp (cấp 5 = +50%, tổng về 0.8).',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: { unlocksSkillIds: [] },
-    branchTag: 'bat_kiem',
-  },
-]
-
-// Ult unlock (spec mục 2/3.4) — 2 node major mở ult manual của route.
-const ULT_UNLOCK_NODES: ProgressionNode[] = [
-  {
-    id: 'kiem_tran_ult_tru_tien',
-    name: 'Tru Tiên Kiếm Trận',
-    description: 'Đại thành kiếm trận — đốt Kiếm Thế triển khai Tru Tiên Kiếm Trận, nổ trảm toàn màn để lại trường kiếm.',
-    type: 'major',
-    role: 'keystone',
-    insightCost: 3,
-    prerequisites: [
-      { kind: 'realm', realmId: 'foundation_establishment' },
-      { kind: 'node', nodeId: 'kiem_tran_tam_tai' },
-    ],
-    effect: { unlocksSkillIds: ['tru_tien_kiem_tran'] },
-    branchTag: 'kiem_tran',
-  },
-  {
-    id: 'bat_kiem_ult_khai_thien',
-    name: 'Kiếm Khai Thiên Môn',
-    description: 'Đại thành Bạt Kiếm — đốt toàn bộ Kiếm Ý tạm, một kiếm khai thiên tràn sát thương ra toàn màn.',
-    type: 'major',
-    role: 'keystone',
-    insightCost: 3,
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: { unlocksSkillIds: ['kiem_khai_thien_mon'] },
-    branchTag: 'bat_kiem',
-  },
-]
-
-// Node chuyển skill cũ thành passive (spec mục 5.3) — skill Kiếm Tu cũ
-// không còn trong loadout (mỗi route 1 skill duy nhất), tên + chất võ
-// thuật chuyển thành passive node tăng cường route tương ứng.
-const CONVERTED_PASSIVE_NODES: ProgressionNode[] = [
-  {
-    id: 'passive_ngu_kiem_thuat',
-    name: 'Ngự Kiếm Thuật',
-    description: 'Mỗi lần cast kiếm trận phóng thêm kiếm ứng hỗ trợ on-hit (+1 kiếm ứng/lvl, cấp 5 = +5).',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'kiem_tran_luong_nghi' }],
-    effect: { statModifiers: [stat('passive_ngu_kiem_thuat', 'metalPower', 3, 3)] },
-    branchTag: 'kiem_tran',
-  },
-  {
-    id: 'passive_van_kiem_trieu_tong',
-    name: 'Vạn Kiếm Triều Tông',
-    description: 'Vạn kiếm triều tông — cường hóa Tru Tiên Kiếm Trận (+8% sát thương ult mỗi cấp).',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'kiem_tran_ult_tru_tien' }],
-    effect: {
-      statModifiers: [{
-        id: 'node:passive_van_kiem_trieu_tong:skillDamagePercent',
-        sourceId: 'passive_van_kiem_trieu_tong',
-        sourceType: 'talent',
-        stat: 'skillDamagePercent',
-        percent: 0.08,
-        perLevelPercent: 0.08,
-      }],
-    },
-    branchTag: 'kiem_tran',
-  },
-  {
-    id: 'passive_thai_hu_nhat_kiem',
-    name: 'Thái Hư Nhất Kiếm',
-    description: 'Thái Hư Kiếm Ý — +2% tỉ lệ chí mạng và +4% sát thương chí mạng mỗi cấp.',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: {
-      statModifiers: [
-        { id: 'node:passive_thai_hu_nhat_kiem:criticalRate', sourceId: 'passive_thai_hu_nhat_kiem', sourceType: 'talent', stat: 'criticalRate', percent: 0.02, perLevelPercent: 0.02 },
-        { id: 'node:passive_thai_hu_nhat_kiem:criticalDamage', sourceId: 'passive_thai_hu_nhat_kiem', sourceType: 'talent', stat: 'criticalDamage', percent: 0.04, perLevelPercent: 0.04 },
-      ],
-    },
-    branchTag: 'bat_kiem',
-  },
-  {
-    id: 'passive_phieu_van_bo',
-    name: 'Phiêu Vân Bộ',
-    description: 'Thân pháp phiêu vân — +2% né tránh và +2% tốc độ ra đòn mỗi cấp.',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: {
-      statModifiers: [
-        { id: 'node:passive_phieu_van_bo:evasionRate', sourceId: 'passive_phieu_van_bo', sourceType: 'talent', stat: 'evasionRate', percent: 0.02, perLevelPercent: 0.02 },
-        { id: 'node:passive_phieu_van_bo:speed', sourceId: 'passive_phieu_van_bo', sourceType: 'talent', stat: 'speed', percent: 0.02, perLevelPercent: 0.02 },
-      ],
-    },
-    branchTag: 'bat_kiem',
-  },
-  {
-    id: 'passive_pha_thien_nhat_kich',
-    name: 'Phá Thiên Nhất Kích',
-    description: 'Một đòn phá thiên — +5% sát thương lên boss mỗi cấp (hỗ trợ Kiếm Khai Thiên Môn).',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_ult_khai_thien' }],
-    effect: {
-      statModifiers: [{
-        id: 'node:passive_pha_thien_nhat_kich:skillDamagePercent',
-        sourceId: 'passive_pha_thien_nhat_kich',
-        sourceType: 'talent',
-        stat: 'skillDamagePercent',
-        percent: 0.05,
-        perLevelPercent: 0.05,
-      }],
-    },
-    branchTag: 'bat_kiem',
-  },
-  // Kiếm Tâm Lãnh Liệt KHÔNG lặp thành node — passive skill innate của
-  // tâm pháp Ngự Kiếm (Techniques.ts innateSkillId) vẫn hiệu lực cho cả
-  // 2 route, không double-dip crit (spec mục 5.3 ghi "giữ" — giữ đúng
-  // nghĩa đen: giữ nguyên chỗ cũ).
-]
-
-// 9 node on-hit kiếm trận (spec mục 4) — số loại mở được = số kiếm của
-// trận (Lưỡng Nghi 2 → Vô Cực 9); node level tăng tỉ lệ proc 3%/level
-// (max 15% ở Lv5). 4 node đầu gắn trận trong-scope, 5 node sau gắn
-// Tứ Tượng+ (realm ngoài content hiện tại — data chờ, cùng pattern
-// khóa realm Vô Cực).
-function onHitNode(
-  id: string,
-  name: string,
-  description: string,
-  kind: import('../../core/progression/ProgressionNode').OnHitEffectKind,
-  prereqNodeId: string,
-): ProgressionNode {
-  return {
-    id,
-    name,
-    description,
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: prereqNodeId }],
-    effect: { onHitEffect: { kind, baseChancePercent: 3, perLevelChancePercent: 3 } },
-    branchTag: 'kiem_tran',
+interface OrbBranchSpec {
+  orb: OrbId
+  orbName: string
+  growth: [
+    OrbGrowthSpec, // [0] is the branch root — realm gate only
+    OrbGrowthSpec, // [1] prereq g0
+    OrbGrowthSpec, // [2] prereq g0
+    OrbGrowthSpec, // [3] prereq g1
+    OrbGrowthSpec, // [4] prereq g2
+  ]
+  capstone: {
+    name: string
+    description: string
+    modifier: NonNullable<ProgressionNode['effect']['kiemTuComboModifier']>
   }
 }
 
-const ON_HIT_NODES: ProgressionNode[] = [
-  onHitNode('onhit_khiem_khi', 'Kiếm Khí Truy Hồn', 'On-hit: kiếm khí kim bổ sung sát thương (3%/lvl, tối đa 15%).', 'khiem_khi_dmg', 'kiem_tran_luong_nghi'),
-  onHitNode('onhit_khiem_phong', 'Kiếm Phong Thần Tốc', 'On-hit: kiếm phong tăng tốc đánh (stack tạm trong trận).', 'khiem_phong_haste', 'kiem_tran_luong_nghi'),
-  onHitNode('onhit_xuat_huyet', 'Kiếm Thương Xuất Huyết', 'On-hit: kiếm thương gây chảy máu (DoT).', 'xuat_huyet_dot', 'kiem_tran_tam_tai'),
-  onHitNode('onhit_tran_tru', 'Kiếm Mạch Trấn Trụ', 'On-hit: kiếm mạch cơ hội trói chân/choáng đối thủ.', 'tran_tru_cc', 'kiem_tran_tam_tai'),
-  onHitNode('onhit_phan_kich', 'Kiếm Ẩn Phản Kích', 'On-hit: kiếm ẩn tăng né tránh phản đòn.', 'phan_kich_dodge', 'kiem_tran_tu_tuong'),
-  onHitNode('onhit_hap_linh', 'Kiếm Trận Hấp Linh', 'On-hit: hút máu theo sát thương kiếm trận gây ra.', 'hap_linh_leech', 'kiem_tran_tu_tuong'),
-  onHitNode('onhit_pha_giap', 'Kiếm Vân Phá Giáp', 'On-hit: xuyên/giảm giáp đối thủ.', 'pha_giap_pen', 'kiem_tran_ngu_hanh'),
-  onHitNode('onhit_quang_crit', 'Kiếm Quang Nhất Thống', 'On-hit: kiếm quang cộng stack chí mạng.', 'quang_crit', 'kiem_tran_luc_dao'),
-  onHitNode('onhit_kiem_than', 'Kiếm Thần Phán Quyết', 'On-hit: kiếm thần phán quyết nguyên tố ngũ hành xoay vòng.', 'than_ngu_hanh', 'kiem_tran_that_tinh'),
+function orbGrowth(orb: OrbId, spec: OrbGrowthSpec, index: number): ProgressionNode {
+  const id = `${orb}_${index + 1}`
+  const chainTo = index === 0 ? null : `${orb}_${index === 3 ? 2 : index === 4 ? 3 : 1}`
+
+  return {
+    id,
+    name: spec.name,
+    description: spec.description,
+    type: 'minor',
+    role: 'growth',
+    insightCost: 1,
+    maxLevel: 5,
+    upgradeCost: { base: 1, perLevel: 2 },
+    kiemTuMode: 'hien',
+    prerequisites: [
+      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM[orb]]!.id },
+      ...(chainTo ? [{ kind: 'node' as const, nodeId: chainTo }] : []),
+    ],
+    effect: { statModifiers: [spec.modifier] },
+    branchTag: 'kiem_pho',
+  }
+}
+
+const ORB_BRANCHES: OrbBranchSpec[] = [
+  {
+    orb: 'orb_dam',
+    orbName: 'Đâm',
+    growth: [
+      { name: 'Kiếm Căn · Đâm', description: '+2 Uy Lực mỗi cấp — nền của đường kiếm đâm.', modifier: stat('orb_dam_1', 'might', 2, 2) },
+      { name: 'Đâm Chuẩn', description: '+5 Chính Xác mỗi cấp.', modifier: stat('orb_dam_2', 'accuracyRating', 5, 5) },
+      { name: 'Đâm Xuyên', description: '+2% Xuyên Kháng mỗi cấp.', modifier: stat('orb_dam_3', 'chanceToIgnoreResistance', undefined, undefined, 0.02, 0.02) },
+      { name: 'Đâm Uy', description: '+3% Sát Thương Kỹ Năng mỗi cấp.', modifier: stat('orb_dam_4', 'skillDamagePercent', undefined, undefined, 0.03, 0.03) },
+      { name: 'Đâm Sát', description: '+4% Sát Thương Chí Mạng mỗi cấp.', modifier: stat('orb_dam_5', 'criticalDamage', undefined, undefined, 0.04, 0.04) },
+    ],
+    capstone: {
+      name: 'Đâm Tâm Pháp',
+      description: 'Combo chứa ít nhất 2 Đâm: +25% sát thương combo.',
+      modifier: { minOrbCount: { orb: 'orb_dam', count: 2 }, bonusDamageMultiplier: 0.25 },
+    },
+  },
+  {
+    orb: 'orb_chem',
+    orbName: 'Chém',
+    growth: [
+      { name: 'Kiếm Căn · Trảm', description: '+2 Uy Lực mỗi cấp — nền của đường kiếm chém.', modifier: stat('orb_chem_1', 'might', 2, 2) },
+      { name: 'Trảm Liệt', description: '+3% Hiệu Lực Dị Thường mỗi cấp — Kiếm Thương chảy mạnh hơn.', modifier: stat('orb_chem_2', 'ailmentPotencyPercent', undefined, undefined, 0.03, 0.03) },
+      { name: 'Trảm Dai', description: '+3% Thời Gian Dị Thường mỗi cấp — vết thương kéo dài hơn.', modifier: stat('orb_chem_3', 'ailmentDurationPercent', undefined, undefined, 0.03, 0.03) },
+      { name: 'Trảm Uy', description: '+3% Sát Thương Kỹ Năng mỗi cấp.', modifier: stat('orb_chem_4', 'skillDamagePercent', undefined, undefined, 0.03, 0.03) },
+      { name: 'Trảm Sát', description: '+2% Tỉ Lệ Chí Mạng mỗi cấp.', modifier: stat('orb_chem_5', 'criticalRate', undefined, undefined, 0.02, 0.02) },
+    ],
+    capstone: {
+      name: 'Trảm Tâm Pháp',
+      description: 'Combo chứa ít nhất 2 Chém: gây thêm 2 tầng Kiếm Thương.',
+      modifier: {
+        minOrbCount: { orb: 'orb_chem', count: 2 },
+        appliesBuff: { definitionId: 'kiem_thuong', target: 'target', stacks: 2 },
+      },
+    },
+  },
+  {
+    orb: 'orb_bo',
+    orbName: 'Bổ',
+    growth: [
+      { name: 'Kiếm Căn · Bổ', description: '+3 Uy Lực mỗi cấp — nền của đường kiếm nặng.', modifier: stat('orb_bo_1', 'might', 3, 3) },
+      { name: 'Bổ Cốt', description: '+3% Xuyên Kháng mỗi cấp — nhát bổ xé giáp.', modifier: stat('orb_bo_2', 'chanceToIgnoreResistance', undefined, undefined, 0.03, 0.03) },
+      { name: 'Bổ Uy', description: '+2% Sát Thương Cuối mỗi cấp.', modifier: stat('orb_bo_3', 'finalDamagePercent', undefined, undefined, 0.02, 0.02) },
+      { name: 'Bổ Thế', description: '+4% Sát Thương Kỹ Năng mỗi cấp.', modifier: stat('orb_bo_4', 'skillDamagePercent', undefined, undefined, 0.04, 0.04) },
+      { name: 'Bổ Sát', description: '+5% Sát Thương Chí Mạng mỗi cấp.', modifier: stat('orb_bo_5', 'criticalDamage', undefined, undefined, 0.05, 0.05) },
+    ],
+    capstone: {
+      name: 'Bổ Tâm Pháp',
+      description: 'Combo chứa Bổ: gây Suy Nhược lên mục tiêu.',
+      modifier: {
+        minOrbCount: { orb: 'orb_bo', count: 1 },
+        appliesBuff: { definitionId: 'suy_nhuoc', target: 'target' },
+      },
+    },
+  },
+  {
+    orb: 'orb_hat',
+    orbName: 'Hất',
+    growth: [
+      { name: 'Kiếm Căn · Hất', description: '+2% Tốc Độ Ra Đòn mỗi cấp — nền của đường kiếm khống chế.', modifier: stat('orb_hat_1', 'speed', undefined, undefined, 0.02, 0.02) },
+      { name: 'Hất Chưởng', description: '+4% Thời Gian Dị Thường mỗi cấp — khống chế kéo dài.', modifier: stat('orb_hat_2', 'ailmentDurationPercent', undefined, undefined, 0.04, 0.04) },
+      { name: 'Hất Uy', description: '+2% Hiệu Lực Dị Thường mỗi cấp.', modifier: stat('orb_hat_3', 'ailmentPotencyPercent', undefined, undefined, 0.02, 0.02) },
+      { name: 'Hất Thế', description: '+2% Sát Thương Kỹ Năng mỗi cấp.', modifier: stat('orb_hat_4', 'skillDamagePercent', undefined, undefined, 0.02, 0.02) },
+      { name: 'Hất Linh', description: '+2% Né Tránh mỗi cấp.', modifier: stat('orb_hat_5', 'evasionRate', undefined, undefined, 0.02, 0.02) },
+    ],
+    capstone: {
+      name: 'Hất Tâm Pháp',
+      description: 'Combo chứa Hất: gây Choáng lên mục tiêu.',
+      modifier: {
+        minOrbCount: { orb: 'orb_hat', count: 1 },
+        appliesBuff: { definitionId: 'choang', target: 'target' },
+      },
+    },
+  },
+  {
+    orb: 'orb_quet',
+    orbName: 'Quét',
+    growth: [
+      { name: 'Kiếm Căn · Quét', description: '+2 Uy Lực mỗi cấp — nền của đường kiếm quét ngang.', modifier: stat('orb_quet_1', 'might', 2, 2) },
+      { name: 'Quét Trần', description: '+2% Sát Thương Cuối mỗi cấp.', modifier: stat('orb_quet_2', 'finalDamagePercent', undefined, undefined, 0.02, 0.02) },
+      { name: 'Quét Uy', description: '+3% Sát Thương Kỹ Năng mỗi cấp.', modifier: stat('orb_quet_3', 'skillDamagePercent', undefined, undefined, 0.03, 0.03) },
+      { name: 'Quét Sát', description: '+2% Tỉ Lệ Chí Mạng mỗi cấp.', modifier: stat('orb_quet_4', 'criticalRate', undefined, undefined, 0.02, 0.02) },
+      { name: 'Quét Phong', description: '+2% Tốc Độ Ra Đòn mỗi cấp.', modifier: stat('orb_quet_5', 'speed', undefined, undefined, 0.02, 0.02) },
+    ],
+    capstone: {
+      name: 'Quét Tâm Pháp',
+      description: 'Combo chứa Quét: +35% sát thương combo.',
+      modifier: { minOrbCount: { orb: 'orb_quet', count: 1 }, bonusDamageMultiplier: 0.35 },
+    },
+  },
 ]
 
-// ─────────── Kiem Tu Reimagined — hidden-path root (Task 10) ───────────
-//
-// `kiem_tu_an` (spec K2/K4) sits at the tree root INVISIBLE until the
-// mortal gate holds: `tram` (Huy Kiem) at Lv3 — derived from
-// skillLevels/skillCastCounts, the same read the old bat_kiem_an gate
-// used. Purchase flips kiemTu.mode hien → ngu one-way: non-refundable,
-// devResetBranch skips it, and the ops layer refuses purchase mid-battle
-// or for non-kiem-tu players. The Ngu branch (Task 11) hangs off this
-// node via `kind:'node'` prereqs + `kiemTuMode:'ngu'` filtering.
+const ORB_NODES: ProgressionNode[] = ORB_BRANCHES.flatMap(branch => {
+  const growth = branch.growth.map((spec, index) => orbGrowth(branch.orb, spec, index))
+  const capstone: ProgressionNode = {
+    id: `${branch.orb}_capstone`,
+    name: branch.capstone.name,
+    description: branch.capstone.description,
+    type: 'major',
+    role: 'keystone',
+    insightCost: 3,
+    kiemTuMode: 'hien',
+    prerequisites: [
+      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM[branch.orb]]!.id },
+      { kind: 'node', nodeId: `${branch.orb}_4` },
+      { kind: 'node', nodeId: `${branch.orb}_5` },
+    ],
+    effect: { kiemTuComboModifier: branch.capstone.modifier },
+    branchTag: 'kiem_pho',
+  }
+
+  return [...growth, capstone]
+})
+
+// ─────────────────── Hidden-path root (Task 10 contract) ───────────────────
+
 export const KIEM_TU_AN_NODE: ProgressionNode = {
   id: 'kiem_tu_an',
   name: 'Kiếm Tu Ẩn',
@@ -498,21 +248,176 @@ export const KIEM_TU_AN_NODE: ProgressionNode = {
   branchTag: 'ngu_kiem',
 }
 
-export const KIEM_TU_NODES: ProgressionNode[] = [
-  ...KIEM_TRAN_KEYSTONES,
-  ...KIEM_TRAN_GROWTH,
-  ...ON_HIT_NODES,
-  ...ULT_UNLOCK_NODES,
-  ...CONVERTED_PASSIVE_NODES,
-  BAT_KIEM_ROOT,
-  ...BAT_KIEM_GROWTH,
-  ...BAT_KIEM_KIEM_Y_NODES,
-  KIEM_TU_AN_NODE,
+// ───────────────────────── Ngu branch ─────────────────────────
+
+// Roll Cascade unlocks (spec §5.2) — one node per slot, realm-gated to
+// the spec's ladder: a (execute) @ Truc Co, e (crit) @ Kim Dan,
+// d (armor) @ Nguyen Anh. The provider reads effect.cascadeUnlock via
+// collectKiemDaoCascadeUnlocks — the ids are content, not contract.
+const NGU_CASCADE_NODES: ProgressionNode[] = [
+  {
+    id: 'ngu_cascade_a',
+    name: 'Phi Kiếm · Sát',
+    description: 'Mở Roll Cascade Sát: mỗi phi kiếm xử quyết mục tiêu dưới ngưỡng HP theo cảnh giới.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 2,
+    kiemTuMode: 'ngu',
+    prerequisites: [
+      { kind: 'node', nodeId: 'kiem_tu_an' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
+    ],
+    effect: { cascadeUnlock: 'a' },
+    branchTag: 'ngu_kiem',
+  },
+  {
+    id: 'ngu_cascade_e',
+    name: 'Phi Kiếm · Biến',
+    description: 'Mở Roll Cascade Biến: mỗi phi kiếm tự roll chí mạng.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 2,
+    kiemTuMode: 'ngu',
+    prerequisites: [
+      { kind: 'node', nodeId: 'kiem_tu_an' },
+      { kind: 'realm', realmId: 'golden_core' },
+    ],
+    effect: { cascadeUnlock: 'e' },
+    branchTag: 'ngu_kiem',
+  },
+  {
+    id: 'ngu_cascade_d',
+    name: 'Phi Kiếm · Phá',
+    description: 'Mở Roll Cascade Phá: mỗi phi kiếm tự roll xuyên/bỏ giáp.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 2,
+    kiemTuMode: 'ngu',
+    prerequisites: [
+      { kind: 'node', nodeId: 'kiem_tu_an' },
+      { kind: 'realm', realmId: 'nascent_soul' },
+    ],
+    effect: { cascadeUnlock: 'd' },
+    branchTag: 'ngu_kiem',
+  },
 ]
 
-/** Số kiếm của trận theo skillId (Lưỡng Nghi 2 → Cửu Cung 9) — dùng
- * cho gain Kiếm Thế mỗi cast (spec 2026-08-29-kiem-the-kiem-y mục 2);
- * skillId không thuộc chuỗi trận → undefined. */
+// Per-instance growth — every phi kiem resolves through the standard
+// damage pipeline, so generic statModifiers scale every instance.
+const NGU_GROWTH_NODES: ProgressionNode[] = [
+  {
+    id: 'ngu_kiem_sac',
+    name: 'Phi Kiếm Sắc',
+    description: '+3% Sát Thương Kỹ Năng mỗi cấp — mọi phi kiếm đều hưởng.',
+    type: 'minor',
+    role: 'growth',
+    insightCost: 1,
+    maxLevel: 5,
+    upgradeCost: { base: 1, perLevel: 2 },
+    kiemTuMode: 'ngu',
+    prerequisites: [{ kind: 'node', nodeId: 'kiem_tu_an' }],
+    effect: { statModifiers: [stat('ngu_kiem_sac', 'skillDamagePercent', undefined, undefined, 0.03, 0.03)] },
+    branchTag: 'ngu_kiem',
+  },
+  {
+    id: 'ngu_kiem_phong',
+    name: 'Phi Kiếm Phong',
+    description: '+2% Xuyên Kháng mỗi cấp — phi kiếm xé giáp tốt hơn.',
+    type: 'minor',
+    role: 'growth',
+    insightCost: 1,
+    maxLevel: 5,
+    upgradeCost: { base: 1, perLevel: 2 },
+    kiemTuMode: 'ngu',
+    prerequisites: [{ kind: 'node', nodeId: 'kiem_tu_an' }],
+    effect: { statModifiers: [stat('ngu_kiem_phong', 'chanceToIgnoreResistance', undefined, undefined, 0.02, 0.02)] },
+    branchTag: 'ngu_kiem',
+  },
+  {
+    id: 'ngu_kiem_sat',
+    name: 'Phi Kiếm Sát Khí',
+    description: '+3% Sát Thương Chí Mạng mỗi cấp — phi kiếm chí mạng đau hơn.',
+    type: 'minor',
+    role: 'growth',
+    insightCost: 1,
+    maxLevel: 5,
+    upgradeCost: { base: 1, perLevel: 2 },
+    kiemTuMode: 'ngu',
+    prerequisites: [{ kind: 'node', nodeId: 'kiem_tu_an' }],
+    effect: { statModifiers: [stat('ngu_kiem_sat', 'criticalDamage', undefined, undefined, 0.03, 0.03)] },
+    branchTag: 'ngu_kiem',
+  },
+]
+
+// ───────────────────────── Cuu Cung 3x3 ─────────────────────────
+// Spec §5.4: 8 outer palaces each grant a lump of Kiem Y (insight-costed
+// + realm-gated, one per realm Luyện Khí → Đại Thừa); Trung Cung grants
+// +1 kiemDaoCount and requires ALL 8 outers. Every node in the cluster
+// carries kiemDaoBelowCap — at cap nothing here is purchasable, so no
+// Kiem Y can pool past the sword cap (K20). Grant amounts are a first
+// balance pass (~half of forgeCost at the gate realm).
+
+const CUU_CUNG_OUTER: Array<{
+  id: string
+  palace: string
+  realmId: string
+  kiemYGrant: number
+}> = [
+  { id: 'cuu_cung_kham', palace: 'Khảm', realmId: 'qi_refining', kiemYGrant: 5_000 },
+  { id: 'cuu_cung_khon', palace: 'Khôn', realmId: 'foundation_establishment', kiemYGrant: 6_500 },
+  { id: 'cuu_cung_chan', palace: 'Chấn', realmId: 'golden_core', kiemYGrant: 8_500 },
+  { id: 'cuu_cung_ton', palace: 'Tốn', realmId: 'nascent_soul', kiemYGrant: 11_000 },
+  { id: 'cuu_cung_can', palace: 'Càn', realmId: 'soul_transformation', kiemYGrant: 14_500 },
+  { id: 'cuu_cung_doai', palace: 'Đoài', realmId: 'void_refinement', kiemYGrant: 18_500 },
+  { id: 'cuu_cung_cin', palace: 'Cấn', realmId: 'body_integration', kiemYGrant: 24_000 },
+  { id: 'cuu_cung_ly', palace: 'Ly', realmId: 'mahayana', kiemYGrant: 31_000 },
+]
+
+const CUU_CUNG_NODES: ProgressionNode[] = [
+  ...CUU_CUNG_OUTER.map<ProgressionNode>(palace => ({
+    id: palace.id,
+    name: `Cửu Cung · ${palace.palace}`,
+    description: `Tụ Kiếm Ý vào cung ${palace.palace} — lập tức nhận ${palace.kiemYGrant} Kiếm Ý.`,
+    type: 'minor',
+    role: 'growth',
+    insightCost: 2,
+    kiemTuMode: 'ngu',
+    prerequisites: [
+      { kind: 'node', nodeId: 'kiem_tu_an' },
+      { kind: 'realm', realmId: palace.realmId },
+      { kind: 'kiemDaoBelowCap' },
+    ],
+    effect: { kiemYGrant: palace.kiemYGrant },
+    branchTag: 'ngu_kiem',
+  })),
+  {
+    id: 'cuu_cung_trung',
+    name: 'Cửu Cung · Trung Cung',
+    description:
+      'Tám cung hội tụ về trung ương — trực tiếp luyện thêm 1 phi kiếm (không tốn Kiếm Ý).',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 5,
+    kiemTuMode: 'ngu',
+    prerequisites: [
+      { kind: 'nodeCount', nodeIds: CUU_CUNG_OUTER.map(p => p.id), countRequired: 8 },
+      { kind: 'kiemDaoBelowCap' },
+    ],
+    effect: { kiemDaoGrant: 1 },
+    branchTag: 'ngu_kiem',
+  },
+]
+
+export const KIEM_TU_NODES: ProgressionNode[] = [
+  ...ORB_NODES,
+  KIEM_TU_AN_NODE,
+  ...NGU_CASCADE_NODES,
+  ...NGU_GROWTH_NODES,
+  ...CUU_CUNG_NODES,
+]
+
+/** Số kiếm của trận theo skillId — COMPILE-COMPAT for the legacy
+ * KiemTranSkills consumer; dies with TRAN_SEQUENCE in Task 12. */
 export function getFormationSwordCount(skillId: string): number | undefined {
   return TRAN_SEQUENCE.find((entry) => entry.skillId === skillId)?.swordCount
 }

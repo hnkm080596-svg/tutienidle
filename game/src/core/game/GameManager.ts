@@ -720,6 +720,7 @@ export class GameManager {
       resolvePlayerBasicAttack: (player) => this.resolvePlayerBasicAttack(player),
       resolvePlayerSpecialUltimate: (player) => this.resolvePlayerSpecialUltimate(player),
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
+      getProgressionNodes: () => this.nodeRegistry.getAll(),
     })
 
     // Tick orchestration (C3 split) - constructed LAST because it reads

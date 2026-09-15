@@ -148,6 +148,8 @@ const lockedReasons = computed(() => {
         skill: skillName,
         requirement,
       }))
+    } else if (prereq.kind === 'kiemDaoBelowCap') {
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.kiemDaoCap'))
     } else {
       reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade'))
     }

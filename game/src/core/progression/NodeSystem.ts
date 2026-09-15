@@ -2,6 +2,7 @@ import type { PlayerData } from '../player/Player'
 import type { NodePrerequisite, ProgressionNode, SkillModifier } from './ProgressionNode'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
+import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
 
 /**
  * Node level hạ tầng dùng chung (combat-skill-flow-element-power-dot-plan.md
@@ -74,6 +75,21 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
 
       return castOk && levelOk
     }
+
+    // Kiem Tu Reimagined (spec K20) — the Cuu Cung cap guard. Lives in
+    // hasPrerequisite so canPurchaseNode blocks the buy BEFORE insight
+    // is deducted or the node recorded. Mortal realm (index 0) fails —
+    // ngu cannot be entered there anyway.
+    case 'kiemDaoBelowCap': {
+      const state = player.kiemTu
+      const realmIndex = getRealmIndex(player.realmId)
+
+      if (state?.mode !== 'ngu' || realmIndex < 1) {
+        return false
+      }
+
+      return state.kiemDaoCount < kiemDaoCap(realmIndex)
+    }
   }
 }
 
@@ -85,6 +101,13 @@ function meetsPrerequisites(player: PlayerData, node: ProgressionNode): boolean 
 /** Đủ điều kiện LĨNH NGỘ (0→1): chưa có level, đủ prereq, đủ Cảm Ngộ cost cấp 1. */
 export function canPurchaseNode(player: PlayerData, node: ProgressionNode): boolean {
   if (getNodeLevel(player, node.id) > 0) {
+    return false
+  }
+
+  // Kiem Tu Reimagined — a mode-tagged node is only purchasable in its
+  // own mode. Without this a converted ngu player could buy inert hien
+  // orb nodes (the aggregation filter would silently eat the effect).
+  if (node.kiemTuMode !== undefined && node.kiemTuMode !== player.kiemTu?.mode) {
     return false
   }
 
@@ -228,7 +251,7 @@ function scaleModifierForLevel<T extends { flat?: number; percent?: number; perL
  * inert for ngu, ngu growth nodes are inert for hien). Mode-agnostic
  * nodes (kiemTuMode undefined) always apply.
  */
-function nodeModeApplies(player: PlayerData, node: ProgressionNode): boolean {
+export function nodeModeApplies(player: PlayerData, node: ProgressionNode): boolean {
   return node.kiemTuMode === undefined || node.kiemTuMode === player.kiemTu?.mode
 }
 

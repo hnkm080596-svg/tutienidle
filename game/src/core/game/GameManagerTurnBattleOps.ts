@@ -10,6 +10,7 @@ import {
   TU_KIEM_Y_EMBLEM,
 } from '../../data/skill/NguKiemDaoSkills'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
+import type { ProgressionNode } from '../progression/ProgressionNode'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import {
   TurnBattleSystem,
@@ -254,6 +255,10 @@ export class GameManagerTurnBattleOps {
     // to turnBattle.players[0] so companion/enemy casts never write into
     // the player's skillCastCounts/skillLevels mirror).
     recordPrimaryPlayerCast?: (skillId: string) => void
+    // Kiem Tu Reimagined Task 11 — registered node defs for the kiem-tu
+    // collectors (combo capstones, cascade unlocks). Read-only access;
+    // the registry remains GameManager-owned (A3).
+    getProgressionNodes: () => readonly ProgressionNode[]
   }) {
     this.turnBattleSystem = new TurnBattleSystem(
       deps.combatSystem,
@@ -964,7 +969,7 @@ export class GameManagerTurnBattleOps {
     if (playerPath?.cultivationPath === 'kiem_tu' && playerPath.kiemTu?.mode === 'hien') {
       playerParticipant.dynamicBasic = buildKiemPhoProvider(
         playerPath,
-        collectKiemPhoComboModifiers(playerPath),
+        collectKiemPhoComboModifiers(playerPath, this.deps.getProgressionNodes()),
       )
     }
 
@@ -974,7 +979,7 @@ export class GameManagerTurnBattleOps {
     if (playerPath?.cultivationPath === 'kiem_tu' && playerPath.kiemTu?.mode === 'ngu') {
       playerParticipant.dynamicBasic = buildNguKiemDaoProvider(
         playerPath,
-        collectKiemDaoCascadeUnlocks(playerPath),
+        collectKiemDaoCascadeUnlocks(playerPath, this.deps.getProgressionNodes()),
       )
       playerParticipant.special = { skill: TU_KIEM_Y_EMBLEM, remainingCooldownTurns: 0 }
       playerParticipant.ultimate = { skill: KIEM_DAO_CASCADE_EMBLEM, remainingCooldownTurns: 0 }

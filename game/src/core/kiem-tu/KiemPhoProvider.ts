@@ -29,7 +29,11 @@ function comboToExtraDef(combo: KiemPhoCombo): TurnSkillDefinition {
     // re-collects the deterministic primary target in applyExtraImpact.
     targeting: combo.targeting ?? { shape: 'single' },
     appliesBuff: combo.appliesBuff
-      ? { definitionId: combo.appliesBuff.definitionId, target: combo.appliesBuff.target }
+      ? {
+          definitionId: combo.appliesBuff.definitionId,
+          target: combo.appliesBuff.target,
+          stacks: combo.appliesBuff.stacks,
+        }
       : undefined,
     presetId: combo.presetId,
   }

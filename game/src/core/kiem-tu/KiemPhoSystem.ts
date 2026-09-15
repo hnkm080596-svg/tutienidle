@@ -24,7 +24,7 @@ export interface KiemPhoCombo {
   pattern: OrbId[]
   presetId: CombatVfxPresetId
   damage?: { multiplier: number }
-  appliesBuff?: { definitionId: string; target: 'self' | 'target' }
+  appliesBuff?: { definitionId: string; target: 'self' | 'target'; stacks?: number }
   targeting?: ActionTargeting
 }
 

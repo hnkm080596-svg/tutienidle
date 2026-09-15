@@ -72,6 +72,23 @@ export function gainKiemY(player: PlayerData, amount: number): void {
 }
 
 /**
+ * Trung Cung purchase grant (spec §5.4) — +N live swords WITHOUT
+ * spending Kiem Y, clamped at the current realm cap. ngu-only; the
+ * kiemDaoBelowCap prereq should already have rejected a capped buy —
+ * this clamp is the second line of defense.
+ */
+export function grantKiemDao(player: PlayerData, amount: number): void {
+  const state = player.kiemTu
+  const realmIndex = getRealmIndex(player.realmId)
+
+  if (!state || state.mode !== 'ngu' || amount <= 0 || realmIndex < 1) {
+    return
+  }
+
+  state.kiemDaoCount = Math.min(kiemDaoCap(realmIndex), state.kiemDaoCount + amount)
+}
+
+/**
  * Breakthrough merge (K15): the swords forged this realm fold into the
  * permanent base multiplier, then the live count resets to 1. The
  * count snapshot MUST precede the reset — order is load-bearing.

@@ -140,6 +140,7 @@
           "skillCastCount": "{count} lần xuất chiêu",
           "skillJoin": "và",
           "skill": "Cần {skill} đạt {requirement}",
+          "kiemDaoCap": "Kiếm Đạo đã đạt trần của cảnh giới",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
         }
       },

@@ -2,6 +2,7 @@ import type { PlayerData } from '../player/Player'
 import type { DynamicBasicProvider, TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { HitResolveOptions } from '../battle/ActionImpactSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
+import type { ProgressionNode } from '../progression/ProgressionNode'
 import { getRealmIndex } from '../realm/realmSystem'
 import {
   CASCADE_CRIT_CHANCE,
@@ -33,23 +34,26 @@ export interface KiemDaoCascadeUnlocks {
   d: boolean
 }
 
-/** The Task-11 node ids carrying `effect.cascadeUnlock` — declared here
- *  so the wiring and the authored tree share one source of truth. */
-export const NGU_CASCADE_NODE_IDS = {
-  a: 'ngu_cascade_a',
-  e: 'ngu_cascade_e',
-  d: 'ngu_cascade_d',
-} as const
+/**
+ * Purchased nodes → cascade unlocks (spec §5.2 a/e/d). Effect-driven:
+ * any node carrying `effect.cascadeUnlock` contributes its slot — the
+ * authored ids live in KiemTuNodes data, not here.
+ */
+export function collectKiemDaoCascadeUnlocks(
+  player: PlayerData,
+  nodes: readonly ProgressionNode[],
+): KiemDaoCascadeUnlocks {
+  const unlocks: KiemDaoCascadeUnlocks = { a: false, e: false, d: false }
 
-/** Purchased-node → cascade unlocks (spec §5.2 a/e/d). Reads
- *  PlayerData.nodeLevels directly — returns all-false until Task 11
- *  authors the nodes. */
-export function collectKiemDaoCascadeUnlocks(player: PlayerData): KiemDaoCascadeUnlocks {
-  return {
-    a: (player.nodeLevels[NGU_CASCADE_NODE_IDS.a] ?? 0) > 0,
-    e: (player.nodeLevels[NGU_CASCADE_NODE_IDS.e] ?? 0) > 0,
-    d: (player.nodeLevels[NGU_CASCADE_NODE_IDS.d] ?? 0) > 0,
+  for (const node of nodes) {
+    const slot = node.effect.cascadeUnlock
+
+    if (slot && (player.nodeLevels?.[node.id] ?? 0) > 0) {
+      unlocks[slot] = true
+    }
   }
+
+  return unlocks
 }
 
 export function buildNguKiemDaoProvider(

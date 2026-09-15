@@ -51,7 +51,7 @@ export interface TurnSkillDefinition {
    * of the buff definition's registry default). undefined = registry
    * default, unchanged behavior.
    */
-  appliesBuff?: { definitionId: string; target: 'self' | 'target'; duration?: number }
+  appliesBuff?: { definitionId: string; target: 'self' | 'target'; duration?: number; stacks?: number }
   /**
    * Phase A1 (2026-09-07) — chance-gated ailment application, checked
    * against TurnReactionManager after applying. Deliberately separate
@@ -121,7 +121,10 @@ export interface DynamicBasicCastContext {
   actor: TurnBattleParticipant
   resolvedSkillId: string
   landedTargetIds: string[]
-  resolveBuff: (target: TurnBattleParticipant, buff: { definitionId: string; duration?: number }) => void
+  resolveBuff: (
+    target: TurnBattleParticipant,
+    buff: { definitionId: string; duration?: number; stacks?: number },
+  ) => void
 }
 
 /**

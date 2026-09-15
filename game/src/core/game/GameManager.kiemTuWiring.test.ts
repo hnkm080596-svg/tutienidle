@@ -93,7 +93,11 @@ describe('GameManager — production wiring của 3 closure Kiếm Tu (kiem-tu �
     expect(manager.skillManager.get('tram')?.totalExperience).toBe(100)
   })
 
-  it('getOnHitNodeLevelsSnapshot: mua node on-hit → snapshot có level', () => {
+  // Kiem Tu Reimagined Task 11 — the on-hit node set was retired with
+  // the legacy tree; no registered node carries onHitEffect anymore, so
+  // the snapshot channel reads empty for ANY nodeLevels until Task 12
+  // removes the channel itself (producer + consumer together).
+  it('getOnHitNodeLevelsSnapshot: retired on-hit nodes yield an empty snapshot', () => {
     const manager = makeWiredManager()
     const player = makeKiemTuPlayer()
 
@@ -102,24 +106,8 @@ describe('GameManager — production wiring của 3 closure Kiếm Tu (kiem-tu �
 
     expect(manager.progressionOps.getOnHitNodeLevelsSnapshot()).toEqual({})
 
-    player.nodeLevels = { ...player.nodeLevels, onhit_khiem_khi: 3 }
+    player.nodeLevels = { ...player.nodeLevels, onhit_khiem_khi: 3, orb_dam_1: 2 }
 
-    expect(manager.progressionOps.getOnHitNodeLevelsSnapshot()).toEqual({ onhit_khiem_khi: 3 })
-  })
-
-  it('getOnHitNodeLevelsSnapshot: node không phải on-hit bị lọc; level 0 bỏ qua; id lạ không throw', () => {
-    const manager = makeWiredManager()
-    const player = makeKiemTuPlayer()
-
-    manager.setActivePlayer(player)
-
-    player.nodeLevels = {
-      minor_tran_kim_luc: 2, // growth thường — không onHitEffect
-      onhit_khiem_phong: 0, // level 0
-      node_khong_ton_tai: 5, // id lạ — phải không throw
-      onhit_xuat_huyet: 4,
-    }
-
-    expect(manager.progressionOps.getOnHitNodeLevelsSnapshot()).toEqual({ onhit_xuat_huyet: 4 })
+    expect(manager.progressionOps.getOnHitNodeLevelsSnapshot()).toEqual({})
   })
 })

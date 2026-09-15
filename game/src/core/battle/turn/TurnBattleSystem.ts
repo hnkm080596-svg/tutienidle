@@ -1279,7 +1279,16 @@ export class TurnBattleSystem {
             resolvedSkillId: action.skillId,
             landedTargetIds: [...targetIds],
             resolveBuff: (buffTarget, buff) => {
-              this.applyDeclaredBuff(actor, { definitionId: buff.definitionId, target: 'target', duration: buff.duration }, [buffTarget])
+              this.applyDeclaredBuff(
+                actor,
+                {
+                  definitionId: buff.definitionId,
+                  target: 'target',
+                  duration: buff.duration,
+                  stacks: buff.stacks,
+                },
+                [buffTarget],
+              )
             },
           })
 
@@ -1405,7 +1414,7 @@ export class TurnBattleSystem {
    */
   private applyDeclaredBuff(
     actor: TurnBattleParticipant,
-    buffSpec: { definitionId: string; target: 'self' | 'target'; duration?: number },
+    buffSpec: { definitionId: string; target: 'self' | 'target'; duration?: number; stacks?: number },
     targets: TurnBattleParticipant[],
   ): void {
     if (!this.registry) return
@@ -1423,16 +1432,23 @@ export class TurnBattleSystem {
 
     if (!definition) return
 
+    // Kiem Tu Reimagined Task 11 — combo capstones may declare N stacks;
+    // each apply() call adds one stack under 'stack' stackMode and is
+    // idempotent under 'refresh'. Default 1 = previous behavior.
+    const stacks = Math.max(1, buffSpec.stacks ?? 1)
+
     // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
     // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
     if (buffSpec.target === 'self') {
-      new BuffSystem(actor.buffs).apply(
-        definition,
-        actor.entity,
-        actor.entity,
-        this.registry,
-        buffSpec.duration,
-      )
+      for (let i = 0; i < stacks; i++) {
+        new BuffSystem(actor.buffs).apply(
+          definition,
+          actor.entity,
+          actor.entity,
+          this.registry,
+          buffSpec.duration,
+        )
+      }
       this.pendingGaugeDeltaTargets = [actor]
       // ARCH-002 (M7) — statModifier buffs are effective NOW, not
       // at the actor's next turn (kim_giap counter-read class).
@@ -1441,13 +1457,15 @@ export class TurnBattleSystem {
       const applied: TurnBattleParticipant[] = []
 
       for (const target of targets) {
-        new BuffSystem(target.buffs).apply(
-          definition,
-          actor.entity,
-          target.entity,
-          this.registry,
-          buffSpec.duration,
-        )
+        for (let i = 0; i < stacks; i++) {
+          new BuffSystem(target.buffs).apply(
+            definition,
+            actor.entity,
+            target.entity,
+            this.registry,
+            buffSpec.duration,
+          )
+        }
         applied.push(target)
         this.refreshParticipantStats(target)
       }

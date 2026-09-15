@@ -18,6 +18,7 @@ import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
 import { MORTAL_PRECURSOR_SKILL_IDS, type OrbId } from '../kiem-tu/KiemTuState'
+import { gainKiemY, grantKiemDao } from '../kiem-tu/NguKiemDao'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import { isBattleInProgress } from '../battle/BattleTypes'
@@ -238,6 +239,18 @@ export class GameManagerProgressionOps {
       player.kiemTu.mode = 'ngu'
       this.deps.learnTechnique('van_kiem_quyet')
       this.deps.equipTechnique('van_kiem_quyet')
+    }
+
+    // Kiem Tu Reimagined Task 11 (spec §5.4/§6) — Cuu Cung grants run
+    // through the NguKiemDao domain functions (the domain owns the cap
+    // rule; nodes never touch player.kiemTu directly). The
+    // kiemDaoBelowCap prereq already blocked capped buys upstream.
+    if (node.effect.kiemYGrant) {
+      gainKiemY(player, node.effect.kiemYGrant)
+    }
+
+    if (node.effect.kiemDaoGrant) {
+      grantKiemDao(player, node.effect.kiemDaoGrant)
     }
 
     return true

@@ -140,6 +140,7 @@
           "skillCastCount": "{count} casts",
           "skillJoin": "and",
           "skill": "Requires {skill} at {requirement}",
+          "kiemDaoCap": "Flying swords at the realm cap",
           "skillUpgrade": "Upgrade the related skill"
         }
       },
