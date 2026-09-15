@@ -518,6 +518,8 @@ export class GameManager {
       skillSystem: this.skillSystem,
       skillManager: this.skillManager,
       getActivePlayer: () => this.activePlayer,
+      // Lazy read — turnBattleOps is constructed after progressionOps.
+      getTurnBattle: () => this.turnBattleOps?.getTurnBattle() ?? null,
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({

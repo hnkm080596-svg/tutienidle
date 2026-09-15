@@ -1,5 +1,6 @@
 import type { PlayerData } from '../player/Player'
 import type { NodePrerequisite, ProgressionNode, SkillModifier } from './ProgressionNode'
+import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
 
@@ -82,9 +83,23 @@ function meetsPrerequisites(player: PlayerData, node: ProgressionNode): boolean 
   return (node.prerequisites ?? []).every(prerequisite => hasPrerequisite(player, prerequisite))
 }
 
+/**
+ * Phap Tu Reimagined Task 4 — route membership: a routeTag node only
+ * exists while the player's route matches (untagged nodes are always
+ * active). Aggregators skip inactive-route nodes and purchase/upgrade
+ * reject them, so an inactive node's levels can never take effect.
+ */
+export function isNodeRouteActive(player: PlayerData, node: ProgressionNode): boolean {
+  return node.routeTag === undefined || player.phapTu.route === node.routeTag
+}
+
 /** Đủ điều kiện LĨNH NGỘ (0→1): chưa có level, đủ prereq, đủ Cảm Ngộ cost cấp 1. */
 export function canPurchaseNode(player: PlayerData, node: ProgressionNode): boolean {
   if (getNodeLevel(player, node.id) > 0) {
+    return false
+  }
+
+  if (!isNodeRouteActive(player, node)) {
     return false
   }
 
@@ -97,6 +112,10 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
 
 /** Đủ điều kiện NÂNG CẤP (L→L+1): đã lĩnh ngộ, chưa max, đủ Cảm Ngộ. */
 export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boolean {
+  if (!isNodeRouteActive(player, node)) {
+    return false
+  }
+
   const level = getNodeLevel(player, node.id)
 
   if (level < 1 || level >= getNodeMaxLevel(node)) {
@@ -226,7 +245,7 @@ export function aggregateNodeStatModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0) {
+    if (level <= 0 || !isNodeRouteActive(player, node)) {
       continue
     }
 
@@ -257,7 +276,7 @@ export function aggregateNodeSkillModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0) {
+    if (level <= 0 || !isNodeRouteActive(player, node)) {
       continue
     }
 
@@ -373,6 +392,77 @@ export function devResetBranch(
 
   // Hoàn Cảm Ngộ vào player (§6.10).
   player.skillInsight += refund
+
+  return refund
+}
+
+/**
+ * Phap Tu Reimagined Task 4 — switch the route half of the atomic
+ * (element, route) commitment. Out-of-combat only (the orchestration op
+ * enforces the no-active-battle rule). For every node tagged with the
+ * OLD route: level -> 0, nodeLevels/purchasedNodeIds entries cleared,
+ * floor(actualPaid x 0.75) refunded using nodeFreePurchaseRecord
+ * exactly like devResetBranch. Nodes tagged with the NEW route are not
+ * auto-bought — the player re-invests. Untagged nodes are untouched.
+ * No The-pool clear is needed: currentThe is battle-scoped (INV-14)
+ * and switching is out-of-combat, so banked The cannot exist at switch
+ * time (INV-16 holds by construction).
+ * Returns total refunded.
+ */
+export function switchRoute(
+  player: PlayerData,
+
+  registry: { getAll(): ProgressionNode[] },
+
+  route: PhapTuRoute,
+): number {
+  const oldRoute = player.phapTu.route
+
+  if (oldRoute === route) {
+    return 0
+  }
+
+  let refund = 0
+
+  for (const node of registry.getAll()) {
+    if (node.routeTag !== oldRoute) {
+      continue
+    }
+
+    const level = getNodeLevel(player, node.id)
+
+    if (level <= 0) {
+      continue
+    }
+
+    let paid = 0
+
+    for (let spent = 0; spent < level; spent++) {
+      paid += getNextLevelCost(node, spent)
+    }
+
+    // Van Dao (M2): only the insight ACTUALLY paid counts — subtract
+    // the waived record like devResetBranch does.
+    paid = Math.max(0, paid - (player.nodeFreePurchaseRecord?.[node.id] ?? 0))
+
+    if (player.nodeFreePurchaseRecord) {
+      delete player.nodeFreePurchaseRecord[node.id]
+    }
+
+    refund += Math.floor(paid * 0.75)
+
+    delete player.nodeLevels[node.id]
+
+    const index = player.purchasedNodeIds.indexOf(node.id)
+
+    if (index !== -1) {
+      player.purchasedNodeIds.splice(index, 1)
+    }
+  }
+
+  player.skillInsight += refund
+
+  player.phapTu.route = route
 
   return refund
 }

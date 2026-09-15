@@ -11,6 +11,7 @@ import {
   getNextLevelCost as getNextLevelCostSystem,
   getNodeMaxLevel as getNodeMaxLevelSystem,
   purchaseNode as purchaseNodeSystem,
+  switchRoute as switchRouteSystem,
   upgradeNode as upgradeNodeSystem,
 } from '../progression/NodeSystem'
 import type { Skill } from '../skill/Skill'
@@ -42,6 +43,9 @@ export class GameManagerProgressionOps {
       skillSystem: SkillSystem
       skillManager: SkillManager
       getActivePlayer: () => PlayerData | undefined
+      // Phap Tu Reimagined Task 4 — combat-state read for switchRoute's
+      // out-of-combat gate (route is static during battle).
+      getTurnBattle: () => unknown
     },
   ) {}
 
@@ -270,6 +274,22 @@ export class GameManagerProgressionOps {
    */
   devResetBranch(branchTag: string, player: PlayerData): number {
     return devResetBranchSystem(player, this.deps.nodeRegistry, branchTag)
+  }
+
+  /**
+   * Phap Tu Reimagined Task 4 — switch the route commitment. Out of
+   * combat ONLY: a route is static during battle (INV-16), so this
+   * rejects while a turn battle is active. The domain function owns
+   * the 75% refund + route-tagged level cleanup.
+   */
+  switchRoute(route: 'dot' | 'no', player: PlayerData): boolean {
+    if (this.deps.getTurnBattle()) {
+      return false
+    }
+
+    switchRouteSystem(player, this.deps.nodeRegistry, route)
+
+    return true
   }
 
   /**
