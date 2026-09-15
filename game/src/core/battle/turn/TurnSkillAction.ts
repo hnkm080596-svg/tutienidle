@@ -152,6 +152,42 @@ export interface SelectedAction {
   slot: TurnSkillSlot | null
 }
 
+/**
+ * Phap Tu Reimagined Task 9 — the cast's execution identity. Separates
+ * the skill that OWNS the cast (cast count, slot cooldown, equipped
+ * identity, progression identity — always `rootSkillId`) from the
+ * payload actually resolving (`resolvedSkill` — damage/ailments/
+ * targeting/runtime combat fields).
+ *
+ * source:
+ * - 'original'   — a normal slot/basic cast (root === payload)
+ * - 'empowered'  — the equipped ult's empowered payload resolved
+ *                  (root = the equipped chain-E skill; the god-ult def
+ *                  is payload only — never gains cast count/cooldown)
+ * - 'composite'  — a composite cast whose payload was picked from a
+ *                  pool (e.g. van_phap_tuy_tam); the pick never gains
+ *                  its own cast count
+ * - 'repeat'     — an extra execution of the same cast (da_phap_lien_tuyen)
+ * - 'multicast'  — an extra execution spawned by the multicast passive
+ *
+ * 'repeat'/'multicast' executions are follow-ups: they must NOT
+ * re-consume the slot cooldown or fire the cast sink (the root cast
+ * already committed). multicast-sourced basic executions may roll
+ * multicast again until the depth cap; repeat-sourced never do.
+ */
+export type TurnExecutionSource = 'original' | 'empowered' | 'composite' | 'repeat' | 'multicast'
+
+export interface TurnSkillExecution {
+  rootSkillId: string
+  resolvedSkill: TurnSkillDefinition | null
+  source: TurnExecutionSource
+}
+
+/** Does this execution own a real cast (commit cooldown + cast sink)? */
+export function executionCommitsCast(execution: TurnSkillExecution | undefined): boolean {
+  return execution === undefined || (execution.source !== 'repeat' && execution.source !== 'multicast')
+}
+
 const FALLBACK_BASIC_ATTACK: ActionDamageInfo = { kind: 'physical', multiplier: 1 }
 
 const FALLBACK_TARGETING: ActionTargeting = { shape: 'single' }

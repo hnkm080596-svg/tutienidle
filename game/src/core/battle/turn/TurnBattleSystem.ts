@@ -8,7 +8,7 @@ import type { CombatSystem } from '../../combat/CombatSystem'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
 import { consumeGaugeAfterAction, advanceGauge, isGaugeReady } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
-import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets } from './TurnSkillAction'
+import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets, executionCommitsCast, type TurnSkillExecution } from './TurnSkillAction'
 import type { TurnSkillDefinition, TurnSkillSlot, TurnSkillSlotRole, SelectedAction } from './TurnSkillAction'
 import type { ActionDamageInfo } from '../ActionImpactSystem'
 import { BuffPool } from '../../buff/BuffPool'
@@ -242,6 +242,8 @@ export interface TurnStepResult {
   skillId: string
   targetIds: string[]
   ccBlocked: boolean
+  /** Task 9 — the cast's execution identity (root vs resolved payload). */
+  execution?: TurnSkillExecution
 }
 
 /**
@@ -288,6 +290,13 @@ export interface TurnDeclaredAction {
    * queue thay vì normal gauge readiness — completeAction bỏ consume gauge
    * cho các turn này (bypass không tốn progress của lượt kế tiếp). */
   isFollowUpBypass: boolean
+
+  /**
+   * Task 9 — execution identity: rootSkillId owns cast count/cooldown/
+   * slot identity; resolvedSkill owns the payload. Absent on charge-
+   * resolve/CC-blocked/empty turns (no cast happens there).
+   */
+  execution?: TurnSkillExecution
 }
 
 export class TurnBattleSystem {
@@ -927,6 +936,8 @@ export class TurnBattleSystem {
     let markerNoPool = false
     let suddenDeathMultiplierCaptured = 1
     let reactionPathPicks: [TurnSkillDefinition, TurnSkillDefinition] | null = null
+    let execution: TurnSkillExecution | undefined
+    let payloadSkill: TurnSkillDefinition | null = null
 
     // Charging turn (tick hoặc resolve): action resolution BỊ THAY THẾ
     // hoàn toàn bởi charge block (tick → không hit; resolve → hits đã push
@@ -968,6 +979,17 @@ export class TurnBattleSystem {
         }
       }
 
+      // Task 9 — execution record: rootSkillId owns cast/cooldown/slot
+      // identity; resolvedSkill owns the payload. All casts today are
+      // 'original' (resolvedSkill === action.skill); Tasks 10-13 diverge
+      // them for empowered/composite/repeat/multicast executions.
+      execution = {
+        rootSkillId: action.skillId,
+        resolvedSkill: action.skill,
+        source: 'original' as const,
+      }
+      payloadSkill = execution.resolvedSkill
+
       const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
 
       if (isChargeInit) {
@@ -978,7 +1000,7 @@ export class TurnBattleSystem {
         actor.pendingChargedSkillId = action.skillId
       }
 
-      const targetScope = action.skill?.targetScope ?? 'enemy'
+      const targetScope = payloadSkill?.targetScope ?? 'enemy'
 
       if (targetScope === 'self') {
         affected = [actor]
@@ -988,7 +1010,7 @@ export class TurnBattleSystem {
         const primaryTarget = selectTarget(actor, opposingSide)
 
         if (primaryTarget && !isChargeInit) {
-          affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
+          affected = collectTurnTargets(primaryTarget, opposingSide, payloadSkill?.targeting ?? action.targeting)
 
           if (action.damage) {
             const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.roundsElapsed ?? 0)
@@ -998,7 +1020,7 @@ export class TurnBattleSystem {
 
           // R3 (AR-18) — Generic composite action policy.
           const isReactionComposite =
-            action.skill?.compositePicks?.poolType === 'reaction_path'
+            payloadSkill?.compositePicks?.poolType === 'reaction_path'
 
           if (isReactionComposite && this.reactionPathPool) {
             reactionPathPicks = selectRandomDistinctElementPair([...this.reactionPathPool])
@@ -1046,6 +1068,10 @@ export class TurnBattleSystem {
       suddenDeathMultiplier: suddenDeathMultiplierCaptured,
       reactionPathPicks,
       isFollowUpBypass,
+      // Task 9 — every real cast records its execution identity here:
+      // 'original' for now (empowered/composite/repeat/multicast arrive
+      // with Tasks 10-13). Charge-resolve/CC-blocked turns carry none.
+      execution,
     }
   }
 
@@ -1128,13 +1154,24 @@ export class TurnBattleSystem {
     // and the block below never ran for them — their cooldown/resource
     // were never committed (dead isChargeInit branch). The charge-resolve
     // turn returns early above and never reaches this point.
-    if (declared.action && !declared.markerNoPool && (declared.action.skill?.chargeTurns ?? 0) > 0) {
+    if (
+      declared.action &&
+      !declared.markerNoPool &&
+      (declared.action.skill?.chargeTurns ?? 0) > 0 &&
+      executionCommitsCast(declared.execution)
+    ) {
       commitAction(actor.entity, declared.action)
-      this.onSkillCast?.(actor, declared.action.skillId)
+      this.onSkillCast?.(actor, declared.execution?.rootSkillId ?? declared.action.skillId)
     }
 
     if (declared.action && declared.affected.length > 0 && !declared.markerNoPool) {
       const action = declared.action
+
+      // Task 9 — payload reads go through the execution's resolvedSkill
+      // (== action.skill for 'original' casts today; diverges for
+      // empowered/composite payloads in Tasks 10-13). Identity reads
+      // (cooldown, cast sink, charge state) stay on the ROOT action.
+      const payloadSkill = declared.execution?.resolvedSkill ?? action.skill
 
       // Task 8 — theGainOnCrit fires once per CAST when any direct hit
       // crits (INV-15): collect the flag across the hit loops, grant
@@ -1200,10 +1237,10 @@ export class TurnBattleSystem {
             // R3 (AR-03) + Task 5 (D11) — Leech healing: % of the HP the
             // target THẬT SỰ lost post-absorb — a fully-warded hit feeds
             // nothing (damage-proportional = taken-only trigger).
-            if (action.skill?.healPercentOfDamage && hitResult.hpDamage > 0) {
+            if (payloadSkill?.healPercentOfDamage && hitResult.hpDamage > 0) {
               this.combat.applyHealing(
                 actor.entity,
-                hitResult.hpDamage * action.skill.healPercentOfDamage,
+                hitResult.hpDamage * payloadSkill.healPercentOfDamage,
                 actor.entity.id,
                 'leech',
               )
@@ -1219,7 +1256,7 @@ export class TurnBattleSystem {
           // applyModifiedDirectDamage bypass semantics at this resolution
           // layer. Deliberately NOT registry-gated: these consume the
           // skill's OWN authored fields, no registry content involved.
-          const skill = action.skill
+          const skill = payloadSkill
 
           if (skill?.consumesAilmentId && skill.damagePerStack) {
             const stacks = new BuffSystem(target.buffs).getStacks(skill.consumesAilmentId)
@@ -1263,7 +1300,9 @@ export class TurnBattleSystem {
 
             // Phase A1 (2026-09-07) / R3 (AR-03) — chance-gated ailment application,
             // then reaction check against the just-applied id.
-            this.applySkillAilments(actor, target, action)
+            if (payloadSkill) {
+              this.applySkillAilments(actor, target, payloadSkill)
+            }
           }
 
           // ARCH-002 (M7) — every pool mutation above (consume-removal —
@@ -1276,13 +1315,15 @@ export class TurnBattleSystem {
           this.refreshParticipantStats(actor)
         }
       }
-    } else if (action.skill?.targetScope !== 'self') {
+    } else if (payloadSkill?.targetScope !== 'self') {
       // Non-damaging action targeting enemies (e.g. pure debuff skill like doc_chuong)
       for (const target of declared.affected) {
         if (!target.entity.alive) continue
         targetIds.push(target.id)
 
-        this.applySkillAilments(actor, target, action)
+        if (payloadSkill) {
+          this.applySkillAilments(actor, target, payloadSkill)
+        }
         // ARCH-002 (M7) — reactions off the applied ailment can grant the
         // SOURCE a buff; refresh both sides (same as the damaging path).
         this.refreshParticipantStats(target)
@@ -1294,8 +1335,13 @@ export class TurnBattleSystem {
       // on `affected` — empty for enemy-targeted charge skills). Only
       // non-charge casts commit here.
       if ((action.skill?.chargeTurns ?? 0) === 0) {
-        commitAction(actor.entity, action)
-        this.onSkillCast?.(actor, action.skillId)
+        // Task 9 — repeat/multicast follow-up executions resolve the
+        // payload WITHOUT re-committing the root's cast: no second
+        // cooldown, no second cast-count (INV-18 structural).
+        if (executionCommitsCast(declared.execution)) {
+          commitAction(actor.entity, action)
+          this.onSkillCast?.(actor, declared.execution?.rootSkillId ?? action.skillId)
+        }
 
         // Task 8 — The gain is skill-authored (theGainOnLandedCast /
         // theGainOnCrit), once per cast that landed >=1 valid target —
@@ -1308,18 +1354,18 @@ export class TurnBattleSystem {
         // post-cast pool, preserving legacy's gain-after-consume
         // ordering. Deliberately NOT inside the registry gate: The gain
         // is engine-native resource accrual, not buff-registry content.
-        if (action.skill && (targetIds.length > 0 || action.skill.targetScope === 'self')) {
-          this.grantTheFromCast(actor, action.skill, castCritLanded)
+        if (payloadSkill && (targetIds.length > 0 || payloadSkill.targetScope === 'self')) {
+          this.grantTheFromCast(actor, payloadSkill, castCritLanded)
         }
 
-        if (action.skill?.appliesBuff && this.registry) {
+        if (payloadSkill?.appliesBuff && this.registry) {
           // Skip an unresolvable buff id gracefully (renamed/drifted content
           // must not crash the tick) — same try/catch pattern as the
           // bossTrigger lookup above.
           let definition: BuffDefinition | undefined
 
           try {
-            definition = this.registry.get(action.skill.appliesBuff.definitionId)
+            definition = this.registry.get(payloadSkill.appliesBuff.definitionId)
           } catch {
             definition = undefined
           }
@@ -1327,13 +1373,13 @@ export class TurnBattleSystem {
           if (definition) {
             // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
             // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
-            if (action.skill.appliesBuff.target === 'self') {
+            if (payloadSkill.appliesBuff.target === 'self') {
               new BuffSystem(actor.buffs).apply(
                 definition,
                 actor.entity,
                 actor.entity,
                 this.registry,
-                action.skill.appliesBuff.duration,
+                payloadSkill.appliesBuff.duration,
               )
               this.pendingGaugeDeltaTargets = [actor]
               // ARCH-002 (M7) — statModifier buffs are effective NOW, not
@@ -1348,7 +1394,7 @@ export class TurnBattleSystem {
                   actor.entity,
                   target.entity,
                   this.registry,
-                  action.skill.appliesBuff.duration,
+                  payloadSkill.appliesBuff.duration,
                 )
                 targets.push(target)
                 this.refreshParticipantStats(target)
@@ -1361,7 +1407,7 @@ export class TurnBattleSystem {
           }
         }
 
-        if (action.skill?.targetScope === 'self') {
+        if (payloadSkill?.targetScope === 'self') {
           targetIds.push(actor.id)
         }
       }
@@ -1444,7 +1490,14 @@ export class TurnBattleSystem {
     battle.log = battle.log ?? []
     battle.log.push(logEntry)
 
-    return { state: battle.state, actorId: actor.id, skillId: declared.skillId, targetIds, ccBlocked: declared.ccBlocked }
+    return {
+      state: battle.state,
+      actorId: actor.id,
+      skillId: declared.skillId,
+      targetIds,
+      ccBlocked: declared.ccBlocked,
+      execution: declared.execution,
+    }
   }
 
   /**
