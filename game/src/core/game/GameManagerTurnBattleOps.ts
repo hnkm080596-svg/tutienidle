@@ -445,10 +445,15 @@ export class GameManagerTurnBattleOps {
       const readyActor = this.turnBattleSystem.tickPacing(battle, false)
 
       if (readyActor !== null) {
+        // Task 11 — a queued repeat/multicast execution is NOT a turn
+        // choice: manual mode must not park it awaiting input (the cast
+        // was already committed; the follow-up resolves automatically).
+        const isQueuedExecution = this.turnBattleSystem.isPendingQueuedExecution(readyActor.id)
+
         this.turnToken.claim({
           actorId: readyActor.id,
           isPlayerTeam: battle.players.includes(readyActor),
-          manualMode: this.presentationOps.runtime.isBattleManualMode(),
+          manualMode: isQueuedExecution ? false : this.presentationOps.runtime.isBattleManualMode(),
         })
 
         if (this.turnToken.getState() === 'AWAITING_INPUT') {

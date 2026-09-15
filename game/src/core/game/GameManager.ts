@@ -140,6 +140,7 @@ import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
 import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
+import { applyAnKitToBasic, applyAnKitToSpecial } from '../../data/skill/TurnAnKitSkills'
 
 
 
@@ -882,8 +883,16 @@ export class GameManager {
           this.routeProfileProvider(skill.id),
         )
 
+        // Task 11 — the An basic carries its composite pick (uniform
+        // element_basic pool) plus `multicast` when the player owns the
+        // ngo_dao_hon_don dao passive (granted at the ritual).
+        const resolved =
+          player.cultivationPath === 'phap_tu_an'
+            ? applyAnKitToBasic(converted, this.skillManager.has('ngo_dao_hon_don'))
+            : converted
+
         return {
-          ...this.applyPhapTuTheGains(converted, player, PHAP_TU_THE_GAIN_BASIC),
+          ...this.applyPhapTuTheGains(resolved, player, PHAP_TU_THE_GAIN_BASIC),
           cooldownTurns: 0,
           resourceType: 'none',
           resourceCost: undefined,
@@ -965,7 +974,9 @@ export class GameManager {
 
       return {
         special: specialSkill
-          ? toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill))
+          ? applyAnKitToSpecial(
+              toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill)),
+            )
           : undefined,
       }
     }

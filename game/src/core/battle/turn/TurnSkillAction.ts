@@ -40,10 +40,45 @@ export interface TurnSkillDefinition {
   /**
    * R3 (AR-18) — Generic composite action policy. Replaces hardcoded
    * content ID checks in the turn engine.
+   *
+   * 'reaction_path' — legacy lane: the pool arrives constructor-injected
+   * (reactionPathPool). Retired content, dies with the Task 14 kill list.
+   *
+   * 'element_basic' — Phap Tu An (Task 11): the orchestrator attaches the
+   * resolved pool ON the def; the engine picks `count` distinct defs
+   * uniformly via the injected rng and resolves picks[0] as THE payload
+   * (damage/ailments/targeting — the pick executes as the cast). Any
+   * extra picks (count > 1) apply damage+ailments through the shared
+   * composite-picks lane. The picked def never owns cast identity —
+   * rootSkillId keeps cast count/cooldown (INV-18).
    */
-  compositePicks?: {
-    poolType: 'reaction_path'
-    count: number
+  compositePicks?:
+    | { poolType: 'reaction_path'; count: number }
+    | {
+        poolType: 'element_basic'
+        count: number
+        pool: readonly TurnSkillDefinition[]
+      }
+  /**
+   * Phap Tu An (Task 11) — extra executions of this action, queued as
+   * follow-up executions at cast completion (source 'repeat'). Each
+   * repeat re-resolves the payload (re-rolls compositePicks). Repeat
+   * executions never re-commit cooldown/cast count and never roll
+   * multicast (P15).
+   */
+  repeatCasts?: number
+  /**
+   * Phap Tu An (Task 11) — multicast passive (ngo_dao_hon_don), attached
+   * to the An basic def by the orchestrator. After an original/composite
+   * or multicast-sourced execution of this skill completes, roll
+   * `chance` via the injected rng — success queues one more execution
+   * (source 'multicast'), which re-rolls its own pick and may roll again.
+   * Total extra executions per cast are bounded by
+   * min(maxExtraCasts, MAX_MULTICAST).
+   */
+  multicast?: {
+    chance: number
+    maxExtraCasts: number
   }
   /**
    * M10 (ARCH-008) — `duration` carries the authored SkillEffect.duration
@@ -206,7 +241,37 @@ export interface TurnSkillExecution {
    * execution that did not burn the pool.
    */
   theBurned?: number
+  /**
+   * Task 11 — multicast chain position: 0/undefined for the original
+   * cast, N for the Nth multicast-sourced follow-up. Bounds the re-roll
+   * (a multicast execution rolls again only while depth <
+   * min(multicast.maxExtraCasts, MAX_MULTICAST)).
+   */
+  multicastDepth?: number
 }
+
+/**
+ * Phap Tu An (Task 11) — a queued follow-up execution of an
+ * already-committed cast. Drained by the engine's follow-up path as a
+ * gauge-free bypass action that re-resolves the root skill's payload
+ * (composite picks re-roll per execution). Structurally bounded:
+ * 'repeat' entries number exactly rootSkill.repeatCasts; 'multicast'
+ * entries are depth-capped by MAX_MULTICAST.
+ */
+export interface TurnQueuedExecution {
+  actorId: string
+  rootSkill: TurnSkillDefinition
+  source: 'repeat' | 'multicast'
+  multicastDepth: number
+}
+
+/**
+ * Hard bound on multicast re-casts per original cast (spec: An's
+ * multicast storm is capped at MAX_MULTICAST extra executions). The
+ * authored `multicast.maxExtraCasts` may set a lower bound; the engine
+ * enforces min(authored, this).
+ */
+export const MAX_MULTICAST = 3
 
 /** Does this execution own a real cast (commit cooldown + cast sink)? */
 export function executionCommitsCast(execution: TurnSkillExecution | undefined): boolean {
@@ -337,20 +402,43 @@ export function selectForcedAction(
  */
 export function selectRandomDistinctElementPair(
   pool: TurnSkillDefinition[],
+  rng: () => number = Math.random,
 ): [TurnSkillDefinition, TurnSkillDefinition] {
   if (pool.length < 2) {
     throw new Error('selectRandomDistinctElementPair requires at least 2 skills in the pool')
   }
 
-  const firstIndex = Math.floor(Math.random() * pool.length)
+  const firstIndex = Math.floor(rng() * pool.length)
 
-  let secondIndex = Math.floor(Math.random() * (pool.length - 1))
+  let secondIndex = Math.floor(rng() * (pool.length - 1))
 
   if (secondIndex >= firstIndex) {
     secondIndex += 1
   }
 
   return [pool[firstIndex]!, pool[secondIndex]!]
+}
+
+/**
+ * Phap Tu An (Task 11) — uniform pick of `count` DISTINCT defs from a
+ * composite pool via the injected rng (partial Fisher-Yates). All new
+ * An-kit randomness routes through the system's injected rng — never
+ * global Math.random — so tests are deterministic.
+ */
+export function pickCompositePool(
+  pool: readonly TurnSkillDefinition[],
+  count: number,
+  rng: () => number,
+): TurnSkillDefinition[] {
+  const remaining = [...pool]
+  const picks: TurnSkillDefinition[] = []
+
+  for (let i = 0; i < count && remaining.length > 0; i++) {
+    const index = Math.floor(rng() * remaining.length)
+    picks.push(remaining.splice(index, 1)[0]!)
+  }
+
+  return picks
 }
 
 /** Sets the used slot on cooldown and consumes its resource — call AFTER a successful cast (a target was actually hit). No-op for the basic fallback (slot is null). */

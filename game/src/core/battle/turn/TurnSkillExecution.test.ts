@@ -144,9 +144,8 @@ describe('TurnSkillExecution — root identity vs resolved payload (Task 9)', ()
       opposingSide: [enemyParticipant],
       affected: [enemyParticipant],
       scaledDamage: special.damage!,
-      isReactionPath: false,
       suddenDeathMultiplier: 1,
-      reactionPathPicks: null,
+      compositePickedSkills: null,
       isFollowUpBypass: true,
       execution: {
         rootSkillId: 'qa_special_root',
@@ -187,9 +186,8 @@ describe('TurnSkillExecution — root identity vs resolved payload (Task 9)', ()
       opposingSide: [enemyParticipant],
       affected: [enemyParticipant],
       scaledDamage: BASIC.damage!,
-      isReactionPath: false,
       suddenDeathMultiplier: 1,
-      reactionPathPicks: null,
+      compositePickedSkills: null,
       isFollowUpBypass: true,
       execution: {
         rootSkillId: 'qa_basic',
