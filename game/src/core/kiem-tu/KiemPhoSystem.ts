@@ -14,10 +14,13 @@ import { unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
 // file never imports it (A6). recordCastAndMatch takes the table as a
 // parameter so the mechanism stays below the content layer.
 
-/** Spec §4.2 — combo definition shape. `presetId` is REQUIRED: it is
- *  the only player-visible tell that a combo fired (INV-7). */
+/** Spec §4.2 — combo definition shape. `presetId` is REQUIRED and
+ *  unique per combo: the fired payload is the ONLY discovery signal
+ *  (K11/INV-7) — two combos sharing a preset are indistinguishable.
+ *  `name` is the Vietnamese readout presentation flashes on fire. */
 export interface KiemPhoCombo {
   id: string
+  name: string
   pattern: OrbId[]
   presetId: CombatVfxPresetId
   damage?: { multiplier: number }
@@ -100,11 +103,16 @@ function tailEquals(log: OrbId[], pattern: OrbId[]): boolean {
  *  whole log — a combo can never chain into a second combo on the same
  *  cast (one fire per cast by construction, spec §4.1).
  *
- *  `combos` is the authored table — injected, not imported (A6). */
+ *  `combos` is the authored table — injected, not imported (A6).
+ *  `modifiers` are the purchased-node capstone hooks (spec §4.2): on a
+ *  match they run sorted `priority ASC, nodeId ASC`, each `apply`
+ *  receiving the running DERIVED copy — the canonical table entry is
+ *  never mutated. */
 export function recordCastAndMatch(
   state: KiemPhoBattleState,
   orb: OrbId,
   combos: readonly KiemPhoCombo[],
+  modifiers: readonly KiemPhoComboModifier[] = [],
 ): KiemPhoCombo | null {
   state.log.push(orb)
   if (state.log.length > LOG_MAX) {
@@ -117,9 +125,25 @@ export function recordCastAndMatch(
       if (combo.pattern.length !== len) continue
       if (tailEquals(state.log, combo.pattern)) {
         state.log = []
-        return combo
+        return applyModifiers(combo, modifiers)
       }
     }
   }
   return null
+}
+
+function applyModifiers(
+  combo: KiemPhoCombo,
+  modifiers: readonly KiemPhoComboModifier[],
+): KiemPhoCombo {
+  const ordered = [...modifiers].sort(
+    (a, b) => a.priority - b.priority || a.nodeId.localeCompare(b.nodeId),
+  )
+  let derived: KiemPhoCombo = { ...combo, pattern: [...combo.pattern] }
+  for (const modifier of ordered) {
+    if (modifier.matches(derived)) {
+      derived = modifier.apply(derived)
+    }
+  }
+  return derived
 }
