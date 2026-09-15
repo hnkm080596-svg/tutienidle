@@ -9,16 +9,73 @@ import {
 } from './EquipmentStatPolicy'
 import { statLabel } from '../stats/StatLabels'
 import { affixes } from '../../data/equipment/affixes'
+import { equipment } from '../../data/equipment/equipment'
+import type { StatType } from '../stats/StatTypes'
+
+// stat-system-reimagined Task 11 (D1, INV-15): speed is the dominant
+// tempo stat, so it may never be the only desirable roll in its pool.
+// Competitive set = offense amps + crit stats + defense stats.
+const SPEED_COMPETITIVE_STATS: ReadonlySet<StatType> = new Set<StatType>([
+  // offense amps
+  'might',
+  'accuracyRating',
+  'skillDamagePercent',
+  'ailmentPotencyPercent',
+  'leechPercent',
+  'finalDamagePercent',
+  'firePower',
+  'woodPower',
+  'waterPower',
+  'metalPower',
+  'earthPower',
+  'firePenetration',
+  'woodPenetration',
+  'waterPenetration',
+  'metalPenetration',
+  'earthPenetration',
+  // crit stats
+  'criticalRate',
+  'criticalDamage',
+  // defense stats
+  'maxHp',
+  'defense',
+  'evasionRate',
+  'wardMax',
+  'wardRegenPerTurn',
+  'blockChance',
+  'blockEffectiveness',
+  'enduranceThreshold',
+  'endurancePercent',
+  'thornsPercent',
+  'hpRegenPerTurn',
+  'criticalAvoidance',
+  'ailmentResistPercent',
+  'dotResistancePercent',
+  'finalDamageReductionPercent',
+  'fireResistance',
+  'woodResistance',
+  'waterResistance',
+  'metalResistance',
+  'earthResistance',
+])
+
+function expectSpeedPoolCompetitive(poolName: string, stats: readonly StatType[]): void {
+  if (!stats.includes('speed')) {
+    return
+  }
+  const rivals = stats.filter((stat) => SPEED_COMPETITIVE_STATS.has(stat))
+  expect(rivals.length, `${poolName} gives speed no rival roll`).toBeGreaterThanOrEqual(2)
+}
 
 describe('EquipmentStatPolicy', () => {
   it('mỗi slot chỉ nhận main stat thuộc bản sắc của slot', () => {
-    expect(isValidEquipmentMainStat('weapon', 'attack')).toBe(true)
+    expect(isValidEquipmentMainStat('weapon', 'might')).toBe(true)
     expect(isValidEquipmentMainStat('helmet', 'maxHp')).toBe(true)
     expect(isValidEquipmentMainStat('armor', 'defense')).toBe(true)
     expect(isValidEquipmentMainStat('boots', 'evasionRate')).toBe(true)
     expect(isValidEquipmentMainStat('ring', 'criticalDamage')).toBe(true)
     expect(isValidEquipmentMainStat('necklace', 'speed')).toBe(true)
-    expect(isValidEquipmentMainStat('boots', 'attack')).toBe(false)
+    expect(isValidEquipmentMainStat('boots', 'might')).toBe(false)
   })
 
   it('không cho main stat xuất hiện lại trong substat pool', () => {
@@ -76,8 +133,46 @@ describe('EquipmentStatPolicy', () => {
       assertValidEquipmentMainStats({
         id: 'invalid_range',
         slot: 'weapon',
-        mainStats: [{ stat: 'attack', ...range }],
+        mainStats: [{ stat: 'might', ...range }],
       }),
     ).toThrow(/Invalid main stat range/)
+  })
+
+  // D1/INV-15: speed scarcity is structural -- every pool that can roll
+  // speed must force a real trade-off against >=2 competitive stats.
+  it('mọi slot policy pool chứa speed đều có >=2 stat cạnh tranh (INV-15)', () => {
+    for (const [slot, policy] of Object.entries(EQUIPMENT_SLOT_STAT_POLICY)) {
+      expectSpeedPoolCompetitive(`${slot}.mainStats`, policy.mainStats)
+      expectSpeedPoolCompetitive(`${slot}.substats`, policy.substats)
+    }
+  })
+
+  it('mọi AffixPool chứa speed đều có >=2 stat cạnh tranh (INV-15)', () => {
+    const statsByPool = new Map<string, Set<StatType>>()
+    for (const affix of affixes) {
+      const stats = statsByPool.get(affix.pool) ?? new Set<StatType>()
+      stats.add(affix.stat)
+      statsByPool.set(affix.pool, stats)
+    }
+
+    for (const [pool, stats] of statsByPool) {
+      if (!stats.has('speed')) {
+        continue
+      }
+      const rivals = [...stats].filter((stat) => SPEED_COMPETITIVE_STATS.has(stat))
+      expect(rivals.length, `affix pool ${pool} gives speed no rival roll`).toBeGreaterThanOrEqual(2)
+    }
+  })
+
+  it('mọi equipment template mainStats chứa speed đều có >=2 stat cạnh tranh (INV-15)', () => {
+    // The item-level mainStats array is the actual roll pool
+    // (EquipmentRolling picks one entry); the slot policy is only the
+    // whitelist -- a speed-only item pool would defeat the invariant.
+    for (const item of equipment) {
+      expectSpeedPoolCompetitive(
+        `${item.id}.mainStats`,
+        item.mainStats.map((range) => range.stat),
+      )
+    }
   })
 })

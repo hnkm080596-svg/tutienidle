@@ -20,7 +20,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     dexterity: 0,
     criticalRate: 0,
     blockChance: 0,
-    attack: 100,
+    might: 100,
   }
 
   return {
@@ -42,7 +42,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -71,7 +71,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
     const source = createCombatant({
       id: 'source',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100, attunement: 50 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 100, attunement: 50 }),
     })
     const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: createBaseStats({ evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 }) })
 
@@ -95,7 +95,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
     const source = createCombatant({
       id: 'source',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100, maxMp: 200 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 100, maxMp: 200 }),
     })
     const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: createBaseStats({ evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 }) })
 
@@ -116,7 +116,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
     const source = createCombatant({
       id: 'source',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 100 }),
       currentSwordIntent: 500,
     })
     const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: createBaseStats({ evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 }) })
@@ -138,7 +138,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
     const source = createCombatant({
       id: 'source',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100, skillDamagePercent: 0.5 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 100, skillDamagePercent: 0.5 }),
     })
     const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: createBaseStats({ evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 }) })
 

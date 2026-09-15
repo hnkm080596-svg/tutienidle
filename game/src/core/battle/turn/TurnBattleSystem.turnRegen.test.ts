@@ -13,9 +13,9 @@ import { MAX_THE, THE_GAIN_PER_FINISHER, THE_GAIN_PER_LINK } from '../../combat/
 
 // M8 (ARCH-003 + ARCH-010 + C05/C06) — combat resources & turn-phase
 // contract. MP/Ward regen joins hpRegenPerTurn on the entity-turn cadence
-// through the vitals authority; the legacy `*RegenPerSecond` field names
-// are normalized HERE (the turn-resource boundary) — authored content is
-// unchanged. A lethal status tick ends the actor's turn before regen and
+// through the vitals authority — the *RegenPerTurn stats tick once per
+// entity turn, matching authored content. A lethal status tick ends the
+// actor's turn before regen and
 // before any charged-hit resolution; charged completion accrues The
 // exactly once.
 
@@ -62,7 +62,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -97,7 +97,7 @@ function makeBattle(players: TurnBattleParticipant[], enemies: TurnBattlePartici
 function makeDotSource(): CombatEntity {
   return createCombatant('dot_source', {
     type: 'enemy',
-    stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 50_000 }),
+    stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 50_000 }),
   })
 }
 
@@ -112,7 +112,7 @@ function makeDummyEnemy(): TurnBattleParticipant {
     evasionRate: 0,
     dexterity: 0,
     criticalRate: 0,
-    attack: 0,
+    might: 0,
     speed: 1,
     maxHp: 1_000_000,
   })
@@ -148,8 +148,8 @@ describe('TurnBattleSystem — per-turn resource regeneration (ARCH-003)', () =>
       maxHp: 1000,
       maxMp: 200,
       wardMax: 100,
-      manaRegenPerSecond: 10,
-      wardRegenPerSecond: 10,
+      manaRegenPerTurn: 10,
+      wardRegenPerTurn: 10,
       hpRegenPerTurn: 10,
     })
     const player = createCombatant('player', {
@@ -160,7 +160,7 @@ describe('TurnBattleSystem — per-turn resource regeneration (ARCH-003)', () =>
       currentMp: 50,
       currentWard: 0,
       // Never hit — the delayed-ward gate opens immediately (Infinity).
-      timeSinceLastHitTaken: Infinity,
+      turnsSinceLastHitLanded: Infinity,
     })
 
     const battle = makeBattle([makeParticipant('player', player, 100, 0)], [makeDummyEnemy()])
@@ -182,14 +182,14 @@ describe('TurnBattleSystem — per-turn resource regeneration (ARCH-003)', () =>
       criticalRate: 0,
       speed: 100,
       wardMax: 1000,
-      wardRegenPerSecond: 10,
+      wardRegenPerTurn: 10,
     })
     const player = createCombatant('player', {
       stats,
       baseStats: stats,
       currentWard: 0,
       // Just hit — the delay counter restarts at 0 on the holder's cadence.
-      timeSinceLastHitTaken: 0,
+      turnsSinceLastHitLanded: 0,
     })
 
     const battle = makeBattle([makeParticipant('player', player, 100, 0)], [makeDummyEnemy()])
@@ -221,15 +221,15 @@ describe('TurnBattleSystem — per-turn resource regeneration (ARCH-003)', () =>
       speed: 100,
       maxMp: 500,
       wardMax: 500,
-      manaRegenPerSecond: 7,
-      wardRegenPerSecond: 9,
+      manaRegenPerTurn: 7,
+      wardRegenPerTurn: 9,
     })
     const player = createCombatant('player', {
       stats,
       baseStats: stats,
       currentMp: 0,
       currentWard: 0,
-      timeSinceLastHitTaken: Infinity,
+      turnsSinceLastHitLanded: Infinity,
     })
 
     const battle = makeBattle([makeParticipant('player', player, 100, 0)], [makeDummyEnemy()])
@@ -252,7 +252,7 @@ describe('TurnBattleSystem — post-status liveness boundary (ARCH-010)', () => 
       criticalRate: 0,
       speed: 100,
       maxMp: 500,
-      manaRegenPerSecond: 50,
+      manaRegenPerTurn: 50,
       hpRegenPerTurn: 50,
     })
     const player = createCombatant('player', {
@@ -351,7 +351,7 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
       dexterity: 0,
       criticalRate: 0,
       speed: 100,
-      attack: 10,
+      might: 10,
     })
     const player = createCombatant('player', { stats, baseStats: stats })
     const playerParticipant = makeParticipant('player', player, 100, 0)
@@ -381,7 +381,7 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
       dexterity: 0,
       criticalRate: 0,
       speed: 100,
-      attack: 10,
+      might: 10,
     })
     const player = createCombatant('player', { stats, baseStats: stats, currentThe: MAX_THE })
     const playerParticipant = makeParticipant('player', player, 100, 0)

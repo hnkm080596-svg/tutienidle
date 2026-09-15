@@ -16,9 +16,8 @@ export const HIDDEN_BEASTS: Enemy[] = [
     family: 'hidden_beast',
     statsInput: {
       maxHp: 2600,
-      attack: 130,
+      might: 130,
       attackSpeed: 1.1,
-      attackRangeRanks: 1,
       criticalRate: 0.1,
       criticalDamage: 2.2,
       armor: 45,

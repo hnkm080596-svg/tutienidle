@@ -15,9 +15,8 @@ import type { StatusVfxAttachedEvent, StatusVfxRemovedEvent } from '../battle/Ba
 
 const ENEMY_STATS_INPUT = {
   maxHp: 10_000_000,
-  attack: 0,
+  might: 0,
   attackSpeed: 1,
-  attackRangeRanks: 9,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,

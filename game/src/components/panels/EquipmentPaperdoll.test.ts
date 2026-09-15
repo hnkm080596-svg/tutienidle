@@ -24,7 +24,7 @@ function equipmentInstance(instanceId: string, itemId: string) {
       id: `${instanceId}:main`,
       sourceId: instanceId,
       sourceType: 'equipment',
-      stat: 'attack',
+      stat: 'might',
       flat: 12,
     },
   })

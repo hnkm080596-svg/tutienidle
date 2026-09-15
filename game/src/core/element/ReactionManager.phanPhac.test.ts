@@ -65,7 +65,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -99,7 +99,7 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
     reactionManager.checkAndTrigger(targetBuffs, 'te_cong', source, target, combatSystem)
 
     // Combat Balance Pass (2026-08-29) — "Bốc Hơi" powerScalingRatio
-    // 1.0 (T5.4): 60 + attack(10)×1.0 = 70.
+    // 1.0 (T5.4): 60 + might(10)×1.0 = 70.
     expect(target.currentHp).toBe(1000 - 70)
     expect(targetBuffs.getActiveIds()).toEqual([])
   })

@@ -93,7 +93,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.cultivationPerSecond).toBe(20) // Object.assign của save2 đã chạy
   })
 
-  it('guard không phá normalization: nodeLevels fallback + attackRange vẫn chạy', () => {
+  it('guard không phá normalization: nodeLevels fallback vẫn chạy', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({})
     save.player.nodeLevels = undefined as never // simulate save cũ thiếu field
@@ -101,7 +101,65 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     player.restoreFromSave(save)
 
     expect(player.nodeLevels).toEqual({})
-    expect(player.baseStats.attackRange).toBeGreaterThan(0)
+    expect(player.baseStats.might).toBeGreaterThan(0)
+  })
+
+  // Stat-key migration (stat-system-reimagined rename pass) — saves
+  // written under the old key names must come back with renamed keys,
+  // retired keys dropped, and modifier stat fields remapped.
+  it('save cũ với stat key cũ → migrate sang key mới, key retired bị drop', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      baseStats: { attack: 10, attackRange: 1, maxMpPercent: 0.2, defense: 7 },
+      modifiers: [
+        {
+          id: 'm1',
+          sourceId: 's1',
+          sourceType: 'equipment',
+          stat: 'attack',
+          flat: 5,
+        },
+        {
+          id: 'm2',
+          sourceId: 's2',
+          sourceType: 'equipment',
+          stat: 'manaRegenPerSecond',
+          flat: 1,
+        },
+      ],
+      persistentTimedEffects: [
+        {
+          id: 'fx1',
+          modifiers: [
+            {
+              id: 'fx1_m',
+              sourceId: 'fx1',
+              sourceType: 'pill',
+              stat: 'speedMultiplier',
+              percent: 10,
+            },
+          ],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    expect(player.baseStats.might).toBe(10)
+    expect(player.baseStats.defense).toBe(7)
+    expect('attack' in player.baseStats).toBe(false)
+    // Task 3: retired keys are gone from StatType entirely — the saved
+    // value drops AND no baseline key fills back in.
+    expect('maxMpPercent' in player.baseStats).toBe(false)
+    expect('attackRange' in player.baseStats).toBe(false)
+
+    expect(player.modifiers.map((modifier) => modifier.stat)).toEqual([
+      'might',
+      'manaRegenPerTurn',
+    ])
+    expect(player.persistentTimedEffects[0]!.modifiers[0]!.stat).toBe(
+      'productionSpeedMultiplier',
+    )
   })
 
   // M1 (ARCH-001) — the player slice is REPLACE semantics too: fields the

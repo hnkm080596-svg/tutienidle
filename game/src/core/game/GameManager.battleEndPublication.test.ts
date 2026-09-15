@@ -33,9 +33,8 @@ interface BattleEndEvent {
 
 const FRAGILE_ENEMY = {
   maxHp: 500,
-  attack: 0,
+  might: 0,
   attackSpeed: 1,
-  attackRangeRanks: 9,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,
@@ -43,9 +42,8 @@ const FRAGILE_ENEMY = {
 
 const LETHAL_ENEMY = {
   maxHp: 10_000_000,
-  attack: 5_000,
+  might: 5_000,
   attackSpeed: 1,
-  attackRangeRanks: 9,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,
@@ -78,22 +76,22 @@ function dummyEnemy(id: string, statsInput: typeof FRAGILE_ENEMY) {
 
 function strongPlayer(): PlayerData {
   const player = createDefaultPlayer()
-  player.baseStats = asBaseStats({ ...player.baseStats, attack: 1_000, speed: 100 })
+  player.baseStats = asBaseStats({ ...player.baseStats, might: 1_000, speed: 100 })
 
   return player
 }
 
 function fragilePlayer(): PlayerData {
   const player = createDefaultPlayer()
-  player.baseStats = asBaseStats({ ...player.baseStats, attack: 0, maxHp: 50, speed: 10 })
+  player.baseStats = asBaseStats({ ...player.baseStats, might: 0, maxHp: 50, speed: 10 })
 
   return player
 }
 
 /** Direct startBattle() input — the dev-spawn/tribulation entry point. */
-function playerEntity(overrides: { attack?: number; maxHp?: number; speed?: number } = {}): CombatEntity {
+function playerEntity(overrides: { might?: number; maxHp?: number; speed?: number } = {}): CombatEntity {
   const stats = createBaseStats({
-    attack: overrides.attack ?? 1_000,
+    might: overrides.might ?? 1_000,
     speed: overrides.speed ?? 100,
     criticalRate: 0,
     ...(overrides.maxHp !== undefined ? { maxHp: overrides.maxHp } : {}),
@@ -118,7 +116,7 @@ function playerEntity(overrides: { attack?: number; maxHp?: number; speed?: numb
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 4,

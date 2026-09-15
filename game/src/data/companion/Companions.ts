@@ -23,7 +23,7 @@ import type { TurnSkillDefinition } from '@/core/battle/turn/TurnSkillAction'
 
 export interface CompanionBaseStats {
   maxHp: number
-  attack: number
+  might: number
   speed: number
 }
 
@@ -80,7 +80,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       special: { realmId: 'qi_refining', realmLevel: 1 },
       ultimate: { realmId: 'foundation_establishment', realmLevel: 1 },
     },
-    baseStats: { maxHp: 90, attack: 12, speed: 110 },
+    baseStats: { maxHp: 90, might: 12, speed: 110 },
     // Fast foxfire caster - claws physically, then burns with Ho Hoa.
     basic: {
       id: 'ho_ly_tinh_basic',
@@ -124,7 +124,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       special: { realmId: 'qi_refining', realmLevel: 4 },
       ultimate: { realmId: 'foundation_establishment', realmLevel: 6 },
     },
-    baseStats: { maxHp: 150, attack: 10, speed: 95 },
+    baseStats: { maxHp: 150, might: 10, speed: 95 },
     // Slow frontline bruiser - stone-splitting blows petrify and stun.
     basic: {
       id: 'khai_son_luc_si_basic',
@@ -160,7 +160,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       special: { realmId: 'qi_refining', realmLevel: 6 },
       ultimate: { realmId: 'foundation_establishment', realmLevel: 4 },
     },
-    baseStats: { maxHp: 80, attack: 9, speed: 120 },
+    baseStats: { maxHp: 80, might: 9, speed: 120 },
     // Spirit crane - fastest hoang pick; frosty wing-beats chill whole rows.
     basic: {
       id: 'linh_hac_basic',
@@ -209,7 +209,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       special: { realmId: 'qi_refining', realmLevel: 2 },
       ultimate: { realmId: 'foundation_establishment', realmLevel: 1 },
     },
-    baseStats: { maxHp: 110, attack: 8, speed: 100 },
+    baseStats: { maxHp: 110, might: 8, speed: 100 },
     // Alchemy boy - poisons with herbs, then detonates the Trung Doc stacks.
     basic: {
       id: 'duoc_dong_tu_basic',
@@ -266,7 +266,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       special: { realmId: 'mortal', realmLevel: 10 },
       ultimate: { realmId: 'foundation_establishment', realmLevel: 1 },
     },
-    baseStats: { maxHp: 120, attack: 15, speed: 108 },
+    baseStats: { maxHp: 120, might: 15, speed: 108 },
     // Wandering swordsman - clean physical lines, a charged draw-cut finish.
     basic: {
       id: 'van_du_kiem_khach_basic',
@@ -303,7 +303,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       special: { realmId: 'mortal', realmLevel: 12 },
       ultimate: { realmId: 'foundation_establishment', realmLevel: 3 },
     },
-    baseStats: { maxHp: 135, attack: 14, speed: 104 },
+    baseStats: { maxHp: 135, might: 14, speed: 104 },
     // Water spirit serpent - chilling bites, column floods, tidal rows.
     basic: {
       id: 'thuy_linh_xa_basic',
@@ -355,7 +355,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       special: { realmId: 'mortal', realmLevel: 14 },
       ultimate: { realmId: 'foundation_establishment', realmLevel: 5 },
     },
-    baseStats: { maxHp: 190, attack: 12, speed: 92 },
+    baseStats: { maxHp: 190, might: 12, speed: 92 },
     // Iron-robe monk - tanks up with Kim Giap, then a palm that weakens
     // every enemy caught in the square.
     basic: {
@@ -398,7 +398,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       special: { realmId: 'mortal', realmLevel: 6 },
       ultimate: { realmId: 'foundation_establishment', realmLevel: 1 },
     },
-    baseStats: { maxHp: 160, attack: 21, speed: 106 },
+    baseStats: { maxHp: 160, might: 21, speed: 106 },
     // Golden-light sage - metal sword-light that bleeds and sunders armor.
     basic: {
       id: 'kim_quang_thanh_nhan_basic',
@@ -439,7 +439,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       presetId: 'metal_slash',
     },
     constellationPerks: [
-      { atRank: 2, kind: 'stat', stat: 'attack', percent: 15 },
+      { atRank: 2, kind: 'stat', stat: 'might', percent: 15 },
       { atRank: 4, kind: 'skill_override', slot: 'special', overrides: { cooldownTurns: 2 } },
       { atRank: 6, kind: 'skill_override', slot: 'ultimate', overrides: { damageMultiplierPercent: 25 } },
     ],
@@ -454,7 +454,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       special: { realmId: 'mortal', realmLevel: 8 },
       ultimate: { realmId: 'foundation_establishment', realmLevel: 5 },
     },
-    baseStats: { maxHp: 260, attack: 14, speed: 90 },
+    baseStats: { maxHp: 260, might: 14, speed: 90 },
     // Black-tortoise guardian - petrifying slams, rooting earth, then a
     // Dia Tru bulwark stance as its ultimate.
     basic: {
@@ -492,7 +492,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
     constellationPerks: [
       { atRank: 2, kind: 'stat', stat: 'maxHp', percent: 20 },
       { atRank: 4, kind: 'skill_override', slot: 'special', overrides: { cooldownTurns: 3 } },
-      { atRank: 6, kind: 'stat', stat: 'attack', flat: 8 },
+      { atRank: 6, kind: 'stat', stat: 'might', flat: 8 },
     ],
   },
 
@@ -510,7 +510,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       special: { realmId: 'mortal', realmLevel: 4 },
       ultimate: { realmId: 'foundation_establishment', realmLevel: 10 },
     },
-    baseStats: { maxHp: 220, attack: 27, speed: 112 },
+    baseStats: { maxHp: 220, might: 27, speed: 112 },
     // Mystic Maiden of the Nine Heavens - starfall sword-light in rows,
     // a sky-fall ultimate across three lanes that leeches back to her.
     basic: {

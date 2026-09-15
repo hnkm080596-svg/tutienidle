@@ -34,7 +34,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -70,7 +70,7 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     realmIndex: 0,
     currentSwordIntent: 0,
     currentKimThe: 0,
-    stats: { skillDamagePercent: 0, maxMp: 0, attack: 10, elementApplicationPercent: 0 } as CombatEntity['stats'],
+    stats: { skillDamagePercent: 0, maxMp: 0, might: 10, elementApplicationPercent: 0 } as CombatEntity['stats'],
     ...overrides,
   } as CombatEntity
 }
@@ -150,7 +150,7 @@ describe('SkillEffectSystem — effect "debuff" trigger Reaction (Combat Rework 
     skillEffectSystem.apply({ type: 'debuff', buffId: 'te_cong', ailmentChance: 1 }, source, target, ctx)
 
     // Combat Balance Pass (2026-08-29) — powerScalingRatio 1.0 (T5.4):
-    // 60 + attack(10)×1.0 = 70.
+    // 60 + might(10)×1.0 = 70.
     expect(target.currentHp).toBe(1000 - 70)
     expect(targetBuffs.getActiveIds()).toEqual([])
   })

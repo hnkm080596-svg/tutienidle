@@ -48,7 +48,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -111,7 +111,7 @@ describe('ARCH-009 (M9) — on-hit proc writes to the VICTIM pool (AUD-C04)', ()
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const player = makeParticipant('player', playerEntity, 10, 0)
@@ -154,7 +154,7 @@ describe('ARCH-009 (M9) — on-hit proc writes to the VICTIM pool (AUD-C04)', ()
     const playerEntity = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyEntity = createCombatant({ id: 'enemy', currentHp: 1_000_000 })
 
@@ -191,7 +191,7 @@ describe('ARCH-009 (M9) — target-scoped CC queries', () => {
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const player = makeParticipant('player', playerEntity, 10, 0)
@@ -235,7 +235,7 @@ describe('ARCH-009 (M9) — reaction consumes the exact matched ingredient insta
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const player = makeParticipant('player', playerEntity, 10, 0, PHAP_TU_BASICS.fire)

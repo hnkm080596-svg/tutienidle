@@ -18,7 +18,7 @@ import type { StatType } from '../stats/StatTypes'
 // - Multiple debuffs and add_stack folding are mapped into appliesAilments.
 // - Leech healing (healPercentOfDamage) is preserved.
 // - Fails explicitly with an Error on unsupported effect types or invalid
-//   configurations — never silently degrades to physical ×1 attack.
+//   configurations — never silently degrades to physical ×1 might.
 //
 // M10 (ARCH-008) — two extensions:
 // - `appliesBuff.duration` carries the authored effect-level duration

@@ -8,7 +8,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 function makeEntity(): CombatEntity {
   return {
     id: 'e', alive: true, realmIndex: 3, currentSwordIntent: 0,
-    stats: { skillDamagePercent: 0.2, maxMp: 50, attack: 12 } as CombatEntity['stats'],
+    stats: { skillDamagePercent: 0.2, maxMp: 50, might: 12 } as CombatEntity['stats'],
   } as CombatEntity
 }
 

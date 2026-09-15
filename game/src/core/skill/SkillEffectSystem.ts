@@ -149,7 +149,7 @@ export class SkillEffectSystem {
           (effect.realmDamageRatio ? effect.realmDamageRatio * source.realmIndex : 0) +
           (effect.manaScalingRatio ? effect.manaScalingRatio * source.stats.maxMp : 0) +
           (effect.skillExperienceRatio
-            ? effect.skillExperienceRatio * (ctx.skillExperience ?? 0) / Math.max(1, source.stats.attack)
+            ? effect.skillExperienceRatio * (ctx.skillExperience ?? 0) / Math.max(1, source.stats.might)
             : 0)
 
         // skillDamagePercent là tổng hợp modifier chung (equipment/
@@ -202,7 +202,7 @@ export class SkillEffectSystem {
             columnRadius: 1,
             charges: effect.swordZoneCharges ?? 3,
             tickInterval: effect.swordZoneTickInterval ?? 1,
-            damagePerTick: finalMultiplier * (effect.swordZoneDamageRatio ?? 0.3) * source.stats.attack,
+            damagePerTick: finalMultiplier * (effect.swordZoneDamageRatio ?? 0.3) * source.stats.might,
             element: effect.zoneElement ?? 'metal',
           })
         }
@@ -380,6 +380,9 @@ export class SkillEffectSystem {
               ctx.combatSystem.applyDotDamage({
                 sourceId: source.id,
                 source,
+                // Task 4 (D18) — authored dotRecovery triggers on the
+                // source's own buffs apply to the burst's element too.
+                sourceBuffs: ctx.sourceBuffs.getAll(),
                 target,
                 rawDamage: burstDamage,
                 element: 'metal',

@@ -15,7 +15,7 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
   // `stats` is destructured out of overrides (and merged into `stats`
   // above already) so the ...restOverrides spread below can't clobber the
-  // merge with a raw partial (eg. `{ attack: 10 } as CombatEntity['stats']`)
+  // merge with a raw partial (eg. `{ might: 10 } as CombatEntity['stats']`)
   // and silently drop base fields (defense, ailmentPotencyPercent, ...)
   // that calculateDamagePerSecond()/apply() still read.
   const { stats: _overrideStats, ...restOverrides } = overrides
@@ -38,7 +38,7 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -79,7 +79,7 @@ describe('BuffSystem — áp buff và getActiveModifiers()', () => {
     const definition: BuffDefinition = {
       id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'buff',
       duration: 5, stackMode: 'refresh',
-      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+      effects: [{ type: 'statModifier', stat: 'might', flat: 5 }],
     }
 
     system.apply(definition, source, target)
@@ -92,7 +92,7 @@ describe('BuffSystem — áp buff và getActiveModifiers()', () => {
     expect(active[0]).toMatchObject({
       sourceId: 'source_1',
       sourceType: 'buff',
-      stat: 'attack',
+      stat: 'might',
       flat: 5,
       stacks: 1,
     })
@@ -108,7 +108,7 @@ describe('BuffSystem — áp buff và getActiveModifiers()', () => {
       id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'buff',
       duration: 5, maxStacks: 5, stackMode: 'stack',
       effects: [
-        { type: 'statModifier', stat: 'attack', flat: 5 },
+        { type: 'statModifier', stat: 'might', flat: 5 },
         { type: 'statModifier', stat: 'defense', flat: 2 },
       ],
     }
@@ -134,7 +134,7 @@ describe('BuffSystem — áp lại cùng buff theo stackMode', () => {
     const definition: BuffDefinition = {
       id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'debuff',
       duration: 5, maxStacks: 2, stackMode: 'stack',
-      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+      effects: [{ type: 'statModifier', stat: 'might', flat: 5 }],
     }
 
     system.apply(definition, source, target)
@@ -162,7 +162,7 @@ describe('BuffSystem — áp lại cùng buff theo stackMode', () => {
     const baseDefinition: BuffDefinition = {
       id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'debuff',
       stackMode: 'refresh', duration: 5,
-      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+      effects: [{ type: 'statModifier', stat: 'might', flat: 5 }],
     }
 
     system.apply(baseDefinition, source, target)
@@ -189,7 +189,7 @@ describe('BuffSystem — áp lại cùng buff theo stackMode', () => {
     const definition: BuffDefinition = {
       id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'debuff',
       duration: 5, stackMode: 'replace',
-      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+      effects: [{ type: 'statModifier', stat: 'might', flat: 5 }],
     }
 
     system.apply(definition, source, target)
@@ -223,7 +223,7 @@ describe('BuffSystem — hết hạn qua update()', () => {
     const definition: BuffDefinition = {
       id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'debuff',
       duration: 2, stackMode: 'refresh',
-      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+      effects: [{ type: 'statModifier', stat: 'might', flat: 5 }],
     }
 
     system.apply(definition, source, target)
@@ -249,7 +249,7 @@ describe('BuffSystem — hết hạn qua update()', () => {
     const definition: BuffDefinition = {
       id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'buff',
       duration: Infinity, stackMode: 'refresh',
-      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+      effects: [{ type: 'statModifier', stat: 'might', flat: 5 }],
     }
 
     system.apply(definition, source, target)
@@ -268,11 +268,11 @@ describe('BuffSystem — hết hạn qua update()', () => {
     const combatSystem = makeCombatSystem()
 
     system.apply(
-      { id: 'buff_ngan', name: 'Ngắn', polarity: 'buff', duration: 1, stackMode: 'refresh', effects: [{ type: 'statModifier', stat: 'attack', flat: 1 }] },
+      { id: 'buff_ngan', name: 'Ngắn', polarity: 'buff', duration: 1, stackMode: 'refresh', effects: [{ type: 'statModifier', stat: 'might', flat: 1 }] },
       source, target,
     )
     system.apply(
-      { id: 'buff_dai', name: 'Dài', polarity: 'buff', duration: 10, stackMode: 'refresh', effects: [{ type: 'statModifier', stat: 'attack', flat: 1 }] },
+      { id: 'buff_dai', name: 'Dài', polarity: 'buff', duration: 10, stackMode: 'refresh', effects: [{ type: 'statModifier', stat: 'might', flat: 1 }] },
       source, target,
     )
 
@@ -330,8 +330,8 @@ describe('BuffSystem — multi-source coexistence (2026-09-01 unified buff syste
   it('update() ticks DoT damage independently per source instance', () => {
     const pool = new BuffPool()
     const system = new BuffSystem(pool)
-    const source1 = makeEntity({ id: 'enemy_1', stats: { attack: 10 } as CombatEntity['stats'] })
-    const source2 = makeEntity({ id: 'enemy_2', stats: { attack: 20 } as CombatEntity['stats'] })
+    const source1 = makeEntity({ id: 'enemy_1', stats: { might: 10 } as CombatEntity['stats'] })
+    const source2 = makeEntity({ id: 'enemy_2', stats: { might: 20 } as CombatEntity['stats'] })
     const target = makeEntity({ id: 'player' })
     const combatSystem = { applyDotDamage: vi.fn() } as unknown as CombatSystem
 
@@ -354,7 +354,7 @@ describe('BuffSystem — Kiếm Tu armorIgnorePercentByRealm (2026-09-01 review 
     const pool = new BuffPool()
     const system = new BuffSystem(pool)
     // realmIndex 8 (Kiếp Lôi/tribulation, realm cuối) -> ignore 90% mitigation.
-    const source = makeEntity({ id: 'source_1', realmIndex: 8, stats: createBaseStats({ attack: 100, defense: 0 }) })
+    const source = makeEntity({ id: 'source_1', realmIndex: 8, stats: createBaseStats({ might: 100, defense: 0 }) })
     const target = makeEntity({ id: 'target_1', stats: createBaseStats({ defense: 50 }) })
 
     const withIgnore: BuffDefinition = {

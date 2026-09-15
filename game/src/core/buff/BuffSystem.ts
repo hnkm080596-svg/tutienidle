@@ -171,7 +171,7 @@ export class BuffSystem {
       : 1
 
     if (!effect.element || effect.element === 'physical') {
-      const power = source.stats.attack
+      const power = source.stats.might
       const mitigation =
         getArmorMitigationPercent(target.stats.defense, target.realmIndex) * armorIgnoreMultiplier
       return Math.max(0, power * ratio * (1 - mitigation)) * (1 + source.stats.ailmentPotencyPercent)
@@ -226,8 +226,8 @@ export class BuffSystem {
 
   /**
    * Universal buff update.
-   * - Turn battle: update(target, combatSystem, registry?, resolveSource?) — deltaSeconds = 1.
-   * - Wall clock with target/combat: update(deltaSeconds, target, combatSystem, registry?, resolveSource?).
+   * - Turn battle: update(target, combatSystem, registry?, resolveSource?, resolveSourceBuffs?) — deltaSeconds = 1.
+   * - Wall clock with target/combat: update(deltaSeconds, target, combatSystem, registry?, resolveSource?, resolveSourceBuffs?).
    * - Persistent out-of-battle: update(deltaSeconds) — decrements duration without combat.
    */
   update(
@@ -236,25 +236,34 @@ export class BuffSystem {
     combatSystem?: CombatSystem,
     registry?: BuffDefinitionCatalog,
     resolveSource?: (sourceId: string) => CombatEntity | undefined,
+    resolveSourceBuffs?: (sourceId: string) => readonly Buff[] | undefined,
   ): void
   update(
     target: CombatEntity,
     combatSystem: CombatSystem,
     registry?: BuffDefinitionCatalog,
     resolveSource?: (sourceId: string) => CombatEntity | undefined,
+    resolveSourceBuffs?: (sourceId: string) => readonly Buff[] | undefined,
   ): void
   update(
     targetOrDelta: CombatEntity | number,
     targetOrCombat?: CombatEntity | CombatSystem,
     combatOrRegistry?: CombatSystem | BuffDefinitionCatalog,
     registryOrResolve?: BuffDefinitionCatalog | ((sourceId: string) => CombatEntity | undefined),
-    resolveSourceParam?: (sourceId: string) => CombatEntity | undefined,
+    // Target-first overloads land their 5th arg (resolveSourceBuffs) in
+    // this position, so the union covers both resolver shapes; each
+    // branch narrows it to the one its own overload declares.
+    resolveSourceParam?:
+      | ((sourceId: string) => CombatEntity | undefined)
+      | ((sourceId: string) => readonly Buff[] | undefined),
+    resolveSourceBuffsParam?: (sourceId: string) => readonly Buff[] | undefined,
   ): void {
     let deltaSeconds = 1
     let target: CombatEntity | undefined
     let combatSystem: CombatSystem | undefined
     let registry: BuffDefinitionCatalog | undefined
     let resolveSource: ((sourceId: string) => CombatEntity | undefined) | undefined
+    let resolveSourceBuffs: ((sourceId: string) => readonly Buff[] | undefined) | undefined
 
     if (typeof targetOrDelta === 'number') {
       deltaSeconds = targetOrDelta
@@ -262,7 +271,8 @@ export class BuffSystem {
         target = targetOrCombat as CombatEntity
         combatSystem = combatOrRegistry as CombatSystem | undefined
         registry = registryOrResolve as BuffDefinitionCatalog | undefined
-        resolveSource = resolveSourceParam
+        resolveSource = resolveSourceParam as ((sourceId: string) => CombatEntity | undefined) | undefined
+        resolveSourceBuffs = resolveSourceBuffsParam
       } else {
         this.updateTime(targetOrDelta)
         return
@@ -272,6 +282,9 @@ export class BuffSystem {
       combatSystem = targetOrCombat as CombatSystem | undefined
       registry = combatOrRegistry as BuffDefinitionCatalog | undefined
       resolveSource = registryOrResolve as ((sourceId: string) => CombatEntity | undefined) | undefined
+      resolveSourceBuffs = resolveSourceParam as
+        | ((sourceId: string) => readonly Buff[] | undefined)
+        | undefined
     }
 
     if (!combatSystem || !target) return
@@ -313,6 +326,7 @@ export class BuffSystem {
             combatSystem.applyDotDamage({
               sourceId: buff.sourceId,
               source: resolveSource?.(buff.sourceId),
+              sourceBuffs: resolveSourceBuffs?.(buff.sourceId),
               target,
               rawDamage,
               element: effect.element,
@@ -415,6 +429,7 @@ export class BuffSystem {
             flat: effect.flat,
             percent: effect.percent,
             stacks: buff.stacks,
+            domain: effect.domain,
           })
         }
       }

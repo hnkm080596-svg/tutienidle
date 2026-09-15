@@ -1,16 +1,16 @@
 // [M13 STATUS: PARTIAL] Mixed liveness module: `areaFor` is live
 // (imported by battle/turn/TurnSkillAction); the Battle-typed helpers
-// (selectAttackableTarget, selectPrimaryTargetForEnemy,
-// canEnemyReachGate, collectAffected, findBattleEnemy) serve only the
+// (selectRankedTarget, collectAffected, findBattleEnemy) serve only the
 // dormant ArtifactSystem and tests now that EnemyAttackSystem and
 // SkillEffectResolver are retired (M13). Do not extend the
 // Battle-typed API; new turn-side targeting belongs in battle/turn/.
 // Combat Grid Rework — chọn primary target + thu thập vùng ảnh hưởng
 // hoàn toàn theo đơn vị GRID (cột/hàng). Pure functions, không state.
 //
-// Hai semantics khoảng cách RIÊNG BIỆT (plan §6.1) — không được hợp nhất:
-// - Player → enemy: Chebyshev quanh avatar, so với player.stats.attackRange.
-// - Enemy → cổng Player: chỉ chênh CỘT tới gateColumn, không xét row.
+// stat-system-reimagined Task 3 (D16): the range helpers
+// (canPlayerReachTarget / canEnemyReachGate / selectPrimaryTargetForEnemy
+// / selectAttackableTarget) were deleted with the retired attackRange
+// stat — reach now belongs to action targeting, not Stats.
 import type { Battle } from './Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActionTargeting, TargetSelectionMode } from './CombatAction'
@@ -32,32 +32,6 @@ export function isHeroGate(entity: CombatEntity, playerId: string): boolean {
   return entity.id === playerId
 }
 
-/**
- * Khoảng cách tấn công của Player (plan §2.3): Chebyshev giữa ô avatar
- * và ô target. Mục tiêu trong tầm khi `<= player.stats.attackRange`.
- */
-export function canPlayerReachTarget(player: CombatEntity, target: CombatEntity): boolean {
-  if (!target.alive) {
-    return false
-  }
-
-  return (
-    getChebyshevDistance(entityGridPosition(player), entityGridPosition(target)) <=
-    player.stats.attackRange
-  )
-}
-
-/**
- * Khoảng cách quái tới CỔNG Player (plan §6.1):
- * - KHÔNG xét row avatar;
- * - distance = abs(enemy.x - gateColumn);
- * - so với attackRange của chính quái;
- * - yêu cầu quái đã materialize (nằm trong battle.enemies).
- */
-export function canEnemyReachGate(enemy: CombatEntity, gateColumn: number): boolean {
-  return Math.abs(enemy.x - gateColumn) <= enemy.stats.attackRange
-}
-
 interface Candidate {
   entity: CombatEntity
   columnDistance: number
@@ -76,60 +50,14 @@ function compareBySelection(a: Candidate, b: Candidate, selection: TargetSelecti
 }
 
 /**
- * Chọn primary target cho NGUỒN QUÁI — candidate duy nhất là Player/cổng:
- * dùng canEnemyReachGate() theo cột, KHÔNG dùng Chebyshev tới avatar row.
+ * Strategy-ranked target pick over ALL alive materialized enemies
+ * (2026-08-26 pre-positioning rule): rank every living enemy by strategy
+ * from the avatar's current position, return the first candidate.
+ * Survives the attackRange retirement (Task 3, D16) unchanged — this
+ * picker never gated on reach. Currently consumed by the dormant
+ * ArtifactSystem activation tick.
  */
-export function selectPrimaryTargetForEnemy(battle: Battle, source: CombatEntity): CombatEntity | null {
-  if (!battle.playerMaterialized || !battle.player.alive) {
-    return null
-  }
-
-  if (!canEnemyReachGate(source, battle.player.x)) {
-    return null
-  }
-
-  return battle.player
-}
-
-/**
- * Chọn primary target CHO PLAYER theo AI strategy (plan §7.2 bước 1):
- * candidate là toàn bộ enemy sống/materialized, CHỈ giữ enemy đang trong
- * Chebyshev range của avatar, sắp theo strategy + tie-break deterministic.
- */
-export function selectAttackableTarget(
-  battle: Battle,
-  strategy: CombatAiStrategy = DEFAULT_COMBAT_AI_STRATEGY,
-): CombatEntity | null {
-  const player = battle.player
-
-  if (!battle.playerMaterialized || !player.alive) {
-    return null
-  }
-
-  const candidates = rankTargetsByStrategy(
-    battle.enemies
-      .filter((battleEnemy) => canPlayerReachTarget(player, battleEnemy.entity))
-      .map((battleEnemy) => ({
-        entity: battleEnemy.entity,
-        distance: getChebyshevDistance(
-          entityGridPosition(player),
-          entityGridPosition(battleEnemy.entity),
-        ),
-      })),
-    strategy,
-  )
-
-  return candidates[0]?.entity ?? null
-}
-
-/**
- * Teleport target (yêu cầu sản phẩm 2026-08-26) — Player TELE NGAY tới
- * hàng có mục tiêu tốt nhất thay vì đứng đợi quái đi vào tầm: xếp hạng
- * TOÀN BỘ enemy sống theo strategy tại vị trí avatar hiện tại, trả về
- * ứng viên đầu tiên. BattleSystem chỉ gọi khi KHÔNG có target trong tầm
- * và ICD teleport đã hết.
- */
-export function selectTeleportTarget(
+export function selectRankedTarget(
   battle: Battle,
   strategy: CombatAiStrategy = DEFAULT_COMBAT_AI_STRATEGY,
 ): CombatEntity | null {
@@ -188,8 +116,8 @@ export function areaFor(anchorRow: LaneIndex, anchorColumn: number, targeting: A
  * Thu thập entity nằm trong vùng ảnh hưởng của action tại anchor.
  * - Nguồn quái: hero là mục tiêu duy nhất có thể bị action trúng
  *   (chưa có enemy AOE friendly-fire trong thiết kế hiện tại).
- * - Secondary được phép nằm NGOÀI attack range của Player sau khi
- *   primary hợp lệ đã chọn (plan §6.4) — đó là damage lan từ điểm va chạm.
+ * - Secondary được phép nằm NGOÀI vùng chứa primary sau khi primary
+ *   hợp lệ đã chọn (plan §6.4) — đó là damage lan từ điểm va chạm.
  * - maxTargets: cắt sau khi sort theo cùng selection metric.
  */
 export function collectAffected(

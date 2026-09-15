@@ -1,6 +1,7 @@
 import type { MainStatKey, StatType } from './StatTypes'
 import { MAIN_STAT_KEYS } from './StatTypes'
 import type { BaseStats, Stats } from './StatBlock'
+import { applyDomainGate, type StatDomain } from './StatDomain'
 
 export type ModifierSourceType =
   | 'realm'
@@ -33,6 +34,13 @@ export interface StatModifier {
   // hành vi giữ nguyên như trước khi có field này.
   tag?: string
 
+  // D10 domain gate: the domain this modifier claims to belong to
+  // (authorial intent - see StatDomain.ts). Absent = universal intent:
+  // may move universal stats but never a gated one. Optional on
+  // purpose: existing content compiles and behaves unchanged while
+  // STAT_DOMAIN is empty.
+  domain?: StatDomain
+
   flat?: number
 
   percent?: number
@@ -54,17 +62,20 @@ export interface StatModifier {
 // hiện có (equipment/technique/buff/pill), calculateStats() tự động
 // quy đổi ra bonus mỗi lần tính lại. Số liệu dưới đây là khởi điểm
 // hợp lý, cần tinh chỉnh qua playtest, không phải số chốt cứng.
-const ATTRIBUTE_ATTACK_PER_POINT = 0.6
+const ATTRIBUTE_MIGHT_PER_POINT = 0.6
 const ATTRIBUTE_DEFENSE_PER_POINT = 0.4
-// Turn-based conversion (2026-09-04) — quy đổi thuần đơn vị từ
-// ATTRIBUTE_ATTACK_SPEED_PERCENT_PER_POINT cũ (0.0015): base 1→100 và
-// rate 0.0015→0.15 cùng nhân 100, giữ đúng % tăng trưởng tương đối —
-// KHÔNG phải cân bằng lại.
-const ATTRIBUTE_SPEED_PER_POINT = 0.15
+// stat-system-reimagined Task 8 (D7): speed removed from ALL attribute
+// derivation -- no attribute axis may grant tempo (INV-2). Speed is the
+// dominant ATB stat by design; its sources are scarce authored grants
+// (D1), never a free by-product of point allocation.
 const ATTRIBUTE_ACCURACY_PER_POINT = 1.5
 const ATTRIBUTE_EVASION_PER_POINT = 1.0
 const ATTRIBUTE_CRIT_RATE_PERCENT_PER_POINT = 0.0005
 const ATTRIBUTE_AILMENT_RESIST_PER_POINT = 0.002
+// D8/D9: Than Than (intelligence) is the control/DoT axis -- gains
+// ailmentPotencyPercent as a flat absolute (percent pool on base 0
+// would be a no-op). Symmetric with ailmentResistPercent, playtest-tunable.
+const ATTRIBUTE_AILMENT_POTENCY_PER_POINT = 0.002
 const ATTRIBUTE_CRIT_DAMAGE_PERCENT_PER_POINT = 0.003
 const ATTRIBUTE_ELEMENT_POWER_PER_POINT = 0.5
 const ATTRIBUTE_MAX_HP_PER_POINT = 8
@@ -126,14 +137,9 @@ const ATTRIBUTE_ELEMENT_TAG_PERCENT_PER_POINT = 0.001
 // (calculateEffectiveStats live-modifier delta pass).
 function deriveAttributeModifiers(finalized: Pick<Stats, MainStatKey>): StatModifier[] {
   const modifiers: StatModifier[] = [
-    flatAttributeModifier('strength', 'attack', finalized.strength * ATTRIBUTE_ATTACK_PER_POINT),
+    flatAttributeModifier('strength', 'might', finalized.strength * ATTRIBUTE_MIGHT_PER_POINT),
     flatAttributeModifier('strength', 'defense', finalized.strength * ATTRIBUTE_DEFENSE_PER_POINT),
 
-    flatAttributeModifier(
-      'dexterity',
-      'speed',
-      finalized.dexterity * ATTRIBUTE_SPEED_PER_POINT,
-    ),
     flatAttributeModifier(
       'dexterity',
       'accuracyRating',
@@ -159,6 +165,11 @@ function deriveAttributeModifiers(finalized: Pick<Stats, MainStatKey>): StatModi
       'intelligence',
       'ailmentResistPercent',
       finalized.intelligence * ATTRIBUTE_AILMENT_RESIST_PER_POINT,
+    ),
+    flatAttributeModifier(
+      'intelligence',
+      'ailmentPotencyPercent',
+      finalized.intelligence * ATTRIBUTE_AILMENT_POTENCY_PER_POINT,
     ),
 
     flatAttributeModifier('vitality', 'maxHp', finalized.vitality * ATTRIBUTE_MAX_HP_PER_POINT),
@@ -272,18 +283,63 @@ function runPipeline(base: Stats, modifiers: StatModifier[]): Stats {
  * 2 lượt: lượt 1 tính đủ mọi modifier THẬT (equipment/technique/buff/
  * ...) để CHỐT giá trị 5 attribute; lượt 2 dẫn xuất bonus từ attribute
  * đã chốt rồi hoà CHUNG vào đúng pool Added/Increased của stat đích
- * (vd attribute-derived +attack hoà chung pool với +attack từ trang
+ * (vd attribute-derived +might hoà chung pool với +might từ trang
  * bị, % tăng tốc đánh từ Dexterity hoà chung pool % từ buff...) —
  * chữ ký hàm KHÔNG đổi nên mọi call site hiện có (BattleSystem, store
  * player.ts) tự động nhận cả 2 sửa đổi (Increased + Attribute) mà
  * không cần sửa gì thêm.
  */
 export function calculateStats(baseStats: BaseStats, modifiers: StatModifier[]): Stats {
-  const pass1 = runPipeline(baseStats, modifiers)
+  // D10: the domain gate runs before any pipeline work; with an empty
+  // STAT_DOMAIN registry every modifier passes through unchanged.
+  const accepted = applyDomainGate(modifiers)
+
+  const pass1 = runPipeline(baseStats, accepted)
 
   const attributeModifiers = deriveAttributeModifiers(pass1)
 
-  return runPipeline(baseStats, [...modifiers, ...attributeModifiers])
+  return runPipeline(baseStats, [...accepted, ...attributeModifiers])
+}
+
+/**
+ * D12 ordering contract (stat-system-reimagined spec section 5): runs ONE
+ * runPipeline pass over base + persistent modifiers and returns the 5
+ * resolved attribute values. Assembly call sites use the totals to emit
+ * domain-gated modifiers (phap_tu attunement -> MP) BEFORE calculateStats
+ * -- the read is not a second derivation, and the emitted modifiers feed
+ * back through the single pipeline (INV-6 intact).
+ */
+export function resolveAttributeTotals(
+  base: Stats,
+  modifiers: StatModifier[],
+): Pick<Stats, MainStatKey> {
+  const resolved = runPipeline(base, modifiers)
+  const totals = {} as Pick<Stats, MainStatKey>
+
+  for (const key of MAIN_STAT_KEYS) {
+    totals[key] = resolved[key]
+  }
+
+  return totals
+}
+
+// D12: a domain may register a deltaDeriver so its attribute-reactive
+// stats re-emit gated deltas inside calculateEffectiveStats, alongside
+// the universal deriveAttributeModifiers pass. The contract derives only
+// deltas, never the base -- exactly like the universal delta pass.
+// Registration order is invocation order; domains with no
+// attribute-reactive stats never register (no-op by absence).
+export type DomainDeltaDeriver = (attributeDelta: Pick<Stats, MainStatKey>) => StatModifier[]
+
+const DOMAIN_DELTA_DERIVERS = new Map<StatDomain, DomainDeltaDeriver>()
+
+export function registerDomainDeltaDeriver(domain: StatDomain, deriver: DomainDeltaDeriver): void {
+  DOMAIN_DELTA_DERIVERS.set(domain, deriver)
+}
+
+/** Test/debug escape hatch -- production code registers once at module load. */
+export function unregisterDomainDeltaDeriver(domain: StatDomain): void {
+  DOMAIN_DELTA_DERIVERS.delete(domain)
 }
 
 /**
@@ -316,7 +372,11 @@ export function calculateStats(baseStats: BaseStats, modifiers: StatModifier[]):
  * report. A live main-stat modifier that nets to zero changes nothing.
  */
 export function calculateEffectiveStats(resolvedBase: Stats, tempModifiers: StatModifier[]): Stats {
-  const effective = runPipeline(resolvedBase, tempModifiers)
+  // D10: same delivery gate as calculateStats - a universal/absent-domain
+  // temp modifier can never move a gated stat mid-battle either.
+  const accepted = applyDomainGate(tempModifiers)
+
+  const effective = runPipeline(resolvedBase, accepted)
 
   const attributeDelta = {} as Pick<Stats, MainStatKey>
   let hasDelta = false
@@ -333,7 +393,15 @@ export function calculateEffectiveStats(resolvedBase: Stats, tempModifiers: Stat
     return effective
   }
 
-  return runPipeline(effective, deriveAttributeModifiers(attributeDelta))
+  const deltaModifiers = deriveAttributeModifiers(attributeDelta)
+
+  // D12: domain deltaDerivers run after the universal delta derivation --
+  // e.g. phap_tu re-emits attunement->MP as domain-gated delta modifiers.
+  for (const deriver of DOMAIN_DELTA_DERIVERS.values()) {
+    deltaModifiers.push(...deriver(attributeDelta))
+  }
+
+  return runPipeline(effective, deltaModifiers)
 }
 
 export function addStack(modifier: StatModifier, amount = 1) {

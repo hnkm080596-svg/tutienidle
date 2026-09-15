@@ -2,7 +2,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import type { Stats } from '../stats/StatBlock'
 import type { EnemyLane } from '../battle/BattleLane'
 import type { EnemyStatInput } from './EnemyStatInput'
-import { normalizeEnemyStats, applyBossMultiplier } from './EnemyStatInput'
+import { normalizeEnemyStats, applyBossMultiplier, assertEnemyDamageSurface } from './EnemyStatInput'
 import type { EnemyArchetype } from './EnemyArchetype'
 import type { TribulationPhase, BossEnrage } from './TribulationPhase'
 import type { CombatVfxPresetId } from '../battle/CombatAction'
@@ -15,7 +15,7 @@ export type { EnemyLane }
  * Combat Balance Pass (2026-08-29, plan §3.6) — 1 action ĐẶC BIỆT data-
  * driven của quái (boss mẫu trước): mỗi lần attack MỚI thứ `everyNth`
  * (1-based, đếm LẠI TỪ ĐẦU sau khi khớp) thay basic attack bằng impact
- * với `damageMultiplier` (nhân cả stats attack qua pipeline thường) và
+ * với `damageMultiplier` (nhân cả stats might qua pipeline thường) và
  * `presetId` riêng để renderer diễn xuất khác biệt. `windupSeconds`
  * override thời gian chuẩn bị (undefined = theo basic của archetype).
  * KHÔNG có UI báo hiệu telegraph riêng — phần đó để dành phase sau.
@@ -183,6 +183,12 @@ export interface EnemyDefinition {
  * lần.
  */
 export function defineEnemy(definition: EnemyDefinition): Enemy {
+  // stat-system-reimagined Task 10 (D21/INV-14) -- reaction-tagged
+  // buff ids and gated-stat modifier channels are rejected at the
+  // authoring boundary; statsInput itself is gated inside
+  // normalizeEnemyStats().
+  assertEnemyDamageSurface(definition)
+
   const stats = normalizeEnemyStats(definition.statsInput)
 
   return {
@@ -298,7 +304,7 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
 
     currentWard: 0,
 
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
 
     realmIndex: getRealmIndex(enemy.realmId),
 

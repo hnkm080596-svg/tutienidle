@@ -35,7 +35,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -124,19 +124,19 @@ describe('TurnBattleSystem adversarial (QA probes)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 100 }),
     })
     const enemyA = createCombatant({
       id: 'enemyA',
       currentHp: 1,
       maxHp: 1,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyB = createCombatant({
       id: 'enemyB',
       currentHp: 5,
       maxHp: 5,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {

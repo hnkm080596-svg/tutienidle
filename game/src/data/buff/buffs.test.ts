@@ -29,24 +29,24 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     return buffs.find((b) => b.id === id)
   }
 
-  it('thanh_tuyen — buff 6s refresh, manaRegenPerSecond +8 flat + manaRegenPercent +0.10', () => {
+  it('thanh_tuyen — buff 6s refresh, manaRegenPerTurn +8 flat + +10% (phap_tu domain, Task 3)', () => {
     const b = byId('thanh_tuyen')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerSecond', flat: 8 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPercent', percent: 0.1 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 8, domain: 'phap_tu' })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerTurn', percent: 0.1, domain: 'phap_tu' })
   })
 
-  it('bang_giap — buff 6s refresh, wardMax +50 + wardRegenPerSecond +5', () => {
+  it('bang_giap — buff 6s refresh, wardMax +50 + wardRegenPerTurn +5', () => {
     const b = byId('bang_giap')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 50 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerSecond', flat: 5 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerTurn', flat: 5 })
   })
 
   it('hoi_luu — buff 4s refresh, leechPercent +0.20', () => {
@@ -77,14 +77,14 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'thornsPercent', flat: 0.15 })
   })
 
-  it('dia_tru — buff 6s refresh, wardMax +60 + wardRegenPerSecond +6 + thornsPercent +0.10', () => {
+  it('dia_tru — buff 6s refresh, wardMax +60 + wardRegenPerTurn +6 + thornsPercent +0.10', () => {
     const b = byId('dia_tru')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 60 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerSecond', flat: 6 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerTurn', flat: 6 })
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'thornsPercent', flat: 0.1 })
   })
 
@@ -101,9 +101,10 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
   // Engine áp/gỡ THEO ID qua theManBuffId() (TheResourceSystem, retired M13) —
   // id phải khớp chính xác `the_man_<element>`.
   it('the_man_<el> ×5 — buff duration Infinity, engine-gỡ, effects theo bảng §4', () => {
-    const expected: Record<string, { type: 'statModifier'; stat: string; flat?: number; percent?: number }[]> = {
+    const expected: Record<string, { type: 'statModifier'; stat: string; flat?: number; percent?: number; domain?: 'phap_tu' }[]> = {
       the_man_fire: [{ type: 'statModifier', stat: 'ailmentPotencyPercent', percent: 0.15 }],
-      the_man_water: [{ type: 'statModifier', stat: 'manaRegenPerSecond', flat: 6 }],
+      // Task 3: MP-pool grant carries the phap_tu domain credential.
+      the_man_water: [{ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 6, domain: 'phap_tu' }],
       the_man_wood: [{ type: 'statModifier', stat: 'ailmentDurationPercent', percent: 0.2 }],
       the_man_metal: [{ type: 'statModifier', stat: 'criticalRate', percent: 0.08 }],
       the_man_earth: [{ type: 'statModifier', stat: 'defense', percent: 0.1 }],
@@ -124,21 +125,21 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     const ngungLo = byId('ngung_lo')!
     const khaiSon = byId('khai_son')!
 
-    expect(ngungLo.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerSecond', flat: 5 })
+    expect(ngungLo.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 5, domain: 'phap_tu' })
     expect(khaiSon.effects).toContainEqual({ type: 'statModifier', stat: 'defense', percent: 0.08 })
   })
 
   // Review round 1 (Finding 1) — biến thể Thổ C không được mượn buff
   // hành khác (bang_giap/kim_giap → sai số liệu + đụng tên đa hành):
   // buff riêng theo đúng bảng §2.5.
-  it('dia_tru_bich — buff 6s refresh, wardMax +100 + wardRegenPerSecond +8, KHÔNG thorns', () => {
+  it('dia_tru_bich — buff 6s refresh, wardMax +100 + wardRegenPerTurn +8, KHÔNG thorns', () => {
     const b = byId('dia_tru_bich')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 100 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerSecond', flat: 8 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerTurn', flat: 8 })
     expect(b.effects.some((e) => e.type === 'statModifier' && e.stat === 'thornsPercent')).toBe(false)
   })
 
@@ -192,13 +193,17 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     })
   })
 
-  it('doc_the — duration Infinity (permanent) + maxStacks/statModifier percent port nguyên vẹn', () => {
+  // stat-system-reimagined Task 4 (D18): the poisonRecoveryPercent stat
+  // retired — Doc Can's heal half is re-authored as a 'dotRecovery'
+  // trigger effect on the buff itself (dotRecoveryTriggers query).
+  it('doc_the — duration Infinity (permanent) + maxStacks/ailmentPotency percent + authored dotRecovery trigger', () => {
     const docThe = buffs.find((b) => b.id === 'doc_the')!
 
     expect(docThe.duration).toBe(Infinity)
     expect(docThe.maxStacks).toBe(5)
     expect(docThe.stackMode).toBe('stack')
     expect(docThe.effects).toContainEqual({ type: 'statModifier', stat: 'ailmentPotencyPercent', percent: 0.05 })
-    expect(docThe.effects).toContainEqual({ type: 'statModifier', stat: 'poisonRecoveryPercent', percent: 0.02 })
+    expect(docThe.effects).toContainEqual({ type: 'dotRecovery', element: 'wood', healPercent: 0.02 })
+    expect(docThe.effects).toHaveLength(2)
   })
 })

@@ -45,7 +45,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -104,13 +104,15 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
     expect(damageEvents[0]).toMatchObject({ sourceId: 'source', targetId: 'target', effectId: 'bong' })
   })
 
-  it('poisonRecoveryPercent hồi máu NGUỒN theo % damage DoT element wood đã trừ — CHỈ wood, không phải fire', () => {
+  // stat-system-reimagined Task 4 (D18) — CombatSystem queries
+  // dotRecoveryTriggers() for authored 'dotRecovery' buff effects on the
+  // source; a source carrying none heals 0 on any DoT tick.
+  it('wood DoT consults dotRecoveryTriggers — source without a recovery buff heals 0', () => {
     const eventBus = new EventBus()
     const combatSystem = new CombatSystem(eventBus)
 
     const source = createCombatant({ id: 'source', type: 'player', currentHp: 500, maxHp: 1000 })
 
-    source.stats.poisonRecoveryPercent = 0.5
     source.stats.woodPower = 10
     source.stats.firePower = 10
 
@@ -120,20 +122,13 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
 
     const resolveSource = (id: string) => (id === source.id ? source : undefined)
 
-    // Trúng Độc (wood) — phải hồi máu nguồn.
+    // Trúng Độc (wood) — the trigger hook runs but the source carries
+    // no dotRecovery buff: target takes damage, source does NOT heal.
     ailmentSystem.apply(getTemplate('trung_doc'), source, target)
     ailmentSystem.update(1, target, combatSystem, undefined, resolveSource)
 
-    expect(source.currentHp).toBeGreaterThan(500)
-
-    const hpAfterWood = source.currentHp
-
-    // Bỏng (fire) — KHÔNG được hồi máu nguồn dù cùng nguồn/cùng stat.
-    const ailmentSystem2 = new BuffSystem(new BuffPool())
-    ailmentSystem2.apply(getTemplate('bong'), source, target)
-    ailmentSystem2.update(1, target, combatSystem, undefined, resolveSource)
-
-    expect(source.currentHp).toBe(hpAfterWood)
+    expect(target.currentHp).toBeLessThan(1000)
+    expect(source.currentHp).toBe(500)
   })
 
   it('kimTheDotResistancePenetrationPercentPerStack chỉ xuyên kháng DoT element metal, không ảnh hưởng DoT khác', () => {

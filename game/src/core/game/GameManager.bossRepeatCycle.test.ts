@@ -36,14 +36,14 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
       id: 'repeat_test_boss', name: 'Repeat Boss', level: 1, realmId: 'mortal', lane: 'ground', isBoss: true,
       // maxHp cực thấp để player (basic attack mặc định, không cần chọn đạo)
       // giết Boss trong lượt đầu tiên, kích hoạt victory + auto-restart ngay.
-      statsInput: { maxHp: 1, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const mobTemplate = defineEnemy({
       // maxHp rất cao — nếu bug tái xuất hiện (mob spawn nhầm ở cycle 2), mob
       // sẽ KHÔNG chết trong vòng lặp test, id của nó vẫn lộ ra trong assertion.
       id: 'repeat_test_mob_should_not_spawn', name: 'Mob', level: 1, realmId: 'mortal', lane: 'ground',
-      statsInput: { maxHp: 100000, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      statsInput: { maxHp: 100000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
 
@@ -102,12 +102,12 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
 describe('pickEnemyForTurnSpawn - spawn mode plumbing (spec v3 D4/D5)', () => {
   const TAG_MOB = defineEnemy({
     id: 'tag_spawn_mob', name: 'Spawn Mob', level: 1, realmId: 'mortal', lane: 'ground',
-    statsInput: { maxHp: 100, attack: 10, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+    statsInput: { maxHp: 100, might: 10, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
   const TAG_BOSS = defineEnemy({
     id: 'tag_spawn_boss', name: 'Spawn Boss', level: 1, realmId: 'mortal', lane: 'ground',
-    statsInput: { maxHp: 50, attack: 10, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+    statsInput: { maxHp: 50, might: 10, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 

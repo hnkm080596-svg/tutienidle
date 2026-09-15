@@ -19,16 +19,15 @@ import type { Skill } from '../skill/Skill'
 // longer reach the battle at all, which the second test pins.
 const ATTACKER_STATS_INPUT = {
   maxHp: 500,
-  attack: 50,
+  might: 50,
   attackSpeed: 2, // interval = 1 / attackSpeed = 0.5s
-  attackRangeRanks: 9,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,
 }
 
 function createAttackerPlayer(): CombatEntity {
-  const stats = createBaseStats({ attack: 50, speed: 2, criticalRate: 0 })
+  const stats = createBaseStats({ might: 50, speed: 2, criticalRate: 0 })
 
   return {
     id: 'player',
@@ -49,7 +48,7 @@ function createAttackerPlayer(): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -89,9 +88,9 @@ function createStubbornEnemy() {
     realmId: 'mortal',
     lane: 'ground',
     // HP + armor rất cao — không bao giờ chết trong lúc test, đòn địch
-    // đánh lại player cũng không đáng kể (attack=0) để player.alive luôn
+    // đánh lại player cũng không đáng kể (might=0) để player.alive luôn
     // true suốt bài test, không ảnh hưởng số đòn đếm được.
-    statsInput: { ...ATTACKER_STATS_INPUT, maxHp: 10_000_000, attack: 0, armor: 0 },
+    statsInput: { ...ATTACKER_STATS_INPUT, maxHp: 10_000_000, might: 0, armor: 0 },
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 }

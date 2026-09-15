@@ -2,7 +2,7 @@ import type { Affix } from '@/core/equipment/Affix'
 
 // Core Loop Foundation checklist (Phase 3, Mục AFFIX) — data mẫu minh
 // hoạ, phủ đúng các stat từng có trong substatPool cũ của
-// iron_sword/spirit_silver_armor (attack/defense/maxHp/maxMp/
+// iron_sword/spirit_silver_armor (might/defense/maxHp/maxMp/
 // dexterity/vitality) + thêm 4 affix mới (criticalRate/
 // criticalDamage/attackSpeed/movementSpeed) cho phong phú. Không khai
 // `slots` = roll được trên mọi loại trang bị (đơn giản hoá cho đợt
@@ -20,7 +20,7 @@ export const affixes: Affix[] = [
   {
     id: 'prefix_attack',
     name: 'Cường Lực',
-    stat: 'attack',
+    stat: 'might',
     kind: 'prefix',
     pool: 'basic',
     tiers: [

@@ -571,7 +571,7 @@
     "realmLine": "{realm} · Tầng {level}",
     "stats": {
       "maxHp": "Sinh Mệnh",
-      "attack": "Công Kích",
+      "might": "Công Kích",
       "speed": "Tốc Độ"
     },
     "exp": {

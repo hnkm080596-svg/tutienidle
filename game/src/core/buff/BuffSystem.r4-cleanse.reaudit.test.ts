@@ -9,14 +9,14 @@ import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 function entity(id: string): CombatEntity {
-  const stats = createBaseStats({ attack: 10000 })
+  const stats = createBaseStats({ might: 10000 })
   return {
     id, name: id, type: 'player', baseStats: stats, stats,
     currentHp: 1000, maxHp: 1000, currentMp: stats.maxMp,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0,
     currentKimThe: 0, timeSinceLastBleedProc: 0, tuLucActive: false,
     tuLucElapsed: 0, tuLucDamageTakenPercent: 0, currentWard: 0,
-    timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+    turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
   }
 }
 

@@ -21,8 +21,9 @@ import type { SkillEffectContext } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
+import { dotRecoveryTriggers } from './DotRecovery'
 import { ReactionManager } from '../element/ReactionManager'
-import type { BuffDefinitionCatalog } from '../buff/BuffTypes'
+import type { Buff, BuffDefinitionCatalog } from '../buff/BuffTypes'
 
 // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX, 2026-08-21) — trần %
 // giảm sát thương từ thuyThePercent, cùng tinh thần ARMOR_CAP (Armor.
@@ -115,10 +116,11 @@ export class CombatSystem {
   }
 
   // finalDamagePercent/finalDamageReductionPercent (affix top-tier, thay
-  // Supreme Strength/Intelligence) — dùng chung bởi resolveAttack()/
-  // applyDotDamage() VÀ mọi damage phản hồi trực tiếp (thorns, ward-break,
+  // Supreme Strength/Intelligence) — HIT-layer multiplier: dùng chung bởi
+  // resolveAttack() VÀ mọi damage phản hồi trực tiếp (thorns, ward-break,
   // reaction) để affix này thật sự áp dụng xuyên suốt pipeline, không chỉ
-  // đòn đánh chính.
+  // đòn đánh chính. KHÔNG áp cho DoT — dotResistancePercent là lớp giảm
+  // duy nhất của DoT (stat-system-reimagined Task 6, D13).
   private finalDamageMultiplier(attacker: CombatEntity | undefined, defender: CombatEntity): number {
     return (1 + (attacker?.stats.finalDamagePercent ?? 0)) * (1 - clampStatValue('finalDamageReductionPercent', defender.stats.finalDamageReductionPercent))
   }
@@ -219,6 +221,12 @@ export class CombatSystem {
 
       finalDamage,
 
+      hpDamage: 0,
+
+      // resolveAttack() overwrites with the real outcome once the absorb
+      // layers run — 'taken' is only the pre-absorb placeholder.
+      outcome: 'taken',
+
       damageType: damage.kind,
 
       critical: isCritical,
@@ -294,6 +302,10 @@ export class CombatSystem {
 
       finalDamage: 0,
 
+      hpDamage: 0,
+
+      outcome: 'miss',
+
       damageType,
 
       critical: false,
@@ -352,9 +364,9 @@ export class CombatSystem {
 
     // Pháp Tu (Thổ Tu, 2026-08-15) — reset đồng hồ "chưa bị đánh" MỖI
     // LẦN thật sự trúng đòn (kể cả khi bị block/không có ward) —
-    // wardRegenPerSecond chỉ hồi sau khi mốc này đủ lâu, xem
+    // wardRegenPerTurn chỉ hồi sau khi mốc này đủ lâu, xem
     // BattleSystem.updateRegen().
-    target.timeSinceLastHitTaken = 0
+    target.turnsSinceLastHitLanded = 0
 
     // Ward hấp thụ TRƯỚC currentHp — phần dư (nếu ward không đủ hoặc
     // không có) mới thật sự trừ máu.
@@ -383,6 +395,13 @@ export class CombatSystem {
 
     result.manaShieldAbsorbed = manaShieldAbsorbed
 
+    // D5/D11 — hpDamage is the post-absorb truth: the hit "landed"
+    // either way (timer reset + hit event above), but only `taken`
+    // (hpDamage > 0) may fire damage-proportional triggers below.
+    result.hpDamage = hpDamage
+
+    result.outcome = hpDamage > 0 ? 'taken' : 'absorbed'
+
     // Nộ (rage) đã GỠ (spec 2026-08-29-kiem-the-kiem-y mục 5.4) —
     // khối tích currentRage theo damage gây/nhận dỡ sạch.
 
@@ -400,17 +419,19 @@ export class CombatSystem {
       critical,
     })
 
-    // Leech — tính trên TOÀN BỘ finalDamage (không chỉ phần đã trừ
-    // HP thật), quy ước ARPG chuẩn.
-    if (source.stats.leechPercent > 0 && source.alive) {
-      this.applyHealing(source, result.finalDamage * clampStatValue('leechPercent', source.stats.leechPercent), source.id, 'leech')
+    // Leech — damage-proportional trigger: fires only on `taken`
+    // (hpDamage > 0), scaled on the HP THẬT SỰ lost post-absorb (D11 —
+    // a fully-warded hit feeds no leech).
+    if (hpDamage > 0 && source.stats.leechPercent > 0 && source.alive) {
+      this.applyHealing(source, hpDamage * clampStatValue('leechPercent', source.stats.leechPercent), source.id, 'leech')
     }
 
-    // Thorns — trừ thẳng HP nguồn, KHÔNG lặp lại pipeline (không tự
-    // roll dodge/crit/thorns ngược lại) — tránh vòng lặp phản đòn vô
-    // hạn giữa 2 bên đều có thorns.
-    if (target.stats.thornsPercent > 0) {
-      this.applyModifiedDirectDamage(source, result.finalDamage * target.stats.thornsPercent, target, 'thorns')
+    // Thorns — defender-side on-hit-taken trigger: only on `taken`,
+    // scaled on hpDamage. Trừ thẳng HP nguồn, KHÔNG lặp lại pipeline
+    // (không tự roll dodge/crit/thorns ngược lại) — tránh vòng lặp
+    // phản đòn vô hạn giữa 2 bên đều có thorns.
+    if (hpDamage > 0 && target.stats.thornsPercent > 0) {
+      this.applyModifiedDirectDamage(source, hpDamage * target.stats.thornsPercent, target, 'thorns')
     }
 
     // Pháp Tu (Thổ Tu) — "Khiên Nổ": Ward VỪA hấp thụ xong VÀ vừa vỡ
@@ -448,12 +469,17 @@ export class CombatSystem {
   applyDotDamage(params: {
     sourceId: string
     source: CombatEntity | undefined
+    // stat-system-reimagined Task 4 (D18) -- the source's own buff list,
+    // so authored dotRecovery triggers (Doc Can) can be read at tick
+    // time. Callers resolve it alongside `source` (resolveSourceBuffs);
+    // absent = no recovery contribution.
+    sourceBuffs?: readonly Buff[]
     target: CombatEntity
     rawDamage: number
     element?: ElementType | 'physical'
     effectId: string
   }) {
-    const { sourceId, source, target, rawDamage, element, effectId } = params
+    const { sourceId, source, sourceBuffs, target, rawDamage, element, effectId } = params
 
     // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục 10) — mỗi
     // tầng currentKimThe xuyên thẳng qua dotResistancePercent của
@@ -467,7 +493,12 @@ export class CombatSystem {
 
     const mitigation = Math.min(DOT_RESISTANCE_CAP, Math.max(DOT_RESISTANCE_FLOOR, target.stats.dotResistancePercent - penetration))
 
-    const finalDamage = Math.max(0, rawDamage * (1 - mitigation) * this.finalDamageMultiplier(source, target))
+    // stat-system-reimagined Task 6 (D13/INV-4) — DoT is a closed
+    // economy: dotResistancePercent (minus authored penetration) is the
+    // ONLY mitigation. finalDamageMultiplier (finalDamagePercent/
+    // finalDamageReductionPercent) is a HIT-layer lever and does NOT
+    // apply here; ward/MP shield/leech/thorns never see DoT either.
+    const finalDamage = Math.max(0, rawDamage * (1 - mitigation))
 
     this.vitals.applyDamage(target, finalDamage, 'dot', sourceId)
 
@@ -485,12 +516,17 @@ export class CombatSystem {
       effectId,
     })
 
-    // Mộc Tu (Plans/PoisonPath/EarthPath, Phase 11) — Poison Recovery:
-    // CHỈ DoT element 'wood' (Trúng Độc), hồi theo damage THẬT SỰ đã
-    // trừ (sau DOT RES) — nguồn phải còn sống, người đã chết/rời trận
-    // không hồi được gì.
-    if (source?.alive && element === 'wood' && source.stats.poisonRecoveryPercent > 0) {
-      this.applyHealing(source, finalDamage * source.stats.poisonRecoveryPercent, source.id, 'leech')
+    // stat-system-reimagined Task 4 (D18) — authored DoT recovery: buff
+    // effects of type 'dotRecovery' on the SOURCE heal it for a fraction
+    // of the damage THẬT SỰ đã trừ (sau DOT RES). The element match is
+    // authored on the effect (Doc Can = 'wood'), not hardcoded here —
+    // dead/absent sources recover nothing. Reason 'healing', not 'leech':
+    // this is an authored recovery trigger that DOES scale with the
+    // source's healingEffectivenessPercent, unlike damage-derived leech.
+    const recovery = dotRecoveryTriggers(source, element, sourceBuffs)
+
+    if (source && recovery > 0) {
+      this.applyHealing(source, finalDamage * recovery, source.id, 'healing')
     }
 
     this.killIfDead(target, sourceId)

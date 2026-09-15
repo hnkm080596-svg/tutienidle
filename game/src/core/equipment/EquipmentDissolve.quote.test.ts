@@ -22,7 +22,7 @@ const TEMPLATE: Equipment = {
   slot: 'weapon',
   grade: 1,
   maxEnhanceLevel: 10,
-  mainStats: [{ stat: 'attack', min: 10, max: 20 }],
+  mainStats: [{ stat: 'might', min: 10, max: 20 }],
   enhanceCost: [{ materialId: 'qi_refining_ore_century', amount: 1 }],
 }
 
@@ -53,10 +53,10 @@ function plainInstance(instanceId: string): EquipmentInstance {
     grade: 'bat_pham',
     quality: 'hoang',
     mainStat: {
-      id: 'roll-main-attack',
+      id: 'roll-main-might',
       sourceId: 'roll-main',
       sourceType: 'equipment',
-      stat: 'attack',
+      stat: 'might',
       flat: 15,
     },
   })

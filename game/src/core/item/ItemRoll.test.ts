@@ -24,7 +24,7 @@ const TEMPLATE: Equipment = {
   slot: 'weapon',
   grade: 1,
   maxEnhanceLevel: 10,
-  mainStats: [{ stat: 'attack', min: 10, max: 20 }],
+  mainStats: [{ stat: 'might', min: 10, max: 20 }],
   enhanceCost: [],
 }
 

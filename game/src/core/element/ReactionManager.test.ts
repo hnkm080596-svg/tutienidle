@@ -61,7 +61,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -179,7 +179,7 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
     reactionManager.checkAndTrigger(targetBuffs, 'te_cong', source, target, combatSystem)
 
     // Combat Balance Pass (2026-08-29) — baseDamage 60 + power
-    // (attack 10 × 0.5 = 5) = 65, rồi × (1 + 0.5) = 97.5.
+    // (might 10 × 0.5 = 5) = 65, rồi × (1 + 0.5) = 97.5.
     expect(target.currentHp).toBe(1000 - 105)
   })
 
@@ -399,11 +399,11 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
     const modifiers = sourceBuffs.getActiveModifiers()
 
     // Plans/magicpathgeneral Phase 7/8/11 — buff 'doc_the' ("Độc Căn",
-    // đổi tên từ "Độc Thế") giờ có 2 modifier: Sát Thương Độc (như cũ)
-    // + Poison Recovery (mới, xem data/buff/buffs.ts).
-    expect(modifiers).toHaveLength(2)
+    // đổi tên từ "Độc Thế") cấp Sát Thương Độc. Task 4 (D18): the heal
+    // half is an authored 'dotRecovery' trigger effect — not a
+    // statModifier, so getActiveModifiers still reports one modifier.
+    expect(modifiers).toHaveLength(1)
     expect(modifiers).toContainEqual(expect.objectContaining({ stat: 'ailmentPotencyPercent', percent: 0.05, stacks: 1 }))
-    expect(modifiers).toContainEqual(expect.objectContaining({ stat: 'poisonRecoveryPercent', percent: 0.02, stacks: 1 }))
   })
 
   // Plans/KimPath mục 5/6 (2026-08-21) — 2 reaction Kim mới.

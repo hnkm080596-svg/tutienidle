@@ -16,7 +16,7 @@ const TEST_EQUIPMENT: Equipment = {
   slot: 'weapon',
   grade: 1,
   maxEnhanceLevel: 10,
-  mainStats: [{ stat: 'attack', min: 10, max: 20 }],
+  mainStats: [{ stat: 'might', min: 10, max: 20 }],
 }
 
 describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với grantItemDrops', () => {
@@ -44,8 +44,8 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
       realmId: 'mortal',
       lane: 'ground',
       statsInput: {
-        maxHp: 1, attack: 0, attackSpeed: 1,
-        attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0,
+        maxHp: 1, might: 0, attackSpeed: 1,
+        criticalRate: 0, criticalDamage: 1.5, armor: 0,
       },
       // KHÔNG khai signatureDrops — cô lập đúng đường equipment_any của
       // stage pool (quái thường = 1 pool draw → đúng 1 món).

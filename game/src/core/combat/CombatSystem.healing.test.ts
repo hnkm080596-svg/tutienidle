@@ -1,0 +1,260 @@
+import { describe, expect, it } from 'vitest'
+import { CombatSystem } from './CombatSystem'
+import { BuffSystem } from '../buff/BuffSystem'
+import { BuffPool } from '../buff/BuffPool'
+import { EventBus } from '../events/EventBus'
+import { createBaseStats } from '../stats/StatBlock'
+import type { CombatEntity } from './CombatEntity'
+import type { Buff, BuffDefinition, BuffDefinitionCatalog } from '../buff/BuffTypes'
+
+// stat-system-reimagined Task 4 (D18 / INV-13) — healingEffectivenessPercent:
+// receiver-side amplification of HP restores that are NOT damage-derived
+// (hpRegenPerTurn ticks, direct heal effects, authored dotRecovery triggers
+// like Doc Can). leechPercent stays the SOLE leech lever — its output is
+// hpDamage * leechPercent, bitwise unchanged. Ward/MP regen and shield
+// absorb are never scaled either.
+
+const WOOD_DOT: BuffDefinition = {
+  id: 'qa_wood_dot',
+  name: 'QA Wood DoT',
+  polarity: 'debuff',
+  duration: 3,
+  stackMode: 'stack',
+  effects: [{ type: 'dot', dpsRatio: 1, element: 'wood' }],
+}
+
+const FIRE_DOT: BuffDefinition = {
+  id: 'qa_fire_dot',
+  name: 'QA Fire DoT',
+  polarity: 'debuff',
+  duration: 3,
+  stackMode: 'stack',
+  effects: [{ type: 'dot', dpsRatio: 1, element: 'fire' }],
+}
+
+// Doc Can-shaped authored trigger: heal the DoT source for a fraction of
+// the wood damage actually dealt, per stack.
+const DOT_RECOVERY: BuffDefinition = {
+  id: 'qa_dot_recovery',
+  name: 'QA Recovery',
+  polarity: 'buff',
+  duration: 3,
+  stackMode: 'stack',
+  maxStacks: 5,
+  effects: [{ type: 'dotRecovery', element: 'wood', healPercent: 0.25 }],
+}
+
+const REGISTRY: BuffDefinitionCatalog = {
+  get: (id: string): BuffDefinition => {
+    for (const definition of [WOOD_DOT, FIRE_DOT, DOT_RECOVERY]) {
+      if (definition.id === id) return definition
+    }
+    throw new Error(`unknown buff id: ${id}`)
+  },
+}
+
+function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
+  const stats = createBaseStats()
+
+  return {
+    id: 'id',
+    name: 'name',
+    type: 'enemy',
+    baseStats: stats,
+    stats,
+    currentHp: stats.maxHp,
+    maxHp: stats.maxHp,
+    currentMp: stats.maxMp,
+    currentSwordIntent: 0,
+    currentMomentum: 0,
+    currentHoaThe: 0,
+    currentThoThe: 0,
+    currentKimThe: 0,
+    timeSinceLastBleedProc: 0,
+    tuLucActive: false,
+    tuLucElapsed: 0,
+    tuLucDamageTakenPercent: 0,
+    currentWard: 0,
+    turnsSinceLastHitLanded: Infinity,
+    realmIndex: 0,
+    x: 0,
+    row: 2,
+    alive: true,
+    ...overrides,
+  }
+}
+
+function makeBuffPoolWith(definition: BuffDefinition, holder: CombatEntity, stacks: number): Buff[] {
+  const pool = new BuffPool()
+  const system = new BuffSystem(pool)
+
+  for (let i = 0; i < stacks; i++) {
+    system.apply(definition, holder, holder, REGISTRY)
+  }
+
+  return pool.getAll()
+}
+
+describe('healingEffectivenessPercent (INV-13)', () => {
+  it('amplifies the hpRegenPerTurn leg of turn regen; mp/ward legs stay bitwise', () => {
+    const combat = new CombatSystem(new EventBus())
+    const stats = createBaseStats({ maxMp: 100, wardMax: 100 })
+    const entity = createCombatant({
+      stats,
+      baseStats: stats,
+      currentHp: 500,
+      maxHp: 1000,
+      currentMp: 0,
+      currentWard: 0,
+    })
+
+    entity.stats.healingEffectivenessPercent = 0.5
+
+    const applied = combat.applyTurnRegen(entity, { hp: 10, mp: 10, ward: 10 }, entity.id)
+
+    expect(applied.hp).toBeCloseTo(15, 5)
+    expect(applied.mp).toBe(10)
+    expect(applied.ward).toBe(10)
+  })
+
+  it('amplifies direct heals (reason healing) by the receiver stat', () => {
+    const combat = new CombatSystem(new EventBus())
+    const entity = createCombatant({ currentHp: 100, maxHp: 10_000 })
+
+    entity.stats.healingEffectivenessPercent = 0.5
+
+    expect(combat.applyHealing(entity, 100, 'src', 'healing')).toBeCloseTo(150, 5)
+  })
+
+  it('never amplifies leech — leechPercent output stays bitwise identical', () => {
+    const combat = new CombatSystem(new EventBus())
+    const entity = createCombatant({ currentHp: 100, maxHp: 10_000 })
+
+    entity.stats.healingEffectivenessPercent = 0.5
+
+    expect(combat.applyHealing(entity, 100, entity.id, 'leech')).toBe(100)
+  })
+
+  it('dotRecovery trigger: wood DoT tick heals the living source, scaled by heal effectiveness', () => {
+    const eventBus = new EventBus()
+    const combat = new CombatSystem(eventBus)
+
+    const sourceStats = createBaseStats({ woodPower: 10 })
+    const source = createCombatant({
+      id: 'source',
+      type: 'player',
+      baseStats: sourceStats,
+      stats: sourceStats,
+      currentHp: 500,
+      maxHp: 1000,
+    })
+    source.stats.healingEffectivenessPercent = 0.5
+
+    const targetStats = createBaseStats()
+    const target = createCombatant({
+      id: 'target',
+      baseStats: targetStats,
+      stats: targetStats,
+      currentHp: 10_000,
+      maxHp: 10_000,
+    })
+
+    const sourceBuffs = makeBuffPoolWith(DOT_RECOVERY, source, 1)
+
+    const targetPool = new BuffPool()
+    new BuffSystem(targetPool).apply(WOOD_DOT, source, target, REGISTRY)
+
+    const resolveSource = (id: string) => (id === source.id ? source : undefined)
+    const resolveSourceBuffs = (id: string) => (id === source.id ? sourceBuffs : undefined)
+
+    new BuffSystem(targetPool).update(1, target, combat, REGISTRY, resolveSource, resolveSourceBuffs)
+
+    // might 10 + woodPower 10 = 20 raw, no mitigation -> finalDamage 20.
+    // Recovery 0.25 * 20 = 5, amplified 1.5x -> 7.5.
+    expect(target.currentHp).toBeCloseTo(10_000 - 20, 5)
+    expect(source.currentHp).toBeCloseTo(507.5, 5)
+  })
+
+  it('dotRecovery trigger without the stat heals the unamplified amount', () => {
+    const eventBus = new EventBus()
+    const combat = new CombatSystem(eventBus)
+
+    const sourceStats = createBaseStats({ woodPower: 10 })
+    const source = createCombatant({
+      id: 'source',
+      type: 'player',
+      baseStats: sourceStats,
+      stats: sourceStats,
+      currentHp: 500,
+      maxHp: 1000,
+    })
+
+    const target = createCombatant({ id: 'target', currentHp: 10_000, maxHp: 10_000 })
+
+    const sourceBuffs = makeBuffPoolWith(DOT_RECOVERY, source, 2)
+
+    combat.applyDotDamage({
+      sourceId: source.id,
+      source,
+      sourceBuffs,
+      target,
+      rawDamage: 20,
+      element: 'wood',
+      effectId: 'qa_wood_dot',
+    })
+
+    // 2 stacks x 0.25 = 0.5 recovery -> 20 * 0.5 = 10 healed, no amp.
+    expect(source.currentHp).toBeCloseTo(510, 5)
+  })
+
+  it('non-matching element DoT does not feed a wood-scoped recovery trigger', () => {
+    const combat = new CombatSystem(new EventBus())
+
+    const source = createCombatant({ id: 'source', type: 'player', currentHp: 500, maxHp: 1000 })
+    const target = createCombatant({ id: 'target', currentHp: 10_000, maxHp: 10_000 })
+
+    const sourceBuffs = makeBuffPoolWith(DOT_RECOVERY, source, 3)
+
+    combat.applyDotDamage({
+      sourceId: source.id,
+      source,
+      sourceBuffs,
+      target,
+      rawDamage: 20,
+      element: 'fire',
+      effectId: 'qa_fire_dot',
+    })
+
+    expect(source.currentHp).toBe(500)
+  })
+
+  it('missing source buffs or dead source produces no recovery', () => {
+    const combat = new CombatSystem(new EventBus())
+
+    const source = createCombatant({ id: 'source', type: 'player', currentHp: 500, maxHp: 1000 })
+    const deadSource = createCombatant({ id: 'dead', type: 'player', currentHp: 0, maxHp: 1000, alive: false })
+    const target = createCombatant({ id: 'target', currentHp: 10_000, maxHp: 10_000 })
+
+    combat.applyDotDamage({
+      sourceId: source.id,
+      source,
+      target,
+      rawDamage: 20,
+      element: 'wood',
+      effectId: 'qa_wood_dot',
+    })
+
+    combat.applyDotDamage({
+      sourceId: deadSource.id,
+      source: deadSource,
+      sourceBuffs: makeBuffPoolWith(DOT_RECOVERY, deadSource, 1),
+      target,
+      rawDamage: 20,
+      element: 'wood',
+      effectId: 'qa_wood_dot',
+    })
+
+    expect(source.currentHp).toBe(500)
+    expect(deadSource.currentHp).toBe(0)
+  })
+})

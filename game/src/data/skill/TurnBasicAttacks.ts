@@ -5,9 +5,9 @@
 // - 5 Pháp Tu Thuần: skill đầu mỗi chuỗi CHAIN_SKILL_IDS, mỗi skill 1
 //   component element ratio 1 (Skills.ts L140/374/319/450/532)
 // - Thể Tu + Phàm Nhân (chưa chọn đạo): KHÔNG dùng Skill object — hệ sống
-//   dùng generic melee (basic attack qua attack stat), map thành
+//   dùng generic melee (basic attack qua might stat), map thành
 //   TurnSkillDefinition physical multiplier 1 tương đương
-// - Enemy: hầu như chỉ basic attack (attack stat) — chung generic physical.
+// - Enemy: hầu như chỉ basic attack (might stat) — chung generic physical.
 //   Riêng Thủy Giáp Long author specialAttacks[0] = Nuốt Sáng (everyNth 4,
 //   damageMultiplier 2.5) — mọiNth counter là trách nhiệm của caller
 //   (GameManager adapter), định nghĩa skill ở đây chỉ là shape damage.
@@ -56,7 +56,7 @@ export const BASIC_ATTACKS_BY_BUILD: Record<string, TurnSkillDefinition> = {
  * Enemy specialAttacks[0] của Thủy Giáp Long (Enemies.ts:1764) — đòn thứ 4
  * "Nuốt Sáng" (×2.5 damage nước). Turn-based: caller (GameManager adapter)
  * đếm everyNth theo lượt của enemy; damage multiplier đích thực nằm ở
- * damage.multiplier (enemy attack stat × 2.5 qua resolveActionHit).
+ * damage.multiplier (enemy might stat × 2.5 qua resolveActionHit).
  */
 export const THUY_GIAP_LONG_WATER_SURGE: TurnSkillDefinition = {
   id: 'water_surge',

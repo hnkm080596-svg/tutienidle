@@ -571,7 +571,7 @@
     "realmLine": "{realm} · Floor {level}",
     "stats": {
       "maxHp": "HP",
-      "attack": "Attack",
+      "might": "Attack",
       "speed": "Speed"
     },
     "exp": {

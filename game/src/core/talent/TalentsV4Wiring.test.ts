@@ -134,7 +134,7 @@ describe('TalentPassives v4 — shape & nhịp engine của 11 passive', () => {
     const skill = passiveById.get('talent_passive_ho_the')!
 
     expect(skill.passiveTrigger).toBe('damage_taken')
-    expect(skill.passiveModifiers![0]!.stat).toBe('wardRegenPerSecond')
+    expect(skill.passiveModifiers![0]!.stat).toBe('wardRegenPerTurn')
     expect(skill.passiveModifiers![0]!.maxStacks).toBe(5)
     expect(skill.passiveConvertsTo).toBeUndefined()
   })

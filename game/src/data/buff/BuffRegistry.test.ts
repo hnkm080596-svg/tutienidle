@@ -18,7 +18,7 @@ const SAMPLE: BuffDefinition = {
   convertsToId: 'other',
   convertsAfterContinuousSeconds: 3,
   effects: [
-    { type: 'statModifier', stat: 'attack', percent: -0.15 },
+    { type: 'statModifier', stat: 'might', percent: -0.15 },
     { type: 'dot', dpsRatio: 0.5, element: 'fire', armorIgnorePercentByRealm: true },
     { type: 'cc', ccEffect: 'stun' },
     { type: 'onHitProc', chance: 0.2, appliesBuffId: 'other' },

@@ -9,14 +9,14 @@ import type { BuffDefinition } from '../../core/buff/BuffTypes'
 //   - "Dung Nham" (thạch_hóa + bỏng, ReactionManager.spawnLavaZone →
 //     HazardZoneSystem.spawnLavaZone): hệ sống spawn Lava Zone 6 tick ×
 //     damagePerTick 20 CỐ ĐỊNH (ElementReaction.ts spawnsLavaZone data,
-//     không attack-scaling). Turn-based dot pipeline damage/tick =
+//     không might-scaling). Turn-based dot pipeline damage/tick =
 //     power × dpsRatio (BuffSystem.calculateDamagePerTurn, physical
-//     dùng stats.attack). dpsRatio = 20/10 = 2.0 quy đổi tại baseline
-//     attack 10 (StatBlock.ts) — damage/tick tại baseline giữ nguyên 20.
+//     dùng stats.might). dpsRatio = 20/10 = 2.0 quy đổi tại baseline
+//     might 10 (StatBlock.ts) — damage/tick tại baseline giữ nguyên 20.
 //   - "Kiếm Trận" (Kiếm Tu keystone, SkillEffect.grantsSwordZone →
 //     HazardZoneSystem.spawnSwordZone): hệ sống damagePerTick =
-//     multiplier × 0.3 × attack, 3 charges. dpsRatio 0.3 quy đổi 1:1
-//     (đã attack-scaled sẵn); charges 3 → duration 3 lượt.
+//     multiplier × 0.3 × might, 3 charges. dpsRatio 0.3 quy đổi 1:1
+//     (đã might-scaled sẵn); charges 3 → duration 3 lượt.
 //
 // Duration giữ nguyên SỐ (no-rebalance policy Completion plan §Global
 // Constraints): 6s × tickInterval 1s = 6 lượt; 3 charges = 3 lượt.

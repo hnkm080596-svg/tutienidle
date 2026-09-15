@@ -6,7 +6,7 @@ import { defineEnemy } from '../enemy/Enemy'
 
 const DUMMY = defineEnemy({
   id: 'adv_dummy', name: 'Adv Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-  statsInput: { maxHp: 10, attack: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+  statsInput: { maxHp: 10, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
   rewards: { techniqueInsight: 0, spiritStone: 5 },
 })
 const STAGE = {

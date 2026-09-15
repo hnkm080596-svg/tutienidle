@@ -23,7 +23,7 @@ function makeInstance(id: string, opts: Partial<EquipmentInstance> = {}): Equipm
       id: `main_${id}`,
       sourceId: 'test_item',
       sourceType: 'equipment',
-      stat: 'attack',
+      stat: 'might',
       flat: 1,
     },
     ...opts,

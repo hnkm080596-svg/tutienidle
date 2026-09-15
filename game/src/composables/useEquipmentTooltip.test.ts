@@ -16,7 +16,7 @@ function instance(overrides: Partial<EquipmentInstance> = {}): EquipmentInstance
     itemId: 'test_sword',
     grade: 'bat_pham',
     quality: 'hoang',
-    mainStat: { id: 'roll-main-attack', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 },
+    mainStat: { id: 'roll-main-might', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 10 },
     ...overrides,
   })
 }
@@ -44,30 +44,30 @@ describe('getEquipmentComparisonTone', () => {
 
   it('upgrade khi mainStat cao hơn đồ đang mặc', () => {
     const { affixRegistry } = setup()
-    const equipped = instance({ instanceId: 'equipped', mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 } })
-    const candidate = instance({ instanceId: 'candidate', mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 20 } })
+    const equipped = instance({ instanceId: 'equipped', mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 10 } })
+    const candidate = instance({ instanceId: 'candidate', mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 20 } })
 
     expect(getEquipmentComparisonTone(candidate, equipped, affixRegistry)).toBe('upgrade')
   })
 
   it('downgrade khi mainStat thấp hơn đồ đang mặc', () => {
     const { affixRegistry } = setup()
-    const equipped = instance({ instanceId: 'equipped', mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 20 } })
-    const candidate = instance({ instanceId: 'candidate', mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 } })
+    const equipped = instance({ instanceId: 'equipped', mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 20 } })
+    const candidate = instance({ instanceId: 'candidate', mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 10 } })
 
     expect(getEquipmentComparisonTone(candidate, equipped, affixRegistry)).toBe('downgrade')
   })
 
-  it('neutral khi số stat tăng bằng số stat giảm (2 stat KHÁC nhau — attack lên, maxHp xuống)', () => {
+  it('neutral khi số stat tăng bằng số stat giảm (2 stat KHÁC nhau — might lên, maxHp xuống)', () => {
     const { affixRegistry } = setup()
     const equipped = instance({
       instanceId: 'equipped',
-      mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 },
+      mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 10 },
       affixes: [{ affixId: 'prefix_max_hp', tier: 1, value: 20 }],
     })
     const candidate = instance({
       instanceId: 'candidate',
-      mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 20 },
+      mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 20 },
       affixes: [{ affixId: 'prefix_max_hp', tier: 1, value: 5 }],
     })
 
@@ -91,7 +91,7 @@ describe('buildEquipmentTooltip', () => {
       description: 'Kiếm thử nghiệm.',
       slot: 'weapon',
       grade: 1,
-      mainStats: [{ stat: 'attack', min: 8, max: 12 }],
+      mainStats: [{ stat: 'might', min: 8, max: 12 }],
       maxEnhanceLevel: 10,
     }
 
@@ -122,7 +122,7 @@ describe('buildEquipmentTooltip', () => {
       name: 'Thanh Vân Kiếm',
       slot: 'weapon',
       grade: 1,
-      mainStats: [{ stat: 'attack', min: 8, max: 12 }],
+      mainStats: [{ stat: 'might', min: 8, max: 12 }],
       maxEnhanceLevel: 10,
     }
 
@@ -143,12 +143,12 @@ describe('buildEquipmentTooltip', () => {
     const { affixRegistry } = setup()
     const equipment = instance({
       grade: 'cuu_pham', realmLevel: 1,
-      mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 14 },
+      mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 14 },
       affixes: [{ affixId: 'prefix_max_hp', tier: 1, value: 15 }],
     })
     const template: Equipment = {
       id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
-      mainStats: [{ stat: 'attack', min: 12, max: 20 }], maxEnhanceLevel: 10,
+      mainStats: [{ stat: 'might', min: 12, max: 20 }], maxEnhanceLevel: 10,
     }
 
     const content = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry())
@@ -172,15 +172,15 @@ describe('buildEquipmentTooltip', () => {
     const zoneRegistry = new ZoneRegistry()
     const equipped = instance({
       instanceId: 'equipped', grade: 'cuu_pham', realmLevel: 1,
-      mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 },
+      mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 10 },
     })
     const candidate = instance({
       instanceId: 'candidate', grade: 'cuu_pham', realmLevel: 1,
-      mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 14 },
+      mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 14 },
     })
     const template: Equipment = {
       id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
-      mainStats: [{ stat: 'attack', min: 12, max: 20 }], maxEnhanceLevel: 10,
+      mainStats: [{ stat: 'might', min: 12, max: 20 }], maxEnhanceLevel: 10,
     }
 
     const content = buildEquipmentTooltip(candidate, template, affixRegistry, null, zoneRegistry, {
@@ -209,7 +209,7 @@ describe('buildEquipmentTooltip', () => {
     const candidate = instance({ instanceId: 'candidate' })
     const template: Equipment = {
       id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
-      mainStats: [{ stat: 'attack', min: 8, max: 12 }], maxEnhanceLevel: 10,
+      mainStats: [{ stat: 'might', min: 8, max: 12 }], maxEnhanceLevel: 10,
     }
 
     const content = buildEquipmentTooltip(candidate, template, affixRegistry, null, zoneRegistry, {
@@ -231,7 +231,7 @@ describe('buildEquipmentTooltip', () => {
     const tienInstance = instance({ quality: 'tien' })
     const template: Equipment = {
       id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
-      mainStats: [{ stat: 'attack', min: 8, max: 12 }], maxEnhanceLevel: 10,
+      mainStats: [{ stat: 'might', min: 8, max: 12 }], maxEnhanceLevel: 10,
     }
 
     const content = buildEquipmentTooltip(tienInstance, template, affixRegistry, null, new ZoneRegistry())
@@ -248,7 +248,7 @@ describe('buildEquipmentTooltip', () => {
     const equipment = instance()
     const template: Equipment = {
       id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
-      mainStats: [{ stat: 'attack', min: 8, max: 12 }], maxEnhanceLevel: 10,
+      mainStats: [{ stat: 'might', min: 8, max: 12 }], maxEnhanceLevel: 10,
     }
 
     const content = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry())

@@ -344,7 +344,7 @@ const activeTimedEffects = computed(() => {
       const hp =
         effect.modifiers.find((modifier) => modifier.stat === 'hpRegenPerTurn')?.flat ?? 0
       const mp =
-        effect.modifiers.find((modifier) => modifier.stat === 'manaRegenPerSecond')?.flat ?? 0
+        effect.modifiers.find((modifier) => modifier.stat === 'manaRegenPerTurn')?.flat ?? 0
 
       const minutes = Math.floor(remainingSeconds / 60)
       const seconds = remainingSeconds % 60

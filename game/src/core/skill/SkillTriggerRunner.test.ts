@@ -9,7 +9,7 @@ function makeSkill(triggers: Skill['triggers']): Skill {
 }
 
 function makeEntity(): CombatEntity {
-  return { id: 'e', alive: true, realmIndex: 0, stats: { skillDamagePercent: 0, maxMp: 0, attack: 1 } as CombatEntity['stats'] } as CombatEntity
+  return { id: 'e', alive: true, realmIndex: 0, stats: { skillDamagePercent: 0, maxMp: 0, might: 1 } as CombatEntity['stats'] } as CombatEntity
 }
 
 describe('SkillTriggerRunner', () => {

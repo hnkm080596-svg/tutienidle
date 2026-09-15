@@ -13,7 +13,7 @@ function attackModifier(id: string, flat: number): StatModifier {
     id,
     sourceId: id,
     sourceType: 'buff',
-    stat: 'attack',
+    stat: 'might',
     flat,
   }
 }
@@ -26,17 +26,17 @@ describe('player store — finalStats reactivity qua externalModifiers', () => {
   it('setExternalModifiers với giá trị mới → finalStats phản ánh ngay khi đọc lại', () => {
     const store = usePlayerStore()
 
-    const before = store.finalStats.attack
+    const before = store.finalStats.might
 
-    store.setExternalModifiers([attackModifier('buff:attack', 100)])
+    store.setExternalModifiers([attackModifier('buff:might', 100)])
 
-    const afterFirst = store.finalStats.attack
+    const afterFirst = store.finalStats.might
 
     expect(afterFirst).toBe(before + 100)
 
-    store.setExternalModifiers([attackModifier('buff:attack', 250)])
+    store.setExternalModifiers([attackModifier('buff:might', 250)])
 
-    const afterSecond = store.finalStats.attack
+    const afterSecond = store.finalStats.might
 
     expect(afterSecond).toBe(before + 250)
     expect(afterSecond).not.toBe(afterFirst)
@@ -45,23 +45,23 @@ describe('player store — finalStats reactivity qua externalModifiers', () => {
   it('gọi setExternalModifiers hai lần liên tiếp với nội dung GIỐNG HỆT (khác object reference) → finalStats vẫn đúng cả hai lần, không throw, không NaN', () => {
     const store = usePlayerStore()
 
-    const before = store.finalStats.attack
+    const before = store.finalStats.might
 
     // Hai mảng khác object reference nhưng nội dung y hệt — mô phỏng
     // GameManager tạo mảng mới mỗi tick dù giá trị buff không đổi.
-    const firstCall = () => store.setExternalModifiers([attackModifier('buff:attack', 42)])
-    const secondCall = () => store.setExternalModifiers([attackModifier('buff:attack', 42)])
+    const firstCall = () => store.setExternalModifiers([attackModifier('buff:might', 42)])
+    const secondCall = () => store.setExternalModifiers([attackModifier('buff:might', 42)])
 
     expect(firstCall).not.toThrow()
 
-    const afterFirst = store.finalStats.attack
+    const afterFirst = store.finalStats.might
 
     expect(afterFirst).toBe(before + 42)
     expect(Number.isNaN(afterFirst)).toBe(false)
 
     expect(secondCall).not.toThrow()
 
-    const afterSecond = store.finalStats.attack
+    const afterSecond = store.finalStats.might
 
     expect(afterSecond).toBe(before + 42)
     expect(Number.isNaN(afterSecond)).toBe(false)

@@ -9,8 +9,8 @@ import type { StatType } from '../stats/StatTypes'
  * (calculateBaseDamage + elementalBasePower) và DoT snapshot
  * (AilmentSystem) không thể lệch công thức về sau.
  */
-export function baseAttackPlusPower(attack: number, power: number): number {
-  return attack + power
+export function baseMightPlusPower(might: number, power: number): number {
+  return might + power
 }
 
 /**
@@ -33,7 +33,7 @@ export function calculateBaseDamage(
 ): number {
   switch (damageType) {
     case 'physical': {
-      const raw = source.stats.attack
+      const raw = source.stats.might
 
       const mitigation = ignoreResistance ? 0 : getArmorMitigationPercent(target.stats.defense, target.realmIndex)
 
@@ -43,8 +43,8 @@ export function calculateBaseDamage(
     case 'primordial':
       // combat-skill-flow-element-power-dot-plan.md §3.1 — Primordial
       // component cũng cộng ATK vào Power nền, QUA ĐÚNG helper nền dùng
-      // chung baseAttackPlusPower() (tránh hai công thức độc lập).
-      return baseAttackPlusPower(source.stats.attack, source.stats.primordialPower)
+      // chung baseMightPlusPower() (tránh hai công thức độc lập).
+      return baseMightPlusPower(source.stats.might, source.stats.primordialPower)
   }
 }
 

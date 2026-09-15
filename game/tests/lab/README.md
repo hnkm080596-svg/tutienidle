@@ -34,8 +34,8 @@ console.log(lab.snapshot())      // readable dump: realm, stats, battle, bags
 | `addEquipment(id, zoneId?)` | rolls a real instance via EquipmentSystem.createInstance → equipmentBag |
 | `addPill(id, n)` | pillRegistry → pillBag; returns `{stored, overflow}` |
 | `setBaseStats(patch)` | mutates player.baseStats (next battle / lab.stats()) |
-| `oneHitKill()` | attack = 1e9 through the real damage pipeline (pending + live battle) |
-| `godMode()` | huge attack/maxHp/defense/speed, heals the live entity |
+| `oneHitKill()` | might = 1e9 through the real damage pipeline (pending + live battle) |
+| `godMode()` | huge might/maxHp/defense/speed, heals the live entity |
 | `setRealm(id, level?)` / `grantCultivation(n)` / `grantSkillInsight(n)` | progression cheats |
 
 Deliberately no "set enemy HP" cheat — vitals mutation is owned by the
@@ -44,11 +44,11 @@ damage pipeline (A2/P17); `oneHitKill()` exercises the honest path.
 ## Notes
 
 - `lab.startStage()` uses `src/core/game/__fixtures__/startAStage.ts`
-  (1 dummy, attack 0, hp 1e6) and **rebinds `lab.player`** to the
+  (1 dummy, might 0, hp 1e6) and **rebinds `lab.player`** to the
   fixture's player.
 - Stat cheats remember a "live patch" so `oneHitKill()` before
   `startStage()` still applies to the spawned entity (the fixture
-  bakes attack/speed=100).
+  bakes might/speed=100).
 - `useRealData()` mirrors the App.vue boot registration
   (`tests/lab/realData.ts`) — keep them in sync when catalogs change.
 - `tests/lab/local/` is gitignored — personal scratch goes there.

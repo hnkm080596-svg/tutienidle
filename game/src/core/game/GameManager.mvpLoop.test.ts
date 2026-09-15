@@ -96,9 +96,8 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       // gate "không bắn quái offscreen" sẽ khoá cứng cả 2 phía.
       statsInput: {
         maxHp: 20,
-        attack: 0,
+        might: 0,
         attackSpeed: 1,
-        attackRangeRanks: 7,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,
@@ -115,9 +114,8 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       // attackRange thật, cùng lý do đã ghi ở mob phía trên (2026-08-22).
       statsInput: {
         maxHp: 15,
-        attack: 0,
+        might: 0,
         attackSpeed: 1,
-        attackRangeRanks: 7,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,
@@ -161,12 +159,9 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // Victory" thay vì đua trên biên HP mỏng của seed.
     player.baseStats.maxHp += 40
 
-    // Combat AI rework (plan §13/§2.4) + balance pass 2026-08-26: Boss
-    // đổi archetype sang 'ranged' ở phase 50% rồi giữ khoảng cách kiting
-    // 0.6×range tới cổng (rank authored 7 bị clamp về 5 → đứng ở cột ≥3).
-    // Kiếm Tu range nền 5 với tới cột ≤10 nên vẫn bắn được kiter; fixture
-    // cộng thêm range để bài test không phụ thuộc biên.
-    player.baseStats.attackRange += 8
+    // stat-system-reimagined Task 3 (D16/D17): the attackRange stat and
+    // the realtime kiting fixture bump retired — the ATB engine targets
+    // by rank/lane, not spatial range.
 
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
 

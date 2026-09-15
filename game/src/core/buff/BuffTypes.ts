@@ -1,4 +1,5 @@
 import type { StatType } from '../stats/StatTypes'
+import type { StatDomain } from '../stats/StatDomain'
 import type { ElementType } from '../element/ElementType'
 
 // R4 (AR-19) — Canonical Buff & Status Types.
@@ -17,6 +18,11 @@ export interface StatModifierEffect {
   stat: StatType
   percent?: number
   flat?: number
+  // stat-system-reimagined Task 3 — forwarded onto the emitted
+  // StatModifier so a buff targeting a domain-gated stat (e.g. MP pool
+  // stats gated to 'phap_tu' once STAT_DOMAIN activates in Task 7)
+  // declares its credential at authoring time.
+  domain?: StatDomain
 }
 
 export interface DotEffectTemplate {
@@ -53,6 +59,17 @@ export interface GaugeDeltaEffect {
   percentOfMax: number
 }
 
+// stat-system-reimagined Task 4 (D18) -- authored DoT-recovery trigger on
+// the SOURCE's own buff (Doc Can). When a DoT tick of a matching element
+// lands, the living source heals healPercent * stacks of the damage dealt;
+// the heal then scales with the source's healingEffectivenessPercent.
+// Element omitted = recovers from any DoT element.
+export interface DotRecoveryEffect {
+  type: 'dotRecovery'
+  element?: ElementType | 'physical'
+  healPercent: number
+}
+
 export type BuffEffectTemplate =
   | StatModifierEffect
   | DotEffectTemplate
@@ -60,6 +77,7 @@ export type BuffEffectTemplate =
   | OnHitProcEffect
   | GaugeDeltaEffect
   | ReactiveTriggerEffect
+  | DotRecoveryEffect
 
 // --- Runtime shapes (Buff.effects) ---
 
@@ -80,6 +98,7 @@ export type BuffEffect =
   | OnHitProcEffect
   | GaugeDeltaEffect
   | ReactiveTriggerEffect
+  | DotRecoveryEffect
 
 export interface BuffDefinition {
   id: string

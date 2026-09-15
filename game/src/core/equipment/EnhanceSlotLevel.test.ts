@@ -32,7 +32,7 @@ function makeEquipment(slot: EquipmentSlotState['slot'] = 'weapon'): Equipment {
     slot,
     maxEnhanceLevel: 10,
     implicitStats: [],
-    mainStats: [{ stat: 'attack', min: 10, max: 20 }],
+    mainStats: [{ stat: 'might', min: 10, max: 20 }],
     affixPools: [],
     iconPool: [],
   } as unknown as Equipment
@@ -47,7 +47,7 @@ function makeEquipment(slot: EquipmentSlotState['slot'] = 'weapon'): Equipment {
     realmLevel: 1,
     forgeUsesTotal: 5,
     forgeUsesRemaining: 5,
-    mainStat: { id: `${id}:main`, sourceId: id, sourceType: 'equipment', stat: 'attack', flat: 12 },
+    mainStat: { id: `${id}:main`, sourceId: id, sourceType: 'equipment', stat: 'might', flat: 12 },
     affixes: [],
   } as unknown as EquipmentInstance
 }

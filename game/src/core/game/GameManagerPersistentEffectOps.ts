@@ -92,9 +92,10 @@ export class GameManagerPersistentEffectOps {
       // player.modifiers.
       ...(player ? aggregateNodeStatModifiers(this.deps.nodeRegistry, player) : []),
       // combat-gate-teleport-autocast plan §9 - combatModifiers of the
-      // EQUIPPED technique (+2 attackRange Dai Ngu Hanh Chan Quyet):
-      // fixed, tier-independent, only while equipped. This is the ONLY
-      // aggregation path so it is never double-counted.
+      // EQUIPPED technique: fixed, tier-independent, only while equipped.
+      // This is the ONLY aggregation path so it is never double-counted.
+      // (No technique currently declares combatModifiers — the old +2
+      // range grant retired with the attackRange stat in Task 3/D16.)
       ...this.getTechniqueCombatModifiers(),
     ]
   }
@@ -150,11 +151,12 @@ export class GameManagerPersistentEffectOps {
    * PLAN HOAN CHINH §5 rework (2026-08-20) - stat effects of the EQUIPPED
    * technique at its CURRENT tier (getTechniqueTier(), now computed from
    * techniqueExperience - the technique's own XP bar, see
-   * TechniqueTier.ts). manaRegenPercent deliberately maps into percent OF
-   * the manaRegenPerSecond stat (standard Increased, see
+   * TechniqueTier.ts). manaRegenIncreasePercent deliberately maps into
+   * percent OF the manaRegenPerTurn stat (standard Increased, see
    * StatCalculator.ts's runPipeline) instead of %maxMp - %maxMp would
    * create a dependency cycle (maxMp is not computed yet at this merge
-   * step).
+   * step). Task 3 (D17): MP-pool modifiers carry domain:'phap_tu' so the
+   * Task-7 gate accepts them once maxMp/manaRegenPerTurn are gated.
    */
   private getTechniqueTierModifiers(_player: PlayerData): StatModifier[] {
     const technique = this.deps.techniqueManager.getEquipped()
@@ -170,13 +172,13 @@ export class GameManagerPersistentEffectOps {
 
     const modifiers: StatModifier[] = []
 
-    if (effect.attackFlat !== undefined) {
+    if (effect.mightFlat !== undefined) {
       modifiers.push({
-        id: `technique-tier:${technique!.id}:attack`,
+        id: `technique-tier:${technique!.id}:might`,
         sourceId: technique!.id,
         sourceType: 'technique',
-        stat: 'attack',
-        flat: effect.attackFlat,
+        stat: 'might',
+        flat: effect.mightFlat,
       })
     }
 
@@ -190,28 +192,30 @@ export class GameManagerPersistentEffectOps {
       })
     }
 
-    if (effect.maxMpPercent !== undefined) {
+    if (effect.maxMpIncreasePercent !== undefined) {
       modifiers.push({
         id: `technique-tier:${technique!.id}:maxMp`,
         sourceId: technique!.id,
         sourceType: 'technique',
         stat: 'maxMp',
-        percent: effect.maxMpPercent,
+        percent: effect.maxMpIncreasePercent,
+        domain: 'phap_tu',
       })
     }
 
-    if (effect.manaRegenPercent !== undefined) {
+    if (effect.manaRegenIncreasePercent !== undefined) {
       modifiers.push({
         id: `technique-tier:${technique!.id}:manaRegen`,
         sourceId: technique!.id,
         sourceType: 'technique',
-        stat: 'manaRegenPerSecond',
-        percent: effect.manaRegenPercent,
+        stat: 'manaRegenPerTurn',
+        percent: effect.manaRegenIncreasePercent,
+        domain: 'phap_tu',
       })
     }
 
-    // Requirement 2026-08-26 - default HP/s & MP/s of the technique: flat
-    // directly onto the 2 per-second regen stats, applied to EVERY
+    // Requirement 2026-08-26 - default HP/turn & MP/turn of the technique: flat
+    // directly onto the 2 per-turn regen stats, applied to EVERY
     // technique declaring tierEffects.
     if (effect.hpRegenFlat !== undefined) {
       modifiers.push({
@@ -228,8 +232,9 @@ export class GameManagerPersistentEffectOps {
         id: `technique-tier:${technique!.id}:mpRegen`,
         sourceId: technique!.id,
         sourceType: 'technique',
-        stat: 'manaRegenPerSecond',
+        stat: 'manaRegenPerTurn',
         flat: effect.mpRegenFlat,
+        domain: 'phap_tu',
       })
     }
 
@@ -473,7 +478,7 @@ export class GameManagerPersistentEffectOps {
       currentKimThe: 0,
       timeSinceLastBleedProc: 0,
       currentWard: 0,
-      timeSinceLastHitTaken: Infinity,
+      turnsSinceLastHitLanded: Infinity,
       realmIndex: 0,
       x: 0,
       row: HERO_LANE_INDEX,

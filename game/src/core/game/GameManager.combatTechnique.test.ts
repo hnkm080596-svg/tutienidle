@@ -5,11 +5,13 @@ import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
 import { calculateStats, type StatModifier } from '../stats/StatCalculator'
 
-// Tâm pháp Pháp Tu (plan §9 + balance pass 2026-08-26): Đại Ngũ Hành
-// Chân Quyết cộng CỐ ĐỊNH +2 attackRange khi equipped (không theo tier,
-// không double-apply). Base range nhân vật = 5.
-describe('GameManager — Technique.combatModifiers (+2 attackRange Pháp Tu)', () => {
-  it('Đại Ngũ Hành equipped → tổng hợp ĐÚNG MỘT modifier +2 attackRange', () => {
+// stat-system-reimagined Task 3 (D16/D17) — the old fixed +2 range
+// combatModifiers retired with the attackRange stat; the technique MP
+// tier fields are now plain authoring percents emitted as
+// {stat, percent, domain:'phap_tu'} modifiers so the Task-7 domain gate
+// accepts them once MP stats are gated.
+describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
+  it('Đại Ngũ Hành equipped (Sơ Nhập) → percent modifiers on maxMp/manaRegenPerTurn carry domain phap_tu', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
@@ -21,76 +23,80 @@ describe('GameManager — Technique.combatModifiers (+2 attackRange Pháp Tu)', 
     gameManager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
 
     const modifiers = gameManager.effectOps.getAggregatedModifiers(player)
-    const rangeModifiers = modifiers.filter((modifier) => modifier.stat === 'attackRange')
 
-    expect(rangeModifiers).toHaveLength(1)
-    expect(rangeModifiers[0]).toMatchObject({
-      id: 'technique:dai_ngu_hanh_chan_quyet:attack_range',
-      sourceId: 'dai_ngu_hanh_chan_quyet',
-      sourceType: 'technique',
-      flat: 2,
-    })
-
-    // Range nền thực tế của Pháp Tu = base 5 + flat 2 = 7 (plan §2.4 +
-    // balance pass 2026-08-26).
-    const stats = calculateStats(
-      player.baseStats,
-      modifiers as StatModifier[],
+    expect(modifiers).toContainEqual(
+      expect.objectContaining({
+        sourceType: 'technique',
+        sourceId: 'dai_ngu_hanh_chan_quyet',
+        stat: 'maxMp',
+        percent: 0.03,
+        domain: 'phap_tu',
+      }),
     )
+    expect(modifiers).toContainEqual(
+      expect.objectContaining({
+        sourceType: 'technique',
+        sourceId: 'dai_ngu_hanh_chan_quyet',
+        stat: 'manaRegenPerTurn',
+        percent: 0.005,
+        domain: 'phap_tu',
+      }),
+    )
+    // mpRegenFlat rides the same gated stat.
+    expect(modifiers).toContainEqual(
+      expect.objectContaining({
+        stat: 'manaRegenPerTurn',
+        flat: 0.5,
+        domain: 'phap_tu',
+      }),
+    )
+    // HP regen stays a universal-stat grant (no domain credential).
+    expect(modifiers).toContainEqual(
+      expect.objectContaining({ stat: 'hpRegenPerTurn', flat: 0.5 }),
+    )
+    expect(
+      modifiers.find((m) => m.stat === 'hpRegenPerTurn')?.domain,
+    ).toBeUndefined()
 
-    expect(stats.attackRange).toBe(7)
+    // Percent applies to the live stats through the normal pipeline.
+    const stats = calculateStats(player.baseStats, modifiers as StatModifier[])
+
+    expect(stats.maxMp).toBeCloseTo(player.baseStats.maxMp * 1.03)
   })
 
-  it('chưa equip tâm pháp nào → KHÔNG có bonus attackRange', () => {
-    const gameManager = new GameManager()
-
-    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
-
-    const player = createDefaultPlayer()
-
-    // Tụ Linh Quyết (tu luyện) không khai combatModifiers — nhưng equip
-    // nó để chứng minh bonus chỉ đến từ tâm pháp CÓ khai field này.
-    gameManager.realmAdvanceOps.learnTechnique('tu_linh_quyet')
-    gameManager.realmAdvanceOps.equipTechnique('tu_linh_quyet')
-
-    const rangeModifiers = gameManager
-      .effectOps.getAggregatedModifiers(player)
-      .filter((modifier) => modifier.stat === 'attackRange')
-
-    expect(rangeModifiers).toHaveLength(0)
-
-    const stats = calculateStats(player.baseStats, gameManager.effectOps.getAggregatedModifiers(player))
-
-    expect(stats.attackRange).toBe(5)
+  it('không technique nào còn khai combatModifiers (field retired với attackRange)', () => {
+    for (const technique of TECHNIQUES) {
+      expect(technique.combatModifiers ?? []).toHaveLength(0)
+    }
   })
 
-  it('bonus KHÔNG nằm trong tierEffects — không scale theo tier, không cộng hai lần', () => {
+  it('tier KHÔNG phát thêm modifier khi insight tăng tier — grant phát lại theo tier mới, không cộng dồn', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
 
     gameManager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_chan_quyet')
-
-    const technique = gameManager.techniqueManager.get('dai_ngu_hanh_chan_quyet')!
-
-    // Field combatModifiers tách biệt tierEffects.
-    for (const tierEffect of Object.values(technique.tierEffects ?? {})) {
-      expect('attackRange' in tierEffect).toBe(false)
-    }
-
     gameManager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
 
-    // Nạp nhiều lần kinh nghiệm (tier tăng) — modifier vẫn đúng MỘT entry
-    // flat 2 qua aggregation path duy nhất.
-    gameManager.rewardOps.gainEquippedTechniqueInsight(1000)
-
     const player = createDefaultPlayer()
-    const rangeModifiers = gameManager
-      .effectOps.getAggregatedModifiers(player)
-      .filter((modifier) => modifier.stat === 'attackRange')
+    const before = gameManager.effectOps
+      .getAggregatedModifiers(player)
+      .filter((modifier) => modifier.sourceType === 'technique')
 
-    expect(rangeModifiers).toHaveLength(1)
-    expect(rangeModifiers[0]!.flat).toBe(2)
-    expect(rangeModifiers[0]!.percent ?? 0).toBe(0)
+    // Đại Thành tier (insight >= 30% of 3000): mỗi stat vẫn ĐÚNG MỘT
+    // modifier entry, chỉ giá trị đổi theo tier.
+    gameManager.rewardOps.gainEquippedTechniqueInsight(900)
+
+    const after = gameManager.effectOps
+      .getAggregatedModifiers(player)
+      .filter((modifier) => modifier.sourceType === 'technique')
+
+    expect(after).toHaveLength(before.length)
+    expect(
+      after.filter((modifier) => modifier.stat === 'maxMp'),
+    ).toHaveLength(1)
+    expect(
+      after.find((modifier) => modifier.stat === 'maxMp')?.percent,
+    ).toBe(0.05)
   })
 })

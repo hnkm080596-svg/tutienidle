@@ -20,10 +20,10 @@ describe('MeridianSystem — Bát Mạch (spec dot-pha-loi-kiep §4.1a)', () => 
     expect(MERIDIANS[7]!.requiredRealmLevel).toBe(16)
     expect(MERIDIANS[8]!.requiredRealmLevel).toBe(18)
     expect(MERIDIANS[8]!.requiresThienDiaChiKieu).toBe(true)
-    // mana bị cấm (Global Constraint) — maxMp/manaRegenPerSecond không được xuất hiện
+    // mana bị cấm (Global Constraint) — maxMp/manaRegenPerTurn không được xuất hiện
     const allStats = MERIDIANS.flatMap((m) => m.stats)
     expect(allStats).not.toContain('maxMp')
-    expect(allStats).not.toContain('manaRegenPerSecond')
+    expect(allStats).not.toContain('manaRegenPerTurn')
     // cost tăng dần đều (tuần tự đầu tư)
     for (let i = 1; i < MERIDIANS.length; i++) {
       expect(MERIDIANS[i]!.thongMachDanCost).toBeGreaterThan(MERIDIANS[i - 1]!.thongMachDanCost)

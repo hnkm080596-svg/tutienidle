@@ -23,7 +23,7 @@ export const MERIDIANS: readonly MeridianDefinition[] = [
   { id: 'doi_mach', name: 'Đới Mạch', description: 'Đai lưng kinh mạch, ôm trọn eo thắt.', requiredRealmLevel: 4, thongMachDanCost: 2, stats: ['defense'], percentAtFullTier: 0.05 },
   { id: 'am_kieu_mach', name: 'Âm Kiều Mạch', description: 'Kiều đạo phía âm, dẫn huyết nuôi thân.', requiredRealmLevel: 6, thongMachDanCost: 4, stats: ['hpRegenPerTurn'], percentAtFullTier: 0.08 },
   { id: 'am_duy_mach', name: 'Âm Duy Mạch', description: 'Duy trì mặt âm của toàn kinh lạc.', requiredRealmLevel: 8, thongMachDanCost: 7, stats: ['maxHp'], percentAtFullTier: 0.05 },
-  { id: 'duong_duy_mach', name: 'Dương Duy Mạch', description: 'Duy trì mặt dương của toàn kinh lạc.', requiredRealmLevel: 10, thongMachDanCost: 11, stats: ['attack'], percentAtFullTier: 0.05 },
+  { id: 'duong_duy_mach', name: 'Dương Duy Mạch', description: 'Duy trì mặt dương của toàn kinh lạc.', requiredRealmLevel: 10, thongMachDanCost: 11, stats: ['might'], percentAtFullTier: 0.05 },
   { id: 'duong_kieu_mach', name: 'Dương Kiều Mạch', description: 'Kiều đạo phía dương, táo bạo uy lực tiến công.', requiredRealmLevel: 12, thongMachDanCost: 16, stats: ['criticalRate'], percentAtFullTier: 0.04 },
   { id: 'xung_mach', name: 'Xung Mạch', description: 'Hải huyết chi mạch — kho huyết lớn của thân.', requiredRealmLevel: 14, thongMachDanCost: 22, stats: ['maxHp'], percentAtFullTier: 0.08 },
   { id: 'doc_mach', name: 'Đốc Mạch', description: 'Kinh mạch chính phía sau, trụ cột của đạo.', requiredRealmLevel: 16, thongMachDanCost: 30, stats: ['strength', 'dexterity', 'intelligence', 'attunement', 'vitality'], percentAtFullTier: 0.05 },

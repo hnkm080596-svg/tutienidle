@@ -31,9 +31,8 @@ function makeEnemy(id = 'sr_enemy'): ReturnType<typeof defineEnemy> {
     lane: 'ground',
     statsInput: {
       maxHp: 1_000_000,
-      attack: 0,
+      might: 0,
       attackSpeed: 1,
-      attackRangeRanks: 9,
       criticalRate: 0,
       criticalDamage: 1.5,
       armor: 0,
@@ -66,7 +65,7 @@ function makePlayer(overrides: Partial<PlayerData> = {}): PlayerData {
   const player = createDefaultPlayer()
   player.baseStats = asBaseStats({
     ...player.baseStats,
-    attack: 100,
+    might: 100,
     speed: 100,
     maxHp: 1_000_000,
   })
@@ -413,11 +412,11 @@ describe('ARCH-002 M7 — resolved base provenance', () => {
     manager.startBattleWithPlayer(player, makeEnemy())
 
     const participant = manager.getTurnBattle()!.players[0]!
-    // +12% attack must be effective immediately at battle start — before the
+    // +12% might must be effective immediately at battle start — before the
     // first fighting step — not wait for the player's first declare.
     expect(participant.buffs.hasAny('tran_phap_doc_hanh_buff')).toBe(true)
-    expect(participant.entity.stats.attack).toBeCloseTo(
-      participant.entity.baseStats.attack * 1.12,
+    expect(participant.entity.stats.might).toBeCloseTo(
+      participant.entity.baseStats.might * 1.12,
       4,
     )
   })
@@ -558,12 +557,12 @@ describe('M9 retained M7 debt — live attunement stacks re-derive elemental pow
       appliedAtMs: Date.now(),
       expiresAtMs: Date.now() + 60_000,
       modifiers: [
-        { id: 'test_live_attack', sourceId: 'test', sourceType: 'pill', stat: 'attack', percent: 0.5 },
+        { id: 'test_live_attack', sourceId: 'test', sourceType: 'pill', stat: 'might', percent: 0.5 },
       ],
     })
     clock.advance(COMBAT_STEP_SECONDS)
 
     expect(participant.entity.stats.firePower).toBeCloseTo(statsBefore.firePower, 8)
-    expect(participant.entity.stats.attack).toBeCloseTo(statsBefore.attack * 1.5, 4)
+    expect(participant.entity.stats.might).toBeCloseTo(statsBefore.might * 1.5, 4)
   })
 })

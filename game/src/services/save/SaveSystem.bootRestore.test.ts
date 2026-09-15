@@ -35,7 +35,7 @@ function createIncomingSave(): GameSave {
       id: 'boot-restore-incoming-main',
       sourceId: 'boot-restore-incoming-item',
       sourceType: 'equipment',
-      stat: 'attack',
+      stat: 'might',
       flat: 12,
     },
     affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],

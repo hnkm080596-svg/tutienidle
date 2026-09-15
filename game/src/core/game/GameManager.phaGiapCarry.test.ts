@@ -19,9 +19,8 @@ function makeEnemy(): ReturnType<typeof defineEnemy> {
     lane: 'ground',
     statsInput: {
       maxHp: 1,
-      attack: 0,
+      might: 0,
       attackSpeed: 1,
-      attackRangeRanks: 1,
       criticalRate: 0,
       criticalDamage: 1.5,
       armor: 0,

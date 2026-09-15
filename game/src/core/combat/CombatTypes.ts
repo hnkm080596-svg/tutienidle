@@ -90,6 +90,15 @@ export const MAX_THE = 100
 export const THE_GAIN_PER_LINK = 10
 export const THE_GAIN_PER_FINISHER = 20
 
+// stat-system-reimagined Task 5 (D5/D11) — explicit hit outcome level:
+//   miss     — accuracy/dodge roll failed; nothing landed
+//   absorbed — landed, but ward + MP shield absorbed everything
+//   taken    — hpDamage > 0
+// Only `taken` fires damage-proportional triggers (leech, thorns,
+// on-hit-taken procs); `landed` (absorbed OR taken) still fires
+// ailment-application rolls and resets turnsSinceLastHitLanded.
+export type HitOutcome = 'miss' | 'absorbed' | 'taken'
+
 export interface DamageResult {
   sourceId: string
 
@@ -98,6 +107,12 @@ export interface DamageResult {
   rawDamage: number
 
   finalDamage: number
+
+  // Post-absorb HP loss (finalDamage - wardAbsorbed - manaShieldAbsorbed).
+  // Leech/thorns/on-hit-taken triggers read THIS, never finalDamage (D11).
+  hpDamage: number
+
+  outcome: HitOutcome
 
   damageType: DamageType
 

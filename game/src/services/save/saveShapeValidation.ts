@@ -14,6 +14,7 @@ import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgressio
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
 import { createBaseStats } from '../../core/stats/StatBlock'
+import { migrateStatModifierStat } from '../../core/stats/statKeyMigration'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
@@ -517,6 +518,14 @@ function validateEquipmentEntries(
       requireNonEmptyString(entry.mainStat, 'id', mainStatPath, issues)
       requireNonEmptyString(entry.mainStat, 'sourceId', mainStatPath, issues)
 
+      // Stat-key migration (stat-system-reimagined rename pass) — saves
+      // written before the rename persist 'attack' & co. here; remapping
+      // keeps the STAT_TYPES check below meaningful instead of rejecting
+      // the whole save as corrupted.
+      if (typeof entry.mainStat.stat === 'string') {
+        entry.mainStat.stat = migrateStatModifierStat(entry.mainStat.stat)
+      }
+
       if (entry.mainStat.sourceType !== 'equipment') {
         issues.push({
           path: `${mainStatPath}.sourceType`,
@@ -625,14 +634,48 @@ function validateEquipmentSlotEntries(
       requireNonNegativeNumber(entry, 'enhanceFailStreak', `${path}[${i}]`, issues)
     }
 
+    const migratedEntry = migrateSocketedModifierStatKeys(entry)
+
     normalizedEntries.push(
-      entry.enhanceFailStreak === undefined
-        ? { ...entry, enhanceFailStreak: 0 }
-        : entry,
+      migratedEntry.enhanceFailStreak === undefined
+        ? { ...migratedEntry, enhanceFailStreak: 0 }
+        : migratedEntry,
     )
   }
 
   return normalizedEntries
+}
+
+// Socketed Phu/Tran items persist COPIES of their template StatModifier
+// list — saves written before the stat-key rename keep 'attack' & co. in
+// modifier.stat. The copies are live state (stack progress rides along),
+// so remap the key in place instead of discarding the item.
+function migrateSocketedModifierStatKeys(
+  entry: Record<string, unknown>,
+): Record<string, unknown> {
+  let migrated = entry
+
+  for (const key of ['socketedTalisman', 'socketedFormation'] as const) {
+    const item = migrated[key]
+
+    if (!isObject(item) || !Array.isArray(item.modifiers)) {
+      continue
+    }
+
+    migrated = {
+      ...migrated,
+      [key]: {
+        ...item,
+        modifiers: item.modifiers.map((modifier: unknown) =>
+          isObject(modifier) && typeof modifier.stat === 'string'
+            ? { ...modifier, stat: migrateStatModifierStat(modifier.stat) }
+            : modifier,
+        ),
+      },
+    }
+  }
+
+  return migrated
 }
 
 export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {

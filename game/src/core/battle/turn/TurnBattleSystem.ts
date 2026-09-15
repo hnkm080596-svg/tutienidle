@@ -13,7 +13,7 @@ import type { TurnSkillDefinition, TurnSkillSlot, TurnSkillSlotRole, SelectedAct
 import type { ActionDamageInfo } from '../ActionImpactSystem'
 import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
-import type { BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { Buff, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { StatModifier } from '../../stats/StatCalculator'
 import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
@@ -221,7 +221,7 @@ const MAX_FOLLOW_UP_CHAIN_DEPTH = 4
  * M8 (ARCH-003) — Ward delayed-regen gate in TURN units. Legacy
  * BattleSystem measured WARD_REGEN_DELAY_SECONDS = 3 on the wall clock;
  * the turn engine preserves the same numeric intent against the actor's
- * own turn cadence: `timeSinceLastHitTaken` counts the holder's turns
+ * own turn cadence: `turnsSinceLastHitLanded` counts the holder's turns
  * (incremented once per declare, reset to 0 by CombatSystem on every
  * landed hit) and Ward regen resumes once 3 turns pass unhit. `Infinity`
  * (never hit) regenerates from the first turn, matching legacy.
@@ -795,7 +795,18 @@ export class TurnBattleSystem {
       return participant?.entity
     }
 
-    actorBuffSystem.update(actor.entity, this.combat, this.registry, resolveSource)
+    // stat-system-reimagined Task 4 (D18) — the source's OWN buff pool is
+    // a separate ownership boundary from its entity (Doc Can sits on the
+    // caster while its DoT ticks on the target). Resolve it here so
+    // authored dotRecovery triggers read the live pool at tick time.
+    const resolveSourceBuffs = (sourceId: string): readonly Buff[] | undefined => {
+      const participant =
+        battle.players.find((p) => p.id === sourceId) ??
+        battle.enemies.find((e) => e.id === sourceId)
+      return participant?.buffs.getAll()
+    }
+
+    actorBuffSystem.update(actor.entity, this.combat, this.registry, resolveSource, resolveSourceBuffs)
 
     // ARCH-002 (M7) — refresh immediately after the buff tick so an
     // expiry inside update() is reflected before the very next stat read
@@ -840,24 +851,22 @@ export class TurnBattleSystem {
 
     // M8 (ARCH-003) — per-turn HP/MP/Ward regeneration through the vitals
     // authority, AFTER the status tick and liveness boundary above (a
-    // lethal DoT leaves no regen). This is the ONE normalization point
-    // for the legacy `*RegenPerSecond` stat names: authored content keeps
-    // its legacy fields and the turn engine applies them once per entity
-    // turn — the same cadence family as hpRegenPerTurn (R1/AR-01 already
-    // routed HP regen through the vitals authority). Ward keeps its
-    // delayed-regen intent: timeSinceLastHitTaken advances on the
+    // lethal DoT leaves no regen). The *RegenPerTurn stats tick once per
+    // entity turn — the same cadence family as hpRegenPerTurn (R1/AR-01
+    // already routed HP regen through the vitals authority). Ward keeps
+    // its delayed-regen intent: turnsSinceLastHitLanded advances on the
     // holder's own turn cadence and CombatSystem resets it to 0 on every
     // landed hit.
-    actor.entity.timeSinceLastHitTaken += 1
+    actor.entity.turnsSinceLastHitLanded += 1
 
     this.combat.applyTurnRegen(
       actor.entity,
       {
         hp: actor.entity.stats.hpRegenPerTurn,
-        mp: actor.entity.stats.manaRegenPerSecond,
+        mp: actor.entity.stats.manaRegenPerTurn,
         ward:
-          actor.entity.timeSinceLastHitTaken >= WARD_REGEN_DELAY_TURNS
-            ? actor.entity.stats.wardRegenPerSecond
+          actor.entity.turnsSinceLastHitLanded >= WARD_REGEN_DELAY_TURNS
+            ? actor.entity.stats.wardRegenPerTurn
             : 0,
       },
       actor.entity.id,
@@ -1165,11 +1174,13 @@ export class TurnBattleSystem {
           if (!hitResult.dodged) {
             targetIds.push(target.id)
 
-            // R3 (AR-03) — Leech healing: heals caster for % of final damage dealt.
-            if (action.skill?.healPercentOfDamage && hitResult.finalDamage > 0) {
+            // R3 (AR-03) + Task 5 (D11) — Leech healing: % of the HP the
+            // target THẬT SỰ lost post-absorb — a fully-warded hit feeds
+            // nothing (damage-proportional = taken-only trigger).
+            if (action.skill?.healPercentOfDamage && hitResult.hpDamage > 0) {
               this.combat.applyHealing(
                 actor.entity,
-                hitResult.finalDamage * action.skill.healPercentOfDamage,
+                hitResult.hpDamage * action.skill.healPercentOfDamage,
                 actor.entity.id,
                 'leech',
               )
@@ -1211,9 +1222,14 @@ export class TurnBattleSystem {
             // pool (sourceId = actor, targetId = victim).
             new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry)
 
-            // Action Playback Task 5 — onImpactLanded counter trigger trên
-            // TARGET bị hit; queuesFollowUp → battle.queuedFollowUpActorId.
-            const { firedFollowUp } = new BuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry)
+            // Action Playback Task 5 + stat-system-reimagined Task 5 (D5)
+            // — onImpactLanded counter trigger trên TARGET bị hit, gated
+            // on `taken` (hpDamage > 0): a fully ward/MP-shielded hit is
+            // not "taken", so no defender on-hit-taken proc fires.
+            // queuesFollowUp → battle.queuedFollowUpActorIds.
+            const { firedFollowUp } = hitResult.hpDamage > 0
+              ? new BuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry)
+              : { firedFollowUp: false }
 
             if (firedFollowUp) {
               // Defect-fix Task 1 — FIFO queue: AOE hit trigger counter trên

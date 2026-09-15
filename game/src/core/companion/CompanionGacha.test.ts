@@ -17,7 +17,7 @@ function makeDefinition(id: string, grade: ItemGrade): CompanionDefinition {
     grade,
     growthRate: 0.05,
     unlockThresholds: {},
-    baseStats: { maxHp: 100, attack: 10, speed: 100 },
+    baseStats: { maxHp: 100, might: 10, speed: 100 },
     basic: {
       id: `${id}_basic`,
       cooldownTurns: 0,

@@ -19,7 +19,7 @@ import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 
 // Fixture: special unlocks at qi_refining tier 5, ultimate at
 // foundation_establishment tier 1 (so qi_refining instances never see it).
-// Perks: +50% attack at rank 1, special cooldown 4 -> 2 at rank 2.
+// Perks: +50% might at rank 1, special cooldown 4 -> 2 at rank 2.
 const TEST_COMPANION_DEFINITION: CompanionDefinition = {
   id: 'test_companion_kit',
   name: 'Kit Test Companion',
@@ -29,7 +29,7 @@ const TEST_COMPANION_DEFINITION: CompanionDefinition = {
     special: { realmId: 'qi_refining', realmLevel: 5 },
     ultimate: { realmId: 'foundation_establishment', realmLevel: 1 },
   },
-  baseStats: { maxHp: 100, attack: 10, speed: 100 },
+  baseStats: { maxHp: 100, might: 10, speed: 100 },
   basic: {
     id: 'test_companion_kit_basic',
     cooldownTurns: 0,
@@ -49,27 +49,27 @@ const TEST_COMPANION_DEFINITION: CompanionDefinition = {
     targeting: { shape: 'single' },
   },
   constellationPerks: [
-    { atRank: 1, kind: 'stat', stat: 'attack', percent: 50 },
+    { atRank: 1, kind: 'stat', stat: 'might', percent: 50 },
     { atRank: 2, kind: 'skill_override', slot: 'special', overrides: { cooldownTurns: 2 } },
   ],
 }
 
 function createPlayer(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 50, speed: 100, criticalRate: 0 }
+  const stats = { ...createBaseStats(), might: 50, speed: 100, criticalRate: 0 }
 
   return {
     id: 'player', name: 'Player', type: 'player', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-    currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
+    currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
   }
 }
 
 function createDummy() {
   return defineEnemy({
     id: 'companion_kit_dummy', name: 'Companion Kit Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-    statsInput: { maxHp: 1, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+    statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 }
@@ -165,13 +165,13 @@ describe('GameManager.buildTurnBattle - companion resolved skill kit', () => {
     pushDefinition()
 
     // qi_refining/5 -> globalLevel 23 -> growth 1 + 0.05*22 = 2.1.
-    // rank 2 -> constellation x1.2; attack then takes +50% stat perk:
+    // rank 2 -> constellation x1.2; might then takes +50% stat perk:
     // 10 * 2.1 * 1.2 = 25.2 -> *1.5 = 37.8 -> round 38.
     const participant = battleCompanionParticipant(
       makeInstance({ realmId: 'qi_refining', realmLevel: 5, constellationRank: 2 }),
     )
 
-    expect(participant.entity.stats.attack).toBe(38)
+    expect(participant.entity.stats.might).toBe(38)
     expect(participant.entity.stats.maxHp).toBe(252)
     // speed is not Math.round'ed by companionStatsAt - compare approximately.
     expect(participant.entity.stats.speed).toBeCloseTo(120)

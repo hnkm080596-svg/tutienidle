@@ -57,6 +57,9 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
     id: 'phap_tu',
     name: 'Pháp Tu — Đại Ngũ Hành Chân Quyết',
     techniqueId: 'dai_ngu_hanh_chan_quyet',
+    // Task 3 (D17): MP-pool + mana-shield grants carry domain:'phap_tu'
+    // so the Task-7 domain gate keeps accepting them once those stats
+    // are gated to the phap_tu domain.
     statModifiers: [
       {
         id: 'phap_tu_linh_luc',
@@ -64,13 +67,15 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
         sourceType: 'realm',
         stat: 'maxMp',
         flat: 100,
+        domain: 'phap_tu',
       },
       {
         id: 'phap_tu_linh_luc_regen',
         sourceId: 'phap_tu',
         sourceType: 'realm',
-        stat: 'manaRegenPerSecond',
+        stat: 'manaRegenPerTurn',
         flat: 2,
+        domain: 'phap_tu',
       },
       {
         id: 'phap_tu_ho_the',
@@ -78,6 +83,7 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
         sourceType: 'realm',
         stat: 'manaShieldPercent',
         flat: 0.25,
+        domain: 'phap_tu',
       },
     ],
     realmRewards: {

@@ -26,11 +26,11 @@ function buildStartedGameManager(): { gameManager: GameManager; combatSource: Ma
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   const player = createDefaultPlayer()
-  player.baseStats = asBaseStats({ ...player.baseStats, attack: 100, speed: 100  })
+  player.baseStats = asBaseStats({ ...player.baseStats, might: 100, speed: 100  })
 
   const enemy = defineEnemy({
     id: 'intro_dummy', name: 'Intro Dummy', level: 1, realmId: 'mortal', lane: 'ground',
-    statsInput: { maxHp: 500, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+    statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 

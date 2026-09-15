@@ -38,7 +38,7 @@ describe('QA R9 - wash ticket save boundary', () => {
       quality: 'dia',
       forgeUsesTotal: 20,
       forgeUsesRemaining: 20,
-      mainStat: { id: 'm', sourceId: 'qa-wash-item', sourceType: 'equipment', stat: 'attack', flat: 12 },
+      mainStat: { id: 'm', sourceId: 'qa-wash-item', sourceType: 'equipment', stat: 'might', flat: 12 },
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
     })
     manager.equipmentBag.add(instance)

@@ -13,7 +13,7 @@ import type { ActionImpactSystem, ActionDamageInfo } from '../battle/ActionImpac
 import type { BuffPool } from '../buff/BuffPool'
 import type { BuffRegistry } from '../buff/BuffRegistry'
 import type { CombatAiStrategy } from '../battle/CombatAiStrategy'
-import { selectAttackableTarget } from '../battle/ActionTargetingSystem'
+import { selectRankedTarget } from '../battle/ActionTargetingSystem'
 import { BuffSystem } from '../buff/BuffSystem'
 import { vfxPresetForElement } from '../battle/CombatAction'
 import type { ElementType } from '../element/ElementType'
@@ -150,7 +150,7 @@ export function updateArtifactActivation(battle: Battle, deltaSeconds: number, d
     return
   }
 
-  const target = selectAttackableTarget(battle, deps.aiStrategy())
+  const target = selectRankedTarget(battle, deps.aiStrategy())
 
   const cycleSeconds = getArtifactCycleSeconds(runtime)
 
@@ -160,9 +160,9 @@ export function updateArtifactActivation(battle: Battle, deltaSeconds: number, d
   runtime.crossElementBonusAppliedThisActivation = false
 
   if (!target) {
-    // Không có mục tiêu hợp lệ trong tầm lúc activation tới hạn — bỏ
-    // qua activation này, chờ chu kỳ kế (không dồn/không target quái
-    // pending-spawn/ngoài range, acceptance §15.3).
+    // Không có mục tiêu sống lúc activation tới hạn — bỏ qua activation
+    // này, chờ chu kỳ kế (không dồn/không target quái pending-spawn,
+    // acceptance §15.3).
     return
   }
 

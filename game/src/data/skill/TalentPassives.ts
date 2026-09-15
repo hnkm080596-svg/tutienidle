@@ -144,13 +144,13 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
   ),
   // 9. Hộ Thể — ward vỡ nổ AoE + hồi ward: phần bùng nổ ward-break nằm
   // ở CombatSystem (Task 4) — passive này giữ phần hồi ward sau vỡ
-  // (wardRegenPerSecond tích theo damage_taken khi ward = 0).
+  // (wardRegenPerTurn tích theo damage_taken khi ward = 0).
   talentPassive(
     'talent_passive_ho_the',
     'Hộ Thể',
     'Nội tại Hộ Thể của thiên phú — khiên vỡ càng lâu càng mau hồi.',
     'damage_taken',
-    [stat('wardRegenPerSecond', 0.02, 5)],
+    [stat('wardRegenPerTurn', 0.02, 5)],
   ),
   // 10. Thứ Phạt — gai: bị đánh gần +30% thorns, mỗi phản +1 tầng Hận
   // Thứ (max 5, +5%/tầng), decay khi không bị đánh 3s (decay thực thi

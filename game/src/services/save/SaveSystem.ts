@@ -140,6 +140,8 @@ export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 // thêm 2 field BẮT BUỘC MỚI `dotResistancePercent`/
 // `poisonRecoveryPercent` (xem core/combat/CombatSystem.ts's
 // applyDotDamage(), core/stats/StatTypes.ts). CŨNG đổi tên hiển
+// (2026-09-14 note: poisonRecoveryPercent has since retired — saves
+// carrying it drop the key via migrateStatRecordKeys.)
 // thị "Độc Căn" <-> "Mộc Thế" cho đúng semantic (KHÔNG đổi field/id
 // nào — save cũ tương thích với riêng phần này). Save cũ thiếu 2 field
 // Stats mới — không viết migration, cùng convention mọi version trước.

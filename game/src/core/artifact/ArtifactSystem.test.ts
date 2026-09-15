@@ -11,7 +11,7 @@ import { onArtifactHitResolved, updateArtifactActivation, type ArtifactSystemDep
 import { buffs } from '../../data/buff/buffs'
 
 function createCombatEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = createBaseStats({ attack: 0, attackRange: 10, woodPower: 100, firePower: 100 })
+  const stats = createBaseStats({ might: 0, woodPower: 100, firePower: 100 })
 
   return {
     id,
@@ -32,7 +32,7 @@ function createCombatEntity(id: string, overrides: Partial<CombatEntity> = {}): 
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 2,
     x: 0,
     row: 2,
@@ -155,11 +155,10 @@ describe('ArtifactSystem.updateArtifactActivation — acceptance §15.3', () => 
     expect(deps.actionImpact.scheduleBasic).toHaveBeenCalledTimes(1)
   })
 
-  it('không target quái ngoài tầm (attackRange) — không schedule gì', () => {
+  it('không target quái đã chết — không schedule gì', () => {
     const runtime = attackArtifactRuntime('attack', 1)
     const battle = createBattle({ artifactRuntime: runtime })
-    battle.player.stats.attackRange = 1
-    battle.enemies[0]!.entity.x = 999 // ngoài tầm hẳn
+    battle.enemies[0]!.entity.alive = false
 
     const deps = createDeps()
 

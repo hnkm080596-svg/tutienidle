@@ -152,7 +152,7 @@ export function companionStatsAt(definition: CompanionDefinition, instance: Comp
 
   const stats: CompanionBaseStats = {
     maxHp: definition.baseStats.maxHp * growth * constellation,
-    attack: definition.baseStats.attack * growth * constellation,
+    might: definition.baseStats.might * growth * constellation,
     speed: definition.baseStats.speed * constellation,
   }
 
@@ -167,7 +167,7 @@ export function companionStatsAt(definition: CompanionDefinition, instance: Comp
 
   return {
     maxHp: Math.round(stats.maxHp),
-    attack: Math.round(stats.attack),
+    might: Math.round(stats.might),
     speed: stats.speed,
   }
 }

@@ -55,7 +55,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     name: 'Luyện Nhục',
     description: 'Rèn cơ nhục.',
     cap: 175,
-    stats: ['attack'],
+    stats: ['might'],
     percentAtFullTier: 0.08,
     requiredRealmLevel: 4,
   },

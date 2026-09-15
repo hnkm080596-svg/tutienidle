@@ -33,9 +33,8 @@ export interface GridPosition {
 }
 
 /**
- * Khoảng cách Chebyshev giữa 2 ô grid — bán kính tấn công của Player:
- * target trong tầm khi `distance <= attackRange` (range 1 phủ cả 8 ô kề,
- * gồm đường chéo). MỌI logic targeting Player dùng helper này, không tự
+ * Khoảng cách Chebyshev giữa 2 ô grid (range 1 phủ cả 8 ô kề, gồm đường
+ * chéo). MỌI logic targeting đo khoảng cách ô dùng helper này, không tự
  * tính khoảng cách riêng (plan §4.1).
  */
 export function getChebyshevDistance(from: GridPosition, to: GridPosition): number {

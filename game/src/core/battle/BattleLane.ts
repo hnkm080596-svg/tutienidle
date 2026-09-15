@@ -29,8 +29,3 @@ export const CENTER_LANE_INDEX: LaneIndex = HERO_LANE_INDEX
 // Authored data field (Enemies.ts) — KHÔNG ảnh hưởng runtime, chỉ giữ
 // cho schema data.
 export type EnemyLane = 'underground' | 'ground' | 'air'
-
-// % tầm nhìn hiển thị cho UI — worldRange giờ đo bằng CỘT.
-export function attackRangeVisiblePercent(worldRangeColumns: number): number {
-  return Math.min(100, Math.round((worldRangeColumns / GRID_COLUMN_COUNT) * 100))
-}

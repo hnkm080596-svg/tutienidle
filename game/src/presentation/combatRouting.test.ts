@@ -53,7 +53,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
     combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     player = createDefaultPlayer()
-    stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+    stats = calculateStats({ ...player.baseStats, might: 100, speed: 100 }, [])
     enemy = defineEnemy({
       id: 'cr_dummy',
       name: 'Combat Dummy',
@@ -62,9 +62,8 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
       lane: 'ground',
       statsInput: {
         maxHp: 500,
-        attack: 0,
+        might: 0,
         attackSpeed: 1,
-        attackRangeRanks: 9,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,

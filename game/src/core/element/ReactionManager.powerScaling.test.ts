@@ -45,7 +45,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -68,7 +68,7 @@ describe('ReactionManager — power scaling (Task 3)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
 
     // te_cong (Tê Cóng, element water) là buff/debuff vừa áp — nguồn Power
-    // đọc từ waterPower. createBaseStats attack nền = 10.
+    // đọc từ waterPower. createBaseStats might nền = 10.
     source.stats.waterPower = 200
 
     const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000 })
@@ -82,10 +82,10 @@ describe('ReactionManager — power scaling (Task 3)', () => {
 
     reactionManager.checkAndTrigger(targetBuffs, 'te_cong', source, target, combatSystem)
 
-    const expectedPowerPart = (source.stats.attack + source.stats.waterPower) * 1.0
+    const expectedPowerPart = (source.stats.might + source.stats.waterPower) * 1.0
 
     // HP cuối = 100000 - (60 + powerPart). Tính ngược để không hard-code
-    // attack nền (mọi caller test khác cũng lấy từ createBaseStats).
+    // might nền (mọi caller test khác cũng lấy từ createBaseStats).
     expect(target.currentHp).toBeCloseTo(100000 - 60 - expectedPowerPart, 5)
   })
 
@@ -97,7 +97,7 @@ describe('ReactionManager — power scaling (Task 3)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
 
     source.stats.waterPower = 0
-    source.stats.attack = 0
+    source.stats.might = 0
 
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
@@ -131,7 +131,7 @@ describe('ReactionManager — power scaling (Task 3)', () => {
 
     reactionManager.checkAndTrigger(targetBuffs, 'te_cong', source, target, combatSystem)
 
-    const expectedPowerPart = (source.stats.attack + source.stats.waterPower) * 1.0
+    const expectedPowerPart = (source.stats.might + source.stats.waterPower) * 1.0
 
     expect(target.currentHp).toBeCloseTo(100000 - (60 + expectedPowerPart) * 1.5, 5)
   })
@@ -150,7 +150,7 @@ describe('ReactionManager — realm scalar (T5.4 full)', () => {
 
     const source = createCombatant({ id: 'source', type: 'player', realmIndex: 0 })
     source.stats.waterPower = 0
-    source.stats.attack = 0
+    source.stats.might = 0
 
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
     const targetBuffs = new BuffSystem(new BuffPool())
@@ -170,7 +170,7 @@ describe('ReactionManager — realm scalar (T5.4 full)', () => {
     // realmScalar khởi điểm: 1 + realmIndex × 1.5 (realm 4 → 7.0)
     const source = createCombatant({ id: 'source', type: 'player', realmIndex: 4 })
     source.stats.waterPower = 0
-    source.stats.attack = 0
+    source.stats.might = 0
 
     const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000 })
     const targetBuffs = new BuffSystem(new BuffPool())
@@ -197,7 +197,7 @@ describe('ReactionManager — realm scalar (T5.4 full)', () => {
     targetBuffs.apply(getBuffDefinition('te_cong'), source, target)
     reactionManager.checkAndTrigger(targetBuffs, 'te_cong', source, target, combatSystem)
 
-    const expectedPowerPart = (source.stats.attack + source.stats.waterPower) * 1.0
+    const expectedPowerPart = (source.stats.might + source.stats.waterPower) * 1.0
 
     expect(target.currentHp).toBeCloseTo(100000 - 60 - expectedPowerPart, 5)
   })

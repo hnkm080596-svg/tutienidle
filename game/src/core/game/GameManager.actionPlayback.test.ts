@@ -12,9 +12,8 @@ import type { Skill } from '../skill/Skill'
 
 const ENEMY_STATS = {
   maxHp: 1_000_000,
-  attack: 0,
+  might: 0,
   attackSpeed: 1,
-  attackRangeRanks: 9,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,
@@ -24,14 +23,14 @@ const ENEMY_STATS = {
 }
 
 function createPlayer(): CombatEntity {
-  const stats = createBaseStats({ attack: 50, speed: 100, criticalRate: 0 })
+  const stats = createBaseStats({ might: 50, speed: 100, criticalRate: 0 })
 
   return {
     id: 'player', name: 'Player', type: 'player', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-    currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
+    currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
   }
 }
 

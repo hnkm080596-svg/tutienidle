@@ -11,9 +11,8 @@ describe('Enemy bossTrigger config threading', () => {
       lane: 'ground',
       statsInput: {
         maxHp: 100,
-        attack: 10,
+        might: 10,
         attackSpeed: 1,
-        attackRangeRanks: 1,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,
@@ -35,9 +34,8 @@ describe('Enemy bossTrigger config threading', () => {
       lane: 'ground',
       statsInput: {
         maxHp: 100,
-        attack: 10,
+        might: 10,
         attackSpeed: 1,
-        attackRangeRanks: 1,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,
@@ -61,9 +59,8 @@ describe('Enemy bossTrigger config threading', () => {
       lane: 'ground',
       statsInput: {
         maxHp: 50,
-        attack: 5,
+        might: 5,
         attackSpeed: 1,
-        attackRangeRanks: 1,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,

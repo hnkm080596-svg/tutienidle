@@ -14,9 +14,7 @@ import type { Enemy } from '../enemy/Enemy'
 function _makeEnemyData(): Enemy {
   const stats = {
     ...createBaseStats(),
-    attack: 0,
-    attackRange: 0,
-    movementSpeed: 0,
+    might: 0,
   }
 
   return {
@@ -216,7 +214,7 @@ describe('Pill nghề — Hỏa Hầu Thông Thần +50% hiệu quả (M3)', () 
 
     const modifier = player.persistentTimedEffects
       .flatMap((effect) => effect.modifiers)
-      .find((entry) => entry.stat === 'manaRegenPerSecond')
+      .find((entry) => entry.stat === 'manaRegenPerTurn')
 
     expect(modifier?.flat).toBe(baseMp * 1.5)
   })

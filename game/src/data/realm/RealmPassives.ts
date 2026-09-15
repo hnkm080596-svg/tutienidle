@@ -28,15 +28,29 @@ const NHAP_DAO_PERCENT_PER_GRADE = 0.03
 function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
   const percent = player.breakthroughGrade * NHAP_DAO_PERCENT_PER_GRADE
 
-  const stats: StatModifier['stat'][] = ['maxHp', 'maxMp', 'hpRegenPerTurn', 'manaRegenPerSecond']
+  // Task 3 (D17): the MP-pool stats carry domain:'phap_tu' so the
+  // Task-7 domain gate keeps accepting these grants once maxMp /
+  // manaRegenPerTurn are gated to the phap_tu domain.
+  const universalStats: StatModifier['stat'][] = ['maxHp', 'hpRegenPerTurn']
+  const phapTuStats: StatModifier['stat'][] = ['maxMp', 'manaRegenPerTurn']
 
-  return stats.map((stat) => ({
-    id: `realm-passive:nhap_dao:${stat}`,
-    sourceId: 'nhap_dao',
-    sourceType: 'realm',
-    stat,
-    percent,
-  }))
+  return [
+    ...universalStats.map((stat) => ({
+      id: `realm-passive:nhap_dao:${stat}`,
+      sourceId: 'nhap_dao',
+      sourceType: 'realm' as const,
+      stat,
+      percent,
+    })),
+    ...phapTuStats.map((stat) => ({
+      id: `realm-passive:nhap_dao:${stat}`,
+      sourceId: 'nhap_dao',
+      sourceType: 'realm' as const,
+      stat,
+      percent,
+      domain: 'phap_tu' as const,
+    })),
+  ]
 }
 
 // Kiến Cơ (mục XII-XIV tài liệu) — Luyện Khí -> Trúc Cơ, khuếch đại

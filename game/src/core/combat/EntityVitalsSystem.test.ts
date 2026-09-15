@@ -15,7 +15,7 @@ function entity(): CombatEntity {
  tuLucActive: false,
  tuLucElapsed: 0,
  tuLucDamageTakenPercent: 0,
-    timeSinceLastHitTaken: 0, realmIndex: 0, x: 0, row: 2, alive: true,
+    turnsSinceLastHitLanded: 0, realmIndex: 0, x: 0, row: 2, alive: true,
   }
 }
 

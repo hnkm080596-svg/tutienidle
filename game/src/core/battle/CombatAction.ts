@@ -13,9 +13,9 @@ export type TargetSelectionMode = 'nearest' | 'lowest_hp' | 'highest_hp'
 
 /**
  * Targeting đo hoàn toàn bằng đơn vị GRID (cột/hàng) — plan §2.6: KHÔNG
- * còn targeting range riêng cho skill, tầm thi triển thực tế luôn là
- * `attackRange` của entity (Chebyshev với Player, column tới cổng với
- * enemy). Interface này CHỈ chuẩn hoá shape/AOE quanh primary target:
+ * còn targeting range riêng cho skill; tầm với do action targeting quyết
+ * định (stat-system-reimagined Task 3 đã retire stat attackRange).
+ * Interface này CHỈ chuẩn hoá shape/AOE quanh primary target:
  * - shape 'square' dùng laneRadius/columnRadius quanh primary target
  *   (radius 0 = chỉ hàng/cột của anchor; n = mở rộng n ô mỗi phía, clamp biên).
  * - shape 'line'  = toàn bộ hàng của primary target.

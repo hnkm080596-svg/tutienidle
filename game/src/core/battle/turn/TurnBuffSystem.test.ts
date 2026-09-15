@@ -28,7 +28,7 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -125,18 +125,18 @@ describe('BuffSystem.apply — stack modes', () => {
     const first: BuffDefinition = {
       id: 'test_buff', name: 'Test', polarity: 'debuff',
       duration: 4, stackMode: 'replace',
-      effects: [{ type: 'statModifier', stat: 'attack', flat: 1 }],
+      effects: [{ type: 'statModifier', stat: 'might', flat: 1 }],
     }
     const second: BuffDefinition = {
       ...first,
-      effects: [{ type: 'statModifier', stat: 'attack', flat: 2 }],
+      effects: [{ type: 'statModifier', stat: 'might', flat: 2 }],
     }
 
     system.apply(first, source, target)
     system.apply(second, source, target)
 
     const instance = pool.getFromSource('test_buff', 'source_1')!
-    expect(instance.effects).toEqual([{ type: 'statModifier', stat: 'attack', flat: 2 }])
+    expect(instance.effects).toEqual([{ type: 'statModifier', stat: 'might', flat: 2 }])
   })
 
   it("stackMode 'stack' at maxStacks with convertsToId + registry converts instead of just capping", () => {
@@ -202,10 +202,10 @@ describe('BuffSystem.apply — stack modes', () => {
 })
 
 describe('BuffSystem — DoT resolution at apply time', () => {
-  it('resolves dpsRatio into a snapshotted damagePerTurn using source.stats.attack for physical element', () => {
+  it('resolves dpsRatio into a snapshotted damagePerTurn using source.stats.might for physical element', () => {
     const pool = new BuffPool()
     const system = new BuffSystem(pool)
-    const source = makeEntity({ id: 'source_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, attack: 100, ailmentPotencyPercent: 0 }) })
+    const source = makeEntity({ id: 'source_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, might: 100, ailmentPotencyPercent: 0 }) })
     const target = makeEntity({ id: 'target_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, defense: 0 }) })
     const definition: BuffDefinition = {
       id: 'bleed', name: 'Bleed', polarity: 'debuff',
@@ -369,14 +369,14 @@ describe('BuffSystem ported BuffSystem methods', () => {
       currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
       currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
       timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-      currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+      currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
       ...rest,
     } as CombatEntity
   }
 
   const ATTACK_MODIFIER_DEF: BuffDefinition = {
     id: 'port_attack_up', name: 'Attack Up', polarity: 'buff', duration: 3, maxStacks: 5, stackMode: 'stack',
-    effects: [{ type: 'statModifier', stat: 'attack', flat: 50 }],
+    effects: [{ type: 'statModifier', stat: 'might', flat: 50 }],
   }
 
   const ROOT_DEF: BuffDefinition = {
@@ -407,12 +407,12 @@ describe('BuffSystem ported BuffSystem methods', () => {
     const modifiers = system.getActiveModifiers()
 
     expect(modifiers).toHaveLength(1)
-    expect(modifiers[0]!.stat).toBe('attack')
+    expect(modifiers[0]!.stat).toBe('might')
     expect(modifiers[0]!.flat).toBe(50)
     expect(modifiers[0]!.stacks).toBe(2)
     expect(modifiers[0]!.sourceId).toBe('src')
     expect(modifiers[0]!.sourceType).toBe('buff')
-    expect(modifiers[0]!.id).toBe('buff:port_attack_up:src:attack')
+    expect(modifiers[0]!.id).toBe('buff:port_attack_up:src:might')
   })
 
   it('isRooted: true only while a cc:root effect is active', () => {
@@ -483,7 +483,7 @@ describe('BuffSystem ported BuffSystem methods', () => {
 describe('BuffSystem port additions for ReactionManager (Phase A1)', () => {
   const A_DEF: BuffDefinition = {
     id: 'fixture_a', name: 'Fixture A', polarity: 'buff', duration: 5, stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'attack', flat: 10 }],
+    effects: [{ type: 'statModifier', stat: 'might', flat: 10 }],
   }
   const B_DEF: BuffDefinition = {
     id: 'fixture_b', name: 'Fixture B', polarity: 'buff', duration: 5, stackMode: 'refresh',
@@ -498,7 +498,7 @@ describe('BuffSystem port additions for ReactionManager (Phase A1)', () => {
       currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
       currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
       timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-      currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+      currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
       ...rest,
     } as CombatEntity
   }
@@ -567,7 +567,7 @@ describe('getAll / remove (Phase A0)', () => {
       currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
       currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
       timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
-      currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+      currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
       ...rest,
     } as CombatEntity
   }

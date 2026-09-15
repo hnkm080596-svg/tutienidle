@@ -31,7 +31,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -73,8 +73,8 @@ const ENRAGE: BuffDefinition = {
 
 describe('Slice 4 adversarial (QA probes)', () => {
   it('INV-S4-1: resource clamp tại min — decay không xuống dưới 0', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 }) })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 10 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     playerP.resources = {
@@ -90,8 +90,8 @@ describe('Slice 4 adversarial (QA probes)', () => {
   })
 
   it('INV-S4-2: totalTurnsElapsed tăng kể cả khi actor bị CC blocked', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 }) })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
+    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 10 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     const stun: BuffDefinition = {
@@ -109,8 +109,8 @@ describe('Slice 4 adversarial (QA probes)', () => {
   })
 
   it('INV-S4-3: boss trigger fire khi actor bị CC blocked vẫn xảy ra (fire trước CC check)', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 }) })
+    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 10 }) })
 
     const enemyP = makeParticipant('enemy', enemy, 5, 1)
     enemyP.bossTrigger = { afterTurns: 1, buffDefinitionId: 'qa_enrage', firedAlready: false }
@@ -137,8 +137,8 @@ describe('Slice 4 adversarial (QA probes)', () => {
     // R2 (AR-05): effective speed lives on entity.stats — the participant
     // speed cache is synced from it. Fixtures must set speed there (the
     // adapter copies entity.stats.speed into participant.speed).
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, speed: 1 }) })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, speed: 100 }) })
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0, speed: 1 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0, speed: 100 }) })
 
     const playerP = makeParticipant('player', player, 1, 0)
     playerP.resources = {

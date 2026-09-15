@@ -30,7 +30,7 @@ function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInst
       id: `${instanceId}:main`,
       sourceId: instanceId,
       sourceType: 'equipment',
-      stat: 'attack',
+      stat: 'might',
       flat: 12,
     },
   })

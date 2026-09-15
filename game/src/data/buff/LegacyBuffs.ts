@@ -52,7 +52,12 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
   // data/progression/PhapTuNodes.ts's WOOD_TRUC_CO_PURE) — 2 tên trước
   // đây bị đảo ngược. Phase 11 — "+2% HP Recovery từ Poison Damage"/tầng
   // (từng bị hoãn ở EarthPath vì DoT tick chưa resolve được entity
-  // NGUỒN) giờ làm thật, xem CombatSystem.applyDotDamage().
+  // NGUỒN). stat-system-reimagined Task 4 (D18): the bespoke
+  // poisonRecoveryPercent stat retired; the heal is now an authored
+  // 'dotRecovery' trigger on this buff — CombatSystem.applyDotDamage()
+  // reads it via dotRecoveryTriggers() (A8: generic effect type, no
+  // content-ID check), the recovered HP scales with the receiver's
+  // healingEffectivenessPercent.
   {
     id: 'doc_the',
 
@@ -77,13 +82,12 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
 
         percent: 0.05,
       },
-
       {
-        type: 'statModifier',
+        type: 'dotRecovery',
 
-        stat: 'poisonRecoveryPercent',
+        element: 'wood',
 
-        percent: 0.02,
+        healPercent: 0.02,
       },
     ],
   },
@@ -102,8 +106,11 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     effects: [
       {
         type: 'statModifier',
-        stat: 'manaRegenPerSecond',
+        stat: 'manaRegenPerTurn',
         flat: 5,
+        // Task 3 (D17): MP pool stat — declare the phap_tu credential so
+        // the Task-7 domain gate keeps accepting this grant.
+        domain: 'phap_tu',
       },
     ],
   },
@@ -395,7 +402,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     effects: [
       {
         type: 'statModifier',
-        stat: 'attack',
+        stat: 'might',
         percent: -0.2,
       },
     ],

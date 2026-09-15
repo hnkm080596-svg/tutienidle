@@ -12,7 +12,7 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     alive: true,
     realmIndex: 0,
     currentSwordIntent: 0,
-    stats: { skillDamagePercent: 0, maxMp: 0, attack: 10 } as CombatEntity['stats'],
+    stats: { skillDamagePercent: 0, maxMp: 0, might: 10 } as CombatEntity['stats'],
     ...overrides,
   } as CombatEntity
 }
@@ -83,13 +83,13 @@ describe('dealDamage executor', () => {
   })
 
   it('applies attributeScaling as additive bonus on top of value', () => {
-    const source = makeEntity({ stats: { skillDamagePercent: 0, maxMp: 0, attack: 10 } as CombatEntity['stats'] })
+    const source = makeEntity({ stats: { skillDamagePercent: 0, maxMp: 0, might: 10 } as CombatEntity['stats'] })
     const target = makeEntity()
     const ctx = makeCtx()
     const action: DealDamageAction = {
       type: 'dealDamage',
       value: 2,
-      attributeScaling: [{ attributes: ['attack'], ratioPerPoint: 0.1 }],
+      attributeScaling: [{ attributes: ['might'], ratioPerPoint: 0.1 }],
     }
 
     runSkillAction(action, source, target, ctx, {}, makeHelpers())

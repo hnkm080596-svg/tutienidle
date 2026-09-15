@@ -52,7 +52,7 @@ function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEn
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -81,7 +81,7 @@ describe('AR-04: Hit resolution and critical authority', () => {
     const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
     const attacker = makeEntity('attacker', {
-      stats: createBaseStats({ criticalRate: 1.0, attack: 100, accuracyRating: 9999 }),
+      stats: createBaseStats({ criticalRate: 1.0, might: 100, accuracyRating: 9999 }),
     })
     const defender = makeEntity('defender', {
       stats: createBaseStats({ criticalAvoidance: 0, evasionRate: 0 }),

@@ -89,7 +89,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
     currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
+    turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -127,13 +127,13 @@ describe('TurnBattleSystem.runToCompletion', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -155,13 +155,13 @@ describe('TurnBattleSystem.runToCompletion', () => {
       type: 'player',
       currentHp: 1,
       maxHp: 1,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
 
     const battle: TurnBattle = {
@@ -181,7 +181,7 @@ describe('TurnBattleSystem.runToCompletion', () => {
       id: 'player',
       type: 'player',
       row: 4,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 50 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 50 }),
     })
     const near = createCombatant({
       id: 'near',
@@ -189,7 +189,7 @@ describe('TurnBattleSystem.runToCompletion', () => {
       x: 1,
       currentHp: 1,
       maxHp: 1,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const far = createCombatant({
       id: 'far',
@@ -197,7 +197,7 @@ describe('TurnBattleSystem.runToCompletion', () => {
       x: 5,
       currentHp: 10,
       maxHp: 10,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -221,13 +221,13 @@ describe('TurnBattleSystem.runToCompletion', () => {
       type: 'player',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 1 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 1 }),
     })
 
     const battle: TurnBattle = {
@@ -260,13 +260,13 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -289,13 +289,13 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -318,13 +318,13 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -377,13 +377,13 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -408,13 +408,13 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -440,13 +440,13 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -477,13 +477,13 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -518,13 +518,13 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -554,7 +554,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
       id: 'player',
       type: 'player',
       row: 4,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyA = createCombatant({
       id: 'enemyA',
@@ -562,7 +562,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
       x: 1,
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyB = createCombatant({
       id: 'enemyB',
@@ -570,7 +570,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
       x: 2,
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -603,13 +603,13 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -641,13 +641,13 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -669,13 +669,13 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -701,13 +701,13 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -733,13 +733,13 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -768,13 +768,13 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -804,13 +804,13 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -838,13 +838,13 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -874,13 +874,13 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -914,13 +914,13 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -945,7 +945,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
 
   it('fires real production boss enrage content (mortal_crocodile_enrage) after 60 rounds', () => {
     // Player must survive ~600 boss turns while dealing no damage, so it
-    // gets a huge HP pool and zero attack. NOTE: afterTurns counts ATB
+    // gets a huge HP pool and zero might. NOTE: afterTurns counts ATB
     // rounds (D2 contract) — a round only closes when the slow boss has
     // acted, and its gauge means it acts roughly once every 10
     // resolveNextStep calls, so 60 rounds need ~600+ steps — hence the
@@ -955,7 +955,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
       type: 'player',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const bossEnemy = defineEnemy({
@@ -966,9 +966,8 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
       lane: 'ground',
       statsInput: {
         maxHp: 1_000_000,
-        attack: 10,
+        might: 10,
         attackSpeed: 1,
-        attackRangeRanks: 1,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,
@@ -1009,7 +1008,7 @@ describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const wave = { totalEnemyCount: 3, spawnedCount: 0, waves: [3], waveIndex: 0, pendingEnemySpawns: [] }
@@ -1028,7 +1027,7 @@ describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
         id: `enemy${spawnCalls}`,
         currentHp: 10,
         maxHp: 10,
-        stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+        stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
       })
 
       return makeParticipant(`enemy${spawnCalls}`, enemy, 10, 1)
@@ -1049,13 +1048,13 @@ describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemy = createCombatant({
       id: 'enemy1',
       currentHp: 10,
       maxHp: 10,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const pendingParticipant = makeParticipant('enemy1', enemy, 10, 1)
 
@@ -1089,7 +1088,7 @@ describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const wave = { totalEnemyCount: 2, spawnedCount: 1, waves: [1, 1], waveIndex: 1, pendingEnemySpawns: [] }
@@ -1108,7 +1107,7 @@ describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
         id: `enemy${spawnCalls}`,
         currentHp: 10,
         maxHp: 10,
-        stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+        stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
       })
 
       return makeParticipant(`enemy${spawnCalls}`, enemy, 10, 1)
@@ -1135,13 +1134,13 @@ describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1161,7 +1160,7 @@ describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1203,13 +1202,13 @@ describe('TurnBattleSystem.resolveNextStep Bï¿½ Th? (CC-lock guard)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1271,13 +1270,13 @@ describe('TurnBattleSystem.resolveNextStep Bï¿½ Th? (CC-lock guard)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1312,13 +1311,13 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 100 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0, defense: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 0, defense: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1335,7 +1334,7 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
         id: `enemy_extra_${i}`,
         currentHp: 1_000_000,
         maxHp: 1_000_000,
-        stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0, defense: 0 }),
+        stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 0, defense: 0 }),
       })
       enemies.push(makeParticipant(`enemy_extra_${i}`, extraEntity, 5, 1))
     }
@@ -1445,7 +1444,7 @@ describe('TurnBattleSystem multi-target death-mid-resolution hardening', () => {
       id: 'player',
       type: 'player',
       row: 4,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999999 }),
     })
     const enemyA = createCombatant({
       id: 'enemyA',
@@ -1453,7 +1452,7 @@ describe('TurnBattleSystem multi-target death-mid-resolution hardening', () => {
       x: 1,
       currentHp: 1,
       maxHp: 1,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyB = createCombatant({
       id: 'enemyB',
@@ -1461,7 +1460,7 @@ describe('TurnBattleSystem multi-target death-mid-resolution hardening', () => {
       x: 2,
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1493,13 +1492,13 @@ describe('TurnBattleSystem hpRegenPerTurn', () => {
       type: 'player',
       currentHp: 50,
       maxHp: 100,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, hpRegenPerTurn: 10 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0, hpRegenPerTurn: 10 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1520,13 +1519,13 @@ describe('TurnBattleSystem hpRegenPerTurn', () => {
       type: 'player',
       currentHp: 95,
       maxHp: 100,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, hpRegenPerTurn: 10 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0, hpRegenPerTurn: 10 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1547,13 +1546,13 @@ describe('TurnBattleSystem countdown phase (unified flow)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 0 }),
     })
 
     return {
@@ -1624,13 +1623,13 @@ describe('TurnBattleSystem.peekNextActor', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1652,13 +1651,13 @@ describe('TurnBattleSystem.peekNextActor', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1678,12 +1677,12 @@ describe('TurnBattleSystem.peekNextActor', () => {
       id: 'player',
       type: 'player',
       alive: false,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       alive: false,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1703,13 +1702,13 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1731,13 +1730,13 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1769,7 +1768,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
         evasionRate: 0,
         dexterity: 0,
         criticalRate: 0,
-        attack: 999,
+        might: 999,
         maxMp: 100,
       },
     })
@@ -1777,7 +1776,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
       id: 'enemy',
       currentHp: 10_000,
       maxHp: 10_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1838,7 +1837,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
         evasionRate: 0,
         dexterity: 0,
         criticalRate: 0,
-        attack: 999,
+        might: 999,
         maxMp: 100,
       },
     })
@@ -1846,7 +1845,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
       id: 'enemy',
       currentHp: 10_000,
       maxHp: 10_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1889,13 +1888,13 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1,
       maxHp: 1,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -1923,13 +1922,13 @@ describe('TurnBattleSystem special role â€” Reaction Path double-cast', () 
       id: 'player',
       type: 'player',
       currentMp: 100,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100, maxMp: 100 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 100, maxMp: 100 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -2002,13 +2001,13 @@ describe('TurnBattleSystem gauge-delta buff (one-shot)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 100 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -2072,13 +2071,13 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 100 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -2168,13 +2167,13 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -2198,13 +2197,13 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -2231,13 +2230,13 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, might: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, might: 0 }),
     })
 
     const battle: TurnBattle = {
@@ -2274,13 +2273,13 @@ describe('TurnBattleSystem appliesAilment (Phase A1)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 100 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const playerParticipant = makeParticipant('player', player, 100, 0)
@@ -2344,13 +2343,13 @@ describe('TurnBattleSystem Phase A1 end-to-end � real production reaction cont
     const firePlayer = createCombatant({
       id: 'fire_player',
       type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 100 }),
     })
     const target = createCombatant({
       id: 'target',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
     })
 
     const firePlayerParticipant = makeParticipant('fire_player', firePlayer, 100, 0)

@@ -1,7 +1,8 @@
 # Stat System Reimagined for Turn-Based Combat — Design Spec
 
 Date: 2026-09-14
-Status: DRAFT — pending user spec review.
+Status: APPROVED-by-user-brainstorm (chat); implemented per plan
+`docs/superpowers/plans/2026-09-14-stat-system-reimagined-plan.md`.
 Context: the realtime→turn-based mechanical conversion (2026-09-04 stat
 conversion + turn mechanism spec 2026-09-10) renamed stats and cadences but
 kept the realtime-era stat inventory. This spec re-imagines the stat system

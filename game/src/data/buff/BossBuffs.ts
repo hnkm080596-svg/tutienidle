@@ -17,7 +17,7 @@ export const BOSS_BUFFS: BuffDefinition[] = [
     duration: Infinity,
     stackMode: 'replace',
     effects: [
-      { type: 'statModifier', stat: 'attack', percent: 0.5 },
+      { type: 'statModifier', stat: 'might', percent: 0.5 },
       { type: 'statModifier', stat: 'speed', percent: 0.2 },
     ],
   },
@@ -29,7 +29,7 @@ export const BOSS_BUFFS: BuffDefinition[] = [
     duration: Infinity,
     stackMode: 'replace',
     effects: [
-      { type: 'statModifier', stat: 'attack', percent: 0.5 },
+      { type: 'statModifier', stat: 'might', percent: 0.5 },
       { type: 'statModifier', stat: 'speed', percent: 0.2 },
     ],
   },
@@ -41,7 +41,7 @@ export const BOSS_BUFFS: BuffDefinition[] = [
     duration: Infinity,
     stackMode: 'replace',
     effects: [
-      { type: 'statModifier', stat: 'attack', percent: 0.5 },
+      { type: 'statModifier', stat: 'might', percent: 0.5 },
       { type: 'statModifier', stat: 'speed', percent: 0.2 },
     ],
   },
@@ -59,6 +59,8 @@ export const BOSS_BUFFS: BuffDefinition[] = [
     polarity: 'buff',
     duration: 4,
     stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'reactionEffectPercent', percent: 0.25 }],
+    // Task 3 (D19): reactionEffectPercent is a phap_tu-domain stat —
+    // tag the credential now (inert until Task 7 populates STAT_DOMAIN).
+    effects: [{ type: 'statModifier', stat: 'reactionEffectPercent', percent: 0.25, domain: 'phap_tu' }],
   },
 ]

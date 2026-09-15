@@ -122,9 +122,8 @@ export interface Battle {
    * xuất hiện → tham chiến". ĐÂY LÀ TRẠNG THÁI GAMEPLAY THẬT, không chỉ
    * animation: quái trong danh sách này CHƯA nằm trong `enemies` nên
    * không thể bị chọn mục tiêu, không nhận sát thương và không tấn công
-   * — người chơi luôn có thời gian cảnh báo công bằng (attackRange quái
-   * hiện lớn hơn chiều rộng grid, spawn trong sân có thể đánh ngay sau
-    * khi materialize). Xem BattleSystem.queueEnemySpawn()/
+   * — người chơi luôn có thời gian cảnh báo công bằng trước khi quái
+   * tham chiến. Xem BattleSystem.queueEnemySpawn()/
    * updatePendingSpawns().
    */
   pendingEnemySpawns: PendingEnemySpawn[]

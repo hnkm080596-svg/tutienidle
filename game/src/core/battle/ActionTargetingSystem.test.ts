@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import {
-  canEnemyReachGate,
-  canPlayerReachTarget,
   collectAffected,
-  selectAttackableTarget,
-  selectTeleportTarget,
+  selectRankedTarget,
 } from './ActionTargetingSystem'
 import { rankTargetsByStrategy } from './CombatAiStrategy'
 import type { Battle } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActionTargeting } from '../battle/CombatAction'
-import { GRID_ROW_COUNT, getChebyshevDistance } from '../battle/BattleGrid'
+import { GRID_ROW_COUNT } from '../battle/BattleGrid'
 
 // Combat Grid Rework — selection + AOE shapes theo đơn vị GRID.
+// Task 3 (D16): the attackRange-gated helpers retired with the stat —
+// selectRankedTarget ranks every alive enemy, no reach gate remains.
 function entity(id: string, x: number, row: number, hp = 100): CombatEntity {
   return {
     id,
@@ -22,7 +21,6 @@ function entity(id: string, x: number, row: number, hp = 100): CombatEntity {
     currentHp: hp,
     maxHp: 100,
     alive: true,
-    stats: { attackRange: 2 },
   } as unknown as CombatEntity
 }
 
@@ -41,76 +39,30 @@ function battleWith(
 
 const PLAYER = entity('player', 1, 4)
 
-describe('canPlayerReachTarget — Chebyshev (plan §2.3)', () => {
-  it('range 1: cùng ô = 0, kề ngang/dọc/chéo = 1, xa 2 cột = ngoài tầm', () => {
-    const player = entity('p', 5, 4)
-    ;(player as unknown as { stats: { attackRange: number } }).stats.attackRange = 1
-
-    expect(getChebyshevDistance({ row: 4, column: 5 }, { row: 4, column: 5 })).toBe(0)
-
-    // Kề ngang (col 6), kề dọc (row 3), chéo — đều trong tầm range 1.
-    expect(canPlayerReachTarget(player, entity('a', 6.0, 4))).toBe(true)
-    expect(canPlayerReachTarget(player, entity('b', 5.0, 3))).toBe(true)
-    expect(canPlayerReachTarget(player, entity('c', 6.0, 5))).toBe(true)
-
-    // Xa 2 cột → ngoài tầm.
-    expect(canPlayerReachTarget(player, entity('d', 7.0, 4))).toBe(false)
-
-    // Target chết → không bao giờ reach được.
-    const dead = entity('dead', 6, 4)
-    dead.alive = false
-    expect(canPlayerReachTarget(player, dead)).toBe(false)
-  })
-})
-
-describe('canEnemyReachGate — semantics riêng với player-to-enemy (plan §6.1)', () => {
-  it('KHÔNG xét row: quái row 0 và row 9 đều đánh cổng khi đủ khoảng cách cột', () => {
-    const near = entity('near', 3.0, 0) // dist 2 tới cổng col 1 = range 2 ✓
-
-    expect(canEnemyReachGate(near, 1)).toBe(true)
-
-    const farRow = entity('farRow', 4.0, 9) // dist 3 > range 2 ✗
-
-    expect(canEnemyReachGate(farRow, 1)).toBe(false)
-  })
-
-  it('quái đã vượt cổng (x < gateColumn) vẫn tính trong tầm theo |dx|', () => {
-    const inside = entity('inside', 1.0, 5)
-
-    expect(canEnemyReachGate(inside, 1)).toBe(true)
-  })
-})
-
-describe('selectAttackableTarget + selectTeleportTarget (plan §7.2 + sản phẩm 2026-08-26)', () => {
-  it('chỉ chọn enemy đang trong Chebyshev range của avatar', () => {
-    const inRange = entity('in', 2.0, 4) // dist 1
-    const outRange = entity('out', 8.0, 8)
-    const battle = battleWith(PLAYER, [outRange, inRange])
-
-    expect(selectAttackableTarget(battle)?.id).toBe('in')
-
-    // Không ai trong tầm → null.
-    const battleFar = battleWith(PLAYER, [outRange])
-
-    expect(selectAttackableTarget(battleFar)).toBeNull()
-  })
-
-  it('teleport target: xếp hạng TOÀN BỘ enemy sống — pre-position ngay cả khi quái còn xa theo cột', () => {
-    // Quái ở cột 14 (xa cổng): KHÔNG attackable nhưng VẪN là teleport
-    // target — Player tele tới hàng nó sớm thay vì đứng đợi.
+describe('selectRankedTarget (plan §7.2 + sản phẩm 2026-08-26)', () => {
+  it('xếp hạng TOÀN BỘ enemy sống theo strategy — không còn gate tầm đánh', () => {
+    // Quái ở cột 14 (xa cổng) vẫn là candidate — pre-position ngay cả
+    // khi quái còn xa theo cột.
     const marching = entity('march', 14.0, 3)
     const battle = battleWith(PLAYER, [marching])
 
-    expect(selectAttackableTarget(battle)).toBeNull()
-    expect(selectTeleportTarget(battle)?.id).toBe('march')
+    expect(selectRankedTarget(battle)?.id).toBe('march')
+  })
+
+  it('bỏ qua enemy đã chết', () => {
+    const dead = entity('dead', 2.0, 4)
+    dead.alive = false
+    const alive = entity('alive', 10.0, 6)
+    const battle = battleWith(PLAYER, [dead, alive])
+
+    expect(selectRankedTarget(battle)?.id).toBe('alive')
   })
 
   it('player chưa materialize → không chọn target', () => {
     const inRange = entity('in', 2.0, 4)
     const battle = battleWith(PLAYER, [inRange], { playerMaterialized: false })
 
-    expect(selectAttackableTarget(battle)).toBeNull()
-    expect(selectTeleportTarget(battle)).toBeNull()
+    expect(selectRankedTarget(battle)).toBeNull()
   })
 
   it('AI strategy: boss_first ưu tiên Boss, tie-break theo distance/row/id', () => {
@@ -119,9 +71,9 @@ describe('selectAttackableTarget + selectTeleportTarget (plan §7.2 + sản ph�
     boss.isBoss = true
     const battle = battleWith(PLAYER, [normal, boss])
 
-    expect(selectAttackableTarget(battle, 'nearest')?.id).toBe('normal_2')
-    expect(selectAttackableTarget(battle, 'boss_first')?.id).toBe('boss_1')
-    expect(selectAttackableTarget(battle, 'lowest_hp')?.id).toBe('normal_2')
+    expect(selectRankedTarget(battle, 'nearest')?.id).toBe('normal_2')
+    expect(selectRankedTarget(battle, 'boss_first')?.id).toBe('boss_1')
+    expect(selectRankedTarget(battle, 'lowest_hp')?.id).toBe('normal_2')
 
     // rankTargetsByStrategy: lowest_hp hòa HP → gần hơn thắng.
     const ranked = rankTargetsByStrategy(

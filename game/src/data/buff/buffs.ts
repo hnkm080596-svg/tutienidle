@@ -27,7 +27,7 @@ export const KIEP_THUONG_DEBUFF: BuffDefinition = {
   effects: [
     {
       type: 'statModifier',
-      stat: 'attack',
+      stat: 'might',
       percent: -0.15,
     },
 
@@ -50,7 +50,7 @@ export const TRAN_PHAP_DOC_HANH_BUFF: BuffDefinition = {
   duration: Infinity,
   stackMode: 'refresh',
   effects: [
-    { type: 'statModifier', stat: 'attack', percent: 0.12 },
+    { type: 'statModifier', stat: 'might', percent: 0.12 },
     { type: 'statModifier', stat: 'defense', percent: 0.12 },
   ],
 }
@@ -62,7 +62,7 @@ export const TRAN_PHAP_LUONG_NGHI_BUFF: BuffDefinition = {
   polarity: 'buff',
   duration: Infinity,
   stackMode: 'refresh',
-  effects: [{ type: 'statModifier', stat: 'attack', percent: 0.1 }],
+  effects: [{ type: 'statModifier', stat: 'might', percent: 0.1 }],
 }
 
 export const TRAN_PHAP_TAM_TAI_BUFF: BuffDefinition = {
@@ -73,7 +73,7 @@ export const TRAN_PHAP_TAM_TAI_BUFF: BuffDefinition = {
   duration: Infinity,
   stackMode: 'refresh',
   effects: [
-    { type: 'statModifier', stat: 'attack', percent: 0.06 },
+    { type: 'statModifier', stat: 'might', percent: 0.06 },
     { type: 'statModifier', stat: 'speed', percent: 0.06 },
   ],
 }
@@ -86,7 +86,7 @@ export const TRAN_PHAP_NGU_HANH_BUFF: BuffDefinition = {
   duration: Infinity,
   stackMode: 'refresh',
   effects: [
-    { type: 'statModifier', stat: 'attack', percent: 0.04 },
+    { type: 'statModifier', stat: 'might', percent: 0.04 },
     { type: 'statModifier', stat: 'defense', percent: 0.06 },
   ],
 }
@@ -99,7 +99,7 @@ export const TRAN_PHAP_CUU_CUNG_BUFF: BuffDefinition = {
   duration: Infinity,
   stackMode: 'refresh',
   effects: [
-    { type: 'statModifier', stat: 'attack', percent: 0.02 },
+    { type: 'statModifier', stat: 'might', percent: 0.02 },
     { type: 'statModifier', stat: 'defense', percent: 0.02 },
   ],
 }
