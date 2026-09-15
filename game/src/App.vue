@@ -520,6 +520,12 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       } else if (!gameManager.skillManager.getEquippedInSlot(0)) {
         gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
       }
+      // Phap Tu Reimagined Task 2 — mortal-path actives (idempotent).
+      for (const mortalSkillId of ['linh_bao', 'huy_quyen']) {
+        if (!gameManager.skillManager.has(mortalSkillId)) {
+          gameManager.progressionOps.learnSkill(mortalSkillId)
+        }
+      }
 
       // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài.
       if (offline.elapsedSeconds > 60) {
@@ -535,6 +541,9 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       gameManager.realmAdvanceOps.equipTechnique('tu_linh_quyet')
       gameManager.progressionOps.learnSkill('tram')
       gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
+      // Phap Tu Reimagined Task 2 — mortal-path actives.
+      gameManager.progressionOps.learnSkill('linh_bao')
+      gameManager.progressionOps.learnSkill('huy_quyen')
 
       for (const buildingId of ['teleport_array', 'gathering_outpost']) {
         const instance = {

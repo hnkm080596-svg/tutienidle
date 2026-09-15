@@ -60,6 +60,105 @@ export const CORE_SKILLS: Skill[] = [
     equipped: false,
   },
 
+  // Phap Tu Reimagined Task 2 — the two mortal-path actives learned
+  // alongside tram at character creation. Both level ONLY by cast count
+  // (CAST_LEVELING_THRESHOLDS; upgradeSkill rejects them, INV-9).
+  // linh_bao Lv3 (10000 casts) is the phap_tu_an ritual gate; its
+  // primordial hit "ignores all defenses" like the Hon Nguyen stat.
+  {
+    id: 'linh_bao',
+
+    name: 'Linh Bạo',
+
+    description: 'Tụ linh khí bùng nổ, bỏ qua mọi phòng thủ.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 3,
+
+    experience: 0,
+
+    totalExperience: 0,
+
+    cooldown: 1,
+
+    target: 'enemy',
+
+    effects: [],
+
+    triggers: [
+      {
+        trigger: 'onCast',
+        actions: [
+          {
+            type: 'dealDamage',
+
+            value: 1,
+
+            damageType: 'primordial',
+          },
+        ],
+      },
+    ],
+
+    execution: { kind: 'attack_speed' },
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'huy_quyen',
+
+    name: 'Huy Quyền',
+
+    description: 'Một quyền đơn giản, không tốn tài nguyên.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 3,
+
+    experience: 0,
+
+    totalExperience: 0,
+
+    cooldown: 1,
+
+    target: 'enemy',
+
+    effects: [],
+
+    triggers: [
+      {
+        trigger: 'onCast',
+        actions: [
+          {
+            type: 'dealDamage',
+
+            value: 1,
+
+            damageType: 'physical',
+          },
+        ],
+      },
+    ],
+
+    execution: { kind: 'attack_speed' },
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
   // Há»a Tu (Plans/magicpathgeneral + Plans/FirePath, 2026-08-21) â€”
   // THAY Háº²N kit 3-skill+1-passive cÅ© (xich_viem_chuong/viem_hai/
   // bao_viem/passive_bao_viem_focus, Ä‘Ã£ xoÃ¡). Framework má»›i: 1 Active
