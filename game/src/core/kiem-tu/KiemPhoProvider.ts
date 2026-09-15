@@ -35,10 +35,26 @@ function comboToExtraDef(combo: KiemPhoCombo): TurnSkillDefinition {
   }
 }
 
+/**
+ * Read-only peek handle for HUD bridges (Task 7): exposes a DETACHED
+ * copy of the battle-runtime matcher state (preset snapshot, cursor,
+ * log). Kept off the generic DynamicBasicProvider contract — content
+ * reads belong to the owning provider (A8).
+ */
+export interface KiemPhoProviderHandle extends DynamicBasicProvider {
+  snapshot(): KiemPhoBattleState
+}
+
+export function isKiemPhoProviderHandle(
+  provider: DynamicBasicProvider | undefined,
+): provider is KiemPhoProviderHandle {
+  return typeof (provider as KiemPhoProviderHandle | undefined)?.snapshot === 'function'
+}
+
 export function buildKiemPhoProvider(
   player: PlayerData,
   modifiers: readonly KiemPhoComboModifier[],
-): DynamicBasicProvider {
+): KiemPhoProviderHandle {
   let state: KiemPhoBattleState = initKiemPhoBattle(player)
   const manualDefs = (): TurnSkillDefinition[] =>
     unlockedOrbs(getRealmIndex(player.realmId)).map(orb => KIEM_PHO_ORBS[orb])
@@ -64,6 +80,10 @@ export function buildKiemPhoProvider(
 
     resetForBattle(): void {
       state = initKiemPhoBattle(player)
+    },
+
+    snapshot(): KiemPhoBattleState {
+      return { ...state, preset: [...state.preset], log: [...state.log] }
     },
 
     onCastResolved(ctx): readonly TurnSkillDefinition[] {

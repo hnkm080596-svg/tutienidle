@@ -17,7 +17,11 @@ import type { Skill } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
-import { MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
+import { MORTAL_PRECURSOR_SKILL_IDS, type OrbId } from '../kiem-tu/KiemTuState'
+import { validatePreset } from '../kiem-tu/KiemPhoSystem'
+import { getRealmIndex } from '../realm/realmSystem'
+import { isBattleInProgress } from '../battle/BattleTypes'
+import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { CHAIN_SKILL_IDS } from '../../data/skill/Skills'
@@ -43,6 +47,9 @@ export class GameManagerProgressionOps {
       skillSystem: SkillSystem
       skillManager: SkillManager
       getActivePlayer: () => PlayerData | undefined
+      // Deferred closure - turnBattleOps is assigned after this ops class
+      // is constructed (same pattern as realmAdvanceOps/effectOps).
+      getTurnBattle: () => TurnBattle | null
     },
   ) {}
 
@@ -345,6 +352,30 @@ export class GameManagerProgressionOps {
 
   unequipSkill(skillId: string): boolean {
     return this.deps.skillSystem.unequip(skillId)
+  }
+
+  /**
+   * Kiem Tu Reimagined (spec §6) — write the hien preset. Persisted on
+   * PlayerData.kiemTu.preset; the battle cursor/log are runtime-only and
+   * never persist. Out-of-combat only: a mid-battle rewrite would desync
+   * the provider's snapshotted preset from PlayerData.
+   */
+  setKiemPhoPreset(player: PlayerData, preset: OrbId[]): boolean {
+    if (player.kiemTu?.mode !== 'hien') {
+      return false
+    }
+
+    if (isBattleInProgress(this.deps.getTurnBattle()?.state)) {
+      return false
+    }
+
+    if (!validatePreset(preset, getRealmIndex(player.realmId))) {
+      return false
+    }
+
+    player.kiemTu.preset = [...preset]
+
+    return true
   }
 
   /**

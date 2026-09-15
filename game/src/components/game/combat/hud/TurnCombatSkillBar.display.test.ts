@@ -24,6 +24,11 @@ vi.mock('@/composables/useTurnCombatManual', () => ({
     isBattleFighting: { value: true },
     slotList: { value: mocks.slotList },
     chooseSlot: mocks.chooseSlot,
+    // Kiem Tu Reimagined — no dynamicBasic provider in this fixture:
+    // the orb picker stays hidden and the 3-slot row renders.
+    dynamicBasicOptions: { value: [] },
+    hasDynamicBasic: { value: false },
+    chooseDynamicBasic: vi.fn(),
   }),
 }))
 

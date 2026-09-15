@@ -489,6 +489,8 @@ export class GameManager {
       skillSystem: this.skillSystem,
       skillManager: this.skillManager,
       getActivePlayer: () => this.activePlayer,
+      // Deferred closure - turnBattleOps is assigned later.
+      getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({
