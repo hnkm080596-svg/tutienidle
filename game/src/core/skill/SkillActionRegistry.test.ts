@@ -24,7 +24,6 @@ function makeCtx(overrides: Partial<SkillEffectContext> = {}): SkillEffectContex
     buffRegistry: { get: (id: string) => ({ id }) } as unknown as SkillEffectContext['buffRegistry'],
     sourceBuffs: {} as SkillEffectContext['sourceBuffs'],
     targetBuffs: {} as SkillEffectContext['targetBuffs'],
-    reactionManager: { checkAndTrigger: () => {} } as unknown as SkillEffectContext['reactionManager'],
     ...overrides,
   }
 }

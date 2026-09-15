@@ -1209,6 +1209,11 @@ export class TurnBattleSystem {
       return { targetIds }
     }
 
+    // Task 12 (spec §6, INV-8/D21) — only PLAYER-SIDE ailment
+    // applications may INITIATE reaction resolution; enemy ailments
+    // participate as incumbents but never trigger.
+    const actorInitiatesReactions = battle.players.includes(actor)
+
     // Charge-resolve turn: hits apply từ chargedSkill capture tại declare
     // (pendingChargedSkillId đã clear ở declare — đọc declared.chargedSkill).
     if (declared.isCharging && declared.chargeResolved) {
@@ -1326,7 +1331,7 @@ export class TurnBattleSystem {
               }
 
               if (this.registry) {
-                this.applySkillAilments(actor, target, pickedSkill)
+                this.applySkillAilments(actor, target, pickedSkill, actorInitiatesReactions)
               }
 
               // ARCH-002 (M7) — refresh after hit + ailment mutations; the
@@ -1421,7 +1426,7 @@ export class TurnBattleSystem {
             // Phase A1 (2026-09-07) / R3 (AR-03) — chance-gated ailment application,
             // then reaction check against the just-applied id.
             if (payloadSkill) {
-              this.applySkillAilments(actor, target, payloadSkill)
+              this.applySkillAilments(actor, target, payloadSkill, actorInitiatesReactions)
             }
           }
 
@@ -1448,7 +1453,7 @@ export class TurnBattleSystem {
         targetIds.push(target.id)
 
         if (payloadSkill) {
-          this.applySkillAilments(actor, target, payloadSkill)
+          this.applySkillAilments(actor, target, payloadSkill, actorInitiatesReactions)
         }
         // ARCH-002 (M7) — reactions off the applied ailment can grant the
         // SOURCE a buff; refresh both sides (same as the damaging path).
@@ -1890,6 +1895,7 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     target: TurnBattleParticipant,
     actionOrSkill: SelectedAction | TurnSkillDefinition,
+    initiatesReactions: boolean,
   ): void {
     if (!this.registry) return
 
@@ -1921,15 +1927,16 @@ export class TurnBattleSystem {
             new BuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
           }
 
-          this.reactionManager?.checkAndTrigger(
-            target.buffs,
-            ailment.buffDefinitionId,
-            actor.entity,
-            target.entity,
-            this.combat,
-            this.registry,
-            actor.buffs,
-          )
+          if (initiatesReactions) {
+            this.reactionManager?.checkAndTrigger(
+              target.buffs,
+              ailment.buffDefinitionId,
+              actor.entity,
+              target.entity,
+              this.combat,
+              this.registry,
+            )
+          }
         }
       }
     }

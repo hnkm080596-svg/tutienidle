@@ -19,7 +19,6 @@ function makeCtx(fireHit: SkillEffectContext['fireHit']): SkillEffectContext {
     buffRegistry: {} as SkillEffectContext['buffRegistry'],
     sourceBuffs: {} as SkillEffectContext['sourceBuffs'],
     targetBuffs: {} as SkillEffectContext['targetBuffs'],
-    reactionManager: {} as SkillEffectContext['reactionManager'],
     skillExperience: 200,
   }
 }

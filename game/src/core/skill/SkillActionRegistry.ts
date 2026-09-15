@@ -108,7 +108,7 @@ const applyBuff: ActionExecutor<Extract<SkillAction, { type: 'applyBuff' }>> = (
 
 // Absorbs the old applyAilment executor: rolls a chance (incl.
 // elementApplicationPercent), applies via ctx.targetBuffs/ctx.buffRegistry,
-// fires onProc on a successful roll, then hands off to the reaction engine.
+// fires onProc on a successful roll.
 const applyDebuff: ActionExecutor<Extract<SkillAction, { type: 'applyDebuff' }>> = (
   action, source, target, ctx, _runtime, helpers,
 ) => {
@@ -118,11 +118,9 @@ const applyDebuff: ActionExecutor<Extract<SkillAction, { type: 'applyDebuff' }>>
   ctx.targetBuffs.apply(ctx.buffRegistry.get(action.buffId), source, target, ctx.buffRegistry)
   helpers.fireNested('onProc', { source, target, buffId: action.buffId })
 
-  ctx.reactionManager.checkAndTrigger(
-    ctx.targetBuffs, action.buffId, source, target, ctx.combatSystem,
-    ctx.buffRegistry, ctx.sourceBuffs, ctx.spawnLavaZone,
-    ctx.reactionKeepChance ?? 0,
-  )
+  // Phap Tu Reimagined Task 12 — the legacy authored-pair reaction
+  // handoff is retired; the turn engine's TurnReactionManager owns
+  // sinh/khac rule reactions on the live path.
 }
 
 const grantResource: ActionExecutor<Extract<SkillAction, { type: 'grantResource' }>> = (

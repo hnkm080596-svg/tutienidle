@@ -3,7 +3,6 @@ import { CombatSystem } from './CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { SkillManager } from '../skill/SkillManager'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { ReactionManager } from '../element/ReactionManager'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 import type { Skill } from '../skill/Skill'
@@ -61,14 +60,14 @@ function makeKillSkill(): Skill {
   }
 }
 
-// buffRegistry/reactionManager are shared, non-battle-specific
-// dependencies (2026-09-01 review ruling) — CombatSystem now takes them
-// as optional final constructor params alongside skillManager, and
+// buffRegistry is a shared, non-battle-specific
+// dependency (2026-09-01 review ruling) — CombatSystem now takes it
+// as an optional final constructor param alongside skillManager, and
 // fireKillTriggers() only fires when ALL of them are provided (an empty
 // throwaway registry would THROW on a `.get()` miss, so the fix is to
 // skip firing entirely, not to construct one).
 function makeFullyWiredCombat(skillManager: SkillManager, eventBus: EventBus): CombatSystem {
-  return new CombatSystem(eventBus, skillManager, new BuffRegistry(), new ReactionManager(eventBus))
+  return new CombatSystem(eventBus, skillManager, new BuffRegistry())
 }
 
 describe('CombatSystem — onKill trigger wiring', () => {
@@ -121,11 +120,11 @@ describe('CombatSystem — onKill trigger wiring', () => {
     expect(killer.currentKimThe).toBe(0)
   })
 
-  it('killIfDead() does not fire onKill (or throw) when buffRegistry/reactionManager were not constructed', () => {
+  it('killIfDead() does not fire onKill (or throw) when buffRegistry was not constructed', () => {
     const eventBus = new EventBus()
     const skillManager = new SkillManager()
     skillManager.add(makeKillSkill())
-    // Only skillManager wired — buffRegistry/reactionManager omitted,
+    // Only skillManager wired — buffRegistry omitted,
     // same as most existing call sites today.
     const combat = new CombatSystem(eventBus, skillManager)
 

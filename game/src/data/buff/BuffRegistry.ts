@@ -24,6 +24,10 @@ export function toBuffDefinition(live: BuffDefinition): BuffDefinition {
     description: live.description,
     polarity: live.polarity,
     hidden: live.hidden,
+    // Phap Tu Reimagined Task 12 — the definition-level element tag must
+    // reach the registry; the sinh/khac rule engine resolves pair
+    // relations through it.
+    element: live.element,
     duration: live.duration,
     maxStacks: live.maxStacks,
     stackMode: live.stackMode,

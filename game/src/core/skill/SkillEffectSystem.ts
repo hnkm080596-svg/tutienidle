@@ -10,7 +10,6 @@ import { getSkillRuntimeStat } from './SkillRuntimeStats'
 import type { CombatSystem } from '../combat/CombatSystem'
 import type { BuffSystem } from '../buff/BuffSystem'
 import type { BuffRegistry } from '../buff/BuffRegistry'
-import type { ReactionManager } from '../element/ReactionManager'
 import type { ElementType } from '../element/ElementType'
 import { MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
 import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
@@ -36,19 +35,14 @@ export interface SkillEffectContext {
 
   targetBuffs: BuffSystem
 
-  // Combat Rework Phase 6 (Pháp Tu Reaction) — kiểm tra/kích phản ứng
-  // ngay sau khi effect 'debuff' áp thành công, xem apply() bên dưới.
-  reactionManager: ReactionManager
+  // Phap Tu Reimagined Task 12 — the legacy reactionManager /
+  // reactionKeepChance fields are retired with the authored-pair table
+  // (the turn engine's TurnReactionManager owns reactions now).
 
-  // Thiên phú Phản Phác (talent-direction-choice-plan §6) — xác suất giữ
-  // ailment ở nhánh consume chuẩn của ReactionManager. Nền 0/không truyền
-  // = hành vi mặc định (xoá cả 2).
-  reactionKeepChance?: number
-
-  // Plans/magicpathgeneral Phase 12 (2026-08-21) — cho phép
-  // ReactionManager spawn Lava Zone (Dung Nham) vào ĐÚNG `battle`
+  // Plans/magicpathgeneral Phase 12 (2026-08-21) — cho phép action
+  // zoneKind 'lava' spawn Lava Zone vào ĐÚNG `battle`
   // đang chạy — bind sẵn ở BattleSystem.castSkill(), optional vì hầu
-  // hết reaction/test không cần.
+  // hết test không cần.
   spawnLavaZone?: (spec: {
     ownerId: string
     row: number
@@ -394,20 +388,9 @@ export class SkillEffectSystem {
           }
         }
 
-        // Combat Rework Phase 6 — debuff vừa áp có thể phản ứng với
-        // debuff hành KHÁC đang có sẵn trên target, xem
-        // core/element/ReactionManager.ts.
-        ctx.reactionManager.checkAndTrigger(
-          ctx.targetBuffs,
-          effect.buffId,
-          source,
-          target,
-          ctx.combatSystem,
-          ctx.buffRegistry,
-          ctx.sourceBuffs,
-          ctx.spawnLavaZone,
-          ctx.reactionKeepChance ?? 0,
-        )
+        // Phap Tu Reimagined Task 12 — the legacy authored-pair reaction
+        // handoff is retired; the turn engine's TurnReactionManager owns
+        // sinh/khac rule reactions on the live path.
         break
       }
 

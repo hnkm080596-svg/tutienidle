@@ -22,7 +22,6 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
 import { dotRecoveryTriggers } from './DotRecovery'
-import { ReactionManager } from '../element/ReactionManager'
 import type { Buff, BuffDefinitionCatalog } from '../buff/BuffTypes'
 
 // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX, 2026-08-21) — trần %
@@ -81,12 +80,12 @@ export class CombatSystem {
   } | null = null
 
   // Trigger/Action rework Task 10 (2026-08-31 spec) — onKill firing.
-  // buffRegistry/reactionManager are shared, non-battle-specific
-  // dependencies (same kind BattleSystem itself receives via its own
-  // constructor — see BattleSystem.ts) — injected here as optional final
-  // constructor params so CombatSystem can build a real SkillEffectContext
+  // buffRegistry is a shared, non-battle-specific
+  // dependency (same kind BattleSystem itself receives via its own
+  // constructor — see BattleSystem.ts) — injected here as an optional final
+  // constructor param so CombatSystem can build a real SkillEffectContext
   // without crashing on an empty registry `.get()` miss. `skillManager`/
-  // `buffRegistry`/`reactionManager` are all optional; every existing
+  // `buffRegistry` are optional; every existing
   // `new CombatSystem(eventBus)` call site keeps compiling unchanged.
   private readonly skillTriggerRunner = new SkillTriggerRunner()
 
@@ -94,7 +93,6 @@ export class CombatSystem {
     readonly eventBus: EventBus,
     private readonly skillManager?: SkillManager,
     private readonly buffRegistry?: BuffRegistry,
-    private readonly reactionManager?: ReactionManager,
   ) {
     this.vitals = new EntityVitalsSystem(eventBus)
   }
@@ -675,10 +673,10 @@ export class CombatSystem {
   // skill-list lookup exists; OnDeathContext/the 'onDeath' TriggerType
   // (Task 1) stay declared, just unfired from this call site for now.
   //
-  // buffRegistry/reactionManager are shared, non-battle-specific
-  // dependencies — injected via the constructor (2026-09-01 review fix)
-  // and used for real here when provided; skip firing entirely if either
-  // is missing rather than constructing an empty throwaway registry
+  // buffRegistry is a shared, non-battle-specific
+  // dependency — injected via the constructor (2026-09-01 review fix)
+  // and used for real here when provided; skip firing entirely if
+  // missing rather than constructing an empty throwaway registry
   // (BuffDefinitionCatalog.get() THROWS on a miss, so an empty throwaway registry
   // would crash killIfDead() mid-battle-tick the first time a bound
   // action looked one up — not silently no-op).
@@ -696,7 +694,7 @@ export class CombatSystem {
     victim: CombatEntity,
     skillContext?: { killer: CombatEntity; skillId: string },
   ): void {
-    if (!skillContext || !this.skillManager || !this.buffRegistry || !this.reactionManager) {
+    if (!skillContext || !this.skillManager || !this.buffRegistry) {
       return
     }
 
@@ -712,7 +710,6 @@ export class CombatSystem {
       buffRegistry: this.buffRegistry,
       sourceBuffs: new BuffSystem(new BuffPool()),
       targetBuffs: new BuffSystem(new BuffPool()),
-      reactionManager: this.reactionManager,
     }
 
     this.skillTriggerRunner.fire(

@@ -5,7 +5,6 @@ import { CombatSystem } from '../combat/CombatSystem'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { ReactionManager } from '../element/ReactionManager'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from './SkillRuntimeStats'
@@ -68,7 +67,6 @@ function createContext(overrides: Partial<SkillEffectContext> = {}): SkillEffect
     buffRegistry: createRegistry(),
     sourceBuffs: new BuffSystem(new BuffPool()),
     targetBuffs: new BuffSystem(new BuffPool()),
-    reactionManager: new ReactionManager(eventBus),
     ...overrides,
   }
 }
