@@ -97,6 +97,14 @@ export interface TurnSkillDefinition {
     count: number
     perInstanceOptions?: (instanceIndex: number, target: CombatEntity) => Partial<HitResolveOptions>
   }
+  /**
+   * Kiem Tu Reimagined Task 9 — HUD emblem marker (Ngu Kiem Dao's
+   * special/ultimate slot indicators). An emblem def RENDERS on the bar
+   * but is never selectable: selectAction/selectForcedAction skip slots
+   * carrying one. Marker defs carry no damage/effects — they exist so
+   * presentation has a slot occupant to label.
+   */
+  emblemOnly?: boolean
 }
 
 /**
@@ -263,6 +271,7 @@ function basicAction(participant: TurnBattleParticipant): SelectedAction {
 export function selectAction(participant: TurnBattleParticipant): SelectedAction {
   if (
     participant.ultimate &&
+    !participant.ultimate.skill.emblemOnly &&
     participant.ultimate.remainingCooldownTurns === 0 &&
     hasResourceFor(participant.entity, participant.ultimate.skill)
   ) {
@@ -271,6 +280,7 @@ export function selectAction(participant: TurnBattleParticipant): SelectedAction
 
   if (
     participant.special &&
+    !participant.special.skill.emblemOnly &&
     participant.special.remainingCooldownTurns === 0 &&
     hasResourceFor(participant.entity, participant.special.skill)
   ) {
@@ -330,6 +340,7 @@ export function selectForcedAction(
 
   if (
     slot &&
+    !slot.skill.emblemOnly &&
     slot.remainingCooldownTurns === 0 &&
     hasResourceFor(participant.entity, slot.skill)
   ) {

@@ -17,6 +17,13 @@ import { getRealmIndex } from '../realm/realmSystem'
 
 export const KIEM_DAO_MERGE_BONUS = 0.3
 
+// Roll Cascade tunables (spec §11 first-pass values — the a/e/d unlock
+// nodes live in Task 11; the provider consumes these, never inlines).
+export const EXECUTE_MULT = 10
+export const CASCADE_CRIT_CHANCE = 0.25
+export const CASCADE_PIERCE_CHANCE = 0.5
+export const PIERCE_FRACTION = 0.6
+
 function assertRealmIndex(realmIndex: number): void {
   if (realmIndex < 1) {
     throw new RangeError(`kiem-tu ngu economy requires realmIndex >= 1, got ${realmIndex}`)

@@ -1,6 +1,14 @@
 import type { SessionRef } from '../presentation/PresentationSession'
 import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
 import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
+import {
+  buildNguKiemDaoProvider,
+  collectKiemDaoCascadeUnlocks,
+} from '../kiem-tu/NguKiemDaoProvider'
+import {
+  KIEM_DAO_CASCADE_EMBLEM,
+  TU_KIEM_Y_EMBLEM,
+} from '../../data/skill/NguKiemDaoSkills'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import {
@@ -953,12 +961,23 @@ export class GameManagerTurnBattleOps {
     // Kiem Tu Reimagined Task 6 — hien participant: the Kiem Pho
     // provider OWNS the basic slot (participant.basic becomes inert);
     // preset cursor/log live in the provider closure, not PlayerData.
-    // Ngu emblem wiring lands in Task 9.
     if (playerPath?.cultivationPath === 'kiem_tu' && playerPath.kiemTu?.mode === 'hien') {
       playerParticipant.dynamicBasic = buildKiemPhoProvider(
         playerPath,
         collectKiemPhoComboModifiers(playerPath),
       )
+    }
+
+    // Task 9 — ngu participant: the Ngu Kiem Dao provider owns the basic
+    // (multi-instance phi kiem); the special/ultimate slots carry emblem
+    // markers only (spec §5.4 — display lanes, never resolvable actions).
+    if (playerPath?.cultivationPath === 'kiem_tu' && playerPath.kiemTu?.mode === 'ngu') {
+      playerParticipant.dynamicBasic = buildNguKiemDaoProvider(
+        playerPath,
+        collectKiemDaoCascadeUnlocks(playerPath),
+      )
+      playerParticipant.special = { skill: TU_KIEM_Y_EMBLEM, remainingCooldownTurns: 0 }
+      playerParticipant.ultimate = { skill: KIEM_DAO_CASCADE_EMBLEM, remainingCooldownTurns: 0 }
     }
 
     // Companion Roster - each companion in player.companions is rebuilt as a
