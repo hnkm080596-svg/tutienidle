@@ -17,6 +17,7 @@ import type { Skill } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
+import { MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
 import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { CHAIN_SKILL_IDS } from '../../data/skill/Skills'
@@ -321,6 +322,17 @@ export class GameManagerProgressionOps {
     }
 
     if (slotIndex < 0 || slotIndex >= getSkillLoadoutSlotCount(player.realmId)) {
+      return false
+    }
+
+    // Kiem Tu Reimagined K3 — mortal precursor skills are pre-path only:
+    // once ANY cultivation path is chosen they can never re-enter a
+    // loadout slot. Runs before the learned-check so the gate covers
+    // precursor ids not yet authored (linh_bao/huy_quyen).
+    if (
+      player.cultivationPath !== undefined &&
+      (MORTAL_PRECURSOR_SKILL_IDS as readonly string[]).includes(skillId)
+    ) {
       return false
     }
 

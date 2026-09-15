@@ -863,8 +863,12 @@ export class GameManager {
    * melee — no skill — until its kit is authored.
    */
   private authoredBasicSkillId(player: PlayerData): string | undefined {
+    // Kiem Tu Reimagined (spec 2026-09-15 K3) — tram is a MORTAL
+    // precursor: once any path is chosen it is no longer the basic.
+    // kiem_tu basics resolve through the dynamicBasic orb provider
+    // (Task 6); until then the static kiem_tu fallback applies.
     if (player.cultivationPath === 'kiem_tu') {
-      return 'tram'
+      return undefined
     }
 
     if (player.cultivationPath === 'phap_tu') {

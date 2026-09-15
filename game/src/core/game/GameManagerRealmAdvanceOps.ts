@@ -2,8 +2,9 @@ import type { ArtifactPath } from '../artifact/Artifact'
 import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
-import type { PlayerData, KiemTuRoute } from '../player/Player'
+import type { PlayerData } from '../player/Player'
 import type { CultivationPathId } from '../player/CultivationPathKit'
+import { freshKiemTuState, MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
 import { grantCultivationPathRealmReward as grantPathRealmReward } from '../player/CultivationPathSystem'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
@@ -11,7 +12,6 @@ import { TINH_HOA_PHAM_THE_MATERIAL_ID, BODY_REFINEMENT_TIERS } from '../../data
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
 import { CORE_REALM_LEVEL, getCurrentRealm } from '../realm/realmSystem'
 import type { Skill } from '../skill/Skill'
-import { HUY_KIEM_L3_CASTS } from '../skill/SkillSystem'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { getMainStatCap } from '../stats/StatCap'
@@ -165,26 +165,22 @@ export class GameManagerRealmAdvanceOps {
     this.learnTechnique(kit.techniqueId)
     this.equipTechnique(kit.techniqueId)
 
-    // Kiem The / Kiem Y (spec 2026-08-29-kiem-the-kiem-y §1) - the route
-    // locks PERMANENTLY at path choice: Huy Kiem (tram) already at Lv3
-    // (10,000 casts) -> Bat Kiem; otherwise Kiem Tran. There is NO route
-    // switch API (setKiemTuRoute removed) - the other branch's nodes are
-    // hidden in the UI (SkillPathPanel renders one branch per route).
-    // kit.skillIds for Kiem Tu is intentionally unused (each route has a
-    // single skill, granted in this branch) - the old 3-skill tuple stays
-    // in CultivationPathKit.
+    // Kiem Tu Reimagined (spec 2026-09-15 K1/K4) — path choice ALWAYS
+    // enters mode 'hien' with the canonical fresh state; there is no
+    // route lock. The legacy kiem-tran/bat-kiem tail (route write,
+    // bat_kiem_thuat grant, kiem_tran_luong_nghi purchase) is gone.
+    // kit.skillIds for Kiem Tu stays unused — hien basics come from the
+    // orb preset via the dynamicBasic provider (Task 6).
     if (pathId === 'kiem_tu') {
-      const tramCasts = player.skillCastCounts?.['tram'] ?? 0
-      const route: KiemTuRoute = tramCasts >= HUY_KIEM_L3_CASTS ? 'bat_kiem' : 'kiem_tran'
+      player.kiemTu = freshKiemTuState()
 
-      player.kiemTuRoute = route
-
-      // Each route OWNS 1 active skill (spec §5) - strip the old kit
-      // skills + tram from the loadout (NOT unlearn: a Pham Nhan save
-      // can still use tram; once Kiem Tu locked the route, tram is
-      // blocked from re-equip by the SkillSystem guard - see the tram
-      // guard below).
-      this.deps.skillSystem.unequip('tram')
+      // Strip the mortal basic + any legacy kit skills from the loadout
+      // (NOT unlearn: a Pham Nhan save can still use them; K3 — the
+      // precursor equip gate in setSkillLoadoutSlot blocks re-equip
+      // post-path).
+      for (const skillId of MORTAL_PRECURSOR_SKILL_IDS) {
+        this.deps.skillSystem.unequip(skillId)
+      }
       for (const skillId of ['ngu_kiem_thuat', 'kiem_khai_thien_mon', 'van_kiem_trieu_tong']) {
         this.deps.skillSystem.unequip(skillId)
       }
@@ -238,18 +234,6 @@ export class GameManagerRealmAdvanceOps {
 
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)
-    }
-
-    // Kiem The / Kiem Y (spec §1/5) - grant the route skill AFTER the
-    // realm advance: the Luong Nghi root has a 'qi_refining' realm prereq,
-    // so the realm swap must happen before purchaseNode. Each route OWNS
-    // 1 active skill at slot 0 (don kiem/bat kiem thuat or da kiem/luong
-    // nghi evolution).
-    if (pathId === 'kiem_tu' && player.kiemTuRoute === 'bat_kiem') {
-      this.deps.progressionOps.learnSkill('bat_kiem_thuat')
-      this.deps.skillSystem.equipToSlot('bat_kiem_thuat', 0)
-    } else if (pathId === 'kiem_tu') {
-      this.deps.progressionOps.purchaseNode('kiem_tran_luong_nghi', player)
     }
 
     return true

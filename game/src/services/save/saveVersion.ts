@@ -34,4 +34,8 @@
 // v61 (2026-09-14, B4 talent v4 M2): cultivationOvercharge,
 // tribulationBonusStacks, nodeFreePurchaseRecord, phaGiapCarryStacks,
 // phaGiapCarryRealmId. Save v60 bị từ chối (dev phase, không migration).
-export const CURRENT_SAVE_VERSION = 61 as const
+// v62 (2026-09-15, kiem-tu-reimagined spec): PlayerData.kiemTu replaces
+// kiemTuRoute + the sword-intent ecosystem (canonical state model:
+// mode/preset/kiemY/kiemDaoCount/kiemDaoBase). Save v61 bị từ chối
+// (dev phase, không migration).
+export const CURRENT_SAVE_VERSION = 62 as const

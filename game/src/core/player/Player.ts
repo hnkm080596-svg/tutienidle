@@ -17,6 +17,7 @@ import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ElementType } from '../element/ElementType'
 import type { ArtifactProgress } from '../artifact/Artifact'
 import type { CompanionInstance } from '../../data/companion/Companions'
+import type { KiemTuState } from '../kiem-tu/KiemTuState'
 
 /** Kiếm Tu tự lực (2026-08-28) — 2 nhánh song song, xem PlayerData.kiemTuRoute. */
 export type KiemTuRoute = 'kiem_tran' | 'bat_kiem'
@@ -112,6 +113,13 @@ export interface PlayerData {
   // dỡ). Mặc định (undefined) = chưa chọn path Kiếm Tu. Type export —
   // tránh UI component tự khai lại union này rồi lệch field thật.
   kiemTuRoute?: KiemTuRoute
+
+  // Kiem Tu Reimagined (spec 2026-09-15 K1) — the ONE canonical path
+  // state. Written at chooseCultivationPath('kiem_tu') = fresh hien
+  // state; mode flips to 'ngu' permanently via the kiem_tu_an node.
+  // Replaces kiemTuRoute / currentSwordIntent-era fields (kill list
+  // lands in the teardown task).
+  kiemTu?: KiemTuState
 
   // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
   // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —
@@ -366,6 +374,10 @@ export function createDefaultPlayer(): PlayerData {
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
     kiemTuRoute: undefined,
+
+    // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
+    // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
+    kiemTu: undefined,
 
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
