@@ -20,7 +20,6 @@ function makeTarget(): CombatEntity {
     maxHp: stats.maxHp,
     currentMp: 0,
     currentSwordIntent: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,
@@ -98,7 +97,7 @@ describe('EntityVitalsSystem — heal event (6A-T1)', () => {
     expect(events.filter((e) => e.type === 'heal')).toHaveLength(0)
   })
 
-  it('reason khác (damage/thorns/...) không emit heal từ applyHealing path', () => {
+  it('reason khác (damage/reaction/...) không emit heal từ applyHealing path', () => {
     const { bus, events } = makeBus()
     const system = new EntityVitalsSystem(bus)
 

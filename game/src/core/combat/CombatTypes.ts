@@ -17,17 +17,14 @@ export type DamageType = 'physical' | 'primordial' | 'elemental'
 // CombatEntity.currentSwordIntent, SkillTypes.ts's 'sword_intent'.
 export const MAX_SWORD_INTENT = 9999
 
-// Thể Tu (Combat Rework Phase 7) — Momentum tích theo ĐÒN TRÚNG của
-// skill Impact (Skill.grantsMomentumPerHit, giống grantsSwordIntentPerHit
-// nhưng theo LƯỢNG chứ không phải cố định +1), đủ 100 thì skill "Heavy
-// Impact" (resourceType 'momentum', cost 100) đủ điều kiện canUse().
-// Thang điểm nhỏ (100, không phải 9999 như Kiếm Ý) vì Momentum tích
-// nhanh mỗi đòn cận chiến, không phải theo missile bắn xa.
-export const MAX_MOMENTUM = 100
+// The Tu Reimagined (spec 2026-09-15 D7/section 7.13) — Momentum
+// (momentum cap/momentum resource/per-hit momentum grant/momentum resource
+// resourceType) retired; the hidden path fuels reactive checks from
+// currentThe, the visible path has no pool resource.
 
 // Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — Hỏa Thế tích theo
 // LƯỢT CAST (Skill.grantsHoaThePerCast, xem BattleSystem.castSkill()),
-// KHÔNG theo đòn trúng như Momentum/Kiếm Ý. "5 tầng" đúng số spec gốc
+// KHÔNG theo đòn trúng như Kiếm Ý. "5 tầng" đúng số spec gốc
 // (thang điểm nhỏ vì mỗi tầng tương lai sẽ mạnh, không cần pool lớn
 // như Kiếm Ý 9999).
 export const MAX_HOA_THE = 5
@@ -94,7 +91,7 @@ export const THE_GAIN_PER_FINISHER = 20
 //   miss     — accuracy/dodge roll failed; nothing landed
 //   absorbed — landed, but ward + MP shield absorbed everything
 //   taken    — hpDamage > 0
-// Only `taken` fires damage-proportional triggers (leech, thorns,
+// Only `taken` fires damage-proportional triggers (leech,
 // on-hit-taken procs); `landed` (absorbed OR taken) still fires
 // ailment-application rolls and resets turnsSinceLastHitLanded.
 export type HitOutcome = 'miss' | 'absorbed' | 'taken'
@@ -109,7 +106,7 @@ export interface DamageResult {
   finalDamage: number
 
   // Post-absorb HP loss (finalDamage - wardAbsorbed - manaShieldAbsorbed).
-  // Leech/thorns/on-hit-taken triggers read THIS, never finalDamage (D11).
+  // Leech/on-hit-taken triggers read THIS, never finalDamage (D11).
   hpDamage: number
 
   outcome: HitOutcome
@@ -128,8 +125,13 @@ export interface DamageResult {
   blocked: boolean
 
   // Phần damage bị Ward hấp thụ trước khi trừ vào currentHp — 0 nếu
-  // không có ward hoặc ward đã cạn.
+  // không có ward hoặc ward đã cạn. TOTAL = external + native.
   wardAbsorbed: number
+
+  // The Tu Reimagined (plan Task 11) — the externalWard component of
+  // wardAbsorbed: the separate protection-only pool (source-tagged,
+  // exempt from wardMax/regen) absorbs BEFORE native currentWard.
+  externalWardAbsorbed: number
 
   // Pháp Tu Redesign (magicpath) — phần damage bị Mana Shield "đẩy"
   // sang mana (SAU Ward, TRƯỚC HP) — 0 nếu không có manaShieldPercent

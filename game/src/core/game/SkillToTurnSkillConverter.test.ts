@@ -136,7 +136,7 @@ describe('toTurnSkillDefinition', () => {
       expect(turnSkill.id).toBe('thanh_tuyen_duong_linh')
       expect(turnSkill.targetScope).toBe('self')
       expect(turnSkill.damage).toBeUndefined()
-      expect(turnSkill.appliesBuff).toEqual({ definitionId: 'thanh_tuyen', target: 'self' })
+      expect(turnSkill.appliesBuffs).toEqual([{ definitionId: 'thanh_tuyen', target: 'self' }])
     })
 
     it('converts earth self-buff special dia_tru_thua_thien: targetScope self, no fake damage, appliesBuff', () => {
@@ -151,7 +151,7 @@ describe('toTurnSkillDefinition', () => {
       expect(turnSkill.id).toBe('dia_tru_thua_thien')
       expect(turnSkill.targetScope).toBe('self')
       expect(turnSkill.damage).toBeUndefined()
-      expect(turnSkill.appliesBuff).toEqual({ definitionId: 'dia_tru', target: 'self' })
+      expect(turnSkill.appliesBuffs).toEqual([{ definitionId: 'dia_tru', target: 'self' }])
     })
 
     it('converts specialization of self-buff skill (Băng Giáp)', () => {
@@ -166,7 +166,7 @@ describe('toTurnSkillDefinition', () => {
 
       expect(turnSkill.targetScope).toBe('self')
       expect(turnSkill.damage).toBeUndefined()
-      expect(turnSkill.appliesBuff).toEqual({ definitionId: 'bang_giap', target: 'self' })
+      expect(turnSkill.appliesBuffs).toEqual([{ definitionId: 'bang_giap', target: 'self' }])
     })
 
     it('maps multiple debuffs on wood special cau_mang_can_tri into appliesAilments', () => {
@@ -223,7 +223,7 @@ describe('toTurnSkillDefinition', () => {
 
       // M10 (ARCH-008) — the spec's authored duration:8 must survive
       // conversion; without it the registry default 6 silently wins.
-      expect(turnSkill.appliesBuff).toEqual({ definitionId: 'thanh_tuyen', target: 'self', duration: 8 })
+      expect(turnSkill.appliesBuffs).toEqual([{ definitionId: 'thanh_tuyen', target: 'self', durationOverride: 8 }])
     })
 
     it('converts trigger-migrated tram (onCast -> dealDamage) into damage, preserving the cast-scaled value', () => {

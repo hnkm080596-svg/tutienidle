@@ -1,5 +1,9 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
-import { getPhapTuAttunementStatModifiers } from './CultivationPathSystem'
+import {
+  getPhapTuAttunementStatModifiers,
+  getTheTuAnReactiveStatModifiers,
+  getTheTuEnduranceStatModifiers,
+} from './CultivationPathSystem'
 import { createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import { getKiemYDamageMultipliers, getKiemYTier } from './KiemYSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -466,13 +470,17 @@ export function resolvePlayerFinalStats(
   // resolved attribute totals and emits its gated MP modifiers BEFORE
   // calculateStats runs -- the totals read is not a second attribute
   // derivation (INV-6), and the emitted modifiers are the ONLY
-  // attunement->MP channel (INV-10).
-  const phapTuModifiers = getPhapTuAttunementStatModifiers(
-    player,
-    resolveAttributeTotals(player.baseStats, allModifiers),
-  )
+  // attunement->MP channel (INV-10). The Tu paths emit the same way
+  // (spec 2026-09-15 section 3): the_tu_an attribute->chance and the_tu
+  // vitality->enduranceThreshold ride the same totals read.
+  const attributeTotals = resolveAttributeTotals(player.baseStats, allModifiers)
+  const pathModifiers = [
+    ...getPhapTuAttunementStatModifiers(player, attributeTotals),
+    ...getTheTuAnReactiveStatModifiers(player, attributeTotals),
+    ...getTheTuEnduranceStatModifiers(player, attributeTotals),
+  ]
 
-  return calculateStats(player.baseStats, [...allModifiers, ...phapTuModifiers])
+  return calculateStats(player.baseStats, [...allModifiers, ...pathModifiers])
 }
 
 /**
@@ -520,7 +528,6 @@ export function playerToCombatEntity(
 
     currentKiemYTemp: 0,
 
-    currentMomentum: 0,
 
     currentHoaThe: 0,
 

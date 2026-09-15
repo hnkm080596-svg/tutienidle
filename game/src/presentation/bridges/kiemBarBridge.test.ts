@@ -3,7 +3,7 @@
 // test poll plumbing với reader mock; file này test chính hàm mapping
 // bằng fake gameManager/player state (structural, không Pinia/Phaser).
 import { describe, expect, it } from 'vitest'
-import { MAX_KIEM_THE } from '@/core/combat/CombatTypes'
+import { MAX_KIEM_THE, MAX_THE } from '@/core/combat/CombatTypes'
 import { kiemYTempMaxFor } from '@/core/battle/KiemTuResourceSystem'
 import type { TurnBattle, TurnBattleState } from '@/core/battle/turn/TurnBattleSystem'
 import type { GameManager } from '@/core/game/GameManager'
@@ -19,7 +19,14 @@ import {
 // participant's CombatEntity (players[0].entity), not a flat .player.
 function fakeBattle(
   state: TurnBattleState,
-  entity: { currentKiemThe?: number; currentKiemYTemp?: number },
+  entity: {
+    currentKiemThe?: number
+    currentKiemYTemp?: number
+    currentThe?: number
+    maxThe?: number
+    externalWard?: { sourceId: string; amount: number }
+    stats?: { maxHp: number }
+  },
 ): TurnBattle {
   return { state, players: [{ entity }], enemies: [] } as unknown as TurnBattle
 }
@@ -100,6 +107,85 @@ describe('makeKiemBarReader — 9.4 Kiếm bar mapping', () => {
     )
 
     expect(reader()).toBeNull()
+  })
+})
+
+describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
+  it('the_tu_an (kit usesTheResource) → {currentThe, maxThe ?? MAX_THE, "Thế"}', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', { currentThe: 45, stats: { maxHp: 400 } }),
+      { bossKillCount: 0, cultivationPath: 'the_tu_an' },
+    )
+
+    expect(reader()).toEqual({ current: 45, max: MAX_THE, label: 'Thế', externalWard: undefined })
+  })
+
+  it('entity-baked maxThe wins over MAX_THE (node bonus)', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', { currentThe: 100, maxThe: 120, stats: { maxHp: 400 } }),
+      { bossKillCount: 0, cultivationPath: 'the_tu_an' },
+    )
+
+    expect(reader()!.max).toBe(120)
+  })
+
+  it('the_tu (Hiện — no Thế pool) without externalWard → null', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', { currentThe: 45, stats: { maxHp: 400 } }),
+      { bossKillCount: 0, cultivationPath: 'the_tu' },
+    )
+
+    expect(reader()).toBeNull()
+  })
+
+  it('externalWard rides the snapshot on ANY route (separate shield layer)', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', {
+        currentKiemThe: 30,
+        externalWard: { sourceId: 'p', amount: 60 },
+        stats: { maxHp: 400 },
+      }),
+      { kiemTuRoute: 'kiem_tran', bossKillCount: 0 },
+    )
+
+    expect(reader()).toEqual({
+      current: 30,
+      max: MAX_KIEM_THE,
+      label: 'Kiếm Thế',
+      externalWard: { current: 60, max: 400 },
+    })
+  })
+
+  it('externalWard alone (no resource route) → snapshot still returned, main bar zeroed', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', { externalWard: { sourceId: 'p', amount: 25 }, stats: { maxHp: 200 } }),
+      { bossKillCount: 0, cultivationPath: 'the_tu' },
+    )
+
+    expect(reader()).toEqual({
+      current: 0,
+      max: 0,
+      label: '',
+      externalWard: { current: 25, max: 200 },
+    })
+  })
+
+  it('the_tu_an with externalWard → Thế bar + shield layer together', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', {
+        currentThe: 30,
+        externalWard: { sourceId: 'p', amount: 50 },
+        stats: { maxHp: 250 },
+      }),
+      { bossKillCount: 0, cultivationPath: 'the_tu_an' },
+    )
+
+    expect(reader()).toEqual({
+      current: 30,
+      max: MAX_THE,
+      label: 'Thế',
+      externalWard: { current: 50, max: 250 },
+    })
   })
 })
 

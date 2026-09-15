@@ -36,7 +36,6 @@ function _createPlayerEntity(): CombatEntity {
     currentSwordIntent: 0,
     currentKiemThe: 0,
     currentKiemYTemp: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,

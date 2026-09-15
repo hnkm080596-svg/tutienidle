@@ -76,13 +76,19 @@ export interface CombatEntity {
   // (TheResourceSystem retired M13 — gains live in TurnBattleSystem).
   currentThe?: number
 
-  // Thể Tu (Combat Rework Phase 7) — Momentum CHIẾN ĐẤU, cùng mô hình
-  // currentSwordIntent nhưng pool 0-100 (xem CombatTypes.ts's
-  // MAX_MOMENTUM), tích qua Skill.grantsMomentumPerHit.
-  currentMomentum: number
+  // The Tu Reimagined (spec 2026-09-15 section 4.1, plan Task 15 review
+  // P0.2) — participant-build The cap. Baked as MAX_THE + the_tu_an
+  // node maxTheBonus at battle construction (Task 20 collector);
+  // TheEconomy.theCap is the single read site (`entity.maxThe ?? MAX_THE`),
+  // so Phap Tu entities without the field keep the global MAX_THE.
+  maxThe?: number
+
+  // The Tu Reimagined (spec 2026-09-15 D7/section 7.13) — momentum resource
+  // retired: the hidden path fuels reactive checks from currentThe, and
+  // the visible path has no pool resource at all.
 
   // Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — Hỏa Thế CHIẾN
-  // ĐẤU, cùng mô hình currentSwordIntent/currentMomentum nhưng pool
+  // ĐẤU, cùng mô hình currentSwordIntent nhưng pool
   // 0-5 (xem CombatTypes.ts's MAX_HOA_THE), tích qua Skill.
   // grantsHoaThePerCast × source.skillStats.hoaTheGainPerCast (0 nếu chưa
   // mua node "Tụ Hỏa" — xem BattleSystem.castSkill()), TỰ GIẢM dần
@@ -145,6 +151,14 @@ export interface CombatEntity {
   // CombatSystem.resolveHit()). State "sống" như currentHp/currentMp,
   // reset về 0 lúc BattleSystem.start()/createBattleEnemy().
   currentWard: number
+
+  // The Tu Reimagined (plan Task 11, spec 2026-09-15 D3) — Sơn Nhạc
+  // external ward: a SEPARATE, protection-only absorb pool granted by an
+  // external source. Distinct from currentWard on purpose: it is exempt
+  // from wardMax/regen, absorbs BEFORE the native ward, never feeds
+  // spendWard, and its existence is bound to the granting marker
+  // instance (reconciled per-source — newest grant replaces wholesale).
+  externalWard?: { sourceId: string; amount: number }
 
   // Phap Tu (Tho Tu, 2026-08-15) — holder turns elapsed since the last
   // LANDED hit on this entity (reset to 0 in CombatSystem.resolveAttack;

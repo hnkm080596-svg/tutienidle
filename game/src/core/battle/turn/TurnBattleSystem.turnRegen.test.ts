@@ -10,6 +10,7 @@ import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 import { BAT_KIEM_THUAT } from '../../../data/skill/BatKiemThuat'
 import { MAX_THE, THE_GAIN_PER_FINISHER, THE_GAIN_PER_LINK } from '../../combat/CombatTypes'
+import type { StatDomain } from '../../stats/StatDomain'
 
 // M8 (ARCH-003 + ARCH-010 + C05/C06) — combat resources & turn-phase
 // contract. MP/Ward regen joins hpRegenPerTurn on the entity-turn cadence
@@ -52,7 +53,6 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,
@@ -345,6 +345,11 @@ describe('TurnBattleSystem — post-status liveness boundary (ARCH-010)', () => 
 })
 
 describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
+  // Spec 2026-09-15 section 4 quirk — the generic slot gain is scoped to
+  // phap_tu participants; these fixtures carry that domain to keep
+  // exercising the charge-completion grant path.
+  const PHAP_TU_DOMAIN = new Set<StatDomain>(['phap_tu'])
+
   it('the real Bat Kiem Thuat charge accrues THE_GAIN_PER_LINK exactly once, at completion', () => {
     const stats = createBaseStats({
       evasionRate: 0,
@@ -355,6 +360,7 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
     })
     const player = createCombatant('player', { stats, baseStats: stats })
     const playerParticipant = makeParticipant('player', player, 100, 0)
+    playerParticipant.activeDomains = PHAP_TU_DOMAIN
     playerParticipant.special = { skill: BAT_KIEM_THUAT, remainingCooldownTurns: 0 }
 
     const enemy = makeDummyEnemy()
@@ -385,6 +391,7 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
     })
     const player = createCombatant('player', { stats, baseStats: stats, currentThe: MAX_THE })
     const playerParticipant = makeParticipant('player', player, 100, 0)
+    playerParticipant.activeDomains = PHAP_TU_DOMAIN
     playerParticipant.ultimate = {
       skill: {
         id: 'qa_charged_ult',

@@ -915,6 +915,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     } else {
       this.playerHud?.updateKiem(0, 0, '')
     }
+
+    // The Tu Reimagined (T22) — Son Nhac Ho The shield layer rides the
+    // same poll; absent/undefined hides the layer (updateExternalWard's
+    // hasPool gate), separate from the resource bar entirely.
+    this.playerHud?.updateExternalWard(kiem?.externalWard?.current ?? 0, kiem?.externalWard?.max ?? 0)
   }
 
   /**

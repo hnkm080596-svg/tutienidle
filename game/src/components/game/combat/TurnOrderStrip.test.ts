@@ -29,7 +29,6 @@ function makeEntity(id: string): CombatEntity {
     maxHp: 100,
     currentMp: 0,
     currentSwordIntent: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,

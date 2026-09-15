@@ -7,7 +7,6 @@ import type { SkillResourceType } from './SkillTypes'
 export const SKILL_RESOURCE_TYPE_LABELS: Record<Exclude<SkillResourceType, 'none'>, string> = {
   mana: 'Linh Lực',
   sword_intent: 'Kiếm Ý',
-  momentum: 'Đà Thế',
   the: 'Thế',
 }
 

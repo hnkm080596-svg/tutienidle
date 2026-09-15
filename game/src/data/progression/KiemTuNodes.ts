@@ -262,17 +262,21 @@ const BAT_KIEM_KIEM_Y_NODES: ProgressionNode[] = [
   {
     id: 'bat_kiem_do_don',
     name: 'Kiếm Ý Đỡ Đòn',
-    description: 'Mỗi tầng Kiếm Ý vĩnh viễn +1% tỉ lệ đỡ đòn và +2% hiệu quả đỡ — đòn trúng bớt đau.',
+    description: 'Mỗi tầng Kiếm Ý vĩnh viễn +1% kháng bạo kích và +2% giảm sát thương cuối — đòn trúng bớt đau.',
     type: 'minor',
     role: 'growth',
     insightCost: 1,
     maxLevel: 5,
     upgradeCost: { base: 1, perLevel: 2 },
     prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
+    // The Tu Reimagined (spec 2026-09-15 section 3.3): block stats are
+    // the_tu-domain now — a Kiem Tu node can no longer grant them.
+    // Re-authored onto universal defensive stats so the parry fantasy
+    // survives without cross-domain bleed.
     effect: {
       statModifiers: [
-        { id: 'node:bat_kiem_do_don:blockChance', sourceId: 'bat_kiem_do_don', sourceType: 'talent', stat: 'blockChance', percent: 0.01, perLevelPercent: 0.01 },
-        { id: 'node:bat_kiem_do_don:blockEffectiveness', sourceId: 'bat_kiem_do_don', sourceType: 'talent', stat: 'blockEffectiveness', percent: 0.02, perLevelPercent: 0.02 },
+        { id: 'node:bat_kiem_do_don:criticalAvoidance', sourceId: 'bat_kiem_do_don', sourceType: 'talent', stat: 'criticalAvoidance', flat: 0.01, perLevelFlat: 0.01 },
+        { id: 'node:bat_kiem_do_don:finalDamageReductionPercent', sourceId: 'bat_kiem_do_don', sourceType: 'talent', stat: 'finalDamageReductionPercent', percent: 0.02, perLevelPercent: 0.02 },
       ],
     },
     branchTag: 'bat_kiem',

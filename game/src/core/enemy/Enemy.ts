@@ -286,7 +286,6 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
 
     currentKiemYTemp: 0,
 
-    currentMomentum: 0,
 
     currentHoaThe: 0,
 

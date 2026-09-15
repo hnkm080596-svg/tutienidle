@@ -69,9 +69,12 @@ describe('KiemTuNodes data validation', () => {
     // Spec 2026-08-29 mục 3.3/5.3 — node BK mới thêm chỉ số công/thủ
     // (đỡ đòn, chí mạng, né tránh, tốc đánh) của node chuyển skill cũ
     // + node công năng kiếm ý.
+    // The Tu Reimagined (spec 2026-09-15 section 3.3): blockChance/
+    // blockEffectiveness are the_tu-domain — no longer legal for a
+    // Kiem Tu node; bat_kiem_do_don re-authored onto criticalAvoidance.
     const allowedStats = new Set([
       'skillDamagePercent', 'wardMax', 'ailmentResistPercent', 'finalDamageReductionPercent', 'metalPower',
-      'blockChance', 'blockEffectiveness', 'criticalRate', 'criticalDamage', 'evasionRate', 'speed',
+      'criticalAvoidance', 'criticalRate', 'criticalDamage', 'evasionRate', 'speed',
     ])
 
     for (const node of bonusNodes) {

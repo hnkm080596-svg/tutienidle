@@ -42,7 +42,6 @@ function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEn
     maxHp: 1_000_000,
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,
@@ -104,7 +103,7 @@ describe('AR-03: Self-buff execution and leech healing', () => {
       cooldownTurns: 3,
       targetScope: 'self',
       targeting: { shape: 'single' },
-      appliesBuff: { definitionId: 'dia_tru', target: 'self' },
+      appliesBuffs: [{ definitionId: 'dia_tru', target: 'self' }],
     }
 
     playerP.basic = selfBuffSkill

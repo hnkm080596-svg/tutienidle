@@ -61,11 +61,11 @@ export interface ApplyDebuffAction {
 }
 
 // Named resource pools every path can grant/consume — mirrors the fields
-// already on CombatEntity (currentSwordIntent, currentMomentum,
-// currentHoaThe, currentThoThe, currentKimThe, currentHuyetPha).
+// already on CombatEntity (currentSwordIntent, currentHoaThe,
+// currentThoThe, currentKimThe, currentHuyetPha). momentum resource retired with
+// momentum resource (spec 2026-09-15 D7).
 export type SkillResourcePoolKey =
   | 'swordIntent'
-  | 'momentum'
   | 'hoaThe'
   | 'thoThe'
   | 'kimThe'

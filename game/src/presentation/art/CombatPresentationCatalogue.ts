@@ -151,6 +151,7 @@ function playerMortalCatalogue(entityKey: string): CombatAnimationCatalogue {
 const MORTAL_SKILL_ANIMATIONS: Readonly<Record<string, CombatAnimationName>> = {
   linh_chuong: 'cast',
   tram: 'sweep_hand',
+  huy_quyen: 'punch',
   dam: 'punch',
   generic_physical: 'punch',
   basic_attack: 'punch',

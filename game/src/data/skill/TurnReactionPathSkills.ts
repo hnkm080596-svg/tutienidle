@@ -49,7 +49,7 @@ export const PHAP_TU_REACTION_ULTIMATE: TurnSkillDefinition = {
   resourceCost: 30,
   targetScope: 'self',
   targeting: { shape: 'single' },
-  appliesBuff: { definitionId: 'reaction_empowerment', target: 'self' },
+  appliesBuffs: [{ definitionId: 'reaction_empowerment', target: 'self' }],
 }
 
 export const REACTION_EMPOWERMENT_BUFF: BuffDefinition = {

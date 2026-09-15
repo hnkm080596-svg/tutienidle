@@ -22,7 +22,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,
@@ -189,7 +188,7 @@ describe('Slice 3 adversarial (QA probes)', () => {
       id: 'qa_self_dot', cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 1 },
       targeting: { shape: 'single' },
-      appliesBuff: { definitionId: 'qa_burn', target: 'self' },
+      appliesBuffs: [{ definitionId: 'qa_burn', target: 'self' }],
     }
 
     const registry = new FixtureRegistry([BURN])

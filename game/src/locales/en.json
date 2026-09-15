@@ -103,7 +103,9 @@
       },
       "branchLabels": {
         "lapDao": "Foundation Path",
-        "thuan": "Pure · {element}"
+        "thuan": "Pure · {element}",
+        "theTu": "Body Cultivation",
+        "theTuAn": "Hidden Body"
       }
     },
     "skillPath": {

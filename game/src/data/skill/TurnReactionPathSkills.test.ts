@@ -35,10 +35,10 @@ describe('TurnReactionPathSkills', () => {
   })
 
   it('ultimate áp buff self reaction_empowerment', () => {
-    expect(PHAP_TU_REACTION_ULTIMATE.appliesBuff).toEqual({
+    expect(PHAP_TU_REACTION_ULTIMATE.appliesBuffs).toEqual([{
       definitionId: 'reaction_empowerment',
       target: 'self',
-    })
+    }])
   })
 
   it('buff Cộng Minh: statModifier reactionEffectPercent, polarity buff', () => {

@@ -34,4 +34,7 @@
 // v61 (2026-09-14, B4 talent v4 M2): cultivationOvercharge,
 // tribulationBonusStacks, nodeFreePurchaseRecord, phaGiapCarryStacks,
 // phaGiapCarryRealmId. Save v60 bị từ chối (dev phase, không migration).
-export const CURRENT_SAVE_VERSION = 61 as const
+// v62 (2026-09-15, the-tu-reimagined spec T1): CultivationPathId mở rộng
+// 'the_tu' + 'the_tu_an' — save cũ chứa path id lạ bị từ chối (dev phase,
+// không migration).
+export const CURRENT_SAVE_VERSION = 62 as const

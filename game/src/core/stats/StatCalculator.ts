@@ -80,7 +80,10 @@ const ATTRIBUTE_CRIT_DAMAGE_PERCENT_PER_POINT = 0.003
 const ATTRIBUTE_ELEMENT_POWER_PER_POINT = 0.5
 const ATTRIBUTE_MAX_HP_PER_POINT = 8
 const ATTRIBUTE_HP_REGEN_PER_POINT = 0.1
-const ATTRIBUTE_ENDURANCE_THRESHOLD_PER_POINT = 1
+// The Tu Reimagined (spec 2026-09-15 section 3.3): vitality ->
+// enduranceThreshold moved OUT of the universal derivation into the
+// the_tu domain channel (getTheTuEnduranceStatModifiers +
+// registerDomainDeltaDeriver('the_tu') in CultivationPathSystem.ts).
 
 // Linh Căn (Attunement) hấp thụ nguyên vai trò "độ thiên hành" cũ của
 // ElementAffinity (đã xoá — luôn = 0 với player, chỉ có ý nghĩa thật
@@ -177,11 +180,6 @@ function deriveAttributeModifiers(finalized: Pick<Stats, MainStatKey>): StatModi
       'vitality',
       'hpRegenPerTurn',
       finalized.vitality * ATTRIBUTE_HP_REGEN_PER_POINT,
-    ),
-    flatAttributeModifier(
-      'vitality',
-      'enduranceThreshold',
-      finalized.vitality * ATTRIBUTE_ENDURANCE_THRESHOLD_PER_POINT,
     ),
   ]
 

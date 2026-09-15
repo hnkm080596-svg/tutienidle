@@ -27,7 +27,6 @@ function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     maxHp: stats.maxHp,
     currentMp: 50,
     currentSwordIntent: 30,
-    currentMomentum: 10,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,
@@ -77,10 +76,6 @@ describe('hasResourceFor', () => {
     expect(hasResourceFor(entity({ currentSwordIntent: 29 }), skill({ resourceType: 'sword_intent', resourceCost: 30 }))).toBe(false)
   })
 
-  it('checks momentum pool', () => {
-    expect(hasResourceFor(entity({ currentMomentum: 10 }), skill({ resourceType: 'momentum', resourceCost: 10 }))).toBe(true)
-    expect(hasResourceFor(entity({ currentMomentum: 5 }), skill({ resourceType: 'momentum', resourceCost: 10 }))).toBe(false)
-  })
 })
 
 describe('consumeResourceFor', () => {

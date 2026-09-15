@@ -5,17 +5,16 @@ import type { ActionRuntimeContext, SkillAction, SkillActionType } from './Skill
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
 import type { TriggerContextMap, TriggerType } from './SkillTrigger'
-import { MAX_SWORD_INTENT, MAX_MOMENTUM, MAX_HOA_THE, MAX_THO_THE, MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
+import { MAX_SWORD_INTENT, MAX_HOA_THE, MAX_THO_THE, MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
 import type { SkillResourcePoolKey } from './SkillAction'
 import type { ActionImpactEvent } from '../battle/BattleEvents'
 
 // Shared by grantResource (Task 5) and consumeResource (Task 6) — every
 // named pool's CombatEntity field and hard cap. Pools with no cap in
-// today's game (none currently) would map to Infinity; all 6 current
+// today's game (none currently) would map to Infinity; all current
 // pools have one.
 export const RESOURCE_POOL_FIELD: Record<SkillResourcePoolKey, keyof CombatEntity> = {
   swordIntent: 'currentSwordIntent',
-  momentum: 'currentMomentum',
   hoaThe: 'currentHoaThe',
   thoThe: 'currentThoThe',
   kimThe: 'currentKimThe',
@@ -24,7 +23,6 @@ export const RESOURCE_POOL_FIELD: Record<SkillResourcePoolKey, keyof CombatEntit
 
 export const RESOURCE_POOL_MAX: Record<SkillResourcePoolKey, number> = {
   swordIntent: MAX_SWORD_INTENT,
-  momentum: MAX_MOMENTUM,
   hoaThe: MAX_HOA_THE,
   thoThe: MAX_THO_THE,
   kimThe: MAX_KIM_THE,

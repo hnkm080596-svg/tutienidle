@@ -60,7 +60,11 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'wardBreakDamagePercent', label: 'Khiên Nổ', description: 'Khi Hộ Thuẫn vừa vỡ hẳn, phản % dung lượng Hộ Thuẫn tối đa thành sát thương vào kẻ tấn công.', category: 'defense_advanced' },
   { key: 'leechPercent', label: 'Hút máu', description: 'Hồi máu theo % sát thương gây ra.', category: 'defense_advanced' },
   { key: 'healingEffectivenessPercent', label: 'Hiệu quả hồi phục', description: 'Tăng % máu hồi được từ hồi phục tự nhiên, skill hồi máu và hiệu ứng hồi phục có sẵn — không ảnh hưởng Hút máu.', category: 'defense_advanced' },
-  { key: 'thornsPercent', label: 'Phản đòn', description: 'Đối phương tự nhận lại % sát thương gây cho mình khi đánh trúng.', category: 'defense_advanced' },
+  // The Tu An reactive chances (spec 2026-09-15 section 3.2).
+  { key: 'counterChance', label: 'Tỉ lệ phản kích', description: 'Xác suất phản đòn khi bị đánh trúng — chỉ từ thuộc tính (Thể Tu Ẩn).', category: 'defense_advanced' },
+  { key: 'protectChance', label: 'Tỉ lệ hộ thể', description: 'Xác suất chặn đòn thay đồng đội — chỉ từ thuộc tính (Thể Tu Ẩn).', category: 'defense_advanced' },
+  { key: 'followUpChance', label: 'Tỉ lệ truy kích', description: 'Xác suất đánh theo sau đòn của đồng đội — chỉ từ thuộc tính (Thể Tu Ẩn).', category: 'defense_advanced' },
+  // generic thorns stat retired (spec 2026-09-15 T12).
   { key: 'ailmentResistPercent', label: 'Kháng dị thường', description: 'Giảm % thời lượng mọi hiệu ứng dị thường (DoT/khống chế) nhận vào.', category: 'defense_advanced' },
   { key: 'ailmentPotencyPercent', label: 'Uy lực dị thường', description: 'Tăng % hiệu lực (sát thương/giây) của dị thường mình gây ra.', category: 'defense_advanced' },
 ]

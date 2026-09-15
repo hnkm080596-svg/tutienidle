@@ -93,10 +93,13 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
 
     const result = calculateStats(base, [makeModifier({ stat: 'vitality', flat: 10 })])
 
-    // pass1 vitality = 1 + 10 = 11 → +88 maxHp, +1.1 hpRegen, +11 endurance.
+    // pass1 vitality = 1 + 10 = 11 → +88 maxHp, +1.1 hpRegen.
+    // The Tu Reimagined (spec 2026-09-15 section 3.3): vitality ->
+    // enduranceThreshold left the universal derivation — it is now a
+    // the_tu-domain emission, so base stays at 10 here.
     expect(result.maxHp).toBeCloseTo(188, 5)
     expect(result.hpRegenPerTurn).toBeCloseTo(1.1, 5)
-    expect(result.enduranceThreshold).toBeCloseTo(21, 5)
+    expect(result.enduranceThreshold).toBeCloseTo(10, 5)
   })
 
   it('không modifier → base giữ nguyên cộng đúng attribute baseline', () => {

@@ -25,6 +25,17 @@ export interface TurnSkillAilmentApplication {
   stacks?: number
 }
 
+/**
+ * The Tu Reimagined (plan Task 11 contract) — one buff application
+ * authored on a TurnSkillDefinition.
+ */
+export interface TurnSkillBuffApplication {
+  definitionId: string
+  target: 'self' | 'action_targets' | 'allies_except_self' | 'all_enemies'
+  durationOverride?: number
+  externalWardGrant?: { sourceMaxHpRatio: number }
+}
+
 export interface TurnSkillDefinition {
   id: string
   cooldownTurns: number
@@ -46,12 +57,32 @@ export interface TurnSkillDefinition {
     count: number
   }
   /**
-   * M10 (ARCH-008) — `duration` carries the authored SkillEffect.duration
-   * override through the converter (e.g. duong_linh_tuyen spec: 8 instead
-   * of the buff definition's registry default). undefined = registry
-   * default, unchanged behavior.
+   * The Tu Reimagined (plan Task 6/11) — multi-buff application contract
+   * (replaces the singular appliesBuff). Each entry resolves its target
+   * set at impact:
+   * - 'self' -> the actor
+   * - 'action_targets' -> declared.affected (the hit's resolved targets)
+   * - 'allies_except_self' -> living same-side participants except actor
+   * - 'all_enemies' -> living opposing-side participants
+   * `durationOverride` is the pre-modifier base delivered to
+   * BuffSystem.apply's M10 channel (node-scaled durations land here).
+   * `externalWardGrant` marks a son_nhac_ho_the-style external ward pool
+   * granted to the target (resolution: Task 11 external-ward contract).
    */
-  appliesBuff?: { definitionId: string; target: 'self' | 'target'; duration?: number }
+  appliesBuffs?: TurnSkillBuffApplication[]
+  /**
+   * The Tu Reimagined (spec 2026-09-15 section 5.2) — passive emblem
+   * occupying a slot: never selectable by selectAction/selectForcedAction,
+   * never deals damage; its permanent buff lands via grantsBuffsAtBuild.
+   */
+  emblemOnly?: boolean
+  /**
+   * The Tu Reimagined (plan Task 6) — buff definitions applied to the
+   * OWNER at participant build (the emblem-buff channel). The defs are
+   * participant-local clones (node-adjusted via collectTheTuKitModifiers),
+   * so they ride the def object itself, not a registry id.
+   */
+  grantsBuffsAtBuild?: import('../../buff/BuffTypes').BuffDefinition[]
   /**
    * Phase A1 (2026-09-07) — chance-gated ailment application, checked
    * against TurnReactionManager after applying. Deliberately separate
@@ -94,11 +125,10 @@ export interface TurnSkillSlot {
 
 const RESOURCE_FIELD: Record<
   Exclude<SkillResourceType, 'none'>,
-  'currentMp' | 'currentSwordIntent' | 'currentMomentum' | 'currentThe'
+  'currentMp' | 'currentSwordIntent' | 'currentThe'
 > = {
   mana: 'currentMp',
   sword_intent: 'currentSwordIntent',
-  momentum: 'currentMomentum',
   the: 'currentThe',
 }
 
@@ -177,6 +207,7 @@ function slotAction(slot: TurnSkillSlot): SelectedAction {
 export function selectAction(participant: TurnBattleParticipant): SelectedAction {
   if (
     participant.ultimate &&
+    !participant.ultimate.skill.emblemOnly &&
     participant.ultimate.remainingCooldownTurns === 0 &&
     hasResourceFor(participant.entity, participant.ultimate.skill)
   ) {
@@ -185,6 +216,7 @@ export function selectAction(participant: TurnBattleParticipant): SelectedAction
 
   if (
     participant.special &&
+    !participant.special.skill.emblemOnly &&
     participant.special.remainingCooldownTurns === 0 &&
     hasResourceFor(participant.entity, participant.special.skill)
   ) {
@@ -246,6 +278,7 @@ export function selectForcedAction(
 
   if (
     slot &&
+    !slot.skill.emblemOnly &&
     slot.remainingCooldownTurns === 0 &&
     hasResourceFor(participant.entity, slot.skill)
   ) {

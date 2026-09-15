@@ -1,6 +1,8 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { SkillResourceStatKey } from '../skill/Skill'
+import type { TheTuKitModifierValues } from '../the-tu/TheTuKitModifiers'
+import type { TheTuAnMechanicModifierValues } from '../the-tu/TheTuAnMechanicModifiers'
 
 /**
  * Skill rework (2026-08-21) — bonus nhắm THẲNG 1 field trên object
@@ -94,6 +96,20 @@ export interface NodeEffect {
   // THUẦN DATA trong NodeSystem). Data (Task 8) tự đảm bảo mutex: 2
   // node biến thể đối diện gate nhau bằng prerequisite excludesNode.
   selectsSpecialization?: { skillId: string; specializationId: string }
+
+  // The Tu Reimagined (plan Task 6) — the ONLY node -> the_tu kit
+  // channel. Each channel value is the PER-LEVEL contribution;
+  // collectTheTuKitModifiers(registry, player) sums them over owned
+  // levels and the participant build bakes the totals into
+  // participant-local kit/buff def clones.
+  theTuKitModifiers?: Partial<TheTuKitModifierValues>
+
+  // The Tu Reimagined (plan Task 20, review P1.7) — the ONLY node ->
+  // the_tu_an channel. Trunk economy channels (cap/cost/gain) plus
+  // branch consequence riders (intercept ward, heavy counter payload,
+  // Tro heal/cost) summed by collectTheTuAnMechanicModifiers and baked
+  // into participant-local def clones by buildTheTuAnKit.
+  theTuAnMechanicModifiers?: Partial<TheTuAnMechanicModifierValues>
 }
 
 /** 9 loại on-hit kiếm trận (spec mục 4) — mở theo cấp trận 2→9. */

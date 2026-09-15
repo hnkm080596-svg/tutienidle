@@ -83,8 +83,8 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
 
       expect(turnSkill.targetScope).toBe('self')
       expect(turnSkill.damage).toBeUndefined()
-      expect(turnSkill.appliesBuff?.definitionId).toBe('thanh_tuyen')
-      expect(turnSkill.appliesBuff?.target).toBe('self')
+      expect(turnSkill.appliesBuffs?.[0]?.definitionId).toBe('thanh_tuyen')
+      expect(turnSkill.appliesBuffs?.[0]?.target).toBe('self')
     })
 
     it('Earth special (dia_tru_thua_thien) is pure self-buff', () => {
@@ -95,8 +95,8 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
 
       expect(turnSkill.targetScope).toBe('self')
       expect(turnSkill.damage).toBeUndefined()
-      expect(turnSkill.appliesBuff?.definitionId).toBe('dia_tru')
-      expect(turnSkill.appliesBuff?.target).toBe('self')
+      expect(turnSkill.appliesBuffs?.[0]?.definitionId).toBe('dia_tru')
+      expect(turnSkill.appliesBuffs?.[0]?.target).toBe('self')
     })
 
     it('Wood special (cau_mang_can_tri) preserves both debuffs (troi_chan and trung_doc)', () => {
@@ -151,7 +151,7 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
     })
 
     it('PHAP_TU_REACTION_ULTIMATE applies reaction empowerment', () => {
-      expect(PHAP_TU_REACTION_ULTIMATE.appliesBuff?.definitionId).toBe('reaction_empowerment')
+      expect(PHAP_TU_REACTION_ULTIMATE.appliesBuffs?.[0]?.definitionId).toBe('reaction_empowerment')
     })
 
     it('REACTION_PATH_POOL contains 5 valid elemental basics', () => {

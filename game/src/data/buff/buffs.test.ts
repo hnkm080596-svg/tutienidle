@@ -67,17 +67,18 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(b.effects).toContainEqual({ type: 'cc', ccEffect: 'root' })
   })
 
-  it('kim_giap — buff 6s refresh, defense +15% + thornsPercent +0.15', () => {
+  // The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;
+  // kim_giap keeps defense, dia_tru keeps ward+regen.
+  it('kim_giap — buff 6s refresh, defense +15%', () => {
     const b = byId('kim_giap')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'defense', percent: 0.15 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'thornsPercent', flat: 0.15 })
   })
 
-  it('dia_tru — buff 6s refresh, wardMax +60 + wardRegenPerTurn +6 + thornsPercent +0.10', () => {
+  it('dia_tru — buff 6s refresh, wardMax +60 + wardRegenPerTurn +6', () => {
     const b = byId('dia_tru')!
 
     expect(b.polarity).toBe('buff')
@@ -85,7 +86,6 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(b.stackMode).toBe('refresh')
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 60 })
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerTurn', flat: 6 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'thornsPercent', flat: 0.1 })
   })
 
   it('thanh_luy — buff 8s stack max 8, defense +6%/tầng', () => {
@@ -132,7 +132,7 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
   // Review round 1 (Finding 1) — biến thể Thổ C không được mượn buff
   // hành khác (bang_giap/kim_giap → sai số liệu + đụng tên đa hành):
   // buff riêng theo đúng bảng §2.5.
-  it('dia_tru_bich — buff 6s refresh, wardMax +100 + wardRegenPerTurn +8, KHÔNG thorns', () => {
+  it('dia_tru_bich — buff 6s refresh, wardMax +100 + wardRegenPerTurn +8, no retaliate stat', () => {
     const b = byId('dia_tru_bich')!
 
     expect(b.polarity).toBe('buff')
@@ -140,21 +140,25 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(b.stackMode).toBe('refresh')
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 100 })
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerTurn', flat: 8 })
-    expect(b.effects.some((e) => e.type === 'statModifier' && e.stat === 'thornsPercent')).toBe(false)
+    // generic thorns stat retired (T12) — Bích stays the no-retaliate line:
+    // no wardBreakDamagePercent either.
+    expect(b.effects.some((e) => e.type === 'statModifier' && e.stat === 'wardBreakDamagePercent')).toBe(false)
   })
 
-  it('dia_tru_thu — buff 6s refresh, wardMax +40 + thornsPercent +0.25', () => {
+  // The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;
+  // Thứ's retaliate identity rides wardBreakDamagePercent (Khiên Nổ).
+  it('dia_tru_thu — buff 6s refresh, wardMax +40 + wardBreakDamagePercent +0.25', () => {
     const b = byId('dia_tru_thu')!
 
     expect(b.polarity).toBe('buff')
     expect(b.duration).toBe(6)
     expect(b.stackMode).toBe('refresh')
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 40 })
-    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'thornsPercent', flat: 0.25 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardBreakDamagePercent', flat: 0.25 })
   })
 
-  it('all 56 definitions (5 Tran Phap formation buffs + 5 buffs + 2 reaction buffs + 5 on-hit proc buffs + 16 ported ailments + 14 thuan-he chain buffs + 5 talent v4 combat buffs + 3 Phase A2 boss enrage buffs + 1 Phase A4 reaction empowerment) are present', () => {
-    expect(buffs).toHaveLength(56)
+  it('all 68 definitions (5 Tran Phap formation buffs + 5 buffs + 2 reaction buffs + 5 on-hit proc buffs + 16 ported ailments + 14 thuan-he chain buffs + 5 talent v4 combat buffs + 3 Phase A2 boss enrage buffs + 1 Phase A4 reaction empowerment + 12 The Tu Reimagined buffs) are present', () => {
+    expect(buffs).toHaveLength(68)
   })
 })
 

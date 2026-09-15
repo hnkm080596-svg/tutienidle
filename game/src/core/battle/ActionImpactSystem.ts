@@ -29,19 +29,37 @@ import type { DamageScalingConfig } from '../combat/DamageCalculator'
  * CombatSystem.resolveActionHit(), which is the only place with a live
  * `source` entity to evaluate them against.
  */
+/**
+ * The Tu Reimagined (spec 2026-09-15 section 3.4) — Cuong Chien
+ * missing-HP scalar: bonus physical damage proportional to the
+ * attacker's LIVE missing-HP fraction, resolved per hit at impact
+ * (never a stat). `missingHpBonusPerMissingPercent` 0.02 = +2% damage
+ * per 1% missing HP; `missingHpBonusCap` bounds the total bonus
+ * multiplier (2.0 => up to x3 at 100% missing).
+ */
+interface ActionDamageMissingHpScalar {
+  missingHpBonusPerMissingPercent?: number
+  missingHpBonusCap?: number
+}
+
 export type ActionDamageInfo =
-  | { kind: 'physical' | 'primordial'; multiplier: number; scaling?: DamageScalingConfig }
-  | { kind: 'elemental'; components: SkillDamageComponent[]; multiplier: number; scaling?: DamageScalingConfig }
+  | ({ kind: 'physical' | 'primordial'; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar)
+  | ({ kind: 'elemental'; components: SkillDamageComponent[]; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar)
 
 export function scaleActionDamage(
   info: ActionDamageInfo,
   percent: number,
 ): ActionDamageInfo {
-  if (info.kind === 'elemental') {
-    return { kind: 'elemental', components: info.components, multiplier: info.multiplier * percent, scaling: info.scaling }
+  const scalar: ActionDamageMissingHpScalar = {
+    missingHpBonusPerMissingPercent: info.missingHpBonusPerMissingPercent,
+    missingHpBonusCap: info.missingHpBonusCap,
   }
 
-  return { kind: info.kind, multiplier: info.multiplier * percent, scaling: info.scaling }
+  if (info.kind === 'elemental') {
+    return { kind: 'elemental', components: info.components, multiplier: info.multiplier * percent, scaling: info.scaling, ...scalar }
+  }
+
+  return { kind: info.kind, multiplier: info.multiplier * percent, scaling: info.scaling, ...scalar }
 }
 
 export interface HitResolveOptions {
@@ -169,7 +187,7 @@ export class ActionImpactSystem {
   /**
    * Một HIT riêng lẻ trong batch skill — tự roll crit/dodge/on-hit đầy đủ
    * qua resolveOneHit do BattleSystem cấp (giữ nguyên pipeline Kiếm Ý/
-   * Momentum/Break/knockback/passive/reward cũ).
+   * Break/knockback/passive/reward cũ).
    */
   fireSkillHit(
     battle: Battle,

@@ -28,16 +28,37 @@ export function getHuyKiemFlatDamageBonus(totalExperience: number): number {
   return Math.floor(Math.max(0, totalExperience) / HUY_KIEM_CASTS_PER_LEVEL)
 }
 
+// The Tu Reimagined (spec 2026-09-15, T6) — cast-leveling generalized
+// from the tram special-case into a data table: any skill id listed here
+// auto-levels by totalExperience in recordCast() and is rejected by the
+// insight-upgrade path. The Tu An's ritual gate reads huy_quyen Lv3.
+export const CAST_LEVELING_THRESHOLDS: Record<string, { lv2: number; lv3: number }> = {
+  tram: { lv2: 1000, lv3: 10000 },
+  huy_quyen: { lv2: 1000, lv3: 10000 },
+}
+
+/** Level a cast-leveled skill reaches at totalExperience casts (1 below lv2). */
+export function getCastLeveledSkillLevel(skillId: string, totalExperience: number): number {
+  const thresholds = CAST_LEVELING_THRESHOLDS[skillId]
+
+  if (!thresholds) return 1
+  if (totalExperience >= thresholds.lv3) return 3
+  if (totalExperience >= thresholds.lv2) return 2
+  return 1
+}
+
 /** Mốc level tuyến tính: Lv2 tại 1000 cast, Lv3 tại 10000 cast. */
 export function getHuyKiemLevelForCasts(totalExperience: number): number {
-  if (totalExperience >= 10000) return 3
-  if (totalExperience >= 1000) return 2
-  return 1
+  return getCastLeveledSkillLevel('tram', totalExperience)
 }
 
 /** Ngưỡng cast Huy Kiếm đạt Lv3 — route Kiếm Tu chốt Bạt Kiếm khi
  * tram ≥ mốc này (spec 2026-08-29-kiem-the-kiem-y mục 1). */
-export const HUY_KIEM_L3_CASTS = 10000
+export const HUY_KIEM_L3_CASTS = CAST_LEVELING_THRESHOLDS['tram']!.lv3
+
+/** Ngưỡng cast Hủy Quyền đạt Lv3 — cổng offer the_tu_an tại Nghi Lễ
+ * Nhập Môn (spec 2026-09-15 T6, xem CultivationPathKit.offerGate). */
+export const HUY_QUYEN_L3_CASTS = CAST_LEVELING_THRESHOLDS['huy_quyen']!.lv3
 
 export interface EffectiveSkill {
   effects: SkillEffect[]
@@ -202,7 +223,7 @@ export class SkillSystem {
   getSkillUpgradeInsightCost(skillId: string): number | undefined {
     const skill = this.manager.get(skillId)
 
-    if (!skill || skill.id === 'tram' || skill.level >= skill.maxLevel) {
+    if (!skill || skill.id in CAST_LEVELING_THRESHOLDS || skill.level >= skill.maxLevel) {
       return undefined
     }
 
@@ -218,7 +239,7 @@ export class SkillSystem {
   upgradeSkill(skillId: string, player: PlayerData): boolean {
     const skill = this.manager.get(skillId)
 
-    if (!skill || skill.id === 'tram' || skill.level >= skill.maxLevel) {
+    if (!skill || skill.id in CAST_LEVELING_THRESHOLDS || skill.level >= skill.maxLevel) {
       return false
     }
 
@@ -334,9 +355,10 @@ export class SkillSystem {
    * (TurnBattleSystem.onSkillCast, wired via GameManagerTurnBattleOps for
    * the primary player only). Generic per learned skill: totalExperience
    * is the cast counter the PlayerData skillCastCounts mirror reflects.
-   * Huy Kiem ('tram') additionally auto-levels via
-   * getHuyKiemLevelForCasts and keeps the legacy per-cast experience
-   * tick; every other skill levels only through upgradeSkill (Cam Ngo).
+   * Cast-leveled skills (CAST_LEVELING_THRESHOLDS — tram, huy_quyen)
+   * additionally auto-level via getCastLeveledSkillLevel; tram also keeps
+   * the legacy per-cast experience tick feeding getHuyKiemFlatDamageBonus.
+   * Every other skill levels only through upgradeSkill (Cam Ngo).
    * No-op for unknown/unlearned ids (e.g. 'generic_physical').
    */
   recordCast(skillId: string): void {
@@ -348,10 +370,12 @@ export class SkillSystem {
 
     skill.totalExperience = (skill.totalExperience ?? 0) + 1
 
-    if (skill.id === 'tram') {
-      skill.experience = (skill.experience ?? 0) + 1
+    if (skill.id in CAST_LEVELING_THRESHOLDS) {
+      if (skill.id === 'tram') {
+        skill.experience = (skill.experience ?? 0) + 1
+      }
 
-      const targetLevel = getHuyKiemLevelForCasts(skill.totalExperience)
+      const targetLevel = getCastLeveledSkillLevel(skill.id, skill.totalExperience)
 
       if (targetLevel > skill.level) {
         const levelsGained = targetLevel - skill.level

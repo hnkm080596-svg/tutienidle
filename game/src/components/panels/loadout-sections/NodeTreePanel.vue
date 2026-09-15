@@ -67,6 +67,16 @@ function branchLabel(branchTag: string | undefined): string {
     return t('panels.nodeTree.branchLabels.thuan', { element: ELEMENT_LABELS[element] ?? branchTag })
   }
 
+  // The Tu Reimagined (T22) — path-id tree tags get i18n labels instead
+  // of the raw branchTag fallback ('the_tu'/'the_tu_an' are not elements).
+  if (branchTag === 'the_tu') {
+    return t('panels.nodeTree.branchLabels.theTu')
+  }
+
+  if (branchTag === 'the_tu_an') {
+    return t('panels.nodeTree.branchLabels.theTuAn')
+  }
+
   return ELEMENT_LABELS[branchTag as ElementType] ?? branchTag
 }
 
@@ -74,6 +84,12 @@ function branchColor(branchTag: string | undefined): string {
   if (branchTag?.startsWith('thuan_')) {
     const element = branchTag.slice('thuan_'.length) as ElementType
     return ELEMENT_COLOR_VARS[element] ?? 'var(--paper-text)'
+  }
+
+  // The Tu Reimagined (T22) — The Tu Hien kit declares element 'metal';
+  // the hidden path falls back to the paper-text neutral.
+  if (branchTag === 'the_tu') {
+    return ELEMENT_COLOR_VARS.metal
   }
 
   return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--paper-text)'

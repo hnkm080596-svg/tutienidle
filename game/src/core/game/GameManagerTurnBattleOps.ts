@@ -17,6 +17,7 @@ import { TurnToken, type TokenState } from '../battle/turn/TurnToken'
 import { TurnPipeline } from '../battle/turn/TurnPipeline'
 export type { ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
 import { BuffSystem } from '../buff/BuffSystem'
+import { isUngTheCombatant } from '../the-tu/TheEconomy'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
 import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
@@ -27,6 +28,7 @@ import {
 import { enemyToCombatEntity } from '../enemy/Enemy'
 import type { Enemy } from '../enemy/Enemy'
 import type { CombatEntity } from '../combat/CombatEntity'
+import type { SurviveLethalSource } from '../combat/CombatSystem'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 import { effectiveWaves } from '../stage/EffectiveWaves'
 import type { Stage } from '../stage/Stage'
@@ -238,12 +240,25 @@ export class GameManagerTurnBattleOps {
     // Resolve special/ultimate via the Skill converter + effective skill.
     resolvePlayerSpecialUltimate: (
       player: PlayerData,
-    ) => { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition }
+    ) => {
+      special?: TurnSkillDefinition
+      ultimate?: TurnSkillDefinition
+      reactivePayloads?: Record<string, TurnSkillDefinition>
+      maxThe?: number
+    }
     // 9.5 #9 — committed-cast sink for the PRIMARY player only
     // (SkillSystem.recordCast; engine fires for every actor, ops filters
     // to turnBattle.players[0] so companion/enemy casts never write into
     // the player's skillCastCounts/skillLevels mirror).
     recordPrimaryPlayerCast?: (skillId: string) => void
+    // The Tu Reimagined (plan Task 9, D9) — GameManager builds the
+    // Bat Tu survival source for a the_tu/cuong_chien player from the
+    // built participant (registry-gated node reads live there); the ops
+    // inserts it ahead of the talent guard inside the survive session.
+    buildTheTuBatTuSurvival?: (
+      player: PlayerData,
+      participant: TurnBattleParticipant,
+    ) => SurviveLethalSource | undefined
   }) {
     this.turnBattleSystem = new TurnBattleSystem(
       deps.combatSystem,
@@ -888,17 +903,25 @@ export class GameManagerTurnBattleOps {
     // the session for combatSystem.killIfDead(). players[0] is the human
     // player (companions append after index 0 in buildTurnBattle).
     this.deps.surviveLethalGuard.beginBattle(player.selectedTalentIds)
+
+    // The Tu Reimagined (plan Task 9, D9) — Cuong Chien's Bat Tu Ba The
+    // ultimate is the FIRST line of survival; the talent guard is the
+    // extra life once the ult is spent/on cooldown.
+    const playerParticipant = this.turnBattle!.players[0]!
+    const batTuSource = this.deps.buildTheTuBatTuSurvival?.(player, playerParticipant)
+
     this.deps.combatSystem.setSurviveLethalSession({
       playerEntityId: playerEntity.id,
       guard: this.deps.surviveLethalGuard,
       // v4 (spec 2026-09-03 section 4.1) - Bat Tu The cleanse/grant on save,
       // wired to the LIVE turn-based player pool (Phase A0 cutover).
       surviveEffects: {
-        buffSystem: new BuffSystem(this.turnBattle!.players[0]!.buffs),
+        buffSystem: new BuffSystem(playerParticipant.buffs),
         registry: BUFF_REGISTRY,
         grantBuffId: 'tu_sinh_ngo',
         cleanseDebuffs: true,
       },
+      extraSources: batTuSource ? [batTuSource] : undefined,
     })
   }
 
@@ -1006,6 +1029,28 @@ export class GameManagerTurnBattleOps {
       }
     }
 
+    // The Tu Reimagined (plan Task 6) — emblem/build-time buff channel:
+    // any participant slot def carrying grantsBuffsAtBuild applies those
+    // participant-local def clones to its owner (phan_chinh emblem ->
+    // permanent Reflection buff). Self-applied, no registry lookup —
+    // the defs are already node-adjusted clones from buildTheTuKit.
+    for (const participant of [playerParticipant, ...companionParticipants]) {
+      const buildBuffs = [
+        ...(participant.basic?.grantsBuffsAtBuild ?? []),
+        ...(participant.special?.skill.grantsBuffsAtBuild ?? []),
+        ...(participant.ultimate?.skill.grantsBuffsAtBuild ?? []),
+      ]
+
+      for (const definition of buildBuffs) {
+        new BuffSystem(participant.buffs).apply(
+          definition,
+          participant.entity,
+          participant.entity,
+          BUFF_REGISTRY,
+        )
+      }
+    }
+
     // Spawn placement (Combat Art Pipeline sections 6/7) - standing positions, no
     // movement. Bosses always center; regular enemies random within region.
     const enemyParticipants = enemyEntities.map((enemyEntity, index) => {
@@ -1049,6 +1094,17 @@ export class GameManagerTurnBattleOps {
 
     this.rewardOps.resetRewardState()
     this.presentationOps.runtime.resetPendingState()
+
+    // The Tu Reimagined (spec 4.1, plan Task 15) — the_tu_an's pool is
+    // battle-scoped: auto-repeat is a new battle for the proc economy,
+    // so every ung_the participant's currentThe resets. (Phap Tu's
+    // currentThe XUYEN KILL persistence is untouched — no marker, no
+    // reset.)
+    for (const participant of previous.players) {
+      if (isUngTheCombatant(participant.buffs)) {
+        participant.entity.currentThe = 0
+      }
+    }
 
     this.turnBattle = {
       players: previous.players,

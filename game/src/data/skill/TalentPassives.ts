@@ -152,15 +152,17 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'damage_taken',
     [stat('wardRegenPerTurn', 0.02, 5)],
   ),
-  // 10. Thứ Phạt — gai: bị đánh gần +30% thorns, mỗi phản +1 tầng Hận
-  // Thứ (max 5, +5%/tầng), decay khi không bị đánh 3s (decay thực thi
-  // consumer tick).
+  // 10. Thứ Phạt — gai: mỗi đòn ăn vào +1 tầng Hận Thứ (max 5,
+  // +5% Khiên Nổ/tầng), decay khi không bị đánh 3s (decay thực thi
+  // consumer tick). The Tu Reimagined (spec 2026-09-15 T12):
+  // generic thorns stat retired — retaliation rides wardBreakDamagePercent
+  // (Khiên Nổ phản theo dung lượng khiên khi khiên vỡ).
   talentPassive(
     'talent_passive_thu_phat',
     'Thứ Phạt',
     'Nội tại Thứ Phạt của thiên phú — mỗi đòn ăn vào nuôi gai sắc.',
     'damage_taken',
-    [stat('thornsPercent', 0.05, 5)],
+    [stat('wardBreakDamagePercent', 0.05, 5)],
   ),
   // 11. Bất Tử Thể — phần passive bổ sung cho guard hiện có: sau khi
   // guard cứu sống, Tử Sinh Ngộ 10s áp trực tiếp (CombatSystem, Task 4)

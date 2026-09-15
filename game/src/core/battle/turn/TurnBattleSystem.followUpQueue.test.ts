@@ -34,7 +34,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
     id: 'id', name: 'name', type: 'enemy', stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
-    currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
+    currentSwordIntent: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
@@ -78,7 +78,7 @@ function fixture() {
   return { battle, system, playerParticipant, enemyParticipant }
 }
 
-describe('TurnBattleSystem — queuedFollowUpActorIds honored by the PRODUCTION loop (tickPacing)', () => {
+describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (tickPacing)', () => {
   it('tickPacing() grants the queued follow-up actor a bypass turn on the NEXT call, not just peekNextActor()', () => {
     const { battle, system, enemyParticipant } = fixture()
 
@@ -92,7 +92,7 @@ describe('TurnBattleSystem — queuedFollowUpActorIds honored by the PRODUCTION 
 
     const firstActor = system.tickPacing(battle)
     expect(firstActor?.id).toBe('player')
-    expect(battle.queuedFollowUpActorIds).toEqual(['enemy'])
+    expect(battle.queuedFollowUps?.map((entry) => entry.actorId)).toEqual(['enemy'])
 
     // Enemy's own gauge is nowhere near ready yet (fresh actionGauge=0,
     // needs many ticks) — the ONLY way it can act next is the bypass queue.
@@ -101,7 +101,7 @@ describe('TurnBattleSystem — queuedFollowUpActorIds honored by the PRODUCTION 
     const secondActor = system.tickPacing(battle)
 
     expect(secondActor?.id).toBe('enemy')
-    expect(battle.queuedFollowUpActorIds).toBeUndefined()
+    expect(battle.queuedFollowUps).toBeUndefined()
   })
 
   it("bypass turn does NOT consume the follow-up actor's own gauge progress", () => {
@@ -126,14 +126,14 @@ describe('TurnBattleSystem — follow-up reciprocity guard', () => {
 
     // Manually simulate a long chain having already happened (rather than
     // building a full ping-pong buff setup) — verify the guard itself.
-    battle.queuedFollowUpActorIds = ['enemy']
+    battle.queuedFollowUps = [{ actorId: 'enemy', executionKind: 'reactive_bypass', actionSource: 'follow_up' }]
     battle.followUpChainDepth = 4 // MAX_FOLLOW_UP_CHAIN_DEPTH
 
     const result = system.tickPacing(battle, false)
 
     // Guard tripped: queue dropped, falls through to normal (gauge not
     // ready yet for either side at actionGauge=0) → no actor this tick.
-    expect(battle.queuedFollowUpActorIds).toBeUndefined()
+    expect(battle.queuedFollowUps).toBeUndefined()
     expect(battle.followUpChainDepth).toBe(0)
     expect(result).toBeNull()
   })

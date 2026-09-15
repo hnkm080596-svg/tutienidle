@@ -14,6 +14,7 @@ import {
   PLAYER_HUD_HP_COLOR,
   PLAYER_HUD_MP_COLOR,
   PLAYER_HUD_KIEM_COLOR,
+  PLAYER_HUD_WARD_COLOR,
   PLAYER_HUD_LABEL_COLOR,
   PLAYER_HUD_STROKE_COLOR,
   ENEMY_HP_BAR_HEIGHT,
@@ -50,6 +51,11 @@ export class PlayerHudLayer {
 
   private kiemGroup!: HudRectGroup
 
+  // The Tu Reimagined (T22) — Son Nhac Ho The external-ward layer: its
+  // own bar above the resource bar, never merged into the ward/resource
+  // pools (protection-only, not spendable).
+  private wardGroup!: HudRectGroup
+
   private destroyed = false
 
   constructor(scene: Phaser.Scene, viewport: { width: number; height: number }) {
@@ -57,8 +63,9 @@ export class PlayerHudLayer {
     this.viewport = viewport
 
     this.hpGroup = this.createGroup(HUD_HP_WIDTH, HUD_HP_HEIGHT, `${HUD_LABEL_FONT_SIZE}`, true)
-    this.mpGroup = this.createGroup(HUD_SUB_WIDTH, HUD_SUB_HEIGHT, HUD_SUB_LABEL_FONT_SIZE, false)
-    this.kiemGroup = this.createGroup(HUD_SUB_WIDTH, HUD_SUB_HEIGHT, HUD_SUB_LABEL_FONT_SIZE, false)
+    this.mpGroup = this.createGroup(HUD_SUB_WIDTH, HUD_SUB_HEIGHT, HUD_SUB_LABEL_FONT_SIZE, false, PLAYER_HUD_MP_COLOR)
+    this.kiemGroup = this.createGroup(HUD_SUB_WIDTH, HUD_SUB_HEIGHT, HUD_SUB_LABEL_FONT_SIZE, false, PLAYER_HUD_KIEM_COLOR)
+    this.wardGroup = this.createGroup(HUD_SUB_WIDTH, HUD_SUB_HEIGHT, HUD_SUB_LABEL_FONT_SIZE, false, PLAYER_HUD_WARD_COLOR)
 
     this.layout(viewport.width, viewport.height)
   }
@@ -112,10 +119,12 @@ export class PlayerHudLayer {
     const hpBarY = height - HUD_MARGIN - HUD_HP_HEIGHT
     const sub1Y = hpBarY - HUD_GAP - HUD_SUB_HEIGHT
     const sub2Y = sub1Y - HUD_GAP - HUD_SUB_HEIGHT
+    const sub3Y = sub2Y - HUD_GAP - HUD_SUB_HEIGHT
 
     this.positionGroup(this.hpGroup, leftX, hpBarY, HUD_HP_WIDTH, HUD_HP_HEIGHT)
     this.positionGroup(this.mpGroup, leftX, sub1Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
     this.positionGroup(this.kiemGroup, leftX, sub2Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
+    this.positionGroup(this.wardGroup, leftX, sub3Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
   }
 
   updateHp(current: number, max: number): void {
@@ -130,8 +139,19 @@ export class PlayerHudLayer {
     this.updateGroup(this.kiemGroup, current, max, max > 0 ? label : '')
   }
 
+  // External ward pool — its own layer label; max is the holder's maxHp
+  // (shield fraction of health), NOT a spendable ward cap.
+  updateExternalWard(current: number, max: number): void {
+    this.updateGroup(
+      this.wardGroup,
+      current,
+      max,
+      max > 0 ? `Hộ Thể ${formatNumber(Math.floor(current))}` : '',
+    )
+  }
+
   setVisible(visible: boolean): void {
-    const groups = [this.hpGroup, this.mpGroup, this.kiemGroup]
+    const groups = [this.hpGroup, this.mpGroup, this.kiemGroup, this.wardGroup]
 
     for (const group of groups) {
       this.setGroupVisible(group, visible && (group === this.hpGroup || group.visible))
@@ -145,7 +165,7 @@ export class PlayerHudLayer {
 
     this.destroyed = true
 
-    for (const group of [this.hpGroup, this.mpGroup, this.kiemGroup]) {
+    for (const group of [this.hpGroup, this.mpGroup, this.kiemGroup, this.wardGroup]) {
       group.background.destroy()
       group.fill.destroy()
       group.label.destroy()
@@ -157,6 +177,7 @@ export class PlayerHudLayer {
     height: number,
     fontSize: string,
     initialVisible: boolean,
+    fillColor = PLAYER_HUD_HP_COLOR,
   ): HudRectGroup {
     const depth = DEPTH_OVERLAY_UI + 2
 
@@ -167,7 +188,7 @@ export class PlayerHudLayer {
       .setDepth(depth)
 
     const fill = this.scene.add
-      .rectangle(0, 0, width, height, PLAYER_HUD_HP_COLOR)
+      .rectangle(0, 0, width, height, fillColor)
       .setOrigin(0, 0.5)
       .setDepth(depth + 1)
 

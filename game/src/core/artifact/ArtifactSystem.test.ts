@@ -23,7 +23,6 @@ function createCombatEntity(id: string, overrides: Partial<CombatEntity> = {}): 
     maxHp: 1000,
     currentMp: 0,
     currentSwordIntent: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,

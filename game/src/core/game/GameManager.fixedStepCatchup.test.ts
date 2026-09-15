@@ -39,7 +39,6 @@ function createAttackerPlayer(): CombatEntity {
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,

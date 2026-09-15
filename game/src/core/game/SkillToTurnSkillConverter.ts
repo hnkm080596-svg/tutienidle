@@ -189,14 +189,14 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
   // Buff effect (e.g. thanh_tuyen_duong_linh, dia_tru_thua_thien, or specializations)
   const buffEffect = effective.effects.find(isBuffEffect)
   if (buffEffect?.buffId) {
-    turnSkill.appliesBuff = {
+    turnSkill.appliesBuffs = [{
       definitionId: buffEffect.buffId,
-      target: isSelf ? 'self' : 'target',
+      target: isSelf ? 'self' : 'action_targets',
       // M10 (ARCH-008) — authored duration override (e.g. duong_linh_tuyen
       // spec: 8) must reach BuffSystem.apply; without it the registry
       // default silently wins (5.988 instead of 7.984 under resist 0.998).
-      ...(buffEffect.duration !== undefined ? { duration: buffEffect.duration } : {}),
-    }
+      ...(buffEffect.duration !== undefined ? { durationOverride: buffEffect.duration } : {}),
+    }]
   }
 
   // Debuff and add_stack effects

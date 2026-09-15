@@ -90,8 +90,8 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // đọc fallback từ đây nữa. Giữ để UI/tooltip hiển thị.
   castTime?: number
 
-  // Lượng tài nguyên cần để cast, ý nghĩa tuỳ resourceType (mana, rage,
-  // sword_intent, momentum) — 'none' thì KHÔNG khai field này (skill free,
+  // Lượng tài nguyên cần để cast, ý nghĩa tuỳ resourceType (mana,
+  // sword_intent, the) — 'none' thì KHÔNG khai field này (skill free,
   // runtime không đọc cost).
   cost?: number
 
@@ -170,12 +170,6 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // BattleSystem.ts's missile-resolve callback.
   grantsSwordIntentPerHit?: boolean
 
-  // Thể Tu (Combat Rework Phase 7) — đánh TRÚNG (không tính né) thì +N
-  // Momentum (CombatEntity.currentMomentum, xem CombatTypes.ts's
-  // MAX_MOMENTUM) — cùng hook missile-resolve callback với
-  // grantsSwordIntentPerHit, khác ở chỗ theo LƯỢNG thay vì cố định +1.
-  grantsMomentumPerHit?: number
-
   // Thể Tu (Combat Rework Phase 7) — đánh TRÚNG thì trừ thêm N vào
   // target.currentBreakGauge (nếu target có, xem CombatEntity.ts) —
   // KHÔNG qua Damage Engine/mitigation, cùng tinh thần Detonate. Chạm
@@ -184,7 +178,7 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   breakDamagePerHit?: number
 
   // Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — mỗi lần CAST
-  // (không phải mỗi đòn TRÚNG như grantsMomentumPerHit) skill này thì
+  // (không phải mỗi đòn TRÚNG như grantsSwordIntentPerHit) skill này thì
   // +source.skillStats.hoaTheGainPerCast vào currentHoaThe (0 nếu chưa mua
   // node "Tụ Hỏa" — nền của stat đó là 0), xem BattleSystem.castSkill().
   grantsHoaThePerCast?: boolean

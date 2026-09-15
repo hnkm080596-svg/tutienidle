@@ -16,7 +16,7 @@ function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
     id: 'p', name: 'p', type: 'player', baseStats: stats, stats,
     currentHp: 100, maxHp: 100, currentMp: 50, maxMp: 50,
-    currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
+    currentSwordIntent: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
     ...overrides,
@@ -138,6 +138,17 @@ describe('buildTurnSkillPresentation (Slice 7 Task 4)', () => {
 
     expect(result.special.state).toBe('not_your_turn')
     expect(result.special.cooldownRemaining).toBe(2)
+  })
+
+  // The Tu Reimagined (Task 22) — emblemOnly slots (Phan Chinh) are
+  // passive emblems: engine never selects them, bar shows them locked
+  // (name renders via display meta; never tappable/ready).
+  it('emblemOnly slot → state locked (không bao giờ ready/not_your_turn)', () => {
+    const b = battle()
+    b.players[0]!.special!.skill.emblemOnly = true
+
+    expect(buildTurnSkillPresentation(b, true).special.state).toBe('locked')
+    expect(buildTurnSkillPresentation(b, false).special.state).toBe('locked')
   })
 })
 

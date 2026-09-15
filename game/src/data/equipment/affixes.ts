@@ -247,9 +247,10 @@ export const affixes: Affix[] = [
   // Thủy/Kim/Thổ Tu (2026-08-15) — mỗi hành thêm 1 affix Power (song
   // hành prefix_fire_power/prefix_wood_power) + 1 affix theo ĐÚNG cơ
   // chế riêng của hành đó (Thủy: speed cho lối chơi ra đòn nhanh hơn
-  // giữ Làm Chậm; Thổ: thornsPercent cho Thạch Giáp — Kim tái dùng
-  // thẳng suffix_ailment_potency có sẵn ở trên, khuếch đại Chảy Máu,
-  // không cần thêm affix riêng).
+  // giữ Làm Chậm; Kim tái dùng thẳng suffix_ailment_potency có sẵn ở
+  // trên, khuếch đại Chảy Máu, không cần thêm affix riêng). The Tu
+  // Reimagined (spec 2026-09-15 T12): generic thorns stat retired — the
+  // "Bàn Thạch" thorns affix is gone with the stat.
   // Turn-based conversion (2026-09-04): cooldownReduction retired —
   // affix Lưu Thủy chuyển sang speed, cùng cơ chế giữ nhịp.
   {
@@ -304,16 +305,4 @@ export const affixes: Affix[] = [
     ],
   },
 
-  {
-    id: 'suffix_thorns',
-    name: 'Bàn Thạch',
-    stat: 'thornsPercent',
-    kind: 'suffix',
-    pool: 'specialized',
-    tiers: [
-      { tier: 1, min: 0.02, max: 0.05 },
-      { tier: 2, min: 0.06, max: 0.1 },
-      { tier: 3, min: 0.11, max: 0.16 },
-    ],
-  },
 ]

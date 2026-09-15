@@ -54,7 +54,6 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
     maxHp: 1_000_000,
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,

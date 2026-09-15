@@ -68,7 +68,7 @@ export function calculateComponentDamage(
 /**
  * Tổng base damage (trước multiplier/crit) của toàn bộ component
  * trong 1 skill — CombatSystem.resolveHit() áp multiplier/crit/
- * block/endurance/ward/leech/thorns lên đúng 1 số tổng này, thống
+ * block/endurance/ward/leech lên đúng 1 số tổng này, thống
  * nhất với đường đi của damage type đơn giản (physical/primordial),
  * không tách riêng nữa.
  */

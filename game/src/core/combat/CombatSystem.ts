@@ -63,6 +63,28 @@ export interface SurviveEffectsPolicy {
   cleanseDebuffs?: boolean
 }
 
+/**
+ * The Tu Reimagined (plan Task 9) — ordered survive-lethal contract.
+ * killIfDead iterates the session's sources; the first `survived:true`
+ * wins. `grantBuffId`/`grantBuffDurationOverride`/`cleanseDebuffs` are
+ * applied through the session's SurviveEffectsPolicy (buffSystem +
+ * registry) — the grant is OPTIONAL: a free survive (e.g. an already-
+ * active Bat Tu buff) returns bare {survived:true} so repeat lethals
+ * never refresh the buff (review-#6 fix).
+ */
+export type SurviveLethalResult =
+  | { survived: false }
+  | {
+      survived: true
+      grantBuffId?: string
+      grantBuffDurationOverride?: number
+      cleanseDebuffs?: boolean
+    }
+
+export interface SurviveLethalSource {
+  trySurvive(entity: CombatEntity): SurviveLethalResult
+}
+
 export class CombatSystem {
   readonly vitals: EntityVitalsSystem
 
@@ -78,6 +100,12 @@ export class CombatSystem {
     playerEntityId: string
     guard: SurviveLethalGuard
     surviveEffects?: SurviveEffectsPolicy
+    /**
+     * The Tu Reimagined (plan Task 9, D9) — ordered sources evaluated
+     * BEFORE the talent guard: the Bat Tu ultimate is the first line of
+     * survival; the talent is the extra life once the ult is spent.
+     */
+    extraSources?: SurviveLethalSource[]
   } | null = null
 
   // Trigger/Action rework Task 10 (2026-08-31 spec) — onKill firing.
@@ -104,6 +132,7 @@ export class CombatSystem {
       playerEntityId: string
       guard: SurviveLethalGuard
       surviveEffects?: SurviveEffectsPolicy
+      extraSources?: SurviveLethalSource[]
     } | null,
   ): void {
     this.surviveLethalSession = session
@@ -117,7 +146,7 @@ export class CombatSystem {
 
   // finalDamagePercent/finalDamageReductionPercent (affix top-tier, thay
   // Supreme Strength/Intelligence) — HIT-layer multiplier: dùng chung bởi
-  // resolveAttack() VÀ mọi damage phản hồi trực tiếp (thorns, ward-break,
+  // resolveAttack() VÀ mọi damage phản hồi trực tiếp (ward-break,
   // reaction) để affix này thật sự áp dụng xuyên suốt pipeline, không chỉ
   // đòn đánh chính. KHÔNG áp cho DoT — dotResistancePercent là lớp giảm
   // duy nhất của DoT (stat-system-reimagined Task 6, D13).
@@ -237,6 +266,8 @@ export class CombatSystem {
 
       wardAbsorbed: 0,
 
+      externalWardAbsorbed: 0,
+
       manaShieldAbsorbed: 0,
 
       // Settled AFTER ward/MP-shield absorb, HP apply and
@@ -319,6 +350,8 @@ export class CombatSystem {
 
       wardAbsorbed: 0,
 
+      externalWardAbsorbed: 0,
+
       manaShieldAbsorbed: 0,
 
       targetKilled: false,
@@ -371,13 +404,31 @@ export class CombatSystem {
     // BattleSystem.updateRegen().
     target.turnsSinceLastHitLanded = 0
 
+    // The Tu Reimagined (plan Task 11, D3) — external ward absorbs
+    // FIRST: the source-tagged, protection-only pool takes the hit
+    // before the native ward. result.wardAbsorbed keeps the TOTAL for
+    // the existing events/UI; externalWardAbsorbed splits the new layer.
+    let externalWardAbsorbed = 0
+
+    if (target.externalWard && target.externalWard.amount > 0) {
+      externalWardAbsorbed = Math.min(target.externalWard.amount, result.finalDamage)
+      target.externalWard.amount -= externalWardAbsorbed
+
+      if (target.externalWard.amount <= 0) {
+        target.externalWard = undefined
+      }
+    }
+
     // Ward hấp thụ TRƯỚC currentHp — phần dư (nếu ward không đủ hoặc
     // không có) mới thật sự trừ máu.
-    const wardAbsorbed = Math.min(target.currentWard, result.finalDamage)
+    const remainingAfterExternal = result.finalDamage - externalWardAbsorbed
+    const nativeWardAbsorbed = Math.min(target.currentWard, remainingAfterExternal)
 
-    target.currentWard -= wardAbsorbed
+    target.currentWard -= nativeWardAbsorbed
 
-    let hpDamage = result.finalDamage - wardAbsorbed
+    const wardAbsorbed = externalWardAbsorbed + nativeWardAbsorbed
+
+    let hpDamage = remainingAfterExternal - nativeWardAbsorbed
 
     // Pháp Tu Redesign (magicpath) — Mana Shield: SAU Ward, TRƯỚC HP.
     // % phần damage CÒN LẠI (không phải finalDamage gốc — Ward đã che
@@ -395,10 +446,12 @@ export class CombatSystem {
     // D11 — hpDamage is the ACTUAL HP the target lost: the vitals
     // authority clamps at 0, so an overkill hit counts only the HP that
     // existed. The returned delta, not the pre-clamp amount, is what
-    // leech/thorns/on-taken triggers scale on.
+    // leech/on-taken triggers scale on.
     const actualHpDamage = this.vitals.applyHpDamageFromSnapshot(target, hpDamage, result.finalDamage, 'damage', targetBefore, source.id)
 
     result.wardAbsorbed = wardAbsorbed
+
+    result.externalWardAbsorbed = externalWardAbsorbed
 
     result.manaShieldAbsorbed = manaShieldAbsorbed
 
@@ -430,6 +483,8 @@ export class CombatSystem {
 
       wardAbsorbed,
 
+      externalWardAbsorbed,
+
       manaShieldAbsorbed,
 
       damageType: result.damageType,
@@ -445,20 +500,16 @@ export class CombatSystem {
       this.applyHealing(source, actualHpDamage * clampStatValue('leechPercent', source.stats.leechPercent), source.id, 'leech')
     }
 
-    // Thorns — defender-side on-hit-taken trigger: only on `taken`,
-    // scaled on actualHpDamage. Trừ thẳng HP nguồn, KHÔNG lặp lại
-    // pipeline (không tự roll dodge/crit/thorns ngược lại) — tránh vòng
-    // lặp phản đòn vô hạn giữa 2 bên đều có thorns.
-    if (actualHpDamage > 0 && target.stats.thornsPercent > 0) {
-      this.applyModifiedDirectDamage(source, actualHpDamage * target.stats.thornsPercent, target, 'thorns')
-    }
-
     // Pháp Tu (Thổ Tu) — "Khiên Nổ": Ward VỪA hấp thụ xong VÀ vừa vỡ
     // hẳn (currentWard chạm 0 sau đòn này) thì phản thêm 1 cục damage
     // riêng vào NGUỒN, tỉ lệ theo wardMax (khiên càng lớn nổ càng
-    // đau) — tách biệt hoàn toàn khỏi thornsPercent (đó là % theo
-    // damage NHẬN vào, cái này % theo DUNG LƯỢNG khiên tối đa).
-    if (wardAbsorbed > 0 && target.currentWard <= 0 && target.stats.wardBreakDamagePercent > 0) {
+    // đau). The Tu Reimagined (spec 2026-09-15 T12): generic thorns stat
+    // retired — ward-break is the surviving defender-side kickback.
+    // Task 11 — the gate reads the NATIVE component only: an
+    // external-only absorb with currentWard already 0 never procs
+    // ward break, and externalWard never feeds its wardMax-scaled
+    // magnitude (it isn't the holder's own ward).
+    if (nativeWardAbsorbed > 0 && target.currentWard <= 0 && target.stats.wardBreakDamagePercent > 0) {
       this.applyModifiedDirectDamage(source, target.stats.wardMax * target.stats.wardBreakDamagePercent, target, 'ward_break')
     }
 
@@ -468,8 +519,8 @@ export class CombatSystem {
     // and SurviveLethalGuard have all run.
     result.targetKilled = !target.alive
 
-    // Thorns có thể giết ngược nguồn — kiểm tra luôn, target là "kẻ
-    // giết" trong trường hợp này.
+    // Ward-break kickback can kill the source — check it too; the
+    // target is the "killer" in that case.
     this.killIfDead(source, target.id)
 
     return result
@@ -520,7 +571,7 @@ export class CombatSystem {
     // economy: dotResistancePercent (minus authored penetration) is the
     // ONLY mitigation. finalDamageMultiplier (finalDamagePercent/
     // finalDamageReductionPercent) is a HIT-layer lever and does NOT
-    // apply here; ward/MP shield/leech/thorns never see DoT either.
+    // apply here; ward/MP shield/leech never see DoT either.
     const finalDamage = Math.max(0, rawDamage * (1 - mitigation))
 
     // hpDamage contract (review 2026-09-15): DoT has no absorb layers,
@@ -578,58 +629,87 @@ export class CombatSystem {
     // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — đòn lẽ ra
     // chết thành sống sót HP = 1, trừ 1 lượt của trận. KHÔNG kích hoạt
     // trong trận Độ Kiếp (session null — GameManager.beginTribulation xoá).
+    //
+    // The Tu Reimagined (plan Task 9, D9) — the session's ordered
+    // extraSources run BEFORE the talent guard: Bat Tu Ba The's ultimate
+    // is the first line; the talent charge is the extra life once the
+    // ult is spent/on cooldown. Each source returns a result object —
+    // HP=1 plus an OPTIONAL buff grant (a free survive grants nothing,
+    // so an active buff can never be refreshed by repeat lethals).
     const surviveSession = this.surviveLethalSession
 
-    if (
-      surviveSession &&
-      entity.id === surviveSession.playerEntityId &&
-      surviveSession.guard.tryConsumeUse()
-    ) {
-      entity.currentHp = 1
+    if (surviveSession && entity.id === surviveSession.playerEntityId) {
+      const applySurviveResult = (
+        result: { grantBuffId?: string; grantBuffDurationOverride?: number; cleanseDebuffs?: boolean },
+      ) => {
+        entity.currentHp = 1
 
-      // v4 (spec 2026-09-03 §4.1) — "độ thân cũng là độ tâm": tẩy mọi
-      // debuff đang bám trên player + áp Tử Sinh Ngộ. Chỉ chạy khi
-      // session mang surviveEffects (GameManager wiring set từ battle
-      // hiện tại — BuffSystem của PLAYER, không phải của địch).
-      const effects = surviveSession.surviveEffects
+        // v4 (spec 2026-09-03 §4.1) — "độ thân cũng là độ tâm": tẩy mọi
+        // debuff đang bám trên player + áp buff sống sót. Chỉ chạy khi
+        // session mang surviveEffects (GameManager wiring set từ battle
+        // hiện tại — BuffSystem của PLAYER, không phải của địch).
+        const effects = surviveSession.surviveEffects
 
-      if (effects) {
-        if (effects.cleanseDebuffs !== false) {
-          for (const buff of effects.buffSystem.getAll()) {
-            if (buff.polarity === 'debuff' && buff.targetId === entity.id) {
-              effects.buffSystem.remove(buff.id, buff.sourceId)
+        if (effects) {
+          if (result.cleanseDebuffs !== false) {
+            for (const buff of effects.buffSystem.getAll()) {
+              if (buff.polarity === 'debuff' && buff.targetId === entity.id) {
+                effects.buffSystem.remove(buff.id, buff.sourceId)
+              }
+            }
+          }
+
+          const grantId = result.grantBuffId
+
+          if (grantId) {
+            const grantBuff = effects.registry.get(grantId)
+
+            if (grantBuff) {
+              // clearsCcOnApply (Bat Tu Ba The, Task 9/11) — the grant
+              // path strips the pool's cc effects before the buff lands,
+              // same as the appliesBuffs resolution path.
+              if (grantBuff.clearsCcOnApply) {
+                effects.buffSystem.clearCcEffects()
+              }
+              effects.buffSystem.apply(grantBuff, entity, entity, effects.registry, result.grantBuffDurationOverride)
             }
           }
         }
 
-        const grantId = effects.grantBuffId
+        // Event vitals của đòn damage (emit TRƯỚC killIfDead) đã mang
+        // killed = true vì HP chạm 0 — phát thêm event hiệu chỉnh SAU khi
+        // guard giữ lượt sống sót để consumer (HUD/scene) đọc trạng thái
+        // CUỐI là còn sống, không kẹt ở hình ảnh "đã chết".
+        this.vitals.emitCurrent(entity, 'survive_lethal', 1, {
+          hp: 0,
+          ward: entity.currentWard,
+          mp: entity.currentMp,
+        }, killerId)
 
-        if (grantId) {
-          const grantBuff = effects.registry.get(grantId)
+        this.eventBus.emit('talent_survive_lethal', {
+          type: 'talent_survive_lethal',
+          entityId: entity.id,
+          sourceId: killerId,
+        })
+      }
 
-          if (grantBuff) {
-            effects.buffSystem.apply(grantBuff, entity, entity, effects.registry)
-          }
+      for (const source of surviveSession.extraSources ?? []) {
+        const result = source.trySurvive(entity)
+
+        if (result.survived) {
+          applySurviveResult(result)
+          return
         }
       }
 
-      // Event vitals của đòn damage (emit TRƯỚC killIfDead) đã mang
-      // killed = true vì HP chạm 0 — phát thêm event hiệu chỉnh SAU khi
-      // guard giữ lượt sống sót để consumer (HUD/scene) đọc trạng thái
-      // CUỐI là còn sống, không kẹt ở hình ảnh "đã chết".
-      this.vitals.emitCurrent(entity, 'survive_lethal', 1, {
-        hp: 0,
-        ward: entity.currentWard,
-        mp: entity.currentMp,
-      }, killerId)
-
-      this.eventBus.emit('talent_survive_lethal', {
-        type: 'talent_survive_lethal',
-        entityId: entity.id,
-        sourceId: killerId,
-      })
-
-      return
+      if (surviveSession.guard.tryConsumeUse()) {
+        const effects = surviveSession.surviveEffects
+        applySurviveResult({
+          grantBuffId: effects?.grantBuffId,
+          cleanseDebuffs: effects?.cleanseDebuffs,
+        })
+        return
+      }
     }
 
     entity.alive = false
@@ -661,7 +741,7 @@ export class CombatSystem {
   // "currently casting skill" concept on its own — callers that only
   // have a killerId (applyDirectDamage/applyModifiedDirectDamage/
   // applyDotDamage today) skip firing, same as non-skill deaths
-  // (DoT ticks, thorns, ward-break).
+  // (DoT ticks, ward-break).
   //
   // onDeath is intentionally NOT fired here (2026-09-01 review ruling,
   // overriding the original brief's Step 3 snippet): onDeath is meant to

@@ -47,7 +47,6 @@ export interface EnemyStatInput {
   special?: {
     blockChance?: number
     blockEffectiveness?: number
-    thornsPercent?: number
     leechPercent?: number
     wardMax?: number
     wardRegenPerTurn?: number
@@ -248,10 +247,17 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     wardBreakDamagePercent: input.special?.wardBreakDamagePercent ?? 0,
     manaShieldPercent: input.special?.manaShieldPercent ?? 0,
     leechPercent: input.special?.leechPercent ?? 0,
-    thornsPercent: input.special?.thornsPercent ?? 0,
+    // The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;
+    // enemies never had a real source for it anyway (special input
+    // dropped in the same sweep).
     // D18 — enemies have no authored healing-effectiveness channel yet;
     // the stat exists on Stats but stays 0 until a real source needs it.
     healingEffectivenessPercent: 0,
+    // The Tu An reactive chances (spec 2026-09-15) — attribute-derived
+    // player-path stats; enemies have no attribute journey so always 0.
+    counterChance: 0,
+    protectChance: 0,
+    followUpChance: 0,
     hpRegenPerTurn: input.hpRegenPerTurn ?? 0,
     manaRegenPerTurn: input.special?.manaRegenPerTurn ?? 0,
     finalDamagePercent: 0,

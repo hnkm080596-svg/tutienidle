@@ -60,6 +60,58 @@ export const CORE_SKILLS: Skill[] = [
     equipped: false,
   },
 
+  // The Tu Reimagined (spec 2026-09-15, T6/section 2.3) — Hủy Quyền:
+  // mortal physical basic-tier sibling of tram, cast-leveled through the
+  // same CAST_LEVELING_THRESHOLDS table (Lv3 = 10.000 casts). Reaching
+  // Lv3 is the ONLY gate revealing the_tu_an at the Initiation Ritual.
+  {
+    id: 'huy_quyen',
+
+    name: 'Hủy Quyền',
+
+    description: 'Quyền pháp phàm nhân thuần túy lấy lực phá thế, không tốn tài nguyên.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 3,
+
+    experience: 0,
+
+    totalExperience: 0,
+
+    cooldown: 1,
+
+
+    target: 'enemy',
+
+    effects: [],
+
+    triggers: [
+      {
+        trigger: 'onCast',
+        actions: [
+          {
+            type: 'dealDamage',
+
+            value: 1,
+
+            damageType: 'physical',
+          },
+        ],
+      },
+    ],
+
+    execution: { kind: 'attack_speed' },
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
   // Há»a Tu (Plans/magicpathgeneral + Plans/FirePath, 2026-08-21) â€”
   // THAY Háº²N kit 3-skill+1-passive cÅ© (xich_viem_chuong/viem_hai/
   // bao_viem/passive_bao_viem_focus, Ä‘Ã£ xoÃ¡). Framework má»›i: 1 Active

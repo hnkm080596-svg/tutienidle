@@ -73,15 +73,14 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
   armor: {
     tendency: 'Thủ',
     mainStats: ['defense'],
+    // The Tu Reimagined (spec 2026-09-15 section 3.3): block/endurance
+    // are the_tu-domain stats — domain-gated data can't be authored
+    // untagged, so they leave the equipment pools entirely.
+    // generic thorns stat retired with the stat (spec section 7.13/T12).
     substats: [
       'maxHp',
-      'blockChance',
-      'blockEffectiveness',
-      'enduranceThreshold',
-      'endurancePercent',
       'criticalAvoidance',
       'dotResistancePercent',
-      'thornsPercent',
       'hpRegenPerTurn',
       'finalDamageReductionPercent',
       ...ELEMENT_RESISTANCE_STATS,
@@ -95,7 +94,6 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
       'ailmentResistPercent',
       'hpRegenPerTurn',
       'wardRegenPerTurn',
-      'endurancePercent',
       'finalDamageReductionPercent',
       ...ELEMENT_RESISTANCE_STATS,
     ],

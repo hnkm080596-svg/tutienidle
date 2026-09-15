@@ -13,7 +13,7 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
-import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
+import { CULTIVATION_PATH_KITS, isCultivationPathOffered } from '@/core/player/CultivationPathKit'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import type { KiemTuRoute } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
@@ -36,7 +36,15 @@ const cooldownSeconds = computed(() => {
 // thêm path mới (Thủy/Kim/Thổ Tu sau này) chỉ cần thêm entry vào
 // CultivationPathKit.ts, KHÔNG cần sửa file này (đúng nguyên bản trước
 // khi dời từ CharacterPanel.vue).
-const availablePaths = computed(() => Object.values(CULTIVATION_PATH_KITS))
+// The Tu Reimagined (T6) — filter through the same predicate the ritual
+// enforces (isCultivationPathOffered): the_tu_an stays hidden until
+// huy_quyen is Lv3; ungated kits always show. stateVersion read keeps
+// the list live as skillLevels ticks.
+const availablePaths = computed(() => {
+  stateVersion.value
+
+  return Object.values(CULTIVATION_PATH_KITS).filter((kit) => isCultivationPathOffered(kit, player.$state))
+})
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
 // (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng

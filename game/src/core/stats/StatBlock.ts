@@ -81,7 +81,7 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     wardBreakDamagePercent: 0,
     manaShieldPercent: 0,
     leechPercent: 0,
-    thornsPercent: 0,
+    // generic thorns stat retired (spec 2026-09-15 T12).
     healingEffectivenessPercent: 0,
     hpRegenPerTurn: 0,
     manaRegenPerTurn: 0,
@@ -91,6 +91,11 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     chanceToIgnoreResistance: 0,
     ailmentResistPercent: 0,
     ailmentPotencyPercent: 0,
+    // The Tu An reactive chances (spec 2026-09-15 section 3.2) — base 0;
+    // the only source is the the_tu_an attribute->chance emission.
+    counterChance: 0,
+    protectChance: 0,
+    followUpChance: 0,
     skillDamagePercent: 0,
     elementApplicationPercent: 0,
     reactionEffectPercent: 0,

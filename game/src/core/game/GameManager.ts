@@ -21,7 +21,7 @@ import type { BuffDefinition } from '../buff/BuffDefinition'
 import { NodeRegistry } from '../progression/NodeRegistry'
 
 import { SkillManager } from '../skill/SkillManager'
-import { SkillSystem } from '../skill/SkillSystem'
+import { CAST_LEVELING_THRESHOLDS, SkillSystem } from '../skill/SkillSystem'
 import { PassiveSystem } from '../skill/PassiveSystem'
 import type { Skill } from '../skill/Skill'
 
@@ -157,6 +157,15 @@ import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentati
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE } from '../../data/skill/TurnReactionPathSkills'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import {
+  buildTheTuAnKit,
+  buildTheTuKit,
+  type TheTuAnKit,
+  type TheTuKit,
+} from '../../data/skill/TheTuSkills'
+import { collectTheTuKitModifiers } from '../the-tu/TheTuKitModifiers'
+import { collectTheTuAnMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
+import { TheTuBatTuSurvival } from '../the-tu/TheTuBatTuSurvival'
 import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
 
 /**
@@ -714,6 +723,18 @@ export class GameManager {
       resolvePlayerBasicAttack: (player) => this.resolvePlayerBasicAttack(player),
       resolvePlayerSpecialUltimate: (player) => this.resolvePlayerSpecialUltimate(player),
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
+      // The Tu Reimagined (plan Task 9, D9) — Cuong Chien only: the
+      // survival source reads the participant's live ultimate slot and
+      // buff pool; node-resolved duration comes off the baked kit clone.
+      buildTheTuBatTuSurvival: (player, participant) => {
+        if (player.cultivationPath !== 'the_tu') return undefined
+        if (this.progressionOps.getNodeLevel('cuong_chien', player) <= 0) return undefined
+
+        return new TheTuBatTuSurvival({
+          ultimateSlot: () => participant.ultimate,
+          buffs: participant.buffs,
+        })
+      },
     })
 
     // Tick orchestration (C3 split) - constructed LAST because it reads
@@ -849,12 +870,62 @@ export class GameManager {
       return BASIC_ATTACKS_BY_BUILD.kiem_tu!
     }
 
+    if (player.cultivationPath === 'the_tu') {
+      // The Tu Reimagined (spec section 5, INV-3) — root-owned kit, else
+      // the generic melee fallback only.
+      return this.resolveTheTuKit(player)?.basic ?? GENERIC_PHYSICAL_BASIC
+    }
+
+    if (player.cultivationPath === 'the_tu_an') {
+      // Spec section 6.1 — fixed kit granted at path choice; the built
+      // clone's grantsBuffsAtBuild plants ung_the + owned-root markers.
+      return this.resolveTheTuAnKit(player).basic
+    }
+
     if (player.cultivationPath === 'phap_tu') {
       const element = this.progressionOps.getPhapTuThuanElement() ?? 'fire'
       return BASIC_ATTACKS_BY_BUILD[`phap_tu_${element}`] ?? GENERIC_PHYSICAL_BASIC
     }
 
     return GENERIC_PHYSICAL_BASIC
+  }
+
+  /**
+   * The Tu Reimagined (plan Task 6) — resolve the owned branch root
+   * (cuong_chien XOR tran_the, excludesNode mutex) into a participant-
+   * local kit clone with collectTheTuKitModifiers baked in. No root ->
+   * undefined (INV-3 fallback is the caller's job).
+   */
+  private resolveTheTuKit(player: PlayerData): TheTuKit | undefined {
+    const mods = collectTheTuKitModifiers(this.nodeRegistry, player)
+
+    if (this.progressionOps.getNodeLevel('cuong_chien', player) > 0) {
+      return buildTheTuKit('cuong_chien', mods)
+    }
+
+    if (this.progressionOps.getNodeLevel('tran_the', player) > 0) {
+      return buildTheTuKit('tran_the', mods)
+    }
+
+    return undefined
+  }
+
+  /**
+   * The Tu Reimagined (plan Task 14) — the An kit is fixed at path
+   * choice (spec 6.1); owned roots (ho_mon/phan_mon/tro_mon, non-mutex
+   * T9) only decide which mechanic markers get planted on the built
+   * basic clone's grantsBuffsAtBuild.
+   */
+  private resolveTheTuAnKit(player: PlayerData): TheTuAnKit {
+    const ownedRoots = (['ho_mon', 'phan_mon', 'tro_mon'] as const).filter(
+      (root) => this.progressionOps.getNodeLevel(root, player) > 0,
+    )
+
+    // Plan Task 20 — trunk economy + branch riders ride the one locked
+    // channel; baked into participant-local marker/payload clones here.
+    const mods = collectTheTuAnMechanicModifiers(this.nodeRegistry, player)
+
+    return buildTheTuAnKit(ownedRoots, mods)
   }
 
   /**
@@ -879,7 +950,18 @@ export class GameManager {
       return undefined
     }
 
-    // Mortal / pham_nhan — tram is the creation-granted basic skill.
+    // Mortal / pham_nhan — the slot-0 loadout occupant is the player's
+    // chosen basic-tier skill (spec 2026-09-15 section 2.3: huy_quyen
+    // is cast as a basic while mortal, its casts feeding the the_tu_an
+    // offer gate). Restricted to the cast-leveled basics family — any
+    // other slot-0 occupant (e.g. bat_kiem_thuat) keeps the creation-
+    // granted tram as the combat basic.
+    const equipped = this.skillManager.getEquippedInSlot(0)
+
+    if (equipped && equipped.id in CAST_LEVELING_THRESHOLDS) {
+      return equipped.id
+    }
+
     return 'tram'
   }
 
@@ -896,7 +978,33 @@ export class GameManager {
    */
   private resolvePlayerSpecialUltimate(
     player: PlayerData,
-  ): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition } {
+  ): {
+    special?: TurnSkillDefinition
+    ultimate?: TurnSkillDefinition
+    reactivePayloads?: Record<string, TurnSkillDefinition>
+    maxThe?: number
+  } {
+    // The Tu Reimagined (plan Task 6) — Hien kits are native
+    // TurnSkillDefinitions resolved by owned root (see resolveTheTuKit).
+    if (player.cultivationPath === 'the_tu') {
+      const kit = this.resolveTheTuKit(player)
+
+      return kit ? { special: kit.special, ultimate: kit.ultimate } : {}
+    }
+
+    // Spec section 6.1 — the fixed An kit (special/ultimate are not
+    // root-gated; roots gate the reactive mechanics via markers).
+    if (player.cultivationPath === 'the_tu_an') {
+      const kit = this.resolveTheTuAnKit(player)
+
+      return {
+        special: kit.special,
+        ultimate: kit.ultimate,
+        reactivePayloads: kit.reactivePayloads,
+        maxThe: kit.maxThe,
+      }
+    }
+
     if (player.cultivationPath !== 'phap_tu') {
       return {}
     }

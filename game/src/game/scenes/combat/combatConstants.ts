@@ -37,6 +37,9 @@ export const PLAYER_HUD_STROKE_COLOR = 0x241b1b
 export const PLAYER_HUD_HP_COLOR = 0xc94b4b
 export const PLAYER_HUD_MP_COLOR = 0x4a90d9
 export const PLAYER_HUD_KIEM_COLOR = 0xd4a72c
+// The Tu Reimagined (T22) — Son Nhac Ho The external-ward layer: pale
+// jade shield tone, visually distinct from HP (crimson) and The (gold).
+export const PLAYER_HUD_WARD_COLOR = 0x7ec8a9
 export const PLAYER_HUD_LABEL_COLOR = '#f4f4f0'
 
 // M13: cast-bar creation path retired with the 'cast'/'cast_start'

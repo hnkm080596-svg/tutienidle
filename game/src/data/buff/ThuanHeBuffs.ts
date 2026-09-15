@@ -63,17 +63,17 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     effects: [{ type: 'cc', ccEffect: 'root' }],
   },
 
-  // Kim B "Thu Giáp Kim Thân" — tự hoá thép, phản đòn.
+  // Kim B "Thu Giáp Kim Thân" — tự hoá thép. The Tu Reimagined (spec
+  // 2026-09-15 T12): generic thorns stat retired — defense is the payload.
   {
     id: 'kim_giap',
     name: 'Kim Giáp',
-    description: 'Thép Nhục Thu bọc thân — phòng ngự và phản đòn cùng tăng.',
+    description: 'Thép Nhục Thu bọc thân — phòng ngự tăng mạnh.',
     polarity: 'buff',
     duration: 6,
     stackMode: 'refresh',
     effects: [
       { type: 'statModifier', stat: 'defense', percent: 0.15 },
-      { type: 'statModifier', stat: 'thornsPercent', flat: 0.15 },
     ],
   },
 
@@ -81,14 +81,13 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
   {
     id: 'dia_tru',
     name: 'Địa Trụ',
-    description: 'Cột đất thiêng chống trời — khiên dày, hồi khiên, phản đòn.',
+    description: 'Cột đất thiêng chống trời — khiên dày, hồi khiên.',
     polarity: 'buff',
     duration: 6,
     stackMode: 'refresh',
     effects: [
       { type: 'statModifier', stat: 'wardMax', flat: 60 },
       { type: 'statModifier', stat: 'wardRegenPerTurn', flat: 6 },
-      { type: 'statModifier', stat: 'thornsPercent', flat: 0.1 },
     ],
   },
 
@@ -122,17 +121,20 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
   },
 
   // Biến thể Thổ C "Địa Trụ · Thứ" (spec §2.5, review round 1) — phản
-  // đòn: +40 wardMax/+25% thornsPercent. Buff riêng, cùng lý do trên.
+  // đòn: +40 wardMax/+25% wardBreakDamagePercent. The Tu Reimagined
+  // (spec 2026-09-15 T12): generic thorns stat retired — the retaliate
+  // fantasy rides Khiên Nổ (ward-break kickback on the attacker),
+  // keeping Thứ distinct from Bích's pure-shield line.
   {
     id: 'dia_tru_thu',
     name: 'Địa Trụ · Thứ',
-    description: 'Đất hóa gai nhọn — khiên mỏng hơn nhưng ai chạm vào cũng đau.',
+    description: 'Đất hóa gai nhọn — khiên mỏng hơn nhưng vỡ ra đòn chết người chạm.',
     polarity: 'buff',
     duration: 6,
     stackMode: 'refresh',
     effects: [
       { type: 'statModifier', stat: 'wardMax', flat: 40 },
-      { type: 'statModifier', stat: 'thornsPercent', flat: 0.25 },
+      { type: 'statModifier', stat: 'wardBreakDamagePercent', flat: 0.25 },
     ],
   },
 

@@ -33,7 +33,6 @@ function createCombatant(id: string): CombatEntity {
     maxHp: 1_000_000,
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,
@@ -104,7 +103,7 @@ describe('QA — TurnBattleSystem appliesBuff/appliesAilments vs unknown buff id
       cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 0 },
       targeting: { shape: 'single' },
-      appliesBuff: { definitionId: 'buff_id_not_in_registry', target: 'target' },
+      appliesBuffs: [{ definitionId: 'buff_id_not_in_registry', target: 'action_targets' }],
     })
 
     const system = new TurnBattleSystem(
@@ -144,7 +143,7 @@ describe('QA — TurnBattleSystem appliesBuff/appliesAilments vs unknown buff id
       cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 0 },
       targeting: { shape: 'single' },
-      appliesBuff: { definitionId: 'unrelated_buff', target: 'target' },
+      appliesBuffs: [{ definitionId: 'unrelated_buff', target: 'action_targets' }],
     })
 
     const system = new TurnBattleSystem(

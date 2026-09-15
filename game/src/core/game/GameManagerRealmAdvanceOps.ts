@@ -4,7 +4,7 @@ import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { CultivationPathId } from '../player/CultivationPathKit'
-import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
+import { CULTIVATION_PATH_KITS, isCultivationPathOffered } from '../player/CultivationPathKit'
 import { grantCultivationPathRealmReward as grantPathRealmReward } from '../player/CultivationPathSystem'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID, BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
@@ -160,6 +160,14 @@ export class GameManagerRealmAdvanceOps {
 
     const kit = CULTIVATION_PATH_KITS[pathId]
 
+    // The Tu Reimagined (T6) — kit.offerGate is the offer-time contract;
+    // enforce the same predicate here so a stale/hidden offer can never
+    // slip through the ritual (isCultivationPathOffered is also what the
+    // Quan Khi panel filters on).
+    if (!isCultivationPathOffered(kit, player)) {
+      return false
+    }
+
     player.cultivationPath = pathId
 
     this.learnTechnique(kit.techniqueId)
@@ -188,6 +196,13 @@ export class GameManagerRealmAdvanceOps {
       for (const skillId of ['ngu_kiem_thuat', 'kiem_khai_thien_mon', 'van_kiem_trieu_tong']) {
         this.deps.skillSystem.unequip(skillId)
       }
+    } else if (pathId === 'the_tu' || pathId === 'the_tu_an') {
+      // The Tu Reimagined (T1) — both Thể Tu paths resolve their kit at
+      // battle build from the chosen progression root (no loadout
+      // skills). The ritual only strips the mortal basics so a lingering
+      // tram/huy_quyen cannot occupy the single mortal slot.
+      this.deps.skillSystem.unequip('tram')
+      this.deps.skillSystem.unequip('huy_quyen')
     } else if (kit.skillIds) {
       kit.skillIds.forEach((skillId, index) => {
         this.deps.progressionOps.learnSkill(skillId)

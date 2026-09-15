@@ -8,8 +8,10 @@ import type { CombatEntity } from './CombatEntity'
 //   miss     — accuracy/dodge roll fails; nothing lands
 //   absorbed — lands, ward + MP shield absorb everything (hpDamage == 0)
 //   taken    — hpDamage > 0
-// Only `taken` fires damage-proportional triggers: leechPercent and
-// thornsPercent read hpDamage (post-absorb HP loss), never finalDamage.
+// Only `taken` fires damage-proportional triggers: leechPercent reads
+// hpDamage (post-absorb HP loss), never finalDamage. generic thorns stat
+// retired (spec 2026-09-15 T12) — leech is the surviving proportional
+// trigger these tests exercise.
 // Landed (absorbed OR taken) still resets turnsSinceLastHitLanded and
 // still rolls ailment application; DoT never touches any of it.
 
@@ -26,7 +28,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
-    currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,
@@ -82,11 +83,11 @@ describe('hit outcome semantics (INV-3)', () => {
     expect(target.currentHp).toBe(1000)
   })
 
-  it('absorbed: full ward absorb -> outcome absorbed, no thorns, no leech, timer still resets', () => {
+  it('absorbed: full ward absorb -> outcome absorbed, no leech, timer still resets', () => {
     const combat = new CombatSystem(new EventBus())
     // leechPercent 0.2 stays under the 0.25 StatMetadata cap.
     const source = attacker({ stats: createBaseStats({ might: 100, accuracyRating: 1000, criticalRate: 0, leechPercent: 0.2 }) })
-    const target = defender({ currentWard: 1000, turnsSinceLastHitLanded: 3 }, { thornsPercent: 0.5 })
+    const target = defender({ currentWard: 1000, turnsSinceLastHitLanded: 3 })
 
     const result = combat.resolveActionHit(source, target, PHYSICAL_HIT)
 
@@ -95,22 +96,18 @@ describe('hit outcome semantics (INV-3)', () => {
     expect(result.outcome).toBe('absorbed')
     expect(result.wardAbsorbed).toBeCloseTo(result.finalDamage, 5)
     // D11: damage-proportional triggers read hpDamage — fully absorbed
-    // means NOTHING for either side, even with nonzero leech/thorns.
+    // means NOTHING for the attacker, even with nonzero leech.
     expect(source.currentHp).toBe(500)
-    expect(source.currentHp).not.toBeLessThan(500) // no thorns kickback
     // Landed (not dodged) still delays ward regen.
     expect(target.turnsSinceLastHitLanded).toBe(0)
     expect(target.currentHp).toBe(1000)
   })
 
-  it('taken: partial ward absorb -> thorns/leech scale on hpDamage only', () => {
+  it('taken: partial ward absorb -> leech scales on hpDamage only', () => {
     const combat = new CombatSystem(new EventBus())
-    // leechPercent 0.2 (under the 0.25 cap) vs thorns 0.3: asymmetric so
-    // each direction's hpDamage read stays distinguishable — net source
-    // delta = hpDamage*(0.2-0.3).
     const source = attacker({ stats: createBaseStats({ might: 100, accuracyRating: 1000, criticalRate: 0, leechPercent: 0.2 }) })
     // might 100 => finalDamage ~80; ward 4 absorbs 4 -> hpDamage ~76.
-    const target = defender({ currentWard: 4 }, { thornsPercent: 0.3 })
+    const target = defender({ currentWard: 4 })
 
     const result = combat.resolveActionHit(source, target, PHYSICAL_HIT)
 
@@ -120,9 +117,9 @@ describe('hit outcome semantics (INV-3)', () => {
     expect(hpDamage).toBeGreaterThan(0)
     expect(hpDamage).toBeCloseTo(result.finalDamage - 4, 5)
 
-    // Thorns hits the SOURCE for 30% of hpDamage; leech heals 20% of
-    // hpDamage — both on the POST-absorb number, never finalDamage.
-    expect(source.currentHp).toBeCloseTo(500 + hpDamage * 0.2 - hpDamage * 0.3, 5)
+    // Leech heals the SOURCE for 20% of hpDamage — on the POST-absorb
+    // number, never finalDamage.
+    expect(source.currentHp).toBeCloseTo(500 + hpDamage * 0.2, 5)
     expect(target.currentHp).toBeCloseTo(1000 - hpDamage, 5)
   })
 
@@ -130,16 +127,16 @@ describe('hit outcome semantics (INV-3)', () => {
     const combat = new CombatSystem(new EventBus())
     const source = attacker({ stats: createBaseStats({ might: 100, accuracyRating: 1000, criticalRate: 0, leechPercent: 0.2 }) })
     // 10 HP left, no ward — post-absorb damage (~27+) far overkills.
-    // D11: leech/thorns scale on the 10 HP the target REALLY lost.
-    const target = defender({ currentHp: 10 }, { thornsPercent: 0.3 })
+    // D11: leech scales on the 10 HP the target REALLY lost.
+    const target = defender({ currentHp: 10 })
 
     const result = combat.resolveActionHit(source, target, PHYSICAL_HIT)
 
     expect(result.outcome).toBe('taken')
     expect(result.hpDamage).toBe(10)
     expect(result.targetKilled).toBe(true)
-    // leech +2 (0.2 x 10), thorns -3 (0.3 x 10) — NOT ~27-scaled.
-    expect(source.currentHp).toBeCloseTo(500 + 10 * 0.2 - 10 * 0.3, 5)
+    // leech +2 (0.2 x 10) — NOT ~27-scaled.
+    expect(source.currentHp).toBeCloseTo(500 + 10 * 0.2, 5)
   })
 
   it('targetKilled is settled AFTER absorb+apply — a fully warded hit is never a kill', () => {
@@ -204,7 +201,7 @@ describe('hit outcome semantics (INV-3)', () => {
 // stat-system-reimagined Task 6 (D13, INV-4) — DoT is a CLOSED economy:
 // rawDamage -> dotResistancePercent (with penetration) -> HP. Nothing
 // else applies — no finalDamagePercent/finalDamageReductionPercent, no
-// ward/MP shield, no leech/thorns, no turnsSinceLastHitLanded touch.
+// ward/MP shield, no leech, no turnsSinceLastHitLanded touch.
 describe('DoT closed economy (D13/INV-4)', () => {
   function dotTarget(statOverrides: Parameters<typeof createBaseStats>[0] = {}) {
     const stats = createBaseStats({ evasionRate: 0, ...statOverrides })
@@ -263,10 +260,10 @@ describe('DoT closed economy (D13/INV-4)', () => {
     expect(events[0]?.hpDamage).toBe(5)
   })
 
-  it('DoT never touches turnsSinceLastHitLanded, ward, or thorns/leech', () => {
+  it('DoT never touches turnsSinceLastHitLanded, ward, or leech', () => {
     const combat = new CombatSystem(new EventBus())
     const source = attacker()
-    const target = dotTarget({ thornsPercent: 0.5 })
+    const target = dotTarget()
     target.currentWard = 500
     target.turnsSinceLastHitLanded = 7
     source.stats.leechPercent = 0.25
@@ -276,6 +273,6 @@ describe('DoT closed economy (D13/INV-4)', () => {
     expect(target.currentHp).toBeCloseTo(10_000 - 100, 5)
     expect(target.currentWard).toBe(500) // DoT bypasses ward entirely
     expect(target.turnsSinceLastHitLanded).toBe(7) // not a landed hit
-    expect(source.currentHp).toBe(500) // no leech, no thorns kickback
+    expect(source.currentHp).toBe(500) // no leech kickback
   })
 })

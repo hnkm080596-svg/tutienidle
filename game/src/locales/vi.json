@@ -103,7 +103,9 @@
       },
       "branchLabels": {
         "lapDao": "Lập Đạo",
-        "thuan": "Thuần · {element}"
+        "thuan": "Thuần · {element}",
+        "theTu": "Thể Tu Hiện",
+        "theTuAn": "Thể Tu Ẩn"
       }
     },
     "skillPath": {
