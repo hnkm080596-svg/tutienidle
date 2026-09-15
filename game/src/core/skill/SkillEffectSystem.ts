@@ -160,7 +160,7 @@ export class SkillEffectSystem {
         // cho 1 cục true damage RIÊNG (bỏ qua Armor/Resistance, cùng
         // tinh thần primordialPower), rồi xoá hẳn ailment đó. Tách
         // khỏi damage impact ở trên (đi thẳng currentHp, không qua mitigation/
-        // ward/leech/thorns) vì đây là "cash-in" 1 hiệu ứng ĐÃ mitigate
+        // ward/leech) vì đây là "cash-in" 1 hiệu ứng ĐÃ mitigate
         // sẵn lúc apply ban đầu (xem AilmentSystem.apply()'s snapshot),
         // mitigate thêm lần nữa ở đây là tính trùng.
         if (target.alive && effect.consumesAilmentId && effect.damagePerStack) {

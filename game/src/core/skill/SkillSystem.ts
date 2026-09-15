@@ -32,18 +32,13 @@ export function getHuyKiemFlatDamageBonus(totalExperience: number): number {
   return Math.floor(Math.max(0, totalExperience) / HUY_KIEM_CASTS_PER_LEVEL)
 }
 
-/** Mốc level tuyến tính: Lv2 tại 1000 cast, Lv3 tại 10000 cast. */
-export function getHuyKiemLevelForCasts(totalExperience: number): number {
-  if (totalExperience >= 10000) return 3
-  if (totalExperience >= 1000) return 2
-  return 1
-}
-
-// Phap Tu Reimagined Task 2 — THE table of skills that level ONLY by
-// cast count (upgradeSkill rejects them, INV-9). tram's curve is the
-// existing one; linh_bao/huy_quyen are the mortal-path actives, and
-// linh_bao Lv3 is the phap_tu_an ritual gate — so the threshold below
-// is also read directly by chooseCultivationPath (one number source).
+// Phap Tu Reimagined Task 2 + The Tu Reimagined (spec 2026-09-15, T6) —
+// THE table of skills that level ONLY by cast count (upgradeSkill
+// rejects them, INV-9): any id listed here auto-levels by
+// totalExperience in recordCast(). tram's curve is the existing one;
+// linh_bao/huy_quyen are the mortal-path actives — linh_bao Lv3 is the
+// phap_tu_an ritual gate, huy_quyen Lv3 the the_tu_an gate — so the
+// thresholds are also read directly by chooseCultivationPath.
 export const CAST_LEVELING_THRESHOLDS: Record<string, { lv2: number; lv3: number }> = {
   tram:      { lv2: 1000, lv3: 10000 },
   linh_bao:  { lv2: 1000, lv3: 10000 },
@@ -70,6 +65,10 @@ export function getCastLeveledSkillLevel(skillId: string, totalExperience: numbe
  * tram ≥ mốc này (spec 2026-08-29-kiem-the-kiem-y mục 1). Re-aliases
  * the threshold table — no second constant source. */
 export const HUY_KIEM_L3_CASTS = CAST_LEVELING_THRESHOLDS.tram!.lv3
+
+/** Ngưỡng cast Hủy Quyền đạt Lv3 — cổng offer the_tu_an tại Nghi Lễ
+ * Nhập Môn (spec 2026-09-15 T6, xem CultivationPathKit.offerGate). */
+export const HUY_QUYEN_L3_CASTS = CAST_LEVELING_THRESHOLDS.huy_quyen!.lv3
 
 export interface EffectiveSkill {
   effects: SkillEffect[]
@@ -372,10 +371,11 @@ export class SkillSystem {
    * (TurnBattleSystem.onSkillCast, wired via GameManagerTurnBattleOps for
    * the primary player only). Generic per learned skill: totalExperience
    * is the cast counter the PlayerData skillCastCounts mirror reflects.
-   * CAST_LEVELING_THRESHOLDS skills auto-level via
+   * CAST_LEVELING_THRESHOLDS skills (tram, huy_quyen) auto-level via
    * getCastLeveledSkillLevel; every other skill levels only through
-   * upgradeSkill (Cam Ngo). No-op for unknown/unlearned ids
-   * (e.g. 'generic_physical').
+   * upgradeSkill (Cam Ngo). tram also keeps the legacy per-cast
+   * experience tick feeding getHuyKiemFlatDamageBonus. No-op for
+   * unknown/unlearned ids (e.g. 'generic_physical').
    */
   recordCast(skillId: string): void {
     const skill = this.manager.get(skillId)

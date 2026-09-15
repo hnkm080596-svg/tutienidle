@@ -18,10 +18,12 @@
 // the current realm's forgeCost, plus live sword count/base multiplier.
 
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
+import { MAX_THE } from '@/core/combat/CombatTypes'
 import type { OrbId, KiemTuState } from '@/core/kiem-tu/KiemTuState'
 import { isKiemPhoProviderHandle } from '@/core/kiem-tu/KiemPhoProvider'
 import { forgeCost } from '@/core/kiem-tu/NguKiemDao'
 import { getRealmIndex } from '@/core/realm/realmSystem'
+import { CULTIVATION_PATH_KITS, type CultivationPathId } from '@/core/player/CultivationPathKit'
 import type { GameManager } from '@/core/game/GameManager'
 import {
   readOptionalGate,
@@ -42,6 +44,11 @@ export interface KiemBarSnapshot {
   /** Ngu readout: live flying swords + permanent base multiplier. */
   kiemDaoCount?: number
   kiemDaoBase?: number
+  // The Tu Reimagined (T22) — Son Nhac Ho The external-ward layer: a
+  // SEPARATE protection-only shield, never merged into the resource bar
+  // or the native ward pool. Rendered on any path when the player
+  // entity carries a pool (max = holder maxHp — shield fraction of HP).
+  externalWard?: { current: number; max: number }
 }
 
 export type KiemBarReader = () => KiemBarSnapshot | null
@@ -53,6 +60,9 @@ export const KIEM_BAR_READER_KEY = 'kiemBarReader' as const
 export interface KiemBarPlayerState {
   kiemTu?: KiemTuState
   realmId: string
+  // The Tu Reimagined (T22) — the path kit's usesTheResource flag
+  // decides whether the bar shows The; no path-id checks in the HUD.
+  cultivationPath?: CultivationPathId
 }
 
 /**
@@ -75,8 +85,27 @@ export function makeKiemBarReader(
     const player = getPlayer()
     const kiemTu = player.kiemTu
 
+    // TurnBattle participant shape — the human player's CombatEntity is
+    // players[0].entity; the external-ward pool lives on the entity (T22).
+    const battleEntity = battle.players[0]?.entity
+    const externalWard = battleEntity?.externalWard
+      ? { current: battleEntity.externalWard.amount, max: battleEntity.stats?.maxHp ?? 0 }
+      : undefined
+
     if (!kiemTu) {
-      return null
+      // The Tu An (T22) — The proc-fuel pool, gated by the kit flag so
+      // the HUD stays data-driven (no path-id checks outside kit data).
+      if (player.cultivationPath && CULTIVATION_PATH_KITS[player.cultivationPath].usesTheResource) {
+        return {
+          current: battleEntity?.currentThe ?? 0,
+          max: battleEntity?.maxThe ?? MAX_THE,
+          label: 'Thế',
+          externalWard,
+        }
+      }
+
+      // No resource pool for this path — still surface a live shield.
+      return externalWard ? { current: 0, max: 0, label: '', externalWard } : null
     }
 
     if (kiemTu.mode === 'hien') {
@@ -97,6 +126,7 @@ export function makeKiemBarReader(
         cursor,
         nextOrb: preset.length > 0 ? preset[cursor % preset.length] : undefined,
         log: snapshot?.log ?? [],
+        externalWard,
       }
     }
 
@@ -111,6 +141,7 @@ export function makeKiemBarReader(
       mode: 'ngu',
       kiemDaoCount: kiemTu.kiemDaoCount,
       kiemDaoBase: kiemTu.kiemDaoBase,
+      externalWard,
     }
   }
 }

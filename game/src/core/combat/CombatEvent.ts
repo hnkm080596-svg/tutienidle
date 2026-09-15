@@ -27,6 +27,10 @@ export interface CombatEvent {
   // never `value`. DoT ticks set hpDamage == value (no absorb applies).
   hpDamage?: number
   wardAbsorbed?: number
+  // The Tu Reimagined (plan Task 11) — the externalWard component of
+  // wardAbsorbed: the HUD's separate "Son Nhac Ho The" layer animates
+  // its own consumption off this field; wardAbsorbed stays the total.
+  externalWardAbsorbed?: number
   manaShieldAbsorbed?: number
 
   damageType?:

@@ -106,7 +106,6 @@ function playerEntity(overrides: { might?: number; maxHp?: number; speed?: numbe
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentMomentum: 0,
 
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,

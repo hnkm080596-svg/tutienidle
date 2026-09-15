@@ -198,6 +198,33 @@ export const TECHNIQUES: Technique[] = [
     equipped: false,
   },
 
+  // The Tu Reimagined (spec 2026-09-15, T1/T6) — the_tu_an signature
+  // technique, granted by the Initiation Ritual when huy_quyen is Lv3.
+  // Defensive/reactive body art: same def typing as kim_cang, leaning
+  // on regen so the hidden path survives long enough to proc.
+  {
+    id: 'ung_the_than_quyet',
+
+    name: 'Ứng Thể Thần Quyết',
+
+    icon: '/assets/techniques/iron_body_scripture.png',
+
+    description: 'Tâm quyết luyện thân theo lối ứng thế — nhu hóa cương, tĩnh chờ động.',
+
+    combatTypeId: 'def',
+
+    tierEffects: {
+      so_nhap: { hpRegenFlat: 1.5, mpRegenFlat: 0.5 },
+      tieu_thanh: { hpRegenFlat: 2.5, mpRegenFlat: 0.75 },
+      dai_thanh: { hpRegenFlat: 3.5, mpRegenFlat: 1 },
+      vien_man: { hpRegenFlat: 5, mpRegenFlat: 1.5 },
+    },
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
   {
     id: 'tu_linh_quyet',
 

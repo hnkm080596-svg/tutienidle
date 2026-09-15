@@ -95,6 +95,13 @@ function slotEntry(
     resourceCost,
   }
 
+  // The Tu Reimagined (T22) — emblemOnly slots (Phan Chinh) are passive
+  // emblems: the engine never selects them, so the bar renders the name
+  // locked instead of offering an untappable "ready" state.
+  if (slot.skill.emblemOnly) {
+    return { ...entry, state: 'locked' }
+  }
+
   if (!isPlayerTurnPaused) {
     return { ...entry, state: 'not_your_turn' }
   }

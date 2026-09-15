@@ -20,6 +20,7 @@ export type StatDomain =
   | 'universal'
   | 'phap_tu'
   | 'the_tu'
+  | 'the_tu_an'
   | 'kiem_tu'
   | 'hoa_tu'
   | 'production'
@@ -38,6 +39,19 @@ export const STAT_DOMAIN: Partial<Record<StatType, StatDomain>> = {
   manaRegenPerTurn: 'phap_tu',
   manaShieldPercent: 'phap_tu',
   reactionEffectPercent: 'phap_tu',
+
+  // The Tu Reimagined (spec 2026-09-15 section 3.3, T8) — block and
+  // endurance are body-path identity: only the_tu-domain modifiers may
+  // move them, and the_tu_an's three reactive chances accept only
+  // the_tu_an-domain emission (which in practice is the attribute
+  // deriver — INV-13 forbids authored modifiers for them entirely).
+  blockChance: 'the_tu',
+  blockEffectiveness: 'the_tu',
+  enduranceThreshold: 'the_tu',
+  endurancePercent: 'the_tu',
+  counterChance: 'the_tu_an',
+  protectChance: 'the_tu_an',
+  followUpChance: 'the_tu_an',
 
   // Task 9 (D15): non-combat meta stats are gated to their owning domain
   // (same mechanism as path stats), not evicted. No authored emitter
@@ -81,6 +95,31 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
     { file: 'data/buff/LegacyBuffs.ts', stats: ['manaRegenPerTurn'] },
   ],
 
+  // The Tu Reimagined (T8) — two separate domains: 'the_tu' owns the
+  // visible path's defensive stats (block/endurance migration in Task 3)
+  // and kit-authored modifiers; 'the_tu_an' owns the hidden path's
+  // reactive chance stats (counterChance/protectChance/followUpChance).
+  the_tu: [
+    { file: 'data/progression/TheTu*' },
+    { file: 'data/skill/TheTu*' },
+    { file: 'data/buff/TheTu*' },
+    // Techniques.ts houses kim_cang_bat_hoai_the — its block/endurance
+    // stat rows are the_tu emissions by content ownership.
+    {
+      file: 'data/technique/Techniques.ts',
+      stats: ['blockChance', 'blockEffectiveness', 'enduranceThreshold', 'endurancePercent'],
+    },
+  ],
+  the_tu_an: [
+    { file: 'data/progression/TheTuAn*' },
+    // The hidden path's kit skills + buffs live in the TheTu* files
+    // (one content file per path family); the chance-stat emitter is a
+    // core-side deriver, not file-scanned. Unscoped rows: the domain
+    // currently owns ONLY the three reactive chance stats (Task 3).
+    { file: 'data/skill/TheTu*' },
+    { file: 'data/buff/TheTu*' },
+  ],
+
   // Task 9 (D15): meta-domain emitter homes. No data/** file authors
   // these today -- the lines declare which files MAY, so a new emitter
   // is a deliberate whitelist addition. (Core-side emitters are not
@@ -107,6 +146,7 @@ export const CULTIVATION_PATH_STAT_DOMAINS: Record<string, readonly StatDomain[]
   // channel (it is a distinct path id, not a distinct domain).
   phap_tu_an: ['phap_tu'],
   the_tu: ['the_tu'],
+  the_tu_an: ['the_tu_an'],
   kiem_tu: ['kiem_tu'],
   hoa_tu: ['hoa_tu'],
 }

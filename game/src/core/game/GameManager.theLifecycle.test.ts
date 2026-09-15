@@ -28,7 +28,6 @@ function combatEntity(currentThe: number): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentMomentum: 0,
     currentThe,
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,

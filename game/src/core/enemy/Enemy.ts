@@ -280,8 +280,6 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
 
     currentMp: enemy.stats.maxMp,
 
-    currentMomentum: 0,
-
 
     currentWard: 0,
 

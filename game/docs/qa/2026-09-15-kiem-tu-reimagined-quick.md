@@ -61,7 +61,7 @@ Focused checks beyond the suite (learned-defect weighted):
 | `npx vitest run src/core/kiem-tu` invariant suite | 24/24 PASS | covers INV-KT-1…15 above |
 | Dead-id fs sweep (`kiem_tran_*`, `bat_kiem_*`, `TRAN_SEQUENCE`, `sword_intent`, `currentSwordIntent`…) | clean | remaining hits are negative-assertion tests, save-version history comments, removal-note comments |
 | Code inspection of all cross-system seams listed in ledger | no defect | evidence in focused-check list above |
-| Browser drive (hien preset cycling, combo fire, ngu cast, merge) | **Not verified** | P14 isolated-worktree exception: browser launch unreliable inside `.agent-worktrees/**`; deferred to branch finishing / main checkout. Headless `GameManager` + engine tests cover the same state transitions; only Phaser/Vue visual presentation lacks live confirmation |
+| Browser drive (hien preset cycling, combo fire, ngu cast, merge) | **PASS (post-merge, main checkout)** | Driven on `master` @ merge commit via `npx playwright cli` + dev server: (a) QuanKhiPanel spec card "Chuyên tu Kiếm Tu: Kiếm Phổ" + preset editor strip/palette — append/remove chips write live through `setKiemPhoPreset` (`preset` observed mutating to `[orb_dam ×3]`); palette shows 3 unlocked orbs at golden_core (Đâm/Chém/Bổ) with Hất/Quét disabled+locked. (b) hien battle: orb picker owns the basic slot (3 `__slot-button--orb` buttons "Dùng Đâm/Chém/Bổ"); `action_impact` events carried `presetId: kiem_combo_tam_thich` ×5 — combo payload reaches presentation as its own event (K11). (c) `kiem_tu_an` purchased through the real op (`tram` Lv3 gate, mode hien→ngu); ngu battle: basic slot = single "Dùng Ngự Kiếm Thuật" manual option, special/ultimate render emblem defs (Tụ Kiếm Ý / Kiếm Đạo Liên Toát); `kiemBarReader` → `{label: "Kiếm Ý · 3 kiếm", current: 484, max: 16899}` (forgeCost(golden_core)=16899 exact; +34 Kiếm Ý banked live from casts). Both battles ended in real victory panels; 0 console errors. Breakthrough-merge presentation not driven (needs major realm advance; domain covered by unit tests). |
 
 ## Findings
 
@@ -73,7 +73,7 @@ No `Confirmed`, `Suspected`, or `Coverage gap` findings against the audited task
 
 ## Gaps and Residual Risk
 
-- Browser/runtime presentation not driven (P14 worktree exception, recorded above). Residual risk is confined to HUD/animation presentation; domain outcomes are covered headlessly. Must be exercised on an authorized checkout before merge sign-off.
+- ~~Browser/runtime presentation not driven (P14 worktree exception)~~ — **resolved post-merge on main checkout** (see Verification Evidence row above). Only residual: breakthrough-merge animation not driven live; its domain transition is unit-covered.
 - The 37-combo table is scaffold content (presetIds, tier multipliers, appliesBuff stacks) — full effect authoring is a declared spec non-goal; matcher/modifier contract is what this review covered.
 - `GameManager.autoFarmOffline` timeout under load is recorded as Flaky/pre-existing-class evidence; it does not weaken the verdict because the task diff contains no offline/time production change.
 

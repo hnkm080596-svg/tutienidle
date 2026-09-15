@@ -1,6 +1,7 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { ArtifactId } from '../artifact/Artifact'
+import type { PlayerData } from './Player'
 
 // Pháp Tu Redesign (magicpath, 2026-08-18) — 5 path Ngũ Hành cũ
 // (phap_tu_hoa/moc/thuy/kim/tho) đã GỘP thành 1 "phap_tu" duy nhất
@@ -12,7 +13,11 @@ import type { ArtifactId } from '../artifact/Artifact'
 // Phap Tu Reimagined (Task 7) — 'phap_tu_an' is a first-class hidden
 // path (not a node/mode): offered only inside the initiation ritual
 // when linh_bao is Lv3, permanent, mutually exclusive with phap_tu.
-export type CultivationPathId = 'phap_tu' | 'phap_tu_an' | 'kiem_tu'
+//
+// The Tu Reimagined (spec 2026-09-15, T1) — the_tu (Hien) and the_tu_an
+// (An) are SEPARATE path ids offered at the Initiation Ritual; picking
+// An excludes the ordinary path permanently (no node/mode flip).
+export type CultivationPathId = 'phap_tu' | 'phap_tu_an' | 'kiem_tu' | 'the_tu' | 'the_tu_an'
 
 export interface CultivationPathRealmReward {
   techniqueId?: string
@@ -53,6 +58,20 @@ export interface CultivationPathKit {
   // Node Tree (unlock 1 hành = unlock luôn 3 skill + 1 nội tại của hành
   // đó, xem data/progression/PhapTuNodes.ts).
   skillIds?: [basic: string, special: string, ultimate: string]
+
+  // The Tu Reimagined (T6) — a path may gate its Ritual offer on
+  // prerequisites evaluated against the live player (the_tu_an requires
+  // huy_quyen Lv3). Consumed by isCultivationPathOffered — the single
+  // predicate both the offer panel and chooseCultivationPath consult.
+  offerGate?: {
+    requiresSkillLevel?: { skillId: string; level: number }
+  }
+
+  // The Tu Reimagined (T22) — the combat HUD's path resource bar reads
+  // this flag (data-driven): the path's battle participant carries the
+  // Thế pool (currentThe/maxThe on CombatEntity). UI never checks path
+  // ids — only this kit flag.
+  usesTheResource?: boolean
 }
 
 export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit> = {
@@ -143,6 +162,26 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
     // hien basics come from the Kiem Pho orb preset (KiemPhoProvider);
     // the hidden ngu conversion lives on the kiem_tu_an node.
   },
+
+  the_tu: {
+    id: 'the_tu',
+    name: 'Thể Tu — Kim Cang Bất Hoại Thể',
+    element: 'metal',
+    techniqueId: 'kim_cang_bat_hoai_the',
+    // The Tu Reimagined (T5) — root-mutex kit: the chosen progression
+    // root (cuong_chien XOR tran_the) resolves the kit at battle build;
+    // no loadout tuple.
+  },
+
+  the_tu_an: {
+    id: 'the_tu_an',
+    name: 'Thể Tu Ẩn — Ứng Thể Thần Quyết',
+    techniqueId: 'ung_the_than_quyet',
+    // T6 — offered at the Initiation Ritual only when the mortal skill
+    // huy_quyen reaches Lv3 (offerGate, see isCultivationPathOffered).
+    offerGate: { requiresSkillLevel: { skillId: 'huy_quyen', level: 3 } },
+    usesTheResource: true,
+  },
 }
 
 // Phap Tu An required kit (review round-4, MEDIUM) — the ritual grants
@@ -166,3 +205,17 @@ export const PHAP_TU_AN_REQUIRED_SKILLS: readonly string[] = [
 // hoàn thành Phàm Nhân cảnh (realmId === 'mortal' && realmLevel ===
 // maxLevel), xem CharacterPanel.vue's canChooseCultivationPath. Không
 // còn hằng số riêng ở đây nữa — đọc thẳng maxLevel của REALMS.
+
+// The Tu Reimagined (T6) — single offer predicate consumed by BOTH the
+// Quan Khi offer list (QuanKhiPanel.vue) and chooseCultivationPath() so
+// the UI can never show a choice the ritual would reject. Reads the live
+// skillLevels mirror — a path with no offerGate is always offered.
+export function isCultivationPathOffered(kit: CultivationPathKit, player: PlayerData): boolean {
+  const required = kit.offerGate?.requiresSkillLevel
+
+  if (!required) {
+    return true
+  }
+
+  return (player.skillLevels?.[required.skillId] ?? 0) >= required.level
+}

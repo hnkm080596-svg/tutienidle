@@ -19,7 +19,7 @@ import { PASSIVE_SKILLS } from '../../data/skill/PassiveSkills'
 // Audit anchors (docs/qa/2026-09-14-audit-combat-review.md):
 //  - C01: tat_phong 3 kills -> +6% speed live; next battle baseStats stayed
 //    stale at the buffed value (snapshot leaked resolved stacks).
-//  - C03: kim_giap on thiet_y_tang — defense/thorns sat in the pool without
+//  - C03: kim_giap on thiet_y_tang — defense sat in the pool without
 //    reaching entity.stats before the counter read them.
 
 function makeEnemy(id = 'sr_enemy'): ReturnType<typeof defineEnemy> {
@@ -149,7 +149,7 @@ describe('ARCH-002 M7 — passive stacks are live in-fight and reset before the 
 })
 
 describe('ARCH-002 M7 — buff apply is effective before the next dependent read', () => {
-  it('thiet_y_tang kim_giap: defense/thorns are live on the SAME step the buff lands', () => {
+  it('thiet_y_tang kim_giap: defense is live on the SAME step the buff lands', () => {
     const manager = new GameManager()
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)
@@ -193,7 +193,6 @@ describe('ARCH-002 M7 — buff apply is effective before the next dependent read
 
     expect(applied).toBe(true)
     expect(monk.entity.stats.defense).toBeCloseTo(baseDefense * 1.15, 5)
-    expect(monk.entity.stats.thornsPercent).toBeCloseTo(0.15, 6)
   })
 
   it('duration-1 buff is folded before the holder next declares, then drops on expiry', () => {

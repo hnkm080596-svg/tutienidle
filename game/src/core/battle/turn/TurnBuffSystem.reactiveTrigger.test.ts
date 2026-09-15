@@ -63,8 +63,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const entity = {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
-
-    currentMomentum: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
   } as CombatEntity
@@ -159,7 +157,7 @@ describe('BuffSystem — reactiveTrigger effect', () => {
     const { targetIds } = system.applyActionImpact(battle, declared)
 
     expect(targetIds).toEqual(['enemy'])
-    expect(battle.queuedFollowUpActorIds).toEqual(['enemy'])
+    expect(battle.queuedFollowUps?.map((entry) => entry.actorId)).toEqual(['enemy'])
   })
 
   it('chance=0 không bao giờ fire', () => {
@@ -178,10 +176,10 @@ describe('BuffSystem — reactiveTrigger effect', () => {
     const declared = system.declareActorAction(battle, actor)
     system.applyActionImpact(battle, declared)
 
-    expect(battle.queuedFollowUpActorIds).toBeUndefined()
+    expect(battle.queuedFollowUps).toBeUndefined()
   })
 
-  it('queuedFollowUpActorId → peekNextActor lần KẾ trả actor đó trực tiếp (bypass gauge)', () => {
+  it('queuedFollowUps → peekNextActor lần KẾ trả actor đó trực tiếp (bypass gauge)', () => {
     const { battle, system } = fixture([COUNTER_DEF])
 
     const actor = system.peekNextActor(battle)!
@@ -189,12 +187,12 @@ describe('BuffSystem — reactiveTrigger effect', () => {
     const { targetIds } = system.applyActionImpact(battle, declared)
     system.completeAction(battle, actor, declared, targetIds)
 
-    expect(battle.queuedFollowUpActorIds).toEqual(['enemy'])
+    expect(battle.queuedFollowUps?.map((entry) => entry.actorId)).toEqual(['enemy'])
 
     const next = system.peekNextActor(battle)
 
     expect(next?.id).toBe('enemy')
-    expect(battle.queuedFollowUpActorIds).toBeUndefined()
+    expect(battle.queuedFollowUps).toBeUndefined()
   })
 })
 

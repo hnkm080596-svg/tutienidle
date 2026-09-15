@@ -10,6 +10,7 @@ import {
   CULTIVATION_PATH_KITS,
   PHAP_TU_AN_BASIC_ID,
   PHAP_TU_AN_SPECIAL_ID,
+  isCultivationPathOffered,
 } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { grantCultivationPathRealmReward as grantPathRealmReward, isPhapTuAnEligible } from '../player/CultivationPathSystem'
@@ -189,6 +190,14 @@ export class GameManagerRealmAdvanceOps {
 
     const kit = CULTIVATION_PATH_KITS[pathId]
 
+    // The Tu Reimagined (T6) — kit.offerGate is the offer-time contract;
+    // enforce the same predicate here so a stale/hidden offer can never
+    // slip through the ritual (isCultivationPathOffered is also what the
+    // Quan Khi panel filters on).
+    if (!isCultivationPathOffered(kit, player)) {
+      return false
+    }
+
     // Transaction boundary (review round-4, atomicity hardening): verify
     // every registry entry the ritual grants BEFORE committing
     // cultivationPath — a missing template must fail the whole choice,
@@ -241,6 +250,13 @@ export class GameManagerRealmAdvanceOps {
       for (const skillId of MORTAL_PRECURSOR_SKILL_IDS) {
         this.deps.skillSystem.unequip(skillId)
       }
+    } else if (pathId === 'the_tu' || pathId === 'the_tu_an') {
+      // The Tu Reimagined (T1) — both Thể Tu paths resolve their kit at
+      // battle build from the chosen progression root (no loadout
+      // skills). The ritual only strips the mortal basics so a lingering
+      // tram/huy_quyen cannot occupy the single mortal slot.
+      this.deps.skillSystem.unequip('tram')
+      this.deps.skillSystem.unequip('huy_quyen')
     } else if (kit.skillIds) {
       kit.skillIds.forEach((skillId, index) => {
         this.deps.progressionOps.learnSkill(skillId)

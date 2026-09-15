@@ -11,8 +11,6 @@ function _debugEntity(): CombatEntity {
   return {
     id: 'dbg_player', name: 'Dbg', type: 'player', baseStats: stats, stats,
     currentHp: 100, maxHp: 100, currentMp: 0,
-
-    currentMomentum: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
   } as CombatEntity
 }

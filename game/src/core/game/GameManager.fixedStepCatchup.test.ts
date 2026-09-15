@@ -38,7 +38,6 @@ function createAttackerPlayer(): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentMomentum: 0,
 
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,

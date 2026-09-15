@@ -1,6 +1,8 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { OrbId } from '../kiem-tu/KiemTuState'
+import type { TheTuKitModifierValues } from '../the-tu/TheTuKitModifiers'
+import type { TheTuAnMechanicModifierValues } from '../the-tu/TheTuAnMechanicModifiers'
 
 export type NodeType = 'minor' | 'major'
 
@@ -109,6 +111,20 @@ export interface NodeEffect {
     // Deterministic apply order — ascending, nodeId tiebreak. Default 0.
     priority?: number
   }
+
+  // The Tu Reimagined (plan Task 6) — the ONLY node -> the_tu kit
+  // channel. Each channel value is the PER-LEVEL contribution;
+  // collectTheTuKitModifiers(registry, player) sums them over owned
+  // levels and the participant build bakes the totals into
+  // participant-local kit/buff def clones.
+  theTuKitModifiers?: Partial<TheTuKitModifierValues>
+
+  // The Tu Reimagined (plan Task 20, review P1.7) — the ONLY node ->
+  // the_tu_an channel. Trunk economy channels (cap/cost/gain) plus
+  // branch consequence riders (intercept ward, heavy counter payload,
+  // Tro heal/cost) summed by collectTheTuAnMechanicModifiers and baked
+  // into participant-local def clones by buildTheTuAnKit.
+  theTuAnMechanicModifiers?: Partial<TheTuAnMechanicModifierValues>
 }
 
 /**

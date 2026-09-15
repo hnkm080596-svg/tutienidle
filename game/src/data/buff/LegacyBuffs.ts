@@ -2,15 +2,17 @@ import type { BuffDefinition } from '@/core/buff/BuffDefinition'
 
 export const LEGACY_BUFFS: BuffDefinition[] = [
   // Pháp Tu (Thổ Tu, 2026-08-15) — Thạch Giáp Trận (special skill,
-  // xem data/skill/Skills.ts) tự buff wardMax/thornsPercent tạm thời
-  // lên bản thân, tái dùng effect 'buff' có sẵn (zero plumbing mới).
+  // xem data/skill/Skills.ts) tự buff wardMax tạm thời lên bản thân,
+  // tái dùng effect 'buff' có sẵn (zero plumbing mới).
+  // The Tu Reimagined (spec 2026-09-15 T12): generic thorns stat retired —
+  // the thorns leg is gone, wardMax remains the buff's payload.
   {
     id: 'thach_giap_buff',
 
     name: 'Thạch Giáp',
 
     description:
-      'Linh khí Thổ ngưng thành 1 lớp khiên đá tạm thời, tăng Hộ Thuẫn tối đa và khả năng phản đòn.',
+      'Linh khí Thổ ngưng thành 1 lớp khiên đá tạm thời, tăng Hộ Thuẫn tối đa.',
 
     polarity: 'buff',
 
@@ -25,14 +27,6 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
         stat: 'wardMax',
 
         flat: 40,
-      },
-
-      {
-        type: 'statModifier',
-
-        stat: 'thornsPercent',
-
-        flat: 0.1,
       },
     ],
   },

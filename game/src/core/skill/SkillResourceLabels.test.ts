@@ -3,10 +3,9 @@ import { skillResourceTypeLabel, SKILL_RESOURCE_TYPE_LABELS } from './SkillResou
 
 describe('SkillResourceLabels', () => {
   describe('SKILL_RESOURCE_TYPE_LABELS', () => {
-    it('covers all three resource types', () => {
-      expect(Object.keys(SKILL_RESOURCE_TYPE_LABELS)).toHaveLength(3)
+    it('covers all two resource types (momentum + sword_intent retired)', () => {
+      expect(Object.keys(SKILL_RESOURCE_TYPE_LABELS)).toHaveLength(2)
       expect(SKILL_RESOURCE_TYPE_LABELS.mana).toBe('Linh Lực')
-      expect(SKILL_RESOURCE_TYPE_LABELS.momentum).toBe('Đà Thế')
       expect(SKILL_RESOURCE_TYPE_LABELS.the).toBe('Thế')
     })
   })
@@ -16,8 +15,8 @@ describe('SkillResourceLabels', () => {
       expect(skillResourceTypeLabel('mana')).toBe('Linh Lực')
     })
 
-    it('returns Đà Thế for momentum', () => {
-      expect(skillResourceTypeLabel('momentum')).toBe('Đà Thế')
+    it('returns Thế for the', () => {
+      expect(skillResourceTypeLabel('the')).toBe('Thế')
     })
 
     it('returns empty string for none', () => {

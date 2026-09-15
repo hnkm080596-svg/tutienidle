@@ -87,8 +87,8 @@ export interface Skill {
   // đọc fallback từ đây nữa. Giữ để UI/tooltip hiển thị.
   castTime?: number
 
-  // Lượng tài nguyên cần để cast, ý nghĩa tuỳ resourceType (mana, rage,
-  // momentum) — 'none' thì KHÔNG khai field này (skill free,
+  // Lượng tài nguyên cần để cast, ý nghĩa tuỳ resourceType (mana,
+  // the) — 'none' thì KHÔNG khai field này (skill free,
   // runtime không đọc cost).
   cost?: number
 
@@ -162,10 +162,10 @@ export interface Skill {
   // (isUnreleased prop on CombatSkillSlot).
   unreleased?: boolean
 
-  // Thể Tu (Combat Rework Phase 7) — đánh TRÚNG (không tính né) thì +N
-  // Momentum (CombatEntity.currentMomentum, xem CombatTypes.ts's
-  // MAX_MOMENTUM) — tích theo LƯỢNG qua missile-resolve callback.
-  grantsMomentumPerHit?: number
+  // Pool grant fields retired: grantsMomentumPerHit (momentum removed,
+  // spec 2026-09-15 D7) and grantsSwordIntentPerHit/grantsHoaThePerCast/
+  // grantsThoThePerCast (entity pools moved off CombatEntity).
+
 
   // Thể Tu (Combat Rework Phase 7) — đánh TRÚNG thì trừ thêm N vào
   // target.currentBreakGauge (nếu target có, xem CombatEntity.ts) —
@@ -173,6 +173,9 @@ export interface Skill {
   // 0 thì Stagger (áp 'choang'), xem BattleSystem's missile-resolve
   // callback.
   breakDamagePerHit?: number
+
+  // grantsHoaThePerCast/grantsThoThePerCast removed with the entity
+  // pools (kiem-tu/phap-tu reimagined state model).
 
   // Core Loop Foundation checklist (Mục SKILL) — danh sách lựa chọn
   // "behavior-changing node" (template, không đổi giữa các instance

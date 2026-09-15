@@ -19,7 +19,6 @@ function makeTarget(): CombatEntity {
     currentHp: 50,
     maxHp: stats.maxHp,
     currentMp: 0,
-    currentMomentum: 0,
 
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,

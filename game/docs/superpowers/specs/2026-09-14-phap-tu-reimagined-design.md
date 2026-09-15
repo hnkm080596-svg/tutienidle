@@ -20,7 +20,7 @@ unlocked by mortal-skill mastery.
 | P4 | **Resources: MP = shield only + one The pool.** No skill costs MP (unchanged). `maxMp`/`manaRegenPerTurn`/`manaShieldPercent`/`reactionEffectPercent` stay `domain: 'phap_tu'` gated stats per the stat spec. One shared The pool 0–100 — per-element The (Hoa/Kim/Tho The, Huyet Pha) is RETIRED (already dead in the turn engine: `grantsHoaThePerCast` & co. sit in `UNSUPPORTED_SKILL_FIELDS`). |
 | P5 | **The loop: basic/special landed hits build The; the ultimate burns it.** The ultimate slot keeps ONE skill: below the The threshold (or without the phap-tuong unlock node) it casts its normal (chain-E) form; at ≥100 The WITH the node owned the cast becomes the phap-tuong (amped) form and consumes the pool. No separate burner button — "vẫn một skill/slot, nhưng khi đủ 100 thế/pháp tướng thì amp lên". |
 | P6 | **Phap Tu An = a separate, mutually-exclusive, permanent path.** Choosing An means no element, no route, no The pool. Kit is fixed: basic = random element basic; special = fires basic X times; ultimate = passive multicast (Ogre-Magi style). Its payoff is the reaction engine. |
-| P7 | **An is a separate PATH offered at the Initiation Ritual, not a node/conversion inside the phap_tu tree.** `CultivationPathId` gains `'phap_tu_an'`. The ritual's path-choice layer offers it iff `linh_bao` is already Lv3 (>= `MORTAL_SKILL_L3_CASTS` casts) at that moment — the same live read Kiem Tu does for `tramCasts` in `chooseCultivationPath` (GameManagerRealmAdvanceOps). Miss it and `phap_tu_an` is unreachable for that character — nothing later re-opens the offer. Contrast: Kiem An is a ROUTE inside `kiem_tu`; Phap An is a first-class path id — intentional asymmetry (Kiem An may migrate to the same shape when The Tu lands). |
+| P7 | **An is a separate PATH offered at the Initiation Ritual, not a node/conversion inside the phap_tu tree.** `CultivationPathId` gains `'phap_tu_an'`. The ritual's path-choice layer offers it iff `linh_bao` is already Lv3 (>= `CAST_LEVELING_THRESHOLDS.linh_bao.lv3` casts) at that moment — the same live read Kiem Tu does for `tramCasts` in `chooseCultivationPath` (GameManagerRealmAdvanceOps). Miss it and `phap_tu_an` is unreachable for that character — nothing later re-opens the offer. Contrast: Kiem An is a ROUTE inside `kiem_tu`; Phap An is a first-class path id — intentional asymmetry (Kiem An may migrate to the same shape when The Tu lands). |
 | P8 | **No conversion exists, so no refund question exists.** Because An is chosen at the ritual, a `phap_tu` player can never become An post-ritual — the inert-element/no-refund machinery is deleted, not answered. |
 | P9 | **Reactions redesigned rule-driven on sinh/khac, replacing the 10 authored pairs.** The 5 elements produce exactly 10 unordered pairs = 5 sinh + 5 khac (adjacent vs non-adjacent in the cycle — no remainder). Two rule classes on top of the existing `WuxingRelations` (`SINH_CYCLE`/`KHAC_PAIRS`): khac pair coexisting on a target → **Khac Che** (consume both ailments → burst scaling with consumed stacks × `reactionEffectPercent`); sinh pair → **Cong Minh** (no consume — feeds the generated/"child" ailment: potency/duration amp or short zone buff). Bespoke pair effects (LavaZone, Thieu Huyet maxHP burn, khai_son…) are retired; a per-pair override is only added back when a pair earns one (A8). |
 | P10 | **Elemental ailments still apply in BOTH routes; `no` weakens them.** Identity stays elemental — route `no` reduces application chance, never strips ailments (they feed DoT fallback and keep element flavor). |
@@ -45,16 +45,18 @@ PhapTuState {                    // phap_tu (hien) path state only —
 }
 ```
 
-- `element` is set by the element root node purchase; the 5 roots gain
-  pairwise `excludesNode` (they currently have none — multi-element
-  builds die here, P1). Element pick and route pick are ONE ATOMIC
-  CORE TRANSACTION: `selectPhapTuElement(player, element, route)`
-  validates both halves and commits them together — the UI's blocking
-  modal is only an input collector, never the guarantee. The state
-  `element != null && route === null` is not creatable through the
-  API (a crash mid-modal simply means the transaction never
-  committed — INV-13). Neutral ×1.0 exists only for the
-  `route===null` pre-pick state (INV-11).
+- `element` is set ONLY by `selectPhapTuElement` — one atomic core
+  transaction that purchases the element root and commits `element`
+  + `route` together (INV-13). The 5 roots gain pairwise
+  `excludesNode` (they currently have none — multi-element builds
+  die here, P1) but carry NO `unlocksElement` effect: the legacy
+  `unlockedElements`/`equippedElements`/`unlocksElement`/
+  `kind:'element'` machinery is a second authority and is retired
+  (INV-21, §8 — including migrating its real consumers such as the
+  artifact Ngu Hanh rotation). The UI's blocking route modal is only
+  an input collector, never the guarantee; `element != null &&
+  route === null` is not creatable through the API. Neutral ×1.0
+  exists only for the `route===null` pre-pick state (INV-11).
 - `route` flips freely out of combat (P3) — a UI toggle, not a node.
 - Ownership: `PhapTuState` lives on `PlayerData` (persisted), mutated
   only through `GameManager` path ops (A3 — one writer). It is
@@ -81,17 +83,27 @@ never changes which skills exist.
 
 - `currentThe` 0–`MAX_THE` (base 100 — existing constant; `Truong The`
   nodes may raise the cap above 100 for a bigger banked burn — §7).
-- Gain: basic landed hit +5, special landed hit +15, `no`-route crit
+  The cap's data path: `nodeLevels` → `resolveMaxThe(player)` →
+  `CombatEntity.maxThe` battle snapshot (undefined ⇒ `MAX_THE`;
+  non-phap_tu entities incl. Bat Kiem get the base). The cap is
+  query-derived, never stored on `PlayerData`.
+- Gain: basic landed cast +5, special landed cast +15, `no`-route crit
   bonus (§4; tunable constants `THE_GAIN_BASIC`/`THE_GAIN_SPECIAL`/
   `THE_GAIN_CRIT`; the old +10/+20 link/finisher constants retire with
   the chain model). No decay WITHIN a battle — the pool is a spend
   gauge, not upkeep. Gains land per LANDED cast — AoE/multi-target
   casts still grant once per cast, not per target.
 - **Battle-scoped, full stop:** `currentThe` resets to 0 at every
-  battle start (construction of the player's `CombatEntity`). One rule
-  covers every boundary — battle end, retreat, death, and save/load
-  all inherit it: the field never leaves the battle runtime and is
-  never persisted, so a save can never carry banked The. The old
+  battle start. Every auto-repeat cycle IS a new battle for
+  battle-scoped resources: `restartTurnBattleCycle` reuses the same
+  `CombatEntity` objects, so reset happens via
+  `resetBattleScopedResources(entity)` at BOTH entity construction
+  AND each cycle restart — not via construction alone. One rule
+  covers every boundary — battle end, retreat, death, save/load,
+  and auto-repeat all inherit it: the field never leaves the battle
+  runtime and is never persisted, so a save can never carry banked
+  The. This lifecycle is shared with Bat Kiem's `currentThe` pool —
+  an auto-repeat starts every path at 0. The old
   "persists across kills in a farm session" behavior is retired
   deliberately — it let a player farm The on trash and open a boss
   fight with a free Phap Tuong (INV-14).
@@ -149,10 +161,12 @@ interface RouteProfile {
   ailmentStackBonus: number       // extra stacks on successful application
   empoweredUlt: 'detonate' | 'nuke'  // phap-tuong behavior selector
 
-  // stat-level modifiers — emitted as universal StatModifiers while
-  // the route is active (normal pipeline; DoT ticks already scale off
-  // `ailmentPotencyPercent` — the route feeds the ONE existing stat,
-  // never a parallel tick lever — A9)
+  // stat-level modifiers — emitted as domain:'phap_tu' StatModifiers
+  // with `flat` absolutes while the route is active (normal pipeline;
+  // DoT ticks already scale off `ailmentPotencyPercent` — the route
+  // feeds the ONE existing stat, never a parallel tick lever — A9;
+  // `flat` not `percent`: potency/duration are zero-base stats and
+  // Increased% on base 0 is a no-op without another flat source)
   statModifiers: StatModifier[]
 
   // named route mechanics beyond stat lines
@@ -194,9 +208,17 @@ this spec fixes TOPOLOGY, not final coefficients.)
   pool more than The). Flagged as a balance lever, not an oversight.
 - skillFactors apply at the effective-skill resolution choke point
   (the same resolution the turn converter consumes — the converter
-  needs no route awareness); statModifiers emit through the normal
-  modifier pipeline as a route-tagged source. Both halves live in
-  `PhapTuRoutes` — one owner, one rule (A2).
+  needs no route awareness) — **KIT-SCOPED, not character-scoped:**
+  factors apply only while `cultivationPath === 'phap_tu'` AND
+  `skill.id ∈ PHAP_TU_KIT_IDS[element]`. `linh_bao`, `huy_quyen`,
+  `tram`, passives, talents, and any non-kit skill never see route
+  factors — a route is the Phap Tu KIT's stance, not a global
+  character stance (INV-2).
+- `statModifiers` emit through the normal modifier pipeline as a
+  route-tagged source — and must feed BOTH aggregation surfaces
+  (persistent/menu AND battle snapshot), not just one, or UI stats
+  and combat stats diverge.
+- Both halves live in `PhapTuRoutes` — one owner, one rule (A2).
 - **Detonate** (`dot` empowered ult):
   - Definition: ALWAYS resolves its direct component + the element's
     normal ailment application; then consumes every **DoT ailment** —
@@ -246,11 +268,13 @@ readable.
 2. for every routeTag node of the OLD route: reset level → 0 and
    refund `floor(actualPaid × 0.75)` insight (actual paid via
    `nodeFreePurchaseRecord` — the existing honest-refund rule)
-3. `currentThe` resets to 0 — banked The never crosses a route switch
-   (a `dot`-banked pool can never feed a `no` nuke; INV-16).
-   Defense-in-depth: The is battle-scoped anyway (§3.2), but the rule
-   is pinned so no future persistence change resurrects the exploit.
-4. set `route = newRoute`
+3. set `route = newRoute`
+
+Banked The can never cross a route switch (INV-16): The is
+battle-scoped (§3.2) and switching is out-of-combat, so no banked
+pool exists at switch time — no explicit reset is needed; the
+invariant is pinned so a future persistence change cannot resurrect
+the exploit.
 
 Switching A→B→A pays the 25% tax in BOTH directions and requires
 re-purchasing the A nodes — stated explicitly in the switch-preview
@@ -288,9 +312,12 @@ huy_quyen (Huy Quyen) — NEW mortal skill, blood fist.
 
 The offer is evaluated live at the ritual, twice, from the same read:
 
-- **Display:** the path-choice layer lists `phap_tu_an` only when
-  `(player.skillCastCounts?.['linh_bao'] ?? 0) >= MORTAL_SKILL_L3_CASTS`
-  — a sealed/hidden path card that simply never renders otherwise.
+- **Display:** the path-choice layer lists `phap_tu_an` only while the
+  ritual itself is available (no path chosen, still mortal at cap —
+  the same conditions `chooseCultivationPath` guards) AND
+  `(player.skillCastCounts?.['linh_bao'] ?? 0) >= CAST_LEVELING_THRESHOLDS.linh_bao.lv3`
+  — display and authority share one predicate, so they can never
+  disagree.
 - **Authority:** `chooseCultivationPath('phap_tu_an', player)` re-checks
   the same predicate and rejects otherwise — presentation may hide,
   the core always enforces.
@@ -377,6 +404,11 @@ On a target holding ailments of 2 distinct elements:
       Kim into that same Hoa ALSO bursts as Hoa
   pair is sinh  → CONG MINH: no consume; the generated ("child")
       ailment gains +potency/+duration for its remaining life.
+      CHILD IS FIXED BY WUXING DIRECTION, NOT ARRIVAL ORDER:
+      for pair (A,B) where SINH_CYCLE[A] === B, B is always the
+      beneficiary — A-incumbent+B-newcomer buffs B AND
+      B-incumbent+A-newcomer buffs B identically. Application
+      order never changes the result.
       v1 LOCKED (user ruling): potency+duration amp ONLY — no
       zone buff, no self-buff; anything richer is a future spec,
       not a tuning knob.
@@ -478,7 +510,7 @@ Thế Mãn nodes (The is spent, not a sustained state).
 | Item | Fate |
 |---|---|
 | Per-element The (Hoa/Kim/Tho The, Huyet Pha) + `SkillRuntimeStats` The fields (`hoaTheGainPerCast`, `kimThe*`, `huyetPha*`, `thoThe*`, `thuyThe*`, `poisonRoot*`, `earthAoe*`…) | retired — the fields already sit in `UNSUPPORTED_*_FIELDS`; remove from converter lists + runtime stats |
-| Element Loadout (`ElementLoadout`, `canEquipElement`, slot table) | retired — hien is mono-element, An is all-elements-by-random |
+| Element Loadout (`ElementLoadout`, `canEquipElement`, slot table) + the whole legacy element authority (`PlayerData.unlockedElements`/`equippedElements`, `NodeEffect.unlocksElement`, `NodePrerequisite 'element'`, `equipElement`) | retired — hien is mono-element via `phapTu.element` (INV-21), An is all-elements-by-random; consumer audit first — the artifact Ngu Hanh rotation currently reads `equippedElements` and must derive `[phapTu.element]` for phap_tu players |
 | Chain POSITION machinery (`ChainStateSystem`, link/finisher gain rules, `setChainDefinition`) | retired — the per-element `[basic, special, ultimate]` table stays as slot data but is RENAMED `PHAP_TU_KIT_IDS` (chain concept dead, name must not imply otherwise); only the link-position logic dies |
 | `phap_tu_reaction_special`/`_ultimate` + `reaction_empowerment` buff + `compositePicks.poolType 'reaction_path'` | replaced by the An kit + `phap_tu` domain `reactionEffectPercent` |
 | `AdjacencySystem` stub / Da Phap adjacency | superseded by An |
@@ -569,14 +601,18 @@ loadouts, unlock lists, or `skillCastCounts` seeds.
     `route != null` — always and only via `selectPhapTuElement` (one
     transaction); no code path can create a picked-element/null-route
     state.
-14. **The is battle-scoped:** `currentThe` is 0 at every battle start;
+14. **The is battle-scoped:** `currentThe` is 0 at every battle start
+    (entity construction AND every auto-repeat cycle via
+    `resetBattleScopedResources` — reused entities don't carry it);
     it is never persisted and never survives a battle boundary —
     farming trash to open a boss with a free Phap Tuong is impossible
-    by construction.
+    by construction. Shared lifecycle with Bat Kiem's pool.
 15. **Crit The is per-cast:** `critTheGain` grants at most once per
     cast action regardless of target/hit count.
-16. **Route switch clears The:** `switchRoute` sets `currentThe` to 0 —
-    banked The never crosses routes.
+16. **Route switch clears The:** banked The never crosses a route
+    switch — subsumed by INV-14 (The is battle-scoped, switching is
+    out-of-combat); pinned so no future persistence change resurrects
+    the exploit.
 17. **Two-phase reaction order:** for one application event, all sinh
     pairs resolve before all khac pairs, each in canonical
     `ElementType` index order — ordering is a design rule, not enum
@@ -593,6 +629,12 @@ loadouts, unlock lists, or `skillCastCounts` seeds.
     through the turn engine's injectable RNG (never `Math.random()`
     inside kit resolution), so combat stays deterministic under a
     seeded test.
+21. **Element single-authority:** `player.phapTu.element` is the ONLY
+    element source — `unlockedElements`/`equippedElements`/
+    `NodeEffect.unlocksElement`/`NodePrerequisite 'element'`/
+    `canEquipElement`/`equipElement` are all retired; every consumer
+    (incl. the artifact Ngu Hanh rotation) derives from
+    `phapTu.element` or is deleted.
 
 ## 11. Residual notes / open details
 

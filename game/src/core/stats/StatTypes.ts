@@ -37,8 +37,8 @@ export type StatType =
   | 'wardRegenPerTurn'
   // Pháp Tu (Thổ Tu, 2026-08-15) — % wardMax phản thành damage vào
   // NGUỒN khi Hộ Thuẫn của mình vừa vỡ hẳn (currentWard chạm 0), xem
-  // CombatSystem.ts's resolveAttack(). Tách khỏi thornsPercent (đó là
-  // % theo damage NHẬN vào, cái này % theo DUNG LƯỢNG khiên).
+  // CombatSystem.ts's resolveAttack(). Tính theo DUNG LƯỢNG khiên tối
+  // đa, KHÔNG theo damage nhận vào (generic thorns stat đã gỡ — T12).
   | 'wardBreakDamagePercent'
   // Pháp Tu Redesign (magicpath) — Mana Shield: % sát thương (SAU Ward,
   // TRƯỚC HP) được đẩy sang mana thay vì máu, quy đổi 1:1 — xem
@@ -47,7 +47,8 @@ export type StatType =
   // sinh tồn — đúng tinh thần "linh lực giảm sát thương").
   | 'manaShieldPercent'
   | 'leechPercent'
-  | 'thornsPercent'
+  // The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;
+  // reflection is a the_tu mechanic (phan_chinh), not a stat.
   // stat-system-reimagined Task 4 (D18) -- receiver-side amplification of
   // HP restores that are NOT damage-derived: hpRegenPerTurn ticks, direct
   // heal effects, authored recovery triggers (dotRecovery). NEVER scales
@@ -56,6 +57,14 @@ export type StatType =
   | 'healingEffectivenessPercent'
   | 'hpRegenPerTurn'
   | 'manaRegenPerTurn'
+  // The Tu An (spec 2026-09-15 T4/section 3.2) — reactive chance stats,
+  // the_tu_an-gated. Derived ONLY from attributes via the two-channel
+  // emission (CultivationPathSystem); INV-13 forbids authored modifiers.
+  // Stored RAW (may exceed REACTIVE_CHANCE_CAP) — cap applies at the
+  // roll/display site via clampStatValue, never inside the pipeline.
+  | 'counterChance'
+  | 'protectChance'
+  | 'followUpChance'
   | 'finalDamagePercent'
   | 'finalDamageReductionPercent'
   | 'criticalAvoidance'

@@ -41,7 +41,6 @@ function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEn
     currentHp: 1_000_000,
     maxHp: 1_000_000,
     currentMp: stats.maxMp,
-    currentMomentum: 0,
     currentThe: 0,
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,

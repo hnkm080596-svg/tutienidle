@@ -110,6 +110,10 @@
         "title": "Đổi Hướng Pháp Tu",
         "body": "Chuyển sang hướng {route}? Node hướng cũ về 0 — lấy lại {regain} Cảm Ngộ, mất {lose}.",
         "confirm": "Đổi Hướng"
+      },
+      "branchLabels": {
+        "theTu": "Thể Tu Hiện",
+        "theTuAn": "Thể Tu Ẩn"
       }
     },
     "skillPath": {

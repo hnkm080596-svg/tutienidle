@@ -6,7 +6,6 @@ import type { SkillResourceType } from './SkillTypes'
 // Phase A3 (2026-09-07) — Pháp Tu Thế pool.
 export const SKILL_RESOURCE_TYPE_LABELS: Record<Exclude<SkillResourceType, 'none'>, string> = {
   mana: 'Linh Lực',
-  momentum: 'Đà Thế',
   the: 'Thế',
 }
 

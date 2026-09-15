@@ -99,8 +99,21 @@ export class BuffSystem {
       return { ...effect }
     })
 
-    const resistMultiplier = 1 - Math.min(AILMENT_RESIST_CAP, Math.max(0, target.stats.ailmentResistPercent))
-    const duration = (durationOverride ?? definition.duration) * resistMultiplier * (1 + source.stats.ailmentDurationPercent)
+    // The Tu Reimagined (plan v2.4 review P0) — fixed_holder_turns:
+    // the authored duration IS the holder-turn count; neither the
+    // target's ailment resist nor the source's ailment-duration stat may
+    // scale it. ailment_scaled (default) keeps the legacy formula.
+    const baseDuration = durationOverride ?? definition.duration
+    const duration =
+      definition.durationPolicy === 'fixed_holder_turns'
+        ? baseDuration
+        : baseDuration * (1 - Math.min(AILMENT_RESIST_CAP, Math.max(0, target.stats.ailmentResistPercent))) * (1 + source.stats.ailmentDurationPercent)
+
+    // uniquePerTarget — newest application wins by construction: drop
+    // every instance of this id (any source) before adding the new one.
+    if (definition.uniquePerTarget) {
+      this.pool.removeAllById(definition.id)
+    }
 
     const existing = this.pool.getFromSource(definition.id, source.id)
 
@@ -211,8 +224,12 @@ export class BuffSystem {
 
     this.pool.removeInstance(buff.id, buff.sourceId)
 
-    const resistMultiplier = 1 - Math.min(AILMENT_RESIST_CAP, Math.max(0, target.stats.ailmentResistPercent))
-    const duration = nextDefinition.duration * resistMultiplier * (1 + (source?.stats.ailmentDurationPercent ?? 0))
+    const duration =
+      nextDefinition.durationPolicy === 'fixed_holder_turns'
+        ? nextDefinition.duration
+        : nextDefinition.duration *
+          (1 - Math.min(AILMENT_RESIST_CAP, Math.max(0, target.stats.ailmentResistPercent))) *
+          (1 + (source?.stats.ailmentDurationPercent ?? 0))
 
     this.pool.removeInstance(nextDefinition.id, buff.sourceId)
 
@@ -476,12 +493,20 @@ export class BuffSystem {
     }
   }
 
+  /**
+   * The Tu Reimagined (plan Task 8) — `context` carries the landed-hit
+   * facts reflection needs (the attacker + the hpDamage actually taken).
+   * BuffSystem stays pure (A6): it only RESOLVES reflect requests — the
+   * turn engine executes them through the damage authority.
+   */
   rollReactiveTrigger(
     target: CombatEntity,
     triggerEvent: 'onCastBegin' | 'onImpactLanded',
     registry: BuffDefinitionCatalog,
-  ): { firedFollowUp: boolean } {
+    context?: { attacker?: CombatEntity; hpDamage?: number },
+  ): { firedFollowUp: boolean; reflectRequests: { attackerEntity: CombatEntity; amount: number }[] } {
     let firedFollowUp = false
+    const reflectRequests: { attackerEntity: CombatEntity; amount: number }[] = []
 
     for (const buff of this.pool.getAll()) {
       for (const effect of buff.effects) {
@@ -495,12 +520,24 @@ export class BuffSystem {
             if (effect.queuesFollowUp) {
               firedFollowUp = true
             }
+
+            // Reflection (phan_chinh): only a TAKEN hit reflects — the
+            // caller gates on hpDamage > 0; the context guard keeps
+            // onCastBegin/context-less calls from reflecting nothing.
+            if (effect.reflectsDamage && context?.attacker && (context.hpDamage ?? 0) > 0) {
+              reflectRequests.push({
+                attackerEntity: context.attacker,
+                amount:
+                  context.hpDamage! * effect.reflectsDamage.takenRatio +
+                  target.stats.maxHp * effect.reflectsDamage.maxHpRatio,
+              })
+            }
           }
         }
       }
     }
 
-    return { firedFollowUp }
+    return { firedFollowUp, reflectRequests }
   }
 
   getStacks(id: string, sourceId?: string): number {
@@ -537,6 +574,15 @@ export class BuffSystem {
 
   removeAllById(id: string): void {
     this.pool.removeAllById(id)
+  }
+
+  /**
+   * The Tu Reimagined (plan Task 9/11) — pool-level cc strip for
+   * clearsCcOnApply buffs on grant paths outside TurnBattleSystem's
+   * appliesBuffs resolution (e.g. CombatSystem's survive-lethal grant).
+   */
+  clearCcEffects(): void {
+    this.pool.clearCcEffects()
   }
 
   renewWithExtension(id: string, sourceId: string, addedDuration: number): void {

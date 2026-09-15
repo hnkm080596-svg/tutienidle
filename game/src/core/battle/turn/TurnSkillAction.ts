@@ -25,6 +25,25 @@ export interface TurnSkillAilmentApplication {
   stacks?: number
 }
 
+/**
+ * The Tu Reimagined (plan Task 11 contract) — one buff application
+ * authored on a TurnSkillDefinition.
+ */
+export interface TurnSkillBuffApplication {
+  definitionId: string
+  /**
+   * 'target' is the legacy alias for 'action_targets' (Kiem Tu combo /
+   * Phap Tu empowered payloads) — both resolve to declared.affected.
+   */
+  target: 'self' | 'target' | 'action_targets' | 'allies_except_self' | 'all_enemies'
+  /** Legacy alias of durationOverride (Kiem Tu/Phap Tu payloads). */
+  duration?: number
+  durationOverride?: number
+  /** Kiem Tu combo capstones — apply() repeated N times (default 1). */
+  stacks?: number
+  externalWardGrant?: { sourceMaxHpRatio: number }
+}
+
 export interface TurnSkillDefinition {
   id: string
   cooldownTurns: number
@@ -76,19 +95,46 @@ export interface TurnSkillDefinition {
     maxExtraCasts: number
   }
   /**
-   * M10 (ARCH-008) — `duration` carries the authored SkillEffect.duration
-   * override through the converter (e.g. duong_linh_tuyen spec: 8 instead
-   * of the buff definition's registry default). undefined = registry
-   * default, unchanged behavior.
+   * The Tu Reimagined (plan Task 6/11) — multi-buff application contract
+   * (replaces the singular appliesBuff). Each entry resolves its target
+   * set at impact:
+   * - 'self' -> the actor
+   * - 'action_targets' -> declared.affected (the hit's resolved targets)
+   * - 'allies_except_self' -> living same-side participants except actor
+   * - 'all_enemies' -> living opposing-side participants
+   * `durationOverride` is the pre-modifier base delivered to
+   * BuffSystem.apply's M10 channel (node-scaled durations land here).
+   * `externalWardGrant` marks a son_nhac_ho_the-style external ward pool
+   * granted to the target (resolution: Task 11 external-ward contract).
    */
-  appliesBuff?: { definitionId: string; target: 'self' | 'target'; duration?: number; stacks?: number }
   /**
-   * Kiem Tu review fix — plural form (same convention as
-   * appliesAilment/appliesAilments): combo payloads may carry several
-   * authored buffs and multiple capstone modifiers may each contribute
-   * one. Resolution normalizes `appliesBuffs ?? [appliesBuff]`.
+   * Legacy singular form (Kiem Tu combo payloads, Phap Tu empowered
+   * ults, companion skills). Resolution normalizes
+   * `appliesBuffs ?? [appliesBuff]` — 'target' means the action's
+   * declared targets, `duration` is the base delivered to BuffSystem.
    */
-  appliesBuffs?: { definitionId: string; target: 'self' | 'target'; duration?: number; stacks?: number }[]
+  appliesBuff?: TurnSkillBuffApplication
+  /**
+   * Multi-buff application contract (The Tu Reimagined plan Task 6/11,
+   * unified with the Kiem Tu plural form). Each entry resolves its
+   * target set at impact:
+   * - 'self' -> the actor
+   * - 'target'/'action_targets' -> declared.affected (resolved targets)
+   * - 'allies_except_self' -> living same-side participants except actor
+   * - 'all_enemies' -> living opposing-side participants
+   * `duration`/`durationOverride` is the pre-modifier base delivered to
+   * BuffSystem.apply's M10 channel; `stacks` repeats the apply N times
+   * (combo capstones); `externalWardGrant` marks a son_nhac_ho_the-style
+   * external ward pool granted to the target.
+   */
+  appliesBuffs?: TurnSkillBuffApplication[]
+  /**
+   * The Tu Reimagined (plan Task 6) — buff definitions applied to the
+   * OWNER at participant build (the emblem-buff channel). The defs are
+   * participant-local clones (node-adjusted via collectTheTuKitModifiers),
+   * so they ride the def object itself, not a registry id.
+   */
+  grantsBuffsAtBuild?: import('../../buff/BuffTypes').BuffDefinition[]
   /**
    * Phase A1 (2026-09-07) — chance-gated ailment application, checked
    * against TurnReactionManager after applying. Deliberately separate
@@ -190,11 +236,12 @@ export interface TurnSkillDefinition {
     perInstanceOptions?: (instanceIndex: number, target: CombatEntity) => Partial<HitResolveOptions>
   }
   /**
-   * Kiem Tu Reimagined Task 9 — HUD emblem marker (Ngu Kiem Dao's
-   * special/ultimate slot indicators). An emblem def RENDERS on the bar
-   * but is never selectable: selectAction/selectForcedAction skip slots
-   * carrying one. Marker defs carry no damage/effects — they exist so
-   * presentation has a slot occupant to label.
+   * Emblem-occupying slot def: never selectable by
+   * selectAction/selectForcedAction, never deals damage. Two producers:
+   * - Kiem Tu Reimagined Task 9 — Ngu Kiem Dao HUD emblem markers render
+   *   on the bar as slot occupants for presentation to label.
+   * - The Tu Reimagined (spec 2026-09-15 section 5.2) — passive emblems;
+   *   their permanent buff lands via grantsBuffsAtBuild.
    */
   emblemOnly?: boolean
 }
@@ -255,10 +302,9 @@ export interface TurnSkillSlot {
 
 const RESOURCE_FIELD: Record<
   Exclude<SkillResourceType, 'none'>,
-  'currentMp' | 'currentMomentum' | 'currentThe'
+  'currentMp' | 'currentThe'
 > = {
   mana: 'currentMp',
-  momentum: 'currentMomentum',
   the: 'currentThe',
 }
 

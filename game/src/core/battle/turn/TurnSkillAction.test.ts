@@ -25,8 +25,6 @@ function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: 50,
-    currentMomentum: 10,
-
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
@@ -62,11 +60,6 @@ describe('hasResourceFor', () => {
 
   it('false when mana cost exceeds current mana', () => {
     expect(hasResourceFor(entity({ currentMp: 10 }), skill({ resourceType: 'mana', resourceCost: 50 }))).toBe(false)
-  })
-
-  it('checks momentum pool', () => {
-    expect(hasResourceFor(entity({ currentMomentum: 10 }), skill({ resourceType: 'momentum', resourceCost: 10 }))).toBe(true)
-    expect(hasResourceFor(entity({ currentMomentum: 5 }), skill({ resourceType: 'momentum', resourceCost: 10 }))).toBe(false)
   })
 })
 

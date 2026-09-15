@@ -59,9 +59,12 @@ export interface ApplyDebuffAction {
 }
 
 // Named resource pools every path can grant/consume — mirrors the fields
-// already on CombatEntity (currentMomentum).
-export type SkillResourcePoolKey =
-  | 'momentum'
+// already on CombatEntity — empty: the element/sword pools moved off
+// CombatEntity (kiem-tu/phap-tu reimagined) and momentum was retired
+// (the-tu-reimagined spec 2026-09-15 D7). `never` until a path re-authors
+// a named entity pool; grantResource becomes unproducible while
+// consumeResource keeps its 'breakGauge' member below.
+export type SkillResourcePoolKey = never
 
 export interface GrantResourceAction {
   type: 'grantResource'

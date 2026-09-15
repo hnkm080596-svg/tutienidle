@@ -139,11 +139,13 @@ describe('TalentPassives v4 — shape & nhịp engine của 11 passive', () => {
     expect(skill.passiveConvertsTo).toBeUndefined()
   })
 
+  // generic thorns stat retired (spec 2026-09-15 T12) — the stacking
+  // retaliation payload is wardBreakDamagePercent (Khiên Nổ).
   it('Thứ Phạt — trigger damage_taken, gai theo tầng Hận Thứ (decay thuộc consumer — không convert)', () => {
     const skill = passiveById.get('talent_passive_thu_phat')!
 
     expect(skill.passiveTrigger).toBe('damage_taken')
-    expect(skill.passiveModifiers![0]!.stat).toBe('thornsPercent')
+    expect(skill.passiveModifiers![0]!.stat).toBe('wardBreakDamagePercent')
     expect(skill.passiveModifiers![0]!.maxStacks).toBe(5)
     expect(skill.passiveConvertsTo).toBeUndefined()
   })

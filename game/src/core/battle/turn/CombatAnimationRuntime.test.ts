@@ -27,7 +27,6 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentMomentum: 0,
 
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,

@@ -761,8 +761,9 @@ export const PHAP_TU_SKILLS: Skill[] = [
     target: 'self',
     effects: [{ type: 'buff', buffId: 'dia_tru' }],
     // Biến thể C (§2.5, review round 1): Bích = khiên THUẦN nuôi E nổ
-    // to (buff riêng dia_tru_bich +100 ward/+8 regen, không thorns);
-    // Thứ = phản đòn (buff riêng dia_tru_thu +40 ward/+25% thorns).
+    // to (buff riêng dia_tru_bich +100 ward/+8 regen);
+    // Thứ = phản đòn (buff riêng dia_tru_thu +40 ward/+25% Khiên Nổ —
+    // generic thorns stat retired, spec 2026-09-15 T12).
     // Không mượn bang_giap/kim_giap — sai số liệu + đụng tên đa hành.
     specializations: [
       {

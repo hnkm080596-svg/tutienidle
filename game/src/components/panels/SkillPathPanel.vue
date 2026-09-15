@@ -29,6 +29,7 @@ import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
 import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
+import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import type { ElementType } from '@/core/element/ElementType'
 import type { Skill } from '@/core/skill/Skill'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
@@ -41,7 +42,26 @@ const { stateVersion } = useStateVersion()
 
 // Kiem Tu also has a real Node Tree (KiemTuNodes.ts). purchaseNode() is
 // only reachable through NodeInspector.vue, which renders when showTree.
-const showTree = computed(() => player.cultivationPath === 'phap_tu' || player.cultivationPath === 'kiem_tu')
+//
+// The Tu Reimagined (T22) — the_tu/the_tu_an mỗi path có 1 cây thật
+// (TheTuNodes/TheTuAnNodes) dưới branchTag trùng path id: single-tag
+// pass-through view qua viewBranchTags(), toàn bộ root (mutex cho Hiện,
+// non-mutex cho Ẩn) render trong cùng một tree.
+const THE_TU_TREE_TAGS: Partial<Record<CultivationPathId, string>> = {
+  the_tu: 'the_tu',
+  the_tu_an: 'the_tu_an',
+}
+
+const theTuTreeTag = computed(() =>
+  player.cultivationPath ? THE_TU_TREE_TAGS[player.cultivationPath] : undefined,
+)
+
+const showTree = computed(
+  () =>
+    player.cultivationPath === 'phap_tu' ||
+    player.cultivationPath === 'kiem_tu' ||
+    theTuTreeTag.value !== undefined,
+)
 
 // ---- Nhánh phap_tu (Hành -> Node Tree) ----
 // Task 16: element tabs always visible for phap_tu — the element-root
@@ -142,20 +162,26 @@ const selectedSkillHasTree = computed(() => {
     return false
   }
 
-  if (player.cultivationPath === 'kiem_tu' || player.cultivationPath === 'phap_tu') {
+  // Kiem Tu + ca hai The Tu: cay co dinh cua path — luon hien, khong
+  // phu thuoc skill dang chon o SkillPathList.
+  if (
+    player.cultivationPath === 'kiem_tu' ||
+    player.cultivationPath === 'phap_tu' ||
+    theTuTreeTag.value !== undefined
+  ) {
     return true
   }
 
   return selectedSkill.value !== null && skillElement(selectedSkill.value) !== null
 })
 
-const treeBranchTag = computed<string>(() =>
-  player.cultivationPath === 'kiem_tu'
-    ? player.kiemTu?.mode === 'ngu'
-      ? 'ngu_kiem'
-      : 'kiem_pho'
-    : selectedBranch.value,
-)
+const treeBranchTag = computed<string>(() => {
+  if (player.cultivationPath === 'kiem_tu') {
+    return player.kiemTu?.mode === 'ngu' ? 'ngu_kiem' : 'kiem_pho'
+  }
+
+  return theTuTreeTag.value ?? selectedBranch.value
+})
 
 function onSelectSkill(skill: Skill) {
   selectedSkillId.value = skill.id

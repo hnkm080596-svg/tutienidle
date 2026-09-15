@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { PHAP_TU_NODES } from '../../src/data/progression/PhapTuNodes'
 import { KIEM_TU_NODES } from '../../src/data/progression/KiemTuNodes'
+import { THE_TU_NODES } from '../../src/data/progression/TheTuNodes'
+import { THE_TU_AN_NODES } from '../../src/data/progression/TheTuAnNodes'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '../../src/core/progression/NodeBranchViews'
 import { ELEMENT_ORDER } from '../../src/core/element/ElementLabels'
 
@@ -21,7 +23,10 @@ import { ELEMENT_ORDER } from '../../src/core/element/ElementLabels'
 // Kiem Tu Reimagined Task 11 — the retired kiem_tran/bat_kiem route
 // tags are gone; the reimagined tree renders through 'kiem_pho' and
 // 'ngu_kiem' (both map to the combined kiem-tu view).
-const VIEW_TAGS = [...ELEMENT_ORDER, 'kiem_pho', 'ngu_kiem']
+// The Tu Reimagined (Task 12) — 'the_tu' is a single-tag pass-through
+// view (one tree, mutex roots inside it); 'the_tu_an' is the hidden
+// path's view tag.
+const VIEW_TAGS = [...ELEMENT_ORDER, 'kiem_pho', 'ngu_kiem', 'the_tu', 'the_tu_an']
 
 function renderableTags(): Set<string> {
   const tags = new Set<string>()
@@ -39,10 +44,11 @@ describe('node branch coverage', () => {
     const hidden = new Set<string>(HIDDEN_BRANCH_TAGS)
     const unrenderable: string[] = []
 
-    for (const node of [...PHAP_TU_NODES, ...KIEM_TU_NODES]) {
+    for (const node of [...PHAP_TU_NODES, ...KIEM_TU_NODES, ...THE_TU_NODES, ...THE_TU_AN_NODES]) {
       // Phap Tu Reimagined (Task 16) — the view membership tag is
       // elementTag for the reworked Phap Tu tree, branchTag for the
-      // Kiem Tu routes; a node is renderable when its view tag is.
+      // Kiem Tu routes and the The Tu trees; a node is renderable when
+      // its view tag is.
       const tag = node.elementTag ?? node.branchTag
       if (tag === undefined) continue
       if (!renderable.has(tag) && !hidden.has(tag)) {

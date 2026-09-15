@@ -12,11 +12,13 @@ interface FakeHud {
   hpCalls: Array<{ current: number; max: number }>
   mpCalls: Array<{ current: number; max: number }>
   kiemCalls: Array<{ current: number; max: number; label: string }>
+  wardCalls: Array<{ current: number; max: number }>
   visible: boolean | null
   destroyed: boolean
   updateHp(current: number, max: number): void
   updateMp(current: number, max: number): void
   updateKiem(current: number, max: number, label: string): void
+  updateExternalWard(current: number, max: number): void
   layout(width: number, height: number): void
   setVisible(v: boolean): void
   destroy(): void
@@ -27,6 +29,7 @@ function makeFakeHud(): FakeHud {
     hpCalls: [],
     mpCalls: [],
     kiemCalls: [],
+    wardCalls: [],
     visible: null,
     destroyed: false,
     updateHp(current, max) {
@@ -37,6 +40,9 @@ function makeFakeHud(): FakeHud {
     },
     updateKiem(current, max, label) {
       hud.kiemCalls.push({ current, max, label })
+    },
+    updateExternalWard(current, max) {
+      hud.wardCalls.push({ current, max })
     },
     layout() {},
     setVisible(v) {
@@ -240,5 +246,48 @@ describe('CombatScene — Kiếm bar poll per-tick (9.4)', () => {
 
     expect(hud.kiemCalls).toHaveLength(1)
     expect(hud.kiemCalls[0]).toEqual({ current: 0, max: 0, label: '' })
+  })
+
+  // The Tu Reimagined (Task 22, P1.2) — externalWard is a SEPARATE shield
+  // layer driven by the same poll; it never merges into the resource bar.
+  it('snapshot.externalWard → updateExternalWard mỗi poll (lớp riêng)', () => {
+    const reader = vi.fn((): ReturnType<KiemBarReader> => ({
+      current: 45,
+      max: 100,
+      label: 'Thế',
+      externalWard: { current: 60, max: 400 },
+    }))
+    const { hud, scene } = sceneWithKiemReader(reader)
+
+    scene.pollKiemBar()
+    scene.pollKiemBar()
+
+    expect(hud.kiemCalls[0]).toEqual({ current: 45, max: 100, label: 'Thế' })
+    expect(hud.wardCalls).toHaveLength(2)
+    expect(hud.wardCalls[0]).toEqual({ current: 60, max: 400 })
+  })
+
+  it('snapshot thiếu externalWard → ward layer ẩn (updateExternalWard(0, 0))', () => {
+    const reader = vi.fn((): ReturnType<KiemBarReader> => ({
+      current: 30,
+      max: 100,
+      label: 'Kiếm Thế',
+    }))
+    const { hud, scene } = sceneWithKiemReader(reader)
+
+    scene.pollKiemBar()
+
+    expect(hud.wardCalls).toHaveLength(1)
+    expect(hud.wardCalls[0]).toEqual({ current: 0, max: 0 })
+  })
+
+  it('reader null → cả resource bar lẫn ward layer đều ẩn', () => {
+    const reader = vi.fn((): ReturnType<KiemBarReader> => null)
+    const { hud, scene } = sceneWithKiemReader(reader)
+
+    scene.pollKiemBar()
+
+    expect(hud.kiemCalls[0]).toEqual({ current: 0, max: 0, label: '' })
+    expect(hud.wardCalls[0]).toEqual({ current: 0, max: 0 })
   })
 })

@@ -27,7 +27,6 @@ function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: 50,
-    currentMomentum: 0,
 
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,

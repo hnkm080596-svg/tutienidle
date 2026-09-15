@@ -9,8 +9,6 @@ function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
     id: 'fixture', name: 'Fixture', type: 'enemy', baseStats: stats, stats,
     currentHp: 100, maxHp: 100, currentMp: 0,
-
-    currentMomentum: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
   } as CombatEntity

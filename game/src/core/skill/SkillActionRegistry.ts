@@ -5,20 +5,16 @@ import type { ActionRuntimeContext, SkillAction, SkillActionType } from './Skill
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
 import type { TriggerContextMap, TriggerType } from './SkillTrigger'
-import { MAX_MOMENTUM } from '../combat/CombatTypes'
 import type { SkillResourcePoolKey } from './SkillAction'
 import type { ActionImpactEvent } from '../battle/BattleEvents'
 
 // Shared by grantResource (Task 5) and consumeResource (Task 6) — every
-// named pool's CombatEntity field and hard cap. Pools with no cap in
-// today's game (none currently) would map to Infinity.
-export const RESOURCE_POOL_FIELD: Record<SkillResourcePoolKey, keyof CombatEntity> = {
-  momentum: 'currentMomentum',
-}
+// named pool's CombatEntity field and hard cap. All named pools are
+// currently retired (SkillResourcePoolKey = never), so both maps are
+// empty; consumeResource's 'breakGauge' arm reads the field directly.
+export const RESOURCE_POOL_FIELD: Record<SkillResourcePoolKey, keyof CombatEntity> = {}
 
-export const RESOURCE_POOL_MAX: Record<SkillResourcePoolKey, number> = {
-  momentum: MAX_MOMENTUM,
-}
+export const RESOURCE_POOL_MAX: Record<SkillResourcePoolKey, number> = {}
 
 export interface ActionExecutionHelpers {
   fireNested: <T extends TriggerType>(trigger: T, context: Omit<TriggerContextMap[T], 'skill'>) => void

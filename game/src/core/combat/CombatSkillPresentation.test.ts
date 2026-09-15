@@ -16,8 +16,6 @@ function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
     id: 'p', name: 'p', type: 'player', baseStats: stats, stats,
     currentHp: 100, maxHp: 100, currentMp: 50, maxMp: 50,
-
-    currentMomentum: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
     ...overrides,
   } as CombatEntity

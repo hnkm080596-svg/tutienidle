@@ -151,10 +151,10 @@ describe('COMPANIONS skill content resolves', () => {
           expect(ailment.chance).toBeLessThanOrEqual(1)
         }
 
-        if (skill.appliesBuff) {
+        for (const application of skill.appliesBuffs ?? []) {
           expect(
-            () => BUFF_REGISTRY.get(skill.appliesBuff!.definitionId),
-            `${definition.id}/${skill.id} buff "${skill.appliesBuff!.definitionId}"`,
+            () => BUFF_REGISTRY.get(application.definitionId),
+            `${definition.id}/${skill.id} buff "${application.definitionId}"`,
           ).not.toThrow()
         }
       }

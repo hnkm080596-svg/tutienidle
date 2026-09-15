@@ -29,6 +29,9 @@ export function toBuffDefinition(live: BuffDefinition): BuffDefinition {
     // relations through it.
     element: live.element,
     duration: live.duration,
+    durationPolicy: live.durationPolicy,
+    uniquePerTarget: live.uniquePerTarget,
+    clearsCcOnApply: live.clearsCcOnApply,
     maxStacks: live.maxStacks,
     stackMode: live.stackMode,
     convertsToId: live.convertsToId,

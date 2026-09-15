@@ -20,7 +20,15 @@ export function toTurnBattleParticipant(
   priority: number,
   basic: TurnSkillDefinition,
   buildId?: string,
-  resolvedSpecialUltimate?: { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition },
+  resolvedSpecialUltimate?: {
+    special?: TurnSkillDefinition
+    ultimate?: TurnSkillDefinition
+    reactivePayloads?: Record<string, TurnSkillDefinition>
+    /** Task 20 — the_tu_an proc-fuel cap (MAX_THE + node bonus); stamped
+     * onto the entity here so every Thế transaction clamps via
+     * `entity.maxThe ?? MAX_THE` (TheEconomy.theCap). */
+    maxThe?: number
+  },
 ): TurnBattleParticipant {
   const participant: TurnBattleParticipant = {
     id: entity.id,
@@ -72,6 +80,19 @@ export function toTurnBattleParticipant(
       skill: ultimate,
       remainingCooldownTurns: 0,
     } satisfies TurnSkillSlot
+  }
+
+  // The Tu An (plan Task 16) — participant-local payload clones the
+  // typed follow-up queue resolves for counter/follow-up procs.
+  if (resolvedSpecialUltimate?.reactivePayloads !== undefined) {
+    participant.reactivePayloads = resolvedSpecialUltimate.reactivePayloads
+  }
+
+  // Task 20 — participant-build cap authority: entity.maxThe persists
+  // across auto-repeat resets (battle-scoped currentThe zeroes, the cap
+  // is configuration, not battle state).
+  if (resolvedSpecialUltimate?.maxThe !== undefined) {
+    entity.maxThe = resolvedSpecialUltimate.maxThe
   }
 
   if (entity.bossTrigger) {

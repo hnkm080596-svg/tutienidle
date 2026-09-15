@@ -18,7 +18,6 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentMomentum: 0,
 
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
@@ -45,8 +44,8 @@ function makeKillSkill(): Skill {
     target: 'enemy',
     effects: [],
     triggers: [
-      { trigger: 'onKill', actions: [{ type: 'grantResource', pool: 'momentum', amount: 1 }] },
-      { trigger: 'onDeath', actions: [{ type: 'grantResource', pool: 'momentum', amount: 1 }] },
+      { trigger: 'onKill', actions: [{ type: 'consumeResource', pool: 'breakGauge', amount: 1 }] },
+      { trigger: 'onDeath', actions: [{ type: 'consumeResource', pool: 'breakGauge', amount: 1 }] },
     ],
     unlocked: true,
     equipped: true,
@@ -71,14 +70,14 @@ describe('CombatSystem — onKill trigger wiring', () => {
     const combat = makeFullyWiredCombat(skillManager, eventBus)
 
     const killer = makeEntity({ id: 'killer',})
-    const victim = makeEntity({ id: 'victim', currentHp: 0 })
+    const victim = makeEntity({ id: 'victim', currentHp: 0, currentBreakGauge: 5, breakGaugeMax: 100 })
 
     // killIfDead's 3rd param bundles killer entity + skillId into one
     // options object — only fires onKill when BOTH are supplied (callers
     // with only a killerId string, or no skillId, skip firing).
     combat.killIfDead(victim, 'killer', { killer, skillId: 'test_kill_skill' })
 
-    expect(killer.currentMomentum).toBe(1)
+    expect(victim.currentBreakGauge).toBe(4)
   })
 
   it('killIfDead() does not fire onDeath (deferred — see fireKillTriggers doc)', () => {
@@ -88,15 +87,14 @@ describe('CombatSystem — onKill trigger wiring', () => {
     const combat = makeFullyWiredCombat(skillManager, eventBus)
 
     const killer = makeEntity({ id: 'killer',})
-    const victim = makeEntity({ id: 'victim', currentHp: 0,})
+    const victim = makeEntity({ id: 'victim', currentHp: 0, currentBreakGauge: 5, breakGaugeMax: 100 })
 
     combat.killIfDead(victim, 'killer', { killer, skillId: 'test_kill_skill' })
 
-    // onKill (killer's own skill) fires; onDeath (would require looking
-    // up the VICTIM's own skills, which CombatSystem cannot do today)
-    // does not — the victim's resource pool stays untouched.
-    expect(killer.currentMomentum).toBe(1)
-    expect(victim.currentMomentum).toBe(0)
+    // onKill (killer's own skill) fires once; onDeath (would require
+    // looking up the VICTIM's own skills, which CombatSystem cannot do
+    // today) does not — the breakGauge drops exactly once.
+    expect(victim.currentBreakGauge).toBe(4)
   })
 
   it('killIfDead() does not fire onKill when skillContext is omitted', () => {
@@ -106,11 +104,11 @@ describe('CombatSystem — onKill trigger wiring', () => {
     const combat = makeFullyWiredCombat(skillManager, eventBus)
 
     const killer = makeEntity({ id: 'killer',})
-    const victim = makeEntity({ id: 'victim', currentHp: 0 })
+    const victim = makeEntity({ id: 'victim', currentHp: 0, currentBreakGauge: 5, breakGaugeMax: 100 })
 
     combat.killIfDead(victim, 'killer')
 
-    expect(killer.currentMomentum).toBe(0)
+    expect(victim.currentBreakGauge).toBe(5)
   })
 
   it('killIfDead() does not fire onKill (or throw) when buffRegistry was not constructed', () => {
@@ -122,13 +120,13 @@ describe('CombatSystem — onKill trigger wiring', () => {
     const combat = new CombatSystem(eventBus, skillManager)
 
     const killer = makeEntity({ id: 'killer',})
-    const victim = makeEntity({ id: 'victim', currentHp: 0 })
+    const victim = makeEntity({ id: 'victim', currentHp: 0, currentBreakGauge: 5, breakGaugeMax: 100 })
 
     expect(() =>
       combat.killIfDead(victim, 'killer', { killer, skillId: 'test_kill_skill' }),
     ).not.toThrow()
 
-    expect(killer.currentMomentum).toBe(0)
+    expect(victim.currentBreakGauge).toBe(5)
   })
 
   it('killIfDead() does not throw when no skillManager was constructed', () => {

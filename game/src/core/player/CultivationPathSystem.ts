@@ -1,11 +1,20 @@
 import type { Technique } from '../technique/Technique'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import type { PlayerData } from './Player'
-import { CULTIVATION_PATH_KITS, type CultivationPathId } from './CultivationPathKit'
+import { CULTIVATION_PATH_KITS, isCultivationPathOffered, type CultivationPathId } from './CultivationPathKit'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
+import {
+  THE_TU_AN_DEX_COUNTER_PER_POINT,
+  THE_TU_AN_DEX_FOLLOWUP_PER_POINT,
+  THE_TU_AN_DEX_PROTECT_PER_POINT,
+  THE_TU_AN_INT_FOLLOWUP_PER_POINT,
+  THE_TU_AN_STR_COUNTER_PER_POINT,
+  THE_TU_AN_VIT_PROTECT_PER_POINT,
+  THE_TU_VITALITY_ENDURANCE_THRESHOLD_PER_POINT,
+} from '../stats/TheTuStatChannels'
 
 // D12 (stat-system-reimagined spec section 5): Linh Can (attunement) feeds
 // MP through the phap_tu domain gate -- the path's own conversion channel,
@@ -68,13 +77,19 @@ registerDomainDeltaDeriver('phap_tu', (delta) =>
  * 'phap_tu_an' appears ONLY when linh_bao has reached its Lv3 cast
  * threshold at this moment — the offer is evaluated at ritual time,
  * never stored, and post-ritual casts cannot reopen it (the ritual
- * itself rejects any second choice).
+ * itself rejects any second choice). The Tu Reimagined adds 'the_tu'
+ * as an always-offered base path and 'the_tu_an' behind the same
+ * ritual-time evaluation via its kit offerGate (huy_quyen Lv3).
  */
 export function getOfferableCultivationPaths(player: PlayerData): CultivationPathId[] {
-  const paths: CultivationPathId[] = ['phap_tu', 'kiem_tu']
+  const paths: CultivationPathId[] = ['phap_tu', 'kiem_tu', 'the_tu']
 
   if (isPhapTuAnEligible(player)) {
     paths.push('phap_tu_an')
+  }
+
+  if (isCultivationPathOffered(CULTIVATION_PATH_KITS.the_tu_an, player)) {
+    paths.push('the_tu_an')
   }
 
   return paths
@@ -86,6 +101,95 @@ export function isPhapTuAnEligible(player: PlayerData): boolean {
 
   return (player.skillCastCounts?.['linh_bao'] ?? 0) >= threshold
 }
+
+// ---------------------------------------------------------------------------
+// The Tu Reimagined (spec 2026-09-15 section 3) — the_tu_an reactive
+// chances + the_tu endurance channel. Same D12 two-channel pattern as
+// phap_tu above: assembly emitters read resolveAttributeTotals and emit
+// domain-gated modifiers BEFORE calculateStats; deltaDerivers re-emit
+// deltas mid-battle for entities owning the domain.
+// ---------------------------------------------------------------------------
+
+function theTuAnReactiveModifiers(
+  totals: Pick<Stats, MainStatKey>,
+  idPrefix: string,
+): StatModifier[] {
+  // RAW uncapped linear values — the REACTIVE_CHANCE_CAP is a metadata
+  // bound consumed at the roll/display site, never inside the pipeline.
+  return [
+    {
+      id: `${idPrefix}:counterChance`,
+      sourceId: 'the_tu_an',
+      sourceType: 'attribute',
+      stat: 'counterChance',
+      flat:
+        totals.strength * THE_TU_AN_STR_COUNTER_PER_POINT +
+        totals.dexterity * THE_TU_AN_DEX_COUNTER_PER_POINT,
+      domain: 'the_tu_an',
+    },
+    {
+      id: `${idPrefix}:protectChance`,
+      sourceId: 'the_tu_an',
+      sourceType: 'attribute',
+      stat: 'protectChance',
+      flat:
+        totals.vitality * THE_TU_AN_VIT_PROTECT_PER_POINT +
+        totals.dexterity * THE_TU_AN_DEX_PROTECT_PER_POINT,
+      domain: 'the_tu_an',
+    },
+    {
+      id: `${idPrefix}:followUpChance`,
+      sourceId: 'the_tu_an',
+      sourceType: 'attribute',
+      stat: 'followUpChance',
+      flat:
+        totals.dexterity * THE_TU_AN_DEX_FOLLOWUP_PER_POINT +
+        totals.intelligence * THE_TU_AN_INT_FOLLOWUP_PER_POINT,
+      domain: 'the_tu_an',
+    },
+  ]
+}
+
+/** Assembly-time emission (spec 3.2) — the_tu_an players only. */
+export function getTheTuAnReactiveStatModifiers(
+  player: PlayerData,
+  totals: Pick<Stats, MainStatKey>,
+): StatModifier[] {
+  return player.cultivationPath === 'the_tu_an'
+    ? theTuAnReactiveModifiers(totals, 'the_tu_an:attributes')
+    : []
+}
+
+function theTuEnduranceModifiers(vitality: number, idPrefix: string): StatModifier[] {
+  return [
+    {
+      id: `${idPrefix}:enduranceThreshold`,
+      sourceId: 'the_tu',
+      sourceType: 'attribute',
+      stat: 'enduranceThreshold',
+      flat: vitality * THE_TU_VITALITY_ENDURANCE_THRESHOLD_PER_POINT,
+      domain: 'the_tu',
+    },
+  ]
+}
+
+/** Assembly-time emission (spec 3.3) — the_tu players only. */
+export function getTheTuEnduranceStatModifiers(
+  player: PlayerData,
+  totals: Pick<Stats, MainStatKey>,
+): StatModifier[] {
+  return player.cultivationPath === 'the_tu'
+    ? theTuEnduranceModifiers(totals.vitality, 'the_tu:vitality')
+    : []
+}
+
+registerDomainDeltaDeriver('the_tu_an', (delta) =>
+  theTuAnReactiveModifiers(delta, 'the_tu_an:attributes_delta'),
+)
+
+registerDomainDeltaDeriver('the_tu', (delta) =>
+  delta.vitality === 0 ? [] : theTuEnduranceModifiers(delta.vitality, 'the_tu:vitality_delta'),
+)
 
 export interface CultivationPathRewardDeps {
   getEquippedTechnique: () => Technique | undefined

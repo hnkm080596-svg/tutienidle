@@ -20,12 +20,9 @@ export type SkillEffectType =
   | 'remove_buff'
 
 // Tài nguyên bị trừ khi cast — 'none' cho basic/moving (chỉ có
-// cooldown), 'mana' cho special. 'momentum' (Thể Tu) — pool
-// RIÊNG 0-100, xem
-// CombatEntity.currentMomentum/CombatTypes.ts's MAX_MOMENTUM. Skill
-// có cost theo momentum thì hasResourceFor() (TurnSkillAction.ts) TỰ
-// CHẶN cho tới khi Momentum đủ — engine selectAction rơi về slot/basic
-// sẵn sàng thay vì "auto-swap đòn kế tiếp" riêng.
+// cooldown), 'mana' cho special. 'momentum' ĐÃ GỠ (spec 2026-09-15 D7 —
+// Thể Tu Ẩn fuels reactive checks from 'the'/currentThe; Thể Tu Hiện has
+// no pool resource).
 // 'rage' ĐÃ GỠ (spec mục 5.4 — Phá Thiên Nhất Kích chuyển thành node,
 // không còn consumer nào). 'sword_intent' ĐÃ GỠ (Kiem Tu Reimagined
 // spec 2026-09-15 §7 — no battle pool; Ngu's Kiem Y is persisted
@@ -33,7 +30,6 @@ export type SkillEffectType =
 export type SkillResourceType =
   | 'none'
   | 'mana'
-  | 'momentum'
   // Phase A3 (2026-09-07) — Pháp Tu Thế pool (CombatEntity.currentThe),
   // gates Thuần-path ultimates. Turn-based gating reuses the generic
   // RESOURCE_FIELD mechanism (TurnSkillAction.ts) — no new code path.

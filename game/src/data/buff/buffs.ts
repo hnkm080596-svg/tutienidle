@@ -4,6 +4,7 @@ import { KIEM_PHO_BUFFS } from './KiemPhoBuffs'
 import { THUAN_HE_BUFFS } from './ThuanHeBuffs'
 import { TALENT_BUFFS } from './TalentBuffs'
 import { BOSS_BUFFS } from './BossBuffs'
+import { THE_TU_BUFFS } from './TheTuBuffs'
 
 // Đột Phá Trúc Cơ (Phase 5) — áp lên buff PERSISTENT ngoài trận
 // (GameManager.applyPersistentBuff()) khi thất bại Độ Kiếp (mục 13
@@ -133,6 +134,7 @@ export const buffs: BuffDefinition[] = [
   ...THUAN_HE_BUFFS,
   ...TALENT_BUFFS,
   ...BOSS_BUFFS,
+  ...THE_TU_BUFFS,
 ]
 
 

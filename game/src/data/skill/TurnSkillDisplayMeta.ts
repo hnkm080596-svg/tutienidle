@@ -47,6 +47,10 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // Kiếm Tu basic — 'Trảm'/"Huy Kiếm" (giữ nguyên theo chốt 9.4).
   tram: fromSkills('tram', { name: 'Huy Kiếm', description: 'Một chiêu thức cơ bản, không tốn tài nguyên.' }),
 
+  // The Tu Reimagined (spec 2026-09-15 §2.3) — mortal cast-leveled
+  // basic sibling of tram; Lv3 gates the_tu_an at the ritual.
+  huy_quyen: fromSkills('huy_quyen', { name: 'Hủy Quyền', description: 'Quyền pháp phàm nhân, không tốn tài nguyên.' }),
+
   // 5 Pháp Tu Thuần Hệ — đồng bộ từ Skills.ts.
   hoa_cau_thuat: fromSkills('hoa_cau_thuat', { name: 'Hỏa Cầu Thuật', description: 'Hỏa hệ công kích.' }),
   thuy_tien_thuat: fromSkills('thuy_tien_thuat', { name: 'Thủy Tiên Thuật', description: 'Thủy hệ công kích.' }),
@@ -65,6 +69,56 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   water_surge: {
     name: 'Nuốt Sáng',
     description: 'Đòn đặc biệt của Thủy Giáp Long — sóng nước dâng quét ngang, mỗi 4 lượt.',
+  },
+
+  // The Tu Reimagined (spec 2026-09-15 section 5, TheTuSkills.ts) —
+  // Hien kits: Cuong Chien (missing-HP berserker) + Tran The (tank).
+  cuong_quyen: {
+    name: 'Cuồng Quyền',
+    description: 'Quyền cuồng bạo — sát thương tăng theo phần sinh mệnh đã mất.',
+  },
+  loan_dau: {
+    name: 'Loạn Đấu',
+    description: 'Đòn đánh mạnh cùng scalar sinh mệnh thiếu hụt. Hồi 4 lượt.',
+  },
+  bat_tu_ba_the: {
+    name: 'Bất Tử Bá Thể',
+    description: 'Trong 3 lượt của bản thân, sát thương trí mạng chỉ để lại 1 sinh mệnh. Hồi 8 lượt.',
+  },
+  tran_ap: {
+    name: 'Trấn Áp',
+    description: 'Trấn áp quét ngang mọi kẻ địch bằng sức thân thể.',
+  },
+  phan_chinh: {
+    name: 'Phản Chấn',
+    description: 'Huy chương nội tại — phản lại một phần sát thương nhận vào.',
+  },
+  son_nhac: {
+    name: 'Sơn Nhạc',
+    description: 'Thân như núi lớn: hộ thể cho đồng đội, khiêu khích kẻ địch, giảm sát thương bản thân. Hồi 6 lượt.',
+  },
+
+  // The Tu Reimagined (spec 2026-09-15 section 6, TheTuSkills.ts) —
+  // An kit (fixed at path choice) + reactive payload defs.
+  tham_the: {
+    name: 'Thám Thế',
+    description: 'Dò thế địch bằng một đòn thân pháp — đánh trúng tích Thế.',
+  },
+  tu_the: {
+    name: 'Tú Thế',
+    description: 'Tích tụ nhịp thế trong 3 lượt: kiểm tra phản ứng tốn ít Thế hơn. Hồi 5 lượt.',
+  },
+  bach_ung: {
+    name: 'Bách Ứng',
+    description: 'Bách ứng bất lao trong 3 lượt: mọi kiểm tra phản ứng miễn phí, phản kích kèm Choáng. Hồi 8 lượt.',
+  },
+  phan_kich: {
+    name: 'Phản Kích',
+    description: 'Đòn phản kích tức thì sau khi trúng hoặc né đòn.',
+  },
+  tro_kich: {
+    name: 'Trợ Kích',
+    description: 'Đòn đánh theo sau hành động của đồng đội.',
   },
 
   // ---------------------------------------------------------------------

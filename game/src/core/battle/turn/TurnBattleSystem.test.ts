@@ -79,8 +79,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentMomentum: 0,
-
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
@@ -485,7 +483,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
       cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 1 },
       targeting: { shape: 'single' },
-      appliesBuff: { definitionId: 'fixture_burn', target: 'target' },
+      appliesBuffs: [{ definitionId: 'fixture_burn', target: 'action_targets' }],
     }
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -526,7 +524,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
       cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 1 },
       targeting: { shape: 'single' },
-      appliesBuff: { definitionId: 'fixture_burn', target: 'self' },
+      appliesBuffs: [{ definitionId: 'fixture_burn', target: 'self' }],
     }
 
     const battle: TurnBattle = {
@@ -572,7 +570,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
       cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 1 },
       targeting: { shape: 'row' },
-      appliesBuff: { definitionId: 'fixture_burn', target: 'target' },
+      appliesBuffs: [{ definitionId: 'fixture_burn', target: 'action_targets' }],
     }
 
     const enemyAParticipant = makeParticipant('enemyA', enemyA, 10, 1)
@@ -611,7 +609,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
       cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 1 },
       targeting: { shape: 'single' },
-      appliesBuff: { definitionId: 'fixture_burn', target: 'target' },
+      appliesBuffs: [{ definitionId: 'fixture_burn', target: 'action_targets' }],
     }
 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
@@ -1929,7 +1927,7 @@ describe('TurnBattleSystem gauge-delta buff (one-shot)', () => {
       cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 1 },
       targeting: { shape: 'single' },
-      appliesBuff: { definitionId: 'fixture_haste', target: 'self' },
+      appliesBuffs: [{ definitionId: 'fixture_haste', target: 'self' }],
     }
 
     const battle: TurnBattle = {

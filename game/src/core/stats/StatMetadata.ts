@@ -1,4 +1,5 @@
 import type { StatType } from './StatTypes'
+import { REACTIVE_CHANCE_CAP } from './TheTuStatChannels'
 
 export type StatUnit = 'flat' | 'percent' | 'rating' | 'multiplier'
 
@@ -32,8 +33,14 @@ export const STAT_METADATA: Partial<Record<StatType, StatMetadata>> = {
   ailmentDurationPercent: { unit: 'percent', min: 0 },
   dotResistancePercent: { unit: 'percent', min: -1, max: 0.75 },
   wardBreakDamagePercent: { unit: 'percent', min: 0 },
-  thornsPercent: { unit: 'percent', min: 0 },
+  // generic thorns stat retired (spec 2026-09-15 T12).
   healingEffectivenessPercent: { unit: 'percent', min: 0 },
+  // The Tu An reactive chances — hard cap REACTIVE_CHANCE_CAP applied
+  // ONLY at consumption (clampStatValue). Stored values may exceed it;
+  // never clamp inside an emitter/deriver (StatCalculator.theTu.test).
+  counterChance: { unit: 'percent', min: 0, max: REACTIVE_CHANCE_CAP },
+  protectChance: { unit: 'percent', min: 0, max: REACTIVE_CHANCE_CAP },
+  followUpChance: { unit: 'percent', min: 0, max: REACTIVE_CHANCE_CAP },
 
   // Realm passive stat modifier % (useRealmStatPassives).
   realmPassivePercent: { unit: 'percent' },

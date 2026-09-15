@@ -24,7 +24,6 @@ export function companionToCombatEntity(instance: CompanionInstance, definition:
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentMomentum: 0,
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: getRealmIndex(instance.realmId),

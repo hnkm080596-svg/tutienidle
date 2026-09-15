@@ -5,7 +5,6 @@ import type { ActionRuntimeContext, DealDamageAction, SkillActionType } from './
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
 import type { EventBus } from '../events/EventBus'
-import { MAX_MOMENTUM } from '../combat/CombatTypes'
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
@@ -218,53 +217,10 @@ describe('applyDebuff executor — chance roll + fireNested onProc (absorbs old 
   })
 })
 
-describe('grantResource executor', () => {
-  it('adds amount to the pool field, clamped to the pool max', () => {
-    const source = makeEntity({ currentMomentum: 3 } as Partial<CombatEntity> as CombatEntity)
-    const target = makeEntity()
-    const fireNested = vi.fn()
-
-    runSkillAction({ type: 'grantResource', pool: 'momentum', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
-
-    expect(source.currentMomentum).toBe(4)
-    expect(fireNested).not.toHaveBeenCalled()
-  })
-
-  it('fires onResourceFull when the write clamps to max', () => {
-    const source = makeEntity({ currentMomentum: MAX_MOMENTUM } as Partial<CombatEntity> as CombatEntity)
-    const target = makeEntity()
-    const fireNested = vi.fn()
-
-    runSkillAction({ type: 'grantResource', pool: 'momentum', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
-
-    expect(source.currentMomentum).toBe(MAX_MOMENTUM)
-    expect(fireNested).toHaveBeenCalledWith('onResourceFull', { source, resource: 'momentum' })
-  })
-})
+// 'the' pool executor coverage lives in TurnBattleSystem.theResource.test.ts;
+// named-pool grant/consume tests retired with the last pool (momentum).
 
 describe('consumeResource executor', () => {
-  it('subtracts amount from the pool and writes runtime.consumedAmount', () => {
-    const source = makeEntity({ currentMomentum: 5 } as Partial<CombatEntity> as CombatEntity)
-    const target = makeEntity()
-    const runtime: ActionRuntimeContext = {}
-
-    runSkillAction({ type: 'consumeResource', pool: 'momentum', amount: 2 }, source, target, makeCtx(), runtime, makeHelpers())
-
-    expect(source.currentMomentum).toBe(3)
-    expect(runtime.consumedAmount).toBe(2)
-  })
-
-  it("'all' consumes the entire pool", () => {
-    const source = makeEntity({ currentMomentum: 5 } as Partial<CombatEntity> as CombatEntity)
-    const target = makeEntity()
-    const runtime: ActionRuntimeContext = {}
-
-    runSkillAction({ type: 'consumeResource', pool: 'momentum', amount: 'all' }, source, target, makeCtx(), runtime, makeHelpers())
-
-    expect(source.currentMomentum).toBe(0)
-    expect(runtime.consumedAmount).toBe(5)
-  })
-
   it("pool 'breakGauge' subtracts from TARGET and fires onBreak at 0", () => {
     const source = makeEntity()
     const target = makeEntity({ currentBreakGauge: 3, breakGaugeMax: 100 } as Partial<CombatEntity> as CombatEntity)

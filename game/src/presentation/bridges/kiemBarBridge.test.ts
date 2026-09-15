@@ -2,6 +2,7 @@
 // (battle/player → KiemBarSnapshot mapping). Structural fakes only —
 // no Pinia/Phaser (same harness shape as the retired route test).
 import { describe, expect, it } from 'vitest'
+import { MAX_THE } from '@/core/combat/CombatTypes'
 import type { TurnBattle, TurnBattleState } from '@/core/battle/turn/TurnBattleSystem'
 import type { GameManager } from '@/core/game/GameManager'
 import { freshKiemTuState, type KiemTuState, type OrbId } from '@/core/kiem-tu/KiemTuState'
@@ -17,10 +18,16 @@ import {
 function fakeBattle(
   state: TurnBattleState,
   provider?: { snapshot: () => KiemPhoBattleState },
+  entity: {
+    currentThe?: number
+    maxThe?: number
+    externalWard?: { sourceId: string; amount: number }
+    stats?: { maxHp: number }
+  } = {},
 ): TurnBattle {
   return {
     state,
-    players: [{ entity: {}, dynamicBasic: provider }],
+    players: [{ entity, dynamicBasic: provider }],
     enemies: [],
   } as unknown as TurnBattle
 }
@@ -118,6 +125,85 @@ describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
       mode: 'ngu',
       kiemDaoCount: 3,
       kiemDaoBase: 1.9,
+    })
+  })
+})
+
+describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
+  it('the_tu_an (kit usesTheResource) → {currentThe, maxThe ?? MAX_THE, "Thế"}', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
+      { realmId: 'golden_core', cultivationPath: 'the_tu_an' },
+    )
+
+    expect(reader()).toEqual({ current: 45, max: MAX_THE, label: 'Thế', externalWard: undefined })
+  })
+
+  it('entity-baked maxThe wins over MAX_THE (node bonus)', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', undefined, { currentThe: 100, maxThe: 120, stats: { maxHp: 400 } }),
+      { realmId: 'golden_core', cultivationPath: 'the_tu_an' },
+    )
+
+    expect(reader()!.max).toBe(120)
+  })
+
+  it('the_tu (Hiện — no Thế pool) without externalWard → null', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
+      { realmId: 'golden_core', cultivationPath: 'the_tu' },
+    )
+
+    expect(reader()).toBeNull()
+  })
+
+  it('externalWard rides the snapshot on ANY mode (separate shield layer)', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', undefined, {
+        externalWard: { sourceId: 'p', amount: 60 },
+        stats: { maxHp: 400 },
+      }),
+      hienPlayer(),
+    )
+
+    expect(reader()).toMatchObject({
+      mode: 'hien',
+      externalWard: { current: 60, max: 400 },
+    })
+  })
+
+  it('externalWard alone (no resource route) → snapshot still returned, main bar zeroed', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', undefined, {
+        externalWard: { sourceId: 'p', amount: 25 },
+        stats: { maxHp: 200 },
+      }),
+      { realmId: 'golden_core', cultivationPath: 'the_tu' },
+    )
+
+    expect(reader()).toEqual({
+      current: 0,
+      max: 0,
+      label: '',
+      externalWard: { current: 25, max: 200 },
+    })
+  })
+
+  it('the_tu_an with externalWard → Thế bar + shield layer together', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', undefined, {
+        currentThe: 30,
+        externalWard: { sourceId: 'p', amount: 50 },
+        stats: { maxHp: 250 },
+      }),
+      { realmId: 'golden_core', cultivationPath: 'the_tu_an' },
+    )
+
+    expect(reader()).toEqual({
+      current: 30,
+      max: MAX_THE,
+      label: 'Thế',
+      externalWard: { current: 50, max: 250 },
     })
   })
 })

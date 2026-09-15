@@ -2084,6 +2084,91 @@ B3 and B5 remain separate large specifications.
 
 Do not combine them into one implementation mission.
 
+### B6 — Path reimagines (Pháp Tu / Kiếm Tu / Thể Tu)
+
+Specs: [stat-system](superpowers/specs/2026-09-14-stat-system-reimagined-design.md)
+(D1–D21), [phap-tu](superpowers/specs/2026-09-14-phap-tu-reimagined-design.md)
+(APPROVED, P1–P16), [kiem-tu](superpowers/specs/2026-09-15-kiem-tu-reimagined-design.md)
+(DRAFT — needs amendment, see ruling below). **Thể Tu reimagine:
+IMPLEMENTED 2026-09-15** — spec `2026-09-15-the-tu-reimagined-design.md`,
+plan `2026-09-15-the-tu-reimagined-plan.md` v2.4 (executed in worktree
+`the-tu-reimagined`). Hiện = `the_tu` (Cuồng Chiến missing-HP pressure +
+Trấn Thể tanking/taunt/reflection/ward) and Ẩn = `the_tu_an` (Hộ intercept
++ Phản counter + Trợ follow-up, Thế proc-fuel economy) are separate
+`CultivationPathId`s offered at the Initiation Ritual; `the_tu_an` gates
+on `huy_quyen` Lv3 via `CultivationPathKit.offerGate` +
+`isCultivationPathOffered`.
+
+Delivered scope: chance stats (`counterChance`/`protectChance`/
+`followUpChance`) are attribute-derived through the `the_tu_an` stat
+domain only — nodes never grant them; Thế is a per-attempt proc-fuel
+budget (`TheEconomy.ts`, `entity.maxThe ?? MAX_THE` cap, node-adjustable
+via `collectTheTuAnMechanicModifiers`); kit resolution plants the
+`ung_the` marker + owned-root markers at participant build with
+participant-local payload clones (`reactivePayloads`); node trees
+`TheTuNodes.ts` (mutex roots) + `TheTuAnNodes.ts` (non-mutex roots) with
+realm gates.
+
+Combat-chain contract changes (R-contract notes — same-change update per
+P17): the turn engine now has (a) a pre-impact **Hộ interception** window
+post-declare that can substitute `declared.affected` before hit
+resolution (single-target enemy actions only, nearest eligible protector
+by Chebyshev distance, exactly one roll); (b) a dodge-side **Phản**
+window — the `!hitResult.dodged` branch emits `onEvade` reactive checks
+mirroring the landed-side pass; (c) a post-ally-action **Trợ** window
+(damaging + non-damaging riders) firing after another player-side
+participant's action, never on self/reactive actions; (d) reactive queue
+entries are typed `{ actorId, actionSource, executionKind,
+triggerContext{origin,intercepted?,outcome?}, payloadSkillId, targetIds }`
+— `executionKind: 'reactive_bypass'` skips only the holder-turn
+lifecycle (buff/DoT/cooldown/regen/round ticks) while still producing a
+`TurnDeclaredAction` resolved by `applyActionImpact` (declare→impact
+authority unchanged); (e) `externalWard {sourceId, amount}` is a
+protection-only pool absorbing before native ward, `wardMax`-exempt,
+never spendable, existence-bound to its source marker
+(`externalWardAbsorbed`/`nativeWardAbsorbed` split on hit results —
+native-only ward break); (f) `BuffDefinition.durationPolicy:
+'fixed_holder_turns'` gives holder-turn buffs exact durations immune to
+ailment resist/duration stats; (g) `turnsSinceLastHitLanded` counts
+holder turns including bypass declares.
+
+Deferred content (documented in plan §"Known limitations"): Trấn Áp
+debuff riders, Bất Tử leech/kill extension, Sơn Nhạc self-DR scaling
+(no participant-local modifier channel yet); Thể Tu artifact grants;
+AoE interception.
+
+**Known design debt — Kiếm Phổ orb-branch identity (external review
+2026-09-16, MEDIUM, deferred by user call):** the 5 orb growth branches
+(Đâm/Chém/Bổ/Hất/Quét, `orb_*_1..5` in `KiemTuNodes.ts`) grant GENERIC
+stats through the shared `statModifiers` channel — might,
+skillDamagePercent, ailment potency/duration, crit, speed. Consequence:
+investing one branch powers all five orbs and every combo, so the
+per-orb fantasy (each kiếm thức upgrading itself) dilutes into a shared
+stat pool, and the cheapest branch becomes the dominant buy.
+Why it exists: `statModifiers` is the only node-effect lever today —
+capstones already carry orb identity correctly via `kiemTuComboModifier`
+(match→mutate at combo fire), but there is no per-orb stat modifier
+domain for growth nodes.
+Why it matters before the deferred 37-combo authored-effect pass
+(spec §11): authored orb-specific effects will want per-orb levers;
+doing the domain first avoids re-authoring growth nodes twice.
+Candidate fix when reopened: an orb-scoped modifier channel parallel to
+`kiemTuComboModifier` (e.g. `effect.kiemTuOrbModifier { orb, stat }`
+resolved at cast against the orb being cast / the combo's pattern),
+keeping generic stats only on nodes intended to be global.
+
+**User ruling 2026-09-15 — every hidden (Ẩn) variant is a separate
+`CultivationPathId`, chosen at the Initiation Ritual.** `phap_tu_an`,
+`kiem_tu_an`, `the_tu_an` are offered in the path-choice layer of
+`chooseCultivationPath` (the Phàm Nhân → Luyện Khí ritual), gated by
+mortal-skill mastery earned as Phàm Nhân — the same live read the shipped
+kiem_tu route-lock uses for `tram` casts. Choosing the hidden path abandons
+the normal branch entirely: **no hidden node on the tree, no post-choice mode
+flip, no refund machinery.** Consequence: the kiem-tu-reimagined spec's
+`mode: 'hien' | 'ngu'` + hidden-node `kiem_tu_an` design (K1–K4) is superseded
+and must be amended to the separate-path model (matching phap-tu P7) before
+its implementation plan runs.
+
 ---
 
 # 0.12. Beta release gate
@@ -2360,7 +2445,7 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 - **Phù/Trận Pháp**: đã có roadmap hậu kỳ riêng (`future-talisman-formation-system-plan.md`), giữ khóa.
 - **Bàn cờ vây 19×19**: hướng rework đã ghi trong `game-guide.md`, chưa đưa vào roadmap hiện tại — cần quyết định riêng trước khi lập plan.(bỏ)
 - **Server roll thiên phú / xác minh backend**: thuộc plan online (`online-login-cloud-save-plan.md`); plan thiên phú trong roadmap này chỉ làm phần effect client-side.
-- **Thể Tu**: plumbing combat đã có nhưng chưa đủ nội dung phát hành; được ghi nhận như lựa chọn mở rộng trong `progression-depth-plan.md`, không cam kết mốc.
+- **Thể Tu**: reimagine đã implement 2026-09-15 — xem §0.11 B6 (hai path riêng `the_tu`/`the_tu_an`, offer tại Lễ Nhập Môn; deferred content ghi trong plan).
 - **Kim Đan (M2 gate + M3 đời sống)**: bỏ khỏi roadmap 2026-08-29 (quyết định người dùng). Data realm `golden_core`+ vẫn tồn tại trong game (skill passive, realms) nhưng không có nội dung gate mới; mở lại chỉ khi người dùng yêu cầu.
 - **Âm thanh / audio-game-feel**: tạm bỏ qua — là mảng asset, chưa có nguồn tài nguyên audio (quyết định người dùng 2026-08-29). Plan giữ làm tham khảo.
 - **World map**: `src/core/world-map/` mới có hạ tầng (hex layout, validator), chưa có dữ liệu bản đồ thật. Với Kim Đan đã bỏ, chờ quyết định riêng về Thanh Vân: chuyển sang biểu diễn world-map hay giữ stage list.

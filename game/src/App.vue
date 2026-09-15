@@ -65,6 +65,8 @@ import { buildings } from './data/building/buildings'
 import { PHAP_TU_NODES } from './data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from './data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from './data/progression/KiemTuNodes'
+import { THE_TU_NODES } from './data/progression/TheTuNodes'
+import { THE_TU_AN_NODES } from './data/progression/TheTuAnNodes'
 import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
@@ -293,6 +295,8 @@ gameManager.catalogOps.registerBuildings(buildings)
 gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
 gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
 gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+gameManager.catalogOps.registerProgressionNodes(THE_TU_NODES)
+gameManager.catalogOps.registerProgressionNodes(THE_TU_AN_NODES)
 gameManager.catalogOps.registerQuests(QUESTS)
 
 const { breakthrough } = useBreakthrough(gameManager)
@@ -529,6 +533,13 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
         }
       }
 
+      // The Tu Reimagined (spec 2026-09-15 §2.3) — huy_quyen joins the
+      // same starter-grant seam as tram (learned, not equipped) so the
+      // the_tu_an offer gate has something real to read on old saves.
+      if (!gameManager.skillManager.has('huy_quyen')) {
+        gameManager.progressionOps.learnSkill('huy_quyen')
+      }
+
       // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài.
       if (offline.elapsedSeconds > 60) {
         offlineSummary.show({
@@ -545,6 +556,8 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
       // Phap Tu Reimagined Task 2 — mortal-path actives.
       gameManager.progressionOps.learnSkill('linh_bao')
+      // Huy Quyen — second mortal basic, learned unequipped; grinding it
+      // to Lv3 (10.000 casts) is what reveals the_tu_an at the ritual.
       gameManager.progressionOps.learnSkill('huy_quyen')
 
       for (const buildingId of ['teleport_array', 'gathering_outpost']) {

@@ -75,12 +75,13 @@ None Confirmed. Two bounded residual notes:
 
 ## Gaps and Residual Risk
 
-- P14 live-browser confirmation deferred per the isolated-worktree
-  exception: the -4% overshoot math is verified from measured alpha
-  bounds, but the pixel-level frame fit and the carved-seal look are not
-  yet confirmed in a real browser. Do the check at ~1280px from an
-  authorized main/preview checkout at branch-finishing time: equipment
-  paperdoll slots (hover) and one material/bag cell (seal size + glyph).
+- ~~P14 live-browser confirmation deferred~~ — resolved at branch
+  finishing (same day, main checkout @1280x800, real guest save seeded
+  with cuu_pham/ngu_pham/tien_pham equipment): carved frame + Han glyph
+  render on bag cells (18.2px seal on 62.7px cell = 30cqw, KaiTi stack
+  resolved, #d13a24 ink, seal-frame.png served 200) and on the
+  item-info card's static SlotView; equipment hover frame now lands its
+  bright stroke on the cell border. 0 console errors.
 
 ## Pre-existing Failures
 

@@ -77,8 +77,8 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
 
       expect(turnSkill.targetScope).toBe('self')
       expect(turnSkill.damage).toBeUndefined()
-      expect(turnSkill.appliesBuff?.definitionId).toBe('thanh_tuyen')
-      expect(turnSkill.appliesBuff?.target).toBe('self')
+      expect(turnSkill.appliesBuffs?.[0]?.definitionId).toBe('thanh_tuyen')
+      expect(turnSkill.appliesBuffs?.[0]?.target).toBe('self')
     })
 
     it('Earth special (dia_tru_thua_thien) is pure self-buff', () => {
@@ -89,8 +89,8 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
 
       expect(turnSkill.targetScope).toBe('self')
       expect(turnSkill.damage).toBeUndefined()
-      expect(turnSkill.appliesBuff?.definitionId).toBe('dia_tru')
-      expect(turnSkill.appliesBuff?.target).toBe('self')
+      expect(turnSkill.appliesBuffs?.[0]?.definitionId).toBe('dia_tru')
+      expect(turnSkill.appliesBuffs?.[0]?.target).toBe('self')
     })
 
     it('Wood special (cau_mang_can_tri) preserves both debuffs (troi_chan and trung_doc)', () => {
@@ -127,5 +127,7 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
       expect(bong?.stacks).toBe(2)
     })
   })
+
+
 
 })

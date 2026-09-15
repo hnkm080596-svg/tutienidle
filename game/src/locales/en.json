@@ -110,6 +110,10 @@
         "title": "Change Pháp Tu Stance",
         "body": "Switch to the {route} stance? Old stance nodes reset to 0 — regain {regain} Insight, lose {lose}.",
         "confirm": "Switch Stance"
+      },
+      "branchLabels": {
+        "theTu": "Body Cultivation",
+        "theTuAn": "Hidden Body"
       }
     },
     "skillPath": {

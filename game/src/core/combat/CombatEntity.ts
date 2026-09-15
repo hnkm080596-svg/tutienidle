@@ -46,20 +46,30 @@ export interface CombatEntity {
   // theGainOnLandedCast/theGainOnCrit — once per cast, never per
   // target). Optional — readers use `?? 0`.
   currentThe?: number
-  // Battle snapshot of the The cap (undefined => MAX_THE). Derived
-  // once at participant build by resolveMaxThe(player) — MAX_THE +
-  // active truong_the_<element> node contribution — never persisted.
+  // Battle snapshot of the The cap (undefined => MAX_THE). Derived once
+  // at participant build — two disjoint producers, one per path:
+  // phap_tu via resolveMaxThe(player) (MAX_THE + truong_the_<element>
+  // node contribution); the_tu_an via the kit-baked MAX_THE +
+  // maxTheBonus (Task 20 collector). TheEconomy.theCap is the single
+  // read site (`entity.maxThe ?? MAX_THE`); never persisted.
   maxThe?: number
 
-  // Thể Tu (Combat Rework Phase 7) — Momentum CHIẾN ĐẤU, pool 0-100
-  // (xem CombatTypes.ts's
-  // MAX_MOMENTUM), tích qua Skill.grantsMomentumPerHit.
-  currentMomentum: number
+  // The Tu Reimagined (spec 2026-09-15 D7/section 7.13) — momentum resource
+  // retired: the hidden path fuels reactive checks from currentThe, and
+  // the visible path has no pool resource at all.
 
   // Ward — máu phụ hấp thụ damage TRƯỚC currentHp (xem
   // CombatSystem.resolveHit()). State "sống" như currentHp/currentMp,
   // reset về 0 lúc BattleSystem.start()/createBattleEnemy().
   currentWard: number
+
+  // The Tu Reimagined (plan Task 11, spec 2026-09-15 D3) — Sơn Nhạc
+  // external ward: a SEPARATE, protection-only absorb pool granted by an
+  // external source. Distinct from currentWard on purpose: it is exempt
+  // from wardMax/regen, absorbs BEFORE the native ward, never feeds
+  // spendWard, and its existence is bound to the granting marker
+  // instance (reconciled per-source — newest grant replaces wholesale).
+  externalWard?: { sourceId: string; amount: number }
 
   // Phap Tu (Tho Tu, 2026-08-15) — holder turns elapsed since the last
   // LANDED hit on this entity (reset to 0 in CombatSystem.resolveAttack;

@@ -42,11 +42,9 @@ const SPEED_COMPETITIVE_STATS: ReadonlySet<StatType> = new Set<StatType>([
   'evasionRate',
   'wardMax',
   'wardRegenPerTurn',
-  'blockChance',
-  'blockEffectiveness',
-  'enduranceThreshold',
-  'endurancePercent',
-  'thornsPercent',
+  // The Tu Reimagined (spec 2026-09-15): block/endurance are
+  // the_tu-domain and left the equipment pools entirely;
+  // generic thorns stat retired with the stat.
   'hpRegenPerTurn',
   'criticalAvoidance',
   'ailmentResistPercent',

@@ -39,9 +39,11 @@ const cooldownSeconds = computed(() => {
 
 // Phap Tu Reimagined (Task 16) — the ritual offers exactly what
 // getOfferableCultivationPaths() decides: phap_tu_an appears ONLY when
-// linh_bao is already Lv3 at ritual time; no locked-card tease when
-// ineligible (spec §11). Offerability is evaluated live per render —
-// eligibility is never stored.
+// linh_bao is already Lv3 at ritual time; the_tu_an appears ONLY when
+// huy_quyen is Lv3 (same isCultivationPathOffered predicate the ritual
+// enforces); no locked-card tease when ineligible (spec §11).
+// Offerability is evaluated live per render — eligibility is never
+// stored.
 const availablePaths = computed(() => {
   stateVersion.value
 

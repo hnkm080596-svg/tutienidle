@@ -41,6 +41,9 @@ export const PLAYER_HUD_KIEM_COLOR = 0xd4a72c
 // once the pool reaches the empowerment threshold.
 export const PLAYER_HUD_THE_COLOR = 0x9b6dd7
 export const PLAYER_HUD_THE_ARMED_COLOR = 0xc9a7f5
+// The Tu Reimagined (T22) — Son Nhac Ho The external-ward layer: pale
+// jade shield tone, visually distinct from HP (crimson) and The (violet).
+export const PLAYER_HUD_WARD_COLOR = 0x7ec8a9
 export const PLAYER_HUD_LABEL_COLOR = '#f4f4f0'
 export const PLAYER_HUD_LABEL_COLOR_INT = 0xf4f4f0
 

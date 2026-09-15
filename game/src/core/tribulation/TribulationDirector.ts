@@ -201,7 +201,6 @@ export class TribulationDirector {
       currentHp: maxHp,
       maxHp,
       currentMp: 0,
-      currentMomentum: 0,
       alive: true,
     } as CombatEntity
     this.mindFailStacks = 0

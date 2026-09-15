@@ -115,6 +115,9 @@ export const CORE_SKILLS: Skill[] = [
     equipped: false,
   },
 
+  // The Tu Reimagined (spec 2026-09-15, T6/section 2.3) — huy_quyen is
+  // also the the_tu_an ritual gate: reaching Lv3 (10.000 casts) is the
+  // ONLY condition revealing that path at the Initiation Ritual.
   {
     id: 'huy_quyen',
 
@@ -271,6 +274,8 @@ export const CORE_SKILLS: Skill[] = [
 
     equipped: false,
   },
+
+
 
   // Há»a Tu (Plans/magicpathgeneral + Plans/FirePath, 2026-08-21) â€”
   // THAY Háº²N kit 3-skill+1-passive cÅ© (xich_viem_chuong/viem_hai/

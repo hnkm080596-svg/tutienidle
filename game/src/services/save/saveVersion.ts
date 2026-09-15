@@ -43,4 +43,7 @@
 // kiemTuRoute + the sword-intent ecosystem (canonical state model:
 // mode/preset/kiemY/kiemDaoCount/kiemDaoBase). Save v62 bị từ chối
 // (dev phase, không migration).
-export const CURRENT_SAVE_VERSION = 63 as const
+// v64 (2026-09-15, the-tu-reimagined spec T1): CultivationPathId mở rộng
+// 'the_tu' + 'the_tu_an' — save cũ chứa path id lạ bị từ chối (dev phase,
+// không migration).
+export const CURRENT_SAVE_VERSION = 64 as const

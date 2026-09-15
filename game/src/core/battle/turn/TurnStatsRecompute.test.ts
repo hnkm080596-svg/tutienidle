@@ -19,8 +19,6 @@ function qaEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
-
-    currentMomentum: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...rest,
   } as CombatEntity

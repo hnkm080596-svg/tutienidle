@@ -21,7 +21,6 @@ function makeEntity(blockChance: number): CombatEntity {
     currentHp: 1000,
     maxHp: 1000,
     currentMp: 0,
-    currentMomentum: 0,
 
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,

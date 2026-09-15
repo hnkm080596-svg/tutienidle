@@ -22,8 +22,6 @@ function mk(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
     id: 'x', name: 'x', type: 'enemy', baseStats: stats, stats,
     currentHp: 1_000_000, maxHp: 1_000_000, currentMp: 0,
-
-    currentMomentum: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
   } as CombatEntity
