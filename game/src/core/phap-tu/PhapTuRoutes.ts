@@ -45,6 +45,15 @@ export type PhapTuUltimateVariant = 'detonate' | 'nuke'
  */
 export const PHAP_TU_EMPOWERMENT_THE_THRESHOLD = 100
 
+// Task 13 (spec §4) — the two empowered-ult route expressions, tuned
+// here as the single owner. DETONATE_AMP multiplies each consumed DoT
+// ailment's remaining tick damage (flat — it does NOT scale with The
+// spent; the burn's payoff IS the consume). NUKE_THE_COEFF is the
+// linear slope of the burn into damage: final x (1 + theBurned/100 x
+// coeff) — balance owns the slope, not diminishing by design.
+export const DETONATE_AMP = 1.5
+export const NUKE_THE_COEFF = 1.0
+
 export interface RouteProfile {
   directMultiplier: number
   ailmentChanceFactor: number

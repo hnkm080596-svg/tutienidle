@@ -1101,6 +1101,13 @@ export class TurnBattleSystem {
 
       payloadSkill = execution.resolvedSkill
 
+      // Task 13 — capture the PRE-BURN pool when the resolved payload is
+      // a consume-all form: the pool only zeroes at commitCast (after
+      // hits resolve), so theScaling must read the value captured here.
+      if (payloadSkill?.consumesAllThe) {
+        execution.theBurned = actor.entity.currentThe ?? 0
+      }
+
       const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
 
       if (isChargeInit) {
@@ -1126,7 +1133,17 @@ export class TurnBattleSystem {
           if (action.damage) {
             const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.roundsElapsed ?? 0)
             suddenDeathMultiplierCaptured = suddenDeathMultiplier
-            scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
+            let resolvedDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
+
+            // Task 13 — theScaling (nuke variant): final damage x
+            // (1 + theBurned/100 x coeff) folded into the damage packet
+            // once; every target's hit resolves through it uniformly.
+            const theScaling = payloadSkill?.theScaling
+            if (theScaling && execution.theBurned) {
+              resolvedDamage = scaleActionDamage(resolvedDamage, 1 + (execution.theBurned / 100) * theScaling.coeff)
+            }
+
+            scaledDamage = resolvedDamage
           }
 
           // R3 (AR-18) — Generic composite action policy (legacy lane —
@@ -1332,6 +1349,13 @@ export class TurnBattleSystem {
 
               if (this.registry) {
                 this.applySkillAilments(actor, target, pickedSkill, actorInitiatesReactions)
+
+                // Task 13 — a picked payload carrying detonateDoT
+                // detonates after its own application, same contract as
+                // the main lane.
+                if (pickedSkill.detonateDoT && target.entity.alive) {
+                  this.applyDetonate(actor, target, pickedSkill.detonateDoT.amp)
+                }
               }
 
               // ARCH-002 (M7) — refresh after hit + ailment mutations; the
@@ -1428,6 +1452,15 @@ export class TurnBattleSystem {
             if (payloadSkill) {
               this.applySkillAilments(actor, target, payloadSkill, actorInitiatesReactions)
             }
+
+            // Task 13 — detonate (dot-route empowered ult, spec §4):
+            // AFTER the normal application lands, consume every live
+            // DoT ailment for remaining-tick x stacks x amp and re-seed
+            // a fixed 1 stack at authored duration. Reaction-silent by
+            // contract — re-seeds never reach TurnReactionManager.
+            if (payloadSkill?.detonateDoT && target.entity.alive) {
+              this.applyDetonate(actor, target, payloadSkill.detonateDoT.amp)
+            }
           }
 
           // ARCH-002 (M7) — every pool mutation above (consume-removal —
@@ -1454,6 +1487,11 @@ export class TurnBattleSystem {
 
         if (payloadSkill) {
           this.applySkillAilments(actor, target, payloadSkill, actorInitiatesReactions)
+        }
+
+        // Task 13 — same detonate contract on the non-damaging lane.
+        if (this.registry && payloadSkill?.detonateDoT && target.entity.alive) {
+          this.applyDetonate(actor, target, payloadSkill.detonateDoT.amp)
         }
         // ARCH-002 (M7) — reactions off the applied ailment can grant the
         // SOURCE a buff; refresh both sides (same as the damaging path).
@@ -1581,6 +1619,12 @@ export class TurnBattleSystem {
       multicastDepth: exec.multicastDepth,
     }
 
+    // Task 13 — same pre-burn capture as the normal declare path: a
+    // queued execution of a consume-all payload burns at its own commit.
+    if (payloadSkill.consumesAllThe) {
+      execution.theBurned = actor.entity.currentThe ?? 0
+    }
+
     const action: SelectedAction = {
       skillId: rootSkill.id,
       skill: rootSkill,
@@ -1611,6 +1655,14 @@ export class TurnBattleSystem {
               suddenDeathMultiplier === 1
                 ? payloadSkill.damage
                 : scaleActionDamage(payloadSkill.damage, suddenDeathMultiplier)
+
+            // Task 13 — theScaling fold (same as declareActorAction).
+            if (payloadSkill.theScaling && execution.theBurned) {
+              scaledDamage = scaleActionDamage(
+                scaledDamage,
+                1 + (execution.theBurned / 100) * payloadSkill.theScaling.coeff,
+              )
+            }
           }
         }
       }
@@ -1711,9 +1763,9 @@ export class TurnBattleSystem {
    * Phap Tu Reimagined Task 10 — the ONE cast-commit sink: slot
    * cooldown + resource consume (root identity), the cast-count sink
    * (always rootSkillId), and the empowered form's consume-all-The
-   * burn. The burn captures `theBurned` onto the execution BEFORE
-   * zeroing — theScaling (Task 13) reads that captured value, never the
-   * post-burn pool.
+   * burn. `theBurned` was already captured at DECLARE (Task 13 — the
+   * pre-burn pool feeds theScaling, which resolves before this commit);
+   * here the pool only zeroes.
    */
   private commitCast(actor: TurnBattleParticipant, declared: TurnDeclaredAction): void {
     const action = declared.action!
@@ -1724,9 +1776,6 @@ export class TurnBattleSystem {
     const payload = declared.execution?.resolvedSkill ?? action.skill
 
     if (payload?.consumesAllThe) {
-      if (declared.execution) {
-        declared.execution.theBurned = actor.entity.currentThe ?? 0
-      }
       actor.entity.currentThe = 0
     }
   }
@@ -1939,6 +1988,71 @@ export class TurnBattleSystem {
           }
         }
       }
+    }
+  }
+
+  /**
+   * Phap Tu Reimagined Task 13 (spec §4) — the 'dot' route's detonation.
+   * Consumes EVERY live ailment instance whose definition carries a
+   * `dot` effect (pure-utility ailments are never touched — a scalpel,
+   * not a cleanser); each consumed instance pays
+   * (perTick x remainingTurns x stacks) x amp as direct damage through
+   * the authoritative vitals pipeline (death mid-loop stops the rest).
+   * Each consumed id then re-seeds ONCE at a fixed 1 stack / authored
+   * duration through BuffSystem.apply — which recomputes potency
+   * against the caster's CURRENT stats (never the consumed snapshot).
+   * The re-seed is not an application event: no chance roll, no
+   * ailmentStackBonus, and reaction-silent — TurnReactionManager is
+   * never reached from here. Iterates a snapshot so re-seeded
+   * instances are never revisited.
+   */
+  private applyDetonate(
+    actor: TurnBattleParticipant,
+    target: TurnBattleParticipant,
+    amp: number,
+  ): void {
+    if (!this.registry) return
+
+    const consumedIds = new Set<string>()
+
+    for (const buff of [...target.buffs.getAll()]) {
+      if (!target.entity.alive) break
+
+      let definition: BuffDefinition | undefined
+
+      try {
+        definition = this.registry.get(buff.id)
+      } catch {
+        definition = undefined
+      }
+
+      if (!definition?.effects.some((effect) => effect.type === 'dot')) continue
+      if (!target.buffs.hasInstance(buff)) continue
+
+      const perTick = buff.effects.reduce(
+        (total, effect) =>
+          total + (effect.type === 'dot' ? (effect.damagePerTurn ?? effect.damagePerSecond ?? 0) : 0),
+        0,
+      )
+      const burst = perTick * buff.remainingTurns * buff.stacks * amp
+
+      // Consume the exact instance; same-id duplicates still consume —
+      // only the re-seed below dedupes by id.
+      target.buffs.removeInstance(buff.id, buff.sourceId)
+      consumedIds.add(buff.id)
+
+      if (burst > 0) {
+        this.combat.applyDirectDamage(target.entity, burst, actor.entity.id)
+      }
+    }
+
+    // Re-seed ONCE per consumed id — a fixed 1 stack at the ailment's
+    // authored duration; BuffSystem.apply recomputes potency against
+    // the caster's current stats and never reaches the reaction check.
+    for (const id of consumedIds) {
+      if (!target.entity.alive) break
+
+      new BuffSystem(target.buffs).apply(this.registry.get(id), actor.entity, target.entity, this.registry)
     }
   }
 

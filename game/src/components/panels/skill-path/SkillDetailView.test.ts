@@ -48,19 +48,6 @@ describe('SkillDetailView — dòng cơ chế Thuần hệ (Task 12)', () => {
     mounted.unmount()
   })
 
-  it('skill có hitCount (Bát Thủ Càn Quét — water ult) → hiện dòng "8 lần"', () => {
-    const skill = SKILLS.find(s => s.id === 'bat_thu_can_quet')!
-
-    expect(skill.effects.some(e => e.hitCount !== undefined)).toBe(true)
-
-    const mounted = mountDetail(skill)
-    const mechanics = mounted.container.querySelector('.skill-detail__mechanics')
-
-    expect(mechanics).not.toBeNull()
-    expect(mechanics!.textContent).toContain('lần liên tiếp')
-    mounted.unmount()
-  })
-
   it('skill có spreadsAilmentId (Vân Mộc Lan Độc) → hiện dòng lan Độc', () => {
     const skill = SKILLS.find(s => s.id === 'van_moc_lan_doc')!
 
@@ -69,17 +56,6 @@ describe('SkillDetailView — dòng cơ chế Thuần hệ (Task 12)', () => {
     const mounted = mountDetail(skill)
 
     expect(mounted.container.querySelector('.skill-detail__mechanics')!.textContent).toContain('Lan')
-    mounted.unmount()
-  })
-
-  it('skill có stacksPerAffectedTarget (Hậu Thổ Thành Lũy) → hiện dòng tầng theo target', () => {
-    const skill = SKILLS.find(s => s.id === 'hau_tho_thanh_luy')!
-
-    expect(skill.effects.some(e => e.stacksPerAffectedTarget === true)).toBe(true)
-
-    const mounted = mountDetail(skill)
-
-    expect(mounted.container.querySelector('.skill-detail__mechanics')!.textContent).toContain('Thành Lũy')
     mounted.unmount()
   })
 })

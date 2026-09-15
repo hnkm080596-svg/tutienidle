@@ -150,9 +150,31 @@ export interface TurnSkillDefinition {
    * The empowered form carries this: at commit, the caster's ENTIRE
    * currentThe pool burns to 0 (a raised cap burns the whole pool, not
    * just the threshold). The pre-consume amount is captured into
-   * `execution.theBurned` for theScaling (Task 13).
+   * `execution.theBurned` at DECLARE for theScaling (Task 13) — the
+   * pool is already 0 by the time damage resolves post-commit.
    */
   consumesAllThe?: boolean
+  /**
+   * Phap Tu Reimagined Task 13 — detonate (the 'dot' route's empowered
+   * expression, spec §4). After the direct component AND the normal
+   * ailment application land, consume every live ailment on each target
+   * whose BuffDefinition carries a `dot` effect (utility ailments are
+   * never touched); each pays (perTick x remainingTurns x stacks) x amp
+   * as direct damage, then re-seeds a FIXED 1 stack at the ailment's
+   * AUTHORED duration with potency recomputed against the caster's
+   * current stats. Re-seed is not an application event: no chance roll,
+   * no ailmentStackBonus, and reaction-silent — never fires
+   * TurnReactionManager (spec O2/R2).
+   */
+  detonateDoT?: { amp: number }
+  /**
+   * Phap Tu Reimagined Task 13 — nuke (the 'no' route's empowered
+   * expression, spec §4): the resolved damage packet scales by
+   * (1 + theBurned/100 x coeff); theBurned is the pool captured at
+   * declare before consumesAllThe zeroes it. Linear by design —
+   * Truong The cap-raises are additive payoff, not diminishing.
+   */
+  theScaling?: { coeff: number }
 }
 
 export interface TurnSkillSlot {

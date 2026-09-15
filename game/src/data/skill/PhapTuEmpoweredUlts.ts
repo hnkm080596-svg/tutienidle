@@ -1,7 +1,7 @@
 import type { ElementType } from '../../core/element/ElementType'
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
 import type { DamageScalingConfig } from '../../core/combat/DamageCalculator'
-import type { PhapTuUltimateVariant } from '../../core/phap-tu/PhapTuRoutes'
+import { DETONATE_AMP, NUKE_THE_COEFF, type PhapTuUltimateVariant } from '../../core/phap-tu/PhapTuRoutes'
 
 // Phap Tu Reimagined Task 10 — the god-ult (Phap Tuong) payload table.
 // These are native TurnSkillDefinitions, NOT Skill objects: the legacy
@@ -17,11 +17,13 @@ import type { PhapTuUltimateVariant } from '../../core/phap-tu/PhapTuRoutes'
 // - id = the god-ult id (tat_phuong_giang_the …) for presentation; it
 //   never appears in cast counts.
 //
-// Route variants (RouteProfile.empoweredUlt): 'detonate' gains
-// detonateDoT and 'nuke' gains theScaling in Task 13 — the base payload
-// below is shared until then. Water folds its authored hitCount x8 into
-// the multiplier (0.6 x 8 = 4.8); wood merges its add_stack +2 into the
-// ailment stacks like the converter does; metal keeps its engine-native
+// Route variants (RouteProfile.empoweredUlt): 'detonate' carries
+// detonateDoT (consume every live DoT ailment for remaining-tick x
+// stacks x DETONATE_AMP, then re-seed a fixed 1 stack); 'nuke' carries
+// theScaling (final damage x (1 + theBurned/100 x NUKE_THE_COEFF)).
+// Water folds its authored hitCount x8 into the multiplier
+// (0.6 x 8 = 4.8); wood merges its add_stack +2 into the ailment
+// stacks like the converter does; metal keeps its engine-native
 // consumesAilmentId detonate (chay_mau x80).
 
 const ATTUNEMENT_SCALING: DamageScalingConfig = {
@@ -110,14 +112,29 @@ const EARTH_PAYLOAD: TurnSkillDefinition = {
 }
 
 /**
- * The empowered payload lookup: element x route variant. Both variants
- * share the base payload until Task 13 differentiates detonateDoT /
- * theScaling — the table shape is the seam Task 10 wires.
+ * The empowered payload lookup: element x route variant. 'detonate'
+ * gains detonateDoT, 'nuke' gains theScaling (Task 13) — the table
+ * shape is the seam Task 10 wires.
  */
 export const PHAP_TU_EMPOWERED_ULTS: Record<ElementType, Record<PhapTuUltimateVariant, TurnSkillDefinition>> = {
-  fire: { detonate: FIRE_PAYLOAD, nuke: FIRE_PAYLOAD },
-  water: { detonate: WATER_PAYLOAD, nuke: WATER_PAYLOAD },
-  wood: { detonate: WOOD_PAYLOAD, nuke: WOOD_PAYLOAD },
-  metal: { detonate: METAL_PAYLOAD, nuke: METAL_PAYLOAD },
-  earth: { detonate: EARTH_PAYLOAD, nuke: EARTH_PAYLOAD },
+  fire: {
+    detonate: { ...FIRE_PAYLOAD, detonateDoT: { amp: DETONATE_AMP } },
+    nuke: { ...FIRE_PAYLOAD, theScaling: { coeff: NUKE_THE_COEFF } },
+  },
+  water: {
+    detonate: { ...WATER_PAYLOAD, detonateDoT: { amp: DETONATE_AMP } },
+    nuke: { ...WATER_PAYLOAD, theScaling: { coeff: NUKE_THE_COEFF } },
+  },
+  wood: {
+    detonate: { ...WOOD_PAYLOAD, detonateDoT: { amp: DETONATE_AMP } },
+    nuke: { ...WOOD_PAYLOAD, theScaling: { coeff: NUKE_THE_COEFF } },
+  },
+  metal: {
+    detonate: { ...METAL_PAYLOAD, detonateDoT: { amp: DETONATE_AMP } },
+    nuke: { ...METAL_PAYLOAD, theScaling: { coeff: NUKE_THE_COEFF } },
+  },
+  earth: {
+    detonate: { ...EARTH_PAYLOAD, detonateDoT: { amp: DETONATE_AMP } },
+    nuke: { ...EARTH_PAYLOAD, theScaling: { coeff: NUKE_THE_COEFF } },
+  },
 }
