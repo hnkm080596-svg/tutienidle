@@ -99,6 +99,25 @@ export interface TurnSkillDefinition {
    * once, not per target). Authored by the 'no' route profile.
    */
   theGainOnCrit?: number
+  /**
+   * Phap Tu Reimagined Task 10 — ultimate empowerment. Attached at
+   * battle build by the orchestrator ONLY when the owning
+   * `linh_ngo_<godUltId>` node is held (the engine stays dumb — A8).
+   * At cast time, `currentThe >= theThreshold` swaps the RESOLVED
+   * payload to `empowered` while the equipped skill keeps cast
+   * count/cooldown identity (execution source 'empowered').
+   */
+  empowerment?: {
+    theThreshold: number
+    empowered: TurnSkillDefinition
+  }
+  /**
+   * The empowered form carries this: at commit, the caster's ENTIRE
+   * currentThe pool burns to 0 (a raised cap burns the whole pool, not
+   * just the threshold). The pre-consume amount is captured into
+   * `execution.theBurned` for theScaling (Task 13).
+   */
+  consumesAllThe?: boolean
 }
 
 export interface TurnSkillSlot {
@@ -181,6 +200,12 @@ export interface TurnSkillExecution {
   rootSkillId: string
   resolvedSkill: TurnSkillDefinition | null
   source: TurnExecutionSource
+  /**
+   * Task 10 — the The pool captured pre-consume when a `consumesAllThe`
+   * payload commits. Read by theScaling (Task 13); undefined for any
+   * execution that did not burn the pool.
+   */
+  theBurned?: number
 }
 
 /** Does this execution own a real cast (commit cooldown + cast sink)? */

@@ -83,7 +83,10 @@ describe('PhapTuNodes reimagined — per-element branch', () => {
       expect(node(`${element}_ailment_mastery`)?.elementTag).toBe(element)
       expect(node(`${element}_damage_mastery`)?.elementTag).toBe(element)
 
-      expect(specialNode?.effect.unlocksSkillIds).toEqual([special])
+      // The realm-gated special unlock grants the kit's remaining slots
+      // together (special + chain-E ult) — spec §3.3 needs the ult's
+      // base form castable WITHOUT the phap-tuong node.
+      expect(specialNode?.effect.unlocksSkillIds).toEqual([special, PHAP_TU_KIT_IDS[element][2]])
       expect(specialNode?.prerequisites).toContainEqual({ kind: 'node', nodeId: rootId })
 
       expect(ultNode?.effect.unlocksSkillIds).toEqual([godUlt])

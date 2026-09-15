@@ -111,6 +111,7 @@ function unlockNode(
   description: string,
   element: ElementType,
   prereqNodeId: string,
+  grantSkillIds?: readonly string[],
 ): ProgressionNode {
   return {
     id: `linh_ngo_${skillId}`,
@@ -121,12 +122,12 @@ function unlockNode(
     insightCost: 2,
     prerequisites: [{ kind: 'node', nodeId: prereqNodeId }],
     elementTag: element,
-    effect: { unlocksSkillIds: [skillId] },
+    effect: { unlocksSkillIds: [...(grantSkillIds ?? [skillId])] },
   }
 }
 
 export function buildElementBranch(element: ElementType): ProgressionNode[] {
-  const [basicId, specialId] = PHAP_TU_KIT_IDS[element]
+  const [basicId, specialId, ultimateId] = PHAP_TU_KIT_IDS[element]
   const godUltId = PHAP_TU_ULTIMATE_IDS[element]
   const label = ELEMENT_LABELS[element]
 
@@ -164,7 +165,11 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
       [stat(`${element}_damage_mastery`, 'skillDamagePercent', 0.05, 0.05)],
     ),
 
-    // Special unlock — gate realm Kim Dan.
+    // Special unlock — gate realm Kim Dan. Grants the kit's remaining
+    // slots together (special + chain-E ultimate): spec §7 has only two
+    // unlock nodes per element, and the ult's BASE form must be castable
+    // without the phap-tuong node (spec §3.3), so the ult cannot ride on
+    // `linh_ngo_<godUlt>` itself.
     {
       ...unlockNode(
         specialId,
@@ -172,6 +177,7 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
         `Mo khoa ky nang dac biet ${label}.`,
         element,
         PHAP_TU_ELEMENT_ROOT_IDS[element],
+        [specialId, ultimateId],
       ),
       prerequisites: [
         { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },

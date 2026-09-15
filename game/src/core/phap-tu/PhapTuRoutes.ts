@@ -31,11 +31,25 @@ export const PHAP_TU_THE_GAIN_CRIT = 3
 export const PHAP_TU_THE_GAIN_BASIC = 5
 export const PHAP_TU_THE_GAIN_SPECIAL = 15
 
+/**
+ * Task 10 — the empowered form of a chain-E ultimate. The route picks
+ * WHICH payload variant resolves ('dot' -> detonate, 'no' -> nuke);
+ * Task 13 differentiates them via detonateDoT/theScaling fields.
+ */
+export type PhapTuUltimateVariant = 'detonate' | 'nuke'
+
+/**
+ * Empowerment gate — spec P13: a CONSTANT 100, deliberately not
+ * MAX_THE. A raised cap lets the player bank past the threshold and
+ * burn the whole stockpile (consume always takes ALL).
+ */
+export const PHAP_TU_EMPOWERMENT_THE_THRESHOLD = 100
+
 export interface RouteProfile {
   directMultiplier: number
   ailmentChanceFactor: number
   ailmentStackBonus: number
-  empoweredUlt?: 'detonate' | 'nuke'
+  empoweredUlt?: PhapTuUltimateVariant
   statModifiers: StatModifier[]
   critTheGain?: number
 }

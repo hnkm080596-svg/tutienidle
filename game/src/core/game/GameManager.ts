@@ -158,9 +158,13 @@ import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentati
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
+import { PHAP_TU_EMPOWERED_ULTS } from '../../data/skill/PhapTuEmpoweredUlts'
+import type { ElementType } from '../element/ElementType'
 import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
 import {
   NEUTRAL_ROUTE_PROFILE,
+  PHAP_TU_EMPOWERMENT_THE_THRESHOLD,
   PHAP_TU_THE_GAIN_BASIC,
   PHAP_TU_THE_GAIN_SPECIAL,
   applyRouteToTurnSkill,
@@ -993,16 +997,52 @@ export class GameManager {
           )
         : undefined,
       ultimate: ultimateSkill
-        ? this.applyPhapTuTheGains(
-            applyRouteToTurnSkill(
-              toTurnSkillDefinition(ultimateSkill, this.skillSystem.getEffectiveSkill(ultimateSkill)),
-              this.routeProfileProvider(ultimateSkill.id),
+        ? this.applyPhapTuEmpowerment(
+            this.applyPhapTuTheGains(
+              applyRouteToTurnSkill(
+                toTurnSkillDefinition(ultimateSkill, this.skillSystem.getEffectiveSkill(ultimateSkill)),
+                this.routeProfileProvider(ultimateSkill.id),
+              ),
+              player,
+              0,
             ),
             player,
-            0,
+            element,
           )
         : undefined,
     }
+  }
+
+  /**
+   * Task 10 — attach the god-ult empowerment to the equipped chain-E
+   * ultimate at battle build. Gated on owning `linh_ngo_<godUltId>`
+   * (the engine stays dumb — the gate lives in orchestration, A8); the
+   * route profile picks the payload variant ('dot' -> detonate, 'no' ->
+   * nuke, none -> nuke default). The payload itself is the raw
+   * PHAP_TU_EMPOWERED_ULTS entry — route direct/ailment factors already
+   * shaped the base form; the empowered form's route expression IS its
+   * variant choice.
+   */
+  private applyPhapTuEmpowerment(
+    def: TurnSkillDefinition,
+    player: PlayerData,
+    element: ElementType,
+  ): TurnSkillDefinition {
+    const godUltId = PHAP_TU_ULTIMATE_IDS[element]
+
+    if ((player.nodeLevels?.[`linh_ngo_${godUltId}`] ?? 0) <= 0) {
+      return def
+    }
+
+    const variant = resolveRouteProfile(player.phapTu).empoweredUlt ?? 'nuke'
+    const empowered = PHAP_TU_EMPOWERED_ULTS[element]?.[variant]
+
+    return empowered
+      ? {
+          ...def,
+          empowerment: { theThreshold: PHAP_TU_EMPOWERMENT_THE_THRESHOLD, empowered },
+        }
+      : def
   }
 
   /**

@@ -988,6 +988,26 @@ export class TurnBattleSystem {
         resolvedSkill: action.skill,
         source: 'original' as const,
       }
+
+      // Task 10 — ultimate empowerment: enough The swaps the RESOLVED
+      // payload to the empowered form. The ROOT identity (cooldown,
+      // cast count, charge state) stays the equipped skill; the pool
+      // itself burns at commit time via consumesAllThe.
+      const empowerment = action.skill?.empowerment
+
+      if (empowerment && (actor.entity.currentThe ?? 0) >= empowerment.theThreshold) {
+        execution = {
+          rootSkillId: action.skillId,
+          resolvedSkill: empowerment.empowered,
+          source: 'empowered',
+        }
+        action = {
+          ...action,
+          damage: empowerment.empowered.damage,
+          targeting: empowerment.empowered.targeting,
+        }
+      }
+
       payloadSkill = execution.resolvedSkill
 
       const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
@@ -1160,8 +1180,7 @@ export class TurnBattleSystem {
       (declared.action.skill?.chargeTurns ?? 0) > 0 &&
       executionCommitsCast(declared.execution)
     ) {
-      commitAction(actor.entity, declared.action)
-      this.onSkillCast?.(actor, declared.execution?.rootSkillId ?? declared.action.skillId)
+      this.commitCast(actor, declared)
     }
 
     if (declared.action && declared.affected.length > 0 && !declared.markerNoPool) {
@@ -1339,8 +1358,7 @@ export class TurnBattleSystem {
         // payload WITHOUT re-committing the root's cast: no second
         // cooldown, no second cast-count (INV-18 structural).
         if (executionCommitsCast(declared.execution)) {
-          commitAction(actor.entity, action)
-          this.onSkillCast?.(actor, declared.execution?.rootSkillId ?? action.skillId)
+          this.commitCast(actor, declared)
         }
 
         // Task 8 — The gain is skill-authored (theGainOnLandedCast /
@@ -1414,6 +1432,30 @@ export class TurnBattleSystem {
     }
 
     return { targetIds }
+  }
+
+  /**
+   * Phap Tu Reimagined Task 10 — the ONE cast-commit sink: slot
+   * cooldown + resource consume (root identity), the cast-count sink
+   * (always rootSkillId), and the empowered form's consume-all-The
+   * burn. The burn captures `theBurned` onto the execution BEFORE
+   * zeroing — theScaling (Task 13) reads that captured value, never the
+   * post-burn pool.
+   */
+  private commitCast(actor: TurnBattleParticipant, declared: TurnDeclaredAction): void {
+    const action = declared.action!
+
+    commitAction(actor.entity, action)
+    this.onSkillCast?.(actor, declared.execution?.rootSkillId ?? action.skillId)
+
+    const payload = declared.execution?.resolvedSkill ?? action.skill
+
+    if (payload?.consumesAllThe) {
+      if (declared.execution) {
+        declared.execution.theBurned = actor.entity.currentThe ?? 0
+      }
+      actor.entity.currentThe = 0
+    }
   }
 
   /**
