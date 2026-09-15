@@ -56,7 +56,7 @@ function describeEffect(
     })
   }
 
-  if (effect.grantsZone || effect.grantsSwordZone) {
+  if (effect.grantsZone) {
     const element = effect.zoneElement ?? 'metal'
 
     lines.push({

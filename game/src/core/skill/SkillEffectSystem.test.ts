@@ -22,11 +22,8 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentSwordIntent: 0,
     currentMomentum: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
+
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
@@ -61,7 +58,7 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     id: 'entity',
     alive: true,
     realmIndex: 0,
-    currentSwordIntent: 0,
+
     stats: { skillDamagePercent: 0, maxMp: 0, might: 10, elementApplicationPercent: 0 } as CombatEntity['stats'],
     ...overrides,
   } as CombatEntity

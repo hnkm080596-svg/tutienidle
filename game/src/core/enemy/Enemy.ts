@@ -280,19 +280,8 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
 
     currentMp: enemy.stats.maxMp,
 
-    currentSwordIntent: 0,
-
-    currentKiemThe: 0,
-
-    currentKiemYTemp: 0,
-
     currentMomentum: 0,
 
-    tuLucActive: false,
-
-    tuLucElapsed: 0,
-
-    tuLucDamageTakenPercent: 0,
 
     currentWard: 0,
 

@@ -9,8 +9,8 @@ import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
 import { consumeGaugeAfterAction, advanceGauge, isGaugeReady } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets, executionCommitsCast, pickCompositePool, MAX_MULTICAST, type TurnSkillExecution, type TurnQueuedExecution } from './TurnSkillAction'
-import type { TurnSkillDefinition, TurnSkillSlot, TurnSkillSlotRole, SelectedAction } from './TurnSkillAction'
-import type { ActionDamageInfo } from '../ActionImpactSystem'
+import type { TurnSkillDefinition, TurnSkillSlot, SelectedAction, DynamicBasicProvider, ForcedTurnChoice } from './TurnSkillAction'
+import type { ActionDamageInfo, HitResolveOptions } from '../ActionImpactSystem'
 import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 import type { Buff, BuffDefinitionCatalog } from '../../buff/BuffTypes'
@@ -27,6 +27,7 @@ import type { BattleLogEntry } from './TurnOrderPreview'
 import { refundGauge, GAUGE_MAX } from './ActionGauge'
 import { TurnReactionManager } from './TurnReactionManager'
 import { MAX_THE } from '../../combat/CombatTypes'
+import type { DamageResult } from '../../combat/CombatTypes'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import type { BuffDefinition } from '../../buff/BuffTypes'
 
@@ -132,6 +133,12 @@ export interface TurnBattleParticipant {
    * resets mid-battle. undefined coerces to 0.
    */
   specialAttackCounter?: number
+  /**
+   * Kiem Tu Reimagined Task 2 — path-specific basic owner (Kiem Pho orb
+   * preset / Ngu Kiem Dao). When present it owns the basic slot and the
+   * post-resolution hook; the engine stays content-agnostic.
+   */
+  dynamicBasic?: DynamicBasicProvider
 }
 
 export interface TurnBattle {
@@ -316,6 +323,20 @@ export interface TurnDeclaredAction {
    * resolve/CC-blocked/empty turns (no cast happens there).
    */
   execution?: TurnSkillExecution
+}
+
+/**
+ * Kiem Tu Reimagined Task 2 — one extra declared impact produced by a
+ * dynamicBasic provider's onCastResolved (combo payload). Presentation
+ * emits each entry separately; each carries its own preset so distinct
+ * combos stay visually distinguishable.
+ */
+export interface TurnActionExtraImpact {
+  presetId?: TurnSkillDefinition['presetId']
+  targeting?: TurnSkillDefinition['targeting']
+  targetIds: string[]
+  landedTargetIds: string[]
+  hitCount: number
 }
 
 export class TurnBattleSystem {
@@ -751,7 +772,7 @@ export class TurnBattleSystem {
   declareActorAction(
     battle: TurnBattle,
     actor: TurnBattleParticipant,
-    forcedSkillSlot?: TurnSkillSlotRole,
+    forcedAction?: ForcedTurnChoice,
   ): TurnDeclaredAction {
     // Task 11 — a queued repeat/multicast execution resolves HERE, ahead
     // of ALL turn machinery: no round/turn counting, no buff tick, no
@@ -1018,8 +1039,8 @@ export class TurnBattleSystem {
       // ARCH-002 (M7) — the effective-stat refresh moved above the gate
       // (covers expiry/CC/charge too); action selection reads the fresh
       // entity.stats.
-      action = forcedSkillSlot
-        ? selectForcedAction(actor, forcedSkillSlot)
+      action = forcedAction
+        ? selectForcedAction(actor, forcedAction)
         : selectAction(actor)
 
       // Phase A3 (2026-09-07) — enemy specialAttacks reader, ported from
@@ -1199,14 +1220,15 @@ export class TurnBattleSystem {
   applyActionImpact(
     battle: TurnBattle,
     declared: TurnDeclaredAction,
-  ): { targetIds: string[] } {
+  ): { targetIds: string[]; extraImpacts: TurnActionExtraImpact[] } {
     const targetIds: string[] = []
+    const extraImpacts: TurnActionExtraImpact[] = []
     const actor =
       battle.players.find((member) => member.id === declared.actorId) ??
       battle.enemies.find((enemy) => enemy.id === declared.actorId)
 
     if (!actor) {
-      return { targetIds }
+      return { targetIds, extraImpacts }
     }
 
     // Task 12 (spec §6, INV-8/D21) + review fix (MED-3) — only
@@ -1267,7 +1289,7 @@ export class TurnBattleSystem {
         this.grantTheFromCast(actor, chargedSkill, chargedCrit)
       }
 
-      return { targetIds }
+      return { targetIds, extraImpacts }
     }
 
     // 9.5 #9 — charge-init commits its cast HERE, not in the
@@ -1354,109 +1376,39 @@ export class TurnBattleSystem {
 
       if (declared.scaledDamage) {
         for (const target of declared.affected) {
-          if (!target.entity.alive) continue
+          // Kiem Tu Reimagined Task 2 — multi-instance defs (Ngu phi kiem):
+          // each instance runs the FULL landed-hit pipeline independently
+          // and stops early when the target dies.
+          const instanceCount = action.skill?.instances?.count ?? 1
+          let targetLanded = false
 
-          const hitResult = this.combat.resolveActionHit(actor.entity, target.entity, declared.scaledDamage)
+          for (let instanceIndex = 0; instanceIndex < instanceCount; instanceIndex++) {
+            if (!target.entity.alive) break
 
-          // AR-04: downstream on-hit effects, debuffs and consume triggers
-          // require a landed hit — dodged attacks bypass all of them.
-          if (!hitResult.dodged) {
+            const hitOptions = action.skill?.instances?.perInstanceOptions?.(instanceIndex, target.entity)
+            const hitResult = this.resolveDeclaredHit(
+              battle,
+              actor,
+              target,
+              declared.scaledDamage,
+              payloadSkill ?? null,
+              actorInitiatesReactions,
+              hitOptions,
+            )
+
+            if (!hitResult.dodged) {
+              targetLanded = true
+
+              if (hitResult.critical) {
+                castCritLanded = true
+              }
+            }
+          }
+
+          if (targetLanded) {
             targetIds.push(target.id)
-
-            if (hitResult.critical) {
-              castCritLanded = true
-            }
-
-            // R3 (AR-03) + Task 5 (D11) — Leech healing: % of the HP the
-            // target THẬT SỰ lost post-absorb — a fully-warded hit feeds
-            // nothing (damage-proportional = taken-only trigger).
-            if (payloadSkill?.healPercentOfDamage && hitResult.hpDamage > 0) {
-              this.combat.applyHealing(
-                actor.entity,
-                hitResult.hpDamage * payloadSkill.healPercentOfDamage,
-                actor.entity.id,
-                'leech',
-              )
-            }
-
-          // Phase A3 — consume-for-damage (Pháp Tu Detonate / Thổ Tu ward
-          // burst). Orchestration only: reads/clears state through
-          // BuffSystem's own API (getAllById/removeAllById); the HP and
-          // Ward mutations go through the authoritative damage/vitals
-          // pipeline (R1 / AR-01) so death, survive-lethal and vitals
-          // events stay exactly-once and uniform. True damage = direct
-          // HP damage via the authority, matching the reaction pipeline's
-          // applyModifiedDirectDamage bypass semantics at this resolution
-          // layer. Deliberately NOT registry-gated: these consume the
-          // skill's OWN authored fields, no registry content involved.
-          const skill = payloadSkill
-
-          if (skill?.consumesAilmentId && skill.damagePerStack) {
-            const stacks = new BuffSystem(target.buffs).getStacks(skill.consumesAilmentId)
-
-            if (stacks > 0) {
-              this.combat.applyDirectDamage(target.entity, stacks * skill.damagePerStack, actor.entity.id)
-              new BuffSystem(target.buffs).removeAllById(skill.consumesAilmentId)
-            }
           }
-
-          if (skill?.consumesWardForDamage && skill.damagePerWardPoint) {
-            const ward = actor.entity.currentWard
-
-            if (ward > 0) {
-              this.combat.applyDirectDamage(target.entity, ward * skill.damagePerWardPoint, actor.entity.id)
-              this.combat.spendWard(actor.entity, ward, 'ward_spend', actor.entity.id)
-            }
-          }
-
-          if (this.registry) {
-            // ARCH-009 (M9) — proc definitions are read from the ACTOR's
-            // pool, but the resulting buff belongs to the HIT VICTIM's
-            // pool (sourceId = actor, targetId = victim).
-            new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry)
-
-            // Action Playback Task 5 + stat-system-reimagined Task 5 (D5)
-            // — onImpactLanded counter trigger trên TARGET bị hit, gated
-            // on `taken` (hpDamage > 0): a fully ward/MP-shielded hit is
-            // not "taken", so no defender on-hit-taken proc fires.
-            // queuesFollowUp → battle.queuedFollowUpActorIds.
-            const { firedFollowUp } = hitResult.hpDamage > 0
-              ? new BuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry)
-              : { firedFollowUp: false }
-
-            if (firedFollowUp) {
-              // Defect-fix Task 1 — FIFO queue: AOE hit trigger counter trên
-              // nhiều target không drop tất cả trừ cái cuối.
-              battle.queuedFollowUpActorIds = battle.queuedFollowUpActorIds ?? []
-              battle.queuedFollowUpActorIds.push(target.id)
-            }
-
-            // Phase A1 (2026-09-07) / R3 (AR-03) — chance-gated ailment application,
-            // then reaction check against the just-applied id.
-            if (payloadSkill) {
-              this.applySkillAilments(actor, target, payloadSkill, actorInitiatesReactions)
-            }
-
-            // Task 13 — detonate (dot-route empowered ult, spec §4):
-            // AFTER the normal application lands, consume every live
-            // DoT ailment for remaining-tick x stacks x amp and re-seed
-            // a fixed 1 stack at authored duration. Reaction-silent by
-            // contract — re-seeds never reach TurnReactionManager.
-            if (payloadSkill?.detonateDoT && target.entity.alive) {
-              this.applyDetonate(actor, target, payloadSkill.detonateDoT.amp)
-            }
-          }
-
-          // ARCH-002 (M7) — every pool mutation above (consume-removal —
-          // removeAllById runs OUTSIDE the registry gate — on-hit procs on
-          // the actor, reactive triggers and ailments on the target,
-          // survive-lethal grants inside resolveActionHit) must be
-          // effective before the next hit/read in this loop, so the
-          // refresh is deliberately not registry-gated either.
-          this.refreshParticipantStats(target)
-          this.refreshParticipantStats(actor)
         }
-      }
     } else if (
       !declared.compositePickedSkills?.length &&
       payloadSkill?.targetScope !== 'self'
@@ -1510,62 +1462,298 @@ export class TurnBattleSystem {
           this.grantTheFromCast(actor, payloadSkill, castCritLanded)
         }
 
-        if (payloadSkill?.appliesBuff && this.registry) {
-          // Skip an unresolvable buff id gracefully (renamed/drifted content
-          // must not crash the tick) — same try/catch pattern as the
-          // bossTrigger lookup above.
-          let definition: BuffDefinition | undefined
-
-          try {
-            definition = this.registry.get(payloadSkill.appliesBuff.definitionId)
-          } catch {
-            definition = undefined
-          }
-
-          if (definition) {
-            // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
-            // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
-            if (payloadSkill.appliesBuff.target === 'self') {
-              new BuffSystem(actor.buffs).apply(
-                definition,
-                actor.entity,
-                actor.entity,
-                this.registry,
-                payloadSkill.appliesBuff.duration,
-              )
-              this.pendingGaugeDeltaTargets = [actor]
-              // ARCH-002 (M7) — statModifier buffs are effective NOW, not
-              // at the actor's next turn (kim_giap counter-read class).
-              this.refreshParticipantStats(actor)
-            } else {
-              const targets: TurnBattleParticipant[] = []
-
-              for (const target of declared.affected) {
-                new BuffSystem(target.buffs).apply(
-                  definition,
-                  actor.entity,
-                  target.entity,
-                  this.registry,
-                  payloadSkill.appliesBuff.duration,
-                )
-                targets.push(target)
-                this.refreshParticipantStats(target)
-              }
-
-              this.pendingGaugeDeltaTargets = targets
-            }
-
-            this.pendingGaugeDeltaDefinition = definition
-          }
+        if (payloadSkill?.appliesBuff) {
+          this.applyDeclaredBuff(actor, payloadSkill.appliesBuff, declared.affected)
         }
 
         if (payloadSkill?.targetScope === 'self') {
           targetIds.push(actor.id)
         }
+
+        // Kiem Tu Reimagined Task 2 — dynamicBasic post-resolution hook.
+        // The provider owns path rules (Kiem Y gain, combo tail-match);
+        // extra defs it returns execute as additive declared impacts
+        // through the SAME landed-hit pipeline (resolveDeclaredHit).
+        if (actor.dynamicBasic?.onCastResolved) {
+          const extraDefs = actor.dynamicBasic.onCastResolved({
+            battle,
+            actor,
+            resolvedSkillId: action.skillId,
+            landedTargetIds: [...targetIds],
+            resolveBuff: (buffTarget, buff) => {
+              this.applyDeclaredBuff(
+                actor,
+                {
+                  definitionId: buff.definitionId,
+                  target: 'target',
+                  duration: buff.duration,
+                  stacks: buff.stacks,
+                },
+                [buffTarget],
+              )
+            },
+          })
+
+          for (const extraDef of extraDefs) {
+            extraImpacts.push(this.applyExtraImpact(battle, actor, declared, extraDef))
+          }
+        }
       }
     }
 
-    return { targetIds }
+    return { targetIds, extraImpacts }
+  }
+
+  /**
+   * Kiem Tu Reimagined Task 2 — the FULL landed-hit consequence chain for
+   * ONE declared hit: resolveActionHit + (on landed) leech / consume-for-
+   * damage / on-hit procs / reactive follow-up trigger / ailment appli-
+   * cation + stat refresh on both sides. Multi-instance casts (Ngu phi
+   * kiem) and provider-returned combo impacts loop THIS helper — never
+   * bare CombatSystem.resolveActionHit, which lacks the consequences.
+   */
+  private resolveDeclaredHit(
+    battle: TurnBattle,
+    actor: TurnBattleParticipant,
+    target: TurnBattleParticipant,
+    damage: ActionDamageInfo,
+    skill: TurnSkillDefinition | null,
+    actorInitiatesReactions: boolean,
+    hitOptions?: Partial<HitResolveOptions>,
+  ): DamageResult {
+    const hitResult = this.combat.resolveActionHit(actor.entity, target.entity, damage, hitOptions)
+
+    // AR-04: downstream on-hit effects, debuffs and consume triggers
+    // require a landed hit — dodged attacks bypass all of them.
+    if (!hitResult.dodged) {
+      // R3 (AR-03) + Task 5 (D11) — Leech healing: % of the HP the
+      // target THẬT SỰ lost post-absorb — a fully-warded hit feeds
+      // nothing (damage-proportional = taken-only trigger).
+      if (skill?.healPercentOfDamage && hitResult.hpDamage > 0) {
+        this.combat.applyHealing(
+          actor.entity,
+          hitResult.hpDamage * skill.healPercentOfDamage,
+          actor.entity.id,
+          'leech',
+        )
+      }
+
+      // Phase A3 — consume-for-damage (Pháp Tu Detonate / Thổ Tu ward
+      // burst). Orchestration only: reads/clears state through
+      // BuffSystem's own API (getAllById/removeAllById); the HP and
+      // Ward mutations go through the authoritative damage/vitals
+      // pipeline (R1 / AR-01) so death, survive-lethal and vitals
+      // events stay exactly-once and uniform. True damage = direct
+      // HP damage via the authority, matching the reaction pipeline's
+      // applyModifiedDirectDamage bypass semantics at this resolution
+      // layer. Deliberately NOT registry-gated: these consume the
+      // skill's OWN authored fields, no registry content involved.
+      if (skill?.consumesAilmentId && skill.damagePerStack) {
+        const stacks = new BuffSystem(target.buffs).getStacks(skill.consumesAilmentId)
+
+        if (stacks > 0) {
+          this.combat.applyDirectDamage(target.entity, stacks * skill.damagePerStack, actor.entity.id)
+          new BuffSystem(target.buffs).removeAllById(skill.consumesAilmentId)
+        }
+      }
+
+      if (skill?.consumesWardForDamage && skill.damagePerWardPoint) {
+        const ward = actor.entity.currentWard
+
+        if (ward > 0) {
+          this.combat.applyDirectDamage(target.entity, ward * skill.damagePerWardPoint, actor.entity.id)
+          this.combat.spendWard(actor.entity, ward, 'ward_spend', actor.entity.id)
+        }
+      }
+
+      if (this.registry) {
+        // ARCH-009 (M9) — proc definitions are read from the ACTOR's
+        // pool, but the resulting buff belongs to the HIT VICTIM's
+        // pool (sourceId = actor, targetId = victim).
+        new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry)
+
+        // Action Playback Task 5 + stat-system-reimagined Task 5 (D5)
+        // — onImpactLanded counter trigger trên TARGET bị hit, gated
+        // on `taken` (hpDamage > 0): a fully ward/MP-shielded hit is
+        // not "taken", so no defender on-hit-taken proc fires.
+        // queuesFollowUp → battle.queuedFollowUpActorIds.
+        const { firedFollowUp } = hitResult.hpDamage > 0
+          ? new BuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry)
+          : { firedFollowUp: false }
+
+        if (firedFollowUp) {
+          // Defect-fix Task 1 — FIFO queue: AOE hit trigger counter trên
+          // nhiều target không drop tất cả trừ cái cuối.
+          battle.queuedFollowUpActorIds = battle.queuedFollowUpActorIds ?? []
+          battle.queuedFollowUpActorIds.push(target.id)
+        }
+
+        // Phase A1 (2026-09-07) / R3 (AR-03) — chance-gated ailment application,
+        // then reaction check against the just-applied id.
+        if (skill) {
+          this.applySkillAilments(actor, target, skill, actorInitiatesReactions)
+        }
+
+        // Task 13 — detonate (dot-route empowered ult, spec §4):
+        // AFTER the normal application lands, consume every live
+        // DoT ailment for remaining-tick x stacks x amp and re-seed
+        // a fixed 1 stack at authored duration. Reaction-silent by
+        // contract — re-seeds never reach TurnReactionManager.
+        if (skill?.detonateDoT && target.entity.alive) {
+          this.applyDetonate(actor, target, skill.detonateDoT.amp)
+        }
+      }
+    }
+
+    // ARCH-002 (M7) — every pool mutation above (consume-removal —
+    // removeAllById runs OUTSIDE the registry gate — on-hit procs on
+    // the actor, reactive triggers and ailments on the target,
+    // survive-lethal grants inside resolveActionHit) must be
+    // effective before the next hit/read in this loop, so the
+    // refresh is deliberately not registry-gated either — and runs
+    // for dodged hits too (same as the pre-extraction loop).
+    this.refreshParticipantStats(target)
+    this.refreshParticipantStats(actor)
+
+    return hitResult
+  }
+
+  /**
+   * Kiem Tu Reimagined Task 2 — appliesBuff machinery shared by the
+   * action's own appliesBuff and provider extra-impact defs / the
+   * resolveBuff ctx channel. Keeps the gaugeDelta one-shot deferral
+   * (pendingGaugeDeltaTargets consumed in completeAction).
+   */
+  private applyDeclaredBuff(
+    actor: TurnBattleParticipant,
+    buffSpec: { definitionId: string; target: 'self' | 'target'; duration?: number; stacks?: number },
+    targets: TurnBattleParticipant[],
+  ): void {
+    if (!this.registry) return
+
+    // Skip an unresolvable buff id gracefully (renamed/drifted content
+    // must not crash the tick) — same try/catch pattern as the
+    // bossTrigger lookup above.
+    let definition: BuffDefinition | undefined
+
+    try {
+      definition = this.registry.get(buffSpec.definitionId)
+    } catch {
+      definition = undefined
+    }
+
+    if (!definition) return
+
+    // Kiem Tu Reimagined Task 11 — combo capstones may declare N stacks;
+    // each apply() call adds one stack under 'stack' stackMode and is
+    // idempotent under 'refresh'. Default 1 = previous behavior.
+    const stacks = Math.max(1, buffSpec.stacks ?? 1)
+
+    // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
+    // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
+    if (buffSpec.target === 'self') {
+      for (let i = 0; i < stacks; i++) {
+        new BuffSystem(actor.buffs).apply(
+          definition,
+          actor.entity,
+          actor.entity,
+          this.registry,
+          buffSpec.duration,
+        )
+      }
+      this.pendingGaugeDeltaTargets = [actor]
+      // ARCH-002 (M7) — statModifier buffs are effective NOW, not
+      // at the actor's next turn (kim_giap counter-read class).
+      this.refreshParticipantStats(actor)
+    } else {
+      const applied: TurnBattleParticipant[] = []
+
+      for (const target of targets) {
+        for (let i = 0; i < stacks; i++) {
+          new BuffSystem(target.buffs).apply(
+            definition,
+            actor.entity,
+            target.entity,
+            this.registry,
+            buffSpec.duration,
+          )
+        }
+        applied.push(target)
+        this.refreshParticipantStats(target)
+      }
+
+      this.pendingGaugeDeltaTargets = applied
+    }
+
+    this.pendingGaugeDeltaDefinition = definition
+  }
+
+  /**
+   * Kiem Tu Reimagined Task 2 — execute ONE provider-returned extra
+   * impact def: fresh target collection from the def's own targeting,
+   * per-target instance loop through resolveDeclaredHit, optional
+   * appliesBuff. Returns the presentation payload.
+   */
+  private applyExtraImpact(
+    battle: TurnBattle,
+    actor: TurnBattleParticipant,
+    declared: TurnDeclaredAction,
+    extraDef: TurnSkillDefinition,
+  ): TurnActionExtraImpact {
+    const extraScope = extraDef.targetScope ?? 'enemy'
+
+    const extraTargets: TurnBattleParticipant[] =
+      extraScope === 'self'
+        ? [actor]
+        : (() => {
+            const primary = selectTarget(actor, declared.opposingSide)
+
+            return primary ? collectTurnTargets(primary, declared.opposingSide, extraDef.targeting) : []
+          })()
+
+    const landedIds: string[] = []
+    let hitCount = 0
+
+    if (extraDef.damage) {
+      const scaled = declared.suddenDeathMultiplier === 1
+        ? extraDef.damage
+        : scaleActionDamage(extraDef.damage, declared.suddenDeathMultiplier)
+
+      for (const target of extraTargets) {
+        const count = extraDef.instances?.count ?? 1
+
+        for (let i = 0; i < count; i++) {
+          if (!target.entity.alive) break
+
+          const opts = extraDef.instances?.perInstanceOptions?.(i, target.entity)
+          const result = this.resolveDeclaredHit(battle, actor, target, scaled, extraDef, actor.canInitiateWuxingReactions === true, opts)
+          hitCount += 1
+
+          if (!result.dodged && !landedIds.includes(target.id)) {
+            landedIds.push(target.id)
+          }
+        }
+      }
+    }
+
+    if (extraDef.appliesBuff) {
+      this.applyDeclaredBuff(actor, extraDef.appliesBuff, extraTargets)
+    }
+
+    if (extraScope === 'self' && !landedIds.includes(actor.id)) {
+      landedIds.push(actor.id)
+    }
+
+    return {
+      presetId: extraDef.presetId,
+      // Authored targeting rides the payload so presentation reports the
+      // same area the gameplay resolution used (A8 — no silent
+      // single-cell downgrade when a combo declares AOE).
+      targeting: extraDef.targeting,
+      targetIds: extraTargets.map((target) => target.id),
+      landedTargetIds: landedIds,
+      hitCount,
+    }
   }
 
   /**
@@ -1861,9 +2049,9 @@ export class TurnBattleSystem {
   resolveActorTurn(
     battle: TurnBattle,
     actor: TurnBattleParticipant,
-    forcedSkillSlot?: TurnSkillSlotRole,
+    forcedAction?: ForcedTurnChoice,
   ): TurnStepResult {
-    const declared = this.declareActorAction(battle, actor, forcedSkillSlot)
+    const declared = this.declareActorAction(battle, actor, forcedAction)
     const { targetIds } = this.applyActionImpact(battle, declared)
     return this.completeAction(battle, actor, declared, targetIds)
   }

@@ -107,7 +107,7 @@ describe('phap_tu_an — ritual offer gate', () => {
     player.skillCastCounts = { linh_bao: LING_BAO_L3, tram: 0 }
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
     expect(player.cultivationPath).toBe('kiem_tu')
-    expect(player.kiemTuRoute).toBe('kiem_tran')
+    expect(player.kiemTu?.mode).toBe('hien')
   })
 
   it('chooseCultivationPath(phap_tu_an) fails atomically when a kit template is missing — nothing committed', () => {

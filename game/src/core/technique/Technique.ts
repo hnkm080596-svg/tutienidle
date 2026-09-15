@@ -105,12 +105,6 @@ export interface Technique {
 
   resourceLabel?: string
 
-  // Kiếm Tu (2026-08-15) — true = thanh tài nguyên trong CombatHud.vue
-  // đổi hẳn NGUỒN SỐ LIỆU sang currentSwordIntent/MAX_SWORD_INTENT
-  // (pool RIÊNG, xem CombatEntity.ts) thay vì currentRage/MAX_RAGE mặc
-  // định — khác `resourceLabel` (chỉ đổi TÊN hiển thị, vẫn đọc Rage).
-  usesSwordIntentResource?: boolean
-
   // PLAN HOÀN CHỈNH mục 5 — hiệu ứng chỉ số theo tier, xem
   // TechniqueTierEffect. Optional/từng-tier-optional vì Kiếm Tu/Thể Tu
   // chưa thiết kế (mục 5.3) — technique nào không khai coi như không

@@ -179,11 +179,11 @@ describe('CombatScene — Kiếm bar poll per-tick (9.4)', () => {
     return { hud, scene }
   }
 
-  it('route kiem_tran → updateKiem(currentKiemThe, MAX_KIEM_THE, "Kiếm Thế") mỗi poll', () => {
+  it('reader returns a bar → updateKiem(current, max, label) mỗi poll', () => {
     const reader = vi.fn((): ReturnType<KiemBarReader> => ({
       current: 30,
       max: 100,
-      label: 'Kiếm Thế',
+      label: 'Kiếm Ý',
     }))
     const { hud, scene } = sceneWithKiemReader(reader)
 
@@ -192,24 +192,24 @@ describe('CombatScene — Kiếm bar poll per-tick (9.4)', () => {
 
     expect(reader).toHaveBeenCalledTimes(2)
     expect(hud.kiemCalls).toHaveLength(2)
-    expect(hud.kiemCalls[0]).toEqual({ current: 30, max: 100, label: 'Kiếm Thế' })
+    expect(hud.kiemCalls[0]).toEqual({ current: 30, max: 100, label: 'Kiếm Ý' })
   })
 
-  it('route bat_kiem → updateKiem(temp + permanent, max, "Kiếm Ý T.2")', () => {
+  it('ngu mode → reader-supplied Kiem Y progress reaches the bar verbatim', () => {
     const reader = vi.fn((): ReturnType<KiemBarReader> => ({
       current: 40,
       max: 920,
-      label: 'Kiếm Ý T.2',
+      label: 'Kiếm Ý',
     }))
     const { hud, scene } = sceneWithKiemReader(reader)
 
     scene.pollKiemBar()
 
     expect(hud.kiemCalls).toHaveLength(1)
-    expect(hud.kiemCalls[0]).toEqual({ current: 40, max: 920, label: 'Kiếm Ý T.2' })
+    expect(hud.kiemCalls[0]).toEqual({ current: 40, max: 920, label: 'Kiếm Ý' })
   })
 
-  it('reader trả null (battle null / route không phải Kiếm Tu) → ẩn bar updateKiem(0, 0, "")', () => {
+  it('reader trả null (battle null / mode hien không bar) → ẩn bar updateKiem(0, 0, "")', () => {
     const reader = vi.fn((): ReturnType<KiemBarReader> => null)
     const { hud, scene } = sceneWithKiemReader(reader)
 

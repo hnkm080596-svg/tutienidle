@@ -476,7 +476,6 @@ export class GameManagerPersistentEffectOps {
       currentHp: stats.maxHp,
       maxHp: stats.maxHp,
       currentMp: stats.maxMp,
-      currentSwordIntent: 0,
       currentMomentum: 0,
       currentWard: 0,
       turnsSinceLastHitLanded: Infinity,
@@ -484,9 +483,6 @@ export class GameManagerPersistentEffectOps {
       x: 0,
       row: HERO_LANE_INDEX,
       alive: true,
-      tuLucActive: false,
-      tuLucElapsed: 0,
-      tuLucDamageTakenPercent: 0,
     }
   }
 }

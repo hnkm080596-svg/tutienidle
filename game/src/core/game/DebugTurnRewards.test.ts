@@ -12,11 +12,7 @@ function _debugEntity(): CombatEntity {
     id: 'dbg_player', name: 'Dbg', type: 'player', baseStats: stats, stats,
     currentHp: 100, maxHp: 100, currentMp: 0,
 
-    currentSwordIntent: 0,
-
     currentMomentum: 0,
-
-    tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
   } as CombatEntity
 }

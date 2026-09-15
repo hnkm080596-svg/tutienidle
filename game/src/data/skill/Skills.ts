@@ -1,16 +1,11 @@
 import type { Skill } from '../../core/skill/Skill'
 import type { ElementType } from '../../core/element/ElementType'
 import { CORE_SKILLS } from './CoreSkills'
-import { KIEM_TRAN_SKILLS } from './KiemTranSkills'
 import { PASSIVE_SKILLS } from './PassiveSkills'
 import { PHAP_TU_SKILLS } from './PhapTuChainSkills'
 
 export const SKILLS: Skill[] = [
   ...CORE_SKILLS,
-
-  // 9 skill Kiem Tran (chieu tran) — generated tu KIEM_TRAN_SKILLS
-  // (table-driven tu TRAN_SEQUENCE trong KiemTuNodes.ts).
-  ...KIEM_TRAN_SKILLS,
   ...PASSIVE_SKILLS,
   ...PHAP_TU_SKILLS,
 ]

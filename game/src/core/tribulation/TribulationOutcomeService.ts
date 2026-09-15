@@ -223,6 +223,11 @@ export class TribulationOutcomeService {
     gameManager.realmAdvanceOps.syncRealmPassive(player)
     gameManager.realmAdvanceOps.syncRealmStatPassive(player)
 
+    // Kiem Tu Reimagined (spec K15) — ngu merge fires exactly once per
+    // major-realm advance, after the realmId write (above) so the merge
+    // snapshots the swords forged under the OLD realm's economy.
+    gameManager.realmAdvanceOps.applyKiemTuRealmTransition(player)
+
     // Cultivation-path realm rewards (technique/artifact kit grants) are
     // idempotent and owned by GameManager; the service only sequences.
     gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)

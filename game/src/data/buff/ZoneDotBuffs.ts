@@ -5,7 +5,7 @@
 // mission's parked-modules rule.
 import type { BuffDefinition } from '../../core/buff/BuffTypes'
 
-// Completion plan Task 7 Step 1 — 2 dot buff definition thay zone-as-dot:
+// Completion plan Task 7 Step 1 — dot buff definition thay zone-as-dot:
 //   - "Dung Nham" (thạch_hóa + bỏng, ReactionManager.spawnLavaZone →
 //     HazardZoneSystem.spawnLavaZone): hệ sống spawn Lava Zone 6 tick ×
 //     damagePerTick 20 CỐ ĐỊNH (ElementReaction.ts spawnsLavaZone data,
@@ -13,13 +13,11 @@ import type { BuffDefinition } from '../../core/buff/BuffTypes'
 //     power × dpsRatio (BuffSystem.calculateDamagePerTurn, physical
 //     dùng stats.might). dpsRatio = 20/10 = 2.0 quy đổi tại baseline
 //     might 10 (StatBlock.ts) — damage/tick tại baseline giữ nguyên 20.
-//   - "Kiếm Trận" (Kiếm Tu keystone, SkillEffect.grantsSwordZone →
-//     HazardZoneSystem.spawnSwordZone): hệ sống damagePerTick =
-//     multiplier × 0.3 × might, 3 charges. dpsRatio 0.3 quy đổi 1:1
-//     (đã might-scaled sẵn); charges 3 → duration 3 lượt.
+//   - "Kiếm Trận" anchor REMOVED (Kiem Tu Reimagined spec 2026-09-15
+//     §7) — the sword-zone keystone no longer exists.
 //
 // Duration giữ nguyên SỐ (no-rebalance policy Completion plan §Global
-// Constraints): 6s × tickInterval 1s = 6 lượt; 3 charges = 3 lượt.
+// Constraints): 6s × tickInterval 1s = 6 lượt.
 //
 // LƯU Ý CUTOVER (Task 7 Step 3-4 BLOCKED): TurnBattleSystem/TurnSkillAction
 // hiện KHÔNG gọi ReactionManager/SkillEffectSystem (engine turn chưa wire
@@ -36,14 +34,4 @@ export const DUNG_NHAM_BURN_DEFINITION: BuffDefinition = {
   duration: 6,
   stackMode: 'refresh',
   effects: [{ type: 'dot', dpsRatio: 2.0, element: 'fire' }],
-}
-
-export const KIEM_TRAN_BURN_DEFINITION: BuffDefinition = {
-  id: 'kiem_tran_burn',
-  name: 'Kiếm Trận Xuyên Tâm',
-  description: 'Kiếm Trận — vung kiếm trận địa xuyên phá (dot thay Sword Zone)',
-  polarity: 'buff',
-  duration: 3,
-  stackMode: 'refresh',
-  effects: [{ type: 'dot', dpsRatio: 0.3, element: 'metal' }],
 }

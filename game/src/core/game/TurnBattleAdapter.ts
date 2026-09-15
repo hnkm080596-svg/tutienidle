@@ -6,28 +6,14 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { TurnSkillDefinition, TurnSkillSlot } from '../battle/turn/TurnSkillAction'
 import { CULTIVATION_PATH_STAT_DOMAINS, type StatDomain } from '../stats/StatDomain'
-import { BAT_KIEM_THUAT, TRU_TIEN_KIEM_TRAN } from '../../data/skill/BatKiemThuat'
 import { BuffPool } from '../buff/BuffPool'
 
 /**
- * Future Systems Task 8 (2026-09-04) — special/ultimate role theo build.
- * Kiếm Tu: Bạt Kiếm Thuật (2-phase charge, Task 7/8) ở `special`;
- * ultimate chưa có content (Slice 2 priority-fallback xử lý graceful).
- *
- * Phase A3 (2026-09-07) — Pháp Tu KHÔNG đi qua map buildId nữa: 'phap_tu'
- * là path id, không đủ để biết element (bug Component 1 trong spec A3 —
- * 'phap_tu' match không slot nào nên Pháp Tuplayer không có
- * special/ultimate). GameManager resolve qua SkillToTurnSkillConverter
- * rồi truyền `resolvedSpecialUltimate` trực tiếp (param 5). Kiếm Tu giữ
- * lookup tĩnh qua buildId (ultimate tĩnh, xem Task 4 A3).
+ * Kiem Tu Reimagined (Task 6) — the buildId special/ultimate maps were
+ * removed: hien Kiem Pho has no special/ult (the preset IS the kit) and
+ * ngu emblems arrive via resolvedSpecialUltimate (Task 9). The legacy
+ * Bạt Kiếm/Kiếm Trận kit they pointed at retires in Task 12.
  */
-const SPECIALS_BY_BUILD: Record<string, TurnSkillDefinition> = {
-  kiem_tu: BAT_KIEM_THUAT,
-}
-
-const ULTIMATES_BY_BUILD: Record<string, TurnSkillDefinition> = {
-  kiem_tu: TRU_TIEN_KIEM_TRAN,
-}
 
 export function toTurnBattleParticipant(
   entity: CombatEntity,
@@ -71,10 +57,8 @@ export function toTurnBattleParticipant(
       (CULTIVATION_PATH_STAT_DOMAINS[buildId]?.includes('phap_tu') ?? false),
   }
 
-  const special =
-    resolvedSpecialUltimate?.special ?? (buildId !== undefined ? SPECIALS_BY_BUILD[buildId] : undefined)
-  const ultimate =
-    resolvedSpecialUltimate?.ultimate ?? (buildId !== undefined ? ULTIMATES_BY_BUILD[buildId] : undefined)
+  const special = resolvedSpecialUltimate?.special
+  const ultimate = resolvedSpecialUltimate?.ultimate
 
   if (special) {
     participant.special = {

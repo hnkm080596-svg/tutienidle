@@ -97,14 +97,13 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     expect(attackAfterEquipment).toBeGreaterThanOrEqual(attackAfterClass + 50)
 
-    // --- Pre-Battle Upgrade: nâng cấp skill route Kiếm Tu (spec
-    // 2026-08-29 — skill Thai Hư có specialization đã chuyển thành
-    // passive node; giờ upgrade nguồn là skill insight cấp skill chủ
-    // động của route).
-    gameManager.progressionOps.learnSkill('bat_kiem_thuat')
-    gameManager.skillSystem.equipToSlot('bat_kiem_thuat', 0)
+    // --- Pre-Battle Upgrade: nâng cấp 1 skill bất kỳ (Kiem Tu
+    // Reimagined — hien basics come from the orb preset, so the generic
+    // authored skill here is tam_muoi_chan_hoa).
+    gameManager.progressionOps.learnSkill('tam_muoi_chan_hoa')
+    gameManager.skillSystem.equipToSlot('tam_muoi_chan_hoa', 0)
 
-    const rawSkill = gameManager.skillManager.get('bat_kiem_thuat')!
+    const rawSkill = gameManager.skillManager.get('tam_muoi_chan_hoa')!
 
     // Trạng thái gốc — channel tick AoE metal components.
     expect(rawSkill.effects[0]?.components).toBeDefined()

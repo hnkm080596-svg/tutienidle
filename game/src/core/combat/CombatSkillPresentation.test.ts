@@ -16,7 +16,8 @@ function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
     id: 'p', name: 'p', type: 'player', baseStats: stats, stats,
     currentHp: 100, maxHp: 100, currentMp: 50, maxMp: 50,
-    tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+
+    currentMomentum: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
     ...overrides,
   } as CombatEntity
@@ -154,13 +155,13 @@ describe('buildTurnSkillPresentation — skillName/skillDescription (9.5 #5)', (
     expect(result.basic.skillDescription!.length).toBeGreaterThan(0)
   })
 
-  it('id authored riêng (bat_kiem_thuat) → metadata từ map authored', () => {
+  it('id authored riêng (ngu_kiem_thuat) → metadata từ map authored', () => {
     const b = battle()
-    b.players[0]!.special!.skill.id = 'bat_kiem_thuat'
+    b.players[0]!.special!.skill.id = 'ngu_kiem_thuat'
 
     const result = buildTurnSkillPresentation(b, true)
 
-    expect(result.special.skillName).toBe('Bạt Kiếm Thuật')
+    expect(result.special.skillName).toBe('Ngự Kiếm Thuật')
   })
 
   it('id lạ (fixture không có trong map) → không set name/description (fallback nhãn role)', () => {

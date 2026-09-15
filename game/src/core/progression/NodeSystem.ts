@@ -3,6 +3,7 @@ import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } fro
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
+import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
 
 /**
  * Node level hạ tầng dùng chung (combat-skill-flow-element-power-dot-plan.md
@@ -72,6 +73,21 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
 
       return castOk && levelOk
     }
+
+    // Kiem Tu Reimagined (spec K20) — the Cuu Cung cap guard. Lives in
+    // hasPrerequisite so canPurchaseNode blocks the buy BEFORE insight
+    // is deducted or the node recorded. Mortal realm (index 0) fails —
+    // ngu cannot be entered there anyway.
+    case 'kiemDaoBelowCap': {
+      const state = player.kiemTu
+      const realmIndex = getRealmIndex(player.realmId)
+
+      if (state?.mode !== 'ngu' || realmIndex < 1) {
+        return false
+      }
+
+      return state.kiemDaoCount < kiemDaoCap(realmIndex)
+    }
   }
 }
 
@@ -117,7 +133,20 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
     return false
   }
 
+  // Kiem Tu Reimagined — a mode-tagged node is only purchasable in its
+  // own mode. Without this a converted ngu player could buy inert hien
+  // orb nodes (the aggregation filter would silently eat the effect).
+  if (node.kiemTuMode !== undefined && node.kiemTuMode !== player.kiemTu?.mode) {
+    return false
+  }
+
   if (player.skillInsight < getNextLevelCost(node, 0)) {
+    return false
+  }
+
+  // Kiem Tu Reimagined — a hidden node is never purchasable before its
+  // revealWhen gate holds (display gate + purchase gate share the read).
+  if (node.revealWhen && !hasPrerequisite(player, node.revealWhen)) {
     return false
   }
 
@@ -126,7 +155,7 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
 
 /** Đủ điều kiện NÂNG CẤP (L→L+1): đã lĩnh ngộ, chưa max, đủ Cảm Ngộ. */
 export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boolean {
-  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
+  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node)) {
     return false
   }
 
@@ -245,6 +274,16 @@ function scaleModifierForLevel<T extends { flat?: number; percent?: number; perL
  * (§6.8 bước 3) — thay hoàn toàn đường push vào player.modifiers cũ.
  * Cùng (registry, levels) bất kể thứ tự nâng → cùng kết quả.
  */
+/**
+ * Kiem Tu Reimagined — a node authored for one kiem_tu mode contributes
+ * nothing while the player is in the other mode (orb growth nodes are
+ * inert for ngu, ngu growth nodes are inert for hien). Mode-agnostic
+ * nodes (kiemTuMode undefined) always apply.
+ */
+export function nodeModeApplies(player: PlayerData, node: ProgressionNode): boolean {
+  return node.kiemTuMode === undefined || node.kiemTuMode === player.kiemTu?.mode
+}
+
 export function aggregateNodeStatModifiers(
   registry: { getAll(): ProgressionNode[] },
 
@@ -255,7 +294,7 @@ export function aggregateNodeStatModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node)) {
       continue
     }
 
@@ -285,7 +324,7 @@ export function aggregateTurnSkillResourceModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node)) {
       continue
     }
 
@@ -326,6 +365,13 @@ export function devResetBranch(
   let refund = 0
 
   for (const node of nodes) {
+    // Kiem Tu Reimagined (spec K4) — mode-switch nodes are one-way and
+    // non-refundable: dev reset never clears nor refunds them. Their
+    // branch children still reset (they hold no mode-switch state).
+    if (node.effect.kiemTuModeSwitch) {
+      continue
+    }
+
     const level = getNodeLevel(player, node.id)
 
     let nodeRefund = 0
@@ -362,7 +408,7 @@ export function devResetBranch(
     changed = false
 
     for (const node of registry.getAll()) {
-      if (getNodeLevel(player, node.id) < 1) {
+      if (getNodeLevel(player, node.id) < 1 || node.effect.kiemTuModeSwitch) {
         continue
       }
 

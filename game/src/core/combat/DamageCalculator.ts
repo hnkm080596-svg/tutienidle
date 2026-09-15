@@ -30,12 +30,15 @@ export function calculateBaseDamage(
   target: CombatEntity,
   damageType: 'physical' | 'primordial',
   ignoreResistance = false,
+  armorPierceFraction = 0,
 ): number {
   switch (damageType) {
     case 'physical': {
       const raw = source.stats.might
 
-      const mitigation = ignoreResistance ? 0 : getArmorMitigationPercent(target.stats.defense, target.realmIndex)
+      const mitigation = ignoreResistance
+        ? 0
+        : getArmorMitigationPercent(target.stats.defense, target.realmIndex) * (1 - armorPierceFraction)
 
       return Math.max(0, raw * (1 - mitigation))
     }
@@ -50,10 +53,10 @@ export function calculateBaseDamage(
 
 /**
  * R3 re-audit (AR-03 gap) — mọi field scaling authored trên SkillEffect
- * (attributeScaling/manaScalingRatio/swordIntentDamageRatio) từng chỉ
+ * (attributeScaling/manaScalingRatio) từng chỉ
  * được cộng vào multiplier bởi SkillEffectSystem.apply() (engine cũ,
- * KHÔNG phải TurnBattleSystem đang active) — nghĩa là mọi skill Pháp Tu/
- * Kiếm Trận cast qua turn engine mất trắng phần scaling này. Một helper
+ * KHÔNG phải TurnBattleSystem đang active) — nghĩa là mọi skill Pháp Tu
+ * cast qua turn engine mất trắng phần scaling này. Một helper
  * DÙNG CHUNG duy nhất (đọc bởi CombatSystem.resolveActionHit()) để
  * ActionDamageInfo.scaling áp đúng công thức, không lệch giữa 2 pipeline.
  */
@@ -61,8 +64,6 @@ export interface DamageScalingConfig {
   attributeScaling?: { attributes: StatType[]; ratioPerPoint: number }[]
 
   manaScalingRatio?: number
-
-  swordIntentDamageRatio?: number
 }
 
 export function calculateScalingBonus(source: CombatEntity, scaling: DamageScalingConfig | undefined): number {
@@ -78,11 +79,9 @@ export function calculateScalingBonus(source: CombatEntity, scaling: DamageScali
     0,
   )
 
-  const swordIntentBonus = scaling.swordIntentDamageRatio ? scaling.swordIntentDamageRatio * source.currentSwordIntent : 0
-
   const manaBonus = scaling.manaScalingRatio ? scaling.manaScalingRatio * source.stats.maxMp : 0
 
-  return attributeBonus + swordIntentBonus + manaBonus
+  return attributeBonus + manaBonus
 }
 
 /**

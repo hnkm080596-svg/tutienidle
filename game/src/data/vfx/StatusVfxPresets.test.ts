@@ -31,13 +31,6 @@ describe('StatusVfxPresets — map theo buff id (buff bar)', () => {
     expect(getStatusVfxPreset('thach_giap_buff').shape).toBe('circle')
   })
 
-  it('onhit_* prefix → circle màu buff (fallback id chưa map)', () => {
-    expect(getStatusVfxPreset('onhit_chua_co_trong_bang')).toMatchObject({
-      color: BUFF_PLACEHOLDER_COLOR,
-      shape: 'circle',
-    })
-  })
-
   it('id lạ + polarity → placeholder theo polarity', () => {
     expect(getStatusVfxPreset('buff_la_ma', 'buff')).toMatchObject({ color: BUFF_PLACEHOLDER_COLOR })
     expect(getStatusVfxPreset('debuff_la_ma', 'debuff')).toMatchObject({

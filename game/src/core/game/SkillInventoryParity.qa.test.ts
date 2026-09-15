@@ -4,7 +4,6 @@ import { PHAP_TU_KIT_IDS, SKILLS } from '../../data/skill/Skills'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
-import { BAT_KIEM_THUAT, TRU_TIEN_KIEM_TRAN } from '../../data/skill/BatKiemThuat'
 
 // R3 Verification Gate: Full reachable active skill inventory in beta.
 // Every active skill reachable in the beta loop (Pháp Tu 5 chains × 3 slots +
@@ -129,15 +128,4 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
     })
   })
 
-  describe('Kiếm Tu and Reaction Path definitions', () => {
-    it('BAT_KIEM_THUAT is valid charging skill', () => {
-      expect(BAT_KIEM_THUAT.chargeTurns).toBe(3)
-      expect(BAT_KIEM_THUAT.damage?.multiplier).toBe(3)
-    })
-
-    it('TRU_TIEN_KIEM_TRAN is valid finisher with the cost', () => {
-      expect(TRU_TIEN_KIEM_TRAN.resourceType).toBe('the')
-      expect(TRU_TIEN_KIEM_TRAN.resourceCost).toBe(100)
-    })
-  })
 })

@@ -37,11 +37,8 @@ function createCombatant(id: string): CombatEntity {
     currentHp: 1_000_000,
     maxHp: 1_000_000,
     currentMp: stats.maxMp,
-    currentSwordIntent: 0,
     currentMomentum: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
+
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,

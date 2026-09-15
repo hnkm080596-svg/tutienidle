@@ -263,8 +263,8 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     spawner.onStatusAttached(makeEvent()) // temporary
     spawner.onStatusAttached(
       makeEvent({
-        statusInstanceId: 'enemy:onhit_x:src',
-        dotType: 'onhit_x',
+        statusInstanceId: 'enemy:vinh_cuu:src',
+        dotType: 'vinh_cuu',
         polarity: 'buff',
         permanent: true,
       }),
@@ -272,7 +272,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     spawner.updateStatusIconPositions()
 
     const temporary = scene.statuses.get('enemy:bong:src') as { icon: FakeGameObject }
-    const permanent = scene.statuses.get('enemy:onhit_x:src') as { icon: FakeGameObject }
+    const permanent = scene.statuses.get('enemy:vinh_cuu:src') as { icon: FakeGameObject }
 
     // permanent row nằm DƯỚI temporary row (dưới chân, xa sprite hơn)
     expect(permanent.icon.y).toBe(temporary.icon.y + STATUS_ROW_GAP + STATUS_ICON_SIZE)

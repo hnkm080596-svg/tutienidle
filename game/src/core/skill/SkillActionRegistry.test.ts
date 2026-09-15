@@ -5,13 +5,13 @@ import type { ActionRuntimeContext, DealDamageAction, SkillActionType } from './
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
 import type { EventBus } from '../events/EventBus'
+import { MAX_MOMENTUM } from '../combat/CombatTypes'
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
     id: 'entity',
     alive: true,
     realmIndex: 0,
-    currentSwordIntent: 0,
     stats: { skillDamagePercent: 0, maxMp: 0, might: 10 } as CombatEntity['stats'],
     ...overrides,
   } as CombatEntity
@@ -220,25 +220,25 @@ describe('applyDebuff executor — chance roll + fireNested onProc (absorbs old 
 
 describe('grantResource executor', () => {
   it('adds amount to the pool field, clamped to the pool max', () => {
-    const source = makeEntity({ currentSwordIntent: 3 } as Partial<CombatEntity> as CombatEntity)
+    const source = makeEntity({ currentMomentum: 3 } as Partial<CombatEntity> as CombatEntity)
     const target = makeEntity()
     const fireNested = vi.fn()
 
-    runSkillAction({ type: 'grantResource', pool: 'swordIntent', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
+    runSkillAction({ type: 'grantResource', pool: 'momentum', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
 
-    expect(source.currentSwordIntent).toBe(4)
+    expect(source.currentMomentum).toBe(4)
     expect(fireNested).not.toHaveBeenCalled()
   })
 
   it('fires onResourceFull when the write clamps to max', () => {
-    const source = makeEntity({ currentSwordIntent: 9999 } as Partial<CombatEntity> as CombatEntity) // MAX_SWORD_INTENT = 9999
+    const source = makeEntity({ currentMomentum: MAX_MOMENTUM } as Partial<CombatEntity> as CombatEntity)
     const target = makeEntity()
     const fireNested = vi.fn()
 
-    runSkillAction({ type: 'grantResource', pool: 'swordIntent', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
+    runSkillAction({ type: 'grantResource', pool: 'momentum', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
 
-    expect(source.currentSwordIntent).toBe(9999)
-    expect(fireNested).toHaveBeenCalledWith('onResourceFull', { source, resource: 'swordIntent' })
+    expect(source.currentMomentum).toBe(MAX_MOMENTUM)
+    expect(fireNested).toHaveBeenCalledWith('onResourceFull', { source, resource: 'momentum' })
   })
 })
 
@@ -352,26 +352,6 @@ describe('consumeForDamage executor — scope', () => {
     expect(getStacks).toHaveBeenCalledWith('bong')
     expect(removeAllById).toHaveBeenCalledWith('bong')
     expect(applyDirectDamage).toHaveBeenCalledWith(target, 70, 'caster', 'damage')
-  })
-})
-
-describe('spawnZone executor', () => {
-  it("zoneKind 'sword' calls ctx.spawnSwordZone with target position", () => {
-    const source = makeEntity({ id: 'p1' } as Partial<CombatEntity> as CombatEntity)
-    const target = makeEntity({ row: 2, x: 3 } as Partial<CombatEntity> as CombatEntity)
-    const spawnSwordZone = vi.fn()
-    const ctx = makeCtx({ spawnSwordZone })
-
-    runSkillAction(
-      { type: 'spawnZone', zoneKind: 'sword', charges: 3, tickInterval: 1, damageRatio: 0.3, position: 'target' },
-      source,
-      target,
-      ctx,
-      {},
-      makeHelpers(),
-    )
-
-    expect(spawnSwordZone).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 'p1', row: 2, charges: 3 }))
   })
 })
 

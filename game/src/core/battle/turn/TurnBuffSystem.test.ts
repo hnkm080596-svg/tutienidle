@@ -18,11 +18,8 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentSwordIntent: 0,
     currentMomentum: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
+
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
@@ -363,7 +360,8 @@ describe('BuffSystem ported BuffSystem methods', () => {
     return {
       id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
       currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
-      tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+
+      currentMomentum: 0,
       currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
       ...rest,
     } as CombatEntity
@@ -491,7 +489,8 @@ describe('BuffSystem port additions for ReactionManager (Phase A1)', () => {
     return {
       id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
       currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
-      tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+
+      currentMomentum: 0,
       currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
       ...rest,
     } as CombatEntity
@@ -559,7 +558,8 @@ describe('getAll / remove (Phase A0)', () => {
     return {
       id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
       currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
-      tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+
+      currentMomentum: 0,
       currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
       ...rest,
     } as CombatEntity

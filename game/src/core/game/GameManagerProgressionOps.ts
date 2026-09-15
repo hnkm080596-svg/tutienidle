@@ -17,6 +17,12 @@ import type { Skill } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
+import { MORTAL_PRECURSOR_SKILL_IDS, type OrbId } from '../kiem-tu/KiemTuState'
+import { gainKiemY, grantKiemDao } from '../kiem-tu/NguKiemDao'
+import { validatePreset } from '../kiem-tu/KiemPhoSystem'
+import { getRealmIndex } from '../realm/realmSystem'
+import { isBattleInProgress } from '../battle/BattleTypes'
+import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
@@ -49,6 +55,13 @@ export class GameManagerProgressionOps {
       // battle owner: a retained terminal TurnBattle does NOT count as
       // in-progress, so the gate is a state query, not object existence.
       isTurnBattleInProgress: () => boolean
+      // Deferred closure - turnBattleOps is assigned after this ops class
+      // is constructed (same pattern as realmAdvanceOps/effectOps).
+      getTurnBattle: () => TurnBattle | null
+      // Deferred closures - realmAdvanceOps owns technique learn/equip
+      // (kiem_tu_an's mode switch swaps in van_kiem_quyet).
+      learnTechnique: (techniqueId: string) => boolean
+      equipTechnique: (techniqueId: string) => boolean
     },
   ) {}
 
@@ -84,35 +97,6 @@ export class GameManagerProgressionOps {
         }
       }
     }
-  }
-
-  /**
-   * Snapshot of purchased on-hit Kiem Tran node levels (reads
-   * PlayerData.nodeLevels through the registry - the node is the source
-   * of truth for `effect.onHitEffect`). Returns {} with no player / no
-   * purchased nodes.
-   */
-  getOnHitNodeLevelsSnapshot(): Record<string, number> {
-    const levels: Record<string, number> = {}
-    const activePlayer = this.deps.getActivePlayer()
-
-    if (!activePlayer) {
-      return levels
-    }
-
-    for (const [nodeId, level] of Object.entries(activePlayer.nodeLevels)) {
-      if (level <= 0 || !this.deps.nodeRegistry.has(nodeId)) {
-        continue
-      }
-
-      const node = this.deps.nodeRegistry.get(nodeId)
-
-      if (node.effect.onHitEffect) {
-        levels[nodeId] = level
-      }
-    }
-
-    return levels
   }
 
   /**
@@ -170,6 +154,12 @@ export class GameManagerProgressionOps {
 
     const node = this.deps.nodeRegistry.get(nodeId)
 
+    // Mode-switch gate re-checked HERE (not only in canPurchaseNode) —
+    // the ops layer never trusts the caller to have pre-checked.
+    if (!this.passesModeSwitchGate(player, node)) {
+      return false
+    }
+
     if (!purchaseNodeSystem(player, node)) {
       return false
     }
@@ -178,14 +168,6 @@ export class GameManagerProgressionOps {
     // purchaseNodeSystem only returns true exactly on that transition.
     for (const skillId of node.effect.unlocksSkillIds ?? []) {
       this.learnSkill(skillId)
-
-      // Kiem The / Kiem Y (spec 2026-08-29 §5.1) - sword-formation
-      // evolution: each route OWNS 1 active skill at slot 0, the new
-      // keystone REPLACES the old formation (equipToSlot swaps the
-      // occupant). No separate KIEM_TRAN_SLOT_INDEX anymore.
-      if (skillId.startsWith('kiem_tran_')) {
-        this.deps.skillSystem.equipToSlot(skillId, 0)
-      }
     }
 
     // Phap Tu Thuan He (E-8, 2026-09-03) - variant node: purchasing the
@@ -198,6 +180,35 @@ export class GameManagerProgressionOps {
 
     if (selectsSpec) {
       this.deps.skillSystem.selectSpecialization(selectsSpec.skillId, selectsSpec.specializationId)
+    }
+
+    // Kiem Tu Reimagined (spec K4) — the hidden-path conversion: flip
+    // mode hien → ngu and swap the equipped technique to the Ngu
+    // signature (van_kiem_quyet replaces whatever the kit equipped).
+    // One-way: the mode field has no reverse write path, and
+    // devResetBranch skips this node (non-refundable by contract).
+    if (node.effect.kiemTuModeSwitch === 'ngu' && player.kiemTu) {
+      player.kiemTu.mode = 'ngu'
+      this.deps.learnTechnique('van_kiem_quyet')
+
+      // Conversion contract: a ngu player without the signature
+      // technique is a broken state — surface a failed equip loudly
+      // instead of silently shipping the half-applied flip.
+      if (!this.deps.equipTechnique('van_kiem_quyet')) {
+        console.warn('[kiem-tu] kiem_tu_an flipped mode to ngu but van_kiem_quyet failed to equip')
+      }
+    }
+
+    // Kiem Tu Reimagined Task 11 (spec §5.4/§6) — Cuu Cung grants run
+    // through the NguKiemDao domain functions (the domain owns the cap
+    // rule; nodes never touch player.kiemTu directly). The
+    // kiemDaoBelowCap prereq already blocked capped buys upstream.
+    if (node.effect.kiemYGrant) {
+      gainKiemY(player, node.effect.kiemYGrant)
+    }
+
+    if (node.effect.kiemDaoGrant) {
+      grantKiemDao(player, node.effect.kiemDaoGrant)
     }
 
     return true
@@ -297,9 +308,35 @@ export class GameManagerProgressionOps {
   }
 
   canPurchaseNode(nodeId: string, player: PlayerData): boolean {
-    return (
-      this.deps.nodeRegistry.has(nodeId) && canPurchaseNodeSystem(player, this.deps.nodeRegistry.get(nodeId))
-    )
+    if (!this.deps.nodeRegistry.has(nodeId)) {
+      return false
+    }
+
+    const node = this.deps.nodeRegistry.get(nodeId)
+
+    // Kiem Tu Reimagined (spec K2/K4/INV-8) — the mode-switch node is
+    // purchasable ONLY by a kiem_tu player still in hien, and NEVER mid-
+    // battle: a combat-time flip would desync the live participant's
+    // provider/emblem slots from PlayerData. Shared by canPurchaseNode
+    // (UI gate) and purchaseNode (the actual transaction — the ops
+    // layer must not trust the caller to have pre-checked).
+    if (!this.passesModeSwitchGate(player, node)) {
+      return false
+    }
+
+    return canPurchaseNodeSystem(player, node)
+  }
+
+  private passesModeSwitchGate(player: PlayerData, node: { effect: { kiemTuModeSwitch?: 'ngu' } }): boolean {
+    if (node.effect.kiemTuModeSwitch !== 'ngu') {
+      return true
+    }
+
+    if (player.cultivationPath !== 'kiem_tu' || player.kiemTu?.mode !== 'hien') {
+      return false
+    }
+
+    return !isBattleInProgress(this.deps.getTurnBattle()?.state)
   }
 
   canUpgradeNode(nodeId: string, player: PlayerData): boolean {
@@ -398,6 +435,17 @@ export class GameManagerProgressionOps {
       return false
     }
 
+    // Kiem Tu Reimagined K3 — mortal precursor skills are pre-path only:
+    // once ANY cultivation path is chosen they can never re-enter a
+    // loadout slot. Runs before the learned-check so the gate covers
+    // precursor ids not yet authored (linh_bao/huy_quyen).
+    if (
+      player.cultivationPath !== undefined &&
+      (MORTAL_PRECURSOR_SKILL_IDS as readonly string[]).includes(skillId)
+    ) {
+      return false
+    }
+
     if (!this.deps.skillManager.has(skillId) || !this.deps.skillManager.get(skillId)!.unlocked) {
       return false
     }
@@ -407,6 +455,30 @@ export class GameManagerProgressionOps {
 
   unequipSkill(skillId: string): boolean {
     return this.deps.skillSystem.unequip(skillId)
+  }
+
+  /**
+   * Kiem Tu Reimagined (spec §6) — write the hien preset. Persisted on
+   * PlayerData.kiemTu.preset; the battle cursor/log are runtime-only and
+   * never persist. Out-of-combat only: a mid-battle rewrite would desync
+   * the provider's snapshotted preset from PlayerData.
+   */
+  setKiemPhoPreset(player: PlayerData, preset: OrbId[]): boolean {
+    if (player.kiemTu?.mode !== 'hien') {
+      return false
+    }
+
+    if (isBattleInProgress(this.deps.getTurnBattle()?.state)) {
+      return false
+    }
+
+    if (!validatePreset(preset, getRealmIndex(player.realmId))) {
+      return false
+    }
+
+    player.kiemTu.preset = [...preset]
+
+    return true
   }
 
   /**

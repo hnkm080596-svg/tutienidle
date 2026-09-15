@@ -19,6 +19,7 @@ import {
   migrateStatModifierStat,
 } from '../../core/stats/statKeyMigration'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
+import { KIEM_PHO_ORB_IDS } from '../../core/kiem-tu/KiemTuState'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -247,6 +248,51 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   requireNonNegativeNumber(player, 'phaGiapCarryStacks', 'player', issues)
   if (player.phaGiapCarryRealmId !== null && typeof player.phaGiapCarryRealmId !== 'string') {
     issues.push({ path: 'player.phaGiapCarryRealmId', message: 'phải là string hoặc null' })
+  }
+
+  // Kiem Tu Reimagined (v62) — kiemTu is optional (absent for non-kiem
+  // players) but a malformed present copy silently degraded hien combat
+  // (empty preset -> nextOrb NaN). Shape-check when present: mode union,
+  // preset 1-9 catalog-member OrbIds, non-negative numerics, and the
+  // ngu invariants (count >= 1, base >= 1) since no legit writer emits
+  // lower.
+  if (player.kiemTu !== undefined) {
+    if (!isObject(player.kiemTu)) {
+      issues.push({ path: 'player.kiemTu', message: 'phải là object hoặc vắng mặt' })
+    } else {
+      const kiemTu = player.kiemTu
+
+      if (kiemTu.mode !== 'hien' && kiemTu.mode !== 'ngu') {
+        issues.push({ path: 'player.kiemTu.mode', message: "phải là 'hien' hoặc 'ngu'" })
+      }
+
+      const preset = kiemTu.preset
+
+      if (!Array.isArray(preset) || preset.length < 1 || preset.length > 9) {
+        issues.push({ path: 'player.kiemTu.preset', message: 'phải là array 1-9 phần tử' })
+      } else {
+        for (const orbId of preset) {
+          if (!KIEM_PHO_ORB_IDS.some((id) => id === orbId)) {
+            issues.push({
+              path: 'player.kiemTu.preset',
+              message: `orb id không hợp lệ: ${String(orbId)}`,
+            })
+
+            break
+          }
+        }
+      }
+
+      requireNonNegativeNumber(kiemTu, 'kiemY', 'player.kiemTu', issues)
+
+      if (!isFiniteNumber(kiemTu.kiemDaoCount) || kiemTu.kiemDaoCount < 1) {
+        issues.push({ path: 'player.kiemTu.kiemDaoCount', message: 'phải là number hữu hạn >= 1' })
+      }
+
+      if (!isFiniteNumber(kiemTu.kiemDaoBase) || kiemTu.kiemDaoBase < 1) {
+        issues.push({ path: 'player.kiemTu.kiemDaoBase', message: 'phải là number hữu hạn >= 1' })
+      }
+    }
   }
 
   // Spec dot-pha-loi-kiep §6.1 — 4 field v54 (Bát Mạch, cửa sổ quái ẩn,

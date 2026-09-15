@@ -1,12 +1,11 @@
-// 9.4 — coverage TRỰC TIẾP cho makeKiemBarReader (logic mapping
-// battle/player → KiemBarSnapshot). CombatScene.hudWiring.test.ts chỉ
-// test poll plumbing với reader mock; file này test chính hàm mapping
-// bằng fake gameManager/player state (structural, không Pinia/Phaser).
+// Kiem Tu Reimagined Task 7 — direct coverage for makeKiemBarReader
+// (battle/player → KiemBarSnapshot mapping). Structural fakes only —
+// no Pinia/Phaser (same harness shape as the retired route test).
 import { describe, expect, it } from 'vitest'
-import { MAX_KIEM_THE } from '@/core/combat/CombatTypes'
-import { kiemYTempMaxFor } from '@/core/battle/KiemTuResourceSystem'
 import type { TurnBattle, TurnBattleState } from '@/core/battle/turn/TurnBattleSystem'
 import type { GameManager } from '@/core/game/GameManager'
+import { freshKiemTuState, type KiemTuState, type OrbId } from '@/core/kiem-tu/KiemTuState'
+import type { KiemPhoBattleState } from '@/core/kiem-tu/KiemPhoSystem'
 import {
   KIEM_BAR_READER_KEY,
   makeKiemBarReader,
@@ -15,13 +14,27 @@ import {
   type KiemBarPlayerState,
 } from '@/presentation/bridges/kiemBarBridge'
 
-// M13: TurnBattle shape — Kiem Tu pools live on the player-side
-// participant's CombatEntity (players[0].entity), not a flat .player.
 function fakeBattle(
   state: TurnBattleState,
-  entity: { currentKiemThe?: number; currentKiemYTemp?: number },
+  provider?: { snapshot: () => KiemPhoBattleState },
 ): TurnBattle {
-  return { state, players: [{ entity }], enemies: [] } as unknown as TurnBattle
+  return {
+    state,
+    players: [{ entity: {}, dynamicBasic: provider }],
+    enemies: [],
+  } as unknown as TurnBattle
+}
+
+function fakeProvider(over: Partial<KiemPhoBattleState> = {}) {
+  const state: KiemPhoBattleState = {
+    preset: ['orb_dam', 'orb_chem'],
+    cursor: 0,
+    log: [],
+    comboMaxLength: 3,
+    ...over,
+  }
+
+  return { snapshot: () => ({ ...state, preset: [...state.preset], log: [...state.log] }) }
 }
 
 function makeReader(battle: TurnBattle | null, player: KiemBarPlayerState) {
@@ -30,76 +43,82 @@ function makeReader(battle: TurnBattle | null, player: KiemBarPlayerState) {
   return makeKiemBarReader(gameManager, () => player)
 }
 
-describe('makeKiemBarReader — 9.4 Kiếm bar mapping', () => {
-  it('route kiem_tran + currentKiemThe=30, battle fighting → {30, MAX_KIEM_THE, "Kiếm Thế"}', () => {
+function hienPlayer(preset: OrbId[] = ['orb_dam', 'orb_chem']): KiemBarPlayerState {
+  return { realmId: 'golden_core', kiemTu: { ...freshKiemTuState(), mode: 'hien', preset } }
+}
+
+describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
+  it('hien + provider → strip model from the live snapshot', () => {
     const reader = makeReader(
-      fakeBattle('fighting', { currentKiemThe: 30 }),
-      { kiemTuRoute: 'kiem_tran', bossKillCount: 0 },
+      fakeBattle('fighting', fakeProvider({ cursor: 1, log: ['orb_dam'] })),
+      hienPlayer(),
     )
 
-    expect(reader()).toEqual({ current: 30, max: MAX_KIEM_THE, label: 'Kiếm Thế' })
+    expect(reader()).toEqual({
+      current: 1,
+      max: 2,
+      label: 'Kiếm Phổ',
+      mode: 'hien',
+      preset: ['orb_dam', 'orb_chem'],
+      cursor: 1,
+      nextOrb: 'orb_chem',
+      log: ['orb_dam'],
+    })
   })
 
-  it('route bat_kiem + temp=20 + bossKillCount 25 (permanent 20, tier 2) → {40, kiemYTempMaxFor(20), "Kiếm Ý T.2"}', () => {
-    const reader = makeReader(
-      fakeBattle('fighting', { currentKiemYTemp: 20 }),
-      { kiemTuRoute: 'bat_kiem', bossKillCount: 25 },
-    )
+  it('hien without a provider falls back to the persisted preset (cursor 0)', () => {
+    const reader = makeReader(fakeBattle('fighting'), hienPlayer(['orb_dam']))
 
-    expect(reader()).toEqual({ current: 40, max: kiemYTempMaxFor(20), label: 'Kiếm Ý T.2' })
+    expect(reader()).toMatchObject({
+      label: 'Kiếm Phổ',
+      mode: 'hien',
+      preset: ['orb_dam'],
+      cursor: 0,
+      nextOrb: 'orb_dam',
+      current: 0,
+      max: 1,
+    })
   })
 
-  it('state countdown vẫn tính đang trong trận → trả snapshot', () => {
-    const reader = makeReader(
-      fakeBattle('countdown', { currentKiemThe: 5 }),
-      { kiemTuRoute: 'kiem_tran', bossKillCount: 0 },
-    )
+  it('countdown state still counts as in-battle → snapshot', () => {
+    const reader = makeReader(fakeBattle('countdown', fakeProvider()), hienPlayer())
 
-    expect(reader()).toEqual({ current: 5, max: MAX_KIEM_THE, label: 'Kiếm Thế' })
+    expect(reader()?.label).toBe('Kiếm Phổ')
   })
 
-  it('field optional thiếu (currentKiemThe undefined) → current 0', () => {
-    const reader = makeReader(
-      fakeBattle('fighting', {}),
-      { kiemTuRoute: 'kiem_tran', bossKillCount: 0 },
-    )
+  it('no battle / battle ended → null', () => {
+    expect(makeReader(null, hienPlayer())()).toBeNull()
 
-    expect(reader()).toEqual({ current: 0, max: MAX_KIEM_THE, label: 'Kiếm Thế' })
-  })
-
-  it('bat_kiem thiếu currentKiemYTemp → current = permanent (tier 1: bossKillCount 10 → 10)', () => {
-    const reader = makeReader(
-      fakeBattle('fighting', {}),
-      { kiemTuRoute: 'bat_kiem', bossKillCount: 10 },
-    )
-
-    expect(reader()).toEqual({ current: 10, max: kiemYTempMaxFor(10), label: 'Kiếm Ý T.1' })
-  })
-
-  it('không có battle → null', () => {
-    const reader = makeReader(null, { kiemTuRoute: 'kiem_tran', bossKillCount: 0 })
-
-    expect(reader()).toBeNull()
-  })
-
-  it('battle không diễn ra (victory/defeat) → null', () => {
     for (const state of ['victory', 'defeat'] as const) {
-      const reader = makeReader(
-        fakeBattle(state, { currentKiemThe: 30 }),
-        { kiemTuRoute: 'kiem_tran', bossKillCount: 0 },
-      )
-
-      expect(reader()).toBeNull()
+      expect(makeReader(fakeBattle(state, fakeProvider()), hienPlayer())()).toBeNull()
     }
   })
 
-  it('player không có kiemTuRoute (không phải Kiếm Tu) → null', () => {
-    const reader = makeReader(
-      fakeBattle('fighting', { currentKiemThe: 30 }),
-      { bossKillCount: 0 },
-    )
+  it('player without kiemTu (not Kiem Tu) → null', () => {
+    const reader = makeReader(fakeBattle('fighting', fakeProvider()), { realmId: 'golden_core' })
 
     expect(reader()).toBeNull()
+  })
+
+  it('ngu mode → Kiem Y / forgeCost(realm) progress + sword count label', () => {
+    const kiemTu: KiemTuState = {
+      ...freshKiemTuState(),
+      mode: 'ngu',
+      kiemY: 5_000,
+      kiemDaoCount: 3,
+      kiemDaoBase: 1.9,
+    }
+    // golden_core = realmIndex 3 → forgeCost(3) = 16_899.
+    const reader = makeReader(fakeBattle('fighting'), { realmId: 'golden_core', kiemTu })
+
+    expect(reader()).toEqual({
+      current: 5_000,
+      max: 16_899,
+      label: 'Kiếm Ý · 3 kiếm',
+      mode: 'ngu',
+      kiemDaoCount: 3,
+      kiemDaoBase: 1.9,
+    })
   })
 })
 
@@ -115,20 +134,17 @@ describe('registerKiemBarReader / readKiemBar — registry round-trip', () => {
     }
   }
 
-  it('register rồi read → đúng snapshot của reader', () => {
+  it('register then read → the reader snapshot passes through', () => {
     const registry = fakeRegistry()
-    const reader = makeReader(
-      fakeBattle('fighting', { currentKiemThe: 30 }),
-      { kiemTuRoute: 'kiem_tran', bossKillCount: 0 },
-    )
+    const reader = makeReader(fakeBattle('fighting', fakeProvider()), hienPlayer())
 
     registerKiemBarReader(registry, reader)
 
     expect(registry.get(KIEM_BAR_READER_KEY)).toBeDefined()
-    expect(readKiemBar(registry)).toEqual({ current: 30, max: MAX_KIEM_THE, label: 'Kiếm Thế' })
+    expect(readKiemBar(registry)?.mode).toBe('hien')
   })
 
-  it('không có reader đăng ký → readKiemBar trả null (không throw)', () => {
+  it('no reader registered → readKiemBar returns null (no throw)', () => {
     expect(readKiemBar(fakeRegistry())).toBeNull()
   })
 })

@@ -16,11 +16,8 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentSwordIntent: 0,
     currentMomentum: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
+
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
@@ -42,7 +39,7 @@ describe('CombatSystem — damage floor sau finalDamageMultiplier', () => {
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
     expect(result.finalDamage).toBe(1)
     expect(target.currentHp).toBe(999)
@@ -57,7 +54,7 @@ describe('CombatSystem — damage floor sau finalDamageMultiplier', () => {
     const targetStats = createBaseStats({ evasionRate: 0, dexterity: 0, defense: 0, finalDamageReductionPercent: 0.75 })
     const target = createCombatant({ id: 'target', stats: targetStats, currentHp: 1000, maxHp: 1000 })
 
-    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
     expect(result.finalDamage).toBeGreaterThanOrEqual(1)
     expect(target.currentHp).toBe(1000 - result.finalDamage)

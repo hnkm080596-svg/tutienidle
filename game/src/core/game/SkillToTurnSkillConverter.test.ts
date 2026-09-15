@@ -36,7 +36,6 @@ describe('toTurnSkillDefinition', () => {
     expect(turnSkill.damage?.scaling).toEqual({
       attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
       manaScalingRatio: 0.001,
-      swordIntentDamageRatio: undefined,
     })
     // Debuff effect → appliesAilment (bong, chance 1).
     expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'bong', chance: 1 })
@@ -108,7 +107,7 @@ describe('toTurnSkillDefinition', () => {
     expect(turnSkill.resourceCost).toBe(skill.cost)
   })
 
-  it('leaves damage.scaling undefined for a skill authoring no attributeScaling/manaScalingRatio/swordIntentDamageRatio', () => {
+  it('leaves damage.scaling undefined for a skill authoring no attributeScaling/manaScalingRatio', () => {
     const manager = new SkillManager()
     const skillSystem = new SkillSystem(manager)
     const synthetic = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
@@ -249,7 +248,7 @@ describe('toTurnSkillDefinition', () => {
           trigger: 'onCast',
           actions: [
             { type: 'dealDamage', value: 1 },
-            { type: 'grantResource', pool: 'swordIntent', amount: 1 },
+            { type: 'grantResource', pool: 'momentum', amount: 1 },
           ],
         },
       ]

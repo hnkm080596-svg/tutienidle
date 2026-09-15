@@ -27,7 +27,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
-import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost, previewRouteSwitch } from '@/core/progression/NodeSystem'
+import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeModeApplies } from '@/core/progression/NodeSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
@@ -156,9 +156,21 @@ const branches = computed(() => {
   const nodeViewTag = (node: ProgressionNode): string | undefined => node.elementTag ?? node.branchTag
 
   const visibleTags = props.branchTag ? new Set<string>(viewBranchTags(props.branchTag)) : null
-  const nodes = visibleTags
+  const tagFiltered = visibleTags
     ? allNodes.filter(node => nodeViewTag(node) !== undefined && visibleTags.has(nodeViewTag(node)!))
     : allNodes.filter(node => !(nodeViewTag(node) !== undefined && (HIDDEN_BRANCH_TAGS as readonly string[]).includes(nodeViewTag(node)!)))
+
+  // Kiem Tu Reimagined — revealWhen hides the node until the prereq
+  // holds against the live player (the hidden-path root never renders
+  // early; canPurchaseNode re-checks the same gate). Mode-tagged nodes
+  // only render in their own mode's view: hien sees the orb branches +
+  // the (unrevealed) hidden root, ngu sees the Ngu branch — the
+  // abandoned mode's nodes vanish entirely.
+  const nodes = tagFiltered.filter(
+    node =>
+      (!node.revealWhen || hasPrerequisite(player.$state, node.revealWhen)) &&
+      nodeModeApplies(player.$state, node),
+  )
 
   const groups = new Map<string, typeof nodes>()
 

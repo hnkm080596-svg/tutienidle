@@ -112,11 +112,37 @@ export type CombatVfxPresetId =
   | 'holy_radiance'
   | 'shadow_burst'
   | 'boss_ground_slam'
-  // Kiếm Tu Bạt Kiếm/Kiếm Trận (Task 8, 2026-08-28) — DATA ONLY, art/
+  // Kiếm Tu (Task 8, 2026-08-28) — DATA ONLY, art/
   // animation sau (renderer chưa đăng ký diễn xuất tương ứng).
   | 'tu_luc'
-  | 'bat_kiem_quat'
-  | 'kiem_tran_zone'
+  // Kiem Tu Reimagined (spec 2026-09-15 §4.3, K11) — one preset per
+  // Kiem Pho combo. The fired payload is the ONLY discovery signal, so
+  // every combo must render distinguishably; renderer maps each preset
+  // to its length-tier base + per-combo name/color signature. DATA
+  // ONLY until the presentation pass registers diễn xuất.
+  | 'kiem_combo_tam_thich' | 'kiem_combo_tam_tram' | 'kiem_combo_tam_phach'
+  | 'kiem_combo_tam_lieu' | 'kiem_combo_tam_tao'
+  | 'kiem_combo_nhi_thich_nhat_tram' | 'kiem_combo_nhi_thich_nhat_phach'
+  | 'kiem_combo_nhi_tram_nhat_thich' | 'kiem_combo_nhi_tram_nhat_phach'
+  | 'kiem_combo_nhi_phach_nhat_thich' | 'kiem_combo_nhi_lieu_nhat_thich'
+  | 'kiem_combo_nhi_tao_nhat_thich'
+  | 'kiem_combo_thich_tram_thich' | 'kiem_combo_tram_thich_tram'
+  | 'kiem_combo_phach_thich_phach'
+  | 'kiem_combo_thich_tram_phach_thich' | 'kiem_combo_tram_phach_thich_tram'
+  | 'kiem_combo_phach_tram_thich_phach' | 'kiem_combo_lieu_tram_thich_lieu'
+  | 'kiem_combo_tao_tram_thich_tao' | 'kiem_combo_thich_lieu_tram_thich'
+  | 'kiem_combo_thich_tao_tram_thich' | 'kiem_combo_tram_lieu_phach_tram'
+  | 'kiem_combo_phach_lieu_tram_phach' | 'kiem_combo_thich_tram_tram_lieu'
+  | 'kiem_combo_tram_thich_thich_lieu' | 'kiem_combo_phach_thich_thich_tao'
+  | 'kiem_combo_ngu_hanh_kiem' | 'kiem_combo_ngu_hanh_nghich_chuyen'
+  | 'kiem_combo_thich_tram_tram_phach_thich'
+  | 'kiem_combo_tram_thich_phach_tram_phach'
+  | 'kiem_combo_phach_tram_thich_lieu_tao'
+  | 'kiem_combo_thich_lieu_phach_tram_tao'
+  | 'kiem_combo_tao_tram_thich_phach_lieu'
+  | 'kiem_combo_tram_phach_lieu_tao_thich'
+  | 'kiem_combo_phach_lieu_tao_thich_tram'
+  | 'kiem_combo_lieu_tao_thich_tram_phach'
 
 /**
  * Id preset VFX telegraph spawn quái (luồng "telegraph → xuất hiện →

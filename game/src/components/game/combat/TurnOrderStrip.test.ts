@@ -28,12 +28,9 @@ function makeEntity(id: string): CombatEntity {
     currentHp: 100,
     maxHp: 100,
     currentMp: 0,
-    currentSwordIntent: 0,
     currentMomentum: 0,
     currentThe: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
+
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,

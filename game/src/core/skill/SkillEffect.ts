@@ -106,16 +106,8 @@ export interface SkillEffect {
   // ưu tiên hơn công thức theo cảnh giới) — xem SkillEffectSystem.ts.
   hitCount?: number
 
-  // Kiếm Tu (Kiếm Khai Thiên Môn, 2026-08-15) — "dựa vào số Kiếm Ý
-  // đang có": cộng thêm ratioPerPoint × currentSwordIntent (CHỈ ĐỌC,
-  // không tiêu Kiếm Ý — khác Vạn Kiếm Triều Tông's `cost`) vào
-  // scalingBonus, cùng chỗ attributeScaling. Số nhỏ vì currentSwordIntent
-  // có thể lên tới 9999 (xem CombatTypes.ts's MAX_SWORD_INTENT).
-  swordIntentDamageRatio?: number
-
-  // Kiếm Tu (Kiếm Khai Thiên Môn, 2026-08-15) — "cảnh giới càng cao
-  // sát thương càng lớn": cộng thêm ratio × source.realmIndex (0-based,
-  // 9 đại cảnh giới) vào scalingBonus.
+  // "Cảnh giới càng cao sát thương càng lớn": cộng thêm ratio ×
+  // source.realmIndex (0-based, 9 đại cảnh giới) vào scalingBonus.
   realmDamageRatio?: number
 
   // Pháp Tu Thuần Hệ (E-2, 2026-09-03) — CHỈ dùng cho effect 'buff'
@@ -136,26 +128,21 @@ export interface SkillEffect {
   // (kể cả nhiều missile của hitCountByRealm) — xem
   // undefined = Normal, hành vi giữ nguyên như trước khi có field này.
 
-  // Kiếm Trận keystone (Tam Tài — Task 8, 2026-08-28) — CHỈ dùng cho
-  // effect 'damage'. Khi true, SAU KHI missile của effect này bắn xong,
-  // spawn 1 SwordZone tại vị trí TARGET (không phải source — vùng kiếm
-  // khí tồn tại độc lập sau khi trận đã bày, cùng tinh thần LavaZone),
-  // xem SkillEffectSystem.ts + BattleSystem.spawnSwordZone(). Không set
-  // = effect 'damage' hoạt động như cũ (chỉ bắn missile thường).
-  // Pháp Tu Thuần Hệ (E-5, 2026-09-03) — GIỮ NGUYÊN cho Kiếm Tu, luôn
-  // zone 'metal'; grantsZone là bản tổng quát (mọi element) — resolver
-  // gộp `grantsSwordZone || grantsZone`.
-  grantsSwordZone?: boolean
 
   // Pháp Tu Thuần Hệ (E-5, 2026-09-03) — CHỈ dùng cho effect 'damage'.
-  // Bản tổng quát của grantsSwordZone: spawn 1 zone tại target với
-  // element từ `zoneElement` (mặc định 'metal' nếu không khai). Dùng
-  // cho Tắt Phương Giông Thổ (fire) / Kiếm Mộc Thông Thiên (wood).
-  // Cùng bộ field swordZone* bên dưới (tick/charges/damageRatio).
+  // Spawn 1 zone tại target với element từ `zoneElement` (mặc định
+  // 'metal' nếu không khai). Dùng cho Tắt Phương Giông Thổ (fire) /
+  // Kiếm Mộc Thông Thiên (wood). Authored data only — the turn engine
+  // reports it via collectUnsupportedSkillSemantics; no runtime zone
+  // spawner is wired (the sword-zone channel was retired, spec
+  // 2026-09-15 §7).
   grantsZone?: boolean
 
   zoneElement?: ElementType
 
+  // Zone tuning dials for grantsZone — names are historical (the
+  // mechanism is generic: Phap Tu authors fire/wood zones). Parked:
+  // no runtime spawner is wired after the sword-zone channel retired.
   swordZoneCharges?: number
   swordZoneTickInterval?: number
   swordZoneDamageRatio?: number // × finalMultiplier của effect này = damagePerTick

@@ -1,5 +1,5 @@
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant, type TurnDeclaredAction } from './TurnBattleSystem'
-import type { TurnSkillSlotRole } from './TurnSkillAction'
+import type { ForcedTurnChoice } from './TurnSkillAction'
 import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandbyComplete } from './TurnActionPresentationEvents'
 import type { EventBus } from '../../events/EventBus'
 import type { CombatAnimationName } from '../CombatAnimationTypes'
@@ -258,7 +258,7 @@ export class CombatAnimationRuntime {
     const { actor, declared } = this.pendingDeclaredAction
     this.pendingDeclaredAction = null
 
-    const { targetIds } = this.deps.getTurnBattleSystem().applyActionImpact(battle, declared)
+    const { targetIds, extraImpacts } = this.deps.getTurnBattleSystem().applyActionImpact(battle, declared)
     this.pendingImpact = { actor, declared, targetIds }
 
     const primaryTargetId = targetIds[0] ?? declared.affected[0]?.id ?? ''
@@ -289,6 +289,37 @@ export class CombatAnimationRuntime {
       hitCount: 1,
       presetId: declared.action?.skill?.presetId,
     })
+
+    // Kiem Tu Reimagined Task 6 — each provider-returned extra impact
+    // (combo payload) emits its OWN action_impact with its own preset,
+    // so the fired combo is a distinct presentation event (K11).
+    for (const extra of extraImpacts) {
+      const extraPrimaryId = extra.landedTargetIds[0] ?? extra.targetIds[0] ?? ''
+      const extraAnchor =
+        battle.players.find((member) => member.id === extraPrimaryId)?.entity ??
+        battle.enemies.find((enemy) => enemy.id === extraPrimaryId)?.entity
+      const extraRow = extraAnchor?.row ?? row
+      const extraCol = Math.round(extraAnchor?.x ?? column)
+
+      emitTurnActionImpact(this.deps.eventBus, {
+        actionId: `${actor.id}-${battle.totalTurnsElapsed ?? 0}-extra-${extraPrimaryId}`,
+        sourceId: actor.id,
+        primaryTargetId: extraPrimaryId,
+        anchorCell: { row: extraRow, column: extraCol },
+        affectedArea: {
+          shape: extra.targeting?.shape ?? 'single',
+          rowStart: extraRow,
+          rowEnd: extraRow,
+          colStart: extraCol,
+          colEnd: extraCol,
+        },
+        affectedTargetIds: extra.targetIds,
+        landedTargetIds: extra.landedTargetIds,
+        dodgedTargetIds: extra.targetIds.filter((id) => !extra.landedTargetIds.includes(id)),
+        hitCount: extra.hitCount,
+        presetId: extra.presetId,
+      })
+    }
 
     this.deps.stepCompletionSink?.onImpact()
   }
@@ -324,7 +355,7 @@ export class CombatAnimationRuntime {
    * UI submit choice cho lượt đang pause. Trả false nếu không có pause
    * (no-op an toàn — choice bị bỏ, không crash).
    */
-  submitTurnChoice(role: TurnSkillSlotRole): boolean {
+  submitTurnChoice(choice: ForcedTurnChoice): boolean {
     if (this.deps.isSessionBlocking?.()) {
       return false
     }
@@ -343,7 +374,7 @@ export class CombatAnimationRuntime {
     // itself when no renderer is attached, so a manual turn takes exactly the
     // same path as an auto one from here on. Resolving inline would give
     // turn-end a second owner, which is the defect the turn spec removes.
-    const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor, role)
+    const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor, choice)
     this.pendingDeclaredAction = { actor, declared }
 
     emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))

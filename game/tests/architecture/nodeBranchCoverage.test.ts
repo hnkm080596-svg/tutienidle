@@ -18,7 +18,10 @@ import { ELEMENT_ORDER } from '../../src/core/element/ElementLabels'
  * tag without a render path fails here instead of shipping silently.
  */
 
-const VIEW_TAGS = [...ELEMENT_ORDER, 'kiem_tran', 'bat_kiem']
+// Kiem Tu Reimagined Task 11 — the retired kiem_tran/bat_kiem route
+// tags are gone; the reimagined tree renders through 'kiem_pho' and
+// 'ngu_kiem' (both map to the combined kiem-tu view).
+const VIEW_TAGS = [...ELEMENT_ORDER, 'kiem_pho', 'ngu_kiem']
 
 function renderableTags(): Set<string> {
   const tags = new Set<string>()

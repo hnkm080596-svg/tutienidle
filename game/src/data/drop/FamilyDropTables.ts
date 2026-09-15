@@ -26,12 +26,10 @@ export const FAMILY_DROP_TABLES: FamilyDropTable[] = [
   {
     familyId: 'bandit',
     guaranteed: [],
-    // van_kiem_quyet is NOT here on purpose: its authored contract is
-    // elite-gated ("Tâm pháp hiếm rơi từ Elite" - 20% elite / 100% boss
-    // on the qi_refining bandit). An ungated pool line would leak it to
-    // every bandit-family kill including the mortal-realm bandits - see
-    // resolveDrops.gating.qa.test.ts. The gate lives in the bandit's
-    // signatureDrops (requiresModifier tinh_anh / boss) instead.
+    // van_kiem_quyet is NOT here on purpose: it is the Ngu Kiem Dao
+    // signature technique now (granted by the kiem_tu_an node), never
+    // a drop — the legacy elite/boss signatureDrops lines were removed
+    // in the same teardown.
     pool: [],
   },
   {

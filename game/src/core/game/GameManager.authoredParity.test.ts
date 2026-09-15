@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
+import { freshKiemTuState } from '../kiem-tu/KiemTuState'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { pills } from '../../data/pill/pills'
@@ -53,10 +54,11 @@ function makeManager() {
 }
 
 describe('ARCH-008 — production basic consumes canonical resolved output', () => {
-  it('kiem_tu tram basic carries the per-cast flat bonus (10000 casts -> x1001)', () => {
+  it('kiem_tu basic is NOT authored tram — the orb preset takes over (K3 mortal-precursor lock)', () => {
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'kiem_tu'
+    player.kiemTu = freshKiemTuState()
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('tram')
@@ -68,11 +70,14 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
 
     const basic = gameManager.getTurnBattle()!.players[0]!.basic!
 
+    // Post-path tram is locked (K3): participant.basic stays the inert
+    // static fallback — the Kiem Pho provider (Task 6) OWNS the slot via
+    // dynamicBasic, so authored per-cast scaling never reaches combat.
     expect(basic.id).toBe('tram')
     expect(basic.damage?.kind).toBe('physical')
-    expect(basic.damage?.multiplier).toBe(1001)
-    // Basic slot stays cadence-free (turn cadence preserved).
+    expect(basic.damage?.multiplier).toBe(1)
     expect(basic.cooldownTurns).toBe(0)
+    expect(gameManager.getTurnBattle()!.players[0]!.dynamicBasic).toBeDefined()
   })
 
   it('mortal (no cultivationPath) with learned tram casts tram as basic — casts accrue to the mirror', () => {

@@ -1,23 +1,28 @@
-// 9.4 — Kiếm bar HUD (Kiếm Thế / Kiếm Ý tạm route Kiếm Tu) hiện theo
-// route, cập nhật MỖI FRAME qua CombatScene.update() (poll, KHÔNG emit
-// event — CombatDefeatPanel/CombatVictoryPanel giữ nguyên).
+// Kiem Tu Reimagined Task 7 — Kiếm bar HUD bridge. Reads the CANONICAL
+// PlayerData.kiemTu state (K1), not the retired kiemTuRoute pools.
+// Updated EVERY FRAME via CombatScene.update() polling (no event emit —
+// CombatDefeatPanel/CombatVictoryPanel unchanged).
 //
-// Kiến trúc: CombatScene (Phaser) CHỈ giao tiếp với core qua EventBus
-// (xem PhaserCanvas.vue) — không cầm GameManager trực tiếp. Nên reader
-// lấy battle + route tính toán được ĐĂNG KÝ từ PhaserCanvas (nơi đã có
-// gameManager + player store) vào Phaser registry; CombatScene mỗi frame
-// gọi reader qua registry key này (pattern y hệt 'eventBus' /
-// 'lastBattlePositionsSnapshot').
+// Architecture: CombatScene (Phaser) talks to core only through the
+// registry gate (see PhaserCanvas.vue) — the reader is registered by
+// PhaserCanvas (which owns gameManager + the player store) and polled
+// per frame, same pattern as 'eventBus' / 'lastBattlePositionsSnapshot'.
 //
-// Reader trả null khi KHÔNG có battle / route không phải Kiếm Tu / battle
-// chưa diễn ra → CombatScene ẩn Kiếm bar (updateKiem(0, 0, '')).
+// Reader returns null when there is no in-progress battle or the player
+// is not on the Kiem Tu path → CombatScene hides the bar.
+//
+// hien (Kiem Pho): the bar shows preset-strip progress — `current` is
+// the auto cursor position, `max` the preset length, plus the orb strip
+// + cast log for presentation layers that render richer HUD.
+// ngu (Ngu Kiem Dao): the bar shows persisted Kiem Y progress toward
+// the current realm's forgeCost, plus live sword count/base multiplier.
 
-import { MAX_KIEM_THE } from '@/core/combat/CombatTypes'
-import { kiemYTempMaxFor } from '@/core/battle/KiemTuResourceSystem'
-import { getKiemYPermanent } from '@/core/player/KiemYSystem'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
+import type { OrbId, KiemTuState } from '@/core/kiem-tu/KiemTuState'
+import { isKiemPhoProviderHandle } from '@/core/kiem-tu/KiemPhoProvider'
+import { forgeCost } from '@/core/kiem-tu/NguKiemDao'
+import { getRealmIndex } from '@/core/realm/realmSystem'
 import type { GameManager } from '@/core/game/GameManager'
-import type { KiemTuRoute } from '@/core/player/Player'
 import {
   readOptionalGate,
   writeGate,
@@ -28,6 +33,15 @@ export interface KiemBarSnapshot {
   current: number
   max: number
   label: string
+  /** Hien preset strip: the persisted orb loop + the auto cursor. */
+  mode?: 'hien' | 'ngu'
+  preset?: readonly OrbId[]
+  cursor?: number
+  nextOrb?: OrbId
+  log?: readonly OrbId[]
+  /** Ngu readout: live flying swords + permanent base multiplier. */
+  kiemDaoCount?: number
+  kiemDaoBase?: number
 }
 
 export type KiemBarReader = () => KiemBarSnapshot | null
@@ -37,14 +51,15 @@ export const KIEM_BAR_READER_KEY = 'kiemBarReader' as const
 /** Phần state player mà reader cần — structural, không import Pinia store
  * (bridge tách khỏi Vue để CombatScene/PhaserCanvas không kéo store). */
 export interface KiemBarPlayerState {
-  kiemTuRoute?: KiemTuRoute
-  bossKillCount: number
+  kiemTu?: KiemTuState
+  realmId: string
 }
 
 /**
  * Đọc snapshot Kiếm bar HIỆN TẠI từ battle đang chạy. null = ẩn bar.
- * Route xác định từ player.kiemTuRoute (nguồn sự thật duy nhất theo
- * Final review fix Important #6); battle cung cấp pool trong trận.
+ * Mode xác định từ player.kiemTu.mode (canonical state, K1); the
+ * battle-scoped provider snapshot supplies cursor/log (runtime, never
+ * persisted).
  */
 export function makeKiemBarReader(
   gameManager: GameManager,
@@ -58,39 +73,46 @@ export function makeKiemBarReader(
     }
 
     const player = getPlayer()
-    const route = player.kiemTuRoute
+    const kiemTu = player.kiemTu
 
-    if (!route) {
+    if (!kiemTu) {
       return null
     }
 
-    // TurnBattle participant shape — the human player's CombatEntity is
-    // players[0].entity (Kiem Tu pools live on CombatEntity, M13).
-    const battleEntity = battle.players[0]?.entity
+    if (kiemTu.mode === 'hien') {
+      // The participant's provider owns the live cursor/log — the
+      // persisted preset is the fallback when no provider is attached
+      // (e.g. mid-migration battles built before the hien wiring).
+      const provider = battle.players[0]?.dynamicBasic
+      const snapshot = isKiemPhoProviderHandle(provider) ? provider.snapshot() : null
+      const preset = snapshot?.preset ?? kiemTu.preset
+      const cursor = snapshot?.cursor ?? 0
 
-    if (!battleEntity) {
-      return null
+      return {
+        current: cursor,
+        max: Math.max(1, preset.length),
+        label: 'Kiếm Phổ',
+        mode: 'hien',
+        preset,
+        cursor,
+        nextOrb: preset.length > 0 ? preset[cursor % preset.length] : undefined,
+        log: snapshot?.log ?? [],
+      }
     }
 
-    if (route === 'kiem_tran') {
-      const current = battleEntity.currentKiemThe ?? 0
+    // ngu (Task 8) — bar = Kiem Y progress toward the next forge at the
+    // CURRENT realm's forgeCost; label carries the live sword count.
+    const realmIndex = getRealmIndex(player.realmId)
 
-      return { current, max: MAX_KIEM_THE, label: 'Kiếm Thế' }
+    return {
+      current: kiemTu.kiemY,
+      max: realmIndex >= 1 ? forgeCost(realmIndex) : 1,
+      label: `Kiếm Ý · ${kiemTu.kiemDaoCount} kiếm`,
+      mode: 'ngu',
+      kiemDaoCount: kiemTu.kiemDaoCount,
+      kiemDaoBase: kiemTu.kiemDaoBase,
     }
-
-    // bat_kiem — Kiếm Ý tạm = vĩnh viễn (đầu trận) + tích trong trận.
-    const kiemYPermanent = getKiemYPermanent(player.bossKillCount)
-    const current = (battleEntity.currentKiemYTemp ?? 0) + kiemYPermanent
-    const max = kiemYTempMaxFor(kiemYPermanent)
-    const tier = getKiemYTierForPermanent(kiemYPermanent)
-
-    return { current, max, label: `Kiếm Ý T.${tier}` }
   }
-}
-
-/** Tier = số Kiếm Ý vĩnh viễn / 10 (spec mục 3.1 — "+10 mỗi tầng"). */
-function getKiemYTierForPermanent(kiemYPermanent: number): number {
-  return Math.max(0, Math.floor(kiemYPermanent / 10))
 }
 
 export function registerKiemBarReader(registry: GateRegistry, reader: KiemBarReader): void {

@@ -64,8 +64,7 @@ export type StatType =
   | 'ailmentPotencyPercent'
   // Kiếm Tu (2026-08-15) — % khuếch đại TOÀN BỘ effect 'damage' của
   // skill chủ động (không phải đòn đánh thường), xem SkillEffectSystem.
-  // ts's finalMultiplier. Nguồn cấp: node/talent + tier Kiếm Ý vĩnh viễn
-  // route Bạt Kiếm (KiemYSystem, áp qua stores/player.ts finalStats).
+  // ts's finalMultiplier. Nguồn cấp: node/talent/equipment.
   | 'skillDamagePercent'
   // Hỏa Tu (Plans/FirePath, "Tật Hỏa" minor, 2026-08-21) — % cộng
   // thêm vào tốc độ đạn bay (MissileSystem cũ đã xóa; combat hiện dùng

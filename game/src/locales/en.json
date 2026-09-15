@@ -148,6 +148,7 @@
           "skillCastCount": "{count} casts",
           "skillJoin": "and",
           "skill": "Requires {skill} at {requirement}",
+          "kiemDaoCap": "Flying swords at the realm cap",
           "skillUpgrade": "Upgrade the related skill"
         },
         "routePick": {
@@ -207,23 +208,31 @@
     },
     "quanKhi": {
       "title": "Quán Khí",
-      "routeNames": {
-        "batKiem": "Bạt Kiếm (Single Sword)",
-        "kiemTran": "Kiếm Trận (Multi Sword)"
+      "specNames": {
+        "kiemPho": "Kiếm Phổ",
+        "nguKiemDao": "Ngự Kiếm Đạo"
       },
       "sections": {
         "pathSelection": {
           "hint": "Choose your cultivation path — this decision CANNOT be changed."
         },
-        "kiemTuRoute": {
-          "hintPrefix": "Sword Cultivator path locked in:",
-          "hintSuffix": " — cannot be changed.",
-          "batKiemDescription": "Huy Kiếm reached tier 3 (10,000 slashes) so Bạt Kiếm unlocked — a single gathering strike that scales with Sword Intent tiers against bosses.",
-          "kiemTranDescription": "Huy Kiếm has not reached tier 3 so the Sword Formation path is taken — the formation evolves with realm and unlocks on-hit effects by formation level."
-        },
         "hiddenPath": {
           "description": "Linh Bao reached its limit — the hidden road reveals itself. Kit: {kit}. No element, no stance, no The — power flows from elemental reactions alone.",
           "warning": "PERMANENT choice — cannot be changed, no way back to the regular Pháp Tu path."
+        },
+        "kiemTuSpec": {
+          "hintPrefix": "Sword Cultivator specialization:",
+          "hintSuffix": ".",
+          "hienDescription": "Kiếm Phổ — preset up to nine sword seals; each basic attack plays the next seal, and seal chains matching the manual burst into combo strikes.",
+          "nguDescription": "Ngự Kiếm Đạo — myriad swords under one will, each flying sword an independent strike; accumulated Sword Intent forges permanent Sword Dao."
+        },
+        "kiemPhoPreset": {
+          "title": "Kiếm Phổ — Seal Sequence",
+          "hint": "Tap a seal to append it to the sequence (max 9); tap a slot in the sequence to remove that seal.",
+          "battleLocked": "Cannot edit the sequence during battle.",
+          "lockedHint": "Unlocks at {realm}.",
+          "appendAria": "Append {name} to the sequence",
+          "removeAria": "Remove {name} from the sequence"
         }
       },
       "actions": {

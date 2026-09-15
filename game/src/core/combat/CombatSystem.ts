@@ -9,7 +9,7 @@ import { applyEndurance } from './Endurance'
 import type { DamageResult } from './CombatTypes'
 
 import type { EventBus } from '../events/EventBus'
-import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
+import type { ActionDamageInfo, HitResolveOptions } from '../battle/ActionImpactSystem'
 import type { ElementType } from '../element/ElementType'
 import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSystem'
 import { clampStatValue } from '../stats/StatMetadata'
@@ -152,35 +152,40 @@ export class CombatSystem {
     source: CombatEntity,
     target: CombatEntity,
     damage: ActionDamageInfo,
-    critical?: boolean,
+    options: Partial<HitResolveOptions> = {},
   ): DamageResult {
-    if (!this.rollHit(source, target)) {
+    if (!options.guaranteedHit && !this.rollHit(source, target)) {
       return this.resolveDodge(source, target, damage.kind)
     }
 
-    const isCritical = critical !== undefined ? critical : this.rollCritical(source, target)
+    const isCritical = options.critical !== undefined ? options.critical : this.rollCritical(source, target)
 
     // R3 re-audit (AR-03 gap) — authored per-skill scaling (attributeScaling/
-    // manaScalingRatio/swordIntentDamageRatio, carried on ActionDamageInfo.
+    // manaScalingRatio, carried on ActionDamageInfo.
     // scaling since the converter used to drop them) plus the general
-    // skillDamagePercent stat (equipment/node/Kiếm Ý tier), which previously
+    // skillDamagePercent stat (equipment/node), which previously
     // had no live consumer in the turn engine at all — same formula
     // SkillEffectSystem.apply() used for the older, non-turn execution path.
     const scalingBonus = calculateScalingBonus(source, damage.scaling)
 
     const effectiveMultiplier =
       damage.multiplier *
+      (options.damageMultiplier ?? 1) *
       (1 + scalingBonus) *
       (1 + clampStatValue('skillDamagePercent', source.stats.skillDamagePercent)) *
       getRealmPressureMultiplier(source, target)
 
     // Chance to Ignore Resistance — roll 1 LẦN/đòn (khác Penetration phẳng,
     // đây là "bỏ qua hoàn toàn" mitigation của đòn đó nếu trúng).
-    const ignoreResistance = Math.random() < clampStatValue('chanceToIgnoreResistance', source.stats.chanceToIgnoreResistance)
+    // Resolved armor policy (armorBypass/armorPierceFraction) comes from the
+    // caller — the calculator executes the already-rolled outcome.
+    const ignoreResistance =
+      options.armorBypass === true ||
+      Math.random() < clampStatValue('chanceToIgnoreResistance', source.stats.chanceToIgnoreResistance)
 
     const baseDamage = damage.kind === 'elemental'
       ? calculateSkillBaseDamage(source, target, damage.components, ignoreResistance)
-      : calculateBaseDamage(source, target, damage.kind, ignoreResistance)
+      : calculateBaseDamage(source, target, damage.kind, ignoreResistance, options.armorPierceFraction ?? 0)
 
     const afterCrit = applyMultiplierAndCritical(baseDamage, effectiveMultiplier, isCritical, source.stats.criticalDamage)
 

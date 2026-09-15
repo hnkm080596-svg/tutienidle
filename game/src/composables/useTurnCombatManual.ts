@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useGameManager, useStateVersion } from './useGameState'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
-import type { TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
+import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
 
 /**
  * Slice 7 (Completion Task 10 + master plan Task 5 hợp nhất) — cầu nối
@@ -91,6 +91,34 @@ export function useTurnCombatManual() {
     bumpState()
   }
 
+  // Kiem Tu Reimagined Task 7 — hien manual orb picker. When the player
+  // participant carries a dynamicBasic provider (Kiem Pho / Ngu Kiem
+  // Dao) its manualOptions() are the ONLY legal manual picks — the
+  // generic 3-slot basic button is replaced by these buttons.
+  const dynamicBasicOptions = computed<readonly TurnSkillDefinition[]>(() => {
+    stateVersion.value
+
+    const current = battle.value
+
+    if (!current || current.state !== 'fighting') {
+      return []
+    }
+
+    return current.players[0]?.dynamicBasic?.manualOptions?.() ?? []
+  })
+
+  const hasDynamicBasic = computed(() => dynamicBasicOptions.value.length > 0)
+
+  function chooseDynamicBasic(defId: string): void {
+    if (!gameManager.isAwaitingManualTurnChoice()) {
+      return
+    }
+
+    gameManager.submitTurnChoice({ kind: 'dynamic_basic', defId })
+
+    bumpState()
+  }
+
   function setManualMode(enabled: boolean): void {
     gameManager.setBattleManualMode(enabled)
 
@@ -105,6 +133,9 @@ export function useTurnCombatManual() {
     slots,
     slotList,
     chooseSlot,
+    dynamicBasicOptions,
+    hasDynamicBasic,
+    chooseDynamicBasic,
     setManualMode,
   }
 }

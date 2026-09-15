@@ -25,6 +25,14 @@ vi.mock('@/composables/useTurnCombatManual', () => ({
     isBattleFighting: { value: true },
     slotList: { value: mocks.slotList },
     chooseSlot: mocks.chooseSlot,
+    // Kiem Tu Reimagined — no dynamicBasic provider in this fixture:
+    // the orb picker stays hidden and the 3-slot row renders. The
+    // __v_isRef tag is required: template v-if/v-for unrefs these,
+    // a bare {value: x} object is truthy and would render a phantom
+    // orb button (merged phap_tu_an emblem test caught this).
+    dynamicBasicOptions: { value: [], __v_isRef: true },
+    hasDynamicBasic: { value: false, __v_isRef: true },
+    chooseDynamicBasic: vi.fn(),
   }),
 }))
 

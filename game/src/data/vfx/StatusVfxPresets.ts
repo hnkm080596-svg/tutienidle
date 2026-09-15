@@ -48,18 +48,13 @@ export function getStatusVfxPreset(buffId: string, polarity?: 'buff' | 'debuff')
     return STATUS_PRESETS[buffId]!
   }
 
-  // 2. onhit_* prefix — pool vĩnh viễn player
-  if (buffId.startsWith('onhit_')) {
-    return { color: BUFF_PLACEHOLDER_COLOR, shape: 'circle' }
-  }
-
-  // 3. Regex heuristic cũ — id lạ mô tả nguyên tố (compat data tương lai)
+  // 2. Regex heuristic cũ — id lạ mô tả nguyên tố (compat data tương lai)
   if (/burn|fire|hot/.test(buffId)) return { color: 0xff7a45, shape: 'diamond' }
   if (/poison|toxic|wood/.test(buffId)) return { color: 0x58e878, shape: 'diamond' }
   if (/bleed|huyet|blood/.test(buffId)) return { color: 0xe5484d, shape: 'diamond' }
   if (/chill|frost|water/.test(buffId)) return { color: 0x58c8ff, shape: 'diamond' }
 
-  // 4. Polarity fallback cuối — placeholder đỏ/xanh (mặc định đỏ cảnh báo)
+  // 3. Polarity fallback cuối — placeholder đỏ/xanh (mặc định đỏ cảnh báo)
   return {
     color: polarity === 'buff' ? BUFF_PLACEHOLDER_COLOR : DEBUFF_PLACEHOLDER_COLOR,
     shape: 'circle',

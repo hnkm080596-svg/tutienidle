@@ -16,7 +16,7 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
-import type { TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
+import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
 import type { TooltipContent } from '@/composables/useTooltip'
 
 const ROLE_ORDER: readonly TurnSkillSlotRole[] = ['basic', 'special', 'ultimate']
@@ -44,7 +44,15 @@ function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefin
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
-const { isAwaitingChoice, isBattleFighting, slotList, chooseSlot } = useTurnCombatManual()
+const {
+  isAwaitingChoice,
+  isBattleFighting,
+  slotList,
+  chooseSlot,
+  dynamicBasicOptions,
+  hasDynamicBasic,
+  chooseDynamicBasic,
+} = useTurnCombatManual()
 
 // Phap Tu An (Task 16) — the path owns no active ultimate: the slot is
 // the always-on dao passive ngo_dao_hon_don, rendered as a passive
@@ -89,6 +97,27 @@ function entryAt(index: number): TurnSkillPresentationEntry {
   return slotList.value[index] ?? SLOT_EMPTY
 }
 
+// Hien owns the basic slot via the orb picker — drop it from the role
+// row while keeping the original slotList indices for special/ultimate.
+const visibleSlots = computed(() =>
+  ROLE_ORDER.map((role, index) => ({ role, index })).filter(
+    ({ role }) => !(role === 'basic' && hasDynamicBasic.value),
+  ),
+)
+
+// Kiem Tu Reimagined Task 7 — orb display names come from
+// TurnSkillDisplayMeta (synced to the authored table). Fallback to the
+// raw id only keeps an un-authored def visible rather than blank.
+function orbLabel(def: TurnSkillDefinition): string {
+  return turnSkillDisplayMetaOf(def.id)?.name ?? def.id
+}
+
+function orbTooltip(def: TurnSkillDefinition): TooltipContent | undefined {
+  const meta = turnSkillDisplayMetaOf(def.id)
+
+  return meta ? { title: meta.name, description: meta.description } : undefined
+}
+
 function isTappable(entry: TurnSkillPresentationEntry): boolean {
   return entry.state === 'ready' && isAwaitingChoice.value
 }
@@ -101,11 +130,37 @@ function tapSlot(role: TurnSkillSlotRole): void {
 <template>
   <div v-if="visible" class="turn-combat-skill-bar">
     <div class="turn-combat-skill-bar__slots">
-      <template v-for="(role, index) in ROLE_ORDER" :key="role">
+      <!-- Kiem Tu Reimagined — the hien orb picker OWNS the basic slot:
+           provider.manualOptions() are the only legal manual picks. -->
+      <template v-if="hasDynamicBasic">
+        <button
+          v-for="orb in dynamicBasicOptions"
+          :key="orb.id"
+          type="button"
+          class="turn-combat-skill-bar__slot-button turn-combat-skill-bar__slot-button--orb"
+          :class="{ 'is-tappable': isAwaitingChoice }"
+          :disabled="!isAwaitingChoice"
+          :aria-label="`Dùng ${orbLabel(orb)}`"
+          @click="chooseDynamicBasic(orb.id)"
+        >
+          <CombatSkillSlot
+            :empty-label="orbLabel(orb)"
+            :display-label="orbLabel(orb)"
+            :remaining="0"
+            :total="0"
+            :is-masked="false"
+            :resource-cost="orb.resourceCost ?? 0"
+            :is-insufficient-resource="false"
+            :tooltip-override="orbTooltip(orb)"
+          />
+        </button>
+      </template>
+
+      <template v-for="slot in visibleSlots" :key="slot.role">
         <!-- Phap Tu An — ult slot is the dao passive emblem, never a
              button (no dead ult control; spec §3.3). -->
         <div
-          v-if="role === 'ultimate' && isAnPath"
+          v-if="slot.role === 'ultimate' && isAnPath"
           class="turn-combat-skill-bar__emblem"
           :aria-label="anEmblemMeta?.name ?? 'Ngộ Đạo Hỗn Độn'"
           v-tooltip="anEmblemTooltip"
@@ -118,20 +173,20 @@ function tapSlot(role: TurnSkillSlotRole): void {
           v-else
           type="button"
           class="turn-combat-skill-bar__slot-button"
-          :class="{ 'is-tappable': isTappable(entryAt(index)) }"
-          :disabled="!isTappable(entryAt(index))"
-          :aria-label="`Dùng ${ROLE_LABELS[role]}`"
-          @click="tapSlot(role)"
+          :class="{ 'is-tappable': isTappable(entryAt(slot.index)) }"
+          :disabled="!isTappable(entryAt(slot.index))"
+          :aria-label="`Dùng ${ROLE_LABELS[slot.role]}`"
+          @click="tapSlot(slot.role)"
         >
           <CombatSkillSlot
-            :empty-label="ROLE_LABELS[role]"
-            :display-label="entryAt(index).skillName"
-            :remaining="entryAt(index).cooldownRemaining"
-            :total="entryAt(index).cooldownTotal"
-            :is-masked="entryAt(index).state === 'cooldown'"
-            :resource-cost="entryAt(index).resourceCost"
-            :is-insufficient-resource="entryAt(index).state === 'blocked_resource'"
-            :tooltip-override="tooltipFor(entryAt(index))"
+            :empty-label="ROLE_LABELS[slot.role]"
+            :display-label="entryAt(slot.index).skillName"
+            :remaining="entryAt(slot.index).cooldownRemaining"
+            :total="entryAt(slot.index).cooldownTotal"
+            :is-masked="entryAt(slot.index).state === 'cooldown'"
+            :resource-cost="entryAt(slot.index).resourceCost"
+            :is-insufficient-resource="entryAt(slot.index).state === 'blocked_resource'"
+            :tooltip-override="tooltipFor(entryAt(slot.index))"
           />
         </button>
       </template>

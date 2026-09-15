@@ -153,8 +153,8 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'thornsPercent', flat: 0.25 })
   })
 
-  it('all 55 definitions (5 Tran Phap formation buffs + 5 buffs + 2 reaction buffs + 5 on-hit proc buffs + 16 ported ailments + 14 thuan-he chain buffs + 5 talent v4 combat buffs + 3 Phase A2 boss enrage buffs) are present', () => {
-    expect(buffs).toHaveLength(55)
+  it('all 51 definitions (6 inline + 22 legacy + 1 Kiem Pho orb debuff + 14 thuan-he chain + 5 talent v4 + 3 boss enrage) are present', () => {
+    expect(buffs).toHaveLength(51)
   })
 })
 

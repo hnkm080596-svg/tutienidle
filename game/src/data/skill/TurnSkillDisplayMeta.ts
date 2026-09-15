@@ -1,5 +1,6 @@
 import type { Skill } from '../../core/skill/Skill'
 import { SKILLS } from './Skills'
+import { KIEM_PHO_COMBOS } from './KiemPhoCombos'
 
 // Bảng 9.5 #5 (2026-09-07) — mapping skillId → display metadata cho HUD
 // turn (TurnCombatSkillBar/CombatSkillSlot). TurnSkillDefinition cố ý
@@ -10,9 +11,9 @@ import { SKILLS } from './Skills'
 // Nguồn dữ liệu:
 // - id trùng SKILLS (Skills.ts) → ĐỒNG BỘ name/description từ bảng Skill
 //   thật (SKILLS_BY_ID lookup lúc khởi tạo — không hardcode 2 nơi).
-// - id authored riêng cho turn engine (generic_physical, bat_kiem_thuat,
-//   water_surge, reaction path) → author trực tiếp tại đây, kèm số liệu
-//   đối chiếu file authored tương ứng.
+// - id authored riêng cho turn engine (generic_physical, ngu_kiem_thuat,
+//   orb_* / kiem_combo_*, water_surge, reaction path) → author trực tiếp
+//   tại đây, kèm số liệu đối chiếu file authored tương ứng.
 
 /** Display metadata hiển thị cho 1 TurnSkillDefinition trong HUD. */
 export interface TurnSkillDisplayMeta {
@@ -58,22 +59,6 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   generic_physical: {
     name: 'Vật Công',
     description: 'Tấn công vật lý cơ bản bằng sức mạnh thân thể.',
-  },
-
-  // Kiếm Tu special — Bạt Kiếm Thuật (BatKiemThuat.ts: charge 3 lượt,
-  // damage Trảm theo số lượt tích × 3, cooldown 5).
-  bat_kiem_thuat: {
-    name: 'Bạt Kiếm Thuật',
-    description: 'Thế: tích lực 3 lượt. Trảm: gây sát thương theo số lượt tích luỹ. Hồi 5 lượt sau Trảm.',
-  },
-
-  // Kiem Tu ultimate - Tru Tien Kiem Tran (BatKiemThuat.ts: burns 100
-  // The, physical x5 single target, cooldown 8). The turn version is
-  // re-authored (no lingering sword field), so meta is authored directly
-  // here instead of syncing the legacy Skills.ts description.
-  tru_tien_kiem_tran: {
-    name: 'Tru Tiên Kiếm Trận',
-    description: 'Đốt 100 Kiếm Thế — nhất trảm diệt một mục tiêu, sát thương vật lý ×5. Hồi 8 lượt.',
   },
 
   // Enemy special — Thủy Giáp Long "Nuốt Sáng" (TurnBasicAttacks.ts:
@@ -234,6 +219,53 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     name: 'Ngộ Đạo Hỗn Độn',
     description: 'Chỉ đòn ở ô Thường (Vạn Pháp Tùy Tâm) có thể tự phân luồng — Đa Pháp Liên Tuyên không kích hoạt.',
   }),
+
+  // Kiem Tu Reimagined (spec 2026-09-15 §3/§4.3) — the five Kiem Pho
+  // orbs (manual picker + HUD strip readout) and the 37 combo entries
+  // (combo name flash is the discovery signal, K11). Combo meta is
+  // spread from the table so names have exactly one source.
+  orb_dam: {
+    name: 'Đâm',
+    description: 'Đâm thẳng một mục tiêu — đòn kiếm gốc của Kiếm Phổ.',
+  },
+  orb_chem: {
+    name: 'Chém',
+    description: 'Chém nặng, gây Kiếm Thương chảy máu cộng dồn.',
+  },
+  orb_bo: {
+    name: 'Bổ',
+    description: 'Bổ mạnh phá giáp — giảm phòng thủ mục tiêu.',
+  },
+  orb_hat: {
+    name: 'Hất',
+    description: 'Hất ngược có tỉ lệ gây Choáng.',
+  },
+  orb_quet: {
+    name: 'Quét',
+    description: 'Quét ngang toàn trận — sát thương mọi mục tiêu.',
+  },
+
+  // Ngu Kiem Dao (Task 9) — the multi-instance phi kiem basic + the two
+  // emblem slots (HUD markers only, never resolvable).
+  ngu_kiem_thuat: {
+    name: 'Ngự Kiếm Thuật',
+    description: 'Phi kiếm độc lập đánh chuỗi mục tiêu — mỗi kiếm một đòn.',
+  },
+  tu_kiem_y: {
+    name: 'Tụ Kiếm Ý',
+    description: 'Mỗi đòn phi kiếm tích 1 Kiếm Ý — đủ Ý luyện thêm phi kiếm.',
+  },
+  kiem_dao_cascade: {
+    name: 'Kiếm Đạo Liên Toát',
+    description: 'Mỗi phi kiếm tự quyết sát chiêu, bạo kích, phá giáp.',
+  },
+
+  ...Object.fromEntries(
+    KIEM_PHO_COMBOS.map((combo) => [
+      combo.id,
+      { name: combo.name, description: `Kiếm Phổ ${combo.pattern.length} chiêu.` },
+    ]),
+  ),
 }
 
 /** Lookup an toàn — id không có trong map trả undefined (caller fallback). */

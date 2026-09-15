@@ -1,5 +1,6 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
+import type { OrbId } from '../kiem-tu/KiemTuState'
 
 export type NodeType = 'minor' | 'major'
 
@@ -29,6 +30,12 @@ export type NodePrerequisite =
   // `level` VÀ tích lũy `count` cast (đọc PlayerData.skillCastCounts,
   // mirror Skill.totalExperience — nguồn sự thật save).
   | { kind: 'skillCastCount'; skillId: string; level?: number; count?: number }
+  // Kiem Tu Reimagined (spec K20) — Cuu Cung preflight: holds only while
+  // the player is in ngu mode AND kiemDaoCount < kiemDaoCap(realmIndex).
+  // Evaluated inside canPurchaseNode, so a capped sword pool blocks the
+  // purchase BEFORE insight is deducted — including the Y-grant outer
+  // nodes (no Y may accumulate past cap).
+  | { kind: 'kiemDaoBelowCap' }
 
 /**
  * Những gì 1 node THẬT SỰ làm khi mua — optional field, không phải
@@ -42,17 +49,6 @@ export interface NodeEffect {
   statModifiers?: StatModifier[]
 
   unlocksSkillIds?: string[]
-
-  // Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 4) — on-hit
-  // effect của kiếm trận: mỗi hit kiếm trận/ult TTKT roll tỉ lệ độc lập
-  // theo cấp node (3%/level, max 15% ở Lv5), hiệu ứng chạy qua modifier
-  // pipeline + damage engine (KiemTranOnHitSystem — retired M13; on-hit
-  // consumer not yet ported to the turn engine).
-  onHitEffect?: {
-    kind: OnHitEffectKind
-    baseChancePercent: number
-    perLevelChancePercent: number
-  }
 
   // Pháp Tu Thuần Hệ (E-8, 2026-09-03) — "node biến thể": mua node là
   // CHỌN HẲN 1 specialization của 1 skill (SkillSystem.
@@ -72,6 +68,46 @@ export interface NodeEffect {
   // battle-scoped The cap by this amount per node level. Consumed by
   // resolveMaxThe(); maxThe is never persisted on PlayerData.
   theCapPerLevel?: number
+
+  // Kiem Tu Reimagined (spec 2026-09-15 K4) — purchasing flips
+  // player.kiemTu.mode (one-way hien → ngu). The wire lives in
+  // GameManagerProgressionOps.purchaseNode; mode-switch nodes are
+  // non-refundable and devResetBranch skips them.
+  kiemTuModeSwitch?: 'ngu'
+
+  // Kiem Tu Reimagined (spec §6, Cuu Cung) — lump Kiem Y granted ONCE
+  // at purchase through gainKiemY() (the domain owner — conversion and
+  // the cap rule live there; nodes never touch player.kiemTu).
+  kiemYGrant?: number
+
+  // Kiem Tu Reimagined (spec §5.4, Trung Cung) — direct +N kiemDaoCount
+  // at purchase through grantKiemDao() (clamped at the realm cap; the
+  // kiemDaoBelowCap prereq should already have blocked a capped buy).
+  kiemDaoGrant?: number
+
+  // Kiem Tu Reimagined (spec §5.2 Roll Cascade) — purchasing unlocks
+  // one cascade slot; the Ngu provider reads these via
+  // collectKiemDaoCascadeUnlocks (effect-driven — node id is free).
+  cascadeUnlock?: 'a' | 'e' | 'd'
+
+  // Kiem Tu Reimagined (spec §4.2) — DATA form of a combo capstone.
+  // KiemPhoNodeModifiers converts purchased nodes carrying this field
+  // into KiemPhoComboModifier hooks at battle-build time; it is the
+  // ONLY channel through which a node may alter a combo.
+  kiemTuComboModifier?: {
+    // matches(combo): combo pattern contains >= count of `orb`.
+    minOrbCount: { orb: OrbId; count: number }
+    // Multiplies the combo's bonus damage by (1 + x) — no-op on
+    // damage-less combos.
+    bonusDamageMultiplier?: number
+    // Attaches a buff/ailment application to the combo; if the combo
+    // already applies the same definition the stacks MERGE (add).
+    appliesBuff?: { definitionId: string; target: 'self' | 'target'; stacks?: number }
+    // Adds stacks to the combo's existing appliesBuff (no-op without one).
+    bonusAilmentStacks?: number
+    // Deterministic apply order — ascending, nodeId tiebreak. Default 0.
+    priority?: number
+  }
 }
 
 /**
@@ -86,18 +122,6 @@ export interface TurnSkillResourceModifier {
 
   theGainOnCrit?: number
 }
-
-/** 9 loại on-hit kiếm trận (spec mục 4) — mở theo cấp trận 2→9. */
-export type OnHitEffectKind =
-  | 'khiem_khi_dmg'
-  | 'khiem_phong_haste'
-  | 'xuat_huyet_dot'
-  | 'tran_tru_cc'
-  | 'phan_kich_dodge'
-  | 'hap_linh_leech'
-  | 'pha_giap_pen'
-  | 'quang_crit'
-  | 'than_ngu_hanh'
 
 /**
  * Node Tree (magicpath mục 7/30) — hạ tầng CHUNG cho mọi path (Pháp
@@ -138,6 +162,23 @@ export interface ProgressionNode {
   upgradeCost?: { base: number; perLevel: number }
 
   prerequisites?: NodePrerequisite[]
+
+  /**
+   * Kiem Tu Reimagined (spec K2) — display gate for hidden nodes: the
+   * node does not RENDER in the tree until this prereq holds, AND
+   * canPurchaseNode re-checks it (a hidden node is never purchasable
+   * before reveal). Evaluated through the same hasPrerequisite() as
+   * `prerequisites` — no new machinery.
+   */
+  revealWhen?: NodePrerequisite
+
+  /**
+   * Kiem Tu Reimagined — the mode this node's effects belong to.
+   * Aggregators skip nodes whose kiemTuMode does not match
+   * player.kiemTu.mode (a hien orb node grants nothing while ngu, and
+   * vice versa). undefined = mode-agnostic.
+   */
+  kiemTuMode?: 'hien' | 'ngu'
 
   effect: NodeEffect
 

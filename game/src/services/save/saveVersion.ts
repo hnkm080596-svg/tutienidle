@@ -39,4 +39,8 @@
 // is now player.phapTu.element), CombatEntity loses skillStats +
 // currentHoaThe/ThoThe/KimThe pools, reaction-path skills/buffs/nodes
 // retired. Save v61 bị từ chối (dev phase, không migration).
-export const CURRENT_SAVE_VERSION = 62 as const
+// v63 (2026-09-15, kiem-tu-reimagined spec): PlayerData.kiemTu replaces
+// kiemTuRoute + the sword-intent ecosystem (canonical state model:
+// mode/preset/kiemY/kiemDaoCount/kiemDaoBase). Save v62 bị từ chối
+// (dev phase, không migration).
+export const CURRENT_SAVE_VERSION = 63 as const

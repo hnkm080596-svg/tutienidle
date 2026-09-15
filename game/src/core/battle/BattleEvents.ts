@@ -178,7 +178,7 @@ export interface StatusVfxAttachedEvent {
   /** Buff bar — màu placeholder xanh/đỏ + hình circle/diamond. */
   polarity?: 'buff' | 'debuff'
 
-  /** Buff bar — duration Infinity (onhit_*) → hàng permanent, không timer. */
+  /** Buff bar — duration Infinity → hàng permanent, không timer. */
   permanent?: boolean
 }
 

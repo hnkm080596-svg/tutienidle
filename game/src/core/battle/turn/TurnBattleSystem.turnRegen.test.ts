@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
+import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
@@ -8,7 +9,6 @@ import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 import { createBaseStats } from '../../stats/StatBlock'
 import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
-import { BAT_KIEM_THUAT } from '../../../data/skill/BatKiemThuat'
 import { MAX_THE, THE_GAIN_PER_FINISHER, THE_GAIN_PER_LINK } from '../../combat/CombatTypes'
 
 // M8 (ARCH-003 + ARCH-010 + C05/C06) — combat resources & turn-phase
@@ -51,12 +51,9 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentSwordIntent: 0,
     currentMomentum: 0,
     currentThe: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
+
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
@@ -341,7 +338,7 @@ describe('TurnBattleSystem — post-status liveness boundary (ARCH-010)', () => 
 })
 
 describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
-  it('the real Bat Kiem Thuat charge accrues THE_GAIN_PER_LINK exactly once, at completion', () => {
+  it('a chargeTurns special accrues THE_GAIN_PER_LINK exactly once, at completion', () => {
     const stats = createBaseStats({
       evasionRate: 0,
       dexterity: 0,
@@ -351,7 +348,19 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
     })
     const player = createCombatant('player', { stats, baseStats: stats })
     const playerParticipant = makeParticipant('player', player, 100, 0)
-    playerParticipant.special = { skill: BAT_KIEM_THUAT, remainingCooldownTurns: 0 }
+    // chargeTurns is a generic engine primitive (kept post-kiem-tu
+    // teardown) — inline fixture carries the same 3-turn shape the
+    // retired bat_kiem_thuat authored. The gain is skill-authored
+    // (theGainOnLandedCast) under the phap-tu The model.
+    const CHARGED_SPECIAL: TurnSkillDefinition = {
+      id: 'qa_charged_special',
+      cooldownTurns: 5,
+      chargeTurns: 3,
+      damage: { kind: 'physical', multiplier: 3 },
+      targeting: { shape: 'single' },
+      theGainOnLandedCast: THE_GAIN_PER_LINK,
+    }
+    playerParticipant.special = { skill: CHARGED_SPECIAL, remainingCooldownTurns: 0 }
 
     const enemy = makeDummyEnemy()
     const battle = makeBattle([playerParticipant], [enemy])
@@ -360,7 +369,7 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
     // Turn 1: charge INITIATION — resource/cooldown commit, no gain yet.
     system.resolveNextStep(battle)
     expect(player.currentThe ?? 0).toBe(0)
-    expect(playerParticipant.chargingTurnsRemaining).toBe(BAT_KIEM_THUAT.chargeTurns)
+    expect(playerParticipant.chargingTurnsRemaining).toBe(CHARGED_SPECIAL.chargeTurns)
 
     // Charge ticks then resolves on the player's 4th turn (3 charge turns).
     runPlayerTurns(system, battle, 4)

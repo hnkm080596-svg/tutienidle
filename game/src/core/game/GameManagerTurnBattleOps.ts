@@ -1,6 +1,16 @@
 import type { SessionRef } from '../presentation/PresentationSession'
-import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
 import { isBattleInProgress } from '../battle/BattleTypes'
+import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
+import {
+  buildNguKiemDaoProvider,
+  collectKiemDaoCascadeUnlocks,
+} from '../kiem-tu/NguKiemDaoProvider'
+import {
+  KIEM_DAO_CASCADE_EMBLEM,
+  TU_KIEM_Y_EMBLEM,
+} from '../../data/skill/NguKiemDaoSkills'
+import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
+import type { ProgressionNode } from '../progression/ProgressionNode'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import {
   TurnBattleSystem,
@@ -19,7 +29,7 @@ import { TurnPipeline } from '../battle/turn/TurnPipeline'
 export type { ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
 import { BuffSystem } from '../buff/BuffSystem'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
-import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
+import type { TurnSkillDefinition, ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
 import {
   diffAndEmitTurnStatusVfx,
@@ -38,7 +48,6 @@ import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffTypes'
 import type { FormationLoadout, PlayerData } from '../player/Player'
 import { playerToCombatEntity, resetBattleScopedResources } from '../player/Player'
-import { getKiemYPermanent } from '../player/KiemYSystem'
 import type { Stats } from '../stats/StatBlock'
 import type { StatModifier } from '../stats/StatCalculator'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
@@ -246,6 +255,10 @@ export class GameManagerTurnBattleOps {
     // to turnBattle.players[0] so companion/enemy casts never write into
     // the player's skillCastCounts/skillLevels mirror).
     recordPrimaryPlayerCast?: (skillId: string) => void
+    // Kiem Tu Reimagined Task 11 — registered node defs for the kiem-tu
+    // collectors (combo capstones, cascade unlocks). Read-only access;
+    // the registry remains GameManager-owned (A3).
+    getProgressionNodes: () => readonly ProgressionNode[]
   }) {
     this.turnBattleSystem = new TurnBattleSystem(
       deps.combatSystem,
@@ -810,13 +823,6 @@ export class GameManagerTurnBattleOps {
     // dependent read can observe the pre-buff base.
     this.turnBattleSystem.refreshEffectiveStats(this.turnBattle)
 
-    // C1 parity - Kiem bar init used to run inside legacy battleSystem.start().
-    initKiemTuBattleResources(
-      this.turnBattle.players[0]!.entity,
-      this.deps.getActivePlayer()?.kiemTuRoute,
-      this.deps.getActivePlayer() ? getKiemYPermanent(this.deps.getActivePlayer()!.bossKillCount) : 0,
-    )
-
     if (!this.isStageStarting) {
       // Non-stage battle (tribulation, devtools) — drop the previous stage
       // binding or a stale perfectClearTurnLimit would leak into a battle
@@ -968,6 +974,28 @@ export class GameManagerTurnBattleOps {
       playerPath ? this.deps.resolvePlayerSpecialUltimate(playerPath) : undefined,
     )
 
+    // Kiem Tu Reimagined Task 6 — hien participant: the Kiem Pho
+    // provider OWNS the basic slot (participant.basic becomes inert);
+    // preset cursor/log live in the provider closure, not PlayerData.
+    if (playerPath?.cultivationPath === 'kiem_tu' && playerPath.kiemTu?.mode === 'hien') {
+      playerParticipant.dynamicBasic = buildKiemPhoProvider(
+        playerPath,
+        collectKiemPhoComboModifiers(playerPath, this.deps.getProgressionNodes()),
+      )
+    }
+
+    // Task 9 — ngu participant: the Ngu Kiem Dao provider owns the basic
+    // (multi-instance phi kiem); the special/ultimate slots carry emblem
+    // markers only (spec §5.4 — display lanes, never resolvable actions).
+    if (playerPath?.cultivationPath === 'kiem_tu' && playerPath.kiemTu?.mode === 'ngu') {
+      playerParticipant.dynamicBasic = buildNguKiemDaoProvider(
+        playerPath,
+        collectKiemDaoCascadeUnlocks(playerPath, this.deps.getProgressionNodes()),
+      )
+      playerParticipant.special = { skill: TU_KIEM_Y_EMBLEM, remainingCooldownTurns: 0 }
+      playerParticipant.ultimate = { skill: KIEM_DAO_CASCADE_EMBLEM, remainingCooldownTurns: 0 }
+    }
+
     // Companion Roster - each companion in player.companions is rebuilt as a
     // fresh CombatEntity/participant per battle. Missing definition or missing
     // formation slot is skipped instead of crashing the battle.
@@ -1075,8 +1103,12 @@ export class GameManagerTurnBattleOps {
     // NOT carry: a new cycle is a new battle instance for currentThe —
     // zero it on every carried entity (Bat Kiem included — shared
     // lifecycle contract).
+    // Kiem Tu Reimagined Task 2 — auto-repeat also reuses provider state,
+    // so battle-scoped dynamicBasic state (Kiem Pho cursor/cast log)
+    // must be reset explicitly or it leaks into the next cycle.
     for (const participant of previous.players) {
       resetBattleScopedResources(participant.entity)
+      participant.dynamicBasic?.resetForBattle?.()
     }
 
     this.turnBattle = {
@@ -1388,9 +1420,9 @@ export class GameManagerTurnBattleOps {
    * pipeline an auto turn does, starting at the impact step because the ready
    * and cast phases have just happened.
    */
-  submitTurnChoice(role: TurnSkillSlotRole): boolean {
+  submitTurnChoice(choice: ForcedTurnChoice): boolean {
     const actor = this.presentationOps.runtime.getAwaitedManualActor()
-    const accepted = this.presentationOps.runtime.submitTurnChoice(role)
+    const accepted = this.presentationOps.runtime.submitTurnChoice(choice)
 
     if (!accepted || !actor) {
       return accepted

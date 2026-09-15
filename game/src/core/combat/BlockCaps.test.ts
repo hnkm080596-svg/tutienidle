@@ -21,11 +21,8 @@ function makeEntity(blockChance: number): CombatEntity {
     currentHp: 1000,
     maxHp: 1000,
     currentMp: 0,
-    currentSwordIntent: 0,
     currentMomentum: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
+
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,

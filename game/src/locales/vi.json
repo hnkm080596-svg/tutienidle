@@ -148,6 +148,7 @@
           "skillCastCount": "{count} lần xuất chiêu",
           "skillJoin": "và",
           "skill": "Cần {skill} đạt {requirement}",
+          "kiemDaoCap": "Kiếm Đạo đã đạt trần của cảnh giới",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
         },
         "routePick": {
@@ -207,23 +208,31 @@
     },
     "quanKhi": {
       "title": "Quán Khí",
-      "routeNames": {
-        "batKiem": "Bạt Kiếm (Đơn Kiếm)",
-        "kiemTran": "Kiếm Trận (Đa Kiếm)"
+      "specNames": {
+        "kiemPho": "Kiếm Phổ",
+        "nguKiemDao": "Ngự Kiếm Đạo"
       },
       "sections": {
         "pathSelection": {
           "hint": "Chọn con đường tu luyện — quyết định này KHÔNG thể đổi lại."
         },
-        "kiemTuRoute": {
-          "hintPrefix": "Đường Kiếm Tu đã chốt:",
-          "hintSuffix": " — không thể đổi.",
-          "batKiemDescription": "Huy Kiếm đạt tầng 3 (10.000 lần trảm) nên khai mở Bạt Kiếm — một chiêu tụ lực, mạnh dần theo tầng Kiếm Ý diệt boss.",
-          "kiemTranDescription": "Huy Kiếm chưa đạt tầng 3 nên bước vào Kiếm Trận — kiếm trận tiến hóa theo cảnh giới, mở hiệu ứng on-hit theo cấp trận."
-        },
         "hiddenPath": {
           "description": "Linh Bạo đã đạt cực hạn — con đường ẩn hiện ra. Bộ kỹ năng: {kit}. Không Hành, không Hướng, không Thế — sức mạnh nằm ở phản ứng ngũ hành.",
           "warning": "Lựa chọn VĨNH VIỄN — không thể đổi lại, không quay về Pháp Tu thường."
+        },
+        "kiemTuSpec": {
+          "hintPrefix": "Chuyên tu Kiếm Tu:",
+          "hintSuffix": ".",
+          "hienDescription": "Kiếm Phổ — sắp sẵn tối đa chín ấn kiếm, mỗi đòn đánh thường đánh theo thứ tự ấn; chuỗi ấn khớp phổ sẽ bộc phát thành tuyệt chiêu.",
+          "nguDescription": "Ngự Kiếm Đạo — vạn kiếm ngự không, mỗi phi kiếm là một đòn độc lập; Kiếm Ý tích lũy rèn thành Kiếm Đạo vĩnh viễn."
+        },
+        "kiemPhoPreset": {
+          "title": "Kiếm Phổ — Thứ Tự Ấn Kiếm",
+          "hint": "Chạm một ấn để thêm vào phổ (tối đa 9); chạm ô trong phổ để gỡ ấn đó.",
+          "battleLocked": "Không thể chỉnh phổ giữa chiến đấu.",
+          "lockedHint": "Mở khóa tại {realm}.",
+          "appendAria": "Thêm {name} vào phổ",
+          "removeAria": "Gỡ {name} khỏi phổ"
         }
       },
       "actions": {

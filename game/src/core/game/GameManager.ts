@@ -161,7 +161,7 @@ import type {
   FreezeReason,
 } from '../battle/turn/CombatClock'
 import type { TokenState } from '../battle/turn/TurnToken'
-import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
+import type { TurnSkillDefinition, ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
@@ -536,6 +536,12 @@ export class GameManager {
       getActivePlayer: () => this.activePlayer,
       // Lazy read — turnBattleOps is constructed after progressionOps.
       isTurnBattleInProgress: () => this.turnBattleOps?.isTurnBattleInProgress() ?? false,
+      // Deferred closure - turnBattleOps is assigned later.
+      getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
+      // Deferred closures - realmAdvanceOps is constructed right after
+      // this and owns technique learn/equip (kiem_tu_an mode swap).
+      learnTechnique: techniqueId => this.realmAdvanceOps.learnTechnique(techniqueId),
+      equipTechnique: techniqueId => this.realmAdvanceOps.equipTechnique(techniqueId),
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({
@@ -763,6 +769,7 @@ export class GameManager {
       // (truong_the_<element>, 'no' route), never persisted.
       resolvePlayerMaxThe: (player) => resolveMaxThe(this.nodeRegistry, player),
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
+      getProgressionNodes: () => this.nodeRegistry.getAll(),
     })
 
     // Tick orchestration (C3 split) - constructed LAST because it reads
@@ -863,9 +870,8 @@ export class GameManager {
    * output is normalized to cooldownTurns 0 and no resource cost.
    *
    * Mortal/pham_nhan players resolve to learned `tram` (auto-granted at
-   * creation): the engine reports its casts as 'tram', which is what feeds
-   * skillCastCounts and the bat_kiem route gate at path choice. The_tu
-   * keeps the authored generic-melee mapping.
+   * creation): the engine reports its casts as 'tram', which feeds
+   * skillCastCounts. The_tu keeps the authored generic-melee mapping.
    */
   private resolvePlayerBasicAttack(player: PlayerData): TurnSkillDefinition {
     this.assertPhapTuAnKitLearned(player)
@@ -957,8 +963,12 @@ export class GameManager {
    * melee — no skill — until its kit is authored.
    */
   private authoredBasicSkillId(player: PlayerData): string | undefined {
+    // Kiem Tu Reimagined (spec 2026-09-15 K3) — tram is a MORTAL
+    // precursor: once any path is chosen it is no longer the basic.
+    // kiem_tu basics resolve through the dynamicBasic orb provider
+    // (Task 6); until then the static kiem_tu fallback applies.
     if (player.cultivationPath === 'kiem_tu') {
-      return 'tram'
+      return undefined
     }
 
     if (player.cultivationPath === 'phap_tu') {
@@ -1368,8 +1378,8 @@ export class GameManager {
    * UI submit choice cho lượt đang pause. Trả false nếu không có pause
    * (no-op an toàn — choice bị bỏ, không crash).
    */
-  submitTurnChoice(role: TurnSkillSlotRole): boolean {
-    return this.turnBattleOps.submitTurnChoice(role)
+  submitTurnChoice(choice: ForcedTurnChoice): boolean {
+    return this.turnBattleOps.submitTurnChoice(choice)
   }
 
   /**

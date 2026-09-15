@@ -124,12 +124,6 @@ export const TECHNIQUES: Technique[] = [
 
     element: 'metal',
 
-    resourceLabel: 'Kiếm Ý',
-
-    // Kiếm Ý CHIẾN ĐẤU dùng pool riêng (currentSwordIntent), không
-    // phải Nộ Khí relabel như Pháp Tu — xem CombatHud.vue.
-    usesSwordIntentResource: true,
-
     // Nội tại chiến đấu — passive_kiem_tam_lanh (xem data/skill/Skills.ts).
     innateSkillId: 'passive_kiem_tam_lanh_liet',
 
@@ -245,13 +239,11 @@ export const TECHNIQUES: Technique[] = [
     equipped: false,
   },
 
-  // Vạn Kiếm Quyết — rớt từ Elite/Boss (data/enemy/Enemies.ts's bandit).
-  // TOÀN BỘ giá trị cũ của tâm pháp này (breakthroughEffect: 3
-  // attribute + criticalDamage tích luỹ mỗi lần phá cảnh giới) đã mất
-  // hiệu lực sau khi bỏ breakthroughEffect — hiện KHÔNG còn tác dụng
-  // cơ học nào, chỉ còn tồn tại như 1 tâm pháp có thể trang bị/rớt
-  // được. Xem audit cuối phiên: cần quyết định xoá hẳn loot này hay
-  // gán lại ý nghĩa mới (vd node/skill riêng) khi làm "class chính thức".
+  // Van Kiem Quyet — Kiem Tu Reimagined (spec 2026-09-15 §7 kept-list):
+  // REPURPOSED as the Ngu Kiem Dao signature technique — learned and
+  // equipped by the kiem_tu_an conversion node, NOT lootable. Tier
+  // effect numbers kept from the orphaned version (content-pass owns
+  // the real tuning); the old breakthroughEffect block died earlier.
   {
     id: 'van_kiem_quyet',
 
@@ -260,7 +252,7 @@ export const TECHNIQUES: Technique[] = [
     icon: '/assets/techniques/van_kiem_quyet.png',
 
     description:
-      'Tâm pháp hiếm rơi từ Elite — vạn kiếm quy tông, ý chí kiếm đạo không gì lay chuyển.',
+      'Tâm pháp Ngự Kiếm Đạo — vạn kiếm quy tông, mỗi phi kiếm tự quyết sát chiêu.',
 
     // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — tâm pháp Elite hồi
     // đều cả hai chỉ số.

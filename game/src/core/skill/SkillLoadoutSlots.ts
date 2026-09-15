@@ -20,15 +20,6 @@ const REALM_SLOT_TABLE: Record<string, number> = {
 
 export const MAX_SKILL_LOADOUT_SLOTS = 5
 
-// Kiếm Tu tự lực (2026-08-28, task-6-brief.md) — slot RIÊNG dành cho
-// chiêu trận Kiếm Trận (kiem_tran_*, xem data/progression/KiemTuNodes.ts),
-// đứng NGOÀI 5 ô loadout chuẩn (getSkillLoadoutSlotCount() ở trên KHÔNG
-// đổi) — mua node trận kế tiếp tự thay chiêu trận cũ ở đúng ô này, không
-// cạnh tranh chỗ với skill người chơi tự chọn qua Loadout UI. Pháp Tu
-// Đạo Sắc: 2 path KHÔNG bao giờ tranh slot — chỉ Kiếm Tu dùng slot này
-// (Pháp Tu ult là nút riêng, không loadout slot — spec §2.4).
-export const KIEM_TRAN_SLOT_INDEX = 4
-
 export function getSkillLoadoutSlotCount(realmId: string): number {
   // realmId không hợp lệ → 1 slot (hành vi an toàn cũ cho scheduler —
   // Trảm của Phàm Nhân luôn có slot 0).
