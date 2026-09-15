@@ -864,6 +864,20 @@ export class GameManager {
     const authoredBasicId = this.authoredBasicSkillId(player)
     const skill = authoredBasicId ? this.skillManager.get(authoredBasicId) : undefined
 
+    // Review round-3 (MEDIUM): a REQUIRED phap basic that isn't learned
+    // is corrupt progression state (the element commit / An ritual grants
+    // it atomically). Fail loudly — degrading to generic melee would
+    // silently strip the path's kit.
+    if (
+      skill === undefined &&
+      authoredBasicId !== undefined &&
+      (player.cultivationPath === 'phap_tu' || player.cultivationPath === 'phap_tu_an')
+    ) {
+      throw new Error(
+        `[GameManager] required basic "${authoredBasicId}" is not learned for path "${player.cultivationPath}" — corrupt progression state`,
+      )
+    }
+
     if (skill) {
       const effective = this.skillSystem.getEffectiveSkill(skill)
       const unsupported = collectUnsupportedSkillSemantics(skill, effective)
