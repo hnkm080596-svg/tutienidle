@@ -108,6 +108,9 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
 // appear here.
 export const CULTIVATION_PATH_STAT_DOMAINS: Record<string, readonly StatDomain[]> = {
   phap_tu: ['phap_tu'],
+  // Phap Tu Reimagined Task 7 — the hidden path OWNS the phap_tu stat
+  // channel (it is a distinct path id, not a distinct domain).
+  phap_tu_an: ['phap_tu'],
   the_tu: ['the_tu'],
   kiem_tu: ['kiem_tu'],
   hoa_tu: ['hoa_tu'],

@@ -916,6 +916,12 @@ export class GameManager {
       return element ? PHAP_TU_KIT_IDS[element]?.[0] : undefined
     }
 
+    // Phap Tu An (Task 7) — its basic is the composite skill granted at
+    // the ritual; the element pick happens inside its resolution (T11).
+    if (player.cultivationPath === 'phap_tu_an') {
+      return 'van_phap_tuy_tam'
+    }
+
     // Future path ids (none exist in CultivationPathId today) author
     // generic melee, not tram.
     if (player.cultivationPath !== undefined) {
@@ -940,6 +946,19 @@ export class GameManager {
   private resolvePlayerSpecialUltimate(
     player: PlayerData,
   ): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition } {
+    // Phap Tu An (Task 7) — the special is the repeat-cast skill granted
+    // at the ritual; the ult slot is a passive (ngo_dao_hon_don), no
+    // ultimate TurnSkillDefinition.
+    if (player.cultivationPath === 'phap_tu_an') {
+      const specialSkill = this.skillManager.get('da_phap_lien_tuyen')
+
+      return {
+        special: specialSkill
+          ? toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill))
+          : undefined,
+      }
+    }
+
     if (player.cultivationPath !== 'phap_tu') {
       return {}
     }

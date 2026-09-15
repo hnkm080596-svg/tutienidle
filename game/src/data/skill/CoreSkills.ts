@@ -159,6 +159,102 @@ export const CORE_SKILLS: Skill[] = [
     equipped: false,
   },
 
+  // ------------------------------------------------------------------
+  // Phap Tu An kit (Task 7, phap-tu-reimagined) — DATA SHELLS only:
+  // ids, slots, targeting, labels for the ritual grant. Resolution
+  // semantics (composite element pick / repeat / multicast) land in the
+  // An-resolution task — the payloads below are placeholders.
+  // ------------------------------------------------------------------
+  {
+    id: 'van_phap_tuy_tam',
+
+    name: 'Vạn Pháp Tùy Tâm',
+
+    description: 'Vạn pháp tùy tâm — mỗi đòn hóa thành một nguyên tố bất định.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    cooldown: 1,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 1,
+
+        damageType: 'primordial',
+      },
+    ],
+
+    execution: { kind: 'attack_speed' },
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'da_phap_lien_tuyen',
+
+    name: 'Đa Pháp Liên Tuyên',
+
+    description: 'Đa pháp liên tuyên — pháp thuật cơ bản bắn ra liên tiếp nhiều lần.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    cooldown: 4,
+
+    target: 'enemy',
+
+    effects: [],
+
+    execution: { kind: 'cooldown' },
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'ngo_dao_hon_don',
+
+    name: 'Ngộ Đạo Hỗn Độn',
+
+    description: 'Ngộ đạo hỗn độn — pháp thuật cơ bản có thể tự phân chia thành nhiều luồng.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    cooldown: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
   // Há»a Tu (Plans/magicpathgeneral + Plans/FirePath, 2026-08-21) â€”
   // THAY Háº²N kit 3-skill+1-passive cÅ© (xich_viem_chuong/viem_hai/
   // bao_viem/passive_bao_viem_focus, Ä‘Ã£ xoÃ¡). Framework má»›i: 1 Active

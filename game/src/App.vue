@@ -290,6 +290,7 @@ gameManager.catalogOps.registerFormations(formations)
 gameManager.catalogOps.registerAlchemyRecipes(alchemyRecipes)
 gameManager.catalogOps.registerBuildings(buildings)
 gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
 gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 gameManager.catalogOps.registerQuests(QUESTS)
 

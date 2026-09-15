@@ -5,7 +5,7 @@ import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { CultivationPathId } from '../player/CultivationPathKit'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
-import { grantCultivationPathRealmReward as grantPathRealmReward } from '../player/CultivationPathSystem'
+import { grantCultivationPathRealmReward as grantPathRealmReward, isPhapTuAnEligible } from '../player/CultivationPathSystem'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID, BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
@@ -157,6 +157,16 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
+    // Phap Tu An (Task 7) — hidden path, offered only when linh_bao
+    // reached Lv3 at THIS ritual moment. Re-check BEFORE any side
+    // effect (technique learn/equip, cultivationPath write): an
+    // ineligible pick mutates nothing. The persisted record is
+    // cultivationPath itself — no eligibility flag is stored, and
+    // post-ritual casts can never reopen the option.
+    if (pathId === 'phap_tu_an' && !isPhapTuAnEligible(player)) {
+      return false
+    }
+
     const kit = CULTIVATION_PATH_KITS[pathId]
 
     player.cultivationPath = pathId
@@ -172,7 +182,12 @@ export class GameManagerRealmAdvanceOps {
     // kit.skillIds for Kiem Tu is intentionally unused (each route has a
     // single skill, granted in this branch) - the old 3-skill tuple stays
     // in CultivationPathKit.
-    if (pathId === 'kiem_tu') {
+    if (pathId === 'phap_tu_an') {
+      this.deps.progressionOps.learnSkill('van_phap_tuy_tam')
+      this.deps.progressionOps.learnSkill('da_phap_lien_tuyen')
+      this.deps.skillSystem.equipToSlot('van_phap_tuy_tam', 0)
+      this.deps.skillSystem.equipToSlot('da_phap_lien_tuyen', 1)
+    } else if (pathId === 'kiem_tu') {
       const tramCasts = player.skillCastCounts?.['tram'] ?? 0
       const route: KiemTuRoute = tramCasts >= HUY_KIEM_L3_CASTS ? 'bat_kiem' : 'kiem_tran'
 
