@@ -14,7 +14,10 @@ import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgressio
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
 import { createBaseStats } from '../../core/stats/StatBlock'
-import { migrateStatModifierStat } from '../../core/stats/statKeyMigration'
+import {
+  isRetiredStatKey,
+  migrateStatModifierStat,
+} from '../../core/stats/statKeyMigration'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
@@ -666,10 +669,12 @@ function migrateSocketedModifierStatKeys(
       ...migrated,
       [key]: {
         ...item,
-        modifiers: item.modifiers.map((modifier: unknown) =>
+        modifiers: item.modifiers.flatMap((modifier: unknown) =>
           isObject(modifier) && typeof modifier.stat === 'string'
-            ? { ...modifier, stat: migrateStatModifierStat(modifier.stat) }
-            : modifier,
+            ? isRetiredStatKey(modifier.stat)
+              ? []
+              : [{ ...modifier, stat: migrateStatModifierStat(modifier.stat) }]
+            : [modifier],
         ),
       },
     }

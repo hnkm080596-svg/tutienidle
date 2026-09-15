@@ -22,7 +22,7 @@ import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
-import { migrateStatModifier } from '../stats/statKeyMigration'
+import { migrateStatModifiers } from '../stats/statKeyMigration'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
@@ -464,13 +464,19 @@ function migrateLegacyTechniqueStatKeys(technique: Technique): void {
     }
   }
 
-  technique.combatModifiers = technique.combatModifiers?.map(migrateStatModifier)
+  if (technique.combatModifiers) {
+    technique.combatModifiers = migrateStatModifiers(technique.combatModifiers)
+  }
 }
 
 function migrateLegacySkillStatKeys(skill: Skill): void {
-  skill.passiveModifiers = skill.passiveModifiers?.map(migrateStatModifier)
+  if (skill.passiveModifiers) {
+    skill.passiveModifiers = migrateStatModifiers(skill.passiveModifiers)
+  }
   skill.specializations = skill.specializations?.map((specialization) => ({
     ...specialization,
-    passiveModifiersOverride: specialization.passiveModifiersOverride?.map(migrateStatModifier),
+    passiveModifiersOverride: specialization.passiveModifiersOverride
+      ? migrateStatModifiers(specialization.passiveModifiersOverride)
+      : specialization.passiveModifiersOverride,
   }))
 }

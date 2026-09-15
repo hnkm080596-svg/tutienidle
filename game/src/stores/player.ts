@@ -19,7 +19,7 @@ import { buildGameSave, computeRestoreIdentity, loadGame, type GameSave } from '
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import {
-  migrateStatModifier,
+  migrateStatModifiers,
   migrateStatRecordKeys,
 } from '@/core/stats/statKeyMigration'
 import type { GameManager } from '@/core/game/GameManager'
@@ -391,19 +391,15 @@ export const usePlayerStore = defineStore('player', {
       // Same rename pass for StatModifier.stat fields persisted on the
       // player slice — legacy equipment/talent/buff modifiers kept the
       // old keys ('attack' & co.) and would stay inert without remap.
-      restoredPlayer.modifiers = (restoredPlayer.modifiers ?? []).map((modifier) =>
-        modifier && typeof modifier === 'object' ? migrateStatModifier(modifier) : modifier,
-      )
-      restoredPlayer.externalModifiers = (restoredPlayer.externalModifiers ?? []).map(
-        (modifier) =>
-          modifier && typeof modifier === 'object' ? migrateStatModifier(modifier) : modifier,
+      // Modifiers on RETIRED stats (attackRange & co.) drop entirely.
+      restoredPlayer.modifiers = migrateStatModifiers(restoredPlayer.modifiers ?? [])
+      restoredPlayer.externalModifiers = migrateStatModifiers(
+        restoredPlayer.externalModifiers ?? [],
       )
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
         (effect) => ({
           ...effect,
-          modifiers: (effect.modifiers ?? []).map((modifier) =>
-            modifier && typeof modifier === 'object' ? migrateStatModifier(modifier) : modifier,
-          ),
+          modifiers: migrateStatModifiers(effect.modifiers ?? []),
         }),
       )
 

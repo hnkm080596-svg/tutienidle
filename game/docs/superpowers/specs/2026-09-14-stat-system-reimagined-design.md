@@ -170,7 +170,7 @@ inventory entirely, §3.5/D16. Reach lives on skills.)
 
 | Stat | Note |
 |---|---|
-| `maxMp` | MP pool — Phap Tu resource AND shield pool |
+| `maxMp` | MP pool — Phap Tu shield pool (defensive resource, §5) |
 | `manaRegenPerTurn` (renamed from `manaRegenPerSecond`) | own-turn cadence (M8 already ticks it per-turn) |
 | `manaShieldPercent` | absorb ratio — authored via Phap Tu nodes through the gate; universal sources can no longer grant it |
 | `reactionEffectPercent` | reaction damage amp (D19) — reactions only exist in the hidden Phap Tu path |
@@ -344,11 +344,16 @@ Complete lever table — every stat's DoT interaction, explicitly:
 - `wardBreakDamagePercent` fires when the ward pool reaches 0 during
   absorb — unchanged (hit path only).
 
-## 5. MP as Phap Tu resource — semantics
+## 5. MP as Phap Tu defensive resource — semantics
 
-- MP is simultaneously the casting resource (for Phap Tu skills that cost
-  it — D3 allows resource requirements per skill) and the shield pool.
-- Post-ward hit damage is redirected into MP at the authored
+> **Amended (2026-09-15) per Phap Tu Reimagined ruling:** MP is the
+> SHIELD pool only — no skill spends MP. Phap Tu's combat resource is a
+> path-specific pool (The / per-skill costs under D3). The only
+> `resourceType: 'mana'` skills (`phap_tu_reaction_special`,
+> `phap_tu_reaction_ultimate`) are legacy machinery owned by the Phap Tu
+> rework, not a live MP sink.
+
+- MP is the mana-shield pool: post-ward hit damage is redirected into MP at the authored
   `manaShieldPercent` ratio until MP reaches 0; remainder hits HP.
   (`manaShieldPercent` gated to `phap_tu`; nodes author the ratio.)
 - MP regen ticks on the owner's turn via the existing vitals authority
@@ -373,15 +378,19 @@ Complete lever table — every stat's DoT interaction, explicitly:
   ratio into every piece of content.
 
   `deriveDomainModifiers` contract: a domain may register a
-  `deltaDeriver(attributeDeltas) -> StatModifier[]` with the stats
-  module. `calculateEffectiveStats` invokes every registered deriver in
-  registration order after the universal delta derivation; a domain
-  that registers nothing is a no-op (`production`, `cultivation`, etc.
-  have no attribute-reactive stats and stay silent). Only `phap_tu`
-  registers initially.
-- MP cost is already Phap Tu-exclusive in content: the only
-  `resourceType: 'mana'` skills in `data/` are
-  `phap_tu_reaction_special` and `phap_tu_reaction_ultimate`.
+  `deltaDeriver(attributeDeltas, context) -> StatModifier[]` with the
+  stats module. `calculateEffectiveStats` invokes a domain's deriver
+  only when the entity's `activeDomains` includes that domain (the
+  battle adapter declares it from cultivationPath; entities without a
+  domain declaration — enemies, companions — run no domain derivers).
+  This scopes attunement->MP to Phap Tu entities: a non-Phap-Tu entity
+  receiving a mid-battle attunement buff cannot leak `maxMp` /
+  `manaRegenPerTurn`. A domain that registers nothing is a no-op
+  (`production`, `cultivation`, etc. have no attribute-reactive stats
+  and stay silent). Only `phap_tu` registers initially.
+- No live content spends MP: the only `resourceType: 'mana'` skills in
+  `data/` are `phap_tu_reaction_special` and `phap_tu_reaction_ultimate`,
+  both retired by the Phap Tu rework.
 - Enemy Phap Tu exists: authored enemy `baseStats` may set `maxMp`,
   `manaShieldPercent`, `manaRegenPerTurn` directly — the gate governs
   modifiers, not base values (§2). Enemy *modifiers* (buffs, scaling)
@@ -478,7 +487,8 @@ Complete lever table — every stat's DoT interaction, explicitly:
   the remedy is authored `ailmentPotencyPercent`, not restoring the
   generic amp.
 - **MP-cost note:** `resourceType: 'mana'` exists only on the two Phap
-  Tu reaction skills — no content migration needed for skill costs.
+  Tu reaction skills, which the Phap Tu rework retires — no skill-cost
+  migration needed, and no new content may spend MP (MP = shield only).
 - **Derivation coefficients are out of scope:** this spec fixes the
   derivation TOPOLOGY (which attribute feeds which stat, which stat is
   gated, which pipeline layer applies where). Per-point coefficients

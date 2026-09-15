@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   migrateStatModifier,
+  migrateStatModifiers,
   migrateStatModifierStat,
   migrateStatRecordKeys,
 } from './statKeyMigration'
@@ -57,9 +58,9 @@ describe('migrateStatRecordKeys', () => {
 
 // StatModifier.stat fields persisted outside baseStats (player.modifiers,
 // equipment mainStat, socketed talisman/formation copies) carry the same
-// legacy keys. Unlike record keys the retired stats stay valid while
-// StatType keeps them, so only the renames apply — everything else
-// passes through untouched.
+// legacy keys. The string-level helper only renames: callers that keep
+// the result (equipment mainStat validation) WANT a retired key to fail
+// the downstream STAT_TYPES check so the entry is flagged/discarded.
 describe('migrateStatModifierStat', () => {
   it('remaps legacy stat keys to their new names', () => {
     expect(migrateStatModifierStat('attack')).toBe('might')
@@ -101,5 +102,48 @@ describe('migrateStatModifier', () => {
     }
 
     expect(migrateStatModifier(modifier)).toBe(modifier)
+  })
+
+  it('returns null for retired stat keys — no zombie modifiers survive restore', () => {
+    const retired: StatModifier = {
+      id: 'm1',
+      sourceId: 's1',
+      sourceType: 'equipment',
+      stat: 'attackRange' as StatModifier['stat'],
+      flat: 5,
+    }
+
+    expect(migrateStatModifier(retired)).toBeNull()
+    expect(
+      migrateStatModifier({ ...retired, stat: 'maxMpPercent' as StatModifier['stat'] }),
+    ).toBeNull()
+    expect(
+      migrateStatModifier({
+        ...retired,
+        stat: 'poisonRecoveryPercent' as StatModifier['stat'],
+      }),
+    ).toBeNull()
+  })
+
+  it('migrateStatModifiers drops retired entries and keeps migrated ones', () => {
+    const keep: StatModifier = {
+      id: 'm1',
+      sourceId: 's1',
+      sourceType: 'equipment',
+      stat: 'attack' as StatModifier['stat'],
+      flat: 10,
+    }
+    const drop: StatModifier = {
+      id: 'm2',
+      sourceId: 's1',
+      sourceType: 'equipment',
+      stat: 'attackRange' as StatModifier['stat'],
+      flat: 5,
+    }
+
+    const migrated = migrateStatModifiers([keep, drop])
+
+    expect(migrated).toHaveLength(1)
+    expect(migrated[0]).toMatchObject({ id: 'm1', stat: 'might' })
   })
 })

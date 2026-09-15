@@ -55,16 +55,28 @@ export function migrateStatRecordKeys(record: Record<string, number>): Stats {
 
 // StatModifier.stat fields persisted outside baseStats (player.modifiers,
 // persistentTimedEffects, equipment mainStat, socketed talisman/formation
-// copies) carry the same legacy keys. Unlike record keys a retired stat
-// is still structurally valid while StatType keeps it, so only the
-// renames apply here — anything else passes through untouched.
+// copies) carry the same legacy keys. This string-level helper only
+// renames: callers that keep the raw result (equipment mainStat
+// validation) WANT a retired key to survive so the downstream STAT_TYPES
+// check can flag/discard the entry instead of silently accepting it.
 export function migrateStatModifierStat(stat: string): string {
   return STAT_KEY_RENAMES[stat] ?? stat
 }
 
+export function isRetiredStatKey(stat: string): boolean {
+  return STAT_KEY_DROPS.has(stat)
+}
+
 // Same migration for a typed StatModifier — returns the input unchanged
-// (same reference) when neither key nor domain needs a touch.
-export function migrateStatModifier(modifier: StatModifier): StatModifier {
+// (same reference) when neither key nor domain needs a touch, and NULL
+// when the modifier carries a retired stat: the key no longer exists in
+// StatType, so restoring it would persist an inert zombie modifier into
+// state/saves forever.
+export function migrateStatModifier(modifier: StatModifier): StatModifier | null {
+  if (STAT_KEY_DROPS.has(modifier.stat)) {
+    return null
+  }
+
   const stat = migrateStatModifierStat(modifier.stat) as StatType
 
   // QA-2026-09-14-001: saves persisted before the domain tag existed can
@@ -81,4 +93,24 @@ export function migrateStatModifier(modifier: StatModifier): StatModifier {
   }
 
   return { ...modifier, stat, ...(domain === undefined ? {} : { domain }) }
+}
+
+// List-level helper for restore call sites: renames/backfills live
+// modifiers, drops retired-stat zombies, keeps non-object passthrough.
+export function migrateStatModifiers(modifiers: StatModifier[]): StatModifier[] {
+  const migrated: StatModifier[] = []
+
+  for (const modifier of modifiers) {
+    if (!modifier || typeof modifier !== 'object') {
+      migrated.push(modifier)
+      continue
+    }
+
+    const result = migrateStatModifier(modifier)
+    if (result !== null) {
+      migrated.push(result)
+    }
+  }
+
+  return migrated
 }

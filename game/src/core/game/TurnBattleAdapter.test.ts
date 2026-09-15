@@ -43,6 +43,25 @@ describe('toTurnBattleParticipant adapter', () => {
 
     expect(participant.alive).toBe(false)
   })
+
+  it('phap_tu buildId grants the phap_tu active domain', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, 'phap_tu')
+
+    expect(participant.activeDomains?.has('phap_tu')).toBe(true)
+  })
+
+  it('kiem_tu buildId grants kiem_tu — and NOT phap_tu', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, 'kiem_tu')
+
+    expect(participant.activeDomains?.has('kiem_tu')).toBe(true)
+    expect(participant.activeDomains?.has('phap_tu')).toBe(false)
+  })
+
+  it('no buildId (enemy/companion) leaves activeDomains undefined', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC)
+
+    expect(participant.activeDomains).toBeUndefined()
+  })
 })
 
 
