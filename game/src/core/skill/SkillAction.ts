@@ -18,8 +18,6 @@ export interface DealDamageAction {
 
   attributeScaling?: { attributes: StatType[]; ratioPerPoint: number }[]
 
-  swordIntentDamageRatio?: number
-
   realmDamageRatio?: number
 
   manaScalingRatio?: number
@@ -61,10 +59,9 @@ export interface ApplyDebuffAction {
 }
 
 // Named resource pools every path can grant/consume — mirrors the fields
-// already on CombatEntity (currentSwordIntent, currentMomentum,
+// already on CombatEntity (currentMomentum,
 // currentHoaThe, currentThoThe, currentKimThe, currentHuyetPha).
 export type SkillResourcePoolKey =
-  | 'swordIntent'
   | 'momentum'
   | 'hoaThe'
   | 'thoThe'
@@ -111,7 +108,7 @@ export interface ConsumeForDamageAction {
 export interface SpawnZoneAction {
   type: 'spawnZone'
 
-  zoneKind: 'lava' | 'sword'
+  zoneKind: 'lava'
 
   charges: number
 

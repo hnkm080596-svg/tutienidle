@@ -50,12 +50,12 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
     })
   })
 
-  it('no route lock: kiemTuRoute stays undefined regardless of tram casts', () => {
+  it('no route lock: tram cast counts never alter the fresh hien state', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
-    expect(player.kiemTuRoute).toBeUndefined()
     expect(player.kiemTu?.mode).toBe('hien')
+    expect(player.kiemTu).toEqual(freshKiemTuState())
   })
 
   it('grants NO legacy kiem-tran/bat-kiem skill — hien basics come from the orb preset', () => {

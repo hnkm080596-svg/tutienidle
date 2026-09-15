@@ -73,7 +73,7 @@ describe('describeSkillMechanics (Task 12 tooltip)', () => {
     expect(half[0]!.text).toContain('50% tầng Bỏng')
   })
 
-  it('E-5 grantsZone + zoneElement → dòng vùng theo hành; grantsSwordZone cũ → Kim', () => {
+  it('E-5 grantsZone + zoneElement → dòng vùng theo hành; không khai → Kim', () => {
     const zone = describeSkillMechanics(
       skillWith([{ type: 'damage', value: 5, grantsZone: true, zoneElement: 'fire' }]),
     )
@@ -81,7 +81,7 @@ describe('describeSkillMechanics (Task 12 tooltip)', () => {
     expect(zone[0]!.text).toContain('vùng Hỏa')
 
     const sword = describeSkillMechanics(
-      skillWith([{ type: 'damage', value: 5, grantsSwordZone: true }]),
+      skillWith([{ type: 'damage', value: 5, grantsZone: true }]),
     )
 
     expect(sword[0]!.text).toContain('vùng Kim')

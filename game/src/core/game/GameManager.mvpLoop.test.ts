@@ -60,9 +60,9 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
-    // Route-lock Kiếm Tu (spec 2026-08-29) — chooseCultivationPath giờ
-    // purchaseNode('kiem_tran_luong_nghi') cho route Kiếm Trận nên PHẢI
-    // đăng ký cây node (game thật đăng ký KIEM_TU_NODES qua App.vue).
+    // Kiem Tu Reimagined — KIEM_TU_NODES is the live node tree; register
+    // it so node purchases in this loop behave like the real game (App.vue
+    // registers the same table).
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 
     const enrageBuff: BuffDefinition = {

@@ -25,7 +25,7 @@ import type { DamageScalingConfig } from '../combat/DamageCalculator'
 /**
  * Thay thế MissileDamageInfo — cùng shape, tên trung lập hành động.
  * `scaling` (R3 re-audit, AR-03 gap) — carries the authored per-skill
- * attributeScaling/manaScalingRatio/swordIntentDamageRatio through to
+ * attributeScaling/manaScalingRatio through to
  * CombatSystem.resolveActionHit(), which is the only place with a live
  * `source` entity to evaluate them against.
  */

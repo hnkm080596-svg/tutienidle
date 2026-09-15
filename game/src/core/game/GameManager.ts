@@ -816,9 +816,8 @@ export class GameManager {
    * resource cost.
    *
    * Mortal/pham_nhan players resolve to learned `tram` (auto-granted at
-   * creation): the engine reports its casts as 'tram', which is what feeds
-   * skillCastCounts and the bat_kiem route gate at path choice. The_tu
-   * keeps the authored generic-melee mapping.
+   * creation): the engine reports its casts as 'tram', which feeds
+   * skillCastCounts. The_tu keeps the authored generic-melee mapping.
    */
   private resolvePlayerBasicAttack(player: PlayerData): TurnSkillDefinition {
     const authoredBasicId = this.authoredBasicSkillId(player)

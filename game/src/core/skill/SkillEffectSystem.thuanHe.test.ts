@@ -30,15 +30,11 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentSwordIntent: 0,
     currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,
     timeSinceLastBleedProc: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
@@ -348,90 +344,6 @@ describe("SkillEffectSystem — E-4: 'hitCount' (N missile cố định)", () =>
     system.apply({ type: 'damage', value: 1, hitCount: 8 }, source, target, ctx)
 
     expect(hits).toBe(3)
-  })
-})
-
-describe("SkillEffectSystem — E-5: 'grantsZone' tổng quát (element)", () => {
-  it('grantsZone + zoneElement fire → spawnSwordZone nhận element fire, công thức damage/tick giữ nguyên', () => {
-    const system = new SkillEffectSystem()
-    const source = createCombatant({ id: 'source', type: 'player', realmIndex: 0 })
-    source.stats.might = 100
-    const target = createCombatant({ id: 'target', x: 8, row: 2 })
-    const spawnSwordZone = vi.fn()
-    const ctx = createContext({ spawnSwordZone })
-
-    system.apply(
-      {
-        type: 'damage',
-        value: 2,
-        grantsZone: true,
-        zoneElement: 'fire',
-        swordZoneCharges: 6,
-        swordZoneTickInterval: 1,
-        swordZoneDamageRatio: 0.5,
-      },
-      source,
-      target,
-      ctx,
-    )
-
-    expect(spawnSwordZone).toHaveBeenCalledTimes(1)
-    expect(spawnSwordZone).toHaveBeenCalledWith({
-      ownerId: 'source',
-      row: 2,
-      column: 8,
-      laneRadius: 0,
-      columnRadius: 1,
-      charges: 6,
-      tickInterval: 1,
-      // finalMultiplier 2 × ratio 0.5 × might 100 = 100 — công thức cũ.
-      damagePerTick: 100,
-      element: 'fire',
-    })
-  })
-
-  it('grantsSwordZone (Kiếm Tu) → element metal như cũ', () => {
-    const system = new SkillEffectSystem()
-    const source = createCombatant({ id: 'source', type: 'player' })
-    const target = createCombatant({ id: 'target', x: 8, row: 2 })
-    const spawnSwordZone = vi.fn()
-    const ctx = createContext({ spawnSwordZone })
-
-    system.apply({ type: 'damage', value: 1, grantsSwordZone: true }, source, target, ctx)
-
-    expect(spawnSwordZone).toHaveBeenCalledTimes(1)
-    expect(spawnSwordZone.mock.calls[0]![0]).toMatchObject({ element: 'metal' })
-  })
-
-  it('grantsZone không zoneElement → mặc định metal', () => {
-    const system = new SkillEffectSystem()
-    const source = createCombatant({ id: 'source', type: 'player' })
-    const target = createCombatant({ id: 'target', x: 8, row: 2 })
-    const spawnSwordZone = vi.fn()
-    const ctx = createContext({ spawnSwordZone })
-
-    system.apply({ type: 'damage', value: 1, grantsZone: true }, source, target, ctx)
-
-    expect(spawnSwordZone.mock.calls[0]![0]).toMatchObject({ element: 'metal' })
-  })
-
-  it('target chết → không spawn zone (cả 2 flag)', () => {
-    const system = new SkillEffectSystem()
-    const source = createCombatant({ id: 'source', type: 'player' })
-    const target = createCombatant({ id: 'target', x: 8, row: 2 })
-    const spawnSwordZone = vi.fn()
-    const ctx = createContext({
-      spawnSwordZone,
-      fireHit: () => {
-        target.currentHp = 0
-        target.alive = false
-        return { landed: true }
-      },
-    })
-
-    system.apply({ type: 'damage', value: 1, grantsZone: true, zoneElement: 'wood' }, source, target, ctx)
-
-    expect(spawnSwordZone).not.toHaveBeenCalled()
   })
 })
 

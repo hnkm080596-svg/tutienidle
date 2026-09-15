@@ -19,7 +19,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       name: 'Test Unlock',
       type: 'major',
       insightCost: 2,
-      effect: { unlocksSkillIds: ['tru_tien_kiem_tran'] },
+      effect: { unlocksSkillIds: ['tram'] },
     }
 
     gameManager.catalogOps.registerProgressionNodes([node])
@@ -28,13 +28,13 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
 
     player.skillInsight = 5
 
-    expect(gameManager.skillManager.has('tru_tien_kiem_tran')).toBe(false)
+    expect(gameManager.skillManager.has('tram')).toBe(false)
 
     expect(gameManager.progressionOps.purchaseNode('unlock_tru_tien', player)).toBe(true)
 
-    expect(gameManager.skillManager.has('tru_tien_kiem_tran')).toBe(true)
+    expect(gameManager.skillManager.has('tram')).toBe(true)
     // learn() KHÔNG tự equip — đúng tinh thần "học" khác "trang bị".
-    expect(gameManager.skillManager.get('tru_tien_kiem_tran')?.equipped).toBe(false)
+    expect(gameManager.skillManager.get('tram')?.equipped).toBe(false)
     expect(player.skillInsight).toBe(3)
     expect(player.purchasedNodeIds).toEqual(['unlock_tru_tien'])
   })
@@ -57,7 +57,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       name: 'Test Unlock',
       type: 'major',
       insightCost: 100,
-      effect: { unlocksSkillIds: ['tru_tien_kiem_tran'] },
+      effect: { unlocksSkillIds: ['tram'] },
     }
 
     gameManager.catalogOps.registerProgressionNodes([node])
@@ -67,7 +67,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     player.skillInsight = 5
 
     expect(gameManager.progressionOps.purchaseNode('unlock_expensive', player)).toBe(false)
-    expect(gameManager.skillManager.has('tru_tien_kiem_tran')).toBe(false)
+    expect(gameManager.skillManager.has('tram')).toBe(false)
     expect(player.skillInsight).toBe(5)
   })
 

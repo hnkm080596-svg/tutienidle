@@ -11,9 +11,9 @@ import { KIEM_PHO_COMBOS } from './KiemPhoCombos'
 // Nguồn dữ liệu:
 // - id trùng SKILLS (Skills.ts) → ĐỒNG BỘ name/description từ bảng Skill
 //   thật (SKILLS_BY_ID lookup lúc khởi tạo — không hardcode 2 nơi).
-// - id authored riêng cho turn engine (generic_physical, bat_kiem_thuat,
-//   water_surge, reaction path) → author trực tiếp tại đây, kèm số liệu
-//   đối chiếu file authored tương ứng.
+// - id authored riêng cho turn engine (generic_physical, ngu_kiem_thuat,
+//   orb_* / kiem_combo_*, water_surge, reaction path) → author trực tiếp
+//   tại đây, kèm số liệu đối chiếu file authored tương ứng.
 
 /** Display metadata hiển thị cho 1 TurnSkillDefinition trong HUD. */
 export interface TurnSkillDisplayMeta {
@@ -59,22 +59,6 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   generic_physical: {
     name: 'Vật Công',
     description: 'Tấn công vật lý cơ bản bằng sức mạnh thân thể.',
-  },
-
-  // Kiếm Tu special — Bạt Kiếm Thuật (BatKiemThuat.ts: charge 3 lượt,
-  // damage Trảm theo số lượt tích × 3, cooldown 5).
-  bat_kiem_thuat: {
-    name: 'Bạt Kiếm Thuật',
-    description: 'Thế: tích lực 3 lượt. Trảm: gây sát thương theo số lượt tích luỹ. Hồi 5 lượt sau Trảm.',
-  },
-
-  // Kiem Tu ultimate - Tru Tien Kiem Tran (BatKiemThuat.ts: burns 100
-  // The, physical x5 single target, cooldown 8). The turn version is
-  // re-authored (no lingering sword field), so meta is authored directly
-  // here instead of syncing the legacy Skills.ts description.
-  tru_tien_kiem_tran: {
-    name: 'Tru Tiên Kiếm Trận',
-    description: 'Đốt 100 Kiếm Thế — nhất trảm diệt một mục tiêu, sát thương vật lý ×5. Hồi 8 lượt.',
   },
 
   // Enemy special — Thủy Giáp Long "Nuốt Sáng" (TurnBasicAttacks.ts:

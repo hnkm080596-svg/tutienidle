@@ -170,9 +170,9 @@ export class CombatSystem {
     const isCritical = options.critical !== undefined ? options.critical : this.rollCritical(source, target)
 
     // R3 re-audit (AR-03 gap) — authored per-skill scaling (attributeScaling/
-    // manaScalingRatio/swordIntentDamageRatio, carried on ActionDamageInfo.
+    // manaScalingRatio, carried on ActionDamageInfo.
     // scaling since the converter used to drop them) plus the general
-    // skillDamagePercent stat (equipment/node/Kiếm Ý tier), which previously
+    // skillDamagePercent stat (equipment/node), which previously
     // had no live consumer in the turn engine at all — same formula
     // SkillEffectSystem.apply() used for the older, non-turn execution path.
     const scalingBonus = calculateScalingBonus(source, damage.scaling)

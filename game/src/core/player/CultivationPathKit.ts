@@ -99,10 +99,9 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
     name: 'Kiếm Tu — Ngự Kiếm Tâm Kinh',
     element: 'metal',
     techniqueId: 'ngu_kiem',
-    // Kiếm Thế / Kiếm Ý (spec 2026-08-29) — KHÔNG còn tuple 3-skill:
-    // route chốt vĩnh viễn trong chooseCultivationPath theo tram Lv3,
-    // mỗi route ĐÚNG 1 active skill (Lưỡng Nghi Kiếm Trận / Bạt Kiếm
-    // Thức) vào slot 0, ult qua node + nút manual riêng.
+    // Kiem Tu Reimagined (spec 2026-09-15) — no authored skill grants:
+    // hien basics come from the Kiem Pho orb preset (KiemPhoProvider);
+    // the hidden ngu conversion lives on the kiem_tu_an node.
   },
 }
 

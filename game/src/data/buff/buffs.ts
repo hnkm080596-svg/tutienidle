@@ -1,6 +1,5 @@
 import type { BuffDefinition } from '@/core/buff/BuffDefinition'
 import { LEGACY_BUFFS } from './LegacyBuffs'
-import { KIEM_TRAN_BUFFS } from './KiemTranBuffs'
 import { KIEM_PHO_BUFFS } from './KiemPhoBuffs'
 import { THUAN_HE_BUFFS } from './ThuanHeBuffs'
 import { TALENT_BUFFS } from './TalentBuffs'
@@ -130,7 +129,6 @@ export const buffs: BuffDefinition[] = [
   TRAN_PHAP_NGU_HANH_BUFF,
   TRAN_PHAP_CUU_CUNG_BUFF,
   ...LEGACY_BUFFS,
-  ...KIEM_TRAN_BUFFS,
   ...KIEM_PHO_BUFFS,
   ...THUAN_HE_BUFFS,
   ...TALENT_BUFFS,

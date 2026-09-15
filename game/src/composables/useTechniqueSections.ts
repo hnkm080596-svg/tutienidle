@@ -48,10 +48,6 @@ export function buildTechniqueSections(
     combatRows.push({ label: 'Tài nguyên', value: technique.resourceLabel })
   }
 
-  if (technique.usesSwordIntentResource) {
-    combatRows.push({ label: 'Nguồn lực', value: 'Kiếm Ý — tầng vĩnh viễn theo boss diệt + pool trong trận' })
-  }
-
   const tierEffect = technique.tierEffects?.[
     getTechniqueTier(techniqueInsight, getTechniqueInsightTotalRequired(technique))
   ]

@@ -38,10 +38,8 @@ const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
-// Final review fix (Critical #1) — Kiếm Tu path cũng có Node Tree thật
-// (KiemTuNodes.ts's 2 cây kiem_tran/bat_kiem), chỉ trước đây không path
-// nào wire showTree cho kiem_tu nên purchaseNode() (chỉ gọi được qua
-// NodeInspector.vue, chỉ render khi showTree) hoàn toàn unreachable.
+// Kiem Tu also has a real Node Tree (KiemTuNodes.ts). purchaseNode() is
+// only reachable through NodeInspector.vue, which renders when showTree.
 const showTree = computed(() => player.cultivationPath === 'phap_tu' || player.cultivationPath === 'kiem_tu')
 
 // ---- Nhánh phap_tu (Hành -> Node Tree) ----

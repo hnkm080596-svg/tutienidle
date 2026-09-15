@@ -282,8 +282,8 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       targeting: { shape: 'line' },
       presetId: 'metal_slash',
     },
-    // Tuyet Kiem Nhat Thu: two-turn The charge, then the resolving slash
-    // (same chargeTurns primitive as bat_kiem_thuat).
+    // Tuyet Kiem Nhat Thu: two-turn charge, then the resolving slash
+    // (generic chargeTurns primitive).
     ultimate: {
       id: 'van_du_kiem_khach_ultimate',
       cooldownTurns: 6,

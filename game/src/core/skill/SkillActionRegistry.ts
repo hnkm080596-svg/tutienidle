@@ -5,16 +5,15 @@ import type { ActionRuntimeContext, SkillAction, SkillActionType } from './Skill
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
 import type { TriggerContextMap, TriggerType } from './SkillTrigger'
-import { MAX_SWORD_INTENT, MAX_MOMENTUM, MAX_HOA_THE, MAX_THO_THE, MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
+import { MAX_MOMENTUM, MAX_HOA_THE, MAX_THO_THE, MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
 import type { SkillResourcePoolKey } from './SkillAction'
 import type { ActionImpactEvent } from '../battle/BattleEvents'
 
 // Shared by grantResource (Task 5) and consumeResource (Task 6) — every
 // named pool's CombatEntity field and hard cap. Pools with no cap in
-// today's game (none currently) would map to Infinity; all 6 current
+// today's game (none currently) would map to Infinity; all 5 current
 // pools have one.
 export const RESOURCE_POOL_FIELD: Record<SkillResourcePoolKey, keyof CombatEntity> = {
-  swordIntent: 'currentSwordIntent',
   momentum: 'currentMomentum',
   hoaThe: 'currentHoaThe',
   thoThe: 'currentThoThe',
@@ -23,7 +22,6 @@ export const RESOURCE_POOL_FIELD: Record<SkillResourcePoolKey, keyof CombatEntit
 }
 
 export const RESOURCE_POOL_MAX: Record<SkillResourcePoolKey, number> = {
-  swordIntent: MAX_SWORD_INTENT,
   momentum: MAX_MOMENTUM,
   hoaThe: MAX_HOA_THE,
   thoThe: MAX_THO_THE,
@@ -46,7 +44,7 @@ export type ActionExecutor<A extends SkillAction = SkillAction> = (
 
 // Ported verbatim from SkillEffectSystem.apply()'s case 'damage' — same
 // scaling formula, same fireHit contract. consumesAilmentId/
-// consumesWardForDamage/grantsSwordZone stay on the OLD SkillEffect path
+// consumesWardForDamage/grantsZone stay on the OLD SkillEffect path
 // until their own dedicated actions (consumeForDamage/spawnZone) are built
 // in a later plan; dealDamage only owns the plain-hit subset.
 const dealDamage: ActionExecutor<Extract<SkillAction, { type: 'dealDamage' }>> = (
@@ -64,7 +62,6 @@ const dealDamage: ActionExecutor<Extract<SkillAction, { type: 'dealDamage' }>> =
           : entry.ratioPerPoint * Math.max(...entry.attributes.map((stat) => source.stats[stat]))),
       0,
     ) +
-    (action.swordIntentDamageRatio ? action.swordIntentDamageRatio * source.currentSwordIntent : 0) +
     (action.realmDamageRatio ? action.realmDamageRatio * source.realmIndex : 0) +
     (action.manaScalingRatio ? action.manaScalingRatio * source.stats.maxMp : 0) +
     (action.skillExperienceRatio
@@ -231,18 +228,7 @@ const consumeForDamage: ActionExecutor<Extract<SkillAction, { type: 'consumeForD
 const spawnZone: ActionExecutor<Extract<SkillAction, { type: 'spawnZone' }>> = (action, source, target, ctx) => {
   const anchor = action.position === 'source' ? source : target
 
-  if (action.zoneKind === 'sword' && ctx.spawnSwordZone) {
-    ctx.spawnSwordZone({
-      ownerId: source.id,
-      row: anchor.row,
-      column: Math.round(anchor.x),
-      laneRadius: 0,
-      columnRadius: 1,
-      charges: action.charges,
-      tickInterval: action.tickInterval,
-      damagePerTick: action.damageRatio * source.stats.might,
-    })
-  } else if (action.zoneKind === 'lava' && ctx.spawnLavaZone) {
+  if (action.zoneKind === 'lava' && ctx.spawnLavaZone) {
     ctx.spawnLavaZone({
       ownerId: source.id,
       row: anchor.row,

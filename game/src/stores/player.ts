@@ -193,8 +193,7 @@ export const usePlayerStore = defineStore('player', {
       const gained = this.cultivation - before
 
       // Đếm tu vi dồn suốt đời (không bị đột phá tiêu hao) — nuôi
-      // technique tier; tier Kiếm Ý sau spec 2026-08-29 đọc
-      // bossKillCount (xem KiemYSystem.ts).
+      // technique tier.
       this.totalCultivationGained += gained
 
       // Thiên phú Ngộ Đạo (talent-direction-choice-plan §6) — đổi tu vi

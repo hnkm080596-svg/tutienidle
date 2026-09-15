@@ -95,7 +95,7 @@ describe('StatusTooltip (buff bar)', () => {
   })
 
   it('show permanent → "×3 · vĩnh viễn" (không giây)', () => {
-    tooltip.show(100, 100, 'player:onhit_x:src', makeData({ permanent: true, remainingTime: undefined }))
+    tooltip.show(100, 100, 'player:vinh_cuu:src', makeData({ permanent: true, remainingTime: undefined }))
 
     const texts = scene.children.filter((child) => child.text !== '')
 

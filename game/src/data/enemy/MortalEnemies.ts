@@ -85,8 +85,10 @@ export const MORTAL_ENEMIES: Enemy[] = [
     // GUARANTEED Phá Cảnh Tâm Pháp vì Boss KHÔNG spawn ngẫu nhiên. Giờ
     // diễn đạt qua signatureDrops; drop thường đến từ bảng stage/family.
     signatureDrops: [
-      { kind: 'technique', itemId: 'van_kiem_quyet', chance: 0.2, requiresModifier: 'tinh_anh' },
-      { kind: 'technique', itemId: 'van_kiem_quyet', chance: 1, requiresModifier: 'boss' },
+      // van_kiem_quyet was removed from this table in the Kiem Tu
+      // Reimagined teardown (spec 2026-09-15 §7): it is the Ngu Kiem
+      // Dao signature technique now — granted by the kiem_tu_an node,
+      // never lootable.
       // Đột Phá Trúc Cơ (Phase 3) — 0.01%, mức thấp nhất từng có trong
       // codebase, có chủ đích (xem data/materials/materials.ts).
       { kind: 'material', itemId: 'great_dao_seed', amount: { min: 1, max: 1 }, chance: 0.0001, requiresModifier: 'boss' },

@@ -42,47 +42,22 @@ export interface CombatEntity {
   // core/player/Player.ts).
   currentMp: number
 
-  // Kiếm Tu (2026-08-15) — Kiếm Ý CHIẾN ĐẤU, state "sống" như
-  // currentRage nhưng pool RIÊNG (0-9999, xem CombatTypes.ts's
-  // MAX_SWORD_INTENT), tích theo cơ chế khác hẳn Rage (mỗi kiếm của
-  // Ngự Kiếm Thuật ĐÁNH TRÚNG +1, không theo % damage gây/nhận).
-  currentSwordIntent: number
-
-  // Kiếm Thế / Kiếm Ý tạm (spec 2026-08-29-kiem-the-kiem-y) — 2 pool
-  // CHIẾN ĐẤU của 2 route Kiếm Tu sau khi chốt đường ở Quán Khí, cùng
-  // mô hình "sống, không persist" như currentSwordIntent:
-  //   currentKiemThe (route Kiếm Trận): pool 0-MAX_KIEM_THE, reset về
-  //   0 mỗi trận, +số kiếm của trận mỗi lần cast (KiemTuResourceSystem
-  //   .gainKiemTheOnFormationCast), tiêu hao cho ult Tru Tiên Kiếm
-  //   Trận + buff +1% dmg mỗi 2 điểm (kiemTheDamageBonusPercent).
-  //   currentKiemYTemp (route Bạt Kiếm): kiếm ý TẠM khởi đầu bằng số
-  //   kiếm ý vĩnh viễn (tầng boss × 10), gain qua channel tick + dmg
-  //   nhận vào, cap vĩnh viễn + MAX_KIEM_Y_TEMP_CAP. Tiêu hao ăn tạm
-  //   TRƯỚC — vĩnh viễn bất khả xâm phạm (consumeKiemYTempFirst).
-  // Optional (KHÔNG bắt buộc như currentSwordIntent) — cùng precedent
-  // currentHuyetPha/totalMaxHpReductionPercent bên dưới: 2 field này
-  // CHỈ có ý nghĩa với Kiếm Tu đã chốt route, mọi fixture/factory hiện
-  // có của path khác không cần touch; undefined coi như 0 (mọi consumer
-  // đọc qua `?? 0`, xem KiemTuResourceSystem).
-  currentKiemThe?: number
-  currentKiemYTemp?: number
-
   // Pháp Tu Đạo Sắc (spec 2026-08-30-phap-tu-dao-sac §2.3) — Thế
   // THUẦN HỆ Pháp Tu sau Lập Đạo, pool 0-MAX_THE (CombatTypes.ts),
   // tích +10 mỗi link chuỗi cast hoàn tất (+20 finisher E), XUYÊN
   // KILL trong phiên farm (không decay), reset về 0 khi bắn Ultimate.
-  // Optional — cùng precedent currentKiemThe: chỉ Pháp Tu đã chốt
+  // Optional — chỉ Pháp Tu đã chốt
   // Thuần mới có ý nghĩa, mọi fixture/path khác đọc qua `?? 0`
   // (TheResourceSystem retired M13 — gains live in TurnBattleSystem).
   currentThe?: number
 
-  // Thể Tu (Combat Rework Phase 7) — Momentum CHIẾN ĐẤU, cùng mô hình
-  // currentSwordIntent nhưng pool 0-100 (xem CombatTypes.ts's
+  // Thể Tu (Combat Rework Phase 7) — Momentum CHIẾN ĐẤU, pool 0-100
+  // (xem CombatTypes.ts's
   // MAX_MOMENTUM), tích qua Skill.grantsMomentumPerHit.
   currentMomentum: number
 
   // Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — Hỏa Thế CHIẾN
-  // ĐẤU, cùng mô hình currentSwordIntent/currentMomentum nhưng pool
+  // ĐẤU, cùng mô hình currentMomentum nhưng pool
   // 0-5 (xem CombatTypes.ts's MAX_HOA_THE), tích qua Skill.
   // grantsHoaThePerCast × source.skillStats.hoaTheGainPerCast (0 nếu chưa
   // mua node "Tụ Hỏa" — xem BattleSystem.castSkill()), TỰ GIẢM dần
@@ -227,12 +202,4 @@ export interface CombatEntity {
   breakGaugeMax?: number
 
   currentBreakGauge?: number
-
-  // Kiếm Tu Bạt Kiếm — trạng thái tụ lực (reset mỗi kỳ sau mỗi phát
-  // quạt; tuLucActive=false khi chết/khống chế cứng).
-  tuLucActive: boolean
-  tuLucElapsed: number
-  // % maxHP đã MẤT trong kỳ tụ hiện tại — nền cho amp "nhận càng
-  // nhiều gây càng nhiều" (spec §4.2), đọc lúc resolve phát quạt.
-  tuLucDamageTakenPercent: number
 }

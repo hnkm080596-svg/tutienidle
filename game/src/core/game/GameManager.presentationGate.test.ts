@@ -99,8 +99,8 @@ function createPlaybackPlayer(): CombatEntity {
   return {
     id: 'player', name: 'Player', type: 'player', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
-    currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
-    timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+    timeSinceLastBleedProc: 0,
+    currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
   }
 }

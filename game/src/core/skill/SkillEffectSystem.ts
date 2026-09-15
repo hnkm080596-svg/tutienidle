@@ -61,28 +61,9 @@ export interface SkillEffectContext {
     element: ElementType | 'physical'
   }) => void
 
-  // Task 8 (Kiếm Trận keystone, 2026-08-28) — cho phép effect 'damage'
-  // spawn SwordZone (SkillEffect.grantsSwordZone) vào ĐÚNG `battle` đang
-  // chạy, bind sẵn ở BattleSystem.castSkill() cùng chỗ spawnLavaZone.
-  // Optional vì hầu hết skill/test không cần.
-  spawnSwordZone?: (spec: {
-    ownerId: string
-    row: number
-    column: number
-    laneRadius: number
-    columnRadius: number
-    charges: number
-    tickInterval: number
-    damagePerTick: number
-    // Pháp Tu Thuần Hệ (E-5, 2026-09-03) — element của zone, mặc định
-    // 'metal' (Kiếm Trận). Optional: caller cũ không truyền vẫn đúng.
-    element?: ElementType
-  }) => void
-
-  // Kiếm Tu (2026-08-15) — id skill ĐANG cast, gắn vào hit lúc
-  // bắn để lúc impact TRÚNG (BattleSystem's impact-resolve callback,
-  // deferred — không đồng bộ với apply() này) biết tra lại đúng skill
-  // nào vừa bắn ra nó, phục vụ Skill.grantsSwordIntentPerHit.
+  // Id skill ĐANG cast, gắn vào hit lúc bắn để lúc impact TRÚNG
+  // (BattleSystem's impact-resolve callback, deferred — không đồng bộ
+  // với apply() này) biết tra lại đúng skill nào vừa bắn ra nó.
   skillId?: string
 
   skillExperience?: number
@@ -145,7 +126,6 @@ export class SkillEffectSystem {
                 : entry.ratioPerPoint * Math.max(...entry.attributes.map(stat => source.stats[stat]))),
             0,
           ) +
-          (effect.swordIntentDamageRatio ? effect.swordIntentDamageRatio * source.currentSwordIntent : 0) +
           (effect.realmDamageRatio ? effect.realmDamageRatio * source.realmIndex : 0) +
           (effect.manaScalingRatio ? effect.manaScalingRatio * source.stats.maxMp : 0) +
           (effect.skillExperienceRatio
@@ -153,8 +133,7 @@ export class SkillEffectSystem {
             : 0)
 
         // skillDamagePercent là tổng hợp modifier chung (equipment/
-        // node/technique + tier Kiếm Ý vĩnh viễn route Bạt Kiếm tính ở
-        // stores/player.ts finalStats qua KiemYSystem). Nền = 0 nên
+        // node/technique). Nền = 0 nên
         // KHÔNG ảnh hưởng path nào chưa có nguồn cấp skillDamagePercent.
         const finalMultiplier = (effect.value ?? 1) * (1 + scalingBonus) * (1 + source.stats.skillDamagePercent)
 
@@ -183,28 +162,6 @@ export class SkillEffectSystem {
           } else {
             ctx.fireHit(target, { kind: effect.damageType ?? 'physical', multiplier: finalMultiplier })
           }
-        }
-
-        // Kiếm Trận keystone (Tam Tài — Task 8, 2026-08-28) — SAU KHI
-        // missile của effect này bắn xong, spawn 1 SwordZone tại vị trí
-        // TARGET (không phải source — vùng kiếm khí tồn tại độc lập sau
-        // khi trận đã bày, cùng tinh thần LavaZone). Chỉ fire nếu target
-        // còn sống — mirrors consumesAilmentId's guard bên dưới.
-        // Pháp Tu Thuần Hệ (E-5) — grantsZone là bản tổng quát (mọi
-        // element, zoneElement ?? 'metal'); grantsSwordZone (Kiếm Tu)
-        // giữ nguyên nghĩa metal — resolver gộp OR 2 flag.
-        if (target.alive && (effect.grantsSwordZone || effect.grantsZone) && ctx.spawnSwordZone) {
-          ctx.spawnSwordZone({
-            ownerId: source.id,
-            row: target.row,
-            column: Math.round(target.x),
-            laneRadius: 0,
-            columnRadius: 1,
-            charges: effect.swordZoneCharges ?? 3,
-            tickInterval: effect.swordZoneTickInterval ?? 1,
-            damagePerTick: finalMultiplier * (effect.swordZoneDamageRatio ?? 0.3) * source.stats.might,
-            element: effect.zoneElement ?? 'metal',
-          })
         }
 
         // Pháp Tu Detonate — "cash in" stack ailment hiện có của target

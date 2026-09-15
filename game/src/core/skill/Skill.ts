@@ -91,7 +91,7 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   castTime?: number
 
   // Lượng tài nguyên cần để cast, ý nghĩa tuỳ resourceType (mana, rage,
-  // sword_intent, momentum) — 'none' thì KHÔNG khai field này (skill free,
+  // momentum) — 'none' thì KHÔNG khai field này (skill free,
   // runtime không đọc cost).
   cost?: number
 
@@ -165,15 +165,9 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // (isUnreleased prop on CombatSkillSlot).
   unreleased?: boolean
 
-  // Kiếm Tu (2026-08-15) — Ngự Kiếm Thuật (basic) đánh trúng thì +1
-  // Kiếm Ý chiến đấu (CombatEntity.currentSwordIntent), xem
-  // BattleSystem.ts's missile-resolve callback.
-  grantsSwordIntentPerHit?: boolean
-
   // Thể Tu (Combat Rework Phase 7) — đánh TRÚNG (không tính né) thì +N
   // Momentum (CombatEntity.currentMomentum, xem CombatTypes.ts's
-  // MAX_MOMENTUM) — cùng hook missile-resolve callback với
-  // grantsSwordIntentPerHit, khác ở chỗ theo LƯỢNG thay vì cố định +1.
+  // MAX_MOMENTUM) — tích theo LƯỢNG qua missile-resolve callback.
   grantsMomentumPerHit?: number
 
   // Thể Tu (Combat Rework Phase 7) — đánh TRÚNG thì trừ thêm N vào

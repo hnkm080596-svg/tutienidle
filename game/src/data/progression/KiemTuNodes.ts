@@ -22,10 +22,6 @@ import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 //   kiemDaoBelowCap prereq — a capped pool rejects the buy BEFORE
 //   insight moves (spec K20).
 //
-// Compile-compat: TRAN_SEQUENCE / getFormationSwordCount stay exported —
-// KiemTranSkills.ts still imports them until Task 12 retires producer +
-// consumer together.
-
 function stat(
   nodeId: string,
   statKey: StatModifier['stat'],
@@ -45,29 +41,6 @@ function stat(
     ...(perLevelPercent !== undefined ? { perLevelPercent } : {}),
   }
 }
-
-// ───────────────────── Compile-compat legacy export ─────────────────────
-// TODO(Task 12): delete together with KiemTranSkills.ts + its Skills.ts
-// wiring — producer and consumer die in the same change.
-
-export const TRAN_SEQUENCE: Array<{
-  id: string
-  name: string
-  realmId: string
-  skillId: string
-  swordCount: number
-  skillDescription?: string
-}> = [
-  { id: 'kiem_tran_luong_nghi', name: 'Lưỡng Nghi Kiếm Trận', realmId: 'qi_refining', skillId: 'kiem_tran_luong_nghi', swordCount: 2 },
-  { id: 'kiem_tran_tam_tai', name: 'Tam Tài Kiếm Trận', realmId: 'foundation_establishment', skillId: 'kiem_tran_tam_tai', swordCount: 3 },
-  { id: 'kiem_tran_tu_tuong', name: 'Tứ Tượng Kiếm Trận', realmId: 'golden_core', skillId: 'kiem_tran_tu_tuong', swordCount: 4 },
-  { id: 'kiem_tran_ngu_hanh', name: 'Ngũ Hành Kiếm Trận', realmId: 'nascent_soul', skillId: 'kiem_tran_ngu_hanh', swordCount: 5 },
-  { id: 'kiem_tran_luc_dao', name: 'Lục Đạo Kiếm Trận', realmId: 'soul_transformation', skillId: 'kiem_tran_luc_dao', swordCount: 6 },
-  { id: 'kiem_tran_that_tinh', name: 'Thất Tinh Kiếm Trận', realmId: 'void_refinement', skillId: 'kiem_tran_that_tinh', swordCount: 7 },
-  { id: 'kiem_tran_bat_quai', name: 'Bát Quái Kiếm Trận', realmId: 'body_integration', skillId: 'kiem_tran_bat_quai', swordCount: 8 },
-  { id: 'kiem_tran_cuu_cung', name: 'Cửu Cung Kiếm Trận', realmId: 'mahayana', skillId: 'kiem_tran_cuu_cung', swordCount: 9 },
-  { id: 'kiem_tran_vo_cuc', name: 'Vô Cực Kiếm Trận', realmId: 'tribulation', skillId: 'kiem_tran_vo_cuc', swordCount: 9, skillDescription: 'Bày Vô Cực Kiếm Trận, 9 thanh phi kiếm hợp thành vòng tròn vô tận chém liên hoàn.' },
-]
 
 // ───────────────────────── Orb branches (hien) ─────────────────────────
 
@@ -415,9 +388,3 @@ export const KIEM_TU_NODES: ProgressionNode[] = [
   ...NGU_GROWTH_NODES,
   ...CUU_CUNG_NODES,
 ]
-
-/** Số kiếm của trận theo skillId — COMPILE-COMPAT for the legacy
- * KiemTranSkills consumer; dies with TRAN_SEQUENCE in Task 12. */
-export function getFormationSwordCount(skillId: string): number | undefined {
-  return TRAN_SEQUENCE.find((entry) => entry.skillId === skillId)?.swordCount
-}

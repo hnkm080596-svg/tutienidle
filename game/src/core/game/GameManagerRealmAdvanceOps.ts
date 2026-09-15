@@ -195,9 +195,6 @@ export class GameManagerRealmAdvanceOps {
       for (const skillId of MORTAL_PRECURSOR_SKILL_IDS) {
         this.deps.skillSystem.unequip(skillId)
       }
-      for (const skillId of ['ngu_kiem_thuat', 'kiem_khai_thien_mon', 'van_kiem_trieu_tong']) {
-        this.deps.skillSystem.unequip(skillId)
-      }
     } else if (kit.skillIds) {
       kit.skillIds.forEach((skillId, index) => {
         this.deps.progressionOps.learnSkill(skillId)

@@ -45,7 +45,6 @@ const UNSUPPORTED_EFFECT_FIELDS = [
   'spreadStackPercent',
   'spreadRefreshesPrimary',
   'stacksPerAffectedTarget',
-  'grantsSwordZone',
   'grantsZone',
   'zoneElement',
   'swordZoneCharges',
@@ -124,17 +123,16 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
   let damage: ActionDamageInfo | undefined
 
   if (damageEffect) {
-    // R3 re-audit (AR-03 gap) — attributeScaling/manaScalingRatio/
-    // swordIntentDamageRatio were being silently dropped here (only
-    // `.value` survived conversion), so every Pháp Tu/Kiếm Trận skill's
+    // R3 re-audit (AR-03 gap) — attributeScaling/manaScalingRatio
+    // were being silently dropped here (only
+    // `.value` survived conversion), so every Pháp Tu skill's
     // authored scaling had zero effect once cast through the turn
     // engine. `undefined` when the skill authors none, so unaffected
     // skills produce an identical damage shape to before.
-    const scaling = damageEffect.attributeScaling || damageEffect.manaScalingRatio || damageEffect.swordIntentDamageRatio
+    const scaling = damageEffect.attributeScaling || damageEffect.manaScalingRatio
       ? {
           attributeScaling: damageEffect.attributeScaling,
           manaScalingRatio: damageEffect.manaScalingRatio,
-          swordIntentDamageRatio: damageEffect.swordIntentDamageRatio,
         }
       : undefined
 
@@ -266,11 +264,10 @@ function resolveTriggerDamage(skill: Skill, effective: EffectiveSkill): ActionDa
     throw new Error(`Unsupported trigger action "${action.type}" for skill "${skill.id}"`)
   }
 
-  const scaling = action.attributeScaling || action.manaScalingRatio || action.swordIntentDamageRatio
+  const scaling = action.attributeScaling || action.manaScalingRatio
     ? {
         attributeScaling: action.attributeScaling,
         manaScalingRatio: action.manaScalingRatio,
-        swordIntentDamageRatio: action.swordIntentDamageRatio,
       }
     : undefined
 
@@ -294,7 +291,6 @@ function isDamageEffect(effect: SkillEffect): effect is SkillEffect & {
   healPercentOfDamage?: number
   attributeScaling?: { attributes: StatType[]; ratioPerPoint: number }[]
   manaScalingRatio?: number
-  swordIntentDamageRatio?: number
 } {
   return effect.type === 'damage'
 }

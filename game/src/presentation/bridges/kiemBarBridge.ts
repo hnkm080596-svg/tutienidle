@@ -14,7 +14,8 @@
 // hien (Kiem Pho): the bar shows preset-strip progress — `current` is
 // the auto cursor position, `max` the preset length, plus the orb strip
 // + cast log for presentation layers that render richer HUD.
-// ngu (Ngu Kiem Dao): lands in Task 8 (needs forgeCost()).
+// ngu (Ngu Kiem Dao): the bar shows persisted Kiem Y progress toward
+// the current realm's forgeCost, plus live sword count/base multiplier.
 
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { OrbId, KiemTuState } from '@/core/kiem-tu/KiemTuState'

@@ -163,19 +163,17 @@ export interface TurnSkillSlot {
 
 const RESOURCE_FIELD: Record<
   Exclude<SkillResourceType, 'none'>,
-  'currentMp' | 'currentSwordIntent' | 'currentMomentum' | 'currentThe'
+  'currentMp' | 'currentMomentum' | 'currentThe'
 > = {
   mana: 'currentMp',
-  sword_intent: 'currentSwordIntent',
   momentum: 'currentMomentum',
   the: 'currentThe',
 }
 
 /**
  * Simplification (design spec §3, "explicitly out of scope: content
- * migration") — checks the resource pool directly, no Kiếm Ý temp-first
- * consumption rule (KiemTuResourceSystem.consumeKiemYTempFirst) or other
- * per-path consumption order. Real content mapping resolves this later.
+ * migration") — checks the resource pool directly, no per-path
+ * consumption order. Real content mapping resolves this later.
  */
 export function hasResourceFor(entity: CombatEntity, skill: TurnSkillDefinition): boolean {
   if (!skill.resourceType || skill.resourceType === 'none' || !skill.resourceCost) {

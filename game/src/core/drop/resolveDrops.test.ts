@@ -127,7 +127,7 @@ describe('resolveDrops - currency', () => {
 describe('resolveDrops - signature drops (spec E7/E11)', () => {
   const SIGNATURE: SignatureDrop[] = [
     { kind: 'material', itemId: 'great_dao_seed', chance: 1, requiresModifier: 'boss' },
-    { kind: 'technique', itemId: 'van_kiem_quyet', chance: 1 },
+    { kind: 'technique', itemId: 'tu_linh_quyet', chance: 1 },
   ]
 
   it('skips a line whose required modifier is absent', () => {
@@ -138,7 +138,7 @@ describe('resolveDrops - signature drops (spec E7/E11)', () => {
       rng: scriptedRng([0, 0]),
     })
 
-    expect(result.items.map((item) => item.itemId)).toEqual(['van_kiem_quyet'])
+    expect(result.items.map((item) => item.itemId)).toEqual(['tu_linh_quyet'])
   })
 
   it('grants it when the modifier is present', () => {
@@ -149,13 +149,13 @@ describe('resolveDrops - signature drops (spec E7/E11)', () => {
       rng: scriptedRng([0, 0]),
     })
 
-    expect(result.items.map((item) => item.itemId)).toEqual(['great_dao_seed', 'van_kiem_quyet'])
+    expect(result.items.map((item) => item.itemId)).toEqual(['great_dao_seed', 'tu_linh_quyet'])
   })
 
   it('on idle keeps only the certain lines', () => {
     const idleSignature: SignatureDrop[] = [
       { kind: 'material', itemId: 'great_dao_seed', chance: 0.5, requiresModifier: 'boss' },
-      { kind: 'technique', itemId: 'van_kiem_quyet', chance: 1, requiresModifier: 'boss' },
+      { kind: 'technique', itemId: 'tu_linh_quyet', chance: 1, requiresModifier: 'boss' },
     ]
 
     const result = resolveDrops({
@@ -165,6 +165,6 @@ describe('resolveDrops - signature drops (spec E7/E11)', () => {
       rng: scriptedRng([0, 0]),
     })
 
-    expect(result.items.map((item) => item.itemId)).toEqual(['van_kiem_quyet'])
+    expect(result.items.map((item) => item.itemId)).toEqual(['tu_linh_quyet'])
   })
 })

@@ -93,35 +93,6 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * Snapshot of purchased on-hit Kiem Tran node levels (reads
-   * PlayerData.nodeLevels through the registry - the node is the source
-   * of truth for `effect.onHitEffect`). Returns {} with no player / no
-   * purchased nodes.
-   */
-  getOnHitNodeLevelsSnapshot(): Record<string, number> {
-    const levels: Record<string, number> = {}
-    const activePlayer = this.deps.getActivePlayer()
-
-    if (!activePlayer) {
-      return levels
-    }
-
-    for (const [nodeId, level] of Object.entries(activePlayer.nodeLevels)) {
-      if (level <= 0 || !this.deps.nodeRegistry.has(nodeId)) {
-        continue
-      }
-
-      const node = this.deps.nodeRegistry.get(nodeId)
-
-      if (node.effect.onHitEffect) {
-        levels[nodeId] = level
-      }
-    }
-
-    return levels
-  }
-
-  /**
    * Phap Tu Thuan He (Task 12, 2026-09-03) - the currently-CHOSEN Thuan
    * element of the player: purchased `lap_dao_thuan_<el>` keystone at
    * level 1 (mutex keystone - data guarantees at most 1 element).
@@ -208,14 +179,6 @@ export class GameManagerProgressionOps {
     // purchaseNodeSystem only returns true exactly on that transition.
     for (const skillId of node.effect.unlocksSkillIds ?? []) {
       this.learnSkill(skillId)
-
-      // Kiem The / Kiem Y (spec 2026-08-29 §5.1) - sword-formation
-      // evolution: each route OWNS 1 active skill at slot 0, the new
-      // keystone REPLACES the old formation (equipToSlot swaps the
-      // occupant). No separate KIEM_TRAN_SLOT_INDEX anymore.
-      if (skillId.startsWith('kiem_tran_')) {
-        this.deps.skillSystem.equipToSlot(skillId, 0)
-      }
     }
 
     // Phap Tu Thuan He (E-8, 2026-09-03) - variant node: purchasing the

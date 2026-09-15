@@ -5,9 +5,9 @@ import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 
 // R3 re-audit (AR-03 gap) — SkillToTurnSkillConverter used to drop
-// attributeScaling/manaScalingRatio/swordIntentDamageRatio entirely, and
+// attributeScaling/manaScalingRatio entirely, and
 // no live turn-combat code path ever read source.stats.skillDamagePercent.
-// This meant every Pháp Tu/Kiếm Trận skill's authored scaling and the
+// This meant every Pháp Tu skill's authored scaling and the
 // entire skillDamagePercent stat had zero effect once cast through the
 // active TurnBattleSystem. These tests prove resolveActionHit() now
 // applies both, deterministically (evasionRate/criticalRate/blockChance
@@ -32,15 +32,11 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentSwordIntent: 0,
     currentMomentum: 0,
     currentHoaThe: 0,
     currentThoThe: 0,
     currentKimThe: 0,
     timeSinceLastBleedProc: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: 0,
@@ -108,28 +104,6 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
 
     // baseDamage 100 × (1 + 0.001×200) = 120.
     expect(result.finalDamage).toBeCloseTo(120, 5)
-  })
-
-  it('applies swordIntentDamageRatio against the live source currentSwordIntent', () => {
-    const combat = new CombatSystem(new EventBus())
-
-    const source = createCombatant({
-      id: 'source',
-      type: 'player',
-      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, might: 100 }),
-      currentSwordIntent: 500,
-    })
-    const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: createBaseStats({ evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 }) })
-
-    const result = combat.resolveActionHit(
-      source,
-      target,
-      { kind: 'physical', multiplier: 1, scaling: { swordIntentDamageRatio: 0.0002 } },
-      { critical: false },
-    )
-
-    // baseDamage 100 × (1 + 0.0002×500) = 110.
-    expect(result.finalDamage).toBeCloseTo(110, 5)
   })
 
   it('applies source.stats.skillDamagePercent even with no ActionDamageInfo.scaling', () => {

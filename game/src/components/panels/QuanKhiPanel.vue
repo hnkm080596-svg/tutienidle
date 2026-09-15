@@ -15,7 +15,6 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
 import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
-import type { KiemTuRoute } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
@@ -86,32 +85,30 @@ function close() {
   ui.closeHomeOverlays()
 }
 
-// Kiếm Tu tự lực (2026-08-28, task-7-brief.md §2) — 2 nút chọn đường
-// SONG SONG, khác hẳn availablePaths ở trên (đó là lựa chọn nghề MỘT
-// LẦN, KHÔNG đổi lại được — xem ConfirmModal). Đây đổi được nhiều lần
-// ngoài combat, cùng pattern reversible ArtifactPathCards.vue/
-// ArtifactPanel.vue's onSelectPath (setArtifactPath) — KHÔNG dùng
-// window.confirm/ConfirmModal.
+// Kiem Tu specialization card below — shown only after the player has
+// chosen the kiem_tu path (read-only display; the hien -> ngu
+// conversion lives on the kiem_tu_an node, not in this panel).
 const isKiemTu = computed(() => {
   stateVersion.value
 
   return player.cultivationPath === 'kiem_tu'
 })
 
-// Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 1) — route
-// chốt VĨNH VIỄN ngay lúc chọn path (tram Lv3 → Bạt Kiếm, chưa → Kiếm
-// Trận). KHÔNG còn UI đổi đường — khối chọn route cũ đã dỡ, chỉ hiển
-// thị đường đã chốt + giải thích điều kiện.
-const currentKiemTuRoute = computed<KiemTuRoute>(() => {
+// Kiem Tu Reimagined (spec 2026-09-15) — hien/ngu specialization mode
+// is canonical on PlayerData.kiemTu. 'hien' (Kiem Pho) is the visible
+// spec every Kiem Tu starts as; 'ngu' (Ngu Kiem Dao) appears only
+// after the hidden kiem_tu_an conversion, so displaying it here never
+// spoils a path the player has not unlocked.
+const kiemTuMode = computed(() => {
   stateVersion.value
 
-  return player.kiemTuRoute ?? 'kiem_tran'
+  return player.kiemTu?.mode ?? 'hien'
 })
 
-const routeNameDisplay = computed(() =>
-  currentKiemTuRoute.value === 'bat_kiem'
-    ? t('panels.quanKhi.routeNames.batKiem')
-    : t('panels.quanKhi.routeNames.kiemTran'),
+const specNameDisplay = computed(() =>
+  kiemTuMode.value === 'ngu'
+    ? t('panels.quanKhi.specNames.nguKiemDao')
+    : t('panels.quanKhi.specNames.kiemPho'),
 )
 </script>
 
@@ -135,19 +132,18 @@ const routeNameDisplay = computed(() =>
       </div>
     </div>
 
-    <!-- Kiếm Thế / Kiếm Ý (spec 2026-08-29) — route đã chốt vĩnh viễn
-         lúc chọn path, hiển thị thông tin thay vì UI đổi đường cũ. Bọc
-         card thật (2026-08-30 frontend-design pass: trước đây chỉ là 2
-         đoạn văn trần, không có khung nào tách khỏi overlay chrome). -->
+    <!-- Kiem Tu Reimagined (spec 2026-09-15) — shows the active
+         specialization (Kiem Pho / Ngu Kiem Dao) read from
+         player.kiemTu.mode. -->
     <div v-if="isKiemTu" class="quan-khi-panel__card">
       <div class="quan-khi-panel__route-card">
         <p class="quan-khi-panel__hint">
-          {{ t('panels.quanKhi.sections.kiemTuRoute.hintPrefix') }} <strong class="quan-khi-panel__route-name">{{ routeNameDisplay }}</strong>{{ t('panels.quanKhi.sections.kiemTuRoute.hintSuffix') }}
+          {{ t('panels.quanKhi.sections.kiemTuSpec.hintPrefix') }} <strong class="quan-khi-panel__route-name">{{ specNameDisplay }}</strong>{{ t('panels.quanKhi.sections.kiemTuSpec.hintSuffix') }}
         </p>
         <p class="quan-khi-panel__warning">
-          {{ currentKiemTuRoute === 'bat_kiem'
-            ? t('panels.quanKhi.sections.kiemTuRoute.batKiemDescription')
-            : t('panels.quanKhi.sections.kiemTuRoute.kiemTranDescription') }}
+          {{ kiemTuMode === 'ngu'
+            ? t('panels.quanKhi.sections.kiemTuSpec.nguDescription')
+            : t('panels.quanKhi.sections.kiemTuSpec.hienDescription') }}
         </p>
       </div>
     </div>

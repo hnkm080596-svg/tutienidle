@@ -1,7 +1,6 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
 import { getPhapTuAttunementStatModifiers } from './CultivationPathSystem'
 import { createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
-import { getKiemYDamageMultipliers, getKiemYTier } from './KiemYSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
 import {
@@ -18,9 +17,6 @@ import type { ElementType } from '../element/ElementType'
 import type { ArtifactProgress } from '../artifact/Artifact'
 import type { CompanionInstance } from '../../data/companion/Companions'
 import type { KiemTuState } from '../kiem-tu/KiemTuState'
-
-/** Kiếm Tu tự lực (2026-08-28) — 2 nhánh song song, xem PlayerData.kiemTuRoute. */
-export type KiemTuRoute = 'kiem_tran' | 'bat_kiem'
 
 export interface PlayerData {
   name: string
@@ -107,18 +103,9 @@ export interface PlayerData {
   // canChooseCultivationPath.
   cultivationPath?: CultivationPathId
 
-  // Kiếm Tu route (spec 2026-08-29-kiem-the-kiem-y mục 1) — chốt VĨNH
-  // VIỄN trong chooseCultivationPath() theo tram Lv3 (10.000 trảm →
-  // bat_kiem, chưa → kiem_tran), KHÔNG còn API đổi (setKiemTuRoute đã
-  // dỡ). Mặc định (undefined) = chưa chọn path Kiếm Tu. Type export —
-  // tránh UI component tự khai lại union này rồi lệch field thật.
-  kiemTuRoute?: KiemTuRoute
-
   // Kiem Tu Reimagined (spec 2026-09-15 K1) — the ONE canonical path
   // state. Written at chooseCultivationPath('kiem_tu') = fresh hien
   // state; mode flips to 'ngu' permanently via the kiem_tu_an node.
-  // Replaces kiemTuRoute / currentSwordIntent-era fields (kill list
-  // lands in the teardown task).
   kiemTu?: KiemTuState
 
   // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
@@ -131,13 +118,9 @@ export interface PlayerData {
   // technique tier + thống kê.
   totalCultivationGained: number
 
-  // Kiếm Ý VĨNH VIỄN (spec 2026-08-29-kiem-the-kiem-y mục 3.1) — tổng
-  // boss/elite đã diệt vĩnh viễn suốt đời save (boss stage isBoss +
+  // Tổng boss/elite đã diệt vĩnh viễn suốt đời save (boss stage isBoss +
   // boss Độ Kiếp + elite/mini-boss, đếm trong BattleLootSystem), chỉ
-  // tăng không giảm. Nguồn tầng Kiếm Ý (thay totalCultivationGained cũ
-  // của SwordIntentSystem đã dọn): tầng N cần tổng 10 + 5×(N-1) boss
-  // cộng dồn, mỗi tầng +10 kiếm ý vĩnh viễn + 0.5%/tầng dmg/crit —
-  // xem core/player/KiemYSystem.ts.
+  // tăng không giảm — counter thống kê/điều kiện chung.
   bossKillCount: number
 
   // Bát Mạch (spec dot-pha-loi-kiep §4.1a) — id các đường Kỳ Kinh đã
@@ -373,10 +356,6 @@ export function createDefaultPlayer(): PlayerData {
 
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
-    kiemTuRoute: undefined,
-
-    // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
-    // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
     kiemTu: undefined,
 
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
@@ -446,32 +425,15 @@ export function createDefaultPlayer(): PlayerData {
  *
  * `externalModifiers` here is the caller-provided modifier list: the store
  * passes its mirror field; the battle ops pass the fresh static aggregation
- * (`GameManagerPersistentEffectOps.getBattleBaseModifiers`). Permanent
- * Kiem Y modifiers (bat_kiem route, tier by bossKillCount) are folded in
- * exactly once — same formula as the menu view.
+ * (`GameManagerPersistentEffectOps.getBattleBaseModifiers`).
  */
 export function resolvePlayerFinalStats(
   player: PlayerData,
   externalModifiers: StatModifier[],
 ): Stats {
-  const kiemYModifiers: StatModifier[] = []
-  if (
-    player.cultivationPath === 'kiem_tu' &&
-    player.kiemTuRoute === 'bat_kiem' &&
-    player.bossKillCount > 0
-  ) {
-    const multipliers = getKiemYDamageMultipliers(getKiemYTier(player.bossKillCount))
-    kiemYModifiers.push(
-      { id: 'kiem_y:skill_damage', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'skillDamagePercent', flat: multipliers.skillDamagePercent },
-      { id: 'kiem_y:critical_rate', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'criticalRate', flat: multipliers.criticalRate },
-      { id: 'kiem_y:critical_damage', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'criticalDamage', flat: multipliers.criticalDamage },
-    )
-  }
-
   const allModifiers = [
     ...player.modifiers,
     ...externalModifiers,
-    ...kiemYModifiers,
   ]
 
   // D12 ordering contract (spec section 5): the Phap Tu system reads the
@@ -526,12 +488,6 @@ export function playerToCombatEntity(
 
     currentMp: stats.maxMp,
 
-    currentSwordIntent: 0,
-
-    currentKiemThe: 0,
-
-    currentKiemYTemp: 0,
-
     currentMomentum: 0,
 
     currentHoaThe: 0,
@@ -545,12 +501,6 @@ export function playerToCombatEntity(
     currentThe: 0,
 
     timeSinceLastBleedProc: 0,
-
-    tuLucActive: false,
-
-    tuLucElapsed: 0,
-
-    tuLucDamageTakenPercent: 0,
 
     currentWard: 0,
 

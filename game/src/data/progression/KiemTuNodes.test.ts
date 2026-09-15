@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { KIEM_TU_NODES, TRAN_SEQUENCE } from './KiemTuNodes'
+import { KIEM_TU_NODES } from './KiemTuNodes'
 import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 
@@ -7,8 +7,7 @@ import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 // tree: 5 orb branches (growth + combo capstone) under 'kiem_pho',
 // the hidden kiem_tu_an root, and the ngu branch (cascade unlocks,
 // per-instance growth, Cuu Cung 3x3) under 'ngu_kiem'. The legacy
-// Kiem Tran / Bat Kiem node set is gone; TRAN_SEQUENCE survives only
-// as a compile-compat export until Task 12 kills its last consumer.
+// Kiem Tran / Bat Kiem node set is gone (Task 12 teardown).
 
 const ORB_IDS: OrbId[] = ['orb_dam', 'orb_chem', 'orb_bo', 'orb_hat', 'orb_quet']
 const REALM_BY_INDEX = [
@@ -49,11 +48,6 @@ describe('KiemTuNodes — tree shape', () => {
     expect(survivors).toEqual([])
     expect(KIEM_TU_NODES.find(n => n.id === 'bat_kiem_an')).toBeUndefined()
     expect(KIEM_TU_NODES.find(n => n.id === 'bat_kiem_thuc')).toBeUndefined()
-  })
-
-  it('TRAN_SEQUENCE remains exported as compile-compat (KiemTranSkills consumer dies in Task 12)', () => {
-    expect(TRAN_SEQUENCE.length).toBe(9)
-    expect(TRAN_SEQUENCE[0]!.skillId).toBe('kiem_tran_luong_nghi')
   })
 
   it('every node lives on kiem_pho or ngu_kiem', () => {

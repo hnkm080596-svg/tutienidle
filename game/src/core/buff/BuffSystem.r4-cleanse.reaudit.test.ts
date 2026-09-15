@@ -13,9 +13,8 @@ function entity(id: string): CombatEntity {
   return {
     id, name: id, type: 'player', baseStats: stats, stats,
     currentHp: 1000, maxHp: 1000, currentMp: stats.maxMp,
-    currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0,
-    currentKimThe: 0, timeSinceLastBleedProc: 0, tuLucActive: false,
-    tuLucElapsed: 0, tuLucDamageTakenPercent: 0, currentWard: 0,
+    currentKimThe: 0, timeSinceLastBleedProc: 0, currentWard: 0,
+    currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0,
     turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
   }
 }

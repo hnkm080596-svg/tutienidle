@@ -201,8 +201,6 @@ export class TribulationDirector {
       currentHp: maxHp,
       maxHp,
       currentMp: 0,
-      currentKiemThe: 0,
-      currentKiemYTemp: 0,
       currentHoaThe: 0,
       currentMomentum: 0,
       alive: true,

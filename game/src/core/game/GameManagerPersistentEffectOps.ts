@@ -471,7 +471,6 @@ export class GameManagerPersistentEffectOps {
       currentHp: stats.maxHp,
       maxHp: stats.maxHp,
       currentMp: stats.maxMp,
-      currentSwordIntent: 0,
       currentMomentum: 0,
       currentHoaThe: 0,
       currentThoThe: 0,
@@ -483,9 +482,6 @@ export class GameManagerPersistentEffectOps {
       x: 0,
       row: HERO_LANE_INDEX,
       alive: true,
-      tuLucActive: false,
-      tuLucElapsed: 0,
-      tuLucDamageTakenPercent: 0,
     }
   }
 }

@@ -112,11 +112,9 @@ export type CombatVfxPresetId =
   | 'holy_radiance'
   | 'shadow_burst'
   | 'boss_ground_slam'
-  // Kiếm Tu Bạt Kiếm/Kiếm Trận (Task 8, 2026-08-28) — DATA ONLY, art/
+  // Kiếm Tu (Task 8, 2026-08-28) — DATA ONLY, art/
   // animation sau (renderer chưa đăng ký diễn xuất tương ứng).
   | 'tu_luc'
-  | 'bat_kiem_quat'
-  | 'kiem_tran_zone'
   // Kiem Tu Reimagined (spec 2026-09-15 §4.3, K11) — one preset per
   // Kiem Pho combo. The fired payload is the ONLY discovery signal, so
   // every combo must render distinguishably; renderer maps each preset

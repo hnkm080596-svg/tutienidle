@@ -1,5 +1,4 @@
 import type { SessionRef } from '../presentation/PresentationSession'
-import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
 import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
 import {
   buildNguKiemDaoProvider,
@@ -49,7 +48,6 @@ import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffTypes'
 import type { FormationLoadout, PlayerData } from '../player/Player'
 import { playerToCombatEntity } from '../player/Player'
-import { getKiemYPermanent } from '../player/KiemYSystem'
 import type { Stats } from '../stats/StatBlock'
 import type { StatModifier } from '../stats/StatCalculator'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
@@ -808,13 +806,6 @@ export class GameManagerTurnBattleOps {
     // and the live runtime modifiers into entity.stats immediately, so no
     // dependent read can observe the pre-buff base.
     this.turnBattleSystem.refreshEffectiveStats(this.turnBattle)
-
-    // C1 parity - Kiem bar init used to run inside legacy battleSystem.start().
-    initKiemTuBattleResources(
-      this.turnBattle.players[0]!.entity,
-      this.deps.getActivePlayer()?.kiemTuRoute,
-      this.deps.getActivePlayer() ? getKiemYPermanent(this.deps.getActivePlayer()!.bossKillCount) : 0,
-    )
 
     if (!this.isStageStarting) {
       // Non-stage battle (tribulation, devtools) — drop the previous stage
