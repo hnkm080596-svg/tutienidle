@@ -13,6 +13,7 @@ import { writeGate, type GateRegistry } from '@/presentation/gate/PresentationGa
 import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
 import type { PlayerVisualProfileId } from '@/presentation/art/PlayerVisualProfiles'
 import { makeKiemBarReader, registerKiemBarReader } from '@/presentation/bridges/kiemBarBridge'
+import { makeTheBarReader, registerTheBarReader } from '@/presentation/bridges/theBarBridge'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
@@ -87,6 +88,9 @@ function seedRegion(registry: GateRegistry): () => void {
   // 9.4 — Kiếm bar reader (Kiếm Thế / Kiếm Ý tạm) đăng ký từ đây (có
   // gameManager + player store) vào registry; CombatScene poll mỗi frame.
   registerKiemBarReader(registry, makeKiemBarReader(gameManager, () => usePlayerStore()))
+
+  // Task 16 — The bar reader (Pháp Tu) — cùng bridge pattern.
+  registerTheBarReader(registry, makeTheBarReader(gameManager, () => usePlayerStore()))
 
   // Player visual profile bridge (player-body-anchor-reward-gourd-plan §4.2) —
   // snapshot ID vào registry để scene đọc lúc create() (không bỏ lỡ trạng thái

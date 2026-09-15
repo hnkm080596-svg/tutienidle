@@ -2,19 +2,18 @@ import { describe, expect, it } from 'vitest'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from './NodeBranchViews'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 
-// B1 fix (2026-09-14): NodeTreePanel renders `node.branchTag === viewTag`
-// exactly, but PhapTuNodes ships Thuần-chain nodes under `thuan_<element>`
-// plus the shared gate under `lap_dao` — 47 nodes unreachable in every
-// element view. This module is the single owner for which tags a tree
-// view renders (panel + coverage guard both consume it).
+// Phap Tu Reimagined (Task 16) — the reworked tree tags nodes by
+// elementTag/routeTag, so every view is single-tag: element views
+// render `elementTag === view`, Kiem Tu routes render
+// `branchTag === view`. The thuan_*/lap_dao family is retired.
 describe('viewBranchTags', () => {
-  it('element view renders element + shared lap_dao gate + its thuan branch', () => {
+  it('element views render exactly the element tag', () => {
     for (const element of ELEMENT_ORDER) {
-      expect(viewBranchTags(element)).toEqual([element, 'lap_dao', `thuan_${element}`])
+      expect(viewBranchTags(element)).toEqual([element])
     }
   })
 
-  it('non-element view tags pass through unchanged (kiem_tran/bat_kiem)', () => {
+  it('kiem route views pass through unchanged (kiem_tran/bat_kiem)', () => {
     expect(viewBranchTags('kiem_tran')).toEqual(['kiem_tran'])
     expect(viewBranchTags('bat_kiem')).toEqual(['bat_kiem'])
   })

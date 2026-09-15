@@ -16,6 +16,7 @@ import type { EventBus } from '@/core/events/EventBus'
 import type { BattlefieldGeometrySnapshot } from '@/presentation/geometry/BattleGridProjection'
 import type { PlayerVisualProfileId } from '@/presentation/art/PlayerVisualProfiles'
 import type { KiemBarReader } from '@/presentation/bridges/kiemBarBridge'
+import type { TheBarReader } from '@/presentation/bridges/theBarBridge'
 
 /**
  * What the dynamic layer may ask of the domain. Under §3.4 this list is
@@ -107,6 +108,7 @@ export interface PresentationGateContents {
   lastBattlePositionsSnapshot: PositionsSnapshotEntry | null
   battlefieldGeometry: BattlefieldGeometrySnapshot
   kiemBarReader: KiemBarReader
+  theBarReader: TheBarReader
 }
 
 export type GateKey = keyof PresentationGateContents

@@ -9,6 +9,7 @@ import type { Stage } from '../stage/Stage'
 import {
   aggregateNodeStatModifiers,
   canPurchaseNode,
+  previewRouteSwitch,
   purchaseNode,
   switchRoute,
   upgradeNode,
@@ -153,6 +154,57 @@ describe('switchRoute', () => {
     expect(refunded).toBe(0)
     expect(player.skillInsight).toBe(before)
     expect(player.nodeFreePurchaseRecord['dot_spec_1']).toBeUndefined()
+  })
+})
+
+// Task 16 — the respec confirm dialog's "regain X, lose Y" numbers come
+// from previewRouteSwitch; it MUST agree with switchRoute's math (A9)
+// and must not mutate state.
+describe('previewRouteSwitch', () => {
+  it('matches switchRoute refund and forfeited math exactly', () => {
+    const player = createDefaultPlayer()
+    player.skillInsight = 100
+    player.phapTu = { element: 'fire', route: 'dot' }
+
+    purchaseNode(player, registry.get('dot_spec_1')) // cost 2
+    upgradeNode(player, registry.get('dot_spec_1')) // +3
+    purchaseNode(player, registry.get('shared_1')) // untagged — not counted
+
+    const preview = previewRouteSwitch(player, registry)
+    const paid = 2 + 3
+
+    expect(preview.refund).toBe(Math.floor(paid * 0.75))
+    expect(preview.forfeited).toBe(paid - Math.floor(paid * 0.75))
+    expect(preview.resetNodeCount).toBe(1)
+
+    // Preview mutated nothing — the switch then refunds the same amount.
+    expect(player.nodeLevels['dot_spec_1']).toBe(2)
+    expect(player.phapTu.route).toBe('dot')
+    expect(switchRoute(player, registry, 'no')).toBe(preview.refund)
+  })
+
+  it('waived insight (nodeFreePurchaseRecord) is excluded from the preview', () => {
+    const player = createDefaultPlayer()
+    player.skillInsight = 100
+    player.phapTu = { element: 'fire', route: 'dot' }
+
+    purchaseNode(player, registry.get('dot_spec_1'))
+    player.nodeFreePurchaseRecord = { dot_spec_1: 2 }
+
+    const preview = previewRouteSwitch(player, registry)
+
+    expect(preview.refund).toBe(0)
+    expect(preview.forfeited).toBe(0)
+    expect(preview.resetNodeCount).toBe(1)
+  })
+
+  it('no route committed → empty preview', () => {
+    const player = createDefaultPlayer()
+    player.phapTu = { element: null, route: null }
+
+    const preview = previewRouteSwitch(player, registry)
+
+    expect(preview).toEqual({ refund: 0, forfeited: 0, resetNodeCount: 0 })
   })
 })
 

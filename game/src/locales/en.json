@@ -101,9 +101,15 @@
         "upgradeCost": "Upgrade · {cost} Insight",
         "otherBranch": "Other"
       },
-      "branchLabels": {
-        "lapDao": "Foundation Path",
-        "thuan": "Pure · {element}"
+      "routes": {
+        "aria": "Pháp Tu stance",
+        "dot": "Detonate",
+        "no": "Eruption"
+      },
+      "routeSwitch": {
+        "title": "Change Pháp Tu Stance",
+        "body": "Switch to the {route} stance? Old stance nodes reset to 0 — regain {regain} Insight, lose {lose}.",
+        "confirm": "Switch Stance"
       }
     },
     "skillPath": {
@@ -134,6 +140,8 @@
           "prerequisiteNode": "Enlighten first: {name}",
           "realm": "Reach the required realm",
           "element": "Unlock the related Element",
+          "elementMismatch": "Belongs to the {element} element — another element is committed",
+          "routeMismatch": "Enlightenable only in the {route} stance",
           "excludesNode": "Conflicts with: {name}",
           "nodeCount": "Enlighten {required}/{total} related nodes",
           "skillLevel": "level {level}",
@@ -141,12 +149,23 @@
           "skillJoin": "and",
           "skill": "Requires {skill} at {requirement}",
           "skillUpgrade": "Upgrade the related skill"
+        },
+        "routePick": {
+          "title": "Choose Your Pháp Tu Stance",
+          "hint": "The chosen element is permanent. The stance can be reforged out of combat — old stance nodes reset to 0 and refund 75% of the Insight paid.",
+          "dotDesc": "Detonate — relentless elemental ailments; the awakened ult ignites every remaining ailment in one burst.",
+          "noDesc": "Eruption — harder direct hits and crits; crits feed The, and the awakened ult burns the whole pool."
         }
+      },
+      "elementTabs": {
+        "aria": "Choose Pháp Tu element"
       },
       "detail": {
         "empty": "Select a skill to view details.",
         "upgrade": "Upgrade ({cost} Insight)",
         "maxed": "Max",
+        "castProgress": "{count} / {next} casts",
+        "castMaxed": "Maxed by cast count",
         "cooldown": "Cooldown",
         "cost": "Cost",
         "type": "Type",
@@ -201,6 +220,10 @@
           "hintSuffix": " — cannot be changed.",
           "batKiemDescription": "Huy Kiếm reached tier 3 (10,000 slashes) so Bạt Kiếm unlocked — a single gathering strike that scales with Sword Intent tiers against bosses.",
           "kiemTranDescription": "Huy Kiếm has not reached tier 3 so the Sword Formation path is taken — the formation evolves with realm and unlocks on-hit effects by formation level."
+        },
+        "hiddenPath": {
+          "description": "Linh Bao reached its limit — the hidden road reveals itself. Kit: {kit}. No element, no stance, no The — power flows from elemental reactions alone.",
+          "warning": "PERMANENT choice — cannot be changed, no way back to the regular Pháp Tu path."
         }
       },
       "actions": {
@@ -208,7 +231,8 @@
       },
       "messages": {
         "confirmPathTitle": "Confirm Your Path",
-        "confirmPathBody": "Enter {name}? This choice CANNOT be changed."
+        "confirmPathBody": "Enter {name}? This choice CANNOT be changed.",
+        "confirmPathHiddenBody": "Enter {name}? This hidden road is PERMANENT — it cannot be changed, and the regular Pháp Tu element/stance tree will never be yours."
       },
       "world": {
         "ceremonyTitle": "ENTRY CEREMONY",

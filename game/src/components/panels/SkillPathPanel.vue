@@ -27,6 +27,7 @@ import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
 import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
+import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { ElementType } from '@/core/element/ElementType'
 import type { Skill } from '@/core/skill/Skill'
@@ -45,7 +46,20 @@ const { stateVersion } = useStateVersion()
 const showTree = computed(() => player.cultivationPath === 'phap_tu' || player.cultivationPath === 'kiem_tu')
 
 // ---- Nhánh phap_tu (Hành -> Node Tree) ----
-const selectedBranch = ref<ElementType>('fire')
+// Task 16: element tabs always visible for phap_tu — the element-root
+// pick happens IN the tree (element+route atomic commit), so the tree
+// must render before any elemental skill is learned. Default tab = the
+// committed element once phapTu.element exists.
+const selectedBranch = ref<ElementType>(player.phapTu?.element ?? 'fire')
+
+watch(
+  () => player.phapTu?.element,
+  element => {
+    if (element) {
+      selectedBranch.value = element
+    }
+  },
+)
 
 // ---- Nhánh kiem_tu (spec 2026-08-29-kiem-the-kiem-y mục 1) — route
 // chốt VĨNH VIỄN lúc chọn path (tram Lv3 → bat_kiem, chưa →
@@ -120,15 +134,16 @@ function skillElement(skill: Skill): ElementType | null {
   return null
 }
 
-// Kiếm Tu: cây được chọn qua toggle riêng (kiemTuBranch), không phụ
-// thuộc skill đang chọn ở SkillPathList. Pháp Tu: giữ hành vi cũ (chỉ
-// hiện cây khi skill đang chọn có tag 'element').
+// Phap Tu Reimagined (Task 16) — cây Pháp Tu luôn hiển thị: element
+// root được chọn TRONG cây (element+route atomic commit), nên không
+// thể gate theo skill đang chọn (trước khi commit, player chưa có
+// skill elemental nào). Kiem Tu giữ nguyên — route chốt lúc chọn path.
 const selectedSkillHasTree = computed(() => {
   if (!showTree.value) {
     return false
   }
 
-  if (player.cultivationPath === 'kiem_tu') {
+  if (player.cultivationPath === 'kiem_tu' || player.cultivationPath === 'phap_tu') {
     return true
   }
 
@@ -167,6 +182,27 @@ function close() {
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--center">
+            <!-- Phap Tu element tabs (Task 16) — browse all 5 branches;
+                 the committed element is marked, others render locked. -->
+            <div
+              v-if="player.cultivationPath === 'phap_tu'"
+              class="skill-path-panel__element-tabs"
+              role="group"
+              :aria-label="t('panels.skillPath.elementTabs.aria')"
+            >
+              <button
+                v-for="element in ELEMENT_ORDER"
+                :key="element"
+                type="button"
+                class="skill-path-panel__element-tab"
+                :class="{ 'is-selected': element === selectedBranch, 'is-committed': element === player.phapTu?.element }"
+                :style="{ '--element-color': ELEMENT_COLOR_VARS[element] }"
+                @click="onSelectBranch(element)"
+              >
+                {{ ELEMENT_LABELS[element] }}
+              </button>
+            </div>
+
             <NodeTreePanel
               v-if="selectedSkillHasTree"
               :branch-tag="treeBranchTag"
@@ -256,6 +292,36 @@ function close() {
   overflow-y: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* Phap Tu element tabs (Task 16) — 5 Hành chips above the tree; the
+   committed element gets a filled accent, the browsed tab an outline. */
+.skill-path-panel__element-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.skill-path-panel__element-tab {
+  padding: 4px 12px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: 999px;
+  color: var(--element-color, var(--text-secondary));
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.skill-path-panel__element-tab.is-selected {
+  border-color: var(--element-color, var(--chrome-300));
+  font-weight: 600;
+}
+
+.skill-path-panel__element-tab.is-committed {
+  background: color-mix(in srgb, var(--element-color, var(--ink-800)) 22%, var(--ink-800));
 }
 
 .skill-path-panel__col--right {

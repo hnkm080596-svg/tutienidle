@@ -1,6 +1,8 @@
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '../stores/player'
 import type { MainStatKey } from '../core/stats/StatTypes'
+import type { ElementType } from '../core/element/ElementType'
+import type { PhapTuRoute } from '../core/phap-tu/PhapTuState'
 
 /**
  * Modifier từ technique/skill không "tĩnh" như equipment — đã được
@@ -44,6 +46,16 @@ export function useLoadoutActions() {
 
     // Node level (plan §6.2) — nâng node đã lĩnh ngộ lên +1 cấp.
     upgradeNode: (nodeId: string) => withBump(gameManager.progressionOps.upgradeNode(nodeId, player.$state)),
+
+    // Phap Tu Reimagined (Task 16) — atomic element+route commit at the
+    // element root (INV-13); the blocking modal only collects input.
+    selectPhapTuElement: (element: ElementType, route: PhapTuRoute) =>
+      withBump(gameManager.progressionOps.selectPhapTuElement(element, route, player.$state)),
+
+    // Route respec (spec P3) — out-of-combat only (op enforces), resets
+    // old-route nodes and refunds floor(actualPaid x 0.75).
+    switchPhapTuRoute: (route: PhapTuRoute) =>
+      withBump(gameManager.progressionOps.switchRoute(route, player.$state)),
 
     // Reset development một nhánh (plan §6.10) — hoàn Cảm Ngộ đã tiêu;
     // bump vô điều kiện (reset về 0 level cũng là thay đổi state UI).

@@ -14,7 +14,10 @@ import {
   PLAYER_HUD_HP_COLOR,
   PLAYER_HUD_MP_COLOR,
   PLAYER_HUD_KIEM_COLOR,
+  PLAYER_HUD_THE_COLOR,
+  PLAYER_HUD_THE_ARMED_COLOR,
   PLAYER_HUD_LABEL_COLOR,
+  PLAYER_HUD_LABEL_COLOR_INT,
   PLAYER_HUD_STROKE_COLOR,
   ENEMY_HP_BAR_HEIGHT,
 } from './combatConstants'
@@ -39,6 +42,13 @@ interface HudRectGroup {
   visible: boolean
 }
 
+// Phap Tu Reimagined (Task 16) — the The bar is the one group carrying
+// a threshold marker (a tick at the fixed 100 empowerment point vs a
+// truong_the-raised cap) so it gets an optional marker member.
+interface TheBarGroup extends HudRectGroup {
+  marker: Phaser.GameObjects.Rectangle
+}
+
 export class PlayerHudLayer {
   private readonly scene: Phaser.Scene
 
@@ -50,6 +60,8 @@ export class PlayerHudLayer {
 
   private kiemGroup!: HudRectGroup
 
+  private theGroup!: TheBarGroup
+
   private destroyed = false
 
   constructor(scene: Phaser.Scene, viewport: { width: number; height: number }) {
@@ -59,6 +71,7 @@ export class PlayerHudLayer {
     this.hpGroup = this.createGroup(HUD_HP_WIDTH, HUD_HP_HEIGHT, `${HUD_LABEL_FONT_SIZE}`, true)
     this.mpGroup = this.createGroup(HUD_SUB_WIDTH, HUD_SUB_HEIGHT, HUD_SUB_LABEL_FONT_SIZE, false)
     this.kiemGroup = this.createGroup(HUD_SUB_WIDTH, HUD_SUB_HEIGHT, HUD_SUB_LABEL_FONT_SIZE, false)
+    this.theGroup = this.createTheGroup(HUD_SUB_WIDTH, HUD_SUB_HEIGHT, HUD_SUB_LABEL_FONT_SIZE)
 
     this.layout(viewport.width, viewport.height)
   }
@@ -92,6 +105,22 @@ export class PlayerHudLayer {
     return this.kiemGroup.visible
   }
 
+  get theGroupVisible(): boolean {
+    return this.theGroup.visible
+  }
+
+  get theLabel(): Phaser.GameObjects.Text {
+    return this.theGroup.label
+  }
+
+  get theFill(): Phaser.GameObjects.Rectangle {
+    return this.theGroup.fill
+  }
+
+  get theMarker(): Phaser.GameObjects.Rectangle {
+    return this.theGroup.marker
+  }
+
   get hpWidth(): number {
     return this.hpGroup.width
   }
@@ -103,7 +132,9 @@ export class PlayerHudLayer {
   /**
    * Vị trí tính từ viewport: cụm HP neo góc trái-DƯỚI (cách HUD_MARGIN),
    * MP ngay dưới HP (cách HUD_GAP), Kiếm dưới MP. bottom inset = 0 từ
-   * 6A-T3 nên không cần chừa chỗ bar DOM nào.
+   * 6A-T3 nên không cần chừa chỗ bar DOM nào. Thế (Pháp Tu) shares the
+   * Kiếm slot — the two readers are mutually exclusive by path
+   * (kiem_tu vs phap_tu), so a second slot would just be a gap.
    */
   layout(width: number, height: number): void {
     this.viewport = { width, height }
@@ -116,6 +147,7 @@ export class PlayerHudLayer {
     this.positionGroup(this.hpGroup, leftX, hpBarY, HUD_HP_WIDTH, HUD_HP_HEIGHT)
     this.positionGroup(this.mpGroup, leftX, sub1Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
     this.positionGroup(this.kiemGroup, leftX, sub2Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
+    this.positionGroup(this.theGroup, leftX, sub2Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
   }
 
   updateHp(current: number, max: number): void {
@@ -130,12 +162,45 @@ export class PlayerHudLayer {
     this.updateGroup(this.kiemGroup, current, max, max > 0 ? label : '')
   }
 
+  /**
+   * The bar (Task 16) — fill vs the FIXED threshold marker at 100 (a
+   * raised cap via truong_the leaves the marker inside the bar);
+   * `armed` = the phap-tuong unlock node is owned, so at threshold the
+   * ult resolves empowered (label marks the armed state, fill brightens
+   * once the pool reaches the marker).
+   */
+  updateThe(current: number, max: number, threshold: number, armed: boolean): void {
+    const hasPool = Number.isFinite(max) && max > 0
+
+    this.setGroupVisible(this.theGroup, hasPool)
+    this.theGroup.marker.setVisible(hasPool && max > threshold)
+
+    if (!hasPool) {
+      return
+    }
+
+    const ratio = Math.min(1, Math.max(0, current / max))
+
+    this.theGroup.fill.scaleX = ratio
+    this.theGroup.fill.setFillStyle(armed && current >= threshold ? PLAYER_HUD_THE_ARMED_COLOR : PLAYER_HUD_THE_COLOR)
+
+    // Marker sits at threshold/max along the bar — it only leaves the
+    // bar's right edge when the cap is raised past 100.
+    const markerRatio = Math.min(1, threshold / max)
+
+    this.theGroup.marker.setPosition(this.theGroup.background.x + this.theGroup.width * markerRatio, this.theGroup.background.y)
+
+    this.theGroup.label.text = `Thế ${formatNumber(Math.floor(current))} / ${formatNumber(Math.max(0, Math.round(max)))}${armed ? ' ◆' : ''}`
+  }
+
   setVisible(visible: boolean): void {
-    const groups = [this.hpGroup, this.mpGroup, this.kiemGroup]
+    const groups = [this.hpGroup, this.mpGroup, this.kiemGroup, this.theGroup]
 
     for (const group of groups) {
       this.setGroupVisible(group, visible && (group === this.hpGroup || group.visible))
     }
+
+    this.theGroup.marker.setVisible(visible && this.theGroup.marker.visible)
   }
 
   destroy(): void {
@@ -145,11 +210,13 @@ export class PlayerHudLayer {
 
     this.destroyed = true
 
-    for (const group of [this.hpGroup, this.mpGroup, this.kiemGroup]) {
+    for (const group of [this.hpGroup, this.mpGroup, this.kiemGroup, this.theGroup]) {
       group.background.destroy()
       group.fill.destroy()
       group.label.destroy()
     }
+
+    this.theGroup.marker.destroy()
   }
 
   private createGroup(
@@ -157,6 +224,7 @@ export class PlayerHudLayer {
     height: number,
     fontSize: string,
     initialVisible: boolean,
+    fillColor: number = PLAYER_HUD_HP_COLOR,
   ): HudRectGroup {
     const depth = DEPTH_OVERLAY_UI + 2
 
@@ -167,7 +235,7 @@ export class PlayerHudLayer {
       .setDepth(depth)
 
     const fill = this.scene.add
-      .rectangle(0, 0, width, height, PLAYER_HUD_HP_COLOR)
+      .rectangle(0, 0, width, height, fillColor)
       .setOrigin(0, 0.5)
       .setDepth(depth + 1)
 
@@ -189,6 +257,19 @@ export class PlayerHudLayer {
     }
 
     this.setGroupVisible(group, initialVisible)
+
+    return group
+  }
+
+  /** The bar carries a threshold marker the other groups don't need. */
+  private createTheGroup(width: number, height: number, fontSize: string): TheBarGroup {
+    const group = this.createGroup(width, height, fontSize, false, PLAYER_HUD_THE_COLOR) as TheBarGroup
+
+    group.marker = this.scene.add
+      .rectangle(0, 0, 2, height + 4, PLAYER_HUD_LABEL_COLOR_INT)
+      .setOrigin(0.5, 0.5)
+      .setDepth(DEPTH_OVERLAY_UI + 3)
+      .setVisible(false)
 
     return group
   }

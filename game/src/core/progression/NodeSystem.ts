@@ -447,15 +447,7 @@ export function switchRoute(
       continue
     }
 
-    let paid = 0
-
-    for (let spent = 0; spent < level; spent++) {
-      paid += getNextLevelCost(node, spent)
-    }
-
-    // Van Dao (M2): only the insight ACTUALLY paid counts — subtract
-    // the waived record like devResetBranch does.
-    paid = Math.max(0, paid - (player.nodeFreePurchaseRecord?.[node.id] ?? 0))
+    const paid = paidForNodeLevels(player, node)
 
     if (player.nodeFreePurchaseRecord) {
       delete player.nodeFreePurchaseRecord[node.id]
@@ -477,4 +469,63 @@ export function switchRoute(
   player.phapTu.route = route
 
   return refund
+}
+
+/** Insight ACTUALLY paid into a node across its levels — Van Dao waived
+ * amounts are deducted (same accounting as devResetBranch/switchRoute). */
+function paidForNodeLevels(player: PlayerData, node: ProgressionNode): number {
+  const level = getNodeLevel(player, node.id)
+
+  let paid = 0
+
+  for (let spent = 0; spent < level; spent++) {
+    paid += getNextLevelCost(node, spent)
+  }
+
+  return Math.max(0, paid - (player.nodeFreePurchaseRecord?.[node.id] ?? 0))
+}
+
+export interface RouteSwitchPreview {
+  /** floor(actualPaid x 0.75) summed over the old route's nodes. */
+  refund: number
+
+  /** The 25% respec tax — paid insight that is NOT returned. */
+  forfeited: number
+
+  /** Old-route nodes that would reset to level 0. */
+  resetNodeCount: number
+}
+
+/**
+ * Task 16 — read-only preview of switchRoute()'s refund math for the
+ * "you regain X, lose Y" UI. Shares paidForNodeLevels with switchRoute
+ * (A9 — one implementation); mutates nothing.
+ */
+export function previewRouteSwitch(
+  player: PlayerData,
+
+  registry: { getAll(): ProgressionNode[] },
+): RouteSwitchPreview {
+  const oldRoute = player.phapTu.route
+
+  const preview: RouteSwitchPreview = { refund: 0, forfeited: 0, resetNodeCount: 0 }
+
+  if (oldRoute === null) {
+    return preview
+  }
+
+  for (const node of registry.getAll()) {
+    if (node.routeTag !== oldRoute || getNodeLevel(player, node.id) <= 0) {
+      continue
+    }
+
+    const paid = paidForNodeLevels(player, node)
+    const refund = Math.floor(paid * 0.75)
+
+    preview.refund += refund
+    preview.forfeited += paid - refund
+    preview.resetNodeCount += 1
+  }
+
+  return preview
 }

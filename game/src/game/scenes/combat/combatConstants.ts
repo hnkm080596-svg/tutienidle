@@ -37,7 +37,12 @@ export const PLAYER_HUD_STROKE_COLOR = 0x241b1b
 export const PLAYER_HUD_HP_COLOR = 0xc94b4b
 export const PLAYER_HUD_MP_COLOR = 0x4a90d9
 export const PLAYER_HUD_KIEM_COLOR = 0xd4a72c
+// Task 16 — The bar (Phap Tu): violet derivation, armed tint brighter
+// once the pool reaches the empowerment threshold.
+export const PLAYER_HUD_THE_COLOR = 0x9b6dd7
+export const PLAYER_HUD_THE_ARMED_COLOR = 0xc9a7f5
 export const PLAYER_HUD_LABEL_COLOR = '#f4f4f0'
+export const PLAYER_HUD_LABEL_COLOR_INT = 0xf4f4f0
 
 // M13: cast-bar creation path retired with the 'cast'/'cast_start'
 // producers — only OFFSET_Y remains, used by positionCastBar cleanup.

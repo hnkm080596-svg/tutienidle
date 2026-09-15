@@ -70,7 +70,10 @@ export const CORE_SKILLS: Skill[] = [
 
     name: 'Linh Bạo',
 
-    description: 'Tụ linh khí bùng nổ, bỏ qua mọi phòng thủ.',
+    // Spec §11 discoverability hint — the one in-game tell that pushing
+    // Linh Bao to its limit BEFORE the Initiation Ritual opens a road
+    // others cannot see (phap_tu_an). No locked card tease anywhere.
+    description: 'Tụ linh khí bùng nổ, bỏ qua mọi phòng thủ. Nghe đồn kẻ đẩy nó đến cực hạn trước Nghi Lễ Nhập Môn sẽ thấy một con đường người khác không thấy.',
 
     type: 'active',
 
@@ -234,7 +237,9 @@ export const CORE_SKILLS: Skill[] = [
 
     name: 'Ngộ Đạo Hỗn Độn',
 
-    description: 'Ngộ đạo hỗn độn — pháp thuật cơ bản có thể tự phân chia thành nhiều luồng.',
+    // Spec §3.3 + §11 — the HUD renders this as a passive emblem (no
+    // active button); the tooltip must explain basic-slot-only multicast.
+    description: 'Ngộ đạo hỗn độn — chỉ đòn ở ô Thường (Vạn Pháp Tùy Tâm) mới có thể tự phân luồng (multicast). Đa Pháp Liên Tuyên không kích hoạt.',
 
     type: 'passive',
 

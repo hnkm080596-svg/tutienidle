@@ -11,12 +11,14 @@ interface FakeRect {
   width: number
   scaleX: number
   visible: boolean
+  fillColor?: number
   setPosition(x: number, y: number): FakeRect
   setDisplaySize(w: number, h: number): FakeRect
   setVisible(v: boolean): FakeRect
   setDepth(d: number): FakeRect
   setStrokeStyle(...a: unknown[]): FakeRect
   setOrigin(...a: unknown[]): FakeRect
+  setFillStyle(color: number): FakeRect
   destroy(): void
 }
 
@@ -59,6 +61,10 @@ function makeFakeRect(width: number): FakeRect {
       return rect
     },
     setOrigin() {
+      return rect
+    },
+    setFillStyle(color: number) {
+      rect.fillColor = color
       return rect
     },
     destroy() {},
@@ -180,6 +186,42 @@ describe('PlayerHudLayer — in-canvas HUD (6A-T4)', () => {
     expect(hud.kiemGroupVisible).toBe(true)
     expect(hud.kiemLabel.text).toContain('Kiếm Ý T.2')
     expect(hud.kiemFill.scaleX).toBeCloseTo(0.3, 5)
+  })
+
+  // Task 16 — The bar (Phap Tu): fill vs the FIXED 100 marker; a
+  // truong_the-raised cap leaves the marker inside the bar; armed marks
+  // the phap-tuong unlock.
+  it('updateThe: max 0 → ẩn; cap raised → marker visible inside bar', () => {
+    const scene = makeScene()
+    const hud = new PlayerHudLayer(scene as never, { width: 800, height: 600 })
+
+    hud.updateThe(0, 0, 100, false)
+
+    expect(hud.theGroupVisible).toBe(false)
+
+    hud.updateThe(65, 130, 100, false)
+
+    expect(hud.theGroupVisible).toBe(true)
+    expect(hud.theFill.scaleX).toBeCloseTo(0.5, 5)
+    expect(hud.theMarker.visible).toBe(true)
+    expect(hud.theLabel.text).toContain('65')
+    expect(hud.theLabel.text).toContain('130')
+
+    // Marker sits at 100/130 along the bar (x measured from the bar's
+    // left edge — background origin is (0, .5)).
+    const bar = hud.theFill
+
+    expect(hud.theMarker.x).toBeCloseTo(bar.x + bar.width * (100 / 130), 5)
+  })
+
+  it('updateThe: cap == threshold → marker hidden (edge of bar); armed marks the label', () => {
+    const scene = makeScene()
+    const hud = new PlayerHudLayer(scene as never, { width: 800, height: 600 })
+
+    hud.updateThe(100, 100, 100, true)
+
+    expect(hud.theMarker.visible).toBe(false)
+    expect(hud.theLabel.text).toContain('◆')
   })
 
   it('destroy: mọi rect/text được destroy (không leak giữa trận)', () => {

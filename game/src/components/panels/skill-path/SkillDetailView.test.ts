@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest'
-import { createApp, h, ref } from 'vue'
+import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import SkillDetailView from './SkillDetailView.vue'
 import { GameManager } from '@/core/game/GameManager'
@@ -34,7 +34,7 @@ function mountDetail(skill: Skill | null) {
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
   app.mount(container)
 
-  return { container, unmount: () => app.unmount() }
+  return { container, pinia, unmount: () => app.unmount() }
 }
 
 afterEach(() => { document.body.innerHTML = '' })
@@ -56,6 +56,35 @@ describe('SkillDetailView — dòng cơ chế Thuần hệ (Task 12)', () => {
     const mounted = mountDetail(skill)
 
     expect(mounted.container.querySelector('.skill-detail__mechanics')!.textContent).toContain('Lan')
+    mounted.unmount()
+  })
+})
+
+// Task 16 — cast-leveled skills (tram/linh_bao/huy_quyen) show cast
+// progress to the next threshold instead of the Insight upgrade button
+// (INV-9 — upgradeSkill rejects them anyway).
+describe('SkillDetailView — cast-level progress (Task 16)', () => {
+  it('tram Lv1 với 400 casts → hiện "400 / 1000" thay nút Nâng Cấp', async () => {
+    const { usePlayerStore } = await import('@/stores/player')
+    const skill = SKILLS.find(s => s.id === 'tram')!
+    const mounted = mountDetail(skill)
+
+    usePlayerStore(mounted.pinia).skillCastCounts = { tram: 400 }
+    await nextTick()
+
+    const levelRow = mounted.container.querySelector('.skill-detail__level')!
+
+    expect(levelRow.textContent).toContain('400')
+    expect(levelRow.textContent).toContain('1000')
+    expect(mounted.container.querySelector('.skill-detail__upgrade')).toBeNull()
+    mounted.unmount()
+  })
+
+  it('skill thường vẫn hiện nút Nâng Cấp (không cast progress)', () => {
+    const skill = SKILLS.find(s => s.id === 'hoa_cau_thuat')!
+    const mounted = mountDetail(skill)
+
+    expect(mounted.container.querySelector('.skill-detail__cast-progress')).toBeNull()
     mounted.unmount()
   })
 })
