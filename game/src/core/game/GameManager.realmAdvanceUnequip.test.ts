@@ -4,6 +4,7 @@ import { createDefaultPlayer } from '../player/Player'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
 import { equipment } from '../../data/equipment/equipment'
 import { SKILLS } from '../../data/skill/Skills'
+import { TECHNIQUES } from '../../data/technique/Techniques'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 
 // QA-2026-09-02-001 — RESOLVED 2026-09-02 qua redesign Task 9.1 (spec v6):
@@ -16,6 +17,7 @@ import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 function setup() {
   const manager = new GameManager()
   manager.catalogOps.registerSkillTemplates(SKILLS)
+  manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   manager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
   manager.catalogOps.registerEquipment(equipment)
   return manager

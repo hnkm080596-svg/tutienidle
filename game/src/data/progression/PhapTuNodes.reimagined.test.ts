@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PHAP_TU_NODES } from './PhapTuNodes'
 import { PHAP_TU_KIT_IDS, SKILLS } from '../skill/Skills'
+import { TECHNIQUES } from '../technique/Techniques'
 import { PHAP_TU_ULTIMATE_IDS } from '../skill/PhapTuUltimates'
 import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
@@ -163,6 +164,7 @@ describe('PhapTuNodes reimagined — element authority', () => {
   function phapTuManager() {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
@@ -208,6 +210,24 @@ describe('PhapTuNodes reimagined — element authority', () => {
     expect(gameManager.progressionOps.selectPhapTuElement('water', 'no', player)).toBe(false)
     expect(player.phapTu).toEqual({ element: 'fire', route: 'dot' })
     expect(player.nodeLevels['thuy_linh_ngo']).toBeUndefined()
+  })
+
+  it('selectPhapTuElement fails atomically when the root unlock skill template is missing', () => {
+    // Review round-4 (atomicity): the root was purchased and {element,
+    // route} committed even when learnSkill() could not succeed —
+    // leaving an element committed without its basic. Verify the whole
+    // selection fails BEFORE any mutation.
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerSkillTemplates(
+      SKILLS.filter((skill) => skill.id !== 'hoa_cau_thuat'),
+    )
+    gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+    const player = createDefaultPlayer()
+    player.cultivationPath = 'phap_tu'
+
+    expect(gameManager.progressionOps.selectPhapTuElement('fire', 'dot', player)).toBe(false)
+    expect(player.phapTu).toEqual({ element: null, route: null })
+    expect(player.nodeLevels['hoa_linh_ngo']).toBeUndefined()
   })
 
   it('chooseCultivationPath(phap_tu) KHONG auto-chon Fire: phapTu null/null, hoa_cau_thuat chua learn', () => {

@@ -7,6 +7,7 @@ import { getTribulationChapters } from '../data/tribulation/TribulationChapters'
 import { asBaseStats } from '../core/stats/StatBlock'
 import { CHARACTER_CREATION_TALENTS, getTalentDefinition } from '../data/talent/Talents'
 import { pills } from '../data/pill/pills'
+import { TECHNIQUES } from '../data/technique/Techniques'
 import { MERIDIANS } from '../data/realm/Meridians'
 import { makeInstance } from '../core/equipment/EquipmentInstance.fixture'
 import { PROFESSION_GRADE_BY_REALM } from '../core/profession/ProfessionGrade'
@@ -34,6 +35,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
 
   it('chooseCultivationPath khi 5/5 stat 10/10 + 6/6 Luyện Th thể → mortalPerfectionAchieved = true', () => {
     const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     const player = usePlayerStore()
     player.realmLevel = 12
     player.bodyRefinementCompletedTiers = 6
@@ -47,6 +49,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     // usePlayerStore() trong cùng pinia trả CÙNG instance — reset path
     // giữa 2 case (giữ nguyên realm mortal tầng 12).
     const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     const player = usePlayerStore()
     player.realmLevel = 12
     player.bodyRefinementCompletedTiers = 6
@@ -68,6 +71,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
 
   it('snapshot chốt tại thời điểm Quán Khí — KHÔNG hồi cứu sau khi vào Luyện Khí', () => {
     const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     const player = usePlayerStore()
     player.realmLevel = 12
     player.bodyRefinementCompletedTiers = 6
@@ -102,6 +106,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
 
   it('thắng kiếp Đại Đạo Trúc Cơ: Phàm Cốt chuyển thành Phàm Nhân Chi Cốt + highestFoundationAchieved = great_dao', () => {
     const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -149,6 +154,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
 
   it('thua kiếp Đại Đạo: greatDaoOpportunityLost vĩnh viễn + KHÔNG đổi talent; lần xét sau cap Thiên', () => {
     const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -206,6 +212,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
 
   it('victory realm mới → mọi item equipped=false + modifier equipment sync rỗng; slot state GIỮ enhanceLevel', () => {
     const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -269,6 +276,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
 
   it('triggerBreakthroughAction auto-unequip TRƯỚC khi vào kiếp', () => {
     const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 

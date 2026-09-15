@@ -6,6 +6,7 @@ import type { EnemyDefinition } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
 import { SKILLS } from '../../data/skill/Skills'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
+import { TECHNIQUES } from '../../data/technique/Techniques'
 
 // Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 1) — route
 // chốt VĨNH VIỄN đúng lúc chooseCultivationPath('kiem_tu'): Huy Kiếm
@@ -65,6 +66,7 @@ function setup() {
   const gameManager = new GameManager()
 
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 
   return gameManager

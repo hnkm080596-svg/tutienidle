@@ -141,6 +141,12 @@ import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
 import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
 import { applyAnKitToBasic, applyAnKitToSpecial } from '../../data/skill/TurnAnKitSkills'
+import {
+  PHAP_TU_AN_BASIC_ID,
+  PHAP_TU_AN_PASSIVE_ID,
+  PHAP_TU_AN_REQUIRED_SKILLS,
+  PHAP_TU_AN_SPECIAL_ID,
+} from '../player/CultivationPathKit'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 
 
@@ -539,6 +545,7 @@ export class GameManager {
       skillManager: this.skillManager,
       skillSystem: this.skillSystem,
       skillTemplates: this.skillTemplates,
+      nodeRegistry: this.nodeRegistry,
       materialBag: this.materialBag,
       breakthroughOutcomeService: this.breakthroughOutcomeService,
       progressionOps: this.progressionOps,
@@ -861,13 +868,16 @@ export class GameManager {
    * keeps the authored generic-melee mapping.
    */
   private resolvePlayerBasicAttack(player: PlayerData): TurnSkillDefinition {
+    this.assertPhapTuAnKitLearned(player)
+
     const authoredBasicId = this.authoredBasicSkillId(player)
     const skill = authoredBasicId ? this.skillManager.get(authoredBasicId) : undefined
 
     // Review round-3 (MEDIUM): a REQUIRED phap basic that isn't learned
     // is corrupt progression state (the element commit / An ritual grants
     // it atomically). Fail loudly — degrading to generic melee would
-    // silently strip the path's kit.
+    // silently strip the path's kit. (phap_tu_an is already covered by
+    // assertPhapTuAnKitLearned above; kept for defense in depth.)
     if (
       skill === undefined &&
       authoredBasicId !== undefined &&
@@ -904,7 +914,7 @@ export class GameManager {
           player.cultivationPath === 'phap_tu_an'
             ? applyAnKitToBasic(
                 converted,
-                this.skillManager.has('ngo_dao_hon_don'),
+                this.skillManager.has(PHAP_TU_AN_PASSIVE_ID),
                 this.resolveAnElementBasicPool(),
               )
             : converted
@@ -960,7 +970,7 @@ export class GameManager {
     // Phap Tu An (Task 7) — its basic is the composite skill granted at
     // the ritual; the element pick happens inside its resolution (T11).
     if (player.cultivationPath === 'phap_tu_an') {
-      return 'van_phap_tuy_tam'
+      return PHAP_TU_AN_BASIC_ID
     }
 
     // Future path ids (none exist in CultivationPathId today) author
@@ -971,6 +981,30 @@ export class GameManager {
 
     // Mortal / pham_nhan — tram is the creation-granted basic skill.
     return 'tram'
+  }
+
+  /**
+   * Review round-4 (MEDIUM) — the phap_tu_an kit is a fixed three-skill
+   * set granted atomically at the ritual (PHAP_TU_AN_REQUIRED_SKILLS is
+   * the single authority). A save/registry missing ANY member is corrupt
+   * progression state — fail loudly at battle build instead of silently
+   * dropping the special button or the dao multicast. Called from both
+   * battle-build resolvers so each enforces the contract independently.
+   */
+  private assertPhapTuAnKitLearned(player: PlayerData) {
+    if (player.cultivationPath !== 'phap_tu_an') {
+      return
+    }
+
+    const missing = PHAP_TU_AN_REQUIRED_SKILLS.filter(
+      (skillId) => !this.skillManager.has(skillId),
+    )
+
+    if (missing.length > 0) {
+      throw new Error(
+        `[GameManager] phap_tu_an kit incomplete — missing learned skills: ${missing.join(', ')}`,
+      )
+    }
   }
 
   /**
@@ -1012,7 +1046,9 @@ export class GameManager {
     // at the ritual; the ult slot is a passive (ngo_dao_hon_don), no
     // ultimate TurnSkillDefinition.
     if (player.cultivationPath === 'phap_tu_an') {
-      const specialSkill = this.skillManager.get('da_phap_lien_tuyen')
+      this.assertPhapTuAnKitLearned(player)
+
+      const specialSkill = this.skillManager.get(PHAP_TU_AN_SPECIAL_ID)
 
       return {
         special: specialSkill

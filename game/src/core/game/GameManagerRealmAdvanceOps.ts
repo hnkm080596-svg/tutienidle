@@ -4,7 +4,12 @@ import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { CultivationPathId } from '../player/CultivationPathKit'
-import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
+import {
+  CULTIVATION_PATH_KITS,
+  PHAP_TU_AN_BASIC_ID,
+  PHAP_TU_AN_SPECIAL_ID,
+} from '../player/CultivationPathKit'
+import type { NodeRegistry } from '../progression/NodeRegistry'
 import { grantCultivationPathRealmReward as grantPathRealmReward, isPhapTuAnEligible } from '../player/CultivationPathSystem'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID, BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
@@ -51,6 +56,7 @@ export class GameManagerRealmAdvanceOps {
       skillManager: SkillManager
       skillSystem: SkillSystem
       skillTemplates: TemplateRegistry<Skill>
+      nodeRegistry: NodeRegistry
       materialBag: MaterialBag
       breakthroughOutcomeService: BreakthroughOutcomeService
       progressionOps: GameManagerProgressionOps
@@ -169,6 +175,48 @@ export class GameManagerRealmAdvanceOps {
 
     const kit = CULTIVATION_PATH_KITS[pathId]
 
+    // Kiem Tu route resolves BEFORE the commit so grant validation can
+    // see which skill the ritual will grant (spec 2026-08-29 §1 — tram
+    // Lv3 at path choice -> Bat Kiem, otherwise Kiem Tran).
+    const kiemTuRoute: KiemTuRoute | null =
+      pathId === 'kiem_tu'
+        ? (player.skillCastCounts?.['tram'] ?? 0) >= HUY_KIEM_L3_CASTS
+          ? 'bat_kiem'
+          : 'kiem_tran'
+        : null
+
+    // Transaction boundary (review round-4, atomicity hardening): verify
+    // every registry entry the ritual grants BEFORE committing
+    // cultivationPath — a missing template must fail the whole choice,
+    // never leave the path committed with a partial kit.
+    const techniqueTemplate = this.deps.techniqueTemplates.get(kit.techniqueId)
+
+    if (!techniqueTemplate) {
+      return false
+    }
+
+    if (
+      techniqueTemplate.innateSkillId !== undefined &&
+      !this.deps.skillTemplates.has(techniqueTemplate.innateSkillId)
+    ) {
+      return false
+    }
+
+    const grantedSkillIds: readonly string[] =
+      pathId === 'phap_tu_an'
+        ? [PHAP_TU_AN_BASIC_ID, PHAP_TU_AN_SPECIAL_ID]
+        : kiemTuRoute === 'bat_kiem'
+          ? ['bat_kiem_thuat']
+          : (kit.skillIds ?? [])
+
+    if (grantedSkillIds.some((skillId) => !this.deps.skillTemplates.has(skillId))) {
+      return false
+    }
+
+    if (kiemTuRoute === 'kiem_tran' && !this.deps.nodeRegistry.has('kiem_tran_luong_nghi')) {
+      return false
+    }
+
     player.cultivationPath = pathId
 
     this.learnTechnique(kit.techniqueId)
@@ -183,15 +231,12 @@ export class GameManagerRealmAdvanceOps {
     // single skill, granted in this branch) - the old 3-skill tuple stays
     // in CultivationPathKit.
     if (pathId === 'phap_tu_an') {
-      this.deps.progressionOps.learnSkill('van_phap_tuy_tam')
-      this.deps.progressionOps.learnSkill('da_phap_lien_tuyen')
-      this.deps.skillSystem.equipToSlot('van_phap_tuy_tam', 0)
-      this.deps.skillSystem.equipToSlot('da_phap_lien_tuyen', 1)
+      this.deps.progressionOps.learnSkill(PHAP_TU_AN_BASIC_ID)
+      this.deps.progressionOps.learnSkill(PHAP_TU_AN_SPECIAL_ID)
+      this.deps.skillSystem.equipToSlot(PHAP_TU_AN_BASIC_ID, 0)
+      this.deps.skillSystem.equipToSlot(PHAP_TU_AN_SPECIAL_ID, 1)
     } else if (pathId === 'kiem_tu') {
-      const tramCasts = player.skillCastCounts?.['tram'] ?? 0
-      const route: KiemTuRoute = tramCasts >= HUY_KIEM_L3_CASTS ? 'bat_kiem' : 'kiem_tran'
-
-      player.kiemTuRoute = route
+      player.kiemTuRoute = kiemTuRoute!
 
       // Each route OWNS 1 active skill (spec §5) - strip the old kit
       // skills + tram from the loadout (NOT unlearn: a Pham Nhan save

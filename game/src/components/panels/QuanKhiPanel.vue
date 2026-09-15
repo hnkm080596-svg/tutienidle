@@ -13,7 +13,7 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
-import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
+import { CULTIVATION_PATH_KITS, PHAP_TU_AN_REQUIRED_SKILLS } from '@/core/player/CultivationPathKit'
 import { getOfferableCultivationPaths } from '@/core/player/CultivationPathSystem'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import type { KiemTuRoute } from '@/core/player/Player'
@@ -46,7 +46,7 @@ const availablePaths = computed(() => {
 
 // The hidden path's kit — names resolved live from the skill registry
 // so the card never drifts from authored content.
-const AN_KIT_SKILL_IDS = ['van_phap_tuy_tam', 'da_phap_lien_tuyen', 'ngo_dao_hon_don'] as const
+const AN_KIT_SKILL_IDS = PHAP_TU_AN_REQUIRED_SKILLS
 
 const anKitSkillNames = computed(() =>
   AN_KIT_SKILL_IDS.map(id => gameManager.skillManager.get(id)?.name ?? id),
