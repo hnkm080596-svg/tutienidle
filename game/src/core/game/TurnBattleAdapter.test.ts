@@ -65,17 +65,15 @@ describe('toTurnBattleParticipant adapter', () => {
 })
 
 
-describe('Future Systems Task 8 â€” Kiáº¿m Tu special = Báº¡t Kiáº¿m Thuáº­t (2-phase charge)', () => {
-  it('kiem_tu participant nháº­n special bat_kiem_thuat vá»›i chargeTurns 3 + multiplier 3', () => {
+describe('Kiem Tu Reimagined Task 6 — no buildId special/ultimate map', () => {
+  it('kiem_tu buildId grants NO special/ultimate — hien kit is the orb preset; ngu emblems arrive via override (Task 9)', () => {
     const participant = toTurnBattleParticipant(entity(), 0, BASIC, 'kiem_tu')
 
-    expect(participant.special?.skill.id).toBe('bat_kiem_thuat')
-    expect(participant.special?.skill.chargeTurns).toBe(3)
-    expect(participant.special?.skill.damage).toEqual({ kind: 'physical', multiplier: 3 })
-    expect(participant.special?.remainingCooldownTurns).toBe(0)
+    expect(participant.special).toBeUndefined()
+    expect(participant.ultimate).toBeUndefined()
   })
 
-  it('build khÃ¡c (pham_nhan) KHÃ”NG cÃ³ special', () => {
+  it('build khác (pham_nhan) KHÔNG có special', () => {
     const participant = toTurnBattleParticipant(entity(), 0, BASIC, 'pham_nhan')
 
     expect(participant.special).toBeUndefined()
@@ -153,15 +151,18 @@ describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)
     expect(participant.ultimate).toBeUndefined()
   })
 
-  it('gives a Kiem Tu player TRU_TIEN_KIEM_TRAN as their ultimate (A3 Task 4)', () => {
+  it('a Kiem Tu player gets slots only via the resolved override (ngu emblems, Task 9) — buildId alone maps nothing', () => {
     const combatEntity = entity()
 
     const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, 'kiem_tu')
+    expect(participant.special).toBeUndefined()
+    expect(participant.ultimate).toBeUndefined()
 
-    expect(participant.ultimate?.skill.id).toBe('tru_tien_kiem_tran')
-    expect(participant.ultimate?.skill.resourceType).toBe('the')
-    expect(participant.ultimate?.skill.resourceCost).toBe(100)
-    expect(participant.ultimate?.skill.cooldownTurns).toBe(8)
-    expect(participant.special?.skill.id).toBe('bat_kiem_thuat')
+    const withEmblems = toTurnBattleParticipant(combatEntity, 0, BASIC, 'kiem_tu', {
+      special: SPECIAL,
+      ultimate: ULTIMATE,
+    })
+    expect(withEmblems.special?.skill.id).toBe('tam_muoi_chan_hoa')
+    expect(withEmblems.ultimate?.skill.id).toBe('hoa_ha_cuu_thien')
   })
 })

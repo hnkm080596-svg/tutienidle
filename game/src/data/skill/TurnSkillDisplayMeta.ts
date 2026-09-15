@@ -1,5 +1,6 @@
 import type { Skill } from '../../core/skill/Skill'
 import { SKILLS } from './Skills'
+import { KIEM_PHO_COMBOS } from './KiemPhoCombos'
 
 // Bảng 9.5 #5 (2026-09-07) — mapping skillId → display metadata cho HUD
 // turn (TurnCombatSkillBar/CombatSkillSlot). TurnSkillDefinition cố ý
@@ -229,6 +230,38 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     name: 'Cửu Thiên Tinh Lạc',
     description: 'Cửu thiên vãn tinh lạc xuống ba cột, hút sinh cơ về bản thân.',
   },
+
+  // Kiem Tu Reimagined (spec 2026-09-15 §3/§4.3) — the five Kiem Pho
+  // orbs (manual picker + HUD strip readout) and the 37 combo entries
+  // (combo name flash is the discovery signal, K11). Combo meta is
+  // spread from the table so names have exactly one source.
+  orb_dam: {
+    name: 'Đâm',
+    description: 'Đâm thẳng một mục tiêu — đòn kiếm gốc của Kiếm Phổ.',
+  },
+  orb_chem: {
+    name: 'Chém',
+    description: 'Chém nặng, gây Kiếm Thương chảy máu cộng dồn.',
+  },
+  orb_bo: {
+    name: 'Bổ',
+    description: 'Bổ mạnh phá giáp — giảm phòng thủ mục tiêu.',
+  },
+  orb_hat: {
+    name: 'Hất',
+    description: 'Hất ngược có tỉ lệ gây Choáng.',
+  },
+  orb_quet: {
+    name: 'Quét',
+    description: 'Quét ngang toàn trận — sát thương mọi mục tiêu.',
+  },
+
+  ...Object.fromEntries(
+    KIEM_PHO_COMBOS.map((combo) => [
+      combo.id,
+      { name: combo.name, description: `Kiếm Phổ ${combo.pattern.length} chiêu.` },
+    ]),
+  ),
 }
 
 /** Lookup an toàn — id không có trong map trả undefined (caller fallback). */

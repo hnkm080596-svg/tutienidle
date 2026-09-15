@@ -1,5 +1,7 @@
 import type { SessionRef } from '../presentation/PresentationSession'
 import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
+import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
+import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import {
   TurnBattleSystem,
@@ -947,6 +949,17 @@ export class GameManagerTurnBattleOps {
       playerPath?.cultivationPath,
       playerPath ? this.deps.resolvePlayerSpecialUltimate(playerPath) : undefined,
     )
+
+    // Kiem Tu Reimagined Task 6 — hien participant: the Kiem Pho
+    // provider OWNS the basic slot (participant.basic becomes inert);
+    // preset cursor/log live in the provider closure, not PlayerData.
+    // Ngu emblem wiring lands in Task 9.
+    if (playerPath?.cultivationPath === 'kiem_tu' && playerPath.kiemTu?.mode === 'hien') {
+      playerParticipant.dynamicBasic = buildKiemPhoProvider(
+        playerPath,
+        collectKiemPhoComboModifiers(playerPath),
+      )
+    }
 
     // Companion Roster - each companion in player.companions is rebuilt as a
     // fresh CombatEntity/participant per battle. Missing definition or missing

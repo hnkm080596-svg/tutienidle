@@ -70,14 +70,14 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
 
     const basic = gameManager.getTurnBattle()!.players[0]!.basic!
 
-    // Post-path tram is locked (K3): the basic resolves to the static
-    // kiem_tu fallback — NO authored per-cast scaling — until the orb
-    // provider takes over (Task 6). The static def shares id 'tram' but
-    // is a distinct TurnSkillDefinition.
+    // Post-path tram is locked (K3): participant.basic stays the inert
+    // static fallback — the Kiem Pho provider (Task 6) OWNS the slot via
+    // dynamicBasic, so authored per-cast scaling never reaches combat.
     expect(basic.id).toBe('tram')
     expect(basic.damage?.kind).toBe('physical')
     expect(basic.damage?.multiplier).toBe(1)
     expect(basic.cooldownTurns).toBe(0)
+    expect(gameManager.getTurnBattle()!.players[0]!.dynamicBasic).toBeDefined()
   })
 
   it('mortal (no cultivationPath) with learned tram casts tram as basic — casts accrue to the mirror', () => {
