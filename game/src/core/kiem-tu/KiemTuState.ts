@@ -9,6 +9,16 @@
  *  patterns ever use (K6). KiemPhoOrbs.ts re-exports this union. */
 export type OrbId = 'orb_dam' | 'orb_chem' | 'orb_bo' | 'orb_hat' | 'orb_quet'
 
+/** Runtime membership list for the OrbId union — save validation and
+ *  other catalog-membership checks consume this, not hand-rolled sets. */
+export const KIEM_PHO_ORB_IDS: readonly OrbId[] = [
+  'orb_dam',
+  'orb_chem',
+  'orb_bo',
+  'orb_hat',
+  'orb_quet',
+]
+
 export type KiemTuMode = 'hien' | 'ngu'
 
 export interface KiemTuState {

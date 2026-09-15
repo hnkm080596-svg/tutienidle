@@ -202,6 +202,14 @@
           "hintSuffix": ".",
           "hienDescription": "Kiếm Phổ — preset up to nine sword seals; each basic attack plays the next seal, and seal chains matching the manual burst into combo strikes.",
           "nguDescription": "Ngự Kiếm Đạo — myriad swords under one will, each flying sword an independent strike; accumulated Sword Intent forges permanent Sword Dao."
+        },
+        "kiemPhoPreset": {
+          "title": "Kiếm Phổ — Seal Sequence",
+          "hint": "Tap a seal to append it to the sequence (max 9); tap a slot in the sequence to remove that seal.",
+          "battleLocked": "Cannot edit the sequence during battle.",
+          "lockedHint": "Unlocks at {realm}.",
+          "appendAria": "Append {name} to the sequence",
+          "removeAria": "Remove {name} from the sequence"
         }
       },
       "actions": {

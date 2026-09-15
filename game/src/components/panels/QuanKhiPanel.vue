@@ -19,6 +19,11 @@ import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
+import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM } from '@/data/skill/KiemPhoOrbs'
+import type { OrbId } from '@/core/kiem-tu/KiemTuState'
+import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
+import { getRealmIndex } from '@/core/realm/realmSystem'
+import { REALMS } from '@/data/realms/realm'
 
 const { t } = useI18n()
 
@@ -110,6 +115,67 @@ const specNameDisplay = computed(() =>
     ? t('panels.quanKhi.specNames.nguKiemDao')
     : t('panels.quanKhi.specNames.kiemPho'),
 )
+
+// Kiem Tu Reimagined (spec §11) — out-of-combat Kiem Pho preset editor.
+// Direct-op editing: every click goes through setKiemPhoPreset() so
+// PlayerData stays the single source of truth — no draft copy to sync.
+const orbPalette = Object.keys(KIEM_PHO_ORBS) as OrbId[]
+
+const realmIndex = computed(() => {
+  stateVersion.value
+
+  return getRealmIndex(player.realmId)
+})
+
+const presetOrbs = computed<OrbId[]>(() => {
+  stateVersion.value
+
+  return player.kiemTu?.preset ?? []
+})
+
+const presetBattleLocked = computed(() => {
+  stateVersion.value
+
+  return isBattleInProgress(gameManager.getTurnBattle()?.state)
+})
+
+function orbLabel(orbId: OrbId): string {
+  return turnSkillDisplayMetaOf(orbId)?.name ?? orbId
+}
+
+function orbTooltip(orbId: OrbId): string {
+  return turnSkillDisplayMetaOf(orbId)?.description ?? ''
+}
+
+function isOrbUnlocked(orbId: OrbId): boolean {
+  return ORB_UNLOCK_REALM[orbId] <= realmIndex.value
+}
+
+function orbUnlockRealmName(orbId: OrbId): string {
+  return REALMS[ORB_UNLOCK_REALM[orbId]]?.name ?? ''
+}
+
+function appendOrb(orbId: OrbId) {
+  if (presetBattleLocked.value || !isOrbUnlocked(orbId) || presetOrbs.value.length >= 9) {
+    return
+  }
+
+  if (gameManager.progressionOps.setKiemPhoPreset(player.$state, [...presetOrbs.value, orbId])) {
+    bumpState()
+  }
+}
+
+function removeOrbAt(index: number) {
+  if (presetBattleLocked.value || presetOrbs.value.length <= 1) {
+    return
+  }
+
+  const next = presetOrbs.value.filter((_, slotIndex) => slotIndex !== index)
+
+  if (gameManager.progressionOps.setKiemPhoPreset(player.$state, next)) {
+    bumpState()
+  }
+}
 </script>
 
 <template>
@@ -145,6 +211,54 @@ const specNameDisplay = computed(() =>
             ? t('panels.quanKhi.sections.kiemTuSpec.nguDescription')
             : t('panels.quanKhi.sections.kiemTuSpec.hienDescription') }}
         </p>
+      </div>
+    </div>
+
+    <!-- Kiem Pho preset editor — hien only (ngu never reads preset).
+         Strip = current persisted sequence, palette = realm-unlocked
+         orbs; both write through setKiemPhoPreset(). -->
+    <div v-if="isKiemTu && kiemTuMode === 'hien'" class="quan-khi-panel__card">
+      <div class="quan-khi-panel__route-card">
+        <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.title') }}</p>
+        <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.hint') }}</p>
+        <p v-if="presetBattleLocked" class="quan-khi-panel__warning">
+          {{ t('panels.quanKhi.sections.kiemPhoPreset.battleLocked') }}
+        </p>
+
+        <div class="quan-khi-panel__preset-strip" role="listbox" :aria-label="t('panels.quanKhi.sections.kiemPhoPreset.title')">
+          <button
+            v-for="(orbId, index) in presetOrbs"
+            :key="`${index}-${orbId}`"
+            type="button"
+            class="quan-khi-panel__preset-slot"
+            :disabled="presetBattleLocked || presetOrbs.length <= 1"
+            :aria-label="t('panels.quanKhi.sections.kiemPhoPreset.removeAria', { name: orbLabel(orbId) })"
+            @click="removeOrbAt(index)"
+          >
+            {{ orbLabel(orbId) }}
+          </button>
+          <span
+            v-for="empty in 9 - presetOrbs.length"
+            :key="`empty-${empty}`"
+            class="quan-khi-panel__preset-slot quan-khi-panel__preset-slot--empty"
+          ></span>
+        </div>
+
+        <div class="quan-khi-panel__preset-palette">
+          <button
+            v-for="orbId in orbPalette"
+            :key="orbId"
+            type="button"
+            class="quan-khi-panel__preset-orb"
+            :class="{ 'is-locked': !isOrbUnlocked(orbId) }"
+            :disabled="presetBattleLocked || !isOrbUnlocked(orbId) || presetOrbs.length >= 9"
+            :title="isOrbUnlocked(orbId) ? orbTooltip(orbId) : t('panels.quanKhi.sections.kiemPhoPreset.lockedHint', { realm: orbUnlockRealmName(orbId) })"
+            :aria-label="t('panels.quanKhi.sections.kiemPhoPreset.appendAria', { name: orbLabel(orbId) })"
+            @click="appendOrb(orbId)"
+          >
+            {{ orbLabel(orbId) }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -217,6 +331,67 @@ const specNameDisplay = computed(() =>
 
 .quan-khi-panel__choice:disabled {
   opacity: 0.6;
+}
+
+/* Kiem Pho preset editor — strip mirrors the HUD preset readout;
+   palette buttons mirror the manual orb picker. */
+.quan-khi-panel__preset-strip {
+  display: flex;
+  gap: 4px;
+}
+
+.quan-khi-panel__preset-slot {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: var(--text-xs);
+  background: var(--ink-700);
+  border: 1px solid var(--chrome-500);
+  border-radius: var(--radius-sm);
+  color: var(--paper-text);
+  cursor: pointer;
+}
+
+.quan-khi-panel__preset-slot--empty {
+  border-style: dashed;
+  opacity: 0.35;
+  cursor: default;
+}
+
+.quan-khi-panel__preset-slot:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.quan-khi-panel__preset-palette {
+  display: flex;
+  gap: 6px;
+}
+
+.quan-khi-panel__preset-orb {
+  flex: 1;
+  padding: 8px 4px;
+  font-size: var(--text-sm);
+  background: linear-gradient(180deg, var(--ink-700), var(--ink-800));
+  border: 1px solid var(--chrome-500);
+  border-radius: var(--radius-sm);
+  color: var(--paper-text);
+  cursor: pointer;
+}
+
+.quan-khi-panel__preset-orb:not(:disabled):hover {
+  border-color: var(--jade);
+}
+
+.quan-khi-panel__preset-orb.is-locked {
+  opacity: 0.45;
+}
+
+.quan-khi-panel__preset-orb:disabled {
+  cursor: default;
 }
 
 /* Đoạn giải thích thật sự — trước đây nhỏ HƠN dòng hint phía trên nó dù

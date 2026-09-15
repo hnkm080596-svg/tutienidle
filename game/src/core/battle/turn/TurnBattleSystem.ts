@@ -305,6 +305,7 @@ export interface TurnDeclaredAction {
  */
 export interface TurnActionExtraImpact {
   presetId?: TurnSkillDefinition['presetId']
+  targeting?: TurnSkillDefinition['targeting']
   targetIds: string[]
   landedTargetIds: string[]
   hitCount: number
@@ -1534,6 +1535,10 @@ export class TurnBattleSystem {
 
     return {
       presetId: extraDef.presetId,
+      // Authored targeting rides the payload so presentation reports the
+      // same area the gameplay resolution used (A8 — no silent
+      // single-cell downgrade when a combo declares AOE).
+      targeting: extraDef.targeting,
       targetIds: extraTargets.map((target) => target.id),
       landedTargetIds: landedIds,
       hitCount,

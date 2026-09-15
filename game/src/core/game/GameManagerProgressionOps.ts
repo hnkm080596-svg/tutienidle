@@ -201,7 +201,13 @@ export class GameManagerProgressionOps {
     if (node.effect.kiemTuModeSwitch === 'ngu' && player.kiemTu) {
       player.kiemTu.mode = 'ngu'
       this.deps.learnTechnique('van_kiem_quyet')
-      this.deps.equipTechnique('van_kiem_quyet')
+
+      // Conversion contract: a ngu player without the signature
+      // technique is a broken state — surface a failed equip loudly
+      // instead of silently shipping the half-applied flip.
+      if (!this.deps.equipTechnique('van_kiem_quyet')) {
+        console.warn('[kiem-tu] kiem_tu_an flipped mode to ngu but van_kiem_quyet failed to equip')
+      }
     }
 
     // Kiem Tu Reimagined Task 11 (spec §5.4/§6) — Cuu Cung grants run

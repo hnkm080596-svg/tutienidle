@@ -202,6 +202,14 @@
           "hintSuffix": ".",
           "hienDescription": "Kiếm Phổ — sắp sẵn tối đa chín ấn kiếm, mỗi đòn đánh thường đánh theo thứ tự ấn; chuỗi ấn khớp phổ sẽ bộc phát thành tuyệt chiêu.",
           "nguDescription": "Ngự Kiếm Đạo — vạn kiếm ngự không, mỗi phi kiếm là một đòn độc lập; Kiếm Ý tích lũy rèn thành Kiếm Đạo vĩnh viễn."
+        },
+        "kiemPhoPreset": {
+          "title": "Kiếm Phổ — Thứ Tự Ấn Kiếm",
+          "hint": "Chạm một ấn để thêm vào phổ (tối đa 9); chạm ô trong phổ để gỡ ấn đó.",
+          "battleLocked": "Không thể chỉnh phổ giữa chiến đấu.",
+          "lockedHint": "Mở khóa tại {realm}.",
+          "appendAria": "Thêm {name} vào phổ",
+          "removeAria": "Gỡ {name} khỏi phổ"
         }
       },
       "actions": {

@@ -307,7 +307,7 @@ export class CombatAnimationRuntime {
         primaryTargetId: extraPrimaryId,
         anchorCell: { row: extraRow, column: extraCol },
         affectedArea: {
-          shape: 'single',
+          shape: extra.targeting?.shape ?? 'single',
           rowStart: extraRow,
           rowEnd: extraRow,
           colStart: extraCol,
