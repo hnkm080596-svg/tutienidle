@@ -1,6 +1,5 @@
 import type { Skill } from '../../core/skill/Skill'
 import { SKILLS } from './Skills'
-import { KIEM_PHO_COMBOS } from './KiemPhoCombos'
 
 // Bảng 9.5 #5 (2026-09-07) — mapping skillId → display metadata cho HUD
 // turn (TurnCombatSkillBar/CombatSkillSlot). TurnSkillDefinition cố ý
@@ -221,9 +220,10 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   }),
 
   // Kiem Tu Reimagined (spec 2026-09-15 §3/§4.3) — the five Kiem Pho
-  // orbs (manual picker + HUD strip readout) and the 37 combo entries
-  // (combo name flash is the discovery signal, K11). Combo meta is
-  // spread from the table so names have exactly one source.
+  // orbs (manual picker + HUD strip readout). The 37 combos are
+  // DELIBERATELY absent: K11 forbids any combo-name surface — the fired
+  // payload's VFX/damage is the only discovery signal, so no combo id
+  // may resolve to display text here (INV-7 fs-guard enforces).
   orb_dam: {
     name: 'Đâm',
     description: 'Đâm thẳng một mục tiêu — đòn kiếm gốc của Kiếm Phổ.',
@@ -260,12 +260,6 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Mỗi phi kiếm tự quyết sát chiêu, bạo kích, phá giáp.',
   },
 
-  ...Object.fromEntries(
-    KIEM_PHO_COMBOS.map((combo) => [
-      combo.id,
-      { name: combo.name, description: `Kiếm Phổ ${combo.pattern.length} chiêu.` },
-    ]),
-  ),
 }
 
 /** Lookup an toàn — id không có trong map trả undefined (caller fallback). */

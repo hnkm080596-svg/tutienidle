@@ -174,6 +174,31 @@ describe('kiemTu tree — collectors', () => {
     expect(derived).not.toBe(matching)
   })
 
+  it('capstones granting DIFFERENT buffs compose on one combo (no overwrite)', () => {
+    const { gameManager, player } = setup()
+    player.kiemTu!.mode = 'hien'
+    player.nodeLevels = { orb_chem_capstone: 1, orb_bo_capstone: 1, orb_hat_capstone: 1 }
+
+    const modifiers = collectKiemPhoComboModifiers(player, KIEM_TU_NODES)
+    expect(modifiers.length).toBe(3)
+
+    // [B,H,C,B] 'phach_lieu_tram_phach' — matches bo (>=1) + hat (>=1);
+    // chem needs >=2 and does not match.
+    const twoBuff = KIEM_PHO_COMBOS.find(c => c.id === 'phach_lieu_tram_phach')!
+    const d2 = modifiers.reduce((acc, m) => (m.matches(acc) ? m.apply(acc) : acc), twoBuff)
+    expect((d2.appliesBuffs ?? []).map(b => b.definitionId).sort()).toEqual(['choang', 'suy_nhuoc'])
+
+    // [C,B,D,C] 'tram_phach_thich_tram' — matches chem (>=2) + bo (>=1).
+    const threeOrb = KIEM_PHO_COMBOS.find(c => c.id === 'tram_phach_thich_tram')!
+    const d3 = modifiers.reduce((acc, m) => (m.matches(acc) ? m.apply(acc) : acc), threeOrb)
+    expect((d3.appliesBuffs ?? []).map(b => b.definitionId).sort()).toEqual(['kiem_thuong', 'suy_nhuoc'])
+    expect(d3.appliesBuffs!.find(b => b.definitionId === 'kiem_thuong')!.stacks).toBe(2)
+
+    // Canonical combo data untouched by modifier application.
+    expect(twoBuff.appliesBuffs).toBeUndefined()
+    expect(threeOrb.appliesBuffs).toBeUndefined()
+  })
+
   it('capstone modifiers stay inert while mode is ngu', () => {
     const { gameManager, player } = setup()
     player.kiemTu!.mode = 'ngu'

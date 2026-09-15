@@ -101,9 +101,10 @@ export interface NodeEffect {
     // damage-less combos.
     bonusDamageMultiplier?: number
     // Attaches a buff/ailment application to the combo; if the combo
-    // already applies the same definition the stacks MERGE (add).
+    // already applies the same definition the stacks MERGE (add);
+    // different definitionIds COEXIST in the combo's appliesBuffs list.
     appliesBuff?: { definitionId: string; target: 'self' | 'target'; stacks?: number }
-    // Adds stacks to the combo's existing appliesBuff (no-op without one).
+    // Adds stacks to every buff the combo carries (no-op when empty).
     bonusAilmentStacks?: number
     // Deterministic apply order — ascending, nodeId tiebreak. Default 0.
     priority?: number

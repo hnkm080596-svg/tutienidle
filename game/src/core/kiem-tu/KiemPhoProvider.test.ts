@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildKiemPhoProvider } from './KiemPhoProvider'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import type { OrbId } from './KiemTuState'
+import type { KiemPhoComboModifier } from './KiemPhoSystem'
 import type { DynamicBasicCastContext } from '../battle/turn/TurnSkillAction'
 
 // Kiem Tu Reimagined Task 6 — hien provider contract: preset cursor,
@@ -50,6 +51,35 @@ describe('KiemPhoProvider', () => {
 
     // Log cleared — a 4th cast starts fresh.
     expect(provider.onCastResolved!(castCtx('orb_dam'))).toEqual([])
+  })
+
+  it('combo extra def carries EVERY granted buff (multi-capstone composition)', () => {
+    const buffMod = (orb: OrbId, count: number, definitionId: string): KiemPhoComboModifier => ({
+      nodeId: `test_${definitionId}`,
+      priority: 0,
+      matches: combo => combo.pattern.filter(o => o === orb).length >= count,
+      apply: combo => ({
+        ...combo,
+        pattern: [...combo.pattern],
+        appliesBuffs: [...(combo.appliesBuffs ?? []), { definitionId, target: 'target' }],
+      }),
+    })
+    // golden_core unlocks len-4 matching; preset [C,B,D,C] fires
+    // 'tram_phach_thich_tram' which matches both capstone predicates.
+    const provider = buildKiemPhoProvider(
+      hienPlayer(['orb_chem', 'orb_bo', 'orb_dam', 'orb_chem'], 'golden_core'),
+      [buffMod('orb_chem', 2, 'kiem_thuong'), buffMod('orb_bo', 1, 'suy_nhuoc')],
+    )
+    provider.onCastResolved!(castCtx('orb_chem'))
+    provider.onCastResolved!(castCtx('orb_bo'))
+    provider.onCastResolved!(castCtx('orb_dam'))
+    const extras = provider.onCastResolved!(castCtx('orb_chem'))
+    expect(extras).toHaveLength(1)
+    expect(extras[0]!.presetId).toBe('kiem_combo_tram_phach_thich_tram')
+    expect((extras[0]!.appliesBuffs ?? []).map(b => b.definitionId).sort()).toEqual([
+      'kiem_thuong',
+      'suy_nhuoc',
+    ])
   })
 
   it('resolveManualPick validates realm unlock and does NOT advance the cursor', () => {

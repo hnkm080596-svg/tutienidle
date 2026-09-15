@@ -61,7 +61,12 @@ PlayerData.kiemTu {
   auto-mode reader never meets an empty preset):
   `{ mode:'hien', preset:['orb_dam'], kiemY:0, kiemDaoCount:1,
      kiemDaoBase:1 }`. Taking `kiem_tu_an` flips `mode` only — the
-  Đạo fields are already at forge baseline.
+  Đạo fields are already at forge baseline. The conversion is a
+  TRANSACTION: the `van_kiem_quyet` signature technique is validated
+  BEFORE any commit (insight, node ownership, mode), and a post-commit
+  equip failure rolls the whole purchase back (learn is idempotent —
+  already-learned never blocks the flip) — a save never lands in
+  "ngu mode without the signature technique".
 - Mutations only through GameManager path ops (one writer, A3):
   `setKiemPhoPreset` (out of combat), `kiem_tu_an` node purchase
   (mode flip), the Kiếm Ý accrual/convert hook (battle side), the
@@ -140,7 +145,11 @@ interface KiemPhoCombo {
                                 // tell that a combo fired (INV-7)
   // resolved like a mini TurnSkillDefinition — authored effect only:
   damage?: { multiplier: number }              // physical, off might
-  appliesBuff?: { definitionId: string; target: 'self' | 'target' }
+  appliesBuffs?: { definitionId: string;       // plural — several
+                   target: 'self' | 'target' }[]// authored buffs and
+                                // several capstone modifiers may each
+                                // contribute one; same definitionId
+                                // merges stacks, different ids coexist
   targeting?: ActionTargeting                  // defaults: same target
                                                // as the completing cast
 }
@@ -498,9 +507,10 @@ is explicitly the wrong order.
 6. **Realm gating:** combos longer than `realmComboMax` cannot match;
    orbs above the realm cannot be cast or placed in the preset.
 7. **Hardcore discovery:** no UI surface enumerates unfired combos or
-   the live cast log; a fired combo always carries a distinct VFX
-   preset id (data test: every combo entry has `presetId` or an
-   equivalent presentation marker).
+   the live cast log, and NO combo name/id may resolve to presentation
+   text (no display-meta entry, no name flash — a name IS enumeration).
+   A fired combo's only tell is its distinct VFX/damage payload (data
+   test: every combo entry has a unique `presetId`).
 8. **Ngu gate:** `kiem_tu_an` invisible/unpurchasable unless kiem_tu
    AND `tram` Lv3; taking it is irreversible; hien nodes grant no
    effects while `mode==='ngu'` (query-time mode filter, same

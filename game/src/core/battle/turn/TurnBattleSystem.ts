@@ -1462,8 +1462,9 @@ export class TurnBattleSystem {
           this.grantTheFromCast(actor, payloadSkill, castCritLanded)
         }
 
-        if (payloadSkill?.appliesBuff) {
-          this.applyDeclaredBuff(actor, payloadSkill.appliesBuff, declared.affected)
+        for (const buffSpec of payloadSkill?.appliesBuffs ??
+          (payloadSkill?.appliesBuff ? [payloadSkill.appliesBuff] : [])) {
+          this.applyDeclaredBuff(actor, buffSpec, declared.affected)
         }
 
         if (payloadSkill?.targetScope === 'self') {
@@ -1736,8 +1737,9 @@ export class TurnBattleSystem {
       }
     }
 
-    if (extraDef.appliesBuff) {
-      this.applyDeclaredBuff(actor, extraDef.appliesBuff, extraTargets)
+    for (const buffSpec of extraDef.appliesBuffs ??
+      (extraDef.appliesBuff ? [extraDef.appliesBuff] : [])) {
+      this.applyDeclaredBuff(actor, buffSpec, extraTargets)
     }
 
     if (extraScope === 'self' && !landedIds.includes(actor.id)) {

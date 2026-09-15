@@ -301,15 +301,24 @@ describe('INV-7 — hardcore discovery', () => {
     expect(seen.size).toBe(KIEM_PHO_COMBOS.length)
   })
 
+  it('no combo id resolves to display text (K11 — name is data-only)', () => {
+    for (const combo of KIEM_PHO_COMBOS) {
+      expect(
+        turnSkillDisplayMetaOf(combo.id),
+        `${combo.id} leaks a name/description to presentation`,
+      ).toBeUndefined()
+    }
+  })
+
   it('grep-guard: nothing outside the owner seam reads the combo table', () => {
     // K11's discovery contract binds EVERY layer — scan all of src,
-    // allowlisting the only legitimate referencers: the table itself,
-    // the matcher/provider that own and inject it, and the display-meta
-    // lookup (id-keyed name flash IS the discovery signal, not
-    // enumeration). A new referencer must be allowlisted deliberately.
+    // allowlisting the only legitimate referencers: the table itself
+    // and the matcher/provider that own and inject it. A combo name or
+    // id must NEVER reach presentation (no display-meta entry, no name
+    // flash): the fired payload's VFX/damage is the only signal. A new
+    // referencer must be allowlisted deliberately.
     const ALLOWED_REFERENCERS = [
       'src/data/skill/KiemPhoCombos.ts',
-      'src/data/skill/TurnSkillDisplayMeta.ts',
       'src/core/kiem-tu/KiemPhoProvider.ts',
       'src/core/kiem-tu/KiemPhoSystem.ts',
     ]
@@ -357,6 +366,47 @@ describe('INV-8 — ngu gate (reveal / purchase / one-way / mode filter)', () =>
 
     ready.player.skillInsight = 500
     expect(ready.gameManager.progressionOps.purchaseNode('kiem_tu_an', ready.player)).toBe(false)
+  })
+
+  it('kiem_tu_an still commits when van_kiem_quyet is already learned (learn is idempotent)', () => {
+    const { gameManager, player } = setupGame(3)
+    expect(gameManager.realmAdvanceOps.learnTechnique('van_kiem_quyet')).toBe(true)
+
+    expect(gameManager.progressionOps.purchaseNode('kiem_tu_an', player)).toBe(true)
+    expect(player.kiemTu!.mode).toBe('ngu')
+  })
+
+  it('kiem_tu_an is transactional — a post-commit equip failure rolls back insight, node and mode', () => {
+    const { gameManager, player } = setupGame(3)
+    vi.spyOn(gameManager.realmAdvanceOps, 'equipTechnique').mockReturnValue(false)
+
+    expect(gameManager.progressionOps.purchaseNode('kiem_tu_an', player)).toBe(false)
+    expect(player.skillInsight).toBe(500)
+    expect(player.nodeLevels?.['kiem_tu_an']).toBeUndefined()
+    expect(player.purchasedNodeIds).not.toContain('kiem_tu_an')
+    expect(player.kiemTu!.mode).toBe('hien')
+  })
+
+  it('kiem_tu_an preflight rejects the purchase when the signature technique is unregistered', () => {
+    const gameManager = new GameManager()
+    gameManager.setCombatClockSource(new ManualClockSource())
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    // Deliberately no registerTechniqueTemplates — van_kiem_quyet can
+    // never learn/equip, so the conversion must refuse to start.
+    const player = nguPlayer('golden_core')
+    player.kiemTu!.mode = 'hien'
+    player.skillInsight = 500
+    player.skillLevels = { tram: 3 }
+    player.skillCastCounts = { tram: 10_000 }
+    gameManager.setActivePlayer(player)
+    gameManager.progressionOps.learnSkill('tram')
+
+    expect(gameManager.progressionOps.purchaseNode('kiem_tu_an', player)).toBe(false)
+    expect(player.skillInsight).toBe(500)
+    expect(player.nodeLevels?.['kiem_tu_an']).toBeUndefined()
+    expect(player.purchasedNodeIds).not.toContain('kiem_tu_an')
+    expect(player.kiemTu!.mode).toBe('hien')
   })
 
   it('ngu mode hides hien orb nodes; hien mode hides ngu branch nodes', () => {

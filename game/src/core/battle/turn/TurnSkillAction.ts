@@ -83,6 +83,13 @@ export interface TurnSkillDefinition {
    */
   appliesBuff?: { definitionId: string; target: 'self' | 'target'; duration?: number; stacks?: number }
   /**
+   * Kiem Tu review fix — plural form (same convention as
+   * appliesAilment/appliesAilments): combo payloads may carry several
+   * authored buffs and multiple capstone modifiers may each contribute
+   * one. Resolution normalizes `appliesBuffs ?? [appliesBuff]`.
+   */
+  appliesBuffs?: { definitionId: string; target: 'self' | 'target'; duration?: number; stacks?: number }[]
+  /**
    * Phase A1 (2026-09-07) — chance-gated ailment application, checked
    * against TurnReactionManager after applying. Deliberately separate
    * from appliesBuff (unconditional, no reaction check) — different

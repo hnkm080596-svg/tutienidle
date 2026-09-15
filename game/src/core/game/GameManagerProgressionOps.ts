@@ -62,6 +62,9 @@ export class GameManagerProgressionOps {
       // (kiem_tu_an's mode switch swaps in van_kiem_quyet).
       learnTechnique: (techniqueId: string) => boolean
       equipTechnique: (techniqueId: string) => boolean
+      // Preflight probe for the mode-switch transaction (template
+      // registered => learn/equip can succeed).
+      hasTechniqueTemplate: (techniqueId: string) => boolean
     },
   ) {}
 
@@ -160,6 +163,24 @@ export class GameManagerProgressionOps {
       return false
     }
 
+    // Kiem Tu review fix — the mode-switch conversion is a one-way,
+    // no-refund transaction: validate the signature technique exists
+    // BEFORE any state commits (same validate→commit discipline as
+    // selectPhapTuElement).
+    const modeSwitch = node.effect.kiemTuModeSwitch === 'ngu' && player.kiemTu
+
+    if (modeSwitch && !this.deps.hasTechniqueTemplate('van_kiem_quyet')) {
+      return false
+    }
+
+    const snapshot = modeSwitch
+      ? {
+          skillInsight: player.skillInsight,
+          purchasedCount: player.purchasedNodeIds.length,
+          mode: player.kiemTu!.mode,
+        }
+      : undefined
+
     if (!purchaseNodeSystem(player, node)) {
       return false
     }
@@ -187,15 +208,23 @@ export class GameManagerProgressionOps {
     // signature (van_kiem_quyet replaces whatever the kit equipped).
     // One-way: the mode field has no reverse write path, and
     // devResetBranch skips this node (non-refundable by contract).
-    if (node.effect.kiemTuModeSwitch === 'ngu' && player.kiemTu) {
-      player.kiemTu.mode = 'ngu'
+    if (modeSwitch) {
+      // Commit order: mode flip -> learn -> equip. Any post-commit
+      // failure rolls the WHOLE transaction back (insight, node,
+      // mode) — a half-applied flip is a broken save, not a warning.
+      player.kiemTu!.mode = 'ngu'
+      // learn is idempotent (already-learned returns false) — equip is
+      // the real commit criterion.
       this.deps.learnTechnique('van_kiem_quyet')
+      const equipped = this.deps.equipTechnique('van_kiem_quyet')
 
-      // Conversion contract: a ngu player without the signature
-      // technique is a broken state — surface a failed equip loudly
-      // instead of silently shipping the half-applied flip.
-      if (!this.deps.equipTechnique('van_kiem_quyet')) {
-        console.warn('[kiem-tu] kiem_tu_an flipped mode to ngu but van_kiem_quyet failed to equip')
+      if (!equipped) {
+        player.kiemTu!.mode = snapshot!.mode
+        player.skillInsight = snapshot!.skillInsight
+        delete player.nodeLevels?.[node.id]
+        player.purchasedNodeIds.length = snapshot!.purchasedCount
+        console.warn('[kiem-tu] kiem_tu_an rolled back — van_kiem_quyet failed to learn/equip')
+        return false
       }
     }
 

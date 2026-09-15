@@ -542,6 +542,7 @@ export class GameManager {
       // this and owns technique learn/equip (kiem_tu_an mode swap).
       learnTechnique: techniqueId => this.realmAdvanceOps.learnTechnique(techniqueId),
       equipTechnique: techniqueId => this.realmAdvanceOps.equipTechnique(techniqueId),
+      hasTechniqueTemplate: techniqueId => this.techniqueTemplates.has(techniqueId),
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({

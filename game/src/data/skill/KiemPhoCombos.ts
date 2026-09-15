@@ -9,10 +9,12 @@ import type { KiemPhoCombo } from '../../core/kiem-tu/KiemPhoSystem'
 // KiemPhoCombos.test.ts. The three corrected len-4s end in H/Q because
 // any X-A-A-Y tail can only stay free when Y is a late-unlock orb.
 //
-// Effects: spec §11 defers full effect authoring to a content pass —
-// every entry carries a length-tier scaffold damage multiplier (len3
-// 2.5, len4 4.0, len5 7.0) plus its REQUIRED unique presetId (K11: the
-// payload is the only discovery signal).
+// Effects: STUB — spec §11 (user ruling 2026-09-15) defers authored
+// combo effects to a separate content pass (same treatment as Phap Tu /
+// The Tu skill effects). Every entry carries a length-tier scaffold
+// damage multiplier (len3 2.5, len4 4.0, len5 7.0) plus its REQUIRED
+// unique presetId (K11: the payload is the only discovery signal).
+// `appliesBuffs` supports multi-buff payloads for the authored pass.
 
 const D = 'orb_dam'
 const C = 'orb_chem'

@@ -17,14 +17,18 @@ import { unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
 /** Spec §4.2 — combo definition shape. `presetId` is REQUIRED and
  *  unique per combo: the fired payload is the ONLY discovery signal
  *  (K11/INV-7) — two combos sharing a preset are indistinguishable.
- *  `name` is the Vietnamese readout presentation flashes on fire. */
+ *  `name` is a data/debug label ONLY — K11 forbids surfacing it in
+ *  combat presentation (no combo id resolves to display text). */
 export interface KiemPhoCombo {
   id: string
   name: string
   pattern: OrbId[]
   presetId: CombatVfxPresetId
   damage?: { multiplier: number }
-  appliesBuff?: { definitionId: string; target: 'self' | 'target'; stacks?: number }
+  /** Resolved buff collection — a combo may carry several authored
+   *  buffs and multiple capstone modifiers may each contribute one.
+   *  Entries with the same definitionId merge their stacks. */
+  appliesBuffs?: { definitionId: string; target: 'self' | 'target'; stacks?: number }[]
   targeting?: ActionTargeting
 }
 

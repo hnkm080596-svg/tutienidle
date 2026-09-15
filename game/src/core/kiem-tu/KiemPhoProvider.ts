@@ -28,13 +28,7 @@ function comboToExtraDef(combo: KiemPhoCombo): TurnSkillDefinition {
     // Spec §4.2 default: same target as the completing cast — 'single'
     // re-collects the deterministic primary target in applyExtraImpact.
     targeting: combo.targeting ?? { shape: 'single' },
-    appliesBuff: combo.appliesBuff
-      ? {
-          definitionId: combo.appliesBuff.definitionId,
-          target: combo.appliesBuff.target,
-          stacks: combo.appliesBuff.stacks,
-        }
-      : undefined,
+    appliesBuffs: combo.appliesBuffs?.map((buff) => ({ ...buff })),
     presetId: combo.presetId,
   }
 }
