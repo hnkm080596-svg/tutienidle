@@ -256,3 +256,56 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
     expect(participant.canInitiateWuxingReactions).toBe(true)
   })
 })
+
+describe('phap basic resolution — fail-fast on converter rejection (no static fallback)', () => {
+  // Review round-2 (LOW): the PHAP_TU_BASICS static table was a second
+  // authority that drifted from authored skills. A converter rejection is
+  // an authored-data defect — it must surface loudly at battle build,
+  // never silently substitute wrong gameplay.
+  function phapTuPlayerReady() {
+    const { gameManager, player } = makeManager()
+    gameManager.setActivePlayer(player)
+    player.cultivationPath = 'phap_tu'
+    player.phapTu = { element: 'fire', route: 'dot' }
+    return { gameManager, player }
+  }
+
+  function spawnDummy(gameManager: GameManager) {
+    return defineEnemy({
+      id: 'fallback_probe',
+      name: 'Fallback Probe',
+      level: 1,
+      realmId: 'mortal',
+      lane: 'ground',
+      statsInput: {
+        maxHp: 1_000_000, might: 0, attackSpeed: 1,
+        criticalRate: 0, criticalDamage: 1.5, armor: 0, evasionRate: 0,
+      },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
+    })
+  }
+
+  it('phap_tu: a corrupted authored basic throws instead of falling back to the drifted static table', () => {
+    const { gameManager, player } = phapTuPlayerReady()
+
+    const authored = SKILLS.find((skill) => skill.id === 'hoa_cau_thuat')!
+    gameManager.catalogOps.registerSkillTemplates([{ ...authored, effects: [] }])
+    expect(gameManager.progressionOps.learnSkill('hoa_cau_thuat')).toBe(true)
+
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+  })
+
+  it('phap_tu_an: a corrupted kit skill throws instead of degrading to generic melee', () => {
+    const { gameManager, player } = makeManager()
+    gameManager.setActivePlayer(player)
+    player.skillCastCounts = { linh_bao: LING_BAO_L3 }
+
+    // The kit is granted from the template registry at the ritual — the
+    // corrupted template must be in place BEFORE the grant.
+    const authored = SKILLS.find((skill) => skill.id === 'van_phap_tuy_tam')!
+    gameManager.catalogOps.registerSkillTemplates([{ ...authored, effects: [] }])
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(true)
+
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+  })
+})

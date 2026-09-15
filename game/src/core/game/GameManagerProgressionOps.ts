@@ -45,8 +45,10 @@ export class GameManagerProgressionOps {
       skillManager: SkillManager
       getActivePlayer: () => PlayerData | undefined
       // Phap Tu Reimagined Task 4 — combat-state read for switchRoute's
-      // out-of-combat gate (route is static during battle).
-      getTurnBattle: () => unknown
+      // out-of-combat gate (route is static during battle). Owned by the
+      // battle owner: a retained terminal TurnBattle does NOT count as
+      // in-progress, so the gate is a state query, not object existence.
+      isTurnBattleInProgress: () => boolean
     },
   ) {}
 
@@ -312,7 +314,7 @@ export class GameManagerProgressionOps {
    * the 75% refund + route-tagged level cleanup.
    */
   switchRoute(route: 'dot' | 'no', player: PlayerData): boolean {
-    if (this.deps.getTurnBattle()) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 

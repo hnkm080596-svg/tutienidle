@@ -106,7 +106,12 @@ export class TurnReactionManager {
       // carrier on the child (buff-domain primitive), not only DoT
       // fields: a non-DoT child like Thach Hoa (statModifier +
       // onHitProc) now gains real potency, not just duration.
-      scaleBuffPotency(child, 1 + CONG_MINH_AMP)
+      // One amplification per instance — a repeat pair event on the
+      // same live child emits no phantom reaction.
+      if (!scaleBuffPotency(child, 1 + CONG_MINH_AMP)) {
+        continue
+      }
+
       child.remainingTurns *= 1 + CONG_MINH_AMP
       if (child.remainingTime !== undefined) child.remainingTime *= 1 + CONG_MINH_AMP
 

@@ -138,6 +138,15 @@ export interface Buff {
   convertsAfterContinuousTurns?: number
   convertsAfterContinuousSeconds?: number
 
+  /**
+   * Runtime marker — this instance already consumed its one amplification
+   * (Cong Minh). refresh/stack modes keep the same Buff instance, so
+   * without the flag each repeat event would re-scale already-amplified
+   * effects into exponential compounding. Set by scaleBuffPotency; a
+   * fresh instance (replace/expire) starts unamplified.
+   */
+  potencyAmplified?: boolean
+
   effects: BuffEffect[]
 }
 
