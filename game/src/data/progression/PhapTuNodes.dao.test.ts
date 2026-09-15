@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PHAP_TU_NODES } from './PhapTuNodes'
-import { CHAIN_SKILL_IDS } from '../skill/Skills'
+import { PHAP_TU_KIT_IDS } from '../skill/Skills'
 import { ELEMENT_ORDER } from '../../core/element/ElementLabels'
 import { getRealmIndex } from '../../core/realm/realmSystem'
 import type { NodePrerequisite, ProgressionNode } from '../../core/progression/ProgressionNode'
@@ -24,7 +24,7 @@ const SKILL_A: Record<string, string> = {
 
 // Tên skill B–E theo hành (thứ tự chuỗi, bỏ A) — dùng dựng id node.
 function chainSkillIds(el: string): string[] {
-  return [...CHAIN_SKILL_IDS[el as (typeof ELEMENT_ORDER)[number]]].slice(1)
+  return [...PHAP_TU_KIT_IDS[el as (typeof ELEMENT_ORDER)[number]]].slice(1)
 }
 
 function nodeById(id: string): ProgressionNode | undefined {

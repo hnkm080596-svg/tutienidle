@@ -2,7 +2,7 @@
 // TurnSkillDefinition cho 8 builds + enemy special, theo Slice 2 spec §3
 // ("straight field copy, not a redesign"):
 // - Kiếm Tu: 'tram' (Huy Kiếm, dealDamage value 1 physical, resourceType none)
-// - 5 Pháp Tu Thuần: skill đầu mỗi chuỗi CHAIN_SKILL_IDS, mỗi skill 1
+// - 5 Pháp Tu Thuần: skill đầu mỗi chuỗi PHAP_TU_KIT_IDS, mỗi skill 1
 //   component element ratio 1 (Skills.ts L140/374/319/450/532)
 // - Thể Tu + Phàm Nhân (chưa chọn đạo): KHÔNG dùng Skill object — hệ sống
 //   dùng generic melee (basic attack qua might stat), map thành

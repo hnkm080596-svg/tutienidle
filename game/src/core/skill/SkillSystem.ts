@@ -7,6 +7,11 @@ import type { PlayerData } from '../player/Player'
 import { getSkillUpgradeInsightCost } from './SkillUpgradeBalance'
 import type { TriggerBinding } from './SkillTrigger'
 import type { DealDamageAction } from './SkillAction'
+import {
+  NEUTRAL_ROUTE_PROFILE,
+  applyRouteToEffectiveSkill,
+  type RouteProfile,
+} from '../phap-tu/PhapTuRoutes'
 
 import {
   SkillManager,
@@ -105,6 +110,16 @@ export class SkillSystem {
     this.castCountSink = sink
   }
 
+  // Phap Tu Reimagined Task 3 — route profile provider. The GameManager
+  // closure does ALL scoping (path + element + kit membership) so this
+  // class keeps no PlayerData dependency; without a provider every
+  // skill resolves under the neutral profile.
+  private routeProfileProvider?: (skillId: string) => RouteProfile
+
+  setRouteProfileProvider(provider: (skillId: string) => RouteProfile): void {
+    this.routeProfileProvider = provider
+  }
+
   /**
    * Hiệu lực THẬT SỰ của 1 skill tại thời điểm hiện tại — áp
    * Specialization (nếu đã chọn, "behavior-changing node" thay hẳn
@@ -154,7 +169,7 @@ export class SkillSystem {
       }),
     }))
 
-    return {
+    const effective: EffectiveSkill = {
       effects,
 
       triggers,
@@ -172,6 +187,15 @@ export class SkillSystem {
 
       targeting: specialization?.targeting ?? skill.targeting,
     }
+
+    // Phap Tu Reimagined Task 3 — route seam 1 (effective surface):
+    // direct damage + ailment chance factors. Turn-runtime fields
+    // (ailmentStackBonus) apply post-conversion at the orchestration
+    // site via applyRouteToTurnSkill.
+    return applyRouteToEffectiveSkill(
+      effective,
+      this.routeProfileProvider?.(skill.id) ?? NEUTRAL_ROUTE_PROFILE,
+    )
   }
 
   /**

@@ -138,7 +138,7 @@ import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
-import { CHAIN_SKILL_IDS } from '../../data/skill/Skills'
+import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
 
 
 
@@ -158,6 +158,12 @@ import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE } from '../../data/skill/TurnReactionPathSkills'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
+import {
+  NEUTRAL_ROUTE_PROFILE,
+  applyRouteToTurnSkill,
+  resolveRouteProfile,
+  type RouteProfile,
+} from '../phap-tu/PhapTuRoutes'
 
 /**
  * GameManager là orchestrator (2026-08-24 refactor — tách business logic
@@ -449,6 +455,29 @@ export class GameManager {
       this.activePlayer.skillLevels ??= {}
       this.activePlayer.skillLevels[skillId] = level
     })
+
+    // Phap Tu Reimagined Task 3 — ONE scoping closure for both route
+    // seams: the provider feeds getEffectiveSkill's effective-surface
+    // application AND the post-conversion applyRouteToTurnSkill call at
+    // the orchestration sites below. Neutral unless the active player
+    // is normal phap_tu with an element and the skill is a kit member.
+    this.routeProfileProvider = (skillId) => {
+      const player = this.activePlayer
+
+      if (player?.cultivationPath !== 'phap_tu') {
+        return NEUTRAL_ROUTE_PROFILE
+      }
+
+      const element = player.phapTu.element
+
+      if (!element || !PHAP_TU_KIT_IDS[element].includes(skillId)) {
+        return NEUTRAL_ROUTE_PROFILE
+      }
+
+      return resolveRouteProfile(player.phapTu)
+    }
+
+    this.skillSystem.setRouteProfileProvider(this.routeProfileProvider)
 
     // Quï¿½i ?n (spec dot-pha-loi-kiep ï¿½4.1c) ï¿½ tra template qua registry
     // chung (registerEnemyTemplates dï¿½ dang kï¿½ Huy?t Mï¿½ng qua ENEMIES).
@@ -769,6 +798,10 @@ export class GameManager {
 
   private activePlayer?: PlayerData
 
+  /** Phap Tu Reimagined Task 3 — kit-scoped route profile lookup shared
+   * by the SkillSystem provider and the post-conversion seam below. */
+  private routeProfileProvider!: (skillId: string) => RouteProfile
+
   /**
    * App.vue đăng ký player sau boot/load — update() dùng để tick expiry
    * timed effect theo Date.now().
@@ -829,7 +862,12 @@ export class GameManager {
       }
 
       try {
-        const converted = toTurnSkillDefinition(skill, effective)
+        // Route seam 2 (post-conversion): the converter stays generic —
+        // ailmentStackBonus lands on the built definition here.
+        const converted = applyRouteToTurnSkill(
+          toTurnSkillDefinition(skill, effective),
+          this.routeProfileProvider(skill.id),
+        )
 
         return {
           ...converted,
@@ -870,7 +908,7 @@ export class GameManager {
     if (player.cultivationPath === 'phap_tu') {
       const element = this.progressionOps.getPhapTuThuanElement() ?? 'fire'
 
-      return CHAIN_SKILL_IDS[element]?.[0]
+      return PHAP_TU_KIT_IDS[element]?.[0]
     }
 
     // Future path ids (none exist in CultivationPathId today) author
@@ -919,17 +957,23 @@ export class GameManager {
     }
 
     const element = this.progressionOps.getPhapTuThuanElement() ?? 'fire'
-    const [, specialId, ultimateId] = CHAIN_SKILL_IDS[element]
+    const [, specialId, ultimateId] = PHAP_TU_KIT_IDS[element]
 
     const specialSkill = this.skillManager.get(specialId)
     const ultimateSkill = this.skillManager.get(ultimateId)
 
     return {
       special: specialSkill
-        ? toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill))
+        ? applyRouteToTurnSkill(
+            toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill)),
+            this.routeProfileProvider(specialSkill.id),
+          )
         : undefined,
       ultimate: ultimateSkill
-        ? toTurnSkillDefinition(ultimateSkill, this.skillSystem.getEffectiveSkill(ultimateSkill))
+        ? applyRouteToTurnSkill(
+            toTurnSkillDefinition(ultimateSkill, this.skillSystem.getEffectiveSkill(ultimateSkill)),
+            this.routeProfileProvider(ultimateSkill.id),
+          )
         : undefined,
     }
   }

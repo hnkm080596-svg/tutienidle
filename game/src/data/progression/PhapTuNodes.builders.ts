@@ -6,7 +6,7 @@ import type {
   SkillModifier,
 } from '../../core/progression/ProgressionNode'
 import type { StatModifier } from '../../core/stats/StatCalculator'
-import { CHAIN_SKILL_IDS, SKILLS } from '../skill/Skills'
+import { PHAP_TU_KIT_IDS, SKILLS } from '../skill/Skills'
 import { PHAP_TU_ULTIMATE_IDS } from '../skill/PhapTuUltimates'
 
 // Pháp Tu Node Tree — REWORK theo combat-skill-flow-element-power-dot-plan.md
@@ -338,7 +338,7 @@ interface ThuanVariantSpec {
 }
 
 interface ThuanChainSpec {
-  /** Skill id B–E theo thứ tự chuỗi (CHAIN_SKILL_IDS, bỏ A). */
+  /** Skill id B–E theo thứ tự chuỗi (PHAP_TU_KIT_IDS, bỏ A). */
   skillId: string
 
   /** Tên hiển thị node unlock ("Lĩnh ngộ <tên skill>"). */
@@ -365,14 +365,14 @@ export function buildThuanBranch(element: ElementType): ProgressionNode[] {
   // ultimate]. basic = root có sẵn (không node unlock); 2 node unlock cho
   // special (realm gate Kim Đan) + ultimate (Độ Kiếp); biến thể gắn special
   // (C cũ). Node ult riêng (PHAP_TU_ULTIMATE_IDS) giữ nguyên prereq special.
-  const chain = CHAIN_SKILL_IDS[element]
+  const chain = PHAP_TU_KIT_IDS[element]
   const [, specialId, ultimateId] = chain
   const skillA = chain[0] as string
   const tag = `thuan_${element}`
   const lapDaoId = `lap_dao_thuan_${element}`
   const ultId = PHAP_TU_ULTIMATE_IDS[element as keyof typeof PHAP_TU_ULTIMATE_IDS]
 
-  const otherThuan = (Object.keys(CHAIN_SKILL_IDS) as ElementType[])
+  const otherThuan = (Object.keys(PHAP_TU_KIT_IDS) as ElementType[])
     .filter((other) => other !== element)
     .map((other) => `lap_dao_thuan_${other}`)
 

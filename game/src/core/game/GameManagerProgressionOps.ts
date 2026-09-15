@@ -19,7 +19,7 @@ import type { SkillSystem } from '../skill/SkillSystem'
 import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
 import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
-import { CHAIN_SKILL_IDS } from '../../data/skill/Skills'
+import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
 import { getMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { TemplateRegistry } from './TemplateRegistry'
@@ -122,7 +122,7 @@ export class GameManagerProgressionOps {
       return undefined
     }
 
-    for (const element of Object.keys(CHAIN_SKILL_IDS) as ElementType[]) {
+    for (const element of Object.keys(PHAP_TU_KIT_IDS) as ElementType[]) {
       const level = activePlayer.nodeLevels[`lap_dao_thuan_${element}`]
 
       if (level !== undefined && level > 0) {

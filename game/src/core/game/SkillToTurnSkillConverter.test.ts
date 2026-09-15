@@ -62,7 +62,7 @@ describe('toTurnSkillDefinition', () => {
   })
 
   it('maps an ultimate with consume-for-damage fields (Detonate/ward-burst)', () => {
-    // Find an ultimate in CHAIN_SKILL_IDS with consumesAilmentId — fall back
+    // Find an ultimate in PHAP_TU_KIT_IDS with consumesAilmentId — fall back
     // to a synthetic skill if none carries it, so this test proves the
     // mapping itself regardless of content drift.
     const manager = new SkillManager()
