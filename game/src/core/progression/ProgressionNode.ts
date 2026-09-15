@@ -94,6 +94,12 @@ export interface NodeEffect {
   // THUẦN DATA trong NodeSystem). Data (Task 8) tự đảm bảo mutex: 2
   // node biến thể đối diện gate nhau bằng prerequisite excludesNode.
   selectsSpecialization?: { skillId: string; specializationId: string }
+
+  // Kiem Tu Reimagined (spec 2026-09-15 K4) — purchasing flips
+  // player.kiemTu.mode (one-way hien → ngu). The wire lives in
+  // GameManagerProgressionOps.purchaseNode; mode-switch nodes are
+  // non-refundable and devResetBranch skips them.
+  kiemTuModeSwitch?: 'ngu'
 }
 
 /** 9 loại on-hit kiếm trận (spec mục 4) — mở theo cấp trận 2→9. */
@@ -147,6 +153,23 @@ export interface ProgressionNode {
   upgradeCost?: { base: number; perLevel: number }
 
   prerequisites?: NodePrerequisite[]
+
+  /**
+   * Kiem Tu Reimagined (spec K2) — display gate for hidden nodes: the
+   * node does not RENDER in the tree until this prereq holds, AND
+   * canPurchaseNode re-checks it (a hidden node is never purchasable
+   * before reveal). Evaluated through the same hasPrerequisite() as
+   * `prerequisites` — no new machinery.
+   */
+  revealWhen?: NodePrerequisite
+
+  /**
+   * Kiem Tu Reimagined — the mode this node's effects belong to.
+   * Aggregators skip nodes whose kiemTuMode does not match
+   * player.kiemTu.mode (a hien orb node grants nothing while ngu, and
+   * vice versa). undefined = mode-agnostic.
+   */
+  kiemTuMode?: 'hien' | 'ngu'
 
   effect: NodeEffect
 

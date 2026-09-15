@@ -26,7 +26,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, t
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost } from '@/core/progression/NodeSystem'
+import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost, hasPrerequisite } from '@/core/progression/NodeSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
 import SkillConnections from './SkillConnections.vue'
@@ -107,9 +107,16 @@ const branches = computed(() => {
   // mapping is owned by NodeBranchViews (single source for the coverage
   // guard tests/architecture/nodeBranchCoverage.test.ts).
   const visibleTags = props.branchTag ? new Set<string>(viewBranchTags(props.branchTag)) : null
-  const nodes = visibleTags
+  const tagFiltered = visibleTags
     ? allNodes.filter(node => node.branchTag !== undefined && visibleTags.has(node.branchTag))
     : allNodes.filter(node => !(node.branchTag !== undefined && (HIDDEN_BRANCH_TAGS as readonly string[]).includes(node.branchTag)))
+
+  // Kiem Tu Reimagined — revealWhen hides the node until the prereq
+  // holds against the live player (the hidden-path root never renders
+  // early; canPurchaseNode re-checks the same gate).
+  const nodes = tagFiltered.filter(
+    node => !node.revealWhen || hasPrerequisite(player.$state, node.revealWhen),
+  )
 
   const groups = new Map<string, typeof nodes>()
 

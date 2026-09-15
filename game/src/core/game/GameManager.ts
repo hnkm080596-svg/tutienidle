@@ -491,6 +491,10 @@ export class GameManager {
       getActivePlayer: () => this.activePlayer,
       // Deferred closure - turnBattleOps is assigned later.
       getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
+      // Deferred closures - realmAdvanceOps is constructed right after
+      // this and owns technique learn/equip (kiem_tu_an mode swap).
+      learnTechnique: techniqueId => this.realmAdvanceOps.learnTechnique(techniqueId),
+      equipTechnique: techniqueId => this.realmAdvanceOps.equipTechnique(techniqueId),
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({

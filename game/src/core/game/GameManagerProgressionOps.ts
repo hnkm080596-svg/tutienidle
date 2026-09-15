@@ -50,6 +50,10 @@ export class GameManagerProgressionOps {
       // Deferred closure - turnBattleOps is assigned after this ops class
       // is constructed (same pattern as realmAdvanceOps/effectOps).
       getTurnBattle: () => TurnBattle | null
+      // Deferred closures - realmAdvanceOps owns technique learn/equip
+      // (kiem_tu_an's mode switch swaps in van_kiem_quyet).
+      learnTechnique: (techniqueId: string) => boolean
+      equipTechnique: (techniqueId: string) => boolean
     },
   ) {}
 
@@ -189,6 +193,12 @@ export class GameManagerProgressionOps {
 
     const node = this.deps.nodeRegistry.get(nodeId)
 
+    // Mode-switch gate re-checked HERE (not only in canPurchaseNode) —
+    // the ops layer never trusts the caller to have pre-checked.
+    if (!this.passesModeSwitchGate(player, node)) {
+      return false
+    }
+
     if (!purchaseNodeSystem(player, node)) {
       return false
     }
@@ -217,6 +227,17 @@ export class GameManagerProgressionOps {
 
     if (selectsSpec) {
       this.deps.skillSystem.selectSpecialization(selectsSpec.skillId, selectsSpec.specializationId)
+    }
+
+    // Kiem Tu Reimagined (spec K4) — the hidden-path conversion: flip
+    // mode hien → ngu and swap the equipped technique to the Ngu
+    // signature (van_kiem_quyet replaces whatever the kit equipped).
+    // One-way: the mode field has no reverse write path, and
+    // devResetBranch skips this node (non-refundable by contract).
+    if (node.effect.kiemTuModeSwitch === 'ngu' && player.kiemTu) {
+      player.kiemTu.mode = 'ngu'
+      this.deps.learnTechnique('van_kiem_quyet')
+      this.deps.equipTechnique('van_kiem_quyet')
     }
 
     return true
@@ -260,9 +281,35 @@ export class GameManagerProgressionOps {
   }
 
   canPurchaseNode(nodeId: string, player: PlayerData): boolean {
-    return (
-      this.deps.nodeRegistry.has(nodeId) && canPurchaseNodeSystem(player, this.deps.nodeRegistry.get(nodeId))
-    )
+    if (!this.deps.nodeRegistry.has(nodeId)) {
+      return false
+    }
+
+    const node = this.deps.nodeRegistry.get(nodeId)
+
+    // Kiem Tu Reimagined (spec K2/K4/INV-8) — the mode-switch node is
+    // purchasable ONLY by a kiem_tu player still in hien, and NEVER mid-
+    // battle: a combat-time flip would desync the live participant's
+    // provider/emblem slots from PlayerData. Shared by canPurchaseNode
+    // (UI gate) and purchaseNode (the actual transaction — the ops
+    // layer must not trust the caller to have pre-checked).
+    if (!this.passesModeSwitchGate(player, node)) {
+      return false
+    }
+
+    return canPurchaseNodeSystem(player, node)
+  }
+
+  private passesModeSwitchGate(player: PlayerData, node: { effect: { kiemTuModeSwitch?: 'ngu' } }): boolean {
+    if (node.effect.kiemTuModeSwitch !== 'ngu') {
+      return true
+    }
+
+    if (player.cultivationPath !== 'kiem_tu' || player.kiemTu?.mode !== 'hien') {
+      return false
+    }
+
+    return !isBattleInProgress(this.deps.getTurnBattle()?.state)
   }
 
   canUpgradeNode(nodeId: string, player: PlayerData): boolean {

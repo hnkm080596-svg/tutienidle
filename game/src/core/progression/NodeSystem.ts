@@ -92,6 +92,12 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
     return false
   }
 
+  // Kiem Tu Reimagined — a hidden node is never purchasable before its
+  // revealWhen gate holds (display gate + purchase gate share the read).
+  if (node.revealWhen && !hasPrerequisite(player, node.revealWhen)) {
+    return false
+  }
+
   return meetsPrerequisites(player, node)
 }
 
@@ -216,6 +222,16 @@ function scaleModifierForLevel<T extends { flat?: number; percent?: number; perL
  * (§6.8 bước 3) — thay hoàn toàn đường push vào player.modifiers cũ.
  * Cùng (registry, levels) bất kể thứ tự nâng → cùng kết quả.
  */
+/**
+ * Kiem Tu Reimagined — a node authored for one kiem_tu mode contributes
+ * nothing while the player is in the other mode (orb growth nodes are
+ * inert for ngu, ngu growth nodes are inert for hien). Mode-agnostic
+ * nodes (kiemTuMode undefined) always apply.
+ */
+function nodeModeApplies(player: PlayerData, node: ProgressionNode): boolean {
+  return node.kiemTuMode === undefined || node.kiemTuMode === player.kiemTu?.mode
+}
+
 export function aggregateNodeStatModifiers(
   registry: { getAll(): ProgressionNode[] },
 
@@ -226,7 +242,7 @@ export function aggregateNodeStatModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0) {
+    if (level <= 0 || !nodeModeApplies(player, node)) {
       continue
     }
 
@@ -257,7 +273,7 @@ export function aggregateNodeSkillModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0) {
+    if (level <= 0 || !nodeModeApplies(player, node)) {
       continue
     }
 
@@ -295,6 +311,13 @@ export function devResetBranch(
   let refund = 0
 
   for (const node of nodes) {
+    // Kiem Tu Reimagined (spec K4) — mode-switch nodes are one-way and
+    // non-refundable: dev reset never clears nor refunds them. Their
+    // branch children still reset (they hold no mode-switch state).
+    if (node.effect.kiemTuModeSwitch) {
+      continue
+    }
+
     const level = getNodeLevel(player, node.id)
 
     let nodeRefund = 0
@@ -331,7 +354,7 @@ export function devResetBranch(
     changed = false
 
     for (const node of registry.getAll()) {
-      if (getNodeLevel(player, node.id) < 1) {
+      if (getNodeLevel(player, node.id) < 1 || node.effect.kiemTuModeSwitch) {
         continue
       }
 

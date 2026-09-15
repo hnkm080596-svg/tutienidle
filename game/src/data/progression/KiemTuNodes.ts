@@ -474,6 +474,30 @@ const ON_HIT_NODES: ProgressionNode[] = [
   onHitNode('onhit_kiem_than', 'Kiếm Thần Phán Quyết', 'On-hit: kiếm thần phán quyết nguyên tố ngũ hành xoay vòng.', 'than_ngu_hanh', 'kiem_tran_that_tinh'),
 ]
 
+// ─────────── Kiem Tu Reimagined — hidden-path root (Task 10) ───────────
+//
+// `kiem_tu_an` (spec K2/K4) sits at the tree root INVISIBLE until the
+// mortal gate holds: `tram` (Huy Kiem) at Lv3 — derived from
+// skillLevels/skillCastCounts, the same read the old bat_kiem_an gate
+// used. Purchase flips kiemTu.mode hien → ngu one-way: non-refundable,
+// devResetBranch skips it, and the ops layer refuses purchase mid-battle
+// or for non-kiem-tu players. The Ngu branch (Task 11) hangs off this
+// node via `kind:'node'` prereqs + `kiemTuMode:'ngu'` filtering.
+export const KIEM_TU_AN_NODE: ProgressionNode = {
+  id: 'kiem_tu_an',
+  name: 'Kiếm Tu Ẩn',
+  description:
+    'Bỏ Kiếm Phổ, theo Ngự Kiếm Đạo — MỘT CHIỀU, không hoàn lại. ' +
+    'Mọi phi kiếm tự quyết đòn; Kiếm Ý tích lũy luyện thêm phi kiếm.',
+  type: 'major',
+  role: 'keystone',
+  insightCost: 3,
+  revealWhen: { kind: 'skillCastCount', skillId: 'tram', level: 3 },
+  prerequisites: [{ kind: 'skillCastCount', skillId: 'tram', level: 3 }],
+  effect: { kiemTuModeSwitch: 'ngu' },
+  branchTag: 'ngu_kiem',
+}
+
 export const KIEM_TU_NODES: ProgressionNode[] = [
   ...KIEM_TRAN_KEYSTONES,
   ...KIEM_TRAN_GROWTH,
@@ -483,6 +507,7 @@ export const KIEM_TU_NODES: ProgressionNode[] = [
   BAT_KIEM_ROOT,
   ...BAT_KIEM_GROWTH,
   ...BAT_KIEM_KIEM_Y_NODES,
+  KIEM_TU_AN_NODE,
 ]
 
 /** Số kiếm của trận theo skillId (Lưỡng Nghi 2 → Cửu Cung 9) — dùng
