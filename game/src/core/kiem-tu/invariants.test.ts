@@ -7,7 +7,7 @@ import { join, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
-import { freshKiemTuState, MORTAL_PRECURSOR_SKILL_IDS, type OrbId } from './KiemTuState'
+import { freshKiemTuState, KIEM_PHO_ORB_IDS, MORTAL_PRECURSOR_SKILL_IDS, type OrbId } from './KiemTuState'
 import {
   initKiemPhoBattle,
   nextOrb,
@@ -28,10 +28,9 @@ import {
   CASCADE_CRIT_CHANCE,
   CASCADE_PIERCE_CHANCE,
   EXECUTE_MULT,
-  PIERCE_FRACTION,
 } from './NguKiemDao'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
-import { KIEM_PHO_ORBS, unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
+import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM, unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { GameManager } from '../game/GameManager'
 import { ManualClockSource } from '../battle/turn/CombatClock'
@@ -216,6 +215,14 @@ describe('INV-2 — preset shape + cursor bounds', () => {
       expect(state.cursor).toBeLessThan(state.preset.length)
     }
   })
+
+  it('KIEM_PHO_ORB_IDS stays in parity with the orb catalog', () => {
+    // The save validator consumes KIEM_PHO_ORB_IDS; if a future orb
+    // reaches the unlock table but not this list, a legal preset would
+    // be rejected on restore — the two sets must never drift.
+    expect([...KIEM_PHO_ORB_IDS].sort()).toEqual(Object.keys(ORB_UNLOCK_REALM).sort())
+    expect([...KIEM_PHO_ORB_IDS].sort()).toEqual(Object.keys(KIEM_PHO_ORBS).sort())
+  })
 })
 
 describe('INV-3/4/6 — combo determinism + suffix-free table + realm gating', () => {
@@ -285,8 +292,11 @@ describe('INV-7 — hardcore discovery', () => {
     expect(seen.size).toBe(KIEM_PHO_COMBOS.length)
   })
 
-  it('grep-guard: no presentation/component file imports the combo table', () => {
-    for (const dir of ['presentation', 'components', 'game']) {
+  it('grep-guard: no presentation-layer file imports the combo table', () => {
+    // The K11 discovery contract binds EVERY layer that could surface
+    // combo data — dirs plus App.vue itself (a composable importing the
+    // table is still a leak).
+    for (const dir of ['presentation', 'components', 'game', 'composables', 'stores']) {
       const root = join(srcRoot, dir)
       for (const file of listSourceFiles(root)) {
         const source = readFileSync(file, 'utf-8')
@@ -296,6 +306,12 @@ describe('INV-7 — hardcore discovery', () => {
         ).toBe(false)
       }
     }
+
+    const appVue = join(srcRoot, 'App.vue')
+    expect(
+      /KiemPhoCombos|KIEM_PHO_COMBOS/.test(readFileSync(appVue, 'utf-8')),
+      'App.vue reads the combo table — discovery must stay blind',
+    ).toBe(false)
   })
 })
 
@@ -388,7 +404,6 @@ describe('INV-9 — cascade bounds', () => {
       'damageMultiplier',
       'guaranteedHit',
     ])
-    void PIERCE_FRACTION
 
     // Battle-level: target dies on sword 1 — remaining instances never
     // evaluate options, so rng is consumed for live instances only.
