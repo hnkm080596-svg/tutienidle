@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { KIEM_PHO_COMBOS } from './KiemPhoCombos'
+import { COMBAT_VFX_PRESETS } from '../vfx/CombatVfxPresets'
 import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 
 // Kiem Tu Reimagined Task 5 — data invariants for the 37-combo table
@@ -68,6 +69,18 @@ describe('KIEM_PHO_COMBOS table', () => {
       const key = combo.pattern.join(',')
       expect(seen.has(key), `duplicate pattern ${key}`).toBe(false)
       seen.add(key)
+    }
+  })
+
+  it('every presetId resolves to a COMBAT_VFX_PRESETS entry', () => {
+    // The `as CombatVfxPresetId` construction in the table would compile
+    // even for a mistyped id; registry membership is the real guard —
+    // a missing entry silently degrades the K11 discovery VFX.
+    for (const combo of KIEM_PHO_COMBOS) {
+      expect(
+        Object.hasOwn(COMBAT_VFX_PRESETS, combo.presetId),
+        `presetId ${combo.presetId} missing from COMBAT_VFX_PRESETS`,
+      ).toBe(true)
     }
   })
 })
