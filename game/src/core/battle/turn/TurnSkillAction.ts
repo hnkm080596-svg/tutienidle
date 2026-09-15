@@ -85,6 +85,20 @@ export interface TurnSkillDefinition {
   counterable?: boolean
   /** Spec §7.1 — which skill this actor counters with. Defaults to null. */
   counterSkillId?: string | null
+  /**
+   * Phap Tu Reimagined Task 8 — The gain is SKILL-AUTHORED, not
+   * slot-position-derived. Granted ONCE per cast action that lands on
+   * >=1 valid target (target/hit count never multiplies it — a
+   * 5-target AoE grants the value once). Clamped at
+   * `entity.maxThe ?? MAX_THE` by the engine.
+   */
+  theGainOnLandedCast?: number
+  /**
+   * Extra The granted ONCE per cast action when any of its direct hits
+   * crits (same per-cast rule — a 5-target all-crit cast adds this
+   * once, not per target). Authored by the 'no' route profile.
+   */
+  theGainOnCrit?: number
 }
 
 export interface TurnSkillSlot {

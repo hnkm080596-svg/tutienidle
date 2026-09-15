@@ -26,7 +26,7 @@ import type { BattleLogEntry } from './TurnOrderPreview'
 import { selectRandomDistinctElementPair } from './TurnSkillAction'
 import { refundGauge, GAUGE_MAX } from './ActionGauge'
 import { TurnReactionManager } from './TurnReactionManager'
-import { MAX_THE, THE_GAIN_PER_LINK, THE_GAIN_PER_FINISHER } from '../../combat/CombatTypes'
+import { MAX_THE } from '../../combat/CombatTypes'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import type { BuffDefinition } from '../../buff/BuffTypes'
 
@@ -1072,6 +1072,7 @@ export class TurnBattleSystem {
     // (pendingChargedSkillId đã clear ở declare — đọc declared.chargedSkill).
     if (declared.isCharging && declared.chargeResolved) {
       const chargedSkill = declared.chargedSkill
+      let chargedCrit = false
 
       if (chargedSkill && chargedSkill.damage) {
         const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
@@ -1090,6 +1091,10 @@ export class TurnBattleSystem {
 
           if (!hitResult.dodged) {
             targetIds.push(target)
+
+            if (hitResult.critical) {
+              chargedCrit = true
+            }
           }
 
           // ARCH-002 (M7) — the hit may have mutated either pool (survive-
@@ -1102,20 +1107,16 @@ export class TurnBattleSystem {
 
       // M8 (ARCH-010) — the shared per-action The gain below lives past
       // this branch's early return, so a charged completion fires it
-      // HERE, exactly once, resolved through the slot that owns the
-      // charged skill (same special/ultimate inference declare uses).
-      // Ordering parity with the normal path is preserved: the cast
-      // resource/cooldown was already committed at charge-init, so the
-      // gain lands on the post-consume pool — Bat Kiem Thuat accrues
-      // currentThe at hit completion and Tru Tien Kiem Tran stays
-      // reachable. Gated on captured targets like the normal path's
-      // `affected.length > 0` requirement.
-      if (chargedSkill && declared.chargeTargetIds.length > 0) {
-        if (actor.special?.skill.id === chargedSkill.id) {
-          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_LINK)
-        } else if (actor.ultimate?.skill.id === chargedSkill.id) {
-          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_FINISHER)
-        }
+      // HERE, exactly once. Task 8 — the gain is the SKILL's authored
+      // field, not slot inference: the charged def carries
+      // theGainOnLandedCast/theGainOnCrit itself. Ordering parity with
+      // the normal path is preserved: the cast resource/cooldown was
+      // already committed at charge-init, so the gain lands on the
+      // post-consume pool — Bat Kiem Thuat accrues currentThe at hit
+      // completion and Tru Tien Kiem Tran stays reachable. Gated on
+      // LANDED targets like the normal path's targetIds requirement.
+      if (chargedSkill && targetIds.length > 0) {
+        this.grantTheFromCast(actor, chargedSkill, chargedCrit)
       }
 
       return { targetIds }
@@ -1134,6 +1135,11 @@ export class TurnBattleSystem {
 
     if (declared.action && declared.affected.length > 0 && !declared.markerNoPool) {
       const action = declared.action
+
+      // Task 8 — theGainOnCrit fires once per CAST when any direct hit
+      // crits (INV-15): collect the flag across the hit loops, grant
+      // once below — never per target.
+      let castCritLanded = false
 
       // R5 (AR-14) — Emit authoritative gameplay 'attack' event on action commit,
       // ensuring passive listeners receive events identically in headless and presentation modes.
@@ -1160,6 +1166,10 @@ export class TurnBattleSystem {
             if (!hitResult.dodged) {
               targetIds.push(target.id)
 
+              if (hitResult.critical) {
+                castCritLanded = true
+              }
+
               if (this.registry) {
                 this.applySkillAilments(actor, target, pickedSkill)
               }
@@ -1182,6 +1192,10 @@ export class TurnBattleSystem {
           // require a landed hit — dodged attacks bypass all of them.
           if (!hitResult.dodged) {
             targetIds.push(target.id)
+
+            if (hitResult.critical) {
+              castCritLanded = true
+            }
 
             // R3 (AR-03) + Task 5 (D11) — Leech healing: % of the HP the
             // target THẬT SỰ lost post-absorb — a fully-warded hit feeds
@@ -1283,20 +1297,19 @@ export class TurnBattleSystem {
         commitAction(actor.entity, action)
         this.onSkillCast?.(actor, action.skillId)
 
-        // Phase A3 — Thế Thuần Hệ gain, simplified from legacy's
-        // chain-link-position rule (no turn-based chain state exists —
-        // see the A3 spec's Global Constraints). Fires once per landed
-        // action from special/ultimate slots only; basic attacks do not
-        // generate Thế. Capped at MAX_THE. Runs AFTER commitAction so an
-        // ultimate's pool consumption (100 → 0) is already reflected —
-        // the finisher gain lands on the post-cast pool, mirroring
-        // legacy's gain-after-consume ordering. Deliberately NOT inside
-        // the registry gate: Thế gain is engine-native resource accrual,
-        // not buff-registry content.
-        if (action.slot && action.slot === actor.special) {
-          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_LINK)
-        } else if (action.slot && action.slot === actor.ultimate) {
-          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_FINISHER)
+        // Task 8 — The gain is skill-authored (theGainOnLandedCast /
+        // theGainOnCrit), once per cast that landed >=1 valid target —
+        // slot position is no longer a gain rule and target/hit count
+        // never multiplies it (INV-15). A self-scoped cast always lands
+        // on the caster (its targetIds entry is pushed by the buff
+        // block below — too late to serve as the landed signal here).
+        // Runs AFTER commitAction so an ultimate's pool consumption
+        // (100 -> 0) is already reflected — the gain lands on the
+        // post-cast pool, preserving legacy's gain-after-consume
+        // ordering. Deliberately NOT inside the registry gate: The gain
+        // is engine-native resource accrual, not buff-registry content.
+        if (action.skill && (targetIds.length > 0 || action.skill.targetScope === 'self')) {
+          this.grantTheFromCast(actor, action.skill, castCritLanded)
         }
 
         if (action.skill?.appliesBuff && this.registry) {
@@ -1355,6 +1368,30 @@ export class TurnBattleSystem {
     }
 
     return { targetIds }
+  }
+
+  /**
+   * Phap Tu Reimagined Task 8 — the single The-gain hook. Values are
+   * authored on the resolving TurnSkillDefinition: theGainOnLandedCast
+   * applies once per landed cast; theGainOnCrit once more when any
+   * direct hit of the cast crited. The cap reads the battle-snapshotted
+   * entity.maxThe (Truong The nodes, 'no' route) with MAX_THE as the
+   * default — never a hard-coded constant.
+   */
+  private grantTheFromCast(
+    actor: TurnBattleParticipant,
+    skill: TurnSkillDefinition,
+    castCritLanded: boolean,
+  ): void {
+    const cap = actor.entity.maxThe ?? MAX_THE
+
+    if (skill.theGainOnLandedCast) {
+      actor.entity.currentThe = Math.min(cap, (actor.entity.currentThe ?? 0) + skill.theGainOnLandedCast)
+    }
+
+    if (castCritLanded && skill.theGainOnCrit) {
+      actor.entity.currentThe = Math.min(cap, (actor.entity.currentThe ?? 0) + skill.theGainOnCrit)
+    }
   }
 
   /**

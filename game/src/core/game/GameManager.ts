@@ -19,6 +19,7 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffDefinition'
 
 import { NodeRegistry } from '../progression/NodeRegistry'
+import { aggregateTurnSkillResourceModifiers } from '../progression/NodeSystem'
 
 import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
@@ -160,7 +161,10 @@ import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill
 import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
 import {
   NEUTRAL_ROUTE_PROFILE,
+  PHAP_TU_THE_GAIN_BASIC,
+  PHAP_TU_THE_GAIN_SPECIAL,
   applyRouteToTurnSkill,
+  resolveMaxThe,
   resolveRouteProfile,
   type RouteProfile,
 } from '../phap-tu/PhapTuRoutes'
@@ -744,6 +748,9 @@ export class GameManager {
       buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
       resolvePlayerBasicAttack: (player) => this.resolvePlayerBasicAttack(player),
       resolvePlayerSpecialUltimate: (player) => this.resolvePlayerSpecialUltimate(player),
+      // Task 8 — The cap snapshot: query-derived from nodeLevels
+      // (truong_the_<element>, 'no' route), never persisted.
+      resolvePlayerMaxThe: (player) => resolveMaxThe(this.nodeRegistry, player),
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
     })
 
@@ -872,7 +879,7 @@ export class GameManager {
         )
 
         return {
-          ...converted,
+          ...this.applyPhapTuTheGains(converted, player, PHAP_TU_THE_GAIN_BASIC),
           cooldownTurns: 0,
           resourceType: 'none',
           resourceCost: undefined,
@@ -976,17 +983,56 @@ export class GameManager {
 
     return {
       special: specialSkill
-        ? applyRouteToTurnSkill(
-            toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill)),
-            this.routeProfileProvider(specialSkill.id),
+        ? this.applyPhapTuTheGains(
+            applyRouteToTurnSkill(
+              toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill)),
+              this.routeProfileProvider(specialSkill.id),
+            ),
+            player,
+            PHAP_TU_THE_GAIN_SPECIAL,
           )
         : undefined,
       ultimate: ultimateSkill
-        ? applyRouteToTurnSkill(
-            toTurnSkillDefinition(ultimateSkill, this.skillSystem.getEffectiveSkill(ultimateSkill)),
-            this.routeProfileProvider(ultimateSkill.id),
+        ? this.applyPhapTuTheGains(
+            applyRouteToTurnSkill(
+              toTurnSkillDefinition(ultimateSkill, this.skillSystem.getEffectiveSkill(ultimateSkill)),
+              this.routeProfileProvider(ultimateSkill.id),
+            ),
+            player,
+            0,
           )
         : undefined,
+    }
+  }
+
+  /**
+   * Task 8 — attach the authored The-gain fields to a phap_tu kit
+   * TurnSkillDefinition at battle build. Base values come from
+   * PHAP_TU_THE_GAIN_* (basic +5 / special +15 / ultimate +0); the 'no'
+   * route profile contributes theGainOnCrit; tu_the_<element> nodes add
+   * per-level deltas via aggregateTurnSkillResourceModifiers — all of it
+   * scoped to this authored skill id (no leak to other elements, Kiem
+   * Tu, or mortal skills). Non-phap_tu paths (incl. phap_tu_an — its
+   * kit has no The loop) return the def unchanged.
+   */
+  private applyPhapTuTheGains(
+    def: TurnSkillDefinition,
+    player: PlayerData,
+    baseGainOnLandedCast: number,
+  ): TurnSkillDefinition {
+    if (player.cultivationPath !== 'phap_tu') {
+      return def
+    }
+
+    const nodeMods = aggregateTurnSkillResourceModifiers(this.nodeRegistry, player).get(def.id)
+    const theGainOnLandedCast = baseGainOnLandedCast + (nodeMods?.theGainOnLandedCast ?? 0)
+    const theGainOnCrit =
+      (resolveRouteProfile(player.phapTu).critTheGain ?? 0) + (nodeMods?.theGainOnCrit ?? 0)
+
+    return {
+      ...def,
+      ...(theGainOnLandedCast > 0 ? { theGainOnLandedCast } : {}),
+      ...(theGainOnCrit > 0 ? { theGainOnCrit } : {}),
     }
   }
 

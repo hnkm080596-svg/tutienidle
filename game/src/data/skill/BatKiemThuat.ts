@@ -1,4 +1,5 @@
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
+import { THE_GAIN_PER_LINK, THE_GAIN_PER_FINISHER } from '../../core/combat/CombatTypes'
 
 // Future Systems Task 8 (2026-09-04) — Bạt Kiếm Thuật: MỘT skill duy nhất
 // ở vai trò `special` của Kiếm Tu, 2 phase lồng trong primitive
@@ -24,6 +25,9 @@ export const BAT_KIEM_THUAT: TurnSkillDefinition = {
   id: 'bat_kiem_thuat',
   cooldownTurns: 5,
   chargeTurns: 3,
+  // Task 8 — The gain is authored on the skill, not inferred from the
+  // slot: the charge-resolve cast lands once and accrues the link value.
+  theGainOnLandedCast: THE_GAIN_PER_LINK,
   damage: { kind: 'physical', multiplier: 3 },
   targeting: { shape: 'single' },
 }
@@ -37,12 +41,18 @@ export const BAT_KIEM_THUAT: TurnSkillDefinition = {
 // enrage magnitudes. Gain path: BAT_KIEM_THUAT occupies the special slot,
 // so its landed hits accrue currentThe via the A3 Task 1 gain hook
 // (THE_GAIN_PER_LINK, capped at MAX_THE = 100); the ultimate consumes the
-// full pool through the generic resource gate when cast.
+// full pool through the generic resource gate when cast. Gains are
+// authored fields (Task 8) — THE_GAIN_PER_* constants live in
+// CombatTypes but are referenced ONLY by this file's skill data.
 export const TRU_TIEN_KIEM_TRAN: TurnSkillDefinition = {
   id: 'tru_tien_kiem_tran',
   cooldownTurns: 8,
   resourceType: 'the',
   resourceCost: 100,
+  // Task 8 — legacy finisher gain preserved as an authored field: the
+  // pool is consumed by the resource gate first, then +20 lands on the
+  // emptied pool (gain-after-consume ordering lives in the engine hook).
+  theGainOnLandedCast: THE_GAIN_PER_FINISHER,
   damage: { kind: 'physical', multiplier: 5 },
   targeting: { shape: 'single' },
 }

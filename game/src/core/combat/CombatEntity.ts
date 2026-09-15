@@ -67,14 +67,19 @@ export interface CombatEntity {
   currentKiemThe?: number
   currentKiemYTemp?: number
 
-  // Pháp Tu Đạo Sắc (spec 2026-08-30-phap-tu-dao-sac §2.3) — Thế
-  // THUẦN HỆ Pháp Tu sau Lập Đạo, pool 0-MAX_THE (CombatTypes.ts),
-  // tích +10 mỗi link chuỗi cast hoàn tất (+20 finisher E), XUYÊN
-  // KILL trong phiên farm (không decay), reset về 0 khi bắn Ultimate.
-  // Optional — cùng precedent currentKiemThe: chỉ Pháp Tu đã chốt
-  // Thuần mới có ý nghĩa, mọi fixture/path khác đọc qua `?? 0`
-  // (TheResourceSystem retired M13 — gains live in TurnBattleSystem).
+  // Phap Tu Reimagined Task 8 — The pool, BATTLE-INSTANCE SCOPED
+  // (breaking lifecycle change): resets to 0 at every fresh
+  // participant build and every auto-repeat cycle
+  // (resetBattleScopedResources), for every path sharing the pool
+  // (Phap Tu, Bat Kiem). No PlayerData persistence, no cross-cycle
+  // carry. Gains are skill-authored (TurnSkillDefinition.
+  // theGainOnLandedCast/theGainOnCrit — once per cast, never per
+  // target). Optional — readers use `?? 0`.
   currentThe?: number
+  // Battle snapshot of the The cap (undefined => MAX_THE). Derived
+  // once at participant build by resolveMaxThe(player) — MAX_THE +
+  // active truong_the_<element> node contribution — never persisted.
+  maxThe?: number
 
   // Thể Tu (Combat Rework Phase 7) — Momentum CHIẾN ĐẤU, cùng mô hình
   // currentSwordIntent nhưng pool 0-100 (xem CombatTypes.ts's

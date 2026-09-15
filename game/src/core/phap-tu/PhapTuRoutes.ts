@@ -2,6 +2,9 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { PlayerData } from '../player/Player'
 import type { EffectiveSkill } from '../skill/SkillSystem'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
+import type { ProgressionNode } from '../progression/ProgressionNode'
+import { getNodeLevel, isNodeElementActive, isNodeRouteActive } from '../progression/NodeSystem'
+import { MAX_THE } from '../combat/CombatTypes'
 import type { PhapTuState, PhapTuRoute } from './PhapTuState'
 
 // Phap Tu Reimagined (spec 2026-09-14 §4) — the ONE owner of route
@@ -19,6 +22,14 @@ import type { PhapTuState, PhapTuRoute } from './PhapTuState'
 
 /** Extra The granted on a direct-hit crit under the 'no' route. */
 export const PHAP_TU_THE_GAIN_CRIT = 3
+
+// Task 8 — authored per-skill The gains for the NORMAL Phap Tu kit
+// (spec 2026-09-14 §3.1/§4): basic +5 / special +15 per landed cast;
+// the ultimate grants nothing (it consumes the pool). These are base
+// values — tu_the_<element> nodes add per-level deltas through
+// aggregateTurnSkillResourceModifiers() at battle build.
+export const PHAP_TU_THE_GAIN_BASIC = 5
+export const PHAP_TU_THE_GAIN_SPECIAL = 15
 
 export interface RouteProfile {
   directMultiplier: number
@@ -175,4 +186,35 @@ export function applyRouteToTurnSkill(turnSkill: TurnSkillDefinition, profile: R
  */
 export function getRouteStatModifiers(player: PlayerData): StatModifier[] {
   return resolveRouteProfile(player.phapTu).statModifiers
+}
+
+/**
+ * Task 8 — the The-cap query (ownership chain: player.nodeLevels ->
+ * here -> CombatEntity.maxThe battle snapshot -> engine clamp).
+ * MAX_THE + active `truong_the_<element>` contribution (theCapPerLevel
+ * x node level, route/element-gated like every other node effect).
+ * Query-derived, never persisted on PlayerData. Non-phap_tu players —
+ * incl. Bat Kiem — get MAX_THE.
+ */
+export function resolveMaxThe(
+  registry: { getAll(): ProgressionNode[] },
+  player: PlayerData,
+): number {
+  if (player.cultivationPath !== 'phap_tu') {
+    return MAX_THE
+  }
+
+  let bonus = 0
+
+  for (const node of registry.getAll()) {
+    const level = getNodeLevel(player, node.id)
+
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
+      continue
+    }
+
+    bonus += (node.effect.theCapPerLevel ?? 0) * level
+  }
+
+  return MAX_THE + bonus
 }

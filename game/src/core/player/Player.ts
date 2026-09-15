@@ -506,7 +506,7 @@ export function playerToCombatEntity(
   skillStats?: import('../skill/SkillRuntimeStats').SkillRuntimeStats,
   skillLevels?: Readonly<Record<string, number>>,
 ): CombatEntity {
-  return {
+  const entity: CombatEntity = {
     id: 'player',
 
     name: player.name,
@@ -541,10 +541,8 @@ export function playerToCombatEntity(
 
     currentKimThe: 0,
 
-    // Phase A3 (2026-09-07) — Pháp Tu Thế pool (Thuần-path ultimate
-    // resource). Same pattern as the other current*The pools.
-    currentThe: 0,
-
+    // The pool: initialized by resetBattleScopedResources() below —
+    // the single contract point for battle-scoped resources (Task 8).
     timeSinceLastBleedProc: 0,
 
     tuLucActive: false,
@@ -576,6 +574,26 @@ export function playerToCombatEntity(
 
     alive: true,
   }
+
+  resetBattleScopedResources(entity)
+
+  return entity
+}
+
+/**
+ * Phap Tu Reimagined Task 8 (INV-14) — battle-instance-scoped resource
+ * reset, the ONE home for fields that must not survive a battle
+ * boundary. currentThe is the breaking change: legacy let it ride
+ * entity reuse across a farm session; now every fresh participant
+ * build AND every auto-repeat restartTurnBattleCycle zeroes it — for
+ * Phap Tu, Bat Kiem, and any future path sharing the pool.
+ *
+ * Call sites: playerToCombatEntity (fresh build) +
+ * GameManagerTurnBattleOps startStage / restartTurnBattleCycle
+ * (carried-over player entities).
+ */
+export function resetBattleScopedResources(entity: CombatEntity): void {
+  entity.currentThe = 0
 }
 
 /**

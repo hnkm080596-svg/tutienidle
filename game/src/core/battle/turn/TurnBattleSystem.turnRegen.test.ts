@@ -392,6 +392,9 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
         chargeTurns: 2,
         resourceType: 'the',
         resourceCost: MAX_THE,
+        // Task 8 — the finisher gain is authored on the skill, not
+        // inferred from the ultimate slot.
+        theGainOnLandedCast: THE_GAIN_PER_FINISHER,
         damage: { kind: 'physical', multiplier: 1 },
         targeting: { shape: 'single' },
       },
