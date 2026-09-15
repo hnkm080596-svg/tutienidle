@@ -53,9 +53,10 @@ export function getPhapTuAttunementStatModifiers(
 // Mid-battle channel (D12): attunement deltas re-emit the gated MP delta
 // through the registered deltaDeriver -- the deriver sees only deltas,
 // never the base, so a stacked attunement buff cannot double-count the
-// assembly-time emission (INV-10). Registered at module load; the domain
-// contract is entity-agnostic (any entity with an attunement delta emits
-// the MP delta -- harmless for entities with no MP consumers).
+// assembly-time emission (INV-10). Registered at module load;
+// calculateEffectiveStats invokes it only for entities whose
+// EffectiveStatContext.activeDomains contains 'phap_tu', so a non-phap_tu
+// entity gaining attunement mid-battle never leaks MP stats.
 registerDomainDeltaDeriver('phap_tu', (delta) =>
   delta.attunement === 0 ? [] : phapTuAttunementMpModifiers(delta.attunement, 'phap_tu:attunement_delta'),
 )

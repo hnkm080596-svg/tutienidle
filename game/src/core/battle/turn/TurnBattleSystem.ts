@@ -15,6 +15,7 @@ import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 import type { Buff, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { StatModifier } from '../../stats/StatCalculator'
+import type { StatDomain } from '../../stats/StatDomain'
 import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
 import { isTurnTriggerReady } from './BossTurnTriggers'
@@ -102,6 +103,13 @@ export interface TurnBattleParticipant {
   ultimate?: TurnSkillSlot
   resources?: TurnResourcePool
   bossTrigger?: TurnBossTrigger
+  /**
+   * stat-system-reimagined review fix (2026-09-15) — stat domains this
+   * participant owns (player path -> its domain). Domain deltaDerivers
+   * in calculateEffectiveStats run only for these, so e.g. a kiem_tu
+   * entity gaining attunement mid-battle never emits phap_tu MP deltas.
+   */
+  activeDomains?: ReadonlySet<StatDomain>
   /** Future Systems Task 7 — charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */
   chargingTurnsRemaining?: number
   pendingChargedSkillId?: string
@@ -346,6 +354,7 @@ export class TurnBattleSystem {
       entity.baseStats,
       participant.buffs,
       this.liveStatModifiers?.(entity) ?? [],
+      participant.activeDomains,
     )
     participant.speed = entity.stats.speed
 

@@ -126,6 +126,36 @@ describe('hit outcome semantics (INV-3)', () => {
     expect(target.currentHp).toBeCloseTo(1000 - hpDamage, 5)
   })
 
+  it('overkill: hpDamage is the ACTUAL HP lost (clamped at 0), not the post-absorb amount', () => {
+    const combat = new CombatSystem(new EventBus())
+    const source = attacker({ stats: createBaseStats({ might: 100, accuracyRating: 1000, criticalRate: 0, leechPercent: 0.2 }) })
+    // 10 HP left, no ward — post-absorb damage (~27+) far overkills.
+    // D11: leech/thorns scale on the 10 HP the target REALLY lost.
+    const target = defender({ currentHp: 10 }, { thornsPercent: 0.3 })
+
+    const result = combat.resolveActionHit(source, target, PHYSICAL_HIT)
+
+    expect(result.outcome).toBe('taken')
+    expect(result.hpDamage).toBe(10)
+    expect(result.targetKilled).toBe(true)
+    // leech +2 (0.2 x 10), thorns -3 (0.3 x 10) — NOT ~27-scaled.
+    expect(source.currentHp).toBeCloseTo(500 + 10 * 0.2 - 10 * 0.3, 5)
+  })
+
+  it('targetKilled is settled AFTER absorb+apply — a fully warded hit is never a kill', () => {
+    const combat = new CombatSystem(new EventBus())
+    const source = attacker()
+    // currentHp 20 < finalDamage ~27: the pre-absorb prediction would
+    // call this a kill; the ward absorbs everything instead.
+    const target = defender({ currentHp: 20, currentWard: 1000 })
+
+    const result = combat.resolveActionHit(source, target, PHYSICAL_HIT)
+
+    expect(result.outcome).toBe('absorbed')
+    expect(target.alive).toBe(true)
+    expect(result.targetKilled).toBe(false)
+  })
+
   it('mp shield after ward: manaShieldPercent caps at 0.8 so the remainder is hpDamage (taken)', () => {
     const combat = new CombatSystem(new EventBus())
     const source = attacker()

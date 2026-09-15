@@ -11,6 +11,7 @@
 // double-deriving the resolved base).
 import type { Stats } from '../../stats/StatBlock'
 import { calculateEffectiveStats, type StatModifier } from '../../stats/StatCalculator'
+import type { StatDomain } from '../../stats/StatDomain'
 import type { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 
@@ -18,8 +19,9 @@ export function recomputeEffectiveStats(
   resolvedBase: Stats,
   buffs: BuffPool,
   liveModifiers: StatModifier[] = [],
+  activeDomains?: ReadonlySet<StatDomain>,
 ): Stats {
   const modifiers = new BuffSystem(buffs).getActiveModifiers()
 
-  return calculateEffectiveStats(resolvedBase, [...modifiers, ...liveModifiers])
+  return calculateEffectiveStats(resolvedBase, [...modifiers, ...liveModifiers], { activeDomains })
 }

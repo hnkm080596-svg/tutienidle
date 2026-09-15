@@ -96,6 +96,26 @@ describe('player store — setExternalModifiers dirty-check', () => {
     expect(store.finalStats.might).toBe(before - 42 + 100)
   })
 
+  it('chỉ đổi domain (cùng id/stat/flat) → chữ ký khác, modifier domain mới được apply', () => {
+    const store = usePlayerStore()
+
+    // Gated stat + no domain -> dev-mode gate throws on read.
+    store.setExternalModifiers([
+      { id: 'mod:mp', sourceId: 'mod:mp', sourceType: 'buff', stat: 'maxMp', flat: 100 },
+    ])
+
+    expect(() => store.finalStats.maxMp).toThrow(/gate violation/)
+
+    // Same fields, now carrying the owning domain — must NOT be
+    // signature-equal (domain decides whether the gate delivers it);
+    // a stale signature would keep the untagged array and still throw.
+    store.setExternalModifiers([
+      { id: 'mod:mp', sourceId: 'mod:mp', sourceType: 'buff', stat: 'maxMp', flat: 100, domain: 'phap_tu' },
+    ])
+
+    expect(store.finalStats.maxMp).toBe(100)
+  })
+
   it('state bị thay từ nơi khác ($patch/load) → lần gán kế tiếp không bị chữ ký cũ chặn nhầm', () => {
     const store = usePlayerStore()
 

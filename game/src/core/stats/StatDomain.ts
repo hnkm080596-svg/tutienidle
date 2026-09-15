@@ -97,6 +97,18 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
   realm: [{ file: 'data/realm/**' }],
 }
 
+// Combat-path domains (cultivation paths own combat stat channels).
+// TurnBattleAdapter maps a participant's path id onto this set when
+// declaring EffectiveStatContext.activeDomains; meta domains
+// (production/cultivation/equipment_meta/artifact/realm) are not
+// combat-path domains and never appear there.
+export const COMBAT_PATH_DOMAINS: ReadonlySet<StatDomain> = new Set<StatDomain>([
+  'phap_tu',
+  'the_tu',
+  'kiem_tu',
+  'hoa_tu',
+])
+
 export interface DomainViolation {
   readonly modifier: StatModifier
   readonly statDomain: StatDomain

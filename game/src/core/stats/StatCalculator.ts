@@ -329,7 +329,23 @@ export function resolveAttributeTotals(
 // deltas, never the base -- exactly like the universal delta pass.
 // Registration order is invocation order; domains with no
 // attribute-reactive stats never register (no-op by absence).
-export type DomainDeltaDeriver = (attributeDelta: Pick<Stats, MainStatKey>) => StatModifier[]
+//
+// Review fix (2026-09-15): derivers are globally registered but must run
+// ONLY for entities that own the domain — the caller declares the
+// entity's domains via EffectiveStatContext. A globally-registered
+// phap_tu deriver would otherwise leak maxMp/manaRegenPerTurn onto a
+// kiem_tu entity that gains attunement mid-battle.
+export interface EffectiveStatContext {
+  // Stat domains the entity owns (player path -> its domain; enemies and
+  // context-free callers declare none). A domain's deltaDeriver runs only
+  // when present here. Absent = universal delta derivation only.
+  readonly activeDomains?: ReadonlySet<StatDomain>
+}
+
+export type DomainDeltaDeriver = (
+  attributeDelta: Pick<Stats, MainStatKey>,
+  context: EffectiveStatContext,
+) => StatModifier[]
 
 const DOMAIN_DELTA_DERIVERS = new Map<StatDomain, DomainDeltaDeriver>()
 
@@ -371,7 +387,11 @@ export function unregisterDomainDeltaDeriver(domain: StatDomain): void {
  * attunement 100), ~5% at attunement 200/cap — documented in the M9
  * report. A live main-stat modifier that nets to zero changes nothing.
  */
-export function calculateEffectiveStats(resolvedBase: Stats, tempModifiers: StatModifier[]): Stats {
+export function calculateEffectiveStats(
+  resolvedBase: Stats,
+  tempModifiers: StatModifier[],
+  context: EffectiveStatContext = {},
+): Stats {
   // D10: same delivery gate as calculateStats - a universal/absent-domain
   // temp modifier can never move a gated stat mid-battle either.
   const accepted = applyDomainGate(tempModifiers)
@@ -397,8 +417,11 @@ export function calculateEffectiveStats(resolvedBase: Stats, tempModifiers: Stat
 
   // D12: domain deltaDerivers run after the universal delta derivation --
   // e.g. phap_tu re-emits attunement->MP as domain-gated delta modifiers.
-  for (const deriver of DOMAIN_DELTA_DERIVERS.values()) {
-    deltaModifiers.push(...deriver(attributeDelta))
+  // Each runs ONLY when the entity owns that domain (context-active).
+  for (const [domain, deriver] of DOMAIN_DELTA_DERIVERS) {
+    if (context.activeDomains?.has(domain)) {
+      deltaModifiers.push(...deriver(attributeDelta, context))
+    }
   }
 
   return runPipeline(effective, deltaModifiers)

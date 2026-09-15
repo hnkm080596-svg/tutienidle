@@ -100,6 +100,10 @@ function externalModifierSignature(modifiers: StatModifier[]): string {
       modifier.sourceType,
       modifier.stat,
       modifier.tag ?? '',
+      // stat-system-reimagined review fix: domain decides whether the
+      // gate delivers a gated-stat modifier — same-fields-different-
+      // domain MUST break the signature or the new grant never lands.
+      modifier.domain ?? '',
       modifier.flat ?? '',
       modifier.percent ?? '',
       modifier.multiplier ?? '',

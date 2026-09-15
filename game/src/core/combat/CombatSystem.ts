@@ -239,7 +239,10 @@ export class CombatSystem {
 
       manaShieldAbsorbed: 0,
 
-      targetKilled: target.currentHp <= finalDamage,
+      // Settled AFTER ward/MP-shield absorb, HP apply and
+      // SurviveLethalGuard inside resolveAttack() — predicting it here
+      // (pre-multiplier, pre-absorb) lies on both directions.
+      targetKilled: false,
     }
 
     return this.resolveAttack(source, target, result, isCritical, blocked)
@@ -389,7 +392,11 @@ export class CombatSystem {
 
     hpDamage -= manaShieldAbsorbed
 
-    this.vitals.applyHpDamageFromSnapshot(target, hpDamage, result.finalDamage, 'damage', targetBefore, source.id)
+    // D11 — hpDamage is the ACTUAL HP the target lost: the vitals
+    // authority clamps at 0, so an overkill hit counts only the HP that
+    // existed. The returned delta, not the pre-clamp amount, is what
+    // leech/thorns/on-taken triggers scale on.
+    const actualHpDamage = this.vitals.applyHpDamageFromSnapshot(target, hpDamage, result.finalDamage, 'damage', targetBefore, source.id)
 
     result.wardAbsorbed = wardAbsorbed
 
@@ -398,9 +405,9 @@ export class CombatSystem {
     // D5/D11 — hpDamage is the post-absorb truth: the hit "landed"
     // either way (timer reset + hit event above), but only `taken`
     // (hpDamage > 0) may fire damage-proportional triggers below.
-    result.hpDamage = hpDamage
+    result.hpDamage = actualHpDamage
 
-    result.outcome = hpDamage > 0 ? 'taken' : 'absorbed'
+    result.outcome = actualHpDamage > 0 ? 'taken' : 'absorbed'
 
     // Nộ (rage) đã GỠ (spec 2026-08-29-kiem-the-kiem-y mục 5.4) —
     // khối tích currentRage theo damage gây/nhận dỡ sạch.
@@ -421,17 +428,18 @@ export class CombatSystem {
 
     // Leech — damage-proportional trigger: fires only on `taken`
     // (hpDamage > 0), scaled on the HP THẬT SỰ lost post-absorb (D11 —
-    // a fully-warded hit feeds no leech).
-    if (hpDamage > 0 && source.stats.leechPercent > 0 && source.alive) {
-      this.applyHealing(source, hpDamage * clampStatValue('leechPercent', source.stats.leechPercent), source.id, 'leech')
+    // a fully-warded hit feeds no leech, an overkill feeds only the HP
+    // the target actually had).
+    if (actualHpDamage > 0 && source.stats.leechPercent > 0 && source.alive) {
+      this.applyHealing(source, actualHpDamage * clampStatValue('leechPercent', source.stats.leechPercent), source.id, 'leech')
     }
 
     // Thorns — defender-side on-hit-taken trigger: only on `taken`,
-    // scaled on hpDamage. Trừ thẳng HP nguồn, KHÔNG lặp lại pipeline
-    // (không tự roll dodge/crit/thorns ngược lại) — tránh vòng lặp
-    // phản đòn vô hạn giữa 2 bên đều có thorns.
-    if (hpDamage > 0 && target.stats.thornsPercent > 0) {
-      this.applyModifiedDirectDamage(source, hpDamage * target.stats.thornsPercent, target, 'thorns')
+    // scaled on actualHpDamage. Trừ thẳng HP nguồn, KHÔNG lặp lại
+    // pipeline (không tự roll dodge/crit/thorns ngược lại) — tránh vòng
+    // lặp phản đòn vô hạn giữa 2 bên đều có thorns.
+    if (actualHpDamage > 0 && target.stats.thornsPercent > 0) {
+      this.applyModifiedDirectDamage(source, actualHpDamage * target.stats.thornsPercent, target, 'thorns')
     }
 
     // Pháp Tu (Thổ Tu) — "Khiên Nổ": Ward VỪA hấp thụ xong VÀ vừa vỡ
@@ -444,6 +452,10 @@ export class CombatSystem {
     }
 
     this.killIfDead(target, source.id)
+
+    // targetKilled is only truthful now — absorb layers, the HP clamp
+    // and SurviveLethalGuard have all run.
+    result.targetKilled = !target.alive
 
     // Thorns có thể giết ngược nguồn — kiểm tra luôn, target là "kẻ
     // giết" trong trường hợp này.
