@@ -560,7 +560,6 @@ export class GameManager {
       // Deferred closures - turnBattleOps/activePlayer assigned later.
       getActivePlayer: () => this.activePlayer,
       getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
-      getSkillRuntimeStats: (player) => this.progressionOps.getSkillRuntimeStats(player),
     })
 
     this.economyOps = new GameManagerEconomyOps({
@@ -738,7 +737,6 @@ export class GameManager {
       surviveLethalGuard: this.surviveLethalGuard,
       sessionAllocator: this.sessionAllocator,
       getActivePlayer: () => this.activePlayer,
-      getSkillRuntimeStats: (player) => this.progressionOps.getSkillRuntimeStats(player),
       getSkillLevels: () =>
         Object.fromEntries(this.skillManager.getAll().map((skill) => [skill.id, skill.level])),
       resetPassiveStacks: () => this.passiveSystem.resetStacks(),

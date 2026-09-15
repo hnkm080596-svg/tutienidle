@@ -34,8 +34,6 @@ function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
     skillInsight: 0,
     totalSkillInsightGained: 0,
     attributePoints: 0,
-    unlockedElements: [],
-    equippedElements: [],
     nodeLevels: {},
     purchasedNodeIds: [],
     completedStageIds: [],

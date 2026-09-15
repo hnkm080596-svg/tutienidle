@@ -6,12 +6,10 @@
 // TurnSkillAction/TurnBattleSystem instead.
 import type { SkillEffect } from './SkillEffect'
 import type { CombatEntity } from '../combat/CombatEntity'
-import { getSkillRuntimeStat } from './SkillRuntimeStats'
 import type { CombatSystem } from '../combat/CombatSystem'
 import type { BuffSystem } from '../buff/BuffSystem'
 import type { BuffRegistry } from '../buff/BuffRegistry'
 import type { ElementType } from '../element/ElementType'
-import { MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
 import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
 
 export interface SkillEffectContext {
@@ -341,52 +339,6 @@ export class SkillEffectSystem {
         if (Math.random() >= chance) break
 
         ctx.targetBuffs.apply(ctx.buffRegistry.get(effect.buffId), source, target, ctx.buffRegistry)
-
-        // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục
-        // 9/11, 2026-08-21) — CHỈ tích khi roll THÀNH CÔNG (đã ở
-        // trong nhánh này), nền 0 nếu chưa mua "Kim Thế".
-        const kimTheGain = getSkillRuntimeStat(source, 'kimTheGainPerProc')
-        if (effect.grantsKimThePerProc && kimTheGain > 0) {
-          source.currentKimThe = Math.min(
-            MAX_KIM_THE + getSkillRuntimeStat(source, 'kimTheMaxStacksBonus'),
-            source.currentKimThe + kimTheGain,
-          )
-
-          source.timeSinceLastBleedProc = 0
-        }
-
-        // Kim Tu ("Huyết Phá", Plans/magicpathgeneral Phase 13,
-        // 2026-08-21) — charge ĐỘC LẬP với Kim Thế ở trên (cùng điều
-        // kiện roll, 2 counter khác nhau). Chạm MAX_HUYET_PHA thì
-        // consume/reset về 0 (KHÔNG mutate ailment/debuff nào — đúng
-        // invariant Phase 16) rồi trigger 1 burst damage MỘT LẦN lên
-        // target qua ĐÚNG pipeline DOT RES (applyDotDamage()),
-        // effectId 'huyet_pha_burst' để phân biệt với tick DoT thường.
-        const huyetPhaGain = getSkillRuntimeStat(source, 'huyetPhaGainPerProc')
-        if (effect.grantsHuyetPhaPerProc && huyetPhaGain > 0) {
-          const nextCharge = (source.currentHuyetPha ?? 0) + huyetPhaGain
-
-          if (nextCharge >= MAX_HUYET_PHA) {
-            source.currentHuyetPha = 0
-
-            const burstDamage = getSkillRuntimeStat(source, 'huyetPhaBurstDamage')
-            if (burstDamage > 0) {
-              ctx.combatSystem.applyDotDamage({
-                sourceId: source.id,
-                source,
-                // Task 4 (D18) — authored dotRecovery triggers on the
-                // source's own buffs apply to the burst's element too.
-                sourceBuffs: ctx.sourceBuffs.getAll(),
-                target,
-                rawDamage: burstDamage,
-                element: 'metal',
-                effectId: 'huyet_pha_burst',
-              })
-            }
-          } else {
-            source.currentHuyetPha = nextCharge
-          }
-        }
 
         // Phap Tu Reimagined Task 12 — the legacy authored-pair reaction
         // handoff is retired; the turn engine's TurnReactionManager owns

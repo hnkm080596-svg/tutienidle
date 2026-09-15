@@ -32,7 +32,6 @@ import { effectiveWaves } from '../stage/EffectiveWaves'
 import type { Stage } from '../stage/Stage'
 
 import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
-import { REACTION_PATH_POOL } from '../../data/skill/TurnReactionPathSkills'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffTypes'
@@ -58,7 +57,6 @@ import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import type { RewardReceiver } from '../reward/RewardSystem'
 
 import type { TemplateRegistry } from './TemplateRegistry'
-import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
 
 
 /**
@@ -212,7 +210,6 @@ export class GameManagerTurnBattleOps {
     // Live player/registry reads - GameManager owns these authorities; the
     // ops only reads through accessors (A3: no duplicate state ownership).
     getActivePlayer: () => PlayerData | undefined
-    getSkillRuntimeStats: (player: PlayerData) => SkillRuntimeStats
     // SkillManager level snapshot for playerToCombatEntity (owned by GameManager).
     getSkillLevels: () => Record<string, number>
     // PassiveSystem owns per-battle passive stacks; ops requests the reset.
@@ -257,7 +254,6 @@ export class GameManagerTurnBattleOps {
       // target debuffs) no-op silently without it. Stage-path systems
       // below already pass BUFF_REGISTRY.
       BUFF_REGISTRY,
-      undefined,
       undefined,
       undefined,
       this.onSkillCast,
@@ -867,7 +863,6 @@ export class GameManagerTurnBattleOps {
     const playerEntity = playerToCombatEntity(
       player,
       playerStats,
-      this.deps.getSkillRuntimeStats(player),
       this.deps.getSkillLevels(),
     )
 
@@ -1115,7 +1110,6 @@ export class GameManagerTurnBattleOps {
           GENERIC_PHYSICAL_BASIC,
         )
       },
-      REACTION_PATH_POOL, // Phase A4 - marker special's 2-pick pool now live
       new TurnReactionManager(this.deps.eventBus),
       this.onSkillCast,
       this.liveStatModifiers,
@@ -1212,7 +1206,6 @@ export class GameManagerTurnBattleOps {
             GENERIC_PHYSICAL_BASIC,
           )
         },
-        REACTION_PATH_POOL, // Phase A4 - marker special's 2-pick pool now live
         new TurnReactionManager(this.deps.eventBus),
         this.onSkillCast,
         this.liveStatModifiers,

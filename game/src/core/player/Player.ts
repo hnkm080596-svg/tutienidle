@@ -15,7 +15,6 @@ import type { FoundationType } from '../breakthrough/FoundationType'
 import type { CultivationPathId } from './CultivationPathKit'
 import { createPhapTuState, type PhapTuState } from '../phap-tu/PhapTuState'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
-import type { ElementType } from '../element/ElementType'
 import type { ArtifactProgress } from '../artifact/Artifact'
 import type { CompanionInstance } from '../../data/companion/Companions'
 
@@ -190,17 +189,6 @@ export interface PlayerData {
   // attunement,vitality} qua GameManager.allocateAttributePoint(), có
   // trần riêng từng stat theo đại cảnh giới (xem core/stats/StatCap.ts).
   attributePoints: number
-
-  // Pháp Tu Redesign — Element đã mở khóa (KHÔNG mất khi unequip, xem
-  // spec mục 32) — rỗng mặc định, phải mở qua node tree. Element
-  // KHÔNG nằm trong mảng này thì không equip/học skill/nâng cấp được.
-  unlockedElements: ElementType[]
-
-  // Pháp Tu Redesign — Element ĐANG mang vào combat, tối đa theo
-  // getElementSlotCount(realmId) (xem core/element/ElementSlot.ts).
-  // Phải là tập con của unlockedElements — GameManager.equipElement()
-  // enforce, type này không tự enforce được.
-  equippedElements: ElementType[]
 
   // Pháp Tu Redesign — id của MỌI ProgressionNode đã mua, xuyên suốt
   // MỌI path (Node Tree là hạ tầng CHUNG, không tách riêng theo path)
@@ -409,8 +397,6 @@ export function createDefaultPlayer(): PlayerData {
     cultivationInsightAccumulator: 0,
     cultivationOvercharge: 0,
     attributePoints: 0,
-    unlockedElements: [],
-    equippedElements: [],
     purchasedNodeIds: [],
     nodeLevels: {},
     nodeFreePurchaseRecord: {},
@@ -503,7 +489,6 @@ export function resolvePlayerFinalStats(
 export function playerToCombatEntity(
   player: PlayerData,
   stats: Stats,
-  skillStats?: import('../skill/SkillRuntimeStats').SkillRuntimeStats,
   skillLevels?: Readonly<Record<string, number>>,
 ): CombatEntity {
   const entity: CombatEntity = {
@@ -516,8 +501,6 @@ export function playerToCombatEntity(
     baseStats: stats,
 
     stats,
-
-    skillStats,
 
     skillLevels,
 
@@ -534,16 +517,6 @@ export function playerToCombatEntity(
     currentKiemYTemp: 0,
 
     currentMomentum: 0,
-
-    currentHoaThe: 0,
-
-    currentThoThe: 0,
-
-    currentKimThe: 0,
-
-    // The pool: initialized by resetBattleScopedResources() below —
-    // the single contract point for battle-scoped resources (Task 8).
-    timeSinceLastBleedProc: 0,
 
     tuLucActive: false,
 

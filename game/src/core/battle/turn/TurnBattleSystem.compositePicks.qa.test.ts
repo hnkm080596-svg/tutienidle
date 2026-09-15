@@ -43,11 +43,7 @@ function makeEntity(id: string): CombatEntity {
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
     currentThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -77,15 +73,8 @@ describe('AR-18: Generic composite skill policy', () => {
   it('executes composite picks for a skill with compositePicks policy and an arbitrary ID', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const pool = [ELEMENTAL_BASIC_A, ELEMENTAL_BASIC_B]
 
-    const system = new TurnBattleSystem(
-      combat,
-      10,
-      undefined,
-      undefined,
-      pool, // reactionPathPool
-    )
+    const system = new TurnBattleSystem(combat, 10)
 
     const player = makeEntity('player')
     const enemy = makeEntity('enemy')
@@ -94,11 +83,13 @@ describe('AR-18: Generic composite skill policy', () => {
     const playerP = makeParticipant('player', player, 0)
     const enemyP = makeParticipant('enemy', enemy, 1)
 
-    // A custom skill ID that is NOT REACTION_PATH_SPECIAL_ID
+    // A custom skill ID — the element_basic lane resolves the pool
+    // attached ON the def (Task 11): picks[0] is the payload, extras
+    // resolve through the shared composite-picks lane.
     const customCompositeSkill: TurnSkillDefinition = {
       id: 'custom_composite_skill_999',
       cooldownTurns: 2,
-      compositePicks: { poolType: 'reaction_path', count: 2 },
+      compositePicks: { poolType: 'element_basic', count: 2, pool: [ELEMENTAL_BASIC_A, ELEMENTAL_BASIC_B] },
       targeting: { shape: 'single' },
     }
 

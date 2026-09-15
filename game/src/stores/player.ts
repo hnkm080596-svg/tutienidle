@@ -8,11 +8,7 @@ import {
   addCultivation,
   breakthrough as breakthroughSystem,
 } from '../core/cultivation/CultivationSystem'
-import {
-  equipElement as equipElementSystem,
-  unequipElement as unequipElementSystem,
-} from '../core/element/ElementLoadout'
-import type { ElementType } from '../core/element/ElementType'
+
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
 import { buildGameSave, computeRestoreIdentity, loadGame, type GameSave } from '../services/save/SaveSystem'
@@ -225,18 +221,6 @@ export const usePlayerStore = defineStore('player', {
 
     breakthrough(): boolean {
       return breakthroughSystem(this)
-    },
-
-    // Pháp Tu Redesign (magicpath) — Element Loadout, cùng pattern
-    // breakthrough() ở trên (pure function core/element/ElementLoadout.ts,
-    // không qua GameManager vì chỉ đụng PlayerData, không cần registry
-    // nào khác).
-    equipElement(element: ElementType): boolean {
-      return equipElementSystem(this, element)
-    },
-
-    unequipElement(element: ElementType): boolean {
-      return unequipElementSystem(this, element)
     },
 
     // Gọi bởi App.vue mỗi tick với kết quả từ

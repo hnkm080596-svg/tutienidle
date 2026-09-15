@@ -4,7 +4,6 @@ import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
-import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from './CombatEntity'
 import type { BuffDefinition } from '../buff/BuffDefinition'
@@ -37,10 +36,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -129,48 +124,5 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
 
     expect(target.currentHp).toBeLessThan(1000)
     expect(source.currentHp).toBe(500)
-  })
-
-  it('kimTheDotResistancePenetrationPercentPerStack chỉ xuyên kháng DoT element metal, không ảnh hưởng DoT khác', () => {
-    const eventBus = new EventBus()
-    const combatSystem = new CombatSystem(eventBus)
-
-    const source = createCombatant({ id: 'source', type: 'player' })
-
-    source.currentKimThe = 5
-    source.skillStats = { ...createSkillRuntimeStats(), kimTheDotResistancePenetrationPercentPerStack: 0.1 }
-    source.stats.metalPower = 10
-    source.stats.woodPower = 10
-
-    const target = createCombatant({ id: 'target', currentHp: 1000000, maxHp: 1000000 })
-
-    target.stats.dotResistancePercent = 0.5
-
-    const resolveSource = (id: string) => (id === source.id ? source : undefined)
-
-    // Chảy Máu (metal) — 5 tầng × 10% penetration = 50% xuyên, mitigation
-    // hiệu quả về 0 -> full raw damage áp dụng.
-    const metalAilments = new BuffSystem(new BuffPool())
-    metalAilments.apply(getTemplate('chay_mau'), source, target)
-    const before1 = target.currentHp
-    metalAilments.update(1, target, combatSystem, undefined, resolveSource)
-    const metalDamage = before1 - target.currentHp
-
-    // Trúng Độc (wood) — cùng nguồn/currentKimThe nhưng KHÔNG phải metal,
-    // penetration không áp dụng -> vẫn bị mitigation đầy đủ 50%.
-    const woodAilments = new BuffSystem(new BuffPool())
-    woodAilments.apply(getTemplate('trung_doc'), source, target)
-    const before2 = target.currentHp
-    woodAilments.update(1, target, combatSystem, undefined, resolveSource)
-    const woodDamage = before2 - target.currentHp
-
-    const woodRawDamage = woodDamage / (1 - 0.5)
-    const metalRawDamage = metalDamage / (1 - 0)
-
-    // Damage metal KHÔNG bị mitigation (xuyên hết), damage wood vẫn bị
-    // trừ đúng 50% dotResistancePercent — 2 tỉ lệ mitigation khác hẳn
-    // nhau dù cùng 1 nguồn/cùng currentKimThe.
-    expect(metalDamage).toBeCloseTo(metalRawDamage, 5)
-    expect(woodDamage).toBeCloseTo(woodRawDamage * 0.5, 5)
   })
 })

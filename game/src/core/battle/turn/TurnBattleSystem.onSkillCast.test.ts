@@ -35,8 +35,12 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
-    currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
-    timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+
+    currentSwordIntent: 0,
+
+    currentMomentum: 0,
+
+    tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
   } as CombatEntity
@@ -78,7 +82,7 @@ describe('TurnBattleSystem.onSkillCast — committed-cast callback', () => {
   it('đòn thường bắn callback ĐÚNG 1 lần với (actor, skillId)', () => {
     const { battle, playerParticipant } = fixture()
     const onSkillCast = vi.fn()
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, undefined, undefined, onSkillCast)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, undefined, onSkillCast)
 
     const declared = system.declareActorAction(battle, playerParticipant)
     system.applyActionImpact(battle, declared)
@@ -90,7 +94,7 @@ describe('TurnBattleSystem.onSkillCast — committed-cast callback', () => {
   it('engine generic: cast của enemy cũng bắn (consumer tự lọc player)', () => {
     const { battle, enemyParticipant } = fixture()
     const onSkillCast = vi.fn()
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, undefined, undefined, onSkillCast)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, undefined, onSkillCast)
 
     const declared = system.declareActorAction(battle, enemyParticipant)
     system.applyActionImpact(battle, declared)
@@ -105,7 +109,7 @@ describe('TurnBattleSystem.onSkillCast — committed-cast callback', () => {
     new BuffSystem(playerParticipant.buffs).apply(STUN_DEF, playerParticipant.entity, playerParticipant.entity, registry)
 
     const onSkillCast = vi.fn()
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, registry, undefined, undefined, undefined, onSkillCast)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, registry, undefined, undefined, onSkillCast)
 
     const declared = system.declareActorAction(battle, playerParticipant)
     expect(declared.ccBlocked).toBe(true)
@@ -113,30 +117,6 @@ describe('TurnBattleSystem.onSkillCast — committed-cast callback', () => {
     system.applyActionImpact(battle, declared)
 
     expect(onSkillCast).not.toHaveBeenCalled()
-  })
-
-  it('marker reaction_path KHÔNG có pool → placeholder cast, KHÔNG bắn', () => {
-    const { battle, playerParticipant } = fixture()
-    playerParticipant.special = {
-      skill: {
-        id: 'reaction_marker',
-        cooldownTurns: 5,
-        compositePicks: { poolType: 'reaction_path', count: 2 },
-        targeting: { shape: 'single' },
-      },
-      remainingCooldownTurns: 0,
-    }
-
-    const onSkillCast = vi.fn()
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, undefined, undefined, onSkillCast)
-
-    const declared = system.declareActorAction(battle, playerParticipant)
-    expect(declared.markerNoPool).toBe(true)
-
-    system.applyActionImpact(battle, declared)
-
-    expect(onSkillCast).not.toHaveBeenCalled()
-    expect(playerParticipant.special.remainingCooldownTurns).toBe(0)
   })
 
   it('charge-initiation tính 1 cast + commit cooldownTurns; tick/resolve KHÔNG bắn lại', () => {
@@ -153,7 +133,7 @@ describe('TurnBattleSystem.onSkillCast — committed-cast callback', () => {
     }
 
     const onSkillCast = vi.fn()
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, undefined, undefined, onSkillCast)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, undefined, onSkillCast)
 
     // Lượt 1: charge-init — cast commits (cooldown + resource), callback fires.
     const initDeclared = system.declareActorAction(battle, playerParticipant)
@@ -190,7 +170,7 @@ describe('TurnBattleSystem.onSkillCast — committed-cast callback', () => {
     }
 
     const onSkillCast = vi.fn()
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, undefined, undefined, onSkillCast)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, undefined, onSkillCast)
 
     const declared = system.declareActorAction(battle, playerParticipant)
     system.applyActionImpact(battle, declared)

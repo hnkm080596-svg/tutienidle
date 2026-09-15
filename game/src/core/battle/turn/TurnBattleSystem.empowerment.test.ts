@@ -28,11 +28,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
     currentThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -91,7 +87,7 @@ function harness(thePool = 0, maxThe?: number) {
   }
 
   const onSkillCast = vi.fn()
-  const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 100, undefined, undefined, undefined, undefined, onSkillCast)
+  const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 100, undefined, undefined, undefined, onSkillCast)
 
   return { battle, playerParticipant, enemyParticipant, system, onSkillCast }
 }

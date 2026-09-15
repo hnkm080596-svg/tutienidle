@@ -76,14 +76,9 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
       file: 'data/technique/Techniques.ts',
       stats: ['maxMp', 'manaRegenPerTurn'],
     },
-    // BossBuffs.ts houses reaction_empowerment -- the player Phap Tu an
-    // ultimate self-buff lives there by filename accident (D19 residual).
-    { file: 'data/buff/BossBuffs.ts', stats: ['reactionEffectPercent'] },
     // Phap Tu Thuan He chain buffs (Th/Ngung Lo MP regen grants).
     { file: 'data/buff/ThuanHeBuffs.ts', stats: ['manaRegenPerTurn'] },
     { file: 'data/buff/LegacyBuffs.ts', stats: ['manaRegenPerTurn'] },
-    // Turn-based reaction path skills (hidden Phap Tu path content, D19).
-    { file: 'data/skill/TurnReactionPathSkills.ts', stats: ['reactionEffectPercent'] },
   ],
 
   // Task 9 (D15): meta-domain emitter homes. No data/** file authors

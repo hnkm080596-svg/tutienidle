@@ -83,17 +83,6 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Đòn đặc biệt của Thủy Giáp Long — sóng nước dâng quét ngang, mỗi 4 lượt.',
   },
 
-  // Pháp Tu Reaction Path (TurnReactionPathSkills.ts). special là MARKER
-  // definition — TurnBattleSystem thay bằng 2 pick random từ pool elemental.
-  phap_tu_reaction_special: {
-    name: 'Ngũ Hành Luân Chuyển',
-    description: 'Đòn đặc biệt Pháp Tu — tung 2 thuật ngũ hành khác nhau cùng lượt, có thể cộng hưởng phản ứng.',
-  },
-  phap_tu_reaction_ultimate: {
-    name: 'Ngũ Hành Hợp Nhất',
-    description: 'Tuyệt kỹ Pháp Tu — tự cường hóa sát thương phản ứng nguyên tố trong 4 lượt.',
-  },
-
   // ---------------------------------------------------------------------
   // Companion skills (companion-gacha Task 11, data/companion/Companions.ts)
   // - ids follow the <definitionId>_<slot> convention; names/descriptions

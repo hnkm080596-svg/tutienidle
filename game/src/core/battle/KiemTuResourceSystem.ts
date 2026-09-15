@@ -10,7 +10,7 @@ import type { KiemTuRoute } from '../player/Player'
 // thuần của 2 pool CHIẾN ĐẤU route Kiếm Tu, pattern PhapTuBattle
 // ResourceSystem (tick/gain riêng, KHÔNG đụng CombatSystem pipeline).
 // Mọi hàm đọc field optional qua `?? 0` — CombatEntity.currentKiemThe/
-// currentKiemYTemp là optional theo precedent currentHuyetPha.
+// currentKiemYTemp là optional theo precedent currentThe.
 
 /** +1% sát thương kiếm trận & on-hit mỗi 2 điểm Kiếm Thế (spec mục 2 — đầy 100 = +50%). */
 export function kiemTheDamageBonusPercent(currentKiemThe: number): number {

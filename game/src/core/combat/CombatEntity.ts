@@ -3,7 +3,6 @@ import type { LaneIndex } from '../battle/BattleLane'
 import type { EnemyArchetype } from '../enemy/EnemyArchetype'
 import type { TribulationPhase, BossEnrage } from '../enemy/TribulationPhase'
 import type { EnemySpecialAttack } from '../enemy/Enemy'
-import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
 
 export type CombatEntityType =
   | 'player'
@@ -23,10 +22,6 @@ export interface CombatEntity {
   baseStats: Stats
 
   stats: Stats
-
-  // Tham số riêng của skill/path, tách khỏi character Stats. Optional để
-  // enemy và fixture không dùng skill không phải cấp một object toàn số 0.
-  skillStats?: SkillRuntimeStats
 
   // Snapshot level của các skill đã học lúc bắt đầu trận. Skill vẫn nhận XP
   // và level-up trong progression, nhưng damage trong trận đọc snapshot này
@@ -59,11 +54,10 @@ export interface CombatEntity {
   //   kiếm ý vĩnh viễn (tầng boss × 10), gain qua channel tick + dmg
   //   nhận vào, cap vĩnh viễn + MAX_KIEM_Y_TEMP_CAP. Tiêu hao ăn tạm
   //   TRƯỚC — vĩnh viễn bất khả xâm phạm (consumeKiemYTempFirst).
-  // Optional (KHÔNG bắt buộc như currentSwordIntent) — cùng precedent
-  // currentHuyetPha/totalMaxHpReductionPercent bên dưới: 2 field này
-  // CHỈ có ý nghĩa với Kiếm Tu đã chốt route, mọi fixture/factory hiện
-  // có của path khác không cần touch; undefined coi như 0 (mọi consumer
-  // đọc qua `?? 0`, xem KiemTuResourceSystem).
+  // Optional (KHÔNG bắt buộc như currentSwordIntent) — CHỈ có ý nghĩa
+  // với Kiếm Tu đã chốt route, mọi fixture/factory hiện có của path khác
+  // không cần touch; undefined coi như 0 (mọi consumer đọc qua `?? 0`,
+  // xem KiemTuResourceSystem).
   currentKiemThe?: number
   currentKiemYTemp?: number
 
@@ -85,66 +79,6 @@ export interface CombatEntity {
   // currentSwordIntent nhưng pool 0-100 (xem CombatTypes.ts's
   // MAX_MOMENTUM), tích qua Skill.grantsMomentumPerHit.
   currentMomentum: number
-
-  // Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — Hỏa Thế CHIẾN
-  // ĐẤU, cùng mô hình currentSwordIntent/currentMomentum nhưng pool
-  // 0-5 (xem CombatTypes.ts's MAX_HOA_THE), tích qua Skill.
-  // grantsHoaThePerCast × source.skillStats.hoaTheGainPerCast (0 nếu chưa
-  // mua node "Tụ Hỏa" — xem BattleSystem.castSkill()), TỰ GIẢM dần
-  // theo thời gian nếu không cast tiếp (BattleSystem.updateHoaThe()).
-  // Chưa cấp hiệu ứng gì (đúng tinh thần "chưa vội +damage" của spec —
-  // nền tảng cho Major Pure ở Kim Đan trở đi).
-  currentHoaThe: number
-
-  // Thổ Tu Pure (Plans/EarthPath mục XV, 2026-08-21) — Thổ Thế CHIẾN
-  // ĐẤU, cùng mô hình currentHoaThe nhưng KHÔNG tự giảm theo thời gian
-  // (doc không nhắc tới decay, khác Hỏa Thế) — chỉ tích qua Skill.
-  // grantsThoThePerCast × source.skillStats.thoTheGainPerCast (0 nếu chưa
-  // mua "Thổ Thế" — xem BattleSystem.castSkill()), pool 0-5 (xem
-  // CombatTypes.ts's MAX_THO_THE). Cũng chưa cấp hiệu ứng +damage nào
-  // riêng — vai trò thật của nó là kích hoạt AOE+Knockback thật (đọc
-  // trực tiếp earthAoeRadius/earthKnockbackDistance, KHÔNG qua stack
-  // này), currentThoThe thuần là counter theo đúng tinh thần doc "không
-  // gán thêm hiệu ứng tuỳ tiện vào từng stack ở giai đoạn này".
-  currentThoThe: number
-
-  // Kim Tu Trúc Cơ Pure (Plans/KimPath mục 9/11/12, 2026-08-21) — Kim
-  // Thế CHIẾN ĐẤU, pool 0-(MAX_KIM_THE + stats.kimTheMaxStacksBonus).
-  // Tích qua Skill.grantsKimThePerProc CHỈ khi Xuất Huyết áp THÀNH CÔNG
-  // (xem SkillEffectSystem.ts's apply(), case 'ailment' — KHÁC hẳn
-  // currentHoaThe/currentThoThe: gate theo ROLL, không phải mỗi lần
-  // cast). Tự giảm CHẬM theo timeSinceLastBleedProc bên dưới (xem
-  // BattleSystem.updateKimThe()) — 1 tầng mỗi
-  // KIM_THE_DECAY_INTERVAL_SECONDS giây KHÔNG proc mới, không phải
-  // continuous per-second như Hỏa Thế. CÓ cấp hiệu ứng thật (KHÁC Hỏa
-  // Thế/Thổ Thế) — đọc trực tiếp trong AilmentSystem.
-  // calculateDamagePerSecond() cho DoT element 'metal'.
-  currentKimThe: number
-
-  // Kim Tu Trúc Cơ Pure — giây kể từ lần cuối currentKimThe TĂNG (reset
-  // về 0 mỗi lần proc thành công), dùng để gate decay 1-tầng-mỗi-N-giây
-  // ở updateKimThe(). Vô nghĩa nếu currentKimThe đã về 0.
-  timeSinceLastBleedProc: number
-
-  // Kim Tu ("Thiêu Huyết" reaction, Hỏa+Kim, Plans/KimPath mục 5) — %
-  // maxHp ĐÃ bị Reaction này trừ vĩnh viễn (trần MAX_HP_REDUCTION_CAP_
-  // PERCENT, xem ReactionManager.ts), tránh boss bị xoá HP quá nhanh
-  // qua nhiều lần Reaction liên tiếp. Optional — undefined = 0, CHỈ
-  // entity nào từng dính Thiêu Huyết mới có giá trị, không cần touch
-  // mọi fixture/factory hiện có (khác currentHoaThe/currentThoThe/
-  // currentKimThe — những field đó BẮT BUỘC vì luôn có giá trị nền 0
-  // ngay từ đầu trận, cái này chỉ phát sinh khi thật sự bị Reaction).
-  totalMaxHpReductionPercent?: number
-
-  // Kim Tu ("Huyết Phá", Plans/magicpathgeneral Phase 13, 2026-08-21) —
-  // charge CHIẾN ĐẤU, cùng mô hình currentKimThe (tích theo ROLL Xuất
-  // Huyết THÀNH CÔNG) nhưng KHÔNG có decay — chạm MAX_HUYET_PHA thì
-  // consume/reset về 0 + burst damage. Optional (KHÔNG bắt buộc như
-  // currentHoaThe/currentKimThe) — cùng lý do totalMaxHpReductionPercent
-  // ở trên: 1 field reaction-like hiếm gặp, không phải counter mọi
-  // entity cần có nền từ đầu trận, không cần touch mọi fixture/factory
-  // hiện có. undefined coi như 0.
-  currentHuyetPha?: number
 
   // Ward — máu phụ hấp thụ damage TRƯỚC currentHp (xem
   // CombatSystem.resolveHit()). State "sống" như currentHp/currentMp,

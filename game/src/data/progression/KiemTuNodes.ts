@@ -18,9 +18,8 @@ import type { StatModifier } from '../../core/stats/StatCalculator'
 //   thương/phòng thủ trong lúc tụ lực — TUYỆT ĐỐI không đụng tickSeconds
 //   (spec §4.3): BattleSystem.updateChanneling()/setChannelTickSeconds()
 //   coi tickSeconds là dữ liệu UI-driven (Task 7's slider 3-9s), KHÔNG có
-//   field runtime nào cho node cộng vào — nếu cho node chỉnh trần x thì
-//   phải thêm field mới vào SkillRuntimeStats.ts (core engine, ngoài phạm
-//   vi task data-only này) nên growth Bạt Kiếm CHỦ ĐỘNG tránh hẳn hướng đó,
+//   field runtime nào cho node cộng vào — growth Bạt Kiếm CHỦ ĐỘNG tránh
+//   hẳn hướng đó,
 //   dùng statModifiers CHỈ NHẮM stat nhân vật CÓ THẬT — skillDamagePercent
 //   (khuếch đại chính effect 'damage' của Bạt Kiếm Thuật, xem
 //   StatTypes.ts's ghi chú "Kiếm Tu... % khuếch đại TOÀN BỘ effect damage

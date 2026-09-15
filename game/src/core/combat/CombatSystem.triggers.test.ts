@@ -20,10 +20,6 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -52,8 +48,8 @@ function makeKillSkill(): Skill {
     target: 'enemy',
     effects: [],
     triggers: [
-      { trigger: 'onKill', actions: [{ type: 'grantResource', pool: 'kimThe', amount: 1 }] },
-      { trigger: 'onDeath', actions: [{ type: 'grantResource', pool: 'kimThe', amount: 1 }] },
+      { trigger: 'onKill', actions: [{ type: 'grantResource', pool: 'swordIntent', amount: 1 }] },
+      { trigger: 'onDeath', actions: [{ type: 'grantResource', pool: 'swordIntent', amount: 1 }] },
     ],
     unlocked: true,
     equipped: true,
@@ -77,7 +73,7 @@ describe('CombatSystem — onKill trigger wiring', () => {
     skillManager.add(makeKillSkill())
     const combat = makeFullyWiredCombat(skillManager, eventBus)
 
-    const killer = makeEntity({ id: 'killer', currentKimThe: 0 })
+    const killer = makeEntity({ id: 'killer', currentSwordIntent: 0 })
     const victim = makeEntity({ id: 'victim', currentHp: 0 })
 
     // killIfDead's 3rd param bundles killer entity + skillId into one
@@ -85,7 +81,7 @@ describe('CombatSystem — onKill trigger wiring', () => {
     // with only a killerId string, or no skillId, skip firing).
     combat.killIfDead(victim, 'killer', { killer, skillId: 'test_kill_skill' })
 
-    expect(killer.currentKimThe).toBe(1)
+    expect(killer.currentSwordIntent).toBe(1)
   })
 
   it('killIfDead() does not fire onDeath (deferred — see fireKillTriggers doc)', () => {
@@ -94,16 +90,16 @@ describe('CombatSystem — onKill trigger wiring', () => {
     skillManager.add(makeKillSkill())
     const combat = makeFullyWiredCombat(skillManager, eventBus)
 
-    const killer = makeEntity({ id: 'killer', currentKimThe: 0 })
-    const victim = makeEntity({ id: 'victim', currentHp: 0, currentKimThe: 0 })
+    const killer = makeEntity({ id: 'killer', currentSwordIntent: 0 })
+    const victim = makeEntity({ id: 'victim', currentHp: 0, currentSwordIntent: 0 })
 
     combat.killIfDead(victim, 'killer', { killer, skillId: 'test_kill_skill' })
 
     // onKill (killer's own skill) fires; onDeath (would require looking
     // up the VICTIM's own skills, which CombatSystem cannot do today)
     // does not — the victim's resource pool stays untouched.
-    expect(killer.currentKimThe).toBe(1)
-    expect(victim.currentKimThe).toBe(0)
+    expect(killer.currentSwordIntent).toBe(1)
+    expect(victim.currentSwordIntent).toBe(0)
   })
 
   it('killIfDead() does not fire onKill when skillContext is omitted', () => {
@@ -112,12 +108,12 @@ describe('CombatSystem — onKill trigger wiring', () => {
     skillManager.add(makeKillSkill())
     const combat = makeFullyWiredCombat(skillManager, eventBus)
 
-    const killer = makeEntity({ id: 'killer', currentKimThe: 0 })
+    const killer = makeEntity({ id: 'killer', currentSwordIntent: 0 })
     const victim = makeEntity({ id: 'victim', currentHp: 0 })
 
     combat.killIfDead(victim, 'killer')
 
-    expect(killer.currentKimThe).toBe(0)
+    expect(killer.currentSwordIntent).toBe(0)
   })
 
   it('killIfDead() does not fire onKill (or throw) when buffRegistry was not constructed', () => {
@@ -128,14 +124,14 @@ describe('CombatSystem — onKill trigger wiring', () => {
     // same as most existing call sites today.
     const combat = new CombatSystem(eventBus, skillManager)
 
-    const killer = makeEntity({ id: 'killer', currentKimThe: 0 })
+    const killer = makeEntity({ id: 'killer', currentSwordIntent: 0 })
     const victim = makeEntity({ id: 'victim', currentHp: 0 })
 
     expect(() =>
       combat.killIfDead(victim, 'killer', { killer, skillId: 'test_kill_skill' }),
     ).not.toThrow()
 
-    expect(killer.currentKimThe).toBe(0)
+    expect(killer.currentSwordIntent).toBe(0)
   })
 
   it('killIfDead() does not throw when no skillManager was constructed', () => {

@@ -365,8 +365,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       targeting: { shape: 'single' },
       presetId: 'slash',
     },
-    // Kim Cang Ho The: self-buff stance, no damage (same self-scope shape
-    // as phap_tu_reaction_ultimate).
+    // Kim Cang Ho The: self-buff stance, no damage.
     special: {
       id: 'thiet_y_tang_special',
       cooldownTurns: 5,

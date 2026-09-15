@@ -1,6 +1,6 @@
 // Bản Mệnh Pháp Bảo — state runtime CHỈ sống trong 1 Battle, không
-// persist (doc §11). Snapshot level/grade/path/equippedElements lúc
-// trận bắt đầu — đổi hướng/nâng phẩm/loadout giữa trận chỉ có hiệu
+// persist (doc §11). Snapshot level/grade/path/rotationElements lúc
+// trận bắt đầu — đổi hướng/nâng phẩm/element giữa trận chỉ có hiệu
 // lực từ trận kế, khớp đúng thiết kế (GameManager.setArtifactPath()/
 // tryUpgradeArtifactGrade() đã chặn đổi giữa combat).
 import type { ArtifactGrade, ArtifactId, ArtifactPath, ArtifactProgress } from './Artifact'
@@ -12,8 +12,11 @@ export interface ArtifactRuntimeSnapshot {
   grade: ArtifactGrade
   path?: ArtifactPath
 
-  /** Chỉ Ngũ Hành (wood/fire/earth/metal/water) đã unlock+equip lúc trận bắt đầu. */
-  equippedElements: ElementType[]
+  /** Elements the artifact rotates through on activation. When this lane is
+   *  ported to the turn engine, derive from player.phapTu.element (a phap_tu
+   *  holder has exactly 1 element) — the equippedElements loadout authority
+   *  was retired in Task 14. */
+  rotationElements: ElementType[]
 }
 
 /** Per-target ICD cho nhánh Khống (doc §8.4) — keyed theo targetId. */
@@ -39,7 +42,7 @@ export interface ArtifactRuntime {
 
   activationCount: number
 
-  /** Con trỏ vòng xoay Ngũ Hành — index vào snapshot.equippedElements (đã lọc theo NGU_HANH_ROTATION_ORDER). */
+  /** Con trỏ vòng xoay Ngũ Hành — index vào snapshot.rotationElements (đã lọc theo NGU_HANH_ROTATION_ORDER). */
   elementCursor: number
 
   perTargetControl: Record<string, ArtifactTargetControlState>
@@ -62,7 +65,7 @@ export interface ArtifactRuntime {
 
 export function createArtifactRuntime(
   progress: ArtifactProgress,
-  equippedElements: ElementType[],
+  rotationElements: ElementType[],
   initialPlayerWard = 0,
 ): ArtifactRuntime {
   return {
@@ -71,7 +74,7 @@ export function createArtifactRuntime(
       level: progress.realmLevel,
       grade: progress.grade,
       path: progress.selectedPath,
-      equippedElements,
+      rotationElements,
     },
     activationTimer: 0,
     activationCount: 0,

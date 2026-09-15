@@ -56,13 +56,13 @@ describe('PhapTuNodes reimagined — element roots', () => {
       const root = node(ELEMENT_ROOT_IDS[element])
 
       expect(root?.effect.unlocksSkillIds).toEqual([PHAP_TU_KIT_IDS[element][0]])
-      expect(root?.effect.unlocksElement).toBeUndefined()
+      expect('unlocksElement' in (root?.effect ?? {})).toBe(false)
     }
   })
 
   it('khong node nao trong cay con unlocksElement', () => {
     for (const entry of PHAP_TU_NODES) {
-      expect(entry.effect.unlocksElement, entry.id).toBeUndefined()
+      expect('unlocksElement' in entry.effect, entry.id).toBe(false)
     }
   })
 })

@@ -1,6 +1,5 @@
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '../stores/player'
-import type { ElementType } from '../core/element/ElementType'
 import type { MainStatKey } from '../core/stats/StatTypes'
 
 /**
@@ -39,14 +38,6 @@ export function useLoadoutActions() {
     // node".
     selectSkillSpecialization: (skillId: string, specializationId: string) =>
       withBump(gameManager.progressionOps.selectSkillSpecialization(skillId, specializationId)),
-
-    // Pháp Tu Redesign (magicpath) — Element Loadout là action CỦA
-    // Pinia store (pure PlayerData, không cần registry — xem
-    // core/element/ElementLoadout.ts), khác equipSkill/equipTechnique
-    // (GameManager method).
-    equipElement: (element: ElementType) => withBump(player.equipElement(element)),
-
-    unequipElement: (element: ElementType) => withBump(player.unequipElement(element)),
 
     // Node Tree — GameManager method (unlocksSkillIds cần skillTemplates).
     purchaseNode: (nodeId: string) => withBump(gameManager.progressionOps.purchaseNode(nodeId, player.$state)),

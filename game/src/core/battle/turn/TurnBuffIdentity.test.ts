@@ -40,10 +40,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -91,7 +87,6 @@ function makeEngine(eventBus: EventBus): { system: TurnBattleSystem; combat: Com
     combat,
     10_000,
     BUFF_REGISTRY,
-    undefined,
     undefined,
     new TurnReactionManager(eventBus),
   )

@@ -5,15 +5,10 @@ import { ELEMENT_ORDER } from '../element/ElementLabels'
 import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { BAT_KIEM_THUAT, TRU_TIEN_KIEM_TRAN } from '../../data/skill/BatKiemThuat'
-import {
-  PHAP_TU_REACTION_SPECIAL,
-  PHAP_TU_REACTION_ULTIMATE,
-  REACTION_PATH_POOL,
-} from '../../data/skill/TurnReactionPathSkills'
 
 // R3 Verification Gate: Full reachable active skill inventory in beta.
 // Every active skill reachable in the beta loop (Pháp Tu 5 chains × 3 slots +
-// specializations, Kiếm Tu, Reaction Path) must convert without errors or
+// specializations, Kiếm Tu) must convert without errors or
 // silent semantic degradation.
 
 describe('R3: Reachable Beta Content Inventory Parity', () => {
@@ -143,22 +138,6 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
     it('TRU_TIEN_KIEM_TRAN is valid finisher with the cost', () => {
       expect(TRU_TIEN_KIEM_TRAN.resourceType).toBe('the')
       expect(TRU_TIEN_KIEM_TRAN.resourceCost).toBe(100)
-    })
-
-    it('PHAP_TU_REACTION_SPECIAL uses generic composite policy', () => {
-      expect(PHAP_TU_REACTION_SPECIAL.compositePicks?.poolType).toBe('reaction_path')
-      expect(PHAP_TU_REACTION_SPECIAL.compositePicks?.count).toBe(2)
-    })
-
-    it('PHAP_TU_REACTION_ULTIMATE applies reaction empowerment', () => {
-      expect(PHAP_TU_REACTION_ULTIMATE.appliesBuff?.definitionId).toBe('reaction_empowerment')
-    })
-
-    it('REACTION_PATH_POOL contains 5 valid elemental basics', () => {
-      expect(REACTION_PATH_POOL).toHaveLength(5)
-      for (const basic of REACTION_PATH_POOL) {
-        expect(basic.damage?.kind).toBe('elemental')
-      }
     })
   })
 })

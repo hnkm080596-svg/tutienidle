@@ -1,5 +1,4 @@
 import type { Skill } from './Skill'
-import { SKILL_RESOURCE_STAT_KEYS, createSkillRuntimeStats, type SkillRuntimeStats } from './SkillRuntimeStats'
 import type { SkillEffect } from './SkillEffect'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { PassiveTrigger } from './SkillTypes'
@@ -223,19 +222,6 @@ export class SkillSystem {
     }
 
     return modifiers
-  }
-
-  /** Tổng hợp riêng tham số path/skill; không đưa chúng vào character Stats. */
-  getSkillRuntimeStats(): SkillRuntimeStats {
-    const stats = createSkillRuntimeStats()
-
-    for (const skill of this.manager.getAll()) {
-      for (const key of SKILL_RESOURCE_STAT_KEYS) {
-        stats[key] += skill[key] ?? 0
-      }
-    }
-
-    return stats
   }
 
   selectSpecialization(skillId: string, specializationId: string): boolean {

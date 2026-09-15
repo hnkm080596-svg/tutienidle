@@ -7,7 +7,6 @@ import { BuffPool } from '../buff/BuffPool'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
-import { createSkillRuntimeStats } from './SkillRuntimeStats'
 import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
@@ -31,10 +30,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -601,23 +596,8 @@ describe("SkillEffectSystem — E-2: 'stacksPerAffectedTarget' (buff self theo s
   })
 })
 
-describe('BuffSystem — E-2: maxStacksBonusByBuffId (node Độc Chướng)', () => {
-  it('skillStats bonus +1 → instance mới mang trần maxStacks+1', () => {
-    const source = createCombatant({
-      id: 'source',
-      type: 'player',
-      skillStats: { ...createSkillRuntimeStats(), maxStacksBonusByBuffId: { trung_doc: 1 } },
-    })
-    const target = createCombatant({ id: 'target' })
-    const buffs = new BuffSystem(new BuffPool())
-    const registry = createRegistry()
-
-    buffs.apply(registry.get('trung_doc'), source, target, registry)
-
-    expect(buffs.getFromSource('trung_doc', 'source')!.maxStacks).toBe(6)
-  })
-
-  it('không bonus → trần đúng bằng definition (hành vi cũ)', () => {
+describe('BuffSystem — maxStacks from definition', () => {
+  it('trần đúng bằng definition (hành vi cũ)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target' })
     const buffs = new BuffSystem(new BuffPool())

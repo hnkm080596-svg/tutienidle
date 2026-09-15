@@ -52,7 +52,6 @@ export class GameManagerPersistentEffectOps {
       materialBag: MaterialBag
       getActivePlayer: () => PlayerData | undefined
       getTurnBattle: () => TurnBattle | null
-      getSkillRuntimeStats: (player: PlayerData) => ReturnType<SkillSystem['getSkillRuntimeStats']>
     },
   ) {}
 
@@ -451,7 +450,7 @@ export class GameManagerPersistentEffectOps {
     const activePlayer = this.deps.getActivePlayer()
 
     if (stats && activePlayer) {
-      return playerToCombatEntity(activePlayer, stats, this.deps.getSkillRuntimeStats(activePlayer))
+      return playerToCombatEntity(activePlayer, stats)
     }
 
     return this.createPersistentBuffGhostEntity()
@@ -479,10 +478,6 @@ export class GameManagerPersistentEffectOps {
       currentMp: stats.maxMp,
       currentSwordIntent: 0,
       currentMomentum: 0,
-      currentHoaThe: 0,
-      currentThoThe: 0,
-      currentKimThe: 0,
-      timeSinceLastBleedProc: 0,
       currentWard: 0,
       turnsSinceLastHitLanded: Infinity,
       realmIndex: 0,

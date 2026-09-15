@@ -41,9 +41,6 @@ export interface TurnSkillDefinition {
    * R3 (AR-18) — Generic composite action policy. Replaces hardcoded
    * content ID checks in the turn engine.
    *
-   * 'reaction_path' — legacy lane: the pool arrives constructor-injected
-   * (reactionPathPool). Retired content, dies with the Task 14 kill list.
-   *
    * 'element_basic' — Phap Tu An (Task 11): the orchestrator attaches the
    * resolved pool ON the def; the engine picks `count` distinct defs
    * uniformly via the injected rng and resolves picks[0] as THE payload
@@ -52,9 +49,7 @@ export interface TurnSkillDefinition {
    * composite-picks lane. The picked def never owns cast identity —
    * rootSkillId keeps cast count/cooldown (INV-18).
    */
-  compositePicks?:
-    | { poolType: 'reaction_path'; count: number }
-    | {
+  compositePicks?: {
         poolType: 'element_basic'
         count: number
         pool: readonly TurnSkillDefinition[]
@@ -415,30 +410,6 @@ export function selectForcedAction(
   }
 
   return selectAction(participant)
-}
-
-/**
- * Future Systems Task 4 — Reaction Path: chọn ngẫu nhiên 2 skill KHÁC
- * nhau từ pool (đảm bảo mỗi lần cast special đều có cơ hội kích reaction
- * — spec §3). Fisher-Yates 2 bước thay vì sort-random (không ổn định).
- */
-export function selectRandomDistinctElementPair(
-  pool: TurnSkillDefinition[],
-  rng: () => number = Math.random,
-): [TurnSkillDefinition, TurnSkillDefinition] {
-  if (pool.length < 2) {
-    throw new Error('selectRandomDistinctElementPair requires at least 2 skills in the pool')
-  }
-
-  const firstIndex = Math.floor(rng() * pool.length)
-
-  let secondIndex = Math.floor(rng() * (pool.length - 1))
-
-  if (secondIndex >= firstIndex) {
-    secondIndex += 1
-  }
-
-  return [pool[firstIndex]!, pool[secondIndex]!]
 }
 
 /**

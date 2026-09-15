@@ -23,7 +23,7 @@ import { shouldStartNextWave, isStageComplete } from './WaveSpawnTrigger'
 import { scaleActionDamage } from '../ActionImpactSystem'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import type { BattleLogEntry } from './TurnOrderPreview'
-import { selectRandomDistinctElementPair } from './TurnSkillAction'
+
 import { refundGauge, GAUGE_MAX } from './ActionGauge'
 import { TurnReactionManager } from './TurnReactionManager'
 import { MAX_THE } from '../../combat/CombatTypes'
@@ -277,9 +277,6 @@ export interface TurnDeclaredAction {
   /** Charge-resolve: skill definition capture tại declare (apply đọc từ đây — pendingChargedSkillId đã clear). */
   chargedSkill: TurnSkillDefinition | null
 
-  /** Marker Reaction Path equipped NHƯNG pool chưa inject — 0 hit an toàn. */
-  markerNoPool: boolean
-
   action: SelectedAction | null
 
   opposingSide: TurnBattleParticipant[]
@@ -293,9 +290,9 @@ export interface TurnDeclaredAction {
 
   /**
    * Task 11 — composite picks resolving as EXTRA payloads beyond the
-   * primary resolvedSkill (reaction_path's 2 picks; element_basic extras
-   * when count > 1). Each picked def applies its own damage + ailments
-   * through the shared picks lane. Empty/null for normal casts.
+   * primary resolvedSkill (element_basic extras when count > 1). Each
+   * picked def applies its own damage + ailments through the shared
+   * picks lane. Empty/null for normal casts.
    */
   compositePickedSkills: readonly TurnSkillDefinition[] | null
 
@@ -318,15 +315,14 @@ export class TurnBattleSystem {
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
     private readonly registry?: BuffDefinitionCatalog,
     private readonly spawnEnemy?: (occupiedSlots?: Set<string>) => TurnBattleParticipant,
-    private readonly reactionPathPool?: readonly TurnSkillDefinition[],
     // Phase A1 (2026-09-07) — optional collaborator, same pattern as
     // registry/spawnEnemy above; consumers no-op safely when absent.
     private readonly reactionManager?: TurnReactionManager,
     // 9.5 #9 — committed-cast notification. Fires once per action that
     // actually commits (same point as commitAction): normal casts and
-    // charge-initiation count; charge ticks/resolve, CC-blocked turns and
-    // markerNoPool placeholders do not. Generic over actors — consumers
-    // filter to the participants they care about.
+    // charge-initiation count; charge ticks/resolve and CC-blocked turns
+    // do not. Generic over actors — consumers filter to the participants
+    // they care about.
     private readonly onSkillCast?: (actor: TurnBattleParticipant, skillId: string) => void,
     /**
      * ARCH-002 (M7) — battle-scoped live-modifier provider. Supplies the
@@ -923,7 +919,6 @@ export class TurnBattleSystem {
         chargeResolved: false,
         chargeTargetIds: [],
         chargedSkill: null,
-        markerNoPool: false,
         action: null,
         opposingSide: [],
         affected: [],
@@ -999,7 +994,6 @@ export class TurnBattleSystem {
     let opposingSide: TurnBattleParticipant[] = []
     let affected: TurnBattleParticipant[] = []
     let scaledDamage: ActionDamageInfo | null = null
-    let markerNoPool = false
     let suddenDeathMultiplierCaptured = 1
     let compositePickedSkills: readonly TurnSkillDefinition[] | null = null
     let execution: TurnSkillExecution | undefined
@@ -1145,25 +1139,6 @@ export class TurnBattleSystem {
 
             scaledDamage = resolvedDamage
           }
-
-          // R3 (AR-18) — Generic composite action policy (legacy lane —
-          // 'reaction_path' pool stays constructor-injected until the
-          // Task 14 kill list removes it).
-          const isReactionComposite =
-            payloadSkill?.compositePicks?.poolType === 'reaction_path'
-
-          if (isReactionComposite && this.reactionPathPool) {
-            compositePickedSkills = selectRandomDistinctElementPair([...this.reactionPathPool], this.rng)
-            // The marker def's placeholder damage never resolves — the
-            // picks are the whole payload (element_basic count>1 extras
-            // differ: the primary pick's scaledDamage still applies).
-            scaledDamage = null
-          } else if (isReactionComposite) {
-            // Marker equipped nhưng pool chưa inject — placeholder damage
-            // vô nghĩa, bỏ qua hit hoàn toàn (không crash, không hit).
-            markerNoPool = true
-            scaledDamage = null
-          }
         }
       }
     }
@@ -1192,7 +1167,6 @@ export class TurnBattleSystem {
       chargeResolved,
       chargeTargetIds,
       chargedSkill: chargedSkillCaptured,
-      markerNoPool,
       action,
       opposingSide,
       affected,
@@ -1293,14 +1267,13 @@ export class TurnBattleSystem {
     // turn returns early above and never reaches this point.
     if (
       declared.action &&
-      !declared.markerNoPool &&
       (declared.action.skill?.chargeTurns ?? 0) > 0 &&
       executionCommitsCast(declared.execution)
     ) {
       this.commitCast(actor, declared)
     }
 
-    if (declared.action && declared.affected.length > 0 && !declared.markerNoPool) {
+    if (declared.action && declared.affected.length > 0) {
       const action = declared.action
 
       // Task 9 — payload reads go through the execution's resolvedSkill
@@ -1323,8 +1296,8 @@ export class TurnBattleSystem {
         skillId: declared.skillId,
       })
 
-      // Composite-picks lane — extra picked payloads (reaction_path's 2
-      // picks; element_basic extras when count > 1) apply their own
+      // Composite-picks lane — extra picked payloads (element_basic
+      // extras when count > 1) apply their own
       // damage + ailments here. The PRIMARY payload still resolves via
       // scaledDamage below, so both lanes may run on one action.
       if (declared.compositePickedSkills?.length) {
@@ -1676,7 +1649,6 @@ export class TurnBattleSystem {
       chargeResolved: false,
       chargeTargetIds: [],
       chargedSkill: null,
-      markerNoPool: false,
       action,
       opposingSide,
       affected,
@@ -1709,7 +1681,7 @@ export class TurnBattleSystem {
     const execution = declared.execution
     const rootSkill = declared.action?.skill
 
-    if (!execution || !rootSkill || declared.markerNoPool || declared.isCharging) {
+    if (!execution || !rootSkill || declared.isCharging) {
       return
     }
 

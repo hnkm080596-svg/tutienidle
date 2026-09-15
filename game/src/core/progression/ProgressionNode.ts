@@ -1,30 +1,5 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
-import type { SkillResourceStatKey } from '../skill/Skill'
-
-/**
- * Skill rework (2026-08-21) — bonus nhắm THẲNG 1 field trên object
- * Skill (xem Skill.ts's SkillResourceStatKey), KHÔNG đi qua
- * StatModifier/ModifierSystem chung của nhân vật. Chỉ giữ flat/percent
- * (đủ cho mọi node hiện có — không node nào cần multiplier/stacks/
- * perLevel cho nhóm field này) — `percent` áp NGAY tại thời điểm mua
- * (nhân trực tiếp vào giá trị hiện có), do prerequisite luôn đảm bảo
- * major (cấp flat gốc) được mua TRƯỚC minor (cấp percent), xem
- * GameManager.purchaseNode().
- */
-export interface SkillModifier {
-  stat: SkillResourceStatKey
-
-  flat?: number
-
-  percent?: number
-
-  // Node nhiều cấp (§6.1) — cộng thêm mỗi level trên mức base:
-  // giá trị tại level L = flat + perLevelFlat × (L − 1).
-  perLevelFlat?: number
-
-  perLevelPercent?: number
-}
 
 export type NodeType = 'minor' | 'major'
 
@@ -36,7 +11,6 @@ export type NodeType = 'minor' | 'major'
  */
 export type NodePrerequisite =
   | { kind: 'realm'; realmId: string }
-  | { kind: 'element'; element: ElementType }
   | { kind: 'node'; nodeId: string }
   // Pháp Tu Redesign (magicpath mục 11) — "lĩnh ngộ hoàn toàn 2-3
   // nhánh": thoả khi ÍT NHẤT `countRequired` node trong `nodeIds` đã
@@ -66,14 +40,6 @@ export type NodePrerequisite =
  */
 export interface NodeEffect {
   statModifiers?: StatModifier[]
-
-  // Skill rework (2026-08-21) — thay cho phần statModifiers từng nhắm
-  // vào 19 field "Thế tài nguyên" (hoaTheGainPerCast, thuyThePercent...)
-  // — giờ ghi thẳng vào Skill instance qua `skillId`, xem
-  // GameManager.purchaseNode().
-  skillModifiers?: { skillId: string; statModifiers: SkillModifier[] }[]
-
-  unlocksElement?: ElementType
 
   unlocksSkillIds?: string[]
 

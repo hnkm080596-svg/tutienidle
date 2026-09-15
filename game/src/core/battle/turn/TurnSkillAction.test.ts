@@ -6,7 +6,6 @@ import {
   tickCooldowns,
   commitAction,
   collectTurnTargets,
-  selectRandomDistinctElementPair,
   type TurnSkillDefinition,
 } from './TurnSkillAction'
 import type { TurnBattleParticipant } from './TurnBattleSystem'
@@ -28,10 +27,6 @@ function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentMp: 50,
     currentSwordIntent: 30,
     currentMomentum: 10,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -269,47 +264,6 @@ describe('collectTurnTargets', () => {
   })
 })
 
-
-// ---------------------------------------------------------------------------
-// Future Systems Task 4 â€” Reaction Path random-2-distinct-element selector
-// ---------------------------------------------------------------------------
-
-describe('selectRandomDistinctElementPair', () => {
-  const pool: TurnSkillDefinition[] = [
-    {
-      id: 'fire_bolt', cooldownTurns: 0,
-      damage: { kind: 'elemental', multiplier: 1, components: [{ kind: 'element', element: 'fire', ratio: 1 }] },
-      targeting: { shape: 'single' },
-    },
-    {
-      id: 'water_bolt', cooldownTurns: 0,
-      damage: { kind: 'elemental', multiplier: 1, components: [{ kind: 'element', element: 'water', ratio: 1 }] },
-      targeting: { shape: 'single' },
-    },
-    {
-      id: 'wood_bolt', cooldownTurns: 0,
-      damage: { kind: 'elemental', multiplier: 1, components: [{ kind: 'element', element: 'wood', ratio: 1 }] },
-      targeting: { shape: 'single' },
-    },
-  ]
-
-  it('tráº£ 2 skill id KHÃC nhau tá»« pool, luÃ´n thuá»™c pool', () => {
-    for (let i = 0; i < 50; i++) {
-      const [a, b] = selectRandomDistinctElementPair(pool)
-
-      expect(a.id).not.toBe(b.id)
-      expect(pool).toContain(a)
-      expect(pool).toContain(b)
-    }
-  })
-
-  it('nÃ©m lá»—i khi pool cÃ³ Ã­t hÆ¡n 2 pháº§n tá»­', () => {
-    const single = pool.slice(0, 1)
-
-    expect(() => selectRandomDistinctElementPair(single)).toThrow()
-    expect(() => selectRandomDistinctElementPair([])).toThrow()
-  })
-})
 
 describe('the resource type (Phase A3)', () => {
   it('gates on currentThe reaching the resource cost', () => {

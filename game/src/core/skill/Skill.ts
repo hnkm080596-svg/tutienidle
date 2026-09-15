@@ -7,11 +7,8 @@ import type {
 import type { SkillEffect } from './SkillEffect'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { SkillSpecialization } from './SkillSpecialization'
-import type { SkillRuntimeStats } from './SkillRuntimeStats'
 import type { ActionTargeting, CombatVfxPresetId } from '../battle/CombatAction'
 import type { TriggerBinding } from './SkillTrigger'
-export { SKILL_RESOURCE_STAT_KEYS } from './SkillRuntimeStats'
-export type { SkillResourceStatKey } from './SkillRuntimeStats'
 
 /**
  * Skill execution policy (plan §8.1) — authored timing semantics of the
@@ -55,7 +52,7 @@ export type SkillExecutionPolicy =
       tickSeconds: number
     }
 
-export interface Skill extends Partial<SkillRuntimeStats> {
+export interface Skill {
   id: string
 
   name: string
@@ -183,17 +180,6 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // callback.
   breakDamagePerHit?: number
 
-  // Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — mỗi lần CAST
-  // (không phải mỗi đòn TRÚNG như grantsMomentumPerHit) skill này thì
-  // +source.skillStats.hoaTheGainPerCast vào currentHoaThe (0 nếu chưa mua
-  // node "Tụ Hỏa" — nền của stat đó là 0), xem BattleSystem.castSkill().
-  grantsHoaThePerCast?: boolean
-
-  // Thổ Tu Pure (Plans/EarthPath mục XV, 2026-08-21) — cùng mô hình
-  // grantsHoaThePerCast nhưng cấp currentThoThe, KHÔNG có decay đối
-  // ứng (xem BattleSystem.castSkill()/CombatEntity.currentThoThe).
-  grantsThoThePerCast?: boolean
-
   // Core Loop Foundation checklist (Mục SKILL) — danh sách lựa chọn
   // "behavior-changing node" (template, không đổi giữa các instance
   // nếu có nhiều — hiện game chỉ có 1 instance/skill nên không quan
@@ -212,14 +198,4 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // never both — see SkillSystem.getEffectiveSkill()/BattleSystem.
   // resolveSkillEffects() for how the two paths coexist during migration.
   triggers?: TriggerBinding[]
-
-  // Skill rework (2026-08-21) — Node Tree Pháp Tu trước đây cộng các
-  // field "Thế tài nguyên" dưới đây thẳng vào CombatEntity.stats (kho
-  // chỉ số CHUNG của nhân vật). Vì mỗi field CHỈ có ý nghĩa với ĐÚNG 1
-  // skill (vd hoaTheGainPerCast chỉ Hỏa Cầu Thuật dùng), chuyển hẳn
-  // sang gắn TRỰC TIẾP lên object Skill sở hữu nó — GameManager.
-  // purchaseNode() ghi thẳng số vào đây khi mua node (xem NodeSystem.ts),
-  // combat đọc qua entity.skills (CombatEntity.ts) hoặc ctx.skill
-  // (SkillEffectSystem.ts), KHÔNG còn đọc entity.stats.<field> nữa.
-  // undefined = coi như 0 (chưa mua node cấp field này).
 }

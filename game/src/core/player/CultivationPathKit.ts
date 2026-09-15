@@ -24,10 +24,10 @@ export interface CultivationPathKit {
 
   name: string
 
-  // Pháp Tu Redesign — KHÔNG còn 1 hành cố định cho Pháp Tu (multi-
-  // element qua Element Loadout, xem core/element/ElementLoadout.ts).
-  // Optional — CHỈ Kiếm Tu còn khai (giữ identity/màu UI riêng), Pháp
-  // Tu để trống.
+  // Phap Tu Reimagined — Phap Tu has no fixed kit element: the chosen
+  // element lives on player.phapTu.element (single authority, picked at
+  // the element-root node). Optional — only Kiem Tu still declares one
+  // (keeps its identity/UI color); Phap Tu leaves it empty.
   element?: ElementType
 
   // Tâm Pháp hợp nhất (2026-08-15) — CHỈ 1 technique, tự học+trang bị

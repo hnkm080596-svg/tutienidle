@@ -32,10 +32,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -332,7 +328,7 @@ describe('player-origin gate — enemies participate as incumbents, never initia
   it('an ENEMY-side application onto a paired target fires NO reaction', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, undefined, new TurnReactionManager(eventBus))
+    const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, new TurnReactionManager(eventBus))
 
     const playerEntity = createCombatant({ id: 'player', type: 'player' })
     const enemyEntity = createCombatant({ id: 'enemy', currentHp: 1_000_000, stats: createBaseStats({ might: 0 }) })
@@ -359,7 +355,7 @@ describe('player-origin gate — enemies participate as incumbents, never initia
   it('an enemy-ORIGIN incumbent on the enemy + a player metal application resolves normally', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, undefined, new TurnReactionManager(eventBus))
+    const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, new TurnReactionManager(eventBus))
 
     const playerEntity = createCombatant({ id: 'player', type: 'player' })
     const enemyEntity = createCombatant({ id: 'enemy', currentHp: 1_000_000, stats: createBaseStats({ might: 0 }) })

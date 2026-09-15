@@ -3,7 +3,6 @@ import type { CombatSystem } from '../combat/CombatSystem'
 import { getArmorMitigationPercent } from '../combat/Armor'
 import { getResistanceMitigationPercent } from '../combat/Resistance'
 import { elementalBasePower } from '../combat/ElementDamageCalculator'
-import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 import type { StatModifier } from '../stats/StatCalculator'
 import { BuffPool } from './BuffPool'
 import type {
@@ -20,7 +19,6 @@ import type {
 
 const AILMENT_RESIST_CAP = 0.75
 
-const POISON_ROOT_THRESHOLD_STACKS = 3
 
 export class BuffSystem {
   constructor(private readonly pool: BuffPool) {}
@@ -45,9 +43,6 @@ export class BuffSystem {
           damagePerTurn: dmg,
           damagePerSecond: dmg,
           element: effect.element,
-          poisonRootPercentPerStack: effect.poisonRootPercentPerStack,
-          poisonRootMaxStacks: effect.poisonRootMaxStacks,
-          poisonRootThresholdBonusPercent: effect.poisonRootThresholdBonusPercent,
         }
       }
       return effect
@@ -69,7 +64,7 @@ export class BuffSystem {
         remainingTurns: duration,
         remainingTime: duration,
         stacks: 1,
-        maxStacks: this.resolveMaxStacks(definition, source),
+        maxStacks: definition.maxStacks,
         stackMode: definition.stackMode,
         continuousTurns: 0,
         continuousSeconds: 0,
@@ -81,16 +76,6 @@ export class BuffSystem {
     }
 
     this.handleExisting(existing, definition, source, target, duration, resolvedEffects, registry)
-  }
-
-  private resolveMaxStacks(definition: BuffDefinition, source: CombatEntity): number | undefined {
-    if (definition.maxStacks === undefined) {
-      return undefined
-    }
-
-    const bonus = source.skillStats?.maxStacksBonusByBuffId?.[definition.id] ?? 0
-
-    return definition.maxStacks + bonus
   }
 
   private handleExisting(
@@ -144,21 +129,6 @@ export class BuffSystem {
     }
   }
 
-  private getPoisonRootMultiplier(
-    effect: Extract<Buff['effects'][number], { type: 'dot' }>,
-    continuousTurns: number,
-  ): number {
-    if (!effect.poisonRootMaxStacks) {
-      return 1
-    }
-
-    const rootStacks = Math.min(effect.poisonRootMaxStacks, Math.floor(continuousTurns))
-    const thresholdBonus =
-      rootStacks >= POISON_ROOT_THRESHOLD_STACKS ? (effect.poisonRootThresholdBonusPercent ?? 0) : 0
-
-    return 1 + (effect.poisonRootPercentPerStack ?? 0) * rootStacks + thresholdBonus
-  }
-
   private calculateDamagePerTurn(
     effect: Extract<BuffEffectTemplate, { type: 'dot' }>,
     source: CombatEntity,
@@ -182,14 +152,7 @@ export class BuffSystem {
     const penetration = source.stats[`${effect.element}Penetration`]
     const mitigation = getResistanceMitigationPercent(resistance, penetration) * armorIgnoreMultiplier
 
-    const kimTheMultiplier =
-      effect.element === 'metal'
-        ? 1 +
-          source.currentKimThe * getSkillRuntimeStat(source, 'kimTheDotDamagePercentPerStack') +
-          getSkillRuntimeStat(source, 'metalAilmentPotencyPercent')
-        : 1
-
-    return Math.max(0, power * ratio * (1 - mitigation)) * (1 + source.stats.ailmentPotencyPercent) * kimTheMultiplier
+    return Math.max(0, power * ratio * (1 - mitigation)) * (1 + source.stats.ailmentPotencyPercent)
   }
 
   private convert(buff: Buff, registry: BuffDefinitionCatalog, target: CombatEntity, source?: CombatEntity) {
@@ -320,8 +283,7 @@ export class BuffSystem {
         if (effect.type === 'dot' && target.alive) {
           const dotRate = effect.damagePerSecond ?? effect.damagePerTurn
           if (dotRate) {
-            const rawDamage =
-              dotRate * buff.stacks * this.getPoisonRootMultiplier(effect, continuous) * deltaSeconds
+            const rawDamage = dotRate * buff.stacks * deltaSeconds
 
             combatSystem.applyDotDamage({
               sourceId: buff.sourceId,

@@ -3,7 +3,6 @@ import type { ElementType } from '../element/ElementType'
 import type { PlayerData } from '../player/Player'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import {
-  aggregateNodeSkillModifiers,
   canPurchaseNode as canPurchaseNodeSystem,
   canUpgradeNode as canUpgradeNodeSystem,
   devResetBranch as devResetBranchSystem,
@@ -130,25 +129,6 @@ export class GameManagerProgressionOps {
     return activePlayer.phapTu.element ?? undefined
   }
 
-  /**
-   * Skill runtime stats + node-derived skillModifiers (plan §6.8) -
-   * replaces mutating the Skill instance at purchase time: flat/perLevel
-   * derived from (registry, nodeLevels) stacked on top of SkillSystem's
-   * aggregate. Public for UI/tests; the combat snapshot goes through the
-   * same path.
-   */
-  getSkillRuntimeStats(player: PlayerData) {
-    const stats = this.deps.skillSystem.getSkillRuntimeStats()
-
-    for (const { statModifiers } of aggregateNodeSkillModifiers(this.deps.nodeRegistry, player)) {
-      for (const modifier of statModifiers) {
-        stats[modifier.stat] += modifier.flat ?? 0
-      }
-    }
-
-    return stats
-  }
-
   learnSkill(skillId: string): boolean {
     const template = this.deps.skillTemplates.get(skillId)
 
@@ -167,9 +147,9 @@ export class GameManagerProgressionOps {
    * Does NOT auto-equip the newly unlocked skill.
    *
    * §6.8 - no more Skill-instance mutation / player.modifiers push at
-   * purchase: every effect is derived from (registry, nodeLevels) via the
-   * aggregators (getAggregatedModifiers + buildSkillRuntimeStats), always
-   * recomputed for the same deterministic result.
+   * purchase: every effect is derived from (registry, nodeLevels) via
+   * getAggregatedModifiers, always recomputed for the same deterministic
+   * result.
    */
   purchaseNode(nodeId: string, player: PlayerData): boolean {
     if (!this.deps.nodeRegistry.has(nodeId)) {

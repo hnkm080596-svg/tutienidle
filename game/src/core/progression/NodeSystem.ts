@@ -1,5 +1,5 @@
 import type { PlayerData } from '../player/Player'
-import type { NodePrerequisite, ProgressionNode, SkillModifier, TurnSkillResourceModifier } from './ProgressionNode'
+import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } from './ProgressionNode'
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
@@ -46,9 +46,6 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
   switch (prerequisite.kind) {
     case 'realm':
       return getRealmIndex(player.realmId) >= getRealmIndex(prerequisite.realmId)
-
-    case 'element':
-      return player.unlockedElements.includes(prerequisite.element)
 
     // §6.1 — kiểm tra qua LEVEL thay vì danh sách boolean riêng.
     case 'node':
@@ -196,10 +193,6 @@ export function purchaseNode(player: PlayerData, node: ProgressionNode): boolean
     player.purchasedNodeIds.push(node.id)
   }
 
-  if (node.effect.unlocksElement && !player.unlockedElements.includes(node.effect.unlocksElement)) {
-    player.unlockedElements.push(node.effect.unlocksElement)
-  }
-
   return true
 }
 
@@ -272,41 +265,6 @@ export function aggregateNodeStatModifiers(
   }
 
   return modifiers
-}
-
-/**
- * Aggregator skill runtime modifiers (thay đường mutate Skill instance
- * cũ lúc purchase) — SkillModifier chỉ dùng flat/perLevelFlat; percent
- * giữ nguyên ngữ nghĩa nhân một lần nếu author có khai.
- */
-export function aggregateNodeSkillModifiers(
-  registry: { getAll(): ProgressionNode[] },
-
-  player: PlayerData,
-) {
-  const result: {
-    skillId: string
-
-    statModifiers: Array<SkillModifier & { flat: number; percent: number }>
-  }[] = []
-
-  for (const node of registry.getAll()) {
-    const level = getNodeLevel(player, node.id)
-
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
-      continue
-    }
-
-    for (const entry of node.effect.skillModifiers ?? []) {
-      result.push({
-        skillId: entry.skillId,
-
-        statModifiers: entry.statModifiers.map(modifier => scaleModifierForLevel(modifier, level)),
-      })
-    }
-  }
-
-  return result
 }
 
 /**

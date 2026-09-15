@@ -6,7 +6,6 @@ import { BuffPool } from '../buff/BuffPool'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
-import { createSkillRuntimeStats } from './SkillRuntimeStats'
 import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
@@ -25,10 +24,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -67,7 +62,6 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     alive: true,
     realmIndex: 0,
     currentSwordIntent: 0,
-    currentKimThe: 0,
     stats: { skillDamagePercent: 0, maxMp: 0, might: 10, elementApplicationPercent: 0 } as CombatEntity['stats'],
     ...overrides,
   } as CombatEntity
@@ -84,7 +78,7 @@ function makeCtx(overrides: Partial<SkillEffectContext> = {}): SkillEffectContex
   }
 }
 
-describe("apply() — case 'debuff' (absorbs old case 'ailment': chance roll, Kim Thế/Huyết Phá procs)", () => {
+describe("apply() — case 'debuff' (absorbs old case 'ailment': chance roll)", () => {
   it('rolls chance + elementApplicationPercent, applies via targetBuffs', () => {
     const source = makeEntity({ stats: { elementApplicationPercent: 0.1 } as CombatEntity['stats'] })
     const target = makeEntity()
@@ -98,26 +92,6 @@ describe("apply() — case 'debuff' (absorbs old case 'ailment': chance roll, Ki
     system.apply({ type: 'debuff', buffId: 'bong', ailmentChance: 0.8 }, source, target, ctx)
 
     expect(apply).toHaveBeenCalled()
-
-    vi.restoreAllMocks()
-  })
-
-  it('grantsKimThePerProc still grants Kim Thế on a successful debuff proc', () => {
-    const source = makeEntity({
-      currentKimThe: 0,
-      skillStats: { ...createSkillRuntimeStats(), kimTheGainPerProc: 5 },
-    })
-    const target = makeEntity()
-    const ctx = makeCtx()
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    const system = new SkillEffectSystem()
-    system.apply(
-      { type: 'debuff', buffId: 'bong', ailmentChance: 1, grantsKimThePerProc: true },
-      source, target, ctx,
-    )
-
-    expect(source.currentKimThe).toBeGreaterThan(0)
 
     vi.restoreAllMocks()
   })

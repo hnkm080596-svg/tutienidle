@@ -32,11 +32,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
     currentThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -142,7 +138,7 @@ function harness(root: TurnSkillDefinition, thePool = 100, maxThe?: number) {
   const enemy = makeParticipant('enemy', enemyEntity, 1, 1)
 
   const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting' }
-  const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, undefined, reactionManager)
+  const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, reactionManager)
 
   return { battle, player, enemy, playerEntity, enemyEntity, system, reactionEvents, triggerSpy }
 }

@@ -30,11 +30,7 @@ function combatEntity(currentThe: number): CombatEntity {
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
     currentThe,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -58,7 +54,7 @@ describe('resetBattleScopedResources (Task 8)', () => {
 
   it('playerToCombatEntity always builds a zeroed The pool', () => {
     const player = createDefaultPlayer()
-    const entity = playerToCombatEntity(player, createBaseStats({}), undefined, {})
+    const entity = playerToCombatEntity(player, createBaseStats({}))
 
     expect(entity.currentThe).toBe(0)
   })

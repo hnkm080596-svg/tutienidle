@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  aggregateNodeSkillModifiers,
   aggregateNodeStatModifiers,
   canPurchaseNode,
   canUpgradeNode,
@@ -55,13 +54,6 @@ describe('hasPrerequisite — theo LEVEL (plan §6.1)', () => {
 
     expect(hasPrerequisite(player, { kind: 'realm', realmId: 'golden_core' })).toBe(true)
     expect(hasPrerequisite(player, { kind: 'realm', realmId: 'void_refinement' })).toBe(false)
-  })
-
-  it('kind element — thoả khi hành đã nằm trong unlockedElements', () => {
-    const player = playerWith({ unlockedElements: ['fire'] })
-
-    expect(hasPrerequisite(player, { kind: 'element', element: 'fire' })).toBe(true)
-    expect(hasPrerequisite(player, { kind: 'element', element: 'water' })).toBe(false)
   })
 
   it('kind node — thoả khi node kia có level >= 1 (không đọc purchasedNodeIds)', () => {
@@ -162,16 +154,6 @@ describe('purchaseNode / upgradeNode (plan §6.1)', () => {
     expect(player.modifiers).toEqual([])
   })
 
-  it('unlocksElement — thêm vào unlockedElements, không trùng', () => {
-    const player = playerWith({ skillInsight: 5 })
-
-    expect(purchaseNode(player, minorNode({ id: 'unlock_fire', insightCost: 1, effect: { unlocksElement: 'fire' } }))).toBe(true)
-    expect(player.unlockedElements).toEqual(['fire'])
-
-    expect(purchaseNode(player, minorNode({ id: 'unlock_fire_2', insightCost: 1, effect: { unlocksElement: 'fire' } }))).toBe(true)
-    expect(player.unlockedElements).toEqual(['fire'])
-  })
-
   // E-8 (2026-09-03) — selectsSpecialization là effect THUẦN DATA (wire
   // SkillSystem ở GameManager.purchaseNode, không phải NodeSystem thuần)
   // — NodeSystem chỉ cần mua được node mang effect này.
@@ -256,47 +238,6 @@ describe('aggregator (plan §6.8) — hiệu lực suy ra từ (registry, nodeLe
 
     expect(aggregateNodeStatModifiers(registry, player)).toEqual([])
   })
-
-  it('skillModifiers suy ra theo level, không mutate Skill instance', () => {
-    const keystone = minorNode({
-      id: 'tu_hoa_test',
-
-      effect: {
-        skillModifiers: [
-          { skillId: 'hoa_cau_thuat', statModifiers: [{ stat: 'hoaTheGainPerCast', flat: 1 }] },
-        ],
-      },
-    })
-
-    const spec = minorNode({
-      id: 'hoa_mach_test',
-
-      maxLevel: 5,
-
-      effect: {
-        skillModifiers: [
-          { skillId: 'hoa_cau_thuat', statModifiers: [{ stat: 'hoaTheGainPerCast', flat: 0.02, perLevelFlat: 0.02 }] },
-        ],
-      },
-    })
-
-    const registry = { getAll: () => [keystone, spec] }
-
-    const player = playerWith({ nodeLevels: { tu_hoa_test: 1, hoa_mach_test: 3 } })
-
-    const aggregated = aggregateNodeSkillModifiers(registry, player)
-
-    expect(aggregated).toHaveLength(2)
-
-    // Cả 2 node cùng nhắm stat hoaTheGainPerCast — flats phải là
-    // {keystone: 1} và {spec level 3: 0.02 + 0.02 × 2 = 0.06}.
-    const flats = aggregated
-      .flatMap(entry => entry.statModifiers.map(modifier => modifier.flat))
-      .sort((a, b) => a - b)
-
-    expect(flats[0]).toBeCloseTo(0.06, 6)
-    expect(flats[1]).toBe(1)
-  })
 })
 
 describe('canPurchaseNode', () => {
@@ -307,19 +248,19 @@ describe('canPurchaseNode', () => {
   })
 
   it('prerequisites là AND — thiếu 1 cái thì false', () => {
-    const player = playerWith({ skillInsight: 10, realmId: 'golden_core', unlockedElements: ['fire'] })
+    const player = playerWith({ skillInsight: 10, realmId: 'golden_core', nodeLevels: { prereq_node: 1 } })
 
     const node = minorNode({
       insightCost: 1,
       prerequisites: [
         { kind: 'realm', realmId: 'golden_core' },
-        { kind: 'element', element: 'water' },
+        { kind: 'node', nodeId: 'missing_node' },
       ],
     })
 
     expect(canPurchaseNode(player, node)).toBe(false)
 
-    player.unlockedElements.push('water')
+    player.nodeLevels['missing_node'] = 1
 
     expect(canPurchaseNode(player, node)).toBe(true)
   })

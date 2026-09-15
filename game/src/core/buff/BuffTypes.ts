@@ -29,9 +29,6 @@ export interface DotEffectTemplate {
   type: 'dot'
   dpsRatio: number
   element?: ElementType | 'physical'
-  poisonRootPercentPerStack?: number
-  poisonRootMaxStacks?: number
-  poisonRootThresholdBonusPercent?: number
   armorIgnorePercentByRealm?: boolean
 }
 
@@ -86,9 +83,6 @@ export interface DotEffect {
   damagePerTurn?: number
   damagePerSecond?: number
   element?: ElementType | 'physical'
-  poisonRootPercentPerStack?: number
-  poisonRootMaxStacks?: number
-  poisonRootThresholdBonusPercent?: number
 }
 
 export type BuffEffect =

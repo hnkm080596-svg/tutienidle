@@ -34,9 +34,6 @@ import type { StatType } from '../stats/StatTypes'
 const SUPPORTED_EFFECT_TYPES = new Set(['damage', 'debuff', 'buff', 'add_stack'])
 
 const UNSUPPORTED_EFFECT_FIELDS = [
-  'grantsKimThePerProc',
-  'grantsHuyetPhaPerProc',
-  'earthPureAreaBehavior',
   'hitCountByRealm',
   'hitCount',
   'realmDamageRatio',
@@ -54,8 +51,6 @@ const UNSUPPORTED_EFFECT_FIELDS = [
 ] as const
 
 const UNSUPPORTED_SKILL_FIELDS = [
-  'grantsHoaThePerCast',
-  'grantsThoThePerCast',
   'breakDamagePerHit',
 ] as const
 
