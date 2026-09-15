@@ -26,12 +26,16 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, t
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost } from '@/core/progression/NodeSystem'
+import { useLoadoutActions } from '@/composables/useLoadoutActions'
+import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost, previewRouteSwitch } from '@/core/progression/NodeSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
+import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import SkillConnections from './SkillConnections.vue'
 import type { SkillConnectionEntry, SkillConnectionRect } from './SkillConnections.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import type { ElementType } from '@/core/element/ElementType'
+import type { PhapTuRoute } from '@/core/phap-tu/PhapTuState'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
 const props = defineProps<{
@@ -52,31 +56,71 @@ const { t } = useI18n()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
+const { switchPhapTuRoute } = useLoadoutActions()
 
 function branchLabel(branchTag: string | undefined): string {
   if (!branchTag) {
     return t('panels.nodeTree.labels.otherBranch')
   }
 
-  if (branchTag === 'lap_dao') {
-    return t('panels.nodeTree.branchLabels.lapDao')
-  }
-
-  if (branchTag.startsWith('thuan_')) {
-    const element = branchTag.slice('thuan_'.length) as ElementType
-    return t('panels.nodeTree.branchLabels.thuan', { element: ELEMENT_LABELS[element] ?? branchTag })
-  }
-
   return ELEMENT_LABELS[branchTag as ElementType] ?? branchTag
 }
 
 function branchColor(branchTag: string | undefined): string {
-  if (branchTag?.startsWith('thuan_')) {
-    const element = branchTag.slice('thuan_'.length) as ElementType
-    return ELEMENT_COLOR_VARS[element] ?? 'var(--paper-text)'
+  return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--paper-text)'
+}
+
+// Phap Tu Reimagined (Task 16) — route respec toggle (P3). A route is a
+// stance, not a node: the toggle lives in the tree header and only
+// shows for normal Phap Tu once the atomic element+route commit exists.
+const PHAP_TU_ROUTE_IDS: readonly PhapTuRoute[] = ['dot', 'no']
+
+const phapTuRoute = computed<PhapTuRoute | null>(() => {
+  stateVersion.value
+
+  return player.cultivationPath === 'phap_tu' ? (player.phapTu?.route ?? null) : null
+})
+
+const inBattle = computed(() => {
+  stateVersion.value
+
+  const battle = gameManager.getTurnBattle()
+
+  return battle !== null && isBattleInProgress(battle.state)
+})
+
+const pendingRoute = ref<PhapTuRoute | null>(null)
+
+const routePreview = computed(() => {
+  stateVersion.value
+
+  if (pendingRoute.value === null) {
+    return null
   }
 
-  return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--paper-text)'
+  return previewRouteSwitch(player.$state, gameManager.nodeRegistry)
+})
+
+function onRouteClick(route: PhapTuRoute) {
+  if (route === phapTuRoute.value || inBattle.value) {
+    return
+  }
+
+  pendingRoute.value = route
+}
+
+function confirmRouteSwitch() {
+  const route = pendingRoute.value
+
+  pendingRoute.value = null
+
+  if (route !== null) {
+    switchPhapTuRoute(route)
+  }
+}
+
+function cancelRouteSwitch() {
+  pendingRoute.value = null
 }
 interface TreeEntry {
   node: ProgressionNode
@@ -102,19 +146,24 @@ const branches = computed(() => {
 
   const allNodes = gameManager.nodeRegistry.getAll()
 
-  // B1 fix (2026-09-14): element views render the element branch plus the
-  // shared lap_dao gate and the element's thuan_* sub-branch — the tag
-  // mapping is owned by NodeBranchViews (single source for the coverage
-  // guard tests/architecture/nodeBranchCoverage.test.ts).
+  // Phap Tu Reimagined (Task 16) — a node belongs to a view when either
+  // its elementTag (reworked Phap Tu tree) or branchTag (Kiem Tu
+  // routes) is in the view's tag set; unfiltered views hide
+  // HIDDEN_BRANCH_TAGS (the future An tree surface — Task 7's path owns
+  // no normal tree). Tag mapping owned by NodeBranchViews (single
+  // source for the coverage guard tests/architecture/
+  // nodeBranchCoverage.test.ts).
+  const nodeViewTag = (node: ProgressionNode): string | undefined => node.elementTag ?? node.branchTag
+
   const visibleTags = props.branchTag ? new Set<string>(viewBranchTags(props.branchTag)) : null
   const nodes = visibleTags
-    ? allNodes.filter(node => node.branchTag !== undefined && visibleTags.has(node.branchTag))
-    : allNodes.filter(node => !(node.branchTag !== undefined && (HIDDEN_BRANCH_TAGS as readonly string[]).includes(node.branchTag)))
+    ? allNodes.filter(node => nodeViewTag(node) !== undefined && visibleTags.has(nodeViewTag(node)!))
+    : allNodes.filter(node => !(nodeViewTag(node) !== undefined && (HIDDEN_BRANCH_TAGS as readonly string[]).includes(nodeViewTag(node)!)))
 
   const groups = new Map<string, typeof nodes>()
 
   for (const node of nodes) {
-    const key = node.branchTag ?? '__other__'
+    const key = nodeViewTag(node) ?? '__other__'
     const list = groups.get(key) ?? []
 
     list.push(node)
@@ -461,6 +510,22 @@ onBeforeUnmount(() => {
     <div class="node-tree__header">
       <span class="node-tree__title">{{ t('panels.nodeTree.title') }}</span>
 
+      <!-- Route respec toggle (P3) — Phap Tu only, once element+route
+           committed; switching refunds 75% of old-route investment. -->
+      <div v-if="phapTuRoute" class="node-tree__route" role="group" :aria-label="t('panels.nodeTree.routes.aria')">
+        <button
+          v-for="route in PHAP_TU_ROUTE_IDS"
+          :key="route"
+          type="button"
+          class="node-tree__route-option"
+          :class="{ 'is-active': route === phapTuRoute }"
+          :disabled="inBattle"
+          @click="onRouteClick(route)"
+        >
+          {{ t(`panels.nodeTree.routes.${route}`) }}
+        </button>
+      </div>
+
       <div class="node-tree__zoom" role="group" :aria-label="t('panels.nodeTree.aria.zoomGroup')">
         <button type="button" :disabled="zoom <= ZOOM_MIN" @click="zoomOut">−</button>
         <button type="button" class="node-tree__zoom-value" :title="t('panels.nodeTree.tooltips.zoomToFit')" @click="zoomToFit">{{ Math.round(zoom * 100) }}%</button>
@@ -510,6 +575,10 @@ onBeforeUnmount(() => {
 
                   <!-- Badge cấp cho node nhiều cấp (plan §6.2): `3/10`. -->
                   <span v-if="entry.maxLevel > 1" class="node-tree__node-level">{{ entry.level }}/{{ entry.maxLevel }}</span>
+
+                  <!-- Badge hướng Dot/No — node routeTag chỉ mua/hiệu
+                       lực khi route đang chọn khớp (query-time gate). -->
+                  <span v-if="entry.node.routeTag" class="node-tree__node-route">{{ t(`panels.nodeTree.routes.${entry.node.routeTag}`) }}</span>
                 </span>
                 <span v-if="entry.node.description" class="node-tree__node-desc">{{ entry.node.description }}</span>
                 <span class="node-tree__node-cost">
@@ -521,6 +590,23 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
+
+    <!-- Route respec confirm — preview shows actual-paid refund math
+         ("regain X, lose Y", spec §11). -->
+    <ConfirmModal
+      v-if="pendingRoute !== null && routePreview !== null"
+      :open="true"
+      :title="t('panels.nodeTree.routeSwitch.title')"
+      :message="t('panels.nodeTree.routeSwitch.body', {
+        route: t(`panels.nodeTree.routes.${pendingRoute}`),
+        regain: routePreview.refund,
+        lose: routePreview.forfeited,
+      })"
+      :confirm-label="t('panels.nodeTree.routeSwitch.confirm')"
+      danger
+      @confirm="confirmRouteSwitch"
+      @cancel="cancelRouteSwitch"
+    />
   </div>
 </template>
 
@@ -540,6 +626,36 @@ onBeforeUnmount(() => {
   align-items: baseline;
   gap: 10px;
   font-family: var(--font-body);
+}
+
+.node-tree__route {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.node-tree__route-option {
+  min-height: 22px;
+  padding: 1px 10px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.node-tree__route-option.is-active {
+  border-color: var(--gold-700);
+  color: var(--gold-700);
+  font-weight: 600;
+}
+
+.node-tree__route-option:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .node-tree__zoom {
@@ -729,6 +845,16 @@ onBeforeUnmount(() => {
   font-size: var(--text-xs);
   line-height: 1.4;
   color: var(--chrome-100);
+}
+
+/* Badge hướng Đốt/Nộ — node routeTag (Phap Tu Reimagined Task 16). */
+.node-tree__node-route {
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gold-700) 60%, transparent);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--gold-700);
 }
 
 .node-tree__node-desc {

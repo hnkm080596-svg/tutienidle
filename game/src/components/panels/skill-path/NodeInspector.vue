@@ -4,22 +4,26 @@
 // mua/nâng cấp. Node nhiều cấp hiển thị `Cấp x/max`, Power nhận mỗi cấp
 // + tổng đang nhận, chi phí cấp kế; nút "Lĩnh Ngộ" ở level 0, "Nâng
 // Cấp" từ level 1, trạng thái "Tối đa" khi đạt maxLevel.
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import GameButton from '@/components/common/GameButton.vue'
-import StatRow from '@/components/common/primitives/StatRow.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import {
   getNodeLevel,
   getNextLevelCost,
   hasPrerequisite,
   canUpgradeNode,
+  isNodeElementActive,
+  isNodeRouteActive,
 } from '@/core/progression/NodeSystem'
-import { getActiveSkillResourceStats } from '@/core/skill/SkillResourceStatLabels'
-import type { ActiveSkillResourceStat } from '@/core/skill/SkillResourceStatLabels'
+import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builders'
+import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import type { ElementType } from '@/core/element/ElementType'
+import type { PhapTuRoute } from '@/core/phap-tu/PhapTuState'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
 const { t } = useI18n()
@@ -35,7 +39,18 @@ const emit = defineEmits<{ unlocked: [node: ProgressionNode] }>()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { purchaseNode, upgradeNode } = useLoadoutActions()
+const { purchaseNode, upgradeNode, selectPhapTuElement } = useLoadoutActions()
+
+const ELEMENT_ROOT_ID_SET = new Set<string>(Object.values(PHAP_TU_ELEMENT_ROOT_IDS))
+const PHAP_TU_ROUTE_IDS: readonly PhapTuRoute[] = ['dot', 'no']
+
+// Task 16 — element roots are NOT purchasable through purchaseNode()
+// (the op rejects them): clicking one opens the blocking route pick,
+// and the atomic selectPhapTuElement() transaction commits
+// element+route together (INV-13 — no element-without-route state).
+const isElementRoot = computed(() => props.node !== null && ELEMENT_ROOT_ID_SET.has(props.node.id))
+
+const routePickOpen = ref(false)
 
 // Level hiện tại / max / cost cấp kế của node đang chọn.
 const level = computed(() => {
@@ -64,34 +79,6 @@ const upgradable = computed(() => {
 
 const isMaxed = computed(() => level.value >= maxLevel.value && maxLevel.value > 1)
 
-// Skill rework — node cấp "Thế tài nguyên" nhắm THẲNG 1 Skill qua
-// effect.skillModifiers — hiện TỔNG hiện tại của skill đó (đã gồm phần
-// node suy ra từ getSkillRuntimeStats(player)). Task 4 (i18n followups
-// 2.3) — label/description là locale key, render qua t() ở đây.
-const affectedSkillStats = computed(() => {
-  stateVersion.value
-
-  const skillId = props.node?.effect.skillModifiers?.[0]?.skillId
-
-  if (!skillId) {
-    return []
-  }
-
-  const skill = gameManager.skillManager.get(skillId)
-
-  return skill ? getActiveSkillResourceStats(skill) : []
-})
-
-// Tham chiếu t() trong getter để reactivity locale theo computed —
-// không t() trực tiếp trong template (key động từ data core).
-function statLabel(stat: ActiveSkillResourceStat): string {
-  return t(stat.labelKey)
-}
-
-function statDescription(stat: ActiveSkillResourceStat): string {
-  return t(stat.descriptionKey)
-}
-
 // Lý do khoá — thuần suy ra từ hasPrerequisite() đã có (không đụng
 // core), chỉ để hiện gợi ý, KHÔNG phải nguồn sự thật.
 const lockedReasons = computed(() => {
@@ -100,6 +87,21 @@ const lockedReasons = computed(() => {
   }
 
   const reasons: string[] = []
+
+  // Task 16 — element/route membership gates (isNodeElementActive /
+  // isNodeRouteActive) are not prerequisites, so hasPrerequisite()
+  // cannot explain them; surface the real lock reason here.
+  if (!isNodeElementActive(player.$state, props.node) && props.node.elementTag) {
+    reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.elementMismatch', {
+      element: ELEMENT_LABELS[props.node.elementTag],
+    }))
+  }
+
+  if (!isNodeRouteActive(player.$state, props.node) && props.node.routeTag) {
+    reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.routeMismatch', {
+      route: t(`panels.nodeTree.routes.${props.node.routeTag}`),
+    }))
+  }
 
   const cost = nextCost.value ?? props.node.insightCost
 
@@ -121,8 +123,6 @@ const lockedReasons = computed(() => {
       }))
     } else if (prereq.kind === 'realm') {
       reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.realm'))
-    } else if (prereq.kind === 'element') {
-      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.element'))
     } else if (prereq.kind === 'excludesNode') {
       reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.excludesNode', {
         name: gameManager.nodeRegistry.get(prereq.nodeId).name,
@@ -161,9 +161,30 @@ function onPurchase() {
     return
   }
 
+  // Element root → the blocking route pick collects the second half of
+  // the atomic commit (spec §3.3: "blocking choice, no dismiss").
+  if (isElementRoot.value) {
+    routePickOpen.value = true
+    return
+  }
+
   const node = props.node
 
   if (purchaseNode(node.id)) {
+    emit('unlocked', node)
+  }
+}
+
+function onRoutePick(route: PhapTuRoute) {
+  const node = props.node
+
+  routePickOpen.value = false
+
+  if (!node?.elementTag) {
+    return
+  }
+
+  if (selectPhapTuElement(node.elementTag, route)) {
     emit('unlocked', node)
   }
 }
@@ -208,18 +229,6 @@ function onUpgrade() {
         <li v-for="reason in lockedReasons" :key="reason">{{ reason }}</li>
       </ul>
 
-      <ul v-if="affectedSkillStats.length > 0" class="node-inspector__skill-stats">
-        <StatRow
-          v-for="stat in affectedSkillStats"
-          :key="stat.labelKey"
-          v-tooltip="statDescription(stat)"
-          :label="statLabel(stat)"
-          bordered
-        >
-          <span class="node-inspector__stat-value">{{ stat.formatted }}</span>
-        </StatRow>
-      </ul>
-
       <div class="node-inspector__actions">
         <!-- Ẩn NỘI DUNG chi phí khi ĐÃ hiện trong danh sách lý do khoá
              phía trên (2026-08-30 frontend-design pass: 2 chỗ cùng nói
@@ -256,6 +265,33 @@ function onUpgrade() {
         </GameButton>
       </div>
     </template>
+
+    <!-- Blocking route pick (spec §3.3 + plan Task 16: "blocking
+         choice, no dismiss") — element+route commit atomically via
+         selectPhapTuElement; the modal only collects input, it is not
+         the guarantee. No cancel: the element root was clicked
+         deliberately, the route half is mandatory. -->
+    <Teleport to="body">
+      <div v-if="routePickOpen" class="route-pick" :style="{ zIndex: OVERLAY_LAYERS.modal }">
+        <section class="route-pick__card" role="alertdialog" aria-modal="true">
+          <h3 class="route-pick__title">{{ t('panels.skillPath.nodeInspector.routePick.title') }}</h3>
+          <p class="route-pick__hint">{{ t('panels.skillPath.nodeInspector.routePick.hint') }}</p>
+
+          <div class="route-pick__options">
+            <GameButton
+              v-for="route in PHAP_TU_ROUTE_IDS"
+              :key="route"
+              class="route-pick__option"
+              variant="ghost"
+              @click="onRoutePick(route)"
+            >
+              <span class="route-pick__option-name">{{ t(`panels.nodeTree.routes.${route}`) }}</span>
+              <span class="route-pick__option-desc">{{ t(`panels.skillPath.nodeInspector.routePick.${route}Desc`) }}</span>
+            </GameButton>
+          </div>
+        </section>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -323,17 +359,6 @@ function onUpgrade() {
   color: var(--crimson);
 }
 
-.node-inspector__skill-stats {
-  list-style: none;
-  margin: 4px 0;
-  padding: 0;
-  font-size: var(--text-sm);
-}
-
-.node-inspector__stat-value {
-  color: var(--chrome-100);
-}
-
 .node-inspector__actions {
   display: flex;
   align-items: center;
@@ -358,5 +383,67 @@ function onUpgrade() {
 .node-inspector__buy:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Blocking route pick — no dismiss affordance by design (spec §3.3);
+   the card itself is a plain overlay since ConfirmModal always renders
+   a cancel action. */
+.route-pick {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, #000 62%, transparent);
+}
+
+.route-pick__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(420px, 88vw);
+  padding: 20px 24px;
+  background: var(--ink-800);
+  border: 1px solid var(--chrome-500);
+  border-radius: var(--radius-md);
+}
+
+.route-pick__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--chrome-100);
+}
+
+.route-pick__hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.route-pick__options {
+  display: flex;
+  gap: 10px;
+}
+
+.route-pick__option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+}
+
+.route-pick__option-name {
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--gold-700);
+}
+
+.route-pick__option-desc {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.4;
 }
 </style>

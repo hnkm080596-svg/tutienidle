@@ -1,30 +1,5 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
-import type { SkillResourceStatKey } from '../skill/Skill'
-
-/**
- * Skill rework (2026-08-21) — bonus nhắm THẲNG 1 field trên object
- * Skill (xem Skill.ts's SkillResourceStatKey), KHÔNG đi qua
- * StatModifier/ModifierSystem chung của nhân vật. Chỉ giữ flat/percent
- * (đủ cho mọi node hiện có — không node nào cần multiplier/stacks/
- * perLevel cho nhóm field này) — `percent` áp NGAY tại thời điểm mua
- * (nhân trực tiếp vào giá trị hiện có), do prerequisite luôn đảm bảo
- * major (cấp flat gốc) được mua TRƯỚC minor (cấp percent), xem
- * GameManager.purchaseNode().
- */
-export interface SkillModifier {
-  stat: SkillResourceStatKey
-
-  flat?: number
-
-  percent?: number
-
-  // Node nhiều cấp (§6.1) — cộng thêm mỗi level trên mức base:
-  // giá trị tại level L = flat + perLevelFlat × (L − 1).
-  perLevelFlat?: number
-
-  perLevelPercent?: number
-}
 
 export type NodeType = 'minor' | 'major'
 
@@ -36,7 +11,6 @@ export type NodeType = 'minor' | 'major'
  */
 export type NodePrerequisite =
   | { kind: 'realm'; realmId: string }
-  | { kind: 'element'; element: ElementType }
   | { kind: 'node'; nodeId: string }
   // Pháp Tu Redesign (magicpath mục 11) — "lĩnh ngộ hoàn toàn 2-3
   // nhánh": thoả khi ÍT NHẤT `countRequired` node trong `nodeIds` đã
@@ -67,14 +41,6 @@ export type NodePrerequisite =
 export interface NodeEffect {
   statModifiers?: StatModifier[]
 
-  // Skill rework (2026-08-21) — thay cho phần statModifiers từng nhắm
-  // vào 19 field "Thế tài nguyên" (hoaTheGainPerCast, thuyThePercent...)
-  // — giờ ghi thẳng vào Skill instance qua `skillId`, xem
-  // GameManager.purchaseNode().
-  skillModifiers?: { skillId: string; statModifiers: SkillModifier[] }[]
-
-  unlocksElement?: ElementType
-
   unlocksSkillIds?: string[]
 
   // Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 4) — on-hit
@@ -94,6 +60,31 @@ export interface NodeEffect {
   // THUẦN DATA trong NodeSystem). Data (Task 8) tự đảm bảo mutex: 2
   // node biến thể đối diện gate nhau bằng prerequisite excludesNode.
   selectsSpecialization?: { skillId: string; specializationId: string }
+
+  // Phap Tu Reimagined (Task 6) — The-resource lane scoped to a
+  // specific turn skill. NOT SkillResourceStatKey (that global runtime
+  // bag would lose the skillId); aggregated per authored skill by
+  // NodeSystem.aggregateTurnSkillResourceModifiers(). Values apply per
+  // node level (level L contributes value x L).
+  turnSkillResourceModifiers?: TurnSkillResourceModifier[]
+
+  // Phap Tu Reimagined (Task 6) — Truong The nodes: raise the
+  // battle-scoped The cap by this amount per node level. Consumed by
+  // resolveMaxThe(); maxThe is never persisted on PlayerData.
+  theCapPerLevel?: number
+}
+
+/**
+ * The-resource modifier for ONE authored turn skill (see NodeEffect.
+ * turnSkillResourceModifiers). theGainOnLandedCast = The granted once
+ * per cast that lands >=1 target; theGainOnCrit = once per crit cast.
+ */
+export interface TurnSkillResourceModifier {
+  skillId: string
+
+  theGainOnLandedCast?: number
+
+  theGainOnCrit?: number
 }
 
 /** 9 loại on-hit kiếm trận (spec mục 4) — mở theo cấp trận 2→9. */
@@ -153,4 +144,14 @@ export interface ProgressionNode {
   // Nhãn nhóm THUẦN HIỂN THỊ (vd 'fire', 'kiem_tu_core') — không ảnh
   // hưởng logic mua/prerequisite, chỉ để UI vẽ đúng nhánh cây.
   branchTag?: string
+
+  // Phap Tu Reimagined — route membership: node only has effect while
+  // the player's phapTu.route matches (aggregators skip inactive-route
+  // nodes; INV-19 forbids shared nodes depending on route-tagged ones).
+  routeTag?: 'dot' | 'no'
+
+  // Phap Tu Reimagined — element-branch membership for the normal
+  // Phap Tu tree; a node with elementTag belongs to that element's
+  // branch and is purchasable only while phapTu.element matches.
+  elementTag?: ElementType
 }

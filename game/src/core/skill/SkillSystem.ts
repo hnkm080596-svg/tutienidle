@@ -1,5 +1,4 @@
 import type { Skill } from './Skill'
-import { SKILL_RESOURCE_STAT_KEYS, createSkillRuntimeStats, type SkillRuntimeStats } from './SkillRuntimeStats'
 import type { SkillEffect } from './SkillEffect'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { PassiveTrigger } from './SkillTypes'
@@ -7,6 +6,11 @@ import type { PlayerData } from '../player/Player'
 import { getSkillUpgradeInsightCost } from './SkillUpgradeBalance'
 import type { TriggerBinding } from './SkillTrigger'
 import type { DealDamageAction } from './SkillAction'
+import {
+  NEUTRAL_ROUTE_PROFILE,
+  applyRouteToEffectiveSkill,
+  type RouteProfile,
+} from '../phap-tu/PhapTuRoutes'
 
 import {
   SkillManager,
@@ -35,9 +39,37 @@ export function getHuyKiemLevelForCasts(totalExperience: number): number {
   return 1
 }
 
+// Phap Tu Reimagined Task 2 — THE table of skills that level ONLY by
+// cast count (upgradeSkill rejects them, INV-9). tram's curve is the
+// existing one; linh_bao/huy_quyen are the mortal-path actives, and
+// linh_bao Lv3 is the phap_tu_an ritual gate — so the threshold below
+// is also read directly by chooseCultivationPath (one number source).
+export const CAST_LEVELING_THRESHOLDS: Record<string, { lv2: number; lv3: number }> = {
+  tram:      { lv2: 1000, lv3: 10000 },
+  linh_bao:  { lv2: 1000, lv3: 10000 },
+  huy_quyen: { lv2: 1000, lv3: 10000 },
+}
+
+/**
+ * Level a cast-leveled skill SHOULD be at for its total cast count, or
+ * undefined when the skill is not cast-leveled (manual insight upgrade).
+ */
+export function getCastLeveledSkillLevel(skillId: string, totalExperience: number): number | undefined {
+  const thresholds = CAST_LEVELING_THRESHOLDS[skillId]
+
+  if (!thresholds) {
+    return undefined
+  }
+
+  if (totalExperience >= thresholds.lv3) return 3
+  if (totalExperience >= thresholds.lv2) return 2
+  return 1
+}
+
 /** Ngưỡng cast Huy Kiếm đạt Lv3 — route Kiếm Tu chốt Bạt Kiếm khi
- * tram ≥ mốc này (spec 2026-08-29-kiem-the-kiem-y mục 1). */
-export const HUY_KIEM_L3_CASTS = 10000
+ * tram ≥ mốc này (spec 2026-08-29-kiem-the-kiem-y mục 1). Re-aliases
+ * the threshold table — no second constant source. */
+export const HUY_KIEM_L3_CASTS = CAST_LEVELING_THRESHOLDS.tram!.lv3
 
 export interface EffectiveSkill {
   effects: SkillEffect[]
@@ -75,6 +107,16 @@ export class SkillSystem {
 
   setCastCountSink(sink: (skillId: string, totalExperience: number, level: number) => void): void {
     this.castCountSink = sink
+  }
+
+  // Phap Tu Reimagined Task 3 — route profile provider. The GameManager
+  // closure does ALL scoping (path + element + kit membership) so this
+  // class keeps no PlayerData dependency; without a provider every
+  // skill resolves under the neutral profile.
+  private routeProfileProvider?: (skillId: string) => RouteProfile
+
+  setRouteProfileProvider(provider: (skillId: string) => RouteProfile): void {
+    this.routeProfileProvider = provider
   }
 
   /**
@@ -126,7 +168,7 @@ export class SkillSystem {
       }),
     }))
 
-    return {
+    const effective: EffectiveSkill = {
       effects,
 
       triggers,
@@ -144,6 +186,15 @@ export class SkillSystem {
 
       targeting: specialization?.targeting ?? skill.targeting,
     }
+
+    // Phap Tu Reimagined Task 3 — route seam 1 (effective surface):
+    // direct damage + ailment chance factors. Turn-runtime fields
+    // (ailmentStackBonus) apply post-conversion at the orchestration
+    // site via applyRouteToTurnSkill.
+    return applyRouteToEffectiveSkill(
+      effective,
+      this.routeProfileProvider?.(skill.id) ?? NEUTRAL_ROUTE_PROFILE,
+    )
   }
 
   /**
@@ -173,19 +224,6 @@ export class SkillSystem {
     return modifiers
   }
 
-  /** Tổng hợp riêng tham số path/skill; không đưa chúng vào character Stats. */
-  getSkillRuntimeStats(): SkillRuntimeStats {
-    const stats = createSkillRuntimeStats()
-
-    for (const skill of this.manager.getAll()) {
-      for (const key of SKILL_RESOURCE_STAT_KEYS) {
-        stats[key] += skill[key] ?? 0
-      }
-    }
-
-    return stats
-  }
-
   selectSpecialization(skillId: string, specializationId: string): boolean {
     const skill = this.manager.get(skillId)
 
@@ -202,7 +240,7 @@ export class SkillSystem {
   getSkillUpgradeInsightCost(skillId: string): number | undefined {
     const skill = this.manager.get(skillId)
 
-    if (!skill || skill.id === 'tram' || skill.level >= skill.maxLevel) {
+    if (!skill || CAST_LEVELING_THRESHOLDS[skill.id] !== undefined || skill.level >= skill.maxLevel) {
       return undefined
     }
 
@@ -218,7 +256,7 @@ export class SkillSystem {
   upgradeSkill(skillId: string, player: PlayerData): boolean {
     const skill = this.manager.get(skillId)
 
-    if (!skill || skill.id === 'tram' || skill.level >= skill.maxLevel) {
+    if (!skill || CAST_LEVELING_THRESHOLDS[skill.id] !== undefined || skill.level >= skill.maxLevel) {
       return false
     }
 
@@ -334,10 +372,10 @@ export class SkillSystem {
    * (TurnBattleSystem.onSkillCast, wired via GameManagerTurnBattleOps for
    * the primary player only). Generic per learned skill: totalExperience
    * is the cast counter the PlayerData skillCastCounts mirror reflects.
-   * Huy Kiem ('tram') additionally auto-levels via
-   * getHuyKiemLevelForCasts and keeps the legacy per-cast experience
-   * tick; every other skill levels only through upgradeSkill (Cam Ngo).
-   * No-op for unknown/unlearned ids (e.g. 'generic_physical').
+   * CAST_LEVELING_THRESHOLDS skills auto-level via
+   * getCastLeveledSkillLevel; every other skill levels only through
+   * upgradeSkill (Cam Ngo). No-op for unknown/unlearned ids
+   * (e.g. 'generic_physical').
    */
   recordCast(skillId: string): void {
     const skill = this.manager.get(skillId)
@@ -348,10 +386,15 @@ export class SkillSystem {
 
     skill.totalExperience = (skill.totalExperience ?? 0) + 1
 
-    if (skill.id === 'tram') {
-      skill.experience = (skill.experience ?? 0) + 1
+    // Cast-leveled skills (CAST_LEVELING_THRESHOLDS) auto-level by cast
+    // count — upgradeSkill rejects them. tram additionally keeps its
+    // legacy per-cast `experience` tick (save-mirror parity).
+    const targetLevel = getCastLeveledSkillLevel(skill.id, skill.totalExperience)
 
-      const targetLevel = getHuyKiemLevelForCasts(skill.totalExperience)
+    if (targetLevel !== undefined) {
+      if (skill.id === 'tram') {
+        skill.experience = (skill.experience ?? 0) + 1
+      }
 
       if (targetLevel > skill.level) {
         const levelsGained = targetLevel - skill.level

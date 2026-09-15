@@ -13,8 +13,8 @@ import type { RewardReceiver } from '../reward/RewardSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { FoundationType } from '../breakthrough/FoundationType'
 import type { CultivationPathId } from './CultivationPathKit'
+import { createPhapTuState, type PhapTuState } from '../phap-tu/PhapTuState'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
-import type { ElementType } from '../element/ElementType'
 import type { ArtifactProgress } from '../artifact/Artifact'
 import type { CompanionInstance } from '../../data/companion/Companions'
 
@@ -106,6 +106,14 @@ export interface PlayerData {
   // canChooseCultivationPath.
   cultivationPath?: CultivationPathId
 
+  // Phap Tu Reimagined (spec 2026-09-14) — persistent path-choice
+  // authority for the normal Phap Tu path: { element, route } commit
+  // atomically via selectPhapTuElement(). Present from character
+  // creation (both null until the ritual + atomic pick); phap_tu_an
+  // holders carry the same inert shape — their path id, not this
+  // state, is what matters.
+  phapTu: PhapTuState
+
   // Kiếm Tu route (spec 2026-08-29-kiem-the-kiem-y mục 1) — chốt VĨNH
   // VIỄN trong chooseCultivationPath() theo tram Lv3 (10.000 trảm →
   // bat_kiem, chưa → kiem_tran), KHÔNG còn API đổi (setKiemTuRoute đã
@@ -181,17 +189,6 @@ export interface PlayerData {
   // attunement,vitality} qua GameManager.allocateAttributePoint(), có
   // trần riêng từng stat theo đại cảnh giới (xem core/stats/StatCap.ts).
   attributePoints: number
-
-  // Pháp Tu Redesign — Element đã mở khóa (KHÔNG mất khi unequip, xem
-  // spec mục 32) — rỗng mặc định, phải mở qua node tree. Element
-  // KHÔNG nằm trong mảng này thì không equip/học skill/nâng cấp được.
-  unlockedElements: ElementType[]
-
-  // Pháp Tu Redesign — Element ĐANG mang vào combat, tối đa theo
-  // getElementSlotCount(realmId) (xem core/element/ElementSlot.ts).
-  // Phải là tập con của unlockedElements — GameManager.equipElement()
-  // enforce, type này không tự enforce được.
-  equippedElements: ElementType[]
 
   // Pháp Tu Redesign — id của MỌI ProgressionNode đã mua, xuyên suốt
   // MỌI path (Node Tree là hạ tầng CHUNG, không tách riêng theo path)
@@ -363,6 +360,10 @@ export function createDefaultPlayer(): PlayerData {
     // đúng nhưng UI gate không tự chuyển vì thiếu dòng này).
     cultivationPath: undefined,
 
+    // Required (non-optional) field — present from creation; both
+    // members stay null until the ritual + atomic element/route pick.
+    phapTu: createPhapTuState(),
+
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
     kiemTuRoute: undefined,
@@ -396,8 +397,6 @@ export function createDefaultPlayer(): PlayerData {
     cultivationInsightAccumulator: 0,
     cultivationOvercharge: 0,
     attributePoints: 0,
-    unlockedElements: [],
-    equippedElements: [],
     purchasedNodeIds: [],
     nodeLevels: {},
     nodeFreePurchaseRecord: {},
@@ -490,10 +489,9 @@ export function resolvePlayerFinalStats(
 export function playerToCombatEntity(
   player: PlayerData,
   stats: Stats,
-  skillStats?: import('../skill/SkillRuntimeStats').SkillRuntimeStats,
   skillLevels?: Readonly<Record<string, number>>,
 ): CombatEntity {
-  return {
+  const entity: CombatEntity = {
     id: 'player',
 
     name: player.name,
@@ -503,8 +501,6 @@ export function playerToCombatEntity(
     baseStats: stats,
 
     stats,
-
-    skillStats,
 
     skillLevels,
 
@@ -521,18 +517,6 @@ export function playerToCombatEntity(
     currentKiemYTemp: 0,
 
     currentMomentum: 0,
-
-    currentHoaThe: 0,
-
-    currentThoThe: 0,
-
-    currentKimThe: 0,
-
-    // Phase A3 (2026-09-07) — Pháp Tu Thế pool (Thuần-path ultimate
-    // resource). Same pattern as the other current*The pools.
-    currentThe: 0,
-
-    timeSinceLastBleedProc: 0,
 
     tuLucActive: false,
 
@@ -563,6 +547,26 @@ export function playerToCombatEntity(
 
     alive: true,
   }
+
+  resetBattleScopedResources(entity)
+
+  return entity
+}
+
+/**
+ * Phap Tu Reimagined Task 8 (INV-14) — battle-instance-scoped resource
+ * reset, the ONE home for fields that must not survive a battle
+ * boundary. currentThe is the breaking change: legacy let it ride
+ * entity reuse across a farm session; now every fresh participant
+ * build AND every auto-repeat restartTurnBattleCycle zeroes it — for
+ * Phap Tu, Bat Kiem, and any future path sharing the pool.
+ *
+ * Call sites: playerToCombatEntity (fresh build) +
+ * GameManagerTurnBattleOps startStage / restartTurnBattleCycle
+ * (carried-over player entities).
+ */
+export function resetBattleScopedResources(entity: CombatEntity): void {
+  entity.currentThe = 0
 }
 
 /**

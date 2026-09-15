@@ -1,42 +1,32 @@
-// Node-tree view mapping (B1 fix, 2026-09-14) — single owner for which
-// progression branchTags a tree view renders. PhapTuNodes ships the
-// Thuan chain under `thuan_<element>` plus the shared Truc Co gate under
-// `lap_dao`; element views must render all three tag sets or the chain
-// is unreachable. Consumed by NodeTreePanel (render filter) and
+// Node-tree view mapping — single owner for which tags a tree view
+// renders. Consumed by NodeTreePanel (render filter) and
 // tests/architecture/nodeBranchCoverage.test.ts (guard).
-
-import { ELEMENT_ORDER } from '../element/ElementLabels'
-import type { ElementType } from '../element/ElementType'
-
-const ELEMENT_TAG_SET = new Set<string>(ELEMENT_ORDER)
-
-/** The shared Truc Co gate tag — renders inside every element view. */
-export const LAP_DAO_BRANCH_TAG = 'lap_dao'
+//
+// Phap Tu Reimagined (Task 16) — the reworked Phap Tu tree tags nodes
+// by `elementTag`/`routeTag` (see PhapTuNodes.builders.ts); the retired
+// `thuan_<element>`/`lap_dao` branchTag family is gone. A node now
+// belongs to a view when EITHER tag equals the view tag, so element
+// views (fire/water/...) and Kiem Tu route views (kiem_tran/bat_kiem)
+// are all single-tag views and this mapping is a pass-through — kept
+// as the documented boundary where future multi-tag views or hidden
+// tags would live.
 
 /**
  * branchTags that are registered but intentionally never rendered.
- * `da_phap` exists only as an `excludesNode` target for the Thuan
- * keystones (see PhapTuNodes.dao.test.ts) — a content placeholder, not
- * a purchaseable node. Keep this list explicit and minimal.
+ * `da_phap` is the reserved tag for the future Phap Tu An tree — the
+ * path owns no normal tree surface (its kit is granted at the ritual,
+ * Task 7), so nothing under that tag may appear in a view.
  */
 export const HIDDEN_BRANCH_TAGS: readonly string[] = ['da_phap']
 
 /**
- * The branchTags a tree view for `viewTag` must render.
- * - Element view (`fire`, ...): the element branch, the shared Lập Đạo
- *   gate, and that element's Thuan sub-branch.
- * - Anything else (kiem_tran/bat_kiem routes, future tags): pass-through
- *   single-tag view.
- * - A HIDDEN tag as the view itself renders nothing.
+ * The tags a tree view for `viewTag` must render. Every current view is
+ * single-tag: element views match `elementTag`, Kiem Tu route views
+ * match `branchTag`. A HIDDEN tag as the view itself renders nothing.
  */
 export function viewBranchTags(viewTag: string): readonly string[] {
   if ((HIDDEN_BRANCH_TAGS as readonly string[]).includes(viewTag)) {
     return []
-  }
-
-  if (ELEMENT_TAG_SET.has(viewTag)) {
-    const element = viewTag as ElementType
-    return [viewTag, LAP_DAO_BRANCH_TAG, `thuan_${element}`]
   }
 
   return [viewTag]

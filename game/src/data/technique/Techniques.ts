@@ -71,6 +71,37 @@ export const TECHNIQUES: Technique[] = [
     equipped: false,
   },
 
+  // Phap Tu An (Task 7, phap-tu-reimagined) — tâm pháp của path ẩn.
+  // innateSkillId carries the dao passive: equipTechnique auto-learns +
+  // equipWithoutSlot's ngo_dao_hon_don (no new wiring needed).
+  {
+    id: 'ngo_dao_chan_quyet',
+
+    insightMultiplier: 3,
+
+    name: 'Ngộ Đạo Chân Quyết',
+
+    icon: '/assets/techniques/dai_ngu_hanh_chan_quyet.png',
+
+    description:
+      'Chân quyết của kẻ ngộ đạo giữa muôn pháp — vạn pháp tùy tâm, đa pháp liên tuyên.',
+
+    resourceLabel: 'Pháp Lực',
+
+    innateSkillId: 'ngo_dao_hon_don',
+
+    tierEffects: {
+      so_nhap: { maxMpIncreasePercent: 0.03, manaRegenIncreasePercent: 0.005, hpRegenFlat: 0.5, mpRegenFlat: 0.5 },
+      tieu_thanh: { maxMpIncreasePercent: 0.04, manaRegenIncreasePercent: 0.0075, hpRegenFlat: 0.75, mpRegenFlat: 0.75 },
+      dai_thanh: { maxMpIncreasePercent: 0.05, manaRegenIncreasePercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
+      vien_man: { maxMpIncreasePercent: 0.1, manaRegenIncreasePercent: 0.02, hpRegenFlat: 2, mpRegenFlat: 2 },
+    },
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
   // Kiếm Tu (2026-08-15) — nhánh SONG SONG với Ngũ Hành Pháp Tu (Phàm
   // Nhân -> Pháp Tu -> Ngũ Hành / -> Kiếm Tu / -> Thể Tu sau này), tái
   // dùng NGUYÊN VẸN cùng cơ chế "chọn 1 lần, cấp trọn kit" (xem

@@ -61,15 +61,10 @@ export interface ApplyDebuffAction {
 }
 
 // Named resource pools every path can grant/consume — mirrors the fields
-// already on CombatEntity (currentSwordIntent, currentMomentum,
-// currentHoaThe, currentThoThe, currentKimThe, currentHuyetPha).
+// already on CombatEntity (currentSwordIntent, currentMomentum).
 export type SkillResourcePoolKey =
   | 'swordIntent'
   | 'momentum'
-  | 'hoaThe'
-  | 'thoThe'
-  | 'kimThe'
-  | 'huyetPha'
 
 export interface GrantResourceAction {
   type: 'grantResource'

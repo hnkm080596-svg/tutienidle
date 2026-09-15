@@ -79,13 +79,13 @@ const KHONG_T18_AREA_ROW_RADIUS = 1
 
 const FIFTH_ACTIVATION_INTERVAL = 5
 
-function getRotationElements(equippedElements: ElementType[]): ElementType[] {
-  return NGU_HANH_ROTATION_ORDER.filter((element) => equippedElements.includes(element))
+function getRotationElements(rotationElements: ElementType[]): ElementType[] {
+  return NGU_HANH_ROTATION_ORDER.filter((element) => rotationElements.includes(element))
 }
 
-/** Lọc equippedElements xuống đúng 5 hành Ngũ Hành (bỏ Phong/Lôi/Hỗn Nguyên) — dùng khi snapshot ArtifactRuntime lúc battle bắt đầu. */
-export function filterNguHanhElements(equippedElements: ElementType[]): ElementType[] {
-  return getRotationElements(equippedElements)
+/** Lọc rotation elements xuống đúng 5 hành Ngũ Hành (bỏ Phong/Lôi/Hỗn Nguyên) — dùng khi snapshot ArtifactRuntime lúc battle bắt đầu. */
+export function filterNguHanhElements(rotationElements: ElementType[]): ElementType[] {
+  return getRotationElements(rotationElements)
 }
 
 const CONG_T3_LEVEL = 3
@@ -168,8 +168,8 @@ export function updateArtifactActivation(battle: Battle, deltaSeconds: number, d
 
   runtime.activationCount += 1
 
-  const { path, level, grade, artifactId, equippedElements } = runtime.snapshot
-  const rotation = getRotationElements(equippedElements)
+  const { path, level, grade, artifactId, rotationElements } = runtime.snapshot
+  const rotation = getRotationElements(rotationElements)
   const gradeMultiplier = getArtifactGradeMultiplier(grade)
 
   const mainElement = rotation.length > 0 ? rotation[runtime.elementCursor % rotation.length] : undefined

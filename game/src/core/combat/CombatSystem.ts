@@ -13,7 +13,6 @@ import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
 import type { ElementType } from '../element/ElementType'
 import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSystem'
 import { clampStatValue } from '../stats/StatMetadata'
-import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import type { SkillManager } from '../skill/SkillManager'
 import { SkillTriggerRunner } from '../skill/SkillTriggerRunner'
@@ -22,21 +21,14 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
 import { dotRecoveryTriggers } from './DotRecovery'
-import { ReactionManager } from '../element/ReactionManager'
 import type { Buff, BuffDefinitionCatalog } from '../buff/BuffTypes'
 
-// Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX, 2026-08-21) — trần %
-// giảm sát thương từ thuyThePercent, cùng tinh thần ARMOR_CAP (Armor.
-// ts) — không thể trở nên bất tử chỉ bằng cách stack riêng 1 stat.
-const WATER_MITIGATION_CAP = 0.75
-
-// Plans/magicpathgeneral Phase 9 (2026-08-21) — DOT RES là 1 stat
-// dạng "*Percent" (fraction 0..1, CÙNG THANG với ailmentResistPercent/
-// ailmentPotencyPercent...), KHÁC thang "Rating" (net/100) của
-// Resistance.ts's getResistanceMitigationPercent() (dùng cho 5 hành
-// Power/Resistance/Penetration) — không tái dùng hàm đó ở đây để
-// tránh lệch thang đo. kimTheDotResistancePenetrationPercentPerStack
-// (penetration) CŨNG là fraction cùng thang, trừ thẳng.
+// Plans/magicpathgeneral Phase 9 (2026-08-21) — DOT RES is a
+// "*Percent" stat (fraction 0..1, same scale as ailmentResistPercent/
+// ailmentPotencyPercent...), NOT the "Rating" (net/100) scale of
+// Resistance.ts's getResistanceMitigationPercent() (used for the 5
+// element Power/Resistance/Penetration stats) — do not reuse that
+// helper here or the scale drifts.
 const DOT_RESISTANCE_CAP = 0.75
 const DOT_RESISTANCE_FLOOR = -1
 
@@ -81,12 +73,12 @@ export class CombatSystem {
   } | null = null
 
   // Trigger/Action rework Task 10 (2026-08-31 spec) — onKill firing.
-  // buffRegistry/reactionManager are shared, non-battle-specific
-  // dependencies (same kind BattleSystem itself receives via its own
-  // constructor — see BattleSystem.ts) — injected here as optional final
-  // constructor params so CombatSystem can build a real SkillEffectContext
+  // buffRegistry is a shared, non-battle-specific
+  // dependency (same kind BattleSystem itself receives via its own
+  // constructor — see BattleSystem.ts) — injected here as an optional final
+  // constructor param so CombatSystem can build a real SkillEffectContext
   // without crashing on an empty registry `.get()` miss. `skillManager`/
-  // `buffRegistry`/`reactionManager` are all optional; every existing
+  // `buffRegistry` are optional; every existing
   // `new CombatSystem(eventBus)` call site keeps compiling unchanged.
   private readonly skillTriggerRunner = new SkillTriggerRunner()
 
@@ -94,7 +86,6 @@ export class CombatSystem {
     readonly eventBus: EventBus,
     private readonly skillManager?: SkillManager,
     private readonly buffRegistry?: BuffRegistry,
-    private readonly reactionManager?: ReactionManager,
   ) {
     this.vitals = new EntityVitalsSystem(eventBus)
   }
@@ -199,18 +190,11 @@ export class CombatSystem {
 
     const afterEndurance = applyEndurance(afterBlock, target.stats.enduranceThreshold, clampStatValue('endurancePercent', target.stats.endurancePercent))
 
-    // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX) — giảm thẳng %
-    // TOÀN BỘ sát thương cuối cùng (không phân biệt loại damage, cùng
-    // tầng với Endurance — cả 2 đều là lớp phòng thủ "cá nhân", không
-    // phải Armor/Resistance theo loại), nền 0 nên không ảnh hưởng path
-    // nào chưa có nguồn cấp.
-    const afterWaterMitigation = afterEndurance * (1 - Math.min(WATER_MITIGATION_CAP, getSkillRuntimeStat(target, 'thuyThePercent')))
-
     // Floor "tối thiểu 1" áp trong resolveAttack() SAU finalDamageMultiplier
     // (finalDamagePercent/finalDamageReductionPercent) — đòn bị giảm nhiều
     // tầng vẫn luôn gây được ít nhất 1 sát thương, kể cả khi affix giảm
     // sát thương cuối cùng kéo về dưới 1.
-    const finalDamage = afterWaterMitigation
+    const finalDamage = afterEndurance
 
     const result: DamageResult = {
       sourceId: source.id,
@@ -504,17 +488,7 @@ export class CombatSystem {
   }) {
     const { sourceId, source, sourceBuffs, target, rawDamage, element, effectId } = params
 
-    // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục 10) — mỗi
-    // tầng currentKimThe xuyên thẳng qua dotResistancePercent của
-    // target, CHỈ cho DoT element 'metal' (cùng scope
-    // kimTheDotDamagePercentPerStack — build lai không nên xuyên kháng
-    // DoT hành khác chỉ vì có Kim Thế).
-    const penetration =
-      element === 'metal' && source
-        ? source.currentKimThe * getSkillRuntimeStat(source, 'kimTheDotResistancePenetrationPercentPerStack')
-        : 0
-
-    const mitigation = Math.min(DOT_RESISTANCE_CAP, Math.max(DOT_RESISTANCE_FLOOR, target.stats.dotResistancePercent - penetration))
+    const mitigation = Math.min(DOT_RESISTANCE_CAP, Math.max(DOT_RESISTANCE_FLOOR, target.stats.dotResistancePercent))
 
     // stat-system-reimagined Task 6 (D13/INV-4) — DoT is a closed
     // economy: dotResistancePercent (minus authored penetration) is the
@@ -675,10 +649,10 @@ export class CombatSystem {
   // skill-list lookup exists; OnDeathContext/the 'onDeath' TriggerType
   // (Task 1) stay declared, just unfired from this call site for now.
   //
-  // buffRegistry/reactionManager are shared, non-battle-specific
-  // dependencies — injected via the constructor (2026-09-01 review fix)
-  // and used for real here when provided; skip firing entirely if either
-  // is missing rather than constructing an empty throwaway registry
+  // buffRegistry is a shared, non-battle-specific
+  // dependency — injected via the constructor (2026-09-01 review fix)
+  // and used for real here when provided; skip firing entirely if
+  // missing rather than constructing an empty throwaway registry
   // (BuffDefinitionCatalog.get() THROWS on a miss, so an empty throwaway registry
   // would crash killIfDead() mid-battle-tick the first time a bound
   // action looked one up — not silently no-op).
@@ -696,7 +670,7 @@ export class CombatSystem {
     victim: CombatEntity,
     skillContext?: { killer: CombatEntity; skillId: string },
   ): void {
-    if (!skillContext || !this.skillManager || !this.buffRegistry || !this.reactionManager) {
+    if (!skillContext || !this.skillManager || !this.buffRegistry) {
       return
     }
 
@@ -712,7 +686,6 @@ export class CombatSystem {
       buffRegistry: this.buffRegistry,
       sourceBuffs: new BuffSystem(new BuffPool()),
       targetBuffs: new BuffSystem(new BuffPool()),
-      reactionManager: this.reactionManager,
     }
 
     this.skillTriggerRunner.fire(

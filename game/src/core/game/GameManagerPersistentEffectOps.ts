@@ -19,6 +19,7 @@ import type { PlayerData } from '../player/Player'
 import { playerToCombatEntity } from '../player/Player'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import { getCultivationPathStatModifiers } from '../player/CultivationPathSystem'
+import { getRouteStatModifiers } from '../phap-tu/PhapTuRoutes'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
 import type { SkillSystem } from '../skill/SkillSystem'
@@ -51,7 +52,6 @@ export class GameManagerPersistentEffectOps {
       materialBag: MaterialBag
       getActivePlayer: () => PlayerData | undefined
       getTurnBattle: () => TurnBattle | null
-      getSkillRuntimeStats: (player: PlayerData) => ReturnType<SkillSystem['getSkillRuntimeStats']>
     },
   ) {}
 
@@ -87,6 +87,10 @@ export class GameManagerPersistentEffectOps {
       ...this.deps.skillSystem.getScaledPassiveModifiers(),
       ...(player ? this.getTechniqueTierModifiers(player) : []),
       ...(player ? getCultivationPathStatModifiers(player) : []),
+      // Phap Tu Reimagined Task 3 — route stat modifiers ride the
+      // STATIC partition in BOTH aggregators (route can't change
+      // mid-battle — never getLiveBattleModifiers).
+      ...(player ? getRouteStatModifiers(player) : []),
       // Node levels (plan §6.8) - node modifiers derived from (registry,
       // nodeLevels), scaled by current level; no longer inside
       // player.modifiers.
@@ -114,6 +118,7 @@ export class GameManagerPersistentEffectOps {
     return [
       ...this.getTechniqueTierModifiers(player),
       ...getCultivationPathStatModifiers(player),
+      ...getRouteStatModifiers(player),
       ...aggregateNodeStatModifiers(this.deps.nodeRegistry, player),
       ...this.getTechniqueCombatModifiers(),
     ]
@@ -445,7 +450,7 @@ export class GameManagerPersistentEffectOps {
     const activePlayer = this.deps.getActivePlayer()
 
     if (stats && activePlayer) {
-      return playerToCombatEntity(activePlayer, stats, this.deps.getSkillRuntimeStats(activePlayer))
+      return playerToCombatEntity(activePlayer, stats)
     }
 
     return this.createPersistentBuffGhostEntity()
@@ -473,10 +478,6 @@ export class GameManagerPersistentEffectOps {
       currentMp: stats.maxMp,
       currentSwordIntent: 0,
       currentMomentum: 0,
-      currentHoaThe: 0,
-      currentThoThe: 0,
-      currentKimThe: 0,
-      timeSinceLastBleedProc: 0,
       currentWard: 0,
       turnsSinceLastHitLanded: Infinity,
       realmIndex: 0,

@@ -162,7 +162,6 @@ describe('domain gate (D10)', () => {
     expect(files).toContain('data/progression/PhapTu*')
     expect(files).toContain('data/realm/RealmPassives.ts')
     expect(files).toContain('data/technique/Techniques.ts')
-    expect(files).toContain('data/buff/BossBuffs.ts')
   })
 
   it('Task 9 (D15): meta stats are gated to their owning domain', () => {

@@ -11,6 +11,7 @@ import { useI18n } from 'vue-i18n'
 import type { Skill } from '@/core/skill/Skill'
 import { skillResourceTypeLabel } from '@/core/skill/SkillResourceLabels'
 import { describeSkillMechanics } from '@/core/skill/SkillMechanicDescriptions'
+import { CAST_LEVELING_THRESHOLDS } from '@/core/skill/SkillSystem'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import GameButton from '@/components/common/GameButton.vue'
@@ -59,6 +60,25 @@ const canUpgrade = computed(() => {
   return upgradeCost.value !== undefined && player.skillInsight >= upgradeCost.value
 })
 
+// Phap Tu Reimagined (Task 16) — cast-leveled skills (tram / linh_bao /
+// huy_quyen) level by cast count, not Insight (upgradeSkill rejects
+// them, INV-9): show the count → next-level threshold instead of the
+// upgrade button. player.skillCastCounts is the read-only mirror.
+const castProgress = computed(() => {
+  stateVersion.value
+
+  const thresholds = props.skill ? CAST_LEVELING_THRESHOLDS[props.skill.id] : undefined
+
+  if (!props.skill || !thresholds) {
+    return null
+  }
+
+  const count = player.skillCastCounts?.[props.skill.id] ?? 0
+  const next = props.skill.level < 2 ? thresholds.lv2 : props.skill.level < 3 ? thresholds.lv3 : null
+
+  return { count, next }
+})
+
 function onUpgrade() {
   if (!props.skill) {
     return
@@ -86,8 +106,16 @@ function onUpgrade() {
       <div class="skill-detail__level">
         <span class="skill-detail__level-label">Lv. {{ skill.level }}/{{ skill.maxLevel }}</span>
 
+        <!-- Cast-leveled skill: progress to the next cast threshold
+             instead of the Insight upgrade button (INV-9). -->
+        <span v-if="castProgress" class="skill-detail__cast-progress">
+          {{ castProgress.next !== null
+            ? t('panels.skillPath.detail.castProgress', { count: castProgress.count, next: castProgress.next })
+            : t('panels.skillPath.detail.castMaxed') }}
+        </span>
+
         <GameButton
-          v-if="!isMaxLevel"
+          v-else-if="!isMaxLevel"
           class="skill-detail__upgrade"
           variant="ghost"
           size="sm"
@@ -160,6 +188,12 @@ function onUpgrade() {
   flex: 0 0 auto;
   font-size: var(--text-sm);
   color: var(--paper-text-muted);
+}
+
+.skill-detail__cast-progress {
+  flex: 0 0 auto;
+  font-size: var(--text-xs);
+  color: var(--gold-700);
 }
 
 .skill-detail__upgrade {

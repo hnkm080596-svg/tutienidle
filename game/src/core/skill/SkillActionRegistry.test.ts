@@ -24,7 +24,6 @@ function makeCtx(overrides: Partial<SkillEffectContext> = {}): SkillEffectContex
     buffRegistry: { get: (id: string) => ({ id }) } as unknown as SkillEffectContext['buffRegistry'],
     sourceBuffs: {} as SkillEffectContext['sourceBuffs'],
     targetBuffs: {} as SkillEffectContext['targetBuffs'],
-    reactionManager: { checkAndTrigger: () => {} } as unknown as SkillEffectContext['reactionManager'],
     ...overrides,
   }
 }
@@ -221,48 +220,48 @@ describe('applyDebuff executor — chance roll + fireNested onProc (absorbs old 
 
 describe('grantResource executor', () => {
   it('adds amount to the pool field, clamped to the pool max', () => {
-    const source = makeEntity({ currentHoaThe: 3 } as Partial<CombatEntity> as CombatEntity)
+    const source = makeEntity({ currentSwordIntent: 3 } as Partial<CombatEntity> as CombatEntity)
     const target = makeEntity()
     const fireNested = vi.fn()
 
-    runSkillAction({ type: 'grantResource', pool: 'hoaThe', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
+    runSkillAction({ type: 'grantResource', pool: 'swordIntent', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
 
-    expect(source.currentHoaThe).toBe(4)
+    expect(source.currentSwordIntent).toBe(4)
     expect(fireNested).not.toHaveBeenCalled()
   })
 
   it('fires onResourceFull when the write clamps to max', () => {
-    const source = makeEntity({ currentHoaThe: 5 } as Partial<CombatEntity> as CombatEntity) // MAX_HOA_THE = 5
+    const source = makeEntity({ currentSwordIntent: 9999 } as Partial<CombatEntity> as CombatEntity) // MAX_SWORD_INTENT = 9999
     const target = makeEntity()
     const fireNested = vi.fn()
 
-    runSkillAction({ type: 'grantResource', pool: 'hoaThe', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
+    runSkillAction({ type: 'grantResource', pool: 'swordIntent', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
 
-    expect(source.currentHoaThe).toBe(5)
-    expect(fireNested).toHaveBeenCalledWith('onResourceFull', { source, resource: 'hoaThe' })
+    expect(source.currentSwordIntent).toBe(9999)
+    expect(fireNested).toHaveBeenCalledWith('onResourceFull', { source, resource: 'swordIntent' })
   })
 })
 
 describe('consumeResource executor', () => {
   it('subtracts amount from the pool and writes runtime.consumedAmount', () => {
-    const source = makeEntity({ currentKimThe: 5 } as Partial<CombatEntity> as CombatEntity)
+    const source = makeEntity({ currentMomentum: 5 } as Partial<CombatEntity> as CombatEntity)
     const target = makeEntity()
     const runtime: ActionRuntimeContext = {}
 
-    runSkillAction({ type: 'consumeResource', pool: 'kimThe', amount: 2 }, source, target, makeCtx(), runtime, makeHelpers())
+    runSkillAction({ type: 'consumeResource', pool: 'momentum', amount: 2 }, source, target, makeCtx(), runtime, makeHelpers())
 
-    expect(source.currentKimThe).toBe(3)
+    expect(source.currentMomentum).toBe(3)
     expect(runtime.consumedAmount).toBe(2)
   })
 
   it("'all' consumes the entire pool", () => {
-    const source = makeEntity({ currentKimThe: 5 } as Partial<CombatEntity> as CombatEntity)
+    const source = makeEntity({ currentMomentum: 5 } as Partial<CombatEntity> as CombatEntity)
     const target = makeEntity()
     const runtime: ActionRuntimeContext = {}
 
-    runSkillAction({ type: 'consumeResource', pool: 'kimThe', amount: 'all' }, source, target, makeCtx(), runtime, makeHelpers())
+    runSkillAction({ type: 'consumeResource', pool: 'momentum', amount: 'all' }, source, target, makeCtx(), runtime, makeHelpers())
 
-    expect(source.currentKimThe).toBe(0)
+    expect(source.currentMomentum).toBe(0)
     expect(runtime.consumedAmount).toBe(5)
   })
 

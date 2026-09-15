@@ -5,30 +5,21 @@ import type { ActionRuntimeContext, SkillAction, SkillActionType } from './Skill
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
 import type { TriggerContextMap, TriggerType } from './SkillTrigger'
-import { MAX_SWORD_INTENT, MAX_MOMENTUM, MAX_HOA_THE, MAX_THO_THE, MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
+import { MAX_SWORD_INTENT, MAX_MOMENTUM } from '../combat/CombatTypes'
 import type { SkillResourcePoolKey } from './SkillAction'
 import type { ActionImpactEvent } from '../battle/BattleEvents'
 
 // Shared by grantResource (Task 5) and consumeResource (Task 6) — every
 // named pool's CombatEntity field and hard cap. Pools with no cap in
-// today's game (none currently) would map to Infinity; all 6 current
-// pools have one.
+// today's game (none currently) would map to Infinity.
 export const RESOURCE_POOL_FIELD: Record<SkillResourcePoolKey, keyof CombatEntity> = {
   swordIntent: 'currentSwordIntent',
   momentum: 'currentMomentum',
-  hoaThe: 'currentHoaThe',
-  thoThe: 'currentThoThe',
-  kimThe: 'currentKimThe',
-  huyetPha: 'currentHuyetPha',
 }
 
 export const RESOURCE_POOL_MAX: Record<SkillResourcePoolKey, number> = {
   swordIntent: MAX_SWORD_INTENT,
   momentum: MAX_MOMENTUM,
-  hoaThe: MAX_HOA_THE,
-  thoThe: MAX_THO_THE,
-  kimThe: MAX_KIM_THE,
-  huyetPha: MAX_HUYET_PHA,
 }
 
 export interface ActionExecutionHelpers {
@@ -108,7 +99,7 @@ const applyBuff: ActionExecutor<Extract<SkillAction, { type: 'applyBuff' }>> = (
 
 // Absorbs the old applyAilment executor: rolls a chance (incl.
 // elementApplicationPercent), applies via ctx.targetBuffs/ctx.buffRegistry,
-// fires onProc on a successful roll, then hands off to the reaction engine.
+// fires onProc on a successful roll.
 const applyDebuff: ActionExecutor<Extract<SkillAction, { type: 'applyDebuff' }>> = (
   action, source, target, ctx, _runtime, helpers,
 ) => {
@@ -118,11 +109,9 @@ const applyDebuff: ActionExecutor<Extract<SkillAction, { type: 'applyDebuff' }>>
   ctx.targetBuffs.apply(ctx.buffRegistry.get(action.buffId), source, target, ctx.buffRegistry)
   helpers.fireNested('onProc', { source, target, buffId: action.buffId })
 
-  ctx.reactionManager.checkAndTrigger(
-    ctx.targetBuffs, action.buffId, source, target, ctx.combatSystem,
-    ctx.buffRegistry, ctx.sourceBuffs, ctx.spawnLavaZone,
-    ctx.reactionKeepChance ?? 0,
-  )
+  // Phap Tu Reimagined Task 12 — the legacy authored-pair reaction
+  // handoff is retired; the turn engine's TurnReactionManager owns
+  // sinh/khac rule reactions on the live path.
 }
 
 const grantResource: ActionExecutor<Extract<SkillAction, { type: 'grantResource' }>> = (

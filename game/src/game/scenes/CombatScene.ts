@@ -26,6 +26,7 @@ import {
 import { getCombatInsets, getFallbackCombatInsets } from '@/presentation/geometry/combatInsets'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
 import { readKiemBar } from '@/presentation/bridges/kiemBarBridge'
+import { readTheBar } from '@/presentation/bridges/theBarBridge'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
@@ -896,6 +897,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // 9.4 - Kiem bar (Kiem The / Kiem Y tam) poll MOI frame.
     this.pollKiemBar()
 
+    // Task 16 — The bar (Phap Tu) same poll pattern.
+    this.pollTheBar()
+
     // Task 9 — party countdown telegraph chases its snapshot target on
     // Phaser's own render clock, independent of how often CombatClock
     // happens to publish a new countdownProgress (game/docs/superpowers/
@@ -914,6 +918,19 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.playerHud?.updateKiem(kiem.current, kiem.max, kiem.label)
     } else {
       this.playerHud?.updateKiem(0, 0, '')
+    }
+  }
+
+  // Task 16 — The bar poll mỗi frame từ reader đăng ký trong
+  // PhaserCanvas (chỉ nơi có gameManager — xem theBarBridge.ts).
+  // null = ẩn bar (không phải phap_tu / không battle / chưa chọn hành).
+  private pollTheBar(): void {
+    const the = this.registry ? readTheBar(this.registry) : null
+
+    if (the) {
+      this.playerHud?.updateThe(the.current, the.max, the.threshold, the.empowered)
+    } else {
+      this.playerHud?.updateThe(0, 0, 0, false)
     }
   }
 

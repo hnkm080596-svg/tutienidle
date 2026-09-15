@@ -45,23 +45,6 @@ export interface SkillEffect {
   // chung với effect 'debuff' (đi cùng buffId ở trên).
   ailmentChance?: number
 
-  // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục 9/11,
-  // 2026-08-21) — CHỈ dùng cho effect 'debuff'. Khi true VÀ roll
-  // ailmentChance THÀNH CÔNG, +source.skillStats.kimTheGainPerProc vào
-  // CombatEntity.currentKimThe (0 nếu chưa mua "Kim Thế") — xem
-  // SkillEffectSystem.ts's apply(), case 'debuff'. KHÁC hẳn
-  // Skill.grantsHoaThePerCast/grantsThoThePerCast (gate theo CAST,
-  // không phải theo ROLL THÀNH CÔNG).
-  grantsKimThePerProc?: boolean
-
-  // Kim Tu ("Huyết Phá", Plans/magicpathgeneral Phase 13, 2026-08-21)
-  // — CÙNG điều kiện/nhánh với grantsKimThePerProc ở trên (roll
-  // ailmentChance THÀNH CÔNG), nhưng tích vào CombatEntity.
-  // currentHuyetPha thay vì currentKimThe — 2 counter độc lập, 1 skill
-  // có thể cấp cả hai cùng lúc. Chạm MAX_HUYET_PHA thì consume/reset +
-  // burst damage (xem SkillEffectSystem.ts's apply(), case 'debuff').
-  grantsHuyetPhaPerProc?: boolean
-
   // Chỉ dùng cho effect 'damage' — hệ số scale multiplier theo
   // attribute của SOURCE lúc cast, cộng dồn qua nhiều entry. 1 phần
   // tử trong `attributes` = coefficient thường (vd Linh Căn cho
@@ -152,12 +135,6 @@ export interface SkillEffect {
   // bay Pierce/Bounce/Homing/AOE cho MỌI missile effect này bắn ra
   // (kể cả nhiều missile của hitCountByRealm) — xem
   // undefined = Normal, hành vi giữ nguyên như trước khi có field này.
-
-  // Thổ Tu Pure (Plans/EarthPath mục XVI, 2026-08-21) — CHỈ dùng cho
-  // effect 'damage'. Khi true VÀ source.skillStats.earthAoeRadius > 0 (đã
-  // từ earthAoeRadius/earthAoeSecondaryDamagePercent/earthKnockbackDistance
-  // tiêu như bình thường cho tới khi Pure major mở AOE+Knockback thật.
-  earthPureAreaBehavior?: boolean
 
   // Kiếm Trận keystone (Tam Tài — Task 8, 2026-08-28) — CHỈ dùng cho
   // effect 'damage'. Khi true, SAU KHI missile của effect này bắn xong,

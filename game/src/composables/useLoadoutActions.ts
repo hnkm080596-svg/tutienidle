@@ -1,7 +1,8 @@
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '../stores/player'
-import type { ElementType } from '../core/element/ElementType'
 import type { MainStatKey } from '../core/stats/StatTypes'
+import type { ElementType } from '../core/element/ElementType'
+import type { PhapTuRoute } from '../core/phap-tu/PhapTuState'
 
 /**
  * Modifier từ technique/skill không "tĩnh" như equipment — đã được
@@ -40,19 +41,21 @@ export function useLoadoutActions() {
     selectSkillSpecialization: (skillId: string, specializationId: string) =>
       withBump(gameManager.progressionOps.selectSkillSpecialization(skillId, specializationId)),
 
-    // Pháp Tu Redesign (magicpath) — Element Loadout là action CỦA
-    // Pinia store (pure PlayerData, không cần registry — xem
-    // core/element/ElementLoadout.ts), khác equipSkill/equipTechnique
-    // (GameManager method).
-    equipElement: (element: ElementType) => withBump(player.equipElement(element)),
-
-    unequipElement: (element: ElementType) => withBump(player.unequipElement(element)),
-
     // Node Tree — GameManager method (unlocksSkillIds cần skillTemplates).
     purchaseNode: (nodeId: string) => withBump(gameManager.progressionOps.purchaseNode(nodeId, player.$state)),
 
     // Node level (plan §6.2) — nâng node đã lĩnh ngộ lên +1 cấp.
     upgradeNode: (nodeId: string) => withBump(gameManager.progressionOps.upgradeNode(nodeId, player.$state)),
+
+    // Phap Tu Reimagined (Task 16) — atomic element+route commit at the
+    // element root (INV-13); the blocking modal only collects input.
+    selectPhapTuElement: (element: ElementType, route: PhapTuRoute) =>
+      withBump(gameManager.progressionOps.selectPhapTuElement(element, route, player.$state)),
+
+    // Route respec (spec P3) — out-of-combat only (op enforces), resets
+    // old-route nodes and refunds floor(actualPaid x 0.75).
+    switchPhapTuRoute: (route: PhapTuRoute) =>
+      withBump(gameManager.progressionOps.switchRoute(route, player.$state)),
 
     // Reset development một nhánh (plan §6.10) — hoàn Cảm Ngộ đã tiêu;
     // bump vô điều kiện (reset về 0 level cũng là thay đổi state UI).

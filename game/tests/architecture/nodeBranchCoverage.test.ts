@@ -31,16 +31,19 @@ function renderableTags(): Set<string> {
 }
 
 describe('node branch coverage', () => {
-  it('every node branchTag is renderable by a tree view or explicitly hidden', () => {
+  it('every node tag is renderable by a tree view or explicitly hidden', () => {
     const renderable = renderableTags()
     const hidden = new Set<string>(HIDDEN_BRANCH_TAGS)
     const unrenderable: string[] = []
 
     for (const node of [...PHAP_TU_NODES, ...KIEM_TU_NODES]) {
-      const tag = node.branchTag
+      // Phap Tu Reimagined (Task 16) — the view membership tag is
+      // elementTag for the reworked Phap Tu tree, branchTag for the
+      // Kiem Tu routes; a node is renderable when its view tag is.
+      const tag = node.elementTag ?? node.branchTag
       if (tag === undefined) continue
       if (!renderable.has(tag) && !hidden.has(tag)) {
-        unrenderable.push(`${node.id} (branchTag '${tag}')`)
+        unrenderable.push(`${node.id} (tag '${tag}')`)
       }
     }
 

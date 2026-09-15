@@ -9,7 +9,10 @@ import type { ArtifactId } from '../artifact/Artifact'
 // chế kit cố định KHÁC hẳn — chưa đi qua Element/Node Tree). Thêm giá
 // trị mới khi Thể Tu được thiết kế sau này — KHÔNG BAO GIỜ tái cấu
 // trúc union này, chỉ mở rộng thêm string.
-export type CultivationPathId = 'phap_tu' | 'kiem_tu'
+// Phap Tu Reimagined (Task 7) — 'phap_tu_an' is a first-class hidden
+// path (not a node/mode): offered only inside the initiation ritual
+// when linh_bao is Lv3, permanent, mutually exclusive with phap_tu.
+export type CultivationPathId = 'phap_tu' | 'phap_tu_an' | 'kiem_tu'
 
 export interface CultivationPathRealmReward {
   techniqueId?: string
@@ -21,10 +24,10 @@ export interface CultivationPathKit {
 
   name: string
 
-  // Pháp Tu Redesign — KHÔNG còn 1 hành cố định cho Pháp Tu (multi-
-  // element qua Element Loadout, xem core/element/ElementLoadout.ts).
-  // Optional — CHỈ Kiếm Tu còn khai (giữ identity/màu UI riêng), Pháp
-  // Tu để trống.
+  // Phap Tu Reimagined — Phap Tu has no fixed kit element: the chosen
+  // element lives on player.phapTu.element (single authority, picked at
+  // the element-root node). Optional — only Kiem Tu still declares one
+  // (keeps its identity/UI color); Phap Tu leaves it empty.
   element?: ElementType
 
   // Tâm Pháp hợp nhất (2026-08-15) — CHỈ 1 technique, tự học+trang bị
@@ -92,6 +95,43 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
         artifactId: 'ngu_hanh_chau',
       },
     },
+  },
+
+  // Phap Tu An (Task 7) — hidden path. Owns the same 'phap_tu' stat
+  // domain (CULTIVATION_PATH_STAT_DOMAINS) so its MP-shield kit line
+  // passes the D10 gate. skillIds intentionally absent: the kit is
+  // granted in a bespoke branch like kiem_tu's (the ult slot is a
+  // passive via the technique's innateSkillId, not a loadout skill).
+  phap_tu_an: {
+    id: 'phap_tu_an',
+    name: 'Pháp Tu Ẩn — Ngộ Đạo Chân Quyết',
+    techniqueId: 'ngo_dao_chan_quyet',
+    statModifiers: [
+      {
+        id: 'phap_tu_an_linh_luc',
+        sourceId: 'phap_tu',
+        sourceType: 'realm',
+        stat: 'maxMp',
+        flat: 100,
+        domain: 'phap_tu',
+      },
+      {
+        id: 'phap_tu_an_linh_luc_regen',
+        sourceId: 'phap_tu',
+        sourceType: 'realm',
+        stat: 'manaRegenPerTurn',
+        flat: 2,
+        domain: 'phap_tu',
+      },
+      {
+        id: 'phap_tu_an_ho_the',
+        sourceId: 'phap_tu',
+        sourceType: 'realm',
+        stat: 'manaShieldPercent',
+        flat: 0.25,
+        domain: 'phap_tu',
+      },
+    ],
   },
 
   kiem_tu: {

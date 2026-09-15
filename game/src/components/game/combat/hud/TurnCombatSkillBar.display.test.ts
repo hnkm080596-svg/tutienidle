@@ -7,12 +7,13 @@
 // Mount theo pattern project (createApp + h, KHÔNG @vue/test-utils —
 // chưa cài, xem CombatExitConfirmModal.test.ts). Mock composable bằng
 // vi.mock (hoisted factory).
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 
 const mocks = vi.hoisted(() => ({
   slotList: [] as TurnSkillPresentationEntry[],
+  cultivationPath: undefined as string | undefined,
   chooseSlot: vi.fn(),
   setBattleManualMode: vi.fn(),
   setCombatInputMode: vi.fn(),
@@ -40,7 +41,19 @@ vi.mock('@/stores/ui', () => ({
   }),
 }))
 
+vi.mock('@/stores/player', () => ({
+  usePlayerStore: () => ({
+    get cultivationPath() {
+      return mocks.cultivationPath
+    },
+  }),
+}))
+
 import TurnCombatSkillBar from './TurnCombatSkillBar.vue'
+
+afterEach(() => {
+  mocks.cultivationPath = undefined
+})
 
 function entry(overrides: Partial<TurnSkillPresentationEntry> = {}): TurnSkillPresentationEntry {
   return {
@@ -93,6 +106,48 @@ describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
     expect(container.textContent).toContain('Thường')
     expect(container.textContent).toContain('Đặc Biệt')
     expect(container.textContent).toContain('Tuyệt Kỹ')
+
+    appCleanup(container)
+  })
+})
+
+// Phap Tu Reimagined (Task 16) — phap_tu_an owns NO active ultimate: the
+// ult slot is the ngo_dao_hon_don dao passive, rendered as an emblem,
+// never a button (spec §3.3).
+describe('TurnCombatSkillBar — phap_tu_an passive emblem', () => {
+  it('ult slot là emblem ngo_dao_hon_don, KHÔNG phải button', async () => {
+    mocks.cultivationPath = 'phap_tu_an'
+    mocks.slotList = [
+      entry({ skillId: 'van_phap_tuy_tam', skillName: 'Vạn Pháp Tùy Tâm' }),
+      entry({ skillId: 'da_phap_lien_tuyen', skillName: 'Đa Pháp Liên Tuyến' }),
+      entry(),
+    ]
+
+    const container = mountBar()
+    await nextTick()
+
+    // Emblem present with the passive name + tag.
+    expect(container.textContent).toContain('Ngộ Đạo Hỗn Độn')
+    expect(container.textContent).toContain('Bị Động')
+    expect(container.textContent).not.toContain('Tuyệt Kỹ')
+
+    // Exactly 2 buttons (basic + special) — the emblem is a div.
+    const buttons = container.querySelectorAll('button.turn-combat-skill-bar__slot-button')
+
+    expect(buttons).toHaveLength(2)
+
+    appCleanup(container)
+  })
+
+  it('path thường vẫn render nút ult bình thường', async () => {
+    mocks.cultivationPath = 'phap_tu'
+    mocks.slotList = [entry(), entry(), entry()]
+
+    const container = mountBar()
+    await nextTick()
+
+    expect(container.querySelectorAll('button.turn-combat-skill-bar__slot-button')).toHaveLength(3)
+    expect(container.querySelector('.turn-combat-skill-bar__emblem')).toBeNull()
 
     appCleanup(container)
   })

@@ -19,6 +19,7 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffDefinition'
 
 import { NodeRegistry } from '../progression/NodeRegistry'
+import { aggregateTurnSkillResourceModifiers } from '../progression/NodeSystem'
 
 import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
@@ -138,7 +139,8 @@ import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
-import { CHAIN_SKILL_IDS } from '../../data/skill/Skills'
+import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
+import { applyAnKitToBasic, applyAnKitToSpecial } from '../../data/skill/TurnAnKitSkills'
 
 
 
@@ -155,9 +157,22 @@ import type { TokenState } from '../battle/turn/TurnToken'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
 import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
-import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE } from '../../data/skill/TurnReactionPathSkills'
+
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
+import { PHAP_TU_EMPOWERED_ULTS } from '../../data/skill/PhapTuEmpoweredUlts'
+import type { ElementType } from '../element/ElementType'
 import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
+import {
+  NEUTRAL_ROUTE_PROFILE,
+  PHAP_TU_EMPOWERMENT_THE_THRESHOLD,
+  PHAP_TU_THE_GAIN_BASIC,
+  PHAP_TU_THE_GAIN_SPECIAL,
+  applyRouteToTurnSkill,
+  resolveMaxThe,
+  resolveRouteProfile,
+  type RouteProfile,
+} from '../phap-tu/PhapTuRoutes'
 
 /**
  * GameManager là orchestrator (2026-08-24 refactor — tách business logic
@@ -450,6 +465,29 @@ export class GameManager {
       this.activePlayer.skillLevels[skillId] = level
     })
 
+    // Phap Tu Reimagined Task 3 — ONE scoping closure for both route
+    // seams: the provider feeds getEffectiveSkill's effective-surface
+    // application AND the post-conversion applyRouteToTurnSkill call at
+    // the orchestration sites below. Neutral unless the active player
+    // is normal phap_tu with an element and the skill is a kit member.
+    this.routeProfileProvider = (skillId) => {
+      const player = this.activePlayer
+
+      if (player?.cultivationPath !== 'phap_tu') {
+        return NEUTRAL_ROUTE_PROFILE
+      }
+
+      const element = player.phapTu.element
+
+      if (!element || !PHAP_TU_KIT_IDS[element].includes(skillId)) {
+        return NEUTRAL_ROUTE_PROFILE
+      }
+
+      return resolveRouteProfile(player.phapTu)
+    }
+
+    this.skillSystem.setRouteProfileProvider(this.routeProfileProvider)
+
     // Quï¿½i ?n (spec dot-pha-loi-kiep ï¿½4.1c) ï¿½ tra template qua registry
     // chung (registerEnemyTemplates dï¿½ dang kï¿½ Huy?t Mï¿½ng qua ENEMIES).
     this.catalogOps = new GameManagerCatalogOps({
@@ -489,6 +527,8 @@ export class GameManager {
       skillSystem: this.skillSystem,
       skillManager: this.skillManager,
       getActivePlayer: () => this.activePlayer,
+      // Lazy read — turnBattleOps is constructed after progressionOps.
+      getTurnBattle: () => this.turnBattleOps?.getTurnBattle() ?? null,
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({
@@ -520,7 +560,6 @@ export class GameManager {
       // Deferred closures - turnBattleOps/activePlayer assigned later.
       getActivePlayer: () => this.activePlayer,
       getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
-      getSkillRuntimeStats: (player) => this.progressionOps.getSkillRuntimeStats(player),
     })
 
     this.economyOps = new GameManagerEconomyOps({
@@ -698,7 +737,6 @@ export class GameManager {
       surviveLethalGuard: this.surviveLethalGuard,
       sessionAllocator: this.sessionAllocator,
       getActivePlayer: () => this.activePlayer,
-      getSkillRuntimeStats: (player) => this.progressionOps.getSkillRuntimeStats(player),
       getSkillLevels: () =>
         Object.fromEntries(this.skillManager.getAll().map((skill) => [skill.id, skill.level])),
       resetPassiveStacks: () => this.passiveSystem.resetStacks(),
@@ -713,6 +751,9 @@ export class GameManager {
       buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
       resolvePlayerBasicAttack: (player) => this.resolvePlayerBasicAttack(player),
       resolvePlayerSpecialUltimate: (player) => this.resolvePlayerSpecialUltimate(player),
+      // Task 8 — The cap snapshot: query-derived from nodeLevels
+      // (truong_the_<element>, 'no' route), never persisted.
+      resolvePlayerMaxThe: (player) => resolveMaxThe(this.nodeRegistry, player),
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
     })
 
@@ -768,6 +809,10 @@ export class GameManager {
   readonly zoneRegistry = new ZoneRegistry()
 
   private activePlayer?: PlayerData
+
+  /** Phap Tu Reimagined Task 3 — kit-scoped route profile lookup shared
+   * by the SkillSystem provider and the post-conversion seam below. */
+  private routeProfileProvider!: (skillId: string) => RouteProfile
 
   /**
    * App.vue đăng ký player sau boot/load — update() dùng để tick expiry
@@ -829,10 +874,23 @@ export class GameManager {
       }
 
       try {
-        const converted = toTurnSkillDefinition(skill, effective)
+        // Route seam 2 (post-conversion): the converter stays generic —
+        // ailmentStackBonus lands on the built definition here.
+        const converted = applyRouteToTurnSkill(
+          toTurnSkillDefinition(skill, effective),
+          this.routeProfileProvider(skill.id),
+        )
+
+        // Task 11 — the An basic carries its composite pick (uniform
+        // element_basic pool) plus `multicast` when the player owns the
+        // ngo_dao_hon_don dao passive (granted at the ritual).
+        const resolved =
+          player.cultivationPath === 'phap_tu_an'
+            ? applyAnKitToBasic(converted, this.skillManager.has('ngo_dao_hon_don'))
+            : converted
 
         return {
-          ...converted,
+          ...this.applyPhapTuTheGains(resolved, player, PHAP_TU_THE_GAIN_BASIC),
           cooldownTurns: 0,
           resourceType: 'none',
           resourceCost: undefined,
@@ -850,8 +908,11 @@ export class GameManager {
     }
 
     if (player.cultivationPath === 'phap_tu') {
-      const element = this.progressionOps.getPhapTuThuanElement() ?? 'fire'
-      return BASIC_ATTACKS_BY_BUILD[`phap_tu_${element}`] ?? GENERIC_PHYSICAL_BASIC
+      const element = this.progressionOps.getPhapTuElement()
+
+      return element
+        ? (BASIC_ATTACKS_BY_BUILD[`phap_tu_${element}`] ?? GENERIC_PHYSICAL_BASIC)
+        : GENERIC_PHYSICAL_BASIC
     }
 
     return GENERIC_PHYSICAL_BASIC
@@ -868,9 +929,15 @@ export class GameManager {
     }
 
     if (player.cultivationPath === 'phap_tu') {
-      const element = this.progressionOps.getPhapTuThuanElement() ?? 'fire'
+      const element = this.progressionOps.getPhapTuElement()
 
-      return CHAIN_SKILL_IDS[element]?.[0]
+      return element ? PHAP_TU_KIT_IDS[element]?.[0] : undefined
+    }
+
+    // Phap Tu An (Task 7) — its basic is the composite skill granted at
+    // the ritual; the element pick happens inside its resolution (T11).
+    if (player.cultivationPath === 'phap_tu_an') {
+      return 'van_phap_tuy_tam'
     }
 
     // Future path ids (none exist in CultivationPathId today) author
@@ -897,40 +964,124 @@ export class GameManager {
   private resolvePlayerSpecialUltimate(
     player: PlayerData,
   ): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition } {
+    // Phap Tu An (Task 7) — the special is the repeat-cast skill granted
+    // at the ritual; the ult slot is a passive (ngo_dao_hon_don), no
+    // ultimate TurnSkillDefinition.
+    if (player.cultivationPath === 'phap_tu_an') {
+      const specialSkill = this.skillManager.get('da_phap_lien_tuyen')
+
+      return {
+        special: specialSkill
+          ? applyAnKitToSpecial(
+              toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill)),
+            )
+          : undefined,
+      }
+    }
+
     if (player.cultivationPath !== 'phap_tu') {
       return {}
     }
 
-    // Phase A4 (2026-09-07) — Reaction Path branch: purchasing ANY
-    // `reaction_path_unlock_<tag>` node awakens the hidden path and
-    // REPLACES the element chain's special/ultimate with the Reaction
-    // Path's marker skills (the engine intercepts the special marker and
-    // casts 2 distinct elemental picks; the ultimate self-applies
-    // reaction_empowerment). Gating reads player.nodeLevels (§6.8 —
-    // PlayerData is the authority), mirroring getPhapTuThuanElement()'s
-    // nodeLevels read pattern.
-    for (const nodeKey of Object.keys(player.nodeLevels)) {
-      if (nodeKey.startsWith('reaction_path_unlock_') && player.nodeLevels[nodeKey]! > 0) {
-        return {
-          special: PHAP_TU_REACTION_SPECIAL,
-          ultimate: PHAP_TU_REACTION_ULTIMATE,
-        }
-      }
+    const element = this.progressionOps.getPhapTuElement()
+
+    if (!element) {
+      return {}
     }
 
-    const element = this.progressionOps.getPhapTuThuanElement() ?? 'fire'
-    const [, specialId, ultimateId] = CHAIN_SKILL_IDS[element]
+    const [, specialId, ultimateId] = PHAP_TU_KIT_IDS[element]
 
     const specialSkill = this.skillManager.get(specialId)
     const ultimateSkill = this.skillManager.get(ultimateId)
 
     return {
       special: specialSkill
-        ? toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill))
+        ? this.applyPhapTuTheGains(
+            applyRouteToTurnSkill(
+              toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill)),
+              this.routeProfileProvider(specialSkill.id),
+            ),
+            player,
+            PHAP_TU_THE_GAIN_SPECIAL,
+          )
         : undefined,
       ultimate: ultimateSkill
-        ? toTurnSkillDefinition(ultimateSkill, this.skillSystem.getEffectiveSkill(ultimateSkill))
+        ? this.applyPhapTuEmpowerment(
+            this.applyPhapTuTheGains(
+              applyRouteToTurnSkill(
+                toTurnSkillDefinition(ultimateSkill, this.skillSystem.getEffectiveSkill(ultimateSkill)),
+                this.routeProfileProvider(ultimateSkill.id),
+              ),
+              player,
+              0,
+            ),
+            player,
+            element,
+          )
         : undefined,
+    }
+  }
+
+  /**
+   * Task 10 — attach the god-ult empowerment to the equipped chain-E
+   * ultimate at battle build. Gated on owning `linh_ngo_<godUltId>`
+   * (the engine stays dumb — the gate lives in orchestration, A8); the
+   * route profile picks the payload variant ('dot' -> detonate, 'no' ->
+   * nuke, none -> nuke default). The payload itself is the raw
+   * PHAP_TU_EMPOWERED_ULTS entry — route direct/ailment factors already
+   * shaped the base form; the empowered form's route expression IS its
+   * variant choice.
+   */
+  private applyPhapTuEmpowerment(
+    def: TurnSkillDefinition,
+    player: PlayerData,
+    element: ElementType,
+  ): TurnSkillDefinition {
+    const godUltId = PHAP_TU_ULTIMATE_IDS[element]
+
+    if ((player.nodeLevels?.[`linh_ngo_${godUltId}`] ?? 0) <= 0) {
+      return def
+    }
+
+    const variant = resolveRouteProfile(player.phapTu).empoweredUlt ?? 'nuke'
+    const empowered = PHAP_TU_EMPOWERED_ULTS[element]?.[variant]
+
+    return empowered
+      ? {
+          ...def,
+          empowerment: { theThreshold: PHAP_TU_EMPOWERMENT_THE_THRESHOLD, empowered },
+        }
+      : def
+  }
+
+  /**
+   * Task 8 — attach the authored The-gain fields to a phap_tu kit
+   * TurnSkillDefinition at battle build. Base values come from
+   * PHAP_TU_THE_GAIN_* (basic +5 / special +15 / ultimate +0); the 'no'
+   * route profile contributes theGainOnCrit; tu_the_<element> nodes add
+   * per-level deltas via aggregateTurnSkillResourceModifiers — all of it
+   * scoped to this authored skill id (no leak to other elements, Kiem
+   * Tu, or mortal skills). Non-phap_tu paths (incl. phap_tu_an — its
+   * kit has no The loop) return the def unchanged.
+   */
+  private applyPhapTuTheGains(
+    def: TurnSkillDefinition,
+    player: PlayerData,
+    baseGainOnLandedCast: number,
+  ): TurnSkillDefinition {
+    if (player.cultivationPath !== 'phap_tu') {
+      return def
+    }
+
+    const nodeMods = aggregateTurnSkillResourceModifiers(this.nodeRegistry, player).get(def.id)
+    const theGainOnLandedCast = baseGainOnLandedCast + (nodeMods?.theGainOnLandedCast ?? 0)
+    const theGainOnCrit =
+      (resolveRouteProfile(player.phapTu).critTheGain ?? 0) + (nodeMods?.theGainOnCrit ?? 0)
+
+    return {
+      ...def,
+      ...(theGainOnLandedCast > 0 ? { theGainOnLandedCast } : {}),
+      ...(theGainOnCrit > 0 ? { theGainOnCrit } : {}),
     }
   }
 

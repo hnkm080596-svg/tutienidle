@@ -1,7 +1,8 @@
 import type { Technique } from '../technique/Technique'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import type { PlayerData } from './Player'
-import { CULTIVATION_PATH_KITS } from './CultivationPathKit'
+import { CULTIVATION_PATH_KITS, type CultivationPathId } from './CultivationPathKit'
+import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
@@ -45,7 +46,8 @@ export function getPhapTuAttunementStatModifiers(
   player: PlayerData,
   totals: Pick<Stats, MainStatKey>,
 ): StatModifier[] {
-  return player.cultivationPath === 'phap_tu'
+  // phap_tu_an owns the same 'phap_tu' stat domain (Task 7).
+  return player.cultivationPath === 'phap_tu' || player.cultivationPath === 'phap_tu_an'
     ? phapTuAttunementMpModifiers(totals.attunement, 'phap_tu:attunement')
     : []
 }
@@ -60,6 +62,30 @@ export function getPhapTuAttunementStatModifiers(
 registerDomainDeltaDeriver('phap_tu', (delta) =>
   delta.attunement === 0 ? [] : phapTuAttunementMpModifiers(delta.attunement, 'phap_tu:attunement_delta'),
 )
+
+/**
+ * Phap Tu Reimagined (Task 7) — paths the initiation ritual may offer.
+ * 'phap_tu_an' appears ONLY when linh_bao has reached its Lv3 cast
+ * threshold at this moment — the offer is evaluated at ritual time,
+ * never stored, and post-ritual casts cannot reopen it (the ritual
+ * itself rejects any second choice).
+ */
+export function getOfferableCultivationPaths(player: PlayerData): CultivationPathId[] {
+  const paths: CultivationPathId[] = ['phap_tu', 'kiem_tu']
+
+  if (isPhapTuAnEligible(player)) {
+    paths.push('phap_tu_an')
+  }
+
+  return paths
+}
+
+/** linh_bao Lv3 gate — shared by the offer query and the ritual commit. */
+export function isPhapTuAnEligible(player: PlayerData): boolean {
+  const threshold = CAST_LEVELING_THRESHOLDS['linh_bao']?.lv3 ?? Number.POSITIVE_INFINITY
+
+  return (player.skillCastCounts?.['linh_bao'] ?? 0) >= threshold
+}
 
 export interface CultivationPathRewardDeps {
   getEquippedTechnique: () => Technique | undefined

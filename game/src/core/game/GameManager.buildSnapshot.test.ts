@@ -122,27 +122,22 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     expect(gameManager.getTurnBattle()!.players[0]!.entity.stats.might).toBe(finalStats.might)
   })
 
-  it('giữ nguyên skill runtime stats trong trận và chỉ nhận thay đổi ở trận kế tiếp', () => {
+  it('giữ nguyên skill levels trong trận và chỉ nhận thay đổi ở trận kế tiếp', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     const runtimeSkill = {
       ...structuredClone(SKILLS[0]!),
       id: 'snapshot_runtime_skill',
-      hoaTheGainPerCast: 1,
     }
     gameManager.skillManager.add(runtimeSkill)
 
     gameManager.startBattleWithPlayer(player, createTestEnemy())
-    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillStats?.hoaTheGainPerCast).toBe(1)
     expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(runtimeSkill.level)
 
-    runtimeSkill.hoaTheGainPerCast = 5
     runtimeSkill.level = 5
-    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillStats?.hoaTheGainPerCast).toBe(1)
     expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(1)
 
     gameManager.startBattleWithPlayer(player, createTestEnemy())
-    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillStats?.hoaTheGainPerCast).toBe(5)
     expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(5)
   })
 })

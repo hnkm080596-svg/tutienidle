@@ -13,6 +13,8 @@ import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 import { useGameManager } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
+import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 import type { TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
 import type { TooltipContent } from '@/composables/useTooltip'
@@ -40,8 +42,24 @@ function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefin
 // (persist per-device), đồng bộ GameManager flag (plain class, không
 // import Pinia — UI layer gọi setter, cùng pattern battleRunMode).
 const ui = useUiStore()
+const player = usePlayerStore()
 const gameManager = useGameManager()
 const { isAwaitingChoice, isBattleFighting, slotList, chooseSlot } = useTurnCombatManual()
+
+// Phap Tu An (Task 16) — the path owns no active ultimate: the slot is
+// the always-on dao passive ngo_dao_hon_don, rendered as a passive
+// emblem (spec §3.3 — "NOT a button"; its agency lives in the
+// multicast storm). The emblem tooltip explains basic-slot-only
+// multicast — the one place the rule surfaces in combat.
+const isAnPath = computed(() => player.cultivationPath === 'phap_tu_an')
+
+const anEmblemMeta = computed(() => turnSkillDisplayMetaOf('ngo_dao_hon_don'))
+
+const anEmblemTooltip = computed<TooltipContent | undefined>(() => {
+  const meta = anEmblemMeta.value
+
+  return meta ? { title: meta.name, description: meta.description } : undefined
+})
 
 const isManualMode = computed(() => ui.combatInputMode === 'manual')
 
@@ -83,27 +101,40 @@ function tapSlot(role: TurnSkillSlotRole): void {
 <template>
   <div v-if="visible" class="turn-combat-skill-bar">
     <div class="turn-combat-skill-bar__slots">
-      <button
-        v-for="(role, index) in ROLE_ORDER"
-        :key="role"
-        type="button"
-        class="turn-combat-skill-bar__slot-button"
-        :class="{ 'is-tappable': isTappable(entryAt(index)) }"
-        :disabled="!isTappable(entryAt(index))"
-        :aria-label="`Dùng ${ROLE_LABELS[role]}`"
-        @click="tapSlot(role)"
-      >
-        <CombatSkillSlot
-          :empty-label="ROLE_LABELS[role]"
-          :display-label="entryAt(index).skillName"
-          :remaining="entryAt(index).cooldownRemaining"
-          :total="entryAt(index).cooldownTotal"
-          :is-masked="entryAt(index).state === 'cooldown'"
-          :resource-cost="entryAt(index).resourceCost"
-          :is-insufficient-resource="entryAt(index).state === 'blocked_resource'"
-          :tooltip-override="tooltipFor(entryAt(index))"
-        />
-      </button>
+      <template v-for="(role, index) in ROLE_ORDER" :key="role">
+        <!-- Phap Tu An — ult slot is the dao passive emblem, never a
+             button (no dead ult control; spec §3.3). -->
+        <div
+          v-if="role === 'ultimate' && isAnPath"
+          class="turn-combat-skill-bar__emblem"
+          :aria-label="anEmblemMeta?.name ?? 'Ngộ Đạo Hỗn Độn'"
+          v-tooltip="anEmblemTooltip"
+        >
+          <span class="turn-combat-skill-bar__emblem-name">{{ anEmblemMeta?.name ?? 'Ngộ Đạo Hỗn Độn' }}</span>
+          <span class="turn-combat-skill-bar__emblem-tag">Bị Động</span>
+        </div>
+
+        <button
+          v-else
+          type="button"
+          class="turn-combat-skill-bar__slot-button"
+          :class="{ 'is-tappable': isTappable(entryAt(index)) }"
+          :disabled="!isTappable(entryAt(index))"
+          :aria-label="`Dùng ${ROLE_LABELS[role]}`"
+          @click="tapSlot(role)"
+        >
+          <CombatSkillSlot
+            :empty-label="ROLE_LABELS[role]"
+            :display-label="entryAt(index).skillName"
+            :remaining="entryAt(index).cooldownRemaining"
+            :total="entryAt(index).cooldownTotal"
+            :is-masked="entryAt(index).state === 'cooldown'"
+            :resource-cost="entryAt(index).resourceCost"
+            :is-insufficient-resource="entryAt(index).state === 'blocked_resource'"
+            :tooltip-override="tooltipFor(entryAt(index))"
+          />
+        </button>
+      </template>
     </div>
 
     <label class="turn-combat-skill-bar__mode-toggle">
@@ -148,6 +179,37 @@ function tapSlot(role: TurnSkillSlotRole): void {
 .turn-combat-skill-bar__slot-button.is-tappable {
   outline: 2px solid var(--jade, #4caf50);
   outline-offset: 2px;
+}
+
+/* Phap Tu An (Task 16) — passive emblem replaces the ult slot button:
+   always-on dao passive, reads as an emblem not a disabled control. */
+.turn-combat-skill-bar__emblem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 56px;
+  min-height: 56px;
+  padding: 4px 6px;
+  border: 1px solid var(--gold-700, #d4a72c);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gold-700, #d4a72c) 14%, transparent);
+  text-align: center;
+}
+
+.turn-combat-skill-bar__emblem-name {
+  font-size: var(--text-xs, 11px);
+  font-weight: 600;
+  color: var(--gold-700, #d4a72c);
+  line-height: 1.2;
+}
+
+.turn-combat-skill-bar__emblem-tag {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #999);
 }
 
 .turn-combat-skill-bar__mode-toggle {

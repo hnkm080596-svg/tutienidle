@@ -6,13 +6,10 @@
 // TurnSkillAction/TurnBattleSystem instead.
 import type { SkillEffect } from './SkillEffect'
 import type { CombatEntity } from '../combat/CombatEntity'
-import { getSkillRuntimeStat } from './SkillRuntimeStats'
 import type { CombatSystem } from '../combat/CombatSystem'
 import type { BuffSystem } from '../buff/BuffSystem'
 import type { BuffRegistry } from '../buff/BuffRegistry'
-import type { ReactionManager } from '../element/ReactionManager'
 import type { ElementType } from '../element/ElementType'
-import { MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
 import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
 
 export interface SkillEffectContext {
@@ -36,19 +33,14 @@ export interface SkillEffectContext {
 
   targetBuffs: BuffSystem
 
-  // Combat Rework Phase 6 (Pháp Tu Reaction) — kiểm tra/kích phản ứng
-  // ngay sau khi effect 'debuff' áp thành công, xem apply() bên dưới.
-  reactionManager: ReactionManager
+  // Phap Tu Reimagined Task 12 — the legacy reactionManager /
+  // reactionKeepChance fields are retired with the authored-pair table
+  // (the turn engine's TurnReactionManager owns reactions now).
 
-  // Thiên phú Phản Phác (talent-direction-choice-plan §6) — xác suất giữ
-  // ailment ở nhánh consume chuẩn của ReactionManager. Nền 0/không truyền
-  // = hành vi mặc định (xoá cả 2).
-  reactionKeepChance?: number
-
-  // Plans/magicpathgeneral Phase 12 (2026-08-21) — cho phép
-  // ReactionManager spawn Lava Zone (Dung Nham) vào ĐÚNG `battle`
+  // Plans/magicpathgeneral Phase 12 (2026-08-21) — cho phép action
+  // zoneKind 'lava' spawn Lava Zone vào ĐÚNG `battle`
   // đang chạy — bind sẵn ở BattleSystem.castSkill(), optional vì hầu
-  // hết reaction/test không cần.
+  // hết test không cần.
   spawnLavaZone?: (spec: {
     ownerId: string
     row: number
@@ -348,66 +340,9 @@ export class SkillEffectSystem {
 
         ctx.targetBuffs.apply(ctx.buffRegistry.get(effect.buffId), source, target, ctx.buffRegistry)
 
-        // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục
-        // 9/11, 2026-08-21) — CHỈ tích khi roll THÀNH CÔNG (đã ở
-        // trong nhánh này), nền 0 nếu chưa mua "Kim Thế".
-        const kimTheGain = getSkillRuntimeStat(source, 'kimTheGainPerProc')
-        if (effect.grantsKimThePerProc && kimTheGain > 0) {
-          source.currentKimThe = Math.min(
-            MAX_KIM_THE + getSkillRuntimeStat(source, 'kimTheMaxStacksBonus'),
-            source.currentKimThe + kimTheGain,
-          )
-
-          source.timeSinceLastBleedProc = 0
-        }
-
-        // Kim Tu ("Huyết Phá", Plans/magicpathgeneral Phase 13,
-        // 2026-08-21) — charge ĐỘC LẬP với Kim Thế ở trên (cùng điều
-        // kiện roll, 2 counter khác nhau). Chạm MAX_HUYET_PHA thì
-        // consume/reset về 0 (KHÔNG mutate ailment/debuff nào — đúng
-        // invariant Phase 16) rồi trigger 1 burst damage MỘT LẦN lên
-        // target qua ĐÚNG pipeline DOT RES (applyDotDamage()),
-        // effectId 'huyet_pha_burst' để phân biệt với tick DoT thường.
-        const huyetPhaGain = getSkillRuntimeStat(source, 'huyetPhaGainPerProc')
-        if (effect.grantsHuyetPhaPerProc && huyetPhaGain > 0) {
-          const nextCharge = (source.currentHuyetPha ?? 0) + huyetPhaGain
-
-          if (nextCharge >= MAX_HUYET_PHA) {
-            source.currentHuyetPha = 0
-
-            const burstDamage = getSkillRuntimeStat(source, 'huyetPhaBurstDamage')
-            if (burstDamage > 0) {
-              ctx.combatSystem.applyDotDamage({
-                sourceId: source.id,
-                source,
-                // Task 4 (D18) — authored dotRecovery triggers on the
-                // source's own buffs apply to the burst's element too.
-                sourceBuffs: ctx.sourceBuffs.getAll(),
-                target,
-                rawDamage: burstDamage,
-                element: 'metal',
-                effectId: 'huyet_pha_burst',
-              })
-            }
-          } else {
-            source.currentHuyetPha = nextCharge
-          }
-        }
-
-        // Combat Rework Phase 6 — debuff vừa áp có thể phản ứng với
-        // debuff hành KHÁC đang có sẵn trên target, xem
-        // core/element/ReactionManager.ts.
-        ctx.reactionManager.checkAndTrigger(
-          ctx.targetBuffs,
-          effect.buffId,
-          source,
-          target,
-          ctx.combatSystem,
-          ctx.buffRegistry,
-          ctx.sourceBuffs,
-          ctx.spawnLavaZone,
-          ctx.reactionKeepChance ?? 0,
-        )
+        // Phap Tu Reimagined Task 12 — the legacy authored-pair reaction
+        // handoff is retired; the turn engine's TurnReactionManager owns
+        // sinh/khac rule reactions on the live path.
         break
       }
 

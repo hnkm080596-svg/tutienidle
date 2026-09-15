@@ -116,4 +116,42 @@ describe('SkillSystem.recordCast — turn-engine cast counting', () => {
     expect(skill.totalExperience).toBe(10001)
     expect(onLevelUp).not.toHaveBeenCalled()
   })
+
+  // Phap Tu Reimagined Task 2 — linh_bao/huy_quyen join tram in the
+  // CAST_LEVELING_THRESHOLDS table (same Lv2@1000/Lv3@10000 curve).
+  // linh_bao Lv3 is the phap_tu_an ritual gate, so cast leveling must
+  // be exact.
+  it.each(['linh_bao', 'huy_quyen'])(
+    '%s auto-levels Lv2 at 1000, Lv3 at 10000 casts',
+    (id) => {
+      const manager = new SkillManager()
+      const onLevelUp = vi.fn()
+      const system = new SkillSystem(manager, onLevelUp)
+      system.learn(SKILLS.find((skill) => skill.id === id)!)
+      const skill = manager.get(id)!
+
+      for (let i = 0; i < 999; i++) system.recordCast(id)
+      expect(skill.level).toBe(1)
+
+      system.recordCast(id)
+      expect(skill.level).toBe(2)
+      expect(onLevelUp).toHaveBeenCalledWith(skill, 1)
+
+      for (let i = 1000; i < 10000; i++) system.recordCast(id)
+      expect(skill.level).toBe(3)
+      expect(skill.totalExperience).toBe(10000)
+    },
+  )
+
+  it.each(['linh_bao', 'huy_quyen'])(
+    'upgradeSkill rejects %s exactly like tram (INV-9: cast-leveled only)',
+    (id) => {
+      const manager = new SkillManager()
+      const system = new SkillSystem(manager)
+      system.learn(SKILLS.find((skill) => skill.id === id)!)
+
+      expect(system.getSkillUpgradeInsightCost(id)).toBeUndefined()
+      expect(system.upgradeSkill(id, { skillInsight: 999 } as never)).toBe(false)
+    },
+  )
 })

@@ -34,4 +34,9 @@
 // v61 (2026-09-14, B4 talent v4 M2): cultivationOvercharge,
 // tribulationBonusStacks, nodeFreePurchaseRecord, phaGiapCarryStacks,
 // phaGiapCarryRealmId. Save v60 bị từ chối (dev phase, không migration).
-export const CURRENT_SAVE_VERSION = 61 as const
+// v62 (phap-tu-reimagined): Phap Tu path/state/combat rework —
+// PlayerData loses unlockedElements/equippedElements (element authority
+// is now player.phapTu.element), CombatEntity loses skillStats +
+// currentHoaThe/ThoThe/KimThe pools, reaction-path skills/buffs/nodes
+// retired. Save v61 bị từ chối (dev phase, không migration).
+export const CURRENT_SAVE_VERSION = 62 as const

@@ -24,10 +24,6 @@ function createCombatEntity(id: string, overrides: Partial<CombatEntity> = {}): 
     currentMp: 0,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -94,12 +90,12 @@ function createBattle(overrides: Partial<Battle> = {}): Battle {
   }
 }
 
-function attackArtifactRuntime(path: 'attack' | 'defense' | 'control' | undefined, level: number, equippedElements: ('wood' | 'fire')[] = ['wood', 'fire']) {
+function attackArtifactRuntime(path: 'attack' | 'defense' | 'control' | undefined, level: number, rotationElements: ('wood' | 'fire')[] = ['wood', 'fire']) {
   const progress = createDefaultArtifactProgress('ngu_hanh_chau')
   progress.realmLevel = level
   progress.selectedPath = path
 
-  return createArtifactRuntime(progress, equippedElements)
+  return createArtifactRuntime(progress, rotationElements)
 }
 
 describe('ArtifactSystem.updateArtifactActivation — acceptance §15.3', () => {

@@ -10,8 +10,7 @@ import { BuffPool } from '../../buff/BuffPool'
 
 // Roadmap 9.5 #12 follow-up (flagged 2026-09-07, activated 2026-09-14):
 // TurnBattleSystem calls registry.get() UNGUARDED in two places that read
-// CONTENT-DERIVED ids — skill.appliesBuff.definitionId (the Reaction Path
-// ultimate path, now live via reaction_path_unlock_* keystones) and
+// CONTENT-DERIVED ids — skill.appliesBuff.definitionId and
 // appliesAilments[].buffDefinitionId. MapBuffRegistry.get THROWS on an
 // unknown id, so a renamed/drifted buff id crashes every fixed-step tick
 // with no error isolation upstream in GameManager's updateBattleFixedStep.
@@ -34,10 +33,6 @@ function createCombatant(id: string): CombatEntity {
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,

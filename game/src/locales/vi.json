@@ -101,9 +101,15 @@
         "upgradeCost": "Nâng cấp · {cost} Cảm Ngộ",
         "otherBranch": "Khác"
       },
-      "branchLabels": {
-        "lapDao": "Lập Đạo",
-        "thuan": "Thuần · {element}"
+      "routes": {
+        "aria": "Hướng Pháp Tu",
+        "dot": "Đốt",
+        "no": "Nộ"
+      },
+      "routeSwitch": {
+        "title": "Đổi Hướng Pháp Tu",
+        "body": "Chuyển sang hướng {route}? Node hướng cũ về 0 — lấy lại {regain} Cảm Ngộ, mất {lose}.",
+        "confirm": "Đổi Hướng"
       }
     },
     "skillPath": {
@@ -134,6 +140,8 @@
           "prerequisiteNode": "Cần lĩnh ngộ trước: {name}",
           "realm": "Cần đạt cảnh giới yêu cầu",
           "element": "Cần mở khoá Hành liên quan",
+          "elementMismatch": "Thuộc Hành {element} — đã chọn Hành khác",
+          "routeMismatch": "Chỉ lĩnh ngộ ở hướng {route}",
           "excludesNode": "Xung khắc với: {name}",
           "nodeCount": "Cần lĩnh ngộ {required}/{total} node liên quan",
           "skillLevel": "cấp {level}",
@@ -141,12 +149,23 @@
           "skillJoin": "và",
           "skill": "Cần {skill} đạt {requirement}",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
+        },
+        "routePick": {
+          "title": "Chọn Hướng Pháp Tu",
+          "hint": "Hành đã chọn không thể đổi. Hướng có thể đổi ngoài chiến đấu — node hướng cũ về 0, hoàn lại 75% Cảm Ngộ đã bỏ ra.",
+          "dotDesc": "Đốt — trạng thái nguyên tố dồn dập; tuyệt chiêu thức tỉnh kích nổ toàn bộ trạng thái còn lại.",
+          "noDesc": "Nộ — sát thương trực tiếp và bạo kích; bạo kích nạp Thế, tuyệt chiêu thức tỉnh đốt toàn bộ Thế."
         }
+      },
+      "elementTabs": {
+        "aria": "Chọn Hành Pháp Tu"
       },
       "detail": {
         "empty": "Chọn một kỹ năng để xem chi tiết.",
         "upgrade": "Nâng Cấp ({cost} Cảm Ngộ)",
         "maxed": "Tối đa",
+        "castProgress": "{count} / {next} lần xuất chiêu",
+        "castMaxed": "Tối đa theo số lần xuất chiêu",
         "cooldown": "Hồi Chiêu",
         "cost": "Tiêu Hao",
         "type": "Loại",
@@ -201,6 +220,10 @@
           "hintSuffix": " — không thể đổi.",
           "batKiemDescription": "Huy Kiếm đạt tầng 3 (10.000 lần trảm) nên khai mở Bạt Kiếm — một chiêu tụ lực, mạnh dần theo tầng Kiếm Ý diệt boss.",
           "kiemTranDescription": "Huy Kiếm chưa đạt tầng 3 nên bước vào Kiếm Trận — kiếm trận tiến hóa theo cảnh giới, mở hiệu ứng on-hit theo cấp trận."
+        },
+        "hiddenPath": {
+          "description": "Linh Bạo đã đạt cực hạn — con đường ẩn hiện ra. Bộ kỹ năng: {kit}. Không Hành, không Hướng, không Thế — sức mạnh nằm ở phản ứng ngũ hành.",
+          "warning": "Lựa chọn VĨNH VIỄN — không thể đổi lại, không quay về Pháp Tu thường."
         }
       },
       "actions": {
@@ -208,7 +231,8 @@
       },
       "messages": {
         "confirmPathTitle": "Xác Nhận Con Đường",
-        "confirmPathBody": "Bước vào {name}? Lựa chọn này KHÔNG thể đổi lại."
+        "confirmPathBody": "Bước vào {name}? Lựa chọn này KHÔNG thể đổi lại.",
+        "confirmPathHiddenBody": "Bước vào {name}? Con đường ẩn này VĨNH VIỄN — không thể đổi lại, và đạo hữu sẽ không có cây Hành/Hướng của Pháp Tu thường."
       },
       "world": {
         "ceremonyTitle": "LỄ NHẬP MÔN",

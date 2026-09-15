@@ -5,7 +5,7 @@ import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { CultivationPathId } from '../player/CultivationPathKit'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
-import { grantCultivationPathRealmReward as grantPathRealmReward } from '../player/CultivationPathSystem'
+import { grantCultivationPathRealmReward as grantPathRealmReward, isPhapTuAnEligible } from '../player/CultivationPathSystem'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID, BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
@@ -27,8 +27,7 @@ import type {
 import type { GameManagerProgressionOps } from './GameManagerProgressionOps'
 import type { TemplateRegistry } from './TemplateRegistry'
 
-const PHAP_TU_STARTER_NODE_ID = 'hoa_linh_ngo'
-const PHAP_TU_STARTER_SKILL_ID = 'hoa_cau_thuat'
+
 
 /**
  * Realm-advance operations: combat technique learn/equip, cultivation
@@ -158,6 +157,16 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
+    // Phap Tu An (Task 7) — hidden path, offered only when linh_bao
+    // reached Lv3 at THIS ritual moment. Re-check BEFORE any side
+    // effect (technique learn/equip, cultivationPath write): an
+    // ineligible pick mutates nothing. The persisted record is
+    // cultivationPath itself — no eligibility flag is stored, and
+    // post-ritual casts can never reopen the option.
+    if (pathId === 'phap_tu_an' && !isPhapTuAnEligible(player)) {
+      return false
+    }
+
     const kit = CULTIVATION_PATH_KITS[pathId]
 
     player.cultivationPath = pathId
@@ -173,7 +182,12 @@ export class GameManagerRealmAdvanceOps {
     // kit.skillIds for Kiem Tu is intentionally unused (each route has a
     // single skill, granted in this branch) - the old 3-skill tuple stays
     // in CultivationPathKit.
-    if (pathId === 'kiem_tu') {
+    if (pathId === 'phap_tu_an') {
+      this.deps.progressionOps.learnSkill('van_phap_tuy_tam')
+      this.deps.progressionOps.learnSkill('da_phap_lien_tuyen')
+      this.deps.skillSystem.equipToSlot('van_phap_tuy_tam', 0)
+      this.deps.skillSystem.equipToSlot('da_phap_lien_tuyen', 1)
+    } else if (pathId === 'kiem_tu') {
       const tramCasts = player.skillCastCounts?.['tram'] ?? 0
       const route: KiemTuRoute = tramCasts >= HUY_KIEM_L3_CASTS ? 'bat_kiem' : 'kiem_tran'
 
@@ -193,26 +207,10 @@ export class GameManagerRealmAdvanceOps {
         this.deps.progressionOps.learnSkill(skillId)
         this.deps.skillSystem.equipToSlot(skillId, index)
       })
-    } else {
-      // Skill tree redesign (2026-08-21) - Hoa Cau Thuat is the ROOT NODE
-      // of the Fire skill tree (not a skill learned outside the tree),
-      // see data/progression/PhapTuNodes.ts's FIRE_LINH_NGO - cost 0 so it
-      // is always purchasable immediately; purchaseNode() handles
-      // learnSkill() via unlocksSkillIds. Then equipped straight into
-      // slot 0 instead of forcing the player to open Node Tree + Radial
-      // Skill Selector before any fight. equipToSlot() displaces the
-      // current slot-0 occupant (Pham Nhan's Tram) - the execution policy
-      // rework (plan §8.6) removed the basic-attack mutual exclusion.
-      // Because a skill is always present after this step, the
-      // blockIfNoBasicAttack() gate in useBattleActions.ts/
-      // useTribulation.ts was REMOVED (the "nothing equipped" state no
-      // longer exists). Thuy/Moc/Tho/Kim do NOT auto-purchase - those 4
-      // root nodes cost 2 Skill Points and the player buys them via the
-      // Node Tree UI.
-      this.deps.progressionOps.purchaseNode(PHAP_TU_STARTER_NODE_ID, player)
-
-      this.deps.skillSystem.equipToSlot(PHAP_TU_STARTER_SKILL_ID, 0)
     }
+    // Phap Tu Reimagined (Task 6) — no auto-Fire starter: choosing
+    // phap_tu leaves player.phapTu { element: null, route: null } until
+    // progressionOps.selectPhapTuElement() commits the atomic choice.
 
     if (player.realmId === 'mortal') {
       // Realm Passive & Pressure System (2026-08-20) - lock the Nhap Dao

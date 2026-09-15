@@ -32,12 +32,11 @@ import { effectiveWaves } from '../stage/EffectiveWaves'
 import type { Stage } from '../stage/Stage'
 
 import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
-import { REACTION_PATH_POOL } from '../../data/skill/TurnReactionPathSkills'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffTypes'
 import type { FormationLoadout, PlayerData } from '../player/Player'
-import { playerToCombatEntity } from '../player/Player'
+import { playerToCombatEntity, resetBattleScopedResources } from '../player/Player'
 import { getKiemYPermanent } from '../player/KiemYSystem'
 import type { Stats } from '../stats/StatBlock'
 import type { StatModifier } from '../stats/StatCalculator'
@@ -58,7 +57,6 @@ import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import type { RewardReceiver } from '../reward/RewardSystem'
 
 import type { TemplateRegistry } from './TemplateRegistry'
-import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
 
 
 /**
@@ -212,7 +210,6 @@ export class GameManagerTurnBattleOps {
     // Live player/registry reads - GameManager owns these authorities; the
     // ops only reads through accessors (A3: no duplicate state ownership).
     getActivePlayer: () => PlayerData | undefined
-    getSkillRuntimeStats: (player: PlayerData) => SkillRuntimeStats
     // SkillManager level snapshot for playerToCombatEntity (owned by GameManager).
     getSkillLevels: () => Record<string, number>
     // PassiveSystem owns per-battle passive stacks; ops requests the reset.
@@ -239,6 +236,10 @@ export class GameManagerTurnBattleOps {
     resolvePlayerSpecialUltimate: (
       player: PlayerData,
     ) => { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition }
+    // Task 8 — the The-cap snapshot for the player entity
+    // (resolveMaxThe: query-derived from nodeLevels, never persisted).
+    // Non-phap_tu players resolve to MAX_THE.
+    resolvePlayerMaxThe: (player: PlayerData) => number
     // 9.5 #9 — committed-cast sink for the PRIMARY player only
     // (SkillSystem.recordCast; engine fires for every actor, ops filters
     // to turnBattle.players[0] so companion/enemy casts never write into
@@ -253,7 +254,6 @@ export class GameManagerTurnBattleOps {
       // target debuffs) no-op silently without it. Stage-path systems
       // below already pass BUFF_REGISTRY.
       BUFF_REGISTRY,
-      undefined,
       undefined,
       undefined,
       this.onSkillCast,
@@ -441,10 +441,15 @@ export class GameManagerTurnBattleOps {
       const readyActor = this.turnBattleSystem.tickPacing(battle, false)
 
       if (readyActor !== null) {
+        // Task 11 — a queued repeat/multicast execution is NOT a turn
+        // choice: manual mode must not park it awaiting input (the cast
+        // was already committed; the follow-up resolves automatically).
+        const isQueuedExecution = this.turnBattleSystem.isPendingQueuedExecution(readyActor.id)
+
         this.turnToken.claim({
           actorId: readyActor.id,
           isPlayerTeam: battle.players.includes(readyActor),
-          manualMode: this.presentationOps.runtime.isBattleManualMode(),
+          manualMode: isQueuedExecution ? false : this.presentationOps.runtime.isBattleManualMode(),
         })
 
         if (this.turnToken.getState() === 'AWAITING_INPUT') {
@@ -858,9 +863,13 @@ export class GameManagerTurnBattleOps {
     const playerEntity = playerToCombatEntity(
       player,
       playerStats,
-      this.deps.getSkillRuntimeStats(player),
       this.deps.getSkillLevels(),
     )
+
+    // Task 8 — snapshot the query-derived The cap (truong_the nodes,
+    // 'no' route). Non-phap_tu paths resolve to MAX_THE; the field
+    // stays the clamp source for this battle instance only.
+    playerEntity.maxThe = this.deps.resolvePlayerMaxThe(player)
 
     this.startBattle(playerEntity, enemy)
 
@@ -1050,6 +1059,15 @@ export class GameManagerTurnBattleOps {
     this.rewardOps.resetRewardState()
     this.presentationOps.runtime.resetPendingState()
 
+    // Task 8 (INV-14) — players are carried wholesale (same entity
+    // objects, HP/resources carry over), but battle-scoped resources do
+    // NOT carry: a new cycle is a new battle instance for currentThe —
+    // zero it on every carried entity (Bat Kiem included — shared
+    // lifecycle contract).
+    for (const participant of previous.players) {
+      resetBattleScopedResources(participant.entity)
+    }
+
     this.turnBattle = {
       players: previous.players,
       enemies: [],
@@ -1092,7 +1110,6 @@ export class GameManagerTurnBattleOps {
           GENERIC_PHYSICAL_BASIC,
         )
       },
-      REACTION_PATH_POOL, // Phase A4 - marker special's 2-pick pool now live
       new TurnReactionManager(this.deps.eventBus),
       this.onSkillCast,
       this.liveStatModifiers,
@@ -1140,6 +1157,13 @@ export class GameManagerTurnBattleOps {
       this.presentationOps.runtime.resetPendingState()
       this.turnBattleStartedAtMs = Date.now()
 
+      // Task 8 (INV-14) — a fresh stage reuses the previous battle's
+      // player participants wholesale; battle-scoped resources still
+      // reset: the new stage IS a new battle instance for currentThe.
+      for (const participant of this.turnBattle.players) {
+        resetBattleScopedResources(participant.entity)
+      }
+
       // Despawn the bootstrap enemy from EnemySystem too (not only
       // turnBattle.enemies) so victory-despawn assertions stay clean.
       for (const bootstrap of this.turnBattle.enemies) {
@@ -1182,7 +1206,6 @@ export class GameManagerTurnBattleOps {
             GENERIC_PHYSICAL_BASIC,
           )
         },
-        REACTION_PATH_POOL, // Phase A4 - marker special's 2-pick pool now live
         new TurnReactionManager(this.deps.eventBus),
         this.onSkillCast,
         this.liveStatModifiers,

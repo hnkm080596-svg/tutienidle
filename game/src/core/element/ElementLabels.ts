@@ -11,8 +11,8 @@ export const ELEMENT_LABELS: Record<ElementType, string> = {
 }
 
 // Màu đặc trưng từng hành — token --el-* (xem assets/theme.css). Trích
-// từ CharacterPanel.vue, dùng chung với ElementLoadoutPicker.vue/
-// NodeTreePanel.vue (Pháp Tu Redesign, magicpath) để không lặp map.
+// từ CharacterPanel.vue, dùng chung với NodeTreePanel.vue (Pháp Tu
+// Redesign, magicpath) để không lặp map.
 export const ELEMENT_COLOR_VARS: Record<ElementType, string> = {
   wood: 'var(--el-wood)',
   fire: 'var(--el-fire)',

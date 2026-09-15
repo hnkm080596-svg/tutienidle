@@ -60,6 +60,206 @@ export const CORE_SKILLS: Skill[] = [
     equipped: false,
   },
 
+  // Phap Tu Reimagined Task 2 — the two mortal-path actives learned
+  // alongside tram at character creation. Both level ONLY by cast count
+  // (CAST_LEVELING_THRESHOLDS; upgradeSkill rejects them, INV-9).
+  // linh_bao Lv3 (10000 casts) is the phap_tu_an ritual gate; its
+  // primordial hit "ignores all defenses" like the Hon Nguyen stat.
+  {
+    id: 'linh_bao',
+
+    name: 'Linh Bạo',
+
+    // Spec §11 discoverability hint — the one in-game tell that pushing
+    // Linh Bao to its limit BEFORE the Initiation Ritual opens a road
+    // others cannot see (phap_tu_an). No locked card tease anywhere.
+    description: 'Tụ linh khí bùng nổ, bỏ qua mọi phòng thủ. Nghe đồn kẻ đẩy nó đến cực hạn trước Nghi Lễ Nhập Môn sẽ thấy một con đường người khác không thấy.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 3,
+
+    experience: 0,
+
+    totalExperience: 0,
+
+    cooldown: 1,
+
+    target: 'enemy',
+
+    effects: [],
+
+    triggers: [
+      {
+        trigger: 'onCast',
+        actions: [
+          {
+            type: 'dealDamage',
+
+            value: 1,
+
+            damageType: 'primordial',
+          },
+        ],
+      },
+    ],
+
+    execution: { kind: 'attack_speed' },
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'huy_quyen',
+
+    name: 'Huy Quyền',
+
+    description: 'Một quyền đơn giản, không tốn tài nguyên.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 3,
+
+    experience: 0,
+
+    totalExperience: 0,
+
+    cooldown: 1,
+
+    target: 'enemy',
+
+    effects: [],
+
+    triggers: [
+      {
+        trigger: 'onCast',
+        actions: [
+          {
+            type: 'dealDamage',
+
+            value: 1,
+
+            damageType: 'physical',
+          },
+        ],
+      },
+    ],
+
+    execution: { kind: 'attack_speed' },
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // ------------------------------------------------------------------
+  // Phap Tu An kit (Task 7, phap-tu-reimagined) — DATA SHELLS only:
+  // ids, slots, targeting, labels for the ritual grant. Resolution
+  // semantics (composite element pick / repeat / multicast) land in the
+  // An-resolution task — the payloads below are placeholders.
+  // ------------------------------------------------------------------
+  {
+    id: 'van_phap_tuy_tam',
+
+    name: 'Vạn Pháp Tùy Tâm',
+
+    description: 'Vạn pháp tùy tâm — mỗi đòn hóa thành một nguyên tố bất định.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    cooldown: 1,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 1,
+
+        damageType: 'primordial',
+      },
+    ],
+
+    execution: { kind: 'attack_speed' },
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'da_phap_lien_tuyen',
+
+    name: 'Đa Pháp Liên Tuyên',
+
+    description: 'Đa pháp liên tuyên — pháp thuật cơ bản bắn ra liên tiếp nhiều lần.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    cooldown: 4,
+
+    target: 'enemy',
+
+    effects: [],
+
+    execution: { kind: 'cooldown' },
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'ngo_dao_hon_don',
+
+    name: 'Ngộ Đạo Hỗn Độn',
+
+    // Spec §3.3 + §11 — the HUD renders this as a passive emblem (no
+    // active button); the tooltip must explain basic-slot-only multicast.
+    description: 'Ngộ đạo hỗn độn — chỉ đòn ở ô Thường (Vạn Pháp Tùy Tâm) mới có thể tự phân luồng (multicast). Đa Pháp Liên Tuyên không kích hoạt.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    cooldown: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
   // Há»a Tu (Plans/magicpathgeneral + Plans/FirePath, 2026-08-21) â€”
   // THAY Háº²N kit 3-skill+1-passive cÅ© (xich_viem_chuong/viem_hai/
   // bao_viem/passive_bao_viem_focus, Ä‘Ã£ xoÃ¡). Framework má»›i: 1 Active
@@ -129,9 +329,6 @@ export const CORE_SKILLS: Skill[] = [
     // Äiá»ƒm khÃ¡c biá»‡t DUY NHáº¤T cá»§a Há»a Cáº§u Thuáº­t vá»›i 4 hÃ nh kia lÃ  Ä‘Æ°á»£c
     // tá»± há»c + trang bá»‹ sáºµn (cost 0, xem GameManager.chooseCultivationPath()).
 
-    // Há»a Tu Pure (Plans/FirePath má»¥c 7) â€” má»—i láº§n cast +hoaTheGainPerCast
-    // (0 náº¿u chÆ°a mua "Tá»¥ Há»a"), xem BattleSystem.castSkill().
-    grantsHoaThePerCast: true,
 
     resourceType: 'none',
 
@@ -418,17 +615,6 @@ export const CORE_SKILLS: Skill[] = [
         buffId: 'chay_mau',
 
         ailmentChance: 0.4,
-
-        // Kim Tu TrÃºc CÆ¡ Pure (Plans/KimPath má»¥c 9/11, 2026-08-21) â€” CHá»ˆ
-        // roll THÃ€NH CÃ”NG (Xuáº¥t Huyáº¿t tháº­t sá»± Ã¡p Ä‘Æ°á»£c) má»›i +Kim Tháº¿, xem
-        // SkillEffectSystem.ts's apply(), case 'ailment'. 0 náº¿u chÆ°a mua
-        // Major "Kim Tháº¿" (kimTheGainPerProc ná»n 0).
-        grantsKimThePerProc: true,
-
-        // Plans/magicpathgeneral Phase 13 (2026-08-21) â€” Huyáº¿t PhÃ¡,
-        // CÃ™NG Ä‘iá»u kiá»‡n roll vá»›i Kim Tháº¿ á»Ÿ trÃªn, 2 counter Ä‘á»™c láº­p.
-        // 0 náº¿u chÆ°a mua node "Huyáº¿t PhÃ¡" (huyetPhaGainPerProc ná»n 0).
-        grantsHuyetPhaPerProc: true,
       },
     ],
 
@@ -451,9 +637,6 @@ export const CORE_SKILLS: Skill[] = [
   // (GameManager.chooseCultivationPath()). ailmentChance Cá» Äá»ŠNH 100%
   // â€” Thá»• KHÃ”NG cÃ³ Earth Application Chance/Petrify Chance/Minor nÃ o
   // chá»‰nh tá»‰ lá»‡ nÃ y (PoisonPath-style, giá»‘ng Má»™c), khÃ¡c Há»a/Thá»§y's
-  // AOE theo grid, má»Ÿ báº±ng Pure major. `earthPureAreaBehavior: true` â€”
-  // GHI ÄÃˆ Ä‘Æ¡n-má»¥c-tiÃªu thÃ nh AOE+Knockback tháº­t khi mua Major "Thá»•
-  // Tháº¿" (xem SkillEffectSystem.ts's apply(), case 'damage').
   {
     id: 'tho_cau_thuat',
 
@@ -491,8 +674,6 @@ export const CORE_SKILLS: Skill[] = [
         manaScalingRatio: 0.001,
 
         attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
-
-        earthPureAreaBehavior: true,
       },
 
       {
@@ -509,11 +690,6 @@ export const CORE_SKILLS: Skill[] = [
     resourceType: 'none',
 
     buildTag: 'core',
-
-    // Thá»• Tu TrÃºc CÆ¡ Pure (Plans/EarthPath má»¥c XV) â€” 0 náº¿u chÆ°a mua
-    // Major "Thá»• Tháº¿" (thoTheGainPerCast ná»n 0), xem BattleSystem.
-    // castSkill().
-    grantsThoThePerCast: true,
 
     unlocked: false,
 

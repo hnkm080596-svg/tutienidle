@@ -60,7 +60,7 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
 
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
-    player.nodeLevels['lap_dao_thuan_wood'] = 1
+    player.phapTu = { element: 'wood', route: null }
 
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerEnemyTemplates([makeDummyEnemy()])

@@ -39,7 +39,7 @@ export function buildArtifactCombatPresentation(
     return EMPTY_STATE
   }
 
-  const rotation = NGU_HANH_ROTATION_ORDER.filter((element) => runtime.snapshot.equippedElements.includes(element))
+  const rotation = NGU_HANH_ROTATION_ORDER.filter((element) => runtime.snapshot.rotationElements.includes(element))
   const nextElement = rotation.length > 0 ? rotation[runtime.elementCursor % rotation.length] : undefined
 
   const cooldownTotal = getArtifactCycleSeconds(runtime)

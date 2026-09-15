@@ -62,7 +62,7 @@ describe('toTurnSkillDefinition', () => {
   })
 
   it('maps an ultimate with consume-for-damage fields (Detonate/ward-burst)', () => {
-    // Find an ultimate in CHAIN_SKILL_IDS with consumesAilmentId — fall back
+    // Find an ultimate in PHAP_TU_KIT_IDS with consumesAilmentId — fall back
     // to a synthetic skill if none carries it, so this test proves the
     // mapping itself regardless of content drift.
     const manager = new SkillManager()
@@ -264,28 +264,18 @@ describe('toTurnSkillDefinition', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)
 
-      // diem_kim_thuat debuff carries proc-grant counters with no
-      // turn-engine consumer.
-      const metal = structuredClone(SKILLS.find((s) => s.id === 'diem_kim_thuat')!)
-      manager.add(metal)
+      // van_moc_lan_doc carries the spread fields the turn engine cannot
+      // execute (spreadsAilmentId/spreadStackPercent/spreadRefreshesPrimary).
+      const wood = structuredClone(SKILLS.find((s) => s.id === 'van_moc_lan_doc')!)
+      manager.add(wood)
 
-      const metalReport = collectUnsupportedSkillSemantics(
-        metal,
-        skillSystem.getEffectiveSkill(metal),
+      const woodReport = collectUnsupportedSkillSemantics(
+        wood,
+        skillSystem.getEffectiveSkill(wood),
       )
 
-      expect(metalReport).toContain('effect.grantsKimThePerProc')
-      expect(metalReport).toContain('effect.grantsHuyetPhaPerProc')
-
-      // tho_cau_thuat carries the per-cast grant + area-behavior flags.
-      const earth = structuredClone(SKILLS.find((s) => s.id === 'tho_cau_thuat')!)
-      const earthReport = collectUnsupportedSkillSemantics(
-        earth,
-        skillSystem.getEffectiveSkill(earth),
-      )
-
-      expect(earthReport).toContain('effect.earthPureAreaBehavior')
-      expect(earthReport).toContain('skill.grantsThoThePerCast')
+      expect(woodReport).toContain('effect.spreadsAilmentId')
+      expect(woodReport).toContain('effect.spreadStackPercent')
 
       // A clean kit reports nothing.
       const tram = structuredClone(SKILLS.find((s) => s.id === 'tram')!)

@@ -1,164 +1,159 @@
-// Turn-based port of ReactionManager.ts (Phase A1, 2026-09-07) — verbatim
-// logic with the established turn-engine type substitutions, following the
-// BuffPool/BuffSystem port precedent (no import from the legacy
-// file). Buff pools are passed as BuffPool and wrapped in
-// BuffSystem at each use site. The legacy spawnLavaZone parameter is
-// DROPPED entirely: the turn-based engine has no hazard-zone system
-// (zone = DoT via AOE + buff, roadmap mục 9.3) — appliesAilmentId:
-// 'dung_nham' alone already produces the DoT.
+// Phap Tu Reimagined Task 12 — spec §6 sinh/khac RULE engine. The 10
+// authored ELEMENT_REACTIONS pairs are retired; every unordered
+// distinct-element pair resolves through exactly one of two rule
+// classes read from WuxingRelations (the one authority for pair
+// relations):
+//
+//   khac pair -> KHAC CHE: consume BOTH instances; burst =
+//     consumedStacks x elementalBasePower(source, overcomer)
+//     x KHAC_CHE_COEFF x (1 + reactionEffectPercent), dealt on the
+//     OVERCOMER element (target's resistance to it applies normally).
+//   sinh pair -> CONG MINH: no consume; the wuxing-direction CHILD
+//     gains potency + duration on its remaining life (v1 locked:
+//     amp only — no zone, no self-buff).
+//
+// One application event resolves in TWO PHASES (INV-17): every sinh
+// pair first, then every khac pair, each in canonical ELEMENT_ORDER —
+// generation before destruction. A khac resolution consumes the
+// newcomer, which ends its remaining pairs. Pair granularity is the
+// incumbent ELEMENT (<=4 distinct elements); the OLDEST instance of
+// each element is the one consumed (BuffPool insertion order, the
+// ARCH-009 contract).
 import type { CombatEntity } from '../../combat/CombatEntity'
-import { getSkillRuntimeStat } from '../../skill/SkillRuntimeStats'
 import type { CombatSystem } from '../../combat/CombatSystem'
-import { BuffSystem } from '../../buff/BuffSystem'
 import type { BuffPool } from '../../buff/BuffPool'
-import type { BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { Buff, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { ElementType } from '../../element/ElementType'
 import type { EventBus } from '../../events/EventBus'
 import { elementalBasePower } from '../../combat/ElementDamageCalculator'
-import { ELEMENT_REACTIONS } from '../../element/ElementReaction'
+import { getResistanceMitigationPercent } from '../../combat/Resistance'
+import { ELEMENT_ORDER } from '../../element/ElementLabels'
+import { khacOvercomer, relationOf, sinhBeneficiary } from '../../element/WuxingRelations'
 
-// Ported verbatim from ReactionManager.ts's MAX_HP_REDUCTION_CAP_PERCENT.
-const MAX_HP_REDUCTION_CAP_PERCENT = 0.3
+// First-pass tuning constants (plan constants block) — KHAC_CHE_COEFF
+// lives here per the plan; CONG_MINH_AMP is the v1 sinh amp (potency
+// and remaining-duration multiplier), unpinned by spec and flagged for
+// the balance pass.
+export const KHAC_CHE_COEFF = 1.0
+export const CONG_MINH_AMP = 0.5
 
-/**
- * Turn-based port of ReactionManager (Combat Rework Phase 6). Stateless —
- * scans the buffs CURRENTLY on the target right after a new buff/debuff was
- * successfully applied, finds a pair matching ELEMENT_REACTIONS, and fires
- * it (at most once per call). Called from TurnBattleSystem's ailment
- * application hook (applyActionImpact) — mirrors the legacy SkillEffectSystem
- * call shape: roll chance -> apply -> check reaction against the just-applied
- * id.
- */
+interface ElementIncumbent {
+  buff: Buff
+  element: ElementType
+  order: number
+}
+
+function elementOf(
+  buffRegistry: BuffDefinitionCatalog,
+  buffId: string,
+): ElementType | undefined {
+  try {
+    return buffRegistry.get(buffId).element
+  } catch {
+    return undefined
+  }
+}
+
 export class TurnReactionManager {
   constructor(private readonly eventBus: EventBus) {}
 
+  /**
+   * Called once per successful ailment application (the "newcomer").
+   * Provenance-agnostic incumbents — a pair forms on coexisting
+   * ELEMENTS regardless of applier; initiation gating (player-origin
+   * only, INV-8/D21) is the CALLER's job (applySkillAilments).
+   */
   checkAndTrigger(
     targetBuffs: BuffPool,
     newBuffId: string,
     source: CombatEntity,
     target: CombatEntity,
     combatSystem: CombatSystem,
-    buffRegistry?: BuffDefinitionCatalog,
-    sourceBuffs?: BuffPool,
-    // Ported verbatim from ReactionManager's reactionKeepChance (Phan Phac
-    // talent) — keep-both-sides roll on the standard consume branch.
-    reactionKeepChance = 0,
-  ) {
-    const targetBuffSystem = new BuffSystem(targetBuffs)
+    buffRegistry: BuffDefinitionCatalog,
+  ): void {
+    const newcomerElement = elementOf(buffRegistry, newBuffId)
+    if (!newcomerElement) return
 
-    // ARCH-009 (M9) — match on the ingredient INSTANCE, not just the buff
-    // id: `existing` keeps its real sourceId so consumption removes the
-    // exact ingredient that matched (a bong applied by the player is not
-    // the same ingredient as one applied by a companion). When several
-    // sources supply a valid ingredient, the OLDEST applied instance is
-    // consumed — BuffPool preserves insertion order, so the scan below
-    // hits it first.
-    for (const existing of targetBuffs.getAll()) {
-      if (existing.id === newBuffId) {
-        continue
+    // The just-applied ingredient instance — ARCH-009 identity is
+    // (id, sourceId). If the application left no live instance
+    // (convertsToId path, immediate removal) there is nothing to pair.
+    const newcomer = targetBuffs.getFromSource(newBuffId, source.id)
+    if (!newcomer) return
+
+    // Oldest live instance per distinct element, excluding the newcomer
+    // and anything sharing its element (same-element pairs never react).
+    const incumbents = new Map<ElementType, ElementIncumbent>()
+    for (const buff of targetBuffs.getAll()) {
+      if (buff === newcomer) continue
+
+      const element = elementOf(buffRegistry, buff.id)
+      if (!element || element === newcomerElement || incumbents.has(element)) continue
+
+      incumbents.set(element, { buff, element, order: ELEMENT_ORDER.indexOf(element) })
+    }
+
+    const pairs = [...incumbents.values()].sort((a, b) => a.order - b.order)
+
+    // Phase 1 — every CONG MINH (sinh) pair in ELEMENT_ORDER.
+    for (const { buff: incumbent, element } of pairs) {
+      if (relationOf(newcomerElement, element) !== 'sinh') continue
+
+      const child =
+        sinhBeneficiary(newcomerElement, element) === newcomerElement ? newcomer : incumbent
+
+      for (const effect of child.effects) {
+        if (effect.type !== 'dot') continue
+        if (effect.damagePerTurn !== undefined) effect.damagePerTurn *= 1 + CONG_MINH_AMP
+        if (effect.damagePerSecond !== undefined) effect.damagePerSecond *= 1 + CONG_MINH_AMP
       }
-
-      const reaction = ELEMENT_REACTIONS[newBuffId]?.[existing.id] ?? ELEMENT_REACTIONS[existing.id]?.[newBuffId]
-
-      if (!reaction) {
-        continue
-      }
-
-      const newBuffInstance = targetBuffs.getFromSource(newBuffId, source.id)
-      const dotEffect = newBuffInstance?.effects.find(
-        (e): e is Extract<typeof e, { type: 'dot' }> => e.type === 'dot',
-      )
-      const powerElement = dotEffect?.element
-
-      const sourcePower =
-        reaction.powerScalingRatio && powerElement && powerElement !== 'physical'
-          ? elementalBasePower(source, powerElement) * reaction.powerScalingRatio
-          : 0
-
-      const realmScalar = 1 + Math.max(0, source.realmIndex) * 1.5
-
-      const flatAndPercentDamage =
-        reaction.baseDamage * realmScalar +
-        sourcePower +
-        (reaction.percentOfTargetCurrentHp ? target.currentHp * reaction.percentOfTargetCurrentHp : 0)
-
-      const reactionDamage = flatAndPercentDamage * (1 + source.stats.reactionEffectPercent)
-
-      combatSystem.applyModifiedDirectDamage(target, reactionDamage, source, 'reaction')
-
-      if (reaction.maxHpReductionPercent) {
-        const alreadyReduced = target.totalMaxHpReductionPercent ?? 0
-
-        const appliedPercent = Math.min(reaction.maxHpReductionPercent, MAX_HP_REDUCTION_CAP_PERCENT - alreadyReduced)
-
-        if (appliedPercent > 0) {
-          target.maxHp = Math.max(1, target.maxHp * (1 - appliedPercent))
-          combatSystem.vitals.clampToMaxHp(target, 'reaction', source.id)
-          target.totalMaxHpReductionPercent = alreadyReduced + appliedPercent
-        }
-      }
-
-      // Consume the matched ingredient by ITS real (id, sourceId) — never
-      // reconstructed from the triggering caster (ARCH-009/AUD-C08).
-      const existingId = existing.id
-      const existingSourceId = existing.sourceId
-
-      if (reaction.appliesBuffId && sourceBuffs && buffRegistry) {
-        targetBuffs.removeInstance(existingId, existingSourceId)
-        targetBuffs.removeInstance(newBuffId, source.id)
-
-        new BuffSystem(sourceBuffs).apply(buffRegistry.get(reaction.appliesBuffId), source, source, buffRegistry)
-      } else if (reaction.appliesAilmentId && buffRegistry) {
-        targetBuffs.removeInstance(existingId, existingSourceId)
-        targetBuffs.removeInstance(newBuffId, source.id)
-
-        const definition = buffRegistry.get(reaction.appliesAilmentId)
-
-        targetBuffSystem.apply(definition, source, target, buffRegistry)
-
-        if (source.stats.reactionEffectPercent > 0) {
-          targetBuffSystem.renewWithExtension(
-            reaction.appliesAilmentId,
-            source.id,
-            definition.duration * source.stats.reactionEffectPercent,
-          )
-        }
-      } else {
-        const keptIsExisting = reaction.keepsAilmentId === existingId
-        const keptBuffId = keptIsExisting
-          ? existingId
-          : reaction.keepsAilmentId === newBuffId
-            ? newBuffId
-            : undefined
-
-        const extensionSeconds = getSkillRuntimeStat(source, 'waterReactionExtensionSeconds')
-        if (keptBuffId && extensionSeconds > 0) {
-          if (keptIsExisting) {
-            targetBuffs.removeInstance(newBuffId, source.id)
-            targetBuffSystem.renewWithExtension(existingId, existingSourceId, extensionSeconds)
-          } else {
-            targetBuffs.removeInstance(existingId, existingSourceId)
-            targetBuffSystem.renewWithExtension(newBuffId, source.id, extensionSeconds)
-          }
-        } else if (reactionKeepChance > 0 && Math.random() < reactionKeepChance) {
-          // Keep-both roll succeeded: no mutation, further reactions possible.
-        } else {
-          targetBuffs.removeInstance(existingId, existingSourceId)
-          targetBuffs.removeInstance(newBuffId, source.id)
-        }
-      }
+      child.remainingTurns *= 1 + CONG_MINH_AMP
+      if (child.remainingTime !== undefined) child.remainingTime *= 1 + CONG_MINH_AMP
 
       this.eventBus.emit('reaction', {
         type: 'reaction',
         sourceId: source.id,
         targetId: target.id,
-        name: reaction.name,
-        damage: reactionDamage,
+        name: 'cong_minh',
+        damage: 0,
+      })
+    }
+
+    // Phase 2 — every KHAC CHE (khac) pair in ELEMENT_ORDER. A consumed
+    // newcomer ends its remaining pairs.
+    for (const { buff: incumbent, element } of pairs) {
+      if (relationOf(newcomerElement, element) !== 'khac') continue
+      if (!targetBuffs.hasInstance(newcomer)) break
+      if (!targetBuffs.hasInstance(incumbent)) continue
+
+      const overcomer = khacOvercomer(newcomerElement, element)
+      const consumedStacks = newcomer.stacks + incumbent.stacks
+
+      const rawBurst =
+        consumedStacks *
+        elementalBasePower(source, overcomer) *
+        KHAC_CHE_COEFF *
+        (1 + source.stats.reactionEffectPercent)
+
+      const mitigation = getResistanceMitigationPercent(
+        target.stats[`${overcomer}Resistance`],
+        source.stats[`${overcomer}Penetration`],
+      )
+      const burst = rawBurst * (1 - mitigation)
+
+      targetBuffs.removeInstance(incumbent.id, incumbent.sourceId)
+      targetBuffs.removeInstance(newcomer.id, newcomer.sourceId)
+
+      combatSystem.applyModifiedDirectDamage(target, burst, source, 'reaction')
+
+      this.eventBus.emit('reaction', {
+        type: 'reaction',
+        sourceId: source.id,
+        targetId: target.id,
+        name: 'khac_che',
+        damage: burst,
       })
 
       combatSystem.killIfDead(target, source.id)
-
-      // One newly applied buff triggers AT MOST one reaction.
-      return
     }
   }
 }

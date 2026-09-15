@@ -14,6 +14,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
 import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
+import { getOfferableCultivationPaths } from '@/core/player/CultivationPathSystem'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import type { KiemTuRoute } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
@@ -32,11 +33,24 @@ const cooldownSeconds = computed(() => {
   return gameManager.tribulationDirector.getCooldownSeconds()
 })
 
-// Liệt kê TẤT CẢ path trong CULTIVATION_PATH_KITS thay vì hardcode 1 —
-// thêm path mới (Thủy/Kim/Thổ Tu sau này) chỉ cần thêm entry vào
-// CultivationPathKit.ts, KHÔNG cần sửa file này (đúng nguyên bản trước
-// khi dời từ CharacterPanel.vue).
-const availablePaths = computed(() => Object.values(CULTIVATION_PATH_KITS))
+// Phap Tu Reimagined (Task 16) — the ritual offers exactly what
+// getOfferableCultivationPaths() decides: phap_tu_an appears ONLY when
+// linh_bao is already Lv3 at ritual time; no locked-card tease when
+// ineligible (spec §11). Offerability is evaluated live per render —
+// eligibility is never stored.
+const availablePaths = computed(() => {
+  stateVersion.value
+
+  return getOfferableCultivationPaths(player.$state).map(id => CULTIVATION_PATH_KITS[id])
+})
+
+// The hidden path's kit — names resolved live from the skill registry
+// so the card never drifts from authored content.
+const AN_KIT_SKILL_IDS = ['van_phap_tuy_tam', 'da_phap_lien_tuyen', 'ngo_dao_hon_don'] as const
+
+const anKitSkillNames = computed(() =>
+  AN_KIT_SKILL_IDS.map(id => gameManager.skillManager.get(id)?.name ?? id),
+)
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
 // (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng
@@ -121,17 +135,38 @@ const routeNameDisplay = computed(() =>
       <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.pathSelection.hint') }}</p>
 
       <div class="quan-khi-panel__choices">
-        <GameButton
-          v-for="kit in availablePaths"
-          :key="kit.id"
-          class="quan-khi-panel__choice"
-          variant="danger"
-          size="sm"
-          :disabled="cooldownSeconds > 0"
-          @click="choosePath(kit.id)"
-        >
-          {{ t('panels.quanKhi.actions.enterPath', { name: kit.name }) }}
-        </GameButton>
+        <template v-for="kit in availablePaths" :key="kit.id">
+          <!-- Sealed hidden-path card (Task 16) — renders ONLY when
+               getOfferableCultivationPaths includes it; names the kit,
+               carries the permanent warning, no node-tree entry point. -->
+          <div v-if="kit.id === 'phap_tu_an'" class="quan-khi-panel__hidden-card">
+            <p class="quan-khi-panel__hidden-title">{{ kit.name }}</p>
+            <p class="quan-khi-panel__hidden-desc">
+              {{ t('panels.quanKhi.sections.hiddenPath.description', { kit: anKitSkillNames.join(' · ') }) }}
+            </p>
+            <p class="quan-khi-panel__hidden-warning">{{ t('panels.quanKhi.sections.hiddenPath.warning') }}</p>
+            <GameButton
+              class="quan-khi-panel__choice"
+              variant="danger"
+              size="sm"
+              :disabled="cooldownSeconds > 0"
+              @click="choosePath(kit.id)"
+            >
+              {{ t('panels.quanKhi.actions.enterPath', { name: kit.name }) }}
+            </GameButton>
+          </div>
+
+          <GameButton
+            v-else
+            class="quan-khi-panel__choice"
+            variant="danger"
+            size="sm"
+            :disabled="cooldownSeconds > 0"
+            @click="choosePath(kit.id)"
+          >
+            {{ t('panels.quanKhi.actions.enterPath', { name: kit.name }) }}
+          </GameButton>
+        </template>
       </div>
     </div>
 
@@ -155,7 +190,9 @@ const routeNameDisplay = computed(() =>
     <ConfirmModal
       :open="pendingPathId !== null"
       :title="t('panels.quanKhi.messages.confirmPathTitle')"
-      :message="t('panels.quanKhi.messages.confirmPathBody', { name: pendingPathName })"
+      :message="pendingPathId === 'phap_tu_an'
+        ? t('panels.quanKhi.messages.confirmPathHiddenBody', { name: pendingPathName })
+        : t('panels.quanKhi.messages.confirmPathBody', { name: pendingPathName })"
       danger
       @confirm="confirmChoosePath"
       @cancel="cancelChoosePath"
@@ -230,5 +267,38 @@ const routeNameDisplay = computed(() =>
   font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--gold-500);
+}
+
+/* Sealed hidden-path card (Task 16) — distinct frame so the ritual
+   reads it as a road others cannot see, not a third equal option. */
+.quan-khi-panel__hidden-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--ink-800);
+  border: 1px solid var(--gold-700);
+  border-radius: var(--radius-md);
+}
+
+.quan-khi-panel__hidden-title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--gold-700);
+}
+
+.quan-khi-panel__hidden-desc {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.quan-khi-panel__hidden-warning {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--crimson);
 }
 </style>

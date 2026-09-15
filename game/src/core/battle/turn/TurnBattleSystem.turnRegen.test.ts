@@ -53,11 +53,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
     currentMp: stats.maxMp,
     currentSwordIntent: 0,
     currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
     currentThe: 0,
-    timeSinceLastBleedProc: 0,
     tuLucActive: false,
     tuLucElapsed: 0,
     tuLucDamageTakenPercent: 0,
@@ -392,6 +388,9 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
         chargeTurns: 2,
         resourceType: 'the',
         resourceCost: MAX_THE,
+        // Task 8 — the finisher gain is authored on the skill, not
+        // inferred from the ultimate slot.
+        theGainOnLandedCast: THE_GAIN_PER_FINISHER,
         damage: { kind: 'physical', multiplier: 1 },
         targeting: { shape: 'single' },
       },

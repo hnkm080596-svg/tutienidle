@@ -25,43 +25,6 @@ export const MAX_SWORD_INTENT = 9999
 // nhanh mỗi đòn cận chiến, không phải theo missile bắn xa.
 export const MAX_MOMENTUM = 100
 
-// Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — Hỏa Thế tích theo
-// LƯỢT CAST (Skill.grantsHoaThePerCast, xem BattleSystem.castSkill()),
-// KHÔNG theo đòn trúng như Momentum/Kiếm Ý. "5 tầng" đúng số spec gốc
-// (thang điểm nhỏ vì mỗi tầng tương lai sẽ mạnh, không cần pool lớn
-// như Kiếm Ý 9999).
-export const MAX_HOA_THE = 5
-
-// Thổ Tu Pure (Plans/EarthPath mục XV, 2026-08-21) — Thổ Thế tích theo
-// LƯỢT CAST (Skill.grantsThoThePerCast, xem BattleSystem.castSkill()),
-// cùng thang điểm nhỏ với Hỏa Thế ("Max: 5 tầng" đúng số spec gốc) —
-// KHÔNG tự giảm theo thời gian (doc không nhắc decay).
-export const MAX_THO_THE = 5
-
-// Kim Tu Trúc Cơ Pure (Plans/KimPath mục 9/11, 2026-08-21) — Kim Thế
-// tích theo ROLL THÀNH CÔNG (Skill.grantsKimThePerProc, xem
-// SkillEffectSystem.ts's apply()), cùng thang điểm nhỏ với Hỏa/Thổ Thế.
-// stats.kimTheMaxStacksBonus (node "Kim Uyên") cộng thêm lên trên nền
-// này — xem BattleSystem.castSkill()'s Math.min().
-export const MAX_KIM_THE = 5
-
-// Kim Tu Trúc Cơ Pure (mục 12, "decay chậm") — không proc Xuất Huyết
-// mới trong ngần này giây thì mất 1 tầng Kim Thế (KHÔNG phải continuous
-// per-second như HOA_THE_BASE_DECAY_PER_SECOND) — xem
-// BattleSystem.updateKimThe().
-export const KIM_THE_DECAY_INTERVAL_SECONDS = 5
-
-// Plans/magicpathgeneral Phase 13 (2026-08-21) — Huyết Phá: charge
-// tích theo ROLL Xuất Huyết THÀNH CÔNG y hệt Kim Thế (Skill.
-// grantsHuyetPhaPerProc, cùng nhánh case 'ailment' trong
-// SkillEffectSystem.ts's apply()), CHẠM NGƯỠNG này thì consume/reset
-// về 0 + trigger burst damage MỘT LẦN (xem CombatEntity.currentHuyetPha,
-// CombatSystem's applyDotDamage() cho phần damage — KHÔNG mutate 1
-// debuff/ailment cũ nào, burst là 1 tick damage riêng, đúng invariant
-// Phase 16 "reaction-like payoff, không sửa trực tiếp state cũ"). "Max:
-// 5 tầng" theo đúng số Plans/KimPath mục 13/15 để lại.
-export const MAX_HUYET_PHA = 5
-
 // Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y) — 2 tài nguyên
 // route Kiếm Tu sau khi chốt đường ở Quán Khí:
 //   - Kiếm Thế (route Kiếm Trận): pool TRONG TRẬN 0-100, reset mỗi

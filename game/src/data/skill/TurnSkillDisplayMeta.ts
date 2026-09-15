@@ -83,17 +83,6 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Đòn đặc biệt của Thủy Giáp Long — sóng nước dâng quét ngang, mỗi 4 lượt.',
   },
 
-  // Pháp Tu Reaction Path (TurnReactionPathSkills.ts). special là MARKER
-  // definition — TurnBattleSystem thay bằng 2 pick random từ pool elemental.
-  phap_tu_reaction_special: {
-    name: 'Ngũ Hành Luân Chuyển',
-    description: 'Đòn đặc biệt Pháp Tu — tung 2 thuật ngũ hành khác nhau cùng lượt, có thể cộng hưởng phản ứng.',
-  },
-  phap_tu_reaction_ultimate: {
-    name: 'Ngũ Hành Hợp Nhất',
-    description: 'Tuyệt kỹ Pháp Tu — tự cường hóa sát thương phản ứng nguyên tố trong 4 lượt.',
-  },
-
   // ---------------------------------------------------------------------
   // Companion skills (companion-gacha Task 11, data/companion/Companions.ts)
   // - ids follow the <definitionId>_<slot> convention; names/descriptions
@@ -229,6 +218,22 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     name: 'Cửu Thiên Tinh Lạc',
     description: 'Cửu thiên vãn tinh lạc xuống ba cột, hút sinh cơ về bản thân.',
   },
+
+  // Phap Tu An kit (Task 16) — dong bo tu Skills.ts; ngo_dao_hon_don's
+  // description must carry the basic-slot-only multicast clause because
+  // its HUD emblem tooltip is the only place the rule surfaces.
+  van_phap_tuy_tam: fromSkills('van_phap_tuy_tam', {
+    name: 'Vạn Pháp Tùy Tâm',
+    description: 'Mỗi đòn hóa thành một nguyên tố bất định.',
+  }),
+  da_phap_lien_tuyen: fromSkills('da_phap_lien_tuyen', {
+    name: 'Đa Pháp Liên Tuyên',
+    description: 'Pháp thuật cơ bản bắn ra liên tiếp nhiều lần.',
+  }),
+  ngo_dao_hon_don: fromSkills('ngo_dao_hon_don', {
+    name: 'Ngộ Đạo Hỗn Độn',
+    description: 'Chỉ đòn ở ô Thường (Vạn Pháp Tùy Tâm) có thể tự phân luồng — Đa Pháp Liên Tuyên không kích hoạt.',
+  }),
 }
 
 /** Lookup an toàn — id không có trong map trả undefined (caller fallback). */
