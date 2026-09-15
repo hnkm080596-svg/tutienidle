@@ -94,6 +94,31 @@ export interface NodeEffect {
   // THUẦN DATA trong NodeSystem). Data (Task 8) tự đảm bảo mutex: 2
   // node biến thể đối diện gate nhau bằng prerequisite excludesNode.
   selectsSpecialization?: { skillId: string; specializationId: string }
+
+  // Phap Tu Reimagined (Task 6) — The-resource lane scoped to a
+  // specific turn skill. NOT SkillResourceStatKey (that global runtime
+  // bag would lose the skillId); aggregated per authored skill by
+  // NodeSystem.aggregateTurnSkillResourceModifiers(). Values apply per
+  // node level (level L contributes value x L).
+  turnSkillResourceModifiers?: TurnSkillResourceModifier[]
+
+  // Phap Tu Reimagined (Task 6) — Truong The nodes: raise the
+  // battle-scoped The cap by this amount per node level. Consumed by
+  // resolveMaxThe(); maxThe is never persisted on PlayerData.
+  theCapPerLevel?: number
+}
+
+/**
+ * The-resource modifier for ONE authored turn skill (see NodeEffect.
+ * turnSkillResourceModifiers). theGainOnLandedCast = The granted once
+ * per cast that lands >=1 target; theGainOnCrit = once per crit cast.
+ */
+export interface TurnSkillResourceModifier {
+  skillId: string
+
+  theGainOnLandedCast?: number
+
+  theGainOnCrit?: number
 }
 
 /** 9 loại on-hit kiếm trận (spec mục 4) — mở theo cấp trận 2→9. */

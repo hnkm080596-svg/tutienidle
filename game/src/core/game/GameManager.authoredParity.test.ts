@@ -99,7 +99,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
-    player.nodeLevels['lap_dao_thuan_wood'] = 1
+    player.phapTu = { element: 'wood', route: null }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('doc_chuong')
@@ -117,7 +117,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
-    player.nodeLevels['lap_dao_thuan_fire'] = 1
+    player.phapTu = { element: 'fire', route: null }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('hoa_cau_thuat')
@@ -175,7 +175,7 @@ describe('ARCH-008 — authored buff duration rides appliesBuff.duration', () =>
     const { gameManager, combatSource } = makeManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
-    player.nodeLevels['lap_dao_thuan_water'] = 1
+    player.phapTu = { element: 'water', route: null }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('thanh_tuyen_duong_linh')

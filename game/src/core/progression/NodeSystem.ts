@@ -1,5 +1,5 @@
 import type { PlayerData } from '../player/Player'
-import type { NodePrerequisite, ProgressionNode, SkillModifier } from './ProgressionNode'
+import type { NodePrerequisite, ProgressionNode, SkillModifier, TurnSkillResourceModifier } from './ProgressionNode'
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
@@ -93,13 +93,30 @@ export function isNodeRouteActive(player: PlayerData, node: ProgressionNode): bo
   return node.routeTag === undefined || player.phapTu.route === node.routeTag
 }
 
+/**
+ * Phap Tu Reimagined Task 6 — element-branch membership: a node with
+ * elementTag is active only while phapTu.element matches (untagged
+ * nodes are always active). Same gate points as routeTag: aggregators
+ * skip inactive-element nodes, purchase/upgrade reject them. While
+ * phapTu.element is null (pre-selection) every element node counts as
+ * active so selectPhapTuElement can purchase its root — unreachable
+ * branch children still fail their root prerequisite.
+ */
+export function isNodeElementActive(player: PlayerData, node: ProgressionNode): boolean {
+  return (
+    node.elementTag === undefined ||
+    player.phapTu.element === null ||
+    player.phapTu.element === node.elementTag
+  )
+}
+
 /** Đủ điều kiện LĨNH NGỘ (0→1): chưa có level, đủ prereq, đủ Cảm Ngộ cost cấp 1. */
 export function canPurchaseNode(player: PlayerData, node: ProgressionNode): boolean {
   if (getNodeLevel(player, node.id) > 0) {
     return false
   }
 
-  if (!isNodeRouteActive(player, node)) {
+  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
     return false
   }
 
@@ -112,7 +129,7 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
 
 /** Đủ điều kiện NÂNG CẤP (L→L+1): đã lĩnh ngộ, chưa max, đủ Cảm Ngộ. */
 export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boolean {
-  if (!isNodeRouteActive(player, node)) {
+  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
     return false
   }
 
@@ -245,7 +262,7 @@ export function aggregateNodeStatModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
       continue
     }
 
@@ -276,7 +293,7 @@ export function aggregateNodeSkillModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
       continue
     }
 
@@ -286,6 +303,43 @@ export function aggregateNodeSkillModifiers(
 
         statModifiers: entry.statModifiers.map(modifier => scaleModifierForLevel(modifier, level)),
       })
+    }
+  }
+
+  return result
+}
+
+/**
+ * Phap Tu Reimagined Task 6 — aggregate the The-resource lane: for
+ * each authored turn skill, sum node-level-scaled theGainOnLandedCast /
+ * theGainOnCrit across all active nodes. Values contribute
+ * per node level (level L adds value x L). The modifier stays scoped
+ * to its authored skillId — it cannot leak to other elements, Kiem
+ * Tu, or mortal skills.
+ */
+export function aggregateTurnSkillResourceModifiers(
+  registry: { getAll(): ProgressionNode[] },
+
+  player: PlayerData,
+): Map<string, TurnSkillResourceModifier> {
+  const result = new Map<string, TurnSkillResourceModifier>()
+
+  for (const node of registry.getAll()) {
+    const level = getNodeLevel(player, node.id)
+
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
+      continue
+    }
+
+    for (const entry of node.effect.turnSkillResourceModifiers ?? []) {
+      const existing = result.get(entry.skillId) ?? { skillId: entry.skillId }
+
+      existing.theGainOnLandedCast =
+        (existing.theGainOnLandedCast ?? 0) + (entry.theGainOnLandedCast ?? 0) * level
+      existing.theGainOnCrit =
+        (existing.theGainOnCrit ?? 0) + (entry.theGainOnCrit ?? 0) * level
+
+      result.set(entry.skillId, existing)
     }
   }
 

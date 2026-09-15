@@ -81,7 +81,7 @@ function buildHarness(element: 'water' | 'earth', playerSpeed: number): Harness 
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'phap_tu'
-  player.nodeLevels[`lap_dao_thuan_${element}`] = 1
+  player.phapTu = { element, route: null }
   // Speed boost: the player must take >= 3 unhit turns between enemy hits
   // for the Ward delay gate to open inside the real loop.
   player.baseStats = asBaseStats({ ...player.baseStats, speed: playerSpeed })

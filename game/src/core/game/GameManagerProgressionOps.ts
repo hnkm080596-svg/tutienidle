@@ -21,6 +21,8 @@ import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
 import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
+import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
+import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { TemplateRegistry } from './TemplateRegistry'
@@ -113,28 +115,19 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * Phap Tu Thuan He (Task 12, 2026-09-03) - the currently-CHOSEN Thuan
-   * element of the player: purchased `lap_dao_thuan_<el>` keystone at
-   * level 1 (mutex keystone - data guarantees at most 1 element).
-   * undefined = no Lap Dao Thuan / not Phap Tu - chain is not gated, ult
-   * does not detonate.
+   * Phap Tu Reimagined (Task 6B) - the player's chosen Phap Tu element.
+   * PlayerData.phapTu is the sole authority (committed atomically by
+   * selectPhapTuElement); lap_dao_thuan_<el> keystones no longer exist.
+   * undefined = not Phap Tu / element not chosen yet.
    */
-  getPhapTuThuanElement(): ElementType | undefined {
+  getPhapTuElement(): ElementType | undefined {
     const activePlayer = this.deps.getActivePlayer()
 
-    if (!activePlayer) {
+    if (activePlayer?.cultivationPath !== 'phap_tu') {
       return undefined
     }
 
-    for (const element of Object.keys(PHAP_TU_KIT_IDS) as ElementType[]) {
-      const level = activePlayer.nodeLevels[`lap_dao_thuan_${element}`]
-
-      if (level !== undefined && level > 0) {
-        return element
-      }
-    }
-
-    return undefined
+    return activePlayer.phapTu.element ?? undefined
   }
 
   /**
@@ -183,6 +176,16 @@ export class GameManagerProgressionOps {
       return false
     }
 
+    // Phap Tu Reimagined (Task 6) — element roots commit through the
+    // atomic selectPhapTuElement() only; public purchase of a root would
+    // split the element+route invariant (element != null implies route
+    // != null).
+    if (
+      (Object.values(PHAP_TU_ELEMENT_ROOT_IDS) as string[]).includes(nodeId)
+    ) {
+      return false
+    }
+
     const node = this.deps.nodeRegistry.get(nodeId)
 
     if (!purchaseNodeSystem(player, node)) {
@@ -214,6 +217,52 @@ export class GameManagerProgressionOps {
     if (selectsSpec) {
       this.deps.skillSystem.selectSpecialization(selectsSpec.skillId, selectsSpec.specializationId)
     }
+
+    return true
+  }
+
+  /**
+   * Phap Tu Reimagined (Task 6) — the ONLY public writer of
+   * player.phapTu.element. Atomic: validates eligibility + route +
+   * root purchasability FIRST, then purchases the element root through
+   * the generic NodeSystem primitive, applies unlock effects, and
+   * finally commits { element, route }. Any failure leaves phapTu
+   * untouched — element != null implies route != null always.
+   */
+  selectPhapTuElement(element: ElementType, route: PhapTuRoute, player: PlayerData): boolean {
+    if (player.cultivationPath !== 'phap_tu') {
+      return false
+    }
+
+    if (player.phapTu.element !== null || player.phapTu.route !== null) {
+      return false
+    }
+
+    if (route !== 'dot' && route !== 'no') {
+      return false
+    }
+
+    const rootId = PHAP_TU_ELEMENT_ROOT_IDS[element]
+
+    if (!rootId || !this.deps.nodeRegistry.has(rootId)) {
+      return false
+    }
+
+    const root = this.deps.nodeRegistry.get(rootId)
+
+    if (!canPurchaseNodeSystem(player, root)) {
+      return false
+    }
+
+    if (!purchaseNodeSystem(player, root)) {
+      return false
+    }
+
+    for (const skillId of root.effect.unlocksSkillIds ?? []) {
+      this.learnSkill(skillId)
+    }
+
+    player.phapTu = { element, route }
 
     return true
   }
