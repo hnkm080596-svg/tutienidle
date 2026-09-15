@@ -234,6 +234,15 @@ export class GameManagerSaveRestore {
         // and is untouched.
         skill.passiveModifiers = structuredClone(template.passiveModifiers)
         skill.specializations = structuredClone(template.specializations)
+
+        // effects/triggers are the same authored-combat-data class:
+        // nothing mutates them on the instance (progression lives in
+        // level/selectedSpecializationId; specialization overrides ride
+        // on `specializations` above). A save frozen with a stale shell
+        // (e.g. da_phap_lien_tuyen's empty effects[] pre-fix) must
+        // re-derive, not stay broken through every future battle.
+        skill.effects = structuredClone(template.effects)
+        skill.triggers = structuredClone(template.triggers)
       } else {
         migrateLegacySkillStatKeys(skill)
       }

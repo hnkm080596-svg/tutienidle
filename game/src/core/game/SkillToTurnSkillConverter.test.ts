@@ -282,6 +282,22 @@ describe('toTurnSkillDefinition', () => {
       expect(collectUnsupportedSkillSemantics(tram, skillSystem.getEffectiveSkill(tram))).toEqual([])
     })
 
+    it('converts the An special da_phap_lien_tuyen: its placeholder damage survives the strict gate (P14 — a phap_tu_an save crashed startBattle)', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'da_phap_lien_tuyen')!)
+      manager.add(skill)
+
+      const effective = skillSystem.getEffectiveSkill(skill)
+      const turnSkill = toTurnSkillDefinition(skill, effective)
+
+      expect(turnSkill.id).toBe('da_phap_lien_tuyen')
+      expect(turnSkill.cooldownTurns).toBe(4)
+      // Placeholder only — the composite pick + repeatCasts authored by
+      // applyAnKitToSpecial replace the payload at declare time.
+      expect(turnSkill.damage?.kind).toBe('primordial')
+    })
+
     it('fails explicitly with an Error on unsupported effect types', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)

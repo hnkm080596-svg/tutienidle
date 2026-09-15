@@ -674,6 +674,29 @@ describe('stat-key migration on techniques[]/skills[] restore', () => {
     )
   })
 
+  it('frozen skill effects re-derive from the template on restore', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+
+    // Save written while da_phap_lien_tuyen was authored with an empty
+    // effects[] shell — the converter gate then rejects every An battle.
+    // effects is authored data, so restore must re-derive it from the
+    // registered template like execution/targeting/passiveModifiers.
+    const stale = structuredClone(
+      SKILLS.find((skill) => skill.id === 'da_phap_lien_tuyen')!,
+    )
+    stale.effects = []
+    stale.unlocked = true
+
+    manager.saveOps.restoreFromSave(baseSave(player, { skills: [stale] }))
+
+    const restored = manager.skillManager.get('da_phap_lien_tuyen')!
+    expect(restored.effects).toEqual(
+      SKILLS.find((skill) => skill.id === 'da_phap_lien_tuyen')!.effects,
+    )
+    expect(restored.effects.length).toBeGreaterThan(0)
+  })
+
   it('entries with no registered template keep the save object with legacy stat keys remapped', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()

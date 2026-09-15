@@ -82,9 +82,25 @@ None added by this QA run — the implementation already carries the decisive te
 
 ## Gaps and Residual Risk
 
-- P14 visual pass deferred per the isolated-worktree exception: the The bar/threshold marker/route modal/hidden-card visuals are unit-covered but not browser-confirmed. Recommend a `npm run dev` visual sweep at branch finishing (authorized main checkout).
 - Focus-trap gap above (QA-2026-09-15-001).
 - The The-bar marker self-heals next frame after a group `setVisible(false→true)` toggle (≤1 frame of missing tick) — cosmetic, bounded, poll-driven.
+- Gitignored `tests/lab/local/` scratch files (5 files, 10 failures) call `getSkillRuntimeStats` — an API Task 14 deleted intentionally — plus stale stage fixtures. Local bit-rot, not shipped; needs rewrite or deletion by the owner.
+
+## P14 Visual Pass (main checkout, post-merge `eb5f4199`)
+
+Ran `npm run dev` (port 5177) + Playwright against the merged tree, driving state via Pinia internals + the dev `spawnEnemy` helper.
+
+Confirmed visually:
+- Main menu, guest auth, character creation, game world boot — clean.
+- `SkillPathPanel` — all 5 element tabs browsable pre-commit; chain + route badges render.
+- Element-root click → blocking route-pick modal (no dismiss affordance; minor cosmetic: description repeats the route name).
+- Atomic commit `selectPhapTuElement('fire','no')` verified live; route toggle switch `no`→`dot` with correct refund preview (paid 1 → regain 0 / lose 1).
+- The bar — "Thế 118 / 150" violet fill ~79%, threshold marker at fixed 100, brighter armed tint + diamond when `linh_ngo_*` owned. Hidden correctly for `phap_tu_an`.
+- `phap_tu_an` emblem — "Ngộ Đạo Hỗn Độn / BỊ ĐỘNG" gold-framed, non-clickable.
+- An-path battle runs to round 3+ post-fix, zero console errors.
+
+### Defect found and fixed during the pass
+- **P14-DEFECT-1 (was: every `phap_tu_an` battle crashed at start)** — `da_phap_lien_tuyen` was authored with `effects: []`; the strict converter gate rejected it before `applyAnKitToSpecial` could attach the composite pick. Two-part fix: (a) authored an inert primordial placeholder damage on the skill (same convention as `van_phap_tuy_tam`); (b) `GameManagerSaveRestore` now re-derives `effects`/`triggers` from the registered template on restore — saves frozen with the stale shell self-heal instead of crashing every battle. Regression tests: `SkillToTurnSkillConverter.test.ts` (converter accepts the shell), `GameManagerSaveRestore.boundary.test.ts` (frozen effects re-derive).
 
 ## Pre-existing Failures
 

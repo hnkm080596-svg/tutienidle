@@ -221,7 +221,19 @@ export const CORE_SKILLS: Skill[] = [
 
     target: 'enemy',
 
-    effects: [],
+    // Placeholder damage (same convention as van_phap_tuy_tam) — the
+    // strict Skill->TurnSkill gate requires a damage/debuff effect on a
+    // non-self skill; applyAnKitToSpecial replaces the payload with the
+    // composite pick + repeatCasts at battle build.
+    effects: [
+      {
+        type: 'damage',
+
+        value: 1,
+
+        damageType: 'primordial',
+      },
+    ],
 
     execution: { kind: 'cooldown' },
 
