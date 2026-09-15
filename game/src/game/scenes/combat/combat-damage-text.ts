@@ -29,7 +29,13 @@ export class CombatDamageText {
   handleDamageEvent(event: CombatEvent) {
     const target = this.scene.spriteFor(event.targetId)
 
-    if (!target || event.value === undefined || event.value <= 0) {
+    // The floating number tracks HP actually lost (hpDamage), matching
+    // the HP bar — `value` is the pre-absorb impact and would show a
+    // phantom "-100" on a fully warded hit. Older emitters without the
+    // breakdown fall back to `value`.
+    const hpDamage = event.hpDamage ?? event.value
+
+    if (!target || hpDamage === undefined || hpDamage <= 0) {
       return
     }
 
@@ -47,7 +53,7 @@ export class CombatDamageText {
         ? DAMAGE_TAKEN_COLOR
         : DAMAGE_DEALT_COLOR
 
-    this.showDamageNumber(target, event.value, color, event.critical ?? false)
+    this.showDamageNumber(target, hpDamage, color, event.critical ?? false)
   }
 
   /** Bộ gom DoT — khóa `targetId|effectId|sourceId`, cửa sổ 1/3 giây. */

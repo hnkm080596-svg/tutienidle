@@ -5,7 +5,7 @@
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { TurnSkillDefinition, TurnSkillSlot } from '../battle/turn/TurnSkillAction'
-import { COMBAT_PATH_DOMAINS, type StatDomain } from '../stats/StatDomain'
+import { CULTIVATION_PATH_STAT_DOMAINS, type StatDomain } from '../stats/StatDomain'
 import { BAT_KIEM_THUAT, TRU_TIEN_KIEM_TRAN } from '../../data/skill/BatKiemThuat'
 import { BuffPool } from '../buff/BuffPool'
 
@@ -51,14 +51,16 @@ export function toTurnBattleParticipant(
     consecutiveHardCcTurns: 0,
     basic,
     // stat-system-reimagined review fix (2026-09-15) — buildId carries
-    // the player's cultivationPath at the GameManager call site; when it
-    // is a combat path the participant owns that stat domain, which
-    // scopes domain deltaDerivers (phap_tu attunement->MP) in
-    // calculateEffectiveStats. Enemies/companions pass no buildId ->
-    // no domain derivers ever run for them.
+    // the player's cultivationPath at the GameManager call site; the
+    // explicit path->domains map declares which stat domains the
+    // participant owns, scoping domain deltaDerivers (phap_tu
+    // attunement->MP) in calculateEffectiveStats. Enemies/companions
+    // pass no buildId -> no domain derivers ever run for them. A path
+    // owning an existing domain (phap_tu_an -> phap_tu) maps here, NOT
+    // into StatDomain.
     activeDomains:
-      buildId !== undefined && COMBAT_PATH_DOMAINS.has(buildId as StatDomain)
-        ? new Set<StatDomain>([buildId as StatDomain])
+      buildId !== undefined && CULTIVATION_PATH_STAT_DOMAINS[buildId] !== undefined
+        ? new Set<StatDomain>(CULTIVATION_PATH_STAT_DOMAINS[buildId])
         : undefined,
   }
 

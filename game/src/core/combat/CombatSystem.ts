@@ -412,6 +412,11 @@ export class CombatSystem {
     // Nộ (rage) đã GỠ (spec 2026-08-29-kiem-the-kiem-y mục 5.4) —
     // khối tích currentRage theo damage gây/nhận dỡ sạch.
 
+    // Explicit contract (review 2026-09-15): `value` stays the
+    // pre-absorb impact (finalDamage); hpDamage/wardAbsorbed/
+    // manaShieldAbsorbed carry the post-absorb truth. Presentation
+    // showing "HP lost" must read hpDamage — a fully absorbed hit shows
+    // no HP number.
     this.eventBus.emit('damage', {
       type: 'damage',
 
@@ -420,6 +425,12 @@ export class CombatSystem {
       targetId: target.id,
 
       value: result.finalDamage,
+
+      hpDamage: actualHpDamage,
+
+      wardAbsorbed,
+
+      manaShieldAbsorbed,
 
       damageType: result.damageType,
 
@@ -522,6 +533,9 @@ export class CombatSystem {
       targetId: target.id,
 
       value: finalDamage,
+
+      // DoT has no absorb layers — hpDamage equals the applied value.
+      hpDamage: finalDamage,
 
       damageType: 'elemental',
 

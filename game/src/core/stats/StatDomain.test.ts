@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { calculateEffectiveStats, calculateStats, type StatModifier } from './StatCalculator'
+import {
+  calculateEffectiveStats,
+  calculateStats,
+  registerDomainDeltaDeriver,
+  unregisterDomainDeltaDeriver,
+  type StatModifier,
+} from './StatCalculator'
 import { createBaseStats } from './StatBlock'
 import {
   DOMAIN_SOURCE_WHITELIST,
@@ -175,6 +181,28 @@ describe('domain gate (D10)', () => {
     ])
 
     expect(result.productionSpeedMultiplier).toBeCloseTo(1.5, 6)
+  })
+
+  it('deriver-emitted gated stat with the WRONG domain is rejected (derivers cannot bypass the gate)', () => {
+    // Review fix (2026-09-15): deltaDeriver output is system-generated,
+    // so applyDomainGate is its only guard — the whitelist lint never
+    // scans it. A kiem_tu deriver must not be able to emit maxMp.
+    const resolved = calculateStats(createBaseStats(), [])
+
+    registerDomainDeltaDeriver('kiem_tu', () => [
+      mod({ stat: GATED_STAT, domain: 'kiem_tu', flat: 999 }),
+    ])
+
+    try {
+      expect(() =>
+        calculateEffectiveStats(resolved, [mod({ stat: 'attunement', flat: 5 })], {
+          activeDomains: new Set(['kiem_tu' as const]),
+        }),
+      ).toThrow(/domain/i)
+      expect(domainViolations).toHaveLength(1)
+    } finally {
+      unregisterDomainDeltaDeriver('kiem_tu')
+    }
   })
 
   it('Task 9: an untagged or foreign-domain meta modifier is rejected', () => {

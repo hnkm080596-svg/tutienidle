@@ -28,7 +28,7 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
 
   { key: 'maxHp', label: 'Khí huyết', description: 'Lượng máu tối đa — về 0 thì gục ngã.', category: 'survival' },
   { key: 'hpRegenPerTurn', label: 'Hồi khí huyết', description: 'Máu hồi tự nhiên mỗi lượt.', category: 'survival' },
-  { key: 'maxMp', label: 'Linh lực', description: 'Tài nguyên tiêu hao khi dùng skill loại special.', category: 'survival' },
+  { key: 'maxMp', label: 'Linh lực', description: 'Tài nguyên phòng thủ của Pháp Tu — một phần sát thương sau Hộ Thuẫn chuyển sang trừ Linh lực thay vì Sinh mệnh.', category: 'survival' },
   { key: 'manaRegenPerTurn', label: 'Hồi linh lực', description: 'Linh lực hồi tự nhiên mỗi lượt.', category: 'survival' },
   { key: 'criticalRate', label: 'Tỉ lệ bạo kích', description: 'Xác suất một đòn đánh gây sát thương chí mạng.', category: 'special' },
   { key: 'criticalDamage', label: 'ST bạo kích', description: 'Sát thương đòn chí mạng. 150% nghĩa là đòn chí mạng mạnh gấp 1.5 lần đòn thường.', category: 'special' },

@@ -156,6 +156,25 @@ describe('hit outcome semantics (INV-3)', () => {
     expect(result.targetKilled).toBe(false)
   })
 
+  it('damage event carries the explicit absorb breakdown (hpDamage, not just pre-absorb value)', () => {
+    const bus = new EventBus()
+    const combat = new CombatSystem(bus)
+    const events: Array<{ value?: number; hpDamage?: number; wardAbsorbed?: number }> = []
+    bus.on('damage', (e) => events.push(e as (typeof events)[number]))
+
+    const source = attacker()
+    const target = defender({ currentWard: 1000 })
+
+    const result = combat.resolveActionHit(source, target, PHYSICAL_HIT)
+
+    expect(events).toHaveLength(1)
+    // `value` stays the pre-absorb impact; hpDamage reports the truth
+    // (0 — fully absorbed) so presentation can tell them apart.
+    expect(events[0]?.value).toBeCloseTo(result.finalDamage, 5)
+    expect(events[0]?.hpDamage).toBe(0)
+    expect(events[0]?.wardAbsorbed).toBeCloseTo(result.finalDamage, 5)
+  })
+
   it('mp shield after ward: manaShieldPercent caps at 0.8 so the remainder is hpDamage (taken)', () => {
     const combat = new CombatSystem(new EventBus())
     const source = attacker()

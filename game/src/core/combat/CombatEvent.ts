@@ -16,7 +16,18 @@ export interface CombatEvent {
 
   targetId?: string
 
+  // `value` = pre-absorb magnitude of the hit (finalDamage). For the
+  // post-absorb truth read the breakdown fields below — a fully
+  // warded hit has value>0 but hpDamage==0.
   value?: number
+
+  // Hit-path absorb breakdown (D5/D11), set on 'damage' events emitted
+  // by resolveActionHit. hpDamage is the ACTUAL HP the target lost
+  // (post-clamp) — presentation showing "HP lost" text must read this,
+  // never `value`. DoT ticks set hpDamage == value (no absorb applies).
+  hpDamage?: number
+  wardAbsorbed?: number
+  manaShieldAbsorbed?: number
 
   damageType?:
     | 'physical'

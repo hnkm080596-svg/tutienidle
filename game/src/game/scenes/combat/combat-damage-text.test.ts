@@ -41,6 +41,9 @@ function createTextHarness() {
             entry.origin = _args
             return entry
           },
+          setScale() {
+            return entry
+          },
           destroy() {
             entry.destroyed = true
           },
@@ -91,6 +94,35 @@ describe('CombatDamageText — kill + heal floating (6A-T2)', () => {
     expect(texts[0]!.text).toBe('+1,234')
     expect(texts[0]!.style.fontSize).toBe('14px')
     expect(texts[0]!.style.color).toBe('#7bd88f')
+  })
+
+  it('handleDamageEvent floats hpDamage (actual HP lost), not the pre-absorb value', () => {
+    const { damageText, texts } = createTextHarness()
+
+    damageText.handleDamageEvent({
+      type: 'damage',
+      targetId: 'e1',
+      value: 100,
+      hpDamage: 35,
+      wardAbsorbed: 65,
+    })
+
+    expect(texts).toHaveLength(1)
+    expect(texts[0]!.text).toBe('-35')
+  })
+
+  it('handleDamageEvent shows nothing on a fully absorbed hit (hpDamage 0)', () => {
+    const { damageText, texts } = createTextHarness()
+
+    damageText.handleDamageEvent({
+      type: 'damage',
+      targetId: 'e1',
+      value: 100,
+      hpDamage: 0,
+      wardAbsorbed: 100,
+    })
+
+    expect(texts).toHaveLength(0)
   })
 
   it('scene guard: heal/kill handler với sprite không tồn tại → không crash, không text', () => {

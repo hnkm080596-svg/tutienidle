@@ -127,8 +127,10 @@ export class TribulationScene extends Phaser.Scene {
   }
 
   private showDamage(event: CombatEvent) {
-    if (!this.player || event.targetId !== 'player' || !event.value) return
-    const text = this.add.text(this.player.x, this.player.y - 80, `-${formatNumber(Math.round(event.value))}`, {
+    // hpDamage = actual HP lost post-absorb; `value` is pre-absorb.
+    const hpDamage = event.hpDamage ?? event.value
+    if (!this.player || event.targetId !== 'player' || !hpDamage) return
+    const text = this.add.text(this.player.x, this.player.y - 80, `-${formatNumber(Math.round(hpDamage))}`, {
       fontSize: '22px', fontStyle: 'bold', color: '#ff8b8b',
     }).setOrigin(0.5)
     this.tweens.add({ targets: text, y: text.y - 42, alpha: 0, duration: 650, onComplete: () => text.destroy() })

@@ -424,7 +424,12 @@ export function calculateEffectiveStats(
     }
   }
 
-  return runPipeline(effective, deltaModifiers)
+  // Review fix (2026-09-15) — deriver-emitted modifiers are
+  // system-generated, so the runtime gate is their ONLY guard
+  // (architecture whitelist scans authored data/** only). A deriver
+  // emitting a wrong-domain gated stat must hit the same wall as any
+  // other modifier source.
+  return runPipeline(effective, applyDomainGate(deltaModifiers))
 }
 
 export function addStack(modifier: StatModifier, amount = 1) {
