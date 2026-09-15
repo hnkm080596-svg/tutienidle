@@ -236,6 +236,16 @@ export class GameManagerProgressionOps {
       return false
     }
 
+    // Transaction boundary (review round-4, atomicity hardening): every
+    // skill the root unlocks must be learnable BEFORE the purchase
+    // spends insight + commits { element, route } — a missing template
+    // would leave the element committed without its basic.
+    for (const skillId of root.effect.unlocksSkillIds ?? []) {
+      if (!this.deps.skillTemplates.has(skillId)) {
+        return false
+      }
+    }
+
     if (!purchaseNodeSystem(player, root)) {
       return false
     }

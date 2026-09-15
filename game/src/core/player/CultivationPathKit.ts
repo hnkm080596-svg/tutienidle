@@ -146,6 +146,21 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
   },
 }
 
+// Phap Tu An required kit (review round-4, MEDIUM) — the ritual grants
+// exactly these three skills atomically: two loadout actives + the dao
+// passive carried by ngo_dao_chan_quyet.innateSkillId (the skillIds
+// tuple cannot express a passive member). Battle construction asserts
+// the full set is learned; a partial kit is corrupt progression state
+// and must fail loudly, never silently drop a slot.
+export const PHAP_TU_AN_BASIC_ID = 'van_phap_tuy_tam'
+export const PHAP_TU_AN_SPECIAL_ID = 'da_phap_lien_tuyen'
+export const PHAP_TU_AN_PASSIVE_ID = 'ngo_dao_hon_don'
+export const PHAP_TU_AN_REQUIRED_SKILLS: readonly string[] = [
+  PHAP_TU_AN_BASIC_ID,
+  PHAP_TU_AN_SPECIAL_ID,
+  PHAP_TU_AN_PASSIVE_ID,
+]
+
 // Nghi Lễ Nhập Môn (2026-08-16) — gate cũ (mốc realmLevel cố định
 // trong qi_refining) đã bị THAY THẾ: chọn nghề giờ CHÍNH LÀ nghi lễ
 // đột phá Phàm Nhân -> Luyện Khí, nên điều kiện mở khoá gắn với việc

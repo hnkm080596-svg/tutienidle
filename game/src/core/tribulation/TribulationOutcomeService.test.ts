@@ -11,6 +11,7 @@ import { GameManager } from '../game/GameManager'
 import { TribulationOutcomeService } from './TribulationOutcomeService'
 import { asBaseStats } from '../stats/StatBlock'
 import { pills } from '../../data/pill/pills'
+import { TECHNIQUES } from '../../data/technique/Techniques'
 import { MERIDIANS } from '../../data/realm/Meridians'
 import type { ActiveTribulationState } from './TribulationDirector'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
@@ -87,6 +88,7 @@ describe('TribulationOutcomeService — victory parity', () => {
   it('foundation_establishment victory: realm/level reset, unequip-all, foundation recorded, talent converted, passives synced', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerPills(pills)
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     const player = usePlayerStore()
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12

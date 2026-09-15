@@ -6,6 +6,7 @@ import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
+import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { CULTIVATION_PATH_STAT_DOMAINS } from '../stats/StatDomain'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
@@ -24,6 +25,9 @@ function makeManager() {
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
+  // kiem_tu ritual grants the kiem_tran_luong_nghi node on the kiem_tran
+  // route — the round-4 transaction boundary requires it registered.
+  gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
   const player = createDefaultPlayer()
   player.realmId = 'mortal'
   player.realmLevel = 12
@@ -104,6 +108,47 @@ describe('phap_tu_an — ritual offer gate', () => {
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
     expect(player.cultivationPath).toBe('kiem_tu')
     expect(player.kiemTuRoute).toBe('kiem_tran')
+  })
+
+  it('chooseCultivationPath(phap_tu_an) fails atomically when a kit template is missing — nothing committed', () => {
+    // Review round-4 (atomicity): cultivationPath was written BEFORE the
+    // grants were verified — a missing template left the path committed
+    // with a partial kit. The whole choice must fail instead.
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerSkillTemplates(
+      SKILLS.filter((skill) => skill.id !== 'da_phap_lien_tuyen'),
+    )
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    const player = createDefaultPlayer()
+    player.realmId = 'mortal'
+    player.realmLevel = 12
+    gameManager.setActivePlayer(player)
+    player.skillCastCounts = { linh_bao: LING_BAO_L3 }
+
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(false)
+    expect(player.cultivationPath).toBeUndefined()
+    expect(player.realmId).toBe('mortal')
+    expect(gameManager.skillManager.has('van_phap_tuy_tam')).toBe(false)
+    expect(gameManager.skillManager.has('ngo_dao_hon_don')).toBe(false)
+  })
+
+  it('chooseCultivationPath(phap_tu_an) fails atomically when the innate passive template is missing', () => {
+    // Same boundary, different seam: the dao passive arrives via
+    // ngo_dao_chan_quyet.innateSkillId — its template must exist too.
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerSkillTemplates(
+      SKILLS.filter((skill) => skill.id !== 'ngo_dao_hon_don'),
+    )
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    const player = createDefaultPlayer()
+    player.realmId = 'mortal'
+    player.realmLevel = 12
+    gameManager.setActivePlayer(player)
+    player.skillCastCounts = { linh_bao: LING_BAO_L3 }
+
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(false)
+    expect(player.cultivationPath).toBeUndefined()
+    expect(player.realmId).toBe('mortal')
   })
 
   it('phap_tu_an activates the phap_tu stat domain for its kit modifiers', () => {
@@ -324,6 +369,28 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     gameManager.setActivePlayer(player)
     // Path state without the ritual grant — required kit skill absent.
     player.cultivationPath = 'phap_tu_an'
+
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+  })
+
+  it('phap_tu_an: missing da_phap_lien_tuyen → throws instead of silently dropping the special', () => {
+    // Review round-4 (MEDIUM): the An kit is a fixed three-skill set —
+    // a corrupt save missing the special entered combat with no button.
+    const { gameManager, player } = makeManager()
+    gameManager.setActivePlayer(player)
+    player.cultivationPath = 'phap_tu_an'
+    expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam')).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('ngo_dao_hon_don')).toBe(true)
+
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+  })
+
+  it('phap_tu_an: missing ngo_dao_hon_don → throws instead of silently dropping the dao multicast', () => {
+    const { gameManager, player } = makeManager()
+    gameManager.setActivePlayer(player)
+    player.cultivationPath = 'phap_tu_an'
+    expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam')).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('da_phap_lien_tuyen')).toBe(true)
 
     expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
   })

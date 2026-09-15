@@ -4,6 +4,7 @@ import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
 import { defineEnemy } from '../enemy/Enemy'
 import { TECHNIQUES } from '../../data/technique/Techniques'
+import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { SKILLS } from '../../data/skill/Skills'
 import type { Equipment } from '../equipment/Equipment'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
@@ -60,6 +61,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
     gameManager.catalogOps.registerEquipment([TEST_WEAPON])
 
     const player = createDefaultPlayer()

@@ -11,6 +11,7 @@ import { GameManager } from '../game/GameManager'
 import { TribulationOutcomeService } from './TribulationOutcomeService'
 import { asBaseStats } from '../stats/StatBlock'
 import { pills } from '../../data/pill/pills'
+import { TECHNIQUES } from '../../data/technique/Techniques'
 import { MERIDIANS } from '../../data/realm/Meridians'
 import {
   SPIRIT_STONE_MATERIAL,
@@ -43,6 +44,9 @@ function surviveFoundationTribulation(player: ReturnType<typeof usePlayerStore>)
 
 /** Player invested enough for the Đại Đạo grade (spec §4.2/§4.4). */
 function investForGreatDao(player: ReturnType<typeof usePlayerStore>, gameManager: GameManager) {
+  // The phap_tu ritual grants dai_ngu_hanh_chan_quyet — the round-4
+  // transaction boundary requires the template registered.
+  gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   player.selectedTalentIds = ['pham_cot']
   player.realmLevel = 12
   player.bodyRefinementCompletedTiers = 6
