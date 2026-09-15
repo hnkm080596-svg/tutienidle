@@ -543,6 +543,7 @@ export class GameManager {
       learnTechnique: techniqueId => this.realmAdvanceOps.learnTechnique(techniqueId),
       equipTechnique: techniqueId => this.realmAdvanceOps.equipTechnique(techniqueId),
       hasTechniqueTemplate: techniqueId => this.techniqueTemplates.has(techniqueId),
+      removeTechnique: techniqueId => this.techniqueManager.remove(techniqueId),
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({

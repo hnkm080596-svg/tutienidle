@@ -323,13 +323,23 @@ describe('INV-7 — hardcore discovery', () => {
       'src/core/kiem-tu/KiemPhoSystem.ts',
     ]
     const violations: string[] = []
+    // A hardcoded literal bypasses the import scan — quote-delimited
+    // matching keeps presetId strings ('kiem_combo_tam_thich', the
+    // LEGITIMATE discovery signal in VFX/impact types) distinct from
+    // the bare combo id ('tam_thich') or name, which must never leak.
+    const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const literalPatterns = KIEM_PHO_COMBOS.flatMap((combo) =>
+      [combo.id, combo.name].map(
+        (literal) => new RegExp(`['"\`]${escapeRegExp(literal)}['"\`]`),
+      ),
+    )
 
     for (const file of listSourceFiles(srcRoot)) {
       const rel = file.replace(/\\/g, '/')
       if (rel.endsWith('.test.ts')) continue
       if (ALLOWED_REFERENCERS.some((allowed) => rel.endsWith(allowed))) continue
       const source = stripComments(readFileSync(file, 'utf-8'))
-      if (/KiemPhoCombos|KIEM_PHO_COMBOS/.test(source)) {
+      if (/KiemPhoCombos|KIEM_PHO_COMBOS/.test(source) || literalPatterns.some((p) => p.test(source))) {
         violations.push(rel)
       }
     }
@@ -384,6 +394,34 @@ describe('INV-8 — ngu gate (reveal / purchase / one-way / mode filter)', () =>
     expect(player.skillInsight).toBe(500)
     expect(player.nodeLevels?.['kiem_tu_an']).toBeUndefined()
     expect(player.purchasedNodeIds).not.toContain('kiem_tu_an')
+    expect(player.kiemTu!.mode).toBe('hien')
+    // The technique the transaction learned must be unlearned — a
+    // rollback that leaves van_kiem_quyet known is not a rollback.
+    expect(gameManager.techniqueManager.has('van_kiem_quyet')).toBe(false)
+    expect(player.nodeFreePurchaseRecord?.['kiem_tu_an']).toBeUndefined()
+  })
+
+  it('kiem_tu_an rollback restores the Van Dao free-purchase record', () => {
+    const { gameManager, player } = setupGame(3)
+    player.selectedTalentIds = ['van_dao']
+    vi.spyOn(Math, 'random').mockReturnValue(0) // waive always fires
+    vi.spyOn(gameManager.realmAdvanceOps, 'equipTechnique').mockReturnValue(false)
+
+    expect(gameManager.progressionOps.purchaseNode('kiem_tu_an', player)).toBe(false)
+    // Cost was waived (never deducted) AND the waive record is gone.
+    expect(player.skillInsight).toBe(500)
+    expect(player.nodeFreePurchaseRecord?.['kiem_tu_an']).toBeUndefined()
+    expect(gameManager.techniqueManager.has('van_kiem_quyet')).toBe(false)
+  })
+
+  it('kiem_tu_an rollback keeps a signature technique the player already knew', () => {
+    const { gameManager, player } = setupGame(3)
+    expect(gameManager.realmAdvanceOps.learnTechnique('van_kiem_quyet')).toBe(true)
+    vi.spyOn(gameManager.realmAdvanceOps, 'equipTechnique').mockReturnValue(false)
+
+    expect(gameManager.progressionOps.purchaseNode('kiem_tu_an', player)).toBe(false)
+    // Pre-existing knowledge is not the transaction's to delete.
+    expect(gameManager.techniqueManager.has('van_kiem_quyet')).toBe(true)
     expect(player.kiemTu!.mode).toBe('hien')
   })
 

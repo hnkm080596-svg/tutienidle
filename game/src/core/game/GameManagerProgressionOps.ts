@@ -65,6 +65,9 @@ export class GameManagerProgressionOps {
       // Preflight probe for the mode-switch transaction (template
       // registered => learn/equip can succeed).
       hasTechniqueTemplate: (techniqueId: string) => boolean
+      // Rollback inverse of learnTechnique — removes a technique ONLY
+      // when this transaction learned it (pre-learned stays).
+      removeTechnique: (techniqueId: string) => void
     },
   ) {}
 
@@ -178,6 +181,9 @@ export class GameManagerProgressionOps {
           skillInsight: player.skillInsight,
           purchasedCount: player.purchasedNodeIds.length,
           mode: player.kiemTu!.mode,
+          // Van Dao may waive the cost inside purchaseNodeSystem and
+          // record it here — restore verbatim (undefined = no record).
+          freeRecord: player.nodeFreePurchaseRecord?.[node.id],
         }
       : undefined
 
@@ -214,15 +220,29 @@ export class GameManagerProgressionOps {
       // mode) — a half-applied flip is a broken save, not a warning.
       player.kiemTu!.mode = 'ngu'
       // learn is idempotent (already-learned returns false) — equip is
-      // the real commit criterion.
-      this.deps.learnTechnique('van_kiem_quyet')
+      // the real commit criterion. learnedNow marks whether THIS
+      // transaction added the technique — rollback removes it only then
+      // (a technique the player already knew is not ours to delete).
+      const learnedNow = this.deps.learnTechnique('van_kiem_quyet')
       const equipped = this.deps.equipTechnique('van_kiem_quyet')
 
       if (!equipped) {
+        if (learnedNow) {
+          this.deps.removeTechnique('van_kiem_quyet')
+        }
+
         player.kiemTu!.mode = snapshot!.mode
         player.skillInsight = snapshot!.skillInsight
         delete player.nodeLevels?.[node.id]
         player.purchasedNodeIds.length = snapshot!.purchasedCount
+
+        if (snapshot!.freeRecord === undefined) {
+          delete player.nodeFreePurchaseRecord?.[node.id]
+        } else {
+          player.nodeFreePurchaseRecord ??= {}
+          player.nodeFreePurchaseRecord[node.id] = snapshot!.freeRecord
+        }
+
         console.warn('[kiem-tu] kiem_tu_an rolled back — van_kiem_quyet failed to learn/equip')
         return false
       }
