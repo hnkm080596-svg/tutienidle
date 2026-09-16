@@ -1,0 +1,88 @@
+import type {
+  CultivationPathId,
+  PathWayDefinition,
+  PathWayId,
+} from '../player/CultivationPathKit'
+
+// Cultivation Path Framework (spec 2026-09-16, M6) — the Kiem Tu path
+// module: the two way definitions + the way membership predicates.
+//
+//   hien — Kiem Pho (preset-combo): the orb preset lives on
+//     player.kiemTu.preset; combat basics come from the KiemPho
+//     dynamicBasic provider.
+//   ngu — Ngu Kiem Dao (hidden): ritual-only entry gated by tram Lv3,
+//     permanent; combat action is provider-injected (ngu_kiem_thuat +
+//     emblem slots). The Kiem Y -> Kiem Dao economy lives on the same
+//     player.kiemTu slice — ngu was NEVER a separate path id (the old
+//     kiemTu.mode discriminator retired in M6; cultivationWay is the
+//     discriminator now).
+//
+// Dependency direction: this file is a leaf — type-only imports only.
+// CultivationPathKit (catalog) and CultivationPathSystem (authority)
+// import FROM here; nothing here imports back, so domain code
+// (NodeSystem/NguKiemDao) can consume the way predicates without a
+// runtime cycle.
+
+/**
+ * Structural read shape for the way predicates — PlayerData and the
+ * presentation-side player slices (e.g. KiemBarPlayerState) both
+ * satisfy it; the fields stay nullable because slices keep the
+ * persisted `| null` convention.
+ */
+export interface KiemTuWayRead {
+  cultivationPath?: CultivationPathId | null
+  cultivationWay?: PathWayId | null
+}
+
+/**
+ * hien membership — the gate for ALL Kiem Pho machinery: the preset
+ * write op (setKiemPhoPreset), the KiemPho dynamicBasic provider, the
+ * preset HUD/editor surfaces, and the hien node subtree.
+ *
+ * Reads the RAW fields, same contract as NodeSystem.nodeWayApplies:
+ * cultivationWay is authoritative once the ritual writes it. A
+ * legacy-shaped player (cultivationPath only, no way) is NOT hien —
+ * the gate fails closed so way machinery never runs for a state the
+ * path authority did not commit.
+ */
+export function isKiemTuHien(player: KiemTuWayRead | null | undefined): boolean {
+  return player?.cultivationPath === 'kiem_tu' && player?.cultivationWay === 'hien'
+}
+
+/**
+ * ngu membership — the gate for the hidden way's machinery: the
+ * NguKiemDao economy (gainKiemY/grantKiemDao/merge), the
+ * NguKiemDaoProvider attach, the kiemDaoBelowCap prereq, and the ngu
+ * node subtree. kiem_tu never had a hidden-variant path id, so a
+ * single era exists: ('kiem_tu', 'ngu') — the WAY id is the check.
+ */
+export function isKiemTuNgu(player: KiemTuWayRead | null | undefined): boolean {
+  return player?.cultivationPath === 'kiem_tu' && player?.cultivationWay === 'ngu'
+}
+
+// ---------------------------------------------------------------------------
+// Way definitions — consumed by CULTIVATION_PATH_MODULES.kiem_tu.ways in
+// CultivationPathKit (the catalog is the single aggregation point).
+// ---------------------------------------------------------------------------
+
+export const KIEM_TU_HIEN_WAY: PathWayDefinition = {
+  id: 'hien',
+  pathId: 'kiem_tu',
+  name: 'Kiếm Tu — Ngự Kiếm Tâm Kinh',
+  element: 'metal',
+  techniqueId: 'ngu_kiem',
+  // Kiem Tu Reimagined (spec 2026-09-15) — no authored skill grants:
+  // hien basics come from the Kiem Pho orb preset (KiemPhoProvider).
+}
+
+export const KIEM_TU_NGU_WAY: PathWayDefinition = {
+  id: 'ngu',
+  pathId: 'kiem_tu',
+  name: 'Kiếm Tu Ẩn — Vạn Kiếm Quyết',
+  techniqueId: 'van_kiem_quyet',
+  // Ritual-only entry, permanent, FREE — the exact port of the retired
+  // kiem_tu_an node's skillCastCount {tram, 3} gate (reads the
+  // skillLevels mirror). A mortal without tram Lv3 at the ritual can
+  // never enter ngu — there is no mid-progression flip any more.
+  offerGate: { requiresSkillLevel: { skillId: 'tram', level: 3 } },
+}

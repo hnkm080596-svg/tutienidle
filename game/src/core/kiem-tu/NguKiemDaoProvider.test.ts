@@ -26,8 +26,9 @@ import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 function makeNguPlayer(realmId = 'golden_core') {
   const player = createDefaultPlayer()
   player.cultivationPath = 'kiem_tu'
+  player.cultivationWay = 'ngu'
   player.realmId = realmId
-  player.kiemTu = { ...freshKiemTuState(), mode: 'ngu' }
+  player.kiemTu = freshKiemTuState()
   return player
 }
 

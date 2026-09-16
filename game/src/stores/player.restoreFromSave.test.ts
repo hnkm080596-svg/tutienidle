@@ -168,7 +168,8 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     // Simulate a previous session that set every optional field.
     player.cultivationPath = 'kiem_tu'
-    player.kiemTu = { mode: 'ngu', preset: ['orb_bo'], kiemY: 5, kiemDaoCount: 2, kiemDaoBase: 1 }
+    player.cultivationWay = 'ngu'
+    player.kiemTu = { preset: ['orb_bo'], kiemY: 5, kiemDaoCount: 2, kiemDaoBase: 1 }
     player.artifact = { artifactId: 'a', tier: 1, exp: 5 } as never
     player.highestFoundationAchieved = 'great_dao' as never
     player.formationLoadout = { formationId: 'f', assignments: [{ row: 0, column: 0, combatantId: 'c' }] }
@@ -179,6 +180,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     player.restoreFromSave(save)
 
     expect(player.cultivationPath).toBeUndefined()
+    expect(player.cultivationWay).toBeUndefined()
     expect(player.kiemTu).toBeUndefined()
     expect(player.artifact).toBeUndefined()
     expect(player.highestFoundationAchieved).toBeUndefined()

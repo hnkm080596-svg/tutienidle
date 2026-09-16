@@ -28,6 +28,7 @@ import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/T
 import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
+import { isKiemTuHien } from '../kiem-tu/KiemTuPath'
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -59,16 +60,6 @@ export class GameManagerProgressionOps {
       // Deferred closure - turnBattleOps is assigned after this ops class
       // is constructed (same pattern as realmAdvanceOps/effectOps).
       getTurnBattle: () => TurnBattle | null
-      // Deferred closures - realmAdvanceOps owns technique learn/equip
-      // (kiem_tu_an's mode switch swaps in van_kiem_quyet).
-      learnTechnique: (techniqueId: string) => boolean
-      equipTechnique: (techniqueId: string) => boolean
-      // Preflight probe for the mode-switch transaction (template
-      // registered => learn/equip can succeed).
-      hasTechniqueTemplate: (techniqueId: string) => boolean
-      // Rollback inverse of learnTechnique — removes a technique ONLY
-      // when this transaction learned it (pre-learned stays).
-      removeTechnique: (techniqueId: string) => void
     },
   ) {}
 
@@ -161,33 +152,6 @@ export class GameManagerProgressionOps {
 
     const node = this.deps.nodeRegistry.get(nodeId)
 
-    // Mode-switch gate re-checked HERE (not only in canPurchaseNode) —
-    // the ops layer never trusts the caller to have pre-checked.
-    if (!this.passesModeSwitchGate(player, node)) {
-      return false
-    }
-
-    // Kiem Tu review fix — the mode-switch conversion is a one-way,
-    // no-refund transaction: validate the signature technique exists
-    // BEFORE any state commits (same validate→commit discipline as
-    // selectPhapTuElement).
-    const modeSwitch = node.effect.kiemTuModeSwitch === 'ngu' && player.kiemTu
-
-    if (modeSwitch && !this.deps.hasTechniqueTemplate('van_kiem_quyet')) {
-      return false
-    }
-
-    const snapshot = modeSwitch
-      ? {
-          skillInsight: player.skillInsight,
-          purchasedCount: player.purchasedNodeIds.length,
-          mode: player.kiemTu!.mode,
-          // Van Dao may waive the cost inside purchaseNodeSystem and
-          // record it here — restore verbatim (undefined = no record).
-          freeRecord: player.nodeFreePurchaseRecord?.[node.id],
-        }
-      : undefined
-
     if (!purchaseNodeSystem(player, node)) {
       return false
     }
@@ -208,45 +172,6 @@ export class GameManagerProgressionOps {
 
     if (selectsSpec) {
       this.deps.skillSystem.selectSpecialization(selectsSpec.skillId, selectsSpec.specializationId)
-    }
-
-    // Kiem Tu Reimagined (spec K4) — the hidden-path conversion: flip
-    // mode hien → ngu and swap the equipped technique to the Ngu
-    // signature (van_kiem_quyet replaces whatever the kit equipped).
-    // One-way: the mode field has no reverse write path, and
-    // devResetBranch skips this node (non-refundable by contract).
-    if (modeSwitch) {
-      // Commit order: mode flip -> learn -> equip. Any post-commit
-      // failure rolls the WHOLE transaction back (insight, node,
-      // mode) — a half-applied flip is a broken save, not a warning.
-      player.kiemTu!.mode = 'ngu'
-      // learn is idempotent (already-learned returns false) — equip is
-      // the real commit criterion. learnedNow marks whether THIS
-      // transaction added the technique — rollback removes it only then
-      // (a technique the player already knew is not ours to delete).
-      const learnedNow = this.deps.learnTechnique('van_kiem_quyet')
-      const equipped = this.deps.equipTechnique('van_kiem_quyet')
-
-      if (!equipped) {
-        if (learnedNow) {
-          this.deps.removeTechnique('van_kiem_quyet')
-        }
-
-        player.kiemTu!.mode = snapshot!.mode
-        player.skillInsight = snapshot!.skillInsight
-        delete player.nodeLevels?.[node.id]
-        player.purchasedNodeIds.length = snapshot!.purchasedCount
-
-        if (snapshot!.freeRecord === undefined) {
-          delete player.nodeFreePurchaseRecord?.[node.id]
-        } else {
-          player.nodeFreePurchaseRecord ??= {}
-          player.nodeFreePurchaseRecord[node.id] = snapshot!.freeRecord
-        }
-
-        console.warn('[kiem-tu] kiem_tu_an rolled back — van_kiem_quyet failed to learn/equip')
-        return false
-      }
     }
 
     // Kiem Tu Reimagined Task 11 (spec §5.4/§6) — Cuu Cung grants run
@@ -368,29 +293,7 @@ export class GameManagerProgressionOps {
 
     const node = this.deps.nodeRegistry.get(nodeId)
 
-    // Kiem Tu Reimagined (spec K2/K4/INV-8) — the mode-switch node is
-    // purchasable ONLY by a kiem_tu player still in hien, and NEVER mid-
-    // battle: a combat-time flip would desync the live participant's
-    // provider/emblem slots from PlayerData. Shared by canPurchaseNode
-    // (UI gate) and purchaseNode (the actual transaction — the ops
-    // layer must not trust the caller to have pre-checked).
-    if (!this.passesModeSwitchGate(player, node)) {
-      return false
-    }
-
     return canPurchaseNodeSystem(player, node)
-  }
-
-  private passesModeSwitchGate(player: PlayerData, node: { effect: { kiemTuModeSwitch?: 'ngu' } }): boolean {
-    if (node.effect.kiemTuModeSwitch !== 'ngu') {
-      return true
-    }
-
-    if (player.cultivationPath !== 'kiem_tu' || player.kiemTu?.mode !== 'hien') {
-      return false
-    }
-
-    return !isBattleInProgress(this.deps.getTurnBattle()?.state)
   }
 
   canUpgradeNode(nodeId: string, player: PlayerData): boolean {
@@ -518,7 +421,9 @@ export class GameManagerProgressionOps {
    * the provider's snapshotted preset from PlayerData.
    */
   setKiemPhoPreset(player: PlayerData, preset: OrbId[]): boolean {
-    if (player.kiemTu?.mode !== 'hien') {
+    // M6 — way membership is the gate (the retired kiemTu.mode
+    // discriminator became cultivationWay; preset is hien machinery).
+    if (!player.kiemTu || !isKiemTuHien(player)) {
       return false
     }
 

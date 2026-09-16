@@ -16,8 +16,10 @@ import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 // Kiem Tu Reimagined Task 11 (spec 2026-09-15 §6, K20) — the new
 // progression tree end-to-end: Cuu Cung purchase grants flow through
 // the NguKiemDao domain functions, the kiemDaoBelowCap prereq blocks
-// purchase BEFORE insight is deducted, and kiemTuMode-tagged nodes are
-// inert + unpurchasable across the mode boundary.
+// purchase BEFORE insight is deducted, and requiredWay-tagged nodes are
+// inert + unpurchasable across the way boundary (M6 — the retired
+// kiemTuMode field / kiem_tu_an flip node are gone; way membership is
+// the gate).
 
 const CUU_CUNG_OUTER_IDS = [
   'cuu_cung_kham',
@@ -39,6 +41,7 @@ function setup() {
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'kiem_tu'
+  player.cultivationWay = 'hien'
   player.realmId = 'mahayana'
   player.kiemTu = freshKiemTuState()
   player.skillInsight = 100_000
@@ -48,9 +51,12 @@ function setup() {
   return { gameManager, player }
 }
 
+// M6 — ngu membership is the WAY, not a purchased node: flipping
+// cultivationWay is the whole switch (no kiem_tu_an prereq chain any
+// more — ngu nodes need only requiredWay + realm + kiemDaoBelowCap).
 function asNgu(player: ReturnType<typeof createDefaultPlayer>, outers: number = CUU_CUNG_OUTER_IDS.length) {
-  player.kiemTu!.mode = 'ngu'
-  player.nodeLevels = { kiem_tu_an: 1 }
+  player.cultivationWay = 'ngu'
+  player.nodeLevels = {}
   for (const id of CUU_CUNG_OUTER_IDS.slice(0, outers)) {
     player.nodeLevels[id] = 1
   }
@@ -124,7 +130,7 @@ describe('kiemTu tree — Cuu Cung grants', () => {
   })
 })
 
-describe('kiemTu tree — mode boundary', () => {
+describe('kiemTu tree — way boundary', () => {
   it('ngu player cannot purchase hien orb nodes (inert trap prevented)', () => {
     const { gameManager, player } = setup()
     asNgu(player)
@@ -134,19 +140,20 @@ describe('kiemTu tree — mode boundary', () => {
 
   it('hien player cannot purchase ngu nodes', () => {
     const { gameManager, player } = setup()
-    player.kiemTu!.mode = 'hien'
-    player.nodeLevels = { kiem_tu_an: 1 } // inconsistent save shape — gate still holds
+    player.cultivationWay = 'hien'
+    player.nodeLevels = { ngu_kiem_sac: 1 } // inconsistent save shape — gate still holds
     expect(gameManager.progressionOps.canPurchaseNode('ngu_cascade_a', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('ngu_cascade_a', player)).toBe(false)
   })
 
-  it('hien orb node statModifiers do not aggregate while mode is ngu', () => {
+  it('hien orb node statModifiers do not aggregate on the ngu way', () => {
     const { gameManager, player } = setup()
     player.nodeLevels = { orb_dam_1: 5 }
-    player.kiemTu!.mode = 'ngu'
+    player.cultivationWay = 'ngu'
     const nguMods = aggregateNodeStatModifiers(gameManager.nodeRegistry, player)
     expect(nguMods.filter(m => m.sourceId === 'orb_dam_1')).toEqual([])
 
-    player.kiemTu!.mode = 'hien'
+    player.cultivationWay = 'hien'
     const hienMods = aggregateNodeStatModifiers(gameManager.nodeRegistry, player)
     expect(hienMods.filter(m => m.sourceId === 'orb_dam_1').length).toBeGreaterThan(0)
   })
@@ -155,7 +162,7 @@ describe('kiemTu tree — mode boundary', () => {
 describe('kiemTu tree — collectors', () => {
   it('purchased orb capstone surfaces as a combo modifier that boosts matching combos', () => {
     const { gameManager, player } = setup()
-    player.kiemTu!.mode = 'hien'
+    player.cultivationWay = 'hien'
     player.nodeLevels = { orb_dam_capstone: 1 }
 
     const modifiers = collectKiemPhoComboModifiers(player, KIEM_TU_NODES)
@@ -176,7 +183,7 @@ describe('kiemTu tree — collectors', () => {
 
   it('capstones granting DIFFERENT buffs compose on one combo (no overwrite)', () => {
     const { gameManager, player } = setup()
-    player.kiemTu!.mode = 'hien'
+    player.cultivationWay = 'hien'
     player.nodeLevels = { orb_chem_capstone: 1, orb_bo_capstone: 1, orb_hat_capstone: 1 }
 
     const modifiers = collectKiemPhoComboModifiers(player, KIEM_TU_NODES)
@@ -199,10 +206,10 @@ describe('kiemTu tree — collectors', () => {
     expect(threeOrb.appliesBuffs).toBeUndefined()
   })
 
-  it('capstone modifiers stay inert while mode is ngu', () => {
+  it('capstone modifiers stay inert on the ngu way', () => {
     const { gameManager, player } = setup()
-    player.kiemTu!.mode = 'ngu'
-    player.nodeLevels = { orb_dam_capstone: 1, kiem_tu_an: 1 }
+    player.cultivationWay = 'ngu'
+    player.nodeLevels = { orb_dam_capstone: 1 }
     expect(collectKiemPhoComboModifiers(player, KIEM_TU_NODES)).toEqual([])
   })
 

@@ -282,19 +282,16 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   // Kiem Tu Reimagined (v62) — kiemTu is optional (absent for non-kiem
   // players) but a malformed present copy silently degraded hien combat
-  // (empty preset -> nextOrb NaN). Shape-check when present: mode union,
-  // preset 1-9 catalog-member OrbIds, non-negative numerics, and the
-  // ngu invariants (count >= 1, base >= 1) since no legit writer emits
-  // lower.
+  // (empty preset -> nextOrb NaN). Shape-check when present: preset
+  // 1-9 catalog-member OrbIds, non-negative numerics, and the ngu
+  // invariants (count >= 1, base >= 1) since no legit writer emits
+  // lower. M6: the mode union check is gone — cultivationWay carries
+  // the hien/ngu distinction.
   if (player.kiemTu !== undefined) {
     if (!isObject(player.kiemTu)) {
       issues.push({ path: 'player.kiemTu', message: 'phải là object hoặc vắng mặt' })
     } else {
       const kiemTu = player.kiemTu
-
-      if (kiemTu.mode !== 'hien' && kiemTu.mode !== 'ngu') {
-        issues.push({ path: 'player.kiemTu.mode', message: "phải là 'hien' hoặc 'ngu'" })
-      }
 
       const preset = kiemTu.preset
 

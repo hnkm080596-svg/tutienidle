@@ -7,20 +7,21 @@ import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 // Kiem Tu Reimagined (spec 2026-09-15 §6) — the tree after the legacy
 // Kiem Tran / Bat Kiem retirement:
 //
-//   branchTag 'kiem_pho' — 5 orb branches (hien). Each branch: 5
+//   branchTag 'kiem_pho' — 5 orb branches (hien way). Each branch: 5
 //   growth nodes realm-gated to the orb's own unlock realm (spec K13)
 //   + 1 keystone capstone carrying effect.kiemTuComboModifier — the
-//   ONLY channel a node may alter a combo (spec §4.2). All tagged
-//   kiemTuMode 'hien' — inert and unpurchasable once mode flips.
+//   ONLY channel a node may alter a combo (spec §4.2). All stamped
+//   requiredWay 'hien' — inert and unpurchasable on the ngu way.
 //
-//   branchTag 'ngu_kiem' — the hidden root kiem_tu_an (Task 10), then
-//   the ngu branch: 3 cascade unlock nodes (a/e/d), 3 per-instance
-//   growth nodes (generic statModifiers — every phi kiem instance runs
-//   the standard damage pipeline so player stats scale all of them),
-//   and the Cuu Cung 3x3: 8 realm-gated kiemYGrant outers feeding
-//   trung_cung's +1 kiemDaoGrant. All 9 Cuu Cung nodes carry the
-//   kiemDaoBelowCap prereq — a capped pool rejects the buy BEFORE
-//   insight moves (spec K20).
+//   branchTag 'ngu_kiem' — the ngu way subtree (Cultivation Path
+//   Framework M6: way membership replaces the retired kiem_tu_an flip
+//   node — entry is ritual-only now): 3 cascade unlock nodes (a/e/d),
+//   3 per-instance growth nodes (generic statModifiers — every phi
+//   kiem instance runs the standard damage pipeline so player stats
+//   scale all of them), and the Cuu Cung 3x3: 8 realm-gated
+//   kiemYGrant outers feeding trung_cung's +1 kiemDaoGrant. All 9 Cuu
+//   Cung nodes carry the kiemDaoBelowCap prereq — a capped pool
+//   rejects the buy BEFORE insight moves (spec K20).
 //
 function stat(
   nodeId: string,
@@ -80,7 +81,6 @@ function orbGrowth(orb: OrbId, spec: OrbGrowthSpec, index: number): ProgressionN
     insightCost: 1,
     maxLevel: 5,
     upgradeCost: { base: 1, perLevel: 2 },
-    kiemTuMode: 'hien',
     prerequisites: [
       { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM[orb]]!.id },
       ...(chainTo ? [{ kind: 'node' as const, nodeId: chainTo }] : []),
@@ -191,7 +191,6 @@ const ORB_NODES: ProgressionNode[] = ORB_BRANCHES.flatMap(branch => {
     type: 'major',
     role: 'keystone',
     insightCost: 3,
-    kiemTuMode: 'hien',
     prerequisites: [
       { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM[branch.orb]]!.id },
       { kind: 'node', nodeId: `${branch.orb}_4` },
@@ -206,20 +205,6 @@ const ORB_NODES: ProgressionNode[] = ORB_BRANCHES.flatMap(branch => {
 
 // ─────────────────── Hidden-path root (Task 10 contract) ───────────────────
 
-export const KIEM_TU_AN_NODE: ProgressionNode = {
-  id: 'kiem_tu_an',
-  name: 'Kiếm Tu Ẩn',
-  description:
-    'Bỏ Kiếm Phổ, theo Ngự Kiếm Đạo — MỘT CHIỀU, không hoàn lại. ' +
-    'Mọi phi kiếm tự quyết đòn; Kiếm Ý tích lũy luyện thêm phi kiếm.',
-  type: 'major',
-  role: 'keystone',
-  insightCost: 3,
-  revealWhen: { kind: 'skillCastCount', skillId: 'tram', level: 3 },
-  prerequisites: [{ kind: 'skillCastCount', skillId: 'tram', level: 3 }],
-  effect: { kiemTuModeSwitch: 'ngu' },
-  branchTag: 'ngu_kiem',
-}
 
 // ───────────────────────── Ngu branch ─────────────────────────
 
@@ -235,9 +220,7 @@ const NGU_CASCADE_NODES: ProgressionNode[] = [
     type: 'major',
     role: 'keystone',
     insightCost: 2,
-    kiemTuMode: 'ngu',
     prerequisites: [
-      { kind: 'node', nodeId: 'kiem_tu_an' },
       { kind: 'realm', realmId: 'foundation_establishment' },
     ],
     effect: { cascadeUnlock: 'a' },
@@ -250,9 +233,7 @@ const NGU_CASCADE_NODES: ProgressionNode[] = [
     type: 'major',
     role: 'keystone',
     insightCost: 2,
-    kiemTuMode: 'ngu',
     prerequisites: [
-      { kind: 'node', nodeId: 'kiem_tu_an' },
       { kind: 'realm', realmId: 'golden_core' },
     ],
     effect: { cascadeUnlock: 'e' },
@@ -265,9 +246,7 @@ const NGU_CASCADE_NODES: ProgressionNode[] = [
     type: 'major',
     role: 'keystone',
     insightCost: 2,
-    kiemTuMode: 'ngu',
     prerequisites: [
-      { kind: 'node', nodeId: 'kiem_tu_an' },
       { kind: 'realm', realmId: 'nascent_soul' },
     ],
     effect: { cascadeUnlock: 'd' },
@@ -287,8 +266,7 @@ const NGU_GROWTH_NODES: ProgressionNode[] = [
     insightCost: 1,
     maxLevel: 5,
     upgradeCost: { base: 1, perLevel: 2 },
-    kiemTuMode: 'ngu',
-    prerequisites: [{ kind: 'node', nodeId: 'kiem_tu_an' }],
+    prerequisites: [],
     effect: { statModifiers: [stat('ngu_kiem_sac', 'skillDamagePercent', undefined, undefined, 0.03, 0.03)] },
     branchTag: 'ngu_kiem',
   },
@@ -301,8 +279,7 @@ const NGU_GROWTH_NODES: ProgressionNode[] = [
     insightCost: 1,
     maxLevel: 5,
     upgradeCost: { base: 1, perLevel: 2 },
-    kiemTuMode: 'ngu',
-    prerequisites: [{ kind: 'node', nodeId: 'kiem_tu_an' }],
+    prerequisites: [],
     effect: { statModifiers: [stat('ngu_kiem_phong', 'chanceToIgnoreResistance', undefined, undefined, 0.02, 0.02)] },
     branchTag: 'ngu_kiem',
   },
@@ -315,8 +292,7 @@ const NGU_GROWTH_NODES: ProgressionNode[] = [
     insightCost: 1,
     maxLevel: 5,
     upgradeCost: { base: 1, perLevel: 2 },
-    kiemTuMode: 'ngu',
-    prerequisites: [{ kind: 'node', nodeId: 'kiem_tu_an' }],
+    prerequisites: [],
     effect: { statModifiers: [stat('ngu_kiem_sat', 'criticalDamage', undefined, undefined, 0.03, 0.03)] },
     branchTag: 'ngu_kiem',
   },
@@ -354,9 +330,7 @@ const CUU_CUNG_NODES: ProgressionNode[] = [
     type: 'minor',
     role: 'growth',
     insightCost: 2,
-    kiemTuMode: 'ngu',
     prerequisites: [
-      { kind: 'node', nodeId: 'kiem_tu_an' },
       { kind: 'realm', realmId: palace.realmId },
       { kind: 'kiemDaoBelowCap' },
     ],
@@ -371,7 +345,6 @@ const CUU_CUNG_NODES: ProgressionNode[] = [
     type: 'major',
     role: 'keystone',
     insightCost: 5,
-    kiemTuMode: 'ngu',
     prerequisites: [
       { kind: 'nodeCount', nodeIds: CUU_CUNG_OUTER.map(p => p.id), countRequired: 8 },
       { kind: 'kiemDaoBelowCap' },
@@ -381,10 +354,21 @@ const CUU_CUNG_NODES: ProgressionNode[] = [
   },
 ]
 
+// M6 — path + way membership stamped at export (same pattern as
+// TheTuNodes): 'hien' owns the orb branches, 'ngu' owns everything in
+// the hidden subtree. requiredCultivationPath is REQUIRED alongside —
+// 'hien' is a way id under BOTH kiem_tu and the_tu, and the retired
+// kiemTuMode field used to carry the path scoping implicitly. The
+// kiem_tu_an flip node is gone; requiredWay is the only kiem-way gate.
 export const KIEM_TU_NODES: ProgressionNode[] = [
-  ...ORB_NODES,
-  KIEM_TU_AN_NODE,
-  ...NGU_CASCADE_NODES,
-  ...NGU_GROWTH_NODES,
-  ...CUU_CUNG_NODES,
+  ...ORB_NODES.map(node => ({
+    ...node,
+    requiredCultivationPath: 'kiem_tu' as const,
+    requiredWay: 'hien',
+  })),
+  ...[...NGU_CASCADE_NODES, ...NGU_GROWTH_NODES, ...CUU_CUNG_NODES].map(node => ({
+    ...node,
+    requiredCultivationPath: 'kiem_tu' as const,
+    requiredWay: 'ngu',
+  })),
 ]

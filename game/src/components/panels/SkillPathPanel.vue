@@ -181,7 +181,8 @@ const selectedSkillHasTree = computed(() => {
 
 const treeBranchTag = computed<string>(() => {
   if (player.cultivationPath === 'kiem_tu') {
-    return player.kiemTu?.mode === 'ngu' ? 'ngu_kiem' : 'kiem_pho'
+    // M6 — cultivationWay is the discriminator (kiemTu.mode retired).
+    return player.cultivationWay === 'ngu' ? 'ngu_kiem' : 'kiem_pho'
   }
 
   return theTuTreeTag.value ?? selectedBranch.value

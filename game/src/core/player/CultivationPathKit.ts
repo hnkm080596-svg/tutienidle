@@ -11,6 +11,7 @@ import {
   PHAP_TU_NGU_HANH_WAY,
 } from '../phap-tu/PhapTuPath'
 import { THE_TU_HIEN_WAY, THE_TU_UNG_THE_WAY } from '../the-tu/TheTuPath'
+import { KIEM_TU_HIEN_WAY, KIEM_TU_NGU_WAY } from '../kiem-tu/KiemTuPath'
 import { LEGACY_PATH_TO_WAY } from './PathWayIdentity'
 
 // M5 — the legacy-id -> (base path, way) adapter lives in the
@@ -175,30 +176,14 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathBaseId, Cu
   kiem_tu: {
     id: 'kiem_tu',
     name: 'Kiếm Tu',
+    // M6 — the way definitions live in the path module
+    // (core/kiem-tu/KiemTuPath.ts) alongside the machinery they own:
+    // the way predicates and the ngu ritual-only offer gate. kiem_tu
+    // never had a hidden-variant path id — both ways persist
+    // cultivationPath 'kiem_tu'; cultivationWay is the discriminator.
     ways: {
-      hien: {
-        id: 'hien',
-        pathId: 'kiem_tu',
-        name: 'Kiếm Tu — Ngự Kiếm Tâm Kinh',
-        element: 'metal',
-        techniqueId: 'ngu_kiem',
-        // Kiem Tu Reimagined (spec 2026-09-15) — no authored skill
-        // grants: hien basics come from the Kiem Pho orb preset
-        // (KiemPhoProvider).
-      },
-
-      // Ngu Kiem Dao (An) — catalogued in M1 but NOT offerable until
-      // M6: no legacy path id maps to it and getOfferableCultivationPaths
-      // still returns only the pre-framework ids (R2). The gate is the
-      // exact port of the deleted-in-M6 kiem_tu_an node prereq
-      // (skillCastCount {tram, 3} reads the skillLevels mirror).
-      ngu: {
-        id: 'ngu',
-        pathId: 'kiem_tu',
-        name: 'Kiếm Tu Ẩn — Vạn Kiếm Quyết',
-        techniqueId: 'van_kiem_quyet',
-        offerGate: { requiresSkillLevel: { skillId: 'tram', level: 3 } },
-      },
+      hien: KIEM_TU_HIEN_WAY,
+      ngu: KIEM_TU_NGU_WAY,
     },
   },
 
@@ -268,9 +253,10 @@ export function getActiveWayDefinition(player: PathWayRead): PathWayDefinition |
 // (base path, way) pair back to the legacy 5-id path id that
 // player.cultivationPath still carries during the transition so
 // unmigrated consumers keep working (e.g. ('phap_tu','ngo_dao') ->
-// 'phap_tu_an'). Every way committable in this phase MUST map to a
-// legacy id; 'kiem_tu/ngu' deliberately has none and stays unofferable
-// until M6. Deleted with LEGACY_PATH_TO_WAY in M7.
+// 'phap_tu_an'). A way with no distinct legacy id (kiem_tu/ngu — the
+// hidden variant was state-internal, never a path id) returns
+// undefined; callers persist the base path id for those. Deleted with
+// LEGACY_PATH_TO_WAY in M7.
 export function getLegacyPathIdForWay(
   pathId: CultivationPathBaseId,
   wayId: PathWayId,

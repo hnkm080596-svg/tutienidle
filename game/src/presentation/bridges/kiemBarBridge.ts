@@ -21,6 +21,7 @@ import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import { MAX_THE } from '@/core/combat/CombatTypes'
 import type { OrbId, KiemTuState } from '@/core/kiem-tu/KiemTuState'
 import { isKiemPhoProviderHandle } from '@/core/kiem-tu/KiemPhoProvider'
+import { isKiemTuHien } from '@/core/kiem-tu/KiemTuPath'
 import { forgeCost } from '@/core/kiem-tu/NguKiemDao'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import {
@@ -74,9 +75,9 @@ export interface KiemBarPlayerState {
 
 /**
  * Đọc snapshot Kiếm bar HIỆN TẠI từ battle đang chạy. null = ẩn bar.
- * Mode xác định từ player.kiemTu.mode (canonical state, K1); the
- * battle-scoped provider snapshot supplies cursor/log (runtime, never
- * persisted).
+ * Way xác định từ player.cultivationWay (M6 — the retired
+ * kiemTu.mode discriminator); the battle-scoped provider snapshot
+ * supplies cursor/log (runtime, never persisted).
  */
 export function makeKiemBarReader(
   gameManager: GameManager,
@@ -116,7 +117,7 @@ export function makeKiemBarReader(
       return externalWard ? { current: 0, max: 0, label: '', externalWard } : null
     }
 
-    if (kiemTu.mode === 'hien') {
+    if (isKiemTuHien(player)) {
       // The participant's provider owns the live cursor/log — the
       // persisted preset is the fallback when no provider is attached
       // (e.g. mid-migration battles built before the hien wiring).

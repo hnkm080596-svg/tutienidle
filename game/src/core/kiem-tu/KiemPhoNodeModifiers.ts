@@ -1,7 +1,7 @@
 import type { PlayerData } from '../player/Player'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { KiemPhoCombo, KiemPhoComboModifier } from './KiemPhoSystem'
-import { nodeModeApplies, nodeWayApplies } from '../progression/NodeSystem'
+import { nodeWayApplies } from '../progression/NodeSystem'
 
 // Kiem Tu Reimagined Task 11 (spec §4.2) — converts purchased nodes
 // carrying `effect.kiemTuComboModifier` into the runtime modifier hooks
@@ -27,7 +27,7 @@ export function collectKiemPhoComboModifiers(
   for (const node of nodes) {
     const data = node.effect.kiemTuComboModifier
 
-    if (!data || (player.nodeLevels?.[node.id] ?? 0) <= 0 || !nodeModeApplies(player, node) || !nodeWayApplies(player, node)) {
+    if (!data || (player.nodeLevels?.[node.id] ?? 0) <= 0 || !nodeWayApplies(player, node)) {
       continue
     }
 

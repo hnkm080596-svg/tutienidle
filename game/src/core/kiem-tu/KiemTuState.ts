@@ -1,9 +1,11 @@
 // Kiem Tu Reimagined (spec 2026-09-15 K1/K6/K14) — the ONE canonical
-// state model for the path. `mode` is the single discriminator: hien
-// (Kiem Pho preset-combo) never reads kiemY/kiemDao*; ngu (Ngu Kiem
-// Dao) never reads preset. All mutations go through the owning ops —
-// chooseCultivationPath (create), purchaseNode dispatch (mode flip),
-// NguKiemDao (economy), GameManagerRealmAdvanceOps (breakthrough merge).
+// state model for the path. Cultivation Path Framework M6: the
+// discriminator moved OFF this slice — player.cultivationWay
+// ('hien'|'ngu') is the membership check (isKiemTuHien/isKiemTuNgu);
+// hien (Kiem Pho preset-combo) never reads kiemY/kiemDao*; ngu (Ngu
+// Kiem Dao) never reads preset. All mutations go through the owning
+// ops — applyPathChoice (create), NguKiemDao (economy),
+// GameManagerRealmAdvanceOps (breakthrough merge).
 
 /** Canonical orb ids — the ONLY ids the preset, cast log and combo
  *  patterns ever use (K6). KiemPhoOrbs.ts re-exports this union. */
@@ -19,13 +21,7 @@ export const KIEM_PHO_ORB_IDS: readonly OrbId[] = [
   'orb_quet',
 ]
 
-export type KiemTuMode = 'hien' | 'ngu'
-
 export interface KiemTuState {
-  /** 'hien' = Kiem Pho (visible path); 'ngu' = Ngu Kiem Dao (hidden,
-   *  one-way via the kiem_tu_an node). */
-  mode: KiemTuMode
-
   /** Hien: the 1..9-orb auto-cast loop, persisted. Edited out of combat
    *  only (setKiemPhoPreset op). Meaningless to ngu. */
   preset: OrbId[]
@@ -43,10 +39,10 @@ export interface KiemTuState {
   kiemDaoBase: number
 }
 
-/** Spec-locked fresh state at path choice (K1). */
+/** Spec-locked fresh state at path choice (K1). Way-agnostic: the
+ *  same defaults serve hien (preset) and ngu (economy zeros). */
 export function freshKiemTuState(): KiemTuState {
   return {
-    mode: 'hien',
     preset: ['orb_dam'],
     kiemY: 0,
     kiemDaoCount: 1,

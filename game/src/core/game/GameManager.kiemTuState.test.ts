@@ -6,8 +6,8 @@ import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { freshKiemTuState, MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
 
-// Kiem Tu Reimagined (spec 2026-09-15 K1/K3/K19) — path choice always
-// enters mode 'hien' with the canonical fresh state; NO route lock, no
+// Kiem Tu Reimagined (spec 2026-09-15 K1/K3/K19) — path choice commits
+// way 'hien' with the canonical fresh state; NO route lock, no
 // legacy skill grants, no keystone purchase. Mortal precursor skills
 // (the whole set, table-driven) become uncastable/unequippable the
 // moment ANY path is chosen.
@@ -41,20 +41,16 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
     const { gameManager, player } = setupMortalWithPathReady(0)
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
-    expect(player.kiemTu).toEqual({
-      mode: 'hien',
-      preset: ['orb_dam'],
-      kiemY: 0,
-      kiemDaoCount: 1,
-      kiemDaoBase: 1,
-    })
+    expect(player.cultivationPath).toBe('kiem_tu')
+    expect(player.cultivationWay).toBe('hien')
+    expect(player.kiemTu).toEqual(freshKiemTuState())
   })
 
   it('no route lock: tram cast counts never alter the fresh hien state', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
-    expect(player.kiemTu?.mode).toBe('hien')
+    expect(player.cultivationWay).toBe('hien')
     expect(player.kiemTu).toEqual(freshKiemTuState())
   })
 

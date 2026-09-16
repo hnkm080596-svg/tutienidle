@@ -6,6 +6,7 @@ import type { PlayerData } from '../player/Player'
 import type { CultivationPathBaseId, PathWayId } from '../player/CultivationPathKit'
 import { MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
+import { isKiemTuNgu } from '../kiem-tu/KiemTuPath'
 import {
   CULTIVATION_PATH_MODULES,
   PHAP_TU_AN_BASIC_ID,
@@ -86,7 +87,8 @@ export class GameManagerRealmAdvanceOps {
    * hien / non-kiem-tu players.
    */
   applyKiemTuRealmTransition(player: PlayerData): void {
-    if (player.kiemTu?.mode === 'ngu') {
+    // M6 — way membership is the discriminator (kiemTu.mode retired).
+    if (player.kiemTu && isKiemTuNgu(player)) {
       applyBreakthroughMerge(player.kiemTu)
     }
   }
@@ -285,9 +287,12 @@ export class GameManagerRealmAdvanceOps {
 
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)
-      // Kiem Tu Reimagined — ngu merge (no-op for hien; ngu cannot exist
-      // at mortal, so this is a contract-covering call, not a hot path).
-      this.applyKiemTuRealmTransition(player)
+      // M6 — NO applyKiemTuRealmTransition here: ngu can now be picked at
+      // this very ritual, so the pre-M6 "ngu cannot exist at mortal"
+      // assumption is false. The slice was JUST created (kiemDaoCount 1 —
+      // nothing forged this realm); merging it would hand out a free
+      // kiemDaoBase bump at entry. The merge stays on real major-realm
+      // advances (TribulationOutcomeService), where forged swords exist.
     }
 
     return true

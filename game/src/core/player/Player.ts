@@ -121,8 +121,9 @@ export interface PlayerData {
   phapTu: PhapTuState
 
   // Kiem Tu Reimagined (spec 2026-09-15 K1) — the ONE canonical path
-  // state. Written at chooseCultivationPath('kiem_tu') = fresh hien
-  // state; mode flips to 'ngu' permanently via the kiem_tu_an node.
+  // state. Written at applyPathChoice('kiem_tu', way) inside the
+  // ritual; way membership lives on cultivationWay ('hien'|'ngu') —
+  // the retired mode field is gone.
   kiemTu?: KiemTuState
 
   // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,

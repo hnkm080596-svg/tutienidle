@@ -129,23 +129,22 @@ function close() {
 }
 
 // Kiem Tu specialization card below — shown only after the player has
-// chosen the kiem_tu path (read-only display; the hien -> ngu
-// conversion lives on the kiem_tu_an node, not in this panel).
+// chosen the kiem_tu path (read-only display; the way was locked at
+// the Initiation Ritual — there is no in-panel conversion).
 const isKiemTu = computed(() => {
   stateVersion.value
 
   return player.cultivationPath === 'kiem_tu'
 })
 
-// Kiem Tu Reimagined (spec 2026-09-15) — hien/ngu specialization mode
-// is canonical on PlayerData.kiemTu. 'hien' (Kiem Pho) is the visible
-// spec every Kiem Tu starts as; 'ngu' (Ngu Kiem Dao) appears only
-// after the hidden kiem_tu_an conversion, so displaying it here never
-// spoils a path the player has not unlocked.
+// Cultivation Path Framework (M6) — the hien/ngu way is canonical on
+// PlayerData.cultivationWay (the retired kiemTu.mode discriminator).
+// 'hien' (Kiem Pho) is the visible spec; 'ngu' (Ngu Kiem Dao) only
+// ever reads 'ngu' for a player who entered it at the ritual.
 const kiemTuMode = computed(() => {
   stateVersion.value
 
-  return player.kiemTu?.mode ?? 'hien'
+  return player.cultivationWay === 'ngu' ? 'ngu' : 'hien'
 })
 
 const specNameDisplay = computed(() =>

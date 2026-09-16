@@ -549,12 +549,6 @@ export class GameManager {
       isTurnBattleInProgress: () => this.turnBattleOps?.isTurnBattleInProgress() ?? false,
       // Deferred closure - turnBattleOps is assigned later.
       getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
-      // Deferred closures - realmAdvanceOps is constructed right after
-      // this and owns technique learn/equip (kiem_tu_an mode swap).
-      learnTechnique: techniqueId => this.realmAdvanceOps.learnTechnique(techniqueId),
-      equipTechnique: techniqueId => this.realmAdvanceOps.equipTechnique(techniqueId),
-      hasTechniqueTemplate: techniqueId => this.techniqueTemplates.has(techniqueId),
-      removeTechnique: techniqueId => this.techniqueManager.remove(techniqueId),
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({

@@ -8,6 +8,7 @@ import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
+import { freshKiemTuState } from '../kiem-tu/KiemTuState'
 import { CULTIVATION_PATH_STAT_DOMAINS } from '../stats/StatDomain'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { defineEnemy } from '../enemy/Enemy'
@@ -124,7 +125,9 @@ describe('phap_tu_an — ritual offer gate', () => {
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
     expect(player.cultivationPath).toBe('kiem_tu')
     expect(player.cultivationWay).toBe('hien')
-    expect(player.kiemTu?.mode).toBe('hien')
+    // M6 — way membership is the discriminator (kiemTu.mode retired);
+    // the ritual still creates the canonical way-agnostic slice.
+    expect(player.kiemTu).toEqual(freshKiemTuState())
   })
 
   it('chooseCultivationPath(phap_tu, ngo_dao) fails atomically when a kit template is missing — nothing committed', () => {

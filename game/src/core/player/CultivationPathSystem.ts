@@ -65,14 +65,6 @@ export type PathChoiceResult = { ok: true } | { ok: false; reason: string }
 // path order (ngo_dao before ung_the), so the sealed cards stay last.
 const RITUAL_PATH_ORDER: readonly CultivationPathBaseId[] = ['phap_tu', 'kiem_tu', 'the_tu']
 
-// Temporary M6 exclusion — the kiem_tu 'ngu' way is catalogued but NOT
-// offerable until M6 lands its ritual entry (way slice mode, node
-// requiredWay migration). listOfferableWays omits it entirely and
-// applyPathChoice rejects it — both read this one predicate.
-function isWayExcludedUntilM6(way: PathWayDefinition): boolean {
-  return way.pathId === 'kiem_tu' && way.id === 'ngu'
-}
-
 function offerGateReason(way: PathWayDefinition): string | undefined {
   const requiredSkill = way.offerGate?.requiresSkillLevel
   if (requiredSkill) {
@@ -89,8 +81,7 @@ function offerGateReason(way: PathWayDefinition): string | undefined {
 
 /**
  * Every (path, way) pair the ritual may show, with a live `eligible`
- * flag — gated ways stay listed so the UI can render locked cards;
- * kiem_tu/ngu is excluded entirely until M6 (see isWayExcludedUntilM6).
+ * flag — gated ways stay listed so the UI can render locked cards.
  * Order: base ways in RITUAL_PATH_ORDER, then gated ways same order.
  */
 export function listOfferableWays(player: PlayerData): readonly PathWayOffer[] {
@@ -100,11 +91,6 @@ export function listOfferableWays(player: PlayerData): readonly PathWayOffer[] {
     for (const pathId of RITUAL_PATH_ORDER) {
       for (const way of Object.values(CULTIVATION_PATH_MODULES[pathId].ways)) {
         if ((way.offerGate !== undefined) !== gated) {
-          continue
-        }
-
-        // The M6-excluded way never appears — not even as a locked card.
-        if (isWayExcludedUntilM6(way)) {
           continue
         }
 
@@ -155,7 +141,8 @@ export function getActiveWay(player: PlayerData): PathWayId | undefined {
  * written, LEGACY_PATH_TO_WAY fallback for legacy-shaped saves — and
  * delegates to the way's PathWayStatFacet. resolvePlayerFinalStats calls
  * this before calculateStats so facet emissions are gated by their own
- * domain tags. Ways without a facet (kiem_tu until M6) emit nothing.
+ * domain tags. Ways without a facet (kiem_tu has no totals-driven
+ * channel) emit nothing.
  */
 export function collectActiveWayStatModifiers(
   player: PlayerData,
@@ -170,8 +157,9 @@ export function collectActiveWayStatModifiers(
  * M5 — the active way's OWNED stat domains: the way's stat facet is the
  * authority when it declares one (hien -> 'the_tu', ung_the ->
  * 'the_tu_an', both phap_tu ways -> 'phap_tu'); facet-less ways fall
- * back to the legacy path-id map row so kiem_tu keeps working until
- * M6. Consumed by GameManagerTurnBattleOps when stamping
+ * back to the legacy path-id map row (kiem_tu resolves 'kiem_tu' for
+ * both ways — correct, they share the domain). Consumed by
+ * GameManagerTurnBattleOps when stamping
  * participant.activeDomains — the mid-battle domain deltaDerivers gate
  * on it, so a collapsed save must not resolve the WRONG way's domain
  * (raw-path lookup would give 'the_tu' for ('the_tu','ung_the')).
@@ -189,8 +177,8 @@ export function resolveActiveWayStatDomains(player: PathWayRead): readonly StatD
  * THE path/way write authority — invoked by RealmAdvanceOps inside the
  * ritual transaction. Validates: the path exists in the catalog, the
  * way belongs to that path, the player has no existing choice, and the
- * way is currently offerable (live offerGate eval, incl. the M6 ngu
- * exclusion). ZERO mutation on any failure.
+ * way is currently offerable (live offerGate eval). ZERO mutation on
+ * any failure.
  *
  * On success writes cultivationWay AND the legacy-effective
  * cultivationPath id (M7 deletion adapter via getLegacyPathIdForWay —
@@ -219,22 +207,24 @@ export function applyPathChoice(
     return { ok: false, reason: 'cultivation path already chosen' }
   }
 
-  if (isWayExcludedUntilM6(way) || !isCultivationPathOffered(way, player)) {
+  if (!isCultivationPathOffered(way, player)) {
     return { ok: false, reason: `way '${wayId}' is not currently offerable` }
   }
 
-  const legacyPathId = getLegacyPathIdForWay(pathId, wayId)
-
-  if (!legacyPathId) {
-    return { ok: false, reason: `no legacy path id for (${pathId}, ${wayId})` }
-  }
+  // Ways with a distinct legacy id persist it so unmigrated consumers
+  // keep working (('phap_tu','ngo_dao') -> 'phap_tu_an'); a way that
+  // never had a legacy path id — kiem_tu/ngu, whose hidden variant was
+  // state-internal — persists the base path id and lets
+  // cultivationWay carry the distinction.
+  const legacyPathId = getLegacyPathIdForWay(pathId, wayId) ?? pathId
 
   player.cultivationWay = wayId
   player.cultivationPath = legacyPathId
 
   // Way-slice lifecycle — created at commit by the authority. Only
-  // kiem_tu declares a slice today: the canonical fresh state enters
-  // mode 'hien' (ngu's slice shape lands with its M6 ritual entry).
+  // kiem_tu declares a slice today: the canonical fresh state is
+  // way-agnostic (the Kiem Y fields start at ngu's defaults; hien
+  // simply never reads them).
   if (pathId === 'kiem_tu') {
     player.kiemTu = freshKiemTuState()
   }
@@ -251,15 +241,23 @@ export function applyPathChoice(
  * as an always-offered base path and 'the_tu_an' behind the same
  * ritual-time evaluation via its way offerGate (huy_quyen Lv3).
  *
- * M2 — now a delegate over listOfferableWays: returns the legacy path
- * ids of the eligible offers (the cataloged kiem_tu 'ngu' way has no
- * legacy id and is never listed until M6 — R2).
+ * M2 — now a delegate over listOfferableWays: returns the
+ * legacy-effective path ids of the eligible offers. kiem_tu/ngu has no
+ * distinct legacy id so both kiem ways resolve 'kiem_tu' — the list is
+ * deduped since a path-level consumer cannot distinguish them anyway.
  */
 export function getOfferableCultivationPaths(player: PlayerData): CultivationPathId[] {
-  return listOfferableWays(player)
-    .filter((offer) => offer.eligible)
-    .map((offer) => getLegacyPathIdForWay(offer.pathId, offer.wayId))
-    .filter((pathId): pathId is CultivationPathId => pathId !== undefined)
+  const pathIds = new Set<CultivationPathId>()
+
+  for (const offer of listOfferableWays(player)) {
+    if (!offer.eligible) {
+      continue
+    }
+
+    pathIds.add(getLegacyPathIdForWay(offer.pathId, offer.wayId) ?? offer.pathId)
+  }
+
+  return [...pathIds]
 }
 
 /** linh_bao Lv3 gate — shared by the offer query and the ritual commit.
