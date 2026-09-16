@@ -13,9 +13,14 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
-import { getPathWayDefinition, PHAP_TU_AN_REQUIRED_SKILLS, type PathWayDefinition } from '@/core/player/CultivationPathKit'
-import { getOfferableCultivationPaths } from '@/core/player/CultivationPathSystem'
-import type { CultivationPathId } from '@/core/player/CultivationPathKit'
+import {
+  CULTIVATION_PATH_MODULES,
+  PHAP_TU_AN_REQUIRED_SKILLS,
+  type CultivationPathBaseId,
+  type PathWayDefinition,
+  type PathWayId,
+} from '@/core/player/CultivationPathKit'
+import { listOfferableWays } from '@/core/player/CultivationPathSystem'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
@@ -37,21 +42,30 @@ const cooldownSeconds = computed(() => {
   return gameManager.tribulationDirector.getCooldownSeconds()
 })
 
-// Phap Tu Reimagined (Task 16) — the ritual offers exactly what
-// getOfferableCultivationPaths() decides: phap_tu_an appears ONLY when
-// linh_bao is already Lv3 at ritual time; the_tu_an appears ONLY when
-// huy_quyen is Lv3 (same isCultivationPathOffered predicate the ritual
-// enforces); no locked-card tease when ineligible (spec §11).
+// Phap Tu Reimagined (Task 16) — the ritual offers exactly what the
+// path authority lists: ngo_dao appears ONLY when linh_bao is already
+// Lv3 at ritual time; ung_the appears ONLY when huy_quyen is Lv3 (same
+// isCultivationPathOffered predicate the ritual enforces inside
+// applyPathChoice); no locked-card tease when ineligible (spec §11).
 // Offerability is evaluated live per render — eligibility is never
 // stored.
-const availablePaths = computed(() => {
+const availableWays = computed(() => {
   stateVersion.value
 
-  // M1 — offers stay legacy path ids during the transition; each row
-  // carries the resolved way definition for display.
-  return getOfferableCultivationPaths(player.$state)
-    .map((id) => ({ id, way: getPathWayDefinition(id) }))
-    .filter((entry): entry is { id: CultivationPathId; way: PathWayDefinition } => entry.way !== undefined)
+  // M2 — offers are (path, way) pairs from the authority. Ineligible
+  // ways stay hidden (pre-framework omission behavior preserved); each
+  // row carries the resolved way definition for display.
+  return listOfferableWays(player.$state)
+    .filter((offer) => offer.eligible)
+    .map((offer) => ({
+      pathId: offer.pathId,
+      wayId: offer.wayId,
+      way: CULTIVATION_PATH_MODULES[offer.pathId].ways[offer.wayId],
+    }))
+    .filter(
+      (entry): entry is { pathId: CultivationPathBaseId; wayId: PathWayId; way: PathWayDefinition } =>
+        entry.way !== undefined,
+    )
 })
 
 // The hidden path's kit — names resolved live from the skill registry
@@ -65,31 +79,35 @@ const anKitSkillNames = computed(() =>
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
 // (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng
 // thay vì browser confirm() mặc định).
-const pendingPathId = ref<CultivationPathId | null>(null)
+const pendingChoice = ref<{ pathId: CultivationPathBaseId; wayId: PathWayId } | null>(null)
 
-const pendingPathName = computed(() => (pendingPathId.value ? getPathWayDefinition(pendingPathId.value)?.name ?? '' : ''))
+const pendingPathName = computed(() =>
+  pendingChoice.value
+    ? CULTIVATION_PATH_MODULES[pendingChoice.value.pathId].ways[pendingChoice.value.wayId]?.name ?? ''
+    : '',
+)
 
-function choosePath(pathId: CultivationPathId) {
-  pendingPathId.value = pathId
+function choosePath(pathId: CultivationPathBaseId, wayId: PathWayId) {
+  pendingChoice.value = { pathId, wayId }
 }
 
 function cancelChoosePath() {
-  pendingPathId.value = null
+  pendingChoice.value = null
 }
 
 function confirmChoosePath() {
-  const pathId = pendingPathId.value
+  const choice = pendingChoice.value
 
-  pendingPathId.value = null
+  pendingChoice.value = null
 
-  if (!pathId) {
+  if (!choice) {
     return
   }
 
-  const way = getPathWayDefinition(pathId)
+  const way = CULTIVATION_PATH_MODULES[choice.pathId].ways[choice.wayId]
 
   const realmIdBefore = player.realmId
-  if (gameManager.realmAdvanceOps.chooseCultivationPath(pathId, player.$state)) {
+  if (gameManager.realmAdvanceOps.chooseCultivationPath(choice.pathId, choice.wayId, player.$state)) {
     bumpState()
 
     // Nghi Lễ Nhập Môn — chọn path VỪA LÀ hành động đột phá Phàm Nhân
@@ -98,7 +116,7 @@ function confirmChoosePath() {
     if (realmIdBefore === 'mortal' && player.realmId !== 'mortal') {
       useWorldAnnouncementStore().show(
         t('panels.quanKhi.world.ceremonyTitle'),
-        t('panels.quanKhi.world.ceremonyBody', { name: way?.name ?? pathId }),
+        t('panels.quanKhi.world.ceremonyBody', { name: way?.name ?? choice.wayId }),
       )
     }
 
@@ -204,11 +222,11 @@ function removeOrbAt(index: number) {
       <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.pathSelection.hint') }}</p>
 
       <div class="quan-khi-panel__choices">
-        <template v-for="kit in availablePaths" :key="kit.id">
+        <template v-for="kit in availableWays" :key="`${kit.pathId}/${kit.wayId}`">
           <!-- Sealed hidden-path card (Task 16) — renders ONLY when
-               getOfferableCultivationPaths includes it; names the way,
-               carries the permanent warning, no node-tree entry point. -->
-          <div v-if="kit.id === 'phap_tu_an'" class="quan-khi-panel__hidden-card">
+               the ngo_dao offer is eligible; names the way, carries the
+               permanent warning, no node-tree entry point. -->
+          <div v-if="kit.wayId === 'ngo_dao'" class="quan-khi-panel__hidden-card">
             <p class="quan-khi-panel__hidden-title">{{ kit.way.name }}</p>
             <p class="quan-khi-panel__hidden-desc">
               {{ t('panels.quanKhi.sections.hiddenPath.description', { kit: anKitSkillNames.join(' · ') }) }}
@@ -219,7 +237,7 @@ function removeOrbAt(index: number) {
               variant="danger"
               size="sm"
               :disabled="cooldownSeconds > 0"
-              @click="choosePath(kit.id)"
+              @click="choosePath(kit.pathId, kit.wayId)"
             >
               {{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}
             </GameButton>
@@ -231,7 +249,7 @@ function removeOrbAt(index: number) {
             variant="danger"
             size="sm"
             :disabled="cooldownSeconds > 0"
-            @click="choosePath(kit.id)"
+            @click="choosePath(kit.pathId, kit.wayId)"
           >
             {{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}
           </GameButton>
@@ -304,9 +322,9 @@ function removeOrbAt(index: number) {
     </div>
 
     <ConfirmModal
-      :open="pendingPathId !== null"
+      :open="pendingChoice !== null"
       :title="t('panels.quanKhi.messages.confirmPathTitle')"
-      :message="pendingPathId === 'phap_tu_an'
+      :message="pendingChoice?.wayId === 'ngo_dao'
         ? t('panels.quanKhi.messages.confirmPathHiddenBody', { name: pendingPathName })
         : t('panels.quanKhi.messages.confirmPathBody', { name: pendingPathName })"
       danger

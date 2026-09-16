@@ -236,7 +236,7 @@ describe('PhapTuNodes reimagined — element authority', () => {
     player.realmId = 'mortal'
     player.realmLevel = 12
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player)).toBe(true)
     expect(player.cultivationPath).toBe('phap_tu')
     expect(player.phapTu).toEqual({ element: null, route: null })
     expect(player.nodeLevels['hoa_linh_ngo']).toBeUndefined()

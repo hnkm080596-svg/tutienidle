@@ -20,6 +20,7 @@ import {
 } from '../../core/stats/statKeyMigration'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 import { KIEM_PHO_ORB_IDS } from '../../core/kiem-tu/KiemTuState'
+import { LEGACY_PATH_TO_WAY } from '../../core/player/CultivationPathKit'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -196,6 +197,28 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // nodeLevels — field từng gây crash boot v47 (SaveSystem.ts comment v47).
   if (!isObject(player.nodeLevels)) {
     issues.push({ path: 'player.nodeLevels', message: 'phải là object' })
+  }
+
+  // Cultivation Path Framework (v65) — cultivationPath gains its missing
+  // enum check (M0 gap): when present it must be one of the 5 legacy
+  // ids — the closed union derived from LEGACY_PATH_TO_WAY keys, single
+  // source until M7 shrinks it to the base 3. cultivationWay (v65) is
+  // an optional PathWayId content string — shape-check the type only;
+  // catalog membership belongs to the path authority, not the save
+  // boundary.
+  if (
+    player.cultivationPath !== undefined &&
+    (typeof player.cultivationPath !== 'string' ||
+      !Object.prototype.hasOwnProperty.call(LEGACY_PATH_TO_WAY, player.cultivationPath))
+  ) {
+    issues.push({
+      path: 'player.cultivationPath',
+      message: 'phải là 1 trong 5 cultivation path id hợp lệ hoặc vắng mặt',
+    })
+  }
+
+  if (player.cultivationWay !== undefined && typeof player.cultivationWay !== 'string') {
+    issues.push({ path: 'player.cultivationWay', message: 'phải là string hoặc vắng mặt' })
   }
 
   // Phap Tu Reimagined — required PlayerData.phapTu: { element, route },

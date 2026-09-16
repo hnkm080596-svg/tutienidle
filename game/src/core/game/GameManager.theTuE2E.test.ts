@@ -127,7 +127,7 @@ describe('initiation ritual (T1/T6)', () => {
     const { gameManager } = makeManager()
     const player = mortalAtGate()
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)).toBe(true)
     expect(player.cultivationPath).toBe('the_tu')
     expect(player.realmId).toBe('qi_refining')
     const technique = gameManager.techniqueManager.get('kim_cang_bat_hoai_the')
@@ -139,11 +139,11 @@ describe('initiation ritual (T1/T6)', () => {
     const { gameManager } = makeManager()
     const player = mortalAtGate()
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu_an', player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
 
     player.skillLevels = { huy_quyen: 3 }
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu_an', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)).toBe(true)
     expect(player.cultivationPath).toBe('the_tu_an')
     expect(gameManager.techniqueManager.get('ung_the_than_quyet')?.equipped).toBe(true)
   })
@@ -153,7 +153,7 @@ describe('cuong_chien battle flow', () => {
   it('root + scalar node reach the participant-local kit clone', () => {
     const { gameManager, combatSource } = makeManager()
     const player = mortalAtGate()
-    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)
     gameManager.progressionOps.purchaseNode('cuong_chien', player)
     gameManager.progressionOps.purchaseNode('minor_cuong_huyet_no', player)
     gameManager.progressionOps.upgradeNode('minor_cuong_huyet_no', player)
@@ -172,7 +172,7 @@ describe('cuong_chien battle flow', () => {
   it('missing-HP scalar lands through the live battle: wounded hits deal more', () => {
     const { gameManager, combatSource } = makeManager()
     const player = mortalAtGate()
-    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)
     gameManager.progressionOps.purchaseNode('cuong_chien', player)
     player.baseStats = asBaseStats({ ...player.baseStats, might: 50, speed: 500 })
 
@@ -200,7 +200,7 @@ describe('cuong_chien battle flow', () => {
   it('lethal hit triggers the ops-wired Bat Tu survival: HP 1, buff, ult CD spent', () => {
     const { gameManager, combatSource } = makeManager()
     const player = mortalAtGate()
-    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)
     gameManager.progressionOps.purchaseNode('cuong_chien', player)
     player.baseStats = asBaseStats({ ...player.baseStats, speed: 1 })
 
@@ -221,7 +221,7 @@ describe('cuong_chien battle flow', () => {
   it('Ba The suppresses hard-CC blocking while the buff is active (INV-5)', () => {
     const { gameManager, combatSource } = makeManager()
     const player = mortalAtGate()
-    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)
     gameManager.progressionOps.purchaseNode('cuong_chien', player)
     player.baseStats = asBaseStats({ ...player.baseStats, might: 50, speed: 500 })
 
@@ -258,7 +258,7 @@ describe('tran_the battle flow', () => {
     registerE2ECompanion()
     const { gameManager, combatSource } = makeManager()
     const player = mortalAtGate()
-    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)
     gameManager.progressionOps.purchaseNode('tran_the', player)
     player.baseStats = asBaseStats({ ...player.baseStats, might: 10, speed: 500, vitality: 200 })
     player.formationLoadout = {
@@ -338,7 +338,7 @@ describe('the_tu_an build wiring (Task 14)', () => {
     gameManager.catalogOps.registerProgressionNodes(THE_TU_AN_NODES)
     const player = mortalAtGate()
     player.skillLevels = { huy_quyen: 3 }
-    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu_an', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)
     gameManager.progressionOps.purchaseNode('phan_mon', player)
 
     const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_an'))
@@ -358,7 +358,7 @@ describe('save/restore parity', () => {
   it('path + node state round-trips; the rebuilt battle resolves the same node-scaled kit', () => {
     const { gameManager } = makeManager()
     const player = mortalAtGate()
-    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)
     gameManager.progressionOps.purchaseNode('cuong_chien', player)
     gameManager.progressionOps.purchaseNode('minor_cuong_huyet_no', player)
 

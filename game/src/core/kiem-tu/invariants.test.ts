@@ -641,7 +641,7 @@ describe('INV-15 — precursor lock (K3)', () => {
       gameManager.progressionOps.learnSkill('tram')
       gameManager.skillSystem.equipToSlot('tram', 0)
 
-      expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
+      expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
       expect(gameManager.progressionOps.setSkillLoadoutSlot(player, 0, skillId)).toBe(false)
     },
   )
@@ -656,7 +656,7 @@ describe('INV-15 — precursor lock (K3)', () => {
     player.realmLevel = 12
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('tram')
-    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
 
     const authoredId = (
       gameManager as unknown as {

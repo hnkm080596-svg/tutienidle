@@ -40,7 +40,7 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
   it('chooseCultivationPath(kiem_tu) sets the canonical fresh state', () => {
     const { gameManager, player } = setupMortalWithPathReady(0)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
     expect(player.kiemTu).toEqual({
       mode: 'hien',
       preset: ['orb_dam'],
@@ -53,7 +53,7 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
   it('no route lock: tram cast counts never alter the fresh hien state', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
     expect(player.kiemTu?.mode).toBe('hien')
     expect(player.kiemTu).toEqual(freshKiemTuState())
   })
@@ -61,7 +61,7 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
   it('grants NO legacy kiem-tran/bat-kiem skill — hien basics come from the orb preset', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
 
-    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
 
     expect(gameManager.skillManager.has('kiem_tran_luong_nghi')).toBe(false)
     expect(gameManager.skillManager.has('bat_kiem_thuat')).toBe(false)
@@ -72,7 +72,7 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
   it('chooseCultivationPath(phap_tu) leaves kiemTu undefined', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player)).toBe(true)
     expect(player.kiemTu).toBeUndefined()
   })
 
@@ -92,7 +92,7 @@ describe('K3 — mortal precursor lock post-path', () => {
     skillId => {
       const { gameManager, player } = setupMortalWithPathReady(10_000)
 
-      gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)
+      gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
 
       // Gate runs BEFORE the learned/exists check — precursor ids reject
       // unconditionally for path players (covers linh_bao/huy_quyen the
@@ -112,7 +112,7 @@ describe('K3 — mortal precursor lock post-path', () => {
   it('kiem_tu basic no longer resolves to authored tram (mortal-only)', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
 
-    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
 
     // The authored-skill seam: post-path, no Skill object backs the
     // basic (orbs take over at Task 6; the static KIEM_TU_BASIC fallback

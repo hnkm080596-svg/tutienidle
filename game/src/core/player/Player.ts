@@ -15,7 +15,7 @@ import { addCultivation } from '../cultivation/CultivationSystem'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { FoundationType } from '../breakthrough/FoundationType'
-import type { CultivationPathId } from './CultivationPathKit'
+import type { CultivationPathId, PathWayId } from './CultivationPathKit'
 import { createPhapTuState, type PhapTuState } from '../phap-tu/PhapTuState'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ArtifactProgress } from '../artifact/Artifact'
@@ -106,6 +106,15 @@ export interface PlayerData {
   // path) là NGOẠI LỆ duy nhất, xem CharacterPanel.vue's
   // canChooseCultivationPath.
   cultivationPath?: CultivationPathId
+
+  // Cultivation Path Framework (spec 2026-09-16, M2) — the chosen WAY
+  // inside the path (e.g. 'ngu_hanh', 'ngo_dao'), written together with
+  // cultivationPath by CultivationPathSystem.applyPathChoice() inside
+  // the Initiation Ritual transaction. During the transition
+  // cultivationPath still carries the legacy 5-id union so unmigrated
+  // consumers keep working; cultivationWay is the authoritative branch
+  // record and the only path/way field that survives the M7 cleanup.
+  cultivationWay?: PathWayId
 
   // Phap Tu Reimagined (spec 2026-09-14) — persistent path-choice
   // authority for the normal Phap Tu path: { element, route } commit
@@ -354,6 +363,11 @@ export function createDefaultPlayer(): PlayerData {
     // player.$state sau này (bug thật đã gặp: technique/skill equip
     // đúng nhưng UI gate không tự chuyển vì thiếu dòng này).
     cultivationPath: undefined,
+
+    // MUST be declared explicitly (even as `undefined`) — same Pinia
+    // toRefs() snapshot reason as cultivationPath above: applyPathChoice
+    // assigns this field through player.$state inside the ritual.
+    cultivationWay: undefined,
 
     // Required (non-optional) field — present from creation; both
     // members stay null until the ritual + atomic element/route pick.

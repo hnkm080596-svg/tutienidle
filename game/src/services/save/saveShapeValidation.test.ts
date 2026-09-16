@@ -136,6 +136,80 @@ describe('validateGameSaveShape — player', () => {
   })
 })
 
+describe('validateGameSaveShape — cultivationPath / cultivationWay (v65)', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  it('chấp nhận save khi cả hai field vắng mặt (nhân vật chưa chọn path)', () => {
+    const save = validSave()
+
+    delete playerOf(save).cultivationPath
+    delete playerOf(save).cultivationWay
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each(['kiem_tu', 'phap_tu', 'phap_tu_an', 'the_tu', 'the_tu_an'])(
+    'chấp nhận cultivationPath = %s (union 5 id trong thời kỳ chuyển tiếp)',
+    (pathId) => {
+      const save = validSave()
+
+      playerOf(save).cultivationPath = pathId
+
+      expect(validateGameSaveShape(save).ok).toBe(true)
+    },
+  )
+
+  it.each(['khong_ton_tai', 'ngu', '', 7, null, { id: 'phap_tu' }])(
+    'từ chối cultivationPath = %j ngoài union (enum check — M0 gap)',
+    (value) => {
+      const save = validSave()
+
+      playerOf(save).cultivationPath = value
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.cultivationPath')
+    },
+  )
+
+  it.each(['hien', 'ngu_hanh', 'ngo_dao', 'ung_the', 'ngu', 'bat_ky_way_naotn'])(
+    'chấp nhận cultivationWay = %s (PathWayId là content string — chỉ kiểm kiểu)',
+    (wayId) => {
+      const save = validSave()
+
+      playerOf(save).cultivationWay = wayId
+
+      expect(validateGameSaveShape(save).ok).toBe(true)
+    },
+  )
+
+  it.each([[7], [null], [{ id: 'hien' }], [['hien']], [true]])(
+    'từ chối cultivationWay = %j không phải string',
+    (value) => {
+      const save = validSave()
+
+      playerOf(save).cultivationWay = value
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.cultivationWay')
+    },
+  )
+
+  it('cặp hợp lệ post-ritual: cultivationPath legacy id + cultivationWay', () => {
+    const save = validSave()
+
+    playerOf(save).cultivationPath = 'phap_tu_an'
+    playerOf(save).cultivationWay = 'ngo_dao'
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
 describe('validateGameSaveShape — phapTu atomic (element ↔ route)', () => {
   // Review round-2 (LOW): writers commit {element, route} atomically, so a
   // half-set pair is corrupt. The validator must enforce the invariant,

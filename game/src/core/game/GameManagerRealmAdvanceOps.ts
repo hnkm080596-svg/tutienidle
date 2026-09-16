@@ -3,17 +3,16 @@ import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData } from '../player/Player'
-import type { CultivationPathId } from '../player/CultivationPathKit'
-import { freshKiemTuState, MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
+import type { CultivationPathBaseId, PathWayId } from '../player/CultivationPathKit'
+import { MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import {
-  getPathWayDefinition,
+  CULTIVATION_PATH_MODULES,
   PHAP_TU_AN_BASIC_ID,
   PHAP_TU_AN_SPECIAL_ID,
-  isCultivationPathOffered,
 } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
-import { grantCultivationPathRealmReward as grantPathRealmReward, isPhapTuAnEligible } from '../player/CultivationPathSystem'
+import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward } from '../player/CultivationPathSystem'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID, BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
@@ -169,7 +168,7 @@ export class GameManagerRealmAdvanceOps {
    * IDENTICAL to useBreakthrough.ts/useTribulation.ts after every major
    * breakthrough.
    */
-  chooseCultivationPath(pathId: CultivationPathId, player: PlayerData): boolean {
+  chooseCultivationPath(pathId: CultivationPathBaseId, wayId: PathWayId, player: PlayerData): boolean {
     if (
       player.cultivationPath ||
       player.realmId !== 'mortal' ||
@@ -178,25 +177,13 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    // Phap Tu An (Task 7) — hidden path, offered only when linh_bao
-    // reached Lv3 at THIS ritual moment. Re-check BEFORE any side
-    // effect (technique learn/equip, cultivationPath write): an
-    // ineligible pick mutates nothing. The persisted record is
-    // cultivationPath itself — no eligibility flag is stored, and
-    // post-ritual casts can never reopen the option.
-    if (pathId === 'phap_tu_an' && !isPhapTuAnEligible(player)) {
-      return false
-    }
+    // M2 — the (path, way) pair resolves its way definition from the
+    // module catalog; an unknown pair yields no way and fails closed.
+    // Way OFFERABILITY is no longer checked here: applyPathChoice owns
+    // gate evaluation (isPhapTuAnEligible's bespoke check is subsumed).
+    const way = CULTIVATION_PATH_MODULES[pathId]?.ways[wayId]
 
-    // M1 — legacy path ids resolve to the way definition through the
-    // transition adapter; an unknown id yields no way and fails closed.
-    const way = getPathWayDefinition(pathId)
-
-    // The Tu Reimagined (T6) — way.offerGate is the offer-time contract;
-    // enforce the same predicate here so a stale/hidden offer can never
-    // slip through the ritual (isCultivationPathOffered is also what the
-    // Quan Khi panel filters on).
-    if (!way || !isCultivationPathOffered(way, player)) {
+    if (!way) {
       return false
     }
 
@@ -218,7 +205,7 @@ export class GameManagerRealmAdvanceOps {
     }
 
     const grantedSkillIds: readonly string[] =
-      pathId === 'phap_tu_an'
+      wayId === 'ngo_dao'
         ? [PHAP_TU_AN_BASIC_ID, PHAP_TU_AN_SPECIAL_ID]
         : (way.skillIds ?? [])
 
@@ -226,24 +213,29 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    player.cultivationPath = pathId
+    // Path/way commit — the authority validates the pair, evaluates the
+    // offerGate live, and writes cultivationWay + the legacy-effective
+    // cultivationPath id plus the path-state slice (kiem_tu). Zero
+    // mutation on failure, so an ineligible/wrong-path pick stops here.
+    if (!applyPathChoice(player, pathId, wayId).ok) {
+      return false
+    }
 
     this.learnTechnique(way.techniqueId)
     this.equipTechnique(way.techniqueId)
 
-    if (pathId === 'phap_tu_an') {
+    if (wayId === 'ngo_dao') {
       this.deps.progressionOps.learnSkill(PHAP_TU_AN_BASIC_ID)
       this.deps.progressionOps.learnSkill(PHAP_TU_AN_SPECIAL_ID)
       this.deps.skillSystem.equipToSlot(PHAP_TU_AN_BASIC_ID, 0)
       this.deps.skillSystem.equipToSlot(PHAP_TU_AN_SPECIAL_ID, 1)
     } else if (pathId === 'kiem_tu') {
-      // Kiem Tu Reimagined (spec 2026-09-15 K1/K4) — path choice ALWAYS
-      // enters mode 'hien' with the canonical fresh state; there is no
-      // route lock. The legacy kiem-tran/bat-kiem tail (route write,
-      // bat_kiem_thuat grant, kiem_tran_luong_nghi purchase) is gone.
-      // way.skillIds for Kiem Tu stays unused — hien basics come from the
-      // orb preset via the dynamicBasic provider (Task 6).
-      player.kiemTu = freshKiemTuState()
+      // Kiem Tu Reimagined (spec 2026-09-15 K1/K4) — the kiemTu slice is
+      // now created inside applyPathChoice (way-slice lifecycle); there
+      // is no route lock and the legacy kiem-tran/bat-kiem tail (route
+      // write, bat_kiem_thuat grant, kiem_tran_luong_nghi purchase) is
+      // gone. way.skillIds for Kiem Tu stays unused — hien basics come
+      // from the orb preset via the dynamicBasic provider (Task 6).
 
       // Strip the mortal basic + any legacy kit skills from the loadout
       // (NOT unlearn: a Pham Nhan save can still use them; K3 — the
@@ -252,8 +244,8 @@ export class GameManagerRealmAdvanceOps {
       for (const skillId of MORTAL_PRECURSOR_SKILL_IDS) {
         this.deps.skillSystem.unequip(skillId)
       }
-    } else if (pathId === 'the_tu' || pathId === 'the_tu_an') {
-      // The Tu Reimagined (T1) — both Thể Tu paths resolve their kit at
+    } else if (pathId === 'the_tu') {
+      // The Tu Reimagined (T1) — both Thể Tu ways resolve their kit at
       // battle build from the chosen progression root (no loadout
       // skills). The ritual only strips the mortal basics so a lingering
       // tram/huy_quyen cannot occupy the single mortal slot.

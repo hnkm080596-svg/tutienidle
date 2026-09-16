@@ -55,24 +55,26 @@ describe('phap_tu_an — ritual offer gate', () => {
     expect(offered).toContain('kiem_tu')
   })
 
-  it('chooseCultivationPath(phap_tu_an) rejects below Lv3 even though the ritual UI could offer it', () => {
+  it('chooseCultivationPath(phap_tu, ngo_dao) rejects below Lv3 even though the ritual UI could offer it', () => {
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
 
     player.skillCastCounts = { linh_bao: LING_BAO_L3 - 1 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
+    expect(player.cultivationWay).toBeUndefined()
   })
 
-  it('chooseCultivationPath(phap_tu_an) at Lv3: path set, technique equipped, an kit in slots 0/1, passive learned', () => {
+  it('chooseCultivationPath(phap_tu, ngo_dao) at Lv3: legacy path id + way set, technique equipped, an kit in slots 0/1, passive learned', () => {
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
 
     player.skillCastCounts = { linh_bao: LING_BAO_L3 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(true)
     expect(player.cultivationPath).toBe('phap_tu_an')
+    expect(player.cultivationWay).toBe('ngo_dao')
 
     // No element/route/The authority — an has none.
     expect(player.phapTu).toEqual({ element: null, route: null })
@@ -88,16 +90,30 @@ describe('phap_tu_an — ritual offer gate', () => {
     expect(gameManager.skillManager.get('ngo_dao_hon_don')?.equipped).toBe(true)
   })
 
+  it('chooseCultivationPath rejects a way that belongs to another path — zero mutation', () => {
+    const { gameManager, player } = makeManager()
+    gameManager.setActivePlayer(player)
+
+    // 'hien' is a real way of kiem_tu/the_tu, never of phap_tu.
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'hien', player)).toBe(false)
+    expect(player.cultivationPath).toBeUndefined()
+    expect(player.cultivationWay).toBeUndefined()
+    expect(player.realmId).toBe('mortal')
+    expect(gameManager.techniqueManager.getEquipped()).toBeUndefined()
+  })
+
   it('post-ritual linh_bao casts never reopen the option (path already set)', () => {
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
 
     player.skillCastCounts = { linh_bao: LING_BAO_L3 }
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player)).toBe(true)
+    expect(player.cultivationWay).toBe('ngu_hanh')
 
     player.skillCastCounts.linh_bao = LING_BAO_L3 * 2
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(false)
     expect(player.cultivationPath).toBe('phap_tu')
+    expect(player.cultivationWay).toBe('ngu_hanh')
   })
 
   it('a kiem_tu choice with linh_bao Lv3 is unaffected — offer is only evaluated inside the ritual', () => {
@@ -105,12 +121,13 @@ describe('phap_tu_an — ritual offer gate', () => {
     gameManager.setActivePlayer(player)
 
     player.skillCastCounts = { linh_bao: LING_BAO_L3, tram: 0 }
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
     expect(player.cultivationPath).toBe('kiem_tu')
+    expect(player.cultivationWay).toBe('hien')
     expect(player.kiemTu?.mode).toBe('hien')
   })
 
-  it('chooseCultivationPath(phap_tu_an) fails atomically when a kit template is missing — nothing committed', () => {
+  it('chooseCultivationPath(phap_tu, ngo_dao) fails atomically when a kit template is missing — nothing committed', () => {
     // Review round-4 (atomicity): cultivationPath was written BEFORE the
     // grants were verified — a missing template left the path committed
     // with a partial kit. The whole choice must fail instead.
@@ -125,14 +142,15 @@ describe('phap_tu_an — ritual offer gate', () => {
     gameManager.setActivePlayer(player)
     player.skillCastCounts = { linh_bao: LING_BAO_L3 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
+    expect(player.cultivationWay).toBeUndefined()
     expect(player.realmId).toBe('mortal')
     expect(gameManager.skillManager.has('van_phap_tuy_tam')).toBe(false)
     expect(gameManager.skillManager.has('ngo_dao_hon_don')).toBe(false)
   })
 
-  it('chooseCultivationPath(phap_tu_an) fails atomically when the innate passive template is missing', () => {
+  it('chooseCultivationPath(phap_tu, ngo_dao) fails atomically when the innate passive template is missing', () => {
     // Same boundary, different seam: the dao passive arrives via
     // ngo_dao_chan_quyet.innateSkillId — its template must exist too.
     const gameManager = new GameManager()
@@ -146,8 +164,9 @@ describe('phap_tu_an — ritual offer gate', () => {
     gameManager.setActivePlayer(player)
     player.skillCastCounts = { linh_bao: LING_BAO_L3 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
+    expect(player.cultivationWay).toBeUndefined()
     expect(player.realmId).toBe('mortal')
   })
 
@@ -173,7 +192,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
     gameManager.setCombatClockSource(combatSource)
     gameManager.setActivePlayer(player)
     player.skillCastCounts = { linh_bao: LING_BAO_L3 }
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(true)
     return { gameManager, player, combatSource }
   }
 
@@ -349,7 +368,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     // corrupted template must be in place BEFORE the grant.
     const authored = SKILLS.find((skill) => skill.id === 'van_phap_tuy_tam')!
     gameManager.catalogOps.registerSkillTemplates([{ ...authored, effects: [] }])
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu_an', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(true)
 
     expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
   })

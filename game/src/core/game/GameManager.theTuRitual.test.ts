@@ -111,30 +111,34 @@ describe('isCultivationPathOffered — ritual offer gate', () => {
 })
 
 describe('chooseCultivationPath — the_tu ritual', () => {
-  it('the_tu equips kim_cang_bat_hoai_the and strips tram + huy_quyen', () => {
+  it('(the_tu, hien) equips kim_cang_bat_hoai_the and strips tram + huy_quyen', () => {
     const { gameManager, player } = setupMortal(0)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)).toBe(true)
     expect(player.cultivationPath).toBe('the_tu')
+    expect(player.cultivationWay).toBe('hien')
     expect(gameManager.techniqueManager.getEquipped()?.id).toBe('kim_cang_bat_hoai_the')
     expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
     expect(gameManager.skillManager.get('huy_quyen')!.equipped).toBe(false)
     expect(player.realmId).toBe('qi_refining')
   })
 
-  it('the_tu_an is rejected when huy_quyen is below Lv3', () => {
+  it('(the_tu, ung_the) is rejected when huy_quyen is below Lv3 — zero mutation', () => {
     const { gameManager, player } = setupMortal(9999)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu_an', player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
+    expect(player.cultivationWay).toBeUndefined()
     expect(player.realmId).toBe('mortal')
+    expect(gameManager.techniqueManager.getEquipped()).toBeUndefined()
   })
 
-  it('the_tu_an at Lv3 equips ung_the_than_quyet and strips mortal skills', () => {
+  it('(the_tu, ung_the) at Lv3 writes the the_tu_an legacy id + ung_the way and strips mortal skills', () => {
     const { gameManager, player } = setupMortal(10000)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu_an', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)).toBe(true)
     expect(player.cultivationPath).toBe('the_tu_an')
+    expect(player.cultivationWay).toBe('ung_the')
     expect(gameManager.techniqueManager.getEquipped()?.id).toBe('ung_the_than_quyet')
     expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
     expect(gameManager.skillManager.get('huy_quyen')!.equipped).toBe(false)

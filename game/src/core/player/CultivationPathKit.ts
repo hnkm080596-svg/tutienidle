@@ -283,6 +283,28 @@ export function getPathWayDefinition(pathId: CultivationPathId): PathWayDefiniti
   return CULTIVATION_PATH_MODULES[mapping.pathId].ways[mapping.wayId]
 }
 
+// M7 deletion adapter — the INVERSE of LEGACY_PATH_TO_WAY: resolves a
+// (base path, way) pair back to the legacy 5-id path id that
+// player.cultivationPath still carries during the transition so
+// unmigrated consumers keep working (e.g. ('phap_tu','ngo_dao') ->
+// 'phap_tu_an'). Every way committable in this phase MUST map to a
+// legacy id; 'kiem_tu/ngu' deliberately has none and stays unofferable
+// until M6. Deleted with LEGACY_PATH_TO_WAY in M7.
+export function getLegacyPathIdForWay(
+  pathId: CultivationPathBaseId,
+  wayId: PathWayId,
+): CultivationPathId | undefined {
+  for (const legacyId of Object.keys(LEGACY_PATH_TO_WAY) as CultivationPathId[]) {
+    const mapping = LEGACY_PATH_TO_WAY[legacyId]
+
+    if (mapping.pathId === pathId && mapping.wayId === wayId) {
+      return legacyId
+    }
+  }
+
+  return undefined
+}
+
 // Phap Tu An required kit (review round-4, MEDIUM) — the ritual grants
 // exactly these three skills atomically: two loadout actives + the dao
 // passive carried by ngo_dao_chan_quyet.innateSkillId (the skillIds
