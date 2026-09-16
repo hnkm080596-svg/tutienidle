@@ -53,7 +53,12 @@ export class StageWaveSystem {
    * passiveSystem.resetStacks() bên trong, đúng điểm reset stack 1 LẦN/
    * màn chứ không phải mỗi wave).
    */
-  start(player: PlayerData, stage: Stage, repeatContinuously = false): boolean {
+  start(
+    player: PlayerData,
+    stage: Stage,
+    repeatContinuously = false,
+    options?: { rng?: () => number },
+  ): boolean {
     if (!this.deps.isStageUnlocked(stage.id, player)) {
       return false
     }
@@ -67,7 +72,7 @@ export class StageWaveSystem {
 
     // Stage chỉ 1 quái + có bossEnemyId -> quái đầu tiên (spawnedCount
     // 0) CŨNG là quái CUỐI, phải là Boss ngay từ đầu.
-    const firstEnemyTemplate = this.pickEnemyForSpawn(stage, effectiveTotalEnemyCount(stage) === 1)
+    const firstEnemyTemplate = this.pickEnemyForSpawn(stage, effectiveTotalEnemyCount(stage) === 1, options)
 
     if (!firstEnemyTemplate) {
       this.deps.stageManager.stop()
@@ -141,7 +146,11 @@ export class StageWaveSystem {
    * (auto-farm cycle) pass `allowTags: false` nên không bao giờ gắn tag.
    * Boss vẫn áp unconditional ở cả 2 kênh (D4).
    */
-  private pickEnemyForSpawn(stage: Stage, isFinalSpawn: boolean, options?: { allowTags?: boolean }): Enemy | undefined {
+  private pickEnemyForSpawn(
+    stage: Stage,
+    isFinalSpawn: boolean,
+    options?: { allowTags?: boolean; rng?: () => number },
+  ): Enemy | undefined {
     const floor = stage.floor ?? stage.requiredRealmLevel
 
     // Các chapter có thể tạm tái dùng encounter pool của chapter trước.
@@ -165,7 +174,7 @@ export class StageWaveSystem {
         // builder authors bossEnemyId === the elite pool species); idle
         // never rolls (allowTags: false).
         const bossEntry = stage.enemyPool.find(poolEntry => poolEntry.enemyId === stage.bossEnemyId)
-        if (options?.allowTags !== false && bossEntry?.eliteChance && rollChance(bossEntry.eliteChance)) {
+        if (options?.allowTags !== false && bossEntry?.eliteChance && rollChance(bossEntry.eliteChance, options?.rng)) {
           return applyStageRealm(applyEnemyTags(boss, ['tinh_anh'], ENEMY_TAGS))
         }
 
@@ -173,7 +182,7 @@ export class StageWaveSystem {
       }
     }
 
-    const entry = this.deps.stageSystem.pickNextEnemyEntry(stage)
+    const entry = this.deps.stageSystem.pickNextEnemyEntry(stage, options?.rng)
     const template = this.deps.enemyTemplates.get(entry.enemyId)
 
     if (!template) {
@@ -182,7 +191,7 @@ export class StageWaveSystem {
 
     // Tag roll — ACTIVE only (spec v3 D5): eliteChance is the chance to
     // attach the tinh_anh tag; idle passes allowTags: false.
-    if (options?.allowTags !== false && entry.eliteChance && rollChance(entry.eliteChance)) {
+    if (options?.allowTags !== false && entry.eliteChance && rollChance(entry.eliteChance, options?.rng)) {
       return applyStageRealm(applyEnemyTags(template, ['tinh_anh'], ENEMY_TAGS))
     }
 
@@ -192,6 +201,7 @@ export class StageWaveSystem {
       const hidden = this.deps.hiddenBeast.maybeReplaceSpawn(
         this.activeStagePlayer,
         stage.requiredRealmId ?? 'qi_refining',
+        options?.rng,
       )
       if (hidden) {
         return applyStageRealm(hidden)
@@ -208,7 +218,11 @@ export class StageWaveSystem {
    * logic, chỉ expose pickEnemyForSpawn cho adapter ngoài. `allowTags`
    * mặc định true (active); idle (auto-farm) truyền false (spec v3 D5).
    */
-  pickEnemyForTurnSpawn(stage: Stage, isFinalSpawn: boolean, options?: { allowTags?: boolean }): Enemy | undefined {
+  pickEnemyForTurnSpawn(
+    stage: Stage,
+    isFinalSpawn: boolean,
+    options?: { allowTags?: boolean; rng?: () => number },
+  ): Enemy | undefined {
     return this.pickEnemyForSpawn(stage, isFinalSpawn, options)
   }
 }

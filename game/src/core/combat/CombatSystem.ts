@@ -118,6 +118,21 @@ export class CombatSystem {
     this.vitals = new EntityVitalsSystem(eventBus)
   }
 
+  /**
+   * Mission C Task 8 — combat rolls read ONE random source. The battle
+   * lifecycle owner sets it per cycle (seeded session rng); anything not
+   * inside a battle keeps the Math.random default. CombatSystem is
+   * shared per-GameManager, so the source is SETTABLE, never
+   * constructor-frozen.
+   */
+  // Lazy default — reads Math.random at each call so test spies still
+  // intercept (matches TurnBattleSystem's rng convention).
+  private randomSource: () => number = () => Math.random()
+
+  setRandomSource(rng: () => number): void {
+    this.randomSource = rng
+  }
+
   setSurviveLethalSession(
     session: {
       playerEntityId: string
@@ -210,7 +225,7 @@ export class CombatSystem {
     // caller — the calculator executes the already-rolled outcome.
     const ignoreResistance =
       options.armorBypass === true ||
-      Math.random() < clampStatValue('chanceToIgnoreResistance', source.stats.chanceToIgnoreResistance)
+      this.randomSource() < clampStatValue('chanceToIgnoreResistance', source.stats.chanceToIgnoreResistance)
 
     const baseDamage = damage.kind === 'elemental'
       ? calculateSkillBaseDamage(source, target, damage.components, ignoreResistance)
@@ -269,7 +284,7 @@ export class CombatSystem {
   }
 
   private rollHit(source: CombatEntity, target: CombatEntity): boolean {
-    return Math.random() < getHitChance(source.stats.accuracyRating, target.stats.evasionRate)
+    return this.randomSource() < getHitChance(source.stats.accuracyRating, target.stats.evasionRate)
   }
 
   // Block hard cap 90% (2026-09-01, T5.5): soft cap 0.75 (StatMetadata)
@@ -280,7 +295,7 @@ export class CombatSystem {
   private rollBlock(target: CombatEntity): boolean {
     const softCapped = clampStatValue('blockChance', target.stats.blockChance)
 
-    return Math.random() < Math.min(CombatSystem.BLOCK_HARD_CAP, softCapped)
+    return this.randomSource() < Math.min(CombatSystem.BLOCK_HARD_CAP, softCapped)
   }
 
   /**
@@ -294,7 +309,7 @@ export class CombatSystem {
   rollCritical(source: CombatEntity, target: CombatEntity): boolean {
     const effectiveChance = clampStatValue('criticalRate', source.stats.criticalRate - target.stats.criticalAvoidance)
 
-    return Math.random() < effectiveChance
+    return this.randomSource() < effectiveChance
   }
 
   /**

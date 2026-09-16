@@ -282,6 +282,14 @@ export class GameManagerTurnBattleOps {
       player: PlayerData,
       participant: TurnBattleParticipant,
     ) => SurviveLethalSource | undefined
+    /**
+     * Mission C Task 8 — mints the session RNG for ONE battle cycle.
+     * Scope boundary: only combat rolls consume it (combat formulas,
+     * proc chances, spawn placement, pool/tag/hidden-beast picks,
+     * engine rolls). Loot/alchemy/pill economy randomness stays on
+     * Math.random deliberately — a seeded battle must not pin drops.
+     */
+    createBattleRng?: () => () => number
   }) {
     this.turnBattleSystem = new TurnBattleSystem(
       deps.combatSystem,
@@ -295,6 +303,7 @@ export class GameManagerTurnBattleOps {
       undefined,
       this.onSkillCast,
       this.liveStatModifiers,
+      this.combatRng,
     )
     // Presentation facade (Wave-2 split) - owns the PresentationSession +
     // CombatAnimationRuntime + mode flag. Deferred closures keep the
@@ -818,6 +827,32 @@ export class GameManagerTurnBattleOps {
    */
   private battleGeneration = 0
 
+  /**
+   * Mission C Task 8 — the session RNG for the CURRENT cycle. Minted by
+   * beginBattleCycle from deps.createBattleRng; every combat roll reads
+   * it (combat formulas via combatSystem.setRandomSource, engine rolls
+   * via the TurnBattleSystem ctor param, spawn placement + pool/tag/
+   * hidden-beast picks via the spawn closures).
+   */
+  private combatRng: () => number = Math.random
+
+  /**
+   * Test/dev seam mirroring setCombatClockSource: swap the factory that
+   * mints each cycle's session RNG. Applies from the NEXT cycle.
+   */
+  setBattleRngFactory(factory: (() => () => number) | undefined): void {
+    this.battleRngFactoryOverride = factory
+  }
+
+  private battleRngFactoryOverride: (() => () => number) | undefined
+
+  private mintCycleRng(): void {
+    // The built-in factory returns a LAZY Math.random closure — storing
+    // `Math.random` by reference would bypass vi.spyOn interception.
+    this.combatRng = ((this.battleRngFactoryOverride ?? this.deps.createBattleRng) ?? (() => () => Math.random()))()
+    this.deps.combatSystem.setRandomSource(this.combatRng)
+  }
+
   getBattleGeneration(): number {
     return this.battleGeneration
   }
@@ -872,6 +907,17 @@ export class GameManagerTurnBattleOps {
     // 1. Session/pending teardown - BEFORE any new state is built.
     this.clearCycleEntryState()
     this.battleGeneration += 1
+
+    // Mint the cycle's session RNG here so EVERY roll below - spawn
+    // placement, enemy-pool picks, engine rolls, combat formulas - reads
+    // one source. Scope guard (spec C3): loot/alchemy/pill economy
+    // randomness intentionally stays on Math.random; only the battle
+    // session is seeded. A stage launch pre-mints in startStage (the
+    // wave system's first-enemy pick runs before this call), so the
+    // nested beginBattleCycle inside a launch chain does not re-mint.
+    if (!this.isStageStarting) {
+      this.mintCycleRng()
+    }
 
     // 2. Per-policy domain resets. ARCH-014 (M12): a fresh battle owns a
     // fresh terminal once-guard - a battle started after any terminal would
@@ -966,6 +1012,7 @@ export class GameManagerTurnBattleOps {
       stageRef ? new TurnReactionManager(this.deps.eventBus) : undefined,
       this.onSkillCast,
       this.liveStatModifiers,
+      this.combatRng,
     )
 
     // ARCH-002 (M7) - fold construction-time buffs (formation Tran Phap)
@@ -1060,7 +1107,7 @@ export class GameManagerTurnBattleOps {
       const isFinalSpawn =
         (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
       const template =
-        this.deps.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn) ??
+        this.deps.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn, { rng: this.combatRng }) ??
         this.lastStageEnemyTemplate
 
       if (!template) {
@@ -1107,7 +1154,7 @@ export class GameManagerTurnBattleOps {
     const position = resolveEnemySpawnPosition(
       {
         isBoss: entity.isBoss ?? false,
-        random: Math.random,
+        random: this.combatRng,
       },
       undefined,
       occupiedSlots,
@@ -1250,7 +1297,7 @@ export class GameManagerTurnBattleOps {
     const enemyParticipants = enemyEntities.map((enemyEntity, index) => {
       const position = resolveEnemySpawnPosition({
         isBoss: enemyEntity.isBoss ?? false,
-        random: Math.random,
+        random: this.combatRng,
       })
 
       enemyEntity.row = position.row
@@ -1297,9 +1344,15 @@ export class GameManagerTurnBattleOps {
   ): boolean {
     this.isStageStarting = true
     this.pendingLaunchStage = stage
+    // Pre-mint the cycle RNG: stageWaves.start picks the launch enemy
+    // BEFORE the nested beginBattleCycle runs, so the mint must happen
+    // here or the launch pick escapes the session boundary.
+    this.mintCycleRng()
     let started = false
     try {
-      started = this.deps.stageWaves.start(player, stage, repeatContinuously)
+      started = this.deps.stageWaves.start(player, stage, repeatContinuously, {
+        rng: () => this.combatRng(),
+      })
     } finally {
       this.isStageStarting = false
       this.pendingLaunchStage = null

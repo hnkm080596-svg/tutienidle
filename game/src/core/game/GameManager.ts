@@ -1333,6 +1333,15 @@ export class GameManager {
     this.turnBattleOps.setCombatClockSource(source)
   }
 
+  /**
+   * Mission C Task 8 — seed every battle cycle's RNG. The factory runs
+   * once per beginBattleCycle; pass `() => mulberry32(seed)` in tests for
+   * deterministic combat. `undefined` restores Math.random.
+   */
+  setBattleRngFactory(factory: (() => () => number) | undefined): void {
+    this.turnBattleOps.setBattleRngFactory(factory)
+  }
+
   freezeCombat(reason: FreezeReason): void {
     this.turnBattleOps.freezeCombat(reason)
   }

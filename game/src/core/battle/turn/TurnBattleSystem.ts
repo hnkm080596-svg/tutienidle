@@ -1029,7 +1029,7 @@ export class TurnBattleSystem {
     // punish-on-cast áp hard-CC buff lên actor, CC-check kế tiếp đọc state
     // mới → ccBlocked đúng theo spec §4.2 ordering.
     if (this.registry) {
-      actorBuffSystem.rollReactiveTrigger(actor.entity, 'onCastBegin', this.registry)
+      actorBuffSystem.rollReactiveTrigger(actor.entity, 'onCastBegin', this.registry, undefined, this.rng)
     }
 
     // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
@@ -1820,7 +1820,7 @@ export class TurnBattleSystem {
         // ARCH-009 (M9) — proc definitions are read from the ACTOR's
         // pool, but the resulting buff belongs to the HIT VICTIM's
         // pool (sourceId = actor, targetId = victim).
-        new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry)
+        new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry, this.rng)
 
         // Action Playback Task 5 + stat-system-reimagined Task 5 (D5)
         // — onImpactLanded counter trigger trên TARGET bị hit, gated
@@ -1833,7 +1833,7 @@ export class TurnBattleSystem {
           ? new BuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry, {
               attacker: actor.entity,
               hpDamage: hitResult.hpDamage,
-            })
+            }, this.rng)
           : { firedFollowUp: false, reflectRequests: [] }
 
         if (firedFollowUp) {

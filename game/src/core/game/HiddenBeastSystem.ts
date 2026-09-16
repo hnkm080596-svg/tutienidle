@@ -19,12 +19,12 @@ export class HiddenBeastSystem {
   }
 
   /** Mỗi lượt spawn stage Luyện Khí: nếu window mở, roll 5% trả Huyết Mông thay quái pool. */
-  maybeReplaceSpawn(player: PlayerData, stageRealmId: string): Enemy | undefined {
+  maybeReplaceSpawn(player: PlayerData, stageRealmId: string, rng: () => number = Math.random): Enemy | undefined {
     if (stageRealmId !== HIDDEN_BEAST_REALM_ID || !this.isWindowOpen(player)) {
       return undefined
     }
 
-    if (!rollChance(HIDDEN_BEAST_SPAWN_CHANCE_PER_SPAWN)) {
+    if (!rollChance(HIDDEN_BEAST_SPAWN_CHANCE_PER_SPAWN, rng)) {
       return undefined
     }
 

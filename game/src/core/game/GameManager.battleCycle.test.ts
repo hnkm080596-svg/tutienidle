@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
+import { mulberry32 } from '../battle/SeededRandom'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { createBaseStats } from '../stats/StatBlock'
@@ -285,5 +286,99 @@ describe('beginBattleCycle — pending-state teardown (spec C1 reset inventory)'
 
     const seqOf = (token: string) => Number(token.replace('playback-', ''))
     expect(seqOf(secondToken)).toBeGreaterThan(seqOf(firstToken))
+  })
+})
+
+describe('session RNG (spec C3) — one seeded source owns every combat roll', () => {
+  // Rolls exercised: enemy placement, pool/tag picks, hit/evasion,
+  // block, crit. The enemy is immortal so no kill runs the out-of-scope
+  // loot rolls.
+  const TANKY_ENEMY = defineEnemy({
+    id: 'rng_tanky', name: 'Tanky', level: 1, realmId: 'mortal', lane: 'ground',
+    statsInput: {
+      maxHp: 1_000_000, might: 5, attackSpeed: 1,
+      criticalRate: 0.5, criticalDamage: 1.5, armor: 0,
+      evasionRate: 0.4,
+    },
+    rewards: { techniqueInsight: 0, spiritStone: 0 },
+  })
+
+  const RNG_STAGE: Stage = {
+    id: 'rng_stage', name: 'RNG Stage', description: '',
+    floor: 1,
+    enemyPool: [
+      { enemyId: TANKY_ENEMY.id, weight: 1, eliteChance: 0.5 },
+      { enemyId: FAST_ENEMY.id, weight: 1 },
+    ],
+    totalEnemyCount: 4, waves: [2, 2],
+    spawnIntervalSeconds: 0,
+  }
+
+  function runSeededBattle(seed: number) {
+    const { gameManager, combatSource, player } = harness()
+    gameManager.setBattleRngFactory(() => mulberry32(seed))
+    player.baseStats = { ...player.baseStats, might: 200, criticalRate: 0.5 } as typeof player.baseStats
+
+    gameManager.catalogOps.registerEnemyTemplates([TANKY_ENEMY, FAST_ENEMY])
+    gameManager.catalogOps.registerStages([RNG_STAGE])
+
+    // Capture the call-site stack of every Math.random use: the session
+    // boundary requires zero COMBAT rolls on it; out-of-scope economy
+    // rolls (loot drop tables via resolveDrops/BattleLootSystem) are
+    // allowed and asserted to be the only survivors.
+    const randomStacks: string[] = []
+    vi.spyOn(Math, 'random').mockImplementation(() => {
+      randomStacks.push(new Error().stack ?? '')
+      return 0.5
+    })
+
+    expect(gameManager.turnBattleOps.startStage(player, RNG_STAGE)).toBe(true)
+
+    const log: unknown[] = []
+    for (let i = 0; i < 300; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+      const battle = gameManager.getTurnBattle()
+      log.push({
+        state: battle?.state,
+        turns: battle?.totalTurnsElapsed ?? 0,
+        playerHp: battle?.players[0]?.entity.currentHp,
+        enemies: battle?.enemies.map(e => ({
+          // Entity ids embed a crypto UUID — outside the session-RNG
+          // contract (identity, not a roll). Compare the template prefix.
+          id: e.entity.id.replace(/_[0-9a-f-]+$/, ''),
+          x: e.entity.x, row: e.entity.row,
+          hp: e.entity.currentHp, alive: e.entity.alive,
+        })),
+      })
+    }
+
+    return { log, randomStacks }
+  }
+
+  it('same seed replays an identical battle; no combat roll touches Math.random', () => {
+    const run1 = runSeededBattle(1234)
+    const run2 = runSeededBattle(1234)
+
+    expect(run1.log).toEqual(run2.log)
+    // Battle positions/rolls differ from pure identity: the log must
+    // contain real combat (turns advanced, damage dealt).
+    expect(run1.log.some(entry => (entry as { turns?: number }).turns! > 0)).toBe(true)
+
+    // Every remaining Math.random call must come from the out-of-scope
+    // economy path (kill loot rolls), never from a combat system.
+    const combatLeaks = (stacks: string[]) =>
+      stacks.filter(s => !/resolveDrops|BattleLootSystem/.test(s))
+    expect(combatLeaks(run1.randomStacks)).toEqual([])
+    expect(combatLeaks(run2.randomStacks)).toEqual([])
+
+    vi.restoreAllMocks()
+  })
+
+  it('a different seed produces a different battle (the rolls are really consumed)', () => {
+    const run1 = runSeededBattle(1)
+    const run2 = runSeededBattle(999999)
+
+    expect(run1.log).not.toEqual(run2.log)
+    vi.restoreAllMocks()
   })
 })
