@@ -1460,6 +1460,10 @@ export class TurnBattleSystem {
           : scaleActionDamage(chargedSkill.damage, suddenDeathMultiplier)
 
         for (const target of declared.chargeTargetIds) {
+          // Mid-impact death: a reflect/proc kill on the actor stops the
+          // rest of the action — the dead cannot finish their swing.
+          if (!actor.entity.alive) break
+
           const targetParticipant = opposingSide.find((p) => p.id === target)
 
           if (!targetParticipant || !targetParticipant.entity.alive) continue
@@ -1566,6 +1570,7 @@ export class TurnBattleSystem {
             : scaleActionDamage(pickedSkill.damage, declared.suddenDeathMultiplier)
 
           for (const target of declared.affected) {
+            if (!actor.entity.alive) break // mid-impact death (T3-22b)
             if (!target.entity.alive) continue
 
             const hitResult = this.resolveDeclaredHit(
@@ -1592,6 +1597,7 @@ export class TurnBattleSystem {
 
       if (declared.scaledDamage) {
         for (const target of declared.affected) {
+          if (!actor.entity.alive) break // mid-impact death (T3-22b)
           // Kiem Tu Reimagined Task 2 — multi-instance defs (Ngu phi kiem):
           // each instance runs the FULL landed-hit pipeline independently
           // and stops early when the target dies.
@@ -1636,6 +1642,7 @@ export class TurnBattleSystem {
       // this else is the THIRD branch of the original picks/scaledDamage/
       // non-damaging chain; with picks in flight it must stay silent.
       for (const target of declared.affected) {
+        if (!actor.entity.alive) break // mid-impact death (T3-22b)
         if (!target.entity.alive) continue
         targetIds.push(target.id)
 
@@ -2045,10 +2052,11 @@ export class TurnBattleSystem {
         : scaleActionDamage(extraDef.damage, declared.suddenDeathMultiplier)
 
       for (const target of extraTargets) {
+        if (!actor.entity.alive) break // mid-impact death (T3-22b)
         const count = extraDef.instances?.count ?? 1
 
         for (let i = 0; i < count; i++) {
-          if (!target.entity.alive) break
+          if (!target.entity.alive || !actor.entity.alive) break
 
           const opts = extraDef.instances?.perInstanceOptions?.(i, target.entity)
           const result = this.resolveDeclaredHit(battle, actor, target, scaled, extraDef, actor.canInitiateWuxingReactions === true, declared, opts)
