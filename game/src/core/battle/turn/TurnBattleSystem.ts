@@ -1092,6 +1092,20 @@ export class TurnBattleSystem {
       return participant?.buffs.getAll()
     }
 
+    // Cooldown snapshot BEFORE the status phase: a lethal DoT tick inside
+    // update() can make a survive-lethal source spend a slot's cooldown
+    // (Bat Tu Ba The, spec 5.1 — the commit lands mid-phase). tickCooldowns
+    // below skips any slot whose cooldown rose above this snapshot; a
+    // mid-phase commit counts own-turns from the NEXT turn, never losing
+    // a turn to the tick that immediately follows the phase that set it.
+    const cooldownsBeforeStatusPhase = new Map<TurnSkillSlot, number>()
+    if (actor.special) {
+      cooldownsBeforeStatusPhase.set(actor.special, actor.special.remainingCooldownTurns)
+    }
+    if (actor.ultimate) {
+      cooldownsBeforeStatusPhase.set(actor.ultimate, actor.ultimate.remainingCooldownTurns)
+    }
+
     actorBuffSystem.update(actor.entity, this.combat, this.registry, resolveSource, resolveSourceBuffs)
 
     // ARCH-002 (M7) — refresh immediately after the buff tick so an
@@ -1201,7 +1215,24 @@ export class TurnBattleSystem {
     // ở charge block). Cooldown của special đã commit ở charge-init lượt
     // trước, không commit lại ở đây.
     if (actor.entity.alive && !ccBlocked && !isCharging) {
-      tickCooldowns(actor)
+      // Slots whose cooldown was (re)committed during this turn's status
+      // phase — value above its pre-update snapshot, or a slot object
+      // that did not exist then — do not tick again in the same turn.
+      const cooldownsCommittedInStatusPhase = new Set<TurnSkillSlot>()
+
+      for (const slot of [actor.special, actor.ultimate]) {
+        if (!slot) {
+          continue
+        }
+
+        const turnsBeforeStatusPhase = cooldownsBeforeStatusPhase.get(slot)
+
+        if (turnsBeforeStatusPhase === undefined || slot.remainingCooldownTurns > turnsBeforeStatusPhase) {
+          cooldownsCommittedInStatusPhase.add(slot)
+        }
+      }
+
+      tickCooldowns(actor, cooldownsCommittedInStatusPhase)
 
       // ARCH-002 (M7) — the effective-stat refresh moved above the gate
       // (covers expiry/CC/charge too); action selection reads the fresh
@@ -2347,7 +2378,7 @@ export class TurnBattleSystem {
           effect.chanceStat,
           holder.entity.stats[effect.chanceStat] ?? 0,
         )
-        const success = Math.random() < chance
+        const success = this.rng() < chance
 
         if (success) {
           onProcSuccess(holder.entity, effect.theGainOnSuccess)

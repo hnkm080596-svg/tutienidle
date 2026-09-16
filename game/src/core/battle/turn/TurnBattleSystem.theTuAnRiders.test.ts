@@ -145,8 +145,20 @@ function declaredAllyAction(
   }
 }
 
-function system(): TurnBattleSystem {
-  return new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY)
+function system(rng?: () => number): TurnBattleSystem {
+  // The rng seam is the LAST constructor param — the reactive-proc
+  // success roll (resolveReactiveProcs) draws from it, so proc outcomes
+  // are scripted here instead of through a Math.random spy.
+  return new TurnBattleSystem(
+    new CombatSystem(new EventBus()),
+    10_000,
+    BUFF_REGISTRY,
+    /*spawnEnemy*/ undefined,
+    /*reactionManager*/ undefined,
+    /*onSkillCast*/ undefined,
+    /*liveStatModifiers*/ undefined,
+    rng,
+  )
 }
 
 afterEach(() => {
@@ -339,14 +351,16 @@ describe('tro riders (spec 8.2)', () => {
     withTroMon(f.supporterP, (effect) => {
       effect.firesOnNonDamagingAction = true
     })
-    // First roll is the hit check (0.999 misses even the 5% floor ->
-    // dodge); every LATER roll must be low so the supporter's proc
-    // succeeds — followUpChance hard-caps at REACTIVE_CHANCE_CAP = 0.6,
-    // so a flat 0.999 mock would suppress the proc too.
-    vi.spyOn(Math, 'random').mockReturnValueOnce(0.999).mockReturnValue(0)
+    // Two seams, two mechanisms: the HIT check still reads the global
+    // Math.random inside CombatSystem — pin it high so the roll misses
+    // even the 5% floor (forced dodge). The Tro PROC roll reads the
+    // injected this.rng — pin that low so the supporter's proc succeeds
+    // through its own authority (followUpChance hard-caps at
+    // REACTIVE_CHANCE_CAP = 0.6, so it needs < 0.6 on its own seam).
+    vi.spyOn(Math, 'random').mockReturnValue(0.999)
 
     const declared = declaredAllyAction(f.strikerP, f.strikerP.basic!, f.battle.enemies, [f.enemyP])
-    system().applyActionImpact(f.battle, declared)
+    system(() => 0).applyActionImpact(f.battle, declared)
 
     // The striker's single-target hit whiffed on the ONLY declared
     // target; the supporter's tro_kich must queue against that one

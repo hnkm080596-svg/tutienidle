@@ -1,6 +1,6 @@
 import type { PlayerData } from '../player/Player'
 import type { ProgressionNode } from '../progression/ProgressionNode'
-import { getNodeLevel } from '../progression/NodeSystem'
+import { getNodeLevel, nodePathApplies } from '../progression/NodeSystem'
 
 // The Tu Reimagined (plan Task 6, review P0.2) — the ONLY node -> kit
 // channel for the_tu. Nodes declare `effect.theTuKitModifiers` (flat,
@@ -50,7 +50,10 @@ export function collectTheTuKitModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0) {
+    // Review fix (LOW-3) — the path-ownership authority applies here
+    // too, not just in the generic aggregators: a wrong-path level
+    // (corrupt save, future reuse) must not leak into kit channels.
+    if (level <= 0 || !nodePathApplies(player, node)) {
       continue
     }
 

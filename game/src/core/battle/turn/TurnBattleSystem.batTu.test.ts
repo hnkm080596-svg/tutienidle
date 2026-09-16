@@ -288,4 +288,56 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player' }))
     expect(selectAction(player).skillId).toBe('bat_tu_ba_the')
   })
+
+  it('own-turn lethal DoT -> Bat Tu fires -> committed ult CD does NOT tick again that same turn', () => {
+    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const enemyP = makeParticipant('enemy', makeEnemy('enemy', 0), 8, 100)
+    const battle: TurnBattle = { players: [player], enemies: [enemyP], state: 'fighting' }
+    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+
+    // Lethal poison ticking on the holder's OWN turn: a might-999k source
+    // x dpsRatio 0.2 resolves ~200k damagePerTurn at apply — far over 50 HP.
+    new BuffSystem(player.buffs).apply(POISON, makeEnemy('dummy'), player.entity, REGISTRY)
+
+    const system = new TurnBattleSystem(combat, 10, REGISTRY)
+    system.declareActorAction(battle, player)
+
+    expect(player.entity.alive).toBe(true)
+    expect(player.entity.currentHp).toBe(1)
+    expect(player.buffs.getAllById('bat_tu_ba_the')).toHaveLength(1)
+    // The survival source committed the full 8-turn cooldown DURING this
+    // turn's status phase (inside BuffSystem.update); the same turn's
+    // cooldown tick must not drop it to 7 — the regression this guards.
+    expect(player.ultimate!.remainingCooldownTurns).toBe(8)
+
+    // Next own turn: the poison ticks lethal again inside the still-active
+    // Bat Tu window (free survive — no new commit), so the cooldown DOES
+    // tick down to 7. The first turn's skip was a same-turn exemption,
+    // not a freeze.
+    system.declareActorAction(battle, player)
+
+    expect(player.entity.alive).toBe(true)
+    expect(player.buffs.getAllById('bat_tu_ba_the')).toHaveLength(1)
+    expect(player.ultimate!.remainingCooldownTurns).toBe(7)
+  })
+
+  it('enemy-turn lethal commits CD=8 -> the holder\'s NEXT own turn still ticks it to 7', () => {
+    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const enemyP = makeParticipant('enemy', makeEnemy('enemy', 0), 8, 100)
+    const battle: TurnBattle = { players: [player], enemies: [enemyP], state: 'fighting' }
+    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+
+    // Enemy-turn lethal: the commit happens outside any status phase of
+    // the holder, so the full cooldown stands and counts down normally.
+    combat.applyDirectDamage(player.entity, 9_999, 'enemy')
+
+    expect(player.entity.alive).toBe(true)
+    expect(player.ultimate!.remainingCooldownTurns).toBe(8)
+
+    const system = new TurnBattleSystem(combat, 10, REGISTRY)
+    system.declareActorAction(battle, player)
+
+    expect(player.entity.alive).toBe(true)
+    expect(player.ultimate!.remainingCooldownTurns).toBe(7)
+  })
 })

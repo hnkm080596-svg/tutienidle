@@ -153,8 +153,20 @@ function declaredAgainst(fixture: Fixture, affected: TurnBattleParticipant[]): T
   }
 }
 
-function system(): TurnBattleSystem {
-  return new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY)
+function system(rng?: () => number): TurnBattleSystem {
+  // The rng seam is the LAST constructor param — the reactive-proc
+  // success roll (resolveReactiveProcs) draws from it, so proc outcomes
+  // are scripted here instead of through a Math.random spy.
+  return new TurnBattleSystem(
+    new CombatSystem(new EventBus()),
+    10_000,
+    BUFF_REGISTRY,
+    /*spawnEnemy*/ undefined,
+    /*reactionManager*/ undefined,
+    /*onSkillCast*/ undefined,
+    /*liveStatModifiers*/ undefined,
+    rng,
+  )
 }
 
 afterEach(() => {
@@ -307,13 +319,16 @@ describe('Ho intercept — semantic single-target', () => {
     const f = makeFixture()
     f.enemyP.basic = ENEMY_AOE
     withHoMon(f.protectorP, 1, 100)
-    vi.spyOn(Math, 'random').mockReturnValue(0) // the roll would succeed if the window opened
+    // Injected rng pinned low — the proc roll WOULD succeed if the
+    // window opened. The hit on the squishy lands by construction
+    // (accuracy 100 vs evasion 0 -> hit chance 1.0), so the global
+    // Math.random needs no spy.
 
     // The AoE anchors on the squishy (column 0); the protector sits at
     // column 5 outside the columnRadius-1 band, so the declare collects
     // a single affected entry — the degenerate case an affected-count
     // gate misreads as a single-target hit.
-    const sys = system()
+    const sys = system(() => 0)
     const declared = sys.declareActorAction(f.battle, f.enemyP)
 
     expect(declared.affected).toEqual([f.squishyP])
@@ -332,9 +347,11 @@ describe('Ho intercept — semantic single-target', () => {
     const f = makeFixture()
     f.enemyP.special = { skill: ENEMY_CHARGED, remainingCooldownTurns: 0 }
     withHoMon(f.protectorP, 1, 100)
-    vi.spyOn(Math, 'random').mockReturnValue(0) // proc roll succeeds
 
-    const sys = system()
+    // Injected rng pinned low — the intercept proc roll succeeds. The
+    // substituted hit lands on the protector by construction (hit
+    // chance 1.0), so the global Math.random needs no spy.
+    const sys = system(() => 0)
 
     // Charge-init turn: the cast commits here; no targets resolve yet.
     const init = sys.declareActorAction(f.battle, f.enemyP)
@@ -368,7 +385,8 @@ describe('Ho intercept — semantic single-target', () => {
   it('a reactive enemy action (actionSource: counter) never opens the window (INV-9)', () => {
     const f = makeFixture()
     withHoMon(f.protectorP, 1, 100)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
+    // Injected rng pinned low — the roll would succeed if the window
+    // opened; INV-9 must keep it closed.
 
     // A queued enemy-side reactive entry declares through the same
     // TurnDeclaredAction shape but carries a reactive actionSource —
@@ -381,7 +399,7 @@ describe('Ho intercept — semantic single-target', () => {
       actionSource: 'counter',
     }
 
-    const { targetIds } = system().applyActionImpact(f.battle, declared)
+    const { targetIds } = system(() => 0).applyActionImpact(f.battle, declared)
 
     expect(declared.intercepted).toBeUndefined()
     expect(declared.affected).toEqual([f.squishyP])
@@ -423,9 +441,11 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
     new BuffSystem(f.protectorP.buffs).apply(BUFF_REGISTRY.get('phan_mon'), f.protectorP.entity, f.protectorP.entity, BUFF_REGISTRY)
     f.protectorP.reactivePayloads = { phan_kich: { ...PHAN_KICH } }
 
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    const sys = system()
+    // Injected rng pinned low: BOTH reactive-proc rolls (the intercept
+    // and the taken-side counter) draw from the rng seam and succeed
+    // (reactive chances hard-cap at REACTIVE_CHANCE_CAP = 0.6). The hit
+    // lands by construction — no Math.random spy.
+    const sys = system(() => 0)
     const declared = driveChargedHit(f, sys)
     const { targetIds } = sys.applyActionImpact(f.battle, declared)
 
@@ -463,9 +483,11 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
       }
     })
 
-    // Rolls pinned low: the hit lands (evasion 0); reflect chance is
-    // authored 1.0.
-    vi.spyOn(Math, 'random').mockReturnValue(0)
+    // No randomness control needed — every roll in this path is
+    // deterministic by construction: the hit lands (accuracy 100 vs
+    // evasion 0 -> chance 1.0) and the reflect trigger's authored
+    // chance is 1.0 (the reflect roll itself still reads the global
+    // Math.random inside BuffSystem, but chance 1.0 always fires).
 
     const declared = driveChargedHit(f, sys)
     const { targetIds } = sys.applyActionImpact(f.battle, declared)
@@ -488,14 +510,61 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
     }
     f.enemyP.special = { skill: chargedWithAilment, remainingCooldownTurns: 0 }
 
-    // Rolls pinned low: the hit lands; the chance-1 ailment applies.
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    const sys = system()
+    // Injected rng pinned low: the chance-1 ailment roll draws from the
+    // rng seam (applySkillAilments); the hit lands by construction.
+    const sys = system(() => 0)
     const declared = driveChargedHit(f, sys)
     const { targetIds } = sys.applyActionImpact(f.battle, declared)
 
     expect(targetIds).toEqual(['squishy'])
     expect(f.squishyP.buffs.getAllById('bong')).toHaveLength(1)
+  })
+})
+
+// RNG authority guard — the reactive-proc success roll in
+// resolveReactiveProcs must draw from the injected this.rng, never the
+// global Math.random (pre-fix it read the global, so a spy controlled
+// the proc while a scripted rng could not). The pair below pins the
+// two sources to OPPOSITE outcomes; the injected seam must win both
+// directions. The hit roll still lands either way — accuracy 100 vs
+// evasion 0 gives hit chance exactly 1.0.
+describe('reactive proc rolls read the injected rng, not Math.random', () => {
+  it('a protectChance-1.0 interceptor does NOT intercept when injected rng fails the roll (global pinned low)', () => {
+    const f = makeFixture()
+    withHoMon(f.protectorP, 1, 15)
+    // Global pinned to a would-succeed value — pre-fix this forced the
+    // intercept through the global seam; now it must change nothing.
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(() => 0.999).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(declared.affected).toEqual([f.squishyP])
+    // The attempt still paid the 15-The proc cost — the ROLL failed on
+    // the injected seam, not the eligibility gate.
+    expect(f.protectorP.entity.currentThe).toBe(0)
+    expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
+    expect(f.protectorP.entity.currentHp).toBe(100_000)
+  })
+
+  it('the interceptor DOES intercept when injected rng succeeds (global pinned high)', () => {
+    const f = makeFixture()
+    withHoMon(f.protectorP, 1, 15)
+    // Global pinned high — pre-fix this failed the proc roll; the
+    // injected rng low must still drive the intercept. The global now
+    // only feeds the CombatSystem hit seam, where chance 1.0 lands
+    // regardless.
+    vi.spyOn(Math, 'random').mockReturnValue(0.999)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(() => 0).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBe(true)
+    expect(declared.interceptedBy).toBe('protector')
+    expect(f.squishyP.entity.currentHp).toBe(100_000)
+    expect(f.protectorP.entity.currentHp).toBeLessThan(100_000)
+    // Economy: -15 attempt, +20 success credit.
+    expect(f.protectorP.entity.currentThe).toBe(20)
   })
 })

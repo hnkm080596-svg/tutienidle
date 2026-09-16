@@ -424,13 +424,23 @@ const FALLBACK_TARGETING: ActionTargeting = { shape: 'single' }
  * counts the ACTOR's own turns (this rework's "tick at the holder's own
  * turn" convention, already used by BuffSystem). Call once per actor
  * per turn, BEFORE selectAction().
+ *
+ * `exclude` — slots to skip this tick: declareActorAction passes the
+ * slots whose cooldown was (re)committed during THIS turn's pre-action
+ * status phase (e.g. a lethal-DoT survive trigger spending the ult slot
+ * inside BuffSystem.update). A fresh commit starts counting from the
+ * holder's NEXT own turn — it must not lose a turn to the tick that
+ * immediately follows the phase that committed it.
  */
-export function tickCooldowns(participant: TurnBattleParticipant): void {
-  if (participant.special) {
+export function tickCooldowns(
+  participant: TurnBattleParticipant,
+  exclude?: ReadonlySet<TurnSkillSlot>,
+): void {
+  if (participant.special && !exclude?.has(participant.special)) {
     participant.special.remainingCooldownTurns = Math.max(0, participant.special.remainingCooldownTurns - 1)
   }
 
-  if (participant.ultimate) {
+  if (participant.ultimate && !exclude?.has(participant.ultimate)) {
     participant.ultimate.remainingCooldownTurns = Math.max(0, participant.ultimate.remainingCooldownTurns - 1)
   }
 }

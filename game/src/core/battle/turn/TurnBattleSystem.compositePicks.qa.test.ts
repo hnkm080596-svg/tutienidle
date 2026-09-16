@@ -243,9 +243,13 @@ describe('composite extra picks run the declared-hit pipeline', () => {
       BUFF_REGISTRY,
     )
 
-    // Rolls pinned low: hits land (accuracy 9999 vs evasion 0), no
-    // crit/block — reflect chance is authored 1.0 anyway.
-    vi.spyOn(Math, 'random').mockReturnValue(0)
+    // No randomness control needed — every roll in this path is
+    // deterministic by construction: hits land (accuracy 9999 vs
+    // evasion 0 -> chance 1.0), no crit/block (chance 0), and the
+    // reflect trigger's authored chance is 1.0. The reflect roll still
+    // reads the global Math.random inside BuffSystem, but chance 1.0
+    // always fires; no reactiveProc effect is in play, so the injected
+    // rng seam is not exercised here.
 
     const battle: TurnBattle = {
       players: [attackerP],
@@ -279,7 +283,22 @@ describe('composite extra picks run the declared-hit pipeline', () => {
   it('each landed pick opens the defender phan_mon taken window (2 hits -> 2 counters queued)', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY)
+    // Injected rng pinned low: every onImpactLanded proc roll draws
+    // from the rng seam and succeeds — reactive chances hard-cap at
+    // REACTIVE_CHANCE_CAP = 0.6, so the roll must be < 0.6 (a high
+    // dodge-style value would suppress it). Hits land by construction
+    // (accuracy 9999 vs evasion 0), so the global Math.random needs
+    // no spy.
+    const system = new TurnBattleSystem(
+      combat,
+      10,
+      BUFF_REGISTRY,
+      /*spawnEnemy*/ undefined,
+      /*reactionManager*/ undefined,
+      /*onSkillCast*/ undefined,
+      /*liveStatModifiers*/ undefined,
+      () => 0,
+    )
 
     const attackerP = makeParticipant('player', makeRegressEntity('player', 100), 0)
     const defenderP = makeParticipant('enemy', makeRegressEntity('enemy', 0), 1)
@@ -299,11 +318,6 @@ describe('composite extra picks run the declared-hit pipeline', () => {
       defenderP.entity,
       BUFF_REGISTRY,
     )
-
-    // Rolls pinned low: hits land, no crit/block, every proc succeeds
-    // (reactive chances hard-cap at REACTIVE_CHANCE_CAP = 0.6, so the
-    // roll must be < 0.6 — a high dodge-style mock would suppress it).
-    vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const battle: TurnBattle = {
       players: [attackerP],
