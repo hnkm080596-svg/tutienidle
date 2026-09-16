@@ -62,6 +62,18 @@ const STUN: BuffDefinition = {
   effects: [{ type: 'cc', ccEffect: 'stun' }],
 }
 
+// Non-cc debuff (poison/dot) — must survive BOTH the lethal grant and
+// repeat lethals inside the Bat Tu window: only hard CC is cleansed,
+// via clearsCcOnApply on the grant path.
+const POISON: BuffDefinition = {
+  id: 'fixture_poison',
+  name: 'Poison',
+  polarity: 'debuff',
+  duration: 5,
+  stackMode: 'refresh',
+  effects: [{ type: 'dot', dpsRatio: 0.2 }],
+}
+
 const TU_SINH_NGO: BuffDefinition = {
   id: 'tu_sinh_ngo',
   name: 'Tu Sinh Ngo',
@@ -80,7 +92,7 @@ class FixtureRegistry {
   }
 }
 
-const REGISTRY = new FixtureRegistry([BAT_TU_BA_THE_BUFF, STUN, TU_SINH_NGO])
+const REGISTRY = new FixtureRegistry([BAT_TU_BA_THE_BUFF, STUN, POISON, TU_SINH_NGO])
 
 function makeTheTuParticipant(id: string, entity: CombatEntity): TurnBattleParticipant {
   const participant = makeParticipant(id, entity, 10, 0)
@@ -197,7 +209,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     expect(player.buffs.getAllById('bat_tu_ba_the')[0]!.remainingTurns).toBe(4)
   })
 
-  it('lethal grant cleanses an active stun (cleanseDebuffs + clearsCcOnApply)', () => {
+  it('lethal grant cleanses an active stun (clearsCcOnApply on the grant path)', () => {
     const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     new BuffSystem(player.buffs).apply(STUN, makeEnemy('dummy'), player.entity, REGISTRY)
     const combat = makeCombatWithSession(player, new SurviveLethalGuard())
@@ -206,6 +218,32 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
 
     expect(player.entity.alive).toBe(true)
     expect(player.buffs.getAllById('fixture_stun')).toHaveLength(0)
+  })
+
+  it('cleanses hard CC only — non-cc debuffs survive the grant AND repeat lethals in the window', () => {
+    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const buffs = new BuffSystem(player.buffs)
+    buffs.apply(STUN, makeEnemy('dummy'), player.entity, REGISTRY)
+    buffs.apply(POISON, makeEnemy('dummy'), player.entity, REGISTRY)
+    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+
+    // First lethal: grant strips the stun via clearsCcOnApply; the
+    // poison is a non-cc debuff and must NOT be blanket-cleansed.
+    combat.applyDirectDamage(player.entity, 9_999, 'enemy')
+
+    expect(player.entity.alive).toBe(true)
+    expect(player.buffs.getAllById('fixture_stun')).toHaveLength(0)
+    expect(player.buffs.getAllById('fixture_poison')).toHaveLength(1)
+    expect(player.buffs.getAllById('bat_tu_ba_the')).toHaveLength(1)
+
+    // Second lethal inside the window: the already-active free survive
+    // used to return no cleanseDebuffs -> undefined !== false wiped
+    // every debuff. It must leave the poison untouched.
+    combat.applyDirectDamage(player.entity, 9_999, 'enemy')
+
+    expect(player.entity.alive).toBe(true)
+    expect(player.entity.currentHp).toBe(1)
+    expect(player.buffs.getAllById('fixture_poison')).toHaveLength(1)
   })
 
   it('active buff suppresses hard-CC blocking without touching consecutiveHardCcTurns', () => {

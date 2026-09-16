@@ -40,7 +40,7 @@ const GROWTH_5 = { base: 1, perLevel: 2 } // 1,1,2,2,3 — sibling growth conven
 const TRUNK_QI: ProgressionNode[] = [
   {
     id: 'minor_ung_the_the_chat',
-    name: 'Ứng Thể',
+    name: 'Ứng Thế',
     description: '+3 Thể Chất mỗi cấp.',
     type: 'minor',
     role: 'growth',

@@ -981,6 +981,11 @@ export class TurnBattleSystem {
     let chargeResolved = false
     let chargeTargetIds: string[] = []
     let chargedSkillCaptured: TurnSkillDefinition | null = null
+    // Review fix (HIGH-2) — `affected` is the single consumed target list:
+    // a charge-resolve materializes its targets HERE too (the old shadowing
+    // local kept `affected` empty, giving the Ho window a parallel lane it
+    // could not substitute). chargeTargetIds stays as the hit-lane id copy.
+    let affected: TurnBattleParticipant[] = []
 
     if (isCharging) {
       actor.chargingTurnsRemaining = (actor.chargingTurnsRemaining ?? 0) - 1
@@ -1005,7 +1010,7 @@ export class TurnBattleSystem {
           const primaryTarget = selectTarget(actor, opposingSide)
 
           if (primaryTarget) {
-            const affected = collectTurnTargets(primaryTarget, opposingSide, chargedSkill.targeting)
+            affected = collectTurnTargets(primaryTarget, opposingSide, chargedSkill.targeting)
 
             // Defect Task 8 (2026-09-05): damage tính lại ở applyActionImpact()
             // (đọc declared.chargedSkill + roundsElapsed độc lập) — không
@@ -1185,7 +1190,6 @@ export class TurnBattleSystem {
 
     let action: SelectedAction | null = null
     let opposingSide: TurnBattleParticipant[] = []
-    let affected: TurnBattleParticipant[] = []
     let scaledDamage: ActionDamageInfo | null = null
     let suddenDeathMultiplierCaptured = 1
     let compositePickedSkills: readonly TurnSkillDefinition[] | null = null
@@ -1517,6 +1521,11 @@ export class TurnBattleSystem {
       // extras when count > 1) apply their own
       // damage + ailments here. The PRIMARY payload still resolves via
       // scaledDamage below, so both lanes may run on one action.
+      // Review fix (MED-3) — extras go through resolveDeclaredHit, the
+      // same per-hit authority as the primary lane: income, leech,
+      // consume effects, on-hit procs, Reflection queue, ailments,
+      // detonate, the taken/evade windows and the stat refresh are all
+      // owned there — this lane only collects landing bookkeeping.
       if (declared.compositePickedSkills?.length) {
         for (const pickedSkill of declared.compositePickedSkills) {
           if (!pickedSkill.damage) continue
@@ -1528,14 +1537,15 @@ export class TurnBattleSystem {
           for (const target of declared.affected) {
             if (!target.entity.alive) continue
 
-            const hitResult = this.combat.resolveActionHit(
-              actor.entity,
-              target.entity,
-              this.applyMissingHpScalar(pickedDamage, actor.entity),
+            const hitResult = this.resolveDeclaredHit(
+              battle,
+              actor,
+              target,
+              pickedDamage,
+              pickedSkill,
+              actorInitiatesReactions,
+              declared,
             )
-
-            // Defender income lands before any window this hit opens.
-            this.grantHitOutcomeIncome(target, hitResult)
 
             if (!hitResult.dodged) {
               targetIds.push(target.id)
@@ -1544,25 +1554,6 @@ export class TurnBattleSystem {
               if (hitResult.critical) {
                 castCritLanded = true
               }
-
-              if (this.registry) {
-                this.applySkillAilments(actor, target, pickedSkill, actorInitiatesReactions)
-
-                // Task 13 — a picked payload carrying detonateDoT
-                // detonates after its own application, same contract as
-                // the main lane.
-                if (pickedSkill.detonateDoT && target.entity.alive) {
-                  this.applyDetonate(actor, target, pickedSkill.detonateDoT.amp)
-                }
-              }
-
-              // ARCH-002 (M7) — refresh after hit + ailment mutations; the
-              // actor too: applySkillAilments -> TurnReactionManager can
-              // grant the SOURCE a buff (e.g. Tho Tu self-stack).
-              this.refreshParticipantStats(target)
-              this.refreshParticipantStats(actor)
-            } else {
-              this.resolveEvadeWindow(battle, target, actor, declared)
             }
           }
         }
@@ -2455,14 +2446,22 @@ export class TurnBattleSystem {
       return
     }
 
-    // Task 20 (spec 8.2 "follow-up on ANY ally action") — a non-damaging
-    // ally action still opens the window for markers carrying
-    // firesOnNonDamagingAction; the follow-up then targets every living
-    // enemy (the triggering action had no enemy targets to inherit).
+    // Task 20 (spec 8.2 "follow-up on ANY ally action") + review fix
+    // (MED-4) — "dealt no damage" gates firesOnNonDamagingAction rolls
+    // (a whiffed damaging action still counts), but it is NOT a
+    // targeting fact: a whiffed action inherits its declared.affected
+    // targets. Only an action that AUTHORED no damage (self-buff, pure
+    // utility — nothing to inherit) fans out to every living enemy.
     const nonDamaging = landedTargets.length === 0
-    const followUpTargets = nonDamaging
-      ? battle.enemies.filter((participant) => participant.entity.alive)
-      : landedTargets.filter((participant) => participant.entity.alive)
+    const authoredDamaging =
+      declared.scaledDamage !== null ||
+      declared.chargedSkill?.damage != null ||
+      (declared.compositePickedSkills?.some((picked) => picked.damage != null) ?? false)
+    const followUpTargets = !nonDamaging
+      ? landedTargets.filter((participant) => participant.entity.alive)
+      : authoredDamaging
+        ? declared.affected.filter((participant) => participant.entity.alive)
+        : battle.enemies.filter((participant) => participant.entity.alive)
 
     if (followUpTargets.length === 0) {
       return
@@ -2486,19 +2485,40 @@ export class TurnBattleSystem {
    * of applyActionImpact, post-declare/pre-impact: on success the
    * declared target is substituted and the hit resolves fully vs the
    * protector (dodge/ward/block/procs all live downstream).
-   * Preconditions: actor is enemy-side, exactly one affected target, the
-   * target is a LIVING player-side participant. Candidates are player-
-   * side participants carrying an onAllyTargeted/intercept reactiveProc
-   * (the ho_mon marker), excluding the original target. Exactly ONE
-   * roll: the nearest protector to the attacker by Chebyshev attempts;
-   * no fallback to further candidates (D5).
+   * Preconditions: actor is enemy-side, the action is a NATURAL
+   * (normal/skill — INV-9, same gate as the Phan/Tro windows) single-
+   * target action by AUTHORED targeting shape (an all_lanes AoE whose
+   * other targets died stays AoE), and the target is a LIVING player-
+   * side participant. Candidates are player-side participants carrying
+   * an onAllyTargeted/intercept reactiveProc (the ho_mon marker),
+   * excluding the original target. Exactly ONE roll: the nearest
+   * protector to the attacker by Chebyshev attempts; no fallback to
+   * further candidates (D5).
    */
   private resolveInterceptWindow(
     battle: TurnBattle,
     declared: TurnDeclaredAction,
     actor: TurnBattleParticipant,
   ): void {
-    if (!battle.enemies.includes(actor) || declared.affected.length !== 1) {
+    if (!battle.enemies.includes(actor)) {
+      return
+    }
+
+    // INV-9 — reactive/replayed actions (counter/follow_up/intercept and
+    // queued executions) never open new reactive windows.
+    if (declared.actionSource !== 'normal' && declared.actionSource !== 'skill') {
+      return
+    }
+
+    // Semantic single-target: the AUTHORED targeting shape decides, not
+    // the runtime affected count. A charge-resolve action reads the
+    // charged payload's shape; its targets materialize into `affected`
+    // at declare so this window shares one target authority.
+    const interceptedTargeting = declared.chargeResolved
+      ? declared.chargedSkill?.targeting
+      : declared.action?.targeting
+
+    if (interceptedTargeting?.shape !== 'single' || declared.affected.length !== 1) {
       return
     }
 
@@ -2553,6 +2573,13 @@ export class TurnBattleSystem {
     declared.affected = [nearest]
     declared.intercepted = true
     declared.interceptedBy = nearest.id
+
+    // A charge-resolve action's hit lane reads chargeTargetIds — keep it
+    // the id-mirror of `affected` so the substitution lands on the
+    // protector there too.
+    if (declared.chargeResolved) {
+      declared.chargeTargetIds = [nearest.id]
+    }
 
     // Task 20 (spec 8.2 "intercept->ally ward") — the node-baked marker
     // rider: the rescued ally gains a grantsExternalWard marker sourced

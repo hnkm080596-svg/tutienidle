@@ -175,7 +175,7 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
 
   the_tu_an: {
     id: 'the_tu_an',
-    name: 'Thể Tu Ẩn — Ứng Thể Thần Quyết',
+    name: 'Thể Tu Ẩn — Ứng Thế Thần Quyết',
     techniqueId: 'ung_the_than_quyet',
     // T6 — offered at the Initiation Ritual only when the mortal skill
     // huy_quyen reaches Lv3 (offerGate, see isCultivationPathOffered).

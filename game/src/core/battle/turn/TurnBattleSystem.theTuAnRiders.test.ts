@@ -314,4 +314,50 @@ describe('tro riders (spec 8.2)', () => {
     })
     expect(f.supporterP.entity.currentThe).toBe(20)
   })
+
+  it('a DODGED damaging ally action keeps the follow-up on the intended target — no all-enemies fan-out', () => {
+    // Regression guard — resolveAllyActionWindow once treated
+    // landedTargets === 0 as "non-damaging" and fanned the follow-up out
+    // to every living enemy. A dodged DAMAGING action is not authored
+    // non-damaging: it must inherit declared.affected instead.
+    const f = fixture()
+    const enemy2 = createCombatant(
+      { id: 'enemy2', type: 'enemy', currentHp: 100_000, maxHp: 100_000, x: 9, row: 0 },
+      3,
+    )
+    const enemy2P = makeParticipant('enemy2', enemy2, 3, 101)
+    f.battle.enemies.push(enemy2P)
+
+    // Force the dodge: hit chance floors at 5% (Accuracy.ts), so a
+    // 0.999 roll misses even through the floor.
+    f.enemyP.entity.baseStats = asBaseStats({
+      ...f.enemyP.entity.baseStats,
+      evasionRate: 1_000_000,
+    })
+    f.enemyP.entity.stats = { ...f.enemyP.entity.stats, evasionRate: 1_000_000 }
+
+    withTroMon(f.supporterP, (effect) => {
+      effect.firesOnNonDamagingAction = true
+    })
+    // First roll is the hit check (0.999 misses even the 5% floor ->
+    // dodge); every LATER roll must be low so the supporter's proc
+    // succeeds — followUpChance hard-caps at REACTIVE_CHANCE_CAP = 0.6,
+    // so a flat 0.999 mock would suppress the proc too.
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.999).mockReturnValue(0)
+
+    const declared = declaredAllyAction(f.strikerP, f.strikerP.basic!, f.battle.enemies, [f.enemyP])
+    system().applyActionImpact(f.battle, declared)
+
+    // The striker's single-target hit whiffed on the ONLY declared
+    // target; the supporter's tro_kich must queue against that one
+    // intended enemy — not ['enemy', 'enemy2'].
+    expect(f.battle.queuedFollowUps).toHaveLength(1)
+    expect(f.battle.queuedFollowUps![0]).toMatchObject({
+      actorId: 'supporter',
+      actionSource: 'follow_up',
+      payloadSkillId: 'tro_kich',
+      triggerContext: { origin: 'ally_action' },
+    })
+    expect(f.battle.queuedFollowUps![0]!.targetIds).toEqual(['enemy'])
+  })
 })

@@ -67,6 +67,24 @@ const ENEMY_BASIC: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
+const ENEMY_AOE: TurnSkillDefinition = {
+  id: 'enemy_aoe',
+  cooldownTurns: 0,
+  damage: { kind: 'physical', multiplier: 1 },
+  // A column band across every lane (all_lanes, default columnRadius 1)
+  // — semantically multi-target regardless of how many entries survive
+  // in declared.affected at impact time.
+  targeting: { shape: 'all_lanes' },
+}
+
+const ENEMY_CHARGED: TurnSkillDefinition = {
+  id: 'enemy_charged',
+  cooldownTurns: 0,
+  chargeTurns: 1,
+  damage: { kind: 'physical', multiplier: 1 },
+  targeting: { shape: 'single' },
+}
+
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
   return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
@@ -279,5 +297,95 @@ describe('Ho intercept window (spec 6.2.1)', () => {
       targetIds: ['enemy'],
       triggerContext: { origin: 'enemy_hit', intercepted: true, outcome: 'evaded' },
     })
+  })
+})
+
+describe('Ho intercept — semantic single-target', () => {
+  it('an all_lanes cast whose affected shrank to one entry does NOT open the window', () => {
+    const f = makeFixture()
+    f.enemyP.basic = ENEMY_AOE
+    withHoMon(f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0) // the roll would succeed if the window opened
+
+    // The AoE anchors on the squishy (column 0); the protector sits at
+    // column 5 outside the columnRadius-1 band, so the declare collects
+    // a single affected entry — the degenerate case an affected-count
+    // gate misreads as a single-target hit.
+    const sys = system()
+    const declared = sys.declareActorAction(f.battle, f.enemyP)
+
+    expect(declared.affected).toEqual([f.squishyP])
+
+    const { targetIds } = sys.applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(declared.affected).toEqual([f.squishyP])
+    expect(targetIds).toEqual(['squishy'])
+    expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
+    expect(f.protectorP.entity.currentHp).toBe(100_000)
+    expect(f.protectorP.entity.currentThe).toBe(100) // no attempt cost paid
+  })
+
+  it('a charge-resolved single-target hit DOES open the window — the protector eats it', () => {
+    const f = makeFixture()
+    f.enemyP.special = { skill: ENEMY_CHARGED, remainingCooldownTurns: 0 }
+    withHoMon(f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0) // proc roll succeeds
+
+    const sys = system()
+
+    // Charge-init turn: the cast commits here; no targets resolve yet.
+    const init = sys.declareActorAction(f.battle, f.enemyP)
+    sys.applyActionImpact(f.battle, init)
+    expect(f.enemyP.chargingTurnsRemaining).toBe(1)
+
+    // Charge-resolve turn: the declared targets materialize into BOTH
+    // chargeTargetIds and affected — the intercept window and the
+    // charged hit lane share one consumed target list (the regression
+    // this guards: affected used to stay EMPTY here, so the window
+    // could never see a charged hit).
+    const declared = sys.declareActorAction(f.battle, f.enemyP)
+
+    expect(declared.chargeResolved).toBe(true)
+    expect(declared.chargeTargetIds).toEqual(['squishy'])
+    expect(declared.affected).toEqual([f.squishyP])
+
+    const { targetIds } = sys.applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBe(true)
+    expect(declared.interceptedBy).toBe('protector')
+    expect(declared.affected).toEqual([f.protectorP])
+    // Substitution must rewrite the charged target set — that is the
+    // array the charge-resolve hit loop iterates.
+    expect(declared.chargeTargetIds).toEqual(['protector'])
+    expect(targetIds).toEqual(['protector'])
+    expect(f.protectorP.entity.currentHp).toBeLessThan(100_000)
+    expect(f.squishyP.entity.currentHp).toBe(100_000)
+  })
+
+  it('a reactive enemy action (actionSource: counter) never opens the window (INV-9)', () => {
+    const f = makeFixture()
+    withHoMon(f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    // A queued enemy-side reactive entry declares through the same
+    // TurnDeclaredAction shape but carries a reactive actionSource —
+    // INV-9 bars it from opening new reactive windows. The evade /
+    // ally-action / taken windows all gate on this field; the intercept
+    // window must too.
+    const declared: TurnDeclaredAction = {
+      ...declaredAgainst(f, [f.squishyP]),
+      isFollowUpBypass: true,
+      actionSource: 'counter',
+    }
+
+    const { targetIds } = system().applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(declared.affected).toEqual([f.squishyP])
+    expect(targetIds).toEqual(['squishy'])
+    expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
+    expect(f.protectorP.entity.currentHp).toBe(100_000)
+    expect(f.protectorP.entity.currentThe).toBe(100) // no attempt cost paid
   })
 })

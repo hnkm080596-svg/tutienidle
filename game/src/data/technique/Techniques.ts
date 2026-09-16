@@ -205,7 +205,7 @@ export const TECHNIQUES: Technique[] = [
   {
     id: 'ung_the_than_quyet',
 
-    name: 'Ứng Thể Thần Quyết',
+    name: 'Ứng Thế Thần Quyết',
 
     icon: '/assets/techniques/iron_body_scripture.png',
 

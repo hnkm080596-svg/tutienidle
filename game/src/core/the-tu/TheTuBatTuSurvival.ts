@@ -14,11 +14,16 @@ import { BAT_TU_BA_THE_TURNS } from '../../data/skill/TheTuSkills'
  *
  * Three outcomes, evaluated per lethal hit:
  *   1. bat_tu_ba_the buff already active -> free survive. No re-grant,
- *      no duration refresh, no cooldown touch (review-#6 fix).
+ *      no duration refresh, no cooldown touch (review-#6 fix), no
+ *      cleanse — cleanseDebuffs:false on every return keeps
+ *      CombatSystem's generic !==false blanket wipe from running on
+ *      repeat lethals inside the window.
  *   2. Ultimate slot off cooldown -> consume the cooldown, grant the
  *      buff at the slot's baked durationOverride (participant-build
  *      resolved: base + batTuDurationBonus — ONE resolved value shared
- *      with the manual cast path, review P0.2), cleanse.
+ *      with the manual cast path, review P0.2). CC strip comes ONLY
+ *      from BAT_TU_BA_THE_BUFF.clearsCcOnApply on the grant path —
+ *      non-cc debuffs (poison/bleed/stat debuffs) are never cleansed.
  *   3. Ultimate on cooldown -> survived:false; the talent guard may
  *      still save the holder.
  *
@@ -37,8 +42,10 @@ export class TheTuBatTuSurvival implements SurviveLethalSource {
   trySurvive(_entity: CombatEntity): SurviveLethalResult {
     // Active buff -> free survive. Presence in the pool = unexpired:
     // remainingTurns ticks only on the holder's own turns.
+    // cleanseDebuffs:false — without it the undefined !== false check
+    // in killIfDead blanket-cleansed EVERY debuff on each repeat lethal.
     if (this.deps.buffs.getAllById('bat_tu_ba_the').length > 0) {
-      return { survived: true }
+      return { survived: true, cleanseDebuffs: false }
     }
 
     const slot = this.deps.ultimateSlot()
@@ -60,7 +67,9 @@ export class TheTuBatTuSurvival implements SurviveLethalSource {
       survived: true,
       grantBuffId: 'bat_tu_ba_the',
       grantBuffDurationOverride: application?.durationOverride ?? BAT_TU_BA_THE_TURNS,
-      cleanseDebuffs: true,
+      // Spec: only hard CC is cleansed, via the granted buff's
+      // clearsCcOnApply (CombatSystem grant path). No blanket debuff wipe.
+      cleanseDebuffs: false,
     }
   }
 }
