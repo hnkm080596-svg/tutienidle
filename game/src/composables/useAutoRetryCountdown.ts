@@ -13,7 +13,7 @@ import { onUnmounted, ref } from 'vue'
 // nguyên tắc "diff theo Date.now()" như GameClock, xem core/idle/
 // GameClock.ts) — mỗi callback tính lại remaining từ deadline, không phụ
 // thuộc số lần callback đã fire.
-export function useAutoRetryCountdown(seconds: number, onComplete: () => void) {
+export function useAutoRetryCountdown(seconds: number, onComplete: () => void | Promise<void>) {
   const remaining = ref(seconds)
   let handle: ReturnType<typeof setInterval> | undefined
   let deadline = 0
@@ -44,7 +44,12 @@ export function useAutoRetryCountdown(seconds: number, onComplete: () => void) {
     }
 
     completed = true
-    onComplete()
+    // onComplete may be async (B4 — refight awaits runAdmitted). A
+    // rejection must be logged, not surface as an unhandled rejection from
+    // a timer callback.
+    void Promise.resolve(onComplete()).catch((error: unknown) => {
+      console.error('[auto-retry] onComplete callback failed', error)
+    })
   }
 
   function start() {

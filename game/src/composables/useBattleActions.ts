@@ -39,11 +39,11 @@ export function useBattleActions() {
    * ARCH-002 (M7): callers no longer pass finalStats — the ops resolves
    * the base post-reset via resolvePlayerFinalStats + the live provider.
    */
-  function runStageStart(
+  async function runStageStart(
     stage: Stage,
     repeat: boolean,
     commit: () => void,
-  ): boolean | Promise<boolean> {
+  ): Promise<boolean> {
     const startStage = () =>
       gameManager.turnBattleOps.startStage(player.$state, stage, repeat)
 
@@ -57,32 +57,30 @@ export function useBattleActions() {
       return started
     }
 
-    return (async () => {
-      const result = await presentation.runAdmitted(
-        'combat',
-        () => {
-          if (!startStage()) {
-            return null
-          }
+    const result = await presentation.runAdmitted(
+      'combat',
+      () => {
+        if (!startStage()) {
+          return null
+        }
 
-          const session = gameManager.getCurrentPresentationSession('combat')
+        const session = gameManager.getCurrentPresentationSession('combat')
 
-          return session ? { target: 'combat', session } : null
-        },
-        { compensate: () => void gameManager.abandonBattle() },
-      )
+        return session ? { target: 'combat', session } : null
+      },
+      { compensate: () => void gameManager.abandonBattle() },
+    )
 
-      if (result.status !== 'entered') {
-        return false
-      }
+    if (result.status !== 'entered') {
+      return false
+    }
 
-      commit()
+    commit()
 
-      return true
-    })()
+    return true
   }
 
-  function startBattle(stage: Stage): boolean | Promise<boolean> {
+  function startBattle(stage: Stage): Promise<boolean> {
     return runStageStart(stage, ui.battleRunMode === 'repeat', () => {
       ui.enterCombatScene('stage')
       bumpState()
@@ -127,7 +125,7 @@ export function useBattleActions() {
    * Bấm "Bắt Đầu" ở StageSelectPanel.vue — admission trước startSelectedStage (F07).
    * Chỉ khi startStage thành công mới đóng panel, emit pose, và vào combat UI.
    */
-  function startSelectedStage(zoneId: string, stage: Stage, mode: BattleRunMode): boolean | Promise<boolean> {
+  function startSelectedStage(zoneId: string, stage: Stage, mode: BattleRunMode): Promise<boolean> {
     return runStageStart(stage, mode === 'repeat', () => {
       gameManager.eventBus.emit('cultivation_changed', { isCultivating: false })
       ui.selectedZoneId = zoneId

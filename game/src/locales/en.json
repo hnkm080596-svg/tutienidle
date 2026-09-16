@@ -1015,6 +1015,10 @@
     "success": "{label} succeeded",
     "failed": "Cannot {label}: {reason}"
   },
+  "autoFarm": {
+    "running": "Auto-farming Perfect Clear: {stage}",
+    "stop": "Stop"
+  },
   "alchemy": {
     "spiritStones": "Spirit Stones",
     "startBrewing": "Start brewing",
@@ -1086,5 +1090,8 @@
       "open": "Open {name}",
       "viewRequirements": "View unlock requirements for {name}"
     }
+  },
+  "save": {
+    "conflict": "Save was changed by another session."
   }
 }

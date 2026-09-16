@@ -10,6 +10,57 @@ import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
 import type { BattleRewardParticleEvent } from '../battle/BattleEvents'
 
 describe('GameManager continuous repeat stage', () => {
+  it('defeat during auto-repeat releases the stage slot — a later startStage must not no-op (audit T1-4)', () => {
+    const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+
+    const killer = defineEnemy({
+      id: 'repeat_killer',
+      name: 'Repeat Killer',
+      level: 1,
+      realmId: 'mortal',
+      lane: 'ground',
+      statsInput: {
+        maxHp: 10_000_000,
+        might: 5_000,
+        attackSpeed: 1,
+        criticalRate: 0,
+        criticalDamage: 1.5,
+        armor: 0,
+      },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
+    })
+    const stage: Stage = {
+      id: 'repeat_defeat_stage',
+      name: 'Repeat Defeat Stage',
+      description: '',
+      floor: 1,
+      enemyPool: [{ enemyId: killer.id, weight: 1 }],
+      totalEnemyCount: 1, waves: [1],
+      spawnIntervalSeconds: 0,
+    }
+    const player = createDefaultPlayer()
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 0, maxHp: 50, speed: 10 })
+
+    gameManager.catalogOps.registerEnemyTemplates([killer])
+    gameManager.catalogOps.registerStages([stage])
+    gameManager.setActivePlayer(player)
+
+    expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
+
+    for (let i = 0; i < 4_000 && gameManager.getTurnBattle()?.state !== 'defeat'; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+    }
+
+    expect(gameManager.getTurnBattle()?.state).toBe('defeat')
+
+    // The leaked slot is the whole bug: it must be released on defeat even
+    // while repeat is armed, or every future startStage returns false.
+    expect(gameManager.turnBattleOps.getStageProgress()).toBeNull()
+    expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
+  })
+
   it('starts another spawn cycle in the same battle without restoring the player', () => {
     const gameManager = new GameManager()
     const combatSource = new ManualClockSource()

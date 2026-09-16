@@ -93,6 +93,7 @@ function makeStubs() {
     restoreGameSession: vi.fn(() => ({ status: 'ok' as const, offline: { elapsedSeconds: 0, cultivation: 0 } })),
     persistPlayer: vi.fn(async () => ({ status: 'ok' as const, revision: 1 })),
     onError: vi.fn(),
+    hardReset: vi.fn(),
   }
 }
 
@@ -116,6 +117,7 @@ function makeLifecycle(stubs: Stubs) {
     restoreGameSession: stubs.restoreGameSession,
     persistPlayer: stubs.persistPlayer,
     onError: stubs.onError,
+    hardReset: stubs.hardReset,
   })
 }
 
@@ -473,6 +475,7 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
             restoreGameSession: stubs.restoreGameSession,
             persistPlayer: stubs.persistPlayer,
             onError: stubs.onError,
+            hardReset: stubs.hardReset,
           })
 
           return () => h('div')
@@ -523,6 +526,7 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
           restoreGameSession: stubs.restoreGameSession,
           persistPlayer: stubs.persistPlayer,
           onError: stubs.onError,
+          hardReset: stubs.hardReset,
         })
 
         // Mirror App.vue's onUnmounted flush — fires strictly after the
@@ -547,5 +551,183 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
     const save: GameSave | undefined = undefined
 
     expect(save).toBeUndefined()
+  })
+})
+
+describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8)', () => {
+  it('new character: first durable save commits BEFORE tick loop / enterGame (order via invocationCallOrder)', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('entered')
+    expect(stubs.player.save).toHaveBeenCalledTimes(1)
+
+    const saveOrder = (stubs.player.save as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0]!
+    const enterOrder = stubs.boot.enterGame.mock.invocationCallOrder[0]!
+    expect(saveOrder).toBeLessThan(enterOrder)
+    expect(stubs.clock.start.mock.invocationCallOrder[0]!).toBeGreaterThan(saveOrder)
+
+    lifecycle.stopAll()
+  })
+
+  it('new character save non-ok → outcome failed, boot.fail + onError, tick loop and clock NEVER start', async () => {
+    const stubs = makeStubs()
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'unavailable',
+      message: 'storage blocked',
+      retryable: false,
+    })
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
+    expect(stubs.onError).toHaveBeenCalledWith('storage blocked')
+    expect(lifecycle.getTickHandle()).toBeUndefined()
+    expect(stubs.clock.start).not.toHaveBeenCalled()
+    expect(stubs.intervals).toHaveLength(0)
+
+    lifecycle.stopAll()
+  })
+
+  it('conflict save result maps to the session-conflict message', async () => {
+    const stubs = makeStubs()
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'conflict',
+      currentRevision: 2,
+    })
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.onError).toHaveBeenCalledWith('Save đã thay đổi ở một phiên khác.')
+
+    lifecycle.stopAll()
+  })
+
+  it('stopAll during the first-save await → continuation is stale, no fail/enter/tick (generation fence extends over the new await)', async () => {
+    const stubs = makeStubs()
+
+    let releaseSave: (value: unknown) => void = () => undefined
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockImplementation(
+      () => new Promise((resolve) => (releaseSave = resolve)),
+    )
+
+    const lifecycle = makeLifecycle(stubs)
+    const boot = lifecycle.bootGame({ createNewCharacter: true })
+
+    // Park bootGame AT the player.save await before stopping — calling
+    // stopAll() synchronously only exercises the existing fence after
+    // coordinator.reset(), leaving the new post-save fence uncovered.
+    await vi.waitFor(() => expect(stubs.player.save).toHaveBeenCalled())
+    lifecycle.stopAll()
+    releaseSave({ status: 'ok', revision: 1 })
+
+    const outcome = await boot
+
+    expect(outcome.status).toBe('skipped')
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
+    expect(stubs.boot.fail).not.toHaveBeenCalled()
+    expect(stubs.intervals).toHaveLength(0)
+    expect(stubs.clock.start).not.toHaveBeenCalled()
+  })
+
+  // QA repro (mission B deep audit): a failed first save leaves every
+  // onNewCharacter grant applied (buildings/materials/activePlayer were
+  // committed BEFORE the save await). The real callback in App.vue is
+  // NOT idempotent - buildingManager.add / materialBag.add / baseStats
+  // all append - so the boot-error -> auth -> re-create path grants the
+  // starter pack a second time and persists the doubled state. This
+  // callback mirrors the same public seams App.vue's onNewCharacter
+  // drives (buildingManager.add x2 starter buildings, materialBag.add
+  // x2 starter stacks, setActivePlayer).
+  it('first save fails then retry creates again -> starter grants apply EXACTLY ONCE (no double grant)', async () => {
+    const stubs = makeStubs()
+
+    // Faithful seam mirror of App.vue's onNewCharacter: non-idempotent
+    // appends (add) plus the active-player registration.
+    const grantStarterContent = () => {
+      stubs.gameManager.buildingManager.add({
+        instanceId: 'a',
+        buildingId: 'teleport_array',
+        level: 1,
+        lastCollectedAt: 0,
+      })
+      stubs.gameManager.buildingManager.add({
+        instanceId: 'b',
+        buildingId: 'gathering_outpost',
+        level: 1,
+        lastCollectedAt: 0,
+      })
+      stubs.gameManager.materialBag.add({} as never, 15)
+      stubs.gameManager.materialBag.add({} as never, 6)
+      stubs.gameManager.setActivePlayer(stubs.player.$state as never)
+    }
+
+    const lifecycle = makeLifecycle(stubs)
+
+    // Attempt 1: storage unavailable at the first-save boundary.
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'unavailable',
+      message: 'storage blocked',
+      retryable: true,
+    })
+
+    const first = await lifecycle.bootGame({
+      createNewCharacter: true,
+      onNewCharacter: grantStarterContent,
+    })
+
+    expect(first.status).toBe('failed')
+
+    // Attempt 2: transient failure recovered; the user re-creates. The
+    // first attempt's grants cannot be rolled back in memory, so the
+    // retry must reload for a clean process - NOT re-run the callback.
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'ok',
+      revision: 1,
+    })
+
+    const second = await lifecycle.bootGame({
+      createNewCharacter: true,
+      onNewCharacter: grantStarterContent,
+    })
+
+    expect(second.status).toBe('skipped')
+    expect(stubs.hardReset).toHaveBeenCalledTimes(1)
+
+    // One character must own ONE starter set: 2 buildings + 2 material
+    // stacks. The guard blocks the second grant entirely.
+    expect(stubs.gameManager.buildingManager.add).toHaveBeenCalledTimes(2)
+    expect(stubs.gameManager.materialBag.add).toHaveBeenCalledTimes(2)
+
+    lifecycle.stopAll()
+  })
+
+  // QA repro (mission B deep audit): the new first-save await is not
+  // guarded - a service that THROWS (coordinator.save has no try/catch;
+  // a remote CloudSaveService may reject on network failure) propagates
+  // out of bootGame. boot.fail() never runs, so the caller sees an
+  // unhandled rejection and the app sits on LoadingScreen forever
+  // instead of the boot-error screen. coordinator.load() shares this
+  // exposure but the new save await widens it.
+  it('player.save THROWS during first save -> boot still fails visibly instead of hanging', async () => {
+    const stubs = makeStubs()
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('network down'),
+    )
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
   })
 })

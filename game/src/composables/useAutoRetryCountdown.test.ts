@@ -92,3 +92,29 @@ describe('useAutoRetryCountdown — deadline thực (uncommitted audit followup 
     expect(onComplete).not.toHaveBeenCalled()
   })
 })
+
+describe('useAutoRetryCountdown — B4 async onComplete', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('accepts an async onComplete — runs once, rejection is logged not thrown unhandled', async () => {
+    vi.useFakeTimers()
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const onComplete = vi.fn(async () => {
+      throw new Error('refight rejected')
+    })
+    const { start } = useAutoRetryCountdown(1, onComplete)
+
+    start()
+    await vi.advanceTimersByTimeAsync(2_000)
+
+    expect(onComplete).toHaveBeenCalledTimes(1)
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[auto-retry] onComplete callback failed',
+      expect.any(Error),
+    )
+
+    errorSpy.mockRestore()
+  })
+})

@@ -1,5 +1,7 @@
 import { usePlayerStore } from '../stores/player'
+import { useNotificationStore } from '../stores/notification'
 import { useGameManager } from './useGameState'
+import { i18n } from '@/i18n'
 import type { GameManager } from '../core/game/GameManager'
 import type { CombatClockBridge } from '../presentation/clock/MainProcessClockSource'
 
@@ -57,6 +59,7 @@ export function useElectronBridge(gameManagerOverride?: GameManager): (() => voi
   }
 
   const player = usePlayerStore()
+  const notification = useNotificationStore()
   const gameManager = gameManagerOverride ?? useGameManager()
 
   // Autosave khi đóng cửa sổ (electron/main.ts's bindQuitFlush()) — tái
@@ -70,9 +73,19 @@ export function useElectronBridge(gameManagerOverride?: GameManager): (() => voi
     // promise; FLUSH_TIMEOUT_MS (main.ts) vẫn là backstop nếu save treo.
     void (async () => {
       try {
-        await player.save(gameManager)
+        const result = await player.save(gameManager)
+
+        // The write result is the acknowledgement contract: a resolved
+        // non-ok status is still a failed save and must be logged +
+        // surfaced. notifyFlushComplete stays in finally - the close is
+        // never blocked by a save failure (the 2s main timeout backstops).
+        if (result.status !== 'ok') {
+          console.error('[electron] quit flush save failed', result)
+          notification.push('error', i18n.global.t('panels.settings.notifications.saveFailed'))
+        }
       } catch (error: unknown) {
         console.error('[electron] quit flush save failed', error)
+        notification.push('error', i18n.global.t('panels.settings.notifications.saveFailed'))
       } finally {
         electronAPI.notifyFlushComplete()
       }

@@ -132,7 +132,12 @@ export class GameManagerBattleRewardOps {
         this.deps.bankPassiveCarry(playerData)
       }
 
-      if (!this.deps.getRepeatContinuously()) {
+      // Defeat releases the stage slot UNCONDITIONALLY - auto-repeat only
+      // survives victory (settleCombatOutcome restarts in place; a dead
+      // player ends stage + repeat per StageWaveSystem's own contract).
+      // Skipping stopRepeat() here used to leak StageManager.active, so
+      // every later startStage no-opped for the rest of the session (T1-4).
+      if (turnBattle.state === 'defeat' || !this.deps.getRepeatContinuously()) {
         this.deps.stageWaves.stopRepeat()
       }
 

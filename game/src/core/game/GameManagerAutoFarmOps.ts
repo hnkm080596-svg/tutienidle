@@ -131,7 +131,13 @@ export class GameManagerAutoFarmOps {
       this.rollAutoFarmCycleReward(player, stage)
     }
 
-    autoFarm.lastCheckedMs += completedCycles * cycleMs
+    // T1-12 — anchor to now minus the UNSETTLED remainder, identical to
+    // tickAutoFarm. A stale/corrupt persisted lastCheckedMs used to
+    // survive this line untouched: the settle paid the whole capped
+    // window, then the next online tickAutoFarm clamped (now - staleTs)
+    // to the cap and paid the SAME window a second time (double-pay —
+    // also triggered by any honest session longer than the 24h cap).
+    autoFarm.lastCheckedMs = Date.now() - (elapsedMs - completedCycles * cycleMs)
   }
 
   /**

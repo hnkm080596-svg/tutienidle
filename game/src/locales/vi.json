@@ -1015,6 +1015,10 @@
     "success": "{label} thành công",
     "failed": "Không thể {label}: {reason}"
   },
+  "autoFarm": {
+    "running": "Đang Tự Động Hoàn Mỹ: {stage}",
+    "stop": "Dừng"
+  },
   "alchemy": {
     "spiritStones": "Linh Thạch",
     "startBrewing": "Bắt đầu luyện",
@@ -1086,5 +1090,8 @@
       "open": "Mở {name}",
       "viewRequirements": "Xem yêu cầu mở {name}"
     }
+  },
+  "save": {
+    "conflict": "Save đã thay đổi ở một phiên khác."
   }
 }

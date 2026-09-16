@@ -16,6 +16,8 @@ import { i18n } from '@/i18n'
 interface MockGameManager {
   getBattleRewardSummary: ReturnType<typeof vi.fn>
   catalogOps: { getStage: ReturnType<typeof vi.fn> }
+  turnBattleOps: { startStage: ReturnType<typeof vi.fn> }
+  abandonBattle: ReturnType<typeof vi.fn>
   eventBus: { emit: ReturnType<typeof vi.fn>; on: ReturnType<typeof vi.fn>; off: ReturnType<typeof vi.fn> }
 }
 
@@ -31,6 +33,8 @@ function makeGameManager(): MockGameManager {
       items: [],
     })),
     catalogOps: { getStage: vi.fn(() => undefined) },
+    turnBattleOps: { startStage: vi.fn(() => false) },
+    abandonBattle: vi.fn(() => false),
     eventBus,
   }
 }
@@ -50,11 +54,13 @@ function mountPanel(gm: MockGameManager, battleRunMode: 'manual' | 'repeat' = 'm
   app.provide(STATE_VERSION_KEY, ref(0))
   app.provide(BUMP_STATE_KEY, () => {})
 
-  app.mount(container)
-
+  // battleRunMode must be armed BEFORE mount — onMounted reads it to
+  // decide whether the 3s auto-retry countdown starts (B4).
   const ui = useUiStore(pinia)
 
   ui.battleRunMode = battleRunMode
+
+  app.mount(container)
 
   return {
     container,
@@ -161,6 +167,28 @@ describe('CombatDefeatPanel — B2-1 progression hint', () => {
 
     const t = (i18n.global as unknown as { t: (k: string) => string }).t
     expect(panel.container.textContent).toContain(t('combat.defeat.hintGear'))
+
+    panel.unmount()
+  })
+})
+
+describe('CombatDefeatPanel — B4 failed refight recovery (audit T1-5)', () => {
+  it('auto-retry countdown ends and startBattle resolves false → retry re-enabled, battleRunMode disarmed to manual', async () => {
+    vi.useFakeTimers()
+    const gm = makeGameManager()
+    // Stage exists so refight() reaches startBattle; the domain refuses it.
+    gm.catalogOps.getStage.mockReturnValue({ id: 'mortal_dong_1' })
+
+    const panel = mountPanel(gm, 'repeat')
+    panel.ui.selectedStageId = 'mortal_dong_1'
+    await nextTick()
+
+    await vi.advanceTimersByTimeAsync(3_000)
+    await nextTick()
+
+    expect(panel.ui.battleRunMode).toBe('manual')
+    const retryButton = panel.container.querySelector('.combat-defeat-panel__retry')
+    expect(retryButton?.classList.contains('is-disabled')).toBe(false)
 
     panel.unmount()
   })
