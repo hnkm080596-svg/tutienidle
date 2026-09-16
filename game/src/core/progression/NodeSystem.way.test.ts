@@ -189,13 +189,15 @@ describe('requiredWay — domain collectors honor the same gate', () => {
     })
     const registry = { getAll: () => [node] }
 
-    // resolveMaxThe only runs for cultivationPath 'phap_tu'; the way
-    // gate must hold on top of it (post-M7 a base path id carries any
-    // of that path's ways).
+    // M4 (R6): resolveMaxThe is ngu_hanh machinery — ngo_dao owns no
+    // The pool at all, so even a way-MATCHING the-cap node contributes
+    // nothing for a ngo_dao player (both persisted shapes). The loop's
+    // nodeWayApplies check remains for way-mismatched nodes inside the
+    // ngu_hanh tree.
     const nguHanh = playerWith({ cultivationPath: 'phap_tu', cultivationWay: 'ngu_hanh', nodeLevels: { ngo_dao_the_cap: 2 } })
     expect(resolveMaxThe(registry, nguHanh)).toBe(MAX_THE)
 
     const ngoDao = playerWith({ cultivationPath: 'phap_tu', cultivationWay: 'ngo_dao', nodeLevels: { ngo_dao_the_cap: 2 } })
-    expect(resolveMaxThe(registry, ngoDao)).toBe(MAX_THE + 10)
+    expect(resolveMaxThe(registry, ngoDao)).toBe(MAX_THE)
   })
 })

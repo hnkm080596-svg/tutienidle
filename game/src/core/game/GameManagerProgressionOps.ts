@@ -27,6 +27,7 @@ import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
+import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -114,7 +115,7 @@ export class GameManagerProgressionOps {
   getPhapTuElement(): ElementType | undefined {
     const activePlayer = this.deps.getActivePlayer()
 
-    if (activePlayer?.cultivationPath !== 'phap_tu') {
+    if (activePlayer === undefined || !isPhapTuNguHanh(activePlayer)) {
       return undefined
     }
 
@@ -272,7 +273,11 @@ export class GameManagerProgressionOps {
    * untouched — element != null implies route != null always.
    */
   selectPhapTuElement(element: ElementType, route: PhapTuRoute, player: PlayerData): boolean {
-    if (player.cultivationPath !== 'phap_tu') {
+    // Cultivation Path Framework (M4, R6): element/route machinery is
+    // ngu_hanh-only — the WAY is the gate, so the post-M7 collapsed
+    // ('phap_tu','ngo_dao') shape cannot commit an element. The
+    // requiredWay stamp on PHAP_TU_NODES is the second layer.
+    if (!isPhapTuNguHanh(player)) {
       return false
     }
 
@@ -420,7 +425,7 @@ export class GameManagerProgressionOps {
     // enforces the same invariant; the op must not report success for
     // a rejected write.
     if (
-      player.cultivationPath !== 'phap_tu' ||
+      !isPhapTuNguHanh(player) ||
       player.phapTu.element === null ||
       player.phapTu.route === null
     ) {

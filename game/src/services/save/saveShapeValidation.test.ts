@@ -237,18 +237,28 @@ describe('validateGameSaveShape — phapTu atomic (element ↔ route)', () => {
       const save = validSave()
 
       ;(save.player as Record<string, unknown>).cultivationPath = 'phap_tu'
+      ;(save.player as Record<string, unknown>).cultivationWay = 'ngu_hanh'
       ;(save.player as Record<string, unknown>).phapTu = phapTu
 
       expect(validateGameSaveShape(save).ok).toBe(true)
     }
   })
 
-  it.each([['phap_tu_an'], ['kiem_tu']])(
-    'từ chối route/element state trên %s — chỉ phap_tu thường sở hữu nó',
-    (path) => {
+  it.each([
+    ['phap_tu_an', 'ngo_dao'],
+    ['kiem_tu', undefined],
+    // M4: element ownership is way-gated — BOTH ngo_dao persisted
+    // shapes reject it, and so does a legacy phap_tu save that never
+    // wrote cultivationWay.
+    ['phap_tu', 'ngo_dao'],
+    ['phap_tu', undefined],
+  ])(
+    'từ chối route/element state trên %s/%s — chỉ ngu_hanh sở hữu nó',
+    (path, way) => {
       const save = validSave()
 
       ;(save.player as Record<string, unknown>).cultivationPath = path
+      ;(save.player as Record<string, unknown>).cultivationWay = way
       ;(save.player as Record<string, unknown>).phapTu = { element: 'fire', route: 'dot' }
 
       const result = validateGameSaveShape(save)

@@ -26,6 +26,7 @@ function fakeBattle(
 function phapTuPlayer(overrides: Partial<TheBarPlayerState> = {}): TheBarPlayerState {
   return {
     cultivationPath: 'phap_tu',
+    cultivationWay: 'ngu_hanh',
     phapTu: { element: 'fire', route: 'dot' },
     nodeLevels: {},
     ...overrides,
@@ -89,7 +90,7 @@ describe('makeTheBarReader — Task 16 The bar mapping', () => {
   it('phap_tu_an owns NO The pool → null (spec P6)', () => {
     const reader = makeReader(
       fakeBattle('fighting', { currentThe: 30 }),
-      phapTuPlayer({ cultivationPath: 'phap_tu_an' }),
+      phapTuPlayer({ cultivationPath: 'phap_tu_an', cultivationWay: 'ngo_dao' }),
     )
 
     expect(reader()).toBeNull()

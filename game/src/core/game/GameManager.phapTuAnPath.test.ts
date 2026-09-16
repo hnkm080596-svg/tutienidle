@@ -330,6 +330,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: 'dot' }
     return { gameManager, player }
   }
@@ -388,6 +389,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     gameManager.setActivePlayer(player)
     // Path state without the ritual grant — required kit skill absent.
     player.cultivationPath = 'phap_tu_an'
+    player.cultivationWay = 'ngo_dao'
 
     expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
   })
@@ -398,6 +400,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
     player.cultivationPath = 'phap_tu_an'
+    player.cultivationWay = 'ngo_dao'
     expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam')).toBe(true)
     expect(gameManager.progressionOps.learnSkill('ngo_dao_hon_don')).toBe(true)
 
@@ -408,6 +411,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
     player.cultivationPath = 'phap_tu_an'
+    player.cultivationWay = 'ngo_dao'
     expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam')).toBe(true)
     expect(gameManager.progressionOps.learnSkill('da_phap_lien_tuyen')).toBe(true)
 

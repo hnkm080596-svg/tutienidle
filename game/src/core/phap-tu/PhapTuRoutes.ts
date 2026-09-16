@@ -5,6 +5,7 @@ import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { getNodeLevel, isNodeElementActive, isNodeRouteActive, nodeWayApplies } from '../progression/NodeSystem'
 import { MAX_THE } from '../combat/CombatTypes'
+import { isPhapTuNguHanh } from './PhapTuPath'
 import type { PhapTuState, PhapTuRoute } from './PhapTuState'
 
 // Phap Tu Reimagined (spec 2026-09-14 §4) — the ONE owner of route
@@ -211,7 +212,9 @@ export function getRouteStatModifiers(player: PlayerData): StatModifier[] {
   // Review fix (HIGH-2): route bonuses are universal stats — gate on the
   // owning path so leaked/dirty phapTu.route state on phap_tu_an or
   // kiem_tu players cannot inject crit/ailment modifiers.
-  if (player.cultivationPath !== 'phap_tu') {
+  // M4 (R6): the WAY is the gate — a collapsed ('phap_tu','ngo_dao')
+  // player owns no route machinery even with dirty phapTu state.
+  if (!isPhapTuNguHanh(player)) {
     return []
   }
 
@@ -230,7 +233,11 @@ export function resolveMaxThe(
   registry: { getAll(): ProgressionNode[] },
   player: PlayerData,
 ): number {
-  if (player.cultivationPath !== 'phap_tu') {
+  // M4 (R6): the The pool is ngu_hanh machinery — ngo_dao has no The
+  // tree, so the WAY is the gate (the requiredWay stamp also filters
+  // truong_the in the loop below; this check keeps the early-out cheap
+  // and self-documenting).
+  if (!isPhapTuNguHanh(player)) {
     return MAX_THE
   }
 

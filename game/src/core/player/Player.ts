@@ -1,6 +1,6 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
 import {
-  getPhapTuAttunementStatModifiers,
+  collectActiveWayStatModifiers,
   getTheTuAnReactiveStatModifiers,
   getTheTuEnduranceStatModifiers,
 } from './CultivationPathSystem'
@@ -453,16 +453,19 @@ export function resolvePlayerFinalStats(
     ...externalModifiers,
   ]
 
-  // D12 ordering contract (spec section 5): the Phap Tu system reads the
-  // resolved attribute totals and emits its gated MP modifiers BEFORE
-  // calculateStats runs -- the totals read is not a second attribute
-  // derivation (INV-6), and the emitted modifiers are the ONLY
-  // attunement->MP channel (INV-10). The Tu paths emit the same way
-  // (spec 2026-09-15 section 3): the_tu_an attribute->chance and the_tu
+  // D12 ordering contract (spec section 5): the active way's stat facet
+  // reads the resolved attribute totals and emits its gated modifiers
+  // BEFORE calculateStats runs -- the totals read is not a second
+  // attribute derivation (INV-6), and the emitted modifiers are the ONLY
+  // attunement->MP channel (INV-10). M4: the Phap Tu attunement emitter
+  // moved behind the way facet (collectActiveWayStatModifiers) so both
+  // phap_tu ways emit identically. The Tu paths still emit via their
+  // hardcoded channels (spec 2026-09-15 section 3) until M5/M6 move them
+  // behind the same facet: the_tu_an attribute->chance and the_tu
   // vitality->enduranceThreshold ride the same totals read.
   const attributeTotals = resolveAttributeTotals(player.baseStats, allModifiers)
   const pathModifiers = [
-    ...getPhapTuAttunementStatModifiers(player, attributeTotals),
+    ...collectActiveWayStatModifiers(player, attributeTotals),
     ...getTheTuAnReactiveStatModifiers(player, attributeTotals),
     ...getTheTuEnduranceStatModifiers(player, attributeTotals),
   ]

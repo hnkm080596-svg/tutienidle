@@ -203,6 +203,7 @@ describe('Pill nghề — Hỏa Hầu Thông Thần +50% hiệu quả (M3)', () 
     const { gameManager, player } = setup()
     player.selectedTalentIds = ['hoa_hau_thong_than']
     player.cultivationPath = 'phap_tu' // MP regen pill gate
+    player.cultivationWay = 'ngu_hanh' // M4: the gate is way-owned
 
     await registerPill(gameManager, 'hoi_linh_dan_mortal')
 

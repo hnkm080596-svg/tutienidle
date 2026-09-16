@@ -6,6 +6,7 @@ import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import { MAIN_STAT_KEYS, type MainStatKey } from '../stats/StatTypes'
 import { getMainStatCap } from '../stats/StatCap'
 import { addCultivation } from '../cultivation/CultivationSystem'
+import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
 import { getRequiredCultivation } from '../realm/realmSystem'
 import type { BuffDefinition } from '../buff/BuffDefinition'
 
@@ -149,7 +150,11 @@ export class PillSystem {
       (effect) => effect.type === 'regen' && (effect.mpPerSecond ?? 0) > 0,
     )
 
-    if (hasManaRegen && player.cultivationPath !== 'phap_tu') {
+    // M4 (R6): MP pills stay ngu_hanh-only — the WAY check preserves the
+    // old phap_tu_an exclusion and covers the post-M7 collapsed shape
+    // ('phap_tu','ngo_dao') where the bare path id can no longer tell
+    // the two ways apart.
+    if (hasManaRegen && !isPhapTuNguHanh(player)) {
       return 'requires_phap_tu'
     }
 

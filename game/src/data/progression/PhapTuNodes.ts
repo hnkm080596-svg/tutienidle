@@ -7,12 +7,22 @@ import { buildElementBranch } from './PhapTuNodes.builders'
 // unlock + The lanes + route-tagged specialization (3 'dot' + 3 'no' +
 // truong_the). The old keystoneReaction/keystonePure XOR, lap_dao_thuan,
 // reaction_path_unlock, B/D-position chains and The Man nodes are gone.
-// phap_tu_an has NO presence here — separate CultivationPathId with its
-// own deferred tree (PhapTuAnNodes.ts, spec §5.3).
+//
+// Cultivation Path Framework (M4) — every node in this tree is stamped
+// requiredCultivationPath 'phap_tu' + requiredWay 'ngu_hanh': the whole
+// element/root/route/The machinery belongs to the ngu_hanh way only.
+// ngo_dao (legacy path id 'phap_tu_an') owns NO tree at all — its way
+// has no progression nodes (PhapTuAnNodes.ts stays an empty stub), so a
+// Ngo Dao player can never purchase or aggregate these nodes even if a
+// dirty phapTu slice leaks into their state.
 export const PHAP_TU_NODES: ProgressionNode[] = [
   ...buildElementBranch('fire'),
   ...buildElementBranch('water'),
   ...buildElementBranch('wood'),
   ...buildElementBranch('metal'),
   ...buildElementBranch('earth'),
-]
+].map((node) => ({
+  ...node,
+  requiredCultivationPath: 'phap_tu',
+  requiredWay: 'ngu_hanh',
+}))

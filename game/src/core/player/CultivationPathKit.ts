@@ -1,8 +1,25 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
+import type { Stats } from '../stats/StatBlock'
+import type { StatDomain } from '../stats/StatDomain'
+import type { MainStatKey } from '../stats/StatTypes'
 import type { ArtifactId } from '../artifact/Artifact'
 import type { PlayerData } from './Player'
 import { getCastLeveledSkillLevel } from '../skill/SkillSystem'
+import {
+  PHAP_TU_NGO_DAO_WAY,
+  PHAP_TU_NGU_HANH_WAY,
+} from '../phap-tu/PhapTuPath'
+
+// M4 — the ngo_dao kit identity lives in the Phap Tu path module
+// (core/phap-tu/PhapTuPath.ts); re-exported so existing consumers keep
+// their import site.
+export {
+  PHAP_TU_AN_BASIC_ID,
+  PHAP_TU_AN_PASSIVE_ID,
+  PHAP_TU_AN_REQUIRED_SKILLS,
+  PHAP_TU_AN_SPECIAL_ID,
+} from '../phap-tu/PhapTuPath'
 
 // Pháp Tu Redesign (magicpath, 2026-08-18) — 5 path Ngũ Hành cũ
 // (phap_tu_hoa/moc/thuy/kim/tho) đã GỘP thành 1 "phap_tu" duy nhất
@@ -48,6 +65,22 @@ export interface CultivationPathRealmReward {
 export type PathOfferGate = {
   requiresSkillLevel?: { skillId: string; level: number }
   requiresSkillCastLevel?: { skillId: string; level: number }
+}
+
+// Cultivation Path Framework (spec 2026-09-16, M4) — a way's stat
+// contribution channel: totals-driven emission reading the RESOLVED
+// attribute totals (resolveAttributeTotals) and emitting domain-tagged
+// StatModifiers BEFORE calculateStats runs — the D12 assembly-time
+// channel. `domains` declares which StatDomains the facet emits into
+// (catalog/documentation contract; the runtime gate enforces the
+// modifier's own domain tag regardless).
+export interface PathWayStatFacet {
+  collectModifiers(
+    player: PlayerData,
+    totals: Pick<Stats, MainStatKey>,
+  ): readonly StatModifier[]
+
+  domains: readonly StatDomain[]
 }
 
 // Cultivation Path Framework (spec 2026-09-16, M1) — PathWayDefinition
@@ -97,6 +130,14 @@ export interface PathWayDefinition {
   // (currentThe/maxThe on CombatEntity). UI never checks path ids —
   // only this flag.
   usesTheResource?: boolean
+
+  // M4 — totals-driven stat contribution (the D12 assembly channel):
+  // collectActiveWayStatModifiers resolves the active way and calls
+  // this facet's collectModifiers during resolvePlayerFinalStats.
+  // Module-level declaration, never persisted. Optional — ways without
+  // a totals-driven channel emit nothing (kiem_tu/the_tu facets land
+  // with M5/M6; their emitters stay hardcoded until then).
+  stats?: PathWayStatFacet
 }
 
 // M1 — one module per base path; ways keyed by PathWayId. During the
@@ -113,87 +154,13 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathBaseId, Cu
   phap_tu: {
     id: 'phap_tu',
     name: 'Pháp Tu',
+    // M4 — the way definitions live in the path module
+    // (core/phap-tu/PhapTuPath.ts) alongside the machinery they own:
+    // the shared 'phap_tu' stat facet, the way predicates, and the
+    // ngo_dao kit identity.
     ways: {
-      ngu_hanh: {
-        id: 'ngu_hanh',
-        pathId: 'phap_tu',
-        name: 'Pháp Tu — Đại Ngũ Hành Chân Quyết',
-        techniqueId: 'dai_ngu_hanh_chan_quyet',
-        // MP-pool + mana-shield grants carry domain:'phap_tu' so the
-        // domain gate keeps accepting them once those stats are gated
-        // to the phap_tu domain.
-        statModifiers: [
-          {
-            id: 'phap_tu_linh_luc',
-            sourceId: 'phap_tu',
-            sourceType: 'realm',
-            stat: 'maxMp',
-            flat: 100,
-            domain: 'phap_tu',
-          },
-          {
-            id: 'phap_tu_linh_luc_regen',
-            sourceId: 'phap_tu',
-            sourceType: 'realm',
-            stat: 'manaRegenPerTurn',
-            flat: 2,
-            domain: 'phap_tu',
-          },
-          {
-            id: 'phap_tu_ho_the',
-            sourceId: 'phap_tu',
-            sourceType: 'realm',
-            stat: 'manaShieldPercent',
-            flat: 0.25,
-            domain: 'phap_tu',
-          },
-        ],
-        realmRewards: {
-          foundation_establishment: {
-            techniqueId: 'dai_ngu_hanh_quyet_truc_co',
-            artifactId: 'ngu_hanh_chau',
-          },
-        },
-      },
-
-      // Former phap_tu_an kit — hidden way. Owns the same 'phap_tu'
-      // stat domain (CULTIVATION_PATH_STAT_DOMAINS) so its MP-shield
-      // line passes the domain gate. skillIds intentionally absent: the
-      // kit is granted in a bespoke branch (the ult slot is a passive
-      // via the technique's innateSkillId, not a loadout skill).
-      ngo_dao: {
-        id: 'ngo_dao',
-        pathId: 'phap_tu',
-        name: 'Pháp Tu Ẩn — Ngộ Đạo Chân Quyết',
-        techniqueId: 'ngo_dao_chan_quyet',
-        statModifiers: [
-          {
-            id: 'phap_tu_an_linh_luc',
-            sourceId: 'phap_tu',
-            sourceType: 'realm',
-            stat: 'maxMp',
-            flat: 100,
-            domain: 'phap_tu',
-          },
-          {
-            id: 'phap_tu_an_linh_luc_regen',
-            sourceId: 'phap_tu',
-            sourceType: 'realm',
-            stat: 'manaRegenPerTurn',
-            flat: 2,
-            domain: 'phap_tu',
-          },
-          {
-            id: 'phap_tu_an_ho_the',
-            sourceId: 'phap_tu',
-            sourceType: 'realm',
-            stat: 'manaShieldPercent',
-            flat: 0.25,
-            domain: 'phap_tu',
-          },
-        ],
-        offerGate: { requiresSkillCastLevel: { skillId: 'linh_bao', level: 3 } },
-      },
+      ngu_hanh: PHAP_TU_NGU_HANH_WAY,
+      ngo_dao: PHAP_TU_NGO_DAO_WAY,
     },
   },
 
@@ -304,21 +271,6 @@ export function getLegacyPathIdForWay(
 
   return undefined
 }
-
-// Phap Tu An required kit (review round-4, MEDIUM) — the ritual grants
-// exactly these three skills atomically: two loadout actives + the dao
-// passive carried by ngo_dao_chan_quyet.innateSkillId (the skillIds
-// tuple cannot express a passive member). Battle construction asserts
-// the full set is learned; a partial kit is corrupt progression state
-// and must fail loudly, never silently drop a slot.
-export const PHAP_TU_AN_BASIC_ID = 'van_phap_tuy_tam'
-export const PHAP_TU_AN_SPECIAL_ID = 'da_phap_lien_tuyen'
-export const PHAP_TU_AN_PASSIVE_ID = 'ngo_dao_hon_don'
-export const PHAP_TU_AN_REQUIRED_SKILLS: readonly string[] = [
-  PHAP_TU_AN_BASIC_ID,
-  PHAP_TU_AN_SPECIAL_ID,
-  PHAP_TU_AN_PASSIVE_ID,
-]
 
 // Nghi Lễ Nhập Môn (2026-08-16) — gate cũ (mốc realmLevel cố định
 // trong qi_refining) đã bị THAY THẾ: chọn nghề giờ CHÍNH LÀ nghi lễ

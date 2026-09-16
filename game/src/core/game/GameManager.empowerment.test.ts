@@ -40,6 +40,7 @@ function makeManager() {
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'phap_tu'
+  player.cultivationWay = 'ngu_hanh'
   // The realm-gated special node (golden_core) grants the kit's
   // remaining slots — [special, chain-E ult] — so a golden_core player
   // with insight can learn the ultimate.

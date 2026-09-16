@@ -60,6 +60,7 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
 
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'wood', route: 'dot' }
 
     gameManager.catalogOps.registerSkillTemplates(SKILLS)

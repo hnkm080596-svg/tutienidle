@@ -252,10 +252,17 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         path: 'player.phapTu',
         message: 'element và route phải cùng null hoặc cùng đã chọn (commit nguyên tử)',
       })
-    } else if (hasElement && player.cultivationPath !== 'phap_tu') {
+    } else if (
+      hasElement &&
+      !(player.cultivationPath === 'phap_tu' && player.cultivationWay === 'ngu_hanh')
+    ) {
+      // Cultivation Path Framework (M4): element/route ownership is
+      // ngu_hanh-only — the WAY must be written, so the transition pair
+      // ('phap_tu_an','ngo_dao') and the post-M7 collapsed pair
+      // ('phap_tu','ngo_dao') both reject element ownership.
       issues.push({
         path: 'player.phapTu',
-        message: "element/route chỉ thuộc path 'phap_tu' thường",
+        message: "element/route chỉ thuộc way 'ngu_hanh' của path 'phap_tu'",
       })
     }
   }

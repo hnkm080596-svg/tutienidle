@@ -13,12 +13,13 @@
 
 import { MAX_THE } from '@/core/combat/CombatTypes'
 import { PHAP_TU_EMPOWERMENT_THE_THRESHOLD } from '@/core/phap-tu/PhapTuRoutes'
+import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
 import { PHAP_TU_ULTIMATE_IDS } from '@/data/skill/PhapTuUltimates'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { GameManager } from '@/core/game/GameManager'
 import type { ElementType } from '@/core/element/ElementType'
 import type { PhapTuState } from '@/core/phap-tu/PhapTuState'
-import type { CultivationPathId } from '@/core/player/CultivationPathKit'
+import type { CultivationPathId, PathWayId } from '@/core/player/CultivationPathKit'
 import {
   readOptionalGate,
   writeGate,
@@ -48,6 +49,7 @@ export const THE_BAR_READER_KEY = 'theBarReader' as const
  * stays free of Vue/Pinia imports so scenes never drag the store in. */
 export interface TheBarPlayerState {
   cultivationPath?: CultivationPathId | null
+  cultivationWay?: PathWayId | null
   phapTu: PhapTuState
   nodeLevels: Record<string, number>
 }
@@ -70,7 +72,10 @@ export function makeTheBarReader(
 
     const player = getPlayer()
 
-    if (player.cultivationPath !== 'phap_tu') {
+    // M4 (R6): the The pool is ngu_hanh machinery — the element check
+    // below already excludes a clean ngo_dao state, but the WAY is the
+    // durable gate for the collapsed ('phap_tu','ngo_dao') shape.
+    if (!isPhapTuNguHanh(player)) {
       return null
     }
 

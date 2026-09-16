@@ -189,6 +189,7 @@ import {
   resolveRouteProfile,
   type RouteProfile,
 } from '../phap-tu/PhapTuRoutes'
+import { isPhapTuNgoDao, isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
 
 /**
  * GameManager là orchestrator (2026-08-24 refactor — tách business logic
@@ -489,7 +490,7 @@ export class GameManager {
     this.routeProfileProvider = (skillId) => {
       const player = this.activePlayer
 
-      if (player?.cultivationPath !== 'phap_tu') {
+      if (player === undefined || !isPhapTuNguHanh(player)) {
         return NEUTRAL_ROUTE_PROFILE
       }
 
@@ -910,7 +911,7 @@ export class GameManager {
     if (
       skill === undefined &&
       authoredBasicId !== undefined &&
-      (player.cultivationPath === 'phap_tu' || player.cultivationPath === 'phap_tu_an')
+      (isPhapTuNguHanh(player) || isPhapTuNgoDao(player))
     ) {
       throw new Error(
         `[GameManager] required basic "${authoredBasicId}" is not learned for path "${player.cultivationPath}" — corrupt progression state`,
@@ -940,7 +941,7 @@ export class GameManager {
         // element_basic pool) plus `multicast` when the player owns the
         // ngo_dao_hon_don dao passive (granted at the ritual).
         const resolved =
-          player.cultivationPath === 'phap_tu_an'
+          isPhapTuNgoDao(player)
             ? applyAnKitToBasic(
                 converted,
                 this.skillManager.has(PHAP_TU_AN_PASSIVE_ID),
@@ -960,8 +961,8 @@ export class GameManager {
         // authored skills. A converter rejection is an authored-data
         // defect; fail loudly instead of silently running wrong gameplay.
         if (
-          player.cultivationPath === 'phap_tu' ||
-          player.cultivationPath === 'phap_tu_an'
+          isPhapTuNguHanh(player) ||
+          isPhapTuNgoDao(player)
         ) {
           throw error
         }
@@ -1044,7 +1045,7 @@ export class GameManager {
       return undefined
     }
 
-    if (player.cultivationPath === 'phap_tu') {
+    if (isPhapTuNguHanh(player)) {
       const element = this.progressionOps.getPhapTuElement()
 
       return element ? PHAP_TU_KIT_IDS[element]?.[0] : undefined
@@ -1052,7 +1053,7 @@ export class GameManager {
 
     // Phap Tu An (Task 7) — its basic is the composite skill granted at
     // the ritual; the element pick happens inside its resolution (T11).
-    if (player.cultivationPath === 'phap_tu_an') {
+    if (isPhapTuNgoDao(player)) {
       return PHAP_TU_AN_BASIC_ID
     }
 
@@ -1086,7 +1087,7 @@ export class GameManager {
    * battle-build resolvers so each enforces the contract independently.
    */
   private assertPhapTuAnKitLearned(player: PlayerData) {
-    if (player.cultivationPath !== 'phap_tu_an') {
+    if (!isPhapTuNgoDao(player)) {
       return
     }
 
@@ -1144,7 +1145,7 @@ export class GameManager {
     // Phap Tu An (Task 7) — the special is the repeat-cast skill granted
     // at the ritual; the ult slot is a passive (ngo_dao_hon_don), no
     // ultimate TurnSkillDefinition.
-    if (player.cultivationPath === 'phap_tu_an') {
+    if (isPhapTuNgoDao(player)) {
       this.assertPhapTuAnKitLearned(player)
 
       const specialSkill = this.skillManager.get(PHAP_TU_AN_SPECIAL_ID)
@@ -1180,7 +1181,7 @@ export class GameManager {
       }
     }
 
-    if (player.cultivationPath !== 'phap_tu') {
+    if (!isPhapTuNguHanh(player)) {
       return {}
     }
 
@@ -1270,7 +1271,7 @@ export class GameManager {
     player: PlayerData,
     baseGainOnLandedCast: number,
   ): TurnSkillDefinition {
-    if (player.cultivationPath !== 'phap_tu') {
+    if (!isPhapTuNguHanh(player)) {
       return def
     }
 

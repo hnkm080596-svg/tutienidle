@@ -28,6 +28,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeModeApplies, nodeWayApplies } from '@/core/progression/NodeSystem'
+import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
@@ -94,7 +95,9 @@ const PHAP_TU_ROUTE_IDS: readonly PhapTuRoute[] = ['dot', 'no']
 const phapTuRoute = computed<PhapTuRoute | null>(() => {
   stateVersion.value
 
-  return player.cultivationPath === 'phap_tu' ? (player.phapTu?.route ?? null) : null
+  // M4 (R6): route switching is ngu_hanh machinery — the WAY gate keeps
+  // the toggle hidden for a collapsed ('phap_tu','ngo_dao') player.
+  return isPhapTuNguHanh(player) ? (player.phapTu?.route ?? null) : null
 })
 
 const inBattle = computed(() => {

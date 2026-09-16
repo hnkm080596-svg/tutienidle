@@ -16,6 +16,7 @@ import { freshKiemTuState } from '../kiem-tu/KiemTuState'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
+import { phapTuAttunementMpModifiers } from '../phap-tu/PhapTuPath'
 import {
   THE_TU_AN_DEX_COUNTER_PER_POINT,
   THE_TU_AN_DEX_FOLLOWUP_PER_POINT,
@@ -26,50 +27,15 @@ import {
   THE_TU_VITALITY_ENDURANCE_THRESHOLD_PER_POINT,
 } from '../stats/TheTuStatChannels'
 
-// D12 (stat-system-reimagined spec section 5): Linh Can (attunement) feeds
-// MP through the phap_tu domain gate -- the path's own conversion channel,
-// not the generic attribute derivation (MP is a Phap Tu resource, D9).
-// Ratios are playtest-tunable first passes, same convention as the
-// ATTRIBUTE_* constants in StatCalculator.ts.
-export const PHAP_TU_ATTUNEMENT_MAX_MP_PER_POINT = 4
-export const PHAP_TU_ATTUNEMENT_MANA_REGEN_PER_POINT = 0.05
-
-function phapTuAttunementMpModifiers(attunement: number, idPrefix: string): StatModifier[] {
-  return [
-    {
-      id: `${idPrefix}:maxMp`,
-      sourceId: 'phap_tu',
-      sourceType: 'attribute',
-      stat: 'maxMp',
-      flat: attunement * PHAP_TU_ATTUNEMENT_MAX_MP_PER_POINT,
-      domain: 'phap_tu',
-    },
-    {
-      id: `${idPrefix}:manaRegen`,
-      sourceId: 'phap_tu',
-      sourceType: 'attribute',
-      stat: 'manaRegenPerTurn',
-      flat: attunement * PHAP_TU_ATTUNEMENT_MANA_REGEN_PER_POINT,
-      domain: 'phap_tu',
-    },
-  ]
-}
-
-/**
- * Assembly-time emission (spec section 5): the Phap Tu system reads the
- * resolved attribute totals and emits its gated MP modifiers BEFORE
- * calculateStats runs -- the totals read is not a second derivation.
- * Only the phap_tu path has an MP pool to feed; other paths are silent.
- */
-export function getPhapTuAttunementStatModifiers(
-  player: PlayerData,
-  totals: Pick<Stats, MainStatKey>,
-): StatModifier[] {
-  // phap_tu_an owns the same 'phap_tu' stat domain (Task 7).
-  return player.cultivationPath === 'phap_tu' || player.cultivationPath === 'phap_tu_an'
-    ? phapTuAttunementMpModifiers(totals.attunement, 'phap_tu:attunement')
-    : []
-}
+// D12 (stat-system-reimagined spec section 5): Linh Can (attunement)
+// feeds MP through the phap_tu domain gate. M4 — the emitter and its
+// tuning constants moved to the Phap Tu path module
+// (core/phap-tu/PhapTuPath.ts) where the way definitions live; the
+// constants are re-exported here so existing consumers keep working.
+export {
+  PHAP_TU_ATTUNEMENT_MANA_REGEN_PER_POINT,
+  PHAP_TU_ATTUNEMENT_MAX_MP_PER_POINT,
+} from '../phap-tu/PhapTuPath'
 
 // Mid-battle channel (D12): attunement deltas re-emit the gated MP delta
 // through the registered deltaDeriver -- the deriver sees only deltas,
@@ -187,6 +153,32 @@ export function getActiveWay(player: PlayerData): PathWayId | undefined {
   return player.cultivationPath !== undefined
     ? LEGACY_PATH_TO_WAY[player.cultivationPath]?.wayId
     : undefined
+}
+
+/**
+ * M4 — generic active-way stat collection (the D12 assembly channel).
+ * Resolves the player's active way — cultivationWay authoritative once
+ * written, LEGACY_PATH_TO_WAY fallback for legacy-shaped saves — and
+ * delegates to the way's PathWayStatFacet. resolvePlayerFinalStats calls
+ * this before calculateStats so facet emissions are gated by their own
+ * domain tags. Ways without a facet (kiem_tu/the_tu until M5/M6) emit
+ * nothing; their hardcoded emitters below stay put until then.
+ */
+export function collectActiveWayStatModifiers(
+  player: PlayerData,
+  totals: Pick<Stats, MainStatKey>,
+): readonly StatModifier[] {
+  const mapping =
+    player.cultivationPath !== undefined ? LEGACY_PATH_TO_WAY[player.cultivationPath] : undefined
+
+  if (!mapping) {
+    return []
+  }
+
+  const wayId = player.cultivationWay ?? mapping.wayId
+  const way = CULTIVATION_PATH_MODULES[mapping.pathId].ways[wayId]
+
+  return way?.stats?.collectModifiers(player, totals) ?? []
 }
 
 /**

@@ -27,6 +27,7 @@ import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
 import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
+import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
 import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
@@ -58,7 +59,9 @@ const theTuTreeTag = computed(() =>
 
 const showTree = computed(
   () =>
-    player.cultivationPath === 'phap_tu' ||
+    // M4 (R6): the Phap Tu element tree is ngu_hanh machinery — a
+    // collapsed ('phap_tu','ngo_dao') player owns no element branches.
+    isPhapTuNguHanh(player) ||
     player.cultivationPath === 'kiem_tu' ||
     theTuTreeTag.value !== undefined,
 )
@@ -166,7 +169,7 @@ const selectedSkillHasTree = computed(() => {
   // phu thuoc skill dang chon o SkillPathList.
   if (
     player.cultivationPath === 'kiem_tu' ||
-    player.cultivationPath === 'phap_tu' ||
+    isPhapTuNguHanh(player) ||
     theTuTreeTag.value !== undefined
   ) {
     return true
@@ -214,7 +217,7 @@ function close() {
             <!-- Phap Tu element tabs (Task 16) — browse all 5 branches;
                  the committed element is marked, others render locked. -->
             <div
-              v-if="player.cultivationPath === 'phap_tu'"
+              v-if="isPhapTuNguHanh(player)"
               class="skill-path-panel__element-tabs"
               role="group"
               :aria-label="t('panels.skillPath.elementTabs.aria')"

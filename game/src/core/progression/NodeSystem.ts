@@ -1,5 +1,6 @@
 import type { PlayerData } from '../player/Player'
 import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } from './ProgressionNode'
+import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
@@ -503,7 +504,7 @@ export function switchRoute(
   // null-check invariant; a non-phap_tu player's dirty route state would
   // also leak universal route stats via getRouteStatModifiers.
   if (
-    player.cultivationPath !== 'phap_tu' ||
+    !isPhapTuNguHanh(player) ||
     player.phapTu.element === null ||
     oldRoute === null ||
     oldRoute === route
@@ -590,7 +591,7 @@ export function previewRouteSwitch(
   // Same gate as switchRoute (HIGH-2) — never preview a switch the
   // domain would reject.
   if (
-    player.cultivationPath !== 'phap_tu' ||
+    !isPhapTuNguHanh(player) ||
     player.phapTu.element === null ||
     oldRoute === null
   ) {

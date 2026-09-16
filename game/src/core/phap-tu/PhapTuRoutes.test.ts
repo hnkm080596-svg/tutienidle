@@ -101,6 +101,7 @@ describe('route scoping via SkillSystem provider', () => {
   function phapTuPlayer(element: 'fire', route: 'dot' | 'no') {
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element, route }
     return player
   }
@@ -134,6 +135,7 @@ describe('route scoping via SkillSystem provider', () => {
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: null, route: null }
     gameManager.setActivePlayer(player)
 
@@ -163,6 +165,7 @@ describe('route stat modifiers aggregation', () => {
   function routedPlayer(route: 'dot' | 'no') {
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route }
     return player
   }
@@ -199,6 +202,7 @@ describe('route stat modifiers aggregation', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: null }
 
     expect(gameManager.effectOps.getAggregatedModifiers(player)).not.toContainEqual(
@@ -213,6 +217,7 @@ describe('route stat modifiers aggregation', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu_an'
+    player.cultivationWay = 'ngo_dao'
     player.phapTu = { element: 'fire', route: 'no' }
 
     expect(gameManager.effectOps.getAggregatedModifiers(player)).not.toContainEqual(

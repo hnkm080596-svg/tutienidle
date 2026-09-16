@@ -8,6 +8,7 @@ import { computed } from 'vue'
 import PhapTuCombatHud from './PhapTuCombatHud.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
+import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
 
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
@@ -15,7 +16,9 @@ const { stateVersion } = useStateVersion()
 const showPhapTuHud = computed(() => {
   stateVersion.value
 
-  return player.cultivationPath === 'phap_tu'
+  // M4 (R6): the element/route/The HUD is ngu_hanh machinery — the WAY
+  // is the gate so a collapsed ('phap_tu','ngo_dao') player never sees it.
+  return isPhapTuNguHanh(player)
 })
 </script>
 
