@@ -13,6 +13,8 @@ import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
+import { PHAN_CHINH_BUFF, PHAN_CHINH_MAXHP_RATIO, PHAN_CHINH_TAKEN_RATIO } from '../../../data/buff/TheTuBuffs'
+import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
 // The Tu Reimagined (spec 6.2.1, plan Task 17) — the Ho intercept window:
@@ -387,5 +389,113 @@ describe('Ho intercept — semantic single-target', () => {
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
     expect(f.protectorP.entity.currentHp).toBe(100_000)
     expect(f.protectorP.entity.currentThe).toBe(100) // no attempt cost paid
+  })
+})
+
+// Regression guard - the charge-resolve lane once resolved hits through
+// bare CombatSystem.resolveActionHit inside applyActionImpact, skipping
+// the shared resolveDeclaredHit() pipeline: no defender onImpactLanded
+// reactive window (Phan counter), no phan_chinh Reflection, and no
+// appliesAilments application. Evaded charged hits DID work (the lane
+// called resolveEvadeWindow itself) - the defect was taken-side only.
+describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () => {
+  /** Drives a charge-init + charge-resolve declare/apply pair; returns the resolve-turn declaration. */
+  function driveChargedHit(f: Fixture, sys: TurnBattleSystem): TurnDeclaredAction {
+    const init = sys.declareActorAction(f.battle, f.enemyP)
+    sys.applyActionImpact(f.battle, init)
+    expect(f.enemyP.chargingTurnsRemaining).toBe(1)
+
+    const declared = sys.declareActorAction(f.battle, f.enemyP)
+    expect(declared.chargeResolved).toBe(true)
+    return declared
+  }
+
+  it('charged + intercepted + TAKEN hit opens the protector onImpactLanded Phan window', () => {
+    const f = makeFixture()
+    f.enemyP.special = { skill: ENEMY_CHARGED, remainingCooldownTurns: 0 }
+    withHoMon(f.protectorP, 1, 100)
+
+    // phan_mon on the same protector - a taken hit rolls its
+    // onImpactLanded counter (counterChance hard-caps at
+    // REACTIVE_CHANCE_CAP = 0.6, so the pinned-0 roll succeeds).
+    f.protectorP.entity.baseStats = asBaseStats({ ...f.protectorP.entity.baseStats, counterChance: 1 })
+    f.protectorP.entity.stats = { ...f.protectorP.entity.stats, counterChance: 1 }
+    new BuffSystem(f.protectorP.buffs).apply(BUFF_REGISTRY.get('phan_mon'), f.protectorP.entity, f.protectorP.entity, BUFF_REGISTRY)
+    f.protectorP.reactivePayloads = { phan_kich: { ...PHAN_KICH } }
+
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const sys = system()
+    const declared = driveChargedHit(f, sys)
+    const { targetIds } = sys.applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBe(true)
+    expect(targetIds).toEqual(['protector'])
+    // TAKEN, not dodged - hpDamage > 0 is the window's gate.
+    expect(f.protectorP.entity.currentHp).toBeLessThan(100_000)
+
+    const counters = (f.battle.queuedFollowUps ?? []).filter(
+      (entry) => entry.actorId === 'protector' && entry.actionSource === 'counter',
+    )
+
+    // Pre-fix failure signature: no entry - the charged lane never
+    // reached resolveReactiveProcs.
+    expect(counters).toHaveLength(1)
+    expect(counters[0]).toMatchObject({
+      payloadSkillId: 'phan_kich',
+      targetIds: ['enemy'],
+      triggerContext: { origin: 'enemy_hit', intercepted: true, outcome: 'taken' },
+    })
+  })
+
+  it('a charged hit into a phan_chinh emblem reflects back at the attacker', () => {
+    const f = makeFixture()
+    f.enemyP.special = { skill: ENEMY_CHARGED, remainingCooldownTurns: 0 }
+    new BuffSystem(f.squishyP.buffs).apply(PHAN_CHINH_BUFF, f.squishyP.entity, f.squishyP.entity, BUFF_REGISTRY)
+
+    const eventBus = new EventBus()
+    const sys = new TurnBattleSystem(new CombatSystem(eventBus), 10_000, BUFF_REGISTRY)
+
+    const reflections: number[] = []
+    eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) => {
+      if (event.reason === 'reflection' && event.entityId === 'enemy') {
+        reflections.push(event.amount)
+      }
+    })
+
+    // Rolls pinned low: the hit lands (evasion 0); reflect chance is
+    // authored 1.0.
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = driveChargedHit(f, sys)
+    const { targetIds } = sys.applyActionImpact(f.battle, declared)
+
+    expect(targetIds).toEqual(['squishy'])
+
+    // might 100 x multiplier 1 = 100 hpDamage taken; the emblem owes
+    // hpDamage x takenRatio + holder maxHp x maxHpRatio.
+    const expected = 100 * PHAN_CHINH_TAKEN_RATIO + 100_000 * PHAN_CHINH_MAXHP_RATIO
+    expect(reflections).toEqual([expected])
+    expect(f.enemyP.entity.currentHp).toBe(100_000 - expected)
+  })
+
+  it('a charged skill carrying an ailment applies it on the landed hit', () => {
+    const f = makeFixture()
+    const chargedWithAilment: TurnSkillDefinition = {
+      ...ENEMY_CHARGED,
+      id: 'enemy_charged_burn',
+      appliesAilments: [{ buffDefinitionId: 'bong', chance: 1 }],
+    }
+    f.enemyP.special = { skill: chargedWithAilment, remainingCooldownTurns: 0 }
+
+    // Rolls pinned low: the hit lands; the chance-1 ailment applies.
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const sys = system()
+    const declared = driveChargedHit(f, sys)
+    const { targetIds } = sys.applyActionImpact(f.battle, declared)
+
+    expect(targetIds).toEqual(['squishy'])
+    expect(f.squishyP.buffs.getAllById('bong')).toHaveLength(1)
   })
 })

@@ -37,8 +37,10 @@ function fixtureCombatant(id: string, statOverrides: Parameters<typeof createBas
 // The Tu Reimagined (plan Task 12, spec section 8.1) — the_tu tree data:
 // mutex roots, realm gates, collector->kit delivery, INV-13 authoring ban.
 
+// Every node in this tree carries requiredCultivationPath 'the_tu' —
+// the fixture player owns the path so purchase/upgrade gates hold.
 function playerWith(overrides: Partial<ReturnType<typeof createDefaultPlayer>> = {}) {
-  return { ...createDefaultPlayer(), skillInsight: 99, ...overrides }
+  return { ...createDefaultPlayer(), skillInsight: 99, cultivationPath: 'the_tu' as const, ...overrides }
 }
 
 function registryWithNodes() {

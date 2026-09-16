@@ -6,10 +6,13 @@ import type { StatModifier } from '../../core/stats/StatCalculator'
 // three NON-MUTEX roots (ho_mon / phan_mon / tro_mon, T9). One
 // branchTag 'the_tu_an' renders the whole tree in a single view.
 //
-// Path gate: same convention as sibling trees — path gating lives at
-// the offer layer (ritual in CultivationPathKit); realm gates are data:
-// roots + trunk open at qi_refining, deeper nodes gate
-// foundation_establishment (beta content bound, spec section 11).
+// Path gate: every node in this tree carries requiredCultivationPath
+// 'the_tu_an' (stamped once at the export below) — NodeSystem.
+// nodePathApplies enforces it at purchase/upgrade/aggregation, so the
+// domain rejects wrong-path ownership even if the offer layer is
+// bypassed. Realm gates are data: roots + trunk open at qi_refining,
+// deeper nodes gate foundation_establishment (beta content bound,
+// spec section 11).
 //
 // Delivery channels (only these exist — A8, no invented riders):
 //   - statModifiers: attribute stats only (vit/dex/str/int — universal,
@@ -391,6 +394,8 @@ const TRO_BRANCH: ProgressionNode[] = [
   },
 ]
 
+// requiredCultivationPath is stamped once here — every node in this
+// file belongs to the the_tu_an path (NodeSystem.nodePathApplies).
 export const THE_TU_AN_NODES: ProgressionNode[] = [
   ...TRUNK_QI,
   ...TRUNK_FOUNDATION,
@@ -400,4 +405,4 @@ export const THE_TU_AN_NODES: ProgressionNode[] = [
   ...PHAN_BRANCH,
   TRO_ROOT,
   ...TRO_BRANCH,
-]
+].map((node): ProgressionNode => ({ ...node, requiredCultivationPath: 'the_tu_an' }))

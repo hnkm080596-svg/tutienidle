@@ -28,13 +28,13 @@ Break-even is p=0.75 at base — the loop only turns positive via node investmen
 | Item | Expected | Actual | Issue |
 |---|---|---|---|
 | `tran_ap` basic | ~×1.0 single-target | ×0.8 `all_lanes`, no CD | Strongest basic in the game on multi-enemy pulls; tank's only offense so acceptable, but watch vs other paths' basics |
-| `bach_ung` + `minor_phan_pha_the`×5 | strong window | 90% `choang` stun chance per counter hit, counters free for 3 turns | Top degenerate candidate — see below |
+| `bach_ung` + `minor_phan_pha_the`×5 | strong window | 70% `choang` stun chance per counter hit (two independent rolls: 40% node + 50% payloadAilments, concatenated — NOT additive 90%), counters free for 3 turns | Top degenerate candidate — see below |
 | `bat_tu_ba_the` | burst survival | 3→4 holder-turns undying per 8 CD ≈ up to 50% uptime + auto-lethal trigger | Marquee ultimate; acceptable but it's the hardest invulnerability in the game |
 | `son_nhac` | team shield | 30% tank maxHp external ward on ALL allies + 30% self DR + 2-turn taunt / 6 CD | 50% coverage on a three-effect ultimate; stacked with Hộ wards risks unkillable-party states vs sustained-damage checks |
 
 ## Degenerate strategies found
 
-1. **Bách Ứng stun-lock** (highest risk): during the 3-turn free-proc window, every taken hit AND every dodge procs a counter (≤60%) carrying ≤90% choang → each enemy attack ≈54% chance to stun the attacker. Multi-attacker waves can self-lock. Mitigations present: enemy ailment resist on choang (ailment_scaled), CD8, sudden-death rounds. Watch: consider whether `choang` on a counter should respect per-target diminishing returns.
+1. **Bách Ứng stun-lock** (highest risk): during the 3-turn free-proc window, every taken hit AND every dodge procs a counter (≤60%) carrying ≤70% choang (1 − 0.6·0.5 across two independent ailment entries) → each enemy attack ≈42% chance to stun the attacker, not 54% as previously estimated. Multi-attacker waves can self-lock. Mitigations present: enemy ailment resist on choang (ailment_scaled), CD8, sudden-death rounds. Watch: consider whether `choang` on a counter should respect per-target diminishing returns.
 2. **Hộ fuel-positive intercepts**: maxed intercepts are economy-positive (+14 EV) AND grant a 25%-protector-maxHp shield per success — the branch is simultaneously the best Thế faucet and a defensive mechanic. Self-limited by enemy single-target frequency, but in single-boss fights attacking the squishy it can chain-shield indefinitely.
 3. **Low-HP Cuồng Chiến floor**: `cuong_quyen` at ~1% HP ≈ ×2.98/turn every turn; `loan_dau` adds only ~+0.25 avg/turn over it. Correct risk/reward shape (Bất Tử enables the low-HP stance safely 3-4 turns), but the special slot is nearly dead weight at max missing-HP — consider if `loan_dau` needs a rider (it doesn't; acceptable).
 

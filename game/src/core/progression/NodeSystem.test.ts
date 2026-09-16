@@ -266,6 +266,77 @@ describe('canPurchaseNode', () => {
   })
 })
 
+// requiredCultivationPath ownership gate — a path-tagged node must be
+// inert for every other path at purchase, upgrade, and aggregation
+// (the render layer is not the gameplay authority).
+describe('nodePathApplies — cultivation path ownership gate', () => {
+  const theTuNode = () =>
+    minorNode({
+      id: 'the_tu_only',
+      requiredCultivationPath: 'the_tu',
+      effect: {
+        statModifiers: [{ id: 'the_tu_only:vit', sourceId: 'the_tu_only', sourceType: 'talent', stat: 'vitality', flat: 3 }],
+      },
+    })
+
+  const theTuAnNode = () => minorNode({ id: 'the_tu_an_only', requiredCultivationPath: 'the_tu_an' })
+
+  it('a the_tu node is NOT purchasable by a phap_tu player even with insight and prereqs satisfied', () => {
+    const player = playerWith({ cultivationPath: 'phap_tu', skillInsight: 50 })
+
+    expect(canPurchaseNode(player, theTuNode())).toBe(false)
+    expect(purchaseNode(player, theTuNode())).toBe(false)
+    expect(getNodeLevel(player, 'the_tu_only')).toBe(0)
+  })
+
+  it('a the_tu node owned by a kiem_tu player aggregates NOTHING; a the_tu player gets the stats', () => {
+    const registry = { getAll: () => [theTuNode()] }
+
+    const kiemTuPlayer = playerWith({ cultivationPath: 'kiem_tu', nodeLevels: { the_tu_only: 2 } })
+    expect(aggregateNodeStatModifiers(registry, kiemTuPlayer)).toEqual([])
+
+    const theTuPlayer = playerWith({ cultivationPath: 'the_tu', nodeLevels: { the_tu_only: 2 } })
+    const mods = aggregateNodeStatModifiers(registry, theTuPlayer)
+    expect(mods).toHaveLength(1)
+    expect(mods[0]!.flat).toBe(3)
+  })
+
+  it('a the_tu_an node requires the_tu_an specifically — a plain the_tu player cannot purchase or aggregate it', () => {
+    const registry = { getAll: () => [theTuAnNode()] }
+    const theTuPlayer = playerWith({ cultivationPath: 'the_tu', skillInsight: 50 })
+
+    expect(canPurchaseNode(theTuPlayer, theTuAnNode())).toBe(false)
+    expect(purchaseNode(theTuPlayer, theTuAnNode())).toBe(false)
+
+    // Sibling path does not inherit ownership — injected levels stay inert.
+    theTuPlayer.nodeLevels = { the_tu_an_only: 1 }
+    expect(aggregateNodeStatModifiers(registry, theTuPlayer)).toEqual([])
+
+    const theTuAnPlayer = playerWith({ cultivationPath: 'the_tu_an', skillInsight: 50 })
+    expect(canPurchaseNode(theTuAnPlayer, theTuAnNode())).toBe(true)
+  })
+
+  it('canUpgradeNode rejects a wrong-path owner even when the node has levels', () => {
+    const node = { ...theTuNode(), maxLevel: 5, upgradeCost: { base: 1, perLevel: 2 } }
+
+    const theTuPlayer = playerWith({ cultivationPath: 'the_tu', skillInsight: 50, nodeLevels: { the_tu_only: 1 } })
+    expect(canUpgradeNode(theTuPlayer, node)).toBe(true)
+
+    const phapTuPlayer = playerWith({ cultivationPath: 'phap_tu', skillInsight: 50, nodeLevels: { the_tu_only: 1 } })
+    expect(canUpgradeNode(phapTuPlayer, node)).toBe(false)
+  })
+
+  it('path-agnostic nodes (requiredCultivationPath undefined) still work for every path', () => {
+    const player = playerWith({ cultivationPath: 'kiem_tu', skillInsight: 10 })
+
+    expect(canPurchaseNode(player, minorNode())).toBe(true)
+    expect(purchaseNode(player, minorNode())).toBe(true)
+
+    const registry = { getAll: () => [minorNode()] }
+    expect(aggregateNodeStatModifiers(registry, player)).toHaveLength(1)
+  })
+})
+
 describe('devResetBranch (plan §6.10)', () => {
   function branchRegistry() {
     const root = minorNode({

@@ -6,11 +6,13 @@ import type { StatModifier } from '../../core/stats/StatCalculator'
 // mutex roots (INV-2). One branchTag 'the_tu' renders the whole tree in
 // a single view — the mutex is a GATE (excludesNode), not hidden UI.
 //
-// Path gate: NodeSystem has no path prerequisite kind — same as the
-// sibling trees, path gating lives at the render/offer layer (ritual
-// offer in CultivationPathKit + the Task-22 tree view). Realm gates are
-// data: roots + trunk open at qi_refining, deeper nodes gate
-// foundation_establishment (beta content bound, spec section 11).
+// Path gate: every node in this tree carries requiredCultivationPath
+// 'the_tu' (stamped once at the export below) — NodeSystem.
+// nodePathApplies enforces it at purchase/upgrade/aggregation, so the
+// domain rejects wrong-path ownership even if the render/offer layer
+// is bypassed. Realm gates are data: roots + trunk open at
+// qi_refining, deeper nodes gate foundation_establishment (beta
+// content bound, spec section 11).
 //
 // Delivery channels (only these exist — A8, no invented riders):
 //   - statModifiers: character stats; gated stats (blockChance,
@@ -319,6 +321,8 @@ const TRAN_BRANCH: ProgressionNode[] = [
   },
 ]
 
+// requiredCultivationPath is stamped once here — every node in this
+// file belongs to the the_tu path (NodeSystem.nodePathApplies).
 export const THE_TU_NODES: ProgressionNode[] = [
   ...TRUNK_QI,
   ...TRUNK_FOUNDATION,
@@ -326,4 +330,4 @@ export const THE_TU_NODES: ProgressionNode[] = [
   ...CUONG_BRANCH,
   TRAN_ROOT,
   ...TRAN_BRANCH,
-]
+].map((node): ProgressionNode => ({ ...node, requiredCultivationPath: 'the_tu' }))

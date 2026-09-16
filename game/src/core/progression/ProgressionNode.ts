@@ -3,6 +3,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import type { TheTuKitModifierValues } from '../the-tu/TheTuKitModifiers'
 import type { TheTuAnMechanicModifierValues } from '../the-tu/TheTuAnMechanicModifiers'
+import type { CultivationPathId } from '../player/CultivationPathKit'
 
 export type NodeType = 'minor' | 'major'
 
@@ -196,6 +197,15 @@ export interface ProgressionNode {
    * vice versa). undefined = mode-agnostic.
    */
   kiemTuMode?: 'hien' | 'ngu'
+
+  /**
+   * Ownership gate — the node only purchases/upgrades/aggregates for a
+   * player on that cultivation path (enforced by
+   * NodeSystem.nodePathApplies at purchase, upgrade, and every
+   * aggregator). undefined = path-agnostic, so mortal/universal nodes
+   * keep working for every path.
+   */
+  requiredCultivationPath?: CultivationPathId
 
   effect: NodeEffect
 

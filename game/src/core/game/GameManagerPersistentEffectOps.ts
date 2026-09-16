@@ -26,6 +26,7 @@ import type { SkillSystem } from '../skill/SkillSystem'
 import type { Stats } from '../stats/StatBlock'
 import { createBaseStats } from '../stats/StatBlock'
 import type { StatModifier } from '../stats/StatCalculator'
+import { CULTIVATION_PATH_STAT_DOMAINS } from '../stats/StatDomain'
 import type { TechniqueManager } from '../technique/TechniqueManager'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
 
@@ -163,7 +164,7 @@ export class GameManagerPersistentEffectOps {
    * step). Task 3 (D17): MP-pool modifiers carry domain:'phap_tu' so the
    * Task-7 gate accepts them once maxMp/manaRegenPerTurn are gated.
    */
-  private getTechniqueTierModifiers(_player: PlayerData): StatModifier[] {
+  private getTechniqueTierModifiers(player: PlayerData): StatModifier[] {
     const technique = this.deps.techniqueManager.getEquipped()
 
     const effect =
@@ -197,7 +198,19 @@ export class GameManagerPersistentEffectOps {
       })
     }
 
-    if (effect.maxMpIncreasePercent !== undefined) {
+    // MP is a phap_tu-domain resource (D9): emit the MP family only when
+    // the player's path OWNS that stat domain (phap_tu + phap_tu_an both
+    // map to it in CULTIVATION_PATH_STAT_DOMAINS). applyDomainGate checks
+    // stat<->modifier domain match, never path ownership -- this emission
+    // gate is the credential check it cannot perform, so a the_tu/kiem_tu
+    // technique's authored MP fields can no longer self-issue phap_tu
+    // credentials onto a player with no MP pool. The authoring field
+    // stays legal; emission decides.
+    const ownsPhapTuDomain =
+      player.cultivationPath !== undefined &&
+      (CULTIVATION_PATH_STAT_DOMAINS[player.cultivationPath]?.includes('phap_tu') ?? false)
+
+    if (ownsPhapTuDomain && effect.maxMpIncreasePercent !== undefined) {
       modifiers.push({
         id: `technique-tier:${technique!.id}:maxMp`,
         sourceId: technique!.id,
@@ -208,7 +221,7 @@ export class GameManagerPersistentEffectOps {
       })
     }
 
-    if (effect.manaRegenIncreasePercent !== undefined) {
+    if (ownsPhapTuDomain && effect.manaRegenIncreasePercent !== undefined) {
       modifiers.push({
         id: `technique-tier:${technique!.id}:manaRegen`,
         sourceId: technique!.id,
@@ -232,7 +245,7 @@ export class GameManagerPersistentEffectOps {
       })
     }
 
-    if (effect.mpRegenFlat !== undefined) {
+    if (ownsPhapTuDomain && effect.mpRegenFlat !== undefined) {
       modifiers.push({
         id: `technique-tier:${technique!.id}:mpRegen`,
         sourceId: technique!.id,

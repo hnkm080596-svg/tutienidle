@@ -129,7 +129,7 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
     return false
   }
 
-  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
+  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node)) {
     return false
   }
 
@@ -155,7 +155,7 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
 
 /** Đủ điều kiện NÂNG CẤP (L→L+1): đã lĩnh ngộ, chưa max, đủ Cảm Ngộ. */
 export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boolean {
-  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node)) {
+  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node) || !nodePathApplies(player, node)) {
     return false
   }
 
@@ -284,6 +284,15 @@ export function nodeModeApplies(player: PlayerData, node: ProgressionNode): bool
   return node.kiemTuMode === undefined || node.kiemTuMode === player.kiemTu?.mode
 }
 
+/**
+ * Ownership gate — a node authored for one cultivation path can be
+ * purchased/upgraded by, and aggregates effects for, only a player on
+ * that same path. requiredCultivationPath undefined = path-agnostic.
+ */
+export function nodePathApplies(player: PlayerData, node: ProgressionNode): boolean {
+  return node.requiredCultivationPath === undefined || node.requiredCultivationPath === player.cultivationPath
+}
+
 export function aggregateNodeStatModifiers(
   registry: { getAll(): ProgressionNode[] },
 
@@ -294,7 +303,7 @@ export function aggregateNodeStatModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node) || !nodePathApplies(player, node)) {
       continue
     }
 
@@ -324,7 +333,7 @@ export function aggregateTurnSkillResourceModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node) || !nodePathApplies(player, node)) {
       continue
     }
 

@@ -1433,14 +1433,22 @@ export class TurnBattleSystem {
 
           if (!targetParticipant || !targetParticipant.entity.alive) continue
 
-          const hitResult = this.combat.resolveActionHit(
-            actor.entity,
-            targetParticipant.entity,
-            this.applyMissingHpScalar(chargedDamage, actor.entity),
+          // Same per-hit authority as the normal lane (resolveDeclaredHit):
+          // defender income, leech, consume effects, on-hit procs, the
+          // Reflection queue, ailments, detonate, the taken-side Phan /
+          // evade windows and both stat refreshes are all owned there -
+          // a charged hit must not bypass them. The missing-HP scalar
+          // resolves inside against the actor's live hp, so the scaled
+          // damage packet passes through raw.
+          const hitResult = this.resolveDeclaredHit(
+            battle,
+            actor,
+            targetParticipant,
+            chargedDamage,
+            chargedSkill,
+            actorInitiatesReactions,
+            declared,
           )
-
-          // Defender income lands before any window this hit opens.
-          this.grantHitOutcomeIncome(targetParticipant, hitResult)
 
           if (!hitResult.dodged) {
             targetIds.push(target)
@@ -1449,15 +1457,7 @@ export class TurnBattleSystem {
             if (hitResult.critical) {
               chargedCrit = true
             }
-          } else {
-            this.resolveEvadeWindow(battle, targetParticipant, actor, declared)
           }
-
-          // ARCH-002 (M7) — the hit may have mutated either pool (survive-
-          // lethal grants, defensive procs inside the damage authority):
-          // refresh both effective views before the next hit/read.
-          this.refreshParticipantStats(targetParticipant)
-          this.refreshParticipantStats(actor)
         }
       }
 
@@ -2457,8 +2457,12 @@ export class TurnBattleSystem {
       declared.scaledDamage !== null ||
       declared.chargedSkill?.damage != null ||
       (declared.compositePickedSkills?.some((picked) => picked.damage != null) ?? false)
+    // Review fix (MED-5) — a composite action pushes the same target once
+    // per landed pick; dedupe by id so Tro Kich resolves once per
+    // triggering TARGET, not once per hit.
+    const landedUnique = [...new Map(landedTargets.map((p) => [p.id, p])).values()]
     const followUpTargets = !nonDamaging
-      ? landedTargets.filter((participant) => participant.entity.alive)
+      ? landedUnique.filter((participant) => participant.entity.alive)
       : authoredDamaging
         ? declared.affected.filter((participant) => participant.entity.alive)
         : battle.enemies.filter((participant) => participant.entity.alive)
