@@ -13,7 +13,9 @@ import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { HO_MON_MARKER, TRO_MON_MARKER } from '../../../data/buff/TheTuBuffs'
-import { TRO_KICH } from '../../../data/skill/TheTuSkills'
+import { BAT_TU_BA_THE, TRO_KICH } from '../../../data/skill/TheTuSkills'
+import { TheTuBatTuSurvival } from '../../the-tu/TheTuBatTuSurvival'
+import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
 // The Tu Reimagined (plan Task 20, spec 8.2) — node-rider mechanics on
@@ -373,5 +375,103 @@ describe('tro riders (spec 8.2)', () => {
       triggerContext: { origin: 'ally_action' },
     })
     expect(f.battle.queuedFollowUps![0]!.targetIds).toEqual(['enemy'])
+  })
+})
+
+describe('dead holder performs no reactive transaction (review MED)', () => {
+  function lethalFixture() {
+    const defender = createCombatant({ id: 'defender', type: 'player', currentHp: 100, maxHp: 100, x: 0, row: 2 }, 5)
+    const defenderP = makeParticipant('defender', defender, 5, 0)
+    defenderP.entity.baseStats = asBaseStats({ ...defenderP.entity.baseStats, counterChance: 1 })
+    defenderP.entity.stats = { ...defenderP.entity.stats, counterChance: 1 }
+    defenderP.entity.currentThe = 50
+    new BuffSystem(defenderP.buffs).apply(
+      BUFF_REGISTRY.get('phan_mon'),
+      defenderP.entity,
+      defenderP.entity,
+      BUFF_REGISTRY,
+    )
+
+    const enemy = createCombatant(
+      {
+        id: 'enemy',
+        type: 'enemy',
+        currentHp: 100_000,
+        maxHp: 100_000,
+        x: 0,
+        row: 0,
+        // One-shot force: 999_999 might x multiplier 1 vs a 100-HP defender.
+        baseStats: createBaseStats({ ...NO_MITIGATION, might: 999_999 }),
+      },
+      10,
+    )
+    const enemyP = makeParticipant('enemy', enemy, 10, 100)
+    enemyP.basic = ENEMY_BASIC
+
+    const battle: TurnBattle = { players: [defenderP], enemies: [enemyP], state: 'fighting' }
+    return { battle, enemyP, defenderP }
+  }
+
+  it('a lethal hit kills the phan_mon holder -> no The cost, no rng draw, no queue', () => {
+    const f = lethalFixture()
+    const rng = vi.fn(() => 0)
+
+    system(rng).applyActionImpact(
+      f.battle,
+      declaredEnemyAction(f, [f.defenderP]),
+    )
+
+    expect(f.defenderP.entity.alive).toBe(false)
+    // The window never opened: no cost paid, no success credit, no draw.
+    expect(f.defenderP.entity.currentThe).toBe(50)
+    expect(rng).not.toHaveBeenCalled()
+    expect(f.battle.queuedFollowUps ?? []).toHaveLength(0)
+  })
+
+  it('the same lethal hit with Bat Tu survival wired -> holder lives -> the Phan window still rolls', () => {
+    // Counter-case: the gate keys on alive AFTER survival resolution, not
+    // on the raw damage amount — a saved holder must still counter.
+    const f = lethalFixture()
+    f.defenderP.ultimate = { skill: BAT_TU_BA_THE, remainingCooldownTurns: 0 }
+
+    const combat = new CombatSystem(new EventBus())
+    combat.setSurviveLethalSession({
+      playerEntityId: f.defenderP.entity.id,
+      guard: new SurviveLethalGuard(),
+      surviveEffects: {
+        buffSystem: new BuffSystem(f.defenderP.buffs),
+        registry: BUFF_REGISTRY,
+        grantBuffId: 'bat_tu_ba_the',
+        cleanseDebuffs: false,
+      },
+      extraSources: [
+        new TheTuBatTuSurvival({
+          ultimateSlot: () => f.defenderP.ultimate,
+          buffs: f.defenderP.buffs,
+        }),
+      ],
+    })
+
+    const rng = vi.fn(() => 0)
+    const sys = new TurnBattleSystem(
+      combat,
+      10_000,
+      BUFF_REGISTRY,
+      /*spawnEnemy*/ undefined,
+      /*reactionManager*/ undefined,
+      /*onSkillCast*/ undefined,
+      /*liveStatModifiers*/ undefined,
+      rng,
+    )
+
+    sys.applyActionImpact(f.battle, declaredEnemyAction(f, [f.defenderP]))
+
+    expect(f.defenderP.entity.alive).toBe(true)
+    expect(f.defenderP.buffs.getAllById('bat_tu_ba_the')).toHaveLength(1)
+    // Holder survived -> the taken window opened, paid, rolled, queued.
+    expect(rng).toHaveBeenCalled()
+    expect(f.battle.queuedFollowUps ?? []).toContainEqual(
+      expect.objectContaining({ actorId: 'defender', actionSource: 'counter' }),
+    )
   })
 })

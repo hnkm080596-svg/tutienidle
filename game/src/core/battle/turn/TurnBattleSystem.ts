@@ -2351,6 +2351,16 @@ export class TurnBattleSystem {
     },
     opts?: { once?: boolean },
   ): { paid: boolean; success: boolean; effect?: ReactiveProcEffect }[] {
+    // Review fix (MED — dead-holder transaction): a participant killed by
+    // the hit that opened this window never performs a proc transaction —
+    // no The cost, no rng draw, no success credit, no queue. The bypass
+    // queue already drops dead actors, but that is too late: the consumed
+    // rng draw would shift every later party proc. Callers filter living
+    // holders where they can; THIS is the authority's last-word guard.
+    if (!holder.entity.alive) {
+      return []
+    }
+
     const attempts: { paid: boolean; success: boolean; effect?: ReactiveProcEffect }[] = []
 
     for (const buff of holder.buffs.getAll()) {
