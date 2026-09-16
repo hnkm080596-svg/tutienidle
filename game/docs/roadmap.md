@@ -1,7 +1,7 @@
 ﻿# Roadmap Phát Triển — Tiên Hiệp Idle
 > **Single Source of Truth cho thứ tự và phạm vi phát triển hiện tại.**
 >
-> Cập nhật kiến trúc: **2026-09-08**
+> Cập nhật kiến trúc: **2026-09-16**
 >
 > Baseline audit: `1f1a3a98f7d6661e3afecc6f1b684197276a85ee`
 >
@@ -1477,12 +1477,15 @@ Asset routing must validate normalized containment before moving files.
    Playwright 17/17 PASS serially. F01 oracle green in a real browser — stage start
    activates CombatScene and deactivates MainScene in the Phaser scene manager.
 
-   Retained debt: `queueCombatAssets` still called from `CombatScene.preload()` as a
-   transitional net (catalog parity test pins it) pending a live cold-combat texture pass;
-   `ui.combatSceneDismissed` / `ui.isTribulationSceneActive` remain only as the fallback
-   for standalone component tests — production visibility derives from the route;
-   E2E `--workers=4` can trip the spec's 10s READY deadline under WebGL contention
-   (serial run is green).
+   Retained debt — updated 2026-09-16 (branch `fix/presentation-debt`):
+   `queueCombatAssets` net RETIRED after a live cold-combat pass showed the
+   scene-level queue had zero work (probe: `queued 0`, textures rendered);
+   `ui.combatSceneDismissed` / `ui.isTribulationSceneActive` REMOVED — the
+   coordinator route is the sole visibility authority (standalone tests mock
+   the route adapter); E2E `--workers=4` READY-deadline flake addressed via
+   `VITE_PRESENTATION_DEADLINE_SCALE` env scaling the DeadlineScheduler
+   (wired in App.vue + playwright.config webServer env) — the multi-worker
+   verification run itself is still outstanding post-merge.
 ```
 
 ### R12 close-out — ✅ DONE 2026-09-14 (branch `feat/r11-r14-missions`)
@@ -1912,6 +1915,8 @@ The 2026-09-14 whole-project engineering audit ([report](qa/2026-09-14-full-proj
 
 Execution program doc: `docs/architecture/2026-09-14-arch-repair-program.md`. Program branch `arch/repair-2026-09`; each mission runs in its own `.agent-worktrees/` worktree with a full G0-G5 worker card; wave order serializes same-file missions.
 
+**Program status: COMPLETE** — `arch/repair-2026-09` is merged into master (tip `164d7bcc`). All 13 missions + E2E baseline + perfectClear quarantine landed; the audit-finding regression matrix below records merged-state coverage.
+
 | Wave | Mission | Findings | Status |
 |---|---|---|---|
 | 0 | Program setup + lint baseline (24 errors) | hygiene | DONE (b00ac6dc, merged 81c30e04) |
@@ -1929,10 +1934,11 @@ Execution program doc: `docs/architecture/2026-09-14-arch-repair-program.md`. Pr
 | 3 | E2E baseline repair (5 failing specs) | baseline | DONE (merged 51a56bb6; suite 19/19) |
 | 4 | M10 — Authored-execution parity (Hoi Xuan Dan retired per user ruling) | ARCH-008 | DONE (6f30f5cc, merged) |
 | 4 | M13 — Retire proven compatibility debt | audit §I | DONE (61bce275, merged) |
-| 4 | perfectClear feasibility quarantine (`it.fails`, playtest debt per user ruling) | baseline | DONE (c5b1eb66; debt doc `docs/qa/2026-09-14-perfectclear-debt.md`) |
-| 5 | Convergence: full gates + audit-repro regression matrix + deep QA + master merge | all | IN PROGRESS — full gates green (type-check, build, 3927+4expfail, lint 0 err); audit-repro matrix below; awaiting user ruling on master merge |
+| 4 | perfectClear feasibility quarantine (`it.fails`, playtest debt per user ruling) | baseline | DONE (c5b1eb66; debt doc `docs/qa/2026-09-14-perfectclear-debt.md`) — margins re-measured 2026-09-16, quarantine still accurate: f1 21/20, f5 24/24, f9 no-victory-in-window, f10 16/15; limits unchanged pending real party/skill-composition playtest |
+| 5 | Convergence: full gates + audit-repro regression matrix + deep QA + master merge | all | ✅ DONE — program branch `arch/repair-2026-09` merged into master (tip `164d7bcc` "roadmap closeout — all 13 repair missions DONE" is on master); full gates green at merge (type-check, build, 3927+4expfail, lint 0 err). The §0.9 content freeze, scoped to this program's duration, lapsed with the merge. |
 
 | — | M14 — Remote contract reconciliation (one-talent client vs three-talent SQL/RPC) | ARCH-015 | PARKED pre-remote-rollout (user ruling) |
+| — | Cultivation Path Framework — normalize the 3 paths into Path → Way modules under one path authority (`CultivationPathKit` evolves into the module catalog; `kiem_tu` Ẩn moves from node flip to ritual-time way offer, `tram` Lv3 gate — the spec amendment the B6 ruling required) | spec/plan 2026-09-16 | 🟡 IN PROGRESS on a separate worktree — spec `docs/specs/2026-09-16-cultivation-path-framework-spec.md` + review `docs/specs/2026-09-16-cultivation-path-framework-review.md` (verdict: needed amendment → applied in plan v3.1) + plan `docs/superpowers/plans/2026-09-16-cultivation-path-framework.md` (M0 inventory → M10). Save bumps v61→v64 per vertical cutover |
 
 ### Audit-finding regression matrix (merged state, arch/repair-2026-09)
 
@@ -2089,7 +2095,11 @@ Do not combine them into one implementation mission.
 Specs: [stat-system](superpowers/specs/2026-09-14-stat-system-reimagined-design.md)
 (D1–D21), [phap-tu](superpowers/specs/2026-09-14-phap-tu-reimagined-design.md)
 (APPROVED, P1–P16), [kiem-tu](superpowers/specs/2026-09-15-kiem-tu-reimagined-design.md)
-(DRAFT — needs amendment, see ruling below). **Thể Tu reimagine:
+(**IMPLEMENTED 2026-09-15/16**, `feat/kiem-tu-reimagined` merged — Kiem Phổ
+preset-combo hien + Ngu Kiem Dao ngu via `kiemTuModeSwitch` node flip; the
+hidden-variant → ritual-time way offer amendment is in-flight via the
+cultivation-path-framework mission on a separate worktree, see §0.8a).
+**Thể Tu reimagine:
 IMPLEMENTED 2026-09-15** — spec `2026-09-15-the-tu-reimagined-design.md`,
 plan `2026-09-15-the-tu-reimagined-plan.md` v2.4 (executed in worktree
 `the-tu-reimagined`). Hiện = `the_tu` (Cuồng Chiến missing-HP pressure +
@@ -2137,25 +2147,34 @@ debuff riders, Bất Tử leech/kill extension, Sơn Nhạc self-DR scaling
 (no participant-local modifier channel yet); Thể Tu artifact grants;
 AoE interception.
 
-**Known design debt — Kiếm Phổ orb-branch identity (external review
-2026-09-16, MEDIUM, deferred by user call):** the 5 orb growth branches
+**Design debt — Kiếm Phổ orb-branch identity (external review 2026-09-16,
+direction RESOLVED by user ruling same day):** the 5 orb growth branches
 (Đâm/Chém/Bổ/Hất/Quét, `orb_*_1..5` in `KiemTuNodes.ts`) grant GENERIC
 stats through the shared `statModifiers` channel — might,
-skillDamagePercent, ailment potency/duration, crit, speed. Consequence:
-investing one branch powers all five orbs and every combo, so the
-per-orb fantasy (each kiếm thức upgrading itself) dilutes into a shared
-stat pool, and the cheapest branch becomes the dominant buy.
-Why it exists: `statModifiers` is the only node-effect lever today —
-capstones already carry orb identity correctly via `kiemTuComboModifier`
-(match→mutate at combo fire), but there is no per-orb stat modifier
-domain for growth nodes.
-Why it matters before the deferred 37-combo authored-effect pass
-(spec §11): authored orb-specific effects will want per-orb levers;
-doing the domain first avoids re-authoring growth nodes twice.
-Candidate fix when reopened: an orb-scoped modifier channel parallel to
-`kiemTuComboModifier` (e.g. `effect.kiemTuOrbModifier { orb, stat }`
-resolved at cast against the orb being cast / the combo's pattern),
-keeping generic stats only on nodes intended to be global.
+skillDamagePercent, ailment potency/duration, crit, speed — so investing
+one branch powers all five orbs and every combo.
+
+**Ruling 2026-09-16: combo discovery is the path's primary fantasy** —
+the shared pool is intentional direction (orb-scoped growth would
+incentivize monoculture presets and hurt preset experimentation), so the
+generic-stat mechanics are NOT the defect. Residual debt narrows to:
+
+- (a) presentation honesty — branch names/descriptions promise per-orb
+  mastery ("nền của đường kiếm đâm") while delivering a shared pool;
+  reframe branches as shared kiếm-ý tiers or fix descriptions;
+- (b) rate-shopping — Bổ is strictly best-rate for raw damage
+  (+3 might/lv vs +2, +4% skillDmg, +5% critDmg, +3% pierce); a rate
+  pass may flatten so branch choice is thematic, not dominant-buy;
+- (c) §11 authored-combo pass levers — combo-pattern effects already
+  ride `kiemTuComboModifier`; if authored effects need an orb-scoped
+  cast lever, the cheap seam is `effect.kiemTuOrbModifier { orb, ... }`
+  mutating the derived `TurnSkillDefinition` inside `KiemPhoProvider`
+  (same pattern as `NguKiemDaoProvider` per-instance options / capstone
+  derived-copy mutation) — NOT a per-cast stat override, since stats
+  resolve inside the damage pipeline.
+
+Sequencing (user ruling): AFTER the cultivation-path-framework merge —
+the framework touches `KiemTuNodes.ts`/providers; no parallel work.
 
 **User ruling 2026-09-15 — every hidden (Ẩn) variant is a separate
 `CultivationPathId`, chosen at the Initiation Ritual.** `phap_tu_an`,
@@ -2168,6 +2187,11 @@ flip, no refund machinery.** Consequence: the kiem-tu-reimagined spec's
 `mode: 'hien' | 'ngu'` + hidden-node `kiem_tu_an` design (K1–K4) is superseded
 and must be amended to the separate-path model (matching phap-tu P7) before
 its implementation plan runs.
+
+**Update 2026-09-16:** the amendment vehicle exists — the cultivation-path-framework
+spec/plan (§0.8a, in progress on a separate worktree) makes the `kiem_tu` Ẩn
+migration its single approved behavior change: ritual-time way offer gated on
+`tram` Lv3, free entry, `hien→ngu` conversion permanently removed.
 
 ---
 
@@ -2300,11 +2324,29 @@ or:
 
 as an implementation mission.
 
-R6 Combat Character Art & Asset Contract reached its completion gate
-2026-09-14 (see the phase block and `docs/qa/2026-09-14-r6-completion-assessment.md`).
-Its dependent mission is R13 (parked, ⏸ in the queue table). With every
-serial phase resolved, the remaining work is the parked items (R11 broader
-consolidation, R12, R13) and the content-resume gate in §0.11.
+All R-phases (R0–R14) and the ARCH-2026-09-14 repair program are COMPLETE and
+merged to master. Remaining tracked work: the cultivation-path-framework
+mission (in progress, separate worktree), M14 remote contract (parked
+pre-remote-rollout), ratcheted debt recorded in R6/R12/B6 (art placeholders,
+Kiếm Phổ orb-branch residuals, Thể Tu deferred content, perfectClear playtest
+debt, E2E `--workers=4` deadline verification), and the parked content items
+in §0.11.
+
+2026-09-16 lane sweep (branch `fix/presentation-debt`, parallel to the
+framework worktree): R12 retained debt retired — `queueCombatAssets` net
+removed after live cold-combat proof (queue empty, textures rendered),
+ui-store fallback visibility flags removed (route is sole authority),
+`VITE_PRESENTATION_DEADLINE_SCALE` wired for the workers=4 flake (the
+multi-worker run remains outstanding post-merge). Bag filter extended from
+materials to equipment + pill sections via a shared `useEntryFilter`
+primitive. Emoji/placeholder sweep verdict: note is stale — only two
+rendered emoji remain (`🔒` lock affordances, deliberate a11y glyphs);
+real placeholder imagery already tracked by the `artTierDebt` ratchet;
+the only untracked placeholder is the Rectangle fallback for non-mortal
+entities (foundation/tribulation enemies, companions) = future art-batch
+content, not emoji debt. No-test-module coverage audit: genuine gaps
+filled (EquipmentDissolve, EquipmentInstanceSnapshot, ProductionCycles);
+several modules verified already-covered via system-level tests.
 
 ---
 
@@ -2394,7 +2436,7 @@ Mục tiêu: game "có hồn" và dễ khám phá hơn.
 
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
-| Nameplate công trình, tách CombatScene, dọn placeholder/emoji | ui-discoverability-refactor-plan.md (lưu trữ — xoá khỏi repo 2026-09-08) | 🟡 Một phần lớn đã xong ngoài plan: UI primitives landed 2026-08-29; `CombatScene` 2.922→**1.539 dòng** (`PlayerHudLayer` tách riêng, HUD rewrite + gỡ legacy controls qua Slice 7 master plan 2026-09-05); CombatSceneOverlay + TurnCombatSkillBar + TurnOrderStrip + BattleLogPanel đã có. **Còn lại**: nameplate công trình, dọn placeholder/emoji |
+| Nameplate công trình, tách CombatScene, dọn placeholder/emoji | ui-discoverability-refactor-plan.md (lưu trữ — xoá khỏi repo 2026-09-08) | 🟡 Một phần lớn đã xong ngoài plan: UI primitives landed 2026-08-29; `CombatScene` 2.922→**1.539 dòng** (`PlayerHudLayer` tách riêng, HUD rewrite + gỡ legacy controls qua Slice 7 master plan 2026-09-05); CombatSceneOverlay + TurnCombatSkillBar + TurnOrderStrip + BattleLogPanel đã có; **nameplate công trình ✅** (`HomeBuildingIcons.vue` render `.building-nameplate` thường trực — tên + level/"Chưa mở" + trạng thái lock/readiness/upgradeable). **dọn placeholder/emoji ✅ stale — sweep 2026-09-16**: toàn `src/` chỉ còn đúng 2 emoji render ra UI (`🔒` tại `DongFuCommandWheel.vue:375` + `SlotView.vue:305`, cả hai là a11y lock affordance có chủ đích); icon data sạch (real PNG hoặc monogram fallback theo design); phap_tu/boss-form placeholder đã track qua `artTierDebt` ratchet. Untracked duy nhất: Rectangle fallback cho non-mortal entities (20 `foundation_*`, tribulation enemies, companions) — đó là art-batch content thiếu, không phải emoji debt |
 
 Tiêu chí hoàn thành: hotspot công trình tự giải thích không cần tooltip; CombatScene không còn là god-class. *(2026-08-29: Âm thanh là asset — tạm bỏ qua khỏi roadmap theo quyết định người dùng; plan [audio-game-feel-plan.md](./audio-game-feel-plan.md) giữ nguyên như tài liệu tham khảo.)*
 
@@ -2405,7 +2447,7 @@ Mục tiêu: mở rộng các trục progression đang bỏ hoang.
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
 | Kiến Cơ 4 bậc, node tree Kiếm Tu, chiều sâu idle (Cảm Ngộ offline, nguồn tăng tốc tu luyện) | [progression-depth-plan.md](./progression-depth-plan.md) | 🟡 Một phần — node tree Kiếm Tu (2 nhánh `KiemTuNodes.ts`, 9 skill Kiếm Trận, Bát Kiếm, tự lực combat) ✅ xong qua kiem-tu-tu-luc; **Kiếm Thế / Kiếm Ý (2026-08-29)** ✅ — route chốt vĩnh viễn lúc chọn path (tram Lv3), 2 tài nguyên (Kiếm Thế pool trận KT / Kiếm Ý tầng boss vĩnh viễn BK), mỗi route 1 skill + 2 ult manual, 9 on-hit node, 6 node chuyển skill cũ, gỡ Nộ; **Đột Phá / Bậc Ẩn / Lôi Kiếp (2026-08-29, spec dot-pha-loi-kiep)** ✅ — Kiến Cơ 4 bậc un-park qua resolver `BreakthroughGrades.ts` (Địa: Trúc Cơ Đan + 3 tầng Luyện Th thể; Thiên: 6/6 + 6/8 kinh mạch; Đại Đạo ẩn hoàn toàn — thua kiếp siêu cấp mất vĩnh viễn, thắng chuyển Phàm Cốt → Phàm Nhân Chi Cốt), Kỳ Kinh Bát Mạch 9 đường (MeridianSystem), quái ẩn Huyết Mông cửa sổ 1000 kill drop Thiên Địa Chi Kiều, Thông Mạch Đan/Trúc Cơ Đan (alchemy specialIngredients), TribulationDirector chương kiếp mới (Tâm Ma hỏi đáp + tank lôi, bỏ quái Kiếp + Đột Phá Lệnh + TribulationSystem cũ), caps Luyện Th thể ×3.5, save v54 — số liệu first-pass chờ playtest; Cảm Ngộ offline chưa làm (Ngộ Đạo chỉ online) |
-| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | economy-fixes-sinks-plan.md (lưu trữ — xoá khỏi repo 2026-09-08) (Phần B — Phần A đã gộp vào economy-ecosystem-plan, đã dọn sau khi hoàn thành) | 🟡 Một phần — Điểm Rèn per-item (forgePoints) đã có trong `EquipmentSystem` (rework 2026-08-26); vendor redesign + filter túi đồ → chuyển sang Group 3 của gp123 spec v2 (`2026-09-03-gp123-bugfix-optimize-design.md` — file spec+plan hiện chỉ có trong branch `worktree-gp123`, chưa có trên master, xem mục 8.6) |
+| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | economy-fixes-sinks-plan.md (lưu trữ — xoá khỏi repo 2026-09-08) (Phần B — Phần A đã gộp vào economy-ecosystem-plan, đã dọn sau khi hoàn thành) | 🟡 Một phần — Điểm Rèn per-item (forgePoints) đã có trong `EquipmentSystem` (rework 2026-08-26); **vendor redesign (6G) ✅ đã merge** (2c5855c+e54a22a — xóa quy đổi cảnh giới, thu mua gate phẩm, VendorPanel thu-mua-only; tab Cửa hàng ẩn chờ 6H); **filter túi đồ** ✅ materials (search + chips nhóm + gộp họ) + equipment (search + chips theo slot) + pills (search + chips theo loại hiệu ứng) — shared `useEntryFilter`, trên `fix/presentation-debt` chờ merge (2026-09-16) |
 
 Tiêu chí hoàn thành: gate đột phá có chất lượng khác nhau; Kiếm Tu có chiều sâu build tương đương Pháp Tu; idle có đường nâng cấp.
 
@@ -2449,7 +2491,7 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 - **Kim Đan (M2 gate + M3 đời sống)**: bỏ khỏi roadmap 2026-08-29 (quyết định người dùng). Data realm `golden_core`+ vẫn tồn tại trong game (skill passive, realms) nhưng không có nội dung gate mới; mở lại chỉ khi người dùng yêu cầu.
 - **Âm thanh / audio-game-feel**: tạm bỏ qua — là mảng asset, chưa có nguồn tài nguyên audio (quyết định người dùng 2026-08-29). Plan giữ làm tham khảo.
 - **World map**: `src/core/world-map/` mới có hạ tầng (hex layout, validator), chưa có dữ liệu bản đồ thật. Với Kim Đan đã bỏ, chờ quyết định riêng về Thanh Vân: chuyển sang biểu diễn world-map hay giữ stage list.
-- **Tutorial động**: tutorial hiện là carousel 9 bước thuần thông tin (`src/data/tutorial/tutorialSteps.ts`). Việc instrument theo dõi hành động thật của người chơi mới chỉ ghi nhận, chưa lập plan.
+- **Tutorial động**: tutorial hiện là carousel 9 bước thuần thông tin (`src/data/tutorial/tutorialSteps.ts`). Việc instrument theo dõi hành động thật của người chơi mới chỉ ghi nhận, chưa lập plan — **cần product ruling trước** (2026-09-16): định nghĩa hành động/metric nào được track (progression step theo hành vi thật vs. đọc-đủ-bước), instrumentation đi qua analytics/event pipeline nào, và tutorial có gate progression không. Không implement cho tới khi có ruling.
 - **Kiếm Tu node tree (đã chuyển vào phạm vi)**: từng nằm ngoài, nay đã làm xong qua `worktree-kiem-tu-tu-luc` — xem Phase 3 / progression-depth.
 - **Hệ nhân vật phụ — party/companion recruit + UI/nội dung** (engine `players[]` đã xong 2026-09-04): spec riêng sau, là việc content/feature lớn — xem bảng 9.5 việc #8.
 
