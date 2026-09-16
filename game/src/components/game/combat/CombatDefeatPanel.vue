@@ -71,18 +71,28 @@ const hasAnyReward = computed(() => {
 
 const isAutoRetrying = ref(false)
 
-function refight() {
+async function refight(): Promise<void> {
   if (!ui.selectedStageId) {
+    isAutoRetrying.value = false
     return
   }
 
   const stage = gameManager.catalogOps.getStage(ui.selectedStageId)
 
   if (!stage) {
+    isAutoRetrying.value = false
     return
   }
 
-  startBattle(stage)
+  const started = await startBattle(stage)
+
+  if (!started) {
+    // A refused/failed start must not leave the retry button permanently
+    // disabled (T1-5): re-enable it and disarm auto-retry, same rollback
+    // contract as the victory panel's !refight() branch.
+    isAutoRetrying.value = false
+    ui.battleRunMode = 'manual'
+  }
 }
 
 const { remaining: retryCountdown, start: startAutoRetryCountdown, stop: stopAutoRetryCountdown } = useAutoRetryCountdown(RETRY_COUNTDOWN_SECONDS, refight)
@@ -97,7 +107,7 @@ function clearTimers() {
 
 function retryNow() {
   clearTimers()
-  refight()
+  void refight()
 }
 
 function returnHome() {

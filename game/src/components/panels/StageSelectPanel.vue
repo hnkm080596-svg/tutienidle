@@ -200,7 +200,7 @@ function start() {
     return
   }
 
-  startSelectedStage(selectedZone.value.id, selectedStage.value, mode.value)
+  void startSelectedStage(selectedZone.value.id, selectedStage.value, mode.value)
 }
 </script>
 

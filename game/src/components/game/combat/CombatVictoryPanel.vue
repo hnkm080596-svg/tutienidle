@@ -39,7 +39,7 @@ const summary = computed(() => {
   return gameManager.getBattleRewardSummary()
 })
 
-function refight(): boolean | Promise<boolean> {
+async function refight(): Promise<boolean> {
   if (!ui.selectedStageId) {
     return false
   }
@@ -54,7 +54,7 @@ function refight(): boolean | Promise<boolean> {
 }
 
 function retryNow() {
-  refight()
+  void refight()
 }
 
 function continueToStageSelect() {
@@ -63,7 +63,7 @@ function continueToStageSelect() {
   exitCombatToHome()
 }
 
-const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryCountdown(COUNTDOWN_SECONDS, () => {
+const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryCountdown(COUNTDOWN_SECONDS, async () => {
   // Tự Động Thám Hiểm — chỉ tiến khi resolver xác nhận màn kế đã mở. Màn
   // tồn tại nhưng bị gate bởi tu vi là trạng thái dừng auto hợp lệ, không
   // được gọi startStage() mù rồi để modal victory kẹt ở 0s.
@@ -90,7 +90,7 @@ const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryC
       const previousStageId = ui.selectedStageId
       ui.selectedStageId = nextStageId
 
-      if (!refight()) {
+      if (!(await refight())) {
         ui.selectedStageId = previousStageId
         ui.battleRunMode = 'manual'
       }
@@ -106,7 +106,7 @@ const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryC
     }
   }
 
-  if (!refight()) {
+  if (!(await refight())) {
     ui.battleRunMode = 'manual'
   }
 })
