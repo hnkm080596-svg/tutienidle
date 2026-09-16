@@ -480,7 +480,9 @@ export class BuffSystem {
     target: CombatEntity,
     targetBuffs: BuffPool,
     registry: BuffDefinitionCatalog,
-    rng: () => number = Math.random,
+    // Lazy closure — a stored `Math.random` reference would bypass
+    // vi.spyOn interception and the session-RNG boundary (Mission C).
+    rng: () => number = () => Math.random(),
   ) {
     const targetBuffSystem = new BuffSystem(targetBuffs)
 
@@ -505,7 +507,7 @@ export class BuffSystem {
     triggerEvent: 'onCastBegin' | 'onImpactLanded',
     registry: BuffDefinitionCatalog,
     context?: { attacker?: CombatEntity; hpDamage?: number },
-    rng: () => number = Math.random,
+    rng: () => number = () => Math.random(),
   ): { firedFollowUp: boolean; reflectRequests: { attackerEntity: CombatEntity; amount: number }[] } {
     let firedFollowUp = false
     const reflectRequests: { attackerEntity: CombatEntity; amount: number }[] = []

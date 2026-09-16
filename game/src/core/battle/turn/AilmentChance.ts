@@ -9,5 +9,5 @@ export function resolveAilmentApplicationChance(
   baseChance: number,
   applicationPercent: number | undefined,
 ): number {
-  return Math.min(1, baseChance + (applicationPercent ?? 0))
+  return Math.max(0, Math.min(1, baseChance + (applicationPercent ?? 0)))
 }

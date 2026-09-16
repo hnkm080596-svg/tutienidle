@@ -803,7 +803,9 @@ export class GameManagerTurnBattleOps {
    * via the TurnBattleSystem ctor param, spawn placement + pool/tag/
    * hidden-beast picks via the spawn closures).
    */
-  private combatRng: () => number = Math.random
+  // Lazy default — a stored `Math.random` reference would bypass
+  // vi.spyOn interception. Re-minted per cycle by mintCycleRng().
+  private combatRng: () => number = () => Math.random()
 
   /**
    * Test/dev seam mirroring setCombatClockSource: swap the factory that
