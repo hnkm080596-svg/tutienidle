@@ -74,11 +74,14 @@ export const BATTLE_CYCLE_POLICIES: Record<BattleCycleKind, BattleCyclePolicy> =
   // 'test' must NOT preserve the loot session: startBattle ALWAYS calls
   // battleLoot.beginBattle() for raw-entity/devtools starts - inheriting a
   // stale receiver/summary would silently leak a prior battle's session
-  // into devtools battles.
+  // into devtools battles. entryState stays 'intro' (deviation from the
+  // plan's 'fighting'): raw startBattle has no production callers and 17
+  // test files rely on its intro/countdown pacing; skipping it changes
+  // observable devtools behavior for no stated benefit.
   test: {
     kind: 'test',
     reset: FRESH_BATTLE_RESET,
-    entryState: 'fighting',
+    entryState: 'intro',
     preserveStageBinding: false,
     preserveLootSession: false,
   },

@@ -1,5 +1,6 @@
 import type { SessionRef } from '../presentation/PresentationSession'
 import { isBattleInProgress } from '../battle/BattleTypes'
+import { BATTLE_CYCLE_POLICIES, type BattleCyclePolicy } from '../battle/BattleCyclePolicy'
 import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
 import {
   buildNguKiemDaoProvider,
@@ -50,7 +51,7 @@ import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffTypes'
 import type { FormationLoadout, PlayerData } from '../player/Player'
-import { playerToCombatEntity, resetBattleScopedResources } from '../player/Player'
+import { playerToCombatEntity } from '../player/Player'
 import type { Stats } from '../stats/StatBlock'
 import type { StatModifier } from '../stats/StatCalculator'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
@@ -150,6 +151,11 @@ export class GameManagerTurnBattleOps {
   readonly autoFarmOps: GameManagerAutoFarmOps
 
   private isStageStarting = false
+
+  /** The Stage object mid-launch - tunneled to the inner beginBattleCycle
+   * call (the launch chain startStage -> stageWaves.start -> launchBattle
+   * cannot pass it through). Set/cleared around stageWaves.start only. */
+  private pendingLaunchStage: Stage | null = null
 
   // --- Turn engine (2026-09-10 combat-turn-mechanism spec) ----------------
   //
@@ -750,7 +756,6 @@ export class GameManagerTurnBattleOps {
       this.deps.stageManager.get() !== null
     ) {
       this.restartTurnBattleCycle()
-      this.resetTurnEngine()
 
       return
     }
@@ -758,15 +763,6 @@ export class GameManagerTurnBattleOps {
     // Spec section 8: combat-over STOPS the clock. It does not freeze it - the
     // battle is over and nothing more will advance.
     this.combatClock.stop()
-  }
-
-  /** Per-battle reset (spec section 3.3 / blocker A5): a token left in
-   * COMBAT_OVER would reject the next battle's first claim and freeze it
-   * permanently. */
-  private resetTurnEngine(): void {
-    this.clearPendingSteps()
-    this.pipeline.reset()
-    this.turnToken.reset()
   }
 
   // --- Battle state queries ---------------------------------------------
@@ -814,38 +810,220 @@ export class GameManagerTurnBattleOps {
     return this.deps.enemySystem.spawn(template)
   }
 
-  startBattle(player: CombatEntity, enemy: Enemy) {
-    const enemyEntity = enemyToCombatEntity(this.deps.enemySystem.spawn(enemy))
+  /**
+   * Monotonic cycle id (Task 5): every beginBattleCycle bumps it, so stale
+   * pending state from a previous battle can be diagnosed against the
+   * current cycle. Diagnostic surface only - the token guard remains the
+   * mutation authority.
+   */
+  private battleGeneration = 0
 
-    // Reset defaults - startBattleWithPlayer() sets the real session right
-    // after. Direct startBattle() (no PlayerData) has no reward receiver and
-    // no talent session; in-battle passive stacks reset every battle.
-    this.deps.battleLoot.beginBattle()
-    this.deps.resetPassiveStacks()
-    this.deps.combatSystem.setSurviveLethalSession(null)
+  getBattleGeneration(): number {
+    return this.battleGeneration
+  }
 
-    // ARCH-014 (M12, review round 1) — a fresh battle owns a fresh terminal
-    // once-guard: without this reset a NON-STAGE battle (devtools spawn /
-    // tribulation launch) started after any terminal would inherit
-    // battleEndEmitted=true, so its victory/defeat would never publish
-    // battle_end AND a later abandon would be swallowed by emitAbandonEnd's
-    // guard. Idempotent; startStage re-resets below and restartTurnBattleCycle
-    // re-resets on auto-repeat.
+  /**
+   * Cycle-entry teardown shared by beginBattleCycle and abandonBattle:
+   * drops every piece of state parked on the PREVIOUS cycle before new
+   * state is built (or after the old battle is destroyed). Order matters:
+   * pending fallback timers die first, then the engine/presentation/token
+   * layer, then the command queue. Per-battle engine reset is mandatory
+   * (spec section 3.3 / blocker A5): a token left in COMBAT_OVER would
+   * reject the next battle's first claim and freeze it permanently.
+   */
+  private clearCycleEntryState(): void {
+    this.clearPendingSteps()
+    this.pipeline.reset()
+    this.turnToken.reset()
+    this.presentationOps.runtime.resetPendingState()
+    this.boundaryQueue = []
+  }
+
+  /**
+   * THE one battle-lifecycle owner (Mission C, spec C2). Every entry path
+   * - startBattle (test/devtools), startBattleWithPlayer (fresh/stage via
+   * the stageWaves launch chain), restartTurnBattleCycle (repeat) -
+   * funnels here exactly once; callers contribute only validation and
+   * post-entry glue. The canonical order:
+   *
+   *   1. Cycle-entry teardown (clearCycleEntryState) + generation bump.
+   *   2. Per-policy domain resets (reward once-guards, loot session,
+   *      survive session, passive stacks BEFORE the stats snapshot).
+   *   3. Player side: the same bootstrap for fresh/stage/repeat -
+   *      resolve stats, build entity, snapshot maxThe.
+   *   4. Battle assembly: buildTurnBattle + entry state + stage wave
+   *      rebuild + fresh TurnBattleSystem.
+   *   5. Player wiring: seedPassiveCarry, loot session, survive-lethal
+   *      session (talent guard + Bat Tu source).
+   *   6. Presentation session (non-stage kinds only; startStage owns its
+   *      own post-block session work, repeat preserves the live session).
+   *   7. Clock restart.
+   */
+  private beginBattleCycle(
+    policy: BattleCyclePolicy,
+    request: {
+      player?: PlayerData
+      playerEntity?: CombatEntity
+      initialEnemy?: Enemy
+      /** 'repeat' carries the preserved stage; 'stage' reads StageManager. */
+      stage?: Stage
+    },
+  ): void {
+    // 1. Session/pending teardown - BEFORE any new state is built.
+    this.clearCycleEntryState()
+    this.battleGeneration += 1
+
+    // 2. Per-policy domain resets. ARCH-014 (M12): a fresh battle owns a
+    // fresh terminal once-guard - a battle started after any terminal would
+    // otherwise inherit battleEndEmitted=true and never publish battle_end.
     this.rewardOps.resetRewardState()
 
-    this.turnBattle = this.buildTurnBattle(player, [enemyEntity])
+    if (!policy.preserveLootSession) {
+      this.deps.battleLoot.beginBattle()
+    }
 
-    // ARCH-002 (M7) — fold construction-time buffs (formation Tran Phap)
+    this.deps.combatSystem.setSurviveLethalSession(null)
+
+    // ARCH-002 (M7) - ephemeral passive state resets BEFORE the resolved
+    // snapshot is taken; live runtime modifiers reach entity.stats through
+    // the engine's provider each refresh instead.
+    this.deps.resetPassiveStacks()
+
+    if (!policy.preserveStageBinding) {
+      // Stage-aggregate state belongs to the stage that set it - a
+      // non-stage battle drops the binding, the repeat arm and the run
+      // timer so nothing stale leaks into an unrelated battle.
+      this.activeStageForTurnBattle = null
+      this.turnBattleRepeatContinuously = false
+      this.turnBattleStartedAtMs = null
+    }
+
+    // 3. Player side.
+    let playerEntity: CombatEntity | null = null
+
+    if (request.player) {
+      const playerStats = this.deps.resolvePlayerStats(request.player)
+
+      playerEntity = playerToCombatEntity(
+        request.player,
+        playerStats,
+        this.deps.getSkillLevels(),
+      )
+
+      // Task 8 - snapshot the query-derived The cap (truong_the nodes,
+      // 'no' route). Non-phap_tu paths resolve to MAX_THE; the field
+      // stays the clamp source for this battle instance only.
+      playerEntity.maxThe = this.deps.resolvePlayerMaxThe(request.player)
+    } else if (request.playerEntity) {
+      playerEntity = request.playerEntity
+    }
+
+    if (!playerEntity) {
+      return
+    }
+
+    // 4. Battle assembly.
+    const enemyEntities: CombatEntity[] = []
+
+    if (request.initialEnemy) {
+      enemyEntities.push(enemyToCombatEntity(this.deps.enemySystem.spawn(request.initialEnemy)))
+    }
+
+    this.turnBattle = this.buildTurnBattle(playerEntity, enemyEntities)
+    this.turnBattle.state = policy.entryState
+
+    const stageRef =
+      request.stage ??
+      (policy.kind === 'stage' ? this.pendingLaunchStage : null)
+
+    if (stageRef) {
+      // Wave-driven battle: the bootstrap enemy spawned above (the stage
+      // launch chain always supplies one) is removed so EVERY enemy -
+      // including the first - spawns through the wave telegraph per the
+      // 2026-09-06 redesign. Despawn it from EnemySystem too (not only
+      // turnBattle.enemies) so victory-despawn assertions stay clean.
+      for (const bootstrap of this.turnBattle.enemies) {
+        this.deps.enemySystem.despawn(bootstrap.entity.id)
+      }
+      this.turnBattle.enemies = []
+      this.turnBattle.wave = {
+        totalEnemyCount: effectiveTotalEnemyCount(stageRef),
+        spawnedCount: 0,
+        waves: effectiveWaves(stageRef),
+        waveIndex: 0,
+        pendingEnemySpawns: [],
+      }
+    }
+
+    // A fresh cycle owns a fresh engine - its private pending fields
+    // (reactive entries, queued executions, gauge deltas, manual options)
+    // can never carry across a boundary.
+    this.turnBattleSystem = new TurnBattleSystem(
+      this.deps.combatSystem,
+      10_000,
+      BUFF_REGISTRY,
+      stageRef ? this.buildStageSpawnFactory(stageRef) : undefined,
+      stageRef ? new TurnReactionManager(this.deps.eventBus) : undefined,
+      this.onSkillCast,
+      this.liveStatModifiers,
+    )
+
+    // ARCH-002 (M7) - fold construction-time buffs (formation Tran Phap)
     // and the live runtime modifiers into entity.stats immediately, so no
     // dependent read can observe the pre-buff base.
     this.turnBattleSystem.refreshEffectiveStats(this.turnBattle)
 
-    if (!this.isStageStarting) {
-      // Non-stage battle (tribulation, devtools) — drop the previous stage
-      // binding or a stale perfectClearTurnLimit would leak into a battle
-      // it does not apply to (round indicator, 2026-09-12).
-      this.activeStageForTurnBattle = null
+    // 5. Player wiring (player battles only - a raw-entity 'test' battle
+    // has no reward receiver and no talent session).
+    const player = request.player ?? null
+    this.playerDataForTurnBattle = policy.preserveStageBinding
+      ? (player ?? this.playerDataForTurnBattle)
+      : player
 
+    if (player) {
+      // M2 - Pha Giap carry: re-seed banked stacks AFTER the per-battle
+      // reset above, then fold them into entity.stats so no read can
+      // observe a pre-seed view.
+      this.deps.seedPassiveCarry(player)
+      this.turnBattleSystem.refreshEffectiveStats(this.turnBattle)
+
+      this.deps.battleLoot.setSession(this.deps.buildPlayerRewardReceiver(player), player)
+
+      // Bat Tu The - reset the survive-lethal charge per battle from the
+      // player's talents, then attach the session for
+      // combatSystem.killIfDead(). players[0] is the human player
+      // (companions append after index 0 in buildTurnBattle).
+      this.deps.surviveLethalGuard.beginBattle(player.selectedTalentIds)
+
+      // The Tu Reimagined - Cuong Chien's Bat Tu Ba The ultimate is the
+      // FIRST line of survival; the talent guard is the extra life once
+      // the ult is spent/on cooldown.
+      const playerParticipant = this.turnBattle.players[0]
+      const batTuSource = playerParticipant
+        ? this.deps.buildTheTuBatTuSurvival?.(player, playerParticipant)
+        : undefined
+
+      this.deps.combatSystem.setSurviveLethalSession({
+        playerEntityId: playerEntity.id,
+        guard: this.deps.surviveLethalGuard,
+        // v4 - Bat Tu The cleanse/grant on save, wired to the LIVE
+        // turn-based player pool.
+        surviveEffects: playerParticipant
+          ? {
+              buffSystem: new BuffSystem(playerParticipant.buffs),
+              registry: BUFF_REGISTRY,
+              grantBuffId: 'tu_sinh_ngo',
+              cleanseDebuffs: true,
+            }
+          : undefined,
+        extraSources: batTuSource ? [batTuSource] : undefined,
+      })
+    }
+
+    // 6. Presentation session for non-stage kinds. startStage ends/begins
+    // its own session in the post-launch block; 'repeat' keeps the running
+    // session (the stage launch already opened it).
+    if (policy.kind === 'fresh' || policy.kind === 'test') {
       const activeSession = this.presentationOps.session.getCurrentSession()
       if (activeSession) {
         this.presentationOps.session.end(activeSession)
@@ -861,96 +1039,61 @@ export class GameManagerTurnBattleOps {
       this.deps.eventBus.emit('presentation_session_started', session)
     }
 
-    // A fresh battle owns a fresh boundary queue too - same reasoning as the
-    // startStage/abandonBattle clears (spec section 9.2): nothing queued
-    // against a previous battle (or against no battle at all) may drain into
-    // this one. startBattle() has no production caller today besides
-    // startStage (which already clears the queue itself before reaching
-    // here), but this keeps the invariant true of the method itself rather
-    // than of its only current caller.
-    this.boundaryQueue = []
-
-    // A fresh battle owns a fresh turn engine and a fresh clock run. startStage
-    // does the same again after it rebuilds the battle; both are idempotent.
-    this.resetTurnEngine()
+    // 7. A fresh battle owns a fresh clock run. stop() before start()
+    // matters - the previous battle may have stopped the clock at
+    // combat-over, and stop() is what clears the stale freeze reasons.
     this.combatClock.stop()
     this.combatClock.start()
     this.syncOffScreenFreeze()
   }
 
-  startBattleWithPlayer(player: PlayerData, enemy: Enemy) {
-    // ARCH-002 (M7) — ordering fix: ephemeral passive state resets BEFORE
-    // the resolved snapshot is taken. Previously the caller resolved
-    // finalStats eagerly (carrying last battle's live stacks via the
-    // per-tick aggregation mirror) and the reset ran inside startBattle()
-    // AFTER the snapshot — the stacks leaked into the new baseStats.
-    //
-    // DESIGN: all combat stats (incl. skill runtime stats) snapshot at
-    // battle start; purchases/loadout changes mid-battle take effect next
-    // battle. The base resolves from the STATIC partition only — live
-    // runtime modifiers (passive stacks, persistent pool, timed effects)
-    // reach entity.stats through the engine's provider each refresh.
-    this.deps.resetPassiveStacks()
+  /**
+   * Stage-bound spawnEnemy factory (was duplicated across startStage and
+   * restartTurnBattleCycle). isFinalSpawn: the last spawn of the stage is
+   * the boss - the factory runs BEFORE resolveNextStep increments
+   * spawnedCount, so the post-spawn total = spawnedCount + 1.
+   */
+  private buildStageSpawnFactory(
+    stageRef: Stage,
+  ): (occupiedSlots?: Set<string>) => TurnBattleParticipant {
+    return (occupiedSlots?: Set<string>) => {
+      const isFinalSpawn =
+        (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
+      const template =
+        this.deps.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn) ??
+        this.lastStageEnemyTemplate
 
-    const playerStats = this.deps.resolvePlayerStats(player)
+      if (!template) {
+        throw new Error(`TurnBattle spawnEnemy: no template available for stage ${stageRef.id}`)
+      }
 
-    const playerEntity = playerToCombatEntity(
-      player,
-      playerStats,
-      this.deps.getSkillLevels(),
-    )
+      this.lastStageEnemyTemplate = template
 
-    // Task 8 — snapshot the query-derived The cap (truong_the nodes,
-    // 'no' route). Non-phap_tu paths resolve to MAX_THE; the field
-    // stays the clamp source for this battle instance only.
-    playerEntity.maxThe = this.deps.resolvePlayerMaxThe(player)
-
-    this.startBattle(playerEntity, enemy)
-
-    // Non-stage battles need the player reference too — the victory
-    // terminal below banks Pha Giap carry stacks (M2). Stage-guarded
-    // readers (completedStageIds, perfect clear) all check
-    // activeStageForTurnBattle, so this stays inert for them.
-    this.playerDataForTurnBattle = player
-
-    // M2 — Pha Giap carry: re-seed banked stacks AFTER the per-battle
-    // reset that startBattle() just ran.
-    this.deps.seedPassiveCarry(player)
-
-    // ARCH-002 (M7) — the seed lands AFTER startBattle()'s construction
-    // refresh, and intro/countdown ticks do not refresh: fold the carried
-    // stacks into entity.stats now so no read can observe a pre-seed view.
-    if (this.turnBattle) {
-      this.turnBattleSystem.refreshEffectiveStats(this.turnBattle)
+      return toTurnBattleParticipant(
+        this.placeSpawnedEnemy(
+          enemyToCombatEntity(this.deps.enemySystem.spawn(template)),
+          occupiedSlots,
+        ),
+        this.turnBattle?.enemies.length ?? 0,
+        GENERIC_PHYSICAL_BASIC,
+      )
     }
+  }
 
-    this.deps.battleLoot.setSession(this.deps.buildPlayerRewardReceiver(player), player)
+  startBattle(player: CombatEntity, enemy: Enemy) {
+    // 'test' for raw-entity/devtools starts; a nested call inside a stage
+    // launch is part of the 'stage' cycle (isStageStarting).
+    this.beginBattleCycle(
+      this.isStageStarting ? BATTLE_CYCLE_POLICIES.stage : BATTLE_CYCLE_POLICIES.test,
+      { playerEntity: player, initialEnemy: enemy },
+    )
+  }
 
-    // Bat Tu The (talent-direction-choice-plan section 6) - reset the
-    // survive-lethal charge per battle from the player's talents, then attach
-    // the session for combatSystem.killIfDead(). players[0] is the human
-    // player (companions append after index 0 in buildTurnBattle).
-    this.deps.surviveLethalGuard.beginBattle(player.selectedTalentIds)
-
-    // The Tu Reimagined (plan Task 9, D9) — Cuong Chien's Bat Tu Ba The
-    // ultimate is the FIRST line of survival; the talent guard is the
-    // extra life once the ult is spent/on cooldown.
-    const playerParticipant = this.turnBattle!.players[0]!
-    const batTuSource = this.deps.buildTheTuBatTuSurvival?.(player, playerParticipant)
-
-    this.deps.combatSystem.setSurviveLethalSession({
-      playerEntityId: playerEntity.id,
-      guard: this.deps.surviveLethalGuard,
-      // v4 (spec 2026-09-03 section 4.1) - Bat Tu The cleanse/grant on save,
-      // wired to the LIVE turn-based player pool (Phase A0 cutover).
-      surviveEffects: {
-        buffSystem: new BuffSystem(playerParticipant.buffs),
-        registry: BUFF_REGISTRY,
-        grantBuffId: 'tu_sinh_ngo',
-        cleanseDebuffs: true,
-      },
-      extraSources: batTuSource ? [batTuSource] : undefined,
-    })
+  startBattleWithPlayer(player: PlayerData, enemy: Enemy) {
+    this.beginBattleCycle(
+      this.isStageStarting ? BATTLE_CYCLE_POLICIES.stage : BATTLE_CYCLE_POLICIES.fresh,
+      { player, initialEnemy: enemy },
+    )
   }
 
   // --- Turn-battle construction (moved verbatim from GameManager) ----------
@@ -1129,82 +1272,20 @@ export class GameManagerTurnBattleOps {
   }
 
   /**
-   * Auto-repeat cycle (Completion Task 8): build a fresh TurnBattle after
-   * victory when repeatContinuously is on - keep player participants (HP/
-   * resources carry over like the survival-mode restartCycle), fresh enemies
-   * via the spawnEnemy factory.
+   * Auto-repeat cycle - fresh-battle contract (spec C1 / Mission C): the
+   * repeat delegates to beginBattleCycle like every other entry path; the
+   * repeat policy preserves ONLY the stage aggregate (binding, repeat arm,
+   * run timer, loot session) while every battle-scoped field rebuilds.
    */
   private restartTurnBattleCycle() {
-    const previous = this.turnBattle
+    const stage = this.activeStageForTurnBattle
+    const player = this.playerDataForTurnBattle
 
-    if (!previous || !this.activeStageForTurnBattle) {
+    if (!this.turnBattle || !stage || !player) {
       return
     }
 
-    const stageRef = this.activeStageForTurnBattle
-
-    this.rewardOps.resetRewardState()
-    this.presentationOps.runtime.resetPendingState()
-
-    // Task 8 (INV-14) — players are carried wholesale (same entity
-    // objects, HP/resources carry over), but battle-scoped resources do
-    // NOT carry: a new cycle is a new battle instance for currentThe —
-    // zero it on every carried entity (covers ung_the's proc pool too
-    // via the shared reset — merged contract).
-    // Kiem Tu Reimagined Task 2 — auto-repeat also reuses provider state,
-    // so battle-scoped dynamicBasic state (Kiem Pho cursor/cast log)
-    // must be reset explicitly or it leaks into the next cycle.
-    for (const participant of previous.players) {
-      resetBattleScopedResources(participant.entity)
-      participant.dynamicBasic?.resetForBattle?.()
-    }
-
-    this.turnBattle = {
-      players: previous.players,
-      enemies: [],
-      // Auto-repeat cycles within a stage do NOT re-countdown (countdown
-      // happens only at stage start) - survival restartCycle goes straight
-      // to fighting.
-      state: 'fighting',
-      totalTurnsElapsed: 0,
-      roundsElapsed: 0,
-      actedThisRound: [],
-      wave: {
-        totalEnemyCount: effectiveTotalEnemyCount(stageRef),
-        spawnedCount: 0,
-        waves: effectiveWaves(stageRef),
-        waveIndex: 0,
-        pendingEnemySpawns: [],
-      },
-    }
-
-    this.turnBattleSystem = new TurnBattleSystem(
-      this.deps.combatSystem,
-      10_000,
-      BUFF_REGISTRY,
-      (occupiedSlots?: Set<string>) => {
-        const isFinalSpawn =
-          (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
-        const template =
-          this.deps.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn) ??
-          this.lastStageEnemyTemplate
-
-        if (!template) {
-          throw new Error(`TurnBattle spawnEnemy: no template available for stage ${stageRef.id}`)
-        }
-
-        this.lastStageEnemyTemplate = template
-
-        return toTurnBattleParticipant(
-          this.placeSpawnedEnemy(enemyToCombatEntity(this.deps.enemySystem.spawn(template)), occupiedSlots),
-          this.turnBattle?.enemies.length ?? 0,
-          GENERIC_PHYSICAL_BASIC,
-        )
-      },
-      new TurnReactionManager(this.deps.eventBus),
-      this.onSkillCast,
-      this.liveStatModifiers,
-    )
+    this.beginBattleCycle(BATTLE_CYCLE_POLICIES.repeat, { player, stage })
   }
 
   // --- Stage / HUD progress ------------------------------------------------
@@ -1215,17 +1296,25 @@ export class GameManagerTurnBattleOps {
     repeatContinuously = false,
   ): boolean {
     this.isStageStarting = true
+    this.pendingLaunchStage = stage
     let started = false
     try {
       started = this.deps.stageWaves.start(player, stage, repeatContinuously)
     } finally {
       this.isStageStarting = false
+      this.pendingLaunchStage = null
     }
 
     if (!started) {
       return false
     }
 
+    // The launch chain (stageWaves.start -> launchBattle ->
+    // startBattleWithPlayer -> beginBattleCycle) already ran the full
+    // canonical cycle with the 'stage' policy - wave config, stage spawn
+    // factory, fresh engine, clock. This post-block contributes ONLY the
+    // stage-aggregate extras (Mission C: the innermost call owns the
+    // cycle; never re-invoke the canonical sequence here).
     const activeSession = this.presentationOps.session.getCurrentSession()
     if (activeSession) {
       this.presentationOps.session.end(activeSession)
@@ -1234,74 +1323,7 @@ export class GameManagerTurnBattleOps {
     this.turnBattleRepeatContinuously = repeatContinuously
     this.activeStageForTurnBattle = stage
     this.playerDataForTurnBattle = player
-
-    // Slice 6 cutover (Completion Task 8): the stage runs on TurnBattle -
-    // wave config + spawnEnemy factory wrap pickEnemyForTurnSpawn. The first
-    // bootstrap enemy spawned via launchBattle -> startBattle ->
-    // buildTurnBattle is removed here so EVERY enemy (incl. the first) spawns
-    // through the wave telegraph per the 2026-09-06 redesign.
-    if (this.turnBattle) {
-      // Gameplay fixes (2026-09-05): reset per-battle flags at every fresh
-      // startStage - otherwise the 2nd refight inherits turnBattleEndEmitted
-      // and its victory terminal never fires.
-      this.rewardOps.resetRewardState()
-      this.presentationOps.runtime.resetPendingState()
-      this.turnBattleStartedAtMs = Date.now()
-
-      // Task 8 (INV-14) — a fresh stage reuses the previous battle's
-      // player participants wholesale; battle-scoped resources still
-      // reset: the new stage IS a new battle instance for currentThe.
-      for (const participant of this.turnBattle.players) {
-        resetBattleScopedResources(participant.entity)
-      }
-
-      // Despawn the bootstrap enemy from EnemySystem too (not only
-      // turnBattle.enemies) so victory-despawn assertions stay clean.
-      for (const bootstrap of this.turnBattle.enemies) {
-        this.deps.enemySystem.despawn(bootstrap.entity.id)
-      }
-      this.turnBattle.enemies = []
-      this.turnBattle.wave = {
-        totalEnemyCount: effectiveTotalEnemyCount(stage),
-        spawnedCount: 0,
-        waves: effectiveWaves(stage),
-        waveIndex: 0,
-        pendingEnemySpawns: [],
-      }
-
-      const stageRef = stage
-
-      this.turnBattleSystem = new TurnBattleSystem(
-        this.deps.combatSystem,
-        10_000,
-        BUFF_REGISTRY,
-        (occupiedSlots?: Set<string>) => {
-          // isFinalSpawn: the last spawn of the stage is the boss (floor 10).
-          // The factory runs BEFORE resolveNextStep increments spawnedCount,
-          // so the post-spawn total = spawnedCount + 1.
-          const isFinalSpawn =
-            (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
-          const template =
-            this.deps.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn) ??
-            this.lastStageEnemyTemplate
-
-          if (!template) {
-            throw new Error(`TurnBattle spawnEnemy: no template available for stage ${stageRef.id}`)
-          }
-
-          this.lastStageEnemyTemplate = template
-
-          return toTurnBattleParticipant(
-            this.placeSpawnedEnemy(enemyToCombatEntity(this.deps.enemySystem.spawn(template)), occupiedSlots),
-            this.turnBattle?.enemies.length ?? 1,
-            GENERIC_PHYSICAL_BASIC,
-          )
-        },
-        new TurnReactionManager(this.deps.eventBus),
-        this.onSkillCast,
-        this.liveStatModifiers,
-      )
-    }
+    this.turnBattleStartedAtMs = Date.now()
 
     const session: SessionRef = {
       kind: 'combat',
@@ -1313,16 +1335,9 @@ export class GameManagerTurnBattleOps {
     }
     this.deps.eventBus.emit('presentation_session_started', session)
 
-    // A fresh battle owns a fresh boundary queue: nothing queued against the
-    // previous fight (or against no fight at all) should drain into this one.
-    this.boundaryQueue = []
-
-    // The battle is built: give it a clean turn engine and start its clock.
-    // stop() before start() matters - the previous battle may have stopped the
-    // clock at combat-over, and stop() is what clears the stale freeze reasons.
-    this.resetTurnEngine()
-    this.combatClock.stop()
-    this.combatClock.start()
+    // The cycle's clock start ran inside beginBattleCycle before this
+    // session existed - a held interactive session must freeze it now
+    // or combat ticks while the battle is not revealed.
     this.syncOffScreenFreeze()
 
     return true
@@ -1390,11 +1405,11 @@ export class GameManagerTurnBattleOps {
     // victory, so victory itself must not clear).
     this.deps.enemyManager.clear()
 
-    // The battle is destroyed: stop counting for it and drop any turn that was
-    // in flight, including its parked fallback timers. Anything queued
-    // against this battle is destroyed with it (spec section 9.2).
-    this.boundaryQueue = []
-    this.resetTurnEngine()
+    // The battle is destroyed: drop any turn that was in flight,
+    // including its parked fallback timers, and anything queued against
+    // this battle (spec section 9.2). Same teardown block beginBattleCycle
+    // runs on entry - the pending-clear cannot drift.
+    this.clearCycleEntryState()
     this.combatClock.stop()
 
     return true

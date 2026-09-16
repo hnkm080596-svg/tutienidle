@@ -26,9 +26,10 @@ describe('BattleCyclePolicy', () => {
         expect(policy.preserveLootSession).toBe(false)
       }
     }
-    // 'test' also enters fighting (devtools battles skip countdown) but
-    // preserves nothing.
-    expect(BATTLE_CYCLE_POLICIES.test.entryState).toBe('fighting')
+    // 'test' preserves nothing and keeps the 'intro' entry (raw startBattle
+    // went through intro/countdown before the refactor too - devtools
+    // pacing unchanged).
+    expect(BATTLE_CYCLE_POLICIES.test.entryState).toBe('intro')
     expect(BATTLE_CYCLE_POLICIES.fresh.entryState).toBe('intro')
     expect(BATTLE_CYCLE_POLICIES.stage.entryState).toBe('intro')
   })
