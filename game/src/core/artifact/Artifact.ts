@@ -4,7 +4,8 @@
 // nằm trong bag, không equip/craft/duplicate. Mỗi nhân vật có đúng
 // MỘT bản mệnh pháp bảo đã thiết kế sẵn theo nghề — không phải hệ
 // thống roll/nhặt tự do.
-import type { CultivationPathId } from '../player/CultivationPathKit'
+import type { CultivationPathId, PathWayRead } from '../player/CultivationPathKit'
+import { getActiveWayDefinition } from '../player/CultivationPathKit'
 
 export type ArtifactId = 'ngu_hanh_chau'
 
@@ -73,11 +74,28 @@ export interface ArtifactDefinition {
   paths: Record<ArtifactPath, ArtifactPathDefinition>
 }
 
-// Partial CÓ CHỦ Ý — Kiếm Tu/Thể Tu chưa có definition (doc §10.1),
-// không tạo placeholder. Mọi call site phải tra bảng này thay vì
+// The artifact a player's path entitles them to is WAY-owned content:
+// ngu_hanh grants ngu_hanh_chau at foundation_establishment via
+// realmRewards while ngo_dao — same base path id — deliberately has
+// none. Deriving from the active way's realmRewards keeps the way
+// definition the single authority; a corrupt/way-less pair resolves
+// no artifact (fail-closed), and Kiếm Tu/Thể Tu keep no placeholder
+// (doc §10.1). Mọi call site phải đi qua resolver này thay vì
 // hardcode 'phap_tu'.
-export const ARTIFACT_ID_BY_CULTIVATION_PATH: Partial<Record<CultivationPathId, ArtifactId>> = {
-  phap_tu: 'ngu_hanh_chau',
+export function resolveExpectedArtifactId(player: PathWayRead): ArtifactId | undefined {
+  const way = getActiveWayDefinition(player)
+
+  if (!way?.realmRewards) {
+    return undefined
+  }
+
+  for (const reward of Object.values(way.realmRewards)) {
+    if (reward.artifactId !== undefined) {
+      return reward.artifactId
+    }
+  }
+
+  return undefined
 }
 
 /**

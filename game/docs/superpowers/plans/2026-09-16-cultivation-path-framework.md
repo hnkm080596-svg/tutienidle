@@ -257,7 +257,9 @@ Only `requiredWay`. No `requiresSpecialization`/`setsSpecialization` — Git sho
 
 - [ ] Guards fail-first → implement → `npx vitest run tests/architecture src/core/player`
 - [ ] `npm run type-check` + `npm run build` + `npx vitest run` (full)
-- [ ] Playwright matrix — all six ways:
+- [ ] Playwright matrix — all six ways (P14 deferred — isolated-worktree
+      exception: browser launch unreliable inside `.agent-worktrees/**`;
+      run from an authorized main/preview checkout at branch finishing):
   - kiem_tu/hien: ritual → preset editor → orb combos in combat
   - kiem_tu/ngu: tram gate → ritual entry → kiemY→kiemDao economy → breakthrough merge
   - phap_tu/ngu_hanh: element+route atomic pick → element tree → reactions/cast

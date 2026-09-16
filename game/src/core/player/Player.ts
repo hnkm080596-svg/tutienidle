@@ -103,13 +103,12 @@ export interface PlayerData {
   // canChooseCultivationPath.
   cultivationPath?: CultivationPathId
 
-  // Cultivation Path Framework (spec 2026-09-16, M2) — the chosen WAY
+  // Cultivation Path Framework (spec 2026-09-16, M7) — the chosen WAY
   // inside the path (e.g. 'ngu_hanh', 'ngo_dao'), written together with
   // cultivationPath by CultivationPathSystem.applyPathChoice() inside
-  // the Initiation Ritual transaction. During the transition
-  // cultivationPath still carries the legacy 5-id union so unmigrated
-  // consumers keep working; cultivationWay is the authoritative branch
-  // record and the only path/way field that survives the M7 cleanup.
+  // the Initiation Ritual transaction. Post-M7 the union is exactly the
+  // three base ids and the pair is atomic — a way-less or foreign-way
+  // pair is corrupt and fails closed everywhere.
   cultivationWay?: PathWayId
 
   // Phap Tu Reimagined (spec 2026-09-14) — persistent path-choice

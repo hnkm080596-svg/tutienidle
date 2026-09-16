@@ -114,6 +114,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
 
+    player.realmId = 'qi_refining'
     player.cultivationPath = 'phap_tu'
     player.cultivationWay = 'ngo_dao'
 

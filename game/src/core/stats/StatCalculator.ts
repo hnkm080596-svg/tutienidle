@@ -349,6 +349,16 @@ export type DomainDeltaDeriver = (
 const DOMAIN_DELTA_DERIVERS = new Map<StatDomain, DomainDeltaDeriver>()
 
 export function registerDomainDeltaDeriver(domain: StatDomain, deriver: DomainDeltaDeriver): void {
+  const existing = DOMAIN_DELTA_DERIVERS.get(domain)
+
+  // Review cycle (M4-followup) — two ways sharing a domain must register
+  // the SAME deriver instance (the phap ways share one facet object); a
+  // different function overwriting silently would flip the delta channel
+  // for a domain another way owns.
+  if (existing !== undefined && existing !== deriver) {
+    throw new Error(`[stats] domain delta deriver conflict on '${domain}' — refusing to overwrite a different deriver`)
+  }
+
   DOMAIN_DELTA_DERIVERS.set(domain, deriver)
 }
 

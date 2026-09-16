@@ -27,7 +27,7 @@
 import type { PlayerData } from '../player/Player'
 import type { TechniqueManager } from '../technique/TechniqueManager'
 import { advanceArtifactRealmLevel } from '../artifact/ArtifactProgression'
-import { ARTIFACT_ID_BY_CULTIVATION_PATH } from '../artifact/Artifact'
+import { resolveExpectedArtifactId } from '../artifact/Artifact'
 import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import { getCurrentRealm } from '../realm/realmSystem'
@@ -117,9 +117,7 @@ export class BreakthroughOutcomeService {
       }
 
       if (player.realmId === 'foundation_establishment' && !player.artifact) {
-        const artifactId = player.cultivationPath
-          ? ARTIFACT_ID_BY_CULTIVATION_PATH[player.cultivationPath]
-          : undefined
+        const artifactId = resolveExpectedArtifactId(player)
 
         if (artifactId) {
           player.artifact = createDefaultArtifactProgress(artifactId)

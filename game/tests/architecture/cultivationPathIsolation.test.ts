@@ -45,17 +45,30 @@ const UPWARD_LAYERS = [
 ] as const
 
 function importSpecifiers(source: string): string[] {
-  const specs: string[] = []
-  const re = /(?:import|export)\s+(?:type\s+)?(?:[\s\S]*?from\s+)?['"]([^'"]+)['"]/g
+  return importRecords(source).map((r) => r.specifier)
+}
+
+interface ImportRecord {
+  specifier: string
+  typeOnly: boolean
+}
+
+function importRecords(source: string): ImportRecord[] {
+  const records: ImportRecord[] = []
+  const re = /(import|export)\s+(type\s+)?(?:[\s\S]*?from\s+)?['"]([^'"]+)['"]/g
   let m: RegExpExecArray | null
-  while ((m = re.exec(source)) !== null) specs.push(m[1]!)
+  while ((m = re.exec(source)) !== null) {
+    records.push({ specifier: m[3]!, typeOnly: m[2] !== undefined })
+  }
   const dyn = /import\(\s*['"]([^'"]+)['"]\s*\)/g
-  while ((m = dyn.exec(source)) !== null) specs.push(m[1]!)
-  return specs
+  while ((m = dyn.exec(source)) !== null) {
+    records.push({ specifier: m[1]!, typeOnly: false })
+  }
+  return records
 }
 
 function resolveToSrc(specifier: string, fromFile: string): string | null {
-  if (specifier.startsWith('@/')) return specifier.slice(2).replaceAll('/', sep + sep).replaceAll(sep + sep, sep)
+  if (specifier.startsWith('@/')) return specifier.slice(2).split('/').join(sep)
   if (specifier.startsWith('.')) {
     const abs = join(fromFile, '..', specifier)
     const rel = relative(SRC, abs)
@@ -96,6 +109,40 @@ const BRANCH_EXEMPT_PREFIXES: readonly string[] = [
   'core/player/',
   ...PATH_MODULE_DIRS,
   'services/save/',
+]
+
+// ---------------------------------------------------------------------------
+// Check 3 — predicate/seam import allowlist (review cycle 2, F3)
+// ---------------------------------------------------------------------------
+// Value-level imports from a path module are the accepted seam shape
+// (predicates, economy ops, providers) — but each site is an intentional
+// cross-system coupling and must be visible. A NEW import site outside
+// this allowlist fails here instead of sneaking into review.
+// Type-only imports are data contracts (OrbId, PhapTuState, ...) and
+// stay free.
+const SEAM_ALLOWLIST_DIRS: readonly string[] = [
+  // Orchestration layer — the battle-provider/ritual seams are owned here.
+  'core/game/',
+  // Presentation may render per-way UI through module predicates.
+  'components/',
+  'composables/',
+  'presentation/',
+]
+
+const SEAM_ALLOWLIST_FILES: readonly string[] = [
+  // Typed NodeEffect channels (elementTag/routeTag, kiemDaoCap) — the
+  // spec-accepted per-path consumer fields.
+  'core/progression/NodeSystem.ts',
+  // MP pills are deliberately ngu_hanh-only (documented gate).
+  'core/pill/PillSystem.ts',
+  // ngu_hanh realm-technique grant inside the dead legacy block.
+  'core/tribulation/BreakthroughOutcomeService.ts',
+  // PhapTuRoutes value helpers for cast-leveled phap machinery.
+  'core/skill/SkillSystem.ts',
+  // The Tu mechanic wiring (TheEconomy / external ward).
+  'core/battle/turn/TurnBattleSystem.ts',
+  // Save boundary validates module-owned slices (orb ids, way ownership).
+  'services/save/saveShapeValidation.ts',
 ]
 
 describe('cultivation path isolation (M10)', () => {
@@ -168,6 +215,49 @@ describe('cultivation path isolation (M10)', () => {
           const m = source.match(re)
           if (m) {
             violations.push(`${relative(GAME_ROOT, file)} [${rule}]: ${m[0].slice(0, 120)}`)
+          }
+        }
+      }
+
+      expect(violations, violations.join('\n')).toEqual([])
+    },
+  )
+
+  it(
+    'value imports from path modules stay inside the documented seam allowlist',
+    { timeout: SCAN_TIMEOUT },
+    () => {
+      const scanned = [
+        ...listAllTs(join(SRC, 'core')),
+        ...listAllTs(join(SRC, 'components')),
+        ...listAllTs(join(SRC, 'composables')),
+        ...listAllTs(join(SRC, 'stores')),
+        ...listAllTs(join(SRC, 'services')),
+        ...listAllTs(join(SRC, 'presentation')),
+        ...listVue(join(SRC, 'components')),
+      ].filter((f) => !f.endsWith('.test.ts'))
+
+      const violations: string[] = []
+      for (const file of scanned) {
+        const fromSrc = relative(SRC, file).split(sep).join('/')
+
+        // Authority, the modules themselves, and content data are exempt.
+        if (
+          fromSrc.startsWith('core/player/') ||
+          PATH_MODULE_DIRS.some((dir) => fromSrc.startsWith(dir)) ||
+          SEAM_ALLOWLIST_DIRS.some((dir) => fromSrc.startsWith(dir)) ||
+          (SEAM_ALLOWLIST_FILES as readonly string[]).includes(fromSrc)
+        ) {
+          continue
+        }
+
+        for (const record of importRecords(readTs(file))) {
+          if (record.typeOnly) continue
+          const target = resolveToSrc(record.specifier, file)
+          if (!target) continue
+          const normalized = target.split(sep).join('/') + '/'
+          if (PATH_MODULE_DIRS.some((dir) => normalized.startsWith(dir))) {
+            violations.push(`${fromSrc} -> ${record.specifier} [unlisted-seam]`)
           }
         }
       }

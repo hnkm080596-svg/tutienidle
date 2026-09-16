@@ -5,7 +5,7 @@
 // core/artifact/ArtifactRuntime.ts.
 import type { Enemy } from '../enemy/Enemy'
 import type { ArtifactGrade, ArtifactId, ArtifactProgress } from './Artifact'
-import { ARTIFACT_GRADE_ORDER, ARTIFACT_ID_BY_CULTIVATION_PATH, isArtifactGrade, isArtifactPath } from './Artifact'
+import { ARTIFACT_GRADE_ORDER, isArtifactGrade, isArtifactPath, resolveExpectedArtifactId } from './Artifact'
 import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { MaterialBag } from '../material/MaterialBag'
@@ -169,9 +169,7 @@ export function advanceArtifactRealmLevel(progress: ArtifactProgress, playerReal
  *   requirement kế (dùng getRealmIndex, KHÔNG string-compare).
  */
 export function normalizeArtifactProgress(player: PlayerData): void {
-  const expectedArtifactId = player.cultivationPath
-    ? ARTIFACT_ID_BY_CULTIVATION_PATH[player.cultivationPath]
-    : undefined
+  const expectedArtifactId = resolveExpectedArtifactId(player)
 
   const meetsAwakenGate = getRealmIndex(player.realmId) >= getRealmIndex('foundation_establishment')
 

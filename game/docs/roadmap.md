@@ -2097,6 +2097,9 @@ Do not combine them into one implementation mission.
 > adapters are gone; saves carrying `_an` path ids fail the v66 shape
 > check. Guards: `tests/architecture/cultivationPathIsolation.test.ts`,
 > `src/core/player/CultivationPathContract.test.ts`; AGENTS.md A13.
+> Per-way Playwright matrix (M10): P14 deferred — isolated-worktree
+> exception; run from an authorized main/preview checkout at branch
+> finishing.
 > The `_an` names below survive only as stat-domain/branch-tag
 > identifiers (`the_tu_an` domain, node files), never as path ids.
 

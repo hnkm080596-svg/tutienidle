@@ -17,7 +17,7 @@ import {
 } from '@/data/ui/commandWheelCatalog'
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
 import { getRealmIndex } from '@/core/realm/realmSystem'
-import { ARTIFACT_ID_BY_CULTIVATION_PATH } from '@/core/artifact/Artifact'
+import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'
 
 const ui = useUiStore()
@@ -34,9 +34,7 @@ const navigation = useBuildingNavigation()
 // commandWheelCatalog.ts.
 const disabledContext = computed<CommandWheelDisabledContext>(() => ({
   hasFoundationRealm: getRealmIndex(player.realmId) >= getRealmIndex('foundation_establishment'),
-  hasArtifactDefinition: player.cultivationPath
-    ? Boolean(ARTIFACT_ID_BY_CULTIVATION_PATH[player.cultivationPath])
-    : false,
+  hasArtifactDefinition: Boolean(resolveExpectedArtifactId(player)),
 }))
 
 function disabledReason(slot: CommandWheelSlot): string | null {

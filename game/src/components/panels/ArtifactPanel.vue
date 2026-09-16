@@ -15,7 +15,7 @@ import ArtifactExperienceBar from './artifact/ArtifactExperienceBar.vue'
 import ArtifactGradeSection from './artifact/ArtifactGradeSection.vue'
 import ArtifactPathCards from './artifact/ArtifactPathCards.vue'
 import { ARTIFACTS } from '@/data/artifact/Artifacts'
-import { ARTIFACT_ID_BY_CULTIVATION_PATH, ARTIFACT_GRADE_LABELS, ARTIFACT_GRADE_ORDER, ARTIFACT_PATH_ORDER } from '@/core/artifact/Artifact'
+import { ARTIFACT_GRADE_LABELS, ARTIFACT_GRADE_ORDER, ARTIFACT_PATH_ORDER, resolveExpectedArtifactId } from '@/core/artifact/Artifact'
 import type { ArtifactPath } from '@/core/artifact/Artifact'
 import {
   DOAN_BAO_THACH_MATERIAL_ID,
@@ -38,7 +38,7 @@ const { t } = useI18n()
 const artifactId = computed(() => {
   stateVersion.value
 
-  return player.cultivationPath ? ARTIFACT_ID_BY_CULTIVATION_PATH[player.cultivationPath] : undefined
+  return resolveExpectedArtifactId(player)
 })
 
 const definition = computed(() => (artifactId.value ? ARTIFACTS[artifactId.value] : undefined))

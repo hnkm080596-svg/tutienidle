@@ -2,10 +2,10 @@
 // Quán Khí (2026-08-20, Realm Passive & Pressure follow-up) — tách
 // path-choices ("Bước Vào Pháp Tu/Kiếm Tu") ra khỏi CharacterPanel.vue
 // thành overlay riêng, cùng pattern SkillPathPanel.vue/TechniquePanel.vue.
-// Mở qua nút "Quán Khí" bên cạnh Đột Phá (CharacterPanel.vue's
-// .character-panel__breakthrough) khi player.realmLevel >= 12 ở Phàm
-// Nhân (xem QUAN_KHI_UNLOCK_LEVEL ở đó) — panel này KHÔNG tự kiểm tra
-// lại điều kiện, chỉ tự đóng ngay sau khi chọn xong (component gọi nó
+// Mở qua TribulationOutcomeService sau khi thắng kiếp Quán Khí
+// (targetRealmId 'qi_refining'), hoặc qua entry button trên
+// CharacterPanel.vue cho Kiếm Tu — panel này KHÔNG tự kiểm tra lại
+// điều kiện, chỉ tự đóng ngay sau khi chọn xong (component gọi nó
 // đã gate rồi).
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

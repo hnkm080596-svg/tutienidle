@@ -71,6 +71,7 @@ describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉ
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.realmId = 'foundation_establishment'
     player.artifact = { ...createDefaultArtifactProgress('ngu_hanh_chau'), experience: 42 }
 

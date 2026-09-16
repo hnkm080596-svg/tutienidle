@@ -18,6 +18,7 @@ import {
   type PathWayDefinition,
 } from './CultivationPathKit'
 import { createDefaultPlayer } from './Player'
+import { listOfferableWays } from './CultivationPathSystem'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
@@ -112,6 +113,21 @@ describe('cultivation path catalog contract (M10)', () => {
     })
     runCultivationPathContractTests(module)
   }
+
+  it('every catalog (path, way) is offerable at the ritual — RITUAL_PATH_ORDER cannot silently drop a path', () => {
+    const offered = new Set(listOfferableWays(createDefaultPlayer()).map((o) => `${o.pathId}/${o.wayId}`))
+    const missing: string[] = []
+
+    for (const [pathId, module] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const wayId of Object.keys(module.ways)) {
+        if (!offered.has(`${pathId}/${wayId}`)) {
+          missing.push(`${pathId}/${wayId}`)
+        }
+      }
+    }
+
+    expect(missing, missing.join(', ')).toEqual([])
+  })
 
   it('contract runner is infra-independent (proves out on a fake module)', () => {
     const fake: CultivationPathModule = {

@@ -20,7 +20,7 @@ import {
 } from '../../core/stats/statKeyMigration'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 import { KIEM_PHO_ORB_IDS } from '../../core/kiem-tu/KiemTuState'
-import { CULTIVATION_PATH_MODULES } from '../../core/player/CultivationPathKit'
+import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
 import { isPhapTuNguHanh } from '../../core/phap-tu/PhapTuPath'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
@@ -222,6 +222,51 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.cultivationWay', message: 'phải là string hoặc vắng mặt' })
   }
 
+  // Pair coherence (review cycle, I1) — applyPathChoice writes the
+  // (path, way) pair + path slice atomically and the ritual advances
+  // realmId in the same commit, so the save boundary rejects every
+  // incoherent shape instead of loading a permanently soft-locked
+  // player: both-set-or-neither, the way must be owned by its path
+  // module, a mortal can never carry the pair, and 'kiem_tu' requires
+  // its kiemTu slice (provider attach + NguKiemDao reads assume it).
+  const hasPath = player.cultivationPath !== undefined
+  const hasWay = player.cultivationWay !== undefined
+
+  if (hasPath !== hasWay) {
+    issues.push({
+      path: 'player.cultivationWay',
+      message: 'cultivationPath và cultivationWay phải cùng vắng mặt hoặc cùng set (commit nguyên tử)',
+    })
+  } else if (
+    hasPath &&
+    typeof player.cultivationPath === 'string' &&
+    Object.prototype.hasOwnProperty.call(CULTIVATION_PATH_MODULES, player.cultivationPath) &&
+    typeof player.cultivationWay === 'string' &&
+    !Object.prototype.hasOwnProperty.call(
+      CULTIVATION_PATH_MODULES[player.cultivationPath as CultivationPathId].ways,
+      player.cultivationWay,
+    )
+  ) {
+    issues.push({
+      path: 'player.cultivationWay',
+      message: `way '${player.cultivationWay}' không thuộc path '${player.cultivationPath}'`,
+    })
+  }
+
+  if (player.realmId === 'mortal' && hasPath) {
+    issues.push({
+      path: 'player.cultivationPath',
+      message: 'không thể set khi realmId là mortal (nghi lễ thăng cảnh trong cùng commit)',
+    })
+  }
+
+  if (player.cultivationPath === 'kiem_tu' && player.kiemTu === undefined) {
+    issues.push({
+      path: 'player.kiemTu',
+      message: "bắt buộc khi cultivationPath là 'kiem_tu' (applyPathChoice tạo slice nguyên tử)",
+    })
+  }
+
   // Phap Tu Reimagined — required PlayerData.phapTu: { element, route },
   // both nullable until the atomic pick; a missing/garbage object would
   // crash selectPhapTuElement/resolveRouteProfile reads downstream.
@@ -290,6 +335,13 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       issues.push({ path: 'player.kiemTu', message: 'phải là object hoặc vắng mặt' })
     } else {
       const kiemTu = player.kiemTu
+
+      // M6 retired kiemTu.mode — a save still carrying it predates the
+      // way model (or was hand-edited); reject rather than persist the
+      // dead key forever.
+      if ('mode' in kiemTu) {
+        issues.push({ path: 'player.kiemTu.mode', message: 'field đã bị retire từ v66 (cultivationWay thay thế)' })
+      }
 
       const preset = kiemTu.preset
 

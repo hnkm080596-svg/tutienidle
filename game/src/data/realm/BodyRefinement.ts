@@ -31,8 +31,8 @@ export interface BodyRefinementTierDefinition {
   // yêu cầu cụ thể: Bì/Nhục/Cốt/Huyết/Tạng/Mạch mở lần lượt ở tầng
   // 2/4/6/8/10/12) — ĐỘC LẬP với thứ tự tuần tự (phải làm đầy tầng
   // trước MỚI tới lượt tầng này, xem BodyRefinementSystem.investTinhHoa());
-  // cả 2 điều kiện đều phải thoả. Tầng cuối (Luyện Mạch) mở cùng lúc
-  // Quán Khí (tầng 12, xem CharacterPanel.vue's QUAN_KHI_UNLOCK_LEVEL)
+  // cả 2 điều kiện đều phải thoả. Tầng cuối (Luyện Mạch) mở cùng cửa
+  // sổ Quán Khí (tầng 12 trở đi, xem TribulationOutcomeService)
   // — cố ý, chừa tầng 12-18 làm cửa sổ hoàn thiện trước khi Quán Khí.
   requiredRealmLevel: number
 }
