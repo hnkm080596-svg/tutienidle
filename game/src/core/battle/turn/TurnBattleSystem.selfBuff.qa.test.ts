@@ -230,7 +230,14 @@ describe('AR-03: Self-buff execution and leech healing', () => {
       state: 'fighting',
     }
 
-    system.resolveNextStep(battle)
+    // Same dice-pinning discipline as the leech test above: unpinned the
+    // hit can miss and the ailments never roll (observed as a load flake).
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5)
+    try {
+      system.resolveNextStep(battle)
+    } finally {
+      randomSpy.mockRestore()
+    }
 
     // Enemy should have both buffs, with trung_doc having 2 stacks.
     expect(enemyP.buffs.getAllById('troi_chan')).toHaveLength(1)
