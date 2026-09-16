@@ -220,14 +220,14 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     // Keys không khai báo trong PlayerData — mô phỏng save bị sửa tay /
     // payload lạ.
-    const polluted = save.player as Record<string, unknown>
+    const polluted = save.player as unknown as Record<string, unknown>
     polluted.__evil = { nested: true }
     polluted.unknownTopLevel = 'x'
-    ;(save.player.baseStats as Record<string, unknown>).__evilStat = 999
+    ;(save.player.baseStats as Record<string, number>).__evilStat = 999
 
     player.restoreFromSave(save)
 
-    const state = player.$state as Record<string, unknown>
+    const state = player.$state as unknown as Record<string, unknown>
 
     expect(state.__evil).toBeUndefined()
     expect(state.unknownTopLevel).toBeUndefined()
