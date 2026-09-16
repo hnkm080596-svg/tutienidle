@@ -549,3 +549,87 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
     expect(save).toBeUndefined()
   })
 })
+
+describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8)', () => {
+  it('new character: first durable save commits BEFORE tick loop / enterGame (order via invocationCallOrder)', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('entered')
+    expect(stubs.player.save).toHaveBeenCalledTimes(1)
+
+    const saveOrder = (stubs.player.save as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0]!
+    const enterOrder = stubs.boot.enterGame.mock.invocationCallOrder[0]!
+    expect(saveOrder).toBeLessThan(enterOrder)
+    expect(stubs.clock.start.mock.invocationCallOrder[0]!).toBeGreaterThan(saveOrder)
+
+    lifecycle.stopAll()
+  })
+
+  it('new character save non-ok → outcome failed, boot.fail + onError, tick loop and clock NEVER start', async () => {
+    const stubs = makeStubs()
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'unavailable',
+      message: 'storage blocked',
+      retryable: false,
+    })
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
+    expect(stubs.onError).toHaveBeenCalledWith('storage blocked')
+    expect(lifecycle.getTickHandle()).toBeUndefined()
+    expect(stubs.clock.start).not.toHaveBeenCalled()
+    expect(stubs.intervals).toHaveLength(0)
+
+    lifecycle.stopAll()
+  })
+
+  it('conflict save result maps to the session-conflict message', async () => {
+    const stubs = makeStubs()
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'conflict',
+      currentRevision: 2,
+    })
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.onError).toHaveBeenCalledWith('Save đã thay đổi ở một phiên khác.')
+
+    lifecycle.stopAll()
+  })
+
+  it('stopAll during the first-save await → continuation is stale, no fail/enter/tick (generation fence extends over the new await)', async () => {
+    const stubs = makeStubs()
+
+    let releaseSave: (value: unknown) => void = () => undefined
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockImplementation(
+      () => new Promise((resolve) => (releaseSave = resolve)),
+    )
+
+    const lifecycle = makeLifecycle(stubs)
+    const boot = lifecycle.bootGame({ createNewCharacter: true })
+
+    // Park bootGame AT the player.save await before stopping — calling
+    // stopAll() synchronously only exercises the existing fence after
+    // coordinator.reset(), leaving the new post-save fence uncovered.
+    await vi.waitFor(() => expect(stubs.player.save).toHaveBeenCalled())
+    lifecycle.stopAll()
+    releaseSave({ status: 'ok', revision: 1 })
+
+    const outcome = await boot
+
+    expect(outcome.status).toBe('skipped')
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
+    expect(stubs.boot.fail).not.toHaveBeenCalled()
+    expect(stubs.intervals).toHaveLength(0)
+    expect(stubs.clock.start).not.toHaveBeenCalled()
+  })
+})

@@ -1086,5 +1086,8 @@
       "open": "Open {name}",
       "viewRequirements": "View unlock requirements for {name}"
     }
+  },
+  "save": {
+    "conflict": "Save was changed by another session."
   }
 }

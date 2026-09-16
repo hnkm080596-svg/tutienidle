@@ -73,7 +73,6 @@ import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
 import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
 import {
-  buildGameSave,
   deleteSave,
   restoreGameSession,
   SAVE_RESET_REQUEST_EVENT,
@@ -649,25 +648,12 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
     player.baseStats[stat] += amount
   }
 
-  const outcome = await bootGame(true)
-
-  // ARCH-013/L04 (review round 1): chỉ persist khi boot THẬT SỰ chạy grants
-  // — outcome 'skipped' (teardown giữa load / double-invoke) nghĩa là
-  // onNewCharacter chưa grant technique/skill/buildings/starter materials,
-  // lưu lúc này sẽ ghi một nhân vật thiếu starter content; 'failed' đã bị
-  // bootFlow.fail() xử lý rồi, không có gì hợp lệ để save.
-  if (outcome.status !== 'entered') {
-    return
-  }
-
-  // R10 (AR-12): buildGameSave() owns making player.$state's reactive
-  // Pinia proxy safe to snapshot — callers just pass it through.
-  const result = await cloudSaveCoordinator.save(buildGameSave(player.$state, gameManager))
-  if (result.status !== 'ok') {
-    bootError.value =
-      result.status === 'conflict' ? 'Save đã thay đổi ở một phiên khác.' : result.message
-    bootFlow.fail()
-  }
+  // The first durable save now lives inside the boot transaction
+  // (useAppLifecycle.bootGame): 'entered' is only returned after the write
+  // commits, and the tick loop never starts on a failed save — the old
+  // post-boot save block here let the runtime tick on an unpersisted
+  // character (audit T1-8).
+  await bootGame(true)
 }
 
 onMounted(() => {

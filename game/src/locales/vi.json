@@ -1086,5 +1086,8 @@
       "open": "Mở {name}",
       "viewRequirements": "Xem yêu cầu mở {name}"
     }
+  },
+  "save": {
+    "conflict": "Save đã thay đổi ở một phiên khác."
   }
 }

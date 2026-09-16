@@ -1,7 +1,9 @@
 import { onBeforeUnmount, type Ref } from 'vue'
 import type { GameManager } from '../core/game/GameManager'
 import type { CloudSaveCoordinator } from '../services/cloudSave/CloudSaveCoordinator'
+import type { CloudSaveWriteResult } from '../services/cloudSave/CloudSaveService'
 import { ESSENCE_STREAM_ARRIVAL_EVENT } from '../core/battle/BattleEvents'
+import { i18n } from '@/i18n'
 
 /**
  * Remediation Task 5 (2026-09-05) — App boot/tick/listener lifecycle
@@ -44,7 +46,7 @@ export interface UseAppLifecycleDeps {
   }
   coordinator: Pick<CloudSaveCoordinator, 'load' | 'save' | 'reset'>
   player: {
-    save: (gameManager: GameManager) => Promise<unknown>
+    save: (gameManager: GameManager) => Promise<CloudSaveWriteResult>
     $state: object
   }
   gameManager: GameManager
@@ -289,6 +291,33 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         onRestoreOk?.(offline)
       } else {
         onNewCharacter?.()
+
+        // Audit T1-8 fix — the first durable save is INSIDE the boot
+        // transaction: a new character must not reach a ticking runtime
+        // until the write commits. Previously App.vue saved AFTER boot
+        // returned 'entered', so a failed/conflicted write left the tick
+        // loop running on an unpersisted character (bootError showed but
+        // the world kept advancing). persistPlayer is NOT used here: its
+        // autosave-failure toast/warn dedupe is runtime-loop behaviour,
+        // and persistProgress()'s entryStage!=='game' gate would skip the
+        // write anyway at this point in boot.
+        const firstSave = await player.save(gameManager)
+
+        // Same generation fence as the load await above: a stopAll() that
+        // landed during the write makes everything below stale.
+        if (bootGeneration !== lifecycleGeneration) {
+          return { status: 'skipped' }
+        }
+
+        if (firstSave.status !== 'ok') {
+          onError(
+            firstSave.status === 'conflict'
+              ? i18n.global.t('save.conflict')
+              : firstSave.message,
+          )
+          boot.fail()
+          return { status: 'failed' }
+        }
       }
 
       clock.start()
