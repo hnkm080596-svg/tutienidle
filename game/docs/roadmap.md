@@ -1484,8 +1484,16 @@ Asset routing must validate normalized containment before moving files.
    coordinator route is the sole visibility authority (standalone tests mock
    the route adapter); E2E `--workers=4` READY-deadline flake addressed via
    `VITE_PRESENTATION_DEADLINE_SCALE` env scaling the DeadlineScheduler
-   (wired in App.vue + playwright.config webServer env) — the multi-worker
-   verification run itself is still outstanding post-merge.
+   (wired in App.vue + playwright.config webServer env). Verified 2026-09-16
+   post-merge: at `--workers=4` the scale lets the heavy combat specs through
+   (turn-combat-hud 5.3m PASS, overlay-layout x3, wave-vfx) but 3
+   timing-predicate specs still flake — each passes deterministically at
+   `--workers=1`, and the failing set shifts between runs, matching the
+   config's measured diagnosis: `workers: 2` stays the reliable ceiling on
+   this machine; the scale is a mitigation, not a cure. One real failure
+   surfaced during verification: standing-slot-panel's card oracle was
+   stale against the 2026-09-15 nametag-off ruling (SlotView showLabel
+   opt-in) — fixed to assert aria-label.
 ```
 
 ### R12 close-out — ✅ DONE 2026-09-14 (branch `feat/r11-r14-missions`)

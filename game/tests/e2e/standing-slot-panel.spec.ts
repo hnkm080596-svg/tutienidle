@@ -182,11 +182,11 @@ test.describe('Standing slot panel (P14)', () => {
 
     // The seeded companion must show up as a queue card next to the player
     // card (proves the save-seed restored, no test-only grant hook needed).
-    // Queue cards are shared SlotView slots now: the caption carries the id
-    // and the monogram adds its first letter, so match the id as a substring.
+    // Queue cards are shared SlotView slots with showLabel off (2026-09-15
+    // nametag ruling): the id lives on the accessible name, not the text.
     const queueCards = panel.locator('.tran-phap-panel__card')
     await expect(queueCards).toHaveCount(2)
-    await expect(queueCards.nth(1)).toContainText(SEEDED_COMPANION.definitionId)
+    await expect(queueCards.nth(1)).toHaveAttribute('aria-label', SEEDED_COMPANION.definitionId)
 
     // Drag the player card (queue index 0) into cell (1,1) = index 4.
     await dragCardToCell(page, 0, 4)
