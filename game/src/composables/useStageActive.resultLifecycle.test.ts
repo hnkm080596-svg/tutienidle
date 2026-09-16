@@ -2,43 +2,33 @@
 //
 // Result lifecycle (2026-08-26) — khi thắng/thua, StageWaveSystem gọi
 // stageManager.stop() nhưng CombatScene vẫn đang hiển thị kết quả:
-// Home/DongFu CHỈ được hiện lại khi combatSceneDismissed === true hoặc
-// chưa từng vào combat. Regression gốc: victory → useStageActive trả
-// false → DongFuScene che canvas dù modal kết quả đang hiện.
+// Home/DongFu CHỈ được hiện lại khi route coordinator đã rời 'combat'
+// (bấm "Tiếp Tục"/"Về Động Phủ" → request({target:'home'})). Regression
+// gốc: victory → useStageActive trả false → DongFuScene che canvas dù
+// modal kết quả đang hiện.
+//
+// R12 cleanup: visibility authority is the coordinator's activeRoute —
+// the ui-store flags (combatSceneDismissed / isTribulationSceneActive)
+// that used to drive these tests are gone; the route ref plays that role.
 import { describe, expect, it } from 'vitest'
 import { computed, createApp, h, ref, type ComputedRef, type Ref } from 'vue'
 import { createPinia } from 'pinia'
 import {
   BUMP_STATE_KEY,
-  GAME_MANAGER_KEY,
   STATE_VERSION_KEY,
 } from '@/composables/useGameState'
-import type { GameManager } from '@/core/game/GameManager'
-import type { TurnBattle, TurnBattleState } from '@/core/battle/turn/TurnBattleSystem'
-import type { Stage } from '@/core/stage/Stage'
-import { useUiStore } from '@/stores/ui'
+import { VUE_ROUTE_ADAPTER_KEY, type Route } from '@/presentation/PresentationContracts'
+import type { VueRouteAdapter } from '@/presentation/VueRouteAdapter'
 import { useStageActive } from '@/composables/useStageActive'
 import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
 
-interface FakeGameManagerOptions {
-  activeStage: boolean
-
-  battleState: TurnBattleState | null
-}
-
-function createHarness(options: FakeGameManagerOptions) {
+function createHarness(initialRoute: Route) {
   const stateVersion: Ref<number> = ref(0)
+  const route: Ref<Route> = ref(initialRoute)
 
-  let current = { ...options }
-
-  const fakeGameManager = {
-    stageManager: {
-      get: () => (current.activeStage ? ({ stageId: 's' } as never) : null),
-    },
-
-    getTurnBattle: (): Pick<TurnBattle, 'state'> | null =>
-      current.battleState === null ? null : ({ state: current.battleState } as never),
-  } as unknown as GameManager
+  const fakeRouteAdapter = {
+    activeRoute: computed(() => route.value),
+  } as unknown as VueRouteAdapter
 
   const container = document.createElement('div')
 
@@ -59,29 +49,20 @@ function createHarness(options: FakeGameManagerOptions) {
 
   app.use(createPinia())
 
-  app.provide(GAME_MANAGER_KEY, fakeGameManager)
   app.provide(STATE_VERSION_KEY, stateVersion)
   app.provide(BUMP_STATE_KEY, () => {})
+  app.provide(VUE_ROUTE_ADAPTER_KEY, fakeRouteAdapter)
 
   app.mount(container)
 
   return {
-    ui: useUiStore(),
+    route,
 
-    read: () => {
-      // Bump stateVersion như App.vue tick() để computed đánh giá lại.
-      stateVersion.value++
+    read: () => ({
+      stageActive: stageActive!.value,
 
-      return {
-        stageActive: stageActive!.value,
-
-        combatSceneActive: combatSceneActive!.value,
-      }
-    },
-
-    setCore(next: Partial<FakeGameManagerOptions>) {
-      current = { ...current, ...next }
-    },
+      combatSceneActive: combatSceneActive!.value,
+    }),
 
     unmount: () => {
       app.unmount()
@@ -92,36 +73,29 @@ function createHarness(options: FakeGameManagerOptions) {
 }
 
 describe('useStageActive / useCombatSceneActive — result lifecycle', () => {
-  it('chưa từng vào combat: Home hiện (stageActive=false), Combat Scene tắt', () => {
-    const harness = createHarness({ activeStage: false, battleState: null })
-
-    expect(harness.ui.combatOrigin).toBeNull()
+  it('chưa từng vào combat (route home): Home hiện (stageActive=false), Combat Scene tắt', () => {
+    const harness = createHarness('home')
 
     expect(harness.read()).toEqual({ stageActive: false, combatSceneActive: false })
 
     harness.unmount()
   })
 
-  it('fighting: Home ẩn, Combat Scene hiện', () => {
-    const harness = createHarness({ activeStage: true, battleState: 'fighting' })
-
-    harness.ui.enterCombatScene('stage')
+  it('fighting (route combat): Home ẩn, Combat Scene hiện', () => {
+    const harness = createHarness('combat')
 
     expect(harness.read()).toEqual({ stageActive: true, combatSceneActive: true })
 
     harness.unmount()
   })
 
-  it('REGRESSION fighting → victory: Combat Scene vẫn active, Home VẪN ẨN, modal hiện', () => {
-    const harness = createHarness({ activeStage: true, battleState: 'fighting' })
-
-    harness.ui.enterCombatScene('stage')
+  it('REGRESSION fighting → victory: route vẫn combat, Home VẪN ẨN, modal hiện', () => {
+    const harness = createHarness('combat')
 
     expect(harness.read().combatSceneActive).toBe(true)
 
-    // Thắng: StageWaveSystem set battle.state='victory' rồi stageManager.stop().
-    harness.setCore({ activeStage: false, battleState: 'victory' })
-
+    // Thắng: battle.state='victory' + stageManager.stop() phía domain —
+    // route không đổi, CombatScene vẫn mount đến khi player bấm tiếp.
     const view = harness.read()
 
     // Trước fix: stageActive=false tại đây khiến DongFuScene che canvas.
@@ -131,14 +105,12 @@ describe('useStageActive / useCombatSceneActive — result lifecycle', () => {
     harness.unmount()
   })
 
-  it('victory → bấm "Tiếp Tục" (exitCombatScene): lúc này Home mới hiện', () => {
-    const harness = createHarness({ activeStage: false, battleState: 'victory' })
-
-    harness.ui.enterCombatScene('stage')
+  it('victory → bấm "Tiếp Tục" (request home): lúc này Home mới hiện', () => {
+    const harness = createHarness('combat')
 
     expect(harness.read()).toEqual({ stageActive: true, combatSceneActive: true })
 
-    harness.ui.exitCombatScene()
+    harness.route.value = 'home'
 
     expect(harness.read()).toEqual({ stageActive: false, combatSceneActive: false })
 
@@ -146,15 +118,21 @@ describe('useStageActive / useCombatSceneActive — result lifecycle', () => {
   })
 
   it('defeat có hành vi tương tự victory', () => {
-    const harness = createHarness({ activeStage: false, battleState: 'defeat' })
-
-    harness.ui.enterCombatScene('stage')
+    const harness = createHarness('combat')
 
     expect(harness.read()).toEqual({ stageActive: true, combatSceneActive: true })
 
-    harness.ui.exitCombatScene()
+    harness.route.value = 'home'
 
     expect(harness.read()).toEqual({ stageActive: false, combatSceneActive: false })
+
+    harness.unmount()
+  })
+
+  it('route tribulation cũng ẩn Home (stageActive=true) nhưng Combat Scene tắt', () => {
+    const harness = createHarness('tribulation')
+
+    expect(harness.read()).toEqual({ stageActive: true, combatSceneActive: false })
 
     harness.unmount()
   })

@@ -334,9 +334,15 @@
       },
       "search": {
         "materialPlaceholder": "Tìm nguyên liệu...",
-        "materialAria": "Tìm nguyên liệu theo tên"
+        "materialAria": "Tìm nguyên liệu theo tên",
+        "equipmentPlaceholder": "Tìm trang bị...",
+        "equipmentAria": "Tìm trang bị theo tên",
+        "pillPlaceholder": "Tìm đan dược...",
+        "pillAria": "Tìm đan dược theo tên"
       },
       "filterAria": "Lọc theo nhóm nguyên liệu",
+      "filterAriaEquipment": "Lọc theo vị trí trang bị",
+      "filterAriaPill": "Lọc theo loại hiệu ứng",
       "groups": {
         "all": "Tất cả"
       },
@@ -1062,6 +1068,15 @@
         "dia": "Thiên Niên",
         "thien": "Vạn Niên",
         "tien": "Thượng Cổ"
+      },
+      "pillEffect": {
+        "cultivation": "Tu Vi",
+        "heal": "Hồi Phục",
+        "regen": "Hồi Theo Giây",
+        "buff": "Buff",
+        "permanentStat": "Chỉ Số Vĩnh Viễn",
+        "randomMainStat": "Chỉ Số Ngẫu Nhiên",
+        "skillInsight": "Cảm Ngộ"
       }
     }
   },

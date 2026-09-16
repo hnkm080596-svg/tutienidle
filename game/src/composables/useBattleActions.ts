@@ -110,7 +110,6 @@ export function useBattleActions() {
       }
 
       ui.battleRunMode = 'manual'
-      ui.exitCombatScene()
       gameManager.eventBus.emit('combat_scene_exit', undefined)
 
       return true

@@ -334,9 +334,15 @@
       },
       "search": {
         "materialPlaceholder": "Search materials...",
-        "materialAria": "Search materials by name"
+        "materialAria": "Search materials by name",
+        "equipmentPlaceholder": "Search equipment...",
+        "equipmentAria": "Search equipment by name",
+        "pillPlaceholder": "Search pills...",
+        "pillAria": "Search pills by name"
       },
       "filterAria": "Filter by material group",
+      "filterAriaEquipment": "Filter by equipment slot",
+      "filterAriaPill": "Filter by effect type",
       "groups": {
         "all": "All"
       },
@@ -1062,6 +1068,15 @@
         "dia": "Millennium",
         "thien": "Myriad Year",
         "tien": "Primordial"
+      },
+      "pillEffect": {
+        "cultivation": "Cultivation",
+        "heal": "Healing",
+        "regen": "Regen Over Time",
+        "buff": "Buff",
+        "permanentStat": "Permanent Stat",
+        "randomMainStat": "Random Main Stat",
+        "skillInsight": "Insight"
       }
     }
   },

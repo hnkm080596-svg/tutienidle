@@ -54,13 +54,12 @@ const ui = useUiStore()
 // xem MainScene.vue), chỉ DOM chrome xung quanh nó ẩn/hiện theo cờ này.
 const routeAdapter = inject(VUE_ROUTE_ADAPTER_KEY, null)
 
-// Scene visibility follows the coordinator route. The ui store flags stay only
-// as the fallback for standalone tests that mount without a coordinator.
+// Scene visibility follows the coordinator route — the single authority for
+// which game screen is mounted (the ui-store fallback flags were retired
+// with the R12 cleanup).
 const isCombatSceneActive = useCombatSceneActive()
-const isTribulationSceneActive = computed(() =>
-  routeAdapter
-    ? routeAdapter.activeRoute.value === 'tribulation'
-    : ui.isTribulationSceneActive,
+const isTribulationSceneActive = computed(
+  () => routeAdapter?.activeRoute.value === 'tribulation',
 )
 const isFullSceneActive = computed(
   () => isCombatSceneActive.value || isTribulationSceneActive.value,

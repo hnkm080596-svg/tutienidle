@@ -9,7 +9,7 @@
 // Building đã xây mở LeftPanel; nút nâng cấp sống trong header panel,
 // không còn chip nổi trên world hotspot.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { nextTick } from 'vue'
+import { computed, nextTick } from 'vue'
 import { createApp, defineComponent, h, ref } from 'vue'
 import { createPinia } from 'pinia'
 import { i18n } from '@/i18n'
@@ -23,6 +23,8 @@ import {
   STATE_VERSION_KEY,
 } from '@/composables/useGameState'
 import { vTooltip } from '@/directives/tooltip'
+import { VUE_ROUTE_ADAPTER_KEY, type Route } from '@/presentation/PresentationContracts'
+import type { VueRouteAdapter } from '@/presentation/VueRouteAdapter'
 import { useUiStore } from '@/stores/ui'
 import type { Material } from '@/core/material/Material'
 import { buildings as gameBuildings } from '@/data/building/buildings'
@@ -86,6 +88,12 @@ function mountHomeBuildings(
   app.provide(GAME_MANAGER_KEY, gameManager)
   app.provide(STATE_VERSION_KEY, stateVersion)
   app.provide(BUMP_STATE_KEY, () => { stateVersion.value += 1 })
+  // Route-driven visibility (R12): stageActive derives from the
+  // coordinator route; provide a 'home' stub so mounted components can
+  // resolve it.
+  app.provide(VUE_ROUTE_ADAPTER_KEY, {
+    activeRoute: computed(() => 'home' as Route),
+  } as unknown as VueRouteAdapter)
 
   app.directive('tooltip', vTooltip)
 

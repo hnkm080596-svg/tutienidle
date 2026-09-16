@@ -1,14 +1,15 @@
-// CombatPreload — danh sách texture CombatScene cần, queue MỘT LẦN dùng
-// chung cho CẢ MainScene.preload() và CombatScene.preload().
+// CombatPreload — canonical enumeration of every texture CombatScene
+// needs. No production caller loads through it anymore: the 'combat'
+// asset bundle (AssetBundleCatalog → AssetLoaderScene) is ensured by the
+// presentation coordinator before the scene activates. Its live role is
+// the parity authority — tests pin the bundle descriptors to the exact
+// key set this helper would queue, so a texture added here without a
+// catalog entry (or vice versa) fails the suite.
 //
-// Fix "lần đầu vào combat không thấy spawn animation" (2026-08-26):
-// trước đây chỉ CombatScene.preload() queue các ảnh này — lần ĐẦU tiên
-// scene start (ngay sau 'battle_start'), loader phải tải ~7-25MB qua
-// dev server trong khi phase spawn telegraph (~1s) đã chạy xong phía
-// core → scene kịp subscribe khi mọi quái đã materialize. Eager-load từ
-// MainScene (chạy lúc boot game, TRƯỚC mọi trận) khiến lần start đầu
-// của CombatScene có loader queue RỖNG → create() gần như tức thời,
-// listener gắn đúng phase spawn.
+// History: it used to be queued from both MainScene.preload() and
+// CombatScene.preload() (the latter as a transitional net until the
+// 2026-09-16 live pass proved the bundle covers every key — cold combat
+// entry queued 0 textures).
 import type Phaser from 'phaser'
 import { GOURD_TEXTURE_KEY, GOURD_TEXTURE_URL } from './RewardGourd'
 import {

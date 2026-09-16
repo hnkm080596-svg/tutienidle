@@ -78,26 +78,16 @@ export function triggerBreakthroughAction(
         },
       )
 
-      if (result.status === 'entered') {
-        useUiStore().enterTribulationScene()
-        return true
-      }
-      return false
+      return result.status === 'entered'
     })()
   }
 
   // Fallback for tests without presentation
-  const started = tribulationOutcomeService.startTribulationPrepared(
+  return tribulationOutcomeService.startTribulationPrepared(
     player,
     gameManager,
     targetRealmId,
   )
-
-  if (started) {
-    useUiStore().enterTribulationScene()
-  }
-
-  return started
 }
 
 /** Presentation sequencing driven by the typed domain outcome. */
@@ -182,7 +172,6 @@ export function checkTribulationOutcomeAction(
       presentOutcome(result)
 
       director.clear()
-      useUiStore().exitTribulationScene()
 
       return true
     }
@@ -217,7 +206,6 @@ export function checkTribulationOutcomeAction(
       presentSettlementError()
 
       director.clear()
-      useUiStore().exitTribulationScene()
 
       return true
     }

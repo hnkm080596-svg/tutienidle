@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // 9.6 — DefeatPanel 10s auto-return-home fallback: 10 giây không tương
-// tác → tự về Động Phủ (ui.exitCombatScene + combat_scene_exit), giống
+// tác → tự về Động Phủ (combat_scene_exit + battleRunMode=manual), giống
 // fallback đã hứa trong comment panel (dùng useAutoRetryCountdown(10)
 // chạy song song nhánh 3s auto-refight).
 // Mount theo pattern project (createApp + h + provide, KHÔNG
@@ -76,18 +76,15 @@ afterEach(() => {
 })
 
 describe('CombatDefeatPanel — 9.6 10s auto-return-home fallback', () => {
-  it('10s không tương tác → returnHome tự động (exitCombatScene + combat_scene_exit)', async () => {
+  it('10s không tương tác → returnHome tự động (combat_scene_exit + manual)', async () => {
     vi.useFakeTimers()
     const gm = makeGameManager()
     const panel = mountPanel(gm, 'manual')
-
-    const exitSpy = vi.spyOn(panel.ui, 'exitCombatScene')
 
     await vi.advanceTimersByTimeAsync(10_000)
     await nextTick()
 
     expect(panel.ui.battleRunMode).toBe('manual')
-    expect(exitSpy).toHaveBeenCalledOnce()
     expect(gm.eventBus.emit).toHaveBeenCalledWith('combat_scene_exit', undefined)
 
     panel.unmount()
@@ -98,12 +95,10 @@ describe('CombatDefeatPanel — 9.6 10s auto-return-home fallback', () => {
     const gm = makeGameManager()
     const panel = mountPanel(gm, 'repeat')
 
-    const exitSpy = vi.spyOn(panel.ui, 'exitCombatScene')
-
     await vi.advanceTimersByTimeAsync(3_000)
     await nextTick()
 
-    expect(exitSpy).not.toHaveBeenCalled()
+    expect(gm.eventBus.emit).not.toHaveBeenCalledWith('combat_scene_exit', undefined)
     expect(panel.ui.battleRunMode).toBe('repeat')
 
     panel.unmount()
@@ -114,7 +109,6 @@ describe('CombatDefeatPanel — 9.6 10s auto-return-home fallback', () => {
     const gm = makeGameManager()
     const panel = mountPanel(gm, 'manual')
 
-    const exitSpy = vi.spyOn(panel.ui, 'exitCombatScene')
     const t = (i18n.global as unknown as { t: (k: string) => string }).t
 
     const returnButton = Array.from(panel.container.querySelectorAll('button')).find((b) =>
@@ -126,12 +120,11 @@ describe('CombatDefeatPanel — 9.6 10s auto-return-home fallback', () => {
     returnButton!.click()
     await nextTick()
 
-    expect(exitSpy).toHaveBeenCalledOnce()
+    expect(gm.eventBus.emit).toHaveBeenCalledWith('combat_scene_exit', undefined)
 
     await vi.advanceTimersByTimeAsync(15_000)
     await nextTick()
 
-    expect(exitSpy).toHaveBeenCalledOnce()
     expect(gm.eventBus.emit).toHaveBeenCalledTimes(1)
 
     panel.unmount()

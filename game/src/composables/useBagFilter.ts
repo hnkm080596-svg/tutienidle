@@ -312,3 +312,84 @@ export function useBagFilter(
 
   return { filtered, visibleCount, isFiltering, clear }
 }
+
+// ===== Generic name-search + single-axis group filter (C1) =====
+// Material keeps the specialized composable above (family grouping);
+// equipment/pill only need search + one group dimension. Group identity
+// is a plain string so consumers pick their own axis (equipment slot,
+// pill effect type) without this file importing domain types.
+
+export interface EntryFilterOptions<G extends string = string> {
+  searchQuery: Ref<string>
+
+  activeGroup: Ref<G | 'all'>
+}
+
+export interface EntryFilterState<T> {
+  filtered: ComputedRef<T[]>
+
+  visibleCount: ComputedRef<number>
+
+  isFiltering: ComputedRef<boolean>
+
+  clear: () => void
+}
+
+export function useEntryFilter<T>(
+  entries: ComputedRef<T[]>,
+  options: EntryFilterOptions,
+  matchers: {
+    name: (entry: T) => string
+    group: (entry: T) => string
+  },
+): EntryFilterState<T> {
+  const { searchQuery, activeGroup } = options
+
+  const filtered = computed<T[]>(() => {
+    const query = normalizeSearchText(searchQuery.value.trim())
+
+    return entries.value.filter((entry) => {
+      if (activeGroup.value !== 'all' && matchers.group(entry) !== activeGroup.value) {
+        return false
+      }
+
+      return !query || normalizeSearchText(matchers.name(entry)).includes(query)
+    })
+  })
+
+  const visibleCount = computed(() => filtered.value.length)
+
+  const isFiltering = computed(
+    () => searchQuery.value.trim() !== '' || activeGroup.value !== 'all',
+  )
+
+  function clear() {
+    searchQuery.value = ''
+
+    activeGroup.value = 'all'
+  }
+
+  return { filtered, visibleCount, isFiltering, clear }
+}
+
+// Pill group axis = first effect type (mirrors the 'effect' sort
+// comparator, which also reads effects[0].type). 'other' catches pills
+// with no effects. Label keys resolved by consumer via t().
+export type PillEffectGroup =
+  | 'heal' | 'cultivation' | 'permanent_stat' | 'random_main_stat'
+  | 'regen' | 'skill_insight' | 'buff' | 'other'
+
+export const PILL_EFFECT_GROUPS: readonly PillEffectGroup[] = [
+  'cultivation', 'heal', 'regen', 'buff', 'permanent_stat', 'random_main_stat', 'skill_insight', 'other',
+]
+
+export const PILL_EFFECT_GROUP_LABEL_KEYS: Record<PillEffectGroup, string> = {
+  cultivation: 'bag.filter.pillEffect.cultivation',
+  heal: 'bag.filter.pillEffect.heal',
+  regen: 'bag.filter.pillEffect.regen',
+  buff: 'bag.filter.pillEffect.buff',
+  permanent_stat: 'bag.filter.pillEffect.permanentStat',
+  random_main_stat: 'bag.filter.pillEffect.randomMainStat',
+  skill_insight: 'bag.filter.pillEffect.skillInsight',
+  other: 'bag.filter.group.other',
+}

@@ -2,7 +2,7 @@
 // 6A-T6 (2026-09-01, spec §3) — confirm modal thoát trận, extract từ
 // CombatControlBar (L173-182 + confirmExit L47-55): scene exit-zone
 // (canvas) emit 'combat_exit_request' → modal này mở; logic confirm
-// giữ NGUYÊN (abandonBattle → manual → exitCombatScene →
+// giữ NGUYÊN (abandonBattle → manual → combat_scene_exit →
 // combat_scene_exit) - now runs inside the closed curtain via
 // useBattleActions.exitCombatToHome. Gate: Stage only (Tribulation has
 // its own flow).

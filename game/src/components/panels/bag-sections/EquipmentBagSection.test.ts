@@ -4,7 +4,7 @@
 // UNEQUIPPED candidate carries compareWith when a worn counterpart
 // exists (spec section 4 paired compare cards).
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createApp, h, ref } from 'vue'
+import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import EquipmentBagSection from './EquipmentBagSection.vue'
 import { GameManager } from '@/core/game/GameManager'
@@ -16,6 +16,7 @@ import { i18n } from '@/i18n'
 import { useTooltip } from '@/composables/useTooltip'
 import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
+import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
 
 function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInstance {
@@ -119,6 +120,121 @@ describe('EquipmentBagSection - item-info-card cell contract', () => {
     expect(content && 'compareWith' in content).toBe(false)
 
     useTooltip().dismissTooltip()
+    mounted.unmount()
+  })
+})
+
+describe('EquipmentBagSection - filter bar (search + slot chips + count)', () => {
+  function bagItem(instanceId: string, itemId: string, slot: EquipmentSlot): EquipmentInstance {
+    return makeInstance({
+      instanceId,
+      itemId,
+      slot,
+      equipped: false,
+      grade: 'cuu_pham',
+      quality: 'hoang',
+      realmLevel: 1,
+      mainStat: {
+        id: `${instanceId}:main`,
+        sourceId: instanceId,
+        sourceType: 'equipment',
+        stat: 'might',
+        flat: 12,
+      },
+    })
+  }
+
+  // gridCells pads the page with null cells; only item-backed slots get
+  // the filled marker class.
+  function filledSlots(container: HTMLElement): HTMLElement[] {
+    return Array.from(container.querySelectorAll<HTMLElement>('.slot-view--filled'))
+  }
+
+  function chipByLabel(container: HTMLElement, label: string): HTMLElement {
+    const chip = Array.from(
+      container.querySelectorAll<HTMLElement>('.bag-section__chips .chip'),
+    ).find((el) => el.textContent?.includes(label))
+
+    if (!chip) {
+      throw new Error(`chip "${label}" not found`)
+    }
+
+    return chip
+  }
+
+  function countText(container: HTMLElement): string {
+    return container.querySelector('.bag-section__count')?.textContent ?? ''
+  }
+
+  function mountTwoItems() {
+    return mountSection((manager) => {
+      manager.equipmentBag.add(bagItem('sword', 'base_kiem', 'weapon'))
+      manager.equipmentBag.add(bagItem('armor', 'base_bao', 'armor'))
+    })
+  }
+
+  it('search narrows rendered cells by name (diacritic-insensitive)', async () => {
+    const mounted = mountTwoItems()
+
+    const input = mounted.container.querySelector<HTMLInputElement>('.bag-section__search')
+
+    expect(input).not.toBeNull()
+    expect(input!.getAttribute('aria-label')).toBe('Tìm trang bị theo tên')
+
+    input!.value = 'kiem'
+    input!.dispatchEvent(new Event('input', { bubbles: true }))
+    await nextTick()
+
+    const filled = filledSlots(mounted.container)
+
+    expect(filled).toHaveLength(1)
+    expect(filled[0]!.getAttribute('aria-label')).toContain('Kiếm')
+    expect(countText(mounted.container)).toBe('1 món')
+
+    mounted.unmount()
+  })
+
+  it('selecting a slot chip filters cells to that equipment slot', async () => {
+    const mounted = mountTwoItems()
+
+    const armorChip = chipByLabel(mounted.container, 'Giáp')
+
+    armorChip.dispatchEvent(new Event('click', { bubbles: true }))
+    await nextTick()
+
+    const filled = filledSlots(mounted.container)
+
+    expect(filled).toHaveLength(1)
+    expect(filled[0]!.getAttribute('aria-label')).toContain('Bào')
+    expect(armorChip.getAttribute('aria-pressed')).toBe('true')
+    expect(countText(mounted.container)).toBe('1 món')
+
+    mounted.unmount()
+  })
+
+  it("'Tất cả' chip restores the list; re-clicking the active chip toggles it off", async () => {
+    const mounted = mountTwoItems()
+
+    const armorChip = chipByLabel(mounted.container, 'Giáp')
+
+    armorChip.dispatchEvent(new Event('click', { bubbles: true }))
+    await nextTick()
+    expect(filledSlots(mounted.container)).toHaveLength(1)
+
+    chipByLabel(mounted.container, 'Tất cả').dispatchEvent(new Event('click', { bubbles: true }))
+    await nextTick()
+    expect(filledSlots(mounted.container)).toHaveLength(2)
+    expect(countText(mounted.container)).toBe('2 món')
+
+    // Toggle-off contract: clicking the already-active chip clears the group.
+    armorChip.dispatchEvent(new Event('click', { bubbles: true }))
+    await nextTick()
+    expect(filledSlots(mounted.container)).toHaveLength(1)
+
+    armorChip.dispatchEvent(new Event('click', { bubbles: true }))
+    await nextTick()
+    expect(filledSlots(mounted.container)).toHaveLength(2)
+
     mounted.unmount()
   })
 })
