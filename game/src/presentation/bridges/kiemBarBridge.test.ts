@@ -139,6 +139,15 @@ describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
     expect(reader()).toEqual({ current: 45, max: MAX_THE, label: 'Thế', externalWard: undefined })
   })
 
+  it('collapsed save (the_tu + ung_the way) → same Thế bar as the legacy id (M5)', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
+      { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
+    )
+
+    expect(reader()).toEqual({ current: 45, max: MAX_THE, label: 'Thế', externalWard: undefined })
+  })
+
   it('entity-baked maxThe wins over MAX_THE (node bonus)', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, { currentThe: 100, maxThe: 120, stats: { maxHp: 400 } }),

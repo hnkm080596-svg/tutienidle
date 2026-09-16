@@ -178,6 +178,7 @@ import {
 import { collectTheTuKitModifiers } from '../the-tu/TheTuKitModifiers'
 import { collectTheTuAnMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
 import { TheTuBatTuSurvival } from '../the-tu/TheTuBatTuSurvival'
+import { isTheTuHien, isTheTuUngThe } from '../the-tu/TheTuPath'
 import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
 import {
   NEUTRAL_ROUTE_PROFILE,
@@ -786,7 +787,7 @@ export class GameManager {
       // survival source reads the participant's live ultimate slot and
       // buff pool; node-resolved duration comes off the baked kit clone.
       buildTheTuBatTuSurvival: (player, participant) => {
-        if (player.cultivationPath !== 'the_tu') return undefined
+        if (!isTheTuHien(player)) return undefined
         if (this.progressionOps.getNodeLevel('cuong_chien', player) <= 0) return undefined
 
         return new TheTuBatTuSurvival({
@@ -978,13 +979,13 @@ export class GameManager {
       return BASIC_ATTACKS_BY_BUILD.kiem_tu!
     }
 
-    if (player.cultivationPath === 'the_tu') {
+    if (isTheTuHien(player)) {
       // The Tu Reimagined (spec section 5, INV-3) — root-owned kit, else
       // the generic melee fallback only.
       return this.resolveTheTuKit(player)?.basic ?? GENERIC_PHYSICAL_BASIC
     }
 
-    if (player.cultivationPath === 'the_tu_an') {
+    if (isTheTuUngThe(player)) {
       // Spec section 6.1 — fixed kit granted at path choice; the built
       // clone's grantsBuffsAtBuild plants ung_the + owned-root markers.
       return this.resolveTheTuAnKit(player).basic
@@ -1162,7 +1163,7 @@ export class GameManager {
 
     // The Tu Reimagined (plan Task 6) — Hien kits are native
     // TurnSkillDefinitions resolved by owned root (see resolveTheTuKit).
-    if (player.cultivationPath === 'the_tu') {
+    if (isTheTuHien(player)) {
       const kit = this.resolveTheTuKit(player)
 
       return kit ? { special: kit.special, ultimate: kit.ultimate } : {}
@@ -1170,7 +1171,7 @@ export class GameManager {
 
     // Spec section 6.1 — the fixed An kit (special/ultimate are not
     // root-gated; roots gate the reactive mechanics via markers).
-    if (player.cultivationPath === 'the_tu_an') {
+    if (isTheTuUngThe(player)) {
       const kit = this.resolveTheTuAnKit(player)
 
       return {

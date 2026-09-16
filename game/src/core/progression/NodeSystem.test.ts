@@ -301,16 +301,16 @@ describe('nodePathApplies — cultivation path ownership gate', () => {
     expect(mods[0]!.flat).toBe(3)
   })
 
-  it('a the_tu_an node requires the_tu_an specifically — a plain the_tu player cannot purchase or aggregate it', () => {
+  it('a legacy the_tu_an tag resolves to the the_tu FAMILY — way membership is the inner gate (M5)', () => {
     const registry = { getAll: () => [theTuAnNode()] }
+    // The node carries only requiredCultivationPath ('the_tu_an'): the
+    // path gate resolves it to the base the_tu family, so EITHER
+    // persisted shape owns it at path level. requiredWay (a sibling
+    // gate, NodeSystem.way.test.ts) is what separates hien from
+    // ung_the inside the family.
     const theTuPlayer = playerWith({ cultivationPath: 'the_tu', skillInsight: 50 })
 
-    expect(canPurchaseNode(theTuPlayer, theTuAnNode())).toBe(false)
-    expect(purchaseNode(theTuPlayer, theTuAnNode())).toBe(false)
-
-    // Sibling path does not inherit ownership — injected levels stay inert.
-    theTuPlayer.nodeLevels = { the_tu_an_only: 1 }
-    expect(aggregateNodeStatModifiers(registry, theTuPlayer)).toEqual([])
+    expect(canPurchaseNode(theTuPlayer, theTuAnNode())).toBe(true)
 
     const theTuAnPlayer = playerWith({ cultivationPath: 'the_tu_an', skillInsight: 50 })
     expect(canPurchaseNode(theTuAnPlayer, theTuAnNode())).toBe(true)

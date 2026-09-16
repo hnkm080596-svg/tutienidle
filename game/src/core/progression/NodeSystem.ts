@@ -1,6 +1,7 @@
 import type { PlayerData } from '../player/Player'
 import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } from './ProgressionNode'
 import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
+import { resolveBasePathId } from '../player/PathWayIdentity'
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
@@ -289,9 +290,25 @@ export function nodeModeApplies(player: PlayerData, node: ProgressionNode): bool
  * Ownership gate — a node authored for one cultivation path can be
  * purchased/upgraded by, and aggregates effects for, only a player on
  * that same path. requiredCultivationPath undefined = path-agnostic.
+ *
+ * M5 — both sides resolve through resolveBasePathId so a stamp written
+ * in either era ('the_tu' base or the legacy 'the_tu_an' id) matches
+ * either persisted shape; WAY isolation inside the path family is
+ * nodeWayApplies' job below. A player with no path fails the gate.
  */
 export function nodePathApplies(player: PlayerData, node: ProgressionNode): boolean {
-  return node.requiredCultivationPath === undefined || node.requiredCultivationPath === player.cultivationPath
+  if (node.requiredCultivationPath === undefined) {
+    return true
+  }
+
+  if (player.cultivationPath === undefined) {
+    return false
+  }
+
+  return (
+    resolveBasePathId(node.requiredCultivationPath) ===
+    resolveBasePathId(player.cultivationPath)
+  )
 }
 
 /**

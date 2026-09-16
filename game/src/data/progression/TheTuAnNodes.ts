@@ -394,8 +394,12 @@ const TRO_BRANCH: ProgressionNode[] = [
   },
 ]
 
-// requiredCultivationPath is stamped once here — every node in this
-// file belongs to the the_tu_an path (NodeSystem.nodePathApplies).
+// M5 — path/way stamps once here: every node belongs to the BASE
+// the_tu path family (the legacy 'the_tu_an' id resolves to the same
+// family via NodeSystem.nodePathApplies) and to the UNG_THE way only
+// (nodeWayApplies). A hien player can neither purchase nor aggregate
+// this tree; the branchTag stays 'the_tu_an' — it is the tree-view
+// display key, not the gameplay gate.
 export const THE_TU_AN_NODES: ProgressionNode[] = [
   ...TRUNK_QI,
   ...TRUNK_FOUNDATION,
@@ -405,4 +409,10 @@ export const THE_TU_AN_NODES: ProgressionNode[] = [
   ...PHAN_BRANCH,
   TRO_ROOT,
   ...TRO_BRANCH,
-].map((node): ProgressionNode => ({ ...node, requiredCultivationPath: 'the_tu_an' }))
+].map(
+  (node): ProgressionNode => ({
+    ...node,
+    requiredCultivationPath: 'the_tu',
+    requiredWay: 'ung_the',
+  }),
+)

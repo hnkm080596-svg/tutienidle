@@ -26,7 +26,7 @@ import {
   getNextArtifactGrade,
 } from '@/core/artifact/ArtifactProgression'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
-import { getPathWayDefinition } from '@/core/player/CultivationPathKit'
+import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import { formatStat } from '@/core/stats/StatLabels'
 
 const ui = useUiStore()
@@ -44,7 +44,9 @@ const artifactId = computed(() => {
 const definition = computed(() => (artifactId.value ? ARTIFACTS[artifactId.value] : undefined))
 
 const cultivationPathLabel = computed(() => {
-  const way = player.cultivationPath ? getPathWayDefinition(player.cultivationPath) : undefined
+  // M5 — the active way (cultivationWay authoritative) names the path,
+  // so a collapsed ('the_tu','ung_the') save labels Ứng Thế correctly.
+  const way = getActiveWayDefinition(player)
 
   return way?.name ?? t('panels.artifact.noPath')
 })

@@ -10,6 +10,14 @@ import {
   PHAP_TU_NGO_DAO_WAY,
   PHAP_TU_NGU_HANH_WAY,
 } from '../phap-tu/PhapTuPath'
+import { THE_TU_HIEN_WAY, THE_TU_UNG_THE_WAY } from '../the-tu/TheTuPath'
+import { LEGACY_PATH_TO_WAY } from './PathWayIdentity'
+
+// M5 — the legacy-id -> (base path, way) adapter lives in the
+// PathWayIdentity leaf so domain systems can resolve era-tolerant path
+// identity without importing this catalog; re-exported so existing
+// consumers keep their import site.
+export { LEGACY_PATH_TO_WAY } from './PathWayIdentity'
 
 // M4 — the ngo_dao kit identity lives in the Phap Tu path module
 // (core/phap-tu/PhapTuPath.ts); re-exported so existing consumers keep
@@ -197,43 +205,15 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathBaseId, Cu
   the_tu: {
     id: 'the_tu',
     name: 'Thể Tu',
+    // M5 — the way definitions live in the path module
+    // (core/the-tu/TheTuPath.ts) alongside the machinery they own: the
+    // way predicates and the per-way stat facets ('the_tu' endurance /
+    // 'the_tu_an' reactive chances).
     ways: {
-      hien: {
-        id: 'hien',
-        pathId: 'the_tu',
-        name: 'Thể Tu — Kim Cang Bất Hoại Thể',
-        element: 'metal',
-        techniqueId: 'kim_cang_bat_hoai_the',
-        // The Tu Reimagined (T5) — root-mutex kit: the chosen
-        // progression root (cuong_chien XOR tran_the) resolves the kit
-        // at battle build; no loadout tuple.
-      },
-
-      // Former the_tu_an kit — offered at the Initiation Ritual only
-      // when the mortal skill huy_quyen reaches Lv3.
-      ung_the: {
-        id: 'ung_the',
-        pathId: 'the_tu',
-        name: 'Thể Tu Ẩn — Ứng Thế Thần Quyết',
-        techniqueId: 'ung_the_than_quyet',
-        offerGate: { requiresSkillLevel: { skillId: 'huy_quyen', level: 3 } },
-        usesTheResource: true,
-      },
+      hien: THE_TU_HIEN_WAY,
+      ung_the: THE_TU_UNG_THE_WAY,
     },
   },
-}
-
-// Transition adapter (deleted in M7) — every legacy 5-id path maps to
-// its (base path, way) pair so existing readers keep working against
-// the module catalog without knowing way ids.
-export const LEGACY_PATH_TO_WAY: Readonly<
-  Record<CultivationPathId, { pathId: CultivationPathBaseId; wayId: PathWayId }>
-> = {
-  kiem_tu: { pathId: 'kiem_tu', wayId: 'hien' },
-  phap_tu: { pathId: 'phap_tu', wayId: 'ngu_hanh' },
-  phap_tu_an: { pathId: 'phap_tu', wayId: 'ngo_dao' },
-  the_tu: { pathId: 'the_tu', wayId: 'hien' },
-  the_tu_an: { pathId: 'the_tu', wayId: 'ung_the' },
 }
 
 // Resolves a legacy path id to its way definition via
@@ -248,6 +228,40 @@ export function getPathWayDefinition(pathId: CultivationPathId): PathWayDefiniti
   }
 
   return CULTIVATION_PATH_MODULES[mapping.pathId].ways[mapping.wayId]
+}
+
+/**
+ * Structural read shape for the active-way resolver — PlayerData and
+ * presentation-side player slices both satisfy it; fields stay
+ * nullable because slices keep the persisted `| null` convention.
+ */
+export interface PathWayRead {
+  cultivationPath?: CultivationPathId | null
+  cultivationWay?: PathWayId | null
+}
+
+/**
+ * M5 — resolves the ACTIVE way definition: cultivationWay is
+ * authoritative once the ritual writes it; a legacy-shaped player
+ * (cultivationPath only, no way) derives through LEGACY_PATH_TO_WAY so
+ * pre-M2 reads keep working. Unlike getPathWayDefinition this honours
+ * the persisted way id, so collapsed saves ('the_tu' + 'ung_the')
+ * resolve the same way as transition saves ('the_tu_an' + 'ung_the').
+ * A (path, way) pair the catalog does not know returns undefined.
+ */
+export function getActiveWayDefinition(player: PathWayRead): PathWayDefinition | undefined {
+  const mapping =
+    player.cultivationPath !== undefined && player.cultivationPath !== null
+      ? LEGACY_PATH_TO_WAY[player.cultivationPath]
+      : undefined
+
+  if (!mapping) {
+    return undefined
+  }
+
+  const wayId = player.cultivationWay ?? mapping.wayId
+
+  return CULTIVATION_PATH_MODULES[mapping.pathId].ways[wayId]
 }
 
 // M7 deletion adapter — the INVERSE of LEGACY_PATH_TO_WAY: resolves a

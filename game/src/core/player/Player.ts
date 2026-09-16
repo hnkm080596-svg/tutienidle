@@ -1,9 +1,5 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
-import {
-  collectActiveWayStatModifiers,
-  getTheTuAnReactiveStatModifiers,
-  getTheTuEnduranceStatModifiers,
-} from './CultivationPathSystem'
+import { collectActiveWayStatModifiers } from './CultivationPathSystem'
 import { createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
@@ -457,18 +453,13 @@ export function resolvePlayerFinalStats(
   // reads the resolved attribute totals and emits its gated modifiers
   // BEFORE calculateStats runs -- the totals read is not a second
   // attribute derivation (INV-6), and the emitted modifiers are the ONLY
-  // attunement->MP channel (INV-10). M4: the Phap Tu attunement emitter
-  // moved behind the way facet (collectActiveWayStatModifiers) so both
-  // phap_tu ways emit identically. The Tu paths still emit via their
-  // hardcoded channels (spec 2026-09-15 section 3) until M5/M6 move them
-  // behind the same facet: the_tu_an attribute->chance and the_tu
-  // vitality->enduranceThreshold ride the same totals read.
+  // gated channels (INV-10). M4 moved the Phap Tu attunement emitter
+  // behind the way facet (collectActiveWayStatModifiers); M5 moves the
+  // The Tu channels the same way — hien's vitality->enduranceThreshold
+  // and ung_the's attribute->chance emissions are declared on the way
+  // stat facets in core/the-tu/TheTuPath.ts, keyed by cultivationWay.
   const attributeTotals = resolveAttributeTotals(player.baseStats, allModifiers)
-  const pathModifiers = [
-    ...collectActiveWayStatModifiers(player, attributeTotals),
-    ...getTheTuAnReactiveStatModifiers(player, attributeTotals),
-    ...getTheTuEnduranceStatModifiers(player, attributeTotals),
-  ]
+  const pathModifiers = collectActiveWayStatModifiers(player, attributeTotals)
 
   return calculateStats(player.baseStats, [...allModifiers, ...pathModifiers])
 }

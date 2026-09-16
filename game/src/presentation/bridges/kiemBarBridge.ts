@@ -23,7 +23,11 @@ import type { OrbId, KiemTuState } from '@/core/kiem-tu/KiemTuState'
 import { isKiemPhoProviderHandle } from '@/core/kiem-tu/KiemPhoProvider'
 import { forgeCost } from '@/core/kiem-tu/NguKiemDao'
 import { getRealmIndex } from '@/core/realm/realmSystem'
-import { getPathWayDefinition, type CultivationPathId } from '@/core/player/CultivationPathKit'
+import {
+  getActiveWayDefinition,
+  type CultivationPathId,
+  type PathWayId,
+} from '@/core/player/CultivationPathKit'
 import type { GameManager } from '@/core/game/GameManager'
 import {
   readOptionalGate,
@@ -60,9 +64,12 @@ export const KIEM_BAR_READER_KEY = 'kiemBarReader' as const
 export interface KiemBarPlayerState {
   kiemTu?: KiemTuState
   realmId: string
-  // The Tu Reimagined (T22) — the path kit's usesTheResource flag
+  // The Tu Reimagined (T22) — the active way's usesTheResource flag
   // decides whether the bar shows The; no path-id checks in the HUD.
+  // M5 — read via getActiveWayDefinition so the collapsed save shape
+  // ('the_tu' + 'ung_the') resolves the same way as 'the_tu_an'.
   cultivationPath?: CultivationPathId
+  cultivationWay?: PathWayId
 }
 
 /**
@@ -93,9 +100,10 @@ export function makeKiemBarReader(
       : undefined
 
     if (!kiemTu) {
-      // The Tu An (T22) — The proc-fuel pool, gated by the way flag so
-      // the HUD stays data-driven (no path-id checks outside way data).
-      if (player.cultivationPath && getPathWayDefinition(player.cultivationPath)?.usesTheResource) {
+      // The Tu An (T22) — The proc-fuel pool, gated by the active way's
+      // flag so the HUD stays data-driven (no path-id checks outside
+      // way data). getActiveWayDefinition resolves both persisted eras.
+      if (getActiveWayDefinition(player)?.usesTheResource) {
         return {
           current: battleEntity?.currentThe ?? 0,
           max: battleEntity?.maxThe ?? MAX_THE,

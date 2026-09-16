@@ -132,14 +132,17 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
 }
 
 // Cultivation path id -> the combat stat domains that path owns.
-// TurnBattleAdapter reads this when declaring a participant's
-// EffectiveStatContext.activeDomains. Kept as an explicit map rather
-// than a cast of the path id into StatDomain: a path id and a stat
-// domain are different concepts, and a future path may OWN an existing
-// domain without BEING one — Phap Tu An ('phap_tu_an') still owns the
-// phap_tu stat channel and gets a row here when that path lands. Meta
-// domains (production/cultivation/equipment_meta/artifact/realm) never
-// appear here.
+// M5 — the way stat facet (PathWayDefinition.stats.domains) is the
+// authority for way-owned domains; resolveActiveWayStatDomains
+// consults it first and falls back to this map for facet-less ways
+// (kiem_tu until M6) and legacy-shaped reads. TurnBattleAdapter no
+// longer reads this map — the caller resolves the active way's
+// domains. Kept as an explicit map rather than a cast of the path id
+// into StatDomain: a path id and a stat domain are different concepts,
+// and a path may OWN an existing domain without BEING one — Phap Tu An
+// ('phap_tu_an') owns the phap_tu stat channel, The Tu An owns
+// 'the_tu_an'. Meta domains (production/cultivation/equipment_meta/
+// artifact/realm) never appear here.
 export const CULTIVATION_PATH_STAT_DOMAINS: Record<string, readonly StatDomain[]> = {
   phap_tu: ['phap_tu'],
   // Phap Tu Reimagined Task 7 — the hidden path OWNS the phap_tu stat

@@ -28,9 +28,9 @@ import SkillDetailView from './skill-path/SkillDetailView.vue'
 import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
 import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
+import { isTheTuHien, isTheTuUngThe } from '@/core/the-tu/TheTuPath'
 import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
-import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import type { ElementType } from '@/core/element/ElementType'
 import type { Skill } from '@/core/skill/Skill'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
@@ -48,14 +48,15 @@ const { stateVersion } = useStateVersion()
 // (TheTuNodes/TheTuAnNodes) dưới branchTag trùng path id: single-tag
 // pass-through view qua viewBranchTags(), toàn bộ root (mutex cho Hiện,
 // non-mutex cho Ẩn) render trong cùng một tree.
-const THE_TU_TREE_TAGS: Partial<Record<CultivationPathId, string>> = {
-  the_tu: 'the_tu',
-  the_tu_an: 'the_tu_an',
-}
-
-const theTuTreeTag = computed(() =>
-  player.cultivationPath ? THE_TU_TREE_TAGS[player.cultivationPath] : undefined,
-)
+//
+// M5 — tree selection resolves on the WAY, never the raw path id: the
+// branchTag strings are display keys (the An tree keeps 'the_tu_an'
+// even though its nodes stamp the base 'the_tu' path family).
+const theTuTreeTag = computed(() => {
+  if (isTheTuHien(player)) return 'the_tu'
+  if (isTheTuUngThe(player)) return 'the_tu_an'
+  return undefined
+})
 
 const showTree = computed(
   () =>

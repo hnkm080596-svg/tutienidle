@@ -56,7 +56,11 @@ describe('the_tu_an node tree (spec 8.2)', () => {
 
   it('roots are purchasable together — buying all three is legal', () => {
     const registry = registryWithNodes()
-    const player = playerWith({ realmId: 'qi_refining', cultivationPath: 'the_tu_an' })
+    const player = playerWith({
+      realmId: 'qi_refining',
+      cultivationPath: 'the_tu_an',
+      cultivationWay: 'ung_the',
+    })
 
     buy(player, registry, 'ho_mon')
     buy(player, registry, 'phan_mon')
@@ -109,7 +113,11 @@ describe('the_tu_an node tree (spec 8.2)', () => {
 describe('collectTheTuAnMechanicModifiers', () => {
   it('sums per-level channels across owned nodes; unowned contribute nothing', () => {
     const registry = registryWithNodes()
-    const player = playerWith({ realmId: 'qi_refining', cultivationPath: 'the_tu_an' })
+    const player = playerWith({
+      realmId: 'qi_refining',
+      cultivationPath: 'the_tu_an',
+      cultivationWay: 'ung_the',
+    })
 
     expect(collectTheTuAnMechanicModifiers(registry, player).maxTheBonus).toBe(0)
 

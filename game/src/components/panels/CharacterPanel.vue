@@ -10,7 +10,7 @@ import type { Stats } from '@/core/stats/StatBlock'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
-import { getPathWayDefinition } from '@/core/player/CultivationPathKit'
+import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getMainStatCap } from '@/core/stats/StatCap'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
@@ -34,7 +34,10 @@ function openQuanKhi() {
   ui.openStandalonePanel('quan_khi')
 }
 
-const chosenKit = computed(() => player.cultivationPath ? getPathWayDefinition(player.cultivationPath) : undefined)
+// M5 — the active way (cultivationWay authoritative) drives the kit
+// label + aura colour; getActiveWayDefinition resolves both persisted
+// eras ('the_tu_an' legacy and the collapsed 'the_tu' + way shape).
+const chosenKit = computed(() => getActiveWayDefinition(player))
 
 // Thiên Phú (talent-direction-choice-plan §7) — hiển thị thiên phú đã chọn
 // (tên + description) đọc từ selectedTalentIds qua getTalentDefinition;

@@ -3,29 +3,23 @@ import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import type { PlayerData } from './Player'
 import {
   CULTIVATION_PATH_MODULES,
+  getActiveWayDefinition,
   getLegacyPathIdForWay,
-  getPathWayDefinition,
   isCultivationPathOffered,
   LEGACY_PATH_TO_WAY,
   type CultivationPathBaseId,
   type CultivationPathId,
   type PathWayDefinition,
   type PathWayId,
+  type PathWayRead,
 } from './CultivationPathKit'
 import { freshKiemTuState } from '../kiem-tu/KiemTuState'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
+import { CULTIVATION_PATH_STAT_DOMAINS, type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
 import { phapTuAttunementMpModifiers } from '../phap-tu/PhapTuPath'
-import {
-  THE_TU_AN_DEX_COUNTER_PER_POINT,
-  THE_TU_AN_DEX_FOLLOWUP_PER_POINT,
-  THE_TU_AN_DEX_PROTECT_PER_POINT,
-  THE_TU_AN_INT_FOLLOWUP_PER_POINT,
-  THE_TU_AN_STR_COUNTER_PER_POINT,
-  THE_TU_AN_VIT_PROTECT_PER_POINT,
-  THE_TU_VITALITY_ENDURANCE_THRESHOLD_PER_POINT,
-} from '../stats/TheTuStatChannels'
+import { theTuAnReactiveModifiers, theTuEnduranceModifiers } from '../the-tu/TheTuPath'
 
 // D12 (stat-system-reimagined spec section 5): Linh Can (attunement)
 // feeds MP through the phap_tu domain gate. M4 — the emitter and its
@@ -161,24 +155,34 @@ export function getActiveWay(player: PlayerData): PathWayId | undefined {
  * written, LEGACY_PATH_TO_WAY fallback for legacy-shaped saves — and
  * delegates to the way's PathWayStatFacet. resolvePlayerFinalStats calls
  * this before calculateStats so facet emissions are gated by their own
- * domain tags. Ways without a facet (kiem_tu/the_tu until M5/M6) emit
- * nothing; their hardcoded emitters below stay put until then.
+ * domain tags. Ways without a facet (kiem_tu until M6) emit nothing.
  */
 export function collectActiveWayStatModifiers(
   player: PlayerData,
   totals: Pick<Stats, MainStatKey>,
 ): readonly StatModifier[] {
-  const mapping =
-    player.cultivationPath !== undefined ? LEGACY_PATH_TO_WAY[player.cultivationPath] : undefined
-
-  if (!mapping) {
-    return []
-  }
-
-  const wayId = player.cultivationWay ?? mapping.wayId
-  const way = CULTIVATION_PATH_MODULES[mapping.pathId].ways[wayId]
+  const way = getActiveWayDefinition(player)
 
   return way?.stats?.collectModifiers(player, totals) ?? []
+}
+
+/**
+ * M5 — the active way's OWNED stat domains: the way's stat facet is the
+ * authority when it declares one (hien -> 'the_tu', ung_the ->
+ * 'the_tu_an', both phap_tu ways -> 'phap_tu'); facet-less ways fall
+ * back to the legacy path-id map row so kiem_tu keeps working until
+ * M6. Consumed by GameManagerTurnBattleOps when stamping
+ * participant.activeDomains — the mid-battle domain deltaDerivers gate
+ * on it, so a collapsed save must not resolve the WRONG way's domain
+ * (raw-path lookup would give 'the_tu' for ('the_tu','ung_the')).
+ */
+export function resolveActiveWayStatDomains(player: PathWayRead): readonly StatDomain[] | undefined {
+  return (
+    getActiveWayDefinition(player)?.stats?.domains ??
+    (player.cultivationPath !== undefined && player.cultivationPath !== null
+      ? CULTIVATION_PATH_STAT_DOMAINS[player.cultivationPath]
+      : undefined)
+  )
 }
 
 /**
@@ -270,84 +274,14 @@ export function isPhapTuAnEligible(player: PlayerData): boolean {
 
 // ---------------------------------------------------------------------------
 // The Tu Reimagined (spec 2026-09-15 section 3) — the_tu_an reactive
-// chances + the_tu endurance channel. Same D12 two-channel pattern as
-// phap_tu above: assembly emitters read resolveAttributeTotals and emit
-// domain-gated modifiers BEFORE calculateStats; deltaDerivers re-emit
-// deltas mid-battle for entities owning the domain.
+// chances + the_tu endurance channel. M5 — the emitters and the
+// path-id gates moved to the The Tu path module (core/the-tu/
+// TheTuPath.ts): each way's PathWayStatFacet owns the assembly-time
+// channel via collectActiveWayStatModifiers above. Only the mid-battle
+// deltaDeriver registrations stay here — the derivers see attribute
+// deltas for entities whose activeDomains already resolved the way's
+// domain (resolveActiveWayStatDomains), never the base.
 // ---------------------------------------------------------------------------
-
-function theTuAnReactiveModifiers(
-  totals: Pick<Stats, MainStatKey>,
-  idPrefix: string,
-): StatModifier[] {
-  // RAW uncapped linear values — the REACTIVE_CHANCE_CAP is a metadata
-  // bound consumed at the roll/display site, never inside the pipeline.
-  return [
-    {
-      id: `${idPrefix}:counterChance`,
-      sourceId: 'the_tu_an',
-      sourceType: 'attribute',
-      stat: 'counterChance',
-      flat:
-        totals.strength * THE_TU_AN_STR_COUNTER_PER_POINT +
-        totals.dexterity * THE_TU_AN_DEX_COUNTER_PER_POINT,
-      domain: 'the_tu_an',
-    },
-    {
-      id: `${idPrefix}:protectChance`,
-      sourceId: 'the_tu_an',
-      sourceType: 'attribute',
-      stat: 'protectChance',
-      flat:
-        totals.vitality * THE_TU_AN_VIT_PROTECT_PER_POINT +
-        totals.dexterity * THE_TU_AN_DEX_PROTECT_PER_POINT,
-      domain: 'the_tu_an',
-    },
-    {
-      id: `${idPrefix}:followUpChance`,
-      sourceId: 'the_tu_an',
-      sourceType: 'attribute',
-      stat: 'followUpChance',
-      flat:
-        totals.dexterity * THE_TU_AN_DEX_FOLLOWUP_PER_POINT +
-        totals.intelligence * THE_TU_AN_INT_FOLLOWUP_PER_POINT,
-      domain: 'the_tu_an',
-    },
-  ]
-}
-
-/** Assembly-time emission (spec 3.2) — the_tu_an players only. */
-export function getTheTuAnReactiveStatModifiers(
-  player: PlayerData,
-  totals: Pick<Stats, MainStatKey>,
-): StatModifier[] {
-  return player.cultivationPath === 'the_tu_an'
-    ? theTuAnReactiveModifiers(totals, 'the_tu_an:attributes')
-    : []
-}
-
-function theTuEnduranceModifiers(vitality: number, idPrefix: string): StatModifier[] {
-  return [
-    {
-      id: `${idPrefix}:enduranceThreshold`,
-      sourceId: 'the_tu',
-      sourceType: 'attribute',
-      stat: 'enduranceThreshold',
-      flat: vitality * THE_TU_VITALITY_ENDURANCE_THRESHOLD_PER_POINT,
-      domain: 'the_tu',
-    },
-  ]
-}
-
-/** Assembly-time emission (spec 3.3) — the_tu players only. */
-export function getTheTuEnduranceStatModifiers(
-  player: PlayerData,
-  totals: Pick<Stats, MainStatKey>,
-): StatModifier[] {
-  return player.cultivationPath === 'the_tu'
-    ? theTuEnduranceModifiers(totals.vitality, 'the_tu:vitality')
-    : []
-}
 
 registerDomainDeltaDeriver('the_tu_an', (delta) =>
   theTuAnReactiveModifiers(delta, 'the_tu_an:attributes_delta'),
@@ -365,7 +299,7 @@ export interface CultivationPathRewardDeps {
 }
 
 export function getCultivationPathStatModifiers(player: PlayerData) {
-  const way = player.cultivationPath ? getPathWayDefinition(player.cultivationPath) : undefined
+  const way = getActiveWayDefinition(player)
 
   return [...(way?.statModifiers ?? [])]
 }
@@ -379,7 +313,7 @@ export function grantCultivationPathRealmReward(
     return false
   }
 
-  const reward = getPathWayDefinition(player.cultivationPath)?.realmRewards?.[realmId]
+  const reward = getActiveWayDefinition(player)?.realmRewards?.[realmId]
 
   if (!reward) {
     return false

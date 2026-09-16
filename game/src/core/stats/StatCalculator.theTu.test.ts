@@ -8,10 +8,11 @@ import {
 } from './StatCalculator'
 import { applyDomainGate } from './StatDomain'
 import { clampStatValue } from './StatMetadata'
+import { collectActiveWayStatModifiers } from '../player/CultivationPathSystem'
 import {
-  getTheTuAnReactiveStatModifiers,
-  getTheTuEnduranceStatModifiers,
-} from '../player/CultivationPathSystem'
+  theTuAnReactiveModifiers,
+  theTuEnduranceModifiers,
+} from '../the-tu/TheTuPath'
 import { createDefaultPlayer, resolvePlayerFinalStats } from '../player/Player'
 import { REACTIVE_CHANCE_CAP } from './TheTuStatChannels'
 
@@ -48,7 +49,9 @@ describe('the_tu_an reactive chance stats — assembly emission', () => {
       [],
     )
 
-    const mods = getTheTuAnReactiveStatModifiers(playerWithPath('the_tu_an'), totals)
+    // M5 — the emitter is totals-driven (facet internals); the way gate
+    // is the facet resolution below.
+    const mods = theTuAnReactiveModifiers(totals, 'the_tu_an:attributes')
 
     const byStat = new Map(mods.map((m) => [m.stat, m]))
     expect(byStat.get('counterChance')?.flat).toBeCloseTo(0.8, 5)
@@ -59,11 +62,23 @@ describe('the_tu_an reactive chance stats — assembly emission', () => {
     }
   })
 
-  it('emits NOTHING for non-the_tu_an players (no leak across paths)', () => {
+  it('the ung_the way facet emits the same triple through the sole channel', () => {
+    const totals = resolveAttributeTotals(
+      createBaseStats({ strength: 100, dexterity: 100, intelligence: 100, vitality: 100 }),
+      [],
+    )
+
+    const mods = collectActiveWayStatModifiers(playerWithPath('the_tu_an'), totals)
+
+    expect(mods).toEqual(theTuAnReactiveModifiers(totals, 'the_tu_an:attributes'))
+  })
+
+  it('emits NO the_tu_an-domain modifier for non-ung_the players (no leak across ways)', () => {
     const totals = resolveAttributeTotals(createBaseStats({ strength: 100, dexterity: 100 }), [])
 
     for (const path of ['the_tu', 'phap_tu', 'kiem_tu', undefined] as const) {
-      expect(getTheTuAnReactiveStatModifiers(playerWithPath(path), totals)).toEqual([])
+      const mods = collectActiveWayStatModifiers(playerWithPath(path), totals)
+      expect(mods.filter((m) => m.domain === 'the_tu_an')).toEqual([])
     }
   })
 
@@ -156,17 +171,19 @@ describe('the_tu_an reactive chance stats — cap at consumption', () => {
 })
 
 describe('the_tu domain migration — endurance channel', () => {
-  it('vitality -> enduranceThreshold emits only for the_tu players', () => {
+  it('vitality -> enduranceThreshold emits only for hien-way players', () => {
     const totals = resolveAttributeTotals(createBaseStats({ vitality: 50 }), [])
 
-    const theTu = getTheTuEnduranceStatModifiers(playerWithPath('the_tu'), totals)
+    const theTu = collectActiveWayStatModifiers(playerWithPath('the_tu'), totals)
     expect(theTu).toHaveLength(1)
     expect(theTu[0]!.stat).toBe('enduranceThreshold')
     expect(theTu[0]!.flat).toBeCloseTo(50, 5)
     expect(theTu[0]!.domain).toBe('the_tu')
+    expect(theTu).toEqual(theTuEnduranceModifiers(totals.vitality, 'the_tu:vitality'))
 
     for (const path of ['the_tu_an', 'phap_tu', 'kiem_tu', undefined] as const) {
-      expect(getTheTuEnduranceStatModifiers(playerWithPath(path), totals)).toEqual([])
+      const mods = collectActiveWayStatModifiers(playerWithPath(path), totals)
+      expect(mods.filter((m) => m.domain === 'the_tu')).toEqual([])
     }
   })
 

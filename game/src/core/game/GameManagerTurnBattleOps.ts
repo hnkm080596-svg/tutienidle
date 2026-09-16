@@ -55,6 +55,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { commitFormationLoadout, resolvePartyFormation } from './FormationPlacement'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
+import { resolveActiveWayStatDomains } from '../player/CultivationPathSystem'
 import { companionToCombatEntity } from '../companion/CompanionCombat'
 import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
 import { COMPANIONS } from '../../data/companion/Companions'
@@ -993,7 +994,7 @@ export class GameManagerTurnBattleOps {
       playerEntity,
       0,
       playerPath ? this.deps.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
-      playerPath?.cultivationPath,
+      playerPath ? resolveActiveWayStatDomains(playerPath) : undefined,
       playerPath ? this.deps.resolvePlayerSpecialUltimate(playerPath) : undefined,
     )
 
