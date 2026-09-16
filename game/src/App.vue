@@ -92,7 +92,7 @@ const ui = useUiStore()
 // trong installAutomationFlagsPersistence: thay đổi chỉ mỗi
 // combatInputMode vẫn phải ghi. Giữ disposer để Mission B6 gắn
 // unmount cleanup.
-const _automationFlagsUnsubscribe = installAutomationFlagsPersistence(ui)
+const automationFlagsUnsubscribe = installAutomationFlagsPersistence(ui)
 const notification = useNotificationStore()
 const { t } = useI18n()
 const offlineSummary = useOfflineSummaryStore()
@@ -680,6 +680,7 @@ onUnmounted(() => {
   combatClockSource.stop()
   electronBridgeDispose?.()
   electronBridgeDispose = undefined
+  automationFlagsUnsubscribe()
   disposeCombatPause()
 
   if (introHandle) {
