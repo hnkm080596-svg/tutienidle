@@ -652,9 +652,12 @@ export function importSaveRaw(raw: string): boolean {
     return false
   }
 
-  // Mission A5 — backup best-effort (không chặn import khi chỉ backup
-  // fail), nhưng write save chính throw thì báo thất bại nguyên vẹn.
-  void backupCurrentSave()
+  // Mission A5 — backup failure aborts the import intact: overwriting
+  // the only save without a written safety net is the unsafe outcome,
+  // so a failed backup returns false with SAVE_KEY untouched.
+  if (!backupCurrentSave()) {
+    return false
+  }
 
   try {
     localStorage.setItem(SAVE_KEY, normalizedRaw)

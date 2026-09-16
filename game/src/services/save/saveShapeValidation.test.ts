@@ -413,6 +413,22 @@ describe('validateGameSaveShape — phần tử', () => {
     expect(pathsOf(result)).toContain('equipment[1].itemId')
   })
 
+  // Mission A1 — talismans/formations luôn rỗng trên serializer, nhưng
+  // element lệch shape vẫn phải bị chặn tại trust boundary.
+  it('talismans/formations entry lệch shape bị từ chối', () => {
+    const save = validSave()
+
+    save.talismans = [{ talismanId: 5, amount: 1 }, { talismanId: 'ok', amount: 'x' }]
+    save.formations = [{ formationId: 'f1' }]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('talismans[0].talismanId')
+    expect(pathsOf(result)).toContain('talismans[1].amount')
+    expect(pathsOf(result)).toContain('formations[0].amount')
+  })
+
   it('optional field sai kiểu vẫn bị từ chối (productionSites không phải array)', () => {
     const save = validSave()
 

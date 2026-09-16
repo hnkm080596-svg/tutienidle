@@ -133,4 +133,33 @@ describe('recovery storage ops — exception-safe (Mission A5)', () => {
     expect(importSaveRaw(validRaw)).toBe(false)
     expect(localStorage.getItem(SAVE_KEY)).toBeNull()
   })
+
+  it('importSaveRaw trả false khi BACKUP write throw — save hiện tại nguyên vẹn', () => {
+    const currentRaw = JSON.stringify(minimalSave())
+
+    localStorage.setItem(SAVE_KEY, currentRaw)
+
+    const original = Storage.prototype.setItem
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key === 'tien-hiep-idle-save-backup') {
+        throw new DOMException('quota exceeded', 'QuotaExceededError')
+      }
+
+      return original.call(this, key, value)
+    })
+
+    // Không backup được → KHÔNG ghi đè save duy nhất khi chưa có
+    // safety net.
+    expect(importSaveRaw(validRaw())).toBe(false)
+    expect(localStorage.getItem(SAVE_KEY)).toBe(currentRaw)
+
+    function validRaw(): string {
+      return JSON.stringify({ ...minimalSave(), player: { ...minimalSave().player, name: 'imported' } })
+    }
+  })
 })

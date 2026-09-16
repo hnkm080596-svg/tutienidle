@@ -1029,8 +1029,8 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   const equipment = requireArray(parsed, 'equipment', '', issues)
   const pills = requireArray(parsed, 'pills', '', issues)
 
-  requireArray(parsed, 'talismans', '', issues)
-  requireArray(parsed, 'formations', '', issues)
+  const talismans = requireArray(parsed, 'talismans', '', issues)
+  const formations = requireArray(parsed, 'formations', '', issues)
 
   const buildings = requireArray(parsed, 'buildings', '', issues)
 
@@ -1111,6 +1111,16 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   if (pills) {
     validateStackEntries(pills, 'pillId', 'pills', issues)
+  }
+
+  // Mission A1 — Phù/Trận bags are retired (serializer always emits []),
+  // but a present malformed element must still fail the trust boundary.
+  if (talismans) {
+    validateStackEntries(talismans, 'talismanId', 'talismans', issues)
+  }
+
+  if (formations) {
+    validateStackEntries(formations, 'formationId', 'formations', issues)
   }
 
   const equipmentValidation = equipment
