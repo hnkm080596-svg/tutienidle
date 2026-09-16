@@ -59,6 +59,48 @@ describe('DecomposeSystem save/restore (AR-08)', () => {
     expect(system.getSettings().workers).toBe(0)
     expect(system.getSettings().gradeFilter).toBe('all')
   })
+
+  // Mission A3 defense-in-depth: even if the shape validator is bypassed,
+  // a non-finite deadline must not poison the cycle timer (NaN nextCycleAt
+  // makes every tick() run a cycle forever).
+  it('restore with NaN nextCycleAt keeps the previous finite deadline', () => {
+    const { system, bag } = makeSystem()
+    addOre(bag, 'mortal_ore_decade', 100)
+    system.updateCapacity(1)
+    system.setSetting({ workers: 1 })
+    system.tick(1_000) // deadline set at 31_000
+
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: Number.NaN,
+      started: true,
+    })
+
+    expect(Number.isFinite(system.getSaveState().nextCycleAt)).toBe(true)
+
+    // Two ticks past the old deadline run at most the settled cycles —
+    // never a per-tick runaway.
+    system.tick(31_000)
+    system.tick(31_500)
+    const drained = system.drainOutput().reduce((sum, e) => sum + e.amount, 0)
+    expect(drained).toBeLessThanOrEqual(50)
+  })
+
+  it('restore with NaN workers clamps to 0 instead of poisoning runOneCycle', () => {
+    const { system } = makeSystem()
+    system.updateCapacity(4)
+
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: Number.NaN },
+      nextCycleAt: 0,
+      started: true,
+    })
+
+    expect(system.getSettings().workers).toBe(0)
+
+    system.tick(1_000)
+    expect(system.drainOutput()).toEqual([])
+  })
 })
 
 describe('DecomposeSystem offline settle (AR-08)', () => {

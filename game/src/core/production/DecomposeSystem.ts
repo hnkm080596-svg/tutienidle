@@ -186,12 +186,23 @@ export class DecomposeSystem {
       started: false,
     }
 
+    // Mission A3 defense-in-depth: the shape validator owns rejection,
+    // but a bypassed payload must still not poison the timer or the
+    // per-cycle consumption math (NaN nextCycleAt = per-tick runaway,
+    // NaN workers = NaN target inside runOneCycle).
+    const restoredWorkers = source.settings.workers ?? 0
+    const restoredDeadline = Math.floor(source.nextCycleAt ?? 0)
+
     this.settings = {
       gradeFilter: source.settings.gradeFilter ?? 'all',
       ageFilter: source.settings.ageFilter ?? 'all',
-      workers: Math.min(Math.max(0, Math.floor(source.settings.workers ?? 0)), this.capacity),
+      workers: Number.isFinite(restoredWorkers)
+        ? Math.min(Math.max(0, Math.floor(restoredWorkers)), this.capacity)
+        : 0,
     }
-    this.nextCycleAt = Math.max(this.nextCycleAt, Math.max(0, Math.floor(source.nextCycleAt ?? 0)))
+    this.nextCycleAt = Number.isFinite(restoredDeadline)
+      ? Math.max(this.nextCycleAt, Math.max(0, restoredDeadline))
+      : this.nextCycleAt
     this.started = this.started || Boolean(source.started)
   }
 

@@ -109,12 +109,19 @@ export class QuestManager {
    * leak into live state (A3).
    */
   restore(state: QuestManagerState): void {
+    // Mission A3 defense-in-depth: normalize instead of trusting the
+    // declared shape — a payload that bypassed the validator (active as
+    // a string, non-finite reset marker) must not crash consumers.
     this.state = {
-      active: structuredClone(state.active ?? []),
+      active: structuredClone(Array.isArray(state.active) ? state.active : []),
 
-      completedOnceIds: [...(state.completedOnceIds ?? [])],
+      completedOnceIds: Array.isArray(state.completedOnceIds)
+        ? [...state.completedOnceIds]
+        : [],
 
-      lastDailyResetAtMs: state.lastDailyResetAtMs ?? 0,
+      lastDailyResetAtMs: Number.isFinite(state.lastDailyResetAtMs)
+        ? state.lastDailyResetAtMs
+        : 0,
     }
   }
 
