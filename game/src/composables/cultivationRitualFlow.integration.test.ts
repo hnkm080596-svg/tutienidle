@@ -44,9 +44,11 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     expect(player.realmId).toBe('mortal')
     expect(useUiStore().standalonePanel).toBe('quan_khi')
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)).toBe(true)
     expect(player.realmId).toBe('qi_refining')
     expect(player.realmLevel).toBe(1)
+    expect(player.cultivationPath).toBe('phap_tu')
+    expect(player.cultivationWay).toBe('ngu_hanh')
 
     player.realmLevel = 12
 

@@ -51,7 +51,12 @@ function makeReader(battle: TurnBattle | null, player: KiemBarPlayerState) {
 }
 
 function hienPlayer(preset: OrbId[] = ['orb_dam', 'orb_chem']): KiemBarPlayerState {
-  return { realmId: 'golden_core', kiemTu: { ...freshKiemTuState(), mode: 'hien', preset } }
+  return {
+    realmId: 'golden_core',
+    cultivationPath: 'kiem_tu',
+    cultivationWay: 'hien',
+    kiemTu: { ...freshKiemTuState(), preset },
+  }
 }
 
 describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
@@ -107,16 +112,20 @@ describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
     expect(reader()).toBeNull()
   })
 
-  it('ngu mode → Kiem Y / forgeCost(realm) progress + sword count label', () => {
+  it('ngu way → Kiem Y / forgeCost(realm) progress + sword count label', () => {
     const kiemTu: KiemTuState = {
       ...freshKiemTuState(),
-      mode: 'ngu',
       kiemY: 5_000,
       kiemDaoCount: 3,
       kiemDaoBase: 1.9,
     }
     // golden_core = realmIndex 3 → forgeCost(3) = 16_899.
-    const reader = makeReader(fakeBattle('fighting'), { realmId: 'golden_core', kiemTu })
+    const reader = makeReader(fakeBattle('fighting'), {
+      realmId: 'golden_core',
+      cultivationPath: 'kiem_tu',
+      cultivationWay: 'ngu',
+      kiemTu,
+    })
 
     expect(reader()).toEqual({
       current: 5_000,
@@ -130,19 +139,28 @@ describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
 })
 
 describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
-  it('the_tu_an (kit usesTheResource) → {currentThe, maxThe ?? MAX_THE, "Thế"}', () => {
+  it('ung_the way (kit usesTheResource) → {currentThe, maxThe ?? MAX_THE, "Thế"}', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu_an' },
+      { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
     )
 
     expect(reader()).toEqual({ current: 45, max: MAX_THE, label: 'Thế', externalWard: undefined })
   })
 
+  it('a way-less the_tu save resolves no way — Thế bar stays hidden (M7 fail-closed)', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
+      { realmId: 'golden_core', cultivationPath: 'the_tu' },
+    )
+
+    expect(reader()).toBeNull()
+  })
+
   it('entity-baked maxThe wins over MAX_THE (node bonus)', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, { currentThe: 100, maxThe: 120, stats: { maxHp: 400 } }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu_an' },
+      { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
     )
 
     expect(reader()!.max).toBe(120)
@@ -189,14 +207,14 @@ describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
     })
   })
 
-  it('the_tu_an with externalWard → Thế bar + shield layer together', () => {
+  it('ung_the with externalWard → Thế bar + shield layer together', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, {
         currentThe: 30,
         externalWard: { sourceId: 'p', amount: 50 },
         stats: { maxHp: 250 },
       }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu_an' },
+      { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
     )
 
     expect(reader()).toEqual({

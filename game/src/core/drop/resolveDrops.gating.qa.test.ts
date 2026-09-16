@@ -6,7 +6,8 @@ import { ENEMIES } from '../../data/enemy/Enemies'
 
 // Kiem Tu Reimagined Task 12 (spec 2026-09-15 §7): van_kiem_quyet was
 // repurposed as the Ngu Kiem Dao signature technique — granted by the
-// kiem_tu_an conversion node, NEVER lootable. The old elite/boss
+// ngu way ritual (M6; formerly the kiem_tu_an conversion node), NEVER
+// lootable. The old elite/boss
 // signatureDrops lines on the qi_refining bandit were removed in the
 // same change. These tests pin the new contract so a future table edit
 // cannot silently reopen a loot path: no signature/pool line may offer

@@ -42,20 +42,29 @@ describe('toTurnBattleParticipant adapter', () => {
     expect(participant.alive).toBe(false)
   })
 
-  it('phap_tu buildId grants the phap_tu active domain', () => {
-    const participant = toTurnBattleParticipant(entity(), 0, BASIC, 'phap_tu')
+  it('a resolved domain list grants the declared active domains', () => {
+    // M5 — the adapter takes the way-resolved domain list; path-id ->
+    // domain mapping lives upstream (resolveActiveWayStatDomains).
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['phap_tu'])
 
     expect(participant.activeDomains?.has('phap_tu')).toBe(true)
   })
 
-  it('kiem_tu buildId grants kiem_tu — and NOT phap_tu', () => {
-    const participant = toTurnBattleParticipant(entity(), 0, BASIC, 'kiem_tu')
+  it('kiem_tu domains grant kiem_tu — and NOT phap_tu', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['kiem_tu'])
 
     expect(participant.activeDomains?.has('kiem_tu')).toBe(true)
     expect(participant.activeDomains?.has('phap_tu')).toBe(false)
   })
 
-  it('no buildId (enemy/companion) leaves activeDomains undefined', () => {
+  it('the the_tu_an way domain is distinct from the hien family domain', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['the_tu_an'])
+
+    expect(participant.activeDomains?.has('the_tu_an')).toBe(true)
+    expect(participant.activeDomains?.has('the_tu')).toBe(false)
+  })
+
+  it('no domains (enemy/companion) leaves activeDomains undefined', () => {
     const participant = toTurnBattleParticipant(entity(), 0, BASIC)
 
     expect(participant.activeDomains).toBeUndefined()
@@ -63,26 +72,26 @@ describe('toTurnBattleParticipant adapter', () => {
 
   // Review fix (MED-3) — reaction initiation is a capability derived
   // from phap_tu-domain ownership, not player-side membership: both
-  // phap_tu paths flag; kiem_tu/enemies/companions never do.
+  // phap_tu ways flag; kiem_tu/enemies/companions never do.
   it('phap_tu-domain participants can initiate wuxing reactions; others cannot', () => {
-    expect(toTurnBattleParticipant(entity(), 0, BASIC, 'phap_tu').canInitiateWuxingReactions).toBe(true)
-    expect(toTurnBattleParticipant(entity(), 0, BASIC, 'phap_tu_an').canInitiateWuxingReactions).toBe(true)
-    expect(toTurnBattleParticipant(entity(), 0, BASIC, 'kiem_tu').canInitiateWuxingReactions).toBe(false)
+    expect(toTurnBattleParticipant(entity(), 0, BASIC, ['phap_tu']).canInitiateWuxingReactions).toBe(true)
+    expect(toTurnBattleParticipant(entity(), 0, BASIC, ['kiem_tu']).canInitiateWuxingReactions).toBe(false)
+    expect(toTurnBattleParticipant(entity(), 0, BASIC, ['the_tu_an']).canInitiateWuxingReactions).toBe(false)
     expect(toTurnBattleParticipant(entity(), 0, BASIC).canInitiateWuxingReactions).toBe(false)
   })
 })
 
 
 describe('Kiem Tu Reimagined Task 6 — no buildId special/ultimate map', () => {
-  it('kiem_tu buildId grants NO special/ultimate — hien kit is the orb preset; ngu emblems arrive via override (Task 9)', () => {
-    const participant = toTurnBattleParticipant(entity(), 0, BASIC, 'kiem_tu')
+  it('kiem_tu domains grant NO special/ultimate — hien kit is the orb preset; ngu emblems arrive via override (Task 9)', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['kiem_tu'])
 
     expect(participant.special).toBeUndefined()
     expect(participant.ultimate).toBeUndefined()
   })
 
-  it('build khác (pham_nhan) KHÔNG có special', () => {
-    const participant = toTurnBattleParticipant(entity(), 0, BASIC, 'pham_nhan')
+  it('a participant without resolved domains has no special', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC)
 
     expect(participant.special).toBeUndefined()
   })
@@ -130,7 +139,7 @@ describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)
   it('populates special/ultimate from the resolved override when provided', () => {
     const combatEntity = entity()
 
-    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, 'phap_tu', {
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['phap_tu'], {
       special: SPECIAL,
       ultimate: ULTIMATE,
     })
@@ -140,33 +149,33 @@ describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)
     expect(participant.ultimate?.remainingCooldownTurns).toBe(0)
   })
 
-  it('override takes precedence over the static buildId map (Pháp Tu no longer silently empty)', () => {
+  it('override takes precedence over the domain slot (Pháp Tu no longer silently empty)', () => {
     const combatEntity = entity()
 
-    // 'phap_tu' as buildId matches nothing in SPECIALS_BY_BUILD (the A3
-    // Component 1 bug) — but with the override the slots still populate.
-    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, 'phap_tu', { special: SPECIAL })
+    // The domain list only declares stat-domain ownership — the
+    // special/ultimate slots come solely from the resolved override.
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['phap_tu'], { special: SPECIAL })
 
     expect(participant.special?.skill.id).toBe('tam_muoi_chan_hoa')
   })
 
-  it('omits both slots when neither override nor matching buildId exists', () => {
+  it('omits both slots when no override is resolved', () => {
     const combatEntity = entity()
 
-    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, 'phap_tu')
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['phap_tu'])
 
     expect(participant.special).toBeUndefined()
     expect(participant.ultimate).toBeUndefined()
   })
 
-  it('a Kiem Tu player gets slots only via the resolved override (ngu emblems, Task 9) — buildId alone maps nothing', () => {
+  it('a Kiem Tu player gets slots only via the resolved override (ngu emblems, Task 9) — domains alone map nothing', () => {
     const combatEntity = entity()
 
-    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, 'kiem_tu')
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['kiem_tu'])
     expect(participant.special).toBeUndefined()
     expect(participant.ultimate).toBeUndefined()
 
-    const withEmblems = toTurnBattleParticipant(combatEntity, 0, BASIC, 'kiem_tu', {
+    const withEmblems = toTurnBattleParticipant(combatEntity, 0, BASIC, ['kiem_tu'], {
       special: SPECIAL,
       ultimate: ULTIMATE,
     })

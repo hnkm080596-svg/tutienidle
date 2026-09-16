@@ -41,8 +41,9 @@ function setup(kiemDaoCount = 3) {
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'kiem_tu'
+  player.cultivationWay = 'ngu'
   player.realmId = 'golden_core'
-  player.kiemTu = { ...freshKiemTuState(), mode: 'ngu', kiemDaoCount }
+  player.kiemTu = { ...freshKiemTuState(), kiemDaoCount }
 
   gameManager.setActivePlayer(player)
   gameManager.progressionOps.learnSkill('tram')

@@ -14,6 +14,7 @@ import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresen
 const mocks = vi.hoisted(() => ({
   slotList: [] as TurnSkillPresentationEntry[],
   cultivationPath: undefined as string | undefined,
+  cultivationWay: undefined as string | undefined,
   chooseSlot: vi.fn(),
   setBattleManualMode: vi.fn(),
   setCombatInputMode: vi.fn(),
@@ -54,6 +55,9 @@ vi.mock('@/stores/player', () => ({
     get cultivationPath() {
       return mocks.cultivationPath
     },
+    get cultivationWay() {
+      return mocks.cultivationWay
+    },
   }),
 }))
 
@@ -61,6 +65,7 @@ import TurnCombatSkillBar from './TurnCombatSkillBar.vue'
 
 afterEach(() => {
   mocks.cultivationPath = undefined
+  mocks.cultivationWay = undefined
 })
 
 function entry(overrides: Partial<TurnSkillPresentationEntry> = {}): TurnSkillPresentationEntry {
@@ -119,12 +124,13 @@ describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
   })
 })
 
-// Phap Tu Reimagined (Task 16) — phap_tu_an owns NO active ultimate: the
+// Phap Tu Reimagined (Task 16) — the ngo_dao way owns NO active ultimate: the
 // ult slot is the ngo_dao_hon_don dao passive, rendered as an emblem,
 // never a button (spec §3.3).
-describe('TurnCombatSkillBar — phap_tu_an passive emblem', () => {
+describe('TurnCombatSkillBar — ngo_dao passive emblem', () => {
   it('ult slot là emblem ngo_dao_hon_don, KHÔNG phải button', async () => {
-    mocks.cultivationPath = 'phap_tu_an'
+    mocks.cultivationPath = 'phap_tu'
+    mocks.cultivationWay = 'ngo_dao'
     mocks.slotList = [
       entry({ skillId: 'van_phap_tuy_tam', skillName: 'Vạn Pháp Tùy Tâm' }),
       entry({ skillId: 'da_phap_lien_tuyen', skillName: 'Đa Pháp Liên Tuyến' }),
@@ -149,6 +155,7 @@ describe('TurnCombatSkillBar — phap_tu_an passive emblem', () => {
 
   it('path thường vẫn render nút ult bình thường', async () => {
     mocks.cultivationPath = 'phap_tu'
+    mocks.cultivationWay = 'ngu_hanh'
     mocks.slotList = [entry(), entry(), entry()]
 
     const container = mountBar()

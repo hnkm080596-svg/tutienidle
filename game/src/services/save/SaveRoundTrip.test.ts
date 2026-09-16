@@ -107,6 +107,45 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     expect(playerData.greatDaoOpportunityLost).toBe(false)
   })
 
+  // Cultivation Path Framework M2 (v65) — the way id persists beside the
+  // legacy-effective path id; an unchosen player serializes with the key
+  // absent (undefined drops out of JSON) and validates clean.
+  it('cultivationPath + cultivationWay round-trip nguyên vẹn (v65)', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    player.realmId = 'qi_refining'
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngo_dao'
+
+    const save = buildGameSave(player, gameManager)
+    const roundTripped: unknown = JSON.parse(JSON.stringify(save))
+
+    expect(validateGameSaveShape(roundTripped)).toMatchObject({
+      ok: true,
+      issues: [],
+      discardedEquipmentCount: 0,
+    })
+
+    const playerData = (roundTripped as { player: typeof player }).player
+
+    expect(playerData.cultivationPath).toBe('phap_tu')
+    expect(playerData.cultivationWay).toBe('ngo_dao')
+  })
+
+  it('cultivationWay vắng mặt trên save chưa chọn path vẫn hợp lệ', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    const roundTripped: unknown = JSON.parse(JSON.stringify(buildGameSave(player, gameManager)))
+    const result = validateGameSaveShape(roundTripped)
+
+    expect(result).toMatchObject({ ok: true, issues: [] })
+
+    const playerData = (roundTripped as { player: Record<string, unknown> }).player
+    expect('cultivationWay' in playerData).toBe(false)
+  })
+
   it('save có equipment schema mới round-trip qua validator', () => {
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()

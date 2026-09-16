@@ -1,9 +1,12 @@
 import type { PlayerData } from '../player/Player'
 import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } from './ProgressionNode'
+import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
+
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
 import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
+import { isKiemTuNgu } from '../kiem-tu/KiemTuPath'
 
 /**
  * Node level hạ tầng dùng chung (combat-skill-flow-element-power-dot-plan.md
@@ -77,12 +80,13 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
     // Kiem Tu Reimagined (spec K20) — the Cuu Cung cap guard. Lives in
     // hasPrerequisite so canPurchaseNode blocks the buy BEFORE insight
     // is deducted or the node recorded. Mortal realm (index 0) fails —
-    // ngu cannot be entered there anyway.
+    // ngu cannot be entered there anyway. M6: way membership replaces
+    // the retired kiemTu.mode discriminator.
     case 'kiemDaoBelowCap': {
       const state = player.kiemTu
       const realmIndex = getRealmIndex(player.realmId)
 
-      if (state?.mode !== 'ngu' || realmIndex < 1) {
+      if (!state || !isKiemTuNgu(player) || realmIndex < 1) {
         return false
       }
 
@@ -129,14 +133,7 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
     return false
   }
 
-  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node)) {
-    return false
-  }
-
-  // Kiem Tu Reimagined — a mode-tagged node is only purchasable in its
-  // own mode. Without this a converted ngu player could buy inert hien
-  // orb nodes (the aggregation filter would silently eat the effect).
-  if (node.kiemTuMode !== undefined && node.kiemTuMode !== player.kiemTu?.mode) {
+  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
     return false
   }
 
@@ -155,7 +152,7 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
 
 /** Đủ điều kiện NÂNG CẤP (L→L+1): đã lĩnh ngộ, chưa max, đủ Cảm Ngộ. */
 export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boolean {
-  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node) || !nodePathApplies(player, node)) {
+  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
     return false
   }
 
@@ -275,22 +272,31 @@ function scaleModifierForLevel<T extends { flat?: number; percent?: number; perL
  * Cùng (registry, levels) bất kể thứ tự nâng → cùng kết quả.
  */
 /**
- * Kiem Tu Reimagined — a node authored for one kiem_tu mode contributes
- * nothing while the player is in the other mode (orb growth nodes are
- * inert for ngu, ngu growth nodes are inert for hien). Mode-agnostic
- * nodes (kiemTuMode undefined) always apply.
- */
-export function nodeModeApplies(player: PlayerData, node: ProgressionNode): boolean {
-  return node.kiemTuMode === undefined || node.kiemTuMode === player.kiemTu?.mode
-}
-
-/**
  * Ownership gate — a node authored for one cultivation path can be
  * purchased/upgraded by, and aggregates effects for, only a player on
  * that same path. requiredCultivationPath undefined = path-agnostic.
+ *
+ * M7 — both sides are BASE path ids, so the gate is direct equality;
+ * WAY isolation inside the path family is nodeWayApplies' job below.
+ * A player with no path fails the gate.
  */
 export function nodePathApplies(player: PlayerData, node: ProgressionNode): boolean {
-  return node.requiredCultivationPath === undefined || node.requiredCultivationPath === player.cultivationPath
+  if (node.requiredCultivationPath === undefined) {
+    return true
+  }
+
+  return player.cultivationPath === node.requiredCultivationPath
+}
+
+/**
+ * Cultivation Path Framework (M3) — way-membership gate, the
+ * branch-level sibling of nodePathApplies: a node authored for one way
+ * inside a path can be purchased/upgraded by, and aggregates effects
+ * for, only a player whose cultivationWay matches. requiredWay
+ * undefined = way-agnostic.
+ */
+export function nodeWayApplies(player: PlayerData, node: ProgressionNode): boolean {
+  return node.requiredWay === undefined || node.requiredWay === player.cultivationWay
 }
 
 export function aggregateNodeStatModifiers(
@@ -303,7 +309,7 @@ export function aggregateNodeStatModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node) || !nodePathApplies(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 
@@ -333,7 +339,7 @@ export function aggregateTurnSkillResourceModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeModeApplies(player, node) || !nodePathApplies(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 
@@ -374,13 +380,6 @@ export function devResetBranch(
   let refund = 0
 
   for (const node of nodes) {
-    // Kiem Tu Reimagined (spec K4) — mode-switch nodes are one-way and
-    // non-refundable: dev reset never clears nor refunds them. Their
-    // branch children still reset (they hold no mode-switch state).
-    if (node.effect.kiemTuModeSwitch) {
-      continue
-    }
-
     const level = getNodeLevel(player, node.id)
 
     let nodeRefund = 0
@@ -417,7 +416,7 @@ export function devResetBranch(
     changed = false
 
     for (const node of registry.getAll()) {
-      if (getNodeLevel(player, node.id) < 1 || node.effect.kiemTuModeSwitch) {
+      if (getNodeLevel(player, node.id) < 1) {
         continue
       }
 
@@ -492,7 +491,7 @@ export function switchRoute(
   // null-check invariant; a non-phap_tu player's dirty route state would
   // also leak universal route stats via getRouteStatModifiers.
   if (
-    player.cultivationPath !== 'phap_tu' ||
+    !isPhapTuNguHanh(player) ||
     player.phapTu.element === null ||
     oldRoute === null ||
     oldRoute === route
@@ -579,7 +578,7 @@ export function previewRouteSwitch(
   // Same gate as switchRoute (HIGH-2) — never preview a switch the
   // domain would reject.
   if (
-    player.cultivationPath !== 'phap_tu' ||
+    !isPhapTuNguHanh(player) ||
     player.phapTu.element === null ||
     oldRoute === null
   ) {

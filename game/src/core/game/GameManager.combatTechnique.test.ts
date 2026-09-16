@@ -20,8 +20,9 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
     const player = createDefaultPlayer()
     // MP modifiers emit only when the path owns the phap_tu domain
     // (emission gate in getTechniqueTierModifiers) -- default player has
-    // cultivationPath undefined, so the path must be set explicitly.
+    // cultivationPath undefined, so the path+way pair must be set explicitly.
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
 
     gameManager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_chan_quyet')
     gameManager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
@@ -86,6 +87,7 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
 
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     const before = gameManager.effectOps
       .getAggregatedModifiers(player)
       .filter((modifier) => modifier.sourceType === 'technique')
@@ -119,6 +121,7 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
 
     const player = createDefaultPlayer()
     player.cultivationPath = 'the_tu'
+    player.cultivationWay = 'hien'
 
     gameManager.realmAdvanceOps.learnTechnique('kim_cang_bat_hoai_the')
     gameManager.realmAdvanceOps.equipTechnique('kim_cang_bat_hoai_the')
@@ -152,6 +155,7 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
 
     const player = createDefaultPlayer()
     player.cultivationPath = 'kiem_tu'
+    player.cultivationWay = 'hien'
 
     gameManager.realmAdvanceOps.learnTechnique('ngu_kiem')
     gameManager.realmAdvanceOps.equipTechnique('ngu_kiem')
@@ -175,14 +179,15 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
     )
   })
 
-  it('phap_tu_an player + ngo_dao_chan_quyet still emits the MP family (the hidden path owns the phap_tu domain)', () => {
+  it('ngo_dao way player + ngo_dao_chan_quyet still emits the MP family (the hidden way owns the phap_tu domain)', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngo_dao'
 
     gameManager.realmAdvanceOps.learnTechnique('ngo_dao_chan_quyet')
     gameManager.realmAdvanceOps.equipTechnique('ngo_dao_chan_quyet')

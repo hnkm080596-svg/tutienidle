@@ -64,6 +64,7 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
 
   if (realmId !== 'mortal') {
     lab.player.cultivationPath = 'phap_tu'
+    lab.player.cultivationWay = 'ngu_hanh'
     lab.manager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_chan_quyet')
     lab.manager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
     if (realmId === 'foundation_establishment') {

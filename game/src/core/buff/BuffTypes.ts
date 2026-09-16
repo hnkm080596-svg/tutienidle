@@ -94,7 +94,7 @@ export interface GaugeDeltaEffect {
 
 /**
  * The Tu Reimagined (spec 2026-09-15 sections 4.1/6, plan Task 14) —
- * the ung_the marker effect: presence marks the holder as a the_tu_an
+ * the ung_the marker effect: presence marks the holder as an ung_the
  * reactive combatant eligible for proc windows and the free-income
  * table. `gainOnBasicHit` is the OWN-basic-lands income channel (review
  * P1 single-channel lock: THE_GAIN_ON_BASIC lives here because

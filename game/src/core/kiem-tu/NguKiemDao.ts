@@ -1,5 +1,6 @@
 import type { PlayerData } from '../player/Player'
 import type { KiemTuState } from './KiemTuState'
+import { isKiemTuNgu } from './KiemTuPath'
 import { getRealmIndex } from '../realm/realmSystem'
 
 // Kiem Tu Reimagined Task 8 (spec 2026-09-15 K14/K15) — Ngu Kiem Dao
@@ -44,14 +45,15 @@ export function kiemDaoCap(realmIndex: number): number {
 }
 
 /**
- * The ONLY Kiem Y entry point (A3). No-op entirely when not in ngu mode
- * or when already at the realm cap — a capped forge does not bank Y.
+ * The ONLY Kiem Y entry point (A3). No-op entirely when the player is
+ * not on the ngu way (cultivationWay is the discriminator — M6) or
+ * when already at the realm cap — a capped forge does not bank Y.
  * Otherwise adds `amount` and converts greedily at the CURRENT realm's
  * forgeCost until under cost or at cap.
  */
 export function gainKiemY(player: PlayerData, amount: number): void {
   const state = player.kiemTu
-  if (!state || state.mode !== 'ngu' || amount <= 0) {
+  if (!state || !isKiemTuNgu(player) || amount <= 0) {
     return
   }
 
@@ -81,7 +83,7 @@ export function grantKiemDao(player: PlayerData, amount: number): void {
   const state = player.kiemTu
   const realmIndex = getRealmIndex(player.realmId)
 
-  if (!state || state.mode !== 'ngu' || amount <= 0 || realmIndex < 1) {
+  if (!state || !isKiemTuNgu(player) || amount <= 0 || realmIndex < 1) {
     return
   }
 

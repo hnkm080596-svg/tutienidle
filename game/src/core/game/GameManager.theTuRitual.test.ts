@@ -3,7 +3,7 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
-import { CULTIVATION_PATH_KITS, isCultivationPathOffered } from '../player/CultivationPathKit'
+import { CULTIVATION_PATH_MODULES, isCultivationPathOffered } from '../player/CultivationPathKit'
 import { CAST_LEVELING_THRESHOLDS, HUY_QUYEN_L3_CASTS } from '../skill/SkillSystem'
 
 // The Tu Reimagined (spec 2026-09-15, T6 + section 2.3) — Task 2:
@@ -88,53 +88,57 @@ describe('huy_quyen — mortal cast-leveled skill', () => {
 })
 
 describe('isCultivationPathOffered — ritual offer gate', () => {
-  it('the_tu is always offered; the_tu_an requires huy_quyen Lv3', () => {
+  it('the hien ways are always offered; ung_the requires huy_quyen Lv3', () => {
     const below = createDefaultPlayer()
     below.skillLevels = { huy_quyen: 2 }
 
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.the_tu, below)).toBe(true)
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.phap_tu, below)).toBe(true)
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.kiem_tu, below)).toBe(true)
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.the_tu_an, below)).toBe(false)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.the_tu.ways.hien!, below)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.phap_tu.ways.ngu_hanh!, below)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.kiem_tu.ways.hien!, below)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.the_tu.ways.ung_the!, below)).toBe(false)
 
     const met = createDefaultPlayer()
     met.skillLevels = { huy_quyen: 3 }
 
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.the_tu_an, met)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.the_tu.ways.ung_the!, met)).toBe(true)
   })
 
-  it('missing huy_quyen mirror (never learned) hides the_tu_an', () => {
+  it('missing huy_quyen mirror (never learned) hides ung_the', () => {
     const player = createDefaultPlayer()
 
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.the_tu_an, player)).toBe(false)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.the_tu.ways.ung_the!, player)).toBe(false)
   })
 })
 
 describe('chooseCultivationPath — the_tu ritual', () => {
-  it('the_tu equips kim_cang_bat_hoai_the and strips tram + huy_quyen', () => {
+  it('(the_tu, hien) equips kim_cang_bat_hoai_the and strips tram + huy_quyen', () => {
     const { gameManager, player } = setupMortal(0)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)).toBe(true)
     expect(player.cultivationPath).toBe('the_tu')
+    expect(player.cultivationWay).toBe('hien')
     expect(gameManager.techniqueManager.getEquipped()?.id).toBe('kim_cang_bat_hoai_the')
     expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
     expect(gameManager.skillManager.get('huy_quyen')!.equipped).toBe(false)
     expect(player.realmId).toBe('qi_refining')
   })
 
-  it('the_tu_an is rejected when huy_quyen is below Lv3', () => {
+  it('(the_tu, ung_the) is rejected when huy_quyen is below Lv3 — zero mutation', () => {
     const { gameManager, player } = setupMortal(9999)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu_an', player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
+    expect(player.cultivationWay).toBeUndefined()
     expect(player.realmId).toBe('mortal')
+    expect(gameManager.techniqueManager.getEquipped()).toBeUndefined()
   })
 
-  it('the_tu_an at Lv3 equips ung_the_than_quyet and strips mortal skills', () => {
+  it('(the_tu, ung_the) at Lv3 writes the base the_tu id + ung_the way and strips mortal skills', () => {
     const { gameManager, player } = setupMortal(10000)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu_an', player)).toBe(true)
-    expect(player.cultivationPath).toBe('the_tu_an')
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)).toBe(true)
+    expect(player.cultivationPath).toBe('the_tu')
+    expect(player.cultivationWay).toBe('ung_the')
     expect(gameManager.techniqueManager.getEquipped()?.id).toBe('ung_the_than_quyet')
     expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
     expect(gameManager.skillManager.get('huy_quyen')!.equipped).toBe(false)

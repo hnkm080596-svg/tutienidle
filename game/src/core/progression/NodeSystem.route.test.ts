@@ -93,6 +93,7 @@ describe('switchRoute', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1')) // cost 2
@@ -113,6 +114,7 @@ describe('switchRoute', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: 'dot' }
     const start = player.skillInsight
 
@@ -131,6 +133,7 @@ describe('switchRoute', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('shared_1'))
@@ -146,6 +149,7 @@ describe('switchRoute', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1'))
@@ -171,6 +175,7 @@ describe('switchRoute', () => {
   it('rejects when no element+route is committed — never writes route', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: null, route: null }
 
     expect(switchRoute(player, registry, 'dot')).toBe(0)
@@ -179,7 +184,8 @@ describe('switchRoute', () => {
 
   it('rejects a non-phap_tu player even with committed phapTu state', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngo_dao'
     player.phapTu = { element: null, route: null }
 
     expect(switchRoute(player, registry, 'dot')).toBe(0)
@@ -202,6 +208,7 @@ describe('previewRouteSwitch', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1')) // cost 2
@@ -225,6 +232,7 @@ describe('previewRouteSwitch', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1'))
@@ -265,6 +273,7 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     const player = createDefaultPlayer()
     player.baseStats = asBaseStats({ ...player.baseStats, might: 100, speed: 100 })
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     gameManager.catalogOps.registerEnemyTemplates([
@@ -298,6 +307,7 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     const player = createDefaultPlayer()
     player.baseStats = asBaseStats({ ...player.baseStats, might: 100, speed: 100 })
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: 'dot' }
 
     gameManager.catalogOps.registerEnemyTemplates([
@@ -334,12 +344,14 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     // Path chosen but element+route not yet committed — there is no
     // route to switch FROM; writing one would poison selectPhapTuElement.
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: null, route: null }
     expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
     expect(player.phapTu).toEqual({ element: null, route: null })
 
     // Hidden path never owns ordinary route state.
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngo_dao'
     expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
     expect(player.phapTu).toEqual({ element: null, route: null })
   })

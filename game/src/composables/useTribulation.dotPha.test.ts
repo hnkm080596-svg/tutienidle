@@ -41,7 +41,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     player.bodyRefinementCompletedTiers = 6
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)).toBe(true)
     expect(player.mortalPerfectionAchieved).toBe(true)
   })
 
@@ -55,17 +55,19 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     player.bodyRefinementCompletedTiers = 6
     player.baseStats = { ...player.baseStats, strength: 9, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)).toBe(true)
     expect(player.mortalPerfectionAchieved).toBe(false)
 
-    // Reset để chọn lại (case 2: đủ stat nhưng Luyện Th thể 5/6)
+    // Reset để chọn lại (case 2: đủ stat nhưng Luyện Th thể 5/6) —
+    // M2: path + way là 1 cặp ghi nguyên tử, reset phải xoá cả hai.
     player.cultivationPath = undefined
+    player.cultivationWay = undefined
     player.realmId = 'mortal'
     player.realmLevel = 12
     player.bodyRefinementCompletedTiers = 5
     player.baseStats = { ...player.baseStats, strength: 10 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)).toBe(true)
     expect(player.mortalPerfectionAchieved).toBe(false)
   })
 
@@ -77,7 +79,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     player.bodyRefinementCompletedTiers = 6
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)
     expect(player.mortalPerfectionAchieved).toBe(true)
 
     // Sau khi vào Luyện Khí, "hoàn hảo" không đổi dù stat/luyện thể đổi
@@ -118,7 +120,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
     // Quán Khí trước (vào Luyện Khí)
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)
     expect(player.realmId).toBe('qi_refining')
 
     // Đầu tư tiếp để đủ điều kiện Đại Đạo ở Luyện Khí
@@ -163,7 +165,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.bodyRefinementCompletedTiers = 6
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)
 
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
@@ -221,7 +223,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     player.bodyRefinementCompletedTiers = 6
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)
     expect(player.realmId).toBe('qi_refining')
 
     // Mặc 1 món đồ ĐÚNG phẩm hiện tại (qi_refining → bat_pham, Task 16 gate).

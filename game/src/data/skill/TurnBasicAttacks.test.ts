@@ -17,13 +17,15 @@ describe('TurnBasicAttacks structural completeness', () => {
 
   it('only builds authored as static TurnSkillDefinitions live in the map — Phap Tu converts canonically', () => {
     expect(BASIC_ATTACKS_BY_BUILD.kiem_tu!.id).toBe('tram')
-    expect(BASIC_ATTACKS_BY_BUILD.the_tu!.id).toBe('generic_physical')
     expect(BASIC_ATTACKS_BY_BUILD.pham_nhan!.id).toBe('generic_physical')
 
-    // No phap_tu_* entries: their basics convert from the authored Skill
-    // at battle build (fail-fast on rejection — no static substitute).
+    // No phap_tu_*/the_tu entries: phap basics convert from the authored
+    // Skill at battle build (fail-fast on rejection — no static
+    // substitute); the_tu ways resolve their kit at battle build and fall
+    // back to GENERIC_PHYSICAL_BASIC directly (M7 removed the dead row).
     for (const key of Object.keys(BASIC_ATTACKS_BY_BUILD)) {
       expect(key.startsWith('phap_tu')).toBe(false)
+      expect(key.startsWith('the_tu')).toBe(false)
     }
   })
 

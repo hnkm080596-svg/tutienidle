@@ -22,8 +22,8 @@ function hienPlayer(preset: OrbId[], realmId = 'qi_refining'): PlayerData {
   const player = createDefaultPlayer()
   player.realmId = realmId
   player.cultivationPath = 'kiem_tu'
+  player.cultivationWay = 'hien'
   player.kiemTu = {
-    mode: 'hien',
     preset,
     kiemY: 0,
     kiemDaoCount: 1,

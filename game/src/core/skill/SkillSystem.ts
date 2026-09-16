@@ -37,7 +37,7 @@ export function getHuyKiemFlatDamageBonus(totalExperience: number): number {
 // rejects them, INV-9): any id listed here auto-levels by
 // totalExperience in recordCast(). tram's curve is the existing one;
 // linh_bao/huy_quyen are the mortal-path actives — linh_bao Lv3 is the
-// phap_tu_an ritual gate, huy_quyen Lv3 the the_tu_an gate — so the
+// ngo_dao offer gate, huy_quyen Lv3 the ung_the gate — so the
 // thresholds are also read directly by chooseCultivationPath.
 export const CAST_LEVELING_THRESHOLDS: Record<string, { lv2: number; lv3: number }> = {
   tram:      { lv2: 1000, lv3: 10000 },
@@ -66,8 +66,9 @@ export function getCastLeveledSkillLevel(skillId: string, totalExperience: numbe
  * the threshold table — no second constant source. */
 export const HUY_KIEM_L3_CASTS = CAST_LEVELING_THRESHOLDS.tram!.lv3
 
-/** Ngưỡng cast Hủy Quyền đạt Lv3 — cổng offer the_tu_an tại Nghi Lễ
- * Nhập Môn (spec 2026-09-15 T6, xem CultivationPathKit.offerGate). */
+/** Ngưỡng cast Hủy Quyền đạt Lv3 — cổng offer way ung_the tại Nghi Lễ
+ * Nhập Môn (spec 2026-09-15 T6, xem PathOfferGate trong
+ * CultivationPathKit.ts). */
 export const HUY_QUYEN_L3_CASTS = CAST_LEVELING_THRESHOLDS.huy_quyen!.lv3
 
 export interface EffectiveSkill {

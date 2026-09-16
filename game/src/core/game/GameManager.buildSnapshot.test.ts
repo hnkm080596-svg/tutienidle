@@ -48,7 +48,7 @@ function createTestEnemy() {
   })
 }
 
-// Combat Rework Phase 8 — Class (CultivationPathKit) + Equipment
+// Combat Rework Phase 8 — Class (PathWayDefinition) + Equipment
 // (static modifier) + Pre-Battle Upgrade (Skill Specialization) đều
 // ĐÃ có sẵn hạ tầng riêng (audit xác nhận, không phải xây mới) —
 // test này là "acceptance test" DUY NHẤT xác nhận CẢ 3 nguồn thật sự
@@ -74,7 +74,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // --- Class: chọn Kiếm Tu (path THẬT đã ship, không phải fixture)
     // — tự cấp Tâm Pháp (Technique) + 3 skill cố định.
     player.realmLevel = 12
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
 
     const attackAfterClass = calculateStats(player.baseStats, [
       ...player.modifiers,

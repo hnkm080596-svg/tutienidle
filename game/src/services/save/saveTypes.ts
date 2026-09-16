@@ -150,6 +150,11 @@ export interface FormationStackSave {
 // `greatDaoOpportunityLost: boolean` (mất vĩnh viễn Đại Đạo). Gỡ Đột
 // Phá Lệnh (token materials) + quái Kiếp. Save v53 bị từ chối (dev
 // phase, không migration). Chi tiết xem saveVersion.ts.
+// version 65 (2026-09-16, cultivation-path-framework M2): player thêm
+// field TUỲ CHỌN `cultivationWay?: PathWayId` (way trong path, xem
+// core/player/CultivationPathKit.ts). M7 (v66): `cultivationPath` thu
+// còn union 3 base id, các id '_an' thành way. Save v64 trở xuống bị
+// từ chối — cùng convention mọi version trước.
 export interface GameSave {
   version: typeof CURRENT_SAVE_VERSION
 

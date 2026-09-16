@@ -3,7 +3,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import type { TheTuKitModifierValues } from '../the-tu/TheTuKitModifiers'
 import type { TheTuAnMechanicModifierValues } from '../the-tu/TheTuAnMechanicModifiers'
-import type { CultivationPathId } from '../player/CultivationPathKit'
+import type { CultivationPathId, PathWayId } from '../player/CultivationPathKit'
 
 export type NodeType = 'minor' | 'major'
 
@@ -71,12 +71,6 @@ export interface NodeEffect {
   // battle-scoped The cap by this amount per node level. Consumed by
   // resolveMaxThe(); maxThe is never persisted on PlayerData.
   theCapPerLevel?: number
-
-  // Kiem Tu Reimagined (spec 2026-09-15 K4) — purchasing flips
-  // player.kiemTu.mode (one-way hien → ngu). The wire lives in
-  // GameManagerProgressionOps.purchaseNode; mode-switch nodes are
-  // non-refundable and devResetBranch skips them.
-  kiemTuModeSwitch?: 'ngu'
 
   // Kiem Tu Reimagined (spec §6, Cuu Cung) — lump Kiem Y granted ONCE
   // at purchase through gainKiemY() (the domain owner — conversion and
@@ -191,14 +185,6 @@ export interface ProgressionNode {
   revealWhen?: NodePrerequisite
 
   /**
-   * Kiem Tu Reimagined — the mode this node's effects belong to.
-   * Aggregators skip nodes whose kiemTuMode does not match
-   * player.kiemTu.mode (a hien orb node grants nothing while ngu, and
-   * vice versa). undefined = mode-agnostic.
-   */
-  kiemTuMode?: 'hien' | 'ngu'
-
-  /**
    * Ownership gate — the node only purchases/upgrades/aggregates for a
    * player on that cultivation path (enforced by
    * NodeSystem.nodePathApplies at purchase, upgrade, and every
@@ -206,6 +192,18 @@ export interface ProgressionNode {
    * keep working for every path.
    */
   requiredCultivationPath?: CultivationPathId
+
+  /**
+   * Cultivation Path Framework (M3, spec 2026-09-16) — way-membership
+   * gate, the branch-level sibling of requiredCultivationPath: the node
+   * only purchases/upgrades/aggregates for a player whose
+   * player.cultivationWay matches (enforced by NodeSystem.nodeWayApplies
+   * beside nodePathApplies at purchase, upgrade, and every aggregator).
+   * Path-scoped id — pair with requiredCultivationPath when the way id
+   * alone is ambiguous across paths. undefined = way-agnostic, so all
+   * existing (untagged) nodes keep working for every way.
+   */
+  requiredWay?: PathWayId
 
   effect: NodeEffect
 

@@ -18,8 +18,9 @@ import {
 function makeNguPlayer(realmId: string) {
   const player = createDefaultPlayer()
   player.cultivationPath = 'kiem_tu'
+  player.cultivationWay = 'ngu'
   player.realmId = realmId
-  player.kiemTu = { ...freshKiemTuState(), mode: 'ngu' }
+  player.kiemTu = freshKiemTuState()
   return player
 }
 
@@ -98,7 +99,7 @@ describe('gainKiemY', () => {
 
   it('is a no-op for hien players and missing kiemTu state', () => {
     const player = makeNguPlayer('qi_refining')
-    player.kiemTu!.mode = 'hien'
+    player.cultivationWay = 'hien'
 
     gainKiemY(player, 9_999)
     expect(player.kiemTu!.kiemY).toBe(0)
@@ -113,7 +114,7 @@ describe('gainKiemY', () => {
 
 describe('applyBreakthroughMerge', () => {
   it('snapshots count into base BEFORE reset: count 3 / base 1 → base 1.9, count 1', () => {
-    const state = { ...freshKiemTuState(), mode: 'ngu' as const, kiemDaoCount: 3, kiemDaoBase: 1 }
+    const state = { ...freshKiemTuState(), kiemDaoCount: 3, kiemDaoBase: 1 }
 
     applyBreakthroughMerge(state)
 
@@ -124,7 +125,6 @@ describe('applyBreakthroughMerge', () => {
   it('kiemY is untouched by the merge', () => {
     const state = {
       ...freshKiemTuState(),
-      mode: 'ngu' as const,
       kiemDaoCount: 4,
       kiemDaoBase: 2,
       kiemY: 777,
@@ -137,7 +137,7 @@ describe('applyBreakthroughMerge', () => {
   })
 
   it('compounds across merges (base multiplies, not adds)', () => {
-    const state = { ...freshKiemTuState(), mode: 'ngu' as const, kiemDaoCount: 2, kiemDaoBase: 1 }
+    const state = { ...freshKiemTuState(), kiemDaoCount: 2, kiemDaoBase: 1 }
 
     applyBreakthroughMerge(state) // base = 1 * 1.6 = 1.6, count 1
     state.kiemDaoCount = 3
@@ -160,7 +160,7 @@ describe('realm-advance merge hook (GameManagerRealmAdvanceOps)', () => {
     expect(ngu.kiemTu!.kiemDaoBase).toBeCloseTo(1 + KIEM_DAO_MERGE_BONUS * 4, 10)
 
     const hien = makeNguPlayer('golden_core')
-    hien.kiemTu!.mode = 'hien'
+    hien.cultivationWay = 'hien'
     hien.kiemTu!.kiemDaoCount = 4
     gameManager.realmAdvanceOps.applyKiemTuRealmTransition(hien)
 

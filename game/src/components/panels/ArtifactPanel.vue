@@ -15,7 +15,7 @@ import ArtifactExperienceBar from './artifact/ArtifactExperienceBar.vue'
 import ArtifactGradeSection from './artifact/ArtifactGradeSection.vue'
 import ArtifactPathCards from './artifact/ArtifactPathCards.vue'
 import { ARTIFACTS } from '@/data/artifact/Artifacts'
-import { ARTIFACT_ID_BY_CULTIVATION_PATH, ARTIFACT_GRADE_LABELS, ARTIFACT_GRADE_ORDER, ARTIFACT_PATH_ORDER } from '@/core/artifact/Artifact'
+import { ARTIFACT_GRADE_LABELS, ARTIFACT_GRADE_ORDER, ARTIFACT_PATH_ORDER, resolveExpectedArtifactId } from '@/core/artifact/Artifact'
 import type { ArtifactPath } from '@/core/artifact/Artifact'
 import {
   DOAN_BAO_THACH_MATERIAL_ID,
@@ -26,7 +26,7 @@ import {
   getNextArtifactGrade,
 } from '@/core/artifact/ArtifactProgression'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
-import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
+import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import { formatStat } from '@/core/stats/StatLabels'
 
 const ui = useUiStore()
@@ -38,14 +38,18 @@ const { t } = useI18n()
 const artifactId = computed(() => {
   stateVersion.value
 
-  return player.cultivationPath ? ARTIFACT_ID_BY_CULTIVATION_PATH[player.cultivationPath] : undefined
+  return resolveExpectedArtifactId(player)
 })
 
 const definition = computed(() => (artifactId.value ? ARTIFACTS[artifactId.value] : undefined))
 
-const cultivationPathLabel = computed(() =>
-  player.cultivationPath ? CULTIVATION_PATH_KITS[player.cultivationPath].name : t('panels.artifact.noPath'),
-)
+const cultivationPathLabel = computed(() => {
+  // M5 — the active way (cultivationWay authoritative) names the path,
+  // so a collapsed ('the_tu','ung_the') save labels Ứng Thế correctly.
+  const way = getActiveWayDefinition(player)
+
+  return way?.name ?? t('panels.artifact.noPath')
+})
 
 const canChange = computed(() => {
   stateVersion.value

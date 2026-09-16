@@ -34,6 +34,10 @@ import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM, unlockedOrbs } from '../../data/skill/
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { turnSkillDisplayMetaOf } from '../../data/skill/TurnSkillDisplayMeta'
 import { GameManager } from '../game/GameManager'
+import {
+  applyPathChoice,
+  listOfferableWays,
+} from '../player/CultivationPathSystem'
 import { ManualClockSource } from '../battle/turn/CombatClock'
 import { CombatSystem } from '../combat/CombatSystem'
 import { EventBus } from '../events/EventBus'
@@ -55,7 +59,8 @@ function hienPlayer(preset: OrbId[], realmId = 'qi_refining'): PlayerData {
   const player = createDefaultPlayer()
   player.realmId = realmId
   player.cultivationPath = 'kiem_tu'
-  player.kiemTu = { ...freshKiemTuState(), mode: 'hien', preset }
+  player.cultivationWay = 'hien'
+  player.kiemTu = { ...freshKiemTuState(), preset }
   return player
 }
 
@@ -63,7 +68,8 @@ function nguPlayer(realmId = 'golden_core'): PlayerData {
   const player = createDefaultPlayer()
   player.realmId = realmId
   player.cultivationPath = 'kiem_tu'
-  player.kiemTu = { ...freshKiemTuState(), mode: 'ngu' }
+  player.cultivationWay = 'ngu'
+  player.kiemTu = freshKiemTuState()
   return player
 }
 
@@ -165,7 +171,7 @@ function stripComments(source: string): string {
   return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
 }
 
-describe('INV-1 — mode single-owner', () => {
+describe('INV-1 — way single-owner', () => {
   it('hien provider output never depends on kiemY/kiemDao state', () => {
     const player = hienPlayer(['orb_dam', 'orb_chem'])
     const provider = buildKiemPhoProvider(player, [])
@@ -343,15 +349,24 @@ describe('INV-7 — hardcore discovery', () => {
   })
 })
 
-describe('INV-8 — ngu gate (reveal / purchase / one-way / mode filter)', () => {
-  function setupGame(tramLevel = 3) {
+describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', () => {
+  // M6 — the kiem_tu_an flip node is retired: ngu entry is the
+  // Initiation Ritual itself, gated by the way's offerGate
+  // (requiresSkillLevel tram Lv3 — reads the skillLevels mirror, the
+  // same read the node's skillCastCount level prereq used). The commit
+  // is FREE (no insight cost — no node purchase, no waive record) and
+  // PERMANENT (applyPathChoice rejects any second choice); way
+  // membership — not a node — isolates the two subtrees.
+
+  function mortalAtRitual(tramLevel: number) {
     const gameManager = new GameManager()
     gameManager.setCombatClockSource(new ManualClockSource())
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
-    const player = nguPlayer('golden_core')
-    player.kiemTu!.mode = 'hien'
+    const player = createDefaultPlayer()
+    player.realmId = 'mortal'
+    player.realmLevel = 12
     player.skillInsight = 500
     player.skillLevels = { tram: tramLevel }
     player.skillCastCounts = { tram: tramLevel >= 3 ? 10_000 : 9_000 }
@@ -360,95 +375,121 @@ describe('INV-8 — ngu gate (reveal / purchase / one-way / mode filter)', () =>
     return { gameManager, player }
   }
 
-  it('kiem_tu_an is hidden until tram Lv3, then purchasable exactly once', () => {
-    const { gameManager, player } = setupGame(2)
-    expect(gameManager.progressionOps.canPurchaseNode('kiem_tu_an', player)).toBe(false)
+  it('the ngu offer stays listed but ineligible below tram Lv3, eligible at Lv3', () => {
+    const locked = mortalAtRitual(2)
+    const lockedOffer = listOfferableWays(locked.player).find(
+      offer => offer.pathId === 'kiem_tu' && offer.wayId === 'ngu',
+    )
+    expect(lockedOffer).toBeDefined()
+    expect(lockedOffer!.eligible).toBe(false)
+    expect(lockedOffer!.reason).toContain('tram')
+    // Both the authority and the ritual reject the ineligible way.
+    expect(applyPathChoice(locked.player, 'kiem_tu', 'ngu').ok).toBe(false)
+    expect(
+      locked.gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', locked.player),
+    ).toBe(false)
+    expect(locked.player.cultivationPath).toBeUndefined()
+    expect(locked.player.cultivationWay).toBeUndefined()
 
-    const ready = setupGame(3)
-    expect(ready.gameManager.progressionOps.canPurchaseNode('kiem_tu_an', ready.player)).toBe(true)
-    expect(ready.gameManager.progressionOps.purchaseNode('kiem_tu_an', ready.player)).toBe(true)
-    expect(ready.player.kiemTu!.mode).toBe('ngu')
-
-    ready.player.skillInsight = 500
-    expect(ready.gameManager.progressionOps.purchaseNode('kiem_tu_an', ready.player)).toBe(false)
+    const ready = mortalAtRitual(3)
+    const readyOffer = listOfferableWays(ready.player).find(
+      offer => offer.pathId === 'kiem_tu' && offer.wayId === 'ngu',
+    )
+    expect(readyOffer!.eligible).toBe(true)
+    expect(
+      ready.gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', ready.player),
+    ).toBe(true)
   })
 
-  it('kiem_tu_an still commits when van_kiem_quyet is already learned (learn is idempotent)', () => {
-    const { gameManager, player } = setupGame(3)
-    expect(gameManager.realmAdvanceOps.learnTechnique('van_kiem_quyet')).toBe(true)
+  it('the commit is free + permanent: no insight cost, a second choice is rejected', () => {
+    const { gameManager, player } = mortalAtRitual(3)
+    const insightBefore = player.skillInsight
 
-    expect(gameManager.progressionOps.purchaseNode('kiem_tu_an', player)).toBe(true)
-    expect(player.kiemTu!.mode).toBe('ngu')
-  })
-
-  it('kiem_tu_an is transactional — a post-commit equip failure rolls back insight, node and mode', () => {
-    const { gameManager, player } = setupGame(3)
-    vi.spyOn(gameManager.realmAdvanceOps, 'equipTechnique').mockReturnValue(false)
-
-    expect(gameManager.progressionOps.purchaseNode('kiem_tu_an', player)).toBe(false)
-    expect(player.skillInsight).toBe(500)
-    expect(player.nodeLevels?.['kiem_tu_an']).toBeUndefined()
-    expect(player.purchasedNodeIds).not.toContain('kiem_tu_an')
-    expect(player.kiemTu!.mode).toBe('hien')
-    // The technique the transaction learned must be unlearned — a
-    // rollback that leaves van_kiem_quyet known is not a rollback.
-    expect(gameManager.techniqueManager.has('van_kiem_quyet')).toBe(false)
-    expect(player.nodeFreePurchaseRecord?.['kiem_tu_an']).toBeUndefined()
-  })
-
-  it('kiem_tu_an rollback restores the Van Dao free-purchase record', () => {
-    const { gameManager, player } = setupGame(3)
-    player.selectedTalentIds = ['van_dao']
-    vi.spyOn(Math, 'random').mockReturnValue(0) // waive always fires
-    vi.spyOn(gameManager.realmAdvanceOps, 'equipTechnique').mockReturnValue(false)
-
-    expect(gameManager.progressionOps.purchaseNode('kiem_tu_an', player)).toBe(false)
-    // Cost was waived (never deducted) AND the waive record is gone.
-    expect(player.skillInsight).toBe(500)
-    expect(player.nodeFreePurchaseRecord?.['kiem_tu_an']).toBeUndefined()
-    expect(gameManager.techniqueManager.has('van_kiem_quyet')).toBe(false)
-  })
-
-  it('kiem_tu_an rollback keeps a signature technique the player already knew', () => {
-    const { gameManager, player } = setupGame(3)
-    expect(gameManager.realmAdvanceOps.learnTechnique('van_kiem_quyet')).toBe(true)
-    vi.spyOn(gameManager.realmAdvanceOps, 'equipTechnique').mockReturnValue(false)
-
-    expect(gameManager.progressionOps.purchaseNode('kiem_tu_an', player)).toBe(false)
-    // Pre-existing knowledge is not the transaction's to delete.
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', player)).toBe(true)
+    expect(player.cultivationPath).toBe('kiem_tu')
+    expect(player.cultivationWay).toBe('ngu')
+    expect(player.kiemTu).toEqual(freshKiemTuState())
+    // Free commit — nothing was deducted, so there is no waive record.
+    expect(player.skillInsight).toBe(insightBefore)
     expect(gameManager.techniqueManager.has('van_kiem_quyet')).toBe(true)
-    expect(player.kiemTu!.mode).toBe('hien')
+    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('van_kiem_quyet')
+
+    // One-way: the way is written AT the ritual — there is no node to
+    // repurchase and no re-choice; both the authority and the ritual
+    // reject a second attempt.
+    expect(applyPathChoice(player, 'kiem_tu', 'hien').ok).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(false)
+    expect(player.cultivationPath).toBe('kiem_tu')
+    expect(player.cultivationWay).toBe('ngu')
   })
 
-  it('kiem_tu_an preflight rejects the purchase when the signature technique is unregistered', () => {
+  it('the ritual still commits when van_kiem_quyet is already learned (learn is idempotent)', () => {
+    const { gameManager, player } = mortalAtRitual(3)
+    expect(gameManager.realmAdvanceOps.learnTechnique('van_kiem_quyet')).toBe(true)
+
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', player)).toBe(true)
+    expect(player.cultivationWay).toBe('ngu')
+    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('van_kiem_quyet')
+  })
+
+  it('chooseCultivationPath(kiem_tu, ngu) fails atomically when the signature technique template is missing — nothing committed', () => {
+    // Same preflight boundary the flip node used to need a rollback for:
+    // the ritual verifies way.techniqueId BEFORE applyPathChoice writes,
+    // so a missing van_kiem_quyet template fails the whole choice.
     const gameManager = new GameManager()
     gameManager.setCombatClockSource(new ManualClockSource())
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerTechniqueTemplates(
+      TECHNIQUES.filter(technique => technique.id !== 'van_kiem_quyet'),
+    )
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
-    // Deliberately no registerTechniqueTemplates — van_kiem_quyet can
-    // never learn/equip, so the conversion must refuse to start.
-    const player = nguPlayer('golden_core')
-    player.kiemTu!.mode = 'hien'
+    const player = createDefaultPlayer()
+    player.realmId = 'mortal'
+    player.realmLevel = 12
     player.skillInsight = 500
     player.skillLevels = { tram: 3 }
-    player.skillCastCounts = { tram: 10_000 }
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('tram')
 
-    expect(gameManager.progressionOps.purchaseNode('kiem_tu_an', player)).toBe(false)
-    expect(player.skillInsight).toBe(500)
-    expect(player.nodeLevels?.['kiem_tu_an']).toBeUndefined()
-    expect(player.purchasedNodeIds).not.toContain('kiem_tu_an')
-    expect(player.kiemTu!.mode).toBe('hien')
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', player)).toBe(false)
+    expect(player.cultivationPath).toBeUndefined()
+    expect(player.cultivationWay).toBeUndefined()
+    expect(player.kiemTu).toBeUndefined()
+    expect(player.realmId).toBe('mortal')
   })
 
-  it('ngu mode hides hien orb nodes; hien mode hides ngu branch nodes', () => {
+  it('way membership isolates the subtrees — hien cannot buy ngu nodes, ngu cannot buy hien nodes', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+
+    const hien = hienPlayer(['orb_dam'], 'golden_core')
+    hien.skillInsight = 500
+    // ngu_kiem_sac has no other prereq — the requiredWay gate alone blocks.
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_sac', hien)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_sac', hien)).toBe(false)
+
+    const ngu = nguPlayer('golden_core')
+    ngu.skillInsight = 500
+    // orb_dam_1's realm gate passes at golden_core — only the way gate blocks.
+    expect(gameManager.progressionOps.canPurchaseNode('orb_dam_1', ngu)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('orb_dam_1', ngu)).toBe(false)
+
+    // ...and the matching way buys normally — no hidden root prereq
+    // chains the ngu subtree any more.
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_sac', ngu)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_sac', ngu)).toBe(true)
+    expect(ngu.nodeLevels['ngu_kiem_sac']).toBe(1)
+  })
+
+  it('hien orb nodes stamp requiredWay hien; ngu branch nodes stamp requiredWay ngu', () => {
     const orbNode = KIEM_TU_NODES.find(n => n.id === 'orb_dam_1')
-    const nguNode = KIEM_TU_NODES.find(n => n.branchTag === 'ngu_kiem' && n.id !== 'kiem_tu_an')
+    const nguNode = KIEM_TU_NODES.find(n => n.branchTag === 'ngu_kiem')
     expect(orbNode).toBeDefined()
     expect(nguNode).toBeDefined()
-    expect(orbNode!.kiemTuMode).toBe('hien')
-    expect(nguNode!.kiemTuMode).toBe('ngu')
+    expect(orbNode!.requiredCultivationPath).toBe('kiem_tu')
+    expect(orbNode!.requiredWay).toBe('hien')
+    expect(nguNode!.requiredCultivationPath).toBe('kiem_tu')
+    expect(nguNode!.requiredWay).toBe('ngu')
   })
 })
 
@@ -528,7 +569,7 @@ describe('INV-10/11 — economy + base monotonic', () => {
   })
 
   it('merge is exactly-once per breakthrough: snapshot before reset, kiemY untouched, base monotonic', () => {
-    const state = { ...freshKiemTuState(), mode: 'ngu' as const, kiemDaoCount: 4, kiemDaoBase: 1, kiemY: 123 }
+    const state = { ...freshKiemTuState(), kiemDaoCount: 4, kiemDaoBase: 1, kiemY: 123 }
     const before = state.kiemDaoBase
 
     applyBreakthroughMerge(state) // base = 1 * (1 + 0.3*4) = 2.2
@@ -641,7 +682,7 @@ describe('INV-15 — precursor lock (K3)', () => {
       gameManager.progressionOps.learnSkill('tram')
       gameManager.skillSystem.equipToSlot('tram', 0)
 
-      expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
+      expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
       expect(gameManager.progressionOps.setSkillLoadoutSlot(player, 0, skillId)).toBe(false)
     },
   )
@@ -656,7 +697,7 @@ describe('INV-15 — precursor lock (K3)', () => {
     player.realmLevel = 12
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('tram')
-    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
 
     const authoredId = (
       gameManager as unknown as {

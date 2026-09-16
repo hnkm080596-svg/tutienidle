@@ -14,6 +14,7 @@ import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 import { useGameManager } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
+import { isPhapTuNgoDao } from '@/core/phap-tu/PhapTuPath'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
@@ -59,7 +60,9 @@ const {
 // emblem (spec §3.3 — "NOT a button"; its agency lives in the
 // multicast storm). The emblem tooltip explains basic-slot-only
 // multicast — the one place the rule surfaces in combat.
-const isAnPath = computed(() => player.cultivationPath === 'phap_tu_an')
+// M4 (R6): the hidden way drives the emblem — the strict ('phap_tu',
+// 'ngo_dao') pair is the durable check.
+const isAnPath = computed(() => isPhapTuNgoDao(player))
 
 const anEmblemMeta = computed(() => turnSkillDisplayMetaOf('ngo_dao_hon_don'))
 

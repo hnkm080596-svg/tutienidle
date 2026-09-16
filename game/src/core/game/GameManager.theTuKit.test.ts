@@ -47,6 +47,7 @@ function makeManager() {
 function makeTheTuPlayer(nodeLevels: Record<string, number>) {
   const player = createDefaultPlayer()
   player.cultivationPath = 'the_tu'
+  player.cultivationWay = 'hien'
   player.nodeLevels = nodeLevels
   return player
 }

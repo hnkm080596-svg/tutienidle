@@ -32,15 +32,16 @@ function makeDummyEnemy(id: string) {
   })
 }
 
-function setup(realmId: string, mode: 'hien' | 'ngu' = 'hien') {
+function setup(realmId: string, way: 'hien' | 'ngu' = 'hien') {
   const gameManager = new GameManager()
   gameManager.setCombatClockSource(new ManualClockSource())
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'kiem_tu'
+  player.cultivationWay = way
   player.realmId = realmId
-  player.kiemTu = { ...freshKiemTuState(), mode }
+  player.kiemTu = freshKiemTuState()
 
   gameManager.setActivePlayer(player)
 
@@ -89,7 +90,7 @@ describe('setKiemPhoPreset', () => {
     expect(player.kiemTu!.preset).toEqual(['orb_dam'])
   })
 
-  it('rejects for ngu mode and non-kiem-tu players', () => {
+  it('rejects on the ngu way and for non-kiem-tu players', () => {
     const { gameManager, player } = setup('foundation_establishment', 'ngu')
 
     expect(

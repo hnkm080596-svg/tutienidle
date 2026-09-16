@@ -3,6 +3,7 @@ import type { DynamicBasicProvider, TurnSkillDefinition } from '../battle/turn/T
 import type { HitResolveOptions } from '../battle/ActionImpactSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ProgressionNode } from '../progression/ProgressionNode'
+import { nodeWayApplies } from '../progression/NodeSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import {
   CASCADE_CRIT_CHANCE,
@@ -48,7 +49,10 @@ export function collectKiemDaoCascadeUnlocks(
   for (const node of nodes) {
     const slot = node.effect.cascadeUnlock
 
-    if (slot && (player.nodeLevels?.[node.id] ?? 0) > 0) {
+    // M3 — the way-membership gate applies here too (this collector
+    // reads nodeLevels directly): a wrong-way level must not unlock a
+    // cascade slot.
+    if (slot && (player.nodeLevels?.[node.id] ?? 0) > 0 && nodeWayApplies(player, node)) {
       unlocks[slot] = true
     }
   }

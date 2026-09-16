@@ -321,8 +321,11 @@ const TRAN_BRANCH: ProgressionNode[] = [
   },
 ]
 
-// requiredCultivationPath is stamped once here — every node in this
-// file belongs to the the_tu path (NodeSystem.nodePathApplies).
+// M5 — path/way stamps once here: every node belongs to the BASE
+// the_tu path family (NodeSystem.nodePathApplies resolves both eras to
+// the family) and to the HIEN way only (nodeWayApplies). An ung_the
+// player can neither purchase nor aggregate this tree; the An tree
+// carries the matching ung_the stamp.
 export const THE_TU_NODES: ProgressionNode[] = [
   ...TRUNK_QI,
   ...TRUNK_FOUNDATION,
@@ -330,4 +333,10 @@ export const THE_TU_NODES: ProgressionNode[] = [
   ...CUONG_BRANCH,
   TRAN_ROOT,
   ...TRAN_BRANCH,
-].map((node): ProgressionNode => ({ ...node, requiredCultivationPath: 'the_tu' }))
+].map(
+  (node): ProgressionNode => ({
+    ...node,
+    requiredCultivationPath: 'the_tu',
+    requiredWay: 'hien',
+  }),
+)

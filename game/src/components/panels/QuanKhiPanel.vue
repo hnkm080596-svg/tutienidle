@@ -2,10 +2,10 @@
 // Quán Khí (2026-08-20, Realm Passive & Pressure follow-up) — tách
 // path-choices ("Bước Vào Pháp Tu/Kiếm Tu") ra khỏi CharacterPanel.vue
 // thành overlay riêng, cùng pattern SkillPathPanel.vue/TechniquePanel.vue.
-// Mở qua nút "Quán Khí" bên cạnh Đột Phá (CharacterPanel.vue's
-// .character-panel__breakthrough) khi player.realmLevel >= 12 ở Phàm
-// Nhân (xem QUAN_KHI_UNLOCK_LEVEL ở đó) — panel này KHÔNG tự kiểm tra
-// lại điều kiện, chỉ tự đóng ngay sau khi chọn xong (component gọi nó
+// Mở qua TribulationOutcomeService sau khi thắng kiếp Quán Khí
+// (targetRealmId 'qi_refining'), hoặc qua entry button trên
+// CharacterPanel.vue cho Kiếm Tu — panel này KHÔNG tự kiểm tra lại
+// điều kiện, chỉ tự đóng ngay sau khi chọn xong (component gọi nó
 // đã gate rồi).
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -13,9 +13,14 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
-import { CULTIVATION_PATH_KITS, PHAP_TU_AN_REQUIRED_SKILLS } from '@/core/player/CultivationPathKit'
-import { getOfferableCultivationPaths } from '@/core/player/CultivationPathSystem'
-import type { CultivationPathId } from '@/core/player/CultivationPathKit'
+import {
+  CULTIVATION_PATH_MODULES,
+  type CultivationPathId,
+  type PathWayDefinition,
+  type PathWayId,
+} from '@/core/player/CultivationPathKit'
+import { listOfferableWays } from '@/core/player/CultivationPathSystem'
+import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
@@ -37,55 +42,78 @@ const cooldownSeconds = computed(() => {
   return gameManager.tribulationDirector.getCooldownSeconds()
 })
 
-// Phap Tu Reimagined (Task 16) — the ritual offers exactly what
-// getOfferableCultivationPaths() decides: phap_tu_an appears ONLY when
-// linh_bao is already Lv3 at ritual time; the_tu_an appears ONLY when
-// huy_quyen is Lv3 (same isCultivationPathOffered predicate the ritual
-// enforces); no locked-card tease when ineligible (spec §11).
+// Phap Tu Reimagined (Task 16) — the ritual offers exactly what the
+// path authority lists: ngo_dao appears ONLY when linh_bao is already
+// Lv3 at ritual time; ung_the appears ONLY when huy_quyen is Lv3 (same
+// isCultivationPathOffered predicate the ritual enforces inside
+// applyPathChoice); no locked-card tease when ineligible (spec §11).
 // Offerability is evaluated live per render — eligibility is never
 // stored.
-const availablePaths = computed(() => {
+const availableWays = computed(() => {
   stateVersion.value
 
-  return getOfferableCultivationPaths(player.$state).map(id => CULTIVATION_PATH_KITS[id])
+  // M2 — offers are (path, way) pairs from the authority. Ineligible
+  // ways stay hidden (pre-framework omission behavior preserved); each
+  // row carries the resolved way definition for display.
+  return listOfferableWays(player.$state)
+    .filter((offer) => offer.eligible)
+    .map((offer) => ({
+      pathId: offer.pathId,
+      wayId: offer.wayId,
+      way: CULTIVATION_PATH_MODULES[offer.pathId].ways[offer.wayId],
+    }))
+    .filter(
+      (entry): entry is { pathId: CultivationPathId; wayId: PathWayId; way: PathWayDefinition } =>
+        entry.way !== undefined,
+    )
 })
 
-// The hidden path's kit — names resolved live from the skill registry
-// so the card never drifts from authored content.
-const AN_KIT_SKILL_IDS = PHAP_TU_AN_REQUIRED_SKILLS
-
-const anKitSkillNames = computed(() =>
-  AN_KIT_SKILL_IDS.map(id => gameManager.skillManager.get(id)?.name ?? id),
-)
+// A sealed way's kit names — resolved live from the way declaration
+// (loadout skillIds + the technique-carried innate passive) so the card
+// never drifts from authored content.
+function sealedKitSkillNames(way: PathWayDefinition): string[] {
+  const skillIds = [...(way.skillIds ?? [])]
+  const innateId = gameManager.techniqueManager.get(way.techniqueId)?.innateSkillId
+  if (innateId) {
+    skillIds.push(innateId)
+  }
+  return skillIds.map(id => gameManager.skillManager.get(id)?.name ?? id)
+}
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
 // (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng
 // thay vì browser confirm() mặc định).
-const pendingPathId = ref<CultivationPathId | null>(null)
+const pendingChoice = ref<{ pathId: CultivationPathId; wayId: PathWayId } | null>(null)
 
-const pendingPathName = computed(() => (pendingPathId.value ? CULTIVATION_PATH_KITS[pendingPathId.value].name : ''))
+const pendingWay = computed(() =>
+  pendingChoice.value
+    ? CULTIVATION_PATH_MODULES[pendingChoice.value.pathId].ways[pendingChoice.value.wayId]
+    : undefined,
+)
 
-function choosePath(pathId: CultivationPathId) {
-  pendingPathId.value = pathId
+const pendingPathName = computed(() => pendingWay.value?.name ?? '')
+
+function choosePath(pathId: CultivationPathId, wayId: PathWayId) {
+  pendingChoice.value = { pathId, wayId }
 }
 
 function cancelChoosePath() {
-  pendingPathId.value = null
+  pendingChoice.value = null
 }
 
 function confirmChoosePath() {
-  const pathId = pendingPathId.value
+  const choice = pendingChoice.value
 
-  pendingPathId.value = null
+  pendingChoice.value = null
 
-  if (!pathId) {
+  if (!choice) {
     return
   }
 
-  const kit = CULTIVATION_PATH_KITS[pathId]
+  const way = CULTIVATION_PATH_MODULES[choice.pathId].ways[choice.wayId]
 
   const realmIdBefore = player.realmId
-  if (gameManager.realmAdvanceOps.chooseCultivationPath(pathId, player.$state)) {
+  if (gameManager.realmAdvanceOps.chooseCultivationPath(choice.pathId, choice.wayId, player.$state)) {
     bumpState()
 
     // Nghi Lễ Nhập Môn — chọn path VỪA LÀ hành động đột phá Phàm Nhân
@@ -94,7 +122,7 @@ function confirmChoosePath() {
     if (realmIdBefore === 'mortal' && player.realmId !== 'mortal') {
       useWorldAnnouncementStore().show(
         t('panels.quanKhi.world.ceremonyTitle'),
-        t('panels.quanKhi.world.ceremonyBody', { name: kit.name }),
+        t('panels.quanKhi.world.ceremonyBody', { name: way?.name ?? choice.wayId }),
       )
     }
 
@@ -107,27 +135,29 @@ function close() {
 }
 
 // Kiem Tu specialization card below — shown only after the player has
-// chosen the kiem_tu path (read-only display; the hien -> ngu
-// conversion lives on the kiem_tu_an node, not in this panel).
+// chosen the kiem_tu path (read-only display; the way was locked at
+// the Initiation Ritual — there is no in-panel conversion).
 const isKiemTu = computed(() => {
   stateVersion.value
 
-  return player.cultivationPath === 'kiem_tu'
+  // M9 — way-strict module predicates, never the raw path id: a
+  // way-less/corrupt kiem_tu save is NOT treated as kiem (fail closed).
+  return isKiemTuHien(player) || isKiemTuNgu(player)
 })
 
-// Kiem Tu Reimagined (spec 2026-09-15) — hien/ngu specialization mode
-// is canonical on PlayerData.kiemTu. 'hien' (Kiem Pho) is the visible
-// spec every Kiem Tu starts as; 'ngu' (Ngu Kiem Dao) appears only
-// after the hidden kiem_tu_an conversion, so displaying it here never
-// spoils a path the player has not unlocked.
-const kiemTuMode = computed(() => {
+// Cultivation Path Framework (M6/M9) — the hien/ngu way is canonical on
+// PlayerData.cultivationWay, read through the module predicate (the
+// retired kiemTu.mode discriminator). 'hien' (Kiem Pho) is the visible
+// spec; 'ngu' (Ngu Kiem Dao) only ever reads 'ngu' for a player who
+// entered it at the ritual.
+const kiemTuWay = computed(() => {
   stateVersion.value
 
-  return player.kiemTu?.mode ?? 'hien'
+  return isKiemTuNgu(player) ? 'ngu' : 'hien'
 })
 
 const specNameDisplay = computed(() =>
-  kiemTuMode.value === 'ngu'
+  kiemTuWay.value === 'ngu'
     ? t('panels.quanKhi.specNames.nguKiemDao')
     : t('panels.quanKhi.specNames.kiemPho'),
 )
@@ -200,14 +230,15 @@ function removeOrbAt(index: number) {
       <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.pathSelection.hint') }}</p>
 
       <div class="quan-khi-panel__choices">
-        <template v-for="kit in availablePaths" :key="kit.id">
-          <!-- Sealed hidden-path card (Task 16) — renders ONLY when
-               getOfferableCultivationPaths includes it; names the kit,
-               carries the permanent warning, no node-tree entry point. -->
-          <div v-if="kit.id === 'phap_tu_an'" class="quan-khi-panel__hidden-card">
-            <p class="quan-khi-panel__hidden-title">{{ kit.name }}</p>
+        <template v-for="kit in availableWays" :key="`${kit.pathId}/${kit.wayId}`">
+          <!-- Sealed hidden-path card (Task 16, M9) — renders for any
+               way declaring sealedOffer (today: ngo_dao); names the
+               way, carries the permanent warning, no node-tree entry
+               point. -->
+          <div v-if="kit.way.sealedOffer" class="quan-khi-panel__hidden-card">
+            <p class="quan-khi-panel__hidden-title">{{ kit.way.name }}</p>
             <p class="quan-khi-panel__hidden-desc">
-              {{ t('panels.quanKhi.sections.hiddenPath.description', { kit: anKitSkillNames.join(' · ') }) }}
+              {{ t('panels.quanKhi.sections.hiddenPath.description', { kit: sealedKitSkillNames(kit.way).join(' · ') }) }}
             </p>
             <p class="quan-khi-panel__hidden-warning">{{ t('panels.quanKhi.sections.hiddenPath.warning') }}</p>
             <GameButton
@@ -215,9 +246,9 @@ function removeOrbAt(index: number) {
               variant="danger"
               size="sm"
               :disabled="cooldownSeconds > 0"
-              @click="choosePath(kit.id)"
+              @click="choosePath(kit.pathId, kit.wayId)"
             >
-              {{ t('panels.quanKhi.actions.enterPath', { name: kit.name }) }}
+              {{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}
             </GameButton>
           </div>
 
@@ -227,9 +258,9 @@ function removeOrbAt(index: number) {
             variant="danger"
             size="sm"
             :disabled="cooldownSeconds > 0"
-            @click="choosePath(kit.id)"
+            @click="choosePath(kit.pathId, kit.wayId)"
           >
-            {{ t('panels.quanKhi.actions.enterPath', { name: kit.name }) }}
+            {{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}
           </GameButton>
         </template>
       </div>
@@ -237,14 +268,14 @@ function removeOrbAt(index: number) {
 
     <!-- Kiem Tu Reimagined (spec 2026-09-15) — shows the active
          specialization (Kiem Pho / Ngu Kiem Dao) read from
-         player.kiemTu.mode. -->
+         player.cultivationWay. -->
     <div v-if="isKiemTu" class="quan-khi-panel__card">
       <div class="quan-khi-panel__route-card">
         <p class="quan-khi-panel__hint">
           {{ t('panels.quanKhi.sections.kiemTuSpec.hintPrefix') }} <strong class="quan-khi-panel__route-name">{{ specNameDisplay }}</strong>{{ t('panels.quanKhi.sections.kiemTuSpec.hintSuffix') }}
         </p>
         <p class="quan-khi-panel__warning">
-          {{ kiemTuMode === 'ngu'
+          {{ kiemTuWay === 'ngu'
             ? t('panels.quanKhi.sections.kiemTuSpec.nguDescription')
             : t('panels.quanKhi.sections.kiemTuSpec.hienDescription') }}
         </p>
@@ -254,7 +285,7 @@ function removeOrbAt(index: number) {
     <!-- Kiem Pho preset editor — hien only (ngu never reads preset).
          Strip = current persisted sequence, palette = realm-unlocked
          orbs; both write through setKiemPhoPreset(). -->
-    <div v-if="isKiemTu && kiemTuMode === 'hien'" class="quan-khi-panel__card">
+    <div v-if="isKiemTu && kiemTuWay === 'hien'" class="quan-khi-panel__card">
       <div class="quan-khi-panel__route-card">
         <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.title') }}</p>
         <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.hint') }}</p>
@@ -300,9 +331,9 @@ function removeOrbAt(index: number) {
     </div>
 
     <ConfirmModal
-      :open="pendingPathId !== null"
+      :open="pendingChoice !== null"
       :title="t('panels.quanKhi.messages.confirmPathTitle')"
-      :message="pendingPathId === 'phap_tu_an'
+      :message="pendingWay?.sealedOffer
         ? t('panels.quanKhi.messages.confirmPathHiddenBody', { name: pendingPathName })
         : t('panels.quanKhi.messages.confirmPathBody', { name: pendingPathName })"
       danger

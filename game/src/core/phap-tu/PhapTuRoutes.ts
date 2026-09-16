@@ -3,8 +3,9 @@ import type { PlayerData } from '../player/Player'
 import type { EffectiveSkill } from '../skill/SkillSystem'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { ProgressionNode } from '../progression/ProgressionNode'
-import { getNodeLevel, isNodeElementActive, isNodeRouteActive } from '../progression/NodeSystem'
+import { getNodeLevel, isNodeElementActive, isNodeRouteActive, nodeWayApplies } from '../progression/NodeSystem'
 import { MAX_THE } from '../combat/CombatTypes'
+import { isPhapTuNguHanh } from './PhapTuPath'
 import type { PhapTuState, PhapTuRoute } from './PhapTuState'
 
 // Phap Tu Reimagined (spec 2026-09-14 §4) — the ONE owner of route
@@ -73,7 +74,7 @@ export const NEUTRAL_ROUTE_PROFILE: RouteProfile = {
 
 // Route stat modifiers are full StatModifiers (post-stat-rework
 // contract): sourceType 'realm'/sourceId 'phap_tu' matches
-// CULTIVATION_PATH_KITS grants, domain 'phap_tu' keeps them inside the
+// CULTIVATION_PATH_MODULES way grants, domain 'phap_tu' keeps them inside the
 // StatDomain gate. Ailment-potency lines use `flat` absolutes — percent
 // on a zero-base stat is a no-op.
 export const PHAP_TU_ROUTES: Record<PhapTuRoute, RouteProfile> = {
@@ -130,7 +131,7 @@ export const PHAP_TU_ROUTES: Record<PhapTuRoute, RouteProfile> = {
 
 /**
  * Route profile for a PhapTuState — NEUTRAL when there is no state or
- * no route (INV-11). phap_tu_an players never reach this: route state
+ * no route (INV-11). ngo_dao players never reach this: route state
  * is not theirs.
  */
 export function resolveRouteProfile(state?: PhapTuState): RouteProfile {
@@ -209,9 +210,11 @@ export function applyRouteToTurnSkill(turnSkill: TurnSkillDefinition, profile: R
  */
 export function getRouteStatModifiers(player: PlayerData): StatModifier[] {
   // Review fix (HIGH-2): route bonuses are universal stats — gate on the
-  // owning path so leaked/dirty phapTu.route state on phap_tu_an or
+  // owning path so leaked/dirty phapTu.route state on ngo_dao or
   // kiem_tu players cannot inject crit/ailment modifiers.
-  if (player.cultivationPath !== 'phap_tu') {
+  // M4 (R6): the WAY is the gate — a collapsed ('phap_tu','ngo_dao')
+  // player owns no route machinery even with dirty phapTu state.
+  if (!isPhapTuNguHanh(player)) {
     return []
   }
 
@@ -230,7 +233,11 @@ export function resolveMaxThe(
   registry: { getAll(): ProgressionNode[] },
   player: PlayerData,
 ): number {
-  if (player.cultivationPath !== 'phap_tu') {
+  // M4 (R6): the The pool is ngu_hanh machinery — ngo_dao has no The
+  // tree, so the WAY is the gate (the requiredWay stamp also filters
+  // truong_the in the loop below; this check keeps the early-out cheap
+  // and self-documenting).
+  if (!isPhapTuNguHanh(player)) {
     return MAX_THE
   }
 
@@ -239,7 +246,7 @@ export function resolveMaxThe(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 

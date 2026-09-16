@@ -21,9 +21,14 @@ import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import { MAX_THE } from '@/core/combat/CombatTypes'
 import type { OrbId, KiemTuState } from '@/core/kiem-tu/KiemTuState'
 import { isKiemPhoProviderHandle } from '@/core/kiem-tu/KiemPhoProvider'
+import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
 import { forgeCost } from '@/core/kiem-tu/NguKiemDao'
 import { getRealmIndex } from '@/core/realm/realmSystem'
-import { CULTIVATION_PATH_KITS, type CultivationPathId } from '@/core/player/CultivationPathKit'
+import {
+  getActiveWayDefinition,
+  type CultivationPathId,
+  type PathWayId,
+} from '@/core/player/CultivationPathKit'
 import type { GameManager } from '@/core/game/GameManager'
 import {
   readOptionalGate,
@@ -60,16 +65,19 @@ export const KIEM_BAR_READER_KEY = 'kiemBarReader' as const
 export interface KiemBarPlayerState {
   kiemTu?: KiemTuState
   realmId: string
-  // The Tu Reimagined (T22) — the path kit's usesTheResource flag
+  // The Tu Reimagined (T22) — the active way's usesTheResource flag
   // decides whether the bar shows The; no path-id checks in the HUD.
+  // Read via getActiveWayDefinition — the persisted (path, way) pair
+  // resolves the way, and a way-less/corrupt pair resolves nothing.
   cultivationPath?: CultivationPathId
+  cultivationWay?: PathWayId
 }
 
 /**
  * Đọc snapshot Kiếm bar HIỆN TẠI từ battle đang chạy. null = ẩn bar.
- * Mode xác định từ player.kiemTu.mode (canonical state, K1); the
- * battle-scoped provider snapshot supplies cursor/log (runtime, never
- * persisted).
+ * Way xác định từ player.cultivationWay (M6 — the retired
+ * kiemTu.mode discriminator); the battle-scoped provider snapshot
+ * supplies cursor/log (runtime, never persisted).
  */
 export function makeKiemBarReader(
   gameManager: GameManager,
@@ -93,9 +101,10 @@ export function makeKiemBarReader(
       : undefined
 
     if (!kiemTu) {
-      // The Tu An (T22) — The proc-fuel pool, gated by the kit flag so
-      // the HUD stays data-driven (no path-id checks outside kit data).
-      if (player.cultivationPath && CULTIVATION_PATH_KITS[player.cultivationPath].usesTheResource) {
+      // The Tu An (T22) — The proc-fuel pool, gated by the active way's
+      // flag so the HUD stays data-driven (no path-id checks outside
+      // way data). getActiveWayDefinition resolves both persisted eras.
+      if (getActiveWayDefinition(player)?.usesTheResource) {
         return {
           current: battleEntity?.currentThe ?? 0,
           max: battleEntity?.maxThe ?? MAX_THE,
@@ -108,7 +117,7 @@ export function makeKiemBarReader(
       return externalWard ? { current: 0, max: 0, label: '', externalWard } : null
     }
 
-    if (kiemTu.mode === 'hien') {
+    if (isKiemTuHien(player)) {
       // The participant's provider owns the live cursor/log — the
       // persisted preset is the fallback when no provider is attached
       // (e.g. mid-migration battles built before the hien wiring).
@@ -130,19 +139,24 @@ export function makeKiemBarReader(
       }
     }
 
-    // ngu (Task 8) — bar = Kiem Y progress toward the next forge at the
-    // CURRENT realm's forgeCost; label carries the live sword count.
-    const realmIndex = getRealmIndex(player.realmId)
+    if (isKiemTuNgu(player)) {
+      // ngu — bar = Kiem Y progress toward the next forge at the
+      // CURRENT realm's forgeCost; label carries the live sword count.
+      const realmIndex = getRealmIndex(player.realmId)
 
-    return {
-      current: kiemTu.kiemY,
-      max: realmIndex >= 1 ? forgeCost(realmIndex) : 1,
-      label: `Kiếm Ý · ${kiemTu.kiemDaoCount} kiếm`,
-      mode: 'ngu',
-      kiemDaoCount: kiemTu.kiemDaoCount,
-      kiemDaoBase: kiemTu.kiemDaoBase,
-      externalWard,
+      return {
+        current: kiemTu.kiemY,
+        max: realmIndex >= 1 ? forgeCost(realmIndex) : 1,
+        label: `Kiếm Ý · ${kiemTu.kiemDaoCount} kiếm`,
+        mode: 'ngu',
+        kiemDaoCount: kiemTu.kiemDaoCount,
+        kiemDaoBase: kiemTu.kiemDaoBase,
+        externalWard,
+      }
     }
+
+    // Corrupt/way-less pair with a kiemTu slice — fail closed, ward only.
+    return externalWard ? { current: 0, max: 0, label: '', externalWard } : null
   }
 }
 

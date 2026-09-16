@@ -279,7 +279,7 @@ describe('nodePathApplies — cultivation path ownership gate', () => {
       },
     })
 
-  const theTuAnNode = () => minorNode({ id: 'the_tu_an_only', requiredCultivationPath: 'the_tu_an' })
+  const theTuAnNode = () => minorNode({ id: 'the_tu_an_only', requiredCultivationPath: 'the_tu' })
 
   it('a the_tu node is NOT purchasable by a phap_tu player even with insight and prereqs satisfied', () => {
     const player = playerWith({ cultivationPath: 'phap_tu', skillInsight: 50 })
@@ -301,19 +301,18 @@ describe('nodePathApplies — cultivation path ownership gate', () => {
     expect(mods[0]!.flat).toBe(3)
   })
 
-  it('a the_tu_an node requires the_tu_an specifically — a plain the_tu player cannot purchase or aggregate it', () => {
+  it('a base-path stamp with no requiredWay is path-level only — way membership is the inner gate (M7)', () => {
     const registry = { getAll: () => [theTuAnNode()] }
-    const theTuPlayer = playerWith({ cultivationPath: 'the_tu', skillInsight: 50 })
+    // The node carries only requiredCultivationPath ('the_tu' base id):
+    // EITHER way inside the path owns it at path level. requiredWay (a
+    // sibling gate, NodeSystem.way.test.ts) is what separates hien from
+    // ung_the inside the family.
+    const theTuPlayer = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'hien', skillInsight: 50 })
 
-    expect(canPurchaseNode(theTuPlayer, theTuAnNode())).toBe(false)
-    expect(purchaseNode(theTuPlayer, theTuAnNode())).toBe(false)
+    expect(canPurchaseNode(theTuPlayer, theTuAnNode())).toBe(true)
 
-    // Sibling path does not inherit ownership — injected levels stay inert.
-    theTuPlayer.nodeLevels = { the_tu_an_only: 1 }
-    expect(aggregateNodeStatModifiers(registry, theTuPlayer)).toEqual([])
-
-    const theTuAnPlayer = playerWith({ cultivationPath: 'the_tu_an', skillInsight: 50 })
-    expect(canPurchaseNode(theTuAnPlayer, theTuAnNode())).toBe(true)
+    const ungThePlayer = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'ung_the', skillInsight: 50 })
+    expect(canPurchaseNode(ungThePlayer, theTuAnNode())).toBe(true)
   })
 
   it('canUpgradeNode rejects a wrong-path owner even when the node has levels', () => {

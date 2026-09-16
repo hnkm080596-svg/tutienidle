@@ -18,7 +18,10 @@ import {
 import type { PlayerData } from '../player/Player'
 import { playerToCombatEntity } from '../player/Player'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
-import { getCultivationPathStatModifiers } from '../player/CultivationPathSystem'
+import {
+  getCultivationPathStatModifiers,
+  resolveActiveWayStatDomains,
+} from '../player/CultivationPathSystem'
 import { getRouteStatModifiers } from '../phap-tu/PhapTuRoutes'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
@@ -26,7 +29,6 @@ import type { SkillSystem } from '../skill/SkillSystem'
 import type { Stats } from '../stats/StatBlock'
 import { createBaseStats } from '../stats/StatBlock'
 import type { StatModifier } from '../stats/StatCalculator'
-import { CULTIVATION_PATH_STAT_DOMAINS } from '../stats/StatDomain'
 import type { TechniqueManager } from '../technique/TechniqueManager'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
 
@@ -199,16 +201,16 @@ export class GameManagerPersistentEffectOps {
     }
 
     // MP is a phap_tu-domain resource (D9): emit the MP family only when
-    // the player's path OWNS that stat domain (phap_tu + phap_tu_an both
-    // map to it in CULTIVATION_PATH_STAT_DOMAINS). applyDomainGate checks
-    // stat<->modifier domain match, never path ownership -- this emission
-    // gate is the credential check it cannot perform, so a the_tu/kiem_tu
-    // technique's authored MP fields can no longer self-issue phap_tu
-    // credentials onto a player with no MP pool. The authoring field
-    // stays legal; emission decides.
+    // the player's active WAY owns that stat domain (both phap_tu ways
+    // declare 'phap_tu' via their stat facet — M7 routes this through
+    // resolveActiveWayStatDomains, the facet authority). applyDomainGate
+    // checks stat<->modifier domain match, never path ownership -- this
+    // emission gate is the credential check it cannot perform, so a
+    // the_tu/kiem_tu technique's authored MP fields can no longer
+    // self-issue phap_tu credentials onto a player with no MP pool.
+    // The authoring field stays legal; emission decides.
     const ownsPhapTuDomain =
-      player.cultivationPath !== undefined &&
-      (CULTIVATION_PATH_STAT_DOMAINS[player.cultivationPath]?.includes('phap_tu') ?? false)
+      resolveActiveWayStatDomains(player)?.includes('phap_tu') ?? false
 
     if (ownsPhapTuDomain && effect.maxMpIncreasePercent !== undefined) {
       modifiers.push({

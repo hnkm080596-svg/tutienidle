@@ -20,6 +20,8 @@ import {
 } from '../../core/stats/statKeyMigration'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 import { KIEM_PHO_ORB_IDS } from '../../core/kiem-tu/KiemTuState'
+import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
+import { isPhapTuNguHanh } from '../../core/phap-tu/PhapTuPath'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -198,6 +200,73 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.nodeLevels', message: 'phải là object' })
   }
 
+  // Cultivation Path Framework (v66) — cultivationPath must be one of
+  // the 3 BASE ids (the CULTIVATION_PATH_MODULES keys). M7 removed the
+  // legacy _an ids from the union, so a save carrying one fails this
+  // enum check and is rejected — dev-phase policy, no migration.
+  // cultivationWay is an optional PathWayId content string — shape-check
+  // the type only; catalog membership belongs to the path authority,
+  // not the save boundary.
+  if (
+    player.cultivationPath !== undefined &&
+    (typeof player.cultivationPath !== 'string' ||
+      !Object.prototype.hasOwnProperty.call(CULTIVATION_PATH_MODULES, player.cultivationPath))
+  ) {
+    issues.push({
+      path: 'player.cultivationPath',
+      message: 'phải là 1 trong 3 cultivation path id hợp lệ hoặc vắng mặt',
+    })
+  }
+
+  if (player.cultivationWay !== undefined && typeof player.cultivationWay !== 'string') {
+    issues.push({ path: 'player.cultivationWay', message: 'phải là string hoặc vắng mặt' })
+  }
+
+  // Pair coherence (review cycle, I1) — applyPathChoice writes the
+  // (path, way) pair + path slice atomically and the ritual advances
+  // realmId in the same commit, so the save boundary rejects every
+  // incoherent shape instead of loading a permanently soft-locked
+  // player: both-set-or-neither, the way must be owned by its path
+  // module, a mortal can never carry the pair, and 'kiem_tu' requires
+  // its kiemTu slice (provider attach + NguKiemDao reads assume it).
+  const hasPath = player.cultivationPath !== undefined
+  const hasWay = player.cultivationWay !== undefined
+
+  if (hasPath !== hasWay) {
+    issues.push({
+      path: 'player.cultivationWay',
+      message: 'cultivationPath và cultivationWay phải cùng vắng mặt hoặc cùng set (commit nguyên tử)',
+    })
+  } else if (
+    hasPath &&
+    typeof player.cultivationPath === 'string' &&
+    Object.prototype.hasOwnProperty.call(CULTIVATION_PATH_MODULES, player.cultivationPath) &&
+    typeof player.cultivationWay === 'string' &&
+    !Object.prototype.hasOwnProperty.call(
+      CULTIVATION_PATH_MODULES[player.cultivationPath as CultivationPathId].ways,
+      player.cultivationWay,
+    )
+  ) {
+    issues.push({
+      path: 'player.cultivationWay',
+      message: `way '${player.cultivationWay}' không thuộc path '${player.cultivationPath}'`,
+    })
+  }
+
+  if (player.realmId === 'mortal' && hasPath) {
+    issues.push({
+      path: 'player.cultivationPath',
+      message: 'không thể set khi realmId là mortal (nghi lễ thăng cảnh trong cùng commit)',
+    })
+  }
+
+  if (player.cultivationPath === 'kiem_tu' && player.kiemTu === undefined) {
+    issues.push({
+      path: 'player.kiemTu',
+      message: "bắt buộc khi cultivationPath là 'kiem_tu' (applyPathChoice tạo slice nguyên tử)",
+    })
+  }
+
   // Phap Tu Reimagined — required PlayerData.phapTu: { element, route },
   // both nullable until the atomic pick; a missing/garbage object would
   // crash selectPhapTuElement/resolveRouteProfile reads downstream.
@@ -220,7 +289,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
     // Atomic-pair invariant: writers commit {element, route} together
     // (selectPhapTuElement), so a half-set pair is always corrupt — and
-    // only ordinary phap_tu owns the state at all (phap_tu_an, kiem_tu,
+    // only the ngu_hanh way owns the state at all (ngo_dao, kiem_tu,
     // mortal must stay {null, null} or route stats leak cross-path).
     const hasElement = player.phapTu.element !== null
     const hasRoute = player.phapTu.route !== null
@@ -229,10 +298,14 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         path: 'player.phapTu',
         message: 'element và route phải cùng null hoặc cùng đã chọn (commit nguyên tử)',
       })
-    } else if (hasElement && player.cultivationPath !== 'phap_tu') {
+    } else if (hasElement && !isPhapTuNguHanh(player)) {
+      // Cultivation Path Framework (M4/M8): element/route ownership is
+      // ngu_hanh-only — the module predicate owns the membership rule,
+      // so ('phap_tu','ngo_dao') and any way-less pair reject element
+      // ownership.
       issues.push({
         path: 'player.phapTu',
-        message: "element/route chỉ thuộc path 'phap_tu' thường",
+        message: "element/route chỉ thuộc way 'ngu_hanh' của path 'phap_tu'",
       })
     }
   }
@@ -252,18 +325,22 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   // Kiem Tu Reimagined (v62) — kiemTu is optional (absent for non-kiem
   // players) but a malformed present copy silently degraded hien combat
-  // (empty preset -> nextOrb NaN). Shape-check when present: mode union,
-  // preset 1-9 catalog-member OrbIds, non-negative numerics, and the
-  // ngu invariants (count >= 1, base >= 1) since no legit writer emits
-  // lower.
+  // (empty preset -> nextOrb NaN). Shape-check when present: preset
+  // 1-9 catalog-member OrbIds, non-negative numerics, and the ngu
+  // invariants (count >= 1, base >= 1) since no legit writer emits
+  // lower. M6: the mode union check is gone — cultivationWay carries
+  // the hien/ngu distinction.
   if (player.kiemTu !== undefined) {
     if (!isObject(player.kiemTu)) {
       issues.push({ path: 'player.kiemTu', message: 'phải là object hoặc vắng mặt' })
     } else {
       const kiemTu = player.kiemTu
 
-      if (kiemTu.mode !== 'hien' && kiemTu.mode !== 'ngu') {
-        issues.push({ path: 'player.kiemTu.mode', message: "phải là 'hien' hoặc 'ngu'" })
+      // M6 retired kiemTu.mode — a save still carrying it predates the
+      // way model (or was hand-edited); reject rather than persist the
+      // dead key forever.
+      if ('mode' in kiemTu) {
+        issues.push({ path: 'player.kiemTu.mode', message: 'field đã bị retire từ v66 (cultivationWay thay thế)' })
       }
 
       const preset = kiemTu.preset

@@ -10,6 +10,7 @@ import {
   TU_KIEM_Y_EMBLEM,
 } from '../../data/skill/NguKiemDaoSkills'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
+import { isKiemTuHien, isKiemTuNgu } from '../kiem-tu/KiemTuPath'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import {
@@ -55,6 +56,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { commitFormationLoadout, resolvePartyFormation } from './FormationPlacement'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
+import { resolveActiveWayStatDomains } from '../player/CultivationPathSystem'
 import { companionToCombatEntity } from '../companion/CompanionCombat'
 import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
 import { COMPANIONS } from '../../data/companion/Companions'
@@ -993,14 +995,14 @@ export class GameManagerTurnBattleOps {
       playerEntity,
       0,
       playerPath ? this.deps.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
-      playerPath?.cultivationPath,
+      playerPath ? resolveActiveWayStatDomains(playerPath) : undefined,
       playerPath ? this.deps.resolvePlayerSpecialUltimate(playerPath) : undefined,
     )
 
     // Kiem Tu Reimagined Task 6 — hien participant: the Kiem Pho
     // provider OWNS the basic slot (participant.basic becomes inert);
     // preset cursor/log live in the provider closure, not PlayerData.
-    if (playerPath?.cultivationPath === 'kiem_tu' && playerPath.kiemTu?.mode === 'hien') {
+    if (playerPath?.kiemTu && isKiemTuHien(playerPath)) {
       playerParticipant.dynamicBasic = buildKiemPhoProvider(
         playerPath,
         collectKiemPhoComboModifiers(playerPath, this.deps.getProgressionNodes()),
@@ -1010,7 +1012,8 @@ export class GameManagerTurnBattleOps {
     // Task 9 — ngu participant: the Ngu Kiem Dao provider owns the basic
     // (multi-instance phi kiem); the special/ultimate slots carry emblem
     // markers only (spec §5.4 — display lanes, never resolvable actions).
-    if (playerPath?.cultivationPath === 'kiem_tu' && playerPath.kiemTu?.mode === 'ngu') {
+    // M6 — way membership replaces the retired kiemTu.mode check.
+    if (playerPath?.kiemTu && isKiemTuNgu(playerPath)) {
       playerParticipant.dynamicBasic = buildNguKiemDaoProvider(
         playerPath,
         collectKiemDaoCascadeUnlocks(playerPath, this.deps.getProgressionNodes()),
@@ -1146,7 +1149,7 @@ export class GameManagerTurnBattleOps {
     // Task 8 (INV-14) — players are carried wholesale (same entity
     // objects, HP/resources carry over), but battle-scoped resources do
     // NOT carry: a new cycle is a new battle instance for currentThe —
-    // zero it on every carried entity (covers the_tu_an's proc pool too
+    // zero it on every carried entity (covers ung_the's proc pool too
     // via the shared reset — merged contract).
     // Kiem Tu Reimagined Task 2 — auto-repeat also reuses provider state,
     // so battle-scoped dynamicBasic state (Kiem Pho cursor/cast log)

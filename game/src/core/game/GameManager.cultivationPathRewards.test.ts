@@ -15,6 +15,7 @@ describe('GameManager — cultivation path realm rewards', () => {
     gameManager.techniqueManager.get('dai_ngu_hanh_chan_quyet')!.insight = 42
 
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.realmId = 'foundation_establishment'
 
     expect(gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)).toBe(true)
@@ -35,6 +36,7 @@ describe('GameManager — cultivation path realm rewards', () => {
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     player.cultivationPath = 'kiem_tu'
+    player.cultivationWay = 'hien'
     player.realmId = 'foundation_establishment'
 
     expect(gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)).toBe(false)

@@ -168,6 +168,7 @@ describe('PhapTuNodes reimagined — element authority', () => {
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     return { gameManager, player }
   }
 
@@ -201,6 +202,7 @@ describe('PhapTuNodes reimagined — element authority', () => {
     expect(player.phapTu).toEqual({ element: null, route: null })
 
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     expect(
       gameManager.progressionOps.selectPhapTuElement('fire', 'invalid' as 'dot', player),
     ).toBe(false)
@@ -224,6 +226,7 @@ describe('PhapTuNodes reimagined — element authority', () => {
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
 
     expect(gameManager.progressionOps.selectPhapTuElement('fire', 'dot', player)).toBe(false)
     expect(player.phapTu).toEqual({ element: null, route: null })
@@ -233,10 +236,11 @@ describe('PhapTuNodes reimagined — element authority', () => {
   it('chooseCultivationPath(phap_tu) KHONG auto-chon Fire: phapTu null/null, hoa_cau_thuat chua learn', () => {
     const { gameManager, player } = phapTuManager()
     player.cultivationPath = undefined
+    player.cultivationWay = undefined
     player.realmId = 'mortal'
     player.realmLevel = 12
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player)).toBe(true)
     expect(player.cultivationPath).toBe('phap_tu')
     expect(player.phapTu).toEqual({ element: null, route: null })
     expect(player.nodeLevels['hoa_linh_ngo']).toBeUndefined()

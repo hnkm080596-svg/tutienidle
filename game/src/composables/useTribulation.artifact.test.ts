@@ -43,6 +43,7 @@ describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉ
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
 
     winFoundationTribulation(player, gameManager)
 
@@ -56,6 +57,7 @@ describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉ
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.cultivationPath = 'kiem_tu'
+    player.cultivationWay = 'hien'
 
     winFoundationTribulation(player, gameManager)
 
@@ -69,6 +71,7 @@ describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉ
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.realmId = 'foundation_establishment'
     player.artifact = { ...createDefaultArtifactProgress('ngu_hanh_chau'), experience: 42 }
 

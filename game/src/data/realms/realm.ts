@@ -50,8 +50,8 @@ export const REALMS: RealmData[] = [
     id: 'mortal',
     name: 'Phàm Nhân',
     // 10 -> 18 (2026-08-20, Realm Passive & Pressure follow-up) — Quán
-    // Khí (chọn Pháp Tu/Kiếm Tu) giờ mở sớm ở tầng 12 (xem
-    // CharacterPanel.vue's QUAN_KHI_UNLOCK_LEVEL), KHÔNG còn bắt buộc
+    // Khí (chọn Pháp Tu/Kiếm Tu) giờ mở qua tribulation qi_refining,
+    // KHÔNG còn bắt buộc
     // maxLevel — 18 chừa 6 tầng đệm (12-18) để chơi tiếp Luyện Thể
     // (tầng cuối Luyện Mạch cũng mở ở 12, xem data/realm/LuyenThe.ts)
     // hoặc grind thêm điểm thuộc tính trước khi quyết định Quán Khí.

@@ -50,7 +50,6 @@ export const GENERIC_PHYSICAL_BASIC: TurnSkillDefinition = {
 
 export const BASIC_ATTACKS_BY_BUILD: Record<string, TurnSkillDefinition> = {
   kiem_tu: KIEM_TU_BASIC,
-  the_tu: GENERIC_PHYSICAL_BASIC,
   pham_nhan: GENERIC_PHYSICAL_BASIC,
 }
 
@@ -70,9 +69,10 @@ export const THUY_GIAP_LONG_WATER_SURGE: TurnSkillDefinition = {
 // Builds whose basic is authored HERE as a static TurnSkillDefinition.
 // Phap Tu paths are deliberately absent: their basics convert from the
 // authored Skill at battle build (single authority — fail-fast on
-// converter rejection, no static substitute).
+// converter rejection, no static substitute). The Tu is absent too
+// (M7 — dead row removed): both ways resolve their kit at battle build
+// and fall back to GENERIC_PHYSICAL_BASIC directly, never via this map.
 export const REQUIRED_BUILD_IDS = [
   'kiem_tu',
-  'the_tu',
   'pham_nhan',
 ] as const

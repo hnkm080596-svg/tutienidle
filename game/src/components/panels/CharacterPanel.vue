@@ -10,7 +10,8 @@ import type { Stats } from '@/core/stats/StatBlock'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
-import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
+import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
+import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getMainStatCap } from '@/core/stats/StatCap'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
@@ -28,13 +29,18 @@ const { allocateAttributePoint } = useLoadoutActions()
 // triggerBreakthroughAction() trong useTribulation.ts (commandWheelCatalog.ts
 // đã bỏ slot quan_khi). Chỉ hiện khi đã chọn Kiếm Tu (route switch chỉ có
 // ý nghĩa ở đó).
-const showQuanKhiEntry = computed(() => player.cultivationPath === 'kiem_tu')
+// M9 — the entry is kiem-way machinery, gated by the module predicates
+// (fail closed on a way-less/corrupt pair), never a raw path id.
+const showQuanKhiEntry = computed(() => isKiemTuHien(player) || isKiemTuNgu(player))
 
 function openQuanKhi() {
   ui.openStandalonePanel('quan_khi')
 }
 
-const chosenKit = computed(() => player.cultivationPath ? CULTIVATION_PATH_KITS[player.cultivationPath] : undefined)
+// M5 — the active way (cultivationWay authoritative) drives the kit
+// label + aura colour; getActiveWayDefinition resolves the persisted
+// (path, way) pair and fails closed on a way-less/corrupt save.
+const chosenKit = computed(() => getActiveWayDefinition(player))
 
 // Thiên Phú (talent-direction-choice-plan §7) — hiển thị thiên phú đã chọn
 // (tên + description) đọc từ selectedTalentIds qua getTalentDefinition;

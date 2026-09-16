@@ -41,6 +41,7 @@ function setup(preset: string[] = ['orb_dam', 'orb_dam', 'orb_dam']) {
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'kiem_tu'
+  player.cultivationWay = 'hien'
   player.realmId = 'golden_core'
   player.kiemTu = { ...freshKiemTuState(), preset: preset as never }
 

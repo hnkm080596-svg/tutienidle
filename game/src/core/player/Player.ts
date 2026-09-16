@@ -1,9 +1,5 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
-import {
-  getPhapTuAttunementStatModifiers,
-  getTheTuAnReactiveStatModifiers,
-  getTheTuEnduranceStatModifiers,
-} from './CultivationPathSystem'
+import { collectActiveWayStatModifiers } from './CultivationPathSystem'
 import { createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
@@ -15,7 +11,7 @@ import { addCultivation } from '../cultivation/CultivationSystem'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { FoundationType } from '../breakthrough/FoundationType'
-import type { CultivationPathId } from './CultivationPathKit'
+import type { CultivationPathId, PathWayId } from './CultivationPathKit'
 import { createPhapTuState, type PhapTuState } from '../phap-tu/PhapTuState'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ArtifactProgress } from '../artifact/Artifact'
@@ -107,17 +103,26 @@ export interface PlayerData {
   // canChooseCultivationPath.
   cultivationPath?: CultivationPathId
 
+  // Cultivation Path Framework (spec 2026-09-16, M7) — the chosen WAY
+  // inside the path (e.g. 'ngu_hanh', 'ngo_dao'), written together with
+  // cultivationPath by CultivationPathSystem.applyPathChoice() inside
+  // the Initiation Ritual transaction. Post-M7 the union is exactly the
+  // three base ids and the pair is atomic — a way-less or foreign-way
+  // pair is corrupt and fails closed everywhere.
+  cultivationWay?: PathWayId
+
   // Phap Tu Reimagined (spec 2026-09-14) — persistent path-choice
   // authority for the normal Phap Tu path: { element, route } commit
   // atomically via selectPhapTuElement(). Present from character
-  // creation (both null until the ritual + atomic pick); phap_tu_an
-  // holders carry the same inert shape — their path id, not this
-  // state, is what matters.
+  // creation (both null until the ritual + atomic pick); ngo_dao
+  // holders carry the same inert shape — the (path, way) pair, not
+  // this state, is what matters.
   phapTu: PhapTuState
 
   // Kiem Tu Reimagined (spec 2026-09-15 K1) — the ONE canonical path
-  // state. Written at chooseCultivationPath('kiem_tu') = fresh hien
-  // state; mode flips to 'ngu' permanently via the kiem_tu_an node.
+  // state. Written at applyPathChoice('kiem_tu', way) inside the
+  // ritual; way membership lives on cultivationWay ('hien'|'ngu') —
+  // the retired mode field is gone.
   kiemTu?: KiemTuState
 
   // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
@@ -355,6 +360,11 @@ export function createDefaultPlayer(): PlayerData {
     // đúng nhưng UI gate không tự chuyển vì thiếu dòng này).
     cultivationPath: undefined,
 
+    // MUST be declared explicitly (even as `undefined`) — same Pinia
+    // toRefs() snapshot reason as cultivationPath above: applyPathChoice
+    // assigns this field through player.$state inside the ritual.
+    cultivationWay: undefined,
+
     // Required (non-optional) field — present from creation; both
     // members stay null until the ritual + atomic element/route pick.
     phapTu: createPhapTuState(),
@@ -439,19 +449,17 @@ export function resolvePlayerFinalStats(
     ...externalModifiers,
   ]
 
-  // D12 ordering contract (spec section 5): the Phap Tu system reads the
-  // resolved attribute totals and emits its gated MP modifiers BEFORE
-  // calculateStats runs -- the totals read is not a second attribute
-  // derivation (INV-6), and the emitted modifiers are the ONLY
-  // attunement->MP channel (INV-10). The Tu paths emit the same way
-  // (spec 2026-09-15 section 3): the_tu_an attribute->chance and the_tu
-  // vitality->enduranceThreshold ride the same totals read.
+  // D12 ordering contract (spec section 5): the active way's stat facet
+  // reads the resolved attribute totals and emits its gated modifiers
+  // BEFORE calculateStats runs -- the totals read is not a second
+  // attribute derivation (INV-6), and the emitted modifiers are the ONLY
+  // gated channels (INV-10). M4 moved the Phap Tu attunement emitter
+  // behind the way facet (collectActiveWayStatModifiers); M5 moves the
+  // The Tu channels the same way — hien's vitality->enduranceThreshold
+  // and ung_the's attribute->chance emissions are declared on the way
+  // stat facets in core/the-tu/TheTuPath.ts, keyed by cultivationWay.
   const attributeTotals = resolveAttributeTotals(player.baseStats, allModifiers)
-  const pathModifiers = [
-    ...getPhapTuAttunementStatModifiers(player, attributeTotals),
-    ...getTheTuAnReactiveStatModifiers(player, attributeTotals),
-    ...getTheTuEnduranceStatModifiers(player, attributeTotals),
-  ]
+  const pathModifiers = collectActiveWayStatModifiers(player, attributeTotals)
 
   return calculateStats(player.baseStats, [...allModifiers, ...pathModifiers])
 }

@@ -27,9 +27,11 @@ import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
 import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
+import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
+import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
+import { isTheTuHien, isTheTuUngThe } from '@/core/the-tu/TheTuPath'
 import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
-import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import type { ElementType } from '@/core/element/ElementType'
 import type { Skill } from '@/core/skill/Skill'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
@@ -47,19 +49,28 @@ const { stateVersion } = useStateVersion()
 // (TheTuNodes/TheTuAnNodes) dưới branchTag trùng path id: single-tag
 // pass-through view qua viewBranchTags(), toàn bộ root (mutex cho Hiện,
 // non-mutex cho Ẩn) render trong cùng một tree.
-const THE_TU_TREE_TAGS: Partial<Record<CultivationPathId, string>> = {
-  the_tu: 'the_tu',
-  the_tu_an: 'the_tu_an',
-}
+//
+// M5 — tree selection resolves on the WAY, never the raw path id: the
+// branchTag strings are display keys (the An tree keeps 'the_tu_an'
+// even though its nodes stamp the base 'the_tu' path family).
+const theTuTreeTag = computed(() => {
+  if (isTheTuHien(player)) return 'the_tu'
+  if (isTheTuUngThe(player)) return 'the_tu_an'
+  return undefined
+})
 
-const theTuTreeTag = computed(() =>
-  player.cultivationPath ? THE_TU_TREE_TAGS[player.cultivationPath] : undefined,
+const isKiemTuWay = computed(
+  // M9 — way-strict module predicates, never the raw path id: a
+  // way-less/corrupt kiem_tu save shows no tree (fail closed).
+  () => isKiemTuHien(player) || isKiemTuNgu(player),
 )
 
 const showTree = computed(
   () =>
-    player.cultivationPath === 'phap_tu' ||
-    player.cultivationPath === 'kiem_tu' ||
+    // M4 (R6): the Phap Tu element tree is ngu_hanh machinery — a
+    // collapsed ('phap_tu','ngo_dao') player owns no element branches.
+    isPhapTuNguHanh(player) ||
+    isKiemTuWay.value ||
     theTuTreeTag.value !== undefined,
 )
 
@@ -165,8 +176,8 @@ const selectedSkillHasTree = computed(() => {
   // Kiem Tu + ca hai The Tu: cay co dinh cua path — luon hien, khong
   // phu thuoc skill dang chon o SkillPathList.
   if (
-    player.cultivationPath === 'kiem_tu' ||
-    player.cultivationPath === 'phap_tu' ||
+    isKiemTuWay.value ||
+    isPhapTuNguHanh(player) ||
     theTuTreeTag.value !== undefined
   ) {
     return true
@@ -176,8 +187,10 @@ const selectedSkillHasTree = computed(() => {
 })
 
 const treeBranchTag = computed<string>(() => {
-  if (player.cultivationPath === 'kiem_tu') {
-    return player.kiemTu?.mode === 'ngu' ? 'ngu_kiem' : 'kiem_pho'
+  if (isKiemTuWay.value) {
+    // M6/M9 — module predicates are the discriminator; inside a
+    // validated kiem pair, non-ngu is hien.
+    return isKiemTuNgu(player) ? 'ngu_kiem' : 'kiem_pho'
   }
 
   return theTuTreeTag.value ?? selectedBranch.value
@@ -214,7 +227,7 @@ function close() {
             <!-- Phap Tu element tabs (Task 16) — browse all 5 branches;
                  the committed element is marked, others render locked. -->
             <div
-              v-if="player.cultivationPath === 'phap_tu'"
+              v-if="isPhapTuNguHanh(player)"
               class="skill-path-panel__element-tabs"
               role="group"
               :aria-label="t('panels.skillPath.elementTabs.aria')"

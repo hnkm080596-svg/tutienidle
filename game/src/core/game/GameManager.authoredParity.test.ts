@@ -58,6 +58,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'kiem_tu'
+    player.cultivationWay = 'hien'
     player.kiemTu = freshKiemTuState()
 
     gameManager.setActivePlayer(player)
@@ -104,6 +105,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'wood', route: null }
 
     gameManager.setActivePlayer(player)
@@ -122,6 +124,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'fire', route: null }
 
     gameManager.setActivePlayer(player)
@@ -149,6 +152,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'kiem_tu'
+    player.cultivationWay = 'hien'
 
     gameManager.setActivePlayer(player)
 
@@ -180,6 +184,7 @@ describe('ARCH-008 — authored buff duration rides appliesBuff.duration', () =>
     const { gameManager, combatSource } = makeManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.phapTu = { element: 'water', route: null }
 
     gameManager.setActivePlayer(player)

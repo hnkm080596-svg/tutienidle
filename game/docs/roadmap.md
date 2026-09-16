@@ -2100,6 +2100,23 @@ Do not combine them into one implementation mission.
 
 ### B6 — Path reimagines (Pháp Tu / Kiếm Tu / Thể Tu)
 
+> **2026-09-16 — Cultivation Path Framework SHIPPED** (branch
+> `cultivation-path-framework`; spec `docs/specs/2026-09-16-cultivation-path-framework-spec.md`,
+> plan `docs/superpowers/plans/2026-09-16-cultivation-path-framework.md`).
+> The 5-ID model below is RETIRED: persisted `cultivationPath` is exactly
+> `kiem_tu | phap_tu | the_tu`; the hidden variants are WAYS on
+> `player.cultivationWay` (`ngo_dao`, `ung_the`, `ngu`), all chosen at the
+> Initiation Ritual behind offer gates (`linh_bao`/huy_quyen/tram Lv3).
+> `kiemTu.mode`, the `kiem_tu_an` flip node, and the legacy path/way
+> adapters are gone; saves carrying `_an` path ids fail the v66 shape
+> check. Guards: `tests/architecture/cultivationPathIsolation.test.ts`,
+> `src/core/player/CultivationPathContract.test.ts`; AGENTS.md A13.
+> Per-way Playwright matrix (M10): P14 deferred — isolated-worktree
+> exception; run from an authorized main/preview checkout at branch
+> finishing.
+> The `_an` names below survive only as stat-domain/branch-tag
+> identifiers (`the_tu_an` domain, node files), never as path ids.
+
 Specs: [stat-system](superpowers/specs/2026-09-14-stat-system-reimagined-design.md)
 (D1–D21), [phap-tu](superpowers/specs/2026-09-14-phap-tu-reimagined-design.md)
 (APPROVED, P1–P16), [kiem-tu](superpowers/specs/2026-09-15-kiem-tu-reimagined-design.md)

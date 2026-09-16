@@ -71,7 +71,7 @@ export function validatePreset(preset: OrbId[], realmIndex: number): boolean {
 }
 
 /** Battle-start snapshot. Hien-only — callers must check
- *  kiemTu.mode === 'hien' before constructing. */
+ *  isKiemTuHien(player) before constructing (M6: way membership). */
 export function initKiemPhoBattle(player: PlayerData): KiemPhoBattleState {
   const kiemTu = player.kiemTu
   return {

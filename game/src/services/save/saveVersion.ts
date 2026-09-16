@@ -46,4 +46,16 @@
 // v64 (2026-09-15, the-tu-reimagined spec T1): CultivationPathId mở rộng
 // 'the_tu' + 'the_tu_an' — save cũ chứa path id lạ bị từ chối (dev phase,
 // không migration).
-export const CURRENT_SAVE_VERSION = 64 as const
+// v65 (2026-09-16, cultivation-path-framework M2): PlayerData thêm field
+// TUỸ CHỌN `cultivationWay?: PathWayId` (way đã chọn trong path, ghi
+// bởi CultivationPathSystem.applyPathChoice trong Nghi Lễ Nhập Môn).
+// `cultivationPath` vẫn mang union 5 id legacy trong thời kỳ chuyển
+// tiếp — giờ được kiểm tra enum membership khi hiện diện. Save v64 bị
+// từ chối (dev phase, không migration).
+// v66 (2026-09-16, cultivation-path-framework M7): CultivationPathId
+// thu còn 3 base id ('kiem_tu' | 'phap_tu' | 'the_tu') — 'phap_tu_an' /
+// 'the_tu_an' trở thành WAYS trên cultivationWay, các adapter
+// LEGACY_PATH_TO_WAY / resolveBasePathId / getLegacyPathIdForWay bị
+// xoá. Save v65 (và save mang path id '_an') bị từ chối (dev phase,
+// không migration).
+export const CURRENT_SAVE_VERSION = 66 as const

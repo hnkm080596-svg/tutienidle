@@ -5,7 +5,7 @@
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { TurnSkillDefinition, TurnSkillSlot } from '../battle/turn/TurnSkillAction'
-import { CULTIVATION_PATH_STAT_DOMAINS, type StatDomain } from '../stats/StatDomain'
+import type { StatDomain } from '../stats/StatDomain'
 import { BuffPool } from '../buff/BuffPool'
 
 /**
@@ -19,7 +19,7 @@ export function toTurnBattleParticipant(
   entity: CombatEntity,
   priority: number,
   basic: TurnSkillDefinition,
-  buildId?: string,
+  activeStatDomains?: readonly StatDomain[],
   resolvedSpecialUltimate?: {
     special?: TurnSkillDefinition
     ultimate?: TurnSkillDefinition
@@ -44,25 +44,20 @@ export function toTurnBattleParticipant(
     buffs: new BuffPool(),
     consecutiveHardCcTurns: 0,
     basic,
-    // stat-system-reimagined review fix (2026-09-15) — buildId carries
-    // the player's cultivationPath at the GameManager call site; the
-    // explicit path->domains map declares which stat domains the
-    // participant owns, scoping domain deltaDerivers (phap_tu
-    // attunement->MP) in calculateEffectiveStats. Enemies/companions
-    // pass no buildId -> no domain derivers ever run for them. A path
-    // owning an existing domain (phap_tu_an -> phap_tu) maps here, NOT
-    // into StatDomain.
+    // stat-system-reimagined review fix (2026-09-15) — the caller
+    // resolves which stat domains the participant owns (M5: via
+    // resolveActiveWayStatDomains so the WAY — not the raw path id —
+    // decides), scoping domain deltaDerivers (phap_tu attunement->MP,
+    // the_tu_an reactive chances) in calculateEffectiveStats.
+    // Enemies/companions pass no domains -> no domain derivers ever run
+    // for them.
     activeDomains:
-      buildId !== undefined && CULTIVATION_PATH_STAT_DOMAINS[buildId] !== undefined
-        ? new Set<StatDomain>(CULTIVATION_PATH_STAT_DOMAINS[buildId])
-        : undefined,
+      activeStatDomains !== undefined ? new Set<StatDomain>(activeStatDomains) : undefined,
     // Review fix (MED-3) — wuxing reaction initiation belongs to the
-    // phap_tu stat domain (phap_tu + phap_tu_an both map to it; spec §6:
-    // "the domain gate already permits" a future mixed-element hien).
-    // Companions/enemies pass no buildId -> false.
-    canInitiateWuxingReactions:
-      buildId !== undefined &&
-      (CULTIVATION_PATH_STAT_DOMAINS[buildId]?.includes('phap_tu') ?? false),
+    // phap_tu stat domain (both phap_tu ways resolve it via their stat
+    // facet; spec §6: "the domain gate already permits" a future
+    // mixed-element hien). Companions/enemies pass no domains -> false.
+    canInitiateWuxingReactions: activeStatDomains?.includes('phap_tu') ?? false,
   }
 
   const special = resolvedSpecialUltimate?.special

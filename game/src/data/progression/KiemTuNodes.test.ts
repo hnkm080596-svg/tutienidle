@@ -5,9 +5,12 @@ import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 
 // Kiem Tu Reimagined Task 11 (spec 2026-09-15 §6) — the reimagined
 // tree: 5 orb branches (growth + combo capstone) under 'kiem_pho',
-// the hidden kiem_tu_an root, and the ngu branch (cascade unlocks,
-// per-instance growth, Cuu Cung 3x3) under 'ngu_kiem'. The legacy
-// Kiem Tran / Bat Kiem node set is gone (Task 12 teardown).
+// and the ngu branch (cascade unlocks, per-instance growth, Cuu Cung
+// 3x3) under 'ngu_kiem'. The legacy Kiem Tran / Bat Kiem node set is
+// gone (Task 12 teardown). Cultivation Path Framework M6: the
+// kiem_tu_an flip node is retired — way entry is ritual-only and every
+// node carries requiredCultivationPath 'kiem_tu' + requiredWay
+// ('hien' orbs / 'ngu' subtree) stamped at export.
 
 const ORB_IDS: OrbId[] = ['orb_dam', 'orb_chem', 'orb_bo', 'orb_hat', 'orb_quet']
 const REALM_BY_INDEX = [
@@ -58,7 +61,7 @@ describe('KiemTuNodes — tree shape', () => {
 })
 
 describe('KiemTuNodes — orb branches (hien)', () => {
-  it.each(ORB_IDS)('%s branch: 5 growth + 1 capstone, hien mode, realm gate', orb => {
+  it.each(ORB_IDS)('%s branch: 5 growth + 1 capstone, hien way, realm gate', orb => {
     const short = orb.replace('orb_', '')
     const growth = KIEM_TU_NODES.filter(
       n => n.branchTag === 'kiem_pho' && n.id.startsWith(`orb_${short}_`) && !n.effect.kiemTuComboModifier,
@@ -72,10 +75,12 @@ describe('KiemTuNodes — orb branches (hien)', () => {
 
     const gateRealm = REALM_BY_INDEX[ORB_UNLOCK_REALM[orb]]!
     for (const g of growth) {
-      expect(g.kiemTuMode).toBe('hien')
+      expect(g.requiredCultivationPath).toBe('kiem_tu')
+      expect(g.requiredWay).toBe('hien')
       expect(g.prerequisites).toContainEqual({ kind: 'realm', realmId: gateRealm })
     }
-    expect(capstone!.kiemTuMode).toBe('hien')
+    expect(capstone!.requiredCultivationPath).toBe('kiem_tu')
+    expect(capstone!.requiredWay).toBe('hien')
     expect(capstone!.type).toBe('major')
   })
 
@@ -103,11 +108,12 @@ describe('KiemTuNodes — orb branches (hien)', () => {
 })
 
 describe('KiemTuNodes — ngu branch', () => {
-  it('kiem_tu_an sits on ngu_kiem tag with mode-switch effect (Task 10 contract)', () => {
-    const an = node('kiem_tu_an')
-    expect(an.branchTag).toBe('ngu_kiem')
-    expect(an.effect.kiemTuModeSwitch).toBe('ngu')
-    expect(an.revealWhen).toEqual({ kind: 'skillCastCount', skillId: 'tram', level: 3 })
+  it('no kiem_tu_an flip node exists — way entry is ritual-only (M6)', () => {
+    expect(KIEM_TU_NODES.find(n => n.id === 'kiem_tu_an')).toBeUndefined()
+    // The retired effect field is gone from every node.
+    for (const n of KIEM_TU_NODES) {
+      expect('kiemTuModeSwitch' in n.effect).toBe(false)
+    }
   })
 
   it('cascade unlock nodes: a @ foundation, e @ golden_core, d @ nascent_soul', () => {
@@ -119,36 +125,35 @@ describe('KiemTuNodes — ngu branch', () => {
     for (const [id, unlock, realmId] of expected) {
       const n = node(id)
       expect(n.branchTag).toBe('ngu_kiem')
-      expect(n.kiemTuMode).toBe('ngu')
+      expect(n.requiredCultivationPath).toBe('kiem_tu')
+      expect(n.requiredWay).toBe('ngu')
       expect(n.effect.cascadeUnlock).toBe(unlock)
-      expect(n.prerequisites).toContainEqual({ kind: 'node', nodeId: 'kiem_tu_an' })
       expect(n.prerequisites).toContainEqual({ kind: 'realm', realmId })
     }
   })
 
-  it('every ngu node requires kiem_tu_an (directly or via another ngu node) and is mode-ngu', () => {
-    const nguNodes = KIEM_TU_NODES.filter(n => n.branchTag === 'ngu_kiem' && n.id !== 'kiem_tu_an')
+  it('every ngu node is way-stamped (requiredWay ngu + requiredCultivationPath kiem_tu) and never prereqs the retired flip node', () => {
+    const nguNodes = KIEM_TU_NODES.filter(n => n.branchTag === 'ngu_kiem')
     expect(nguNodes.length).toBeGreaterThan(0)
-    const nguIds = new Set(nguNodes.map(n => n.id))
     for (const n of nguNodes) {
-      expect(n.kiemTuMode).toBe('ngu')
+      expect(n.requiredCultivationPath).toBe('kiem_tu')
+      expect(n.requiredWay).toBe('ngu')
       const nodePrereqs = (n.prerequisites ?? []).filter(p => p.kind === 'node')
-      // Directly on kiem_tu_an OR on another ngu node (which itself
-      // chains back to kiem_tu_an — nodeCount prereqs don't draw links).
-      const chained = nodePrereqs.some(p => p.nodeId === 'kiem_tu_an' || nguIds.has(p.nodeId!))
-      expect(chained || (n.prerequisites ?? []).some(p => p.kind === 'nodeCount')).toBe(true)
+      // No 'node' prereq may point at the retired kiem_tu_an flip node;
+      // in-branch node links (none today) stay legal.
+      expect(nodePrereqs.every(p => p.nodeId !== 'kiem_tu_an')).toBe(true)
     }
   })
 })
 
 describe('KiemTuNodes — Cuu Cung 3x3', () => {
-  it('8 outer kiemYGrant nodes, each realm-gated, cap-guarded, prereq kiem_tu_an', () => {
+  it('8 outer kiemYGrant nodes, each realm-gated, cap-guarded, way-stamped ngu', () => {
     for (const id of CUU_CUNG_OUTER_IDS) {
       const n = node(id)
       expect(n.branchTag).toBe('ngu_kiem')
-      expect(n.kiemTuMode).toBe('ngu')
+      expect(n.requiredCultivationPath).toBe('kiem_tu')
+      expect(n.requiredWay).toBe('ngu')
       expect(n.effect.kiemYGrant).toBeGreaterThan(0)
-      expect(n.prerequisites).toContainEqual({ kind: 'node', nodeId: 'kiem_tu_an' })
       expect(n.prerequisites).toContainEqual({ kind: 'kiemDaoBelowCap' })
       expect((n.prerequisites ?? []).some(p => p.kind === 'realm')).toBe(true)
     }
@@ -157,7 +162,8 @@ describe('KiemTuNodes — Cuu Cung 3x3', () => {
   it('trung_cung grants +1 kiemDaoCount, requires all 8 outers, cap-guarded', () => {
     const trung = node('cuu_cung_trung')
     expect(trung.branchTag).toBe('ngu_kiem')
-    expect(trung.kiemTuMode).toBe('ngu')
+    expect(trung.requiredCultivationPath).toBe('kiem_tu')
+    expect(trung.requiredWay).toBe('ngu')
     expect(trung.effect.kiemDaoGrant).toBe(1)
     expect(trung.prerequisites).toContainEqual({
       kind: 'nodeCount',

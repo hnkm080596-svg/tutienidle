@@ -146,6 +146,7 @@
           "element": "Cần mở khoá Hành liên quan",
           "elementMismatch": "Thuộc Hành {element} — đã chọn Hành khác",
           "routeMismatch": "Chỉ lĩnh ngộ ở hướng {route}",
+          "wayMismatch": "Thuộc một hướng tu luyện khác",
           "excludesNode": "Xung khắc với: {name}",
           "nodeCount": "Cần lĩnh ngộ {required}/{total} node liên quan",
           "skillLevel": "cấp {level}",
