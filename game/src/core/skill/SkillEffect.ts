@@ -115,6 +115,11 @@ export interface SkillEffect {
   // target CÒN SỐNG mà action vừa trúng (ctx.affectedTargets, cap trần
   // maxStacks của buff qua BuffSystem.apply nhiều lần). 0 target →
   // không buff. Không set = 'buff' hoạt động như cũ (1 lần apply).
+  // Mission C Task 10a supersession note: the turn-engine port
+  // (TurnSkillBuffApplication.stacksPerAffectedTarget) keeps the
+  // alive-only stacking but deliberately drops the "0 target -> no
+  // buff" clause — whiffed actions still grant the base stack,
+  // consistent with the `stacks ?? 1` default.
   stacksPerAffectedTarget?: boolean
 
   /** Bonus multiplier theo Linh Lực tối đa của Pháp Tu. */

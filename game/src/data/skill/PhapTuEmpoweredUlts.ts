@@ -108,7 +108,9 @@ const EARTH_PAYLOAD: TurnSkillDefinition = {
   targeting: { shape: 'all_lanes' },
   appliesAilment: { buffDefinitionId: 'troi_chan', chance: 1 },
   appliesAilments: [{ buffDefinitionId: 'troi_chan', chance: 1 }],
-  appliesBuff: { definitionId: 'thanh_luy', target: 'target' },
+  // Mission C Task 10a — authored semantics (SkillEffect.ts): the CASTER
+  // gains one thanh_luy stack per living target the action hit.
+  appliesBuff: { definitionId: 'thanh_luy', target: 'self', stacksPerAffectedTarget: true },
 }
 
 /**

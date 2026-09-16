@@ -78,7 +78,10 @@ describe('PhapTuRoutes', () => {
     } as TurnSkillDefinition
 
     const routed = applyRouteToTurnSkill(turnSkill, PHAP_TU_ROUTES.dot)
-    expect(routed.appliesAilments![0]!.stacks).toBe(1)
+    // Mission C Task 10c — an omitted stacks means 1 by engine default
+    // (TurnBattleSystem ailment.stacks ?? 1), so the bonus ADDS to the
+    // implicit stack, not to zero.
+    expect(routed.appliesAilments![0]!.stacks).toBe(2)
 
     const neutral = applyRouteToTurnSkill(turnSkill, NEUTRAL_ROUTE_PROFILE)
     expect(neutral.appliesAilments![0]!.stacks).toBeUndefined()

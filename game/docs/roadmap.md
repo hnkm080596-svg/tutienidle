@@ -3058,6 +3058,30 @@ contract they establish:
   (`MainProcessClockSource`, via `electronAPI.combatClock`) with
   `backgroundThrottling: false`, so a minimized/backgrounded window does not
   starve combat of frames; the web build falls back to `RafClockSource`.
+- **Session RNG (Mission C, 2026-09):** one injectable random source is
+  minted per battle cycle in `beginBattleCycle` and threaded through the
+  combat path — `CombatSystem.setRandomSource`, `TurnBattleSystem`,
+  `BuffSystem`, stage/enemy pool picks, tag rolls, hidden-beast selection,
+  spawn placement, and dynamic-basic providers. `SeededRandom` makes a
+  whole battle replayable; `setBattleRngFactory` is the injection seam.
+  Loot/drop, alchemy, and pill economy deliberately stay on
+  `Math.random` — they are outside the combat-RNG boundary.
+- **Cultivation-path runtime (Mission C, 2026-09):** path-specific battle
+  integration (basic skill, special/ultimate payloads, max The, stat
+  domains, dynamic basics, survive sources, emblem slots) is dispatched
+  by `core/player/CultivationPathRegistry` keyed on `path:way`;
+  `GameManagerTurnBattleOps` consumes the `CultivationPathRuntime`
+  interface and holds no concrete path predicates.
+- **Skill semantics (Mission C, 2026-09):** `thanh_luy` self-buff stacks
+  per surviving affected target (alive-only, max-stack cap);
+  `elementApplicationPercent` feeds ailment chance via
+  `resolveAilmentApplicationChance` (base + stat, clamped to 1); route
+  `ailmentStackBonus` adds onto the engine's implicit 1 stack;
+  `SkillToTurnSkillConverter` reports authored `scope`/`refresh` as
+  unsupported rather than dropping them. `thach_hoa`'s
+  `onHitProc` direction (holder-attacks -> victim-applies) is the
+  authored contract — see the decision record in
+  `TurnBuffIdentity.test.ts`.
 
 **Measured evidence (real browser runs, not simulated):**
 

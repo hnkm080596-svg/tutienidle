@@ -281,6 +281,25 @@ describe('toTurnSkillDefinition', () => {
       expect(collectUnsupportedSkillSemantics(tram, skillSystem.getEffectiveSkill(tram))).toEqual([])
     })
 
+    it('Mission C Task 10d — effect.scope + effect.refresh are reported, not silently dropped', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+
+      // Mirror the authored usages at PhapTuChainSkills.ts:475 (scope
+      // 'primary_target') and :655 (add_stack refresh:true).
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
+      const effective = skillSystem.getEffectiveSkill(skill)
+      effective.effects = [
+        { type: 'damage', scope: 'primary_target', value: 1 },
+        { type: 'add_stack', buffId: 'chay_mau', stacks: 2, refresh: true },
+      ] as typeof effective.effects
+
+      const report = collectUnsupportedSkillSemantics(skill, effective)
+
+      expect(report).toEqual(expect.arrayContaining(['effect.scope', 'effect.refresh']))
+      expect(report).toHaveLength(2)
+    })
+
     it('converts the An special da_phap_lien_tuyen: its placeholder damage survives the strict gate (P14 — a phap_tu_an save crashed startBattle)', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)

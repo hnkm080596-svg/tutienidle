@@ -6,6 +6,7 @@
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { CombatSystem } from '../../combat/CombatSystem'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
+import { resolveAilmentApplicationChance } from './AilmentChance'
 import { consumeGaugeAfterAction, advanceGauge, isGaugeReady } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets, executionCommitsCast, pickCompositePool, MAX_MULTICAST, type TurnSkillExecution, type TurnQueuedExecution } from './TurnSkillAction'
@@ -1936,7 +1937,14 @@ export class TurnBattleSystem {
     // Kiem Tu Reimagined Task 11 — combo capstones may declare N stacks;
     // each apply() call adds one stack under 'stack' stackMode and is
     // idempotent under 'refresh'. Default 1 = previous behavior.
-    const stacks = Math.max(1, buffSpec.stacks ?? 1)
+    // Mission C Task 10a — stacksPerAffectedTarget ports the authored
+    // SkillEffect clause: stacks = still-alive action targets (a dead
+    // target is not "imprisoned"). Math.max(1, ...) intentionally
+    // supersedes the authored "0 target -> no buff" clause — a whiffed-
+    // into-corpse edge still grants the base stack (stacks ?? 1 parity).
+    const stacks = buffSpec.stacksPerAffectedTarget
+      ? Math.max(1, actionTargets.filter((t) => t.entity.alive).length)
+      : Math.max(1, buffSpec.stacks ?? 1)
     const duration = buffSpec.durationOverride ?? buffSpec.duration
 
     // The Tu Reimagined (plan Task 6/11) — the application resolves its
@@ -2946,7 +2954,9 @@ export class TurnBattleSystem {
     for (const ailment of ailments) {
       // Task 11 — ailment rolls route through the injected rng (same
       // deterministic seam as composite picks and multicast rolls).
-      if (this.rng() < ailment.chance) {
+      // Mission C Task 10b — elementApplicationPercent adds to the base
+      // chance (legacy SkillEffectSystem:294 parity).
+      if (this.rng() < resolveAilmentApplicationChance(ailment.chance, actor.entity.stats.elementApplicationPercent)) {
         // Skip an unresolvable ailment id gracefully — same try/catch
         // pattern as the bossTrigger lookup in declareActorAction.
         let definition: BuffDefinition | undefined
