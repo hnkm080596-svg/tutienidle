@@ -40,6 +40,7 @@ Every listed line ref was verified pre-mission; at execution time re-locate by s
 | Task 32 (`AlchemyView.vue`) | E9 edits `:200-218,:302` |
 | Tasks 24/37 (`useEquipmentTooltip.ts`) | E12 edits `:207` |
 | Task 21 (`package.json`, `vite.config.ts`) | F6 pins Vue + adds `cross-env`; F4 rewrites the server block |
+| Task 3 aftermath | `elementApplicationPercent` becomes fully consumer-less once `SkillEffectSystem`/`SkillActionRegistry` are deleted — its turn-engine replacement (`AilmentChance`/`resolveAilmentApplicationChance`) is Mission C Task 10's scope and may not exist yet. No regression vs. today (already unconsumed live); producers (`PhapTuNodes.builders.ts:258`, `StatTypes.ts`, `StatLabels.ts`) stay. Record so QA doesn't flag it as a new defect. |
 - **Worktree:** this plan executes inside `.agent-worktrees/cleanup` on branch `chore/cleanup` (P2 multi-file rule).
 - **Verification (P3):** `quick` = `npm run type-check` + `npx vitest run <task scope>` per task. Task 22 (vue-router removal) touches `package.json` + `main.ts` and therefore uses `full` = `npm run type-check` + `npm run build` + `npx vitest run`. Mission-level gates: adversarial-QA quick on the diff (P4), P5 three-lens review round before completion.
 
@@ -78,7 +79,7 @@ Re-verify at execution time, but these were confirmed against the current tree:
 **Why first:** `CombatSystem` is the last production importer of `SkillTriggerRunner` and `SkillEffectContext`; deleting this path unlocks Tasks 2-4.
 
 **Files:**
-- Modify: `game/src/core/combat/CombatSystem.ts` — field `:111` (`skillTriggerRunner`), constructor params `:115-116` (`skillManager?`, `buffRegistry?` + stale comments `:104-110`), `killIfDead` signature `:599-602` (drop `skillContext` param), call `this.fireKillTriggers(entity, skillContext)` `:712`, method `fireKillTriggers` `:754-784` (incl. its long comment `:716-753`), imports `:17-22` (`SkillManager` :17, `SkillTriggerRunner` :18, `SkillEffectContext` :19, plus `BuffRegistry` :20/`BuffSystem` :21/`BuffPool` :22 — each used only by the trigger path).
+- Modify: `game/src/core/combat/CombatSystem.ts` — field `:111` (`skillTriggerRunner`), constructor params `:115-116` (`skillManager?`, `buffRegistry?` + stale comments `:104-110`), `killIfDead` signature `:599-602` (drop `skillContext` param), call `this.fireKillTriggers(entity, skillContext)` `:712`, method `fireKillTriggers` `:754-784` (incl. its long comment `:716-753`), imports `:17-22` MINUS `BuffSystem` — `SkillManager` :17, `SkillTriggerRunner` :18, `SkillEffectContext` :19, `BuffRegistry` :20, `BuffPool` :22 die with the path; **`BuffSystem` (:21) stays** — it types the live `SurviveEffectsPolicy.buffSystem` field (:52) used by the survive-lethal session path (:630-656).
 - Delete: `game/src/core/combat/CombatSystem.triggers.test.ts` (whole file tests the deleted path).
 
 **Interfaces:**
@@ -113,7 +114,7 @@ Re-verify at execution time, but these were confirmed against the current tree:
 - `SkillEffectContext` (declared in `SkillEffectSystem.ts:15`) has no live consumer after Tasks 1-2 — it dies with the file.
 
 - [ ] **Step 1: Grep-verify** — `grep -rn "SkillEffectSystem\|SkillEffectContext\|SkillActionRegistry\|runSkillAction\|SKILL_ACTION_REGISTRY" src --include="*.ts" --include="*.vue"` → after Tasks 1-2 the only hits are the files being deleted, their tests, and comments.
-- [ ] **Step 2: Delete the six files.** Clean stale `SkillEffectSystem`/`SkillActionRegistry` comments in retained files: `SkillEffect.ts` (~7 refs), `CombatSystem.ts:289`, `DamageCalculator.ts:57`, `PhapTuRoutes.ts:149`, `SkillAction.ts:30`, `GameManager.ts` comments.
+- [ ] **Step 2: Delete the six files.** Clean stale `SkillEffectSystem`/`SkillActionRegistry` references in retained files — the enumeration below is NOT exhaustive; **the rule is "clean every remaining hit the Step-1 grep returns"** (verified sites: `SkillTrigger.ts:10` — `SkillActionRegistry.fireNested` inside the live `TriggerBinding` doc, `SkillEffect.ts` ~7 refs, `CombatSystem.ts:197,:289`, `DamageCalculator.ts:57,:75`, `PhapTuRoutes.ts:149`, `SkillAction.ts:30`, `StatTypes.ts:75,:84`, `buffs.ts:109`, `CoreSkills.ts:336`, `PhapTuChainSkills.ts:244`, `ZoneDotBuffs.ts:23`, `GameManager.ts` comments, `SkillSystem.huyKiem.test.ts:32`, `buffs.registryConsistency.test.ts:5`).
 - [ ] **Step 3: Update `vitalsWriteAuthority.test.ts`** — remove both entries from the allowlist.
 - [ ] **Step 4: `npm run type-check` + `npx vitest run src/core/skill src/core/battle tests/architecture`.**
 - [ ] **Step 5: Commit** `chore(skill): delete dormant SkillEffectSystem/SkillActionRegistry runtime`
@@ -139,7 +140,7 @@ Re-verify at execution time, but these were confirmed against the current tree:
 - Modify: `game/src/core/battle/ActionTargetingSystem.ts` — keep `areaFor` (`:86`, live in `TurnSkillAction.ts:629`) and `selectRankedTarget` (`:60`, parked `ArtifactSystem.ts:153`); delete `isHeroGate` (`:31`), `collectAffected` (`:123`), `findBattleEnemy` (`:173`). Update the header comment (`:3` lists the deleted names).
 - Modify: `game/src/core/battle/ActionTargetingSystem.test.ts`, `ActionTargetingSystem.adversarial.test.ts` — delete the `collectAffected`/`isHeroGate`/`findBattleEnemy` describes; keep `areaFor`/`selectRankedTarget` coverage.
 
-- [ ] **Step 1: Grep-verify** — `grep -rn "isHeroGate\|collectAffected\|findBattleEnemy" src tests` → expect only the module, its two test files, and the `TurnSkillAction.ts:607-613` comment (fix the comment to not cite the deleted function — the cited function is a turn-side re-implementation, so comment deletion is honest).
+- [ ] **Step 1: Grep-verify** — `grep -rn "isHeroGate\|collectAffected\|findBattleEnemy" src tests` → the module, its two test files, `ActionTargetingSystem.ts:97-98` (`collectAffected()` referenced inside the retained `areaFor` — fix that call/reference, it is live code not just a comment), the `TurnSkillAction.ts:607-613` comment (fix — the cited function is a turn-side re-implementation), and `TurnSkillAction.adversarial.test.ts:103`. **Rule: clean every hit the grep returns.**
 - [ ] **Step 2: Delete the three helpers; trim the tests.**
 - [ ] **Step 3: `npm run type-check` + `npx vitest run src/core/battle`.**
 - [ ] **Step 4: Commit** `chore(battle): drop dead targeting helpers, keep areaFor/selectRankedTarget`
@@ -150,11 +151,11 @@ Re-verify at execution time, but these were confirmed against the current tree:
 - Modify: `game/src/core/battle/Battle.ts` — including the `:4` header comment, which still references `ActionImpactSystem`/`ActionTargetingSystem`; refresh it to describe the parked artifact contract after Tasks 4-5 slim those modules.
 - Modify fixtures: `game/src/core/artifact/ArtifactSystem.test.ts:70-87` (`createBattle` sets the deleted fields), `ActionTargetingSystem.test.ts:27-38` + `ActionTargetingSystem.adversarial.test.ts:23-29` `battleWith` helpers. Note: those helpers use `as unknown as Battle` casts so they compile regardless — drop the dead keys anyway for honesty.
 
-**What parked code actually reads (keep):** `Battle.id`, `.player`, `.enemies`, `.state`, `.playerMaterialized`, `.playerBuffs`, `.elapsedSeconds`, `.artifactRuntime`; `BattleEnemy.entity`, `.attackTimer`, `.buffs`, `.rewardGranted` (constructed by the parked test fixture).
+**What parked code actually reads (keep):** `Battle.player`, `.enemies`, `.state`, `.playerMaterialized`, `.playerBuffs`, `.artifactRuntime`; `BattleEnemy.entity`, `.buffs`. (`ArtifactSystem.ts` reads `battle.artifactRuntime/.enemies/.player/.playerMaterialized/.state`.)
 
-**Delete (zero references anywhere after Tasks 1-5):** `Battle.mode`, `.countdownSecondsRemaining`, `.playerTeleport` + `PlayerTeleportState`, `.pendingPlayerSpawn` + `PendingPlayerSpawn`, `.pendingSummons`, `.pendingEnemySpawns` + the `Battle.ts` `PendingEnemySpawn` interface (the live turn-side `PendingEnemySpawn` is declared separately in `TurnBattleSystem.ts:75` — untouched), `.nextSkillSlotIndexCursor`; `BattleEnemy.castTimer`, `.appliedTribulationPhaseCount`, `.enrageApplied`, `.specialAttackCounter`. Fix stale `pendingSummons`/`BattleSystem` comments in `BattleLootSystem.ts:162`, `StageWaveSystem.ts:41`, `TribulationPhase.ts:35`, `CombatEntity.ts:63`.
+**Delete (zero production readers — several have only fixture writes):** `Battle.id` (:60 — only `ArtifactSystem.test.ts:39` writes it), `.elapsedSeconds` (:110 — fixture `:41` only), `.mode`, `.countdownSecondsRemaining` (note: `CombatCountdownOverlay.vue:33` + its test `:6` reference the name — receiver-scoped check required; if the overlay reads a *different* type's field, fix the stale reference, don't keep the field), `.playerTeleport` + `PlayerTeleportState`, `.pendingPlayerSpawn` + `PendingPlayerSpawn`, `.pendingSummons`, `.pendingEnemySpawns` + the `Battle.ts` `PendingEnemySpawn` interface (the live turn-side `PendingEnemySpawn` is declared separately in `TurnBattleSystem.ts:75` — untouched), `.nextSkillSlotIndexCursor`; `BattleEnemy.attackTimer` (:26 — fixture `:82` only), `.castTimer`, `.appliedTribulationPhaseCount`, `.enrageApplied`, `.specialAttackCounter` (the live `BattleLootSystem.ts:197,201` `rewardGranted` reads are on the separate `RewardPendingEnemy` interface `:69-72`, NOT `BattleEnemy` — so `BattleEnemy.rewardGranted` :33 is also deletable). Fix stale `pendingSummons`/`BattleSystem`/`specialAttackCounter` comments in `BattleLootSystem.ts:162`, `StageWaveSystem.ts:41`, `TribulationPhase.ts:35`, `CombatEntity.ts:63`, `TurnBattleSystem.ts:142` ("ported from `BattleEnemy.specialAttackCounter`").
 
-- [ ] **Step 1: Per-field grep** — for each candidate field, `grep -rn "<field>" src --include="*.ts" --include="*.vue" | grep -v Battle.ts` and confirm hits are only the two parked/test fixture files listed above.
+- [ ] **Step 1: Per-field grep — receiver-scoped, not name-scoped.** `pendingEnemySpawns`/`specialAttackCounter`/`mode`/`state`/`elapsedSeconds` are shared names live in `TurnBattleSystem`/`BattleTypes`/`GameMode` — a bare `grep <field>` returns false positives and cannot prove deletability. For each candidate field, grep the *receiver* (`battle.<field>`, `enemy.<field>` inside `Artifact*` code) or narrow with `grep -rn "\.elapsedSeconds\b" src | grep -iv "turn\|tribulation"`. Only delete fields whose remaining hits are declaration + the parked test fixture.
 - [ ] **Step 2: Delete fields + interfaces; update fixtures to drop the removed keys.**
 - [ ] **Step 3: `npm run type-check` + `npx vitest run src/core/artifact src/core/battle`.**
 - [ ] **Step 4: Commit** `chore(battle): trim Battle contract to parked artifact runtime surface`
@@ -186,7 +187,19 @@ Re-verify at execution time, but these were confirmed against the current tree:
 - Comment cleanups referencing the deleted symbols: `saveShapeValidation.ts:1010-1011` ("restoreFromSave runs migrateStatModifiers after the boundary") and `SaveSystem.ts:146` ("drop the key via migrateStatRecordKeys").
 
 **Interfaces:**
-- New restore filter (module-local in `player.ts`): `isCurrentStatModifier(m: unknown): m is StatModifier` = `isObject(m) && typeof m.stat === 'string' && STAT_TYPES.has(m.stat)` (import `STAT_TYPES`). Apply to `modifiers`, `externalModifiers`, and each `persistentTimedEffects[].modifiers`. Modifiers on domain-gated stats without `domain` are then dropped by `applyDomainGate` (production filters + `console.error`) — no backfill; that is the dev-stage contract.
+- New restore filter (module-local in `player.ts`): `isCurrentStatModifier(m: unknown): m is StatModifier` — must check MORE than `STAT_TYPES.has(m.stat)`: `applyDomainGate` (`src/core/stats/StatDomain.ts:185-213`) **throws** in dev/test (`isDevOrTestEnv()` at `:161-163`) on a gated-stat modifier lacking `domain`, so "the production path drops it" is false — post-delete it would crash `calculateStats` on the next call, not drop. The restore filter must drop gated-stat modifiers lacking `domain` at the boundary:
+
+```ts
+function isCurrentStatModifier(m: unknown): m is StatModifier {
+  if (!isObject(m) || typeof m.stat !== 'string' || !STAT_TYPES.has(m.stat)) return false
+  // Gated stats REQUIRE a domain — a legacy domain-less entry is a bridge
+  // artifact; drop it here, before applyDomainGate can throw on it.
+  if (STAT_DOMAIN[m.stat] !== undefined && m.domain === undefined) return false
+  return true
+}
+```
+
+(Verify `STAT_DOMAIN`'s export shape at `StatDomain.ts` — keyed by stat; adjust the membership check to whatever the map exposes.) Apply to `modifiers`, `externalModifiers`, and each `persistentTimedEffects[].modifiers`. No backfill anywhere — that is the dev-stage contract.
 
 - [ ] **Step 1: Failing tests first** — `saveShapeValidation.test.ts`: a save whose equipment `mainStat.stat === 'attack'` (legacy key) returns `ok:false`. `player` restore test: a `baseStats` record containing `attack: 5` and a modifier `{ stat: 'attackRange' }` → after restore, `baseStats` has no `might` inflation and the modifier is gone.
 - [ ] **Step 2: Run — expect FAIL** (current code remaps/retains them).
@@ -202,7 +215,7 @@ Re-verify at execution time, but these were confirmed against the current tree:
 
 **Interface:** `GameManager.resolvePlayerBasicAttack` (`GameManager.ts:977-996`) — a mortal/`pham_nhan` player now falls through to `GENERIC_PHYSICAL_BASIC`, which is exactly what the deleted key mapped to. Behavior-identical — no failing test needed; the update is pure dead-key removal.
 
-- [ ] **Step 1: Grep-verify** `pham_nhan` is never a `CultivationPathId` value (`CultivationPathKit.ts:44`) and `grep -rn "BASIC_ATTACKS_BY_BUILD" src` shows the map is only indexed by `player.cultivationPath` and tests.
+- [ ] **Step 1: Grep-verify** `pham_nhan` is never a `CultivationPathId` value (`CultivationPathKit.ts:44`) and `grep -rn "BASIC_ATTACKS_BY_BUILD" src` shows the map is only indexed by `player.cultivationPath` and tests. Also clean stale `pham_nhan` comments in `SaveSystem.ts:169` and `GameManager.ts:892,:1071` (rule: clean every remaining hit).
 - [ ] **Step 2: Remove the key + required-id entry + test update.**
 - [ ] **Step 3: `npm run type-check` + `npx vitest run src/data/skill`.**
 - [ ] **Step 4: Commit** `chore(skill-data): drop unreachable pham_nhan basic-attack key`
@@ -447,7 +460,7 @@ then `created.registry as unknown as GateRegistry` → `toGateRegistry(created.r
 - Modify: `game/src/core/equipment/EquipmentSlotState.ts` — delete `socketedTalisman`/`socketedFormation` (`:34,36`), `bonusAffixSlots` (`:40`), `appliedTalismanIds` (`:44`), their comments, the `SocketedModifierItem` import (`:2`), and the `createDefaultSlotState` entries (`:64-68`).
 - Modify: `game/src/core/game/GameManagerPersistentEffectOps.ts` — `getSlotModifiers` (`:397-417`) loses its socket branches → the method becomes an empty aggregation; collapse `getActiveRuntimeModifiers` (`:276-278`) to return `getActiveTimedModifiers(...)` directly and delete `getSlotModifiers`, or keep a no-socket `getSlotModifiers` only if a fresh grep shows other callers (expected: none).
 - Modify: `game/src/composables/useEquipmentTooltip.ts:158-159` — remove the `+ bonusAffixSlots` term from `affixCapacity` (field is always 0).
-- Modify: `game/src/services/save/saveShapeValidation.ts` — remove socketed-field validation/normalization (`:1219-1233` block + `migrateSocketedModifierStatKeys` if not already gone via Task 8) and any `bonusAffixSlots`/`appliedTalismanIds`/`socketed*` shape checks.
+- Modify: `game/src/services/save/saveShapeValidation.ts` — **careful:** the `:1219-1233` range contains LIVE `enhanceFailStreak` validation/defaulting (`:1219-1229`, retained by this task — consumed by `EquipmentOperationSystem`). The only socket-related remnant is the `migrateSocketedModifierStatKeys` call at `:1223` and its helper `:1239-1267`, both already deleted by Task 8 — post-Task-8 nothing in this range is socket-related. This task's real validator surface: remove any `bonusAffixSlots`/`appliedTalismanIds`/`socketed*` *field* shape checks inside `validateEquipmentSlotsSave` (re-grep — there are no standalone "retired-socket defaults" in the file; the socket logic lived only inside the migrator helper).
 - Modify: `game/src/services/save/saveTypes.ts`, `SaveSystem.ts:195-201` — drop stale legacy comments describing the migration.
 - Modify tests: `saveShapeValidation.test.ts:869-885` (socketed cases → remove or convert to "legacy socket payload rejected/ignored"), `GameManagerSaveRestore.boundary.test.ts:128-129`, `SaveSystem.restoreIdentity.test.ts:104` fixtures.
 
@@ -534,7 +547,7 @@ then `created.registry as unknown as GateRegistry` → `toGateRegistry(created.r
 - Modify: `game/src/core/economy/VendorBalance.ts:61-72,127-133` — delete `ESSENCE_REALM_ORDER`; the essence branch becomes `const tierIndex = Math.max(0, getRealmTier(meta?.realmId ?? realmId) - 1)` then `VENDOR_ESSENCE_PRICE_BASE * Math.pow(VENDOR_REALM_GROWTH, tierIndex)` (same formula family as `realmGrowthFactor`, one realm-order authority: `RealmTierMap`).
 - Modify: the vendor balance/pricing test — pin essence price per reachable realm (`mortal`→base·1, `qi_refining`→base·3, `foundation_establishment`→base·9).
 
-**Behavior note (documented, not a bug):** the old table priced `tribulation` at index 9 vs `getRealmTier` index 8, and `body_integration` at index 8 vs tier 8 (same). No essence material carries `profession.realmId` and beta realm scope caps at `foundation_establishment`, so all reachable prices are unchanged; the divergence lives only in unreachable post-beta realms. Record it in the test comment.
+**Behavior note (documented, not a bug):** the swap computes `getRealmTier(...) - 1`, so `tribulation` moves 9→8 and `body_integration` — tier 8 via the deliberate mahayana-share (`RealmTierMap.ts:18`) — moves 8→**7**, folding onto mahayana's price (arguably the *correct* alignment with the shared-tier decision, not a regression). No essence material carries `profession.realmId` and `SUPPORTED_PROFESSION_REALMS` caps at `foundation_establishment` (`ProfessionMaterial.ts:30-34`), so all reachable prices are unchanged; the divergence lives only in unreachable post-beta realms. Record it in the test comment.
 
 - [ ] **Step 1: Failing/pinning test** — essence unit price for `mortal`/`qi_refining`/`foundation_establishment` context realms equals the current values (locks reachable behavior before the swap).
 - [ ] **Step 2: Run — confirm reachable prices unchanged; implement the swap.**
@@ -635,7 +648,7 @@ export function accrueCultivationInsight(player: PlayerData, gained: number): vo
 ### Task 37: `useEquipmentTooltip` — require the quote, delete the fallback formula
 
 **Files:**
-- Modify: `game/src/composables/useEquipmentTooltip.ts:99-111` — `mainStatRangeQuote` param becomes required (`mainStatRangeQuote: { min: number; max: number }`); delete the `?? (() => {...})()` fallback that re-implements `EquipmentSystem.quoteMainStatRange` (and the now-unused `getGlobalCultivationLevel`/`realmFromGrade`/`MAIN_STAT_REALM_SCALE`/`ITEM_QUALITY_IMPLICIT_MULTIPLIER` imports).
+- Modify: `game/src/composables/useEquipmentTooltip.ts:99-111` — `mainStatRangeQuote` param becomes required (`mainStatRangeQuote: { min: number; max: number }`); delete the `?? (() => {...})()` fallback that re-implements `EquipmentSystem.quoteMainStatRange` (and the now-unused `getGlobalCultivationLevel`/`realmFromGrade`/`MAIN_STAT_REALM_SCALE`/`ITEM_QUALITY_IMPLICIT_MULTIPLIER` imports). Also make `EquipmentCompareContext.mainStatRangeQuote` (`:76`) required — `:273` passes `compare.mainStatRangeQuote` into the now-required param and type-check will force this anyway; state it so it isn't missed.
 - Modify: `game/src/composables/useEquipmentTooltip.test.ts` — pass an explicit quote where the test relied on the fallback.
 
 **Verified:** all four production callers already pass `quoteMainStatRange(...)` — `EquipmentBagSection.vue:154`, `DissolveTab.vue:154`, `useEquippedRows.ts:107`, `EquipmentPaperdoll.vue:138`. If a caller appears that lacks the quote, that call site must obtain it from `equipmentSystem.quoteMainStatRange` — never re-derive.
