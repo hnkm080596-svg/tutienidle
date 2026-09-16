@@ -422,6 +422,128 @@ describe('validateGameSaveShape — phần tử', () => {
   })
 })
 
+describe('validateGameSaveShape — quests slice (Mission A1)', () => {
+  function validQuests(): Record<string, unknown> {
+    return {
+      active: [{ questId: 'daily_kill_wolves', progress: 2, claimed: false }],
+      completedOnceIds: ['once_quest_a'],
+      lastDailyResetAtMs: 1_725_000_000_000,
+    }
+  }
+
+  it('chấp nhận quests slice hợp lệ', () => {
+    const save = validSave()
+
+    save.quests = validQuests()
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('từ chối quests không phải object', () => {
+    const save = validSave()
+
+    save.quests = 'not-an-object'
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('.quests')
+  })
+
+  it('từ chối quests.active không phải array', () => {
+    const save = validSave()
+
+    save.quests = { ...validQuests(), active: 'x' }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('.quests.active')
+  })
+
+  it.each([
+    [{ questId: 5, progress: 1, claimed: false }, 'questId'],
+    [{ questId: 'q', progress: 'x', claimed: false }, 'progress'],
+    [{ questId: 'q', progress: -1, claimed: false }, 'progress'],
+    [{ questId: 'q', progress: Number.NaN, claimed: false }, 'progress'],
+    [{ questId: 'q', progress: 1, claimed: 'y' }, 'claimed'],
+  ])('từ chối quests.active entry sai field (%j)', (entry, _field) => {
+    const save = validSave()
+
+    save.quests = { ...validQuests(), active: [entry] }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('.quests.active[0]')
+  })
+
+  it('từ chối quests.completedOnceIds không phải string[]', () => {
+    const save = validSave()
+
+    save.quests = { ...validQuests(), completedOnceIds: [1, 'ok'] }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('.quests.completedOnceIds')
+  })
+
+  it.each([Number.NaN, -1, 'x'])(
+    'từ chối quests.lastDailyResetAtMs = %s',
+    (value) => {
+      const save = validSave()
+
+      save.quests = { ...validQuests(), lastDailyResetAtMs: value }
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('.quests.lastDailyResetAtMs')
+    },
+  )
+})
+
+describe('validateGameSaveShape — buildings slice (Mission A1)', () => {
+  function validBuilding(): Record<string, unknown> {
+    return {
+      instanceId: 'b1',
+      buildingId: 'chi_hien_quan',
+      level: 2,
+      lastCollectedAt: 1_725_000_000_000,
+    }
+  }
+
+  it('chấp nhận buildings entry hợp lệ', () => {
+    const save = validSave()
+
+    save.buildings = [validBuilding()]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([
+    [{ ...validBuilding(), level: 'bad' }, 'level string'],
+    [{ ...validBuilding(), level: 0 }, 'level 0'],
+    [{ ...validBuilding(), level: 1.5 }, 'level non-integer'],
+    [{ ...validBuilding(), level: Number.NaN }, 'level NaN'],
+    [{ ...validBuilding(), instanceId: 7 }, 'instanceId non-string'],
+    [{ ...validBuilding(), buildingId: 7 }, 'buildingId non-string'],
+    [{ ...validBuilding(), lastCollectedAt: -5 }, 'lastCollectedAt âm'],
+    [{ ...validBuilding(), lastCollectedAt: 'x' }, 'lastCollectedAt string'],
+    ['not-an-object', 'entry non-object'],
+  ])('từ chối buildings entry: %s', (entry, _case) => {
+    const save = validSave()
+
+    save.buildings = [entry]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('buildings[0]')
+  })
+})
+
 describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/NaN)', () => {
   function validEquipmentEntry(): Record<string, unknown> {
     return {

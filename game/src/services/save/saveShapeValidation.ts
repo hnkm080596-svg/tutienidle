@@ -597,6 +597,68 @@ function validateIdEntries(entries: unknown[], path: string, issues: ShapeIssue[
   }
 }
 
+// Mission A1 — deep per-slice validation. QuestManager.restore spreads
+// state.active blindly, so a malformed element must fail the boundary
+// instead of crashing restore (quest `active:"x"` -> TypeError).
+function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): void {
+  if (!isObject(value)) {
+    issues.push({ path, message: 'phải là object hoặc vắng mặt' })
+
+    return
+  }
+
+  const active = value.active
+
+  if (!Array.isArray(active)) {
+    issues.push({ path: `${path}.active`, message: 'phải là array' })
+  } else {
+    for (let i = 0; i < active.length; i += 1) {
+      const entry = active[i]
+
+      if (
+        !isObject(entry) ||
+        typeof entry.questId !== 'string' ||
+        !isNonNegativeFiniteNumber(entry.progress) ||
+        typeof entry.claimed !== 'boolean'
+      ) {
+        issues.push({ path: `${path}.active[${i}]`, message: 'quest progress sai shape' })
+      }
+    }
+  }
+
+  if (
+    !Array.isArray(value.completedOnceIds) ||
+    !value.completedOnceIds.every((id) => typeof id === 'string')
+  ) {
+    issues.push({ path: `${path}.completedOnceIds`, message: 'phải là string[]' })
+  }
+
+  if (!isNonNegativeFiniteNumber(value.lastDailyResetAtMs)) {
+    issues.push({ path: `${path}.lastDailyResetAtMs`, message: 'phải là số hữu hạn không âm' })
+  }
+}
+
+// Mission A1 — BuildingSystem reads level/lastCollectedAt directly for
+// stored-amount math; a non-numeric level used to pass the gate and
+// produce NaN rates. Shape-only: maxLevel bounds stay with the building
+// catalog (this file does not check gameplay values).
+function validateBuildingsSave(entries: unknown[], path: string, issues: ShapeIssue[]): void {
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i]
+
+    if (
+      !isObject(entry) ||
+      typeof entry.instanceId !== 'string' ||
+      typeof entry.buildingId !== 'string' ||
+      !Number.isInteger(entry.level) ||
+      (entry.level as number) < 1 ||
+      !isNonNegativeFiniteNumber(entry.lastCollectedAt)
+    ) {
+      issues.push({ path: `${path}[${i}]`, message: 'building sai shape' })
+    }
+  }
+}
+
 interface EquipmentEntriesValidation {
   normalizedEntries: unknown[]
 
@@ -873,7 +935,8 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   requireArray(parsed, 'talismans', '', issues)
   requireArray(parsed, 'formations', '', issues)
-  requireArray(parsed, 'buildings', '', issues)
+
+  const buildings = requireArray(parsed, 'buildings', '', issues)
 
   const equipmentSlots = requireArray(parsed, 'equipmentSlots', '', issues)
 
@@ -881,8 +944,10 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   optionalArray(parsed, 'productionSites', '', issues)
   optionalArray(parsed, 'alchemyJobs', '', issues)
 
-  if (parsed.quests !== undefined && !isObject(parsed.quests)) {
-    issues.push({ path: '.quests', message: 'phải là object hoặc vắng mặt' })
+  // Mission A1 — deep element checks: a present-but-malformed slice must
+  // fail the boundary before restore trusts the declared TS shape.
+  if (parsed.quests !== undefined) {
+    validateQuestSave(parsed.quests, '.quests', issues)
   }
 
   // R7 (AR-08) - decompose slice is optional; when present it must be
@@ -909,6 +974,10 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   if (skills) {
     validateIdEntries(skills, 'skills', issues)
+  }
+
+  if (buildings) {
+    validateBuildingsSave(buildings, 'buildings', issues)
   }
 
   if (materials) {
