@@ -131,10 +131,11 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
 
       gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 24 * 60 * 60)
 
-      // 24h / 0.5s = 172_800 cycles vẫn roll — nhưng theo cap 24h nên
-      // lastCheckedMs tiến ĐÚNG 24h (= startMs + 24h, trước hiện tại).
-      expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThanOrEqual(startMs + 86_400_000)
-      expect(player.autoFarmStage?.lastCheckedMs).toBeLessThanOrEqual(startMs + 86_400_000 + 1000)
+      // 24h / 0.5s = 172_800 cycles vẫn roll. B5 (T1-12): anchor rebase
+      // về now - remainder (remainder = 0 vì 24h chia hết 0.5s) nên mốc
+      // nằm ~now — không phải startMs + 24h như encoding cũ.
+      expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThan(Date.now() - 1000)
+      expect(player.autoFarmStage?.lastCheckedMs).toBeLessThanOrEqual(Date.now())
     })
 
     it('cycleSeconds <= 0 / non-finite → no-op an toàn, không loop vô hạn', () => {

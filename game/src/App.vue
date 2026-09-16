@@ -393,6 +393,10 @@ const lifecycle = useAppLifecycle({
   onError: (message) => {
     bootError.value = message
   },
+  // B2 — a retried character creation after a failed first save cannot
+  // roll its starter grants back in memory; the composable calls this to
+  // recover on a clean process (same convention as resetSaveFromSettings).
+  hardReset: () => window.location.reload(),
 })
 
 // Cảnh báo autosave fail chỉ 1 lần cho mỗi chuỗi fail — autosave chạy

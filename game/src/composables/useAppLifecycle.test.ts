@@ -93,6 +93,7 @@ function makeStubs() {
     restoreGameSession: vi.fn(() => ({ status: 'ok' as const, offline: { elapsedSeconds: 0, cultivation: 0 } })),
     persistPlayer: vi.fn(async () => ({ status: 'ok' as const, revision: 1 })),
     onError: vi.fn(),
+    hardReset: vi.fn(),
   }
 }
 
@@ -116,6 +117,7 @@ function makeLifecycle(stubs: Stubs) {
     restoreGameSession: stubs.restoreGameSession,
     persistPlayer: stubs.persistPlayer,
     onError: stubs.onError,
+    hardReset: stubs.hardReset,
   })
 }
 
@@ -473,6 +475,7 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
             restoreGameSession: stubs.restoreGameSession,
             persistPlayer: stubs.persistPlayer,
             onError: stubs.onError,
+            hardReset: stubs.hardReset,
           })
 
           return () => h('div')
@@ -523,6 +526,7 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
           restoreGameSession: stubs.restoreGameSession,
           persistPlayer: stubs.persistPlayer,
           onError: stubs.onError,
+          hardReset: stubs.hardReset,
         })
 
         // Mirror App.vue's onUnmounted flush — fires strictly after the
@@ -631,5 +635,99 @@ describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8
     expect(stubs.boot.fail).not.toHaveBeenCalled()
     expect(stubs.intervals).toHaveLength(0)
     expect(stubs.clock.start).not.toHaveBeenCalled()
+  })
+
+  // QA repro (mission B deep audit): a failed first save leaves every
+  // onNewCharacter grant applied (buildings/materials/activePlayer were
+  // committed BEFORE the save await). The real callback in App.vue is
+  // NOT idempotent - buildingManager.add / materialBag.add / baseStats
+  // all append - so the boot-error -> auth -> re-create path grants the
+  // starter pack a second time and persists the doubled state. This
+  // callback mirrors the same public seams App.vue's onNewCharacter
+  // drives (buildingManager.add x2 starter buildings, materialBag.add
+  // x2 starter stacks, setActivePlayer).
+  it('first save fails then retry creates again -> starter grants apply EXACTLY ONCE (no double grant)', async () => {
+    const stubs = makeStubs()
+
+    // Faithful seam mirror of App.vue's onNewCharacter: non-idempotent
+    // appends (add) plus the active-player registration.
+    const grantStarterContent = () => {
+      stubs.gameManager.buildingManager.add({
+        instanceId: 'a',
+        buildingId: 'teleport_array',
+        level: 1,
+        lastCollectedAt: 0,
+      })
+      stubs.gameManager.buildingManager.add({
+        instanceId: 'b',
+        buildingId: 'gathering_outpost',
+        level: 1,
+        lastCollectedAt: 0,
+      })
+      stubs.gameManager.materialBag.add({} as never, 15)
+      stubs.gameManager.materialBag.add({} as never, 6)
+      stubs.gameManager.setActivePlayer(stubs.player.$state as never)
+    }
+
+    const lifecycle = makeLifecycle(stubs)
+
+    // Attempt 1: storage unavailable at the first-save boundary.
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'unavailable',
+      message: 'storage blocked',
+      retryable: true,
+    })
+
+    const first = await lifecycle.bootGame({
+      createNewCharacter: true,
+      onNewCharacter: grantStarterContent,
+    })
+
+    expect(first.status).toBe('failed')
+
+    // Attempt 2: transient failure recovered; the user re-creates. The
+    // first attempt's grants cannot be rolled back in memory, so the
+    // retry must reload for a clean process - NOT re-run the callback.
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'ok',
+      revision: 1,
+    })
+
+    const second = await lifecycle.bootGame({
+      createNewCharacter: true,
+      onNewCharacter: grantStarterContent,
+    })
+
+    expect(second.status).toBe('skipped')
+    expect(stubs.hardReset).toHaveBeenCalledTimes(1)
+
+    // One character must own ONE starter set: 2 buildings + 2 material
+    // stacks. The guard blocks the second grant entirely.
+    expect(stubs.gameManager.buildingManager.add).toHaveBeenCalledTimes(2)
+    expect(stubs.gameManager.materialBag.add).toHaveBeenCalledTimes(2)
+
+    lifecycle.stopAll()
+  })
+
+  // QA repro (mission B deep audit): the new first-save await is not
+  // guarded - a service that THROWS (coordinator.save has no try/catch;
+  // a remote CloudSaveService may reject on network failure) propagates
+  // out of bootGame. boot.fail() never runs, so the caller sees an
+  // unhandled rejection and the app sits on LoadingScreen forever
+  // instead of the boot-error screen. coordinator.load() shares this
+  // exposure but the new save await widens it.
+  it('player.save THROWS during first save -> boot still fails visibly instead of hanging', async () => {
+    const stubs = makeStubs()
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('network down'),
+    )
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
   })
 })

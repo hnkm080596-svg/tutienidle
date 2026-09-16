@@ -72,6 +72,14 @@ export interface UseAppLifecycleDeps {
   ) => { status: string; message?: string; offline?: { elapsedSeconds: number; cultivation: number } }
   persistPlayer: () => Promise<unknown>
   onError: (message: string) => void
+  /**
+   * Full page reload seam (App.vue passes window.location.reload). Used
+   * when a retried character creation would otherwise double-apply the
+   * starter grants left over from a failed first save - no manager-level
+   * reset exists, so the only honest recovery is a clean process (same
+   * convention as the settings delete-save flow).
+   */
+  hardReset: () => void
 }
 
 export interface BootOutcome {
@@ -111,6 +119,11 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   let saveInFlight = false
   let persistenceSuppressed = false
   let stopped = false
+  // B2 (audit T1-8 follow-up) — starter grants commit to runtime state
+  // BEFORE the first save; if that save fails, the buildings/materials/
+  // activePlayer already applied cannot be rolled back in memory. A
+  // second createNewCharacter boot must reload instead of re-granting.
+  let newCharacterGrantsApplied = false
   // ARCH-013/L04 — boot generation. `stopAll()` bumps it, so every async
   // continuation that captured the pre-stop value can tell it is stale and
   // must not write (restore, timers, route transitions) into a disposed
@@ -227,6 +240,15 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     try {
       const { createNewCharacter, onRestoreOk, onNewCharacter } = options
 
+      if (createNewCharacter && newCharacterGrantsApplied) {
+        // A previous attempt already committed starter grants to runtime
+        // state and its first save failed - re-running onNewCharacter
+        // would double-grant buildings/materials and persist the doubled
+        // state. Reload for a clean process instead of re-granting.
+        deps.hardReset()
+        return { status: 'skipped' }
+      }
+
       boot.startSaveLoad()
 
       // Nhân vật mới reset revision về 0 khớp storage (deleteSave đã xoá
@@ -291,6 +313,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         onRestoreOk?.(offline)
       } else {
         onNewCharacter?.()
+        newCharacterGrantsApplied = true
 
         // Audit T1-8 fix — the first durable save is INSIDE the boot
         // transaction: a new character must not reach a ticking runtime
@@ -301,7 +324,26 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         // autosave-failure toast/warn dedupe is runtime-loop behaviour,
         // and persistProgress()'s entryStage!=='game' gate would skip the
         // write anyway at this point in boot.
-        const firstSave = await player.save(gameManager)
+        let firstSave: CloudSaveWriteResult
+
+        try {
+          firstSave = await player.save(gameManager)
+        } catch (error: unknown) {
+          // A throwing service must still resolve the transaction
+          // visibly - coordinator.save has no try/catch, so a remote
+          // CloudSaveService rejecting on network failure would escape
+          // bootGame as an unhandled rejection and leave the app on the
+          // loading screen forever (boot.fail() never runs).
+          console.error('[boot] first character save threw', error)
+
+          if (bootGeneration !== lifecycleGeneration) {
+            return { status: 'skipped' }
+          }
+
+          onError(i18n.global.t('panels.settings.notifications.saveFailed'))
+          boot.fail()
+          return { status: 'failed' }
+        }
 
         // Same generation fence as the load await above: a stopAll() that
         // landed during the write makes everything below stale.
