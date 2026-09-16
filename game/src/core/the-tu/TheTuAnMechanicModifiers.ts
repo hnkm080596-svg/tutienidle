@@ -1,6 +1,6 @@
 import type { PlayerData } from '../player/Player'
 import type { ProgressionNode } from '../progression/ProgressionNode'
-import { getNodeLevel, nodePathApplies } from '../progression/NodeSystem'
+import { getNodeLevel, nodePathApplies, nodeWayApplies } from '../progression/NodeSystem'
 
 // The Tu Reimagined (plan Task 20, review P1.7) — the ONE locked node ->
 // the_tu_an channel. Nodes declare `effect.theTuAnMechanicModifiers`
@@ -80,7 +80,8 @@ export function collectTheTuAnMechanicModifiers(
 
     // Same ownership gate as collectTheTuKitModifiers — nodePathApplies
     // is the single authority; callers must not be trusted to pre-filter.
-    if (level <= 0 || !nodePathApplies(player, node)) {
+    // M3: the way-membership gate rides the same line.
+    if (level <= 0 || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 

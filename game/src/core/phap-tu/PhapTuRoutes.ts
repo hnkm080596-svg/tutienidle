@@ -3,7 +3,7 @@ import type { PlayerData } from '../player/Player'
 import type { EffectiveSkill } from '../skill/SkillSystem'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { ProgressionNode } from '../progression/ProgressionNode'
-import { getNodeLevel, isNodeElementActive, isNodeRouteActive } from '../progression/NodeSystem'
+import { getNodeLevel, isNodeElementActive, isNodeRouteActive, nodeWayApplies } from '../progression/NodeSystem'
 import { MAX_THE } from '../combat/CombatTypes'
 import type { PhapTuState, PhapTuRoute } from './PhapTuState'
 
@@ -239,7 +239,7 @@ export function resolveMaxThe(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 

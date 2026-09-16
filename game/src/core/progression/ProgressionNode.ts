@@ -3,7 +3,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import type { TheTuKitModifierValues } from '../the-tu/TheTuKitModifiers'
 import type { TheTuAnMechanicModifierValues } from '../the-tu/TheTuAnMechanicModifiers'
-import type { CultivationPathId } from '../player/CultivationPathKit'
+import type { CultivationPathId, PathWayId } from '../player/CultivationPathKit'
 
 export type NodeType = 'minor' | 'major'
 
@@ -206,6 +206,18 @@ export interface ProgressionNode {
    * keep working for every path.
    */
   requiredCultivationPath?: CultivationPathId
+
+  /**
+   * Cultivation Path Framework (M3, spec 2026-09-16) — way-membership
+   * gate, the branch-level sibling of requiredCultivationPath: the node
+   * only purchases/upgrades/aggregates for a player whose
+   * player.cultivationWay matches (enforced by NodeSystem.nodeWayApplies
+   * beside nodePathApplies at purchase, upgrade, and every aggregator).
+   * Path-scoped id — pair with requiredCultivationPath when the way id
+   * alone is ambiguous across paths. undefined = way-agnostic, so all
+   * existing (untagged) nodes keep working for every way.
+   */
+  requiredWay?: PathWayId
 
   effect: NodeEffect
 

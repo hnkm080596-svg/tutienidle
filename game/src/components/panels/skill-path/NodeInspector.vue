@@ -18,6 +18,7 @@ import {
   canUpgradeNode,
   isNodeElementActive,
   isNodeRouteActive,
+  nodeWayApplies,
 } from '@/core/progression/NodeSystem'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builders'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
@@ -101,6 +102,13 @@ const lockedReasons = computed(() => {
     reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.routeMismatch', {
       route: t(`panels.nodeTree.routes.${props.node.routeTag}`),
     }))
+  }
+
+  // M3 — way-membership gate is not a prerequisite either; surface the
+  // real lock reason (normally the tree filter hides these nodes, but
+  // the inspector still explains a stale/edge selection).
+  if (!nodeWayApplies(player.$state, props.node) && props.node.requiredWay) {
+    reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.wayMismatch'))
   }
 
   const cost = nextCost.value ?? props.node.insightCost

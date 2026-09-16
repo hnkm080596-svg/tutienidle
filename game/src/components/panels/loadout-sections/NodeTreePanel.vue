@@ -27,7 +27,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
-import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeModeApplies } from '@/core/progression/NodeSystem'
+import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeModeApplies, nodeWayApplies } from '@/core/progression/NodeSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
@@ -182,10 +182,13 @@ const branches = computed(() => {
   // only render in their own mode's view: hien sees the orb branches +
   // the (unrevealed) hidden root, ngu sees the Ngu branch — the
   // abandoned mode's nodes vanish entirely.
+  // M3 — way-tagged nodes follow the same display rule as mode-tagged
+  // ones: a node authored for another way does not render at all.
   const nodes = tagFiltered.filter(
     node =>
       (!node.revealWhen || hasPrerequisite(player.$state, node.revealWhen)) &&
-      nodeModeApplies(player.$state, node),
+      nodeModeApplies(player.$state, node) &&
+      nodeWayApplies(player.$state, node),
   )
 
   const groups = new Map<string, typeof nodes>()

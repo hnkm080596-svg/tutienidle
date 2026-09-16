@@ -146,6 +146,7 @@
           "element": "Unlock the related Element",
           "elementMismatch": "Belongs to the {element} element — another element is committed",
           "routeMismatch": "Enlightenable only in the {route} stance",
+          "wayMismatch": "Belongs to a different cultivation way",
           "excludesNode": "Conflicts with: {name}",
           "nodeCount": "Enlighten {required}/{total} related nodes",
           "skillLevel": "level {level}",
