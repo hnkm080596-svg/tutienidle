@@ -76,6 +76,22 @@ const stagesInZone = computed(() => {
 const selectedStageId = ref<string | null>(null)
 const selectedChapter = ref<number>(stagesInZone.value[0]?.chapter ?? 1)
 
+// Auto-farm B5 — armed state is player state (survives reload), so the
+// panel mirrors it: running farm row + stop control, and the perfect-farm
+// start only closes the panel when the domain accepted it.
+const armedFarmStage = computed(() => {
+  const armed = player.$state.autoFarmStage
+  if (!armed) {
+    return null
+  }
+
+  return gameManager.catalogOps.getStage(armed.stageId) ?? null
+})
+
+function stopAutoFarm() {
+  gameManager.turnBattleOps.autoFarmOps.stopAutoFarm(player.$state)
+}
+
 const chapterOptions = computed(() => {
   const chapters = new Map<number, { chapter: number; label: string }>()
 
@@ -195,8 +211,12 @@ function start() {
   // gọi startAutoFarm trực tiếp (roll reward theo wall-clock, không
   // hoạt ảnh) — khác mọi mode khác đều qua startSelectedStage.
   if (mode.value === 'perfect_farm') {
-    gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player.$state, selectedStage.value.id)
-    ui.leftPanelMode = null
+    // Only close on an accepted start - a refused start (slot held by a
+    // running farm, missing perfect clear) keeps the panel open so the
+    // failure is visible instead of silent (partial T4-38).
+    if (gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player.$state, selectedStage.value.id)) {
+      ui.leftPanelMode = null
+    }
     return
   }
 
@@ -275,6 +295,12 @@ function start() {
         </section>
 
         <section class="stage-select__detail">
+        <div v-if="armedFarmStage" class="stage-select__autofarm">
+          <span>{{ t('autoFarm.running', { stage: armedFarmStage.name }) }}</span>
+          <GameButton variant="danger" size="sm" data-testid="autofarm-stop" @click="stopAutoFarm">
+            {{ t('autoFarm.stop') }}
+          </GameButton>
+        </div>
       <template v-if="selectedStage">
         <h4 class="stage-select__title">{{ selectedStage.name }}</h4>
         <p class="stage-select__description">{{ selectedStage.description }}</p>
@@ -542,6 +568,16 @@ function start() {
 .stage-select__enemy > span:last-child { min-width: 0; display: flex; flex-direction: column; }
 .stage-select__enemy strong { font-size: var(--text-sm); }
 .stage-select__enemy small { color: var(--paper-text-muted); font-size: var(--text-xs); }
+
+.stage-select__autofarm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
 
 .stage-select__mode {
   display: grid;

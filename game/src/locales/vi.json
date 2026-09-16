@@ -1015,6 +1015,10 @@
     "success": "{label} thành công",
     "failed": "Không thể {label}: {reason}"
   },
+  "autoFarm": {
+    "running": "Đang Tự Động Hoàn Mỹ: {stage}",
+    "stop": "Dừng"
+  },
   "alchemy": {
     "spiritStones": "Linh Thạch",
     "startBrewing": "Bắt đầu luyện",

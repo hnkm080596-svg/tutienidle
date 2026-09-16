@@ -4,6 +4,8 @@ import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import StageSelectPanel from './StageSelectPanel.vue'
 import { GameManager } from '@/core/game/GameManager'
+import { usePlayerStore } from '@/stores/player'
+import { useUiStore } from '@/stores/ui'
 import { STAGES } from '@/data/stage/Stages'
 import { zones } from '@/data/stage/Zones'
 import { ENEMIES } from '@/data/enemy/Enemies'
@@ -43,7 +45,7 @@ function mountStageSelect() {
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
   app.mount(container)
 
-  return { container, unmount: () => app.unmount() }
+  return { container, pinia, manager, unmount: () => app.unmount() }
 }
 
 afterEach(() => { document.body.innerHTML = '' })
@@ -73,5 +75,48 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     expect(mounted.container.textContent).toContain(`${t('panels.stageSelect.labels.bossNamePrefix')} ${bossTemplate.name}`)
 
     mounted.unmount()
+  })
+})
+
+describe('StageSelectPanel — B5 auto-farm armed state + refused start guard (audit T1-6 / partial T4-38)', () => {
+  it('auto-farm armed → panel shows running state + stop control; stop releases the farm', async () => {
+    const { container, pinia, unmount } = mountStageSelect()
+    const player = usePlayerStore(pinia)
+
+    player.autoFarmStage = { stageId: 'mortal_dong_1', lastCheckedMs: Date.now() }
+    await nextTick()
+
+    const stopButton = container.querySelector<HTMLButtonElement>('[data-testid="autofarm-stop"]')
+    expect(stopButton).not.toBeNull()
+
+    stopButton!.click()
+    await nextTick()
+    expect(player.autoFarmStage).toBeNull()
+    unmount()
+  })
+
+  it('perfect-farm start refused (stage slot already held) → panel stays open, farm unchanged', async () => {
+    const { container, pinia, manager, unmount } = mountStageSelect()
+    const player = usePlayerStore(pinia)
+    const ui = useUiStore(pinia)
+
+    player.perfectClearStageIds.push('mortal_dong_1', 'mortal_dong_2')
+    // Occupy the single stage slot with a farm on another stage.
+    expect(manager.turnBattleOps.autoFarmOps.startAutoFarm(player.$state, 'mortal_dong_2')).toBe(true)
+    ui.leftPanelMode = 'stage_select'
+    await nextTick()
+
+    // Select perfect_farm on the already-selected first stage, then Start.
+    // The mode row renders 4 <Chip> children in order manual/repeat/
+    // progress/perfect_farm (StageSelectPanel.vue mode row).
+    const farmChip = container.querySelectorAll<HTMLElement>('.stage-select__mode .chip')[3]!
+    farmChip.click()
+    await nextTick()
+    container.querySelector<HTMLButtonElement>('[data-testid="stage-start-button"]')!.click()
+    await nextTick()
+
+    expect(ui.leftPanelMode).toBe('stage_select')
+    expect(player.autoFarmStage?.stageId).toBe('mortal_dong_2')
+    unmount()
   })
 })

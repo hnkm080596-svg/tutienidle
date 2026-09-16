@@ -7,6 +7,7 @@ import CombatSceneOverlay from '../game/combat/CombatSceneOverlay.vue'
 import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay.vue'
 import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
 import DongFuCommandWheel from '../game/DongFuCommandWheel.vue'
+import AutoFarmIndicator from '../game/AutoFarmIndicator.vue'
 import BuildingDetailPopover from '../game/BuildingDetailPopover.vue'
 import LeftPanel from './LeftPanel.vue'
 import RightPanel from './RightPanel.vue'
@@ -134,6 +135,11 @@ function closeSidePanels() {
         <!-- Command wheel nhiều tầng — trigger là nhân vật tu luyện
              giữa Động Phủ (DongFuScene.vue). -->
         <DongFuCommandWheel />
+
+        <!-- Armed auto-farm holds the single StageManager slot (no combat
+             can mount) — the indicator lives in home chrome, not the
+             combat HUD, so the stop path is always reachable (T1-6). -->
+        <AutoFarmIndicator />
       </template>
 
       <CombatSceneOverlay v-if="isCombatSceneActive" />
