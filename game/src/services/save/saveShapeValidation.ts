@@ -13,6 +13,7 @@ import { COMPANIONS } from '../../data/companion/Companions'
 import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgression'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
+import { isHerbAge } from '../../core/production/ProductionTypes'
 import { createBaseStats } from '../../core/stats/StatBlock'
 import {
   isRetiredStatKey,
@@ -659,6 +660,101 @@ function validateBuildingsSave(entries: unknown[], path: string, issues: ShapeIs
   }
 }
 
+// Mission A1 — ProductionCycle: every timestamp/seed feeds settle/tick
+// math; a non-finite completesAtMs used to pass the gate and run one
+// cycle per tick forever.
+function validateProductionCycleSave(
+  value: unknown,
+  path: string,
+  issues: ShapeIssue[],
+): void {
+  if (
+    !isObject(value) ||
+    typeof value.cycleId !== 'string' ||
+    typeof value.siteId !== 'string' ||
+    typeof value.collectionRealmId !== 'string' ||
+    !isFiniteNumber(value.siteLevelAtStart) ||
+    !isFiniteNumber(value.rewardTableVersion) ||
+    !isFiniteNumber(value.rollSeed) ||
+    !isFiniteNumber(value.startedAtMs) ||
+    !isFiniteNumber(value.completesAtMs)
+  ) {
+    issues.push({ path, message: 'production cycle sai shape' })
+  }
+}
+
+function validateProductionSitesSave(
+  entries: unknown[],
+  path: string,
+  issues: ShapeIssue[],
+): void {
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i]
+    const entryPath = `${path}[${i}]`
+
+    if (
+      !isObject(entry) ||
+      typeof entry.siteId !== 'string' ||
+      !Number.isInteger(entry.level) ||
+      typeof entry.autoRestart !== 'boolean'
+    ) {
+      issues.push({ path: entryPath, message: 'production site sai shape' })
+
+      continue
+    }
+
+    if (
+      entry.assignedWorkers !== undefined &&
+      (!Number.isInteger(entry.assignedWorkers) || (entry.assignedWorkers as number) < 0)
+    ) {
+      issues.push({ path: `${entryPath}.assignedWorkers`, message: 'phải là int không âm' })
+    }
+
+    if (entry.activeCycle !== undefined) {
+      validateProductionCycleSave(entry.activeCycle, `${entryPath}.activeCycle`, issues)
+    }
+
+    if (entry.workerCycles !== undefined) {
+      if (!Array.isArray(entry.workerCycles)) {
+        issues.push({ path: `${entryPath}.workerCycles`, message: 'phải là array' })
+      } else {
+        for (let j = 0; j < entry.workerCycles.length; j += 1) {
+          validateProductionCycleSave(
+            entry.workerCycles[j],
+            `${entryPath}.workerCycles[${j}]`,
+            issues,
+          )
+        }
+      }
+    }
+  }
+}
+
+// Mission A1 — AlchemySystem.restoreJobs feeds these into settle/tick;
+// a missing id or non-finite deadline must fail the boundary.
+function validateAlchemyJobsSave(
+  entries: unknown[],
+  path: string,
+  issues: ShapeIssue[],
+): void {
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i]
+
+    if (
+      !isObject(entry) ||
+      typeof entry.jobId !== 'string' ||
+      typeof entry.recipeId !== 'string' ||
+      typeof entry.pillId !== 'string' ||
+      typeof entry.herbMaterialId !== 'string' ||
+      !isFiniteNumber(entry.startedAtMs) ||
+      !isFiniteNumber(entry.completesAtMs) ||
+      !isFiniteNumber(entry.roomLevelAtStart)
+    ) {
+      issues.push({ path: `${path}[${i}]`, message: 'alchemy job sai shape' })
+    }
+  }
+}
+
 interface EquipmentEntriesValidation {
   normalizedEntries: unknown[]
 
@@ -940,9 +1036,18 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   const equipmentSlots = requireArray(parsed, 'equipmentSlots', '', issues)
 
-  // Field optional của GameSave — chỉ kiểm kiểu khi hiện diện.
-  optionalArray(parsed, 'productionSites', '', issues)
-  optionalArray(parsed, 'alchemyJobs', '', issues)
+  // Field optional của GameSave — chỉ kiểm kiểu khi hiện diện, rồi
+  // deep-check từng phần tử (Mission A1).
+  const productionSites = optionalArray(parsed, 'productionSites', '', issues)
+  const alchemyJobs = optionalArray(parsed, 'alchemyJobs', '', issues)
+
+  if (productionSites) {
+    validateProductionSitesSave(productionSites, 'productionSites', issues)
+  }
+
+  if (alchemyJobs) {
+    validateAlchemyJobsSave(alchemyJobs, 'alchemyJobs', issues)
+  }
 
   // Mission A1 — deep element checks: a present-but-malformed slice must
   // fail the boundary before restore trusts the declared TS shape.
@@ -953,6 +1058,8 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   // R7 (AR-08) - decompose slice is optional; when present it must be
   // an object with a non-negative finite workers number (restore
   // re-clamps; malformed input is rejected instead of crashing boot).
+  // Mission A1 extends it: nextCycleAt/started plus enum membership for
+  // the two filters (a bad deadline is a per-tick runaway).
   if (parsed.decompose !== undefined) {
     if (!isObject(parsed.decompose)) {
       issues.push({ path: '.decompose', message: 'phải là object hoặc vắng mặt' })
@@ -960,10 +1067,28 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
       const decompose = parsed.decompose as Record<string, unknown>
       const settings = decompose.settings
 
-      if (!isObject(settings) || !Number.isFinite((settings as { workers?: unknown }).workers)) {
-        issues.push({ path: '.decompose.settings.workers', message: 'phải là số hữu hạn' })
-      } else if ((settings as { workers: number }).workers < 0) {
-        issues.push({ path: '.decompose.settings.workers', message: 'không được âm' })
+      if (!isObject(settings)) {
+        issues.push({ path: '.decompose.settings', message: 'phải là object' })
+      } else {
+        if (!isNonNegativeFiniteNumber(settings.workers)) {
+          issues.push({ path: '.decompose.settings.workers', message: 'phải là số hữu hạn không âm' })
+        }
+
+        if (settings.gradeFilter !== 'all' && !isProfessionGrade(settings.gradeFilter)) {
+          issues.push({ path: '.decompose.settings.gradeFilter', message: 'phải là ProfessionGrade hoặc all' })
+        }
+
+        if (settings.ageFilter !== 'all' && !isHerbAge(settings.ageFilter)) {
+          issues.push({ path: '.decompose.settings.ageFilter', message: 'phải là HerbAge hoặc all' })
+        }
+      }
+
+      if (!isNonNegativeFiniteNumber(decompose.nextCycleAt)) {
+        issues.push({ path: '.decompose.nextCycleAt', message: 'phải là số hữu hạn không âm' })
+      }
+
+      if (typeof decompose.started !== 'boolean') {
+        issues.push({ path: '.decompose.started', message: 'phải là boolean' })
       }
     }
   }

@@ -544,6 +544,244 @@ describe('validateGameSaveShape — buildings slice (Mission A1)', () => {
   })
 })
 
+describe('validateGameSaveShape — productionSites slice (Mission A1)', () => {
+  function validCycle(): Record<string, unknown> {
+    return {
+      cycleId: 'cycle-1',
+      siteId: 'thanh_van_forest',
+      collectionRealmId: 'mortal',
+      siteLevelAtStart: 1,
+      rewardTableVersion: 1,
+      rollSeed: 12345,
+      startedAtMs: 1_725_000_000_000,
+      completesAtMs: 1_725_000_060_000,
+    }
+  }
+
+  function validSite(): Record<string, unknown> {
+    return {
+      siteId: 'thanh_van_forest',
+      level: 2,
+      autoRestart: true,
+      assignedWorkers: 2,
+      activeCycle: validCycle(),
+      workerCycles: [validCycle()],
+    }
+  }
+
+  it('chấp nhận productionSites đầy đủ hợp lệ', () => {
+    const save = validSave()
+
+    save.productionSites = [validSite()]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([
+    [{ ...validSite(), siteId: 5 }, 'siteId non-string'],
+    [{ ...validSite(), level: 'x' }, 'level non-integer'],
+    [{ ...validSite(), level: 1.5 }, 'level thập phân'],
+    [{ ...validSite(), autoRestart: 'yes' }, 'autoRestart non-bool'],
+    ['not-an-object', 'entry non-object'],
+  ])('từ chối productionSites entry: %s', (entry, _case) => {
+    const save = validSave()
+
+    save.productionSites = [entry]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('productionSites[0]')
+  })
+
+  it.each([['x'], [1.5], [-1]])(
+    'từ chối productionSites[0].assignedWorkers = %s',
+    (value) => {
+      const save = validSave()
+
+      save.productionSites = [{ ...validSite(), assignedWorkers: value }]
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('productionSites[0].assignedWorkers')
+    },
+  )
+
+  it('từ chối activeCycle sai shape (completesAtMs non-finite)', () => {
+    const save = validSave()
+
+    save.productionSites = [
+      { ...validSite(), activeCycle: { ...validCycle(), completesAtMs: 'x' } },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('productionSites[0].activeCycle')
+  })
+
+  it('từ chối workerCycles không phải array', () => {
+    const save = validSave()
+
+    save.productionSites = [{ ...validSite(), workerCycles: 'x' }]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('productionSites[0].workerCycles')
+  })
+
+  it('từ chối workerCycles entry sai shape (rollSeed NaN)', () => {
+    const save = validSave()
+
+    save.productionSites = [
+      { ...validSite(), workerCycles: [{ ...validCycle(), rollSeed: Number.NaN }] },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('productionSites[0].workerCycles[0]')
+  })
+
+  it('chấp nhận site tối thiểu (không cycle/assignedWorkers)', () => {
+    const save = validSave()
+
+    save.productionSites = [{ siteId: 'thanh_van_forest', level: 1, autoRestart: false }]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('validateGameSaveShape — alchemyJobs slice (Mission A1)', () => {
+  function validJob(): Record<string, unknown> {
+    return {
+      jobId: 'job-1',
+      recipeId: 'pill_regen_mortal',
+      pillId: 'pill_regen_mortal',
+      herbMaterialId: 'mortal_herb_decade',
+      startedAtMs: 1_725_000_000_000,
+      completesAtMs: 1_725_000_060_000,
+      roomLevelAtStart: 1,
+    }
+  }
+
+  it('chấp nhận alchemyJobs entry hợp lệ', () => {
+    const save = validSave()
+
+    save.alchemyJobs = [validJob()]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([
+    [{ ...validJob(), jobId: 5 }],
+    [{ ...validJob(), recipeId: undefined }],
+    [{ ...validJob(), pillId: 7 }],
+    [{ ...validJob(), herbMaterialId: null }],
+    [{ ...validJob(), startedAtMs: 'x' }],
+    [{ ...validJob(), completesAtMs: 'x' }],
+    [{ ...validJob(), completesAtMs: Number.NaN }],
+    [{ ...validJob(), roomLevelAtStart: 'x' }],
+    ['not-an-object'],
+  ])('từ chối alchemyJobs entry: %j', (entry) => {
+    const save = validSave()
+    const normalized = isRecord(entry)
+      ? Object.fromEntries(Object.entries(entry).filter(([, v]) => v !== undefined))
+      : entry
+
+    save.alchemyJobs = [normalized]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('alchemyJobs[0]')
+  })
+})
+
+describe('validateGameSaveShape — decompose slice (Mission A1 extension)', () => {
+  function validDecompose(): Record<string, unknown> {
+    return {
+      settings: { gradeFilter: 'all', ageFilter: 'decade', workers: 2 },
+      nextCycleAt: 1_725_000_030_000,
+      started: true,
+    }
+  }
+
+  it('chấp nhận decompose slice hợp lệ', () => {
+    const save = validSave()
+
+    save.decompose = validDecompose()
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([['bad'], [Number.NaN], [-5]])(
+    'từ chối decompose.nextCycleAt = %s (timer poison — runaway tick)',
+    (value) => {
+      const save = validSave()
+
+      save.decompose = { ...validDecompose(), nextCycleAt: value }
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('.decompose.nextCycleAt')
+    },
+  )
+
+  it('từ chối decompose.started non-boolean', () => {
+    const save = validSave()
+
+    save.decompose = { ...validDecompose(), started: 'yes' }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('.decompose.started')
+  })
+
+  it('từ chối decompose.settings.gradeFilter ngoài enum', () => {
+    const save = validSave()
+
+    save.decompose = {
+      ...validDecompose(),
+      settings: { gradeFilter: 'bogus', ageFilter: 'all', workers: 1 },
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('.decompose.settings.gradeFilter')
+  })
+
+  it('từ chối decompose.settings.ageFilter ngoài enum', () => {
+    const save = validSave()
+
+    save.decompose = {
+      ...validDecompose(),
+      settings: { gradeFilter: 'all', ageFilter: 'bogus', workers: 1 },
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('.decompose.settings.ageFilter')
+  })
+
+  it('từ chối decompose.settings không phải object', () => {
+    const save = validSave()
+
+    save.decompose = { ...validDecompose(), settings: 'x' }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('.decompose.settings')
+  })
+})
+
 describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/NaN)', () => {
   function validEquipmentEntry(): Record<string, unknown> {
     return {
