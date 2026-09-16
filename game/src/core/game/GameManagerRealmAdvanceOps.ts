@@ -7,7 +7,7 @@ import type { CultivationPathId } from '../player/CultivationPathKit'
 import { freshKiemTuState, MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import {
-  CULTIVATION_PATH_KITS,
+  getPathWayDefinition,
   PHAP_TU_AN_BASIC_ID,
   PHAP_TU_AN_SPECIAL_ID,
   isCultivationPathOffered,
@@ -188,13 +188,15 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const kit = CULTIVATION_PATH_KITS[pathId]
+    // M1 — legacy path ids resolve to the way definition through the
+    // transition adapter; an unknown id yields no way and fails closed.
+    const way = getPathWayDefinition(pathId)
 
-    // The Tu Reimagined (T6) — kit.offerGate is the offer-time contract;
+    // The Tu Reimagined (T6) — way.offerGate is the offer-time contract;
     // enforce the same predicate here so a stale/hidden offer can never
     // slip through the ritual (isCultivationPathOffered is also what the
     // Quan Khi panel filters on).
-    if (!isCultivationPathOffered(kit, player)) {
+    if (!way || !isCultivationPathOffered(way, player)) {
       return false
     }
 
@@ -202,7 +204,7 @@ export class GameManagerRealmAdvanceOps {
     // every registry entry the ritual grants BEFORE committing
     // cultivationPath — a missing template must fail the whole choice,
     // never leave the path committed with a partial kit.
-    const techniqueTemplate = this.deps.techniqueTemplates.get(kit.techniqueId)
+    const techniqueTemplate = this.deps.techniqueTemplates.get(way.techniqueId)
 
     if (!techniqueTemplate) {
       return false
@@ -218,7 +220,7 @@ export class GameManagerRealmAdvanceOps {
     const grantedSkillIds: readonly string[] =
       pathId === 'phap_tu_an'
         ? [PHAP_TU_AN_BASIC_ID, PHAP_TU_AN_SPECIAL_ID]
-        : (kit.skillIds ?? [])
+        : (way.skillIds ?? [])
 
     if (grantedSkillIds.some((skillId) => !this.deps.skillTemplates.has(skillId))) {
       return false
@@ -226,8 +228,8 @@ export class GameManagerRealmAdvanceOps {
 
     player.cultivationPath = pathId
 
-    this.learnTechnique(kit.techniqueId)
-    this.equipTechnique(kit.techniqueId)
+    this.learnTechnique(way.techniqueId)
+    this.equipTechnique(way.techniqueId)
 
     if (pathId === 'phap_tu_an') {
       this.deps.progressionOps.learnSkill(PHAP_TU_AN_BASIC_ID)
@@ -239,7 +241,7 @@ export class GameManagerRealmAdvanceOps {
       // enters mode 'hien' with the canonical fresh state; there is no
       // route lock. The legacy kiem-tran/bat-kiem tail (route write,
       // bat_kiem_thuat grant, kiem_tran_luong_nghi purchase) is gone.
-      // kit.skillIds for Kiem Tu stays unused — hien basics come from the
+      // way.skillIds for Kiem Tu stays unused — hien basics come from the
       // orb preset via the dynamicBasic provider (Task 6).
       player.kiemTu = freshKiemTuState()
 
@@ -257,8 +259,8 @@ export class GameManagerRealmAdvanceOps {
       // tram/huy_quyen cannot occupy the single mortal slot.
       this.deps.skillSystem.unequip('tram')
       this.deps.skillSystem.unequip('huy_quyen')
-    } else if (kit.skillIds) {
-      kit.skillIds.forEach((skillId, index) => {
+    } else if (way.skillIds) {
+      way.skillIds.forEach((skillId, index) => {
         this.deps.progressionOps.learnSkill(skillId)
         this.deps.skillSystem.equipToSlot(skillId, index)
       })

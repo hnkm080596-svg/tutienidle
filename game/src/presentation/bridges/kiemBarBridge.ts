@@ -23,7 +23,7 @@ import type { OrbId, KiemTuState } from '@/core/kiem-tu/KiemTuState'
 import { isKiemPhoProviderHandle } from '@/core/kiem-tu/KiemPhoProvider'
 import { forgeCost } from '@/core/kiem-tu/NguKiemDao'
 import { getRealmIndex } from '@/core/realm/realmSystem'
-import { CULTIVATION_PATH_KITS, type CultivationPathId } from '@/core/player/CultivationPathKit'
+import { getPathWayDefinition, type CultivationPathId } from '@/core/player/CultivationPathKit'
 import type { GameManager } from '@/core/game/GameManager'
 import {
   readOptionalGate,
@@ -93,9 +93,9 @@ export function makeKiemBarReader(
       : undefined
 
     if (!kiemTu) {
-      // The Tu An (T22) — The proc-fuel pool, gated by the kit flag so
-      // the HUD stays data-driven (no path-id checks outside kit data).
-      if (player.cultivationPath && CULTIVATION_PATH_KITS[player.cultivationPath].usesTheResource) {
+      // The Tu An (T22) — The proc-fuel pool, gated by the way flag so
+      // the HUD stays data-driven (no path-id checks outside way data).
+      if (player.cultivationPath && getPathWayDefinition(player.cultivationPath)?.usesTheResource) {
         return {
           current: battleEntity?.currentThe ?? 0,
           max: battleEntity?.maxThe ?? MAX_THE,

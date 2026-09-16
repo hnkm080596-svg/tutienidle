@@ -67,7 +67,8 @@ export function getCastLeveledSkillLevel(skillId: string, totalExperience: numbe
 export const HUY_KIEM_L3_CASTS = CAST_LEVELING_THRESHOLDS.tram!.lv3
 
 /** Ngưỡng cast Hủy Quyền đạt Lv3 — cổng offer the_tu_an tại Nghi Lễ
- * Nhập Môn (spec 2026-09-15 T6, xem CultivationPathKit.offerGate). */
+ * Nhập Môn (spec 2026-09-15 T6, xem PathOfferGate trong
+ * CultivationPathKit.ts). */
 export const HUY_QUYEN_L3_CASTS = CAST_LEVELING_THRESHOLDS.huy_quyen!.lv3
 
 export interface EffectiveSkill {

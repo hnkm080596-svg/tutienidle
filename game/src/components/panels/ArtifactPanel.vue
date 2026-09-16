@@ -26,7 +26,7 @@ import {
   getNextArtifactGrade,
 } from '@/core/artifact/ArtifactProgression'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
-import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
+import { getPathWayDefinition } from '@/core/player/CultivationPathKit'
 import { formatStat } from '@/core/stats/StatLabels'
 
 const ui = useUiStore()
@@ -43,9 +43,11 @@ const artifactId = computed(() => {
 
 const definition = computed(() => (artifactId.value ? ARTIFACTS[artifactId.value] : undefined))
 
-const cultivationPathLabel = computed(() =>
-  player.cultivationPath ? CULTIVATION_PATH_KITS[player.cultivationPath].name : t('panels.artifact.noPath'),
-)
+const cultivationPathLabel = computed(() => {
+  const way = player.cultivationPath ? getPathWayDefinition(player.cultivationPath) : undefined
+
+  return way?.name ?? t('panels.artifact.noPath')
+})
 
 const canChange = computed(() => {
   stateVersion.value

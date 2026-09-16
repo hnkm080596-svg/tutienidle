@@ -48,7 +48,7 @@ function createTestEnemy() {
   })
 }
 
-// Combat Rework Phase 8 — Class (CultivationPathKit) + Equipment
+// Combat Rework Phase 8 — Class (PathWayDefinition) + Equipment
 // (static modifier) + Pre-Battle Upgrade (Skill Specialization) đều
 // ĐÃ có sẵn hạ tầng riêng (audit xác nhận, không phải xây mới) —
 // test này là "acceptance test" DUY NHẤT xác nhận CẢ 3 nguồn thật sự

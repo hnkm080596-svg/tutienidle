@@ -73,7 +73,7 @@ export const NEUTRAL_ROUTE_PROFILE: RouteProfile = {
 
 // Route stat modifiers are full StatModifiers (post-stat-rework
 // contract): sourceType 'realm'/sourceId 'phap_tu' matches
-// CULTIVATION_PATH_KITS grants, domain 'phap_tu' keeps them inside the
+// CULTIVATION_PATH_MODULES way grants, domain 'phap_tu' keeps them inside the
 // StatDomain gate. Ailment-potency lines use `flat` absolutes — percent
 // on a zero-base stat is a no-op.
 export const PHAP_TU_ROUTES: Record<PhapTuRoute, RouteProfile> = {

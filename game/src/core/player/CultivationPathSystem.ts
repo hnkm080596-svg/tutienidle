@@ -1,8 +1,7 @@
 import type { Technique } from '../technique/Technique'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import type { PlayerData } from './Player'
-import { CULTIVATION_PATH_KITS, isCultivationPathOffered, type CultivationPathId } from './CultivationPathKit'
-import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
+import { getPathWayDefinition, isCultivationPathOffered, type CultivationPathId } from './CultivationPathKit'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
@@ -79,27 +78,37 @@ registerDomainDeltaDeriver('phap_tu', (delta) =>
  * never stored, and post-ritual casts cannot reopen it (the ritual
  * itself rejects any second choice). The Tu Reimagined adds 'the_tu'
  * as an always-offered base path and 'the_tu_an' behind the same
- * ritual-time evaluation via its kit offerGate (huy_quyen Lv3).
+ * ritual-time evaluation via its way offerGate (huy_quyen Lv3).
  */
 export function getOfferableCultivationPaths(player: PlayerData): CultivationPathId[] {
   const paths: CultivationPathId[] = ['phap_tu', 'kiem_tu', 'the_tu']
 
-  if (isPhapTuAnEligible(player)) {
+  // M1 transition — hidden ways surface under their legacy _an path
+  // ids; the gate read moved onto the way definition's offerGate (the
+  // ngo_dao linh_bao gate is cast-count based, evaluated inside
+  // isCultivationPathOffered — replaces the bespoke isPhapTuAnEligible
+  // call that used to live here). The kiem_tu 'ngu' way is catalogued
+  // but has no legacy id — it is never offered until M6 (R2).
+  const ngoDao = getPathWayDefinition('phap_tu_an')
+  if (ngoDao && isCultivationPathOffered(ngoDao, player)) {
     paths.push('phap_tu_an')
   }
 
-  if (isCultivationPathOffered(CULTIVATION_PATH_KITS.the_tu_an, player)) {
+  const ungThe = getPathWayDefinition('the_tu_an')
+  if (ungThe && isCultivationPathOffered(ungThe, player)) {
     paths.push('the_tu_an')
   }
 
   return paths
 }
 
-/** linh_bao Lv3 gate — shared by the offer query and the ritual commit. */
+/** linh_bao Lv3 gate — shared by the offer query and the ritual commit.
+ * M1: the rule now lives on the ngo_dao way's requiresSkillCastLevel
+ * offerGate; this delegate stays for RealmAdvanceOps until M2. */
 export function isPhapTuAnEligible(player: PlayerData): boolean {
-  const threshold = CAST_LEVELING_THRESHOLDS['linh_bao']?.lv3 ?? Number.POSITIVE_INFINITY
+  const way = getPathWayDefinition('phap_tu_an')
 
-  return (player.skillCastCounts?.['linh_bao'] ?? 0) >= threshold
+  return way !== undefined && isCultivationPathOffered(way, player)
 }
 
 // ---------------------------------------------------------------------------
@@ -199,9 +208,9 @@ export interface CultivationPathRewardDeps {
 }
 
 export function getCultivationPathStatModifiers(player: PlayerData) {
-  return player.cultivationPath
-    ? [...(CULTIVATION_PATH_KITS[player.cultivationPath].statModifiers ?? [])]
-    : []
+  const way = player.cultivationPath ? getPathWayDefinition(player.cultivationPath) : undefined
+
+  return [...(way?.statModifiers ?? [])]
 }
 
 export function grantCultivationPathRealmReward(
@@ -213,7 +222,7 @@ export function grantCultivationPathRealmReward(
     return false
   }
 
-  const reward = CULTIVATION_PATH_KITS[player.cultivationPath].realmRewards?.[realmId]
+  const reward = getPathWayDefinition(player.cultivationPath)?.realmRewards?.[realmId]
 
   if (!reward) {
     return false

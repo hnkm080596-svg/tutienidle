@@ -3,7 +3,7 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
-import { CULTIVATION_PATH_KITS, isCultivationPathOffered } from '../player/CultivationPathKit'
+import { getPathWayDefinition, isCultivationPathOffered } from '../player/CultivationPathKit'
 import { CAST_LEVELING_THRESHOLDS, HUY_QUYEN_L3_CASTS } from '../skill/SkillSystem'
 
 // The Tu Reimagined (spec 2026-09-15, T6 + section 2.3) — Task 2:
@@ -92,21 +92,21 @@ describe('isCultivationPathOffered — ritual offer gate', () => {
     const below = createDefaultPlayer()
     below.skillLevels = { huy_quyen: 2 }
 
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.the_tu, below)).toBe(true)
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.phap_tu, below)).toBe(true)
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.kiem_tu, below)).toBe(true)
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.the_tu_an, below)).toBe(false)
+    expect(isCultivationPathOffered(getPathWayDefinition('the_tu')!, below)).toBe(true)
+    expect(isCultivationPathOffered(getPathWayDefinition('phap_tu')!, below)).toBe(true)
+    expect(isCultivationPathOffered(getPathWayDefinition('kiem_tu')!, below)).toBe(true)
+    expect(isCultivationPathOffered(getPathWayDefinition('the_tu_an')!, below)).toBe(false)
 
     const met = createDefaultPlayer()
     met.skillLevels = { huy_quyen: 3 }
 
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.the_tu_an, met)).toBe(true)
+    expect(isCultivationPathOffered(getPathWayDefinition('the_tu_an')!, met)).toBe(true)
   })
 
   it('missing huy_quyen mirror (never learned) hides the_tu_an', () => {
     const player = createDefaultPlayer()
 
-    expect(isCultivationPathOffered(CULTIVATION_PATH_KITS.the_tu_an, player)).toBe(false)
+    expect(isCultivationPathOffered(getPathWayDefinition('the_tu_an')!, player)).toBe(false)
   })
 })
 

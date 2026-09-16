@@ -13,7 +13,7 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
-import { CULTIVATION_PATH_KITS, PHAP_TU_AN_REQUIRED_SKILLS } from '@/core/player/CultivationPathKit'
+import { getPathWayDefinition, PHAP_TU_AN_REQUIRED_SKILLS, type PathWayDefinition } from '@/core/player/CultivationPathKit'
 import { getOfferableCultivationPaths } from '@/core/player/CultivationPathSystem'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
@@ -47,7 +47,11 @@ const cooldownSeconds = computed(() => {
 const availablePaths = computed(() => {
   stateVersion.value
 
-  return getOfferableCultivationPaths(player.$state).map(id => CULTIVATION_PATH_KITS[id])
+  // M1 — offers stay legacy path ids during the transition; each row
+  // carries the resolved way definition for display.
+  return getOfferableCultivationPaths(player.$state)
+    .map((id) => ({ id, way: getPathWayDefinition(id) }))
+    .filter((entry): entry is { id: CultivationPathId; way: PathWayDefinition } => entry.way !== undefined)
 })
 
 // The hidden path's kit — names resolved live from the skill registry
@@ -63,7 +67,7 @@ const anKitSkillNames = computed(() =>
 // thay vì browser confirm() mặc định).
 const pendingPathId = ref<CultivationPathId | null>(null)
 
-const pendingPathName = computed(() => (pendingPathId.value ? CULTIVATION_PATH_KITS[pendingPathId.value].name : ''))
+const pendingPathName = computed(() => (pendingPathId.value ? getPathWayDefinition(pendingPathId.value)?.name ?? '' : ''))
 
 function choosePath(pathId: CultivationPathId) {
   pendingPathId.value = pathId
@@ -82,7 +86,7 @@ function confirmChoosePath() {
     return
   }
 
-  const kit = CULTIVATION_PATH_KITS[pathId]
+  const way = getPathWayDefinition(pathId)
 
   const realmIdBefore = player.realmId
   if (gameManager.realmAdvanceOps.chooseCultivationPath(pathId, player.$state)) {
@@ -94,7 +98,7 @@ function confirmChoosePath() {
     if (realmIdBefore === 'mortal' && player.realmId !== 'mortal') {
       useWorldAnnouncementStore().show(
         t('panels.quanKhi.world.ceremonyTitle'),
-        t('panels.quanKhi.world.ceremonyBody', { name: kit.name }),
+        t('panels.quanKhi.world.ceremonyBody', { name: way?.name ?? pathId }),
       )
     }
 
@@ -202,10 +206,10 @@ function removeOrbAt(index: number) {
       <div class="quan-khi-panel__choices">
         <template v-for="kit in availablePaths" :key="kit.id">
           <!-- Sealed hidden-path card (Task 16) — renders ONLY when
-               getOfferableCultivationPaths includes it; names the kit,
+               getOfferableCultivationPaths includes it; names the way,
                carries the permanent warning, no node-tree entry point. -->
           <div v-if="kit.id === 'phap_tu_an'" class="quan-khi-panel__hidden-card">
-            <p class="quan-khi-panel__hidden-title">{{ kit.name }}</p>
+            <p class="quan-khi-panel__hidden-title">{{ kit.way.name }}</p>
             <p class="quan-khi-panel__hidden-desc">
               {{ t('panels.quanKhi.sections.hiddenPath.description', { kit: anKitSkillNames.join(' · ') }) }}
             </p>
@@ -217,7 +221,7 @@ function removeOrbAt(index: number) {
               :disabled="cooldownSeconds > 0"
               @click="choosePath(kit.id)"
             >
-              {{ t('panels.quanKhi.actions.enterPath', { name: kit.name }) }}
+              {{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}
             </GameButton>
           </div>
 
@@ -229,7 +233,7 @@ function removeOrbAt(index: number) {
             :disabled="cooldownSeconds > 0"
             @click="choosePath(kit.id)"
           >
-            {{ t('panels.quanKhi.actions.enterPath', { name: kit.name }) }}
+            {{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}
           </GameButton>
         </template>
       </div>
