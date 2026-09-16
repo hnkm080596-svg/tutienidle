@@ -3,7 +3,10 @@ import {
   AssetBundleManager,
   type DomImageLoader,
 } from './AssetBundleManager'
-import type { AssetResourceDescriptor } from './AssetBundleCatalog'
+import {
+  getBundleDescriptors,
+  type AssetResourceDescriptor,
+} from './AssetBundleCatalog'
 import type { AssetLoaderScene } from '@/game/scenes/AssetLoaderScene'
 
 function createMockLoaderScene() {
@@ -260,7 +263,34 @@ describe('AssetBundleManager', () => {
     expect(newLoader.loadDescriptors).toHaveBeenCalledTimes(1)
   })
 
-  it('loader swap mid-DOM-load: the stale decode cannot publish either', async () => {
+  it('first entry: loader registering mid-DOM-load must not fail the ensure', async () => {
+    // Regression for the entry transition race: GameRoot mounts and starts
+    // the Phaser host concurrently with ensureFor('home'), so the DOM image
+    // loads begin while loaderScene is still null. AssetLoaderScene.create()
+    // then registers the loader and bumps the generation - DOM images never
+    // publish into the Phaser texture cache, so that bump must not stale them.
+    let resolveDom!: () => void
+    const domBlocker = new Promise<void>((resolve) => {
+      resolveDom = resolve
+    })
+    const blockingDomLoader: DomImageLoader = vi.fn(async () => {
+      await domBlocker
+    })
+
+    // No loaderScene - the host is still booting, exactly like first entry.
+    const manager = new AssetBundleManager({
+      domImageLoader: blockingDomLoader,
+    })
+
+    const pending = manager.ensureLoaded(['home'])
+    manager.setLoaderScene(loaderScene)
+    resolveDom()
+
+    await expect(pending).resolves.toBeUndefined()
+    expect(manager.isLoaded('home')).toBe(true)
+  })
+
+  it('loader swap mid-DOM-load: DOM images still commit - only the Phaser batch is fenced', async () => {
     let resolveDom!: () => void
     const domBlocker = new Promise<void>((resolve) => {
       resolveDom = resolve
@@ -279,8 +309,17 @@ describe('AssetBundleManager', () => {
     manager.setLoaderScene(createMockLoaderScene())
     resolveDom()
 
+    // The Phaser batch was bound to the replaced loader's cache, so it still
+    // rejects. The DOM results only live in the browser cache - a swap cannot
+    // invalidate them, so they commit instead of forcing a pointless refetch.
     await expect(pending).rejects.toThrow('superseded')
     expect(manager.isLoaded('home')).toBe(false)
+
+    for (const d of getBundleDescriptors('home')) {
+      if (d.kind === 'dom-image') {
+        expect(manager.isResourceLoaded(d.key)).toBe(true)
+      }
+    }
   })
 
   it('dispose mid-load fences publication the same way', async () => {

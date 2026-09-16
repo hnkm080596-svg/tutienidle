@@ -96,6 +96,8 @@ export class AssetBundleManager implements AssetPort {
   // afterward must not publish into a cache it was cleared out of (the old
   // continuation would resurrect keys the swap deliberately dropped while
   // the new Phaser.Game's texture manager does not actually hold them).
+  // The fence guards the Phaser batch only - DOM images live in the browser
+  // cache, which a loader swap cannot make stale.
   private loaderGeneration = 0
 
   constructor(options: AssetBundleManagerOptions = {}) {
@@ -248,18 +250,15 @@ export class AssetBundleManager implements AssetPort {
       return this.wrapWithSignal(existingPromise, signal)
     }
 
-    const generation = this.loaderGeneration
-
     const runLoad = async (): Promise<void> => {
       try {
         await this.domImageLoader(desc.url)
-        // Stale generation (loader swap/dispose during the await): the cache
-        // this result was headed for was cleared — publishing would mark a
-        // key loaded that the CURRENT loader does not hold. Reject so the
-        // caller sees a retriable failure, not a false "loaded" success.
-        if (generation !== this.loaderGeneration) {
-          throw new Error('Asset load superseded by loader swap')
-        }
+        // No loaderGeneration fence here: a DOM image's result lives in the
+        // browser cache, not in the loader scene's texture cache, so a
+        // setLoaderScene/dispose during the await cannot make it stale. The
+        // record stays true no matter which Phaser.Game is current - fencing
+        // it would turn every first-entry host registration into a spurious
+        // "superseded" failure mid-transition.
         this.loadedResources.add(desc.key)
       } finally {
         // Identity-guarded delete: a loader swap clears the map, and a NEW
@@ -307,7 +306,7 @@ export class AssetBundleManager implements AssetPort {
     const runBatch = async (): Promise<void> => {
       try {
         await loader.loadDescriptors(uncommitted)
-        // Same generation fence as the DOM path: these keys were written
+        // Generation fence (unlike the DOM path): these keys were written
         // into the OLD scene's texture cache — the new loader does not hold
         // them, so they must not be published (or claimed as success).
         if (generation !== this.loaderGeneration) {

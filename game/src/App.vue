@@ -249,9 +249,11 @@ function onTransitionBack() {
 
   // Returning home from a failed combat entry goes through the domain owner
   // first - the battle must be abandoned, not merely hidden. The teardown
-  // (abandon + error dismissal) runs inside the closed-curtain window so the
-  // error shell stays mounted - and nothing else changes - until the curtain
-  // has fully covered the previous screen.
+  // runs inside the closed-curtain window so the error shell stays mounted -
+  // and nothing else changes - until the curtain has fully covered the
+  // previous screen. The error itself is dismissed by the coordinator at the
+  // 'loading' step: dropping it any earlier removes the failedRequest pin
+  // that keeps the game stage mounted through 'closing'.
   const abandonFailedCombat = failed.target === 'combat'
 
   void coordinator.request({
@@ -260,8 +262,6 @@ function onTransitionBack() {
       if (abandonFailedCombat) {
         gameManager.abandonBattle()
       }
-
-      coordinator.clearError()
 
       return true
     },

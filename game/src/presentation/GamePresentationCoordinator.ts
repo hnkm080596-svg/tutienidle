@@ -192,8 +192,11 @@ export class GamePresentationCoordinator {
       }
     }
 
-    this.clearError()
-
+    // The error is NOT cleared here: error.failedRequest.target is the pin
+    // that keeps a failed game route's stage mounted through this retry's
+    // 'closing' phase. executeTransition drops it once the curtain is closed
+    // (step 3), where targetRoute takes over. Clearing early would unmount
+    // GameRoot mid-close and destroy the Phaser host the retry reuses.
     return this.request(failed)
   }
 
@@ -371,6 +374,12 @@ export class GamePresentationCoordinator {
 
       // Step 3: ensure assets
       this.phase = 'loading'
+      // The recorded failure is dropped only now - once the curtain is
+      // closed and targetRoute can take over as the stage pin. Clearing it
+      // earlier (e.g. inside retry()) leaves 'closing' with no game-route
+      // pin, which flips the entry stage back to the prior route mid-close
+      // and unmounts the Phaser host a game-route retry was meant to reuse.
+      this.error = null
       this.notify()
 
       await this.withTimeout(

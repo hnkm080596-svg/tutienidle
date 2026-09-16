@@ -462,6 +462,44 @@ describe('GamePresentationCoordinator', () => {
     expect(coordinator.getSnapshot().error).toBeNull()
   })
 
+  it('retry keeps the failure record pinned until the curtain is closed', async () => {
+    // The failed request's target is what keeps a failed game route's stage
+    // mounted (useBootFlow.stage reads error.failedRequest.target). Clearing
+    // it before the retried curtain has closed drops the stage to the prior
+    // route mid-close - which unmounts GameRoot and destroys the Phaser host
+    // the retry was supposed to reuse.
+    let failNext = true
+    renderer.prepare = vi.fn(async () => {
+      if (failNext) {
+        failNext = false
+        throw new Error('scene create exploded')
+      }
+    })
+
+    const coordinator = createCoordinator({ initialRoute: 'boot' })
+
+    const first = await coordinator.request({ target: 'home' })
+    expect(first.status).toBe('failed')
+    expect(coordinator.getSnapshot().error?.failedRequest.target).toBe('home')
+
+    const closeDef = deferred()
+    curtain.close = vi.fn(() => {
+      callLog.push('curtain.close')
+      return closeDef.promise
+    })
+
+    const retried = coordinator.retry()
+
+    // Mid-close, the error must still pin the failed target; only once the
+    // curtain has closed does the new transition take over and clear it.
+    expect(coordinator.getSnapshot().phase).toBe('closing')
+    expect(coordinator.getSnapshot().error?.failedRequest.target).toBe('home')
+
+    closeDef.resolve()
+    expect((await retried).status).toBe('entered')
+    expect(coordinator.getSnapshot().error).toBeNull()
+  })
+
   it('retry with no recorded failure is rejected', async () => {
     const coordinator = createCoordinator({ initialRoute: 'home' })
 
