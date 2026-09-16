@@ -2111,9 +2111,10 @@ Do not combine them into one implementation mission.
 > adapters are gone; saves carrying `_an` path ids fail the v66 shape
 > check. Guards: `tests/architecture/cultivationPathIsolation.test.ts`,
 > `src/core/player/CultivationPathContract.test.ts`; AGENTS.md A13.
-> Per-way Playwright matrix (M10): P14 deferred — isolated-worktree
-> exception; run from an authorized main/preview checkout at branch
-> finishing.
+> Per-way Playwright matrix (M10): DONE post-merge —
+> `tests/e2e/cultivation-path-ritual.spec.ts`, 7/7 green (gate-negative
+> + all six ways through the real tribulation loop; includes the
+> ngo_dao no-artifact / phap_bao-slot-disabled oracle).
 > The `_an` names below survive only as stat-domain/branch-tag
 > identifiers (`the_tu_an` domain, node files), never as path ids.
 

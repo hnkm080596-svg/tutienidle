@@ -18,7 +18,7 @@
 - **No unused primitives/state:** do not land fields, interfaces, or registries without their production consumer chain in the same mission. Reviewer-verified rejections: no `pathSpecializations` record, no `kiemTuNgu` slice split, no generic `PathCombatContribution`, no `requiresSpecialization`/`setsSpecialization` node generics, no parallel `CultivationPathRegistry`.
 - **P3 verification:** `quick` = `npm run type-check` + `npx vitest run <scope>` from `game/`. `full` = + `npm run build` + `npx vitest run` — mandatory for M2 (save shape + ritual), M7 (union shrink), M10.
 - **P4:** adversarial QA (quick) after every production mission; deep for M2/M6/M7.
-- **P5:** code-review gate per mission. **P7:** commit steps describe granularity only — every commit needs explicit user authorization.
+- **P5:** three-lens review round per mission. **P7:** commit steps describe granularity only — every commit needs explicit user authorization.
 - **P13/P14:** M2/M4/M5/M6 require driving the real ritual→way→progression→combat flow via Playwright (`npm run dev`, read actual port).
 - **P17/roadmap:** before touching `core/battle/turn/**`, battle-tick integration, or `CombatScene` — check roadmap combat-chain phases + `docs/qa/`.
 - **`ngu` kit — decided** (spec §6.2): `techniqueId: 'van_kiem_quyet'`, `skillIds: []` (action set is provider-injected), offerGate `tram` Lv3, free entry. No longer a blocker.
@@ -257,9 +257,9 @@ Only `requiredWay`. No `requiresSpecialization`/`setsSpecialization` — Git sho
 
 - [ ] Guards fail-first → implement → `npx vitest run tests/architecture src/core/player`
 - [ ] `npm run type-check` + `npm run build` + `npx vitest run` (full)
-- [ ] Playwright matrix — all six ways (P14 deferred — isolated-worktree
-      exception: browser launch unreliable inside `.agent-worktrees/**`;
-      run from an authorized main/preview checkout at branch finishing):
+- [ ] Playwright matrix — all six ways (run inside the implementation
+      worktree per current P14 — the isolated-worktree exception is
+      retired; an environment failure is an explicit blocker, not a deferral):
   - kiem_tu/hien: ritual → preset editor → orb combos in combat
   - kiem_tu/ngu: tram gate → ritual entry → kiemY→kiemDao economy → breakthrough merge
   - phap_tu/ngu_hanh: element+route atomic pick → element tree → reactions/cast

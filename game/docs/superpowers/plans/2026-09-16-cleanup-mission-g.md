@@ -1,72 +1,681 @@
 # Mission G — Dead Code & Type Hygiene Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development or executing-plans. Steps use checkbox syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Delete confirmed dead code and legacy bridges (dev-stage rule: nothing to preserve), close `as never`/`any` contract gaps, deduplicate the small copies.
+**Goal:** Delete confirmed dead code and legacy bridges (dev-stage rule: nothing to preserve), close the `as never`/`any` contract gaps, remove unreachable UI/state, and collapse the duplicated rules onto their single owners — without redesigning gameplay and without disturbing the parked artifact-combat runtime.
 
-**Architecture:** M13 dormant cluster and legacy migration shims are deleted outright with their tests adjusted to surviving contracts. Cast sites get real types. Duplicated rules collapse onto their authoritative owner.
+**Architecture:** The M13 dormant cluster is deleted in stages — `CombatSystem`'s trigger path first (it is the last production consumer), then the three legacy skill-execution modules, then the mixed battle modules are slimmed to their live contracts. Legacy save/stat bridges are deleted outright: restore and validation reject or drop legacy keys instead of remapping them. Cast sites get real types. Dedup collapses copies onto the authoritative owner.
 
-**Tech Stack:** TypeScript, Vitest.
+**Tech Stack:** TypeScript, Vitest, Vue 3, Pinia, Phaser.
 
-**Spec:** `docs/specs/2026-09-16-audit-remediation-spec.md` Mission G. Audit: `docs/qa/2026-09-16-full-project-scout-audit.md` T8-69..75, plus type-audit findings.
+**Spec:** `docs/specs/2026-09-16-audit-remediation-spec.md` (Mission G section + locked product decisions). Audit evidence: `docs/qa/2026-09-16-full-project-scout-audit.md` T8-69..75, T3-20, T5-47/50, plus the type-audit findings.
 
 ## Global Constraints
 
-- Dev-stage rule: delete legacy bridges — `statKeyMigration`, retired-save shims, `pham_nhan` keys, transitional types. No compat layer.
-- **Exception:** artifact combat runtime files stay parked (reimagine after pathway framework — locked decision); but UI advertising of artifact combat effects is removed in this mission.
-- P8: replacing `as never`/`any` with real types is the point — don't introduce new casts.
-- Every deletion must be verified unreachable by import-graph grep BEFORE deleting (audit already did this once — re-verify at execution time since code may have drifted).
-- Worktree: `.agent-worktrees/cleanup` (branch `chore/cleanup`).
+- **Dev-stage rule:** no live players — delete old-save migrations, version-compat shims, and legacy↔new bridge code. Never write migrations; never preserve a rename/translate path. Restore/validation must *reject or drop* legacy keys, not translate them.
+- **Parked exception:** artifact combat *runtime* files stay parked for the future reimagine — `src/core/artifact/ArtifactSystem.ts`, `ArtifactRuntime.ts` (incl. `createArtifactRuntime`), `src/core/battle/Battle.ts` (the `Battle`/`BattleEnemy` contract they consume), and the helpers parked code still calls (`selectRankedTarget`, `getArtifactCycleSeconds`, the `scheduleBasic` impact port). Only combat-effect *advertising* (HUD slot + milestone tooltips) is removed in this mission.
+- **No gameplay redesign.** Deletions are limited to symbols proven unreachable by fresh grep at execution time. Live artifact *progression* (`ArtifactProgression.ts`, `ArtifactPanel.vue`, grade/path/EXP UI, `doan_bao_thach` drops via `StageDropTables`) stays untouched.
+- **P8:** no `any`; replacing `as never`/`any` with real types is the point — do not introduce new casts to fix old ones. Narrow `unknown` with guards where needed.
+- **P15:** comments in `.ts`/`.vue` files are English ASCII only (existing Vietnamese comments in files being edited may be left or minimally corrected — do not mass-translate).
+- **P16:** any *new* user-facing string goes through `t()` i18n keys.
+- **Fresh-grep rule:** the audit ran days ago and the tree has drifted (see Corrections below). Re-run every import/reference grep before each deletion; if a "dead" symbol turns out live, skip the deletion and record the finding instead of forcing it.
+- **Worktree:** this plan executes inside `.agent-worktrees/cleanup` on branch `chore/cleanup` (P2 multi-file rule).
+- **Verification (P3):** `quick` = `npm run type-check` + `npx vitest run <task scope>` per task. Task 22 (vue-router removal) touches `package.json` + `main.ts` and therefore uses `full` = `npm run type-check` + `npm run build` + `npx vitest run`. Mission-level gates: adversarial-QA quick on the diff (P4), P5 three-lens review round before completion.
+
+## Corrections from fresh verification (audit claims that are stale or wrong)
+
+Re-verify at execution time, but these were confirmed against the current tree:
+
+1. **`TurnBasicAttacks.ts` `the_tu` key is already gone.** `BASIC_ATTACKS_BY_BUILD` currently holds only `kiem_tu` and `pham_nhan`. `pham_nhan` *is* still dead — `CultivationPathId = 'kiem_tu' | 'phap_tu' | 'the_tu'` (`CultivationPathKit.ts:44`), so `BASIC_ATTACKS_BY_BUILD[player.cultivationPath]` (`GameManager.ts:977`) can never index `pham_nhan`; its value is `GENERIC_PHYSICAL_BASIC`, identical to the existing fallthrough. Deleting it is behavior-identical.
+2. **Realm "legacy formula" claims were half-stale.** No realm in `src/data/realms/realm.ts` carries `baseRequiredCultivation`/`cultivationMultiplier` at all — mortal now uses `baseCultivationMinutes: 1`. Both legacy branches (`realmSystem.ts` ~48-57, ~77-83) are fully unreachable, and the comments claiming "Phàm Nhân keeps the old absorption formula" are stale. `getCultivationDurationSeconds` has *no production callers* (test-only export + internal use).
+3. **`broken_foundation_scroll`/`old_jade_slip` are intentional lore items, not producer-less dead data.** `EnemyDropSinkInvariant.test.ts:19-20` allowlists them by design; `materials.ts:104,112` comments document the "no reward, no punishment" intent. Keep them; no deletion.
+4. **`body_integration` missing from `REALM_TIERS` is intentional.** `RealmTierMap.ts` maps it to tier 8 (shares Mahayana's economic tier) by documented decision. Do not "fix".
+5. **`ActionImpactSystem.ts` is mixed, not dead.** `ActionDamageInfo`, `scaleActionDamage`, `HitResolveOptions` are live in the turn engine (`TurnBattleSystem`, `TurnSkillAction`, `SkillToTurnSkillConverter`, `NguKiemDaoProvider`); the class + batch API is dormant.
+6. **`ActionTargetingSystem.ts` is mixed, not dead.** `areaFor` is live in `TurnSkillAction.ts:629`; `selectRankedTarget` is consumed by parked `ArtifactSystem.ts:153`. Only `isHeroGate`, `collectAffected`, `findBattleEnemy` are fully dead.
+7. **`Battle.ts` is still the parked artifact contract.** `ArtifactSystem.ts` reads `battle.artifactRuntime/.enemies/.player/.playerMaterialized/.state` and its test constructs full fixtures. Trim only fields with zero references; do not delete the file.
+8. **`ArtifactDropBalance.ts` is genuinely dead** — `ARTIFACT_STONE_DROP_CHANCE`/`ARTIFACT_STONE_BOSS_QUANTITY_*` have zero production consumers (only `ArtifactDropBalance.test.ts`); live `doan_bao_thach` drops flow through `StageDropTables.ts:69`. Its header comment references a `grantArtifactStoneDrop()` that no longer exists.
+9. **`combatOrigin` is live.** `ui.enterCombatScene` writes it (`useBattleActions.ts:87,137`); `CombatExitConfirmModal.vue:36` and `CombatResultModal.vue:20` read it. Do not delete.
+10. **`SkillTriggerRunner` is dormant but not import-free** — `CombatSystem.ts:18,111` imports + instantiates it, and `fireKillTriggers` is wired into `killIfDead`. The chain is unreachable in production because `GameManager.ts:239` constructs `new CombatSystem(this.eventBus)` with no `skillManager`/`buffRegistry`, so the guard at `CombatSystem.ts:758` always early-returns. Remove the wiring first, then the modules.
+11. **`hoi_xuan_dan` retirement is already rejection-only.** `usePillDetailed` rejects `retired` pills (`GameManagerPillOps.ts:52-53`); alchemy recipes carry `retired` (`alchemyRecipes.ts:30`) and `startAlchemyJob` rejects them (pinned by `GameManager.authoredParity.test.ts:248`). The herb chain (`hoi_xuan_thao_*` materials, `daily_collect_hoi_xuan_thao` quest) is intentionally live per `PillFamilies.ts:28-32`. No conversion shim remains — this task is verification + comment truth only.
+12. **`player.load()` is dead** — zero callers anywhere; `useAppLifecycle` loads via `coordinator.load()` → `LocalCloudSaveService.load()` → `loadGame()`. Only stale comments reference it.
+13. **`beginTribulation` is dead on both owners** — `BattleLootSystem.beginTribulation` and `SurviveLethalGuard.beginTribulation` have only test callers; tribulation now runs through `TribulationDirector.start()` + `TurnBattleOps` (`beginBattle`/`setSession`). Tribulation's no-survive rule is enforced by `setSurviveLethalSession(null)`, not the deleted method.
+14. **`DropRoll.weightedRandom([])` is NOT yet fixed** (`DropRoll.ts:43` still indexes `[length-1]!`). Mission E (E10) owns it — do not touch it here; re-check at execution time and skip if already landed.
+15. **Artifact advertising surface:** the milestone tooltip descriptions in `ArtifactPathCards.vue:44` and the whole `useArtifactCombatPresentation` → `ArtifactCombatPresentation` → `ArtifactCombatSlot` → `PhapTuCombatHud` → `CombatBuildHud` chain (which always renders `EMPTY_STATE` — `useArtifactCombatPresentation.ts:20` passes `null`). `getArtifactCycleSeconds` stays (used internally by parked `ArtifactSystem.ts:155`).
+16. **`ESSENCE_REALM_ORDER` diverges from `getRealmTier` only above beta scope** (`body_integration` index 8 vs tier 8 → same; `tribulation` index 9 vs tier 9→index 8 → differs; `mahayana` order differs but same effective index). All essence materials carry no `profession.realmId`, so the reachable inputs agree; unification is safe with a pinned regression test.
+17. **The `isCultivating` PlayerData field is write-only** (`App.vue:468` writes it; nothing reads it — `MainScene` consumes the `cultivation_changed` *event payload*, not the field). It is persisted + shape-validated, so removal touches `Player.ts`, `App.vue`, `saveShapeValidation.ts:237`, `saveTypes.ts:102` comment, and several test fixtures.
+18. **`unlockedRealmEnhancements` + `markRealmEnhancementUnlocked` are write-only end-to-end** — the action exists (`player.ts:274`) but has zero callers and nothing reads the array.
+19. **The Phù/Trận socket fields are write-only end-to-end** — `EquipmentSlotState.socketedTalisman`/`socketedFormation`/`bonusAffixSlots`/`appliedTalismanIds` have no production writers; `getSlotModifiers` (`GameManagerPersistentEffectOps.ts:397-417`) aggregates fields that are always empty. The bag slices were already declared dead (`SaveSystem.ts:358,360` serialize `[]`). `SocketedModifierItem`/`TwoModifiers` stay — `Talisman`/`Formation` template types still use them.
+20. **The `5` in `CharacterCreationScreen.vue:37` already has an authoritative constant** — `CHARACTER_CREATION_ATTRIBUTE_POINTS` in `src/services/character/CharacterCreationService.ts:3`.
+21. **`useTribulation.resolveNextBreakthroughRealm` is safely replaceable by `getNextRealm`** — `canTriggerBreakthrough` (`GameManagerRealmAdvanceOps.ts:404-409`) returns true only for `mortal`/`qi_refining`, so the differing `foundation_establishment → golden_core` arm is unreachable through this flow.
 
 ---
 
-### Task 1: M13 dormant cluster deletion
+## Phase 1 — M13 dormant cluster (staged deletions)
 
-**Files (verify-then-delete):** `game/src/core/skill/SkillTriggerRunner.ts`, `game/src/core/skill/SkillEffectSystem.ts`, `game/src/core/skill/SkillActionRegistry.ts` (runtime registry portion — keep `SkillAction`/`TriggerBinding` types consumed by `SkillToTurnSkillConverter`), `game/src/core/battle/ActionImpactSystem.ts` (class portion — keep `ActionDamageInfo`/`scaleActionDamage`/`HitResolveOptions` used by turn engine), `game/src/core/battle/ActionTargetingSystem.ts` dead helpers, `game/src/core/battle/Battle.ts` transitional types, `game/src/core/artifact/ArtifactDropBalance.ts`, `game/src/core/combat/CombatSystem.ts` `fireKillTriggers` + `killIfDead` 3rd param.
+### Task 1: Remove the `CombatSystem` legacy kill-trigger path
 
-- [ ] For EACH file/symbol: `grep` all importers; confirm only tests or dormant peers reference it; delete symbol + its dedicated tests; keep shared live types.
-- [ ] `npx vitest run src/core` + `npm run type-check` green after each cluster deletion.
-- [ ] Commit `chore(core): delete dormant M13 execution cluster`
+**Why first:** `CombatSystem` is the last production importer of `SkillTriggerRunner` and `SkillEffectContext`; deleting this path unlocks Tasks 2-4.
 
-### Task 2: Legacy bridge deletion
+**Files:**
+- Modify: `game/src/core/combat/CombatSystem.ts` — field `:111` (`skillTriggerRunner`), constructor params `:115-116` (`skillManager?`, `buffRegistry?` + stale comments `:104-110`), `killIfDead` signature `:599-602` (drop `skillContext` param), call `this.fireKillTriggers(entity, skillContext)` `:712`, method `fireKillTriggers` `:754-784` (incl. its long comment `:716-753`), imports `:17-19` (`SkillManager`, `SkillTriggerRunner`, `SkillEffectContext`) and the `BuffRegistry`/`BuffSystem`/`BuffPool` imports used only by the trigger path.
+- Delete: `game/src/core/combat/CombatSystem.triggers.test.ts` (whole file tests the deleted path).
 
-**Files:** `game/src/core/stats/statKeyMigration.ts` (+ call sites in `player.ts` restore, `saveShapeValidation.ts`), `TurnBasicAttacks.ts` dead `the_tu`/`pham_nhan` keys, retired save-resolution shims (retired `hoi_xuan_dan` handling in `GameManagerPillOps` — simplify to rejection), unreachable legacy realm-formula branches (`realmSystem.ts:51-58,77-83`), `Buff.ts` one-line shim.
+**Interfaces:**
+- `killIfDead(entity: CombatEntity, killerId: string)` — two-arg signature preserved; death marking, `death`/`kill` event emits, and the survive-lethal session path are untouched.
+- `new CombatSystem(eventBus)` — sole remaining constructor shape (matches `GameManager.ts:239` and all tests).
 
-- [ ] Verify each is only reachable via old-save paths; delete; fix call sites (validator/restore no longer remap — they reject or read current keys only); update tests that exercised the bridges to assert the new behavior.
-- [ ] Commit `chore: remove legacy save/stat bridge code`
+- [ ] **Step 1: Grep-verify the path is unreachable.** `grep -rn "killIfDead(" src --include="*.ts"` — confirm every production caller passes ≤2 args (`TurnReactionManager.ts:162`, internal calls at `:134,:505,:513,:591`; `SkillActionRegistry.ts:199` and `SkillEffectSystem.ts:183` are themselves deleted in later tasks). `grep -rn "new CombatSystem(" src --include="*.ts" | grep -v test` — confirm production uses only `new CombatSystem(this.eventBus)` (`GameManager.ts:239`), i.e. `skillManager`/`buffRegistry` are never provided and `fireKillTriggers` can never pass its `:758` guard.
+- [ ] **Step 2: Delete the code.** Remove `fireKillTriggers`, the `skillContext` param + call, the `skillTriggerRunner` field, the two optional ctor params, and now-unused imports. Fix the stale `GameManager.beginTribulation` reference in the `killIfDead` doc comment (`:610`) while here.
+- [ ] **Step 3: Delete `CombatSystem.triggers.test.ts`** and run `npx vitest run src/core/combat` — `CombatSystem.surviveLethal.test.ts`, `hitOutcomes.test.ts`, `BlockCaps.test.ts` must stay green (they construct `new CombatSystem(eventBus)` already).
+- [ ] **Step 4: `npm run type-check`.**
+- [ ] **Step 5: Commit** `chore(combat): remove dormant onKill trigger path from CombatSystem`
 
-### Task 3: `as never` / `any` contract fixes
+### Task 2: Delete `SkillTriggerRunner.ts`
 
-**Files:** `game/src/core/game/GameManagerTickOps.ts:276` (fake Material → typed fallback `Material`), `game/src/components/panels/equipment-hall/DecomposeTab.vue:70,74` (`as never` → `DecomposeSettings['gradeFilter'|'ageFilter']`), `game/src/core/battle/ActionImpactSystem.ts:196,207` (typed event payload — or delete with Task 1 if the whole class goes), `game/src/game/scenes/CombatScene.ts:580,587` (`(event: any)` → `EventHandler<never>`), `game/src/components/game/PhaserCanvas.vue:182,203` (`declare global` in `env.d.ts` for `__tutienPhaserGame`), `game/src/game/scenes/combat/combat-status-tooltip.ts:68` + `presentation/host/useDynamicRegion.ts:228,232` (drop unnecessary double-casts), `CombatScene.ts:1042` redundant `!`, `DropRoll.ts` covered by Mission E (skip if already landed).
+**Files:**
+- Delete: `game/src/core/skill/SkillTriggerRunner.ts`, `game/src/core/skill/SkillTriggerRunner.test.ts`
 
-- [ ] One commit; `npm run type-check` green.
-- [ ] Commit `refactor(types): replace as-never/any casts with real types`
+- [ ] **Step 1: Grep-verify zero remaining importers** — `grep -rn "SkillTriggerRunner" src --include="*.ts"` should return only the two files being deleted plus stale comments (`GameManager.ts`, `Skill.ts`, `SkillEffectSystem.ts` — comments only; clean the ones in files you keep).
+- [ ] **Step 2: Delete both files; run `npm run type-check` + `npx vitest run src/core/skill`.**
+- [ ] **Step 3: Commit** `chore(skill): delete SkillTriggerRunner legacy dispatcher`
 
-### Task 4: Dead UI/state + artifact advertising removal
+### Task 3: Delete `SkillEffectSystem.ts` + `SkillActionRegistry.ts` (runtime path)
 
-**Files:** unreachable `MainMenu` overlay path (`App.vue:192` `setShowMainMenu`), empty `router`/`vue-router` decision (remove dep + file or keep — decide by whether any nav is planned; if removing, update `package.json`), dead store fields (`player.load`, `markRealmEnhancementUnlocked`, write-only `isCultivating`, `pendingEquipTarget`, `combatOrigin`), `beginTribulation` dead op, `resolveSpriteBodyAnchor` (+its test), `spiritStoneIdForRealm`, `filterNguHanhElements`, `Buff.ts` (if not in Task 2), artifact combat presentation chain (`useArtifactCombatPresentation.ts`, `ArtifactCombatSlot.vue`, HUD mount) + any UI text advertising artifact combat effects.
+**Files:**
+- Delete: `game/src/core/skill/SkillEffectSystem.ts`, `game/src/core/skill/SkillEffectSystem.test.ts`, `game/src/core/skill/SkillEffectSystem.thuanHe.test.ts`, `game/src/core/skill/SkillEffectParity.test.ts`, `game/src/core/skill/SkillActionRegistry.ts`, `game/src/core/skill/SkillActionRegistry.test.ts`
+- Modify: `game/tests/architecture/vitalsWriteAuthority.test.ts` — remove the two allowlist entries (`SkillActionRegistry.ts` ~line 64, `SkillEffectSystem.ts` ~line 69). The guard asserts every allowlisted file still writes vitals — stale entries fail the suite once the files are gone.
 
-- [ ] Verify unreachable per item → delete → type-check + targeted tests.
-- [ ] Commit `chore(ui): remove dead presentation chains and stale store fields`
+**Interfaces (RETAINED — do not delete):**
+- `SkillAction.ts`: `SkillAction` union, `SkillActionType`, `ActionRuntimeContext`, `SkillResourcePoolKey`, `DealDamageAction` — consumed by `Skill.ts`, `SkillSystem.ts:8`, and `SkillToTurnSkillConverter.ts` (reads `binding.actions` at `:87,:241-249`).
+- `SkillTrigger.ts`: `TriggerBinding`, `TriggerContextMap`, `TriggerType` — `Skill.triggers?: TriggerBinding[]` (`Skill.ts:197`) is live via the converter.
+- `SkillEffect.ts`: `SkillEffect` — consumed by `SkillToTurnSkillConverter.ts:6`, `Skill.ts:7`, `EffectiveSkill` (`SkillSystem.ts:75-77`). Only its stale `SkillEffectSystem` comment references get cleaned.
+- `SkillEffectContext` (declared in `SkillEffectSystem.ts:15`) has no live consumer after Tasks 1-2 — it dies with the file.
 
-### Task 5: Dead data + roadmap truth
+- [ ] **Step 1: Grep-verify** — `grep -rn "SkillEffectSystem\|SkillEffectContext\|SkillActionRegistry\|runSkillAction\|SKILL_ACTION_REGISTRY" src --include="*.ts" --include="*.vue"` → after Tasks 1-2 the only hits are the files being deleted, their tests, and comments.
+- [ ] **Step 2: Delete the six files.** Clean stale `SkillEffectSystem`/`SkillActionRegistry` comments in retained files: `SkillEffect.ts` (~7 refs), `CombatSystem.ts:289`, `DamageCalculator.ts:57`, `PhapTuRoutes.ts:149`, `SkillAction.ts:30`, `GameManager.ts` comments.
+- [ ] **Step 3: Update `vitalsWriteAuthority.test.ts`** — remove both entries from the allowlist.
+- [ ] **Step 4: `npm run type-check` + `npx vitest run src/core/skill src/core/battle tests/architecture`.**
+- [ ] **Step 5: Commit** `chore(skill): delete dormant SkillEffectSystem/SkillActionRegistry runtime`
 
-**Files:** `game/src/data/stage/Stages.ts:145` (floor-8 `foundation_metal_beetle_swarm` → `foundation_ferocious_metal_beetle_swarm` — fix the typo, it's real content), `game/src/data/materials/materials.ts:104,112` (no-producer entries — remove from allowlist or add a producer; pick removal, note in roadmap), `TurnBasicAttacks.ts` dead keys (Task 2 overlap — do once), `realm.ts:56` stale comment path, `realm.ts:10-16` stale legacy-formula comments.
+### Task 4: Slim `ActionImpactSystem.ts` to its live + parked contract
 
-- [ ] Commit `fix(data): floor-8 enemy typo, remove producer-less materials, comment truth`
+**Files:**
+- Modify: `game/src/core/battle/ActionImpactSystem.ts` — keep only the contract block; delete `ActionImpactSystem` class (`:173` onward: `scheduleBasic`, `tick`, `fireSkillHit`, `beginSkillBatch`, `endSkillBatch`, `batch` field), `ResolveOneHitFn` (`:103-109`, only used by `tick`), `SkillBatchMeta`, and the two `as never` emits (`:196,:207` die with the class). Update the file header comment.
+- Modify: `game/src/core/artifact/ArtifactSystem.ts:12,24` — replace the `actionImpact: ActionImpactSystem` dep type with a narrow parked port: `actionImpact: { scheduleBasic(entry: ScheduledBasicImpact): void }` (the only member parked code calls — `:183,:199,:218`).
+- Modify: `game/src/core/artifact/ArtifactSystem.test.ts:57` — the `{ scheduleBasic: vi.fn() } as unknown as ActionImpactSystem` mock becomes a plain object literal (no cast needed against the port type).
+- Delete: `game/src/core/battle/ActionImpactSystem.test.ts` — both describes (`:35` basic pipeline, `:138` skill batch) cover only the deleted class; `scaleActionDamage` has no coverage there.
 
-### Task 6: Dedup batch
+**Interfaces (RETAINED):** `ActionDamageInfo` (`:45`), `scaleActionDamage` (`:49`), `HitResolveOptions` (`:65`), `ScheduledBasicImpact` (`:111`, the parked port's param type). Live consumers: `TurnBattleSystem.ts:13,23`, `TurnSkillAction.ts`, `SkillToTurnSkillConverter.ts:4`, `ArtifactSystem.ts`, `NguKiemDaoProvider.ts`.
 
-**Files:** `game/src/core/game/BattleLootSystem.ts:699-721` (two identical color tables → one), `NodeTreePanel.vue:219` + `NodeInspector.vue:62` (→ `getNodeMaxLevel`), `VendorBalance.ts:61-72` `ESSENCE_REALM_ORDER` (derive from `RealmTierMap` or document intentional divergence with a comment), shared `buildProfessionMaterialId` constructor (ProductionCatalog/AlchemySystem/EquipmentOperationCostCatalog/buildings/AlchemyView), `MaterialBag`/`PillBag` mutable-stack exposure (return immutable copies or read models), `player.ts` insight-settle loop ×2 → shared accrual helper, `useTribulation.ts:24-28` realm map → `getNextRealm`, `useBuildingHeaderState.ts:42-57` → `buildingOps` quote, `useEquipmentTooltip.ts:104-111` fallback formula → require the quote param, `CharacterCreationScreen.vue:37` budget `5` → `CHARACTER_CREATION_ATTRIBUTE_POINTS`, `GameManagerPersistentEffectOps` tu_linh_tran read → store consumes a domain getter, starter `huy_quyen` double-backfill.
+- [ ] **Step 1: Grep-verify class-member callers** — `grep -rn "scheduleBasic\|fireSkillHit\|beginSkillBatch\|endSkillBatch\|\.tick(" src --include="*.ts" | grep -v ActionImpactSystem` → only parked `ArtifactSystem` (`scheduleBasic`) and tests. `grep -rn "new ActionImpactSystem" src` → expect zero production constructions.
+- [ ] **Step 2: Slim the file + retype the parked dep; update the parked test mock.** The `as never` emit inside the deleted `tick`/batch code disappears with it (resolves that audit item without a cast fix).
+- [ ] **Step 3: Delete/trim `ActionImpactSystem.test.ts`; run `npm run type-check` + `npx vitest run src/core/battle src/core/artifact`.**
+- [ ] **Step 4: Commit** `refactor(battle): slim ActionImpactSystem to damage contracts + parked artifact port`
 
-- [ ] Each dedup: single owner, both consumers route through it; per-item regression test where behavior is observable.
-- [ ] Commit `refactor: collapse duplicated rules onto single owners`
+### Task 5: Slim `ActionTargetingSystem.ts` to live + parked helpers
+
+**Files:**
+- Modify: `game/src/core/battle/ActionTargetingSystem.ts` — keep `areaFor` (`:86`, live in `TurnSkillAction.ts:629`) and `selectRankedTarget` (`:60`, parked `ArtifactSystem.ts:153`); delete `isHeroGate` (`:31`), `collectAffected` (`:123`), `findBattleEnemy` (`:173`). Update the header comment (`:3` lists the deleted names).
+- Modify: `game/src/core/battle/ActionTargetingSystem.test.ts`, `ActionTargetingSystem.adversarial.test.ts` — delete the `collectAffected`/`isHeroGate`/`findBattleEnemy` describes; keep `areaFor`/`selectRankedTarget` coverage.
+
+- [ ] **Step 1: Grep-verify** — `grep -rn "isHeroGate\|collectAffected\|findBattleEnemy" src tests` → expect only the module, its two test files, and the `TurnSkillAction.ts:608-612` comment (fix the comment to not cite the deleted function).
+- [ ] **Step 2: Delete the three helpers; trim the tests.**
+- [ ] **Step 3: `npm run type-check` + `npx vitest run src/core/battle`.**
+- [ ] **Step 4: Commit** `chore(battle): drop dead targeting helpers, keep areaFor/selectRankedTarget`
+
+### Task 6: Trim `Battle.ts` to the parked artifact contract
+
+**Files:**
+- Modify: `game/src/core/battle/Battle.ts`
+- Modify fixtures: `game/src/core/artifact/ArtifactSystem.test.ts:65-86` (`createBattle` sets the deleted fields), `ActionTargetingSystem.test.ts:25-35` + `ActionTargetingSystem.adversarial.test.ts` `battleWith` helpers if they set deleted fields.
+
+**What parked code actually reads (keep):** `Battle.id`, `.player`, `.enemies`, `.state`, `.playerMaterialized`, `.playerBuffs`, `.elapsedSeconds`, `.artifactRuntime`; `BattleEnemy.entity`, `.attackTimer`, `.buffs`, `.rewardGranted` (constructed by the parked test fixture).
+
+**Delete (zero references anywhere after Tasks 1-5):** `Battle.mode`, `.countdownSecondsRemaining`, `.playerTeleport` + `PlayerTeleportState`, `.pendingPlayerSpawn` + `PendingPlayerSpawn`, `.pendingSummons`, `.pendingEnemySpawns` + the `Battle.ts` `PendingEnemySpawn` interface (the live turn-side `PendingEnemySpawn` is declared separately in `TurnBattleSystem.ts:75` — untouched), `.nextSkillSlotIndexCursor`; `BattleEnemy.castTimer`, `.appliedTribulationPhaseCount`, `.enrageApplied`, `.specialAttackCounter`. Fix stale `pendingSummons`/`BattleSystem` comments in `BattleLootSystem.ts:162`, `StageWaveSystem.ts:41`, `TribulationPhase.ts:35`, `CombatEntity.ts:63`.
+
+- [ ] **Step 1: Per-field grep** — for each candidate field, `grep -rn "<field>" src --include="*.ts" --include="*.vue" | grep -v Battle.ts` and confirm hits are only the two parked/test fixture files listed above.
+- [ ] **Step 2: Delete fields + interfaces; update fixtures to drop the removed keys.**
+- [ ] **Step 3: `npm run type-check` + `npx vitest run src/core/artifact src/core/battle`.**
+- [ ] **Step 4: Commit** `chore(battle): trim Battle contract to parked artifact runtime surface`
+
+### Task 7: Delete `ArtifactDropBalance.ts`
+
+**Files:**
+- Delete: `game/src/core/artifact/ArtifactDropBalance.ts`, `game/src/core/artifact/ArtifactDropBalance.test.ts`
+
+- [ ] **Step 1: Grep-verify** — `grep -rn "ARTIFACT_STONE_DROP_CHANCE\|ARTIFACT_STONE_BOSS\|ArtifactDropBalance\|grantArtifactStoneDrop" src tests` → expect only the two files and stale comments. Confirm the live drop path is `StageDropTables.ts:69` (`doan_bao_thach` material entry) + `BattleLootSystem.artifactDrop.test.ts` (unaffected).
+- [ ] **Step 2: Delete both files; `npm run type-check` + `npx vitest run src/core/artifact src/core/game`.**
+- [ ] **Step 3: Commit** `chore(artifact): delete unreferenced ArtifactDropBalance constants`
+
+---
+
+## Phase 2 — Legacy bridges (delete, don't migrate)
+
+### Task 8: Delete `statKeyMigration.ts` and make restore/validation reject legacy keys
+
+**Files:**
+- Delete: `game/src/core/stats/statKeyMigration.ts`, `game/src/core/stats/statKeyMigration.test.ts`
+- Modify: `game/src/services/save/saveShapeValidation.ts` — drop the `migrateStatModifierStat`/`isRetiredStatKey` import (`:20-21`); delete the remap at `:1111-1113` (the `STAT_TYPES.has(entry.mainStat.stat)` check directly below `:1122-1124` then *rejects* legacy keys — the desired dev-stage behavior); delete `migrateSocketedModifierStatKeys` (`:1239-1267`) and its call at `:1223` — replace with validation that `socketed*` modifier `stat` values are `STAT_TYPES` members (push an issue otherwise; these fields are themselves removed in Task 24).
+- Modify: `game/src/stores/player.ts` — drop the import (`:18-20`); in `restoreFromSave`, iterate `clonedPlayer.baseStats` directly into the existing `allowedStatKeys` whitelist (`:370-383`) — legacy keys like `attack` are not in `createBaseStats()` and drop naturally; replace the three `migrateStatModifiers` calls (`:405-413`) with a current-shape filter.
+- Modify: `game/src/core/game/GameManagerSaveRestore.ts` — drop the import (`:25`); delete the `migrateLegacyTechniqueStatKeys`/`migrateLegacySkillStatKeys` helpers (`~:480-500`, including the `attackFlat → mightFlat` record rewrite) and their call sites.
+- Modify: `game/src/stores/player.legacyGatedModifier.qa.test.ts` — rewrite: a legacy-keyed or domain-less gated modifier is now *dropped*, not backfilled.
+- Modify: `game/src/services/save/saveShapeValidation.test.ts` — cases asserting remap (`attack` → `might`) become rejection assertions.
+
+**Interfaces:**
+- New restore filter (module-local in `player.ts`): `isCurrentStatModifier(m: unknown): m is StatModifier` = `isObject(m) && typeof m.stat === 'string' && STAT_TYPES.has(m.stat)` (import `STAT_TYPES`). Apply to `modifiers`, `externalModifiers`, and each `persistentTimedEffects[].modifiers`. Modifiers on domain-gated stats without `domain` are then dropped by `applyDomainGate` (production filters + `console.error`) — no backfill; that is the dev-stage contract.
+
+- [ ] **Step 1: Failing tests first** — `saveShapeValidation.test.ts`: a save whose equipment `mainStat.stat === 'attack'` (legacy key) returns `ok:false`. `player` restore test: a `baseStats` record containing `attack: 5` and a modifier `{ stat: 'attackRange' }` → after restore, `baseStats` has no `might` inflation and the modifier is gone.
+- [ ] **Step 2: Run — expect FAIL** (current code remaps/retains them).
+- [ ] **Step 3: Implement** the deletions + filter described above.
+- [ ] **Step 4: Run — PASS; `npm run type-check`; `npx vitest run src/services/save src/stores src/core/stats src/core/game`.**
+- [ ] **Step 5: Commit** `chore(save): delete statKeyMigration; reject legacy stat keys`
+
+### Task 9: Remove the dead `pham_nhan` basic-attack key
+
+**Files:**
+- Modify: `game/src/data/skill/TurnBasicAttacks.ts` — remove `pham_nhan` from `BASIC_ATTACKS_BY_BUILD` (`:53`) and `REQUIRED_BUILD_IDS` (`:77`).
+- Modify: `game/src/data/skill/TurnBasicAttacks.test.ts:20` (asserts the entry exists → assert `BASIC_ATTACKS_BY_BUILD['pham_nhan']` is `undefined` or drop the assertion); `TheTuSkills.test.ts:100` already asserts `the_tu` absence — keep.
+
+**Interface:** `GameManager.resolvePlayerBasicAttack` (`GameManager.ts:977-996`) — a mortal/`pham_nhan` player now falls through to `GENERIC_PHYSICAL_BASIC`, which is exactly what the deleted key mapped to. Behavior-identical — no failing test needed; the update is pure dead-key removal.
+
+- [ ] **Step 1: Grep-verify** `pham_nhan` is never a `CultivationPathId` value (`CultivationPathKit.ts:44`) and `grep -rn "BASIC_ATTACKS_BY_BUILD" src` shows the map is only indexed by `player.cultivationPath` and tests.
+- [ ] **Step 2: Remove the key + required-id entry + test update.**
+- [ ] **Step 3: `npm run type-check` + `npx vitest run src/data/skill`.**
+- [ ] **Step 4: Commit** `chore(skill-data): drop unreachable pham_nhan basic-attack key`
+
+### Task 10: `hoi_xuan_dan` — verify rejection is complete, pin it, clean comments
+
+**Files:**
+- Modify: `game/src/core/game/GameManagerPillOps.ts` — no code change expected; confirm the `retired` check (`:49-53`) runs before every other gate and is the only retired special-case.
+- Modify: `game/src/core/game/GameManager.authoredParity.test.ts` / `src/core/pill/PillSystem.profession.test.ts` — add/adjust an explicit rejection pin only if coverage is missing (existing: `authoredParity.test.ts:248` asserts `startAlchemyJob` rejects retired recipes; `PillSystem.profession.test.ts:136-142` asserts `usePillDetailed` keeps the pill in bag).
+
+- [ ] **Step 1: Grep-verify no residual conversion/compat exists** — `grep -rn "hoi_xuan_dan\|hoi_xuan_thao" src --include="*.ts" --include="*.vue" | grep -v test` → expected hits: `PillFamilies.ts:33` (retired family row), `alchemyRecipes.ts:30` (retired propagation), `quests.ts:28-31` (intentional live herb quest), `materials.ts` herb generation (intentional), comments. Any save-restore special-casing is a defect — remove it.
+- [ ] **Step 2: Confirm/adjust the rejection tests; run `npx vitest run src/core/game/GameManager.authoredParity src/core/pill`.**
+- [ ] **Step 3: Commit** `test(pill): pin retired-family rejection contract` (or no commit if nothing changed — record the verification in the worklog).
+
+### Task 11: Delete the `Buff.ts` re-export shim
+
+**Files:**
+- Delete: `game/src/core/buff/Buff.ts` (`export type { Buff } from './BuffTypes'`)
+- Modify: `game/src/core/buff/BuffPool.test.ts:3`, `game/src/core/buff/BuffSystem.test.ts:5` — repoint `import type { Buff }` to `'./BuffTypes'`.
+
+- [ ] **Step 1: Grep-verify** — `grep -rn "from '.*\/Buff'" src tests | grep -v BuffTypes` → only the two test imports.
+- [ ] **Step 2: Repoint imports, delete the file; `npm run type-check` + `npx vitest run src/core/buff`.**
+- [ ] **Step 3: Commit** `chore(buff): delete Buff.ts re-export shim`
+
+### Task 12: Remove dead realm-formula branches and stale comments
+
+**Files:**
+- Modify: `game/src/data/realms/realm.ts` — delete `baseRequiredCultivation?`/`cultivationMultiplier?` fields (`:15-16`) and their stale comment block (`:10-16`, which wrongly claims Phàm Nhân still uses the old formula); fix the mortal-entry comment ("GIỮ NGUYÊN công thức hấp thu cũ" — now false; mortal uses `baseCultivationMinutes: 1`).
+- Modify: `game/src/core/realm/realmSystem.ts` — in `getRequiredCultivation`, delete the `realmDurationMultiplier === undefined` legacy branch (`~:77-83`); in `getCultivationDurationSeconds`, delete the `baseCultivationMinutes === undefined` legacy branch (`~:48-57`). `getCultivationDurationSeconds` has no production callers — delete the export and inline the minutes→seconds math inside `getRequiredCultivation`'s `baseCultivationMinutes` branch, or keep it only if a caller remains after re-grep. Update the stale "Phàm Nhân (tutorial) — công thức hấp thu cũ" comment.
+- Modify: `game/src/core/cultivation/CultivationSystem.test.ts:7,24,35` — if `getCultivationDurationSeconds` is deleted, rewrite those assertions via `getRequiredCultivation` (`minutes * 60 * BASE_CULTIVATION_PER_SECOND`).
+
+**Interface (result):**
+
+```ts
+export function getRequiredCultivation(realmId: string, realmLevel: number): number {
+  const realm = getCurrentRealm(realmId)
+
+  if (realm.baseCultivationMinutes !== undefined) {
+    return Math.floor(
+      (realm.baseCultivationMinutes + Math.max(1, realmLevel) - 1) * 60 * BASE_CULTIVATION_PER_SECOND,
+    )
+  }
+
+  // duration-budget path (realmDurationMultiplier) — unchanged
+  // guard: throw/warn if neither field is set (data contract violation)
+}
+```
+
+- [ ] **Step 1: Grep-verify** — `grep -rn "baseRequiredCultivation\|cultivationMultiplier" src` → only `realm.ts` + `realmSystem.ts` today; `grep -rn "getCultivationDurationSeconds" src | grep -v test` → no production callers. Confirm every `REALMS` entry has `baseCultivationMinutes` XOR `realmDurationMultiplier` (data invariant to pin).
+- [ ] **Step 2: Failing test** — in a realm/realmSystem test: `REALMS` invariant `expect(REALMS.every(r => (r.baseCultivationMinutes !== undefined) !== (r.realmDurationMultiplier !== undefined))).toBe(true)` plus `getRequiredCultivation('golden_core', 1)` still equals the budget-formula value and `getRequiredCultivation('mortal', 1) === 60 * BASE_CULTIVATION_PER_SECOND` (unchanged outputs).
+- [ ] **Step 3: FAIL (invariant test may already pass — if so, it stands as the regression net; the changed assertions are the removal targets).**
+- [ ] **Step 4: Implement** the deletions + inline.
+- [ ] **Step 5: PASS; `npm run type-check`; `npx vitest run src/core/realm src/core/cultivation`.**
+- [ ] **Step 6: Commit** `chore(realm): delete unreachable legacy cultivation formulas`
+
+---
+
+## Phase 3 — Type hygiene (`as never` / `any` / redundant casts)
+
+### Task 13: Typed `Material` fallback in `GameManagerTickOps`
+
+**Files:**
+- Modify: `game/src/core/game/GameManagerTickOps.ts:271-287`
+
+**Fix:** `materialRegistry.has() ? .get() : undefined` + `as never` fallback becomes a fully typed fallback — decompose output is produced by buildings, so:
+
+```ts
+const tinhHoa: Material =
+  (this.deps.materialRegistry.has(entry.materialId)
+    ? this.deps.materialRegistry.get(entry.materialId)
+    : undefined) ??
+  { id: entry.materialId, name: entry.materialId, category: 'other', sourceType: 'building' }
+
+const overflow = this.deps.materialBag.add(tinhHoa, entry.amount)
+// notification below uses tinhHoa.name directly — drop the `as { name?: string }` cast
+```
+
+- [ ] **Step 1: Failing/compile test** — a `deliverDecomposeOutput` entry whose `materialId` is absent from the registry still adds to the bag with the fallback name (extend the existing tick/decompose test file). Assert no `as never` remains via type-check.
+- [ ] **Step 2: Implement; `npm run type-check` + `npx vitest run src/core/game`.**
+- [ ] **Step 3: Commit** `fix(tick): typed Material fallback for decompose output`
+
+### Task 14: `DecomposeTab.vue` select-value guards
+
+**Files:**
+- Modify: `game/src/components/panels/equipment-hall/DecomposeTab.vue:69-76`
+
+**Fix:** `DecomposeSettings['gradeFilter']` is `ProfessionGrade | 'all'`; `ageFilter` is `HerbAge | 'all'` (`DecomposeSystem.ts:29-33`). Guard before assigning — no cast:
+
+```ts
+function onGradeChange(event: Event) {
+  const value = (event.target as HTMLSelectElement).value
+  if (value === 'all' || isProfessionGrade(value)) applySetting({ gradeFilter: value })
+}
+function onAgeChange(event: Event) {
+  const value = (event.target as HTMLSelectElement).value
+  if (value === 'all' || (HERB_AGES as readonly string[]).includes(value)) applySetting({ ageFilter: value })
+}
+```
+
+(import `isProfessionGrade` from `core/profession/ProfessionGrade`, `HERB_AGES` from `core/production/ProductionTypes` — the same sources the validator uses.)
+
+- [ ] **Step 1: Failing test** — a DecomposeTab component/store test: inject an out-of-union select value → `settings` unchanged (or assert via `applySetting` spy). If no component test seam exists, add the guard functions as a small exported helper and unit-test it.
+- [ ] **Step 2: Implement; `npm run type-check` + relevant vitest.**
+- [ ] **Step 3: Commit** `fix(decompose): validate DOM select values instead of as-never casts`
+
+### Task 15: `CombatScene` handler tuples → `EventHandler<never>`; drop redundant `!`
+
+**Files:**
+- Modify: `game/src/game/scenes/CombatScene.ts` — `boundHandlers` (`:579`) and `getCombatEventBindings()` return type (`:586`): `Array<[string, (event: any) => void]>` → `Array<[string, EventHandler<never>]>` (`import type { EventHandler } from '@/core/events/EventBus'`). `EventHandler<never>` is exactly what `EventBus.on/off` stores internally — handlers keep their concrete payload types at the binding literals. Also drop the redundant non-null assertion `this.projection!.gridToScreen` at `:1042` (`this.projection.cellSizeAt` at `:1039` already proves non-null in that block).
+
+- [ ] **Step 1: Grep-verify no other `(event: any)` remains in the file after the change — `grep -n "any" src/game/scenes/CombatScene.ts`.**
+- [ ] **Step 2: Implement; `npm run type-check` + `npx vitest run src/game/scenes`.**
+- [ ] **Step 3: Commit** `refactor(scene): type combat event handler tuples, drop redundant assertion`
+
+### Task 16: `__tutienPhaserGame` global declaration
+
+**Files:**
+- Modify: `game/env.d.ts` (already included via `tsconfig.app.json:3`) — append:
+
+```ts
+// Exposed on window for e2e/visual gates only (see PhaserCanvas.vue) —
+// no gameplay code reads it.
+interface Window {
+  __tutienPhaserGame?: import('phaser').Game
+}
+```
+
+- Modify: `game/src/components/game/PhaserCanvas.vue:182,203` — `;(window as unknown as { __tutienPhaserGame?: Phaser.Game }).__tutienPhaserGame = ...` → `window.__tutienPhaserGame = ...`.
+
+- [ ] **Step 1: Implement; `npm run type-check`; confirm `grep -n "as unknown" src/components/game/PhaserCanvas.vue` returns nothing for this site.**
+- [ ] **Step 2: Commit** `refactor(host): declare __tutienPhaserGame globally in env.d.ts`
+
+### Task 17: Drop remaining double casts (`combat-status-tooltip`, `useDynamicRegion`)
+
+**Files:**
+- Modify: `game/src/game/scenes/combat/combat-status-tooltip.ts` — `TooltipParts.container: { destroy(): void }` (`:27-29`) → `container: Phaser.GameObjects.Container`; delete the `as unknown as { destroy(): void }` cast at `:68` (the file already imports Phaser).
+- Modify: `game/src/presentation/gate/PresentationGate.ts` + `game/src/presentation/host/useDynamicRegion.ts:228,232` — add a small adapter exported from the gate module (keeps Phaser out of the gate's type surface):
+
+```ts
+/** Phaser's DataManager satisfies GateRegistry structurally; adapt once. */
+export function toGateRegistry(registry: { get(key: string): unknown; set(key: string, value: unknown): void }): GateRegistry {
+  return { get: (key) => registry.get(key), set: (key, value) => registry.set(key, value) }
+}
+```
+
+then `created.registry as unknown as GateRegistry` → `toGateRegistry(created.registry)` at both sites.
+
+- [ ] **Step 1: Implement; `npm run type-check` + `npx vitest run src/presentation src/game/scenes`.**
+- [ ] **Step 2: Commit** `refactor(types): remove double casts in tooltip + region gate`
+
+### Task 18: `weightedRandom([])` — verify ownership, do not fix here
+
+- [ ] **Step 1: Check whether Mission E/E10 landed** — `grep -n "entries.length" src/core/reward/DropRoll.ts`. If the empty-input throw is already present, record it and move on; if absent, leave the code untouched (E10 owns it) and note it in the mission report.
+- [ ] **Step 2: No commit** (documentation step only).
+
+---
+
+## Phase 4 — Dead UI / state / artifact advertising
+
+### Task 19: Remove the artifact combat presentation chain + milestone effect tooltips
+
+**Files:**
+- Delete: `game/src/composables/useArtifactCombatPresentation.ts`, `game/src/core/artifact/ArtifactCombatPresentation.ts`, `game/src/components/game/combat/hud/ArtifactCombatSlot.vue`, `game/src/components/game/combat/hud/PhapTuCombatHud.vue`, `game/src/components/game/combat/hud/CombatBuildHud.vue`
+- Modify: `game/src/components/game/combat/CombatSkillDockPanel.vue:24,57` — remove the `CombatBuildHud` import + `<CombatBuildHud />` mount (the `<aside>`/`rootRef`/`TurnCombatSkillBar` stay — width publishing is still needed).
+- Modify: `game/src/components/panels/artifact/ArtifactPathCards.vue:44` — the milestone `v-tooltip` description advertises combat effects that don't exist → drop `description: milestone.description` (keep `title` = name + level). If the resulting tooltip is title-only noise, drop `v-tooltip` from the `<li>` entirely.
+
+**Retained (do not touch):** `ArtifactSystem.ts` (incl. `getArtifactCycleSeconds` — used internally at `:155`), `ArtifactRuntime.ts`, `ArtifactProgression.ts`, `ArtifactPanel.vue` + `ArtifactOverview`/`ArtifactExperienceBar`/`ArtifactGradeSection`/`ArtifactPathCards` shells, `data/artifact/**` milestone data (parked design copy), `GameManager.setArtifactPath` + its test, `player.artifact` state.
+
+- [ ] **Step 1: Grep-verify the chain** — `grep -rn "useArtifactCombatPresentation\|ArtifactCombatPresentation\|ArtifactCombatSlot\|PhapTuCombatHud\|CombatBuildHud" src tests` → only the files listed. Confirm no `.test.ts` file covers them (none found in verification).
+- [ ] **Step 2: Delete files + unmount + strip the tooltip description.** Keep the milestone names/levels (progression display); the parked `NguHanhChau.ts` descriptions stay in data (not rendered) — add a one-line comment there noting combat-effect copy is parked until the reimagine.
+- [ ] **Step 3: `npm run type-check` + `npx vitest run src/components src/core/artifact`.**
+- [ ] **Step 4: Commit** `chore(artifact): remove dormant combat HUD chain and milestone effect tooltips`
+
+### Task 20: Remove the unreachable MainMenu overlay
+
+**Files:**
+- Delete: `game/src/components/menu/MainMenu.vue`
+- Modify: `game/src/App.vue` — remove the `MainMenu` import (`:47`), `initialShowMainMenu: false` (`:180`), `showMainMenu` computed (`:209-213`), `handleMenuStart`/`handleMenuSettings` (`:215-222` — `ui.leftPanelMode = 'settings'` inside `handleMenuSettings` is dead with the menu), `showMainMenu.value = false` writes (`:216,:536`), the `<MainMenu>` template block (`:722-734`), and the `mainMenu` CSS comment (`:842`).
+- Modify: `game/src/presentation/GamePresentationCoordinator.ts` — remove `showMainMenu` field (`:74`), `initialShowMainMenu` dep (`:61,:97`), snapshot field (`:110`), `setShowMainMenu` (`:129-133`).
+- Modify: `game/src/presentation/VueRouteAdapter.ts` — remove `showMainMenu` (`:138,:162,:180,:217`).
+- Modify: `game/src/presentation/PresentationContracts.ts:103` — remove `showMainMenu` from the snapshot interface.
+- Modify: `game/src/core/presentation/OverlayLayers.ts:23` — remove the `mainMenu` layer entry.
+- Modify: `game/tests/architecture/overlayLayers.test.ts:56` — remove the `MainMenu.vue` → `OVERLAY_LAYERS.mainMenu` entry.
+- Modify: `game/src/presentation/GamePresentationCoordinator.test.ts:663-664` — remove the `setShowMainMenu` case. Check `App.wiring.test.ts`/`App.routeMountWitness.test.ts` for `MainMenu`/`showMainMenu` references and update.
+
+- [ ] **Step 1: Grep-verify zero callers ever set the menu visible** — `grep -rn "setShowMainMenu\|showMainMenu\|MainMenu" src tests` → every production hit is a `false` write or the chain itself. Confirm nothing else uses `OVERLAY_LAYERS.mainMenu`.
+- [ ] **Step 2: Delete + rewire all listed sites.**
+- [ ] **Step 3: `npm run type-check` + `npx vitest run src tests/architecture`.**
+- [ ] **Step 4: Commit** `chore(ui): remove unreachable MainMenu overlay chain`
+
+### Task 21: Remove the inert `vue-router` dependency
+
+**Files:**
+- Delete: `game/src/router/index.ts` (then the empty `game/src/router/` dir)
+- Modify: `game/src/main.ts` — remove `import router` (`:6`) + `app.use(router)` (`:19`)
+- Modify: `game/package.json` — remove `"vue-router": "^5.2.0"` (`:34`); regenerate the lockfile (`npm install` or targeted lockfile update).
+
+**Decision (locked by verification):** `routes: []` + zero `RouterView`/`useRouter`/`useRoute`/`createRouter` callers outside `router/index.ts` — the app's real navigation is the presentation coordinator (`VueRouteAdapter`, `RouteMount`), not vue-router. Remove it; restoring the dep later is a one-line package change if a future nav plan appears.
+
+- [ ] **Step 1: Grep-verify** — `grep -rn "vue-router\|RouterView\|useRouter\|useRoute\b" src tests` → only `src/router/index.ts` + `main.ts`.
+- [ ] **Step 2: Remove the file, the import/`use`, the dep; reinstall to update the lockfile.**
+- [ ] **Step 3: FULL verification** (package.json/lockfile touched, P3): `npm run type-check` + `npm run build` + `npx vitest run`.
+- [ ] **Step 4: Commit** `chore(deps): drop unused vue-router`
+
+### Task 22: Dead store members — `player.load()`, `markRealmEnhancementUnlocked` + `unlockedRealmEnhancements`, `PlayerData.isCultivating`, `ui.pendingEquipTarget`
+
+**Files:**
+- Modify: `game/src/stores/player.ts` — delete the `load()` action (`:305-313`) and its `loadGame` import if now unused; delete `markRealmEnhancementUnlocked` (`:274-284`).
+- Modify: `game/src/core/player/Player.ts` — delete `unlockedRealmEnhancements` from `PlayerData` (`:61`) + default (`:350`); delete `isCultivating` (`:83`) + default (`:352`); clean the stale comments referencing them (`:72,:78,:258`).
+- Modify: `game/src/App.vue:468` — remove `player.isCultivating = true` (the `cultivation_changed` event emit stays — it carries its own payload).
+- Modify: `game/src/services/save/saveShapeValidation.ts` — remove `requireBoolean(player, 'isCultivating', ...)` (`:237`) and the `unlockedRealmEnhancements` block (`:230-233`).
+- Modify: `game/src/services/save/saveTypes.ts` — drop the stale `isCultivating` (`:102`) and `unlockedRealmEnhancements` (`:57`) comments.
+- Modify: `game/src/stores/ui.ts:158-159` — delete `pendingEquipTarget` + its legacy comment.
+- Modify test fixtures that declare the removed fields: `player.aiStrategy.test.ts`, `player.artifact.test.ts`, `player.legacyGatedModifier.qa.test.ts`, `player.restoreFromSave.test.ts`, `player.talentM2.test.ts` (all carry `isCultivating: false` / `unlockedRealmEnhancements: []`), `saveShapeValidation.test.ts:1629,1730` (expected-key lists).
+
+**Explicitly kept (audit correction #9):** `ui.combatOrigin` + `enterCombatScene` — live gate read by `CombatResultModal`/`CombatExitConfirmModal`, written by `useBattleActions.ts:87,137`.
+
+- [ ] **Step 1: Grep-verify per member** — `player.load(`, `markRealmEnhancementUnlocked`, `unlockedRealmEnhancements` (non-fixture readers), `player.isCultivating` reads (vs `event.isCultivating` payload reads — do not confuse), `pendingEquipTarget`. Re-confirm `combatOrigin` stays.
+- [ ] **Step 2: Delete fields + writers + validation + stale comments; update fixtures.**
+- [ ] **Step 3: `npm run type-check` + `npx vitest run src/stores src/services/save src/App*`.**
+- [ ] **Step 4: Commit** `chore(stores): remove write-only and caller-less state`
+
+### Task 23: Delete the dead `beginTribulation` APIs
+
+**Files:**
+- Modify: `game/src/core/game/BattleLootSystem.ts` — delete `beginTribulation` (`:167-172`) + its doc block (`:156-166`); fix the stale comment at `:377` (and the `pendingSummons` reference at `:162` if not already cleaned in Task 6).
+- Modify: `game/src/core/talent/SurviveLethalGuard.ts` — delete `beginTribulation()` (`:20-22`) + its doc line (`:7-8`); the tribulation exclusion contract is `setSurviveLethalSession(null)` — keep that documented.
+- Delete: `game/src/core/game/BattleLootSystem.beginTribulation.test.ts` (whole file tests the deleted method).
+- Modify: `game/src/core/talent/SurviveLethalGuard.test.ts:37-41` — delete the `beginTribulation` case.
+- Modify: `game/src/core/combat/CombatSystem.surviveLethal.test.ts:123-140` — the "tribulation does not trigger survive" case: drop `session.guard.beginTribulation()` and keep the `setSurviveLethalSession(null)` assertion path (the test still proves no survive when the session is null — same contract, honest setup).
+- Modify: `game/src/core/combat/CombatSystem.ts:610` — fix the stale `GameManager.beginTribulation` comment if not done in Task 1.
+
+- [ ] **Step 1: Grep-verify** — `grep -rn "beginTribulation" src tests` → only the two owners, the listed tests, comments.
+- [ ] **Step 2: Delete + adjust tests; `npm run type-check` + `npx vitest run src/core/game src/core/talent src/core/combat`.**
+- [ ] **Step 3: Commit** `chore(battle): remove dead beginTribulation APIs`
+
+### Task 24: Remove the write-only Phù/Trận socket chain fields
+
+**Files:**
+- Modify: `game/src/core/equipment/EquipmentSlotState.ts` — delete `socketedTalisman`/`socketedFormation` (`:34,36`), `bonusAffixSlots` (`:40`), `appliedTalismanIds` (`:44`), their comments, the `SocketedModifierItem` import (`:2`), and the `createDefaultSlotState` entries (`:64-68`).
+- Modify: `game/src/core/game/GameManagerPersistentEffectOps.ts` — `getSlotModifiers` (`:397-417`) loses its socket branches → the method becomes an empty aggregation; collapse `getActiveRuntimeModifiers` (`:276-278`) to return `getActiveTimedModifiers(...)` directly and delete `getSlotModifiers`, or keep a no-socket `getSlotModifiers` only if a fresh grep shows other callers (expected: none).
+- Modify: `game/src/composables/useEquipmentTooltip.ts:158-159` — remove the `+ bonusAffixSlots` term from `affixCapacity` (field is always 0).
+- Modify: `game/src/services/save/saveShapeValidation.ts` — remove socketed-field validation/normalization (`:1219-1233` block + `migrateSocketedModifierStatKeys` if not already gone via Task 8) and any `bonusAffixSlots`/`appliedTalismanIds`/`socketed*` shape checks.
+- Modify: `game/src/services/save/saveTypes.ts`, `SaveSystem.ts:195-201` — drop stale legacy comments describing the migration.
+- Modify tests: `saveShapeValidation.test.ts:869-885` (socketed cases → remove or convert to "legacy socket payload rejected/ignored"), `GameManagerSaveRestore.boundary.test.ts:128-129`, `SaveSystem.restoreIdentity.test.ts:104` fixtures.
+
+**Retained:** `SocketedModifierItem.ts`/`TwoModifiers` (used by `Talisman`/`Formation` template types), `TalismanRegistry`/`FormationRegistry` + `data/talisman`/`data/formation` content (registered content — dead-end *usage* is E11/roadmap scope, not this task), `enhanceLevel`/`enhanceFailStreak` (live slot enhancement).
+
+- [ ] **Step 1: Grep-verify no production writer exists** — `grep -rn "socketedTalisman\s*=\|socketedFormation\s*=\|appliedTalismanIds\.\|bonusAffixSlots =" src` → expect declarations/defaults only.
+- [ ] **Step 2: Failing test** — extend `useEquipmentTooltip` coverage: `affixCapacity` equals `rarityAffixCap.prefix + suffix` (no slot bonus) — or a tooltip test asserting the socketed-item tooltip surface is unchanged for a real slot state.
+- [ ] **Step 3: Implement; `npm run type-check` + `npx vitest run src/core/equipment src/core/game src/services/save src/composables`.**
+- [ ] **Step 4: Commit** `chore(equipment): remove write-only Phu/Tran socket fields`
+
+### Task 25: Delete `resolveSpriteBodyAnchor` (+ module + test)
+
+**Files:**
+- Delete: `game/src/game/support/SpriteBodyAnchor.ts`, `game/src/game/support/SpriteBodyAnchor.test.ts`
+
+- [ ] **Step 1: Grep-verify** — `grep -rn "resolveSpriteBodyAnchor\|SpriteBodyAnchor" src tests` → only the two files.
+- [ ] **Step 2: Delete; `npm run type-check` + `npx vitest run src/game`.**
+- [ ] **Step 3: Commit** `chore(scene): delete unused SpriteBodyAnchor helper`
+
+### Task 26: Delete `spiritStoneIdForRealm` + `filterNguHanhElements`
+
+**Files:**
+- Modify: `game/src/core/equipment/EquipmentSystem.ts:422` — delete `spiritStoneIdForRealm` (zero callers).
+- Modify: `game/src/core/artifact/ArtifactSystem.ts:87` — delete `filterNguHanhElements` (zero callers; inside a parked file, but the export is dead even to parked code — parked means "not deleted wholesale", not "dead code kept").
+
+- [ ] **Step 1: Grep-verify** — `grep -rn "spiritStoneIdForRealm\|filterNguHanhElements" src tests` → declarations only.
+- [ ] **Step 2: Delete; `npm run type-check` + `npx vitest run src/core/equipment src/core/artifact`.**
+- [ ] **Step 3: Commit** `chore(core): delete uncalled realm/element helpers`
+
+---
+
+## Phase 5 — Dead data + roadmap truth
+
+### Task 27: Floor-8 ferocious beetle fix (real content bug)
+
+**Files:**
+- Modify: `game/src/data/stage/Stages.ts:145` — `{ common: 'foundation_metal_beetle_swarm', elite: 'foundation_ferocious_blade_hawk_king' }` → `common: 'foundation_ferocious_metal_beetle_swarm'` (the ferocious variant exists at `FoundationEnemies.ts:314`; every other odd floor pair uses the ferocious form, and floor 7's elite already proves the non-ferocious swarm is the floor-7 mob).
+- Modify: `game/src/data/stage/Stages.test.ts` — add the pinning case.
+
+- [ ] **Step 1: Failing test** — in `Stages.test.ts`: assert the chapter-3 floor-8 stage's common enemy is `foundation_ferocious_metal_beetle_swarm` (or assert the chapter-wide convention: every even floor's `common`/`elite` use the `ferocious` variant of the preceding odd floor — pick the narrower assertion matching existing test style).
+- [ ] **Step 2: Run — FAIL.**
+- [ ] **Step 3: Fix the data row.**
+- [ ] **Step 4: Run — PASS; `npx vitest run src/data`.**
+- [ ] **Step 5: Commit** `fix(stage): floor-8 common enemy is the ferocious beetle swarm`
+
+### Task 28: Data/comment truth pass (verified-intentional items)
+
+**Files:**
+- Modify: `game/src/data/enemy/EnemyDropSinkInvariant.test.ts:19-20` — keep `broken_foundation_scroll`/`old_jade_slip` allowlisted; if the allowlist comment doesn't already say so, add one line: intentional lore drops, no functional sink by design (English ASCII per P15 for new comments).
+- Modify: `game/src/data/materials/materials.ts:104,112` — comments already document intent; no code change.
+- Modify: `game/src/core/realm/RealmTierMap.ts` — `body_integration` tier-8 special case is intentional; no change (record in worklog).
+
+- [ ] **Step 1: Grep-confirm** both materials still appear in a live drop table (`StageDropTables.ts` comment `:20`) and the invariant test passes as-is.
+- [ ] **Step 2: Apply only the comment addition if missing; run `npx vitest run src/data/enemy`.**
+- [ ] **Step 3: Commit** `docs(data): note intentional sinkless lore drops` (or fold into the nearest commit — record the verification).
+
+---
+
+## Phase 6 — Dedup batch (one owner per rule)
+
+### Task 29: Single rank→particle-color table in `BattleLootSystem`
+
+**Files:**
+- Modify: `game/src/core/game/BattleLootSystem.ts:699-721` — `getGradeParticleColor` (`Record<ItemGrade, number>`) and `getQualityParticleColor` (`Record<ItemQuality, number>`) are byte-identical tables (`ItemGrade` and `ItemQuality` are the same 5-member union). Replace both with one module constant `RANK_PARTICLE_COLORS: Record<ItemGrade, number>` and have both methods return `RANK_PARTICLE_COLORS[key]`.
+- Modify: the existing loot/particle test file covering these methods — add a case asserting grade and quality lookups return identical values for all five ranks.
+
+- [ ] **Step 1: Failing/passing parity test** — for each of `['hoang','huyen','dia','thien','tien']`, grade-color === quality-color (write it before collapsing; it may pass immediately — it exists to pin the single-table contract).
+- [ ] **Step 2: Collapse to one table; `npm run type-check` + `npx vitest run src/core/game`.**
+- [ ] **Step 3: Commit** `refactor(loot): single rank particle color table`
+
+### Task 30: Route node max-level reads through `getNodeMaxLevel`
+
+**Files:**
+- Modify: `game/src/components/panels/loadout-sections/NodeTreePanel.vue:224` — `Math.max(1, node.maxLevel ?? 1)` → `getNodeMaxLevel(node)`.
+- Modify: `game/src/components/panels/skill-path/NodeInspector.vue:63` — same replacement (import from `core/progression/NodeSystem`).
+
+- [ ] **Step 1: Test** — extend a node-panel/component or `NodeSystem` test asserting `getNodeMaxLevel` semantics (`undefined`/`0`/positive `maxLevel` → 1/1/N) and that both UI consumers use it (a small unit assertion is enough — the panels already exercise max-level display in their tests).
+- [ ] **Step 2: Implement; `npm run type-check` + `npx vitest run src/components src/core/progression`.**
+- [ ] **Step 3: Commit** `refactor(nodes): route max-level normalization through getNodeMaxLevel`
+
+### Task 31: `ESSENCE_REALM_ORDER` → `getRealmTier`
+
+**Files:**
+- Modify: `game/src/core/economy/VendorBalance.ts:61-72,127-133` — delete `ESSENCE_REALM_ORDER`; the essence branch becomes `const tierIndex = Math.max(0, getRealmTier(meta?.realmId ?? realmId) - 1)` then `VENDOR_ESSENCE_PRICE_BASE * Math.pow(VENDOR_REALM_GROWTH, tierIndex)` (same formula family as `realmGrowthFactor`, one realm-order authority: `RealmTierMap`).
+- Modify: the vendor balance/pricing test — pin essence price per reachable realm (`mortal`→base·1, `qi_refining`→base·3, `foundation_establishment`→base·9).
+
+**Behavior note (documented, not a bug):** the old table priced `tribulation` at index 9 vs `getRealmTier` index 8, and `body_integration` at index 8 vs tier 8 (same). No essence material carries `profession.realmId` and beta realm scope caps at `foundation_establishment`, so all reachable prices are unchanged; the divergence lives only in unreachable post-beta realms. Record it in the test comment.
+
+- [ ] **Step 1: Failing/pinning test** — essence unit price for `mortal`/`qi_refining`/`foundation_establishment` context realms equals the current values (locks reachable behavior before the swap).
+- [ ] **Step 2: Run — confirm reachable prices unchanged; implement the swap.**
+- [ ] **Step 3: `npm run type-check` + `npx vitest run src/core/economy`.**
+- [ ] **Step 4: Commit** `refactor(vendor): derive essence realm index from RealmTierMap`
+
+### Task 32: Shared profession material-id constructor
+
+**Files:**
+- Modify: `game/src/core/profession/ProfessionMaterial.ts` — add the authoritative constructor (the file already documents the `<realm>_wood_<age>` / `<realm>_ore_<age>` convention at `:8-10`):
+
+```ts
+export function buildProfessionMaterialId(
+  resourceKind: 'wood' | 'ore',
+  realmId: string,
+  age: HerbAge,
+): string {
+  return `${realmId}_${resourceKind}_${age}`
+}
+```
+
+- Route every inline construction through it (verified sites — re-grep at execution time, the audit said ~6 and the current tree shows more):
+  - `game/src/data/materials/materials.ts` — the generator's `id: ${realmId}_wood_${age}` / `${realmId}_ore_${age}` (`~:185,:204`).
+  - `game/src/core/production/ProductionCatalog.ts:54,111,124` — wood/ore id strings.
+  - `game/src/core/alchemy/AlchemySystem.ts:176` — `${realmId}_wood_${requiredAge}`.
+  - `game/src/components/panels/AlchemyView.vue:154` — `${recipe.fuelWoodRealmId}_wood_${variant.age}` (cross-layer construction — the audit's point).
+  - `game/src/core/equipment/EquipmentOperationCostCatalog.ts:70` — `${realmId}_ore_decade`.
+  - `game/src/data/building/buildings.ts:27-28` (and literal rows `:105-106,:132` — leave literal data literals alone; only replace *constructed* ids where a realm/age variable is composed).
+- Optionally co-locate `herbBaseId(herbId, realmId)` + `herbMaterialId(herbBaseId, age)` — the herb grammar differs (`${herbId}_${realmId}_${age}`); do NOT force it through the wood/ore helper. Only add if the same triple is re-implemented in ≥2 places (`materials.ts:230,245`, `ProductionCatalog.ts:154,156`, `alchemyRecipes.ts:19-22`).
+- Leave `DecomposeSystem.ts:352`'s `ORE_ID_PATTERN` parser alone (inverse direction) but have it reference the shared pattern/comment so the convention has one documentation owner.
+
+- [ ] **Step 1: Grep-enumerate the real sites** — `grep -rn '_wood_\|_ore_' src --include="*.ts" --include="*.vue" | grep -v test` and list the constructed-id sites (variable interpolation, not literals).
+- [ ] **Step 2: Test** — `buildProfessionMaterialId('wood','qi_refining','decade') === 'qi_refining_wood_decade'`; `'ore'` variant; assert existing producer outputs are unchanged (materials list snapshot or id-membership test).
+- [ ] **Step 3: Implement + migrate call sites; `npm run type-check` + `npx vitest run src/core src/data src/components`.**
+- [ ] **Step 4: Commit** `refactor(profession): single material-id constructor`
+
+### Task 33: `MaterialBag`/`PillBag` readonly stack snapshots
+
+**Files:**
+- Modify: `game/src/core/material/MaterialBag.ts` — `get()` returns `Readonly<MaterialStack> | undefined`; `getAll()` returns `Readonly<MaterialStack>[]` built as `{ ...stack }` copies (shallow is enough — `amount` is a number, `material` is shared-by-design template data).
+- Modify: `game/src/core/pill/PillBag.ts` — same for `PillStack`.
+- Modify: `MaterialBag.test.ts`/`PillBagSection.test.ts` (or a new colocated test) — caller mutation isolation.
+
+**Verification already done (re-check at execution):** the only `materialBag.get(` production caller reads `.material` (`GameManagerCompanionOps.ts:89`); `getAll()` consumers only read (`MaterialBagSection.vue:211`, `PillBagSection.vue:257`, `BagGrid.vue`, `CompanionPanel.vue:227`, `LoreCodex.vue:24`). No caller assigns `stack.amount` — confirmed by `grep "\.amount =" src` (only `CombatSystem.ts:404` externalWard, unrelated).
+
+- [ ] **Step 1: Failing tests** — `const s = bag.get(id)!; (s as { amount: number }).amount = 0;` then `bag.getAmount(id)` is unchanged; same for `getAll()` result mutation.
+- [ ] **Step 2: Run — FAIL (live references today).**
+- [ ] **Step 3: Implement** the readonly return types + copies; fix any caller type friction (none expected — all reads).
+- [ ] **Step 4: PASS; `npm run type-check` + `npx vitest run src/core src/components`.**
+- [ ] **Step 5: Commit** `fix(inventory): return readonly snapshots from bag stack accessors`
+
+### Task 34: Shared cultivation-insight accrual
+
+**Files:**
+- Modify: `game/src/stores/player.ts` — the two identical threshold loops: online in `cultivate()` (`~:199-213`) and offline in `restoreFromSave` (`~:452-466`).
+- Modify: create the shared helper next to the talent rule it belongs to — `getInsightPerCultivation` lives in the talent module (find it via `grep -rn "getInsightPerCultivation" src/core/talent`); add `accrueCultivationInsight(player: PlayerData, gained: number): void` beside it or in a small `core/cultivation` helper, preserving exact semantics:
+
+```ts
+export function accrueCultivationInsight(player: PlayerData, gained: number): void {
+  const threshold = getInsightPerCultivation(player.selectedTalentIds)
+  if (threshold === undefined || threshold <= 0 || gained <= 0) return
+  player.cultivationInsightAccumulator += gained
+  while (player.cultivationInsightAccumulator >= threshold) {
+    player.cultivationInsightAccumulator -= threshold
+    player.skillInsight += 1
+    player.totalSkillInsightGained += 1
+  }
+}
+```
+
+- [ ] **Step 1: Failing/passing parity tests** — below-threshold (no insight, accumulator keeps remainder), exact-threshold, multi-threshold (2.5× threshold → +2 insight, remainder kept), threshold 0/undefined no-ops, and an online+offline parity case (same gained through both paths → identical `skillInsight`/`accumulator`).
+- [ ] **Step 2: Implement the helper; both call sites delegate.**
+- [ ] **Step 3: `npm run type-check` + `npx vitest run src/stores src/core/talent src/core/cultivation`.**
+- [ ] **Step 4: Commit** `refactor(insight): single cultivation-insight accrual helper`
+
+### Task 35: `useTribulation` → `getNextRealm`
+
+**Files:**
+- Modify: `game/src/composables/useTribulation.ts:24-28,53` — replace `resolveNextBreakthroughRealm` with `getNextRealm(player.realmId)?.id ?? null` (`core/realm/realmSystem.ts:13`); delete the local function.
+- Modify: `useTribulation.artifact.test.ts` or a small new test for the mapping.
+
+**Safety (verified):** `canTriggerBreakthrough` (`GameManagerRealmAdvanceOps.ts:404-409`) returns true only for `mortal`/`qi_refining`, so the previously-differing `foundation_establishment → golden_core` arm is unreachable through this flow — the swap is behavior-identical at every reachable input.
+
+- [ ] **Step 1: Test the mapping** — `triggerBreakthroughAction` target resolution: mortal→`qi_refining`, qi_refining→`foundation_establishment` (mock `canTriggerBreakthrough` true for those realms per the real gate), foundation_establishment→`null`/rejected by `canTriggerBreakthrough` false.
+- [ ] **Step 2: Implement; `npm run type-check` + `npx vitest run src/composables`.**
+- [ ] **Step 3: Commit** `refactor(tribulation): use getNextRealm for breakthrough target`
+
+### Task 36: `useBuildingHeaderState` consumes a `buildingOps` upgrade quote
+
+**Files:**
+- Modify: `game/src/core/game/GameManagerBuildingOps.ts` — add `quoteBuildingUpgrade(instanceId: string)` mirroring `quoteProductionUpgrade` (`:314`), delegating to the same rules `BuildingSystem.upgrade` enforces (`BuildingSystem.ts:190-217`): returns `{ template, instance, hasNextLevel, meetsRealmRequirement, requiredRealmId, nextUpgradeCost, canAfford } | null`. Compute inside ops/system — one owner for `upgradeCost[level] ?? []`, `level < maxLevel`, `getRealmTier(realmId) >= level + 1`, and materialBag affordability.
+- Modify: `game/src/composables/useBuildingHeaderState.ts:37-62` — `nextUpgradeCost`/`canAffordUpgrade`/`hasNextLevel`/`meetsRealmRequirement`/`requiredRealmName` all derive from the quote; the composable keeps label formatting only. `upgrade()` (`:76-84`) still calls `buildingOps.upgradeBuilding` (authoritative re-check — UI quote is display-only).
+
+- [ ] **Step 1: Test** — `quoteBuildingUpgrade` unit test: capped level → `hasNextLevel:false`; realm-gated next level → `meetsRealmRequirement:false`; insufficient materials → `canAfford:false`; happy path returns the exact `template.upgradeCost[level]` entry. Plus a composable-level assertion that header state mirrors the quote (no independent formula).
+- [ ] **Step 2: Implement; `npm run type-check` + `npx vitest run src/core/game src/composables src/components`.**
+- [ ] **Step 3: Commit** `refactor(building): header state consumes buildingOps upgrade quote`
+
+### Task 37: `useEquipmentTooltip` — require the quote, delete the fallback formula
+
+**Files:**
+- Modify: `game/src/composables/useEquipmentTooltip.ts:99-111` — `mainStatRangeQuote` param becomes required (`mainStatRangeQuote: { min: number; max: number }`); delete the `?? (() => {...})()` fallback that re-implements `EquipmentSystem.quoteMainStatRange` (and the now-unused `getGlobalCultivationLevel`/`realmFromGrade`/`MAIN_STAT_REALM_SCALE`/`ITEM_QUALITY_IMPLICIT_MULTIPLIER` imports).
+- Modify: `game/src/composables/useEquipmentTooltip.test.ts` — pass an explicit quote where the test relied on the fallback.
+
+**Verified:** all four production callers already pass `quoteMainStatRange(...)` — `EquipmentBagSection.vue:154`, `DissolveTab.vue:154`, `useEquippedRows.ts:107`, `EquipmentPaperdoll.vue:138`. If a caller appears that lacks the quote, that call site must obtain it from `equipmentSystem.quoteMainStatRange` — never re-derive.
+
+- [ ] **Step 1: Grep-verify all callers pass the param** — `grep -rn "buildEquipmentTooltip(" src | grep -v test` → four sites, all with the quote arg.
+- [ ] **Step 2: Make the param required + delete the fallback; `npm run type-check` + `npx vitest run src/composables`.**
+- [ ] **Step 3: Commit** `refactor(tooltip): require equipment main-stat quote, drop fallback formula`
+
+### Task 38: `CharacterCreationScreen` budget constant
+
+**Files:**
+- Modify: `game/src/components/onboarding/CharacterCreationScreen.vue:37` — `5 - pointsSpent.value` → `CHARACTER_CREATION_ATTRIBUTE_POINTS - pointsSpent.value` (import from `src/services/character/CharacterCreationService.ts:3` — the same constant the creation service validates against at `:53`).
+- Modify: the character-creation test — assert remaining points derive from the shared constant (e.g. spend 1 → `CHARACTER_CREATION_ATTRIBUTE_POINTS - 1` left; the `pointsLeft !== 0` finish gate at `:126` then tracks the constant automatically).
+
+- [ ] **Step 1: Test adjustment; implement; `npm run type-check` + `npx vitest run src/components src/services/character`.**
+- [ ] **Step 2: Commit** `refactor(onboarding): use CHARACTER_CREATION_ATTRIBUTE_POINTS for budget`
+
+### Task 39: `tu_linh_tran` domain getter
+
+**Files:**
+- Modify: `game/src/core/economy/TuLinhTranBalance.ts` — add the authoritative read:
+
+```ts
+export function getActiveCultivationSpeedPercent(
+  effects: readonly PersistentTimedEffect[],
+  nowMs: number,
+): number {
+  return effects
+    .filter((e) => e.effectGroup === TU_LINH_TRAN_EFFECT_GROUP && e.expiresAtMs > nowMs)
+    .reduce((sum, e) => sum + (e.cultivationSpeedPercent ?? 0), 0)
+}
+```
+
+- Modify: `game/src/stores/player.ts:174-183` — replace the inline filter/sum with `getActiveCultivationSpeedPercent(this.persistentTimedEffects, Date.now())`.
+
+**Semantics note:** the old code summed `cultivationSpeedPercent` across *all* active effects without a group check; only `tu_linh_tran` writes that field (`GameManagerPersistentEffectOps.ts:385`), so the group-filtered getter is equivalent today and is the stronger invariant (matches `activateTuLinhTran`'s group-stack accounting at `:360-362`).
+
+- [ ] **Step 1: Test** — `getActiveCultivationSpeedPercent`: expired effect excluded; effect in another group carrying a stray `cultivationSpeedPercent` excluded; two stacked group effects sum. Plus the existing `player.cultivationSpeed.test.ts` must stay green (pin the percent applied to `cultivationPerSecond`).
+- [ ] **Step 2: Implement; `npm run type-check` + `npx vitest run src/stores src/core/economy src/core/game`.**
+- [ ] **Step 3: Commit** `refactor(tu-linh-tran): domain-owned active cultivation-speed getter`
+
+### Task 40: Remove the `huy_quyen` double backfill in `App.vue`
+
+**Files:**
+- Modify: `game/src/App.vue:552-563` — the loop over `['linh_bao', 'huy_quyen']` (`:552-556`) already grants `huy_quyen`; the block at `:558-563` grants it a second time (no-op via `has()` guard, but duplicated intent). Delete the second block + its comment.
+
+- [ ] **Step 1: Test** — restore-path idempotency: run `onRestoreOk` twice against a save missing starter skills → `huy_quyen` learned exactly once, `learnSkill` not re-invoked for it (spy or `skillManager.has` + call-count assertion in the existing App boot/restore test file).
+- [ ] **Step 2: Delete the duplicate block; `npm run type-check` + `npx vitest run src/App* src/composables`.**
+- [ ] **Step 3: Commit** `chore(boot): remove duplicated huy_quyen starter backfill`
 
 ---
 
 ## Mission G done-criteria
 
-- M13 dormant cluster and legacy bridges deleted; type surface has no production `any`/`as never` left (except documented test-harness boundary).
-- No unreachable UI/state/data ships; artifact combat advertising gone.
-- Duplicated rules collapsed onto single owners.
-- `npm run type-check` + `npx vitest run` green; P4 quick QA; P5 review.
+- **Dormant M13 cluster removed in stages:** `SkillTriggerRunner`, `SkillEffectSystem`, `SkillActionRegistry` runtime, the `ActionImpactSystem` class + batch API, dead `ActionTargetingSystem` helpers, unused `Battle`/`BattleEnemy` fields, `ArtifactDropBalance`, `CombatSystem.fireKillTriggers`/`killIfDead` 3rd arg/optional ctor deps — all gone with their tests adjusted to surviving contracts. Retained and verified live: `SkillAction`/`TriggerBinding`/`SkillEffect` types, `ActionDamageInfo`/`scaleActionDamage`/`HitResolveOptions`/`ScheduledBasicImpact`, `areaFor`, `selectRankedTarget`, `Battle` (parked), `ArtifactSystem`/`ArtifactRuntime` (parked), `getArtifactCycleSeconds`.
+- **Legacy bridges deleted, not migrated:** `statKeyMigration` gone; validation/restore reject or drop legacy stat keys; `pham_nhan` key removed; `Buff.ts` shim gone; unreachable realm-formula branches + dead `RealmData` fields removed; `hoi_xuan_dan` verified rejection-only.
+- **No unreachable UI/state ships:** MainMenu overlay chain, `vue-router`, `player.load()`, `markRealmEnhancementUnlocked`/`unlockedRealmEnhancements`, `isCultivating`, `pendingEquipTarget`, `beginTribulation`, `resolveSpriteBodyAnchor`, `spiritStoneIdForRealm`, `filterNguHanhElements`, Phù/Trận socket fields — all removed or (for `combatOrigin`) verified live and kept.
+- **Artifact combat advertising removed** while parked runtime stays: HUD slot chain deleted; milestone tooltips no longer advertise combat effects; artifact progression UI untouched.
+- **Type surface clean:** no production `any` or unjustified `as never`/double-cast at the listed sites; `__tutienPhaserGame` declared globally.
+- **Duplicated rules have single owners:** rank colors, node max level, realm order, profession material ids, bag snapshot access, insight accrual, breakthrough target, building quote, tooltip quote, creation budget, `tu_linh_tran` read, `huy_quyen` backfill.
+- **Floor-8 beetle fixed;** verified-intentional data (lore materials, `body_integration` tier) documented.
+- **Verification:** `npm run type-check` + `npx vitest run` green (full verification incl. `npm run build` after Task 21's dep change); P4 adversarial-QA quick on the aggregate diff; P5 three-lens review round before completion.
+
+## Known risks / watch-items for the reviewer
+
+- `Battle.ts` trimming touches parked test fixtures — if the artifact reimagine wants those fields back they are trivially restorable from git history; the trim is still the honest current contract.
+- Removing `migrateStatModifiers` also removes the `domain` backfill (QA-2026-09-14-001). Legacy saves carrying domain-less gated modifiers will have them dropped by `applyDomainGate` (production path) rather than backfilled — intended under the dev-stage rule; the rewritten qa test pins the drop.
+- `ESSENCE_REALM_ORDER` unification changes essence pricing only for realms above beta scope; pinned by test.
+- `getCultivationDurationSeconds` deletion assumes the fresh grep still shows no production callers — re-check before removing.

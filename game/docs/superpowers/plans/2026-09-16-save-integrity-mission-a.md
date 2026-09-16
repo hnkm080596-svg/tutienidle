@@ -353,4 +353,4 @@ Plus a mutation sweep: for each top-level GameSave slice, a save built with that
 - No storage write path can throw uncaught.
 - Foreign keys cannot enter `$state`.
 - Round-trip conformance test green; `npm run type-check` + `npx vitest run src/services/save src/stores src/core/production src/core/quest` all green.
-- P4: run `tutienidle-adversarial-qa` quick on the diff; P5: run `code-review`.
+- P4: run `tutienidle-adversarial-qa` quick on the diff; P5: run the three-lens review round (A/B/C) — zero unresolved Medium+ before done.
