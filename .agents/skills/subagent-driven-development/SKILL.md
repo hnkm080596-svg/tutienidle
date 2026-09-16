@@ -468,6 +468,15 @@ the four classes above stop you here. There is no second fix wave —
 residual load-bearing findings surface to your human partner when
 finishing-a-development-branch presents the options.
 
+**Project override (root `AGENTS.md` P5):** in this repository the final
+review is the P5 three-lens review round — three genuinely independent
+passes (correctness/regression/requirements, architecture/contracts/
+maintainability, tests/runtime/user-flow/adversarial) over the same
+aggregate diff. A single dispatched code reviewer is one lens, not the
+round. The loop ends only when a complete three-lens round finishes with
+zero unresolved Critical/High/Medium findings — the "no second fix wave"
+cap above does not waive that gate.
+
 ## Finish
 
 Before you delete anything, collect every ledger line containing `Ruling:` —

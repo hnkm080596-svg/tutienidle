@@ -7,11 +7,11 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 ## Overview
 
-**Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests + project gates → Detect environment → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
-## Step 1: Verify Tests
+## Step 1: Verify Tests and Project Gates
 
 Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).
 
@@ -23,7 +23,16 @@ Tests failing (<N> failures). Must fix before completing:
 [Show failures]
 ```
 
-**If tests pass:** continue to Step 2.
+**Project gate check (TutienIdle — `AGENTS.md` P-rules).** The integration menu is reachable only after all required pre-merge gates are already satisfied in the implementation worktree:
+
+- P3 verification at the required mode, green on the current tree.
+- P13/P14 runtime/browser checks, where triggered, already run **inside the implementation worktree** — this skill never performs the feature's first real browser validation, and a branch is not merge-ready merely because Playwright could not run.
+- P4 adversarial QA where applicable, with its verdict recorded.
+- A complete P5 three-lens review round finished with zero unresolved Critical/High/Medium findings on the aggregate diff (deferred Low/Nit findings listed with reasons).
+
+If any required gate is missing, stop and return to the dev workflow — do not present the menu, and do not merge into `master` to obtain browser evidence. Post-merge validation on `master` is supplementary only.
+
+**If tests pass and the gates are satisfied:** continue to Step 2.
 
 ## Step 2: Detect Environment
 

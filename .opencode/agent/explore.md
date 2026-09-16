@@ -74,6 +74,6 @@ Use [architecture-worker-exercises.md](../../game/docs/architecture/architecture
 
 ## What to read alongside this prompt
 
-- `AGENTS.md` — full spec including P1–P12 and E1–E16. Read E11, E15 at minimum.
+- `AGENTS.md` — full spec including P1–P17 and E1–E17. Read E11, E15 at minimum.
 
 When you finish a research task, the summary (per E11) must state: what was investigated, what was found (with file paths and line numbers as evidence), and any remaining limitations, open questions, or Notes / Suggestions.

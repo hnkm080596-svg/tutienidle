@@ -345,9 +345,10 @@ assertions keep running normally.
   after each wave.
 - **M1<->M2 contract:** pending wash/refine invalidation on session
   restore — M1 defines the hook, M2 consumes it.
-- **P14 caveat:** browser launch unreliable inside `.agent-worktrees/` —
-  visual checks run from the main checkout at branch finishing or defer
-  with `DONE_WITH_CONCERNS`.
+- **P14 caveat (superseded 2026-09-17):** the isolated-worktree exception
+  is retired — P13/P14 checks run inside the implementation worktree
+  before merge-ready; an environment failure is an explicit blocker, not
+  a deferral.
 
 ## Deferred / out of scope
 

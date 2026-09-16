@@ -197,5 +197,5 @@ Closes T7-60..68, T5-46.
 ## Execution notes
 
 - **Order:** A → B → C → D → E → F → G. A+B are data-loss; C must precede any new combat/path feature work; E items are independent and can run parallel to C/D by different workers. All product decisions locked above.
-- **Per-mission gates:** each mission = one worktree (P2), quick verification per task + full before merge, adversarial-QA quick after each mission (P4), code-review before completion (P5).
+- **Per-mission gates:** each mission = one worktree (P2), quick verification per task + full before merge, triggered P13/P14 checks run inside that worktree (no deferral to a main checkout), adversarial-QA quick after each mission (P4), P5 three-lens review round before completion (zero unresolved Medium+).
 - **Known-intentional, do not "fix":** parked MeridianSystem, retired `hoi_xuan_dan`/`dung_nham_burn`/`PARKED_TALENTS`, `phap_tu_an`/`da_phap` hidden stubs, post-foundation realm placeholder data, `REALM_SLOT_TABLE` full coverage, test-support files under `src/` (deliberate convention — though they should move under `tests/` in G-sweep or be excluded from production imports by an arch guard).

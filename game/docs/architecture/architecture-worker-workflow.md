@@ -133,7 +133,7 @@ Answer every row of each triggered module. These are invariant prompts, not asse
 - **U3:** Are assets resolved/preloaded from one catalog? Validate externally derived paths before filesystem use; enumerate actual consumers.
 - **U4:** Are rendering resources owned through narrow contracts? Moving code to a helper that writes scene internals does not transfer responsibility.
 - **U5:** Are localized strings routed through i18n, and code comments plain ASCII English? Check the changed surface, without mass-migrating unrelated content.
-- **U6:** Does P14 apply, and precisely what visual behavior was inspected? Record authorized worktree deferral honestly under P14; do not report screenshots as proof of domain outcomes.
+- **U6:** Does P14 apply, and precisely what visual behavior was inspected? P14 runs inside the implementation worktree before merge-ready — record exactly what was visually inspected there; a genuine environment failure is reported as an explicit blocker, not a deferral. Do not report screenshots as proof of domain outcomes.
 
 ## 6. G2 — Turn invariants into useful tests
 
@@ -171,13 +171,13 @@ Stop implementation when the task card's coherent outcome is met. Remaining auth
 
 ## 8. G4 — Verification and review
 
-Follow existing P3-P5/P13/P14 gates, not a replacement scoring system:
+Follow existing P3-P5/P13/P14 gates, not a replacement scoring system. Gate order: simplify → verify → runtime/browser checks → adversarial QA → three-lens review round → fix → reverify → repeat round.
 
 - Simplify with E3 when triggered, preserving behavior.
 - Select P3 quick or full by actual triggers; record exact commands, exit results and relevant test counts. Stop at first failure and classify/fix under P12.
+- Execute P13/P14 when triggered, inside the implementation worktree (the P14 worktree exception is retired — an environment failure is an explicit blocker with captured evidence, never a deferral to a main checkout). Record what remains unverified.
 - After a feature/fix, run P4 adversarial QA in its restricted write scope. If production repair is needed, exit QA, repair in development and repeat affected gates.
-- Run code-review on the simplified verified diff when P5 applies. Resolve findings at confidence >=80 unless explicitly waived. Substantial review fixes repeat simplification, applicable verification and review.
-- Execute P13/P14 when triggered; use documented P14 deferral only under its actual conditions. Record what remains unverified.
+- When P5 applies, run a complete three-lens review round over the simplified verified diff: Review A (correctness/regression/requirement fidelity), Review B (architecture/contracts/maintainability), Review C (tests/runtime/user flow — real runtime/Playwright evidence for browser-sensitive work). Every finding carries a severity (Critical/High/Medium/Low/Nit). Zero unresolved Medium-or-higher is the completion threshold; every Medium+ fix re-verifies and triggers a fresh complete round. Deferred Low/Nit findings stay listed with reasons. The user may explicitly waive a finding — record it.
 - Docs-only work uses link/reference/mirror/consistency checks under E13; production QA, type-check/build and gameplay tests are N/A.
 
 Review rejects an unsupported pass even when tests are green: missing current owner, helper-only coverage, real caller not migrated, duplicate authority without justified retained purpose, swallowed required context, untested task-critical failure path, unrelated redesign, or an unrecorded runtime gap.
@@ -194,15 +194,15 @@ Q1-Q12 / triggered modules: PASS with evidence, GAP, or N/A with reason
 Owner and actual migrated consumers:
 Old/alternate path status:
 Verification: exact commands, results, test counts, limitations
-QA verdict (P4) / code-review verdict (P5):
-P13 progression evidence / P14 visual evidence or valid deferral:
+QA verdict (P4) / P5 review round (lenses run, findings by severity, rounds completed, unresolved Medium+ = 0):
+P13 progression evidence / P14 visual evidence from the implementation worktree (or explicit environment blocker):
 Unresolved task work:
 Retained debt / Notes-Suggestions:
 ```
 
 Coordinator reads the aggregate diff and evidence, including interactions between worker slices. A worker's assertion is not independent proof. Reject or return only the concrete unresolved responsibility; do not dispatch an open-ended “improve everything” follow-up.
 
-These architecture questions do not replace P4 verdicts. Preserve the exact P4 verdict and legitimate reason, including its existing completion rules. A known unimplemented requirement cannot be labeled implemented. Keep any runtime deferral visible in the final outcome. No commit/merge/integration/push/deploy authorization is implied by acceptance.
+These architecture questions do not replace P4 verdicts. Preserve the exact P4 verdict and legitimate reason, including its existing completion rules. A known unimplemented requirement cannot be labeled implemented. Keep any runtime gap or environment blocker visible in the final outcome. No commit/merge/integration/push/deploy authorization is implied by acceptance.
 
 ## 10. Ready-to-use worker assignment
 
