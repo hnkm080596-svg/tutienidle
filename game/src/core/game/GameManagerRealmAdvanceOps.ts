@@ -4,14 +4,9 @@ import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData } from '../player/Player'
 import type { CultivationPathId, PathWayId } from '../player/CultivationPathKit'
-import { MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import { isKiemTuNgu } from '../kiem-tu/KiemTuPath'
-import {
-  CULTIVATION_PATH_MODULES,
-  PHAP_TU_AN_BASIC_ID,
-  PHAP_TU_AN_SPECIAL_ID,
-} from '../player/CultivationPathKit'
+import { CULTIVATION_PATH_MODULES } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward } from '../player/CultivationPathSystem'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
@@ -206,10 +201,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const grantedSkillIds: readonly string[] =
-      wayId === 'ngo_dao'
-        ? [PHAP_TU_AN_BASIC_ID, PHAP_TU_AN_SPECIAL_ID]
-        : (way.skillIds ?? [])
+    const grantedSkillIds: readonly string[] = way.skillIds ?? []
 
     if (grantedSkillIds.some((skillId) => !this.deps.skillTemplates.has(skillId))) {
       return false
@@ -226,39 +218,23 @@ export class GameManagerRealmAdvanceOps {
     this.learnTechnique(way.techniqueId)
     this.equipTechnique(way.techniqueId)
 
-    if (wayId === 'ngo_dao') {
-      this.deps.progressionOps.learnSkill(PHAP_TU_AN_BASIC_ID)
-      this.deps.progressionOps.learnSkill(PHAP_TU_AN_SPECIAL_ID)
-      this.deps.skillSystem.equipToSlot(PHAP_TU_AN_BASIC_ID, 0)
-      this.deps.skillSystem.equipToSlot(PHAP_TU_AN_SPECIAL_ID, 1)
-    } else if (pathId === 'kiem_tu') {
-      // Kiem Tu Reimagined (spec 2026-09-15 K1/K4) — the kiemTu slice is
-      // now created inside applyPathChoice (way-slice lifecycle); there
-      // is no route lock and the legacy kiem-tran/bat-kiem tail (route
-      // write, bat_kiem_thuat grant, kiem_tran_luong_nghi purchase) is
-      // gone. way.skillIds for Kiem Tu stays unused — hien basics come
-      // from the orb preset via the dynamicBasic provider (Task 6).
-
-      // Strip the mortal basic + any legacy kit skills from the loadout
-      // (NOT unlearn: a Pham Nhan save can still use them; K3 — the
-      // precursor equip gate in setSkillLoadoutSlot blocks re-equip
-      // post-path).
-      for (const skillId of MORTAL_PRECURSOR_SKILL_IDS) {
-        this.deps.skillSystem.unequip(skillId)
-      }
-    } else if (pathId === 'the_tu') {
-      // The Tu Reimagined (T1) — both Thể Tu ways resolve their kit at
-      // battle build from the chosen progression root (no loadout
-      // skills). The ritual only strips the mortal basics so a lingering
-      // tram/huy_quyen cannot occupy the single mortal slot.
-      this.deps.skillSystem.unequip('tram')
-      this.deps.skillSystem.unequip('huy_quyen')
-    } else if (way.skillIds) {
-      way.skillIds.forEach((skillId, index) => {
-        this.deps.progressionOps.learnSkill(skillId)
-        this.deps.skillSystem.equipToSlot(skillId, index)
-      })
+    // M9 — the post-commit loadout contract is way-DECLARED, never a
+    // concrete path/way branch: unequipSkillIds strips the mortal
+    // precursor basics (NOT unlearn — a Pham Nhan save can still use
+    // them; the precursor equip gate blocks re-equip post-path), then
+    // skillIds learn + equip into slots in order. kiem_tu basics come
+    // from the orb preset via the dynamicBasic provider; both the_tu
+    // ways resolve their kit at battle build; ngo_dao's third kit
+    // member is a technique-carried passive (innateSkillId), not a
+    // loadout skill.
+    for (const skillId of way.unequipSkillIds ?? []) {
+      this.deps.skillSystem.unequip(skillId)
     }
+
+    way.skillIds?.forEach((skillId, index) => {
+      this.deps.progressionOps.learnSkill(skillId)
+      this.deps.skillSystem.equipToSlot(skillId, index)
+    })
     // Phap Tu Reimagined (Task 6) — no auto-Fire starter: choosing
     // phap_tu leaves player.phapTu { element: null, route: null } until
     // progressionOps.selectPhapTuElement() commits the atomic choice.

@@ -4,7 +4,7 @@ import type {
   PathWayId,
 } from '../player/CultivationPathKit'
 import type { PlayerData } from '../player/Player'
-import { freshKiemTuState } from './KiemTuState'
+import { freshKiemTuState, MORTAL_PRECURSOR_SKILL_IDS } from './KiemTuState'
 
 // Cultivation Path Framework (spec 2026-09-16, M6) — the Kiem Tu path
 // module: the two way definitions + the way membership predicates.
@@ -86,6 +86,10 @@ export const KIEM_TU_HIEN_WAY: PathWayDefinition = {
   techniqueId: 'ngu_kiem',
   // Kiem Tu Reimagined (spec 2026-09-15) — no authored skill grants:
   // hien basics come from the Kiem Pho orb preset (KiemPhoProvider).
+  // M9 — the ritual strips the mortal precursor skills from the loadout
+  // (NOT unlearn: a Pham Nhan save can still use them; the precursor
+  // equip gate blocks re-equip post-path).
+  unequipSkillIds: MORTAL_PRECURSOR_SKILL_IDS,
   // M7 — the facet declares domain OWNERSHIP only (resolveActiveWayStatDomains
   // is the authority now that the path-keyed domain map is gone); Kiem Tu
   // has no totals-driven emission channel, so collectModifiers is a no-op.
@@ -105,6 +109,8 @@ export const KIEM_TU_NGU_WAY: PathWayDefinition = {
   // skillLevels mirror). A mortal without tram Lv3 at the ritual can
   // never enter ngu — there is no mid-progression flip any more.
   offerGate: { requiresSkillLevel: { skillId: 'tram', level: 3 } },
+  // M9 — same mortal-precursor strip as hien.
+  unequipSkillIds: MORTAL_PRECURSOR_SKILL_IDS,
   // M7 — same shared-domain facet as hien: 'kiem_tu', no totals-driven
   // channel.
   stats: {

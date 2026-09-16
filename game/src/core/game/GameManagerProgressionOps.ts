@@ -30,6 +30,7 @@ import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.bui
 import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
 import { isKiemTuHien } from '../kiem-tu/KiemTuPath'
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
+import { commitPhapTuElementRoute } from '../phap-tu/PhapTuState'
 import { getMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { TemplateRegistry } from './TemplateRegistry'
@@ -244,7 +245,7 @@ export class GameManagerProgressionOps {
       this.learnSkill(skillId)
     }
 
-    player.phapTu = { element, route }
+    commitPhapTuElementRoute(player, element, route)
 
     return true
   }

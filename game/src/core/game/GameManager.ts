@@ -179,6 +179,7 @@ import { collectTheTuKitModifiers } from '../the-tu/TheTuKitModifiers'
 import { collectTheTuAnMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
 import { TheTuBatTuSurvival } from '../the-tu/TheTuBatTuSurvival'
 import { isTheTuHien, isTheTuUngThe } from '../the-tu/TheTuPath'
+import { isKiemTuHien, isKiemTuNgu } from '../kiem-tu/KiemTuPath'
 import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
 import {
   NEUTRAL_ROUTE_PROFILE,
@@ -969,8 +970,15 @@ export class GameManager {
       }
     }
 
-    if (player.cultivationPath === 'kiem_tu') {
-      return BASIC_ATTACKS_BY_BUILD.kiem_tu!
+    // M9 — content-map lookup keyed on the path id, not a literal
+    // branch: builds with a static authored basic resolve here (today
+    // only kiem_tu); every other path falls through to its kit/melee.
+    const authoredBasic = player.cultivationPath
+      ? BASIC_ATTACKS_BY_BUILD[player.cultivationPath]
+      : undefined
+
+    if (authoredBasic) {
+      return authoredBasic
     }
 
     if (isTheTuHien(player)) {
@@ -1035,8 +1043,10 @@ export class GameManager {
     // Kiem Tu Reimagined (spec 2026-09-15 K3) — tram is a MORTAL
     // precursor: once any path is chosen it is no longer the basic.
     // kiem_tu basics resolve through the dynamicBasic orb provider
-    // (Task 6); until then the static kiem_tu fallback applies.
-    if (player.cultivationPath === 'kiem_tu') {
+    // (Task 6); a way-strict predicate keeps a corrupt pair fail-
+    // closed here while still yielding undefined via the generic
+    // any-path catch-all below.
+    if (isKiemTuHien(player) || isKiemTuNgu(player)) {
       return undefined
     }
 

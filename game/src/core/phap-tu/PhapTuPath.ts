@@ -171,6 +171,22 @@ export const PHAP_TU_NGU_HANH_WAY: PathWayDefinition = {
   },
 }
 
+// Ngo Dao required kit (review round-4, MEDIUM) — the ritual grants
+// exactly these three skills atomically: two loadout actives + the dao
+// passive carried by ngo_dao_chan_quyet.innateSkillId (the skillIds
+// list cannot express a passive member). Battle construction asserts
+// the full set is learned; a partial kit is corrupt progression state
+// and must fail loudly, never silently drop a slot. Re-exported from
+// CultivationPathKit so existing consumers keep their import site.
+export const PHAP_TU_AN_BASIC_ID = 'van_phap_tuy_tam'
+export const PHAP_TU_AN_SPECIAL_ID = 'da_phap_lien_tuyen'
+export const PHAP_TU_AN_PASSIVE_ID = 'ngo_dao_hon_don'
+export const PHAP_TU_AN_REQUIRED_SKILLS: readonly string[] = [
+  PHAP_TU_AN_BASIC_ID,
+  PHAP_TU_AN_SPECIAL_ID,
+  PHAP_TU_AN_PASSIVE_ID,
+]
+
 export const PHAP_TU_NGO_DAO_WAY: PathWayDefinition = {
   id: 'ngo_dao',
   pathId: 'phap_tu',
@@ -178,10 +194,12 @@ export const PHAP_TU_NGO_DAO_WAY: PathWayDefinition = {
   techniqueId: 'ngo_dao_chan_quyet',
   // Former phap_tu_an kit — hidden way. Owns the same 'phap_tu' stat
   // domain (the shared PHAP_TU_WAY_STATS facet) so its MP-shield line
-  // passes the domain gate. skillIds intentionally absent: the kit is
-  // granted in a bespoke branch (the ult slot is a passive via the
-  // technique's innateSkillId, not a loadout skill). Modifier ids keep
-  // the ngo_dao name now that 'phap_tu_an' is no longer a path id.
+  // passes the domain gate. M9 — the two loadout actives ride the
+  // generic skillIds channel (learned + equipped at slots 0/1); the
+  // kit's third member is the dao passive carried by the technique's
+  // innateSkillId, not a loadout skill. Modifier ids keep the ngo_dao
+  // name now that 'phap_tu_an' is no longer a path id.
+  skillIds: [PHAP_TU_AN_BASIC_ID, PHAP_TU_AN_SPECIAL_ID],
   statModifiers: [
     {
       id: 'ngo_dao_linh_luc',
@@ -210,20 +228,8 @@ export const PHAP_TU_NGO_DAO_WAY: PathWayDefinition = {
   ],
   stats: PHAP_TU_WAY_STATS,
   offerGate: { requiresSkillCastLevel: { skillId: 'linh_bao', level: 3 } },
+  // Sealed hidden-path card at the ritual (named way + permanent-choice
+  // warning, no plain button) — the panel reads this flag, never the id.
+  sealedOffer: true,
 }
 
-// Ngo Dao required kit (review round-4, MEDIUM) — the ritual grants
-// exactly these three skills atomically: two loadout actives + the dao
-// passive carried by ngo_dao_chan_quyet.innateSkillId (the skillIds
-// tuple cannot express a passive member). Battle construction asserts
-// the full set is learned; a partial kit is corrupt progression state
-// and must fail loudly, never silently drop a slot. Re-exported from
-// CultivationPathKit so existing consumers keep their import site.
-export const PHAP_TU_AN_BASIC_ID = 'van_phap_tuy_tam'
-export const PHAP_TU_AN_SPECIAL_ID = 'da_phap_lien_tuyen'
-export const PHAP_TU_AN_PASSIVE_ID = 'ngo_dao_hon_don'
-export const PHAP_TU_AN_REQUIRED_SKILLS: readonly string[] = [
-  PHAP_TU_AN_BASIC_ID,
-  PHAP_TU_AN_SPECIAL_ID,
-  PHAP_TU_AN_PASSIVE_ID,
-]

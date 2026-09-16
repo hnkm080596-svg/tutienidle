@@ -118,18 +118,27 @@ export interface PathWayDefinition {
   // cannot overwrite player progress.
   realmRewards?: Readonly<Record<string, CultivationPathRealmReward>>
 
-  // Exactly 3 fixed skills into Skill Loadout slots 0/1/2 at path
-  // choice (the first tuple entry uses the 'attack_speed' execution
-  // policy but is still a normal loadout skill). Optional: no current
-  // way declares one — Kiem Tu basics come from the Kiem Pho orb
-  // preset, Phap Tu skills open through the Node Tree, The Tu resolves
-  // its kit at battle build, ngo_dao grants a bespoke set.
-  skillIds?: readonly [string, string, string]
+  // Skills learned + equipped into Skill Loadout slots IN ORDER at path
+  // choice (slot index = array position). M9 — the ngo_dao kit rides
+  // this channel too; its third member is a technique-carried passive,
+  // not a loadout skill, so it is not listed here.
+  skillIds?: readonly string[]
+
+  // Skills unequipped (NOT unlearned) from the loadout at ritual
+  // commit — the mortal-precursor strip. Declared per way so the
+  // ritual orchestrator never branches on concrete path/way ids.
+  unequipSkillIds?: readonly string[]
 
   // Ritual offer gate — consumed by isCultivationPathOffered, the
   // single predicate both the offer panel and chooseCultivationPath
   // consult.
   offerGate?: PathOfferGate
+
+  // M9 — the offer panel renders this way as a sealed hidden-path card
+  // (named way, permanent-choice warning, danger styling) instead of a
+  // plain choice button. Presentation flag on the way so the panel
+  // never branches on a concrete way id.
+  sealedOffer?: boolean
 
   // The combat HUD's path resource bar reads this flag (data-driven):
   // the way's battle participant carries the The pool

@@ -15,12 +15,12 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
 import {
   CULTIVATION_PATH_MODULES,
-  PHAP_TU_AN_REQUIRED_SKILLS,
   type CultivationPathId,
   type PathWayDefinition,
   type PathWayId,
 } from '@/core/player/CultivationPathKit'
 import { listOfferableWays } from '@/core/player/CultivationPathSystem'
+import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
@@ -68,24 +68,30 @@ const availableWays = computed(() => {
     )
 })
 
-// The hidden path's kit — names resolved live from the skill registry
-// so the card never drifts from authored content.
-const AN_KIT_SKILL_IDS = PHAP_TU_AN_REQUIRED_SKILLS
-
-const anKitSkillNames = computed(() =>
-  AN_KIT_SKILL_IDS.map(id => gameManager.skillManager.get(id)?.name ?? id),
-)
+// A sealed way's kit names — resolved live from the way declaration
+// (loadout skillIds + the technique-carried innate passive) so the card
+// never drifts from authored content.
+function sealedKitSkillNames(way: PathWayDefinition): string[] {
+  const skillIds = [...(way.skillIds ?? [])]
+  const innateId = gameManager.techniqueManager.get(way.techniqueId)?.innateSkillId
+  if (innateId) {
+    skillIds.push(innateId)
+  }
+  return skillIds.map(id => gameManager.skillManager.get(id)?.name ?? id)
+}
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
 // (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng
 // thay vì browser confirm() mặc định).
 const pendingChoice = ref<{ pathId: CultivationPathId; wayId: PathWayId } | null>(null)
 
-const pendingPathName = computed(() =>
+const pendingWay = computed(() =>
   pendingChoice.value
-    ? CULTIVATION_PATH_MODULES[pendingChoice.value.pathId].ways[pendingChoice.value.wayId]?.name ?? ''
-    : '',
+    ? CULTIVATION_PATH_MODULES[pendingChoice.value.pathId].ways[pendingChoice.value.wayId]
+    : undefined,
 )
+
+const pendingPathName = computed(() => pendingWay.value?.name ?? '')
 
 function choosePath(pathId: CultivationPathId, wayId: PathWayId) {
   pendingChoice.value = { pathId, wayId }
@@ -134,21 +140,24 @@ function close() {
 const isKiemTu = computed(() => {
   stateVersion.value
 
-  return player.cultivationPath === 'kiem_tu'
+  // M9 — way-strict module predicates, never the raw path id: a
+  // way-less/corrupt kiem_tu save is NOT treated as kiem (fail closed).
+  return isKiemTuHien(player) || isKiemTuNgu(player)
 })
 
-// Cultivation Path Framework (M6) — the hien/ngu way is canonical on
-// PlayerData.cultivationWay (the retired kiemTu.mode discriminator).
-// 'hien' (Kiem Pho) is the visible spec; 'ngu' (Ngu Kiem Dao) only
-// ever reads 'ngu' for a player who entered it at the ritual.
-const kiemTuMode = computed(() => {
+// Cultivation Path Framework (M6/M9) — the hien/ngu way is canonical on
+// PlayerData.cultivationWay, read through the module predicate (the
+// retired kiemTu.mode discriminator). 'hien' (Kiem Pho) is the visible
+// spec; 'ngu' (Ngu Kiem Dao) only ever reads 'ngu' for a player who
+// entered it at the ritual.
+const kiemTuWay = computed(() => {
   stateVersion.value
 
-  return player.cultivationWay === 'ngu' ? 'ngu' : 'hien'
+  return isKiemTuNgu(player) ? 'ngu' : 'hien'
 })
 
 const specNameDisplay = computed(() =>
-  kiemTuMode.value === 'ngu'
+  kiemTuWay.value === 'ngu'
     ? t('panels.quanKhi.specNames.nguKiemDao')
     : t('panels.quanKhi.specNames.kiemPho'),
 )
@@ -222,13 +231,14 @@ function removeOrbAt(index: number) {
 
       <div class="quan-khi-panel__choices">
         <template v-for="kit in availableWays" :key="`${kit.pathId}/${kit.wayId}`">
-          <!-- Sealed hidden-path card (Task 16) — renders ONLY when
-               the ngo_dao offer is eligible; names the way, carries the
-               permanent warning, no node-tree entry point. -->
-          <div v-if="kit.wayId === 'ngo_dao'" class="quan-khi-panel__hidden-card">
+          <!-- Sealed hidden-path card (Task 16, M9) — renders for any
+               way declaring sealedOffer (today: ngo_dao); names the
+               way, carries the permanent warning, no node-tree entry
+               point. -->
+          <div v-if="kit.way.sealedOffer" class="quan-khi-panel__hidden-card">
             <p class="quan-khi-panel__hidden-title">{{ kit.way.name }}</p>
             <p class="quan-khi-panel__hidden-desc">
-              {{ t('panels.quanKhi.sections.hiddenPath.description', { kit: anKitSkillNames.join(' · ') }) }}
+              {{ t('panels.quanKhi.sections.hiddenPath.description', { kit: sealedKitSkillNames(kit.way).join(' · ') }) }}
             </p>
             <p class="quan-khi-panel__hidden-warning">{{ t('panels.quanKhi.sections.hiddenPath.warning') }}</p>
             <GameButton
@@ -265,7 +275,7 @@ function removeOrbAt(index: number) {
           {{ t('panels.quanKhi.sections.kiemTuSpec.hintPrefix') }} <strong class="quan-khi-panel__route-name">{{ specNameDisplay }}</strong>{{ t('panels.quanKhi.sections.kiemTuSpec.hintSuffix') }}
         </p>
         <p class="quan-khi-panel__warning">
-          {{ kiemTuMode === 'ngu'
+          {{ kiemTuWay === 'ngu'
             ? t('panels.quanKhi.sections.kiemTuSpec.nguDescription')
             : t('panels.quanKhi.sections.kiemTuSpec.hienDescription') }}
         </p>
@@ -275,7 +285,7 @@ function removeOrbAt(index: number) {
     <!-- Kiem Pho preset editor — hien only (ngu never reads preset).
          Strip = current persisted sequence, palette = realm-unlocked
          orbs; both write through setKiemPhoPreset(). -->
-    <div v-if="isKiemTu && kiemTuMode === 'hien'" class="quan-khi-panel__card">
+    <div v-if="isKiemTu && kiemTuWay === 'hien'" class="quan-khi-panel__card">
       <div class="quan-khi-panel__route-card">
         <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.title') }}</p>
         <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.hint') }}</p>
@@ -323,7 +333,7 @@ function removeOrbAt(index: number) {
     <ConfirmModal
       :open="pendingChoice !== null"
       :title="t('panels.quanKhi.messages.confirmPathTitle')"
-      :message="pendingChoice?.wayId === 'ngo_dao'
+      :message="pendingWay?.sealedOffer
         ? t('panels.quanKhi.messages.confirmPathHiddenBody', { name: pendingPathName })
         : t('panels.quanKhi.messages.confirmPathBody', { name: pendingPathName })"
       danger

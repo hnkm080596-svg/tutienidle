@@ -28,6 +28,7 @@ import SkillDetailView from './skill-path/SkillDetailView.vue'
 import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
 import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
+import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
 import { isTheTuHien, isTheTuUngThe } from '@/core/the-tu/TheTuPath'
 import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
@@ -58,12 +59,18 @@ const theTuTreeTag = computed(() => {
   return undefined
 })
 
+const isKiemTuWay = computed(
+  // M9 — way-strict module predicates, never the raw path id: a
+  // way-less/corrupt kiem_tu save shows no tree (fail closed).
+  () => isKiemTuHien(player) || isKiemTuNgu(player),
+)
+
 const showTree = computed(
   () =>
     // M4 (R6): the Phap Tu element tree is ngu_hanh machinery — a
     // collapsed ('phap_tu','ngo_dao') player owns no element branches.
     isPhapTuNguHanh(player) ||
-    player.cultivationPath === 'kiem_tu' ||
+    isKiemTuWay.value ||
     theTuTreeTag.value !== undefined,
 )
 
@@ -169,7 +176,7 @@ const selectedSkillHasTree = computed(() => {
   // Kiem Tu + ca hai The Tu: cay co dinh cua path — luon hien, khong
   // phu thuoc skill dang chon o SkillPathList.
   if (
-    player.cultivationPath === 'kiem_tu' ||
+    isKiemTuWay.value ||
     isPhapTuNguHanh(player) ||
     theTuTreeTag.value !== undefined
   ) {
@@ -180,9 +187,10 @@ const selectedSkillHasTree = computed(() => {
 })
 
 const treeBranchTag = computed<string>(() => {
-  if (player.cultivationPath === 'kiem_tu') {
-    // M6 — cultivationWay is the discriminator (kiemTu.mode retired).
-    return player.cultivationWay === 'ngu' ? 'ngu_kiem' : 'kiem_pho'
+  if (isKiemTuWay.value) {
+    // M6/M9 — module predicates are the discriminator; inside a
+    // validated kiem pair, non-ngu is hien.
+    return isKiemTuNgu(player) ? 'ngu_kiem' : 'kiem_pho'
   }
 
   return theTuTreeTag.value ?? selectedBranch.value

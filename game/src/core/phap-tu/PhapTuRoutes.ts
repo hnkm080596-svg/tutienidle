@@ -131,7 +131,7 @@ export const PHAP_TU_ROUTES: Record<PhapTuRoute, RouteProfile> = {
 
 /**
  * Route profile for a PhapTuState — NEUTRAL when there is no state or
- * no route (INV-11). phap_tu_an players never reach this: route state
+ * no route (INV-11). ngo_dao players never reach this: route state
  * is not theirs.
  */
 export function resolveRouteProfile(state?: PhapTuState): RouteProfile {
@@ -210,7 +210,7 @@ export function applyRouteToTurnSkill(turnSkill: TurnSkillDefinition, profile: R
  */
 export function getRouteStatModifiers(player: PlayerData): StatModifier[] {
   // Review fix (HIGH-2): route bonuses are universal stats — gate on the
-  // owning path so leaked/dirty phapTu.route state on phap_tu_an or
+  // owning path so leaked/dirty phapTu.route state on ngo_dao or
   // kiem_tu players cannot inject crit/ailment modifiers.
   // M4 (R6): the WAY is the gate — a collapsed ('phap_tu','ngo_dao')
   // player owns no route machinery even with dirty phapTu state.

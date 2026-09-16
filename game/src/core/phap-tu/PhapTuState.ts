@@ -16,3 +16,16 @@ export interface PhapTuState {
 export function createPhapTuState(): PhapTuState {
   return { element: null, route: null }
 }
+
+/**
+ * M9 — the atomic {element, route} commit (INV-13) is owned HERE, on
+ * the state authority, not inline in the orchestrator: every writer of
+ * player.phapTu goes through this so the pair can never half-commit.
+ */
+export function commitPhapTuElementRoute(
+  player: { phapTu: PhapTuState },
+  element: ElementType,
+  route: PhapTuRoute,
+): void {
+  player.phapTu = { element, route }
+}

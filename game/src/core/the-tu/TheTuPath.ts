@@ -185,7 +185,9 @@ export const THE_TU_HIEN_WAY: PathWayDefinition = {
   techniqueId: 'kim_cang_bat_hoai_the',
   // The Tu Reimagined (T5) — root-mutex kit: the chosen progression
   // root (cuong_chien XOR tran_the) resolves the kit at battle build;
-  // no loadout tuple.
+  // no loadout tuple. M9 — the ritual strips the two Thể Tu mortal
+  // basics so a lingering tram/huy_quyen cannot occupy the mortal slot.
+  unequipSkillIds: ['tram', 'huy_quyen'],
   stats: THE_TU_HIEN_STATS,
 }
 
@@ -201,5 +203,7 @@ export const THE_TU_UNG_THE_WAY: PathWayDefinition = {
   // id).
   offerGate: { requiresSkillLevel: { skillId: 'huy_quyen', level: 3 } },
   usesTheResource: true,
+  // M9 — same mortal-basic strip as hien.
+  unequipSkillIds: ['tram', 'huy_quyen'],
   stats: THE_TU_UNG_THE_STATS,
 }

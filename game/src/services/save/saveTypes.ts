@@ -152,9 +152,9 @@ export interface FormationStackSave {
 // phase, không migration). Chi tiết xem saveVersion.ts.
 // version 65 (2026-09-16, cultivation-path-framework M2): player thêm
 // field TUỲ CHỌN `cultivationWay?: PathWayId` (way trong path, xem
-// core/player/CultivationPathKit.ts); `cultivationPath` vẫn union 5 id
-// legacy trong thời kỳ chuyển tiếp và giờ được validate enum. Save v64
-// bị từ chối — cùng convention mọi version trước.
+// core/player/CultivationPathKit.ts). M7 (v66): `cultivationPath` thu
+// còn union 3 base id, các id '_an' thành way. Save v64 trở xuống bị
+// từ chối — cùng convention mọi version trước.
 export interface GameSave {
   version: typeof CURRENT_SAVE_VERSION
 
