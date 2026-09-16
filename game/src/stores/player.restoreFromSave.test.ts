@@ -210,4 +210,28 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     // Identity committed on success — a third call converges via the guard.
     expect(player.restoreFromSave(save)).toEqual(result)
   })
+
+  // Mission A6 — foreign keys trong payload KHÔNG được vào $state: spread
+  // `...clonedPlayer` trước đây đưa cả key lạ lên store, rồi buildGameSave
+  // serialize lại → key rác tự nhân bản qua mọi save kế tiếp.
+  it('foreign keys trong save.player bị drop — không vào $state, không re-save', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({ name: 'clean' })
+
+    // Keys không khai báo trong PlayerData — mô phỏng save bị sửa tay /
+    // payload lạ.
+    const polluted = save.player as Record<string, unknown>
+    polluted.__evil = { nested: true }
+    polluted.unknownTopLevel = 'x'
+    ;(save.player.baseStats as Record<string, unknown>).__evilStat = 999
+
+    player.restoreFromSave(save)
+
+    const state = player.$state as Record<string, unknown>
+
+    expect(state.__evil).toBeUndefined()
+    expect(state.unknownTopLevel).toBeUndefined()
+    expect((state.baseStats as Record<string, unknown>).__evilStat).toBeUndefined()
+    expect(player.name).toBe('clean') // field hợp lệ vẫn restore
+  })
 })

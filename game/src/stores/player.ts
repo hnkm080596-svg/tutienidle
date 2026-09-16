@@ -354,6 +354,33 @@ export const usePlayerStore = defineStore('player', {
       // a restore — a plain assign only overwrites, never removes).
       const clonedPlayer = structuredClone(save.player)
 
+      // Mission A6 — whitelist before the spread: only keys declared by
+      // createDefaultPlayer() may enter $state. A foreign key in the
+      // payload (hand-edited save, foreign payload) would otherwise be
+      // spread onto the store AND re-serialized by every later
+      // buildGameSave — self-replicating junk.
+      const allowedPlayerKeys = new Set(Object.keys(createDefaultPlayer()))
+
+      for (const key of Object.keys(clonedPlayer)) {
+        if (!allowedPlayerKeys.has(key)) {
+          Reflect.deleteProperty(clonedPlayer, key)
+        }
+      }
+
+      // Same whitelist inside baseStats — migrateStatRecordKeys passes
+      // unknown keys through, so a foreign stat key would survive onto
+      // $state the same way.
+      const allowedStatKeys = new Set(Object.keys(createBaseStats()))
+      const migratedBaseStats: Record<string, number> = {}
+
+      for (const [key, value] of Object.entries(
+        migrateStatRecordKeys(clonedPlayer.baseStats),
+      )) {
+        if (allowedStatKeys.has(key)) {
+          migratedBaseStats[key] = value
+        }
+      }
+
       const restoredPlayer: PlayerData = {
         ...createDefaultPlayer(),
         ...clonedPlayer,
@@ -367,7 +394,7 @@ export const usePlayerStore = defineStore('player', {
         // record exactly once.
         baseStats: asBaseStats({
           ...createBaseStats(),
-          ...migrateStatRecordKeys(clonedPlayer.baseStats),
+          ...migratedBaseStats,
         }),
       }
 
