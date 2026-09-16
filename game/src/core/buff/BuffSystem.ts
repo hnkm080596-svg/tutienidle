@@ -480,12 +480,15 @@ export class BuffSystem {
     target: CombatEntity,
     targetBuffs: BuffPool,
     registry: BuffDefinitionCatalog,
+    // Lazy closure — a stored `Math.random` reference would bypass
+    // vi.spyOn interception and the session-RNG boundary (Mission C).
+    rng: () => number = () => Math.random(),
   ) {
     const targetBuffSystem = new BuffSystem(targetBuffs)
 
     for (const buff of this.pool.getAll()) {
       for (const effect of buff.effects) {
-        if (effect.type === 'onHitProc' && Math.random() < effect.chance) {
+        if (effect.type === 'onHitProc' && rng() < effect.chance) {
           const definition = registry.get(effect.appliesBuffId)
           targetBuffSystem.apply(definition, source, target, registry)
         }
@@ -504,6 +507,7 @@ export class BuffSystem {
     triggerEvent: 'onCastBegin' | 'onImpactLanded',
     registry: BuffDefinitionCatalog,
     context?: { attacker?: CombatEntity; hpDamage?: number },
+    rng: () => number = () => Math.random(),
   ): { firedFollowUp: boolean; reflectRequests: { attackerEntity: CombatEntity; amount: number }[] } {
     let firedFollowUp = false
     const reflectRequests: { attackerEntity: CombatEntity; amount: number }[] = []
@@ -511,7 +515,7 @@ export class BuffSystem {
     for (const buff of this.pool.getAll()) {
       for (const effect of buff.effects) {
         if (effect.type === 'reactiveTrigger' && effect.trigger === triggerEvent) {
-          if (Math.random() < effect.chance) {
+          if (rng() < effect.chance) {
             if (effect.appliesDefinitionId) {
               const definition = registry.get(effect.appliesDefinitionId)
               this.apply(definition, target, target, registry)

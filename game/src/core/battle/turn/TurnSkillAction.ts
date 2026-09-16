@@ -41,6 +41,14 @@ export interface TurnSkillBuffApplication {
   durationOverride?: number
   /** Kiem Tu combo capstones — apply() repeated N times (default 1). */
   stacks?: number
+  /**
+   * Mission C Task 10a — ports SkillEffect.stacksPerAffectedTarget
+   * (Hau Tho Thanh Luy): the buff lands with stacks = the number of
+   * action targets still ALIVE when the buff applies. Supersedes the
+   * authored "0 target -> no buff" clause: a whiffed-into-corpse edge
+   * still grants the base stack, consistent with `stacks ?? 1`.
+   */
+  stacksPerAffectedTarget?: boolean
   externalWardGrant?: { sourceMaxHpRatio: number }
 }
 

@@ -42,6 +42,11 @@ const UNSUPPORTED_EFFECT_FIELDS = [
   'spreadStackPercent',
   'spreadRefreshesPrimary',
   'stacksPerAffectedTarget',
+  // Mission C Task 10d — real authored fields (SkillEffect.ts:11,28;
+  // PhapTuChainSkills.ts) that the turn engine cannot execute; report
+  // them instead of silently dropping.
+  'scope',
+  'refresh',
   'grantsZone',
   'zoneElement',
   'swordZoneCharges',

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
+import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
@@ -76,6 +77,14 @@ function fixture() {
   return { battle, system, playerParticipant, enemyParticipant }
 }
 
+function playerSkill(): TurnSkillDefinition {
+  return { id: 'player_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } }
+}
+
+function enemySkill(): TurnSkillDefinition {
+  return { id: 'enemy_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } }
+}
+
 describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (tickPacing)', () => {
   it('tickPacing() grants the queued follow-up actor a bypass turn on the NEXT call, not just peekNextActor()', () => {
     const { battle, system, enemyParticipant } = fixture()
@@ -115,6 +124,49 @@ describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (t
     system.tickPacing(battle) // enemy's bypass turn
 
     expect(enemyParticipant.actionGauge).toBe(500)
+  })
+})
+
+describe('TurnBattleSystem — queuedExecutions drain order and dead actors (Mission C contract)', () => {
+  it('a queued execution resolves the SAME actor as a committed follow-up cast, before any gauge turn', () => {
+    const { battle, system, enemyParticipant } = fixture()
+
+    battle.queuedExecutions = [
+      { actorId: 'player', rootSkill: playerSkill(), source: 'repeat', multicastDepth: 0 },
+    ]
+
+    const actor = system.tickPacing(battle)
+
+    expect(actor?.id).toBe('player')
+    // The committed execution drains even though no gauge is full.
+    expect(battle.queuedExecutions).toBeUndefined()
+    // Enemy gauge untouched — the exec bypassed normal order.
+    expect(enemyParticipant.actionGauge).toBeLessThan(1000)
+  })
+
+  it('a queued execution for a dead actor drops silently — it never resolves', () => {
+    const { battle, system, enemyParticipant } = fixture()
+
+    // A second live enemy keeps the battle in 'fighting' — killing the
+    // queued actor outright would flip the battle to victory before the
+    // queue drains, which is a different contract.
+    const survivor = createCombatant({ id: 'enemy2', stats: createBaseStats({ speed: 10, might: 0 }) })
+    battle.enemies.push(makeParticipant('enemy2', survivor, 10, 2))
+
+    enemyParticipant.entity.alive = false
+    battle.queuedExecutions = [
+      { actorId: 'enemy', rootSkill: enemySkill(), source: 'repeat', multicastDepth: 0 },
+    ]
+
+    const playerHpBefore = battle.players[0]!.entity.currentHp
+    // Dead actor's entry is consumed and skipped; the call falls through
+    // to normal order (no gauge ready yet -> null this tick).
+    const actor = system.tickPacing(battle)
+
+    expect(battle.queuedExecutions).toBeUndefined()
+    expect(actor?.id).not.toBe('enemy')
+    // No in-flight action from the dead actor ever landed.
+    expect(battle.players[0]!.entity.currentHp).toBe(playerHpBefore)
   })
 })
 

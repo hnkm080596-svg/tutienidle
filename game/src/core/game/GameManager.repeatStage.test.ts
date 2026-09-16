@@ -61,7 +61,7 @@ describe('GameManager continuous repeat stage', () => {
     expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
   })
 
-  it('starts another spawn cycle in the same battle without restoring the player', () => {
+  it('runs a fresh battle per repeat cycle — stage binding, repeat arm and reward flow persist across cycles', () => {
     const gameManager = new GameManager()
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)

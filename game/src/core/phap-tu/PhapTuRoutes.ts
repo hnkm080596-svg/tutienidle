@@ -192,7 +192,10 @@ export function applyRouteToTurnSkill(turnSkill: TurnSkillDefinition, profile: R
 
   const addBonus = <T extends { stacks?: number }>(application: T): T => ({
     ...application,
-    stacks: (application.stacks ?? 0) + profile.ailmentStackBonus,
+    // Mission C Task 10c — an omitted stacks means 1 by engine default
+    // (TurnBattleSystem ailment.stacks ?? 1); the bonus adds to that
+    // implicit stack, not to zero.
+    stacks: (application.stacks ?? 1) + profile.ailmentStackBonus,
   })
 
   return {

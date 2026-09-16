@@ -169,3 +169,50 @@ describe('GameManager — manual mode pause-on-player-turn (Slice 7)', () => {
     expect(gameManager.submitTurnChoice('basic')).toBe(false)
   })
 })
+
+describe('manual mode — committed queued executions auto-resolve (Mission C contract)', () => {
+  // A repeatCasts/multicast execution is the remainder of an ALREADY
+  // COMMITTED cast: manual mode must not park it awaiting input, and it
+  // must resolve before any new gauge turn. A genuinely new player turn
+  // still pauses.
+  it('queued repeat execution resolves without pausing; the next real player turn still pauses', () => {
+    const { gameManager, combatSource } = startManualBattle()
+
+    // Give the player's basic a committed follow-up execution.
+    const participant = gameManager.getTurnBattle()!.players[0]!
+    participant.basic!.repeatCasts = 1
+
+    gameManager.setBattleManualMode(true)
+
+    for (let i = 0; i < 50 && !gameManager.isAwaitingManualTurnChoice(); i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+    }
+    expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
+
+    const turnsAtSubmit = gameManager.getTurnBattle()!.totalTurnsElapsed ?? 0
+    expect(gameManager.submitTurnChoice('basic')).toBe(true)
+    // Original cast resolves immediately.
+    expect(gameManager.getTurnBattle()!.totalTurnsElapsed ?? 0).toBe(turnsAtSubmit + 1)
+
+    // The queued repeat execution must drain on a later step WITHOUT the
+    // engine parking on AWAITING_INPUT in between — the first elapsed
+    // increment after submit is that committed execution.
+    let sawAwaiting = false
+    let queuedResolved = false
+    for (let i = 0; i < 60 && !queuedResolved; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+      if (gameManager.isAwaitingManualTurnChoice()) sawAwaiting = true
+      queuedResolved = (gameManager.getTurnBattle()!.totalTurnsElapsed ?? 0) > turnsAtSubmit + 1
+    }
+    expect(queuedResolved).toBe(true)
+    expect(sawAwaiting).toBe(false)
+
+    // Once the queue is empty, a genuinely new player turn still pauses.
+    let pausedAgain = false
+    for (let i = 0; i < 200 && !pausedAgain; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+      pausedAgain = gameManager.isAwaitingManualTurnChoice()
+    }
+    expect(pausedAgain).toBe(true)
+  })
+})

@@ -44,6 +44,23 @@ import { EventBus } from '../events/EventBus'
 import { BuffPool } from '../buff/BuffPool'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import { createBaseStats } from '../stats/StatBlock'
+import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
+import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
+import { KIEM_TU_BASIC } from '../../data/skill/TurnBasicAttacks'
+
+// The kiem_tu resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
+// surface is stubbed; nothing here is invoked for this path.
+const PATH_RUNTIME_STUB_DEPS = {
+  skillManager: {},
+  skillSystem: {},
+  skillTemplates: {},
+  nodeRegistry: { getAll: () => [] },
+  getNodeLevel: () => 0,
+  getPhapTuElement: () => undefined,
+  routeProfileProvider: () => {
+    throw new Error('unused')
+  },
+} as unknown as CultivationPathRuntimeDeps
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -699,13 +716,12 @@ describe('INV-15 — precursor lock (K3)', () => {
     gameManager.progressionOps.learnSkill('tram')
     gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
 
-    const authoredId = (
-      gameManager as unknown as {
-        authoredBasicSkillId(p: typeof player): string | undefined
-      }
-    ).authoredBasicSkillId(player)
+    // Mission C Task 9 — resolution now lives behind the path-runtime
+    // boundary; the resolved basic is the static authored def (object
+    // identity), not a Skill-backed conversion of the precursor 'tram'.
+    const runtime = resolveCultivationPathRuntime(player, PATH_RUNTIME_STUB_DEPS)
 
-    expect(authoredId).toBeUndefined()
+    expect(runtime.resolveBasic(player)).toBe(KIEM_TU_BASIC)
     expect(unlockedOrbs(1)).toContain('orb_dam')
   })
 })

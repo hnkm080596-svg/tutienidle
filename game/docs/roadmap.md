@@ -3034,6 +3034,21 @@ contract they establish:
   turn path, but it still stands in `GameManager.update()` and was NOT removed
   on this branch - it feeds the doomed real-time SkillSystem and its removal
   belongs to that engine's retirement, not here.
+- **Battle lifecycle constitution (Mission C, 2026-09):**
+  `GameManagerTurnBattleOps.beginBattleCycle(policy)` is the single
+  lifecycle owner. The four entry paths (`startBattle`,
+  `startBattleWithPlayer`, `startStage`, `restartTurnBattleCycle`)
+  delegate to it via `BattleCyclePolicy` (`fresh` / `stage` / `repeat` /
+  `tribulation` / `test`); `startStage` adds only stage binding and
+  presentation-session glue — the innermost call owns the cycle, so a
+  stage launch never runs two cycles. A repeat cycle is provably a FRESH
+  battle: the only state carried over is stage binding, repeat arm,
+  player identity, the accumulated loot session, and the run timer.
+  Everything else (HP/MP/ward, buffs, cooldowns, action gauge, survive
+  charges, charging state, external ward, The pool, turn counters and
+  queues, presentation/pending state, terminal guards) is rebuilt from
+  `PlayerData`. Playback tokens are monotonic across cycles and a stale
+  ack from a dead battle cannot drain a live cycle's pending state.
 - The world tick's cadence is unchanged (still 1 Hz via `useAppLifecycle`).
   `updateBattleFixedStep` no longer drives combat at all — it is auto-farm
   only, a wall-clock reward cycle with no `turnBattle`. Combat advances on
@@ -3043,6 +3058,30 @@ contract they establish:
   (`MainProcessClockSource`, via `electronAPI.combatClock`) with
   `backgroundThrottling: false`, so a minimized/backgrounded window does not
   starve combat of frames; the web build falls back to `RafClockSource`.
+- **Session RNG (Mission C, 2026-09):** one injectable random source is
+  minted per battle cycle in `beginBattleCycle` and threaded through the
+  combat path — `CombatSystem.setRandomSource`, `TurnBattleSystem`,
+  `BuffSystem`, stage/enemy pool picks, tag rolls, hidden-beast selection,
+  spawn placement, and dynamic-basic providers. `SeededRandom` makes a
+  whole battle replayable; `setBattleRngFactory` is the injection seam.
+  Loot/drop, alchemy, and pill economy deliberately stay on
+  `Math.random` — they are outside the combat-RNG boundary.
+- **Cultivation-path runtime (Mission C, 2026-09):** path-specific battle
+  integration (basic skill, special/ultimate payloads, max The, stat
+  domains, dynamic basics, survive sources, emblem slots) is dispatched
+  by `core/player/CultivationPathRegistry` keyed on `path:way`;
+  `GameManagerTurnBattleOps` consumes the `CultivationPathRuntime`
+  interface and holds no concrete path predicates.
+- **Skill semantics (Mission C, 2026-09):** `thanh_luy` self-buff stacks
+  per surviving affected target (alive-only, max-stack cap);
+  `elementApplicationPercent` feeds ailment chance via
+  `resolveAilmentApplicationChance` (base + stat, clamped to 1); route
+  `ailmentStackBonus` adds onto the engine's implicit 1 stack;
+  `SkillToTurnSkillConverter` reports authored `scope`/`refresh` as
+  unsupported rather than dropping them. `thach_hoa`'s
+  `onHitProc` direction (holder-attacks -> victim-applies) is the
+  authored contract — see the decision record in
+  `TurnBuffIdentity.test.ts`.
 
 **Measured evidence (real browser runs, not simulated):**
 

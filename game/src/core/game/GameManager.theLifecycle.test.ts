@@ -83,8 +83,9 @@ describe('auto-repeat cycle resets currentThe (INV-14)', () => {
 
     expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
 
-    // Simulate a finished pool: the entity object is carried wholesale
-    // into the next cycle, so without the reset this 80 would leak.
+    // Simulate a finished pool: under the fresh-battle contract (spec C1)
+    // the repeat cycle rebuilds the player side wholesale - this 80 must
+    // not reach cycle 2's entity.
     const carriedEntity = gameManager.getTurnBattle()!.players[0]!.entity
     carriedEntity.currentThe = 80
 
@@ -103,8 +104,10 @@ describe('auto-repeat cycle resets currentThe (INV-14)', () => {
 
     expect(seenEnemyIds.length).toBeGreaterThanOrEqual(2)
 
-    // Same entity object, new battle-instance scope — The is gone.
-    expect(gameManager.getTurnBattle()!.players[0]!.entity).toBe(carriedEntity)
-    expect(carriedEntity.currentThe).toBe(0)
+    // Fresh battle, fresh entity - the cycle-2 player entity is a NEW
+    // object whose The pool starts at 0.
+    const cycle2Entity = gameManager.getTurnBattle()!.players[0]!.entity
+    expect(cycle2Entity).not.toBe(carriedEntity)
+    expect(cycle2Entity.currentThe).toBe(0)
   })
 })

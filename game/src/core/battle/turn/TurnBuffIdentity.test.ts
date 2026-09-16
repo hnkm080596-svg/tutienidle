@@ -138,6 +138,14 @@ describe('ARCH-009 (M9) — on-hit proc writes to the VICTIM pool (AUD-C04)', ()
     expect(enemyStep.ccBlocked).toBe(true)
   })
 
+  // DECISION RECORD (Mission C, 2026-09-16 audit T3-19): `onHitProc` =
+  // holder-attacks -> victim-applies is the AUTHORED contract
+  // (docs/systems/buffs.md:18; LegacyBuffs.ts:225-228 marks the port
+  // "dung brief"). `thach_hoa` on an enemy intentionally lets that
+  // enemy's hits stun the player. The audit claim is recorded as STALE —
+  // do not flip the data. If a future design wants struck-direction
+  // semantics, the mechanism is a NEW `onStruckProc` effect type, not a
+  // data flip.
   it('thach_hoa on the ENEMY (authored direction): the enemy landing a hit stuns the player, not itself', () => {
     const eventBus = new EventBus()
     const { system } = makeEngine(eventBus)

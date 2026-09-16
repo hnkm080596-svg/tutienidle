@@ -6,6 +6,7 @@
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { CombatSystem } from '../../combat/CombatSystem'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
+import { resolveAilmentApplicationChance } from './AilmentChance'
 import { consumeGaugeAfterAction, advanceGauge, isGaugeReady } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets, executionCommitsCast, pickCompositePool, MAX_MULTICAST, type TurnSkillExecution, type TurnQueuedExecution } from './TurnSkillAction'
@@ -1029,7 +1030,7 @@ export class TurnBattleSystem {
     // punish-on-cast áp hard-CC buff lên actor, CC-check kế tiếp đọc state
     // mới → ccBlocked đúng theo spec §4.2 ordering.
     if (this.registry) {
-      actorBuffSystem.rollReactiveTrigger(actor.entity, 'onCastBegin', this.registry)
+      actorBuffSystem.rollReactiveTrigger(actor.entity, 'onCastBegin', this.registry, undefined, this.rng)
     }
 
     // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
@@ -1460,6 +1461,10 @@ export class TurnBattleSystem {
           : scaleActionDamage(chargedSkill.damage, suddenDeathMultiplier)
 
         for (const target of declared.chargeTargetIds) {
+          // Mid-impact death: a reflect/proc kill on the actor stops the
+          // rest of the action — the dead cannot finish their swing.
+          if (!actor.entity.alive) break
+
           const targetParticipant = opposingSide.find((p) => p.id === target)
 
           if (!targetParticipant || !targetParticipant.entity.alive) continue
@@ -1566,6 +1571,7 @@ export class TurnBattleSystem {
             : scaleActionDamage(pickedSkill.damage, declared.suddenDeathMultiplier)
 
           for (const target of declared.affected) {
+            if (!actor.entity.alive) break // mid-impact death (T3-22b)
             if (!target.entity.alive) continue
 
             const hitResult = this.resolveDeclaredHit(
@@ -1592,6 +1598,7 @@ export class TurnBattleSystem {
 
       if (declared.scaledDamage) {
         for (const target of declared.affected) {
+          if (!actor.entity.alive) break // mid-impact death (T3-22b)
           // Kiem Tu Reimagined Task 2 — multi-instance defs (Ngu phi kiem):
           // each instance runs the FULL landed-hit pipeline independently
           // and stops early when the target dies.
@@ -1636,6 +1643,7 @@ export class TurnBattleSystem {
       // this else is the THIRD branch of the original picks/scaledDamage/
       // non-damaging chain; with picks in flight it must stay silent.
       for (const target of declared.affected) {
+        if (!actor.entity.alive) break // mid-impact death (T3-22b)
         if (!target.entity.alive) continue
         targetIds.push(target.id)
 
@@ -1813,7 +1821,7 @@ export class TurnBattleSystem {
         // ARCH-009 (M9) — proc definitions are read from the ACTOR's
         // pool, but the resulting buff belongs to the HIT VICTIM's
         // pool (sourceId = actor, targetId = victim).
-        new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry)
+        new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry, this.rng)
 
         // Action Playback Task 5 + stat-system-reimagined Task 5 (D5)
         // — onImpactLanded counter trigger trên TARGET bị hit, gated
@@ -1826,7 +1834,7 @@ export class TurnBattleSystem {
           ? new BuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry, {
               attacker: actor.entity,
               hpDamage: hitResult.hpDamage,
-            })
+            }, this.rng)
           : { firedFollowUp: false, reflectRequests: [] }
 
         if (firedFollowUp) {
@@ -1929,7 +1937,14 @@ export class TurnBattleSystem {
     // Kiem Tu Reimagined Task 11 — combo capstones may declare N stacks;
     // each apply() call adds one stack under 'stack' stackMode and is
     // idempotent under 'refresh'. Default 1 = previous behavior.
-    const stacks = Math.max(1, buffSpec.stacks ?? 1)
+    // Mission C Task 10a — stacksPerAffectedTarget ports the authored
+    // SkillEffect clause: stacks = still-alive action targets (a dead
+    // target is not "imprisoned"). Math.max(1, ...) intentionally
+    // supersedes the authored "0 target -> no buff" clause — a whiffed-
+    // into-corpse edge still grants the base stack (stacks ?? 1 parity).
+    const stacks = buffSpec.stacksPerAffectedTarget
+      ? Math.max(1, actionTargets.filter((t) => t.entity.alive).length)
+      : Math.max(1, buffSpec.stacks ?? 1)
     const duration = buffSpec.durationOverride ?? buffSpec.duration
 
     // The Tu Reimagined (plan Task 6/11) — the application resolves its
@@ -2045,10 +2060,11 @@ export class TurnBattleSystem {
         : scaleActionDamage(extraDef.damage, declared.suddenDeathMultiplier)
 
       for (const target of extraTargets) {
+        if (!actor.entity.alive) break // mid-impact death (T3-22b)
         const count = extraDef.instances?.count ?? 1
 
         for (let i = 0; i < count; i++) {
-          if (!target.entity.alive) break
+          if (!target.entity.alive || !actor.entity.alive) break
 
           const opts = extraDef.instances?.perInstanceOptions?.(i, target.entity)
           const result = this.resolveDeclaredHit(battle, actor, target, scaled, extraDef, actor.canInitiateWuxingReactions === true, declared, opts)
@@ -2938,7 +2954,9 @@ export class TurnBattleSystem {
     for (const ailment of ailments) {
       // Task 11 — ailment rolls route through the injected rng (same
       // deterministic seam as composite picks and multicast rolls).
-      if (this.rng() < ailment.chance) {
+      // Mission C Task 10b — elementApplicationPercent adds to the base
+      // chance (legacy SkillEffectSystem:294 parity).
+      if (this.rng() < resolveAilmentApplicationChance(ailment.chance, actor.entity.stats.elementApplicationPercent)) {
         // Skip an unresolvable ailment id gracefully — same try/catch
         // pattern as the bossTrigger lookup in declareActorAction.
         let definition: BuffDefinition | undefined

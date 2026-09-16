@@ -3,17 +3,21 @@
  * tách ra từ ExplorationSystem (trước đây có riêng 1 bản
  * randomInt() private) để ExplorationSystem lẫn loot-khi-giết-quái
  * (xem GameManager.grantBattleRewardIfNeeded()) dùng chung 1 nguồn.
+ *
+ * Mission C Task 8 — optional trailing `rng` param: the combat session
+ * threads its seeded RNG through; economy callers leave it at the
+ * Math.random default (out of the session-RNG boundary).
  */
-export function randomInt(min: number, max: number): number {
+export function randomInt(min: number, max: number, rng: () => number = Math.random): number {
   const low = Math.ceil(min)
 
   const high = Math.floor(max)
 
-  return Math.floor(Math.random() * (high - low + 1)) + low
+  return Math.floor(rng() * (high - low + 1)) + low
 }
 
-export function rollChance(chance: number): boolean {
-  return Math.random() < chance
+export function rollChance(chance: number, rng: () => number = Math.random): boolean {
+  return rng() < chance
 }
 
 export interface WeightedEntry<T> {
@@ -27,10 +31,10 @@ export interface WeightedEntry<T> {
  * bị (xem EquipmentQuality.ts) và bất kỳ chỗ nào khác cần random
  * không đều.
  */
-export function weightedRandom<T>(entries: WeightedEntry<T>[]): T {
+export function weightedRandom<T>(entries: WeightedEntry<T>[], rng: () => number = Math.random): T {
   const totalWeight = entries.reduce((sum, entry) => sum + entry.weight, 0)
 
-  let roll = Math.random() * totalWeight
+  let roll = rng() * totalWeight
 
   for (const entry of entries) {
     roll -= entry.weight

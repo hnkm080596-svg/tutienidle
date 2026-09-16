@@ -5,6 +5,23 @@ import { SKILLS } from '../../data/skill/Skills'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { freshKiemTuState, MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
+import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
+import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
+import { KIEM_TU_BASIC } from '../../data/skill/TurnBasicAttacks'
+
+// The kiem_tu resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
+// surface is stubbed; nothing here is invoked for this path.
+const PATH_RUNTIME_STUB_DEPS = {
+  skillManager: {},
+  skillSystem: {},
+  skillTemplates: {},
+  nodeRegistry: { getAll: () => [] },
+  getNodeLevel: () => 0,
+  getPhapTuElement: () => undefined,
+  routeProfileProvider: () => {
+    throw new Error('unused')
+  },
+} as unknown as CultivationPathRuntimeDeps
 
 // Kiem Tu Reimagined (spec 2026-09-15 K1/K3/K19) — path choice commits
 // way 'hien' with the canonical fresh state; NO route lock, no
@@ -113,13 +130,11 @@ describe('K3 — mortal precursor lock post-path', () => {
     // The authored-skill seam: post-path, no Skill object backs the
     // basic (orbs take over at Task 6; the static KIEM_TU_BASIC fallback
     // — which coincidentally carries id 'tram' — is a separate def with
-    // no authored scaling/cast-count semantics).
-    const authoredId = (
-      gameManager as unknown as {
-        authoredBasicSkillId(p: typeof player): string | undefined
-      }
-    ).authoredBasicSkillId(player)
+    // no authored scaling/cast-count semantics). Mission C Task 9 moved
+    // the resolution behind the path-runtime boundary — assert through
+    // it: the resolved basic IS the static authored def, by identity.
+    const runtime = resolveCultivationPathRuntime(player, PATH_RUNTIME_STUB_DEPS)
 
-    expect(authoredId).toBeUndefined()
+    expect(runtime.resolveBasic(player)).toBe(KIEM_TU_BASIC)
   })
 })
