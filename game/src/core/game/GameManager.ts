@@ -19,10 +19,9 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffDefinition'
 
 import { NodeRegistry } from '../progression/NodeRegistry'
-import { aggregateTurnSkillResourceModifiers } from '../progression/NodeSystem'
 
 import { SkillManager } from '../skill/SkillManager'
-import { CAST_LEVELING_THRESHOLDS, SkillSystem } from '../skill/SkillSystem'
+import { SkillSystem } from '../skill/SkillSystem'
 import { PassiveSystem } from '../skill/PassiveSystem'
 import type { Skill } from '../skill/Skill'
 
@@ -140,14 +139,14 @@ import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
 import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
-import { applyAnKitToBasic, applyAnKitToSpecial } from '../../data/skill/TurnAnKitSkills'
 import {
-  PHAP_TU_AN_BASIC_ID,
-  PHAP_TU_AN_PASSIVE_ID,
-  PHAP_TU_AN_REQUIRED_SKILLS,
-  PHAP_TU_AN_SPECIAL_ID,
-} from '../player/CultivationPathKit'
-import { ELEMENT_ORDER } from '../element/ElementLabels'
+  NEUTRAL_ROUTE_PROFILE,
+  resolveRouteProfile,
+  type RouteProfile,
+} from '../phap-tu/PhapTuRoutes'
+import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
+import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
+import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 
 
 
@@ -161,37 +160,10 @@ import type {
   FreezeReason,
 } from '../battle/turn/CombatClock'
 import type { TokenState } from '../battle/turn/TurnToken'
-import type { TurnSkillDefinition, ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
+import type { ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
-import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
-import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
-import { PHAP_TU_EMPOWERED_ULTS } from '../../data/skill/PhapTuEmpoweredUlts'
-import type { ElementType } from '../element/ElementType'
-import {
-  buildTheTuAnKit,
-  buildTheTuKit,
-  type TheTuAnKit,
-  type TheTuKit,
-} from '../../data/skill/TheTuSkills'
-import { collectTheTuKitModifiers } from '../the-tu/TheTuKitModifiers'
-import { collectTheTuAnMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
-import { TheTuBatTuSurvival } from '../the-tu/TheTuBatTuSurvival'
-import { isTheTuHien, isTheTuUngThe } from '../the-tu/TheTuPath'
-import { isKiemTuHien, isKiemTuNgu } from '../kiem-tu/KiemTuPath'
-import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
-import {
-  NEUTRAL_ROUTE_PROFILE,
-  PHAP_TU_EMPOWERMENT_THE_THRESHOLD,
-  PHAP_TU_THE_GAIN_BASIC,
-  PHAP_TU_THE_GAIN_SPECIAL,
-  applyRouteToTurnSkill,
-  resolveMaxThe,
-  resolveRouteProfile,
-  type RouteProfile,
-} from '../phap-tu/PhapTuRoutes'
-import { isPhapTuNgoDao, isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
 
 /**
  * GameManager là orchestrator (2026-08-24 refactor — tách business logic
@@ -771,25 +743,21 @@ export class GameManager {
       bankPassiveCarry: (player) => this.passiveSystem.bankBattleCarryStacks(player),
       seedPassiveCarry: (player) => this.passiveSystem.seedBattleCarryStacks(player),
       buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
-      resolvePlayerBasicAttack: (player) => this.resolvePlayerBasicAttack(player),
-      resolvePlayerSpecialUltimate: (player) => this.resolvePlayerSpecialUltimate(player),
-      // Task 8 — The cap snapshot: query-derived from nodeLevels
-      // (truong_the_<element>, 'no' route), never persisted.
-      resolvePlayerMaxThe: (player) => resolveMaxThe(this.nodeRegistry, player),
+      // Mission C Task 9 — the ONLY path-dispatch call left in the
+      // orchestration layer: every basic/special/maxThe/provider/survive
+      // resolution funnels through the registry runtime.
+      resolvePathRuntime: (player) =>
+        resolveCultivationPathRuntime(player, {
+          skillManager: this.skillManager,
+          skillSystem: this.skillSystem,
+          skillTemplates: this.skillTemplates,
+          nodeRegistry: this.nodeRegistry,
+          getNodeLevel: (nodeId, p) => this.progressionOps.getNodeLevel(nodeId, p),
+          getPhapTuElement: () => this.progressionOps.getPhapTuElement(),
+          routeProfileProvider: this.routeProfileProvider,
+        }),
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
       getProgressionNodes: () => this.nodeRegistry.getAll(),
-      // The Tu Reimagined (plan Task 9, D9) — Cuong Chien only: the
-      // survival source reads the participant's live ultimate slot and
-      // buff pool; node-resolved duration comes off the baked kit clone.
-      buildTheTuBatTuSurvival: (player, participant) => {
-        if (!isTheTuHien(player)) return undefined
-        if (this.progressionOps.getNodeLevel('cuong_chien', player) <= 0) return undefined
-
-        return new TheTuBatTuSurvival({
-          ultimateSlot: () => participant.ultimate,
-          buffs: participant.buffs,
-        })
-      },
     })
 
     // Tick orchestration (C3 split) - constructed LAST because it reads
@@ -875,422 +843,9 @@ export class GameManager {
     this.turnBattleOps.startBattle(player, enemy)
   }
 
-  /**
-   * M10 (ARCH-008) — the production basic resolves through the canonical
-   * Skill -> TurnSkillDefinition pipeline (SkillSystem.getEffectiveSkill
-   * + toTurnSkillDefinition), so authored level/cast scaling, damage
-   * components and ailments reach the real turn engine. Mirrors
-   * resolvePlayerSpecialUltimate()'s path.
-   *
-   * Unlearned/missing authored basics degrade to GENERIC_PHYSICAL_BASIC —
-   * honest "no skill" melee. Converter REJECTION is different: the
-   * phap_tu ways rethrow (authored-data defect must surface), while
-   * kiem_tu falls back to its authored static TurnSkillDefinition. The
-   * basic slot is cadence-free by design (every-turn swing), so converted
-   * output is normalized to cooldownTurns 0 and no resource cost.
-   *
-   * Mortal/pham_nhan players resolve to learned `tram` (auto-granted at
-   * creation): the engine reports its casts as 'tram', which feeds
-   * skillCastCounts. The_tu keeps the authored generic-melee mapping.
-   */
-  private resolvePlayerBasicAttack(player: PlayerData): TurnSkillDefinition {
-    this.assertNgoDaoKitLearned(player)
-
-    const authoredBasicId = this.authoredBasicSkillId(player)
-    const skill = authoredBasicId ? this.skillManager.get(authoredBasicId) : undefined
-
-    // Review round-3 (MEDIUM): a REQUIRED phap basic that isn't learned
-    // is corrupt progression state (the element commit / An ritual grants
-    // it atomically). Fail loudly — degrading to generic melee would
-    // silently strip the path's kit. (ngo_dao is already covered by
-    // assertNgoDaoKitLearned above; kept for defense in depth.)
-    if (
-      skill === undefined &&
-      authoredBasicId !== undefined &&
-      (isPhapTuNguHanh(player) || isPhapTuNgoDao(player))
-    ) {
-      throw new Error(
-        `[GameManager] required basic "${authoredBasicId}" is not learned for path "${player.cultivationPath}" — corrupt progression state`,
-      )
-    }
-
-    if (skill) {
-      const effective = this.skillSystem.getEffectiveSkill(skill)
-      const unsupported = collectUnsupportedSkillSemantics(skill, effective)
-
-      if (unsupported.length > 0) {
-        console.warn(
-          `[GameManager] basic "${skill.id}" executes partially — ` +
-            `unsupported authored semantics: ${unsupported.join(', ')}`,
-        )
-      }
-
-      try {
-        // Route seam 2 (post-conversion): the converter stays generic —
-        // ailmentStackBonus lands on the built definition here.
-        const converted = applyRouteToTurnSkill(
-          toTurnSkillDefinition(skill, effective),
-          this.routeProfileProvider(skill.id),
-        )
-
-        // Task 11 — the An basic carries its composite pick (uniform
-        // element_basic pool) plus `multicast` when the player owns the
-        // ngo_dao_hon_don dao passive (granted at the ritual).
-        const resolved =
-          isPhapTuNgoDao(player)
-            ? applyAnKitToBasic(
-                converted,
-                this.skillManager.has(PHAP_TU_AN_PASSIVE_ID),
-                this.resolveAnElementBasicPool(),
-              )
-            : converted
-
-        return {
-          ...this.applyPhapTuTheGains(resolved, player, PHAP_TU_THE_GAIN_BASIC),
-          cooldownTurns: 0,
-          resourceType: 'none',
-          resourceCost: undefined,
-        }
-      } catch (error) {
-        // Review round-2 (LOW): phap paths have no static fallback — the
-        // PHAP_TU_BASICS table was a second authority that drifted from
-        // authored skills. A converter rejection is an authored-data
-        // defect; fail loudly instead of silently running wrong gameplay.
-        if (
-          isPhapTuNguHanh(player) ||
-          isPhapTuNgoDao(player)
-        ) {
-          throw error
-        }
-
-        console.warn(
-          `[GameManager] basic "${skill.id}" rejected by strict converter — falling back to static build basic:`,
-          error instanceof Error ? error.message : error,
-        )
-      }
-    }
-
-    // M9 — content-map lookup keyed on the path id, not a literal
-    // branch: builds with a static authored basic resolve here (today
-    // only kiem_tu); every other path falls through to its kit/melee.
-    const authoredBasic = player.cultivationPath
-      ? BASIC_ATTACKS_BY_BUILD[player.cultivationPath]
-      : undefined
-
-    if (authoredBasic) {
-      return authoredBasic
-    }
-
-    if (isTheTuHien(player)) {
-      // The Tu Reimagined (spec section 5, INV-3) — root-owned kit, else
-      // the generic melee fallback only.
-      return this.resolveTheTuKit(player)?.basic ?? GENERIC_PHYSICAL_BASIC
-    }
-
-    if (isTheTuUngThe(player)) {
-      // Spec section 6.1 — fixed kit granted at path choice; the built
-      // clone's grantsBuffsAtBuild plants ung_the + owned-root markers.
-      return this.resolveTheTuAnKit(player).basic
-    }
-
-    return GENERIC_PHYSICAL_BASIC
-  }
-
-  /**
-   * The Tu Reimagined (plan Task 6) — resolve the owned branch root
-   * (cuong_chien XOR tran_the, excludesNode mutex) into a participant-
-   * local kit clone with collectTheTuKitModifiers baked in. No root ->
-   * undefined (INV-3 fallback is the caller's job).
-   */
-  private resolveTheTuKit(player: PlayerData): TheTuKit | undefined {
-    const mods = collectTheTuKitModifiers(this.nodeRegistry, player)
-
-    if (this.progressionOps.getNodeLevel('cuong_chien', player) > 0) {
-      return buildTheTuKit('cuong_chien', mods)
-    }
-
-    if (this.progressionOps.getNodeLevel('tran_the', player) > 0) {
-      return buildTheTuKit('tran_the', mods)
-    }
-
-    return undefined
-  }
-
-  /**
-   * The Tu Reimagined (plan Task 14) — the An kit is fixed at path
-   * choice (spec 6.1); owned roots (ho_mon/phan_mon/tro_mon, non-mutex
-   * T9) only decide which mechanic markers get planted on the built
-   * basic clone's grantsBuffsAtBuild.
-   */
-  private resolveTheTuAnKit(player: PlayerData): TheTuAnKit {
-    const ownedRoots = (['ho_mon', 'phan_mon', 'tro_mon'] as const).filter(
-      (root) => this.progressionOps.getNodeLevel(root, player) > 0,
-    )
-
-    // Plan Task 20 — trunk economy + branch riders ride the one locked
-    // channel; baked into participant-local marker/payload clones here.
-    const mods = collectTheTuAnMechanicModifiers(this.nodeRegistry, player)
-
-    return buildTheTuAnKit(ownedRoots, mods)
-  }
-
-  /**
-   * M10 (ARCH-008) — which authored Skill backs this build's basic. Any
-   * future non-elemental path (e.g. a revived the_tu) authors generic
-   * melee — no skill — until its kit is authored.
-   */
-  private authoredBasicSkillId(player: PlayerData): string | undefined {
-    // Kiem Tu Reimagined (spec 2026-09-15 K3) — tram is a MORTAL
-    // precursor: once any path is chosen it is no longer the basic.
-    // kiem_tu basics resolve through the dynamicBasic orb provider
-    // (Task 6); a way-strict predicate keeps a corrupt pair fail-
-    // closed here while still yielding undefined via the generic
-    // any-path catch-all below.
-    if (isKiemTuHien(player) || isKiemTuNgu(player)) {
-      return undefined
-    }
-
-    if (isPhapTuNguHanh(player)) {
-      const element = this.progressionOps.getPhapTuElement()
-
-      return element ? PHAP_TU_KIT_IDS[element]?.[0] : undefined
-    }
-
-    // Phap Tu An (Task 7) — its basic is the composite skill granted at
-    // the ritual; the element pick happens inside its resolution (T11).
-    if (isPhapTuNgoDao(player)) {
-      return PHAP_TU_AN_BASIC_ID
-    }
-
-    // Future path ids (none exist in CultivationPathId today) author
-    // generic melee, not tram.
-    if (player.cultivationPath !== undefined) {
-      return undefined
-    }
-
-    // Mortal / pham_nhan — the slot-0 loadout occupant is the player's
-    // chosen basic-tier skill (spec 2026-09-15 section 2.3: huy_quyen
-    // is cast as a basic while mortal, its casts feeding the ung_the
-    // offer gate). Restricted to the cast-leveled basics family — any
-    // other slot-0 occupant (e.g. bat_kiem_thuat) keeps the creation-
-    // granted tram as the combat basic.
-    const equipped = this.skillManager.getEquippedInSlot(0)
-
-    if (equipped && equipped.id in CAST_LEVELING_THRESHOLDS) {
-      return equipped.id
-    }
-
-    return 'tram'
-  }
-
-  /**
-   * Review round-4 (MEDIUM) — the ngo_dao kit is a fixed three-skill
-   * set granted atomically at the ritual (PHAP_TU_AN_REQUIRED_SKILLS is
-   * the single authority). A save/registry missing ANY member is corrupt
-   * progression state — fail loudly at battle build instead of silently
-   * dropping the special button or the dao multicast. Called from both
-   * battle-build resolvers so each enforces the contract independently.
-   */
-  private assertNgoDaoKitLearned(player: PlayerData) {
-    if (!isPhapTuNgoDao(player)) {
-      return
-    }
-
-    const missing = PHAP_TU_AN_REQUIRED_SKILLS.filter(
-      (skillId) => !this.skillManager.has(skillId),
-    )
-
-    if (missing.length > 0) {
-      throw new Error(
-        `[GameManager] ngo_dao kit incomplete — missing learned skills: ${missing.join(', ')}`,
-      )
-    }
-  }
-
-  /**
-   * Review fix (HIGH-1) — the An composite pool is the CANONICAL
-   * conversion of the five authored element basics (PHAP_TU_KIT_IDS[el][0]
-   * templates through getEffectiveSkill + toTurnSkillDefinition), not a
-   * static duplicate table. A missing/invalid template throws here —
-   * authoring errors must surface loudly at battle build, never silently
-   * shrink the pick pool.
-   */
-  private resolveAnElementBasicPool(): TurnSkillDefinition[] {
-    return ELEMENT_ORDER.map((element) => {
-      const templateId = PHAP_TU_KIT_IDS[element][0]
-      const template = this.skillTemplates.get(templateId)
-
-      if (!template) {
-        throw new Error(`An kit element pool: skill template "${templateId}" is not registered`)
-      }
-
-      return toTurnSkillDefinition(template, this.skillSystem.getEffectiveSkill(template))
-    })
-  }
-
-  /**
-   * Phase A3 (2026-09-07) — resolve the player's special/ultimate
-   * TurnSkillDefinitions for Pháp Tu builds, via the
-   * Skill→TurnSkillDefinition converter. Specialization resolution is
-   * entirely SkillSystem.getEffectiveSkill()'s job — this method only
-   * reads its output. Mirrors resolvePlayerBasicAttack()'s path/element
-   * branching. Kiếm Tu returns {} — its special/ultimate stay in
-   * TurnBattleAdapter's static buildId maps (BAT_KIEM_THUAT / the A3
-   * Task 4 ultimate), which are native turn-based content, not Skill
-   * objects.
-   */
-  private resolvePlayerSpecialUltimate(
-    player: PlayerData,
-  ): {
-    special?: TurnSkillDefinition
-    ultimate?: TurnSkillDefinition
-    reactivePayloads?: Record<string, TurnSkillDefinition>
-    maxThe?: number
-  } {
-    // Phap Tu An (Task 7) — the special is the repeat-cast skill granted
-    // at the ritual; the ult slot is a passive (ngo_dao_hon_don), no
-    // ultimate TurnSkillDefinition.
-    if (isPhapTuNgoDao(player)) {
-      this.assertNgoDaoKitLearned(player)
-
-      const specialSkill = this.skillManager.get(PHAP_TU_AN_SPECIAL_ID)
-
-      return {
-        special: specialSkill
-          ? applyAnKitToSpecial(
-              toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill)),
-              this.resolveAnElementBasicPool(),
-            )
-          : undefined,
-      }
-    }
-
-    // The Tu Reimagined (plan Task 6) — Hien kits are native
-    // TurnSkillDefinitions resolved by owned root (see resolveTheTuKit).
-    if (isTheTuHien(player)) {
-      const kit = this.resolveTheTuKit(player)
-
-      return kit ? { special: kit.special, ultimate: kit.ultimate } : {}
-    }
-
-    // Spec section 6.1 — the fixed An kit (special/ultimate are not
-    // root-gated; roots gate the reactive mechanics via markers).
-    if (isTheTuUngThe(player)) {
-      const kit = this.resolveTheTuAnKit(player)
-
-      return {
-        special: kit.special,
-        ultimate: kit.ultimate,
-        reactivePayloads: kit.reactivePayloads,
-        maxThe: kit.maxThe,
-      }
-    }
-
-    if (!isPhapTuNguHanh(player)) {
-      return {}
-    }
-
-    const element = this.progressionOps.getPhapTuElement()
-
-    if (!element) {
-      return {}
-    }
-
-    const [, specialId, ultimateId] = PHAP_TU_KIT_IDS[element]
-
-    const specialSkill = this.skillManager.get(specialId)
-    const ultimateSkill = this.skillManager.get(ultimateId)
-
-    return {
-      special: specialSkill
-        ? this.applyPhapTuTheGains(
-            applyRouteToTurnSkill(
-              toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill)),
-              this.routeProfileProvider(specialSkill.id),
-            ),
-            player,
-            PHAP_TU_THE_GAIN_SPECIAL,
-          )
-        : undefined,
-      ultimate: ultimateSkill
-        ? this.applyPhapTuEmpowerment(
-            this.applyPhapTuTheGains(
-              applyRouteToTurnSkill(
-                toTurnSkillDefinition(ultimateSkill, this.skillSystem.getEffectiveSkill(ultimateSkill)),
-                this.routeProfileProvider(ultimateSkill.id),
-              ),
-              player,
-              0,
-            ),
-            player,
-            element,
-          )
-        : undefined,
-    }
-  }
-
-  /**
-   * Task 10 — attach the god-ult empowerment to the equipped chain-E
-   * ultimate at battle build. Gated on owning `linh_ngo_<godUltId>`
-   * (the engine stays dumb — the gate lives in orchestration, A8); the
-   * route profile picks the payload variant ('dot' -> detonate, 'no' ->
-   * nuke, none -> nuke default). The payload itself is the raw
-   * PHAP_TU_EMPOWERED_ULTS entry — route direct/ailment factors already
-   * shaped the base form; the empowered form's route expression IS its
-   * variant choice.
-   */
-  private applyPhapTuEmpowerment(
-    def: TurnSkillDefinition,
-    player: PlayerData,
-    element: ElementType,
-  ): TurnSkillDefinition {
-    const godUltId = PHAP_TU_ULTIMATE_IDS[element]
-
-    if ((player.nodeLevels?.[`linh_ngo_${godUltId}`] ?? 0) <= 0) {
-      return def
-    }
-
-    const variant = resolveRouteProfile(player.phapTu).empoweredUlt ?? 'nuke'
-    const empowered = PHAP_TU_EMPOWERED_ULTS[element]?.[variant]
-
-    return empowered
-      ? {
-          ...def,
-          empowerment: { theThreshold: PHAP_TU_EMPOWERMENT_THE_THRESHOLD, empowered },
-        }
-      : def
-  }
-
-  /**
-   * Task 8 — attach the authored The-gain fields to a phap_tu kit
-   * TurnSkillDefinition at battle build. Base values come from
-   * PHAP_TU_THE_GAIN_* (basic +5 / special +15 / ultimate +0); the 'no'
-   * route profile contributes theGainOnCrit; tu_the_<element> nodes add
-   * per-level deltas via aggregateTurnSkillResourceModifiers — all of it
-   * scoped to this authored skill id (no leak to other elements, Kiem
-   * Tu, or mortal skills). Non-ngu_hanh ways (incl. ngo_dao — its
-   * kit has no The loop) return the def unchanged.
-   */
-  private applyPhapTuTheGains(
-    def: TurnSkillDefinition,
-    player: PlayerData,
-    baseGainOnLandedCast: number,
-  ): TurnSkillDefinition {
-    if (!isPhapTuNguHanh(player)) {
-      return def
-    }
-
-    const nodeMods = aggregateTurnSkillResourceModifiers(this.nodeRegistry, player).get(def.id)
-    const theGainOnLandedCast = baseGainOnLandedCast + (nodeMods?.theGainOnLandedCast ?? 0)
-    const theGainOnCrit =
-      (resolveRouteProfile(player.phapTu).critTheGain ?? 0) + (nodeMods?.theGainOnCrit ?? 0)
-
-    return {
-      ...def,
-      ...(theGainOnLandedCast > 0 ? { theGainOnLandedCast } : {}),
-      ...(theGainOnCrit > 0 ? { theGainOnCrit } : {}),
-    }
-  }
+  // Mission C Task 9 — the path-integration resolvers that lived here
+  // moved to src/core/player/CultivationPathRegistry.ts (the single
+  // dispatch site); the ops consume the runtime via resolvePathRuntime.
 
   /** Tr?ng thï¿½i turn-based hi?n t?i ï¿½ consumer n?i b? flip d?n sang dï¿½y. */
   getTurnBattle(): TurnBattle | null {
@@ -1340,6 +895,17 @@ export class GameManager {
    */
   setBattleRngFactory(factory: (() => () => number) | undefined): void {
     this.turnBattleOps.setBattleRngFactory(factory)
+  }
+
+  /**
+   * Mission C Task 9 — dev/test seam mirroring setBattleRngFactory:
+   * override the cultivation-path runtime resolver (e.g. a test-only
+   * fake_path runtime). `undefined` restores the registry dispatch.
+   */
+  setPathRuntimeResolver(
+    resolver: ((player: PlayerData) => CultivationPathRuntime) | undefined,
+  ): void {
+    this.turnBattleOps.setPathRuntimeResolver(resolver)
   }
 
   freezeCombat(reason: FreezeReason): void {

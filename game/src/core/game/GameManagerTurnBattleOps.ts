@@ -1,18 +1,8 @@
 import type { SessionRef } from '../presentation/PresentationSession'
 import { isBattleInProgress } from '../battle/BattleTypes'
 import { BATTLE_CYCLE_POLICIES, type BattleCyclePolicy } from '../battle/BattleCyclePolicy'
-import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
-import {
-  buildNguKiemDaoProvider,
-  collectKiemDaoCascadeUnlocks,
-} from '../kiem-tu/NguKiemDaoProvider'
-import {
-  KIEM_DAO_CASCADE_EMBLEM,
-  TU_KIEM_Y_EMBLEM,
-} from '../../data/skill/NguKiemDaoSkills'
-import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
-import { isKiemTuHien, isKiemTuNgu } from '../kiem-tu/KiemTuPath'
 import type { ProgressionNode } from '../progression/ProgressionNode'
+import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import {
   TurnBattleSystem,
@@ -30,7 +20,6 @@ import { TurnToken, type TokenState } from '../battle/turn/TurnToken'
 import { TurnPipeline } from '../battle/turn/TurnPipeline'
 export type { ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
 import { BuffSystem } from '../buff/BuffSystem'
-import { isUngTheCombatant } from '../the-tu/TheEconomy'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
 import type { TurnSkillDefinition, ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
@@ -57,7 +46,6 @@ import type { StatModifier } from '../stats/StatCalculator'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { commitFormationLoadout, resolvePartyFormation } from './FormationPlacement'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
-import { resolveActiveWayStatDomains } from '../player/CultivationPathSystem'
 import { companionToCombatEntity } from '../companion/CompanionCombat'
 import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
 import { COMPANIONS } from '../../data/companion/Companions'
@@ -249,39 +237,20 @@ export class GameManagerTurnBattleOps {
     bankPassiveCarry: (player: PlayerData) => void
     seedPassiveCarry: (player: PlayerData) => void
     buildPlayerRewardReceiver: (player: PlayerData) => RewardReceiver
-    // M10 (ARCH-008) — canonical basic resolution lives in GameManager
-    // (it owns skillManager/skillSystem); this ops consumes the result.
-    resolvePlayerBasicAttack: (player: PlayerData) => TurnSkillDefinition
-    // Resolve special/ultimate via the Skill converter + effective skill.
-    resolvePlayerSpecialUltimate: (
-      player: PlayerData,
-    ) => {
-      special?: TurnSkillDefinition
-      ultimate?: TurnSkillDefinition
-      reactivePayloads?: Record<string, TurnSkillDefinition>
-      maxThe?: number
-    }
-    // Task 8 — the The-cap snapshot for the player entity
-    // (resolveMaxThe: query-derived from nodeLevels, never persisted).
-    // Non-phap_tu players resolve to MAX_THE.
-    resolvePlayerMaxThe: (player: PlayerData) => number
+    // Mission C Task 9 — the cultivation-path boundary: GameManager wires
+    // the registry resolver; this ops consumes the runtime interface and
+    // never branches on path/way identity (guard:
+    // tests/architecture/battleLifecyclePathBoundary.test.ts).
+    resolvePathRuntime: (player: PlayerData) => CultivationPathRuntime
     // 9.5 #9 — committed-cast sink for the PRIMARY player only
     // (SkillSystem.recordCast; engine fires for every actor, ops filters
     // to turnBattle.players[0] so companion/enemy casts never write into
     // the player's skillCastCounts/skillLevels mirror).
     recordPrimaryPlayerCast?: (skillId: string) => void
-    // Kiem Tu Reimagined Task 11 — registered node defs for the kiem-tu
-    // collectors (combo capstones, cascade unlocks). Read-only access;
-    // the registry remains GameManager-owned (A3).
+    // Kiem Tu Reimagined Task 11 — registered node defs for the path
+    // runtime's collectors (combo capstones, cascade unlocks). Read-only
+    // access; the registry remains GameManager-owned (A3).
     getProgressionNodes: () => readonly ProgressionNode[]
-    // The Tu Reimagined (plan Task 9, D9) — GameManager builds the
-    // Bat Tu survival source for a the_tu/cuong_chien player from the
-    // built participant (registry-gated node reads live there); the ops
-    // inserts it ahead of the talent guard inside the survive session.
-    buildTheTuBatTuSurvival?: (
-      player: PlayerData,
-      participant: TurnBattleParticipant,
-    ) => SurviveLethalSource | undefined
     /**
      * Mission C Task 8 — mints the session RNG for ONE battle cycle.
      * Scope boundary: only combat rolls consume it (combat formulas,
@@ -846,6 +815,21 @@ export class GameManagerTurnBattleOps {
 
   private battleRngFactoryOverride: (() => () => number) | undefined
 
+  /**
+   * Mission C Task 9 — dev/test seam mirroring setBattleRngFactory: swap
+   * the path-runtime resolver (a test registers a fake_path runtime the
+   * shipped registry does not know). `undefined` restores the registry.
+   */
+  setPathRuntimeResolver(resolver: ((player: PlayerData) => CultivationPathRuntime) | undefined): void {
+    this.pathRuntimeOverride = resolver
+  }
+
+  private pathRuntimeOverride: ((player: PlayerData) => CultivationPathRuntime) | undefined
+
+  private resolvePathRuntime(player: PlayerData): CultivationPathRuntime {
+    return (this.pathRuntimeOverride ?? this.deps.resolvePathRuntime)(player)
+  }
+
   private mintCycleRng(): void {
     // The built-in factory returns a LAZY Math.random closure — storing
     // `Math.random` by reference would bypass vi.spyOn interception.
@@ -959,7 +943,7 @@ export class GameManagerTurnBattleOps {
       // Task 8 - snapshot the query-derived The cap (truong_the nodes,
       // 'no' route). Non-phap_tu paths resolve to MAX_THE; the field
       // stays the clamp source for this battle instance only.
-      playerEntity.maxThe = this.deps.resolvePlayerMaxThe(request.player)
+      playerEntity.maxThe = this.resolvePathRuntime(request.player).resolveMaxThe(request.player)
     } else if (request.playerEntity) {
       playerEntity = request.playerEntity
     }
@@ -1046,8 +1030,8 @@ export class GameManagerTurnBattleOps {
       // FIRST line of survival; the talent guard is the extra life once
       // the ult is spent/on cooldown.
       const playerParticipant = this.turnBattle.players[0]
-      const batTuSource = playerParticipant
-        ? this.deps.buildTheTuBatTuSurvival?.(player, playerParticipant)
+      const extraSurviveSources = playerParticipant
+        ? this.resolvePathRuntime(player).buildSurviveSources?.(player, playerParticipant)
         : undefined
 
       this.deps.combatSystem.setSurviveLethalSession({
@@ -1063,7 +1047,7 @@ export class GameManagerTurnBattleOps {
               cleanseDebuffs: true,
             }
           : undefined,
-        extraSources: batTuSource ? [batTuSource] : undefined,
+        extraSources: extraSurviveSources?.length ? extraSurviveSources : undefined,
       })
     }
 
@@ -1181,35 +1165,39 @@ export class GameManagerTurnBattleOps {
       playerEntity.x = playerSlot.column
     }
 
+    // Mission C Task 9 — ALL path integration resolves through the
+    // runtime boundary; no path/way predicate may appear below.
+    const pathRuntime = playerPath ? this.resolvePathRuntime(playerPath) : undefined
+
     const playerParticipant = toTurnBattleParticipant(
       playerEntity,
       0,
-      playerPath ? this.deps.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
-      playerPath ? resolveActiveWayStatDomains(playerPath) : undefined,
-      playerPath ? this.deps.resolvePlayerSpecialUltimate(playerPath) : undefined,
+      pathRuntime?.resolveBasic(playerPath!) ?? GENERIC_PHYSICAL_BASIC,
+      pathRuntime?.resolveStatDomains(playerPath!),
+      pathRuntime?.resolveSpecialUltimate(playerPath!),
     )
 
-    // Kiem Tu Reimagined Task 6 — hien participant: the Kiem Pho
-    // provider OWNS the basic slot (participant.basic becomes inert);
-    // preset cursor/log live in the provider closure, not PlayerData.
-    if (playerPath?.kiemTu && isKiemTuHien(playerPath)) {
-      playerParticipant.dynamicBasic = buildKiemPhoProvider(
-        playerPath,
-        collectKiemPhoComboModifiers(playerPath, this.deps.getProgressionNodes()),
-      )
+    // Dynamic-basic provider (Kiem Pho orbs / Ngu Kiem Dao multi-instance)
+    // — OWNS the basic slot where a path supplies one; preset cursor/log
+    // live in the provider closure, not PlayerData. Rolls consume the
+    // session RNG.
+    const dynamicBasic = pathRuntime?.buildDynamicBasic?.(
+      playerPath!,
+      this.deps.getProgressionNodes(),
+      this.combatRng,
+    )
+    if (dynamicBasic) {
+      playerParticipant.dynamicBasic = dynamicBasic
     }
 
-    // Task 9 — ngu participant: the Ngu Kiem Dao provider owns the basic
-    // (multi-instance phi kiem); the special/ultimate slots carry emblem
-    // markers only (spec §5.4 — display lanes, never resolvable actions).
-    // M6 — way membership replaces the retired kiemTu.mode check.
-    if (playerPath?.kiemTu && isKiemTuNgu(playerPath)) {
-      playerParticipant.dynamicBasic = buildNguKiemDaoProvider(
-        playerPath,
-        collectKiemDaoCascadeUnlocks(playerPath, this.deps.getProgressionNodes()),
-      )
-      playerParticipant.special = { skill: TU_KIEM_Y_EMBLEM, remainingCooldownTurns: 0 }
-      playerParticipant.ultimate = { skill: KIEM_DAO_CASCADE_EMBLEM, remainingCooldownTurns: 0 }
+    // Emblem/marker slot overrides (Ngu Kiem Dao — spec §5.4: display
+    // lanes, never resolvable actions).
+    const emblemSlots = pathRuntime?.emblemSlots?.()
+    if (emblemSlots?.special) {
+      playerParticipant.special = { skill: emblemSlots.special, remainingCooldownTurns: 0 }
+    }
+    if (emblemSlots?.ultimate) {
+      playerParticipant.ultimate = { skill: emblemSlots.ultimate, remainingCooldownTurns: 0 }
     }
 
     // Companion Roster - each companion in player.companions is rebuilt as a
