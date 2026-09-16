@@ -82,8 +82,9 @@ const ATTRIBUTE_MAX_HP_PER_POINT = 8
 const ATTRIBUTE_HP_REGEN_PER_POINT = 0.1
 // The Tu Reimagined (spec 2026-09-15 section 3.3): vitality ->
 // enduranceThreshold moved OUT of the universal derivation into the
-// the_tu domain channel (theTuEnduranceModifiers in TheTuPath.ts +
-// registerDomainDeltaDeriver('the_tu') in CultivationPathSystem.ts).
+// the_tu domain channel (theTuEnduranceModifiers in TheTuPath.ts;
+// the deriver is declared on the way facet's deltaDerivers and
+// registered from the catalog by CultivationPathSystem).
 
 // Linh Căn (Attunement) hấp thụ nguyên vai trò "độ thiên hành" cũ của
 // ElementAffinity (đã xoá — luôn = 0 với player, chỉ có ý nghĩa thật

@@ -1,5 +1,5 @@
 import type { ElementType } from '../element/ElementType'
-import type { StatModifier } from '../stats/StatCalculator'
+import type { DomainDeltaDeriver, StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import type { StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -11,7 +11,11 @@ import {
   PHAP_TU_NGU_HANH_WAY,
 } from '../phap-tu/PhapTuPath'
 import { THE_TU_HIEN_WAY, THE_TU_UNG_THE_WAY } from '../the-tu/TheTuPath'
-import { KIEM_TU_HIEN_WAY, KIEM_TU_NGU_WAY } from '../kiem-tu/KiemTuPath'
+import {
+  createKiemTuInitialState,
+  KIEM_TU_HIEN_WAY,
+  KIEM_TU_NGU_WAY,
+} from '../kiem-tu/KiemTuPath'
 
 // M4 — the ngo_dao kit identity lives in the Phap Tu path module
 // (core/phap-tu/PhapTuPath.ts); re-exported so existing consumers keep
@@ -75,6 +79,14 @@ export interface PathWayStatFacet {
   ): readonly StatModifier[]
 
   domains: readonly StatDomain[]
+
+  // M8 — the way's MID-BATTLE domain delta channel (INV-10): each
+  // entry declares the DomainDeltaDeriver for a domain this facet
+  // owns. The framework registers every declared deriver at catalog
+  // load (CultivationPathSystem); calculateEffectiveStats invokes a
+  // deriver only when the entity's activeDomains contain the domain,
+  // so a delta on a foreign domain never leaks stats cross-way.
+  deltaDerivers?: Readonly<Partial<Record<StatDomain, DomainDeltaDeriver>>>
 }
 
 // Cultivation Path Framework (spec 2026-09-16, M1) — PathWayDefinition
@@ -140,6 +152,12 @@ export interface CultivationPathModule {
   id: CultivationPathId
   name: string // e.g. 'Kiếm Tu'
   ways: Readonly<Record<PathWayId, PathWayDefinition>>
+
+  // M8 — optional path-state slice factory, invoked by applyPathChoice
+  // at ritual commit. The MODULE owns which PlayerData field it writes
+  // (kiem_tu -> player.kiemTu); the framework never branches on the
+  // concrete path to create slices.
+  createInitialState?: (player: PlayerData) => void
 }
 
 export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, CultivationPathModule>> = {
@@ -168,6 +186,10 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, Cultiv
       hien: KIEM_TU_HIEN_WAY,
       ngu: KIEM_TU_NGU_WAY,
     },
+    // M8 — the path owns its state slice: the canonical fresh
+    // player.kiemTu is way-agnostic (the Kiem Y fields start at ngu's
+    // defaults; hien simply never reads them).
+    createInitialState: createKiemTuInitialState,
   },
 
   the_tu: {

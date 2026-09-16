@@ -3,6 +3,8 @@ import type {
   PathWayDefinition,
   PathWayId,
 } from '../player/CultivationPathKit'
+import type { PlayerData } from '../player/Player'
+import { freshKiemTuState } from './KiemTuState'
 
 // Cultivation Path Framework (spec 2026-09-16, M6) — the Kiem Tu path
 // module: the two way definitions + the way membership predicates.
@@ -17,9 +19,9 @@ import type {
 //     kiemTu.mode discriminator retired in M6; cultivationWay is the
 //     discriminator now).
 //
-// Dependency direction: this file is a leaf — type-only imports only.
-// CultivationPathKit (catalog) and CultivationPathSystem (authority)
-// import FROM here; nothing here imports back, so domain code
+// Dependency direction: this file is a leaf — it never imports back
+// into the catalog/authority. The only runtime import is the sibling
+// KiemTuState slice factory (createInitialState below), so domain code
 // (NodeSystem/NguKiemDao) can consume the way predicates without a
 // runtime cycle.
 
@@ -32,6 +34,17 @@ import type {
 export interface KiemTuWayRead {
   cultivationPath?: CultivationPathId | null
   cultivationWay?: PathWayId | null
+}
+
+/**
+ * M8 — the module-owned state-slice factory, invoked by
+ * CultivationPathSystem.applyPathChoice via the module contract
+ * (createInitialState). The canonical fresh player.kiemTu is
+ * way-agnostic: the Kiem Y / Kiem Dao fields start at ngu's defaults
+ * and hien simply never reads them.
+ */
+export function createKiemTuInitialState(player: PlayerData): void {
+  player.kiemTu = freshKiemTuState()
 }
 
 /**

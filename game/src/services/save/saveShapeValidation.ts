@@ -21,6 +21,7 @@ import {
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 import { KIEM_PHO_ORB_IDS } from '../../core/kiem-tu/KiemTuState'
 import { CULTIVATION_PATH_MODULES } from '../../core/player/CultivationPathKit'
+import { isPhapTuNguHanh } from '../../core/phap-tu/PhapTuPath'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -252,13 +253,11 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         path: 'player.phapTu',
         message: 'element và route phải cùng null hoặc cùng đã chọn (commit nguyên tử)',
       })
-    } else if (
-      hasElement &&
-      !(player.cultivationPath === 'phap_tu' && player.cultivationWay === 'ngu_hanh')
-    ) {
-      // Cultivation Path Framework (M4): element/route ownership is
-      // ngu_hanh-only — the WAY must be written, so ('phap_tu','ngo_dao')
-      // and any way-less pair reject element ownership.
+    } else if (hasElement && !isPhapTuNguHanh(player)) {
+      // Cultivation Path Framework (M4/M8): element/route ownership is
+      // ngu_hanh-only — the module predicate owns the membership rule,
+      // so ('phap_tu','ngo_dao') and any way-less pair reject element
+      // ownership.
       issues.push({
         path: 'player.phapTu',
         message: "element/route chỉ thuộc way 'ngu_hanh' của path 'phap_tu'",

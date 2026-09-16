@@ -115,6 +115,12 @@ const THE_TU_HIEN_STATS: PathWayStatFacet = {
   domains: ['the_tu'],
   collectModifiers: (_player, totals) =>
     theTuEnduranceModifiers(totals.vitality, 'the_tu:vitality'),
+  // M8 — mid-battle vitality deltas re-emit the endurance threshold on
+  // the same domain (INV-10: deltas only, never the base).
+  deltaDerivers: {
+    the_tu: (delta) =>
+      delta.vitality === 0 ? [] : theTuEnduranceModifiers(delta.vitality, 'the_tu:vitality_delta'),
+  },
 }
 
 // The ung_the way stat facet — the three reactive chances on the
@@ -123,6 +129,10 @@ const THE_TU_UNG_THE_STATS: PathWayStatFacet = {
   domains: ['the_tu_an'],
   collectModifiers: (_player, totals) =>
     theTuAnReactiveModifiers(totals, 'the_tu_an:attributes'),
+  // M8 — mid-battle attribute deltas re-derive the reactive chances.
+  deltaDerivers: {
+    the_tu_an: (delta) => theTuAnReactiveModifiers(delta, 'the_tu_an:attributes_delta'),
+  },
 }
 
 /**

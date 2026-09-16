@@ -73,6 +73,16 @@ const PHAP_TU_WAY_STATS: PathWayStatFacet = {
   domains: ['phap_tu'],
   collectModifiers: (_player, totals) =>
     phapTuAttunementMpModifiers(totals.attunement, 'phap_tu:attunement'),
+  // M8 — the mid-battle attunement-delta channel is declared here too:
+  // the deriver sees only deltas, never the base, so a stacked
+  // attunement buff cannot double-count the assembly-time emission
+  // (INV-10). The framework registers it at catalog load.
+  deltaDerivers: {
+    phap_tu: (delta) =>
+      delta.attunement === 0
+        ? []
+        : phapTuAttunementMpModifiers(delta.attunement, 'phap_tu:attunement_delta'),
+  },
 }
 
 /**

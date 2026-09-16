@@ -10,14 +10,10 @@ import {
   type PathWayId,
   type PathWayRead,
 } from './CultivationPathKit'
-import { freshKiemTuState } from '../kiem-tu/KiemTuState'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
-import { phapTuAttunementMpModifiers } from '../phap-tu/PhapTuPath'
-import { theTuAnReactiveModifiers, theTuEnduranceModifiers } from '../the-tu/TheTuPath'
-
 // D12 (stat-system-reimagined spec section 5): Linh Can (attunement)
 // feeds MP through the phap_tu domain gate. M4 — the emitter and its
 // tuning constants moved to the Phap Tu path module
@@ -28,16 +24,22 @@ export {
   PHAP_TU_ATTUNEMENT_MAX_MP_PER_POINT,
 } from '../phap-tu/PhapTuPath'
 
-// Mid-battle channel (D12): attunement deltas re-emit the gated MP delta
-// through the registered deltaDeriver -- the deriver sees only deltas,
-// never the base, so a stacked attunement buff cannot double-count the
-// assembly-time emission (INV-10). Registered at module load;
-// calculateEffectiveStats invokes it only for entities whose
-// EffectiveStatContext.activeDomains contains 'phap_tu', so a non-phap_tu
-// entity gaining attunement mid-battle never leaks MP stats.
-registerDomainDeltaDeriver('phap_tu', (delta) =>
-  delta.attunement === 0 ? [] : phapTuAttunementMpModifiers(delta.attunement, 'phap_tu:attunement_delta'),
-)
+// M8 — mid-battle domain delta derivers are MODULE-DECLARED on each
+// way's PathWayStatFacet (deltaDerivers); the framework registers them
+// generically from the catalog at load. The derivers see attribute
+// deltas for entities whose activeDomains already resolved the way's
+// domain (resolveActiveWayStatDomains), never the base — INV-10 holds:
+// a stacked attribute buff cannot double-count the assembly emission,
+// and a foreign-domain delta never leaks stats cross-way.
+for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
+  for (const way of Object.values(pathModule.ways)) {
+    for (const [domain, deriver] of Object.entries(way.stats?.deltaDerivers ?? {})) {
+      if (deriver) {
+        registerDomainDeltaDeriver(domain as StatDomain, deriver)
+      }
+    }
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Cultivation Path Framework (spec 2026-09-16, M2) — path/way authority.
@@ -196,35 +198,14 @@ export function applyPathChoice(
   player.cultivationWay = wayId
   player.cultivationPath = pathId
 
-  // Way-slice lifecycle — created at commit by the authority. Only
-  // kiem_tu declares a slice today: the canonical fresh state is
-  // way-agnostic (the Kiem Y fields start at ngu's defaults; hien
-  // simply never reads them).
-  if (pathId === 'kiem_tu') {
-    player.kiemTu = freshKiemTuState()
-  }
+  // State-slice lifecycle — created at commit by the authority through
+  // the module contract. Only kiem_tu declares createInitialState
+  // today: the canonical fresh player.kiemTu is way-agnostic (the Kiem
+  // Y fields start at ngu's defaults; hien simply never reads them).
+  pathModule.createInitialState?.(player)
 
   return { ok: true }
 }
-
-// ---------------------------------------------------------------------------
-// The Tu Reimagined (spec 2026-09-15 section 3) — the_tu_an reactive
-// chances + the_tu endurance channel. M5 — the emitters and the
-// path-id gates moved to the The Tu path module (core/the-tu/
-// TheTuPath.ts): each way's PathWayStatFacet owns the assembly-time
-// channel via collectActiveWayStatModifiers above. Only the mid-battle
-// deltaDeriver registrations stay here — the derivers see attribute
-// deltas for entities whose activeDomains already resolved the way's
-// domain (resolveActiveWayStatDomains), never the base.
-// ---------------------------------------------------------------------------
-
-registerDomainDeltaDeriver('the_tu_an', (delta) =>
-  theTuAnReactiveModifiers(delta, 'the_tu_an:attributes_delta'),
-)
-
-registerDomainDeltaDeriver('the_tu', (delta) =>
-  delta.vitality === 0 ? [] : theTuEnduranceModifiers(delta.vitality, 'the_tu:vitality_delta'),
-)
 
 export interface CultivationPathRewardDeps {
   getEquippedTechnique: () => Technique | undefined
