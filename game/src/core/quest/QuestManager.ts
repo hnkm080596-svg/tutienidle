@@ -113,10 +113,21 @@ export class QuestManager {
     // declared shape — a payload that bypassed the validator (active as
     // a string, non-finite reset marker) must not crash consumers.
     this.state = {
-      active: structuredClone(Array.isArray(state.active) ? state.active : []),
+      active: structuredClone(
+        Array.isArray(state.active)
+          ? state.active.filter(
+              (entry): entry is QuestManagerState['active'][number] =>
+                typeof entry === 'object' &&
+                entry !== null &&
+                typeof (entry as { questId?: unknown }).questId === 'string' &&
+                Number.isFinite((entry as { progress?: unknown }).progress) &&
+                typeof (entry as { claimed?: unknown }).claimed === 'boolean',
+            )
+          : [],
+      ),
 
       completedOnceIds: Array.isArray(state.completedOnceIds)
-        ? [...state.completedOnceIds]
+        ? state.completedOnceIds.filter((id) => typeof id === 'string')
         : [],
 
       lastDailyResetAtMs: Number.isFinite(state.lastDailyResetAtMs)

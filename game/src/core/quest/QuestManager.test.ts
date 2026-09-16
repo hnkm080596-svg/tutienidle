@@ -48,4 +48,24 @@ describe('QuestManager.restore', () => {
     expect(manager.getState().completedOnceIds).toEqual([])
     expect(manager.getState().lastDailyResetAtMs).toBe(0)
   })
+
+  it('drops malformed entries inside otherwise-valid arrays', () => {
+    const manager = new QuestManager()
+
+    manager.restore({
+      active: [
+        { questId: 'q_ok', progress: 1, claimed: false },
+        { questId: 5, progress: 1, claimed: false },
+        'garbage',
+        { questId: 'q_nan', progress: Number.NaN, claimed: false },
+      ] as never,
+      completedOnceIds: ['ok', 123, null] as never,
+      lastDailyResetAtMs: 0,
+    })
+
+    expect(manager.getState().active).toEqual([
+      { questId: 'q_ok', progress: 1, claimed: false },
+    ])
+    expect(manager.getState().completedOnceIds).toEqual(['ok'])
+  })
 })
