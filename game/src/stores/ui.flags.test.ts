@@ -9,6 +9,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useUiStore } from './ui'
 import {
   UI_AUTOMATION_STORAGE_KEY,
+  installAutomationFlagsPersistence,
   loadPersistedUiAutomationFlags,
   savePersistedUiAutomationFlags,
 } from './uiFlagsPersistence'
@@ -90,27 +91,10 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
   })
 
   it('mutation TRỰC TIẾP từ panel (battleRunMode = ...) được $subscribe bắt và lưu', async () => {
-    // Wire giống App.vue: subscribe filtered-snapshot với skip-unchanged.
-    let lastSnapshot = ''
-
+    // Wiring production thật — App.vue gọi đúng hàm này.
     const ui = useUiStore()
 
-    ui.$subscribe((_mutation, state) => {
-      const snapshot = JSON.stringify({
-        m: state.battleRunMode,
-      })
-
-      if (snapshot === lastSnapshot) {
-        return
-      }
-
-      lastSnapshot = snapshot
-
-      savePersistedUiAutomationFlags({
-        battleRunMode: state.battleRunMode,
-        combatInputMode: state.combatInputMode,
-      })
-    }, { detached: true })
+    const unsubscribe = installAutomationFlagsPersistence(ui)
 
     // CombatVictoryPanel/StageSelectPanel gán thẳng thế này.
     ui.battleRunMode = 'progress'
@@ -129,5 +113,31 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
     expect(JSON.parse(localStorage.getItem(UI_AUTOMATION_STORAGE_KEY)!).battleRunMode).toBe(
       writeCountBefore,
     )
+
+    unsubscribe()
+  })
+
+  it('mutation chỉ combatInputMode (battleRunMode giữ nguyên) vẫn persist — Mission A4', async () => {
+    const ui = useUiStore()
+
+    const unsubscribe = installAutomationFlagsPersistence(ui)
+
+    // Prime snapshot qua battleRunMode change.
+    ui.battleRunMode = 'repeat'
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    // Giờ chỉ đổi combatInputMode — dirty check cũ so sánh một mình
+    // battleRunMode nên sẽ bỏ qua mutation này.
+    ui.combatInputMode = 'manual'
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    const loaded = loadPersistedUiAutomationFlags()
+
+    expect(loaded.battleRunMode).toBe('repeat')
+    expect(loaded.combatInputMode).toBe('manual')
+
+    unsubscribe()
   })
 })

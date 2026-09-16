@@ -79,3 +79,53 @@ export function savePersistedUiAutomationFlags(snapshot: UiAutomationFlagSnapsho
     // Private mode/quota exceeded — bỏ qua, flags vẫn chạy trong phiên.
   }
 }
+
+/**
+ * Minimal structural contract for a Pinia store carrying the two
+ * automation flags — lets this module own the subscribe wiring without
+ * importing the ui store (which already imports this module).
+ */
+interface AutomationFlagsSource {
+  $subscribe(
+    callback: (
+      mutation: unknown,
+      state: Pick<AutomationFlagsSource, 'battleRunMode' | 'combatInputMode'>,
+    ) => void,
+    options?: { detached?: boolean },
+  ): () => void
+
+  battleRunMode: BattleRunMode
+
+  combatInputMode: CombatInputMode
+}
+
+/**
+ * Mission A4 — persist automation flags on ANY store mutation, including
+ * direct `ui.battleRunMode = ...` / `ui.combatInputMode = ...` writes from
+ * panels that bypass the setter actions. The dirty check compares the
+ * composite signature so a combatInputMode-only change still writes.
+ * Returns the Pinia unsubscribe — the caller owns the lifecycle.
+ */
+export function installAutomationFlagsPersistence(
+  store: AutomationFlagsSource,
+): () => void {
+  let lastSnapshot: string | undefined
+
+  return store.$subscribe(
+    (_mutation, state) => {
+      const snapshot = `${state.battleRunMode}|${state.combatInputMode}`
+
+      if (snapshot === lastSnapshot) {
+        return
+      }
+
+      lastSnapshot = snapshot
+
+      savePersistedUiAutomationFlags({
+        battleRunMode: state.battleRunMode,
+        combatInputMode: state.combatInputMode,
+      })
+    },
+    { detached: true },
+  )
+}

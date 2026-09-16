@@ -33,7 +33,7 @@ import { useNotificationStore } from './stores/notification'
 import { useI18n } from 'vue-i18n'
 import { useOfflineSummaryStore } from './stores/offlineSummary'
 import { useSaveIssueStore } from './stores/saveIssue'
-import { savePersistedUiAutomationFlags } from './stores/uiFlagsPersistence'
+import { installAutomationFlagsPersistence } from './stores/uiFlagsPersistence'
 import { useAppLifecycle, type BootOutcome } from './composables/useAppLifecycle'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
@@ -88,24 +88,12 @@ const ui = useUiStore()
 // ghi snapshot vào localStorage. Ghi rẻ (JSON nhỏ), skip khi snapshot
 // không đổi để tránh ghi lặp vô nghĩa mỗi tick.
 // (2026-08-30) isAutoConsumeTinhHoa đã GỠ — Luyện Thể tự đầu tư qua
-// essence stream; chỉ còn battleRunMode.
-// battleRunMode là string đơn giản — so sánh trực tiếp thay vì
-// JSON.stringify() (alloc string + object mỗi mutation vô ích cho 1
-// field nguyên thuỷ).
-let lastAutomationSnapshot: string | undefined
-
-ui.$subscribe((_mutation, state) => {
-  if (state.battleRunMode === lastAutomationSnapshot) {
-    return
-  }
-
-  lastAutomationSnapshot = state.battleRunMode
-
-  savePersistedUiAutomationFlags({
-    battleRunMode: state.battleRunMode,
-    combatInputMode: state.combatInputMode,
-  })
-}, { detached: true })
+// essence stream; chỉ còn battleRunMode + combatInputMode.
+// Mission A4 — dirty check theo composite battleRunMode|combatInputMode
+// trong installAutomationFlagsPersistence: thay đổi chỉ mỗi
+// combatInputMode vẫn phải ghi. Giữ disposer để Mission B6 gắn
+// unmount cleanup.
+const _automationFlagsUnsubscribe = installAutomationFlagsPersistence(ui)
 const notification = useNotificationStore()
 const { t } = useI18n()
 const offlineSummary = useOfflineSummaryStore()
