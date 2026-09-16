@@ -520,11 +520,19 @@ export function loadGame(): LoadOutcome {
 // Sao lưu save hiện có vào BACKUP_KEY — gọi TRƯỚC mọi thao tác có
 // thể xoá/ghi đè save chính (deleteSave(), importSaveRaw()), để luôn
 // còn 1 bước lùi qua restoreBackup() nếu người chơi bấm nhầm.
-export function backupCurrentSave() {
-  const raw = localStorage.getItem(SAVE_KEY)
+// Mission A5 — storage throw (quota/SecurityError) thì trả false thay
+// vì làm caller crash: backup là best-effort, không được phá flow chính.
+export function backupCurrentSave(): boolean {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY)
 
-  if (raw) {
-    localStorage.setItem(BACKUP_KEY, raw)
+    if (raw) {
+      localStorage.setItem(BACKUP_KEY, raw)
+    }
+
+    return true
+  } catch {
+    return false
   }
 }
 
@@ -537,27 +545,38 @@ export function getRawSave(): string | null {
 }
 
 export function restoreBackup(): boolean {
-  const raw = localStorage.getItem(BACKUP_KEY)
+  try {
+    const raw = localStorage.getItem(BACKUP_KEY)
 
-  if (!raw) {
+    if (!raw) {
+      return false
+    }
+
+    localStorage.setItem(SAVE_KEY, raw)
+    localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
+
+    return true
+  } catch {
+    // Mission A5 — storage throw → báo thất bại thay vì crash recovery UI.
     return false
   }
-
-  localStorage.setItem(SAVE_KEY, raw)
-  localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
-
-  return true
 }
 
 export function deleteSave() {
-  backupCurrentSave()
+  try {
+    // Best-effort: backup fail (quota/SecurityError) KHÔNG chặn xoá —
+    // người chơi đã xác nhận mất save.
+    void backupCurrentSave()
 
-  localStorage.removeItem(SAVE_KEY)
-  localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
+    localStorage.removeItem(SAVE_KEY)
+    localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
 
-  // Xoá cả revision — save đã không còn thì revision cũ là rác, và
-  // revision tồn dư khiến lần CAS đầu tiên của nhân vật mới fail.
-  localStorage.removeItem(SAVE_REVISION_KEY)
+    // Xoá cả revision — save đã không còn thì revision cũ là rác, và
+    // revision tồn dư khiến lần CAS đầu tiên của nhân vật mới fail.
+    localStorage.removeItem(SAVE_REVISION_KEY)
+  } catch {
+    // Mission A5 — storage throw → nuốt lỗi, UI recovery không crash.
+  }
 }
 
 // Tải save hiện có (bất kể đọc được hay không) xuống file .json —
@@ -633,9 +652,15 @@ export function importSaveRaw(raw: string): boolean {
     return false
   }
 
-  backupCurrentSave()
+  // Mission A5 — backup best-effort (không chặn import khi chỉ backup
+  // fail), nhưng write save chính throw thì báo thất bại nguyên vẹn.
+  void backupCurrentSave()
 
-  localStorage.setItem(SAVE_KEY, normalizedRaw)
+  try {
+    localStorage.setItem(SAVE_KEY, normalizedRaw)
+  } catch {
+    return false
+  }
 
   return true
 }

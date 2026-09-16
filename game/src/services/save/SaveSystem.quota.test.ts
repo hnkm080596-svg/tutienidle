@@ -1,6 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { writeGameSave, SAVE_KEY, CURRENT_SAVE_VERSION, type GameSave } from './SaveSystem'
+import {
+  writeGameSave,
+  backupCurrentSave,
+  restoreBackup,
+  deleteSave,
+  importSaveRaw,
+  SAVE_KEY,
+  CURRENT_SAVE_VERSION,
+  type GameSave,
+} from './SaveSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
 
 // Fixture tối thiểu hợp lệ — writeGameSave không validate shape (việc
@@ -59,5 +68,69 @@ describe('writeGameSave — SaveWriteResult (quota handling, audit C1a)', () => 
     const result = writeGameSave(minimalSave())
 
     expect(result).toEqual({ status: 'failed', reason: 'unknown' })
+  })
+})
+
+// Mission A5 — mọi đường ghi/xoá storage recovery cũng phải qua
+// try/catch như writeGameSave: private mode / quota throw SecurityError
+// hoặc QuotaExceededError và UI không được crash.
+describe('recovery storage ops — exception-safe (Mission A5)', () => {
+  it('backupCurrentSave trả false — KHÔNG throw — khi setItem throw', () => {
+    localStorage.setItem(SAVE_KEY, '{"version":1}')
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota exceeded', 'QuotaExceededError')
+    })
+
+    expect(backupCurrentSave()).toBe(false)
+  })
+
+  it('backupCurrentSave trả true khi không có save gì để backup (no-op)', () => {
+    expect(backupCurrentSave()).toBe(true)
+  })
+
+  it('restoreBackup trả false — KHÔNG throw — khi setItem throw', () => {
+    // BACKUP_KEY là private constant trong SaveSystem — literal khớp.
+    localStorage.setItem('tien-hiep-idle-save-backup', '{"version":1}')
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('security')
+    })
+
+    expect(restoreBackup()).toBe(false)
+  })
+
+  it('deleteSave không throw khi backup (setItem) throw — save vẫn bị xoá', () => {
+    localStorage.setItem(SAVE_KEY, '{"version":1}')
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota exceeded', 'QuotaExceededError')
+    })
+
+    expect(() => deleteSave()).not.toThrow()
+    expect(localStorage.getItem(SAVE_KEY)).toBeNull()
+  })
+
+  it('importSaveRaw trả false — KHÔNG throw — khi ghi save chính throw', () => {
+    const validRaw = JSON.stringify(minimalSave())
+    const original = Storage.prototype.setItem
+
+    // Chỉ chặn write vào SAVE_KEY — handoff marker/backup vẫn chạy được,
+    // để test đúng nhánh "final write throw".
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key === SAVE_KEY) {
+        throw new DOMException('quota exceeded', 'QuotaExceededError')
+      }
+
+      return original.call(this, key, value)
+    })
+
+    expect(importSaveRaw(validRaw)).toBe(false)
+    expect(localStorage.getItem(SAVE_KEY)).toBeNull()
   })
 })
