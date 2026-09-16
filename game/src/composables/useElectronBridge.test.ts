@@ -7,6 +7,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import type { GameManager } from '../core/game/GameManager'
 import { useElectronBridge, type ElectronBridgeAPI } from './useElectronBridge'
+import { usePlayerStore } from '../stores/player'
+import { useNotificationStore } from '../stores/notification'
 
 function makeApi() {
   // Each subscription gets its own remover, like the real preload.
@@ -16,13 +18,15 @@ function makeApi() {
     resume: [] as Array<ReturnType<typeof vi.fn>>,
   }
 
+  const onBeforeQuitFlush = vi.fn<(callback: () => void) => () => void>(() => {
+    const remover = vi.fn()
+    removers.flush.push(remover)
+    return remover
+  })
+
   const api: ElectronBridgeAPI = {
     isElectron: true,
-    onBeforeQuitFlush: vi.fn(() => {
-      const remover = vi.fn()
-      removers.flush.push(remover)
-      return remover
-    }),
+    onBeforeQuitFlush,
     onSystemSuspend: vi.fn(() => {
       const remover = vi.fn()
       removers.suspend.push(remover)
@@ -40,7 +44,7 @@ function makeApi() {
     },
   }
 
-  return { api, removers }
+  return { api, removers, onBeforeQuitFlush }
 }
 
 const fakeGameManager = {} as GameManager
@@ -90,5 +94,58 @@ describe('useElectronBridge — subscription disposal (ARCH-013/L04)', () => {
     expect(removers.flush).toHaveLength(2)
     expect(removers.flush[0]).toHaveBeenCalledTimes(1)
     expect(removers.flush[1]).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('useElectronBridge — quit-flush save result (audit T1-2)', () => {
+  afterEach(() => {
+    delete window.electronAPI
+  })
+
+  it('flush save resolves non-ok → still notifies main (2s backstop must not hang the app) BUT logs + surfaces the failure', async () => {
+    setActivePinia(createPinia())
+    const { api, onBeforeQuitFlush } = makeApi()
+    window.electronAPI = api
+
+    const playerStore = usePlayerStore()
+    const saveSpy = vi.spyOn(playerStore, 'save').mockResolvedValue({
+      status: 'unavailable',
+      message: 'quota full',
+      retryable: false,
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    useElectronBridge(fakeGameManager)
+    const flushCallback = onBeforeQuitFlush.mock.calls[0]![0]
+    flushCallback()
+
+    // notifyFlushComplete must still fire — a failed save never blocks the close.
+    await vi.waitFor(() => expect(api.notifyFlushComplete).toHaveBeenCalledTimes(1))
+    expect(saveSpy).toHaveBeenCalledTimes(1)
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[electron] quit flush save failed',
+      expect.objectContaining({ status: 'unavailable' }),
+    )
+    expect(useNotificationStore().toasts.some((toast) => toast.kind === 'error')).toBe(true)
+
+    errorSpy.mockRestore()
+  })
+
+  it('flush save resolves ok → notify, no error log, no error toast', async () => {
+    setActivePinia(createPinia())
+    const { api, onBeforeQuitFlush } = makeApi()
+    window.electronAPI = api
+
+    vi.spyOn(usePlayerStore(), 'save').mockResolvedValue({ status: 'ok', revision: 1 })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    useElectronBridge(fakeGameManager)
+    onBeforeQuitFlush.mock.calls[0]![0]()
+
+    await vi.waitFor(() => expect(api.notifyFlushComplete).toHaveBeenCalledTimes(1))
+    expect(errorSpy).not.toHaveBeenCalled()
+    expect(useNotificationStore().toasts).toHaveLength(0)
+
+    errorSpy.mockRestore()
   })
 })

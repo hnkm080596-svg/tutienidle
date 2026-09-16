@@ -5,6 +5,7 @@ import {
   createCombatClockHost,
   attachPowerMonitorToClockHost,
 } from '../src/main-process/combatClockHost'
+import { createQuitFlush } from '../src/main-process/quitFlush'
 
 // Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
 // (2026-08-24) — main process cho bản desktop. Hai mục đích:
@@ -38,6 +39,14 @@ function main() {
   // One host for the one BrowserWindow this app creates (see the
   // single-instance lock above).
   const clockHost = createCombatClockHost()
+
+  // Autosave on window close — the first 'close' is held while the renderer
+  // flushes its save (IPC 'app:flush-complete', see electron/preload.ts),
+  // then win.close() re-enters and passes through. The handler keeps the
+  // flushed/flushing window state (see src/main-process/quitFlush.ts);
+  // a second user close during the flush window stays blocked without
+  // re-sending the flush request (audit T6-52).
+  const onQuitFlushClose = createQuitFlush({ ipcMain })
 
   ipcMain.on('combat-clock:start', () => {
     clockHost.start(16, (elapsed) => {
@@ -107,7 +116,7 @@ function main() {
       win.loadFile(path.join(__dirname, '../dist/index.html'))
     }
 
-    win.on('close', event => bindQuitFlush(win, event))
+    win.on('close', event => onQuitFlushClose(win, event))
 
     win.on('closed', () => {
       mainWindow = null
@@ -117,41 +126,3 @@ function main() {
   }
 }
 
-const FLUSH_TIMEOUT_MS = 2000
-
-// Autosave khi đóng cửa sổ — lần 'close' ĐẦU chặn lại, yêu cầu renderer
-// flush save (đường IPC 'app:flush-complete', xem electron/preload.ts) rồi
-// mới tự gọi lại win.close(). `saveFlushed` phải sống NGOÀI hàm này (đóng
-// theo `win`, không phải theo lần gọi) — win.close() ở dưới tự kích hoạt
-// lại đúng sự kiện 'close' này; không có cờ nhớ trạng thái thì sẽ
-// preventDefault() vô hạn, cửa sổ không bao giờ đóng được thật.
-const flushedWindows = new WeakSet<BrowserWindow>()
-
-function bindQuitFlush(win: BrowserWindow, event: Electron.Event) {
-  if (flushedWindows.has(win)) {
-    return
-  }
-
-  event.preventDefault()
-
-  let settled = false
-
-  const finish = () => {
-    if (settled) {
-      return
-    }
-
-    settled = true
-
-    clearTimeout(timeoutHandle)
-    ipcMain.removeListener('app:flush-complete', finish)
-
-    flushedWindows.add(win)
-    win.close()
-  }
-
-  ipcMain.once('app:flush-complete', finish)
-  win.webContents.send('app:before-quit-flush')
-
-  const timeoutHandle = setTimeout(finish, FLUSH_TIMEOUT_MS)
-}
