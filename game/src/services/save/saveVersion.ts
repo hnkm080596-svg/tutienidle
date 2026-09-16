@@ -12,6 +12,10 @@
 // chi_hien_quan (nguồn nhân công duy nhất, capacity 1+level×2), thêm
 // field productionSiteStates[].assignedWorkers (phân bổ nhân công
 // manual). Save v54 bị từ chối (dev phase, không migration).
+// (2026-09-16 correction: assignedWorkers was DECLARED at v55 but the
+// buildGameSave serializer never emitted it — the field only became
+// actually persisted by the Mission A2 fix; no version bump, the field
+// is optional and absent means AUTO.)
 // v56 (2026-09-04, stage-auto-farm spec): 3 field PlayerData mới —
 // perfectClearStageIds (stage đã đạt điều kiện Hoàn Mỹ),
 // perfectClearSeconds (wall-clock giây lần đạt đầu tiên, dùng làm cơ

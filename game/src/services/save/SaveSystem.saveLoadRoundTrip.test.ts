@@ -178,4 +178,40 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     // No offline window elapsed (same mocked instant) - no double award.
     expect(fresh.decomposeSystem.drainOutput()).toEqual([])
   })
+
+  it('Mission A2: assignedWorkers survives save -> load -> restore', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1_725_160_000_000)
+
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+    player.autoWorkerCapacity = 5
+    gameManager.setActivePlayer(player)
+
+    const siteId = gameManager.productionSystem.getSiteDefinitions()[0]!.siteId
+    gameManager.productionSystem.ensureSiteState(siteId)
+    gameManager.buildingOps.assignWorkers(siteId, 2)
+
+    const save = buildGameSave(player, gameManager)
+
+    // The serializer must not drop the declared field.
+    expect(
+      save.productionSites?.find((state) => state.siteId === siteId)?.assignedWorkers,
+    ).toBe(2)
+
+    const writeResult = writeGameSave(save)
+    expect(writeResult).toEqual({ status: 'ok' })
+
+    const outcome = loadGame()
+    expect(outcome.status).toBe('ok')
+    if (outcome.status !== 'ok') {
+      return
+    }
+
+    const fresh = createBootedGameManager()
+    const freshPlayer = createDefaultPlayer()
+    fresh.setActivePlayer(freshPlayer)
+    fresh.saveOps.restoreFromSave(outcome.save)
+
+    expect(fresh.productionSystem.getState(siteId)?.assignedWorkers).toBe(2)
+  })
 })

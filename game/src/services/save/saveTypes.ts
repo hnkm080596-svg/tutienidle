@@ -276,6 +276,11 @@ export interface ProductionSiteStateSave {
   // đây KHÔNG được persist: mất trắng tiến trình mỗi lần reload và worker
   // không sản xuất offline. Giờ lưu lại để settleOffline chạy tiếp trong cap.
   workerCycles?: ProductionCycleSave[]
+
+  // Mission A2 — manual worker allocation declared at v55 but dropped by
+  // the serializer until now; undefined = AUTO (round-robin) per
+  // ProductionSiteState.
+  assignedWorkers?: number
 }
 
 /** Shape persist của ActiveAlchemyJob — khớp core/alchemy. */

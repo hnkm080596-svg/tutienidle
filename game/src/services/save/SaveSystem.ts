@@ -373,6 +373,10 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
       activeCycle: state.activeCycle,
 
       workerCycles: state.workerCycles?.length ? state.workerCycles : undefined,
+
+      // Mission A2 — manual allocation must persist; runtime-only
+      // activeWorkerSlots stays derived from live capacity (not saved).
+      assignedWorkers: state.assignedWorkers,
     }))),
 
     alchemyJobs: detachSaveValue(gameManager.alchemySystem.getJobs()),
