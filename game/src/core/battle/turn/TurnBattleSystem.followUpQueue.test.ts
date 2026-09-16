@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
+import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
@@ -76,12 +77,12 @@ function fixture() {
   return { battle, system, playerParticipant, enemyParticipant }
 }
 
-function playerSkill() {
-  return { id: 'player_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' as const } }
+function playerSkill(): TurnSkillDefinition {
+  return { id: 'player_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } }
 }
 
-function enemySkill() {
-  return { id: 'enemy_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' as const } }
+function enemySkill(): TurnSkillDefinition {
+  return { id: 'enemy_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } }
 }
 
 describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (tickPacing)', () => {
