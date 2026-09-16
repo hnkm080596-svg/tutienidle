@@ -247,6 +247,17 @@ function onTransitionBack() {
     return
   }
 
+  // Pre-boot there is no game tree to return to: GameRoot - and the
+  // home/combat/tribulation mount witness inside it - only mounts once
+  // isBooted flips. Requesting 'home' here would await-ready a witness that
+  // cannot exist and replay the same readiness timeout. "Back" before boot
+  // means returning to the auth screen, the same escape the boot-error
+  // branch offers; requesting the already-current route is always admissible.
+  if (!isBooted.value) {
+    void coordinator.request({ target: 'auth' })
+    return
+  }
+
   // Returning home from a failed combat entry goes through the domain owner
   // first - the battle must be abandoned, not merely hidden. The teardown
   // runs inside the closed-curtain window so the error shell stays mounted -
@@ -726,10 +737,16 @@ onUnmounted(() => {
     />
   </RouteMount>
 
-  <SaveIncompatibleScreen v-else-if="saveIssue.status" />
-
   <RouteMount v-else-if="entryStage === 'error'" route="error">
-    <main class="boot-error">
+    <!-- SaveIncompatibleScreen is a CONTENT VARIANT of the error route, not a
+         route of its own: it must stay inside the error RouteMount witness.
+         As a sibling v-else-if branch it would match before this branch
+         whenever saveIssue.status is set, the error mount witness would never
+         report, and every incompatible/corrupted-save boot would hang on
+         "Renderer readiness timed out". -->
+    <SaveIncompatibleScreen v-if="saveIssue.status" />
+
+    <main v-else class="boot-error">
       <h1>Không thể khởi động</h1>
       <p>{{ bootError }}</p>
       <button type="button" @click="bootFlow.showAuth">Trở về đăng nhập</button>
