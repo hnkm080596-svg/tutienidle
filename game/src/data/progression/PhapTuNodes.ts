@@ -11,7 +11,7 @@ import { buildElementBranch } from './PhapTuNodes.builders'
 // Cultivation Path Framework (M4) — every node in this tree is stamped
 // requiredCultivationPath 'phap_tu' + requiredWay 'ngu_hanh': the whole
 // element/root/route/The machinery belongs to the ngu_hanh way only.
-// ngo_dao (legacy path id 'phap_tu_an') owns NO tree at all — its way
+// ngo_dao owns NO tree at all — its way
 // has no progression nodes (PhapTuAnNodes.ts stays an empty stub), so a
 // Ngo Dao player can never purchase or aggregate these nodes even if a
 // dirty phapTu slice leaks into their state.

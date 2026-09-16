@@ -60,9 +60,8 @@ const {
 // emblem (spec §3.3 — "NOT a button"; its agency lives in the
 // multicast storm). The emblem tooltip explains basic-slot-only
 // multicast — the one place the rule surfaces in combat.
-// M4 (R6): the hidden way drives the emblem — the WAY is the durable
-// check (accepts both the 'phap_tu_an' transition id and the post-M7
-// collapsed 'phap_tu' path id).
+// M4 (R6): the hidden way drives the emblem — the strict ('phap_tu',
+// 'ngo_dao') pair is the durable check.
 const isAnPath = computed(() => isPhapTuNgoDao(player))
 
 const anEmblemMeta = computed(() => turnSkillDisplayMetaOf('ngo_dao_hon_don'))

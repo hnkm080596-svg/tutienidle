@@ -67,8 +67,8 @@ export interface KiemBarPlayerState {
   realmId: string
   // The Tu Reimagined (T22) — the active way's usesTheResource flag
   // decides whether the bar shows The; no path-id checks in the HUD.
-  // M5 — read via getActiveWayDefinition so the collapsed save shape
-  // ('the_tu' + 'ung_the') resolves the same way as 'the_tu_an'.
+  // Read via getActiveWayDefinition — the persisted (path, way) pair
+  // resolves the way, and a way-less/corrupt pair resolves nothing.
   cultivationPath?: CultivationPathId
   cultivationWay?: PathWayId
 }

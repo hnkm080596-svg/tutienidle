@@ -3,7 +3,7 @@ import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData } from '../player/Player'
-import type { CultivationPathBaseId, PathWayId } from '../player/CultivationPathKit'
+import type { CultivationPathId, PathWayId } from '../player/CultivationPathKit'
 import { MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import { isKiemTuNgu } from '../kiem-tu/KiemTuPath'
@@ -170,7 +170,7 @@ export class GameManagerRealmAdvanceOps {
    * IDENTICAL to useBreakthrough.ts/useTribulation.ts after every major
    * breakthrough.
    */
-  chooseCultivationPath(pathId: CultivationPathBaseId, wayId: PathWayId, player: PlayerData): boolean {
+  chooseCultivationPath(pathId: CultivationPathId, wayId: PathWayId, player: PlayerData): boolean {
     if (
       player.cultivationPath ||
       player.realmId !== 'mortal' ||
@@ -182,7 +182,7 @@ export class GameManagerRealmAdvanceOps {
     // M2 — the (path, way) pair resolves its way definition from the
     // module catalog; an unknown pair yields no way and fails closed.
     // Way OFFERABILITY is no longer checked here: applyPathChoice owns
-    // gate evaluation (isPhapTuAnEligible's bespoke check is subsumed).
+    // the offerGate evaluation.
     const way = CULTIVATION_PATH_MODULES[pathId]?.ways[wayId]
 
     if (!way) {
@@ -216,7 +216,7 @@ export class GameManagerRealmAdvanceOps {
     }
 
     // Path/way commit — the authority validates the pair, evaluates the
-    // offerGate live, and writes cultivationWay + the legacy-effective
+    // offerGate live, and writes cultivationWay + the base
     // cultivationPath id plus the path-state slice (kiem_tu). Zero
     // mutation on failure, so an ineligible/wrong-path pick stops here.
     if (!applyPathChoice(player, pathId, wayId).ok) {

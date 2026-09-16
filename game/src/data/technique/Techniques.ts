@@ -198,7 +198,7 @@ export const TECHNIQUES: Technique[] = [
     equipped: false,
   },
 
-  // The Tu Reimagined (spec 2026-09-15, T1/T6) — the_tu_an signature
+  // The Tu Reimagined (spec 2026-09-15, T1/T6) — ung_the signature
   // technique, granted by the Initiation Ritual when huy_quyen is Lv3.
   // Defensive/reactive body art: same def typing as kim_cang, leaning
   // on regen so the hidden path survives long enough to proc.

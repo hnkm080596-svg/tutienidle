@@ -3,7 +3,7 @@ import type { BuffPool } from '../buff/BuffPool'
 import type { CombatEntity } from '../combat/CombatEntity'
 
 // The Tu Reimagined (spec 2026-09-15 section 4.1, plan Task 15) — the
-// the_tu_an proc-fuel economy. The is a THROUGHPUT BUDGET, not a
+// ung_the proc-fuel economy. The is a THROUGHPUT BUDGET, not a
 // probability: pay-per-attempt on each reactive window, free income from
 // the authored table only, clamped at the participant's maxThe cap.
 //

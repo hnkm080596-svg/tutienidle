@@ -7,8 +7,8 @@
 // PhaserCanvas (which already has gameManager + player store); the
 // scene calls it through the registry key each frame.
 //
-// Reader returns null when there is no live battle, the path is not
-// 'phap_tu' (phap_tu_an owns NO The pool — spec P6), or no element has
+// Reader returns null when there is no live battle, the way is not
+// ngu_hanh (ngo_dao owns NO The pool — spec P6), or no element has
 // been committed -> CombatScene hides the bar.
 
 import { MAX_THE } from '@/core/combat/CombatTypes'

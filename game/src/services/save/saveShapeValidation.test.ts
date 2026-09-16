@@ -150,14 +150,28 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v65)', () 
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
-  it.each(['kiem_tu', 'phap_tu', 'phap_tu_an', 'the_tu', 'the_tu_an'])(
-    'chấp nhận cultivationPath = %s (union 5 id trong thời kỳ chuyển tiếp)',
+  it.each(['kiem_tu', 'phap_tu', 'the_tu'])(
+    'chấp nhận cultivationPath = %s (union 3 id base, post-M7)',
     (pathId) => {
       const save = validSave()
 
       playerOf(save).cultivationPath = pathId
 
       expect(validateGameSaveShape(save).ok).toBe(true)
+    },
+  )
+
+  it.each(['phap_tu_an', 'the_tu_an'])(
+    'từ chối cultivationPath = %s (legacy _an id đã xoá ở v66)',
+    (pathId) => {
+      const save = validSave()
+
+      playerOf(save).cultivationPath = pathId
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.cultivationPath')
     },
   )
 
@@ -200,10 +214,10 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v65)', () 
     },
   )
 
-  it('cặp hợp lệ post-ritual: cultivationPath legacy id + cultivationWay', () => {
+  it('cặp hợp lệ post-ritual: cultivationPath base id + cultivationWay', () => {
     const save = validSave()
 
-    playerOf(save).cultivationPath = 'phap_tu_an'
+    playerOf(save).cultivationPath = 'phap_tu'
     playerOf(save).cultivationWay = 'ngo_dao'
 
     expect(validateGameSaveShape(save).ok).toBe(true)
@@ -245,11 +259,9 @@ describe('validateGameSaveShape — phapTu atomic (element ↔ route)', () => {
   })
 
   it.each([
-    ['phap_tu_an', 'ngo_dao'],
     ['kiem_tu', undefined],
-    // M4: element ownership is way-gated — BOTH ngo_dao persisted
-    // shapes reject it, and so does a legacy phap_tu save that never
-    // wrote cultivationWay.
+    // M4+M7: element ownership is way-gated — the ngo_dao way and a
+    // way-less phap_tu save both reject it.
     ['phap_tu', 'ngo_dao'],
     ['phap_tu', undefined],
   ])(

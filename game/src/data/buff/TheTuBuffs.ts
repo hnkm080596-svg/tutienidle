@@ -96,7 +96,7 @@ export const KHIEM_KHICH_DEBUFF: BuffDefinition = {
   effects: [],
 }
 
-// --- the_tu_an markers (spec section 6, plan Task 14) ---
+// --- ung_the markers (spec section 6, plan Task 14) ---
 // ung_the owns the own-basic-lands income channel (single channel per
 // review P1 — THAM_THE carries no gain field). The *_mon markers carry
 // each root's reactiveProc spec read by the reactive windows (Tasks

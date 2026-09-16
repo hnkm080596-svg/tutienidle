@@ -7,7 +7,8 @@ import type { StatModifier } from '../../core/stats/StatCalculator'
 // branchTag 'the_tu_an' renders the whole tree in a single view.
 //
 // Path gate: every node in this tree carries requiredCultivationPath
-// 'the_tu_an' (stamped once at the export below) — NodeSystem.
+// 'the_tu' + requiredWay 'ung_the' (stamped once at the export below)
+// — NodeSystem.
 // nodePathApplies enforces it at purchase/upgrade/aggregation, so the
 // domain rejects wrong-path ownership even if the offer layer is
 // bypassed. Realm gates are data: roots + trunk open at qi_refining,
@@ -395,11 +396,10 @@ const TRO_BRANCH: ProgressionNode[] = [
 ]
 
 // M5 — path/way stamps once here: every node belongs to the BASE
-// the_tu path family (the legacy 'the_tu_an' id resolves to the same
-// family via NodeSystem.nodePathApplies) and to the UNG_THE way only
-// (nodeWayApplies). A hien player can neither purchase nor aggregate
-// this tree; the branchTag stays 'the_tu_an' — it is the tree-view
-// display key, not the gameplay gate.
+// 'the_tu' path (direct equality in NodeSystem.nodePathApplies) and to
+// the UNG_THE way only (nodeWayApplies). A hien player can neither
+// purchase nor aggregate this tree; the branchTag stays 'the_tu_an' —
+// it is the tree-view display key, not the gameplay gate.
 export const THE_TU_AN_NODES: ProgressionNode[] = [
   ...TRUNK_QI,
   ...TRUNK_FOUNDATION,

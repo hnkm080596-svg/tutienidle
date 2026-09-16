@@ -144,7 +144,8 @@ describe('initiation ritual (T1/T6)', () => {
 
     player.skillLevels = { huy_quyen: 3 }
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)).toBe(true)
-    expect(player.cultivationPath).toBe('the_tu_an')
+    expect(player.cultivationPath).toBe('the_tu')
+    expect(player.cultivationWay).toBe('ung_the')
     expect(gameManager.techniqueManager.get('ung_the_than_quyet')?.equipped).toBe(true)
   })
 })

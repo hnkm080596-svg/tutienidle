@@ -53,7 +53,7 @@ describe('nodeWayApplies — cultivation way membership gate', () => {
 
     const mortal = playerWith()
     const hien = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'hien' })
-    const ungThe = playerWith({ cultivationPath: 'the_tu_an', cultivationWay: 'ung_the' })
+    const ungThe = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'ung_the' })
 
     for (const player of [mortal, hien, ungThe]) {
       expect(nodeWayApplies(player, agnostic)).toBe(true)
@@ -78,7 +78,7 @@ describe('nodeWayApplies — cultivation way membership gate', () => {
   })
 
   it('a matching-way player purchases and aggregates the node normally', () => {
-    const player = playerWith({ cultivationPath: 'the_tu_an', cultivationWay: 'ung_the', skillInsight: 50 })
+    const player = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'ung_the', skillInsight: 50 })
 
     expect(canPurchaseNode(player, ungTheNode())).toBe(true)
     expect(purchaseNode(player, ungTheNode())).toBe(true)
@@ -93,7 +93,7 @@ describe('nodeWayApplies — cultivation way membership gate', () => {
   it('canUpgradeNode rejects a wrong-way owner even when the node has levels', () => {
     const node = ungTheNode({ maxLevel: 5, upgradeCost: { base: 1, perLevel: 2 } })
 
-    const ungThe = playerWith({ cultivationPath: 'the_tu_an', cultivationWay: 'ung_the', skillInsight: 50, nodeLevels: { ung_the_only: 1 } })
+    const ungThe = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'ung_the', skillInsight: 50, nodeLevels: { ung_the_only: 1 } })
     expect(canUpgradeNode(ungThe, node)).toBe(true)
 
     const hien = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'hien', skillInsight: 50, nodeLevels: { ung_the_only: 1 } })
@@ -176,7 +176,7 @@ describe('requiredWay — domain collectors honor the same gate', () => {
     expect(collectTheTuKitModifiers(registry, hien).missingHpBonusBonus).toBe(0)
     expect(collectTheTuAnMechanicModifiers(registry, hien).maxTheBonus).toBe(0)
 
-    const ungThe = playerWith({ cultivationPath: 'the_tu_an', cultivationWay: 'ung_the', nodeLevels: { ung_the_kit_node: 2, ung_the_an_node: 2 } })
+    const ungThe = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'ung_the', nodeLevels: { ung_the_kit_node: 2, ung_the_an_node: 2 } })
     expect(collectTheTuKitModifiers(registry, ungThe).missingHpBonusBonus).toBe(1)
     expect(collectTheTuAnMechanicModifiers(registry, ungThe).maxTheBonus).toBe(14)
   })

@@ -49,7 +49,7 @@ export interface CombatEntity {
   // Battle snapshot of the The cap (undefined => MAX_THE). Derived once
   // at participant build — two disjoint producers, one per path:
   // phap_tu via resolveMaxThe(player) (MAX_THE + truong_the_<element>
-  // node contribution); the_tu_an via the kit-baked MAX_THE +
+  // node contribution); ung_the via the kit-baked MAX_THE +
   // maxTheBonus (Task 20 collector). TheEconomy.theCap is the single
   // read site (`entity.maxThe ?? MAX_THE`); never persisted.
   maxThe?: number

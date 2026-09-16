@@ -1,13 +1,13 @@
-// The Tu Reimagined — cultivation-path framework M5: Thể Tu way-normalisation
-// spec contract tests. PlayerData.cultivationPath is transitioning to BASE
-// ids ('the_tu'); 'the_tu_an' is a LEGACY/TRANSITION-era persisted id that
-// must keep working until the M7 adapter deletion. EVERY Thể Tu way-specific
-// gate (kit build, Bất Tử Ba Thể survival, path stat emission, node-tree
-// access, the Thế resource bar / stat domain) resolves on the WAY —
+// The Tu Reimagined — cultivation-path framework M5+M7: Thể Tu
+// way-normalisation spec contract tests. Post-M7 cultivationPath is the
+// BASE id ('the_tu') and cultivationWay the discriminator — there is
+// exactly one persisted shape. EVERY Thể Tu way-specific gate (kit
+// build, Bất Tử Ba Thể survival, path stat emission, node-tree access,
+// the Thế resource bar / stat domain) resolves on the WAY —
 // cultivationPath + cultivationWay — never on the raw path id.
 //
-// Mirrors core/phap-tu/PhapTuPath.way.test.ts: both persisted eras and
-// fail-closed behaviour on corrupt (path, way) pairs.
+// Mirrors core/phap-tu/PhapTuPath.way.test.ts: fail-closed behaviour on
+// corrupt (path, way) pairs.
 //
 // The Hiện dual-root mutex (cuong_chien XOR tran_the) stays NodeSystem-owned
 // — these tests only verify it still operates under the way stamp.
@@ -67,10 +67,10 @@ function theTuPlayer(overrides: Partial<PlayerData> = {}): PlayerData {
   return player
 }
 
-/** Transition-era persisted shape: LEGACY path id + the way. */
-function legacyUngThePlayer(overrides: Partial<PlayerData> = {}): PlayerData {
+/** The single persisted shape post-M7: BASE path id + the way. */
+function ungThePlayer(overrides: Partial<PlayerData> = {}): PlayerData {
   const player = createDefaultPlayer()
-  player.cultivationPath = 'the_tu_an'
+  player.cultivationPath = 'the_tu'
   player.cultivationWay = 'ung_the'
   player.realmId = 'qi_refining'
   player.skillInsight = 99
@@ -78,15 +78,7 @@ function legacyUngThePlayer(overrides: Partial<PlayerData> = {}): PlayerData {
   return player
 }
 
-/** M7-era persisted shape: BASE path id + the way. */
-function collapsedUngThePlayer(overrides: Partial<PlayerData> = {}): PlayerData {
-  return legacyUngThePlayer({ cultivationPath: 'the_tu', ...overrides })
-}
-
-const UNG_THE_SHAPES = [
-  ['transition (the_tu_an, ung_the)', legacyUngThePlayer],
-  ['collapsed (the_tu, ung_the)', collapsedUngThePlayer],
-] as const
+const UNG_THE_SHAPES = [['(the_tu, ung_the)', ungThePlayer]] as const
 
 const TANKY_DUMMY = {
   maxHp: 100_000,
@@ -148,12 +140,11 @@ function startBattle(gameManager: GameManager, player: PlayerData): TurnBattle {
   return battle!
 }
 
-describe('Thể Tu way predicates — transition + collapsed eras', () => {
+describe('Thể Tu way predicates — strict base pairs', () => {
   it.each([
     [{ cultivationPath: 'the_tu', cultivationWay: 'hien' }, true],
     [{ cultivationPath: 'the_tu', cultivationWay: 'ung_the' }, false],
-    [{ cultivationPath: 'the_tu_an', cultivationWay: 'ung_the' }, false],
-    [{ cultivationPath: 'the_tu_an', cultivationWay: 'hien' }, false],
+    [{ cultivationPath: 'the_tu' }, false],
     [{ cultivationPath: 'phap_tu', cultivationWay: 'hien' }, false],
     [{}, false],
     [undefined, false],
@@ -162,11 +153,9 @@ describe('Thể Tu way predicates — transition + collapsed eras', () => {
   })
 
   it.each([
-    // BOTH persisted eras resolve the Ứng Thế way.
-    [{ cultivationPath: 'the_tu_an', cultivationWay: 'ung_the' }, true],
     [{ cultivationPath: 'the_tu', cultivationWay: 'ung_the' }, true],
     [{ cultivationPath: 'the_tu', cultivationWay: 'hien' }, false],
-    [{ cultivationPath: 'the_tu_an', cultivationWay: 'hien' }, false],
+    [{ cultivationPath: 'the_tu' }, false],
     [{ cultivationPath: 'phap_tu', cultivationWay: 'ung_the' }, false],
     [{}, false],
     [undefined, false],
@@ -174,10 +163,14 @@ describe('Thể Tu way predicates — transition + collapsed eras', () => {
     expect(isTheTuUngThe(slice as PlayerData | undefined)).toBe(expected)
   })
 
-  it('corrupt pair (the_tu_an, hien) fails closed on BOTH predicates', () => {
-    const corrupt = { cultivationPath: 'the_tu_an', cultivationWay: 'hien' } as PlayerData
-    expect(isTheTuHien(corrupt)).toBe(false)
-    expect(isTheTuUngThe(corrupt)).toBe(false)
+  it('corrupt pair (the_tu, <foreign way>) fails closed on BOTH predicates', () => {
+    for (const corrupt of [
+      { cultivationPath: 'the_tu', cultivationWay: 'ngo_dao' },
+      { cultivationPath: 'the_tu', cultivationWay: 'ngu' },
+    ] as const) {
+      expect(isTheTuHien(corrupt as PlayerData)).toBe(false)
+      expect(isTheTuUngThe(corrupt as PlayerData)).toBe(false)
+    }
   })
 })
 
@@ -196,7 +189,7 @@ describe('Thể Tu way definitions', () => {
     expect(THE_TU_UNG_THE_WAY.pathId).toBe('the_tu')
     expect(THE_TU_UNG_THE_WAY.usesTheResource).toBe(true)
     expect(THE_TU_UNG_THE_WAY.stats?.domains).toEqual(['the_tu_an'])
-    expect(THE_TU_UNG_THE_WAY.stats?.collectModifiers(legacyUngThePlayer(), TOT10)).toEqual(
+    expect(THE_TU_UNG_THE_WAY.stats?.collectModifiers(ungThePlayer(), TOT10)).toEqual(
       theTuAnReactiveModifiers(TOT10, 'the_tu_an:attributes'),
     )
   })
@@ -305,8 +298,8 @@ describe('stat facets — collectActiveWayStatModifiers is the sole channel', ()
     },
   )
 
-  it('legacy saves without cultivationWay still emit via the LEGACY_PATH_TO_WAY fallback', () => {
-    const legacy = legacyUngThePlayer()
+  it('a way-less save resolves nothing — corrupt post-M7, emits no reactive chances', () => {
+    const legacy = ungThePlayer()
     legacy.baseStats.strength = 100
     legacy.baseStats.dexterity = 100
     legacy.baseStats.intelligence = 100
@@ -314,9 +307,9 @@ describe('stat facets — collectActiveWayStatModifiers is the sole channel', ()
     delete legacy.cultivationWay
 
     const stats = resolvePlayerFinalStats(legacy, [])
-    expect(stats.counterChance).toBeCloseTo(0.8, 5)
-    expect(stats.protectChance).toBeCloseTo(0.7, 5)
-    expect(stats.followUpChance).toBeCloseTo(0.7, 5)
+    expect(stats.counterChance).toBe(0)
+    expect(stats.protectChance).toBe(0)
+    expect(stats.followUpChance).toBe(0)
   })
 
   it('way-owned stat domains resolve from the way, not the raw path id', () => {
@@ -395,9 +388,9 @@ describe('battle builds — participant kit is way-resolved', () => {
     expect(participant.buffs.hasAny('ung_the')).toBe(false)
   })
 
-  it('corrupt pair (the_tu_an, hien) fails closed — no way kit resolves', () => {
+  it('corrupt pair (the_tu, <foreign way>) fails closed — no way kit resolves', () => {
     const { gameManager } = makeManager()
-    const player = legacyUngThePlayer({ cultivationWay: 'hien' })
+    const player = ungThePlayer({ cultivationWay: 'ngo_dao' })
     player.nodeLevels = { cuong_chien: 1, ho_mon: 1 }
 
     const battle = startBattle(gameManager, player)
@@ -406,7 +399,7 @@ describe('battle builds — participant kit is way-resolved', () => {
     expect(participant.basic?.id).toBe('generic_physical')
     expect(participant.reactivePayloads).toBeUndefined()
     expect(participant.buffs.hasAny('ung_the')).toBe(false)
-    expect(participant.activeDomains?.has('the_tu_an')).toBe(false)
+    expect(participant.activeDomains?.has('the_tu_an') ?? false).toBe(false)
   })
 })
 
@@ -465,7 +458,7 @@ describe('way-authored kits still compose from the node collectors', () => {
 
     const ungTheMods = collectTheTuAnMechanicModifiers(
       NODE_REGISTRY,
-      collapsedUngThePlayer({ nodeLevels: { minor_ung_the_bi_the: 1 } }),
+      ungThePlayer({ nodeLevels: { minor_ung_the_bi_the: 1 } }),
     )
     const ungTheKit = buildTheTuAnKit(['ho_mon'], ungTheMods)
     expect(ungTheKit.basic.id).toBe('tham_the')

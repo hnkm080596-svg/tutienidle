@@ -184,7 +184,7 @@ describe('switchRoute', () => {
 
   it('rejects a non-phap_tu player even with committed phapTu state', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
     player.cultivationWay = 'ngo_dao'
     player.phapTu = { element: null, route: null }
 
@@ -350,7 +350,7 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     expect(player.phapTu).toEqual({ element: null, route: null })
 
     // Hidden path never owns ordinary route state.
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
     player.cultivationWay = 'ngo_dao'
     expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
     expect(player.phapTu).toEqual({ element: null, route: null })

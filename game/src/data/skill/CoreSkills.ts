@@ -63,7 +63,7 @@ export const CORE_SKILLS: Skill[] = [
   // Phap Tu Reimagined Task 2 — the two mortal-path actives learned
   // alongside tram at character creation. Both level ONLY by cast count
   // (CAST_LEVELING_THRESHOLDS; upgradeSkill rejects them, INV-9).
-  // linh_bao Lv3 (10000 casts) is the phap_tu_an ritual gate; its
+  // linh_bao Lv3 (10000 casts) is the ngo_dao ritual gate; its
   // primordial hit "ignores all defenses" like the Hon Nguyen stat.
   {
     id: 'linh_bao',
@@ -72,7 +72,7 @@ export const CORE_SKILLS: Skill[] = [
 
     // Spec §11 discoverability hint — the one in-game tell that pushing
     // Linh Bao to its limit BEFORE the Initiation Ritual opens a road
-    // others cannot see (phap_tu_an). No locked card tease anywhere.
+    // others cannot see (ngo_dao). No locked card tease anywhere.
     description: 'Tụ linh khí bùng nổ, bỏ qua mọi phòng thủ. Nghe đồn kẻ đẩy nó đến cực hạn trước Nghi Lễ Nhập Môn sẽ thấy một con đường người khác không thấy.',
 
     type: 'active',
@@ -116,7 +116,7 @@ export const CORE_SKILLS: Skill[] = [
   },
 
   // The Tu Reimagined (spec 2026-09-15, T6/section 2.3) — huy_quyen is
-  // also the the_tu_an ritual gate: reaching Lv3 (10.000 casts) is the
+  // also the ung_the ritual gate: reaching Lv3 (10.000 casts) is the
   // ONLY condition revealing that path at the Initiation Ritual.
   {
     id: 'huy_quyen',

@@ -114,7 +114,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
 
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
     player.cultivationWay = 'ngo_dao'
 
     const save = buildGameSave(player, gameManager)
@@ -128,7 +128,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     const playerData = (roundTripped as { player: typeof player }).player
 
-    expect(playerData.cultivationPath).toBe('phap_tu_an')
+    expect(playerData.cultivationPath).toBe('phap_tu')
     expect(playerData.cultivationWay).toBe('ngo_dao')
   })
 

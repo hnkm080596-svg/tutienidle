@@ -116,7 +116,7 @@ export const SON_NHAC: TurnSkillDefinition = {
   ],
 }
 
-// --- the_tu_an (Ung The) — fixed kit granted at path choice (spec 6.1) ---
+// --- ung_the (The Tu An) — fixed kit granted at path choice (spec 6.1) ---
 // The kit itself is NOT root-gated: roots plant the reactive-mechanic
 // markers that make the kit's proc windows live (Tasks 15-18).
 
@@ -184,7 +184,7 @@ const THE_TU_AN_ROOT_MARKERS: Record<TheTuAnRootId, BuffDefinition> = {
 }
 
 /**
- * Participant-build factory for the_tu_an (plan Task 14): returns
+ * Participant-build factory for ung_the (plan Task 14): returns
  * participant-local CLONES of the fixed kit with the marker set baked
  * into basic.grantsBuffsAtBuild — ung_the always, plus one marker per
  * owned root (non-mutex, T9). The ops' existing grantsBuffsAtBuild seam

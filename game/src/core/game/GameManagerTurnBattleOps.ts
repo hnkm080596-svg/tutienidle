@@ -1149,7 +1149,7 @@ export class GameManagerTurnBattleOps {
     // Task 8 (INV-14) — players are carried wholesale (same entity
     // objects, HP/resources carry over), but battle-scoped resources do
     // NOT carry: a new cycle is a new battle instance for currentThe —
-    // zero it on every carried entity (covers the_tu_an's proc pool too
+    // zero it on every carried entity (covers ung_the's proc pool too
     // via the shared reset — merged contract).
     // Kiem Tu Reimagined Task 2 — auto-repeat also reuses provider state,
     // so battle-scoped dynamicBasic state (Kiem Pho cursor/cast log)

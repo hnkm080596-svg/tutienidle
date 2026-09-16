@@ -1,31 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import {
   CULTIVATION_PATH_MODULES,
-  LEGACY_PATH_TO_WAY,
-  getPathWayDefinition,
+  getActiveWayDefinition,
   isCultivationPathOffered,
-  type CultivationPathId,
 } from './CultivationPathKit'
-import { getOfferableCultivationPaths } from './CultivationPathSystem'
+import { listOfferableWays } from './CultivationPathSystem'
 import { createDefaultPlayer } from './Player'
-import { CULTIVATION_PATH_STAT_DOMAINS, DOMAIN_SOURCE_WHITELIST } from '../stats/StatDomain'
+import { DOMAIN_SOURCE_WHITELIST } from '../stats/StatDomain'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
 
-// Cultivation Path Framework (spec 2026-09-16, M1) — the kit catalog
+// Cultivation Path Framework (spec 2026-09-16, M1+M7) — the kit catalog
 // evolved in place into the path/way module catalog. These tests pin
-// the catalog contract: 3 base paths, way definitions carry the former
-// kit fields, and the legacy 5-id -> (path, way) adapter resolves every
-// union member until M7 deletes it.
-
-const LEGACY_PATH_IDS: readonly CultivationPathId[] = [
-  'phap_tu',
-  'phap_tu_an',
-  'kiem_tu',
-  'the_tu',
-  'the_tu_an',
-]
+// the catalog contract: exactly 3 base path ids, way definitions carry
+// the former kit fields, and the legacy 5-id union + its era adapters
+// are gone (a persisted _an id fails the v66 save check).
 
 describe('CULTIVATION_PATH_MODULES — catalog shape', () => {
   it('contains exactly the three base path ids', () => {
@@ -73,6 +63,17 @@ describe('CULTIVATION_PATH_MODULES — catalog shape', () => {
       }
     }
   })
+
+  it('every way declares its owned stat domains via the stats facet', () => {
+    for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
+      for (const way of Object.values(pathModule.ways)) {
+        expect(
+          way.stats?.domains?.length,
+          `${pathModule.id}/${way.id} must declare owned domains`,
+        ).toBeGreaterThan(0)
+      }
+    }
+  })
 })
 
 describe('way definitions — authored content carried over from kits', () => {
@@ -110,9 +111,9 @@ describe('way definitions — authored content carried over from kits', () => {
 
     expect(way?.techniqueId).toBe('ngo_dao_chan_quyet')
     expect(way?.statModifiers?.map((modifier) => modifier.id)).toEqual([
-      'phap_tu_an_linh_luc',
-      'phap_tu_an_linh_luc_regen',
-      'phap_tu_an_ho_the',
+      'ngo_dao_linh_luc',
+      'ngo_dao_linh_luc_regen',
+      'ngo_dao_ho_the',
     ])
     expect(way?.offerGate).toEqual({ requiresSkillCastLevel: { skillId: 'linh_bao', level: 3 } })
   })
@@ -133,54 +134,34 @@ describe('way definitions — authored content carried over from kits', () => {
   })
 })
 
-describe('LEGACY_PATH_TO_WAY — transition adapter (deleted in M7)', () => {
-  it('covers every CultivationPathId union member, no extras', () => {
-    expect(Object.keys(LEGACY_PATH_TO_WAY).sort()).toEqual([...LEGACY_PATH_IDS].sort())
+describe('getActiveWayDefinition — strict persisted pair', () => {
+  it('resolves the way for every valid (path, way) pair', () => {
+    const cases: Array<[string, string, string]> = [
+      ['kiem_tu', 'hien', 'ngu_kiem'],
+      ['kiem_tu', 'ngu', 'van_kiem_quyet'],
+      ['phap_tu', 'ngu_hanh', 'dai_ngu_hanh_chan_quyet'],
+      ['phap_tu', 'ngo_dao', 'ngo_dao_chan_quyet'],
+      ['the_tu', 'hien', 'kim_cang_bat_hoai_the'],
+      ['the_tu', 'ung_the', 'ung_the_than_quyet'],
+    ]
 
-    for (const pathId of LEGACY_PATH_IDS) {
-      expect(LEGACY_PATH_TO_WAY[pathId], pathId).toBeDefined()
+    for (const [pathId, wayId, techniqueId] of cases) {
+      const way = getActiveWayDefinition({
+        cultivationPath: pathId as 'kiem_tu',
+        cultivationWay: wayId,
+      })
+      expect(way?.id, `${pathId}/${wayId}`).toBe(wayId)
+      expect(way?.techniqueId).toBe(techniqueId)
     }
   })
 
-  it('maps each legacy id to its expected (path, way) pair', () => {
-    expect(LEGACY_PATH_TO_WAY.kiem_tu).toEqual({ pathId: 'kiem_tu', wayId: 'hien' })
-    expect(LEGACY_PATH_TO_WAY.phap_tu).toEqual({ pathId: 'phap_tu', wayId: 'ngu_hanh' })
-    expect(LEGACY_PATH_TO_WAY.phap_tu_an).toEqual({ pathId: 'phap_tu', wayId: 'ngo_dao' })
-    expect(LEGACY_PATH_TO_WAY.the_tu).toEqual({ pathId: 'the_tu', wayId: 'hien' })
-    expect(LEGACY_PATH_TO_WAY.the_tu_an).toEqual({ pathId: 'the_tu', wayId: 'ung_the' })
-  })
-
-  it('every mapping resolves to a real way in the catalog', () => {
-    for (const pathId of LEGACY_PATH_IDS) {
-      const mapping = LEGACY_PATH_TO_WAY[pathId]
-      const way = CULTIVATION_PATH_MODULES[mapping.pathId]?.ways[mapping.wayId]
-
-      expect(way, pathId).toBeDefined()
-      expect(way?.id).toBe(mapping.wayId)
-      expect(way?.pathId).toBe(mapping.pathId)
-    }
-  })
-})
-
-describe('getPathWayDefinition', () => {
-  it('returns the mapped way definition for all five legacy path ids', () => {
-    expect(getPathWayDefinition('kiem_tu')?.id).toBe('hien')
-    expect(getPathWayDefinition('phap_tu')?.id).toBe('ngu_hanh')
-    expect(getPathWayDefinition('phap_tu_an')?.id).toBe('ngo_dao')
-    expect(getPathWayDefinition('the_tu')?.id).toBe('hien')
-    expect(getPathWayDefinition('the_tu_an')?.id).toBe('ung_the')
-  })
-
-  it('resolves the authored technique for each legacy id', () => {
-    expect(getPathWayDefinition('kiem_tu')?.techniqueId).toBe('ngu_kiem')
-    expect(getPathWayDefinition('phap_tu')?.techniqueId).toBe('dai_ngu_hanh_chan_quyet')
-    expect(getPathWayDefinition('phap_tu_an')?.techniqueId).toBe('ngo_dao_chan_quyet')
-    expect(getPathWayDefinition('the_tu')?.techniqueId).toBe('kim_cang_bat_hoai_the')
-    expect(getPathWayDefinition('the_tu_an')?.techniqueId).toBe('ung_the_than_quyet')
-  })
-
-  it('returns undefined for an id outside the legacy union', () => {
-    expect(getPathWayDefinition('not_a_path' as CultivationPathId)).toBeUndefined()
+  it('fails closed on a way-less save, a foreign way, or no path', () => {
+    expect(getActiveWayDefinition({ cultivationPath: 'the_tu' })).toBeUndefined()
+    expect(
+      getActiveWayDefinition({ cultivationPath: 'the_tu', cultivationWay: 'ngo_dao' }),
+    ).toBeUndefined()
+    expect(getActiveWayDefinition({ cultivationWay: 'hien' })).toBeUndefined()
+    expect(getActiveWayDefinition({})).toBeUndefined()
   })
 })
 
@@ -188,13 +169,15 @@ describe('isCultivationPathOffered — way offer gates', () => {
   it('ungated ways are always offered', () => {
     const player = createDefaultPlayer()
 
-    expect(isCultivationPathOffered(getPathWayDefinition('kiem_tu')!, player)).toBe(true)
-    expect(isCultivationPathOffered(getPathWayDefinition('phap_tu')!, player)).toBe(true)
-    expect(isCultivationPathOffered(getPathWayDefinition('the_tu')!, player)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.kiem_tu.ways.hien!, player)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.phap_tu.ways.ngu_hanh!, player)).toBe(
+      true,
+    )
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.the_tu.ways.hien!, player)).toBe(true)
   })
 
   it('ung_the keeps the huy_quyen Lv3 requiresSkillLevel gate (skillLevels mirror)', () => {
-    const way = getPathWayDefinition('the_tu_an')!
+    const way = CULTIVATION_PATH_MODULES.the_tu.ways.ung_the!
 
     const below = createDefaultPlayer()
     below.skillLevels = { huy_quyen: 2 }
@@ -209,7 +192,7 @@ describe('isCultivationPathOffered — way offer gates', () => {
   })
 
   it('ngo_dao gates on linh_bao cast level via skillCastCounts + CAST_LEVELING_THRESHOLDS', () => {
-    const way = getPathWayDefinition('phap_tu_an')!
+    const way = CULTIVATION_PATH_MODULES.phap_tu.ways.ngo_dao!
     const lv3Casts = CAST_LEVELING_THRESHOLDS.linh_bao!.lv3
 
     const below = createDefaultPlayer()
@@ -221,14 +204,14 @@ describe('isCultivationPathOffered — way offer gates', () => {
     expect(isCultivationPathOffered(way, met)).toBe(true)
 
     // Cast-count gate, not the skillLevels mirror: a Lv3 mirror with no
-    // casts does NOT satisfy it (isPhapTuAnEligible parity).
+    // casts does NOT satisfy it.
     const levelsOnly = createDefaultPlayer()
     levelsOnly.skillLevels = { linh_bao: 3 }
     levelsOnly.skillCastCounts = {}
     expect(isCultivationPathOffered(way, levelsOnly)).toBe(false)
   })
 
-  it('the ngu way gate evaluates tram Lv3 even though nothing offers it yet', () => {
+  it('the ngu way gate evaluates tram Lv3', () => {
     const ngu = CULTIVATION_PATH_MODULES.kiem_tu.ways.ngu!
 
     const below = createDefaultPlayer()
@@ -241,49 +224,70 @@ describe('isCultivationPathOffered — way offer gates', () => {
   })
 })
 
-describe('getOfferableCultivationPaths — transition offers (unchanged signature/results)', () => {
-  it('returns the base trio plus gated _an ids in legacy order; ngu is never an offer', () => {
+describe('listOfferableWays — ritual offers', () => {
+  it('lists all six (path, way) pairs: ungated first, gated last in path order', () => {
     const player = createDefaultPlayer()
     player.skillLevels = { huy_quyen: 3, tram: 3 }
     player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 }
 
-    const offered = getOfferableCultivationPaths(player)
+    const offered = listOfferableWays(player).map((offer) => `${offer.pathId}/${offer.wayId}`)
 
-    expect(offered).toEqual(['phap_tu', 'kiem_tu', 'the_tu', 'phap_tu_an', 'the_tu_an'])
-    // 'ngu' is a way id inside the kiem_tu module — it can never appear
-    // as a legacy offer id (R2: not offerable until M6).
-    expect(offered).not.toContain('ngu')
+    expect(offered).toEqual([
+      'phap_tu/ngu_hanh',
+      'kiem_tu/hien',
+      'the_tu/hien',
+      'phap_tu/ngo_dao',
+      'kiem_tu/ngu',
+      'the_tu/ung_the',
+    ])
+    expect(listOfferableWays(player).every((offer) => offer.eligible)).toBe(true)
   })
 
-  it('with no gates met only the base trio is offered', () => {
+  it('with no gates met only the ungated trio is eligible — gated ways stay listed with a reason', () => {
     const player = createDefaultPlayer()
 
-    expect(getOfferableCultivationPaths(player)).toEqual(['phap_tu', 'kiem_tu', 'the_tu'])
+    const offers = listOfferableWays(player)
+    const eligible = offers.filter((offer) => offer.eligible)
+
+    expect(eligible.map((offer) => `${offer.pathId}/${offer.wayId}`)).toEqual([
+      'phap_tu/ngu_hanh',
+      'kiem_tu/hien',
+      'the_tu/hien',
+    ])
+    for (const offer of offers.filter((o) => !o.eligible)) {
+      expect(offer.reason, `${offer.pathId}/${offer.wayId}`).toBeDefined()
+    }
   })
 
-  it('phap_tu_an follows the linh_bao cast threshold exactly', () => {
+  it('ngo_dao follows the linh_bao cast threshold exactly', () => {
     const player = createDefaultPlayer()
+    const ngoDao = (p: typeof player) =>
+      listOfferableWays(p).find((o) => o.pathId === 'phap_tu' && o.wayId === 'ngo_dao')
+
     player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 - 1 }
-    expect(getOfferableCultivationPaths(player)).not.toContain('phap_tu_an')
+    expect(ngoDao(player)?.eligible).toBe(false)
 
     player.skillCastCounts.linh_bao = CAST_LEVELING_THRESHOLDS.linh_bao!.lv3
-    expect(getOfferableCultivationPaths(player)).toContain('phap_tu_an')
+    expect(ngoDao(player)?.eligible).toBe(true)
   })
 
-  it('the_tu_an follows the huy_quyen Lv3 mirror exactly', () => {
+  it('ung_the follows the huy_quyen Lv3 mirror exactly', () => {
     const player = createDefaultPlayer()
+    const ungThe = () =>
+      listOfferableWays(player).find((o) => o.pathId === 'the_tu' && o.wayId === 'ung_the')
+
     player.skillLevels = { huy_quyen: 2 }
-    expect(getOfferableCultivationPaths(player)).not.toContain('the_tu_an')
+    expect(ungThe()?.eligible).toBe(false)
 
     player.skillLevels.huy_quyen = 3
-    expect(getOfferableCultivationPaths(player)).toContain('the_tu_an')
+    expect(ungThe()?.eligible).toBe(true)
   })
 })
 
-describe('stat domains — the_tu_an', () => {
-  it("CULTIVATION_PATH_STAT_DOMAINS maps the_tu_an to its own domain", () => {
-    expect(CULTIVATION_PATH_STAT_DOMAINS['the_tu_an']).toEqual(['the_tu_an'])
-    expect(CULTIVATION_PATH_STAT_DOMAINS['the_tu']).toEqual(['the_tu'])
+describe('stat domains — the_tu_an domain ownership', () => {
+  it('the ung_the way facet owns the the_tu_an domain; hien owns the_tu', () => {
+    expect(CULTIVATION_PATH_MODULES.the_tu.ways.ung_the?.stats?.domains).toEqual(['the_tu_an'])
+    expect(CULTIVATION_PATH_MODULES.the_tu.ways.hien?.stats?.domains).toEqual(['the_tu'])
   })
 
   it('DOMAIN_SOURCE_WHITELIST declares the the_tu / the_tu_an emitter homes', () => {

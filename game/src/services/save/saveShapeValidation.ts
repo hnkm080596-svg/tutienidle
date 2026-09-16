@@ -20,7 +20,7 @@ import {
 } from '../../core/stats/statKeyMigration'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 import { KIEM_PHO_ORB_IDS } from '../../core/kiem-tu/KiemTuState'
-import { LEGACY_PATH_TO_WAY } from '../../core/player/CultivationPathKit'
+import { CULTIVATION_PATH_MODULES } from '../../core/player/CultivationPathKit'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -199,21 +199,21 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.nodeLevels', message: 'phải là object' })
   }
 
-  // Cultivation Path Framework (v65) — cultivationPath gains its missing
-  // enum check (M0 gap): when present it must be one of the 5 legacy
-  // ids — the closed union derived from LEGACY_PATH_TO_WAY keys, single
-  // source until M7 shrinks it to the base 3. cultivationWay (v65) is
-  // an optional PathWayId content string — shape-check the type only;
-  // catalog membership belongs to the path authority, not the save
-  // boundary.
+  // Cultivation Path Framework (v66) — cultivationPath must be one of
+  // the 3 BASE ids (the CULTIVATION_PATH_MODULES keys). M7 removed the
+  // legacy _an ids from the union, so a save carrying one fails this
+  // enum check and is rejected — dev-phase policy, no migration.
+  // cultivationWay is an optional PathWayId content string — shape-check
+  // the type only; catalog membership belongs to the path authority,
+  // not the save boundary.
   if (
     player.cultivationPath !== undefined &&
     (typeof player.cultivationPath !== 'string' ||
-      !Object.prototype.hasOwnProperty.call(LEGACY_PATH_TO_WAY, player.cultivationPath))
+      !Object.prototype.hasOwnProperty.call(CULTIVATION_PATH_MODULES, player.cultivationPath))
   ) {
     issues.push({
       path: 'player.cultivationPath',
-      message: 'phải là 1 trong 5 cultivation path id hợp lệ hoặc vắng mặt',
+      message: 'phải là 1 trong 3 cultivation path id hợp lệ hoặc vắng mặt',
     })
   }
 
@@ -243,7 +243,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
     // Atomic-pair invariant: writers commit {element, route} together
     // (selectPhapTuElement), so a half-set pair is always corrupt — and
-    // only ordinary phap_tu owns the state at all (phap_tu_an, kiem_tu,
+    // only the ngu_hanh way owns the state at all (ngo_dao, kiem_tu,
     // mortal must stay {null, null} or route stats leak cross-path).
     const hasElement = player.phapTu.element !== null
     const hasRoute = player.phapTu.route !== null
@@ -257,9 +257,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       !(player.cultivationPath === 'phap_tu' && player.cultivationWay === 'ngu_hanh')
     ) {
       // Cultivation Path Framework (M4): element/route ownership is
-      // ngu_hanh-only — the WAY must be written, so the transition pair
-      // ('phap_tu_an','ngo_dao') and the post-M7 collapsed pair
-      // ('phap_tu','ngo_dao') both reject element ownership.
+      // ngu_hanh-only — the WAY must be written, so ('phap_tu','ngo_dao')
+      // and any way-less pair reject element ownership.
       issues.push({
         path: 'player.phapTu',
         message: "element/route chỉ thuộc way 'ngu_hanh' của path 'phap_tu'",

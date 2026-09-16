@@ -196,15 +196,16 @@ describe('way-resolved stat/domain channels', () => {
     expect(resolveActiveWayStatDomains(kiemTuPlayer('ngu'))).toEqual(['kiem_tu'])
   })
 
-  it('getActiveWayDefinition resolves the persisted pair; a way-less kiem save derives hien', () => {
+  it('getActiveWayDefinition resolves the persisted pair; a way-less kiem save fails closed (M7)', () => {
     expect(getActiveWayDefinition(kiemTuPlayer('ngu'))?.id).toBe('ngu')
     expect(getActiveWayDefinition(kiemTuPlayer('hien'))?.id).toBe('hien')
 
     const wayLess = kiemTuPlayer('hien')
     delete wayLess.cultivationWay
-    // LEGACY_PATH_TO_WAY['kiem_tu'] -> hien: lenient read fallback.
-    expect(getActiveWayDefinition(wayLess)?.id).toBe('hien')
-    expect(getActiveWay(wayLess)).toBe('hien')
+    // M7: the LEGACY_PATH_TO_WAY lenient fallback is gone — a persisted
+    // path without a way resolves nothing instead of guessing hien.
+    expect(getActiveWayDefinition(wayLess)).toBeUndefined()
+    expect(getActiveWay(wayLess)).toBeUndefined()
   })
 })
 

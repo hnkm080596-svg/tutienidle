@@ -30,12 +30,11 @@ import {
 } from './PhapTuPath'
 import { getRouteStatModifiers, resolveMaxThe } from './PhapTuRoutes'
 
-// Cultivation Path Framework (M4, spec 2026-09-16, audit R6) — way
+// Cultivation Path Framework (M4+M7, spec 2026-09-16, audit R6) — way
 // identity drives ALL way-specific behavior. Every ngu_hanh-only
 // mechanism (element/route/The machinery) must gate on the WAY, never
-// the bare 'phap_tu' path id, so the ngo_dao way cannot reach them
-// under EITHER persisted shape: the transition pair
-// ('phap_tu_an','ngo_dao') or the post-M7 collapse ('phap_tu','ngo_dao').
+// the bare 'phap_tu' path id, so the ngo_dao way cannot reach them.
+// Post-M7 there is exactly one persisted shape: ('phap_tu','ngo_dao').
 
 function nguHanh(overrides: Partial<PlayerData> = {}): PlayerData {
   const player = createDefaultPlayer()
@@ -44,23 +43,15 @@ function nguHanh(overrides: Partial<PlayerData> = {}): PlayerData {
   return Object.assign(player, overrides)
 }
 
-/** Transition shape — what applyPathChoice persists during M4-M6. */
-function ngoDaoTransition(overrides: Partial<PlayerData> = {}): PlayerData {
-  const player = createDefaultPlayer()
-  player.cultivationPath = 'phap_tu_an'
-  player.cultivationWay = 'ngo_dao'
-  return Object.assign(player, overrides)
-}
-
-/** Post-M7 shape — the base path id carries either way. */
-function ngoDaoCollapsed(overrides: Partial<PlayerData> = {}): PlayerData {
+/** The single persisted shape: base path id + the way. */
+function ngoDao(overrides: Partial<PlayerData> = {}): PlayerData {
   const player = createDefaultPlayer()
   player.cultivationPath = 'phap_tu'
   player.cultivationWay = 'ngo_dao'
   return Object.assign(player, overrides)
 }
 
-const NGO_DAO_SHAPES = { transition: ngoDaoTransition, collapsed: ngoDaoCollapsed } as const
+const NGO_DAO_SHAPES = { collapsed: ngoDao } as const
 
 /** Dirty ngo_dao state — an element/route pair that could only leak in
  * through corruption (ngo_dao owns no phapTu commitment). */
@@ -99,8 +90,8 @@ function dummyEnemy() {
 describe('way predicates — isPhapTuNguHanh / isPhapTuNgoDao', () => {
   it('isPhapTuNguHanh requires the phap_tu path AND the ngu_hanh way together', () => {
     expect(isPhapTuNguHanh(nguHanh())).toBe(true)
-    expect(isPhapTuNguHanh(ngoDaoTransition())).toBe(false)
-    expect(isPhapTuNguHanh(ngoDaoCollapsed())).toBe(false)
+    expect(isPhapTuNguHanh(ngoDao())).toBe(false)
+    expect(isPhapTuNguHanh(ngoDao())).toBe(false)
     expect(isPhapTuNguHanh(createDefaultPlayer())).toBe(false)
     expect(isPhapTuNguHanh(null)).toBe(false)
 
@@ -111,11 +102,16 @@ describe('way predicates — isPhapTuNguHanh / isPhapTuNgoDao', () => {
     expect(isPhapTuNguHanh(legacy)).toBe(false)
   })
 
-  it('isPhapTuNgoDao accepts BOTH persisted eras of the hidden way', () => {
-    expect(isPhapTuNgoDao(ngoDaoTransition())).toBe(true)
-    expect(isPhapTuNgoDao(ngoDaoCollapsed())).toBe(true)
+  it('isPhapTuNgoDao requires the strict (phap_tu, ngo_dao) pair', () => {
+    expect(isPhapTuNgoDao(ngoDao())).toBe(true)
     expect(isPhapTuNgoDao(nguHanh())).toBe(false)
     expect(isPhapTuNgoDao(createDefaultPlayer())).toBe(false)
+
+    // Way-less and foreign-way pairs fail closed.
+    const wayless = ngoDao()
+    delete wayless.cultivationWay
+    expect(isPhapTuNgoDao(wayless)).toBe(false)
+    expect(isPhapTuNgoDao(ngoDao({ cultivationWay: 'ung_the' }))).toBe(false)
   })
 })
 
@@ -130,7 +126,7 @@ describe('selectPhapTuElement — ngu_hanh way gate', () => {
 
     // The collapsed shape is the real R6 leak: a bare 'phap_tu' path
     // check would let a ngo_dao player commit an element.
-    for (const ngo of [ngoDaoTransition(), ngoDaoCollapsed()]) {
+    for (const ngo of [ngoDao(), ngoDao()]) {
       expect(gameManager.progressionOps.selectPhapTuElement('fire', 'dot', ngo)).toBe(false)
       expect(ngo.phapTu).toEqual({ element: null, route: null })
       expect(ngo.nodeLevels['hoa_linh_ngo']).toBeUndefined()
@@ -145,7 +141,7 @@ describe('selectPhapTuElement — ngu_hanh way gate', () => {
     expect(gameManager.progressionOps.getPhapTuElement()).toBe('water')
 
     // Leaked element state on the hidden way must not surface.
-    for (const ngo of [dirtyNgoDao(ngoDaoTransition), dirtyNgoDao(ngoDaoCollapsed)]) {
+    for (const ngo of [dirtyNgoDao(ngoDao), dirtyNgoDao(ngoDao)]) {
       gameManager.setActivePlayer(ngo)
       expect(gameManager.progressionOps.getPhapTuElement()).toBeUndefined()
     }
@@ -207,7 +203,7 @@ describe('route stats + The cap — ngu_hanh way gate', () => {
     const ngu = nguHanh({ phapTu: { element: 'fire', route: 'dot' } })
     expect(getRouteStatModifiers(ngu)).toHaveLength(2)
 
-    for (const ngo of [dirtyNgoDao(ngoDaoTransition), dirtyNgoDao(ngoDaoCollapsed)]) {
+    for (const ngo of [dirtyNgoDao(ngoDao), dirtyNgoDao(ngoDao)]) {
       expect(getRouteStatModifiers(ngo)).toEqual([])
     }
   })
@@ -252,8 +248,8 @@ describe('the bar bridge — ngu_hanh way gate', () => {
     expect(nguReader()?.current).toBe(40)
 
     for (const shape of [
-      { cultivationPath: 'phap_tu_an', cultivationWay: 'ngo_dao' },
       { cultivationPath: 'phap_tu', cultivationWay: 'ngo_dao' },
+      { cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
     ]) {
       const reader = makeTheBarReader(gameManager, () => barPlayer(shape))
       expect(reader(), JSON.stringify(shape)).toBeNull()
@@ -328,14 +324,14 @@ describe('way stat facet — shared phap_tu domain emission', () => {
       expect(modifier.domain).toBe('phap_tu')
     }
 
-    expect(collectActiveWayStatModifiers(ngoDaoTransition(), totals)).toEqual(nguMods)
-    expect(collectActiveWayStatModifiers(ngoDaoCollapsed(), totals)).toEqual(nguMods)
+    expect(collectActiveWayStatModifiers(ngoDao(), totals)).toEqual(nguMods)
+    expect(collectActiveWayStatModifiers(ngoDao(), totals)).toEqual(nguMods)
   })
 
   it('resolvePlayerFinalStats yields identical MP for ngu_hanh and ngo_dao', () => {
     const ngu = nguHanh()
     ngu.baseStats.attunement = 10
-    const ngo = ngoDaoTransition()
+    const ngo = ngoDao()
     ngo.baseStats.attunement = 10
 
     const nguStats = resolvePlayerFinalStats(ngu, [])
@@ -346,15 +342,14 @@ describe('way stat facet — shared phap_tu domain emission', () => {
     expect(ngoStats.manaRegenPerTurn).toBeCloseTo(nguStats.manaRegenPerTurn, 6)
   })
 
-  it('legacy-shaped phap_tu player (path only, no way) still emits via the LEGACY_PATH_TO_WAY fallback', () => {
-    const legacy = createDefaultPlayer()
-    legacy.cultivationPath = 'phap_tu'
-    legacy.baseStats.attunement = 10
+  it('way-less phap_tu player (path only, no way) emits NOTHING — M7 fail-closed', () => {
+    const wayLess = createDefaultPlayer()
+    wayLess.cultivationPath = 'phap_tu'
+    wayLess.baseStats.attunement = 10
 
-    expect(resolvePlayerFinalStats(legacy, []).maxMp).toBeCloseTo(
-      10 * PHAP_TU_ATTUNEMENT_MAX_MP_PER_POINT,
-      6,
-    )
+    // M7: the LEGACY_PATH_TO_WAY lenient fallback is gone — the attunement
+    // facet cannot resolve a way, so no phap_tu emission occurs.
+    expect(resolvePlayerFinalStats(wayLess, []).maxMp).toBe(0)
   })
 
   it('non-phap players emit nothing through the facet channel', () => {
@@ -380,37 +375,31 @@ describe('battle build — the way drives the kit branch', () => {
     }
   }
 
-  it.each(['transition', 'collapsed'] as const)(
-    '%s shape: ngo_dao resolves the An kit basic/special even with leaked element state',
-    (shape) => {
-      const gameManager = phapTuManager()
-      const player = NGO_DAO_SHAPES[shape]({ phapTu: { element: 'fire', route: 'no' } })
-      gameManager.setActivePlayer(player)
-      learnAnKit(gameManager)
+  it('ngo_dao resolves the An kit basic/special even with leaked element state', () => {
+    const gameManager = phapTuManager()
+    const player = NGO_DAO_SHAPES.collapsed({ phapTu: { element: 'fire', route: 'no' } })
+    gameManager.setActivePlayer(player)
+    learnAnKit(gameManager)
 
-      gameManager.startBattleWithPlayer(player, dummyEnemy())
+    gameManager.startBattleWithPlayer(player, dummyEnemy())
 
-      const participant = gameManager.getTurnBattle()!.players[0]!
-      expect(participant.basic?.id).toBe(PHAP_TU_AN_BASIC_ID)
-      expect(participant.basic?.compositePicks?.pool).toHaveLength(5)
-      expect(participant.special?.skill.id).toBe(PHAP_TU_AN_SPECIAL_ID)
-      // The An kit carries no The loop — no theGain fields on the basic.
-      expect(participant.basic?.theGainOnLandedCast).toBeUndefined()
-      expect(participant.basic?.theGainOnCrit).toBeUndefined()
-    },
-  )
+    const participant = gameManager.getTurnBattle()!.players[0]!
+    expect(participant.basic?.id).toBe(PHAP_TU_AN_BASIC_ID)
+    expect(participant.basic?.compositePicks?.pool).toHaveLength(5)
+    expect(participant.special?.skill.id).toBe(PHAP_TU_AN_SPECIAL_ID)
+    // The An kit carries no The loop — no theGain fields on the basic.
+    expect(participant.basic?.theGainOnLandedCast).toBeUndefined()
+    expect(participant.basic?.theGainOnCrit).toBeUndefined()
+  })
 
-  it.each(['transition', 'collapsed'] as const)(
-    '%s shape: a missing required kit skill throws at battle build',
-    (shape) => {
-      const gameManager = phapTuManager()
-      const player = NGO_DAO_SHAPES[shape]()
-      gameManager.setActivePlayer(player)
+  it('a missing required kit skill throws at battle build', () => {
+    const gameManager = phapTuManager()
+    const player = NGO_DAO_SHAPES.collapsed()
+    gameManager.setActivePlayer(player)
 
-      // No kit skills learned — assertPhapTuAnKitLearned must fail loudly.
-      expect(() => gameManager.startBattleWithPlayer(player, dummyEnemy())).toThrow()
-    },
-  )
+    // No kit skills learned — assertNgoDaoKitLearned must fail loudly.
+    expect(() => gameManager.startBattleWithPlayer(player, dummyEnemy())).toThrow()
+  })
 
   it('ngu_hanh resolves the committed element kit with The gains', () => {
     const gameManager = phapTuManager()

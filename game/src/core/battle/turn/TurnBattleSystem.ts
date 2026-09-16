@@ -1765,7 +1765,7 @@ export class TurnBattleSystem {
     // AR-04: downstream on-hit effects, debuffs and consume triggers
     // require a landed hit — dodged attacks bypass all of them.
     if (!hitResult.dodged) {
-      // Spec 4.1 — the acting the_tu_an's own basic landed: free income
+      // Spec 4.1 — the acting ung_the combatant's own basic landed: free income
       // through the marker's authored field.
       this.grantBasicLandedIncome(actor, skill?.id)
 
@@ -2309,7 +2309,7 @@ export class TurnBattleSystem {
    * - dodged -> +THE_GAIN_ON_EVADE
    * - taken (!dodged && hpDamage > 0) -> +THE_GAIN_ON_HIT_TAKEN
    * - landed but fully absorbed -> nothing (INV-16: not a "taken").
-   * Marker-gated: non-the_tu_an participants never see this table.
+   * Marker-gated: non-ung_the participants never see this table.
    */
   private grantHitOutcomeIncome(target: TurnBattleParticipant, hitResult: { dodged: boolean; hpDamage: number }): void {
     if (!isUngTheCombatant(target.buffs)) {

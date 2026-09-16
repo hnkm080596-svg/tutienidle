@@ -105,15 +105,12 @@ export function isPhapTuNguHanh(player: PhapTuWayRead | null | undefined): boole
 /**
  * ngo_dao membership — the gate for the hidden way's fixed-kit
  * machinery (applyAnKitToBasic/Special, the kit-learned assertion, the
- * combat emblem). The persisted path id accepts BOTH eras: 'phap_tu_an'
- * during the M4-M6 transition and 'phap_tu' after the M7 base-path
- * collapse — the WAY id is the durable check.
+ * combat emblem). M7 — strict base-pair predicate: only the persisted
+ * pair ('phap_tu', 'ngo_dao') matches; the legacy 'phap_tu_an' path id
+ * is gone from the union and can never satisfy this.
  */
 export function isPhapTuNgoDao(player: PhapTuWayRead | null | undefined): boolean {
-  return (
-    (player?.cultivationPath === 'phap_tu_an' || player?.cultivationPath === 'phap_tu') &&
-    player?.cultivationWay === 'ngo_dao'
-  )
+  return player?.cultivationPath === 'phap_tu' && player?.cultivationWay === 'ngo_dao'
 }
 
 // ---------------------------------------------------------------------------
@@ -170,13 +167,14 @@ export const PHAP_TU_NGO_DAO_WAY: PathWayDefinition = {
   name: 'Pháp Tu Ẩn — Ngộ Đạo Chân Quyết',
   techniqueId: 'ngo_dao_chan_quyet',
   // Former phap_tu_an kit — hidden way. Owns the same 'phap_tu' stat
-  // domain (CULTIVATION_PATH_STAT_DOMAINS) so its MP-shield line passes
-  // the domain gate. skillIds intentionally absent: the kit is granted
-  // in a bespoke branch (the ult slot is a passive via the technique's
-  // innateSkillId, not a loadout skill).
+  // domain (the shared PHAP_TU_WAY_STATS facet) so its MP-shield line
+  // passes the domain gate. skillIds intentionally absent: the kit is
+  // granted in a bespoke branch (the ult slot is a passive via the
+  // technique's innateSkillId, not a loadout skill). Modifier ids keep
+  // the ngo_dao name now that 'phap_tu_an' is no longer a path id.
   statModifiers: [
     {
-      id: 'phap_tu_an_linh_luc',
+      id: 'ngo_dao_linh_luc',
       sourceId: 'phap_tu',
       sourceType: 'realm',
       stat: 'maxMp',
@@ -184,7 +182,7 @@ export const PHAP_TU_NGO_DAO_WAY: PathWayDefinition = {
       domain: 'phap_tu',
     },
     {
-      id: 'phap_tu_an_linh_luc_regen',
+      id: 'ngo_dao_linh_luc_regen',
       sourceId: 'phap_tu',
       sourceType: 'realm',
       stat: 'manaRegenPerTurn',
@@ -192,7 +190,7 @@ export const PHAP_TU_NGO_DAO_WAY: PathWayDefinition = {
       domain: 'phap_tu',
     },
     {
-      id: 'phap_tu_an_ho_the',
+      id: 'ngo_dao_ho_the',
       sourceId: 'phap_tu',
       sourceType: 'realm',
       stat: 'manaShieldPercent',

@@ -87,10 +87,10 @@ describe('makeTheBarReader — Task 16 The bar mapping', () => {
     }
   })
 
-  it('phap_tu_an owns NO The pool → null (spec P6)', () => {
+  it('ngo_dao way owns NO The pool → null (spec P6)', () => {
     const reader = makeReader(
       fakeBattle('fighting', { currentThe: 30 }),
-      phapTuPlayer({ cultivationPath: 'phap_tu_an', cultivationWay: 'ngo_dao' }),
+      phapTuPlayer({ cultivationPath: 'phap_tu', cultivationWay: 'ngo_dao' }),
     )
 
     expect(reader()).toBeNull()

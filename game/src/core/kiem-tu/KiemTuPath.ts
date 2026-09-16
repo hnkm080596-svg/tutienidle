@@ -73,6 +73,13 @@ export const KIEM_TU_HIEN_WAY: PathWayDefinition = {
   techniqueId: 'ngu_kiem',
   // Kiem Tu Reimagined (spec 2026-09-15) — no authored skill grants:
   // hien basics come from the Kiem Pho orb preset (KiemPhoProvider).
+  // M7 — the facet declares domain OWNERSHIP only (resolveActiveWayStatDomains
+  // is the authority now that the path-keyed domain map is gone); Kiem Tu
+  // has no totals-driven emission channel, so collectModifiers is a no-op.
+  stats: {
+    domains: ['kiem_tu'],
+    collectModifiers: () => [],
+  },
 }
 
 export const KIEM_TU_NGU_WAY: PathWayDefinition = {
@@ -85,4 +92,10 @@ export const KIEM_TU_NGU_WAY: PathWayDefinition = {
   // skillLevels mirror). A mortal without tram Lv3 at the ritual can
   // never enter ngu — there is no mid-progression flip any more.
   offerGate: { requiresSkillLevel: { skillId: 'tram', level: 3 } },
+  // M7 — same shared-domain facet as hien: 'kiem_tu', no totals-driven
+  // channel.
+  stats: {
+    domains: ['kiem_tu'],
+    collectModifiers: () => [],
+  },
 }

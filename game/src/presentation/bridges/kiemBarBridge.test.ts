@@ -139,16 +139,7 @@ describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
 })
 
 describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
-  it('the_tu_an (kit usesTheResource) → {currentThe, maxThe ?? MAX_THE, "Thế"}', () => {
-    const reader = makeReader(
-      fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu_an' },
-    )
-
-    expect(reader()).toEqual({ current: 45, max: MAX_THE, label: 'Thế', externalWard: undefined })
-  })
-
-  it('collapsed save (the_tu + ung_the way) → same Thế bar as the legacy id (M5)', () => {
+  it('ung_the way (kit usesTheResource) → {currentThe, maxThe ?? MAX_THE, "Thế"}', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
       { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
@@ -157,10 +148,19 @@ describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
     expect(reader()).toEqual({ current: 45, max: MAX_THE, label: 'Thế', externalWard: undefined })
   })
 
+  it('a way-less the_tu save resolves no way — Thế bar stays hidden (M7 fail-closed)', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
+      { realmId: 'golden_core', cultivationPath: 'the_tu' },
+    )
+
+    expect(reader()).toBeNull()
+  })
+
   it('entity-baked maxThe wins over MAX_THE (node bonus)', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, { currentThe: 100, maxThe: 120, stats: { maxHp: 400 } }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu_an' },
+      { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
     )
 
     expect(reader()!.max).toBe(120)
@@ -207,14 +207,14 @@ describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
     })
   })
 
-  it('the_tu_an with externalWard → Thế bar + shield layer together', () => {
+  it('ung_the with externalWard → Thế bar + shield layer together', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, {
         currentThe: 30,
         externalWard: { sourceId: 'p', amount: 50 },
         stats: { maxHp: 250 },
       }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu_an' },
+      { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
     )
 
     expect(reader()).toEqual({

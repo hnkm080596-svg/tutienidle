@@ -4,10 +4,7 @@ import type { PlayerData } from './Player'
 import {
   CULTIVATION_PATH_MODULES,
   getActiveWayDefinition,
-  getLegacyPathIdForWay,
   isCultivationPathOffered,
-  LEGACY_PATH_TO_WAY,
-  type CultivationPathBaseId,
   type CultivationPathId,
   type PathWayDefinition,
   type PathWayId,
@@ -15,7 +12,7 @@ import {
 } from './CultivationPathKit'
 import { freshKiemTuState } from '../kiem-tu/KiemTuState'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
-import { CULTIVATION_PATH_STAT_DOMAINS, type StatDomain } from '../stats/StatDomain'
+import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
 import { phapTuAttunementMpModifiers } from '../phap-tu/PhapTuPath'
@@ -50,7 +47,7 @@ registerDomainDeltaDeriver('phap_tu', (delta) =>
 
 /** One offerable (path, way) pair for the Initiation Ritual offer list. */
 export interface PathWayOffer {
-  pathId: CultivationPathBaseId
+  pathId: CultivationPathId
   wayId: PathWayId
   /** Live offerGate evaluation at THIS moment — never stored. */
   eligible: boolean
@@ -63,7 +60,7 @@ export type PathChoiceResult = { ok: true } | { ok: false; reason: string }
 // Offer order — preserves the pre-framework ritual list: the three base
 // ways first (phap/kiem/the), then the gated hidden ways in the same
 // path order (ngo_dao before ung_the), so the sealed cards stay last.
-const RITUAL_PATH_ORDER: readonly CultivationPathBaseId[] = ['phap_tu', 'kiem_tu', 'the_tu']
+const RITUAL_PATH_ORDER: readonly CultivationPathId[] = ['phap_tu', 'kiem_tu', 'the_tu']
 
 function offerGateReason(way: PathWayDefinition): string | undefined {
   const requiredSkill = way.offerGate?.requiresSkillLevel
@@ -110,39 +107,31 @@ export function listOfferableWays(player: PlayerData): readonly PathWayOffer[] {
 }
 
 /**
- * The active BASE path id, or undefined before the ritual. Reads
- * through LEGACY_PATH_TO_WAY so legacy _an path ids still resolve to
- * their base path during the transition.
+ * The active path id, or undefined before the ritual / for a corrupt
+ * (path, way) pair — the read fails closed through the same catalog
+ * resolution as getActiveWayDefinition.
  */
-export function getActivePath(player: PlayerData): CultivationPathBaseId | undefined {
-  return player.cultivationPath !== undefined
-    ? LEGACY_PATH_TO_WAY[player.cultivationPath]?.pathId
-    : undefined
+export function getActivePath(player: PlayerData): CultivationPathId | undefined {
+  return getActiveWayDefinition(player)?.pathId
 }
 
 /**
- * The active way. cultivationWay is authoritative once written; a
- * legacy-shaped player (cultivationPath only) derives through
- * LEGACY_PATH_TO_WAY so pre-M2 reads keep working.
+ * The active way, or undefined before the ritual / for a corrupt pair.
+ * cultivationWay is authoritative; a way-less save is corrupt post-M7
+ * and resolves nothing.
  */
 export function getActiveWay(player: PlayerData): PathWayId | undefined {
-  if (player.cultivationWay !== undefined) {
-    return player.cultivationWay
-  }
-
-  return player.cultivationPath !== undefined
-    ? LEGACY_PATH_TO_WAY[player.cultivationPath]?.wayId
-    : undefined
+  return getActiveWayDefinition(player)?.id
 }
 
 /**
  * M4 — generic active-way stat collection (the D12 assembly channel).
  * Resolves the player's active way — cultivationWay authoritative once
- * written, LEGACY_PATH_TO_WAY fallback for legacy-shaped saves — and
- * delegates to the way's PathWayStatFacet. resolvePlayerFinalStats calls
- * this before calculateStats so facet emissions are gated by their own
- * domain tags. Ways without a facet (kiem_tu has no totals-driven
- * channel) emit nothing.
+ * written; a way-less or mismatched pair is corrupt and emits nothing —
+ * and delegates to the way's PathWayStatFacet. resolvePlayerFinalStats
+ * calls this before calculateStats so facet emissions are gated by
+ * their own domain tags. Ways with no totals-driven channel (kiem_tu)
+ * emit nothing.
  */
 export function collectActiveWayStatModifiers(
   player: PlayerData,
@@ -154,23 +143,17 @@ export function collectActiveWayStatModifiers(
 }
 
 /**
- * M5 — the active way's OWNED stat domains: the way's stat facet is the
- * authority when it declares one (hien -> 'the_tu', ung_the ->
- * 'the_tu_an', both phap_tu ways -> 'phap_tu'); facet-less ways fall
- * back to the legacy path-id map row (kiem_tu resolves 'kiem_tu' for
- * both ways — correct, they share the domain). Consumed by
- * GameManagerTurnBattleOps when stamping
+ * M5 — the active way's OWNED stat domains, resolved from the way's
+ * stat facet — the single authority post-M7 (hien -> 'the_tu', ung_the
+ * -> 'the_tu_an', both phap_tu ways -> 'phap_tu', both kiem_tu ways ->
+ * 'kiem_tu'). Consumed by GameManagerTurnBattleOps when stamping
  * participant.activeDomains — the mid-battle domain deltaDerivers gate
- * on it, so a collapsed save must not resolve the WRONG way's domain
- * (raw-path lookup would give 'the_tu' for ('the_tu','ung_the')).
+ * on it, so the WAY — never the raw path id — decides the domain (a
+ * path-level lookup would give 'the_tu' for ('the_tu','ung_the')).
+ * Corrupt/way-less pairs resolve nothing.
  */
 export function resolveActiveWayStatDomains(player: PathWayRead): readonly StatDomain[] | undefined {
-  return (
-    getActiveWayDefinition(player)?.stats?.domains ??
-    (player.cultivationPath !== undefined && player.cultivationPath !== null
-      ? CULTIVATION_PATH_STAT_DOMAINS[player.cultivationPath]
-      : undefined)
-  )
+  return getActiveWayDefinition(player)?.stats?.domains
 }
 
 /**
@@ -180,15 +163,14 @@ export function resolveActiveWayStatDomains(player: PathWayRead): readonly StatD
  * way is currently offerable (live offerGate eval). ZERO mutation on
  * any failure.
  *
- * On success writes cultivationWay AND the legacy-effective
- * cultivationPath id (M7 deletion adapter via getLegacyPathIdForWay —
- * ('phap_tu','ngo_dao') persists 'phap_tu_an' so unmigrated consumers
- * keep working), then creates the path-state slice where the path
- * declares one (today only kiem_tu -> freshKiemTuState()).
+ * On success writes cultivationWay AND cultivationPath (the BASE path
+ * id directly — M7 removed the legacy-id adapter), then creates the
+ * path-state slice where the path declares one (today only kiem_tu ->
+ * freshKiemTuState()).
  */
 export function applyPathChoice(
   player: PlayerData,
-  pathId: CultivationPathBaseId,
+  pathId: CultivationPathId,
   wayId: PathWayId,
 ): PathChoiceResult {
   const pathModule = CULTIVATION_PATH_MODULES[pathId]
@@ -211,15 +193,8 @@ export function applyPathChoice(
     return { ok: false, reason: `way '${wayId}' is not currently offerable` }
   }
 
-  // Ways with a distinct legacy id persist it so unmigrated consumers
-  // keep working (('phap_tu','ngo_dao') -> 'phap_tu_an'); a way that
-  // never had a legacy path id — kiem_tu/ngu, whose hidden variant was
-  // state-internal — persists the base path id and lets
-  // cultivationWay carry the distinction.
-  const legacyPathId = getLegacyPathIdForWay(pathId, wayId) ?? pathId
-
   player.cultivationWay = wayId
-  player.cultivationPath = legacyPathId
+  player.cultivationPath = pathId
 
   // Way-slice lifecycle — created at commit by the authority. Only
   // kiem_tu declares a slice today: the canonical fresh state is
@@ -230,44 +205,6 @@ export function applyPathChoice(
   }
 
   return { ok: true }
-}
-
-/**
- * Phap Tu Reimagined (Task 7) — paths the initiation ritual may offer.
- * 'phap_tu_an' appears ONLY when linh_bao has reached its Lv3 cast
- * threshold at this moment — the offer is evaluated at ritual time,
- * never stored, and post-ritual casts cannot reopen it (the ritual
- * itself rejects any second choice). The Tu Reimagined adds 'the_tu'
- * as an always-offered base path and 'the_tu_an' behind the same
- * ritual-time evaluation via its way offerGate (huy_quyen Lv3).
- *
- * M2 — now a delegate over listOfferableWays: returns the
- * legacy-effective path ids of the eligible offers. kiem_tu/ngu has no
- * distinct legacy id so both kiem ways resolve 'kiem_tu' — the list is
- * deduped since a path-level consumer cannot distinguish them anyway.
- */
-export function getOfferableCultivationPaths(player: PlayerData): CultivationPathId[] {
-  const pathIds = new Set<CultivationPathId>()
-
-  for (const offer of listOfferableWays(player)) {
-    if (!offer.eligible) {
-      continue
-    }
-
-    pathIds.add(getLegacyPathIdForWay(offer.pathId, offer.wayId) ?? offer.pathId)
-  }
-
-  return [...pathIds]
-}
-
-/** linh_bao Lv3 gate — shared by the offer query and the ritual commit.
- * M1: the rule now lives on the ngo_dao way's requiresSkillCastLevel
- * offerGate. M2: delegates to the offer list (the gate eval inside
- * applyPathChoice subsumes the ritual-side check). */
-export function isPhapTuAnEligible(player: PlayerData): boolean {
-  return listOfferableWays(player).some(
-    (offer) => offer.pathId === 'phap_tu' && offer.wayId === 'ngo_dao' && offer.eligible,
-  )
 }
 
 // ---------------------------------------------------------------------------

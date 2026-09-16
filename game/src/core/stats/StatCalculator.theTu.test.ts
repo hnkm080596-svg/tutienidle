@@ -36,9 +36,25 @@ function statMod(overrides: Partial<StatModifier>): StatModifier {
   }
 }
 
-function playerWithPath(path: 'the_tu' | 'the_tu_an' | 'phap_tu' | 'kiem_tu' | undefined) {
+// M7 — the persisted pair: a path id alone is corrupt (way-less saves
+// resolve nothing), so the helper takes the (path, way) pair. The
+// 'ung_the' argument is the former 'the_tu_an' shorthand.
+function playerWithPath(
+  path: 'the_tu' | 'phap_tu' | 'kiem_tu' | 'ung_the' | undefined,
+) {
   const player = createDefaultPlayer()
-  player.cultivationPath = path
+
+  if (path === 'ung_the') {
+    player.cultivationPath = 'the_tu'
+    player.cultivationWay = 'ung_the'
+    return player
+  }
+
+  if (path !== undefined) {
+    player.cultivationPath = path
+    player.cultivationWay = path === 'phap_tu' ? 'ngu_hanh' : 'hien'
+  }
+
   return player
 }
 
@@ -68,7 +84,7 @@ describe('the_tu_an reactive chance stats — assembly emission', () => {
       [],
     )
 
-    const mods = collectActiveWayStatModifiers(playerWithPath('the_tu_an'), totals)
+    const mods = collectActiveWayStatModifiers(playerWithPath('ung_the'), totals)
 
     expect(mods).toEqual(theTuAnReactiveModifiers(totals, 'the_tu_an:attributes'))
   })
@@ -83,7 +99,7 @@ describe('the_tu_an reactive chance stats — assembly emission', () => {
   })
 
   it('resolvePlayerFinalStats stores the RAW value — over cap is correct pre-consumption', () => {
-    const player = playerWithPath('the_tu_an')
+    const player = playerWithPath('ung_the')
     player.baseStats.strength = 100
     player.baseStats.dexterity = 100
     player.baseStats.intelligence = 100
@@ -113,7 +129,7 @@ describe('the_tu_an reactive chance stats — cap at consumption', () => {
   // Review-locked contract (P0.1): emitters/deriver emit raw linear
   // values; clampStatValue at the roll/display site applies the cap.
   it('raw 0.80 with a -0.05 effective delta stays capped at 0.60', () => {
-    const player = playerWithPath('the_tu_an')
+    const player = playerWithPath('ung_the')
     player.baseStats.strength = 100
     player.baseStats.dexterity = 100
     const resolved = resolvePlayerFinalStats(player, [])
@@ -132,7 +148,7 @@ describe('the_tu_an reactive chance stats — cap at consumption', () => {
   })
 
   it('raw 0.80 with a -0.25 effective delta rolls at 0.55', () => {
-    const player = playerWithPath('the_tu_an')
+    const player = playerWithPath('ung_the')
     player.baseStats.strength = 100
     player.baseStats.dexterity = 100
     const resolved = resolvePlayerFinalStats(player, [])
@@ -148,7 +164,7 @@ describe('the_tu_an reactive chance stats — cap at consumption', () => {
   })
 
   it('delta deriver is domain-gated: no the_tu_an context -> no chance delta', () => {
-    const player = playerWithPath('the_tu_an')
+    const player = playerWithPath('ung_the')
     player.baseStats.strength = 100
     player.baseStats.dexterity = 100
     const resolved = resolvePlayerFinalStats(player, [])
@@ -181,14 +197,14 @@ describe('the_tu domain migration — endurance channel', () => {
     expect(theTu[0]!.domain).toBe('the_tu')
     expect(theTu).toEqual(theTuEnduranceModifiers(totals.vitality, 'the_tu:vitality'))
 
-    for (const path of ['the_tu_an', 'phap_tu', 'kiem_tu', undefined] as const) {
+    for (const path of ['ung_the', 'phap_tu', 'kiem_tu', undefined] as const) {
       const mods = collectActiveWayStatModifiers(playerWithPath(path), totals)
       expect(mods.filter((m) => m.domain === 'the_tu')).toEqual([])
     }
   })
 
   it('per-path matrix: only the_tu derives enduranceThreshold from vitality', () => {
-    for (const path of ['the_tu', 'the_tu_an', 'phap_tu', 'kiem_tu', undefined] as const) {
+    for (const path of ['the_tu', 'ung_the', 'phap_tu', 'kiem_tu', undefined] as const) {
       const player = playerWithPath(path)
       player.baseStats.vitality = 50
 

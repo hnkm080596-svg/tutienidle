@@ -3,7 +3,7 @@ import type { ProgressionNode } from '../progression/ProgressionNode'
 import { getNodeLevel, nodePathApplies, nodeWayApplies } from '../progression/NodeSystem'
 
 // The Tu Reimagined (plan Task 20, review P1.7) — the ONE locked node ->
-// the_tu_an channel. Nodes declare `effect.theTuAnMechanicModifiers`
+// ung_the channel. Nodes declare `effect.theTuAnMechanicModifiers`
 // (flat, per-level); this collector sums them by channel over owned node
 // levels and the participant build bakes the totals into participant-
 // local def clones (buildTheTuAnKit) and the entity's maxThe cap.

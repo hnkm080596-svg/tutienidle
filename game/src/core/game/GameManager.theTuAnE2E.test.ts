@@ -345,7 +345,8 @@ describe('an save/restore parity', () => {
     expect(result.status).toBe('ok')
 
     const restoredPlayer = playerStore.$state
-    expect(restoredPlayer.cultivationPath).toBe('the_tu_an')
+    expect(restoredPlayer.cultivationPath).toBe('the_tu')
+    expect(restoredPlayer.cultivationWay).toBe('ung_the')
     expect(restoredPlayer.nodeLevels?.ho_mon).toBe(1)
     expect(restoredPlayer.nodeLevels?.tro_mon).toBe(1)
 

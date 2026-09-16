@@ -93,8 +93,12 @@ describe('the_tu kit data', () => {
     })
   })
 
-  it('BASIC_ATTACKS_BY_BUILD.the_tu stays the generic pre-root fallback (INV-3)', () => {
-    expect(BASIC_ATTACKS_BY_BUILD['the_tu']).toBe(GENERIC_PHYSICAL_BASIC)
+  it('no-root hien resolves the generic melee fallback directly (INV-3, M7)', () => {
+    // The generic the_tu row was dead content (kit resolution + the
+    // `?? GENERIC_PHYSICAL_BASIC` fallback own the behavior); the map
+    // no longer carries it.
+    expect(BASIC_ATTACKS_BY_BUILD['the_tu']).toBeUndefined()
+    expect(GENERIC_PHYSICAL_BASIC.id).toBe('generic_physical')
   })
 
   it('every kit id has display metadata', () => {

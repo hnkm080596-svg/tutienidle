@@ -115,9 +115,9 @@ export interface PlayerData {
   // Phap Tu Reimagined (spec 2026-09-14) — persistent path-choice
   // authority for the normal Phap Tu path: { element, route } commit
   // atomically via selectPhapTuElement(). Present from character
-  // creation (both null until the ritual + atomic pick); phap_tu_an
-  // holders carry the same inert shape — their path id, not this
-  // state, is what matters.
+  // creation (both null until the ritual + atomic pick); ngo_dao
+  // holders carry the same inert shape — the (path, way) pair, not
+  // this state, is what matters.
   phapTu: PhapTuState
 
   // Kiem Tu Reimagined (spec 2026-09-15 K1) — the ONE canonical path

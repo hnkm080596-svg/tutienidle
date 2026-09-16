@@ -882,8 +882,8 @@ export class GameManager {
    * resolvePlayerSpecialUltimate()'s path.
    *
    * Unlearned/missing authored basics degrade to GENERIC_PHYSICAL_BASIC —
-   * honest "no skill" melee. Converter REJECTION is different: phap_tu /
-   * phap_tu_an rethrow (authored-data defect must surface), while
+   * honest "no skill" melee. Converter REJECTION is different: the
+   * phap_tu ways rethrow (authored-data defect must surface), while
    * kiem_tu falls back to its authored static TurnSkillDefinition. The
    * basic slot is cadence-free by design (every-turn swing), so converted
    * output is normalized to cooldownTurns 0 and no resource cost.
@@ -893,7 +893,7 @@ export class GameManager {
    * skillCastCounts. The_tu keeps the authored generic-melee mapping.
    */
   private resolvePlayerBasicAttack(player: PlayerData): TurnSkillDefinition {
-    this.assertPhapTuAnKitLearned(player)
+    this.assertNgoDaoKitLearned(player)
 
     const authoredBasicId = this.authoredBasicSkillId(player)
     const skill = authoredBasicId ? this.skillManager.get(authoredBasicId) : undefined
@@ -901,8 +901,8 @@ export class GameManager {
     // Review round-3 (MEDIUM): a REQUIRED phap basic that isn't learned
     // is corrupt progression state (the element commit / An ritual grants
     // it atomically). Fail loudly — degrading to generic melee would
-    // silently strip the path's kit. (phap_tu_an is already covered by
-    // assertPhapTuAnKitLearned above; kept for defense in depth.)
+    // silently strip the path's kit. (ngo_dao is already covered by
+    // assertNgoDaoKitLearned above; kept for defense in depth.)
     if (
       skill === undefined &&
       authoredBasicId !== undefined &&
@@ -1060,7 +1060,7 @@ export class GameManager {
 
     // Mortal / pham_nhan — the slot-0 loadout occupant is the player's
     // chosen basic-tier skill (spec 2026-09-15 section 2.3: huy_quyen
-    // is cast as a basic while mortal, its casts feeding the the_tu_an
+    // is cast as a basic while mortal, its casts feeding the ung_the
     // offer gate). Restricted to the cast-leveled basics family — any
     // other slot-0 occupant (e.g. bat_kiem_thuat) keeps the creation-
     // granted tram as the combat basic.
@@ -1074,14 +1074,14 @@ export class GameManager {
   }
 
   /**
-   * Review round-4 (MEDIUM) — the phap_tu_an kit is a fixed three-skill
+   * Review round-4 (MEDIUM) — the ngo_dao kit is a fixed three-skill
    * set granted atomically at the ritual (PHAP_TU_AN_REQUIRED_SKILLS is
    * the single authority). A save/registry missing ANY member is corrupt
    * progression state — fail loudly at battle build instead of silently
    * dropping the special button or the dao multicast. Called from both
    * battle-build resolvers so each enforces the contract independently.
    */
-  private assertPhapTuAnKitLearned(player: PlayerData) {
+  private assertNgoDaoKitLearned(player: PlayerData) {
     if (!isPhapTuNgoDao(player)) {
       return
     }
@@ -1092,7 +1092,7 @@ export class GameManager {
 
     if (missing.length > 0) {
       throw new Error(
-        `[GameManager] phap_tu_an kit incomplete — missing learned skills: ${missing.join(', ')}`,
+        `[GameManager] ngo_dao kit incomplete — missing learned skills: ${missing.join(', ')}`,
       )
     }
   }
@@ -1141,7 +1141,7 @@ export class GameManager {
     // at the ritual; the ult slot is a passive (ngo_dao_hon_don), no
     // ultimate TurnSkillDefinition.
     if (isPhapTuNgoDao(player)) {
-      this.assertPhapTuAnKitLearned(player)
+      this.assertNgoDaoKitLearned(player)
 
       const specialSkill = this.skillManager.get(PHAP_TU_AN_SPECIAL_ID)
 
@@ -1258,7 +1258,7 @@ export class GameManager {
    * route profile contributes theGainOnCrit; tu_the_<element> nodes add
    * per-level deltas via aggregateTurnSkillResourceModifiers — all of it
    * scoped to this authored skill id (no leak to other elements, Kiem
-   * Tu, or mortal skills). Non-phap_tu paths (incl. phap_tu_an — its
+   * Tu, or mortal skills). Non-ngu_hanh ways (incl. ngo_dao — its
    * kit has no The loop) return the def unchanged.
    */
   private applyPhapTuTheGains(

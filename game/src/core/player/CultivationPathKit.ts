@@ -12,13 +12,6 @@ import {
 } from '../phap-tu/PhapTuPath'
 import { THE_TU_HIEN_WAY, THE_TU_UNG_THE_WAY } from '../the-tu/TheTuPath'
 import { KIEM_TU_HIEN_WAY, KIEM_TU_NGU_WAY } from '../kiem-tu/KiemTuPath'
-import { LEGACY_PATH_TO_WAY } from './PathWayIdentity'
-
-// M5 — the legacy-id -> (base path, way) adapter lives in the
-// PathWayIdentity leaf so domain systems can resolve era-tolerant path
-// identity without importing this catalog; re-exported so existing
-// consumers keep their import site.
-export { LEGACY_PATH_TO_WAY } from './PathWayIdentity'
 
 // M4 — the ngo_dao kit identity lives in the Phap Tu path module
 // (core/phap-tu/PhapTuPath.ts); re-exported so existing consumers keep
@@ -37,22 +30,14 @@ export {
 // chế kit cố định KHÁC hẳn — chưa đi qua Element/Node Tree). Thêm giá
 // trị mới khi Thể Tu được thiết kế sau này — KHÔNG BAO GIỜ tái cấu
 // trúc union này, chỉ mở rộng thêm string.
-// Phap Tu Reimagined (Task 7) — 'phap_tu_an' is a first-class hidden
-// path (not a node/mode): offered only inside the initiation ritual
-// when linh_bao is Lv3, permanent, mutually exclusive with phap_tu.
 //
-// The Tu Reimagined (spec 2026-09-15, T1) — the_tu (Hien) and the_tu_an
-// (An) are SEPARATE path ids offered at the Initiation Ritual; picking
-// An excludes the ordinary path permanently (no node/mode flip).
-//
-// Cultivation Path Framework (spec 2026-09-16) — this union stays at 5
-// ids through the transition and shrinks to the three base ids at M7.
-export type CultivationPathId = 'phap_tu' | 'phap_tu_an' | 'kiem_tu' | 'the_tu' | 'the_tu_an'
-
-// M1 — the module catalog is keyed by the three BASE path ids while the
-// 5-id union above still exists; legacy _an ids resolve through
-// LEGACY_PATH_TO_WAY below. Collapses back to CultivationPathId at M7.
-export type CultivationPathBaseId = 'kiem_tu' | 'phap_tu' | 'the_tu'
+// Cultivation Path Framework (spec 2026-09-16, M7) — the persisted
+// union is now exactly the three BASE path ids. The hidden variants
+// (ngo_dao under phap_tu, ung_the under the_tu, ngu under kiem_tu)
+// are WAYS on player.cultivationWay, never path ids: the transition-
+// era 'phap_tu_an'/'the_tu_an' ids and the LEGACY_PATH_TO_WAY adapter
+// are deleted; saves carrying them fail the v66 shape check.
+export type CultivationPathId = 'kiem_tu' | 'phap_tu' | 'the_tu'
 
 // Path-scoped way id (content string, like node ids — spec §24).
 export type PathWayId = string
@@ -98,7 +83,7 @@ export interface PathWayStatFacet {
 export interface PathWayDefinition {
   id: PathWayId
 
-  pathId: CultivationPathId // base path id ('phap_tu' etc — base even during transition)
+  pathId: CultivationPathId // base path id ('phap_tu' etc)
 
   name: string
 
@@ -143,23 +128,21 @@ export interface PathWayDefinition {
   // M4 — totals-driven stat contribution (the D12 assembly channel):
   // collectActiveWayStatModifiers resolves the active way and calls
   // this facet's collectModifiers during resolvePlayerFinalStats.
-  // Module-level declaration, never persisted. Optional — ways without
-  // a totals-driven channel emit nothing (kiem_tu/the_tu facets land
-  // with M5/M6; their emitters stay hardcoded until then).
+  // Module-level declaration, never persisted. M7 — every way declares
+  // a facet: `domains` is the authoritative owned-domain list consumed
+  // by resolveActiveWayStatDomains; ways with no totals-driven channel
+  // (both kiem_tu ways) emit nothing from collectModifiers.
   stats?: PathWayStatFacet
 }
 
-// M1 — one module per base path; ways keyed by PathWayId. During the
-// transition the module is a pure view over the former kit rows (no
-// createInitialState/stats/lifecycle facets yet — they land in M2/M4
-// with their consumers).
+// M1 — one module per base path; ways keyed by PathWayId.
 export interface CultivationPathModule {
-  id: CultivationPathId // base path id
+  id: CultivationPathId
   name: string // e.g. 'Kiếm Tu'
   ways: Readonly<Record<PathWayId, PathWayDefinition>>
 }
 
-export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathBaseId, CultivationPathModule>> = {
+export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, CultivationPathModule>> = {
   phap_tu: {
     id: 'phap_tu',
     name: 'Pháp Tu',
@@ -201,20 +184,6 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathBaseId, Cu
   },
 }
 
-// Resolves a legacy path id to its way definition via
-// LEGACY_PATH_TO_WAY + CULTIVATION_PATH_MODULES. Undefined for ids
-// outside the legacy union — callers handle per site (these sites only
-// run when the path is set and valid).
-export function getPathWayDefinition(pathId: CultivationPathId): PathWayDefinition | undefined {
-  const mapping = LEGACY_PATH_TO_WAY[pathId]
-
-  if (!mapping) {
-    return undefined
-  }
-
-  return CULTIVATION_PATH_MODULES[mapping.pathId].ways[mapping.wayId]
-}
-
 /**
  * Structural read shape for the active-way resolver — PlayerData and
  * presentation-side player slices both satisfy it; fields stay
@@ -226,50 +195,23 @@ export interface PathWayRead {
 }
 
 /**
- * M5 — resolves the ACTIVE way definition: cultivationWay is
- * authoritative once the ritual writes it; a legacy-shaped player
- * (cultivationPath only, no way) derives through LEGACY_PATH_TO_WAY so
- * pre-M2 reads keep working. Unlike getPathWayDefinition this honours
- * the persisted way id, so collapsed saves ('the_tu' + 'ung_the')
- * resolve the same way as transition saves ('the_tu_an' + 'ung_the').
- * A (path, way) pair the catalog does not know returns undefined.
+ * M7 — resolves the ACTIVE way definition straight from the persisted
+ * (cultivationPath, cultivationWay) pair against the module catalog.
+ * There is no fallback: a path with no way, a way id the path module
+ * does not own, or an absent path all return undefined — a way-less
+ * save is corrupt post-M7 (the ritual writes both fields atomically).
  */
 export function getActiveWayDefinition(player: PathWayRead): PathWayDefinition | undefined {
-  const mapping =
-    player.cultivationPath !== undefined && player.cultivationPath !== null
-      ? LEGACY_PATH_TO_WAY[player.cultivationPath]
-      : undefined
-
-  if (!mapping) {
+  if (
+    player.cultivationPath === undefined ||
+    player.cultivationPath === null ||
+    player.cultivationWay === undefined ||
+    player.cultivationWay === null
+  ) {
     return undefined
   }
 
-  const wayId = player.cultivationWay ?? mapping.wayId
-
-  return CULTIVATION_PATH_MODULES[mapping.pathId].ways[wayId]
-}
-
-// M7 deletion adapter — the INVERSE of LEGACY_PATH_TO_WAY: resolves a
-// (base path, way) pair back to the legacy 5-id path id that
-// player.cultivationPath still carries during the transition so
-// unmigrated consumers keep working (e.g. ('phap_tu','ngo_dao') ->
-// 'phap_tu_an'). A way with no distinct legacy id (kiem_tu/ngu — the
-// hidden variant was state-internal, never a path id) returns
-// undefined; callers persist the base path id for those. Deleted with
-// LEGACY_PATH_TO_WAY in M7.
-export function getLegacyPathIdForWay(
-  pathId: CultivationPathBaseId,
-  wayId: PathWayId,
-): CultivationPathId | undefined {
-  for (const legacyId of Object.keys(LEGACY_PATH_TO_WAY) as CultivationPathId[]) {
-    const mapping = LEGACY_PATH_TO_WAY[legacyId]
-
-    if (mapping.pathId === pathId && mapping.wayId === wayId) {
-      return legacyId
-    }
-  }
-
-  return undefined
+  return CULTIVATION_PATH_MODULES[player.cultivationPath]?.ways[player.cultivationWay]
 }
 
 // Nghi Lễ Nhập Môn (2026-08-16) — gate cũ (mốc realmLevel cố định
@@ -280,13 +222,12 @@ export function getLegacyPathIdForWay(
 // còn hằng số riêng ở đây nữa — đọc thẳng maxLevel của REALMS.
 
 // Single offer predicate consumed by BOTH the Quan Khi offer list
-// (QuanKhiPanel.vue via getOfferableCultivationPaths) and
+// (QuanKhiPanel.vue via listOfferableWays) and
 // chooseCultivationPath() so the UI can never show a choice the ritual
 // would reject. A way with no offerGate is always offered. Gates read
 // the live mirrors: requiresSkillLevel -> player.skillLevels;
 // requiresSkillCastLevel -> the cast-leveled skill's level derived from
-// player.skillCastCounts via CAST_LEVELING_THRESHOLDS (the
-// isPhapTuAnEligible semantic, now data-driven).
+// player.skillCastCounts via CAST_LEVELING_THRESHOLDS.
 export function isCultivationPathOffered(way: PathWayDefinition, player: PlayerData): boolean {
   const requiredSkill = way.offerGate?.requiresSkillLevel
 

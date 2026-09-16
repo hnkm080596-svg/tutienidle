@@ -153,16 +153,13 @@ export function isTheTuHien(player: TheTuWayRead | null | undefined): boolean {
 /**
  * ung_the membership — the gate for the hidden way's fixed-kit
  * machinery (tham_the/tu_the/bach_ung, reactive payloads, the The
- * pool, the 'the_tu_an' reactive facet, the An node tree). The
- * persisted path id accepts BOTH eras: 'the_tu_an' during the M4-M6
- * transition and 'the_tu' after the M7 base-path collapse — the WAY id
- * is the durable check.
+ * pool, the 'the_tu_an' reactive facet, the An node tree). M7 — strict
+ * base-pair predicate: only the persisted pair ('the_tu', 'ung_the')
+ * matches; the legacy 'the_tu_an' path id is gone from the union and
+ * can never satisfy this.
  */
 export function isTheTuUngThe(player: TheTuWayRead | null | undefined): boolean {
-  return (
-    (player?.cultivationPath === 'the_tu_an' || player?.cultivationPath === 'the_tu') &&
-    player?.cultivationWay === 'ung_the'
-  )
+  return player?.cultivationPath === 'the_tu' && player?.cultivationWay === 'ung_the'
 }
 
 // ---------------------------------------------------------------------------

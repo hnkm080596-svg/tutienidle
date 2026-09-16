@@ -35,8 +35,8 @@ function openQuanKhi() {
 }
 
 // M5 — the active way (cultivationWay authoritative) drives the kit
-// label + aura colour; getActiveWayDefinition resolves both persisted
-// eras ('the_tu_an' legacy and the collapsed 'the_tu' + way shape).
+// label + aura colour; getActiveWayDefinition resolves the persisted
+// (path, way) pair and fails closed on a way-less/corrupt save.
 const chosenKit = computed(() => getActiveWayDefinition(player))
 
 // Thiên Phú (talent-direction-choice-plan §7) — hiển thị thiên phú đã chọn

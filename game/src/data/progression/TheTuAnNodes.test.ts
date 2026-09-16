@@ -58,7 +58,7 @@ describe('the_tu_an node tree (spec 8.2)', () => {
     const registry = registryWithNodes()
     const player = playerWith({
       realmId: 'qi_refining',
-      cultivationPath: 'the_tu_an',
+      cultivationPath: 'the_tu',
       cultivationWay: 'ung_the',
     })
 
@@ -115,7 +115,7 @@ describe('collectTheTuAnMechanicModifiers', () => {
     const registry = registryWithNodes()
     const player = playerWith({
       realmId: 'qi_refining',
-      cultivationPath: 'the_tu_an',
+      cultivationPath: 'the_tu',
       cultivationWay: 'ung_the',
     })
 

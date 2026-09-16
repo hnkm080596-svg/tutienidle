@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { getOfferableCultivationPaths } from '../player/CultivationPathSystem'
+import {
+  listOfferableWays,
+  resolveActiveWayStatDomains,
+} from '../player/CultivationPathSystem'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
@@ -9,14 +12,19 @@ import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { freshKiemTuState } from '../kiem-tu/KiemTuState'
-import { CULTIVATION_PATH_STAT_DOMAINS } from '../stats/StatDomain'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { defineEnemy } from '../enemy/Enemy'
 
-// Phap Tu Reimagined (Task 7) — phap_tu_an is a first-class
-// CultivationPathId offered ONLY inside the initiation ritual, gated by
-// live linh_bao cast count (>= lv3 threshold). No Phap Tu element,
-// route, or The pool. The persisted record is cultivationPath itself.
+// Phap Tu Reimagined (Task 7) + Cultivation Path Framework M7 — the
+// hidden Phap Tu variant is the 'ngo_dao' WAY under path 'phap_tu',
+// offered ONLY inside the initiation ritual, gated by live linh_bao
+// cast count (>= lv3 threshold). No element, route, or The pool. The
+// persisted record is the (cultivationPath, cultivationWay) pair.
+
+const ngoDaoOffer = (player: Parameters<typeof listOfferableWays>[0]) =>
+  listOfferableWays(player).find(
+    (offer) => offer.pathId === 'phap_tu' && offer.wayId === 'ngo_dao',
+  )
 
 const LING_BAO_L3 = CAST_LEVELING_THRESHOLDS.linh_bao!.lv3
 
@@ -35,25 +43,25 @@ function makeManager() {
   return { gameManager, player }
 }
 
-describe('phap_tu_an — ritual offer gate', () => {
-  it('getOfferableCultivationPaths hides phap_tu_an below linh_bao Lv3, shows it at Lv3', () => {
+describe('ngo_dao way — ritual offer gate', () => {
+  it('listOfferableWays marks ngo_dao ineligible below linh_bao Lv3, eligible at Lv3', () => {
     const { player } = makeManager()
 
     player.skillCastCounts = { linh_bao: LING_BAO_L3 - 1 }
-    expect(getOfferableCultivationPaths(player)).not.toContain('phap_tu_an')
+    expect(ngoDaoOffer(player)?.eligible).toBe(false)
 
     player.skillCastCounts.linh_bao = LING_BAO_L3
-    expect(getOfferableCultivationPaths(player)).toContain('phap_tu_an')
+    expect(ngoDaoOffer(player)?.eligible).toBe(true)
   })
 
-  it('offer includes the base paths regardless of linh_bao', () => {
+  it('the ungated ways stay eligible regardless of linh_bao', () => {
     const { player } = makeManager()
 
     player.skillCastCounts = {}
 
-    const offered = getOfferableCultivationPaths(player)
-    expect(offered).toContain('phap_tu')
-    expect(offered).toContain('kiem_tu')
+    const offered = listOfferableWays(player).filter((offer) => offer.eligible)
+    expect(offered.some((o) => o.pathId === 'phap_tu' && o.wayId === 'ngu_hanh')).toBe(true)
+    expect(offered.some((o) => o.pathId === 'kiem_tu' && o.wayId === 'hien')).toBe(true)
   })
 
   it('chooseCultivationPath(phap_tu, ngo_dao) rejects below Lv3 even though the ritual UI could offer it', () => {
@@ -67,14 +75,14 @@ describe('phap_tu_an — ritual offer gate', () => {
     expect(player.cultivationWay).toBeUndefined()
   })
 
-  it('chooseCultivationPath(phap_tu, ngo_dao) at Lv3: legacy path id + way set, technique equipped, an kit in slots 0/1, passive learned', () => {
+  it('chooseCultivationPath(phap_tu, ngo_dao) at Lv3: base path id + way set, technique equipped, an kit in slots 0/1, passive learned', () => {
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
 
     player.skillCastCounts = { linh_bao: LING_BAO_L3 }
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(true)
-    expect(player.cultivationPath).toBe('phap_tu_an')
+    expect(player.cultivationPath).toBe('phap_tu')
     expect(player.cultivationWay).toBe('ngo_dao')
 
     // No element/route/The authority — an has none.
@@ -173,10 +181,15 @@ describe('phap_tu_an — ritual offer gate', () => {
     expect(player.realmId).toBe('mortal')
   })
 
-  it('phap_tu_an activates the phap_tu stat domain for its kit modifiers', () => {
-    // Kit statModifiers are domain:'phap_tu' — the path must claim that
+  it('ngo_dao way owns the phap_tu stat domain for its kit modifiers', () => {
+    // Kit statModifiers are domain:'phap_tu' — the way must claim that
     // domain or every gated stat (maxMp/manaShieldPercent/...) rejects.
-    expect(CULTIVATION_PATH_STAT_DOMAINS['phap_tu_an']).toContain('phap_tu')
+    const { gameManager, player } = makeManager()
+    gameManager.setActivePlayer(player)
+    player.skillCastCounts = { linh_bao: LING_BAO_L3 }
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(true)
+
+    expect(resolveActiveWayStatDomains(player)).toEqual(['phap_tu'])
   })
 })
 
@@ -391,7 +404,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
     // Path state without the ritual grant — required kit skill absent.
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
     player.cultivationWay = 'ngo_dao'
 
     expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
@@ -402,7 +415,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     // a corrupt save missing the special entered combat with no button.
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
     player.cultivationWay = 'ngo_dao'
     expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam')).toBe(true)
     expect(gameManager.progressionOps.learnSkill('ngo_dao_hon_don')).toBe(true)
@@ -413,7 +426,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
   it('phap_tu_an: missing ngo_dao_hon_don → throws instead of silently dropping the dao multicast', () => {
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
     player.cultivationWay = 'ngo_dao'
     expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam')).toBe(true)
     expect(gameManager.progressionOps.learnSkill('da_phap_lien_tuyen')).toBe(true)

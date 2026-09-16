@@ -216,7 +216,7 @@ describe('route stat modifiers aggregation', () => {
     // kiem_tu player must not reach the aggregators.
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
     player.cultivationWay = 'ngo_dao'
     player.phapTu = { element: 'fire', route: 'no' }
 

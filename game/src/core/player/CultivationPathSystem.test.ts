@@ -4,15 +4,13 @@ import type { StatDomain } from '../stats/StatDomain'
 import { createDefaultPlayer, resolvePlayerFinalStats } from './Player'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { freshKiemTuState } from '../kiem-tu/KiemTuState'
-import type { CultivationPathBaseId, PathWayId } from './CultivationPathKit'
+import type { CultivationPathId, PathWayId } from './CultivationPathKit'
 // Importing the path system registers its phap_tu delta deriver with the
 // stats module (D12 contract) — the registration itself is under test.
 import {
   applyPathChoice,
   getActivePath,
   getActiveWay,
-  getOfferableCultivationPaths,
-  isPhapTuAnEligible,
   listOfferableWays,
   PHAP_TU_ATTUNEMENT_MANA_REGEN_PER_POINT,
   PHAP_TU_ATTUNEMENT_MAX_MP_PER_POINT,
@@ -39,6 +37,7 @@ describe('phap_tu attunement -> MP emission (D12)', () => {
   it('assembly: a phap_tu player gains MP from attunement through the gate', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.baseStats.attunement = 10
 
     const stats = resolvePlayerFinalStats(player, [])
@@ -60,6 +59,7 @@ describe('phap_tu attunement -> MP emission (D12)', () => {
   it('assembly: modifier-driven attunement counts toward the MP emission', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.baseStats.attunement = 5
 
     const stats = resolvePlayerFinalStats(player, [attunementBuff(5)])
@@ -70,6 +70,7 @@ describe('phap_tu attunement -> MP emission (D12)', () => {
   it('INV-10: a mid-battle attunement delta emits the gated MP delta exactly once', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.baseStats.attunement = 10
     const resolved = resolvePlayerFinalStats(player, [])
 
@@ -89,6 +90,7 @@ describe('phap_tu attunement -> MP emission (D12)', () => {
   it('mid-battle: a NON-phap_tu entity with an attunement delta gains no MP', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'kiem_tu'
+    player.cultivationWay = 'hien'
     player.baseStats.attunement = 10
     const resolved = resolvePlayerFinalStats(player, [])
 
@@ -106,6 +108,7 @@ describe('phap_tu attunement -> MP emission (D12)', () => {
   it('mid-battle: no declared domains -> no domain deriver runs at all', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.baseStats.attunement = 10
     const resolved = resolvePlayerFinalStats(player, [])
 
@@ -118,6 +121,7 @@ describe('phap_tu attunement -> MP emission (D12)', () => {
   it('a non-attunement delta emits no MP delta', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
     player.baseStats.attunement = 10
     const resolved = resolvePlayerFinalStats(player, [])
 
@@ -149,7 +153,7 @@ function mortalPlayer() {
 }
 
 describe('listOfferableWays — (path, way) offer authority', () => {
-  it('returns all five offerable pairs: 3 base ways + the 2 gated hidden ways', () => {
+  it('returns all six offerable pairs: 3 ungated ways + the 3 gated ways', () => {
     const player = mortalPlayer()
 
     expect(listOfferableWays(player).map(offerId)).toEqual([
@@ -157,19 +161,22 @@ describe('listOfferableWays — (path, way) offer authority', () => {
       'kiem_tu/hien',
       'the_tu/hien',
       'phap_tu/ngo_dao',
+      'kiem_tu/ngu',
       'the_tu/ung_the',
     ])
   })
 
-  it('kiem_tu/ngu is absent entirely — even at tram Lv9 (filtered until M6)', () => {
+  it('kiem_tu/ngu is listed and becomes eligible at tram Lv3 (M6: ritual-only way)', () => {
     const player = mortalPlayer()
-    player.skillLevels = { tram: 9 }
-    player.skillCastCounts = { tram: 999_999 }
+    player.skillLevels = { tram: 2 }
 
-    const offers = listOfferableWays(player)
+    const at = (p: typeof player) =>
+      listOfferableWays(p).find((offer) => offer.wayId === 'ngu')?.eligible
 
-    expect(offers.map(offerId)).not.toContain('kiem_tu/ngu')
-    expect(offers).toHaveLength(5)
+    expect(at(player)).toBe(false)
+
+    player.skillLevels.tram = 3
+    expect(at(player)).toBe(true)
   })
 
   it('base ways are always eligible; gated ways flag ineligible with a reason below their gate', () => {
@@ -214,27 +221,12 @@ describe('listOfferableWays — (path, way) offer authority', () => {
     expect(at(player)).toBe(true)
   })
 
-  it('legacy delegate getOfferableCultivationPaths returns the eligible legacy ids', () => {
+  it('all six ways flag eligible once every gate is met', () => {
     const player = mortalPlayer()
     player.skillCastCounts = { linh_bao: LINH_BAO_L3 }
-    player.skillLevels = { huy_quyen: 3 }
+    player.skillLevels = { huy_quyen: 3, tram: 3 }
 
-    expect(getOfferableCultivationPaths(player)).toEqual([
-      'phap_tu',
-      'kiem_tu',
-      'the_tu',
-      'phap_tu_an',
-      'the_tu_an',
-    ])
-  })
-
-  it('isPhapTuAnEligible delegate tracks the ngo_dao offer flag', () => {
-    const player = mortalPlayer()
-
-    expect(isPhapTuAnEligible(player)).toBe(false)
-
-    player.skillCastCounts = { linh_bao: LINH_BAO_L3 }
-    expect(isPhapTuAnEligible(player)).toBe(true)
+    expect(listOfferableWays(player).every((offer) => offer.eligible)).toBe(true)
   })
 })
 
@@ -242,7 +234,7 @@ describe('applyPathChoice — the sole path/way write authority', () => {
   it('rejects an unknown path id with zero mutation', () => {
     const player = mortalPlayer()
 
-    const result = applyPathChoice(player, 'khong_ton_tai' as CultivationPathBaseId, 'hien')
+    const result = applyPathChoice(player, 'khong_ton_tai' as CultivationPathId, 'hien')
 
     expect(result.ok).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
@@ -282,10 +274,9 @@ describe('applyPathChoice — the sole path/way write authority', () => {
     expect(player.cultivationWay).toBeUndefined()
   })
 
-  it('rejects kiem_tu/ngu even at tram Lv9 — the way is not offerable until M6', () => {
+  it('rejects kiem_tu/ngu below tram Lv3 — the offerGate runs inside the authority', () => {
     const player = mortalPlayer()
-    player.skillLevels = { tram: 9 }
-    player.skillCastCounts = { tram: 999_999 }
+    player.skillLevels = { tram: 2 }
 
     const result = applyPathChoice(player, 'kiem_tu', 'ngu')
 
@@ -293,6 +284,16 @@ describe('applyPathChoice — the sole path/way write authority', () => {
     expect(player.cultivationPath).toBeUndefined()
     expect(player.cultivationWay).toBeUndefined()
     expect(player.kiemTu).toBeUndefined()
+  })
+
+  it('accepts kiem_tu/ngu at tram Lv3 — writes the BASE kiem_tu id + the way', () => {
+    const player = mortalPlayer()
+    player.skillLevels = { tram: 3 }
+
+    expect(applyPathChoice(player, 'kiem_tu', 'ngu').ok).toBe(true)
+    expect(player.cultivationPath).toBe('kiem_tu')
+    expect(player.cultivationWay).toBe('ngu')
+    expect(player.kiemTu).toEqual(freshKiemTuState())
   })
 
   it('rejects a second choice once a path is committed', () => {
@@ -308,34 +309,34 @@ describe('applyPathChoice — the sole path/way write authority', () => {
   })
 
   it.each([
-    ['kiem_tu', 'hien', 'kiem_tu'],
-    ['phap_tu', 'ngu_hanh', 'phap_tu'],
-    ['the_tu', 'hien', 'the_tu'],
+    ['kiem_tu', 'hien'],
+    ['phap_tu', 'ngu_hanh'],
+    ['the_tu', 'hien'],
   ] as const)(
-    '(%s, %s) writes cultivationWay + the legacy-effective cultivationPath %s',
-    (pathId, wayId, expectedLegacyPath) => {
+    '(%s, %s) writes cultivationWay + the BASE cultivationPath id',
+    (pathId, wayId) => {
       const player = mortalPlayer()
 
       expect(applyPathChoice(player, pathId, wayId)).toEqual({ ok: true })
       expect(player.cultivationWay).toBe(wayId)
-      // M7 deletion adapter — unmigrated consumers keep reading the
-      // legacy id for the chosen pair.
-      expect(player.cultivationPath).toBe(expectedLegacyPath)
+      // M7 — the base path id persists directly; the legacy-id adapter
+      // is gone.
+      expect(player.cultivationPath).toBe(pathId)
     },
   )
 
   it.each([
-    ['phap_tu', 'ngo_dao', 'phap_tu_an', { skillCastCounts: { linh_bao: LINH_BAO_L3 } }],
-    ['the_tu', 'ung_the', 'the_tu_an', { skillLevels: { huy_quyen: 3 } }],
+    ['phap_tu', 'ngo_dao', { skillCastCounts: { linh_bao: LINH_BAO_L3 } }],
+    ['the_tu', 'ung_the', { skillLevels: { huy_quyen: 3 } }],
   ] as const)(
-    '(%s, %s) writes cultivationWay + legacy id %s once its gate is met',
-    (pathId, wayId, expectedLegacyPath, mirrors) => {
+    '(%s, %s) writes the BASE id + way once its gate is met — hidden ways are ways, not path ids',
+    (pathId, wayId, mirrors) => {
       const player = mortalPlayer()
       Object.assign(player, mirrors)
 
       expect(applyPathChoice(player, pathId, wayId)).toEqual({ ok: true })
       expect(player.cultivationWay).toBe(wayId)
-      expect(player.cultivationPath).toBe(expectedLegacyPath)
+      expect(player.cultivationPath).toBe(pathId)
     },
   )
 
@@ -354,7 +355,7 @@ describe('applyPathChoice — the sole path/way write authority', () => {
   })
 })
 
-describe('getActivePath / getActiveWay — reads through the transition', () => {
+describe('getActivePath / getActiveWay — strict persisted-pair reads', () => {
   it('returns undefined for a player with no choice', () => {
     const player = mortalPlayer()
 
@@ -370,19 +371,20 @@ describe('getActivePath / getActiveWay — reads through the transition', () => 
     expect(getActiveWay(player)).toBe('hien')
   })
 
-  it('derives the way for a legacy-shaped player (cultivationPath only)', () => {
+  it('a way-less save is corrupt — both reads resolve nothing', () => {
     const player = mortalPlayer()
-    player.cultivationPath = 'phap_tu_an'
+    player.cultivationPath = 'phap_tu'
 
-    expect(getActivePath(player)).toBe('phap_tu')
-    expect(getActiveWay(player)).toBe('ngo_dao')
+    expect(getActivePath(player)).toBeUndefined()
+    expect(getActiveWay(player)).toBeUndefined()
   })
 
-  it('cultivationWay is authoritative once written', () => {
+  it('a (path, way) pair the catalog does not own resolves nothing', () => {
     const player = mortalPlayer()
-    player.cultivationPath = 'phap_tu_an'
-    player.cultivationWay = 'ngo_dao'
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ung_the'
 
-    expect(getActiveWay(player)).toBe('ngo_dao')
+    expect(getActivePath(player)).toBeUndefined()
+    expect(getActiveWay(player)).toBeUndefined()
   })
 })

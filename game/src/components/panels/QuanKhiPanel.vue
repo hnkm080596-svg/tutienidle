@@ -16,7 +16,7 @@ import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
 import {
   CULTIVATION_PATH_MODULES,
   PHAP_TU_AN_REQUIRED_SKILLS,
-  type CultivationPathBaseId,
+  type CultivationPathId,
   type PathWayDefinition,
   type PathWayId,
 } from '@/core/player/CultivationPathKit'
@@ -63,7 +63,7 @@ const availableWays = computed(() => {
       way: CULTIVATION_PATH_MODULES[offer.pathId].ways[offer.wayId],
     }))
     .filter(
-      (entry): entry is { pathId: CultivationPathBaseId; wayId: PathWayId; way: PathWayDefinition } =>
+      (entry): entry is { pathId: CultivationPathId; wayId: PathWayId; way: PathWayDefinition } =>
         entry.way !== undefined,
     )
 })
@@ -79,7 +79,7 @@ const anKitSkillNames = computed(() =>
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
 // (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng
 // thay vì browser confirm() mặc định).
-const pendingChoice = ref<{ pathId: CultivationPathBaseId; wayId: PathWayId } | null>(null)
+const pendingChoice = ref<{ pathId: CultivationPathId; wayId: PathWayId } | null>(null)
 
 const pendingPathName = computed(() =>
   pendingChoice.value
@@ -87,7 +87,7 @@ const pendingPathName = computed(() =>
     : '',
 )
 
-function choosePath(pathId: CultivationPathBaseId, wayId: PathWayId) {
+function choosePath(pathId: CultivationPathId, wayId: PathWayId) {
   pendingChoice.value = { pathId, wayId }
 }
 
@@ -258,7 +258,7 @@ function removeOrbAt(index: number) {
 
     <!-- Kiem Tu Reimagined (spec 2026-09-15) — shows the active
          specialization (Kiem Pho / Ngu Kiem Dao) read from
-         player.kiemTu.mode. -->
+         player.cultivationWay. -->
     <div v-if="isKiemTu" class="quan-khi-panel__card">
       <div class="quan-khi-panel__route-card">
         <p class="quan-khi-panel__hint">

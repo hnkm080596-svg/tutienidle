@@ -150,10 +150,9 @@ export class PillSystem {
       (effect) => effect.type === 'regen' && (effect.mpPerSecond ?? 0) > 0,
     )
 
-    // M4 (R6): MP pills stay ngu_hanh-only — the WAY check preserves the
-    // old phap_tu_an exclusion and covers the post-M7 collapsed shape
-    // ('phap_tu','ngo_dao') where the bare path id can no longer tell
-    // the two ways apart.
+    // M4 (R6): MP pills stay ngu_hanh-only — the WAY check is what
+    // excludes ngo_dao, since the bare path id cannot tell the two
+    // phap_tu ways apart.
     if (hasManaRegen && !isPhapTuNguHanh(player)) {
       return 'requires_phap_tu'
     }
