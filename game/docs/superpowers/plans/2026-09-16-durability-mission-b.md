@@ -1,5 +1,7 @@
 # Mission B — Runtime Durability Implementation Plan
 
+> **STATUS: MERGED** (2026-09 — commits `0ec05dd9`..`355626c8`, merge `4c5bcffe`). This document is the historical execution record; do NOT re-dispatch it. Later mission plans (C–G) treat its changes as the baseline.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Game only acknowledges persistence when data is actually committed; no session soft-locks from lifecycle races.

@@ -398,7 +398,7 @@ it('repeat restore of the same payload returns the same ACTUAL number', () => {
 
 ### Task 10: StageSelectPanel auto-farm mode disarm on stage change (E6 / T4-38, rescoped)
 
-> **Cross-plan dependency:** Mission B Task 5 owns the `startAutoFarm`-result close-guard (`if (startAutoFarm(...)) ui.leftPanelMode = null`) plus its test — it merges before this mission. This task owns ONLY the remaining half of T4-38: `mode` staying armed across stage changes. If the close-guard is absent at execution time, land it here and flag the merge drift.
+> **Cross-plan dependency (satisfied):** Mission B Task 5 owned the `startAutoFarm`-result close-guard (`if (startAutoFarm(...)) ui.leftPanelMode = null`) plus its test — **Mission B is merged** (merge `4c5bcffe`), so the guard is already in the baseline. This task owns ONLY the remaining half of T4-38: `mode` staying armed across stage changes. Verify the guard is still present at execution time; if absent, land it here and flag the merge drift.
 
 **Scope:** `mode` (local ref) stays armed across stage changes — a `perfect_farm` selection on stage A silently applies to stage B.
 
@@ -415,7 +415,7 @@ Disarm: `watch(selectedStageId, () => { mode.value = 'manual' })` — the `selec
 - [ ] **Step 4: Run — PASS** + type-check.
 - [ ] **Step 5: Commit** `fix(stage-select): disarm battle mode on stage change`
 
-**Dependencies:** Mission B Task 5 (close-guard). **Batch:** U.
+**Dependencies:** Mission B Task 5 close-guard — **landed** (merge `4c5bcffe`). **Batch:** U.
 
 ---
 

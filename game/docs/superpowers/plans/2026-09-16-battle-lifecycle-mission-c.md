@@ -247,13 +247,13 @@ this.deps.combatSystem.setSurviveLethalSession(null)
 
 ---
 
-### Task 4: Defeat terminal releases the stage slot under repeat (audit T1-4) — **DEFERRED TO MISSION B TASK 3**
+### Task 4: Defeat terminal releases the stage slot under repeat (audit T1-4) — **LANDED VIA MISSION B TASK 3 (merge `4c5bcffe`)**
 
-> **Cross-plan ownership note:** Mission B Task 3 owns the single edit to `GameManagerBattleRewardOps.ts:135-137` (`defeat || !repeat → stopRepeat()`) plus its failing test in `GameManager.repeatStage.test.ts` — spec order runs A→B→C, so by the time this mission executes the fix is already merged. Do NOT re-apply the change here: two worktrees editing the same hunk with the same commit message produce a guaranteed merge conflict.
+> **Cross-plan ownership note:** Mission B Task 3 owned the single edit to `GameManagerBattleRewardOps.ts` (`defeat || !repeat → stopRepeat()`) plus its test in `GameManager.repeatStage.test.ts` — **Mission B is merged**, so the fix is already in the baseline. Do NOT re-apply it: duplicating the same hunk produces a guaranteed merge conflict.
 >
 > What this mission still owes around that fix:
 >
-> - [ ] **Step 1: Regression net** — after `git merge`/rebase onto post-B master, confirm `GameManager.repeatStage.test.ts` contains the T1-4 defeat-releases-slot test and it passes; if the merge dropped it, restore it here. While in that file, rename the stale title at :13 ("starts another spawn cycle in the same battle *without restoring the player*") — it documents the obsolete carry semantic; the fresh-battle contract makes it misleading.
+> - [ ] **Step 1: Regression net** — confirm `GameManager.repeatStage.test.ts` contains the T1-4 defeat-releases-slot test and it passes on the post-B baseline; if the merge dropped it, restore it here. While in that file, rename the stale title at :13 ("starts another spawn cycle in the same battle *without restoring the player*") — it documents the obsolete carry semantic; the fresh-battle contract makes it misleading.
 > - [ ] **Step 2: Contract check inside `beginBattleCycle`** — Task 2/3's canonical reset must preserve the post-B behavior: a defeat terminal ALWAYS releases the stage slot (repeat only survives victory). Add one assertion to the Task-3 repeat-cycle test that a defeat inside a repeat-armed cycle leaves `stageWaves` disarmed — guards the fix against the lifecycle refactor regressing it.
 
 ---

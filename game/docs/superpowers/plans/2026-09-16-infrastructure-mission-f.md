@@ -10,7 +10,7 @@
 
 **Spec:** `docs/specs/2026-09-16-audit-remediation-spec.md` (Mission F + locked F8 decisions). Audit evidence: `docs/qa/2026-09-16-full-project-scout-audit.md` T7-60..68, T5-46, T5-49, T3-24.
 
-**Sequencing note (verified against the current tree):** **Mission A is already merged** — `assignedWorkers` persistence, `combatInputMode`, deep validators, exception-safe storage, and the composite dirty check in `App.vue` are live. Mission B is planned but not merged — `onCharacterCreated` still saves post-boot and `useElectronBridge` still ignores the save result. This plan's tasks do not depend on the B diff, but Tasks 9-11 touch `useAppLifecycle.bootGame`, which Mission B2 extends — if B lands first, apply the same seams inside the extended function.
+**Sequencing note (verified against the current tree):** **Missions A and B are already merged** (B via merge `4c5bcffe`) — `assignedWorkers`/`combatInputMode` persistence, deep validators, exception-safe storage, the boot-transaction save inside `bootGame`, and the quit-flush acknowledgment are all live. Tasks 9-11 touch `useAppLifecycle.bootGame`, which B2 already extended — apply these seams inside the post-B function shape (the generation fence and save-load sequencing are in place; `remoteSync` slots before `coordinator.load()` as specified).
 
 ## Global Constraints
 
@@ -498,7 +498,7 @@ describe('EventBus — dispatch isolation (audit T5-49)', () => {
 - Modify: `game/src/services/auth/AuthService.ts:8-12` (`AuthSession` gains `userId?: string`)
 - Modify: `game/src/services/auth/SupabaseAuthService.ts:2,39` (store + return `userId`)
 - Modify: `game/src/components/onboarding/AuthEntryScreen.vue:10,42` (emit the session, not just the mode)
-- Modify: `game/src/App.vue:638-640` (`onAuthenticated` binds the account slot)
+- Modify: `game/src/App.vue:641-643` (`onAuthenticated` binds the account slot)
 - Modify tests: `SaveSystem.test.ts` (:17-19 consts + every literal `localStorage.setItem(SAVE_KEY…)`), `SaveMigration.test.ts` (:23,48,67,70,71), `saveVersion.test.ts` (:5,82,105), `SaveSystem.quota.test.ts` (:3,41), `LocalCloudSaveService.quota.test.ts` (:7-8 + all uses), `SaveSystem.bootRestore.test.ts`/`SaveRoundTrip.test.ts`/`SaveSystem.saveLoadRoundTrip.test.ts`/`SaveSystem.restoreIdentity.test.ts`/`SaveSystem.snapshotIsolation.test.ts` (check each for literal keys)
 - Modify e2e: `tests/e2e/helpers.ts` (add exported `GUEST_SAVE_KEY`), `cultivation-path-ritual.spec.ts` (:29,73,122,361,427), `save-reload.spec.ts` (:44,55,96), `standing-slot-panel.spec.ts` (:40,71,129), `tribulation-flow.spec.ts` (:41,77,146), `error-recovery.spec.ts` (:19)
 
@@ -647,7 +647,7 @@ export interface StoredSupabaseSession {
 
   `AuthEntryScreen.vue` — `defineEmits<{ authenticated: [session: AuthSession] }>()` (import the type), and :42 becomes `emit('authenticated', result.session)` — move it inside the `if (!result.ok) return` flow exactly where it is; `result.session` is only defined on `ok`.
 
-  `App.vue` — `import { accountIdForSession, setSaveAccountId } from './services/save/saveKeys'` + `import type { AuthSession } from './services/auth/AuthService'`; replace :638-640 (`function onAuthenticated() { void bootGame(false) }`):
+  `App.vue` — `import { accountIdForSession, setSaveAccountId } from './services/save/saveKeys'` + `import type { AuthSession } from './services/auth/AuthService'`; replace :641-643 (`function onAuthenticated() { void bootGame(false) }`):
 
 ```ts
 function onAuthenticated(session: AuthSession) {
@@ -658,7 +658,7 @@ function onAuthenticated(session: AuthSession) {
 }
 ```
 
-  Template :746 unchanged (`@authenticated="onAuthenticated"` — payload type flows through).
+  Template :732 unchanged (`@authenticated="onAuthenticated"` — payload type flows through).
 
 - [ ] **Step 5: Rewire the storage paths.** In `SaveSystem.ts`: delete the `SAVE_KEY`/`BACKUP_KEY`/`IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY`/`SAVE_REVISION_KEY` constant declarations (:27-49 — keep the version-history comment block, it documents the *value* history not the key shape; add a one-line note that keys are now per-account via `saveKeys.ts`), import the four resolvers, and replace every use (post-A line refs):
 
@@ -822,8 +822,8 @@ export async function resolveSupabaseSession(config: SupabaseConfig): Promise<St
 - Modify: `game/supabase/migrations/202608240001_online_auth_character.sql` (:54 constraint + name, :150 RPC check — **in place**, locked dev-stage decision)
 - Create: `game/src/services/cloudSave/SupabaseRemoteSave.ts`
 - Modify: `game/src/services/cloudSave/CloudSaveServiceFactory.ts` (export the boot sync; update the AR-15 comment)
-- Modify: `game/src/composables/useAppLifecycle.ts` (`UseAppLifecycleDeps` — optional `remoteSync`; call it after `boot.startSaveLoad()` :228 and before `coordinator.load()` :234 — the generation fence at :236-241 already covers continuations after this await)
-- Modify: `game/src/App.vue` (lifecycle deps at :346-405 — pass `remoteSync`)
+- Modify: `game/src/composables/useAppLifecycle.ts` (`UseAppLifecycleDeps` — optional `remoteSync`; call it after `boot.startSaveLoad()` :252 and before `coordinator.load()` :258 — the generation fence at :260-265 already covers continuations after this await; post-B2, `bootGame` is at :228 and the first-save transaction lives at :330-348)
+- Modify: `game/src/App.vue` (lifecycle deps at :345-405 — pass `remoteSync`)
 - Test: `game/src/services/cloudSave/SupabaseRemoteSave.test.ts` (new), `game/src/composables/useAppLifecycle.test.ts` (extend stubs)
 
 **Interfaces:**
@@ -833,7 +833,7 @@ export async function resolveSupabaseSession(config: SupabaseConfig): Promise<St
   - Pull: `GET /rest/v1/characters?select=id&user_id=eq.{userId}&limit=1` → `GET /rest/v1/character_saves?select=payload,save_revision,updated_at&character_id=eq.{id}&limit=1`. Remote wins when `Date.parse(updated_at)` > local `save.player.lastSavedAt` AND the payload is usable (`version === CURRENT_SAVE_VERSION` + `validateGameSaveShape().ok`) — then write `JSON.stringify(shape.normalizedSave)` to `resolveSaveKey()` (same normalization `loadGame` applies) + `resolveRevisionKey()` = `save_revision`. An unusable/missing payload counts as "no remote".
   - Push (remote absent or older, local `loadGame()` ok): `POST /rest/v1/character_saves` with `Prefer: resolution=merge-duplicates`, body `{character_id, user_id, schema_version: CURRENT_SAVE_VERSION, save_revision: <local revision>, payload: <local save>, updated_at: new Date().toISOString()}` — **`updated_at` is required**: the column default only applies on INSERT; without an explicit value every later UPDATE keeps the insert timestamp and newest-wins goes stale after the first push. (If the table lacks the column, add `updated_at timestamptz not null default now()` to the migration in Step 1.)
   - Any thrown/HTTP error → `unavailable`; the boot caller logs and proceeds on the local slot.
-- Lifecycle dep `remoteSync?: () => Promise<unknown>` — invoked inside `bootGame` after `boot.startSaveLoad()` (:228) and before `coordinator.load()` (:234), only when `!createNewCharacter`, wrapped in try/catch (`console.warn` + continue). The existing generation fence at :236-241 already covers continuations after this await.
+- Lifecycle dep `remoteSync?: () => Promise<unknown>` — invoked inside `bootGame` after `boot.startSaveLoad()` (:252) and before `coordinator.load()` (:258), only when `!createNewCharacter`, wrapped in try/catch (`console.warn` + continue). The existing generation fence at :260-265 already covers continuations after this await.
 - Guest progress is NOT migrated into a fresh account slot on register — the account slot starts empty and the normal character-creation flow runs. Documented decision (flag to owner if product wants adopt-guest-on-register later).
 
 - [ ] **Step 1: SQL in-place fix** — `202608240001_online_auth_character.sql`:
