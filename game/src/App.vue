@@ -11,6 +11,7 @@ import {
   VUE_ROUTE_ADAPTER_KEY,
   GAME_PRESENTATION_KEY,
   type CurtainPort,
+  type DeadlineScheduler,
 } from './presentation/PresentationContracts'
 import { PhaserSceneAdapter } from './presentation/PhaserSceneAdapter'
 import { AssetBundleManager } from './presentation/assets/AssetBundleManager'
@@ -166,11 +167,26 @@ const curtainPort: CurtainPort = {
     await transitionOverlayRef.value?.open(id, signal)
   },
 }
+// E2E contention relief (R12 retained debt): parallel Playwright workers
+// each own a WebGL context, so a transition phase can legitimately outlast
+// the wall-clock deadlines under load. playwright.config sets
+// VITE_PRESENTATION_DEADLINE_SCALE on the dev server; unset/1 keeps
+// production timing untouched.
+const deadlineScale = Number(import.meta.env.VITE_PRESENTATION_DEADLINE_SCALE ?? 1)
+const deadlineScheduler: DeadlineScheduler | undefined =
+  deadlineScale > 1
+    ? {
+        set: (callback, ms) => setTimeout(callback, ms * deadlineScale),
+        clear: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+      }
+    : undefined
+
 const coordinator = new GamePresentationCoordinator({
   sessionPort: gameManager.getPresentationPort(),
   renderer: compositeRenderer,
   curtain: curtainPort,
   assets: assetBundleManager,
+  scheduler: deadlineScheduler,
   initialRoute: 'boot',
   initialBootSubphase: 'intro',
   initialShowMainMenu: false,

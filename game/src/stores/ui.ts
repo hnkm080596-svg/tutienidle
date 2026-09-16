@@ -177,16 +177,6 @@ export const useUiStore = defineStore('ui', {
 
     selectedStageId: null as string | null,
 
-    // Combat UI Redesign — battle vẫn "sticky" ở state victory/defeat
-    // (xem BattleSystem) cho tới khi trận mới ghi đè, nên
-    // useCombatSceneActive() cần 1 cờ RIÊNG để biết người chơi đã chủ
-    // động rời Combat Scene (bấm "Tiếp Tục"/"Về Động Phủ") hay chưa —
-    // false thì Combat Scene vẫn hiện dù battle đã kết thúc, đợi
-    // CombatResultModal xử lý (đếm ngược Auto Battle hoặc chờ bấm nút).
-    // Reset về false ở useBattleActions.startSelectedStage()/App.vue's
-    // fightStage() (mọi điểm bắt đầu trận mới).
-    combatSceneDismissed: false,
-
     // Nguồn gốc trận đang/vừa diễn ra — Stage (qua StageSelectPanel) có
     // CombatResultModal riêng (reward/Đánh Lại/Tiếp Tục theo đúng spec);
     // Tribulation (Đột Phá) đã có luồng thắng/thua RIÊNG từ trước (xem
@@ -195,7 +185,6 @@ export const useUiStore = defineStore('ui', {
     // nhưng KHÔNG hiện CombatResultModal (tránh hiện 2 lớp kết quả chồng
     // nhau). null = chưa từng có trận nào.
     combatOrigin: null as 'stage' | 'tribulation' | null,
-    isTribulationSceneActive: false,
     }
   },
 
@@ -349,23 +338,13 @@ export const useUiStore = defineStore('ui', {
       this.persistAutomationFlags()
     },
 
-    // Combat UI Redesign — gọi bởi CombatVictoryPanel's "Tiếp Tục" (khi
-    // !isAuto) và CombatDefeatPanel's "Về Động Phủ" — CombatScene.ts
-    // lắng nghe cùng lúc trên eventBus ('combat_scene_exit') để tự
-    // this.scene.start('MainScene'), xem CombatResultModal.vue.
-    exitCombatScene() {
-      this.combatSceneDismissed = true
-    },
-
+    // Records which domain flow produced the current combat — read by
+    // CombatResultModal/CombatExitConfirmModal to gate stage-only result
+    // UI. Scene visibility itself is owned by the coordinator route
+    // (useCombatSceneActive/useStageActive) — the old dismissed/active
+    // flags were removed with the R12 cleanup.
     enterCombatScene(origin: 'stage' | 'tribulation') {
-      this.combatSceneDismissed = false
       this.combatOrigin = origin
-    },
-    enterTribulationScene() {
-      this.isTribulationSceneActive = true
-    },
-    exitTribulationScene() {
-      this.isTribulationSceneActive = false
     },
   },
 })

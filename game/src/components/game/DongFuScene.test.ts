@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import { createPinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, h, nextTick, ref } from 'vue'
+import { computed, createApp, h, nextTick, ref } from 'vue'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
+import { VUE_ROUTE_ADAPTER_KEY, type Route } from '@/presentation/PresentationContracts'
+import type { VueRouteAdapter } from '@/presentation/VueRouteAdapter'
 import { GameManager } from '@/core/game/GameManager'
 import { buildings } from '@/data/building/buildings'
 import { commitThanhVanVariant } from '@/game/support/ThanhVanArt'
@@ -96,15 +98,25 @@ function mountDongFuScene() {
   const app = createApp({ render: () => h(DongFuScene) })
   const pinia = createPinia()
 
+  // Route-driven visibility (R12): the scene hides while the coordinator
+  // route is combat/tribulation. Tests drive the ref directly instead of
+  // the removed ui.enterCombatScene/exitCombatScene flags.
+  const route = ref<Route>('home')
+  const fakeRouteAdapter = {
+    activeRoute: computed(() => route.value),
+  } as unknown as VueRouteAdapter
+
   app.use(pinia)
   app.use(i18n)
   app.provide(GAME_MANAGER_KEY, gameManager)
   app.provide(STATE_VERSION_KEY, ref(0))
   app.provide(BUMP_STATE_KEY, () => {})
+  app.provide(VUE_ROUTE_ADAPTER_KEY, fakeRouteAdapter)
   app.mount(container)
 
   return {
     ui: useUiStore(pinia),
+    route,
     root: () => container.querySelector<HTMLElement>('.home-scene'),
     activeStack: () => container.querySelector<HTMLElement>('.home-scene__parallax-stack--active'),
     activeLayers: () => Array.from(
@@ -198,10 +210,10 @@ describe('DongFuScene seasonal parallax background', () => {
     setReducedMotion(false)
     const mounted = mountDongFuScene()
 
-    mounted.ui.enterCombatScene('stage')
+    mounted.route.value = 'combat'
     await nextTick()
     commitThanhVanVariant({ season: 'winter', time: 'night' })
-    mounted.ui.exitCombatScene()
+    mounted.route.value = 'home'
     await nextTick()
 
     expect(pendingImages).toHaveLength(10)
@@ -239,10 +251,10 @@ describe('DongFuScene seasonal parallax background', () => {
     setReducedMotion(false)
     const mounted = mountDongFuScene()
 
-    mounted.ui.enterCombatScene('stage')
+    mounted.route.value = 'combat'
     await nextTick()
     commitThanhVanVariant({ season: 'autumn', time: 'evening' })
-    mounted.ui.exitCombatScene()
+    mounted.route.value = 'home'
     await nextTick()
 
     pendingImages[4]!.onerror?.()
@@ -273,10 +285,10 @@ describe('DongFuScene seasonal parallax background', () => {
     ))).toBe(true)
     expect(mounted.activeStack()!.classList).toContain('is-reduced-motion')
 
-    mounted.ui.enterCombatScene('stage')
+    mounted.route.value = 'combat'
     await nextTick()
     commitThanhVanVariant({ season: 'summer', time: 'noon' })
-    mounted.ui.exitCombatScene()
+    mounted.route.value = 'home'
     await nextTick()
     pendingImages.forEach((image) => image.onload?.())
     await flushSwap()

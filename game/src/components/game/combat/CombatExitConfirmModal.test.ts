@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // 6A-T6 (2026-09-01) — extract CombatExitConfirmModal: scene exit
 // bridge `combat_exit_request` → modal mở; confirm chạy đúng luồng cũ
-// (abandonBattle + battleRunMode=manual + exitCombatScene +
+// (abandonBattle + battleRunMode=manual + combat_scene_exit +
 // combat_scene_exit); Tribulation KHÔNG mở modal.
 // Mount theo pattern project (createApp + h + provide, KHÔNG
 // @vue/test-utils — chưa cài).
@@ -21,7 +21,6 @@ function t(key: string): string {
 
 interface MockGameManager {
   abandonBattle: ReturnType<typeof vi.fn>
-  exitCombatScene: ReturnType<typeof vi.fn>
   emit: ReturnType<typeof vi.fn>
   on: ReturnType<typeof vi.fn>
   off: ReturnType<typeof vi.fn>
@@ -31,7 +30,6 @@ interface MockGameManager {
 function makeGameManager(): MockGameManager {
   const gm: MockGameManager = {
     abandonBattle: vi.fn(),
-    exitCombatScene: vi.fn(),
     emit: vi.fn(),
     on: vi.fn(),
     off: vi.fn(),
@@ -130,12 +128,9 @@ describe('CombatExitConfirmModal — extract (6A-T6)', () => {
     modal.unmount()
   })
 
-  it('confirm "Thoát Trận": abandonBattle + manual + ui.exitCombatScene + emit combat_scene_exit + đóng', async () => {
+  it('confirm "Thoát Trận": abandonBattle + manual + emit combat_scene_exit + đóng', async () => {
     const gm = makeGameManager()
     const modal = mountModal(gm, 'stage')
-
-    // ui.exitCombatScene là action trên UI store — spy store, KHÔNG mock gm.
-    const exitSpy = vi.spyOn(modal.ui, 'exitCombatScene')
 
     gm.capturedRequestHandler?.()
     await nextTick()
@@ -144,7 +139,6 @@ describe('CombatExitConfirmModal — extract (6A-T6)', () => {
 
     expect(gm.abandonBattle).toHaveBeenCalledOnce()
     expect(modal.ui.battleRunMode).toBe('manual')
-    expect(exitSpy).toHaveBeenCalledOnce()
     expect(gm.emit).toHaveBeenCalledWith('combat_scene_exit', undefined)
     expect(modal.query()).toBeNull()
 
@@ -155,15 +149,13 @@ describe('CombatExitConfirmModal — extract (6A-T6)', () => {
     const gm = makeGameManager()
     const modal = mountModal(gm, 'stage')
 
-    const exitSpy = vi.spyOn(modal.ui, 'exitCombatScene')
-
     gm.capturedRequestHandler?.()
     await nextTick()
 
     await modal.clickButton(t('combat.overlay.exitConfirm.stay'))
 
     expect(gm.abandonBattle).not.toHaveBeenCalled()
-    expect(exitSpy).not.toHaveBeenCalled()
+    expect(gm.emit).not.toHaveBeenCalledWith('combat_scene_exit', undefined)
     expect(modal.query()).toBeNull()
 
     modal.unmount()

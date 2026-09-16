@@ -103,7 +103,6 @@ describe('CombatExitConfirmModal — focus trap (deferred follow-up Task 2)', ()
   it('Escape → đóng modal (Ở LẠI), KHÔNG abandon/exit', async () => {
     const gm = makeGameManager()
     const modal = mountModal(gm)
-    const exitSpy = vi.spyOn(modal.ui, 'exitCombatScene')
 
     await modal.open()
 
@@ -112,7 +111,6 @@ describe('CombatExitConfirmModal — focus trap (deferred follow-up Task 2)', ()
 
     expect(modal.queryCard()).toBeNull()
     expect(gm.abandonBattle).not.toHaveBeenCalled()
-    expect(exitSpy).not.toHaveBeenCalled()
     expect(gm.emit).not.toHaveBeenCalledWith('combat_scene_exit', undefined)
 
     modal.unmount()

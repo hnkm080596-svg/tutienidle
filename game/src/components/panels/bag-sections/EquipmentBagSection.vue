@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
+import Chip from '../../common/primitives/Chip.vue'
 import BagPaginationControls, { type BagSortOption } from './BagPaginationControls.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useUiStore, type EquipmentSortMode } from '@/stores/ui'
@@ -8,6 +10,7 @@ import { useBagPagination } from '@/composables/useBagPagination'
 import { useBagGridLayout } from '@/composables/useBagGridLayout'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { compareNumber, compareText, stableSort, withDirection } from '@/composables/useBagSort'
+import { useEntryFilter } from '@/composables/useBagFilter'
 import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
@@ -15,8 +18,11 @@ import { gradeLabel } from '@/core/presentation/labels'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import { compareProfessionGrades } from '@/core/profession/ProfessionGrade'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
+import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { SlotPresentationState } from '@/components/common/SlotTypes'
+
+const { t } = useI18n()
 
 // Grid responsive theo chiều rộng thật — xem ghi chú đầy đủ ở
 // useBagGridLayout.ts/MaterialBagSection.vue (cùng pattern áp cho cả
@@ -160,6 +166,32 @@ const entries = computed<EquipmentEntry[]>(() => {
   })
 })
 
+// ================= Filter/search + slot chips =================
+// Mirrors the MaterialBagSection filter bar; filter runs BEFORE sort +
+// pagination. Group axis = equipment slot (single dimension).
+const searchQuery = ref('')
+
+const activeGroup = ref<EquipmentSlot | 'all'>('all')
+
+const { filtered, visibleCount } = useEntryFilter(
+  entries,
+  { searchQuery, activeGroup },
+  { name: (entry) => entry.name, group: (entry) => entry.instance.slot },
+)
+
+const GROUP_CHIPS = computed<Array<{ value: EquipmentSlot | 'all'; label: string }>>(() => [
+  { value: 'all', label: t('panels.bag.groups.all') },
+  ...EQUIPMENT_SLOTS.map((slot) => ({
+    value: slot,
+    label: t(`panels.bag.paperdoll.slots.${slot}`),
+  })),
+])
+
+// Clicking the already-active chip clears the group filter.
+function toggleGroup(value: EquipmentSlot | 'all') {
+  activeGroup.value = activeGroup.value === value ? 'all' : value
+}
+
 // Tiêu chí Trang Bị (plan Workstream E) — mặc định/quality/rarity/
 // realm/slot/name/forge.
 const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: EquipmentEntry, b: EquipmentEntry) => number> = {
@@ -184,16 +216,16 @@ const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: E
   forge: (a, b) => compareNumber(a.instance.forgeUsesRemaining, b.instance.forgeUsesRemaining),
 }
 
-// Sort chạy trên bản copy của TOÀN BỘ list TRƯỚC pagination.
+// Sort chạy trên bản copy của list ĐÃ LỌC TRƯỚC pagination.
 const cells = computed<BagCell[]>(() => {
   const sortState = ui.bagSorts.equipment
 
   if (sortState.mode === 'default') {
-    return entries.value.map((entry) => entry.cell)
+    return filtered.value.map((entry) => entry.cell)
   }
 
   const sorted = stableSort(
-    entries.value,
+    filtered.value,
     withDirection(EQUIPMENT_COMPARATORS[sortState.mode], sortState.direction),
   )
 
@@ -206,10 +238,36 @@ watch(
   () => ({ ...ui.bagSorts.equipment }),
   () => resetPage(),
 )
+
+// Filter changes reset to the first page (same contract as sort).
+watch([searchQuery, activeGroup], () => resetPage())
 </script>
 
 <template>
   <div class="bag-section">
+    <div class="bag-section__filters">
+      <input
+        v-model="searchQuery"
+        type="search"
+        class="bag-section__search"
+        :placeholder="t('panels.bag.search.equipmentPlaceholder')"
+        :aria-label="t('panels.bag.search.equipmentAria')"
+      >
+
+      <div class="bag-section__chips" role="group" :aria-label="t('panels.bag.filterAriaEquipment')">
+        <Chip
+          v-for="chip in GROUP_CHIPS"
+          :key="chip.value"
+          :active="activeGroup === chip.value"
+          @click="toggleGroup(chip.value)"
+        >
+          {{ chip.label }}
+        </Chip>
+      </div>
+
+      <span class="bag-section__count">{{ visibleCount }} {{ t('panels.bag.countSuffix') }}</span>
+    </div>
+
     <div ref="gridRef" class="bag-section__grid" :style="gridStyle">
       <SlotView
         v-for="(cell, index) in gridCells"
@@ -251,6 +309,50 @@ watch(
   height: 100%;
   min-height: 0;
   gap: 6px;
+}
+
+.bag-section__filters {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.bag-section__search {
+  flex: 1 1 120px;
+  min-width: 0;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-2);
+  background: var(--ink-800);
+  color: var(--text-primary);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+}
+
+.bag-section__search::placeholder {
+  color: var(--text-muted);
+}
+
+.bag-section__search:focus-visible {
+  outline: none;
+  border-color: var(--chrome-300);
+  box-shadow: var(--focus-ring-chrome);
+}
+
+.bag-section__chips {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.bag-section__count {
+  color: var(--paper-text-muted);
+  font-size: var(--text-xs);
+  white-space: nowrap;
 }
 
 .bag-section__grid {

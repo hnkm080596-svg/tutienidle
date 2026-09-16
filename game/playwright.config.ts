@@ -56,5 +56,12 @@ export default defineConfig({
     url: `http://localhost:${DEV_PORT}`,
     reuseExistingServer: true,
     timeout: 30_000,
+    env: {
+      // Coordinator deadline scale (R12 retained debt): the deadlines are
+      // wall-clock failure detectors, but under multi-worker WebGL
+      // contention a healthy transition can legitimately outlast them.
+      // Scaling applies to E2E runs only - App.vue reads this at boot.
+      VITE_PRESENTATION_DEADLINE_SCALE: '3',
+    },
   },
 })

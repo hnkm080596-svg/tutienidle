@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
+import Chip from '../../common/primitives/Chip.vue'
 import BagPaginationControls, { type BagSortOption } from './BagPaginationControls.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBagPagination } from '@/composables/useBagPagination'
 import { useBagGridLayout } from '@/composables/useBagGridLayout'
 import { useUiStore, type PillSortMode } from '@/stores/ui'
 import { compareNumber, compareText, stableSort, withDirection } from '@/composables/useBagSort'
+import {
+  useEntryFilter,
+  PILL_EFFECT_GROUPS,
+  PILL_EFFECT_GROUP_LABEL_KEYS,
+  type PillEffectGroup,
+} from '@/composables/useBagFilter'
 import { usePlayerStore } from '@/stores/player'
 import { addCultivation } from '@/core/cultivation/CultivationSystem'
 import { useNotificationStore } from '@/stores/notification'
@@ -19,6 +27,8 @@ import { ITEM_GRADE_ORDER, composeItemGradeNameSegments } from '@/core/item/Item
 import { compareProfessionGrades, realmFromGrade } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
 import { gradeLabel, realmLabel } from '@/core/presentation/labels'
+
+const { t } = useI18n()
 
 const ui = useUiStore()
 
@@ -229,6 +239,9 @@ interface PillEntry {
   pill: Pill
 
   amount: number
+
+  /** Composed "{Chat} - {Name}" display name - the search axis. */
+  name: string
 }
 
 const SORT_OPTIONS: Array<BagSortOption & { value: PillSortMode }> = [
@@ -250,6 +263,8 @@ const entries = computed<PillEntry[]>(() => {
       pill: stack.pill,
 
       amount: stack.amount,
+
+      name: displayName,
 
       cell: {
         key: stack.pill.id,
@@ -290,6 +305,38 @@ const entries = computed<PillEntry[]>(() => {
   })
 })
 
+// ================= Filter/search/group chips =================
+// Same pattern as MaterialBagSection: filter state is session-only and
+// runs BEFORE sort + pagination. Group axis = first effect type (the
+// 'effect' sort comparator reads the same field); 'other' catches pills
+// with no effects.
+const searchQuery = ref('')
+
+const activeGroup = ref<PillEffectGroup | 'all'>('all')
+
+const { filtered, visibleCount } = useEntryFilter(
+  entries,
+  { searchQuery, activeGroup },
+  {
+    name: (entry) => entry.name,
+    group: (entry) => entry.pill.effects[0]?.type ?? 'other',
+  },
+)
+
+// Chip labels resolve through the locale-key map (useBagFilter does not
+// import i18n). Clicking the active chip toggles back to 'all'.
+const GROUP_CHIPS = computed<Array<{ value: PillEffectGroup | 'all'; label: string }>>(() => [
+  { value: 'all', label: t('panels.bag.groups.all') },
+  ...PILL_EFFECT_GROUPS.map((group) => ({
+    value: group,
+    label: t(PILL_EFFECT_GROUP_LABEL_KEYS[group]),
+  })),
+])
+
+function toggleGroup(value: PillEffectGroup | 'all') {
+  activeGroup.value = activeGroup.value === value ? 'all' : value
+}
+
 // Tiêu chí Đan Dược (plan Workstream E) — phẩm đan/loại hiệu ứng/số
 // lượng/tên. "Loại hiệu ứng" so sánh effect type ĐẦU TIÊN của recipe.
 const PILL_COMPARATORS: Record<Exclude<PillSortMode, 'default'>, (a: PillEntry, b: PillEntry) => number> = {
@@ -304,16 +351,17 @@ const PILL_COMPARATORS: Record<Exclude<PillSortMode, 'default'>, (a: PillEntry, 
   name: (a, b) => compareText(a.pill.name, b.pill.name),
 }
 
-// Sort trên bản copy TRƯỚC pagination (plan Workstream E).
+// Sort trên bản copy TRƯỚC pagination (plan Workstream E) — sort đọc
+// list ĐÃ filter (filter chạy trước sort, xem MaterialBagSection).
 const cells = computed<BagCell[]>(() => {
   const sortState = ui.bagSorts.pill
 
   if (sortState.mode === 'default') {
-    return entries.value.map((entry) => entry.cell)
+    return filtered.value.map((entry) => entry.cell)
   }
 
   const sorted = stableSort(
-    entries.value,
+    filtered.value,
     withDirection(PILL_COMPARATORS[sortState.mode], sortState.direction),
   )
 
@@ -326,6 +374,8 @@ watch(
   () => ({ ...ui.bagSorts.pill }),
   () => resetPage(),
 )
+
+watch([searchQuery, activeGroup], () => resetPage())
 
 // Buff regen deadline (plan §8): hiển thị timed effect ĐANG hoạt động
 // với thời gian còn lại THỰC (Date.now vs expiresAtMs) — menu và combat
@@ -379,6 +429,29 @@ const activeTimedEffects = computed(() => {
 
         <span class="pill-active__remaining">{{ effect.remaining }}</span>
       </div>
+    </div>
+
+    <div class="bag-section__filters">
+      <input
+        v-model="searchQuery"
+        type="search"
+        class="bag-section__search"
+        :placeholder="t('panels.bag.search.pillPlaceholder')"
+        :aria-label="t('panels.bag.search.pillAria')"
+      >
+
+      <div class="bag-section__chips" role="group" :aria-label="t('panels.bag.filterAriaPill')">
+        <Chip
+          v-for="chip in GROUP_CHIPS"
+          :key="chip.value"
+          :active="activeGroup === chip.value"
+          @click="toggleGroup(chip.value)"
+        >
+          {{ chip.label }}
+        </Chip>
+      </div>
+
+      <span class="bag-section__count">{{ visibleCount }} {{ t('panels.bag.countUnitSuffix') }}</span>
     </div>
 
     <div ref="gridRef" class="bag-section__grid" :style="gridStyle">
@@ -458,6 +531,50 @@ const activeTimedEffects = computed(() => {
   height: 100%;
   min-height: 0;
   gap: 6px;
+}
+
+.bag-section__filters {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.bag-section__search {
+  flex: 1 1 120px;
+  min-width: 0;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-2);
+  background: var(--ink-800);
+  color: var(--text-primary);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+}
+
+.bag-section__search::placeholder {
+  color: var(--text-muted);
+}
+
+.bag-section__search:focus-visible {
+  outline: none;
+  border-color: var(--chrome-300);
+  box-shadow: var(--focus-ring-chrome);
+}
+
+.bag-section__chips {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.bag-section__count {
+  color: var(--paper-text-muted);
+  font-size: var(--text-xs);
+  white-space: nowrap;
 }
 
 .bag-section__grid {

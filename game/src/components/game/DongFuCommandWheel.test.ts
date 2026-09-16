@@ -7,12 +7,14 @@
 // - Ring 4: Tàng Kinh Các TRÁI / Cài Đặt PHẢI đối xứng ngang cùng ring.
 // - Building shortcut đi qua building navigation controller.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { createApp, defineComponent, h } from 'vue'
 import { createPinia } from 'pinia'
 import DongFuCommandWheel from './DongFuCommandWheel.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
+import { VUE_ROUTE_ADAPTER_KEY, type Route } from '@/presentation/PresentationContracts'
+import type { VueRouteAdapter } from '@/presentation/VueRouteAdapter'
 import { useUiStore } from '@/stores/ui'
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
 import { i18n } from '@/i18n'
@@ -39,6 +41,12 @@ function mountWheel(gameManager: GameManager) {
   app.provide(BUMP_STATE_KEY, () => {
     stateVersion.value += 1
   })
+  // Route-driven visibility (R12): stageActive derives from the
+  // coordinator route; provide a 'home' stub so mounted components can
+  // resolve it.
+  app.provide(VUE_ROUTE_ADAPTER_KEY, {
+    activeRoute: computed(() => 'home' as Route),
+  } as unknown as VueRouteAdapter)
 
   app.mount(container)
 

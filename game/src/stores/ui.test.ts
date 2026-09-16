@@ -7,14 +7,6 @@ describe('ui store', () => {
     setActivePinia(createPinia())
   })
 
-  it('vào scene Độ Kiếp đánh dấu overlay riêng', () => {
-    const ui = useUiStore()
-
-    ui.enterTribulationScene()
-
-    expect(ui.isTribulationSceneActive).toBe(true)
-  })
-
   it('click nền Động Phủ đóng đồng thời panel, standalone, popover và wheel', () => {
     const ui = useUiStore()
 

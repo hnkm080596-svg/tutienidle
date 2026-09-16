@@ -84,7 +84,7 @@ import {
   type ThanhVanVariant,
 } from '@/game/support/ThanhVanArt'
 import { attachThanhVanBackdrop, type ThanhVanBackdropHandle } from '@/game/support/ThanhVanBackdrop'
-import { queueCombatAssets, animatedCombatAnimationSets } from '@/game/support/CombatPreload'
+import { animatedCombatAnimationSets } from '@/game/support/CombatPreload'
 import type {
   CombatAnimationCatalogue,
   CombatAnimationName,
@@ -691,13 +691,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   preload() {
-    // TRANSITIONAL net. AssetBundleManager now ensures the 'combat' bundle
-    // before this scene is ever activated, and AssetBundleCatalog's parity
-    // test pins its enumeration to this helper's queued keys - so in a correct
-    // run this queue is empty and Phaser skips it. It stays until the live
-    // browser pass (P14) confirms cold combat entry renders every texture;
-    // removing it earlier would trade a proven path for an unverified one.
-    queueCombatAssets(this)
+    // No loader work: AssetBundleManager ensures the 'combat' bundle before
+    // this scene is ever activated (coordinator 'loading' phase), and the
+    // catalog/parity tests pin the bundle to queueCombatAssets' enumeration.
+    // Verified 2026-09-16: cold combat entry queued 0 textures with the
+    // transitional net still wired, and every sprite/backdrop rendered.
   }
 
   private initTransitionId = 0
@@ -741,9 +739,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // Spec B §3.2 (2026-09-11) — register animations for ANIMATED entities
     // only. This used to walk every combat entity; enemies are `kind: 'static'`
     // now, and registering their clips would leave a loaded gun beside
-    // playCombatAnimation(). Same list queueCombatAssets() (preload()) loads
-    // the atlas from, so the two can never name different keys. preload() → loader COMPLETE → create() là thứ
-    // tự chuẩn của Phaser Scene nên texture các sheetKey này đã sẵn sàng.
+    // playCombatAnimation(). The combat bundle enumerates its atlases from
+    // the same list, so the two can never name different keys — bundle
+    // ensure completes before scene activation, so these sheetKey textures
+    // are already present at create().
     for (const { entityKey, clips } of animatedCombatAnimationSets()) {
       this.registerCombatAnimations(entityKey, clips)
     }
