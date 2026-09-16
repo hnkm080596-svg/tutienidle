@@ -10,7 +10,7 @@
 
 **Spec:** `docs/specs/2026-09-16-audit-remediation-spec.md` (Mission F + locked F8 decisions). Audit evidence: `docs/qa/2026-09-16-full-project-scout-audit.md` T7-60..68, T5-46, T5-49, T3-24.
 
-**Sequencing note (verified against master `c57e8175`):** Missions A and B are planned but not merged in this checkout — `App.vue:95-108` still has the old `battleRunMode`-only dirty check and `onCharacterCreated` (`App.vue:647-676`) still saves post-boot. This plan's tasks do not depend on those diffs, but Task 9-11 touch `useAppLifecycle.bootGame`, which Mission B2 extends — if B lands first, apply the same seams inside the extended function.
+**Sequencing note (verified against the current tree):** **Mission A is already merged** — `assignedWorkers` persistence, `combatInputMode`, deep validators, exception-safe storage, and the composite dirty check in `App.vue` are live. Mission B is planned but not merged — `onCharacterCreated` still saves post-boot and `useElectronBridge` still ignores the save result. This plan's tasks do not depend on the B diff, but Tasks 9-11 touch `useAppLifecycle.bootGame`, which Mission B2 extends — if B lands first, apply the same seams inside the extended function.
 
 ## Global Constraints
 
@@ -492,19 +492,19 @@ describe('EventBus — dispatch isolation (audit T5-49)', () => {
 
 **Files:**
 - Create: `game/src/services/save/saveKeys.ts` (the single resolver)
-- Modify: `game/src/services/save/SaveSystem.ts` (:27, :35, :41-42, :49 constants → resolvers; every `localStorage` call site at :392, :419, :470, :503, :520-523, :528, :532, :536-543, :548-556, :619-634)
-- Modify: `game/src/services/cloudSave/LocalCloudSaveService.ts:1,5,28,41` (`SAVE_REVISION_KEY` → `resolveRevisionKey()`)
-- Modify: `game/src/services/supabase/SupabaseSession.ts` (stored shape gains `userId`/`mode`/`expiresAtMs` — `expiresAtMs` consumed by Task 10)
+- Modify: `game/src/services/save/SaveSystem.ts` (:27, :35, :41, :49 constants → resolvers; every `localStorage` call site at :396, :430, :489, :527, :550-553, :564, :572, :580-590, :613-615, :689-708 — post-A line refs)
+- Modify: `game/src/services/cloudSave/LocalCloudSaveService.ts:1,5,37,50` (`SAVE_REVISION_KEY` → `resolveRevisionKey()`)
+- Modify: `game/src/services/supabase/SupabaseSession.ts` (stored shape gains `userId`/`mode`/`expiresAtMs` — `expiresAtMs` consumed by Task 10; **export `StoredSupabaseSession`** — currently `interface` at :1 is unexported and Task 10/11 signatures need the type)
 - Modify: `game/src/services/auth/AuthService.ts:8-12` (`AuthSession` gains `userId?: string`)
-- Modify: `game/src/services/auth/SupabaseAuthService.ts:6,39-40` (store + return `userId`)
+- Modify: `game/src/services/auth/SupabaseAuthService.ts:2,39` (store + return `userId`)
 - Modify: `game/src/components/onboarding/AuthEntryScreen.vue:10,42` (emit the session, not just the mode)
-- Modify: `game/src/App.vue:643-645` (`onAuthenticated` binds the account slot)
+- Modify: `game/src/App.vue:638-640` (`onAuthenticated` binds the account slot)
 - Modify tests: `SaveSystem.test.ts` (:17-19 consts + every literal `localStorage.setItem(SAVE_KEY…)`), `SaveMigration.test.ts` (:23,48,67,70,71), `saveVersion.test.ts` (:5,82,105), `SaveSystem.quota.test.ts` (:3,41), `LocalCloudSaveService.quota.test.ts` (:7-8 + all uses), `SaveSystem.bootRestore.test.ts`/`SaveRoundTrip.test.ts`/`SaveSystem.saveLoadRoundTrip.test.ts`/`SaveSystem.restoreIdentity.test.ts`/`SaveSystem.snapshotIsolation.test.ts` (check each for literal keys)
 - Modify e2e: `tests/e2e/helpers.ts` (add exported `GUEST_SAVE_KEY`), `cultivation-path-ritual.spec.ts` (:29,73,122,361,427), `save-reload.spec.ts` (:44,55,96), `standing-slot-panel.spec.ts` (:40,71,129), `tribulation-flow.spec.ts` (:41,77,146), `error-recovery.spec.ts` (:19)
 
-**Complete localStorage save-path enumeration (verified by grep — these are ALL the save-slot touch points; nothing else reads/writes the save keys):**
-- `SaveSystem.ts` — `SAVE_KEY` (export :27; used :392, :419, :520, :532, :542, :551, :634), `BACKUP_KEY` (:35; used :523, :528, :536), `IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY` (:41-42; used :470, :503, :543, :552, :621-626), `SAVE_REVISION_KEY` (:49; used :556).
-- `LocalCloudSaveService.ts` — `SAVE_REVISION_KEY` (:5 read, :28 write, :41 rollback).
+**Complete localStorage save-path enumeration (verified by grep on the post-A tree — these are ALL the save-slot touch points; nothing else reads/writes the save keys):**
+- `SaveSystem.ts` — `SAVE_KEY` (export :27; used :396, :430, :550, :572, :590, :613, :708), `BACKUP_KEY` (:35; used :553, :564, :580), `IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY` (:41; used :489, :527, :589, :614, :689, :694), `SAVE_REVISION_KEY` (:49; used :615).
+- `LocalCloudSaveService.ts` — `SAVE_REVISION_KEY` (:5 read, :37 write, :50 rollback).
 - `player.ts:305-315` `load()` calls `loadGame()` — resolves automatically, no change needed.
 - NOT per-account (deliberately device-level — leave alone): `uiFlagsPersistence.ts` `UI_AUTOMATION_STORAGE_KEY` (:14, comment :6-8 already declares it a device preference), `stores/audio.ts`, `composables/uiScale.ts`, `core/dev/DevMode.ts`, `CombatScene`/`ThanhVanBackdropArt`/`BattlefieldRenderMode` debug flags.
 
@@ -621,12 +621,12 @@ export function resolveImportHandoffKey(): string { return `${IMPORT_HANDOFF_KEY
 
 - [ ] **Step 4: Extend the session/auth surfaces:**
 
-  `SupabaseSession.ts` — widen the stored shape (new fields optional so a pre-change stored session still validates and simply resolves as guest):
+  `SupabaseSession.ts` — widen the stored shape (new fields optional so a pre-change stored session still validates and simply resolves as guest) and **export the interface** (`interface StoredSupabaseSession` at :1 is currently unexported — Tasks 10/11 need the type in signatures):
 
 ```ts
 export type SupabaseSessionMode = 'guest' | 'login' | 'register'
 
-interface StoredSupabaseSession {
+export interface StoredSupabaseSession {
   accessToken: string
   refreshToken: string
   sessionId: string
@@ -639,7 +639,7 @@ interface StoredSupabaseSession {
 }
 ```
 
-(`readSupabaseSession`'s validation keeps requiring the original triple and passes the optionals through.)
+(`readSupabaseSession`'s validation keeps requiring the original triple and passes the optionals through — confirm the pass-through edit explicitly: if the validator picks fields instead of spreading, add `userId`/`mode`/`expiresAtMs` to the returned object.)
 
   `AuthService.ts` — `AuthSession` gains `/** Supabase auth.users id — absent for mock-auth sessions. */ userId?: string`.
 
@@ -647,7 +647,7 @@ interface StoredSupabaseSession {
 
   `AuthEntryScreen.vue` — `defineEmits<{ authenticated: [session: AuthSession] }>()` (import the type), and :42 becomes `emit('authenticated', result.session)` — move it inside the `if (!result.ok) return` flow exactly where it is; `result.session` is only defined on `ok`.
 
-  `App.vue` — `import { accountIdForSession, setSaveAccountId } from './services/save/saveKeys'` + `import type { AuthSession } from './services/auth/AuthService'`; replace :643-645:
+  `App.vue` — `import { accountIdForSession, setSaveAccountId } from './services/save/saveKeys'` + `import type { AuthSession } from './services/auth/AuthService'`; replace :638-640 (`function onAuthenticated() { void bootGame(false) }`):
 
 ```ts
 function onAuthenticated(session: AuthSession) {
@@ -660,17 +660,17 @@ function onAuthenticated(session: AuthSession) {
 
   Template :746 unchanged (`@authenticated="onAuthenticated"` — payload type flows through).
 
-- [ ] **Step 5: Rewire the storage paths.** In `SaveSystem.ts`: delete the `SAVE_KEY`/`BACKUP_KEY`/`IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY`/`SAVE_REVISION_KEY` constant declarations (:27-49 — keep the version-history comment block, it documents the *value* history not the key shape; add a one-line note that keys are now per-account via `saveKeys.ts`), import the four resolvers, and replace every use:
+- [ ] **Step 5: Rewire the storage paths.** In `SaveSystem.ts`: delete the `SAVE_KEY`/`BACKUP_KEY`/`IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY`/`SAVE_REVISION_KEY` constant declarations (:27-49 — keep the version-history comment block, it documents the *value* history not the key shape; add a one-line note that keys are now per-account via `saveKeys.ts`), import the four resolvers, and replace every use (post-A line refs):
 
-  - `writeGameSave` (:392): `localStorage.setItem(resolveSaveKey(), JSON.stringify(save))`
-  - `loadGame` (:419): `localStorage.getItem(resolveSaveKey())`; handoff get/remove (:470,:503) → `resolveImportHandoffKey()`
-  - `backupCurrentSave` (:519-525): `getItem(resolveSaveKey())` → `setItem(resolveBackupKey(), raw)` (keep the existing try/… behavior from Mission A if landed — as of master it is unguarded; do not re-add Mission A work here, just swap the keys)
-  - `hasBackup` (:528) → `resolveBackupKey()`; `getRawSave` (:532) → `resolveSaveKey()`
-  - `restoreBackup` (:535-546): `getItem(resolveBackupKey())` → `setItem(resolveSaveKey(), raw)` + `removeItem(resolveImportHandoffKey())`
-  - `deleteSave` (:548-557): `removeItem(resolveSaveKey())`, `removeItem(resolveImportHandoffKey())`, `removeItem(resolveRevisionKey())`
-  - `importSaveRaw` (:619-634): handoff write/remove → `resolveImportHandoffKey()`, final write → `resolveSaveKey()`
+  - `writeGameSave` (:396): `localStorage.setItem(resolveSaveKey(), JSON.stringify(save))`
+  - `loadGame` (:430): `localStorage.getItem(resolveSaveKey())`; handoff get/remove (:489, :527) → `resolveImportHandoffKey()`
+  - `backupCurrentSave` (:550-553): `getItem(resolveSaveKey())` → `setItem(resolveBackupKey(), raw)` (Mission A already added the try/catch guard — just swap the keys)
+  - `hasBackup` (:564) → `resolveBackupKey()`; `getRawSave` (:572) → `resolveSaveKey()`
+  - `restoreBackup` (:580-590): `getItem(resolveBackupKey())` → `setItem(resolveSaveKey(), raw)` + `removeItem(resolveImportHandoffKey())`
+  - `deleteSave` (:613-615): `removeItem(resolveSaveKey())`, `removeItem(resolveImportHandoffKey())`, `removeItem(resolveRevisionKey())`
+  - `importSaveRaw` (:689-708): handoff write/remove → `resolveImportHandoffKey()`, final write → `resolveSaveKey()`
 
-  `LocalCloudSaveService.ts`: import `resolveRevisionKey` from `'../save/saveKeys'`; :5, :28, :41 all become `resolveRevisionKey()` calls (the `SAVE_REVISION_KEY` import is removed — revision-first ordering comment stays, still true).
+  `LocalCloudSaveService.ts`: import `resolveRevisionKey` from `'../save/saveKeys'`; :5, :37, :50 all become `resolveRevisionKey()` calls (the `SAVE_REVISION_KEY` import is removed — revision-first ordering comment stays, still true).
 
 - [ ] **Step 6: Update the test/e2e call sites.** In unit tests replace literal/constant keys with resolver calls (`localStorage.setItem(resolveSaveKey(), raw)` etc.) and add `setSaveAccountId(null)` to `beforeEach` in any file that binds an account. In e2e, add `export const GUEST_SAVE_KEY = 'tien-hiep-idle-save:guest'` to `tests/e2e/helpers.ts` and repoint every spec constant + every literal inside `page.evaluate`/`addInitScript` (the evaluate bodies carry string literals — update them to `'tien-hiep-idle-save:guest'` inline; keep the existing comment noting literals can't serialize from module scope).
 
@@ -685,7 +685,7 @@ function onAuthenticated(session: AuthSession) {
 **Files:**
 - Modify: `game/src/services/supabase/SupabaseHttp.ts` (timeout)
 - Modify: `game/src/services/supabase/SupabaseSession.ts` (add `resolveSupabaseSession` — refresh-aware accessor)
-- Modify: `game/src/services/character/SupabaseCharacterCreationService.ts:22-26,29-43,55` (`session()` → refresh-aware)
+- Modify: `game/src/services/character/SupabaseCharacterCreationService.ts` (`private session()` :22-26 → refresh-aware; call sites :29, :39, :55)
 - Test: `game/src/services/supabase/SupabaseHttp.test.ts` (new), `game/src/services/supabase/SupabaseSession.test.ts` (new)
 
 **Interfaces:**
@@ -701,7 +701,10 @@ import { requestSupabase } from './SupabaseHttp'
 const config = { url: 'https://example.supabase.co', anonKey: 'anon' }
 
 describe('requestSupabase — timeout (audit T3-24)', () => {
-  it('passes an AbortSignal that aborts on the 10s timeout', async () => {
+  it('arms a 10s AbortSignal.timeout and merges the caller signal', async () => {
+    // NOTE: vitest fake timers do NOT drive AbortSignal.timeout — do not
+    // try to advance timers into a real abort. Spy the factory instead.
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout')
     let captured: RequestInit | undefined
     vi.stubGlobal('fetch', vi.fn(async (_url: string, init: RequestInit) => {
       captured = init
@@ -709,25 +712,25 @@ describe('requestSupabase — timeout (audit T3-24)', () => {
     }))
 
     await requestSupabase(config, '/rest/v1/x')
+    expect(timeoutSpy).toHaveBeenCalledWith(10_000)
     expect(captured?.signal).toBeInstanceOf(AbortSignal)
+
+    timeoutSpy.mockRestore()
     vi.unstubAllGlobals()
   })
 
-  it('a fetch that never settles rejects within the timeout window', async () => {
-    vi.useFakeTimers()
+  it('a caller abort still rejects the request through the merged signal', async () => {
     vi.stubGlobal('fetch', vi.fn((_url: string, init: RequestInit) =>
       new Promise<Response>((_resolve, reject) => {
         init.signal?.addEventListener('abort', () =>
-          reject(new DOMException('The operation timed out', 'TimeoutError')))
+          reject(new DOMException('Aborted', 'AbortError')))
       }),
     ))
-
-    const pending = requestSupabase(config, '/rest/v1/x')
-    const settled = pending.then(() => 'resolved', (e: unknown) => (e as DOMException).name)
-    await vi.advanceTimersByTimeAsync(11_000)
-    expect(await settled).toBe('TimeoutError')
+    const controller = new AbortController()
+    const pending = requestSupabase(config, '/rest/v1/x', { signal: controller.signal })
+    controller.abort()
+    await expect(pending).rejects.toMatchObject({ name: 'AbortError' })
     vi.unstubAllGlobals()
-    vi.useRealTimers()
   })
 })
 ```
@@ -819,17 +822,18 @@ export async function resolveSupabaseSession(config: SupabaseConfig): Promise<St
 - Modify: `game/supabase/migrations/202608240001_online_auth_character.sql` (:54 constraint + name, :150 RPC check — **in place**, locked dev-stage decision)
 - Create: `game/src/services/cloudSave/SupabaseRemoteSave.ts`
 - Modify: `game/src/services/cloudSave/CloudSaveServiceFactory.ts` (export the boot sync; update the AR-15 comment)
-- Modify: `game/src/composables/useAppLifecycle.ts` (:29-73 deps — optional `remoteSync`; :228-234 call it before `coordinator.load()`)
-- Modify: `game/src/App.vue:358-409` (lifecycle deps — pass `remoteSync`)
+- Modify: `game/src/composables/useAppLifecycle.ts` (`UseAppLifecycleDeps` — optional `remoteSync`; call it after `boot.startSaveLoad()` :228 and before `coordinator.load()` :234 — the generation fence at :236-241 already covers continuations after this await)
+- Modify: `game/src/App.vue` (lifecycle deps at :346-405 — pass `remoteSync`)
 - Test: `game/src/services/cloudSave/SupabaseRemoteSave.test.ts` (new), `game/src/composables/useAppLifecycle.test.ts` (extend stubs)
 
 **Interfaces:**
 - `syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<'pulled' | 'pushed' | 'skipped' | 'unavailable'>`:
   - `skipped` when no session, `mode === 'guest'`, no `userId`, or the account has no `characters` row (the FK target for `character_saves` — a remote save cannot exist without it).
+  - **Every authenticated call passes `session.accessToken` as `requestSupabase`'s 4th arg** (`SupabaseHttp.ts:13` — without it the Authorization header carries the anon key and the RLS policies from Step 1 return empty/denied results, silently degrading sync to `skipped` forever).
   - Pull: `GET /rest/v1/characters?select=id&user_id=eq.{userId}&limit=1` → `GET /rest/v1/character_saves?select=payload,save_revision,updated_at&character_id=eq.{id}&limit=1`. Remote wins when `Date.parse(updated_at)` > local `save.player.lastSavedAt` AND the payload is usable (`version === CURRENT_SAVE_VERSION` + `validateGameSaveShape().ok`) — then write `JSON.stringify(shape.normalizedSave)` to `resolveSaveKey()` (same normalization `loadGame` applies) + `resolveRevisionKey()` = `save_revision`. An unusable/missing payload counts as "no remote".
-  - Push (remote absent or older, local `loadGame()` ok): `POST /rest/v1/character_saves` with `Prefer: resolution=merge-duplicates`, body `{character_id, user_id, schema_version: CURRENT_SAVE_VERSION, save_revision: <local revision>, payload: <local save>}`.
+  - Push (remote absent or older, local `loadGame()` ok): `POST /rest/v1/character_saves` with `Prefer: resolution=merge-duplicates`, body `{character_id, user_id, schema_version: CURRENT_SAVE_VERSION, save_revision: <local revision>, payload: <local save>, updated_at: new Date().toISOString()}` — **`updated_at` is required**: the column default only applies on INSERT; without an explicit value every later UPDATE keeps the insert timestamp and newest-wins goes stale after the first push. (If the table lacks the column, add `updated_at timestamptz not null default now()` to the migration in Step 1.)
   - Any thrown/HTTP error → `unavailable`; the boot caller logs and proceeds on the local slot.
-- Lifecycle dep `remoteSync?: () => Promise<unknown>` — invoked inside `bootGame` after `boot.startSaveLoad()` and before `coordinator.load()`, only when `!createNewCharacter`, wrapped in try/catch (`console.warn` + continue). The existing generation fence at :242 already covers continuations after this await.
+- Lifecycle dep `remoteSync?: () => Promise<unknown>` — invoked inside `bootGame` after `boot.startSaveLoad()` (:228) and before `coordinator.load()` (:234), only when `!createNewCharacter`, wrapped in try/catch (`console.warn` + continue). The existing generation fence at :236-241 already covers continuations after this await.
 - Guest progress is NOT migrated into a fresh account slot on register — the account slot starts empty and the normal character-creation flow runs. Documented decision (flag to owner if product wants adopt-guest-on-register later).
 
 - [ ] **Step 1: SQL in-place fix** — `202608240001_online_auth_character.sql`:
@@ -843,7 +847,7 @@ create policy saves_own_insert on public.character_saves for insert with check (
 create policy saves_own_update on public.character_saves for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 ```
 
-- [ ] **Step 2: Failing tests** — `SupabaseRemoteSave.test.ts`: stub `fetch`, `localStorage`, `sessionStorage` (same `MemoryStorage` pattern as `SaveSystem.test.ts:24-51`); seed a stored session `{mode:'login', userId:'u1', …, expiresAtMs: future}`; bind `setSaveAccountId('u1')`. Cases: guest session → `skipped` + zero fetch calls; no `characters` row → `skipped`; remote `updated_at` newer than local `lastSavedAt` → local slot overwritten, revision set, returns `pulled`; remote older → POST merge-duplicates observed, returns `pushed`; remote payload `{}` (the `p_initial_save` shape `SupabaseCharacterCreationService` sends today) → treated as absent; fetch rejection → `unavailable`.
+- [ ] **Step 2: Failing tests** — `SupabaseRemoteSave.test.ts`: stub `fetch`, `localStorage`, `sessionStorage` (same `MemoryStorage` pattern as `SaveSystem.test.ts:24-51`); seed a stored session `{mode:'login', userId:'u1', accessToken:'tok-u1', …, expiresAtMs: future}`; bind `setSaveAccountId('u1')`. Cases: guest session → `skipped` + zero fetch calls; no `characters` row → `skipped`; remote `updated_at` newer than local `lastSavedAt` → local slot overwritten, revision set, returns `pulled`; remote older → POST merge-duplicates observed, returns `pushed`; remote payload `{}` (the `p_initial_save` shape `SupabaseCharacterCreationService` sends today) → treated as absent; fetch rejection → `unavailable`. **Auth-header coverage:** capture every fetch `init.headers.Authorization` and assert each call carries `Bearer tok-u1`, never `Bearer <anonKey>` — this is the regression guard for the RLS-denial bug class.
   `useAppLifecycle.test.ts`: add `remoteSync: vi.fn(async () => 'skipped')` to `makeStubs`/`makeLifecycle`; assert it is awaited before `coordinator.load` via `invocationCallOrder`, is skipped for `createNewCharacter: true`, and that a rejection still reaches `coordinator.load` (boot proceeds).
 
 - [ ] **Step 3: Run — expect FAIL** (`npx vitest run src/services/cloudSave/SupabaseRemoteSave.test.ts src/composables/useAppLifecycle.test.ts`).

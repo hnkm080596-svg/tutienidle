@@ -1,5 +1,7 @@
 # Mission A — Save Integrity Implementation Plan
 
+> **STATUS: MERGED** (2026-09 — commits `a90a2613`..`9c518ca8`). This document is the historical execution record; do NOT re-dispatch it. Later mission plans (B–G) treat its changes as the baseline.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Close the persistence boundary — every declared `GameSave` slice gets deep element-level validation, all persistent fields round-trip, and every storage write has a typed failure contract.

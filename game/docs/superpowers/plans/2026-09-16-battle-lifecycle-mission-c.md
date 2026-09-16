@@ -20,7 +20,7 @@
   - T3-22's "manual mode discards queued reactive-turn choices" is STALE: `GameManagerTurnBattleOps.stepTurnBattle` already detects `isPendingQueuedExecution(readyActor.id)` and claims with `manualMode: false` (`GameManagerTurnBattleOps.ts:478-483`). Task 6 locks the contract with tests; no behavior change expected.
   - T1-4 is REAL and worse than the summary suggests: on natural defeat with repeat armed, `GameManagerBattleRewardOps.ts:135-137` skips `stageWaves.stopRepeat()` — so `StageManager.active` stays set and `repeatStageContinuously` stays armed with no battle running. Every later `StageManager.start()` no-ops for the session.
   - T5-43 is only partially stale: `TurnBattleSystem` does take an injectable `rng` (`TurnBattleSystem.ts:478`) but `CombatSystem` (:213/:272/:283/:297) and `BuffSystem` (:488/:514) still call global `Math.random`, and orchestration placement (`GameManagerTurnBattleOps.ts:967`, `:1110`) plus spawn selection (`StageSystem.ts:9`, `StageWaveSystem.ts:168/185`, `HiddenBeastSystem.ts:27` via `DropRoll.ts`) never see it.
-- P8: no `any` — narrow with `unknown` + guards. P15: English ASCII comments in `.ts`. A2/A5: one authority per rule; ops orchestrate. A8: no `if path === ...` content branches in generic mechanisms.
+- P8: no `any` — narrow with `unknown` + guards. P15: English ASCII comments in `.ts` — write `-` not `—`/`→` inside code comments (this document uses them in prose; code snippets must emit ASCII only). A2/A5: one authority per rule; ops orchestrate. A8: no `if path === ...` content branches in generic mechanisms.
 - P17: this mission changes combat contracts → update the `docs/roadmap.md` combat-chain section (the "Primary combat chain" block at ~:1843 and the Phase R5 contract at ~:708) inside the repeat-policy task (Task 3), in the same change.
 - Worktree: `.agent-worktrees/battle-lifecycle` (branch `refactor/battle-lifecycle`).
 - Verification per task (P3 quick): `npm run type-check` + `npx vitest run <task scope>`.
@@ -42,7 +42,7 @@
 | `reactivePayloads` (The Tu An clones) | rebuilt | rebuilt | rebuilt | **CARRIED on the reused participant** |
 | `bossTrigger.firedAlready` | fresh enemy participants | fresh | fresh | new `TurnBattleSystem`, but enemy participants respawn fresh anyway |
 | `queuedFollowUps` / `queuedExecutions` / `followUpChainDepth` | new object literal (absent) | same | same | new object literal (absent) — OK |
-| `TurnBattleSystem` private pending (`pendingReactiveEntry` :493, `pendingQueuedExecution` :501, `pendingGaugeDelta*` :485-486, `manualOptionsByActor`, `nextReactiveActionId`) | `turnBattleSystem` field — NOT rebuilt here | same | rebuilt inside `stageWaves` flow? NO — rebuilt only in `restartTurnBattleCycle` (:1181) and initial construction | **new instance (:1181) — OK** |
+| `TurnBattleSystem` private pending (`pendingReactiveEntry` :493, `pendingQueuedExecution` :501, `pendingGaugeDelta*` :485-486, `manualOptionsByActor`, `nextReactiveActionId`) | `turnBattleSystem` field — NOT rebuilt here | same | rebuilt in the `startStage` post-block (:1274) — fresh engine per stage start | **new instance (:1181) — OK** |
 | `rewardOps` (`rewardsGranted`, `battleEndEmitted`) | `resetRewardState()` :834 | same | `resetRewardState()` :1247 | `resetRewardState()` :1146 |
 | `presentationOps.runtime` pending (ready/declared/impact/manual, `playbackToken`) | `resetPendingState()` inside `resetTurnEngine`? NO — only `clearPendingSteps`+pipeline+token (:766-770); `resetPendingState` NOT called in `startBattle` | same | `resetPendingState()` :1248 | `resetPendingState()` :1147 |
 | `boundaryQueue` | cleared :871 | same | cleared at COMBAT_OVER (:725) + :871 via startBattle | cleared at COMBAT_OVER (:725) before restart — OK |
@@ -72,6 +72,7 @@ Canonical reset list (locked): every row marked **CARRIED** above must reset on 
 | `StageWaveSystem.ts:168,185` | `rollChance(eliteChance)` boss/elite tag | YES |
 | `StageSystem.ts:9` | `weightedRandom` enemy-pool pick | YES |
 | `HiddenBeastSystem.ts:27` | `rollChance(0.05)` hidden-beast substitution | YES |
+| `NguKiemDaoProvider.ts:83,88` | cascade-crit + pierce rolls inside `buildNguKiemDaoProvider(player, unlocks, rng = Math.random)` (:63-66) — ops call site :1017-1020 passes NO rng today | YES — thread session rng through `CultivationPathRuntime.buildDynamicBasic` (Task 9 signature gains an `rng` param) |
 | `DropRoll.ts:12/16/33` | `randomInt`/`rollChance`/`weightedRandom` primitives | gain optional `rng` param |
 | `BattleLootSystem.ts:454` | `randomInt` loot-table pick | **OUT** — reward economy, not combat outcome; a seeded battle does not pin drops |
 | `GameManagerTickOps.ts:209` | alchemy tick random | **OUT** — not combat |
@@ -90,7 +91,7 @@ Canonical reset list (locked): every row marked **CARRIED** above must reset on 
 
 ```ts
 // 'tribulation' from spec C2 maps onto 'fresh': tribulation battles are
-// run by TribulationDirector (GameManager.startTribulation :1564-1576),
+// run by TribulationDirector (GameManager.startTribulation :1565),
 // a separate lifecycle that never enters the turn-battle ops — the
 // non-stage branch of startBattle (:843-862) is the only tribulation-
 // adjacent path this owner covers. Do NOT add a 'tribulation' kind
@@ -143,7 +144,11 @@ export const BATTLE_CYCLE_POLICIES: Record<BattleCycleKind, BattleCyclePolicy> =
   fresh:       { kind: 'fresh',       reset: FRESH_BATTLE_RESET, entryState: 'intro',    preserveStageBinding: false, preserveLootSession: false },
   stage:       { kind: 'stage',       reset: FRESH_BATTLE_RESET, entryState: 'intro',    preserveStageBinding: false, preserveLootSession: false },
   repeat:      { kind: 'repeat',      reset: FRESH_BATTLE_RESET, entryState: 'fighting', preserveStageBinding: true,  preserveLootSession: true  },
-  test:        { kind: 'test',        reset: FRESH_BATTLE_RESET, entryState: 'fighting', preserveStageBinding: false, preserveLootSession: true  },
+  // 'test' must NOT preserve the loot session: today startBattle ALWAYS
+  // calls battleLoot.beginBattle() (:823) for raw-entity/devtools starts
+  // — inheriting a stale receiver/summary would silently leak a prior
+  // battle's session into devtools battles.
+  test:        { kind: 'test',        reset: FRESH_BATTLE_RESET, entryState: 'fighting', preserveStageBinding: false, preserveLootSession: false },
 }
 ```
 
@@ -163,7 +168,7 @@ export const BATTLE_CYCLE_POLICIES: Record<BattleCycleKind, BattleCyclePolicy> =
 
 **Files:**
 - Modify: `src/core/game/GameManagerTurnBattleOps.ts`
-- Modify: `src/core/game/GameManager.ts` (delegate surface only — `startBattle` :874, `startBattleWithPlayer` :1536, `startStage`)
+- Modify: `src/core/game/GameManager.ts` (delegate surface only — `startBattle` :874, `startBattleWithPlayer` :1537; there is NO `GameManager.startStage` delegate — production calls `turnBattleOps.startStage` directly, `useBattleActions.ts:47-48`)
 - Test: `src/core/game/GameManager.battleCycle.test.ts` (new)
 
 **Interfaces:**
@@ -211,10 +216,12 @@ this.deps.combatSystem.setSurviveLethalSession(null)
 //    this.combatClock.stop(); this.combatClock.start(); this.syncOffScreenFreeze()
 ```
 
-- [ ] **Step 1: Read first** — `startBattle` (:817-879), `startBattleWithPlayer` (:881-954), `startStage` (:1212-1330), `restartTurnBattleCycle` (:1137-1208), `resetTurnEngine` (:766-770), `abandonBattle` (~:1360-1390). List which statements each keeps after delegation — the answer should be "only validate + call + post-entry glue".
+- [ ] **Step 1: Read first** — `startBattle` (:817-879), `startBattleWithPlayer` (:881-954), `startStage` (:1212-1330), `restartTurnBattleCycle` (:1137-1208), `resetTurnEngine` (:766-770), `abandonBattle` (:1351-1401 — include the teardown tail: boundaryQueue clear, `resetTurnEngine`, clock stop at ~:1396-1398). List which statements each keeps after delegation — the answer should be "only validate + call + post-entry glue".
 - [ ] **Step 2: Failing test** — `GameManager.battleCycle.test.ts`: instrument the four entry paths (a stage start, a `startBattleWithPlayer` non-stage start, a repeat victory, an abandon→restart) and assert each runs the FULL reset list — concretely: after a battle with a debuffed/on-cooldown/charged player, each entry leaves `participant.buffs` empty, cooldowns 0, gauge 0, `entity.currentThe === 0`, `rewardOps` guards cleared (observable: a second `battle_end` publishes).
 - [ ] **Step 3: FAIL** — today `startBattle` never calls `runtime.resetPendingState()` (see inventory row) and `restartTurnBattleCycle` never touches `battleLoot`/survive/passive ordering.
 - [ ] **Step 4: Implement** — extract the player bootstrap from `startBattleWithPlayer` (:893-953) into a private `buildPlayerBattleSide(player)`; write `beginBattleCycle`; make `startBattle`, `startBattleWithPlayer`, `restartTurnBattleCycle`, and the `startStage` post-`launchBattle` block all call it. `abandonBattle` keeps its own teardown (it ENDS a cycle, doesn't begin one) but routes its `runtime.resetPendingState()` + `stopRepeat()` through the same helper block so the pending-clear can't drift.
+
+  **startStage composition (resolves the double-cycle hazard):** the launch chain is `startStage` → `stageWaves.start` → `launchBattle` → `startBattleWithPlayer` → `startBattle` — i.e. a FULL cycle already runs inside `stageWaves.start` (bootstrap enemy spawn at :818, `battleLoot.beginBattle`, session work gated by `isStageStarting` :843). The nested `startBattle` must NOT call `beginBattleCycle` again: ownership rule is **the INNERMOST call owns the cycle** — `beginBattleCycle` lives inside `startBattle` (all paths funnel through it); `startStage`'s post-`launchBattle` block contributes ONLY stage-specific extras (stage binding :1235, repeat flag :1234, `startedAtMs` :1249, engine build :1274 — which moves inside `beginBattleCycle` anyway) and never re-invokes the canonical sequence. The `isStageStarting` gate (:843) already suppresses the bootstrap-enemy branch inside `startBattle` during stage launches; keep that suppression and move the bootstrap-enemy DESPAWN (:1258-1263) into the `'stage'` policy path inside `beginBattleCycle` so the orphan-enemy leak can't drift. Concretely: `startStage` post-block becomes `assert stageWaves.start(...) → beginBattleCycle-owned state is live → set stage binding fields → return true`.
 - [ ] **Step 5: PASS** — `npx vitest run src/core/game/GameManager.battleCycle src/core/game/GameManager.bossRepeatCycle src/core/game/GameManagerTurnBattleOps.commandBoundary` + type-check.
 - [ ] **Step 6: Commit** `refactor(battle): single beginBattleCycle lifecycle owner`
 
@@ -246,7 +253,7 @@ this.deps.combatSystem.setSurviveLethalSession(null)
 >
 > What this mission still owes around that fix:
 >
-> - [ ] **Step 1: Regression net** — after `git merge`/rebase onto post-B master, confirm `GameManager.repeatStage.test.ts` contains the T1-4 defeat-releases-slot test and it passes; if the merge dropped it, restore it here.
+> - [ ] **Step 1: Regression net** — after `git merge`/rebase onto post-B master, confirm `GameManager.repeatStage.test.ts` contains the T1-4 defeat-releases-slot test and it passes; if the merge dropped it, restore it here. While in that file, rename the stale title at :13 ("starts another spawn cycle in the same battle *without restoring the player*") — it documents the obsolete carry semantic; the fresh-battle contract makes it misleading.
 > - [ ] **Step 2: Contract check inside `beginBattleCycle`** — Task 2/3's canonical reset must preserve the post-B behavior: a defeat terminal ALWAYS releases the stage slot (repeat only survives victory). Add one assertion to the Task-3 repeat-cycle test that a defeat inside a repeat-armed cycle leaves `stageWaves` disarmed — guards the fix against the lifecycle refactor regressing it.
 
 ---
@@ -278,7 +285,7 @@ Current protection (verified): every ack requires `token === this.playbackToken`
 - Test: `src/core/battle/turn/TurnBattleSystem` queued-execution test file (check for an existing `queuedExecution`/`multicast` spec first — `TurnBattleSystem.hoIntercept.test.ts` and `theTuAnRiders.test.ts` are the neighbors) or new `src/core/game/GameManagerTurnBattleOps.manualMode.test.ts`
 - Modify: `GameManagerTurnBattleOps.ts` ONLY if a test exposes a real gap.
 
-- [ ] **Step 1: Read first** — `stepTurnBattle` (:470-500): `isPendingQueuedExecution(readyActor.id)` → `manualMode: false` claim; `TurnBattleSystem.dequeueQueuedExecution`/`isPendingQueuedExecution` (:576-590, :903-915, :2255-2256); `TurnReactionManager` queuing for multicast/repeat (`queuedExecutions` :237, :2220-2238).
+- [ ] **Step 1: Read first** — `stepTurnBattle` (:470-500): `isPendingQueuedExecution(readyActor.id)` → `manualMode: false` claim; `TurnBattleSystem.dequeueQueuedExecution`/`isPendingQueuedExecution` (:576-590, :903-915, :2255-2256); the `queuedExecutions` queue lives on `TurnBattle` (:237) written inside `TurnBattleSystem`'s multicast/repeat scheduling (:2220-2238) — `TurnReactionManager` owns NO queue.
 - [ ] **Step 2: Failing/new regression tests** (expected to PASS already — they lock the contract):
   - Manual mode ON + a successful counter/multicast queues `queuedExecutions` → the queued actor's turn resolves WITHOUT `submitTurnChoice` (claim runs with `manualMode: false`).
   - Manual mode ON + a genuinely fresh player turn → token routes to `AWAITING_INPUT`, `pauseForManualActor` runs, clock stays frozen until `submitTurnChoice` — manual gating still applies to REAL turns.
@@ -329,6 +336,8 @@ Apply at: the `for (const target of ...)` loops in `applyActionImpact` (both the
 - Modify: `src/core/game/StageWaveSystem.ts` (`pickEnemyForSpawn`/`pickEnemyForTurnSpawn` options gain `random?: () => number`; thread into `rollChance`, `pickNextEnemyEntry`, `hiddenBeast.maybeReplaceSpawn`)
 - Modify: `src/core/game/HiddenBeastSystem.ts` (`maybeReplaceSpawn(player, realmId, rng?)`)
 - Modify: `src/core/game/GameManagerTurnBattleOps.ts` (mint `this.combatRng` per cycle in `beginBattleCycle` from a new optional dep `createBattleRng?: () => () => number` defaulting to `() => Math.random`; feed `new TurnBattleSystem(..., this.combatRng)`, `combat.setRandomSource(this.combatRng)`, both `resolveEnemySpawnPosition` calls (:967/:1110), and the `pickEnemyForTurnSpawn` calls (:1189, :1285))
+- Modify: `src/core/game/GameManager.ts` — **injection seam (required for the determinism test):** `gameManager.setBattleRngFactory(factory)` mirroring `setCombatClockSource` (`GameManager.ts:1332-1333` → ops setter at :339). Without it `createBattleRng` is constructor-frozen inside `new GameManager()` and no test can seed a battle.
+- Modify: `src/core/kiem-tu/NguKiemDaoProvider.ts` + Task-9's `buildDynamicBasic` signature — the provider's cascade-crit (:83) and pierce (:88) rolls default to `Math.random` today; thread `this.combatRng` through `runtime.buildDynamicBasic(player, nodes, this.combatRng)`.
 - Test: `src/core/battle/SeededRandom.test.ts` + a determinism spec in `src/core/game/GameManager.battleCycle.test.ts` or `src/core/battle/turn/TurnBattleSystem.determinism.test.ts`
 
 - [ ] **Step 1: Read first** — every call site in the header inventory table; confirm `CombatSystem` is shared per-GameManager (constructed once) → the session rng must be SETTABLE per cycle (`setRandomSource`), not constructor-frozen.
@@ -336,7 +345,7 @@ Apply at: the `for (const target of ...)` loops in `applyActionImpact` (both the
   - `SeededRandom`: same seed → identical sequence; different seeds → different; output ∈ [0,1).
   - `CombatSystem`: injected `() => 0.99` forces every roll to fail (no ignore-resist, no crit above cap, hit blocked vs high evasion — pick assertions that isolate each roll site); `() => 0` forces all succeed.
   - `BuffSystem`: on-hit proc with `chance 0.5` fires under `() => 0.2`, not under `() => 0.9` — passed via the new param, no `vi.spyOn(Math, 'random')` needed.
-  - Determinism end-to-end: `createBattleRng = () => mulberry32(1234)`; run the same `startStage` + scripted ticks twice → identical battle log (enemy ids, spawn positions, damage numbers, ailment outcomes). Assert `Math.random` is never hit: `vi.spyOn(Math, 'random')` + `expect(spy).not.toHaveBeenCalled()` during the battle tick.
+  - Determinism end-to-end: inject `gameManager.setBattleRngFactory(() => mulberry32(1234))`; run the same `startStage` + scripted ticks twice → identical battle log (enemy ids, spawn positions, damage numbers, ailment outcomes). Use a kiem_tu_ngu player in ONE of the runs so `NguKiemDaoProvider`'s rolls are exercised. Assert `Math.random` is never hit: `vi.spyOn(Math, 'random')` + `expect(spy).not.toHaveBeenCalled()` during the battle tick.
 - [ ] **Step 3: FAIL** — today the spy is called (hit/block/crit/placement).
 - [ ] **Step 4: Implement** — threading order: `DropRoll` params → `StageSystem`/`HiddenBeastSystem` → `StageWaveSystem` options → `BuffSystem` params → `CombatSystem.setRandomSource` → ops wiring. `TurnBattleSystem` already accepts `rng` as ctor param 8 — pass `this.combatRng` at both construction sites (:1181 and the `startStage`/`startBattle` construction site).
 - [ ] **Step 5: Scope guard** — `BattleLootSystem.randomInt` (:454), `GameManagerTickOps` alchemy (:209), `GameManagerPillOps` (:37) stay on global `Math.random` — they are economy/pill randomness, not combat outcome; leave a comment at the `createBattleRng` dep stating the boundary.
@@ -359,14 +368,28 @@ Apply at: the `for (const target of ...)` loops in `applyActionImpact` (both the
 export interface CultivationPathRuntime {
   /** resolvePlayerBasicAttack — incl. An-kit composite wrap, route post-conversion. */
   resolveBasic(player: PlayerData): TurnSkillDefinition
-  /** resolvePlayerSpecialUltimate — kit slots or emblem markers (Ngu). */
-  resolveSpecialUltimate(player: PlayerData): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition } | undefined
+  /** resolvePlayerSpecialUltimate — kit slots or emblem markers (Ngu).
+   *  MUST carry the full return shape of GameManager.resolvePlayerSpecialUltimate
+   *  (:1142-1230): the isTheTuUngThe branch (:1178-1186) returns
+   *  kit.reactivePayloads + kit.maxThe, which toTurnBattleParticipant
+   *  (TurnBattleAdapter.ts:82-91) stamps onto participant/entity.
+   *  Dropping them deletes the the_tu_an reactive-payload channel. */
+  resolveSpecialUltimate(player: PlayerData): {
+    special?: TurnSkillDefinition
+    ultimate?: TurnSkillDefinition
+    reactivePayloads?: ReactivePayload[]
+    maxThe?: number
+  } | undefined
   /** resolvePlayerMaxThe — The cap snapshot (kiem_tu/phap_tu_an; else MAX_THE). */
   resolveMaxThe(player: PlayerData): number
-  /** resolveActiveWayStatDomains — domain gate for stat derivation. */
-  resolveStatDomains(player: PlayerData): ReadonlySet<StatDomain>
-  /** Kiem Tu hien/ngu dynamic-basic provider — undefined for other paths. */
-  buildDynamicBasic?(player: PlayerData, nodes: ProgressionNodes): DynamicBasicProvider | undefined
+  /** resolveActiveWayStatDomains (CultivationPathSystem.ts:157) — domain
+   *  gate for stat derivation; TurnBattleAdapter wraps to a Set
+   *  (:54-55) at the consumption point. */
+  resolveStatDomains(player: PlayerData): readonly StatDomain[] | undefined
+  /** Kiem Tu hien/ngu dynamic-basic provider — undefined for other
+   *  paths. `rng` is the session battle RNG (Task 8): NguKiemDaoProvider's
+   *  cascade-crit/pierce rolls must NOT default to global Math.random. */
+  buildDynamicBasic?(player: PlayerData, nodes: ProgressionNodes, rng: () => number): DynamicBasicProvider | undefined
   /** The Tu — Bat Tu Ba The survive source(s); empty/undefined elsewhere. */
   buildSurviveSources?(player: PlayerData, participant: TurnBattleParticipant): SurviveLethalSource[]
   /** Emblem/marker slot overrides (Ngu Kiem Dao special/ultimate emblems). */
@@ -383,8 +406,8 @@ Migration map (what moves where):
 - [ ] **Step 1: Read first** — `GameManager.ts` :890-1300 in full; `buildTurnBattle` :979-1130; `src/core/kiem-tu/` providers (`buildKiemPhoProvider`, `buildNguKiemDaoProvider`, `collectKiemPhoComboModifiers`, `collectKiemDaoCascadeUnlocks`); `src/core/the-tu/TheTuBatTuSurvival`; `src/core/phap-tu/` route/An-kit seams (`applyRouteToTurnSkill`, `applyAnKitToBasic`, `applyAnKitToSpecial`).
 - [ ] **Step 2: Failing tests:**
   - Contract test: a `fake_path` factory registered in a test registry produces a runtime; a battle built through `beginBattleCycle` uses its basic/special without ANY path-id branch in the ops.
-  - Guard test: `GameManagerTurnBattleOps.ts` no longer imports `isKiemTuHien`/`isKiemTuNgu`/`isTheTuHien`/`isPhapTu*` (assert via source scan or import-graph guard consistent with `tests/architecture` conventions).
-  - Parity: a kiem_tu_hien player still gets `dynamicBasic` set; a kiem_tu_ngu player gets the provider + `TU_KIEM_Y_EMBLEM`/`KIEM_DAO_CASCADE_EMBLEM` slots; a the_tu player gets `buildSurviveSources` wired into `setSurviveLethalSession.extraSources` — pin with existing-suite assertions, don't rewrite them.
+  - Guard test: `GameManagerTurnBattleOps.ts` no longer imports ANY path predicate — `isKiemTuHien`/`isKiemTuNgu`/`isTheTuHien`/`isPhapTu*` AND the already-dead `isUngTheCombatant` (:32) and every other `../the-tu/*`, `../kiem-tu/*`, `../phap-tu/*` import that exists only for branching (assert via source scan or import-graph guard consistent with `tests/architecture` conventions).
+  - Parity: a kiem_tu_hien player still gets `dynamicBasic` set; a kiem_tu_ngu player gets the provider + `TU_KIEM_Y_EMBLEM`/`KIEM_DAO_CASCADE_EMBLEM` slots; a the_tu player gets `buildSurviveSources` wired into `setSurviveLethalSession.extraSources`; **a the_tu_an player still gets `reactivePayloads` + `maxThe` stamped** (the return-shape risk in the interface — pin it). Pin with existing-suite assertions, don't rewrite them — `GameManager.theTuAnE2E.test.ts` already covers the payload channel end-to-end.
 - [ ] **Step 3: FAIL** — guard test fails (ops imports the path predicates today).
 - [ ] **Step 4: Implement** — registry map `pathId → factory`; `resolveCultivationPathRuntime(player, deps)` is the single dispatcher (A8: branches live in the registry/content modules, never in `buildTurnBattle`). Migrate one path at a time: the_tu (smallest surface) → phap_tu → kiem_tu → mortal fallback.
 - [ ] **Step 5: PASS** — `npx vitest run src/core/player src/core/game src/core/kiem-tu src/core/phap-tu src/core/the-tu` + type-check.
@@ -409,7 +432,7 @@ Migration map (what moves where):
 - [ ] **Step 2: FAIL** — today `target: 'target'` (:111) lands the buff on `declared.affected` (the enemies) with 1 stack each.
 - [ ] **Step 3: Implement** — port the authored `stacksPerAffectedTarget` semantics (`SkillEffect.ts:113-118`: stacks = số target còn sống trúng đòn, capped by buff `maxStacks`):
   - `TurnSkillBuffApplication` gains `stacksPerAffectedTarget?: boolean`.
-  - `applyDeclaredBuff` computes `stacks = buffSpec.stacksPerAffectedTarget ? Math.max(1, actionTargets.filter(t => t.entity.alive).length) : Math.max(1, buffSpec.stacks ?? 1)` — document the alive-filter decision (dead enemies are not "imprisoned"; minimum 1 so a whiffed-into-corpse edge still grants the base stack consistent with `stacks ?? 1` behavior).
+  - `applyDeclaredBuff` computes `stacks = buffSpec.stacksPerAffectedTarget ? Math.max(1, actionTargets.filter(t => t.entity.alive).length) : Math.max(1, buffSpec.stacks ?? 1)` — document BOTH decisions: dead enemies are not "imprisoned" (alive-filter), AND the `Math.max(1, ...)` intentionally SUPERSEDES the authored "0 target → không buff" clause (`SkillEffect.ts:113-118`) — a whiffed-into-corpse edge still grants the base stack, consistent with `stacks ?? 1`. Update that clause's comment in `SkillEffect.ts` to record the supersession.
   - Payload: `appliesBuff: { definitionId: 'thanh_luy', target: 'self', stacksPerAffectedTarget: true }`.
 
 **10b — `elementApplicationPercent` applies in turn combat**

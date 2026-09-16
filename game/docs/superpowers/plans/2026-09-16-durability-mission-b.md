@@ -1079,7 +1079,7 @@ function stopAutoFarm() {
 }
 ```
 
-- [ ] **Step 4: Run — expect PASS + `npm run type-check`.** P13/P14: user-visible wiring — note for the reviewer whether e2e coverage of the indicator exists (none today; `tests/e2e/create-to-combat.spec.ts` drives stage select but not farming); flag manual verification.
+- [ ] **Step 4: Run — expect PASS + `npm run type-check`.** P13/P14: user-visible wiring — drive the indicator in a real browser inside the implementation worktree (start auto-farm → indicator appears → stop → indicator clears). No e2e spec covers farming today (`tests/e2e/create-to-combat.spec.ts` drives stage select only), so a `playwright-cli` session is the evidence path; per current P14 a genuine environment failure is an explicit blocker with captured evidence, never a deferral to master.
 - [ ] **Step 5: Commit** `fix(autofarm): wire stop control and clamp corrupt timestamps`
 
 ---

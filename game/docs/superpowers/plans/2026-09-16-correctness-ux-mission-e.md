@@ -103,14 +103,18 @@ import { createDeadEnemy, createLootTestSetup } from './battleLootTestSetup'
 it('quest kill hook receives the enemy TEMPLATE id, not the instance id', () => {
   const { loot, deps } = createLootTestSetup()
   // Simulate a spawned instance: entity id differs from the template id.
-  loot.processDefeatedEnemies([createDeadEnemy('wild_wolf_abc-123')], null)
+  // REQUIRED fixture change first: `enemySystem.get` always returns the
+  // {id:'mob'} stub (`battleLootTestSetup.ts:141-143`), so `createDeadEnemy`
+  // must accept a `templateId` that the stub lookup carries through —
+  // without it this assertion can never see 'wild_wolf'.
+  loot.processDefeatedEnemies([createDeadEnemy('wild_wolf_abc-123', 'wild_wolf')], null)
   const calls = vi.mocked(deps.questSystem.onEnemyDefeated).mock.calls
-  expect(calls[0]?.[2]).toBe('wild_wolf') // or the fixture enemy's templateId — see Step 3
+  expect(calls[0]?.[2]).toBe('wild_wolf')
 })
 
 it('hidden-beast reset hook receives the template id', () => {
   const { loot, deps } = createLootTestSetup()
-  loot.processDefeatedEnemies([createDeadEnemy('huyet_mong_abc-123')], null)
+  loot.processDefeatedEnemies([createDeadEnemy('huyet_mong_abc-123', 'huyet_mong')], null)
   expect(vi.mocked(deps.hiddenBeast.onEnemyDefeated).mock.calls[0]?.[1]).toBe('huyet_mong')
 })
 ```
@@ -119,7 +123,7 @@ it('hidden-beast reset hook receives the template id', () => {
 - [ ] **Step 3: Implement.**
   - `Enemy.ts`: add `templateId?: string` with a one-line English comment (P15): `// Template id this instance was spawned from; set by EnemySystem.spawn.`
   - `EnemySystem.spawn`: `templateId: template.id` in the object literal alongside the `id:` override.
-  - `battleLootTestSetup.ts` fixture `enemy` stub: add `templateId: 'mob'` (or per-test override — give the fixture an option only if a test needs a different one).
+  - `battleLootTestSetup.ts` fixture: `createDeadEnemy(id)` gains a required-for-these-tests second arg `templateId` and the stub `enemySystem.get` must return an object carrying it — the stub currently hardcodes `{id:'mob'}` (:141-143), so a default `templateId: 'mob'` plus a per-call override is the minimal change.
   - `BattleLootSystem.ts`: at both call sites pass `enemy.templateId ?? enemy.id` — the `?? enemy.id` fallback preserves behavior for `Enemy` records that never went through `spawn` (raw templates used directly, e.g. `defineEnemy` results registered without instance minting).
   - Note: do NOT fix this by string-splitting the instance id — the id's `_uuid` suffix is minted in exactly one place; an explicit field is the durable contract.
 - [ ] **Step 4: Run — expect PASS.** Also run `npx vitest run src/core/game/HiddenBeastSystem.test.ts src/core/game/GameManager.questLifecycle.test.ts` (adjacent coverage must stay green).
@@ -176,7 +180,7 @@ it('drinkable pills still consume normally', () => { /* existing-path sanity, ke
 - Modify: `src/core/quest/QuestSystem.ts:139-222`.
 - Test: `src/core/quest/QuestSystem.test.ts` (exists — add cases).
 
-**Interfaces:** `claim(registry, manager, rewardSystem, receiver, bags, questId): boolean`. `rewardSystem.give` returns `void`; the material/pill item-drop grants below it return overflow counts, not failures. The atomic risk is a throwing `receiver`/`bags` call after the debit.
+**Interfaces:** `claim(registry, manager, rewardSystem, receiver, bags, questId): boolean`. `rewardSystem.give` calls `addTechniqueInsight`/`addCultivation`/`addSpiritStone` sequentially (`RewardSystem.ts:17-29`) — a mid-`give` throw still leaves PARTIAL rewards granted (no debit, no claim). This task is ordering, not true atomicity: the fix makes the debit the last fallible step so a failed grant can't consume the cost. Note the bag-overflow ordering consequence of grant-first: `itemDrops` grants return overflow counts — keep them AFTER the debit so the bag sees the cost freed before the rewards land (a near-full bag would otherwise overflow a reward item that would have fit post-debit). Order: `give → debit → itemDrops → markClaimed`.
 
 - [ ] **Step 1: Failing test** — in `QuestSystem.test.ts`, build an active collect-quest at full progress, then a `receiver` whose `addSpiritStone` throws:
 
@@ -195,9 +199,9 @@ it('does not debit quest item cost when reward grant throws', () => {
 Also assert the success path still debits exactly once (existing tests should already cover; add if absent).
 
 - [ ] **Step 2: Run — FAIL** (`npx vitest run src/core/quest/QuestSystem.test.ts`). Material count drops to 0 today.
-- [ ] **Step 3: Implement** — reorder `claim`: run `rewardSystem.give` and the `itemDrops` loop FIRST, debit `materialBag.remove(quest.condition.materialId, quest.condition.amount)` immediately before `manager.markClaimed`. `resolveClaimable` already proved `materialBag.has(...)`, so removing last cannot fail a leg that succeeded earlier. Keep the overflow-notification blocks unchanged. Add an English comment noting the ordering contract (`// Grant before debit: a throwing grant must not consume the cost.`).
+- [ ] **Step 3: Implement** — reorder `claim` to `rewardSystem.give → materialBag.remove(...) → itemDrops loop → manager.markClaimed`. `resolveClaimable` already proved `materialBag.has(...)`, so the debit cannot fail a leg that succeeded earlier; placing `itemDrops` after the debit preserves today's bag-space semantics (the cost frees its slots before reward items land). Keep the overflow-notification blocks unchanged. Add an English comment noting the ordering contract (`// Grant before debit: a throwing grant must not consume the cost. Drops run last so the debit frees bag space first.`). Residual (document, don't solve): a throw inside `give` itself can still leave partial currency rewards with no debit — true atomicity would need a transaction primitive, out of scope.
 - [ ] **Step 4: Run — PASS.**
-- [ ] **Step 5: Commit** `fix(quest): claim is atomic — no cost without reward`
+- [ ] **Step 5: Commit** `fix(quest): debit cost only after reward grant succeeds`
 
 **Dependencies:** none. **Batch:** Q.
 
@@ -238,7 +242,7 @@ const applied = this.vitals.applyTurnRegen(this.ghost!, { hp: (this.ghost!.stats
 if (applied.hp > 0) { this.snapshotHp = this.ghost!.currentHp }
 ```
 
-Record the semantic mapping in a comment: `hpRegenPerTurn` is reused as the per-second rate inside tribulation's 1-second step — tribulation has no turns; the vitals owner still applies clamp/healing-effectiveness/event rules. Keep `emitState()` mirroring `snapshotHp` into `active.hp` afterwards.
+Record the semantic mapping in a comment: `hpRegenPerTurn` is reused as the per-second rate inside tribulation's 1-second step — tribulation has no turns; the vitals owner still applies clamp/healing-effectiveness/event rules. Keep `emitState()` mirroring `snapshotHp` into `active.hp` afterwards. Incidental fix while in the region: `TribulationDirector.ts:271` contains mojibake (`nhảy蹲`) — correct it to ASCII/Vietnamese-clean text in the same commit.
 - [ ] **Step 4: Run — PASS.**
 - [ ] **Step 5: Commit** `fix(tribulation): apply documented hp regen through vitals owner`
 
@@ -308,7 +312,7 @@ if (event.entityId === 'player' && event.hpAfter < event.hpBefore) {
 ```
 
 Refactor `showDamage`'s text spawn (:128-137) into `showDamageText(amount: number)` so both the legacy path and the vitals path share it. Remove the dead `bus.on('damage', this.damageHandler)` subscription + its `off` + handler **only if** nothing else in the tribulation channel emits `'damage'` — grep `emit.*'damage'` under `src/core/tribulation` first; if some path does emit it, keep the listener.
-- [ ] **Step 4: Run — PASS** + `npx playwright test tests/e2e/tribulation-flow.spec.ts` (P13 wiring check — run inside the implementation worktree per current P14; the old worktree deferral is retired — a genuine environment failure is an explicit blocker in the task report).
+- [ ] **Step 4: Run — PASS** + `npx playwright test tests/e2e/tribulation-flow.spec.ts` (P13 wiring check — run inside the implementation worktree per current P14: the worktree is the primary pre-merge runtime environment; a genuine environment failure is an explicit blocker with captured evidence, never a deferral to master).
 - [ ] **Step 5: Commit** `fix(tribulation): render damage numbers from entity_vitals_changed`
 
 **Dependencies:** none. **Batch:** T.
@@ -354,7 +358,7 @@ it('repeat restore of the same payload returns the same ACTUAL number', () => {
 
 **Files:**
 - Modify: `src/components/panels/BuildingConstructionGate.vue:55-63` (+ i18n: `:98,102,114-116`), `src/components/game/HomeBuildingIcons.vue` (add `useStateVersion`; i18n: `:82-83,160-162`), `src/composables/useBuildingNavigation.ts` (no change expected — it exposes plain functions; the reactive contract lives in consumers).
-- Locales: `homeBuildings.status.built` (`Đã mở · Cấp {level}/{max}`), `homeBuildings.status.notBuilt` (`Chưa mở · Nhấn để xem yêu cầu`), `homeBuildings.level` (`Cấp {level}`), `homeBuildings.notBuilt` (`Chưa mở`), `buildingGate.*` (`costLabel`/`free`/`build`/`confirmTitle`/`confirmMessage`) — check existing `homeBuildings.*` (only `aria.*` today) and `panels.*` for a building-gate home before adding.
+- Locales: `homeBuildings.status.built` (`Đã mở · Cấp {level}/{max}`), `homeBuildings.status.notBuilt` (`Chưa mở · Nhấn để xem yêu cầu`), `homeBuildings.level` (`Cấp {level}`), `homeBuildings.notBuilt` (`Chưa mở`), `buildingGate.*` (`free`/`confirmTitle`/`confirmMessage`) — `panels.buildingPopover.build` ("Xây dựng") and `panels.buildingPopover.costTitle` already exist (vi.json:545-548): REUSE them, don't create `buildingGate.build`/`costLabel` duplicates. Check `homeBuildings.*` (only `aria.*` today) before adding.
 - Test: component test — check `src/components/**` test conventions (`mount()` + jsdom exist, e.g. `ActionFeedbackLog.test.ts`); if mounting the gate is too heavy, extract nothing — assert via a computed-level test by spying on `buildingSystem.canBuild` call count before/after `bumpState()`.
 
 - [ ] **Step 1: Failing tests:**
@@ -377,11 +381,11 @@ it('repeat restore of the same payload returns the same ACTUAL number', () => {
 
 **Files:**
 - Modify: `src/components/panels/AlchemyView.vue:200-218,302` (+ migrate the file's remaining hardcoded strings while touching it — P16 encouraged: `Đan lô hiện tại`, `ĐAN PHƯƠNG`, `Linh Thảo`, `Chi phí khác`, `Xem trước lần luyện`, `Chắc chắn ... viên`, `Lò đang luyện`, `Huỷ (mất nguyên liệu)`).
-- Locales: `alchemy.reason.retired` is MISSING from both files — add it; all other `startJob` reasons (`not_found`, `room_not_built`, `job_slots_full`, `wrong_herb`, `missing_herb`, `missing_fuel_wood`, `missing_spirit_stone`) already have keys. Add `alchemy.*` labels for the migrated strings (`alchemy.currentCauldron`, `alchemy.recipe`, `alchemy.herb`, `alchemy.otherCosts`, `alchemy.preview`, `alchemy.outcome`, `alchemy.duration`, `alchemy.jobs`, `alchemy.cancelJob`) — verify each against existing keys first.
+- Locales: `alchemy.reason.retired` and `alchemy.reason.missing_special_ingredient` are MISSING from both files — add both (`AlchemySystem.ts:274` returns it for `specialIngredients` recipes, e.g. `alchemy_thong_mach_dan`/`truc_co_dan` at `alchemyRecipes.ts:49,61`); all other `startJob` reasons (`not_found`, `room_not_built`, `job_slots_full`, `wrong_herb`, `missing_herb`, `missing_fuel_wood`, `missing_spirit_stone`) already have keys. Also add `alchemy.reason.fallback` for forward-compat. Add `alchemy.*` labels for the migrated strings (`alchemy.currentCauldron`, `alchemy.recipe`, `alchemy.herb`, `alchemy.otherCosts`, `alchemy.preview`, `alchemy.outcome`, `alchemy.duration`, `alchemy.jobs`, `alchemy.cancelJob`) — verify each against existing keys first.
 - Test: component test for `AlchemyView` if mountable, else extend a domain test asserting `startAlchemyJob` reason codes cover the key set (guard-style: every reason string the ops can return has an `alchemy.reason.*` entry — a data-driven test reading the locale JSON).
 
 - [ ] **Step 1: Failing tests:**
-  - Reason→key completeness: collect the literal reason strings returned by `GameManagerAlchemyOps.startAlchemyJob` + `AlchemySystem.startJob` (`'not_found' | 'retired' | 'room_not_built' | 'job_slots_full' | 'wrong_herb' | 'missing_herb' | 'missing_fuel_wood' | 'missing_spirit_stone'`) and assert `vi['alchemy']['reason'][reason]` exists for each — fails on `retired`.
+  - Reason→key completeness: collect the literal reason strings returned by `GameManagerAlchemyOps.startAlchemyJob` + `AlchemySystem.startJob` (`'not_found' | 'retired' | 'room_not_built' | 'job_slots_full' | 'wrong_herb' | 'missing_herb' | 'missing_fuel_wood' | 'missing_spirit_stone' | 'missing_special_ingredient'`) and assert `vi['alchemy']['reason'][reason]` exists for each — fails on `retired` and `missing_special_ingredient`.
   - UI: on failed `startJob`, `useNotificationStore`/feedback receives the resolved `t('alchemy.reason.<x>')` instead of a console warn (mock the notification store; assert `push` called with localized text — or if the codebase prefers feedback keys, push `{ messageKey: 'alchemy.reason.x' }` via the existing `NotificationEvent.messageKey` channel — pick the channel `useNotificationStore().push` actually supports; check its signature first).
 - [ ] **Step 2: Run — FAIL.**
 - [ ] **Step 3: Implement** — `startJob` failure → `useNotificationStore().push('warning', t(...))` or a keyed push per the store's contract; add a `canBrew` computed (`stateVersion` read; recipe+herb selected, variant `enough`, fuel/stone rows sufficient, `jobs.length < maxSlots` — read the slot cap the same way the preview does, do NOT recompute job-slot rules locally: if a domain availability query doesn't exist, the button stays enabled and relies on the surfaced reason — record that choice) → `:disabled="!canBrew"` on the GameButton. Migrate listed strings to new `alchemy.*` keys in both locales.
@@ -392,34 +396,26 @@ it('repeat restore of the same payload returns the same ACTUAL number', () => {
 
 ---
 
-### Task 10: StageSelectPanel auto-farm gating (E6 / T4-38)
+### Task 10: StageSelectPanel auto-farm mode disarm on stage change (E6 / T4-38, rescoped)
 
-**Scope:** panel closes even when `startAutoFarm` returns `false`; `mode` stays armed across stage changes.
+> **Cross-plan dependency:** Mission B Task 5 owns the `startAutoFarm`-result close-guard (`if (startAutoFarm(...)) ui.leftPanelMode = null`) plus its test — it merges before this mission. This task owns ONLY the remaining half of T4-38: `mode` staying armed across stage changes. If the close-guard is absent at execution time, land it here and flag the merge drift.
+
+**Scope:** `mode` (local ref) stays armed across stage changes — a `perfect_farm` selection on stage A silently applies to stage B.
 
 **Files:**
-- Modify: `src/components/panels/StageSelectPanel.vue:185-204`.
-- Test: component/composable-level — `mode` is a local `ref`; test via mount or by extracting nothing and asserting through the component (check existing StageSelect tests: grep `StageSelectPanel` under `src/**/*.test.ts`).
+- Modify: `src/components/panels/StageSelectPanel.vue` (the `mode` ref + `selectedStageId` watcher region :100-118).
+- Test: component/composable-level — `mode` is a local `ref`; test via mount (check existing StageSelect tests: grep `StageSelectPanel` under `src/**/*.test.ts`).
 
-- [ ] **Step 1: Failing tests:**
-  - `startAutoFarm` stubbed to return `false` → after `start()`, `ui.leftPanelMode` is still set (panel did NOT close).
-  - `mode = 'perfect_farm'` then `selectStage(other)` → `mode` back to `'manual'` (or whatever the disarm contract becomes — pick `'manual'` as the documented reset).
+- [ ] **Step 1: Failing test:**
+  - `mode = 'perfect_farm'` then `selectStage(other)` → `mode` back to `'manual'` (the documented reset).
 - [ ] **Step 2: Run — FAIL.**
 - [ ] **Step 3: Implement:**
 
-```ts
-if (mode.value === 'perfect_farm') {
-  if (gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player.$state, selectedStage.value.id)) {
-    ui.leftPanelMode = null
-  }
-  return
-}
-```
-
-Disarm: `watch(selectedStageId, () => { mode.value = 'manual' })` — the `selectedStageId` watchers at :100-118 already re-pick the stage on zone/chapter change, so one watcher covers all change paths (verify: `selectStage` is the only other writer of `selectedStageId`). If `mode` should persist for non-perfect modes, reset only when the new stage isn't perfect-clear: `mode.value = isSelectedStagePerfectClear.value ? mode.value : 'manual'` — choose and document; recommended: unconditional reset to `'manual'` (predictable, no stale armed state).
+Disarm: `watch(selectedStageId, () => { mode.value = 'manual' })` — the `selectedStageId` watchers at :100-118 already re-pick the stage on zone/chapter change, so one watcher covers all change paths (verify: `selectStage` is the only other writer of `selectedStageId`). Decision: unconditional reset to `'manual'` (predictable, no stale armed state) — do NOT condition on the new stage's perfect-clear status.
 - [ ] **Step 4: Run — PASS** + type-check.
-- [ ] **Step 5: Commit** `fix(stage-select): close on successful autofarm only; disarm mode on stage change`
+- [ ] **Step 5: Commit** `fix(stage-select): disarm battle mode on stage change`
 
-**Dependencies:** none. **Batch:** U.
+**Dependencies:** Mission B Task 5 (close-guard). **Batch:** U.
 
 ---
 
@@ -488,9 +484,9 @@ Disarm: `watch(selectedStageId, () => { mode.value = 'manual' })` — the `selec
 - [ ] **Step 2: Run — FAIL** (`npx vitest run tests/architecture/overlayLayers.test.ts`).
 - [ ] **Step 3: Implement:**
   - `OverlayLayers.ts`: `announcement: 1850` with a comment (English, matching file style) that announcements are ambient and must never cover blocking modals.
-  - `WorldAnnouncementOverlay.vue`: `onBeforeUnmount(stopTyping)`; `@keydown.escape` or a document-level keydown listener (symmetric add/remove) → `store.hide()`; add `role="dialog"`/`aria-modal="true"`/`aria-live` as appropriate to the scrim while it intercepts input.
+  - `WorldAnnouncementOverlay.vue`: `onBeforeUnmount(stopTyping)`; `@keydown.escape` or a document-level keydown listener (symmetric add/remove) → `store.hide()`. A11y (decided): `role="alert"` + `aria-live="assertive"` — NOT `role="dialog"`/`aria-modal`: this is an ambient, click-anywhere-to-dismiss, non-focus-trapping overlay; asserting modal semantics would lie to AT.
   - `worldAnnouncement.ts`: keep a module-scoped `let autoCloseHandle` inside the store action — clear it at the top of `show()` and inside `hide()` (the identity check stays as the stale-callback guard).
-- [ ] **Step 4: Run — PASS** + type-check. P14: verify a modal (e.g. offline summary) isn't blocked by a firing announcement in a real browser — run inside the implementation worktree per current P14 (no deferral to a non-worktree checkout; a genuine environment failure is an explicit blocker, record the evidence).
+- [ ] **Step 4: Run — PASS** + type-check. P14: verify a modal (e.g. offline summary) isn't blocked by a firing announcement in a real browser — run inside the implementation worktree per current P14 (the old worktree deferral is retired; a genuine environment failure is an explicit blocker with captured evidence, never a deferral to master).
 - [ ] **Step 5: Commit** `fix(ui): announcements below modal layer, Escape + timer cleanup`
 
 **Dependencies:** none. Dispatches alone.
@@ -513,7 +509,7 @@ Disarm: `watch(selectedStageId, () => { mode.value = 'manual' })` — the `selec
   - Companion: skill slot whose id has meta → meta name; unknown id → `t('companion.skills.unknown')`, never the raw id.
 - [ ] **Step 2: Run — FAIL.**
 - [ ] **Step 3: Implement:**
-  - `BattleLogPanel`: build `nameOf(id)` = `battle.value?.participants.find(p => p.id === id)?.entity.name ?? t('combat.log.unknownActor')` — pull `battle` (already exported from `useTurnBattleInfo`) or extend the composable with a `participantNameOf(id)` helper; `describe()` → `t('combat.log.entry', { turn, actor, skill, targets })` with `skill = entry.skillId ? turnSkillDisplayMetaOf(entry.skillId)?.name ?? t('combat.log.unknownSkill') : t('combat.log.basicAttack')`. Toggle button text → `t('combat.log.toggle')` (keep the ▸/▾ glyph as presentation).
+  - `BattleLogPanel`: `TurnBattle` has NO `participants` field — participants live in `battle.value.players` + `battle.value.enemies` (`TurnBattleSystem.ts:172-173`; the codebase's own lookup idiom is `players.find(id) ?? enemies.find(id)` at :586-587). Preferred fix: extend `useTurnBattleInfo` with a `participantNameOf(id)` helper doing exactly that lookup — the panel then calls `participantNameOf(entry.actorId) ?? t('combat.log.unknownActor')`. `describe()` → `t('combat.log.entry', { turn, actor, skill, targets })` with `skill = entry.skillId ? turnSkillDisplayMetaOf(entry.skillId)?.name ?? t('combat.log.unknownSkill') : t('combat.log.basicAttack')`. Toggle button text → `t('combat.log.toggle')` (keep the ▸/▾ glyph as presentation).
   - `CompanionPanel`: `turnSkillDisplayMetaOf(selected.definition[slot]!.id)?.name ?? t('companion.skills.unknown')`.
 - [ ] **Step 4: Run — PASS** + i18n parity + type-check.
 - [ ] **Step 5: Commit** `fix(ui): display names instead of raw skill/entity ids`
@@ -580,7 +576,7 @@ it('unknown prerequisite realm id does NOT pass the gate', () => {
 
 - [ ] **Step 2: Run — FAIL.**
 - [ ] **Step 3: Implement:**
-  - `DropRoll.weightedRandom`: `if (entries.length === 0) throw new Error('weightedRandom: empty entries')` at the top. Also guard `totalWeight <= 0` → same throw family (`weightedRandom: non-positive total weight`) — a zero-weight table has the same `entries[-1]` crash path; add it only if a caller can actually produce it (check `resolveDrops` callers — if unreachable, keep just the empty guard).
+  - `DropRoll.weightedRandom`: `if (entries.length === 0) throw new Error('weightedRandom: empty entries')` at the top. (Correction to the audit's adjacent claim: a `totalWeight <= 0` table does NOT crash — `roll` becomes 0 and the loop returns `entries[0]`, a silent wrong pick. Guard it the same way ONLY if a caller can produce it — check `resolveDrops` callers; if unreachable, keep just the empty guard.)
   - `NodeSystem.hasPrerequisite` `case 'realm'`: resolve both indices; `const required = getRealmIndex(prerequisite.realmId); if (required < 0) return false` — fail closed, never silently pass. Check whether a warning channel exists in scope (`console.warn` is used elsewhere in core for content drift — match the file's convention; if the node layer has a notification dep use it, otherwise `console.warn` + comment). Also confirm the player's own `realmId` unknown case (`getRealmIndex(player.realmId) < 0`) — fail closed there too (`return false` when required >= 0 but player index < 0 is already correct via `>=`; only the prereq side needs the guard).
 - [ ] **Step 4: Run — PASS** (`npx vitest run src/core/reward src/core/progression`).
 - [ ] **Step 5: Commit** `fix(core): fail loudly on empty roll and unknown realm prereq`
@@ -648,11 +644,14 @@ deletion — this section is the tracking record.
   never a `bossEnemyId` (MortalEnemies.ts / StageWaveSystem.ts). Unblock:
   boss-flag content pass.
 - `heaven` / `great_dao` breakthrough grades + `pham_nhan_chi_cot`
-  (BreakthroughGrades.ts:42-44, GameManagerRealmAdvanceOps.ts:429-434) —
-  gated on content that doesn't exist yet. Unblock: grade-content pass.
+  (BreakthroughGrades.ts:42-44, `canTriggerBreakthrough` gate at
+  GameManagerRealmAdvanceOps.ts:395-409 — PRODUCT SCOPE comment :400-403;
+  the file ends at :410) — gated on content that doesn't exist yet.
+  Unblock: grade-content pass.
 - `phap_tu`/`kiem_tu` top-tier nodes gated on `golden_core`
-  (PhapTuNodes.builders.ts:182-185) — unreachable while beta caps at
-  foundation_establishment (D2 decision). Unblock: post-beta realm unlock.
+  (src/data/progression/PhapTuNodes.builders.ts:182-185) — unreachable
+  while beta caps at foundation_establishment (D2 decision). Unblock:
+  post-beta realm unlock.
 - Artifact (Pháp Bảo) combat reimagine — runtime files parked by product
   decision; combat-effect advertising already removed/hidden per the
   artifact decision. Unblock: dedicated artifact rework mission.
