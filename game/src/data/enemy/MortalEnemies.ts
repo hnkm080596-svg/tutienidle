@@ -87,8 +87,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
     signatureDrops: [
       // van_kiem_quyet was removed from this table in the Kiem Tu
       // Reimagined teardown (spec 2026-09-15 §7): it is the Ngu Kiem
-      // Dao signature technique now — granted by the kiem_tu_an node,
-      // never lootable.
+      // Dao signature technique now — granted by the ngu way ritual
+      // kit, never lootable.
       // Đột Phá Trúc Cơ (Phase 3) — 0.01%, mức thấp nhất từng có trong
       // codebase, có chủ đích (xem data/materials/materials.ts).
       { kind: 'material', itemId: 'great_dao_seed', amount: { min: 1, max: 1 }, chance: 0.0001, requiresModifier: 'boss' },

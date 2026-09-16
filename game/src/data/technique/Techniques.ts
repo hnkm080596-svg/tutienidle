@@ -268,7 +268,7 @@ export const TECHNIQUES: Technique[] = [
 
   // Van Kiem Quyet — Kiem Tu Reimagined (spec 2026-09-15 §7 kept-list):
   // REPURPOSED as the Ngu Kiem Dao signature technique — learned and
-  // equipped by the kiem_tu_an conversion node, NOT lootable. Tier
+  // equipped by the ngu way's ritual kit, NOT lootable. Tier
   // effect numbers kept from the orphaned version (content-pass owns
   // the real tuning); the old breakthroughEffect block died earlier.
   {

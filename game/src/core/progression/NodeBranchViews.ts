@@ -20,10 +20,10 @@
 export const HIDDEN_BRANCH_TAGS: readonly string[] = ['da_phap']
 
 /** Kiem Tu Reimagined (spec §6) — one kiem-tu tree, two branchTags:
- *  'kiem_pho' holds the orb branches, 'ngu_kiem' the hidden root +
- *  Ngu branch. Both views render BOTH tags — visibility inside the
- *  tree is governed by revealWhen (kiem_tu_an) and the kiemTuMode
- *  display filter in NodeTreePanel (opposite-mode nodes hidden). */
+ *  'kiem_pho' holds the orb branches, 'ngu_kiem' the Ngu branch. Both
+ *  views render BOTH tags — visibility inside the tree is governed by
+ *  the requiredWay display filter in NodeTreePanel (opposite-way nodes
+ *  hidden). */
 const KIEM_TU_VIEW_TAGS = ['kiem_pho', 'ngu_kiem'] as const
 
 /**

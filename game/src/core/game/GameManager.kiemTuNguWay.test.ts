@@ -56,7 +56,8 @@ describe('kiem_tu ngu way — ritual offer gate (tram Lv3)', () => {
     const locked = mortalAtRitual(2)
     const lockedOffer = nguOffer(locked.player)
 
-    // Gated ways stay listed so the UI renders the sealed card.
+    // Gated ways stay listed with eligible:false + reason — the UI
+    // layer decides presentation (QuanKhiPanel shows eligible only).
     expect(lockedOffer).toBeDefined()
     expect(lockedOffer!.eligible).toBe(false)
     expect(lockedOffer!.reason).toBe('requires tram Lv3')

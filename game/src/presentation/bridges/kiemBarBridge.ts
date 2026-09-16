@@ -21,7 +21,7 @@ import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import { MAX_THE } from '@/core/combat/CombatTypes'
 import type { OrbId, KiemTuState } from '@/core/kiem-tu/KiemTuState'
 import { isKiemPhoProviderHandle } from '@/core/kiem-tu/KiemPhoProvider'
-import { isKiemTuHien } from '@/core/kiem-tu/KiemTuPath'
+import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
 import { forgeCost } from '@/core/kiem-tu/NguKiemDao'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import {
@@ -139,19 +139,24 @@ export function makeKiemBarReader(
       }
     }
 
-    // ngu (Task 8) — bar = Kiem Y progress toward the next forge at the
-    // CURRENT realm's forgeCost; label carries the live sword count.
-    const realmIndex = getRealmIndex(player.realmId)
+    if (isKiemTuNgu(player)) {
+      // ngu — bar = Kiem Y progress toward the next forge at the
+      // CURRENT realm's forgeCost; label carries the live sword count.
+      const realmIndex = getRealmIndex(player.realmId)
 
-    return {
-      current: kiemTu.kiemY,
-      max: realmIndex >= 1 ? forgeCost(realmIndex) : 1,
-      label: `Kiếm Ý · ${kiemTu.kiemDaoCount} kiếm`,
-      mode: 'ngu',
-      kiemDaoCount: kiemTu.kiemDaoCount,
-      kiemDaoBase: kiemTu.kiemDaoBase,
-      externalWard,
+      return {
+        current: kiemTu.kiemY,
+        max: realmIndex >= 1 ? forgeCost(realmIndex) : 1,
+        label: `Kiếm Ý · ${kiemTu.kiemDaoCount} kiếm`,
+        mode: 'ngu',
+        kiemDaoCount: kiemTu.kiemDaoCount,
+        kiemDaoBase: kiemTu.kiemDaoBase,
+        externalWard,
+      }
     }
+
+    // Corrupt/way-less pair with a kiemTu slice — fail closed, ward only.
+    return externalWard ? { current: 0, max: 0, label: '', externalWard } : null
   }
 }
 
