@@ -3,11 +3,13 @@ import { ref } from 'vue'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { useSaveIssueStore } from '@/stores/saveIssue'
+import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, deleteSave, importSaveRaw } from '@/services/save/SaveSystem'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import ConfirmModal from './ConfirmModal.vue'
 
 const saveIssue = useSaveIssueStore()
+const notification = useNotificationStore()
 
 // Thay window.confirm()/window.alert() native — modal xác nhận đồng bộ
 // hoá bằng pending-action giống SettingsPanel.vue: mở ConfirmModal, hành
@@ -36,9 +38,13 @@ function handleReset() {
     'Xoá & Bắt Đầu Mới',
     'Xoá save hiện tại và bắt đầu nhân vật mới? Nhớ Tải Về Save trước nếu chưa làm — hành động này không thể hoàn tác.',
     () => {
-      deleteSave()
-
-      window.location.reload()
+      // Mission A review — deleteSave() returns false on storage
+      // failure; reloading would boot back into the same corrupt save.
+      if (deleteSave()) {
+        window.location.reload()
+      } else {
+        notification.push('error', 'Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ.')
+      }
     },
     true,
   )

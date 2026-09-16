@@ -133,6 +133,16 @@ export class GameManagerSaveRestore {
         throw new Error(`Unknown building in save: ${instance.buildingId}`)
       }
     }
+
+    // Mission A review (MA-R1-04) — an unknown siteId previously passed
+    // preflight, then occupied worker allocation slots while producing
+    // nothing (no definition → cycleMs 0), permanently draining capacity
+    // from real sites. Registry-backed reference → hard-fail here.
+    for (const site of save.productionSites ?? []) {
+      if (!this.deps.productionSystem.getSiteDefinition(site.siteId)) {
+        throw new Error(`Unknown production site in save: ${site.siteId}`)
+      }
+    }
   }
 
   /**

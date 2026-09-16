@@ -597,6 +597,8 @@ describe('validateGameSaveShape — productionSites slice (Mission A1)', () => {
     [{ ...validSite(), siteId: 5 }, 'siteId non-string'],
     [{ ...validSite(), level: 'x' }, 'level non-integer'],
     [{ ...validSite(), level: 1.5 }, 'level thập phân'],
+    [{ ...validSite(), level: 0 }, 'level = 0'],
+    [{ ...validSite(), level: -2 }, 'level âm'],
     [{ ...validSite(), autoRestart: 'yes' }, 'autoRestart non-bool'],
     ['not-an-object', 'entry non-object'],
   ])('từ chối productionSites entry: %s', (entry, _case) => {
@@ -1563,5 +1565,258 @@ describe('validateGameSaveShape — C1 corrupt-save residuals', () => {
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain(expectedPath)
+  })
+})
+
+describe('validateGameSaveShape — player record/array deep checks (Mission A review)', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  it.each([
+    ['might', 'huge'],
+    ['might', Number.NaN],
+    ['might', null],
+  ])('từ chối baseStats.%s = %j', (statKey, value) => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.baseStats = { ...(player.baseStats as object), [statKey]: value }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain(`player.baseStats.${statKey}`)
+  })
+
+  it('chấp nhận baseStats có stat = 0 và stat âm (shape-only)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.baseStats = {
+      ...(player.baseStats as object),
+      might: 0,
+      customStat: -5,
+    }
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([Number.NaN, -1, 'x'])('từ chối nodeLevels value = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).nodeLevels = { node_1: value }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.node_1')
+  })
+
+  it.each([Number.NaN, 'x'])('từ chối nodeFreePurchaseRecord value = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).nodeFreePurchaseRecord = { node_1: value }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeFreePurchaseRecord.node_1')
+  })
+
+  it.each([
+    'selectedTalentIds',
+    'unlockedRealmEnhancements',
+    'purchasedNodeIds',
+    'completedStageIds',
+    'perfectClearStageIds',
+    'grantedRealmPassiveIds',
+    'openedMeridianIds',
+  ])('từ chối %s chứa phần tử non-string', (field) => {
+    const save = validSave()
+
+    playerOf(save)[field] = ['ok_id', 7]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain(`player.${field}[1]`)
+  })
+
+  it.each([
+    'selectedTalentIds',
+    'purchasedNodeIds',
+    'completedStageIds',
+    'grantedRealmPassiveIds',
+    'externalModifiers',
+    'persistentTimedEffects',
+  ])('từ chối khi %s không phải array', (field) => {
+    const save = validSave()
+
+    playerOf(save)[field] = 'not-an-array'
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('từ chối modifiers chứa phần tử non-object / thiếu stat', () => {
+    const save = validSave()
+
+    playerOf(save).modifiers = ['x', { id: 'm1' }]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.modifiers[0]')
+    expect(pathsOf(result)).toContain('player.modifiers[1].stat')
+  })
+
+  it('từ chối modifier có numeric field NaN', () => {
+    const save = validSave()
+
+    playerOf(save).modifiers = [
+      { id: 'm1', sourceId: 's1', sourceType: 'buff', stat: 'might', flat: Number.NaN },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.modifiers[0].flat')
+  })
+
+  it('từ chối persistentTimedEffects có expiresAtMs NaN', () => {
+    const save = validSave()
+
+    playerOf(save).persistentTimedEffects = [
+      { id: 'e1', sourceItemId: 'pill_x', appliedAtMs: 1, expiresAtMs: Number.NaN, modifiers: [] },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.persistentTimedEffects[0].expiresAtMs')
+  })
+
+  it.each(['warp_speed', 5, null])('từ chối combatAiStrategy = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).combatAiStrategy = value
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+    expect(pathsOf(validateGameSaveShape(save))).toContain('player.combatAiStrategy')
+  })
+
+  it.each([Number.NaN, -3])('từ chối skillLevels value = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).skillLevels = { skill_1: value }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.skillLevels.skill_1')
+  })
+
+  it('chấp nhận skillLevels/skillCastCounts vắng mặt (optional)', () => {
+    const save = validSave()
+
+    delete playerOf(save).skillLevels
+    delete playerOf(save).skillCastCounts
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([
+    'hasSeenTutorial',
+    'isCultivating',
+    'autoWorkerCapacity',
+    'totalCultivationGained',
+    'bossKillCount',
+    'skillInsight',
+    'attributePoints',
+    'breakthroughGrade',
+  ])('từ chối %s sai kiểu', (field) => {
+    const save = validSave()
+
+    playerOf(save)[field] = 'junk'
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it.each(['warp', 5])('từ chối highestFoundationAchieved = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).highestFoundationAchieved = value
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.highestFoundationAchieved')
+  })
+
+  it('từ chối artifact malformed, chấp nhận artifact vắng mặt', () => {
+    const save = validSave()
+
+    playerOf(save).artifact = { artifactId: '', grade: 'than' }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+
+    const clean = validSave()
+
+    delete playerOf(clean).artifact
+
+    expect(validateGameSaveShape(clean).ok).toBe(true)
+  })
+})
+
+describe('validateGameSaveShape — cycle/site consistency (Mission A review)', () => {
+  function validCycle(): Record<string, unknown> {
+    return {
+      cycleId: 'cycle-1',
+      siteId: 'thanh_van_forest',
+      collectionRealmId: 'mortal',
+      siteLevelAtStart: 1,
+      rewardTableVersion: 1,
+      rollSeed: 12345,
+      startedAtMs: 1_725_000_000_000,
+      completesAtMs: 1_725_000_060_000,
+    }
+  }
+
+  it('từ chối activeCycle có siteId khác site cha', () => {
+    const save = validSave()
+
+    save.productionSites = [
+      {
+        siteId: 'thanh_van_forest',
+        level: 1,
+        autoRestart: true,
+        activeCycle: { ...validCycle(), siteId: 'other_site' },
+      },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('productionSites[0].activeCycle.siteId')
+  })
+
+  it('từ chối workerCycles có siteId khác site cha', () => {
+    const save = validSave()
+
+    save.productionSites = [
+      {
+        siteId: 'thanh_van_forest',
+        level: 1,
+        autoRestart: true,
+        workerCycles: [validCycle(), { ...validCycle(), cycleId: 'c2', siteId: 'other_site' }],
+      },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('productionSites[0].workerCycles[1].siteId')
   })
 })

@@ -94,3 +94,49 @@ No `Confirmed` finding remains open.
 ## Pre-existing Failures
 
 None observed; full suite green (4 `expected fail` cases are marked-failing-by-design, unrelated).
+
+## Post-Merge Review Addendum (2026-09-17)
+
+Independent code review of the merged range `c57e8175..749be2f5` — verdict merge-safe, no Critical findings. Acted-on items (all fixed on master, pending commit):
+
+**Fixed (Important — trust-boundary hole in player slice):**
+- `validatePlayer` record/array fields were container-only. Now deep-checked: `baseStats`/`nodeLevels`/`nodeFreePurchaseRecord`/`skillLevels`/`skillCastCounts` values must be finite (non-negative where the field is a count); `selectedTalentIds`/`unlockedRealmEnhancements`/`purchasedNodeIds`/`completedStageIds`/`perfectClearStageIds`/`grantedRealmPassiveIds`/`openedMeridianIds` require string elements; `modifiers`/`externalModifiers`/`persistentTimedEffects[].modifiers` require object elements with non-empty `id`/`sourceId`/`sourceType`/`stat` and finite numeric fields (`stat` intentionally NOT catalog-checked — `migrateStatModifiers` runs after the boundary, so a STAT_TYPES membership check here would brick saves carrying unmigrated keys); `persistentTimedEffects` requires non-empty `id`/`sourceItemId` + finite `appliedAtMs`/`expiresAtMs`; `combatAiStrategy` must be in `COMBAT_AI_STRATEGIES`; `highestFoundationAchieved` must be a `FoundationType` when present; `artifact` deep-checked when present; remaining required numeric/boolean scalars (`autoWorkerCapacity`, `totalCultivationGained`, `bossKillCount`, `skillInsight`, `totalSkillInsightGained`, `cultivationInsightAccumulator`, `attributePoints`, `bodyRefinementCompletedTiers`, `bodyRefinementCurrentTierProgress`, `breakthroughGrade`, `hasSeenTutorial`, `isCultivating`) now type-checked.
+
+**Fixed (Minor batch):**
+- `validateProductionSitesSave`: `level` now requires integer >= 1 (was integer-only; parity with buildings).
+- `restoreBackup`: `removeItem(handoff)` moved before `setItem(SAVE_KEY)` — a handoff-cleanup throw now leaves `SAVE_KEY` untouched, so `false` honestly means "nothing restored".
+- `DecomposeSystem.restore`: null `settings` sub-object falls back to defaults instead of throwing on property read.
+- `QuestManager.restore`: element filter and `lastDailyResetAtMs` now require `>= 0` (parity with validator contract).
+- `ui.flags.test.ts`: renamed misleading `writeCountBefore` to `persistedModeBefore`.
+
+**Deferred (documented, not defects):**
+- Element-level foreign keys inside non-player entries (e.g. `{questId, progress, claimed, evil: ...}`) still self-replicate through build/restore — inert data, key-whitelisting inside every entry validator deferred as accepted residual.
+- Stale import handoff marker on backup-failure abort — harmless (`loadGame` only consumes it on exact payload match and removes unconditionally).
+- Future optional `PlayerData` field omitted from `createDefaultPlayer()` would be silently dropped by the A6 whitelist — mitigated today (all optionals explicitly present in defaults) and by the conformance test when the field is populated there.
+- Unguarded `loadGame`/`hasBackup`/`getRawSave` reads — pre-existing, unchanged (see Gaps above).
+
+**Verification:** type-check clean; full suite 5132 passed / 4 expected-fail (`eslintCoreSeverity` lint-probe timeout under full-suite load is a flake — passes in isolation in 2.5s).
+
+## Post-Merge Review Round 2 (2026-09-17)
+
+Second independent review (3 adversarial passes) — verdict REQUEST CHANGES with 6 P2. Disposition:
+
+**Fixed:**
+- MA-R1-01: `QuestManager.restore` now canonicalizes entries to `{questId, progress, claimed}` — foreign keys can no longer self-replicate through restore → buildGameSave.
+- MA-R1-02: quest element filter and `lastDailyResetAtMs` require `>= 0` (parity with validator).
+- MA-R1-03: production site `level >= 1` (integer-only previously allowed 0/negative → silent upgrade soft-lock).
+- MA-R1-04: three layers — `preflightSaveRegistryReferences` rejects unknown `productionSites[].siteId`; `ProductionSystem.restoreStates` drops unknown siteIds defensively; validator enforces `cycle.siteId === parent siteId`. An orphan site previously held allocated worker slots while never producing.
+- MA-R2-01: `deleteSave()` returns `boolean` and attempts every key removal even when one throws; both reload callers (`App.vue`, `SaveIncompatibleScreen`) gate `window.location.reload()` on success and surface an error notification on failure.
+- MA-R2-02: `loadGame()` storage reads wrapped — `getItem(SAVE_KEY)` throw returns `{status:'storage_unavailable'}` (new LoadOutcome variant; deliberately not 'empty' so boot never starts a new character over an unreadable save). Handoff-marker read/remove degrade gracefully. `LocalCloudSaveService.load()` maps it to the existing `unavailable` status → `boot.fail()`. `hasBackup()`/`getRawSave()` now degrade to false/null.
+- MA-R2-03: `restoreBackup` reordered — handoff cleanup before `setItem(SAVE_KEY)`, so `false` honestly means "nothing restored".
+- MA-R3-01: `DecomposeSystem.tick` rebases the deadline to `now + cycleMs` after one catch-up run — the old form replayed a long-overdue backlog one run per tick (a burst spread across frames). Offline backlog remains `settleOffline()`'s job.
+- MA-R3-02: far-future `nextCycleAt` (> now + cycleMs — unreachable by legit writers) rebases instead of stalling decompose indefinitely.
+
+**Declined with reasoning:**
+- MA-R2-04 (P3): handoff-first ordering in `importSaveRaw` is intentional — a non-storable marker must abort before mutating anything, or the save changes while the discarded-equipment counter is lost. A stale marker is inert (`loadGame` only consumes it on exact `normalizedRaw` match and removes it unconditionally).
+
+**Tests added:** storage failure matrix (`getItem`/`removeItem` per-key throws for loadGame/deleteSave/restoreBackup/hasBackup/getRawSave), quest canonicalization bypass test, unknown-siteId preflight + restoreStates drop, cycle/siteId mismatch rejections, decompose rebase + far-future deadline, player record/array deep checks (~30 cases).
+
+**Verification:** type-check clean; `npm run build` clean; full suite 5146 passed / 4 expected-fail; Playwright `tests/e2e/save-reload.spec.ts` — PASS on main checkout (real browser save → reload → boot → restore).
+
+**Remaining documented residuals:** element-level foreign keys in non-player slices (inert); TG-01 — the conformance fixpoint proves round-trip idempotency, not serializer completeness (per-field coverage still relies on dedicated tests like `assignedWorkers`).

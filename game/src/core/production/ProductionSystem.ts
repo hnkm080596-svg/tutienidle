@@ -115,6 +115,14 @@ export class ProductionSystem {
     this.states.clear()
 
     for (const state of states) {
+      // Mission A review (MA-R1-04) defense-in-depth: a payload that
+      // bypassed preflight can carry an unknown siteId — such a site
+      // holds allocated worker slots but never produces (no definition
+      // → cycleMs 0), draining capacity. Drop at the boundary.
+      if (!this.siteDefinitionsById.has(state.siteId)) {
+        continue
+      }
+
       this.states.set(state.siteId, {
         ...state,
         activeWorkerSlots: state.activeWorkerSlots ?? 0,

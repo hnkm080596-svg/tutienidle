@@ -418,9 +418,19 @@ export type LoadOutcome =
   | { status: 'ok'; save: GameSave; discardedEquipmentCount: number }
   | { status: 'incompatible'; foundVersion: number | undefined; raw: string }
   | { status: 'corrupted'; raw: string }
+  // Mission A review (MA-R2-02) — storage access itself threw
+  // (SecurityError/denied). Deliberately NOT 'empty': callers must not
+  // start a new character over an unreadable existing save.
+  | { status: 'storage_unavailable' }
 
 export function loadGame(): LoadOutcome {
-  const raw = localStorage.getItem(SAVE_KEY)
+  let raw: string | null
+
+  try {
+    raw = localStorage.getItem(SAVE_KEY)
+  } catch {
+    return { status: 'storage_unavailable' }
+  }
 
   if (!raw) {
     return { status: 'empty' }
@@ -471,9 +481,18 @@ export function loadGame(): LoadOutcome {
     return { status: 'corrupted', raw }
   }
 
-  const importedHandoffRaw = localStorage.getItem(
-    IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY,
-  )
+  // Handoff marker is auxiliary — a read failure degrades to "no
+  // marker" (count lost, save still loads) instead of failing the load.
+  let importedHandoffRaw: string | null = null
+
+  try {
+    importedHandoffRaw = localStorage.getItem(
+      IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY,
+    )
+  } catch {
+    importedHandoffRaw = null
+  }
+
   let importedDiscardedCount = 0
 
   if (importedHandoffRaw) {
@@ -504,7 +523,11 @@ export function loadGame(): LoadOutcome {
     // bị xóa kể cả khi marker lệch normalizedRaw (rác). Ý đồ cũ giữ
     // nguyên: mọi đường return trước (parse fail, version, shape) nằm
     // TRƯỚC block này nên handoff còn nguyên cho lần load hợp lệ.
-    localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
+    try {
+      localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
+    } catch {
+      // Marker persists harmlessly — next valid load consumes/removes it.
+    }
   }
 
   return {
@@ -537,11 +560,19 @@ export function backupCurrentSave(): boolean {
 }
 
 export function hasBackup(): boolean {
-  return localStorage.getItem(BACKUP_KEY) !== null
+  try {
+    return localStorage.getItem(BACKUP_KEY) !== null
+  } catch {
+    return false
+  }
 }
 
 export function getRawSave(): string | null {
-  return localStorage.getItem(SAVE_KEY)
+  try {
+    return localStorage.getItem(SAVE_KEY)
+  } catch {
+    return null
+  }
 }
 
 export function restoreBackup(): boolean {
@@ -552,8 +583,11 @@ export function restoreBackup(): boolean {
       return false
     }
 
-    localStorage.setItem(SAVE_KEY, raw)
+    // Xoá handoff TRƯỚC khi ghi: nếu removeItem throw thì SAVE_KEY còn
+    // nguyên và `false` phản ánh đúng "chưa restore gì" (ghi trước xoá
+    // sau sẽ báo false dù backup đã được restore).
     localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
+    localStorage.setItem(SAVE_KEY, raw)
 
     return true
   } catch {
@@ -562,21 +596,32 @@ export function restoreBackup(): boolean {
   }
 }
 
-export function deleteSave() {
-  try {
-    // Best-effort: backup fail (quota/SecurityError) KHÔNG chặn xoá —
-    // người chơi đã xác nhận mất save.
-    void backupCurrentSave()
+// Mission A review (MA-R2-01) — returns observable success: callers
+// must only reload on `true`, otherwise a swallowed removeItem failure
+// would reload into the same corrupt save the user just tried to
+// delete. Every key is attempted even when one throws — aborting the
+// loop early could leave a stale SAVE_REVISION_KEY that fails the next
+// character's first CAS write.
+export function deleteSave(): boolean {
+  // Best-effort: backup fail (quota/SecurityError) KHÔNG chặn xoá —
+  // người chơi đã xác nhận mất save.
+  void backupCurrentSave()
 
-    localStorage.removeItem(SAVE_KEY)
-    localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
+  let ok = true
 
-    // Xoá cả revision — save đã không còn thì revision cũ là rác, và
-    // revision tồn dư khiến lần CAS đầu tiên của nhân vật mới fail.
-    localStorage.removeItem(SAVE_REVISION_KEY)
-  } catch {
-    // Mission A5 — storage throw → nuốt lỗi, UI recovery không crash.
+  for (const key of [
+    SAVE_KEY,
+    IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY,
+    SAVE_REVISION_KEY,
+  ]) {
+    try {
+      localStorage.removeItem(key)
+    } catch {
+      ok = false
+    }
   }
+
+  return ok
 }
 
 // Tải save hiện có (bất kể đọc được hay không) xuống file .json —

@@ -109,3 +109,19 @@ describe('GameManagerSaveRestore — preflight registry drift coverage (R10, S4)
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow('Unknown building in save: removed_building_id')
   })
 })
+
+describe('GameManagerSaveRestore — production site drift (Mission A review, MA-R1-04)', () => {
+  it('rejects an unknown production siteId before any owner mutation', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    manager.setActivePlayer(player)
+
+    const save = baseSave({
+      productionSites: [{ siteId: 'removed_site_id', level: 1, autoRestart: true }],
+    })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(
+      'Unknown production site in save: removed_site_id',
+    )
+  })
+})

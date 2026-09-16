@@ -407,8 +407,15 @@ function persistProgress() {
 
 function resetSaveFromSettings() {
   lifecycle.suppressPersistence()
-  deleteSave()
-  window.location.reload()
+
+  // Mission A review — deleteSave() returns false on storage failure;
+  // reloading anyway would boot back into the same save the user tried
+  // to delete.
+  if (deleteSave()) {
+    window.location.reload()
+  } else {
+    notification.push('error', 'Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ.')
+  }
 }
 
 // Cultivation ⇄ combat (2026-08-20) — không còn nút bấm thủ công, tu

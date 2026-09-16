@@ -10,10 +10,19 @@ export class LocalCloudSaveService implements CloudSaveService {
   readonly capability = 'local-only' as const
 
   async load(): Promise<CloudSaveLoadResult> {
-    const outcome = loadGame()
-    if (outcome.status === 'ok') return { ...outcome, revision: readRevision() }
-    if (outcome.status === 'empty') return { status: 'empty', revision: 0 }
-    return outcome
+    try {
+      const outcome = loadGame()
+      if (outcome.status === 'ok') return { ...outcome, revision: readRevision() }
+      if (outcome.status === 'empty') return { status: 'empty', revision: 0 }
+      if (outcome.status === 'storage_unavailable') {
+        return { status: 'unavailable', message: 'localStorage không truy cập được' }
+      }
+      return outcome
+    } catch {
+      // readRevision() or any residual storage throw — 'unavailable' is
+      // the lifecycle-handled status (boot.fail, never new-character).
+      return { status: 'unavailable', message: 'localStorage không truy cập được' }
+    }
   }
 
   async save(save: GameSave, expectedRevision: number): Promise<CloudSaveWriteResult> {

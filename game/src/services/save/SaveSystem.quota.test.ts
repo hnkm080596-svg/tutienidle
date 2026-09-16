@@ -2,11 +2,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   writeGameSave,
+  loadGame,
   backupCurrentSave,
   restoreBackup,
   deleteSave,
+  hasBackup,
+  getRawSave,
   importSaveRaw,
   SAVE_KEY,
+  SAVE_REVISION_KEY,
   CURRENT_SAVE_VERSION,
   type GameSave,
 } from './SaveSystem'
@@ -161,5 +165,83 @@ describe('recovery storage ops — exception-safe (Mission A5)', () => {
     function validRaw(): string {
       return JSON.stringify({ ...minimalSave(), player: { ...minimalSave().player, name: 'imported' } })
     }
+  })
+})
+
+describe('Mission A review — storage failure matrix (getItem/removeItem)', () => {
+  it('loadGame trả storage_unavailable khi getItem(SAVE_KEY) throw', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('denied', 'SecurityError')
+    })
+
+    expect(loadGame()).toEqual({ status: 'storage_unavailable' })
+  })
+
+  it('loadGame vẫn ok khi chỉ handoff getItem throw (marker phụ trợ degrade)', () => {
+    writeGameSave(minimalSave())
+
+    const realGetItem = Storage.prototype.getItem
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(function (this: Storage, key: string) {
+      if (key === 'tien-hiep-idle-import-discarded-equipment-count') {
+        throw new DOMException('denied', 'SecurityError')
+      }
+      return realGetItem.call(this, key)
+    })
+
+    const outcome = loadGame()
+
+    expect(outcome.status).toBe('ok')
+  })
+
+  it('deleteSave trả false khi removeItem(SAVE_KEY) throw nhưng vẫn xoá các key còn lại', () => {
+    localStorage.setItem(SAVE_KEY, '{"version":1}')
+    localStorage.setItem('tien-hiep-idle-import-discarded-equipment-count', '{}')
+    localStorage.setItem(SAVE_REVISION_KEY, '3')
+
+    const realRemoveItem = Storage.prototype.removeItem
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(function (this: Storage, key: string) {
+      if (key === SAVE_KEY) {
+        throw new DOMException('denied', 'SecurityError')
+      }
+      return realRemoveItem.call(this, key)
+    })
+
+    expect(deleteSave()).toBe(false)
+    // Save còn nguyên — caller KHÔNG được reload.
+    expect(localStorage.getItem(SAVE_KEY)).not.toBeNull()
+    // Partial-delete tránh tối đa: handoff + revision vẫn được dọn.
+    expect(localStorage.getItem('tien-hiep-idle-import-discarded-equipment-count')).toBeNull()
+    expect(localStorage.getItem(SAVE_REVISION_KEY)).toBeNull()
+  })
+
+  it('deleteSave trả true khi mọi key xoá thành công', () => {
+    localStorage.setItem(SAVE_KEY, '{"version":1}')
+
+    expect(deleteSave()).toBe(true)
+    expect(localStorage.getItem(SAVE_KEY)).toBeNull()
+  })
+
+  it('restoreBackup trả false và SAVE_KEY nguyên vẹn khi removeItem(handoff) throw', () => {
+    localStorage.setItem('tien-hiep-idle-save-backup', '{"version":1}')
+    localStorage.setItem(SAVE_KEY, '{"version":2,"keep":true}')
+
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new DOMException('denied', 'SecurityError')
+    })
+
+    expect(restoreBackup()).toBe(false)
+    // Reorder (MA-R2-03): handoff cleanup runs before the write, so a
+    // throw leaves the real save untouched — false means "nothing
+    // restored", not "restored but cleanup failed".
+    expect(localStorage.getItem(SAVE_KEY)).toBe('{"version":2,"keep":true}')
+  })
+
+  it('hasBackup/getRawSave degrade thay vì throw khi getItem fail', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('denied', 'SecurityError')
+    })
+
+    expect(hasBackup()).toBe(false)
+    expect(getRawSave()).toBeNull()
   })
 })

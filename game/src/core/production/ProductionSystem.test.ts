@@ -475,3 +475,18 @@ describe('Reward rolls — phân bố (sanity thống kê)', () => {
     expect(highTierPicks).toBeGreaterThan(250)
   })
 })
+
+describe('ProductionSystem.restoreStates — unknown siteId (Mission A review, MA-R1-04)', () => {
+  it('drops states whose siteId has no definition — orphan sites must not hold worker capacity', () => {
+    const system = createSystem()
+
+    system.restoreStates([
+      { siteId: 'ghost_site', level: 1, autoRestart: true, activeWorkerSlots: 0 },
+      { siteId: 'thanh_van_lam', level: 1, autoRestart: false, activeWorkerSlots: 0 },
+    ])
+
+    expect(system.getState('ghost_site')).toBeUndefined()
+    expect(system.getState('thanh_van_lam')).toBeDefined()
+    expect(system.getAllStates()).toHaveLength(1)
+  })
+})

@@ -23,6 +23,9 @@ import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 import { KIEM_PHO_ORB_IDS } from '../../core/kiem-tu/KiemTuState'
 import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
 import { isPhapTuNguHanh } from '../../core/phap-tu/PhapTuPath'
+import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
+import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
+import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -189,16 +192,198 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   requireNonNegativeNumber(player, 'cultivation', 'player', issues)
   requireNonNegativeNumber(player, 'cultivationPerSecond', 'player', issues)
 
+  // Mission A review — the player record/array fields below were
+  // container-only until now: baseStats.might = 'huge' passed the
+  // boundary, slipped through the key whitelist (keys only, not
+  // values), and spread NaN through every stat computation.
   if (!isObject(player.baseStats)) {
     issues.push({ path: 'player.baseStats', message: 'phải là object' })
+  } else {
+    for (const [statKey, statValue] of Object.entries(player.baseStats)) {
+      if (!isFiniteNumber(statValue)) {
+        issues.push({
+          path: `player.baseStats.${statKey}`,
+          message: 'phải là số hữu hạn',
+        })
+      }
+    }
   }
 
-  requireArray(player, 'modifiers', 'player', issues)
-  requireArray(player, 'selectedTalentIds', 'player', issues)
+  const playerModifiers = requireArray(player, 'modifiers', 'player', issues)
+
+  if (playerModifiers) {
+    validateStatModifierEntries(playerModifiers, 'player.modifiers', issues)
+  }
+
+  const externalModifiers = requireArray(player, 'externalModifiers', 'player', issues)
+
+  if (externalModifiers) {
+    validateStatModifierEntries(externalModifiers, 'player.externalModifiers', issues)
+  }
+
+  const selectedTalentIds = requireArray(player, 'selectedTalentIds', 'player', issues)
+
+  if (selectedTalentIds) {
+    validateStringEntries(selectedTalentIds, 'player.selectedTalentIds', issues)
+  }
+
+  const unlockedRealmEnhancements = requireArray(player, 'unlockedRealmEnhancements', 'player', issues)
+
+  if (unlockedRealmEnhancements) {
+    validateStringEntries(unlockedRealmEnhancements, 'player.unlockedRealmEnhancements', issues)
+  }
+
+  requireBoolean(player, 'hasSeenTutorial', 'player', issues)
+  requireBoolean(player, 'isCultivating', 'player', issues)
+  requireNonNegativeNumber(player, 'autoWorkerCapacity', 'player', issues)
+  requireNonNegativeNumber(player, 'totalCultivationGained', 'player', issues)
+  requireNonNegativeNumber(player, 'bossKillCount', 'player', issues)
+  requireNonNegativeNumber(player, 'skillInsight', 'player', issues)
+  requireNonNegativeNumber(player, 'totalSkillInsightGained', 'player', issues)
+  requireNonNegativeNumber(player, 'cultivationInsightAccumulator', 'player', issues)
+  requireNonNegativeNumber(player, 'attributePoints', 'player', issues)
+  requireNonNegativeNumber(player, 'bodyRefinementCompletedTiers', 'player', issues)
+  requireNonNegativeNumber(player, 'bodyRefinementCurrentTierProgress', 'player', issues)
+  requireNonNegativeNumber(player, 'breakthroughGrade', 'player', issues)
+
+  const purchasedNodeIds = requireArray(player, 'purchasedNodeIds', 'player', issues)
+
+  if (purchasedNodeIds) {
+    validateStringEntries(purchasedNodeIds, 'player.purchasedNodeIds', issues)
+  }
+
+  const completedStageIds = requireArray(player, 'completedStageIds', 'player', issues)
+
+  if (completedStageIds) {
+    validateStringEntries(completedStageIds, 'player.completedStageIds', issues)
+  }
+
+  const perfectClearStageIds = requireArray(player, 'perfectClearStageIds', 'player', issues)
+
+  if (perfectClearStageIds) {
+    validateStringEntries(perfectClearStageIds, 'player.perfectClearStageIds', issues)
+  }
+
+  const grantedRealmPassiveIds = requireArray(player, 'grantedRealmPassiveIds', 'player', issues)
+
+  if (grantedRealmPassiveIds) {
+    validateStringEntries(grantedRealmPassiveIds, 'player.grantedRealmPassiveIds', issues)
+  }
+
+  // persistentTimedEffects — expiresAtMs is the absolute authority
+  // (see PersistentTimedEffect.ts): a NaN deadline never expires.
+  const timedEffects = requireArray(player, 'persistentTimedEffects', 'player', issues)
+
+  if (timedEffects) {
+    for (let i = 0; i < timedEffects.length; i += 1) {
+      const effect = timedEffects[i]
+      const effectPath = `player.persistentTimedEffects[${i}]`
+
+      if (!isObject(effect)) {
+        issues.push({ path: effectPath, message: 'phải là object' })
+        continue
+      }
+
+      requireNonEmptyString(effect, 'id', effectPath, issues)
+      requireNonEmptyString(effect, 'sourceItemId', effectPath, issues)
+
+      if (!isFiniteNumber(effect.appliedAtMs)) {
+        issues.push({ path: `${effectPath}.appliedAtMs`, message: 'phải là số hữu hạn' })
+      }
+      if (!isFiniteNumber(effect.expiresAtMs)) {
+        issues.push({ path: `${effectPath}.expiresAtMs`, message: 'phải là số hữu hạn' })
+      }
+
+      const effectModifiers = requireArray(effect, 'modifiers', effectPath, issues)
+
+      if (effectModifiers) {
+        validateStatModifierEntries(effectModifiers, `${effectPath}.modifiers`, issues)
+      }
+    }
+  }
+
+  if (
+    player.highestFoundationAchieved !== undefined &&
+    (typeof player.highestFoundationAchieved !== 'string' ||
+      !Object.prototype.hasOwnProperty.call(FOUNDATION_LABELS, player.highestFoundationAchieved))
+  ) {
+    issues.push({
+      path: 'player.highestFoundationAchieved',
+      message: 'phải là FoundationType hợp lệ hoặc vắng mặt',
+    })
+  }
+
+  if (!COMBAT_AI_STRATEGIES.some((strategy) => strategy === player.combatAiStrategy)) {
+    issues.push({ path: 'player.combatAiStrategy', message: 'phải thuộc COMBAT_AI_STRATEGIES' })
+  }
+
+  // skillLevels/skillCastCounts are optional records — NaN/negative
+  // values leak into skill XP/UI the same way nodeLevels did.
+  for (const recordKey of ['skillLevels', 'skillCastCounts'] as const) {
+    const record = player[recordKey]
+
+    if (record === undefined) {
+      continue
+    }
+
+    if (!isObject(record)) {
+      issues.push({ path: `player.${recordKey}`, message: 'phải là object hoặc vắng mặt' })
+      continue
+    }
+
+    for (const [skillId, value] of Object.entries(record)) {
+      if (!isNonNegativeFiniteNumber(value)) {
+        issues.push({
+          path: `player.${recordKey}.${skillId}`,
+          message: 'phải là số hữu hạn >= 0',
+        })
+      }
+    }
+  }
+
+  // artifact optional (ArtifactProgress) — a malformed grade/experience
+  // makes ArtifactPanel index ARTIFACT_GRADE_ORDER → -1 / NaN exp bar.
+  if (player.artifact !== undefined) {
+    if (!isObject(player.artifact)) {
+      issues.push({ path: 'player.artifact', message: 'phải là object hoặc vắng mặt' })
+    } else {
+      requireNonEmptyString(player.artifact, 'artifactId', 'player.artifact', issues)
+      requireNonEmptyString(player.artifact, 'realmId', 'player.artifact', issues)
+
+      if (!isFiniteNumber(player.artifact.realmLevel) || player.artifact.realmLevel < 1) {
+        issues.push({ path: 'player.artifact.realmLevel', message: 'phải là số hữu hạn >= 1' })
+      }
+
+      requireNonNegativeNumber(player.artifact, 'experience', 'player.artifact', issues)
+
+      if (!isArtifactGrade(player.artifact.grade)) {
+        issues.push({ path: 'player.artifact.grade', message: 'phải là ArtifactGrade hợp lệ' })
+      }
+
+      if (
+        player.artifact.selectedPath !== undefined &&
+        !isArtifactPath(player.artifact.selectedPath)
+      ) {
+        issues.push({
+          path: 'player.artifact.selectedPath',
+          message: 'phải là ArtifactPath hoặc vắng mặt',
+        })
+      }
+    }
+  }
 
   // nodeLevels — field từng gây crash boot v47 (SaveSystem.ts comment v47).
   if (!isObject(player.nodeLevels)) {
     issues.push({ path: 'player.nodeLevels', message: 'phải là object' })
+  } else {
+    for (const [nodeId, level] of Object.entries(player.nodeLevels)) {
+      if (!isNonNegativeFiniteNumber(level)) {
+        issues.push({
+          path: `player.nodeLevels.${nodeId}`,
+          message: 'phải là số hữu hạn >= 0',
+        })
+      }
+    }
   }
 
   // Cultivation Path Framework (v66) — cultivationPath must be one of
@@ -318,6 +503,15 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   requireNonNegativeNumber(player, 'tribulationBonusStacks', 'player', issues)
   if (!isObject(player.nodeFreePurchaseRecord)) {
     issues.push({ path: 'player.nodeFreePurchaseRecord', message: 'phải là object' })
+  } else {
+    for (const [nodeId, count] of Object.entries(player.nodeFreePurchaseRecord)) {
+      if (!isNonNegativeFiniteNumber(count)) {
+        issues.push({
+          path: `player.nodeFreePurchaseRecord.${nodeId}`,
+          message: 'phải là số hữu hạn >= 0',
+        })
+      }
+    }
   }
   requireNonNegativeNumber(player, 'phaGiapCarryStacks', 'player', issues)
   if (player.phaGiapCarryRealmId !== null && typeof player.phaGiapCarryRealmId !== 'string') {
@@ -375,7 +569,12 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   // Spec dot-pha-loi-kiep §6.1 — 4 field v54 (Bát Mạch, cửa sổ quái ẩn,
   // snapshot hoàn hảo, mất vĩnh viễn Đại Đào).
-  requireArray(player, 'openedMeridianIds', 'player', issues)
+  const openedMeridianIds = requireArray(player, 'openedMeridianIds', 'player', issues)
+
+  if (openedMeridianIds) {
+    validateStringEntries(openedMeridianIds, 'player.openedMeridianIds', issues)
+  }
+
   requireNonNegativeNumber(player, 'luyenKhiKillsSinceBeast', 'player', issues)
   if (typeof player.mortalPerfectionAchieved !== 'boolean') {
     issues.push({ path: 'player.mortalPerfectionAchieved', message: 'phải là boolean' })
@@ -696,6 +895,7 @@ function validateProductionSitesSave(
       !isObject(entry) ||
       typeof entry.siteId !== 'string' ||
       !Number.isInteger(entry.level) ||
+      (entry.level as number) < 1 ||
       typeof entry.autoRestart !== 'boolean'
     ) {
       issues.push({ path: entryPath, message: 'production site sai shape' })
@@ -712,6 +912,19 @@ function validateProductionSitesSave(
 
     if (entry.activeCycle !== undefined) {
       validateProductionCycleSave(entry.activeCycle, `${entryPath}.activeCycle`, issues)
+
+      // A cycle nested under a site must belong to that site — a
+      // mismatched siteId resolves rewards against the wrong definition.
+      if (
+        isObject(entry.activeCycle) &&
+        entry.activeCycle.siteId !== undefined &&
+        entry.activeCycle.siteId !== entry.siteId
+      ) {
+        issues.push({
+          path: `${entryPath}.activeCycle.siteId`,
+          message: 'phải khớp siteId của site cha',
+        })
+      }
     }
 
     if (entry.workerCycles !== undefined) {
@@ -724,6 +937,17 @@ function validateProductionSitesSave(
             `${entryPath}.workerCycles[${j}]`,
             issues,
           )
+
+          if (
+            isObject(entry.workerCycles[j]) &&
+            (entry.workerCycles[j] as Record<string, unknown>).siteId !== undefined &&
+            (entry.workerCycles[j] as Record<string, unknown>).siteId !== entry.siteId
+          ) {
+            issues.push({
+              path: `${entryPath}.workerCycles[${j}].siteId`,
+              message: 'phải khớp siteId của site cha',
+            })
+          }
         }
       }
     }
@@ -771,6 +995,45 @@ function requireNonEmptyString(
 
   if (typeof value !== 'string' || value.trim().length === 0) {
     issues.push({ path: `${path}.${key}`, message: 'phải là string không rỗng' })
+  }
+}
+
+function validateStringEntries(entries: unknown[], path: string, issues: ShapeIssue[]) {
+  for (let i = 0; i < entries.length; i += 1) {
+    if (typeof entries[i] !== 'string') {
+      issues.push({ path: `${path}[${i}]`, message: 'phải là string' })
+    }
+  }
+}
+
+// StatModifier element check — `stat` only needs to be a non-empty
+// string, NOT a STAT_TYPES member: restoreFromSave runs
+// migrateStatModifiers after the boundary, so a stale/renamed key is
+// still valid input; a membership check here would brick saves
+// carrying unmigrated keys.
+function validateStatModifierEntries(entries: unknown[], path: string, issues: ShapeIssue[]) {
+  for (let i = 0; i < entries.length; i += 1) {
+    const modifier = entries[i]
+    const modifierPath = `${path}[${i}]`
+
+    if (!isObject(modifier)) {
+      issues.push({ path: modifierPath, message: 'phải là object' })
+      continue
+    }
+
+    requireNonEmptyString(modifier, 'id', modifierPath, issues)
+    requireNonEmptyString(modifier, 'sourceId', modifierPath, issues)
+    requireNonEmptyString(modifier, 'sourceType', modifierPath, issues)
+    requireNonEmptyString(modifier, 'stat', modifierPath, issues)
+
+    for (const field of STAT_MODIFIER_NUMERIC_FIELDS) {
+      if (modifier[field] !== undefined && !isFiniteNumber(modifier[field])) {
+        issues.push({
+          path: `${modifierPath}.${field}`,
+          message: 'phải là số hữu hạn hoặc vắng mặt',
+        })
+      }
+    }
   }
 }
 

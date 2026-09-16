@@ -69,3 +69,26 @@ describe('QuestManager.restore', () => {
     expect(manager.getState().completedOnceIds).toEqual(['ok'])
   })
 })
+
+describe('QuestManager.restore — canonicalization (Mission A review)', () => {
+  it('drops foreign fields and negative values on a bypassed payload', () => {
+    const manager = new QuestManager()
+
+    manager.restore({
+      active: [
+        { questId: 'q_ok', progress: 1, claimed: false, __junk: { x: 1 } },
+        { questId: 'q_neg', progress: -5, claimed: false },
+      ] as never,
+      completedOnceIds: ['ok'],
+      lastDailyResetAtMs: -100,
+    })
+
+    const state = manager.getState()
+
+    // Canonical shape only — no __junk to self-replicate into the next
+    // buildGameSave() output.
+    expect(state.active).toEqual([{ questId: 'q_ok', progress: 1, claimed: false }])
+    expect(JSON.stringify(state.active)).not.toContain('__junk')
+    expect(state.lastDailyResetAtMs).toBe(0)
+  })
+})

@@ -104,14 +104,14 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
     expect(loadPersistedUiAutomationFlags().battleRunMode).toBe('progress')
 
     // Gán cùng giá trị lần nữa → snapshot trùng, KHÔNG ghi lặp (skip).
-    const writeCountBefore = JSON.parse(localStorage.getItem(UI_AUTOMATION_STORAGE_KEY)!).battleRunMode
+    const persistedModeBefore = JSON.parse(localStorage.getItem(UI_AUTOMATION_STORAGE_KEY)!).battleRunMode
 
     ui.battleRunMode = 'progress'
 
     await new Promise((resolve) => setTimeout(resolve, 0))
 
     expect(JSON.parse(localStorage.getItem(UI_AUTOMATION_STORAGE_KEY)!).battleRunMode).toBe(
-      writeCountBefore,
+      persistedModeBefore,
     )
 
     unsubscribe()

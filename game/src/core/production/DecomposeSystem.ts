@@ -128,16 +128,23 @@ export class DecomposeSystem {
     }
 
     if (nowMs < this.nextCycleAt) {
+      // Mission A review (MA-R3-02): no legit writer emits a deadline
+      // further than one cycle out — a stale/crafted far-future value
+      // would stall decompose indefinitely, so rebase instead.
+      if (this.nextCycleAt - nowMs > this.cycleMs) {
+        this.nextCycleAt = nowMs + this.cycleMs
+      }
+
       return
     }
 
     // Catch-up một lượt (idle không burst) — lượt tiếp theo từ hiện tại.
-    const missedCycles = Math.min(
-      Math.floor((nowMs - this.nextCycleAt) / this.cycleMs) + 1,
-      1,
-    )
-
-    this.nextCycleAt = this.nextCycleAt + missedCycles * this.cycleMs
+    // MA-R3-01: rebase to now + cycleMs, not nextCycleAt + cycleMs —
+    // the old form advanced a late deadline by only one cycle, so a
+    // long-ago deadline replayed the whole backlog one run per tick
+    // (a burst spread across frames). Offline backlog belongs to
+    // settleOffline(); the online tick never replays.
+    this.nextCycleAt = nowMs + this.cycleMs
 
     this.runOneCycle()
   }
@@ -189,13 +196,18 @@ export class DecomposeSystem {
     // Mission A3 defense-in-depth: the shape validator owns rejection,
     // but a bypassed payload must still not poison the timer or the
     // per-cycle consumption math (NaN nextCycleAt = per-tick runaway,
-    // NaN workers = NaN target inside runOneCycle).
-    const restoredWorkers = source.settings.workers ?? 0
+    // NaN workers = NaN target inside runOneCycle). A null settings
+    // sub-object would throw on property read — fall back to defaults.
+    const sourceSettings =
+      typeof source.settings === 'object' && source.settings !== null
+        ? source.settings
+        : { gradeFilter: 'all' as const, ageFilter: 'all' as const, workers: 0 }
+    const restoredWorkers = sourceSettings.workers ?? 0
     const restoredDeadline = Math.floor(source.nextCycleAt ?? 0)
 
     this.settings = {
-      gradeFilter: source.settings.gradeFilter ?? 'all',
-      ageFilter: source.settings.ageFilter ?? 'all',
+      gradeFilter: sourceSettings.gradeFilter ?? 'all',
+      ageFilter: sourceSettings.ageFilter ?? 'all',
       workers: Number.isFinite(restoredWorkers)
         ? Math.min(Math.max(0, Math.floor(restoredWorkers)), this.capacity)
         : 0,

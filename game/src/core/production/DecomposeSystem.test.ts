@@ -198,3 +198,48 @@ describe('DecomposeSystem — cycle + output (Task 14)', () => {
     expect(system.drainOutput()).toHaveLength(0)
   })
 })
+
+describe('DecomposeSystem — online catch-up policy (Mission A review)', () => {
+  it('a far-overdue deadline runs ONE cycle and rebases (no per-tick backlog replay)', () => {
+    addOre('mortal_ore_decade', 10_000)
+
+    const system = createSystemWithCapacity(6)
+
+    system.setSetting({ workers: 1 })
+    system.tick(0) // deadline = 30_000
+
+    // 300 cycles late — the tick runs exactly one cycle and the deadline
+    // rebases to now + cycleMs instead of advancing one step per tick.
+    system.tick(30_000 + 300 * 30_000)
+
+    expect(system.drainOutput()).toHaveLength(1)
+
+    // The very next tick must NOT run another cycle — old behavior would
+    // keep replaying the backlog one run per tick.
+    system.tick(30_000 + 300 * 30_000 + 1)
+
+    expect(system.drainOutput()).toHaveLength(0)
+  })
+
+  it('a far-future deadline rebases to now + cycleMs instead of stalling', () => {
+    addOre('mortal_ore_decade', 100)
+
+    const system = createSystemWithCapacity(6)
+
+    system.setSetting({ workers: 1 })
+
+    // Bypassed payload: deadline years ahead of now.
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: 10_000_000_000,
+      started: true,
+    })
+
+    system.tick(1_000)
+
+    // Deadline rebased to 1_000 + 30_000 — the next due tick produces.
+    system.tick(31_000)
+
+    expect(system.drainOutput()).toHaveLength(1)
+  })
+})
