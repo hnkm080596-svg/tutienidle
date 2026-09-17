@@ -10,9 +10,10 @@ import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import type { CombatScheduler } from '../runtime/scheduler/CombatScheduler'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
 import { resolveAilmentApplicationChance } from './AilmentChance'
+import { actionTagsOfSkill, BuffPoolActionValidator, type ActionValidator } from './ActionValidator'
 import { consumeGaugeAfterAction, advanceGauge, isGaugeReady } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
-import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets, executionCommitsCast, pickCompositePool, MAX_MULTICAST, type TurnSkillExecution, type TurnQueuedExecution } from './TurnSkillAction'
+import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets, executionCommitsCast, pickCompositePool, MAX_MULTICAST, NULL_ACTION, type TurnSkillExecution, type TurnQueuedExecution } from './TurnSkillAction'
 import type { TurnSkillDefinition, TurnSkillSlot, SelectedAction, DynamicBasicProvider, ForcedTurnChoice, TurnSkillBuffApplication } from './TurnSkillAction'
 import type { ActionDamageInfo, HitResolveOptions } from '../ActionImpactSystem'
 import { BuffPool } from '../../buff/BuffPool'
@@ -494,7 +495,16 @@ export class TurnBattleSystem {
      * instance; gameplay code must not drive it.
      */
     readonly combatScheduler?: CombatScheduler,
-  ) {}
+  ) {
+    // Reaction M4 (contract sec.70-72) -- the action-tag restriction
+    // channel (Cam Cong). Bound to the same catalog the buff lanes use;
+    // absent registry -> no restrictions (unsealed selection is
+    // byte-identical to today).
+    this.actionValidator =
+      this.registry !== undefined ? new BuffPoolActionValidator(this.registry) : undefined
+  }
+
+  private readonly actionValidator: ActionValidator | undefined
 
   // Action Playback Task 3 -- gauge-delta deferral chuyển từ local vars
   // của resolveActorTurn cũ thành class fields (applyActionImpact ghi,
@@ -1255,9 +1265,21 @@ export class TurnBattleSystem {
       // ARCH-002 (M7) -- the effective-stat refresh moved above the gate
       // (covers expiry/CC/charge too); action selection reads the fresh
       // entity.stats.
+      // Reaction M4 (contract sec.71) -- the actor's action-tag
+      // restriction set is computed ONCE per declaration here and passed
+      // into both selection channels (Cam Cong). No registry -> no
+      // validator -> undefined -> unsealed selection identical to today.
+      const forbiddenActionTags = this.actionValidator?.forbiddenActionTags(actor)
+
       action = forcedAction
-        ? selectForcedAction(actor, forcedAction)
-        : selectAction(actor)
+        ? selectForcedAction(actor, forcedAction, forbiddenActionTags)
+        : selectAction(actor, forbiddenActionTags)
+
+      // R-E -- skillId '' marks the sealed NULL_ACTION (Cam Cong): it
+      // flows harmlessly through the pipeline below (skill null skips
+      // empowerment/composite/charge; targeting is gated) and maps to
+      // the existing empty-turn shape (action: null) in the return --
+      // never a forbidden pick, never a stun flag.
 
       // Phase A3 (2026-09-07) -- enemy specialAttacks reader, ported from
       // legacy EnemyAttackSystem.fireEnemyAttack()'s everyNth semantics
@@ -1273,7 +1295,7 @@ export class TurnBattleSystem {
       // script, so the selectTarget call below passes ignoreTaunt.
       let scriptedSpecial = false
 
-      if (!action.slot && actor.entity.specialAttacks?.length) {
+      if (action.skillId !== '' && !action.slot && actor.entity.specialAttacks?.length) {
         const attackCount = (actor.specialAttackCounter ?? 0) + 1
 
         actor.specialAttackCounter = attackCount
@@ -1347,6 +1369,22 @@ export class TurnBattleSystem {
 
       payloadSkill = execution.resolvedSkill
 
+      // Cam Cong -- the RESOLVED payload is the action's real
+      // classification: an empowerment/composite swap can surface an
+      // attack payload from a non-attack root def (the seal was checked
+      // at selection on the root). If the resolved payload carries a
+      // forbidden tag the action has no legal outcome -- it collapses
+      // to the sealed empty turn (R-E).
+      if (
+        payloadSkill !== null &&
+        forbiddenActionTags !== undefined &&
+        actionTagsOfSkill(payloadSkill).some((tag) =>
+          forbiddenActionTags.has(tag),
+        )
+      ) {
+        action = NULL_ACTION
+      }
+
       // Task 13 -- capture the PRE-BURN pool when the resolved payload is
       // a consume-all form: the pool only zeroes at commitCast (after
       // hits resolve), so theScaling must read the value captured here.
@@ -1371,7 +1409,11 @@ export class TurnBattleSystem {
         scaledDamage = null
       } else {
         opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
-        const primaryTarget = selectTarget(actor, opposingSide, { ignoreTaunt: scriptedSpecial })
+        // R-E -- a sealed NULL_ACTION collects no targets: the turn is
+        // EMPTY (affected stays [], scaledDamage stays null).
+        const primaryTarget = action.skillId !== ''
+          ? selectTarget(actor, opposingSide, { ignoreTaunt: scriptedSpecial })
+          : null
 
         if (primaryTarget && !isChargeInit) {
           affected = collectTurnTargets(primaryTarget, opposingSide, payloadSkill?.targeting ?? action.targeting)
@@ -1411,18 +1453,21 @@ export class TurnBattleSystem {
       chargeResolved,
       chargeTargetIds,
       chargedSkill: chargedSkillCaptured,
-      action,
+      // R-E -- the sealed NULL_ACTION (skillId '') maps to the existing
+      // empty-turn shape: action null, no provenance, no execution
+      // record (same as CC-blocked/charge-resolve turns).
+      action: action?.skillId === '' ? null : action,
       opposingSide,
       affected,
       scaledDamage,
       suddenDeathMultiplier: suddenDeathMultiplierCaptured,
       compositePickedSkills,
       isFollowUpBypass: false,
-      actionSource: action?.slot ? 'skill' : 'normal',
+      actionSource: action?.skillId === '' ? undefined : action?.slot ? 'skill' : 'normal',
       // Task 9 -- every real cast records its execution identity here:
       // 'original' for now (empowered/composite/repeat/multicast arrive
       // with Tasks 10-13). Charge-resolve/CC-blocked turns carry none.
-      execution,
+      execution: action?.skillId === '' ? undefined : execution,
     }
   }
 

@@ -273,6 +273,13 @@ export interface BuffDefinition {
    * and the survive-lethal grant path.
    */
   clearsCcOnApply?: boolean
+  /**
+   * Reaction M4 (contract sec.70-72) — action tags this buff forbids the
+   * HOLDER from selecting (Cam Cong: ['attack']). Enforced by
+   * ActionValidator inside selectAction/selectForcedAction as a
+   * selection restriction — never a stun/CC block.
+   */
+  forbiddenActionTags?: readonly string[]
   maxStacks?: number
   stackMode: BuffStackMode
 

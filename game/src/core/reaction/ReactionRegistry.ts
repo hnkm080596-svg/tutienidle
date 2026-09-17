@@ -13,6 +13,7 @@ import {
 } from '../element/WuxingRelations'
 import type { ElementalStateRegistry } from './ElementalStateRegistry'
 import type { ReactionDefinition } from './ReactionDefinition'
+import type { StackExpr } from './StackExpr'
 import type { ReactionId } from './ReactionTypes'
 
 const ELEMENTS = [
@@ -116,6 +117,117 @@ function validatePayoffBuffIds(
   }
 }
 
+/** M4 -- a StackExpr 'stacks' reference or a `when` role must be a role
+    the relation actually has (sinh: parent/child; khac:
+    attacker/defender). Catching it at seal beats a mid-combat throw
+    inside emitPayoffOperations (same authority class as the element and
+    buff-id checks above). */
+function validatePayoffRoles(def: ReactionDefinition): void {
+  const legal =
+    def.relation === 'sinh'
+      ? new Set(['parent', 'child'])
+      : new Set(['attacker', 'defender'])
+
+  const checkExpr = (expr: StackExpr, stepKind: string): void => {
+    switch (expr.op) {
+      case 'stacks':
+        if (!legal.has(expr.role)) {
+          throw new Error(
+            `ReactionRegistry: '${def.id}' step '${stepKind}' references role '${expr.role}' which relation '${def.relation}' does not have`,
+          )
+        }
+        return
+      case 'add':
+      case 'mul':
+      case 'min':
+      case 'max':
+        if (expr.args.length === 0) {
+          throw new Error(
+            `ReactionRegistry: '${def.id}' step '${stepKind}' has an empty '${expr.op}' expr (min/max of nothing is degenerate)`,
+          )
+        }
+        for (const arg of expr.args) checkExpr(arg, stepKind)
+        return
+      case 'ceil_half':
+      case 'floor_half':
+        checkExpr(expr.arg, stepKind)
+        return
+      case 'const':
+        return
+    }
+  }
+
+  const maybeExpr = (expr: StackExpr | undefined, stepKind: string): void => {
+    if (expr !== undefined) checkExpr(expr, stepKind)
+  }
+
+  // Step kinds bound to a specific role must match the relation:
+  // child-* steps are sinh-only (khac has no child participant) and
+  // reaction_damage reads the attacker role (khac-only). Other kinds
+  // are relation-agnostic.
+  const requireRole: Partial<
+    Record<ReactionDefinition['payoff']['steps'][number]['kind'], 'child' | 'attacker'>
+  > = {
+    add_child_stacks: 'child',
+    add_child_modifier: 'child',
+    extend_child_duration: 'child',
+    reaction_damage: 'attacker',
+  }
+
+  for (const step of def.payoff.steps) {
+    const role = requireRole[step.kind]
+    if (role !== undefined && !legal.has(role)) {
+      throw new Error(
+        `ReactionRegistry: '${def.id}' step '${step.kind}' requires role '${role}' which relation '${def.relation}' does not have`,
+      )
+    }
+
+    switch (step.kind) {
+      case 'add_child_stacks':
+        maybeExpr(step.stacks, step.kind)
+        break
+      case 'add_child_modifier':
+        maybeExpr(step.value, step.kind)
+        break
+      case 'extend_child_duration':
+        maybeExpr(step.turns, step.kind)
+        break
+      case 'reaction_damage':
+        maybeExpr(step.coefficient, step.kind)
+        break
+      case 'apply_status':
+        maybeExpr(step.stacks, step.kind)
+        maybeExpr(step.durationOverride, step.kind)
+        if (step.modifier !== undefined) maybeExpr(step.modifier.value, step.kind)
+        if (step.when !== undefined && !legal.has(step.when.role)) {
+          throw new Error(
+            `ReactionRegistry: '${def.id}' step '${step.kind}' when-role '${step.when.role}' is not a '${def.relation}' participant`,
+          )
+        }
+        break
+      case 'push_gauge':
+        maybeExpr(step.fractionOfMax, step.kind)
+        break
+      case 'heal_from_damage':
+        maybeExpr(step.fraction, step.kind)
+        break
+    }
+  }
+
+  // heal_from_damage materializes from the preceding damage op's
+  // result -- a def without an earlier reaction_damage step can never
+  // emit it (the emitter throws; catch it at seal instead).
+  let seenDamage = false
+  for (const step of def.payoff.steps) {
+    if (step.kind === 'reaction_damage') seenDamage = true
+    if (step.kind === 'heal_from_damage' && !seenDamage) {
+      throw new Error(
+        `ReactionRegistry: '${def.id}' heal_from_damage requires a preceding reaction_damage step`,
+      )
+    }
+  }
+}
+
 /** validateReactionDefinitions -- full structural pass (megaplan M1
     step 1). Throws on the FIRST malformation found while iterating the
     input order; deterministic because iteration order is input order. */
@@ -143,6 +255,7 @@ export function validateReactionDefinitions(
 
     validateElements(def, elements)
     validatePayoffBuffIds(def, buffExists)
+    validatePayoffRoles(def)
 
     const key = pairKey(def)
     const prior = pairs.get(key)

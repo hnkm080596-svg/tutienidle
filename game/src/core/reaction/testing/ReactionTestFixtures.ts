@@ -181,10 +181,22 @@ export interface ReactionTestWorld {
       payoffEmitter?: ReactionPayoffEmitter
     },
   ): ReactionSystem
-  /** Batch runner over the REAL executor (buffs port wired to the
-      world's BuffSystem; other ports absent -- ops touching them fault
-      structurally, which tests should not trigger). */
-  makeBatchRunner(): ReactionBatchRunner
+  /** Batch runner over the REAL executor. The buffs port is the world's
+      real BuffSystem; damage/gauge/heal/resource/shield are recording
+      STUB ports (the reaction engine never owns those authorities --
+      tests assert on the emitted ops + recorded calls, not resolved
+      numbers). Pass `ports` to override any of them. */
+  makeBatchRunner(opts?: {
+    ports?: Partial<CombatAuthorityPorts>
+  }): ReactionBatchRunner
+  /** The recording stub ports makeBatchRunner wires -- inspectable. */
+  readonly stubCalls: {
+    damage: { targetId: string; coefficient: number }[]
+    gauge: { targetId: string; fractionOfMax: number }[]
+    heal: { targetId: string; amount: number }[]
+    resource: { kind: 'gain' | 'consume'; targetId: string }[]
+    shield: { targetId: string; amount: number }[]
+  }
   /** Scripted op ctx (sequence mints per world). */
   makeCtx(origin?: Partial<CombatOperationOrigin>): CombatAuthorityExecutionContext
   /** Real apply through the system; returns the fabricated committed
@@ -260,6 +272,14 @@ export function createReactionTestWorld(): ReactionTestWorld {
   const boardQuery = new BuffSystemBoardQuery(system, elements)
   const gate = new ReactionTriggerGate(capabilities, elements)
 
+  const stubCalls: ReactionTestWorld['stubCalls'] = {
+    damage: [],
+    gauge: [],
+    heal: [],
+    resource: [],
+    shield: [],
+  }
+
   let seq = 0
   let eventSeq = 0
 
@@ -290,6 +310,7 @@ export function createReactionTestWorld(): ReactionTestWorld {
     capabilities,
     boardQuery,
     gate,
+    stubCalls,
     makeReactionSystem(reactionRegistry, opts = {}) {
       return new ReactionSystem(
         reactionRegistry,
@@ -299,8 +320,60 @@ export function createReactionTestWorld(): ReactionTestWorld {
         opts.payoffEmitter,
       )
     },
-    makeBatchRunner() {
-      const ports: CombatAuthorityPorts = { buffs: system }
+    makeBatchRunner(opts = {}) {
+      const ports: CombatAuthorityPorts = {
+        buffs: system,
+        damage: {
+          dealDamage: (payload) => {
+            stubCalls.damage.push({
+              targetId: payload.targetId,
+              coefficient: payload.coefficient,
+            })
+            return { rawDamage: 100, hpDamage: 100, killed: false }
+          },
+        },
+        gauge: {
+          pushGauge: (targetId, fractionOfMax) => {
+            stubCalls.gauge.push({ targetId, fractionOfMax })
+            return {
+              before: 0,
+              requestedDelta: fractionOfMax,
+              appliedDelta: fractionOfMax,
+              after: fractionOfMax,
+            }
+          },
+        },
+        heal: {
+          heal: (payload) => {
+            stubCalls.heal.push({
+              targetId: payload.targetId,
+              amount: payload.amount,
+            })
+            return {
+              requested: payload.amount,
+              healed: payload.amount,
+              after: payload.amount,
+            }
+          },
+        },
+        resource: {
+          gain: (targetId, _resourceId, amount) => {
+            stubCalls.resource.push({ kind: 'gain', targetId })
+            return { before: 0, requested: amount, applied: amount, after: amount }
+          },
+          consume: (targetId, _resourceId, amount) => {
+            stubCalls.resource.push({ kind: 'consume', targetId })
+            return { before: 0, requested: amount, applied: 0, after: 0 }
+          },
+        },
+        shield: {
+          applyShield: (targetId, amount) => {
+            stubCalls.shield.push({ targetId, amount })
+            return { applied: amount, shieldAfter: amount }
+          },
+        },
+        ...opts.ports,
+      }
       return new ReactionBatchRunner(
         new CombatOperationExecutor(ports),
         system,

@@ -39,10 +39,12 @@ import type {
   ReactionEvaluationResult,
 } from './ReactionTypes'
 
-/** M4 seam -- the authored payoff ops for a selected definition, built
-    against the FROZEN context (snapshot participants/stacks). M4's
-    ReactionOperations supplies the real emitter; the M3 default emits
-    none (consume-only batches). */
+import { emitPayoffOperations } from './ReactionOperations'
+
+/** The authored payoff ops for a selected definition, built against the
+    FROZEN context (snapshot participants/stacks). The production
+    default is ReactionOperations' emitPayoffOperations; tests may
+    inject a scripted emitter. */
 export type ReactionPayoffEmitter = (
   def: ReactionDefinition,
   context: ReactionContext,
@@ -54,7 +56,7 @@ export class ReactionSystem {
     private readonly board: ElementalBoardQuery,
     private readonly gate: ReactionGateCheck,
     private readonly biasQuery: ReactionBiasQuery = new IdentityReactionBiasQuery(),
-    private readonly payoffEmitter: ReactionPayoffEmitter = () => [],
+    private readonly payoffEmitter: ReactionPayoffEmitter = emitPayoffOperations,
   ) {}
 
   /** spec sec.15/28 -- registry-scan candidates for a trigger element on

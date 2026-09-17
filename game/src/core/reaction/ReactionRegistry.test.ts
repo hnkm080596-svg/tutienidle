@@ -142,6 +142,85 @@ describe('ReactionRegistry validation', () => {
     ).toThrow(/defined by both/)
   })
 
+  it('throws on a stacks expr referencing a role the relation lacks', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs[0] = {
+      ...defs[0]!,
+      payoff: {
+        steps: [
+          {
+            kind: 'add_child_stacks',
+            stacks: { op: 'stacks', role: 'attacker' }, // sinh has no attacker
+          },
+        ],
+      },
+    }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/role 'attacker'/)
+  })
+
+  it('throws on a when-role the relation lacks', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs[5] = {
+      ...defs[5]!,
+      payoff: {
+        steps: [
+          {
+            kind: 'apply_status',
+            definitionId: 'test_bleed' as BuffDefinitionId,
+            when: { role: 'parent', op: 'gte', value: 1 }, // khac has no parent
+          },
+        ],
+      },
+    }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/when-role 'parent'/)
+  })
+
+  it('throws on a child-bound step kind authored on a khac def', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs[5] = {
+      ...defs[5]!,
+      payoff: {
+        steps: [
+          {
+            kind: 'add_child_stacks',
+            stacks: { op: 'const', value: 1 },
+          },
+        ],
+      },
+    }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/step 'add_child_stacks' requires role 'child'/)
+  })
+
+  it('throws on heal_from_damage without a preceding reaction_damage', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs[5] = {
+      ...defs[5]!,
+      payoff: {
+        steps: [
+          {
+            kind: 'heal_from_damage',
+            fraction: { op: 'const', value: 0.1 },
+            capRatio: 0.25,
+            healTarget: 'source',
+          },
+        ],
+      },
+    }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/requires a preceding reaction_damage/)
+  })
+
   it('registry get() throws on unknown id', () => {
     const { w, buffExists } = setup()
     const registry = new ReactionRegistry(

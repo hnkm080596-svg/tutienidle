@@ -10,6 +10,7 @@ import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 import { areaFor } from '../ActionTargetingSystem'
 import { entityGridPosition, type GridPosition } from '../BattleGrid'
 import { isCellInShape, type AoeShapeSpec } from './AoeShape'
+import { isActionAllowed } from './ActionValidator'
 
 /**
  * Slice 2 skill shape — deliberately NOT the live `Skill` interface
@@ -252,6 +253,13 @@ export interface TurnSkillDefinition {
    *   their permanent buff lands via grantsBuffsAtBuild.
    */
   emblemOnly?: boolean
+  /**
+   * Reaction M4 (contract sec.70-72) — the action's tag classification
+   * for restriction checks (Cam Cong's forbiddenActionTags). When absent
+   * the engine infers ['attack'] iff the def carries `damage` (R-E2);
+   * explicit tags always win (e.g. ['heal'] on a self-heal special).
+   */
+  actionTags?: readonly string[]
 }
 
 /**
@@ -428,6 +436,19 @@ const FALLBACK_BASIC_ATTACK: ActionDamageInfo = { kind: 'physical', multiplier: 
 const FALLBACK_TARGETING: ActionTargeting = { shape: 'single' }
 
 /**
+ * Reaction M4 (R-E) — the sealed no-action. Produced when every
+ * candidate is forbidden by the actor's restriction set (Cam Cong):
+ * NOT a stun -- declareActorAction converts skillId '' into the same
+ * empty-turn shape as the existing no-action return (action: null).
+ */
+export const NULL_ACTION: SelectedAction = {
+  skillId: '',
+  skill: null,
+  targeting: FALLBACK_TARGETING,
+  slot: null,
+}
+
+/**
  * Ticks special/ultimate cooldowns down by 1, floored at 0 — cooldown
  * counts the ACTOR's own turns (this rework's "tick at the holder's own
  * turn" convention, already used by BuffSystem). Call once per actor
@@ -491,32 +512,49 @@ function basicAction(participant: TurnBattleParticipant): SelectedAction {
   }
 }
 
+function slotReady(slot: TurnSkillSlot | undefined, participant: TurnBattleParticipant): slot is TurnSkillSlot {
+  return (
+    slot !== undefined &&
+    !slot.skill.emblemOnly &&
+    slot.remainingCooldownTurns === 0 &&
+    hasResourceFor(participant.entity, slot.skill)
+  )
+}
+
 /**
  * Priority: ultimate (off cooldown + affordable) -> special (same) ->
  * basic (no cooldown/cost by construction) -> hardcoded fallback basic
  * attack when the participant has no `basic` set at all (Slice 1
  * backward compatibility — see plan Task 4).
+ *
+ * Reaction M4 — `forbidden` is the actor's action-tag restriction set
+ * (Cam Cong via ActionValidator). Forbidden candidates are skipped in
+ * priority order; when every candidate is sealed the actor gets the
+ * NULL_ACTION empty turn (R-E), never a silently-forbidden pick.
  */
-export function selectAction(participant: TurnBattleParticipant): SelectedAction {
-  if (
-    participant.ultimate &&
-    !participant.ultimate.skill.emblemOnly &&
-    participant.ultimate.remainingCooldownTurns === 0 &&
-    hasResourceFor(participant.entity, participant.ultimate.skill)
-  ) {
-    return slotAction(participant.ultimate)
+export function selectAction(
+  participant: TurnBattleParticipant,
+  forbidden?: ReadonlySet<string>,
+): SelectedAction {
+  if (slotReady(participant.ultimate, participant)) {
+    const candidate = slotAction(participant.ultimate!)
+
+    if (isActionAllowed(candidate, forbidden)) {
+      return candidate
+    }
   }
 
-  if (
-    participant.special &&
-    !participant.special.skill.emblemOnly &&
-    participant.special.remainingCooldownTurns === 0 &&
-    hasResourceFor(participant.entity, participant.special.skill)
-  ) {
-    return slotAction(participant.special)
+  if (slotReady(participant.special, participant)) {
+    const candidate = slotAction(participant.special!)
+
+    if (isActionAllowed(candidate, forbidden)) {
+      return candidate
+    }
   }
 
-  return basicAction(participant)
+  const basic = basicAction(participant)
+
+  return isActionAllowed(basic, forbidden) ? basic : NULL_ACTION
 }
 
 /**
@@ -536,47 +574,58 @@ export type TurnSkillSlotRole = 'basic' | 'special' | 'ultimate'
 export function selectForcedAction(
   participant: TurnBattleParticipant,
   forced: ForcedTurnChoice,
+  forbidden?: ReadonlySet<string>,
 ): SelectedAction {
   // Kiem Tu Reimagined Task 2 — a dynamic_basic pick travels the SAME
   // manual-submit channel as slot roles; the provider validates the id
   // against its own manualOptions (invalid -> normal selection). Manual
   // picks never advance the provider's auto cursor.
+  // Reaction M4 — a manual pick whose tags are forbidden is rejected
+  // like any other invalid pick (falls to restricted selection; the
+  // seal cannot be bypassed through the forced channel).
   if (typeof forced === 'object') {
     const picked = participant.dynamicBasic?.resolveManualPick?.(forced.defId) ?? null
 
     if (picked) {
-      return {
+      const candidate: SelectedAction = {
         skillId: picked.id,
         skill: picked,
         damage: picked.damage,
         targeting: picked.targeting,
         slot: null,
       }
+
+      return isActionAllowed(candidate, forbidden)
+        ? candidate
+        : selectAction(participant, forbidden)
     }
 
-    return selectAction(participant)
+    return selectAction(participant, forbidden)
   }
 
   if (forced === 'basic') {
     if (participant.basic || participant.dynamicBasic) {
-      return basicAction(participant)
+      const basic = basicAction(participant)
+
+      return isActionAllowed(basic, forbidden)
+        ? basic
+        : selectAction(participant, forbidden)
     }
 
-    return selectAction(participant)
+    return selectAction(participant, forbidden)
   }
 
   const slot = forced === 'special' ? participant.special : participant.ultimate
 
-  if (
-    slot &&
-    !slot.skill.emblemOnly &&
-    slot.remainingCooldownTurns === 0 &&
-    hasResourceFor(participant.entity, slot.skill)
-  ) {
-    return slotAction(slot)
+  if (slotReady(slot, participant)) {
+    const candidate = slotAction(slot)
+
+    if (isActionAllowed(candidate, forbidden)) {
+      return candidate
+    }
   }
 
-  return selectAction(participant)
+  return selectAction(participant, forbidden)
 }
 
 /**
