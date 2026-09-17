@@ -12,11 +12,13 @@ import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import type { DecomposeSettings } from '@/core/production/DecomposeSystem'
 import {
+  isProfessionGrade,
   PROFESSION_GRADE_ORDER,
   PROFESSION_GRADE_NAMES,
 } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
 import { HERB_AGES } from '@/core/production/ProductionTypes'
+import type { HerbAge } from '@/core/production/ProductionTypes'
 import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
 
 const { t } = useI18n()
@@ -67,11 +69,19 @@ const estimate = computed(() => {
 })
 
 function onGradeChange(event: Event) {
-  applySetting({ gradeFilter: (event.target as HTMLSelectElement).value as never })
+  const value = (event.target as HTMLSelectElement).value
+
+  if (value !== 'all' && !isProfessionGrade(value)) return
+
+  applySetting({ gradeFilter: value })
 }
 
 function onAgeChange(event: Event) {
-  applySetting({ ageFilter: (event.target as HTMLSelectElement).value as never })
+  const value = (event.target as HTMLSelectElement).value
+
+  if (value !== 'all' && !(HERB_AGES as readonly string[]).includes(value)) return
+
+  applySetting({ ageFilter: value as HerbAge | 'all' })
 }
 
 function onWorkersInput(event: Event) {
