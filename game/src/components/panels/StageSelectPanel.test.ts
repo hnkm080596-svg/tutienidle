@@ -101,6 +101,10 @@ describe('StageSelectPanel — B5 auto-farm armed state + refused start guard (a
     const ui = useUiStore(pinia)
 
     player.perfectClearStageIds.push('mortal_dong_1', 'mortal_dong_2')
+    // Eligibility contract (Mission B round 3): arming needs a valid
+    // cycle time too — perfectClearStageIds alone is not enough.
+    player.perfectClearSeconds['mortal_dong_1'] = 100
+    player.perfectClearSeconds['mortal_dong_2'] = 100
     // Occupy the single stage slot with a farm on another stage.
     expect(manager.turnBattleOps.autoFarmOps.startAutoFarm(player.$state, 'mortal_dong_2')).toBe(true)
     ui.leftPanelMode = 'stage_select'

@@ -167,3 +167,21 @@ A tampered save with `lastCheckedMs` far in the future yields negative `elapsedM
 
 - `npx vitest run` — autoFarmRestore (10), autoFarmAdversarial (7), autoFarmOffline (7), autoFarm (7), conformance (1), idleDrops (6): all green; the 4 new repro tests failed for the intended reason pre-fix.
 - Save/restore family (SaveSystem.*, GameManagerSaveRestore.*, useAppLifecycle): 432 tests green; `npm run type-check` clean.
+
+---
+
+# Addendum — external audit round 4 (mission-b-fix worktree)
+
+- Date: 2026-09-17
+- Trigger: external fourth-round review verdict REQUEST CHANGES — 1 Medium (B5 same-stage restore skips eligibility validation; sibling split-invariant in startAutoFarm).
+- Verdict: finding Confirmed → repaired in this pass.
+
+## QA-2026-09-17-B10: owned same-stage lease read as converged BEFORE eligibility re-validation (Medium — CONFIRMED, repaired)
+
+- Invariant: persisted `autoFarmStage` may hold the slot only while the farm is ELIGIBLE — perfect-cleared, registered, valid cycle time — on the payload actually restored.
+- Pre-fix: `reconcileAutoFarmRuntime` ran the identity-converged return before eligibility validation. A different payload keeping `autoFarmStage = A` while removing A from `perfectClearStageIds` (or dropping `perfectClearSeconds[A]`) passed shape validation (no cross-field invariant exists — `perfectClearSeconds` validates only present entries, `autoFarmStage` only its own shape) and kept the lease: `tickAutoFarm` checks lease identity + cycleSeconds but never `perfectClearStageIds`, so the revoked-clear farm kept minting; the missing-cycle variant held the slot inert, blocking manual combat.
+- Sibling split-invariant (same finding): `startAutoFarm` never checked `perfectClearSeconds` while reconcile required it — two entry points, two eligibility contracts.
+- Fix: one eligibility primitive `resolveValidAutoFarmStage(player, stageId)` = perfectClearStageIds membership + valid perfectClearSeconds + registered stage, now shared by `startAutoFarm`, `reconcileAutoFarmRuntime`, AND `settleAutoFarmOffline` (settle runs before reconcile on restore — without the shared gate, a revoked-clear payload with elapsed >60s would still pay offline cycles for the dead farm).
+  - Reconcile order per the audit's prescription: self-heal stale marker → `!autoFarm` releases ours → validate eligibility on EVERY restore (invalid: release ours unconditionally + clear persisted) → same-stage owned lease converged → different-stage owned lease released → acquire fail-closed.
+  - `startAutoFarm` drops its redundant `get() !== null` pre-check (`start()` already refuses an occupied slot) and gains the cycle-time gate for free via the shared primitive.
+- Regression coverage: `autoFarmRestore.test.ts` — revoked-perfect-clear same-stage payload drops lease + persisted farm + pays nothing on tick; missing-cycle same-stage payload drops the inert lease and manual combat starts. `autoFarm.test.ts` — `startAutoFarm` refuses a perfect-cleared stage with no valid cycle and leaves the slot free. Adversarial cycleSeconds tests re-shaped to arm-valid-then-corrupt (the invalid-armed state is no longer creatable through the lease entries — the tick guard remains as defense in depth).

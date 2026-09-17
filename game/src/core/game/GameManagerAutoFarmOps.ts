@@ -55,20 +55,32 @@ export class GameManagerAutoFarmOps {
   ) {}
 
   /**
+   * The ONE eligibility contract for an armed farm — shared by
+   * startAutoFarm and reconcileAutoFarmRuntime so both entry points agree
+   * on what a valid farm is: perfect-cleared, a resolvable registered
+   * stage, AND a valid persisted cycle time (the tick can never complete
+   * a cycle without it — an armed-but-inert farm would hold the single
+   * slot while blocking manual combat).
+   */
+  private resolveValidAutoFarmStage(player: PlayerData, stageId: string): Stage | null {
+    if (!player.perfectClearStageIds.includes(stageId)) {
+      return null
+    }
+
+    if (!isValidCycleSeconds(player.perfectClearSeconds[stageId])) {
+      return null
+    }
+
+    return this.deps.stageTemplates.get(stageId) ?? null
+  }
+
+  /**
    * Enable auto-farm for a stage that reached Hoan My. Shares the SAME
    * single-slot StageManager with manual/repeat/progress (exclusivity
    * uniform) - no TurnBattleSystem, no animation; reward rolls by wall-clock.
    */
   startAutoFarm(player: PlayerData, stageId: string): boolean {
-    if (!player.perfectClearStageIds.includes(stageId)) {
-      return false
-    }
-
-    if (this.deps.stageManager.get() !== null) {
-      return false
-    }
-
-    const stage = this.deps.stageTemplates.get(stageId)
+    const stage = this.resolveValidAutoFarmStage(player, stageId)
 
     if (!stage) {
       return false
@@ -121,17 +133,34 @@ export class GameManagerAutoFarmOps {
       this.farmLease = null
     }
 
-    // A same-manager restore carrying a DIFFERENT payload leaves the
-    // previously-armed farm lease orphaned: persisted state swapped or
-    // removed the farm but the slot stays held, blocking manual stages
-    // forever (persisted authority says no farm, so nothing else can
-    // release it). Release only the lease this authority holds.
-    if (this.farmLease !== null && this.farmLease.stageId !== autoFarm?.stageId) {
-      this.deps.stageManager.stop()
-      this.farmLease = null
+    // A same-manager restore carrying a no-farm payload leaves the
+    // previously-armed farm lease orphaned: persisted state removed the
+    // farm but the slot stays held, blocking manual stages forever
+    // (persisted authority says no farm, so nothing else can release
+    // it). Release only the lease this authority holds.
+    if (!autoFarm) {
+      if (this.farmLease !== null) {
+        this.deps.stageManager.stop()
+        this.farmLease = null
+      }
+
+      return
     }
 
-    if (!autoFarm) {
+    // Eligibility runs on EVERY restore — before the converged check: a
+    // changed payload can keep the same stageId while revoking the
+    // perfect-clear or dropping the cycle time, and tickAutoFarm never
+    // re-checks perfectClearStageIds. An unvalidated "converged" lease
+    // would keep minting on a revoked stage, or hold the slot inert.
+    const stage = this.resolveValidAutoFarmStage(player, autoFarm.stageId)
+
+    if (!stage) {
+      if (this.farmLease !== null) {
+        this.deps.stageManager.stop()
+        this.farmLease = null
+      }
+
+      player.autoFarmStage = null
       return
     }
 
@@ -140,28 +169,20 @@ export class GameManagerAutoFarmOps {
     // end state, not a conflict (start() returns false for any occupied
     // slot). A foreign lease on the same stage is a different object and
     // falls through to the fail-closed acquire below.
+    if (this.farmLease !== null && this.farmLease.stageId === autoFarm.stageId) {
+      return
+    }
+
+    // Different-farm payload: release the old owned lease before
+    // acquiring the new stage — never leave it orphaned on the slot.
     if (this.farmLease !== null) {
-      return
+      this.deps.stageManager.stop()
+      this.farmLease = null
     }
 
-    // Same precondition as startAutoFarm: a persisted lease for a stage
-    // that was never perfect-cleared (crafted/foreign save) is a dead
-    // lease — holding the slot would block manual stages while paying
-    // nothing. Same for a missing/invalid cycle time: the tick can never
-    // complete a cycle, so the farm would hold the slot inert forever.
-    if (
-      !player.perfectClearStageIds.includes(autoFarm.stageId) ||
-      !isValidCycleSeconds(player.perfectClearSeconds[autoFarm.stageId])
-    ) {
-      player.autoFarmStage = null
-      return
-    }
-
-    const stage = this.deps.stageTemplates.get(autoFarm.stageId)
-
-    if (!stage || !this.deps.stageManager.start(stage)) {
-      // Slot held by a foreign owner (live manual battle mid-restore) or
-      // stage unresolvable — drop the persisted lease fail-closed.
+    if (!this.deps.stageManager.start(stage)) {
+      // Slot held by a foreign owner (live manual battle mid-restore) —
+      // drop the persisted lease fail-closed.
       player.autoFarmStage = null
       return
     }
@@ -188,6 +209,16 @@ export class GameManagerAutoFarmOps {
       return
     }
 
+    // Same eligibility contract as start/reconcile: settle runs BEFORE
+    // reconcile in restoreFromSave, so without it a revoked perfect-clear
+    // (or dead stage) payload would still pay offline cycles for a farm
+    // reconcile is about to drop.
+    const stage = this.resolveValidAutoFarmStage(player, autoFarm.stageId)
+
+    if (!stage) {
+      return
+    }
+
     const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
 
     if (!isValidCycleSeconds(cycleSeconds)) {
@@ -204,12 +235,6 @@ export class GameManagerAutoFarmOps {
     const completedCycles = Math.floor(elapsedMs / cycleMs)
 
     if (completedCycles <= 0) {
-      return
-    }
-
-    const stage = this.deps.stageTemplates.get(autoFarm.stageId)
-
-    if (!stage) {
       return
     }
 

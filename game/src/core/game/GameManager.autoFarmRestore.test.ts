@@ -295,4 +295,48 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     // battle's session.
     expect(gameManager.getBattleRewardSummary().spiritStone).toBe(0)
   })
+
+  it('same-stage re-restore that REVOKED the perfect-clear drops the lease (eligibility re-validated every restore)', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T10:00:00Z'))
+
+    const { playerStore, gameManager, save } = harness()
+
+    expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
+    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+
+    // Shape-valid payload: no cross-field invariant ties armed farm to
+    // perfectClearStageIds. A converged-check before validation would
+    // keep the lease minting on a revoked stage — the tick never
+    // re-checks perfectClearStageIds.
+    const secondSave = baseSave({ ...save.player, name: 'Revoked', perfectClearStageIds: [] })
+
+    expect(restoreGameSession(playerStore, gameManager, secondSave).status).toBe('ok')
+
+    expect(playerStore.$state.autoFarmStage).toBeNull()
+    expect(gameManager.stageManager.get()).toBeNull()
+
+    vi.setSystemTime(new Date('2026-09-04T10:05:00Z'))
+    gameManager.tickOps.update(0.1)
+
+    expect(gameManager.getBattleRewardSummary().spiritStone).toBe(0)
+  })
+
+  it('same-stage re-restore with a MISSING cycle time drops the inert lease (combat unblocked)', () => {
+    const { playerStore, gameManager, save } = harness()
+
+    expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
+    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+
+    // Shape-valid payload: perfectClearSeconds validates only PRESENT
+    // entries — a missing key passes shape checks but can never complete
+    // a cycle. Keeping the lease would block manual stages inertly.
+    const secondPlayer = { ...save.player, name: 'NoCycle', perfectClearSeconds: {} }
+
+    expect(restoreGameSession(playerStore, gameManager, baseSave(secondPlayer)).status).toBe('ok')
+
+    expect(playerStore.$state.autoFarmStage).toBeNull()
+    expect(gameManager.stageManager.get()).toBeNull()
+    expect(gameManager.turnBattleOps.startStage(playerStore.$state, COMBAT_STAGE)).toBe(true)
+  })
 })

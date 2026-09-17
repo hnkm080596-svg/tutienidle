@@ -87,6 +87,19 @@ describe('GameManager — auto-farm start/stop exclusivity', () => {
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(false)
   })
 
+  it('startAutoFarm fail khi stage Hoàn Mỹ nhưng KHÔNG có cycle time hợp lệ', () => {
+    // Same eligibility contract as reconcile (Mission B audit round 3):
+    // an armed farm with no usable perfectClearSeconds can never pay —
+    // arming it would hold the single StageManager slot inert and block
+    // manual combat. Both entry points share resolveValidAutoFarmStage.
+    const { gameManager, player } = harness()
+    delete player.perfectClearSeconds[FARM_STAGE.id]
+
+    expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(false)
+    expect(player.autoFarmStage).toBeNull()
+    expect(gameManager.stageManager.get()).toBeNull()
+  })
+
   it('stopAutoFarm clear autoFarmStage + giải phóng StageManager slot', () => {
     const { gameManager, player } = harness()
 
