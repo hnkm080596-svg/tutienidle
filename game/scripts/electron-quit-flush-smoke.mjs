@@ -195,9 +195,12 @@ try {
   console.log('[smoke] baseline save: name=%s lastSavedAt=%s', baseline?.player?.name, baseline?.player?.lastSavedAt)
 
   // Mutate LIVE state (not localStorage) so only the quit-flush write can
-  // carry it to disk: Pinia reachable through the mounted Vue app.
-  const sentinelCultivation = 54321
-  const mutated = await win1.evaluate((cultivation) => {
+  // carry it to disk: Pinia reachable through the mounted Vue app. The
+  // sentinel is `name` — NOT an accrued field: a per-tick authority like
+  // addCultivation() would normalize a tampered cultivation value before
+  // the flush save runs.
+  const sentinelName = 'SmokeBotFlush'
+  const mutated = await win1.evaluate((name) => {
     const el = document.getElementById('app')
     const app = el?.__vue_app__
     const provides = app?._context?.provides
@@ -207,9 +210,9 @@ try {
       .find((v) => v && typeof v === 'object' && v._s instanceof Map)
     const store = pinia?._s?.get('player')
     if (!store) return 'no-store'
-    store.$state.cultivation = cultivation
+    store.$state.name = name
     return 'ok'
-  }, sentinelCultivation)
+  }, sentinelName)
   console.log('[smoke] live-state mutation:', mutated)
 
   const preClose = await readSave(win1)
@@ -232,18 +235,20 @@ try {
   if (after === null) {
     fail('no guest save after relaunch')
   } else {
-    if (after.player?.name !== 'SmokeBot') fail(`player.name mismatch: ${after.player?.name}`)
     if (!(after.player?.lastSavedAt > preClose.player.lastSavedAt)) {
       fail(`lastSavedAt did not advance past pre-close read (${after.player?.lastSavedAt} vs ${preClose.player.lastSavedAt}) — the quit-flush was not the last writer`)
     }
-    if (mutated === 'ok' && after.player?.cultivation !== sentinelCultivation) {
-      fail(`cultivation sentinel not persisted: ${after.player?.cultivation} !== ${sentinelCultivation}`)
+    if (mutated === 'ok' && after.player?.name !== sentinelName) {
+      fail(`name sentinel not persisted: ${after.player?.name} !== ${sentinelName}`)
     }
-    console.log('[smoke] relaunch save: name=%s cultivation=%s lastSavedAt=%s', after?.player?.name, after?.player?.cultivation, after?.player?.lastSavedAt)
+    console.log('[smoke] relaunch save: name=%s lastSavedAt=%s', after?.player?.name, after?.player?.lastSavedAt)
   }
 
-  // Durability end-to-end: guest re-auth restores INTO the game.
+  // Durability end-to-end: guest re-auth restores INTO the game. The
+  // boot path re-runs restore + presentation on cold caches — give the
+  // home mount more room than the creation-screen default.
   await win2.getByTestId('auth-guest-button').click()
+  await win2.locator('.game-root').waitFor({ state: 'visible', timeout: 60_000 })
   await enterHome(win2)
   console.log('[smoke] relaunch boot restored into game home')
 
