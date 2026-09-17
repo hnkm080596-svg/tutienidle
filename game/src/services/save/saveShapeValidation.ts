@@ -223,14 +223,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     validateStringEntries(selectedTalentIds, 'player.selectedTalentIds', issues)
   }
 
-  const unlockedRealmEnhancements = requireArray(player, 'unlockedRealmEnhancements', 'player', issues)
-
-  if (unlockedRealmEnhancements) {
-    validateStringEntries(unlockedRealmEnhancements, 'player.unlockedRealmEnhancements', issues)
-  }
-
   requireBoolean(player, 'hasSeenTutorial', 'player', issues)
-  requireBoolean(player, 'isCultivating', 'player', issues)
   requireNonNegativeNumber(player, 'autoWorkerCapacity', 'player', issues)
   requireNonNegativeNumber(player, 'totalCultivationGained', 'player', issues)
   requireNonNegativeNumber(player, 'bossKillCount', 'player', issues)

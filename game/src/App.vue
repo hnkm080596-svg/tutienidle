@@ -449,15 +449,13 @@ function tick() {
     // Đang trong trận thì không cộng tu vi — 2 việc loại trừ nhau.
     // Tầm Bảo (gather, trước là "Thu Thập") không bị ảnh hưởng: nó tự
     // tính tiến độ qua startedAt/collect(), không phụ thuộc vào nhánh
-    // này. Tu vi vẫn tăng cả trong combat; isCultivating là trạng thái kinh tế
-    // (luôn bật), còn event cultivation_changed chỉ điều khiển pose hình ảnh.
+    // này. Tu vi vẫn tăng cả trong combat; event cultivation_changed chỉ
+    // điều khiển pose hình ảnh.
     const battleBeforeAuto = gameManager.getTurnBattle()
     const isFighting = battleBeforeAuto !== null && isBattleInProgress(battleBeforeAuto.state)
 
     // Cultivation progresses alongside combat. Fighting only controls the
     // scene pose; it no longer suspends cultivation gains.
-    player.isCultivating = true
-
     if (isFighting !== wasFighting) {
       gameManager.eventBus.emit('cultivation_changed', {
         isCultivating: isCultivationPoseActive(isFighting),

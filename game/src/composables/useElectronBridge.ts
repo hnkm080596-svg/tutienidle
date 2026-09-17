@@ -17,7 +17,7 @@ import type { CombatClockBridge } from '../presentation/clock/MainProcessClockSo
 // lý do gián đoạn (throttle, minimize, OS sleep...); core KHÔNG phụ thuộc
 // event này để catch-up đúng (xem GameManager.updateBattleFixedStep()).
 // KHÔNG nối event này vào OfflineProgressSystem — hệ thống đó chỉ chạy 1
-// lần lúc player.load() (app khởi động lại), không dành cho gián đoạn
+// lần lúc boot load (app khởi động lại), không dành cho gián đoạn
 // giữa phiên.
 export interface ElectronBridgeAPI {
   isElectron: true

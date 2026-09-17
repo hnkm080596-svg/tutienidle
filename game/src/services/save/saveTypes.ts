@@ -54,7 +54,7 @@ export interface FormationStackSave {
 // Ignore Resistance/Ailment Resist & Potency, tag-hierarchy Increased)
 // + hệ thống Tâm Pháp 3 tầng (Tu Luyện/Chiến Đấu/Phá Cảnh — Technique
 // đổi hẳn shape sang discriminated union, xem core/technique/Technique.ts).
-// PlayerData thêm totalMonstersKilled/unlockedRealmEnhancements. Save
+// PlayerData thêm totalMonstersKilled. Save
 // cũ (version <6) KHÔNG tương thích, không viết migration — cùng lý do
 // version 5, save cũ tự động bị coi như không tồn tại.
 // version 7: MASTER SPEC Economy Phase 4 — thêm Building (Farm/Mine/
@@ -98,10 +98,8 @@ export interface FormationStackSave {
 // core/equipment/EquipmentSystem.ts's forge()/refine()). Equipment
 // template (đăng ký lúc bootstrap, không nằm trong save) mất
 // `fixedAffixes`, thêm `forgeCost`.
-// version 16: Thám Hiểm rework — player: PlayerData thêm
-// isCultivating (cổng thủ công tu luyện, xem stores/player.ts's
-// toggleCultivating()). Save cũ (version <16) KHÔNG tương thích,
-// không viết migration — cùng lý do các version trước.
+// version 16: Thám Hiểm rework — save cũ (version <16) KHÔNG tương
+// thích, không viết migration — cùng lý do các version trước.
 // version 17: Naming-principles pass ("nguyen li dat ten") —
 // equipment: EquipmentInstance[]'s `rarity` đổi hẳn value set — 5 bậc
 // Ngũ Phẩm mới (hoang_pham/huyen_pham/dia_pham/thien_pham/tien_pham,

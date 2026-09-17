@@ -1607,7 +1607,6 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
 
   it.each([
     'selectedTalentIds',
-    'unlockedRealmEnhancements',
     'purchasedNodeIds',
     'completedStageIds',
     'perfectClearStageIds',
@@ -1708,7 +1707,6 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
 
   it.each([
     'hasSeenTutorial',
-    'isCultivating',
     'autoWorkerCapacity',
     'totalCultivationGained',
     'bossKillCount',

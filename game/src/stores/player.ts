@@ -11,7 +11,7 @@ import {
 
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
-import { buildGameSave, computeRestoreIdentity, loadGame, type GameSave } from '../services/save/SaveSystem'
+import { buildGameSave, computeRestoreIdentity, type GameSave } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
@@ -154,7 +154,8 @@ export const usePlayerStore = defineStore('player', {
     // 'cultivation_speed' của thiên phú đã chọn (2026-08-27). Các nguồn
     // buff/tâm pháp/trang bị vẫn KHÔNG có đường thay đổi tốc độ tu luyện.
     // `cultivationPerSecond` là snapshot được LƯU vào save, dùng để tính
-    // tiến độ ngoại tuyến lúc load (xem player.load()). Trả về lượng tu
+    // tiến độ ngoại tuyến lúc load (boot path: useAppLifecycle →
+    // CloudSaveCoordinator.load → restoreFromSave). Trả về lượng tu
     // vi THẬT vừa cộng được (sau khi đã chặn ở "required", xem
     // addCultivation()).
     cultivate(deltaSeconds: number): number {
@@ -265,19 +266,6 @@ export const usePlayerStore = defineStore('player', {
       ]
     },
 
-    // true nếu MỚI đánh dấu (chưa từng unlock trước đó) — dùng để
-    // chống cộng trùng hiệu ứng gắn passive khi đột phá đại cảnh giới
-    // (xem composables/useBreakthrough.ts).
-    markRealmEnhancementUnlocked(key: string): boolean {
-      if (this.unlockedRealmEnhancements.includes(key)) {
-        return false
-      }
-
-      this.unlockedRealmEnhancements.push(key)
-
-      return true
-    },
-
     // Nhận gameManager từ App.vue thay vì tự giữ instance trong
     // store — GameManager không phải reactive state của Vue (xem
     // ghi chú trong GameManager.ts/App.vue), store chỉ pass-through.
@@ -293,22 +281,6 @@ export const usePlayerStore = defineStore('player', {
       // cannot handle Proxy objects at any nesting depth). Callers just
       // pass the state through.
       return cloudSaveCoordinator.save(buildGameSave(this.$state, gameManager))
-    },
-
-    // Chỉ merge phần PlayerData vào store — phần còn lại của save
-    // (skill/technique/inventory/exploration) trả nguyên trong
-    // `save` để App.vue tự gọi gameManager.saveOps.restoreFromSave(), vì
-    // store không nên biết về GameManager.
-    load() {
-      const outcome = loadGame()
-
-      if (outcome.status !== 'ok') {
-        return outcome
-      }
-
-      const offline = this.restoreFromSave(outcome.save)
-
-      return { ...outcome, offline }
     },
 
     restoreFromSave(save: GameSave) {
