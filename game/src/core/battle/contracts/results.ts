@@ -1,20 +1,20 @@
-// contracts/results.ts — result taxonomy LOCKED (contract §50-53, review r2):
+// contracts/results.ts -- result taxonomy LOCKED (contract sec.50-53, review r2):
 //   'resolved'  = committed, typed payload attached
 //   'skipped'   = normal runtime invalidation (dead target, stale state,
-//                 insufficient resource) — typed reason required
-//   'failed'    = RESERVED — kept in the union per spec §52 but NO v1
+//                 insufficient resource) -- typed reason required
+//   'failed'    = RESERVED -- kept in the union per spec sec.52 but NO v1
 //                 producer may emit it (review r2: no concrete semantic
 //                 exists yet; an application roll failure is
 //                 'resolved' + result.applied:false, not 'failed').
-//                 A producer emitting 'failed' fails tests — add a
+//                 A producer emitting 'failed' fails tests -- add a
 //                 semantic first.
 //   STRUCTURAL  = missing port / unknown definition / malformed op ->
 //                 NEVER a result. Dev+test: throw. Broken engine wiring is
-//                 not a combat outcome (§50).
+//                 not a combat outcome (sec.50).
 //
 // NOTE: an ApplyBuffOperation whose application roll fails returns
-// {status:'resolved', result:{applied:false}} — the op executed fine; the
-// BUFF result is the authority on success (contract §17).
+// {status:'resolved', result:{applied:false}} -- the op executed fine; the
+// BUFF result is the authority on success (contract sec.17).
 // insufficient_resource -> 'skipped' (target state invalidation), not
 // 'failed'.
 
@@ -32,16 +32,16 @@ export type CombatOperationResultReason =
 
 export interface CombatOperationResultBase {
   operationId: CombatOperationId
-  status: CombatOperationResultStatus // 'failed' reserved — see header
+  status: CombatOperationResultStatus // 'failed' reserved -- see header
   reason?: CombatOperationResultReason
 }
 
 // ---------------------------------------------------------------------------
-// Result-side buff contract types — pinned here so the union compiles; the
+// Result-side buff contract types -- pinned here so the union compiles; the
 // buff megaplan implements them verbatim.
 // ---------------------------------------------------------------------------
 
-/** Canonical result (spec §17). Authoritative — consumers do not infer
+/** Canonical result (spec sec.17). Authoritative -- consumers do not infer
     application success by querying afterward. */
 export interface ApplyBuffResult {
   applied: boolean
@@ -61,7 +61,7 @@ export interface StacksResult {
   stacksAfter: number
 }
 
-/** Buff spec §37 — if stacks reach zero, removal reason = 'consumed'. */
+/** Buff spec sec.37 -- if stacks reach zero, removal reason = 'consumed'. */
 export interface ConsumeStacksResult {
   consumed: number
   remaining: number
@@ -75,7 +75,7 @@ export interface HealResult {
 }
 
 // ---------------------------------------------------------------------------
-// Result union — richer than {status} (review: the trace must reconstruct
+// Result union -- richer than {status} (review: the trace must reconstruct
 // mutations).
 // ---------------------------------------------------------------------------
 

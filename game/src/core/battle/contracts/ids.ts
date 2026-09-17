@@ -1,8 +1,8 @@
-// contracts/ids.ts — branded string aliases (type-level only).
+// contracts/ids.ts -- branded string aliases (type-level only).
 //
 // Plain string aliases: uniqueness is enforced by the scheduler at enqueue
-// time (contract §13), not by the type system. Sibling systems never
-// redefine these — import them.
+// time (contract sec.13), not by the type system. Sibling systems never
+// redefine these -- import them.
 
 export type CombatEntityId = string
 export type BuffDefinitionId = string

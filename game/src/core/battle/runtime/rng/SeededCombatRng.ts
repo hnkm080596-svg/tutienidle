@@ -1,7 +1,7 @@
 import type { CombatRng } from '../../contracts/rng'
 
 /**
- * SeededCombatRng — mulberry32, a tiny deterministic 32-bit PRNG.
+ * SeededCombatRng -- mulberry32, a tiny deterministic 32-bit PRNG.
  *
  * Algorithm (per roll):
  *   state = (state + 0x6D2B79F5) mod 2^32         // Weyl-sequence step
@@ -11,7 +11,7 @@ import type { CombatRng } from '../../contracts/rng'
  *   out   = ((t ^ (t >>> 14)) >>> 0) / 2^32       // -> [0, 1)
  *
  * Same seed -> identical sequence. This MUST stay bit-identical to
- * `mulberry32` in core/battle/SeededRandom.ts — the M4 reroute swaps the
+ * `mulberry32` in core/battle/SeededRandom.ts -- the M4 reroute swaps the
  * legacy cycle `() => number` for this class and the roll stream must not
  * shift. The implementation is duplicated here on purpose: runtime/ keeps
  * its dependency surface to contracts/ only.
@@ -35,7 +35,7 @@ export class SeededCombatRng implements CombatRng {
 
   rollChance(chance: number): boolean {
     // Consumes exactly ONE roll even when the outcome is forced
-    // (chance <= 0 / >= 1): legacy `rng() < chance` parity — skipping the
+    // (chance <= 0 / >= 1): legacy `rng() < chance` parity -- skipping the
     // roll would shift every subsequent consumer of the stream.
     return this.roll() < chance
   }

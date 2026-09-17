@@ -1,5 +1,5 @@
-// contracts/periodic.ts — typed periodic requests (review r3 BLOCKER 3:
-// canonicalized to the Buff Final Spec shape — damageProfile +
+// contracts/periodic.ts -- typed periodic requests (review r3 BLOCKER 3:
+// canonicalized to the Buff Final Spec shape -- damageProfile +
 // coefficient + crit/miss, NOT `rawPower`). Buff resolves lifecycle/stack
 // semantics (stack scaling already folded into `coefficient`;
 // `stackCount` rides along only if the profile needs it); DamageSystem
@@ -19,7 +19,7 @@ export interface BuffPeriodicDamageRequest {
   targetId: CombatEntityId
   element?: ElementType | 'physical'
   damageProfile: string
-  /** Stack-scaled effective coefficient — NOT raw damage. */
+  /** Stack-scaled effective coefficient -- NOT raw damage. */
   coefficient: number
   hitCount: number
   canCrit: boolean
@@ -37,7 +37,7 @@ export interface BuffPeriodicHealRequest {
   amount: number
 }
 
-/** The CONTRACT shape — a bundle of typed requests committed by a
+/** The CONTRACT shape -- a bundle of typed requests committed by a
     periodic trigger. NOT the buff spec's same-named resolution-record
     interface (the contract supersedes; the buff plan reconciles its own
     naming later). */

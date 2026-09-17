@@ -1,12 +1,12 @@
-// contracts/operations.ts — the discriminated union IS the runtime
+// contracts/operations.ts -- the discriminated union IS the runtime
 // contract. `type` is inseparable from `payload` (review: no
 // {type:'heal', payload:damagePayload}).
 //
-// NO top-level sourceId on ResolvedCombatOperation — origin.sourceId is
+// NO top-level sourceId on ResolvedCombatOperation -- origin.sourceId is
 // the single canonical source (review r2 HIGH 3: op.sourceId /
 // op.origin.sourceId / payload.sourceId would be three mutable copies).
 //
-// No path-specific primitives (CON-23): the vocabulary is generic (§5).
+// No path-specific primitives (CON-23): the vocabulary is generic (sec.5).
 
 import type { ElementType } from '../../element/ElementType'
 
@@ -15,7 +15,7 @@ import type { CombatOperationOrigin } from './origin'
 import type { BuffInstanceSelector } from './selectors'
 
 // ---------------------------------------------------------------------------
-// Reaction eligibility (contract §14) — runtime metadata on an application,
+// Reaction eligibility (contract sec.14) -- runtime metadata on an application,
 // NOT part of BuffDefinition. Same buff may be applied by skill / reaction /
 // proc / script with different eligibility.
 // ---------------------------------------------------------------------------
@@ -23,11 +23,11 @@ import type { BuffInstanceSelector } from './selectors'
 export type ReactionEligibility = 'eligible' | 'suppressed'
 
 // ---------------------------------------------------------------------------
-// Buff request-side contract types (spec §15 + buff spec §29-33).
+// Buff request-side contract types (spec sec.15 + buff spec sec.29-33).
 // ---------------------------------------------------------------------------
 
-/** Authority port input (spec §15). Application reason is derived from
-    `origin.kind` — it must not be independently authored with a
+/** Authority port input (spec sec.15). Application reason is derived from
+    `origin.kind` -- it must not be independently authored with a
     contradictory value. */
 export interface ApplyBuffRequest {
   definitionId: BuffDefinitionId
@@ -40,7 +40,7 @@ export interface ApplyBuffRequest {
   origin: CombatOperationOrigin
 }
 
-/** BuffModifier channel vocabulary (buff spec §30). No path-specific
+/** BuffModifier channel vocabulary (buff spec sec.30). No path-specific
     channels. */
 export type BuffModifierChannel =
   | 'potency'
@@ -58,7 +58,7 @@ export type BuffModifierLifetime =
   | { type: 'battle' }
   | { type: 'explicit' }
 
-/** The buff-spec BuffModifier shape as a contract alias (buff spec §29). */
+/** The buff-spec BuffModifier shape as a contract alias (buff spec sec.29). */
 export interface BuffModifierPayload {
   id: string
   appliedBy?: CombatEntityId
@@ -82,7 +82,7 @@ export type BuffRemovalReason =
   | 'scripted'
 
 // ---------------------------------------------------------------------------
-// Operation union (contract §5). Each member is self-contained: `type`
+// Operation union (contract sec.5). Each member is self-contained: `type`
 // discriminates, `payload` is typed per member.
 // ---------------------------------------------------------------------------
 
@@ -109,10 +109,10 @@ export interface DealDamageOperation {
   payload: {
     targetId: CombatEntityId
     element?: ElementType | 'physical'
-    /** Intent-level profile — DamageSystem resolves formula/mitigation/crit
+    /** Intent-level profile -- DamageSystem resolves formula/mitigation/crit
         channel from profile+origin, never the executor. */
     damageProfile: string
-    /** Authored coefficient — NOT final damage. DamageSystem still applies
+    /** Authored coefficient -- NOT final damage. DamageSystem still applies
         stats/scaling/profile/mitigation/crit. */
     coefficient: number
     hitCount: number
@@ -126,16 +126,16 @@ export interface DealDamageOperation {
 export interface HealOperation {
   type: 'heal'
   payload: { targetId: CombatEntityId; amount: number } // always concrete (R-C7)
-  // review r4 HIGH 3: no capFractionOfHealTargetMaxHp — the only consumer
+  // review r4 HIGH 3: no capFractionOfHealTargetMaxHp -- the only consumer
   // (Xuyen Tho) caps the heal RATIO at resolution time, not maxHp at execute
   // time (spec: heal = 5% x D of damage dealt, cap 25% = the ratio's own cap).
 }
 
-// Review r2 HIGH 3 — payload omits sourceId/origin: BOTH come from the op's
+// Review r2 HIGH 3 -- payload omits sourceId/origin: BOTH come from the op's
 // origin envelope (single canonical source). The executor composes the full
 // ApplyBuffRequest at dispatch: { ...payload, sourceId: op.origin.sourceId,
 // origin: op.origin }. ApplyBuffRequest (the authority port input) keeps its
-// §15 shape unchanged.
+// sec.15 shape unchanged.
 export type ApplyBuffRequestPayload = Omit<ApplyBuffRequest, 'sourceId' | 'origin'>
 
 export interface ApplyBuffOperation {
@@ -218,7 +218,7 @@ export interface ApplyShieldOperation {
 }
 
 // ---------------------------------------------------------------------------
-// Resolved operation — the intersection means `type:'heal'` can NEVER carry
+// Resolved operation -- the intersection means `type:'heal'` can NEVER carry
 // a damage payload.
 // ---------------------------------------------------------------------------
 

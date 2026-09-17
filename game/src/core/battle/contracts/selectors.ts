@@ -1,4 +1,4 @@
-// contracts/selectors.ts — BuffInstanceSelector discriminated union.
+// contracts/selectors.ts -- BuffInstanceSelector discriminated union.
 // NO optional soup: each member carries exactly the fields its resolution
 // strategy needs.
 
@@ -25,8 +25,8 @@ function requireStringField(value: unknown, field: string, kind: string): void {
   }
 }
 
-/** Runtime guard for untrusted input — validates the BuffInstanceSelector
-    discriminated union. Structural failure: throws (contract §50), never
+/** Runtime guard for untrusted input -- validates the BuffInstanceSelector
+    discriminated union. Structural failure: throws (contract sec.50), never
     a silent pass. */
 export function assertValidSelector(
   selector: unknown,

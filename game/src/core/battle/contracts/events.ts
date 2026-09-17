@@ -1,19 +1,19 @@
-// contracts/events.ts — event identity vs sequence vs causality are
+// contracts/events.ts -- event identity vs sequence vs causality are
 // SEPARATE authorities (review r2/r3/r4).
 //
-// Producers emit ENVELOPE-FREE payloads (`CombatEventPayload` — no
+// Producers emit ENVELOPE-FREE payloads (`CombatEventPayload` -- no
 // eventId/causation/combatSequence at all); the scoped CombatEventSink
 // mints `eventId` = `evt.${scopeId}.${counter++}` + the causation id
-// (review r4 MEDIUM 3 — no per-authority ordinal bookkeeping). The
+// (review r4 MEDIUM 3 -- no per-authority ordinal bookkeeping). The
 // scheduler stamps only `combatSequence` at enqueueEvent and dedups on
-// the producer eventId there — the SINGLE dedup point (r4 HIGH 1).
+// the producer eventId there -- the SINGLE dedup point (r4 HIGH 1).
 //
 // Causality: `causationOperationId` (authority-emitted) or
-// `causationEventId` (handler-emitted) gives the trace an explicit edge —
+// `causationEventId` (handler-emitted) gives the trace an explicit edge --
 // never parse eventIds.
 //
 // CLOSED unions (review r3 MEDIUM): TS type aliases cannot be
-// declaration-merged — sibling plans add members by EDITING this file,
+// declaration-merged -- sibling plans add members by EDITING this file,
 // not by augmenting.
 
 import type { ElementType } from '../../element/ElementType'
@@ -34,7 +34,7 @@ export interface CombatEventBase {
   eventId: CombatEventId // sink-minted `evt.${scopeId}.${n}` (see sink.ts)
   causationOperationId?: CombatOperationId // set by an op-scoped sink
   causationEventId?: CombatEventId // set by an event-scoped sink
-  combatSequence: number // scheduler-stamped — sole allocator
+  combatSequence: number // scheduler-stamped -- sole allocator
 }
 
 export interface ElementalApplicationCommitted extends CombatEventBase {
@@ -52,7 +52,7 @@ export interface ElementalApplicationCommitted extends CombatEventBase {
   origin: CombatOperationOrigin
 }
 
-/** Spec §18 — a failed application commits nothing; BuffSystem may emit
+/** Spec sec.18 -- a failed application commits nothing; BuffSystem may emit
     this for log/debug. */
 export interface BuffApplicationFailedEvent extends CombatEventBase {
   type: 'buff_application_failed'
@@ -69,12 +69,12 @@ export interface BuffApplicationFailedEvent extends CombatEventBase {
 // scheduler's built-in handler converts each request 1:1 into
 // deal_damage/heal ops (`periodic.${eventId}.${i}` ids) settled in the
 // same barrier. The SAME event is emitted by buff lifecycle ticks via
-// lctx.events — one lane for op-triggered AND lifecycle periodic
+// lctx.events -- one lane for op-triggered AND lifecycle periodic
 // resolution. Executor stays a pure router (it never sees the requests).
 //
 // NO `origin: CombatOperationOrigin` on the event (r5 BLOCKER 2): a
 // lifecycle tick is not an operation and one event can carry requests
-// from MANY different sourceIds — provenance lives on each request. The
+// from MANY different sourceIds -- provenance lives on each request. The
 // built-in handler mints each emitted op's origin itself:
 //   {kind:'buff_periodic', originId:`${req.instanceId}:${req.periodicId}`,
 //    sourceId:req.sourceId, rootActionId:event.rootActionId,
@@ -94,7 +94,7 @@ export interface CombatSettlementFaultEvent extends CombatEventBase {
   traceDigest: string
 }
 
-/** What authorities/handlers emit — envelope-free. */
+/** What authorities/handlers emit -- envelope-free. */
 export type CombatEventPayload =
   | Omit<
       ElementalApplicationCommitted,
@@ -110,7 +110,7 @@ export type CombatEventPayload =
     >
 
 /** What the sink hands the scheduler. */
-// NOT CombatSettlementFaultEvent — faults are OUT-OF-BAND diagnostics
+// NOT CombatSettlementFaultEvent -- faults are OUT-OF-BAND diagnostics
 // (review r3 HIGH 6): a halted scheduler cannot drain its own fault
 // event. Faults go to trace.recordFault + diagnosticSink, never the
 // gameplay queue.
@@ -119,7 +119,7 @@ export type PendingCombatEvent =
   | Omit<BuffApplicationFailedEvent, 'combatSequence'>
   | Omit<PeriodicRequestsCommitted, 'combatSequence'>
 
-// PendingCombatEvent / CombatEventPayload are CLOSED unions — sibling
+// PendingCombatEvent / CombatEventPayload are CLOSED unions -- sibling
 // plans add members by editing this file in their own missions (reaction
 // adds ReactionResolvedEvent/ReactionSkippedEvent; buff adds
 // BuffApplied/BuffStacksChanged/...).

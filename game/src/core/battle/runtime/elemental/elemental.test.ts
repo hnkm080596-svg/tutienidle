@@ -5,7 +5,7 @@ import type { ElementType } from '../../../element/ElementType'
 import type { BuffDefinitionId } from '../../contracts/ids'
 import { createElementalStateRegistry } from './ElementalStateRegistryImpl'
 
-// Fixture ids — contract §19 locked baseline, used for shape testing only.
+// Fixture ids -- contract sec.19 locked baseline, used for shape testing only.
 const BASELINE: Record<ElementType, BuffDefinitionId> = {
   wood: 'doc_can',
   fire: 'hoa_an',

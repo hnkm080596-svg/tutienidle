@@ -1,10 +1,10 @@
-// contracts/elemental.ts — ElementalStateRegistry interface (contract
-// §19). Reaction does not treat every elemental buff as canonical
-// reaction state — this registry is the shared element <-> definitionId
+// contracts/elemental.ts -- ElementalStateRegistry interface (contract
+// sec.19). Reaction does not treat every elemental buff as canonical
+// reaction state -- this registry is the shared element <-> definitionId
 // authority. Interface only; the validating factory lives in
 // runtime/elemental/.
 //
-// Locked baseline (contract §19):
+// Locked baseline (contract sec.19):
 //   fire  -> hoa_an
 //   water -> han_tuc
 //   wood  -> doc_can

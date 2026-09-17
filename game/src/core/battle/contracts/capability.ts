@@ -1,5 +1,5 @@
-// contracts/capability.ts — narrow read port for entity capability flags
-// (contract §24: reaction capability is runtime metadata, not a buff
+// contracts/capability.ts -- narrow read port for entity capability flags
+// (contract sec.24: reaction capability is runtime metadata, not a buff
 // field).
 
 import type { CombatEntityId } from './ids'

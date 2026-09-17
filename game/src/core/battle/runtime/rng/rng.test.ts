@@ -49,14 +49,14 @@ describe('SeededCombatRng', () => {
   it('rollChance consumes exactly one roll even at chance <= 0 / >= 1', () => {
     // THE regression guard: legacy `rng() < chance` always consumed one
     // roll. An implementation that skips the roll at the 0/1 boundaries
-    // shifts every subsequent consumer of the stream — the mixed calls
+    // shifts every subsequent consumer of the stream -- the mixed calls
     // below must stay in lockstep with a pure roll() stream on the same
     // seed.
     const seed = 4242
     const mixed = new SeededCombatRng(seed)
     const pure = new SeededCombatRng(seed)
 
-    pure.roll() // stream position 0 — consumed on the mixed side below
+    pure.roll() // stream position 0 -- consumed on the mixed side below
     expect(mixed.rollChance(0)).toBe(false) // forced false
     pure.roll() // position 1
     expect(mixed.rollChance(1)).toBe(true) // forced true

@@ -143,7 +143,7 @@ describe('CombatOperation union', () => {
     ])
   })
 
-  it('type owns payload — narrowing exposes the member payload', () => {
+  it('type owns payload -- narrowing exposes the member payload', () => {
     const op: ResolvedCombatOperation = DAMAGE_OP
 
     if (op.type !== 'deal_damage') {
@@ -155,12 +155,12 @@ describe('CombatOperation union', () => {
   })
 
   it('rejects a mismatched payload at the type level', () => {
-    // @ts-expect-error — 'heal' can never carry a deal_damage payload
+    // @ts-expect-error -- 'heal' can never carry a deal_damage payload
     const bad: CombatOperation = { type: 'heal', payload: { targetId: 'e', damageProfile: 'x', coefficient: 1, hitCount: 1, canCrit: false, canMiss: false } }
     void bad
   })
 
-  it('apply_buff payload omits sourceId — the origin envelope is canonical', () => {
+  it('apply_buff payload omits sourceId -- the origin envelope is canonical', () => {
     const op: ApplyBuffOperation = {
       type: 'apply_buff',
       payload: {
@@ -173,12 +173,12 @@ describe('CombatOperation union', () => {
     }
     expect(op.payload.targetId).toBe('entity.b')
 
-    // @ts-expect-error — payload omits sourceId; origin.sourceId is the single canonical source (r2 HIGH 3)
+    // @ts-expect-error -- payload omits sourceId; origin.sourceId is the single canonical source (r2 HIGH 3)
     const bad: ApplyBuffOperation = { type: 'apply_buff', payload: { definitionId: 'd', sourceId: 'e1', targetId: 'e2', stacks: 1, baseChance: 1, reactionEligibility: 'eligible' } }
     void bad
   })
 
-  it('BuffModifierLifetime covers all 7 spec members — incl. rounds/battle/explicit', () => {
+  it('BuffModifierLifetime covers all 7 spec members -- incl. rounds/battle/explicit', () => {
     const lifetimes: BuffModifierLifetime[] = [
       { type: 'buff_lifetime' },
       { type: 'uses', remaining: 1 },
@@ -221,7 +221,7 @@ describe('CombatOperation union', () => {
   it('ResolvedCombatOperation has no top-level sourceId', () => {
     const op: ResolvedCombatOperation = DAMAGE_OP
 
-    // @ts-expect-error — sourceId lives only on origin (r2 HIGH 3)
+    // @ts-expect-error -- sourceId lives only on origin (r2 HIGH 3)
     const leaked: unknown = op.sourceId
     expect(leaked).toBeUndefined()
     expect(op.origin.sourceId).toBe('entity.a')
@@ -278,11 +278,11 @@ describe('BuffInstanceSelector', () => {
   })
 
   it('rejects {} / partial identity / unknown kinds at the type level', () => {
-    // @ts-expect-error — empty object is not a selector
+    // @ts-expect-error -- empty object is not a selector
     const empty: BuffInstanceSelector = {}
-    // @ts-expect-error — identity requires sourceId AND targetId
+    // @ts-expect-error -- identity requires sourceId AND targetId
     const partial: BuffInstanceSelector = { kind: 'identity', definitionId: 'd', sourceId: 'a' }
-    // @ts-expect-error — unknown kind discriminant
+    // @ts-expect-error -- unknown kind discriminant
     const bogus: BuffInstanceSelector = { kind: 'bogus', instanceId: 'i' }
     void empty
     void partial

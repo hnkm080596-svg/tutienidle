@@ -2,8 +2,8 @@ import type { CombatCapabilityQuery } from '../../contracts/capability'
 import type { CombatEntityId } from '../../contracts/ids'
 
 /**
- * StaticCapabilityQuery — immutable per-battle snapshot of entity
- * capability flags (contract §24). Built once by the composition root;
+ * StaticCapabilityQuery -- immutable per-battle snapshot of entity
+ * capability flags (contract sec.24). Built once by the composition root;
  * `has` is a pure lookup with no side effects, keeping CombatRng-free
  * deterministic gating.
  */

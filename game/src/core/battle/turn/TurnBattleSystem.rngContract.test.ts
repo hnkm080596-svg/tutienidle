@@ -6,20 +6,20 @@ import { SeededCombatRng } from '../runtime/rng/SeededCombatRng'
 import { defineEnemy } from '../../enemy/Enemy'
 import type { Stage } from '../../stage/Stage'
 
-// Combat-contract M4 — the composition-root RNG reroute contract.
+// Combat-contract M4 -- the composition-root RNG reroute contract.
 //
 // mintCycleRng mints ONE CombatRng per battle cycle and every consumer
 // (stage enemy picks, spawn placement, dynamic-basic providers, engine
 // rolls, combat formulas) reads that single typed stream. This test pins
 // the ONE-stream property end-to-end through GameManager: a seeded
 // CombatRng injected via setBattleRngFactory must reproduce a full
-// battle byte-for-byte — any consumer that kept a parallel
+// battle byte-for-byte -- any consumer that kept a parallel
 // `() => number` mint or skipped/duplicated a roll would desync the
 // stream and diverge the run.
 //
 // The enemy is effectively immortal so no kill ever reaches the loot
 // rolls (economy randomness deliberately stays on Math.random, outside
-// the session boundary — spec C3).
+// the session boundary -- spec C3).
 
 const RNG_TANK = defineEnemy({
   id: 'rngc_tank',
@@ -102,7 +102,7 @@ function runSeededBattle(seed: number) {
       turns: battle?.totalTurnsElapsed ?? 0,
       playerHp: battle?.players[0]?.entity.currentHp,
       enemies: battle?.enemies.map((enemy) => ({
-        // Entity ids embed a crypto UUID — identity minting is outside
+        // Entity ids embed a crypto UUID -- identity minting is outside
         // the session-RNG contract; compare the template prefix only.
         id: enemy.entity.id.replace(/_[0-9a-f-]+$/, ''),
         x: enemy.entity.x,
@@ -122,7 +122,7 @@ describe('CombatRng composition-root contract (M4)', () => {
     const run2 = runSeededBattle(42)
 
     expect(run1).toEqual(run2)
-    // The log must contain real combat (turns resolved, damage dealt) —
+    // The log must contain real combat (turns resolved, damage dealt) --
     // an empty battle would trivialize the parity check.
     expect(run1.some((entry) => (entry as { turns?: number }).turns! > 0)).toBe(true)
   })

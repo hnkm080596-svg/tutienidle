@@ -1,4 +1,4 @@
-// contracts/sink.ts — SCOPED sink (review r4 MEDIUM 3): producers emit
+// contracts/sink.ts -- SCOPED sink (review r4 MEDIUM 3): producers emit
 // envelope-free `CombatEventPayload`; the sink implementation is created
 // per-scope by the scheduler and mints `eventId`
 // (`evt.${scopeId}.${counter++}`) + the causation id itself (op scope ->
