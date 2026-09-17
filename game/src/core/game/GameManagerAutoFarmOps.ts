@@ -5,7 +5,7 @@ import type { PlayerData } from '../player/Player'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 import type { Stage } from '../stage/Stage'
-import type { StageManager } from '../stage/StageManager'
+import type { ActiveStage, StageManager } from '../stage/StageManager'
 import type { TemplateRegistry } from './TemplateRegistry'
 import type { BattleLootSystem, RewardPendingEnemy } from './BattleLootSystem'
 import type { StageWaveSystem } from './StageWaveSystem'
@@ -34,6 +34,15 @@ function isValidCycleSeconds(cycleSeconds: number | undefined): cycleSeconds is 
  * Public access: `gameManager.turnBattleOps.autoFarmOps.*`.
  */
 export class GameManagerAutoFarmOps {
+  /**
+   * The ActiveStage object THIS authority acquired — tracked by object
+   * identity, not stageId: a slot re-acquired by a foreign owner for the
+   * same stage is a different object and must neither be released by the
+   * farm nor satisfy the tick's lease check. Self-heals at reconcile when
+   * the slot no longer holds this object (external release path).
+   */
+  private farmLease: ActiveStage | null = null
+
   constructor(
     private readonly deps: {
       stageManager: StageManager
@@ -69,6 +78,7 @@ export class GameManagerAutoFarmOps {
       return false
     }
 
+    this.farmLease = this.deps.stageManager.get()
     player.autoFarmStage = { stageId, lastCheckedMs: Date.now() }
 
     return true
@@ -83,12 +93,13 @@ export class GameManagerAutoFarmOps {
 
     player.autoFarmStage = null
 
-    // Release only the lease THIS farm holds — if the slot were ever
-    // occupied by a different stage (a diverged-state bug), stopping the
-    // farm must not kill an unrelated battle's lease.
-    if (this.deps.stageManager.get()?.stageId === autoFarm.stageId) {
+    // Release only the lease object THIS farm acquired — a slot occupied
+    // by a foreign owner (even for the same stage) is never ours to stop.
+    if (this.farmLease !== null && this.deps.stageManager.get() === this.farmLease) {
       this.deps.stageManager.stop()
     }
+
+    this.farmLease = null
   }
 
   /**
@@ -102,14 +113,34 @@ export class GameManagerAutoFarmOps {
   reconcileAutoFarmRuntime(player: PlayerData): void {
     const autoFarm = player.autoFarmStage
 
+    // An external release path (stopRepeat on a stale battle reference)
+    // can free the slot while this marker still points at the dead
+    // ActiveStage — the marker is only meaningful while the slot still
+    // holds that exact object.
+    if (this.farmLease !== null && this.deps.stageManager.get() !== this.farmLease) {
+      this.farmLease = null
+    }
+
+    // A same-manager restore carrying a DIFFERENT payload leaves the
+    // previously-armed farm lease orphaned: persisted state swapped or
+    // removed the farm but the slot stays held, blocking manual stages
+    // forever (persisted authority says no farm, so nothing else can
+    // release it). Release only the lease this authority holds.
+    if (this.farmLease !== null && this.farmLease.stageId !== autoFarm?.stageId) {
+      this.deps.stageManager.stop()
+      this.farmLease = null
+    }
+
     if (!autoFarm) {
       return
     }
 
     // Idempotent: a second restore of a same-farm payload sees the slot
-    // already held by THIS farm stage — that IS the desired end state,
-    // not a conflict (start() returns false for any occupied slot).
-    if (this.deps.stageManager.get()?.stageId === autoFarm.stageId) {
+    // already held by THIS farm's matching lease — that IS the desired
+    // end state, not a conflict (start() returns false for any occupied
+    // slot). A foreign lease on the same stage is a different object and
+    // falls through to the fail-closed acquire below.
+    if (this.farmLease !== null) {
       return
     }
 
@@ -129,8 +160,13 @@ export class GameManagerAutoFarmOps {
     const stage = this.deps.stageTemplates.get(autoFarm.stageId)
 
     if (!stage || !this.deps.stageManager.start(stage)) {
+      // Slot held by a foreign owner (live manual battle mid-restore) or
+      // stage unresolvable — drop the persisted lease fail-closed.
       player.autoFarmStage = null
+      return
     }
+
+    this.farmLease = this.deps.stageManager.get()
   }
 
   /**
@@ -202,11 +238,17 @@ export class GameManagerAutoFarmOps {
       return
     }
 
-    // Fail-closed lease check (Mission B audit): persisted state and the
-    // runtime slot must agree before rewards mint. A farm ticking without
-    // its StageManager lease runs concurrent with a real battle that
-    // shares the same BattleLootSystem session.
-    if (this.deps.stageManager.get()?.stageId !== autoFarm.stageId) {
+    // Fail-closed lease check (Mission B audit): the slot must still hold
+    // THIS farm's lease object AND for the stage persisted — identity
+    // alone is not enough when a mid-restore failure leaves the old lease
+    // held while persisted state already moved to another stage; stageId
+    // alone is not ownership (a foreign owner re-acquiring the same stage
+    // must not satisfy the tick into its live battle session).
+    if (
+      this.farmLease === null ||
+      this.deps.stageManager.get() !== this.farmLease ||
+      this.farmLease.stageId !== autoFarm.stageId
+    ) {
       return
     }
 

@@ -141,3 +141,29 @@ A tampered save with `lastCheckedMs` far in the future yields negative `elapsedM
 
 - QA-B4 (mid-loop reward throw leaves anchor un-advanced) and QA-B5 (far-future `lastCheckedMs` stalls) remain Suspected/Low backlog items — the fail-closed tick narrows neither, both still bounded by the 24h cap.
 - The `deepAuditCandidate` mapper flag on this diff is addressed by the manual routing above plus the full `restoreGameSession`-seam integration tests; no unmapped-path risk remained after inspection.
+
+---
+
+# Addendum — external audit round 3 (mission-b-fix worktree)
+
+- Date: 2026-09-17
+- Trigger: external third-round review verdict REQUEST CHANGES — 1 Medium (B5 reconcile leaves a stale StageManager lease on a different-payload restore).
+- Verdict: finding Confirmed → repaired in this pass; a sharper sibling defect (foreign same-stage lease read as converged) found and repaired in the same seam.
+
+## QA-2026-09-17-B9: reconcile orphans/releases wrongly when a DIFFERENT payload restores over a held farm lease (Medium — CONFIRMED, repaired)
+
+- Invariant: persisted `autoFarmStage` and the `StageManager` slot must converge on every restore — no orphaned lease, no armed-but-unowned tick.
+- Pre-fix flow: `reconcileAutoFarmRuntime` returned early on `!autoFarm`, so a same-GameManager restore carrying a payload with `autoFarmStage: null` left the previously-armed farm's lease held forever — persisted authority said "no farm", the slot stayed blocked, and nothing could release it (`stopAutoFarm` early-returns on null persisted state). A payload farming a DIFFERENT stage fared no better: `start()` failed on the occupied slot and the imported farm was dropped while the old lease stayed. Both reachable via the supported repeated-restore contract (`restoreFromSave` re-runs fully for any non-identical payload — exercised by the replace/onceOnlySettle suites and reachable through boot retry).
+- Sibling defect found during this pass (same seam): a FOREIGN lease on the same stage satisfied the `stageId` converge-check — a manual battle holding stage X plus a restored payload farming X read as "converged", leaving the farm persisted-armed while `tickAutoFarm`'s own stageId check would pay into the live battle's shared `BattleLootSystem` session.
+- Fix — lease OWNERSHIP by object identity: `GameManagerAutoFarmOps` tracks `farmLease` — the exact `ActiveStage` object it acquired via `startAutoFarm`/`reconcileAutoFarmRuntime`. Identity (not stageId) cannot collide with a foreign re-acquire of the same stage.
+  - Reconcile self-heals a stale marker (slot no longer holds our object — external release path like `stopRepeat`), then releases a still-held lease whose stageId the restored payload no longer owns (no-farm or different-farm payload), then treats a surviving marker as converged, then validates + acquires fail-closed as before. A foreign lease is never released and never satisfies convergence.
+  - `stopAutoFarm` releases by identity (`get() === farmLease`) instead of stageId match — stopping a farm can never kill a foreign same-stage lease; the marker clears unconditionally.
+  - `tickAutoFarm` fails closed unless `get() === farmLease` — the farm pays only while holding ITS lease object, so an external release followed by a foreign same-stage acquire cannot mint rewards into a foreign session.
+  - `startAutoFarm` records the lease object on successful acquire.
+- Regression coverage (`GameManager.autoFarmRestore.test.ts`, all via the real `restoreGameSession` seam): farm → no-farm payload releases the slot (manual start then succeeds); farm A → farm B payload swaps the lease; foreign same-stage lease → imported farm drops fail-closed, foreign object untouched; external release + foreign same-stage acquire → tick pays nothing. Adversarial harness updated to a stateful slot mock + `armFarm` through the real `startAutoFarm` entry; the T1-12 anchor test now arms through `startAutoFarm` so its `tickDelta <= 1 cycle` assertion stays meaningful under the identity gate.
+- Residual (Low): a restore that throws mid-`saveOps.restoreFromSave` leaves the previous lease held while persisted was already replaced — the session is in the failed-restore path then (visible `rejected`/boot fail), and the retry converges. `hardReset` = `window.location.reload()` (fresh process) — no orphan path there.
+
+## Verification (this pass)
+
+- `npx vitest run` — autoFarmRestore (10), autoFarmAdversarial (7), autoFarmOffline (7), autoFarm (7), conformance (1), idleDrops (6): all green; the 4 new repro tests failed for the intended reason pre-fix.
+- Save/restore family (SaveSystem.*, GameManagerSaveRestore.*, useAppLifecycle): 432 tests green; `npm run type-check` clean.

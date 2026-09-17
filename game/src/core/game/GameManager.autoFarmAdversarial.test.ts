@@ -84,11 +84,24 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
 // perfectClearSeconds, so a malformed save carries the poison straight
 // into the tick loop.
 function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
+  // The slot mock reproduces real StageManager semantics: a ticking farm
+  // must hold the lease OBJECT it acquired (Mission B audit — identity,
+  // not stageId), so tests arm it through startAutoFarm rather than
+  // hand-setting player.autoFarmStage.
+  let active: { stageId: string } | null = null
+
   const deps = {
-    // The lease mirrors the persisted farm these tests arm — a ticking
-    // farm always holds its StageManager slot in production (Mission B
-    // audit: reconcileAutoFarmRuntime at restore + fail-closed tick).
-    stageManager: { get: () => ({ stageId: 'adv_stage' }), start: () => true, stop: () => {} },
+    stageManager: {
+      get: () => active,
+      start: (stage: { id: string }) => {
+        if (active !== null) return false
+        active = { stageId: stage.id }
+        return true
+      },
+      stop: () => {
+        active = null
+      },
+    },
     stageTemplates: { get: () => STAGE },
     battleLoot: {
       beginBattle: vi.fn(),
@@ -102,6 +115,16 @@ function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
   } as unknown as ConstructorParameters<typeof GameManagerAutoFarmOps>[0]
 
   return new GameManagerAutoFarmOps(deps)
+}
+
+// Arm the farm through the real entry point so the ops' lease marker
+// tracks the acquired slot object — then adjust lastCheckedMs for the
+// scenario under test.
+function armFarm(ops: GameManagerAutoFarmOps, player: ReturnType<typeof createDefaultPlayer>, lastCheckedMs: number) {
+  if (!ops.startAutoFarm(player, 'adv_stage')) {
+    throw new Error('armFarm: startAutoFarm refused — harness drift')
+  }
+  player.autoFarmStage!.lastCheckedMs = lastCheckedMs
 }
 
 describe('Adversarial — online auto-farm tick invariants', () => {
@@ -118,7 +141,7 @@ describe('Adversarial — online auto-farm tick invariants', () => {
     const player = createDefaultPlayer()
     player.perfectClearStageIds.push('adv_stage')
     player.perfectClearSeconds['adv_stage'] = 0
-    player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs: Date.now() - 60_000 }
+    armFarm(ops, player, Date.now() - 60_000)
 
     expect(() => ops.tickAutoFarm(player)).not.toThrow()
     expect(processDefeatedEnemies.mock.calls.length).toBe(0)
@@ -130,7 +153,7 @@ describe('Adversarial — online auto-farm tick invariants', () => {
     const player = createDefaultPlayer()
     player.perfectClearStageIds.push('adv_stage')
     player.perfectClearSeconds['adv_stage'] = NaN
-    player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs: Date.now() - 60_000 }
+    armFarm(ops, player, Date.now() - 60_000)
 
     ops.tickAutoFarm(player)
 
@@ -151,7 +174,7 @@ describe('Adversarial — corrupt lastCheckedMs bound (C1)', () => {
     player.perfectClearSeconds['adv_stage'] = 100 // cycle 50s
     // Corrupt save: epoch timestamp. Elapsed is ~55 years -> completedCycles
     // would be ~10^8 without the clamp (pre-fix: main-thread hang).
-    player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs: 1 }
+    armFarm(ops, player, 1)
 
     ops.tickAutoFarm(player)
 

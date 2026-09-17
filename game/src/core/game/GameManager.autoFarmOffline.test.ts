@@ -166,8 +166,12 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
         player.perfectClearStageIds.push('farm_stage')
         player.perfectClearSeconds['farm_stage'] = 100 // cycle = 50s
 
+        // Arm through the real entry point — the Mission B tick gate pays
+        // only while the ops' lease marker still owns the slot object.
+        expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, 'farm_stage')).toBe(true)
+
         // Corrupt save shape: epoch+1ms survives validation (finite, >= 0).
-        player.autoFarmStage = { stageId: 'farm_stage', lastCheckedMs: 1 }
+        player.autoFarmStage!.lastCheckedMs = 1
 
         // Cycle counter: getBattleRewardSummary().spiritStone aggregates reward
         // rolls without needing a material registry (same read as
