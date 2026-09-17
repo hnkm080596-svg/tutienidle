@@ -55,7 +55,7 @@
 - Create: `game/docs/architecture/2026-09-17-buff-inventory.md`
 
 - [ ] **Step 1 — Lock baseline:** `git rev-parse HEAD`.
-- [ ] **Step 2 — Verify contract prerequisites (BLOCKING):** `contracts/operations.ts` buff op subset + `BuffInstanceSelector`/`ApplyBuffRequest`/`ApplyBuffResult`/`ConsumeStacksResult`; `contracts/results.ts`; `contracts/events.ts` `ElementalApplicationCommitted`/`BuffApplicationFailedEvent`; `contracts/rng.ts` `CombatRng`; `contracts/elemental.ts`; `contracts/context.ts` `CombatAuthorityExecutionContext`; `scheduler/CombatOperationExecutor.ts` + `BuffAuthority` port (all methods take `ctx`); `CombatScheduler.enqueueEvent`/`enqueueAuthored`. Missing → BLOCKED.
+- [ ] **Step 2 — Verify contract prerequisites (BLOCKING):** `contracts/operations.ts` buff op subset + `BuffInstanceSelector`/`ApplyBuffRequest`/`ApplyBuffResult`/`ConsumeStacksResult`; `contracts/results.ts`; `contracts/events.ts` `ElementalApplicationCommitted`/`BuffApplicationFailedEvent`; `contracts/rng.ts` `CombatRng`; `contracts/elemental.ts`; `contracts/context.ts` `CombatAuthorityExecutionContext`; `runtime/scheduler/CombatOperationExecutor.ts` + `BuffAuthority` port (all methods take `ctx`); `CombatScheduler.enqueueEvent`/`enqueueAuthored`/`createLifecycleSink`. Missing → BLOCKED.
 - [ ] **Step 3 — BuffPool/BufSystem consumer census (drives M4):**
   - **Pools:** every `new BuffPool()` site — `TurnBattleParticipant.buffs` field decl (`TurnBattleSystem.ts` participants; `TurnBattleAdapter.ts` build), allies' `buffPool`, `player.persistentTimedEffects` pool owner (find in `GameManager*.ts`/`PlayerData`), `pendingGaugeDeltaDefinition` path (`:483`).
   - **Reads:** `getActiveModifiers` consumers (`liveStatModifiers` closure `:470`, `recomputeEffectiveStats`), `getStacks`/`getFromSource`/`getAllById`/`hasAny` call sites (skill conditions, `applySkillAilments`, detonate `dot` scan at `detonateDoT` impl, `consumesAilmentId` reads, UI `buffState` snapshot in `action_executed` payload → `BattleFloatingStatusBar`/`battleHUDStore`), CC queries `isStunned/isFrozen/isRooted` (`declareActorAction` CC check ~`:960+`), `clearCcEffects` (Bá Thể), proc rollers `rollOnHitEffects`/`rollReactiveTrigger` call sites.
@@ -273,7 +273,11 @@ export class BuffSystem {
   getActiveModifiers(holderId: CombatEntityId): StatModifier[]   // R-B5 — same StatModifier shape as legacy
 }
 
-// BuffLifecycleContext.ts — root-transaction context for non-op emissions
+// BuffLifecycleContext.ts — root-transaction context for non-op emissions.
+// `events` is built by `scheduler.createLifecycleSink(rootActionId)` — the
+// PUBLIC scheduler API for non-op roots (contract v5). Ordinals are
+// scheduler-owned per scopeId, so two sinks for the same rootActionId never
+// mint the same eventId.
 export interface BuffLifecycleContext {
   rootActionId: string        // e.g. `status.turn.35.player` — minted by the turn-lifecycle owner
   events: CombatEventSink     // LIFECYCLE-scoped sink — mints evt.${rootActionId}.${n}, no causationOperationId
@@ -415,7 +419,7 @@ resolvePeriodicDamage(def, instance, sourceStats, targetStatsSnapshot):
 | Today | After |
 |---|---|
 | `actor.buffs: BuffPool` per participant | `battleBuffs: BuffSystem` single; participant keeps `entity.id` only |
-| `new BuffSystem(actor.buffs).update(actor.entity, this.combat, registry, resolveSource, resolveSourceBuffs)` `:1110` | `const resolutions = buffs.onHolderTurnEnd(actor.id, lctx); scheduler.enqueueAuthored(periodicRequests→ops)` |
+| `new BuffSystem(actor.buffs).update(actor.entity, this.combat, registry, resolveSource, resolveSourceBuffs)` `:1110` | `buffs.onHolderTurnEnd(actor.id, lctx)` — emits `PeriodicRequestsCommitted` via `lctx.events` (`scheduler.createLifecycleSink`); the built-in handler converts requests → ops in the same barrier (contract v5 bridge) |
 | `applySkillAilments` loop `new BuffSystem(target.buffs).apply(def,...)` per stack `:2973` | ONE `ApplyBuffOperation{stacks}` through executor → buff2 `apply` handles stack math; `initiatesReactions` becomes the request's `reactionEligibility:'eligible'` (legacy `TurnReactionManager` still called after — R3 bridge, marked for seal-batch removal) |
 | `new BuffSystem(target.buffs).apply(def,...)` appliesBuffs lane `:1824` | same `ApplyBuffOperation` route, `reactionEligibility:'suppressed'` (appliesBuffs are not elemental applications today — verify per def `kind`) |
 | `BuffSystem.isStunned/isFrozen/isRooted(targetId)` CC checks | `buffs.hasActiveCc(holderId, targetId, 'stun')` query — same ARCH-009 targetId guard ported |
