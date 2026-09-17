@@ -38,7 +38,7 @@ const DAMAGE_OP: ResolvedCombatOperation = {
 }
 
 describe('CombatOperation union', () => {
-  it('discriminates all 16 members by type', () => {
+  it('discriminates all 19 members by type', () => {
     const ops: CombatOperation[] = [
       DAMAGE_OP,
       { type: 'heal', payload: { targetId: 'entity.a', amount: 25 } },

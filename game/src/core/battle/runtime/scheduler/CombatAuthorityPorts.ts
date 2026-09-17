@@ -1,7 +1,7 @@
 // CombatAuthorityPorts.ts -- intent-level inputs; the AUTHORITY resolves
-// formulas. EVERY method takes ctx (review r3 BLOCKER 1): authorities mint
-// eventIds + causationOperationId from ctx.operationId and emit via
-// ctx.events (the op-scoped CombatEventSink).
+// formulas. EVERY method takes ctx (review r3 BLOCKER 1): authorities emit
+// envelope-free payloads via ctx.events -- the op-scoped CombatEventSink
+// mints eventIds + causationOperationId itself (r4 MEDIUM 3).
 //
 // Ports are OPTIONAL per domain -- an op routed to an unwired port is a
 // STRUCTURAL failure (contract sec.50): the executor throws

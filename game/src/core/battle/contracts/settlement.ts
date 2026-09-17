@@ -59,7 +59,10 @@ export type DeferredOperation = {
 
 /** Typed read-only access to prior in-batch results -- the runner
     materializes DeferredOperations against THIS, never a raw array and
-    never scheduler state. */
+    never scheduler state. `getOperation` resolves the producing op so
+    materialization can inspect its declared fields (healTarget etc.) --
+    absent for result-only records that never had an operation. */
 export interface BatchResultContext {
   get(operationId: CombatOperationId): CombatOperationResult | undefined
+  getOperation(operationId: CombatOperationId): ResolvedCombatOperation | undefined
 }
