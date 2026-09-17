@@ -70,7 +70,7 @@ test.describe('Combat overlay layout (T8.3)', () => {
       // slot bottom-center cũ (class `combat-scene-overlay__build-hud`, đã
       // XÓA) vào CombatSkillDockPanel.vue (`.combat-skill-dock-panel`), dock
       // neo MÉP PHẢI. Vùng HUD canvas trái-dưới: chỉ content-có-chứa (con
-      // dock thực — CombatBuildHud) mới cần né, còn container tự nó đã ở
+      // dock thực — TurnCombatSkillBar) mới cần né, còn container tự nó đã ở
       // bên phải nên không đè trái-dưới — đo con đầu tiên thay vì container.
       //
       // Layout fix (2026-09-06) — dock KHÔNG còn full-height (top:0) như

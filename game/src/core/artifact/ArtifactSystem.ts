@@ -116,7 +116,7 @@ function buildArtifactDamage(element: ElementType | undefined, multiplier: numbe
   }
 }
 
-/** Export cho UI (ArtifactCombatPresentation.ts) — cùng công thức tick dùng nội bộ. */
+/** Shared cycle formula — used internally by the parked artifact tick. */
 export function getArtifactCycleSeconds(runtime: Battle['artifactRuntime']): number {
   if (!runtime) {
     return ARTIFACT_BASE_CYCLE_SECONDS

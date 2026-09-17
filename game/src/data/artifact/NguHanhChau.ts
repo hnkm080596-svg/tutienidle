@@ -9,6 +9,9 @@ export const NGU_HANH_CHAU_DEFINITION: ArtifactDefinition = {
   name: 'Ngũ Hành Châu',
   cultivationPathId: 'phap_tu',
   unlockRealmId: 'foundation_establishment',
+  // Milestone descriptions advertise combat effects; the combat presentation
+  // chain was removed (Mission G) and the runtime is parked — the copy is
+  // retained as design data until the reimagine, not rendered.
   paths: {
     attack: {
       path: 'attack',

@@ -21,7 +21,6 @@
 // đo `offsetWidth` (chiều ngang), không phụ thuộc `top`.
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import TurnCombatSkillBar from './hud/TurnCombatSkillBar.vue'
-import CombatBuildHud from './hud/CombatBuildHud.vue'
 import { clearSkillDockWidth, publishSkillDockWidth } from '@/presentation/geometry/combatInsets'
 
 const rootRef = ref<HTMLElement | null>(null)
@@ -54,7 +53,6 @@ onBeforeUnmount(() => {
 
 <template>
   <aside ref="rootRef" class="combat-skill-dock-panel dark-drawer-fill">
-    <CombatBuildHud />
     <TurnCombatSkillBar />
   </aside>
 </template>
