@@ -25,7 +25,7 @@ import type {
   CombatEventId,
   CombatOperationId,
 } from './ids'
-import type { ReactionEligibility } from './operations'
+import type { BuffRemovalReason, ReactionEligibility } from './operations'
 import type { CombatOperationOrigin } from './origin'
 import type { BuffPeriodicDamageRequest, BuffPeriodicHealRequest } from './periodic'
 import type {
@@ -160,6 +160,94 @@ export interface CombatSettlementFaultEvent extends CombatEventBase {
   traceDigest: string
 }
 
+// ---------------------------------------------------------------------------
+// Buff events (buff-plan amendment 5 -- spec sec.45; the buff-side fact IS
+// PeriodicRequestsCommitted for periodic outcomes -- no
+// buff_periodic_resolved.amount exists; damage/heal outcomes live on the
+// deal_damage/heal op results, owned by Damage/Heal authorities).
+// ---------------------------------------------------------------------------
+
+export interface BuffAppliedEvent extends CombatEventBase {
+  type: 'buff_applied'
+  /** ctx.origin.rootActionId (op) or lctx.rootActionId (lifecycle) --
+      lifecycle-scope emissions carry no causation; the root rides the
+      event so the trace can parent it (same lane as
+      PeriodicRequestsCommitted). */
+  rootActionId: string
+  instanceId: BuffInstanceId
+  definitionId: BuffDefinitionId
+  sourceId: CombatEntityId
+  targetId: CombatEntityId
+  /** true = the apply created the instance; false = reapply onto it. */
+  created: boolean
+}
+
+export interface BuffStacksChangedEvent extends CombatEventBase {
+  type: 'buff_stacks_changed'
+  /** ctx.origin.rootActionId (op) or lctx.rootActionId (lifecycle) --
+      lifecycle-scope emissions carry no causation; the root rides the
+      event so the trace can parent it (same lane as
+      PeriodicRequestsCommitted). */
+  rootActionId: string
+  instanceId: BuffInstanceId
+  stacksBefore: number
+  stacksAfter: number
+  addedStacks: number
+}
+
+export interface BuffDurationChangedEvent extends CombatEventBase {
+  type: 'buff_duration_changed'
+  /** ctx.origin.rootActionId (op) or lctx.rootActionId (lifecycle) --
+      lifecycle-scope emissions carry no causation; the root rides the
+      event so the trace can parent it (same lane as
+      PeriodicRequestsCommitted). */
+  rootActionId: string
+  instanceId: BuffInstanceId
+  durationBefore: number
+  durationAfter: number
+}
+
+export interface BuffModifierAddedEvent extends CombatEventBase {
+  type: 'buff_modifier_added'
+  /** ctx.origin.rootActionId (op) or lctx.rootActionId (lifecycle) --
+      lifecycle-scope emissions carry no causation; the root rides the
+      event so the trace can parent it (same lane as
+      PeriodicRequestsCommitted). */
+  rootActionId: string
+  instanceId: BuffInstanceId
+  modifierId: string
+  /** The runtime ENTRY identity (r5 HIGH 1) -- same authored modifierId,
+      different generations are distinguishable in the trace. */
+  modifierRuntimeId: string
+}
+
+export interface BuffModifierRemovedEvent extends CombatEventBase {
+  type: 'buff_modifier_removed'
+  /** ctx.origin.rootActionId (op) or lctx.rootActionId (lifecycle) --
+      lifecycle-scope emissions carry no causation; the root rides the
+      event so the trace can parent it (same lane as
+      PeriodicRequestsCommitted). */
+  rootActionId: string
+  instanceId: BuffInstanceId
+  modifierId: string
+  modifierRuntimeId: string
+}
+
+export interface BuffRemovedEvent extends CombatEventBase {
+  type: 'buff_removed'
+  /** ctx.origin.rootActionId (op) or lctx.rootActionId (lifecycle) --
+      lifecycle-scope emissions carry no causation; the root rides the
+      event so the trace can parent it (same lane as
+      PeriodicRequestsCommitted). */
+  rootActionId: string
+  instanceId: BuffInstanceId
+  definitionId: BuffDefinitionId
+  sourceId: CombatEntityId
+  targetId: CombatEntityId
+  reason: BuffRemovalReason
+  stacksAtRemoval: number
+}
+
 /** What authorities/handlers emit -- envelope-free. */
 export type CombatEventPayload =
   | Omit<
@@ -174,6 +262,30 @@ export type CombatEventPayload =
       PeriodicRequestsCommitted,
       'eventId' | 'causationOperationId' | 'causationEventId' | 'combatSequence'
     >
+  | Omit<
+      BuffAppliedEvent,
+      'eventId' | 'causationOperationId' | 'causationEventId' | 'combatSequence'
+    >
+  | Omit<
+      BuffStacksChangedEvent,
+      'eventId' | 'causationOperationId' | 'causationEventId' | 'combatSequence'
+    >
+  | Omit<
+      BuffDurationChangedEvent,
+      'eventId' | 'causationOperationId' | 'causationEventId' | 'combatSequence'
+    >
+  | Omit<
+      BuffModifierAddedEvent,
+      'eventId' | 'causationOperationId' | 'causationEventId' | 'combatSequence'
+    >
+  | Omit<
+      BuffModifierRemovedEvent,
+      'eventId' | 'causationOperationId' | 'causationEventId' | 'combatSequence'
+    >
+  | Omit<
+      BuffRemovedEvent,
+      'eventId' | 'causationOperationId' | 'causationEventId' | 'combatSequence'
+    >
 
 /** What the sink hands the scheduler. */
 // NOT CombatSettlementFaultEvent -- faults are OUT-OF-BAND diagnostics
@@ -184,6 +296,12 @@ export type PendingCombatEvent =
   | Omit<ElementalApplicationCommitted, 'combatSequence'>
   | Omit<BuffApplicationFailedEvent, 'combatSequence'>
   | Omit<PeriodicRequestsCommitted, 'combatSequence'>
+  | Omit<BuffAppliedEvent, 'combatSequence'>
+  | Omit<BuffStacksChangedEvent, 'combatSequence'>
+  | Omit<BuffDurationChangedEvent, 'combatSequence'>
+  | Omit<BuffModifierAddedEvent, 'combatSequence'>
+  | Omit<BuffModifierRemovedEvent, 'combatSequence'>
+  | Omit<BuffRemovedEvent, 'combatSequence'>
 
 // PendingCombatEvent / CombatEventPayload are CLOSED unions -- sibling
 // plans add members by editing this file in their own missions (reaction
@@ -195,3 +313,9 @@ export type CombatEvent =
   | PeriodicRequestsCommitted
   | PeriodicOperationSettled // v7.3 -- scheduler-originated (above)
   | CombatSettlementFaultEvent // stamped for trace, diagnostic lane only
+  | BuffAppliedEvent
+  | BuffStacksChangedEvent
+  | BuffDurationChangedEvent
+  | BuffModifierAddedEvent
+  | BuffModifierRemovedEvent
+  | BuffRemovedEvent

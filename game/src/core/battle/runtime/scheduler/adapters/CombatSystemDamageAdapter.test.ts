@@ -106,6 +106,7 @@ function makeHarness(entities: CombatEntity[]): Harness {
       ...origin,
     },
     events: { emit: (e) => emitted.push(e) },
+    combatSequence: 0,
   })
 
   return {

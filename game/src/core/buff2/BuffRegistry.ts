@@ -301,7 +301,8 @@ export class BuffRegistry implements BuffDefinitionLookup {
     } else if (p.type === 'heal') {
       requireFiniteNumber(defId, p.amount, `periodic '${p.id}'.amount`)
     } else {
-      fail(defId, `periodic '${p.id}': unknown type '${String((p as { type?: unknown }).type)}'`)
+      const malformed = p as { id?: unknown; type?: unknown }
+      fail(defId, `periodic '${String(malformed.id)}': unknown type '${String(malformed.type)}'`)
     }
   }
 

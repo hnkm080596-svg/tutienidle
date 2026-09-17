@@ -19,4 +19,9 @@ export interface BuffModifier extends BuffModifierPayload {
   readonly modifierRuntimeId: string
   /** Owning instance (reverse link for diagnostics/trace). */
   readonly instanceId: BuffInstanceId
+  /** Runtime reservation (spec addendum v1.2): while set, this entry is
+      reserved for the named in-flight periodic request and folds into
+      NOTHING -- cleared when PeriodicOperationSettled finalizes the mark
+      (resolved -> consume a use; otherwise -> release). */
+  pendingRequestId?: string
 }

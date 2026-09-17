@@ -13,6 +13,19 @@ import type {
   BuffInstanceId,
   CombatEntityId,
 } from '../../battle/contracts/ids'
+import type { CombatAuthorityExecutionContext } from '../../battle/contracts/context'
+import type { CombatOperationOrigin } from '../../battle/contracts/origin'
+import type { CombatEventPayload, PendingCombatEvent } from '../../battle/contracts/events'
+import type { CombatRng } from '../../battle/contracts/rng'
+import type { ElementalStateRegistry } from '../../battle/contracts/elemental'
+import type { ElementType } from '../../element/ElementType'
+import { ApplicationResolver } from '../ApplicationResolver'
+import {
+  BuffSystem,
+  type BuffEntityReadPort,
+  type BuffStatReadPort,
+  type DamageProfileSnapshotPort,
+} from '../BuffSystem'
 import {
   createCapabilityValidatorRegistry,
   type CapabilityValidatorRegistry,
@@ -126,6 +139,145 @@ export function makeBuffWorld(opts?: {
         lastAppliedSequence: 0,
         ...overrides,
       } as BuffInstance
+    },
+  }
+}
+
+// ---------------------------------------------------------------------------
+// BuffSystem-level world (M2+): authority + ports + scripted ctx.
+// ---------------------------------------------------------------------------
+
+/** Deterministic CombatRng spy -- queue rolls explicitly; every
+    rollChance consumes exactly one queued value (defaults to 0 so an
+    unqueued rollChance(>0) succeeds deterministically). */
+export interface TestRng extends CombatRng {
+  /** Rolls consumed so far (stream-parity assertions). */
+  readonly rolls: number
+  queue(...values: number[]): void
+}
+
+export function makeTestRng(defaultRoll = 0): TestRng {
+  const queued: number[] = []
+  let rolls = 0
+  return {
+    get rolls() {
+      return rolls
+    },
+    queue(...values: number[]) {
+      queued.push(...values)
+    },
+    roll() {
+      rolls += 1
+      return queued.shift() ?? defaultRoll
+    },
+    rollChance(chance: number) {
+      return this.roll() < chance
+    },
+  }
+}
+
+export interface CollectedEvents {
+  readonly events: readonly PendingCombatEvent[]
+  ofType<T extends PendingCombatEvent['type']>(
+    type: T,
+  ): Extract<PendingCombatEvent, { type: T }>[]
+  clear(): void
+}
+
+export function makeCollectingSink(): CollectedEvents & { emit(e: CombatEventPayload): void } {
+  const events: PendingCombatEvent[] = []
+  return {
+    events,
+    emit(e) {
+      events.push(e as PendingCombatEvent)
+    },
+    ofType(type) {
+      return events.filter((e) => e.type === type) as never[]
+    },
+    clear() {
+      events.length = 0
+    },
+  }
+}
+
+export interface BuffSystemWorld extends BuffWorld {
+  system: BuffSystem
+  rng: TestRng
+  stats: Map<CombatEntityId, NonNullable<ReturnType<BuffStatReadPort['getStats']>>>
+  alive: Set<CombatEntityId>
+  snapshots: Map<string, Record<string, number>>
+  elementalMap: Map<BuffDefinitionId, ElementType>
+  sink: ReturnType<typeof makeCollectingSink>
+  /** Scripted op-scope ctx -- events land in world.sink; combatSequence
+      mints from a per-world counter. */
+  makeCtx(origin?: Partial<CombatOperationOrigin>): CombatAuthorityExecutionContext
+}
+
+export function makeBuffSystemWorld(opts?: {
+  battleId?: string
+  damageProfiles?: BuffDamageProfileCatalog
+  elementalMap?: Map<BuffDefinitionId, ElementType>
+}): BuffSystemWorld {
+  const world = makeBuffWorld(opts)
+  const rng = makeTestRng()
+  const stats: BuffSystemWorld['stats'] = new Map()
+  const alive = new Set<CombatEntityId>(Object.values(TEST_ENTITIES))
+  const snapshots: BuffSystemWorld['snapshots'] = new Map()
+  const elementalMap = opts?.elementalMap ?? new Map<BuffDefinitionId, ElementType>()
+  const sink = makeCollectingSink()
+  let seq = 0
+
+  const statsPort: BuffStatReadPort = { getStats: (id) => stats.get(id) }
+  const entitiesPort: BuffEntityReadPort = { isAlive: (id) => alive.has(id) }
+  const snapshotsPort: DamageProfileSnapshotPort = {
+    capture: (profileId, sourceId, fields) => {
+      const key = `${profileId}:${sourceId}`
+      const authored = snapshots.get(key) ?? {}
+      const out: Record<string, number> = {}
+      for (const f of fields) out[f] = authored[f] ?? 0
+      return out
+    },
+  }
+  const elemental: ElementalStateRegistry = {
+    getDefinitionId: (element) => {
+      for (const [defId, el] of elementalMap) if (el === element) return defId
+      return `test_an.${element}` as BuffDefinitionId
+    },
+    getElement: (defId) => elementalMap.get(defId) ?? null,
+  }
+
+  const system = new BuffSystem(
+    world.store,
+    world.registry,
+    new ApplicationResolver(rng),
+    statsPort,
+    entitiesPort,
+    snapshotsPort,
+    elemental,
+  )
+
+  return {
+    ...world,
+    system,
+    rng,
+    stats,
+    alive,
+    snapshots,
+    elementalMap,
+    sink,
+    makeCtx(origin = {}) {
+      return {
+        operationId: `op.test.${++seq}`,
+        origin: {
+          kind: 'skill',
+          originId: 'test_op',
+          sourceId: TEST_ENTITIES.sourceA,
+          rootActionId: 'root.test.1',
+          ...origin,
+        },
+        events: sink,
+        combatSequence: ++seq * 100,
+      }
     },
   }
 }
