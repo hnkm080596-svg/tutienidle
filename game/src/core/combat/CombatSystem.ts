@@ -146,6 +146,21 @@ export class CombatSystem {
     return this.applyDirectDamage(target, amount, attacker.id, reason)
   }
 
+  /**
+   * Combat-contract M3 -- the REACTION damage channel for the
+   * DamageAuthority adapter. Flat direct damage through the vitals
+   * authority with reason 'reaction': NO hit-layer modifiers
+   * (finalDamagePercent/finalDamageReductionPercent do not apply --
+   * unlike applyModifiedDirectDamage), NO DoT economy
+   * (dotResistancePercent/dotRecovery never see it), and no crit/miss
+   * roll exists on this path (canCrit:false is honored by
+   * construction). Mitigation/resistance is the producing profile's
+   * decision -- `amount` arrives already resolved.
+   */
+  applyReactionDamage(target: CombatEntity, amount: number, sourceId: string) {
+    return this.applyDirectDamage(target, amount, sourceId, 'reaction')
+  }
+
   applyHealing(target: CombatEntity, amount: number, sourceId: string, reason: VitalsChangeReason = 'healing') {
     return this.vitals.applyHealing(target, amount, reason, sourceId)
   }
@@ -585,6 +600,11 @@ export class CombatSystem {
     }
 
     this.killIfDead(target, sourceId)
+
+    // Combat-contract M3 -- returns the HP actually removed (post
+    // dotResistance, post 0-clamp) so the DamageAuthority adapter can
+    // report hpDamage without re-deriving the clamp.
+    return actualHpDamage
   }
 
   /**

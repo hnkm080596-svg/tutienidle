@@ -141,6 +141,10 @@ const SEAM_ALLOWLIST_FILES: readonly string[] = [
   'core/skill/SkillSystem.ts',
   // The Tu mechanic wiring (TheEconomy / external ward).
   'core/battle/turn/TurnBattleSystem.ts',
+  // Combat-contract M3 resource adapter -- the ResourceAuthority port
+  // delegates 'the'-pool gains to TheEconomy's single clamp authority
+  // (grantThe); consumes mirror consumeResourceFor's direct write.
+  'core/battle/runtime/scheduler/adapters/EntityResourceAdapter.ts',
   // Save boundary validates module-owned slices (orb ids, way ownership).
   'services/save/saveShapeValidation.ts',
 ]
