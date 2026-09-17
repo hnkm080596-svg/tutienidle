@@ -83,6 +83,9 @@ export default defineConfig({
     environment: 'node',
     // Architecture/meta guards live under tests/ (kept out of app source);
     // e2e specs (*.spec.ts, Playwright) are unaffected.
-    include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
+    // tests/lab is assertion-light experiment sweeps (audit T7-61) — it has
+    // its own config (vitest.lab.config.mts, `npm run lab`) and is OUT of
+    // the default gate so committed experiments can't pass/fail the suite.
+    include: ['src/**/*.test.ts', 'tests/architecture/**/*.test.ts'],
   },
 })
