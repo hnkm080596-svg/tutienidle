@@ -1,5 +1,7 @@
 # Mission G — Dead Code & Type Hygiene Implementation Plan
 
+> **STATUS: MERGED** — `master @ fcd65c5c` (merge of `chore/cleanup`, 2026-09-17). P4 deep QA `PASS WITH EVIDENCE` at `docs/qa/2026-09-17-cleanup-mission-g-deep.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Delete confirmed dead code and legacy bridges (dev-stage rule: nothing to preserve), close the `as never`/`any` contract gaps, remove unreachable UI/state, and collapse the duplicated rules onto their single owners — without redesigning gameplay and without disturbing the parked artifact-combat runtime.
