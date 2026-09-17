@@ -140,3 +140,14 @@ Second independent review (3 adversarial passes) — verdict REQUEST CHANGES wit
 **Verification:** type-check clean; `npm run build` clean; full suite 5146 passed / 4 expected-fail; Playwright `tests/e2e/save-reload.spec.ts` — PASS on main checkout (real browser save → reload → boot → restore).
 
 **Remaining documented residuals:** element-level foreign keys in non-player slices (inert); TG-01 — the conformance fixpoint proves round-trip idempotency, not serializer completeness (per-field coverage still relies on dedicated tests like `assignedWorkers`).
+
+## External Final Audit Addendum (2026-09-17, post-Mission-G tree @ `0856c22d`)
+
+Independent external audit — verdict **PASS WITH GAPS — MISSION A CLOSED**. Zero P1/P2 confirmed; all prior blockers verified closed on the current tree (quest canonicalization, negative quest values, production `level=0`, orphan-site worker leak, `deleteSave` false-success, `loadGame` storage exceptions, `restoreBackup` ordering, decompose backlog replay + far-future deadline, `assignedWorkers` round-trip, `combatInputMode` composite signature, storage failure contracts, player whitelist, A8 conformance).
+
+**Recorded backlog — not reopening the mission:**
+
+- **A-GAP-01 (Low, optional hardening):** alchemy/production semantic fields check finiteness only — `roomLevelAtStart` is not integer/≥1-enforced, `startedAtMs <= completesAtMs` not enforced. Runtime survives both (room-level clamped by formula, past deadline settles fast). If `validateGameSaveShape` is intended to promise post-`ok` semantic trust, this is a boundary gap.
+- **A-GAP-02 (Low, accepted):** `importSaveRaw` ordering handoff-marker → backup → save-write is intentional; marker is inert against a non-matching payload (`normalizedRaw` binding). Main save is safe; auxiliary marker may move on backup failure — transaction impurity accepted by QA.
+- **A-TG-01 (test gap — highest residual value):** the A8 conformance fixpoint (`saveA → validate → restore → saveB → toEqual`) proves serializer/validator/restore idempotency, NOT serializer completeness — a serializer that silently drops a field passes because the field is absent in both fixtures. Same bug class as `assignedWorkers`. Suggested fix: per-slice persisted-field manifest or sentinel fixtures per persistence-sensitive field.
+- **Architecture watch (not a finding):** `restoreGameSession` applies slices sequentially after preflight — a future throwing restore owner could leave partial mutation ("caught" ≠ "atomic"). No current valid payload reaches a post-preflight throw; remember the invariant if new restore owners are added.
