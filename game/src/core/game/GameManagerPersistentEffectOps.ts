@@ -5,8 +5,6 @@ import type { BuffDefinition } from '../buff/BuffDefinition'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import type { EquipmentBag } from '../equipment/EquipmentBag'
-import type { EquipmentSlotManager } from '../equipment/EquipmentSlotManager'
-import { EQUIPMENT_SLOTS } from '../equipment/EquipmentSlotState'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import {
@@ -50,7 +48,6 @@ export class GameManagerPersistentEffectOps {
       techniqueManager: TechniqueManager
       nodeRegistry: NodeRegistry
       equipmentBag: EquipmentBag
-      equipmentSlotManager: EquipmentSlotManager
       materialRegistry: MaterialRegistry
       materialBag: MaterialBag
       getActivePlayer: () => PlayerData | undefined
@@ -268,13 +265,12 @@ export class GameManagerPersistentEffectOps {
   }
 
   /**
-   * ALL live modifiers of the player: timed effects + Phu/Tran sockets on
-   * equipped slots. Battle recompute calls this via the provider each
-   * tick - an effect expiring mid-fight simply drops out of the next
-   * recompute.
+   * ALL live modifiers of the player: timed effects. Battle recompute
+   * calls this via the provider each tick - an effect expiring mid-fight
+   * simply drops out of the next recompute.
    */
   getActiveRuntimeModifiers(player: PlayerData, now = Date.now()): StatModifier[] {
-    return [...this.getActiveTimedModifiers(player, now), ...this.getSlotModifiers()]
+    return this.getActiveTimedModifiers(player, now)
   }
 
   /**
@@ -386,34 +382,6 @@ export class GameManagerPersistentEffectOps {
     })
 
     return { ok: true }
-  }
-
-  /**
-   * SINGLE source aggregating the 2+2 Phu/Tran modifiers on slots that
-   * currently hold equipment (plan §7.2). Socket modifiers keep
-   * sourceId/sourceType stable for tooltip/debug tracing; they never go
-   * into the baseStats snapshot.
-   */
-  getSlotModifiers(): StatModifier[] {
-    const result: StatModifier[] = []
-
-    for (const slot of EQUIPMENT_SLOTS) {
-      if (!this.deps.equipmentBag.getEquippedInSlot(slot)) {
-        continue
-      }
-
-      const state = this.deps.equipmentSlotManager.get(slot)
-
-      if (state.socketedTalisman) {
-        result.push(...state.socketedTalisman.modifiers)
-      }
-
-      if (state.socketedFormation) {
-        result.push(...state.socketedFormation.modifiers)
-      }
-    }
-
-    return result
   }
 
   /**

@@ -156,8 +156,7 @@ export function buildEquipmentTooltip(
   ]
 
   const rarityAffixCap = ITEM_QUALITY_AFFIX_SLOTS[instance.quality]
-  const bonusAffixSlots = slotState?.bonusAffixSlots ?? 0
-  const affixCapacity = Math.min(GLOBAL_MAX_AFFIXES, rarityAffixCap.prefix + rarityAffixCap.suffix + bonusAffixSlots)
+  const affixCapacity = Math.min(GLOBAL_MAX_AFFIXES, rarityAffixCap.prefix + rarityAffixCap.suffix)
 
   const affixRows: TooltipStatRow[] = instance.affixes.map(rolled => {
     const affix = affixRegistry.get(rolled.affixId)

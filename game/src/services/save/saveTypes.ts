@@ -39,9 +39,8 @@ export interface FormationStackSave {
 // đang chạy đều mất khi reload. Manager nào lưu id thay vì full
 // object (materials/pills/talismans) đều resolve lại qua registry
 // tương ứng lúc restore — xem GameManager.restoreFromSave().
-// version 3: thêm formations (FormationBag) — socketedFormation
-// trên equipment instance tự động đi theo `equipment` sẵn có,
-// không cần field riêng.
+// version 3: thêm formations (FormationBag) — formation đi theo
+// `equipment` sẵn có, không cần field riêng.
 // version 4: thêm crafts (CraftingManager) — lượt craft Đan/Phù/
 // Trận đang chạy, nguyên liệu đã trừ nên phải lưu lại tiến độ,
 // không thì reload giữa chừng sẽ mất trắng nguyên liệu đã tiêu.
@@ -65,22 +64,19 @@ export interface FormationStackSave {
 // Trận/Yểm Phù chuyển từ EquipmentInstance sang EquipmentSlotState
 // (gắn theo SLOT, không theo item cụ thể — xem core/equipment/
 // EquipmentSlotState.ts), lưu equipmentSlots: EquipmentSlotState[].
-// EquipmentInstance trong save không còn 3 field enhanceLevel/
-// socketedFormation/bonusSubstatSlots. Save cũ (version <8) KHÔNG
-// tương thích, không viết migration — cùng lý do các version trước.
+// EquipmentInstance trong save không còn field enhanceLevel. Save cũ
+// (version <8) KHÔNG tương thích, không viết migration — cùng lý do các
+// version trước.
 // version 9: Core Loop Foundation checklist (Mục AFFIX/RARITY) —
 // EquipmentInstance đổi `substats: StatModifier[]` thành
 // `affixes: RolledAffix[]` (xem core/equipment/RolledAffix.ts) + thêm
 // field `rarity: EquipmentRarity` (xem core/equipment/EquipmentRarity.ts).
-// EquipmentSlotState đổi tên `bonusSubstatSlots` -> `bonusAffixSlots`
-// (cùng ý nghĩa).
 // version 10: Đột Phá Trúc Cơ (Phase 1) — xoá PlayerData.pillUsageCount
 // + Pill.usageLimit, thay bằng trần theo cảnh giới (RealmData.attributeCap,
 // xem PillSystem.canUse()).
 // version 11: Đột Phá Trúc Cơ (Phase 5) — thêm
 // PlayerData.highestFoundationAchieved (mục 16 spec `breakthrough`).
-// version 12: Home Hub (Phase 2) — thêm EquipmentSlotState.appliedTalismanIds
-// (badge Phù Viện, xem GameManager.applyTalisman()).
+// version 12: Home Hub (Phase 2).
 // version 13: Beta Phase 4 (Tutorial) — thêm PlayerData.hasSeenTutorial.
 // version 14: BUILDing spec (Building System rework) — ActiveCraft
 // (crafts: ActiveCraft[]) đổi field: thêm craftId bắt buộc (xem

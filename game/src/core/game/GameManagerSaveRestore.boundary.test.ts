@@ -129,8 +129,6 @@ const SAVED_SLOT_STATE: EquipmentSlotState = {
   slot: 'weapon',
   enhanceLevel: 5,
   enhanceFailStreak: 2,
-  bonusAffixSlots: 0,
-  appliedTalismanIds: [],
 }
 
 const FUTURE_JOB: AlchemyJobSave = {

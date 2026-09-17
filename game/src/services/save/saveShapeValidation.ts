@@ -1189,31 +1189,6 @@ function validateEquipmentSlotEntries(
       requireNonNegativeNumber(entry, 'enhanceFailStreak', `${path}[${i}]`, issues)
     }
 
-    // Socketed Phu/Tran items persist COPIES of their template
-    // StatModifier list — a stat key that is not a current StatType
-    // (legacy/retired) is an issue now; there is no rename path.
-    for (const key of ['socketedTalisman', 'socketedFormation'] as const) {
-      const item = entry[key]
-
-      if (!isObject(item) || !Array.isArray(item.modifiers)) {
-        continue
-      }
-
-      for (let j = 0; j < item.modifiers.length; j += 1) {
-        const modifier = item.modifiers[j]
-
-        if (
-          isObject(modifier) &&
-          (typeof modifier.stat !== 'string' || !STAT_TYPES.has(modifier.stat))
-        ) {
-          issues.push({
-            path: `${path}[${i}].${key}.modifiers[${j}].stat`,
-            message: 'phải là StatType hợp lệ',
-          })
-        }
-      }
-    }
-
     normalizedEntries.push(
       entry.enhanceFailStreak === undefined
         ? { ...entry, enhanceFailStreak: 0 }

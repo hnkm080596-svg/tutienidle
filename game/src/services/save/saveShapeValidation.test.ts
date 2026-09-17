@@ -842,7 +842,7 @@ describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/Na
     }
   })
 
-  it('rejects a legacy socketed modifier stat key in equipmentSlots', () => {
+  it('tolerates a legacy socketed payload on equipmentSlots — fields retired, ignored', () => {
     const save = validSave()
 
     save.equipmentSlots = [
@@ -855,22 +855,12 @@ describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/Na
           realmId: 'luyen_khi',
           modifiers: [
             { id: 'tran-1_a', sourceId: 'tran-1', sourceType: 'formation', stat: 'attack', flat: 5 },
-            { id: 'tran-1_b', sourceId: 'tran-1', sourceType: 'formation', stat: 'manaRegenPerTurn', flat: 1 },
           ],
         },
       },
     ]
 
-    const result = validateGameSaveShape(save)
-
-    expect(result.ok).toBe(false)
-    if (!result.ok) {
-      expect(
-        result.issues.some((issue) =>
-          issue.path.includes('socketedFormation.modifiers[0].stat'),
-        ),
-      ).toBe(true)
-    }
+    expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
   it.each([

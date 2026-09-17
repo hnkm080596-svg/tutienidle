@@ -554,7 +554,6 @@ export class GameManager {
       techniqueManager: this.techniqueManager,
       nodeRegistry: this.nodeRegistry,
       equipmentBag: this.equipmentBag,
-      equipmentSlotManager: this.equipmentSlotManager,
       materialRegistry: this.materialRegistry,
       materialBag: this.materialBag,
       // Deferred closures - turnBattleOps/activePlayer assigned later.
