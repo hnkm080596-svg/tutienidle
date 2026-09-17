@@ -1,5 +1,7 @@
 # Mission D — Worker Economy Authority Implementation Plan
 
+**STATUS: MERGED** (2026-09-17, merge `bfaa9dc6` → master)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** One workforce authority — workers are required fuel for all production; the manual `activeCycle` path is deleted end-to-end; the UI renders the domain's read model; realms above the beta scope clamp to the top supported territory tier; decompose never catch-up-bursts.

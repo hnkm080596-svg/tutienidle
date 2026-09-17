@@ -1,5 +1,7 @@
 # Mission E — Correctness & UX Batch Implementation Plan
 
+**STATUS: MERGED** (2026-09-17, merge `66fd042b` → master)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Land the independent confirmed defects — gameplay id mismatches, silent resource loss, tribulation correctness, stale UI, paid-preview honesty, raw-id leaks — as one batch of small, independently verifiable tasks.

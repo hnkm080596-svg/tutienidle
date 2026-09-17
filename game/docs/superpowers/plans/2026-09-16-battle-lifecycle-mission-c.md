@@ -1,5 +1,7 @@
 # Mission C — Battle Lifecycle Constitution Implementation Plan
 
+**STATUS: MERGED** (2026-09-17, merge `3a49c114` → master)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** One authority owns the battle lifecycle; a repeat cycle is provably a fresh battle; all combat rolls consume one injectable session RNG; cultivation-path integration goes through one interface; the verified skill-semantic bugs are fixed with regression tests.

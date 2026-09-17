@@ -1,0 +1,1789 @@
+# Buff System Reimagined — Final Architecture Specification
+
+Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
+Version: 1.0
+Compatibility requirement: None
+Migration requirement: None
+Primary reference implementation: Hỏa Ấn
+System owner: Buff System
+Architecture style: Breaking redesign / single authority / data-first
+
+> **Implementation notes (2026-09-17):**
+> - Đây là spec foundation của trilogy: "Ailment System" trong [hoa-an spec](./2026-09-17-hoa-an-ailment-system-spec.md) = BuffSystem này (ailment là `kind: 'ailment'`); buff operations trong [skill-definition spec](./2026-09-17-skill-definition-system-spec.md) map lên §65. Cả ba cùng PARKED.
+> - Problem list B01–B20 đã verify trên code hiện tại: `scaleBuffPotency`/`potencyAmplified` tồn tại (`BuffSystem.ts:36-47`), `damagePerTurn`/`damagePerSecond` snapshot lúc apply (`BuffSystem.ts:90-91`), `Math.random()` trong proc paths (`BuffSystem.ts:488,514`), runtime mutable `effects` (`BuffTypes.ts:220-221,313`).
+> - **Gap cần ruling trước implement:** spec không nhắc `TurnBuffSystem`/`TurnBuffPool` (turn-native authority hiện tại, R4) — "one canonical BuffSystem" phải absorb nó explicit; không nhắc `player.persistentTimedEffects` (Kiếp Thương 60s sống xuyên battle) — battle-scoped `onBattleEnd` clear không cover persistent buffs ngoài trận.
+> - Migration stance mâu thuẫn với skill spec: spec này cấm compat layer/dual-run (§73) trong khi skill spec §69 cho phép temporary adapter — cần unified migration ruling.
+
+## 1. Purpose
+
+Buff System là authority duy nhất của persistent combat state có lifecycle.
+
+Bao gồm:
+
+- Buff
+- Debuff
+- Ailment
+- Marker
+- Stack
+- Duration
+- Persistent modifier
+- Periodic status
+- Control-state presence
+- Persistent capability grants
+
+Buff System không phải authority của:
+
+- Damage formula
+- Healing formula
+- Skill execution
+- Targeting
+- Reaction rules
+- Proc logic
+- Path mechanics
+- Resource economy
+- Combat turn scheduling
+- Stat calculation
+- AI
+
+## 2. Problems Confirmed In Current Engine
+
+Các vấn đề hiện tại cần được loại bỏ thay vì vá tiếp.
+
+| ID | Problem | Severity |
+|---|---|---|
+| B01 | DoT resolve damage khi apply rồi lưu `damagePerTurn` | Critical |
+| B02 | Runtime `Buff.effects` là mutable copy | Critical |
+| B03 | `scaleBuffPotency()` mutate magnitude trực tiếp | Critical |
+| B04 | `potencyAmplified` là workaround cho thiếu modifier model | High |
+| B05 | Tick và duration progression bị gộp trong `update()` | Critical |
+| B06 | Không có manual periodic trigger | Critical |
+| B07 | Consume / cleanse / expire đều gần như là remove | High |
+| B08 | Không có first-class stack consumption | High |
+| B09 | Modifier không có identity / lifetime / stacking policy | Critical |
+| B10 | Refresh giữ lại destructive mutation cũ | High |
+| B11 | Combat proc sử dụng trực tiếp `Math.random()` | Critical |
+| B12 | BuffSystem execute reactive/proc mechanics | High |
+| B13 | `BuffEffectTemplate` đang thành catch-all gameplay union | High |
+| B14 | Một `update()` xử lý turn + seconds + persistence | High |
+| B15 | Consumer có thể nhận mutable Buff | High |
+| B16 | Pool routing tạo authority/routing complexity | High |
+| B17 | Tick timing không phải authored contract rõ ràng | High |
+| B18 | Duration scaling / lifetime clock / tick timing đang trộn | High |
+| B19 | Dynamic periodic scaling không biểu diễn sạch | Critical |
+| B20 | Reaction/Skill phải biết Buff implementation details | High |
+
+## 3. Core Architecture
+
+Target model:
+
+```
+              BuffDefinition
+              immutable data
+                    │
+                    ▼
+              BuffSystem
+          state + lifecycle authority
+                    │
+              BuffInstance
+        ┌───────────┼───────────┐
+        │           │           │
+      stacks     lifetime    modifiers
+        │           │           │
+        └───────────┼───────────┘
+                    │
+              resolved intents
+                    │
+       ┌────────────┼─────────────┐
+       ▼            ▼             ▼
+ DamageSystem   StatSystem    Proc/Reaction
+```
+
+Buff System lưu và thay đổi persistent state.
+Các authority khác xử lý gameplay domain của họ.
+
+## 4. Canonical System Shape
+
+```ts
+class BuffSystem {
+  private readonly instances:
+    Map<BuffInstanceId, BuffInstance>
+
+  constructor(
+    private readonly definitions: BuffRegistry,
+    private readonly applicationResolver: BuffApplicationResolver,
+    private readonly periodicResolver: BuffPeriodicResolver,
+    private readonly events: CombatEventQueue,
+  ) {}
+}
+```
+
+Một BuffSystem canonical cho battle.
+Không tạo `new BuffSystem(targetBuffPool)` theo từng target.
+
+## 5. BuffPool Is Removed As Gameplay Authority
+
+Không còn:
+
+```
+Entity A → BuffPool
+Entity B → BuffPool
+Entity C → BuffPool
+```
+
+Canonical storage thuộc BuffSystem.
+
+Mỗi instance tự chứa:
+
+- definitionId
+- sourceId
+- targetId
+
+Query theo target/source chỉ là index/query.
+
+## 6. BuffDefinition
+
+```ts
+interface BuffDefinition {
+  id: BuffDefinitionId
+
+  name: string
+  description?: string
+
+  kind:
+    | 'buff'
+    | 'debuff'
+    | 'ailment'
+    | 'marker'
+
+  element?: ElementType
+
+  instanceScope: BuffInstanceScope
+
+  stacking: BuffStackingDefinition
+  lifetime: BuffLifetimeDefinition
+
+  application?: BuffApplicationDefinition
+
+  periodic?: PeriodicEffectDefinition[]
+
+  statModifiers?: BuffStatModifierDefinition[]
+
+  controls?: ControlDefinition[]
+
+  capabilities?: CapabilityGrantDefinition[]
+
+  dispellable: boolean
+
+  tags?: readonly string[]
+}
+```
+
+Definition hoàn toàn immutable.
+
+## 7. Instance Scope
+
+Đây là khái niệm riêng, không được trộn với stacking.
+
+```ts
+type BuffInstanceScope =
+  | 'per_source'
+  | 'per_target'
+```
+
+**per_source**
+
+Identity: definitionId + sourceId + targetId
+
+Hai source độc lập.
+
+Ví dụ: Hỏa Ấn của A và Hỏa Ấn của B là hai instance.
+
+**per_target**
+
+Identity: definitionId + targetId
+
+Target chỉ được có một instance.
+Instance vẫn giữ `sourceId`.
+
+Nếu source mới reapply: `sourceOwnership: latest` — mặc định source mới trở thành owner.
+
+Suitable cho:
+
+- Taunt
+- unique global marker
+- một số global debuff
+
+## 8. BuffInstance
+
+```ts
+interface BuffInstance {
+  instanceId: BuffInstanceId
+
+  definitionId: BuffDefinitionId
+
+  sourceId: CombatEntityId
+  targetId: CombatEntityId
+
+  stacks: number
+
+  remaining?: number
+
+  modifiers: BuffModifier[]
+
+  snapshot?: BuffSnapshotData
+
+  createdSequence: number
+  lastAppliedSequence: number
+}
+```
+
+Không có `effects: BuffEffect[]`.
+Không có `potencyAmplified`.
+Không chứa mutable Definition clone.
+
+## 9. Stacking Model
+
+```ts
+interface BuffStackingDefinition {
+  maxStacks: number
+
+  onReapplyStacks:
+    | 'add'
+    | 'replace'
+    | 'keep'
+
+  onReapplyDuration:
+    | 'refresh'
+    | 'keep'
+    | 'extend'
+
+  replaceInstanceOnReapply?: boolean
+}
+```
+
+`stack amount` đến từ Apply request.
+Không hard-code `reapply = +1`.
+
+## 10. Apply Request
+
+```ts
+interface ApplyBuffRequest {
+  definitionId: BuffDefinitionId
+
+  sourceId: CombatEntityId
+  targetId: CombatEntityId
+
+  stacks?: number
+
+  baseChance?: number
+
+  durationOverride?: number
+
+  reason:
+    | 'skill'
+    | 'reaction'
+    | 'proc'
+    | 'scripted'
+}
+```
+
+Defaults: `stacks = 1`, `baseChance = 1`
+
+## 11. Application Definition
+
+Application behavior thuộc Buff domain.
+
+```ts
+interface BuffApplicationDefinition {
+  resistance:
+    | 'none'
+    | 'ailment'
+
+  clampChance?: boolean
+}
+```
+
+Positive self-buff thường: `resistance = none`
+Ailment: `resistance = ailment`
+
+## 12. Application Resolver
+
+BuffSystem không tự viết random/stat formula inline.
+
+```ts
+interface BuffApplicationResolver {
+  resolve(
+    request: ApplyBuffRequest,
+    definition: BuffDefinition,
+  ): BuffApplicationResolution
+}
+```
+
+Resolver được phép dùng Stat System / CombatRng.
+
+Final conceptual chance:
+
+```
+baseChance
+× sourceApplicationModifier
+× targetResistanceModifier
+```
+
+rồi clamp `0 → 1`.
+
+## 13. RNG Rule
+
+Không system combat nào gọi `Math.random()`.
+
+Canonical:
+
+```ts
+interface CombatRng {
+  roll(): number
+
+  rollChance(chance: number): boolean
+}
+```
+
+Buff application có thể roll chance — nhưng bắt buộc qua injected `CombatRng`.
+Proc randomness thuộc Proc System.
+Skill randomness thuộc Skill/Combat resolver.
+
+## 14. Failed Application
+
+Application fail:
+
+- NO instance creation
+- NO stack
+- NO duration refresh
+- NO modifier change
+- NO reaction
+
+Return:
+
+```ts
+{
+  applied: false
+}
+```
+
+## 15. Reapplication Semantics
+
+Ví dụ Hỏa Ấn:
+
+```
+current:
+3 stacks
+1 turn
+
+incoming:
+2 stacks
+
+policy:
+add + refresh
+
+result:
+5 stacks
+3 turns
+```
+
+Overcap:
+
+```
+4 + 3
+max 5
+
+result:
+5
+```
+
+Overflow bị bỏ mặc định.
+Không tự convert overflow thành mechanic khác.
+
+## 16. Apply At Stack Cap
+
+Nếu `Hỏa Ấn ×5`, `remaining 1` và successful application `incoming +1`:
+
+```
+result:
+stacks = 5
+duration refreshed
+```
+
+Return result phải phản ánh:
+
+```ts
+{
+  requestedStacks: 1,
+  addedStacks: 0,
+  overflowStacks: 1,
+  durationChanged: true,
+}
+```
+
+## 17. Lifetime — Three Independent Concepts
+
+Không được trộn:
+
+- duration amount
+- clock
+- duration scaling
+
+## 18. Lifetime Clock
+
+```ts
+type BuffLifetimeClock =
+  | 'holder_turns'
+  | 'source_turns'
+  | 'rounds'
+  | 'seconds'
+  | 'permanent'
+```
+
+## 19. Duration Scaling
+
+```ts
+type BuffDurationScaling =
+  | 'fixed'
+  | 'ailment_scaled'
+```
+
+## 20. Lifetime Definition
+
+```ts
+interface BuffLifetimeDefinition {
+  clock: BuffLifetimeClock
+
+  duration?: number
+
+  scaling: BuffDurationScaling
+
+  removeOnSourceDeath?: boolean
+}
+```
+
+Default: `removeOnSourceDeath = false`
+Do đó caster chết không tự xóa DoT của họ.
+
+## 21. Explicit Lifecycle Entry Points
+
+Universal overloaded `update()` bị xóa.
+
+BuffSystem nhận explicit lifecycle:
+
+```ts
+onHolderTurnStart(entityId)
+
+onHolderTurnEnd(entityId)
+
+onSourceTurnStart(entityId)
+
+onSourceTurnEnd(entityId)
+
+onRoundEnd()
+
+onTimePassed(seconds)
+
+onEntityDeath(entityId)
+
+onBattleEnd()
+```
+
+Không đoán context qua overload.
+
+## 22. Periodic Effect Definition
+
+V1:
+
+```ts
+interface PeriodicDamageDefinition {
+  id: string
+
+  type: 'damage'
+
+  element:
+    | ElementType
+    | 'physical'
+
+  damageProfile: DamageProfileId
+
+  coefficient: number
+
+  scaling:
+    | 'snapshot'
+    | 'dynamic'
+
+  timing:
+    | 'holder_turn_start'
+    | 'holder_turn_end'
+    | 'source_turn_start'
+    | 'source_turn_end'
+    | 'interval'
+
+  intervalSeconds?: number
+
+  stackScaling:
+    | 'multiply'
+    | 'ignore'
+
+  canCrit: boolean
+}
+```
+
+Periodic union có thể mở rộng bằng nhu cầu gameplay thật.
+Không tạo catch-all callback.
+
+## 23. Damage Authority
+
+BuffSystem không import hoặc tính:
+
+- armor mitigation
+- resistance formula
+- elemental power
+- crit
+- HP mutation
+- death
+
+BuffSystem tạo request:
+
+```ts
+interface PeriodicDamageRequest {
+  sourceId: CombatEntityId
+  targetId: CombatEntityId
+
+  origin: 'buff'
+  originId: BuffDefinitionId
+  periodicId: string
+
+  element: ElementType | 'physical'
+  damageProfile: DamageProfileId
+
+  coefficient: number
+
+  stackCount: number
+
+  canCrit: boolean
+}
+```
+
+DamageSystem xử lý phần còn lại.
+
+## 24. Dynamic Scaling
+
+`scaling = dynamic` means:
+
+```
+tick
+↓
+current source stats
+↓
+current target stats
+↓
+DamageSystem
+```
+
+Không lưu final damage trong BuffInstance.
+Hỏa Ấn sử dụng dynamic.
+
+## 25. Snapshot Scaling
+
+`scaling = snapshot` means:
+
+```
+apply
+↓
+snapshot required offensive context
+↓
+store minimal snapshot
+```
+
+Tick sử dụng snapshot.
+
+Snapshot phải chứa dữ liệu semantic cần thiết.
+Không nhất thiết lưu `finalDamage` nếu damage system có thể resolve từ canonical snapshot context.
+
+## 26. Tick Is Not Lifetime
+
+Đây là invariant bắt buộc.
+
+```
+periodic trigger
+≠
+duration decrement
+```
+
+Hai operation độc lập.
+
+Manual tick: trigger periodic, duration unchanged.
+Natural lifecycle: trigger periodic, then advance lifetime.
+
+## 27. Manual Periodic Trigger
+
+```ts
+triggerPeriodic(
+  selector: BuffInstanceSelector,
+  options: {
+    periodicId?: string
+
+    reason:
+      | 'skill'
+      | 'reaction'
+      | 'scripted'
+  }
+): PeriodicResolution[]
+```
+
+Không advance duration.
+
+## 28. Natural Holder-Turn-End Ordering
+
+Canonical order:
+
+```
+1. Holder's action ends
+
+2. holder_turn_end periodic effects resolve
+
+3. use-based modifiers consumed
+
+4. holder-turn modifier lifetimes advance
+
+5. buff lifetime advances
+
+6. buffs reaching zero are removed as expired
+
+7. committed Buff events are published
+
+8. queued Reaction/Proc commands may resolve
+```
+
+Ordering phải deterministic.
+
+## 29. Buff Modifier
+
+```ts
+interface BuffModifier {
+  id: string
+
+  appliedBy?: CombatEntityId
+
+  channel: BuffModifierChannel
+
+  operation:
+    | 'add'
+    | 'multiply'
+    | 'set'
+
+  value: number
+
+  reapply:
+    | 'replace'
+    | 'stack'
+    | 'max'
+    | 'min'
+
+  priority: number
+
+  lifetime: BuffModifierLifetime
+}
+```
+
+## 30. Initial Modifier Channels
+
+V1:
+
+```ts
+type BuffModifierChannel =
+  | 'potency'
+  | 'periodic_damage'
+  | 'next_periodic_damage'
+  | 'duration'
+  | 'application_chance'
+```
+
+Không thêm channel path-specific.
+
+## 31. Modifier Resolution Order
+
+Để tránh order-dependent math:
+
+```
+Base
+↓
+ADD modifiers
+↓
+MULTIPLY modifiers
+↓
+SET modifier
+```
+
+Nếu nhiều `set`: highest priority wins.
+Nếu priority tie: stable modifier id ordering.
+
+Không phụ thuộc insertion order.
+
+## 32. Same Modifier Reapplication
+
+Modifier identity dựa vào `id` + `appliedBy` where relevant.
+
+Example: `liet_diem_next_tick` with `reapply = replace`
+
+```
+Repeated application:
+×1.5
+→ apply again
+→ still ×1.5
+```
+
+không `×2.25`.
+
+## 33. Modifier Lifetime
+
+```ts
+type BuffModifierLifetime =
+  | {
+      type: 'buff_lifetime'
+    }
+
+  | {
+      type: 'uses'
+      remaining: number
+    }
+
+  | {
+      type: 'holder_turns'
+      remaining: number
+    }
+
+  | {
+      type: 'source_turns'
+      remaining: number
+    }
+
+  | {
+      type: 'rounds'
+      remaining: number
+    }
+
+  | {
+      type: 'battle'
+    }
+
+  | {
+      type: 'explicit'
+    }
+```
+
+## 34. Modifier Boundary Semantics
+
+`holder_turns: 2` nghĩa là modifier hợp lệ trong hai holder-turn boundaries kế tiếp mà nó tồn tại trước periodic resolution.
+
+At `holder_turn_end`:
+
+```
+periodic uses modifier
+↓
+remaining modifier turns -1
+```
+
+Manual tick: does not decrement holder_turn lifetime.
+
+`uses: 1`: first eligible effect uses modifier → removed immediately after resolution.
+
+## 35. Buff Refresh Does Not Refresh Modifier
+
+Mandatory invariant:
+
+```
+refresh buff duration
+≠
+refresh modifier lifetime
+```
+
+Modifier chỉ refresh nếu explicit `addModifier()` được gọi lại.
+
+## 36. Stack APIs
+
+```
+addStacks(...)
+removeStacks(...)
+consumeStacks(...)
+setStacks(...)
+```
+
+Không external mutation.
+
+## 37. Consume Is First-Class
+
+```ts
+consumeStacks(
+  selector,
+  amount: number | 'all',
+  context,
+): ConsumeStacksResult
+```
+
+Result:
+
+```ts
+interface ConsumeStacksResult {
+  consumed: number
+  remaining: number
+  removed: boolean
+}
+```
+
+If stacks reach zero: removal reason = `consumed`.
+
+## 38. Duration APIs
+
+```
+refreshDuration(...)
+extendDuration(...)
+setRemainingDuration(...)
+```
+
+No direct mutation.
+
+## 39. Removal Reasons
+
+```ts
+type BuffRemovalReason =
+  | 'expired'
+  | 'consumed'
+  | 'cleansed'
+  | 'reaction'
+  | 'death'
+  | 'source_death'
+  | 'battle_end'
+  | 'replaced'
+  | 'scripted'
+```
+
+Mọi removal phải có reason.
+
+## 40. Target Death
+
+```
+target death
+↓
+remove every buff targeting entity
+↓
+reason = death
+```
+
+Không convert thành expire.
+Không trigger `onExpire`.
+
+## 41. Source Death
+
+Default: buff remains
+
+Nếu definition `removeOnSourceDeath: true` thì remove `reason = source_death`.
+
+Hỏa Ấn: `removeOnSourceDeath = false`
+
+## 42. Cleanse
+
+```ts
+cleanse(
+  targetId,
+  query,
+): CleanseResult
+```
+
+Query có thể chọn: kind / tags / element / definition id.
+
+Chỉ buff `dispellable = true` được cleanse.
+Removal: `reason = cleansed`.
+
+## 43. Reaction Ownership
+
+Reaction System không sống trong BuffSystem.
+
+Flow:
+
+```
+Buff application commits
+↓
+BuffAppliedEvent queued
+↓
+ReactionSystem observes committed state
+↓
+ReactionSystem resolves rule
+↓
+Reaction creates combat commands
+↓
+BuffSystem / DamageSystem execute those commands
+```
+
+Reaction không mutate BuffInstance trực tiếp.
+
+## 44. No Event Reentrancy
+
+Buff mutation:
+
+```
+validate
+↓
+resolve
+↓
+mutate
+↓
+commit
+↓
+queue events
+```
+
+Event listener không được chạy nested mutation ngay giữa transaction.
+Consumers tạo `CombatCommand` cho scheduler.
+
+Điều này ngăn `apply → reaction → consume → apply → listener` nested state mutation khó kiểm soát.
+
+## 45. Domain Events
+
+Initial events:
+
+```ts
+type BuffEvent =
+  | BuffAppliedEvent
+  | BuffApplicationFailedEvent
+
+  | BuffStacksChangedEvent
+  | BuffDurationChangedEvent
+
+  | BuffModifierAddedEvent
+  | BuffModifierRemovedEvent
+
+  | BuffPeriodicResolvedEvent
+
+  | BuffRemovedEvent
+```
+
+Events chỉ phát sau state commit.
+
+## 46. Event Payload
+
+Common fields:
+
+```ts
+{
+  instanceId
+
+  definitionId
+
+  sourceId
+  targetId
+
+  combatSequence
+
+  reason?
+}
+```
+
+Mutation events nên có `before` / `after` khi hữu ích.
+
+## 47. Proc / Reactive Responsibility
+
+Các mechanic sau không còn được BuffSystem execute:
+
+- onHitProc
+- reactiveTrigger
+- reactiveProc
+- reactiveEconomy
+- counter
+- follow-up
+- intercept
+- dotRecovery
+
+Buff có thể grant persistent capability.
+
+Example:
+
+```ts
+interface CapabilityGrantDefinition {
+  id: string
+  type: CapabilityType
+  payload: unknown
+}
+```
+
+BuffSystem expose readonly capability descriptors.
+System owner xử lý behavior.
+
+## 48. Example Counter Flow
+
+```
+Buff grants counter capability
+↓
+Combat event: damage_taken
+↓
+ProcSystem queries active capability
+↓
+ProcSystem rolls CombatRng
+↓
+ProcSystem checks resource
+↓
+TurnBattleSystem queues counter action
+```
+
+Không có `BuffSystem.rollReactiveTrigger()`.
+
+## 49. Stat Modifier Responsibility
+
+Buff Definition có thể khai báo stat modifier.
+BuffSystem expose active descriptors.
+
+```ts
+getStatModifiers(targetId):
+  readonly ActiveStatModifier[]
+```
+
+Stat System resolve final stats.
+BuffSystem không recompute stat tree.
+
+## 50. Control State
+
+```ts
+BuffDefinition:
+controls: [
+  { type: 'stun' }
+]
+```
+
+BuffSystem: `hasControl(targetId, 'stun')`
+TurnBattleSystem quyết định stun làm gì.
+BuffSystem chỉ xác nhận persistent control state đang tồn tại.
+
+## 51. Query API
+
+Consumer chỉ nhận readonly state.
+
+```ts
+getInstance(selector):
+  Readonly<BuffInstanceSnapshot> | undefined
+
+getForTarget(targetId):
+  readonly BuffInstanceSnapshot[]
+
+getByDefinition(targetId, definitionId):
+  readonly BuffInstanceSnapshot[]
+
+getStacks(selector): number
+
+has(selector): boolean
+
+getModifiers(selector):
+  readonly BuffModifierSnapshot[]
+
+getCapabilities(targetId):
+  readonly ActiveCapability[]
+```
+
+Không expose mutable instance.
+
+## 52. Selector
+
+```ts
+type BuffInstanceSelector =
+  | {
+      definitionId: string
+      targetId: string
+      sourceId: string
+    }
+
+  | {
+      instanceId: string
+    }
+```
+
+Operations cần targeting rộng hơn có query API riêng.
+Không mutate "all matching" một cách mơ hồ.
+
+## 53. Operation Results
+
+Core APIs không return `void`.
+
+Example:
+
+```ts
+interface ApplyBuffResult {
+  applied: boolean
+
+  instanceId?: string
+
+  created?: boolean
+
+  stacksBefore?: number
+  stacksAfter?: number
+
+  requestedStacks?: number
+  addedStacks?: number
+  overflowStacks?: number
+
+  durationBefore?: number
+  durationAfter?: number
+}
+```
+
+## 54. Periodic Result
+
+```ts
+interface PeriodicResolution {
+  instanceId: string
+
+  periodicId: string
+
+  sourceId: string
+  targetId: string
+
+  stackCount: number
+
+  reason:
+    | 'natural'
+    | 'skill'
+    | 'reaction'
+    | 'scripted'
+
+  damageResult?: DamageResult
+}
+```
+
+Useful for skill conditions, combat log, reactions, tests.
+
+## 55. Deterministic Ordering
+
+Nếu nhiều statuses trigger ở cùng boundary, canonical sort:
+
+```
+1. targetId
+2. definitionId
+3. sourceId
+4. instanceId
+5. periodicId
+```
+
+Hoặc equivalent explicit stable comparator.
+Không dựa vào Map insertion order.
+
+## 56. Definition Validation
+
+Registry startup validates:
+
+- unique definition ID
+- maxStacks >= 1
+- valid instanceScope
+- duration required unless permanent
+- non-negative duration
+- valid periodic IDs
+- periodic IDs unique per definition
+- intervalSeconds required for interval periodic
+- valid damageProfile
+- valid element
+- valid modifier channels
+- valid control IDs
+- valid capability descriptors
+
+Development build: throw on invalid authored data.
+Không silent fallback.
+
+## 57. Hỏa Ấn Canonical Definition
+
+Locked gameplay definition:
+
+```ts
+const HOA_AN: BuffDefinition = {
+  id: 'hoa_an',
+
+  name: 'Hỏa Ấn',
+
+  kind: 'ailment',
+
+  element: 'fire',
+
+  instanceScope: 'per_source',
+
+  stacking: {
+    maxStacks: 5,
+
+    onReapplyStacks: 'add',
+    onReapplyDuration: 'refresh',
+  },
+
+  lifetime: {
+    clock: 'holder_turns',
+
+    duration: 3,
+
+    scaling: 'ailment_scaled',
+
+    removeOnSourceDeath: false,
+  },
+
+  application: {
+    resistance: 'ailment',
+  },
+
+  periodic: [
+    {
+      id: 'hoa_an_dot',
+
+      type: 'damage',
+
+      element: 'fire',
+
+      damageProfile: 'phap_tu_ailment',
+
+      coefficient: TBD_BALANCE,
+
+      scaling: 'dynamic',
+
+      timing: 'holder_turn_end',
+
+      stackScaling: 'multiply',
+
+      canCrit: false,
+    },
+  ],
+
+  dispellable: true,
+
+  tags: [
+    'elemental',
+    'fire',
+    'ailment',
+    'dot',
+    'reaction_source',
+  ],
+}
+```
+
+## 58. Hỏa Ấn Application
+
+Example:
+
+```
+1 stack / 1 turn remaining
+
+Dẫn Hỏa Quyết applies 1 stack
+↓
+2 stacks
+3 turns
+```
+
+At cap:
+
+```
+5 stacks / 1 turn
+
+successful apply
+↓
+5 stacks / 3 turns
+```
+
+## 59. Hỏa Ấn Tick
+
+Natural:
+
+```
+target turn end
+↓
+resolve current caster stats
+↓
+resolve current target mitigation
+↓
+damage coefficient × 5 stacks
+↓
+damage
+↓
+duration -1
+```
+
+Hỏa Ấn tick:
+
+- does not crit
+- does not roll accuracy
+- does not count as skill hit
+
+Damage System receives proper origin tags.
+
+## 60. Xích Viêm — Next Tick Modifier
+
+DoT route:
+
+```ts
+buffSystem.addModifier(hoaAnSelector, {
+  id: 'xich_viem_next_tick',
+
+  appliedBy: casterId,
+
+  channel: 'next_periodic_damage',
+
+  operation: 'multiply',
+
+  value: 1.5,
+
+  reapply: 'replace',
+
+  priority: 100,
+
+  lifetime: {
+    type: 'uses',
+    remaining: 1,
+  },
+})
+```
+
+Next manual or natural Hỏa Ấn tick: `×1.5` → modifier consumed.
+
+## 61. Phần Thiên Hỏa Vực
+
+Empowered DoT Ultimate can execute:
+
+```
+apply Hỏa Ấn
+↓
+manual triggerPeriodic()
+↓
+add potency modifier
+↓
+extend duration
+```
+
+Each operation is independent and ordered by SkillDefinition.
+No special Hỏa code in BuffSystem.
+
+## 62. Manual Tick
+
+`triggerPeriodic()` does:
+
+- periodic resolution
+- modifier use consumption
+
+does NOT:
+
+- decrement Buff lifetime
+- decrement holder-turn modifiers
+
+A `uses` modifier can be consumed because a use occurred.
+A `holder_turns` modifier is not decremented.
+
+## 63. Cửu Tiêu Viêm Bạo
+
+Nổ Ultimate:
+
+```
+query caster-owned Hỏa Ấn stack count
+↓
+Skill System computes coefficient
+↓
+DamageSystem resolves nuke
+↓
+BuffSystem.consumeStacks(all)
+```
+
+Result: removal reason = `consumed`. No `onExpire`.
+
+## 64. Cộng Minh
+
+Old model — `scaleBuffPotency()` / `potencyAmplified = true` — is deleted.
+
+New:
+
+```
+ReactionSystem
+↓
+addModifier(
+  ailment,
+  {
+    id,
+    channel: 'potency',
+    operation: 'multiply',
+    value,
+    reapply: 'replace',
+    lifetime
+  }
+)
+```
+
+No destructive mutation.
+
+## 65. SkillDefinition Integration
+
+Skill operations targeting BuffSystem:
+
+```ts
+type BuffSkillOperation =
+  | ApplyBuffOperation
+  | AddBuffModifierOperation
+  | TriggerBuffPeriodicOperation
+  | ConsumeBuffStacksOperation
+  | AddBuffStacksOperation
+  | RemoveBuffStacksOperation
+  | RefreshBuffDurationOperation
+  | ExtendBuffDurationOperation
+  | CleanseBuffOperation
+```
+
+Skill executor uses API only.
+
+## 66. Forbidden Patterns
+
+Forbidden after redesign:
+
+- `Math.random()` inside gameplay systems
+- `buff.stacks += ...` outside BuffSystem
+- `buff.effects[x] *= ...` anywhere
+- `potencyAmplified`
+- `scaleBuffPotency()`
+- `BuffSystem.rollOnHitEffects()`
+- `BuffSystem.rollReactiveTrigger()`
+- `BuffSystem.calculateDamagePerTurn()`
+- `if (buff.id === 'hoa_an')` inside Buff core
+- Pháp Tu-specific / Thể Tu-specific / Kiếm Tu-specific knowledge in BuffSystem
+
+## 67. Required BuffSystem API
+
+Minimum:
+
+```ts
+class BuffSystem {
+  apply(...): ApplyBuffResult
+
+  addStacks(...): StackChangeResult
+
+  removeStacks(...): StackChangeResult
+
+  consumeStacks(...): ConsumeStacksResult
+
+  setStacks(...): StackChangeResult
+
+  refreshDuration(...): DurationChangeResult
+
+  extendDuration(...): DurationChangeResult
+
+  setRemainingDuration(...): DurationChangeResult
+
+  addModifier(...): ModifierChangeResult
+
+  removeModifier(...): ModifierChangeResult
+
+  triggerPeriodic(...):
+    PeriodicResolution[]
+
+  remove(...):
+    RemoveBuffResult
+
+  cleanse(...):
+    CleanseResult
+
+  onHolderTurnStart(...): void
+
+  onHolderTurnEnd(...): void
+
+  onSourceTurnStart(...): void
+
+  onSourceTurnEnd(...): void
+
+  onRoundEnd(...): void
+
+  onTimePassed(...): void
+
+  onEntityDeath(...): void
+
+  onBattleEnd(...): void
+
+  getInstance(...)
+
+  getForTarget(...)
+
+  getByDefinition(...)
+
+  getStacks(...)
+
+  getModifiers(...)
+
+  getStatModifiers(...)
+
+  getCapabilities(...)
+
+  hasControl(...)
+
+  has(...)
+}
+```
+
+## 68. Transaction Rule
+
+Mọi mutation:
+
+```
+validate
+↓
+resolve
+↓
+mutate internal state
+↓
+commit
+↓
+produce result
+↓
+queue domain events
+```
+
+Không event callback chạy giữa transaction.
+
+## 69. Architecture Invariants
+
+| ID | Invariant |
+|---|---|
+| INV-B01 | Single authority — chỉ BuffSystem mutate BuffInstance |
+| INV-B02 | Immutable definition — BuffDefinition không thay đổi runtime |
+| INV-B03 | No mutable runtime effects — BuffInstance không giữ mutable `effects[]` |
+| INV-B04 | Explicit instance scope — per-source và per-target là authored behavior |
+| INV-B05 | Explicit lifecycle — turn/time progression đi qua explicit lifecycle methods |
+| INV-B06 | Tick != duration — periodic resolution độc lập lifecycle progression |
+| INV-B07 | Modifier independence — modifier có identity, policy và lifetime riêng |
+| INV-B08 | Refresh isolation — buff refresh không refresh modifier lifetime |
+| INV-B09 | Semantic removal — mọi removal có reason |
+| INV-B10 | External damage authority — Damage System sở hữu damage |
+| INV-B11 | Deterministic RNG — mọi randomness qua CombatRng |
+| INV-B12 | Committed-state events — consumer chỉ thấy committed state |
+| INV-B13 | No reentrant mutation — event response được queue thành command mới |
+| INV-B14 | No path-specific core — Buff core không biết cultivation path |
+| INV-B15 | Readonly external state — consumer không nhận mutable BuffInstance |
+
+## 70. Required Core Tests
+
+**Instance identity**
+
+```
+A applies Hỏa Ấn
+B applies Hỏa Ấn
+same target
+→ two instances
+```
+
+**Global instance**
+
+```
+per_target definition
+A apply
+B reapply
+→ one instance
+→ ownership changes according to policy
+```
+
+**Stack**
+
+```
+4 + 3
+max = 5
+→ 5
+→ overflow 2
+```
+
+**Refresh**
+
+```
+5 stacks / 1 turn
+successful reapply
+→ 5 stacks / 3 turns
+```
+
+**Failed application**
+
+```
+application fail
+→ no state change
+```
+
+**Dynamic periodic**
+
+```
+apply Hỏa Ấn
+increase source Fire Power
+tick
+→ new Fire Power affects tick
+```
+
+**Snapshot periodic**
+
+```
+apply snapshot DoT
+change source stat
+tick
+→ snapshot semantics preserved
+```
+
+**Manual tick**
+
+```
+manual tick
+→ damage
+→ buff duration unchanged
+```
+
+**Next tick modifier**
+
+```
+×1.5 uses=1
+tick 1 = boosted
+tick 2 = normal
+```
+
+**Holder-turn modifier**
+
+```
+modifier holder_turns=2
+manual tick
+→ remaining still 2
+natural turn end
+→ effect applies
+→ remaining 1
+```
+
+**Refresh isolation**
+
+```
+buff refresh
+→ buff duration resets
+temporary modifier
+→ lifetime unchanged
+```
+
+**Consume**
+
+```
+5 stacks
+consume all
+→ consumed 5
+→ instance removed
+→ reason consumed
+```
+
+**Cleanse** → reason cleansed
+
+**Expire** — duration reaches zero → reason expired
+
+**Death**
+
+```
+target dies
+→ reason death
+→ no onExpire
+```
+
+**Source death** — Hỏa caster dies → Hỏa Ấn remains
+
+**Modifier reapply**
+
+```
+same replace modifier ×1.5
+applied twice
+→ ×1.5
+not ×2.25
+```
+
+**Determinism**
+
+```
+same seed
+same commands
+→ same application rolls
+→ same event ordering
+→ same status state
+```
+
+## 71. Hỏa Ấn Acceptance Test
+
+Buff System Reimagined không được xem là hoàn thành nếu chưa biểu diễn được Hỏa Ấn hoàn toàn bằng generic primitives:
+
+- apply
+- application resistance
+- per-source ownership
+- 5 stacks
+- refresh
+- 3 holder turns
+- dynamic Fire DoT
+- manual tick
+- next-tick modifier
+- potency modifier
+- duration extend
+- partial stack removal
+- consume all
+- cleanse
+- reaction interaction
+- target death
+- source death persistence
+- battle cleanup
+
+Zero Hỏa-specific branch trong Buff core.
+
+## 72. Secondary Acceptance Test
+
+Sau Hỏa Ấn, ít nhất một non-Hỏa status phải được authored trên cùng primitives.
+
+Recommended: Poison / Bleed / or existing CC/debuff.
+
+Nếu second status yêu cầu redesign ngay lập tức: Buff abstraction chưa đủ generic.
+
+## 73. Deletion List
+
+Current concepts phải bị xóa hoặc viết lại:
+
+- BuffPool gameplay authority
+- runtime `Buff.effects`
+- `damagePerTurn` as canonical runtime DoT
+- `damagePerSecond` as canonical runtime DoT
+- `scaleBuffPotency()`
+- `potencyAmplified`
+- `BuffSystem.calculateDamagePerTurn()`
+- `BuffSystem.rollOnHitEffects()`
+- `BuffSystem.rollReactiveTrigger()`
+- universal overloaded `BuffSystem.update()`
+- direct combat `Math.random()`
+- generic silent `remove()`
+- reactive path execution inside BuffSystem
+
+Không giữ compatibility layer.
+Không dual-run engine.
+Không fallback sang implementation cũ.
+
+## 74. Definition of Done
+
+Buff System Reimagined hoàn thành khi:
+
+- BuffDefinition hoàn toàn immutable.
+- BuffInstance chỉ chứa runtime state.
+- Mọi external Buff state readonly.
+- BuffSystem là mutation authority duy nhất.
+- Stack, duration và modifier hoàn toàn tách biệt.
+- Manual tick hoạt động không advance duration.
+- Dynamic periodic damage hoạt động.
+- Snapshot periodic vẫn biểu diễn được như một authored policy.
+- Modifier có identity + reapply policy + deterministic lifetime.
+- Consume / cleanse / expire / death khác semantic.
+- Application sử dụng deterministic CombatRng.
+- BuffSystem không execute Proc/Reaction/Path mechanic.
+- Damage resolution thuộc DamageSystem.
+- Event chỉ publish sau committed state.
+- Không có nested/reentrant mutation.
+- Hỏa Ấn hoạt động bằng zero custom BuffSystem branch.
+- Ít nhất một status thứ hai chứng minh generic design.
+
+## 75. Final Architecture Rule
+
+- BuffDefinition describes persistent combat state.
+- BuffInstance stores only runtime state.
+- BuffSystem owns lifecycle and mutation.
+- DamageSystem owns damage.
+- StatSystem owns stats.
+- ReactionSystem owns reactions.
+- ProcSystem owns procs.
+- SkillSystem owns skill execution.
+- TurnBattleSystem owns combat timing.
+
+Nếu một feature mới buộc BuffSystem biết tên skill / tên path / reaction cụ thể / counter cụ thể / resource cụ thể thì responsibility đã bị đặt sai.
+
+Buff System phải trở thành một generic persistent-state engine, không phải nơi mọi mechanic có duration được đưa vào.

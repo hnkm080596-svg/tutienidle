@@ -1,5 +1,7 @@
 # Mission F — Verification & Infrastructure Implementation Plan
 
+> **STATUS: MERGED** (2026-09-17, `master` merge commit `f2fbd363`, worktree `.agent-worktrees/infrastructure`, branch `chore/infrastructure`)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Test tooling tests the right tree, type-check covers the guard suite, one canonical verify command exists, and the Supabase boundary is account-keyed with timeouts and refresh.
