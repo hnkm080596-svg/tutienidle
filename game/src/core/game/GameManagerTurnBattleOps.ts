@@ -731,7 +731,7 @@ export class GameManagerTurnBattleOps {
       battle.state === 'victory' &&
       this.turnBattleRepeatContinuously &&
       this.activeStageForTurnBattle !== null &&
-      this.deps.stageManager.get() !== null
+      this.deps.stageWaves.holdsActiveStageLease()
     ) {
       this.restartTurnBattleCycle()
 
@@ -832,12 +832,30 @@ export class GameManagerTurnBattleOps {
     return (this.pathRuntimeOverride ?? this.deps.resolvePathRuntime)(player)
   }
 
-  private mintCycleRng(): void {
+  /**
+   * Mint the candidate RNG for the next cycle WITHOUT installing it.
+   * Mission C audit (transactional admission): a stage start pre-mints so
+   * the launch-time enemy pick consumes the cycle stream, but the minted
+   * source is committed via commitCycleRng only when the cycle actually
+   * begins — a refused startStage must not touch the live battle's RNG.
+   */
+  private mintCycleRng(): () => number {
     // The built-in factory returns a LAZY Math.random closure — storing
     // `Math.random` by reference would bypass vi.spyOn interception.
-    this.combatRng = ((this.battleRngFactoryOverride ?? this.deps.createBattleRng) ?? (() => () => Math.random()))()
-    this.deps.combatSystem.setRandomSource(this.combatRng)
+    return ((this.battleRngFactoryOverride ?? this.deps.createBattleRng) ?? (() => () => Math.random()))()
   }
+
+  private commitCycleRng(rng: () => number): void {
+    this.combatRng = rng
+    this.deps.combatSystem.setRandomSource(rng)
+  }
+
+  /**
+   * Stage-launch RNG handoff: startStage mints the candidate here so the
+   * wave system's first-enemy pick consumes it, and beginBattleCycle
+   * commits it as the session RNG. Null outside a stage launch.
+   */
+  private pendingCycleRng: (() => number) | null = null
 
   getBattleGeneration(): number {
     return this.battleGeneration
@@ -894,16 +912,16 @@ export class GameManagerTurnBattleOps {
     this.clearCycleEntryState()
     this.battleGeneration += 1
 
-    // Mint the cycle's session RNG here so EVERY roll below - spawn
+    // Commit the cycle's session RNG here so EVERY roll below - spawn
     // placement, enemy-pool picks, engine rolls, combat formulas - reads
     // one source. Scope guard (spec C3): loot/alchemy/pill economy
     // randomness intentionally stays on Math.random; only the battle
-    // session is seeded. A stage launch pre-mints in startStage (the
-    // wave system's first-enemy pick runs before this call), so the
-    // nested beginBattleCycle inside a launch chain does not re-mint.
-    if (!this.isStageStarting) {
-      this.mintCycleRng()
-    }
+    // session is seeded. A stage launch carries its pre-minted candidate
+    // through pendingCycleRng (the wave system's first-enemy pick already
+    // consumed from that stream); beginBattleCycle is the commit point,
+    // so a refused startStage never installs anything.
+    this.commitCycleRng(this.pendingCycleRng ?? this.mintCycleRng())
+    this.pendingCycleRng = null
 
     // 2. Per-policy domain resets. ARCH-014 (M12): a fresh battle owns a
     // fresh terminal once-guard - a battle started after any terminal would
@@ -1334,18 +1352,22 @@ export class GameManagerTurnBattleOps {
   ): boolean {
     this.isStageStarting = true
     this.pendingLaunchStage = stage
-    // Pre-mint the cycle RNG: stageWaves.start picks the launch enemy
-    // BEFORE the nested beginBattleCycle runs, so the mint must happen
-    // here or the launch pick escapes the session boundary.
-    this.mintCycleRng()
+    // Pre-mint the cycle RNG as a CANDIDATE (not installed): the launch
+    // enemy pick must consume the cycle stream, so the mint happens here
+    // — but commit waits for the cycle to actually begin inside
+    // beginBattleCycle. A refused start leaves the live battle's RNG
+    // and combat source untouched.
+    const candidateRng = this.mintCycleRng()
+    this.pendingCycleRng = candidateRng
     let started = false
     try {
       started = this.deps.stageWaves.start(player, stage, repeatContinuously, {
-        rng: () => this.combatRng(),
+        rng: candidateRng,
       })
     } finally {
       this.isStageStarting = false
       this.pendingLaunchStage = null
+      this.pendingCycleRng = null
     }
 
     if (!started) {

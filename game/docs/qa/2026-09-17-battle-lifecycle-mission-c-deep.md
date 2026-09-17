@@ -102,3 +102,39 @@ None added by this audit — every high-risk hypothesis was resolved by an exist
 ## Pre-existing Failures
 
 None observed. The `kiem-tu/invariants` file-scan timeouts under load seen in Mission B did not recur in this suite run.
+
+---
+
+# Addendum — External audit round (lease/ownership unification), HEAD cb3a602f+
+
+External re-review of Mission C against post-B-rounds master returned `REQUEST CHANGES` — 1 High + 3 Medium. All four verified real before repair; this round is the fix record.
+
+## Findings (confirmed → fixed)
+
+### EXT-C1 (HIGH): `StageWaveSystem.start()` leaked the slot on a thrown launch
+- **Evidence:** `stageManager.start()` acquired the lease at admission; `pickEnemyForSpawn` (`weightedRandom` throws on empty pool) and `launchBattle`→`beginBattleCycle` (`resolvePathRuntime`, skill conversion, `spawnEnemy` — all real throw paths) ran with no rollback. Only the `!firstEnemyTemplate` return-false branch released. A thrown start left the global slot occupied forever — same soft-lock family Mission B removed.
+- **Fix:** `start` is now a transaction — `acquire` → `try { pick; launch }` → any failure runs `rollbackFailedStart(lease)` which releases ONLY the acquired lease (identity-checked) and resets `activeStagePlayer`/`repeatStageContinuously`; thrown errors rethrow unwrapped.
+- **Tests:** `GameManager.stageLease.test.ts` — launch-chain throw (path-runtime resolver seam) → lease freed → retry starts; enemy-pick throw (empty authored pool) → lease freed. Both were red pre-fix (lease leaked).
+
+### EXT-C2 (MEDIUM): refused `startStage` re-seeded the running battle's RNG
+- **Evidence:** `mintCycleRng()` created AND installed via `combatSystem.setRandomSource()` before `stageWaves.start()` could refuse (locked stage, occupied slot, pick failure) — a rejected request mutated the live battle's random stream, breaking the C3 one-RNG-per-cycle contract.
+- **Fix:** mint/install split — `mintCycleRng()` returns a candidate; `commitCycleRng` installs. `startStage` carries the candidate in `pendingCycleRng`; the wave pick consumes it; `beginBattleCycle` is the commit point (`commitCycleRng(pendingCycleRng ?? mintCycleRng())`). A refused start mints but never installs — the live stream is provably untouched.
+- **Test:** refused occupied-slot start → `setRandomSource` call count unchanged, installed stream is still cycle A's, stage A lease intact. Red pre-fix (2 installs vs 1).
+
+### EXT-C3 (MEDIUM): multi-instance lane skipped the actor-death check
+- **Evidence:** the `scaledDamage` multi-instance loop (Kiem Tu `instances.count = kiemDaoCount` — a real production path) checked `!target.entity.alive` between instances but not `!actor.entity.alive`, unlike every sibling lane (composite picks, non-damaging, charge, extra-impact — all T3-22b guarded). A lethal Reflection on instance 1 let instances 2..N resolve from a dead caster.
+- **Fix:** `if (!actor.entity.alive || !target.entity.alive) break` at the top of the instance loop — same guard, same lane.
+- **Test:** `midImpactDeath.test.ts` — `instances.count = 3` + lethal reflect → `resolveActionHit` called exactly once; actor dead; one landed hit only. Red pre-fix (2 calls).
+
+### EXT-C4 (MEDIUM/architectural): ambient slot vs exact lease ownership
+- **Evidence:** `stopRepeat()` called `stageManager.stop()` unconditionally — any stale battle teardown could stomp a foreign lease (auto-farm's, or a re-acquired stage's). The repeat gate asked `get() !== null` ("someone holds the slot") instead of "I still hold my lease". `getProgress` reported a foreign lease's stageId as ours.
+- **Fix:** `StageManager` is now a capability API — `acquire()` returns the lease token, `release(lease)` frees the slot only for the exact object it still holds (stale/foreign tokens are no-ops). `start`/`stop`/`restartCycle` removed (`restartCycle` had zero callers — dead ambient-mutation path). `StageWaveSystem` tracks `stageLease`; `stopRepeat` releases only its own; new `holdsActiveStageLease()` backs the repeat gate; `getProgress` reports only while the wave lease is live. `GameManagerAutoFarmOps` migrated — `farmLease` IS the capability object.
+- **Tests:** `StageManager.test.ts` (new, 5 tests — foreign/stale/null token refusal, second-owner isolation). `stageLease.test.ts` — stale `stopRepeat` via `abandonBattle` cannot release a foreign lease; victory+repeat does NOT restart when a foreign owner holds the slot. Both red pre-fix.
+
+## Verification
+- `npm run verify` on the final diff: type-check + build + full vitest suite.
+- Scoped green: 12 files / 72 tests (lease transaction, RNG admission, farm suites, repeat/boss/battle-cycle regressions) + 8 files / 47 tests (composable/presentation lifecycle surface).
+- P13/P14: not triggered — domain-layer change; repeat/victory/launch lifecycle is exercised end-to-end via ManualClockSource integration tests (`repeatStage`, `battleCycle`, `stageLease`).
+
+## Residual (documented, not blocking)
+- A throw AFTER `beginBattleCycle` commits (post-admission, mid-cycle-build) leaves the previous battle's teardown already run — the lease is still correctly released and the error propagates; reconstructing the torn-down battle is out of scope (pre-existing half-cycle reality, not worsened).

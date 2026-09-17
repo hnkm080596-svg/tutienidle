@@ -1606,7 +1606,10 @@ export class TurnBattleSystem {
           let targetLanded = false
 
           for (let instanceIndex = 0; instanceIndex < instanceCount; instanceIndex++) {
-            if (!target.entity.alive) break
+            // Mid-impact death (T3-22b): a reflect/proc kill on the actor
+            // between instances stops the rest — a dead caster's
+            // remaining phi kiem never swing (mission C audit regression).
+            if (!actor.entity.alive || !target.entity.alive) break
 
             const hitOptions = action.skill?.instances?.perInstanceOptions?.(instanceIndex, target.entity)
             const hitResult = this.resolveDeclaredHit(

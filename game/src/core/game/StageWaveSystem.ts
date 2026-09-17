@@ -5,7 +5,7 @@ import { applyEnemyTags } from '../enemy/EnemyTag'
 import { ENEMY_TAGS } from '../../data/enemy/EnemyTags'
 import { rollChance } from '../reward/DropRoll'
 import type { PlayerData } from '../player/Player'
-import type { StageManager } from '../stage/StageManager'
+import type { ActiveStage, StageManager } from '../stage/StageManager'
 import type { StageSystem } from '../stage/StageSystem'
 import type { Stage } from '../stage/Stage'
 import type { EnemySystem } from '../enemy/EnemySystem'
@@ -42,6 +42,11 @@ export interface StageWaveSystemDeps {
 export class StageWaveSystem {
   private activeStagePlayer?: PlayerData
   private repeatStageContinuously = false
+  // The lease object THIS stage run acquired — the ownership capability
+  // (Mission C audit): release is valid only while the slot still holds
+  // this exact object, so a stale stopRepeat can never stomp a foreign
+  // owner's lease.
+  private stageLease: ActiveStage | null = null
 
   constructor(private readonly deps: StageWaveSystemDeps) {}
 
@@ -50,6 +55,11 @@ export class StageWaveSystem {
    * lệnh gọi này (qua launchBattle — tự nhiên tái dùng
    * passiveSystem.resetStacks() bên trong, đúng điểm reset stack 1 LẦN/
    * màn chứ không phải mỗi wave).
+   *
+   * Transactional (Mission C audit): the lease is acquired first, then
+   * pick + launch run; ANY failure — refused pick, thrown pick, thrown
+   * launch — rolls the lease back and rethrows. A thrown start can never
+   * leave the global slot occupied.
    */
   start(
     player: PlayerData,
@@ -61,26 +71,48 @@ export class StageWaveSystem {
       return false
     }
 
-    if (!this.deps.stageManager.start(stage)) {
+    // Self-heal a stale marker: our previous lease died externally, so
+    // it must not count as "us still holding the slot".
+    if (this.stageLease !== null && this.deps.stageManager.get() !== this.stageLease) {
+      this.stageLease = null
+    }
+
+    const lease = this.deps.stageManager.acquire(stage)
+    if (!lease) {
       return false
     }
 
+    this.stageLease = lease
     this.activeStagePlayer = player
     this.repeatStageContinuously = repeatContinuously
 
-    // Stage chỉ 1 quái + có bossEnemyId -> quái đầu tiên (spawnedCount
-    // 0) CŨNG là quái CUỐI, phải là Boss ngay từ đầu.
-    const firstEnemyTemplate = this.pickEnemyForSpawn(stage, effectiveTotalEnemyCount(stage) === 1, options)
+    try {
+      // Stage chỉ 1 quái + có bossEnemyId -> quái đầu tiên (spawnedCount
+      // 0) CŨNG là quái CUỐI, phải là Boss ngay từ đầu.
+      const firstEnemyTemplate = this.pickEnemyForSpawn(stage, effectiveTotalEnemyCount(stage) === 1, options)
 
-    if (!firstEnemyTemplate) {
-      this.deps.stageManager.stop()
+      if (!firstEnemyTemplate) {
+        this.rollbackFailedStart(lease)
+        return false
+      }
 
-      return false
+      this.deps.launchBattle(player, firstEnemyTemplate)
+
+      return true
+    } catch (error) {
+      // Roll back ONLY the lease we acquired: release() is identity-
+      // checked, so if the slot somehow changed hands mid-unwind the
+      // foreign owner is never stomped. The original error propagates.
+      this.rollbackFailedStart(lease)
+      throw error
     }
+  }
 
-    this.deps.launchBattle(player, firstEnemyTemplate)
-
-    return true
+  private rollbackFailedStart(lease: ActiveStage): void {
+    this.deps.stageManager.release(lease)
+    this.stageLease = null
+    this.activeStagePlayer = undefined
+    this.repeatStageContinuously = false
   }
 
   // C1 (2026-09-08) — the legacy real-time spawn loop (update()) and
@@ -93,8 +125,24 @@ export class StageWaveSystem {
   // và tắt auto-repeat. Phần thưởng đã kiếm được KHÔNG mất (loot cấp theo
   // từng quái chết, xem BattleLootSystem.processDefeatedEnemies()).
   stopRepeat() {
-    this.deps.stageManager.stop()
+    // Capability release — frees the slot ONLY if this stage run still
+    // owns it. A lease that died externally (or a slot now held by a
+    // foreign owner like auto-farm) is untouched.
+    if (this.stageLease !== null) {
+      this.deps.stageManager.release(this.stageLease)
+      this.stageLease = null
+    }
     this.repeatStageContinuously = false
+  }
+
+  /**
+   * Ownership query for the repeat gate (Mission C audit): "this stage
+   * run still holds its lease" — not "someone holds the slot". A foreign
+   * owner (auto-farm, or a lease that replaced ours) must not keep a
+   * dead stage run auto-repeating.
+   */
+  holdsActiveStageLease(): boolean {
+    return this.stageLease !== null && this.deps.stageManager.get() === this.stageLease
   }
 
   // Phase A0 (2026-09-07) — the `alive` field is REMOVED from this shape:
@@ -105,7 +153,9 @@ export class StageWaveSystem {
   getProgress(): { spawned: number; total: number } | null {
     const active = this.deps.stageManager.get()
 
-    if (!active) {
+    // Ownership check: only OUR lease's progress is reportable — a
+    // foreign owner holding the slot is not this stage run.
+    if (!active || active !== this.stageLease) {
       return null
     }
 
