@@ -145,6 +145,24 @@ describe('preflight (sec.40-42)', () => {
     ])
     expect(runner.preflight(b)).toBe(false)
   })
+
+  it('unknown precondition kind is a structural fault, not a fail-closed stale-skip', () => {
+    const runner = new CombatOperationBatchRunner(noopChecker)
+    const bad = batch([damageOp('op.1')], [
+      { kind: 'time_travel', entityId: 'entity.a' },
+    ] as unknown as CombatOperationBatch['preconditions'])
+    expect(() => runner.preflight(bad)).toThrow(CombatSettlementFault)
+  })
+
+  it('missing/malformed preconditions field is a structural fault, not a TypeError', () => {
+    const runner = new CombatOperationBatchRunner(noopChecker)
+    const noField = {
+      batchId: 'b.1',
+      origin: ORIGIN,
+      operations: [damageOp('op.1')],
+    } as unknown as CombatOperationBatch
+    expect(() => runner.preflight(noField)).toThrow(CombatSettlementFault)
+  })
 })
 
 describe('validateBatchStructure (r4 BLOCKER 3)', () => {
@@ -220,6 +238,31 @@ describe('validateBatchStructure (r4 BLOCKER 3)', () => {
     expect(() =>
       runner.validateBatchStructure(batch([blankId])),
     ).toThrow(CombatSettlementFault)
+  })
+
+  it('rejects a missing preconditions field and unknown/malformed kinds', () => {
+    const noField = {
+      batchId: 'b.1',
+      origin: ORIGIN,
+      operations: [damageOp('op.1')],
+    } as unknown as CombatOperationBatch
+    expect(() => runner.validateBatchStructure(noField)).toThrow(
+      CombatSettlementFault,
+    )
+
+    const badKind = batch([damageOp('op.1')], [
+      { kind: 'time_travel', entityId: 'entity.a' },
+    ] as unknown as CombatOperationBatch['preconditions'])
+    expect(() => runner.validateBatchStructure(badKind)).toThrow(
+      CombatSettlementFault,
+    )
+
+    const malformedBuff = batch([damageOp('op.1')], [
+      { kind: 'buff_participant', instanceId: 'bi.1' },
+    ] as unknown as CombatOperationBatch['preconditions'])
+    expect(() => runner.validateBatchStructure(malformedBuff)).toThrow(
+      CombatSettlementFault,
+    )
   })
 })
 

@@ -370,6 +370,24 @@ describe('handler-emitted events (r5 HIGH 4)', () => {
   })
 })
 
+describe('malformed handler settlement', () => {
+  it('an unknown settlement kind is a structural fault, not a silent no-op', () => {
+    const h = makeHarness()
+    h.emissions.set('op.A', [elem('e1')])
+    routeElemental(h, {
+      e1: () =>
+        ({ kind: 'mystery' }) as unknown as ImmediateSettlement,
+    })
+    h.scheduler.enqueueAuthored([damageOp('op.A')])
+
+    expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
+    expect(h.scheduler.state).toBe('faulted')
+    expect(h.scheduler.trace.faults[0]?.reason).toBe('structural_fault')
+    // Fault fires at the malformed settlement -- no consequence op ran.
+    expect(h.calls).toEqual(['op.A', 'h:e1'])
+  })
+})
+
 describe('operation id uniqueness (r3 HIGH + r5 BLOCKER 3)', () => {
   it('enqueueAuthored([A,B]) with a pre-seen B id faults before A executes', () => {
     const h = makeHarness()
@@ -552,6 +570,36 @@ describe('batch structural preflight (r4 BLOCKER 3)', () => {
 
     expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
     expect(h.calls).toEqual(['op.A', 'h:e1'])
+  })
+
+  it('faults on an unknown precondition kind / missing preconditions field before any op runs', () => {
+    const h = makeHarness()
+    const badKind = batchOf(
+      'b.bad',
+      [damageOp('batch.B1')],
+      [
+        { kind: 'time_travel', entityId: 'entity.a' },
+      ] as unknown as CombatOperationBatch['preconditions'],
+    )
+    const noField = {
+      batchId: 'b.missing',
+      origin: ORIGIN,
+      operations: [damageOp('batch.B2')],
+    } as unknown as CombatOperationBatch
+    h.emissions.set('op.A', [elem('e1'), elem('e2')])
+    routeElemental(h, {
+      e1: () => ({ kind: 'batch', batch: badKind }),
+      e2: () => ({ kind: 'batch', batch: noField }),
+    })
+    h.scheduler.enqueueAuthored([damageOp('op.A')])
+
+    // Unknown kind: structural fault -- a broken command graph must not
+    // fail closed into a stale-skip. (The second malformed batch is
+    // unreachable once the first faults, so it is covered by the
+    // runner-level unit test.)
+    expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
+    expect(h.calls).toEqual(['op.A', 'h:e1'])
+    expect(h.scheduler.state).toBe('faulted')
   })
 })
 
@@ -931,6 +979,63 @@ describe('dual settlement guard (r3 HIGH 5)', () => {
     expect(h.scheduler.trace.faults[0]?.reason).toBe(
       'settlement_work_budget_exceeded',
     )
+  })
+
+  it('work budget resets per ROOT unit: two authored roots of N work each pass with N < budget < 2N', () => {
+    // Each authored root = 1 op + 2 emitted events = 3 work units.
+    // Budget 4 sits between N(3) and 2N(6): without the per-root reset the
+    // second root's cumulative 6 units would fault mid-frame.
+    const h = makeHarness({ maxImmediateWorkPerBarrier: 4 })
+    h.emissions.set('op.A', [elem('a1'), elem('a2')])
+    h.emissions.set('op.B', [elem('b1'), elem('b2')])
+    routeElemental(h, {})
+    h.scheduler.enqueueAuthored([damageOp('op.A'), damageOp('op.B')])
+
+    h.scheduler.run()
+    expect(h.calls).toEqual([
+      'op.A',
+      'h:a1',
+      'h:a2',
+      'op.B',
+      'h:b1',
+      'h:b2',
+    ])
+    expect(
+      h.scheduler.trace.records.map((r) => r.operation.operationId),
+    ).toEqual(['op.A', 'op.B'])
+    expect(h.scheduler.state).toBe('running')
+    expect(h.diagnosticEvents).toHaveLength(0)
+  })
+
+  it('work budget reset also covers lifecycle root events', () => {
+    // Root 1 (lifecycle event): settle + 2 handler-returned ops = 3 units.
+    // Root 2 (authored op): execute + 2 emitted events = 3 units.
+    // Budget 4 < combined 6 -- pass only if root 2 gets a fresh budget.
+    const h = makeHarness({ maxImmediateWorkPerBarrier: 4 })
+    h.emissions.set('op.A', [elem('a1'), elem('a2')])
+    routeElemental(h, {
+      e1: () => ({
+        kind: 'operations',
+        operations: [damageOp('op.X'), damageOp('op.Y')],
+      }),
+      a1: () => undefined,
+      a2: () => undefined,
+    })
+    h.scheduler.createLifecycleSink('action.life.1').emit(elem('e1'))
+    h.scheduler.enqueueAuthored([damageOp('op.A')])
+
+    h.scheduler.run()
+    // Root events drain before authored ops in each run() iteration.
+    expect(h.calls).toEqual([
+      'h:e1',
+      'op.X',
+      'op.Y',
+      'op.A',
+      'h:a1',
+      'h:a2',
+    ])
+    expect(h.scheduler.state).toBe('running')
+    expect(h.diagnosticEvents).toHaveLength(0)
   })
 })
 

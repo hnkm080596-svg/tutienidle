@@ -329,6 +329,12 @@ export class CombatScheduler {
           }
         } else if (settlement.kind === 'batch') {
           this.runBatchFrame(settlement.batch)
+        } else {
+          // Unknown settlement kind -- a broken command graph, not a
+          // silent no-op.
+          this.structuralFault(
+            `handler for '${event.type}' returned a settlement with unknown kind '${String((settlement as { kind?: unknown }).kind)}'`,
+          )
         }
       }
       // r5 HIGH 4 -- handler-emitted events settle AFTER the returned

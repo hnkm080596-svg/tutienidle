@@ -97,13 +97,25 @@ function isFiniteNumber(value: unknown): boolean {
 export class CombatOperationBatchRunner {
   constructor(private readonly preconditions: PreconditionChecker) {}
 
-  /** sec.40-42 -- ALL preconditions evaluated before ANY op runs. */
+  /** sec.40-42 -- ALL preconditions evaluated before ANY op runs.
+      An unknown kind is a broken command graph (structural fault), never
+      a fail-closed stale-skip; structural validation normally catches it
+      first -- this is the standalone-call defense. */
   preflight(batch: CombatOperationBatch): boolean {
+    if (
+      typeof batch !== 'object' ||
+      batch === null ||
+      !Array.isArray(batch.preconditions)
+    ) {
+      throw new CombatSettlementFault(
+        'batch preflight: preconditions must be an array',
+      )
+    }
     for (const p of batch.preconditions) {
       if (p.kind === 'entity_alive') {
         if (!this.preconditions.isAlive(p.entityId)) return false
-      } else {
-        // buff_participant: an unverifiable/missing instance is stale.
+      } else if (p.kind === 'buff_participant') {
+        // An unverifiable/missing instance is stale.
         const instance = this.preconditions.getBuffInstance?.(p.instanceId)
         if (instance === undefined) return false
         if (
@@ -113,6 +125,10 @@ export class CombatOperationBatchRunner {
         ) {
           return false
         }
+      } else {
+        throw new CombatSettlementFault(
+          `batch preflight: unknown precondition kind '${String((p as { kind?: unknown }).kind)}'`,
+        )
       }
     }
     return true
@@ -138,6 +154,14 @@ export class CombatOperationBatchRunner {
       throw new CombatSettlementFault(
         `batch '${batch.batchId}': operations must be an array`,
       )
+    }
+    if (!Array.isArray(batch.preconditions)) {
+      throw new CombatSettlementFault(
+        `batch '${batch.batchId}': preconditions must be an array`,
+      )
+    }
+    for (const p of batch.preconditions) {
+      this.assertPrecondition(p, batch.batchId)
     }
 
     const seen = new Set<CombatOperationId>()
@@ -169,6 +193,47 @@ export class CombatOperationBatchRunner {
         )
       }
     }
+  }
+
+  /** Structural check on one precondition -- a malformed kind or missing
+      field is a broken command graph, not a runtime staleness signal. */
+  private assertPrecondition(p: unknown, batchId: string): void {
+    if (typeof p !== 'object' || p === null) {
+      throw new CombatSettlementFault(
+        `batch '${batchId}': precondition must be a non-null object`,
+      )
+    }
+    const kind = (p as { kind?: unknown }).kind
+    if (kind === 'entity_alive') {
+      if (!isNonEmptyString((p as { entityId?: unknown }).entityId)) {
+        throw new CombatSettlementFault(
+          `batch '${batchId}': entity_alive precondition requires entityId`,
+        )
+      }
+      return
+    }
+    if (kind === 'buff_participant') {
+      const bp = p as {
+        instanceId?: unknown
+        expectedSourceId?: unknown
+        expectedTargetId?: unknown
+        expectedStacks?: unknown
+      }
+      if (
+        !isNonEmptyString(bp.instanceId) ||
+        !isNonEmptyString(bp.expectedSourceId) ||
+        !isNonEmptyString(bp.expectedTargetId) ||
+        !isFiniteNumber(bp.expectedStacks)
+      ) {
+        throw new CombatSettlementFault(
+          `batch '${batchId}': malformed buff_participant precondition`,
+        )
+      }
+      return
+    }
+    throw new CombatSettlementFault(
+      `batch '${batchId}': unknown precondition kind '${String(kind)}'`,
+    )
   }
 
   private validateDeferred(
