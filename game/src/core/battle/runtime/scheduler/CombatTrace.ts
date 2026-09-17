@@ -130,6 +130,7 @@ export class CombatTrace {
     const eventRootActionId = (event: CombatEvent): string | undefined => {
       switch (event.type) {
         case 'periodic_requests_committed':
+        case 'periodic_operation_settled':
           return event.rootActionId
         case 'elemental_application_committed':
         case 'buff_application_failed':

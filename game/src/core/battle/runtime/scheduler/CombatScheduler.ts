@@ -58,7 +58,7 @@ import {
   type CombatDiagnosticSink,
   type CombatSettlementGuardReason,
 } from './CombatSettlementFault'
-import { CombatOperationExecutor } from './CombatOperationExecutor'
+import type { CombatOperationExecutor } from './CombatOperationExecutor'
 import {
   BatchResultStore,
   CombatOperationBatchRunner,
@@ -187,6 +187,9 @@ export class CombatScheduler {
       enqueued. */
   enqueueAuthored(ops: readonly ResolvedCombatOperation[]): void {
     this.assertAccepting('enqueueAuthored')
+    if (!Array.isArray(ops)) {
+      this.structuralFault('enqueueAuthored: ops is not an array')
+    }
     const ids = ops.map((op) => {
       if (typeof op !== 'object' || op === null) {
         this.structuralFault('enqueueAuthored: non-object operation entry')
@@ -215,6 +218,9 @@ export class CombatScheduler {
     if (typeof type !== 'string' || type.length === 0) {
       this.structuralFault('registerImmediateHandler: blank event type')
     }
+    if (typeof handler !== 'function') {
+      this.structuralFault('registerImmediateHandler: handler is not a function')
+    }
     if (this.handlers.has(type)) {
       this.structuralFault(
         `duplicate immediate handler for event type '${type}'`,
@@ -227,6 +233,20 @@ export class CombatScheduler {
       rootEventQueue; internal sinks route to their scope's target list
       via commitEvent. Duplicate eventId -> dropped, stamped once. */
   enqueueEvent(pending: PendingCombatEvent): void {
+    // Post-fault event lanes silently drop (pinned P5 T1 contract): a
+    // halted scheduler cannot drain them, and a throwing event intake
+    // inside a drain frame would mask the originating fault. Intake is
+    // closed, not journaled -- unlike the command lanes which fail fast.
+    if (this.schedulerState === 'faulted') return
+    if (
+      typeof pending !== 'object' ||
+      pending === null ||
+      typeof pending.eventId !== 'string' ||
+      pending.eventId.length === 0 ||
+      typeof pending.type !== 'string'
+    ) {
+      this.structuralFault('enqueueEvent: malformed pending event')
+    }
     this.commitEvent(pending, this.rootEventQueue)
   }
 
@@ -284,18 +304,7 @@ export class CombatScheduler {
     const collector = new Map<CombatOperationId, CombatOperationResultStatus>()
     this.executionStatusCollector = collector
     try {
-      this.drain()
-    } catch (error) {
-      this.schedulerState = 'faulted'
-      if (this.trace.faults.length === 0) {
-        this.trace.recordFault(
-          error instanceof CombatSettlementFault
-            ? 'structural_fault'
-            : 'unexpected_error',
-          this.trace.digest(),
-        )
-      }
-      throw error
+      this.driveDrain()
     } finally {
       this.executionStatusCollector = null
       this.runInFlight = false
@@ -314,6 +323,18 @@ export class CombatScheduler {
     this.assertAccepting('run')
     this.runInFlight = true
     try {
+      this.driveDrain()
+    } finally {
+      this.runInFlight = false
+    }
+    return this.trace
+  }
+
+  /** Shared drain driver (Lens B11): run() and lifecycle settle() have
+      provably identical fault semantics -- any escape kills the
+      scheduler, faults originating outside a guarded site get recorded. */
+  private driveDrain(): void {
+    try {
       this.drain()
     } catch (error) {
       // Any escape (guard fault, structural fault, authority error) kills
@@ -331,10 +352,7 @@ export class CombatScheduler {
         )
       }
       throw error
-    } finally {
-      this.runInFlight = false
     }
-    return this.trace
   }
 
   /** The shared drain loop -- run() and lifecycle settle() both drive it.
@@ -468,6 +486,20 @@ export class CombatScheduler {
             this.structuralFault(
               `handler for '${event.type}' returned a malformed operations settlement`,
             )
+          }
+          // Lens B8 -- produced ops get the same structural validation as
+          // batch entries (payload shape, origin, selectors), not ids only.
+          for (const op of ops) {
+            try {
+              this.batchRunner.validateProducedOperation(
+                op,
+                `handler '${event.type}' produced group`,
+              )
+            } catch (error) {
+              this.structuralFault(
+                error instanceof Error ? error.message : String(error),
+              )
+            }
           }
           this.reserveOperationGroup(
             ops.map((op) =>
@@ -635,8 +667,34 @@ export class CombatScheduler {
       immediateQueue (r5 BLOCKER 1). */
   private commitEvent(pending: PendingCombatEvent, target: CombatEvent[]): void {
     if (this.schedulerState === 'faulted') return // halted: intake closed
+    // Scheduler-originated types are unforgeable by producers (Lens B6):
+    // a cast payload smuggling the type must never reach the queues --
+    // 'periodic_operation_settled' would feed a registered handler a
+    // fabricated settlement; 'combat_settlement_fault' is diagnostic-only.
+    if (
+      (pending as { type?: unknown }).type === 'periodic_operation_settled' ||
+      (pending as { type?: unknown }).type === 'combat_settlement_fault'
+    ) {
+      this.structuralFault(
+        `commitEvent: producer may not emit '${String((pending as { type?: unknown }).type)}'`,
+      )
+    }
     if (this.acceptedEventIds.has(pending.eventId)) return // stamped once
     this.acceptedEventIds.add(pending.eventId)
+    // Mint-side work charge (Lens C2): emissions minted inside a drain
+    // count against the whole-run budget so a flood of sink emits in one
+    // authority/handler call cannot escape the guard that bounds settle
+    // work. Intake outside a drain is not charged -- it pays when each
+    // queued event settles.
+    if (this.runInFlight) {
+      this.workThisRun++
+      if (this.workThisRun > this.maxTotalWorkPerRun) {
+        this.raiseGuardFault(
+          'settlement_work_budget_exceeded',
+          `run work budget ${this.maxTotalWorkPerRun} exceeded (event mint flood)`,
+        )
+      }
+    }
     const stamped = { ...pending, combatSequence: this.allocateSeq() } as CombatEvent
     this.trace.recordEvent(stamped)
     target.push(stamped)
@@ -761,10 +819,42 @@ export class CombatScheduler {
 
   private periodicBridge(event: CombatEvent): ImmediateSettlement | void {
     if (event.type !== 'periodic_requests_committed') return
+    // The bridge is the one lane that MATERIALIZES ops from event data --
+    // malformed requests fault structurally (Lens B2), never mint ops
+    // carrying undefined/NaN into authorities.
+    if (!Array.isArray(event.requests)) {
+      this.structuralFault('periodicBridge: requests is not an array')
+    }
     const operations = event.requests.map((req) =>
       this.periodicRequestToOp(event, req),
     )
     return { kind: 'operations', operations }
+  }
+
+  private assertPeriodicRequestShape(
+    req: PeriodicRequestsCommitted['requests'][number],
+  ): void {
+    const r = req as unknown as Record<string, unknown>
+    for (const field of ['requestId', 'instanceId', 'periodicId', 'sourceId', 'targetId']) {
+      if (typeof r[field] !== 'string' || (r[field] as string).length === 0) {
+        this.structuralFault(`periodicBridge: request missing '${field}'`)
+      }
+    }
+    if ('damageProfile' in req) {
+      if (typeof req.damageProfile !== 'string' || req.damageProfile.length === 0) {
+        this.structuralFault('periodicBridge: damage request missing damageProfile')
+      }
+      if (
+        !Number.isFinite(req.coefficient) ||
+        !Number.isFinite(req.hitCount) ||
+        typeof req.canCrit !== 'boolean' ||
+        typeof req.canMiss !== 'boolean'
+      ) {
+        this.structuralFault('periodicBridge: malformed damage request fields')
+      }
+    } else if (!Number.isFinite(req.amount)) {
+      this.structuralFault('periodicBridge: heal request missing finite amount')
+    }
   }
 
   private periodicRequestToOp(
@@ -784,6 +874,7 @@ export class CombatScheduler {
     // periodicRequestByOpId only after the produced group passes atomic
     // reservation in settleEvent (v7.6 hygiene).
     const operationId = `periodic.${req.requestId}`
+    this.assertPeriodicRequestShape(req)
     this.pendingPeriodicCorrelation.set(operationId, req.requestId)
     if ('damageProfile' in req) {
       return {
@@ -800,6 +891,10 @@ export class CombatScheduler {
           canMiss: req.canMiss,
           periodicId: req.periodicId,
           tags: req.tags,
+          // Forward-carriers (Lens B5): snapshot-scaling + stackCount ride
+          // to the damage authority -- the request is useless without them.
+          ...(req.stackCount !== undefined ? { stackCount: req.stackCount } : {}),
+          ...(req.snapshot !== undefined ? { snapshot: req.snapshot } : {}),
         },
       }
     }

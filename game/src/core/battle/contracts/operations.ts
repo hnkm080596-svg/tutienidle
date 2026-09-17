@@ -123,6 +123,12 @@ export interface DealDamageOperation {
     canMiss: boolean
     periodicId?: string
     tags?: readonly string[]
+    /** Buff-periodic forward-carriers (Lens B5): stackCount rides for
+        profiles that scale on stacks; snapshot carries the apply-time
+        source context for snapshot-scaled periodics -- DamageSystem
+        resolves against THIS instead of live source stats when present. */
+    stackCount?: number
+    snapshot?: Readonly<Record<string, number>>
   }
 }
 

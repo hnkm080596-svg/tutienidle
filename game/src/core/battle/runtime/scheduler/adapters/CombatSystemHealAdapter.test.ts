@@ -57,6 +57,7 @@ const CTX: CombatAuthorityExecutionContext = {
     rootActionId: 'root.test',
   } satisfies CombatOperationOrigin,
   events: { emit: () => {} },
+  combatSequence: 0,
 }
 
 describe('CombatSystemHealAdapter', () => {

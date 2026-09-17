@@ -147,6 +147,16 @@ export class CombatOperationBatchRunner {
       Any violation -> CombatSettlementFault (broken command graph).
       Global uniqueness is the scheduler's reservation step -- this method
       checks in-batch structure only. */
+  /** Single-op shape validation for handler-PRODUCED ops (Lens B8): the
+      produced-group lane used to check ids only -- malformed payloads
+      reached ports as raw TypeErrors instead of structural faults. */
+  validateProducedOperation(op: unknown, context: string): void {
+    if (typeof op !== 'object' || op === null) {
+      throw new CombatSettlementFault(`${context}: produced entry must be a non-null object`)
+    }
+    this.assertResolvedOperationShape(op as ResolvedCombatOperation, context, -1)
+  }
+
   validateBatchStructure(batch: CombatOperationBatch): void {
     if (typeof batch !== 'object' || batch === null) {
       throw new CombatSettlementFault('batch must be a non-null object')
@@ -178,6 +188,17 @@ export class CombatOperationBatchRunner {
       const operationId = (entry as { operationId?: unknown }).operationId
       if (!isNonEmptyString(operationId)) {
         this.fail(batch.batchId, i, 'blank operationId')
+      }
+      // `periodic.*` ids are scheduler-minted bridge ops (Lens C6): a
+      // producer forging one inside a batch would execute with no
+      // PeriodicOperationSettled and no correlation -- a uses-mark
+      // consumer would hang silently. Reject the namespace in batches.
+      if (typeof operationId === 'string' && operationId.startsWith('periodic.')) {
+        this.fail(
+          batch.batchId,
+          i,
+          `operationId '${operationId}': 'periodic.*' namespace is scheduler-reserved`,
+        )
       }
       if (seen.has(operationId)) {
         this.fail(batch.batchId, i, `duplicate operationId '${operationId}'`)
@@ -256,7 +277,10 @@ export class CombatOperationBatchRunner {
     if (entry.healTarget !== 'source' && entry.healTarget !== 'target') {
       this.fail(batchId, index, `deferred '${entry.operationId}': bad healTarget`)
     }
-    if (!isFiniteNumber(entry.fraction)) {
+    // Lens C5: fraction must be finite AND non-negative -- a negative
+    // fraction materializes a negative heal, bypassing the literal-heal
+    // `amount >= 0` validation.
+    if (!isFiniteNumber(entry.fraction) || entry.fraction < 0) {
       this.fail(batchId, index, `deferred '${entry.operationId}': bad fraction`)
     }
     this.assertOrigin(entry.origin, batchId, index)
@@ -504,7 +528,7 @@ export class CombatOperationBatchRunner {
       producer-minted operationId is preserved (R-C2). */
   materialize(
     deferred: DeferredOperation,
-    results: BatchResultStore,
+    results: BatchResultContext,
   ): ResolvedCombatOperation {
     const prior = results.get(deferred.resultOperationId)
     const priorOp = results.getOperation(deferred.resultOperationId)
