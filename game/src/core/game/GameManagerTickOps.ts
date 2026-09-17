@@ -7,6 +7,7 @@ import type { PillRegistry } from '../pill/PillRegistry'
 import type { PlayerData } from '../player/Player'
 import type { DecomposeSystem, DecomposeOutputEntry } from '../production/DecomposeSystem'
 import type { ProductionSystem } from '../production/ProductionSystem'
+import { resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import type { QuestManager } from '../quest/QuestManager'
 import type { QuestRegistry } from '../quest/QuestRegistry'
 import type { QuestSystem } from '../quest/QuestSystem'
@@ -148,14 +149,15 @@ export class GameManagerTickOps {
       )
 
       // R7 (AR-08) shared worker pool - decompose claims its workers
-      // from the CHQ capacity FIRST; production receives the remainder.
-      // Capacity is re-supplied every tick so CHQ build/upgrade takes
-      // effect without a restart, and stale restored workers clamp down.
+      // from the CHQ capacity FIRST; production receives the remainder via
+      // the ONE split rule (Mission D / spec D5) - the same helper the
+      // restore path uses (GameManagerSaveRestore). Capacity is
+      // re-supplied every tick so CHQ build/upgrade takes effect without
+      // a restart, and stale restored workers clamp down.
       this.deps.decomposeSystem.updateCapacity(activePlayer.autoWorkerCapacity ?? 0)
-      const decomposeWorkers = this.deps.decomposeSystem.getSettings().workers
-      const productionCapacity = Math.max(
-        0,
-        (activePlayer.autoWorkerCapacity ?? 0) - decomposeWorkers,
+      const productionCapacity = resolveProductionWorkerCapacity(
+        activePlayer.autoWorkerCapacity ?? 0,
+        this.deps.decomposeSystem.getSettings().workers,
       )
 
       this.deps.productionSystem.tickWorkers(
