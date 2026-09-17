@@ -113,9 +113,9 @@ export class TribulationDirector {
   private active: ActiveTribulationState | null = null
   private chapters: readonly TribulationChapterProfile[] = []
   /**
-   * Entity "ma" cho EntityVitalsSystem phát event chuẩn (HUD/scene đọc
-   * 'entity_vitals_changed'/'damage' như trận cũ) — damage thật áp trên
-   * snapshot fields riêng, entity này chỉ là kênh phát event.
+   * Ghost entity for EntityVitalsSystem so it emits standard
+   * 'entity_vitals_changed' events (scene/HUD render from them). Real damage
+   * applies to the snapshot fields; this entity is only the event channel.
    */
   private ghost: CombatEntity | null = null
   private snapshotHp = 0
