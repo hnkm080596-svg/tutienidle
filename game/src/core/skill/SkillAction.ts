@@ -25,9 +25,8 @@ export interface DealDamageAction {
 
   hitCountByRealm?: boolean
 
-  // Phase 2A — batch-level knockback (Thổ Tu pattern). Read at
-  // beginSkillBatch() time in BattleSystem.ts, same as
-  // earthPureAreaBehavior today; NOT a per-hit field on the executor.
+  // Phase 2A — batch-level knockback (Thổ Tu pattern). Read at batch
+  // open time by the executing engine; NOT a per-hit field.
   knockbackDistance?: number
 }
 

@@ -9,7 +9,7 @@
 // giữ state ngoài Battle (runtime-only, xem ArtifactRuntime.ts).
 import type { Battle } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { ActionImpactSystem, ActionDamageInfo } from '../battle/ActionImpactSystem'
+import type { ActionDamageInfo, ScheduledBasicImpact } from '../battle/ActionImpactSystem'
 import type { BuffPool } from '../buff/BuffPool'
 import type { BuffRegistry } from '../buff/BuffRegistry'
 import type { CombatAiStrategy } from '../battle/CombatAiStrategy'
@@ -21,7 +21,12 @@ import type { ArtifactPath } from './Artifact'
 import { getArtifactGradeMultiplier } from './ArtifactProgression'
 
 export interface ArtifactSystemDeps {
-  actionImpact: ActionImpactSystem
+  /**
+   * Parked port — the dormant ActionImpactSystem class was removed in
+   * Mission G; only the scheduleBasic member this file calls survives
+   * as the contract (the reimagine provides a real implementation).
+   */
+  actionImpact: { scheduleBasic(entry: ScheduledBasicImpact): void }
   buffRegistry: BuffRegistry
   getBuffsFor: (battle: Battle, entity: CombatEntity) => BuffPool
   aiStrategy: () => CombatAiStrategy

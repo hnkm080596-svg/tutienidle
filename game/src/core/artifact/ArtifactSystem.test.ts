@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Battle, BattleEnemy } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
-import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 import { BuffPool } from '../buff/BuffPool'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { createBaseStats } from '../stats/StatBlock'
@@ -56,7 +55,7 @@ function createDeps(overrides: Partial<ArtifactSystemDeps> = {}): ArtifactSystem
   const buffRegistry = createBuffRegistry()
 
   return {
-    actionImpact: { scheduleBasic: vi.fn() } as unknown as ActionImpactSystem,
+    actionImpact: { scheduleBasic: vi.fn() },
     buffRegistry,
     getBuffsFor: (battle, entity) =>
       entity.id === battle.player.id
