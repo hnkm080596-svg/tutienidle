@@ -86,8 +86,8 @@ const legacyMaterials: Material[] = [
   },
 
   // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
-  // §6) — đá nâng phẩm, rơi từ quái Trúc Cơ trở lên (xem
-  // BattleLootSystem.grantArtifactStoneDrop() + ArtifactDropBalance.ts).
+  // §6) — đá nâng phẩm, rơi từ quái Trúc Cơ trở lên qua dòng weighted
+  // trong StageDropTables (không có bảng thấp hơn nào liệt kê nó).
   {
     id: 'doan_bao_thach',
     name: 'Đoán Bảo Thạch',
