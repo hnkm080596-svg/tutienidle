@@ -136,23 +136,27 @@ describe('VendorBalance — bảng giá Hóa Bán', () => {
     expect(getUnitSellPrice(ore('o_thuong_co', 'mortal', 'thuong_co'), 'mortal')).toBe(120)
   })
 
-  it('Luyện Khí Tinh Hoa — giá theo index realm của bối cảnh bán', () => {
-    const realms = [
-      'mortal',
-      'qi_refining',
-      'foundation_establishment',
-      'golden_core',
-      'nascent_soul',
-      'soul_transformation',
-      'void_refinement',
-      'mahayana',
-      'body_integration',
-      'tribulation',
-    ]
+  it('Luyện Khí Tinh Hoa — giá theo realm tier của bối cảnh bán', () => {
+    // Reachable realms (SUPPORTED_PROFESSION_REALMS caps at
+    // foundation_establishment): mortal→5·1, qi_refining→5·3, fe→5·9.
+    // Post-beta realms follow getRealmTier: tribulation 9→8 and
+    // body_integration folds onto mahayana's shared tier (8→7) — an
+    // intended alignment with the shared-tier decision, unreachable
+    // today.
+    const expectedIndex: Record<string, number> = {
+      mortal: 0,
+      qi_refining: 1,
+      foundation_establishment: 2,
+      golden_core: 3,
+      nascent_soul: 4,
+      soul_transformation: 5,
+      void_refinement: 6,
+      mahayana: 7,
+      body_integration: 7,
+      tribulation: 8,
+    }
 
-    for (const realmId of realms) {
-      const index = realms.indexOf(realmId)
-
+    for (const [realmId, index] of Object.entries(expectedIndex)) {
       expect(getUnitSellPrice(
         {
           id: LUYEN_KHI_TINH_HOA_ID,
