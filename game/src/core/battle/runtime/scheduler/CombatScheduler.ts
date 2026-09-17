@@ -114,6 +114,9 @@ export class CombatScheduler {
   /** Per-ROOT work budget (r5 HIGH 3) -- reset at each root unit. */
   private workThisBarrier = 0
   private schedulerState: 'running' | 'faulted' = 'running'
+  /** Single-flight guard (P5 F-E): settlement is not reentrant -- an
+      authority/handler calling run() mid-execute is a structural fault. */
+  private runInFlight = false
 
   private readonly sinkHost: CombatEventSinkHost = {
     nextEventOrdinal: (scopeId) => this.nextEventOrdinal(scopeId),
@@ -195,8 +198,11 @@ export class CombatScheduler {
   }
 
   /** PUBLIC lifecycle sink factory (r5 HIGH 2) -- buff lifecycle / proc
-      roots emit via this; events land on rootEventQueue. */
+      roots emit via this; events land on rootEventQueue. Command-lane
+      intake: post-fault creation is a structural fault (the sink's emits
+      would silently drop anyway -- fail fast at creation instead). */
   createLifecycleSink(rootActionId: string): CombatEventSink {
+    this.assertAccepting('createLifecycleSink')
     return new ScopedCombatEventSink(
       { kind: 'lifecycle', scopeId: rootActionId },
       this.rootEventQueue,
@@ -205,8 +211,15 @@ export class CombatScheduler {
   }
 
   /** Drains authored ops + root events until quiescent. Throws
-      CombatSettlementFault on any guard/structural fault (dev/test). */
+      CombatSettlementFault on any guard/structural fault (dev/test).
+      Single-flight + fail-fast post-fault (P5 F-E/T1): reentrant or
+      post-fault calls are structural faults, never silent no-ops. */
   run(): CombatTrace {
+    if (this.runInFlight) {
+      this.structuralFault('run(): reentrant call during settlement')
+    }
+    this.assertAccepting('run')
+    this.runInFlight = true
     try {
       while (
         this.authoredQueue.length > 0 ||
@@ -247,6 +260,8 @@ export class CombatScheduler {
         )
       }
       throw error
+    } finally {
+      this.runInFlight = false
     }
     return this.trace
   }

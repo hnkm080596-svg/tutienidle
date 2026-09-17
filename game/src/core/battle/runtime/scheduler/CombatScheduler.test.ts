@@ -396,7 +396,9 @@ describe('operation id uniqueness (r3 HIGH + r5 BLOCKER 3)', () => {
       h.scheduler.enqueueAuthored([damageOp('op.A'), damageOp('op.B')]),
     ).toThrow(CombatSettlementFault)
 
-    h.scheduler.run()
+    // The reservation fault halts the scheduler -- a post-fault run()
+    // throws (fail-fast intake, P5 T1) and executes nothing.
+    expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
     expect(h.calls).toEqual([])
   })
 
@@ -1255,5 +1257,130 @@ describe('root event frames (P5 F-A)', () => {
     h.scheduler.run()
     // e1 -> e3's whole consequence tree (h:e3 + its returned op.X) -> e2.
     expect(h.calls).toEqual(['h:e1', 'h:e3', 'op.X', 'h:e2'])
+  })
+})
+
+describe('run() reentrancy (P5 F-E)', () => {
+  it('an authority calling run() mid-execute is a structural fault -- settlement is single-flight', () => {
+    const ref: { current: CombatScheduler | undefined } = {
+      current: undefined,
+    }
+    const executor = new CombatOperationExecutor({
+      damage: {
+        dealDamage: () => {
+          ref.current?.run() // reentrant -- must fault, never nest
+          return { rawDamage: 1, hpDamage: 1, killed: false }
+        },
+      },
+    })
+    const scheduler = new CombatScheduler(executor)
+    ref.current = scheduler
+    scheduler.enqueueAuthored([damageOp('op.A')])
+
+    expect(() => scheduler.run()).toThrow(CombatSettlementFault)
+    expect(scheduler.state).toBe('faulted')
+    expect(scheduler.trace.faults[0]?.reason).toBe('structural_fault')
+  })
+})
+
+describe('post-fault intake (P5 T1)', () => {
+  it('command lanes throw post-fault; event lanes silently drop', () => {
+    const h = makeHarness({ maxImmediateWorkPerBarrier: 3 })
+    // A pre-fault lifecycle sink stays in hand -- its emits must drop
+    // silently once the scheduler halts.
+    const sink = h.scheduler.createLifecycleSink('action.life.1')
+    h.emissions.set('op.A', [elem('loop')])
+    routeElemental(h, {
+      loop: (_e, s) => {
+        s.emit(elem('loop'))
+      },
+    })
+    h.scheduler.enqueueAuthored([damageOp('op.A')])
+
+    expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
+    expect(h.scheduler.state).toBe('faulted')
+
+    const stampedEvents = h.scheduler.trace.events.length
+    const committedOps = h.scheduler.trace.records.length
+
+    // Command lanes fail fast -- nothing half-enters a dead scheduler.
+    expect(() =>
+      h.scheduler.enqueueAuthored([damageOp('op.Late')]),
+    ).toThrow(CombatSettlementFault)
+    expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
+    expect(() =>
+      h.scheduler.registerImmediateHandler(
+        'buff_application_failed',
+        () => undefined,
+      ),
+    ).toThrow(CombatSettlementFault)
+    expect(() => h.scheduler.createLifecycleSink('late.scope')).toThrow(
+      CombatSettlementFault,
+    )
+    expect(() => h.scheduler.reserveOperationId('op.Late')).toThrow(
+      CombatSettlementFault,
+    )
+
+    // Event lanes silently drop -- a halted scheduler cannot drain them,
+    // so emitters must never depend on post-fault delivery. Nothing is
+    // stamped: a dropped event leaves no trace (intake is closed, not
+    // journaled).
+    sink.emit(elem('dropped'))
+    h.scheduler.enqueueEvent({
+      ...elem('dropped.ext'),
+      eventId: 'evt.late.0',
+    } as PendingCombatEvent)
+    expect(h.scheduler.trace.events.length).toBe(stampedEvents)
+    expect(h.scheduler.trace.records.length).toBe(committedOps)
+  })
+})
+
+describe('run() catch-path taxonomy (P5 T5)', () => {
+  it('a generic authority error records unexpected_error and faults the scheduler', () => {
+    const executor = new CombatOperationExecutor({
+      damage: {
+        dealDamage: () => {
+          throw new Error('authority exploded')
+        },
+      },
+    })
+    const scheduler = new CombatScheduler(executor)
+    scheduler.enqueueAuthored([damageOp('op.A')])
+
+    expect(() => scheduler.run()).toThrow('authority exploded')
+    expect(scheduler.state).toBe('faulted')
+    expect(scheduler.trace.faults[0]?.reason).toBe('unexpected_error')
+  })
+
+  it('a missing authority port records structural_fault', () => {
+    const scheduler = new CombatScheduler(new CombatOperationExecutor({}))
+    scheduler.enqueueAuthored([damageOp('op.A')])
+
+    expect(() => scheduler.run()).toThrow(CombatSettlementFault)
+    expect(scheduler.state).toBe('faulted')
+    expect(scheduler.trace.faults[0]?.reason).toBe('structural_fault')
+  })
+})
+
+describe('emitted-vs-queued-sibling ordering (P5 T6)', () => {
+  it('returned ops run first; emitted children append to the frame tail behind queued siblings', () => {
+    const h = makeHarness()
+    h.emissions.set('op.A', [elem('e1'), elem('e2')])
+    routeElemental(h, {
+      e1: (_e, sink) => {
+        sink.emit(elem('child'))
+        return { kind: 'operations', operations: [damageOp('op.X')] }
+      },
+      e2: () => undefined,
+      child: () => undefined,
+    })
+    h.scheduler.enqueueAuthored([damageOp('op.A')])
+
+    h.scheduler.run()
+    // Locked frame semantics: e1's RETURNED settlement runs inside e1's
+    // settle (before e2); e1's emitted events append to the frame TAIL --
+    // behind the already-queued sibling e2 (r5 HIGH 4: emitted events
+    // settle after the returned settlement, in frame FIFO order).
+    expect(h.calls).toEqual(['op.A', 'h:e1', 'op.X', 'h:e2', 'h:child'])
   })
 })
