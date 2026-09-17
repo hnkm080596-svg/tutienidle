@@ -75,12 +75,62 @@ export class GameManagerAutoFarmOps {
   }
 
   stopAutoFarm(player: PlayerData): void {
-    if (player.autoFarmStage === null) {
+    const autoFarm = player.autoFarmStage
+
+    if (autoFarm === null) {
       return
     }
 
     player.autoFarmStage = null
-    this.deps.stageManager.stop()
+
+    // Release only the lease THIS farm holds — if the slot were ever
+    // occupied by a different stage (a diverged-state bug), stopping the
+    // farm must not kill an unrelated battle's lease.
+    if (this.deps.stageManager.get()?.stageId === autoFarm.stageId) {
+      this.deps.stageManager.stop()
+    }
+  }
+
+  /**
+   * Restore-time reconcile: persisted autoFarmStage is a durable lease
+   * that must re-acquire the single StageManager slot on boot. startAutoFarm
+   * is NOT the right entry — it resets lastCheckedMs to Date.now(), wiping
+   * the offline remainder the settle just re-anchored. An unresolvable
+   * stage (removed content / corrupt id) drops the dead lease rather than
+   * leaving a farm armed-but-inert with a free slot.
+   */
+  reconcileAutoFarmRuntime(player: PlayerData): void {
+    const autoFarm = player.autoFarmStage
+
+    if (!autoFarm) {
+      return
+    }
+
+    // Idempotent: a second restore of a same-farm payload sees the slot
+    // already held by THIS farm stage — that IS the desired end state,
+    // not a conflict (start() returns false for any occupied slot).
+    if (this.deps.stageManager.get()?.stageId === autoFarm.stageId) {
+      return
+    }
+
+    // Same precondition as startAutoFarm: a persisted lease for a stage
+    // that was never perfect-cleared (crafted/foreign save) is a dead
+    // lease — holding the slot would block manual stages while paying
+    // nothing. Same for a missing/invalid cycle time: the tick can never
+    // complete a cycle, so the farm would hold the slot inert forever.
+    if (
+      !player.perfectClearStageIds.includes(autoFarm.stageId) ||
+      !isValidCycleSeconds(player.perfectClearSeconds[autoFarm.stageId])
+    ) {
+      player.autoFarmStage = null
+      return
+    }
+
+    const stage = this.deps.stageTemplates.get(autoFarm.stageId)
+
+    if (!stage || !this.deps.stageManager.start(stage)) {
+      player.autoFarmStage = null
+    }
   }
 
   /**
@@ -149,6 +199,14 @@ export class GameManagerAutoFarmOps {
     const autoFarm = player.autoFarmStage
 
     if (!autoFarm) {
+      return
+    }
+
+    // Fail-closed lease check (Mission B audit): persisted state and the
+    // runtime slot must agree before rewards mint. A farm ticking without
+    // its StageManager lease runs concurrent with a real battle that
+    // shares the same BattleLootSystem session.
+    if (this.deps.stageManager.get()?.stageId !== autoFarm.stageId) {
       return
     }
 

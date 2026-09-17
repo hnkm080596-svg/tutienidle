@@ -1155,6 +1155,7 @@
     "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}"
   },
   "save": {
-    "conflict": "Save was changed by another session."
+    "conflict": "Save was changed by another session.",
+    "createFailed": "Character creation failed — initialization did not complete."
   }
 }

@@ -713,6 +713,8 @@ export class GameManager {
       getWorkerAssignments: () => this.buildingOps.getWorkerAssignments(),
       settleAutoFarmOffline: (player, elapsedSeconds) =>
         this.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, elapsedSeconds),
+      reconcileAutoFarmRuntime: (player) =>
+        this.turnBattleOps.autoFarmOps.reconcileAutoFarmRuntime(player),
       decomposeSystem: this.decomposeSystem,
       // Deferred closures - tickOps is assigned later in this constructor.
       deliverDecomposeOutput: (entry) => this.tickOps.deliverDecomposeOutput(entry),

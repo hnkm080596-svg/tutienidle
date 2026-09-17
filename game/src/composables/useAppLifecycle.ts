@@ -331,8 +331,35 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
         onRestoreOk?.(offline)
       } else {
-        onNewCharacter?.()
+        // Mark the transaction dirty BEFORE the callback runs
+        // (Mission B audit): the callback drives non-idempotent grants
+        // across several mutable authorities. A mid-grant throw leaves a
+        // partially-mutated runtime — the flag must already be set so any
+        // later retry takes the dirty-transaction branch (hardReset)
+        // instead of re-running grants on top of the partial state.
         newCharacterGrantsApplied = true
+
+        try {
+          // Await even though the type is () => void: a promise-returning
+          // callback is silently assignable to it, and an async rejection
+          // must land in this same catch rather than escaping bootGame.
+          await onNewCharacter?.()
+        } catch (error: unknown) {
+          // Same visible-failure contract as a throwing first save: a
+          // grant-phase throw must resolve through boot.fail()/onError,
+          // not escape bootGame as an unhandled rejection (the
+          // `await bootGame(true)` caller has no catch) leaving the app
+          // on the loading screen forever.
+          console.error('[boot] character creation grants threw', error)
+
+          if (bootGeneration !== lifecycleGeneration) {
+            return { status: 'skipped' }
+          }
+
+          onError(i18n.global.t('save.createFailed'))
+          boot.fail()
+          return { status: 'failed' }
+        }
 
         // Audit T1-8 fix — the first durable save is INSIDE the boot
         // transaction: a new character must not reach a ticking runtime

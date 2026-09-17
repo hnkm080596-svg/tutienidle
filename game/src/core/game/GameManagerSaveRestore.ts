@@ -59,6 +59,10 @@ export interface GameManagerSaveRestoreDeps {
   // Auto-farm Task 5 (2026-09-04) — offline catch-up closure (logic sống
   // trên GameManager, SaveRestore chỉ gọi lại — cùng pattern trên).
   settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
+  // Mission B audit — the persisted farm lease must also RE-ACQUIRE the
+  // StageManager slot at restore; settle alone leaves the slot free while
+  // persisted state stays armed.
+  reconcileAutoFarmRuntime: (player: PlayerData) => void
   // R7 (AR-08) - decompose restore + shared delivery closure (online
   // tick and offline settle use the SAME delivery/overflow path).
   decomposeSystem: DecomposeSystem
@@ -437,6 +441,14 @@ export class GameManagerSaveRestore {
         // offline (cùng gate >60s với Production catch-up).
         this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds)
       }
+
+      // Mission B audit — re-acquire the StageManager lease for a persisted
+      // farm on EVERY restore, not only inside the >60s settle window: a
+      // fast reload restores an armed farm too. Without this the slot reads
+      // free while tickAutoFarm keeps paying on persisted state alone, and
+      // a manual stage start runs concurrent with the farm over the shared
+      // BattleLootSystem session.
+      this.deps.reconcileAutoFarmRuntime(offlinePlayer)
     }
 
     // Đan Phòng offline settle (§8.2).

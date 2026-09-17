@@ -1154,6 +1154,7 @@
     "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}"
   },
   "save": {
-    "conflict": "Save đã thay đổi ở một phiên khác."
+    "conflict": "Save đã thay đổi ở một phiên khác.",
+    "createFailed": "Tạo nhân vật thất bại — khởi tạo không hoàn tất."
   }
 }

@@ -788,4 +788,55 @@ describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8
 
     lifecycle.stopAll()
   })
+
+  // Mission B external audit (Medium): onNewCharacter runs OUTSIDE the
+  // try/catch and BEFORE newCharacterGrantsApplied is set. A mid-grant
+  // throw escapes bootGame as an unhandled rejection (the caller
+  // `await bootGame(true)` has no catch either) -> boot.fail() never
+  // runs, the flag stays false on a PARTIALLY mutated runtime, and a
+  // retry re-runs the non-idempotent grants = the same double-grant
+  // class the save-failure path was fixed for, one seam earlier.
+  it('onNewCharacter THROWS mid-grant -> boot fails visibly + retry hard-resets instead of re-granting', async () => {
+    const stubs = makeStubs()
+
+    const grantStarterContent = vi.fn(() => {
+      stubs.gameManager.buildingManager.add({
+        instanceId: 'a',
+        buildingId: 'teleport_array',
+        level: 1,
+        lastCollectedAt: 0,
+      })
+      throw new Error('grant blew up mid-transaction')
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const first = await lifecycle.bootGame({
+      createNewCharacter: true,
+      onNewCharacter: grantStarterContent,
+    })
+
+    // The throw must resolve through the same visible failure contract as
+    // a throwing first save — not an unhandled rejection on a stuck boot.
+    expect(first.status).toBe('failed')
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+    expect(stubs.onError).toHaveBeenCalled()
+    expect(stubs.player.save).not.toHaveBeenCalled()
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
+
+    // The runtime is dirty (partial grants applied, no save): a retry
+    // must take the dirty-transaction branch (hardReset + skipped), not
+    // re-run the callback on top of the partial state.
+    const second = await lifecycle.bootGame({
+      createNewCharacter: true,
+      onNewCharacter: grantStarterContent,
+    })
+
+    expect(second.status).toBe('skipped')
+    expect(stubs.hardReset).toHaveBeenCalledTimes(1)
+    // The callback ran exactly once — the first attempt. A re-run would
+    // double-apply the partial grants.
+    expect(grantStarterContent).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
+  })
 })
