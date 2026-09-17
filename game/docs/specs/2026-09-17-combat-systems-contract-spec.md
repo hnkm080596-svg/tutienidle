@@ -2,7 +2,7 @@
 
 Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
 Version: 1.3
-Applies to: [SkillDefinition v1.1](./2026-09-17-skill-definition-system-spec.md), [Buff System Reimagined v1.0](./2026-09-17-buff-system-reimagined-spec.md), [Reaction System Reimagined v1.0](./2026-09-17-reaction-system-reimagined-spec.md)
+Applies to: [SkillDefinition v1.1](./2026-09-17-skill-definition-system-spec.md), [Buff System Reimagined v1.2](./2026-09-17-buff-system-reimagined-spec.md), [Reaction System Reimagined v1.0](./2026-09-17-reaction-system-reimagined-spec.md)
 Compatibility requirement: None
 Migration requirement: None
 Purpose: Khóa contract runtime giữa Skill, Buff, Reaction và các combat authorities trước implementation.
@@ -1375,3 +1375,11 @@ Additive deltas locked in the implementation megaplan (`2026-09-17-megaplan-comb
 
 1. **`PeriodicOperationSettled` event (scheduler-originated):** after every `periodic.${requestId}` op completes its barrier, the scheduler enqueues `{type:'periodic_operation_settled', requestId, operationId, status, reason?}` into the enclosing frame — FIFO after already-queued siblings, always inside the same root transaction. It is a member of `CombatEvent` but NOT of `CombatEventPayload`/`PendingCombatEvent` (no authority emits it through a sink). Purpose: the periodic emitter's registered immediate handler finalizes `uses`-modifier pending marks from the real op status — the only correlation channel that works for manual `triggerPeriodic` (whose generated ops settle inside the triggering op's barrier, after the authority call returned), lifecycle boundaries, and interval crossings alike.
 2. **`settle()` per sequential periodic unit:** `createLifecycleSink().settle()` may be invoked once per sequential periodic unit inside a single lifecycle entry (interval multi-crossing and multi-instance boundaries settle between request computations so later requests observe post-settlement state). The returned opId→status map remains for diagnostics/tests; `uses` finalization no longer depends on it.
+
+---
+
+## Addendum v1.4 (2026-09-17 — locked via Buff megaplan review round 4)
+
+1. **Typed periodic correlation:** `ResolvedCombatOperation` gains `periodicRequestId?: string` — set ONLY by the built-in periodic bridge on generated ops. The scheduler emits `PeriodicOperationSettled` when `op.periodicRequestId !== undefined`, never by parsing `operationId`. The `periodic.${requestId}` operation-id shape remains as a naming/debugging convention only — it carries no semantics.
+2. **`PeriodicOperationSettled` stamping (locked):** `eventId = 'evt.settled.' + operationId` (deterministic — op ids are globally unique); `causationOperationId = operationId`; `rootActionId` copied from the op's origin (the emitter's continuation needs it to mint follow-on request events); `combatSequence = allocateSeq()` at enqueue (therefore `seq(op) < seq(settled)`); recorded exactly once — the emission site runs once per periodic op's barrier.
+3. **Manual-trigger continuation:** a multi-unit `triggerPeriodic` emits `PeriodicRequestsCommitted` carrying exactly ONE request and queues the remaining units; the emitter's registered `periodic_operation_settled` handler — invoked with the event-scoped sink — finalizes the unit's `uses` marks, then computes and emits the NEXT unit's single-request event through that sink. Every manual request therefore computes against post-settlement state, identical to the lifecycle path (v1.3 rule 2).
