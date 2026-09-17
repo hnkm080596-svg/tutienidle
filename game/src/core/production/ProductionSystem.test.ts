@@ -114,209 +114,150 @@ describe('ProductionBalance', () => {
   })
 })
 
-describe('ProductionSystem — cycle lifecycle (plan §4)', () => {
-  it('snapshot deadline từ collectionRealmId + levelAtStart', () => {
+describe('ProductionSystem — workers-as-fuel (Mission D / spec D3)', () => {
+  it('state has no activeCycle field at all — the manual lane does not exist', () => {
     const system = createSystem()
+    const state = system.ensureSiteState('thanh_van_lam')
+    expect('activeCycle' in state).toBe(false)
+  })
 
-    system.ensureSiteState('thanh_van_lam')
+  it('capacity 0 produces NOTHING online even with autoRestart on — workers are required fuel', () => {
+    const { bag, registry } = createBag()
+    const system = createSystem()
+    system.setAutoRestart('thanh_van_lam', true)
 
-    expect(system.startCycle('thanh_van_lam', 'qi_refining', 1_000_000)).toBe(true)
+    system.tickWorkers(60_000, bag, registry, 'mortal', 0)
+
+    expect(system.getState('thanh_van_lam')!.workerCycles ?? []).toHaveLength(0)
+    expect(bag.getAll()).toHaveLength(0)
+  })
+
+  it('capacity 0 produces NOTHING offline — no manual fallback phase', () => {
+    const { bag, registry } = createBag()
+    const system = createSystem()
+    system.restoreStates([
+      { siteId: 'thanh_van_lam', level: 1, autoRestart: true, activeWorkerSlots: 0, workerCycles: [] },
+    ])
+
+    const settled = system.settleOffline(bag, registry, 'mortal', 10_000_000, {
+      workerCapacity: 0,
+      offlineSinceMs: 0,
+    })
+
+    expect(settled).toBe(0)
+    expect(bag.getAll()).toHaveLength(0)
+  })
+
+  it('lane count equals activeWorkerSlots exactly — 1 worker -> 1 lane, no implicit extra lane', () => {
+    const { bag, registry } = createBag()
+    const system = createSystem()
+    system.setAutoRestart('thanh_van_lam', true)
+
+    system.tickWorkers(1_000, bag, registry, 'mortal', 1)
 
     const state = system.getState('thanh_van_lam')!
-
-    expect(state.activeCycle!.completesAtMs - state.activeCycle!.startedAtMs).toBe(300 * 1000)
+    expect(state.activeWorkerSlots).toBe(1)
+    expect(state.workerCycles).toHaveLength(1)
   })
 
-  it('nâng level giữa cycle không đổi deadline của cycle đang chạy', () => {
+  it('snapshot deadline from collectionRealmId + levelAtStart (worker lane)', () => {
     const { bag, registry } = createBag()
-
-    bag.add(registry.get('qi_refining_wood_decade'), 50)
-
-    // Plan Workstream F — Linh Thạch là MATERIAL trong bag.
-    bag.add(SPIRIT_STONE_MATERIAL, 5000)
-
     const system = createSystem()
+    system.setAutoRestart('thanh_van_lam', true)
 
-    system.ensureSiteState('thanh_van_lam')
+    system.tickWorkers(1_000_000, bag, registry, 'qi_refining', 1)
 
-    system.startCycle('thanh_van_lam', 'mortal', 0)
-
-    const before = system.getState('thanh_van_lam')!.activeCycle!
-
-    expect(system.upgradeSite('thanh_van_lam', bag)).toBe(true)
-
-    expect(system.getState('thanh_van_lam')!.level).toBe(2)
-
-    expect(system.getState('thanh_van_lam')!.activeCycle!.completesAtMs).toBe(before.completesAtMs)
+    const cycle = system.getState('thanh_van_lam')!.workerCycles![0]!
+    expect(cycle.collectionRealmId).toBe('qi_refining')
+    expect(cycle.completesAtMs - cycle.startedAtMs).toBe(300 * 1000)
   })
 
-  it('cùng collectionRealmId + level → cùng thời lượng bất kể reward roll ra gì', () => {
+  it('a due worker lane grants ONCE; the next tick refills the freed lane (idempotent, no double pay)', () => {
+    const { bag, registry } = createBag()
     const system = createSystem()
+    system.setAutoRestart('thanh_van_lam', true)
 
-    system.ensureSiteState('thanh_van_quang')
+    system.tickWorkers(0, bag, registry, 'mortal', 1)
+    const cycle = system.getState('thanh_van_lam')!.workerCycles![0]!
+    cycle.rollSeed = 12345
+    const expected = system.rollRewards(cycle).reduce((total, reward) => total + reward.amount, 0)
+
+    system.tickWorkers(100_000, bag, registry, 'mortal', 1)
+    const afterGrant = bag.getAll().reduce((total, stack) => total + stack.amount, 0)
+    expect(afterGrant).toBe(expected)
+
+    // Same instant re-tick: no second grant; the freed lane refills on
+    // the NEXT observation (top-up-then-settle order).
+    system.tickWorkers(100_000, bag, registry, 'mortal', 1)
+    expect(bag.getAll().reduce((total, stack) => total + stack.amount, 0)).toBe(afterGrant)
+  })
+
+  it('autoRestart=false gets NO slots even with spare capacity (eligibility gate)', () => {
+    const { bag, registry } = createBag()
+    const system = createSystem()
+    system.setAutoRestart('thanh_van_lam', false)
+
+    system.tickWorkers(1_000, bag, registry, 'mortal', 5)
+
+    expect(system.getState('thanh_van_lam')!.activeWorkerSlots).toBe(0)
+    expect(system.getState('thanh_van_lam')!.workerCycles ?? []).toHaveLength(0)
+  })
+
+  it('getSiteView reports progress from the earliest worker lane (not a manual cycle)', () => {
+    const { bag, registry } = createBag()
+    const system = createSystem()
+    system.setAutoRestart('thanh_van_lam', true)
+
+    system.tickWorkers(1_000, bag, registry, 'mortal', 1)
+
+    const view = system.getSiteView('thanh_van_lam', 1_000)!
+    expect(view.cycleTotalMs).toBe(100_000)
+    // The lane was seeded AT nowMs=1_000 (emptyLaneStartMs), so a full
+    // 100s remains — not 99s.
+    expect(view.cycleRemainingMs).toBe(100_000)
+  })
+
+  it('restoreStates drops a stale activeCycle key — tolerated, whitelisted out, never migrated', () => {
+    const system = createSystem()
+    const stale = {
+      siteId: 'thanh_van_lam',
+      level: 2,
+      autoRestart: true,
+      activeWorkerSlots: 0,
+      workerCycles: [],
+      // Pre-removal payload residue: must NOT round-trip into live state.
+      activeCycle: {
+        cycleId: 'old', siteId: 'thanh_van_lam', collectionRealmId: 'mortal',
+        siteLevelAtStart: 1, rewardTableVersion: 1, rollSeed: 1,
+        startedAtMs: 0, completesAtMs: 1,
+      },
+    }
+
+    system.restoreStates([stale])
+
+    const restored = system.getState('thanh_van_lam')!
+    expect('activeCycle' in restored).toBe(false)
+    expect(restored.level).toBe(2)
+  })
+
+  it('cùng collectionRealmId + level → cùng thời lượng bất kể reward roll ra gì (worker lane)', () => {
+    const { bag, registry } = createBag()
+    const system = createSystem()
+    system.setAutoRestart('thanh_van_quang', true)
 
     for (let seedRun = 0; seedRun < 20; seedRun++) {
-      system.startCycle('thanh_van_quang', 'mortal', 0)
+      system.tickWorkers(0, bag, registry, 'mortal', 3)
 
-      const cycle = system.getState('thanh_van_quang')!.activeCycle!
-
+      const cycle = system.getState('thanh_van_quang')!.workerCycles![0]!
       cycle.rollSeed = seedRun * 7919
 
       const rewards = system.rollRewards(cycle)
 
-      // Mọi kết quả (kể cả phẩm Tiên) cùng deadline đã snapshot — kiểm tra
-      // qua completesAtMs không phụ thuộc seed.
+      // Every outcome shares the snapshot deadline — completesAtMs does
+      // not depend on the seed.
       expect(cycle.completesAtMs).toBe(computeCycleSeconds(100, 1) * 1000)
-
       expect(rewards.length).toBeGreaterThan(0)
     }
-  })
-
-  it('settle gửi Bag đúng một lần; tick lặp không cấp đôi (idempotent)', () => {
-    const { bag, registry } = createBag()
-
-    const system = createSystem()
-
-    system.startCycle('thanh_van_lam', 'mortal', 0)
-
-    // Pin seed để kết quả deterministic (tier roll từ seed snapshot).
-    const cycle = system.getState('thanh_van_lam')!.activeCycle!
-
-    cycle.rollSeed = 12345
-
-    const expected = system.rollRewards(cycle).reduce((total, reward) => total + reward.amount, 0)
-
-    system.tick(999_999_999, bag, registry, 'mortal')
-
-    const woodTotal = bag.getAll().reduce((total, stack) => total + stack.amount, 0)
-
-    expect(woodTotal).toBe(expected)
-
-    system.tick(1_000_000_000, bag, registry, 'mortal')
-
-    expect(bag.getAll().reduce((total, stack) => total + stack.amount, 0)).toBe(woodTotal)
-
-    expect(system.getState('thanh_van_lam')!.activeCycle).toBeUndefined()
-  })
-
-  it('Auto tắt → về idle sau settle; Auto bật → cycle mới với cảnh giới hiện tại', () => {
-    const { bag, registry } = createBag()
-
-    const system = createSystem()
-
-    system.setAutoRestart('thanh_van_lam', false)
-
-    system.startCycle('thanh_van_lam', 'mortal', 0)
-
-    system.tick(999_999_999, bag, registry, 'qi_refining')
-
-    expect(system.getState('thanh_van_lam')!.activeCycle).toBeUndefined()
-
-    system.setAutoRestart('thanh_van_lam', true)
-
-    system.startCycle('thanh_van_lam', 'mortal', 0)
-
-    system.tick(1_999_999_999, bag, registry, 'qi_refining')
-
-    const restarted = system.getState('thanh_van_lam')!.activeCycle!
-
-    expect(restarted.collectionRealmId).toBe('qi_refining')
-
-    expect(restarted.startedAtMs).toBeLessThanOrEqual(1_999_999_999)
-  })
-
-  it('offline settle tuần tự từng cycle, tuân cap, không nhân một roll', () => {
-    const { bag, registry } = createBag()
-
-    const system = createSystem()
-
-    system.setAutoRestart('thanh_van_quang', true)
-
-    const startMs = 1_000_000_000
-
-    system.startCycle('thanh_van_quang', 'mortal', startMs)
-
-    // Giả lập quay lại sau 1 giờ: nhiều cycle 100s settle tuần tự, mỗi
-    // cycle một roll riêng (tổng quáng ≥ số cycle vì mỗi cycle ≥ 1).
-    const settled = system.settleOffline(bag, registry, 'mortal', startMs + 3600 * 1000)
-
-    expect(settled).toBeGreaterThan(10)
-
-    const oreStacks = bag.getAll().filter((stack) => stack.material.id.includes('_ore_'))
-
-    const oreTotal = oreStacks.reduce((total, stack) => total + stack.amount, 0)
-
-    expect(oreTotal).toBeGreaterThanOrEqual(settled)
-
-    // Cap: quay lại sau 100 giờ chỉ settle đúng ~360 cycle (10h / 100s),
-    // phần dư bị ngân sách chặn.
-    const cappedBag = new MaterialBag()
-
-    const cappedSystem = createSystem()
-
-    cappedSystem.setAutoRestart('thanh_van_quang', true)
-
-    cappedSystem.startCycle('thanh_van_quang', 'mortal', startMs)
-
-    const cappedSettled = cappedSystem.settleOffline(
-      cappedBag,
-      registry,
-      'mortal',
-      startMs + 100 * 3600 * 1000,
-    )
-
-    expect(cappedSettled).toBeLessThanOrEqual(361)
-  })
-
-  it('hết cap offline: backlog bị huỷ + restart từ nowMs, tick online KHÔNG trả thêm (chặn bypass cap)', () => {
-    const { bag, registry } = createBag()
-
-    const system = createSystem()
-
-    system.setAutoRestart('thanh_van_quang', true)
-
-    const startMs = 1_000_000_000
-
-    system.startCycle('thanh_van_quang', 'mortal', startMs)
-
-    // Vắng 100 giờ — vượt xa cap 10h.
-    const nowMs = startMs + 100 * 3600 * 1000
-
-    system.settleOffline(bag, registry, 'mortal', nowMs)
-
-    const totalAfterOffline = bag.getAll().reduce((total, stack) => total + stack.amount, 0)
-
-    // Backlog hết ngân sách phải bị huỷ: cycle kế tiếp bắt đầu từ nowMs
-    // (không còn cycle quá khứ chờ tick online trả dần).
-    const restarted = system.getState('thanh_van_quang')!.activeCycle!
-
-    expect(restarted.startedAtMs).toBe(nowMs)
-
-    // Tick online ngay sau đó không cấp thêm (cycle mới chưa hoàn thành).
-    system.tick(nowMs + 1000, bag, registry, 'mortal')
-
-    expect(bag.getAll().reduce((total, stack) => total + stack.amount, 0)).toBe(totalAfterOffline)
-  })
-
-  it('tick: auto-restart KHÔNG backdate quá cap (tab throttle dài ngày không trả backlog vô hạn)', () => {
-    const { bag, registry } = createBag()
-
-    const system = createSystem()
-
-    system.setAutoRestart('thanh_van_lam', true)
-
-    system.startCycle('thanh_van_lam', 'mortal', 0)
-
-    // Tick đầu tiên sau 3 ngày "chạy" (không qua settleOffline).
-    const nowMs = 3 * 24 * 3600 * 1000
-
-    system.tick(nowMs, bag, registry, 'mortal')
-
-    const restarted = system.getState('thanh_van_lam')!.activeCycle!
-
-    expect(restarted.startedAtMs).toBeGreaterThanOrEqual(
-      nowMs - PRODUCTION_OFFLINE_CAP_SECONDS * 1000,
-    )
   })
 
   it('worker offline (T3): cycle dở dang từ save + cycle mới chạy trong cap như slot tay', () => {

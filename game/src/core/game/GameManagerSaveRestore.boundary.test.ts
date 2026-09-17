@@ -30,6 +30,7 @@ import type { Quest } from '../quest/Quest'
 import { buildGameSave, restoreGameSession, type GameSave } from '../../services/save/SaveSystem'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 import { usePlayerStore } from '../../stores/player'
+import { resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 
 function makeManager(): GameManager {
   const manager = new GameManager()
@@ -323,6 +324,37 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
       ageFilter: 'all',
       workers: 0,
     })
+  })
+
+  it('restore settle receives the SAME pool the online tick computes (spec D5 — one rule, no second copy)', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    player.autoWorkerCapacity = 7
+    manager.setActivePlayer(player)
+
+    // Prime live decompose capacity so the restored workers value survives its clamp.
+    manager.decomposeSystem.updateCapacity(7)
+
+    const spy = vi.spyOn(manager.productionSystem, 'settleOffline')
+
+    manager.saveOps.restoreFromSave(
+      baseSave(player, {
+        player: { ...player, lastSavedAt: Date.now() - 7_200_000 }, // >60s gate -> offline settle runs
+        productionSites: [
+          { siteId: 'thanh_van_lam', level: 1, autoRestart: true, assignedWorkers: 5 },
+        ],
+        decompose: {
+          settings: { gradeFilter: 'all', ageFilter: 'all', workers: 2 },
+          nextCycleAt: 0,
+          started: false,
+        },
+      }),
+    )
+
+    expect(spy).toHaveBeenCalledTimes(1)
+    // Asserting against the helper itself (not a literal) is the point:
+    // both paths MUST consume the same rule.
+    expect(spy.mock.calls[0]![4]?.workerCapacity).toBe(resolveProductionWorkerCapacity(7, 2))
   })
 })
 

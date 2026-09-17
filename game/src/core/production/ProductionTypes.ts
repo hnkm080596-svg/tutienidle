@@ -71,16 +71,13 @@ export interface ProductionSiteState {
 
   autoRestart: boolean
 
-  /** Số cycle song song hiện được pool nhân công toàn cục cấp cho site. */
+  /** Parallel lanes the shared worker pool currently grants this site. */
   activeWorkerSlots: number
 
-  activeCycle?: ProductionCycle
-
-  /** Các cycle bổ sung do worker 2+ vận hành. */
+  /** In-flight worker lane heads — the ONLY cycle kind (Mission D / spec D3). */
   workerCycles?: ProductionCycle[]
 
-  /** Chi-hien-quan spec (2026-09-02): số slot MANUAL gán cho site.
-   *  undefined = site chạy AUTO (round-robin phần dư capacity). */
+  /** Player-requested assignment; undefined = AUTO (round-robin share). */
   assignedWorkers?: number
 }
 

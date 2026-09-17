@@ -156,6 +156,27 @@ describe('GameManager — assignWorkers (UI phân bổ, INV-CHQ-10)', () => {
 
     expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(2)
   })
+
+  it('getWorkforceView: total from CHQ capacity, reserved from decompose, requested vs effective distinct', () => {
+    const { manager, siteId } = managerWithChq(3) // total 7
+    manager.decomposeSystem.updateCapacity(7)
+    manager.decomposeSystem.setSetting({ workers: 2 })
+    manager.buildingOps.assignWorkers(siteId, 4)
+
+    const view = manager.buildingOps.getWorkforceView()
+    expect(view.total).toBe(7)
+    expect(view.reserved).toBe(2)
+    expect(view.available).toBe(5)
+    expect(view.requested[siteId]).toBe(4)
+  })
+
+  it('assignWorkers clamps to the AVAILABLE pool (total minus decompose), not the total', () => {
+    const { manager, siteId } = managerWithChq(3) // total 7
+    manager.decomposeSystem.updateCapacity(7)
+    manager.decomposeSystem.setSetting({ workers: 4 })
+    manager.buildingOps.assignWorkers(siteId, 99)
+    expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(3)
+  })
 })
 
 describe('GameManager - R7 full-tick wiring guard (P13 class)', () => {

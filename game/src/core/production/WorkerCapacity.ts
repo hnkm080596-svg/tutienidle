@@ -8,3 +8,26 @@ export function getWorkerCapacityForLevel(chiHienQuanLevel: number): number {
 
   return 1 + chiHienQuanLevel * 2
 }
+
+/**
+ * Mission D (spec D5) — the ONE worker-pool split rule: decompose
+ * claims `decomposeWorkers` from the CHQ pool FIRST; production
+ * receives the remainder. Consumed by the online tick
+ * (GameManagerTickOps), the offline restore settle
+ * (GameManagerSaveRestore) and the UI read model (WorkforceView).
+ * Callers never recompute `total - workers` inline (A9).
+ */
+export function resolveProductionWorkerCapacity(
+  totalWorkerCapacity: number,
+  decomposeWorkers: number,
+): number {
+  const total = Number.isFinite(totalWorkerCapacity)
+    ? Math.max(0, Math.floor(totalWorkerCapacity))
+    : 0
+
+  const reserved = Number.isFinite(decomposeWorkers)
+    ? Math.max(0, Math.floor(decomposeWorkers))
+    : 0
+
+  return Math.max(0, total - reserved)
+}

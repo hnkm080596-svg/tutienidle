@@ -422,7 +422,7 @@
       }
     },
     "production": {
-      "summary": "Khai Vật Đường khai thác nguyên liệu mọi cảnh giới — chọn nguồn, bắt đầu cycle, nhận thẳng vào Túi.",
+      "summary": "Khai Vật Đường khai thác nguyên liệu mọi cảnh giới — phân nhân công cho nguồn, nhận thẳng vào Túi.",
       "kinds": {
         "forest": "Lâm",
         "mine": "Quáng",
@@ -441,6 +441,7 @@
       "workerModeAuto": "Tự động",
       "workerModeManual": "Phân thủ công",
       "workerAutoHint": "Nhân công tự chia đều các nguồn đang bật lặp lại.",
+      "workersReserved": "Phân Giải đang giữ {count} nhân công",
       "workerAssignAria": "Phân bổ nhân công cho {name}",
       "linMach": {
         "title": "Linh Mạch",
@@ -450,7 +451,6 @@
       "remaining": "{time}",
       "statusProducing": "Đang sản xuất — còn {time}",
       "done": "Hoàn tất…",
-      "start": "Bắt đầu",
       "autoRepeat": "Auto lặp lại",
       "upgrade": "Nâng cấp nguồn"
     },

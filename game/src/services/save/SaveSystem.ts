@@ -370,8 +370,6 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
 
       autoRestart: state.autoRestart,
 
-      activeCycle: state.activeCycle,
-
       workerCycles: state.workerCycles?.length ? state.workerCycles : undefined,
 
       // Mission A2 — manual allocation must persist; runtime-only

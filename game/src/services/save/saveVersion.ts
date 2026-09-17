@@ -62,4 +62,8 @@
 // LEGACY_PATH_TO_WAY / resolveBasePathId / getLegacyPathIdForWay bị
 // xoá. Save v65 (và save mang path id '_an') bị từ chối (dev phase,
 // không migration).
-export const CURRENT_SAVE_VERSION = 66 as const
+// v67 (2026-09-17, worker-economy Mission D): ProductionSiteStateSave
+// mất `activeCycle` — workers-as-fuel (spec D3); workerCycles là cycle
+// kind duy nhất. Save v66 bị từ chối (dev phase, không migration); một
+// `activeCycle` stale trong payload cũ được tolerate + whitelist out.
+export const CURRENT_SAVE_VERSION = 67 as const

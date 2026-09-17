@@ -3082,6 +3082,28 @@ contract they establish:
   `onHitProc` direction (holder-attacks -> victim-applies) is the
   authored contract — see the decision record in
   `TurnBuffIdentity.test.ts`.
+- **Worker economy authority (Mission D, 2026-09):** workers are
+  required fuel for all production — the manual `activeCycle` path is
+  deleted end-to-end (state, lifecycle methods, offline phase, save
+  shape/serializer/validator, ops facade, panel Start control).
+  `workerCycles` is the only cycle kind; lane count equals
+  `activeWorkerSlots` exactly. `resolveProductionWorkerCapacity`
+  (`WorkerCapacity.ts`) is the ONE worker-pool split rule — decompose
+  claims its workers first, production gets the remainder — consumed by
+  the online tick, the offline restore settle, and the UI read model.
+  `buildWorkforceView`/`GameManagerBuildingOps.getWorkforceView`
+  (`WorkforceView.ts`) is the ONE workforce read model: the panel
+  renders total/reserved/available/requested/effective/idle verbatim
+  and derives manual mode from persisted `assignedWorkers`; it never
+  recomputes the split. `resolveTerritoryTier` (`ProductionCatalog.ts`)
+  is the ONE realm->territory-tier clamp: realms above the beta scope
+  clamp to `foundation_establishment` at every production entry point
+  (`tickWorkers`, `settleOffline`, `rollRewards`); unknown realms
+  resolve to the bottom tier. Decompose catch-up is now-anchored
+  (MA-R3-01): a stalled tick runs exactly one late cycle and rebases
+  `nextCycleAt` to `now + cycleMs`. Save v67 drops `activeCycle`; stale
+  keys are tolerated at the validator and whitelisted out at
+  `restoreStates` — no migration.
 
 **Measured evidence (real browser runs, not simulated):**
 

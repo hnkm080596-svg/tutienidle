@@ -910,22 +910,11 @@ function validateProductionSitesSave(
       issues.push({ path: `${entryPath}.assignedWorkers`, message: 'phải là int không âm' })
     }
 
-    if (entry.activeCycle !== undefined) {
-      validateProductionCycleSave(entry.activeCycle, `${entryPath}.activeCycle`, issues)
-
-      // A cycle nested under a site must belong to that site — a
-      // mismatched siteId resolves rewards against the wrong definition.
-      if (
-        isObject(entry.activeCycle) &&
-        entry.activeCycle.siteId !== undefined &&
-        entry.activeCycle.siteId !== entry.siteId
-      ) {
-        issues.push({
-          path: `${entryPath}.activeCycle.siteId`,
-          message: 'phải khớp siteId của site cha',
-        })
-      }
-    }
+    // Mission D (spec D3): `activeCycle` was removed from the state
+    // shape (workers-as-fuel; workerCycles is the only cycle kind).
+    // A stale `activeCycle` key in an old-shaped payload is tolerated
+    // here and whitelisted out at restoreStates — it is NOT validated or
+    // rejected (dev phase, no migration).
 
     if (entry.workerCycles !== undefined) {
       if (!Array.isArray(entry.workerCycles)) {

@@ -118,6 +118,10 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     expect(text).toContain('Tự động')
     expect(text).toContain('Phân thủ công')
 
+    // Workers-as-fuel (spec D3): no Start-cycle control exists; the panel
+    // is pure worker allocation + auto-repeat gating.
+    expect(deps.container.querySelector('.site-card__action')).toBeNull()
+
     // Linh mạch card render (outpost đã xây — sau khi xóa spirit_spring).
     expect(text).toContain('Linh Mạch')
 
@@ -132,6 +136,44 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     deps.gameManager.buildingOps.assignWorkers(siteId, undefined)
 
     expect(deps.gameManager.productionSystem.getState(siteId)?.assignedWorkers).toBeUndefined()
+
+    deps.app.unmount()
+  })
+
+  it('ProductionPanel: workerMode derives from persisted assignments (no local ref); slider max = available pool', async () => {
+    const deps = makeDeps(ProductionPanel)
+    deps.gameManager.buildingManager.add({
+      instanceId: 'outpost_inst', buildingId: 'gathering_outpost', level: 1, lastCollectedAt: 0,
+    })
+    deps.gameManager.buildingManager.add({
+      instanceId: 'chq_inst', buildingId: 'chi_hien_quan', level: 2, lastCollectedAt: 0,
+    })
+
+    const player = usePlayerStore(deps.pinia)
+    player.realmId = 'mortal'
+    deps.gameManager.setActivePlayer(player.$state)
+    const chq = deps.gameManager.buildingManager.getByBuildingId('chi_hien_quan')!
+    deps.gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, chq) // total 5
+
+    // Decompose holds 2 of the 5 -> production sliders max at 3.
+    deps.gameManager.decomposeSystem.updateCapacity(5)
+    deps.gameManager.decomposeSystem.setSetting({ workers: 2 })
+
+    // A persisted assignment exists BEFORE mount -> the panel must derive
+    // 'manual' from it (audit T4-29: the old local ref always reset to auto).
+    const siteId = deps.gameManager.buildingOps.getProductionViews(Date.now())[0]!.definition.siteId
+    deps.gameManager.buildingOps.assignWorkers(siteId, 2)
+
+    deps.app.mount(deps.container)
+    await nextTick()
+
+    const radios = deps.container.querySelectorAll<HTMLInputElement>('input[name="worker-mode"]')
+    expect(radios[0]!.checked).toBe(false) // auto
+    expect(radios[1]!.checked).toBe(true)  // manual
+
+    const slider = deps.container.querySelector<HTMLInputElement>('.worker-allocation__slider input[type=range]')
+    expect(slider).not.toBeNull()
+    expect(slider!.max).toBe('3') // available = 5 - 2, not the total 5
 
     deps.app.unmount()
   })

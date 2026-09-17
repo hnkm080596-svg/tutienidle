@@ -6,7 +6,9 @@ import { BuildingSystem } from '../building/BuildingSystem'
 import type { Building } from '../building/Building'
 import type { BuildingInstance } from '../building/BuildingInstance'
 import { ProductionSystem } from '../production/ProductionSystem'
-import { getWorkerCapacityForLevel } from '../production/WorkerCapacity'
+import type { DecomposeSystem } from '../production/DecomposeSystem'
+import { getWorkerCapacityForLevel, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
+import { buildWorkforceView, type WorkforceView } from '../production/WorkforceView'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
 import { NotificationQueue } from './NotificationQueue'
@@ -17,6 +19,7 @@ export interface GameManagerBuildingOpsDeps {
   buildingManager: BuildingManager
   buildingSystem: BuildingSystem
   productionSystem: ProductionSystem
+  decomposeSystem: DecomposeSystem
   materialBag: MaterialBag
   materialRegistry: MaterialRegistry
   notifications: NotificationQueue
@@ -139,6 +142,20 @@ export class GameManagerBuildingOps {
   }
 
   /**
+   * Mission D (spec D1) - the ONE workforce read model for the panel:
+   * total/reserved/available/requested/effective/idle, all derived from
+   * the same split rule the tick uses. The panel renders this verbatim;
+   * it does not recompute the split (A7).
+   */
+  getWorkforceView(): WorkforceView {
+    return buildWorkforceView(
+      this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0,
+      this.deps.decomposeSystem.getSettings().workers,
+      this.deps.productionSystem.getAllStates(),
+    )
+  }
+
+  /**
    * Chi-hien-quan (2026-09-02) — UI phân bổ: gán/xóa số slot manual của
    * 1 site. `count === undefined` = về AUTO (xóa assignedWorkers).
    * Clamp [0, capacity] phòng UI gửi sai; không đổi nếu site không tồn tại.
@@ -156,7 +173,12 @@ export class GameManagerBuildingOps {
       return
     }
 
-    const capacity = this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0
+    // Clamp to the production remainder, not the raw total - a slider must
+    // never let the player promise workers decompose already claimed.
+    const capacity = resolveProductionWorkerCapacity(
+      this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0,
+      this.deps.decomposeSystem.getSettings().workers,
+    )
 
     // NaN (UI path lỗi) coi như 0 — không để assignedWorkers = NaN
     // phá regex phân bổ tickWorkers.
@@ -290,11 +312,6 @@ export class GameManagerBuildingOps {
         cycleTotalMs: view.cycleTotalMs,
       }
     })
-  }
-
-  /** Bắt đầu cycle tại cảnh giới HIỆN TẠI của player (snapshot §4.1). */
-  startProductionCycle(siteId: string, player: PlayerData): boolean {
-    return this.deps.productionSystem.startCycle(siteId, player.realmId, Date.now())
   }
 
   setProductionAutoRestart(siteId: string, enabled: boolean): boolean {

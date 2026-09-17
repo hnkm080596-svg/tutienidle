@@ -148,13 +148,31 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
     manager.tickOps.reconcileQuestLifecycle()
 
     const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId
+    player.autoWorkerCapacity = 1 // one CHQ worker -> the due lane is eligible
 
-    // Backdate so the cycle is already complete on the next update tick.
-    expect(
-      manager.productionSystem.startCycle(siteId, player.realmId, Date.now() - 86_400_000),
-    ).toBe(true)
+    // Backdated worker lane: already complete on the next update tick.
+    manager.productionSystem.restoreStates([
+      {
+        siteId,
+        level: 1,
+        autoRestart: true,
+        activeWorkerSlots: 0,
+        workerCycles: [
+          {
+            cycleId: 'due_lane',
+            siteId,
+            collectionRealmId: player.realmId,
+            siteLevelAtStart: 1,
+            rewardTableVersion: 1,
+            rollSeed: 42,
+            startedAtMs: Date.now() - 86_400_000,
+            completesAtMs: Date.now() - 1_000,
+          },
+        ],
+      },
+    ])
 
-    const cycle = manager.productionSystem.getState(siteId)!.activeCycle!
+    const cycle = manager.productionSystem.getState(siteId)!.workerCycles![0]!
     const rewards = manager.productionSystem.rollRewards(cycle)
 
     expect(rewards.length).toBeGreaterThan(0)
@@ -222,12 +240,30 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
     manager.tickOps.reconcileQuestLifecycle()
 
     const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId
+    player.autoWorkerCapacity = 1 // one CHQ worker -> the due lane is eligible
 
-    expect(
-      manager.productionSystem.startCycle(siteId, player.realmId, Date.now() - 86_400_000),
-    ).toBe(true)
+    manager.productionSystem.restoreStates([
+      {
+        siteId,
+        level: 1,
+        autoRestart: true,
+        activeWorkerSlots: 0,
+        workerCycles: [
+          {
+            cycleId: 'due_lane',
+            siteId,
+            collectionRealmId: player.realmId,
+            siteLevelAtStart: 1,
+            rewardTableVersion: 1,
+            rollSeed: 42,
+            startedAtMs: Date.now() - 86_400_000,
+            completesAtMs: Date.now() - 1_000,
+          },
+        ],
+      },
+    ])
 
-    const cycle = manager.productionSystem.getState(siteId)!.activeCycle!
+    const cycle = manager.productionSystem.getState(siteId)!.workerCycles![0]!
     const rewards = manager.productionSystem.rollRewards(cycle)
 
     expect(rewards.length).toBeGreaterThan(0)

@@ -580,7 +580,6 @@ describe('validateGameSaveShape — productionSites slice (Mission A1)', () => {
       level: 2,
       autoRestart: true,
       assignedWorkers: 2,
-      activeCycle: validCycle(),
       workerCycles: [validCycle()],
     }
   }
@@ -625,19 +624,6 @@ describe('validateGameSaveShape — productionSites slice (Mission A1)', () => {
       expect(pathsOf(result)).toContain('productionSites[0].assignedWorkers')
     },
   )
-
-  it('từ chối activeCycle sai shape (completesAtMs non-finite)', () => {
-    const save = validSave()
-
-    save.productionSites = [
-      { ...validSite(), activeCycle: { ...validCycle(), completesAtMs: 'x' } },
-    ]
-
-    const result = validateGameSaveShape(save)
-
-    expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('productionSites[0].activeCycle')
-  })
 
   it('từ chối workerCycles không phải array', () => {
     const save = validSave()
@@ -1784,22 +1770,16 @@ describe('validateGameSaveShape — cycle/site consistency (Mission A review)', 
     }
   }
 
-  it('từ chối activeCycle có siteId khác site cha', () => {
+  it('a stale activeCycle key in productionSites is tolerated (removed field, dev-stage: no migration, no rejection)', () => {
     const save = validSave()
-
-    save.productionSites = [
+    ;(save as Record<string, unknown>).productionSites = [
       {
-        siteId: 'thanh_van_forest',
-        level: 1,
-        autoRestart: true,
-        activeCycle: { ...validCycle(), siteId: 'other_site' },
+        siteId: 'thanh_van_lam', level: 1, autoRestart: true,
+        activeCycle: { cycleId: 'old', siteId: 'thanh_van_lam', collectionRealmId: 'mortal',
+          siteLevelAtStart: 1, rewardTableVersion: 1, rollSeed: 1, startedAtMs: 0, completesAtMs: 1 },
       },
     ]
-
-    const result = validateGameSaveShape(save)
-
-    expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('productionSites[0].activeCycle.siteId')
+    expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
   it('từ chối workerCycles có siteId khác site cha', () => {

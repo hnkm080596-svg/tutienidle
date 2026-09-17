@@ -17,6 +17,7 @@ import { BuildingRegistry } from '../building/BuildingRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { ProductionSystem } from '../production/ProductionSystem'
 import type { ProductionSiteState } from '../production/ProductionTypes'
+import { resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
@@ -414,10 +415,9 @@ export class GameManagerSaveRestore {
           offlinePlayer.realmId,
           Date.now(),
           {
-            workerCapacity: Math.max(
-              0,
-              (offlinePlayer.autoWorkerCapacity ?? 0) -
-                this.deps.decomposeSystem.getSettings().workers,
+            workerCapacity: resolveProductionWorkerCapacity(
+              offlinePlayer.autoWorkerCapacity ?? 0,
+              this.deps.decomposeSystem.getSettings().workers,
             ),
             offlineSinceMs: save.player.lastSavedAt ?? Date.now(),
             workerAssignments: this.deps.getWorkerAssignments(),

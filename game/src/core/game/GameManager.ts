@@ -642,6 +642,7 @@ export class GameManager {
       buildingManager: this.buildingManager,
       buildingSystem: this.buildingSystem,
       productionSystem: this.productionSystem,
+      decomposeSystem: this.decomposeSystem,
       materialBag: this.materialBag,
       materialRegistry: this.materialRegistry,
       notifications: this.notifications,
