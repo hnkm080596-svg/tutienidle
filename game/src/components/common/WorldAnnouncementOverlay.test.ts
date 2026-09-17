@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// T4-35 — the announcement overlay is ambient chrome: it must not leak
+// T4-35 - the announcement overlay is ambient chrome: it must not leak
 // its typewriter interval across unmount, must dismiss on Escape, and
 // the store's auto-close timer must be a tracked handle (cleared by
 // show()/hide()), not a fire-and-forget setTimeout.

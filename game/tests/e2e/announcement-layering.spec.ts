@@ -2,14 +2,14 @@ import { expect, test } from '@playwright/test'
 import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
 
 /**
- * T4-35 P14 — the world announcement is ambient chrome: while one is
+ * T4-35 P14 - the world announcement is ambient chrome: while one is
  * firing, a blocking modal (offline summary here) must still be
  * interactable. Regression: OVERLAY_LAYERS.announcement used to sit at
  * 2000, ABOVE modal (1900), so the announcement scrim swallowed every
  * click aimed at the dialog for up to 5s.
  *
  * Both stores are reached through the mounted Vue app
- * (`#app.__vue_app__` -> `$pinia` internals) — same "no new production
+ * (`#app.__vue_app__` -> `$pinia` internals) - same "no new production
  * surface" principle as the window.__tutienPhaserGame seam.
  */
 test.describe('announcement layering (T4-35)', () => {

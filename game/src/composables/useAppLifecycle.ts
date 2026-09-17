@@ -82,10 +82,10 @@ export interface UseAppLifecycleDeps {
    */
   hardReset: () => void
   /**
-   * Spec F8 — optional login-time remote save reconciliation. Invoked
+   * Spec F8 - optional login-time remote save reconciliation. Invoked
    * inside bootGame after boot.startSaveLoad() and before
    * coordinator.load(), only when !createNewCharacter. A rejection is
-   * logged and boot proceeds on the local slot — remote unavailability
+   * logged and boot proceeds on the local slot - remote unavailability
    * must never block boot.
    */
   remoteSync?: () => Promise<unknown>
@@ -264,7 +264,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         try {
           await remoteSync()
         } catch (error: unknown) {
-          // Remote reconciliation must never block boot — the local slot
+          // Remote reconciliation must never block boot - the local slot
           // is the authority for loadGame() either way.
           console.warn('[boot] remote save sync failed; continuing on local slot', error)
         }

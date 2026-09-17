@@ -41,7 +41,7 @@ const recentEntries = computed(() => {
   return entries.slice(Math.max(0, entries.length - MAX_VISIBLE))
 })
 
-// T4-36 — ids are internal; the log renders participant entity.name +
+// T4-36 - ids are internal; the log renders participant entity.name +
 // TURN_SKILL_DISPLAY_META names, with localized fallbacks instead of
 // ever leaking a raw id.
 function describe(entry: BattleLogEntry): string {

@@ -16,9 +16,9 @@ import { formatDuration } from '@/core/format/formatDuration'
 // Sản Xuất (2026-08-25, resource-professions-rework plan §9.1) — thay
 // ExplorationPanel: mỗi Địa Giới hiển thị đúng ba card Lâm/Quáng/
 // Động Thiên với level + speed, trạng thái idle/producing, đồng hồ
-// cycle, trọng số realm tier đã chuẩn hoá, toggle Auto. Mission D
-// (spec D3): sites produce on worker lanes only — no Start button;
-// KHÔNG có nút Claim — hoàn thành tự gửi Bag (§4.3).
+// cycle, normalized realm-tier weights, Auto toggle. Mission D
+// (spec D3): sites produce on worker lanes only - no Start button;
+// NO Claim button - completions go straight to Bag (sec 4.3).
 const { t } = useI18n()
 
 const KIND_META: Record<string, { labelKey: 'forest' | 'mine' | 'grotto'; sigil: string }> = {
@@ -214,7 +214,7 @@ function upgrade(siteId: string) {
 const workforce = computed(() => {
   stateVersion.value
 
-  // Track the same tick clock `rows` reads (:96) — reserved/available/
+  // Track the same tick clock `rows` reads (:96) - reserved/available/
   // effective totals and the slider :max must refresh every tick too,
   // not only on bumpState() interactions (T4-30 reintroduction guard).
   void nowMs.value

@@ -327,7 +327,7 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
     })
   })
 
-  it('restore settle receives the SAME pool the online tick computes (spec D5 — one rule, no second copy)', () => {
+  it('restore settle receives the SAME pool the online tick computes (spec D5 - one rule, no second copy)', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
     player.autoWorkerCapacity = 7

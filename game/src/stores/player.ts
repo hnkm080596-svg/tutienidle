@@ -409,7 +409,7 @@ export const usePlayerStore = defineStore('player', {
       const offlineGained =
         this.cultivation + this.cultivationOvercharge - cultivationBefore
 
-      // T3-26 — the modal reports what the player actually received:
+      // T3-26 - the modal reports what the player actually received:
       // addCultivation clamps at the tier requirement (or banks into
       // cultivationOvercharge), so the theoretical elapsed*rate figure is
       // wrong whenever the cap binds. Store and return the real delta.

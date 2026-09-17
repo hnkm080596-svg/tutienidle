@@ -9,7 +9,7 @@ export interface AuthSession {
   sessionId: string
   mode: AuthenticationMode
   loginId?: string
-  /** Supabase auth.users id — absent for mock-auth sessions. */
+  /** Supabase auth.users id - absent for mock-auth sessions. */
   userId?: string
 }
 

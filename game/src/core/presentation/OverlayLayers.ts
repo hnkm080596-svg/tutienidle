@@ -27,7 +27,7 @@ export const OVERLAY_LAYERS = {
   panel: 1800,
   /** Blocking modals above panels (OfflineSummaryModal, LoreCodexModal, TutorialOverlay). */
   modal: 1900,
-  /** WorldAnnouncementOverlay — ambient/ephemeral banners; must never cover a blocking modal. */
+  /** WorldAnnouncementOverlay - ambient/ephemeral banners; must never cover a blocking modal. */
   announcement: 1850,
   /** Tooltip — floating contextual info. */
   tooltip: 2200,

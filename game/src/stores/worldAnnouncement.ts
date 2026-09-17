@@ -10,9 +10,9 @@ export interface WorldAnnouncementContent {
 // title + 1 dòng body (khớp mockup mục XIII tài liệu beta).
 const AUTO_CLOSE_MS = 5000
 
-// Handle cho auto-close timer — tracked để show()/hide() huỷ timer
-// cũ thay vì để nó sống tới hạn rồi nhờ identity check (timer dư vẫn
-// đếm và fire callback một lần nữa).
+// Handle for the auto-close timer - tracked so show()/hide() cancels
+// the old timer instead of letting it live to expiry and relying on
+// the identity check (a stray timer still fires its callback once).
 let autoCloseHandle: ReturnType<typeof setTimeout> | undefined
 
 export const useWorldAnnouncementStore = defineStore('worldAnnouncement', {

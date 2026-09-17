@@ -3,9 +3,9 @@ import { requestSupabase } from './SupabaseHttp'
 
 const config = { url: 'https://example.supabase.co', anonKey: 'anon' }
 
-describe('requestSupabase — timeout (audit T3-24)', () => {
+describe('requestSupabase - timeout (audit T3-24)', () => {
   it('arms a 10s AbortSignal.timeout and merges the caller signal', async () => {
-    // NOTE: vitest fake timers do NOT drive AbortSignal.timeout — do not
+    // NOTE: vitest fake timers do NOT drive AbortSignal.timeout - do not
     // try to advance timers into a real abort. Spy the factory instead.
     const timeoutSpy = vi.spyOn(AbortSignal, 'timeout')
     let captured: RequestInit | undefined

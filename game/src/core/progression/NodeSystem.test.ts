@@ -57,10 +57,10 @@ describe('hasPrerequisite — theo LEVEL (plan §6.1)', () => {
     expect(hasPrerequisite(player, { kind: 'realm', realmId: 'void_refinement' })).toBe(false)
   })
 
-  // T8-75 — an unknown prerequisite realm id resolves to index -1 and
+  // T8-75 - an unknown prerequisite realm id resolves to index -1 and
   // `playerIndex >= -1` silently passed the gate. Content drift must
   // fail closed.
-  it('kind realm — unknown prerequisite realm id does NOT pass the gate', () => {
+  it('kind realm - unknown prerequisite realm id does NOT pass the gate', () => {
     const player = playerWith({ realmId: 'nascent_soul' })
 
     expect(hasPrerequisite(player, { kind: 'realm', realmId: 'realm_that_does_not_exist' })).toBe(false)

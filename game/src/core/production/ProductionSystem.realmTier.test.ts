@@ -1,4 +1,4 @@
-// Mission D (spec D2, audit T3-17) — every realm entering production
+// Mission D (spec D2, audit T3-17) - every realm entering production
 // resolves through ONE clamp to a supported territory tier: in-list
 // passes through, above top tier clamps down, unknown resolves to the
 // bottom tier. Never rejected, never a silent -1 profile.
@@ -49,7 +49,7 @@ describe('resolveTerritoryTier (Mission D / spec D2)', () => {
     }
   })
 
-  it('an unknown realm resolves to the bottom tier — never rejected, never -1', () => {
+  it('an unknown realm resolves to the bottom tier - never rejected, never -1', () => {
     expect(resolveTerritoryTier(TERRITORY_THANH_VAN, 'not_a_realm')).toBe('mortal')
   })
 })
@@ -83,7 +83,7 @@ describe('clamp applied at every production entry point (T3-17)', () => {
       offlineSinceMs: 1_000_000,
     })
 
-    expect(settled).toBe(4) // 1h / 900s foundation cycles — not frozen, not 2700s
+    expect(settled).toBe(4) // 1h / 900s foundation cycles - not frozen, not 2700s
     expect(bag.getAll().length).toBeGreaterThan(0)
   })
 

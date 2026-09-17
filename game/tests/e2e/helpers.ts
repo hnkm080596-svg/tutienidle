@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test'
 import { expect } from '@playwright/test'
 
-// Spec F8 — guest sessions bind the shared ':guest' save slot; page.evaluate
+// Spec F8 - guest sessions bind the shared ':guest' save slot; page.evaluate
 // bodies below carry this as a string literal because Playwright cannot
 // serialize module-scope values into the browser context.
 export const GUEST_SAVE_KEY = 'tien-hiep-idle-save:guest'

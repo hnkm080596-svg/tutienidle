@@ -60,7 +60,7 @@ function anchorStyle(entry: DongFuBuildingArtEntry) {
   }
 }
 
-// T4-31 — these run inside the template's tracked render, but the domain
+// T4-31 - these run inside the template's tracked render, but the domain
 // objects they read are not reactive. Reading stateVersion makes the
 // badge/nameplate/tooltip re-derive on every game-state bump.
 function presentationFor(buildingId: string) {

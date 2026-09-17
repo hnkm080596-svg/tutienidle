@@ -49,8 +49,8 @@ watch(
   },
 )
 
-// Overlay là ambient, không nhận focus — Escape phải nghe ở document
-// level (add/remove đối xứng qua lifecycle component).
+// The overlay is ambient and takes no focus - Escape must listen at
+// document level (add/remove symmetric across the component lifecycle).
 function onEscapeKey(event: KeyboardEvent) {
   if (event.key === 'Escape' && store.active) {
     store.hide()

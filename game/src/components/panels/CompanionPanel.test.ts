@@ -200,8 +200,8 @@ describe('CompanionPanel', () => {
     mounted.unmount()
   })
 
-  // T4-36 — skill rows render TURN_SKILL_DISPLAY_META names, never the
-  // raw definition id ('ho_ly_tinh_basic' -> 'Trảo Kích').
+  // T4-36 - skill rows render TURN_SKILL_DISPLAY_META names, never the
+  // raw definition id ('ho_ly_tinh_basic' -> display name).
   it('renders the skill display name instead of the raw skill id', () => {
     const mounted = mountPanel(({ player }) => {
       player.companions = [ownedInstance()]

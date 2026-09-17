@@ -146,11 +146,11 @@ describe('WashTab — Tẩy Luyện', () => {
   })
 })
 
-// T4-33 — paid-preview honesty: the compare table hid rolled lines that
+// T4-33 - paid-preview honesty: the compare table hid rolled lines that
 // outnumbered the current affixes, mislabeled a zero-line roll as
-// "not rolled", kept a dead "Giữ" armed after a failed commit (the domain
+// "not rolled", kept a dead armed "Keep" button after a failed commit (the domain
 // already ate the ticket), and never discarded the paid ticket on unmount.
-describe('WashTab — preview honesty (T4-33)', () => {
+describe('WashTab - preview honesty (T4-33)', () => {
   function prepareWashable(manager: GameManager, quality: 'huyen' | 'dia') {
     const instance = manager.equipmentBag.get('equipped')!
     instance.quality = quality
@@ -186,7 +186,7 @@ describe('WashTab — preview honesty (T4-33)', () => {
     )
     expect(rows).toHaveLength(2)
 
-    // Row 2 has no current line — its "before" cell marks the line as new,
+    // Row 2 has no current line - its "before" cell marks the line as new,
     // not blank.
     expect(rows[1]!.textContent).toContain('dòng mới')
 
@@ -212,7 +212,7 @@ describe('WashTab — preview honesty (T4-33)', () => {
     const mounted = mountTab((manager) => prepareWashable(manager, 'huyen'))
     await selectAndPreview(mounted)
 
-    // Lock AFTER the preview — commit revalidation rejects it.
+    // Lock AFTER the preview - commit revalidation rejects it.
     mounted.manager.equipmentBag.get('equipped')!.locked = true
 
     const keepBtn = Array.from(mounted.container.querySelectorAll<HTMLButtonElement>('button'))

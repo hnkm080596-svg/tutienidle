@@ -246,7 +246,7 @@ describe('ARCH-008 — Hoi Xuan Dan explicitly retired (user-locked, HP regen no
   })
 
   // Mission E Task 2 (audit T1-10): type 'material' pills are not
-  // consumables — they fell through the legacy path and were silently
+  // consumables - they fell through the legacy path and were silently
   // destroyed on click.
   it.each(['truc_co_dan', 'thong_mach_dan'])(
     'usePillDetailed rejects material pill %s without consuming it',

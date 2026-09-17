@@ -116,7 +116,7 @@ describe('QuestSystem', () => {
   })
 
   // Mission E Task 3 (audit T1-11): a throwing grant must not consume
-  // the turn-in cost — debit runs after give, before itemDrops.
+  // the turn-in cost - debit runs after give, before itemDrops.
   it('does not debit quest item cost when reward grant throws', () => {
     const { registry, manager, system, bags, rewardSystem, materialRegistry, materialBag } = setup()
     const player = createPlayer()

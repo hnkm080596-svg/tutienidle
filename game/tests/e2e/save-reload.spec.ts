@@ -13,7 +13,7 @@ import {
  * E2E lifecycle spec 3/3 (tech-debt-test-coverage-plan.md §3.3) — chơi
  * 1 đoạn, lưu tiến trình (nút "Lưu Tiến Trình" trong Cài Đặt — cùng
  * đường player.save() với autosave 15s), reload trang, nhân vật +
- * Linh Thạch giữ nguyên qua localStorage save 'tien-hiep-idle-save:guest'.
+ * Spirit Stones persist across the localStorage save 'tien-hiep-idle-save:guest'.
  *
  * Remediation Task 9 (2026-09-05) — DETERMINISTIC resource setup:
  *

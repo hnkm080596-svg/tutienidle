@@ -55,7 +55,7 @@ onMounted(() => {
 const buildCost = computed(() => template.value.upgradeCost[0] ?? [])
 
 const canBuild = computed(() => {
-  // T4-31 — materialBag is not reactive; without this read the gate froze
+  // T4-31 - materialBag is not reactive; without this read the gate froze
   // at first evaluation and never re-enabled after materials arrived.
   stateVersion.value
 

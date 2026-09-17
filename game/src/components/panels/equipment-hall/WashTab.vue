@@ -75,7 +75,7 @@ function discardPendingTicket() {
   pendingWashTicket.value = null
 }
 
-// T4-33 — the ticket was PAID at preview time; an unmount that keeps it
+// T4-33 - the ticket was PAID at preview time; an unmount that keeps it
 // armed lets a remounted tab reuse a stale paid roll.
 onBeforeUnmount(discardPendingTicket)
 
@@ -139,7 +139,7 @@ function doWashKeep() {
   }
 
   // The domain consumes the ticket on EVERY commit attempt (R9/AR-21,
-  // refine-style), so a failed commit must not leave a dead armed "Giữ" —
+  // refine-style), so a failed commit must not leave a dead armed "Keep" -
   // the rejection is already surfaced via withSyncAndResult feedback.
   washCommit(selectedRow.value.instanceId, pendingWashTicket.value)
   pendingWashTicket.value = null
@@ -188,14 +188,14 @@ interface AffixCompareRow {
 
   afterTier?: number
 
-  /** True while a paid ticket is pending — distinguishes "rolled zero
+  /** True while a paid ticket is pending - distinguishes "rolled zero
    * lines" (removed) from "no roll pending" (notRolled). */
   hasTicket: boolean
 }
 
 /** Tẩy Luyện reroll TOÀN BỘ affix (đổi cả identity) — mỗi dòng so sánh
- * theo ĐÚNG vị trí index giữa affix hiện tại và affix preview đang chờ.
- * T4-33: rows cover BOTH lists — a roll with more lines than the item
+ * by EXACT index position between current affixes and the pending preview.
+ * T4-33: rows cover BOTH lists - a roll with more lines than the item
  * currently has must still show the extra rolled line, and a roll that
  * dropped a line shows it as removed. */
 const washAffixCompareRows = computed<AffixCompareRow[]>(() => {

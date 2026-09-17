@@ -32,7 +32,7 @@ export interface WeightedEntry<T> {
  * không đều.
  */
 export function weightedRandom<T>(entries: WeightedEntry<T>[], rng: () => number = Math.random): T {
-  // T8-71 — an empty table used to crash on `entries[-1]!.value` with an
+  // T8-71 - an empty table used to crash on `entries[-1]!.value` with an
   // opaque TypeError; fail loudly so the broken caller is findable.
   if (entries.length === 0) {
     throw new Error('weightedRandom: empty entries')

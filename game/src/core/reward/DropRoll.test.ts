@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { weightedRandom } from './DropRoll'
 
-// T8-71 — the roll used to crash with an opaque TypeError
+// T8-71 - the roll used to crash with an opaque TypeError
 // (entries[entries.length - 1]!.value on an empty table). Fail loudly
 // with a descriptive error instead.
 describe('weightedRandom', () => {

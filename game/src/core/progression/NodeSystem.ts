@@ -49,14 +49,14 @@ export function getNextLevelCost(node: ProgressionNode, currentLevel: number): n
 export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisite): boolean {
   switch (prerequisite.kind) {
     case 'realm': {
-      // T8-75 — an unknown prerequisite realm resolves to index -1 and
+      // T8-75 - an unknown prerequisite realm resolves to index -1 and
       // `playerIndex >= -1` used to silently pass. Content drift must
       // fail closed (the player's own unknown realmId already fails via
       // `>=`: -1 >= required is false whenever required is valid).
       const requiredIndex = getRealmIndex(prerequisite.realmId)
 
       if (requiredIndex < 0) {
-        console.warn(`[NodeSystem] hasPrerequisite: unknown prerequisite realmId '${prerequisite.realmId}' — failing closed`)
+        console.warn(`[NodeSystem] hasPrerequisite: unknown prerequisite realmId '${prerequisite.realmId}' - failing closed`)
 
         return false
       }

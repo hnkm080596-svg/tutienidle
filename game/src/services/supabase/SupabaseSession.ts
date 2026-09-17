@@ -7,7 +7,7 @@ export interface StoredSupabaseSession {
   accessToken: string
   refreshToken: string
   sessionId: string
-  /** auth.users uuid — remote character/save rows key on it. Optional: sessions stored before Mission F lack it. */
+  /** auth.users uuid - remote character/save rows key on it. Optional: sessions stored before Mission F lack it. */
   userId?: string
   /** Auth mode at login time; guest sessions keep their uuid but still map to the shared guest save slot. */
   mode?: SupabaseSessionMode
@@ -58,7 +58,7 @@ interface GoTrueRefreshResponse {
  * Stored session with a live access token. Refreshes via GoTrue when the
  * token is expired (or was stored before expiry tracking existed); on
  * refresh failure the session is cleared and the caller treats the user
- * as signed out — never a silent stall (spec F8).
+ * as signed out - never a silent stall (spec F8).
  */
 export async function resolveSupabaseSession(config: SupabaseConfig): Promise<StoredSupabaseSession | null> {
   const session = readSupabaseSession()

@@ -104,7 +104,7 @@ describe('EventBus — on/emit/off round trip', () => {
   })
 })
 
-describe('EventBus — dispatch isolation (audit T5-49)', () => {
+describe('EventBus - dispatch isolation (audit T5-49)', () => {
   it('a throwing handler does not abort remaining handlers and does not propagate', () => {
     const bus = new EventBus()
     const after = vi.fn()

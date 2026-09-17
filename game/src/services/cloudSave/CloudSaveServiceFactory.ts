@@ -9,7 +9,7 @@ export const cloudSaveCoordinator = new CloudSaveCoordinator(new LocalCloudSaveS
 
 const supabaseConfig = getSupabaseConfig()
 
-// Spec F8 — boot-time newest-wins sync for authenticated accounts. This is
+// Spec F8 - boot-time newest-wins sync for authenticated accounts. This is
 // NOT the AR-15 "remote adapter" (that stays a separate product decision):
 // it is an explicit, optional pre-load reconciliation step wired by App.vue;
 // the write path remains the local-only adapter above.

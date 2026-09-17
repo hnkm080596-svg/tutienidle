@@ -1,7 +1,7 @@
 import { readSupabaseSession } from '../supabase/SupabaseSession'
 
 // Spec F8 (locked 2026-09-16): every save-storage key is namespaced to the
-// authenticated account — 'tien-hiep-idle-save:<accountId>' — with a shared
+// authenticated account - 'tien-hiep-idle-save:<accountId>' - with a shared
 // 'guest' slot for unauthenticated play. One resolver feeds every storage
 // path; nothing templates the key inline.
 export const GUEST_ACCOUNT_ID = 'guest'
@@ -14,7 +14,7 @@ const IMPORT_HANDOFF_KEY_BASE = 'tien-hiep-idle-import-discarded-equipment-count
 // Bound at authenticate time (App.vue onAuthenticated). null = fall back to
 // the stored Supabase session (survives reload inside the same tab via
 // sessionStorage), then to guest. Any future logout path MUST call
-// setSaveAccountId(null) — the stored session is cleared separately.
+// setSaveAccountId(null) - the stored session is cleared separately.
 let explicitAccountId: string | null = null
 
 export function setSaveAccountId(accountId: string | null): void {
@@ -23,7 +23,7 @@ export function setSaveAccountId(accountId: string | null): void {
 
 export function resolveSaveAccountId(): string {
   if (explicitAccountId !== null) return explicitAccountId
-  // Node/vitest has no sessionStorage — resolver stays pure there.
+  // Node/vitest has no sessionStorage - resolver stays pure there.
   if (typeof sessionStorage === 'undefined') return GUEST_ACCOUNT_ID
   const session = readSupabaseSession()
   return session?.mode !== 'guest' && session?.userId ? session.userId : GUEST_ACCOUNT_ID

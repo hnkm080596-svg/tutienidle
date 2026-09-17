@@ -268,9 +268,9 @@ describe('buildEquipmentTooltip', () => {
     expect(content.slotPreview?.rarityRank).toBe(itemQualityRank(equipment.quality))
     expect(content.slotPreview?.accessibleLabel).toContain(gradeLabel(equipment.grade))
   })
-  // T4-34 — trần Cường Hóa trên tooltip là trần SLOT (MAX_SLOT_ENHANCE_LEVEL
-  // = 100), không phải template.maxEnhanceLevel (field cũ = 10 trên mọi
-  // template, đọc nhầm sang per-item cap).
+  // T4-34 - the tooltip's enhance cap is the SLOT cap (MAX_SLOT_ENHANCE_LEVEL
+  // = 100), not template.maxEnhanceLevel (the legacy field = 10 on every
+  // template - reading it as a per-item cap was the bug).
   it('enhance row shows the slot cap (MAX_SLOT_ENHANCE_LEVEL), not template.maxEnhanceLevel', () => {
     const { affixRegistry } = setup()
     const equipment = instance()

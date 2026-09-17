@@ -125,11 +125,11 @@ describe('StageSelectPanel — B5 auto-farm armed state + refused start guard (a
   })
 })
 
-// T4-38 (Mission E Task 10) — `mode` was a local ref that survived stage
+// T4-38 (Mission E Task 10) - `mode` was a local ref that survived stage
 // changes: arm 'repeat'/'perfect_farm' on stage A, click stage B, and the
 // armed mode silently applied to B. The fix disarms to 'manual' on every
 // selectedStageId change (direct click AND zone/chapter re-picks).
-describe('StageSelectPanel — mode disarms on stage change (T4-38)', () => {
+describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
   it('armed mode resets to manual when a different stage node is clicked', async () => {
     const { container, pinia, unmount } = mountStageSelect()
     const player = usePlayerStore(pinia)
@@ -169,7 +169,7 @@ describe('StageSelectPanel — mode disarms on stage change (T4-38)', () => {
     await nextTick()
     expect(chips[2]!.classList.contains('is-active')).toBe(true)
 
-    // Chapter 2 chip → selectFirstStageInChapter re-picks mortal_dong_11.
+    // Chapter 2 chip -> selectFirstStageInChapter re-picks mortal_dong_11.
     const chapterChips = Array.from(
       container.querySelectorAll<HTMLElement>('.stage-select__filter-group--chapters .chip'),
     )

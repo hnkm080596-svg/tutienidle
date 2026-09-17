@@ -63,7 +63,7 @@
 // xoá. Save v65 (và save mang path id '_an') bị từ chối (dev phase,
 // không migration).
 // v67 (2026-09-17, worker-economy Mission D): ProductionSiteStateSave
-// mất `activeCycle` — workers-as-fuel (spec D3); workerCycles là cycle
-// kind duy nhất. Save v66 bị từ chối (dev phase, không migration); một
-// `activeCycle` stale trong payload cũ được tolerate + whitelist out.
+// lost `activeCycle` - workers-as-fuel (spec D3); workerCycles is the
+// only cycle kind. Save v66 is rejected (dev phase, no migration); a
+// stale `activeCycle` in an old payload is tolerated + whitelisted out.
 export const CURRENT_SAVE_VERSION = 67 as const

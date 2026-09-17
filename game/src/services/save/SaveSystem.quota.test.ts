@@ -20,7 +20,7 @@ import { createDefaultPlayer } from '../../core/player/Player'
 const SAVE_KEY = resolveSaveKey()
 const SAVE_REVISION_KEY = resolveRevisionKey()
 // Captured at module load: calling a resolver INSIDE a Storage-method mock
-// recurses (resolvers read sessionStorage → the same mocked prototype).
+// recurses (resolvers read sessionStorage -> the same mocked prototype).
 const BACKUP_KEY = resolveBackupKey()
 const IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY = resolveImportHandoffKey()
 

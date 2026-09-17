@@ -382,7 +382,7 @@ const lifecycle = useAppLifecycle({
   // roll its starter grants back in memory; the composable calls this to
   // recover on a clean process (same convention as resetSaveFromSettings).
   hardReset: () => window.location.reload(),
-  // Spec F8 — newest-wins remote reconciliation before the local load;
+  // Spec F8 - newest-wins remote reconciliation before the local load;
   // undefined when Supabase isn't configured (fully local boot).
   remoteSync: remoteSaveSync,
 })
@@ -579,7 +579,7 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
         }
       }
 
-      // 3 nguồn Thanh Vân: bật autoRestart — sites start producing once
+      // the 3 Thanh Van sources: autoRestart on - sites start producing once
       // workers are allocated (Mission D: workers-as-fuel, no manual start).
       for (const definition of gameManager.productionSystem.getSiteDefinitions()) {
         gameManager.buildingOps.setProductionAutoRestart(definition.siteId, true)
@@ -610,7 +610,7 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
 }
 
 function onAuthenticated(session: AuthSession) {
-  // Spec F8 — bind the save slot BEFORE boot loads: every storage path
+  // Spec F8 - bind the save slot BEFORE boot loads: every storage path
   // resolves through resolveSaveKey() from this point on.
   setSaveAccountId(accountIdForSession(session))
   void bootGame(false)

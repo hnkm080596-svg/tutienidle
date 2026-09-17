@@ -118,7 +118,7 @@ describe('overlay layer contract', () => {
   )
 
   it(
-    'announcement sits below modal — ambient banners must never cover blocking modals',
+    'announcement sits below modal - ambient banners must never cover blocking modals',
     () => {
       expect(layers.announcement).toBeTypeOf('number')
       expect(layers.modal).toBeTypeOf('number')

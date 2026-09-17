@@ -114,14 +114,14 @@ describe('ProductionBalance', () => {
   })
 })
 
-describe('ProductionSystem — workers-as-fuel (Mission D / spec D3)', () => {
-  it('state has no activeCycle field at all — the manual lane does not exist', () => {
+describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
+  it('state has no activeCycle field at all - the manual lane does not exist', () => {
     const system = createSystem()
     const state = system.ensureSiteState('thanh_van_lam')
     expect('activeCycle' in state).toBe(false)
   })
 
-  it('capacity 0 produces NOTHING online even with autoRestart on — workers are required fuel', () => {
+  it('capacity 0 produces NOTHING online even with autoRestart on - workers are required fuel', () => {
     const { bag, registry } = createBag()
     const system = createSystem()
     system.setAutoRestart('thanh_van_lam', true)
@@ -132,7 +132,7 @@ describe('ProductionSystem — workers-as-fuel (Mission D / spec D3)', () => {
     expect(bag.getAll()).toHaveLength(0)
   })
 
-  it('capacity 0 produces NOTHING offline — no manual fallback phase', () => {
+  it('capacity 0 produces NOTHING offline - no manual fallback phase', () => {
     const { bag, registry } = createBag()
     const system = createSystem()
     system.restoreStates([
@@ -148,7 +148,7 @@ describe('ProductionSystem — workers-as-fuel (Mission D / spec D3)', () => {
     expect(bag.getAll()).toHaveLength(0)
   })
 
-  it('lane count equals activeWorkerSlots exactly — 1 worker -> 1 lane, no implicit extra lane', () => {
+  it('lane count equals activeWorkerSlots exactly - 1 worker -> 1 lane, no implicit extra lane', () => {
     const { bag, registry } = createBag()
     const system = createSystem()
     system.setAutoRestart('thanh_van_lam', true)
@@ -178,8 +178,9 @@ describe('ProductionSystem — workers-as-fuel (Mission D / spec D3)', () => {
     system.setAutoRestart('thanh_van_lam', true)
 
     system.tickWorkers(0, bag, registry, 'mortal', 1)
+    // getState() returns a detached snapshot (spec D2): identical fields,
+    // so rollRewards on the copy predicts the domain grant exactly.
     const cycle = system.getState('thanh_van_lam')!.workerCycles![0]!
-    cycle.rollSeed = 12345
     const expected = system.rollRewards(cycle).reduce((total, reward) => total + reward.amount, 0)
 
     system.tickWorkers(100_000, bag, registry, 'mortal', 1)
@@ -213,11 +214,11 @@ describe('ProductionSystem — workers-as-fuel (Mission D / spec D3)', () => {
     const view = system.getSiteView('thanh_van_lam', 1_000)!
     expect(view.cycleTotalMs).toBe(100_000)
     // The lane was seeded AT nowMs=1_000 (emptyLaneStartMs), so a full
-    // 100s remains — not 99s.
+    // 100s remains - not 99s.
     expect(view.cycleRemainingMs).toBe(100_000)
   })
 
-  it('restoreStates drops a stale activeCycle key — tolerated, whitelisted out, never migrated', () => {
+  it('restoreStates drops a stale activeCycle key - tolerated, whitelisted out, never migrated', () => {
     const system = createSystem()
     const stale = {
       siteId: 'thanh_van_lam',
@@ -240,7 +241,7 @@ describe('ProductionSystem — workers-as-fuel (Mission D / spec D3)', () => {
     expect(restored.level).toBe(2)
   })
 
-  it('cùng collectionRealmId + level → cùng thời lượng bất kể reward roll ra gì (worker lane)', () => {
+  it('same collectionRealmId + level -> same duration regardless of the rolled reward (worker lane)', () => {
     const { bag, registry } = createBag()
     const system = createSystem()
     system.setAutoRestart('thanh_van_quang', true)
@@ -253,7 +254,7 @@ describe('ProductionSystem — workers-as-fuel (Mission D / spec D3)', () => {
 
       const rewards = system.rollRewards(cycle)
 
-      // Every outcome shares the snapshot deadline — completesAtMs does
+      // Every outcome shares the snapshot deadline - completesAtMs does
       // not depend on the seed.
       expect(cycle.completesAtMs).toBe(computeCycleSeconds(100, 1) * 1000)
       expect(rewards.length).toBeGreaterThan(0)

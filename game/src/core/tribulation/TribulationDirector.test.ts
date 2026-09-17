@@ -107,8 +107,8 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
   })
 
   // Mission E Task 5 (audit T3-23): getState hands out a detached
-  // snapshot — consumer mutation must not corrupt domain state (A3).
-  it('getState returns a detached snapshot — mutations do not leak into the director', () => {
+  // snapshot - consumer mutation must not corrupt domain state (A3).
+  it('getState returns a detached snapshot - mutations do not leak into the director', () => {
     const { director } = makeDirector()
     director.start(readyPlayer(), testStats(), false, 'qi_refining')
 
@@ -121,6 +121,41 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
     const question = director.getState()!.currentQuestion!
     ;(question.answers as string[])[0] = 'mutated'
     expect(director.getState()!.currentQuestion!.answers[0]).not.toBe('mutated')
+  })
+
+  // E1/E2 regression - the presentation surface obeys the same
+  // detachment contract as getState: the snapshot hands out copies of
+  // nested-mutable fields, and reading it never writes domain state.
+  it('getPresentationSnapshot detaches nested mutable state - caller mutation cannot corrupt gameplay truth', () => {
+    const { director } = makeDirector()
+    director.start(readyPlayer(), testStats(), false, 'qi_refining')
+
+    const session = director.getCurrentPresentationSession()!
+    const snap = director.getPresentationSnapshot(session.sessionId)!
+
+    const realCorrect = snap.state.currentQuestion!.correctAnswerIndex
+    snap.state.currentQuestion!.correctAnswerIndex = (realCorrect + 1) % 4
+    ;(snap.state.currentQuestion!.answers as string[])[0] = 'mutated'
+
+    const fresh = director.getPresentationSnapshot(session.sessionId)!
+    expect(fresh.state.currentQuestion!.correctAnswerIndex).toBe(realCorrect)
+    expect(fresh.state.currentQuestion!.answers[0]).not.toBe('mutated')
+
+    // The domain truth is intact: the real answer still validates.
+    const q = director.getState()!.currentQuestion!
+    expect(director.answerQuestion(q.correctAnswerIndex)).toBe(true)
+  })
+
+  it('getState and getPresentationSnapshot return independent object graphs', () => {
+    const { director } = makeDirector()
+    director.start(readyPlayer(), testStats(), false, 'qi_refining')
+
+    const session = director.getCurrentPresentationSession()!
+    const a = director.getState()!
+    const b = director.getPresentationSnapshot(session.sessionId)!
+
+    expect(a.currentQuestion).not.toBe(b.state.currentQuestion)
+    expect(a.currentQuestion!.answers).not.toBe(b.state.currentQuestion!.answers)
   })
 
   it('answerQuestion khi không có câu hỏi active → false (no-op)', () => {
@@ -165,7 +200,7 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
 
     director.start(readyPlayer(), stats, false, 'qi_refining')
 
-    // Qua chương mind bằng trả lời đúng — regen chưa đủ để vượt damage.
+    // Clear the mind chapter by answering correctly - regen alone cannot outpace the damage yet.
     let guard = 0
     while (director.getState()!.chapterIndex === 0 && guard++ < 50) {
       const q = director.getState()!.currentQuestion!
@@ -173,34 +208,34 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
       director.update(3)
     }
 
-    // Chờ strike đầu tiên hạ HP xuống dưới max.
+    // Wait for the first strike to pull HP below max.
     guard = 0
     while (snapshotHp(director) >= 5000 && guard++ < 30) {
       director.update(1)
     }
     expect(snapshotHp(director)).toBeLessThan(5000)
 
-    // Một step nhỏ ngay sau strike: không strike mới trong 0.1s
-    // (interval >> 0.1) nhưng regen vẫn chạy theo thời gian trôi.
+    // A small step right after the strike: no new strike within 0.1s
+    // (interval >> 0.1) but regen still runs on elapsed time.
     const hpBefore = snapshotHp(director)
     director.update(0.1)
     expect(snapshotHp(director)).toBeGreaterThan(hpBefore)
   })
 
-  it('regen clamps at maxHp — never heals above the snapshot ceiling', () => {
+  it('regen clamps at maxHp - never heals above the snapshot ceiling', () => {
     const { director } = makeDirector()
     const stats = createBaseStats({ maxHp: 5000, defense: 0, hpRegenPerTurn: 10 }) as Stats
 
     director.start(readyPlayer(), stats, false, 'qi_refining')
 
-    // Mind chapter has no strikes — deterministic window. Force the
+    // Mind chapter has no strikes - deterministic window. Force the
     // snapshot 1 HP below max (strike damage arrives in fixed quanta,
     // so the cast stands in for "just below max after a strike").
     const internal = director as unknown as { snapshotHp: number; ghost: { currentHp: number } }
     internal.snapshotHp = 4999
     internal.ghost.currentHp = 4999
 
-    // 0.5s x 10/s = 5 HP healed > 1 missing — the vitals owner clamps
+    // 0.5s x 10/s = 5 HP healed > 1 missing - the vitals owner clamps
     // to maxHp; lands exactly at 5000, never above.
     director.update(0.5)
     expect(snapshotHp(director)).toBe(5000)

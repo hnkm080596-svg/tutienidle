@@ -64,7 +64,7 @@ export function useTurnBattleInfo() {
   })
 
   /**
-   * T4-36 — participant-id -> display name lookup for log/turn text.
+   * T4-36 - participant-id -> display name lookup for log/turn text.
    * Same players-then-enemies idiom the engine itself uses
    * (TurnBattleSystem execActor lookup); ids stay internal.
    */

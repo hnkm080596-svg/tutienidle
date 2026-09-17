@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// Port per checkout (2026-09-16) — same derivation as vite.config.ts, so
+// Port per checkout (2026-09-16) - same derivation as vite.config.ts, so
 // the spawned dev server and baseURL always agree. DEV_PORT env overrides.
 import { devPortForRoot } from './scripts/dev-port.ts'
 import { fileURLToPath } from 'node:url'
@@ -56,7 +56,7 @@ export default defineConfig({
   webServer: {
     command: 'node node_modules/vite/bin/vite.js',
     url: `http://localhost:${DEV_PORT}`,
-    // Never reuse a foreign server on CI — a stale worktree server is the
+    // Never reuse a foreign server on CI - a stale worktree server is the
     // T7-62 false-green. Local reuse stays for the manual-server workflow.
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,

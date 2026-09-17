@@ -7,7 +7,7 @@
 // - `phap_tu`: art Pháp Tu mới trong combat; tu luyện tạm dùng fallback
 //   Phàm Nhân đã thống nhất.
 // - `kiem_tu`: CHƯA có art riêng — fallback toàn bộ sang Phàm Nhân.
-// - `the_tu`: CHƯA có art riêng — fallback toàn bộ sang Phàm Nhân.
+// - `the_tu`: NO dedicated art yet - falls back entirely to mortal.
 //
 // Scenes chỉ nhận PROFILE ID (không cầm Player store/GameManager) qua
 // Phaser registry + event `player_visual_profile_changed`.
@@ -163,8 +163,8 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
   the_tu: {
     id: 'the_tu',
 
-    // Chưa có art riêng — toàn bộ fallback Phàm Nhân (cùng policy kiem_tu;
-    // art The Tu là future content).
+    // No dedicated art yet - everything falls back to mortal (same policy
+    // as kiem_tu; the_tu art is future content).
     combatTextureKey: MORTAL_COMBAT_KEY,
     combatTextureUrl: `/assets/characters/player/mortal/${MORTAL_COMBAT_KEY}.png`,
     combatSourceSize: { w: 1312, h: 1199 },

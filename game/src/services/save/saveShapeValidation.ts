@@ -902,7 +902,7 @@ function validateProductionSitesSave(
     // Mission D (spec D3): `activeCycle` was removed from the state
     // shape (workers-as-fuel; workerCycles is the only cycle kind).
     // A stale `activeCycle` key in an old-shaped payload is tolerated
-    // here and whitelisted out at restoreStates — it is NOT validated or
+    // here and whitelisted out at restoreStates - it is NOT validated or
     // rejected (dev phase, no migration).
 
     if (entry.workerCycles !== undefined) {

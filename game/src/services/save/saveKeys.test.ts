@@ -8,10 +8,10 @@ import {
   setSaveAccountId,
 } from './saveKeys'
 
-describe('saveKeys — per-account resolution (spec F8)', () => {
+describe('saveKeys - per-account resolution (spec F8)', () => {
   afterEach(() => setSaveAccountId(null))
 
-  it('no session, no binding → guest slot', () => {
+  it('no session, no binding -> guest slot', () => {
     expect(resolveSaveAccountId()).toBe(GUEST_ACCOUNT_ID)
     expect(resolveSaveKey()).toBe('tien-hiep-idle-save:guest')
     expect(resolveRevisionKey()).toBe('tien-hiep-idle-save-revision:guest')
