@@ -1,10 +1,16 @@
 # Combat Systems Reimagined — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Non-trivial production missions MUST follow `game/docs/architecture/architecture-worker-workflow.md` (G0–G5) and return the G5 evidence report.
+>
+> **Review resync (buff-plan review round 7, `7429d14a`):** sibling megaplans are the authority — this parent's orchestration is corrected to their locked rulings: (a) R3 corrected — `TurnReactionManager`/`canInitiateWuxingReactions`/`checkAndTrigger` are DELETED at reaction **M-INT inside buff M4's worktree**, NOT kept until seal batch; (b) mission EXECUTION ORDER corrected — reaction engine (M6) must land BEFORE buff cutover (M4) because M-INT consumes `ReactionDispatcher`/`ReactionRegistry`/`ElementalStateRegistry`; (c) M4 is ONE ATOMIC WORKTREE MISSION — no M4a/M4b split; (d) R1/R2 census corrected — no independent `TurnBuffSystem`/`TurnBuffPool` impl exists to absorb (test files only), `player.persistentTimedEffects` is NOT a buff pool and is untouched (persistent buffs = `GameManager.buffPool` → `BuffPersistence`); (e) M6/M7 exit criteria + Deferred section resynced — legacy engine dead post-M4, seal batch owns only canonical-content items (real ấn defs, production `ReactionRegistry`, dispatcher registration, Ngộ Đạo grant, real payoff defs).
+>
+> **Execution order (LOCKED — mission numbers are scope labels, not sequence):**
+> `M0 → M1 (contracts) → M2 (scheduler) → M3 (buff core) → M6 (reaction engine, fixture/inert) → M4 (buff cutover + reaction M-INT in the SAME worktree) → M5 (skill pipeline) → M7 (battle wiring)`.
+> Buff M4 cannot start before reaction M6 completes — its merge gate requires the M-INT sub-steps which consume the reaction package.
 
 **Goal:** Land the shared combat runtime spine (contracts, scheduler, deterministic RNG), rebuild BuffSystem as the single persistent-state authority, introduce the declarative SkillDefinition pipeline, and build the capability-gated Ngũ Hành Reaction engine — **without authoring any of the 5 elemental ấn** (Hỏa Ấn + Hàn Tức/Độc Căn/Liệt Thương/Trấn Ấn ship together in a later batch).
 
-**Architecture:** Four layers in dependency order: (1) `combat/contracts` — shared operation/event/origin/result types + `CombatRng`; (2) `CombatScheduler` + `CombatOperationExecutor` — ordering, settlement barriers, exactly-once events; (3) new `BuffSystem` — definition/instance/modifier model absorbing `TurnBuffSystem`; (4) `SkillResolver → ResolvedSkillPlan → executor` and `ReactionSystem` — both emitting `CombatOperation`s, never mutating foreign state.
+**Architecture:** Four layers in dependency order: (1) `combat/contracts` — shared operation/event/origin/result types + `CombatRng`; (2) `CombatScheduler` + `CombatOperationExecutor` — ordering, settlement barriers, exactly-once events; (3) new `BuffSystem` — definition/instance/modifier model as the single battle-scoped authority (no independent `TurnBuffSystem` impl exists — only test files remain, cleaned in M4/M5); (4) `SkillResolver → ResolvedSkillPlan → executor` and `ReactionSystem` — both emitting `CombatOperation`s, never mutating foreign state.
 
 **Tech Stack:** Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 
@@ -25,16 +31,16 @@
 - **P4** adversarial QA (quick) after every production mission; **deep** for M4 and M7.
 - **P5** three-lens review round per mission. **P7** — commit steps describe granularity only; every commit needs explicit user authorization.
 - **P13/P14:** M4 and M7 touch battle runtime wiring — drive a real battle via Playwright (`npm run dev`, actual port) before merge-ready.
-- **Save policy:** strict version rejection; if M4 changes persisted buff shape or `persistentTimedEffects` (R2 ruling), schema + consumer + `saveVersion` bump land together.
+- **Save policy:** strict version rejection; if M4 changes persisted buff shape, schema + consumer + `saveVersion` bump land together. `player.persistentTimedEffects` is NOT a buff pool and is NOT migrated (R2 — corrected census).
 - Per-mission report: changed / files / authority moved / adapters remaining / tests / build status / behavior changes / risks / next.
 
 ## M0 Rulings (must be resolved before production edits)
 
 | # | Question | Proposed ruling |
 |---|---|---|
-| R1 | `TurnBuffSystem`/`TurnBuffPool` fate | Absorbed — new BuffSystem IS the turn-native engine; `TurnBuff*` deleted in M4 |
-| R2 | `player.persistentTimedEffects` (Kiếp Thương, out-of-battle) | Out of scope for battle BuffSystem; stays on its own persistence path until a dedicated ruling |
-| R3 | Legacy `TurnReactionManager` + `ELEMENT_REACTIONS` (live for visible Pháp Tu) | **Keep live** until seal batch — new reactions need the 5 seals which don't exist yet; legacy table deleted when seals + Ngộ Đạo capability land |
+| R1 | `TurnBuffSystem`/`TurnBuffPool` fate | RESOLVED (corrected census): NO independent `TurnBuff*` impl exists to absorb — only test files importing `core/buff` remain (renamed/verified in M4/M5). New BuffSystem is the single battle-scoped authority. |
+| R2 | `player.persistentTimedEffects` (Kiếp Thương, out-of-battle) | RESOLVED: NOT a buff pool — a separate persistent system, untouched by this program. Persistent buffs are `GameManager.buffPool` → `BuffPersistence` (buff megaplan M3). No `persistentTimedEffects` migration input exists. |
+| R3 | Legacy `TurnReactionManager` + `ELEMENT_REACTIONS` (live for visible Pháp Tu) | **DELETED at reaction M-INT — inside buff M4's worktree** (the cutover removes the `BuffPool` the legacy engine reads/mutates, so removal must land on the same branch before merge). NOT seal batch. Per spec, visible Pháp Tu gets NO automatic reactions — the behavior is retired, not preserved; `elemental_reaction_enabled` granted to nobody; `ReactionDispatcher` NOT registered until a valid production `ReactionRegistry` exists (seal/Ngộ Đạo mission). |
 | R4 | `Độc Căn` name collision (poison-root mechanic inside `trung_doc` vs new Mộc ailment id `doc_can`) | Rename the poison-root mechanic keys (`poisonRoot*` → distinct prefix) at M4 data migration |
 | R5 | Thế resource authority for `GainResourceOperation`/`ConsumeResourceOperation` | Locate at M0 inventory (`ResourceTurnHook.ts`, `player.phapTu`); resource ops land only if a real consumer exists — otherwise deferred |
 | R6 | Migration stance conflict (buff forbids compat / skill allows adapter) | Buff data = rewrite-in-place; skill legacy path = resolver-input adapter with dated retirement |
@@ -52,7 +58,7 @@
 
 - [ ] **Step 1 — Lock baseline:** record `git rev-parse HEAD`; all claims reference this SHA.
 - [ ] **Step 2 — Resolve M0 rulings R1–R10** with the user; record each decision + reason in the inventory doc.
-- [ ] **Step 3 — Buff consumer inventory:** every `BuffPool`/`TurnBuffPool` reader and writer, `new BuffSystem(` sites (`TurnBattleSystem.ts:1033,1824`), `appliesBuff(s)`/`appliesAilments` data fields, `TurnStatusPresentationEvents`, `persistentTimedEffects` writers, `scaleBuffPotency`/`potencyAmplified`/`rollOnHitEffects`/`rollReactiveTrigger`/`Math.random` call sites, `data/buff/*` definition counts.
+- [ ] **Step 3 — Buff consumer inventory:** every `BuffPool`/`TurnBuffPool` reader and writer, `new BuffSystem(` sites (`TurnBattleSystem.ts:1033,1824`), `appliesBuff(s)`/`appliesAilments` data fields, `TurnStatusPresentationEvents`, `persistentTimedEffects` writers (confirm R2 — separate system, untouched), `scaleBuffPotency`/`potencyAmplified`/`rollOnHitEffects`/`rollReactiveTrigger`/`Math.random` call sites, `data/buff/*` definition counts.
 - [ ] **Step 4 — Skill pipeline inventory:** `Skill`/`SkillEffect`/`SkillAction`/`TriggerBinding` duality sites, `SkillToTurnSkillConverter` consumers, `SkillSystem.getEffectiveSkill`, `TurnSkillDefinition` shape, passive trigger runtime, `SkillExecutionPolicy` consumers (for R8).
 - [ ] **Step 5 — Reaction/damage/gauge inventory:** `TurnReactionManager.checkAndTrigger` call site (`TurnBattleSystem.ts:2978`), `ELEMENT_REACTIONS` shape, `CombatSystem`/`EntityVitalsSystem`/`ElementDamageCalculator` public surface (damage authority seam), `ActionGauge` push API, `CombatCapabilityQuery` candidates (existing capability/buff-capability concepts).
 - [ ] **Step 6 — Resource authority (R5):** find who owns Thế today and where `resource_gain` would land.
@@ -167,9 +173,11 @@ class CombatOperationExecutor {
 
 ---
 
-## Mission 4 — Buff cutover: migrate data + reroute consumers + delete old engine
+## Mission 4 — Buff cutover: migrate data + reroute consumers + delete old engine (+ Reaction M-INT)
 
-The largest blast radius. Split if inventory shows it: **M4a** = turn-native path (`TurnBuffSystem`/`TurnBuffPool` → new engine), **M4b** = legacy `BuffSystem`/`BuffPool`/`data/buff/*` + `persistentTimedEffects` per R2.
+The largest blast radius. **ONE ATOMIC WORKTREE MISSION — do NOT split into separately mergeable commits** (resync r7): the cutover deletes the `BuffPool` that legacy `TurnReactionManager` reads/mutates, so the consumer cutover AND the legacy-engine deletion must land on one branch — no intermediate state may exist where the pool is gone but the legacy reaction still needs it.
+
+**Hard prerequisite:** reaction **M6 must complete first** — the M-INT sub-steps below consume `ElementalStateRegistry` (reaction megaplan M1) which does not exist before then. Sequence: contract M1–M2 → buff M3 → **reaction M6** → this mission.
 
 **Files:**
 - Rewrite: `game/src/data/buff/*` (`buffs.ts`, `TurnBuffs.ts`, `BossBuffs.ts`, `KiemPhoBuffs.ts`, `LegacyBuffs.ts`, `TalentBuffs.ts`, `TheTuBuffs.ts`, `ThuanHeBuffs.ts`, `ZoneDotBuffs.ts`, registries) into `BuffDefinition` v2 — **existing buffs only; no ấn ids**
@@ -179,15 +187,17 @@ The largest blast radius. Split if inventory shows it: **M4a** = turn-native pat
 - Modify: pills/artifacts/talents/tribulation appliers (M0 list)
 - Delete: `BuffPool` authority, runtime `Buff.effects`, `damagePerTurn`/`damagePerSecond` canonical runtime fields, `scaleBuffPotency`, `potencyAmplified`, `rollOnHitEffects`, `rollReactiveTrigger`, overloaded `update()`, direct `Math.random` in buff paths, silent `remove()`
 - Per R4: rename poison-root mechanic keys to clear `doc_can` collision
-- If R2 requires: `saveVersion` bump + `PersistentTimedEffect` touch — same mission, per save policy
+- If persisted buff shape changes: `saveVersion` bump — same mission, per save policy (`persistentTimedEffects` is NOT touched — R2 corrected census)
+- **Reaction M-INT sub-steps (same branch — buff megaplan M4 step 4):** bind production `ElementalStateRegistry` to the five canonical ấn ids; delete `TurnReactionManager.ts` + `canInitiateWuxingReactions` (flag + stamp + call site); grant `elemental_reaction_enabled` to NOBODY; do NOT register `ReactionDispatcher`/`ReactionSystem`/`ReactionRegistry` in production (no valid production registry until canonical content — seal/Ngộ Đạo mission owns registration)
 
 - [ ] **Step 1 — Definition migration + registry validation** (§56) with parity tests over migrated data (same stack caps, durations, elements, dispellable).
 - [ ] **Step 2 — Consumer reroute** top-down: TurnBattleSystem → presentation → UI read model → non-battle appliers.
 - [ ] **Step 3 — Deletion list execution** (§73); grep-verify each deleted symbol has zero references.
-- [ ] **Step 4 — Verify (P3 full) + P13/P14 Playwright battle drive** (apply buff, DoT tick, cleanse, death cleanup visible in UI/log).
-- [ ] **Step 5 — P4 adversarial QA (deep) + P5 review round.**
+- [ ] **Step 4 — Reaction M-INT on this worktree** (see file list above): canonical `ElementalStateRegistry` bound; legacy engine/flag/callsite deleted; no dispatcher registration; no capability grant.
+- [ ] **Step 5 — Verify (P3 full) + P13/P14 Playwright battle drive** (apply buff, DoT tick, cleanse, death cleanup visible in UI/log; **visible-Pháp-Tu elemental application fires NO automatic reaction** — spec-correct post-M-INT).
+- [ ] **Step 6 — P4 adversarial QA (deep) + P5 review round.**
 
-**Exit criteria:** zero old-engine symbols; all migrated buffs behave identically (behavior change = none unless approved); real-battle runtime evidence captured.
+**Exit criteria:** zero old-engine symbols; all migrated buffs behave identically (behavior change = none unless approved); `TurnReactionManager`/`canInitiateWuxingReactions` fully deleted; canonical `ElementalStateRegistry` in place; NO production `ReactionDispatcher` (deferred to canonical-content mission); real-battle runtime evidence captured. **Merge gate: M4 does not merge until the M-INT sub-steps are green.**
 
 ---
 
@@ -221,7 +231,7 @@ The largest blast radius. Split if inventory shows it: **M4a** = turn-native pat
 ## Mission 6 — ReactionSystem engine
 
 **Files:**
-- Create: `game/src/core/reaction/ElementalStateRegistry.ts` — contract §19 (element ↔ buffDefinitionId mapping; **populated by test fixtures — real ấn ids arrive in seal batch**)
+- Create: `game/src/core/reaction/ElementalStateRegistry.ts` — contract §19 (element ↔ buffDefinitionId mapping; unit tests use `test_*` fixtures; **production binding to the five canonical ấn ids lands at M-INT inside M4** — never legacy ailments)
 - Create: `game/src/core/reaction/ReactionDefinition.ts` + `ReactionRegistry.ts` — §61–63 validation (5 Sinh + 5 Khắc canonical, unique `selectionTiePriority`)
 - Create: `game/src/core/reaction/ReactionSystem.ts` — §64 API (`evaluateAfterElementalApplication` → `buildCandidates` → `selectCandidate` → `resolveCandidate`); fixed-point bias math (§31–32); snapshot + preconditions (§36–42); emits `ReactionResolution` operations only
 - Create: `game/src/core/reaction/ReactionBoard.ts` — same-source/same-target board query over BuffSystem (§26)
@@ -240,7 +250,7 @@ The largest blast radius. Split if inventory shows it: **M4a** = turn-native pat
 - [ ] **Step 5 — Cấm Công restriction buff + ActionValidator enforcement.**
 - [ ] **Step 6 — Verify (P3 quick) + P4 quick.**
 
-**Exit criteria:** §74–82 green on fixtures; engine inert in production (capability ungranted); legacy `TurnReactionManager` untouched and still live (R3).
+**Exit criteria:** §74–82 green on fixtures; engine inert in production (capability ungranted, no production wiring); legacy `TurnReactionManager` still live AT THIS POINT — its deletion is M-INT inside M4 (corrected R3; M6 executes BEFORE M4 per the locked execution order).
 
 ---
 
@@ -259,7 +269,7 @@ The largest blast radius. Split if inventory shows it: **M4a** = turn-native pat
 - [ ] **Step 4 — Verify (P3 full) + P13/P14 Playwright** real battle (skill→buff→tick→death→log, origins distinct).
 - [ ] **Step 5 — P4 deep + P5 review round.**
 
-**Exit criteria:** contract §104 DoD items all green; legacy TurnReactionManager still serving visible Pháp Tu; no ấn content shipped.
+**Exit criteria:** contract §104 DoD items all green; `TurnReactionManager` already DELETED at M4's M-INT — visible Pháp Tu has NO automatic reactions (spec-correct); `ReactionDispatcher` still unregistered pending canonical content; no ấn content shipped.
 
 ---
 
@@ -268,12 +278,13 @@ The largest blast radius. Split if inventory shows it: **M4a** = turn-native pat
 - `hoa_an`, `han_tuc`, `doc_can`, `liet_thuong`, `tran_an` BuffDefinitions + `ElementalStateRegistry` population
 - Hỏa skill kit (Dẫn Hỏa Quyết / Xích Viêm / Phần Thiên / Cửu Tiêu) on new SkillDefinition
 - `elemental_reaction_enabled` grant + Ngộ Đạo random-cast/multicast kit
-- Legacy `TurnReactionManager`/`ELEMENT_REACTIONS` deletion + visible-Pháp Tu reaction ruling execution (R3)
+- **Production reaction wiring (canonical-content mission):** author + validate production `ReactionRegistry` (all 10 relations + `buffExists` on real ids) → construct `ReactionSystem` → register `ReactionDispatcher` on `elemental_application_committed`. (`TurnReactionManager`/`canInitiateWuxingReactions` are already dead — deleted at M-INT inside M4, NOT here.)
 - The 10 reaction payoff definitions (Dưỡng Viêm … Trấn Thủy) and Cấm Công production buff
 - Độc Căn colliding-name cleanup finalization (R4 completes in seal data)
 
 ## Self-review notes
 
 - **Spec coverage:** contract §1–105 → M1 (types/rng), M2 (scheduler/settlement/trace), M3–M4 (buff authority + cutover), M5 (skill pipeline), M6 (reaction engine), M7 (wiring + DoD). Hỏa Ấn spec = deferred batch only.
+- **Execution order vs labels:** mission numbers are scope labels; the locked sequence is `M0→M1→M2→M3→M6→M4(+M-INT)→M5→M7` — reaction M6 precedes buff M4 because M-INT consumes the reaction package.
 - **Type consistency:** `CombatOperation`, `ApplyBuffResult`, `ReactionEligibility`, `ElementalApplicationCommitted`, `selectionTiePriority`, `forbiddenActionTags`, `combatSequence` — single canonical spelling used across missions.
 - **Known risk:** M4 is the make-or-break mission (live-data cutover); M0 inventory must be exhaustive or M4 will surface surprise consumers mid-flight.
