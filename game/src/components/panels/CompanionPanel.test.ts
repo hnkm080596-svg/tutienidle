@@ -200,6 +200,24 @@ describe('CompanionPanel', () => {
     mounted.unmount()
   })
 
+  // T4-36 — skill rows render TURN_SKILL_DISPLAY_META names, never the
+  // raw definition id ('ho_ly_tinh_basic' -> 'Trảo Kích').
+  it('renders the skill display name instead of the raw skill id', () => {
+    const mounted = mountPanel(({ player }) => {
+      player.companions = [ownedInstance()]
+    })
+
+    const skillNames = Array.from(
+      mounted.container.querySelectorAll<HTMLElement>('.companion-panel__skill-id'),
+    ).map((el) => el.textContent ?? '')
+
+    expect(skillNames.length).toBeGreaterThan(0)
+    expect(skillNames[0]).toBe('Trảo Kích')
+    expect(mounted.container.textContent ?? '').not.toContain('ho_ly_tinh_basic')
+
+    mounted.unmount()
+  })
+
   it('command wheel entry resolves the standalone companion panel', () => {
     const slot = COMMAND_WHEEL_SLOTS.find((entry) => entry.id === 'companion_roster')
 

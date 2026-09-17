@@ -647,6 +647,7 @@
       },
       "unlocked": "Unlocked",
       "locked": "Locked",
+      "unknown": "Unknown skill",
       "unlockAt": "Unlocks at {realm} floor {level}",
       "absent": "—",
       "cooldownTag": "{turns}-turn cooldown"
@@ -688,6 +689,15 @@
       "hintCultivate": "Your cultivation is still lacking — refine a few more levels, then return stronger.",
       "hintGear": "Not enough power to breach this realm — enhance your gear, take pills, or gain insight before the rematch."
     },
+    "log": {
+      "toggle": "Battle Log",
+      "entry": "Turn {turn}: {actor} uses {skill}{targets}",
+      "entryCcBlocked": "Turn {turn}: {actor} is locked (CC)",
+      "basicAttack": "basic attack",
+      "unknownActor": "??",
+      "unknownSkill": "unknown skill"
+    },
+
     "offline": {
       "title": "CLOSED-DOOR RETREAT ENDED",
       "labels": {

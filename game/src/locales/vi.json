@@ -647,6 +647,7 @@
       },
       "unlocked": "Đã mở",
       "locked": "Khoá",
+      "unknown": "Kỹ năng chưa rõ",
       "unlockAt": "Mở tại {realm} tầng {level}",
       "absent": "—",
       "cooldownTag": "Hồi {turns} lượt"
@@ -687,6 +688,14 @@
       "returnHome": "Về Động Phủ",
       "hintCultivate": "Tu vi chưa đủ — tu luyện thêm tầng, rồi quay lại khi đã mạnh hơn.",
       "hintGear": "Chưa đủ sức phá bí cảnh — cường hóa trang bị, dùng đan dược hoặc lĩnh ngộ thêm trước khi tái chiến."
+    },
+    "log": {
+      "toggle": "Nhật ký",
+      "entry": "Lượt {turn}: {actor} dùng {skill}{targets}",
+      "entryCcBlocked": "Lượt {turn}: {actor} bị khóa (CC)",
+      "basicAttack": "đòn thường",
+      "unknownActor": "??",
+      "unknownSkill": "kỹ năng chưa rõ"
     },
     "offline": {
       "title": "BẾ QUAN KẾT THÚC",

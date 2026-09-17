@@ -63,6 +63,25 @@ export function useTurnBattleInfo() {
     return gameManager.getActiveTurnBattleStage()
   })
 
+  /**
+   * T4-36 — participant-id -> display name lookup for log/turn text.
+   * Same players-then-enemies idiom the engine itself uses
+   * (TurnBattleSystem execActor lookup); ids stay internal.
+   */
+  const participantNameOf = (participantId: string): string | undefined => {
+    const current = battle.value
+
+    if (!current) {
+      return undefined
+    }
+
+    const participant =
+      current.players.find((member) => member.id === participantId) ??
+      current.enemies.find((enemy) => enemy.id === participantId)
+
+    return participant?.entity.name
+  }
+
   return {
     battle,
     isBattleFighting,
@@ -70,5 +89,6 @@ export function useTurnBattleInfo() {
     logEntries,
     roundsElapsed,
     activeStage,
+    participantNameOf,
   }
 }
