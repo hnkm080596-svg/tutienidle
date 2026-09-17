@@ -106,6 +106,23 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
     expect(ticked.questionSecondsLimit).toBe(12)
   })
 
+  // Mission E Task 5 (audit T3-23): getState hands out a detached
+  // snapshot — consumer mutation must not corrupt domain state (A3).
+  it('getState returns a detached snapshot — mutations do not leak into the director', () => {
+    const { director } = makeDirector()
+    director.start(readyPlayer(), testStats(), false, 'qi_refining')
+
+    const state = director.getState()!
+    const hpBefore = state.hp
+    state.hp = -999
+    expect(director.getState()!.hp).toBe(hpBefore)
+
+    // Nested mutable: currentQuestion must be detached too.
+    const question = director.getState()!.currentQuestion!
+    ;(question.answers as string[])[0] = 'mutated'
+    expect(director.getState()!.currentQuestion!.answers[0]).not.toBe('mutated')
+  })
+
   it('answerQuestion khi không có câu hỏi active → false (no-op)', () => {
     const { director } = makeDirector()
     expect(director.answerQuestion(0)).toBe(false)

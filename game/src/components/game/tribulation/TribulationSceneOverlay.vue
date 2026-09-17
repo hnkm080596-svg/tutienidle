@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 
+const { t } = useI18n()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
@@ -15,11 +17,15 @@ const chapterProgress = computed(() => `${(active.value?.chapterIndex ?? 0) + 1}
 const questionSeconds = computed(() => Math.ceil(active.value?.questionSecondsRemaining ?? 0))
 const isMindChapter = computed(() => active.value?.currentQuestion != null)
 const isFinished = computed(() => active.value?.state === 'victory' || active.value?.state === 'defeat')
-const resultTitle = computed(() => (active.value?.state === 'victory' ? 'VƯỢT KIẾP' : 'KIẾP THẤT BẠI'))
+const resultTitle = computed(() =>
+  t(active.value?.state === 'victory' ? 'tribulation.overlay.resultVictory' : 'tribulation.overlay.resultDefeat'),
+)
 const resultText = computed(() =>
-  active.value?.state === 'victory'
-    ? 'Thiên kiếp tan biến — đạo tâm thêm vững.'
-    : 'Thân hoại đạo tiêu — dưỡng thương rồi thử lại.',
+  t(
+    active.value?.state === 'victory'
+      ? 'tribulation.overlay.resultVictoryText'
+      : 'tribulation.overlay.resultDefeatText',
+  ),
 )
 
 function answer(index: number) {
@@ -31,17 +37,17 @@ function answer(index: number) {
   <div v-if="active" class="tribulation-ui">
     <div class="tribulation-ui__header">
       <div class="tribulation-ui__chapter">{{ active.chapterName }}</div>
-      <div class="tribulation-ui__progress">Chương {{ chapterProgress }}</div>
+      <div class="tribulation-ui__progress">{{ t('tribulation.overlay.chapter', { progress: chapterProgress }) }}</div>
     </div>
 
     <div class="tribulation-ui__hp-cluster">
       <Bar class="tribulation-ui__hp-track" :value="hp" :max="maxHp" :height="8" />
-      <div class="tribulation-ui__hp">HP {{ formatNumber(Math.ceil(hp)) }} / {{ formatNumber(maxHp) }}</div>
+      <div class="tribulation-ui__hp">{{ t('tribulation.overlay.hp', { hp: formatNumber(Math.ceil(hp)), max: formatNumber(maxHp) }) }}</div>
     </div>
 
     <div v-if="!isMindChapter && !isFinished" class="tribulation-ui__tank">
-      <div class="tribulation-ui__strikes">Lôi đã đỡ: {{ active.lightningStrikesTaken }}</div>
-      <div class="tribulation-ui__hint">Trụ vững — lôi giáng xuống theo nhịp</div>
+      <div class="tribulation-ui__strikes">{{ t('tribulation.overlay.strikesTaken', { count: active.lightningStrikesTaken }) }}</div>
+      <div class="tribulation-ui__hint">{{ t('tribulation.overlay.tankHint') }}</div>
     </div>
 
     <div v-if="isMindChapter" class="tribulation-ui__mind">
@@ -58,7 +64,7 @@ function answer(index: number) {
         </GameButton>
       </div>
       <Bar class="tribulation-ui__time-track" :value="active.questionSecondsRemaining" :max="Math.max(1, active.questionSecondsLimit)" :height="6" anchor="right" />
-      <div class="tribulation-ui__timer">{{ questionSeconds }}s</div>
+      <div class="tribulation-ui__timer">{{ t('tribulation.overlay.seconds', { count: questionSeconds }) }}</div>
     </div>
 
     <div v-if="isFinished" class="tribulation-ui__result">

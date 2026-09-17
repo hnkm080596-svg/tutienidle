@@ -975,6 +975,17 @@
       "subtitle": "Không thể mặc trang bị khi độ kiếp",
       "confirm": "Đã hiểu",
       "cancel": "Chờ đã"
+    },
+    "overlay": {
+      "chapter": "Chương {progress}",
+      "hp": "HP {hp} / {max}",
+      "strikesTaken": "Lôi đã đỡ: {count}",
+      "tankHint": "Trụ vững — lôi giáng xuống theo nhịp",
+      "seconds": "{count}s",
+      "resultVictory": "VƯỢT KIẾP",
+      "resultDefeat": "KIẾP THẤT BẠI",
+      "resultVictoryText": "Thiên kiếp tan biến — đạo tâm thêm vững.",
+      "resultDefeatText": "Thân hoại đạo tiêu — dưỡng thương rồi thử lại."
     }
   },
   "actionFailure": {

@@ -653,7 +653,16 @@ export class TribulationDirector {
 
     this.active.hp = this.snapshotHp
 
-    return this.active
+    // Mission E Task 5 (audit T3-23): detach — the overlay reads a copy,
+    // never the mutable internal record (A3). `currentQuestion` is
+    // nested-mutable and gets its own shallow copy (same policy as
+    // getPresentationSnapshot).
+    return {
+      ...this.active,
+      currentQuestion: this.active.currentQuestion
+        ? { ...this.active.currentQuestion, answers: [...this.active.currentQuestion.answers] }
+        : null,
+    }
   }
 
   /**

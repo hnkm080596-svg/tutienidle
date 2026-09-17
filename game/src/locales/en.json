@@ -975,6 +975,17 @@
       "subtitle": "Cannot wear equipment during tribulation",
       "confirm": "I understand",
       "cancel": "Wait"
+    },
+    "overlay": {
+      "chapter": "Chapter {progress}",
+      "hp": "HP {hp} / {max}",
+      "strikesTaken": "Lightning endured: {count}",
+      "tankHint": "Hold firm — lightning falls on its own cadence",
+      "seconds": "{count}s",
+      "resultVictory": "TRIBULATION PASSED",
+      "resultDefeat": "TRIBULATION FAILED",
+      "resultVictoryText": "The heavenly tribulation dissolves — your dao heart stands firmer.",
+      "resultDefeatText": "Body broken, dao scattered — recover, then try again."
     }
   },
   "actionFailure": {
