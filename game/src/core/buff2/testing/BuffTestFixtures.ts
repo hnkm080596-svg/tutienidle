@@ -15,7 +15,15 @@ import type {
 } from '../../battle/contracts/ids'
 import type { CombatAuthorityExecutionContext } from '../../battle/contracts/context'
 import type { CombatOperationOrigin } from '../../battle/contracts/origin'
-import type { CombatEventPayload, PendingCombatEvent } from '../../battle/contracts/events'
+import type {
+  CombatEventPayload,
+  PendingCombatEvent,
+  PeriodicOperationSettled,
+} from '../../battle/contracts/events'
+import type {
+  CombatOperationResultReason,
+  CombatOperationResultStatus,
+} from '../../battle/contracts/results'
 import type { CombatRng } from '../../battle/contracts/rng'
 import type { ElementalStateRegistry } from '../../battle/contracts/elemental'
 import type { ElementType } from '../../element/ElementType'
@@ -38,6 +46,7 @@ import {
 } from '../BuffRegistry'
 import { BuffStore } from '../BuffStore'
 import { createBuffReadPort, type BuffReadPort } from '../BuffQuery'
+import type { BuffLifecycleContext } from '../BuffLifecycleContext'
 
 /** Canonical test entity ids (reaction plan shares this namespace). */
 export const TEST_ENTITIES = {
@@ -211,6 +220,16 @@ export interface BuffSystemWorld extends BuffWorld {
   /** Scripted op-scope ctx -- events land in world.sink; combatSequence
       mints from a per-world counter. */
   makeCtx(origin?: Partial<CombatOperationOrigin>): CombatAuthorityExecutionContext
+  /** Lifecycle root ctx -- sink-shared emissions; `settle` is a spy
+      (tests assert per-unit + final barrier counts). */
+  makeLctx(): BuffLifecycleContext & { settles: number }
+  /** Drive the registered 'periodic_operation_settled' handler with a
+      synthesized event (tests stand in for the scheduler bridge). */
+  settlePeriodic(
+    requestId: string,
+    status?: CombatOperationResultStatus,
+    reason?: CombatOperationResultReason,
+  ): void
 }
 
 export function makeBuffSystemWorld(opts?: {
@@ -278,6 +297,33 @@ export function makeBuffSystemWorld(opts?: {
         events: sink,
         combatSequence: ++seq * 100,
       }
+    },
+    makeLctx() {
+      const lctx: BuffLifecycleContext & { settles: number } = {
+        rootActionId: `status.test.${++seq}`,
+        sequence: ++seq * 100,
+        events: sink,
+        settles: 0,
+        settle() {
+          lctx.settles++
+          return new Map()
+        },
+      }
+      return lctx
+    },
+    settlePeriodic(requestId, status = 'resolved', reason) {
+      const event: PeriodicOperationSettled = {
+        type: 'periodic_operation_settled',
+        eventId: `evt.periodic.${requestId}.0`,
+        combatSequence: ++seq * 100,
+        requestId,
+        operationId: `periodic.${requestId}`,
+        causationOperationId: `periodic.${requestId}`,
+        rootActionId: 'status.test.1',
+        status,
+        ...(reason !== undefined ? { reason } : {}),
+      }
+      system.handlePeriodicSettled(event, sink)
     },
   }
 }

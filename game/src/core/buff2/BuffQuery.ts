@@ -89,16 +89,16 @@ export function createBuffReadPort(
     },
 
     getForTarget(targetId) {
-      return store.forTarget(targetId).map(snapshotInstance)
+      return [...store.forTarget(targetId)].sort(compareInstance).map(snapshotInstance)
     },
 
     getForSource(sourceId) {
-      return store.fromSource(sourceId).map(snapshotInstance)
+      return [...store.fromSource(sourceId)].sort(compareInstance).map(snapshotInstance)
     },
 
     getByDefinition(targetId, definitionId) {
-      return store
-        .forTarget(targetId)
+      return [...store.forTarget(targetId)]
+        .sort(compareInstance)
         .filter((i) => i.definitionId === definitionId)
         .map(snapshotInstance)
     },

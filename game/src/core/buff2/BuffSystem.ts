@@ -48,6 +48,7 @@ import type { BuffAuthority } from '../battle/runtime/scheduler/CombatAuthorityP
 import type { ApplicationResolver } from './ApplicationResolver'
 import type {
   BuffDefinition,
+  BuffLifetimeClock,
   BuffPeriodicDefinition,
 } from './BuffDefinition'
 import type { BuffInstance, BuffSnapshotData } from './BuffInstance'
@@ -62,6 +63,7 @@ import {
 } from './BuffPeriodicResolver'
 import type { BuffReadPort } from './BuffQuery'
 import { createBuffReadPort } from './BuffQuery'
+import type { BuffLifecycleContext } from './BuffLifecycleContext'
 import type { BuffRegistry } from './BuffRegistry'
 import type { BuffStore } from './BuffStore'
 
@@ -736,6 +738,95 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
   }
 
   // =====================================================================
+  // Lifecycle entry points (spec sec.21/26/28 + sec.40-41). Each is a
+  // root transaction: periodic units emit + settle ONE AT A TIME, then
+  // Phase B runs (dead sweeps -> modifier lifetimes -> continuous
+  // counters + conversion -> buff lifetimes -> expiry -> final barrier).
+  // NEVER advances a clock or modifier lifetime outside its own anchor.
+  // =====================================================================
+
+  onHolderTurnStart(entityId: CombatEntityId, lctx: BuffLifecycleContext): void {
+    this.runPeriodicPhase('holder_turn_start', 'target', entityId, lctx)
+    this.runPhaseB(lctx, {})
+  }
+
+  onHolderTurnEnd(entityId: CombatEntityId, lctx: BuffLifecycleContext): void {
+    this.runPeriodicPhase('holder_turn_end', 'target', entityId, lctx)
+    this.runPhaseB(lctx, {
+      affected: (i) => i.targetId === entityId,
+      buffClock: 'holder_turns',
+      modifierLifetime: 'holder_turns',
+      continuous: 'turns',
+    })
+  }
+
+  onSourceTurnStart(entityId: CombatEntityId, lctx: BuffLifecycleContext): void {
+    this.runPeriodicPhase('source_turn_start', 'source', entityId, lctx)
+    this.runPhaseB(lctx, {})
+  }
+
+  onSourceTurnEnd(entityId: CombatEntityId, lctx: BuffLifecycleContext): void {
+    this.runPeriodicPhase('source_turn_end', 'source', entityId, lctx)
+    this.runPhaseB(lctx, {
+      affected: (i) => i.sourceId === entityId,
+      buffClock: 'source_turns',
+      modifierLifetime: 'source_turns',
+    })
+  }
+
+  onRoundEnd(lctx: BuffLifecycleContext): void {
+    // spec sec.22 has no round-timed periodic -- Phase B only.
+    this.runPhaseB(lctx, {
+      buffClock: 'rounds',
+      modifierLifetime: 'rounds',
+    })
+  }
+
+  onTimePassed(seconds: number, lctx: BuffLifecycleContext): void {
+    // Boundedness: a negative delta would corrupt intervalElapsed /
+    // grow remaining. Clocks only move forward; clamp here rather than
+    // trusting every caller.
+    const elapsed = Math.max(0, seconds)
+    // Interval multi-crossing (r4 BLOCKER 2): crossings expand into units
+    // ordered by absolute tick time inside the window; each computes
+    // AFTER the previous unit's settle (never precomputed).
+    for (const { unit } of this.collectIntervalUnits(elapsed)) {
+      this.emitLifecycleUnit(unit, { type: 'interval' }, lctx)
+    }
+    this.runPhaseB(lctx, {
+      buffClock: 'seconds',
+      seconds: elapsed,
+      continuous: 'seconds',
+    })
+  }
+
+  /** spec sec.40-41 -- invoked only at a quiescent point. UNCONDITIONAL
+      on the dead target; removeOnSourceDeath gates the source lane. */
+  onEntityDeath(entityId: CombatEntityId, lctx: BuffLifecycleContext): void {
+    for (const instance of this.sortedAll()) {
+      if (instance.targetId === entityId) {
+        this.removeInstance(instance, 'death', lctx.events, lctx.rootActionId)
+        continue
+      }
+      const def = this.registry.get(instance.definitionId)
+      if (
+        instance.sourceId === entityId &&
+        def.lifetime.removeOnSourceDeath === true
+      ) {
+        this.removeInstance(instance, 'source_death', lctx.events, lctx.rootActionId)
+      }
+    }
+    lctx.settle()
+  }
+
+  onBattleEnd(lctx: BuffLifecycleContext): void {
+    for (const instance of this.sortedAll()) {
+      this.removeInstance(instance, 'battle_end', lctx.events, lctx.rootActionId)
+    }
+    lctx.settle()
+  }
+
+  // =====================================================================
   // Queries -- BuffReadPort delegation (spec sec.51)
   // =====================================================================
 
@@ -763,6 +854,286 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
         return this.store.find(sel.definitionId, sel.sourceId, sel.targetId)
       case 'target_definition':
         return this.store.findOnTarget(sel.definitionId, sel.targetId)
+    }
+  }
+
+  /** spec sec.55 canonical sort over the WHOLE store (dead sweeps,
+      expiry, death/battle-end removals). */
+  private sortedAll(): readonly BuffInstance[] {
+    return [...this.store.all()].sort(
+      (a, b) =>
+        a.targetId.localeCompare(b.targetId) ||
+        a.definitionId.localeCompare(b.definitionId) ||
+        a.sourceId.localeCompare(b.sourceId) ||
+        a.instanceId.localeCompare(b.instanceId),
+    )
+  }
+
+  /** Boundary unit list: (instance, periodic) pairs matching the anchor
+      + timing, canonical-sorted. */
+  private collectBoundaryUnits(
+    timing: PeriodicTriggerKind,
+    anchor: 'target' | 'source',
+    entityId: CombatEntityId,
+  ): RankedUnit[] {
+    const units: RankedUnit[] = []
+    for (const instance of this.store.all()) {
+      if (
+        anchor === 'target'
+          ? instance.targetId !== entityId
+          : instance.sourceId !== entityId
+      ) {
+        continue
+      }
+      const def = this.registry.get(instance.definitionId)
+      for (const p of def.periodic ?? []) {
+        if (p.timing !== timing) continue
+        units.push({
+          instanceId: instance.instanceId,
+          periodicId: p.id,
+          targetId: instance.targetId,
+          definitionId: def.id,
+          sourceId: instance.sourceId,
+        })
+      }
+    }
+    return units.sort(compareUnits)
+  }
+
+  /** Interval crossings (r4 BLOCKER 2): each periodic's accumulator
+      advances by `seconds`; every crossed boundary expands into a unit
+      at offset (j*intervalSeconds - prevElapsed) inside the window.
+      Units sort by offset, ties by the canonical comparator. The
+      remainder carries REGARDLESS of later settlements -- a killed unit
+      still consumed its crossings. */
+  private collectIntervalUnits(
+    seconds: number,
+  ): { unit: RankedUnit; offset: number }[] {
+    const out: { unit: RankedUnit; offset: number }[] = []
+    for (const instance of this.store.all()) {
+      const def = this.registry.get(instance.definitionId)
+      for (const p of def.periodic ?? []) {
+        if (p.timing !== 'interval' || p.intervalSeconds === undefined) continue
+        const prev = instance.intervalElapsed?.[p.id] ?? 0
+        const elapsed = prev + seconds
+        const ticks = Math.floor(elapsed / p.intervalSeconds)
+        for (let j = 1; j <= ticks; j++) {
+          out.push({
+            unit: {
+              instanceId: instance.instanceId,
+              periodicId: p.id,
+              targetId: instance.targetId,
+              definitionId: def.id,
+              sourceId: instance.sourceId,
+            },
+            offset: j * p.intervalSeconds - prev,
+          })
+        }
+        instance.intervalElapsed ??= {}
+        instance.intervalElapsed[p.id] = elapsed - ticks * p.intervalSeconds
+      }
+    }
+    out.sort((a, b) => a.offset - b.offset || compareUnits(a.unit, b.unit))
+    return out
+  }
+
+  private runPeriodicPhase(
+    timing: PeriodicTriggerKind,
+    anchor: 'target' | 'source',
+    entityId: CombatEntityId,
+    lctx: BuffLifecycleContext,
+  ): void {
+    const trigger = { type: timing, anchorEntityId: entityId }
+    for (const unit of this.collectBoundaryUnits(timing, anchor, entityId)) {
+      this.emitLifecycleUnit(unit, trigger, lctx)
+    }
+  }
+
+  /** ONE unit: revalidate (store + target alive -- an earlier unit's
+      settlement may have killed this instance or its target), compute
+      against CURRENT state, mark pending, emit the single-request event,
+      then the per-unit barrier (r4 BLOCKER 2). */
+  private emitLifecycleUnit(
+    unit: RankedUnit,
+    trigger: { type: PeriodicTriggerKind; anchorEntityId?: CombatEntityId },
+    lctx: BuffLifecycleContext,
+  ): void {
+    const instance = this.store.get(unit.instanceId)
+    if (instance === undefined || !this.entities.isAlive(instance.targetId)) {
+      return
+    }
+    const computation = this.computeUnitRequest(instance, unit.periodicId)
+    if (computation === undefined) return
+    lctx.events.emit({
+      type: 'periodic_requests_committed',
+      trigger,
+      rootActionId: lctx.rootActionId,
+      requests: [computation.request],
+    })
+    this.pendingUses.set(computation.request.requestId, computation.marks)
+    lctx.settle()
+  }
+
+  /** Phase B (spec sec.28 steps 3-8): liveness sweeps BEFORE any
+      lifetime work, then matching-clock decrements/counters/conversions,
+      expiry, and the final barrier. Everything emits through
+      lctx.events; settle() publishes them + drains consequences inside
+      this root transaction. */
+  private runPhaseB(
+    lctx: BuffLifecycleContext,
+    opts: {
+      /** Boundary anchor predicate (decrement/continuous scope). */
+      affected?: (instance: BuffInstance) => boolean
+      /** Buff clock to decrement on affected instances. */
+      buffClock?: BuffLifetimeClock
+      /** Decrement step for 'seconds' clock (turn/round clocks use 1). */
+      seconds?: number
+      /** Modifier lifetime type to decrement on affected instances. */
+      modifierLifetime?: 'holder_turns' | 'source_turns' | 'rounds'
+      /** continuousTurns++ (holder end) or continuousSeconds += s. */
+      continuous?: 'turns' | 'seconds'
+    },
+  ): void {
+    // (1) Liveness revalidation BEFORE any lifetime work (HIGH 2/r4
+    //     HIGH 1): the WHOLE store, canonical-sorted -- a dead entity's
+    //     non-ticking buffs leave now, never as 'expired' later.
+    for (const instance of this.sortedAll()) {
+      if (!this.entities.isAlive(instance.targetId)) {
+        this.removeInstance(instance, 'death', lctx.events, lctx.rootActionId)
+        continue
+      }
+      const def = this.registry.get(instance.definitionId)
+      if (
+        def.lifetime.removeOnSourceDeath === true &&
+        !this.entities.isAlive(instance.sourceId)
+      ) {
+        this.removeInstance(instance, 'source_death', lctx.events, lctx.rootActionId)
+      }
+    }
+
+    const affected = opts.affected ?? (() => true)
+    const live = this.sortedAll().filter(affected)
+
+    // (2) Modifier lifetimes -- matching clock, live only.
+    if (opts.modifierLifetime !== undefined) {
+      for (const instance of live) {
+        for (const entry of [...instance.modifiers]) {
+          if (entry.lifetime.type !== opts.modifierLifetime) continue
+          const remaining = entry.lifetime.remaining - 1
+          if (remaining <= 0) {
+            this.releaseMarksFor(entry)
+            instance.modifiers.splice(instance.modifiers.indexOf(entry), 1)
+            lctx.events.emit({
+              type: 'buff_modifier_removed',
+              rootActionId: lctx.rootActionId,
+              instanceId: instance.instanceId,
+              modifierId: entry.id,
+              modifierRuntimeId: entry.modifierRuntimeId,
+            })
+          } else {
+            entry.lifetime = { ...entry.lifetime, remaining }
+          }
+        }
+      }
+    }
+
+    // (3) Continuous counters + convertsAfter* threshold -- converts via
+    //     internal apply (R-B7, suppressed eligibility, 'replaced').
+    if (opts.continuous === 'turns') {
+      for (const instance of live) instance.continuousTurns++
+      this.runConversions(
+        live,
+        lctx,
+        (i, d) =>
+          d.convertsAfterContinuousTurns !== undefined &&
+          i.continuousTurns >= d.convertsAfterContinuousTurns,
+      )
+    } else if (opts.continuous === 'seconds') {
+      const s = opts.seconds ?? 0
+      for (const instance of live) instance.continuousSeconds += s
+      this.runConversions(
+        live,
+        lctx,
+        (i, d) =>
+          d.convertsAfterContinuousSeconds !== undefined &&
+          i.continuousSeconds >= d.convertsAfterContinuousSeconds,
+      )
+    }
+
+    // (4) Buff lifetime decrement -- matching clock, live only (a
+    //     conversion above already removed its instance).
+    if (opts.buffClock !== undefined) {
+      const step = opts.buffClock === 'seconds' ? (opts.seconds ?? 0) : 1
+      for (const instance of live) {
+        if (this.store.get(instance.instanceId) === undefined) continue
+        const def = this.registry.get(instance.definitionId)
+        if (
+          def.lifetime.clock !== opts.buffClock ||
+          instance.remaining === undefined
+        ) {
+          continue
+        }
+        const before = instance.remaining
+        instance.remaining = before - step
+        lctx.events.emit({
+          type: 'buff_duration_changed',
+          rootActionId: lctx.rootActionId,
+          instanceId: instance.instanceId,
+          durationBefore: before,
+          durationAfter: instance.remaining,
+        })
+      }
+    }
+
+    // (5) Expiry -- canonical-sorted sweep; remaining <= 0 leaves as
+    //     'expired' (dead entities already left above as 'death').
+    for (const instance of this.sortedAll()) {
+      if (instance.remaining !== undefined && instance.remaining <= 0) {
+        this.removeInstance(instance, 'expired', lctx.events, lctx.rootActionId)
+      }
+    }
+
+    // (6) Final barrier -- lifecycle emissions + their consequences
+    //     resolve inside this root transaction.
+    lctx.settle()
+  }
+
+  /** convertsAfter* continuation (R-B7): remove 'replaced', then an
+      internal apply at stacks:1 / baseChance:1 / suppressed -- provenance
+      chains under the lifecycle root (no parent op exists). */
+  private runConversions(
+    live: readonly BuffInstance[],
+    lctx: BuffLifecycleContext,
+    reached: (instance: BuffInstance, def: BuffDefinition) => boolean,
+  ): void {
+    for (const instance of live) {
+      if (this.store.get(instance.instanceId) === undefined) continue
+      const def = this.registry.get(instance.definitionId)
+      if (def.convertsToId === undefined || !reached(instance, def)) continue
+      const origin: CombatOperationOrigin = {
+        kind: 'scripted',
+        originId: `buff_convert.${instance.instanceId}`,
+        sourceId: instance.sourceId,
+        rootActionId: lctx.rootActionId,
+      }
+      this.removeInstance(instance, 'replaced', lctx.events, lctx.rootActionId)
+      this.apply(
+        {
+          definitionId: def.convertsToId,
+          sourceId: instance.sourceId,
+          targetId: instance.targetId,
+          stacks: 1,
+          baseChance: 1,
+          reactionEligibility: 'suppressed',
+          origin,
+        },
+        {
+          operationId: `lifecycle_convert.${instance.instanceId}`,
+          origin,
+          events: lctx.events,
+          combatSequence: lctx.sequence,
+        },
+      )
     }
   }
 
