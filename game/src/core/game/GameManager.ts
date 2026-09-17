@@ -216,9 +216,9 @@ export class GameManager {
 
   // M13: the ActionImpactSystem/SkillEffectSystem INSTANCES here served
   // only the retired legacy engine helpers (EnemyAttackSystem,
-  // SkillEffectResolver). The classes themselves stay live (turn engine
-  // uses scaleActionDamage/ActionDamageInfo; SkillTriggerRunner keeps the
-  // SkillEffectContext contract) — only these orphaned fields are gone.
+  // SkillEffectResolver). The damage contracts stay live (turn engine
+  // uses scaleActionDamage/ActionDamageInfo) — only these orphaned
+  // fields are gone.
   readonly buffPool = new BuffPool()
   readonly buffSystem = new BuffSystem(this.buffPool)
   readonly buffRegistry = new BuffRegistry()
