@@ -2,7 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Non-trivial production missions MUST follow `game/docs/architecture/architecture-worker-workflow.md` (G0–G5) and return the G5 evidence report.
 
-> **Review revision:** v7.2 — buff-plan review round 2 (at `5a7f21b1`): `CombatOperationExecutor.execute(op, ctx)` — the SCHEDULER builds the whole ctx incl. `combatSequence` (executor never allocates; batch entries run via the injected `executeEntry` lane); `PeriodicRequestsCommitted.holderId` → `trigger {type: PeriodicTriggerKind, anchorEntityId?}` (source-turn anchors and battle-wide `onTimePassed` have no holder); requests carry emitter-minted `requestId`, generated ops named `periodic.${requestId}` (status correlation for uses-consumption gating); `createLifecycleSink` also returns `settle()` → opId→status map; `remove()` → `RemoveBuffResult` (spec §53 no-void rule); `capability.ts` gains generic `CapabilityGrantDefinition {id, type, payload: unknown}` + `ActiveCapabilityGrant` + `CapabilityValidatorRegistry` (typed payloads owned by consuming domains — buff core holds no path vocabulary).
+> **Review revision:** v7.3 — buff-plan review round 3 (at `38e90b3e`): new scheduler-originated `PeriodicOperationSettled` event — after each `periodic.*` generated op's barrier completes, the scheduler emits `{requestId, operationId, status, reason?}` into the enclosing frame, so the periodic emitter can finalize `uses` modifiers inside the SAME causal settlement tree regardless of entry path (manual `triggerPeriodic`, lifecycle boundary, interval crossing); `createLifecycleSink().settle()` may be called once per sequential periodic unit (multiple settles per lifecycle entry are legal).
+>
+> v7.2 — buff-plan review round 2 (at `5a7f21b1`): `CombatOperationExecutor.execute(op, ctx)` — the SCHEDULER builds the whole ctx incl. `combatSequence` (executor never allocates; batch entries run via the injected `executeEntry` lane); `PeriodicRequestsCommitted.holderId` → `trigger {type: PeriodicTriggerKind, anchorEntityId?}` (source-turn anchors and battle-wide `onTimePassed` have no holder); requests carry emitter-minted `requestId`, generated ops named `periodic.${requestId}` (status correlation for uses-consumption gating); `createLifecycleSink` also returns `settle()` → opId→status map; `remove()` → `RemoveBuffResult` (spec §53 no-void rule); `capability.ts` gains generic `CapabilityGrantDefinition {id, type, payload: unknown}` + `ActiveCapabilityGrant` + `CapabilityValidatorRegistry` (typed payloads owned by consuming domains — buff core holds no path vocabulary).
 >
 > v7.1 — buff-plan review amendment (2026-09-17): adds `SetBuffStacksOperation`/`SetBuffDurationOperation`/`CleanseBuffOperation` + `BuffCleanseQuery`/`CleanseResult` + matching result members and `BuffAuthority` port methods (Buff Final Spec §36/§38/§42/§67 parity — every mutator reachable via ops per §8); `CombatAuthorityExecutionContext.combatSequence` (the op's own execution-start allocation — read channel, scheduler stays sole allocator); `createLifecycleSink` returns `{sink, sequence}` (the root transaction's allocated sequence); `BuffPeriodicDamageRequest.snapshot?` (spec §25 snapshot-scaling carrier). Purely additive — no v7 semantics changed.
 >
@@ -138,6 +140,7 @@ type CombatEvent =
   | ElementalApplicationCommitted
   | BuffApplicationFailedEvent
   | PeriodicRequestsCommitted
+  | PeriodicOperationSettled                   // v7.3 — scheduler-originated (below)
   | CombatSettlementFaultEvent                 // stamped for trace, diagnostic lane only
 interface ElementalApplicationCommitted extends CombatEventBase {
   type: 'elemental_application_committed'
@@ -176,6 +179,25 @@ interface PeriodicRequestsCommitted extends CombatEventBase {
 type PeriodicTriggerKind =
   | 'holder_turn_start' | 'holder_turn_end' | 'source_turn_start' | 'source_turn_end'
   | 'interval' | 'manual'
+// v7.3 — PeriodicOperationSettled is SCHEDULER-ORIGINATED: no authority or
+// handler emits it (it is NOT a member of CombatEventPayload /
+// PendingCombatEvent — the sink unions stay unchanged). After every op whose
+// operationId is periodic-generated (`periodic.${requestId}` — the only id
+// shape the built-in bridge mints) completes its barrier, the scheduler
+// enqueues this event into the frame that produced the op. It carries the
+// settled status so the periodic emitter's registered immediate handler can
+// finalize `uses`-modifier pending marks: 'resolved' → consume, anything else
+// → release. This is the ONLY post-result correlation channel that works for
+// EVERY entry path — manual triggerPeriodic (whose generated ops settle
+// inside the triggering op's own barrier, after the authority returned),
+// lifecycle boundaries, and interval crossings all see it identically.
+interface PeriodicOperationSettled extends CombatEventBase {
+  type: 'periodic_operation_settled'
+  requestId: string                    // the request that produced the op
+  operationId: CombatOperationId       // `periodic.${requestId}`
+  status: CombatOperationResult['status']         // 'resolved' | 'skipped' | 'failed'
+  reason?: CombatOperationResultReason
+}
 interface CombatSettlementFaultEvent extends CombatEventBase {
   type: 'combat_settlement_fault'
   reason: 'settlement_depth_exceeded' | 'settlement_work_budget_exceeded'  // r4 MEDIUM 2
@@ -343,9 +365,12 @@ class CombatScheduler {
       internals). Sole allocator stays the scheduler.
       v7.2 — also returns `settle`: runs the drain and reports
       opId → status for every op EXECUTED during that call. Lifecycle
-      authorities use it as the spec-§28 barrier AND to correlate generated
-      op outcomes (e.g. `periodic.${requestId}` → 'resolved'|'skipped')
-      back to their emitted requests. */
+      authorities use it as the spec-§28 barrier; it is legal to call it
+      once PER sequential periodic unit (v7.3 — several settles inside one
+      lifecycle entry).
+      v7.3 — `uses`-modifier correlation NO LONGER depends on this map:
+      `PeriodicOperationSettled` events finalize pending marks inside the
+      settlement tree itself. The map remains for diagnostics/tests. */
   createLifecycleSink(rootActionId: string): {
     sink: CombatEventSink
     sequence: number
@@ -739,6 +764,8 @@ executeOpWithBarrier(op):                          // every op — authored, gen
   workThisBarrier++; if > maxImmediateWorkPerBarrier → FAULT
   drainEvents(frameEvents)                          // §55: ALL of op's consequences
                                                     // settle before its siblings
+  return result                                     // v7.3 — callers emit
+                                                    // PeriodicOperationSettled
 drainEvents(frameQueue):
   while frameQueue non-empty and not faulted:
     settleEvent(frameQueue.shift(), frameQueue)
@@ -752,8 +779,17 @@ settleEvent(event, frameQueue):
     // r5 BLOCKER 3 — validate + reserve the WHOLE produced group atomically
     // before its first member executes (same rule batches already follow)
     validateGroupIds(ops); reserveAll(ops)
-    for op of ops: executeOpWithBarrier(op)         // each op's own frame drains
+    for op of ops:
+      result = executeOpWithBarrier(op)             // each op's own frame drains
                                                     // before the next sibling
+      // v7.3 — periodic outcome publication: after a periodic-generated op's
+      // barrier, emit the settled event into the ENCLOSING frame (FIFO after
+      // already-queued siblings — deterministic; still inside this root
+      // transaction). The buff-side registered handler finalizes `uses` marks.
+      if op.operationId.startsWith('periodic.'):
+        enqueueInto(frameQueue, stamp(PeriodicOperationSettled{
+          requestId: op.operationId.slice('periodic.'.length),
+          operationId: op.operationId, status: result.status, reason: result.reason }))
   if {kind:'batch'}: runBatchFrame(settlement.batch)
   for e of emitted: enqueueInto(frameQueue, e)      // r5 HIGH 4 — handler-emitted
                                                     // events settle AFTER the

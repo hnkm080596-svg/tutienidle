@@ -1,7 +1,7 @@
 # Buff System Reimagined — Final Architecture Specification
 
 Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
-Version: 1.1
+Version: 1.2
 Compatibility requirement: None
 Migration requirement: None
 Primary reference implementation: Hỏa Ấn
@@ -1802,3 +1802,14 @@ Clarifications locked during the implementation-plan review. These refine — ne
 6. **§28 lifecycle ordering under the request bridge:** periodic-capable boundaries run two phases around a settlement barrier — (A) collect+canonical-sort periodics, compute requests, emit `PeriodicRequestsCommitted`, settle (damage/heal ops and consequences resolve); (B) release/commit `uses` marks per rule 3, decrement matching modifier lifetimes, advance conversion bookkeeping, decrement matching buff lifetimes, expire, emit lifecycle domain events, settle again (queued reaction/proc consequences of lifecycle events resolve in the same root transaction). Phase B revalidates every collected instance against the store — an instance removed during the barrier (e.g. target died) is skipped, never mutated through a stale reference.
 7. **§37 zero-stack generalization:** ANY stacks mutation landing at 0 removes the instance — `removeStacks`/`setStacks` → reason `'consumed'`; `consumeStacks` → the passed reason (`'consumed' | 'reaction'`). A buff with zero stacks is nothing.
 8. **§47 capability payload ownership:** `payload: unknown` is opaque to BuffSystem. Typed payload schemas + validators are owned and registered by the consuming domains (proc/path modules); the buff registry validates each grant through the registered validator — unknown `type` throws at load.
+
+---
+
+## Addendum v1.2 (2026-09-17 — locked via implementation-megaplan review round 3)
+
+1. **`uses` finalization mechanism (supersedes v1.1 rule 3's mechanism, keeps its rule):** a `uses` modifier is still consumed iff the generated periodic op resolves — but finalization is driven by the contract's `PeriodicOperationSettled` event (`requestId` → `status`), handled inside the same settlement tree that resolved the op. This is what makes the rule hold for manual `triggerPeriodic` (whose generated ops settle after the authority call returned, inside the triggering op's own barrier) — not just lifecycle paths.
+2. **§26/§28 sequential periodic units:** the periodic phase computes and settles ONE request at a time — collect+canonical-sort → per unit {revalidate instance still exists → compute request → emit `PeriodicRequestsCommitted` (single request) → settle}. `onTimePassed` expands interval crossings into rounds (round r = each periodic's r-th crossing, comparator-ordered within the round); each crossing is its own unit. A request computed after a prior unit's settlement always sees post-settlement state — a `uses` modifier skipped-released by tick 1 CAN fold into tick 2.
+3. **§10–22 event emission order for canonical elemental applications:** `ElementalApplicationCommitted` emits BEFORE the generic `buff_applied`/`buff_stacks_changed`/`buff_duration_changed` events — the committed elemental fact (and its reaction consequences, via depth-first settlement) always precedes generic buff observability consequences. Non-canonical applications emit only the generic events.
+4. **§25 snapshot capture ownership:** the snapshot is produced by a profile-owned capture port (`capture(damageProfileId, sourceId) → snapshot`), not by BuffSystem reading arbitrary stat keys. The damage profile owns the snapshot's semantic schema; BuffSystem stores the opaque result per periodic (`instance.snapshots[periodicId]`) and recaptures on every successful apply after source-ownership resolution (v1.1 rule 4 unchanged).
+5. **`getCapabilities` canonical order:** returned grants sort by `definitionId → sourceId → instanceId → capabilityId` — identical capability sets produce identical order (and identical downstream RNG consumption) regardless of store insertion history.
+6. **Post-barrier liveness (§40–41 completeness):** after a periodic settlement barrier, Phase B removes (a) any instance whose `targetId` died → reason `'death'`; (b) any remaining instance whose `sourceId` died AND `lifetime.removeOnSourceDeath` → reason `'source_death'` — both BEFORE modifier/lifetime/conversion/expiry work.

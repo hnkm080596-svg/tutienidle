@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Non-trivial production missions MUST follow `game/docs/architecture/architecture-worker-workflow.md` (G0–G5) and return the G5 evidence report.
 
+> **Revision (buff-plan review round 3, `38e90b3e`):** the rollout conflict with the Buff megaplan is resolved by a single integration sequence — new milestone **M-INT** (production integration) is scheduled INSIDE the buff megaplan's M4 worktree, after its consumer cutover removes the legacy `checkAndTrigger` call site. M-INT owns: rebinding `CANONICAL_REACTIONS`/`ElementalStateRegistry` to the migrated real elemental def ids, granting `elemental_reaction_enabled` at the `canInitiateWuxingReactions` seam, registering `ReactionDispatcher` on `elemental_application_committed`, and deleting `TurnReactionManager` + the flag. "Inert until seal batch" is amended to "inert until M-INT" everywhere below.
+
 **Goal:** Build the capability-gated Ngũ Hành reaction engine for Ngộ Đạo (hidden Pháp Tu): same-source/same-target reaction board, Sinh `P²` / Khắc `A×D` deterministic candidate selection, consume-all semantics, snapshot+precondition atomicity, and pure `ResolvedCombatOperation` emission — shipped **inert** (nothing in production grants `elemental_reaction_enabled`) and **fully test-covered** on fixture element/ailment ids.
 
 **Architecture:** New module `game/src/core/reaction/` — a read-only evaluator (`ReactionSystem`) that observes committed `ElementalApplicationCommitted` events through `ReactionTriggerGate`, reads a same-source board via `ElementalBoardQuery`, selects ONE candidate by fixed-point weight, freezes participants into a `ReactionContext` snapshot, and emits a `ReactionResolution` (preconditions + ordered operations). A `ReactionBatchRunner` executes the batch through `CombatOperationExecutor`: preflight preconditions → consume-first → payoff order → typed skips, no rollback. Cấm Công lands as a `forbiddenActionTags:['attack']` buff enforced by a new `ActionValidator` in the turn engine. All payoff content lives in `game/src/data/reaction/` as data — the 10 canonical relations bound to **test fixture buff ids** (real ấn ids deferred to the seal batch).
@@ -10,16 +12,16 @@
 
 **Specs:**
 - `game/docs/specs/2026-09-17-reaction-system-reimagined-spec.md` (v1.0 — reaction semantics)
-- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.1 — **SUPERSEDES** two spec points: `reactionEligibility` is runtime metadata on `ApplyBuffRequest`, and tie-break uses authored `selectionTiePriority` — lexical ReactionId ordering is forbidden)
-- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.0 — consumed API: `ApplyBuffRequest`/`ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSnapshot`, removal reason `'reaction'`, modifier `reapply:'max'` + `buff_lifetime`, `forbiddenActionTags`)
+- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.3 — **SUPERSEDES** two spec points: `reactionEligibility` is runtime metadata on `ApplyBuffRequest`, and tie-break uses authored `selectionTiePriority` — lexical ReactionId ordering is forbidden; v1.2/v1.3 addenda add buff ops, lifecycle settle, `PeriodicOperationSettled`)
+- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.2 — consumed API: `ApplyBuffRequest`/`ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSnapshot`, removal reason `'reaction'`, modifier `reapply:'max'` + `buff_lifetime`, `forbiddenActionTags`; v1.2 addendum locks elemental-first event ordering)
 - `game/docs/specs/2026-09-17-hoa-an-ailment-system-spec.md` (context only — real ailments NOT authored here)
 
 **Sibling-plan dependency:** This megaplan is the code-level expansion of the ReactionSystem scope inside `game/docs/superpowers/plans/2026-09-17-combat-systems-reimagined.md` (its M6). **Hard prerequisite:** that program's M1 (contracts), M2 (scheduler/executor) and M3 (BuffSystem core with the §51/§67 query+mutation surface) must have landed. M0 verifies presence; if absent, this plan is BLOCKED — do not create parallel contract types under `core/reaction/`.
 
 ## Global Constraints
 
-- **Engine ships INERT (R7 — ruling assumption, pending user sign-off):** `elemental_reaction_enabled` is granted by nothing in production. No `TurnBattleSystem`/`GameManager*` wiring of the reaction trigger in this program. All coverage is Vitest-level on fixture content. The engine's existence must be invisible to production combat.
-- **Legacy reaction path untouched (R3 — ruling assumption, pending user sign-off):** `TurnReactionManager` (`src/core/battle/turn/TurnReactionManager.ts`, rules engine over `WuxingRelations`) keeps serving visible Pháp Tu via `canInitiateWuxingReactions` (`TurnBattleSystem.ts:137`, stamped at `TurnBattleAdapter.ts:60`). Do not delete, reroute, or weaken it — the visible-Pháp Tu reaction-removal ruling executes in the seal batch, not here.
+- **Engine ships INERT until M-INT (R7 — ruling assumption, pending user sign-off):** `elemental_reaction_enabled` is granted by nothing in production during M1–M6. No `TurnBattleSystem`/`GameManager*` wiring of the reaction trigger in this program's own missions. All coverage is Vitest-level on fixture content. The engine's existence must be invisible to production combat UNTIL the integration milestone (M-INT) — which runs inside the buff megaplan's M4 worktree and ends the inert state deliberately.
+- **Legacy reaction path untouched UNTIL M-INT (R3 — ruling assumption, pending user sign-off):** `TurnReactionManager` (`src/core/battle/turn/TurnReactionManager.ts`, rules engine over `WuxingRelations`) keeps serving visible Pháp Tu via `canInitiateWuxingReactions` (`TurnBattleSystem.ts:137`, stamped at `TurnBattleAdapter.ts:60`) through this program's M1–M6. Its removal is NOT seal-batch scope — it is owned by **M-INT** inside the buff megaplan's M4 worktree (the buff cutover deletes the `BuffPool` the legacy engine reads and mutates, so the swap must land on that same branch before merge — buff-plan r4 BLOCKER 3).
 - **No ấn authoring:** `hoa_an`/`han_tuc`/`doc_can`/`liet_thuong`/`tran_an` definitions and real payoff tuning are seal-batch scope. This program binds elements to fixture ids `test_seal_fire`/`test_seal_water`/`test_seal_wood`/`test_seal_metal`/`test_seal_earth` and secondary statuses to `test_bleed`/`test_defense_break`/`test_defense_erosion`/`test_cam_cong`.
 - **Zero RNG in the reaction engine (INV-R17):** no `Math.random()`, no `CombatRng` injection — selection is pure fixed-point math. Randomness enters only upstream (random cast, application roll).
 - **No mutation:** `ReactionSystem` never mutates buff/damage/gauge state. All state change requests are `ResolvedCombatOperation`s executed by `CombatOperationExecutor` → domain authority. Forbidden: `buff.stacks = 0`, direct `target.hp` writes, `actionGauge` writes (contract §8, §89).
@@ -44,8 +46,8 @@
 
 | # | Assumption | Rationale |
 |---|---|---|
-| R3 | Legacy `TurnReactionManager` + `canInitiateWuxingReactions` stay live and untouched until the seal batch lands real ấn ids + the capability grant. Deletion scheduled there, not here. | New engine is inert without seals; removing legacy now deletes visible-Pháp Tu gameplay with no replacement. Matches sibling plan R3. |
-| R7 | Engine lands capability-ungranted: inert in production, fully test-covered. | Deferred-grant is explicit architecture (`CombatCapabilityQuery` port exists; nothing calls `.has()` in production until seals). Matches sibling plan R7. |
+| R3 | Legacy `TurnReactionManager` + `canInitiateWuxingReactions` stay live and untouched through M1–M6; deletion is owned by **M-INT** (inside the buff megaplan's M4 worktree — its cutover deletes the `BuffPool` the legacy engine reads/mutates, so consumer + removal must land on the same branch). | New engine is inert without integration; removing legacy early deletes visible-Pháp Tu gameplay with no replacement. Amended from "seal batch" — buff-plan r4 BLOCKER 3 forced a single integration sequence. |
+| R7 | Engine lands capability-ungranted during M1–M6: inert in production, fully test-covered; `elemental_reaction_enabled` is granted at M-INT on the `canInitiateWuxingReactions` seam. | Deferred-grant is explicit architecture (`CombatCapabilityQuery` port exists; nothing calls `.has()` in production until M-INT). Matches sibling plan R7. |
 | R-A | `DealReactionDamageOperation` (the reaction damage op) declares `damageProfile: 'reaction_damage'`, `element: <attacker element>` (the Khắc overcomer), `canCrit: false`, `origin.kind: 'reaction'`. | Spec silent on element/profile; attacker-element preserves the legacy Khắc Chế semantic ("damage on the overcomer element, target resistance applies"). **Provisional — flag for balance pass.** Alternative: elementless true damage. |
 | R-B | Xuyên Thổ heal cap "25%" is a cap on the heal RATIO, not maxHp (review r4 — spec: "heal from actual reaction damage = 5% × D, cap 25%"; D≤5 makes it a natural boundary). Evaluated as `fraction = min(0.05·D, 0.25)` at StackExpr resolution — pure snapshot math; NO maxHp read anywhere in the deferred path. Heal target = `sourceId`. | The earlier `0.25 × source.maxHp` reading was wrong — the spec caps the damage→heal conversion rate. **Locked** (reviewer correction). |
 | R-C | Dưỡng Kim "Kim penetration `+4%×P`" maps to modifier channel `'potency'` (multiply `1 + 0.04×P`) on the child Liệt Thương instance. | `BuffModifierChannel` has no `'penetration'` channel (buff spec §30); potency is the generic magnitude channel. **Provisional** — seal batch may add a stat/peneration channel. |
@@ -523,7 +525,7 @@ Every `ApplyBuffOperation` emitted by a reaction sets `reactionEligibility: 'sup
 - [ ] **Step 5 — Implement** `StackExpr` eval, `ReactionOperations` emitters, `CANONICAL_REACTIONS`, full `resolveCandidate` emission; `forbiddenActionTags` field; `ActionValidator` + `actionTagsOf` + `isActionAllowed`; `selectAction`/`selectForcedAction` restriction param (ultimate→special→basic candidates filtered; fallback basic `['attack']`); `TurnBattleSystem` computes `forbidden` set once per declare and passes it.
 - [ ] **Step 6 — Verify (P3 full)** + P13/P14 Playwright real-battle drive (unsealed selection unaffected) + P4 deep + P5 round.
 
-**Exit criteria:** all 5 Sinh + all 5 Khắc profiles resolve through ops (spec §85 rows); consume-all + reason `reaction`; modifiers `reapply:'max'`/`buff_lifetime`; damage `origin:'reaction'`/`canCrit:false`; gauge ops routed; seal enforced as tag restriction not stun; engine still inert in production.
+**Exit criteria:** all 5 Sinh + all 5 Khắc profiles resolve through ops (spec §85 rows); consume-all + reason `reaction`; modifiers `reapply:'max'`/`buff_lifetime`; damage `origin:'reaction'`/`canCrit:false`; gauge ops routed; seal enforced as tag restriction not stun; engine still inert in production (inert until M-INT).
 
 ---
 
@@ -572,7 +574,7 @@ interface ReactionEvaluationTrace {  // contract §85 shape
 - [ ] **Step 5 — Failing test (exactly-once handoff):** dispatcher ignores a duplicate `eventId` (scheduler dedups — assert dispatcher delegates/relies on it; if scheduler owns dedup, this test asserts the dispatcher is idempotent under double-invoke with the same event).
 - [ ] **Step 6 — Implement + docs; verify (P3 quick)** + P4 quick + P5 round + final self-review against spec §85 DoD checklist.
 
-**Exit criteria:** spec §74–82 + contract §91–101 reaction-relevant rows all named and green; sequential settlement proven; trace reconstructable; docs updated; engine remains production-inert.
+**Exit criteria:** spec §74–82 + contract §91–101 reaction-relevant rows all named and green; sequential settlement proven; trace reconstructable; docs updated; engine remains production-inert (until M-INT).
 
 ---
 
@@ -604,12 +606,20 @@ interface ReactionEvaluationTrace {  // contract §85 shape
 | §80/§79 | bias read once, recorded | `ReactionBias.test.ts` + trace assertions |
 | §85 | debug trace shape | `ReactionTrace.test.ts` |
 
+## Milestone M-INT — Production integration (scheduled INSIDE the buff megaplan's M4 worktree)
+
+**Why here (buff-plan r4 BLOCKER 3):** the buff cutover deletes the `BuffPool` that `TurnReactionManager.checkAndTrigger` reads AND mutates (khắc consumes instances, sinh scales `remainingTurns`) — the legacy call cannot survive the cutover, and a gap where neither engine fires would silently delete visible-Pháp Tu reactions. One branch must carry both sides of the swap. This milestone runs in that worktree after the buff consumer cutover and before M4's merge gate.
+
+- [ ] Rebind `ElementalStateRegistry` + `CANONICAL_REACTIONS`/`test_*` fixture ids → the migrated real elemental `BuffDefinition` ids produced by buff M4's data flip (the *existing* elemental ailments — the five new ấn defs remain seal-batch scope below).
+- [ ] Grant `elemental_reaction_enabled` wherever `canInitiateWuxingReactions` is stamped (`TurnBattleAdapter.ts:60`, `phap_tu` stat domain) + wire `CombatCapabilityQuery`'s production backing — the new engine serves the same visible-Pháp Tu surface the legacy engine did.
+- [ ] `scheduler.registerImmediateHandler('elemental_application_committed', ReactionDispatcher)` at battle build (`TurnBattleAdapter`); depth-first settlement guarantees it evaluates the committed elemental state before generic `buff_applied` consequences (buff spec addendum v1.2 emission order).
+- [ ] Delete `TurnReactionManager.ts`, `canInitiateWuxingReactions` (`TurnBattleSystem.ts:137` + stamp), and the `:2979` call site (the call site itself is already gone — the buff cutover's `applySkillAilments` rewrite removes it; this step deletes the engine + flag).
+- [ ] Verify: buff M4's full gate owns the evidence (reaction fires through `ReactionDispatcher` in the Playwright battle check).
+
 ## Deferred to seal batch (explicitly NOT this program)
 
-- Real ấn `BuffDefinition`s (`hoa_an`, `han_tuc`, `doc_can`, `liet_thuong`, `tran_an`) + `ElementalStateRegistry` rebinding to real ids; `cam_cong`/bleed/defbreak/erosion production ids replacing `test_*`.
-- `elemental_reaction_enabled` production grant (Ngộ Đạo kit / way module) + `CombatCapabilityQuery` production backing.
-- `ReactionDispatcher` wiring into `CombatScheduler` immediate-settlement drain inside `TurnBattleSystem` (foundation M7 seam).
-- Legacy `TurnReactionManager`/`canInitiateWuxingReactions` retirement + visible-Pháp Tu reaction ruling execution (R3).
+- Real ấn `BuffDefinition`s (`hoa_an`, `han_tuc`, `doc_can`, `liet_thuong`, `tran_an`) — NEW seal content authoring (the M-INT id rebinding of EXISTING migrated ailments is separate and lives in M-INT above); `cam_cong`/bleed/defbreak/erosion production ids replacing `test_*`.
+- `elemental_reaction_enabled` grant for the Ngộ Đạo kit beyond the M-INT visible-Pháp Tu seam.
 - Real payoff number tuning; `damageProfile 'reaction_damage'` authoring in DamageSystem profile registry; R-A element decision; R-C penetration channel.
 - Skill `tags` taxonomy (`attack` etc.) replacing the R-E2 inference.
 
@@ -621,7 +631,7 @@ interface ReactionEvaluationTrace {  // contract §85 shape
 4. Spec §19 flat `ReactionContext` fields → superseded by contract §36 `participants` array (needed for instanceId capture anyway).
 5. `TurnSkillDefinition` has no `tags`/`actionTags` (`TurnSkillAction.ts:55-255`) and `BuffDefinition` has no `forbiddenActionTags` (`BuffTypes.ts:238-284`) — additive fields added in M4; R-E2 inference bridges until the skill-definition tag taxonomy lands.
 6. `ActionGauge.ts` exposes only `refundGauge` (positive delta, `GAUGE_MAX=1000`) — gauge pushback needs a negative-delta route on the gauge authority port; flagged for foundation executor.
-7. `canInitiateWuxingReactions` (`TurnBattleSystem.ts:137`, stamped `TurnBattleAdapter.ts:60` for the `phap_tu` stat domain) gates the LEGACY engine for ALL pháp tu — broader than the spec's Ngộ Đạo-only intent. R3 keeps this live; the new capability is deliberately ungranted (R7). Coordinator must confirm the visible-Pháp Tu reaction removal timing (seal batch).
+7. RESOLVED (buff-plan review round 3): `canInitiateWuxingReactions` (`TurnBattleSystem.ts:137`, stamped `TurnBattleAdapter.ts:60` for the `phap_tu` stat domain) gates the LEGACY engine for ALL pháp tu — broader than the spec's Ngộ Đạo-only intent. Removal timing is now locked: **M-INT** inside the buff megaplan's M4 worktree (same branch, before its merge gate) — the capability grant lands at that same seam so the visible-Pháp Tu surface is preserved.
 8. RESOLVED (contract plan v5): `heal_from_damage` rides `DeferredOperation` inside `CombatOperationBatch` — the deferred entry carries its own pre-minted `operationId` (R-F pattern) + `origin` + an already-resolved `fraction` (the "cap 25%" is a ratio cap applied at StackExpr resolution — R-B corrected, NO maxHp read); the batch runner materializes a concrete `HealOperation` from prior in-batch results via `BatchResultContext`; a skipped dependency records `{status:'skipped', reason:'dependency_not_resolved'}`. `HealOperation.amount` is always concrete by executor time. The executor never resolves refs.
 9. Current `Buff`/`BuffPool` have no `instanceId` — participant snapshots require the new BuffSystem's `BuffInstanceSnapshot.instanceId`. One more reason the foundation prerequisite is blocking.
 10. `Độc Căn` name collision (poison-root mechanic inside `trung_doc` vs future `doc_can` id) — sibling plan R4 owns the rename at its M4; this plan's fixtures use `test_seal_wood` and stay clear of the collision.
@@ -631,5 +641,5 @@ interface ReactionEvaluationTrace {  // contract §85 shape
 1. RESOLVED: `DeferredOperation` materialization (contract plan v5, R-C7) — damage result payload carries `hpDamage`/`rawDamage`; runner builds the concrete `HealOperation` via `BatchResultContext`; deferred entries carry pre-minted `operationId`s; the heal-ratio cap is resolved at StackExpr evaluation (R-B — ratio cap, not maxHp).
 2. R-A: reaction damage `element` — attacker-element (chosen, preserves legacy overcomer-element semantics) vs elementless true damage?
 3. R-C: is a `'penetration'`/`'stat'` modifier channel planned for buff2, or is the `'potency'` proxy acceptable for Dưỡng Kim at seal batch?
-4. Should `CANONICAL_REACTIONS` ship in `src/data/reaction/` (chosen) or stay test-adjacent until seal batch rebinds the ids?
+4. RESOLVED (rollout lock): `CANONICAL_REACTIONS` ships in `src/data/reaction/`; the `test_*` → real-id rebinding is M-INT scope (inside the buff M4 worktree), not seal batch.
 5. RESOLVED (contract v4): `operationId` minting ownership — ReactionSystem mints deterministic ids for ALL its ops including `DeferredOperation` entries (R-F pattern); the scheduler never mints op ids — it asserts global uniqueness via `reserveOperationId` on every execution path and stamps `combatSequence` itself.
