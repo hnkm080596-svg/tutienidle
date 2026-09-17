@@ -5,22 +5,15 @@ export interface RealmData {
 
   // Minutes needed for level 1 -> 2. Later levels add one minute each.
   // Extended levels 13-18 never affect the next realm's base time.
+  // Mutually exclusive with realmDurationMultiplier (XOR contract —
+  // pinned by CultivationSystem.test.ts).
   baseCultivationMinutes?: number
-
-  // Phàm Nhân (tutorial) DUY NHẤT — công thức hấp thu linh khí cũ
-  // (baseRequiredCultivation * cultivationMultiplier^(level-1)), cố
-  // tình KHÔNG đổi sang cơ chế ngân sách thời gian bên dưới (xem
-  // getRequiredCultivation() ở core/realm/realmSystem.ts). Mọi cảnh
-  // giới khác để trống 2 field này.
-  baseRequiredCultivation?: number
-  cultivationMultiplier?: number
 
   // Rework "100% mỗi tiểu cảnh giới" (2026-08-16) — bội số của
   // BASE_CULTIVATION_UNIT_SECONDS (x, xem realmSystem.ts): tổng thời
   // gian tu luyện MỤC TIÊU (giả định tốc độ tu luyện CƠ BẢN, không
   // cộng bonus) để đi hết toàn bộ cảnh giới này, chia không đều cho
-  // từng tầng theo đường cong tăng dần — thay thế hẳn 2 field phía
-  // trên cho MỌI cảnh giới TRỪ Phàm Nhân. x = 1 ngày -> Luyện Khí =
+  // từng tầng theo đường cong tăng dần. x = 1 ngày -> Luyện Khí =
   // 10 ngày, mỗi đại cảnh giới sau x3 cảnh giới trước.
   realmDurationMultiplier?: number
 
@@ -44,8 +37,8 @@ export const REALMS: RealmData[] = [
   // realmSystem.ts). Không có nghi lễ Đột Phá riêng như Trúc Cơ — "nghi
   // lễ" của Phàm Nhân -> Luyện Khí CHÍNH LÀ chọn Pháp Tu/Kiếm Tu (xem
   // GameManager.chooseCultivationPath(), CultivationSystem.breakthrough()).
-  // Là tutorial nên GIỮ NGUYÊN công thức hấp thu cũ, không theo ngân
-  // sách thời gian x/10x/30x... của các cảnh giới còn lại.
+  // Là tutorial nên dùng nhịp phút/tầng cố định (baseCultivationMinutes),
+  // không theo ngân sách thời gian x/10x/30x... của các cảnh giới sau.
   {
     id: 'mortal',
     name: 'Phàm Nhân',

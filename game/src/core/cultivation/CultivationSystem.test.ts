@@ -1,14 +1,33 @@
 import { describe, expect, it } from 'vitest'
 import { addCultivation, breakthrough, canBreakthrough } from './CultivationSystem'
 import { createDefaultPlayer } from '../player/Player'
+import { REALMS } from '../../data/realms/realm'
 import {
   BASE_CULTIVATION_PER_SECOND,
   EXTENDED_REALM_LEVEL,
-  getCultivationDurationSeconds,
   getRequiredCultivation,
 } from '../realm/realmSystem'
 
 describe('Cultivation progression curve', () => {
+  // Mission G — data contract: each realm declares exactly ONE formula
+  // field (minutes-per-level XOR total-duration-budget). The retired
+  // baseRequiredCultivation/cultivationMultiplier exponential path is
+  // gone; this invariant is the regression net.
+  it('every realm declares exactly one cultivation formula field (XOR)', () => {
+    expect(
+      REALMS.every(
+        (realm) =>
+          (realm.baseCultivationMinutes !== undefined) !==
+          (realm.realmDurationMultiplier !== undefined),
+      ),
+    ).toBe(true)
+  })
+
+  it('pinned outputs — budget formula and mortal minutes unchanged', () => {
+    expect(getRequiredCultivation('golden_core', 1)).toBe(4_632_475)
+    expect(getRequiredCultivation('mortal', 1)).toBe(60 * BASE_CULTIVATION_PER_SECOND)
+  })
+
   it.each([
     ['mortal', 1, 1],
     ['mortal', 11, 11],
@@ -21,7 +40,6 @@ describe('Cultivation progression curve', () => {
     ['foundation_establishment', 11, 74],
     ['foundation_establishment', 17, 80],
   ])('%s level %i needs %i minutes', (realmId, level, minutes) => {
-    expect(getCultivationDurationSeconds(realmId, level)).toBe(minutes * 60)
     expect(getRequiredCultivation(realmId, level)).toBe(minutes * 60 * BASE_CULTIVATION_PER_SECOND)
   })
 
@@ -32,7 +50,7 @@ describe('Cultivation progression curve', () => {
   ])('%s keeps core and extended totals independent', (realmId, coreMinutes, fullMinutes) => {
     const sumThrough = (lastSourceLevel: number) => Array.from(
       { length: lastSourceLevel },
-      (_, index) => getCultivationDurationSeconds(realmId, index + 1) / 60,
+      (_, index) => getRequiredCultivation(realmId, index + 1) / BASE_CULTIVATION_PER_SECOND / 60,
     ).reduce((sum, minutes) => sum + minutes, 0)
 
     expect(sumThrough(11)).toBe(coreMinutes)
