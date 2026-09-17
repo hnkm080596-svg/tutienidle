@@ -29,7 +29,7 @@
 - **No unused primitives:** every interface/registry lands with a real consumer or test consumer in the same mission. `elemental_reaction_enabled` intentionally ships ungranted — see M0 ruling R7.
 - **P3 verification:** `quick` = `npm run type-check` + `npx vitest run <scope>` from `game/`. `full` = + `npm run build` + `npx vitest run` — mandatory for M4 (buff cutover) and M7 (battle wiring).
 - **P4** adversarial QA (quick) after every production mission; **deep** for M4 and M7.
-- **P5** three-lens review round per mission. **P7** — commit steps describe granularity only; every commit needs explicit user authorization.
+- **P5** Sequential Multi-Pass Review per mission (≥3 ordered passes over evolving code states). **P7** — commit steps describe granularity only; every commit needs explicit user authorization.
 - **P13/P14:** M4 and M7 touch battle runtime wiring — drive a real battle via Playwright (`npm run dev`, actual port) before merge-ready.
 - **Save policy:** strict version rejection; if M4 changes persisted buff shape, schema + consumer + `saveVersion` bump land together. `player.persistentTimedEffects` is NOT a buff pool and is NOT migrated (R2 — corrected census).
 - Per-mission report: changed / files / authority moved / adapters remaining / tests / build status / behavior changes / risks / next.
@@ -195,7 +195,7 @@ The largest blast radius. **ONE ATOMIC WORKTREE MISSION — do NOT split into se
 - [ ] **Step 3 — Deletion list execution** (§73); grep-verify each deleted symbol has zero references.
 - [ ] **Step 4 — Reaction M-INT on this worktree** (see file list above): canonical `ElementalStateRegistry` bound; legacy engine/flag/callsite deleted; no dispatcher registration; no capability grant.
 - [ ] **Step 5 — Verify (P3 full) + P13/P14 Playwright battle drive** (apply buff, DoT tick, cleanse, death cleanup visible in UI/log; **visible-Pháp-Tu elemental application fires NO automatic reaction** — spec-correct post-M-INT).
-- [ ] **Step 6 — P4 adversarial QA (deep) + P5 review round.**
+- [ ] **Step 6 — P4 adversarial QA (deep) + P5 sequential review passes.**
 
 **Exit criteria:** zero old-engine symbols; all migrated buffs behave identically (behavior change = none unless approved); `TurnReactionManager`/`canInitiateWuxingReactions` fully deleted; canonical `ElementalStateRegistry` in place; NO production `ReactionDispatcher` (deferred to canonical-content mission); real-battle runtime evidence captured. **Merge gate: M4 does not merge until the M-INT sub-steps are green.**
 
@@ -267,7 +267,7 @@ The largest blast radius. **ONE ATOMIC WORKTREE MISSION — do NOT split into se
 - [ ] **Step 2 — Contract tests §91–102** end-to-end on real engine + fixture content.
 - [ ] **Step 3 — Determinism suite:** same seed + same commands → identical trace/final state (§87).
 - [ ] **Step 4 — Verify (P3 full) + P13/P14 Playwright** real battle (skill→buff→tick→death→log, origins distinct).
-- [ ] **Step 5 — P4 deep + P5 review round.**
+- [ ] **Step 5 — P4 deep + P5 sequential review passes.**
 
 **Exit criteria:** contract §104 DoD items all green; `TurnReactionManager` already DELETED at M4's M-INT — visible Pháp Tu has NO automatic reactions (spec-correct); `ReactionDispatcher` still unregistered pending canonical content; no ấn content shipped.
 

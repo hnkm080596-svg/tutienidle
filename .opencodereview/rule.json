@@ -1,0 +1,39 @@
+{
+  "include": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "game/tests/**/*.ts"
+  ],
+  "rules": [
+    {
+      "path": "{**/*.test.ts,**/*.spec.ts,game/tests/**/*.ts}",
+      "rule": "Test defects only: mocks or stubs that hide integration defects or bypass the real authority path; regression behavior not actually exercised (missing assertions, assertions trivially true); tests coupled to implementation details instead of observable behavior; tests duplicating production logic instead of exercising the real path; guard/wiring tests weakened or removed to make a change pass; e2e specs that cannot detect the failure they claim to cover.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "game/src/data/**/*.ts",
+      "rule": "Content/registry defects only: duplicate IDs; references to non-existent IDs; inconsistent relationships between content entries; dependency-direction violations (data files importing runtime systems); content definitions embedding runtime authority that belongs in systems; authored effects or flags the engine cannot execute (silent-downgrade risk); content changes without a matching mechanic on the consuming side.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "game/src/game/**/*.ts",
+      "rule": "Phaser/scene defects only: duplicate scene-transition authority; incorrect scene lifecycle use (init/preload/create/update/shutdown); double initialization; event listeners registered more than once or never removed; tweens/timers/textures/objects not released on shutdown or destroy; assets loaded by the wrong owner; one scene directly controlling unrelated scenes; transition race conditions; authoritative gameplay state mutated from render or animation code.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "{game/src/components/**/*.{ts,vue},game/src/composables/**/*.ts,game/src/stores/**/*.ts,game/src/presentation/**/*.{ts,vue},game/src/App.vue}",
+      "rule": "Vue/Pinia defects only: UI owning domain logic or computing authoritative gameplay results; direct domain-state mutation from presentation instead of owner APIs; duplicated reactive authority over one piece of state; stale reactive state after reset/restore; incorrect watchers (missing immediate/deep/flush needs, watch loops); missing cleanup in onUnmounted/onScopeDispose; event-listener, timer, or subscription leaks; Vue-Pinia-Phaser synchronization errors; hardcoded UI strings bypassing the i18n gateway; computed/ref misuse causing stale or lost reactivity.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "game/src/core/**/*.ts",
+      "rule": "Domain/combat authority defects only: logic bypassing the owning system's API; direct mutation of another system's state; multiple sources of truth for one rule or state; invalid or duplicated state transitions; damage/vitals resolution outside the gameplay authority; duplicated formulas or calculations across systems; buff/debuff lifecycle errors (double-apply, missing expiry, wrong owner); hidden side effects inside queries or previews; nondeterministic combat outcomes from shared mutable state; missing cleanup on reset/restore; one-shot effects executing more than once; orchestrators reimplementing domain rules instead of delegating.",
+      "merge_system_rule": true
+    },
+    {
+      "path": "game/src/services/**/*.ts",
+      "rule": "Service/orchestration defects only: orchestrators reimplementing domain rules instead of delegating to owners; swallowed errors that leave callers believing an operation succeeded; async work without a lifecycle owner, cleanup, or stale-result policy; overlapping sessions without identity/generation checks; partial failures reported as full success.",
+      "merge_system_rule": true
+    }
+  ]
+}

@@ -28,7 +28,8 @@ Tests failing (<N> failures). Must fix before completing:
 - P3 verification at the required mode, green on the current tree.
 - P13/P14 runtime/browser checks, where triggered, already run **inside the implementation worktree** — this skill never performs the feature's first real browser validation, and a branch is not merge-ready merely because Playwright could not run.
 - P4 adversarial QA where applicable, with its verdict recorded.
-- A complete P5 three-lens review round finished with zero unresolved Critical/High/Medium findings on the aggregate diff (deferred Low/Nit findings listed with reasons).
+- The P18 OCR gate is clean on the current aggregate diff (or its explicit environment gap is recorded).
+- A complete P5 Sequential Multi-Pass Review finished — at least 3 ordered passes over evolving code states — with zero unresolved Critical/High/Medium findings on the aggregate diff (deferred Low/Nit findings listed with reasons).
 
 If any required gate is missing, stop and return to the dev workflow — do not present the menu, and do not merge into `master` to obtain browser evidence. Post-merge validation on `master` is supplementary only.
 

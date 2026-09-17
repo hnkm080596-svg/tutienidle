@@ -33,7 +33,7 @@
 - **Operation emission, not execution:** `ReactionSystem` produces `ReactionResolution`; `ReactionBatchRunner` owns preflight + ordered execution + typed skips; `CombatScheduler` owns `combatSequence` and settlement barriers (never allocated inside this module).
 - **P3 verification:** `quick` (default) = `npm run type-check` + `npx vitest run <scope>` from `game/`. `full` = `npm run type-check` + `npm run build` + `npx vitest run` — mandatory for M4 (touches `TurnSkillAction.ts`/`TurnBattleSystem.ts` battle runtime selection path).
 - **P4:** adversarial QA (quick) after every production mission; deep for M4 (ActionValidator lands in the live action-selection path).
-- **P5:** three-lens review round per mission; every finding gets severity; Medium+ blocks completion.
+- **P5:** Sequential Multi-Pass Review per mission (≥3 ordered passes over evolving code states); every finding gets severity; Medium+ blocks completion.
 - **P7:** commit steps describe granularity only — every commit needs explicit user authorization.
 - **P13/P14:** M4 touches `core/battle/turn/**` action selection — drive a real battle via Playwright (`npm run dev`, actual port) confirming an unsealed actor still selects normally before merge-ready.
 - **Per-mission report:** changed / files / authority moved / adapters remaining / tests / build status / behavior changes (=None unless approved) / risks / next.

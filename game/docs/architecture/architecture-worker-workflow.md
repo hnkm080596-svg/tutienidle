@@ -171,13 +171,14 @@ Stop implementation when the task card's coherent outcome is met. Remaining auth
 
 ## 8. G4 — Verification and review
 
-Follow existing P3-P5/P13/P14 gates, not a replacement scoring system. Gate order: simplify → verify → runtime/browser checks → adversarial QA → three-lens review round → fix → reverify → repeat round.
+Follow existing P3-P5/P13/P14/P18 gates, not a replacement scoring system. Gate order: simplify → verify → OCR gate → runtime/browser checks → adversarial QA → sequential review passes (≥3) → done.
 
 - Simplify with E3 when triggered, preserving behavior.
 - Select P3 quick or full by actual triggers; record exact commands, exit results and relevant test counts. Stop at first failure and classify/fix under P12.
+- Run the P18 OCR gate (delegation mode) on the task diff inside the implementation worktree; loop validate → fix → reverify → OCR until one clean pass on the latest state.
 - Execute P13/P14 when triggered, inside the implementation worktree (the P14 worktree exception is retired — an environment failure is an explicit blocker with captured evidence, never a deferral to a main checkout). Record what remains unverified.
 - After a feature/fix, run P4 adversarial QA in its restricted write scope. If production repair is needed, exit QA, repair in development and repeat affected gates.
-- When P5 applies, run a complete three-lens review round over the simplified verified diff: Review A (correctness/regression/requirement fidelity), Review B (architecture/contracts/maintainability), Review C (tests/runtime/user flow — real runtime/Playwright evidence for browser-sensitive work). Every finding carries a severity (Critical/High/Medium/Low/Nit). Zero unresolved Medium-or-higher is the completion threshold; every Medium+ fix re-verifies and triggers a fresh complete round. Deferred Low/Nit findings stay listed with reasons. The user may explicitly waive a finding — record it.
+- When P5 applies, run the Sequential Multi-Pass Review over the simplified verified diff — ordered passes over evolving states, not simultaneous perspectives on one snapshot: Pass 1 (local correctness/regression, on the post-OCR state), Pass 2 (architecture/authority/ownership, on the post-Pass-1-fix state), Pass 3 (adversarial integration incl. tests/runtime/user flow — real runtime/Playwright evidence for browser-sensitive work, on the post-Pass-2-fix state). Every finding carries a severity (Critical/High/Medium/Low/Nit). A Medium-or-higher fix on the last scheduled pass forces another pass over the resulting state; zero unresolved Medium-or-higher on the final reviewed state is the completion threshold. Deferred Low/Nit findings stay listed with reasons. The user may explicitly waive a finding — record it.
 - Docs-only work uses link/reference/mirror/consistency checks under E13; production QA, type-check/build and gameplay tests are N/A.
 
 Review rejects an unsupported pass even when tests are green: missing current owner, helper-only coverage, real caller not migrated, duplicate authority without justified retained purpose, swallowed required context, untested task-critical failure path, unrelated redesign, or an unrecorded runtime gap.
@@ -194,7 +195,7 @@ Q1-Q12 / triggered modules: PASS with evidence, GAP, or N/A with reason
 Owner and actual migrated consumers:
 Old/alternate path status:
 Verification: exact commands, results, test counts, limitations
-QA verdict (P4) / P5 review round (lenses run, findings by severity, rounds completed, unresolved Medium+ = 0):
+P18 OCR result (clean pass evidence or explicit gap) / QA verdict (P4) / P5 sequential review (passes run in order with per-pass evidence, findings by severity, unresolved Medium+ = 0):
 P13 progression evidence / P14 visual evidence from the implementation worktree (or explicit environment blocker):
 Unresolved task work:
 Retained debt / Notes-Suggestions:

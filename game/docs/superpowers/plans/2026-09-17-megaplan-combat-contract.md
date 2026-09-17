@@ -39,7 +39,7 @@
 - **Executor is a pure router:** it never reads scheduler state, never queries result history, never picks "the closest existing method" on an authority — the port interface defines intent-level inputs; the authority resolves them.
 - **No path-specific primitives (CON-23):** no `ApplyHoaAn`, `TriggerDungKim`, `ApplyCamCong`, `DoNguDaoReaction` — operation vocabulary is generic (§5).
 - **P3 verification:** `quick` = `npm run type-check` + `npx vitest run <scope>`; `full` adds `npm run build` + `npx vitest run` — mandatory for M4 (touches `GameManagerTurnBattleOps` battle-lifecycle wiring).
-- **P4** adversarial QA (quick) per mission; **P5** three-lens review per mission; **P7** commits need explicit authorization.
+- **P4** adversarial QA (quick) per mission; **P5** Sequential Multi-Pass Review per mission (≥3 ordered passes over evolving code states); **P7** commits need explicit authorization.
 - **P13/P14:** M4 touches battle lifecycle — drive a real battle via Playwright (`npm run dev`, actual port) before merge-ready.
 - **Per-mission report:** changed / files / authority moved / adapters remaining / tests / build status / behavior changes (=None expected) / risks / next.
 
@@ -1028,7 +1028,7 @@ The adapter is allowed to ADD a `CombatSystem` method for the reaction channel i
 - [ ] **Step 1 — Failing test (seeded determinism):** two battles, same build + `SeededCombatRng(42)` via `setBattleRngFactory` + same actions → identical outcomes. Proves the ONE-stream property is preserved.
 - [ ] **Step 2 — Reroute** — no second RNG authority anywhere; `TurnBattleAdapter` mints NOTHING (review: it must not create a parallel stream).
 - [ ] **Step 3 — Verify (P3 FULL)** + **P13/P14** Playwright real battle.
-- [ ] **Step 4 — P4 quick + P5 round.**
+- [ ] **Step 4 — P4 quick + P5 sequential review passes.**
 
 **Exit criteria:** one `CombatRng` per cycle at the composition root; zero direct/unwrapped `Math.random` calls in the battle RNG graph outside the `FunctionCombatRng`/factory boundary (the lazy `() => Math.random()` inside it is the sanctioned spy seam — review r2 MEDIUM); scheduler+executor constructed and injected but dormant; suite green.
 

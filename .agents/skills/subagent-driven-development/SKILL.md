@@ -469,13 +469,15 @@ residual load-bearing findings surface to your human partner when
 finishing-a-development-branch presents the options.
 
 **Project override (root `AGENTS.md` P5):** in this repository the final
-review is the P5 three-lens review round — three genuinely independent
-passes (correctness/regression/requirements, architecture/contracts/
-maintainability, tests/runtime/user-flow/adversarial) over the same
-aggregate diff. A single dispatched code reviewer is one lens, not the
-round. The loop ends only when a complete three-lens round finishes with
-zero unresolved Critical/High/Medium findings — the "no second fix wave"
-cap above does not waive that gate.
+review is the P5 Sequential Multi-Pass Review — at least three ordered
+passes (local correctness/regression, architecture/authority/ownership,
+adversarial integration) where each pass reviews the aggregate-diff state
+produced by the previous pass's fixes, not the same snapshot. A single
+dispatched code reviewer is one pass, not the gate. The loop ends only
+when a pass over the resulting final state finishes with zero unresolved
+Critical/High/Medium findings — a Medium-or-higher fix on the last
+scheduled pass forces another pass, and the "no second fix wave" cap
+above does not waive that gate.
 
 ## Finish
 

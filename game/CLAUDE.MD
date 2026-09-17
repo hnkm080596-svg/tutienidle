@@ -54,7 +54,7 @@ A task is complete only when:
 - Obvious edge cases have been handled.
 - The implementation is consistent with the existing architecture.
 
-For non-trivial changes, the root `AGENTS.md` post-task gates also apply: the required P3 verification mode, triggered P13/P14 runtime/browser checks run inside the implementation worktree, P4 adversarial QA, and the P5 three-lens review round ending with zero unresolved Critical/High/Medium findings. Green tests alone never complete a task.
+For non-trivial changes, the root `AGENTS.md` post-task gates also apply: the required P3 verification mode, the P18 Open Code Review gate on the task diff, triggered P13/P14 runtime/browser checks run inside the implementation worktree, P4 adversarial QA, and the P5 Sequential Multi-Pass Review — at least 3 ordered passes over evolving code states — ending with zero unresolved Critical/High/Medium findings. Green tests alone never complete a task.
 
 After completing a task, summarize:
 - What changed

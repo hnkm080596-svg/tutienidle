@@ -18,7 +18,7 @@
 - **No unused primitives/state:** do not land fields, interfaces, or registries without their production consumer chain in the same mission. Reviewer-verified rejections: no `pathSpecializations` record, no `kiemTuNgu` slice split, no generic `PathCombatContribution`, no `requiresSpecialization`/`setsSpecialization` node generics, no parallel `CultivationPathRegistry`.
 - **P3 verification:** `quick` = `npm run type-check` + `npx vitest run <scope>` from `game/`. `full` = + `npm run build` + `npx vitest run` — mandatory for M2 (save shape + ritual), M7 (union shrink), M10.
 - **P4:** adversarial QA (quick) after every production mission; deep for M2/M6/M7.
-- **P5:** three-lens review round per mission. **P7:** commit steps describe granularity only — every commit needs explicit user authorization.
+- **P5:** Sequential Multi-Pass Review per mission (≥3 ordered passes over evolving code states). **P7:** commit steps describe granularity only — every commit needs explicit user authorization.
 - **P13/P14:** M2/M4/M5/M6 require driving the real ritual→way→progression→combat flow via Playwright (`npm run dev`, read actual port).
 - **P17/roadmap:** before touching `core/battle/turn/**`, battle-tick integration, or `CombatScene` — check roadmap combat-chain phases + `docs/qa/`.
 - **`ngu` kit — decided** (spec §6.2): `techniqueId: 'van_kiem_quyet'`, `skillIds: []` (action set is provider-injected), offerGate `tram` Lv3, free entry. No longer a blocker.
