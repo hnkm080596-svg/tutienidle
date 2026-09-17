@@ -5,8 +5,9 @@ import { getSurviveLethalUsesPerBattle } from './TalentEffects'
  * sống sót qua đòn chí mạng, battle-scoped:
  * - beginBattle() reset lượt từ thiên phú của player mỗi trận MỚI.
  * - Trận Độ Kiếp là nghi lễ thật, KHÔNG được phép kích hoạt — contract
- *   phía CombatSystem: tribulation gọi setSurviveLethalSession(null),
- *   không gắn guard vào trận.
+ *   là tribulation resolve qua TribulationDirector, không qua
+ *   beginBattleCycle/CombatSystem, nên session guard không bao giờ
+ *   được gắn cho trận đó.
  *
  * Tiêu thụ tại CombatSystem.killIfDead() — điểm DUY NHẤT tuyên bố chết
  * (HP <= 0 → alive = false) của mọi đường damage.
