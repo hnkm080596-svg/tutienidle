@@ -389,7 +389,7 @@ the `resolveActorTurn`/`resolveNextStep`/`runToCompletion` wrappers
 | Field | Definition | Notes |
 |---|---|---|
 | `CombatEntity.id: string` | `core/combat/CombatEntity.ts:12` | Produced by `'player'` (`core/player/Player.ts:468`), companion definition id (`core/companion/CompanionCombat.ts:19`), enemy `` `${template.id}_${crypto.randomUUID()}` `` (`core/enemy/EnemySystem.ts:20` — nondeterministic uuid, see §1.3), tribulation ghost `'player'` (`TribulationDirector.ts:196`). This is the `CombatEntityId` substrate. |
-| `battle.totalTurnsElapsed` | `TurnBattle.ts:176`; written `:944`; read `:2849` | Raw actor-action counter; skipped by bypass/queued branches. |
+| `battle.totalTurnsElapsed` | `TurnBattleSystem.ts:176`; written `:944`; read `:2849` | Raw actor-action counter; skipped by bypass/queued branches. |
 | `BattleLogEntry` | `core/battle/turn/TurnOrderPreview.ts:7-14` | `{ turn: totalTurnsElapsed, actorId, skillId, targetIds }` appended in `completeAction` (`:2849-2856`). |
 | `TurnSkillExecution` | `TurnSkillAction.ts:379-396` | `{ rootSkillId, resolvedSkill, source: TurnExecutionSource, theBurned?, multicastDepth? }` — `TurnExecutionSource = 'original'|'empowered'|'composite'|'repeat'|'multicast'` (`:377`). `rootSkillId` owns cast count/cooldown (`executionCommitsCast` `:422-424`); `resolvedSkill` owns the payload. Closest thing to a cast identity — in-memory, per-declare, never minted as a string. |
 | `TurnDeclaredAction.execution` + `actionSource`/`triggerContext`/`intercepted`/`interceptedBy` | `TurnBattleSystem.ts:374-395` | Per-declare provenance bundle handed declare -> impact -> complete. |
