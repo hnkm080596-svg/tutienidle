@@ -1,6 +1,6 @@
 ﻿import Phaser from 'phaser'
 import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
-import type { EventBus } from '@/core/events/EventBus'
+import type { EventBus, EventHandler } from '@/core/events/EventBus'
 import {
   readOptionalGate,
   writeGate,
@@ -577,14 +577,14 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // subscribe/unsubscribe cùng lặp qua nó nên không thể lệch nhau (trước
   // đây có 10 entry trong mảng này + 12 dòng on/off thủ công song song,
   // thêm event vào bên này mà quên bên kia không có gì báo lỗi).
-  private boundHandlers: Array<[string, (event: any) => void]> = []
+  private boundHandlers: Array<[string, EventHandler<never>]> = []
   private debugAnchorHandler = () => this.drawDebugBodyAnchors()
   // Action Playback Task 7 (2026-09-05) — GameManager bridge (set trong
   // subscribeCombatEvents từ registry; scene KHÔNG import trực tiếp).
   // Internal (module boundary — combat-action-feedback paces engine acks).
   gameManagerRef?: DomainCommandPort
 
-  private getCombatEventBindings(): Array<[string, (event: any) => void]> {
+  private getCombatEventBindings(): Array<[string, EventHandler<never>]> {
     return [
       ['turn_cast_start', (event: CombatScenePayload) => this.onAttack(event)],
       ['critical', (event: CombatScenePayload) => this.onCritical(event)],
@@ -1037,9 +1037,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.gridLeft = bounds.left
     this.gridTop = bounds.top
     this.cellSize = this.projection.cellSizeAt(GRID_ROW_COUNT - 1).width
+    const projection = this.projection
     this.laneRowCenterY = Array.from(
       { length: GRID_ROW_COUNT },
-      (_, row) => this.projection!.gridToScreen(row, 0).y,
+      (_, row) => projection.gridToScreen(row, 0).y,
     )
 
     if (this.arenaRect) {
