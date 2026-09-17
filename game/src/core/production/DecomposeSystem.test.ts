@@ -242,4 +242,29 @@ describe('DecomposeSystem — online catch-up policy (Mission A review)', () => 
 
     expect(system.drainOutput()).toHaveLength(1)
   })
+
+  it('stalled tick runs exactly ONE late cycle and re-anchors nextCycleAt to now (spec D4 — pins MA-R3-01)', () => {
+    addOre('mortal_ore_decade', 1_000)
+
+    const system = createSystemWithCapacity(6)
+    system.setSetting({ workers: 1 })
+
+    system.tick(0)        // starts: nextCycleAt = 30_000
+    system.tick(300_000)  // 270s late -> exactly one catch-up cycle
+
+    expect(system.drainOutput()).toHaveLength(1)
+    // Anchored to NOW, not advanced one step from the stale deadline
+    // (pre-MA-R3-01 bug: re-armed at 60_000 -> every later tick burned a
+    // cycle until the timer caught up).
+    expect(system.getSaveState().nextCycleAt).toBe(330_000)
+
+    // Immediately afterwards nothing is due — no catch-up backlog drains.
+    system.tick(300_001)
+    system.tick(310_000)
+    expect(system.drainOutput()).toHaveLength(0)
+
+    // And the next legitimate cycle lands at the new deadline.
+    system.tick(330_000)
+    expect(system.drainOutput()).toHaveLength(1)
+  })
 })
