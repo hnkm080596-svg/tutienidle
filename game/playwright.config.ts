@@ -1,9 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// Port per-checkout (2026-09-07) — standing-slot worktree dùng 5175
-// (master 5173, UITemp 5174). Vite config đọc cùng giá trị nên dev server
-// thủ công và webServer của Playwright luôn cùng port.
-const DEV_PORT = process.env.DEV_PORT ?? '5175'
+// Port per checkout (2026-09-16) — same derivation as vite.config.ts, so
+// the spawned dev server and baseURL always agree. DEV_PORT env overrides.
+import { devPortForRoot } from './scripts/dev-port.ts'
+import { fileURLToPath } from 'node:url'
+
+const DEV_PORT = String(process.env.DEV_PORT ?? devPortForRoot(fileURLToPath(new URL('.', import.meta.url))))
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -54,13 +56,16 @@ export default defineConfig({
   webServer: {
     command: 'node node_modules/vite/bin/vite.js',
     url: `http://localhost:${DEV_PORT}`,
-    reuseExistingServer: true,
+    // Never reuse a foreign server on CI — a stale worktree server is the
+    // T7-62 false-green. Local reuse stays for the manual-server workflow.
+    reuseExistingServer: !process.env.CI,
     timeout: 30_000,
     env: {
-      // Coordinator deadline scale (R12 retained debt): the deadlines are
-      // wall-clock failure detectors, but under multi-worker WebGL
-      // contention a healthy transition can legitimately outlast them.
-      // Scaling applies to E2E runs only - App.vue reads this at boot.
+      // E2E-only contention relief (R12 retained debt): scales the
+      // presentation-coordinator transition deadlines, nothing else
+      // (App.vue:175-179 reads it; production timing untouched). Kept
+      // suite-wide because webServer.env cannot scope per-spec; revisit
+      // when the suite runs serially or on provisioned CI hardware.
       VITE_PRESENTATION_DEADLINE_SCALE: '3',
     },
   },

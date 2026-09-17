@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import electron from 'vite-plugin-electron/simple'
+import { devPortForRoot } from './scripts/dev-port.ts'
 
 // Uncommitted audit followup plan, Ưu tiên 2 (Electron packaging,
 // 2026-08-24) — plugin electron() chỉ đăng ký khi biến env ELECTRON được
@@ -12,19 +13,22 @@ import electron from 'vite-plugin-electron/simple'
 // dev`/`npm run build` (target web thuần) tuyệt đối không đổi hành vi.
 const isElectron = Boolean(process.env.ELECTRON)
 
+// Port per checkout (audit T7-62, 2026-09-16): derived from the checkout
+// root path so each worktree owns a distinct port; strictPort makes a
+// collision fail loudly instead of silently serving the wrong tree.
+// playwright.config.ts derives the same value, so its webServer always
+// targets this server. Override: DEV_PORT=5999 npm run dev.
+const devPort = Number(process.env.DEV_PORT ?? devPortForRoot(fileURLToPath(new URL('.', import.meta.url))))
+
 // https://vite.dev/config/
 export default defineConfig({
-  // Port per-checkout (2026-09-07) — standing-slot worktree dùng 5175
-  // (master 5173, UITemp 5174): chạy song song nhiều dev server không xung
-  // đột port (vite otherwise auto-increment, nhưng Playwright baseURL cần
-  // port cố định biết trước). Env override vẫn được: npm run dev -- --port 5999.
   server: {
-    port: Number(process.env.DEV_PORT ?? 5175),
-    strictPort: false,
+    port: devPort,
+    strictPort: true,
   },
   preview: {
-    port: Number(process.env.DEV_PORT ?? 5175),
-    strictPort: false,
+    port: devPort,
+    strictPort: true,
   },
   // Asset URL tương đối — bắt buộc để index.html load đúng qua file://
   // khi Electron đóng gói (electron-builder). Không ảnh hưởng dev server/

@@ -5,6 +5,7 @@
     "vite.config.*",
     "vitest.config.*",
     "vitest.lab.config.*",
+    "scripts/**/*.ts",
     "cypress.config.*",
     "playwright.config.*",
     "eslint.config.*",
@@ -22,6 +23,11 @@
 
     // Disable emitting output during `vue-tsc --build`, which is used for type-checking only.
     "noEmit": true,
+
+    // Config files import scripts/*.ts with an explicit extension so Vite's
+    // native config loader (planned default) resolves them — requires this
+    // flag under noEmit.
+    "allowImportingTsExtensions": true,
 
     // `vue-tsc --build` produces a .tsbuildinfo file for incremental type-checking.
     // Specified here to keep it out of the root directory.
