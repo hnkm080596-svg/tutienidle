@@ -536,19 +536,13 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
         gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
       }
       // Phap Tu Reimagined Task 2 — mortal-path actives (idempotent).
+      // huy_quyen (The Tu Reimagined §2.3) shares this seam — learned,
+      // not equipped — so the ung_the offer gate reads it on old saves.
       for (const mortalSkillId of ['linh_bao', 'huy_quyen']) {
         if (!gameManager.skillManager.has(mortalSkillId)) {
           gameManager.progressionOps.learnSkill(mortalSkillId)
         }
       }
-
-      // The Tu Reimagined (spec 2026-09-15 §2.3) — huy_quyen joins the
-      // same starter-grant seam as tram (learned, not equipped) so the
-      // ung_the offer gate has something real to read on old saves.
-      if (!gameManager.skillManager.has('huy_quyen')) {
-        gameManager.progressionOps.learnSkill('huy_quyen')
-      }
-
     },
     onNewCharacter: () => {
       // Nhân vật mới: học sẵn tâm pháp + skill + grant khởi đầu.
