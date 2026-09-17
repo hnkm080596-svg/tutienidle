@@ -34,7 +34,7 @@ import type { PlayerData } from '../player/Player'
 /** Màu tím chuỗi Tinh Hoa Phàm Thể (2026-08-30) — bay về người chơi. */
 const ESSENCE_PARTICLE_COLOR = 0xc792ea
 
-// ItemGrade and ItemQuality are the same 5-member union — one table.
+// ItemGrade and ItemQuality are the same 5-member union - one table.
 const RANK_PARTICLE_COLORS: Record<ItemGrade, number> = {
   hoang: 0x8a877e,
   huyen: 0x6fbf73,
@@ -367,12 +367,13 @@ export class BattleLootSystem {
             zoneId,
           )
 
-          // Kiếm Ý vĩnh viễn (spec 2026-08-29-kiem-the-kiem-y mục 3.1) —
-          // đếm boss diệt: boss stage (isBoss) + elite/mini-boss (isElite);
-          // boss Độ Kiếp cũng là entity isBoss do defineEnemy tribulation
-          // template. CHỈ Kiếm Tu route
-          // Bạt Kiếm tiêu thụ tầng, nhưng counter đếm cho MỌI path (thống
-          // kê vô hại, đổi path muộn không mất tiến trình).
+          // Kiem Y vinh vien (spec 2026-08-29-kiem-the-kiem-y sec.3.1) -
+          // counts boss kills: stage bosses (isBoss) + elite/mini-boss
+          // (isElite); tribulation bosses are also isBoss entities via
+          // the defineEnemy tribulation template. ONLY the Kiem Tu
+          // route's Bat Kiem consumes stacks, but the counter accrues
+          // for EVERY path (harmless over-counting, switching path late
+          // loses no progress).
           if (
             this.player &&
             (battleEnemy.entity.isBoss === true || battleEnemy.entity.isElite === true)

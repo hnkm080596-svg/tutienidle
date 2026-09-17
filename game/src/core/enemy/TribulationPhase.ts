@@ -29,9 +29,9 @@ export interface TribulationPhase {
   // BattleSystem.updateTribulationPhases().
   archetypeOverride?: EnemyArchetype
 
-  // Boss Mechanics — triệu hồi thêm quái vào TRẬN ĐANG DIỄN RA khi
-  // vào phase này. Legacy drain path (Battle.pendingSummons +
-  // GameManager.updateBossSummons) retired with the grid BattleSystem —
+  // Boss Mechanics - summons extra enemies into the RUNNING battle when
+  // this phase is entered. Legacy drain path (Battle.pendingSummons +
+  // GameManager.updateBossSummons) retired with the grid BattleSystem -
   // no current consumer; kept as content data for the turn-side port.
   summonEnemyIds?: string[]
 }

@@ -113,3 +113,34 @@ query surfaces were in scope.
   fails loudly (not silently) under Allman style.
 
 Verdict: **PASS WITH EVIDENCE**
+
+## Round 3 addendum - D4 follow-up defect (found via full verify)
+
+The D4 addendum claimed no caller relied on `getSiteView()`'s
+create-on-read side effect. That was wrong in one path, caught by the
+next full `npm run verify` (the earlier scoped run did not include
+`ChiHienQuan.integration.test.ts`):
+
+- **Defect**: `GameManagerBuildingOps.assignWorkers()` ->
+  `ProductionSystem.setWorkerAssignment()` returned `false` (silent
+  no-op) for a defined-but-never-materialized site. Pre-D4, the
+  `getSiteView()` call inside `getProductionViews()` had already run
+  `ensureSiteState()` as a hidden side effect, so the command always
+  found state. Post-D4 the query is pure, exposing the dependency:
+  ChiHienQuan worker allocation failed (`assignedWorkers` stayed
+  `undefined`, manual mode never persisted).
+- **Fix**: `setWorkerAssignment()` now follows the `setAutoRestart()`
+  command pattern - `getSiteDefinition()` guard (unknown sites still
+  return `false`, contract preserved) then `ensureSiteState()`:
+  materialization is part of the write, owned by the command.
+- **Regression**: new unit test
+  `setWorkerAssignment materializes state on a defined site (D4
+  follow-up)` in `ProductionSystem.workers.test.ts`; the failing
+  `ChiHienQuan.integration` allocation + workerMode tests now pass.
+- **Blast radius re-verified**: 137 files / 1,138 tests green
+  (production + game + save + panels scope).
+
+Lesson recorded: domain queries that used to mutate can hide
+materialization dependencies in unrelated command paths; the scoped
+blast radius for a query-purity change must include UI integration
+tests, not only domain tests.

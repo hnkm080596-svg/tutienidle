@@ -152,13 +152,13 @@ describe('player store — talent v4 M2 (Hau Tich / Ngo Dao offline)', () => {
   })
 
   it('Ngo Dao — online va offline di QUA CUNG mot accrual: cung gained cho ket qua giong het nhau', () => {
-    // 2500 tu vi → 1 Cảm Ngộ + 500 dư, bất kể đường nào.
+    // 2500 tu vi -> 1 Cam Ngo + 500 remainder, regardless of path.
     const online = usePlayerStore()
     online.realmId = 'qi_refining'
     online.realmLevel = 1
     online.cultivation = 0
     online.selectedTalentIds = ['ngo_dao']
-    online.cultivate(250) // 10/s × 250s = 2500 tu vi
+    online.cultivate(250) // 10/s * 250s = 2500 tu vi
 
     setActivePinia(createPinia())
     const offline = usePlayerStore()

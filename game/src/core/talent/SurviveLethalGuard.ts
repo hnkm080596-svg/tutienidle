@@ -1,16 +1,17 @@
 import { getSurviveLethalUsesPerBattle } from './TalentEffects'
 
 /**
- * Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — counter lượt
- * sống sót qua đòn chí mạng, battle-scoped:
- * - beginBattle() reset lượt từ thiên phú của player mỗi trận MỚI.
- * - Trận Độ Kiếp là nghi lễ thật, KHÔNG được phép kích hoạt — contract
- *   là tribulation resolve qua TribulationDirector, không qua
- *   beginBattleCycle/CombatSystem, nên session guard không bao giờ
- *   được gắn cho trận đó.
+ * Bat Tu The talent (talent-direction-choice-plan sec.6) - battle-
+ * scoped lethal-survival charge counter:
+ * - beginBattle() resets charges from the player's talent each NEW
+ *   battle.
+ * - Tribulation is a real rite and may NEVER trigger it - the contract
+ *   is tribulation resolution via TribulationDirector, not via
+ *   beginBattleCycle/CombatSystem, so no session guard is ever bound
+ *   to that fight.
  *
- * Tiêu thụ tại CombatSystem.killIfDead() — điểm DUY NHẤT tuyên bố chết
- * (HP <= 0 → alive = false) của mọi đường damage.
+ * Consumed at CombatSystem.killIfDead() - the ONLY point declaring
+ * death (HP <= 0 -> alive = false) across every damage path.
  */
 export class SurviveLethalGuard {
   private remainingUses = 0

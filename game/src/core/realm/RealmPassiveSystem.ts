@@ -2,10 +2,10 @@ import type { PlayerData } from '../player/Player'
 import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
 
 /**
- * Cấp Realm Passive (Nhập Đạo/Kiến Cơ/...) của cảnh giới `realmId` nếu
- * có định nghĩa VÀ chưa từng cấp cho nhân vật này — idempotent, giống
- * hệt pattern GameManager.syncRealmPassive() (skill passive). An toàn
- * gọi lặp lại ở mọi điểm breakthrough.
+ * Grants the Realm Passive (Nhap Dao/Kien Co/...) of realm `realmId`
+ * when a definition exists AND it was never granted to this character -
+ * idempotent, the same pattern as GameManager.syncRealmPassive()
+ * (skill passive). Safe to call repeatedly at every breakthrough.
  */
 export function grantRealmPassive(player: PlayerData, realmId: string) {
   if (player.grantedRealmPassiveIds.includes(realmId)) {

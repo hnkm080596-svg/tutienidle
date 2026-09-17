@@ -1,6 +1,6 @@
 // [M13 STATUS: PARKED] Legacy real-time Battle/BattleEnemy contract.
 // Trimmed in Mission G to exactly the surface the parked ArtifactSystem
-// reads — no live consumer sees this shape (the turn engine owns
+// reads - no live consumer sees this shape (the turn engine owns
 // TurnBattle in battle/turn/). Do not re-extend; if the artifact runtime
 // is ever revived it re-declares the fields it needs.
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -11,7 +11,7 @@ import type { BuffPool } from '../buff/BuffPool'
 import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
 
 /**
- * 1 quái đang sống trong trận — buff pool tách riêng theo từng con.
+ * One living enemy in the battle - buff pool kept separate per enemy.
  */
 export interface BattleEnemy {
   entity: CombatEntity
@@ -34,16 +34,16 @@ export interface Battle {
    */
   playerMaterialized: boolean
 
-  // Buff/debuff phát sinh TRONG trận — tách khỏi buff persistent ngoài
-  // trận (ví dụ từ pill). Mỗi quái có buff pool riêng trong
-  // BattleEnemy.buffs.
+  // Buffs/debuffs raised WITHIN the battle - separate from persistent
+  // out-of-battle buffs (e.g. from pills). Each enemy has its own buff
+  // pool in BattleEnemy.buffs.
   playerBuffs: BuffPool
 
   /**
-   * Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
-   * §11) — snapshot level/grade/path + timer/rotation/ICD RUNTIME-ONLY
-   * (không persist). undefined = player không có artifact — tick
-   * artifact no-op hoàn toàn trong trường hợp đó.
+   * ban_menh_phap_bao (2026-08-27, foundation-artifact-system-plan.md
+   * sec.11) - snapshot level/grade/path + timer/rotation/ICD
+   * RUNTIME-ONLY (not persisted). undefined = player has no artifact -
+   * the artifact tick is a full no-op in that case.
    */
   artifactRuntime?: ArtifactRuntime
 }

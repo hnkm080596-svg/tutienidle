@@ -437,7 +437,7 @@ describe('devResetBranch (plan §6.10)', () => {
 
 describe('getNodeMaxLevel', () => {
   // Single normalization owner for "how many levels can this node reach"
-  // — both UI consumers (NodeTreePanel, NodeInspector) must read through
+  // - both UI consumers (NodeTreePanel, NodeInspector) must read through
   // it instead of re-deriving Math.max(1, maxLevel ?? 1).
   it('normalizes absent/zero/positive maxLevel to 1/1/N', () => {
     expect(getNodeMaxLevel(minorNode())).toBe(1)

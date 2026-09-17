@@ -39,8 +39,8 @@ export interface FormationStackSave {
 // đang chạy đều mất khi reload. Manager nào lưu id thay vì full
 // object (materials/pills/talismans) đều resolve lại qua registry
 // tương ứng lúc restore — xem GameManager.restoreFromSave().
-// version 3: thêm formations (FormationBag) — formation đi theo
-// `equipment` sẵn có, không cần field riêng.
+// version 3: adds formations (FormationBag) - formations ride the
+// existing `equipment` field, no separate field needed.
 // version 4: thêm crafts (CraftingManager) — lượt craft Đan/Phù/
 // Trận đang chạy, nguyên liệu đã trừ nên phải lưu lại tiến độ,
 // không thì reload giữa chừng sẽ mất trắng nguyên liệu đã tiêu.
@@ -53,9 +53,9 @@ export interface FormationStackSave {
 // Ignore Resistance/Ailment Resist & Potency, tag-hierarchy Increased)
 // + hệ thống Tâm Pháp 3 tầng (Tu Luyện/Chiến Đấu/Phá Cảnh — Technique
 // đổi hẳn shape sang discriminated union, xem core/technique/Technique.ts).
-// PlayerData thêm totalMonstersKilled. Save
-// cũ (version <6) KHÔNG tương thích, không viết migration — cùng lý do
-// version 5, save cũ tự động bị coi như không tồn tại.
+// PlayerData gains totalMonstersKilled. Old
+// saves (version <6) are INCOMPATIBLE, no migration written - same
+// reason as version 5: old saves are treated as absent.
 // version 7: MASTER SPEC Economy Phase 4 — thêm Building (Farm/Mine/
 // Smelter...), lưu buildings: BuildingInstance[] (xem
 // core/building/*). Save cũ (version <7) KHÔNG tương thích, không
@@ -64,9 +64,9 @@ export interface FormationStackSave {
 // Trận/Yểm Phù chuyển từ EquipmentInstance sang EquipmentSlotState
 // (gắn theo SLOT, không theo item cụ thể — xem core/equipment/
 // EquipmentSlotState.ts), lưu equipmentSlots: EquipmentSlotState[].
-// EquipmentInstance trong save không còn field enhanceLevel. Save cũ
-// (version <8) KHÔNG tương thích, không viết migration — cùng lý do các
-// version trước.
+// EquipmentInstance in saves no longer has the enhanceLevel field. Old
+// saves (version <8) are INCOMPATIBLE, no migration written - same
+// reason as previous versions.
 // version 9: Core Loop Foundation checklist (Mục AFFIX/RARITY) —
 // EquipmentInstance đổi `substats: StatModifier[]` thành
 // `affixes: RolledAffix[]` (xem core/equipment/RolledAffix.ts) + thêm
@@ -94,8 +94,9 @@ export interface FormationStackSave {
 // core/equipment/EquipmentSystem.ts's forge()/refine()). Equipment
 // template (đăng ký lúc bootstrap, không nằm trong save) mất
 // `fixedAffixes`, thêm `forgeCost`.
-// version 16: Thám Hiểm rework — save cũ (version <16) KHÔNG tương
-// thích, không viết migration — cùng lý do các version trước.
+// version 16: Tham Hiem rework - old saves (version <16) are
+// INCOMPATIBLE, no migration written - same reason as previous
+// versions.
 // version 17: Naming-principles pass ("nguyen li dat ten") —
 // equipment: EquipmentInstance[]'s `rarity` đổi hẳn value set — 5 bậc
 // Ngũ Phẩm mới (hoang_pham/huyen_pham/dia_pham/thien_pham/tien_pham,

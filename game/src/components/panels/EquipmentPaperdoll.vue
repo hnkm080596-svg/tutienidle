@@ -124,7 +124,14 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
     // tooltip optional), slot vẫn hiển thị, không chết panel.
     const template = instance ? gameManager.equipmentOps.getEquipmentTemplate(instance.itemId) : undefined
 
-    result[entry.slot] = instance && template
+    // G1 (Mission G Task 37) - the tooltip contract requires the
+    // authoritative range quote; a miss = malformed item data, so the
+    // tooltip drops (same "registry miss -> no tooltip" rule above).
+    const mainStatRangeQuote = instance && template
+      ? gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry)
+      : undefined
+
+    result[entry.slot] = instance && template && mainStatRangeQuote
       ? buildEquipmentTooltip(
           instance,
           template,
@@ -135,7 +142,7 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
           // paperdoll renders only EQUIPPED items - an equipped item IS
           // the compare counterpart, never a candidate for one.
           undefined,
-          gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
+          mainStatRangeQuote,
         )
       : undefined
   }

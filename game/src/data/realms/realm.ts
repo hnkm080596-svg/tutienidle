@@ -5,16 +5,16 @@ export interface RealmData {
 
   // Minutes needed for level 1 -> 2. Later levels add one minute each.
   // Extended levels 13-18 never affect the next realm's base time.
-  // Mutually exclusive with realmDurationMultiplier (XOR contract —
+  // Mutually exclusive with realmDurationMultiplier (XOR contract -
   // pinned by CultivationSystem.test.ts).
   baseCultivationMinutes?: number
 
-  // Rework "100% mỗi tiểu cảnh giới" (2026-08-16) — bội số của
-  // BASE_CULTIVATION_UNIT_SECONDS (x, xem realmSystem.ts): tổng thời
-  // gian tu luyện MỤC TIÊU (giả định tốc độ tu luyện CƠ BẢN, không
-  // cộng bonus) để đi hết toàn bộ cảnh giới này, chia không đều cho
-  // từng tầng theo đường cong tăng dần. x = 1 ngày -> Luyện Khí =
-  // 10 ngày, mỗi đại cảnh giới sau x3 cảnh giới trước.
+  // Rework "100% per minor realm" (2026-08-16) - a multiple of
+  // BASE_CULTIVATION_UNIT_SECONDS (x, see realmSystem.ts): total TARGET
+  // cultivation time (assuming BASIC cultivation speed, no bonuses) to
+  // cross this whole realm, split unevenly per tier on an increasing
+  // curve. x = 1 day -> Luyen Khi = 10 days, each later major realm x3
+  // the previous.
   realmDurationMultiplier?: number
 
   // Trần tổng bonus vĩnh viễn (cộng dồn qua các pill permanent_stat
@@ -31,14 +31,15 @@ export const REALMS: RealmData[] = [
   // không được dùng maxLevel/gate của chúng để suy ra rằng người chơi hiện có
   // thể tiến xa hơn Trúc Cơ. Khi mở rộng scope phải thiết kế lại gate đại cảnh
   // giới, thời gian tu luyện, nội dung và test progression cùng lúc.
-  // Phàm Nhân (2026-08-16) — đại cảnh giới THẤP NHẤT, đứng TRƯỚC
-  // qi_refining trong mảng này (getRealmIndex()/getGlobalCultivationLevel()
-  // đều thuần index-driven, tự động đúng khi chèn ở đầu, không cần sửa
-  // realmSystem.ts). Không có nghi lễ Đột Phá riêng như Trúc Cơ — "nghi
-  // lễ" của Phàm Nhân -> Luyện Khí CHÍNH LÀ chọn Pháp Tu/Kiếm Tu (xem
+  // Pham Nhan (2026-08-16) - the LOWEST major realm, placed BEFORE
+  // qi_refining in this array (getRealmIndex()/getGlobalCultivationLevel()
+  // are purely index-driven, automatically correct when prepended - no
+  // realmSystem.ts edits needed). No separate Breakthrough rite like Truc Co - the
+  // "rite" for Pham Nhan -> Luyen Khi IS choosing Phap Tu/Kiem Tu (see
   // GameManager.chooseCultivationPath(), CultivationSystem.breakthrough()).
-  // Là tutorial nên dùng nhịp phút/tầng cố định (baseCultivationMinutes),
-  // không theo ngân sách thời gian x/10x/30x... của các cảnh giới sau.
+  // Being the tutorial, it uses a fixed minutes-per-tier cadence
+  // (baseCultivationMinutes), not the x/10x/30x... time budgets of later
+  // realms.
   {
     id: 'mortal',
     name: 'Phàm Nhân',

@@ -4,8 +4,8 @@
 // (isHeroGate/collectAffected/findBattleEnemy) were deleted in Mission G.
 // Do not extend the Battle-typed API; new turn-side targeting belongs in
 // battle/turn/.
-// Combat Grid Rework — chọn primary target + vùng ảnh hưởng hoàn toàn
-// theo đơn vị GRID (cột/hàng). Pure functions, không state.
+// Combat Grid Rework - primary target + affected area are chosen
+// entirely in GRID units (column/row). Pure functions, no state.
 //
 // stat-system-reimagined Task 3 (D16): the range helpers
 // (canPlayerReachTarget / canEnemyReachGate / selectPrimaryTargetForEnemy
@@ -87,7 +87,7 @@ export function areaFor(anchorRow: LaneIndex, anchorColumn: number, targeting: A
         targeting.columnRadius ?? 0,
       )
     case 'cross':
-      // No single rectangle describes a cross — the turn engine filters
+      // No single rectangle describes a cross - the turn engine filters
       // per-cell via isCellInShape() instead of using this bounding area.
       return null
     case 'line':

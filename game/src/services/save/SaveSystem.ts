@@ -191,11 +191,11 @@ export { CURRENT_SAVE_VERSION }
 //   quang_sat→mortal_ore_common_raw, thanh_linh_moc→mortal_wood_common_raw,
 //   huyen_thiet→mortal_ore_common_processed, phu_chi→mortal_wood_common_processed
 //   (gộp amount nếu trùng id đích).
-// - pills cũ map theo effect gần nhất: healing→pill_regen_mortal,
-//   cultivation→pill_cultivation_mortal; permanent/buff KHÔNG đổi thành
-//   +1 Main Stat (sai bản chất — plan §9) mà hoàn nguyên Linh Thạch
-//   100/stack vào player.spiritStone.
-// Migration IDEMPOTENT: chạy 2 lần không nhân đôi hoàn trả.
+// - legacy pills map to the nearest effect: healing->pill_regen_mortal,
+//   cultivation->pill_cultivation_mortal; permanent/buff do NOT become
+//   +1 Main Stat (wrong semantics - plan sec.9) but refund 100 Linh
+//   Thach/stack into player.spiritStone.
+// Migration IDEMPOTENT: running twice does not double the refund.
 // version 44 (2026-08-25, resource-professions-rework plan §10 — rework
 // vòng kinh tế "Địa Giới → Lâm/Quáng/Động Thiên → Bag"):
 // - materials: map cặp raw/processed cũ về material TRỰC TIẾP mới theo
@@ -203,10 +203,10 @@ export { CURRENT_SAVE_VERSION }
 //   wood_*_raw/processed → `<realm>_wood_decade`; ore_*_raw/processed →
 //   `<realm>_ore_decade` (gp123 6E C2: trục tuổi thống nhất); herb_*_raw/processed → thảo Động Thiên decade
 //   đầu tiên của realm tương ứng (không xác định được đan phương cũ).
-// - Phù/Trận legacy KHAI TỬ (§10.1): talismans/formations trong Bag +
-//   socket trên slot quy đổi thành Linh Thạch theo bảng compensation
-//   (common 200 / uncommon 500 / rare 1200); xoá toàn bộ state socket.
-//   Affix đã roll trên equipment GIỮ NGUYÊN (§10.1.5).
+// - Phu/Tran legacy RETIRED (sec.10.1): talismans/formations in the Bag
+//   + socket state on slots convert to Linh Thach per the compensation
+//   table (common 200 / uncommon 500 / rare 1200); all socket state is
+//   dropped. Rolled affixes on equipment are KEPT (sec.10.1.5).
 // - Buildings trung gian bị loại bỏ (herb_garden/smelter/
 //   artisan_workshop/formation_altar/talisman_institute): hoàn trả Linh
 //   Thạch theo bảng cố định /level; strip gardenPlots/processingJobs.

@@ -4,7 +4,7 @@ import { rankTargetsByStrategy } from './CombatAiStrategy'
 import type { Battle } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-// Combat Grid Rework — selection theo đơn vị GRID.
+// Combat Grid Rework - selection in GRID units.
 // Task 3 (D16): the attackRange-gated helpers retired with the stat —
 // selectRankedTarget ranks every alive enemy, no reach gate remains.
 function entity(id: string, x: number, row: number, hp = 100): CombatEntity {

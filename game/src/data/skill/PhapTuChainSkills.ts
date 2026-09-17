@@ -240,10 +240,10 @@ export const PHAP_TU_SKILLS: Skill[] = [
     execution: { kind: 'cast_time', castTime: 1.2 },
     target: 'self',
     effects: [{ type: 'buff', buffId: 'thanh_tuyen' }],
-    // Biến thể C (§2.2): Tuyền = buff mạnh hơn (+12 regen, 8s — duration
-    // override trên effect, turn engine đọc
-    // effect.duration ?? definition.duration); Băng Giáp = đổi sang
-    // ward phòng thủ.
+    // Variant C (sec.2.2): Tuyen = stronger buff (+12 regen, 8s -
+    // duration overridden on the effect; the turn engine reads
+    // effect.duration ?? definition.duration); Bang Giap = swapped to a
+    // defensive ward.
     specializations: [
       {
         id: 'duong_linh_tuyen',

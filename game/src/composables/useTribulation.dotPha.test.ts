@@ -311,7 +311,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
   })
 
   it('target realm resolve qua getNextRealm — mortal→qi_refining, qi_refining→foundation_establishment', () => {
-    // Mission G Task 35 — pin the single-owner swap: the breakthrough
+    // Mission G Task 35 - pin the single-owner swap: the breakthrough
     // target must come from the realm ladder, not a local map.
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)

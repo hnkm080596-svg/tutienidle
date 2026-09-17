@@ -6,7 +6,7 @@ import {
 } from './ProfessionMaterial'
 import { materials } from '../../data/materials/materials'
 
-// Mission G Task 32 — one constructor owns the `<realm>_wood|ore_<age>`
+// Mission G Task 32 - one constructor owns the `<realm>_wood|ore_<age>`
 // and `<herbId>_<realm>` / `<herbBase>_<age>` id grammars; every producer
 // routes through it.
 describe('buildProfessionMaterialId', () => {

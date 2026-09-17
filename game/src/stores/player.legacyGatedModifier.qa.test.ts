@@ -4,10 +4,10 @@ import { usePlayerStore } from './player'
 import { createBaseStats } from '../core/stats/StatBlock'
 import type { GameSave } from '../services/save/SaveSystem'
 
-// QA evidence — stat-system-reimagined domain gate + Mission G dev-stage
+// QA evidence - stat-system-reimagined domain gate + Mission G dev-stage
 // rule: a save carrying a legacy stat key (e.g. 'manaRegenPerSecond',
 // 'speedMultiplier') or a domain-less modifier on a now-gated stat is NOT
-// backfilled — the modifier is dropped at restore so it can never sit in
+// backfilled - the modifier is dropped at restore so it can never sit in
 // state as an always-rejected applyDomainGate zombie. Oracle: restore
 // never throws, the modifier is gone, the stat stays at baseline; a
 // correctly-domained modifier on the same stat survives.

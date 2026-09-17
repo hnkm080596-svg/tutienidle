@@ -281,9 +281,10 @@ gameManager.catalogOps.registerZones(zones)
 gameManager.catalogOps.registerEquipment(equipment)
 gameManager.catalogOps.registerAffixes(affixes)
 gameManager.catalogOps.registerPills(pills)
-// Buff KHÔNG phải Phù/Trận legacy — turn engine resolve effect
-// 'buff'/'debuff' qua buffRegistry.get() (THROW khi thiếu); bỏ dòng
-// này làm registry rỗng và crash giữa trận (fix review 2026-08-26).
+// Buffs are NOT the legacy Phu/Tran types - the turn engine resolves
+// 'buff'/'debuff' effects via buffRegistry.get() (THROWS on miss);
+// dropping this line leaves the registry empty and crashes mid-battle
+// (review fix 2026-08-26).
 // Skill buff-carrying Kiếm Tu cũ đã chuyển node (spec 2026-08-29),
 // registry vẫn cần cho buff hệ khác (Thổ Giáp/Độ Kiếp...).
 gameManager.catalogOps.registerBuffs(buffs)
@@ -446,11 +447,11 @@ function tick() {
       )
     }
 
-    // Đang trong trận thì không cộng tu vi — 2 việc loại trừ nhau.
-    // Tầm Bảo (gather, trước là "Thu Thập") không bị ảnh hưởng: nó tự
-    // tính tiến độ qua startedAt/collect(), không phụ thuộc vào nhánh
-    // này. Tu vi vẫn tăng cả trong combat; event cultivation_changed chỉ
-    // điều khiển pose hình ảnh.
+    // No cultivation gain while in a battle - the two are mutually
+    // exclusive. Tam Bao (gather, formerly "Thu Thap") is unaffected:
+    // it tracks progress via startedAt/collect() and does not depend on
+    // this branch. Tu vi still increases during combat; the
+    // cultivation_changed event only drives the visual pose.
     const battleBeforeAuto = gameManager.getTurnBattle()
     const isFighting = battleBeforeAuto !== null && isBattleInProgress(battleBeforeAuto.state)
 
@@ -519,9 +520,9 @@ function tick() {
 }
 
 async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
-  // Entry flow: guest auth, đăng nhập, tạo nhân vật — mọi đường vào game
-  // đều đi qua đây để GameRoot hiện. Idempotent: gọi lại khi đã boot là
-  // no-op.
+  // Entry flow: guest auth, login, character creation - every route
+  // into the game funnels through here so GameRoot can mount.
+  // Idempotent: calling again once booted is a no-op.
   // Remediation Task 5 — bootInFlight guard trong composable: boot thứ 2
   // khi boot đầu còn pending bị skip; guard reset khi fail để retry chạy
   // được. Phần dưới chỉ xử lý UI hiển thị theo outcome.
@@ -536,8 +537,8 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
         gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
       }
       // Phap Tu Reimagined Task 2 — mortal-path actives (idempotent).
-      // huy_quyen (The Tu Reimagined §2.3) shares this seam — learned,
-      // not equipped — so the ung_the offer gate reads it on old saves.
+      // huy_quyen (The Tu Reimagined sec.2.3) shares this seam - learned,
+      // not equipped - so the ung_the offer gate reads it on old saves.
       for (const mortalSkillId of ['linh_bao', 'huy_quyen']) {
         if (!gameManager.skillManager.has(mortalSkillId)) {
           gameManager.progressionOps.learnSkill(mortalSkillId)
@@ -716,8 +717,8 @@ onUnmounted(() => {
   </RouteMount>
 
   <ErrorBoundary v-else>
-    <!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot (intro, hoặc khi
-         transition vào game chưa entered). -->
+    <!-- LoadingScreen shows ONLY during boot (intro, or while the
+         transition into the game has not entered). -->
     <LoadingScreen v-if="!isBooted" />
 
     <!-- GameRoot chỉ hiện khi boot xong -->

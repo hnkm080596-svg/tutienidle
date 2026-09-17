@@ -40,7 +40,7 @@ function makeManager(): GameManager {
   manager.catalogOps.registerAffixes(affixes)
   manager.catalogOps.registerBuildings(buildings)
   // The fixture entries double as their own registered templates so the
-  // save payloads below are not orphans — restore drops entries whose id
+  // save payloads below are not orphans - restore drops entries whose id
   // has no registered template (dev-stage rule, Mission G).
   manager.catalogOps.registerSkillTemplates([...SKILLS, SAVED_SKILL])
   manager.catalogOps.registerTechniqueTemplates([...TECHNIQUES, SAVED_TECHNIQUE])

@@ -34,10 +34,11 @@ export interface StageWaveSystemDeps {
 }
 
 /**
- * Vòng đời wave của 1 Màn (2026-08-24, tách khỏi GameManager):
- * spawn theo nhịp (SONG SONG, không đợi quái cũ chết), spawn ngay nếu
- * sân trống, set 'victory' khi đã spawn đủ + hết quái sống, auto-repeat
- * cycle khi bật chế độ đánh liên tục.
+ * Wave lifecycle of one stage (2026-08-24, split from GameManager):
+ * spawns on cadence (IN PARALLEL, without waiting for prior enemies to
+ * die), spawns immediately if the field is empty, sets 'victory' when
+ * all waves spawned + no enemies alive, auto-repeats the cycle when
+ * continuous-fight mode is on.
  */
 export class StageWaveSystem {
   private activeStagePlayer?: PlayerData

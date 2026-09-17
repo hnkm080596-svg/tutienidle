@@ -71,7 +71,7 @@ function mountSpringPanel(realmId = 'qi_refining') {
   const playerStore = usePlayerStore(pinia)
   playerStore.realmId = realmId
   // Production wiring (App.vue): the domain quote reads the ACTIVE player,
-  // not the Pinia store object — mirror that or the realm gate is skipped.
+  // not the Pinia store object - mirror that or the realm gate is skipped.
   gameManager.setActivePlayer(playerStore.$state)
   app.mount(container)
 
@@ -123,7 +123,7 @@ describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () 
   })
 
   it('header mirrors the buildingOps quote — realm-gated next level disables upgrade and names the required realm', async () => {
-    // Mission G Task 36 — mortal (tier 1) cannot take a level-2 building;
+    // Mission G Task 36 - mortal (tier 1) cannot take a level-2 building;
     // the disabled state and label must come from quoteBuildingUpgrade,
     // not a panel-side formula.
     const mounted = mountSpringPanel('mortal')

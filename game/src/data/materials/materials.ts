@@ -90,9 +90,9 @@ const legacyMaterials: Material[] = [
     stackLimit: 999,
   },
 
-  // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
-  // §6) — đá nâng phẩm, rơi từ quái Trúc Cơ trở lên qua dòng weighted
-  // trong StageDropTables (không có bảng thấp hơn nào liệt kê nó).
+  // ban_menh_phap_bao (2026-08-27, foundation-artifact-system-plan.md
+  // sec.6) - grade-upgrading stone, drops from Foundation+ enemies via
+  // the weighted path in StageDropTables (no lower table lists it).
   {
     id: 'doan_bao_thach',
     name: 'Đoán Bảo Thạch',

@@ -67,6 +67,12 @@ export function useEquippedRows() {
       // getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts).
       const template = gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)
 
+      // G1 (Mission G Task 37) - the tooltip contract requires the
+      // authoritative range quote; a miss = malformed item data.
+      const mainStatRangeQuote = template
+        ? gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry)
+        : undefined
+
       return {
         instance,
 
@@ -93,7 +99,9 @@ export function useEquippedRows() {
 
         // buildEquipmentTooltip đòi template thật — registry miss thì
         // KHÔNG có tooltip (SlotView tooltip optional), không chết panel.
-        tooltip: template
+        // G1 (Task 37): the quote is required too - a miss means malformed
+        // item data, same drop rule.
+        tooltip: template && mainStatRangeQuote
           ? buildEquipmentTooltip(
               instance,
               template,
@@ -104,7 +112,7 @@ export function useEquippedRows() {
               // rows ARE the equipped items - an equipped item is the
               // compare counterpart, never a candidate for one.
               undefined,
-              gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
+              mainStatRangeQuote,
             )
           : undefined,
 

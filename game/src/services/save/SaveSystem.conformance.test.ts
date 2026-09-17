@@ -24,8 +24,8 @@ import type { Technique } from '../../core/technique/Technique'
 
 const NOW = 1_725_160_000_000
 
-// Techniques/skills round-trip only when a template is registered —
-// restore drops orphan entries (dev-stage rule, Mission G) — so the
+// Techniques/skills round-trip only when a template is registered -
+// restore drops orphan entries (dev-stage rule, Mission G) - so the
 // fixtures double as their own registered templates.
 const CONF_TECHNIQUE: Technique = {
   id: 'conf_tech',
@@ -120,7 +120,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     },
   ]
 
-  // Techniques/skills registered as templates above — the entries
+  // Techniques/skills registered as templates above - the entries
   // round-trip through restore's template re-derive unchanged.
   manager.techniqueManager.restore([structuredClone(CONF_TECHNIQUE)])
   manager.skillManager.restore([structuredClone(CONF_SKILL)])

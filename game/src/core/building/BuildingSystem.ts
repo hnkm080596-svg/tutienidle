@@ -217,7 +217,7 @@ export class BuildingSystem {
   }
 
   /**
-   * Authoritative upgrade quote — the SAME rules upgrade() enforces
+   * Authoritative upgrade quote - the SAME rules upgrade() enforces
    * (cost row, max level, realm tier gate, material affordability), read
    * side only. Panel header state consumes this; upgrade() re-checks.
    */

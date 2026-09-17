@@ -14,7 +14,7 @@ vi.mock('../talent/TalentEffects', async (importOriginal) => {
   }
 })
 
-// Single owner of the threshold accumulator — online cultivate() and
+// Single owner of the threshold accumulator - online cultivate() and
 // offline restoreFromSave() both delegate here (Mission G Task 34).
 describe('accrueCultivationInsight', () => {
   afterEach(() => {

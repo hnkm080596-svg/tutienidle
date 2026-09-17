@@ -52,13 +52,14 @@ export function calculateBaseDamage(
 }
 
 /**
- * R3 re-audit (AR-03 gap) — mọi field scaling authored trên SkillEffect
- * (attributeScaling/manaScalingRatio) từng chỉ
- * được cộng vào multiplier bởi executor legacy đã xoá (engine cũ,
- * KHÔNG phải TurnBattleSystem đang active) — nghĩa là mọi skill Pháp Tu
- * cast qua turn engine mất trắng phần scaling này. Một helper
- * DÙNG CHUNG duy nhất (đọc bởi CombatSystem.resolveActionHit()) để
- * ActionDamageInfo.scaling áp đúng công thức, không lệch giữa 2 pipeline.
+ * R3 re-audit (AR-03 gap) - every scaling field authored on SkillEffect
+ * (attributeScaling/manaScalingRatio) used to be added into the
+ * multiplier only by the removed legacy executor (the old engine, NOT
+ * the active TurnBattleSystem) - meaning every Phap Tu skill cast
+ * through the turn engine lost this scaling entirely. The SINGLE
+ * shared helper (read by CombatSystem.resolveActionHit()) applies the
+ * formula to ActionDamageInfo.scaling - no divergence between the two
+ * pipelines.
  */
 export interface DamageScalingConfig {
   attributeScaling?: { attributes: StatType[]; ratioPerPoint: number }[]
@@ -71,8 +72,9 @@ export function calculateScalingBonus(source: CombatEntity, scaling: DamageScali
     return 0
   }
 
-  // Guard attributes rỗng — Math.max() trên mảng rỗng = -Infinity, kéo
-  // toàn bộ bonus về -Infinity (parity với executor legacy đã xoá).
+  // Guard against an empty attributes array - Math.max() over an empty
+  // array = -Infinity, dragging the whole bonus to -Infinity (parity
+  // with the removed legacy executor).
   const attributeBonus = (scaling.attributeScaling ?? []).reduce(
     (sum, entry) =>
       sum + (entry.attributes.length === 0 ? 0 : entry.ratioPerPoint * Math.max(...entry.attributes.map(stat => source.stats[stat]))),
