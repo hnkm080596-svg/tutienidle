@@ -9,12 +9,20 @@ import {
   hasBackup,
   getRawSave,
   importSaveRaw,
-  SAVE_KEY,
-  SAVE_REVISION_KEY,
+
   CURRENT_SAVE_VERSION,
   type GameSave,
 } from './SaveSystem'
+import { resolveBackupKey, resolveImportHandoffKey, resolveRevisionKey, resolveSaveKey } from './saveKeys'
 import { createDefaultPlayer } from '../../core/player/Player'
+
+// Guest-slot keys (no account bound in this file).
+const SAVE_KEY = resolveSaveKey()
+const SAVE_REVISION_KEY = resolveRevisionKey()
+// Captured at module load: calling a resolver INSIDE a Storage-method mock
+// recurses (resolvers read sessionStorage → the same mocked prototype).
+const BACKUP_KEY = resolveBackupKey()
+const IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY = resolveImportHandoffKey()
 
 // Fixture tối thiểu hợp lệ — writeGameSave không validate shape (việc
 // của loadGame/importSaveRaw), chỉ cần object JSON-stringify được.
@@ -95,7 +103,7 @@ describe('recovery storage ops — exception-safe (Mission A5)', () => {
 
   it('restoreBackup trả false — KHÔNG throw — khi setItem throw', () => {
     // BACKUP_KEY là private constant trong SaveSystem — literal khớp.
-    localStorage.setItem('tien-hiep-idle-save-backup', '{"version":1}')
+    localStorage.setItem(BACKUP_KEY, '{"version":1}')
 
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('security')
@@ -150,7 +158,7 @@ describe('recovery storage ops — exception-safe (Mission A5)', () => {
       key: string,
       value: string,
     ) {
-      if (key === 'tien-hiep-idle-save-backup') {
+      if (key === BACKUP_KEY) {
         throw new DOMException('quota exceeded', 'QuotaExceededError')
       }
 
@@ -182,7 +190,7 @@ describe('Mission A review — storage failure matrix (getItem/removeItem)', () 
 
     const realGetItem = Storage.prototype.getItem
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(function (this: Storage, key: string) {
-      if (key === 'tien-hiep-idle-import-discarded-equipment-count') {
+      if (key === IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY) {
         throw new DOMException('denied', 'SecurityError')
       }
       return realGetItem.call(this, key)
@@ -195,7 +203,7 @@ describe('Mission A review — storage failure matrix (getItem/removeItem)', () 
 
   it('deleteSave trả false khi removeItem(SAVE_KEY) throw nhưng vẫn xoá các key còn lại', () => {
     localStorage.setItem(SAVE_KEY, '{"version":1}')
-    localStorage.setItem('tien-hiep-idle-import-discarded-equipment-count', '{}')
+    localStorage.setItem(IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY, '{}')
     localStorage.setItem(SAVE_REVISION_KEY, '3')
 
     const realRemoveItem = Storage.prototype.removeItem
@@ -210,7 +218,7 @@ describe('Mission A review — storage failure matrix (getItem/removeItem)', () 
     // Save còn nguyên — caller KHÔNG được reload.
     expect(localStorage.getItem(SAVE_KEY)).not.toBeNull()
     // Partial-delete tránh tối đa: handoff + revision vẫn được dọn.
-    expect(localStorage.getItem('tien-hiep-idle-import-discarded-equipment-count')).toBeNull()
+    expect(localStorage.getItem(IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY)).toBeNull()
     expect(localStorage.getItem(SAVE_REVISION_KEY)).toBeNull()
   })
 
@@ -222,7 +230,7 @@ describe('Mission A review — storage failure matrix (getItem/removeItem)', () 
   })
 
   it('restoreBackup trả false và SAVE_KEY nguyên vẹn khi removeItem(handoff) throw', () => {
-    localStorage.setItem('tien-hiep-idle-save-backup', '{"version":1}')
+    localStorage.setItem(BACKUP_KEY, '{"version":1}')
     localStorage.setItem(SAVE_KEY, '{"version":2,"keep":true}')
 
     vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {

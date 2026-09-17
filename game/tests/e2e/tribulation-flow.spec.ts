@@ -9,6 +9,7 @@ import {
   openSettingsAndSave,
   reauthAndEnterHome,
   waitForPresentationIdle,
+  GUEST_SAVE_KEY,
 } from './helpers'
 
 /**
@@ -38,7 +39,7 @@ import {
  * the interactive session is held, so the poll retries until the
  * coordinator's release lands (phase 'idle' implies released).
  */
-const SAVE_KEY = 'tien-hiep-idle-save'
+const SAVE_KEY = GUEST_SAVE_KEY
 
 // CORE_REALM_LEVEL (src/core/realm/realmSystem.ts) — minimum tier for the
 // Quan Khi major breakthrough. The minor-tier ladder keeps working above
@@ -74,7 +75,7 @@ interface GameManagerHandle {
 function readSave(page: import('@playwright/test').Page): Promise<SaveShape | null> {
   return page.evaluate(() => {
     // String literal — module constants do not serialize into evaluate.
-    const raw = localStorage.getItem('tien-hiep-idle-save')
+    const raw = localStorage.getItem('tien-hiep-idle-save:guest')
 
     return raw ? (JSON.parse(raw) as SaveShape) : null
   })

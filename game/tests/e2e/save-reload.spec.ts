@@ -6,13 +6,14 @@ import {
   enterHome,
   openSettingsAndSave,
   reauthAndEnterHome,
+  GUEST_SAVE_KEY,
 } from './helpers'
 
 /**
  * E2E lifecycle spec 3/3 (tech-debt-test-coverage-plan.md §3.3) — chơi
  * 1 đoạn, lưu tiến trình (nút "Lưu Tiến Trình" trong Cài Đặt — cùng
  * đường player.save() với autosave 15s), reload trang, nhân vật +
- * Linh Thạch giữ nguyên qua localStorage save 'tien-hiep-idle-save'.
+ * Linh Thạch giữ nguyên qua localStorage save 'tien-hiep-idle-save:guest'.
  *
  * Remediation Task 9 (2026-09-05) — DETERMINISTIC resource setup:
  *
@@ -41,7 +42,7 @@ import {
  */
 const SPIRIT_STONE_ID = 'spirit_stone_ha_pham'
 const SEEDED_AMOUNT = 12_345
-const SAVE_KEY = 'tien-hiep-idle-save'
+const SAVE_KEY = GUEST_SAVE_KEY
 
 interface SaveShape {
   version: number
@@ -52,7 +53,7 @@ interface SaveShape {
 function readSave(page: import('@playwright/test').Page): Promise<SaveShape | null> {
   return page.evaluate(() => {
     // String literal — hằng số module không serialize qua evaluate context.
-    const raw = localStorage.getItem('tien-hiep-idle-save')
+    const raw = localStorage.getItem('tien-hiep-idle-save:guest')
 
     return raw ? (JSON.parse(raw) as SaveShape) : null
   })

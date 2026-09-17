@@ -8,16 +8,23 @@ import {
   getRawSave,
   importSaveRaw,
   writeGameSave,
-  SAVE_REVISION_KEY,
   CURRENT_SAVE_VERSION,
   type GameSave,
 } from './SaveSystem'
+import {
+  resolveBackupKey,
+  resolveImportHandoffKey,
+  resolveRevisionKey,
+  resolveSaveKey,
+  setSaveAccountId,
+} from './saveKeys'
 import { createDefaultPlayer } from '../../core/player/Player'
 
-const SAVE_KEY = 'tien-hiep-idle-save'
-const BACKUP_KEY = 'tien-hiep-idle-save-backup'
-const IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY =
-  'tien-hiep-idle-import-discarded-equipment-count'
+// Guest-slot keys (no account bound — beforeEach re-arms the resolver).
+const SAVE_KEY = resolveSaveKey()
+const BACKUP_KEY = resolveBackupKey()
+const SAVE_REVISION_KEY = resolveRevisionKey()
+const IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY = resolveImportHandoffKey()
 
 // vitest.config chạy environment: 'node' — không có localStorage thật,
 // polyfill in-memory tối thiểu đủ cho SaveSystem (chỉ dùng getItem/
@@ -52,6 +59,7 @@ class MemoryStorage implements Storage {
 
 beforeEach(() => {
   vi.stubGlobal('localStorage', new MemoryStorage())
+  setSaveAccountId(null)
 })
 
 // Fixture hợp lệ đầy đủ theo shape GameSave hiện hành — từ
@@ -84,6 +92,22 @@ function validSave(): Record<string, unknown> {
 }
 
 const VALID_RAW = JSON.stringify(validSave())
+
+describe('per-account save slots (spec F8)', () => {
+  it('two accounts hold independent save slots; guest sees neither (spec F8)', () => {
+    setSaveAccountId('acct-a')
+    writeGameSave(validGameSave('A'))
+    setSaveAccountId('acct-b')
+    expect(loadGame().status).toBe('empty')
+    writeGameSave(validGameSave('B'))
+    setSaveAccountId(null)
+    expect(loadGame().status).toBe('empty') // guest slot untouched
+    setSaveAccountId('acct-a')
+    const loaded = loadGame()
+    expect(loaded.status).toBe('ok')
+    if (loaded.status === 'ok') expect(loaded.save.player.name).toBe('A')
+  })
+})
 
 describe('loadGame — phân biệt empty/ok/incompatible/corrupted (Phase 5, mục XVI)', () => {
   it('empty khi chưa từng có save', () => {

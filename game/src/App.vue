@@ -35,6 +35,8 @@ import { useOfflineSummaryStore } from './stores/offlineSummary'
 import { useSaveIssueStore } from './stores/saveIssue'
 import { installAutomationFlagsPersistence } from './stores/uiFlagsPersistence'
 import { useAppLifecycle, type BootOutcome } from './composables/useAppLifecycle'
+import { accountIdForSession, setSaveAccountId } from './services/save/saveKeys'
+import type { AuthSession } from './services/auth/AuthService'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
 import PresentationTransitionOverlay from './components/game/PresentationTransitionOverlay.vue'
@@ -631,7 +633,10 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
   return outcome
 }
 
-function onAuthenticated() {
+function onAuthenticated(session: AuthSession) {
+  // Spec F8 — bind the save slot BEFORE boot loads: every storage path
+  // resolves through resolveSaveKey() from this point on.
+  setSaveAccountId(accountIdForSession(session))
   void bootGame(false)
 }
 

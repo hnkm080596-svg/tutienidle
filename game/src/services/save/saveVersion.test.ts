@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadGame, CURRENT_SAVE_VERSION, type GameSave } from './SaveSystem'
+import { resolveSaveKey } from './saveKeys'
 import { createDefaultPlayer } from '../../core/player/Player'
 
-const SAVE_KEY = 'tien-hiep-idle-save'
+const SAVE_KEY = resolveSaveKey()
 
 // Phap Tu Reimagined Task 15 — the rework deleted PlayerData fields
 // (unlockedElements/equippedElements/skillStats consumers) and whole

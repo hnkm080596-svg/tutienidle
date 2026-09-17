@@ -5,6 +5,7 @@ import {
   enterHome,
   openSettingsAndSave,
   reauthAndEnterHome,
+  GUEST_SAVE_KEY,
 } from './helpers'
 
 /**
@@ -37,7 +38,7 @@ import {
  *
  * The webServer (DEV_PORT) is started/killed by playwright.config.ts.
  */
-const SAVE_KEY = 'tien-hiep-idle-save'
+const SAVE_KEY = GUEST_SAVE_KEY
 
 // CompanionInstance (data/companion/Companions.ts) entry identical to what
 // createCompanionInstance() produces on a real pull: mortal realmLevel 1,
@@ -68,7 +69,7 @@ interface SaveShape {
 function readSave(page: Page): Promise<SaveShape | null> {
   return page.evaluate(() => {
     // String literal - module constants do not serialize into evaluate.
-    const raw = localStorage.getItem('tien-hiep-idle-save')
+    const raw = localStorage.getItem('tien-hiep-idle-save:guest')
 
     return raw ? (JSON.parse(raw) as SaveShape) : null
   })
