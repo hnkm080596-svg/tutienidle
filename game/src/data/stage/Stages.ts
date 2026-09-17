@@ -142,7 +142,7 @@ const FOUNDATION_CHAPTER: ChapterConfig = {
     { common: 'foundation_rock_tortoise', elite: 'foundation_mud_golem' },
     { common: 'foundation_ferocious_rock_tortoise', elite: 'foundation_ferocious_mud_golem' },
     { common: 'foundation_metal_beetle_swarm', elite: 'foundation_blade_hawk_king' },
-    { common: 'foundation_metal_beetle_swarm', elite: 'foundation_ferocious_blade_hawk_king' },
+    { common: 'foundation_ferocious_metal_beetle_swarm', elite: 'foundation_ferocious_blade_hawk_king' },
     { common: 'foundation_mist_shark', elite: 'foundation_flood_dragon_whelp' },
     { common: 'foundation_ferocious_mist_shark', elite: 'foundation_ferocious_flood_dragon_whelp' },
   ],
