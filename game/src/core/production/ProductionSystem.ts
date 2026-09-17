@@ -30,6 +30,7 @@ import {
   rollWeightedIndex,
 } from './ProductionBalance'
 import { HERB_AGES } from './ProductionTypes'
+import { resolveTerritoryTier } from './ProductionCatalog'
 import { allocateWorkerSlots } from './WorkerAllocator'
 import { advanceWorkerLanes } from './WorkerLaneAdvance'
 import {
@@ -307,12 +308,17 @@ export class ProductionSystem {
       state.activeWorkerSlots = slotsBySite.get(state.siteId) ?? 0
     }
 
+    // Mission D (spec D2) — resolve the player's realm to a supported
+    // territory tier ONCE at the boundary; every spawned lane snapshots
+    // the clamped id.
+    const collectionRealmId = resolveTerritoryTier(this.deps.territory, currentRealmId)
+
     for (const state of activeStates) {
       state.workerCycles ??= []
 
       const definition = this.getSiteDefinition(state.siteId)
 
-      const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]
+      const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[collectionRealmId]
 
       const cycleMs =
         definition && baseSeconds ? computeCycleSeconds(baseSeconds, state.level) * 1000 : 0
@@ -323,7 +329,7 @@ export class ProductionSystem {
       // emptyLaneStartMs (top-up-then-settle order preserved).
       const result = advanceWorkerLanes({
         siteId: state.siteId,
-        collectionRealmId: currentRealmId,
+        collectionRealmId,
         siteLevel: state.level,
         baseSeconds: baseSeconds ?? 0,
         cycleMs,
@@ -375,7 +381,7 @@ export class ProductionSystem {
       this.offlineDeps(),
       bag,
       registry,
-      currentRealmId,
+      resolveTerritoryTier(this.deps.territory, currentRealmId),
       nowMs,
       options,
     )
@@ -429,7 +435,10 @@ export class ProductionSystem {
       return []
     }
 
-    const profile = getTierWeightProfile(cycle.collectionRealmId, this.deps.territory.realmIds)
+    const profile = getTierWeightProfile(
+      resolveTerritoryTier(this.deps.territory, cycle.collectionRealmId),
+      this.deps.territory.realmIds,
+    )
 
     const tierIndex = rollWeightedIndex(profile, random)
 

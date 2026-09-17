@@ -276,3 +276,32 @@ export function realmSortKey(realmId: string): number {
     return Number.MAX_SAFE_INTEGER
   }
 }
+
+/**
+ * Mission D (spec D2) — realm -> territory-tier resolution at the
+ * production boundary. A player realm ABOVE the territory's top
+ * supported tier clamps DOWN to it (beta scope ends at
+ * foundation_establishment; audit T3-17 — higher realms otherwise ran
+ * on unsupported timing with a silent low-profile reward fallback, and
+ * the manual start path rejected them outright). A realm absent from
+ * the global realm order resolves to the BOTTOM tier: produce
+ * something rather than silently stall.
+ *
+ * Extension point: post-beta territories declare their own realmIds;
+ * this resolver clamps per-territory — no engine change needed.
+ */
+export function resolveTerritoryTier(territory: TerritoryDefinition, realmId: string): string {
+  if (territory.realmIds.includes(realmId)) {
+    return realmId
+  }
+
+  const realmIndex = getRealmIndex(realmId)
+
+  if (realmIndex < 0) {
+    return territory.realmIds[0]!
+  }
+
+  const supported = territory.realmIds.filter((id) => getRealmIndex(id) <= realmIndex)
+
+  return supported[supported.length - 1] ?? territory.realmIds[0]!
+}

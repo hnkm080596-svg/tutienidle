@@ -50,7 +50,11 @@ export const TIER_WEIGHT_PROFILES: Record<'low' | 'middle' | 'high', TierWeightP
   high: [20, 40, 40],
 }
 
-/** Profile trọng số lấy từ collectionRealmId đã snapshot (§5.1). */
+/** Profile trọng số lấy từ collectionRealmId đã snapshot (§5.1).
+ *  Mission D (spec D2): `-1` is unreachable for cycles written through
+ *  resolveTerritoryTier — the clause doubles as corrupt-snapshot defense
+ *  and the bottom-tier (index 0) case. Never throws: a poisoned save
+ *  must degrade, not crash the tick. */
 export function getTierWeightProfile(collectionRealmId: string, territoryRealmIds: readonly string[]): TierWeightProfile {
   const index = territoryRealmIds.indexOf(collectionRealmId)
 
