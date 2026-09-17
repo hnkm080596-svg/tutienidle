@@ -151,26 +151,6 @@ export class BattleLootSystem {
     this.player = player
   }
 
-  /**
-   * Khởi tạo session cho trận ĐỘ KIỆP (P2 fix 2026-08-24) — reset TOÀN
-   * BỘ state battle-scoped của trận Stage TRƯỚC đó rồi mới gắn player.
-   * Trước đây startTribulation() chỉ set player, để lại receiver + reward
-   * summary của trận Stage cũ:
-   * - getBattleRewardSummary() trả phần thưởng STALE (hiện tại trận Kiếp
-   *   không có panel summary nhưng API công khai vẫn đọc được).
-   * - receiver cũ còn sống: nếu sau này trận Kiếp có enemy/summon chết
-   *   thì reward/loot sẽ chảy qua receiver của phiên trước — hành vi phụ
-   *   thuộc lịch sử trận đấu.
-   * receiver = null là chủ đích: quái Kiếp (nếu có) chết KHÔNG cấp
-   * reward/loot — deterministic, không đổi balance của Độ Kiếp.
-   */
-  beginTribulation(player: PlayerData) {
-    this.receiver = null
-    this.player = player
-
-    this.summary = createEmptyBattleRewardSummary()
-  }
-
   getSummary(): BattleRewardSummary {
     return this.summary
   }
@@ -380,8 +360,8 @@ export class BattleLootSystem {
 
           // Kiếm Ý vĩnh viễn (spec 2026-08-29-kiem-the-kiem-y mục 3.1) —
           // đếm boss diệt: boss stage (isBoss) + elite/mini-boss (isElite);
-          // boss Độ Kiếp đi qua beginTribulation battle (entity isBoss
-          // do defineEnemy tribulation template). CHỈ Kiếm Tu route
+          // boss Độ Kiếp cũng là entity isBoss do defineEnemy tribulation
+          // template. CHỈ Kiếm Tu route
           // Bạt Kiếm tiêu thụ tầng, nhưng counter đếm cho MỌI path (thống
           // kê vô hại, đổi path muộn không mất tiến trình).
           if (

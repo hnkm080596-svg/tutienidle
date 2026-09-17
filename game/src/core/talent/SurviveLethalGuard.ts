@@ -4,8 +4,9 @@ import { getSurviveLethalUsesPerBattle } from './TalentEffects'
  * Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — counter lượt
  * sống sót qua đòn chí mạng, battle-scoped:
  * - beginBattle() reset lượt từ thiên phú của player mỗi trận MỚI.
- * - beginTribulation() reset về 0 — trận Độ Kiếp là nghi lễ thật, KHÔNG
- *   được phép kích hoạt (quyết định khi implement, khoá bằng test).
+ * - Trận Độ Kiếp là nghi lễ thật, KHÔNG được phép kích hoạt — contract
+ *   phía CombatSystem: tribulation gọi setSurviveLethalSession(null),
+ *   không gắn guard vào trận.
  *
  * Tiêu thụ tại CombatSystem.killIfDead() — điểm DUY NHẤT tuyên bố chết
  * (HP <= 0 → alive = false) của mọi đường damage.
@@ -15,10 +16,6 @@ export class SurviveLethalGuard {
 
   beginBattle(selectedTalentIds: readonly string[] | undefined): void {
     this.remainingUses = getSurviveLethalUsesPerBattle(selectedTalentIds)
-  }
-
-  beginTribulation(): void {
-    this.remainingUses = 0
   }
 
   getRemainingUses(): number {

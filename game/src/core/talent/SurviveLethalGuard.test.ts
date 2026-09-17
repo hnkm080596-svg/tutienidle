@@ -34,16 +34,6 @@ describe('SurviveLethalGuard — Bất Tử Thể', () => {
     expect(guard.tryConsumeUse()).toBe(true)
   })
 
-  it('beginTribulation — 0 lượt dù ngay trước đó có thiên phú (Độ Kiếp là nghi lễ thật)', () => {
-    const guard = new SurviveLethalGuard()
-
-    guard.beginBattle(['bat_tu_the'])
-    guard.beginTribulation()
-
-    expect(guard.getRemainingUses()).toBe(0)
-    expect(guard.tryConsumeUse()).toBe(false)
-  })
-
   it('id lạ trong save cũ — bỏ qua an toàn, không crash', () => {
     const guard = new SurviveLethalGuard()
 
