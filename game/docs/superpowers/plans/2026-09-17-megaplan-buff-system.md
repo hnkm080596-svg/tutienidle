@@ -30,9 +30,9 @@
 
 ## Canonical names (locked across sibling plans)
 
-**Consumes (contract plan owns):** `CombatRng`, `CombatOperationOrigin`, `CombatOperation` (ops targeting this system: `ApplyBuffOperation`, `AddBuffStacksOperation`, `RemoveBuffStacksOperation`, `ConsumeBuffStacksOperation`, `AddBuffModifierOperation`, `RemoveBuffModifierOperation`, `RefreshBuffDurationOperation`, `ExtendBuffDurationOperation`, `TriggerBuffPeriodicOperation`, `RemoveBuffOperation`), `ApplyBuffRequest`, `ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSelector`, `BuffRemovalReason`, `ElementalApplicationCommitted`, `BuffApplicationFailedEvent`, `CombatEvent`, `CombatScheduler.emitImmediate`, `BuffAuthority` port.
+**Consumes (contract plan owns):** `CombatRng`, `CombatOperationOrigin`, `CombatOperation` (ops targeting this system: `ApplyBuffOperation`, `AddBuffStacksOperation`, `RemoveBuffStacksOperation`, `ConsumeBuffStacksOperation`, `AddBuffModifierOperation`, `RemoveBuffModifierOperation`, `RefreshBuffDurationOperation`, `ExtendBuffDurationOperation`, `TriggerBuffPeriodicOperation`, `RemoveBuffOperation`), `ApplyBuffRequest`, `ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSelector` (discriminated union — contract v2), `BuffRemovalReason`, `ElementalApplicationCommitted`, `BuffApplicationFailedEvent`, `PendingCombatEvent` + `CombatEventSink`, `PeriodicResolution`/`BuffPeriodicDamageRequest`/`BuffPeriodicHealRequest` (contract `periodic.ts` — request types cross the authority boundary so they live in contracts, not buff2), `CombatScheduler.emitImmediate`, `BuffAuthority` port.
 
-**Produces (everyone else imports):** `BuffDefinition` (new shape), `BuffInstance`, `BuffInstanceId` minting, `BuffInstanceSnapshot`, `BuffModifier`, `BuffModifierChannel`, `BuffModifierLifetime`, `BuffPeriodic`, `BuffPeriodicDamageRequest`/`BuffPeriodicHealRequest`/`PeriodicResolution`, `BuffRemovalReason` impl, `BuffQuery`/`BuffReadPort`, `ApplicationResolver`, `BuffLifecycle` (entry-point enum), `BuffEvent` union (`BuffApplied`, `BuffStacksChanged`, `BuffRemoved`, `BuffPeriodicResolved`, `BuffModifierAdded/Removed`, `ElementalApplicationCommitted` emission site), `BuffSystem` (buff2), `BuffRegistry` (buff2).
+**Produces (everyone else imports):** `BuffDefinition` (new shape), `BuffInstance`, `BuffInstanceId` minting, `BuffInstanceSnapshot`, `BuffModifier`, `BuffModifierChannel`, `BuffModifierLifetime`, `BuffPeriodic`, `BuffRemovalReason` impl, `BuffQuery`/`BuffReadPort`, `ApplicationResolver`, `BuffLifecycle` (entry-point enum), `BuffEvent` union (`BuffApplied`, `BuffStacksChanged`, `BuffRemoved`, `BuffPeriodicResolved`, `BuffModifierAdded/Removed`, `ElementalApplicationCommitted` emission site), `BuffSystem` (buff2), `BuffRegistry` (buff2).
 
 ## Ruling assumptions — pending user sign-off
 
@@ -229,7 +229,7 @@ export class BuffSystem {
     private readonly store: BuffStore,
     private readonly registry: BuffRegistry,
     private readonly resolver: ApplicationResolver,
-    private readonly emit: (event: CombatEvent) => void,   // scheduler.emitImmediate — post-commit only (§54)
+    private readonly emit: (event: PendingCombatEvent) => void,   // CombatEventSink.emit — scheduler stamps eventId+combatSequence; post-commit only (§54)
     private readonly stats: StatProviderPort,               // resolve entities for periodic math — narrow port
     private readonly mintSeq: () => number,                 // appliedAtSequence from scheduler
   )

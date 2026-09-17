@@ -13,7 +13,7 @@
 - `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.1 — `ResolvedCombatOperation`, origins `kind:'skill'`, `castId`/`subcastIndex`, settlement)
 - `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (consumed ops: `ApplyBuff`, `TriggerBuffPeriodic`, `ConsumeBuffStacks`, `AddBuffStacks`, `read_stacks` query)
 
-**Sibling-plan dependency:** Expansion of the Skill scope in `game/docs/superpowers/plans/2026-09-17-combat-systems-reimagined.md` (its M5). **Hard prerequisites:** contract megaplan M1–M3 (operations, scheduler, authority ports incl. `fractionOfOperationResult` heal) AND buff megaplan M1–M2 (`BuffDefinition`/`BuffSystem`/`ApplyBuffRequest`). M0 verifies; if absent → BLOCKED. The `SkillExecutor` emits operations — it NEVER calls `BuffSystem`/`CombatSystem` directly.
+**Sibling-plan dependency:** Expansion of the Skill scope in `game/docs/superpowers/plans/2026-09-17-combat-systems-reimagined.md` (its M5). **Hard prerequisites:** contract megaplan M1–M3 v2 (operations, scheduler `enqueueAuthored`/`run()`, authority ports, `DeferredOperation` for result-referencing heals) AND buff megaplan M1–M2 (`BuffDefinition`/`BuffSystem`/`ApplyBuffRequest`). M0 verifies; if absent → BLOCKED. The `SkillExecutor` emits operations — it NEVER calls `BuffSystem`/`CombatSystem` directly.
 
 ## Global Constraints
 
@@ -52,7 +52,7 @@
 - Create: `game/docs/architecture/2026-09-17-skilldef-inventory.md`
 
 - [ ] **Step 1 — Lock baseline:** `git rev-parse HEAD`.
-- [ ] **Step 2 — Verify prerequisites (BLOCKING):** contract ops union + `CombatOperationOrigin{kind:'skill',castId,subcastIndex}` + `originId`; scheduler `enqueueOperation`/`runUntilQuiescent`; `BuffAuthority`/`DamageAuthority`/`GaugeAuthority`/`ResourceAuthority` ports; buff2 `ApplyBuffRequest.reactionEligibility` + `getStacks` + `triggerPeriodic` + `consumeStacks`. Missing → BLOCKED.
+- [ ] **Step 2 — Verify prerequisites (BLOCKING):** contract ops union + `CombatOperationOrigin{kind:'skill',castId,subcastIndex}` + `originId`; scheduler `enqueueAuthored`/`run()` with per-op settlement barrier; `BuffAuthority`/`DamageAuthority`/`GaugeAuthority`/`ResourceAuthority` ports; buff2 `ApplyBuffRequest.reactionEligibility` + `getStacks` + `triggerPeriodic` + `consumeStacks`. Missing → BLOCKED.
 - [ ] **Step 3 — Skill producer census (drives adapter coverage):**
   - `data/skill/` (~9,152 lines total): `CoreSkills.ts`(671), `PhapTuChainSkills.ts`(1020), `PhapTuEmpoweredUlts.ts`(142), `PhapTuUltimates.ts`(30), `TheTuSkills.ts`(404), `NguKiemDaoSkills.ts`(38), `KiemPhoCombos.ts`(88), `KiemPhoOrbs.ts`(77), `PassiveSkills.ts`(522), `TalentPassives.ts`(182), `Skills.ts`(24), `TurnAnKitSkills.ts`(63), `TurnBasicAttacks.ts`(78). For each: does it produce `Skill` (legacy shape), `TurnSkillDefinition` (direct), or both? (`TurnAnKitSkills`/`TurnBasicAttacks` likely author `TurnSkillDefinition` directly — CONFIRM.)
   - Orchestrator-authored `TurnSkillDefinition`s: `buildTheTuAnKit`/`collectTheTuAnMechanicModifiers` (Thế Tu clones with baked node bonuses), `linh_ngo_*` empowerment attach site (`TurnSkillDefinition.empowerment`), `compositePicks.pool` attach (Pháp Tu Ẩn), emblem defs (`emblemOnly`), `dynamicBasic` providers (Ngự Kiếm Đạo `instances`+`perInstanceOptions`).
@@ -111,7 +111,7 @@ export interface SkillDefinition {
 // AuthoredOperation.ts — contract §3: intent only, zero runtime ids
 export type AuthoredSkillOperation =
   | { type: 'deal_damage'; target: SkillTargetIntent; coefficient?: number; components?: SkillDamageComponent[]; damageType?: 'physical' | 'primordial'; hitCount?: number; canCrit?: boolean; canMiss?: boolean; scaling?: AuthoredScaling; consumeBuff?: { definitionId: BuffDefinitionId; damagePerStack: number; scope?: 'own' | 'any'; healPercentOfDamage?: number }; consumeWard?: { damagePerWardPoint: number }; healPercentOfDamage?: number }
-  | { type: 'heal'; target: SkillTargetIntent; amount?: number; fractionOfMaxHp?: number; fractionOfOperationResult?: { fraction: number; capFractionOfTargetMaxHp: number } }
+  | { type: 'heal'; target: SkillTargetIntent; amount?: number; fractionOfMaxHp?: number; fractionOfPriorDamage?: { fraction: number; capFractionOfTargetMaxHp: number } }   // authored-level result reference → executor emits a DeferredOperation resolved from the plan's own prior damage result (contract v2 R-C7)
   | { type: 'apply_buff'; target: SkillTargetIntent; definitionId: BuffDefinitionId; stacks?: number; chance?: number; durationOverride?: number; reactionEligibility?: ReactionEligibility }   // DEFAULT 'suppressed' — elemental defs must opt in (R-S4 adapter maps legacy flag)
   | { type: 'add_buff_stacks' | 'remove_buff_stacks' | 'consume_buff_stacks'; target: SkillTargetIntent; definitionId: BuffDefinitionId; stacks: number | 'all' }
   | { type: 'add_buff_modifier' | 'remove_buff_modifier'; target: SkillTargetIntent; definitionId: BuffDefinitionId; modifier: AuthoredModifier }
@@ -235,7 +235,9 @@ export class SkillExecutor {
     private readonly queries: OperationResultQuery,   // buffs.getStacks, entity vitals, resource reads
     private readonly entityQuery: { alive(id: CombatEntityId): boolean },
   )
-  /** Executes plan ops in order; between ops: scheduler.runUntilQuiescent() barrier. */
+  /** Executes plan ops in order — feeds the scheduler ONE op at a time:
+      enqueueAuthored([op]) → run() (full settle) → evaluate next op's
+      if/read_stacks against post-settlement state → repeat. */
   execute(plan: ResolvedSkillPlan): SkillCastOutcome
   /** Queues follow-up plans: subcasts (repeat/multicast), composite extra picks — each its own ResolvedSkillPlan with subcastIndex++ and its own settle (contract §60). */
   enqueueSubcasts(plan: ResolvedSkillPlan): void
@@ -251,7 +253,7 @@ export interface OperationResultQuery {
 ```
 
 **Execution semantics:**
-- `barrierAfter` → `scheduler.runUntilQuiescent()` then evaluate the NEXT op's `if`/`read_stacks` against post-settlement state (the §94 contract test: apply Hỏa → reaction consumes → `read_stacks` sees 0).
+- `barrierAfter` → the executor calls `scheduler.run()` after the op settles (the scheduler's per-authored-op barrier already drains immediate events), then evaluates the NEXT op's `if`/`read_stacks` against post-settlement state (the §94 contract test: apply Hỏa → reaction consumes → `read_stacks` sees 0).
 - Target death mid-plan: ops with dead required targets → `{status:'skipped', reason:'invalid_target_state'}`, plan continues (contract §49) — BUT `landed` computes from committed results only.
 - Subcast driving: `subcasts.count`/`multicast` → after parent plan settles, resolver produces `plan(subcastIndex+1)` (composite re-rolled per subcast — Task 11 parity: "re-rolls compositePicks"); enqueue each, execute sequentially.
 - `detonate` sugar expands to: `read_stacks` per dot-ailment → `consume_buff_stacks('all')` → `deal_damage` scaled by read vars → re-seed `apply_buff{stacks:1, reactionEligibility:'suppressed'}` (Task 13 spec: "reaction-silent — never fires TurnReactionManager").

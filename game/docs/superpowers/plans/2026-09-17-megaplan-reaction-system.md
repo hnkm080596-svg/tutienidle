@@ -64,7 +64,8 @@
 - [ ] **Step 1 — Lock baseline:** record `git rev-parse HEAD` in the inventory doc; all "current state" claims reference this SHA.
 - [ ] **Step 2 — Verify foundation prerequisites (BLOCKING):** confirm these exist and compile:
   - `game/src/core/battle/contracts/operations.ts` — `CombatOperation` union incl. `ConsumeBuffStacksOperation`, `AddBuffStacksOperation`, `AddBuffModifierOperation`, `ExtendBuffDurationOperation`, `ApplyBuffOperation`, `PushGaugeOperation`, `HealOperation`, `DealDamageOperation`; `CombatOperationOrigin`; `ResolvedCombatOperation`; `ReactionEligibility`
-  - `game/src/core/battle/contracts/results.ts` — `CombatOperationResultBase` + per-op result payloads (incl. damage `actualDamage` on the damage result — needed by Xuyên Thổ heal; if absent, record a contract-extension request for `HealOperation.fractionOfOperationResult`)
+  - `game/src/core/battle/contracts/results.ts` — `CombatOperationResultBase` + per-op result payloads (incl. damage `rawDamage`/`hpDamage` on the damage result — needed by Xuyên Thổ heal)
+  - `game/src/core/battle/contracts/settlement.ts` — `ImmediateSettlement` union (`{kind:'operations'}` / `{kind:'batch'}`) + `CombatOperationBatch` (preconditions + ordered ops) + `DeferredOperation` (lazy op materialized from prior in-batch results — the `heal_from_damage` vehicle; SUPERSEDES the earlier `HealOperation.fractionOfOperationResult` idea — the executor never resolves refs)
   - `game/src/core/battle/contracts/events.ts` — `ElementalApplicationCommitted` (fields: `eventId`, `instanceId`, `sourceId`, `targetId`, `definitionId`, `element`, `stacksBefore/After`, `requestedStacks`, `addedStacks`, `reactionEligibility`, `origin`, `combatSequence`)
   - `game/src/core/battle/contracts/capability.ts` — `CombatCapabilityQuery { has(entityId, capabilityId): boolean }`
   - `game/src/core/battle/scheduler/` — `CombatScheduler` (sequence allocation, settlement barrier, exactly-once `eventId` dedup), `CombatOperationExecutor`, `BuffAuthority`/`DamageAuthority`/`GaugeAuthority` ports
@@ -354,7 +355,9 @@ interface ReactionResolution {  // contract §39
   reactionId: ReactionId
   context: ReactionContext
   preconditions: readonly ReactionParticipantPrecondition[]
-  operations: readonly ResolvedCombatOperation[]
+  /** Contract v1.1+review: may contain DeferredOperation entries (heal_from_damage)
+      materialized by the batch runner at their position from prior in-batch results. */
+  operations: readonly (ResolvedCombatOperation | DeferredOperation)[]
 }
 
 type ReactionEvaluationResult =
@@ -448,8 +451,9 @@ type ReactionPayoffStep =
       when?: { role: ReactionParticipantRole; op: 'gte' | 'lt'; value: number } }      // → ApplyBuffOperation(reactionEligibility:'suppressed') [+ AddBuffModifier]
   | { kind: 'push_gauge'; fractionOfMax: StackExpr }                                   // PushGaugeOperation — negative = pushback
   | { kind: 'heal_from_damage'; fraction: StackExpr; capFractionOfTargetMaxHp: number; healTarget: 'source' }
-      // HealOperation payload { fractionOfOperationResult: { operationId, fraction, capFractionOfTargetMaxHp } }
-      // resolved by the runner from the referenced damage op's actualDamage (R-B)
+      // Emitted as a DeferredOperation positioned after the damage op in the batch —
+      // resolve(results) reads the referenced damage op's {rawDamage|hpDamage} and
+      // materializes a concrete HealOperation (R-B). Executor never sees an unresolved ref.
 
 // The emitted subset of CombatOperation (spec §47; ApplyControl lowered to ApplyBuff per contract §6/§71):
 type ReactionOperation =
@@ -500,7 +504,7 @@ Every `ApplyBuffOperation` emitted by a reaction sets `reactionEligibility: 'sup
   - `tuc_viem coefficient = 0.20(A+D)+0.08D`: A4 D2 → `0.20·6+0.08·2 = 1.36` on the DealDamage payload; `element === 'water'` (attacker); `canCrit === false`; `origin.kind === 'reaction'`, `origin.reactionId === 'tuc_viem'`.
   - `dung_kim defense break`: `apply_status` emits ApplyBuff `test_defense_break` stacks A, `durationOverride === min(3, ceil(D/2))`, `reactionEligibility === 'suppressed'`.
   - `doan_moc bleed`: stacks `1+floor(A/2)`; modifier `doan_moc` value `1+0.05·D` targets the bleed selector `(definitionId, sourceId, targetId)` — NOT an instanceId (instance doesn't exist at resolution time).
-  - `xuyen_tho heal`: emitted `HealOperation` carries `fractionOfOperationResult` referencing the damage op's `operationId`; runner resolves `min(actualDamage·0.05·D, 0.25·sourceMaxHp)` — test with stub damage result `actualDamage 1000`, D3, source maxHp 400 → heal `min(150, 100)=100`.
+  - `xuyen_tho heal`: emitted as a `DeferredOperation` positioned after the damage op in the batch; the batch runner materializes it from the damage op's `hpDamage`/`rawDamage` — `min(hpDamage·0.05·D, 0.25·sourceMaxHp)` — test with stub damage result `hpDamage 1000`, D3, source maxHp 400 → materialized `HealOperation.amount === 100`.
   - `tran_thuy seal gate`: A2 → no `test_cam_cong` op; A3 → op present; duration 1 at D3, 2 at D4.
 - [ ] **Step 3 — Failing tests (no recursion, spec §80/contract §93):** resolve `duong_viem` with `test_seal_metal` already on the board → emitted `AddBuffStacksOperation` on fire produces NO `ElementalApplicationCommitted` (the scheduler stub's event log stays empty) → `dung_kim` does NOT chain in the same batch.
 - [ ] **Step 4 — Failing tests (Cấm Công, spec §81/contract §101):** `TurnBattleSystem.camCong.test.ts` — enemy participant with basic `actionTags:['attack']` + self-heal special `actionTags:['heal']` (cooldown ready), holding a `test_cam_cong`-style buff whose def carries `forbiddenActionTags:['attack']`:
@@ -518,7 +522,7 @@ Every `ApplyBuffOperation` emitted by a reaction sets `reactionEligibility: 'sup
 ## Mission 5 — Determinism + trace + sequential-settlement proof + docs
 
 **Files:**
-- Create: `game/src/core/reaction/ReactionDispatcher.ts` — `onElementalApplicationCommitted` → gate → evaluate → `scheduler.enqueueOperation(batch)` seam (the unit M7/seal-batch wiring will call)
+- Create: `game/src/core/reaction/ReactionDispatcher.ts` — `onElementalApplicationCommitted` → gate → evaluate → returns `ImmediateSettlement {kind:'batch', batch: CombatOperationBatch}` to the scheduler (contract settlement.ts; the unit M7/seal-batch wiring registers this as the immediate handler for `elemental_application_committed`)
 - Create: `game/src/core/reaction/ReactionTrace.ts` — `ReactionEvaluationTrace` (candidates w/ base+bias+final, winner, preflight, emitted ops) + §85-shaped formatter
 - Modify: `game/src/core/reaction/ReactionSystem.ts` — record trace through evaluation
 - Test: `game/src/core/reaction/ReactionDeterminism.test.ts`, `ReactionDispatcher.test.ts`, `ReactionTrace.test.ts`
@@ -529,11 +533,16 @@ Every `ApplyBuffOperation` emitted by a reaction sets `reactionEligibility: 'sup
 class ReactionDispatcher {
   constructor(
     gate: ReactionTriggerGate, system: ReactionSystem,
-    runner: ReactionBatchRunner, enqueue: (ops: readonly ResolvedCombatOperation[]) => void,
+    /** Builds the CombatOperationBatch (preconditions + ordered ops) the scheduler's
+        CombatOperationBatchRunner will preflight + run inside a batch frame. */
+    batchFactory: (resolution: ReactionResolution) => CombatOperationBatch,
     emit: (event: ReactionResolvedEvent | ReactionSkippedEvent) => void,
   )
-  /** Called once per committed event by the scheduler's immediate-settlement drain. */
-  onElementalApplicationCommitted(event: ElementalApplicationCommitted): ReactionBatchOutcome | null
+  /** Scheduler's immediate handler for 'elemental_application_committed'.
+      Returns ImmediateSettlement {kind:'batch'} on resolution, or void when the
+      gate/selection produces no reaction — the scheduler drains it like any
+      other immediate consequence. */
+  onElementalApplicationCommitted(event: ElementalApplicationCommitted): ImmediateSettlement | void
 }
 
 interface ReactionEvaluationTrace {  // contract §85 shape
@@ -603,13 +612,13 @@ interface ReactionEvaluationTrace {  // contract §85 shape
 5. `TurnSkillDefinition` has no `tags`/`actionTags` (`TurnSkillAction.ts:55-255`) and `BuffDefinition` has no `forbiddenActionTags` (`BuffTypes.ts:238-284`) — additive fields added in M4; R-E2 inference bridges until the skill-definition tag taxonomy lands.
 6. `ActionGauge.ts` exposes only `refundGauge` (positive delta, `GAUGE_MAX=1000`) — gauge pushback needs a negative-delta route on the gauge authority port; flagged for foundation executor.
 7. `canInitiateWuxingReactions` (`TurnBattleSystem.ts:137`, stamped `TurnBattleAdapter.ts:60` for the `phap_tu` stat domain) gates the LEGACY engine for ALL pháp tu — broader than the spec's Ngộ Đạo-only intent. R3 keeps this live; the new capability is deliberately ungranted (R7). Coordinator must confirm the visible-Pháp Tu reaction removal timing (seal batch).
-8. `HealOperation` may not yet support result-referencing amounts — Xuyên Thổ's `heal_from_damage` needs either a payload extension (`fractionOfOperationResult`) resolved by the batch runner from the damage op's `actualDamage` (this plan's default), or an executor-level feature. Confirm with the foundation contract.
+8. RESOLVED (contract plan v2): `heal_from_damage` rides `DeferredOperation` inside `CombatOperationBatch` — the batch runner materializes a concrete `HealOperation` from prior in-batch results; `HealOperation.amount` is always concrete by executor time. The executor never resolves refs.
 9. Current `Buff`/`BuffPool` have no `instanceId` — participant snapshots require the new BuffSystem's `BuffInstanceSnapshot.instanceId`. One more reason the foundation prerequisite is blocking.
 10. `Độc Căn` name collision (poison-root mechanic inside `trung_doc` vs future `doc_can` id) — sibling plan R4 owns the rename at its M4; this plan's fixtures use `test_seal_wood` and stay clear of the collision.
 
 ## Open questions for coordinator
 
-1. Does `HealOperation` accept `fractionOfOperationResult`, or should the runner rewrite it to a concrete `amount` before executor dispatch (needs `actualDamage` on the damage op result payload — confirm contract)?
+1. RESOLVED: `DeferredOperation` materialization (contract plan v2, R-C7) — damage result payload carries `hpDamage`/`rawDamage`; runner builds the concrete `HealOperation`.
 2. R-A: reaction damage `element` — attacker-element (chosen, preserves legacy overcomer-element semantics) vs elementless true damage?
 3. R-C: is a `'penetration'`/`'stat'` modifier channel planned for buff2, or is the `'potency'` proxy acceptable for Dưỡng Kim at seal batch?
 4. Should `CANONICAL_REACTIONS` ship in `src/data/reaction/` (chosen) or stay test-adjacent until seal batch rebinds the ids?
