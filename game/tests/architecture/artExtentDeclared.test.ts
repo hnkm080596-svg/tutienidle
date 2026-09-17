@@ -40,7 +40,13 @@ function frameName(clip: AtlasClip, index: number): string {
 }
 
 const clips = mortalClips()
-const atlas = JSON.parse(readFileSync(publicPath(clips.idle.atlasUrl), 'utf8')) as {
+const idleClip = clips.idle
+
+if (!idleClip) {
+  throw new Error('mortal clips missing idle')
+}
+
+const atlas = JSON.parse(readFileSync(publicPath(idleClip.atlasUrl), 'utf8')) as {
   frames: Record<string, AtlasFrame>
 }
 
@@ -54,6 +60,11 @@ describe('mortal art extents', () => {
     () => {
       for (const name of COMBAT_ANIMATION_NAMES) {
         const clip = clips[name]
+
+        if (!clip) {
+          throw new Error(`${name}: clip not declared`)
+        }
+
         let tallest: AtlasFrame | undefined
 
         for (let index = clip.firstFrame; index <= clip.lastFrame; index++) {

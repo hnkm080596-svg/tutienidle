@@ -10,6 +10,12 @@ import type {
 } from './saveTypes'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
+import {
+  resolveBackupKey,
+  resolveImportHandoffKey,
+  resolveRevisionKey,
+  resolveSaveKey,
+} from './saveKeys'
 
 // large-file-split — save-shape interfaces (GameSave, stack saves,
 // production/alchemy save states, restore contract) live in
@@ -22,9 +28,10 @@ export * from './saveTypes'
 // import với saveShapeValidation.ts.
 export { CURRENT_SAVE_VERSION }
 
-// Export cho test import thay vì hardcode key — nếu key đổi, test fail
-// ngay lúc build thay vì âm thầm ghi/nhầm key khác.
-export const SAVE_KEY = 'tien-hiep-idle-save'
+// Storage keys are per-account since Mission F (spec F8) — every path
+// below resolves through saveKeys.ts resolvers ('<base>:<accountId>',
+// guest slot when unauthenticated). The comments below keep documenting
+// the backup/handoff/revision *purpose*; the key shape lives there.
 
 // Phase 5 (Reliability) — bản sao save TRƯỚC lần ghi đè/xoá gần nhất
 // (deleteSave()), không phải lịch sử nhiều bản. Mục đích duy nhất:
@@ -32,21 +39,17 @@ export const SAVE_KEY = 'tien-hiep-idle-save'
 // thích, dữ liệu cũ vẫn còn 1 bước để cứu qua restoreBackup() —
 // KHÔNG thay thế Export (export mới là nơi an toàn thật sự, backup
 // này nằm cùng localStorage nên mất theo nếu người dùng xoá site data).
-const BACKUP_KEY = 'tien-hiep-idle-save-backup'
 
 // Import current-version có equipment legacy phải normalize TRƯỚC khi ghi,
 // nên reload sau import không thể tự đếm lại entry đã bỏ. Handoff one-shot
 // này giữ counter cùng CHÍNH XÁC normalized payload để không gán nhầm cho
 // một save khác được ghi xen giữa; nó không nằm trong GameSave schema.
-const IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY =
-  'tien-hiep-idle-import-discarded-equipment-count'
 
 // Revision phục vụ CAS optimistic-concurrency của cloud-save adapter
 // (xem services/cloudSave/). Đặt ở đây (thay vì trong LocalCloudSaveService)
 // để deleteSave() có thể xoá cùng lúc, tránh để lại revision cũ sau khi
 // save chính đã bị xoá — nếu không, nhân vật mới tạo sẽ CAS-fail ngay
 // lần save đầu tiên ("Save đã thay đổi ở một phiên khác.").
-export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 
 // v23: Thiên Công Phường rework — thêm building 'artisan_workshop',
 // xoá hẳn exploration 'myriad-demon-forest' (Vạn Yêu Lâm), thêm
@@ -391,7 +394,7 @@ export type SaveWriteResult = { status: 'ok' } | { status: 'failed'; reason: 'qu
 
 export function writeGameSave(save: GameSave): SaveWriteResult {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(save))
     return { status: 'ok' }
   } catch (error: unknown) {
     // QuotaExceededError (DOMException name) — save vượt ~5MB localStorage.
@@ -425,7 +428,7 @@ export function loadGame(): LoadOutcome {
   let raw: string | null
 
   try {
-    raw = localStorage.getItem(SAVE_KEY)
+    raw = localStorage.getItem(resolveSaveKey())
   } catch {
     return { status: 'storage_unavailable' }
   }
@@ -485,7 +488,7 @@ export function loadGame(): LoadOutcome {
 
   try {
     importedHandoffRaw = localStorage.getItem(
-      IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY,
+      resolveImportHandoffKey(),
     )
   } catch {
     importedHandoffRaw = null
@@ -522,7 +525,7 @@ export function loadGame(): LoadOutcome {
     // nguyên: mọi đường return trước (parse fail, version, shape) nằm
     // TRƯỚC block này nên handoff còn nguyên cho lần load hợp lệ.
     try {
-      localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
+      localStorage.removeItem(resolveImportHandoffKey())
     } catch {
       // Marker persists harmlessly — next valid load consumes/removes it.
     }
@@ -545,10 +548,10 @@ export function loadGame(): LoadOutcome {
 // vì làm caller crash: backup là best-effort, không được phá flow chính.
 export function backupCurrentSave(): boolean {
   try {
-    const raw = localStorage.getItem(SAVE_KEY)
+    const raw = localStorage.getItem(resolveSaveKey())
 
     if (raw) {
-      localStorage.setItem(BACKUP_KEY, raw)
+      localStorage.setItem(resolveBackupKey(), raw)
     }
 
     return true
@@ -559,7 +562,7 @@ export function backupCurrentSave(): boolean {
 
 export function hasBackup(): boolean {
   try {
-    return localStorage.getItem(BACKUP_KEY) !== null
+    return localStorage.getItem(resolveBackupKey()) !== null
   } catch {
     return false
   }
@@ -567,7 +570,7 @@ export function hasBackup(): boolean {
 
 export function getRawSave(): string | null {
   try {
-    return localStorage.getItem(SAVE_KEY)
+    return localStorage.getItem(resolveSaveKey())
   } catch {
     return null
   }
@@ -575,7 +578,7 @@ export function getRawSave(): string | null {
 
 export function restoreBackup(): boolean {
   try {
-    const raw = localStorage.getItem(BACKUP_KEY)
+    const raw = localStorage.getItem(resolveBackupKey())
 
     if (!raw) {
       return false
@@ -584,8 +587,8 @@ export function restoreBackup(): boolean {
     // Xoá handoff TRƯỚC khi ghi: nếu removeItem throw thì SAVE_KEY còn
     // nguyên và `false` phản ánh đúng "chưa restore gì" (ghi trước xoá
     // sau sẽ báo false dù backup đã được restore).
-    localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
-    localStorage.setItem(SAVE_KEY, raw)
+    localStorage.removeItem(resolveImportHandoffKey())
+    localStorage.setItem(resolveSaveKey(), raw)
 
     return true
   } catch {
@@ -608,9 +611,9 @@ export function deleteSave(): boolean {
   let ok = true
 
   for (const key of [
-    SAVE_KEY,
-    IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY,
-    SAVE_REVISION_KEY,
+    resolveSaveKey(),
+    resolveImportHandoffKey(),
+    resolveRevisionKey(),
   ]) {
     try {
       localStorage.removeItem(key)
@@ -685,11 +688,11 @@ export function importSaveRaw(raw: string): boolean {
   try {
     if (discardedEquipmentCount > 0) {
       localStorage.setItem(
-        IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY,
+        resolveImportHandoffKey(),
         JSON.stringify({ normalizedRaw, discardedEquipmentCount }),
       )
     } else {
-      localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
+      localStorage.removeItem(resolveImportHandoffKey())
     }
   } catch {
     return false
@@ -703,7 +706,7 @@ export function importSaveRaw(raw: string): boolean {
   }
 
   try {
-    localStorage.setItem(SAVE_KEY, normalizedRaw)
+    localStorage.setItem(resolveSaveKey(), normalizedRaw)
   } catch {
     return false
   }

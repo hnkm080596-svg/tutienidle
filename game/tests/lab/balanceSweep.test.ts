@@ -120,7 +120,7 @@ describe('balance sweep — all chapter floors vs player models', () => {
     const stageList: Stage[] = STAGES.slice().sort(
       (a, b) =>
         (REALM_ORDER[a.requiredRealmId ?? 'mortal'] ?? 0) -
-          (REALM_ORDER[b.requiredRealmId ?? 'mortal'] ?? 0) || a.floor - b.floor,
+          (REALM_ORDER[b.requiredRealmId ?? 'mortal'] ?? 0) || (a.floor ?? 0) - (b.floor ?? 0),
     )
 
     const rows: string[] = []

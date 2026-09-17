@@ -1,0 +1,19 @@
+{
+  // Test-only project so `npm run type-check` (vue-tsc --build) covers the
+  // architecture guard suite and the lab harness (audit T7-60). Extends the
+  // dom base like tsconfig.app because tests import @/presentation modules
+  // that touch DOM types; `types` opts node back in for node:fs/node:path
+  // helpers (tests/architecture/helpers/scanTs.ts).
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["tests/architecture/**/*", "tests/lab/**/*"],
+  // tests/lab/local/ is gitignored personal scratch — never part of the gate.
+  "exclude": ["tests/lab/local/**"],
+  "compilerOptions": {
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "noUncheckedIndexedAccess": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tests.tsbuildinfo"
+  }
+}

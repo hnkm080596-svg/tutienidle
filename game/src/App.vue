@@ -35,6 +35,8 @@ import { useOfflineSummaryStore } from './stores/offlineSummary'
 import { useSaveIssueStore } from './stores/saveIssue'
 import { installAutomationFlagsPersistence } from './stores/uiFlagsPersistence'
 import { useAppLifecycle, type BootOutcome } from './composables/useAppLifecycle'
+import { accountIdForSession, setSaveAccountId } from './services/save/saveKeys'
+import type { AuthSession } from './services/auth/AuthService'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
 import PresentationTransitionOverlay from './components/game/PresentationTransitionOverlay.vue'
@@ -71,7 +73,7 @@ import { THE_TU_AN_NODES } from './data/progression/TheTuAnNodes'
 import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
-import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
+import { cloudSaveCoordinator, remoteSaveSync } from './services/cloudSave/CloudSaveServiceFactory'
 import {
   deleteSave,
   restoreGameSession,
@@ -397,6 +399,9 @@ const lifecycle = useAppLifecycle({
   // roll its starter grants back in memory; the composable calls this to
   // recover on a clean process (same convention as resetSaveFromSettings).
   hardReset: () => window.location.reload(),
+  // Spec F8 — newest-wins remote reconciliation before the local load;
+  // undefined when Supabase isn't configured (fully local boot).
+  remoteSync: remoteSaveSync,
 })
 
 // Cảnh báo autosave fail chỉ 1 lần cho mỗi chuỗi fail — autosave chạy
@@ -631,7 +636,10 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
   return outcome
 }
 
-function onAuthenticated() {
+function onAuthenticated(session: AuthSession) {
+  // Spec F8 — bind the save slot BEFORE boot loads: every storage path
+  // resolves through resolveSaveKey() from this point on.
+  setSaveAccountId(accountIdForSession(session))
   void bootGame(false)
 }
 

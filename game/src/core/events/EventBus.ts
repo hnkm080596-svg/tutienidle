@@ -41,11 +41,18 @@ export class EventBus {
       return
     }
 
+    // Snapshot before dispatch (audit T5-49): handlers added mid-emit fire
+    // next time, never mid-iteration; each handler is isolated so one
+    // throw cannot abort the chain or reach core tick emitters.
     for (
       const handler
-      of handlers
+      of [...handlers]
     ) {
-      (handler as EventHandler<T>)(event)
+      try {
+        (handler as EventHandler<T>)(event)
+      } catch (error: unknown) {
+        console.error(`[EventBus] listener for "${eventType}" threw`, error)
+      }
     }
   }
 

@@ -16,6 +16,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, onUnmounted, ref } from 'vue'
 import { useAppLifecycle } from './useAppLifecycle'
+import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import type { GameSave } from '../services/save/SaveSystem'
 import type { GameManager } from '../core/game/GameManager'
 
@@ -29,14 +30,17 @@ function makeStubs() {
   }
 
   const intervals: Array<() => void> = []
+  const intervalCalls: Array<{ timeoutMs: number }> = []
 
   return {
     clock,
     intervals,
+    intervalCalls,
     // setInterval stub trả handle tuần tự, đẩy callback vào mảng để test
     // bấm thủ công (mô phỏng timer fire).
-    scheduleInterval: (callback: () => void): number => {
+    scheduleInterval: (callback: () => void, timeoutMs: number): number => {
       intervals.push(callback)
+      intervalCalls.push({ timeoutMs })
       return intervals.length
     },
     clearHandle: vi.fn(),
@@ -93,6 +97,7 @@ function makeStubs() {
     persistPlayer: vi.fn(async () => ({ status: 'ok' as const, revision: 1 })),
     onError: vi.fn(),
     hardReset: vi.fn(),
+    remoteSync: vi.fn(async () => 'skipped'),
   }
 }
 
@@ -117,6 +122,7 @@ function makeLifecycle(stubs: Stubs) {
     persistPlayer: stubs.persistPlayer,
     onError: stubs.onError,
     hardReset: stubs.hardReset,
+    remoteSync: stubs.remoteSync,
   })
 }
 
@@ -127,6 +133,17 @@ describe('useAppLifecycle — idempotent tick loop (Remediation Task 5)', () => 
 
   afterEach(() => {
     vi.useRealTimers()
+  })
+
+  it('tick loop cadence comes from SpeedSettings.TICK_INTERVAL_MS (audit T5-46)', () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    lifecycle.startTickLoop(() => undefined)
+
+    expect(stubs.intervalCalls[0]?.timeoutMs).toBe(TICK_INTERVAL_MS)
+
+    lifecycle.stopAll()
   })
 
   it('startTickLoop 2 lần → CHỈ 1 interval chạy (không leak)', () => {
@@ -162,11 +179,13 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
   it('bootGame 2 lần khi boot đầu còn pending → boot flow chỉ chạy 1 lần', async () => {
     const stubs = makeStubs()
 
-    // load() chờ gate — mô phỏng boot đang pending.
+    // load() chờ gate — mô phỏng boot đang pending. Deferred created
+    // upfront: bootGame awaits remoteSync BEFORE calling load(), so a
+    // resolver assigned inside mockImplementation would not exist yet
+    // when the test releases it.
     let releaseLoad: (value: unknown) => void = () => undefined
-    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockImplementation(
-      () => new Promise((resolve) => (releaseLoad = resolve)),
-    )
+    const loadGate = new Promise((resolve) => (releaseLoad = resolve))
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockImplementation(() => loadGate)
 
     const lifecycle = makeLifecycle(stubs)
 
@@ -251,9 +270,8 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
     const stubs = makeStubs()
 
     let releaseLoad: (value: unknown) => void = () => undefined
-    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockImplementation(
-      () => new Promise((resolve) => (releaseLoad = resolve)),
-    )
+    const loadGate = new Promise((resolve) => (releaseLoad = resolve))
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockImplementation(() => loadGate)
 
     const lifecycle = makeLifecycle(stubs)
 
@@ -283,9 +301,8 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
     const stubs = makeStubs()
 
     let releaseLoad: (value: unknown) => void = () => undefined
-    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockImplementation(
-      () => new Promise((resolve) => (releaseLoad = resolve)),
-    )
+    const loadGate = new Promise((resolve) => (releaseLoad = resolve))
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockImplementation(() => loadGate)
 
     const lifecycle = makeLifecycle(stubs)
 
@@ -360,6 +377,48 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
     expect(outcome.status).toBe('entered')
     expect(stubs.boot.enterGame).toHaveBeenCalledTimes(1)
     expect(stubs.intervals).toHaveLength(1)
+
+    lifecycle.stopAll()
+  })
+})
+
+describe('useAppLifecycle — remote sync reconciliation (spec F8, Mission F Task 11)', () => {
+  it('remoteSync is awaited after startSaveLoad and before coordinator.load', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    await lifecycle.bootGame({ createNewCharacter: false })
+
+    const syncOrder = stubs.remoteSync.mock.invocationCallOrder[0]
+    const loadOrder = (stubs.coordinator.load as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0]
+    expect(stubs.remoteSync).toHaveBeenCalledTimes(1)
+    expect(syncOrder).toBeDefined()
+    expect(loadOrder).toBeDefined()
+    expect(syncOrder!).toBeLessThan(loadOrder!)
+
+    lifecycle.stopAll()
+  })
+
+  it('createNewCharacter boot skips remoteSync — the new character has no remote row yet', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(stubs.remoteSync).not.toHaveBeenCalled()
+
+    lifecycle.stopAll()
+  })
+
+  it('remoteSync rejection never blocks boot — coordinator.load still runs', async () => {
+    const stubs = makeStubs()
+    stubs.remoteSync.mockRejectedValueOnce(new Error('remote down'))
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(stubs.coordinator.load).toHaveBeenCalledTimes(1)
+    expect(outcome.status).toBe('require-character')
 
     lifecycle.stopAll()
   })

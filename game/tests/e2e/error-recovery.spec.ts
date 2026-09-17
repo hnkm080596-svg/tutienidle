@@ -16,7 +16,7 @@ test.describe('Save error recovery', () => {
     // Inject save JSON malformed — SaveSystem load phải report 'corrupted'
     // thay vì crash (QA-2026-09-01-002 learned defect: shape validation).
     await page.addInitScript(() => {
-      localStorage.setItem('tien-hiep-idle-save', '{corrupted json not valid')
+      localStorage.setItem('tien-hiep-idle-save:guest', '{corrupted json not valid')
     })
 
     await page.goto('/')

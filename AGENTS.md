@@ -27,7 +27,7 @@ Root: `game/`. Stack: Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 
 **P3. Verification — 2 modes only, no in-between:**
 - `quick` (default): `npm run type-check` + `npx vitest run <relevant scope>`
-- `full`: `npm run type-check` + `npm run build` + `npx vitest run` — use when touching `vite.config.ts`, `tsconfig.json`, `vitest.config.ts`, `package.json`/lock, deps, asset/build pipeline, Pinia root state, router, Phaser scene infra, major architecture, milestone/release readiness, or when asked.
+- `full`: `npm run type-check` + `npm run build` + `npx vitest run` — use when touching `vite.config.ts`, `tsconfig.json`, `vitest.config.ts`, `package.json`/lock, deps, asset/build pipeline, Pinia root state, router, Phaser scene infra, major architecture, milestone/release readiness, or when asked. The canonical evidence command is `npm run verify` (= type-check + build + full vitest). Agents reporting verification run it from `game/`. Vue tracks the 3.6 prerelease line deliberately (vapor packages); it is pinned to an exact version, not the rc dist-tag — bump it intentionally, never via a tag.
 
 Stop on first failure, fix, rerun same mode. Don't re-verify unchanged code. Fix task-caused failures before declaring done. P3 is one gate in the P5 completion sequence — a green P3 alone is never completion.
 

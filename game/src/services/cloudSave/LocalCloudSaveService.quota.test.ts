@@ -4,11 +4,15 @@ import { LocalCloudSaveService } from './LocalCloudSaveService'
 import {
   CURRENT_SAVE_VERSION,
   importSaveRaw,
-  SAVE_KEY,
-  SAVE_REVISION_KEY,
+
   type GameSave,
 } from '../save/SaveSystem'
+import { resolveRevisionKey, resolveSaveKey } from '../save/saveKeys'
 import { createDefaultPlayer } from '../../core/player/Player'
+
+// Guest-slot keys (no account bound in this file).
+const SAVE_KEY = resolveSaveKey()
+const SAVE_REVISION_KEY = resolveRevisionKey()
 
 // Mock Storage.prototype.setItem có chọn lọc: chỉ throw khi key khớp,
 // các key khác vẫn ghi bình thường qua impl gốc.

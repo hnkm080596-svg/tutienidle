@@ -4,7 +4,7 @@
 // dedicated script — chạy độc lập hoặc sau build qua npm script:
 //   node scripts/check-bundle-split.mjs [--dist <dir>]
 // Mặc định BUILD MỚI vào thư mục tạm rồi xoá; --dist tái dùng build có sẵn
-// (CI: `check-bundle-split dist` sau `npm run build-only`).
+// (CI: `node scripts/check-bundle-split.mjs --dist dist` sau `npm run build-only`).
 //
 // Assert (giữ nguyên contract cũ):
 // (1) KHÔNG còn 1 bundle khổng lồ duy nhất (entry index-*.js < 900KB),

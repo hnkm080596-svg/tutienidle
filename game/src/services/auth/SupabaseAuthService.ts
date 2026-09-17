@@ -3,7 +3,7 @@ import { clearSupabaseSession, readSupabaseSession, storeSupabaseSession } from 
 import { requestSupabase, SupabaseHttpError } from '../supabase/SupabaseHttp'
 import { isValidLoginId, isValidPassword, type AuthCredentials, type AuthenticationMode, type AuthResult, type AuthService } from './AuthService'
 
-interface GoTrueResponse { access_token: string; refresh_token: string; user: { id: string } }
+interface GoTrueResponse { access_token: string; refresh_token: string; expires_in?: number; user: { id: string } }
 
 function accountEmail(loginId: string): string {
   return `${loginId.toLowerCase()}@accounts.tien-hiep-idle.invalid`
@@ -36,8 +36,15 @@ export class SupabaseAuthService implements AuthService {
         method: 'POST', body: JSON.stringify({ p_device_label: navigator.userAgent.slice(0, 160) }),
       }, auth.access_token)
 
-      storeSupabaseSession({ accessToken: auth.access_token, refreshToken: auth.refresh_token, sessionId })
-      return { ok: true, session: { sessionId, mode, loginId: credentials?.loginId.toLowerCase() } }
+      storeSupabaseSession({
+        accessToken: auth.access_token,
+        refreshToken: auth.refresh_token,
+        sessionId,
+        userId: auth.user.id,
+        mode,
+        expiresAtMs: auth.expires_in ? Date.now() + auth.expires_in * 1000 : undefined,
+      })
+      return { ok: true, session: { sessionId, mode, loginId: credentials?.loginId.toLowerCase(), userId: auth.user.id } }
     } catch (error) {
       if (error instanceof SupabaseHttpError && error.status === 400) {
         return { ok: false, code: mode === 'register' ? 'id_taken' : 'invalid_credentials', message: mode === 'register' ? 'ID này đã được sử dụng.' : 'ID hoặc mật khẩu không chính xác.' }

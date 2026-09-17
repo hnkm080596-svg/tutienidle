@@ -9,6 +9,7 @@
 // (Export/Xoá) thay vì bị migrate âm thầm.
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CURRENT_SAVE_VERSION, loadGame } from './SaveSystem'
+import { resolveBackupKey, resolveRevisionKey, resolveSaveKey } from './saveKeys'
 import { createDefaultPlayer } from '../../core/player/Player'
 
 function writeRawSave(version: number): string {
@@ -20,7 +21,7 @@ function writeRawSave(version: number): string {
     materials: [{ materialId: 'legacy_material', amount: 3 }],
   })
 
-  localStorage.setItem('tien-hiep-idle-save', raw)
+  localStorage.setItem(resolveSaveKey(), raw)
 
   return raw
 }
@@ -45,7 +46,7 @@ function writeValidCurrentSave(): string {
     equipmentSlots: [],
   })
 
-  localStorage.setItem('tien-hiep-idle-save', raw)
+  localStorage.setItem(resolveSaveKey(), raw)
 
   return raw
 }
@@ -64,11 +65,11 @@ describe('loadGame — retirement của auto-migration (v42–v46)', () => {
       expect(outcome).toEqual({ status: 'incompatible', foundVersion: version, raw })
 
       // Save gốc KHÔNG bị ghi đè/migrate.
-      expect(localStorage.getItem('tien-hiep-idle-save')).toBe(raw)
+      expect(localStorage.getItem(resolveSaveKey())).toBe(raw)
 
       // Không backup/revision nào được tạo từ đường load.
-      expect(localStorage.getItem('tien-hiep-idle-save-backup')).toBeNull()
-      expect(localStorage.getItem('tien-hiep-idle-save-revision')).toBeNull()
+      expect(localStorage.getItem(resolveBackupKey())).toBeNull()
+      expect(localStorage.getItem(resolveRevisionKey())).toBeNull()
     })
   }
 

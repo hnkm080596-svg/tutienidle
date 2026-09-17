@@ -9,7 +9,7 @@ surface that still goes through the real owners.
 ```bash
 npm run lab          # run tests/lab once
 npm run lab:watch    # watch mode
-npx vitest run tests/lab/scratch.test.ts   # single file
+npx vitest run --config vitest.lab.config.mts tests/lab/<file>   # single file
 ```
 
 ## Usage

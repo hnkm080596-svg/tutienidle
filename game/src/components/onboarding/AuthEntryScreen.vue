@@ -5,9 +5,9 @@ import GameButton from '@/components/common/GameButton.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { authService } from '@/services/auth/AuthServiceFactory'
-import { isValidLoginId, isValidPassword, type AuthenticationMode } from '@/services/auth/AuthService'
+import { isValidLoginId, isValidPassword, type AuthenticationMode, type AuthSession } from '@/services/auth/AuthService'
 
-const emit = defineEmits<{ authenticated: [mode: AuthenticationMode] }>()
+const emit = defineEmits<{ authenticated: [session: AuthSession] }>()
 const mode = ref<'login' | 'register'>('login')
 const loginId = ref('')
 const password = ref('')
@@ -39,7 +39,7 @@ async function authenticate(authenticationMode: AuthenticationMode) {
   // Keep the busy state until the curtain transition unmounts this screen -
   // the save load and scene swap now run while the auth screen is still
   // displayed, and the spinner is the feedback for that window.
-  emit('authenticated', authenticationMode)
+  emit('authenticated', result.session)
 }
 
 function submit() {

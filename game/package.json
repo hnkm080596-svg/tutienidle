@@ -10,9 +10,10 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
+    "verify": "npm run type-check && npm run build && npx vitest run",
     "test": "vitest run",
-    "lab": "vitest run tests/lab",
-    "lab:watch": "vitest tests/lab",
+    "lab": "vitest run --config vitest.lab.config.mts",
+    "lab:watch": "vitest --config vitest.lab.config.mts",
     "test:e2e": "playwright test",
     "check:bundle-split": "node scripts/check-bundle-split.mjs",
     "lint": "eslint .",
@@ -21,15 +22,15 @@
     "assets:route": "node scripts/route-assets.mjs",
     "assets:ink-ui": "node scripts/build-ink-wash-assets.mjs",
     "assets:ink-ui:check": "node scripts/build-ink-wash-assets.mjs --check",
-    "electron:dev": "set ELECTRON=1 && vite",
-    "dist:win": "set ELECTRON=1 && npm run build && electron-builder --win"
+    "electron:dev": "cross-env ELECTRON=1 vite",
+    "dist:win": "cross-env ELECTRON=1 npm run build && electron-builder --win"
   },
   "dependencies": {
     "@floating-ui/vue": "^2.0.1",
     "phaser": "^4.2.1",
     "pinia": "^4.0.2",
     "tone": "^15.1.22",
-    "vue": "rc",
+    "vue": "3.6.0-rc.3",
     "vue-i18n": "^11.4.10",
     "vue-router": "^5.2.0"
   },
@@ -41,6 +42,7 @@
     "@vue/eslint-config-typescript": "^14.9.0",
     "@vue/tsconfig": "^0.9.1",
     "canvas": "^3.2.3",
+    "cross-env": "^10.1.0",
     "electron": "^43.4.1",
     "electron-builder": "^26.15.3",
     "eslint": "^10.9.1",
@@ -61,18 +63,18 @@
     "node": "^22.18.0 || >=24.12.0"
   },
   "overrides": {
-    "vue": "rc",
-    "@vue/compiler-core": "rc",
-    "@vue/compiler-dom": "rc",
-    "@vue/compiler-sfc": "rc",
-    "@vue/compiler-ssr": "rc",
-    "@vue/compiler-vapor": "rc",
-    "@vue/reactivity": "rc",
-    "@vue/runtime-core": "rc",
-    "@vue/runtime-dom": "rc",
-    "@vue/runtime-vapor": "rc",
-    "@vue/server-renderer": "rc",
-    "@vue/shared": "rc",
-    "@vue/compat": "rc"
+    "vue": "3.6.0-rc.3",
+    "@vue/compiler-core": "3.6.0-rc.3",
+    "@vue/compiler-dom": "3.6.0-rc.3",
+    "@vue/compiler-sfc": "3.6.0-rc.3",
+    "@vue/compiler-ssr": "3.6.0-rc.3",
+    "@vue/compiler-vapor": "3.6.0-rc.3",
+    "@vue/reactivity": "3.6.0-rc.3",
+    "@vue/runtime-core": "3.6.0-rc.3",
+    "@vue/runtime-dom": "3.6.0-rc.3",
+    "@vue/runtime-vapor": "3.6.0-rc.3",
+    "@vue/server-renderer": "3.6.0-rc.3",
+    "@vue/shared": "3.6.0-rc.3",
+    "@vue/compat": "3.6.0-rc.3"
   }
 }

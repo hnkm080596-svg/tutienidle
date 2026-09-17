@@ -17,6 +17,13 @@ dist-ssr
 coverage
 *.local
 
+# Local env files (Supabase anon key etc.) — the repo-root .gitignore
+# already covers these; repeated so a bare game/ checkout stays safe.
+# .env.example stays tracked as the template.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

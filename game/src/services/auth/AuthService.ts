@@ -9,6 +9,8 @@ export interface AuthSession {
   sessionId: string
   mode: AuthenticationMode
   loginId?: string
+  /** Supabase auth.users id — absent for mock-auth sessions. */
+  userId?: string
 }
 
 export type AuthErrorCode = 'invalid_id' | 'weak_password' | 'invalid_credentials' | 'id_taken' | 'server_unavailable'

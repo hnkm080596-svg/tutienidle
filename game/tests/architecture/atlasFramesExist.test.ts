@@ -64,8 +64,14 @@ function sourceFiles(root: string): string[] {
 }
 
 const clips = mortalClips()
-const atlasUrl = clips.idle.atlasUrl
-const sheetUrl = clips.idle.sheetUrl
+const idleClip = clips.idle
+
+if (!idleClip) {
+  throw new Error('mortal clips missing idle')
+}
+
+const atlasUrl = idleClip.atlasUrl
+const sheetUrl = idleClip.sheetUrl
 const atlas = JSON.parse(readFileSync(publicPath(atlasUrl), 'utf8')) as AtlasFile
 
 describe('mortal combat atlas frames', () => {
@@ -89,6 +95,10 @@ describe('mortal combat atlas frames', () => {
       for (const name of COMBAT_ANIMATION_NAMES) {
         const clip = clips[name]
 
+        if (!clip) {
+          throw new Error(`${name}: clip not declared`)
+        }
+
         for (let index = clip.firstFrame; index <= clip.lastFrame; index++) {
           const key = frameName(clip, index)
           declaredFrameNames.add(key)
@@ -106,11 +116,15 @@ describe('mortal combat atlas frames', () => {
     'keeps all mortal clips on one sheet with consistent source frames',
     () => {
       expect(new Set(Object.values(clips).map((clip) => clip.sheetKey))).toEqual(
-        new Set([clips.idle.sheetKey]),
+        new Set([idleClip.sheetKey]),
       )
 
       for (const name of COMBAT_ANIMATION_NAMES) {
         const clip = clips[name]
+
+        if (!clip) {
+          throw new Error(`${name}: clip not declared`)
+        }
 
         for (let index = clip.firstFrame; index <= clip.lastFrame; index++) {
           const frame = atlas.frames[frameName(clip, index)]!
