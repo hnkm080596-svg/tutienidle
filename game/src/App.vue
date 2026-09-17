@@ -46,7 +46,6 @@ import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
 import SaveIncompatibleScreen from './components/common/SaveIncompatibleScreen.vue'
 import AuthEntryScreen from './components/onboarding/AuthEntryScreen.vue'
-import MainMenu from './components/menu/MainMenu.vue'
 import CharacterCreationScreen, {
   type CharacterCreationPayload,
 } from './components/onboarding/CharacterCreationScreen.vue'
@@ -178,7 +177,6 @@ const coordinator = new GamePresentationCoordinator({
   scheduler: deadlineScheduler,
   initialRoute: 'boot',
   initialBootSubphase: 'intro',
-  initialShowMainMenu: false,
 })
 const presentation = createGamePresentation({
   coordinator,
@@ -206,21 +204,6 @@ provide(PHASER_SCENE_ADAPTER_KEY, phaserSceneAdapter)
 provide(ASSET_BUNDLE_MANAGER_KEY, assetBundleManager)
 provide(VUE_ROUTE_ADAPTER_KEY, routeAdapter)
 provide(GAME_PRESENTATION_KEY, presentation)
-
-// MainMenu overlay state synced with coordinator snapshot
-const showMainMenu = computed({
-  get: () => routeAdapter.showMainMenu.value,
-  set: (val: boolean) => coordinator.setShowMainMenu(val),
-})
-
-function handleMenuStart() {
-  showMainMenu.value = false
-  void bootGame(false)
-}
-
-function handleMenuSettings() {
-  ui.leftPanelMode = 'settings'
-}
 
 // A failed tribulation transition with a breakthrough ALREADY in progress
 // offers RETRY ONLY: there is no domain cancel-tribulation command, and
@@ -538,11 +521,9 @@ function tick() {
 }
 
 async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
-  // MainMenu là entry tạm thời — mọi đường vào game (menu "Bắt đầu",
-  // guest auth, đăng nhập, tạo nhân vật) đều phải tắt nó để GameRoot
-  // hiện được. Idempotent: gọi lại khi menu đã ẩn là no-op.
-  showMainMenu.value = false
-
+  // Entry flow: guest auth, đăng nhập, tạo nhân vật — mọi đường vào game
+  // đều đi qua đây để GameRoot hiện. Idempotent: gọi lại khi đã boot là
+  // no-op.
   // Remediation Task 5 — bootInFlight guard trong composable: boot thứ 2
   // khi boot đầu còn pending bị skip; guard reset khi fail để retry chạy
   // được. Phần dưới chỉ xử lý UI hiển thị theo outcome.
@@ -711,20 +692,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- MainMenu overlay tạm (Task 8 online-foundation sẽ thay thế):
-       hiện từ lúc mount phủ trên intro/auth, đóng vĩnh viễn khi
-       bootGame() chạy — qua nút "Bắt đầu tu luyện" hoặc auth flow.
-       Layer: OVERLAY_LAYERS.mainMenu (MainMenu.vue tự bind) phủ
-       LoadingScreen 3s đầu; user thấy menu thay vì màn loading. -->
-  <Transition>
-    <MainMenu
-      v-if="showMainMenu"
-      class="main-menu-overlay"
-      @start="handleMenuStart"
-      @settings="handleMenuSettings"
-    />
-  </Transition>
-
   <RouteMount v-if="entryStage === 'intro'" route="boot">
     <LoadingScreen />
   </RouteMount>
@@ -758,7 +725,7 @@ onUnmounted(() => {
 
   <ErrorBoundary v-else>
     <!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot (intro, hoặc khi
-         transition vào game chưa entered), SAU KHI MainMenu đã đóng. -->
+         transition vào game chưa entered). -->
     <LoadingScreen v-if="!isBooted" />
 
     <!-- GameRoot chỉ hiện khi boot xong -->
@@ -826,13 +793,6 @@ body {
   background: var(--paper-100);
   color: var(--paper-text);
   cursor: pointer;
-}
-
-.main-menu-overlay {
-  position: fixed;
-  inset: 0;
-  /* No z-index here — the component binds OVERLAY_LAYERS.mainMenu itself
-     so the app-level overlay order has a single source. */
 }
 
 .v-enter-active,

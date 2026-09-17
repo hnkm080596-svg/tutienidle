@@ -660,8 +660,8 @@ describe('GamePresentationCoordinator', () => {
 
     // Unsubscribe works
     unsubscribe()
-    coordinator.setShowMainMenu(true)
-    expect(received?.showMainMenu).toBe(false)
+    coordinator.setBootSubphase('initializing')
+    expect(received?.bootSubphase).toBeNull()
   })
 
   it('runs behindCurtain on a non-session target after curtain close, requiring no session', async () => {

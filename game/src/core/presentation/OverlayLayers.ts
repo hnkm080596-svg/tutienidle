@@ -19,9 +19,7 @@
 export const OVERLAY_LAYERS = {
   /** CombatPauseOverlay — deliberately below the curtain: a route transition always covers the pause prompt. */
   combatPause: 900,
-  /** MainMenu — boot entry overlay, above LoadingScreen's plain DOM-order stacking. */
-  mainMenu: 1000,
-  /** ActionFeedbackLog — bottom-right action history. */
+/** ActionFeedbackLog — bottom-right action history. */
   feedback: 1200,
   /** ToastContainer — transient notifications. */
   toast: 1500,
