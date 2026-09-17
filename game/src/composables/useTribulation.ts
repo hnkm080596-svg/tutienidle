@@ -8,6 +8,7 @@ import { TribulationOutcomeService, type TribulationOutcomeResult, type Tribulat
 import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import { useUiStore } from '../stores/ui'
 import { isBattleInProgress } from '../core/battle/BattleTypes'
+import { getNextRealm } from '../core/realm/realmSystem'
 import { i18n } from '@/i18n'
 
 // R8.2 (AR-10): outcome authority lives in TribulationOutcomeService (core).
@@ -20,12 +21,6 @@ import { i18n } from '@/i18n'
 // Tr?m gate (blockIfNoBasicAttack, 2026-08-20 -> gap 2026-08-21) - PhA?p
 // Tu t? h?c + trang b? S?N 1 chiA?u c? b?n ngay lA?c ch?n path, tA�nh
 // hu?ng "chua trang b? gA�" khA4ng cA2n x?y ra.
-
-function resolveNextBreakthroughRealm(currentRealmId: string): string | null {
-  if (currentRealmId === 'mortal') return 'qi_refining'
-  if (currentRealmId === 'qi_refining') return 'foundation_establishment'
-  return null
-}
 
 /**
  * Bấm nút đột phá (Quán Khí / Trúc Cơ / Độ Kiếp sau Trúc Cơ). Tự
@@ -50,7 +45,7 @@ export function triggerBreakthroughAction(
   }
 
   const tribulationOutcomeService = new TribulationOutcomeService()
-  const targetRealmId = resolveNextBreakthroughRealm(player.realmId)
+  const targetRealmId = getNextRealm(player.realmId)?.id ?? null
   if (!targetRealmId) {
     return false
   }

@@ -309,4 +309,31 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(false)
     expect(gameManager.tribulationDirector.getState()).not.toBeNull()
   })
+
+  it('target realm resolve qua getNextRealm — mortal→qi_refining, qi_refining→foundation_establishment', () => {
+    // Mission G Task 35 — pin the single-owner swap: the breakthrough
+    // target must come from the realm ladder, not a local map.
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerPills(pills)
+    const player = usePlayerStore()
+
+    player.realmId = 'mortal'
+    player.realmLevel = 12
+
+    expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
+    expect(gameManager.tribulationDirector.getState()?.targetRealmId).toBe('qi_refining')
+  })
+
+  it('foundation_establishment+ — canTriggerBreakthrough từ chối, action trả false', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    const player = usePlayerStore()
+
+    player.realmId = 'foundation_establishment'
+    player.realmLevel = 18
+
+    expect(triggerBreakthroughAction(player, gameManager)).toBe(false)
+    expect(gameManager.tribulationDirector.getState()).toBeNull()
+  })
 })
