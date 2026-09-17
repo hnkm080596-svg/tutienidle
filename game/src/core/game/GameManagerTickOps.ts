@@ -1,5 +1,6 @@
 import type { AlchemySystem } from '../alchemy/AlchemySystem'
 import type { BuffSystem } from '../buff/BuffSystem'
+import type { Material } from '../material/Material'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { PillBag } from '../pill/PillBag'
@@ -261,30 +262,32 @@ export class GameManagerTickOps {
    * old inline tick block.
    */
   deliverDecomposeOutput(entry: DecomposeOutputEntry): void {
-    const tinhHoa = this.deps.materialRegistry.has(entry.materialId)
-      ? this.deps.materialRegistry.get(entry.materialId)
-      : undefined
+    // Registry miss → typed fallback Material (decompose output is
+    // produced by buildings; the id doubles as display name).
+    const tinhHoa: Material =
+      (this.deps.materialRegistry.has(entry.materialId)
+        ? this.deps.materialRegistry.get(entry.materialId)
+        : undefined) ?? {
+        id: entry.materialId,
+        name: entry.materialId,
+        category: 'other',
+        sourceType: 'building',
+      }
 
-    const overflow = this.deps.materialBag.add(
-      tinhHoa ?? ({ id: entry.materialId, name: entry.materialId } as never),
-      entry.amount,
-    )
+    const overflow = this.deps.materialBag.add(tinhHoa, entry.amount)
 
     const delivered = entry.amount - overflow
 
     if (delivered > 0) {
       this.deps.notifications.push({
         kind: 'craft',
-        message: `Phân Giải +${delivered} ${(tinhHoa as { name?: string } | undefined)?.name ?? 'Tinh Hoa'}`,
+        message: `Phân Giải +${delivered} ${tinhHoa.name}`,
       })
     }
 
     if (overflow > 0) {
       this.deps.notifications.push(
-        createBagOverflowEvent(
-          (tinhHoa as { name?: string } | undefined)?.name ?? entry.materialId,
-          overflow,
-        ),
+        createBagOverflowEvent(tinhHoa.name, overflow),
       )
     }
   }
