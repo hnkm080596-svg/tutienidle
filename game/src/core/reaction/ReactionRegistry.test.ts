@@ -1,0 +1,154 @@
+// ReactionRegistry.test.ts -- megaplan M1 step 1: startup validation
+// throws on every listed malformation; canonical coverage enforced.
+
+import { describe, expect, it } from 'vitest'
+import type { BuffDefinitionId } from '../battle/contracts/ids'
+import type { ReactionDefinition } from './ReactionDefinition'
+import { ReactionRegistry, validateReactionDefinitions } from './ReactionRegistry'
+import {
+  createReactionTestWorld,
+  makeCanonicalReactionDefs,
+  TEST_ELEMENT_BUFF_IDS,
+} from './testing/ReactionTestFixtures'
+
+function setup() {
+  const w = createReactionTestWorld()
+  const buffExists = (id: string) =>
+    w.registry.all().some((d) => d.id === id)
+  return { w, buffExists }
+}
+
+describe('ReactionRegistry validation', () => {
+  it('accepts the canonical 10-def catalog', () => {
+    const { w, buffExists } = setup()
+    const registry = new ReactionRegistry(
+      makeCanonicalReactionDefs(),
+      w.elements,
+      buffExists,
+    )
+    expect(registry.all()).toHaveLength(10)
+    expect(registry.get('duong_viem').elements.parent).toBe('wood')
+  })
+
+  it('throws on duplicate ReactionId', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs.push({ ...defs[0]! })
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/duplicate reaction id/)
+  })
+
+  it('throws on duplicate selectionTiePriority (id spelling never decides)', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs.push({ ...defs[0]!, id: 'duong_viem_alias' })
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/duplicate selectionTiePriority/)
+  })
+
+  it('throws on sinh def missing parent+child', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs[0] = { ...defs[0]!, elements: { parent: 'wood' } }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/requires parent \+ child/)
+  })
+
+  it('throws on khac def missing attacker+defender', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs[5] = { ...defs[5]!, elements: { attacker: 'water' } }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/requires attacker \+ defender/)
+  })
+
+  it('throws on wrong-relation fields', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs[0] = {
+      ...defs[0]!,
+      elements: { parent: 'wood', child: 'fire', attacker: 'water' },
+    }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/must not carry attacker\/defender/)
+  })
+
+  it('throws on self-element relation', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs[0] = { ...defs[0]!, elements: { parent: 'fire', child: 'fire' } }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/self-element/)
+  })
+
+  it('throws on non-canonical pair direction', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    // wood->metal is khac territory (metal overcomes wood), not sinh.
+    defs[0] = {
+      ...defs[0]!,
+      elements: { parent: 'wood', child: 'metal' },
+    }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/not a canonical sinh pair/)
+  })
+
+  it('throws on apply_status payoff referencing an unknown buff', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs[0] = {
+      ...defs[0]!,
+      payoff: {
+        steps: [
+          {
+            kind: 'apply_status',
+            definitionId: 'test_no_such_buff' as BuffDefinitionId,
+          },
+        ],
+      },
+    }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/unknown buff/)
+  })
+
+  it('throws when a canonical pair has no definition', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs().filter(
+      (d) => d.id !== 'duong_viem',
+    )
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/canonical pair 'sinh:wood>fire'/)
+  })
+
+  it('throws on two defs for one canonical pair', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs.push({
+      ...defs[0]!,
+      id: 'duong_viem_bis',
+      selectionTiePriority: 999,
+    })
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists),
+    ).toThrow(/defined by both/)
+  })
+
+  it('registry get() throws on unknown id', () => {
+    const { w, buffExists } = setup()
+    const registry = new ReactionRegistry(
+      makeCanonicalReactionDefs(),
+      w.elements,
+      buffExists,
+    )
+    expect(() => registry.get('nope')).toThrow(/unknown reaction id/)
+  })
+})
