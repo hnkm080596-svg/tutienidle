@@ -16,6 +16,11 @@ import { HERB_AGES, PRODUCTION_SITE_KINDS } from './ProductionTypes'
 import { HERB_AGE_WEIGHTS, MATERIAL_AGE_WEIGHTS } from './ProductionBalance'
 import { REALM_TIERS } from '../realm/RealmTierMap'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
+import {
+  buildProfessionMaterialId,
+  herbBaseId,
+  herbMaterialId,
+} from '../profession/ProfessionMaterial'
 
 export const TERRITORY_THANH_VAN: TerritoryDefinition = {
   id: 'thanh_van',
@@ -51,7 +56,7 @@ const SITE_UPGRADE_COSTS = (): ProductionSiteDefinition['upgradeCosts'] => {
   return REALM_TIERS.slice(1).map((realmId, index) => {
     const targetTier = index + 2
     return {
-      woodMaterialId: `${realmId}_wood_${ageByTier[targetTier] ?? 'decade'}`,
+      woodMaterialId: buildProfessionMaterialId('wood', realmId, ageByTier[targetTier] ?? 'decade'),
       woodAmount: Math.round(5 * Math.pow(1.65, index)),
       spiritStone: Math.round(100 * Math.pow(2.2, index)),
     }
@@ -108,7 +113,7 @@ export const THANH_VAN_PRODUCTION_SITES: readonly ProductionSiteDefinition[] = [
 export const THANH_VAN_FOREST_REWARDS: readonly ForestRewardDefinition[] = TERRITORY_THANH_VAN.realmIds.flatMap(
   (realmId) =>
     HERB_AGES.map((age) => ({
-      materialId: `${realmId}_wood_${age}`,
+      materialId: buildProfessionMaterialId('wood', realmId, age),
       realmId,
       age,
       // Số lượng theo tuổi nằm ở balance; definition giữ 0 để resolver
@@ -121,7 +126,7 @@ export const THANH_VAN_FOREST_REWARDS: readonly ForestRewardDefinition[] = TERRI
 export const THANH_VAN_MINE_REWARDS: readonly MineRewardDefinition[] = HERB_AGES.flatMap(
   (age) =>
     TERRITORY_THANH_VAN.realmIds.map((realmId) => ({
-      materialId: `${realmId}_ore_${age}`,
+      materialId: buildProfessionMaterialId('ore', realmId, age),
       realmId,
       age,
       // Số lượng theo tuổi nằm ở balance; definition giữ 0 để resolver
@@ -151,7 +156,7 @@ export interface GrottoHerbBase {
 
 export const THANH_VAN_GROTTO_HERB_BASES: readonly GrottoHerbBase[] =
   TERRITORY_THANH_VAN.realmIds.flatMap((realmId) => PILL_FAMILIES.map((family) => ({
-    baseId: `${family.herbId}_${realmId}`,
+    baseId: herbBaseId(family.herbId, realmId),
     name: family.herbName,
     pillRecipeId: `alchemy_${family.id}_${realmId}`,
     realmId,
@@ -160,7 +165,7 @@ export const THANH_VAN_GROTTO_HERB_BASES: readonly GrottoHerbBase[] =
 export const THANH_VAN_GROTTO_HERBS: readonly GrottoHerbDefinition[] =
   THANH_VAN_GROTTO_HERB_BASES.flatMap((base) =>
     HERB_AGES.map((age) => ({
-      materialId: `${base.baseId}_${age}`,
+      materialId: herbMaterialId(base.baseId, age),
       realmId: base.realmId,
       pillRecipeId: base.pillRecipeId,
       age,

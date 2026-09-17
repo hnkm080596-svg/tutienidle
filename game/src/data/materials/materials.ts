@@ -1,6 +1,11 @@
 import type { Material } from '@/core/material/Material'
 import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 import type { ProfessionMaterialMeta } from '@/core/profession/ProfessionMaterial'
+import {
+  buildProfessionMaterialId,
+  herbBaseId,
+  herbMaterialId,
+} from '@/core/profession/ProfessionMaterial'
 import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import { REALMS } from '@/data/realms/realm'
@@ -186,7 +191,7 @@ function buildProfessionMaterials(): Material[] {
   for (const realmId of REALM_TIERS) {
     for (const age of ages) {
       list.push({
-        id: `${realmId}_wood_${age}`,
+        id: buildProfessionMaterialId('wood', realmId, age),
         name: `${MATERIAL_AGE_LABELS[age]} Linh Mộc ${REALM_LABEL_BY_ID[realmId] ?? realmId}`,
         category: 'wood',
         element: 'wood',
@@ -202,7 +207,7 @@ function buildProfessionMaterials(): Material[] {
   for (const realmId of REALM_TIERS) {
     for (const age of ages) {
       list.push({
-        id: `${realmId}_ore_${age}`,
+        id: buildProfessionMaterialId('ore', realmId, age),
         name: `${MATERIAL_AGE_LABELS[age]} Linh Khoáng ${REALM_LABEL_BY_ID[realmId] ?? realmId}`,
         category: 'ore',
         element: 'metal',
@@ -227,10 +232,10 @@ function buildReworkPillHerbs(): Material[] {
 
   return REALM_TIERS.flatMap((realmId) =>
     PILL_FAMILIES.flatMap((family) => {
-      const herbBaseId = `${family.herbId}_${realmId}`
+      const baseId = herbBaseId(family.herbId, realmId)
 
       return ages.map((age) => ({
-        id: `${herbBaseId}_${age}`,
+        id: herbMaterialId(baseId, age),
         name: `${HERB_AGE_LABELS[age]} ${family.herbName}`,
         category: 'herb' as const,
         years: HERB_AGE_YEARS[age],
@@ -243,7 +248,7 @@ function buildReworkPillHerbs(): Material[] {
           realmId,
           age,
           pillRecipeId: `alchemy_${family.id}_${realmId}`,
-          herbBaseId,
+          herbBaseId: baseId,
         },
       }))
     }),

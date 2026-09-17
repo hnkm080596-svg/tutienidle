@@ -2,12 +2,13 @@ import type { AlchemyHerbVariant, AlchemyRecipe } from '@/core/alchemy/AlchemySy
 import { HERB_AGES } from '@/core/production/ProductionTypes'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
+import { herbBaseId, herbMaterialId } from '@/core/profession/ProfessionMaterial'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 /** Biến thể phủ ĐỦ trục HerbAge (5 bậc — gp123 6E C1, thuong_co craftable). */
 function grottoVariants(baseId: string): AlchemyHerbVariant[] {
   return HERB_AGES.map((age) => ({
-    materialId: `${baseId}_${age}`,
+    materialId: herbMaterialId(baseId, age),
     age,
     label: MATERIAL_AGE_LABELS[age],
   }))
@@ -19,7 +20,7 @@ const generatedRecipes: AlchemyRecipe[] = REALM_TIERS.flatMap((realmId, tierInde
     id: `alchemy_${family.id}_${realmId}`,
     pillId: `${family.id}_${realmId}`,
     realmId,
-    herbVariants: grottoVariants(`${family.herbId}_${realmId}`),
+    herbVariants: grottoVariants(herbBaseId(family.herbId, realmId)),
     herbAmount: 2 + Math.floor(tierIndex / 3),
     fuelWoodRealmId: realmId,
     fuelWoodAmount: 2 + Math.floor(tierIndex / 2),

@@ -13,6 +13,7 @@ import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { HerbAge } from '../production/ProductionTypes'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
+import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { mulberry32 } from '../production/ProductionBalance'
 
 /** Biến thể nguyên liệu của thảo — stack cụ thể trong Bag. */
@@ -173,7 +174,7 @@ export function resolveFuelWood(
   amount: number,
   requiredAge: AlchemyHerbVariant['age'],
 ): string | null {
-  const candidate = `${realmId}_wood_${requiredAge}`
+  const candidate = buildProfessionMaterialId('wood', realmId, requiredAge)
 
   return bag.has(candidate, amount) ? candidate : null
 }

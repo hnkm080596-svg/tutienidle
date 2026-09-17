@@ -6,6 +6,7 @@ import { useNotificationStore } from '@/stores/notification'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
+import { buildProfessionMaterialId } from '@/core/profession/ProfessionMaterial'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
@@ -152,7 +153,7 @@ const fuelWoodRow = computed(() => {
     return null
   }
 
-  const woodId = `${recipe.fuelWoodRealmId}_wood_${variant.age}`
+  const woodId = buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant.age)
 
   return {
     label: gameManager.materialRegistry.has(woodId)
