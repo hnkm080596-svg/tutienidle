@@ -1111,7 +1111,18 @@
     "aria": {
       "open": "Mở {name}",
       "viewRequirements": "Xem yêu cầu mở {name}"
-    }
+    },
+    "status": {
+      "built": "Đã mở · Cấp {level}/{max}",
+      "notBuilt": "Chưa mở · Nhấn để xem yêu cầu"
+    },
+    "level": "Cấp {level}",
+    "notBuilt": "Chưa mở"
+  },
+  "buildingGate": {
+    "free": "Miễn phí",
+    "confirmTitle": "Xây {name}?",
+    "confirmMessage": "Sẽ tốn {cost}."
   },
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác."

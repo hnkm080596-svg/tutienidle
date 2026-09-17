@@ -120,6 +120,11 @@ function mountHomeBuildings(
     seasonOverlay: () =>
       container.querySelector<HTMLImageElement>('.home-building-hotspots__season-overlay'),
 
+    bump: async () => {
+      stateVersion.value += 1
+      await nextTick()
+    },
+
     setVariant: async (nextVariant: ThanhVanVariant) => {
       renderedVariant.value = nextVariant
       await nextTick()
@@ -424,6 +429,50 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
     const nameplate = mounted.nameplate('pill_room')!
 
     expect(nameplate.classList.contains('building-nameplate--default')).toBe(true)
+
+    mounted.unmount()
+  })
+
+  // T4-31 — presentationFor/statusFor read no reactive source, so badges
+  // and nameplates froze at first render. After the fix they track
+  // stateVersion: a build landing after mount must flip the badge.
+  it('badge flips locked → built after a building materializes + bumpState', async () => {
+    const mounted = mountHomeBuildings(gameManager)
+
+    const nameplate = mounted.nameplate('pill_room')!
+    expect(nameplate.classList.contains('building-nameplate--locked')).toBe(true)
+
+    gameManager.buildingManager.add({
+      instanceId: 'inst_pill_late',
+      buildingId: 'pill_room',
+      level: 1,
+      lastCollectedAt: 0,
+    })
+    await mounted.bump()
+
+    expect(nameplate.classList.contains('building-nameplate--locked')).toBe(false)
+    expect(nameplate.classList.contains('building-nameplate--default')).toBe(true)
+    expect(nameplate.textContent).toContain('Cấp 1')
+
+    mounted.unmount()
+  })
+
+  it('badge flips to upgradeable when upgrade materials arrive + bumpState', async () => {
+    gameManager.buildingManager.add({
+      instanceId: 'inst_pill_late_up',
+      buildingId: 'pill_room',
+      level: 1,
+      lastCollectedAt: 0,
+    })
+
+    const mounted = mountHomeBuildings(gameManager)
+    const nameplate = mounted.nameplate('pill_room')!
+    expect(nameplate.classList.contains('building-nameplate--upgradeable')).toBe(false)
+
+    gameManager.materialBag.add(UPGRADE_MATERIAL, 10)
+    await mounted.bump()
+
+    expect(nameplate.classList.contains('building-nameplate--upgradeable')).toBe(true)
 
     mounted.unmount()
   })

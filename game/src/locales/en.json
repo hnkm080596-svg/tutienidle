@@ -1111,7 +1111,18 @@
     "aria": {
       "open": "Open {name}",
       "viewRequirements": "View unlock requirements for {name}"
-    }
+    },
+    "status": {
+      "built": "Unlocked · Level {level}/{max}",
+      "notBuilt": "Locked · Click to view requirements"
+    },
+    "level": "Level {level}",
+    "notBuilt": "Locked"
+  },
+  "buildingGate": {
+    "free": "Free",
+    "confirmTitle": "Build {name}?",
+    "confirmMessage": "This will cost {cost}."
   },
   "save": {
     "conflict": "Save was changed by another session."
