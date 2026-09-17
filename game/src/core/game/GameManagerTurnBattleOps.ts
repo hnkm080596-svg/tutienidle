@@ -888,35 +888,21 @@ export class GameManagerTurnBattleOps {
    * services - the battle that owned all of that can never resume. Rather
    * than leave a zombie 'fighting' reference on torn-down machinery,
    * destroy it outright with the same teardown abandonBattle performs
-   * (session end, defeat terminal, stage-lease release, enemy cleanup,
-   * clock stop) and drop every per-battle binding back to known-idle.
-   * The lease release also covers the repeat path, where no wave-side
-   * launch transaction wraps the mid-cycle restart.
+   * (session end, stage-lease release, enemy cleanup, clock stop) and
+   * drop every per-battle binding back to known-idle. Terminal semantics
+   * are NOT handled here - beginBattleCycle already published the
+   * outgoing battle's defeat pre-commit, and a half-built new battle
+   * never earns one. The lease release also covers the repeat path,
+   * where no wave-side launch transaction wraps the mid-cycle restart.
    */
-  private discardFailedCycle(previousBattle: TurnBattle | null): void {
-    // Terminal teardown runs ONLY for a previous battle that was still
-    // in progress: its destruction must publish defeat exactly once (the
-    // once-guard was just re-armed by this cycle's reset, so this IS that
-    // battle's one battle_end; its carry was already banked pre-commit by
-    // beginBattleCycle, before the cycle reset could zero the stacks).
-    // Two cases get dropped silently instead:
-    // - an already-terminal previous battle (a repeat restart failing
-    //   after victory) - its terminal was already published and its
-    //   carry already banked; re-marking defeat would double-publish.
-    // - a half-built NEW battle (this.turnBattle may already point at
-    //   it) - it never began, so no session was published for it;
-    //   emitting battle_end would send a phantom defeat to consumers
-    //   that never saw a start. Keying on previousBattle, NOT on
-    //   this.turnBattle, keeps the live battle's terminal intact even
-    //   when the reference was already handed to the half-built one.
-    if (
-      previousBattle !== null &&
-      previousBattle.state !== 'victory' &&
-      previousBattle.state !== 'defeat'
-    ) {
-      previousBattle.state = 'defeat'
-      this.rewardOps.emitAbandonEnd()
-    }
+  private discardFailedCycle(): void {
+    // Whatever this.turnBattle still points at is dropped WITHOUT a
+    // terminal event: a half-built new battle never began, so emitting
+    // battle_end would send a phantom defeat to consumers that never
+    // saw a start; and the previous battle is always already terminal
+    // by this point (beginBattleCycle terminalizes a non-terminal
+    // outgoing battle pre-commit; a repeat's previous was terminal to
+    // begin with), so it needs nothing here.
     this.turnBattle = null
 
     const session = this.presentationOps.session.getCurrentSession()
@@ -979,36 +965,57 @@ export class GameManagerTurnBattleOps {
   ): void {
     // Failure contract (Mission C r2, destructive semantics): everything
     // after the commit section runs inside a transaction - any throw
-    // mid-cycle runs discardFailedCycle(), which destroys the previous
-    // battle outright and returns the ops to known-idle. The alternative
+    // mid-cycle runs discardFailedCycle(), which drops the half-built
+    // battle and returns the ops to known-idle. The alternative
     // (leaving the old battle's reference live with its machinery already
     // reset) is a zombie half-cycle, strictly worse than a clean kill.
-    // previousBattle is captured here so discard can tell the legitimately
-    // live battle (terminal teardown) from a half-built new one (drop
-    // silently - it never began).
+    // previousBattle is captured here for the pre-commit terminal block:
+    // the outgoing battle ends the moment this cycle begins, whether the
+    // construction below succeeds or throws.
     const previousBattle = this.turnBattle
     const previousPlayer = this.playerDataForTurnBattle
 
-    // C11: a non-terminal previous battle ends here, so bank its carry
-    // BEFORE the committed section's resetStacks() zeroes the live
-    // stacks - 'bank at battle end regardless of outcome' is the
-    // authored rule, and a mid-fight replace is an implicit end, same
-    // as abandon. A terminal previous battle already banked at its
-    // terminal, and banking AFTER the reset would persist zeros, so
-    // this is the only correct point to do it.
+    // C11+C13: a non-terminal previous battle ends here - a mid-fight
+    // replace is an implicit battle end, same as abandon. So BEFORE the
+    // committed section's resets run, the outgoing battle gets its full
+    // terminal treatment: bank carry while the live stacks still exist
+    // (post-reset banking persists zeros; a terminal previous battle
+    // already banked at its terminal) and publish its exactly-one
+    // battle_end - the rewardOps contract owes every ended battle a
+    // terminal event even when the replacement SUCCEEDS, otherwise
+    // presentation consumers watch a battle vanish with no terminal.
+    // Once this block runs the previous battle is always terminal, so
+    // the discard path never has to terminalize it.
     if (
       previousBattle !== null &&
       previousBattle.state !== 'victory' &&
-      previousBattle.state !== 'defeat' &&
-      previousPlayer !== null
+      previousBattle.state !== 'defeat'
     ) {
-      this.deps.bankPassiveCarry(previousPlayer)
+      if (previousPlayer !== null) {
+        this.deps.bankPassiveCarry(previousPlayer)
+      }
+      previousBattle.state = 'defeat'
+      this.rewardOps.emitAbandonEnd()
+
+      // A stage battle's implicit end also ends its stage run - same as
+      // abandon/defeat, which release the lease so the next startStage
+      // is not refused forever. Guarded on the incoming cycle's kind: a
+      // 'stage' launch already acquired the slot for ITS stage before
+      // beginBattleCycle ran, so releasing here would kill the new
+      // battle's own lease; 'repeat' preserves its run's lease (and is
+      // unreachable anyway - a repeat's previous is always terminal).
+      // For fresh/test incoming cycles the wave lease can only belong
+      // to the outgoing stage battle, or be absent - either way
+      // stopRepeat() is the right end-of-run cleanup.
+      if (policy.kind !== 'stage' && !policy.preserveStageBinding) {
+        this.deps.stageWaves.stopRepeat()
+      }
     }
 
     try {
       this.beginBattleCycleCommitted(policy, request)
     } catch (error) {
-      this.discardFailedCycle(previousBattle)
+      this.discardFailedCycle()
       throw error
     }
   }

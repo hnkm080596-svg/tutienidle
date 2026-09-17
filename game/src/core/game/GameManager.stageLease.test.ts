@@ -404,6 +404,26 @@ describe('C6 - a thrown launch destroys the previous battle (no zombie)', () => 
     gameManager.turnBattleOps.setPathRuntimeResolver(undefined)
     expect(() => gameManager.startBattleWithPlayer(player, DUMMY)).not.toThrow()
   })
+
+  it('a successful mid-fight replace publishes the replaced battle\'s one defeat terminal (C13)', () => {
+    const { gameManager, player } = setup(DUMMY)
+
+    gameManager.startBattleWithPlayer(player, DUMMY)
+    expect(gameManager.getTurnBattle()?.state).toBe('intro')
+
+    const battleEnds: string[] = []
+    gameManager.eventBus.on('battle_end', (event: { state: string }) => {
+      battleEnds.push(event.state)
+    })
+
+    // The replace SUCCEEDS - the implicit-end contract still owes the
+    // outgoing battle its exactly-one terminal event, same as an
+    // explicit abandon.
+    gameManager.startBattleWithPlayer(player, DUMMY)
+
+    expect(battleEnds).toEqual(['defeat'])
+    expect(gameManager.getTurnBattle()?.state).toBe('intro')
+  })
 })
 
 describe('C8 - stopRepeat clears the stage run\'s player context', () => {
