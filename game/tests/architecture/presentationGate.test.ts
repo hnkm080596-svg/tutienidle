@@ -33,6 +33,10 @@ const GATE_KEYS = [
   'lastBattlePositionsSnapshot',
   'battlefieldGeometry',
   'kiemBarReader',
+  // Audit T7-67 — added 2026-09-16 after drifting (theBarReader shipped in
+  // Phap Tu Task 16 without joining this list). When the gate gains a key,
+  // add its literal here in the same commit or the guard goes blind to it.
+  'theBarReader',
 ]
 
 const RAW_ACCESS = new RegExp(
