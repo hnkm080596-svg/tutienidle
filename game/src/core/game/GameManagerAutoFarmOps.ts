@@ -5,7 +5,7 @@ import type { PlayerData } from '../player/Player'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 import type { Stage } from '../stage/Stage'
-import type { ActiveStage, StageManager } from '../stage/StageManager'
+import type { StageLease, StageManager } from '../stage/StageManager'
 import type { TemplateRegistry } from './TemplateRegistry'
 import type { BattleLootSystem, RewardPendingEnemy } from './BattleLootSystem'
 import type { StageWaveSystem } from './StageWaveSystem'
@@ -35,13 +35,13 @@ function isValidCycleSeconds(cycleSeconds: number | undefined): cycleSeconds is 
  */
 export class GameManagerAutoFarmOps {
   /**
-   * The ActiveStage object THIS authority acquired — tracked by object
+   * The StageLease token THIS authority acquired — tracked by object
    * identity, not stageId: a slot re-acquired by a foreign owner for the
-   * same stage is a different object and must neither be released by the
+   * same stage is a different token and must neither be released by the
    * farm nor satisfy the tick's lease check. Self-heals at reconcile when
-   * the slot no longer holds this object (external release path).
+   * the slot no longer holds this token (external release path).
    */
-  private farmLease: ActiveStage | null = null
+  private farmLease: StageLease | null = null
 
   constructor(
     private readonly deps: {
@@ -125,11 +125,10 @@ export class GameManagerAutoFarmOps {
   reconcileAutoFarmRuntime(player: PlayerData): void {
     const autoFarm = player.autoFarmStage
 
-    // An external release path (stopRepeat on a stale battle reference)
-    // can free the slot while this marker still points at the dead
-    // ActiveStage — the marker is only meaningful while the slot still
-    // holds that exact object.
-    if (this.farmLease !== null && this.deps.stageManager.get() !== this.farmLease) {
+    // An external release path can free the slot while this marker still
+    // points at the dead token — the marker is only meaningful while the
+    // slot still holds that exact object.
+    if (!this.deps.stageManager.owns(this.farmLease)) {
       this.farmLease = null
     }
 
@@ -264,7 +263,7 @@ export class GameManagerAutoFarmOps {
     // must not satisfy the tick into its live battle session).
     if (
       this.farmLease === null ||
-      this.deps.stageManager.get() !== this.farmLease ||
+      !this.deps.stageManager.owns(this.farmLease) ||
       this.farmLease.stageId !== autoFarm.stageId
     ) {
       return

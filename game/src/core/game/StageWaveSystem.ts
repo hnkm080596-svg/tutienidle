@@ -5,7 +5,7 @@ import { applyEnemyTags } from '../enemy/EnemyTag'
 import { ENEMY_TAGS } from '../../data/enemy/EnemyTags'
 import { rollChance } from '../reward/DropRoll'
 import type { PlayerData } from '../player/Player'
-import type { ActiveStage, StageManager } from '../stage/StageManager'
+import type { StageLease, StageManager } from '../stage/StageManager'
 import type { StageSystem } from '../stage/StageSystem'
 import type { Stage } from '../stage/Stage'
 import type { EnemySystem } from '../enemy/EnemySystem'
@@ -42,11 +42,11 @@ export interface StageWaveSystemDeps {
 export class StageWaveSystem {
   private activeStagePlayer?: PlayerData
   private repeatStageContinuously = false
-  // The lease object THIS stage run acquired — the ownership capability
+  // The lease token THIS stage run acquired — the ownership capability
   // (Mission C audit): release is valid only while the slot still holds
-  // this exact object, so a stale stopRepeat can never stomp a foreign
+  // this exact token, so a stale stopRepeat can never stomp a foreign
   // owner's lease.
-  private stageLease: ActiveStage | null = null
+  private stageLease: StageLease | null = null
 
   constructor(private readonly deps: StageWaveSystemDeps) {}
 
@@ -73,7 +73,7 @@ export class StageWaveSystem {
 
     // Self-heal a stale marker: our previous lease died externally, so
     // it must not count as "us still holding the slot".
-    if (this.stageLease !== null && this.deps.stageManager.get() !== this.stageLease) {
+    if (!this.deps.stageManager.owns(this.stageLease)) {
       this.stageLease = null
     }
 
@@ -108,7 +108,7 @@ export class StageWaveSystem {
     }
   }
 
-  private rollbackFailedStart(lease: ActiveStage): void {
+  private rollbackFailedStart(lease: StageLease): void {
     this.deps.stageManager.release(lease)
     this.stageLease = null
     this.activeStagePlayer = undefined
@@ -133,6 +133,10 @@ export class StageWaveSystem {
       this.stageLease = null
     }
     this.repeatStageContinuously = false
+    // C8 — the stage run's player context must not outlive the stage
+    // hold: pickEnemyForSpawn reads it for the hidden-beast roll, and
+    // this same system serves the idle auto-farm pick channel.
+    this.activeStagePlayer = undefined
   }
 
   /**
@@ -142,7 +146,7 @@ export class StageWaveSystem {
    * dead stage run auto-repeating.
    */
   holdsActiveStageLease(): boolean {
-    return this.stageLease !== null && this.deps.stageManager.get() === this.stageLease
+    return this.deps.stageManager.owns(this.stageLease)
   }
 
   // Phase A0 (2026-09-07) — the `alive` field is REMOVED from this shape:
@@ -151,13 +155,13 @@ export class StageWaveSystem {
   // GameManager.getStageProgress() now composes the live count itself from
   // this.turnBattle.enemies.
   getProgress(): { spawned: number; total: number } | null {
-    const active = this.deps.stageManager.get()
-
     // Ownership check: only OUR lease's progress is reportable — a
     // foreign owner holding the slot is not this stage run.
-    if (!active || active !== this.stageLease) {
+    if (!this.deps.stageManager.owns(this.stageLease)) {
       return null
     }
+
+    const active = this.deps.stageManager.getActive()!
 
     const stage = this.deps.stageTemplates.get(active.stageId)
 

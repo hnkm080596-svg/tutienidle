@@ -215,7 +215,7 @@ export class BattleLootSystem {
           // table by realm+floor, family table, per-enemy signatures,
           // boss/elite/tag modifiers). This system owns the HOW (bags,
           // toasts, particles, summary, quest hooks).
-          const activeStage = stageOverride ? undefined : this.deps.stageManager.get()
+          const activeStage = stageOverride ? undefined : this.deps.stageManager.getActive()
           const stage =
             stageOverride ??
             (activeStage ? this.deps.stageTemplates.get(activeStage.stageId) : undefined)
@@ -349,7 +349,7 @@ export class BattleLootSystem {
             }
           }
 
-          const activeStageId = this.deps.stageManager.get()?.stageId
+          const activeStageId = this.deps.stageManager.getActive()?.stageId
           const zoneId = activeStageId
             ? this.deps.zoneRegistry.getZoneForStage(activeStageId)?.id
             : undefined
@@ -429,7 +429,7 @@ export class BattleLootSystem {
 
     // Địa Giới ghép động (2026-08-15) — Zone chứa Stage đang hoạt động
     // lúc rớt đồ, xem ZoneRegistry.getZoneForStage()/EquipmentNaming.ts.
-    const activeStageId = this.deps.stageManager.get()?.stageId
+    const activeStageId = this.deps.stageManager.getActive()?.stageId
     const zoneId = activeStageId
       ? this.deps.zoneRegistry.getZoneForStage(activeStageId)?.id
       : undefined

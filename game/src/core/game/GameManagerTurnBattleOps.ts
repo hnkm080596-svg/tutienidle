@@ -851,11 +851,14 @@ export class GameManagerTurnBattleOps {
   }
 
   /**
-   * Stage-launch RNG handoff: startStage mints the candidate here so the
-   * wave system's first-enemy pick consumes it, and beginBattleCycle
-   * commits it as the session RNG. Null outside a stage launch.
+   * Stage-launch RNG handoff: startStage installs a lazy box here so the
+   * wave system's first-enemy pick mints+consumes the candidate on first
+   * use, and beginBattleCycle commits the resolved stream as the session
+   * RNG. A refused start never resolves the box — no stream is minted at
+   * all (C7: deterministic factories see identical sequences with or
+   * without refusals). Null outside a stage launch.
    */
-  private pendingCycleRng: (() => number) | null = null
+  private pendingCycleRng: { stream: (() => number) | null } | null = null
 
   getBattleGeneration(): number {
     return this.battleGeneration
@@ -876,6 +879,76 @@ export class GameManagerTurnBattleOps {
     this.turnToken.reset()
     this.presentationOps.runtime.resetPendingState()
     this.boundaryQueue = []
+  }
+
+  /**
+   * Mission C r2 (C6) — destructive failure contract for beginBattleCycle.
+   * A cycle that throws after the commit section has already cleared the
+   * pending/token/queue state, installed its RNG and reset the per-cycle
+   * services — the battle that owned all of that can never resume. Rather
+   * than leave a zombie 'fighting' reference on torn-down machinery,
+   * destroy it outright with the same teardown abandonBattle performs
+   * (session end, defeat terminal, stage-lease release, enemy cleanup,
+   * clock stop) and drop every per-battle binding back to known-idle.
+   * The lease release also covers the repeat path, where no wave-side
+   * launch transaction wraps the mid-cycle restart.
+   */
+  private discardFailedCycle(previousBattle: TurnBattle | null): void {
+    const destroyed = this.turnBattle
+
+    if (destroyed !== null) {
+      // Terminal teardown runs ONLY for a previous battle that was still
+      // in progress: its destruction must publish defeat + bank carry
+      // exactly once (the once-guard was just re-armed by this cycle's
+      // reset, so this IS that battle's one battle_end). Two cases get
+      // dropped silently instead:
+      // - an already-terminal previous battle (a repeat restart failing
+      //   after victory) — its terminal was already published and its
+      //   carry already banked; re-marking defeat would double-publish.
+      // - a half-built NEW battle — it never began, so no session was
+      //   published for it; emitting battle_end would send a phantom
+      //   defeat to consumers that never saw a start.
+      if (
+        destroyed === previousBattle &&
+        destroyed.state !== 'victory' &&
+        destroyed.state !== 'defeat'
+      ) {
+        destroyed.state = 'defeat'
+
+        if (this.playerDataForTurnBattle) {
+          this.deps.bankPassiveCarry(this.playerDataForTurnBattle)
+        }
+        this.rewardOps.emitAbandonEnd()
+      }
+      this.turnBattle = null
+    }
+
+    const session = this.presentationOps.session.getCurrentSession()
+    if (session) {
+      this.presentationOps.session.end(session)
+    }
+
+    // Whatever battle was destroyed, its stage run is over too: release
+    // the wave system's lease + player context. This is what frees the
+    // slot on the REPEAT path (no wave-side transaction wraps a mid-cycle
+    // restart); on the launch path the wave system's own rollback also
+    // runs, and release() is idempotent under the identity check.
+    this.deps.stageWaves.stopRepeat()
+
+    // Drop surviving enemies + pending spawns — including a half-spawned
+    // bootstrap from the failed cycle — same cleanup abandonBattle runs.
+    this.deps.enemyManager.clear()
+    this.deps.combatSystem.setSurviveLethalSession(null)
+
+    this.clearCycleEntryState()
+    this.combatClock.stop()
+
+    this.activeStageForTurnBattle = null
+    this.turnBattleRepeatContinuously = false
+    this.playerDataForTurnBattle = null
+    this.turnBattleStartedAtMs = null
+    this.statusVfxSnapshot.clear()
+    this.statusVfxBattle = null
   }
 
   /**
@@ -908,6 +981,34 @@ export class GameManagerTurnBattleOps {
       stage?: Stage
     },
   ): void {
+    // Failure contract (Mission C r2, destructive semantics): everything
+    // after the commit section runs inside a transaction — any throw
+    // mid-cycle runs discardFailedCycle(), which destroys the previous
+    // battle outright and returns the ops to known-idle. The alternative
+    // (leaving the old battle's reference live with its machinery already
+    // reset) is a zombie half-cycle, strictly worse than a clean kill.
+    // previousBattle is captured here so discard can tell the legitimately
+    // live battle (terminal teardown) from a half-built new one (drop
+    // silently — it never began).
+    const previousBattle = this.turnBattle
+
+    try {
+      this.beginBattleCycleCommitted(policy, request)
+    } catch (error) {
+      this.discardFailedCycle(previousBattle)
+      throw error
+    }
+  }
+
+  private beginBattleCycleCommitted(
+    policy: BattleCyclePolicy,
+    request: {
+      player?: PlayerData
+      playerEntity?: CombatEntity
+      initialEnemy?: Enemy
+      stage?: Stage
+    },
+  ): void {
     // 1. Session/pending teardown - BEFORE any new state is built.
     this.clearCycleEntryState()
     this.battleGeneration += 1
@@ -920,7 +1021,7 @@ export class GameManagerTurnBattleOps {
     // through pendingCycleRng (the wave system's first-enemy pick already
     // consumed from that stream); beginBattleCycle is the commit point,
     // so a refused startStage never installs anything.
-    this.commitCycleRng(this.pendingCycleRng ?? this.mintCycleRng())
+    this.commitCycleRng(this.pendingCycleRng?.stream ?? this.mintCycleRng())
     this.pendingCycleRng = null
 
     // 2. Per-policy domain resets. ARCH-014 (M12): a fresh battle owns a
@@ -969,7 +1070,10 @@ export class GameManagerTurnBattleOps {
     }
 
     if (!playerEntity) {
-      return
+      // Structural fault: every entry path supplies a player source —
+      // silently returning here would leave the just-committed resets
+      // owning a battle that was never built.
+      throw new Error('beginBattleCycle: no player source supplied')
     }
 
     // 4. Battle assembly.
@@ -1352,17 +1456,21 @@ export class GameManagerTurnBattleOps {
   ): boolean {
     this.isStageStarting = true
     this.pendingLaunchStage = stage
-    // Pre-mint the cycle RNG as a CANDIDATE (not installed): the launch
-    // enemy pick must consume the cycle stream, so the mint happens here
-    // — but commit waits for the cycle to actually begin inside
-    // beginBattleCycle. A refused start leaves the live battle's RNG
-    // and combat source untouched.
-    const candidateRng = this.mintCycleRng()
-    this.pendingCycleRng = candidateRng
+    // The cycle RNG is a LAZY candidate (C7): the launch enemy pick must
+    // consume the cycle stream, so the box mints on first roll — but
+    // commit still waits for the cycle to actually begin inside
+    // beginBattleCycle. A refused start resolves nothing: the live
+    // battle's RNG is untouched AND no factory stream is consumed.
+    const pending: { stream: (() => number) | null } = { stream: null }
+    this.pendingCycleRng = pending
+    const mintOnUse = (): number => {
+      pending.stream ??= this.mintCycleRng()
+      return pending.stream()
+    }
     let started = false
     try {
       started = this.deps.stageWaves.start(player, stage, repeatContinuously, {
-        rng: candidateRng,
+        rng: mintOnUse,
       })
     } finally {
       this.isStageStarting = false

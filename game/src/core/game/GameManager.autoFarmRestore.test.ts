@@ -115,7 +115,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(restored.status).toBe('ok')
 
     // The runtime lease must mirror the persisted authority.
-    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
 
     // A normal stage start must refuse while the farm holds the slot.
     const player = playerStore.$state
@@ -124,7 +124,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     // stopAutoFarm releases the lease; combat B then starts normally.
     gameManager.turnBattleOps.autoFarmOps.stopAutoFarm(player)
     expect(player.autoFarmStage).toBeNull()
-    expect(gameManager.stageManager.get()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
     expect(gameManager.turnBattleOps.startStage(player, COMBAT_STAGE)).toBe(true)
   })
 
@@ -143,19 +143,22 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(gameManager.getBattleRewardSummary().spiritStone).toBeGreaterThan(0)
   })
 
-  it('fail-closed: a lost StageManager lease stops the tick from paying on persisted state alone', () => {
+  it('fail-closed: persisted-armed without an owned lease never mints rewards', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-04T10:00:00Z'))
 
     const { playerStore, gameManager, save } = harness()
+    save.player.autoFarmStage = null
     const restored = restoreGameSession(playerStore, gameManager, save)
     expect(restored.status).toBe('ok')
+    expect(gameManager.stageManager.getActive()).toBeNull()
 
-    // Lease loss WITHOUT the persisted-state cleanup (stopAutoFarm clears
-    // both — this simulates a lifecycle that freed the slot only).
-    gameManager.stageManager.release(gameManager.stageManager.get()!)
-    expect(gameManager.stageManager.get()).toBeNull()
-    expect(playerStore.$state.autoFarmStage?.stageId).toBe(FARM_STAGE.id)
+    // Post-C5 the old repro — an external caller releasing the farm's
+    // token via get()+release() — is impossible by construction (the
+    // observational snapshot carries no release capability). The
+    // reachable equivalent: persisted authority armed while the ops
+    // holds no lease at all (a state write that bypassed startAutoFarm).
+    playerStore.$state.autoFarmStage = { stageId: FARM_STAGE.id, lastCheckedMs: Date.now() - 60_000 }
 
     vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
     gameManager.tickOps.update(0.1)
@@ -174,7 +177,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
 
     // Dead persisted lease is dropped, not left armed-but-inert.
     expect(playerStore.$state.autoFarmStage).toBeNull()
-    expect(gameManager.stageManager.get()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
   })
 
   it('persisted farm for a stage never perfect-cleared -> lease cleared (same gate as startAutoFarm)', () => {
@@ -188,14 +191,14 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(restored.status).toBe('ok')
 
     expect(playerStore.$state.autoFarmStage).toBeNull()
-    expect(gameManager.stageManager.get()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
   })
 
   it('re-restoring a same-farm payload keeps the armed lease (reconcile is idempotent)', () => {
     const { playerStore, gameManager, save } = harness()
 
     expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
-    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
 
     // A genuinely different payload carrying the SAME armed farm must not
     // see the held slot as a conflict and disarm it — stageManager.start
@@ -210,7 +213,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(restoreGameSession(playerStore, gameManager, secondSave).status).toBe('ok')
 
     expect(playerStore.$state.autoFarmStage?.stageId).toBe(FARM_STAGE.id)
-    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
   })
 
   it('re-restoring a NO-farm payload releases the previously-armed farm lease', () => {
@@ -221,14 +224,14 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     const { playerStore, gameManager, save } = harness()
 
     expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
-    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
 
     const secondSave = baseSave({ ...save.player, name: 'NoFarm', autoFarmStage: null })
 
     expect(restoreGameSession(playerStore, gameManager, secondSave).status).toBe('ok')
 
     expect(playerStore.$state.autoFarmStage).toBeNull()
-    expect(gameManager.stageManager.get()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
 
     // The freed slot must accept a manual stage again.
     expect(gameManager.turnBattleOps.startStage(playerStore.$state, COMBAT_STAGE)).toBe(true)
@@ -238,7 +241,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     const { playerStore, gameManager, save } = harness()
 
     expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
-    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
 
     const secondPlayer = {
       ...save.player,
@@ -251,7 +254,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(restoreGameSession(playerStore, gameManager, baseSave(secondPlayer)).status).toBe('ok')
 
     expect(playerStore.$state.autoFarmStage?.stageId).toBe(FARM_STAGE_B.id)
-    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE_B.id)
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE_B.id)
   })
 
   it('a foreign lease on the SAME stage is not converged — imported farm drops fail-closed', () => {
@@ -270,30 +273,29 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(playerStore.$state.autoFarmStage).toBeNull()
     // The foreign lease is untouched — reconcile never releases a slot
     // it did not acquire.
-    expect(gameManager.stageManager.get()).toBe(foreignLease)
+    expect(gameManager.stageManager.owns(foreignLease)).toBe(true)
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
   })
 
-  it('a foreign same-stage lease does NOT satisfy the tick — the farm pays only while holding ITS lease', () => {
+  it('persisted-armed + a foreign same-stage lease still pays nothing (tick is ownership-gated)', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-04T10:00:00Z'))
 
     const { playerStore, gameManager, save } = harness()
-
+    save.player.autoFarmStage = null
     expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
-    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
 
-    // External path releases the farm lease (a stale caller that got hold
-    // of the token), then a foreign owner takes the same stage.
-    gameManager.stageManager.release(gameManager.stageManager.get()!)
-    expect(gameManager.stageManager.acquire(FARM_STAGE)).not.toBeNull()
+    // A foreign owner holds the slot for the stage a direct state write
+    // farms — matching stageId alone must not satisfy the tick (paying
+    // here would mint into the foreign battle's shared loot session).
+    const foreignLease = gameManager.stageManager.acquire(FARM_STAGE)!
+    playerStore.$state.autoFarmStage = { stageId: FARM_STAGE.id, lastCheckedMs: Date.now() - 60_000 }
 
     vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
     gameManager.tickOps.update(0.1)
 
-    // Persisted says armed and stageId matches, but the live slot object
-    // is not the farm's lease — paying here would mint into a foreign
-    // battle's session.
     expect(gameManager.getBattleRewardSummary().spiritStone).toBe(0)
+    expect(gameManager.stageManager.owns(foreignLease)).toBe(true)
   })
 
   it('same-stage re-restore that REVOKED the perfect-clear drops the lease (eligibility re-validated every restore)', () => {
@@ -303,7 +305,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     const { playerStore, gameManager, save } = harness()
 
     expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
-    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
 
     // Shape-valid payload: no cross-field invariant ties armed farm to
     // perfectClearStageIds. A converged-check before validation would
@@ -314,7 +316,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(restoreGameSession(playerStore, gameManager, secondSave).status).toBe('ok')
 
     expect(playerStore.$state.autoFarmStage).toBeNull()
-    expect(gameManager.stageManager.get()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
 
     vi.setSystemTime(new Date('2026-09-04T10:05:00Z'))
     gameManager.tickOps.update(0.1)
@@ -326,7 +328,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     const { playerStore, gameManager, save } = harness()
 
     expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
-    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
 
     // Shape-valid payload: perfectClearSeconds validates only PRESENT
     // entries — a missing key passes shape checks but can never complete
@@ -336,7 +338,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(restoreGameSession(playerStore, gameManager, baseSave(secondPlayer)).status).toBe('ok')
 
     expect(playerStore.$state.autoFarmStage).toBeNull()
-    expect(gameManager.stageManager.get()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
     expect(gameManager.turnBattleOps.startStage(playerStore.$state, COMBAT_STAGE)).toBe(true)
   })
 })

@@ -97,7 +97,7 @@ describe('GameManager — auto-farm start/stop exclusivity', () => {
 
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(false)
     expect(player.autoFarmStage).toBeNull()
-    expect(gameManager.stageManager.get()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
   })
 
   it('stopAutoFarm clear autoFarmStage + giải phóng StageManager slot', () => {
