@@ -3,7 +3,6 @@ import { createPinia } from 'pinia'
 
 import './assets/theme.css'
 import App from './App.vue'
-import router from './router'
 import { vTooltip } from './directives/tooltip'
 import { useErrorStore } from './stores/error'
 import { initUiScale } from './composables/uiScale'
@@ -16,7 +15,6 @@ const app = createApp(App)
 const pinia = createPinia()
 
 app.use(pinia)
-app.use(router)
 app.use(i18n)
 app.directive('tooltip', vTooltip)
 
