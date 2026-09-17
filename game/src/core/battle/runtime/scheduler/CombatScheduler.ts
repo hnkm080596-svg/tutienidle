@@ -10,7 +10,9 @@
 // - EVENT QUEUES ARE PER-EXECUTION FRAMES (r5 BLOCKER 1): an op's
 //   emissions drain inside ITS barrier -- before its siblings and before
 //   outer queued events. A global FIFO would produce E1 -> X -> E2 -> E3;
-//   the correct order is E1 -> X -> E3 -> Z -> Y -> E2.
+//   the correct order is E1 -> X -> E3 -> Z -> Y -> E2. ROOT events get
+//   the same frame treatment: their consequence tree drains before the
+//   next queued root, inside the root's single work budget.
 // - combatSequence = chronological creation/execution-start order (r6):
 //   ops stamp at execution-START (before executor.execute -- an authority
 //   emits mid-execute), events stamp at enqueue-commit. It is NOT a
@@ -214,7 +216,15 @@ export class CombatScheduler {
         this.workThisBarrier = 0 // fresh budget per ROOT unit
         const rootEvent = this.rootEventQueue.shift()
         if (rootEvent !== undefined) {
-          this.settleEvent(rootEvent, this.rootEventQueue)
+          // Root events settle inside a frame-local queue -- symmetric
+          // with op frames (r5 BLOCKER 1 + Option B). Handler emissions
+          // land on THIS frame, share this root unit's work budget, and
+          // drain depth-first before the next queued root event; pushing
+          // them to rootEventQueue would grant each emission a fresh
+          // budget + depth reset (an unguarded ping-pong loop).
+          const frameEvents: CombatEvent[] = []
+          this.settleEvent(rootEvent, frameEvents)
+          this.drainEvents(frameEvents)
           continue
         }
         const op = this.authoredQueue.shift()

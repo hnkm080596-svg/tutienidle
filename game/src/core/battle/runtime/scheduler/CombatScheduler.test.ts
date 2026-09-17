@@ -1214,3 +1214,46 @@ describe('lifecycle roots + periodic bridge (r4 BLOCKER 2 / r5 BLOCKER 2 / r5 HI
     ).toThrow(CombatSettlementFault)
   })
 })
+
+describe('root event frames (P5 F-A)', () => {
+  it('a root-scope emission loop faults on the work budget -- the root lane is guarded', () => {
+    const h = makeHarness({ maxImmediateWorkPerBarrier: 5 })
+    const sink = h.scheduler.createLifecycleSink('action.life.1')
+    routeElemental(h, {
+      // Each emission re-queues the same event. Before frame-local root
+      // queues this looped forever: every emitted event became a new root
+      // unit with a fresh budget and a depth reset.
+      loop: (_e, s) => {
+        s.emit(elem('loop'))
+      },
+    })
+    sink.emit(elem('loop'))
+
+    expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
+    expect(h.diagnosticEvents[0]?.reason).toBe(
+      'settlement_work_budget_exceeded',
+    )
+    expect(h.scheduler.trace.faults[0]?.reason).toBe(
+      'settlement_work_budget_exceeded',
+    )
+    expect(h.scheduler.state).toBe('faulted')
+  })
+
+  it('a root event\'s consequence tree drains before the next queued root (Option B)', () => {
+    const h = makeHarness()
+    const sink = h.scheduler.createLifecycleSink('action.life.1')
+    routeElemental(h, {
+      e1: (_e, s) => {
+        s.emit(elem('e3'))
+      },
+      e3: () => ({ kind: 'operations', operations: [damageOp('op.X')] }),
+      e2: () => undefined,
+    })
+    sink.emit(elem('e1'))
+    sink.emit(elem('e2')) // queued behind e1 before run()
+
+    h.scheduler.run()
+    // e1 -> e3's whole consequence tree (h:e3 + its returned op.X) -> e2.
+    expect(h.calls).toEqual(['h:e1', 'h:e3', 'op.X', 'h:e2'])
+  })
+})
