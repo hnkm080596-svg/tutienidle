@@ -1149,6 +1149,10 @@
     "confirmTitle": "Xây {name}?",
     "confirmMessage": "Sẽ tốn {cost}."
   },
+  "notifications": {
+    "skillLevelUp": "{name} đạt cấp {level}",
+    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}"
+  },
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác."
   }

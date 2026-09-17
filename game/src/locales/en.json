@@ -1150,6 +1150,10 @@
     "confirmTitle": "Build {name}?",
     "confirmMessage": "This will cost {cost}."
   },
+  "notifications": {
+    "skillLevelUp": "{name} reached level {level}",
+    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}"
+  },
   "save": {
     "conflict": "Save was changed by another session."
   }
