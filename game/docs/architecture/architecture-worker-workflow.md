@@ -195,7 +195,7 @@ Q1-Q12 / triggered modules: PASS with evidence, GAP, or N/A with reason
 Owner and actual migrated consumers:
 Old/alternate path status:
 Verification: exact commands, results, test counts, limitations
-P18 OCR result (clean pass evidence or explicit gap) / QA verdict (P4) / P5 sequential review (passes run in order with per-pass evidence, findings by severity, unresolved Medium+ = 0):
+P18 OCR result (clean pass + coverage evidence, or recorded gap with explicit user waiver) / QA verdict (P4) / P5 sequential review (passes run in order with per-pass evidence, findings by severity, unresolved Medium+ = 0):
 P13 progression evidence / P14 visual evidence from the implementation worktree (or explicit environment blocker):
 Unresolved task work:
 Retained debt / Notes-Suggestions:
