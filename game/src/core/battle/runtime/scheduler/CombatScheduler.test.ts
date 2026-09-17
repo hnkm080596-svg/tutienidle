@@ -847,6 +847,35 @@ describe('event sinks + dedup (r4 MEDIUM 3 / r4 HIGH 1)', () => {
     expect(x?.operation.origin.causationEventId).toBe(e1?.eventId)
   })
 
+  it('sinks strip smuggled causation fields -- scope mints, never inherits (P5 F-F)', () => {
+    const h = makeHarness()
+    routeElemental(h, { e1: () => undefined })
+    const smuggled = {
+      ...elem('e1'),
+      causationOperationId: 'op.smuggled',
+      causationEventId: 'evt.smuggled.0',
+    } as unknown as CombatEventPayload
+
+    // Lifecycle scope: NEITHER causation field may survive.
+    h.scheduler.createLifecycleSink('action.life.1').emit(smuggled)
+    // Operation scope: mints its own causationOperationId; a smuggled
+    // causationEventId must not leak through.
+    h.emissions.set('op.A', [smuggled])
+    h.scheduler.enqueueAuthored([damageOp('op.A')])
+
+    h.scheduler.run()
+    const life = h.scheduler.trace.events.find(
+      (e) => e.eventId === 'evt.action.life.1.0',
+    )
+    expect(life?.causationOperationId).toBeUndefined()
+    expect(life?.causationEventId).toBeUndefined()
+    const opEvent = h.scheduler.trace.events.find(
+      (e) => e.eventId === 'evt.op.A.0',
+    )
+    expect(opEvent?.causationOperationId).toBe('op.A')
+    expect(opEvent?.causationEventId).toBeUndefined()
+  })
+
   it('exactly-once: a duplicated enqueueEvent is stamped once and drained once', () => {
     const h = makeHarness()
     routeElemental(h, { e1: () => undefined })

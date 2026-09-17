@@ -134,8 +134,19 @@ export class CombatTrace {
         case 'elemental_application_committed':
         case 'buff_application_failed':
           return event.origin.rootActionId
-        default:
+        case 'combat_settlement_fault':
+          // Out-of-band diagnostic -- no gameplay root.
           return undefined
+        default: {
+          // Exhaustiveness pin (same pattern as the executor's dispatch):
+          // a NEW CombatEvent union member narrows `event` away from
+          // never here and fails to compile -- it must declare its root
+          // mapping, not silently orphan. The runtime fallback stays for
+          // records built outside the typed union.
+          const exhaustive: never = event
+          void exhaustive
+          return undefined
+        }
       }
     }
 

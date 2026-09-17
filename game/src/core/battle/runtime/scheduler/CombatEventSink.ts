@@ -41,24 +41,34 @@ export class ScopedCombatEventSink implements CombatEventSink {
   emit(payload: CombatEventPayload): void {
     const ordinal = this.host.nextEventOrdinal(this.scope.scopeId)
     const eventId = `evt.${this.scope.scopeId}.${ordinal}`
+    // Causation is minted by SCOPE, never inherited (P5 F-F): a runtime
+    // payload (untyped/cast) can smuggle causationOperationId /
+    // causationEventId past the type-level Omit -- strip them before
+    // stamping this scope's own.
+    const clean = { ...payload } as CombatEventPayload & {
+      causationOperationId?: CombatOperationId
+      causationEventId?: CombatEventId
+    }
+    delete clean.causationOperationId
+    delete clean.causationEventId
     let pending: PendingCombatEvent
     switch (this.scope.kind) {
       case 'operation':
         pending = {
-          ...payload,
+          ...clean,
           eventId,
           causationOperationId: this.scope.causationOperationId,
         }
         break
       case 'event':
         pending = {
-          ...payload,
+          ...clean,
           eventId,
           causationEventId: this.scope.causationEventId,
         }
         break
       case 'lifecycle':
-        pending = { ...payload, eventId }
+        pending = { ...clean, eventId }
         break
     }
     this.host.commitEvent(pending, this.target)
