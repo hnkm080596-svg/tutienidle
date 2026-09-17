@@ -543,7 +543,7 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
   // được. Phần dưới chỉ xử lý UI hiển thị theo outcome.
   const outcome = await lifecycle.bootGame({
     createNewCharacter,
-    onRestoreOk: (offline) => {
+    onRestoreOk: () => {
       // Fix (2026-08-20) — grant "Trảm" save cũ (idempotent).
       if (!gameManager.skillManager.has('tram')) {
         gameManager.progressionOps.learnSkill('tram')
@@ -565,13 +565,6 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
         gameManager.progressionOps.learnSkill('huy_quyen')
       }
 
-      // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài.
-      if (offline.elapsedSeconds > 60) {
-        offlineSummary.show({
-          elapsedSeconds: offline.elapsedSeconds,
-          cultivation: offline.cultivation,
-        })
-      }
     },
     onNewCharacter: () => {
       // Nhân vật mới: học sẵn tâm pháp + skill + grant khởi đầu.

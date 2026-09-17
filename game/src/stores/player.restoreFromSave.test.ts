@@ -60,6 +60,26 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     vi.restoreAllMocks()
   })
 
+  // T3-26 — the returned OfflineResult must report the ACTUAL post-cap
+  // delta (what addCultivation really credited), not the theoretical
+  // elapsed*rate figure. The modal renders this number.
+  it('reports actual post-cap offline cultivation, not theoretical', () => {
+    const player = usePlayerStore()
+    // Mortal L1 required = 600; seed 500 and a theoretical grant far past it.
+    const save = buildMinimalSave({
+      cultivation: 500,
+      cultivationPerSecond: 10,
+      lastSavedAt: currentMs - 300_000, // theoretical = 3000, cap headroom = 100
+    })
+
+    const result = player.restoreFromSave(save)
+
+    expect(result.cultivation).toBe(100)
+    expect(result.elapsedSeconds).toBe(300)
+    // The identity-guard replay must return the corrected value too.
+    expect(player.restoreFromSave(save).cultivation).toBe(100)
+  })
+
   it('gọi 2 lần CÙNG save → offline cultivation chỉ cộng 1 lần', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({ lastSavedAt: currentMs - 30_000, cultivationPerSecond: 10 })
@@ -86,7 +106,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     const save2 = buildMinimalSave({ lastSavedAt: currentMs - 60_000, cultivationPerSecond: 20 })
     const result = player.restoreFromSave(save2)
 
-    expect(result.cultivation).toBe(1_200) // 20/s * 60s — full apply, không bị guard chặn
+    expect(result.cultivation).toBe(600) // 20/s * 60s = 1200 theoretical, clamped at mortal L1 required = 600
     expect(result.elapsedSeconds).toBe(60)
     expect(player.cultivationPerSecond).toBe(20) // Object.assign của save2 đã chạy
   })
