@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
@@ -48,6 +48,22 @@ watch(
     }, TYPE_INTERVAL_MS)
   },
 )
+
+// Overlay là ambient, không nhận focus — Escape phải nghe ở document
+// level (add/remove đối xứng qua lifecycle component).
+function onEscapeKey(event: KeyboardEvent) {
+  if (event.key === 'Escape' && store.active) {
+    store.hide()
+  }
+}
+
+document.addEventListener('keydown', onEscapeKey)
+
+onBeforeUnmount(() => {
+  stopTyping()
+
+  document.removeEventListener('keydown', onEscapeKey)
+})
 </script>
 
 <template>
@@ -55,6 +71,8 @@ watch(
     <div
       v-if="store.active"
       class="world-announcement"
+      role="alert"
+      aria-live="assertive"
       :style="{ zIndex: OVERLAY_LAYERS.announcement }"
       @click="store.hide()"
     >
