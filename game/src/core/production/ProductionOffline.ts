@@ -29,10 +29,6 @@ export interface ProductionOfflineDeps {
 
   getSiteDefinition: (siteId: string) => ProductionSiteDefinition | undefined
 
-  canStart: (siteId: string) => boolean
-
-  startCycle: (siteId: string, collectionRealmId: string, nowMs: number) => boolean
-
   grantCycleRewards: (
     cycle: ProductionCycle,
     bag: MaterialBag,
@@ -56,90 +52,25 @@ export function settleProductionOffline(
   nowMs: number = Date.now(),
   options: ProductionOfflineOptions = {},
 ): number {
-  let budgetRemainingMs = PRODUCTION_OFFLINE_CAP_SECONDS * 1000
-
-  let settled = 0
-
-  let guard = 0
-
-  while (guard < 5000) {
-    guard += 1
-
-    // Tìm cycle hoàn thành SỚM NHẤT trong quá khứ của nowMs.
-    let targetState: ProductionSiteState | undefined
-
-    let targetCycle: ProductionCycle | undefined
-
-    for (const state of deps.states.values()) {
-      const cycle = state.activeCycle
-
-      if (!cycle || cycle.completesAtMs > nowMs) {
-        continue
-      }
-
-      if (!targetCycle || cycle.completesAtMs < targetCycle.completesAtMs) {
-        targetState = state
-
-        targetCycle = cycle
-      }
-    }
-
-    if (!targetState || !targetCycle) {
-      break
-    }
-
-    const durationMs = Math.max(0, targetCycle.completesAtMs - targetCycle.startedAtMs)
-
-    if (durationMs > budgetRemainingMs) {
-      break
-    }
-
-    budgetRemainingMs -= durationMs
-
-    targetState.activeCycle = undefined
-
-    deps.grantCycleRewards(targetCycle, bag, registry)
-
-    settled += 1
-
-    if (targetState.autoRestart && deps.canStart(targetCycle.siteId)) {
-      deps.startCycle(targetCycle.siteId, currentRealmId, targetCycle.completesAtMs)
-    }
-  }
-
-  // Huỷ backlog manual hết ngân sách (xem JSDoc).
-  for (const state of deps.states.values()) {
-    const cycle = state.activeCycle
-
-    if (!cycle || cycle.completesAtMs > nowMs) {
-      continue
-    }
-
-    state.activeCycle = undefined
-
-    if (state.autoRestart) {
-      deps.startCycle(state.siteId, currentRealmId, nowMs)
-    }
-  }
-
-  settled += settleWorkersOffline(
+  // Mission D (spec D3) — workers-as-fuel: the manual activeCycle path
+  // is gone; offline settle is exactly the worker-lane phase under the
+  // full PRODUCTION_OFFLINE_CAP budget.
+  return settleWorkersOffline(
     deps,
     bag,
     registry,
     currentRealmId,
     nowMs,
-    budgetRemainingMs,
+    PRODUCTION_OFFLINE_CAP_SECONDS * 1000,
     Math.floor(options.workerCapacity ?? 0),
     options.offlineSinceMs,
     options.workerAssignments,
   )
-
-  return settled
 }
 
 /**
- * Offline settle cho worker cycles (T3) — chia ngân sách còn lại sau
- * manual settle.
+ * Offline settle cho worker cycles (T3) — toàn bộ ngân sách cap
+ * (Mission D: không còn manual phase ăn budget trước).
  *
  * M11 (ARCH-007): each site runs `slots` parallel worker LANES inside the
  * [offlineSinceMs, nowMs] window — one sequential cycle chain per lane on

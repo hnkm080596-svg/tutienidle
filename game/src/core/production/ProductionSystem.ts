@@ -1,8 +1,9 @@
 // ProductionSystem (plan §4) — engine production dùng chung cho Lâm,
-// Quáng, Động Thiên. Snapshot điều kiện lúc start (realm/level/table
+// Quáng, Động Thiên. Mission D (spec D3): production runs on worker
+// lanes ONLY — workers are required fuel; the manual activeCycle path
+// is deleted. Snapshot điều kiện lúc start (realm/level/table
 // version/seed), CHỈ roll reward khi cycle hoàn thành, delivery vào Bag
-// idempotent, auto-restart tạo cycle mới với seed riêng, offline settle
-// tuần tự trong cap (§4.3).
+// idempotent, offline settle tuần tự trong cap (§4.3).
 
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
@@ -22,7 +23,6 @@ import {
   HERB_AGE_WEIGHTS,
   MATERIAL_AGE_AMOUNTS,
   MATERIAL_AGE_WEIGHTS,
-  PRODUCTION_OFFLINE_CAP_SECONDS,
   computeCycleSeconds,
   getSiteSpeedMultiplier,
   getTierWeightProfile,
@@ -32,7 +32,6 @@ import {
 import { HERB_AGES } from './ProductionTypes'
 import { allocateWorkerSlots } from './WorkerAllocator'
 import { advanceWorkerLanes } from './WorkerLaneAdvance'
-import { buildProductionCycle as buildCycle } from './ProductionCycles'
 import {
   settleProductionOffline,
   type ProductionOfflineDeps,
@@ -107,9 +106,10 @@ export class ProductionSystem {
 
   /**
    * M1 (ARCH-001) — restore REPLACES the whole site-state map, and every
-   * restored entry is a detached copy (activeCycle/workerCycles included):
-   * the payload is a value, so mutating it afterwards must not leak into
-   * live state (A3).
+   * restored entry is a detached copy (workerCycles included): the
+   * payload is a value, so mutating it afterwards must not leak into
+   * live state (A3). Whitelisted fields only — legacy keys (e.g. the
+   * removed `activeCycle`) are dropped here, not migrated.
    */
   restoreStates(states: ProductionSiteState[]): void {
     this.states.clear()
@@ -124,9 +124,11 @@ export class ProductionSystem {
       }
 
       this.states.set(state.siteId, {
-        ...state,
+        siteId: state.siteId,
+        level: state.level,
+        autoRestart: state.autoRestart,
         activeWorkerSlots: state.activeWorkerSlots ?? 0,
-        activeCycle: state.activeCycle ? { ...state.activeCycle } : undefined,
+        assignedWorkers: state.assignedWorkers,
         workerCycles: (state.workerCycles ?? []).map((cycle) => ({ ...cycle })),
       })
     }
@@ -159,47 +161,6 @@ export class ProductionSystem {
   // =========================
   // Cycle lifecycle (§4.1)
   // =========================
-
-  canStart(siteId: string): boolean {
-    const definition = this.getSiteDefinition(siteId)
-
-    if (!definition) {
-      return false
-    }
-
-    const state = this.states.get(siteId)
-
-    return !state?.activeCycle
-  }
-
-  /**
-   * Bắt đầu cycle — snapshot collectionRealmId + level + table version +
-   * seed; deadline chỉ từ hai giá trị snapshot (nâng level giữa cycle
-   * chỉ hiệu lực cycle kế tiếp, §4.2).
-   */
-  startCycle(siteId: string, collectionRealmId: string, nowMs: number): boolean {
-    const definition = this.getSiteDefinition(siteId)
-
-    if (!definition || !this.canStart(siteId)) {
-      return false
-    }
-
-    if (!this.deps.territory.realmIds.includes(collectionRealmId)) {
-      return false
-    }
-
-    const state = this.ensureSiteState(siteId)
-
-    const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[collectionRealmId]
-
-    if (!baseSeconds) {
-      return false
-    }
-
-    state.activeCycle = buildCycle(siteId, collectionRealmId, state.level, baseSeconds, nowMs)
-
-    return true
-  }
 
   setAutoRestart(siteId: string, enabled: boolean): boolean {
     if (!this.getSiteDefinition(siteId)) {
@@ -309,38 +270,8 @@ export class ProductionSystem {
   // =========================
 
   /**
-   * Settle mọi cycle hoàn thành ở thời điểm nowMs. Auto-restart bắt đầu
-   * cycle mới NGAY sau settle với seed riêng và cảnh giới HIỆN TẠI của
-   * người chơi (caller truyền currentRealmId). Idempotent: settle xoá
-   * activeCycle trước khi roll — tick/reload lặp không cấp đôi.
-   */
-  tick(nowMs: number, bag: MaterialBag, registry: MaterialRegistry, currentRealmId: string): void {
-    for (const state of this.states.values()) {
-      const cycle = state.activeCycle
-
-      if (!cycle || nowMs < cycle.completesAtMs) {
-        continue
-      }
-
-      state.activeCycle = undefined
-
-      this.grantCycleRewards(cycle, bag, registry)
-
-      if (state.autoRestart && this.canStart(cycle.siteId)) {
-        // Chặn backdate quá cap — tab bị throttle/đóng lâu ngày từng khiến
-        // chuỗi auto-restart nối ngược về quá khứ và trả TOÀN BỘ backlog
-        // nhiều ngày trong vài phút, vô hiệu hoá cap offline (review
-        // 2026-08-28). Chain chỉ được lùi tối đa bằng cap.
-        const earliestRestartMs = nowMs - PRODUCTION_OFFLINE_CAP_SECONDS * 1000
-
-        this.startCycle(cycle.siteId, currentRealmId, Math.max(cycle.completesAtMs, earliestRestartMs))
-      }
-    }
-  }
-
-  /**
-   * Phân bổ pool worker và vận hành các cycle bổ sung. Slot đầu tiên
-   * vẫn là activeCycle thủ công để không đổi contract UI cũ.
+   * Mission D (spec D3) — every lane comes from the shared worker pool;
+   * lane count = activeWorkerSlots (no manual slot, no activeCycle).
    *
    * Chi-hien-quan spec (2026-09-02): `assignments` tùy chọn — Map
    * siteId → số slot MANUAL. Sites có assignment (và autoRestart) nhận
@@ -423,8 +354,9 @@ export class ProductionSystem {
    * backlog nhiều ngày và cap mất tác dụng (review 2026-08-28).
    *
    * Worker (T3 economy-ecosystem-plan): cycle dở dang của worker được
-   * persist vào save và settle offline trong phần ngân sách còn lại,
-   * chạy nối tiếp như slot tay. Trả về số cycle đã settle (manual + worker).
+   * persist vào save và settle offline trong toàn bộ ngân sách cap
+   * (Mission D — không còn manual phase ăn budget trước). Trả về số
+   * worker cycle đã settle.
    */
   settleOffline(
     bag: MaterialBag,
@@ -455,11 +387,6 @@ export class ProductionSystem {
       states: this.states,
 
       getSiteDefinition: (siteId) => this.getSiteDefinition(siteId),
-
-      canStart: (siteId) => this.canStart(siteId),
-
-      startCycle: (siteId, collectionRealmId, nowMs) =>
-        this.startCycle(siteId, collectionRealmId, nowMs),
 
       grantCycleRewards: (cycle, bag, registry) =>
         this.grantCycleRewards(cycle, bag, registry),
@@ -641,14 +568,19 @@ export class ProductionSystem {
       cycleTotalMs: undefined as number | undefined,
     }
 
-    const cycle = state.activeCycle
+    const lanes = state.workerCycles ?? []
 
-    if (cycle) {
-      const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[cycle.collectionRealmId] ?? 100
+    let earliest: ProductionCycle | undefined
 
-      view.cycleTotalMs = computeCycleSeconds(baseSeconds, cycle.siteLevelAtStart) * 1000
+    for (const cycle of lanes) {
+      if (!earliest || cycle.completesAtMs < earliest.completesAtMs) {
+        earliest = cycle
+      }
+    }
 
-      view.cycleRemainingMs = Math.max(0, cycle.completesAtMs - nowMs)
+    if (earliest) {
+      view.cycleTotalMs = Math.max(1, earliest.completesAtMs - earliest.startedAtMs)
+      view.cycleRemainingMs = Math.max(0, earliest.completesAtMs - nowMs)
     }
 
     return view

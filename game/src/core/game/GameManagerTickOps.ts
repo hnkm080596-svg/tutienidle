@@ -139,15 +139,6 @@ export class GameManagerTickOps {
         this.reconcileQuestLifecycle()
       }
 
-      // Production settle (plan §4.3) — delivery thẳng Bag khi cycle
-      // hoàn thành; notification ghi rõ vật liệu + số lượng (§9.1).
-      this.deps.productionSystem.tick(
-        Date.now(),
-        this.deps.materialBag,
-        this.deps.materialRegistry,
-        activePlayer.realmId,
-      )
-
       // R7 (AR-08) shared worker pool - decompose claims its workers
       // from the CHQ capacity FIRST; production receives the remainder via
       // the ONE split rule (Mission D / spec D5) - the same helper the

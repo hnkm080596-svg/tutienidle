@@ -422,7 +422,7 @@
       }
     },
     "production": {
-      "summary": "Khai Vật Đường harvests materials for every realm — pick a source, start a cycle, receive them straight into the Bag.",
+      "summary": "Khai Vật Đường harvests materials for every realm — assign workers to a source, receive them straight into the Bag.",
       "kinds": {
         "forest": "Grove",
         "mine": "Mine",
@@ -451,7 +451,6 @@
       "remaining": "{time}",
       "statusProducing": "Producing — {time} left",
       "done": "Done…",
-      "start": "Start",
       "autoRepeat": "Auto repeat",
       "upgrade": "Upgrade Source"
     },

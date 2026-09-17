@@ -118,6 +118,10 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     expect(text).toContain('Tự động')
     expect(text).toContain('Phân thủ công')
 
+    // Workers-as-fuel (spec D3): no Start-cycle control exists; the panel
+    // is pure worker allocation + auto-repeat gating.
+    expect(deps.container.querySelector('.site-card__action')).toBeNull()
+
     // Linh mạch card render (outpost đã xây — sau khi xóa spirit_spring).
     expect(text).toContain('Linh Mạch')
 

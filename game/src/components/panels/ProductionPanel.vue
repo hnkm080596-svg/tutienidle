@@ -16,8 +16,9 @@ import { formatDuration } from '@/core/format/formatDuration'
 // Sản Xuất (2026-08-25, resource-professions-rework plan §9.1) — thay
 // ExplorationPanel: mỗi Địa Giới hiển thị đúng ba card Lâm/Quáng/
 // Động Thiên với level + speed, trạng thái idle/producing, đồng hồ
-// cycle, trọng số realm tier đã chuẩn hoá, toggle Auto. Nút Start chỉ
-// xuất hiện khi idle; KHÔNG có nút Claim — hoàn thành tự gửi Bag (§4.3).
+// cycle, trọng số realm tier đã chuẩn hoá, toggle Auto. Mission D
+// (spec D3): sites produce on worker lanes only — no Start button;
+// KHÔNG có nút Claim — hoàn thành tự gửi Bag (§4.3).
 const { t } = useI18n()
 
 const KIND_META: Record<string, { labelKey: 'forest' | 'mine' | 'grotto'; sigil: string }> = {
@@ -139,7 +140,7 @@ const rows = computed<SiteRow[]>(() => {
 
       assignedWorkers: view.state.assignedWorkers,
 
-      isProducing: view.state.activeCycle !== undefined,
+      isProducing: (view.state.workerCycles?.length ?? 0) > 0 || view.state.activeWorkerSlots > 0,
 
       progress: Math.min(1, Math.max(0, 1 - cycleRemainingMs / totalMs)),
 
@@ -148,12 +149,6 @@ const rows = computed<SiteRow[]>(() => {
     }
   })
 })
-
-function start(siteId: string) {
-  if (gameManager.buildingOps.startProductionCycle(siteId, player.$state)) {
-    bumpState()
-  }
-}
 
 function toggleAuto(row: SiteRow) {
   gameManager.buildingOps.setProductionAutoRestart(row.siteId, !row.autoRestart)
@@ -439,15 +434,6 @@ function collectLinMach() {
             <p class="site-card__status">{{ t('panels.production.statusProducing', { time: row.remainingLabel }) }}</p>
           </template>
 
-          <GameButton
-            v-else
-            class="site-card__action"
-            size="sm"
-            @click="start(row.siteId)"
-          >
-            {{ t('panels.production.start') }}
-          </GameButton>
-
           <label class="site-card__auto">
             <input
               type="checkbox"
@@ -705,10 +691,6 @@ function collectLinMach() {
   margin: 0;
   font-size: var(--text-xs);
   color: var(--paper-text-soft);
-}
-
-.site-card__action {
-  padding: 8px;
 }
 
 .site-card__auto {

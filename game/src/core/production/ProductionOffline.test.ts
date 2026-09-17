@@ -6,14 +6,12 @@
 // ProductionSystem.offlineParity.test.ts covers worker-lane parity with
 // tickWorkers. This file drives the exported function with a stub
 // ProductionOfflineDeps harness to pin:
-//   - manual phase: empty queue, not-yet-due / boundary deadlines,
-//     canStart gate, per-cycle budget cost (negative-duration clamp,
-//     oversized-cycle forfeit), GLOBAL earliest-deadline ordering across
-//     sites, the 5000-iteration loop guard.
 //   - worker phase: capacity <= 0 / non-autoRestart freezes, fractional
 //     capacity, missing offlineSinceMs seeding rule, cycleMs-0 sites,
-//     and the SHARED budget handoff (manual first, then worker sites in
-//     states-map order).
+//     the FULL-cap budget (no manual consumer ahead), and the shared
+//     budget ordering across sites in states-map order.
+//   - Mission D (spec D3): the manual activeCycle phase is deleted;
+//     this file drives the worker phase only.
 import { describe, expect, it } from 'vitest'
 import { MaterialBag } from '../material/MaterialBag'
 import { MaterialRegistry } from '../material/MaterialRegistry'
@@ -76,52 +74,25 @@ interface Harness {
   deps: ProductionOfflineDeps
   /** Cycles handed to grantCycleRewards, in call order. */
   grants: ProductionCycle[]
-  /** startCycle invocations, in call order. */
-  starts: Array<{ siteId: string; collectionRealmId: string; nowMs: number }>
 }
 
-/**
- * Stub deps mirroring ProductionSystem semantics: canStart = no active
- * cycle; startCycle writes a fixed-duration cycle (restartCycleMs)
- * unless the slot is taken; grantCycleRewards only records the cycle.
- */
-function createHarness(
-  states: Map<string, ProductionSiteState>,
-  options: {
-    canStart?: (siteId: string) => boolean
-    restartCycleMs?: number
-  } = {},
-): Harness {
+/** Stub deps mirroring ProductionSystem semantics (worker lanes only). */
+function createHarness(states: Map<string, ProductionSiteState>): Harness {
   const siteDefinitions = new Map<string, ProductionSiteDefinition>(
     THANH_VAN_PRODUCTION_SITES.map((site) => [site.siteId, site]),
   )
 
   const grants: ProductionCycle[] = []
-  const starts: Harness['starts'] = []
 
   const deps: ProductionOfflineDeps = {
     states,
     getSiteDefinition: (siteId) => siteDefinitions.get(siteId),
-    canStart: options.canStart ?? ((siteId) => states.get(siteId)?.activeCycle === undefined),
-    startCycle: (siteId, collectionRealmId, nowMs) => {
-      starts.push({ siteId, collectionRealmId, nowMs })
-
-      const state = states.get(siteId)
-
-      if (!state || state.activeCycle) {
-        return false
-      }
-
-      state.activeCycle = makeCycle(siteId, nowMs, nowMs + (options.restartCycleMs ?? CYCLE_MS))
-
-      return true
-    },
     grantCycleRewards: (cycle) => {
       grants.push(cycle)
     },
   }
 
-  return { deps, grants, starts }
+  return { deps, grants }
 }
 
 function settle(
@@ -133,166 +104,6 @@ function settle(
   // stub never reads them, so fresh empties suffice.
   return settleProductionOffline(deps, new MaterialBag(), new MaterialRegistry(), REALM, nowMs, options)
 }
-
-describe('settleProductionOffline — manual cycle phase', () => {
-  it('returns 0 for an empty state map (nothing due, nothing to forfeit)', () => {
-    const states = new Map<string, ProductionSiteState>()
-    const { deps, grants, starts } = createHarness(states)
-
-    expect(
-      settle(deps, T0, { workerCapacity: 2, offlineSinceMs: 0 }),
-    ).toBe(0)
-    expect(grants).toEqual([])
-    expect(starts).toEqual([])
-  })
-
-  it('leaves in-flight cycles untouched when nowMs precedes their deadline (zero/negative elapsed)', () => {
-    const notDue = makeCycle(LAM, T0 - 10_000, T0 + 50_000)
-    // Corrupted snapshot: even the START is after nowMs.
-    const negativeElapsed = makeCycle(QUANG, T0 + 10_000, T0 + 60_000)
-    const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { activeCycle: notDue, autoRestart: true })],
-      [QUANG, makeState(QUANG, { activeCycle: negativeElapsed, autoRestart: true })],
-    ])
-    const { deps, grants, starts } = createHarness(states)
-
-    expect(settle(deps, T0)).toBe(0)
-    expect(grants).toEqual([])
-    expect(starts).toEqual([])
-    expect(states.get(LAM)!.activeCycle).toBe(notDue)
-    expect(states.get(QUANG)!.activeCycle).toBe(negativeElapsed)
-  })
-
-  it('settles a cycle whose completesAtMs equals nowMs (due boundary is inclusive)', () => {
-    const due = makeCycle(LAM, T0 - CYCLE_MS, T0)
-    const states = new Map([[LAM, makeState(LAM, { activeCycle: due })]])
-    const { deps, grants } = createHarness(states)
-
-    expect(settle(deps, T0)).toBe(1)
-    expect(grants).toEqual([due])
-    expect(states.get(LAM)!.activeCycle).toBeUndefined()
-  })
-
-  it('settles a due cycle once with autoRestart off — no restart, site goes idle', () => {
-    const due = makeCycle(LAM, T0 - CYCLE_MS, T0 - 1)
-    const states = new Map([[LAM, makeState(LAM, { activeCycle: due, autoRestart: false })]])
-    const { deps, grants, starts } = createHarness(states)
-
-    expect(settle(deps, T0)).toBe(1)
-    expect(grants).toEqual([due])
-    expect(starts).toEqual([])
-    expect(states.get(LAM)!.activeCycle).toBeUndefined()
-  })
-
-  it('grants a due cycle but does not restart when canStart rejects the site', () => {
-    const due = makeCycle(LAM, T0 - CYCLE_MS, T0 - 1)
-    const states = new Map([[LAM, makeState(LAM, { activeCycle: due, autoRestart: true })]])
-    const { deps, grants, starts } = createHarness(states, { canStart: () => false })
-
-    expect(settle(deps, T0)).toBe(1)
-    expect(grants).toEqual([due])
-    expect(starts).toEqual([])
-    expect(states.get(LAM)!.activeCycle).toBeUndefined()
-  })
-
-  it('forfeits a single due cycle whose duration exceeds the whole cap, re-arming from nowMs', () => {
-    const huge = makeCycle(LAM, T0 - CAP_MS - 1, T0) // duration CAP_MS + 1
-    const states = new Map([[LAM, makeState(LAM, { activeCycle: huge, autoRestart: true })]])
-    const { deps, grants, starts } = createHarness(states)
-
-    expect(settle(deps, T0)).toBe(0)
-    expect(grants).toEqual([])
-    expect(starts).toEqual([{ siteId: LAM, collectionRealmId: REALM, nowMs: T0 }])
-    expect(states.get(LAM)!.activeCycle!.startedAtMs).toBe(T0)
-  })
-
-  it('forfeits an oversized due cycle to full idle when autoRestart is off', () => {
-    const huge = makeCycle(LAM, T0 - CAP_MS - 1, T0)
-    const states = new Map([[LAM, makeState(LAM, { activeCycle: huge, autoRestart: false })]])
-    const { deps, grants, starts } = createHarness(states)
-
-    expect(settle(deps, T0)).toBe(0)
-    expect(grants).toEqual([])
-    expect(starts).toEqual([])
-    expect(states.get(LAM)!.activeCycle).toBeUndefined()
-  })
-
-  it('clamps a corrupted negative-duration cycle to zero budget cost and settles it', () => {
-    // completesAtMs < startedAtMs: Math.max(0, duration) => 0 budget cost.
-    const corrupted = makeCycle(LAM, T0 - 1_000, T0 - 5_000)
-    const states = new Map([[LAM, makeState(LAM, { activeCycle: corrupted })]])
-    const { deps, grants } = createHarness(states)
-
-    expect(settle(deps, T0)).toBe(1)
-    expect(grants).toEqual([corrupted])
-  })
-
-  it('settles cross-site backlog in global earliest-deadline order, chaining each site at its own completion instant', () => {
-    const a1 = makeCycle(LAM, T0, T0 + CYCLE_MS) // due T0+100s, auto chains +100s each
-    const b1 = makeCycle(QUANG, T0, T0 + 150_000) // single due T0+150s
-    const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { activeCycle: a1, autoRestart: true })],
-      [QUANG, makeState(QUANG, { activeCycle: b1, autoRestart: false })],
-    ])
-    const { deps, grants, starts } = createHarness(states)
-
-    const now = T0 + 400_000
-
-    expect(settle(deps, now)).toBe(5)
-    // Interleaved by deadline across sites — not per-site drain order.
-    expect(grants.map((cycle) => [cycle.siteId, cycle.completesAtMs])).toEqual([
-      [LAM, T0 + 100_000],
-      [QUANG, T0 + 150_000],
-      [LAM, T0 + 200_000],
-      [LAM, T0 + 300_000],
-      [LAM, T0 + 400_000],
-    ])
-    // Chained restarts backdate to the completion instant with the CURRENT realm.
-    for (const [index, start] of starts.entries()) {
-      expect(start.siteId).toBe(LAM)
-      expect(start.collectionRealmId).toBe(REALM)
-      expect(start.nowMs).toBe(T0 + (index + 1) * CYCLE_MS)
-    }
-    expect(states.get(LAM)!.activeCycle!.completesAtMs).toBe(T0 + 500_000)
-    expect(states.get(QUANG)!.activeCycle).toBeUndefined()
-  })
-
-  it('an unaffordable earliest cycle forfeits the whole remaining manual backlog', () => {
-    // The earliest due cycle costs more than the budget: the loop breaks
-    // and the forfeit pass drops EVERY later due cycle too — including
-    // affordable ones on other sites.
-    const huge = makeCycle(LAM, T0 - CAP_MS - 501, T0 - 500) // duration CAP_MS + 1
-    const small = makeCycle(QUANG, T0 - CYCLE_MS, T0 - 100)
-    const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { activeCycle: huge, autoRestart: false })],
-      [QUANG, makeState(QUANG, { activeCycle: small, autoRestart: false })],
-    ])
-    const { deps, grants } = createHarness(states)
-
-    expect(settle(deps, T0)).toBe(0)
-    expect(grants).toEqual([])
-    expect(states.get(LAM)!.activeCycle).toBeUndefined()
-    expect(states.get(QUANG)!.activeCycle).toBeUndefined()
-  })
-
-  it('bounds a pathological instant-cycle chain at 5000 settlements (loop guard, no hang)', () => {
-    // Every restart completes 1ms after it starts and is always due —
-    // without the guard this loop would never exit.
-    const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { activeCycle: makeCycle(LAM, 0, 1), autoRestart: true })],
-    ])
-    const { deps, grants, starts } = createHarness(states, { restartCycleMs: 1 })
-
-    const now = T0
-
-    expect(settle(deps, now)).toBe(5000)
-    expect(grants).toHaveLength(5000)
-    // The still-due chain tail is forfeited and re-armed from nowMs.
-    expect(starts).toHaveLength(5001)
-    expect(starts[5000]).toEqual({ siteId: LAM, collectionRealmId: REALM, nowMs: now })
-    expect(states.get(LAM)!.activeCycle!.startedAtMs).toBe(now)
-  })
-})
 
 describe('settleProductionOffline — worker settle phase', () => {
   it('capacity <= 0 freezes saved lanes but still zeroes activeWorkerSlots on every state', () => {
@@ -386,40 +197,22 @@ describe('settleProductionOffline — worker settle phase', () => {
     expect(states.get('ghost_site')!.workerCycles).toEqual([])
   })
 
-  it('pays worker cycles only from the budget left after manual settle', () => {
-    // The manual cycle costs CAP_MS - CYCLE_MS, leaving exactly one 100s
-    // worker completion affordable — the next one in the chain forfeits.
-    const manual = makeCycle(QUANG, T0 - (CAP_MS - CYCLE_MS), T0)
-    const lane = makeCycle(LAM, T0, T0 + CYCLE_MS)
+  it('worker phase now receives the FULL cap budget (no manual consumer ahead of it)', () => {
     const states = new Map<string, ProductionSiteState>([
-      [QUANG, makeState(QUANG, { activeCycle: manual, autoRestart: false })],
-      [LAM, makeState(LAM, { autoRestart: true, workerCycles: [lane] })],
+      [LAM, makeState(LAM, { autoRestart: true, workerCycles: [] })],
     ])
     const { deps, grants } = createHarness(states)
 
-    const now = T0 + 350_000
-    const options: ProductionOfflineOptions = {
+    // Window = exactly the cap: floor(CAP_MS / CYCLE_MS) completions all
+    // paid — previously a manual cycle could consume budget first.
+    const settled = settle(deps, T0 + CAP_MS, {
       workerCapacity: 1,
       offlineSinceMs: T0,
       workerAssignments: new Map([[LAM, 1]]),
-    }
+    })
 
-    expect(settle(deps, now, options)).toBe(2)
-    expect(grants).toEqual([manual, lane])
-    // Forfeited successors leave only the live chain tail behind.
-    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
-      T0 + 400_000,
-    ])
-
-    // Control: same worker state, no manual consumer -> all 3 in-window
-    // completions are paid.
-    const controlStates = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, workerCycles: [makeCycle(LAM, T0, T0 + CYCLE_MS)] })],
-    ])
-    const control = createHarness(controlStates)
-
-    expect(settle(control.deps, now, options)).toBe(3)
-    expect(control.grants).toHaveLength(3)
+    expect(settled).toBe(Math.floor(CAP_MS / CYCLE_MS))
+    expect(grants).toHaveLength(settled)
   })
 
   it('feeds the remaining worker budget to sites in states order — an earlier site can starve later ones', () => {

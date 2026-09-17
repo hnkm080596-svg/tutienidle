@@ -80,7 +80,6 @@ function makeStubs() {
       materialBag: { add: vi.fn() },
       productionSystem: { getSiteDefinitions: () => [] },
       setProductionAutoRestart: vi.fn(),
-      startProductionCycle: vi.fn(),
       setActivePlayer: vi.fn(),
       buildingManager: { add: vi.fn() },
       refreshAutoWorkerCapacity: vi.fn(),

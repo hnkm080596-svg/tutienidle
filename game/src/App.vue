@@ -608,10 +608,10 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
         }
       }
 
-      // 3 nguồn Thanh Vân tự chạy + autoRestart.
+      // 3 nguồn Thanh Vân: bật autoRestart — sites start producing once
+      // workers are allocated (Mission D: workers-as-fuel, no manual start).
       for (const definition of gameManager.productionSystem.getSiteDefinitions()) {
         gameManager.buildingOps.setProductionAutoRestart(definition.siteId, true)
-        gameManager.buildingOps.startProductionCycle(definition.siteId, player.$state)
       }
 
       gameManager.setActivePlayer(player.$state)

@@ -314,11 +314,6 @@ export class GameManagerBuildingOps {
     })
   }
 
-  /** Bắt đầu cycle tại cảnh giới HIỆN TẠI của player (snapshot §4.1). */
-  startProductionCycle(siteId: string, player: PlayerData): boolean {
-    return this.deps.productionSystem.startCycle(siteId, player.realmId, Date.now())
-  }
-
   setProductionAutoRestart(siteId: string, enabled: boolean): boolean {
     return this.deps.productionSystem.setAutoRestart(siteId, enabled)
   }

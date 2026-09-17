@@ -270,8 +270,6 @@ export interface ProductionSiteStateSave {
 
   autoRestart: boolean
 
-  activeCycle?: ProductionCycleSave
-
   // 2026-08-28 (economy-ecosystem-plan T3) — worker cycle dở dang trước
   // đây KHÔNG được persist: mất trắng tiến trình mỗi lần reload và worker
   // không sản xuất offline. Giờ lưu lại để settleOffline chạy tiếp trong cap.
