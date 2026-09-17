@@ -1,15 +1,35 @@
 import type { Stage } from './Stage'
 
-export interface ActiveStage {
-  stageId: string
+declare const stageLeaseBrand: unique symbol
 
-  spawnedCount: number
+/**
+ * Ownership capability for the single stage slot. Opaque by design: only
+ * StageManager.acquire() mints it, and only the exact minted object
+ * passes the owns()/release() identity checks. The brand keeps it
+ * non-constructible and non-forgeable at the type level — the
+ * ActiveStageSnapshot handed out by getActive() deliberately lacks it,
+ * so an observational read can never be passed back to release().
+ */
+export interface StageLease {
+  readonly stageId: string
+  readonly [stageLeaseBrand]: true
+}
 
-  // Giây còn lại tới lần spawn kế — dùng deltaSeconds (giống các
-  // timer combat trong Battle), KHÔNG dùng Date.now(), để tôn trọng
-  // pause/tốc độ x1-x4 giống mọi timer combat khác (khác Exploration/
-  // Crafting, cố ý chạy cả khi offline).
-  spawnCountdown: number
+/**
+ * Read-only view of the held slot — stage bookkeeping for observational
+ * consumers (progress, loot-stage reads). NOT the capability: this object
+ * cannot be passed to release() (no brand at compile time, not the
+ * minted token at runtime).
+ *
+ * spawnCountdown: giây còn lại tới lần spawn kế — dùng deltaSeconds
+ * (giống các timer combat trong Battle), KHÔNG dùng Date.now(), để tôn
+ * trọng pause/tốc độ x1-x4 giống mọi timer combat khác (khác
+ * Exploration/Crafting, cố ý chạy cả khi offline).
+ */
+export interface ActiveStageSnapshot {
+  readonly stageId: string
+  readonly spawnedCount: number
+  readonly spawnCountdown: number
 }
 
 /**
@@ -17,49 +37,76 @@ export interface ActiveStage {
  * (BattleSystem.battle: Battle | null), không phải nhiều tab chạy
  * song song như CraftingManager (Map theo resultType).
  *
- * Mission C audit (lease/ownership unification) — the slot is a
- * CAPABILITY, not ambient state: acquire() returns the ActiveStage
- * object that IS the ownership token, and only that exact object can
- * release the slot. Owners (manual stage run, auto-farm) keep their
- * token; a stale or foreign token passed to release() is a no-op, so
- * one system's teardown can never stomp another owner's lease — not
- * even one that holds the same stageId.
+ * Mission C audit (capability hardening, C5): the slot is a CAPABILITY —
+ * acquire() mints an opaque StageLease token and only that exact object
+ * can release the slot. Owners (manual stage run, auto-farm) keep their
+ * token privately; a stale, forged, or foreign token passed to release()
+ * is a no-op, and the observational getActive() snapshot can never be
+ * used to release somebody else's lease — not even one holding the same
+ * stageId.
  */
 export class StageManager {
-  private active: ActiveStage | null = null
+  private active: {
+    readonly lease: StageLease
+    readonly snapshot: ActiveStageSnapshot
+  } | null = null
 
   /**
-   * Take the single slot. Returns the lease object — the ownership
-   * capability — or null when the slot is already held by anyone.
+   * Take the single slot. Returns the ownership token — keep it private;
+   * it is the ONLY object that can release this lease. Null when the
+   * slot is already held by anyone.
    */
-  acquire(stage: Stage): ActiveStage | null {
+  acquire(stage: Stage): StageLease | null {
     if (this.active) {
       return null
     }
 
+    const lease = { stageId: stage.id } as StageLease
+
     this.active = {
-      stageId: stage.id,
-
-      spawnedCount: 1,
-
-      spawnCountdown: stage.spawnIntervalSeconds,
+      lease,
+      snapshot: {
+        stageId: stage.id,
+        spawnedCount: 1,
+        spawnCountdown: stage.spawnIntervalSeconds,
+      },
     }
 
-    return this.active
+    return lease
   }
 
-  get(): ActiveStage | null {
-    return this.active
+  /**
+   * Observational read — a snapshot of the held slot, deliberately NOT
+   * the ownership token. Consumers may inspect stageId/bookkeeping but
+   * can never recover release capability from it.
+   */
+  getActive(): ActiveStageSnapshot | null {
+    const snapshot = this.active?.snapshot
+
+    // Defensive copy — the held record is internal bookkeeping; handing
+    // out the same reference would let a consumer mutate it behind the
+    // owner's back.
+    return snapshot ? { ...snapshot } : null
+  }
+
+  /**
+   * Is `lease` the token this slot currently holds? The only ownership
+   * question that exists — "someone holds the slot" is intentionally not
+   * answerable as a capability.
+   */
+  owns(lease: StageLease | null | undefined): boolean {
+    return lease != null && this.active?.lease === lease
   }
 
   /**
    * Capability release — frees the slot only when `lease` IS the current
-   * owner (object identity). A stale token (its lease already released)
-   * or a foreign token is a safe no-op; there is intentionally no
-   * ownerless "stop" — whoever holds the token holds the slot.
+   * owner (object identity). A stale token (its lease already released),
+   * a forged literal, a getActive() snapshot, or a foreign token is a
+   * safe no-op; there is intentionally no ownerless "stop" — whoever
+   * holds the token holds the slot.
    */
-  release(lease: ActiveStage | null | undefined): boolean {
-    if (!lease || this.active !== lease) {
+  release(lease: StageLease | null | undefined): boolean {
+    if (!this.owns(lease)) {
       return false
     }
 

@@ -1,10 +1,19 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
+import { EventBus } from '../events/EventBus'
 import { GameManager } from './GameManager'
-import { createDefaultPlayer } from '../player/Player'
+import { StageWaveSystem } from './StageWaveSystem'
+import { StageManager } from '../stage/StageManager'
+import { StageSystem } from '../stage/StageSystem'
+import { EnemySystem } from '../enemy/EnemySystem'
+import { EnemyManager } from '../enemy/EnemyManager'
+import { HiddenBeastSystem } from './HiddenBeastSystem'
+import { TemplateRegistry } from './TemplateRegistry'
+import { createDefaultPlayer, playerToCombatEntity } from '../player/Player'
 import { asBaseStats } from '../stats/StatBlock'
-import { defineEnemy } from '../enemy/Enemy'
+import { defineEnemy, type Enemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
+import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 
 // Mission C audit (round: lease/ownership review) — the stage slot is a
 // capability and the launch is a transaction:
@@ -15,10 +24,17 @@ import type { Stage } from '../stage/Stage'
 //   C2  a refused startStage must be a no-op on the RUNNING battle: the
 //       cycle RNG is minted as a candidate and committed only when the
 //       new cycle actually begins inside beginBattleCycle.
-//   C4  ownership is object-identity, not occupancy: a stale stopRepeat
-//       (abandon on a dead battle reference) must not stomp a foreign
-//       lease, and the repeat gate asks "do I still hold MY lease", not
-//       "does anyone hold the slot".
+//   C4  ownership is object-identity, not occupancy.
+//   C5  the observational API (getActive) must not expose the release
+//       capability — a snapshot can never free somebody else's slot.
+//   C6  a launch that throws after the cycle's commit section must not
+//       leave the PREVIOUS battle standing as a zombie: the failure
+//       contract is "destroyed outright + clean idle".
+//   C7  a refused startStage must not even MINT a stream — deterministic
+//       factories observe identical sequences with or without refusals.
+//   C8  stopRepeat clears the stage run's player context — the idle
+//       auto-farm pick channel must never roll hidden beast on a stale
+//       PlayerData reference.
 
 const DUMMY = defineEnemy({
   id: 'lease_dummy', name: 'Lease Dummy', level: 1, realmId: 'mortal', lane: 'ground',
@@ -52,6 +68,32 @@ function setup(...enemies: ReturnType<typeof defineEnemy>[]) {
   return { gameManager, combatSource, player }
 }
 
+/** StageWaveSystem unit harness — same dep shape as bossRepeatCycle tests. */
+function waveHarness(...stages: Stage[]) {
+  const enemyTemplates = new TemplateRegistry<Enemy>()
+  enemyTemplates.register(DUMMY.id, DUMMY)
+  const stageTemplates = new TemplateRegistry<Stage>()
+  for (const stage of stages) {
+    stageTemplates.register(stage.id, stage)
+  }
+  const stageManager = new StageManager()
+  const hiddenBeast = new HiddenBeastSystem({ getEnemyTemplate: () => undefined })
+
+  const stageWaves = new StageWaveSystem({
+    eventBus: new EventBus(),
+    enemySystem: new EnemySystem(new EnemyManager()),
+    stageManager,
+    stageSystem: new StageSystem(),
+    stageTemplates,
+    enemyTemplates,
+    isStageUnlocked: () => true,
+    launchBattle: () => {},
+    hiddenBeast,
+  })
+
+  return { stageWaves, stageManager, hiddenBeast }
+}
+
 describe('C1 — stage launch is a transaction (lease rolls back on throw)', () => {
   it('launch-chain throw releases the lease and a retry can start cleanly', () => {
     const { gameManager, player } = setup(DUMMY)
@@ -65,7 +107,7 @@ describe('C1 — stage launch is a transaction (lease rolls back on throw)', () 
     })
 
     expect(() => gameManager.turnBattleOps.startStage(player, stage, false)).toThrow('path runtime boom')
-    expect(gameManager.stageManager.get()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
 
     // The slot is free: a fixed retry starts instead of soft-locking.
     gameManager.turnBattleOps.setPathRuntimeResolver(undefined)
@@ -80,12 +122,12 @@ describe('C1 — stage launch is a transaction (lease rolls back on throw)', () 
     gameManager.catalogOps.registerStages([broken])
 
     expect(() => gameManager.turnBattleOps.startStage(player, broken, false)).toThrow()
-    expect(gameManager.stageManager.get()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
   })
 })
 
-describe('C2 — refused startStage is a no-op on the running battle', () => {
-  it('occupied-slot refusal never installs a new cycle RNG', () => {
+describe('C2/C7 — refused startStage is a no-op on the running battle AND the RNG factory', () => {
+  it('occupied-slot refusal never installs AND never mints a cycle RNG', () => {
     const { gameManager, player } = setup(DUMMY)
     const stageA = stageFixture('rng_stage_a', DUMMY.id)
     const stageB = stageFixture('rng_stage_b', DUMMY.id)
@@ -110,56 +152,213 @@ describe('C2 — refused startStage is a no-op on the running battle', () => {
     // stream still live.
     expect(setSource.mock.calls.length).toBe(installsAfterA)
     expect(setSource.mock.calls.at(-1)?.[0]).toBe(liveStream)
-    expect(gameManager.stageManager.get()?.stageId).toBe(stageA.id)
+    // C7: the refusal did not even MINT a candidate — the factory stream
+    // sequence is identical to a run with no failed start.
+    expect(streams).toHaveLength(1)
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(stageA.id)
   })
 })
 
-describe('C4 — slot ownership is object-identity, not occupancy', () => {
-  it('a stale stopRepeat (abandonBattle) cannot release a foreign lease', () => {
-    const { gameManager, player } = setup(DUMMY)
+describe('C4/C5 — slot ownership is a capability, not an observable object', () => {
+  it('a stale stopRepeat cannot release a foreign lease (wave unit level)', () => {
     const stageA = stageFixture('owner_stage_a', DUMMY.id)
     const stageB = stageFixture('owner_stage_b', DUMMY.id)
-    gameManager.catalogOps.registerStages([stageA, stageB])
+    const { stageWaves, stageManager } = waveHarness(stageA, stageB)
+    const player = createDefaultPlayer()
 
-    expect(gameManager.turnBattleOps.startStage(player, stageA, false)).toBe(true)
+    expect(stageWaves.start(player, stageA, false)).toBe(true)
+    stageWaves.stopRepeat() // the wave run released its own lease
 
-    // The wave system's lease dies abnormally (e.g. an earlier unwind
-    // already released it) and a foreign owner takes the slot. A stale
-    // stopRepeat — fired from this battle's abandon path — must leave the
-    // foreign lease alone.
-    gameManager.stageManager.release(gameManager.stageManager.get()!)
-    const foreign = gameManager.stageManager.acquire(stageB)
-    expect(foreign).not.toBeNull()
+    const foreign = stageManager.acquire(stageB)!
+    // A second, stale stopRepeat fires while a foreign owner holds the
+    // slot — the wave run holds no token, so nothing can be released.
+    stageWaves.stopRepeat()
 
-    expect(gameManager.abandonBattle()).toBe(true)
-    expect(gameManager.stageManager.get()).toBe(foreign)
+    expect(stageManager.owns(foreign)).toBe(true)
+    expect(stageManager.getActive()?.stageId).toBe(stageB.id)
   })
 
-  it('repeat-on-victory does not restart when the slot is held by a foreign owner', () => {
+  it('holdsActiveStageLease reports only the wave run\'s own lease — never a foreign hold', () => {
+    const stageA = stageFixture('repeat_own_a', DUMMY.id)
+    const stageB = stageFixture('repeat_own_b', DUMMY.id)
+    const { stageWaves, stageManager } = waveHarness(stageA, stageB)
+    const player = createDefaultPlayer()
+
+    expect(stageWaves.holdsActiveStageLease()).toBe(false)
+    expect(stageWaves.start(player, stageA, true)).toBe(true)
+    expect(stageWaves.holdsActiveStageLease()).toBe(true)
+
+    stageWaves.stopRepeat()
+    expect(stageWaves.holdsActiveStageLease()).toBe(false)
+
+    // A foreign owner occupying the slot is never "our" lease — the
+    // repeat gate asks "do I still hold MY lease", not "is the slot held".
+    stageManager.acquire(stageB)
+    expect(stageWaves.holdsActiveStageLease()).toBe(false)
+  })
+
+  it('getProgress reports only while this run owns the lease', () => {
+    const stageA = stageFixture('progress_a', DUMMY.id)
+    const stageB = stageFixture('progress_b', DUMMY.id)
+    const { stageWaves, stageManager } = waveHarness(stageA, stageB)
+    const player = createDefaultPlayer()
+
+    stageWaves.start(player, stageA, false)
+    expect(stageWaves.getProgress()?.total).toBe(1)
+
+    stageWaves.stopRepeat()
+    expect(stageWaves.getProgress()).toBeNull()
+
+    // A foreign hold is not this stage run — no progress leak.
+    stageManager.acquire(stageB)
+    expect(stageWaves.getProgress()).toBeNull()
+  })
+
+  it('a repeat victory restart still works through the ownership gate (control case)', () => {
     const { gameManager, combatSource, player } = setup(FRAGILE_DUMMY)
-    const stageA = stageFixture('repeat_gate_a', FRAGILE_DUMMY.id)
-    const stageB = stageFixture('repeat_gate_b', FRAGILE_DUMMY.id)
-    gameManager.catalogOps.registerStages([stageA, stageB])
+    const stageA = stageFixture('repeat_ctrl_a', FRAGILE_DUMMY.id)
+    gameManager.catalogOps.registerStages([stageA])
 
     expect(gameManager.turnBattleOps.startStage(player, stageA, true)).toBe(true)
     const generation = gameManager.turnBattleOps.getBattleGeneration()
 
-    // Wave lease dies, foreign owner takes the slot BEFORE the victory
-    // terminal evaluates the repeat condition.
-    gameManager.stageManager.release(gameManager.stageManager.get()!)
-    expect(gameManager.stageManager.acquire(stageB)).not.toBeNull()
-
-    for (let i = 0; i < 4_000 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
+    // Victory -> repeat -> fresh cycle all run inside one clock step, so
+    // the transient 'victory' state is never visible at poll boundaries —
+    // the observable signal of a fired repeat is the next cycle minted.
+    for (let i = 0; i < 4_000 && gameManager.turnBattleOps.getBattleGeneration() === generation; i++) {
       combatSource.advance(COMBAT_STEP_SECONDS)
     }
-    expect(gameManager.getTurnBattle()?.state).toBe('victory')
 
-    // Repeat must NOT fire: the slot is held, but not by this stage run.
-    for (let i = 0; i < 50; i++) {
-      combatSource.advance(COMBAT_STEP_SECONDS)
+    expect(gameManager.turnBattleOps.getBattleGeneration()).toBeGreaterThan(generation)
+    // The wave run still owns its own lease for the repeated stage.
+    expect(gameManager.stageManager.getActive()?.stageId).toBe(stageA.id)
+    expect(gameManager.getTurnBattle()?.state).not.toBe('defeat')
+  })
+})
+
+describe('C6 — a thrown launch destroys the previous battle (no zombie)', () => {
+  it('throw in the commit section: prior battle destroyed, ops clean idle, retry works', () => {
+    const { gameManager, player } = setup(DUMMY)
+    const stageB = stageFixture('destroy_b', DUMMY.id)
+    gameManager.catalogOps.registerStages([stageB])
+
+    // Battle A live through the non-stage entry (no lease involved).
+    gameManager.startBattle(playerToCombatEntity(player, player.baseStats), DUMMY)
+    expect(gameManager.getTurnBattle()?.state).toBe('intro')
+    const battleEnds: string[] = []
+    gameManager.eventBus.on('battle_end', (event: { state: string }) => {
+      battleEnds.push(event.state)
+    })
+
+    // Path runtime throws inside the launch chain — after the new
+    // cycle's commit section already reset the pending/token/queue,
+    // installed its RNG and ran the per-cycle service resets.
+    gameManager.turnBattleOps.setPathRuntimeResolver(() => {
+      throw new Error('path runtime boom')
+    })
+
+    expect(() => gameManager.turnBattleOps.startStage(player, stageB, false)).toThrow('path runtime boom')
+
+    // Destructive failure contract: battle A is definitively destroyed —
+    // not a 'fighting' corpse with torn-down machinery.
+    expect(gameManager.getTurnBattle()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
+    // Its terminal was published exactly once (abandon semantics) so
+    // presentation consumers leave the battle surface.
+    expect(battleEnds).toEqual(['defeat'])
+
+    // Known-idle: a fixed retry runs the canonical cycle immediately.
+    gameManager.turnBattleOps.setPathRuntimeResolver(undefined)
+    expect(gameManager.turnBattleOps.startStage(player, stageB, false)).toBe(true)
+    expect(gameManager.getTurnBattle()?.state).toBe('intro')
+  })
+
+  it('throw inside battle assembly after the bootstrap spawn: no enemy leak survives teardown', () => {
+    const { gameManager, player } = setup(DUMMY)
+    const stageB = stageFixture('destroy_spawn_b', DUMMY.id)
+    gameManager.catalogOps.registerStages([stageB])
+
+    // The stub runtime resolves maxThe (first call site) then throws on
+    // resolveBasic — inside buildTurnBattle, AFTER enemySystem.spawn
+    // already registered the bootstrap enemy.
+    gameManager.turnBattleOps.setPathRuntimeResolver(() => ({
+      resolveMaxThe: () => 100,
+      resolveBasic: () => {
+        throw new Error('path runtime boom')
+      },
+    }) as unknown as CultivationPathRuntime)
+
+    expect(() => gameManager.turnBattleOps.startStage(player, stageB, false)).toThrow('path runtime boom')
+
+    expect(gameManager.getTurnBattle()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
+    // The half-spawned bootstrap enemy is cleared with the failed cycle.
+    expect(gameManager.enemyManager.getAll()).toHaveLength(0)
+  })
+
+  it('throw inside a repeat restart: lease released, no zombie battle, slot not soft-locked', () => {
+    const { gameManager, combatSource, player } = setup(FRAGILE_DUMMY)
+    const stageA = stageFixture('repeat_destroy_a', FRAGILE_DUMMY.id)
+    gameManager.catalogOps.registerStages([stageA])
+
+    expect(gameManager.turnBattleOps.startStage(player, stageA, true)).toBe(true)
+
+    const battleEnds: string[] = []
+    gameManager.eventBus.on('battle_end', (event: { state: string }) => {
+      battleEnds.push(event.state)
+    })
+
+    // Install the failure AFTER the first cycle is live: the resolver only
+    // runs during cycle construction, so the repeat restart's
+    // beginBattleCycle hits it — a path the wave system's launch
+    // transaction does NOT wrap (no acquire happens on repeat).
+    gameManager.turnBattleOps.setPathRuntimeResolver(() => {
+      throw new Error('repeat construction boom')
+    })
+
+    // Victory -> repeat -> beginBattleCycle throws inside the clock step.
+    let thrown: unknown = null
+    try {
+      for (let i = 0; i < 4_000; i++) {
+        combatSource.advance(COMBAT_STEP_SECONDS)
+      }
+    } catch (error) {
+      thrown = error
     }
-    expect(gameManager.turnBattleOps.getBattleGeneration()).toBe(generation)
-    expect(gameManager.getTurnBattle()?.state).toBe('victory')
-    expect(gameManager.stageManager.get()?.stageId).toBe(stageB.id)
+    expect((thrown as Error)?.message).toBe('repeat construction boom')
+
+    // Destructive contract: battle destroyed, and the wave lease freed —
+    // otherwise the slot stays occupied forever with no live battle.
+    expect(gameManager.getTurnBattle()).toBeNull()
+    expect(gameManager.stageManager.getActive()).toBeNull()
+    // The won battle's terminal was already published — teardown must NOT
+    // re-mark it defeat or emit a second battle_end.
+    expect(battleEnds).toEqual(['victory'])
+
+    // The slot is usable again immediately.
+    gameManager.turnBattleOps.setPathRuntimeResolver(undefined)
+    expect(gameManager.turnBattleOps.startStage(player, stageA, false)).toBe(true)
+    expect(gameManager.getTurnBattle()?.state).toBe('intro')
+  })
+})
+
+describe('C8 — stopRepeat clears the stage run\'s player context', () => {
+  it('idle picks after stopRepeat never roll hidden beast on a stale player', () => {
+    const stageA = stageFixture('context_a', DUMMY.id)
+    const { stageWaves, hiddenBeast } = waveHarness(stageA)
+    const player = createDefaultPlayer()
+    const spy = vi.spyOn(hiddenBeast, 'maybeReplaceSpawn')
+
+    stageWaves.start(player, stageA, false)
+    // The live stage pick consulted hidden beast with the stage's player.
+    expect(spy).toHaveBeenCalled()
+
+    stageWaves.stopRepeat()
+    spy.mockClear()
+
+    // The same pick channel the idle auto-farm uses must not see a stale
+    // PlayerData reference after the stage hold ended.
+    stageWaves.pickEnemyForTurnSpawn(stageA, false, { allowTags: false })
+    expect(spy).not.toHaveBeenCalled()
   })
 })

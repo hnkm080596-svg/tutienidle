@@ -138,3 +138,49 @@ External re-review of Mission C against post-B-rounds master returned `REQUEST C
 
 ## Residual (documented, not blocking)
 - A throw AFTER `beginBattleCycle` commits (post-admission, mid-cycle-build) leaves the previous battle's teardown already run — the lease is still correctly released and the error propagates; reconstructing the torn-down battle is out of scope (pre-existing half-cycle reality, not worsened).
+
+---
+
+# Addendum — External audit round 2 (capability opacity + lifecycle failure contract), HEAD e1361086+
+
+External re-review of the round-1 fix returned `REQUEST CHANGES` — 2 Medium + 2 Low. C1–C4 confirmed fixed; the new findings sat inside the semantics of those fixes. All four verified real before repair; this addendum is the round-2 record.
+
+## Findings (confirmed → fixed)
+
+### EXT-C5 (MEDIUM): `get()` returned the live capability token
+- **Evidence:** the round-1 capability API still let any caller recover the current owner's release token — `stageManager.get() === lease` — and `GameManager.stageManager` is public, so a foreign caller could `release(get()!)` another owner's slot. The primitive guarded only against accidental stale tokens, not a foreign caller obtaining the live one.
+- **Fix:** capability and observation split — `StageLease` is now an opaque branded interface (non-constructible `unique symbol` brand); `get()` is gone. New surface: `acquire() → StageLease | null`, `release(lease)`, `owns(lease)`, `getActive() → Readonly<ActiveStageSnapshot> | null`. The snapshot carries `{ stageId, spawnedCount, spawnCountdown }` only — no brand at compile time, not the minted object at runtime, and `getActive()` returns a defensive copy so a consumer cannot mutate the held record. All callers migrated (`get() === lease` → `owns(lease)`; `get()` reads → `getActive()`).
+- **Tests:** `StageManager.test.ts` rewritten (9 tests): second acquire refused; snapshot≠token; `release(snapshot)` refused even through a cast; forged literal refused; foreign token refused; stale token refused; new-owner isolation; `release(null)` no-op; snapshot mutation cannot corrupt the held record. The C4 suite's own `release(get()!)` loophole was deleted — dead-owner scenarios now use a unit-level `StageWaveSystem` harness or a foreign `StageManager` minted token instead of recovering the live one.
+
+### EXT-C6 (MEDIUM): `beginBattleCycle()` was not transaction-safe post-admission
+- **Evidence:** the commit section ran destructive resets (pending/token/queue clear, RNG install, reward once-guard re-arm, loot/survive/passive resets) BEFORE the throw-prone construction work (path runtime, battle assembly, engine construction). A throw left the previous battle's object alive on torn-down machinery — a zombie 'fighting' half-cycle.
+- **Fix (destructive semantics):** `beginBattleCycle` wraps the whole committed body; any throw runs `discardFailedCycle()` then rethrows. The discard mirrors `abandonBattle`'s teardown — session end, enemy clear, survive-session drop, cycle-entry clear, clock stop, stage/repeat/player binding clear — plus `stageWaves.stopRepeat()` so the stage lease is freed on EVERY entry path (the repeat path had no wave-side transaction — a mid-repeat construction throw would have soft-locked the slot exactly like C1).
+- **Terminal discipline inside the discard:** the once-guard is re-armed by the new cycle's reset, so terminal teardown is gated three ways — (a) an in-progress previous battle: marked defeat + carry banked + its one `battle_end` published (it was live and known to presentation); (b) an already-terminal previous battle (a repeat restart failing after victory): dropped silently — its terminal was already published and its carry already banked, re-marking would double-publish; (c) a half-built new battle: dropped silently — it never began, so no phantom `battle_end`.
+- **Tests:** `stageLease.test.ts` — throw in the commit section → prior battle destroyed, `getActive()` null, exactly one `battle_end: 'defeat'`, retry starts clean; throw during battle assembly after the bootstrap spawn → no leaked enemy registration; throw inside a REPEAT restart → lease freed (no soft-lock), `battle_end` stream is `['victory']` only (no phantom defeat on the won battle), retry works.
+
+### EXT-C7 (LOW): rejected starts still minted a candidate RNG
+- **Evidence:** `startStage` called `mintCycleRng()` before admission, so a refused request consumed a factory stream — deterministic-harness streams would diverge from a control run.
+- **Fix:** lazy-mint box — `pendingCycleRng` is a `{ stream }` cell filled on FIRST use by `mintOnUse` (the wave pick's rng). Slot-occupied/locked refusals never invoke it: zero factory calls, zero installs. Commit reads `pending.stream ?? mintCycleRng()`, so a pick that never rolled (single-entry pool) still gets exactly one stream per actual cycle.
+- **Test:** refused occupied-slot start → factory call count AND `setRandomSource` call count both unchanged; a later successful cycle receives the next expected stream.
+
+### EXT-C8 (LOW): `stopRepeat()` left stale `activeStagePlayer`
+- **Evidence:** `rollbackFailedStart` cleared the context but normal `stopRepeat` did not — the stage run's `PlayerData` outlived its lease and could feed the hidden-beast roll on the shared idle pick channel.
+- **Fix:** `stopRepeat` now clears `activeStagePlayer` alongside the repeat flag (the rollback path already did).
+- **Test:** wave-harness test — live stage pick consults hidden beast; after `stopRepeat`, the same pick channel (`pickEnemyForTurnSpawn`, the one auto-farm uses) never touches the stale player reference.
+
+## Defect found + fixed inside this round (implementation-time adversarial pass)
+
+### QA-2026-09-17-C9: repeat-path lease leak + terminal double-publish in the first discard design
+- **Evidence:** the initial `discardFailedCycle` did not release the stage lease (a 'repeat'-policy construction throw has no wave transaction around it → slot soft-lock), and its unconditional teardown would have re-marked a just-won battle 'defeat', double-banked the passive carry, and emitted a second `battle_end` for a battle whose victory was already published.
+- **Fix:** unconditional `stageWaves.stopRepeat()` inside the discard (idempotent with the launch-path rollback) + the three-way terminal gate above.
+- **Test:** the repeat-restart regression asserts lease freed + `battleEnds === ['victory']` + clean retry.
+
+## Verification
+- `npm run verify` on the final diff: type-check + build + full vitest — 624/625 files, 5,234 tests (4 expected-fail). The one red was `eslintCoreSeverity.test.ts` spawn timeout under parallel load — the documented environment flake, green isolated (1.3s), same as round 1.
+- Scoped green: 115 files / 681 tests across `src/core/game/` + `src/core/stage/`.
+- P13/P14: not triggered — domain-layer change; lifecycle exercised end-to-end via ManualClockSource integration tests.
+
+## Residual (documented, not blocking)
+- `ActiveStageSnapshot.spawnedCount/spawnCountdown` are reviewer-specified vestigial fields — the live spawn count has been owned by `battle.wave.spawnedCount` since the wave redesign (`getStageProgress` already reads it); the snapshot fields are set at acquire and never mutated. Consumers needing live progress should not read them.
+- A throw inside `discardFailedCycle`'s own teardown (e.g. a throwing `battle_end` subscriber) would mask the original error — the same exposure `abandonBattle` already has; no new risk introduced.
+- A 'test'/'fresh'-policy beginBattleCycle run while the wave system holds a stage lease (devtools/test seam) leaves the lease held if the new cycle SUCCEEDS — pre-existing devtools-only gap, unchanged by this round; the failure path now releases it.

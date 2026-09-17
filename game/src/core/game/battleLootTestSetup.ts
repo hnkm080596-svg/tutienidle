@@ -143,7 +143,7 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
       despawn: vi.fn(),
     },
     rewardSystem: { give: giveReward },
-    stageManager: { get: () => (stage ? { stageId: stage.stageId } : undefined) },
+    stageManager: { getActive: () => (stage ? { stageId: stage.stageId } : undefined) },
     stageTemplates: {
       get: (stageId: string) =>
         stage && stageId === stage.stageId ? (stage as unknown as Stage) : undefined,
