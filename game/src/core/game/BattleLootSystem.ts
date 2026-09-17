@@ -33,6 +33,15 @@ import type { PlayerData } from '../player/Player'
 
 /** Màu tím chuỗi Tinh Hoa Phàm Thể (2026-08-30) — bay về người chơi. */
 const ESSENCE_PARTICLE_COLOR = 0xc792ea
+
+// ItemGrade and ItemQuality are the same 5-member union — one table.
+const RANK_PARTICLE_COLORS: Record<ItemGrade, number> = {
+  hoang: 0x8a877e,
+  huyen: 0x6fbf73,
+  dia: 0x5b9bd5,
+  thien: 0xffd54f,
+  tien: 0xfff6d8,
+}
 import type { Enemy, EnemyReward } from '../enemy/Enemy'
 import type { LootNotificationPresentation } from '../notification/NotificationEvent'
 import type { NotificationQueue } from './NotificationQueue'
@@ -683,27 +692,11 @@ export class BattleLootSystem {
   }
 
   private getGradeParticleColor(grade: ItemGrade): number {
-    const colors: Record<ItemGrade, number> = {
-      hoang: 0x8a877e,
-      huyen: 0x6fbf73,
-      dia: 0x5b9bd5,
-      thien: 0xffd54f,
-      tien: 0xfff6d8,
-    }
-
-    return colors[grade]
+    return RANK_PARTICLE_COLORS[grade]
   }
 
   private getQualityParticleColor(quality: ItemQuality): number {
-    const colors: Record<ItemQuality, number> = {
-      hoang: 0x8a877e,
-      huyen: 0x6fbf73,
-      dia: 0x5b9bd5,
-      thien: 0xffd54f,
-      tien: 0xfff6d8,
-    }
-
-    return colors[quality]
+    return RANK_PARTICLE_COLORS[quality]
   }
 
   // Gộp theo itemId+kind (nhiều wave cùng trận có thể rớt trùng loại)
