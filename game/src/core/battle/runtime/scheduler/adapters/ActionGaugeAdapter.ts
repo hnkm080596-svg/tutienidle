@@ -21,17 +21,30 @@ import type { CombatEntityId } from '../../../contracts/ids'
 
 import type { GaugeAuthority } from '../CombatAuthorityPorts'
 
-import { requireLivingActor, type GaugeActorLookup } from './lookups'
+import {
+  requireLivingActor,
+  type CombatEntityLookup,
+  type GaugeActorLookup,
+} from './lookups'
 
 export class ActionGaugeAdapter implements GaugeAuthority {
-  constructor(private readonly resolveActor: GaugeActorLookup) {}
+  constructor(
+    private readonly resolveActor: GaugeActorLookup,
+    // The liveness gate reads the LIVE entity; the GaugeActor's own
+    // `alive` is the participant cache and can be stale mid-resolution.
+    private readonly resolveEntity: CombatEntityLookup,
+  ) {}
 
   pushGauge(
     targetId: CombatEntityId,
     fractionOfMax: number,
     _ctx: CombatAuthorityExecutionContext,
   ): { before: number; requestedDelta: number; appliedDelta: number; after: number } {
-    const actor: GaugeActor = requireLivingActor(this.resolveActor, targetId)
+    const actor: GaugeActor = requireLivingActor(
+      this.resolveActor,
+      this.resolveEntity,
+      targetId,
+    )
 
     const before = actor.actionGauge
     refundGauge(actor, fractionOfMax * GAUGE_MAX)

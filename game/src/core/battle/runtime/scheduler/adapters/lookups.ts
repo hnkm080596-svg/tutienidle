@@ -53,16 +53,21 @@ export function requireLivingEntity(
 }
 
 /** Same invalidation for the gauge channel: a dead participant's gauge
-    is inert, so pushing it is a dead-target skip. */
+    is inert, so pushing it is a dead-target skip. Liveness gates on the
+    LIVE entity -- the participant `alive` flag is a cache synced only
+    inside the pacing loop, so a just-killed participant can read
+    stale-true mid-resolution (M4 review fix). */
 export function requireLivingActor(
-  resolve: GaugeActorLookup,
+  resolveActor: GaugeActorLookup,
+  resolveEntity: CombatEntityLookup,
   id: CombatEntityId,
 ): GaugeActor {
-  const actor = resolve(id)
-  if (actor === undefined || !actor.alive) {
+  requireLivingEntity(resolveEntity, id)
+  const actor = resolveActor(id)
+  if (actor === undefined) {
     throw new CombatOperationSkip(
       'invalid_target_state',
-      `gauge actor '${id}' is not resolvable or dead`,
+      `gauge actor '${id}' is not resolvable`,
     )
   }
   return actor

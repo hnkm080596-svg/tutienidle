@@ -472,10 +472,11 @@ export class TurnBattleSystem {
      */
     private readonly liveStatModifiers?: (entity: CombatEntity) => StatModifier[],
     /**
-     * Phap Tu Reimagined Task 11 — the ONE randomness source for all
-     * new An-kit rolls (composite picks, multicast rolls, ailment
-     * application). Tests inject a scripted rng for determinism.
-     * Combat-contract M4 — retyped to the CombatRng interface; the
+     * Combat-contract M4 — the battle-wide CombatRng for ALL engine
+     * rolls (reactive triggers, composite picks, multicast, proc
+     * chances, ailment application; first introduced as the An-kit
+     * roll source in Phap Tu Reimagined Task 11). Tests inject a
+     * scripted/seeded CombatRng for determinism. The
      * default wraps a LAZY Math.random closure so vi.spyOn(Math,
      * 'random') interception keeps working for callers that construct
      * the system before installing the spy. Downstream helpers that

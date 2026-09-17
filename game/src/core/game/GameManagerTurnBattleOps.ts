@@ -897,7 +897,7 @@ export class GameManagerTurnBattleOps {
           resolveParticipant(id)?.buffs.getAll(),
       }),
       heal: new CombatSystemHealAdapter(this.deps.combatSystem, resolveEntity),
-      gauge: new ActionGaugeAdapter((id) => resolveParticipant(id)),
+      gauge: new ActionGaugeAdapter((id) => resolveParticipant(id), resolveEntity),
       resource: new EntityResourceAdapter(resolveEntity),
       shield: new VitalsShieldAdapter(this.deps.combatSystem.vitals, resolveEntity),
       // buffs port stays unwired until the buff2 authority lands.

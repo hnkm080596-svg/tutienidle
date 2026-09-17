@@ -7,6 +7,8 @@ import { describe, expect, it } from 'vitest'
 
 import type { GaugeActor } from '../../../../battle/turn/ActionGauge'
 import { GAUGE_MAX } from '../../../../battle/turn/ActionGauge'
+import type { CombatEntity } from '../../../../combat/CombatEntity'
+import { createBaseStats } from '../../../../stats/StatBlock'
 
 import type { CombatAuthorityExecutionContext } from '../../../contracts/context'
 import type { CombatOperationOrigin } from '../../../contracts/origin'
@@ -19,9 +21,38 @@ function makeActor(id: string, actionGauge: number, alive = true): GaugeActor {
   return { id, speed: 100, actionGauge, alive }
 }
 
-function makeAdapter(actors: GaugeActor[]) {
-  const map = new Map<CombatEntityId, GaugeActor>(actors.map((a) => [a.id, a]))
-  return new ActionGaugeAdapter((id) => map.get(id))
+/** Minimal CombatEntity -- the adapter only reads id + alive. */
+function makeEntity(id: string, alive = true): CombatEntity {
+  const stats = createBaseStats()
+  return {
+    id,
+    name: id,
+    type: 'enemy',
+    stats,
+    baseStats: stats,
+    currentHp: stats.maxHp,
+    maxHp: stats.maxHp,
+    currentMp: stats.maxMp,
+    currentWard: 0,
+    turnsSinceLastHitLanded: 0,
+    realmIndex: 0,
+    x: 0,
+    row: 0 as never,
+    alive,
+  }
+}
+
+function makeAdapter(actors: GaugeActor[], entities?: CombatEntity[]) {
+  const actorMap = new Map<CombatEntityId, GaugeActor>(actors.map((a) => [a.id, a]))
+  // Default: mirror each actor's flag onto a backing entity -- the
+  // override list lets a test diverge the cache from the live truth.
+  const entityMap = new Map<CombatEntityId, CombatEntity>(
+    (entities ?? actors.map((a) => makeEntity(a.id, a.alive))).map((e) => [e.id, e]),
+  )
+  return new ActionGaugeAdapter(
+    (id) => actorMap.get(id),
+    (id) => entityMap.get(id),
+  )
 }
 
 const CTX: CombatAuthorityExecutionContext = {
@@ -91,5 +122,23 @@ describe('ActionGaugeAdapter', () => {
         expect((error as CombatOperationSkip).reason).toBe('invalid_target_state')
       }
     }
+  })
+
+  it('skips when the live entity is dead even though the participant cache still reads alive', () => {
+    // M4 review fix: participant.alive is a cache synced only inside the
+    // pacing loop -- a just-killed participant can read stale-true
+    // mid-resolution. The gate must read entity.alive.
+    const staleCache = makeActor('victim', 100, true)
+    const adapter = makeAdapter([staleCache], [makeEntity('victim', false)])
+
+    try {
+      adapter.pushGauge('victim', 0.1, CTX)
+      expect.unreachable('should have thrown')
+    } catch (error) {
+      expect(error).toBeInstanceOf(CombatOperationSkip)
+      expect((error as CombatOperationSkip).reason).toBe('invalid_target_state')
+    }
+    // The skip must land BEFORE any gauge mutation.
+    expect(staleCache.actionGauge).toBe(100)
   })
 })
