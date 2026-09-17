@@ -5,6 +5,7 @@ import {
   canUpgradeNode,
   devResetBranch,
   getNodeLevel,
+  getNodeMaxLevel,
   getNextLevelCost,
   hasPrerequisite,
   purchaseNode,
@@ -431,5 +432,16 @@ describe('devResetBranch (plan §6.10)', () => {
 
     expect(refund2).toBe(1 + 1)
     expect(getNodeLevel(player, 'branch_child')).toBe(0)
+  })
+})
+
+describe('getNodeMaxLevel', () => {
+  // Single normalization owner for "how many levels can this node reach"
+  // — both UI consumers (NodeTreePanel, NodeInspector) must read through
+  // it instead of re-deriving Math.max(1, maxLevel ?? 1).
+  it('normalizes absent/zero/positive maxLevel to 1/1/N', () => {
+    expect(getNodeMaxLevel(minorNode())).toBe(1)
+    expect(getNodeMaxLevel(minorNode({ maxLevel: 0 }))).toBe(1)
+    expect(getNodeMaxLevel(minorNode({ maxLevel: 7 }))).toBe(7)
   })
 })

@@ -27,7 +27,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
-import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
+import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
 import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
@@ -221,7 +221,7 @@ const branches = computed(() => {
     for (const node of branchNodes) {
       const level = getNodeLevel(player.$state, node.id)
 
-      const maxLevel = Math.max(1, node.maxLevel ?? 1)
+      const maxLevel = getNodeMaxLevel(node)
 
       const upgradable = canUpgradeNode(player.$state, node)
 
