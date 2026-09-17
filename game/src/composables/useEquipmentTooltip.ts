@@ -10,6 +10,7 @@ import { realmFromGrade } from '@/core/profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import { composeEquipmentDisplayName } from '@/core/equipment/EquipmentNaming'
 import { EQUIPMENT_SLOT_LABELS } from '@/core/equipment/EquipmentTypes'
+import { MAX_SLOT_ENHANCE_LEVEL } from '@/core/equipment/EnhanceCurve'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import { gradeLabel, realmLabel } from '@/core/presentation/labels'
 import type { SlotComparison } from '@/components/common/SlotTypes'
@@ -204,7 +205,7 @@ export function buildEquipmentTooltip(
   const enhanceLevel = slotState?.enhanceLevel ?? 0
 
   if (enhanceLevel > 0) {
-    forgeRows.push({ label: 'Cường Hóa', value: `+${enhanceLevel}/${template.maxEnhanceLevel}` })
+    forgeRows.push({ label: 'Cường Hóa', value: `+${enhanceLevel}/${MAX_SLOT_ENHANCE_LEVEL}` })
   }
 
   const maxForgePoints = instance.forgeUsesTotal
