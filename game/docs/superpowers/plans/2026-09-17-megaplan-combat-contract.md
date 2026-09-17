@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Non-trivial production missions MUST follow `game/docs/architecture/architecture-worker-workflow.md` (G0–G5) and return the G5 evidence report.
 
-> **Review revision:** v4 — incorporates code review round 3 (at `5c17f2a3`). Round-3 fixes: `CombatAuthorityExecutionContext` carries `{operationId, origin, events}` into every authority call — authorities mint `eventId`s (`evt.${ctx.operationId}.${kind}.${ordinal}`) and tag events with `causationOperationId` (explicit operation→event causal edge); `DeferredOperation` carries its own pre-minted `operationId` (materialization preserves id — R-C2 producer-minting holds for deferred ops) + `origin`; the max-HP heal cap moved onto the materialized `HealOperation` resolved by `HealAuthority` (BatchResultContext has no stat access); `BuffPeriodicDamageRequest` canonicalized to `{damageProfile, coefficient, hitCount, canCrit, canMiss}` (converts 1:1 to `DealDamageOperation` — no `rawPower` precomputation, Damage owns formulas); battle-global `seenOperationIds`/`reserveOperationId` enforced on EVERY op path (authored, immediate, batch, deferred); dual settlement guard (nesting depth AND per-barrier work budget); `CombatSettlementFaultEvent` demoted to an out-of-band diagnostic record (not a queued gameplay event — the halted scheduler can't drain it); `PendingCombatEvent` reworded — closed union, siblings extend by editing `events.ts`; M0 rootActionId census widened; stale `sourceId` comment removed. v3 (`5c17f2a3`): review round 2. v2 (`eb8587d2`): review round 1.
+> **Review revision:** v5 — incorporates code review round 4 (at `aead334b`). Round-4 fixes: `pendingImmediateOps` replaced by depth-first settlement frames — each `ImmediateSettlement`'s ops run to completion (incl. their own consequence trees) before siblings AND before the next queued event (Option B locked: handlers observe post-consequence state); periodic bridge closed — authorities emit `PeriodicRequestsCommitted` via `ctx.events`, a scheduler built-in handler converts each request 1:1 to `deal_damage`/`heal` ops (`periodic.${eventId}.${i}` ids) — the same lane serves lifecycle ticks; batch structural preflight added (all op ids + deferred refs validated & reserved BEFORE first mutation — a malformed graph is a structural fault, never a mid-batch throw); dedup single-pointed at `enqueueEvent` (`acceptedEventIds`); deferred refs to `skipped`/unresolved damage produce `{status:'skipped', reason:'dependency_not_resolved'}`; Xuyên Thổ heal cap re-read — spec caps the heal RATIO (`min(0.05·D, 0.25)`, StackExpr-evaluated at resolution), not maxHp — `capFractionOfHealTargetMaxHp` REMOVED (YAGNI); M3 no longer hard-codes `buff_periodic`→DoT (profile dispatches; `legacy_dot` profile maps to `applyDotDamage`); `SettlementOverflowEvent` removed (faults are the diagnostic lane); fault reason union gains `settlement_work_budget_exceeded`; scoped `CombatEventSink` mints `eventId`/`causation*` itself — producers emit envelope-free `CombatEventPayload` (no ordinal bookkeeping). v4 (`aead334b`): round 3. v3 (`5c17f2a3`): round 2. v2 (`eb8587d2`): round 1.
 
 **Goal:** Build the shared combat runtime spine — `core/battle/contracts/` (pure types: operations/results/events/origin/selectors) + `core/battle/runtime/` (implementations: `CombatRng` impls, `ElementalStateRegistry` factory, `StaticCapabilityQuery`, `CombatEventSink`), `CombatScheduler` (sole `combatSequence` allocator + per-operation settlement barrier + exactly-once event dispatch + reaction batch frames), `CombatOperationExecutor` (pure router, zero scheduler knowledge) and authority port interfaces — that Buff System Reimagined, SkillDefinition, and ReactionSystem all plug into.
 
@@ -94,40 +94,44 @@ interface CombatOperationResultBase {
 }
 type CombatOperationResultReason =
   | 'stale_reaction_snapshot' | 'invalid_target_state' | 'application_roll_failed'
-  | 'insufficient_resource' | 'blocked_by_restriction'
+  | 'insufficient_resource' | 'blocked_by_restriction' | 'dependency_not_resolved'
 // NOTE: an ApplyBuffOperation whose application roll fails returns
 // {status:'resolved', result:{applied:false}} — the op executed fine; the BUFF
 // result is the authority on success (contract §17). insufficient_resource →
 // 'skipped' (target state invalidation), not 'failed'.
 
-// contracts/events.ts — event identity vs sequence are SEPARATE authorities
-// (review r2/r3 BLOCKER): the PRODUCER mints a deterministic eventId BEFORE
-// enqueue — `evt.${ctx.operationId}.${kind}.${ordinal}` for authority-emitted
-// events (the ordinal distinguishes two same-kind events from ONE op), or
-// `evt.${incomingEventId}.${handlerKey}.${ordinal}` for handler-emitted events.
-// The scheduler stamps only `combatSequence`. Dedup key = producer eventId, so
-// a double-delivered event shares ONE id and `seenEventIds` actually dedups.
+// contracts/events.ts — event identity vs sequence vs causality are SEPARATE
+// authorities (review r2/r3/r4). Producers emit ENVELOPE-FREE payloads
+// (`CombatEventPayload` — no eventId/causation/combatSequence at all);
+// the scoped CombatEventSink mints `eventId` = `evt.${scopeId}.${counter++}`
+// + the causation id (review r4 MEDIUM 3 — no per-authority ordinal
+// bookkeeping). The scheduler stamps only `combatSequence` at enqueueEvent and
+// dedups on the producer eventId there — the SINGLE dedup point (r4 HIGH 1).
 // Causality: `causationOperationId` (authority-emitted) or `causationEventId`
 // (handler-emitted) gives the trace an explicit edge — never parse eventIds.
-// CLOSED union (review r3 MEDIUM): TS type aliases cannot be declaration-merged —
-// sibling plans add members by EDITING this file, not by augmenting.
-type PendingCombatEvent =
+// CLOSED unions (review r3 MEDIUM): TS type aliases cannot be declaration-
+// merged — sibling plans add members by EDITING this file, not by augmenting.
+type CombatEventPayload =                        // what authorities/handlers emit
+  | Omit<ElementalApplicationCommitted, 'eventId'|'causationOperationId'|'causationEventId'|'combatSequence'>
+  | Omit<BuffApplicationFailedEvent, 'eventId'|'causationOperationId'|'causationEventId'|'combatSequence'>
+  | Omit<PeriodicRequestsCommitted, 'eventId'|'causationOperationId'|'causationEventId'|'combatSequence'>
+type PendingCombatEvent =                        // what the sink hands the scheduler
   | Omit<ElementalApplicationCommitted, 'combatSequence'>
   | Omit<BuffApplicationFailedEvent, 'combatSequence'>
-  | Omit<SettlementOverflowEvent, 'combatSequence'>
+  | Omit<PeriodicRequestsCommitted, 'combatSequence'>
   // NOT CombatSettlementFaultEvent — faults are OUT-OF-BAND diagnostics
   // (review r3 HIGH 6): a halted scheduler cannot drain its own fault event.
   // Faults go to trace.recordFault + diagnosticSink, never the gameplay queue.
 interface CombatEventBase {
-  eventId: CombatEventId                       // producer-minted (see above)
-  causationOperationId?: CombatOperationId     // set when an authority emits mid-execute
-  causationEventId?: CombatEventId             // set when an event handler emits
+  eventId: CombatEventId                       // sink-minted `evt.${scopeId}.${n}` (see sink.ts)
+  causationOperationId?: CombatOperationId     // set by an op-scoped sink
+  causationEventId?: CombatEventId             // set by an event-scoped sink
   combatSequence: number                       // scheduler-stamped — sole allocator
 }
 type CombatEvent =
   | ElementalApplicationCommitted
   | BuffApplicationFailedEvent
-  | SettlementOverflowEvent
+  | PeriodicRequestsCommitted
   | CombatSettlementFaultEvent                 // stamped for trace, diagnostic lane only
 interface ElementalApplicationCommitted extends CombatEventBase {
   type: 'elemental_application_committed'
@@ -138,11 +142,24 @@ interface ElementalApplicationCommitted extends CombatEventBase {
   reactionEligibility: ReactionEligibility
   origin: CombatOperationOrigin
 }
-interface SettlementOverflowEvent extends CombatEventBase {
-  type: 'settlement_overflow'; depth: number; lastEventId?: CombatEventId
+// Periodic bridge (review r4 BLOCKER 2): BuffAuthority.triggerPeriodic commits
+// its use/modifier semantics, then emits THIS event via ctx.events carrying the
+// typed requests. The scheduler's built-in handler converts each request 1:1
+// into deal_damage/heal ops (`periodic.${event.eventId}.${i}` ids, origin.kind
+// 'buff_periodic', causationEventId = event) settled in the same barrier. The
+// SAME event is emitted by buff lifecycle ticks via lctx.events — one lane for
+// op-triggered AND lifecycle periodic resolution. Executor stays a pure router
+// (it never sees the requests; the op result only counts them).
+interface PeriodicRequestsCommitted extends CombatEventBase {
+  type: 'periodic_requests_committed'
+  holderId: CombatEntityId
+  requests: readonly (BuffPeriodicDamageRequest | BuffPeriodicHealRequest)[]
+  origin: CombatOperationOrigin      // triggering op's origin or the lifecycle root
 }
 interface CombatSettlementFaultEvent extends CombatEventBase {
-  type: 'combat_settlement_fault'; reason: 'settlement_depth_exceeded'; traceDigest: string
+  type: 'combat_settlement_fault'
+  reason: 'settlement_depth_exceeded' | 'settlement_work_budget_exceeded'  // r4 MEDIUM 2
+  traceDigest: string
 }
 
 // contracts/rng.ts — INTERFACE only here; impls live in runtime/rng/
@@ -178,25 +195,26 @@ interface CombatOperationBatch {
 type CombatPrecondition =
   | { kind: 'buff_participant'; instanceId: BuffInstanceId; expectedSourceId: CombatEntityId; expectedTargetId: CombatEntityId; expectedStacks: number }
   | { kind: 'entity_alive'; entityId: CombatEntityId }
-/** Review r2/r3 BLOCKER — declarative primitive, NOT an arbitrary closure.
+/** Review r2/r3/r4 — declarative primitive, NOT an arbitrary closure.
     A closure could capture mutable combat state; a data primitive is
     materialized by the batch runner from the typed result store. Extensible —
     add members when a real consumer needs one (YAGNI).
     `operationId` is PRE-MINTED by the producer (R-C2 applies to deferred ops —
-    the batch runner must NOT mint ids); materialization preserves it. */
+    the batch runner must NOT mint ids); materialization preserves it.
+    `resultOperationId` constraints (r4 BLOCKER 3/HIGH 2): must reference an
+    EARLIER entry in the SAME batch whose resolved type is `deal_damage` —
+    enforced by static batch validation BEFORE any mutation. At materialize
+    time, a referenced result that is not `resolved` yields
+    {status:'skipped', reason:'dependency_not_resolved'} — never a silent 0. */
 type DeferredOperation =
   | {
       kind: 'heal_from_damage_result'
       /** Producer-minted id of the ResolvedCombatOperation this becomes. */
       operationId: CombatOperationId
-      /** The prior in-batch damage op whose result this heal derives from. */
+      /** An earlier in-batch `deal_damage` op whose result this heal derives from. */
       resultOperationId: CombatOperationId
       healTarget: 'source' | 'target'
       fraction: number
-      /** Passed through onto the materialized HealOperation — the CAP is
-          resolved by HealAuthority (it owns stat reads), NOT by the batch
-          runner (BatchResultContext only sees prior results — review r3). */
-      capFractionOfHealTargetMaxHp?: number
       origin: CombatOperationOrigin
     }
 /** Typed read-only access to prior in-batch results — the runner materializes
@@ -205,18 +223,21 @@ interface BatchResultContext {
   get(operationId: CombatOperationId): CombatOperationResult | undefined
 }
 
-// contracts/sink.ts — authorities call this; the scheduler-backed impl forwards
-// to scheduler.enqueueEvent (stamps combatSequence, dedups by producer eventId)
-interface CombatEventSink { emit(event: PendingCombatEvent): void }
+// contracts/sink.ts — SCOPED sink (review r4 MEDIUM 3): producers emit
+// envelope-free `CombatEventPayload`; the sink implementation is created
+// per-scope by the scheduler and mints `eventId` (`evt.${scopeId}.${counter++}`)
+// + the causation id itself (op scope → causationOperationId, event scope →
+// causationEventId, lifecycle scope → no causation). Forwards the built
+// PendingCombatEvent to scheduler.enqueueEvent (single dedup + stamp point).
+interface CombatEventSink { emit(event: CombatEventPayload): void }
 
-// contracts/context.ts — review r3 BLOCKER 1: authorities mint event ids from
-// the EXECUTING op's id (`evt.${ctx.operationId}.${kind}.${ordinal}`) — so the
-// executor hands each authority call this context. Also carries the causal
-// edge + the event lane. Without it an authority cannot mint stable eventIds.
+// contracts/context.ts — review r3 BLOCKER 1: the executor hands each authority
+// call this context; ctx.events is an OP-SCOPED sink so the authority never
+// does id bookkeeping — it just emits {type, ...fields}.
 interface CombatAuthorityExecutionContext {
   operationId: CombatOperationId       // the op currently executing
   origin: CombatOperationOrigin
-  events: CombatEventSink
+  events: CombatEventSink              // scoped to this op — mints evt.${operationId}.${n}
 }
 
 // contracts/trace.ts — review r2 HIGH 2: op sequence lives on the RECORD, not the op
@@ -238,15 +259,15 @@ class CombatScheduler {
   })
   enqueueAuthored(ops: readonly ResolvedCombatOperation[]): void     // authored intent — barrier after EACH
   /** Review r3 HIGH — uniqueness is GLOBAL, not authored-only. Every op path
-      (authored shift, pendingImmediateOps shift, batch entry, deferred
+      (authored shift, settlement-frame ops, batch entries, deferred
       materialization) reserves its id here right before the op is accepted
       for execution; duplicate → structural fault. BatchResultContext.get()
       keys on these ids, so a collision is a correctness bug, not a nicety. */
   reserveOperationId(id: CombatOperationId): void
-  registerImmediateHandler(type: string, handler: (event: CombatEvent) => ImmediateSettlement | void): void
-  /** Producer already minted eventId + causation id; scheduler stamps
-      combatSequence and dedups on eventId (CON-19). Duplicate delivery of the
-      same eventId → stamped once. */
+  registerImmediateHandler(type: string, handler: (event: CombatEvent, sink: CombatEventSink) => ImmediateSettlement | void): void
+  /** Called by scoped sinks (they mint eventId + causation id); THE dedup point
+      — stamps combatSequence only for never-seen eventIds (CON-19). Duplicate
+      delivery of the same eventId → stamped once, dropped here. */
   enqueueEvent(pending: PendingCombatEvent): void
   run(): CombatTrace                                                  // drains authored + immediate until quiescent
   // NO public allocateSequence() — sequence is allocated internally at stamp/commit time
@@ -256,6 +277,9 @@ class CombatOperationExecutor {
   /** Routes op → port. Builds CombatAuthorityExecutionContext
       ({operationId: op.operationId, origin: op.origin, events: sink}) and
       passes it as the ctx arg on every authority call (review r3 BLOCKER 1).
+      The `sink` is an OP-SCOPED sink the scheduler creates per execution —
+      it mints `evt.${op.operationId}.${n}` + `causationOperationId` itself;
+      authorities emit envelope-free payloads (review r4 MEDIUM 3).
       Returns the FULL discriminated result — batch runners + traces need
       op-specific payloads (damage.hpDamage), not just the base (review r2). */
   execute(op: ResolvedCombatOperation, sink: CombatEventSink): CombatOperationResult
@@ -314,7 +338,7 @@ const MAX_IMMEDIATE_WORK_PER_BARRIER = 1024
 ## Mission 1 — Contract types (pure) + runtime impls (rng/registry/capability)
 
 **Files:**
-- Create: `game/src/core/battle/contracts/ids.ts`, `origin.ts`, `selectors.ts`, `operations.ts`, `results.ts`, `events.ts`, `rng.ts`, `capability.ts`, `elemental.ts`, `settlement.ts`, `sink.ts`, `periodic.ts`
+- Create: `game/src/core/battle/contracts/ids.ts`, `origin.ts`, `selectors.ts`, `operations.ts`, `results.ts`, `events.ts`, `rng.ts`, `capability.ts`, `elemental.ts`, `settlement.ts`, `sink.ts`, `context.ts`, `periodic.ts`
 - Create: `game/src/core/battle/runtime/rng/SeededCombatRng.ts`, `FunctionCombatRng.ts`, `ScriptedCombatRng.ts`
 - Create: `game/src/core/battle/runtime/capability/StaticCapabilityQuery.ts`
 - Create: `game/src/core/battle/runtime/elemental/ElementalStateRegistryImpl.ts` (`createElementalStateRegistry` factory — validates all-5-mapped + distinct ids)
@@ -358,14 +382,10 @@ export interface DealDamageOperation {
 }
 export interface HealOperation {
   type: 'heal'
-  payload: {
-    targetId: CombatEntityId
-    amount: number                        // always concrete (R-C7)
-    /** Optional clamp resolved by HealAuthority at execute time (it owns stat
-        reads). DeferredOperation carries this through materialization; the
-        batch runner never touches stats (review r3 BLOCKER 2). */
-    capFractionOfHealTargetMaxHp?: number
-  }
+  payload: { targetId: CombatEntityId; amount: number }   // always concrete (R-C7)
+  // review r4 HIGH 3: no capFractionOfHealTargetMaxHp — the only consumer
+  // (Xuyên Thổ) caps the heal RATIO at resolution time, not maxHp at execute
+  // time (spec: heal = 5%×D of damage dealt, cap 25% = the ratio's own cap).
 }
 // Review r2 HIGH 3 — payload omits sourceId/origin: BOTH come from the op's
 // origin envelope (single canonical source). The executor composes the full
@@ -454,6 +474,10 @@ export interface BuffAuthority {
   removeModifier(sel: BuffInstanceSelector, modifierId: string, ctx: CombatAuthorityExecutionContext): { removed: boolean }
   refreshDuration(sel: BuffInstanceSelector, duration: number | undefined, ctx: CombatAuthorityExecutionContext): { durationBefore: number; durationAfter: number }
   extendDuration(sel: BuffInstanceSelector, turns: number, maxRemaining: number | undefined, ctx: CombatAuthorityExecutionContext): { durationBefore: number; durationAfter: number }
+  /** Commits periodic use/modifier semantics, then emits
+      `PeriodicRequestsCommitted` (carrying the typed requests) via ctx.events —
+      the scheduler's built-in handler converts them to ops (review r4
+      BLOCKER 2). The return value feeds result.resolutionsEmitted only. */
   triggerPeriodic(sel: BuffInstanceSelector, periodicId: string | undefined, ctx: CombatAuthorityExecutionContext): readonly PeriodicResolution[]
   remove(sel: BuffInstanceSelector, reason: BuffRemovalReason, ctx: CombatAuthorityExecutionContext): void
 }
@@ -481,7 +505,6 @@ export interface BuffPeriodicHealRequest {
   instanceId: BuffInstanceId; periodicId: string
   sourceId: CombatEntityId; targetId: CombatEntityId
   amount: number
-  capFractionOfHealTargetMaxHp?: number
 }
 export interface PeriodicResolution {
   requests: readonly (BuffPeriodicDamageRequest | BuffPeriodicHealRequest)[]
@@ -507,16 +530,27 @@ export class CombatOperationBatchRunner {
   )
   /** Preflight ALL preconditions before any op runs (§40–42 atomic stale-skip). */
   preflight(batch: CombatOperationBatch): boolean
-  /** Review r2/r3 BLOCKER — NOT operationsOf(). Deferred entries CANNOT be
+  /** Review r2/r3/r4 — NOT operationsOf(). Deferred entries CANNOT be
       resolved upfront; the runner materializes each at its position via
       BatchResultContext built from prior in-batch CombatOperationResults.
-      Materialization PRESERVES deferred.operationId (producer-minted, R-C2);
-      the runner then calls scheduler.reserveOperationId on it like every
-      other op path. The scheduler drives:
+      Materialization PRESERVES deferred.operationId (producer-minted, R-C2).
+      The scheduler drives:
+        preflight ALL runtime preconditions (§40–42)
+        validateBatchStructure(batch)   // r4 BLOCKER 3 — BEFORE first mutation:
+          all op/deferred ids unique in-batch AND unreserved globally;
+          every deferred resultOperationId → an EARLIER 'deal_damage' entry;
+          malformed payloads → CombatSettlementFault (broken command graph)
+        reserveOperationId for ALL batch ids ATOMICALLY — a bad id can never
+          fault mid-batch after earlier ops already committed
         for entry of batch.operations:
-          op = isDeferred(entry) ? materialize(entry, resultsCtx) : entry
-          scheduler.reserveOperationId(op.operationId)   // global uniqueness
-          result = executor.execute(op, sink)
+          if deferred:
+            prior = resultsCtx.get(entry.resultOperationId)
+            prior.status !== 'resolved'
+              → record {status:'skipped', reason:'dependency_not_resolved'}
+                for entry.operationId; continue                     // r4 HIGH 2
+            op = materialize(entry, resultsCtx)
+          else op = entry
+          result = executor.execute(op, opSink(op))
           resultsCtx.record(op.operationId, result)
           settle immediate consequences before next entry (§43+§55)
     */
@@ -529,91 +563,121 @@ export class CombatOperationBatchRunner {
 ```
 Scheduler state:
   authoredQueue: ResolvedCombatOperation[]       // authored intent — barrier after EACH op
-  immediateQueue: StampedCombatEvent[]           // post-commit domain events
-  seenEventIds: Set<CombatEventId>               // exactly-once (CON-19)
+  immediateQueue: StampedCombatEvent[]           // post-commit domain events (FIFO)
+  acceptedEventIds: Set<CombatEventId>           // THE dedup point — enqueue only (r4 HIGH 1)
   seenOperationIds: Set<CombatOperationId>       // GLOBAL op-id uniqueness (r3 HIGH)
-  pendingImmediateOps: ResolvedCombatOperation[] // generated BY immediate settlement
-  batchFrameStack: BatchFrame[]                  // nested-batch tracking
-  settlementNestingDepth: number                 // recursion guard
+  settlementNestingDepth: number                 // recursive guard (event trees, batch frames)
   workThisBarrier: number                        // flat-chain guard (r3 HIGH 5)
   state: 'running' | 'faulted'                   // faulted = halt, no more drain
+  // NO pendingImmediateOps — generated ops run in depth-first settlement
+  // frames, not a shared FIFO (r4 BLOCKER 1)
 
 run():
-  while authoredQueue or pendingImmediateOps or immediateQueue non-empty:
+  while authoredQueue or immediateQueue non-empty:
     if state === 'faulted' → break
-    // ONE unit of work at a time; immediate settlement always drains before
-    // the next AUTHORED op. Immediate-generated ops settle within the same
-    // barrier (they are consequences, not authored intent).
     if immediateQueue non-empty:
-      drainImmediateOnce()                      // one event → handler → settlement
+      settleOneEvent()                          // drains ONE event's FULL consequence tree
       continue
-    if pendingImmediateOps non-empty:
-      op = shift → reserveOperationId(op.operationId) → execute
-           → events go to immediateQueue
-      workThisBarrier++
-      continue
-    // both empty → take ONE authored op, execute, then loop back to drain
-    // whatever it produced before the NEXT authored op runs.
+    // queue empty → take ONE authored op; its emitted events land in
+    // immediateQueue and ALL settle before the NEXT authored op (§55)
     op = authoredQueue.shift()
-    reserveOperationId(op.operationId)            // r3 HIGH — authored path too
-    workThisBarrier = 0                           // new barrier for each authored op
-    executor.execute(op, sink)
-  // quiescent = all three empty
+    reserveOperationId(op.operationId)
+    workThisBarrier = 0                          // per-authored-op budget window
+    executor.execute(op, opSink(op))
+  // quiescent = both empty
 
-drainImmediateOnce():
-  event = immediateQueue.shift()
-  if seenEventIds.has(event.eventId) → skip (CON-19 exactly-once)
-  seenEventIds.add(event.eventId)
-  workThisBarrier++
-  if workThisBarrier > maxImmediateWorkPerBarrier → FAULT   // flat infinite chain
-  handler(event) → ImmediateSettlement:
-    {kind:'operations'} → push to pendingImmediateOps (in order)
-    {kind:'batch'}      → CombatOperationBatchRunner:
-        preflight ALL preconditions (§40–42):
-          any fail → emit ReactionSkippedEvent-equivalent; zero ops (atomic stale-skip)
-        else:
-          push batchFrameStack; settlementNestingDepth++
-          if depth > maxSettlementNestingDepth → FAULT      // recursive guard
-          batch ops run ordered, non-interleaved;
-          after EACH batch op, immediate consequences settle before the next
-          batch op (satisfies §43 batch non-interleave AND §55 per-op settle);
-          external authored ops CANNOT interleave (frame holds authoredQueue);
-          nested batches ARE allowed — an immediate event from a batch op may
-          return another {kind:'batch'}; it runs to completion inside the parent
-          frame before the parent's next op
-        DeferredOperation entries materialize at their position via
-          materialize(entry, resultsCtx) — preserves deferred.operationId —
-          then reserveOperationId + execute like every other op (r3 HIGH)
-        pop batchFrameStack; settlementNestingDepth--
+settleOneEvent():                                // settlementNestingDepth++ / --
+  event = immediateQueue.shift()                 // already deduped at enqueue
+  workThisBarrier++; if > maxImmediateWorkPerBarrier → FAULT   // flat chain
+  if settlementNestingDepth > maxSettlementNestingDepth → FAULT // recursion
+  settlement = handler(event)
+  if {kind:'operations'}:
+    // FRAME: every generated op runs to completion — including its own
+    // consequence tree — before the next sibling AND before the next queued
+    // event (r4 BLOCKER 1 + Option B lock: handlers observe post-consequence
+    // state; an event's subtree settles before later queued events' handlers)
+    for op of settlement.operations: runImmediateOp(op)
+  if {kind:'batch'}: runBatchFrame(settlement.batch)
 
-FAULT:  // r3 HIGH 6 — out-of-band diagnostic, NOT a queued gameplay event
+runImmediateOp(op):
+  reserveOperationId(op.operationId)
+  executor.execute(op, opSink(op))
+  workThisBarrier++; if > budget → FAULT
+  drainImmediateQueue()                          // per-op barrier — §55 recursive
+
+drainImmediateQueue():
+  while immediateQueue non-empty and not faulted: settleOneEvent()
+
+runBatchFrame(batch):                            // settlementNestingDepth++ / --
+  preflight ALL preconditions (§40–42):
+    any fail → emit skip event-equivalent; zero ops (atomic stale-skip)
+  validateBatchStructure(batch) (r4 BLOCKER 3 — BEFORE first mutation):
+    every op/deferred operationId unique in-batch AND unreserved globally;
+    every deferred resultOperationId references an EARLIER entry of type
+    'deal_damage'; payload shapes well-formed. Any violation → FAULT
+    (structural — a broken command graph, NOT a runtime invalidation)
+  reserveOperationId for ALL batch ids atomically
+  resultsCtx = empty
+  for entry of batch.operations:                 // ordered, non-interleaved (§43)
+    if deferred:
+      prior = resultsCtx.get(entry.resultOperationId)
+      prior.status !== 'resolved'
+        → resultsCtx.record(entry.operationId, {status:'skipped',
+            reason:'dependency_not_resolved'}); continue          // r4 HIGH 2
+      op = materialize(entry, resultsCtx)       // preserves deferred.operationId
+    else op = entry
+    result = executor.execute(op, opSink(op))
+    resultsCtx.record(op.operationId, result)
+    drainImmediateQueue()                        // per-op settle inside frame
+  // nested batches allowed — a batch op's event may return {kind:'batch'};
+  // it runs inside this frame via the same settleOneEvent path
+
+FAULT:  // r3 HIGH 6 + r4 MEDIUM 2 — out-of-band diagnostic, NOT a queued event
   trace.recordFault(reason, digest); diagnosticSink.emit(CombatSettlementFaultEvent)
   state = 'faulted'; halt progression; dev/test: throw CombatSettlementFault
-  // NEVER enqueue the fault into immediateQueue — a halted scheduler can't
-  // drain it. NEVER retro-fail the committed originating op (R9-revised).
+  // reason ∈ {settlement_depth_exceeded, settlement_work_budget_exceeded}
+  // NEVER enqueue the fault into immediateQueue; NEVER retro-fail committed ops.
 
-enqueueEvent(pending): dedup on pending.eventId (producer-minted) → stamp
-  {combatSequence: allocateSeq()} → enqueue
+enqueueEvent(pending):                           // THE dedup point (r4 HIGH 1)
+  if acceptedEventIds.has(pending.eventId) → return      // stamped once
+  acceptedEventIds.add(pending.eventId)
+  stamp {combatSequence: allocateSeq()} → enqueue
+  // drainImmediateOnce does NOT re-check seenEventIds — one set, one point.
 
 reserveOperationId(id): seenOperationIds.has(id) → structural fault throw;
-  else add — called on authored shift, immediate-op shift, batch entries, and
-  deferred materialization (r3 HIGH — uniqueness is battle-global because
+  else add — called on authored shift, immediate ops, batch (atomic upfront),
+  and deferred materialization (r3 HIGH — uniqueness is battle-global because
   BatchResultContext.get() keys on it)
+
+// Periodic bridge (r4 BLOCKER 2): scheduler ctor registers a BUILT-IN handler
+// for 'periodic_requests_committed' → {kind:'operations'} — converts each
+// typed request 1:1: BuffPeriodicDamageRequest → DealDamageOperation{payload},
+// BuffPeriodicHealRequest → HealOperation{amount}; ids `periodic.${eventId}.${i}`;
+// origin {kind:'buff_periodic', originId: req.instanceId, sourceId: req.sourceId,
+// rootActionId: event.origin.rootActionId, causationEventId: event.eventId}.
+// The scheduler is the PRODUCER here (R-C2 consistent). Lifecycle ticks emit
+// the same event via lctx.events — one lane for both triggers.
 ```
 
-Key invariant (review fix): `pendingImmediateOps` and `immediateQueue` are checked BEFORE `authoredQueue` — so an authored op's consequences always settle before the next authored op. A batch's ops go through the same per-op settle inside the frame.
+Key invariants (review-locked): `immediateQueue` drains before `authoredQueue` — an authored op's consequences always settle before the next authored op (§55). Generated ops run in depth-first settlement frames: an op's OWN consequence tree completes before its siblings (X→Z before Y, never X→Y→Z) and before the next queued event's handler (Option B — handlers observe post-consequence state). A batch's ops go through the same per-op settle inside the frame.
 
 - [ ] **Step 1 — Failing tests (executor):** each op type → its port once, payload+origin intact; **missing port → throw (structural fault), NOT a typed `failed` result** (contract §50 — broken wiring is not a combat outcome); result payloads populated (`push_gauge` returns before/after).
 - [ ] **Step 2 — Failing tests (scheduler — the corrected semantics):**
   - `authored A → emits event → handler returns ops X,Y → X,Y complete BEFORE authored B runs` (THE regression guard for the review blocker — old pseudocode ran B first).
+  - **depth-first consequence frames (r4 BLOCKER 1):** handler returns [X,Y]; X emits E2 whose handler returns [Z] → observed order is `X, Z, Y` — NEVER `X, Y, Z` (a shared FIFO produces the wrong order).
+  - **Option B lock (r4 MEDIUM):** op emits E1,E2 where E1's handler produces X → order `E1-handler, X, E2-handler` — an event's consequence tree settles before the next queued event's handler runs (handlers observe post-consequence state).
   - chained immediate consequences (op → event → op → event) fully drain before next authored op.
-  - exactly-once: duplicate `eventId` → handler fires once; two DISTINCT events from one op (`evt.OP.0`/`evt.OP.1`) both fire (ordinal prevents false dedup).
-  - causal edge: authority-emitted event carries `causationOperationId === op.operationId`; handler-emitted event carries `causationEventId` — trace shows op→event→op without string parsing.
+  - exactly-once (r4 HIGH 1): dedup lives ONLY at `enqueueEvent` — duplicate delivery is never stamped twice (assert only one stamped event exists), drain does not re-check.
+  - scoped sink (r4 MEDIUM 3): authority emits two same-type payloads envelope-free → stamped events carry `evt.OP.0`/`evt.OP.1` + `causationOperationId === op.operationId` — no manual ordinals in the authority.
+  - causal edge: authority-emitted event carries `causationOperationId`; handler-emitted event carries `causationEventId` — trace shows op→event→op without string parsing.
   - **global op-id uniqueness (r3 HIGH):** authored-vs-authored collision throws; authored-vs-immediate collision throws; batch-vs-deferred collision throws.
-  - sequence ownership: events stamped by scheduler (authorities emit pending events with no envelope); ops' `combatSequence` allocation point locked (stamp at execute-time — record choice in doc).
+  - **batch structural preflight (r4 BLOCKER 3):** batch containing a duplicate op id / a deferred ref to a nonexistent id / a deferred ref to a LATER entry / a deferred ref to a non-`deal_damage` entry → `CombatSettlementFault` BEFORE any op executes (spy authority sees zero calls — a broken command graph is not a runtime invalidation).
+  - deferred runtime dependency (r4 HIGH 2): referenced damage op `skipped` → deferred entry records `{status:'skipped', reason:'dependency_not_resolved'}` — never a silent heal-0.
+  - deferred op happy path: materializes using prior in-batch results (fake damage result → heal amount derived); materialized op KEEPS the deferred `operationId`.
+  - **periodic bridge (r4 BLOCKER 2):** stub authority emits `PeriodicRequestsCommitted` via `ctx.events` → built-in handler returns ops → `deal_damage`/`heal` settle in the same barrier with ids `periodic.${eventId}.${i}` and `origin.kind === 'buff_periodic'`; a lifecycle-scoped sink emits the same event shape.
   - batch frame: preflight fail → zero ops + skip event; preflight pass → ops run in order, per-op settle, authored ops can't interleave mid-batch; nested batch runs to completion inside parent frame.
-  - deferred op: `DeferredOperation` materializes using prior in-batch results (fake damage result → heal amount derived); materialized op KEEPS the deferred `operationId`.
-  - **dual guard (r3 HIGH 5):** recursive nesting past `maxSettlementNestingDepth` → fault; FLAT op→event→op→event chain past `maxImmediateWorkPerBarrier` → fault.
+  - sequence ownership: events stamped by scheduler (authorities emit pending events with no envelope); ops' `combatSequence` allocation point locked (stamp at execute-time — record choice in doc).
+  - **dual guard (r3 HIGH 5):** recursive nesting past `maxSettlementNestingDepth` → fault; FLAT op→event→op→event chain past `maxImmediateWorkPerBarrier` → fault; fault `reason` distinguishes the two (`settlement_depth_exceeded` vs `settlement_work_budget_exceeded`).
   - fault is out-of-band (r3 HIGH 6): `trace.recordFault` + `diagnosticSink.emit` called; `immediateQueue` does NOT receive `CombatSettlementFaultEvent`; scheduler state → faulted; committed op stays `resolved`.
 - [ ] **Step 3 — Implement.**
 - [ ] **Step 4 — Verify (P3 quick).**
@@ -634,10 +698,10 @@ Real adapters so every port has a real consumer — EXCEPT buffs (buff2 lands as
 - Create: `game/src/core/battle/runtime/scheduler/adapters/VitalsShieldAdapter.ts` — routes `apply_shield` through a vitals-level ward grant (`CombatSystem`/`EntityVitalsSystem` method — add `applyWard`/`grantWard` if absent; NEVER `entity.currentWard += x` — review r2 HIGH 6)
 - Test: `adapters/*.test.ts`
 
-**Damage adapter rule (review blocker):** `dealDamage(payload, origin)` dispatches on `damageProfile` + `origin.kind`:
-- `origin.kind === 'buff_periodic'` → DoT channel (`applyDotDamage` — dotResistance/dotRecovery economy).
-- `origin.kind === 'reaction'` → **reaction channel**: a new explicit path (e.g. `applyReactionDamage` or profile-routed) — NEVER `applyDotDamage` (that would consume `dotResistancePercent`, fire `dotRecovery`, and report reason `'dot'`). **The infrastructure layer does NOT pin the formula** (review r2 HIGH 5): which mitigation/resistance/final-damage layers apply is a `damageProfile` decision owned by DamageSystem/gameplay — the contract only guarantees the channel is distinct from DoT and honors `canCrit:false`.
-- `origin.kind === 'skill'|'proc'` → hit channel (`applyModifiedDirectDamage` semantics).
+**Damage adapter rule (review-locked):** `dealDamage(payload, ctx)` dispatches on `damageProfile` with `origin` as context — the PROFILE owns the formula (r4 HIGH 4: infrastructure does NOT hard-code `origin ⇒ channel`; a `buff_periodic` op is not automatically DoT — poison/burn/bleed/scripted-pulse profiles may each choose different economies).
+- `damageProfile: 'legacy_dot'` → DoT channel (`applyDotDamage` — dotResistance/dotRecovery economy; the migration maps existing periodic defs to this profile to preserve behavior).
+- `damageProfile: 'reaction_*'` (origin.kind `'reaction'`) → **reaction channel**: a new explicit path (e.g. `applyReactionDamage` or profile-routed) — NEVER `applyDotDamage` (that would consume `dotResistancePercent`, fire `dotRecovery`, and report reason `'dot'`). The infrastructure layer does NOT pin the formula (review r2 HIGH 5): mitigation/resistance/final-damage layers are the profile's decision — the contract only guarantees the channel is distinct from DoT and honors `canCrit:false`.
+- standard hit profiles (`origin.kind 'skill'|'proc'`) → hit channel (`applyModifiedDirectDamage` semantics).
 The adapter is allowed to ADD a `CombatSystem` method for the reaction channel if none exists — record as a contract extension in the mission report.
 
 - [ ] **Step 1 — Failing tests:** `{origin.kind:'reaction', canCrit:false}` → reaction channel (assert it does NOT consume `dotResistancePercent` / does NOT trigger `dotRecovery` / reports `reason:'reaction'`); gauge adapter signed-clamps negative pushback at 0 and caps at `GAUGE_MAX`; resource `consume('all')` reports `{before, requested:'all', applied, after}`.
@@ -709,4 +773,4 @@ The adapter is allowed to ADD a `CombatSystem` method for the reaction channel i
 1. RESOLVED (review r2): `combatSequence` stamped by scheduler at `enqueueEvent` (events) / execute time (ops — lives on `CombatExecutionRecord` in the trace, NOT on the op). Every executed op + every stamped event gets one; enqueued-but-never-executed ops get none.
 2. RESOLVED (review r3): `PreconditionChecker` stays YAGNI — `buff_participant` + `entity_alive` only; add `resource_at_least`/`stacks_at_least` when a real atomic batch needs it.
 3. RESOLVED (review r2): explicit reaction damage channel accepted (e.g. `applyReactionDamage`), but the infrastructure plan does NOT pin mitigation/resistance rules — `damageProfile` owns the formula.
-4. RESOLVED (review r3): the heal cap for `heal_from_damage` (e.g. Xuyên Thổ's 25% source-maxHp clamp) is carried on the materialized `HealOperation.capFractionOfHealTargetMaxHp` and resolved by `HealAuthority` — the batch runner has no stat access, so the cap cannot live on the deferred primitive.
+4. RESOLVED (review r4, corrected): Xuyên Thổ's "cap 25%" clamps the heal RATIO (`min(0.05·D, 0.25)` — evaluated by StackExpr at resolution time, D≤5 makes it a natural boundary), NOT a max-Hp clamp — `capFractionOfHealTargetMaxHp` was removed from both `DeferredOperation` and `HealOperation` (YAGNI, no real consumer).

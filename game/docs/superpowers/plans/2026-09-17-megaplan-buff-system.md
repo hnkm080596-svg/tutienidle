@@ -30,7 +30,7 @@
 
 ## Canonical names (locked across sibling plans)
 
-**Consumes (contract plan owns):** `CombatRng`, `CombatOperationOrigin`, `CombatOperation` (ops targeting this system: `ApplyBuffOperation`, `AddBuffStacksOperation`, `RemoveBuffStacksOperation`, `ConsumeBuffStacksOperation`, `AddBuffModifierOperation`, `RemoveBuffModifierOperation`, `RefreshBuffDurationOperation`, `ExtendBuffDurationOperation`, `TriggerBuffPeriodicOperation`, `RemoveBuffOperation`), `ApplyBuffRequest`, `ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSelector` (discriminated union — contract v2), `BuffRemovalReason`, `ElementalApplicationCommitted`, `BuffApplicationFailedEvent`, `PendingCombatEvent` + `CombatEventSink`, `PeriodicResolution`/`BuffPeriodicDamageRequest`/`BuffPeriodicHealRequest` (contract `periodic.ts` — request types cross the authority boundary so they live in contracts, not buff2), `CombatAuthorityExecutionContext` (contract v4 — carries `{operationId, origin, events}`; BuffAuthority methods take it per-call — the ctor-injected emit was REMOVED because authorities mint `eventId`s from `ctx.operationId`), `BuffAuthority` port.
+**Consumes (contract plan owns):** `CombatRng`, `CombatOperationOrigin`, `CombatOperation` (ops targeting this system: `ApplyBuffOperation`, `AddBuffStacksOperation`, `RemoveBuffStacksOperation`, `ConsumeBuffStacksOperation`, `AddBuffModifierOperation`, `RemoveBuffModifierOperation`, `RefreshBuffDurationOperation`, `ExtendBuffDurationOperation`, `TriggerBuffPeriodicOperation`, `RemoveBuffOperation`), `ApplyBuffRequest`, `ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSelector` (discriminated union — contract v2), `BuffRemovalReason`, `ElementalApplicationCommitted`, `BuffApplicationFailedEvent`, `PendingCombatEvent` + `CombatEventSink`, `PeriodicResolution`/`BuffPeriodicDamageRequest`/`BuffPeriodicHealRequest` (contract `periodic.ts` — request types cross the authority boundary so they live in contracts, not buff2), `PeriodicRequestsCommitted` (contract `events.ts` — the periodic bridge), `CombatAuthorityExecutionContext` (contract v4 — carries `{operationId, origin, events}`; BuffAuthority methods take it per-call; `ctx.events` is an OP-SCOPED `CombatEventSink` that mints `eventId`/`causationOperationId` itself — authorities emit envelope-free `CombatEventPayload`s), `BuffAuthority` port.
 
 **Produces (everyone else imports):** `BuffDefinition` (new shape), `BuffInstance`, `BuffInstanceId` minting, `BuffInstanceSnapshot`, `BuffModifier`, `BuffModifierChannel`, `BuffModifierLifetime`, `BuffPeriodic`, `BuffRemovalReason` impl, `BuffQuery`/`BuffReadPort`, `ApplicationResolver`, `BuffLifecycle` (entry-point enum), `BuffEvent` union (`BuffApplied`, `BuffStacksChanged`, `BuffRemoved`, `BuffPeriodicResolved`, `BuffModifierAdded/Removed`, `ElementalApplicationCommitted` emission site), `BuffSystem` (buff2), `BuffRegistry` (buff2).
 
@@ -224,9 +224,10 @@ export class ApplicationResolver {
 }
 
 // BuffSystem.ts — the mutation authority (spec §51 surface).
-// Contract v4: NO ctor-injected emit — events are emitted through
-// ctx.events with producer-minted eventIds (`evt.${ctx.operationId}.${type}.${ordinal}`)
-// + `causationOperationId = ctx.operationId`. The scheduler stamps only combatSequence.
+// Contract v4+: NO ctor-injected emit AND no event-id bookkeeping — ctx.events
+// is an OP-SCOPED CombatEventSink that mints `eventId` (`evt.${operationId}.${n}`)
+// + `causationOperationId` itself. Authorities emit ENVELOPE-FREE payloads
+// (`CombatEventPayload`); the scheduler stamps only combatSequence.
 export class BuffSystem {
   constructor(
     private readonly store: BuffStore,
@@ -260,8 +261,11 @@ export class BuffSystem {
   onTimeElapsed(holderId: CombatEntityId, seconds: number, lctx: BuffLifecycleContext): readonly PeriodicResolution[]  // persistent pool mode (R2)
 
   // === periodic ===
-  resolvePeriodic(holderId: CombatEntityId, lctx: BuffLifecycleContext): readonly PeriodicResolution[]      // internal
-  triggerPeriodic(sel: BuffInstanceSelector, periodicId: string | undefined, ctx: CombatAuthorityExecutionContext): readonly PeriodicResolution[]  // TriggerBuffPeriodic — no lifetime advance (contract §73)
+  // Both paths emit `PeriodicRequestsCommitted` (requests payload) through the
+  // scoped sink — the scheduler's built-in handler converts them to
+  // deal_damage/heal ops settled in the same barrier (contract v4 bridge).
+  resolvePeriodic(holderId: CombatEntityId, lctx: BuffLifecycleContext): readonly PeriodicResolution[]      // internal — emits via lctx.events
+  triggerPeriodic(sel: BuffInstanceSelector, periodicId: string | undefined, ctx: CombatAuthorityExecutionContext): readonly PeriodicResolution[]  // TriggerBuffPeriodic — no lifetime advance (contract §73); emits via ctx.events
 
   // === queries (BuffReadPort impl) ===
   getInstance(sel: BuffInstanceSelector): BuffInstanceSnapshot | undefined
@@ -272,16 +276,16 @@ export class BuffSystem {
 // BuffLifecycleContext.ts — root-transaction context for non-op emissions
 export interface BuffLifecycleContext {
   rootActionId: string        // e.g. `status.turn.35.player` — minted by the turn-lifecycle owner
-  events: CombatEventSink     // same sink lane as ctx.events
+  events: CombatEventSink     // LIFECYCLE-scoped sink — mints evt.${rootActionId}.${n}, no causationOperationId
 }
 ```
 
 ```ts
 // BuffEvents.ts — every event post-commit; ElementalApplicationCommitted among them (spec §60).
-// All members extend CombatEventBase: producer-minted `eventId` +
-// `causationOperationId` (authority-ctx emissions) — scheduler stamps only
-// `combatSequence`. These pending shapes are added to contracts/events.ts by
-// THIS plan (closed union — edit the central file, contract v4).
+// Members are envelope-free (the scoped sink mints `eventId`/`causation*`; the
+// scheduler stamps `combatSequence`). These payload shapes are added to
+// contracts/events.ts by THIS plan (closed union — edit the central file,
+// contract v4+).
 export type BuffEvent =
   | { type: 'buff_applied'; instanceId; definitionId; sourceId; targetId; created: boolean }
   | { type: 'buff_stacks_changed'; instanceId; stacksBefore; stacksAfter; addedStacks }
@@ -290,7 +294,8 @@ export type BuffEvent =
   | { type: 'buff_modifier_added' | 'buff_modifier_removed'; instanceId; modifierId }
   | ElementalApplicationCommitted   // emitted ONLY by elemental-kind applies that added stacks (§20–21)
   | { type: 'buff_application_failed'; definitionId; sourceId; targetId; reason }
-// (each & CombatEventBase — eventId/causationOperationId minted per emission site)
+// (each & CombatEventBase at delivery — envelope minted by the scoped sink;
+// `PeriodicRequestsCommitted` is contract-owned and NOT in this union)
 ```
 
 **Application flow (spec §25 + contract §16–21):**
@@ -298,7 +303,7 @@ export type BuffEvent =
 apply(req, ctx):   // ctx = CombatAuthorityExecutionContext (v4)
   def = registry.get(req.definitionId)              // unknown → throw (structural, §50)
   {success, duration} = resolver.resolve(req, resolverCtx)  // ONE CombatRng roll
-  if !success: ctx.events.emit(buff_application_failed{eventId:`evt.${ctx.operationId}.buff_application_failed.0`, causationOperationId:ctx.operationId, ...}); return {applied:false}   // §18 — no state touched
+  if !success: ctx.events.emit({type:'buff_application_failed', definitionId, sourceId, targetId, reason}); return {applied:false}   // §18 — no state touched; envelope minted by the op-scoped sink
   resolve instance by instanceScope:
     per_source → find(defId, sourceId, targetId)
     per_target → any source's instance on target
@@ -310,7 +315,7 @@ apply(req, ctx):   // ctx = CombatAuthorityExecutionContext (v4)
     fail     → return {applied:false}
   clearsCcOnApply → strip holder's cc instances (reason 'cleansed')
   commit → ctx.events.emit buff_applied / buff_stacks_changed
-           (eventId `evt.${ctx.operationId}.${type}.${i}`, causationOperationId = ctx.operationId)
+           (envelope-free payloads — sink mints evt.${ctx.operationId}.${n} + causation)
   if def.kind === 'ailment' && element set && addedStacks > 0:
     ctx.events.emit ElementalApplicationCommitted (reactionEligibility from REQ, §14)
   return full ApplyBuffResult
@@ -353,7 +358,10 @@ export type { BuffPeriodicDamageRequest, BuffPeriodicHealRequest, PeriodicResolu
 //     element?, damageProfile, coefficient, hitCount, canCrit, canMiss,
 //     stackCount?, tags?}
 //   BuffPeriodicHealRequest   = {instanceId, periodicId, sourceId, targetId,
-//     amount, capFractionOfHealTargetMaxHp?}
+//     amount}
+// Periodic requests reach the ops layer via `PeriodicRequestsCommitted` events
+// (ctx.events / lctx.events — contract v4 bridge), never via a return value the
+// scheduler can't see.
 
 // Dynamic coefficient (replaces BuffSystem.calculateDamagePerTurn + damagePerTurn snapshot):
 resolvePeriodicDamage(def, instance, sourceStats, targetStatsSnapshot):

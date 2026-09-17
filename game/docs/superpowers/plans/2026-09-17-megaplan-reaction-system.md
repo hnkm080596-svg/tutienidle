@@ -47,7 +47,7 @@
 | R3 | Legacy `TurnReactionManager` + `canInitiateWuxingReactions` stay live and untouched until the seal batch lands real ấn ids + the capability grant. Deletion scheduled there, not here. | New engine is inert without seals; removing legacy now deletes visible-Pháp Tu gameplay with no replacement. Matches sibling plan R3. |
 | R7 | Engine lands capability-ungranted: inert in production, fully test-covered. | Deferred-grant is explicit architecture (`CombatCapabilityQuery` port exists; nothing calls `.has()` in production until seals). Matches sibling plan R7. |
 | R-A | `DealReactionDamageOperation` (the reaction damage op) declares `damageProfile: 'reaction_damage'`, `element: <attacker element>` (the Khắc overcomer), `canCrit: false`, `origin.kind: 'reaction'`. | Spec silent on element/profile; attacker-element preserves the legacy Khắc Chế semantic ("damage on the overcomer element, target resistance applies"). **Provisional — flag for balance pass.** Alternative: elementless true damage. |
-| R-B | Xuyên Thổ heal cap "25%" = `0.25 × source.maxHp` (caster-side sustain cap), heal target = `sourceId`. | Spec says "cap 25%" without naming the base; source-maxHp is the conventional sustain cap. **Provisional.** |
+| R-B | Xuyên Thổ heal cap "25%" is a cap on the heal RATIO, not maxHp (review r4 — spec: "heal from actual reaction damage = 5% × D, cap 25%"; D≤5 makes it a natural boundary). Evaluated as `fraction = min(0.05·D, 0.25)` at StackExpr resolution — pure snapshot math; NO maxHp read anywhere in the deferred path. Heal target = `sourceId`. | The earlier `0.25 × source.maxHp` reading was wrong — the spec caps the damage→heal conversion rate. **Locked** (reviewer correction). |
 | R-C | Dưỡng Kim "Kim penetration `+4%×P`" maps to modifier channel `'potency'` (multiply `1 + 0.04×P`) on the child Liệt Thương instance. | `BuffModifierChannel` has no `'penetration'` channel (buff spec §30); potency is the generic magnitude channel. **Provisional** — seal batch may add a stat/peneration channel. |
 | R-D | `elementBias` in `ReactionBias` keys on the relation's *agent* element: Sinh → parent element, Khắc → attacker element. | §55 "prefer Hỏa-related reaction" needs a deterministic key; trigger-element keying boosts all 4 candidates equally (no discrimination). Baseline = 1.0 either way. **Provisional.** |
 | R-E | A sealed actor with NO legal action produces an empty turn (`action: null`, `skillId: ''` — same shape as the existing no-action return), not a stun flag. | Cấm Công ≠ stun (contract §72): the actor keeps its turn cadence; "no legal action" is a selection outcome, not a CC block. **Provisional.** |
@@ -390,11 +390,9 @@ class ReactionBatchRunner {
 3. after each op, if an op's target is no longer valid (dead/removed):
    that op → result { status:'skipped', reason:'invalid_target_state' }; continue (§49)
 4. no rollback once the first op commits (§48)
-5. emit ReactionResolvedEvent post-commit (spec §50) via the sink —
-   handler-emitted events mint `eventId` from the TRIGGERING event
-   (`evt.${triggerEvent.eventId}.reaction_resolved`) + set
-   `causationEventId = triggerEvent.eventId` (contract v4 causality);
-   the scheduler stamps combatSequence at enqueue:
+5. emit ReactionResolvedEvent post-commit (spec §50) via the event-scoped sink —
+   envelope-free payload; the sink mints `eventId` (`evt.${triggerEvent.eventId}.${n}`)
+   + `causationEventId = triggerEvent.eventId`; the scheduler stamps combatSequence:
    { type:'reaction_resolved', reactionId, relation, sourceId, targetId,
      consumed: [{buffId, stacks}...] — from snapshot }
    skipped batches emit ReactionSkippedEvent { type:'reaction_skipped', reactionId, reason } for trace parity
@@ -454,14 +452,15 @@ type ReactionPayoffStep =
       maxDuration?: number; modifier?: { modifierId: string; channel: 'potency'; value: StackExpr };
       when?: { role: ReactionParticipantRole; op: 'gte' | 'lt'; value: number } }      // → ApplyBuffOperation(reactionEligibility:'suppressed') [+ AddBuffModifier]
   | { kind: 'push_gauge'; fractionOfMax: StackExpr }                                   // PushGaugeOperation — negative = pushback
-  | { kind: 'heal_from_damage'; fraction: StackExpr; capFractionOfHealTargetMaxHp: number; healTarget: 'source' }
-      // Emitted as a DeferredOperation positioned after the damage op in the batch
-      // (contract v4 shape): {kind:'heal_from_damage_result', operationId (pre-minted
+  | { kind: 'heal_from_damage'; fraction: StackExpr; capRatio: number; healTarget: 'source' }
+      // capRatio clamps the RATIO at StackExpr resolution — `min(fraction, capRatio)`
+      // is evaluated NOW (pure snapshot math, R-B). Emitted as a DeferredOperation
+      // positioned after the damage op in the batch (contract v5 shape):
+      // {kind:'heal_from_damage_result', operationId (pre-minted
       // `rx.${eventId}.${reactionId}.heal`), resultOperationId: <the damage op's id>,
-      // healTarget, fraction, capFractionOfHealTargetMaxHp, origin}. The batch runner
-      // materializes it into a HealOperation from the referenced damage op's
-      // {rawDamage|hpDamage} (R-B); the CAP is carried on the materialized op and
-      // resolved by HealAuthority at execute time — the runner has no stat access.
+      // healTarget, fraction: <already-resolved number>, origin}. The batch runner
+      // materializes it into HealOperation{amount: prior.hpDamage × fraction};
+      // a skipped/unsuccessful referenced op → {skipped, dependency_not_resolved}.
       // Executor never sees an unresolved ref.
 
 // The emitted subset of CombatOperation (spec §47; ApplyControl lowered to ApplyBuff per contract §6/§71):
@@ -494,7 +493,7 @@ function actionTagsOf(action: SelectedAction): readonly string[]  // authored ta
 | `tuc_viem` | khắc | water→fire | 60 | `reaction_damage 0.20·(A+D)+0.08·D`; `push_gauge −0.03·A` |
 | `dung_kim` | khắc | fire→metal | 70 | `reaction_damage 0.35·(A+D)`; `apply_status test_defense_break {stacks A, durationOverride min(3,ceil(D/2))}` |
 | `doan_moc` | khắc | metal→wood | 80 | `reaction_damage 0.15·(A+D)`; `apply_status test_bleed {stacks 1+floor(A/2), modifier {doan_moc, potency, 1+0.05·D}}` |
-| `xuyen_tho` | khắc | wood→earth | 90 | `reaction_damage 0.15·(A+D)`; `apply_status test_defense_erosion {stacks A}`; `heal_from_damage {fraction 0.05·D, cap 0.25, healTarget source}` |
+| `xuyen_tho` | khắc | wood→earth | 90 | `reaction_damage 0.15·(A+D)`; `apply_status test_defense_erosion {stacks A}`; `heal_from_damage {fraction 0.05·D, capRatio 0.25, healTarget source}` |
 | `tran_thuy` | khắc | earth→water | 100 | `reaction_damage 0.10·(A+D)`; `push_gauge −0.04·A`; `apply_status test_cam_cong {when A≥3, durationOverride D∈1–3→1 / D∈4–5→2}` |
 
 Emitted op order per batch (contract §44 — consumes ALWAYS first, then authored payoff order):
@@ -513,7 +512,7 @@ Every `ApplyBuffOperation` emitted by a reaction sets `reactionEligibility: 'sup
   - `tuc_viem coefficient = 0.20(A+D)+0.08D`: A4 D2 → `0.20·6+0.08·2 = 1.36` on the DealDamage payload; `element === 'water'` (attacker); `canCrit === false`; `origin.kind === 'reaction'`, `origin.reactionId === 'tuc_viem'`.
   - `dung_kim defense break`: `apply_status` emits ApplyBuff `test_defense_break` stacks A, `durationOverride === min(3, ceil(D/2))`, `reactionEligibility === 'suppressed'`.
   - `doan_moc bleed`: stacks `1+floor(A/2)`; modifier `doan_moc` value `1+0.05·D` targets the bleed selector `(definitionId, sourceId, targetId)` — NOT an instanceId (instance doesn't exist at resolution time).
-  - `xuyen_tho heal`: emitted as a `DeferredOperation` positioned after the damage op in the batch, carrying its own pre-minted `operationId` (`rx.${event.eventId}.xuyen_tho.heal`) + `origin`; the batch runner materializes it from the damage op's `hpDamage`/`rawDamage` — test with stub damage result `hpDamage 1000`, D3 → materialized `HealOperation{amount === 150, capFractionOfHealTargetMaxHp === 0.25, targetId === sourceId}`; the CAP is applied by `HealAuthority` (healed = min(150, 0.25·source.maxHp) = 100 at maxHp 400) — the runner has no stat access (contract v4).
+  - `xuyen_tho heal`: emitted as a `DeferredOperation` positioned after the damage op in the batch, carrying its own pre-minted `operationId` (`rx.${event.eventId}.xuyen_tho.heal`) + `origin`; the ratio cap is applied at RESOLUTION (`fraction = min(0.05·D, 0.25)`): stub damage result `hpDamage 1000`, D3 → `fraction === 0.15` → materialized `HealOperation{amount === 150, targetId === sourceId}` (D5 → `fraction === 0.25` — the authored boundary); a `skipped` referenced damage op → `{status:'skipped', reason:'dependency_not_resolved'}` (contract v4 HIGH 2).
   - `tran_thuy seal gate`: A2 → no `test_cam_cong` op; A3 → op present; duration 1 at D3, 2 at D4.
 - [ ] **Step 3 — Failing tests (no recursion, spec §80/contract §93):** resolve `duong_viem` with `test_seal_metal` already on the board → emitted `AddBuffStacksOperation` on fire produces NO `ElementalApplicationCommitted` (the scheduler stub's event log stays empty) → `dung_kim` does NOT chain in the same batch.
 - [ ] **Step 4 — Failing tests (Cấm Công, spec §81/contract §101):** `TurnBattleSystem.camCong.test.ts` — enemy participant with basic `actionTags:['attack']` + self-heal special `actionTags:['heal']` (cooldown ready), holding a `test_cam_cong`-style buff whose def carries `forbiddenActionTags:['attack']`:
@@ -545,17 +544,15 @@ class ReactionDispatcher {
     /** Builds the CombatOperationBatch (preconditions + ordered ops) the scheduler's
         CombatOperationBatchRunner will preflight + run inside a batch frame. */
     batchFactory: (resolution: ReactionResolution) => CombatOperationBatch,
-    /** Contract v4: the dispatcher emits via the scheduler-owned sink;
-        ReactionResolved/Skipped events mint `eventId` from the incoming
-        event (`evt.${event.eventId}.reaction_resolved`) + set
-        `causationEventId` — handler-emitted events have no executing op. */
-    sink: CombatEventSink,
   )
   /** Scheduler's immediate handler for 'elemental_application_committed'.
+      `sink` is EVENT-SCOPED — supplied by the scheduler per invocation; it mints
+      `eventId` (`evt.${event.eventId}.${n}`) + `causationEventId` itself, so the
+      dispatcher emits envelope-free payloads for ReactionResolved/Skipped.
       Returns ImmediateSettlement {kind:'batch'} on resolution, or void when the
       gate/selection produces no reaction — the scheduler drains it like any
       other immediate consequence. */
-  onElementalApplicationCommitted(event: ElementalApplicationCommitted): ImmediateSettlement | void
+  onElementalApplicationCommitted(event: ElementalApplicationCommitted, sink: CombatEventSink): ImmediateSettlement | void
 }
 
 interface ReactionEvaluationTrace {  // contract §85 shape
@@ -625,13 +622,13 @@ interface ReactionEvaluationTrace {  // contract §85 shape
 5. `TurnSkillDefinition` has no `tags`/`actionTags` (`TurnSkillAction.ts:55-255`) and `BuffDefinition` has no `forbiddenActionTags` (`BuffTypes.ts:238-284`) — additive fields added in M4; R-E2 inference bridges until the skill-definition tag taxonomy lands.
 6. `ActionGauge.ts` exposes only `refundGauge` (positive delta, `GAUGE_MAX=1000`) — gauge pushback needs a negative-delta route on the gauge authority port; flagged for foundation executor.
 7. `canInitiateWuxingReactions` (`TurnBattleSystem.ts:137`, stamped `TurnBattleAdapter.ts:60` for the `phap_tu` stat domain) gates the LEGACY engine for ALL pháp tu — broader than the spec's Ngộ Đạo-only intent. R3 keeps this live; the new capability is deliberately ungranted (R7). Coordinator must confirm the visible-Pháp Tu reaction removal timing (seal batch).
-8. RESOLVED (contract plan v4): `heal_from_damage` rides `DeferredOperation` inside `CombatOperationBatch` — the deferred entry carries its own pre-minted `operationId` (R-F pattern) + `origin`; the batch runner materializes a concrete `HealOperation` from prior in-batch results via `BatchResultContext`; the source-maxHp cap is carried on the materialized op (`capFractionOfHealTargetMaxHp`) and resolved by `HealAuthority` (stat reads are authority-owned, not runner-owned). `HealOperation.amount` is always concrete by executor time. The executor never resolves refs.
+8. RESOLVED (contract plan v5): `heal_from_damage` rides `DeferredOperation` inside `CombatOperationBatch` — the deferred entry carries its own pre-minted `operationId` (R-F pattern) + `origin` + an already-resolved `fraction` (the "cap 25%" is a ratio cap applied at StackExpr resolution — R-B corrected, NO maxHp read); the batch runner materializes a concrete `HealOperation` from prior in-batch results via `BatchResultContext`; a skipped dependency records `{status:'skipped', reason:'dependency_not_resolved'}`. `HealOperation.amount` is always concrete by executor time. The executor never resolves refs.
 9. Current `Buff`/`BuffPool` have no `instanceId` — participant snapshots require the new BuffSystem's `BuffInstanceSnapshot.instanceId`. One more reason the foundation prerequisite is blocking.
 10. `Độc Căn` name collision (poison-root mechanic inside `trung_doc` vs future `doc_can` id) — sibling plan R4 owns the rename at its M4; this plan's fixtures use `test_seal_wood` and stay clear of the collision.
 
 ## Open questions for coordinator
 
-1. RESOLVED: `DeferredOperation` materialization (contract plan v4, R-C7) — damage result payload carries `hpDamage`/`rawDamage`; runner builds the concrete `HealOperation` via `BatchResultContext`; deferred entries carry pre-minted `operationId`s; heal cap resolved by `HealAuthority`.
+1. RESOLVED: `DeferredOperation` materialization (contract plan v5, R-C7) — damage result payload carries `hpDamage`/`rawDamage`; runner builds the concrete `HealOperation` via `BatchResultContext`; deferred entries carry pre-minted `operationId`s; the heal-ratio cap is resolved at StackExpr evaluation (R-B — ratio cap, not maxHp).
 2. R-A: reaction damage `element` — attacker-element (chosen, preserves legacy overcomer-element semantics) vs elementless true damage?
 3. R-C: is a `'penetration'`/`'stat'` modifier channel planned for buff2, or is the `'potency'` proxy acceptable for Dưỡng Kim at seal batch?
 4. Should `CANONICAL_REACTIONS` ship in `src/data/reaction/` (chosen) or stay test-adjacent until seal batch rebinds the ids?
