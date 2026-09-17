@@ -50,7 +50,6 @@ export const GENERIC_PHYSICAL_BASIC: TurnSkillDefinition = {
 
 export const BASIC_ATTACKS_BY_BUILD: Record<string, TurnSkillDefinition> = {
   kiem_tu: KIEM_TU_BASIC,
-  pham_nhan: GENERIC_PHYSICAL_BASIC,
 }
 
 /**
@@ -72,7 +71,8 @@ export const THUY_GIAP_LONG_WATER_SURGE: TurnSkillDefinition = {
 // converter rejection, no static substitute). The Tu is absent too
 // (M7 — dead row removed): both ways resolve their kit at battle build
 // and fall back to GENERIC_PHYSICAL_BASIC directly, never via this map.
+// Mortal (no cultivationPath) falls through to GENERIC_PHYSICAL_BASIC —
+// the removed 'pham_nhan' row only ever mapped to that same fallback.
 export const REQUIRED_BUILD_IDS = [
   'kiem_tu',
-  'pham_nhan',
 ] as const
