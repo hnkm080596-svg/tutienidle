@@ -1647,3 +1647,52 @@ describe('emitted-vs-queued-sibling ordering (P5 T6)', () => {
     expect(h.calls).toEqual(['op.A', 'h:e1', 'op.X', 'h:e2', 'h:child'])
   })
 })
+
+describe('qa: periodic requestId -> generated operationId collision', () => {
+  it('two requests sharing one requestId inside one event -> group-atomic duplicate fault', () => {
+    const h = makeHarness()
+    const { sink } = h.scheduler.createLifecycleSink('status.turn.9.p')
+    sink.emit({
+      type: 'periodic_requests_committed',
+      trigger: { type: 'interval' },
+      rootActionId: 'status.turn.9.p',
+      // Producer bug: the same requestId minted twice -> both requests map
+      // to `periodic.req.dup` -> the produced group carries a duplicate
+      // operationId and must fault atomically (never a silent drop).
+      requests: [
+        periodicDamageReq('entity.a', 'entity.b', 'req.dup'),
+        periodicDamageReq('entity.c', 'entity.d', 'req.dup'),
+      ],
+    })
+    expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
+    expect(h.scheduler.state).toBe('faulted')
+    // Atomicity oracle: NEITHER periodic op executed.
+    expect(h.calls).toEqual([])
+    expect(h.damageCalls).toEqual([])
+  })
+
+  it('a later event reusing an already-reserved requestId -> reserved-id fault', () => {
+    const h = makeHarness()
+    const { sink } = h.scheduler.createLifecycleSink('status.turn.9.p')
+    sink.emit({
+      type: 'periodic_requests_committed',
+      trigger: { type: 'interval' },
+      rootActionId: 'status.turn.9.p',
+      requests: [periodicDamageReq('entity.a', 'entity.b', 'req.once')],
+    })
+    // A second committed event re-mints the same requestId -> the second
+    // produced op collides with the first's reserved operationId.
+    sink.emit({
+      type: 'periodic_requests_committed',
+      trigger: { type: 'interval' },
+      rootActionId: 'status.turn.9.p',
+      requests: [periodicDamageReq('entity.c', 'entity.d', 'req.once')],
+    })
+    expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
+    expect(h.scheduler.state).toBe('faulted')
+    // The first request's op DID execute before the collision surfaced;
+    // the second never ran.
+    expect(h.calls).toEqual(['periodic.req.once'])
+    expect(h.damageCalls).toHaveLength(1)
+  })
+})
