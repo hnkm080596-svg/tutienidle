@@ -413,16 +413,6 @@ export class EquipmentSystem {
     }
   }
 
-  /**
-   * T2 (review 2026-08-28, economy-ecosystem-plan): phẩm Linh Thạch của
-   * Tẩy Luyện/Tinh Luyện resolve theo realm TRANG BỊ thay vì hard-code
-   * Hạ Phẩm — trang bị realm 4+ tiêu Trung Phẩm, realm 7+ tiêu Thượng
-   * Phẩm, nhất quán với nguồn phát (Linh Tuyền/quái rơi theo realm).
-   */
-  spiritStoneIdForRealm(realmId: string): string {
-    return getSpiritStoneMaterialIdForRealmTier(getRealmTier(realmId))
-  }
-
   getEnhanceCost(
     slot: EquipmentSlot,
 

@@ -88,11 +88,6 @@ function getRotationElements(rotationElements: ElementType[]): ElementType[] {
   return NGU_HANH_ROTATION_ORDER.filter((element) => rotationElements.includes(element))
 }
 
-/** Lọc rotation elements xuống đúng 5 hành Ngũ Hành (bỏ Phong/Lôi/Hỗn Nguyên) — dùng khi snapshot ArtifactRuntime lúc battle bắt đầu. */
-export function filterNguHanhElements(rotationElements: ElementType[]): ElementType[] {
-  return getRotationElements(rotationElements)
-}
-
 const CONG_T3_LEVEL = 3
 
 function getArtifactHitMultiplier(path: ArtifactPath | undefined, level: number, gradeMultiplier: number): number {
