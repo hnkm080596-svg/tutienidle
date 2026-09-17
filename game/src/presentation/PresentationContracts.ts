@@ -100,7 +100,6 @@ export type CoordinatorSnapshot = Readonly<{
   phase: Phase
   transitionId: number
   bootSubphase: BootSubphase
-  showMainMenu: boolean
   error: CoordinatorError | null
 }>
 

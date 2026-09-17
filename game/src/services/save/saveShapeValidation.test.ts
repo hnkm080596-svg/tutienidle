@@ -823,11 +823,9 @@ describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/Na
     }
   })
 
-  // Stat-key migration (stat-system-reimagined rename pass) — saves
-  // written before the rename keep legacy keys in mainStat.stat and
-  // socketed modifier copies; the boundary remaps them instead of
-  // rejecting the whole save as corrupted.
-  it('remaps legacy mainStat.stat keys instead of rejecting the save', () => {
+  // Dev-stage rule (Mission G) — legacy stat keys are REJECTED at the
+  // boundary, not remapped: a save carrying them fails validation.
+  it('rejects a legacy mainStat.stat key', () => {
     const save = validSave()
     const entry = validEquipmentEntry()
 
@@ -836,15 +834,15 @@ describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/Na
 
     const result = validateGameSaveShape(save)
 
-    expect(result.ok).toBe(true)
-    if (result.ok) {
-      const equipment = normalizedSaveOf(result).equipment as Record<string, unknown>[]
-
-      expect((equipment[0]!.mainStat as Record<string, unknown>).stat).toBe('might')
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(
+        result.issues.some((issue) => issue.path.endsWith('mainStat.stat')),
+      ).toBe(true)
     }
   })
 
-  it('remaps legacy socketed modifier stat keys in equipmentSlots', () => {
+  it('tolerates a legacy socketed payload on equipmentSlots — fields retired, ignored', () => {
     const save = validSave()
 
     save.equipmentSlots = [
@@ -857,25 +855,12 @@ describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/Na
           realmId: 'luyen_khi',
           modifiers: [
             { id: 'tran-1_a', sourceId: 'tran-1', sourceType: 'formation', stat: 'attack', flat: 5 },
-            { id: 'tran-1_b', sourceId: 'tran-1', sourceType: 'formation', stat: 'manaRegenPerSecond', flat: 1 },
           ],
         },
       },
     ]
 
-    const result = validateGameSaveShape(save)
-
-    expect(result.ok).toBe(true)
-    if (result.ok) {
-      const slots = normalizedSaveOf(result).equipmentSlots as Record<string, unknown>[]
-      const item = slots[0]!.socketedFormation as Record<string, unknown>
-      const modifiers = item.modifiers as Record<string, unknown>[]
-
-      expect(modifiers.map((modifier) => modifier.stat)).toEqual([
-        'might',
-        'manaRegenPerTurn',
-      ])
-    }
+    expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
   it.each([
@@ -1612,7 +1597,6 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
 
   it.each([
     'selectedTalentIds',
-    'unlockedRealmEnhancements',
     'purchasedNodeIds',
     'completedStageIds',
     'perfectClearStageIds',
@@ -1713,7 +1697,6 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
 
   it.each([
     'hasSeenTutorial',
-    'isCultivating',
     'autoWorkerCapacity',
     'totalCultivationGained',
     'bossKillCount',

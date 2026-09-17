@@ -49,6 +49,28 @@ export interface ProfessionMaterialMeta {
   herbBaseId?: string
 }
 
+/**
+ * Authoritative Gỗ/Quáng id constructor — `<realmId>_<kind>_<age>`.
+ * Parsers (DecomposeSystem ORE_ID_PATTERN) mirror this grammar.
+ */
+export function buildProfessionMaterialId(
+  resourceKind: 'wood' | 'ore',
+  realmId: string,
+  age: HerbAge,
+): string {
+  return `${realmId}_${resourceKind}_${age}`
+}
+
+/** Linh thảo base identity chung các biến thể niên đại — `<herbId>_<realmId>`. */
+export function herbBaseId(herbId: string, realmId: string): string {
+  return `${herbId}_${realmId}`
+}
+
+/** Linh thảo variant id — `<herbBaseId>_<age>`. */
+export function herbMaterialId(baseId: string, age: HerbAge): string {
+  return `${baseId}_${age}`
+}
+
 /** Guard đầy đủ cho meta Gỗ/Khoáng — trục tuổi 5 bậc thống nhất (6E C2). */
 export function isProfessionResourceMeta(meta: ProfessionMaterialMeta): boolean {
   return (

@@ -19,8 +19,36 @@ import { usePlayerStore } from '../../stores/player'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
 import type { ProductionCycle, ProductionSiteState } from '../../core/production/ProductionTypes'
+import type { Skill } from '../../core/skill/Skill'
+import type { Technique } from '../../core/technique/Technique'
 
 const NOW = 1_725_160_000_000
+
+// Techniques/skills round-trip only when a template is registered —
+// restore drops orphan entries (dev-stage rule, Mission G) — so the
+// fixtures double as their own registered templates.
+const CONF_TECHNIQUE: Technique = {
+  id: 'conf_tech',
+  name: 'Conf Tech',
+  description: 'd',
+  unlocked: true,
+  equipped: false,
+  tierEffects: {},
+}
+
+const CONF_SKILL: Skill = {
+  id: 'conf_skill',
+  name: 'Conf Skill',
+  description: 'd',
+  type: 'passive',
+  level: 3,
+  maxLevel: 10,
+  cooldown: 0,
+  target: 'self',
+  effects: [],
+  unlocked: true,
+  equipped: false,
+}
 
 function createRegisteredManager(): GameManager {
   const manager = new GameManager()
@@ -30,6 +58,8 @@ function createRegisteredManager(): GameManager {
   manager.catalogOps.registerAffixes(affixes)
   manager.catalogOps.registerBuildings(buildings)
   manager.catalogOps.registerPills(pills)
+  manager.catalogOps.registerSkillTemplates([CONF_SKILL])
+  manager.catalogOps.registerTechniqueTemplates([CONF_TECHNIQUE])
 
   return manager
 }
@@ -70,33 +100,10 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     },
   ]
 
-  // Techniques/skills without a registered template stay as-authored by
-  // design (preflight exempts them) — the entries still round-trip.
-  manager.techniqueManager.restore([
-    {
-      id: 'conf_tech',
-      name: 'Conf Tech',
-      description: 'd',
-      unlocked: true,
-      equipped: false,
-      tierEffects: {},
-    },
-  ])
-  manager.skillManager.restore([
-    {
-      id: 'conf_skill',
-      name: 'Conf Skill',
-      description: 'd',
-      type: 'passive',
-      level: 3,
-      maxLevel: 10,
-      cooldown: 0,
-      target: 'self',
-      effects: [],
-      unlocked: true,
-      equipped: false,
-    },
-  ])
+  // Techniques/skills registered as templates above — the entries
+  // round-trip through restore's template re-derive unchanged.
+  manager.techniqueManager.restore([structuredClone(CONF_TECHNIQUE)])
+  manager.skillManager.restore([structuredClone(CONF_SKILL)])
 
   // Bags.
   manager.materialBag.add(manager.materialRegistry.get(materials[0]!.id), 7)

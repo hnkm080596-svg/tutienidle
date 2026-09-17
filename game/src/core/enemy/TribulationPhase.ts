@@ -30,10 +30,9 @@ export interface TribulationPhase {
   archetypeOverride?: EnemyArchetype
 
   // Boss Mechanics — triệu hồi thêm quái vào TRẬN ĐANG DIỄN RA khi
-  // vào phase này. BattleSystem không biết cách tra Enemy template
-  // theo id (đó là việc của GameManager) nên chỉ ĐẨY id vào
-  // Battle.pendingSummons, GameManager tự rút ra và spawn thật (cùng
-  // pattern drainNotifications()) — xem GameManager.updateBossSummons().
+  // vào phase này. Legacy drain path (Battle.pendingSummons +
+  // GameManager.updateBossSummons) retired with the grid BattleSystem —
+  // no current consumer; kept as content data for the turn-side port.
   summonEnemyIds?: string[]
 }
 

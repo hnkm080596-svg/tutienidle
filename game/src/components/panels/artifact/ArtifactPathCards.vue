@@ -41,7 +41,6 @@ const emit = defineEmits<{ select: [path: ArtifactPath] }>()
           v-for="milestone in pathDef.milestones"
           :key="milestone.level"
           :class="{ 'is-unlocked': artifactLevel >= milestone.level }"
-          v-tooltip="{ title: `${milestone.name} (tầng ${milestone.level})`, description: milestone.description }"
         >
           <span class="artifact-path-cards__milestone-level">{{ milestone.level }}</span>
           <span class="artifact-path-cards__milestone-name">{{ milestone.name }}</span>

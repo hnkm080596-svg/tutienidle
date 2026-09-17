@@ -20,7 +20,7 @@ export interface SkillEffect {
 
   // Pháp Tu Thuần Hệ (E-3, 2026-09-03) — CHỈ dùng cho effect
   // 'add_stack'/'remove_buff' (trước đây 2 type này là no-op trong
-  // SkillEffectSystem, thuộc PassiveSystem). 'add_stack': số tầng cộng
+  // executor legacy, thuộc PassiveSystem). 'add_stack': số tầng cộng
   // thêm lên buff ĐANG CHẠY (mặc định 1; không tạo mới nếu chưa có);
   // 'refresh' = true gia hạn duration các instance vừa cộng.
   // 'remove_buff': 'polarity' lọc theo hướng buff/debuff, 'count' số
@@ -35,7 +35,7 @@ export interface SkillEffect {
 
   // Dùng cho effect 'damage' khi skill pha trộn nhiều loại damage
   // (vd 20% Physical + 80% Fire) — có mặt thì thay thế hoàn toàn
-  // damageType (xem SkillEffectSystem.ts).
+  // damageType.
   components?: SkillDamageComponent[]
 
   // 0..1 — tỉ lệ áp dụng debuff SAU KHI đòn đã trúng, roll ĐỘC LẬP
@@ -49,15 +49,15 @@ export interface SkillEffect {
   // attribute của SOURCE lúc cast, cộng dồn qua nhiều entry. 1 phần
   // tử trong `attributes` = coefficient thường (vd Linh Căn cho
   // skill hệ pháp thuật); NHIỀU phần tử = "Adaptive" kiểu Last Epoch
-  // (dùng giá trị CAO NHẤT trong nhóm) — xem SkillEffectSystem.ts.
+  // (dùng giá trị CAO NHẤT trong nhóm).
   attributeScaling?: { attributes: StatType[]; ratioPerPoint: number }[]
 
   // Pháp Tu Detonate (vd Bạo Viêm "cash in" stack Bỏng) — CHỈ dùng cho
   // effect 'damage'. Nếu target đang có ailment này, gây bonus damage
   // = stacks × damagePerStack (true damage, KHÔNG qua Armor/Resistance
   // — cùng tinh thần primordialPower "bỏ qua mitigation") RỒI xoá hẳn
-  // ailment đó khỏi target — đổi DOT đang chạy lấy 1 cục burst ngay,
-  // xem SkillEffectSystem.ts. Không set = effect 'damage' hoạt động
+  // ailment đó khỏi target — đổi DOT đang chạy lấy 1 cục burst ngay.
+  // Không set = effect 'damage' hoạt động
   // như cũ (chỉ bắn missile thường).
   consumesAilmentId?: string
 
@@ -89,21 +89,21 @@ export interface SkillEffect {
   // target) cho 1 cục true damage bonus = currentWard × damagePerWardPoint
   // (bỏ qua Armor/Resistance, cùng tinh thần consumesAilmentId), rồi
   // xoá sạch currentWard về 0. Không set = effect 'damage' hoạt động
-  // như cũ. Xem SkillEffectSystem.ts.
+  // như cũ.
   consumesWardForDamage?: boolean
 
   damagePerWardPoint?: number
 
   // Kiếm Tu (Ngự Kiếm Thuật, 2026-08-15) — CHỈ dùng cho effect
   // 'damage'. Bắn (source.realmIndex + 1) missile liên tiếp thay vì
-  // 1, mỗi cái tự roll critical/dodge riêng — xem SkillEffectSystem.ts.
+  // 1, mỗi cái tự roll critical/dodge riêng.
   hitCountByRealm?: boolean
 
   // Pháp Tu Thuần Hệ (E-4, 2026-09-03) — CHỈ dùng cho effect 'damage'.
   // Bắn SỐ LẦN CỐ ĐỊNH N missile (vd Bát Thuần "8 đợt sóng"), mỗi cái
   // tự roll critical/dodge riêng — cùng tinh thần hitCountByRealm.
   // LOẠI TRỪ NHAU: nếu cả hai đều set, hitCount THẮNG (số tường minh
-  // ưu tiên hơn công thức theo cảnh giới) — xem SkillEffectSystem.ts.
+  // ưu tiên hơn công thức theo cảnh giới).
   hitCount?: number
 
   // "Cảnh giới càng cao sát thương càng lớn": cộng thêm ratio ×

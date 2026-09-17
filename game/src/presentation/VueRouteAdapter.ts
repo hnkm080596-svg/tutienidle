@@ -135,7 +135,6 @@ export interface VueRouteAdapter {
   readonly phase: Ref<Phase>
   readonly transitionId: Ref<number>
   readonly bootSubphase: Ref<BootSubphase>
-  readonly showMainMenu: Ref<boolean>
   readonly error: Ref<CoordinatorError | null>
   readonly isTransitioning: ComputedRef<boolean>
   readonly isLocked: ComputedRef<boolean>
@@ -159,7 +158,6 @@ export function createVueRouteAdapter(
   const phase = shallowRef<Phase>(currentSnapshot.phase)
   const transitionId = shallowRef<number>(currentSnapshot.transitionId)
   const bootSubphase = shallowRef<BootSubphase>(currentSnapshot.bootSubphase)
-  const showMainMenu = shallowRef<boolean>(currentSnapshot.showMainMenu)
   const error = shallowRef<CoordinatorError | null>(currentSnapshot.error)
 
   const activeRoute = computed<Route>(() => renderRoute.value ?? currentRoute.value)
@@ -177,7 +175,6 @@ export function createVueRouteAdapter(
     phase.value = snapshot.phase
     transitionId.value = snapshot.transitionId
     bootSubphase.value = snapshot.bootSubphase
-    showMainMenu.value = snapshot.showMainMenu
     error.value = snapshot.error
   })
 
@@ -214,7 +211,6 @@ export function createVueRouteAdapter(
     phase: readonly(phase) as Ref<Phase>,
     transitionId: readonly(transitionId) as Ref<number>,
     bootSubphase: readonly(bootSubphase) as Ref<BootSubphase>,
-    showMainMenu: readonly(showMainMenu) as Ref<boolean>,
     error: readonly(error) as Ref<CoordinatorError | null>,
     isTransitioning,
     isLocked,

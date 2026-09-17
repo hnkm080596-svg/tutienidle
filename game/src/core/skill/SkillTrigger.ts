@@ -4,10 +4,8 @@ import type { SkillAction } from './SkillAction'
 import type { SkillResourcePoolKey } from './SkillAction'
 
 // Trigger/Action rework (2026-08-31 spec, Phase 2A) — full vocabulary.
-// onHit/onCrit/onEvade, onKill/onDeath, and onTick have real hand-wired
-// firing sites (see the plan's Task 9/10/11). onProc/onResourceFull/
-// onBreak fire from INSIDE the action executor that causes them (see
-// SkillActionRegistry.ts's fireNested helper) — no separate firing site.
+// Bindings are consumed by SkillToTurnSkillConverter into the live turn
+// engine; the legacy nested-action firing site was deleted in Mission G.
 export type TriggerType =
   | 'onCast'
   | 'onHit'

@@ -72,8 +72,8 @@ export type StatType =
   | 'ailmentResistPercent'
   | 'ailmentPotencyPercent'
   // Kiếm Tu (2026-08-15) — % khuếch đại TOÀN BỘ effect 'damage' của
-  // skill chủ động (không phải đòn đánh thường), xem SkillEffectSystem.
-  // ts's finalMultiplier. Nguồn cấp: node/talent/equipment.
+  // skill chủ động (không phải đòn đánh thường), xem finalMultiplier
+  // của pipeline damage. Nguồn cấp: node/talent/equipment.
   | 'skillDamagePercent'
   // Hỏa Tu (Plans/FirePath, "Tật Hỏa" minor, 2026-08-21) — % cộng
   // thêm vào tốc độ đạn bay (MissileSystem cũ đã xóa; combat hiện dùng
@@ -81,7 +81,7 @@ export type StatType =
   // hưởng path/hành nào chưa có nguồn cấp.
   // Hỏa Tu Trúc Cơ (Plans/FirePath mục 6/8, 2026-08-21) — cộng THẲNG
   // vào effect.ailmentChance lúc roll áp ailment (xem
-  // SkillEffectSystem.ts's apply(), case 'ailment'), clamp tối đa 1.
+  // resolveAilmentApplicationChance), clamp tối đa 1.
   // Nền 0 — Hỏa Cầu Thuật Luyện Khí có ailmentChance gốc < 1 (KHÔNG
   // còn luôn luôn áp Thiêu Đốt), node "Dẫn Hỏa"/"Hỏa Nguyên" cộng
   // thêm % này.

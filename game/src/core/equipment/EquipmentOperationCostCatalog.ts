@@ -6,7 +6,10 @@
 // Cường Hóa (§7.1): cost chuyển sang Quáng CÙNG cảnh giới mục tiêu +
 // Linh Thạch. Baseline để playtest chỉnh tại đây.
 import type { RecipeMaterialCost } from './Equipment'
-import { SUPPORTED_PROFESSION_REALMS } from '../profession/ProfessionMaterial'
+import {
+  SUPPORTED_PROFESSION_REALMS,
+  buildProfessionMaterialId,
+} from '../profession/ProfessionMaterial'
 
 export type EquipmentOperation = 'enhance'
 
@@ -67,7 +70,7 @@ export function createDefaultEquipmentOperationCostCatalog(): EquipmentOperation
 
       // Sink Quáng Thập Niên (`ore_decade`, gp123 6E C2) + Linh Thạch — scale theo enhance level.
       cost: {
-        materials: [{ materialId: `${realmId}_ore_decade`, amount: 2 }],
+        materials: [{ materialId: buildProfessionMaterialId('ore', realmId, 'decade'), amount: 2 }],
 
         spiritStone: 50,
       },

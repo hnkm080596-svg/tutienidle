@@ -2,6 +2,7 @@ import type { Building } from '@/core/building/Building'
 import type { BuildingLevelDef } from '@/core/building/BuildingLevelEffect'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { REALM_TIERS, getRealmIdForTier } from '@/core/realm/RealmTierMap'
+import { buildProfessionMaterialId } from '@/core/profession/ProfessionMaterial'
 
 // gp123 6E (task C2): thang tuổi gỗ/khoáng theo tier — dùng trục tuổi
 // thống nhất (decade..thuong_co) thay hậu tố phẩm hoang..tien cũ.
@@ -24,8 +25,8 @@ function extendCosts(firstThree: Building['upgradeCost'], baseAmount: number): B
     const age = AGE_BY_TIER[tier]!
     const amount = Math.round(baseAmount * Math.pow(1.65, tier - 3))
     return [
-      { materialId: `${realmId}_wood_${age}`, amount },
-      { materialId: `${realmId}_ore_${age}`, amount: Math.max(1, Math.round(amount / 2)) },
+      { materialId: buildProfessionMaterialId('wood', realmId, age), amount },
+      { materialId: buildProfessionMaterialId('ore', realmId, age), amount: Math.max(1, Math.round(amount / 2)) },
     ]
   })
   return [...firstThree, ...future]

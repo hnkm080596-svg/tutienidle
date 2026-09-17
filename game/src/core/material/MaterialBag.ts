@@ -127,10 +127,15 @@ export class MaterialBag {
 
   get(
     materialId: string,
-  ): MaterialStack | undefined {
-    return this.materials.get(
+  ): Readonly<MaterialStack> | undefined {
+    const stack = this.materials.get(
       materialId,
     )
+
+    // Snapshot — stack sống trong map là state nội bộ, caller chỉ đọc.
+    return stack === undefined
+      ? undefined
+      : { ...stack }
   }
 
 
@@ -157,9 +162,10 @@ export class MaterialBag {
   }
 
 
-  getAll(): MaterialStack[] {
+  getAll(): Readonly<MaterialStack>[] {
     return Array.from(
       this.materials.values(),
+      (stack) => ({ ...stack }),
     )
   }
 

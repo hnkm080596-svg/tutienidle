@@ -55,7 +55,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Tách vendor (Vue/Pinia/router/i18n) và các bảng data tĩnh lớn
+        // Tách vendor (Vue/Pinia/i18n) và các bảng data tĩnh lớn
         // (materials/skill/enemy/stage/equipment/pill/talisman/buff/
         // formation/alchemy/building/progression/quest) ra khỏi chunk
         // entry chính. Các bảng data này vẫn được import tĩnh (đăng ký
@@ -67,7 +67,7 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (
-              /[\\/]node_modules[\\/](vue|@vue|pinia|vue-router|vue-i18n|@intlify|@floating-ui)[\\/]/.test(
+              /[\\/]node_modules[\\/](vue|@vue|pinia|vue-i18n|@intlify|@floating-ui)[\\/]/.test(
                 id,
               )
             ) {

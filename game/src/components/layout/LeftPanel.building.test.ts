@@ -40,7 +40,7 @@ const SPRING: Building = {
   ],
 }
 
-function mountSpringPanel() {
+function mountSpringPanel(realmId = 'qi_refining') {
   const container = document.createElement('div')
   const pinia = createPinia()
   const gameManager = new GameManager()
@@ -68,7 +68,11 @@ function mountSpringPanel() {
   })
 
   useUiStore(pinia).leftPanelMode = 'worker_lodge'
-  usePlayerStore(pinia).realmId = 'qi_refining'
+  const playerStore = usePlayerStore(pinia)
+  playerStore.realmId = realmId
+  // Production wiring (App.vue): the domain quote reads the ACTIVE player,
+  // not the Pinia store object — mirror that or the realm gate is skipped.
+  gameManager.setActivePlayer(playerStore.$state)
   app.mount(container)
 
   return {
@@ -114,6 +118,22 @@ describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () 
 
     expect(mounted.gameManager.buildingManager.getByBuildingId(SPRING.id)?.level).toBe(2)
     expect(heading.textContent).toContain(t('layout.functionOverlay.levelRange', { level: 2, max: 3 }))
+
+    mounted.unmount()
+  })
+
+  it('header mirrors the buildingOps quote — realm-gated next level disables upgrade and names the required realm', async () => {
+    // Mission G Task 36 — mortal (tier 1) cannot take a level-2 building;
+    // the disabled state and label must come from quoteBuildingUpgrade,
+    // not a panel-side formula.
+    const mounted = mountSpringPanel('mortal')
+    const actions = mounted.container.querySelector<HTMLElement>('.overlay-panel__header')!
+    const upgradeButton = actions.querySelector<HTMLButtonElement>('.building-heading__upgrade')!
+
+    expect(upgradeButton.disabled).toBe(true)
+    expect(upgradeButton.title).toContain(
+      t('layout.functionOverlay.requiredRealm', { realm: 'Luyện Khí' }),
+    )
 
     mounted.unmount()
   })

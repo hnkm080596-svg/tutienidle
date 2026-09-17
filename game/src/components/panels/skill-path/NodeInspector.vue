@@ -13,6 +13,7 @@ import GameButton from '@/components/common/GameButton.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import {
   getNodeLevel,
+  getNodeMaxLevel,
   getNextLevelCost,
   hasPrerequisite,
   canUpgradeNode,
@@ -60,7 +61,7 @@ const level = computed(() => {
   return props.node ? getNodeLevel(player.$state, props.node.id) : 0
 })
 
-const maxLevel = computed(() => Math.max(1, props.node?.maxLevel ?? 1))
+const maxLevel = computed(() => (props.node ? getNodeMaxLevel(props.node) : 1))
 
 const nextCost = computed(() => {
   stateVersion.value

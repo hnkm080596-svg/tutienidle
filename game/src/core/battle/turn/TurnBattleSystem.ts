@@ -140,7 +140,7 @@ export interface TurnBattleParticipant {
   pendingChargedSkillId?: string
   /**
    * Phase A3 (2026-09-07) — 1-based counter of this enemy's own actions,
-   * ported from BattleEnemy.specialAttackCounter (Battle.ts) with the same
+   * ported from the retired grid-battle specialAttackCounter with the same
    * everyNth semantics as legacy EnemyAttackSystem.fireEnemyAttack()
    * (module retired M13 — semantics ported here):
    * when counter % everyNth === 0, the special attack's damageMultiplier
@@ -2955,7 +2955,7 @@ export class TurnBattleSystem {
       // Task 11 — ailment rolls route through the injected rng (same
       // deterministic seam as composite picks and multicast rolls).
       // Mission C Task 10b — elementApplicationPercent adds to the base
-      // chance (legacy SkillEffectSystem:294 parity).
+      // chance (parity with the deleted legacy executor).
       if (this.rng() < resolveAilmentApplicationChance(ailment.chance, actor.entity.stats.elementApplicationPercent)) {
         // Skip an unresolvable ailment id gracefully — same try/catch
         // pattern as the bossTrigger lookup in declareActorAction.

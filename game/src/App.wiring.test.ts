@@ -362,3 +362,47 @@ describe('bindPresentationActive — presentationActive has exactly one owner', 
     expect(calls).toEqual([false, true, false])
   })
 })
+
+// --- Mission G Task 40: huy_quyen starter backfill has exactly one seam ---
+
+/**
+ * onRestoreOk grants starter skills to old saves. huy_quyen once had TWO
+ * grant blocks (the mortal-skill loop + a second standalone block) — a
+ * no-op via the has() guard, but duplicated intent. This guard pins one
+ * seam: the 'huy_quyen' literal may appear at most once inside the
+ * onRestoreOk callback.
+ */
+describe('onRestoreOk starter backfill — huy_quyen granted through one seam', () => {
+  const { scriptSetup } = readAppVueBlocks()
+  const appSourceFile = parseScript(scriptSetup, 'App.vue.script-setup.ts')
+
+  function findOnRestoreOkBody(): ts.Node {
+    let found: ts.Node | undefined
+    const visit = (node: ts.Node): void => {
+      if (
+        ts.isPropertyAssignment(node)
+        && ts.isIdentifier(node.name)
+        && node.name.text === 'onRestoreOk'
+        && ts.isArrowFunction(node.initializer)
+      ) {
+        found = node.initializer.body
+        return
+      }
+      ts.forEachChild(node, visit)
+    }
+    visit(appSourceFile)
+    if (!found) throw new Error('onRestoreOk callback not found in App.vue — wiring changed?')
+    return found
+  }
+
+  it("the 'huy_quyen' literal appears exactly once inside onRestoreOk", () => {
+    const body = findOnRestoreOkBody()
+    let count = 0
+    const visit = (node: ts.Node): void => {
+      if (ts.isStringLiteral(node) && node.text === 'huy_quyen') count += 1
+      ts.forEachChild(node, visit)
+    }
+    visit(body)
+    expect(count).toBe(1)
+  })
+})

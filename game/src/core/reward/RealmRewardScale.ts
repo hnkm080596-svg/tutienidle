@@ -10,7 +10,7 @@ import { getRealmIndex } from '../realm/realmSystem'
 // bậc cảnh giới (khớp đường cong thời gian/effort ~×3/realm). enemy.realmId
 // đã được StageWaveSystem override theo stage.requiredRealmId lúc spawn,
 // nên đọc theo enemy.realmId là đúng stage đang đánh (nhất quán với gate
-// rớt Đoán Bảo Thạch trong ArtifactDropBalance.ts).
+// rớt Đoán Bảo Thạch qua dữ liệu bảng drop).
 const REALM_REWARD_GROWTH_BASE = 3
 
 export function getRealmRewardMultiplier(realmId: string): number {

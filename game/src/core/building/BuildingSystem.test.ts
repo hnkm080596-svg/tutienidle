@@ -90,6 +90,78 @@ describe('BuildingSystem.upgrade realm tier gate', () => {
   })
 })
 
+describe('BuildingSystem.quoteUpgrade (single owner for header/upgrade rules)', () => {
+  const COST_TEMPLATE: Building = {
+    ...TEMPLATE,
+    maxLevel: 5,
+    upgradeCost: [
+      [],
+      [{ materialId: 'mortal_wood_decade', amount: 4 }],
+      [{ materialId: 'mortal_wood_decade', amount: 6 }],
+      [],
+    ],
+  }
+
+  function setup(level = 1) {
+    const registry = new BuildingRegistry()
+    const manager = new BuildingManager()
+    const bag = new MaterialBag()
+    registry.register(COST_TEMPLATE)
+    manager.add(instanceAt(level))
+
+    return { registry, manager, bag }
+  }
+
+  it('capped level → hasNextLevel:false', () => {
+    const { registry, manager, bag } = setup(5)
+
+    const quote = system.quoteUpgrade('i1', registry, manager, bag, 'mortal')
+
+    expect(quote?.hasNextLevel).toBe(false)
+    expect(quote?.nextUpgradeCost).toEqual([])
+  })
+
+  it('realm-gated next level → meetsRealmRequirement:false', () => {
+    const { registry, manager, bag } = setup(2)
+
+    const quote = system.quoteUpgrade('i1', registry, manager, bag, 'qi_refining')
+
+    expect(quote?.hasNextLevel).toBe(true)
+    expect(quote?.meetsRealmRequirement).toBe(false)
+    expect(quote?.requiredRealmId).toBe('foundation_establishment')
+  })
+
+  it('insufficient materials → canAfford:false', () => {
+    const { registry, manager, bag } = setup(1)
+
+    const quote = system.quoteUpgrade('i1', registry, manager, bag, 'qi_refining')
+
+    expect(quote?.nextUpgradeCost).toEqual([{ materialId: 'mortal_wood_decade', amount: 4 }])
+    expect(quote?.canAfford).toBe(false)
+  })
+
+  it('happy path — exact upgradeCost[level] entry, affordable', () => {
+    const { registry, manager, bag } = setup(1)
+    bag.add({ id: 'mortal_wood_decade', name: 'Gỗ', category: 'wood', sourceType: 'exploration' }, 4)
+
+    const quote = system.quoteUpgrade('i1', registry, manager, bag, 'qi_refining')
+
+    expect(quote).toMatchObject({
+      hasNextLevel: true,
+      meetsRealmRequirement: true,
+      requiredRealmId: 'qi_refining',
+      nextUpgradeCost: [{ materialId: 'mortal_wood_decade', amount: 4 }],
+      canAfford: true,
+    })
+  })
+
+  it('unknown instance → null', () => {
+    const { registry, manager, bag } = setup(1)
+
+    expect(system.quoteUpgrade('missing', registry, manager, bag, 'mortal')).toBeNull()
+  })
+})
+
 describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', () => {
   function spring(): Building {
     return {

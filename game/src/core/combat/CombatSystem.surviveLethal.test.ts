@@ -124,10 +124,8 @@ describe('CombatSystem — Bất Tử Thể (survive_lethal)', () => {
   it('trận Độ Kiếp — KHÔNG kích hoạt dù player có Bất Tử Thể (khoá theo plan §6)', () => {
     const combat = new CombatSystem(new EventBus())
 
-    // Mirror GameManager.startTribulation(): guard về 0 + session null.
-    const session = createSession(['bat_tu_the'])
-
-    session.guard.beginTribulation()
+    // Mirror GameManager.startTribulation(): session null — tribulation
+    // never attaches a guard, so the lethal hit stands.
     combat.setSurviveLethalSession(null)
 
     const player = createCombatant({ id: 'player', type: 'player', currentHp: 10, maxHp: 1000 })
@@ -136,7 +134,6 @@ describe('CombatSystem — Bất Tử Thể (survive_lethal)', () => {
 
     expect(player.currentHp).toBe(0)
     expect(player.alive).toBe(false)
-    expect(session.guard.getRemainingUses()).toBe(0)
   })
 
   it('đòn không chết — không tiêu lượt', () => {

@@ -131,6 +131,25 @@ describe('DecomposeTab — settings UI (Task 14-UI)', () => {
     tab.unmount()
   })
 
+  it('invalid select values are rejected — settings unchanged', async () => {
+    const gm = makeGameManager()
+    const tab = mountTab(gm)
+
+    const gradeSelect = tab.select(0)
+    const ageSelect = tab.select(1)
+
+    gradeSelect.value = 'not_a_grade'
+    gradeSelect.dispatchEvent(new Event('change'))
+    ageSelect.value = 'not_an_age'
+    ageSelect.dispatchEvent(new Event('change'))
+    await nextTick()
+
+    expect(gm.decomposeSystem.getSettings().gradeFilter).toBe('all')
+    expect(gm.decomposeSystem.getSettings().ageFilter).toBe('all')
+
+    tab.unmount()
+  })
+
   it('hiển thị pending output estimate (workers > 0 → dòng text có số)', async () => {
     const gm = makeGameManager()
     const tab = mountTab(gm)

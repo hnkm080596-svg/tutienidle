@@ -9,7 +9,7 @@
 // giữ state ngoài Battle (runtime-only, xem ArtifactRuntime.ts).
 import type { Battle } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { ActionImpactSystem, ActionDamageInfo } from '../battle/ActionImpactSystem'
+import type { ActionDamageInfo, ScheduledBasicImpact } from '../battle/ActionImpactSystem'
 import type { BuffPool } from '../buff/BuffPool'
 import type { BuffRegistry } from '../buff/BuffRegistry'
 import type { CombatAiStrategy } from '../battle/CombatAiStrategy'
@@ -21,7 +21,12 @@ import type { ArtifactPath } from './Artifact'
 import { getArtifactGradeMultiplier } from './ArtifactProgression'
 
 export interface ArtifactSystemDeps {
-  actionImpact: ActionImpactSystem
+  /**
+   * Parked port — the dormant ActionImpactSystem class was removed in
+   * Mission G; only the scheduleBasic member this file calls survives
+   * as the contract (the reimagine provides a real implementation).
+   */
+  actionImpact: { scheduleBasic(entry: ScheduledBasicImpact): void }
   buffRegistry: BuffRegistry
   getBuffsFor: (battle: Battle, entity: CombatEntity) => BuffPool
   aiStrategy: () => CombatAiStrategy
@@ -83,11 +88,6 @@ function getRotationElements(rotationElements: ElementType[]): ElementType[] {
   return NGU_HANH_ROTATION_ORDER.filter((element) => rotationElements.includes(element))
 }
 
-/** Lọc rotation elements xuống đúng 5 hành Ngũ Hành (bỏ Phong/Lôi/Hỗn Nguyên) — dùng khi snapshot ArtifactRuntime lúc battle bắt đầu. */
-export function filterNguHanhElements(rotationElements: ElementType[]): ElementType[] {
-  return getRotationElements(rotationElements)
-}
-
 const CONG_T3_LEVEL = 3
 
 function getArtifactHitMultiplier(path: ArtifactPath | undefined, level: number, gradeMultiplier: number): number {
@@ -111,7 +111,7 @@ function buildArtifactDamage(element: ElementType | undefined, multiplier: numbe
   }
 }
 
-/** Export cho UI (ArtifactCombatPresentation.ts) — cùng công thức tick dùng nội bộ. */
+/** Shared cycle formula — used internally by the parked artifact tick. */
 export function getArtifactCycleSeconds(runtime: Battle['artifactRuntime']): number {
   if (!runtime) {
     return ARTIFACT_BASE_CYCLE_SECONDS

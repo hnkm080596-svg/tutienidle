@@ -58,6 +58,18 @@ describe('foundation stages', () => {
     const boss = STAGES.find((stage) => stage.id === 'foundation_floor_10')!
     expect(boss.bossEnemyId).toBe('foundation_ferocious_flood_dragon_whelp')
   })
+
+  it('chương 3: tầng chẵn dùng biến thể ferocious, tầng lẻ dùng bản thường', () => {
+    for (const stage of STAGES.filter((s) => s.chapter === 3)) {
+      const ids = stage.enemyPool.map((entry) => entry.enemyId)
+
+      if ((stage.floor ?? 0) % 2 === 0) {
+        for (const id of ids) expect(id).toContain('_ferocious_')
+      } else {
+        for (const id of ids) expect(id).not.toContain('_ferocious_')
+      }
+    }
+  })
 })
 
 // Spec v3 D2/D9 (2026-09-11): STAGES is built by defineChapterStages -

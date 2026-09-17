@@ -45,21 +45,6 @@ export const CORE_REALM_LEVEL = 12
 
 export const EXTENDED_REALM_LEVEL = 18
 
-export function getCultivationDurationSeconds(realmId: string, realmLevel: number): number {
-  const realm = getCurrentRealm(realmId)
-
-  if (realm.baseCultivationMinutes === undefined) {
-    const required = Math.floor(
-      (realm.baseRequiredCultivation ?? 0) *
-        Math.pow(realm.cultivationMultiplier ?? 1, realmLevel - 1),
-    )
-
-    return required / BASE_CULTIVATION_PER_SECOND
-  }
-
-  return (realm.baseCultivationMinutes + Math.max(1, realmLevel) - 1) * 60
-}
-
 // Trong 1 đại cảnh giới, tầng cuối tốn thời gian lâu hơn tầng đầu theo
 // đường cong mũ này (trọng số tầng T = growthRate^(T-1), tổng ngân
 // sách chia theo tỉ lệ trọng số) — hằng số điều chỉnh được.
@@ -70,16 +55,14 @@ export function getRequiredCultivation(realmId: string, realmLevel: number): num
 
   if (realm.baseCultivationMinutes !== undefined) {
     return Math.floor(
-      getCultivationDurationSeconds(realmId, realmLevel) * BASE_CULTIVATION_PER_SECOND,
+      (realm.baseCultivationMinutes + Math.max(1, realmLevel) - 1) * 60 * BASE_CULTIVATION_PER_SECOND,
     )
   }
 
   if (realm.realmDurationMultiplier === undefined) {
-    // Phàm Nhân (tutorial) — công thức hấp thu cũ, không đổi.
-    return Math.floor(
-      (realm.baseRequiredCultivation ?? 0) *
-        Math.pow(realm.cultivationMultiplier ?? 1, realmLevel - 1),
-    )
+    // XOR data contract (pinned in CultivationSystem.test.ts): a realm
+    // without EITHER formula field is a data bug — fail loudly.
+    throw new Error(`Realm "${realmId}" declares no cultivation formula field`)
   }
 
   const totalSeconds = realm.realmDurationMultiplier * BASE_CULTIVATION_UNIT_SECONDS

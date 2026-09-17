@@ -58,7 +58,6 @@ export interface CoordinatorDeps {
   scheduler?: DeadlineScheduler
   initialRoute?: Route
   initialBootSubphase?: BootSubphase
-  initialShowMainMenu?: boolean
 }
 
 export class GamePresentationCoordinator {
@@ -71,7 +70,6 @@ export class GamePresentationCoordinator {
   private currentTransitionId = 0
   private nextTransitionId = 0
   private bootSubphase: BootSubphase = 'intro'
-  private showMainMenu = false
   private error: CoordinatorError | null = null
 
   private readonly sessionPort: SessionPresentationPort
@@ -94,7 +92,6 @@ export class GamePresentationCoordinator {
     this.scheduler = deps.scheduler ?? defaultDeadlineScheduler
     this.currentRoute = deps.initialRoute ?? 'boot'
     this.bootSubphase = deps.initialBootSubphase ?? (this.currentRoute === 'boot' ? 'intro' : null)
-    this.showMainMenu = deps.initialShowMainMenu ?? false
   }
 
   getSnapshot(): CoordinatorSnapshot {
@@ -107,7 +104,6 @@ export class GamePresentationCoordinator {
       phase: this.phase,
       transitionId: this.currentTransitionId,
       bootSubphase: this.bootSubphase,
-      showMainMenu: this.showMainMenu,
       error: this.error ? { ...this.error } : null,
     }
   }
@@ -123,12 +119,6 @@ export class GamePresentationCoordinator {
   setBootSubphase(subphase: BootSubphase): void {
     if (this.disposed || this.bootSubphase === subphase) return
     this.bootSubphase = subphase
-    this.notify()
-  }
-
-  setShowMainMenu(show: boolean): void {
-    if (this.disposed || this.showMainMenu === show) return
-    this.showMainMenu = show
     this.notify()
   }
 

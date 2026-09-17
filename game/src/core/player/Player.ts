@@ -54,12 +54,6 @@ export interface PlayerData {
   // nối vào stat/effect system theo talent-system-plan.md.
   selectedTalentIds: string[]
 
-  // Ghi nhận đã unlock hiệu ứng gắn passive của Phá Cảnh Tâm Pháp khi
-  // phá ĐẠI cảnh giới (key: `${techniqueId}:${realmId}`) — tránh cộng
-  // trùng modifier vĩnh viễn nếu code chạy lại (idempotent, giống
-  // GameManager.syncRealmPassive()). Xem composables/useBreakthrough.ts.
-  unlockedRealmEnhancements: string[]
-
   // Đột Phá Trúc Cơ (Phase 5) — Căn Cơ CAO NHẤT từng đạt qua Độ Kiếp
   // thắng lợi (mục 16 spec `breakthrough` — "được reveal" sau khi
   // thắng). undefined = chưa từng Trúc Cơ thành công. CHỈ dùng để
@@ -69,18 +63,9 @@ export interface PlayerData {
 
   // Beta Phase 4 (Tutorial Carousel) — đã xem/bỏ qua tutorial nhập môn
   // chưa, gate theo nhân vật MỚI (App.vue's onMounted() else-branch) —
-  // đúng pattern unlockedRealmEnhancements (thêm field + default trong
-  // createDefaultPlayer(), tự persist qua spread).
+  // thêm field + default trong createDefaultPlayer(), tự persist qua
+  // spread.
   hasSeenTutorial: boolean
-
-  // Cultivation ⇄ combat (2026-08-20) — KHÔNG còn nút bấm thủ công,
-  // field này giờ SUY RA THẲNG từ isFighting mỗi tick (App.vue's
-  // tick(): `player.isCultivating = !isFighting`) — chiến đấu thì
-  // không tu luyện, không chiến đấu thì tự động tu luyện. Vẫn giữ làm
-  // field thật (không tính lại tại chỗ dùng) vì MainScene.ts's
-  // onCultivationChanged() cần 1 giá trị ổn định để đổi pose ngồi
-  // thiền, và SaveSystem.ts vẫn persist field này.
-  isCultivating: boolean
 
   // Pháp Tu profession-tier ladder (2026-08-14, xem
   // core/player/CultivationPathKit.ts) — undefined (mặc định của MỌI
@@ -255,8 +240,8 @@ export interface PlayerData {
   phaGiapCarryRealmId: string | null
 
   // Idempotency guard cho Realm Passive theo cảnh giới (Nhập Đạo/Kiến
-  // Cơ/...) — cùng pattern unlockedRealmEnhancements, key = realmId
-  // vừa bước vào. Xem core/realm/RealmPassiveSystem.ts.
+  // Cơ/...) — key = realmId vừa bước vào. Xem
+  // core/realm/RealmPassiveSystem.ts.
   grantedRealmPassiveIds: string[]
 
   // Timed effect theo thời gian thực (2026-08-24, plan §5.4) — deadline
@@ -347,9 +332,7 @@ export function createDefaultPlayer(): PlayerData {
     perfectClearStageIds: [],
     perfectClearSeconds: {},
     autoFarmStage: null,
-    unlockedRealmEnhancements: [],
     hasSeenTutorial: false,
-    isCultivating: false,
 
     // PHẢI khai báo tường minh (dù `undefined`) — Pinia Options Store
     // dựng reactive property bằng toRefs() snapshot 1 LẦN lúc khởi tạo

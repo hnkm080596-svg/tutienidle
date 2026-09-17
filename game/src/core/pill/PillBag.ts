@@ -67,8 +67,11 @@ export class PillBag {
     return true
   }
 
-  get(pillId: string): PillStack | undefined {
-    return this.pills.get(pillId)
+  get(pillId: string): Readonly<PillStack> | undefined {
+    const stack = this.pills.get(pillId)
+
+    // Snapshot — xem MaterialBag.get.
+    return stack === undefined ? undefined : { ...stack }
   }
 
   getAmount(pillId: string): number {
@@ -79,8 +82,8 @@ export class PillBag {
     return this.getAmount(pillId) >= amount
   }
 
-  getAll(): PillStack[] {
-    return Array.from(this.pills.values())
+  getAll(): Readonly<PillStack>[] {
+    return Array.from(this.pills.values(), (stack) => ({ ...stack }))
   }
 
   clear() {

@@ -190,9 +190,8 @@ export interface Skill {
 
   // Trigger/Action rework (2026-08-31 spec) — a skill fully migrated off
   // `effects` declares its behavior here instead: each binding pairs a
-  // TriggerType with an ordered SkillAction list, run by
-  // SkillTriggerRunner. A skill is either on `effects` or on `triggers`,
-  // never both — see SkillSystem.getEffectiveSkill()/BattleSystem.
-  // resolveSkillEffects() for how the two paths coexist during migration.
+  // TriggerType with an ordered SkillAction list. Consumed live by the
+  // turn engine via SkillToTurnSkillConverter (the legacy runner that
+  // fired these bindings was removed with the dormant M13 path).
   triggers?: TriggerBinding[]
 }

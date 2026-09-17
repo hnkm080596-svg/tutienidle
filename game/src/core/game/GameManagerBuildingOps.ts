@@ -187,6 +187,21 @@ export class GameManagerBuildingOps {
     state.assignedWorkers = Math.max(0, Math.min(Math.floor(safeCount), capacity))
   }
 
+  /**
+   * Authoritative upgrade quote for the building header (Mission G Task
+   * 36) — the SAME rules upgradeBuilding enforces, read-side only.
+   * Mirrors quoteProductionUpgrade.
+   */
+  quoteBuildingUpgrade(instanceId: string) {
+    return this.deps.buildingSystem.quoteUpgrade(
+      instanceId,
+      this.deps.buildingRegistry,
+      this.deps.buildingManager,
+      this.deps.materialBag,
+      this.deps.getActivePlayer()?.realmId,
+    )
+  }
+
   upgradeBuilding(instanceId: string): boolean {
     const upgraded = this.deps.buildingSystem.upgrade(
       instanceId,

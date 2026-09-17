@@ -6,7 +6,7 @@ import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 import { characterCreationService } from '@/services/character/CharacterCreationServiceFactory'
-import { isValidCharacterName } from '@/services/character/CharacterCreationService'
+import { isValidCharacterName, CHARACTER_CREATION_ATTRIBUTE_POINTS } from '@/services/character/CharacterCreationService'
 
 export interface CharacterCreationPayload {
   name: string
@@ -34,7 +34,7 @@ const attributeLabels = computed<Record<keyof CharacterCreationPayload['attribut
   vitality: { name: t('onboarding.creation.attributes.vitality.name'), hint: t('onboarding.creation.attributes.vitality.hint') },
 }))
 const pointsSpent = computed(() => Object.values(attributes.value).reduce((sum, value) => sum + value, 0))
-const pointsLeft = computed(() => 5 - pointsSpent.value)
+const pointsLeft = computed(() => CHARACTER_CREATION_ATTRIBUTE_POINTS - pointsSpent.value)
 const validName = computed(() => isValidCharacterName(name.value))
 
 function toggleTalent(talent: TalentDefinition) {

@@ -179,7 +179,7 @@ const region = useDynamicRegion({
 
     // Expose cho e2e/visual gate — đọc battlefieldGeometry qua registry mà
     // không cần chạm canvas pixel. Không có code gameplay dùng nó.
-    ;(window as unknown as { __tutienPhaserGame?: Phaser.Game }).__tutienPhaserGame = game
+    window.__tutienPhaserGame = game
 
     publishHostWhenSized()
   },
@@ -200,7 +200,7 @@ const region = useDynamicRegion({
     sceneAdapter?.setGame(null)
     bundleManager?.setLoaderScene(null)
 
-    ;(window as unknown as { __tutienPhaserGame?: Phaser.Game }).__tutienPhaserGame = undefined
+    window.__tutienPhaserGame = undefined
   },
 })
 

@@ -155,8 +155,6 @@ export const useUiStore = defineStore('ui', {
     // save) — cùng nhóm isAuto.
     standalonePanel: null as StandalonePanel,
 
-    // (legacy) pendingEquipTarget giữ để tránh vỡ shape store.
-    pendingEquipTarget: null as { kind: 'talisman' | 'formation'; id: string } | null,
 
     battleRunMode: automation.battleRunMode ?? 'manual',
 

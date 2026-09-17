@@ -25,7 +25,7 @@ export interface StatusTooltipData {
 }
 
 interface TooltipParts {
-  container: { destroy(): void }
+  container: Phaser.GameObjects.Container
   anchorStatusId: string
 }
 
@@ -65,7 +65,7 @@ export class StatusTooltip {
     const container = this.scene.add.container(clampedX, clampedY, [bg, nameText, detailText])
     container.setDepth(DEPTH_OVERLAY_UI + 8)
 
-    this.active = { container: container as unknown as { destroy(): void }, anchorStatusId: statusInstanceId }
+    this.active = { container, anchorStatusId: statusInstanceId }
   }
 
   hide() {

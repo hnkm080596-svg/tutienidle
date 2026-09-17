@@ -39,9 +39,8 @@ export interface FormationStackSave {
 // đang chạy đều mất khi reload. Manager nào lưu id thay vì full
 // object (materials/pills/talismans) đều resolve lại qua registry
 // tương ứng lúc restore — xem GameManager.restoreFromSave().
-// version 3: thêm formations (FormationBag) — socketedFormation
-// trên equipment instance tự động đi theo `equipment` sẵn có,
-// không cần field riêng.
+// version 3: thêm formations (FormationBag) — formation đi theo
+// `equipment` sẵn có, không cần field riêng.
 // version 4: thêm crafts (CraftingManager) — lượt craft Đan/Phù/
 // Trận đang chạy, nguyên liệu đã trừ nên phải lưu lại tiến độ,
 // không thì reload giữa chừng sẽ mất trắng nguyên liệu đã tiêu.
@@ -54,7 +53,7 @@ export interface FormationStackSave {
 // Ignore Resistance/Ailment Resist & Potency, tag-hierarchy Increased)
 // + hệ thống Tâm Pháp 3 tầng (Tu Luyện/Chiến Đấu/Phá Cảnh — Technique
 // đổi hẳn shape sang discriminated union, xem core/technique/Technique.ts).
-// PlayerData thêm totalMonstersKilled/unlockedRealmEnhancements. Save
+// PlayerData thêm totalMonstersKilled. Save
 // cũ (version <6) KHÔNG tương thích, không viết migration — cùng lý do
 // version 5, save cũ tự động bị coi như không tồn tại.
 // version 7: MASTER SPEC Economy Phase 4 — thêm Building (Farm/Mine/
@@ -65,22 +64,19 @@ export interface FormationStackSave {
 // Trận/Yểm Phù chuyển từ EquipmentInstance sang EquipmentSlotState
 // (gắn theo SLOT, không theo item cụ thể — xem core/equipment/
 // EquipmentSlotState.ts), lưu equipmentSlots: EquipmentSlotState[].
-// EquipmentInstance trong save không còn 3 field enhanceLevel/
-// socketedFormation/bonusSubstatSlots. Save cũ (version <8) KHÔNG
-// tương thích, không viết migration — cùng lý do các version trước.
+// EquipmentInstance trong save không còn field enhanceLevel. Save cũ
+// (version <8) KHÔNG tương thích, không viết migration — cùng lý do các
+// version trước.
 // version 9: Core Loop Foundation checklist (Mục AFFIX/RARITY) —
 // EquipmentInstance đổi `substats: StatModifier[]` thành
 // `affixes: RolledAffix[]` (xem core/equipment/RolledAffix.ts) + thêm
 // field `rarity: EquipmentRarity` (xem core/equipment/EquipmentRarity.ts).
-// EquipmentSlotState đổi tên `bonusSubstatSlots` -> `bonusAffixSlots`
-// (cùng ý nghĩa).
 // version 10: Đột Phá Trúc Cơ (Phase 1) — xoá PlayerData.pillUsageCount
 // + Pill.usageLimit, thay bằng trần theo cảnh giới (RealmData.attributeCap,
 // xem PillSystem.canUse()).
 // version 11: Đột Phá Trúc Cơ (Phase 5) — thêm
 // PlayerData.highestFoundationAchieved (mục 16 spec `breakthrough`).
-// version 12: Home Hub (Phase 2) — thêm EquipmentSlotState.appliedTalismanIds
-// (badge Phù Viện, xem GameManager.applyTalisman()).
+// version 12: Home Hub (Phase 2).
 // version 13: Beta Phase 4 (Tutorial) — thêm PlayerData.hasSeenTutorial.
 // version 14: BUILDing spec (Building System rework) — ActiveCraft
 // (crafts: ActiveCraft[]) đổi field: thêm craftId bắt buộc (xem
@@ -98,10 +94,8 @@ export interface FormationStackSave {
 // core/equipment/EquipmentSystem.ts's forge()/refine()). Equipment
 // template (đăng ký lúc bootstrap, không nằm trong save) mất
 // `fixedAffixes`, thêm `forgeCost`.
-// version 16: Thám Hiểm rework — player: PlayerData thêm
-// isCultivating (cổng thủ công tu luyện, xem stores/player.ts's
-// toggleCultivating()). Save cũ (version <16) KHÔNG tương thích,
-// không viết migration — cùng lý do các version trước.
+// version 16: Thám Hiểm rework — save cũ (version <16) KHÔNG tương
+// thích, không viết migration — cùng lý do các version trước.
 // version 17: Naming-principles pass ("nguyen li dat ten") —
 // equipment: EquipmentInstance[]'s `rarity` đổi hẳn value set — 5 bậc
 // Ngũ Phẩm mới (hoang_pham/huyen_pham/dia_pham/thien_pham/tien_pham,

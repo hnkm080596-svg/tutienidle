@@ -106,7 +106,7 @@ export const TRAN_PHAP_CUU_CUNG_BUFF: BuffDefinition = {
 }
 
 // Buff/debuff mà skill effect tham chiếu qua buffId (xem
-// SkillEffectSystem, data/skill/Skills.ts). Áp lên buff pool riêng
+// data/skill/Skills.ts). Áp lên buff pool riêng
 // theo entity trong trận (Battle.playerBuffs/enemyBuffs) — không
 // phải buff persistent ngoài trận.
 // Kiếm Thế / Kiếm Ý (spec 2026-08-29 mục 5.3): sword_wound (thuộc

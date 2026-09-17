@@ -613,12 +613,11 @@ export function commitAction(entity: CombatEntity, action: SelectedAction): void
 }
 
 /**
- * AOE target collection for TurnBattle — mirrors ActionTargetingSystem.
- * collectAffected()'s shape-filter logic, but over TurnBattleParticipant[]
- * instead of a live Battle (Slice 1/2 stays standalone, no Battle
- * coupling). The primary target is always included even when the shape
- * math would exclude it, matching live collectAffected()'s "primary
- * always hits" guarantee.
+ * AOE target collection for TurnBattle — the same shape-filter logic the
+ * retired grid-battle collectAffected() used, but over
+ * TurnBattleParticipant[] (no Battle coupling). The primary target is
+ * always included even when the shape math would exclude it — the
+ * "primary always hits" guarantee.
  */
 export function collectTurnTargets(
   primaryTarget: TurnBattleParticipant,

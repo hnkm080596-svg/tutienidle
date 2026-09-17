@@ -146,7 +146,7 @@ export { CURRENT_SAVE_VERSION }
 // `poisonRecoveryPercent` (xem core/combat/CombatSystem.ts's
 // applyDotDamage(), core/stats/StatTypes.ts). CŨNG đổi tên hiển
 // (2026-09-14 note: poisonRecoveryPercent has since retired — saves
-// carrying it drop the key via migrateStatRecordKeys.)
+// carrying it drop the key via the baseStats whitelist at restore.)
 // thị "Độc Căn" <-> "Mộc Thế" cho đúng semantic (KHÔNG đổi field/id
 // nào — save cũ tương thích với riêng phần này). Save cũ thiếu 2 field
 // Stats mới — không viết migration, cùng convention mọi version trước.
@@ -195,13 +195,7 @@ export { CURRENT_SAVE_VERSION }
 //   cultivation→pill_cultivation_mortal; permanent/buff KHÔNG đổi thành
 //   +1 Main Stat (sai bản chất — plan §9) mà hoàn nguyên Linh Thạch
 //   100/stack vào player.spiritStone.
-// - Phù legacy: mỗi appliedTalismanIds[i] hoàn trả 1
-//   phu_mortal_common về bag, reset appliedTalismanIds/bonusAffixSlots
-//   (Affix đã roll KHÔNG xoá).
-// - Trận legacy trên weapon (socketedFormation có trigger): hoàn trả 1
-//   tran_mortal_common, xoá socket.
-// Migration IDEMPOTENT: chạy 2 lần không nhân đôi hoàn trả (guard theo
-// trạng thái đích: appliedTalismanIds rỗng/socket undefined = đã migrate).
+// Migration IDEMPOTENT: chạy 2 lần không nhân đôi hoàn trả.
 // version 44 (2026-08-25, resource-professions-rework plan §10 — rework
 // vòng kinh tế "Địa Giới → Lâm/Quáng/Động Thiên → Bag"):
 // - materials: map cặp raw/processed cũ về material TRỰC TIẾP mới theo
@@ -211,9 +205,8 @@ export { CURRENT_SAVE_VERSION }
 //   đầu tiên của realm tương ứng (không xác định được đan phương cũ).
 // - Phù/Trận legacy KHAI TỬ (§10.1): talismans/formations trong Bag +
 //   socket trên slot quy đổi thành Linh Thạch theo bảng compensation
-//   (common 200 / uncommon 500 / rare 1200); xoá toàn bộ state socket,
-//   bonusAffixSlots, appliedTalismanIds. Affix đã roll trên equipment
-//   GIỮ NGUYÊN (§10.1.5).
+//   (common 200 / uncommon 500 / rare 1200); xoá toàn bộ state socket.
+//   Affix đã roll trên equipment GIỮ NGUYÊN (§10.1.5).
 // - Buildings trung gian bị loại bỏ (herb_garden/smelter/
 //   artisan_workshop/formation_altar/talisman_institute): hoàn trả Linh
 //   Thạch theo bảng cố định /level; strip gardenPlots/processingJobs.

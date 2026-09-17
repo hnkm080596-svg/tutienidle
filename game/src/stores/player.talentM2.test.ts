@@ -26,9 +26,7 @@ function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
     externalModifiers: [],
     spiritStone: 0,
     selectedTalentIds: [],
-    unlockedRealmEnhancements: [],
     hasSeenTutorial: false,
-    isCultivating: false,
     totalCultivationGained: 0,
     bossKillCount: 0,
     skillInsight: 0,
@@ -151,5 +149,31 @@ describe('player store — talent v4 M2 (Hau Tich / Ngo Dao offline)', () => {
     store.restoreFromSave(save)
 
     expect(store.skillInsight).toBe(insightAfterFirst)
+  })
+
+  it('Ngo Dao — online va offline di QUA CUNG mot accrual: cung gained cho ket qua giong het nhau', () => {
+    // 2500 tu vi → 1 Cảm Ngộ + 500 dư, bất kể đường nào.
+    const online = usePlayerStore()
+    online.realmId = 'qi_refining'
+    online.realmLevel = 1
+    online.cultivation = 0
+    online.selectedTalentIds = ['ngo_dao']
+    online.cultivate(250) // 10/s × 250s = 2500 tu vi
+
+    setActivePinia(createPinia())
+    const offline = usePlayerStore()
+    offline.restoreFromSave(buildMinimalSave({
+      realmId: 'qi_refining',
+      realmLevel: 1,
+      selectedTalentIds: ['ngo_dao'],
+      cultivationPerSecond: 10,
+      lastSavedAt: currentMs - 250_000, // 250s offline -> 2500 tu vi
+    }))
+
+    expect(online.skillInsight).toBe(1)
+    expect(offline.skillInsight).toBe(1)
+    expect(online.cultivationInsightAccumulator).toBe(500)
+    expect(offline.cultivationInsightAccumulator).toBe(500)
+    expect(online.totalSkillInsightGained).toBe(offline.totalSkillInsightGained)
   })
 })

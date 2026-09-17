@@ -62,10 +62,9 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
     currency: { spiritStone: { min: 25, max: 35 }, techniqueInsight: { min: 90, max: 120 } },
     guaranteed: [],
     pool: [
-      // Doan Bao Thach used to be gated by an explicit realm check in
-      // grantArtifactStoneDrop. The gate is now simply which tables list it:
-      // it appears here and in no lower band, so the check has nothing left
-      // to ask (spec 2.5).
+      // Doan Bao Thach used to be gated by an explicit realm check. The
+      // gate is now simply which tables list it: it appears here and in no
+      // lower band, so the check has nothing left to ask (spec 2.5).
       { kind: 'material', itemId: 'doan_bao_thach', amount: { min: 1, max: 3 }, weight: 25 },
       // Ore still drops at this realm too under the old foundationBeast()
       // helper (bossEligible branch), so it stays in this band's pool.

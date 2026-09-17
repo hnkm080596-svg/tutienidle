@@ -225,11 +225,11 @@ export function useDynamicRegion(options: DynamicRegionOptions): DynamicRegion {
 
     game = created
 
-    const cleanup = options.seed?.(created.registry as unknown as GateRegistry)
+    const cleanup = options.seed?.(created.registry)
     seedCleanup = typeof cleanup === 'function' ? cleanup : null
 
     if (options.validateSeed) {
-      assertGateSeeded(created.registry as unknown as GateRegistry)
+      assertGateSeeded(created.registry)
     }
 
     options.onBooted?.(created)

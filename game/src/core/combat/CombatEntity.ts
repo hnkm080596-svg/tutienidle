@@ -65,7 +65,7 @@ export interface CombatEntity {
 
   // Ward — máu phụ hấp thụ damage TRƯỚC currentHp (xem
   // CombatSystem.resolveHit()). State "sống" như currentHp/currentMp,
-  // reset về 0 lúc BattleSystem.start()/createBattleEnemy().
+  // reset về 0 khi combatant mới được dựng cho trận.
   currentWard: number
 
   // The Tu Reimagined (plan Task 11, spec 2026-09-15 D3) — Sơn Nhạc

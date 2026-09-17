@@ -57,20 +57,6 @@ export const VENDOR_BYPRODUCT_PRICE_BASE = 1
 /** Hệ số nhân giá mỗi bậc realm tier. */
 export const VENDOR_REALM_GROWTH = 3
 
-/** Thứ tự realm dùng định giá Luyện Khí Tinh Hoa theo bối cảnh bán. */
-const ESSENCE_REALM_ORDER: readonly string[] = [
-  'mortal',
-  'qi_refining',
-  'foundation_establishment',
-  'golden_core',
-  'nascent_soul',
-  'soul_transformation',
-  'void_refinement',
-  'mahayana',
-  'body_integration',
-  'tribulation',
-]
-
 /**
  * Hệ số nhân theo realm CỦA MATERIAL (meta nghề) — giá trị là thuộc tính
  * nội tại của nguyên liệu. Material không có meta realm (essence/byproduct
@@ -124,11 +110,10 @@ export function getUnitSellPrice(material: Material, realmId: string): number | 
     }
 
     case 'essence': {
-      const index = ESSENCE_REALM_ORDER.indexOf(meta?.realmId ?? realmId)
-
-      // Realm ngoài thang essence tier (không thể xảy ra với REALM_TIERS
-      // hiện có) → fallback tier thấp nhất thay vì giá 0.
-      const tierIndex = Math.max(0, index)
+      // Cùng một authority thứ bậc realm với realmGrowthFactor — realm
+      // ngoài thang (không thể xảy ra với REALM_TIERS hiện có) fallback
+      // tier thấp nhất qua getRealmTier → 1.
+      const tierIndex = Math.max(0, getRealmTier(meta?.realmId ?? realmId) - 1)
 
       return VENDOR_ESSENCE_PRICE_BASE * Math.pow(VENDOR_REALM_GROWTH, tierIndex)
     }

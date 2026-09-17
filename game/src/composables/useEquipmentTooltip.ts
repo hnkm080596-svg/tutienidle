@@ -3,9 +3,8 @@ import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlotState } from '@/core/equipment/EquipmentSlotState'
 import type { AffixRegistry } from '@/core/equipment/AffixRegistry'
 import type { ZoneRegistry } from '@/core/stage/ZoneRegistry'
-import { getEffectiveAffixValue, GLOBAL_MAX_AFFIXES, MAIN_STAT_REALM_SCALE } from '@/core/equipment/EquipmentSystem'
-import { ITEM_QUALITY_AFFIX_SLOTS, ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '@/core/equipment/ItemQualityBalance'
-import { getGlobalCultivationLevel } from '@/core/realm/realmSystem'
+import { getEffectiveAffixValue, GLOBAL_MAX_AFFIXES } from '@/core/equipment/EquipmentSystem'
+import { ITEM_QUALITY_AFFIX_SLOTS } from '@/core/equipment/ItemQualityBalance'
 import { realmFromGrade } from '@/core/profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import { composeEquipmentDisplayName } from '@/core/equipment/EquipmentNaming'
@@ -74,7 +73,7 @@ export interface EquipmentCompareContext {
 
   slotState: EquipmentSlotState | null
 
-  mainStatRangeQuote?: { min: number; max: number }
+  mainStatRangeQuote: { min: number; max: number } | undefined
 }
 
 // Tooltip Equipment có cấu trúc (2026-08-15) — loại CUỐI trong đợt
@@ -96,20 +95,13 @@ export function buildEquipmentTooltip(
   affixRegistry: AffixRegistry,
   slotState: EquipmentSlotState | null,
   zoneRegistry: ZoneRegistry,
-  compare?: EquipmentCompareContext,
-  mainStatRangeQuote?: { min: number; max: number },
+  compare: EquipmentCompareContext | undefined,
+  mainStatRangeQuote: { min: number; max: number } | undefined,
 ): EquipmentTooltipContent {
   const mainStatValue = formatStat(instance.mainStat.stat, instance.mainStat.flat ?? 0)
   // R9 (AR-23 4c): the effective range is the EQUIPMENT SYSTEM's quote.
-  // The old self-computed scaling here duplicated the roll pipeline.
-  const effectiveMainRangeValues = mainStatRangeQuote ?? (() => {
-    const rolledRange = template.mainStats.find(range => range.stat === instance.mainStat.stat)
-    const realmScale = 1 + getGlobalCultivationLevel(realmFromGrade(instance.grade), instance.realmLevel ?? 1) * MAIN_STAT_REALM_SCALE
-    const qualityScale = ITEM_QUALITY_IMPLICIT_MULTIPLIER[instance.quality]
-    return rolledRange
-      ? { min: rolledRange.min * qualityScale * realmScale, max: rolledRange.max * qualityScale * realmScale }
-      : undefined
-  })()
+  // Callers must pass quoteMainStatRange() output — never re-derive.
+  const effectiveMainRangeValues = mainStatRangeQuote
 
   // Delta fields (spec section 4) - computed up front so every stat row can
   // spread { delta, deltaTone }; empty when there is no real compare
@@ -156,8 +148,7 @@ export function buildEquipmentTooltip(
   ]
 
   const rarityAffixCap = ITEM_QUALITY_AFFIX_SLOTS[instance.quality]
-  const bonusAffixSlots = slotState?.bonusAffixSlots ?? 0
-  const affixCapacity = Math.min(GLOBAL_MAX_AFFIXES, rarityAffixCap.prefix + rarityAffixCap.suffix + bonusAffixSlots)
+  const affixCapacity = Math.min(GLOBAL_MAX_AFFIXES, rarityAffixCap.prefix + rarityAffixCap.suffix)
 
   const affixRows: TooltipStatRow[] = instance.affixes.map(rolled => {
     const affix = affixRegistry.get(rolled.affixId)

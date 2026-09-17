@@ -159,4 +159,49 @@ describe('BattleLootSystem — realm reward scaling', () => {
       loot: expect.objectContaining({ accentColorVar: '--grade-tien' }),
     })
   })
+
+  it('grade and quality particle colors are one table across all five ranks', () => {
+    // Mission G Task 29 — pins the single-table contract: the equipment
+    // path (quality) and the pill path (grade) must emit the identical
+    // color for every rank of the shared 5-member union.
+    vi.spyOn(Math, 'random').mockReturnValue(0.99)
+    const itemColors = (emit: ReturnType<typeof vi.fn>) =>
+      emit.mock.calls
+        .filter((call) => call[0] === 'reward_particle' && call[1]?.kind === 'item')
+        .map((call) => (call[1] as { color: number }).color)
+
+    for (const rank of ['hoang', 'huyen', 'dia', 'thien', 'tien'] as const) {
+      // fe_5: no unconditional equipment_any line, so the signature drop
+      // is the only 'item' particle of the run (mortal_5 emits two).
+      const equipment = createLootTestSetup({
+        realmId: 'foundation_establishment',
+        stage: { stageId: 'fe_5', requiredRealmId: 'foundation_establishment', floor: 5 },
+        equipmentTemplates: [TEST_EQUIPMENT_TEMPLATE],
+        signatureDrops: [{ kind: 'equipment', itemId: 'eq_test', chance: 1 }],
+      })
+      equipment.createInstance.mockReturnValue({
+        ...TEST_EQUIPMENT_INSTANCE,
+        quality: rank,
+      } as EquipmentInstance)
+      equipment.killEnemy()
+
+      const pill = createLootTestSetup({
+        realmId: 'foundation_establishment',
+        stage: { stageId: 'fe_5', requiredRealmId: 'foundation_establishment', floor: 5 },
+        pillTemplates: [{ id: 'pill_t', name: 'Đan', grade: rank }],
+        signatureDrops: [{ kind: 'pill', itemId: 'pill_t', chance: 1 }],
+      })
+      pill.killEnemy()
+
+      const qualityColors = itemColors(equipment.eventBus.emit)
+      const gradeColors = itemColors(pill.eventBus.emit)
+      expect(qualityColors.length).toBeGreaterThan(0)
+      expect(gradeColors.length).toBeGreaterThan(0)
+      // Incidental table drops ride the same mocked createInstance, so
+      // every emitted quality color of the run shares the rank.
+      expect(new Set(qualityColors).size).toBe(1)
+      expect(new Set(gradeColors).size).toBe(1)
+      expect(gradeColors[0]).toBe(qualityColors[0])
+    }
+  })
 })

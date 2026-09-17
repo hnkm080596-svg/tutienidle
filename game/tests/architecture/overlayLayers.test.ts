@@ -53,7 +53,6 @@ const HARDCODED_LAYER = /(?:z-index|zIndex)\s*:\s*(\d{3,})/g
 const OVERLAY_BINDINGS: Record<string, string> = {
   'components/game/PresentationTransitionOverlay.vue': 'OVERLAY_LAYERS.curtain',
   'components/game/combat/CombatPauseOverlay.vue': 'OVERLAY_LAYERS.combatPause',
-  'components/menu/MainMenu.vue': 'OVERLAY_LAYERS.mainMenu',
   'components/common/ActionFeedbackLog.vue': 'OVERLAY_LAYERS.feedback',
   'components/common/ToastContainer.vue': 'OVERLAY_LAYERS.toast',
   'components/common/OfflineSummaryModal.vue': 'OVERLAY_LAYERS.modal',

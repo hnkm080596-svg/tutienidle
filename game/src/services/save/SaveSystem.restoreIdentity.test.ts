@@ -101,7 +101,6 @@ describe('restore identity (AR-12)', () => {
     ['equipmentSlots', (save: GameSave) => {
       save.equipmentSlots = [{
         slot: 'weapon', enhanceLevel: 1, enhanceFailStreak: 0,
-        bonusAffixSlots: 0, appliedTalismanIds: [],
       }]
     }],
     ['productionSites', (save: GameSave) => {

@@ -33,6 +33,15 @@ import type { PlayerData } from '../player/Player'
 
 /** Màu tím chuỗi Tinh Hoa Phàm Thể (2026-08-30) — bay về người chơi. */
 const ESSENCE_PARTICLE_COLOR = 0xc792ea
+
+// ItemGrade and ItemQuality are the same 5-member union — one table.
+const RANK_PARTICLE_COLORS: Record<ItemGrade, number> = {
+  hoang: 0x8a877e,
+  huyen: 0x6fbf73,
+  dia: 0x5b9bd5,
+  thien: 0xffd54f,
+  tien: 0xfff6d8,
+}
 import type { Enemy, EnemyReward } from '../enemy/Enemy'
 import type { LootNotificationPresentation } from '../notification/NotificationEvent'
 import type { NotificationQueue } from './NotificationQueue'
@@ -149,26 +158,6 @@ export class BattleLootSystem {
   setSession(receiver: RewardReceiver, player: PlayerData) {
     this.receiver = receiver
     this.player = player
-  }
-
-  /**
-   * Khởi tạo session cho trận ĐỘ KIỆP (P2 fix 2026-08-24) — reset TOÀN
-   * BỘ state battle-scoped của trận Stage TRƯỚC đó rồi mới gắn player.
-   * Trước đây startTribulation() chỉ set player, để lại receiver + reward
-   * summary của trận Stage cũ:
-   * - getBattleRewardSummary() trả phần thưởng STALE (hiện tại trận Kiếp
-   *   không có panel summary nhưng API công khai vẫn đọc được).
-   * - receiver cũ còn sống: nếu sau này trận Kiếp có enemy/summon chết
-   *   (pendingSummons đã có trong Battle type) thì reward/loot sẽ chảy
-   *   qua receiver của phiên trước — hành vi phụ thuộc lịch sử trận đấu.
-   * receiver = null là chủ đích: quái Kiếp (nếu có) chết KHÔNG cấp
-   * reward/loot — deterministic, không đổi balance của Độ Kiếp.
-   */
-  beginTribulation(player: PlayerData) {
-    this.receiver = null
-    this.player = player
-
-    this.summary = createEmptyBattleRewardSummary()
   }
 
   getSummary(): BattleRewardSummary {
@@ -380,8 +369,8 @@ export class BattleLootSystem {
 
           // Kiếm Ý vĩnh viễn (spec 2026-08-29-kiem-the-kiem-y mục 3.1) —
           // đếm boss diệt: boss stage (isBoss) + elite/mini-boss (isElite);
-          // boss Độ Kiếp đi qua beginTribulation battle (entity isBoss
-          // do defineEnemy tribulation template). CHỈ Kiếm Tu route
+          // boss Độ Kiếp cũng là entity isBoss do defineEnemy tribulation
+          // template. CHỈ Kiếm Tu route
           // Bạt Kiếm tiêu thụ tầng, nhưng counter đếm cho MỌI path (thống
           // kê vô hại, đổi path muộn không mất tiến trình).
           if (
@@ -703,27 +692,11 @@ export class BattleLootSystem {
   }
 
   private getGradeParticleColor(grade: ItemGrade): number {
-    const colors: Record<ItemGrade, number> = {
-      hoang: 0x8a877e,
-      huyen: 0x6fbf73,
-      dia: 0x5b9bd5,
-      thien: 0xffd54f,
-      tien: 0xfff6d8,
-    }
-
-    return colors[grade]
+    return RANK_PARTICLE_COLORS[grade]
   }
 
   private getQualityParticleColor(quality: ItemQuality): number {
-    const colors: Record<ItemQuality, number> = {
-      hoang: 0x8a877e,
-      huyen: 0x6fbf73,
-      dia: 0x5b9bd5,
-      thien: 0xffd54f,
-      tien: 0xfff6d8,
-    }
-
-    return colors[quality]
+    return RANK_PARTICLE_COLORS[quality]
   }
 
   // Gộp theo itemId+kind (nhiều wave cùng trận có thể rớt trùng loại)
