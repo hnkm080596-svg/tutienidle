@@ -616,7 +616,15 @@ export class ProductionSystem {
       return undefined
     }
 
-    const state = this.ensureSiteState(siteId)
+    // D4 - a view query must not materialize domain state (queries
+    // observe; commands write). An absent site projects the same
+    // level-1 idle default ensureSiteState would create, and the view
+    // always hands out a detached snapshot - never the live record.
+    const existing = this.states.get(siteId)
+
+    const state: ProductionSiteState = existing
+      ? this.snapshotState(existing)
+      : { siteId, level: 1, autoRestart: false, activeWorkerSlots: 0, workerCycles: [] }
 
     const view = {
       definition,
