@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { QuestSystem } from './QuestSystem'
 import { QuestRegistry } from './QuestRegistry'
 import { QuestManager } from './QuestManager'
@@ -113,6 +113,31 @@ describe('QuestSystem', () => {
     const receiver = createReceiver()
     expect(system.claim(registry, manager, rewardSystem, receiver, bags, 'collect_test')).toBe(true)
     expect(system.claim(registry, manager, rewardSystem, receiver, bags, 'collect_test')).toBe(false)
+  })
+
+  // Mission E Task 3 (audit T1-11): a throwing grant must not consume
+  // the turn-in cost — debit runs after give, before itemDrops.
+  it('does not debit quest item cost when reward grant throws', () => {
+    const { registry, manager, system, bags, rewardSystem, materialRegistry, materialBag } = setup()
+    const player = createPlayer()
+
+    system.reconcileActiveQuests(registry, manager, player)
+    materialBag.add(materialRegistry.get('linh_chi'), 5)
+    manager.incrementProgress('collect_test', 5)
+
+    const receiver = {
+      addTechniqueInsight: vi.fn(),
+      addCultivation: vi.fn(),
+      addSpiritStone: vi.fn(() => {
+        throw new Error('sink exploded')
+      }),
+    }
+
+    expect(() =>
+      system.claim(registry, manager, rewardSystem, receiver, bags, 'collect_test'),
+    ).toThrow('sink exploded')
+    expect(materialBag.getAmount('linh_chi')).toBe(5)
+    expect(manager.getProgress('collect_test')?.claimed).not.toBe(true)
   })
 
   it('kill increment chỉ áp dụng đúng enemyId', () => {
