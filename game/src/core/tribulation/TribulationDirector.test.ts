@@ -140,6 +140,55 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
     expect(director.getState()!.state).toBe('victory')
   })
 
+  // Mission E Task 4 (audit T3-21): the documented per-second HP regen
+  // must actually apply through the vitals owner.
+  it('applies hpRegenPerTurn per elapsed second during ongoing tribulation', () => {
+    const { director } = makeDirector()
+    const stats = createBaseStats({ maxHp: 5000, defense: 0, hpRegenPerTurn: 100 }) as Stats
+
+    director.start(readyPlayer(), stats, false, 'qi_refining')
+
+    // Qua chương mind bằng trả lời đúng — regen chưa đủ để vượt damage.
+    let guard = 0
+    while (director.getState()!.chapterIndex === 0 && guard++ < 50) {
+      const q = director.getState()!.currentQuestion!
+      director.answerQuestion(q.correctAnswerIndex)
+      director.update(3)
+    }
+
+    // Chờ strike đầu tiên hạ HP xuống dưới max.
+    guard = 0
+    while (snapshotHp(director) >= 5000 && guard++ < 30) {
+      director.update(1)
+    }
+    expect(snapshotHp(director)).toBeLessThan(5000)
+
+    // Một step nhỏ ngay sau strike: không strike mới trong 0.1s
+    // (interval >> 0.1) nhưng regen vẫn chạy theo thời gian trôi.
+    const hpBefore = snapshotHp(director)
+    director.update(0.1)
+    expect(snapshotHp(director)).toBeGreaterThan(hpBefore)
+  })
+
+  it('regen clamps at maxHp — never heals above the snapshot ceiling', () => {
+    const { director } = makeDirector()
+    const stats = createBaseStats({ maxHp: 5000, defense: 0, hpRegenPerTurn: 10 }) as Stats
+
+    director.start(readyPlayer(), stats, false, 'qi_refining')
+
+    // Mind chapter has no strikes — deterministic window. Force the
+    // snapshot 1 HP below max (strike damage arrives in fixed quanta,
+    // so the cast stands in for "just below max after a strike").
+    const internal = director as unknown as { snapshotHp: number; ghost: { currentHp: number } }
+    internal.snapshotHp = 4999
+    internal.ghost.currentHp = 4999
+
+    // 0.5s x 10/s = 5 HP healed > 1 missing — the vitals owner clamps
+    // to maxHp; lands exactly at 5000, never above.
+    director.update(0.5)
+    expect(snapshotHp(director)).toBe(5000)
+  })
+
   it('grade Đại Đạo (đủ điều kiện + đan): damage nhận nhiều hơn human cùng thời gian', () => {
     const humanDirector = makeDirector().director
     const greatDaoDirector = makeDirector().director

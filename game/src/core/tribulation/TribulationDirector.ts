@@ -267,7 +267,7 @@ export class TribulationDirector {
     }
 
     // Catch-up khi tab nền (Chromium gom nhiều giây vào 1 tick): giới
-    // hạn mỗi update bằng cạn chương để không nhảy蹲 qua kết quả —
+    // hạn mỗi update bằng cạn chương để không nhảy qua kết quả —
     // chấp nhận trôi dần, đúng pattern elapsedInTribulation cũ.
     let remaining = Math.max(0, deltaSeconds)
 
@@ -275,9 +275,24 @@ export class TribulationDirector {
       const step = Math.min(remaining, 1)
       this.tickStep(step)
       remaining -= step
+
+      // Mission E Task 4 (audit T3-21): HP regen per elapsed second.
+      // `hpRegenPerTurn` is reused as the per-second rate inside
+      // tribulation's 1-second step — tribulation has no turns. The
+      // vitals owner applies the maxHp clamp, healing-effectiveness
+      // scaling and the 'regen' event; we only mirror the result.
+      if (active.state === 'ongoing' && this.ghost) {
+        const applied = this.vitals.applyTurnRegen(
+          this.ghost,
+          { hp: (this.ghost.stats.hpRegenPerTurn ?? 0) * step },
+          'player',
+        )
+        if (applied.hp > 0) {
+          this.snapshotHp = this.ghost.currentHp
+        }
+      }
     }
 
-    // HP regen theo stats thật — hồi dần mỗi giây trôi qua
     if (active.state === 'ongoing' && this.snapshotHp > 0) {
       this.emitState()
     }
