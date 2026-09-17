@@ -44,6 +44,16 @@ const COMBAT_STAGE: Stage = {
   spawnIntervalSeconds: 0,
 }
 
+const FARM_STAGE_B: Stage = {
+  id: 'restore_farm_b',
+  name: 'Farm B',
+  description: '',
+  floor: 1,
+  enemyPool: [{ enemyId: DUMMY.id, weight: 1 }],
+  totalEnemyCount: 2, waves: [2],
+  spawnIntervalSeconds: 0,
+}
+
 function baseSave(player: PlayerData): GameSave {
   return {
     version: CURRENT_SAVE_VERSION,
@@ -74,7 +84,7 @@ function harness() {
   const gameManager = new GameManager()
 
   gameManager.catalogOps.registerEnemyTemplates([DUMMY])
-  gameManager.catalogOps.registerStages([FARM_STAGE, COMBAT_STAGE])
+  gameManager.catalogOps.registerStages([FARM_STAGE, COMBAT_STAGE, FARM_STAGE_B])
 
   // The save's player slice carries an armed farm for FARM_STAGE. A recent
   // lastSavedAt keeps the offline window UNDER the >60s settle gate —
@@ -201,5 +211,88 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
 
     expect(playerStore.$state.autoFarmStage?.stageId).toBe(FARM_STAGE.id)
     expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+  })
+
+  it('re-restoring a NO-farm payload releases the previously-armed farm lease', () => {
+    // Same-GameManager re-restore of a DIFFERENT payload is a supported
+    // contract (boot retry loading a changed save, replace/onceOnlySettle
+    // suites). Persisted authority switched farm A off — the lease the
+    // first restore acquired must not stay orphaned on the slot.
+    const { playerStore, gameManager, save } = harness()
+
+    expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
+    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+
+    const secondSave = baseSave({ ...save.player, name: 'NoFarm', autoFarmStage: null })
+
+    expect(restoreGameSession(playerStore, gameManager, secondSave).status).toBe('ok')
+
+    expect(playerStore.$state.autoFarmStage).toBeNull()
+    expect(gameManager.stageManager.get()).toBeNull()
+
+    // The freed slot must accept a manual stage again.
+    expect(gameManager.turnBattleOps.startStage(playerStore.$state, COMBAT_STAGE)).toBe(true)
+  })
+
+  it('re-restoring a DIFFERENT-farm payload swaps the lease (A -> B)', () => {
+    const { playerStore, gameManager, save } = harness()
+
+    expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
+    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+
+    const secondPlayer = {
+      ...save.player,
+      name: 'FarmSwap',
+      perfectClearStageIds: [FARM_STAGE_B.id],
+      perfectClearSeconds: { [FARM_STAGE_B.id]: 100 },
+      autoFarmStage: { stageId: FARM_STAGE_B.id, lastCheckedMs: Date.now() - 20_000 },
+    }
+
+    expect(restoreGameSession(playerStore, gameManager, baseSave(secondPlayer)).status).toBe('ok')
+
+    expect(playerStore.$state.autoFarmStage?.stageId).toBe(FARM_STAGE_B.id)
+    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE_B.id)
+  })
+
+  it('a foreign lease on the SAME stage is not converged — imported farm drops fail-closed', () => {
+    // A manual battle holding the slot for the very stage the incoming
+    // payload farms: matching stageId alone must NOT satisfy reconcile —
+    // the farm never acquired that lease. Arming the persisted farm on
+    // top of it would let tickAutoFarm pay into the live battle's shared
+    // BattleLootSystem session.
+    const { playerStore, gameManager, save } = harness()
+
+    expect(gameManager.stageManager.start(FARM_STAGE)).toBe(true)
+    const foreignLease = gameManager.stageManager.get()
+
+    expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
+
+    expect(playerStore.$state.autoFarmStage).toBeNull()
+    // The foreign lease is untouched — reconcile never releases a slot
+    // it did not acquire.
+    expect(gameManager.stageManager.get()).toBe(foreignLease)
+  })
+
+  it('a foreign same-stage lease does NOT satisfy the tick — the farm pays only while holding ITS lease', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T10:00:00Z'))
+
+    const { playerStore, gameManager, save } = harness()
+
+    expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
+    expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
+
+    // External path releases the farm lease (e.g. stopRepeat fired on a
+    // stale battle reference), then a foreign owner takes the same stage.
+    gameManager.stageManager.stop()
+    expect(gameManager.stageManager.start(FARM_STAGE)).toBe(true)
+
+    vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
+    gameManager.tickOps.update(0.1)
+
+    // Persisted says armed and stageId matches, but the live slot object
+    // is not the farm's lease — paying here would mint into a foreign
+    // battle's session.
+    expect(gameManager.getBattleRewardSummary().spiritStone).toBe(0)
   })
 })
