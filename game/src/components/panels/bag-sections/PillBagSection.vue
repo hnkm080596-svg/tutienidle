@@ -216,21 +216,19 @@ function drinkPill(pillId: string) {
   }
 
   // Reason channel (plan §8): sai cảnh giới/capped báo ngay thay vì
-  // fail im lặng.
-  const reasonText =
-    result.reason === 'wrong_realm'
-      ? 'Chỉ dùng được tại đúng cảnh giới của đan dược.'
-      : result.reason === 'all_main_stats_capped'
-        ? 'Cả 5 chỉ số chính đã đạt trần cảnh giới.'
-        : result.reason === 'requires_phap_tu'
-          ? 'Đan dược hồi Linh Lực chỉ dùng được cho Pháp Tu.'
-          : result.reason === 'retired'
-            ? 'Đan dược này đã ngừng lưu hành — hiệu ứng cũ không còn được hỗ trợ.'
-            : result.reason === 'cap'
-              ? 'Chỉ số liên quan đã đạt trần cảnh giới.'
-              : 'Không thể dùng đan dược.'
+  // fail im lặng. Mission E Task 2: keyed messages through the i18n
+  // gateway (P16) — one map entry per domain reason.
+  const reasonKeys: Record<NonNullable<typeof result.reason>, string> = {
+    not_found: 'bag.pill.reason.fallback',
+    wrong_realm: 'bag.pill.reason.wrong_realm',
+    all_main_stats_capped: 'bag.pill.reason.all_main_stats_capped',
+    requires_phap_tu: 'bag.pill.reason.requires_phap_tu',
+    cap: 'bag.pill.reason.cap',
+    retired: 'bag.pill.reason.retired',
+    material_pill: 'bag.pill.reason.material_pill',
+  }
 
-  useNotificationStore().push('warning', reasonText)
+  useNotificationStore().push('warning', t(reasonKeys[result.reason ?? 'not_found']))
 }
 
 interface PillEntry {
@@ -299,7 +297,9 @@ const entries = computed<PillEntry[]>(() => {
 
         icon: stack.pill.icon,
 
-        onClick: () => drinkPill(stack.pill.id),
+        // Mission E Task 2 (audit T1-10): material pills have no drink
+        // action — the cell renders without a click affordance.
+        onClick: stack.pill.type === 'material' ? undefined : () => drinkPill(stack.pill.id),
       },
     }
   })

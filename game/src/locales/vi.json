@@ -1052,6 +1052,17 @@
   },
   "bag": {
     "overflow": "Túi đầy — mất {amount} {name}",
+    "pill": {
+      "reason": {
+        "wrong_realm": "Chỉ dùng được tại đúng cảnh giới của đan dược.",
+        "all_main_stats_capped": "Cả 5 chỉ số chính đã đạt trần cảnh giới.",
+        "requires_phap_tu": "Đan dược hồi Linh Lực chỉ dùng được cho Pháp Tu.",
+        "retired": "Đan dược này đã ngừng lưu hành — hiệu ứng cũ không còn được hỗ trợ.",
+        "cap": "Chỉ số liên quan đã đạt trần cảnh giới.",
+        "material_pill": "Đan dược này không uống trực tiếp — nó được tiêu qua hệ thống riêng.",
+        "fallback": "Không thể dùng đan dược."
+      }
+    },
     "filter": {
       "group": {
         "wood": "Gỗ",

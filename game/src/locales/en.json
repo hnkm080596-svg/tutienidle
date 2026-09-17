@@ -1052,6 +1052,17 @@
   },
   "bag": {
     "overflow": "Bag full — lost {amount} {name}",
+    "pill": {
+      "reason": {
+        "wrong_realm": "Only usable at the pill's own realm.",
+        "all_main_stats_capped": "All 5 main stats have reached the realm cap.",
+        "requires_phap_tu": "Mana-regen pills are only usable by Phap Tu.",
+        "retired": "This pill is retired — its old effect is no longer supported.",
+        "cap": "The related stat has reached the realm cap.",
+        "material_pill": "This pill is not consumed directly — it is spent through its own system.",
+        "fallback": "Cannot use this pill."
+      }
+    },
     "filter": {
       "group": {
         "wood": "Wood",
