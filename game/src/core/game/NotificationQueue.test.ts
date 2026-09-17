@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { NotificationQueue } from './NotificationQueue'
 import type { NotificationEvent } from '../notification/NotificationEvent'
+import { GameManager } from './GameManager'
+import type { Skill } from '../skill/Skill'
+import { createDefaultPlayer } from '../player/Player'
+import { i18n } from '../../i18n'
 
 // Hàng đợi toast trong core — drain kiểu "rút hết và xoá" để App.vue's
 // tick() đẩy lên store mỗi frame (xem NotificationQueue.ts's ghi chú).
@@ -101,5 +105,67 @@ describe('NotificationQueue — push/drain', () => {
       name: 'Kiểm Đao',
       amountLabel: 'x1',
     })
+  })
+})
+// T4-37 — the skill-level-up toast used to push mojibake literals
+// ("d?t c?p"); it must carry messageKey/messageParams so the renderer
+// localizes it, with a correct-Vietnamese fallback message.
+describe('skill level-up notification (T4-37)', () => {
+  function skillTemplate(id: string): Skill {
+    return {
+      id,
+      name: 'Test Skill',
+      description: '',
+      type: 'active',
+      level: 1,
+      maxLevel: 10,
+      cooldown: 0,
+      cost: 0,
+      target: 'enemy',
+      effects: [{ type: 'damage', value: 100, damageType: 'physical' }],
+      unlocked: false,
+      equipped: false,
+    }
+  }
+
+  it('single-level gain pushes messageKey notifications.skillLevelUp', () => {
+    const gm = new GameManager()
+    const player = createDefaultPlayer()
+    player.skillInsight = 100
+
+    gm.skillSystem.learn(skillTemplate('test_skill'))
+    expect(gm.skillSystem.upgradeSkill('test_skill', player)).toBe(true)
+
+    const events = gm.drainNotifications()
+    const event = events.find((entry) => entry.kind === 'upgrade')
+
+    expect(event).toBeDefined()
+    expect(event!.messageKey).toBe('notifications.skillLevelUp')
+    expect(event!.messageParams).toMatchObject({ name: 'Test Skill', level: '2' })
+    expect(event!.message).toBe('Test Skill đạt cấp 2')
+    expect(i18n.global.t('notifications.skillLevelUp', { name: 'Test Skill', level: '2' })).toBe(
+      'Test Skill đạt cấp 2',
+    )
+  })
+
+  it('multi-level gain pushes messageKey notifications.skillLevelUpMulti', () => {
+    const gm = new GameManager()
+
+    gm.skillSystem.learn(skillTemplate('tram'))
+    const learned = gm.skillManager.get('tram')!
+    learned.totalExperience = 9999
+
+    gm.skillSystem.recordCast('tram')
+
+    const events = gm.drainNotifications()
+    const event = events.find((entry) => entry.kind === 'upgrade')
+
+    expect(event).toBeDefined()
+    expect(event!.messageKey).toBe('notifications.skillLevelUpMulti')
+    expect(event!.messageParams).toMatchObject({ name: 'Test Skill', level: '3', gained: '2' })
+    expect(event!.message).toBe('Test Skill tăng 2 cấp, đạt cấp 3')
+    expect(
+      i18n.global.t('notifications.skillLevelUpMulti', { name: 'Test Skill', level: '3', gained: '2' }),
+    ).toBe('Test Skill tăng 2 cấp, đạt cấp 3')
   })
 })

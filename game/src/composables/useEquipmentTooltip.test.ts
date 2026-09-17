@@ -8,6 +8,7 @@ import type { Equipment } from '@/core/equipment/Equipment'
 import { ZoneRegistry } from '@/core/stage/ZoneRegistry'
 import { composeEquipmentDisplayName } from '@/core/equipment/EquipmentNaming'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
+import { createDefaultSlotState } from '@/core/equipment/EquipmentSlotState'
 import { gradeLabel } from '@/core/presentation/labels'
 
 function instance(overrides: Partial<EquipmentInstance> = {}): EquipmentInstance {
@@ -256,5 +257,23 @@ describe('buildEquipmentTooltip', () => {
     expect(content.slotPreview?.equipmentQualityRank).toBe(professionGradeRank(equipment.grade))
     expect(content.slotPreview?.rarityRank).toBe(itemQualityRank(equipment.quality))
     expect(content.slotPreview?.accessibleLabel).toContain(gradeLabel(equipment.grade))
+  })
+  // T4-34 — trần Cường Hóa trên tooltip là trần SLOT (MAX_SLOT_ENHANCE_LEVEL
+  // = 100), không phải template.maxEnhanceLevel (field cũ = 10 trên mọi
+  // template, đọc nhầm sang per-item cap).
+  it('enhance row shows the slot cap (MAX_SLOT_ENHANCE_LEVEL), not template.maxEnhanceLevel', () => {
+    const { affixRegistry } = setup()
+    const equipment = instance()
+    const template: Equipment = {
+      id: 'test_sword', name: 'Kiếm', slot: 'weapon', grade: 1,
+      mainStats: [{ stat: 'might', min: 8, max: 12 }], maxEnhanceLevel: 10,
+    }
+    const slotState = { ...createDefaultSlotState('weapon'), enhanceLevel: 45 }
+
+    const content = buildEquipmentTooltip(equipment, template, affixRegistry, slotState, new ZoneRegistry())
+
+    const forgeSection = content.sections.find(section => section.rows.some(row => row.label === 'Cường Hóa'))
+    const row = forgeSection?.rows.find(r => r.label === 'Cường Hóa')
+    expect(row?.value).toBe('+45/100')
   })
 })

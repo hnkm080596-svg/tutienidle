@@ -37,7 +37,7 @@ export class GameManagerPillOps {
     random: () => number = Math.random,
   ): {
     ok: boolean
-    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap' | 'retired'
+    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap' | 'retired' | 'material_pill'
     mainStat?: MainStatKey
   } {
     if (!this.deps.pillBag.has(pillId, 1)) {
@@ -51,6 +51,14 @@ export class GameManagerPillOps {
     // other gate so the player sees the real reason.
     if (pill.retired === true) {
       return { ok: false, reason: 'retired' }
+    }
+
+    // Mission E Task 2 (audit T1-10): type 'material' pills (Thong Mach
+    // Dan / Truc Co Dan) are not consumables - their sinks live outside
+    // this path (MeridianSystem, breakthrough gate). Domain-side reject
+    // so every caller inherits it (A2); the pill stays in the bag.
+    if (pill.type === 'material') {
+      return { ok: false, reason: 'material_pill' }
     }
 
     // Exact-realm gate for profession pills (plan §5.2).

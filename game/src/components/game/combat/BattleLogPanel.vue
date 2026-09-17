@@ -8,12 +8,16 @@
 // giải phóng vùng nhìn khi dock che; đóng mặc định khi trận đấu bắt đầu
 // bù look, log vẫn đầy đủ khi bung. Long message tự wrap (UI-006).
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useStateVersion } from '@/composables/useGameState'
+import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
+import type { BattleLogEntry } from '@/core/battle/turn/TurnOrderPreview'
 
 const MAX_VISIBLE = 30
 
-const { isBattleFighting, logEntries } = useTurnBattleInfo()
+const { isBattleFighting, logEntries, participantNameOf } = useTurnBattleInfo()
+const { t } = useI18n()
 // ARCH-005 (M12): battle.log is append-only MUTATED in place — logEntries
 // resolves to the same array reference on every version bump, so a
 // computed chained on it alone is never re-invalidated (log panel could
@@ -37,20 +41,30 @@ const recentEntries = computed(() => {
   return entries.slice(Math.max(0, entries.length - MAX_VISIBLE))
 })
 
-function describe(entry: {
-  turn: number
-  actorId: string
-  skillId: string
-  targetIds: string[]
-  ccBlocked: boolean
-}): string {
+// T4-36 — ids are internal; the log renders participant entity.name +
+// TURN_SKILL_DISPLAY_META names, with localized fallbacks instead of
+// ever leaking a raw id.
+function describe(entry: BattleLogEntry): string {
+  const actor = participantNameOf(entry.actorId) ?? t('combat.log.unknownActor')
+
   if (entry.ccBlocked) {
-    return `Lượt ${entry.turn}: ${entry.actorId} bị khóa (CC)`
+    return t('combat.log.entryCcBlocked', { turn: entry.turn, actor })
   }
 
-  const targets = entry.targetIds.length > 0 ? ` → ${entry.targetIds.join(', ')}` : ''
+  const skill = entry.skillId
+    ? turnSkillDisplayMetaOf(entry.skillId)?.name ?? t('combat.log.unknownSkill')
+    : t('combat.log.basicAttack')
 
-  return `Lượt ${entry.turn}: ${entry.actorId} dùng ${entry.skillId || 'đòn thường'}${targets}`
+  const targetNames = entry.targetIds
+    .map((targetId) => participantNameOf(targetId) ?? t('combat.log.unknownActor'))
+    .join(', ')
+
+  return t('combat.log.entry', {
+    turn: entry.turn,
+    actor,
+    skill,
+    targets: targetNames.length > 0 ? ` → ${targetNames}` : '',
+  })
 }
 </script>
 
@@ -61,7 +75,7 @@ function describe(entry: {
       class="battle-log-panel__toggle"
       :aria-expanded="!collapsed"
       @click="collapsed = !collapsed"
-    >{{ collapsed ? 'Nhật ký ▸' : 'Nhật ký ▾' }}</button>
+    >{{ collapsed ? `${t('combat.log.toggle')} ▸` : `${t('combat.log.toggle')} ▾` }}</button>
 
     <div v-if="!collapsed" class="battle-log-panel__entries">
       <p v-for="(entry, index) in recentEntries" :key="`${entry.turn}-${index}`" class="battle-log-panel__line">

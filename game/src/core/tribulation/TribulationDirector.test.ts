@@ -106,6 +106,23 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
     expect(ticked.questionSecondsLimit).toBe(12)
   })
 
+  // Mission E Task 5 (audit T3-23): getState hands out a detached
+  // snapshot — consumer mutation must not corrupt domain state (A3).
+  it('getState returns a detached snapshot — mutations do not leak into the director', () => {
+    const { director } = makeDirector()
+    director.start(readyPlayer(), testStats(), false, 'qi_refining')
+
+    const state = director.getState()!
+    const hpBefore = state.hp
+    state.hp = -999
+    expect(director.getState()!.hp).toBe(hpBefore)
+
+    // Nested mutable: currentQuestion must be detached too.
+    const question = director.getState()!.currentQuestion!
+    ;(question.answers as string[])[0] = 'mutated'
+    expect(director.getState()!.currentQuestion!.answers[0]).not.toBe('mutated')
+  })
+
   it('answerQuestion khi không có câu hỏi active → false (no-op)', () => {
     const { director } = makeDirector()
     expect(director.answerQuestion(0)).toBe(false)
@@ -138,6 +155,55 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
       if (q) director.answerQuestion(q.correctAnswerIndex)
     }
     expect(director.getState()!.state).toBe('victory')
+  })
+
+  // Mission E Task 4 (audit T3-21): the documented per-second HP regen
+  // must actually apply through the vitals owner.
+  it('applies hpRegenPerTurn per elapsed second during ongoing tribulation', () => {
+    const { director } = makeDirector()
+    const stats = createBaseStats({ maxHp: 5000, defense: 0, hpRegenPerTurn: 100 }) as Stats
+
+    director.start(readyPlayer(), stats, false, 'qi_refining')
+
+    // Qua chương mind bằng trả lời đúng — regen chưa đủ để vượt damage.
+    let guard = 0
+    while (director.getState()!.chapterIndex === 0 && guard++ < 50) {
+      const q = director.getState()!.currentQuestion!
+      director.answerQuestion(q.correctAnswerIndex)
+      director.update(3)
+    }
+
+    // Chờ strike đầu tiên hạ HP xuống dưới max.
+    guard = 0
+    while (snapshotHp(director) >= 5000 && guard++ < 30) {
+      director.update(1)
+    }
+    expect(snapshotHp(director)).toBeLessThan(5000)
+
+    // Một step nhỏ ngay sau strike: không strike mới trong 0.1s
+    // (interval >> 0.1) nhưng regen vẫn chạy theo thời gian trôi.
+    const hpBefore = snapshotHp(director)
+    director.update(0.1)
+    expect(snapshotHp(director)).toBeGreaterThan(hpBefore)
+  })
+
+  it('regen clamps at maxHp — never heals above the snapshot ceiling', () => {
+    const { director } = makeDirector()
+    const stats = createBaseStats({ maxHp: 5000, defense: 0, hpRegenPerTurn: 10 }) as Stats
+
+    director.start(readyPlayer(), stats, false, 'qi_refining')
+
+    // Mind chapter has no strikes — deterministic window. Force the
+    // snapshot 1 HP below max (strike damage arrives in fixed quanta,
+    // so the cast stands in for "just below max after a strike").
+    const internal = director as unknown as { snapshotHp: number; ghost: { currentHp: number } }
+    internal.snapshotHp = 4999
+    internal.ghost.currentHp = 4999
+
+    // 0.5s x 10/s = 5 HP healed > 1 missing — the vitals owner clamps
+    // to maxHp; lands exactly at 5000, never above.
+    director.update(0.5)
+    expect(snapshotHp(director)).toBe(5000)
   })
 
   it('grade Đại Đạo (đủ điều kiện + đan): damage nhận nhiều hơn human cùng thời gian', () => {

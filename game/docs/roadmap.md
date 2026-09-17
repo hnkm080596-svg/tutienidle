@@ -2376,6 +2376,34 @@ several modules verified already-covered via system-level tests.
 
 ---
 
+# 0.16. Deferred content — pre-beta (audit T3-25 / spec E11)
+
+Locked decision (2026-09-16): these items stay in source, unwired and
+undeleted, until the listed prerequisite lands. No gameplay wiring, no
+deletion — this section is the tracking record.
+
+- `alchemy_thong_mach_dan` — craftable pill (alchemyRecipes.ts) whose sink
+  `MeridianSystem.investThongMachDan` is a parked system. Task E2 stops
+  players from destroying it via the drink path. Unblock: MeridianSystem
+  revival decision.
+- `great_dao_seed` — gated on `requiresModifier:'boss'`, but `bandit` is
+  never a `bossEnemyId` (MortalEnemies.ts / StageWaveSystem.ts). Unblock:
+  boss-flag content pass.
+- `heaven` / `great_dao` breakthrough grades + `pham_nhan_chi_cot`
+  (BreakthroughGrades.ts:42-44, `canTriggerBreakthrough` gate at
+  GameManagerRealmAdvanceOps.ts:395-409 — PRODUCT SCOPE comment :400-403;
+  the file ends at :410) — gated on content that doesn't exist yet.
+  Unblock: grade-content pass.
+- `phap_tu`/`kiem_tu` top-tier nodes gated on `golden_core`
+  (src/data/progression/PhapTuNodes.builders.ts:182-185) — unreachable
+  while beta caps at foundation_establishment (D2 decision). Unblock:
+  post-beta realm unlock.
+- Artifact (Pháp Bảo) combat reimagine — runtime files parked by product
+  decision; combat-effect advertising already removed/hidden per the
+  artifact decision. Unblock: dedicated artifact rework mission.
+
+---
+
 # Historical sections
 
 Sections below this point are retained as historical implementation detail, product decisions, completed work, and subsystem references.

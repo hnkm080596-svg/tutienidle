@@ -10,6 +10,7 @@
 // khi trừ nguyên liệu, cùng pattern HomeBuildingIcons.vue's
 // BuildingDetailPopover.vue (2 nơi build Building giờ đều xác nhận).
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -19,6 +20,7 @@ import ConfirmModal from '@/components/common/ConfirmModal.vue'
 
 const props = defineProps<{ buildingId: string }>()
 
+const { t } = useI18n()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
@@ -52,15 +54,19 @@ onMounted(() => {
 
 const buildCost = computed(() => template.value.upgradeCost[0] ?? [])
 
-const canBuild = computed(() =>
-  gameManager.buildingSystem.canBuild(
+const canBuild = computed(() => {
+  // T4-31 — materialBag is not reactive; without this read the gate froze
+  // at first evaluation and never re-enabled after materials arrived.
+  stateVersion.value
+
+  return gameManager.buildingSystem.canBuild(
     props.buildingId,
     gameManager.buildingRegistry,
     gameManager.buildingManager,
     player.$state,
     gameManager.materialBag,
-  ),
-)
+  )
+})
 
 function materialLabel(materialId: string): string {
   return gameManager.materialRegistry.has(materialId) ? gameManager.materialRegistry.get(materialId).name : materialId
@@ -95,11 +101,11 @@ function build() {
       <p class="construction-gate__description">{{ template.description }}</p>
 
       <p class="construction-gate__cost">
-        Cần: {{ buildCost.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') || 'Miễn phí' }}
+        {{ t('panels.buildingPopover.costTitle') }}: {{ buildCost.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') || t('buildingGate.free') }}
       </p>
 
       <GameButton class="construction-gate__build" size="sm" :disabled="!canBuild" @click="requestBuild">
-        Xây Dựng
+        {{ t('panels.buildingPopover.build') }}
       </GameButton>
     </div>
 
@@ -111,9 +117,9 @@ function build() {
          Đặt NGOÀI cặp v-if/v-else để không phá adjacency của chúng. -->
     <ConfirmModal
       :open="confirmOpen"
-      :title="`Xây ${template.name}?`"
-      :message="`Sẽ tốn ${buildCost.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') || 'miễn phí'}.`"
-      :confirm-label="'Xây Dựng'"
+      :title="t('buildingGate.confirmTitle', { name: template.name })"
+      :message="t('buildingGate.confirmMessage', { cost: buildCost.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') || t('buildingGate.free') })"
+      :confirm-label="t('panels.buildingPopover.build')"
       @confirm="build"
       @cancel="confirmOpen = false"
     />

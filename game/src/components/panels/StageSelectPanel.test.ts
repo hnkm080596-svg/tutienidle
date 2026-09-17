@@ -120,3 +120,61 @@ describe('StageSelectPanel — B5 auto-farm armed state + refused start guard (a
     unmount()
   })
 })
+
+// T4-38 (Mission E Task 10) — `mode` was a local ref that survived stage
+// changes: arm 'repeat'/'perfect_farm' on stage A, click stage B, and the
+// armed mode silently applied to B. The fix disarms to 'manual' on every
+// selectedStageId change (direct click AND zone/chapter re-picks).
+describe('StageSelectPanel — mode disarms on stage change (T4-38)', () => {
+  it('armed mode resets to manual when a different stage node is clicked', async () => {
+    const { container, pinia, unmount } = mountStageSelect()
+    const player = usePlayerStore(pinia)
+    player.completedStageIds = ['mortal_dong_1'] // unlock stage 2
+    await nextTick()
+    await nextTick()
+
+    const chips = Array.from(
+      container.querySelectorAll<HTMLElement>('.stage-select__mode .chip'),
+    )
+    expect(chips.length).toBeGreaterThanOrEqual(3)
+
+    chips[1]!.click() // arm 'repeat'
+    await nextTick()
+    expect(chips[1]!.classList.contains('is-active')).toBe(true)
+
+    container
+      .querySelector<HTMLElement>('[data-testid="stage-node-mortal_dong_2"]')!
+      .click()
+    await nextTick()
+
+    expect(chips[0]!.classList.contains('is-active')).toBe(true)
+    expect(chips[1]!.classList.contains('is-active')).toBe(false)
+
+    unmount()
+  })
+
+  it('armed mode also disarms when a chapter change re-picks the stage', async () => {
+    const { container, unmount } = mountStageSelect()
+    await nextTick()
+    await nextTick()
+
+    const chips = Array.from(
+      container.querySelectorAll<HTMLElement>('.stage-select__mode .chip'),
+    )
+    chips[2]!.click() // arm 'progress'
+    await nextTick()
+    expect(chips[2]!.classList.contains('is-active')).toBe(true)
+
+    // Chapter 2 chip → selectFirstStageInChapter re-picks mortal_dong_11.
+    const chapterChips = Array.from(
+      container.querySelectorAll<HTMLElement>('.stage-select__filter-group--chapters .chip'),
+    )
+    chapterChips[1]!.click()
+    await nextTick()
+    await nextTick()
+
+    expect(chips[0]!.classList.contains('is-active')).toBe(true)
+
+    unmount()
+  })
+})

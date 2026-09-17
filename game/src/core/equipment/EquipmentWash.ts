@@ -107,11 +107,11 @@ function rollWashAffixes(
     return { ok: false, reason: 'missing_spirit_stone' }
   }
 
-  const maxLines = Math.min(
-    GLOBAL_MAX_AFFIXES - 1,
-    ITEM_QUALITY_SUBSTATS_RANGE[instance.quality].max,
-  )
-  const lineCount = Math.floor(random() * (maxLines + 1))
+  // T4-33 — honor BOTH ends of the quality's affix range. Every quality
+  // has min 0 today, so this is contract-correctness, not a balance change.
+  const range = ITEM_QUALITY_SUBSTATS_RANGE[instance.quality]
+  const maxLines = Math.min(GLOBAL_MAX_AFFIXES - 1, range.max)
+  const lineCount = range.min + Math.floor(random() * (maxLines - range.min + 1))
   const maxTier = Math.min(
     ITEM_QUALITY_AFFIX_TIER[instance.quality],
     WASH_TIER_WEIGHTS_BY_QUALITY[instance.quality].length,

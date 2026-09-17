@@ -68,6 +68,8 @@
       },
       "status": {
         "notRolled": "chưa roll",
+        "removed": "đã mất",
+        "added": "dòng mới",
         "kept": "giữ nguyên"
       },
       "warnings": {
@@ -645,6 +647,7 @@
       },
       "unlocked": "Đã mở",
       "locked": "Khoá",
+      "unknown": "Kỹ năng chưa rõ",
       "unlockAt": "Mở tại {realm} tầng {level}",
       "absent": "—",
       "cooldownTag": "Hồi {turns} lượt"
@@ -685,6 +688,14 @@
       "returnHome": "Về Động Phủ",
       "hintCultivate": "Tu vi chưa đủ — tu luyện thêm tầng, rồi quay lại khi đã mạnh hơn.",
       "hintGear": "Chưa đủ sức phá bí cảnh — cường hóa trang bị, dùng đan dược hoặc lĩnh ngộ thêm trước khi tái chiến."
+    },
+    "log": {
+      "toggle": "Nhật ký",
+      "entry": "Lượt {turn}: {actor} dùng {skill}{targets}",
+      "entryCcBlocked": "Lượt {turn}: {actor} bị khóa (CC)",
+      "basicAttack": "đòn thường",
+      "unknownActor": "??",
+      "unknownSkill": "kỹ năng chưa rõ"
     },
     "offline": {
       "title": "BẾ QUAN KẾT THÚC",
@@ -975,6 +986,17 @@
       "subtitle": "Không thể mặc trang bị khi độ kiếp",
       "confirm": "Đã hiểu",
       "cancel": "Chờ đã"
+    },
+    "overlay": {
+      "chapter": "Chương {progress}",
+      "hp": "HP {hp} / {max}",
+      "strikesTaken": "Lôi đã đỡ: {count}",
+      "tankHint": "Trụ vững — lôi giáng xuống theo nhịp",
+      "seconds": "{count}s",
+      "resultVictory": "VƯỢT KIẾP",
+      "resultDefeat": "KIẾP THẤT BẠI",
+      "resultVictoryText": "Thiên kiếp tan biến — đạo tâm thêm vững.",
+      "resultDefeatText": "Thân hoại đạo tiêu — dưỡng thương rồi thử lại."
     }
   },
   "actionFailure": {
@@ -1022,14 +1044,28 @@
   "alchemy": {
     "spiritStones": "Linh Thạch",
     "startBrewing": "Bắt đầu luyện",
+    "currentCauldron": "Đan lô hiện tại",
+    "recipe": "ĐAN PHƯƠNG",
+    "herb": "Linh Thảo",
+    "herbCount": "{amount} chủ dược",
+    "otherCosts": "Chi phí khác",
+    "preview": "Xem trước lần luyện",
+    "outcome": "Chắc chắn {guaranteed} viên, {chance}% thêm {extra} viên",
+    "duration": "Thời gian: ~{minutes} phút",
+    "jobs": "Lò đang luyện",
+    "cancelJob": "Huỷ (mất nguyên liệu)",
+    "gradeUnknown": "Chưa xác định",
     "reason": {
       "not_found": "Không tìm thấy đan phương",
+      "retired": "Đan phương này đã ngừng lưu hành — không luyện thêm được",
       "room_not_built": "Cần xây Đan Phòng trước",
       "job_slots_full": "Lò đang bận",
       "wrong_herb": "Sai Linh Thảo — đan phương chỉ nhận đúng một loại thảo",
       "missing_herb": "Không đủ Linh Thảo",
       "missing_fuel_wood": "Không đủ Gỗ nhiên liệu cùng cảnh giới và cùng tuổi với Linh Thảo đã chọn",
-      "missing_spirit_stone": "Không đủ Linh Thạch"
+      "missing_spirit_stone": "Không đủ Linh Thạch",
+      "missing_special_ingredient": "Thiếu nguyên liệu đặc biệt của đan phương",
+      "fallback": "Không thể bắt đầu luyện"
     }
   },
   "layout": {
@@ -1052,6 +1088,17 @@
   },
   "bag": {
     "overflow": "Túi đầy — mất {amount} {name}",
+    "pill": {
+      "reason": {
+        "wrong_realm": "Chỉ dùng được tại đúng cảnh giới của đan dược.",
+        "all_main_stats_capped": "Cả 5 chỉ số chính đã đạt trần cảnh giới.",
+        "requires_phap_tu": "Đan dược hồi Linh Lực chỉ dùng được cho Pháp Tu.",
+        "retired": "Đan dược này đã ngừng lưu hành — hiệu ứng cũ không còn được hỗ trợ.",
+        "cap": "Chỉ số liên quan đã đạt trần cảnh giới.",
+        "material_pill": "Đan dược này không uống trực tiếp — nó được tiêu qua hệ thống riêng.",
+        "fallback": "Không thể dùng đan dược."
+      }
+    },
     "filter": {
       "group": {
         "wood": "Gỗ",
@@ -1089,7 +1136,22 @@
     "aria": {
       "open": "Mở {name}",
       "viewRequirements": "Xem yêu cầu mở {name}"
-    }
+    },
+    "status": {
+      "built": "Đã mở · Cấp {level}/{max}",
+      "notBuilt": "Chưa mở · Nhấn để xem yêu cầu"
+    },
+    "level": "Cấp {level}",
+    "notBuilt": "Chưa mở"
+  },
+  "buildingGate": {
+    "free": "Miễn phí",
+    "confirmTitle": "Xây {name}?",
+    "confirmMessage": "Sẽ tốn {cost}."
+  },
+  "notifications": {
+    "skillLevelUp": "{name} đạt cấp {level}",
+    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}"
   },
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác."

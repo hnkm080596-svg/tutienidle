@@ -229,8 +229,14 @@ export class GameManager {
       kind: 'upgrade',
       message:
         levelsGained === 1
-          ? `${skill.name} d?t c?p ${skill.level}`
-          : `${skill.name} tang ${levelsGained} c?p, d?t c?p ${skill.level}`,
+          ? `${skill.name} đạt cấp ${skill.level}`
+          : `${skill.name} tăng ${levelsGained} cấp, đạt cấp ${skill.level}`,
+      messageKey: levelsGained === 1 ? 'notifications.skillLevelUp' : 'notifications.skillLevelUpMulti',
+      messageParams: {
+        name: skill.name,
+        level: String(skill.level),
+        gained: String(levelsGained),
+      },
     })
   })
   readonly passiveSystem = new PassiveSystem(

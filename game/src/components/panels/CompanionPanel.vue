@@ -40,6 +40,7 @@ import { ITEM_GRADE_LABELS, ITEM_GRADE_ORDER } from '@/core/item/ItemGrade'
 import type { ItemGrade } from '@/core/item/ItemGrade'
 import { realmLabel } from '@/core/presentation/labels'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -419,7 +420,7 @@ function close() {
               <li v-for="slot in SKILL_SLOTS" :key="slot" class="companion-panel__skill">
                 <span class="companion-panel__skill-slot">{{ slotName(slot) }}</span>
                 <template v-if="selected.definition[slot]">
-                  <span class="companion-panel__skill-id">{{ selected.definition[slot]!.id }}</span>
+                  <span class="companion-panel__skill-id">{{ turnSkillDisplayMetaOf(selected.definition[slot]!.id)?.name ?? t('companion.skills.unknown') }}</span>
                   <span
                     class="companion-panel__skill-state"
                     :class="{ 'is-locked': !skillUnlocked(slot) }"

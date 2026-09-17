@@ -446,6 +446,12 @@ export const usePlayerStore = defineStore('player', {
       const offlineGained =
         this.cultivation + this.cultivationOvercharge - cultivationBefore
 
+      // T3-26 — the modal reports what the player actually received:
+      // addCultivation clamps at the tier requirement (or banks into
+      // cultivationOvercharge), so the theoretical elapsed*rate figure is
+      // wrong whenever the cap binds. Store and return the real delta.
+      const offlineResult = { ...offline, cultivation: offlineGained }
+
       // M2 — Ngo Dao (spec §4.3 row 20): the insight_per_cultivation
       // accumulator settles the offline grant too, through the SAME
       // threshold/counters as the online cultivate() path.
@@ -474,9 +480,9 @@ export const usePlayerStore = defineStore('player', {
       // apply succeeded: a mid-restore throw leaves it uncommitted so a
       // retry with the same payload re-applies instead of being skipped
       // by the guard above.
-      lastRestoredPayloads.set(this, { identity: payloadIdentity, offline })
+      lastRestoredPayloads.set(this, { identity: payloadIdentity, offline: offlineResult })
 
-      return offline
+      return offlineResult
     },
   },
 })

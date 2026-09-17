@@ -119,6 +119,16 @@ describe('overlay layer contract', () => {
   )
 
   it(
+    'announcement sits below modal — ambient banners must never cover blocking modals',
+    () => {
+      expect(layers.announcement).toBeTypeOf('number')
+      expect(layers.modal).toBeTypeOf('number')
+      expect(layers.announcement).toBeLessThan(layers.modal!)
+    },
+    SCAN_TIMEOUT,
+  )
+
+  it(
     'every known app-level overlay binds its named tier',
     () => {
       for (const [fromSrc, token] of Object.entries(OVERLAY_BINDINGS)) {

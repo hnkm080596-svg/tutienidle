@@ -9,6 +9,7 @@ import { createDefaultPlayer } from '../player/Player'
 import { buildGameSave } from '../../services/save/SaveSystem'
 import { validateGameSaveShape } from '../../services/save/saveShapeValidation'
 import { GameManager } from './GameManager'
+import { ITEM_QUALITY_SUBSTATS_RANGE } from '../equipment/ItemQualityBalance'
 
 describe('GameManager wash transaction', () => {
   afterEach(() => {
@@ -163,5 +164,54 @@ describe('GameManager wash transaction', () => {
     expect(result.reason).toBe('no_pending_wash')
     expect(instance.affixes).toEqual(before)
     expect(instance.forgeUsesRemaining).toBe(forgeBefore)
+  })
+
+  // T4-33 — the roll must honor BOTH ends of ITEM_QUALITY_SUBSTATS_RANGE:
+  // lineCount = min + floor(random * (max - min + 1)). Every quality has
+  // min 0 today, so pin the contract by mutating the range for this test —
+  // random -> 0 must yield min lines, not 0.
+  it('wash line count honors the range minimum (contract pin)', () => {
+    const original = ITEM_QUALITY_SUBSTATS_RANGE.dia
+    ITEM_QUALITY_SUBSTATS_RANGE.dia = { min: 2, max: 3 }
+
+    try {
+      vi.spyOn(Math, 'random').mockReturnValue(0) // floor of the range
+
+      const manager = new GameManager()
+      manager.catalogOps.registerMaterials(materials)
+      manager.catalogOps.registerEquipment(equipment)
+      manager.catalogOps.registerAffixes(affixes)
+
+      const instance = makeInstance({
+        instanceId: 'wash-min-item',
+        itemId: 'base_kiem',
+        equipped: false,
+        quality: 'dia',
+        forgeUsesTotal: 20,
+        forgeUsesRemaining: 20,
+        mainStat: {
+          id: 'wash-min-main',
+          sourceId: 'wash-min-item',
+          sourceType: 'equipment',
+          stat: 'might',
+          flat: 12,
+        },
+      })
+      manager.equipmentBag.add(instance)
+
+      const essence = manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID)
+      const spiritStone = manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID)
+      manager.materialBag.add(essence, 100)
+      manager.materialBag.add(spiritStone, 1000)
+
+      const preview = manager.equipmentOps.previewWashItem(instance.instanceId)
+
+      expect(preview.ok).toBe(true)
+      expect(
+        manager.equipmentOps.getWashPreviewAffixes(preview.ticketId!)!.affixes,
+      ).toHaveLength(2)
+    } finally {
+      ITEM_QUALITY_SUBSTATS_RANGE.dia = original
+    }
   })
 })

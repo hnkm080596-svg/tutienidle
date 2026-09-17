@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Building } from '@/core/building/Building'
-import { useGameManager } from '@/composables/useGameState'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useStageActive } from '@/composables/useStageActive'
 import { useBuildingNavigation } from '@/composables/useBuildingNavigation'
 import type { BuildingTooltipContent } from '@/composables/useTooltip'
@@ -27,6 +27,7 @@ const { variant } = defineProps<{
 
 const { t } = useI18n()
 const gameManager = useGameManager()
+const { stateVersion } = useStateVersion()
 const stageActive = useStageActive()
 const navigation = useBuildingNavigation()
 const ui = useUiStore()
@@ -59,11 +60,16 @@ function anchorStyle(entry: DongFuBuildingArtEntry) {
   }
 }
 
+// T4-31 — these run inside the template's tracked render, but the domain
+// objects they read are not reactive. Reading stateVersion makes the
+// badge/nameplate/tooltip re-derive on every game-state bump.
 function presentationFor(buildingId: string) {
+  stateVersion.value
   return navigation.getBuildingPresentation(buildingId)
 }
 
 function statusFor(buildingId: string) {
+  stateVersion.value
   return navigation.getBuildingStatus(buildingId)
 }
 
@@ -79,8 +85,8 @@ function tooltipFor(building: Building): BuildingTooltipContent {
     name: building.name,
     functionLabel: building.description,
     statusLabel: presentation.isBuilt
-      ? `Đã mở · Cấp ${presentation.level}/${building.maxLevel}`
-      : 'Chưa mở · Nhấn để xem yêu cầu',
+      ? t('homeBuildings.status.built', { level: presentation.level, max: building.maxLevel })
+      : t('homeBuildings.status.notBuilt'),
     isBuilt: presentation.isBuilt,
   }
 }
@@ -158,8 +164,8 @@ onBeforeUnmount(() => {
           <span v-else-if="statusFor(scene.building.id) === 'upgradeable'" class="building-nameplate__upgradeable" />
           <span class="building-nameplate__text">{{ scene.building.name }}</span>
           <small class="building-nameplate__level">{{ presentationFor(scene.building.id).isBuilt
-            ? `Cấp ${presentationFor(scene.building.id).level}`
-            : 'Chưa mở' }}</small>
+            ? t('homeBuildings.level', { level: presentationFor(scene.building.id).level })
+            : t('homeBuildings.notBuilt') }}</small>
         </span>
       </div>
 

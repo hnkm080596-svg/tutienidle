@@ -1,8 +1,7 @@
 import Phaser from 'phaser'
 import type { EventBus } from '@/core/events/EventBus'
 import { readOptionalGate } from '@/presentation/gate/PresentationGate'
-import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
-import type { CombatEvent } from '@/core/combat/CombatEvent'
+import type { EntityVitalsChangedEvent, VitalsChangeReason } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import {
   addInkWashNineSlice,
@@ -17,17 +16,37 @@ interface ResizeSize {
   height: number
 }
 
+const DAMAGE_REASONS: ReadonlySet<VitalsChangeReason> = new Set([
+  'damage',
+  'dot',
+  'heavenly_tribulation',
+  'reaction',
+  'reflection',
+  'ward_break',
+])
+
+// T6-54 — hp actually lost by the player on a damage-type vitals event, or
+// null when the event must not render a "-N" number. Presentation reads the
+// authoritative hpBefore/hpAfter delta, never event.amount (pre-absorb).
+export function vitalsDamageAmount(event: EntityVitalsChangedEvent): number | null {
+  if (event.entityId !== 'player') return null
+  if (!DAMAGE_REASONS.has(event.reason)) return null
+  const lost = event.hpBefore - event.hpAfter
+  return lost > 0 ? lost : null
+}
+
 export class TribulationScene extends Phaser.Scene {
   private player?: Phaser.GameObjects.Sprite
   private viewportFrame?: Phaser.GameObjects.NineSlice
   private eventBus?: EventBus
   private lightningHandler = () => this.strikeLightning()
-  private damageHandler = (event: CombatEvent) => this.showDamage(event)
   private vitalsHandler = (event: EntityVitalsChangedEvent) => {
     // Bất Tử Thể có thể cứu player sau event killed=true (CombatSystem
     // phát event hiệu chỉnh killed=false ngay sau guard) — alpha phải
     // phản ánh trạng thái CUỐI của event, không chỉ chiều chết.
     if (event.entityId === 'player') this.player?.setAlpha(event.killed ? 0.35 : 1)
+    const damage = vitalsDamageAmount(event)
+    if (damage !== null) this.showDamage(damage)
   }
   private resizeHandler = (gameSize: ResizeSize) => {
     this.viewportFrame?.setSize(Math.max(0, gameSize.width - 24), Math.max(0, gameSize.height - 24))
@@ -95,7 +114,6 @@ export class TribulationScene extends Phaser.Scene {
     if (bus) {
       this.eventBus = bus
       bus.on('tribulation_lightning', this.lightningHandler)
-      bus.on<CombatEvent>('damage', this.damageHandler)
       bus.on<EntityVitalsChangedEvent>('entity_vitals_changed', this.vitalsHandler)
     }
 
@@ -126,10 +144,8 @@ export class TribulationScene extends Phaser.Scene {
     this.tweens.add({ targets: bolt, alpha: 0, duration: 260, onComplete: () => bolt.destroy() })
   }
 
-  private showDamage(event: CombatEvent) {
-    // hpDamage = actual HP lost post-absorb; `value` is pre-absorb.
-    const hpDamage = event.hpDamage ?? event.value
-    if (!this.player || event.targetId !== 'player' || !hpDamage) return
+  private showDamage(hpDamage: number) {
+    if (!this.player) return
     const text = this.add.text(this.player.x, this.player.y - 80, `-${formatNumber(Math.round(hpDamage))}`, {
       fontSize: '22px', fontStyle: 'bold', color: '#ff8b8b',
     }).setOrigin(0.5)
@@ -138,7 +154,6 @@ export class TribulationScene extends Phaser.Scene {
 
   private unsubscribe() {
     this.eventBus?.off('tribulation_lightning', this.lightningHandler)
-    this.eventBus?.off<CombatEvent>('damage', this.damageHandler)
     this.eventBus?.off<EntityVitalsChangedEvent>('entity_vitals_changed', this.vitalsHandler)
   }
 }

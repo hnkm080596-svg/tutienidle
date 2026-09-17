@@ -245,6 +245,35 @@ describe('ARCH-008 — Hoi Xuan Dan explicitly retired (user-locked, HP regen no
     expect(gameManager.pillBag.getAmount('hoi_xuan_dan_mortal')).toBe(1)
   })
 
+  // Mission E Task 2 (audit T1-10): type 'material' pills are not
+  // consumables — they fell through the legacy path and were silently
+  // destroyed on click.
+  it.each(['truc_co_dan', 'thong_mach_dan'])(
+    'usePillDetailed rejects material pill %s without consuming it',
+    (pillId) => {
+      const { gameManager } = makeManager()
+      const player = createDefaultPlayer()
+
+      gameManager.setActivePlayer(player)
+
+      const pill = gameManager.pillRegistry.get(pillId)
+
+      expect(pill.type).toBe('material')
+
+      gameManager.pillBag.add(pill, 2)
+
+      const result = gameManager.pillOps.usePillDetailed(
+        pillId,
+        { addCultivation: () => {}, heal: () => {}, applyBuff: () => {} },
+        player,
+      )
+
+      expect(result.ok).toBe(false)
+      expect(result.reason).toBe('material_pill')
+      expect(gameManager.pillBag.getAmount(pillId)).toBe(2)
+    },
+  )
+
   it('every hoi_xuan_dan recipe is marked retired; startAlchemyJob rejects it', () => {
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
