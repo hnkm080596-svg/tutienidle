@@ -73,7 +73,7 @@ import { THE_TU_AN_NODES } from './data/progression/TheTuAnNodes'
 import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
-import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
+import { cloudSaveCoordinator, remoteSaveSync } from './services/cloudSave/CloudSaveServiceFactory'
 import {
   deleteSave,
   restoreGameSession,
@@ -399,6 +399,9 @@ const lifecycle = useAppLifecycle({
   // roll its starter grants back in memory; the composable calls this to
   // recover on a clean process (same convention as resetSaveFromSettings).
   hardReset: () => window.location.reload(),
+  // Spec F8 — newest-wins remote reconciliation before the local load;
+  // undefined when Supabase isn't configured (fully local boot).
+  remoteSync: remoteSaveSync,
 })
 
 // Cảnh báo autosave fail chỉ 1 lần cho mỗi chuỗi fail — autosave chạy

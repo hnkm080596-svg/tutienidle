@@ -81,6 +81,14 @@ export interface UseAppLifecycleDeps {
    * convention as the settings delete-save flow).
    */
   hardReset: () => void
+  /**
+   * Spec F8 — optional login-time remote save reconciliation. Invoked
+   * inside bootGame after boot.startSaveLoad() and before
+   * coordinator.load(), only when !createNewCharacter. A rejection is
+   * logged and boot proceeds on the local slot — remote unavailability
+   * must never block boot.
+   */
+  remoteSync?: () => Promise<unknown>
 }
 
 export interface BootOutcome {
@@ -113,6 +121,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     restoreGameSession,
     persistPlayer,
     onError,
+    remoteSync,
   } = deps
 
   let autosaveHandle: number | undefined
@@ -250,6 +259,16 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       }
 
       boot.startSaveLoad()
+
+      if (!createNewCharacter && remoteSync) {
+        try {
+          await remoteSync()
+        } catch (error: unknown) {
+          // Remote reconciliation must never block boot — the local slot
+          // is the authority for loadGame() either way.
+          console.warn('[boot] remote save sync failed; continuing on local slot', error)
+        }
+      }
 
       // Nhân vật mới reset revision về 0 khớp storage (deleteSave đã xoá
       // revision key) — tránh CAS-fail save đầu tiên.

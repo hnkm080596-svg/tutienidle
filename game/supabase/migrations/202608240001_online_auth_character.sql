@@ -51,7 +51,10 @@ create table public.characters (
   created_at timestamptz not null default now(),
   deleted_at timestamptz,
   permanent_delete_after timestamptz,
-  constraint characters_three_talents check (cardinality(selected_talent_ids) = 3),
+  -- Client contract: CHARACTER_CREATION_TALENT_COUNT = 1
+  -- (src/services/character/CharacterCreationService.ts). The previous
+  -- cardinality = 3 made every real create_character call fail.
+  constraint characters_one_talent check (cardinality(selected_talent_ids) = 1),
   constraint characters_name_length check (char_length(name) between 2 and 20)
 );
 -- Tên tiếp tục được giữ chỗ khi soft-delete; scheduled permanent deletion
@@ -147,7 +150,8 @@ begin
   perform public.assert_active_session(p_session_id);
   select * into roll_row from public.talent_rolls where id = p_roll_id and user_id = auth.uid() for update;
   if not found or roll_row.consumed_at is not null or roll_row.expires_at <= now() then raise exception 'invalid talent roll'; end if;
-  if cardinality(p_talent_ids) <> 3 or cardinality(array(select distinct unnest(p_talent_ids))) <> 3 or not p_talent_ids <@ roll_row.talent_ids then raise exception 'invalid talent selection'; end if;
+  -- Client contract: CHARACTER_CREATION_TALENT_COUNT = 1 — one pick from the rolled nine.
+  if cardinality(p_talent_ids) <> 1 or cardinality(array(select distinct unnest(p_talent_ids))) <> 1 or not p_talent_ids <@ roll_row.talent_ids then raise exception 'invalid talent selection'; end if;
   if char_length(trim(p_name)) not between 2 and 20 or not public.is_character_name_available(p_session_id, p_name) then raise exception 'character name unavailable'; end if;
   if exists (select 1 from jsonb_each(p_attributes) where key not in ('strength','dexterity','intelligence','attunement','vitality') or jsonb_typeof(value) <> 'number' or (value::text)::numeric < 0 or trunc((value::text)::numeric) <> (value::text)::numeric) then raise exception 'invalid attributes'; end if;
   if (select count(*) from jsonb_object_keys(p_attributes)) <> 5 then raise exception 'invalid attributes'; end if;
@@ -176,6 +180,10 @@ create policy talents_authenticated_read on public.talents for select to authent
 create policy rolls_own_read on public.talent_rolls for select using (user_id = auth.uid());
 create policy characters_own_read on public.characters for select using (user_id = auth.uid());
 create policy saves_own_read on public.character_saves for select using (user_id = auth.uid());
+-- Boot-time save sync upserts character_saves directly (the RPC writes went
+-- through security definer and never needed these).
+create policy saves_own_insert on public.character_saves for insert with check (user_id = auth.uid());
+create policy saves_own_update on public.character_saves for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 revoke all on function public.claim_active_session(text) from public;
 revoke all on function public.assert_active_session(uuid) from public;
