@@ -153,8 +153,8 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(restored.status).toBe('ok')
     expect(gameManager.stageManager.getActive()).toBeNull()
 
-    // Post-C5 the old repro — an external caller releasing the farm's
-    // token via get()+release() — is impossible by construction (the
+    // Post-C5 the old repro - an external caller releasing the farm's
+    // token via get()+release() - is impossible by construction (the
     // observational snapshot carries no release capability). The
     // reachable equivalent: persisted authority armed while the ops
     // holds no lease at all (a state write that bypassed startAutoFarm).
@@ -286,7 +286,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
 
     // A foreign owner holds the slot for the stage a direct state write
-    // farms — matching stageId alone must not satisfy the tick (paying
+    // farms - matching stageId alone must not satisfy the tick (paying
     // here would mint into the foreign battle's shared loot session).
     const foreignLease = gameManager.stageManager.acquire(FARM_STAGE)!
     playerStore.$state.autoFarmStage = { stageId: FARM_STAGE.id, lastCheckedMs: Date.now() - 60_000 }

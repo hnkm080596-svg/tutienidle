@@ -35,7 +35,7 @@ function isValidCycleSeconds(cycleSeconds: number | undefined): cycleSeconds is 
  */
 export class GameManagerAutoFarmOps {
   /**
-   * The StageLease token THIS authority acquired — tracked by object
+   * The StageLease token THIS authority acquired - tracked by object
    * identity, not stageId: a slot re-acquired by a foreign owner for the
    * same stage is a different token and must neither be released by the
    * farm nor satisfy the tick's lease check. Self-heals at reconcile when
@@ -107,7 +107,7 @@ export class GameManagerAutoFarmOps {
 
     player.autoFarmStage = null
 
-    // Capability release — frees the slot only while it still holds THIS
+    // Capability release - frees the slot only while it still holds THIS
     // farm's lease object; a foreign owner (even same stageId) is never
     // ours to release.
     this.deps.stageManager.release(this.farmLease)
@@ -126,7 +126,7 @@ export class GameManagerAutoFarmOps {
     const autoFarm = player.autoFarmStage
 
     // An external release path can free the slot while this marker still
-    // points at the dead token — the marker is only meaningful while the
+    // points at the dead token - the marker is only meaningful while the
     // slot still holds that exact object.
     if (!this.deps.stageManager.owns(this.farmLease)) {
       this.farmLease = null
