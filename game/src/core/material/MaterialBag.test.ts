@@ -239,4 +239,20 @@ describe('MaterialBag — round-trip add/remove đầy đủ', () => {
     expect(bag.get('limited_material')).toBeUndefined()
     expect(bag.getAll()).toHaveLength(1)
   })
+
+  it('stack accessors trả snapshot — caller mutate không rò vào bag', () => {
+    const bag = new MaterialBag()
+
+    bag.add(MATERIAL, 5)
+
+    const viaGet = bag.get('test_material') as { amount: number }
+    viaGet.amount = 0
+
+    expect(bag.getAmount('test_material')).toBe(5)
+
+    const viaAll = bag.getAll()[0] as { amount: number }
+    viaAll.amount = 0
+
+    expect(bag.getAmount('test_material')).toBe(5)
+  })
 })
