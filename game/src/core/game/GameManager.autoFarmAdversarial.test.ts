@@ -85,7 +85,10 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
 // into the tick loop.
 function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
   const deps = {
-    stageManager: { get: () => null, start: () => true, stop: () => {} },
+    // The lease mirrors the persisted farm these tests arm — a ticking
+    // farm always holds its StageManager slot in production (Mission B
+    // audit: reconcileAutoFarmRuntime at restore + fail-closed tick).
+    stageManager: { get: () => ({ stageId: 'adv_stage' }), start: () => true, stop: () => {} },
     stageTemplates: { get: () => STAGE },
     battleLoot: {
       beginBattle: vi.fn(),

@@ -60,6 +60,21 @@ function createRegisteredManager(): GameManager {
   manager.catalogOps.registerPills(pills)
   manager.catalogOps.registerSkillTemplates([CONF_SKILL])
   manager.catalogOps.registerTechniqueTemplates([CONF_TECHNIQUE])
+  // Mission B audit — the persisted autoFarmStage lease below only
+  // survives restore when its stage is registered (reconcile drops a dead
+  // lease). stage_a must exist as a template for the round-trip.
+  manager.catalogOps.registerStages([
+    {
+      id: 'stage_a',
+      name: 'Stage A',
+      description: '',
+      floor: 1,
+      enemyPool: [],
+      totalEnemyCount: 0,
+      waves: [],
+      spawnIntervalSeconds: 0,
+    },
+  ])
 
   return manager
 }
@@ -88,6 +103,11 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   player.nodeLevels = { test_node: 2 }
   player.purchasedNodeIds = ['test_node']
   player.completedStageIds = ['stage_a']
+  // A real armed-farm save always carries the perfect-clear row —
+  // reconcileAutoFarmRuntime drops a farm whose stage was never cleared
+  // (same precondition as startAutoFarm).
+  player.perfectClearStageIds = ['stage_a']
+  player.perfectClearSeconds = { stage_a: 60 }
   player.autoFarmStage = { stageId: 'stage_a', lastCheckedMs: NOW - 1_000 }
   player.companions = [
     {

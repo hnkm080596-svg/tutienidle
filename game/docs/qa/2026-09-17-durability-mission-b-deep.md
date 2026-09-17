@@ -100,3 +100,44 @@ A tampered save with `lastCheckedMs` far in the future yields negative `elapsedM
 
 - `kiem-tu/invariants.test.ts` — two file-scan guards timeout under full-suite parallel load; pass in isolation. Not task-caused.
 - `ChiHienQuan.integration.test.ts` — one gacha assertion flaked once under load in run 1, passed in isolation and on rerun. Not task-caused.
+
+---
+
+# Addendum — external audit round 2 (mission-b-fix worktree)
+
+- Date: 2026-09-17
+- Trigger: external second-round review verdict REQUEST CHANGES — 1 High (B5 restore lease), 1 Medium (B2 grant-phase exception boundary), 1 coverage gap (B1 native Electron evidence).
+- Verdict: findings Confirmed → repaired in this pass; B1 native runtime evidence captured.
+
+## QA-2026-09-17-B7: persisted auto-farm loses its StageManager lease after reload (High — CONFIRMED, repaired)
+
+- Invariant: one authority per lease — a persisted `autoFarmStage` must hold the single `StageManager` slot, or nothing may tick/pay on it.
+- Pre-fix flow: `player.restoreFromSave` restores `autoFarmStage`; `GameManagerSaveRestore` only ran `settleAutoFarmOffline` (no slot re-acquire); `tickAutoFarm` read persisted state alone. After reload `StageManager.active === null` → slot reads free → manual stage start succeeds → real battle runs CONCURRENT with a farm that keeps calling `battleLoot.beginBattle()/setSession()/setChannel('idle')` every cycle over the shared reward session.
+- Repro (normal path, no corrupt save): perfect-clear A → start auto-farm A → quit → relaunch → auto-farm ticks while slot is free → start stage B succeeds → both run.
+- Fix:
+  - `GameManagerAutoFarmOps.reconcileAutoFarmRuntime(player)` — restore-time command that validates the persisted lease (registered stage, `perfectClearStageIds` membership, valid `perfectClearSeconds`) and re-acquires the slot via `stageManager.start` WITHOUT touching `lastCheckedMs` (deliberately not `startAutoFarm`, which re-anchors the timestamp and would wipe the offline remainder). Idempotent: a slot already held by the same farm stage is the desired end state, not a conflict.
+  - Wired in `GameManagerSaveRestore.restoreFromSave` after the offline settle block — on EVERY restore with a player slice, not only inside the >60s settle gate (a fast reload restores an armed farm too).
+  - `tickAutoFarm` fails closed: `stageManager.get()?.stageId !== autoFarm.stageId` → return, before any reward roll.
+  - `stopAutoFarm` releases the slot only when the held lease's stageId matches the farm — stopping a farm can never kill an unrelated battle's lease.
+  - Dead leases are dropped: unregistered stage, missing perfect-clear, or invalid cycle time all clear `player.autoFarmStage` instead of arming an inert slot-blocker.
+- Regression coverage: `GameManager.autoFarmRestore.test.ts` drives the REAL `restoreGameSession` seam (not hand-set `player.autoFarmStage`): persisted farm → slot re-acquired → `startStage(B)` refused → `stopAutoFarm` releases → `startStage(B)` succeeds; restored farm pays via world tick; lost lease → tick pays nothing; unregistered stage → cleared; never-cleared stage → cleared; same-farm re-restore → lease survives (idempotency).
+
+## QA-2026-09-17-B8: `onNewCharacter` throw escapes the boot transaction (Medium — CONFIRMED, repaired)
+
+- Invariant: the create-character transaction resolves visibly on every outcome; grants run at most once per process.
+- Pre-fix: `onNewCharacter?.()` ran before `newCharacterGrantsApplied = true`, outside any try/catch. A mid-grant throw escaped `bootGame` as an unhandled rejection (the `await bootGame(true)` caller has no catch), leaving `boot.fail()` unreached, the flag false on a partially-mutated runtime, and a retry re-running the non-idempotent grants — the same double-grant class as QA-B1, one seam earlier.
+- Fix: flag set BEFORE the callback; callback awaited inside try/catch (await because a promise-returning function is silently assignable to `() => void`); on throw → generation fence → `onError(t('save.createFailed'))` → `boot.fail()` → `{ status: 'failed' }`. Retry hits the existing dirty-transaction branch (`hardReset` + `skipped`), so grants never re-run on partial state.
+- New i18n key `save.createFailed` (en + vi) — the grant-phase failure is not a save failure, so it no longer reuses `panels.settings.notifications.saveFailed`.
+- Regression coverage: `useAppLifecycle.test.ts` — "onNewCharacter THROWS mid-grant" asserts `failed` + `boot.fail` + `onError` + no save + no enterGame, and that a retry takes the hardReset/skipped path with the callback invoked exactly once.
+
+## B1 native runtime evidence — CAPTURED
+
+- Artifact: `game/scripts/electron-quit-flush-smoke.mjs` — launches the real packaged build (`dist-electron/main.js`) under the repo's Electron binary with an isolated `--user-data-dir`, drives the packaged renderer (`dist/` served over loopback HTTP via the app's own `VITE_DEV_SERVER_URL` hook — absolute `/assets/...` URLs cannot resolve under `loadFile(file://)`; the quit-flush IPC path under test is identical).
+- Scenario executed: guest auth → create character "SmokeBot" → baseline save observed (`lastSavedAt=…272312`) → live Pinia mutation `cultivation=54321` → `app.close()` → native close held by quit-flush → renderer `player.save()` → `flush-complete` ACK → process exit → relaunch same profile.
+- Result: relaunched save carries `cultivation=54321` and `lastSavedAt=…274724` — strictly newer than the pre-close read, proving the quit-flush was the last writer; guest re-auth restored into game home. `[smoke] RESULT: PASS`.
+- Environment notes discovered: `ELECTRON_RUN_AS_NODE=1` in the host env makes `electron.exe` run as plain Node (`import 'electron'` then resolves to the npm path package, not the builtin — named ESM imports fail). The smoke deletes it from the child env. Fresh worktrees lack `node_modules`; `PLAYWRIGHT_CORE_FROM`/`ELECTRON_EXE` env overrides cover that.
+
+## Residual risk (unchanged dispositions)
+
+- QA-B4 (mid-loop reward throw leaves anchor un-advanced) and QA-B5 (far-future `lastCheckedMs` stalls) remain Suspected/Low backlog items — the fail-closed tick narrows neither, both still bounded by the 24h cap.
+- The `deepAuditCandidate` mapper flag on this diff is addressed by the manual routing above plus the full `restoreGameSession`-seam integration tests; no unmapped-path risk remained after inspection.
