@@ -1033,14 +1033,28 @@
   "alchemy": {
     "spiritStones": "Linh Thạch",
     "startBrewing": "Bắt đầu luyện",
+    "currentCauldron": "Đan lô hiện tại",
+    "recipe": "ĐAN PHƯƠNG",
+    "herb": "Linh Thảo",
+    "herbCount": "{amount} chủ dược",
+    "otherCosts": "Chi phí khác",
+    "preview": "Xem trước lần luyện",
+    "outcome": "Chắc chắn {guaranteed} viên, {chance}% thêm {extra} viên",
+    "duration": "Thời gian: ~{minutes} phút",
+    "jobs": "Lò đang luyện",
+    "cancelJob": "Huỷ (mất nguyên liệu)",
+    "gradeUnknown": "Chưa xác định",
     "reason": {
       "not_found": "Không tìm thấy đan phương",
+      "retired": "Đan phương này đã ngừng lưu hành — không luyện thêm được",
       "room_not_built": "Cần xây Đan Phòng trước",
       "job_slots_full": "Lò đang bận",
       "wrong_herb": "Sai Linh Thảo — đan phương chỉ nhận đúng một loại thảo",
       "missing_herb": "Không đủ Linh Thảo",
       "missing_fuel_wood": "Không đủ Gỗ nhiên liệu cùng cảnh giới và cùng tuổi với Linh Thảo đã chọn",
-      "missing_spirit_stone": "Không đủ Linh Thạch"
+      "missing_spirit_stone": "Không đủ Linh Thạch",
+      "missing_special_ingredient": "Thiếu nguyên liệu đặc biệt của đan phương",
+      "fallback": "Không thể bắt đầu luyện"
     }
   },
   "layout": {

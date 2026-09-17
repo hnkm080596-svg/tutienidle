@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
+import { useNotificationStore } from '@/stores/notification'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
@@ -17,7 +18,7 @@ import { professionGradeRank } from '@/core/profession/slotRank'
 // N viên, X% thêm 1 viên" (không dùng cụm ">100%").
 // i18n (task 2.2 lô 1) — chuỗi UI qua t(); REASON_LABELS cũ (dead const,
 // zero consumers) trích thành alchemy.reason.* trong locales.
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 const player = usePlayerStore()
 
@@ -53,7 +54,7 @@ const recipes = computed<AlchemyRecipe[]>(() => {
 const currentGrade = computed(() => getProfessionGradeForRealm(player.realmId))
 
 const currentGradeLabel = computed(() =>
-  currentGrade.value ? PROFESSION_GRADE_NAMES[currentGrade.value] : 'Chưa xác định',
+  currentGrade.value ? PROFESSION_GRADE_NAMES[currentGrade.value] : t('alchemy.gradeUnknown'),
 )
 
 // Pham text carries its rank color everywhere it appears (user ruling).
@@ -197,6 +198,58 @@ const jobs = computed(() => {
   })
 })
 
+/**
+ * Job-slot cap read the same way GameManagerAlchemyOps does — the domain
+ * owns the concurrent_job_slots rule; the view only consumes it.
+ */
+const maxJobSlots = computed(() => {
+  stateVersion.value
+
+  const instance = gameManager.buildingManager.getByBuildingId('pill_room')
+
+  if (!instance) {
+    return 0
+  }
+
+  const template = gameManager.buildingRegistry.get('pill_room')
+
+  return gameManager.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
+})
+
+const canBrew = computed(() => {
+  stateVersion.value
+
+  if (!selectedRecipe.value || !selectedHerbId.value) {
+    return false
+  }
+
+  if (jobs.value.length >= Math.max(1, maxJobSlots.value)) {
+    return false
+  }
+
+  const variant = variantRows.value.find((row) => row.materialId === selectedHerbId.value)
+
+  if (!variant?.enough) {
+    return false
+  }
+
+  if (fuelWoodRow.value && fuelWoodRow.value.owned < fuelWoodRow.value.amount) {
+    return false
+  }
+
+  if (spiritStoneRow.value.owned < spiritStoneRow.value.amount) {
+    return false
+  }
+
+  return true
+})
+
+function alchemyErrorMessage(reason: string | undefined): string {
+  const key = `alchemy.reason.${reason ?? 'fallback'}`
+
+  return te(key) ? t(key) : t('alchemy.reason.fallback')
+}
+
 function startJob() {
   if (!selectedRecipe.value || !selectedHerbId.value) {
     return
@@ -205,7 +258,7 @@ function startJob() {
   const result = gameManager.alchemyOps.startAlchemyJob(selectedRecipe.value.id, selectedHerbId.value, player.$state)
 
   if (!result.ok) {
-    console.warn('start alchemy failed:', result.reason)
+    useNotificationStore().push('warning', alchemyErrorMessage(result.reason))
   }
 
   bumpState()
@@ -222,7 +275,7 @@ function cancelJob(jobId: string) {
   <div class="alchemy-view">
     <div class="alchemy-view__recipes scrollfade">
       <section class="alchemy-group">
-        <p class="alchemy-group__eyebrow">Đan lô hiện tại</p>
+        <p class="alchemy-group__eyebrow">{{ t('alchemy.currentCauldron') }}</p>
         <h4 class="alchemy-group__title" :style="{ color: currentGradeColor }">{{ currentGradeLabel }}</h4>
 
         <button
@@ -242,35 +295,34 @@ function cancelJob(jobId: string) {
             }}
           </span>
 
-          <span class="alchemy-row__herb">{{ recipe.herbAmount }} chủ dược</span>
+          <span class="alchemy-row__herb">{{ t('alchemy.herbCount', { amount: recipe.herbAmount }) }}</span>
         </button>
       </section>
     </div>
 
     <div v-if="selectedRecipe" class="alchemy-detail scrollfade">
       <header class="alchemy-detail__header">
-        <span>ĐAN PHƯƠNG</span>
+        <span>{{ t('alchemy.recipe') }}</span>
         <h3>{{ gameManager.pillRegistry.get(selectedRecipe.pillId).name }}</h3>
         <small :style="{ color: currentGradeColor }">{{ currentGradeLabel }}</small>
       </header>
       <!-- §9.3: preview thời gian + tỷ lệ tổng + guaranteed + chance cộng -->
       <section v-if="preview" class="alchemy-detail__block">
-        <h4>Xem trước lần luyện</h4>
+        <h4>{{ t('alchemy.preview') }}</h4>
 
         <p class="alchemy-detail__outcome">
-          Chắc chắn {{ preview.guaranteedPills }} viên,
-          {{ preview.extraPillChance }}% thêm {{ preview.extraPillYield }} viên
+          {{ t('alchemy.outcome', { guaranteed: preview.guaranteedPills, chance: preview.extraPillChance, extra: preview.extraPillYield }) }}
         </p>
 
         <!-- Bỏ "— Đan Phòng cấp N" (2026-08-30, bug report: trùng lặp
              Cấp đã hiện ở header building phía trên panel). -->
         <p class="alchemy-detail__duration">
-          Thời gian: ~{{ Math.ceil(preview.durationSeconds / 60) }} phút
+          {{ t('alchemy.duration', { minutes: Math.ceil(preview.durationSeconds / 60) }) }}
         </p>
       </section>
 
       <section class="alchemy-detail__block">
-        <h4>Linh Thảo ({{ selectedRecipe.herbAmount }})</h4>
+        <h4>{{ t('alchemy.herb') }} ({{ selectedRecipe.herbAmount }})</h4>
 
         <label
           v-for="variant in variantRows"
@@ -287,7 +339,7 @@ function cancelJob(jobId: string) {
       </section>
 
       <section class="alchemy-detail__block">
-        <h4>Chi phí khác</h4>
+        <h4>{{ t('alchemy.otherCosts') }}</h4>
 
         <ul class="alchemy-costs">
           <StatRow v-if="fuelWoodRow" :label="fuelWoodRow.label" :tone="fuelWoodRow.owned < fuelWoodRow.amount ? 'negative' : 'default'">
@@ -299,13 +351,13 @@ function cancelJob(jobId: string) {
           </StatRow>
         </ul>
 
-        <GameButton class="alchemy-detail__action" size="sm" accent-var="--scene-fire-text" @click="startJob">
+        <GameButton class="alchemy-detail__action" size="sm" accent-var="--scene-fire-text" :disabled="!canBrew" @click="startJob">
           {{ t('alchemy.startBrewing') }}
         </GameButton>
       </section>
 
       <section v-if="jobs.length > 0" class="alchemy-detail__block">
-        <h4>Lò đang luyện</h4>
+        <h4>{{ t('alchemy.jobs') }}</h4>
 
         <div v-for="job in jobs" :key="job.jobId" class="alchemy-job">
           <div class="alchemy-job__head">
@@ -317,7 +369,7 @@ function cancelJob(jobId: string) {
           <Bar class="alchemy-job__progress" :value="job.progress" :max="1" :height="6" />
 
           <GameButton class="alchemy-job__cancel" variant="ghost" size="sm" @click="cancelJob(job.jobId)">
-            Huỷ (mất nguyên liệu)
+            {{ t('alchemy.cancelJob') }}
           </GameButton>
         </div>
       </section>

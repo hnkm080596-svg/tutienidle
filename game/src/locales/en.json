@@ -1033,14 +1033,28 @@
   "alchemy": {
     "spiritStones": "Spirit Stones",
     "startBrewing": "Start brewing",
+    "currentCauldron": "Current cauldron",
+    "recipe": "RECIPE",
+    "herb": "Spirit Herb",
+    "herbCount": "{amount} herbs",
+    "otherCosts": "Other costs",
+    "preview": "Brew preview",
+    "outcome": "Guaranteed {guaranteed}, {chance}% chance of {extra} more",
+    "duration": "Duration: ~{minutes} min",
+    "jobs": "Brewing",
+    "cancelJob": "Cancel (materials lost)",
+    "gradeUnknown": "Unknown",
     "reason": {
       "not_found": "Recipe not found",
+      "retired": "This recipe is retired — no new brews",
       "room_not_built": "Build the Pill Room first",
       "job_slots_full": "The furnace is busy",
       "wrong_herb": "Wrong Spirit Herb — a recipe accepts exactly one herb type",
       "missing_herb": "Not enough Spirit Herb",
       "missing_fuel_wood": "Not enough fuel wood matching the herb's realm and age",
-      "missing_spirit_stone": "Not enough Spirit Stones"
+      "missing_spirit_stone": "Not enough Spirit Stones",
+      "missing_special_ingredient": "Missing the recipe's special ingredient",
+      "fallback": "Cannot start brewing"
     }
   },
   "layout": {
