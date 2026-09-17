@@ -392,7 +392,10 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     expect(pending.every((cycle) => cycle.completesAtMs > now)).toBe(true)
   })
 
-  it('capacity 0 freezes worker lanes identically online and offline', () => {
+  // D1 (INV-D-03): capacity 0 is NOT a freeze - retained lanes keep
+  // their deadlines and settle once, identically online and offline.
+  // Zero slots only means no successor lanes spawn.
+  it('capacity 0 settles retained lanes once, identically online and offline', () => {
     const start = 1_000_000
     const now = start + 150_000
     const assignments = new Map([[SITE, 2]])
@@ -401,17 +404,13 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
       makeWorkerCycle(SITE, start, start + 100_000, 'lane_b'),
     ])
 
-    // Online: capacity 0 -> tickWorkers early-returns; in-flight lanes
-    // stay frozen (no completions, no top-up), exactly like before M11.
     const online = createSystem()
     const onlineBag = createBag()
     online.restoreStates(structuredClone(saved))
     online.tickWorkers(now, onlineBag.bag, onlineBag.registry, REALM, 0, assignments)
-    expect(online.drainSettlementEvents()).toEqual([])
-    expect(pendingDues(online)).toEqual([start + 100_000, start + 100_000])
+    expect(online.drainSettlementEvents().length).toBeGreaterThan(0)
+    expect(pendingDues(online)).toEqual([])
 
-    // Offline: workerCapacity 0 -> the same freeze (settle returns 0,
-    // saved lanes preserved untouched for when capacity returns).
     const offline = createSystem()
     const offlineBag = createBag()
     offline.restoreStates(structuredClone(saved))
@@ -420,9 +419,8 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
       offlineSinceMs: start,
       workerAssignments: assignments,
     })
-    expect(settled).toBe(0)
-    expect(offline.drainSettlementEvents()).toEqual([])
-    expect(pendingDues(offline)).toEqual([start + 100_000, start + 100_000])
+    expect(settled).toBe(2)
+    expect(pendingDues(offline)).toEqual([])
   })
 
   it('0-slot site still drains saved due cycles once (no respawn) — online parity', () => {

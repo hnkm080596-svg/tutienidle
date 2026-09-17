@@ -21,7 +21,7 @@ beforeEach(() => {
   vi.stubGlobal('sessionStorage', new MemoryStorage())
 })
 
-describe('resolveSupabaseSession — refresh-aware accessor (spec F8)', () => {
+describe('resolveSupabaseSession - refresh-aware accessor (spec F8)', () => {
   it('returns the stored session when expiry is comfortably ahead', async () => {
     storeSupabaseSession({
       accessToken: 'tok-live', refreshToken: 'rt', sessionId: 's1',
@@ -66,7 +66,7 @@ describe('resolveSupabaseSession — refresh-aware accessor (spec F8)', () => {
     vi.unstubAllGlobals()
   })
 
-  it('refresh failure clears the session and returns null — never a silent stall', async () => {
+  it('refresh failure clears the session and returns null - never a silent stall', async () => {
     storeSupabaseSession({
       accessToken: 'old', refreshToken: 'rt', sessionId: 's1',
       expiresAtMs: Date.now() - 1000,
@@ -80,7 +80,7 @@ describe('resolveSupabaseSession — refresh-aware accessor (spec F8)', () => {
     vi.unstubAllGlobals()
   })
 
-  it('no stored session → null, no fetch', async () => {
+  it('no stored session -> null, no fetch', async () => {
     const fetchSpy = vi.fn()
     vi.stubGlobal('fetch', fetchSpy)
 

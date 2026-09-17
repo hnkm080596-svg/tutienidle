@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   loadGame,
+  inspectLocalSave,
   deleteSave,
   backupCurrentSave,
   hasBackup,
@@ -20,7 +21,7 @@ import {
 } from './saveKeys'
 import { createDefaultPlayer } from '../../core/player/Player'
 
-// Guest-slot keys (no account bound — beforeEach re-arms the resolver).
+// Guest-slot keys (no account bound - beforeEach re-arms the resolver).
 const SAVE_KEY = resolveSaveKey()
 const BACKUP_KEY = resolveBackupKey()
 const SAVE_REVISION_KEY = resolveRevisionKey()
@@ -234,6 +235,43 @@ describe('loadGame — shape validation (save-shape-validation-plan.md)', () => 
       expect(outcome.save.equipment).toEqual([])
       expect(outcome.discardedEquipmentCount).toBe(1)
     }
+  })
+})
+
+// F2 / INV-F-19 - the remote-sync preflight must inspect the local save
+// WITHOUT consuming it: loadGame() eats the one-shot import-handoff
+// marker as part of its owner contract, so a read-only caller uses
+// inspectLocalSave() and the real owner load still sees the count once.
+describe('inspectLocalSave - pure read (F2/INV-F-19)', () => {
+  it('returns the same statuses as loadGame without touching the handoff marker', () => {
+    localStorage.setItem(SAVE_KEY, VALID_RAW)
+    localStorage.setItem(
+      IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY,
+      JSON.stringify({ normalizedRaw: VALID_RAW, discardedEquipmentCount: 3 }),
+    )
+
+    const inspected = inspectLocalSave()
+    expect(inspected.status).toBe('ok')
+
+    // The marker survives the pure read - the owner load consumes it.
+    expect(localStorage.getItem(IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY)).not.toBeNull()
+
+    const loaded = loadGame()
+    expect(loaded.status).toBe('ok')
+    if (loaded.status === 'ok') {
+      expect(loaded.discardedEquipmentCount).toBe(3)
+    }
+    expect(localStorage.getItem(IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY)).toBeNull()
+  })
+
+  it('mirrors loadGame status mapping for every non-ok outcome', () => {
+    expect(inspectLocalSave().status).toBe('empty')
+
+    localStorage.setItem(SAVE_KEY, 'not json')
+    expect(inspectLocalSave().status).toBe('corrupted')
+
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ version: 1 }))
+    expect(inspectLocalSave().status).toBe('incompatible')
   })
 })
 

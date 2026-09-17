@@ -28,7 +28,7 @@ export * from './saveTypes'
 // import với saveShapeValidation.ts.
 export { CURRENT_SAVE_VERSION }
 
-// Storage keys are per-account since Mission F (spec F8) — every path
+// Storage keys are per-account since Mission F (spec F8) - every path
 // below resolves through saveKeys.ts resolvers ('<base>:<accountId>',
 // guest slot when unauthenticated). The comments below keep documenting
 // the backup/handoff/revision *purpose*; the key shape lives there.
@@ -417,7 +417,24 @@ export type LoadOutcome =
   // start a new character over an unreadable existing save.
   | { status: 'storage_unavailable' }
 
-export function loadGame(): LoadOutcome {
+// F2 / INV-F-19 - inspectLocalSave() is the PURE read half of the
+// pipeline: raw -> parse -> version -> shape, with zero consumption.
+// The one-shot import-handoff marker stays untouched, so a preflight
+// reader (remote newest-wins) can never eat the count the real owner
+// load is supposed to report. loadGame() = inspect + consume.
+export type InspectedSave =
+  | { status: 'empty' }
+  | {
+      status: 'ok'
+      save: GameSave
+      raw: string
+      shapeDiscardedEquipmentCount: number
+    }
+  | { status: 'incompatible'; foundVersion: number | undefined; raw: string }
+  | { status: 'corrupted'; raw: string }
+  | { status: 'storage_unavailable' }
+
+export function inspectLocalSave(): InspectedSave {
   let raw: string | null
 
   try {
@@ -475,6 +492,33 @@ export function loadGame(): LoadOutcome {
     return { status: 'corrupted', raw }
   }
 
+  return {
+    status: 'ok',
+    save: shape.normalizedSave as GameSave,
+    raw,
+    shapeDiscardedEquipmentCount: shape.discardedEquipmentCount,
+  }
+}
+
+export function loadGame(): LoadOutcome {
+  const inspected = inspectLocalSave()
+
+  switch (inspected.status) {
+    case 'empty':
+    case 'storage_unavailable':
+      return { status: inspected.status }
+    case 'incompatible':
+      return {
+        status: 'incompatible',
+        foundVersion: inspected.foundVersion,
+        raw: inspected.raw,
+      }
+    case 'corrupted':
+      return { status: 'corrupted', raw: inspected.raw }
+  }
+
+  const raw = inspected.raw
+
   // Handoff marker is auxiliary — a read failure degrades to "no
   // marker" (count lost, save still loads) instead of failing the load.
   let importedHandoffRaw: string | null = null
@@ -526,11 +570,9 @@ export function loadGame(): LoadOutcome {
 
   return {
     status: 'ok',
-    // validateGameSaveShape đã kiểm tra boundary và trả bản normalized;
-    // cast tập trung duy nhất tại cửa load, không giữ field legacy.
-    save: shape.normalizedSave as GameSave,
+    save: inspected.save,
     discardedEquipmentCount:
-      shape.discardedEquipmentCount + importedDiscardedCount,
+      inspected.shapeDiscardedEquipmentCount + importedDiscardedCount,
   }
 }
 

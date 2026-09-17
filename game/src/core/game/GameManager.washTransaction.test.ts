@@ -166,9 +166,9 @@ describe('GameManager wash transaction', () => {
     expect(instance.forgeUsesRemaining).toBe(forgeBefore)
   })
 
-  // T4-33 — the roll must honor BOTH ends of ITEM_QUALITY_SUBSTATS_RANGE:
+  // T4-33 - the roll must honor BOTH ends of ITEM_QUALITY_SUBSTATS_RANGE:
   // lineCount = min + floor(random * (max - min + 1)). Every quality has
-  // min 0 today, so pin the contract by mutating the range for this test —
+  // min 0 today, so pin the contract by mutating the range for this test -
   // random -> 0 must yield min lines, not 0.
   it('wash line count honors the range minimum (contract pin)', () => {
     const original = ITEM_QUALITY_SUBSTATS_RANGE.dia

@@ -243,7 +243,7 @@ describe('DecomposeSystem — online catch-up policy (Mission A review)', () => 
     expect(system.drainOutput()).toHaveLength(1)
   })
 
-  it('stalled tick runs exactly ONE late cycle and re-anchors nextCycleAt to now (spec D4 — pins MA-R3-01)', () => {
+  it('stalled tick runs exactly ONE late cycle and re-anchors nextCycleAt to now (spec D4 - pins MA-R3-01)', () => {
     addOre('mortal_ore_decade', 1_000)
 
     const system = createSystemWithCapacity(6)
@@ -258,7 +258,7 @@ describe('DecomposeSystem — online catch-up policy (Mission A review)', () => 
     // cycle until the timer caught up).
     expect(system.getSaveState().nextCycleAt).toBe(330_000)
 
-    // Immediately afterwards nothing is due — no catch-up backlog drains.
+    // Immediately afterwards nothing is due - no catch-up backlog drains.
     system.tick(300_001)
     system.tick(310_000)
     expect(system.drainOutput()).toHaveLength(0)

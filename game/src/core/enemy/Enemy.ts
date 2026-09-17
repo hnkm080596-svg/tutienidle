@@ -53,7 +53,7 @@ export interface Enemy {
   id: string
 
   // Template id this instance was spawned from; set by EnemySystem.spawn.
-  // Kill consumers (quests, hidden beast) match template ids — the
+  // Kill consumers (quests, hidden beast) match template ids - the
   // instance id is uuid-unique and must never reach them (audit T3-16).
   templateId?: string
 

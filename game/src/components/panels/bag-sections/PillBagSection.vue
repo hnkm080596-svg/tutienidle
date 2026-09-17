@@ -216,8 +216,8 @@ function drinkPill(pillId: string) {
   }
 
   // Reason channel (plan §8): sai cảnh giới/capped báo ngay thay vì
-  // fail im lặng. Mission E Task 2: keyed messages through the i18n
-  // gateway (P16) — one map entry per domain reason.
+  // fail silently. Mission E Task 2: keyed messages through the i18n
+  // gateway (P16) - one map entry per domain reason.
   const reasonKeys: Record<NonNullable<typeof result.reason>, string> = {
     not_found: 'bag.pill.reason.fallback',
     wrong_realm: 'bag.pill.reason.wrong_realm',
@@ -298,7 +298,7 @@ const entries = computed<PillEntry[]>(() => {
         icon: stack.pill.icon,
 
         // Mission E Task 2 (audit T1-10): material pills have no drink
-        // action — the cell renders without a click affordance.
+        // action - the cell renders without a click affordance.
         onClick: stack.pill.type === 'material' ? undefined : () => drinkPill(stack.pill.id),
       },
     }

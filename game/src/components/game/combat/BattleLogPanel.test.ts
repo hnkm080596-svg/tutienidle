@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// T4-36 — battle log must render display names (participant entity.name
+// T4-36 - battle log must render display names (participant entity.name
 // + TurnSkillDisplayMeta), never raw ids like 'wild_wolf_1' or
 // 'hoa_cau_thuat'. Mounted with a fake GameManager over the standard
 // GAME_MANAGER_KEY/STATE_VERSION_KEY injection seam.

@@ -164,7 +164,7 @@ export class TribulationDirector {
     }
     return {
       sessionId,
-      state: { ...this.active, hp: this.snapshotHp },
+      state: this.snapshotActiveState(),
     }
   }
 
@@ -266,9 +266,10 @@ export class TribulationDirector {
       return
     }
 
-    // Catch-up khi tab nền (Chromium gom nhiều giây vào 1 tick): giới
-    // hạn mỗi update bằng cạn chương để không nhảy qua kết quả —
-    // chấp nhận trôi dần, đúng pattern elapsedInTribulation cũ.
+    // Background-tab catch-up (Chromium batches many seconds into one
+    // tick): cap each update at the chapter remainder so the outcome
+    // cannot be skipped - the residual drains next tick, same pattern
+    // as the old elapsedInTribulation.
     let remaining = Math.max(0, deltaSeconds)
 
     while (remaining > 0 && active.state === 'ongoing') {
@@ -278,7 +279,7 @@ export class TribulationDirector {
 
       // Mission E Task 4 (audit T3-21): HP regen per elapsed second.
       // `hpRegenPerTurn` is reused as the per-second rate inside
-      // tribulation's 1-second step — tribulation has no turns. The
+      // tribulation's 1-second step - tribulation has no turns. The
       // vitals owner applies the maxHp clamp, healing-effectiveness
       // scaling and the 'regen' event; we only mirror the result.
       if (active.state === 'ongoing' && this.ghost) {
@@ -646,23 +647,27 @@ export class TribulationDirector {
     }
   }
 
-  getState(): ActiveTribulationState | null {
-    if (!this.active) {
-      return null
-    }
+  /**
+   * E1/E2 - the ONE detached-state builder for every query surface
+   * (getState, getPresentationSnapshot). A query is observational: it
+   * copies `active` + the nested-mutable currentQuestion and overrides
+   * hp from the snapshot authority - it never writes this.active (A3).
+   * Internal hp sync stays the domain lifecycle writer (emitState).
+   */
+  private snapshotActiveState(): ActiveTribulationState {
+    const active = this.active!
 
-    this.active.hp = this.snapshotHp
-
-    // Mission E Task 5 (audit T3-23): detach — the overlay reads a copy,
-    // never the mutable internal record (A3). `currentQuestion` is
-    // nested-mutable and gets its own shallow copy (same policy as
-    // getPresentationSnapshot).
     return {
-      ...this.active,
-      currentQuestion: this.active.currentQuestion
-        ? { ...this.active.currentQuestion, answers: [...this.active.currentQuestion.answers] }
+      ...active,
+      hp: this.snapshotHp,
+      currentQuestion: active.currentQuestion
+        ? { ...active.currentQuestion, answers: [...active.currentQuestion.answers] }
         : null,
     }
+  }
+
+  getState(): ActiveTribulationState | null {
+    return this.active ? this.snapshotActiveState() : null
   }
 
   /**

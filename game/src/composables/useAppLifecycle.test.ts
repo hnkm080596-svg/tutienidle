@@ -179,7 +179,7 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
   it('bootGame 2 lần khi boot đầu còn pending → boot flow chỉ chạy 1 lần', async () => {
     const stubs = makeStubs()
 
-    // load() chờ gate — mô phỏng boot đang pending. Deferred created
+    // load() waits on the gate - simulates a pending boot. Deferred created
     // upfront: bootGame awaits remoteSync BEFORE calling load(), so a
     // resolver assigned inside mockImplementation would not exist yet
     // when the test releases it.
@@ -382,7 +382,7 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
   })
 })
 
-describe('useAppLifecycle — remote sync reconciliation (spec F8, Mission F Task 11)', () => {
+describe('useAppLifecycle - remote sync reconciliation (spec F8, Mission F Task 11)', () => {
   it('remoteSync is awaited after startSaveLoad and before coordinator.load', async () => {
     const stubs = makeStubs()
     const lifecycle = makeLifecycle(stubs)
@@ -399,7 +399,7 @@ describe('useAppLifecycle — remote sync reconciliation (spec F8, Mission F Tas
     lifecycle.stopAll()
   })
 
-  it('createNewCharacter boot skips remoteSync — the new character has no remote row yet', async () => {
+  it('createNewCharacter boot skips remoteSync - the new character has no remote row yet', async () => {
     const stubs = makeStubs()
     const lifecycle = makeLifecycle(stubs)
 
@@ -410,7 +410,7 @@ describe('useAppLifecycle — remote sync reconciliation (spec F8, Mission F Tas
     lifecycle.stopAll()
   })
 
-  it('remoteSync rejection never blocks boot — coordinator.load still runs', async () => {
+  it('remoteSync rejection never blocks boot - coordinator.load still runs', async () => {
     const stubs = makeStubs()
     stubs.remoteSync.mockRejectedValueOnce(new Error('remote down'))
     const lifecycle = makeLifecycle(stubs)

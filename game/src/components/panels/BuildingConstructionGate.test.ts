@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// T4-31 — the gate's `canBuild` computed never read `stateVersion`, so
+// T4-31 - the gate's `canBuild` computed never read `stateVersion`, so
 // materials arriving after mount left the build button disabled forever
 // (and material loss could never re-disable it). The fix threads
 // stateVersion into the computed; this test mounts the real component
@@ -76,7 +76,7 @@ afterEach(() => {
   window.localStorage.removeItem('dev.testModeUnlockAll')
 })
 
-describe('BuildingConstructionGate — canBuild re-evaluates on stateVersion (T4-31)', () => {
+describe('BuildingConstructionGate - canBuild re-evaluates on stateVersion (T4-31)', () => {
   it('build button starts disabled without materials and enables after the bag gains them + bumpState', async () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerMaterials([UPGRADE_MATERIAL])

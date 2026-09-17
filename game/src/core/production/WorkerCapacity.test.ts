@@ -16,7 +16,7 @@ describe('getWorkerCapacityForLevel — công thức 1 + level×2 (user chốt)'
   })
 })
 
-describe('resolveProductionWorkerCapacity — ONE split rule (Mission D / spec D5)', () => {
+describe('resolveProductionWorkerCapacity - ONE split rule (Mission D / spec D5)', () => {
   it('decompose claims its workers first; production gets the remainder', () => {
     expect(resolveProductionWorkerCapacity(7, 2)).toBe(5)
     expect(resolveProductionWorkerCapacity(3, 3)).toBe(0)

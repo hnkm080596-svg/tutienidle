@@ -106,7 +106,10 @@ function settle(
 }
 
 describe('settleProductionOffline — worker settle phase', () => {
-  it('capacity <= 0 freezes saved lanes but still zeroes activeWorkerSlots on every state', () => {
+  // D1 (INV-D-03): a saved in-flight lane is retained work - it keeps
+  // its own deadline and settles once under the cap budget even when
+  // the pool is zero. Slots still zero out; no successor spawns.
+  it('capacity <= 0 still settles a due saved lane once and zeroes activeWorkerSlots', () => {
     const saved = makeCycle(LAM, T0, T0 + CYCLE_MS)
     const states = new Map<string, ProductionSiteState>([
       [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 3, workerCycles: [saved] })],
@@ -115,15 +118,15 @@ describe('settleProductionOffline — worker settle phase', () => {
 
     expect(
       settle(deps, T0 + 150_000, { workerCapacity: -3, offlineSinceMs: T0 }),
-    ).toBe(0)
-    expect(grants).toEqual([])
-    // In-flight lanes stay frozen for when capacity returns...
-    expect(states.get(LAM)!.workerCycles).toEqual([saved])
-    // ...but stale slot counts are always re-zeroed first.
+    ).toBe(1)
+    expect(grants).toEqual([saved])
+    expect(states.get(LAM)!.workerCycles).toEqual([])
     expect(states.get(LAM)!.activeWorkerSlots).toBe(0)
   })
 
-  it('freezes saved worker lanes on non-autoRestart sites (not advanced, not forfeited)', () => {
+  // D1 (INV-D-03): leaving the auto set is an allocation drop to zero -
+  // the retained lane still completes once, then the lane dies.
+  it('settles a saved worker lane on a non-autoRestart site once, without respawning', () => {
     const saved = makeCycle(LAM, T0, T0 + CYCLE_MS)
     const states = new Map<string, ProductionSiteState>([
       [LAM, makeState(LAM, { autoRestart: false, activeWorkerSlots: 2, workerCycles: [saved] })],
@@ -132,9 +135,9 @@ describe('settleProductionOffline — worker settle phase', () => {
 
     expect(
       settle(deps, T0 + 150_000, { workerCapacity: 4, offlineSinceMs: T0 }),
-    ).toBe(0)
-    expect(grants).toEqual([])
-    expect(states.get(LAM)!.workerCycles).toEqual([saved])
+    ).toBe(1)
+    expect(grants).toEqual([saved])
+    expect(states.get(LAM)!.workerCycles).toEqual([])
     expect(states.get(LAM)!.activeWorkerSlots).toBe(0)
   })
 
@@ -204,7 +207,7 @@ describe('settleProductionOffline — worker settle phase', () => {
     const { deps, grants } = createHarness(states)
 
     // Window = exactly the cap: floor(CAP_MS / CYCLE_MS) completions all
-    // paid — previously a manual cycle could consume budget first.
+    // paid - previously a manual cycle could consume budget first.
     const settled = settle(deps, T0 + CAP_MS, {
       workerCapacity: 1,
       offlineSinceMs: T0,

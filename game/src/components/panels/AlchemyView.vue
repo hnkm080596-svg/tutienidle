@@ -200,7 +200,7 @@ const jobs = computed(() => {
 })
 
 /**
- * Job-slot cap read the same way GameManagerAlchemyOps does — the domain
+ * Job-slot cap read the same way GameManagerAlchemyOps does - the domain
  * owns the concurrent_job_slots rule; the view only consumes it.
  */
 const maxJobSlots = computed(() => {

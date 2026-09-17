@@ -1,5 +1,5 @@
 /**
- * Real game-loop tick cadence (ms between outer ticks) — the single
+ * Real game-loop tick cadence (ms between outer ticks) - the single
  * authority consumed by useAppLifecycle's tick loop. Value only controls
  * SMOOTHNESS, never pace: the tick consumes the real measured deltaSeconds
  * (App.vue), so a delayed timer still simulates the full elapsed time and

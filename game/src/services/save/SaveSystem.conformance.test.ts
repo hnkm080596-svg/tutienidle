@@ -159,7 +159,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     manager.buildingManager.get('b-chq')!,
   )
 
-  // Production — one populated site (worker cycles + manual
+  // Production - one populated site (worker cycles + manual
   // assignment); the other definitions get default ensured states.
   const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId
   const siteState: ProductionSiteState = {

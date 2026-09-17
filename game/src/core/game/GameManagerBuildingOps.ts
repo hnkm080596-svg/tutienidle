@@ -161,30 +161,14 @@ export class GameManagerBuildingOps {
    * Clamp [0, capacity] phòng UI gửi sai; không đổi nếu site không tồn tại.
    */
   assignWorkers(siteId: string, count: number | undefined): void {
-    const state = this.deps.productionSystem.getState(siteId)
-
-    if (!state) {
-      return
-    }
-
-    if (count === undefined) {
-      delete state.assignedWorkers
-
-      return
-    }
-
-    // Clamp to the production remainder, not the raw total - a slider must
-    // never let the player promise workers decompose already claimed.
+    // Clamp bound stays fed by the one split rule - the domain command
+    // owns the write itself (D2: no foreign mutation of site state).
     const capacity = resolveProductionWorkerCapacity(
       this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0,
       this.deps.decomposeSystem.getSettings().workers,
     )
 
-    // NaN (UI path lỗi) coi như 0 — không để assignedWorkers = NaN
-    // phá regex phân bổ tickWorkers.
-    const safeCount = Number.isFinite(count) ? count : 0
-
-    state.assignedWorkers = Math.max(0, Math.min(Math.floor(safeCount), capacity))
+    this.deps.productionSystem.setWorkerAssignment(siteId, count, capacity)
   }
 
   /**

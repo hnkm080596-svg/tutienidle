@@ -107,7 +107,7 @@ function rollWashAffixes(
     return { ok: false, reason: 'missing_spirit_stone' }
   }
 
-  // T4-33 — honor BOTH ends of the quality's affix range. Every quality
+  // T4-33 - honor BOTH ends of the quality's affix range. Every quality
   // has min 0 today, so this is contract-correctness, not a balance change.
   const range = ITEM_QUALITY_SUBSTATS_RANGE[instance.quality]
   const maxLines = Math.min(GLOBAL_MAX_AFFIXES - 1, range.max)

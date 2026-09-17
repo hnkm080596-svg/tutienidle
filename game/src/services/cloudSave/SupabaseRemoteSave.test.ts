@@ -1,4 +1,4 @@
-// Spec F8 — login-time newest-wins remote save reconciliation.
+// Spec F8 - login-time newest-wins remote save reconciliation.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { syncRemoteSaveOnLogin } from './SupabaseRemoteSave'
 import { storeSupabaseSession } from '../supabase/SupabaseSession'
@@ -75,8 +75,8 @@ beforeEach(() => {
   setSaveAccountId(null)
 })
 
-describe('syncRemoteSaveOnLogin — newest-wins reconciliation (spec F8)', () => {
-  it('guest session → skipped, zero fetch calls', async () => {
+describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
+  it('guest session -> skipped, zero fetch calls', async () => {
     storeSupabaseSession({
       accessToken: 'g', refreshToken: 'rt', sessionId: 's1', mode: 'guest',
     })
@@ -88,7 +88,7 @@ describe('syncRemoteSaveOnLogin — newest-wins reconciliation (spec F8)', () =>
     vi.unstubAllGlobals()
   })
 
-  it('no characters row → skipped (no remote save can exist)', async () => {
+  it('no characters row -> skipped (no remote save can exist)', async () => {
     loginSession()
     const calls = stubFetch(() => json([]))
 
@@ -112,7 +112,7 @@ describe('syncRemoteSaveOnLogin — newest-wins reconciliation (spec F8)', () =>
     vi.unstubAllGlobals()
   })
 
-  it('remote newer + usable → pulled: local slot overwritten, revision set', async () => {
+  it('remote newer + usable -> pulled: local slot overwritten, revision set', async () => {
     loginSession()
     localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(1_000)))
     const remoteSave = validGameSave(5_000_000)
@@ -136,7 +136,7 @@ describe('syncRemoteSaveOnLogin — newest-wins reconciliation (spec F8)', () =>
     vi.unstubAllGlobals()
   })
 
-  it('remote older → pushed: POST merge-duplicates with explicit updated_at', async () => {
+  it('remote older -> pushed: POST merge-duplicates with explicit updated_at', async () => {
     loginSession()
     const localSave = validGameSave(50_000_000)
     localStorage.setItem(resolveSaveKey(), JSON.stringify(localSave))
@@ -167,7 +167,7 @@ describe('syncRemoteSaveOnLogin — newest-wins reconciliation (spec F8)', () =>
     vi.unstubAllGlobals()
   })
 
-  it('remote payload {} (the p_initial_save shape) counts as absent → push when local ok', async () => {
+  it('remote payload {} (the p_initial_save shape) counts as absent -> push when local ok', async () => {
     loginSession()
     localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
 
@@ -185,7 +185,7 @@ describe('syncRemoteSaveOnLogin — newest-wins reconciliation (spec F8)', () =>
     vi.unstubAllGlobals()
   })
 
-  it('fetch rejection → unavailable, local slot untouched', async () => {
+  it('fetch rejection -> unavailable, local slot untouched', async () => {
     loginSession()
     localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(1_000)))
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network down') }))

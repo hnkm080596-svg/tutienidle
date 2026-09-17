@@ -20,7 +20,7 @@ export class LocalCloudSaveService implements CloudSaveService {
       }
       return outcome
     } catch {
-      // readLocalSaveRevision() or any residual storage throw — 'unavailable' is
+      // readLocalSaveRevision() or any residual storage throw - 'unavailable' is
       // the lifecycle-handled status (boot.fail, never new-character).
       return { status: 'unavailable', message: 'localStorage không truy cập được' }
     }

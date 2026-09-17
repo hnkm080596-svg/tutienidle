@@ -5,6 +5,7 @@
 // and diverge offline.
 import { describe, expect, it } from 'vitest'
 import { MaterialBag } from '../material/MaterialBag'
+import { buildProductionCycle } from './ProductionCycles'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { materials } from '../../data/materials/materials'
 import {
@@ -153,5 +154,117 @@ describe('online/offline allocation parity (AR-07 divergence)', () => {
 
     expect(offline.getState('thanh_van_lam')!.activeWorkerSlots).toBe(2)
     expect(offline.getState('thanh_van_quang')!.activeWorkerSlots).toBe(2)
+  })
+})
+
+// D1 regression - INV-D-03: allocation dropping to zero must not freeze
+// in-flight lanes. Retained work keeps its own deadline, settles once,
+// and spawns no successor while capacity stays 0.
+describe('D1 - capacity zero must not freeze retained lanes', () => {
+  it('online: a lane in flight when capacity drops to 0 settles once and does not respawn', () => {
+    const system = makeAutoSystem(['thanh_van_lam'])
+    const { bag, registry } = createBag()
+    const t0 = 1_000_000
+
+    // Spawn one lane at capacity 1 (mortal/level-1 cycle = 100s).
+    system.tickWorkers(t0, bag, registry, REALM, 1)
+    expect(system.getState('thanh_van_lam')!.workerCycles).toHaveLength(1)
+
+    // Decompose claims the whole pool before the deadline: the retained
+    // lane is still in flight (not due yet), nothing settles.
+    system.tickWorkers(t0 + 50_000, bag, registry, REALM, 0)
+    expect(system.getState('thanh_van_lam')!.workerCycles).toHaveLength(1)
+    expect(system.drainSettlementEvents()).toHaveLength(0)
+
+    // Past the deadline the retained lane settles exactly once even
+    // though capacity is still 0.
+    system.tickWorkers(t0 + 150_000, bag, registry, REALM, 0)
+    expect(system.getState('thanh_van_lam')!.workerCycles).toHaveLength(0)
+    expect(system.drainSettlementEvents().length).toBeGreaterThan(0)
+
+    // No successor lane spawns while capacity stays 0 - the pool is gone.
+    system.tickWorkers(t0 + 400_000, bag, registry, REALM, 0)
+    expect(system.getState('thanh_van_lam')!.workerCycles).toHaveLength(0)
+    expect(system.drainSettlementEvents()).toHaveLength(0)
+  })
+
+  it('offline: workerCapacity 0 still settles a saved in-flight lane without respawning', () => {
+    const system = makeAutoSystem(['thanh_van_lam'])
+    const { bag, registry } = createBag()
+    const t0 = 1_000_000
+
+    // A saved in-flight lane due at t0 + 100s (mortal/level-1 cycle).
+    const savedCycle = buildProductionCycle('thanh_van_lam', REALM, 1, 100, t0)
+    system.restoreStates([{
+      siteId: 'thanh_van_lam',
+      level: 1,
+      autoRestart: true,
+      activeWorkerSlots: 1,
+      workerCycles: [savedCycle],
+    }])
+
+    // The player was offline across the deadline with zero production
+    // workers: the retained lane settles under the cap budget once.
+    const settled = system.settleOffline(bag, registry, REALM, t0 + 200_000, {
+      workerCapacity: 0,
+      offlineSinceMs: t0,
+    })
+
+    expect(settled).toBe(1)
+    expect(system.getState('thanh_van_lam')!.workerCycles).toHaveLength(0)
+  })
+})
+
+// D2 regression - ProductionSystem is the domain owner of worker state:
+// assignment is a command on the domain, and query surfaces hand out
+// detached snapshots, never the live mutable record (A3/A7).
+describe('D2 - worker assignment ownership boundary', () => {
+  it('setWorkerAssignment clamps the request into [0, capacity]', () => {
+    const system = makeAutoSystem(['thanh_van_lam'])
+
+    expect(system.setWorkerAssignment('thanh_van_lam', 3, 5)).toBe(true)
+    expect(system.getState('thanh_van_lam')!.assignedWorkers).toBe(3)
+
+    expect(system.setWorkerAssignment('thanh_van_lam', 99, 5)).toBe(true)
+    expect(system.getState('thanh_van_lam')!.assignedWorkers).toBe(5)
+  })
+
+  it('setWorkerAssignment(undefined) clears the request back to auto', () => {
+    const system = makeAutoSystem(['thanh_van_lam'])
+    system.setWorkerAssignment('thanh_van_lam', 2, 5)
+
+    expect(system.setWorkerAssignment('thanh_van_lam', undefined, 5)).toBe(true)
+    expect(system.getState('thanh_van_lam')!.assignedWorkers).toBeUndefined()
+  })
+
+  it('setWorkerAssignment rejects unknown sites and non-finite counts', () => {
+    const system = makeAutoSystem(['thanh_van_lam'])
+
+    expect(system.setWorkerAssignment('no_such_site', 1, 5)).toBe(false)
+    expect(system.setWorkerAssignment('thanh_van_lam', Number.NaN, 5)).toBe(true)
+    expect(system.getState('thanh_van_lam')!.assignedWorkers).toBe(0)
+  })
+
+  it('getState/getAllStates hand out detached snapshots - caller mutation cannot corrupt the domain', () => {
+    const system = makeAutoSystem(['thanh_van_lam'])
+    system.setWorkerAssignment('thanh_van_lam', 2, 5)
+
+    const leaked = system.getState('thanh_van_lam')!
+    leaked.assignedWorkers = 99
+    leaked.workerCycles!.push(
+      buildProductionCycle('thanh_van_lam', REALM, 1, 100, 1_000_000),
+    )
+
+    expect(system.getState('thanh_van_lam')!.assignedWorkers).toBe(2)
+    expect(system.getState('thanh_van_lam')!.workerCycles).toHaveLength(0)
+
+    const all = system.getAllStates()
+    all[0]!.assignedWorkers = 77
+    all[0]!.workerCycles!.push(
+      buildProductionCycle('thanh_van_lam', REALM, 1, 100, 1_000_000),
+    )
+
+    expect(system.getState('thanh_van_lam')!.assignedWorkers).toBe(2)
+    expect(system.getState('thanh_van_lam')!.workerCycles).toHaveLength(0)
   })
 })

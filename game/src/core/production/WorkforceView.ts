@@ -1,8 +1,8 @@
 import type { ProductionSiteState } from './ProductionTypes'
-import { resolveProductionWorkerCapacity } from './WorkerCapacity'
+import { sanitizeWorkerPoolInputs } from './WorkerCapacity'
 
 /**
- * Mission D (spec D1) — the ONE authoritative workforce view.
+ * Mission D (spec D1) - the ONE authoritative workforce view.
  * Presentation renders it verbatim and never recomputes capacity,
  * the decompose reservation, or the allocation itself (A2/A7/A9).
  */
@@ -31,13 +31,12 @@ export function buildWorkforceView(
   decomposeWorkers: number,
   states: readonly ProductionSiteState[],
 ): WorkforceView {
-  const total = Number.isFinite(totalWorkerCapacity)
-    ? Math.max(0, Math.floor(totalWorkerCapacity))
-    : 0
-
-  const reserved = Number.isFinite(decomposeWorkers)
-    ? Math.max(0, Math.floor(decomposeWorkers))
-    : 0
+  // D3 - pool inputs normalize through the ONE shared rule; the view
+  // never re-sanitizes total/reserved on its own.
+  const { total, reserved, available } = sanitizeWorkerPoolInputs(
+    totalWorkerCapacity,
+    decomposeWorkers,
+  )
 
   const requested: Record<string, number> = {}
   const effective: Record<string, number> = {}
@@ -48,8 +47,6 @@ export function buildWorkforceView(
     }
     effective[state.siteId] = state.activeWorkerSlots
   }
-
-  const available = resolveProductionWorkerCapacity(total, reserved)
   const used = Object.values(effective).reduce((sum, count) => sum + count, 0)
 
   return { total, reserved, available, requested, effective, idle: Math.max(0, available - used) }

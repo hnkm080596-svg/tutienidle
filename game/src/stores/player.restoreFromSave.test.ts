@@ -59,7 +59,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     vi.restoreAllMocks()
   })
 
-  // T3-26 — the returned OfflineResult must report the ACTUAL post-cap
+  // T3-26 - the returned OfflineResult must report the ACTUAL post-cap
   // delta (what addCultivation really credited), not the theoretical
   // elapsed*rate figure. The modal renders this number.
   it('reports actual post-cap offline cultivation, not theoretical', () => {

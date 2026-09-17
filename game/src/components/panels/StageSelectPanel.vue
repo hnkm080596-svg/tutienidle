@@ -177,7 +177,7 @@ const ARCHETYPE_LABEL_KEYS: Record<string, string> = {
 
 const mode = ref<BattleRunMode>('manual')
 
-// T4-38 — an armed mode must not leak across stage selection: every
+// T4-38 - an armed mode must not leak across stage selection: every
 // writer of selectedStageId (selectStage click, zone/chapter re-pick)
 // funnels through this watcher, so one reset covers all paths.
 watch(selectedStageId, () => {

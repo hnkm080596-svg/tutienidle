@@ -74,7 +74,7 @@ export interface ProductionSiteState {
   /** Parallel lanes the shared worker pool currently grants this site. */
   activeWorkerSlots: number
 
-  /** In-flight worker lane heads — the ONLY cycle kind (Mission D / spec D3). */
+  /** In-flight worker lane heads - the ONLY cycle kind (Mission D / spec D3). */
   workerCycles?: ProductionCycle[]
 
   /** Player-requested assignment; undefined = AUTO (round-robin share). */

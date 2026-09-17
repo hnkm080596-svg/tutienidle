@@ -25,7 +25,7 @@ const DAMAGE_REASONS: ReadonlySet<VitalsChangeReason> = new Set([
   'ward_break',
 ])
 
-// T6-54 — hp actually lost by the player on a damage-type vitals event, or
+// T6-54 - hp actually lost by the player on a damage-type vitals event, or
 // null when the event must not render a "-N" number. Presentation reads the
 // authoritative hpBefore/hpAfter delta, never event.amount (pre-absorb).
 export function vitalsDamageAmount(event: EntityVitalsChangedEvent): number | null {

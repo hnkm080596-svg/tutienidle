@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// T4-32 — startAlchemyJob failures went to console.warn (invisible to the
+// T4-32 - startAlchemyJob failures went to console.warn (invisible to the
 // player) and the brew button never disabled. These tests pin: every
 // reason code the domain can return has an alchemy.reason.* key; a failed
 // start pushes a localized notification; the button disables while the
@@ -141,7 +141,7 @@ describe('alchemy.reason.* key completeness (T4-32)', () => {
   })
 })
 
-describe('AlchemyView — failure surface + disabled brew (T4-32)', () => {
+describe('AlchemyView - failure surface + disabled brew (T4-32)', () => {
   it('failed brew pushes a localized notification instead of console.warn', async () => {
     const gameManager = createManager()
     // All materials present so canBrew passes; no pill_room built so the
@@ -171,7 +171,7 @@ describe('AlchemyView — failure surface + disabled brew (T4-32)', () => {
       level: 1,
       lastCollectedAt: 0,
     })
-    // Herb missing → the variant row is not 'enough'.
+    // Herb missing -> the variant row is not 'enough'.
     gameManager.materialBag.add(WOOD, 5)
 
     const mounted = mountAlchemy(gameManager)

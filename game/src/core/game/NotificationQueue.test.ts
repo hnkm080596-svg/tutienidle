@@ -107,7 +107,7 @@ describe('NotificationQueue — push/drain', () => {
     })
   })
 })
-// T4-37 — the skill-level-up toast used to push mojibake literals
+// T4-37 - the skill-level-up toast used to push mojibake literals
 // ("d?t c?p"); it must carry messageKey/messageParams so the renderer
 // localizes it, with a correct-Vietnamese fallback message.
 describe('skill level-up notification (T4-37)', () => {

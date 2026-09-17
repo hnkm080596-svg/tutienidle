@@ -6,7 +6,7 @@ export class SupabaseHttpError extends Error {
   }
 }
 
-// Audit T3-24 — no request may hang forever: every Supabase call carries
+// Audit T3-24 - no request may hang forever: every Supabase call carries
 // a 10s deadline, merged with any caller-provided signal.
 export const SUPABASE_REQUEST_TIMEOUT_MS = 10_000
 

@@ -150,7 +150,7 @@ export class QuestSystem {
       return false
     }
 
-    // Mission E Task 3 (audit T1-11) — grant before debit: a throwing
+    // Mission E Task 3 (audit T1-11) - grant before debit: a throwing
     // grant must not consume the turn-in cost. The debit cannot fail a
     // leg that succeeded earlier (resolveClaimable already proved the
     // bag holds the cost). Drops run last so the debit frees bag space

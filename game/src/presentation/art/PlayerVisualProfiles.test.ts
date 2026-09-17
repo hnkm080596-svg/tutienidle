@@ -32,22 +32,22 @@ describe('PlayerVisualProfiles — resolvePlayerVisualProfileId', () => {
     )
   })
 
-  // T4-39 — the_tu is a valid CultivationPathId and must resolve its own
+  // T4-39 - the_tu is a valid CultivationPathId and must resolve its own
   // logical profile (art layer may still fall back to mortal textures).
-  it('the_tu → the_tu', () => {
+  it('the_tu -> the_tu', () => {
     expect(resolvePlayerVisualProfileId({ realmId: 'qi_refining', cultivationPath: 'the_tu' })).toBe(
       'the_tu',
     )
   })
 
-  // phap_tu_an collapsed into phap_tu + cultivationWay (save v66) — the
+  // phap_tu_an collapsed into phap_tu + cultivationWay (save v66) - the
   // legacy id stays a mortal fallback, never revived.
-  it('legacy phap_tu_an → mortal fallback (not revived)', () => {
+  it('legacy phap_tu_an -> mortal fallback (not revived)', () => {
     expect(resolvePlayerVisualProfileId({ cultivationPath: 'phap_tu_an' })).toBe('mortal')
   })
 })
 
-describe('PlayerVisualProfiles — profile coverage', () => {
+describe('PlayerVisualProfiles - profile coverage', () => {
   it('every PlayerVisualProfileId has a presentation profile entry', () => {
     const ids = ['mortal', 'phap_tu', 'kiem_tu', 'the_tu'] as const
 

@@ -1,4 +1,4 @@
-// T6-54 — damage numbers must render from `entity_vitals_changed`, not the
+// T6-54 - damage numbers must render from `entity_vitals_changed`, not the
 // dead 'damage' subscription (nothing under src/core/tribulation emits it).
 // The conditional is captured in the pure helper `vitalsDamageAmount` so the
 // rule is testable without mounting Phaser.
@@ -27,7 +27,7 @@ function vitalsEvent(overrides: Partial<EntityVitalsChangedEvent>): EntityVitals
   }
 }
 
-describe('TribulationScene — vitalsDamageAmount', () => {
+describe('TribulationScene - vitalsDamageAmount', () => {
   it('returns the hp delta for player damage reasons', () => {
     for (const reason of ['damage', 'dot', 'heavenly_tribulation', 'reaction', 'reflection', 'ward_break'] as const) {
       expect(vitalsDamageAmount(vitalsEvent({ reason }))).toBe(300)

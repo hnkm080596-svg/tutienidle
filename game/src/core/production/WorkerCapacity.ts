@@ -10,7 +10,7 @@ export function getWorkerCapacityForLevel(chiHienQuanLevel: number): number {
 }
 
 /**
- * Mission D (spec D5) — the ONE worker-pool split rule: decompose
+ * Mission D (spec D5) - the ONE worker-pool split rule: decompose
  * claims `decomposeWorkers` from the CHQ pool FIRST; production
  * receives the remainder. Consumed by the online tick
  * (GameManagerTickOps), the offline restore settle
@@ -21,6 +21,18 @@ export function resolveProductionWorkerCapacity(
   totalWorkerCapacity: number,
   decomposeWorkers: number,
 ): number {
+  return sanitizeWorkerPoolInputs(totalWorkerCapacity, decomposeWorkers).available
+}
+
+/**
+ * D3 - the ONE normalization for worker-pool inputs (finite, floored,
+ * clamped at 0), shared by the split rule and the read model so a
+ * policy change cannot drift UI away from the engine.
+ */
+export function sanitizeWorkerPoolInputs(
+  totalWorkerCapacity: number,
+  decomposeWorkers: number,
+): { total: number; reserved: number; available: number } {
   const total = Number.isFinite(totalWorkerCapacity)
     ? Math.max(0, Math.floor(totalWorkerCapacity))
     : 0
@@ -29,5 +41,5 @@ export function resolveProductionWorkerCapacity(
     ? Math.max(0, Math.floor(decomposeWorkers))
     : 0
 
-  return Math.max(0, total - reserved)
+  return { total, reserved, available: Math.max(0, total - reserved) }
 }

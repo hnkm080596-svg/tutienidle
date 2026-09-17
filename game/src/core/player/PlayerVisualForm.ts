@@ -12,9 +12,9 @@ export type PlayerVisualProfileId = 'mortal' | 'phap_tu' | 'kiem_tu' | 'the_tu'
  * - `cultivationPath` decides once the character has entered a path
  *   (phap_tu/kiem_tu/the_tu);
  * - still mortal (no path) or an unknown value -> `mortal`;
- * - `kiem_tu`/`the_tu` return their own ids (the logical form) — the art
+ * - `kiem_tu`/`the_tu` return their own ids (the logical form) - the art
  *   layer falls back to mortal while no dedicated art exists.
- * - `phap_tu_an` collapsed into phap_tu + cultivationWay (save v66) —
+ * - `phap_tu_an` collapsed into phap_tu + cultivationWay (save v66) -
  *   the legacy id must NOT be revived here.
  */
 export function resolvePlayerVisualProfileId(input: {

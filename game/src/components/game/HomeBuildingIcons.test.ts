@@ -433,10 +433,10 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
     mounted.unmount()
   })
 
-  // T4-31 — presentationFor/statusFor read no reactive source, so badges
+  // T4-31 - presentationFor/statusFor read no reactive source, so badges
   // and nameplates froze at first render. After the fix they track
   // stateVersion: a build landing after mount must flip the badge.
-  it('badge flips locked → built after a building materializes + bumpState', async () => {
+  it('badge flips locked -> built after a building materializes + bumpState', async () => {
     const mounted = mountHomeBuildings(gameManager)
 
     const nameplate = mounted.nameplate('pill_room')!

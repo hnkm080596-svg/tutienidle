@@ -52,7 +52,7 @@ export function settleProductionOffline(
   nowMs: number = Date.now(),
   options: ProductionOfflineOptions = {},
 ): number {
-  // Mission D (spec D3) — workers-as-fuel: the manual activeCycle path
+  // Mission D (spec D3) - workers-as-fuel: the manual activeCycle path
   // is gone; offline settle is exactly the worker-lane phase under the
   // full PRODUCTION_OFFLINE_CAP budget.
   return settleWorkersOffline(
@@ -69,8 +69,8 @@ export function settleProductionOffline(
 }
 
 /**
- * Offline settle cho worker cycles (T3) — toàn bộ ngân sách cap
- * (Mission D: không còn manual phase ăn budget trước).
+ * Offline settle for worker cycles (T3) - the whole cap budget
+ * (Mission D: no manual phase eats budget first anymore).
  *
  * M11 (ARCH-007): each site runs `slots` parallel worker LANES inside the
  * [offlineSinceMs, nowMs] window — one sequential cycle chain per lane on
@@ -104,11 +104,14 @@ function settleWorkersOffline(
     state.activeWorkerSlots = 0
   }
 
-  // workerCapacity <= 0 mirrors the online early-return (tickWorkers
-  // freezes workerCycles entirely when capacity is 0). Budget 0 must
-  // STILL run: due cycles forfeit under the cap instead of lingering
-  // past-due for a free online grant.
-  if (activeStates.length === 0 || workerCapacity <= 0) {
+  // D1 (INV-D-03) — same retained-lane contract as tickWorkers: saved
+  // in-flight lanes keep their own deadlines and settle under the cap
+  // budget even when the pool is zero or the site left the auto set.
+  // Only a total absence of advanceable work skips the pass.
+  const advanceableStates = [...deps.states.values()].filter(
+    (state) => state.autoRestart || (state.workerCycles?.length ?? 0) > 0,
+  )
+  if (advanceableStates.length === 0) {
     return 0
   }
 
@@ -126,7 +129,7 @@ function settleWorkersOffline(
 
   let budgetMs = budgetRemainingMs
 
-  for (const state of activeStates) {
+  for (const state of advanceableStates) {
     const slots = slotsBySite.get(state.siteId) ?? 0
 
     const definition = deps.getSiteDefinition(state.siteId)
