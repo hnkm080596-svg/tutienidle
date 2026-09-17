@@ -70,6 +70,18 @@ Battle chạy dưới `PresentationSession` (`core/presentation/PresentationSess
 
 `BattleRunMode`: `manual` | `repeat` (đánh lại stage) | `progress` (auto tiến stage kế) | `perfect_farm` (farm stage đã hoàn mỹ). `combatInputMode`: `auto` (engine không pause) | `manual` (pause tới lượt player chờ chọn skill qua 3 nút) — trục riêng với run mode.
 
+## Combat contract layer — built-but-dormant
+
+Contract layer cho combat (spec `.superpowers/sdd/2026-09-17-combat-systems-contract-spec.md`, megaplan `2026-09-17-megaplan-combat-contract`, branch `feat/combat-contract`) đã build xong nhưng **chưa route gameplay** — gameplay authority hiện tại vẫn là pipeline declare → apply phía trên.
+
+- `core/battle/contracts/` — contract types: `CombatOperation` union (16 member generic, không primitive theo-path), `CombatOperationResult`, `CombatEvent` (producer emit envelope-free payload → scoped sink mint `eventId` + causation id), `CombatOperationOrigin`, `CombatRng`, settlement/batch types.
+- `core/battle/runtime/scheduler/` — `CombatOperationExecutor` (pure router `op.type` → authority port), `CombatScheduler` (settlement barrier sau mỗi op, per-execution event frames depth-first, exactly-once `eventId` dedup, dual guard `settlement_depth_exceeded` / `settlement_work_budget_exceeded`, fault lane out-of-band qua `diagnosticSink`), `CombatOperationBatchRunner` (atomic preflight + deferred `heal_from_damage_result`), `CombatTrace` (journal + causation tree §85), `CombatTraceExporter` (dev-only serializable snapshot — không phải dependency của gameplay path).
+- Composition root `GameManagerTurnBattleOps.mintCycleScheduler()` mint executor + scheduler mỗi battle cycle, inject vào `TurnBattleSystem` — **dormant**: chưa có authored op nào route qua; port `buffs` để `undefined` chờ buff megaplan. Adapter damage/heal/gauge/resource/shield đã nối vào engine hiện tại (`runtime/scheduler/adapters/`).
+- RNG: `mintCycleRng()` mint một `CombatRng` mỗi cycle — mọi roll của engine đi qua `roll()`/`rollChance()` của nó; `SeededCombatRng` qua `setBattleRngFactory` phục vụ determinism test.
+- DoD sweep theo spec §104 (row → test hoặc sibling plan): [../architecture/2026-09-17-combat-contract-dod.md](../architecture/2026-09-17-combat-contract-dod.md).
+
+Các sibling plan (skill / reaction / buff megaplan, seal batch) sẽ produce + consume trên layer này.
+
 ## Liên quan
 
 - [damage-pipeline.md](./damage-pipeline.md) — damage resolve chi tiết.
