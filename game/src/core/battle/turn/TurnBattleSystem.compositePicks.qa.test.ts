@@ -18,6 +18,7 @@ import {
 } from '../../../data/buff/TheTuBuffs'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
+import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
 // AR-18 QA Probe:
@@ -297,7 +298,7 @@ describe('composite extra picks run the declared-hit pipeline', () => {
       /*reactionManager*/ undefined,
       /*onSkillCast*/ undefined,
       /*liveStatModifiers*/ undefined,
-      () => 0,
+      new FunctionCombatRng(() => 0),
     )
 
     const attackerP = makeParticipant('player', makeRegressEntity('player', 100), 0)

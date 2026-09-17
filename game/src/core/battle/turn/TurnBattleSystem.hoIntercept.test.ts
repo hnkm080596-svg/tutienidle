@@ -12,6 +12,7 @@ import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
 import { PHAN_CHINH_BUFF, PHAN_CHINH_MAXHP_RATIO, PHAN_CHINH_TAKEN_RATIO } from '../../../data/buff/TheTuBuffs'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
@@ -165,7 +166,7 @@ function system(rng?: () => number): TurnBattleSystem {
     /*reactionManager*/ undefined,
     /*onSkillCast*/ undefined,
     /*liveStatModifiers*/ undefined,
-    rng,
+    rng === undefined ? undefined : new FunctionCombatRng(rng),
   )
 }
 

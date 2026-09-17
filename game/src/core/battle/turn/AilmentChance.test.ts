@@ -8,6 +8,7 @@ import { createBaseStats } from '../../stats/StatBlock'
 import { BuffPool } from '../../buff/BuffPool'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 
 // Mission C Task 10b — elementApplicationPercent must apply to ailment
 // application rolls in turn combat (the deleted legacy executor already
@@ -83,7 +84,7 @@ describe('applySkillAilments honors elementApplicationPercent', () => {
       undefined,
       vi.fn(),
       undefined,
-      () => 0.9,
+      new FunctionCombatRng(() => 0.9),
     )
 
     system.resolveNextStep(battle)
@@ -115,7 +116,7 @@ describe('applySkillAilments honors elementApplicationPercent', () => {
       undefined,
       vi.fn(),
       undefined,
-      () => 0.9,
+      new FunctionCombatRng(() => 0.9),
     )
 
     system.resolveNextStep(battle)

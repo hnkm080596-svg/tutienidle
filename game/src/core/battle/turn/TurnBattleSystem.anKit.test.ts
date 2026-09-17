@@ -5,6 +5,7 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import { BuffPool } from '../../buff/BuffPool'
+import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
 // Phap Tu Reimagined Task 11 (plan Task 10) — the Phap Tu An kit:
@@ -117,7 +118,7 @@ function harness(rng: () => number = () => 0.5) {
     undefined,
     onSkillCast,
     undefined,
-    rng,
+    new FunctionCombatRng(rng),
   )
 
   return { battle, playerParticipant, enemyParticipant, system, onSkillCast }

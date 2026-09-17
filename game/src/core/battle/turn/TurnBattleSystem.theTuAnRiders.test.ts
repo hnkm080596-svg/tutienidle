@@ -12,6 +12,7 @@ import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import { HO_MON_MARKER, TRO_MON_MARKER } from '../../../data/buff/TheTuBuffs'
 import { BAT_TU_BA_THE, TRO_KICH } from '../../../data/skill/TheTuSkills'
 import { TheTuBatTuSurvival } from '../../the-tu/TheTuBatTuSurvival'
@@ -159,7 +160,7 @@ function system(rng?: () => number): TurnBattleSystem {
     /*reactionManager*/ undefined,
     /*onSkillCast*/ undefined,
     /*liveStatModifiers*/ undefined,
-    rng,
+    rng === undefined ? undefined : new FunctionCombatRng(rng),
   )
 }
 
@@ -461,7 +462,7 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
       /*reactionManager*/ undefined,
       /*onSkillCast*/ undefined,
       /*liveStatModifiers*/ undefined,
-      rng,
+      new FunctionCombatRng(rng),
     )
 
     sys.applyActionImpact(f.battle, declaredEnemyAction(f, [f.defenderP]))

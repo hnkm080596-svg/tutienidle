@@ -5,6 +5,9 @@
 // slice sau.
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { CombatSystem } from '../../combat/CombatSystem'
+import type { CombatRng } from '../contracts/rng'
+import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
+import type { CombatScheduler } from '../runtime/scheduler/CombatScheduler'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
 import { resolveAilmentApplicationChance } from './AilmentChance'
 import { consumeGaugeAfterAction, advanceGauge, isGaugeReady } from './ActionGauge'
@@ -472,11 +475,21 @@ export class TurnBattleSystem {
      * Phap Tu Reimagined Task 11 — the ONE randomness source for all
      * new An-kit rolls (composite picks, multicast rolls, ailment
      * application). Tests inject a scripted rng for determinism.
-     * The default is a LAZY closure — reading Math.random at each call
-     * keeps vi.spyOn(Math, 'random') interception working for callers
-     * that construct the system before installing the spy.
+     * Combat-contract M4 — retyped to the CombatRng interface; the
+     * default wraps a LAZY Math.random closure so vi.spyOn(Math,
+     * 'random') interception keeps working for callers that construct
+     * the system before installing the spy. Downstream helpers that
+     * still take `() => number` receive `() => this.rng.roll()` —
+     * identical consumption order.
      */
-    private readonly rng: () => number = () => Math.random(),
+    private readonly rng: CombatRng = new FunctionCombatRng(() => Math.random()),
+    /**
+     * Combat-contract M4 — the per-cycle operation scheduler, built by
+     * the composition root (GameManagerTurnBattleOps.mintCycleScheduler).
+     * CONSTRUCTED but DORMANT: no authored ops route through it until
+     * the buff/skill cutover lands.
+     */
+    private readonly combatScheduler?: CombatScheduler,
   ) {}
 
   // Action Playback Task 3 — gauge-delta deferral chuyển từ local vars
@@ -1030,7 +1043,7 @@ export class TurnBattleSystem {
     // punish-on-cast áp hard-CC buff lên actor, CC-check kế tiếp đọc state
     // mới → ccBlocked đúng theo spec §4.2 ordering.
     if (this.registry) {
-      actorBuffSystem.rollReactiveTrigger(actor.entity, 'onCastBegin', this.registry, undefined, this.rng)
+      actorBuffSystem.rollReactiveTrigger(actor.entity, 'onCastBegin', this.registry, undefined, () => this.rng.roll())
     }
 
     // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
@@ -1311,7 +1324,7 @@ export class TurnBattleSystem {
       const composite = action.skill?.compositePicks
 
       if (composite?.poolType === 'element_basic' && composite.pool.length > 0) {
-        const picks = pickCompositePool(composite.pool, composite.count, this.rng)
+        const picks = pickCompositePool(composite.pool, composite.count, () => this.rng.roll())
 
         if (picks.length > 0) {
           execution = {
@@ -1821,7 +1834,7 @@ export class TurnBattleSystem {
         // ARCH-009 (M9) — proc definitions are read from the ACTOR's
         // pool, but the resulting buff belongs to the HIT VICTIM's
         // pool (sourceId = actor, targetId = victim).
-        new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry, this.rng)
+        new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry, () => this.rng.roll())
 
         // Action Playback Task 5 + stat-system-reimagined Task 5 (D5)
         // — onImpactLanded counter trigger trên TARGET bị hit, gated
@@ -1834,7 +1847,7 @@ export class TurnBattleSystem {
           ? new BuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry, {
               attacker: actor.entity,
               hpDamage: hitResult.hpDamage,
-            }, this.rng)
+            }, () => this.rng.roll())
           : { firedFollowUp: false, reflectRequests: [] }
 
         if (firedFollowUp) {
@@ -2118,7 +2131,7 @@ export class TurnBattleSystem {
     const composite = rootSkill.compositePicks
 
     if (composite?.poolType === 'element_basic' && composite.pool.length > 0) {
-      const picks = pickCompositePool(composite.pool, composite.count, this.rng)
+      const picks = pickCompositePool(composite.pool, composite.count, () => this.rng.roll())
 
       if (picks.length > 0) {
         payloadSkill = picks[0]!
@@ -2250,7 +2263,7 @@ export class TurnBattleSystem {
       const depth = execution.multicastDepth ?? 0
       const cap = Math.min(multicast.maxExtraCasts, MAX_MULTICAST)
 
-      if (depth < cap && this.rng() < multicast.chance) {
+      if (depth < cap && this.rng.rollChance(multicast.chance)) {
         const queue = (battle.queuedExecutions ??= [])
         queue.push({
           actorId: actor.id,
@@ -2404,7 +2417,7 @@ export class TurnBattleSystem {
           effect.chanceStat,
           holder.entity.stats[effect.chanceStat] ?? 0,
         )
-        const success = this.rng() < chance
+        const success = this.rng.rollChance(chance)
 
         if (success) {
           onProcSuccess(holder.entity, effect.theGainOnSuccess)
@@ -2956,7 +2969,7 @@ export class TurnBattleSystem {
       // deterministic seam as composite picks and multicast rolls).
       // Mission C Task 10b — elementApplicationPercent adds to the base
       // chance (parity with the deleted legacy executor).
-      if (this.rng() < resolveAilmentApplicationChance(ailment.chance, actor.entity.stats.elementApplicationPercent)) {
+      if (this.rng.rollChance(resolveAilmentApplicationChance(ailment.chance, actor.entity.stats.elementApplicationPercent))) {
         // Skip an unresolvable ailment id gracefully — same try/catch
         // pattern as the bossTrigger lookup in declareActorAction.
         let definition: BuffDefinition | undefined

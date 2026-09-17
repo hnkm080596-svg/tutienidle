@@ -18,6 +18,16 @@ import {
 } from '../battle/turn/CombatClock'
 import { TurnToken, type TokenState } from '../battle/turn/TurnToken'
 import { TurnPipeline } from '../battle/turn/TurnPipeline'
+import type { CombatRng } from '../battle/contracts/rng'
+import type { CombatEntityId } from '../battle/contracts/ids'
+import { FunctionCombatRng } from '../battle/runtime/rng/FunctionCombatRng'
+import { CombatOperationExecutor } from '../battle/runtime/scheduler/CombatOperationExecutor'
+import { CombatScheduler } from '../battle/runtime/scheduler/CombatScheduler'
+import { CombatSystemDamageAdapter } from '../battle/runtime/scheduler/adapters/CombatSystemDamageAdapter'
+import { CombatSystemHealAdapter } from '../battle/runtime/scheduler/adapters/CombatSystemHealAdapter'
+import { ActionGaugeAdapter } from '../battle/runtime/scheduler/adapters/ActionGaugeAdapter'
+import { EntityResourceAdapter } from '../battle/runtime/scheduler/adapters/EntityResourceAdapter'
+import { VitalsShieldAdapter } from '../battle/runtime/scheduler/adapters/VitalsShieldAdapter'
 export type { ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
 import { BuffSystem } from '../buff/BuffSystem'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
@@ -38,7 +48,7 @@ import type { Stage } from '../stage/Stage'
 import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
-import type { BuffDefinition } from '../buff/BuffTypes'
+import type { Buff, BuffDefinition } from '../buff/BuffTypes'
 import type { FormationLoadout, PlayerData } from '../player/Player'
 import { playerToCombatEntity } from '../player/Player'
 import type { Stats } from '../stats/StatBlock'
@@ -252,13 +262,15 @@ export class GameManagerTurnBattleOps {
     // access; the registry remains GameManager-owned (A3).
     getProgressionNodes: () => readonly ProgressionNode[]
     /**
-     * Mission C Task 8 — mints the session RNG for ONE battle cycle.
-     * Scope boundary: only combat rolls consume it (combat formulas,
-     * proc chances, spawn placement, pool/tag/hidden-beast picks,
-     * engine rolls). Loot/alchemy/pill economy randomness stays on
-     * Math.random deliberately — a seeded battle must not pin drops.
+     * Mission C Task 8 — mints the session RNG for ONE battle cycle
+     * (combat-contract M4: typed CombatRng, consumed via roll()/
+     * rollChance()). Scope boundary: only combat rolls consume it
+     * (combat formulas, proc chances, spawn placement, pool/tag/
+     * hidden-beast picks, engine rolls). Loot/alchemy/pill economy
+     * randomness stays on Math.random deliberately — a seeded battle
+     * must not pin drops.
      */
-    createBattleRng?: () => () => number
+    createBattleRng?: () => CombatRng
   }) {
     this.turnBattleSystem = new TurnBattleSystem(
       deps.combatSystem,
@@ -273,6 +285,7 @@ export class GameManagerTurnBattleOps {
       this.onSkillCast,
       this.liveStatModifiers,
       this.combatRng,
+      this.combatScheduler,
     )
     // Presentation facade (Wave-2 split) - owns the PresentationSession +
     // CombatAnimationRuntime + mode flag. Deferred closures keep the
@@ -797,25 +810,28 @@ export class GameManagerTurnBattleOps {
   private battleGeneration = 0
 
   /**
-   * Mission C Task 8 — the session RNG for the CURRENT cycle. Minted by
-   * beginBattleCycle from deps.createBattleRng; every combat roll reads
-   * it (combat formulas via combatSystem.setRandomSource, engine rolls
-   * via the TurnBattleSystem ctor param, spawn placement + pool/tag/
-   * hidden-beast picks via the spawn closures).
+   * Mission C Task 8 — the session RNG for the CURRENT cycle, re-typed
+   * to CombatRng by combat-contract M4. Minted by beginBattleCycle from
+   * deps.createBattleRng; every combat roll reads it (combat formulas
+   * via combatSystem.setRandomSource, engine rolls via the
+   * TurnBattleSystem ctor param, spawn placement + pool/tag/
+   * hidden-beast picks via the spawn closures). Downstream helpers that
+   * still take `() => number` receive `() => rng.roll()` — identical
+   * consumption order.
    */
   // Lazy default — a stored `Math.random` reference would bypass
   // vi.spyOn interception. Re-minted per cycle by mintCycleRng().
-  private combatRng: () => number = () => Math.random()
+  private combatRng: CombatRng = new FunctionCombatRng(() => Math.random())
 
   /**
    * Test/dev seam mirroring setCombatClockSource: swap the factory that
    * mints each cycle's session RNG. Applies from the NEXT cycle.
    */
-  setBattleRngFactory(factory: (() => () => number) | undefined): void {
+  setBattleRngFactory(factory: (() => CombatRng) | undefined): void {
     this.battleRngFactoryOverride = factory
   }
 
-  private battleRngFactoryOverride: (() => () => number) | undefined
+  private battleRngFactoryOverride: (() => CombatRng) | undefined
 
   /**
    * Mission C Task 9 — dev/test seam mirroring setBattleRngFactory: swap
@@ -833,10 +849,84 @@ export class GameManagerTurnBattleOps {
   }
 
   private mintCycleRng(): void {
-    // The built-in factory returns a LAZY Math.random closure — storing
-    // `Math.random` by reference would bypass vi.spyOn interception.
-    this.combatRng = ((this.battleRngFactoryOverride ?? this.deps.createBattleRng) ?? (() => () => Math.random()))()
-    this.deps.combatSystem.setRandomSource(this.combatRng)
+    // The built-in fallback wraps a LAZY Math.random closure in a
+    // FunctionCombatRng — storing `Math.random` by reference would
+    // bypass vi.spyOn interception (the sanctioned spy seam).
+    this.combatRng =
+      (this.battleRngFactoryOverride ?? this.deps.createBattleRng)?.() ??
+      new FunctionCombatRng(() => Math.random())
+    // CombatSystem keeps its `() => number` seam — the wrapper forwards
+    // to THIS mint's stream (capture the object, not the mutable field).
+    const rng = this.combatRng
+    this.deps.combatSystem.setRandomSource(() => rng.roll())
+  }
+
+  /**
+   * Combat-contract M4 — the per-cycle operation scheduler + executor.
+   * CONSTRUCTED but DORMANT: no authored ops route through it until the
+   * buff/skill cutover lands; TurnBattleSystem receives it as a ctor
+   * dep alongside the cycle CombatRng. Every lookup closes over the
+   * LIVE turnBattle (read at call time — the field is reassigned
+   * wholesale per cycle) so op target ids resolve to the same objects
+   * the engine mutates.
+   */
+  private combatScheduler: CombatScheduler | undefined
+
+  private mintCycleScheduler(): void {
+    const resolveParticipant = (
+      id: CombatEntityId,
+    ): TurnBattleParticipant | undefined => {
+      const battle = this.turnBattle
+      if (battle === null) {
+        return undefined
+      }
+      return (
+        battle.players.find((participant) => participant.id === id) ??
+        battle.enemies.find((participant) => participant.id === id)
+      )
+    }
+    const resolveEntity = (id: CombatEntityId): CombatEntity | undefined =>
+      resolveParticipant(id)?.entity
+
+    const executor = new CombatOperationExecutor({
+      damage: new CombatSystemDamageAdapter(this.deps.combatSystem, resolveEntity, {
+        // M3 carryover — the same resolution declareActorAction hands
+        // BuffSystem.update (the DoT SOURCE's own pool), so authored
+        // dotRecovery triggers stay reachable on legacy_dot ops.
+        resolveSourceBuffs: (id: CombatEntityId): readonly Buff[] | undefined =>
+          resolveParticipant(id)?.buffs.getAll(),
+      }),
+      heal: new CombatSystemHealAdapter(this.deps.combatSystem, resolveEntity),
+      gauge: new ActionGaugeAdapter((id) => resolveParticipant(id)),
+      resource: new EntityResourceAdapter(resolveEntity),
+      shield: new VitalsShieldAdapter(this.deps.combatSystem.vitals, resolveEntity),
+      // buffs port stays unwired until the buff2 authority lands.
+    })
+
+    this.combatScheduler = new CombatScheduler(executor, {
+      preconditions: {
+        isAlive: (id) => resolveParticipant(id)?.entity.alive ?? false,
+        getBuffInstance: (instanceId) => {
+          // Legacy Buff.id is the DEFINITION id (the per-instance key is
+          // (id, sourceId)); a real BuffInstanceId arrives with the buff
+          // authority cutover. Until then this is a fail-closed
+          // best-effort: a wrong first match fails the batch's
+          // expected-source/target/stacks check (stale skip), never a
+          // wrong execute.
+          const battle = this.turnBattle
+          if (battle === null) {
+            return undefined
+          }
+          for (const participant of [...battle.players, ...battle.enemies]) {
+            const buff = participant.buffs.getAll().find((entry) => entry.id === instanceId)
+            if (buff !== undefined) {
+              return { sourceId: buff.sourceId, targetId: buff.targetId, stacks: buff.stacks }
+            }
+          }
+          return undefined
+        },
+      },
+    })
   }
 
   getBattleGeneration(): number {
@@ -989,7 +1079,10 @@ export class GameManagerTurnBattleOps {
 
     // A fresh cycle owns a fresh engine - its private pending fields
     // (reactive entries, queued executions, gauge deltas, manual options)
-    // can never carry across a boundary.
+    // can never carry across a boundary. The operation scheduler mints
+    // alongside it (M4 - constructed but dormant until the buff/skill
+    // cutover routes authored ops through it).
+    this.mintCycleScheduler()
     this.turnBattleSystem = new TurnBattleSystem(
       this.deps.combatSystem,
       10_000,
@@ -999,6 +1092,7 @@ export class GameManagerTurnBattleOps {
       this.onSkillCast,
       this.liveStatModifiers,
       this.combatRng,
+      this.combatScheduler,
     )
 
     // ARCH-002 (M7) - fold construction-time buffs (formation Tran Phap)
@@ -1093,7 +1187,7 @@ export class GameManagerTurnBattleOps {
       const isFinalSpawn =
         (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
       const template =
-        this.deps.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn, { rng: this.combatRng }) ??
+        this.deps.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn, { rng: () => this.combatRng.roll() }) ??
         this.lastStageEnemyTemplate
 
       if (!template) {
@@ -1140,7 +1234,7 @@ export class GameManagerTurnBattleOps {
     const position = resolveEnemySpawnPosition(
       {
         isBoss: entity.isBoss ?? false,
-        random: this.combatRng,
+        random: () => this.combatRng.roll(),
       },
       undefined,
       occupiedSlots,
@@ -1182,11 +1276,14 @@ export class GameManagerTurnBattleOps {
     // Dynamic-basic provider (Kiem Pho orbs / Ngu Kiem Dao multi-instance)
     // — OWNS the basic slot where a path supplies one; preset cursor/log
     // live in the provider closure, not PlayerData. Rolls consume the
-    // session RNG.
+    // session RNG — the captured object (not the mutable field) so the
+    // provider stays bound to THIS cycle's stream exactly like the
+    // retired closure hand-off did.
+    const cycleRng = this.combatRng
     const dynamicBasic = pathRuntime?.buildDynamicBasic?.(
       playerPath!,
       this.deps.getProgressionNodes(),
-      this.combatRng,
+      () => cycleRng.roll(),
     )
     if (dynamicBasic) {
       playerParticipant.dynamicBasic = dynamicBasic
@@ -1287,7 +1384,7 @@ export class GameManagerTurnBattleOps {
     const enemyParticipants = enemyEntities.map((enemyEntity, index) => {
       const position = resolveEnemySpawnPosition({
         isBoss: enemyEntity.isBoss ?? false,
-        random: this.combatRng,
+        random: () => this.combatRng.roll(),
       })
 
       enemyEntity.row = position.row
@@ -1341,7 +1438,7 @@ export class GameManagerTurnBattleOps {
     let started = false
     try {
       started = this.deps.stageWaves.start(player, stage, repeatContinuously, {
-        rng: () => this.combatRng(),
+        rng: () => this.combatRng.roll(),
       })
     } finally {
       this.isStageStarting = false

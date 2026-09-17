@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
-import { mulberry32 } from '../battle/SeededRandom'
+import { SeededCombatRng } from '../battle/runtime/rng/SeededCombatRng'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { createBaseStats } from '../stats/StatBlock'
@@ -316,7 +316,7 @@ describe('session RNG (spec C3) — one seeded source owns every combat roll', (
 
   function runSeededBattle(seed: number) {
     const { gameManager, combatSource, player } = harness()
-    gameManager.setBattleRngFactory(() => mulberry32(seed))
+    gameManager.setBattleRngFactory(() => new SeededCombatRng(seed))
     player.baseStats = { ...player.baseStats, might: 200, criticalRate: 0.5 } as typeof player.baseStats
 
     gameManager.catalogOps.registerEnemyTemplates([TANKY_ENEMY, FAST_ENEMY])

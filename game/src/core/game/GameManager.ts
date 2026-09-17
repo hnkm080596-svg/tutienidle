@@ -154,6 +154,7 @@ import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 
 import type { Stats } from '../stats/StatBlock'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
+import type { CombatRng } from '../battle/contracts/rng'
 import type {
   ClockSource,
   CombatClockState,
@@ -896,10 +897,11 @@ export class GameManager {
 
   /**
    * Mission C Task 8 — seed every battle cycle's RNG. The factory runs
-   * once per beginBattleCycle; pass `() => mulberry32(seed)` in tests for
-   * deterministic combat. `undefined` restores Math.random.
+   * once per beginBattleCycle; pass `() => new SeededCombatRng(seed)`
+   * in tests for deterministic combat (combat-contract M4: the minted
+   * unit is a typed CombatRng). `undefined` restores Math.random.
    */
-  setBattleRngFactory(factory: (() => () => number) | undefined): void {
+  setBattleRngFactory(factory: (() => CombatRng) | undefined): void {
     this.turnBattleOps.setBattleRngFactory(factory)
   }
 

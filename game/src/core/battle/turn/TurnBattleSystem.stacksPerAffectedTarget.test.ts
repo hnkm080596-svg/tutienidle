@@ -7,6 +7,7 @@ import { createBaseStats } from '../../stats/StatBlock'
 import { BuffPool } from '../../buff/BuffPool'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import { PHAP_TU_EMPOWERED_ULTS } from '../../../data/skill/PhapTuEmpoweredUlts'
 
 // Mission C Task 10a (audit T3-19 adjacent) — Hau Tho Thanh Luy's
@@ -68,7 +69,7 @@ function harness(enemyCount: number) {
     undefined,
     vi.fn(),
     undefined,
-    () => 0.5, // deterministic mid rng — hit/evasion rolls all land
+    new FunctionCombatRng(() => 0.5), // deterministic mid rng — hit/evasion rolls all land
   )
 
   return { battle, playerParticipant, enemyParticipants, system }
