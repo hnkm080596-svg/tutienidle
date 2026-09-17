@@ -184,3 +184,34 @@ External re-review of the round-1 fix returned `REQUEST CHANGES` — 2 Medium + 
 - `ActiveStageSnapshot.spawnedCount/spawnCountdown` are reviewer-specified vestigial fields — the live spawn count has been owned by `battle.wave.spawnedCount` since the wave redesign (`getStageProgress` already reads it); the snapshot fields are set at acquire and never mutated. Consumers needing live progress should not read them.
 - A throw inside `discardFailedCycle`'s own teardown (e.g. a throwing `battle_end` subscriber) would mask the original error — the same exposure `abandonBattle` already has; no new risk introduced.
 - A 'test'/'fresh'-policy beginBattleCycle run while the wave system holds a stage lease (devtools/test seam) leaves the lease held if the new cycle SUCCEEDS — pre-existing devtools-only gap, unchanged by this round; the failure path now releases it.
+
+---
+
+# Addendum — External audit round 3 (P15 comment hygiene + failure-contract carry semantics), HEAD 34905cd7+
+
+External re-review of the round-2 fix returned `REQUEST CHANGES` — 1 Medium + 2 Low. C5–C8 confirmed fixed; the new findings were a hard-rule violation in the round-2 diff itself plus two failure-contract semantic holes. All three verified real before repair; this addendum is the round-3 record.
+
+## Findings (confirmed -> fixed)
+
+### EXT-C10 (MEDIUM): round-2 authored comments violated P15 (ASCII-only)
+- **Evidence:** the round-2 diff introduced dozens of Unicode punctuation marks (em dash, arrows, ellipsis) plus a relocated Vietnamese doc block across `StageManager.ts`, `StageWaveSystem.ts`, `GameManagerTurnBattleOps.ts`, `GameManagerAutoFarmOps.ts` and the new/changed test files. P15 is a hard protection rule (Windows mojibake prevention); the Mission C plan itself restates it.
+- **Fix:** blame-scoped sweep — only lines authored by the two Mission C commits (`43940c12`, `98520206`) were normalized (`em dash` -> `-`, `->` arrows -> `->`, ellipsis -> `...`); the relocated Vietnamese doc comments were translated to English. No legacy lines touched; pure character substitution (no whitespace/indentation changes). Verified zero non-ASCII bytes remain in added diff lines.
+- **Test:** N/A (comment-only) — type-check + scoped suite rerun green after the sweep.
+
+### EXT-C11 (LOW): discard banked carry AFTER the new cycle had already zeroed the stacks
+- **Evidence:** `beginBattleCycleCommitted` runs `resetPassiveStacks()` before the throw-prone construction work; the discard then called `bankPassiveCarry`, which reads the LIVE passive stacks - already reset to 0. A failed begin banked `floor(0 * fraction)` instead of the destroyed battle's real stacks, contradicting the authored 'bank at battle end regardless of outcome' rule.
+- **Fix:** the bank moved to `beginBattleCycle`'s pre-commit section - a non-terminal previous battle with a bound player banks its carry BEFORE the committed section runs (a mid-fight replace is an implicit battle end, same as abandon). A terminal previous battle is skipped (its terminal already banked). The discard no longer banks at all - post-reset banking is exactly the bug.
+- **Test:** `stageLease.test.ts` C11 - battle A with 4 stacks + throwing path runtime -> `phaGiapCarryStacks === 2` (`floor(4 * 0.5)`), `phaGiapCarryRealmId` set. Red pre-fix (banked 0).
+
+### EXT-C12 (LOW): post-assignment throw ate the previous battle's terminal
+- **Evidence:** the discard keyed terminal teardown on `this.turnBattle === previousBattle`. Once the new half-built battle had taken over `this.turnBattle`, a later throw dropped BOTH battles silently - the live previous battle never got its one `battle_end: defeat` even though presentation knew it.
+- **Fix:** the discard now terminalizes `previousBattle` directly (the captured reference), not whatever `this.turnBattle` happens to point at. `this.turnBattle = null` still runs unconditionally - the slot is cleared whether it holds the old battle or the half-built one.
+- **Test:** `stageLease.test.ts` C12 - stub `CultivationPathRuntime` that clears every pre-assignment resolve call then throws inside `buildSurviveSources` (first throw-prone site after the assignment) -> `battleEnds === ['defeat']` for the previous battle, `getTurnBattle() === null`, fixed retry clean. Red pre-fix (emitted nothing).
+
+## Verification
+- `npm run type-check`: clean.
+- Scoped: 115 files / 685 tests across `src/core/game/` + `src/core/stage/` (4 expected-fail) - includes the two new red-then-green regressions.
+- P13/P14: not triggered - domain-layer change.
+
+## Residual (documented, not blocking)
+- Behavior note (intended, consistent with authored rule): a mid-fight fresh replace now banks the outgoing battle's carry where it previously dropped silently - 'bank at battle end regardless of outcome' applied to an implicit end. On the success path the new battle's own terminal later overwrites the carry field with ITS bank (overwrite, not additive) - no double-count.

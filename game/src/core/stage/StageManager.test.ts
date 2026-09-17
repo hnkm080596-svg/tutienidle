@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { StageManager, type StageLease } from './StageManager'
 import type { Stage } from './Stage'
 
-// Mission C audit C4/C5 — the single stage slot is a capability, not
+// Mission C audit C4/C5 - the single stage slot is a capability, not
 // ambient state: acquire() returns an opaque StageLease token and only
 // that exact minted object can release the slot. getActive() hands out a
-// read-only SNAPSHOT that is deliberately NOT the token — an
+// read-only SNAPSHOT that is deliberately NOT the token - an
 // observational read must never recover release capability for a slot
 // someone else owns.
 
@@ -15,7 +15,7 @@ const STAGE_A: Stage = {
 }
 const STAGE_B: Stage = { ...STAGE_A, id: 'lease_b' }
 
-describe('StageManager — capability lease', () => {
+describe('StageManager - capability lease', () => {
   it('acquire returns the lease token; a second acquire is refused while held', () => {
     const manager = new StageManager()
 
@@ -27,7 +27,7 @@ describe('StageManager — capability lease', () => {
     expect(manager.acquire(STAGE_B)).toBeNull()
   })
 
-  it('getActive returns a snapshot — observational state, never the capability token', () => {
+  it('getActive returns a snapshot - observational state, never the capability token', () => {
     const manager = new StageManager()
     const lease = manager.acquire(STAGE_A)!
 
@@ -65,7 +65,7 @@ describe('StageManager — capability lease', () => {
     expect(manager.getActive()?.spawnedCount).toBe(1)
   })
 
-  it('a forged token literal cannot release the slot — identity, not shape', () => {
+  it('a forged token literal cannot release the slot - identity, not shape', () => {
     const manager = new StageManager()
     const lease = manager.acquire(STAGE_A)!
 
@@ -74,7 +74,7 @@ describe('StageManager — capability lease', () => {
     expect(manager.owns(lease)).toBe(true)
   })
 
-  it('release(foreignToken) is a no-op — the real owner keeps the slot', () => {
+  it('release(foreignToken) is a no-op - the real owner keeps the slot', () => {
     const manager = new StageManager()
     const other = new StageManager()
 
@@ -96,7 +96,7 @@ describe('StageManager — capability lease', () => {
     expect(manager.release(lease)).toBe(false)
   })
 
-  it('a new owner after release is a different token — the old one stays dead', () => {
+  it('a new owner after release is a different token - the old one stays dead', () => {
     const manager = new StageManager()
     const first = manager.acquire(STAGE_A)!
     manager.release(first)

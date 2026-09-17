@@ -94,7 +94,7 @@ function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
     stageManager: {
       getActive: () => active,
       owns: (lease: { stageId: string } | null) => lease !== null && active === lease,
-      // Capability API (Mission C): acquire returns the lease object —
+      // Capability API (Mission C): acquire returns the lease object -
       // the ownership token; release frees the slot only for the exact
       // object it still holds.
       acquire: (stage: { id: string }) => {
