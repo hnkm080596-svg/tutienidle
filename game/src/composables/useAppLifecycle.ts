@@ -3,6 +3,7 @@ import type { GameManager } from '../core/game/GameManager'
 import type { CloudSaveCoordinator } from '../services/cloudSave/CloudSaveCoordinator'
 import type { CloudSaveWriteResult } from '../services/cloudSave/CloudSaveService'
 import { ESSENCE_STREAM_ARRIVAL_EVENT } from '../core/battle/BattleEvents'
+import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import { i18n } from '@/i18n'
 
 /**
@@ -132,7 +133,6 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   let lifecycleGeneration = 0
 
   const AUTOSAVE_INTERVAL_MS = 15_000
-  const TICK_INTERVAL_MS = 1_000
 
   // --- Event-bus handlers: đăng ký một lần, gỡ symmetric khi teardown ---
 

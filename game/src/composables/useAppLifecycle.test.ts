@@ -16,6 +16,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, onUnmounted, ref } from 'vue'
 import { useAppLifecycle } from './useAppLifecycle'
+import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import type { GameSave } from '../services/save/SaveSystem'
 import type { GameManager } from '../core/game/GameManager'
 
@@ -29,14 +30,17 @@ function makeStubs() {
   }
 
   const intervals: Array<() => void> = []
+  const intervalCalls: Array<{ timeoutMs: number }> = []
 
   return {
     clock,
     intervals,
+    intervalCalls,
     // setInterval stub trả handle tuần tự, đẩy callback vào mảng để test
     // bấm thủ công (mô phỏng timer fire).
-    scheduleInterval: (callback: () => void): number => {
+    scheduleInterval: (callback: () => void, timeoutMs: number): number => {
       intervals.push(callback)
+      intervalCalls.push({ timeoutMs })
       return intervals.length
     },
     clearHandle: vi.fn(),
@@ -127,6 +131,17 @@ describe('useAppLifecycle — idempotent tick loop (Remediation Task 5)', () => 
 
   afterEach(() => {
     vi.useRealTimers()
+  })
+
+  it('tick loop cadence comes from SpeedSettings.TICK_INTERVAL_MS (audit T5-46)', () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    lifecycle.startTickLoop(() => undefined)
+
+    expect(stubs.intervalCalls[0]?.timeoutMs).toBe(TICK_INTERVAL_MS)
+
+    lifecycle.stopAll()
   })
 
   it('startTickLoop 2 lần → CHỈ 1 interval chạy (không leak)', () => {
