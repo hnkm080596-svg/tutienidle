@@ -447,6 +447,13 @@ export class CombatOperationBatchRunner {
         if (!isNonEmptyString(p.targetId)) bad('targetId')
         if (!isNonEmptyString(p.resourceId)) bad('resourceId')
         if (!(isFiniteNumber(p.amount) || p.amount === 'all')) bad('amount')
+        if (
+          p.valueSource !== undefined &&
+          p.valueSource !== 'current' &&
+          p.valueSource !== 'cast_snapshot'
+        ) {
+          bad('valueSource')
+        }
         return
       }
       case 'apply_shield': {

@@ -63,7 +63,7 @@ describe('EntityResourceAdapter -- currentThe', () => {
     const entity = makeEntity('caster', {}, { currentThe: 40 })
     const adapter = makeAdapter([entity])
 
-    const result = adapter.consume('caster', 'the', 'all', CTX)
+    const result = adapter.consume('caster', 'the', 'all', undefined, CTX)
 
     expect(result).toEqual({ before: 40, requested: 'all', applied: 40, after: 0 })
     expect(entity.currentThe).toBe(0)
@@ -83,7 +83,7 @@ describe('EntityResourceAdapter -- currentThe', () => {
     const entity = makeEntity('caster', {}, { currentThe: 40 })
     const adapter = makeAdapter([entity])
 
-    const result = adapter.consume('caster', 'the', 15, CTX)
+    const result = adapter.consume('caster', 'the', 15, undefined, CTX)
 
     expect(result).toEqual({ before: 40, requested: 15, applied: 15, after: 25 })
     expect(entity.currentThe).toBe(25)
@@ -94,7 +94,7 @@ describe('EntityResourceAdapter -- currentThe', () => {
     const adapter = makeAdapter([entity])
 
     try {
-      adapter.consume('caster', 'the', 41, CTX)
+      adapter.consume('caster', 'the', 41, undefined, CTX)
       expect.unreachable('should have thrown')
     } catch (error) {
       expect(error).toBeInstanceOf(CombatOperationSkip)
@@ -108,7 +108,7 @@ describe('EntityResourceAdapter -- currentThe', () => {
     const adapter = makeAdapter([entity])
 
     try {
-      adapter.consume('caster', 'the', 1, CTX)
+      adapter.consume('caster', 'the', 1, undefined, CTX)
       expect.unreachable('should have thrown')
     } catch (error) {
       expect((error as CombatOperationSkip).reason).toBe('insufficient_resource')
@@ -119,13 +119,65 @@ describe('EntityResourceAdapter -- currentThe', () => {
   })
 })
 
+describe('EntityResourceAdapter -- valueSource (P5 F-B)', () => {
+  it("numeric 'cast_snapshot' consumes exactly the frozen amount (later gains do not inflate)", () => {
+    const entity = makeEntity('caster', {}, { currentThe: 40 })
+    const adapter = makeAdapter([entity])
+
+    const result = adapter.consume('caster', 'the', 15, 'cast_snapshot', CTX)
+
+    expect(result).toEqual({ before: 40, requested: 15, applied: 15, after: 25 })
+    expect(entity.currentThe).toBe(25)
+  })
+
+  it("numeric 'cast_snapshot' shares the insufficient check -- cannot spend what is not there", () => {
+    const entity = makeEntity('caster', {}, { currentThe: 40 })
+    const adapter = makeAdapter([entity])
+
+    try {
+      adapter.consume('caster', 'the', 41, 'cast_snapshot', CTX)
+      expect.unreachable('should have thrown')
+    } catch (error) {
+      expect(error).toBeInstanceOf(CombatOperationSkip)
+      expect((error as CombatOperationSkip).reason).toBe('insufficient_resource')
+    }
+    expect(entity.currentThe).toBe(40)
+  })
+
+  it("'all' + 'cast_snapshot' is contradictory -> CombatSettlementFault, no mutation", () => {
+    const entity = makeEntity('caster', {}, { currentThe: 40 })
+    const adapter = makeAdapter([entity])
+
+    expect(() =>
+      adapter.consume('caster', 'the', 'all', 'cast_snapshot', CTX),
+    ).toThrow(CombatSettlementFault)
+    expect(entity.currentThe).toBe(40)
+  })
+
+  it('an unknown valueSource value is malformed -> CombatSettlementFault', () => {
+    const entity = makeEntity('caster', {}, { currentThe: 40 })
+    const adapter = makeAdapter([entity])
+
+    expect(() =>
+      adapter.consume(
+        'caster',
+        'the',
+        5,
+        'bogus' as unknown as 'current',
+        CTX,
+      ),
+    ).toThrow(CombatSettlementFault)
+    expect(entity.currentThe).toBe(40)
+  })
+})
+
 describe('EntityResourceAdapter -- structure', () => {
   it('throws CombatSettlementFault on a resourceId with no wired channel (mp/ward deferred)', () => {
     const entity = makeEntity('caster')
     const adapter = makeAdapter([entity])
 
     expect(() => adapter.gain('caster', 'mp', 10, CTX)).toThrow(CombatSettlementFault)
-    expect(() => adapter.consume('caster', 'ward', 10, CTX)).toThrow(CombatSettlementFault)
+    expect(() => adapter.consume('caster', 'ward', 10, undefined, CTX)).toThrow(CombatSettlementFault)
   })
 
   it('throws CombatOperationSkip(invalid_target_state) on an unresolvable entity', () => {

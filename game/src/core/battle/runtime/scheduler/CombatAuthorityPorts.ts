@@ -13,6 +13,7 @@ import type {
   ApplyBuffRequest,
   BuffModifierPayload,
   BuffRemovalReason,
+  ConsumeResourceOperation,
   DealDamageOperation,
   HealOperation,
 } from '../../contracts/operations'
@@ -108,10 +109,15 @@ export interface ResourceAuthority {
     amount: number,
     ctx: CombatAuthorityExecutionContext,
   ): { before: number; requested: number; applied: number; after: number }
+  /** `valueSource` is the op payload's -- 'cast_snapshot' asserts the
+      numeric amount was frozen at cast; 'all'+snapshot is contradictory
+      and faults at the authority (P5 F-B: the field must reach the port,
+      not die at the executor). */
   consume(
     targetId: CombatEntityId,
     resourceId: string,
     amount: number | 'all',
+    valueSource: ConsumeResourceOperation['payload']['valueSource'],
     ctx: CombatAuthorityExecutionContext,
   ): { before: number; requested: number | 'all'; applied: number; after: number }
 }

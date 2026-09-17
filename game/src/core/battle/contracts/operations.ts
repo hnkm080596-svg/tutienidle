@@ -202,13 +202,20 @@ export interface GainResourceOperation {
   payload: { targetId: CombatEntityId; resourceId: string; amount: number }
 }
 
+/** 'current' (default) resolves the spend at execution; 'cast_snapshot'
+    asserts the numeric amount was frozen at cast time (e.g. an empowered
+    ultimate snapshots theBurned at cast -- later gains must not inflate
+    the spend). The pair 'all' + 'cast_snapshot' is contradictory ('all'
+    is inherently resolve-at-execution) and faults at the authority. */
+export type ConsumeResourceValueSource = 'current' | 'cast_snapshot'
+
 export interface ConsumeResourceOperation {
   type: 'consume_resource'
   payload: {
     targetId: CombatEntityId
     resourceId: string
     amount: number | 'all'
-    valueSource?: 'current' | 'cast_snapshot'
+    valueSource?: ConsumeResourceValueSource
   }
 }
 

@@ -255,6 +255,7 @@ export class CombatOperationExecutor {
           op.payload.targetId,
           op.payload.resourceId,
           op.payload.amount,
+          op.payload.valueSource,
           ctx,
         )
         return {

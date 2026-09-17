@@ -325,6 +325,29 @@ describe('CombatOperationExecutor routing', () => {
     }
   })
 
+  it('forwards consume_resource valueSource to the resource port (P5 F-B)', () => {
+    const { ports, calls } = makePorts()
+    const { sink } = makeSink()
+    const executor = new CombatOperationExecutor(ports)
+
+    executor.execute(
+      op({
+        operationId: 'op.consume',
+        type: 'consume_resource',
+        payload: {
+          targetId: 'entity.a',
+          resourceId: 'the',
+          amount: 3,
+          valueSource: 'cast_snapshot',
+        },
+      }),
+      sink,
+    )
+
+    expect(calls[0]?.method).toBe('resource.consume')
+    expect(calls[0]?.args).toEqual(['entity.a', 'the', 3, 'cast_snapshot'])
+  })
+
   it('composes ApplyBuffRequest from payload + origin envelope (r2 HIGH 3)', () => {
     const { ports, calls } = makePorts()
     const { sink } = makeSink()
