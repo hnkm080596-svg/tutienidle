@@ -140,7 +140,7 @@ export interface TurnBattleParticipant {
   pendingChargedSkillId?: string
   /**
    * Phase A3 (2026-09-07) — 1-based counter of this enemy's own actions,
-   * ported from BattleEnemy.specialAttackCounter (Battle.ts) with the same
+   * ported from the retired grid-battle specialAttackCounter with the same
    * everyNth semantics as legacy EnemyAttackSystem.fireEnemyAttack()
    * (module retired M13 — semantics ported here):
    * when counter % everyNth === 0, the special attack's damageMultiplier

@@ -159,8 +159,8 @@ export class BattleLootSystem {
    * - getBattleRewardSummary() trả phần thưởng STALE (hiện tại trận Kiếp
    *   không có panel summary nhưng API công khai vẫn đọc được).
    * - receiver cũ còn sống: nếu sau này trận Kiếp có enemy/summon chết
-   *   (pendingSummons đã có trong Battle type) thì reward/loot sẽ chảy
-   *   qua receiver của phiên trước — hành vi phụ thuộc lịch sử trận đấu.
+   *   thì reward/loot sẽ chảy qua receiver của phiên trước — hành vi phụ
+   *   thuộc lịch sử trận đấu.
    * receiver = null là chủ đích: quái Kiếp (nếu có) chết KHÔNG cấp
    * reward/loot — deterministic, không đổi balance của Độ Kiếp.
    */

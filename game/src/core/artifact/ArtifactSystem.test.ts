@@ -35,9 +35,7 @@ function createCombatEntity(id: string, overrides: Partial<CombatEntity> = {}): 
 function createBattleEnemy(id: string, overrides: Partial<CombatEntity> = {}): BattleEnemy {
   return {
     entity: createCombatEntity(id, { row: 2, x: 0, ...overrides }),
-    attackTimer: 0,
     buffs: new BuffPool(),
-    rewardGranted: false,
   }
 }
 
@@ -71,16 +69,11 @@ function createBattle(overrides: Partial<Battle> = {}): Battle {
   const enemy = createBattleEnemy('enemy_1')
 
   return {
-    id: 'battle-1',
     player,
     enemies: [enemy],
     state: 'fighting',
-    playerTeleport: { remainingSeconds: 0 },
     playerMaterialized: true,
     playerBuffs: new BuffPool(),
-    elapsedSeconds: 0,
-    pendingSummons: [],
-    pendingEnemySpawns: [],
     ...overrides,
   }
 }

@@ -37,9 +37,7 @@ export interface StageWaveSystemDeps {
  * Vòng đời wave của 1 Màn (2026-08-24, tách khỏi GameManager):
  * spawn theo nhịp (SONG SONG, không đợi quái cũ chết), spawn ngay nếu
  * sân trống, set 'victory' khi đã spawn đủ + hết quái sống, auto-repeat
- * cycle khi bật chế độ đánh liên tục. Cả boss summon (Combat Rework
- * Phase 4 — rút Battle.pendingSummons rồi spawn thật) cũng nằm đây vì
- * cùng pattern spawn glue.
+ * cycle khi bật chế độ đánh liên tục.
  */
 export class StageWaveSystem {
   private activeStagePlayer?: PlayerData
@@ -103,9 +101,7 @@ export class StageWaveSystem {
   // it used to read the legacy battleSystem's enemy list, which is always
   // empty during real turn-based gameplay (HUD counter stuck at 0).
   // GameManager.getStageProgress() now composes the live count itself from
-  // this.turnBattle.enemies. resolveBossSummons() below still reads
-  // battleSystem for pendingSummons (separate, currently-dead code path —
-  // out of scope per the A0 spec).
+  // this.turnBattle.enemies.
   getProgress(): { spawned: number; total: number } | null {
     const active = this.deps.stageManager.get()
 
