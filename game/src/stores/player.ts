@@ -17,7 +17,8 @@ import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
-import { getCultivationRampMultiplier, getCultivationSpeedMultiplier, getInsightPerCultivation } from '@/core/talent/TalentEffects'
+import { getCultivationRampMultiplier, getCultivationSpeedMultiplier } from '@/core/talent/TalentEffects'
+import { accrueCultivationInsight } from '@/core/cultivation/CultivationInsight'
 import type { StatModifier } from '@/core/stats/StatCalculator'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
 import {
@@ -192,23 +193,10 @@ export const usePlayerStore = defineStore('player', {
 
       // Thiên phú Ngộ Đạo (talent-direction-choice-plan §6) — đổi tu vi
       // tu luyện ONLINE lấy Cảm Ngộ Kỹ năng theo ngưỡng. Chưa đủ ngưỡng
-      // thì dồn accumulator sang lần sau. Chỉ online — offline là thiết
-      // kế riêng sau này.
-      const insightThreshold = getInsightPerCultivation(this.selectedTalentIds)
-
-      // Guard `> 0` (audit fix 2026-08-31): talent data edit đặt
-      // cultivationPerInsight: 0 từng tạo infinite loop (accumulator -= 0
-      // không giảm) — freeze tick 100ms vĩnh viễn. Ngưỡng 0 vô nghĩa, bỏ
-      // hẳn nhánh insight.
-      if (insightThreshold !== undefined && insightThreshold > 0 && gained > 0) {
-        this.cultivationInsightAccumulator += gained
-
-        while (this.cultivationInsightAccumulator >= insightThreshold) {
-          this.cultivationInsightAccumulator -= insightThreshold
-          this.skillInsight += 1
-          this.totalSkillInsightGained += 1
-        }
-      }
+      // thì dồn accumulator sang lần sau.
+      // Ngưỡng/counters do CultivationInsight.accrueCultivationInsight
+      // sở hữu — chung cho online + offline (task 34, cleanup mission).
+      accrueCultivationInsight(this, gained)
 
       // Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — cùng nguồn
       // "gained" nuôi Kiếm Ý ở trên, xem core/technique/TechniqueTier.ts's
@@ -428,21 +416,7 @@ export const usePlayerStore = defineStore('player', {
       // M2 — Ngo Dao (spec §4.3 row 20): the insight_per_cultivation
       // accumulator settles the offline grant too, through the SAME
       // threshold/counters as the online cultivate() path.
-      const offlineInsightThreshold = getInsightPerCultivation(this.selectedTalentIds)
-
-      if (
-        offlineInsightThreshold !== undefined &&
-        offlineInsightThreshold > 0 &&
-        offlineGained > 0
-      ) {
-        this.cultivationInsightAccumulator += offlineGained
-
-        while (this.cultivationInsightAccumulator >= offlineInsightThreshold) {
-          this.cultivationInsightAccumulator -= offlineInsightThreshold
-          this.skillInsight += 1
-          this.totalSkillInsightGained += 1
-        }
-      }
+      accrueCultivationInsight(this, offlineGained)
 
       // Bản Mệnh Pháp Bảo (doc §10.2) — sửa mọi invariant sai ngay sau
       // blind Object.assign() ở trên: nghề không khớp, thiếu state dù
