@@ -17,7 +17,7 @@
 **Specs:**
 - `game/docs/specs/2026-09-17-reaction-system-reimagined-spec.md` (v1.0 — reaction semantics)
 - `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.5 — **SUPERSEDES** two spec points: `reactionEligibility` is runtime metadata on `ApplyBuffRequest`, and tie-break uses authored `selectionTiePriority` — lexical ReactionId ordering is forbidden; addenda add buff ops, lifecycle settle, `PeriodicOperationSettled`)
-- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.4 — consumed API: `ApplyBuffRequest`/`ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSnapshot`, removal reason `'reaction'`, modifier `reapply:'max'` + `buff_lifetime`, `forbiddenActionTags`; v1.2 addendum locks elemental-first event ordering)
+- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.5 — consumed API: `ApplyBuffRequest`/`ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSnapshot`, removal reason `'reaction'`, modifier `reapply:'max'` + `buff_lifetime`, `forbiddenActionTags`; v1.2 addendum locks elemental-first event ordering)
 - `game/docs/specs/2026-09-17-hoa-an-ailment-system-spec.md` (context only — real ailments NOT authored here)
 
 **Sibling-plan dependency:** This megaplan is the code-level expansion of the ReactionSystem scope inside `game/docs/superpowers/plans/2026-09-17-combat-systems-reimagined.md` (its M6). **Hard prerequisite:** that program's M1 (contracts), M2 (scheduler/executor) and M3 (BuffSystem core with the §51/§67 query+mutation surface) must have landed. M0 verifies presence; if absent, this plan is BLOCKED — do not create parallel contract types under `core/reaction/`.

@@ -10,10 +10,10 @@
 
 **Specs:**
 - `game/docs/specs/2026-09-17-skill-definition-system-spec.md` (v1.1 — THE source of truth)
-- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.1 — `ResolvedCombatOperation`, origins `kind:'skill'`, `castId`/`subcastIndex`, settlement)
-- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (consumed ops: `ApplyBuff`, `TriggerBuffPeriodic`, `ConsumeBuffStacks`, `AddBuffStacks`, `read_stacks` query)
+- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.5 — `ResolvedCombatOperation` (no top-level `sourceId`; `origin.sourceId` is sole authority), origins `kind:'skill'`, `castId`/`subcastIndex`, settlement, `TriggerPeriodicStartResult`)
+- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.5 — consumed ops: `ApplyBuff`, `TriggerBuffPeriodic`, `ConsumeBuffStacks`, `AddBuffStacks`, `read_stacks` query)
 
-**Sibling-plan dependency:** Expansion of the Skill scope in `game/docs/superpowers/plans/2026-09-17-combat-systems-reimagined.md` (its M5). **Hard prerequisites:** contract megaplan M1–M3 v2 (operations, scheduler `enqueueAuthored`/`run()`, authority ports, `DeferredOperation` for result-referencing heals) AND buff megaplan M1–M2 (`BuffDefinition`/`BuffSystem`/`ApplyBuffRequest`). M0 verifies; if absent → BLOCKED. The `SkillExecutor` emits operations — it NEVER calls `BuffSystem`/`CombatSystem` directly.
+**Sibling-plan dependency:** Expansion of the Skill scope in `game/docs/superpowers/plans/2026-09-17-combat-systems-reimagined.md` (its M5). **Hard prerequisites:** the current approved Combat Contract megaplan's M1–M3 (operations, scheduler `enqueueAuthored`/`run()`, authority ports, `DeferredOperation` for result-referencing heals) AND buff megaplan M1–M2 (`BuffDefinition`/`BuffSystem`/`ApplyBuffRequest`). M0 verifies; if absent → BLOCKED. The `SkillExecutor` emits operations — it NEVER calls `BuffSystem`/`CombatSystem` directly.
 
 ## Global Constraints
 

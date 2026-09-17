@@ -10,7 +10,7 @@ Migration requirement: None
 
 > **Implementation notes (2026-09-17):**
 > - Spec này **thay thế** `ELEMENT_REACTIONS`/`TurnReactionManager` hiện tại (pair-table, áp cho mọi elemental application) — xem `docs/systems/elements-reactions.md`. Model mới: same-source board, consume-all, capability-gated.
-> - **Gameplay change lớn cần ruling:** reaction hiện kích cho MỌI Pháp Tu elemental application; spec mới gate sau capability `elemental_reaction_enabled` (chỉ Ngộ Đạo) — visible Pháp Tu mất toàn bộ reaction hiện có (Bốc Hơi, Độc Viêm, …). Xác nhận đây là intent trước khi implement.
+> - **RESOLVED (implementation review, buff-plan round 4):** visible Pháp Tu loses automatic reactions — that IS the intent. The legacy `TurnReactionManager`/`canInitiateWuxingReactions` path is spec-nonconforming and retired at M-INT (inside the buff megaplan's M4 worktree); `elemental_reaction_enabled` is granted to nobody until the Ngộ Đạo kit lands (seal batch).
 > - **Ailment rename/rework map (không phải rename thuần):** Hàn Tức ≠ `te_cong` (Tê Cóng hiện là DoT/CC), Liệt Thương ≠ `chay_mau` (Chảy Máu hiện là DoT), Trấn Ấn ≠ `thach_hoa` (Thạch Hóa hiện là CC cứng). Và `Độc Căn` hiện là TÊN mechanic threshold bên trong `trung_doc` (poison root) — name collision cần resolve.
 > - Dependencies: yêu cầu buff spec v1.0 landed (per_source instance, `reactionEligible` trên application commit, removal reason `reaction`, modifier `reapply: max`, `buff_lifetime` modifier lifetime); Cấm Công cần action-tagging trên skill (skill spec §7 `tags` cover) + ActionRestriction enforcement ở turn engine; gauge ops cần `ActionGauge` push API (đã tồn tại `core/battle/turn/ActionGauge.ts`).
 

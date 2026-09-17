@@ -2,7 +2,7 @@
 
 Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
 Version: 1.5
-Applies to: [SkillDefinition v1.1](./2026-09-17-skill-definition-system-spec.md), [Buff System Reimagined v1.4](./2026-09-17-buff-system-reimagined-spec.md), [Reaction System Reimagined v1.0](./2026-09-17-reaction-system-reimagined-spec.md)
+Applies to: [SkillDefinition v1.1](./2026-09-17-skill-definition-system-spec.md), [Buff System Reimagined v1.5](./2026-09-17-buff-system-reimagined-spec.md), [Reaction System Reimagined v1.0](./2026-09-17-reaction-system-reimagined-spec.md)
 Compatibility requirement: None
 Migration requirement: None
 Purpose: Khóa contract runtime giữa Skill, Buff, Reaction và các combat authorities trước implementation.

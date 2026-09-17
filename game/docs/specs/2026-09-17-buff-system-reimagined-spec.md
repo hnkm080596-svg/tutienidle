@@ -1,7 +1,7 @@
 # Buff System Reimagined — Final Architecture Specification
 
 Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
-Version: 1.4
+Version: 1.5
 Compatibility requirement: None
 Migration requirement: None
 Primary reference implementation: Hỏa Ấn
@@ -11,8 +11,8 @@ Architecture style: Breaking redesign / single authority / data-first
 > **Implementation notes (2026-09-17):**
 > - Đây là spec foundation của trilogy: "Ailment System" trong [hoa-an spec](./2026-09-17-hoa-an-ailment-system-spec.md) = BuffSystem này (ailment là `kind: 'ailment'`); buff operations trong [skill-definition spec](./2026-09-17-skill-definition-system-spec.md) map lên §65. Cả ba cùng PARKED.
 > - Problem list B01–B20 đã verify trên code hiện tại: `scaleBuffPotency`/`potencyAmplified` tồn tại (`BuffSystem.ts:36-47`), `damagePerTurn`/`damagePerSecond` snapshot lúc apply (`BuffSystem.ts:90-91`), `Math.random()` trong proc paths (`BuffSystem.ts:488,514`), runtime mutable `effects` (`BuffTypes.ts:220-221,313`).
-> - **Gap cần ruling trước implement:** spec không nhắc `TurnBuffSystem`/`TurnBuffPool` (turn-native authority hiện tại, R4) — "one canonical BuffSystem" phải absorb nó explicit; không nhắc `player.persistentTimedEffects` (Kiếp Thương 60s sống xuyên battle) — battle-scoped `onBattleEnd` clear không cover persistent buffs ngoài trận.
-> - Migration stance mâu thuẫn với skill spec: spec này cấm compat layer/dual-run (§73) trong khi skill spec §69 cho phép temporary adapter — cần unified migration ruling.
+> - **RESOLVED by implementation review (megaplan v2–v6):** `TurnBuffSystem`/`TurnBuffPool` — no independent turn authority exists to absorb; the codebase already retired those impls (only test files importing `core/buff` remain — megaplan M5 renames/verifies). `player.persistentTimedEffects` is NOT a buff pool (Kiếp Thương-style persistent state stays untouched); persistent buffs are owned by `GameManager.buffPool` → megaplan `BuffPersistence` wrapper.
+> - **Migration ruling (locked):** §73 wins — NO compat layer, NO dual-run, data-first migration → consumer cutover → old package deletion. Skill spec §69's temporary-adapter permission does NOT extend to the buff authority.
 
 ## 1. Purpose
 
@@ -493,7 +493,7 @@ Không đoán context qua overload.
 
 ## 22. Periodic Effect Definition
 
-V1:
+V1 (v1.5 — canonical shape locked against the contract megaplan):
 
 ```ts
 interface PeriodicDamageDefinition {
@@ -513,6 +513,8 @@ interface PeriodicDamageDefinition {
     | 'snapshot'
     | 'dynamic'
 
+  snapshotFields?: readonly string[]   // v1.5 — present iff scaling:'snapshot'
+
   timing:
     | 'holder_turn_start'
     | 'holder_turn_end'
@@ -527,6 +529,10 @@ interface PeriodicDamageDefinition {
     | 'ignore'
 
   canCrit: boolean
+  canMiss: boolean                     // v1.5
+  hitCount: number                     // v1.5
+
+  tags?: readonly string[]             // v1.5
 }
 ```
 
@@ -544,27 +550,41 @@ BuffSystem không import hoặc tính:
 - HP mutation
 - death
 
-BuffSystem tạo request:
+BuffSystem tạo request (v1.5 — canonical `BuffPeriodicDamageRequest`, deferring
+to the Combat Contract's `contracts/periodic.ts`):
 
 ```ts
-interface PeriodicDamageRequest {
+interface BuffPeriodicDamageRequest {
+  requestId: string                    // emitter-minted correlation id
+
+  instanceId: BuffInstanceId
+  periodicId: string
+
   sourceId: CombatEntityId
   targetId: CombatEntityId
 
-  origin: 'buff'
-  originId: BuffDefinitionId
-  periodicId: string
-
-  element: ElementType | 'physical'
+  element?: ElementType | 'physical'
   damageProfile: DamageProfileId
 
-  coefficient: number
+  coefficient: number                  // authored × stackScaling × modifiers
 
-  stackCount: number
-
+  hitCount: number
   canCrit: boolean
+  canMiss: boolean
+
+  stackCount?: number                  // metadata for stack-scaled profiles
+  tags?: readonly string[]
+
+  snapshot?: Readonly<Record<string, number>>  // iff scaling:'snapshot'
 }
 ```
+
+**The request carries NO `CombatOperationOrigin`/`originId`** (v1.5 — supersedes
+the old `origin:'buff'`/`originId` fields). Operation provenance is owned by
+the scheduler's built-in periodic bridge, which mints
+`CombatOperationOrigin{kind:'buff_periodic', originId, sourceId, rootActionId,
+causationEventId}` when materializing the generated `DealDamageOperation` /
+`HealOperation`. The request is pure payload — provenance is bridge business.
 
 DamageSystem xử lý phần còn lại.
 
@@ -1847,3 +1867,12 @@ Clarifications locked during the implementation-plan review. These refine — ne
 
 1. **§27/§67 `triggerPeriodic` return type (supersedes the synchronous `PeriodicResolution[]` API):** the method returns `TriggerPeriodicStartResult {started: boolean; firstRequestId?: string; candidateUnitCount: number}` — it reports that a sequential series STARTED, never the resolutions of continuation work that has not happened yet. Lifecycle entry points keep `readonly PeriodicResolution[]` — they genuinely emit+settle every unit inside the call. Per-request outcomes remain observable via `PeriodicRequestsCommitted`/`PeriodicOperationSettled`/combat trace.
 2. **Modifier runtime identity on the public surface:** `BuffModifierAdded`/`BuffModifierRemoved` events carry `{instanceId, modifierId, modifierRuntimeId}` — consumers can distinguish same-`modifierId` generations (v1.3 rule 2's entry identity is now observable, not just internal). `addModifier` returns `{applied, modifierRuntimeId?}`. `removeModifier(sel, modifierId)` removes EVERY runtime entry carrying that authored id (`all_matching` semantics — a same-id stack is one logical modifier to its author); each removed entry emits its own `buff_modifier_removed` with its `modifierRuntimeId`, and the result reports `removedRuntimeIds`.
+
+---
+
+## Addendum v1.5 (2026-09-17 — locked via implementation-megaplan review round 6)
+
+1. **§22 `PeriodicDamageDefinition` completed (supersedes the v1.0 field list):** adds `snapshotFields?: readonly string[]` (required iff `scaling:'snapshot'`), `canMiss: boolean`, `hitCount: number`, `tags?: readonly string[]` — matching the contract megaplan's authored shape exactly.
+2. **§23 request shape replaced:** `PeriodicDamageRequest` → `BuffPeriodicDamageRequest` (canonical `contracts/periodic.ts` shape): `requestId`, `instanceId`, `periodicId`, `sourceId`, `targetId`, `element?`, `damageProfile`, `coefficient`, `hitCount`, `canCrit`, `canMiss`, `stackCount?`, `tags?`, `snapshot?`. **The request carries NO `origin`/`originId`** — the old `origin:'buff'` fields are deleted. Operation provenance is the scheduler periodic bridge's job: it mints `CombatOperationOrigin{kind:'buff_periodic', originId, sourceId, rootActionId, causationEventId}` when materializing each generated op. The request is pure payload.
+3. **`triggerPeriodic` all-dead branch (clarifies v1.4 rule 1):** when the ordered candidate list is non-empty but every unit is dead/invalid at trigger time, the result is `{started:false, candidateUnitCount: <list size>}` — no `firstRequestId`, no `pendingSeries` entry, zero `PeriodicRequestsCommitted`. `started:false` therefore means "no live unit was triggerable" whether the selector matched nothing or only dead units.
+4. **Known limitation (recorded, not a defect):** `removeModifier`'s `all_matching` semantics cannot remove one specific generation (e.g. only caster A's entry of a same-id stack). If gameplay ever needs exact-entry removal, add a separate `RemoveBuffModifierEntryOperation {modifierRuntimeId}` — do NOT overload `remove_buff_modifier` (v1.4's authored-id semantics stays stable).

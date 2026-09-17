@@ -2,7 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Non-trivial production missions MUST follow `game/docs/architecture/architecture-worker-workflow.md` (G0–G5) and return the G5 evidence report.
 
-> **Review revision:** v7.5 — buff-plan review round 5 (at `cb3a602f`): (a) periodic correlation goes SCHEDULER-PRIVATE — `ResolvedCombatOperation` loses `periodicRequestId`; the built-in bridge records `operationId → requestId` in a scheduler-internal map that the post-barrier site reads+deletes (nothing public to forge/collide — r5 HIGH 3); (b) `PeriodicOperationSettled.eventId` mints through the CANONICAL allocator in the producing op's scope — `evt.${op.operationId}.${scopeOrdinal++}` (the same `eventOrdinalByScope` counter as the op's own sink — globally collision-proof by construction, supersedes v7.4's `evt.settled.${opId}`; r5 HIGH 2); (c) `triggerPeriodic` returns `TriggerPeriodicStartResult {started, firstRequestId?, candidateUnitCount}` — the initiating op reports series-start metadata, never un-emitted continuation resolutions (r5 BLOCKER 1); (d) modifier events gain `modifierRuntimeId` and `remove_buff_modifier` is locked `all_matching` (r5 HIGH 1); (e) spec addendum v1.5 supersedes §4 — `ResolvedCombatOperation` has NO top-level `sourceId` (r5 BLOCKER 3).
+> **Review revision:** v7.6 — buff-plan review round 6 (at `3007986f`): all-dead `triggerPeriodic` branch locked (`started:false` covers "matched but none live"); MINOR notes recorded — future exact-entry `RemoveBuffModifierEntryOperation{modifierRuntimeId}` must NOT overload `remove_buff_modifier`; correlation map records after group reservation or clears on structural fault.
+>
+> v7.5 — buff-plan review round 5 (at `cb3a602f`): (a) periodic correlation goes SCHEDULER-PRIVATE — `ResolvedCombatOperation` loses `periodicRequestId`; the built-in bridge records `operationId → requestId` in a scheduler-internal map that the post-barrier site reads+deletes (nothing public to forge/collide — r5 HIGH 3); (b) `PeriodicOperationSettled.eventId` mints through the CANONICAL allocator in the producing op's scope — `evt.${op.operationId}.${scopeOrdinal++}` (the same `eventOrdinalByScope` counter as the op's own sink — globally collision-proof by construction, supersedes v7.4's `evt.settled.${opId}`; r5 HIGH 2); (c) `triggerPeriodic` returns `TriggerPeriodicStartResult {started, firstRequestId?, candidateUnitCount}` — the initiating op reports series-start metadata, never un-emitted continuation resolutions (r5 BLOCKER 1); (d) modifier events gain `modifierRuntimeId` and `remove_buff_modifier` is locked `all_matching` (r5 HIGH 1); (e) spec addendum v1.5 supersedes §4 — `ResolvedCombatOperation` has NO top-level `sourceId` (r5 BLOCKER 3).
 >
 > v7.4 — buff-plan review round 4 (at `b8bd751b`): periodic ops carry TYPED correlation (v7.5 superseded: correlation is now a scheduler-private map, not a public field). `PeriodicOperationSettled` stamping locked. Manual `triggerPeriodic` multi-request triggers run as a settled-event CONTINUATION — each `PeriodicRequestsCommitted` carries ONE request; the emitter's settled-handler emits the next unit's event via the event-scoped sink, so every request computes against post-settlement state.
 >
@@ -22,7 +24,7 @@
 
 **Specs:**
 - `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.5 — THE source of truth; supersedes conflicting points in the other specs)
-- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.4 — first real authority consumer)
+- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.5 — first real authority consumer)
 - `game/docs/specs/2026-09-17-skill-definition-system-spec.md` (v1.1 — operation producer)
 - `game/docs/specs/2026-09-17-reaction-system-reimagined-spec.md` (v1.0 — event consumer)
 
@@ -84,6 +86,10 @@ type ResolvedCombatOperation = CombatOperation & {
 // post-barrier settled-event site reads + deletes that entry. The
 // `periodic.${requestId}` op-id shape remains a naming/debugging convention
 // only — never parsed.
+// v7.6 — map hygiene (r6 MINOR 2): record the correlation only AFTER the
+// generated op's id passes group reservation, or clear pending entries on
+// structural settlement fault — a faulted scheduler can't corrupt gameplay,
+// but stale map entries pollute diagnostics.
 // (CombatOperation members each carry their own `type` + `payload` — see M1.)
 
 // contracts/selectors.ts — discriminated union; NO optional soup
@@ -555,6 +561,10 @@ export interface AddBuffModifierOperation { type: 'add_buff_modifier'; payload: 
 // The op removes EVERY entry with that modifierId ('all_matching' — a same-id
 // stack is one logical modifier to its author); each removed entry emits its
 // own buff_modifier_removed carrying its modifierRuntimeId.
+// v7.6 — known limitation (r6 MINOR 1): all_matching cannot remove one
+// specific generation (e.g. only caster A's entry). If gameplay needs that,
+// add a separate RemoveBuffModifierEntryOperation{modifierRuntimeId} — do NOT
+// overload this op.
 export interface RemoveBuffModifierOperation { type: 'remove_buff_modifier'; payload: { selector: BuffInstanceSelector; modifierId: string } }
 export interface RefreshBuffDurationOperation { type: 'refresh_buff_duration'; payload: { selector: BuffInstanceSelector; duration?: number } }
 export interface ExtendBuffDurationOperation  { type: 'extend_buff_duration';  payload: { selector: BuffInstanceSelector; turns: number; maxRemaining?: number } }
@@ -604,7 +614,12 @@ export type CombatOperationResult =
 // continuation). Per-request outcomes live on PeriodicRequestsCommitted /
 // PeriodicOperationSettled / the trace, not the initiating op's result.
 interface TriggerPeriodicStartResult {
-  started: boolean                 // false = selector matched no live unit
+  started: boolean                 // false = no live unit was triggerable —
+                                   // covers BOTH "selector matched nothing"
+                                   // AND "matched but all candidates dead"
+                                   // (v7.6 — r6 MEDIUM 1: explicit all-dead
+                                   // branch; no firstRequestId, no pending
+                                   // continuation)
   firstRequestId?: string          // the request emitted synchronously
   candidateUnitCount: number       // ordered unit list size at trigger time
                                    // (candidates, NOT promised resolutions —

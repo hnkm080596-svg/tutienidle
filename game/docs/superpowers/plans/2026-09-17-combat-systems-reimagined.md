@@ -9,8 +9,8 @@
 **Tech Stack:** Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 
 **Specs:**
-- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.1 — runtime contract, supersedes conflicting points in the other specs)
-- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.0)
+- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.5 — runtime contract, supersedes conflicting points in the other specs)
+- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.5)
 - `game/docs/specs/2026-09-17-skill-definition-system-spec.md` (v1.1)
 - `game/docs/specs/2026-09-17-reaction-system-reimagined-spec.md` (v1.0)
 - `game/docs/specs/2026-09-17-hoa-an-ailment-system-spec.md` (v1.1 — **context only; not implemented in this program**)
@@ -150,7 +150,7 @@ class CombatOperationExecutor {
 - Create: `game/src/core/buff2/BuffModifier.ts` — §29–34 (channels, add/multiply/set order, reapply policy, lifetimes incl. `buff_lifetime`/`uses`/`holder_turns`/`source_turns`/`rounds`/`battle`/`explicit`)
 - Create: `game/src/core/buff2/BuffSystem.ts` — §67 API surface; single per-battle instance store; per_source/per_target identity; lifecycle entry points (§21); canonical holder-turn-end ordering (§28); transaction rule (§68); removal reasons (§39); cleanse (§42)
 - Create: `game/src/core/buff2/BuffApplicationResolver.ts` — §12 (chance × source mod × target resist → clamp → `CombatRng.rollChance`)
-- Create: `game/src/core/buff2/BuffPeriodicResolver.ts` — §22–27 (emits `PeriodicDamageRequest` to damage port; dynamic vs snapshot scaling; manual `triggerPeriodic`)
+- Create: `game/src/core/buff2/BuffPeriodicResolver.ts` — §22–27 (emits `BuffPeriodicDamageRequest`/`BuffPeriodicHealRequest` via `PeriodicRequestsCommitted` → the scheduler's periodic bridge materializes ops and owns `CombatOperationOrigin`; dynamic vs snapshot scaling; manual `triggerPeriodic` → `TriggerPeriodicStartResult`)
 - Create: `game/src/core/buff2/BuffEvents.ts` — §45–46 payloads incl. `addedStacks` on `BuffAppliedEvent`
 - Test: `game/src/core/buff2/*.test.ts` — spec §70 suite on synthetic fixtures (`test_burn`, `test_mark`, `test_stun`)
 
