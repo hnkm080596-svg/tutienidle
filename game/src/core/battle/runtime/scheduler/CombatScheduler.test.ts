@@ -948,6 +948,10 @@ describe('combatSequence ownership (r6)', () => {
 describe('dual settlement guard (r3 HIGH 5)', () => {
   it('recursive op->event->op nesting past maxSettlementNestingDepth faults with depth reason', () => {
     const h = makeHarness({ maxSettlementNestingDepth: 4 })
+    let faultHandlerCalls = 0
+    h.scheduler.registerImmediateHandler('combat_settlement_fault', () => {
+      faultHandlerCalls++
+    })
     let n = 0
     h.alwaysEmit.push(elem('loop'))
     routeElemental(h, {
@@ -960,6 +964,19 @@ describe('dual settlement guard (r3 HIGH 5)', () => {
     expect(h.diagnosticEvents[0]?.reason).toBe('settlement_depth_exceeded')
     expect(h.scheduler.trace.faults[0]?.reason).toBe('settlement_depth_exceeded')
     expect(h.scheduler.state).toBe('faulted')
+    // Same out-of-band contract as the budget variant below: the stamped
+    // fault event reached diagnosticSink + trace but NEVER an event queue,
+    // and every committed op keeps its resolved result (sec.48).
+    expect(faultHandlerCalls).toBe(0)
+    expect(
+      h.scheduler.trace.events.filter(
+        (e) => e.type === 'combat_settlement_fault',
+      ),
+    ).toHaveLength(1)
+    expect(h.scheduler.trace.records.length).toBeGreaterThan(0)
+    for (const rec of h.scheduler.trace.records) {
+      expect(rec.result.status).toBe('resolved')
+    }
   })
 
   it('flat handler-emitted chain past maxImmediateWorkPerBarrier faults with budget reason', () => {
