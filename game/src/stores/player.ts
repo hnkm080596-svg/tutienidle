@@ -18,6 +18,7 @@ import { STAT_DOMAIN } from '@/core/stats/StatDomain'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
 import { getCultivationRampMultiplier, getCultivationSpeedMultiplier } from '@/core/talent/TalentEffects'
+import { getActiveCultivationSpeedPercent } from '@/core/economy/TuLinhTranBalance'
 import { accrueCultivationInsight } from '@/core/cultivation/CultivationInsight'
 import type { StatModifier } from '@/core/stats/StatCalculator'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
@@ -171,11 +172,12 @@ export const usePlayerStore = defineStore('player', {
         getCultivationRampMultiplier(this.selectedTalentIds, this.realmLevel)
 
       // Tụ Linh Trận (economy-fixes-sinks-plan §3.2 B1, 2026-08-29) —
-      // cộng dồn % từ các effect tu_linh_tran đang active (thường chỉ 1
-      // effect tại 1 thời điểm, nhưng để an toàn sum qua tất cả).
-      const tuLinhPercent = this.persistentTimedEffects
-        .filter((effect) => effect.expiresAtMs > Date.now())
-        .reduce((sum, effect) => sum + (effect.cultivationSpeedPercent ?? 0), 0)
+      // cộng dồn % từ các effect tu_linh_tran đang active. Đọc qua
+      // domain getter (Mission G Task 39) — group-filtered + deadline.
+      const tuLinhPercent = getActiveCultivationSpeedPercent(
+        this.persistentTimedEffects,
+        Date.now(),
+      )
 
       if (tuLinhPercent > 0) {
         this.cultivationPerSecond *= 1 + tuLinhPercent

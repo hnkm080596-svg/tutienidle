@@ -1,4 +1,5 @@
 import { getRealmTier } from '../realm/RealmTierMap'
+import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { SPIRIT_STONE_CONVERSION_RATIO } from '../material/SpiritStoneMaterial'
 
@@ -27,4 +28,19 @@ export function getTuLinhTranCost(
   const amount = Math.max(1, Math.ceil(rawInHa / factor))
 
   return { materialId, amount }
+}
+
+/**
+ * Active cultivation-speed bonus from Tụ Linh Trận effects — the
+ * domain-owned read (Mission G Task 39): group-filtered AND
+ * deadline-checked, matching activateTuLinhTran's group-stack
+ * accounting. Stray cultivationSpeedPercent on other groups is ignored.
+ */
+export function getActiveCultivationSpeedPercent(
+  effects: readonly PersistentTimedEffect[],
+  nowMs: number,
+): number {
+  return effects
+    .filter((e) => e.effectGroup === TU_LINH_TRAN_EFFECT_GROUP && e.expiresAtMs > nowMs)
+    .reduce((sum, e) => sum + (e.cultivationSpeedPercent ?? 0), 0)
 }
