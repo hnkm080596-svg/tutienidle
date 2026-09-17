@@ -14,7 +14,7 @@
 - `game/docs/specs/2026-09-17-reaction-system-reimagined-spec.md` (consumed surface: `BuffInstanceSnapshot.instanceId`, `ConsumeStacksResult`, modifier `reapply:'max'`/`buff_lifetime`)
 - `game/docs/specs/2026-09-17-skill-definition-system-spec.md` (`TriggerBuffPeriodic`, `read_stacks` consumers)
 
-**Sibling-plan dependency:** Expansion of the buff scope in `game/docs/superpowers/plans/2026-09-17-combat-systems-reimagined.md` (its M3–M4). **Hard prerequisite:** the contract megaplan's M1–M2 must have landed (`game/src/core/battle/contracts/**`, `core/battle/scheduler/**`). M0 verifies; if absent → BLOCKED — do not re-declare `ApplyBuffRequest`/`ApplyBuffResult`/`ConsumeStacksResult`/`CombatRng`/events locally (contract plan §Canonical-names owns them; buff2 fills the *implementations*).
+**Sibling-plan dependency:** Expansion of the buff scope in `game/docs/superpowers/plans/2026-09-17-combat-systems-reimagined.md` (its M3–M4). **Hard prerequisite:** the contract megaplan's M1–M2 must have landed (`game/src/core/battle/contracts/**`, `core/battle/runtime/scheduler/**`). M0 verifies; if absent → BLOCKED — do not re-declare `ApplyBuffRequest`/`ApplyBuffResult`/`ConsumeStacksResult`/`CombatRng`/events locally (contract plan §Canonical-names owns them; buff2 fills the *implementations*).
 
 ## Global Constraints
 
@@ -30,7 +30,7 @@
 
 ## Canonical names (locked across sibling plans)
 
-**Consumes (contract plan owns):** `CombatRng`, `CombatOperationOrigin`, `CombatOperation` (ops targeting this system: `ApplyBuffOperation`, `AddBuffStacksOperation`, `RemoveBuffStacksOperation`, `ConsumeBuffStacksOperation`, `AddBuffModifierOperation`, `RemoveBuffModifierOperation`, `RefreshBuffDurationOperation`, `ExtendBuffDurationOperation`, `TriggerBuffPeriodicOperation`, `RemoveBuffOperation`), `ApplyBuffRequest`, `ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSelector` (discriminated union — contract v2), `BuffRemovalReason`, `ElementalApplicationCommitted`, `BuffApplicationFailedEvent`, `PendingCombatEvent` + `CombatEventSink`, `PeriodicResolution`/`BuffPeriodicDamageRequest`/`BuffPeriodicHealRequest` (contract `periodic.ts` — request types cross the authority boundary so they live in contracts, not buff2), `CombatScheduler.emitImmediate`, `BuffAuthority` port.
+**Consumes (contract plan owns):** `CombatRng`, `CombatOperationOrigin`, `CombatOperation` (ops targeting this system: `ApplyBuffOperation`, `AddBuffStacksOperation`, `RemoveBuffStacksOperation`, `ConsumeBuffStacksOperation`, `AddBuffModifierOperation`, `RemoveBuffModifierOperation`, `RefreshBuffDurationOperation`, `ExtendBuffDurationOperation`, `TriggerBuffPeriodicOperation`, `RemoveBuffOperation`), `ApplyBuffRequest`, `ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSelector` (discriminated union — contract v2), `BuffRemovalReason`, `ElementalApplicationCommitted`, `BuffApplicationFailedEvent`, `PendingCombatEvent` + `CombatEventSink`, `PeriodicResolution`/`BuffPeriodicDamageRequest`/`BuffPeriodicHealRequest` (contract `periodic.ts` — request types cross the authority boundary so they live in contracts, not buff2), `CombatAuthorityExecutionContext` (contract v4 — carries `{operationId, origin, events}`; BuffAuthority methods take it per-call — the ctor-injected emit was REMOVED because authorities mint `eventId`s from `ctx.operationId`), `BuffAuthority` port.
 
 **Produces (everyone else imports):** `BuffDefinition` (new shape), `BuffInstance`, `BuffInstanceId` minting, `BuffInstanceSnapshot`, `BuffModifier`, `BuffModifierChannel`, `BuffModifierLifetime`, `BuffPeriodic`, `BuffRemovalReason` impl, `BuffQuery`/`BuffReadPort`, `ApplicationResolver`, `BuffLifecycle` (entry-point enum), `BuffEvent` union (`BuffApplied`, `BuffStacksChanged`, `BuffRemoved`, `BuffPeriodicResolved`, `BuffModifierAdded/Removed`, `ElementalApplicationCommitted` emission site), `BuffSystem` (buff2), `BuffRegistry` (buff2).
 
@@ -55,7 +55,7 @@
 - Create: `game/docs/architecture/2026-09-17-buff-inventory.md`
 
 - [ ] **Step 1 — Lock baseline:** `git rev-parse HEAD`.
-- [ ] **Step 2 — Verify contract prerequisites (BLOCKING):** `contracts/operations.ts` buff op subset + `BuffInstanceSelector`/`ApplyBuffRequest`/`ApplyBuffResult`/`ConsumeStacksResult`; `contracts/results.ts`; `contracts/events.ts` `ElementalApplicationCommitted`/`BuffApplicationFailedEvent`; `contracts/rng.ts` `CombatRng`; `contracts/elemental.ts`; `scheduler/CombatOperationExecutor.ts` + `BuffAuthority` port; `CombatScheduler.emitImmediate`. Missing → BLOCKED.
+- [ ] **Step 2 — Verify contract prerequisites (BLOCKING):** `contracts/operations.ts` buff op subset + `BuffInstanceSelector`/`ApplyBuffRequest`/`ApplyBuffResult`/`ConsumeStacksResult`; `contracts/results.ts`; `contracts/events.ts` `ElementalApplicationCommitted`/`BuffApplicationFailedEvent`; `contracts/rng.ts` `CombatRng`; `contracts/elemental.ts`; `contracts/context.ts` `CombatAuthorityExecutionContext`; `scheduler/CombatOperationExecutor.ts` + `BuffAuthority` port (all methods take `ctx`); `CombatScheduler.enqueueEvent`/`enqueueAuthored`. Missing → BLOCKED.
 - [ ] **Step 3 — BuffPool/BufSystem consumer census (drives M4):**
   - **Pools:** every `new BuffPool()` site — `TurnBattleParticipant.buffs` field decl (`TurnBattleSystem.ts` participants; `TurnBattleAdapter.ts` build), allies' `buffPool`, `player.persistentTimedEffects` pool owner (find in `GameManager*.ts`/`PlayerData`), `pendingGaugeDeltaDefinition` path (`:483`).
   - **Reads:** `getActiveModifiers` consumers (`liveStatModifiers` closure `:470`, `recomputeEffectiveStats`), `getStacks`/`getFromSource`/`getAllById`/`hasAny` call sites (skill conditions, `applySkillAilments`, detonate `dot` scan at `detonateDoT` impl, `consumesAilmentId` reads, UI `buffState` snapshot in `action_executed` payload → `BattleFloatingStatusBar`/`battleHUDStore`), CC queries `isStunned/isFrozen/isRooted` (`declareActorAction` CC check ~`:960+`), `clearCcEffects` (Bá Thể), proc rollers `rollOnHitEffects`/`rollReactiveTrigger` call sites.
@@ -223,66 +223,82 @@ export class ApplicationResolver {
   // duration: ailment_scaled → base*(1-min(cap,resist))*(1+srcDur); fixed_holder_turns → base verbatim (R-B3 keeps today's formula)
 }
 
-// BuffSystem.ts — the mutation authority (spec §51 surface)
+// BuffSystem.ts — the mutation authority (spec §51 surface).
+// Contract v4: NO ctor-injected emit — events are emitted through
+// ctx.events with producer-minted eventIds (`evt.${ctx.operationId}.${type}.${ordinal}`)
+// + `causationOperationId = ctx.operationId`. The scheduler stamps only combatSequence.
 export class BuffSystem {
   constructor(
     private readonly store: BuffStore,
     private readonly registry: BuffRegistry,
     private readonly resolver: ApplicationResolver,
-    private readonly emit: (event: PendingCombatEvent) => void,   // CombatEventSink.emit — scheduler stamps eventId+combatSequence; post-commit only (§54)
     private readonly stats: StatProviderPort,               // resolve entities for periodic math — narrow port
-    private readonly mintSeq: () => number,                 // appliedAtSequence from scheduler
+    private readonly readSeq: () => number,                 // appliedAtSequence — READ-ONLY view of scheduler's counter (reading ≠ allocating; scheduler stays sole allocator)
   )
 
-  // === cross-authority surface (the BuffAuthority port impl) ===
-  apply(req: ApplyBuffRequest): ApplyBuffResult
-  addStacks(sel: BuffInstanceSelector, stacks: number): { stacksBefore: number; stacksAfter: number }
-  removeStacks(sel: BuffInstanceSelector, stacks: number): { stacksBefore: number; stacksAfter: number }
-  consumeStacks(sel: BuffInstanceSelector, stacks: number | 'all', reason: 'consumed' | 'reaction'): ConsumeStacksResult
-  addModifier(sel: BuffInstanceSelector, mod: BuffModifier): void
-  removeModifier(sel: BuffInstanceSelector, modifierId: string): void
-  refreshDuration(sel: BuffInstanceSelector, duration?: number): { durationBefore: number; durationAfter: number }
-  extendDuration(sel: BuffInstanceSelector, turns: number, maxRemaining?: number): { durationBefore: number; durationAfter: number }
-  remove(sel: BuffInstanceSelector, reason: BuffRemovalReason): void
+  // === cross-authority surface (the BuffAuthority port impl — every method takes ctx) ===
+  apply(req: ApplyBuffRequest, ctx: CombatAuthorityExecutionContext): ApplyBuffResult
+  addStacks(sel: BuffInstanceSelector, stacks: number, ctx: CombatAuthorityExecutionContext): { stacksBefore: number; stacksAfter: number }
+  removeStacks(sel: BuffInstanceSelector, stacks: number, ctx: CombatAuthorityExecutionContext): { stacksBefore: number; stacksAfter: number }
+  consumeStacks(sel: BuffInstanceSelector, stacks: number | 'all', reason: 'consumed' | 'reaction', ctx: CombatAuthorityExecutionContext): ConsumeStacksResult
+  addModifier(sel: BuffInstanceSelector, mod: BuffModifier, ctx: CombatAuthorityExecutionContext): void
+  removeModifier(sel: BuffInstanceSelector, modifierId: string, ctx: CombatAuthorityExecutionContext): void
+  refreshDuration(sel: BuffInstanceSelector, duration: number | undefined, ctx: CombatAuthorityExecutionContext): { durationBefore: number; durationAfter: number }
+  extendDuration(sel: BuffInstanceSelector, turns: number, maxRemaining: number | undefined, ctx: CombatAuthorityExecutionContext): { durationBefore: number; durationAfter: number }
+  remove(sel: BuffInstanceSelector, reason: BuffRemovalReason, ctx: CombatAuthorityExecutionContext): void
 
   // === lifecycle entry points (spec §53; replaces catch-all update()) ===
-  onHolderTurnEnd(holderId: CombatEntityId): readonly PeriodicResolution[]
-  onSourceTurnEnd(sourceId: CombatEntityId): readonly PeriodicResolution[]
-  onRoundEnd(): readonly PeriodicResolution[]
-  onHolderDeath(holderId: CombatEntityId): void
-  onSourceDeath(sourceId: CombatEntityId): void
-  onBattleEnd(): void
-  onTimeElapsed(holderId: CombatEntityId, seconds: number): readonly PeriodicResolution[]  // persistent pool mode (R2)
+  // Lifecycle emissions have no executing op — ids mint from the root
+  // transaction id (`evt.${lctx.rootActionId}.${type}.${ordinal}`); TurnBattleSystem
+  // passes the status-phase root (`status.turn.N.*`) per R-C2.
+  onHolderTurnEnd(holderId: CombatEntityId, lctx: BuffLifecycleContext): readonly PeriodicResolution[]
+  onSourceTurnEnd(sourceId: CombatEntityId, lctx: BuffLifecycleContext): readonly PeriodicResolution[]
+  onRoundEnd(lctx: BuffLifecycleContext): readonly PeriodicResolution[]
+  onHolderDeath(holderId: CombatEntityId, lctx: BuffLifecycleContext): void
+  onSourceDeath(sourceId: CombatEntityId, lctx: BuffLifecycleContext): void
+  onBattleEnd(lctx: BuffLifecycleContext): void
+  onTimeElapsed(holderId: CombatEntityId, seconds: number, lctx: BuffLifecycleContext): readonly PeriodicResolution[]  // persistent pool mode (R2)
 
   // === periodic ===
-  resolvePeriodic(holderId: CombatEntityId): readonly PeriodicResolution[]      // internal
-  triggerPeriodic(sel: BuffInstanceSelector, periodicId?: string): readonly PeriodicResolution[]  // TriggerBuffPeriodic — no lifetime advance (contract §73)
+  resolvePeriodic(holderId: CombatEntityId, lctx: BuffLifecycleContext): readonly PeriodicResolution[]      // internal
+  triggerPeriodic(sel: BuffInstanceSelector, periodicId: string | undefined, ctx: CombatAuthorityExecutionContext): readonly PeriodicResolution[]  // TriggerBuffPeriodic — no lifetime advance (contract §73)
 
   // === queries (BuffReadPort impl) ===
   getInstance(sel: BuffInstanceSelector): BuffInstanceSnapshot | undefined
   getForTarget / getForHolder / getByDefinition / getStacks / hasForbiddenTags
   getActiveModifiers(holderId: CombatEntityId): StatModifier[]   // R-B5 — same StatModifier shape as legacy
 }
+
+// BuffLifecycleContext.ts — root-transaction context for non-op emissions
+export interface BuffLifecycleContext {
+  rootActionId: string        // e.g. `status.turn.35.player` — minted by the turn-lifecycle owner
+  events: CombatEventSink     // same sink lane as ctx.events
+}
 ```
 
 ```ts
-// BuffEvents.ts — every event post-commit; ElementalApplicationCommitted among them (spec §60)
+// BuffEvents.ts — every event post-commit; ElementalApplicationCommitted among them (spec §60).
+// All members extend CombatEventBase: producer-minted `eventId` +
+// `causationOperationId` (authority-ctx emissions) — scheduler stamps only
+// `combatSequence`. These pending shapes are added to contracts/events.ts by
+// THIS plan (closed union — edit the central file, contract v4).
 export type BuffEvent =
-  | { type: 'buff_applied'; eventId; combatSequence; instanceId; definitionId; sourceId; targetId; created: boolean }
-  | { type: 'buff_stacks_changed'; eventId; combatSequence; instanceId; stacksBefore; stacksAfter; addedStacks }
-  | { type: 'buff_removed'; eventId; combatSequence; instanceId; definitionId; sourceId; targetId; reason: BuffRemovalReason; stacksAtRemoval: number }
-  | { type: 'buff_periodic_resolved'; eventId; combatSequence; instanceId; periodicId; kind: 'damage'|'heal'; amount: number }
-  | { type: 'buff_modifier_added' | 'buff_modifier_removed'; eventId; combatSequence; instanceId; modifierId }
+  | { type: 'buff_applied'; instanceId; definitionId; sourceId; targetId; created: boolean }
+  | { type: 'buff_stacks_changed'; instanceId; stacksBefore; stacksAfter; addedStacks }
+  | { type: 'buff_removed'; instanceId; definitionId; sourceId; targetId; reason: BuffRemovalReason; stacksAtRemoval: number }
+  | { type: 'buff_periodic_resolved'; instanceId; periodicId; kind: 'damage'|'heal'; amount: number }
+  | { type: 'buff_modifier_added' | 'buff_modifier_removed'; instanceId; modifierId }
   | ElementalApplicationCommitted   // emitted ONLY by elemental-kind applies that added stacks (§20–21)
-  | { type: 'buff_application_failed'; eventId; combatSequence; definitionId; sourceId; targetId; reason }
+  | { type: 'buff_application_failed'; definitionId; sourceId; targetId; reason }
+// (each & CombatEventBase — eventId/causationOperationId minted per emission site)
 ```
 
 **Application flow (spec §25 + contract §16–21):**
 ```
-apply(req):
+apply(req, ctx):   // ctx = CombatAuthorityExecutionContext (v4)
   def = registry.get(req.definitionId)              // unknown → throw (structural, §50)
-  {success, duration} = resolver.resolve(req, ctx)  // ONE CombatRng roll
-  if !success: emit buff_application_failed; return {applied:false}   // §18 — no state touched
+  {success, duration} = resolver.resolve(req, resolverCtx)  // ONE CombatRng roll
+  if !success: ctx.events.emit(buff_application_failed{eventId:`evt.${ctx.operationId}.buff_application_failed.0`, causationOperationId:ctx.operationId, ...}); return {applied:false}   // §18 — no state touched
   resolve instance by instanceScope:
     per_source → find(defId, sourceId, targetId)
     per_target → any source's instance on target
@@ -293,9 +309,10 @@ apply(req):
     replace  → remove old (reason 'replaced'), create new
     fail     → return {applied:false}
   clearsCcOnApply → strip holder's cc instances (reason 'cleansed')
-  commit → emit buff_applied / buff_stacks_changed
+  commit → ctx.events.emit buff_applied / buff_stacks_changed
+           (eventId `evt.${ctx.operationId}.${type}.${i}`, causationOperationId = ctx.operationId)
   if def.kind === 'ailment' && element set && addedStacks > 0:
-    emit ElementalApplicationCommitted (reactionEligibility from REQ, §14)
+    ctx.events.emit ElementalApplicationCommitted (reactionEligibility from REQ, §14)
   return full ApplyBuffResult
 ```
 
@@ -324,31 +341,32 @@ apply(req):
 - Test: `BuffPeriodic.test.ts`, `BuffLifecycle.test.ts`, `BuffConversion.test.ts`, `BuffPersistence.test.ts`
 
 ```ts
-// BuffPeriodicResolver.ts — spec §26–28; NO direct damage — requests only
-export interface BuffPeriodicDamageRequest {
-  instanceId: BuffInstanceId; periodicId: string
-  sourceId: CombatEntityId; targetId: CombatEntityId
-  element?: ElementType | 'physical'
-  rawPower: number                     // resolved dynamic base × stacks × modifiers
-  originKind: 'buff_periodic'          // damage origin channel (contract §67)
-  tags?: readonly string[]
-}
-export interface BuffPeriodicHealRequest {
-  instanceId; periodicId; sourceId; targetId; amount; originKind: 'buff_periodic'
-}
-export interface PeriodicResolution { requests: readonly (BuffPeriodicDamageRequest | BuffPeriodicHealRequest)[] }
+// BuffPeriodicResolver.ts — spec §26–28; NO direct damage — requests only.
+// SHAPES ARE CONTRACT-OWNED (contract megaplan v4 `periodic.ts`) — buff2 does
+// NOT redefine them. Review r3 BLOCKER 3: the request carries damageProfile +
+// coefficient + hit/miss/crit — NOT `rawPower`. Buff resolves lifecycle/stack
+// semantics (stack scaling already folded into `coefficient`); DamageSystem
+// resolves the combat formula. Scheduler converts each request 1:1 into a
+// ResolvedCombatOperation (origin.kind 'buff_periodic').
+export type { BuffPeriodicDamageRequest, BuffPeriodicHealRequest, PeriodicResolution } from '../../battle/contracts/periodic'
+//   BuffPeriodicDamageRequest = {instanceId, periodicId, sourceId, targetId,
+//     element?, damageProfile, coefficient, hitCount, canCrit, canMiss,
+//     stackCount?, tags?}
+//   BuffPeriodicHealRequest   = {instanceId, periodicId, sourceId, targetId,
+//     amount, capFractionOfHealTargetMaxHp?}
 
-// Dynamic magnitude (replaces BuffSystem.calculateDamagePerTurn + damagePerTurn snapshot):
+// Dynamic coefficient (replaces BuffSystem.calculateDamagePerTurn + damagePerTurn snapshot):
 resolvePeriodicDamage(def, instance, sourceStats, targetStatsSnapshot):
-  base = periodic.powerDomain === 'source_stats'
-    ? elementalBasePower-equivalent via stats port (physical → might; element → per-element base)
+  coefficient = periodic.powerDomain === 'source_stats'
+    ? elementalBaseCoefficient-equivalent via stats port (physical → might; element → per-element base)
     : periodic.baseCoefficient
   × (scaling === 'per_stack' ? instance.stacks : 1)
   × modifierFactor(instance.modifiers, 'periodic_damage')          // multiplicative chain
   × modifierFactor(instance.modifiers, 'potency')                  // ailmentPotencyPercent analog → moves to modifier channel
   then consume 'next_periodic_damage' uses
-  // mitigation (armor/resist/realm-ignore) applied by the DAMAGE authority on the request —
-  // buff2 supplies rawPower + element + armorIgnore flag; keeps BuffSystem free of Armor/Resistance imports.
+  // request.coefficient = the stack-scaled effective coefficient; DamageSystem's
+  // damageProfile applies stats/scaling/mitigation/crit. BuffSystem stays free
+  // of Armor/Resistance imports — mitigation is profile-owned.
 ```
 
 **Lifecycle matrix (spec §53–56 — the regression-prone part):**
@@ -365,7 +383,7 @@ resolvePeriodicDamage(def, instance, sourceStats, targetStatsSnapshot):
 
 `convertsToId` semantics ported verbatim from `BuffSystem.convert` (`:222–256`): remove source instance → apply conversion def **through the same apply()** (recursive call keeps resist/duration formula — it emitted as a fresh application; mark `reactionEligibility:'suppressed'` on conversions so a converting elemental ailment can't trigger reactions — flag as R-B7 provisional).
 
-- [ ] **Step 1 — Failing tests (periodic):** 3-stack fixture DoT → `rawPower` scales with stacks AND live source stats (mutate stats between ticks → second tick differs — the spec §27 dynamic-resolution requirement that the OLD system fails); `next_periodic_damage` modifier applies once then gone; `powerDomain:'buff'` uses `baseCoefficient`; source dead → spec says requests still emitted for `holder_death`-only removal defs (verify against spec §55 row — source death removes only if `source_death` listed).
+- [ ] **Step 1 — Failing tests (periodic):** 3-stack fixture DoT → request `coefficient` scales with stacks AND live source stats (mutate stats between ticks → second tick differs — the spec §27 dynamic-resolution requirement that the OLD system fails); emitted request carries `damageProfile`/`canCrit`/`canMiss`/`hitCount` (scheduler converts 1:1 to `deal_damage` — contract v4); `next_periodic_damage` modifier applies once then gone; `powerDomain:'buff'` uses `baseCoefficient`; source dead → spec says requests still emitted for `holder_death`-only removal defs (verify against spec §55 row — source death removes only if `source_death` listed).
 - [ ] **Step 2 — Failing tests (lifecycle):** `onHolderTurnEnd` decrements only `holder_turns` anchors; expiry order (periodic BEFORE decrement-then-remove, matching today's order in `update()` `:346–390`); `convertsToId` at threshold fires once, new instance at stacks=1 with suppressed eligibility; `onHolderDeath` clears `holder_death` defs only; `onSourceDeath` clears `source_death` defs (spec's Trấn Ấn use-case).
 - [ ] **Step 3 — Failing tests (persistence):** `BuffPersistence` standalone pool — `onTimeElapsed` ticks seconds, no combat deps, events still emitted for log.
 - [ ] **Step 4 — Failing tests (hooks):** `onExpire`/`onRemove`/`onStackChange` hook ids surface on the emitted events (hook EXECUTION is out of scope — events carry the id for the ops layer to consume).
@@ -389,7 +407,7 @@ resolvePeriodicDamage(def, instance, sourceStats, targetStatsSnapshot):
 | Today | After |
 |---|---|
 | `actor.buffs: BuffPool` per participant | `battleBuffs: BuffSystem` single; participant keeps `entity.id` only |
-| `new BuffSystem(actor.buffs).update(actor.entity, this.combat, registry, resolveSource, resolveSourceBuffs)` `:1110` | `const resolutions = buffs.onHolderTurnEnd(actor.id); scheduler.enqueue(periodicRequests→ops)` |
+| `new BuffSystem(actor.buffs).update(actor.entity, this.combat, registry, resolveSource, resolveSourceBuffs)` `:1110` | `const resolutions = buffs.onHolderTurnEnd(actor.id, lctx); scheduler.enqueueAuthored(periodicRequests→ops)` |
 | `applySkillAilments` loop `new BuffSystem(target.buffs).apply(def,...)` per stack `:2973` | ONE `ApplyBuffOperation{stacks}` through executor → buff2 `apply` handles stack math; `initiatesReactions` becomes the request's `reactionEligibility:'eligible'` (legacy `TurnReactionManager` still called after — R3 bridge, marked for seal-batch removal) |
 | `new BuffSystem(target.buffs).apply(def,...)` appliesBuffs lane `:1824` | same `ApplyBuffOperation` route, `reactionEligibility:'suppressed'` (appliesBuffs are not elemental applications today — verify per def `kind`) |
 | `BuffSystem.isStunned/isFrozen/isRooted(targetId)` CC checks | `buffs.hasActiveCc(holderId, targetId, 'stun')` query — same ARCH-009 targetId guard ported |

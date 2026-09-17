@@ -113,23 +113,24 @@ type CombatOperation =
 ## Mission 2 — CombatScheduler + CombatOperationExecutor
 
 **Files:**
-- Create: `game/src/core/battle/scheduler/CombatScheduler.ts` — operation queue, `combatSequence` allocation (sole allocator), settlement barrier, immediate-event drain to quiescence, `eventId` dedup (exactly-once), `maxImmediateSettlementDepth` guard (R9 policy), debug trace recorder
-- Create: `game/src/core/battle/scheduler/CombatOperationExecutor.ts` — routes `ResolvedCombatOperation` to authority ports; contains routing only, no formulas
-- Create: `game/src/core/battle/scheduler/CombatAuthorityPorts.ts` — `BuffAuthority`, `DamageAuthority`, `GaugeAuthority`, `ResourceAuthority`, `ActionValidatorAuthority` port interfaces
-- Create: `game/src/core/battle/scheduler/CombatTrace.ts` — §85-shaped trace tree (rootAction → subcast → operation → result → event → evaluation)
-- Test: `game/src/core/battle/scheduler/CombatScheduler.test.ts` — synthetic ops + stub authorities
+- Create: `game/src/core/battle/runtime/scheduler/CombatScheduler.ts` — operation queue, `combatSequence` allocation (sole allocator), settlement barrier, immediate-event drain to quiescence, `eventId` dedup (exactly-once), `seenOperationIds` global uniqueness, dual guard (nesting depth + per-barrier work budget — contract v4), debug trace recorder
+- Create: `game/src/core/battle/runtime/scheduler/CombatOperationExecutor.ts` — routes `ResolvedCombatOperation` to authority ports; contains routing only, no formulas
+- Create: `game/src/core/battle/runtime/scheduler/CombatAuthorityPorts.ts` — `BuffAuthority`, `DamageAuthority`, `GaugeAuthority`, `ResourceAuthority`, `ActionValidatorAuthority` port interfaces (all take `CombatAuthorityExecutionContext` — contract megaplan v4)
+- Create: `game/src/core/battle/runtime/scheduler/CombatTrace.ts` — §85-shaped trace tree (rootAction → subcast → operation → result → event → evaluation)
+- Test: `game/src/core/battle/runtime/scheduler/CombatScheduler.test.ts` — synthetic ops + stub authorities
 
-**Interfaces — Produces:**
+**Interfaces — Produces** (SUPERSEDED by the contract megaplan's canonical names — that plan is authoritative; sketch shown for shape only):
 
 ```ts
 class CombatScheduler {
-  allocateSequence(): number
-  enqueueOperation(op: ResolvedCombatOperation): void
-  runUntilQuiescent(): CombatTrace        // settles each op + drains immediate events
-  emitImmediate(event: CombatEvent): void // dedup by eventId, exactly-once
+  // NO public allocateSequence — scheduler stamps internally (sole allocator)
+  enqueueAuthored(ops: readonly ResolvedCombatOperation[]): void  // barrier after EACH op
+  enqueueEvent(pending: PendingCombatEvent): void                  // dedup by producer eventId
+  reserveOperationId(id: CombatOperationId): void                  // global uniqueness, all paths
+  run(): CombatTrace                                               // drains authored + immediate until quiescent
 }
 class CombatOperationExecutor {
-  execute(op: ResolvedCombatOperation): CombatOperationResultBase
+  execute(op: ResolvedCombatOperation, sink: CombatEventSink): CombatOperationResult  // pure router
 }
 ```
 
@@ -247,7 +248,7 @@ The largest blast radius. Split if inventory shows it: **M4a** = turn-native pat
 
 **Files:**
 - Modify: `game/src/core/battle/turn/TurnBattleSystem.ts` — migrated skill/buff flows execute through `CombatScheduler` barriers; `combatSequence` single-source; multicast subcast settlement (§60–61); target-death retarget handoff (§62)
-- Create: `game/src/core/battle/scheduler/CombatTraceExporter.ts` — §85 debug trace dump (dev builds)
+- Create: `game/src/core/battle/runtime/scheduler/CombatTraceExporter.ts` — §85 debug trace dump (dev builds)
 - Modify: combat log / presentation event adapters for new event shapes + `origin` tags (`skill`/`buff_periodic`/`reaction`)
 - Test: `game/src/core/battle/turn/TurnBattleSystem.contract.test.ts` — §91–102 contract suite
 - Docs: update `game/docs/systems/buffs.md`, `elements-reactions.md`, `skills.md`, `combat-overview.md`; roadmap entry
