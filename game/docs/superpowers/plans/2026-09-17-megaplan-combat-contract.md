@@ -2,7 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Non-trivial production missions MUST follow `game/docs/architecture/architecture-worker-workflow.md` (G0–G5) and return the G5 evidence report.
 
-> **Review revision:** v7 — incorporates code review round 6 (at `239a60bc`). Round-6 fix: an op's `combatSequence` is allocated at **execution-START** — before `executor.execute()` — so a cause's sequence always precedes its effects' (an authority emitting mid-execute can no longer get a lower sequence than the op that emitted it). Semantics locked: `combatSequence` = chronological creation/execution-start order ONLY; the causal tree is built from `causationOperationId`/`causationEventId`/`rootActionId`/`parentOperationId` — `CombatTrace.toString()` renders the tree from causation fields, never by sorting on sequence (depth-first settlement order ≠ numeric order: `A=1,E1=2,E2=3,X=4` settles as `A→E1→X→E2`). v6 (`239a60bc`): round 5 — event queues are **per-execution frames**, not one global FIFO — an op's emissions drain inside ITS barrier before siblings AND before outer queued events (true depth-first consequence trees: `E1→X→E3→Z→Y→E2`, never `E1→X→E2→E3`; batch frames get the same isolation); `PeriodicRequestsCommitted` drops the fabricated `origin` (a lifecycle root isn't a `CombatOperation` — the event carries `holderId`+`rootActionId`; the built-in handler mints each request's OWN `origin{kind:'buff_periodic', originId: instanceId:periodicId, sourceId: req.sourceId, causationEventId}`); group-atomic id reservation everywhere — `enqueueAuthored`, handler-returned op lists, and batches all validate+reserve ALL ids before their first member executes (a produced group never commits op 1 then discovers a bad id in op 2); batch structural validation now runs BEFORE runtime preflight (a malformed graph is a structural fault independent of combat state — a dead target can't hide a duplicate id); `createLifecycleSink(rootActionId)` is a public scheduler API and event ordinals are scheduler-owned per scope (`eventOrdinalByScope`) so two sinks for one scope never collide; `workThisBarrier` resets per ROOT unit (authored op OR root-queue event — lifecycle roots get a fresh budget too); handler-emitted events settle AFTER the handler's returned settlement (locked ordering); `registerImmediateHandler` is one-handler-per-type (duplicate → structural fault); M3 exit criterion + R9 wording fixed (profiles not origins; "settlement guard violation" covers both guards). v5 (`57475205`): round 4. v4 (`aead334b`): round 3. v3 (`5c17f2a3`): round 2. v2 (`eb8587d2`): round 1.
+> **Review revision:** v7.1 — buff-plan review amendment (2026-09-17): adds `SetBuffStacksOperation`/`SetBuffDurationOperation`/`CleanseBuffOperation` + `BuffCleanseQuery`/`CleanseResult` + matching result members and `BuffAuthority` port methods (Buff Final Spec §36/§38/§42/§67 parity — every mutator reachable via ops per §8); `CombatAuthorityExecutionContext.combatSequence` (the op's own execution-start allocation — read channel, scheduler stays sole allocator); `createLifecycleSink` returns `{sink, sequence}` (the root transaction's allocated sequence); `BuffPeriodicDamageRequest.snapshot?` (spec §25 snapshot-scaling carrier). Purely additive — no v7 semantics changed.
+>
+> v7 — incorporates code review round 6 (at `239a60bc`). Round-6 fix: an op's `combatSequence` is allocated at **execution-START** — before `executor.execute()` — so a cause's sequence always precedes its effects' (an authority emitting mid-execute can no longer get a lower sequence than the op that emitted it). Semantics locked: `combatSequence` = chronological creation/execution-start order ONLY; the causal tree is built from `causationOperationId`/`causationEventId`/`rootActionId`/`parentOperationId` — `CombatTrace.toString()` renders the tree from causation fields, never by sorting on sequence (depth-first settlement order ≠ numeric order: `A=1,E1=2,E2=3,X=4` settles as `A→E1→X→E2`). v6 (`239a60bc`): round 5 — event queues are **per-execution frames**, not one global FIFO — an op's emissions drain inside ITS barrier before siblings AND before outer queued events (true depth-first consequence trees: `E1→X→E3→Z→Y→E2`, never `E1→X→E2→E3`; batch frames get the same isolation); `PeriodicRequestsCommitted` drops the fabricated `origin` (a lifecycle root isn't a `CombatOperation` — the event carries `holderId`+`rootActionId`; the built-in handler mints each request's OWN `origin{kind:'buff_periodic', originId: instanceId:periodicId, sourceId: req.sourceId, causationEventId}`); group-atomic id reservation everywhere — `enqueueAuthored`, handler-returned op lists, and batches all validate+reserve ALL ids before their first member executes (a produced group never commits op 1 then discovers a bad id in op 2); batch structural validation now runs BEFORE runtime preflight (a malformed graph is a structural fault independent of combat state — a dead target can't hide a duplicate id); `createLifecycleSink(rootActionId)` is a public scheduler API and event ordinals are scheduler-owned per scope (`eventOrdinalByScope`) so two sinks for one scope never collide; `workThisBarrier` resets per ROOT unit (authored op OR root-queue event — lifecycle roots get a fresh budget too); handler-emitted events settle AFTER the handler's returned settlement (locked ordering); `registerImmediateHandler` is one-handler-per-type (duplicate → structural fault); M3 exit criterion + R9 wording fixed (profiles not origins; "settlement guard violation" covers both guards). v5 (`57475205`): round 4. v4 (`aead334b`): round 3. v3 (`5c17f2a3`): round 2. v2 (`eb8587d2`): round 1.
 
 **Goal:** Build the shared combat runtime spine — `core/battle/contracts/` (pure types: operations/results/events/origin/selectors) + `core/battle/runtime/` (implementations: `CombatRng` impls, `ElementalStateRegistry` factory, `StaticCapabilityQuery`, `CombatEventSink`), `CombatScheduler` (sole `combatSequence` allocator + per-operation settlement barrier + exactly-once event dispatch + reaction batch frames), `CombatOperationExecutor` (pure router, zero scheduler knowledge) and authority port interfaces — that Buff System Reimagined, SkillDefinition, and ReactionSystem all plug into.
 
@@ -244,6 +246,12 @@ interface CombatAuthorityExecutionContext {
   operationId: CombatOperationId       // the op currently executing
   origin: CombatOperationOrigin
   events: CombatEventSink              // scoped to this op — mints evt.${operationId}.${n}
+  /** v7.1 (buff-plan review amendment) — the executing op's OWN combatSequence,
+      allocated at execution-START before this ctx is built (r6). Read channel
+      for authorities stamping internal state (BuffInstance.createdSequence /
+      lastAppliedSequence). Allocation stays with the scheduler — the ctx is
+      never an allocator. */
+  combatSequence: number
 }
 
 // contracts/trace.ts — review r2 HIGH 2: op sequence lives on the RECORD, not the op
@@ -290,7 +298,12 @@ class CombatScheduler {
       to build BuffLifecycleContext.events. Event ordinals are scheduler-owned
       per scopeId (`eventOrdinalByScope`), so two sinks for the same
       rootActionId NEVER mint the same eventId. Op/event sinks are internal. */
-  createLifecycleSink(rootActionId: string): CombatEventSink
+  /** v7.1 — returns the sink AND the root transaction's own combatSequence,
+      allocated once at creation (R-C2 roots are real transactions;
+      `status.turn.N.*` needs a truthful sequence for lifecycle-created state
+      e.g. convertsToId — without it authorities would read scheduler
+      internals). Sole allocator stays the scheduler. */
+  createLifecycleSink(rootActionId: string): { sink: CombatEventSink; sequence: number }
   run(): CombatTrace                                                  // drains authored + root events until quiescent
   // NO public allocateSequence() — sequence is allocated internally at stamp/commit time
 }
@@ -380,6 +393,7 @@ export type CombatOperation =
   | AddBuffStacksOperation | RemoveBuffStacksOperation | ConsumeBuffStacksOperation
   | AddBuffModifierOperation | RemoveBuffModifierOperation
   | RefreshBuffDurationOperation | ExtendBuffDurationOperation
+  | SetBuffStacksOperation | SetBuffDurationOperation | CleanseBuffOperation
   | TriggerBuffPeriodicOperation | RemoveBuffOperation
   | PushGaugeOperation
   | GainResourceOperation | ConsumeResourceOperation
@@ -432,6 +446,19 @@ export interface RefreshBuffDurationOperation { type: 'refresh_buff_duration'; p
 export interface ExtendBuffDurationOperation  { type: 'extend_buff_duration';  payload: { selector: BuffInstanceSelector; turns: number; maxRemaining?: number } }
 export interface TriggerBuffPeriodicOperation { type: 'trigger_buff_periodic'; payload: { selector: BuffInstanceSelector; periodicId?: string } }
 export interface RemoveBuffOperation          { type: 'remove_buff';           payload: { selector: BuffInstanceSelector; removalReason: BuffRemovalReason } }
+/** v7.1 (buff-plan review amendment) — spec §36/§38/§42/§67 parity: every
+    BuffAuthority mutator is reachable via an op (contract §8 external
+    mutation rule). Producers arrive with their consumers. */
+export interface SetBuffStacksOperation       { type: 'set_buff_stacks';       payload: { selector: BuffInstanceSelector; stacks: number } }
+export interface SetBuffDurationOperation     { type: 'set_buff_duration';     payload: { selector: BuffInstanceSelector; duration: number } }
+export interface BuffCleanseQuery {
+  kind?: 'buff' | 'debuff' | 'ailment' | 'marker'
+  tags?: readonly string[]
+  element?: ElementType
+  definitionId?: BuffDefinitionId
+}
+export interface CleanseBuffOperation         { type: 'cleanse_buff';          payload: { targetId: CombatEntityId; query: BuffCleanseQuery } }
+export interface CleanseResult { cleansed: BuffInstanceId[]; skipped: BuffInstanceId[] }  // skipped = matched but dispellable:false
 export type BuffRemovalReason =
   | 'expired' | 'consumed' | 'cleansed' | 'reaction' | 'death' | 'source_death' | 'battle_end' | 'replaced' | 'scripted'
 export interface PushGaugeOperation    { type: 'push_gauge';    payload: { targetId: CombatEntityId; fractionOfMax: number } }
@@ -450,7 +477,9 @@ export type CombatOperationResult =
   | { operationId; type: 'add_buff_stacks' | 'remove_buff_stacks'; status; reason?; result?: StacksResult }  // {stacksBefore, stacksAfter}
   | { operationId; type: 'consume_buff_stacks'; status; reason?; result?: ConsumeStacksResult }
   | { operationId; type: 'add_buff_modifier' | 'remove_buff_modifier'; status; reason?; result?: { modifierId: string; applied: boolean } }
-  | { operationId; type: 'refresh_buff_duration' | 'extend_buff_duration'; status; reason?; result?: { durationBefore: number; durationAfter: number } }
+  | { operationId; type: 'refresh_buff_duration' | 'extend_buff_duration' | 'set_buff_duration'; status; reason?; result?: { durationBefore: number; durationAfter: number } }
+  | { operationId; type: 'set_buff_stacks'; status; reason?; result?: StacksResult }
+  | { operationId; type: 'cleanse_buff'; status; reason?; result?: CleanseResult }
   | { operationId; type: 'trigger_buff_periodic'; status; reason?; result?: { resolutionsEmitted: number } }
   | { operationId; type: 'remove_buff'; status; reason? }
   | { operationId; type: 'push_gauge'; status; reason?; result?: { before: number; requestedDelta: number; appliedDelta: number; after: number } }
@@ -507,6 +536,11 @@ export interface BuffAuthority {
       BLOCKER 2). The return value feeds result.resolutionsEmitted only. */
   triggerPeriodic(sel: BuffInstanceSelector, periodicId: string | undefined, ctx: CombatAuthorityExecutionContext): readonly PeriodicResolution[]
   remove(sel: BuffInstanceSelector, reason: BuffRemovalReason, ctx: CombatAuthorityExecutionContext): void
+  /** v7.1 — spec §36/§38/§42/§67 required-API parity. cleanse removes every
+      dispellable instance on targetId matching query (reason 'cleansed'). */
+  setStacks(sel: BuffInstanceSelector, stacks: number, ctx: CombatAuthorityExecutionContext): StacksResult
+  setRemainingDuration(sel: BuffInstanceSelector, duration: number, ctx: CombatAuthorityExecutionContext): { durationBefore: number; durationAfter: number }
+  cleanse(targetId: CombatEntityId, query: BuffCleanseQuery, ctx: CombatAuthorityExecutionContext): CleanseResult
 }
 // contracts/periodic.ts — typed periodic requests (review r3 BLOCKER 3:
 // canonicalized to the Buff Final Spec shape — damageProfile + coefficient +
@@ -527,6 +561,11 @@ export interface BuffPeriodicDamageRequest {
   canMiss: boolean
   stackCount?: number          // metadata for profiles that scale on stacks
   tags?: readonly string[]
+  /** v7.1 — present iff the periodic def's scaling==='snapshot': the source's
+      offensive context captured at apply (Buff Final Spec §25). DamageSystem
+      resolves against THIS instead of live source stats when present;
+      target mitigation still resolves live at tick. */
+  snapshot?: Readonly<Record<string, number>>
 }
 export interface BuffPeriodicHealRequest {
   instanceId: BuffInstanceId; periodicId: string
@@ -561,14 +600,15 @@ export class CombatOperationBatchRunner {
       resolved upfront; the runner materializes each at its position via
       BatchResultContext built from prior in-batch CombatOperationResults.
       Materialization PRESERVES deferred.operationId (producer-minted, R-C2).
-      The scheduler drives:
-        preflight ALL runtime preconditions (§40–42)
-        validateBatchStructure(batch)   // r4 BLOCKER 3 — BEFORE first mutation:
+      The scheduler drives (r5 HIGH 1 — structural BEFORE runtime: a malformed
+      command graph is a fault independent of combat state):
+        validateBatchStructure(batch)   // r4 BLOCKER 3 — BEFORE any mutation:
           all op/deferred ids unique in-batch AND unreserved globally;
           every deferred resultOperationId → an EARLIER 'deal_damage' entry;
           malformed payloads → CombatSettlementFault (broken command graph)
         reserveOperationId for ALL batch ids ATOMICALLY — a bad id can never
           fault mid-batch after earlier ops already committed
+        preflight ALL runtime preconditions (§40–42) — stale → atomic skip
         for entry of batch.operations:
           if deferred:
             prior = resultsCtx.get(entry.resultOperationId)
@@ -696,7 +736,9 @@ reserveOperationId(id): seenOperationIds.has(id) → structural fault throw;
 Sink factories (r5 HIGH 2):
   createOperationSink(op, frameEvents)     // internal — scopeId = op.operationId
   createEventSink(event, emitted)          // internal — scopeId = event.eventId
-  createLifecycleSink(rootActionId)        // PUBLIC — buff lifecycle/proc roots
+  createLifecycleSink(rootActionId)        // PUBLIC — buff lifecycle/proc roots;
+                                           // v7.1: also allocates the root's
+                                           // combatSequence → {sink, sequence}
   // Every sink mints evt.${scopeId}.${eventOrdinalByScope[scopeId]++} + the
   // scope's causation id (op → causationOperationId, event → causationEventId,
   // lifecycle → none) and calls enqueueEvent with its target list. Ordinals
