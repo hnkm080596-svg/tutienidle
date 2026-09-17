@@ -87,3 +87,175 @@ export type ReactionBatchOutcome =
   | { status: 'resolved'; reactionId: ReactionId; results: readonly CombatOperationResultBase[] }
   | { status: 'skipped'; reactionId: ReactionId; reason: 'stale_reaction_snapshot' }
   | { status: 'partial'; reactionId: ReactionId; results: readonly CombatOperationResultBase[] }
+
+// ---------------------------------------------------------------------------
+// M3 -- resolution builder (contract sec.36-39). The snapshot is captured
+// ONCE at selection from the board; every payoff reads the frozen values.
+// ---------------------------------------------------------------------------
+
+import type { ElementalApplicationCommitted } from '../battle/contracts/events'
+import type { CombatOperationOrigin } from '../battle/contracts/origin'
+import type { ConsumeBuffStacksOperation } from '../battle/contracts/operations'
+import type { ReactionDefinition } from './ReactionDefinition'
+import type { ReactionCandidate } from './ReactionTypes'
+import { boardStacks } from './ReactionTypes'
+import type { BuffDefinitionId, CombatOperationId } from '../battle/contracts/ids'
+import type { ElementalStateRegistry } from './ElementalStateRegistry'
+
+/** Which participant roles are consumed by a reaction (spec sec.77/78):
+    sinh consumes the parent (child is kept + converted); khac consumes
+    BOTH attacker and defender. */
+export function consumedRoles(
+  def: ReactionDefinition,
+): readonly ReactionParticipantRole[] {
+  return def.relation === 'sinh' ? ['parent'] : ['attacker', 'defender']
+}
+
+/** Participant roles in snapshot order (sinh: parent+child; khac:
+    attacker+defender -- contract sec.38). */
+export function participantRoles(
+  def: ReactionDefinition,
+): readonly { role: ReactionParticipantRole; element: ElementType }[] {
+  return def.relation === 'sinh'
+    ? [
+        { role: 'parent', element: def.elements.parent! },
+        { role: 'child', element: def.elements.child! },
+      ]
+    : [
+        { role: 'attacker', element: def.elements.attacker! },
+        { role: 'defender', element: def.elements.defender! },
+      ]
+}
+
+/** Snapshot participants from the board. Every participant must have a
+    live instance recorded (board.instances[element]) -- a role with
+    stacks>0 but no recorded instance is a structural desync and throws. */
+export function snapshotParticipants(
+  def: ReactionDefinition,
+  board: ReactionBoard,
+): readonly ReactionParticipantSnapshot[] {
+  return participantRoles(def).map(({ role, element }) => {
+    const instanceId = board.instances[element]
+    const stacks = boardStacks(board, element)
+    if (instanceId === undefined || stacks <= 0) {
+      throw new Error(
+        `resolveCandidate: participant '${role}' (${element}) has no live ` +
+          `instance on the board (stacks=${stacks})`,
+      )
+    }
+    return { role, element, instanceId, stacks }
+  })
+}
+
+/** contract sec.41 -- one precondition per participant; expected values
+    are the board snapshot's. */
+export function buildPreconditions(
+  participants: readonly ReactionParticipantSnapshot[],
+  board: ReactionBoard,
+): readonly ReactionParticipantPrecondition[] {
+  return participants.map((p) => ({
+    instanceId: p.instanceId,
+    expectedSourceId: board.sourceId,
+    expectedTargetId: board.targetId,
+    expectedStacks: p.stacks,
+  }))
+}
+
+/** The reaction-scoped origin stamped on every emitted op (contract
+    sec.59): kind 'reaction', originId = reactionId, causationEventId =
+    the triggering application event. */
+export function reactionOrigin(
+  def: ReactionDefinition,
+  event: ElementalApplicationCommitted,
+): CombatOperationOrigin {
+  return {
+    kind: 'reaction',
+    originId: def.id,
+    sourceId: event.sourceId,
+    rootActionId: event.origin.rootActionId,
+    causationEventId: event.eventId,
+    reactionId: def.id,
+  }
+}
+
+/** Deterministic op-id minting under the reaction scope:
+    `rx.${eventId}.${reactionId}.${label}` (contract M4 heal convention:
+    `rx.${eventId}.${reactionId}.heal`). */
+export function reactionOpId(
+  event: ElementalApplicationCommitted,
+  def: ReactionDefinition,
+  label: string,
+): CombatOperationId {
+  return `rx.${event.eventId}.${def.id}.${label}` as CombatOperationId
+}
+
+/** contract sec.44 -- consume ops head the batch, one per consumed
+    participant, 'all' stacks, removalReason 'reaction' (sec.47). */
+export function buildConsumeOperations(
+  def: ReactionDefinition,
+  participants: readonly ReactionParticipantSnapshot[],
+  event: ElementalApplicationCommitted,
+): ResolvedCombatOperation[] {
+  const consumed = new Set(consumedRoles(def))
+  const origin = reactionOrigin(def, event)
+  return participants
+    .filter((p) => consumed.has(p.role))
+    .map(
+      (p): ResolvedCombatOperation => ({
+        type: 'consume_buff_stacks',
+        operationId: reactionOpId(event, def, `consume.${p.role}`),
+        origin,
+        payload: {
+          selector: { kind: 'instance', instanceId: p.instanceId },
+          stacks: 'all',
+          removalReason: 'reaction',
+        } satisfies ConsumeBuffStacksOperation['payload'],
+      }),
+    )
+}
+
+/** contract sec.36-39 -- the full resolution record for a selected
+    candidate. `emitPayoff` is the M4 seam: given the definition + frozen
+    context it returns the authored payoff ops (ReactionOperations); the
+    M3 default emits none. Consume ops always precede payoff ops (sec.44). */
+export function resolveCandidate(
+  candidate: ReactionCandidate,
+  event: ElementalApplicationCommitted,
+  board: ReactionBoard,
+  emitPayoff: (
+    def: ReactionDefinition,
+    context: ReactionContext,
+  ) => readonly (ResolvedCombatOperation | DeferredOperation)[] = () => [],
+): ReactionResolution {
+  const def = candidate.definition
+  const participants = snapshotParticipants(def, board)
+  const context: ReactionContext = {
+    reactionId: def.id,
+    relation: def.relation,
+    sourceId: event.sourceId,
+    targetId: event.targetId,
+    triggerElement: event.element,
+    participants,
+    rootActionId: event.origin.rootActionId,
+    causationEventId: event.eventId,
+    combatSequence: event.combatSequence,
+  }
+  const preconditions = buildPreconditions(participants, board)
+  const consumeOps = buildConsumeOperations(def, participants, event)
+  const payoffOps = emitPayoff(def, context)
+  return {
+    reactionId: def.id,
+    context,
+    preconditions,
+    operations: [...consumeOps, ...payoffOps],
+  }
+}
+
+/** DefinitionId lookup for the consumed-event payload: resolves each
+    participant's element through the shared elemental registry (never a
+    literal id -- the registry is the element->def authority). */
+export function participantBuffIdLookup(
+  elements: ElementalStateRegistry,
+): (p: ReactionParticipantSnapshot) => BuffDefinitionId {
+  return (p) => elements.getDefinitionId(p.element)
+}

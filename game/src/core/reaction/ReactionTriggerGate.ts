@@ -16,7 +16,13 @@ import {
   type ReactionGateVerdict,
 } from './ReactionTypes'
 
-export class ReactionTriggerGate {
+/** The minimal surface the evaluation chain needs -- satisfied by
+    ReactionTriggerGate and by test stubs. */
+export interface ReactionGateCheck {
+  check(event: ElementalApplicationCommitted): ReactionGateVerdict
+}
+
+export class ReactionTriggerGate implements ReactionGateCheck {
   constructor(
     private readonly capabilities: CombatCapabilityQuery,
     private readonly elements: ElementalStateRegistry,

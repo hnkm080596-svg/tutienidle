@@ -137,6 +137,8 @@ export class CombatTrace {
         case 'buff_modifier_added':
         case 'buff_modifier_removed':
         case 'buff_removed':
+        case 'reaction_resolved':
+        case 'reaction_skipped':
           return event.rootActionId
         case 'elemental_application_committed':
         case 'buff_application_failed':

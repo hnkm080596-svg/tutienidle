@@ -9,6 +9,8 @@ import { ReactionSystem } from './ReactionSystem'
 import { ReactionRegistry } from './ReactionRegistry'
 import { createElementalStateRegistry } from './ElementalStateRegistry'
 import type { ReactionBias, ReactionBiasQuery } from './ReactionBias'
+import type { ElementalBoardQuery } from './ReactionBoard'
+import type { ReactionGateCheck } from './ReactionTriggerGate'
 import type { ReactionBoard } from './ReactionTypes'
 import {
   makeCanonicalReactionDefs,
@@ -24,6 +26,19 @@ const registry = new ReactionRegistry(
   elements,
   buffExists,
 )
+
+// These tests drive buildCandidates/selectCandidate on fabricated
+// boards -- the evaluate chain's board/gate deps are never consulted.
+const noBoard: ElementalBoardQuery = {
+  read: () => {
+    throw new Error('board query not wired in this suite')
+  },
+}
+const noGate: ReactionGateCheck = {
+  check: () => {
+    throw new Error('gate not wired in this suite')
+  },
+}
 
 function board(
   stacks: Partial<Record<ElementType, number>>,
@@ -42,7 +57,7 @@ function board(
 
 describe('ReactionSystem candidate+selection facade', () => {
   it('one evaluation selects at most one reaction (INV-R05)', () => {
-    const system = new ReactionSystem(registry)
+    const system = new ReactionSystem(registry, noBoard, noGate)
     // All 4 fire relations qualify: wood, fire, earth, metal, water stocked.
     const b = board({ wood: 2, fire: 2, earth: 2, metal: 2, water: 2 })
     const candidates = system.buildCandidates(
@@ -69,7 +84,7 @@ describe('ReactionSystem candidate+selection facade', () => {
         return { relationBiasBps: { khac: 5_000 } }
       },
     }
-    const system = new ReactionSystem(registry, spy)
+    const system = new ReactionSystem(registry, noBoard, noGate, spy)
     const b = board({ wood: 2, fire: 2, water: 2, metal: 2 })
     const candidates = system.buildCandidates(
       TEST_ENTITIES.sourceA,
@@ -92,7 +107,7 @@ describe('ReactionSystem candidate+selection facade', () => {
     // Board: wood4 fire1 water1 metal1 -- duong_viem sinh base 16 vs
     // tuc_viem khac base 1*1=1 vs dung_kim khac base 1*1=1.
     const b = board({ wood: 4, fire: 1, water: 1, metal: 1 })
-    const neutral = new ReactionSystem(registry)
+    const neutral = new ReactionSystem(registry, noBoard, noGate)
     const neutralWinner = neutral.selectCandidate(
       neutral.buildCandidates(TEST_ENTITIES.sourceA, 'fire', b),
     )
@@ -102,7 +117,7 @@ describe('ReactionSystem candidate+selection facade', () => {
     const boosted: ReactionBiasQuery = {
       getFor: () => ({ reactionBiasBps: { tuc_viem: 200_000 } }),
     }
-    const biased = new ReactionSystem(registry, boosted)
+    const biased = new ReactionSystem(registry, noBoard, noGate, boosted)
     const biasedWinner = biased.selectCandidate(
       biased.buildCandidates(TEST_ENTITIES.sourceA, 'fire', b),
     )
@@ -122,8 +137,8 @@ describe('ReactionSystem candidate+selection facade', () => {
           : d,
     )
     const swappedRegistry = new ReactionRegistry(swapped, elements, buffExists)
-    const baseline = new ReactionSystem(registry)
-    const variant = new ReactionSystem(swappedRegistry)
+    const baseline = new ReactionSystem(registry, noBoard, noGate)
+    const variant = new ReactionSystem(swappedRegistry, noBoard, noGate)
     const b = board({ wood: 3, fire: 3, earth: 1, water: 3, metal: 1 })
     expect(
       variant.selectCandidate(

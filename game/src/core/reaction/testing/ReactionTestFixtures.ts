@@ -45,6 +45,19 @@ import {
 import { createElementalStateRegistry } from '../ElementalStateRegistry'
 import type { ElementalStateRegistry } from '../ElementalStateRegistry'
 import type { ReactionDefinition } from '../ReactionDefinition'
+import type { CombatCapabilityQuery } from '../../battle/contracts/capability'
+import { BuffSystemBoardQuery, type ElementalBoardQuery } from '../ReactionBoard'
+import { ReactionTriggerGate } from '../ReactionTriggerGate'
+import {
+  ReactionSystem,
+  type ReactionPayoffEmitter,
+} from '../ReactionSystem'
+import type { ReactionBiasQuery } from '../ReactionBias'
+import type { ReactionRegistry } from '../ReactionRegistry'
+import { ELEMENTAL_REACTION_CAPABILITY } from '../ReactionTypes'
+import { ReactionBatchRunner } from '../ReactionBatchRunner'
+import { CombatOperationExecutor } from '../../battle/runtime/scheduler/CombatOperationExecutor'
+import type { CombatAuthorityPorts } from '../../battle/runtime/scheduler/CombatAuthorityPorts'
 
 export { TEST_ENTITIES }
 
@@ -152,6 +165,26 @@ export interface ReactionTestWorld {
   readonly rng: TestRng
   readonly alive: Set<CombatEntityId>
   readonly sink: CollectedEvents & { emit(e: CombatEventPayload): void }
+  /** Scripted capability query -- grantAll grants everything; per-call
+      override via `capabilities.grant(capId)` sets. */
+  readonly capabilities: CombatCapabilityQuery & {
+    grant(entityId: CombatEntityId, capabilityId: string): void
+    deny(entityId: CombatEntityId, capabilityId: string): void
+  }
+  readonly boardQuery: ElementalBoardQuery
+  readonly gate: ReactionTriggerGate
+  /** Builds a ReactionSystem over the world's real gate/board/elements. */
+  makeReactionSystem(
+    registry: ReactionRegistry,
+    opts?: {
+      biasQuery?: ReactionBiasQuery
+      payoffEmitter?: ReactionPayoffEmitter
+    },
+  ): ReactionSystem
+  /** Batch runner over the REAL executor (buffs port wired to the
+      world's BuffSystem; other ports absent -- ops touching them fault
+      structurally, which tests should not trigger). */
+  makeBatchRunner(): ReactionBatchRunner
   /** Scripted op ctx (sequence mints per world). */
   makeCtx(origin?: Partial<CombatOperationOrigin>): CombatAuthorityExecutionContext
   /** Real apply through the system; returns the fabricated committed
@@ -210,6 +243,23 @@ export function createReactionTestWorld(): ReactionTestWorld {
     elements,
   )
 
+  // Scripted capability query -- grants are explicit per
+  // (entity, capability); tests grant ELEMENTAL_REACTION_CAPABILITY to
+  // whichever source they need.
+  const grants = new Set<string>()
+  const capabilities: ReactionTestWorld['capabilities'] = {
+    has: (entityId, capabilityId) => grants.has(`${entityId}|${capabilityId}`),
+    grant: (entityId, capabilityId) => {
+      grants.add(`${entityId}|${capabilityId}`)
+    },
+    deny: (entityId, capabilityId) => {
+      grants.delete(`${entityId}|${capabilityId}`)
+    },
+  }
+
+  const boardQuery = new BuffSystemBoardQuery(system, elements)
+  const gate = new ReactionTriggerGate(capabilities, elements)
+
   let seq = 0
   let eventSeq = 0
 
@@ -237,6 +287,26 @@ export function createReactionTestWorld(): ReactionTestWorld {
     rng,
     alive,
     sink,
+    capabilities,
+    boardQuery,
+    gate,
+    makeReactionSystem(reactionRegistry, opts = {}) {
+      return new ReactionSystem(
+        reactionRegistry,
+        boardQuery,
+        gate,
+        opts.biasQuery,
+        opts.payoffEmitter,
+      )
+    },
+    makeBatchRunner() {
+      const ports: CombatAuthorityPorts = { buffs: system }
+      return new ReactionBatchRunner(
+        new CombatOperationExecutor(ports),
+        system,
+        (id) => alive.has(id),
+      )
+    },
     makeCtx,
     applyElement(sourceId, targetId, element, stacks, opts = {}) {
       const ctx = makeCtx()

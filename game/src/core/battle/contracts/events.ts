@@ -24,6 +24,7 @@ import type {
   CombatEntityId,
   CombatEventId,
   CombatOperationId,
+  ReactionId,
 } from './ids'
 import type { BuffRemovalReason, ReactionEligibility } from './operations'
 import type { CombatOperationOrigin } from './origin'
@@ -248,6 +249,32 @@ export interface BuffRemovedEvent extends CombatEventBase {
   stacksAtRemoval: number
 }
 
+// ---------------------------------------------------------------------------
+// Reaction events (reaction megaplan M3 -- spec sec.50). Emitted by the
+// reaction batch lane through the EVENT-SCOPED sink (causationEventId =
+// the triggering elemental_application_committed event). rootActionId rides
+// the payload for the same orphan-fallback reason as the buff events.
+// ---------------------------------------------------------------------------
+
+export interface ReactionResolvedEvent extends CombatEventBase {
+  type: 'reaction_resolved'
+  rootActionId: string
+  reactionId: ReactionId
+  relation: 'sinh' | 'khac'
+  sourceId: CombatEntityId
+  targetId: CombatEntityId
+  /** The pre-consume participant snapshot -- which seals were consumed
+      and how many stacks each carried (spec sec.50). */
+  consumed: readonly { buffId: BuffDefinitionId; stacks: number }[]
+}
+
+export interface ReactionSkippedEvent extends CombatEventBase {
+  type: 'reaction_skipped'
+  rootActionId: string
+  reactionId: ReactionId
+  reason: 'stale_reaction_snapshot'
+}
+
 /** What authorities/handlers emit -- envelope-free. */
 export type CombatEventPayload =
   | Omit<
@@ -286,6 +313,14 @@ export type CombatEventPayload =
       BuffRemovedEvent,
       'eventId' | 'causationOperationId' | 'causationEventId' | 'combatSequence'
     >
+  | Omit<
+      ReactionResolvedEvent,
+      'eventId' | 'causationOperationId' | 'causationEventId' | 'combatSequence'
+    >
+  | Omit<
+      ReactionSkippedEvent,
+      'eventId' | 'causationOperationId' | 'causationEventId' | 'combatSequence'
+    >
 
 /** What the sink hands the scheduler. */
 // NOT CombatSettlementFaultEvent -- faults are OUT-OF-BAND diagnostics
@@ -302,6 +337,8 @@ export type PendingCombatEvent =
   | Omit<BuffModifierAddedEvent, 'combatSequence'>
   | Omit<BuffModifierRemovedEvent, 'combatSequence'>
   | Omit<BuffRemovedEvent, 'combatSequence'>
+  | Omit<ReactionResolvedEvent, 'combatSequence'>
+  | Omit<ReactionSkippedEvent, 'combatSequence'>
 
 // PendingCombatEvent / CombatEventPayload are CLOSED unions -- sibling
 // plans add members by editing this file in their own missions (reaction
@@ -319,3 +356,5 @@ export type CombatEvent =
   | BuffModifierAddedEvent
   | BuffModifierRemovedEvent
   | BuffRemovedEvent
+  | ReactionResolvedEvent
+  | ReactionSkippedEvent
