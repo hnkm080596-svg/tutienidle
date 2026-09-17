@@ -1,7 +1,7 @@
 # Combat Systems Contract — SkillDefinition × BuffSystem × ReactionSystem
 
 Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
-Version: 1.1
+Version: 1.2
 Applies to: [SkillDefinition v1.1](./2026-09-17-skill-definition-system-spec.md), [Buff System Reimagined v1.0](./2026-09-17-buff-system-reimagined-spec.md), [Reaction System Reimagined v1.0](./2026-09-17-reaction-system-reimagined-spec.md)
 Compatibility requirement: None
 Migration requirement: None
@@ -1354,3 +1354,17 @@ The final rule is:
 - No subsystem owns the entire battle.
 - No subsystem reaches through another authority to mutate its state.
 - All important state transitions are deterministic, explicit and traceable.
+
+---
+
+## Addendum v1.2 (2026-09-17 — locked via Buff megaplan review rounds 1–2)
+
+Additive deltas locked in the implementation megaplan (`2026-09-17-megaplan-combat-contract.md` v7.1/v7.2). These amend the contract surface without changing any v1.1 semantic:
+
+1. **New buff operations:** `SetBuffStacksOperation`, `SetBuffDurationOperation`, `CleanseBuffOperation` (payload `{targetId, query: BuffCleanseQuery}`), matching result-union members, `BuffAuthority.setStacks`/`setRemainingDuration`/`cleanse`. Every mutator stays reachable via an operation.
+2. **`CombatAuthorityExecutionContext.combatSequence`** — the executing op's own execution-start allocation; read channel for authorities stamping internal state. **`CombatOperationExecutor.execute(op, ctx)`** — the scheduler builds the complete ctx (it owns sequence allocation); the executor never allocates or guesses. Batch/deferred entries execute through a scheduler-injected `executeEntry` lane so every entry still gets its own sequence.
+3. **`createLifecycleSink(rootActionId)` → `{sink, sequence, settle}`** — `settle()` drains the scheduler and returns `ReadonlyMap<CombatOperationId, status>` for ops executed during that call (lifecycle-authority barrier + outcome correlation).
+4. **`PeriodicRequestsCommitted`:** `holderId` replaced by `trigger: {type: 'holder_turn_start' | 'holder_turn_end' | 'source_turn_start' | 'source_turn_end' | 'interval' | 'manual', anchorEntityId?}` — source-turn boundaries anchor on the source and `onTimePassed` is battle-wide; requests are self-contained. Each `BuffPeriodicDamageRequest`/`BuffPeriodicHealRequest` carries emitter-minted `requestId`; generated ops are named `periodic.${requestId}` so emitters correlate settled status back to requests.
+5. **`BuffPeriodicDamageRequest.snapshot?: Readonly<Record<string, number>>`** — carries apply-time captured offensive context for `scaling: 'snapshot'` periodics; DamageSystem resolves against it instead of live source stats (target mitigation still live).
+6. **`remove_buff` returns `RemoveBuffResult {removed, instanceId?, stacksAtRemoval?}`** — no core mutation API returns void.
+7. **Generic capability grants:** `CapabilityGrantDefinition {id, type: CapabilityType, payload: unknown}` + `ActiveCapabilityGrant` + `CapabilityValidatorRegistry` (runtime — owner domains register payload validators; unknown type throws at def load). Buff core stores/exposes grants and never interprets payloads — no path/mechanic vocabulary in buff types.

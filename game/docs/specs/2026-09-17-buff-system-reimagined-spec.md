@@ -1,7 +1,7 @@
 # Buff System Reimagined — Final Architecture Specification
 
 Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
-Version: 1.0
+Version: 1.1
 Compatibility requirement: None
 Migration requirement: None
 Primary reference implementation: Hỏa Ấn
@@ -1787,3 +1787,18 @@ Buff System Reimagined hoàn thành khi:
 Nếu một feature mới buộc BuffSystem biết tên skill / tên path / reaction cụ thể / counter cụ thể / resource cụ thể thì responsibility đã bị đặt sai.
 
 Buff System phải trở thành một generic persistent-state engine, không phải nơi mọi mechanic có duration được đưa vào.
+
+---
+
+## Addendum v1.1 (2026-09-17 — locked via implementation-megaplan review rounds 1–2)
+
+Clarifications locked during the implementation-plan review. These refine — never contradict — the v1.0 semantics:
+
+1. **§53/§67 concrete result shapes:** `remove(): RemoveBuffResult {removed: boolean; instanceId?; stacksAtRemoval?}`; `StackChangeResult {stacksBefore; stacksAfter}`; `DurationChangeResult {durationBefore; durationAfter}`; `ModifierChangeResult {applied|removed: boolean}`; `CleanseResult {cleansed: BuffInstanceId[]; skipped: BuffInstanceId[]}` (`skipped` = matched but `dispellable:false`). No core mutation API returns `void`.
+2. **§45 `BuffPeriodicResolvedEvent` superseded:** the committed buff-side fact is the contract's `PeriodicRequestsCommitted` event carrying the typed requests. Actual damage/heal outcomes are `deal_damage`/`heal` operation results owned by Damage/Heal authorities — BuffSystem never knows final amounts, so no buff event carries `amount`.
+3. **§34 `uses` consumption timing:** a `uses` modifier is consumed iff the generated periodic operation actually **resolved** (settled op status `'resolved'`). Requests computed but skipped downstream (`skipped_*`) do NOT consume — the modifier survives for the next tick. Consumption commits in the post-settlement lifecycle phase, not at request creation.
+4. **§25 snapshot semantics:** `snapshot` is recaptured on EVERY successful `apply` — including reapply — after source-ownership resolution. The snapshot always belongs to the instance's current `sourceId` (a `per_target` ownership transfer can never leave a stale previous-caster snapshot).
+5. **§26 interval multi-crossing:** `onTimePassed(seconds)` emits `floor(elapsed / intervalSeconds)` requests per interval periodic, computed sequentially so `uses`-modifiers marked by earlier crossings don't fold into later same-batch requests; `elapsed %= intervalSeconds` carries the remainder. Requests skipped because an earlier tick killed the target do not consume `uses` (rule 3).
+6. **§28 lifecycle ordering under the request bridge:** periodic-capable boundaries run two phases around a settlement barrier — (A) collect+canonical-sort periodics, compute requests, emit `PeriodicRequestsCommitted`, settle (damage/heal ops and consequences resolve); (B) release/commit `uses` marks per rule 3, decrement matching modifier lifetimes, advance conversion bookkeeping, decrement matching buff lifetimes, expire, emit lifecycle domain events, settle again (queued reaction/proc consequences of lifecycle events resolve in the same root transaction). Phase B revalidates every collected instance against the store — an instance removed during the barrier (e.g. target died) is skipped, never mutated through a stale reference.
+7. **§37 zero-stack generalization:** ANY stacks mutation landing at 0 removes the instance — `removeStacks`/`setStacks` → reason `'consumed'`; `consumeStacks` → the passed reason (`'consumed' | 'reaction'`). A buff with zero stacks is nothing.
+8. **§47 capability payload ownership:** `payload: unknown` is opaque to BuffSystem. Typed payload schemas + validators are owned and registered by the consuming domains (proc/path modules); the buff registry validates each grant through the registered validator — unknown `type` throws at load.

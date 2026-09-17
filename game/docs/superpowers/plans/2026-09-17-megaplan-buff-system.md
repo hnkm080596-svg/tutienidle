@@ -2,7 +2,22 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Non-trivial production missions MUST follow `game/docs/architecture/architecture-worker-workflow.md` (G0–G5) and return the G5 evidence report.
 
-> **Review revision:** v2 — incorporates code review round 1 (verdict REQUEST CHANGES: 10 BLOCKER / 10 HIGH / 4 MEDIUM). Fixes in this revision:
+> **Review revision:** v3 — incorporates code review round 2 (verdict REQUEST CHANGES on `5a7f21b1`: 5 BLOCKER / 6 HIGH / 4 MEDIUM). Fixes in this revision:
+> - **BLOCKER 1 (contract):** `ctx.combatSequence` was unfillable — the executor built the ctx but never received `opSequence`. Contract v7.2: scheduler builds the complete ctx, `execute(op, ctx)`; batch entries run via the injected `executeEntry` lane.
+> - **BLOCKER 2:** lifecycle now has a SECOND settle — Phase B emits lifecycle domain events then `settle()` again, so reactions to expiry/removal/conversion resolve inside the same root transaction (spec §28.7–8).
+> - **BLOCKER 3:** `BuffCapability` is no longer a typed union inside buff2 — buff2 holds the generic contract `CapabilityGrantDefinition {id, type, payload: unknown}` (spec §47 verbatim); typed payloads (`reactive_proc`, `the_economy`, …) live in the OWNING domains (`core/proc/`, `core/path/the-tu/`) and are enforced via `CapabilityValidatorRegistry`. Buff core holds zero Thể Tu/path vocabulary.
+> - **BLOCKER 4:** snapshot recaptured on EVERY successful apply (incl. reapply) AFTER source-ownership resolution — a `per_target` transfer can never leave `sourceId=B` with `snapshot=stats(A)`.
+> - **BLOCKER 5 (contract):** `PeriodicRequestsCommitted.holderId` → `trigger {type: PeriodicTriggerKind, anchorEntityId?}` — source-turn anchors and battle-wide `onTimePassed` now express cleanly; requests are self-contained.
+> - **HIGH 1:** `uses` consumption is resolution-gated — requests carry `requestId`, generated ops are `periodic.${requestId}`, `settle()` returns opId→status; only `'resolved'` ops consume (a skipped tick never burns the modifier). Marks are computed per-request inside Phase A so earlier crossings in one `onTimePassed` batch don't double-fold.
+> - **HIGH 2:** Phase B revalidates every collected instance via `store.get(instanceId)` after the barrier — stale references are skipped, never mutated.
+> - **HIGH 3:** zero-stack rule generalized — ANY stacks mutation at 0 removes the instance (`removeStacks`/`setStacks` → `'consumed'`; `consumeStacks` → its passed reason).
+> - **HIGH 4:** interval multi-crossing locked — `floor(elapsed/interval)` requests per `onTimePassed`, sequential request computation, remainder carries.
+> - **HIGH 5:** capability execution moves to a new narrow owner — `core/proc/CombatProcSystem` — created at M4, not hosted in `TurnBattleSystem` (no interim proc engine inside the turn engine).
+> - **HIGH 6:** `gauge_delta` fires from the `buff_applied` event (immediate handler → `PushGaugeOperation`) — only a committed application pushes gauge; failed rolls can't.
+> - **HIGH 7:** Final specs synced — contract spec v1.2 addendum + buff spec v1.1 addendum record every locked delta (result shapes, periodic-event supersession, uses/snapshot/interval/capability semantics).
+> - **MEDIUM 1–4:** `remove()` returns `RemoveBuffResult`; `snapshotFields` are validated against the damage profile's declared snapshot schema (profile owns the semantics, not the def author); M4 is documented as an atomic worktree mission (file-level compile-red between data flip and consumer cutover is expected — the gate is mission-level); R-B7 conversion suppression is LOCKED (continuation, not a new application — reaction may observe `buff_applied` directly if ever needed).
+>
+> v2 — incorporates code review round 1 (verdict REQUEST CHANGES: 10 BLOCKER / 10 HIGH / 4 MEDIUM). Fixes in that revision:
 > - **BLOCKER 1:** proc/reactive/economy execution REMOVED from buff2 entirely — `on_hit_proc`/`reactive_trigger`/`reactive_proc`/`reactive_economy`/`the_economy`/`gauge_delta`/`dot_recovery`/marker-flags migrate to typed `capabilities` descriptors (spec §47); owning systems (turn-engine proc lane, gauge lane, damage adapter) consume them. `rollOnHitEffects`/`rollReactiveTrigger` are NOT ported (spec §66/§73 deletion list).
 > - **BLOCKER 2:** stacking split back into spec §9's two independent axes (`onReapplyStacks` × `onReapplyDuration` + `replaceInstanceOnReapply`).
 > - **BLOCKER 3:** lifetime split into spec §17–20's three independent concepts (`clock` / `duration?` / `scaling` + `removeOnSourceDeath`); `fixed_holder_turns` becomes `{clock:'holder_turns', scaling:'fixed'}`; `duration` optional and absent for `permanent`.
@@ -30,15 +45,18 @@
 
 **Sibling-plan dependency:** Expansion of the buff scope in `game/docs/superpowers/plans/2026-09-17-combat-systems-reimagined.md` (its M3–M4). **Hard prerequisite:** the contract megaplan's M1–M2 **including the v7.1 amendments below** must have landed (`game/src/core/battle/contracts/**`, `core/battle/runtime/scheduler/**`). M0 verifies; if absent → BLOCKED — do not re-declare `ApplyBuffRequest`/`ApplyBuffResult`/`ConsumeStacksResult`/`CombatRng`/events locally (contract plan §Canonical-names owns them; buff2 fills the *implementations*).
 
-## Required contract amendments (landed in contract megaplan v7.1)
+## Required contract amendments (landed in contract megaplan v7.1 + v7.2)
 
 These were gaps the buff spec exposes in the contract surface — additive only, no v7 semantics changed. Buff M0 verifies each:
 
-1. **`CleanseBuffOperation` + `SetBuffStacksOperation` + `SetBuffDurationOperation`** in the `CombatOperation` union, matching result members, and `BuffAuthority.cleanse`/`setStacks`/`setRemainingDuration` port methods — spec §36/§38/§42/§67 require the APIs; contract §8 requires ops to reach them. `BuffCleanseQuery`/`CleanseResult` types live in `contracts/`.
-2. **`CombatAuthorityExecutionContext.combatSequence`** — the executing op's own execution-start allocation (contract r6). Read channel for `BuffInstance.createdSequence`/`lastAppliedSequence`; replaces the rejected `readSeq` port.
-3. **`createLifecycleSink(rootActionId)` → `{sink, sequence}`** — allocates the root transaction's `combatSequence` at creation; `BuffLifecycleContext` carries it so lifecycle-created instances (convertsToId) get a truthful `createdSequence` without touching scheduler internals.
+1. **`CleanseBuffOperation` + `SetBuffStacksOperation` + `SetBuffDurationOperation`** in the `CombatOperation` union, matching result members, and `BuffAuthority.cleanse`/`setStacks`/`setRemainingDuration` port methods — spec §36/§38/§42/§67 require the APIs; contract §8 requires ops to reach them. `BuffCleanseQuery`/`CleanseResult`/`RemoveBuffResult` types live in `contracts/`.
+2. **`CombatAuthorityExecutionContext.combatSequence`** — the executing op's own execution-start allocation (contract r6). Read channel for `BuffInstance.createdSequence`/`lastAppliedSequence`; replaces the rejected `readSeq` port. **v7.2:** the SCHEDULER builds the ctx (`execute(op, ctx)` — the executor pure-routes; batch entries via the injected `executeEntry` lane), so the field is always populated.
+3. **`createLifecycleSink(rootActionId)` → `{sink, sequence, settle}`** — allocates the root transaction's `combatSequence` at creation; `BuffLifecycleContext` carries it so lifecycle-created instances (convertsToId) get a truthful `createdSequence` without touching scheduler internals. **v7.2:** `settle()` drains the scheduler and returns `ReadonlyMap<CombatOperationId, status>` for ops executed during that call — the spec-§28 barrier AND the uses-consumption correlation channel.
 4. **`BuffPeriodicDamageRequest.snapshot?: Readonly<Record<string, number>>`** — carries the apply-time captured offensive context for `scaling:'snapshot'` periodics (spec §25); DamageSystem resolves against it instead of live source stats.
 5. **Buff domain events** (`BuffApplied`/`BuffStacksChanged`/`BuffDurationChanged`/`BuffModifierAdded`/`BuffModifierRemoved`/`BuffRemoved`) join `CombatEventPayload`/`PendingCombatEvent` by editing the closed unions in `contracts/events.ts` — the declared mechanism for sibling plans (contract v4+).
+6. **v7.2 — `PeriodicRequestsCommitted.holderId` → `trigger {type, anchorEntityId?}`** (BLOCKER 5); requests carry emitter-minted `requestId`, generated ops named `periodic.${requestId}` (HIGH 1 correlation).
+7. **v7.2 — `remove()` → `RemoveBuffResult`** (spec §53 no-void rule).
+8. **v7.2 — `contracts/capability.ts` gains `CapabilityGrantDefinition`/`ActiveCapabilityGrant`/`CapabilityType` + `runtime/capability/CapabilityValidatorRegistry`** (BLOCKER 3 — generic grants, owner-registered payload validators).
 
 ## Global Constraints
 
@@ -49,7 +67,7 @@ These were gaps the buff spec exposes in the contract surface — additive only,
 - **BuffSystem computes no combat math (spec §23).** No armor/resistance/elemental-power/crit/HP access in periodic paths. The periodic resolver folds `coefficient × stackScaling × modifiers` into a request; `damageProfile` + live stats resolve downstream in DamageSystem.
 - **No RNG in buff2 except the application roll** — one `CombatRng`, consumed by `ApplicationResolver`, exactly one `rollChance` per apply (contract rng semantics: a roll is consumed even at chance ≤0/≥1 — stream parity). Proc/reactive rolls move to their consuming systems.
 - **Deterministic ordering everywhere (spec §55).** Every multi-instance sweep (periodic collection, expiry, death, cleanse, stat projection) sorts by the canonical comparator — never Map insertion order.
-- **Explicit lifecycle barrier (spec §26/§28).** Periodic-capable entry points take `BuffLifecycleContext` whose `settle()` drains the scheduler between the periodic phase and the lifetime-advance phase. `triggerPeriodic` (manual) never advances lifetimes.
+- **Explicit lifecycle barriers (spec §26/§28).** Periodic-capable entry points take `BuffLifecycleContext` and settle TWICE: after the periodic phase (damage/heal ops resolve before lifetime advances) and after lifecycle-event emission (reaction/proc consequences resolve in the same root transaction). `triggerPeriodic` (manual) never advances lifetimes.
 - **Legacy observable behavior preserved unless spec changes it:** `convertsToId`/`convertsAtStackCap`, `clearsCcOnApply`, `uniquePerTarget`→`per_target`, duration scaling incl. `fixed`, ailment resist cap 0.75, reflect/proc/economy *descriptors* (execution moves to owners). Spec CHANGES that must not be silently preserved: application formula (§12), unconditional death removal (§40), single-instance `per_target` with ownership transfer (§7), snapshot periodic (§25).
 - **No ấn authoring** — fixture ids `test_*` for reaction-facing definitions; the real five are seal-batch scope.
 - **P3:** quick per mission; **full mandatory for M4/M5** (cuts live `TurnBattleSystem` paths). **P4** quick per mission, deep at M4/M5. **P5** round per mission. **P7** commits need explicit authorization. **P13/P14** Playwright real battle at M4/M5 — run from the implementation worktree.
@@ -57,9 +75,9 @@ These were gaps the buff spec exposes in the contract surface — additive only,
 
 ## Canonical names (locked across sibling plans)
 
-**Consumes (contract plan owns — never redefine locally):** `CombatRng`, `CombatOperationOrigin`, `CombatOperation` (ops targeting this system: `ApplyBuffOperation`, `AddBuffStacksOperation`, `RemoveBuffStacksOperation`, `ConsumeBuffStacksOperation`, `SetBuffStacksOperation` (v7.1), `AddBuffModifierOperation`, `RemoveBuffModifierOperation`, `RefreshBuffDurationOperation`, `ExtendBuffDurationOperation`, `SetBuffDurationOperation` (v7.1), `TriggerBuffPeriodicOperation`, `RemoveBuffOperation`, `CleanseBuffOperation` (v7.1)), `ApplyBuffRequest` (contract §15 shape verbatim — `stacks`/`baseChance`/`reactionEligibility`/`origin` all present), `ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSelector` (discriminated union; `holder_definition.holderId` resolves against `instance.targetId` — the canonical persistent subject), `BuffRemovalReason`, `BuffCleanseQuery`, `CleanseResult` (v7.1), `ElementalApplicationCommitted`, `BuffApplicationFailedEvent`, `PendingCombatEvent` + `CombatEventSink`, `BuffPeriodicDamageRequest`/`BuffPeriodicHealRequest`/`PeriodicResolution` (contract `periodic.ts`), `PeriodicRequestsCommitted` (contract `events.ts` — the periodic bridge; its `holderId` = the lifecycle-anchor entity), `CombatAuthorityExecutionContext` (carries `{operationId, origin, events, combatSequence}` — v7.1), `BuffAuthority` port, `ElementalStateRegistry` (contract §19 — canonical elemental-state lookup), `ElementType`.
+**Consumes (contract plan owns — never redefine locally):** `CombatRng`, `CombatOperationOrigin`, `CombatOperation` (ops targeting this system: `ApplyBuffOperation`, `AddBuffStacksOperation`, `RemoveBuffStacksOperation`, `ConsumeBuffStacksOperation`, `SetBuffStacksOperation` (v7.1), `AddBuffModifierOperation`, `RemoveBuffModifierOperation`, `RefreshBuffDurationOperation`, `ExtendBuffDurationOperation`, `SetBuffDurationOperation` (v7.1), `TriggerBuffPeriodicOperation`, `RemoveBuffOperation`, `CleanseBuffOperation` (v7.1)), `ApplyBuffRequest` (contract §15 shape verbatim — `stacks`/`baseChance`/`reactionEligibility`/`origin` all present), `ApplyBuffResult`, `ConsumeStacksResult`, `BuffInstanceSelector` (discriminated union; `target_definition.targetId` — the canonical persistent subject; v7.2 renamed from `holder_definition`), `BuffRemovalReason`, `BuffCleanseQuery`, `CleanseResult` (v7.1), `ElementalApplicationCommitted`, `BuffApplicationFailedEvent`, `PendingCombatEvent` + `CombatEventSink`, `BuffPeriodicDamageRequest`/`BuffPeriodicHealRequest`/`PeriodicResolution` (contract `periodic.ts`), `PeriodicRequestsCommitted` (contract `events.ts` — the periodic bridge; carries `trigger {type, anchorEntityId?}` — v7.2), `CombatAuthorityExecutionContext` (carries `{operationId, origin, events, combatSequence}` — v7.1/v7.2), `BuffAuthority` port, `CapabilityGrantDefinition`/`ActiveCapabilityGrant`/`CapabilityType`/`CapabilityValidatorRegistry` (v7.2), `PeriodicTriggerKind` (v7.2), `ElementalStateRegistry` (contract §19 — canonical elemental-state lookup), `ElementType`.
 
-**Produces (everyone else imports):** `BuffDefinition` (spec §6 shape), `BuffInstance`, `BuffInstanceId` minting, `BuffInstanceSnapshot`, `BuffSnapshotData`, `BuffModifier`, `BuffModifierChannel`, `BuffModifierLifetime`, `BuffPeriodicDefinition` (`PeriodicDamageDefinition`/`PeriodicHealDefinition`), `BuffCapability` + `ActiveCapability`, `BuffStatModifierDefinition`, `BuffControlDefinition`, `ReactiveTriggerName`, `BuffQuery`/`BuffReadPort`, `ApplicationResolver`, `BuffLifecycleContext`, buff `CombatEventPayload` members (`BuffApplied`/`BuffStacksChanged`/`BuffDurationChanged`/`BuffModifierAdded`/`BuffModifierRemoved`/`BuffRemoved` — edited into the closed union per amendment 5), `BuffSystem` (buff2 — `BuffAuthority` + `BuffReadPort` impl), `BuffRegistry` (buff2), `BuffPersistence` (standalone out-of-battle pool mode), `BuffTestFixtures` (owns `test_*` ids — shared naming with the reaction plan's fixtures).
+**Produces (everyone else imports):** `BuffDefinition` (spec §6 shape), `BuffInstance`, `BuffInstanceId` minting, `BuffInstanceSnapshot`, `BuffSnapshotData`, `BuffModifier`, `BuffModifierChannel`, `BuffModifierLifetime`, `BuffPeriodicDefinition` (`PeriodicDamageDefinition`/`PeriodicHealDefinition`), `BuffStatModifierDefinition`, `BuffControlDefinition`, `BuffQuery`/`BuffReadPort`, `ApplicationResolver`, `BuffLifecycleContext`, buff `CombatEventPayload` members (`BuffApplied`/`BuffStacksChanged`/`BuffDurationChanged`/`BuffModifierAdded`/`BuffModifierRemoved`/`BuffRemoved` — edited into the closed union per amendment 5), `BuffSystem` (buff2 — `BuffAuthority` + `BuffReadPort` impl), `BuffRegistry` (buff2), `BuffPersistence` (standalone out-of-battle pool mode), `BuffTestFixtures` (owns `test_*` ids — shared naming with the reaction plan's fixtures).
 
 ## Ruling assumptions — pending user sign-off
 
@@ -73,9 +91,9 @@ These were gaps the buff spec exposes in the contract surface — additive only,
 | R-B4 (revised) | `instanceScope`: `'per_source'` (default — legacy `(id,sourceId)` pool key) or `'per_target'` (replaces `uniquePerTarget`). `per_target` keeps ONE instance on the target: reapply by a new source transfers `sourceId` per `sourceOwnership` (default `'latest'`) and applies the stacking axes — the `instanceId` STAYS STABLE (reaction preconditions key on it). No `'all'` scope — not in spec §7, no consumer. | spec §7; reviewer HIGH — "remove old + create new" broke instance identity. |
 | R-B5 | `stat_modifier` effects project as `StatModifier[]` via `getStatModifiers(targetId)` — same shape as legacy `getActiveModifiers` (incl. `stacks` and `sourceType` derived from `polarity`); the `liveStatModifiers` closure consumer keeps its shape. The `potency` modifier channel scales projected magnitudes (Cong Minh parity). | The ops-layer modifier closure contract is preserved; buff2 changes the source, not the projection. |
 | R-B6 | `forbiddenActionTags` lives on `BuffDefinition` — consumed by the reaction plan's `ActionValidator`; `hasForbiddenTags(entityId)`/`hasControl(targetId, cc)` are read-only queries. | Contract §6/§71–72. |
-| R-B7 | `convertsToId` re-application goes through the same `apply()` path with `reactionEligibility:'suppressed'` and a lifecycle-scoped ctx (`lctx.events` mints `evt.${rootActionId}.${n}`, no causationOperationId — lifecycle scope). Removal reason for the converted instance: `'replaced'`. `convertsAtStackCap` preserves legacy reach-cap conversion (`stack` mode, `nextStacks >= maxStacks`). | Today's conversions fire the legacy reaction manager; suppressed is the spec-consistent semantic — confirm at sign-off. |
-| R-B8 (new) | **Lifecycle barrier protocol.** Periodic-capable entry points (`onHolderTurnStart/End`, `onSourceTurnStart/End`, `onRoundEnd`, `onTimePassed`) take `BuffLifecycleContext {rootActionId, sequence, events, settle: () => void}`. Internal order: collect+sort periodics → compute requests (uses-modifiers marked) → emit `PeriodicRequestsCommitted` → **`lctx.settle()`** (typically `() => scheduler.run()` — damage/heal ops, deaths, and their consequences resolve) → remove consumed `uses` modifiers → advance matching modifier lifetimes → advance matching buff lifetimes → expire. | Spec §28 canonical order requires periodic *resolution* before lifetime advancement; under the request bridge the damage lands via the scheduler — the barrier is the only honest implementation. |
-| R-B9 (new) | **Snapshot periodic.** `scaling:'snapshot'` + `snapshotFields: readonly string[]` on the def; `apply()` captures the listed source stat values into `instance.snapshot.stats` (data capture — not damage math); each tick emits the request with `snapshot` attached (v7.1); DamageSystem resolves offensive context from the snapshot, target mitigation stays live. | Spec §25 + §70 required test; contract amendment carries the field. |
+| R-B7 | `convertsToId` re-application goes through the same `apply()` path with `reactionEligibility:'suppressed'` and a lifecycle-scoped ctx (`lctx.events` mints `evt.${rootActionId}.${n}`, no causationOperationId — lifecycle scope). Removal reason for the converted instance: `'replaced'`. `convertsAtStackCap` preserves legacy reach-cap conversion (`stack` mode, `nextStacks >= maxStacks`). | LOCKED (round 2): conversion is a continuation, not a new application — suppressed is the semantic. |
+| R-B8 (new) | **Lifecycle barrier protocol.** Periodic-capable entry points (`onHolderTurnStart/End`, `onSourceTurnStart/End`, `onRoundEnd`, `onTimePassed`) take `BuffLifecycleContext {rootActionId, sequence, events, settle(): ReadonlyMap<opId, status>}` — produced by `scheduler.createLifecycleSink` (v7.2). Internal order: collect+sort periodics → compute requests (sequential, pending uses-marks) → emit `PeriodicRequestsCommitted` → **`settle()` (barrier 1)** → revalidate instances → commit/release uses-marks per resolved op status → modifier/buff lifetimes + conversion + expiry → emit lifecycle events → **`settle()` (barrier 2 — reaction/proc consequences resolve in-root)**. | Spec §28 canonical order requires periodic *resolution* before lifetime advancement AND reaction resolution after event publication; under the request bridge both are explicit barriers. |
+| R-B9 (revised) | **Snapshot periodic.** `scaling:'snapshot'` + `snapshotFields: readonly string[]` on the def — validated ⊆ the damage profile's declared snapshot schema (profile owns the semantics — MEDIUM 2). `apply()` captures the listed source stats into `instance.snapshot.stats` **on EVERY successful apply — creation AND reapply — AFTER source-ownership resolution** (BLOCKER 4: `sourceId` and `snapshot` can never disagree); each tick emits the request with `snapshot` attached (v7.1). | Spec §25 + addendum §4; contract amendment carries the field. Legacy parity: `damagePerTurn` recomputed per apply anyway. |
 
 ---
 
@@ -85,7 +103,7 @@ These were gaps the buff spec exposes in the contract surface — additive only,
 - Create: `game/docs/architecture/2026-09-17-buff-inventory.md`
 
 - [ ] **Step 1 — Lock baseline:** `git rev-parse HEAD`.
-- [ ] **Step 2 — Verify contract prerequisites (BLOCKING):** `contracts/operations.ts` buff op subset **incl. v7.1 additions** (`SetBuffStacksOperation`/`SetBuffDurationOperation`/`CleanseBuffOperation`/`BuffCleanseQuery`/`CleanseResult`) + `BuffInstanceSelector`/`ApplyBuffRequest`/`ApplyBuffResult`/`ConsumeStacksResult`; `contracts/results.ts`; `contracts/events.ts` `ElementalApplicationCommitted`/`BuffApplicationFailedEvent`; `contracts/rng.ts` `CombatRng`; `contracts/elemental.ts` `ElementalStateRegistry`; `contracts/context.ts` `CombatAuthorityExecutionContext` **with `combatSequence`**; `contracts/periodic.ts` requests **with `snapshot?`**; `runtime/scheduler/CombatOperationExecutor.ts` + `BuffAuthority` port (all methods take ctx, **incl. `setStacks`/`setRemainingDuration`/`cleanse`**); `CombatScheduler.enqueueEvent`/`enqueueAuthored`/`createLifecycleSink` **returning `{sink, sequence}`**; `runtime/elemental/ElementalStateRegistryImpl` (all-5 canonical mapping). Missing → BLOCKED.
+- [ ] **Step 2 — Verify contract prerequisites (BLOCKING):** `contracts/operations.ts` buff op subset **incl. v7.1 additions** (`SetBuffStacksOperation`/`SetBuffDurationOperation`/`CleanseBuffOperation`/`BuffCleanseQuery`/`CleanseResult`/`RemoveBuffResult`) + `BuffInstanceSelector`/`ApplyBuffRequest`/`ApplyBuffResult`/`ConsumeStacksResult`; `contracts/results.ts`; `contracts/events.ts` `ElementalApplicationCommitted`/`BuffApplicationFailedEvent` + **`PeriodicRequestsCommitted.trigger` (NOT `holderId`)**; `contracts/rng.ts` `CombatRng`; `contracts/capability.ts` **`CapabilityGrantDefinition`/`ActiveCapabilityGrant`/`CapabilityType`**; `contracts/elemental.ts` `ElementalStateRegistry`; `contracts/context.ts` `CombatAuthorityExecutionContext` **with `combatSequence`**; `contracts/periodic.ts` requests **with `snapshot?` + `requestId`**; `runtime/scheduler/CombatOperationExecutor.ts` — **`execute(op, ctx)` signature (scheduler builds ctx)** — + `BuffAuthority` port (all methods take ctx, **incl. `setStacks`/`setRemainingDuration`/`cleanse`, `remove` → `RemoveBuffResult`**); `CombatScheduler.enqueueEvent`/`enqueueAuthored`/`createLifecycleSink` **returning `{sink, sequence, settle}`**; `runtime/capability/CapabilityValidatorRegistry`; `runtime/elemental/ElementalStateRegistryImpl` (all-5 canonical mapping). Missing → BLOCKED.
 - [ ] **Step 3 — BuffPool/BuffSystem consumer census (drives M4):**
   - **Pools:** every `new BuffPool()` site — `TurnBattleParticipant.buffs` field decl (`TurnBattleSystem.ts`; `TurnBattleAdapter.ts` build), allies' pools, **`GameManager.buffPool` (`GameManager.ts:222`)** — the persistent buff pool (distinct from `player.persistentTimedEffects`), `pendingGaugeDeltaTargets`/`pendingGaugeDeltaDefinition` path (`:486-487`, `:1996`, `:2825-2831`).
   - **Holder==target invariant check (BLOCKING):** audit EVERY apply lane (`:1110` tick, `:1824` appliesBuffs, `:2973` ailment lane, proc lanes, `GameManagerTurnBattleOps:1046/1252/1276`, grantsAtBuild, external-ward grants, `applyPersistentBuff`) — confirm every applied instance lands in the pool of the entity its `targetId` names. Any pool-owner≠targetId case must be recorded: it decides whether `targetId` alone can absorb the "holder" role (expected: yes — ARCH-009 already routes proc'd buffs to the victim's pool).
@@ -93,7 +111,7 @@ These were gaps the buff spec exposes in the contract surface — additive only,
   - **Writes:** every `new BuffSystem(pool).apply(...)` site (above), `remove`/`removeAllById` (cleanse lanes, detonate, `consumesAilmentId`), `reactionManager.checkAndTrigger` invocation at `:2979` (to be REMOVED — reaction consumption is the reaction megaplan's).
   - **Executing-effect consumers:** who reads `onHitProc`/`reactiveTrigger`/`reactiveProc`/`reactiveEconomy`/`theEconomy`/`gaugeDelta`/`dotRecovery` payloads today (turn engine lanes, TheTu economy, gauge, CombatSystem) — each becomes a `capabilities` consumer; map consumer → capability type.
 - [ ] **Step 4 — Data census:** every file under `game/src/data/buff/` — count defs per `stackMode`, defs using `convertsToId` (te_cong→dong_bang chain), `convertsAtStackCap` candidates (stack-mode + convertsToId), `uniquePerTarget` (taunt, son_nhac_ho_the), `clearsCcOnApply` (Bá Thể), `durationPolicy:'fixed_holder_turns'` (Thế Tu kit → `{clock:'holder_turns', scaling:'fixed'}`), `element:` field (current ailments — `bong`,`trung_doc`,`chay_mau`,`te_cong`,`hoai_tu`,`thach_hoa` — and whether each is a CANONICAL elemental state per `ElementalStateRegistry` or just element-tagged), marker/theEconomy/reactiveProc/reactiveEconomy carriers (~230 lines in `TheTuBuffs.ts`), `dotRecovery` (Độc Căn inside `trung_doc`), `gaugeDelta`, `dot` (`dpsRatio`/`armorIgnorePercentByRealm`), `duration` semantics per def (turns vs seconds — wall-clock defs map to `clock:'seconds'`). **`convertsAfterContinuousSeconds` check (BLOCKING if any battle def uses it):** `continuousSeconds` now advances ONLY on `onTimePassed` — a battle-scoped def that relied on the legacy dual-increment (update(deltaSeconds=1) bumped both counters per turn) must be remapped to `convertsAfterContinuousTurns` or flagged. Output: per-file def-id table → migration mapping.
-- [ ] **Step 5 — Effect/capability usage matrix:** which of the 11 `BuffEffectTemplate` kinds are used by which def — each maps to a spec field or a `BuffCapability` member; no silent drops.
+- [ ] **Step 5 — Effect/capability usage matrix:** which of the 11 `BuffEffectTemplate` kinds are used by which def — each maps to a spec field or a capability-grant `type` + typed payload (owner-module schema); no silent drops.
 - [ ] **Step 6 — Write authority matrix + R1/R2/R-B1..R-B9 table** for sign-off.
 
 **Exit criteria:** every consumer + every definition accounted; prereqs verified (incl. v7.1); holder==target invariant proven or exceptions listed; stale-doc note recorded (`docs/systems/buffs.md` claims TurnBuffSystem exists).
@@ -106,7 +124,7 @@ These were gaps the buff spec exposes in the contract surface — additive only,
 - Create: `game/src/core/buff2/BuffDefinition.ts` — spec §6 shape
 - Create: `game/src/core/buff2/BuffInstance.ts` — spec §8 runtime instance + `BuffInstanceSnapshot`
 - Create: `game/src/core/buff2/BuffModifier.ts` — spec §29/§33 modifier types
-- Create: `game/src/core/buff2/BuffCapability.ts` — spec §47 capability descriptor union
+- (no `BuffCapability.ts` — grants are the contract's generic `CapabilityGrantDefinition`; typed payloads live in owner modules, see M1 capability note)
 - Create: `game/src/core/buff2/BuffStore.ts` — battle-scoped instance store (the pool replacement)
 - Create: `game/src/core/buff2/BuffQuery.ts` — `BuffReadPort` read surface (spec §51)
 - Create: `game/src/core/buff2/BuffRegistry.ts` — definition catalog + spec §56 startup validation
@@ -176,21 +194,23 @@ export interface PeriodicHealDefinition {
 export type BuffPeriodicDefinition = PeriodicDamageDefinition | PeriodicHealDefinition
 // Union extends ONLY when real gameplay needs it — no catch-all callback (spec §22).
 
-// BuffCapability.ts — spec §47 CapabilityGrantDefinition channel: the ONLY place
-// proc/reactive/economy payloads live. BuffSystem exposes them readonly via
-// getCapabilities(); owning systems execute behavior. Typed union — never payload:unknown.
-export type ReactiveTriggerName =
-  | 'onCastBegin' | 'onImpactLanded' | 'onEvade' | 'onAllyTargeted' | 'onAllyActionComplete'
-export type BuffCapability =
-  | { type: 'marker'; markerId?: string; flags?: Readonly<Record<string, boolean | number>> }
-  | { type: 'on_hit_proc'; chance: number; appliesBuffId: BuffDefinitionId }
-  | { type: 'reactive_trigger'; trigger: ReactiveTriggerName; chance: number; appliesDefinitionId?: BuffDefinitionId; queuesFollowUp?: boolean; reflectsDamage?: { maxHpRatio: number; takenRatio: number } }
-  | { type: 'reactive_proc'; trigger: ReactiveTriggerName; mechanic: 'intercept' | 'counter' | 'follow_up'; chanceStat: 'protectChance' | 'counterChance' | 'followUpChance'; theCost?: number; theGainOnSuccess?: number; queuedAction?: { payloadSkillId: string; actionSource: 'counter' | 'follow_up' | 'intercept'; targetMode: 'attacker' | 'triggering_targets' }; grantsWardToOriginalTarget?: { buffDefinitionId: BuffDefinitionId; sourceMaxHpRatio: number }; healsTriggeringAllyMaxHpRatio?: number; firesOnNonDamagingAction?: boolean }
-  | { type: 'reactive_economy'; procCostFlatDelta?: number; freeProcs?: boolean; payloadAilments?: readonly { buffDefinitionId: BuffDefinitionId; chance: number; stacks?: number }[] }
-  | { type: 'the_economy'; gainOnBasicHit?: number; gainOnEvade?: number; gainOnHitTaken?: number; gainPerRound?: number }
-  | { type: 'gauge_delta'; percentOfMax: number }
-  | { type: 'dot_recovery'; element?: ElementType | 'physical'; healPercent: number }
-export interface ActiveCapability { instanceId: BuffInstanceId; definitionId: BuffDefinitionId; capability: BuffCapability }
+// Capabilities — spec §47 verbatim: buff2 stores/exposes the GENERIC grant and
+// never interprets payloads (review BLOCKER 3 — no `theCost`/`counterChance`/
+// `intercept` vocabulary inside core/buff2).
+//   capability type on BuffDefinition: capabilities?: readonly CapabilityGrantDefinition[]
+//   getCapabilities returns ActiveCapabilityGrant[]                      (contract types)
+// Payload schemas are owned by the CONSUMING domains — the migration mapping is:
+//   core/proc/ProcCapabilities.ts      → 'on_hit_proc' | 'reactive_trigger' payloads
+//                                        + typed narrowing helpers + validator
+//   core/path/the-tu/TheTuCapabilities.ts → 'reactive_proc' | 'reactive_economy'
+//                                        | 'the_economy' payloads + validators
+//   core/battle/gauge (or proc)        → 'gauge_delta' payload + validator
+//   core/combat (dotRecovery owner)    → 'dot_recovery' payload + validator
+//   marker flags                       → 'marker' payload (consumed by path/proc modules)
+// Each owner registers its validator into CapabilityValidatorRegistry at
+// composition; BuffRegistry validates every grant via the registry at def load
+// (spec §56) — unknown type or invalid payload throws. Consumers narrow:
+//   const p = theTuCaps.asReactiveProc(grant)  // typed guard in the OWNER module
 
 export interface BuffStatModifierDefinition { stat: StatType; percent?: number; flat?: number; domain?: StatDomain }
 export interface BuffControlDefinition { type: 'stun' | 'freeze' | 'root' }
@@ -211,7 +231,7 @@ export interface BuffDefinition {          // spec §6 — all fields readonly; 
   periodic?: readonly BuffPeriodicDefinition[]
   statModifiers?: readonly BuffStatModifierDefinition[]
   controls?: readonly BuffControlDefinition[]
-  capabilities?: readonly BuffCapability[]
+  capabilities?: readonly CapabilityGrantDefinition[]   // contract type — generic grants, owner-validated payloads
   forbiddenActionTags?: readonly string[]  // contract §6 — Cấm Công channel
   dispellable: boolean                     // spec §42 — cleanse() gate
   tags?: readonly string[]
@@ -237,6 +257,10 @@ export interface BuffInstance {
   snapshot?: BuffSnapshotData              // captured at apply when any periodic is scaling:'snapshot' (R-B9)
   intervalElapsed?: Record<string, number> // periodicId → seconds since last 'interval' tick;
                                            // NOT reset by duration refresh (accumulator ≠ lifetime)
+  periodicTickCount?: Record<string, number> // periodicId → emitted-tick ordinal — mints
+                                           // requestId `req.${instanceId}.${periodicId}.${n}`;
+                                           // globally unique WITHOUT depending on event/root ids
+                                           // (two manual triggers under one rootActionId never collide)
   createdSequence: number                  // ctx.combatSequence / lifecycle-root sequence — never readSeq
   lastAppliedSequence: number
 }
@@ -272,7 +296,7 @@ export interface BuffReadPort {
   getStacks(sel: BuffInstanceSelector): number
   getModifiers(sel: BuffInstanceSelector): readonly BuffModifier[]        // frozen copies
   getStatModifiers(targetId: CombatEntityId): StatModifier[]              // R-B5 — legacy StatModifier shape incl. stacks
-  getCapabilities(targetId: CombatEntityId): readonly ActiveCapability[]  // spec §51 — descriptors for owner systems
+  getCapabilities(targetId: CombatEntityId): readonly ActiveCapabilityGrant[]  // spec §51 — generic descriptors for owner systems
   hasControl(targetId: CombatEntityId, control: 'stun' | 'freeze' | 'root'): boolean  // spec §50
   hasForbiddenTags(entityId: CombatEntityId): ReadonlySet<string>         // resolves def.forbiddenActionTags over target's instances
   has(sel: BuffInstanceSelector): boolean
@@ -280,7 +304,7 @@ export interface BuffReadPort {
 ```
 
 - [ ] **Step 1 — Failing tests (store):** keying by `instanceId`; `forTarget`/`fromSource`/`byDefinition`/`find`/`findOnTarget` filters; `findOnTarget` returns the single `per_target` instance regardless of source; remove returns the instance (event needs stacks-at-removal).
-- [ ] **Step 2 — Failing tests (registry — spec §56 full list):** duplicate id throws; `maxStacks >= 1`; valid `instanceScope`; `duration` required unless `clock==='permanent'` (and absent for permanent); non-negative duration; periodic ids unique per definition; `intervalSeconds` required iff `timing==='interval'`; `snapshotFields` required iff `scaling==='snapshot'`; valid `damageProfile` (catalog lookup port); valid `element`; valid control types; valid capability payloads (per-member validator — e.g. `on_hit_proc.appliesBuffId`/`reactive_trigger.appliesDefinitionId`/`convertsToId` refs resolvable); valid modifier channels on any def-authored modifier refs; unknown `StatType` rejected; `dispellable` boolean present. Dev build throws — no silent fallback.
+- [ ] **Step 2 — Failing tests (registry — spec §56 full list):** duplicate id throws; `maxStacks >= 1`; valid `instanceScope`; `duration` required unless `clock==='permanent'` (and absent for permanent); non-negative duration; periodic ids unique per definition; `intervalSeconds` required iff `timing==='interval'`; `snapshotFields` required iff `scaling==='snapshot'` AND ⊆ the damage profile's declared `snapshotFields` schema (profile owns the semantic keys — MEDIUM 2); valid `damageProfile` (catalog lookup port); valid `element`; valid control types; valid capability grants via `CapabilityValidatorRegistry` (registry ctor takes the validator registry — each grant's `type` must be registered and its `payload` must pass the owner's validator; e.g. `convertsToId` refs resolvable); valid modifier channels on any def-authored modifier refs; unknown `StatType` rejected; `dispellable` boolean present. Dev build throws — no silent fallback.
 - [ ] **Step 3 — Failing tests (query):** snapshots are DEEP-frozen copies (mutating `snapshot.modifiers[0]` doesn't corrupt the store); `getStacks` instance/identity selectors match spec §52; `getCapabilities` returns typed descriptors; `hasControl` matches `controls[]` on `targetId` (ARCH-009 semantics — structurally impossible to misroute in a single store).
 - [ ] **Step 4 — Implement** all files. **Migration mapping table** (in code comments + inventory doc): `stackMode:'stack'` → `stacking{onReapplyStacks:'add', onReapplyDuration:'refresh'}` (+`convertsAtStackCap` when convertsToId present); `'refresh'` → `{onReapplyStacks:'keep', onReapplyDuration:'refresh'}`; `'replace'` → `{onReapplyStacks:'replace', onReapplyDuration:'refresh', replaceInstanceOnReapply:true}`; `uniquePerTarget` → `instanceScope:'per_target'` + `sourceOwnership:'latest'` + `{onReapplyStacks:'replace', onReapplyDuration:'refresh'}`; `durationPolicy:'ailment_scaled'`/`'fixed_holder_turns'` → `lifetime.scaling:'ailment_scaled'`/`'fixed'`; `duration`+turn-ticks → `clock:'holder_turns'`; wall-clock → `clock:'seconds'`; `cc` → `controls[]`; `statModifier` → `statModifiers[]`; `dot` → `periodic[{type:'damage', timing:'holder_turn_end', scaling:'dynamic', stackScaling:'multiply', damageProfile:'legacy_dot', canCrit:false, canMiss:false, hitCount:1}]` (+ `tags:['armor_ignore_by_realm']` when legacy flag set); `onHitProc`/`reactiveTrigger`/`reactiveProc`/`reactiveEconomy`/`theEconomy`/`gaugeDelta`/`dotRecovery`/marker-flags → `capabilities[]` members of the same name.
 - [ ] **Step 5 — Verify (P3 quick).**
@@ -296,7 +320,7 @@ export interface BuffReadPort {
 - Create: `game/src/core/buff2/ApplicationResolver.ts` — spec §12 chance/duration resolution + rng
 - Create: `game/src/core/buff2/BuffSystem.ts` — mutation authority (spec §67 full surface)
 - Modify: `game/src/core/battle/contracts/events.ts` — edit the buff `CombatEventPayload`/`PendingCombatEvent` member shapes into the CLOSED unions (amendment 5 — contract-owned file; buff2 declares no event types locally, only emit helpers if needed)
-- Create: `game/src/core/buff2/BuffLifecycleContext.ts` — `{rootActionId, sequence, events, settle}` (R-B8)
+- Create: `game/src/core/buff2/BuffLifecycleContext.ts` — `{rootActionId, sequence, events, settle}` (R-B8; `settle` = contract v7.2 `createLifecycleSink` lane)
 - Test: `ApplicationResolver.test.ts`, `BuffModifierEngine.test.ts`, `BuffSystemApply.test.ts`, `BuffStacks.test.ts`, `BuffCleanse.test.ts`
 
 **Interfaces — Produces:**
@@ -355,7 +379,8 @@ export function resolveChannel(mods: readonly BuffModifier[], channel: BuffModif
 // method takes lctx. BuffAuthority port impl + BuffReadPort impl.
 
 // Bounded stat-read port — application resolution (§12/§19) + snapshot capture
-// (§25) ONLY. Periodic resolution NEVER touches it (BLOCKER 6).
+// (§25) + liveness (Phase-B dead-target sweep) ONLY. Periodic resolution NEVER
+// touches stats (BLOCKER 6).
 export interface BuffStatReadPort {
   getStats(entityId: CombatEntityId): Readonly<{
     elementApplicationPercent?: number
@@ -363,6 +388,8 @@ export interface BuffStatReadPort {
     ailmentResistPercent?: number
     [key: string]: number | undefined   // snapshotFields values read through this index
   }> | undefined
+  isAlive(entityId: CombatEntityId): boolean   // post-barrier revalidation (HIGH 2)
+                                             // + death-reason correctness
 }
 
 export class BuffSystem {
@@ -382,13 +409,17 @@ export class BuffSystem {
   addStacks(sel, stacks, ctx): StacksResult
   removeStacks(sel, stacks, ctx): StacksResult
   setStacks(sel, stacks, ctx): StacksResult                       // spec §36 (v7.1 op + port)
-  consumeStacks(sel, stacks | 'all', reason 'consumed'|'reaction', ctx): ConsumeStacksResult  // spec §37 — zero stacks → removed, reason
+  consumeStacks(sel, stacks | 'all', reason 'consumed'|'reaction', ctx): ConsumeStacksResult  // spec §37 — zero stacks → removed, passed reason
+  // ZERO-STACK RULE (spec addendum §7 — HIGH 3): ANY stacks mutation landing
+  // at 0 removes the instance. removeStacks/setStacks → reason 'consumed';
+  // consumeStacks → its passed reason ('consumed'|'reaction'). A buff with
+  // zero stacks is nothing — no stacks:0 instance may persist.
   addModifier(sel, mod: BuffModifierPayload, ctx): { applied: boolean }
   removeModifier(sel, modifierId, ctx): { removed: boolean }
   refreshDuration(sel, duration|undefined, ctx): { durationBefore: number; durationAfter: number }  // contract inline shape
   extendDuration(sel, turns, maxRemaining|undefined, ctx): { durationBefore: number; durationAfter: number }
   setRemainingDuration(sel, duration, ctx): { durationBefore: number; durationAfter: number }       // spec §38 (v7.1 op + port)
-  remove(sel, reason: BuffRemovalReason, ctx): void
+  remove(sel, reason: BuffRemovalReason, ctx): RemoveBuffResult   // spec §53/§67 — no void returns
   cleanse(targetId, query: BuffCleanseQuery, ctx): CleanseResult  // spec §42 — dispellable-only, reason 'cleansed'
   // Manual periodic trigger (spec §27/§62): commits periodic semantics +
   // emits PeriodicRequestsCommitted via ctx.events; NEVER advances lifetimes,
@@ -397,8 +428,9 @@ export class BuffSystem {
 
   // === lifecycle entry points (spec §21; replaces catch-all update()) ===
   // BuffLifecycleContext = { rootActionId, sequence, events: CombatEventSink,
-  //   settle: () => void }  — settle() drains the scheduler (R-B8 barrier).
-  // Periodic-capable methods run TWO PHASES around lctx.settle().
+  //   settle(): ReadonlyMap<CombatOperationId, CombatOperationResult['status']> }
+  //   — settle() drains the scheduler AND reports which ops executed (R-B8
+  //   barrier + uses-consumption correlation, contract v7.2).
   onHolderTurnStart(entityId: CombatEntityId, lctx: BuffLifecycleContext): readonly PeriodicResolution[]
   onHolderTurnEnd(entityId: CombatEntityId, lctx: BuffLifecycleContext): readonly PeriodicResolution[]
   onSourceTurnStart(entityId: CombatEntityId, lctx: BuffLifecycleContext): readonly PeriodicResolution[]
@@ -445,10 +477,6 @@ apply(req, ctx):                          // req = contract §15 shape (stacks/b
   if def.clearsCcOnApply: strip target's control instances (reason 'cleansed') BEFORE own commit
   mutate:
     !existing → create instance (stacks = min(req.stacks, maxStacks); remaining = duration;
-                 snapshot capture — see R-B9: captured ONCE at creation, fields =
-                 union of snapshotFields across the def's snapshot periodics, values
-                 read via stats.getStats(sourceId); reapplies do NOT re-capture —
-                 the snapshot freezes the ORIGINAL application context;
                  createdSequence = ctx.combatSequence)
     existing:
       stacks axis  — add: min(stacks + req.stacks, maxStacks) | replace: req.stacks (clamp) | keep: unchanged
@@ -456,6 +484,10 @@ apply(req, ctx):                          // req = contract §15 shape (stacks/b
       per_target + sourceOwnership 'latest' → existing.sourceId = req.sourceId (instanceId UNCHANGED — R-B4)
       replaceInstanceOnReapply → remove (reason 'replaced') + create new
       lastAppliedSequence = ctx.combatSequence
+    snapshot recapture — EVERY successful apply, AFTER source-ownership
+      resolution (R-B9/BLOCKER 4): if any periodic is scaling==='snapshot',
+      instance.snapshot.stats = capture(union of snapshotFields, sourceId) via
+      stats port — sourceId and snapshot can never disagree.
     convertsToId && convertsAtStackCap && add-axis reaches maxStacks → convert instead (R-B7)
   commit → ctx.events.emit buff_applied / buff_stacks_changed (+buff_duration_changed)
   // canonical gate (contract §19–20 — review HIGH fix): NOT every element-tagged
@@ -492,7 +524,7 @@ apply(req, ctx):                          // req = contract §15 shape (stacks/b
 //     × (stackScaling==='multiply' ? instance.stacks : 1)
 //     × resolveChannel(mods, 'periodic_damage', 1)
 //     × resolveChannel(mods, 'potency', 1)          // Cong Minh channel — also scales statModifiers (R-B5)
-//     × resolveChannel(mods, 'next_periodic_damage', 1)   // marks its 'uses' consumed
+//     × resolveChannel(mods, 'next_periodic_damage', 1)   // pending-marks its 'uses' (commit gated on the generated op resolving — spec addendum §3)
 // then emits BuffPeriodicDamageRequest{instanceId, periodicId,
 //   sourceId: instance.sourceId, targetId: instance.targetId, element,
 //   damageProfile, coefficient: effectiveCoefficient, hitCount, canCrit, canMiss,
@@ -508,41 +540,96 @@ apply(req, ctx):                          // req = contract §15 shape (stacks/b
 
 ```
 Periodic-capable boundary (onHolderTurnStart/End, onSourceTurnStart/End,
-onRoundEnd, onTimePassed) — TWO PHASES around the barrier:
+onRoundEnd, onTimePassed) — TWO PHASES around TWO barriers:
 
 Phase A (periodic):
   collect instances whose defs carry a periodic with matching `timing`
     (holder_*  → instances where targetId===entityId;   // 'holder' = the subject the state persists on
      source_*  → instances where sourceId===entityId;
-     interval  → per-instance elapsedSeconds accumulator crossing intervalSeconds)
+     interval  → per-instance intervalElapsed accumulator, floor(elapsed/interval)
+                crossings EACH produce a request — sequential computation, see below)
   sort by canonical comparator (targetId→definitionId→sourceId→instanceId→periodicId)  // spec §55
-  compute requests (mark 'uses' modifiers consumed — values already folded)
-  emit PeriodicRequestsCommitted{holderId: entityId, rootActionId, requests} via lctx.events
-  lctx.settle()          // ← THE BARRIER — scheduler drains: requests → deal_damage/
-                         //   heal ops settle; deaths/consequences resolve.
-                         //   INVARIANT: settle() must run while the scheduler is
-                         //   quiescent — lifecycle roots are root transactions,
-                         //   never invoked mid-settlement (no nested run()).
-Phase B (post-settle lifecycle — spec §28 steps 3–6):
-  remove consumed 'uses' modifiers
-  decrement matching modifier lifetimes (holder_turns at holder end, etc.)
+  compute requests SEQUENTIALLY in sorted order:
+    requestId = `req.${instanceId}.${periodicId}.${++instance.periodicTickCount[periodicId]}`
+      — per-instance monotonic tick ordinal; globally unique across boundaries,
+      manual triggers, and multi-crossing batches (rootActionId-scoped minting
+      WOULD collide when two triggerPeriodic calls share a root transaction)
+    fold coefficient (stackScaling + modifier channels); mark 'uses' modifiers
+    PENDING-consumed per request — a pending mark excludes the modifier from
+    folding into LATER requests in the same batch (HIGH 1/4: one uses-charge
+    feeds exactly one tick, never two crossings at once)
+  emit PeriodicRequestsCommitted{trigger:{type: <this boundary's PeriodicTriggerKind>,
+    anchorEntityId: entityId (absent for 'interval'/battle-wide)}, rootActionId,
+    requests} via lctx.events                   // v7.2 — no holderId (BLOCKER 5);
+                                                // triggerPeriodic emits type:'manual'
+                                                // with anchorEntityId = instance.targetId
+  outcomes = lctx.settle()   // ← BARRIER 1 — scheduler drains: requests →
+                             //   deal_damage/heal ops (`periodic.${requestId}`)
+                             //   settle; deaths/consequences resolve.
+                             //   INVARIANT: settle() must run while the scheduler
+                             //   is quiescent — lifecycle roots are root
+                             //   transactions, never invoked mid-settlement.
+Phase B (post-settle lifecycle — spec §28 steps 3–8):
+  // HIGH 2 — revalidate: barrier-1 damage may have killed the target and
+  // removed collected instances. Re-read the store; skip gone instances.
+  live = instances.filter(i => store.get(i.instanceId) !== undefined)
+  // DEAD-TARGET SWEEP FIRST — a tick that killed the holder inside barrier 1
+  // must not let its OTHER buffs fall into the expiry sweep below. Any live
+  // instance whose targetId is dead → remove reason 'death' BEFORE lifetime
+  // processing (spec §40 reason correctness; onEntityDeath remains the entry
+  // for out-of-band deaths — both paths converge on 'death', idempotent).
+  for i of live where !stats.isAlive(i.targetId) → remove 'death'; drop from live
+  // HIGH 1 — resolution-gated uses consumption (spec §34 'removed immediately
+  // after resolution'): for each request whose generated op status ===
+  // 'resolved' (outcomes.get(`periodic.${requestId}`)), commit its pending
+  // uses-marks → remove those modifiers. 'skipped'/'failed' ops release their
+  // pending marks — the modifier survives for the next tick.
+  decrement matching modifier lifetimes (holder_turns at holder end, etc.) — live only
   continuousTurns++ (holder boundaries) / continuousSeconds += (onTimePassed)
   convertsAfter* threshold check → convert via internal apply (R-B7, suppressed)
-  decrement matching buff lifetimes (clock: holder_turns→targetId match, etc.)
+  decrement matching buff lifetimes (clock: holder_turns→targetId match, etc.) — live only
   expire (remaining ≤ 0 → remove, reason 'expired') — canonical-sorted sweep
-  lifecycle emissions via lctx.events (buff_removed etc.)
+  emit lifecycle domain events via lctx.events (buff_removed / buff_applied from
+    conversions / stacks+duration changes)
+  lctx.settle()              // ← BARRIER 2 (BLOCKER 2) — spec §28.7–8: committed
+                             //   lifecycle events publish AND their queued
+                             //   Reaction/Proc consequences resolve INSIDE this
+                             //   root transaction. Without it, a buff_removed→
+                             //   proc could leak into a later scheduler run.
+  return
 
-Manual triggerPeriodic: phase A only — no modifier-lifetime decrement,
-no buff-lifetime advance (spec §62). 'uses' still consumed (a use occurred).
+Non-periodic boundaries (onEntityDeath/onBattleEnd): single phase —
+mutate → emit → settle() (same barrier-2 semantics — death/battle-end
+removals' consequences resolve before return).
+
+Manual triggerPeriodic: phase A only (emit via ctx.events; NO internal barrier —
+the calling op's own settlement barrier drains the request event); never advances
+lifetimes, never decrements turn-based modifier lifetimes (spec §62). 'uses'
+marks from a manual trigger stay PENDING on the instance: they are excluded
+from folding into any later request immediately, and commit-or-release at the
+instance's next lifecycle Phase B — pending marks die with the instance if it is
+removed first (a modifier never outlives its instance). LOCKED: a manual-trigger
+request that resolves still consumed its mark — pending is bookkeeping, not
+double-use.
 
 onEntityDeath(e):  // spec §40–41 — replaces split onHolderDeath/onSourceDeath
+  // INVOKED ONLY AT A QUIESCENT POINT by the engine (post-action death-check /
+  // turn boundary) — never mid-settlement; deaths inside barrier 1 are already
+  // handled by Phase B's dead-target sweep (same 'death' reason, idempotent).
   every instance with targetId===e → remove, reason 'death'   // UNCONDITIONAL — no
     // removalConditions list; dead entities hold no buff state (review BLOCKER 10)
   every instance with sourceId===e && def.lifetime.removeOnSourceDeath → 'source_death'
-  canonical-sorted; no onExpire fired
+  canonical-sorted; no onExpire fired; emit + settle() (barrier-2 semantics)
 
-onBattleEnd: all instances → 'battle_end' (canonical-sorted)
+onBattleEnd: all instances → 'battle_end' (canonical-sorted); emit + settle()
 ```
+
+**Interval multi-crossing (HIGH 4, spec §26 locked):** `onTimePassed(seconds)` —
+per interval periodic: `elapsed += seconds`; `ticks = floor(elapsed / intervalSeconds)`;
+`elapsed -= ticks * intervalSeconds`. Each tick produces one request in Phase A's
+sequential computation (distinct requestId each). If tick k's op kills the target,
+ticks k+1.. skip as `skipped` → their pending uses-marks release (rule above) —
+the modifier isn't burned by ticks that never resolved.
 
 | Entry point | Decrements (clock / modifier lifetimes) | Periodic timing | Converts check |
 |---|---|---|---|
@@ -556,8 +643,8 @@ onBattleEnd: all instances → 'battle_end' (canonical-sorted)
 | `onBattleEnd` | — | — | removal only |
 
 - [ ] **Step 1 — Failing tests (periodic):** 3-stack DoT → request `coefficient` = authored×3×modifiers; request carries `damageProfile`/`canCrit`/`canMiss`/`hitCount`; `next_periodic_damage` folds once then consumed; **dynamic vs snapshot:** mutate source stats between ticks → dynamic tick's damage differs via the damage authority (integration test), snapshot tick's request carries the apply-time `snapshot` and its damage is stats-independent; `stackScaling:'ignore'` flat; heal periodic → `BuffPeriodicHealRequest`; source dead + `removeOnSourceDeath:false` → requests still emitted (damage authority handles absent source).
-- [ ] **Step 2 — Failing tests (lifecycle):** per-anchor decrement matrix (each entry point decrements ONLY its clock); **barrier ordering (spec §28 — THE regression test):** instance at `remaining:1` whose tick kills the target → deal_damage op settles BEFORE the expiry sweep; a still-alive buff on the killed target is removed with reason `'death'` not `'expired'`; expiry at zero after a non-lethal tick → `'expired'`; manual `triggerPeriodic` doesn't advance lifetime or turn-modifiers; `convertsToId` at threshold fires once, new instance stacks=1, suppressed eligibility, `replaced` reason; canonical sort proven on simultaneous periodics (two ailments same boundary → comparator order, not insertion order).
-- [ ] **Step 3 — Failing tests (persistence):** `BuffPersistence` — apply/remove/query/`onTimePassed` work with NO scheduler. It wraps a `BuffSystem` whose store mints `buff.persistent.${ownerId}.${n}` and synthesizes every ctx/lctx locally — apply ctx = `{operationId:'persistent.apply.${n}', origin:{kind:'scripted', originId:'persistent', sourceId, rootActionId:'persistent'}, events: collectingSink, combatSequence: localSeq++}`; lifecycle ctx = `{rootActionId:'persistent', sequence: localSeq, events: collectingSink, settle: () => {}}` (no-op settle is legal ONLY because periodic defs are rejected — see below). The resolver still consumes exactly one `rollChance` per apply — persistent mode injects a local `CombatRng` instance (deterministic stream, no scheduler needed); the roll contract is uniform across modes. Defs carrying `periodic` are REJECTED by the persistent pool (no barrier exists to settle requests — construction-time guard); events reach the injected sink for log/debug.
+- [ ] **Step 2 — Failing tests (lifecycle):** per-anchor decrement matrix (each entry point decrements ONLY its clock); **barrier ordering (spec §28 — THE regression test):** instance at `remaining:1` whose tick kills the target → deal_damage op settles BEFORE the expiry sweep; a still-alive buff on the killed target is removed with reason `'death'` not `'expired'`; **post-settle revalidation:** an instance removed inside barrier 1 is skipped by Phase B, never mutated through a stale reference; **barrier 2:** a reaction queued on `buff_removed`/`buff_applied` resolves inside the same root transaction (spy handler observes it before the lifecycle method returns); **resolution-gated uses:** `next_periodic_damage uses=1` consumed iff its op resolved — a `skipped` tick leaves the modifier; **interval multi-crossing:** `onTimePassed(10)` on interval 3 → 3 requests (distinct requestIds) + remainder 1; tick-1 kill → ticks 2–3 skipped, marks released; manual `triggerPeriodic` doesn't advance lifetime or turn-modifiers; `convertsToId` at threshold fires once, new instance stacks=1, suppressed eligibility, `replaced` reason; canonical sort proven on simultaneous periodics.
+- [ ] **Step 3 — Failing tests (persistence):** `BuffPersistence` — apply/remove/query/`onTimePassed` work with NO scheduler. It wraps a `BuffSystem` whose store mints `buff.persistent.${ownerId}.${n}` and synthesizes every ctx/lctx locally — apply ctx = `{operationId:'persistent.apply.${n}', origin:{kind:'scripted', originId:'persistent', sourceId, rootActionId:'persistent'}, events: collectingSink, combatSequence: localSeq++}`; lifecycle ctx = `{rootActionId:'persistent', sequence: localSeq, events: collectingSink, settle: () => new Map()}` (empty-map settle is legal ONLY because periodic defs are rejected — see below). The resolver still consumes exactly one `rollChance` per apply — persistent mode injects a local `CombatRng` instance (deterministic stream, no scheduler needed); the roll contract is uniform across modes. Defs carrying `periodic` are REJECTED by the persistent pool (no barrier exists to settle requests — construction-time guard); events reach the injected sink for log/debug.
 - [ ] **Step 4 — Implement + verify (P3 quick).**
 
 **Exit criteria:** periodic is request-based, barrier-ordered, dynamic+snapshot capable; all 8 lifecycle entry points proven; conversion + persistence ported; every mutation still evented; zero combat-math imports inside buff2.
@@ -568,8 +655,9 @@ onBattleEnd: all instances → 'battle_end' (canonical-sorted)
 
 **Files:**
 - Modify: `game/src/data/buff/**` — migrate ALL ~7 def files to the new `BuffDefinition` shape (mechanical per M1 mapping — **data migrates FIRST, no adapter**); `BuffRegistry.ts` becomes the buff2 registry
-- Modify: `game/src/core/battle/turn/TurnBattleSystem.ts` — participants stop owning `BuffPool`; single battle `BuffSystem`; ailment/buff apply lanes → `ApplyBuffOperation` through the scheduler; tick at `:1110` → `onHolderTurnEnd`; CC checks → `hasControl`; proc/reactive lanes consume `getCapabilities` descriptors; `reactionManager.checkAndTrigger` call REMOVED
-- Modify: `game/src/core/battle/turn/TurnBattleAdapter.ts` — construct buff2 `BuffSystem` + registry + resolver + stats port + `ElementalStateRegistry` at battle build; `battleId` arrives from the composition root (R-B1)
+- Create: `game/src/core/proc/CombatProcSystem.ts` — narrow capability owner (HIGH 5): consumes `getCapabilities` descriptors, rolls `CombatRng`, emits ops through the scheduler. Owns `on_hit_proc`/`reactive_trigger`/`reactive_proc`/`reactive_economy`/`the_economy`/`gauge_delta`/`dot_recovery` consumption. `core/proc/ProcCapabilities.ts` + `core/path/the-tu/TheTuCapabilities.ts` hold the typed payload schemas + validators (BLOCKER 3). NOT hosted inside `TurnBattleSystem` — no interim proc engine in the turn engine.
+- Modify: `game/src/core/battle/turn/TurnBattleSystem.ts` — participants stop owning `BuffPool`; single battle `BuffSystem`; ailment/buff apply lanes → `ApplyBuffOperation` through the scheduler; tick at `:1110` → `onHolderTurnEnd`; CC checks → `hasControl`; proc/reactive lanes DELEGATE to `CombatProcSystem` at the same seam points; `reactionManager.checkAndTrigger` call REMOVED
+- Modify: `game/src/core/battle/turn/TurnBattleAdapter.ts` — construct buff2 `BuffSystem` + `CombatProcSystem` + registry + resolver + stats port + `ElementalStateRegistry` + `CapabilityValidatorRegistry` at battle build; `battleId` arrives from the composition root (R-B1)
 - Modify: `game/src/core/game/GameManagerTurnBattleOps.ts` — mint `battleId` (`battle.${n}`) alongside scheduler/rng; hand into the adapter
 - Modify: `game/src/core/combat/CombatSystem.ts` — `applyDotDamage`'s `sourceBuffs` seam reads capability descriptors (dotRecovery bridge — see below)
 - Test: `TurnBattleSystem.buff2.test.ts` (port the relevant `TurnBuffSystem*.test.ts` assertions), `data/buff/*.test.ts` updated
@@ -579,22 +667,25 @@ onBattleEnd: all instances → 'battle_end' (canonical-sorted)
 | Today | After |
 |---|---|
 | `actor.buffs: BuffPool` per participant | `battleBuffs: BuffSystem` single store; participant keeps `entity.id` only |
-| `new BuffSystem(actor.buffs).update(actor.entity, this.combat, registry, resolveSource, resolveSourceBuffs)` `:1110` | `buffs.onHolderTurnEnd(actor.id, lctx)` — `lctx = {rootActionId: 'status.turn.N.*', sequence, events: scheduler.createLifecycleSink(...).sink, settle: () => scheduler.run()}`; requests → `PeriodicRequestsCommitted` → built-in handler → `deal_damage` ops (contract bridge). Turn-start site (action declaration entry) → `onHolderTurnStart`; the acting entity's own turn-end → `onSourceTurnEnd` for its outgoing instances; round rollover → `onRoundEnd` — all with the same lctx shape, each a separate lifecycle root transaction |
+| `new BuffSystem(actor.buffs).update(actor.entity, this.combat, registry, resolveSource, resolveSourceBuffs)` `:1110` | `buffs.onHolderTurnEnd(actor.id, lctx)` — `const {sink, sequence, settle} = scheduler.createLifecycleSink('status.turn.N.*')`; `lctx = {rootActionId, sequence, events: sink, settle}` (v7.2 — settle returns the op-status map); requests → `PeriodicRequestsCommitted` → built-in handler → `deal_damage` ops (contract bridge). Turn-start site (action declaration entry) → `onHolderTurnStart`; the acting entity's own turn-end → `onSourceTurnEnd` for its outgoing instances; round rollover → `onRoundEnd` — all with the same lctx shape, each a separate lifecycle root transaction |
 | `applySkillAilments` loop `new BuffSystem(target.buffs).apply(def,...)` per stack `:2973` | ONE `ApplyBuffOperation{definitionId, stacks: ailment.stacks ?? 1, baseChance: ailment.chance, reactionEligibility: initiatesReactions ? 'eligible' : 'suppressed'}` through the executor — the resolver rolls ONCE (today: `this.rng() < resolveAilmentApplicationChance(...)` at `:2959` — the roll MOVES into buff2's resolver; `AilmentChance.ts` retires) |
 | `reactionManager.checkAndTrigger(...)` `:2979` | **REMOVED (spec §73 — no dual-run).** buff2 emits `ElementalApplicationCommitted`; the reaction megaplan owns consumption. **Merge gate:** M4 is not merge-ready until the reaction plan's `elemental_application_committed` consumer exists on the same branch — otherwise elemental reactions silently stop firing (P14 battle check must cover this explicitly). |
 | `new BuffSystem(target.buffs).apply(def,...)` appliesBuffs lane `:1824` (resolveBuff) | `ApplyBuffOperation` route, `reactionEligibility:'suppressed'` (not elemental applications); per-target loop kept; `clearsCcOnApply` handled inside `apply()` |
-| `rollOnHitEffects` `:1824` (actor pool → victim pool) | Turn-engine proc lane: `buffs.getCapabilities(actorId)` filtered `type==='on_hit_proc'` → `rng.rollChance(cap.chance)` → `ApplyBuffOperation{cap.appliesBuffId, targetId: victim}` through the scheduler. Proc EXECUTION lives in the turn engine (interim owner until a dedicated proc/reaction owner lands) — **never a buff2 method** |
-| `rollReactiveTrigger` `:1834` (victim pool, onImpactLanded) | Same pattern on victim's `reactive_trigger` capabilities: roll → `appliesDefinitionId` → `ApplyBuffOperation`; `queuesFollowUp` → `battle.queuedFollowUps` (unchanged); `reflectsDamage` → `DealDamageOperation` through the scheduler (damage authority owns reflect damage) |
+| `rollOnHitEffects` `:1824` (actor pool → victim pool) | `CombatProcSystem.onHitLanded(attacker, target)` — reads `buffs.getCapabilities(attacker)` filtered `type==='on_hit_proc'` → `rng.rollChance(cap.payload.chance)` → `ApplyBuffOperation{payload.appliesBuffId, targetId: target}` through the scheduler. TBS calls the proc system at the seam; the proc engine lives in `core/proc/`, never in buff2 or TBS |
+| `rollReactiveTrigger` `:1834` (victim pool, onImpactLanded) | `CombatProcSystem.onImpactLanded(victim, attacker)` — same pattern on victim's `reactive_trigger` grants: roll → `appliesDefinitionId` → `ApplyBuffOperation`; `queuesFollowUp` → `battle.queuedFollowUps` (unchanged); `reflectsDamage` → `DealDamageOperation` through the scheduler (damage authority owns reflect damage). `onCastBegin` site `:1033` routes the same way |
+| Thể Tu reactive economy lanes (`resolveReactiveProcs` `:2407`, theCost/theGain counters, `the_economy` gains) | `CombatProcSystem` + `TheTuCapabilities` payloads — proc system rolls the chance stat (`payload.chanceStat`), TheTu resource ops via `ResourceAuthority` port; mechanics vocabulary lives in `core/proc/`/`core/path/the-tu/`, not buff2 |
 | `BuffSystem.isStunned/isFrozen/isRooted(targetId)` CC checks | `buffs.hasControl(targetId, 'stun')` — same targetId guard, structurally enforced by the single store (ARCH-009) |
 | `getActiveModifiers()` per participant → `liveStatModifiers` `:470` | `buffs.getStatModifiers(entityId)` per participant — identical `StatModifier[]` output (potency-channel folding included) |
-| `pendingGaugeDeltaTargets`/`applyGaugeDeltaEffects` `:486/:1996/:2825` | After the apply op commits, the appliesBuffs lane reads the def's `gauge_delta` capability → `PushGaugeOperation` at the same post-consume phase (gauge authority owns the push; ordering preserved) |
-| `dotRecoveryTriggers(source, element, sourceBuffs)` in `applyDotDamage` `:600` | `resolveSourceBuffs` adapter → `buffs.getCapabilities(sourceId)` filtered `dot_recovery` (+element match) — CombatSystem consumes descriptors, still inside the `legacy_dot` profile channel |
+| `pendingGaugeDeltaTargets`/`applyGaugeDeltaEffects` `:486/:1996/:2825` | **Event-driven (HIGH 6):** `CombatProcSystem` registers an immediate handler on `buff_applied` → applied def carries a `gauge_delta` grant → `PushGaugeOperation` through the scheduler. Only a COMMITTED application pushes gauge — the caller never needs `ApplyBuffResult`, and a failed roll can't leak a push. Ordering note: fires inside the apply op's barrier (earlier than legacy's post-impact phase but same action — gauge is only read at boundaries/next actions; semantics preserved) |
+| `dotRecoveryTriggers(source, element, sourceBuffs)` in `applyDotDamage` `:600` | `resolveSourceBuffs` adapter → `buffs.getCapabilities(sourceId)` filtered `type==='dot_recovery'` (+element match) — CombatSystem narrows the grant payload via the dotRecovery owner's helper, still inside the `legacy_dot` profile channel |
 | `scaleBuffPotency` call sites (Cong Minh amp) | `AddBuffModifierOperation{channel:'potency', operation:'multiply', reapply:'max', lifetime:'buff_lifetime'}` — deletes `potencyAmplified` |
 | `consumesAilmentId`/detonate reads (`getStacks`+`removeAllById`) | `buffs.getStacks(selector)` / `ConsumeBuffStacksOperation` |
 | `renewWithExtension` | `ExtendBuffDurationOperation` |
 | `BuffPool.clearCcEffects` (Bá Thể) | inside `apply()` via `clearsCcOnApply` |
 | `uniquePerTarget` | `instanceScope:'per_target'` — instance persists, `sourceId` transfers (R-B4) |
 | `player.persistentTimedEffects` | **UNTOUCHED** — different system (deadline-ms effects, not buffs — R2) |
+
+**ATOMIC MISSION (MEDIUM 3 — locked):** M4 runs as ONE worktree mission. Between the data flip and the consumer cutover the tree may not compile — that is EXPECTED; the P3/P13/P14 gates apply at mission end, not per file flip. Do not split M4 into separately-mergable commits.
 
 - [ ] **Step 1 — Migrate `data/buff/` files first** (mechanical per M1 mapping) with a per-file test flip (`buffs.test.ts`, `TheTuBuffs.test.ts`, `ZoneDotBuffs.test.ts`, `BuffRegistry.test.ts`, `buffs.registryConsistency.test.ts`). No adapter is created — the new registry loads only the new shape.
 - [ ] **Step 2 — Failing tests:** source isolation (A's burn on T vs B's burn on T = two instances); ailment apply through scheduler emits `ElementalApplicationCommitted` for canonical defs only; periodic requests reach the damage authority through the executor; capability-consuming lanes (proc/reactive/gauge/dotRecovery) read descriptors and behave identically to legacy.
@@ -632,8 +723,12 @@ onBattleEnd: all instances → 'battle_end' (canonical-sorted)
 | §12 + rng | multiplicative chance; exactly one rollChance even at 0/≥1 | `ApplicationResolver.test.ts :: formula` / `:: one roll always` |
 | §19–22 (contract) | canonical-only elemental event; iff `addedStacks>0`; none from stack ops | `BuffSystemApply.test.ts :: canonical gate` / `BuffStacks.test.ts :: stack mutation is silent` |
 | §7 | `per_target` single instance + ownership transfer, instanceId stable | `BuffSystemApply.test.ts :: per_target ownership` |
-| §24–25 | dynamic tick sees live stats (integration); snapshot tick carries apply-time context | `BuffPeriodic.test.ts :: dynamic` / `:: snapshot` |
-| §26–28 | barrier: damage settles before lifetime advance/expiry; manual tick advances nothing | `BuffLifecycle.test.ts :: settle before expire` / `:: manual tick is pure` |
+| §24–25 | dynamic tick sees live stats (integration); snapshot tick carries apply-time context; reapply/ownership-transfer recaptures snapshot | `BuffPeriodic.test.ts :: dynamic` / `:: snapshot` / `:: snapshot recapture on transfer` |
+| §39/§37 | `remove()` returns `RemoveBuffResult`; zero-stack via removeStacks/setStacks → `'consumed'` removal | `BuffStacks.test.ts :: zero stacks remove` / `:: remove result` |
+| §47 | capability grants are generic — buff2 holds no path vocabulary; unknown type throws at load; owner-registered validators gate payloads | `BuffRegistry.test.ts :: capability validation` |
+| §26–28 | barrier: damage settles before lifetime advance/expiry; Phase-B revalidation; barrier-2 drains lifecycle-event reactions in-root; manual tick advances nothing | `BuffLifecycle.test.ts :: settle before expire` / `:: stale instance skipped` / `:: barrier 2 drains reactions` / `:: manual tick is pure` |
+| §34 + v7.2 | `uses` consumed iff generated op `'resolved'`; skipped ticks release marks; one charge feeds one tick even across multi-crossing batches | `BuffLifecycle.test.ts :: uses gated on resolution` / `BuffPeriodic.test.ts :: multi-crossing uses` |
+| §26 | interval multi-crossing: `floor(elapsed/interval)` requests, distinct requestIds, remainder carries | `BuffLifecycle.test.ts :: interval crossings` |
 | §29–32 | modifier BASE→ADD→MULTIPLY→SET; priority+id tiebreak; reapply no-compound | `BuffModifierEngine.test.ts` |
 | §33–35 | modifier lifetimes per boundary; uses-consume; refresh isolation | `BuffLifecycle.test.ts :: modifier boundaries` |
 | §36–38 | setStacks/setRemainingDuration/consume first-class | `BuffStacks.test.ts` |
@@ -659,13 +754,13 @@ onBattleEnd: all instances → 'battle_end' (canonical-sorted)
 - `ActionValidator` consumption of `hasForbiddenTags`/`hasControl` → reaction megaplan
 - `ELEMENTAL_REACTION_CAPABILITY` grant (Ngộ Đạo) → seal batch
 - Application-formula numeric re-tune (R-B3 behavior change) → seal batch balance pass
-- Capability-execution consolidation into a dedicated proc/reaction owner (today the turn engine hosts the lanes) → reaction/skill megaplans
+- ProcSystem/owning-domain reaction-trigger depth beyond `on_hit_proc`/`reactive_trigger`/`reactive_proc`/`reactive_economy`/`the_economy`/`gauge_delta`/`dot_recovery` (e.g. full `CombatCapabilityQuery`-driven dispatch) → reaction/skill megaplans; `CombatProcSystem` itself lands at M4
 
 ## Open questions for coordinator
 
 1. RESOLVED (review ruling): application chance uses spec §12 multiplicative formula with target resistance at application (`resistance:'ailment'` gated) — legacy additive formula retired; numeric parity intentionally broken, re-tune at seal batch.
-2. R-B7 — `convertsToId` re-application eligibility suppressed: confirm conversions never trigger reactions (today they CAN via legacy manager — the bridge is removed; new engine sees suppressed).
+2. RESOLVED (review round 2 — R-B7 locked): `convertsToId` re-application is `reactionEligibility:'suppressed'` — a conversion is a CONTINUATION of state, not a new application for reaction purposes. If a future design needs conversion-triggered reactions, ReactionSystem observes `buff_applied`/`buff_removed('replaced')` events directly — the eligibility field stays honest.
 3. Flat-`coefficient` damage profiles (legacy `powerDomain:'buff'`/`baseCoefficient` analog): coefficient units = absolute damage per tick vs ratio — assumed absolute via a flat profile; confirm at seal batch.
-4. Capability consolidation — 8 typed `BuffCapability` members absorb 6 legacy effect kinds + marker flags; confirm no external code discriminates by `effect.type` string (M0 step 5 — if presentation reads `theEconomy`/`marker` directly, keep a `type` tag on the descriptor).
+4. Capability consolidation — the 6 legacy effect kinds + marker flags become capability grants whose typed payloads are owned by `core/proc/` + path modules; confirm no external code discriminates by `effect.type` string (M0 step 5 — if presentation reads `theEconomy`/`marker` directly, the payload keeps the data but ownership moves).
 5. `onReapplyDuration:'extend'` — `remaining += granted duration` uncapped (no spec'd cap); flag if a real def needs a cap.
 6. M4 merge gate — elemental reactions pause between `checkAndTrigger` removal and the reaction consumer landing; confirm "same integration branch" vs documented gap is acceptable.
