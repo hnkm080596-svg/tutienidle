@@ -52,6 +52,11 @@ export interface EnemyReward {
 export interface Enemy {
   id: string
 
+  // Template id this instance was spawned from; set by EnemySystem.spawn.
+  // Kill consumers (quests, hidden beast) match template ids — the
+  // instance id is uuid-unique and must never reach them (audit T3-16).
+  templateId?: string
+
   name: string
 
   level: number
@@ -265,6 +270,8 @@ export function createBossVariant(enemy: Enemy): Enemy {
 export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
   return {
     id: enemy.id,
+
+    templateId: enemy.templateId,
 
     name: enemy.name,
 

@@ -19,6 +19,10 @@ export class EnemySystem {
       // EnemyManager.get()/.find() luôn trả về SAI instance.
       id: `${template.id}_${crypto.randomUUID()}`,
 
+      // Mission E Task 1 (audit T3-16): stamp the template id so kill
+      // consumers match on template identity, not the instance id.
+      templateId: template.id,
+
       currentHp:
         template.maxHp,
 

@@ -365,10 +365,16 @@ export class BattleLootSystem {
             ? this.deps.zoneRegistry.getZoneForStage(activeStageId)?.id
             : undefined
 
+          // Mission E Task 1 (audit T3-16): consumers match TEMPLATE
+          // ids; the instance id is uuid-minted. The ?? id fallback
+          // keeps raw-template records (never passed through spawn)
+          // working.
+          const defeatedTemplateId = battleEnemy.entity.templateId ?? battleEnemy.entity.id
+
           this.deps.questSystem.onEnemyDefeated(
             this.deps.questRegistry,
             this.deps.questManager,
-            battleEnemy.entity.id,
+            defeatedTemplateId,
             zoneId,
           )
 
@@ -390,7 +396,7 @@ export class BattleLootSystem {
           if (this.player) {
             this.deps.hiddenBeast.onEnemyDefeated(
               this.player,
-              battleEnemy.entity.id,
+              defeatedTemplateId,
               enemy.realmId,
             )
           }

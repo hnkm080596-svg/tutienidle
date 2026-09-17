@@ -11,6 +11,11 @@ export type CombatEntityType =
 export interface CombatEntity {
   id: string
 
+  // Template id the enemy instance was spawned from (EnemySystem.spawn
+  // stamps Enemy.templateId; enemyToCombatEntity carries it). Kill
+  // consumers match template ids, not uuid-minted instance ids.
+  templateId?: string
+
   name: string
 
   type: CombatEntityType
