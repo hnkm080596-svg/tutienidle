@@ -68,6 +68,8 @@
       },
       "status": {
         "notRolled": "not rolled",
+        "removed": "removed",
+        "added": "new line",
         "kept": "kept"
       },
       "warnings": {

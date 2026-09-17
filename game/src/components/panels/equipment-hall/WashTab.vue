@@ -3,7 +3,7 @@
 // extracted from EquipmentHallPanel.vue shell. Preview state
 // (pendingWashAffixes) is now LOCAL — v-if unmount on tab switch resets
 // it automatically, matching the manual reset the old switchTab() did.
-import { computed, inject, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
@@ -75,6 +75,10 @@ function discardPendingTicket() {
   pendingWashTicket.value = null
 }
 
+// T4-33 — the ticket was PAID at preview time; an unmount that keeps it
+// armed lets a remounted tab reuse a stale paid roll.
+onBeforeUnmount(discardPendingTicket)
+
 const washCost = computed(() => {
   stateVersion.value
 
@@ -134,9 +138,11 @@ function doWashKeep() {
     return
   }
 
-  if (washCommit(selectedRow.value.instanceId, pendingWashTicket.value)) {
-    pendingWashTicket.value = null
-  }
+  // The domain consumes the ticket on EVERY commit attempt (R9/AR-21,
+  // refine-style), so a failed commit must not leave a dead armed "Giữ" —
+  // the rejection is already surfaced via withSyncAndResult feedback.
+  washCommit(selectedRow.value.instanceId, pendingWashTicket.value)
+  pendingWashTicket.value = null
 }
 
 const pendingWashAffixDisplay = computed(() =>
@@ -174,30 +180,41 @@ const selectedAffixes = computed(() => {
 interface AffixCompareRow {
   index: number
 
-  beforeLabel: string
+  beforeLabel?: string
 
-  beforeTier: number
+  beforeTier?: number
 
   afterLabel?: string
 
   afterTier?: number
+
+  /** True while a paid ticket is pending — distinguishes "rolled zero
+   * lines" (removed) from "no roll pending" (notRolled). */
+  hasTicket: boolean
 }
 
 /** Tẩy Luyện reroll TOÀN BỘ affix (đổi cả identity) — mỗi dòng so sánh
- * theo ĐÚNG vị trí index giữa affix hiện tại và affix preview đang chờ. */
+ * theo ĐÚNG vị trí index giữa affix hiện tại và affix preview đang chờ.
+ * T4-33: rows cover BOTH lists — a roll with more lines than the item
+ * currently has must still show the extra rolled line, and a roll that
+ * dropped a line shows it as removed. */
 const washAffixCompareRows = computed<AffixCompareRow[]>(() => {
   const pending = pendingWashAffixDisplay.value
+  const current = selectedAffixes.value
+  const rowCount = Math.max(current.length, pending.length)
 
-  return selectedAffixes.value.map((affix, position) => ({
-    index: affix.index,
+  return Array.from({ length: rowCount }, (_, position) => ({
+    index: position,
 
-    beforeLabel: affix.label,
+    beforeLabel: current[position]?.label,
 
-    beforeTier: affix.tier,
+    beforeTier: current[position]?.tier,
 
     afterLabel: pending[position]?.label,
 
     afterTier: pending[position]?.tier,
+
+    hasTicket: pendingWashTicket.value !== null,
   }))
 })
 
@@ -249,10 +266,14 @@ const washRenAfter = computed(() =>
           <tbody>
             <tr v-for="(row, position) in washAffixCompareRows" :key="row.index">
               <th scope="row">{{ t('panels.equipmentHall.labels.rowLine') }} {{ position + 1 }}</th>
-              <td><span :class="tierClass(row.beforeTier)">{{ row.beforeLabel }}</span></td>
+              <td>
+                <span v-if="row.beforeLabel" :class="tierClass(row.beforeTier!)">{{ row.beforeLabel }}</span>
+                <span v-else class="qi-hall__owned">{{ t('panels.equipmentHall.status.added') }}</span>
+              </td>
               <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
               <td>
                 <span v-if="row.afterLabel" :class="tierClass(row.afterTier!)">{{ row.afterLabel }}</span>
+                <span v-else-if="row.hasTicket" class="qi-hall__owned">{{ t('panels.equipmentHall.status.removed') }}</span>
                 <span v-else class="qi-hall__owned">{{ t('panels.equipmentHall.status.notRolled') }}</span>
               </td>
             </tr>

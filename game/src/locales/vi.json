@@ -68,6 +68,8 @@
       },
       "status": {
         "notRolled": "chưa roll",
+        "removed": "đã mất",
+        "added": "dòng mới",
         "kept": "giữ nguyên"
       },
       "warnings": {
