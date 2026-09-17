@@ -1,4 +1,4 @@
-# QA Review: combat-contract (feat/combat-contract, 21ac93cf..0f5c5c47)
+# QA Review: combat-contract (feat/combat-contract, 21ac93cf..d62cc7df)
 
 - Date: 2026-09-17
 - Mode: quick
@@ -31,18 +31,26 @@ Mapper output: domains `combat-and-tribulation`, `economy-and-progression`, `pin
 | INV-CC-8 | Adapter field fidelity | `hitCount`/`canCrit`/`canMiss`/`tags` not carried | Cross-system chain | Cross-system chain | Dormant path; recorded deferred to skill megaplan (learned-defect RR8 pattern noted) | Coverage gap — dormant, no live oracle needed | Low while dormant |
 | INV-CC-9 | `resolveSourceBuffs` wiring | `legacy_dot` ops preserve authored `dotRecovery` | Conservation | Stale state | Resolver character-identical to engine's (`players→enemies` by participant id, own-pool `getAll`) | Code inspection (M4 review) | Medium (dormant path) |
 | INV-CC-10 | `setBattleRngFactory` callers | Old `() => () => number` callers break | Contract | Repeat | Only 2 test callers + delegation chain; type-check green | Type-check | Low |
+| INV-CC-11 | Cross-root work budget / `workThisRun` | Mid-run intake (lifecycle emits, `enqueueEvent`/`enqueueAuthored` in-flight) minting unbounded fresh per-root budgets | Livelock safety — total work across ALL roots of one drain bounded by `MAX_TOTAL_WORK_PER_RUN` (65536) | Repeat | Event-mint flood inside one authority call faults (`settlement_work_budget_exceeded`) instead of flooding | Unit (`CombatScheduler.review-round-2.test.ts` Lens C2; `CombatScheduler.test.ts` `maxTotalWorkPerRun: 30` budget test) | High — closes the last unguarded loop |
+| INV-CC-12 | Periodic correlation / `periodicRequestByOpId` | `PeriodicOperationSettled` emitted exactly once per periodic op's barrier, into enclosing frame | Exactly-once + causality — `causationOperationId` = periodic op, `seq(op) < seq(settled)`, canonical `evt.${opId}.${n}` id, one-shot map entry deleted on read | Reorder + interruption | Sibling periodic ops all settle before any settled event fires, in request order; correlation survives no public op field (unforgeable) | Unit (`periodic_operation_settled` suite ~`CombatScheduler.test.ts:1259`; Lens C3 multi-request ordering) | High (dormant path; contract surface for buff megaplan) |
+| INV-CC-13 | Forgeable event types | Producer emitting `periodic_operation_settled`/`combat_settlement_fault` via a sink payload | Integrity — scheduler-originated types unreachable from producer lanes | Value mutation | `commitEvent` structural-faults on both type strings | Unit (Lens B6 `review-round-2.test.ts:220`) | Medium |
+| INV-CC-14 | Lifecycle `settle()` | Sequential periodic units each get a drain + per-op status map; reentrancy | Single-flight + isolation — same drain loop as `run()`, collector reports every executed op, reentrant/post-fault call is a structural fault | Interruption | `settle()` drains authored + root events; statuses map opId→status; reentrant `settle()` faults | Unit (Lens C4 `review-round-2.test.ts:185`; `CombatScheduler.test.ts:1386-1436`) | Medium (dormant path) |
+| INV-CC-15 | Correlation commit ordering | `pendingPeriodicCorrelation` scratch committed only after group-atomic reservation passes | Atomicity — a structural fault mid-group leaves zero stale correlation | Interruption | Duplicate `requestId` → both `periodic.${requestId}` ops fault before either executes; later re-mint collides with reserved id | Unit (`CombatScheduler.test.ts` `qa: periodic requestId` suite, `bca9c55e`) | Medium |
+| INV-CC-16 | Bridge request validation + forwarding | Malformed periodic requests minting ops carrying undefined/NaN; `snapshot`/`stackCount` dropped | Integrity + field fidelity — requests validated for required fields + finite numbers before op construction; forward-carriers ride to `deal_damage` payload | Value mutation | Heal missing `amount` → structural fault; `snapshot`+`stackCount` present on payload | Unit (Lens B2/B5 `review-round-2.test.ts:361-376`) | Medium (dormant path) |
 
 ## Verification Evidence
 
 | Command or observation | Result | Evidence/limitation |
 | --- | --- | --- |
-| `npm run verify` (= type-check + build + `npx vitest run`) from `game/` | PASS — 633 files / 5324 tests (+4 expected-fail), build clean | Full run at HEAD `0f5c5c47` |
+| `npm run verify` (= type-check + build + `npx vitest run`) from `game/` | PASS — 636 files / 5370 tests (+4 expected-fail), build clean | Full run at final HEAD `d62cc7df` (post-v7.x + review-round-2 fixes) |
 | `npx vitest run tests/architecture` | PASS — 428 tests | Run at M4 (`c32ccb3e`); architecture diff since then is docs+test-only |
 | Playwright `tests/e2e/create-to-combat.spec.ts` | PASS | Real-browser run at M4 in this worktree |
 | `TurnBattleSystem.rngContract.test.ts` | Green in suite | Two SeededCombatRng(42) stage battles → deep-equal logs; divergence guard |
 | `GameManager.battleCycle.test.ts` session-RNG spec | Green in suite | `Math.random` stack-spy — zero combat-path stacks |
 | `ScriptedCombatRng.roll()` exhaustion | Throws structural-fault error (read at HEAD) | No silent `Math.random` fallback — matches contract §50; test-only impl trusts script domain |
 | `applyDotDamage` production callers | `BuffSystem.ts:356` ignores additive return value | `applyReactionDamage`/`grantWard` consumed only by dormant adapters |
+| `npx vitest run src/core/battle/runtime/scheduler/` at `bca9c55e`+ | PASS — 10 files / 139 tests | Covers v7.x: executor routes all 20 op types, settled-event suite, lifecycle `settle()`, cross-root budget, collision guards |
+| v7.x scheduler mechanics inline re-review (`CombatScheduler.ts` read at `d62cc7df`) | Coherent | `workThisRun` charged at exec/settle/mint; scratch→commit ordering; settled event minted canonically + pushed to enclosing frame FIFO; forgeable-type guard; single-flight `settle()` |
 
 ## Findings
 

@@ -135,7 +135,7 @@ export class GameManagerTurnBattleOps {
   // Reward-flow flags (rewardsGranted set + battleEndEmitted) live in
   // rewardOps - the terminal/grant flow owns them exclusively.
 
-  // Phase A6 (9.5 #7) — last-emitted status snapshot + the battle instance
+  // Phase A6 (9.5 #7) -- last-emitted status snapshot + the battle instance
   // it belongs to. Persistent across steps so construction-time buffs emit
   // attach on first observation; a replaced battle resets via identity.
   private statusVfxSnapshot = new Map<string, TurnStatusSnapshotEntry>()
@@ -169,7 +169,7 @@ export class GameManagerTurnBattleOps {
   private detachTokenListener: (() => void) | null = null
 
   /**
-   * 9.5 #9 — engine-side cast notification, filtered to the primary
+   * 9.5 #9 -- engine-side cast notification, filtered to the primary
    * player. The engine reports every committed cast (enemy, companion,
    * player); only players[0] writes into the skillCastCounts/skillLevels
    * mirror via deps.recordPrimaryPlayerCast. Reads this.turnBattle live:
@@ -182,7 +182,7 @@ export class GameManagerTurnBattleOps {
   }
 
   /**
-   * ARCH-002 (M7) — battle-scoped live-modifier provider handed to
+   * ARCH-002 (M7) -- battle-scoped live-modifier provider handed to
    * TurnBattleSystem. Only the primary player has a runtime modifier
    * channel today (passive stacks, persistent pool, timed/socket
    * effects); companions and enemies return []. The closure reads the
@@ -232,42 +232,42 @@ export class GameManagerTurnBattleOps {
     getSkillLevels: () => Record<string, number>
     // PassiveSystem owns per-battle passive stacks; ops requests the reset.
     resetPassiveStacks: () => void
-    // ARCH-002 (M7) — resolved-base authority for the battle snapshot:
+    // ARCH-002 (M7) -- resolved-base authority for the battle snapshot:
     // GameManager wires resolvePlayerFinalStats(player,
     // effectOps.getBattleBaseModifiers(player)). Called INSIDE the
     // post-reset window so ephemeral stacks can never bake into baseStats.
     resolvePlayerStats: (player: PlayerData) => Stats
-    // ARCH-002 (M7) — live runtime modifiers for the engine's
+    // ARCH-002 (M7) -- live runtime modifiers for the engine's
     // liveStatModifiers provider (passive stacks, persistent pool,
     // timed/socket effects). Same owner as the menu aggregation
-    // (GameManagerPersistentEffectOps) — never a second calculator.
+    // (GameManagerPersistentEffectOps) -- never a second calculator.
     getLiveBattleModifiers: (player: PlayerData) => StatModifier[]
-    // M2 — Pha Giap carry: bank/seed the bound passive's stacks across
+    // M2 -- Pha Giap carry: bank/seed the bound passive's stacks across
     // battles (PassiveSystem owns the stacks; PlayerData owns the bank).
     bankPassiveCarry: (player: PlayerData) => void
     seedPassiveCarry: (player: PlayerData) => void
     buildPlayerRewardReceiver: (player: PlayerData) => RewardReceiver
-    // Mission C Task 9 — the cultivation-path boundary: GameManager wires
+    // Mission C Task 9 -- the cultivation-path boundary: GameManager wires
     // the registry resolver; this ops consumes the runtime interface and
     // never branches on path/way identity (guard:
     // tests/architecture/battleLifecyclePathBoundary.test.ts).
     resolvePathRuntime: (player: PlayerData) => CultivationPathRuntime
-    // 9.5 #9 — committed-cast sink for the PRIMARY player only
+    // 9.5 #9 -- committed-cast sink for the PRIMARY player only
     // (SkillSystem.recordCast; engine fires for every actor, ops filters
     // to turnBattle.players[0] so companion/enemy casts never write into
     // the player's skillCastCounts/skillLevels mirror).
     recordPrimaryPlayerCast?: (skillId: string) => void
-    // Kiem Tu Reimagined Task 11 — registered node defs for the path
+    // Kiem Tu Reimagined Task 11 -- registered node defs for the path
     // runtime's collectors (combo capstones, cascade unlocks). Read-only
     // access; the registry remains GameManager-owned (A3).
     getProgressionNodes: () => readonly ProgressionNode[]
     /**
-     * Mission C Task 8 — mints the session RNG for ONE battle cycle
+     * Mission C Task 8 -- mints the session RNG for ONE battle cycle
      * (combat-contract M4: typed CombatRng, consumed via roll()/
      * rollChance()). Scope boundary: only combat rolls consume it
      * (combat formulas, proc chances, spawn placement, pool/tag/
      * hidden-beast picks, engine rolls). Loot/alchemy/pill economy
-     * randomness stays on Math.random deliberately — a seeded battle
+     * randomness stays on Math.random deliberately -- a seeded battle
      * must not pin drops.
      */
     createBattleRng?: () => CombatRng
@@ -275,7 +275,7 @@ export class GameManagerTurnBattleOps {
     this.turnBattleSystem = new TurnBattleSystem(
       deps.combatSystem,
       10_000,
-      // ARCH-002 (M7) — non-stage battles still need the live buff
+      // ARCH-002 (M7) -- non-stage battles still need the live buff
       // registry: skill appliesBuff branches (kim_giap/dia_tru self-buffs,
       // target debuffs) no-op silently without it. Stage-path systems
       // below already pass BUFF_REGISTRY.
@@ -478,7 +478,7 @@ export class GameManagerTurnBattleOps {
       const readyActor = this.turnBattleSystem.tickPacing(battle, false)
 
       if (readyActor !== null) {
-        // Task 11 — a queued repeat/multicast execution is NOT a turn
+        // Task 11 -- a queued repeat/multicast execution is NOT a turn
         // choice: manual mode must not park it awaiting input (the cast
         // was already committed; the follow-up resolves automatically).
         const isQueuedExecution = this.turnBattleSystem.isPendingQueuedExecution(readyActor.id)
@@ -504,10 +504,10 @@ export class GameManagerTurnBattleOps {
       // beginTurnPipeline above and auto-repeat can replace the battle.
       if (this.turnBattle) {
         emitTurnBattleEntitySnapshot(this.deps.eventBus, this.turnBattle)
-        // Phase A6 (9.5 #7) — status-icon feed. `before` is the LAST-EMITTED
+        // Phase A6 (9.5 #7) -- status-icon feed. `before` is the LAST-EMITTED
         // snapshot for this battle instance (empty on first observation:
         // buffs applied at construction/intro/countdown attach then). A
-        // replaced battle (auto-repeat) resets to empty — the scene clears
+        // replaced battle (auto-repeat) resets to empty -- the scene clears
         // stale icons itself on battle transition, and emitting removed
         // events for a dead battle would be noise.
         const statusBefore =
@@ -774,7 +774,7 @@ export class GameManagerTurnBattleOps {
   /**
    * Whether a turn battle is actively in progress (intro/countdown/
    * fighting). The TurnBattle object is retained after victory/defeat so
-   * consumers can read the terminal result — callers that need an
+   * consumers can read the terminal result -- callers that need an
    * in-combat gate must use this query, not `getTurnBattle() !== null`.
    */
   isTurnBattleInProgress(): boolean {
@@ -783,7 +783,7 @@ export class GameManagerTurnBattleOps {
 
   /**
    * The stage that launched the CURRENT turn battle (null for non-stage
-   * battles like tribulation). Read-only query — combat UI needs the
+   * battles like tribulation). Read-only query -- combat UI needs the
    * launching stage's own fields (perfectClearTurnLimit for the round
    * indicator), not the UI selection, which may point elsewhere.
    */
@@ -819,16 +819,16 @@ export class GameManagerTurnBattleOps {
   private battleGeneration = 0
 
   /**
-   * Mission C Task 8 — the session RNG for the CURRENT cycle, re-typed
+   * Mission C Task 8 -- the session RNG for the CURRENT cycle, re-typed
    * to CombatRng by combat-contract M4. Minted by beginBattleCycle from
    * deps.createBattleRng; every combat roll reads it (combat formulas
    * via combatSystem.setRandomSource, engine rolls via the
    * TurnBattleSystem ctor param, spawn placement + pool/tag/
    * hidden-beast picks via the spawn closures). Downstream helpers that
-   * still take `() => number` receive `() => rng.roll()` — identical
+   * still take `() => number` receive `() => rng.roll()` -- identical
    * consumption order.
    */
-  // Lazy default — a stored `Math.random` reference would bypass
+  // Lazy default -- a stored `Math.random` reference would bypass
   // vi.spyOn interception. Re-minted per cycle by mintCycleRng().
   private combatRng: CombatRng = new FunctionCombatRng(() => Math.random())
 
@@ -843,7 +843,7 @@ export class GameManagerTurnBattleOps {
   private battleRngFactoryOverride: (() => CombatRng) | undefined
 
   /**
-   * Mission C Task 9 — dev/test seam mirroring setBattleRngFactory: swap
+   * Mission C Task 9 -- dev/test seam mirroring setBattleRngFactory: swap
    * the path-runtime resolver (a test registers a fake_path runtime the
    * shipped registry does not know). `undefined` restores the registry.
    */
@@ -859,23 +859,23 @@ export class GameManagerTurnBattleOps {
 
   private mintCycleRng(): void {
     // The built-in fallback wraps a LAZY Math.random closure in a
-    // FunctionCombatRng — storing `Math.random` by reference would
+    // FunctionCombatRng -- storing `Math.random` by reference would
     // bypass vi.spyOn interception (the sanctioned spy seam).
     this.combatRng =
       (this.battleRngFactoryOverride ?? this.deps.createBattleRng)?.() ??
       new FunctionCombatRng(() => Math.random())
-    // CombatSystem keeps its `() => number` seam — the wrapper forwards
+    // CombatSystem keeps its `() => number` seam -- the wrapper forwards
     // to THIS mint's stream (capture the object, not the mutable field).
     const rng = this.combatRng
     this.deps.combatSystem.setRandomSource(() => rng.roll())
   }
 
   /**
-   * Combat-contract M4 — the per-cycle operation scheduler + executor.
+   * Combat-contract M4 -- the per-cycle operation scheduler + executor.
    * CONSTRUCTED but DORMANT: no authored ops route through it until the
    * buff/skill cutover lands; TurnBattleSystem receives it as a ctor
    * dep alongside the cycle CombatRng. Every lookup closes over the
-   * LIVE turnBattle (read at call time — the field is reassigned
+   * LIVE turnBattle (read at call time -- the field is reassigned
    * wholesale per cycle) so op target ids resolve to the same objects
    * the engine mutates.
    */
@@ -899,7 +899,7 @@ export class GameManagerTurnBattleOps {
 
     const executor = new CombatOperationExecutor({
       damage: new CombatSystemDamageAdapter(this.deps.combatSystem, resolveEntity, {
-        // M3 carryover — the same resolution declareActorAction hands
+        // M3 carryover -- the same resolution declareActorAction hands
         // BuffSystem.update (the DoT SOURCE's own pool), so authored
         // dotRecovery triggers stay reachable on legacy_dot ops.
         resolveSourceBuffs: (id: CombatEntityId): readonly Buff[] | undefined =>
@@ -1270,7 +1270,7 @@ export class GameManagerTurnBattleOps {
       playerEntity.x = playerSlot.column
     }
 
-    // Mission C Task 9 — ALL path integration resolves through the
+    // Mission C Task 9 -- ALL path integration resolves through the
     // runtime boundary; no path/way predicate may appear below.
     const pathRuntime = playerPath ? this.resolvePathRuntime(playerPath) : undefined
 
@@ -1283,9 +1283,9 @@ export class GameManagerTurnBattleOps {
     )
 
     // Dynamic-basic provider (Kiem Pho orbs / Ngu Kiem Dao multi-instance)
-    // — OWNS the basic slot where a path supplies one; preset cursor/log
+    // -- OWNS the basic slot where a path supplies one; preset cursor/log
     // live in the provider closure, not PlayerData. Rolls consume the
-    // session RNG — the captured object (not the mutable field) so the
+    // session RNG -- the captured object (not the mutable field) so the
     // provider stays bound to THIS cycle's stream exactly like the
     // retired closure hand-off did.
     const cycleRng = this.combatRng
@@ -1298,7 +1298,7 @@ export class GameManagerTurnBattleOps {
       playerParticipant.dynamicBasic = dynamicBasic
     }
 
-    // Emblem/marker slot overrides (Ngu Kiem Dao — spec §5.4: display
+    // Emblem/marker slot overrides (Ngu Kiem Dao -- spec §5.4: display
     // lanes, never resolvable actions).
     const emblemSlots = pathRuntime?.emblemSlots?.()
     if (emblemSlots?.special) {
@@ -1366,7 +1366,7 @@ export class GameManagerTurnBattleOps {
       }
     }
 
-    // The Tu Reimagined (plan Task 6) — emblem/build-time buff channel:
+    // The Tu Reimagined (plan Task 6) -- emblem/build-time buff channel:
     // any participant slot def carrying grantsBuffsAtBuild applies those
     // participant-local def clones to its owner (phan_chinh emblem ->
     // permanent Reflection buff). Self-applied, no registry lookup —
@@ -1536,13 +1536,13 @@ export class GameManagerTurnBattleOps {
     }
     this.deps.stageWaves.stopRepeat()
 
-    // M2 — Pha Giap carry: retreat also banks (plan Slice 6 — battle end
+    // M2 -- Pha Giap carry: retreat also banks (plan Slice 6 -- battle end
     // regardless of outcome).
     if (this.playerDataForTurnBattle) {
       this.deps.bankPassiveCarry(this.playerDataForTurnBattle)
     }
 
-    // ARCH-014 (M12) — ONE terminal publisher: rewardOps owns every
+    // ARCH-014 (M12) -- ONE terminal publisher: rewardOps owns every
     // 'battle_end' emission (victory, natural defeat, abandon). The shared
     // once-guard both publishes and stamps the flag, so a duplicate
     // terminal can never slip through if the clock were ever restarted.

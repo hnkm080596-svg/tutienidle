@@ -1,4 +1,4 @@
-// TurnBattleSystem Slice 1 (spec 2026-09-04) — engine turn-based độc lập,
+// TurnBattleSystem Slice 1 (spec 2026-09-04) -- engine turn-based độc lập,
 // headless, KHÔNG nối vào BattleSystem.ts/GameManager. Chứng minh ATB
 // gauge (TurnQueue) + targeting + CombatSystem.resolveActionHit chạy
 // đúng end-to-end trước khi lớp thêm skill/buff/reaction/hazard zone ở
@@ -50,7 +50,7 @@ import { clampStatValue } from '../../stats/StatMetadata'
 import type { BuffDefinition, ReactiveProcEffect, ReactiveTriggerName } from '../../buff/BuffTypes'
 
 /**
- * Future Systems Task 6 — gauge-delta effect: bắn 1 LẦN ngay khi buff
+ * Future Systems Task 6 -- gauge-delta effect: bắn 1 LẦN ngay khi buff
  * được áp, đẩy % GAUGE_MAX vào actionGauge của participant nhận buff
  * (refundGauge đã clamp [0, GAUGE_MAX]). Không phải tick liên tục.
  */
@@ -77,13 +77,13 @@ export interface TurnBossTrigger {
 }
 
 export interface PendingEnemySpawn {
-  /** Đã build đầy đủ (roll template/elite/boss xong) — chỉ chờ hết telegraph. */
+  /** Đã build đầy đủ (roll template/elite/boss xong) -- chỉ chờ hết telegraph. */
   participant: TurnBattleParticipant
   ticksRemaining: number
   totalTicks: number
 }
 
-// Turn-Based Wave Redesign (2026-09-06) — quy đổi TRỰC TIẾP từ
+// Turn-Based Wave Redesign (2026-09-06) -- quy đổi TRỰC TIẾP từ
 // SPAWN_TELEGRAPH_SECONDS của legacy/BattleSystem.ts (0.75s/1.0s/1.4s)
 // sang tick (0.1s/tick, khớp BATTLE_FIXED_STEP mà GameManager gọi
 // tickPacing() mỗi lần) để giữ đúng cảm giác thời gian người chơi đã quen.
@@ -123,45 +123,45 @@ export interface TurnBattleParticipant {
   resources?: TurnResourcePool
   bossTrigger?: TurnBossTrigger
   /**
-   * stat-system-reimagined review fix (2026-09-15) — stat domains this
+   * stat-system-reimagined review fix (2026-09-15) -- stat domains this
    * participant owns (player path -> its domain). Domain deltaDerivers
    * in calculateEffectiveStats run only for these, so e.g. a kiem_tu
    * entity gaining attunement mid-battle never emits phap_tu MP deltas.
    */
   activeDomains?: ReadonlySet<StatDomain>
   /**
-   * Review fix (MED-3) — wuxing reaction INITIATION is an explicit
+   * Review fix (MED-3) -- wuxing reaction INITIATION is an explicit
    * capability, not player-side membership: stamped by the adapter for
-   * participants owning the phap_tu stat domain (spec §6/D21 — the
+   * participants owning the phap_tu stat domain (spec §6/D21 -- the
    * domain gate is what permits a future mixed-element hien route).
    * Companions/enemies/non-phap_tu players never carry it; their
    * ailments still participate as incumbents.
    */
   canInitiateWuxingReactions?: boolean
-  /** Future Systems Task 7 — charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */
+  /** Future Systems Task 7 -- charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */
   chargingTurnsRemaining?: number
   pendingChargedSkillId?: string
   /**
-   * Phase A3 (2026-09-07) — 1-based counter of this enemy's own actions,
+   * Phase A3 (2026-09-07) -- 1-based counter of this enemy's own actions,
    * ported from the retired grid-battle specialAttackCounter with the same
    * everyNth semantics as legacy EnemyAttackSystem.fireEnemyAttack()
-   * (module retired M13 — semantics ported here):
+   * (module retired M13 -- semantics ported here):
    * when counter % everyNth === 0, the special attack's damageMultiplier
    * replaces the basic attack's for that action. Runtime-only, never
    * resets mid-battle. undefined coerces to 0.
    */
   specialAttackCounter?: number
   /**
-   * Kiem Tu Reimagined Task 2 — path-specific basic owner (Kiem Pho orb
+   * Kiem Tu Reimagined Task 2 -- path-specific basic owner (Kiem Pho orb
    * preset / Ngu Kiem Dao). When present it owns the basic slot and the
    * post-resolution hook; the engine stays content-agnostic.
    */
   dynamicBasic?: DynamicBasicProvider
   /**
-   * The Tu Reimagined (spec 6.2, plan Task 16) — participant-local
+   * The Tu Reimagined (spec 6.2, plan Task 16) -- participant-local
    * reactive payload defs keyed by skill id (phan_kich/tro_kich clones,
    * node-adjusted at battle build). QueuedFollowUp.payloadSkillId
-   * resolves through this map — never through a shared registry, so a
+   * resolves through this map -- never through a shared registry, so a
    * node's payload upgrade reaches this participant's copy only.
    */
   reactivePayloads?: Record<string, TurnSkillDefinition>
@@ -169,9 +169,9 @@ export interface TurnBattleParticipant {
 
 export interface TurnBattle {
   /**
-   * Future Systems Task 9 (2026-09-04) — party: mảng player-side units,
+   * Future Systems Task 9 (2026-09-04) -- party: mảng player-side units,
    * chung 1 ATB queue với enemy (TurnQueue tái dùng nguyên vẹn); thua khi
-   * TOÀN BỘ party chết (đối xứng điều kiện thắng — spec §6).
+   * TOÀN BỘ party chết (đối xứng điều kiện thắng -- spec §6).
    */
   players: TurnBattleParticipant[]
   enemies: TurnBattleParticipant[]
@@ -185,7 +185,7 @@ export interface TurnBattle {
   actedThisRound?: string[]
   /**
    * Countdown phase (flow: Countdown → Spawn → Gauge combat → Wave →
-   * Result) — số lượt-pacing còn lại trước khi state chuyển 'fighting'.
+   * Result) -- số lượt-pacing còn lại trước khi state chuyển 'fighting'.
    * GameManager pacing loop tick giảm; engine `resolveNextStep()` KHÔNG
    * resolve combat trong pha này (chỉ tick countdown khi được gọi qua
    * `tickCountdown()`), enemies đã spawn đứng yên chờ.
@@ -204,36 +204,36 @@ export interface TurnBattle {
     spawnedCount: number
     /** effectiveWaves(stage) snapshot, taken once at battle start. */
     waves: number[]
-    /** 0-based index into `waves` — which wave is currently spawning/active. */
+    /** 0-based index into `waves` -- which wave is currently spawning/active. */
     waveIndex: number
     /** Quái đã spawn (dạng pending) nhưng CHƯA vào trận thật (battle.enemies). */
     pendingEnemySpawns: PendingEnemySpawn[]
   }
   /**
-   * Slice 7 extension (Completion Task 11) — battle log: 1 entry mỗi lượt
-   * resolveActorTurn (append-only, ephemeral — không persist vào save,
+   * Slice 7 extension (Completion Task 11) -- battle log: 1 entry mỗi lượt
+   * resolveActorTurn (append-only, ephemeral -- không persist vào save,
    * combat ephemeral theo nguyên tắc rework).
    */
   log?: BattleLogEntry[]
   /**
-   * Action Playback (2026-09-05) — counter/follow-up (§6 spec): actors queued
+   * Action Playback (2026-09-05) -- counter/follow-up (§6 spec): actors queued
    * here jump straight to 'ready' after the current turn's standby, bypassing
    * gauge. FIFO queue (not a single id) so an AOE hit that triggers multiple
    * counters doesn't drop all but the last one. Defect-fix Task 1: đổi từ
-   * singular — tickPacing (production loop) giờ đọc queue này.
-   * The Tu Reimagined (Task 16) — entries are typed QueuedFollowUp
+   * singular -- tickPacing (production loop) giờ đọc queue này.
+   * The Tu Reimagined (Task 16) -- entries are typed QueuedFollowUp
    * records carrying provenance (actionSource/triggerContext) and the
    * queued payload descriptor, not bare actor ids.
    */
   queuedFollowUps?: QueuedFollowUp[]
-  /** Defect-fix Task 1 — reciprocity guard: đếm consecutive bypass turns qua
+  /** Defect-fix Task 1 -- reciprocity guard: đếm consecutive bypass turns qua
    * queue, reset khi 1 normal gauge turn resolve; cap trong dequeueFollowUpActor()
    * để 2 entity counter-buff không bounce follow-up lẫn nhau vô hạn. */
   followUpChainDepth?: number
   /**
-   * Phap Tu An (Task 11) — prepared follow-up EXECUTIONS (repeat /
+   * Phap Tu An (Task 11) -- prepared follow-up EXECUTIONS (repeat /
    * multicast) of an already-committed cast. Unlike the actor queue
-   * above, an entry carries its own payload root — the drained actor
+   * above, an entry carries its own payload root -- the drained actor
    * does NOT run normal action selection (the descriptor IS the action)
    * and skips per-turn machinery (buff tick, regen, CC): these are the
    * remainder of one cast, not a new turn.
@@ -246,11 +246,11 @@ export interface TurnBattle {
  * nhắm xuyên qua entity đứng gần hơn cùng hàng); không có ai cùng hàng
  * thì chọn gần nhất toàn bàn cờ theo Chebyshev.
  *
- * The Tu Reimagined (plan Task 10, D6/INV-11) — Khiem Khich Taunt reads
+ * The Tu Reimagined (plan Task 10, D6/INV-11) -- Khiem Khich Taunt reads
  * the ACTOR's own pool BEFORE positional rules: an active khiem_khich
  * debuff forces the pick onto its sourceId (the taunter) when that
  * participant is alive in the opposing side. uniquePerTarget on the def
- * means a newer taunt already evicted older instances — the last
+ * means a newer taunt already evicted older instances -- the last
  * instance is the newest by construction. Dead/missing taunter falls
  * through to positional. opts.ignoreTaunt exempts scripted
  * specialAttacks (their positional pick is part of the authored script).
@@ -297,13 +297,13 @@ export function selectTarget(
 
 const DEFAULT_MAX_TURNS = 10_000
 
-/** Defect-fix Task 1 (2026-09-05) — reciprocity cap: 2 entity cùng holding
+/** Defect-fix Task 1 (2026-09-05) -- reciprocity cap: 2 entity cùng holding
  * counter buff không được bounce follow-up lẫn nhau quá 4 nhịp liên tiếp
- * (không có normal turn xen vào) — chặn chain vô hạn starving turn order. */
+ * (không có normal turn xen vào) -- chặn chain vô hạn starving turn order. */
 const MAX_FOLLOW_UP_CHAIN_DEPTH = 4
 
 /**
- * M8 (ARCH-003) — Ward delayed-regen gate in TURN units. Legacy
+ * M8 (ARCH-003) -- Ward delayed-regen gate in TURN units. Legacy
  * BattleSystem measured WARD_REGEN_DELAY_SECONDS = 3 on the wall clock;
  * the turn engine preserves the same numeric intent against the actor's
  * own turn cadence: `turnsSinceLastHitLanded` counts the holder's turns
@@ -319,14 +319,14 @@ export interface TurnStepResult {
   skillId: string
   targetIds: string[]
   ccBlocked: boolean
-  /** Task 9 — the cast's execution identity (root vs resolved payload). */
+  /** Task 9 -- the cast's execution identity (root vs resolved payload). */
   execution?: TurnSkillExecution
 }
 
 /**
- * Action Playback Task 3 (2026-09-05) — kết quả PHA declare: mọi thứ đã
+ * Action Playback Task 3 (2026-09-05) -- kết quả PHA declare: mọi thứ đã
  * quyết định cho lượt của actor (skill, target set, damage đã scale, charge
- * state) NHƯNG chưa áp damage — applyActionImpact() đọc các field này.
+ * state) NHƯNG chưa áp damage -- applyActionImpact() đọc các field này.
  */
 export interface TurnDeclaredAction {
   actorId: string
@@ -342,7 +342,7 @@ export interface TurnDeclaredAction {
   /** Charge-resolve: targetIds capture tại declare (hits áp tại apply). */
   chargeTargetIds: string[]
 
-  /** Charge-resolve: skill definition capture tại declare (apply đọc từ đây — pendingChargedSkillId đã clear). */
+  /** Charge-resolve: skill definition capture tại declare (apply đọc từ đây -- pendingChargedSkillId đã clear). */
   chargedSkill: TurnSkillDefinition | null
 
   action: SelectedAction | null
@@ -357,39 +357,39 @@ export interface TurnDeclaredAction {
   suddenDeathMultiplier: number
 
   /**
-   * Task 11 — composite picks resolving as EXTRA payloads beyond the
+   * Task 11 -- composite picks resolving as EXTRA payloads beyond the
    * primary resolvedSkill (element_basic extras when count > 1). Each
    * picked def applies its own damage + ailments through the shared
    * picks lane. Empty/null for normal casts.
    */
   compositePickedSkills: readonly TurnSkillDefinition[] | null
 
-  /** Defect-fix Task 1 — turn này được grant qua follow-up/counter bypass
-   * queue thay vì normal gauge readiness — completeAction bỏ consume gauge
+  /** Defect-fix Task 1 -- turn này được grant qua follow-up/counter bypass
+   * queue thay vì normal gauge readiness -- completeAction bỏ consume gauge
    * cho các turn này (bypass không tốn progress của lượt kế tiếp). */
   isFollowUpBypass: boolean
 
   /**
-   * Task 9 — execution identity: rootSkillId owns cast count/cooldown/
+   * Task 9 -- execution identity: rootSkillId owns cast count/cooldown/
    * slot identity; resolvedSkill owns the payload. Absent on charge-
    * resolve/CC-blocked/empty turns (no cast happens there).
    */
   execution?: TurnSkillExecution
 
   /**
-   * The Tu Reimagined (spec 7.1, plan Task 16) — the action's provenance.
+   * The Tu Reimagined (spec 7.1, plan Task 16) -- the action's provenance.
    * Natural declares are 'normal' (basic) or 'skill' (a slotted cast);
    * queued reactive entries carry 'counter' | 'follow_up' | 'intercept'.
    * Reactive sources never open new reactive windows by default (INV-9)
-   * — the Ho/Phan/Tro windows gate on this field.
+   * -- the Ho/Phan/Tro windows gate on this field.
    */
   actionSource?: ReactiveActionSource
 
-  /** Composite trigger context captured at queue time — node payload
+  /** Composite trigger context captured at queue time -- node payload
    *  variants (e.g. post-evasion heavy counter) read this. */
   triggerContext?: ReactiveTriggerContext
 
-  /** The Tu Reimagined (plan Task 17) — set when a Ho intercept
+  /** The Tu Reimagined (plan Task 17) -- set when a Ho intercept
    *  substituted this action's target; flows into queued entries'
    *  composite triggerContext.intercepted. */
   intercepted?: boolean
@@ -399,14 +399,14 @@ export interface TurnDeclaredAction {
 }
 
 /**
- * The Tu Reimagined (spec 7.1, plan Task 16) — provenance axis for the
+ * The Tu Reimagined (spec 7.1, plan Task 16) -- provenance axis for the
  * reactive queue. 'normal'/'skill' describe natural turns; the reactive
  * sources describe bypass actions queued by a proc window.
  */
 export type ReactiveActionSource = 'normal' | 'skill' | 'counter' | 'follow_up' | 'intercept'
 
 /**
- * Composite trigger context (spec 6.2.2, plan Task 16) — each axis is
+ * Composite trigger context (spec 6.2.2, plan Task 16) -- each axis is
  * read independently by node payload variants: a Ho->EVA->Counter chain
  * produces {origin:'enemy_hit', intercepted:true, outcome:'evaded'}.
  */
@@ -434,7 +434,7 @@ export interface QueuedFollowUp {
 }
 
 /**
- * Kiem Tu Reimagined Task 2 — one extra declared impact produced by a
+ * Kiem Tu Reimagined Task 2 -- one extra declared impact produced by a
  * dynamicBasic provider's onCastResolved (combo payload). Presentation
  * emits each entry separately; each carries its own preset so distinct
  * combos stay visually distinguishable.
@@ -453,26 +453,26 @@ export class TurnBattleSystem {
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
     private readonly registry?: BuffDefinitionCatalog,
     private readonly spawnEnemy?: (occupiedSlots?: Set<string>) => TurnBattleParticipant,
-    // Phase A1 (2026-09-07) — optional collaborator, same pattern as
+    // Phase A1 (2026-09-07) -- optional collaborator, same pattern as
     // registry/spawnEnemy above; consumers no-op safely when absent.
     private readonly reactionManager?: TurnReactionManager,
-    // 9.5 #9 — committed-cast notification. Fires once per action that
+    // 9.5 #9 -- committed-cast notification. Fires once per action that
     // actually commits (same point as commitAction): normal casts and
     // charge-initiation count; charge ticks/resolve and CC-blocked turns
-    // do not. Generic over actors — consumers filter to the participants
+    // do not. Generic over actors -- consumers filter to the participants
     // they care about.
     private readonly onSkillCast?: (actor: TurnBattleParticipant, skillId: string) => void,
     /**
-     * ARCH-002 (M7) — battle-scoped live-modifier provider. Supplies the
+     * ARCH-002 (M7) -- battle-scoped live-modifier provider. Supplies the
      * runtime modifier set that cannot bake into the resolved base
      * (passive stacks, persistent buff pool, timed/socket effects).
-     * Returns StatModifier[] only — the assembly stays in
+     * Returns StatModifier[] only -- the assembly stays in
      * recomputeEffectiveStats, so this engine never owns a second stat
      * path and stays headless (the ops layer injects the closure).
      */
     private readonly liveStatModifiers?: (entity: CombatEntity) => StatModifier[],
     /**
-     * Combat-contract M4 — the battle-wide CombatRng for ALL engine
+     * Combat-contract M4 -- the battle-wide CombatRng for ALL engine
      * rolls (reactive triggers, composite picks, multicast, proc
      * chances, ailment application; first introduced as the An-kit
      * roll source in Phap Tu Reimagined Task 11). Tests inject a
@@ -485,7 +485,7 @@ export class TurnBattleSystem {
      */
     private readonly rng: CombatRng = new FunctionCombatRng(() => Math.random()),
     /**
-     * Combat-contract M4 — the per-cycle operation scheduler, built by
+     * Combat-contract M4 -- the per-cycle operation scheduler, built by
      * the composition root (GameManagerTurnBattleOps.mintCycleScheduler).
      * CONSTRUCTED but DORMANT: no authored ops route through it until
      * the buff/skill cutover lands (the tests/architecture dormancy
@@ -496,22 +496,22 @@ export class TurnBattleSystem {
     readonly combatScheduler?: CombatScheduler,
   ) {}
 
-  // Action Playback Task 3 — gauge-delta deferral chuyển từ local vars
+  // Action Playback Task 3 -- gauge-delta deferral chuyển từ local vars
   // của resolveActorTurn cũ thành class fields (applyActionImpact ghi,
-  // completeAction tiêu thụ — 2 phase tách nhau qua GameManager khi
+  // completeAction tiêu thụ -- 2 phase tách nhau qua GameManager khi
   // presentationActive, nên state phải sống trên instance).
   private pendingGaugeDeltaTargets: TurnBattleParticipant[] = []
   private pendingGaugeDeltaDefinition: BuffDefinition | undefined
 
-  // Defect-fix Task 1 (2026-09-05) — bridge dequeueFollowUpActor() →
+  // Defect-fix Task 1 (2026-09-05) -- bridge dequeueFollowUpActor() →
   // declareActorAction(): set ngay trước khi trả bypass actor, đọc 1 lần
   // trong declare để populate TurnDeclaredAction.isFollowUpBypass rồi clear.
-  // The Tu Reimagined (Task 16) — the bridge carries the whole typed
+  // The Tu Reimagined (Task 16) -- the bridge carries the whole typed
   // entry (provenance + payload descriptor), not just the actor id.
   private pendingReactiveEntry: QueuedFollowUp | null = null
 
   /**
-   * Task 11 — same bridge pattern as pendingFollowUpBypassActorId, but
+   * Task 11 -- same bridge pattern as pendingFollowUpBypassActorId, but
    * the entry IS the action: dequeueQueuedExecution() sets it,
    * declareActorAction() consumes it once and builds the declared action
    * from the descriptor (no selectAction, no turn machinery).
@@ -519,7 +519,7 @@ export class TurnBattleSystem {
   private pendingQueuedExecution: TurnQueuedExecution | null = null
 
   /**
-   * R1 (AR-01) test seam — production wiring goes through
+   * R1 (AR-01) test seam -- production wiring goes through
    * GameManager.setSurviveLethalSession on the shared CombatSystem; this
    * delegation lets engine-level tests exercise the survive-lethal
    * interception without touching the private combat collaborator.
@@ -531,7 +531,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * ARCH-002 (M7) — entity.stats is the LIVE effective view, not a
+   * ARCH-002 (M7) -- entity.stats is the LIVE effective view, not a
    * build-time constant: recompute it from the immutable resolved base +
    * the participant's active buff modifiers + the provider's live runtime
    * modifiers, then mirror speed into the participant cache (R2/AR-05:
@@ -540,7 +540,7 @@ export class TurnBattleSystem {
   private refreshParticipantStats(participant: TurnBattleParticipant): void {
     const entity = participant.entity
 
-    // The Tu Reimagined (plan Task 11, review P1.1) — externalWard is
+    // The Tu Reimagined (plan Task 11, review P1.1) -- externalWard is
     // existence-bound to its source's marker instance; every pool
     // mutation seam (apply/update/remove/clear) already funnels into
     // this refresh, so reconcile lives here as the single choke point.
@@ -554,13 +554,13 @@ export class TurnBattleSystem {
     )
     participant.speed = entity.stats.speed
 
-    // ARCH-002 (M7) — entity.maxHp is the REAL vitals ceiling (heal clamp,
+    // ARCH-002 (M7) -- entity.maxHp is the REAL vitals ceiling (heal clamp,
     // regen gate, entity_vitals_changed.maxHp, snapshot maxHp) and is
     // frozen at build; entity.stats.maxHp is the live effective view.
     // Reconcile here so a live maxHp modifier moves the heal ceiling the
     // same step it lands: shrink clamps currentHp through the vitals
     // authority (emits entity_vitals_changed carrying the new ceiling),
-    // growth keeps currentHp — no free heal.
+    // growth keeps currentHp -- no free heal.
     if (entity.stats.maxHp !== entity.maxHp) {
       entity.maxHp = entity.stats.maxHp
       this.combat.vitals.clampToMaxHp(entity, 'stat_refresh')
@@ -568,7 +568,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * ARCH-002 (M7) — refresh every participant's effective stats. Pacing
+   * ARCH-002 (M7) -- refresh every participant's effective stats. Pacing
    * and actor-peek call this before any gauge/speed read so buff
    * apply/remove/expire and live runtime modifiers are already folded;
    * the battle builder also calls it once after construction so
@@ -581,16 +581,16 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Defect-fix Task 1 — shared bởi tickPacing() và peekNextActor():
+   * Defect-fix Task 1 -- shared bởi tickPacing() và peekNextActor():
    * dequeue follow-up actor kế tiếp từ queue (nếu có, còn sống, dưới
    * reciprocity cap). Bỏ qua id của actor chết không tốn chain-depth.
    */
   private dequeueFollowUpActor(battle: TurnBattle): TurnBattleParticipant | null {
-    // Task 11 — prepared executions (repeat/multicast) drain FIRST: they
+    // Task 11 -- prepared executions (repeat/multicast) drain FIRST: they
     // are the remainder of an already-committed cast and must resolve
     // before counter follow-ups and before any new gauge turn. Entries
     // for dead actors drop silently. Structurally bounded (repeatCasts
-    // count / multicast depth cap) — no reciprocity counter needed.
+    // count / multicast depth cap) -- no reciprocity counter needed.
     const execQueue = battle.queuedExecutions
 
     if (execQueue && execQueue.length > 0) {
@@ -619,7 +619,7 @@ export class TurnBattleSystem {
     }
 
     if ((battle.followUpChainDepth ?? 0) >= MAX_FOLLOW_UP_CHAIN_DEPTH) {
-      // Reciprocity guard tripped — drop phần còn lại của queue, quay về
+      // Reciprocity guard tripped -- drop phần còn lại của queue, quay về
       // normal gauge order thay vì bounce vô hạn.
       battle.queuedFollowUps = undefined
       battle.followUpChainDepth = 0
@@ -704,15 +704,15 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Gameplay fixes (2026-09-05) — wall-clock pacing: mỗi pacing tick (0.1s
+   * Gameplay fixes (2026-09-05) -- wall-clock pacing: mỗi pacing tick (0.1s
    * hệ sống) chỉ advance gauge MỘT step cho mọi actor; actor resolve CHỈ
    * khi gauge đầy. Trước đây updateBattleFixedStep gọi resolveNextStep()
-   * mỗi tick — inner-loop advance tới ready trong CÙNG call khiến 1 turn
+   * mỗi tick -- inner-loop advance tới ready trong CÙNG call khiến 1 turn
    * = 1 tick (trận chớp mắt, không còn ai kịp thấy gì).
    *
    * Trả về actor ready (hoặc vừa resolve). `resolve` = true: turn đã chạy
    * hoàn tất headless (default path); `resolve` = false: CHỈ advance gauge
-   * và trả ready actor — GameManager presentation path sẽ điều phối
+   * và trả ready actor -- GameManager presentation path sẽ điều phối
    * declare/impact/complete qua 3 acknowledge (Action Playback Task 6).
    */
   tickPacing(battle: TurnBattle, resolve = true): TurnBattleParticipant | null {
@@ -720,14 +720,14 @@ export class TurnBattleSystem {
       return null
     }
 
-    // Turn-Based Wave Redesign (2026-09-06) — wave-batch spawn/telegraph
+    // Turn-Based Wave Redesign (2026-09-06) -- wave-batch spawn/telegraph
     // chạy MỖI tick (không gate sau completeAction như cơ chế 1-quái-lần
     // trước đây): pending telegraph đếm ngược → materialize khi hết; sân
     // trống + hết pending + còn wave → queue cả wave mới đồng loạt.
     // Pending telegraph decrement KHÔNG phụ thuộc spawnEnemy factory —
     // materialize là việc hệ thống (đã build xong participant), chỉ wave-
     // start MỚI cần factory. Test 2 của plan chạy tickPacing không factory
-    // mà vẫn kỳ vọng pending đếm ngược — đúng ngữ nghĩa này.
+    // mà vẫn kỳ vọng pending đếm ngược -- đúng ngữ nghĩa này.
     if (battle.wave) {
       const stillPending: PendingEnemySpawn[] = []
 
@@ -775,7 +775,7 @@ export class TurnBattleSystem {
       }
     }
 
-    // ARCH-002 (M7) — fold every live stat source into entity.stats BEFORE
+    // ARCH-002 (M7) -- fold every live stat source into entity.stats BEFORE
     // any gauge/speed read this step AND before the empty-field early
     // return below: during spawn/telegraph windows (no living enemies yet)
     // the refresh must still run so live modifiers (passive stacks,
@@ -809,7 +809,7 @@ export class TurnBattleSystem {
       }
     }
 
-    // Defect-fix Task 1 — follow-up/counter queue TRƯỚC gauge order: queue
+    // Defect-fix Task 1 -- follow-up/counter queue TRƯỚC gauge order: queue
     // là production path duy nhất đọc (peekNextActor không chạy trong loop).
     const followUpActor = this.dequeueFollowUpActor(battle)
 
@@ -866,7 +866,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Slice 7 (Completion Task 10) — tìm actor kế tiếp SẴN SÀNG hành động
+   * Slice 7 (Completion Task 10) -- tìm actor kế tiếp SẴN SÀNG hành động
    * mà KHÔNG resolve gì cả. Gauge advancement chạy thật (mutation để
    * tìm ai tới lượt là thật và GIỮ NGUYÊN), nhưng dừng trước buff tick /
    * action resolution / turn-counter increment. GameManager manual mode
@@ -874,12 +874,12 @@ export class TurnBattleSystem {
    * resume sau đó bằng resolveActorTurn(battle, actor, chosenSlot).
    */
   peekNextActor(battle: TurnBattle): TurnBattleParticipant | null {
-    // Countdown phase: combat chưa bắt đầu — không ai tới lượt.
+    // Countdown phase: combat chưa bắt đầu -- không ai tới lượt.
     if (battle.state !== 'fighting') {
       return null
     }
 
-    // Defect-fix Task 1 — dùng chung dequeue helper với tickPacing (queue
+    // Defect-fix Task 1 -- dùng chung dequeue helper với tickPacing (queue
     // FIFO + reciprocity guard thay vì single-id overwrite cũ).
     const followUpActor = this.dequeueFollowUpActor(battle)
 
@@ -893,7 +893,7 @@ export class TurnBattleSystem {
       participant.alive = participant.entity.alive
     }
 
-    // ARCH-002 (M7) — same effective-stat refresh as tickPacing so the
+    // ARCH-002 (M7) -- same effective-stat refresh as tickPacing so the
     // previewed actor order reflects live speeds.
     this.refreshEffectiveStats(battle)
 
@@ -903,7 +903,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Action Playback Task 3 (2026-09-05) — PHA 1/3: declare action (chọn
+   * Action Playback Task 3 (2026-09-05) -- PHA 1/3: declare action (chọn
    * skill, tính target set, charge tick, CC check, buff/resource/boss
    * tick) NHƯNG KHÔNG áp damage. 3 call site resolveActionHit cũ được
    * hoãn sang applyActionImpact() (Task 3 spec §Task 3).
@@ -913,10 +913,10 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     forcedAction?: ForcedTurnChoice,
   ): TurnDeclaredAction {
-    // Task 11 — a queued repeat/multicast execution resolves HERE, ahead
+    // Task 11 -- a queued repeat/multicast execution resolves HERE, ahead
     // of ALL turn machinery: no round/turn counting, no buff tick, no
     // regen, no CC check, no cooldown tick, no action selection. The
-    // descriptor IS the remainder of an already-committed cast — it only
+    // descriptor IS the remainder of an already-committed cast -- it only
     // re-resolves the payload (composite picks re-roll per execution).
     const queuedExec = this.pendingQueuedExecution
     this.pendingQueuedExecution = null
@@ -925,7 +925,7 @@ export class TurnBattleSystem {
       return this.declareQueuedExecution(battle, actor, queuedExec)
     }
 
-    // The Tu Reimagined (spec 7.1, plan v2.4 P0.1) — a queued reactive
+    // The Tu Reimagined (spec 7.1, plan v2.4 P0.1) -- a queued reactive
     // entry branches at the TOP: real action through declare -> impact,
     // but none of the natural-turn lifecycle below runs for it.
     if (this.pendingReactiveEntry?.actorId === actor.id) {
@@ -933,7 +933,7 @@ export class TurnBattleSystem {
       this.pendingReactiveEntry = null
 
       if (!actor.entity.alive) {
-        // Spec 7.1 — dead attackers must not receive queued payloads; the
+        // Spec 7.1 -- dead attackers must not receive queued payloads; the
         // entry is consumed and resolves to nothing.
         return {
           actorId: actor.id,
@@ -977,7 +977,7 @@ export class TurnBattleSystem {
       battle.roundsElapsed = (battle.roundsElapsed ?? 0) + 1
       battle.actedThisRound = []
 
-      // The Tu Reimagined (spec 4.1) — anti-starvation bootstrap: each
+      // The Tu Reimagined (spec 4.1) -- anti-starvation bootstrap: each
       // ung_the participant collects its marker's authored gainPerRound
       // per boundary (node-adjusted at participant build, Task 20).
       for (const participant of aliveNow) {
@@ -989,7 +989,7 @@ export class TurnBattleSystem {
 
     const actorBuffSystem = new BuffSystem(actor.buffs)
 
-    // Future Systems Task 7 — charge state (Thế→Trảm). Charging takes
+    // Future Systems Task 7 -- charge state (Thế→Trảm). Charging takes
     // precedence: KHÔNG đụng CC counter Bá Thể (đã bất động tự nhiên,
     // không double penalty); buff tick/hpRegen/resource vẫn chạy (actor
     // vẫn sống); action resolution bị thay thế bởi charge tick/resolve;
@@ -999,7 +999,7 @@ export class TurnBattleSystem {
     let chargeResolved = false
     let chargeTargetIds: string[] = []
     let chargedSkillCaptured: TurnSkillDefinition | null = null
-    // Review fix (HIGH-2) — `affected` is the single consumed target list:
+    // Review fix (HIGH-2) -- `affected` is the single consumed target list:
     // a charge-resolve materializes its targets HERE too (the old shadowing
     // local kept `affected` empty, giving the Ho window a parallel lane it
     // could not substitute). chargeTargetIds stays as the hit-lane id copy.
@@ -1031,7 +1031,7 @@ export class TurnBattleSystem {
             affected = collectTurnTargets(primaryTarget, opposingSide, chargedSkill.targeting)
 
             // Defect Task 8 (2026-09-05): damage tính lại ở applyActionImpact()
-            // (đọc declared.chargedSkill + roundsElapsed độc lập) — không
+            // (đọc declared.chargedSkill + roundsElapsed độc lập) -- không
             // cần tính trùng ở đây.
             chargeTargetIds = affected.filter((target) => target.entity.alive).map((target) => target.id)
             chargedSkillCaptured = chargedSkill
@@ -1043,7 +1043,7 @@ export class TurnBattleSystem {
       }
     }
 
-    // Action Playback Task 5 — onCastBegin reactive trigger TRƯỚC CC-check:
+    // Action Playback Task 5 -- onCastBegin reactive trigger TRƯỚC CC-check:
     // punish-on-cast áp hard-CC buff lên actor, CC-check kế tiếp đọc state
     // mới → ccBlocked đúng theo spec §4.2 ordering.
     if (this.registry) {
@@ -1054,11 +1054,11 @@ export class TurnBattleSystem {
     // lượt của holder (áp ở lượt N-1, block lượt N..N+1, hết sau khi block
     // lượt cuối). Tick trước sẽ làm duration-1 expire trước khi kịp block.
     // Bá Thể: bị hard-CC liên tục >= 3 lượt thì lượt thứ 4 tự gỡ CC và
-    // hành động (fairness guard — không ai bị khóa vĩnh viễn).
+    // hành động (fairness guard -- không ai bị khóa vĩnh viễn).
     //
     // isCharging skip hoàn toàn khối này (Defect-fix Task 2, 2026-09-05):
     // charging đã có hành động thay thế riêng (charge tick/resolve, xem
-    // khối phía trên) — actor không hề bị "chặn" bởi CC trong lượt này,
+    // khối phía trên) -- actor không hề bị "chặn" bởi CC trong lượt này,
     // nên KHÔNG tính vào consecutiveHardCcTurns (tránh Bá Thể clear sớm
     // sai) và ccBlocked phải là false (tránh log mâu thuẫn: ccBlocked=true
     // kèm skillId/damage thật của charge resolve).
@@ -1069,7 +1069,7 @@ export class TurnBattleSystem {
     } else if (actor.buffs.getAllById('bat_tu_ba_the').length > 0) {
       // Bat Tu Ba The (The Tu Reimagined plan Task 9, D10): while the
       // buff is active, hard CC cannot block the holder. The counter is
-      // SUPPRESSED, not reset — consecutiveHardCcTurns is left untouched
+      // SUPPRESSED, not reset -- consecutiveHardCcTurns is left untouched
       // so accumulation resumes where it left off after the buff expires.
       ccBlocked = false
     } else {
@@ -1090,7 +1090,7 @@ export class TurnBattleSystem {
       }
     }
 
-    // R3 (AR-06) — provide source entity resolver so elemental penetration
+    // R3 (AR-06) -- provide source entity resolver so elemental penetration
     // and Mộc Tu poison recovery operate with authoritative source context.
     const resolveSource = (sourceId: string): CombatEntity | undefined => {
       const participant =
@@ -1099,7 +1099,7 @@ export class TurnBattleSystem {
       return participant?.entity
     }
 
-    // stat-system-reimagined Task 4 (D18) — the source's OWN buff pool is
+    // stat-system-reimagined Task 4 (D18) -- the source's OWN buff pool is
     // a separate ownership boundary from its entity (Doc Can sits on the
     // caster while its DoT ticks on the target). Resolve it here so
     // authored dotRecovery triggers read the live pool at tick time.
@@ -1112,7 +1112,7 @@ export class TurnBattleSystem {
 
     // Cooldown snapshot BEFORE the status phase: a lethal DoT tick inside
     // update() can make a survive-lethal source spend a slot's cooldown
-    // (Bat Tu Ba The, spec 5.1 — the commit lands mid-phase). tickCooldowns
+    // (Bat Tu Ba The, spec 5.1 -- the commit lands mid-phase). tickCooldowns
     // below skips any slot whose cooldown rose above this snapshot; a
     // mid-phase commit counts own-turns from the NEXT turn, never losing
     // a turn to the tick that immediately follows the phase that set it.
@@ -1126,15 +1126,15 @@ export class TurnBattleSystem {
 
     actorBuffSystem.update(actor.entity, this.combat, this.registry, resolveSource, resolveSourceBuffs)
 
-    // ARCH-002 (M7) — refresh immediately after the buff tick so an
+    // ARCH-002 (M7) -- refresh immediately after the buff tick so an
     // expiry inside update() is reflected before the very next stat read
     // (hpRegenPerTurn below must not fire one extra turn off an expired
     // buff). The refresh after bossTrigger below still covers
     // trigger-granted buffs for action selection.
     this.refreshParticipantStats(actor)
 
-    // M8 (ARCH-010) — post-status liveness boundary: a status/DoT tick
-    // that killed the actor ends the turn HERE — no regeneration, no
+    // M8 (ARCH-010) -- post-status liveness boundary: a status/DoT tick
+    // that killed the actor ends the turn HERE -- no regeneration, no
     // resource deltas, no boss trigger, no action selection, and no
     // charged-hit resolution downstream (chargeResolved is forced off so
     // applyActionImpact's early charge branch cannot fire post-death
@@ -1159,10 +1159,10 @@ export class TurnBattleSystem {
       }
     }
 
-    // M8 (ARCH-003) — per-turn HP/MP/Ward regeneration through the vitals
+    // M8 (ARCH-003) -- per-turn HP/MP/Ward regeneration through the vitals
     // authority, AFTER the status tick and liveness boundary above (a
     // lethal DoT leaves no regen). The *RegenPerTurn stats tick once per
-    // entity turn — the same cadence family as hpRegenPerTurn (R1/AR-01
+    // entity turn -- the same cadence family as hpRegenPerTurn (R1/AR-01
     // already routed HP regen through the vitals authority). Ward keeps
     // its delayed-regen intent: turnsSinceLastHitLanded advances on the
     // holder's own turn cadence and CombatSystem resets it to 0 on every
@@ -1192,10 +1192,10 @@ export class TurnBattleSystem {
       this.registry &&
       isTurnTriggerReady({ afterTurns: actor.bossTrigger.afterTurns }, battle.roundsElapsed ?? 0)
     ) {
-      // Phase A2 (2026-09-07) — BuffDefinitionCatalog.get() THROWS on an
+      // Phase A2 (2026-09-07) -- BuffDefinitionCatalog.get() THROWS on an
       // unknown id, and bossTrigger data is now populated for real
       // enemies (content drift / renamed buff id would crash the whole
-      // battle tick). Skip the buff gracefully instead — same
+      // battle tick). Skip the buff gracefully instead -- same
       // try/catch skip pattern as GameManager's formation-buff lookup.
       // firedAlready stays false so a corrected id can still fire later.
       let definition: BuffDefinition | undefined
@@ -1213,10 +1213,10 @@ export class TurnBattleSystem {
       }
     }
 
-    // ARCH-002 (M7) — unconditional effective-stat refresh at every
+    // ARCH-002 (M7) -- unconditional effective-stat refresh at every
     // declare: buff expiry (BuffSystem.update above), duration-1 buffs,
     // boss-trigger applications, Ba The CC clears and the live runtime
-    // modifiers all land here — including for CC-blocked and charging
+    // modifiers all land here -- including for CC-blocked and charging
     // actors, whose stat view must not freeze while locked.
     this.refreshParticipantStats(actor)
 
@@ -1234,8 +1234,8 @@ export class TurnBattleSystem {
     // trước, không commit lại ở đây.
     if (actor.entity.alive && !ccBlocked && !isCharging) {
       // Slots whose cooldown was (re)committed during this turn's status
-      // phase — value above its pre-update snapshot, or a slot object
-      // that did not exist then — do not tick again in the same turn.
+      // phase -- value above its pre-update snapshot, or a slot object
+      // that did not exist then -- do not tick again in the same turn.
       const cooldownsCommittedInStatusPhase = new Set<TurnSkillSlot>()
 
       for (const slot of [actor.special, actor.ultimate]) {
@@ -1252,23 +1252,23 @@ export class TurnBattleSystem {
 
       tickCooldowns(actor, cooldownsCommittedInStatusPhase)
 
-      // ARCH-002 (M7) — the effective-stat refresh moved above the gate
+      // ARCH-002 (M7) -- the effective-stat refresh moved above the gate
       // (covers expiry/CC/charge too); action selection reads the fresh
       // entity.stats.
       action = forcedAction
         ? selectForcedAction(actor, forcedAction)
         : selectAction(actor)
 
-      // Phase A3 (2026-09-07) — enemy specialAttacks reader, ported from
+      // Phase A3 (2026-09-07) -- enemy specialAttacks reader, ported from
       // legacy EnemyAttackSystem.fireEnemyAttack()'s everyNth semantics
-      // (module retired M13 — ported here):
+      // (module retired M13 -- ported here):
       // 1-based counter on the actor's OWN actions; when
       // counter % everyNth === 0 the matching special attack's
       // damageMultiplier replaces the basic attack's damage (presetId
       // carries for presentation). Only applies to plain basic attacks
-      // (slot null) — explicit skills (special/ultimate slots) are never
+      // (slot null) -- explicit skills (special/ultimate slots) are never
       // replaced. Counter never resets mid-battle; undefined coerces to 0.
-      // The Tu Reimagined (plan Task 10, D6) — scripted specials are
+      // The Tu Reimagined (plan Task 10, D6) -- scripted specials are
       // TAUNT-EXEMPT: their positional pick is part of the authored
       // script, so the selectTarget call below passes ignoreTaunt.
       let scriptedSpecial = false
@@ -1291,7 +1291,7 @@ export class TurnBattleSystem {
         }
       }
 
-      // Task 9 — execution record: rootSkillId owns cast/cooldown/slot
+      // Task 9 -- execution record: rootSkillId owns cast/cooldown/slot
       // identity; resolvedSkill owns the payload. All casts today are
       // 'original' (resolvedSkill === action.skill); Tasks 10-13 diverge
       // them for empowered/composite/repeat/multicast executions.
@@ -1301,7 +1301,7 @@ export class TurnBattleSystem {
         source: 'original' as const,
       }
 
-      // Task 10 — ultimate empowerment: enough The swaps the RESOLVED
+      // Task 10 -- ultimate empowerment: enough The swaps the RESOLVED
       // payload to the empowered form. The ROOT identity (cooldown,
       // cast count, charge state) stays the equipped skill; the pool
       // itself burns at commit time via consumesAllThe.
@@ -1320,7 +1320,7 @@ export class TurnBattleSystem {
         }
       }
 
-      // Task 11 — element_basic composite pick: the root skill authored a
+      // Task 11 -- element_basic composite pick: the root skill authored a
       // uniform pick among a def-carried pool; picks[0] becomes THE
       // resolved payload (the cast executes AS it), extras resolve
       // damage-only through the shared picks lane. Identity stays on the
@@ -1347,7 +1347,7 @@ export class TurnBattleSystem {
 
       payloadSkill = execution.resolvedSkill
 
-      // Task 13 — capture the PRE-BURN pool when the resolved payload is
+      // Task 13 -- capture the PRE-BURN pool when the resolved payload is
       // a consume-all form: the pool only zeroes at commitCast (after
       // hits resolve), so theScaling must read the value captured here.
       if (payloadSkill?.consumesAllThe) {
@@ -1357,8 +1357,8 @@ export class TurnBattleSystem {
       const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
 
       if (isChargeInit) {
-        // Future Systems Task 7 — charge INITIATION (Thế): KHÔNG resolve
-        // ngay — ghi charge state, đòn tự resolve khi charge xong (Trảm).
+        // Future Systems Task 7 -- charge INITIATION (Thế): KHÔNG resolve
+        // ngay -- ghi charge state, đòn tự resolve khi charge xong (Trảm).
         // Cooldown/resource vẫn commit như cast thường (commitAction).
         actor.chargingTurnsRemaining = action.skill!.chargeTurns
         actor.pendingChargedSkillId = action.skillId
@@ -1381,7 +1381,7 @@ export class TurnBattleSystem {
             suddenDeathMultiplierCaptured = suddenDeathMultiplier
             let resolvedDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
 
-            // Task 13 — theScaling (nuke variant): final damage x
+            // Task 13 -- theScaling (nuke variant): final damage x
             // (1 + theBurned/100 x coeff) folded into the damage packet
             // once; every target's hit resolves through it uniformly.
             const theScaling = payloadSkill?.theScaling
@@ -1419,7 +1419,7 @@ export class TurnBattleSystem {
       compositePickedSkills,
       isFollowUpBypass: false,
       actionSource: action?.slot ? 'skill' : 'normal',
-      // Task 9 — every real cast records its execution identity here:
+      // Task 9 -- every real cast records its execution identity here:
       // 'original' for now (empowered/composite/repeat/multicast arrive
       // with Tasks 10-13). Charge-resolve/CC-blocked turns carry none.
       execution,
@@ -1427,8 +1427,8 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Action Playback Task 3 (2026-09-05) — PHA 2/3: áp damage của declared
-   * action (3 call site resolveActionHit cũ — charge-resolve, normal,
+   * Action Playback Task 3 (2026-09-05) -- PHA 2/3: áp damage của declared
+   * action (3 call site resolveActionHit cũ -- charge-resolve, normal,
    * Reaction Path) + commitAction + appliesBuff application. Trả về
    * targetIds hit thành công.
    */
@@ -1438,7 +1438,7 @@ export class TurnBattleSystem {
   ): { targetIds: string[]; extraImpacts: TurnActionExtraImpact[] } {
     const targetIds: string[] = []
     const extraImpacts: TurnActionExtraImpact[] = []
-    // The Tu Reimagined (spec 6.2.3, plan Task 18) — participants that
+    // The Tu Reimagined (spec 6.2.3, plan Task 18) -- participants that
     // took a LANDED damaging hit this action; feeds the Tro window's
     // triggering_targets set.
     const landedTargets: TurnBattleParticipant[] = []
@@ -1450,21 +1450,21 @@ export class TurnBattleSystem {
       return { targetIds, extraImpacts }
     }
 
-    // Task 12 (spec §6, INV-8/D21) + review fix (MED-3) — only
+    // Task 12 (spec §6, INV-8/D21) + review fix (MED-3) -- only
     // phap_tu-domain participants may INITIATE reaction resolution.
     // Player-side membership is NOT the authority: companions and
     // non-phap_tu players share the players array but cannot trigger;
     // enemy ailments participate as incumbents but never initiate.
     const actorInitiatesReactions = actor.canInitiateWuxingReactions === true
 
-    // Spec 6.2.1 — the Ho window sits between declaration and impact:
+    // Spec 6.2.1 -- the Ho window sits between declaration and impact:
     // a successful protectChance roll rewrites declared.affected before
     // the hit loop, so the substituted hit resolves fully vs the
     // protector. Presentation reads the post-substitution targetIds.
     this.resolveInterceptWindow(battle, declared, actor)
 
     // Charge-resolve turn: hits apply từ chargedSkill capture tại declare
-    // (pendingChargedSkillId đã clear ở declare — đọc declared.chargedSkill).
+    // (pendingChargedSkillId đã clear ở declare -- đọc declared.chargedSkill).
     if (declared.isCharging && declared.chargeResolved) {
       const chargedSkill = declared.chargedSkill
       let chargedCrit = false
@@ -1479,7 +1479,7 @@ export class TurnBattleSystem {
 
         for (const target of declared.chargeTargetIds) {
           // Mid-impact death: a reflect/proc kill on the actor stops the
-          // rest of the action — the dead cannot finish their swing.
+          // rest of the action -- the dead cannot finish their swing.
           if (!actor.entity.alive) break
 
           const targetParticipant = opposingSide.find((p) => p.id === target)
@@ -1514,14 +1514,14 @@ export class TurnBattleSystem {
         }
       }
 
-      // M8 (ARCH-010) — the shared per-action The gain below lives past
+      // M8 (ARCH-010) -- the shared per-action The gain below lives past
       // this branch's early return, so a charged completion fires it
-      // HERE, exactly once. Task 8 — the gain is the SKILL's authored
+      // HERE, exactly once. Task 8 -- the gain is the SKILL's authored
       // field, not slot inference: the charged def carries
       // theGainOnLandedCast/theGainOnCrit itself. Ordering parity with
       // the normal path is preserved: the cast resource/cooldown was
       // already committed at charge-init, so the gain lands on the
-      // post-consume pool — Bat Kiem Thuat accrues currentThe at hit
+      // post-consume pool -- Bat Kiem Thuat accrues currentThe at hit
       // completion and Tru Tien Kiem Tran stays reachable. Gated on
       // LANDED targets like the normal path's targetIds requirement.
       if (chargedSkill && targetIds.length > 0) {
@@ -1533,10 +1533,10 @@ export class TurnBattleSystem {
       return { targetIds, extraImpacts }
     }
 
-    // 9.5 #9 — charge-init commits its cast HERE, not in the
+    // 9.5 #9 -- charge-init commits its cast HERE, not in the
     // affected-gated block below: enemy-targeted charge skills collect
     // targets only at resolve time, so `affected` stays empty at declare
-    // and the block below never ran for them — their cooldown/resource
+    // and the block below never ran for them -- their cooldown/resource
     // were never committed (dead isChargeInit branch). The charge-resolve
     // turn returns early above and never reaches this point.
     if (
@@ -1550,18 +1550,18 @@ export class TurnBattleSystem {
     if (declared.action && declared.affected.length > 0) {
       const action = declared.action
 
-      // Task 9 — payload reads go through the execution's resolvedSkill
+      // Task 9 -- payload reads go through the execution's resolvedSkill
       // (== action.skill for 'original' casts today; diverges for
       // empowered/composite payloads in Tasks 10-13). Identity reads
       // (cooldown, cast sink, charge state) stay on the ROOT action.
       const payloadSkill = declared.execution?.resolvedSkill ?? action.skill
 
-      // Task 8 — theGainOnCrit fires once per CAST when any direct hit
+      // Task 8 -- theGainOnCrit fires once per CAST when any direct hit
       // crits (INV-15): collect the flag across the hit loops, grant
-      // once below — never per target.
+      // once below -- never per target.
       let castCritLanded = false
 
-      // R5 (AR-14) — Emit authoritative gameplay 'attack' event on action commit,
+      // R5 (AR-14) -- Emit authoritative gameplay 'attack' event on action commit,
       // ensuring passive listeners receive events identically in headless and presentation modes.
       this.combat.eventBus.emit('attack', {
         type: 'attack',
@@ -1570,15 +1570,15 @@ export class TurnBattleSystem {
         skillId: declared.skillId,
       })
 
-      // Composite-picks lane — extra picked payloads (element_basic
+      // Composite-picks lane -- extra picked payloads (element_basic
       // extras when count > 1) apply their own
       // damage + ailments here. The PRIMARY payload still resolves via
       // scaledDamage below, so both lanes may run on one action.
-      // Review fix (MED-3) — extras go through resolveDeclaredHit, the
+      // Review fix (MED-3) -- extras go through resolveDeclaredHit, the
       // same per-hit authority as the primary lane: income, leech,
       // consume effects, on-hit procs, Reflection queue, ailments,
       // detonate, the taken/evade windows and the stat refresh are all
-      // owned there — this lane only collects landing bookkeeping.
+      // owned there -- this lane only collects landing bookkeeping.
       if (declared.compositePickedSkills?.length) {
         for (const pickedSkill of declared.compositePickedSkills) {
           if (!pickedSkill.damage) continue
@@ -1616,7 +1616,7 @@ export class TurnBattleSystem {
       if (declared.scaledDamage) {
         for (const target of declared.affected) {
           if (!actor.entity.alive) break // mid-impact death (T3-22b)
-          // Kiem Tu Reimagined Task 2 — multi-instance defs (Ngu phi kiem):
+          // Kiem Tu Reimagined Task 2 -- multi-instance defs (Ngu phi kiem):
           // each instance runs the FULL landed-hit pipeline independently
           // and stops early when the target dies.
           const instanceCount = action.skill?.instances?.count ?? 1
@@ -1668,11 +1668,11 @@ export class TurnBattleSystem {
           this.applySkillAilments(actor, target, payloadSkill, actorInitiatesReactions)
         }
 
-        // Task 13 — same detonate contract on the non-damaging lane.
+        // Task 13 -- same detonate contract on the non-damaging lane.
         if (this.registry && payloadSkill?.detonateDoT && target.entity.alive) {
           this.applyDetonate(actor, target, payloadSkill.detonateDoT.amp)
         }
-        // ARCH-002 (M7) — reactions off the applied ailment can grant the
+        // ARCH-002 (M7) -- reactions off the applied ailment can grant the
         // SOURCE a buff; refresh both sides (same as the damaging path).
         this.refreshParticipantStats(target)
         this.refreshParticipantStats(actor)
@@ -1680,24 +1680,24 @@ export class TurnBattleSystem {
     }
 
       // Charge-init is committed in the pre-block above (it cannot rely
-      // on `affected` — empty for enemy-targeted charge skills). Only
+      // on `affected` -- empty for enemy-targeted charge skills). Only
       // non-charge casts commit here.
       if ((action.skill?.chargeTurns ?? 0) === 0) {
-        // Task 9 — repeat/multicast follow-up executions resolve the
+        // Task 9 -- repeat/multicast follow-up executions resolve the
         // payload WITHOUT re-committing the root's cast: no second
         // cooldown, no second cast-count (INV-18 structural).
         if (executionCommitsCast(declared.execution)) {
           this.commitCast(actor, declared)
         }
 
-        // Task 8 — The gain is skill-authored (theGainOnLandedCast /
+        // Task 8 -- The gain is skill-authored (theGainOnLandedCast /
         // theGainOnCrit), once per cast that landed >=1 valid target —
         // slot position is no longer a gain rule and target/hit count
         // never multiplies it (INV-15). A self-scoped cast always lands
         // on the caster (its targetIds entry is pushed by the buff
-        // block below — too late to serve as the landed signal here).
+        // block below -- too late to serve as the landed signal here).
         // Runs AFTER commitAction so an ultimate's pool consumption
-        // (100 -> 0) is already reflected — the gain lands on the
+        // (100 -> 0) is already reflected -- the gain lands on the
         // post-cast pool, preserving legacy's gain-after-consume
         // ordering. Deliberately NOT inside the registry gate: The gain
         // is engine-native resource accrual, not buff-registry content.
@@ -1714,7 +1714,7 @@ export class TurnBattleSystem {
           targetIds.push(actor.id)
         }
 
-        // Kiem Tu Reimagined Task 2 — dynamicBasic post-resolution hook.
+        // Kiem Tu Reimagined Task 2 -- dynamicBasic post-resolution hook.
         // The provider owns path rules (Kiem Y gain, combo tail-match);
         // extra defs it returns execute as additive declared impacts
         // through the SAME landed-hit pipeline (resolveDeclaredHit).
@@ -1746,7 +1746,7 @@ export class TurnBattleSystem {
       }
     }
 
-    // Spec 6.2.3 — the Tro window: after a player-side action completes
+    // Spec 6.2.3 -- the Tro window: after a player-side action completes
     // (damaging or non-damaging), other player-side tro_mon carriers
     // roll their onAllyActionComplete procs.
     this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
@@ -1755,11 +1755,11 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Kiem Tu Reimagined Task 2 — the FULL landed-hit consequence chain for
+   * Kiem Tu Reimagined Task 2 -- the FULL landed-hit consequence chain for
    * ONE declared hit: resolveActionHit + (on landed) leech / consume-for-
    * damage / on-hit procs / reactive follow-up trigger / ailment appli-
    * cation + stat refresh on both sides. Multi-instance casts (Ngu phi
-   * kiem) and provider-returned combo impacts loop THIS helper — never
+   * kiem) and provider-returned combo impacts loop THIS helper -- never
    * bare CombatSystem.resolveActionHit, which lacks the consequences.
    */
   private resolveDeclaredHit(
@@ -1772,7 +1772,7 @@ export class TurnBattleSystem {
     declared: TurnDeclaredAction,
     hitOptions?: Partial<HitResolveOptions>,
   ): DamageResult {
-    // The Tu Reimagined (spec section 3.4, plan Task 7) — the missing-HP
+    // The Tu Reimagined (spec section 3.4, plan Task 7) -- the missing-HP
     // scalar resolves PER HIT against the actor's LIVE hp: a
     // Reflection/leech landing between AOE impacts changes the next
     // hit's bonus.
@@ -1783,19 +1783,19 @@ export class TurnBattleSystem {
       hitOptions,
     )
 
-    // The Tu Reimagined (spec 4.1 ordering lock) — defender income
+    // The Tu Reimagined (spec 4.1 ordering lock) -- defender income
     // lands before any window this hit opens (evade/taken).
     this.grantHitOutcomeIncome(target, hitResult)
 
     // AR-04: downstream on-hit effects, debuffs and consume triggers
-    // require a landed hit — dodged attacks bypass all of them.
+    // require a landed hit -- dodged attacks bypass all of them.
     if (!hitResult.dodged) {
-      // Spec 4.1 — the acting ung_the combatant's own basic landed: free income
+      // Spec 4.1 -- the acting ung_the combatant's own basic landed: free income
       // through the marker's authored field.
       this.grantBasicLandedIncome(actor, skill?.id)
 
-      // R3 (AR-03) + Task 5 (D11) — Leech healing: % of the HP the
-      // target THẬT SỰ lost post-absorb — a fully-warded hit feeds
+      // R3 (AR-03) + Task 5 (D11) -- Leech healing: % of the HP the
+      // target THẬT SỰ lost post-absorb -- a fully-warded hit feeds
       // nothing (damage-proportional = taken-only trigger).
       if (skill?.healPercentOfDamage && hitResult.hpDamage > 0) {
         this.combat.applyHealing(
@@ -1806,7 +1806,7 @@ export class TurnBattleSystem {
         )
       }
 
-      // Phase A3 — consume-for-damage (Pháp Tu Detonate / Thổ Tu ward
+      // Phase A3 -- consume-for-damage (Pháp Tu Detonate / Thổ Tu ward
       // burst). Orchestration only: reads/clears state through
       // BuffSystem's own API (getAllById/removeAllById); the HP and
       // Ward mutations go through the authoritative damage/vitals
@@ -1835,17 +1835,17 @@ export class TurnBattleSystem {
       }
 
       if (this.registry) {
-        // ARCH-009 (M9) — proc definitions are read from the ACTOR's
+        // ARCH-009 (M9) -- proc definitions are read from the ACTOR's
         // pool, but the resulting buff belongs to the HIT VICTIM's
         // pool (sourceId = actor, targetId = victim).
         new BuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, target.buffs, this.registry, () => this.rng.roll())
 
         // Action Playback Task 5 + stat-system-reimagined Task 5 (D5)
-        // — onImpactLanded counter trigger trên TARGET bị hit, gated
+        // -- onImpactLanded counter trigger trên TARGET bị hit, gated
         // on `taken` (hpDamage > 0): a fully ward/MP-shielded hit is
         // not "taken", so no defender on-hit-taken proc fires.
         // queuesFollowUp → battle.queuedFollowUps (typed entries).
-        // The Tu Reimagined (Task 8) — the context carries the landed
+        // The Tu Reimagined (Task 8) -- the context carries the landed
         // hit's facts so phan_chinh Reflection can resolve its amount.
         const { firedFollowUp, reflectRequests } = hitResult.hpDamage > 0
           ? new BuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry, {
@@ -1855,7 +1855,7 @@ export class TurnBattleSystem {
           : { firedFollowUp: false, reflectRequests: [] }
 
         if (firedFollowUp) {
-          // Defect-fix Task 1 — FIFO queue: AOE hit trigger counter trên
+          // Defect-fix Task 1 -- FIFO queue: AOE hit trigger counter trên
           // nhiều target không drop tất cả trừ cái cuối.
           battle.queuedFollowUps = battle.queuedFollowUps ?? []
           battle.queuedFollowUps.push({
@@ -1865,7 +1865,7 @@ export class TurnBattleSystem {
           })
         }
 
-        // The Tu Reimagined (Task 8, D4/INV-8) — Reflection is a
+        // The Tu Reimagined (Task 8, D4/INV-8) -- Reflection is a
         // TERMINAL damage event through the vitals authority: it can
         // kill the attacker but opens no reactive windows back (a
         // reflected hit never triggers the attacker's own triggers).
@@ -1874,23 +1874,23 @@ export class TurnBattleSystem {
           this.combat.applyModifiedDirectDamage(request.attackerEntity, request.amount, target.entity, 'reflection')
         }
 
-        // Phase A1 (2026-09-07) / R3 (AR-03) — chance-gated ailment application,
+        // Phase A1 (2026-09-07) / R3 (AR-03) -- chance-gated ailment application,
         // then reaction check against the just-applied id.
         if (skill) {
           this.applySkillAilments(actor, target, skill, actorInitiatesReactions)
         }
 
-        // Task 13 — detonate (dot-route empowered ult, spec §4):
+        // Task 13 -- detonate (dot-route empowered ult, spec §4):
         // AFTER the normal application lands, consume every live
         // DoT ailment for remaining-tick x stacks x amp and re-seed
         // a fixed 1 stack at authored duration. Reaction-silent by
-        // contract — re-seeds never reach TurnReactionManager.
+        // contract -- re-seeds never reach TurnReactionManager.
         if (skill?.detonateDoT && target.entity.alive) {
           this.applyDetonate(actor, target, skill.detonateDoT.amp)
         }
       }
 
-      // Spec 6.2.2 — the taken-side Phan window: a LANDED hit with
+      // Spec 6.2.2 -- the taken-side Phan window: a LANDED hit with
       // hpDamage > 0 (fully absorbed is not "taken", same gate as
       // Reflection) rolls the defender's onImpactLanded reactiveProc
       // effects. Natural actions only (INV-9); income already landed
@@ -1906,17 +1906,17 @@ export class TurnBattleSystem {
         })
       }
     } else {
-      // Spec 6.2.2 — the dodge branch opens the defender's onEvade
+      // Spec 6.2.2 -- the dodge branch opens the defender's onEvade
       // window (income already landed above).
       this.resolveEvadeWindow(battle, target, actor, declared)
     }
 
-    // ARCH-002 (M7) — every pool mutation above (consume-removal —
-    // removeAllById runs OUTSIDE the registry gate — on-hit procs on
+    // ARCH-002 (M7) -- every pool mutation above (consume-removal —
+    // removeAllById runs OUTSIDE the registry gate -- on-hit procs on
     // the actor, reactive triggers and ailments on the target,
     // survive-lethal grants inside resolveActionHit) must be
     // effective before the next hit/read in this loop, so the
-    // refresh is deliberately not registry-gated either — and runs
+    // refresh is deliberately not registry-gated either -- and runs
     // for dodged hits too (same as the pre-extraction loop).
     this.refreshParticipantStats(target)
     this.refreshParticipantStats(actor)
@@ -1925,7 +1925,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Kiem Tu Reimagined Task 2 — appliesBuff machinery shared by the
+   * Kiem Tu Reimagined Task 2 -- appliesBuff machinery shared by the
    * action's own appliesBuff and provider extra-impact defs / the
    * resolveBuff ctx channel. Keeps the gaugeDelta one-shot deferral
    * (pendingGaugeDeltaTargets consumed in completeAction).
@@ -1939,7 +1939,7 @@ export class TurnBattleSystem {
     if (!this.registry) return
 
     // Skip an unresolvable buff id gracefully (renamed/drifted content
-    // must not crash the tick) — same try/catch pattern as the
+    // must not crash the tick) -- same try/catch pattern as the
     // bossTrigger lookup above.
     let definition: BuffDefinition | undefined
 
@@ -1951,30 +1951,30 @@ export class TurnBattleSystem {
 
     if (!definition) return
 
-    // Kiem Tu Reimagined Task 11 — combo capstones may declare N stacks;
+    // Kiem Tu Reimagined Task 11 -- combo capstones may declare N stacks;
     // each apply() call adds one stack under 'stack' stackMode and is
     // idempotent under 'refresh'. Default 1 = previous behavior.
-    // Mission C Task 10a — stacksPerAffectedTarget ports the authored
+    // Mission C Task 10a -- stacksPerAffectedTarget ports the authored
     // SkillEffect clause: stacks = still-alive action targets (a dead
     // target is not "imprisoned"). Math.max(1, ...) intentionally
-    // supersedes the authored "0 target -> no buff" clause — a whiffed-
+    // supersedes the authored "0 target -> no buff" clause -- a whiffed-
     // into-corpse edge still grants the base stack (stacks ?? 1 parity).
     const stacks = buffSpec.stacksPerAffectedTarget
       ? Math.max(1, actionTargets.filter((t) => t.entity.alive).length)
       : Math.max(1, buffSpec.stacks ?? 1)
     const duration = buffSpec.durationOverride ?? buffSpec.duration
 
-    // The Tu Reimagined (plan Task 6/11) — the application resolves its
+    // The Tu Reimagined (plan Task 6/11) -- the application resolves its
     // own target set: 'self'/'target'/'action_targets' read the
     // declared action; the ally/enemy scopes read the battle sides.
     const targets = this.resolveBuffApplicationTargets(battle, actor, buffSpec.target, actionTargets)
 
     // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
-    // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
+    // delta cộng lên trên -- nếu áp trước sẽ bị consume ghi đè).
     const applied: TurnBattleParticipant[] = []
 
     for (const target of targets) {
-      // clearsCcOnApply (Ba The, Task 9) — applying strips the TARGET
+      // clearsCcOnApply (Ba The, Task 9) -- applying strips the TARGET
       // pool's cc effects before the new buff lands.
       if (definition.clearsCcOnApply) {
         target.buffs.clearCcEffects()
@@ -1990,7 +1990,7 @@ export class TurnBattleSystem {
         )
       }
 
-      // The Tu Reimagined (plan Task 11, D3/INV-12) — the grant lands a
+      // The Tu Reimagined (plan Task 11, D3/INV-12) -- the grant lands a
       // source-tagged externalWard pool on the target: REPLACE, never
       // stack (recast refreshes to full; a lower recast lowers the
       // pool). sourceMaxHpRatio reads the GRANTING tank's live maxHp.
@@ -2005,7 +2005,7 @@ export class TurnBattleSystem {
       }
 
       applied.push(target)
-      // ARCH-002 (M7) — statModifier buffs are effective NOW, not at the
+      // ARCH-002 (M7) -- statModifier buffs are effective NOW, not at the
       // holder's next turn (kim_giap counter-read class).
       this.refreshParticipantStats(target)
     }
@@ -2015,7 +2015,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * The Tu Reimagined (plan Task 6) — resolve a TurnSkillBuffApplication's
+   * The Tu Reimagined (plan Task 6) -- resolve a TurnSkillBuffApplication's
    * target set. 'action_targets' reads the declared action's affected
    * (pre-resolved by the caller); 'self' the actor; the side scopes the
    * battle arrays. Legacy 'target' is an alias of 'action_targets'.
@@ -2046,7 +2046,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Kiem Tu Reimagined Task 2 — execute ONE provider-returned extra
+   * Kiem Tu Reimagined Task 2 -- execute ONE provider-returned extra
    * impact def: fresh target collection from the def's own targeting,
    * per-target instance loop through resolveDeclaredHit, optional
    * appliesBuff. Returns the presentation payload.
@@ -2106,7 +2106,7 @@ export class TurnBattleSystem {
     return {
       presetId: extraDef.presetId,
       // Authored targeting rides the payload so presentation reports the
-      // same area the gameplay resolution used (A8 — no silent
+      // same area the gameplay resolution used (A8 -- no silent
       // single-cell downgrade when a combo declares AOE).
       targeting: extraDef.targeting,
       targetIds: extraTargets.map((target) => target.id),
@@ -2116,9 +2116,9 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Phap Tu An (Task 11) — declare phase for a queued repeat/multicast
+   * Phap Tu An (Task 11) -- declare phase for a queued repeat/multicast
    * execution: the descriptor IS the action (no selectAction, no charge,
-   * no CC). The payload re-resolves — an element_basic composite root
+   * no CC). The payload re-resolves -- an element_basic composite root
    * re-rolls its pick per execution, per spec ("each fire independently
    * re-rolled"). The execution carries its source so commit/cast-sink
    * stay silent and multicast re-roll gating sees the depth.
@@ -2150,7 +2150,7 @@ export class TurnBattleSystem {
       multicastDepth: exec.multicastDepth,
     }
 
-    // Task 13 — same pre-burn capture as the normal declare path: a
+    // Task 13 -- same pre-burn capture as the normal declare path: a
     // queued execution of a consume-all payload burns at its own commit.
     if (payloadSkill.consumesAllThe) {
       execution.theBurned = actor.entity.currentThe ?? 0
@@ -2187,7 +2187,7 @@ export class TurnBattleSystem {
                 ? payloadSkill.damage
                 : scaleActionDamage(payloadSkill.damage, suddenDeathMultiplier)
 
-            // Task 13 — theScaling fold (same as declareActorAction).
+            // Task 13 -- theScaling fold (same as declareActorAction).
             if (payloadSkill.theScaling && execution.theBurned) {
               scaledDamage = scaleActionDamage(
                 scaledDamage,
@@ -2219,17 +2219,17 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Phap Tu An (Task 11) — enqueue the cast's own follow-up executions:
+   * Phap Tu An (Task 11) -- enqueue the cast's own follow-up executions:
    *
    * - `repeatCasts` on the root skill: each committed cast queues that
    *   many 'repeat' entries (depth 0). Only casts that COMMIT (source
-   *   'original'/'composite'/'empowered' — never a repeat/multicast
+   *   'original'/'composite'/'empowered' -- never a repeat/multicast
    *   itself) spawn repeats, so repeats can never recurse.
    * - `multicast` on the root skill: original/composite and
    *   multicast-sourced executions roll `chance`; success queues one
    *   'multicast' entry at depth+1, bounded by
    *   min(maxExtraCasts, MAX_MULTICAST) (P15: the special's repeat fires
-   *   never roll — source 'repeat' is excluded; 'empowered' is too).
+   *   never roll -- source 'repeat' is excluded; 'empowered' is too).
    */
   private enqueueFollowUpExecutions(
     battle: TurnBattle,
@@ -2244,7 +2244,7 @@ export class TurnBattleSystem {
     }
 
     // Only a cast that actually resolved (had a live target set) queues
-    // follow-ups — a whiffed-into-empty cast commits nothing.
+    // follow-ups -- a whiffed-into-empty cast commits nothing.
     if (declared.affected.length === 0) {
       return
     }
@@ -2280,9 +2280,9 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Task 11 — presentation/orchestration seam: is the actor's pending
+   * Task 11 -- presentation/orchestration seam: is the actor's pending
    * turn a queued EXECUTION (repeat/multicast) rather than a real turn?
-   * Manual mode must NOT await player input for these — the cast was
+   * Manual mode must NOT await player input for these -- the cast was
    * already chosen; the follow-up resolves automatically.
    */
   isPendingQueuedExecution(actorId: string): boolean {
@@ -2290,10 +2290,10 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Phap Tu Reimagined Task 10 — the ONE cast-commit sink: slot
+   * Phap Tu Reimagined Task 10 -- the ONE cast-commit sink: slot
    * cooldown + resource consume (root identity), the cast-count sink
    * (always rootSkillId), and the empowered form's consume-all-The
-   * burn. `theBurned` was already captured at DECLARE (Task 13 — the
+   * burn. `theBurned` was already captured at DECLARE (Task 13 -- the
    * pre-burn pool feeds theScaling, which resolves before this commit);
    * here the pool only zeroes.
    */
@@ -2311,12 +2311,12 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Phap Tu Reimagined Task 8 — the single The-gain hook. Values are
+   * Phap Tu Reimagined Task 8 -- the single The-gain hook. Values are
    * authored on the resolving TurnSkillDefinition: theGainOnLandedCast
    * applies once per landed cast; theGainOnCrit once more when any
    * direct hit of the cast crited. The cap reads the battle-snapshotted
    * entity.maxThe (Truong The nodes, 'no' route) with MAX_THE as the
-   * default — never a hard-coded constant.
+   * default -- never a hard-coded constant.
    */
   private grantTheFromCast(
     actor: TurnBattleParticipant,
@@ -2359,10 +2359,10 @@ export class TurnBattleSystem {
   }
 
   /**
-   * The Tu Reimagined (spec 6.2/7.1, plan Tasks 15-18) — one reactive
+   * The Tu Reimagined (spec 6.2/7.1, plan Tasks 15-18) -- one reactive
    * window pass on a holder's pool: every reactiveProc effect matching
    * `trigger` attempts in pool order. Per attempt: pay-per-attempt cost
-   * (resolveProcCost — bach_ung freeProcs / tu_the delta already inside)
+   * (resolveProcCost -- bach_ung freeProcs / tu_the delta already inside)
    * -> insufficient The means NO roll; the stat channel rolls via
    * clampStatValue; success credits the gain and pushes the effect's
    * queuedAction onto the typed bypass queue with the composite context.
@@ -2378,13 +2378,13 @@ export class TurnBattleSystem {
       outcome?: 'taken' | 'evaded'
       intercepted?: boolean
       triggeringTargets?: TurnBattleParticipant[]
-      /** Task 20 — the ally-action window on a non-damaging action; only
+      /** Task 20 -- the ally-action window on a non-damaging action; only
        * effects carrying firesOnNonDamagingAction may roll. */
       nonDamaging?: boolean
     },
     opts?: { once?: boolean },
   ): { paid: boolean; success: boolean; effect?: ReactiveProcEffect }[] {
-    // Review fix (MED — dead-holder transaction): a participant killed by
+    // Review fix (MED -- dead-holder transaction): a participant killed by
     // the hit that opened this window never performs a proc transaction —
     // no The cost, no rng draw, no success credit, no queue. The bypass
     // queue already drops dead actors, but that is too late: the consumed
@@ -2402,7 +2402,7 @@ export class TurnBattleSystem {
           continue
         }
 
-        // Task 20 — the Tro window on a non-damaging ally action opens
+        // Task 20 -- the Tro window on a non-damaging ally action opens
         // only for effects that opted in via firesOnNonDamagingAction.
         if (context.nonDamaging === true && !effect.firesOnNonDamagingAction) {
           continue
@@ -2426,7 +2426,7 @@ export class TurnBattleSystem {
         if (success) {
           onProcSuccess(holder.entity, effect.theGainOnSuccess)
 
-          // Task 20 (spec 8.2 "tro_kich heals ally") — a successful Tro
+          // Task 20 (spec 8.2 "tro_kich heals ally") -- a successful Tro
           // proc heals the TRIGGERING ally through the vitals authority.
           if (effect.healsTriggeringAllyMaxHpRatio !== undefined && context.attacker?.entity.alive) {
             this.combat.applyHealing(
@@ -2478,7 +2478,7 @@ export class TurnBattleSystem {
    * The dodge-side window (spec 6.2.2): the defender's pool gets an
    * onEvade pass after its +THE_GAIN_ON_EVADE income already landed —
    * the just-earned income can fund this hit's check (ordering lock,
-   * review P1.6). Natural actions only — reactive actions never open
+   * review P1.6). Natural actions only -- reactive actions never open
    * new windows (INV-9).
    */
   private resolveEvadeWindow(
@@ -2499,12 +2499,12 @@ export class TurnBattleSystem {
   }
 
   /**
-   * The Tro window (spec 6.2.3, plan Task 18) — after a player-side
+   * The Tro window (spec 6.2.3, plan Task 18) -- after a player-side
    * action lands >=1 damaging hit, every OTHER living player-side
    * participant carrying an onAllyActionComplete reactiveProc (tro_mon
    * marker) rolls once; success queues its payload against the whole
    * landed set. Never fires on the actor's own window (ally !== actor)
-   * or on reactive actions (INV-9 — a counter/follow-up hit does not
+   * or on reactive actions (INV-9 -- a counter/follow-up hit does not
    * open another reactive window).
    */
   private resolveAllyActionWindow(
@@ -2521,17 +2521,17 @@ export class TurnBattleSystem {
     }
 
     // Task 20 (spec 8.2 "follow-up on ANY ally action") + review fix
-    // (MED-4) — "dealt no damage" gates firesOnNonDamagingAction rolls
+    // (MED-4) -- "dealt no damage" gates firesOnNonDamagingAction rolls
     // (a whiffed damaging action still counts), but it is NOT a
     // targeting fact: a whiffed action inherits its declared.affected
     // targets. Only an action that AUTHORED no damage (self-buff, pure
-    // utility — nothing to inherit) fans out to every living enemy.
+    // utility -- nothing to inherit) fans out to every living enemy.
     const nonDamaging = landedTargets.length === 0
     const authoredDamaging =
       declared.scaledDamage !== null ||
       declared.chargedSkill?.damage != null ||
       (declared.compositePickedSkills?.some((picked) => picked.damage != null) ?? false)
-    // Review fix (MED-5) — a composite action pushes the same target once
+    // Review fix (MED-5) -- a composite action pushes the same target once
     // per landed pick; dedupe by id so Tro Kich resolves once per
     // triggering TARGET, not once per hit.
     const landedUnique = [...new Map(landedTargets.map((p) => [p.id, p])).values()]
@@ -2559,12 +2559,12 @@ export class TurnBattleSystem {
   }
 
   /**
-   * The Ho intercept window (spec 6.2.1, plan Task 17) — runs at the top
+   * The Ho intercept window (spec 6.2.1, plan Task 17) -- runs at the top
    * of applyActionImpact, post-declare/pre-impact: on success the
    * declared target is substituted and the hit resolves fully vs the
    * protector (dodge/ward/block/procs all live downstream).
    * Preconditions: actor is enemy-side, the action is a NATURAL
-   * (normal/skill — INV-9, same gate as the Phan/Tro windows) single-
+   * (normal/skill -- INV-9, same gate as the Phan/Tro windows) single-
    * target action by AUTHORED targeting shape (an all_lanes AoE whose
    * other targets died stays AoE), and the target is a LIVING player-
    * side participant. Candidates are player-side participants carrying
@@ -2582,7 +2582,7 @@ export class TurnBattleSystem {
       return
     }
 
-    // INV-9 — reactive/replayed actions (counter/follow_up/intercept and
+    // INV-9 -- reactive/replayed actions (counter/follow_up/intercept and
     // queued executions) never open new reactive windows.
     if (declared.actionSource !== 'normal' && declared.actionSource !== 'skill') {
       return
@@ -2652,17 +2652,17 @@ export class TurnBattleSystem {
     declared.intercepted = true
     declared.interceptedBy = nearest.id
 
-    // A charge-resolve action's hit lane reads chargeTargetIds — keep it
+    // A charge-resolve action's hit lane reads chargeTargetIds -- keep it
     // the id-mirror of `affected` so the substitution lands on the
     // protector there too.
     if (declared.chargeResolved) {
       declared.chargeTargetIds = [nearest.id]
     }
 
-    // Task 20 (spec 8.2 "intercept->ally ward") — the node-baked marker
+    // Task 20 (spec 8.2 "intercept->ally ward") -- the node-baked marker
     // rider: the rescued ally gains a grantsExternalWard marker sourced
     // by the protector plus the ward pool itself. Same existence-bound
-    // contract as son_nhac_ho_the — reconcileExternalWard owns expiry.
+    // contract as son_nhac_ho_the -- reconcileExternalWard owns expiry.
     const wardGrant = winning.effect?.grantsWardToOriginalTarget
 
     if (wardGrant !== undefined && this.registry !== undefined) {
@@ -2676,7 +2676,7 @@ export class TurnBattleSystem {
 
       if (definition !== undefined) {
         // The marker lands on the rescued ally's pool SOURCED BY the
-        // protector — sourceId must match the ward's sourceId or the
+        // protector -- sourceId must match the ward's sourceId or the
         // existence-bound reconcile clears the pool at the next refresh.
         new BuffSystem(original.buffs).apply(definition, nearest.entity, original.entity, this.registry)
         original.entity.externalWard = {
@@ -2688,7 +2688,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Own-basic-lands income (spec 4.1) — the acting participant's own
+   * Own-basic-lands income (spec 4.1) -- the acting participant's own
    * basic landed a hit. Reads the authored theEconomy.gainOnBasicHit
    * field off the ung_the marker clone (single channel, review P1).
    */
@@ -2700,12 +2700,12 @@ export class TurnBattleSystem {
   }
 
   /**
-   * The Tu Reimagined (spec 7.1, plan Task 16/v2.4 P0.1) — a queued
+   * The Tu Reimagined (spec 7.1, plan Task 16/v2.4 P0.1) -- a queued
    * reactive entry declares as a REAL TurnDeclaredAction (targets,
    * payload skill, scaledDamage) while skipping the entire natural-turn
    * lifecycle: no turn/round counters, no buff/DoT ticks, no CC check,
    * no regen/resource deltas, no charge advance, no cooldown ticks. The
-   * impact still flows through applyActionImpact — bypass != a second
+   * impact still flows through applyActionImpact -- bypass != a second
    * damage path.
    */
   private declareReactiveBypass(
@@ -2718,7 +2718,7 @@ export class TurnBattleSystem {
       : undefined
     const baseSkill = payload ?? actor.basic ?? null
 
-    // Spec 6.1 / plan Task 19 — bach_ung's payload upgrade rider merges
+    // Spec 6.1 / plan Task 19 -- bach_ung's payload upgrade rider merges
     // its authored payloadAilments into the payload's appliesAilments at
     // resolve time. Clone so the participant's reactivePayloads entry is
     // never mutated across declares.
@@ -2745,7 +2745,7 @@ export class TurnBattleSystem {
     let affected: TurnBattleParticipant[] = []
 
     if (entry.targetIds && entry.targetIds.length > 0) {
-      // Queue-time captured targets (spec 6.2 — counter hits the attacker
+      // Queue-time captured targets (spec 6.2 -- counter hits the attacker
       // that provoked it); dead targets filter out at resolve.
       const byId = new Map(
         [...battle.players, ...battle.enemies].map((participant) => [participant.id, participant]),
@@ -2756,7 +2756,7 @@ export class TurnBattleSystem {
           participant !== undefined && participant.entity.alive,
         )
     } else if (skill) {
-      // No captured targets — positional fallback keeps the action legal.
+      // No captured targets -- positional fallback keeps the action legal.
       const primary = selectTarget(actor, opposingSide)
 
       if (primary) {
@@ -2770,7 +2770,7 @@ export class TurnBattleSystem {
           skill,
           damage: skill.damage,
           targeting: skill.targeting,
-          slot: null, // slotless — no cooldown/resource commit (spec 7.1)
+          slot: null, // slotless -- no cooldown/resource commit (spec 7.1)
         }
       : null
 
@@ -2795,7 +2795,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * The Tu Reimagined (spec section 3.4, plan Task 7) — Cuong Chien's
+   * The Tu Reimagined (spec section 3.4, plan Task 7) -- Cuong Chien's
    * signature scalar: skills authored with scalesWithMissingHp multiply
    * their damage by (1 + missingHpRatio * coefficient), re-read against
    * the actor's LIVE hp at each hit. Non-the_tu damage passes through.
@@ -2818,7 +2818,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Action Playback Task 3 (2026-09-05) — PHA 3/3: turn cleanup (gauge
+   * Action Playback Task 3 (2026-09-05) -- PHA 3/3: turn cleanup (gauge
    * consume, gauge-delta push, wave spawn, win/loss check, battle log).
    */
   completeAction(
@@ -2827,17 +2827,17 @@ export class TurnBattleSystem {
     declared: TurnDeclaredAction,
     targetIds: string[],
   ): TurnStepResult {
-    // Defect-fix Task 1 — bypass turn KHÔNG consume gauge (counter-reactor
+    // Defect-fix Task 1 -- bypass turn KHÔNG consume gauge (counter-reactor
     // không mất progress của lượt kế tiếp vì side effect của phản ứng).
     consumeGaugeAfterAction(actor, declared.isFollowUpBypass ? 0 : 1)
 
-    // Task 11 — the cast's own follow-up executions queue at action end:
+    // Task 11 -- the cast's own follow-up executions queue at action end:
     // repeatCasts spawn 'repeat' entries; a multicast-capable root skill
     // rolls `chance` for one 'multicast' entry (re-rolling per execution
     // until the depth cap). Repeat/empowered sources never roll.
     this.enqueueFollowUpExecutions(battle, actor, declared)
 
-    // Future Systems Task 6 — gauge-delta one-shot push SAU consume
+    // Future Systems Task 6 -- gauge-delta one-shot push SAU consume
     // (consume đặt gauge về 0; delta cộng lên trên, không bị ghi đè).
     if (this.pendingGaugeDeltaTargets.length > 0) {
       for (const participant of this.pendingGaugeDeltaTargets) {
@@ -2861,7 +2861,7 @@ export class TurnBattleSystem {
       battle.state = 'victory'
     }
 
-    // Slice 7 extension — battle log: 1 entry/lượt, append-only.
+    // Slice 7 extension -- battle log: 1 entry/lượt, append-only.
     const logEntry: BattleLogEntry = {
       turn: battle.totalTurnsElapsed ?? 0,
       actorId: actor.id,
@@ -2884,9 +2884,9 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Slice 7 (Completion Task 10) — resolve lượt của MỘT actor ĐÃ peek:
+   * Slice 7 (Completion Task 10) -- resolve lượt của MỘT actor ĐÃ peek:
    * thin wrapper gọi 3 phase Action Playback back-to-back (signature/
-   * hành vi KHÔNG ĐỔI — mọi caller/test cũ giữ nguyên).
+   * hành vi KHÔNG ĐỔI -- mọi caller/test cũ giữ nguyên).
    */
   resolveActorTurn(
     battle: TurnBattle,
@@ -2900,7 +2900,7 @@ export class TurnBattleSystem {
 
   /**
    * Thin wrapper (Slice 7): peekNextActor() + resolveActorTurn() không
-   * forced slot — giữ nguyên signature/hành vi cho mọi caller Slice 1-6
+   * forced slot -- giữ nguyên signature/hành vi cho mọi caller Slice 1-6
    * (auto mode, runToCompletion(), mọi test cũ).
    */
   resolveNextStep(battle: TurnBattle): TurnStepResult {
@@ -2910,14 +2910,14 @@ export class TurnBattleSystem {
       return { state: 'intro', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
-    // Countdown phase: combat chưa bắt đầu — no-op an toàn (gauge không
+    // Countdown phase: combat chưa bắt đầu -- no-op an toàn (gauge không
     // chạy, không ai hành động; GameManager tick countdown qua
     // tickCountdown() thay vì gọi method này).
     if (battle.state === 'countdown') {
       return { state: 'countdown', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
-    // Trận đã kết thúc (victory/defeat) — KHÔNG ghi đè state thành defeat
+    // Trận đã kết thúc (victory/defeat) -- KHÔNG ghi đè state thành defeat
     // (code-review fix: peekNextActor trả null cho state != fighting, nhánh
     // dưới chỉ được phép set defeat khi trận thực sự không còn ai sống).
     if (battle.state !== 'fighting') {
@@ -2934,7 +2934,7 @@ export class TurnBattleSystem {
     return this.resolveActorTurn(battle, actor)
   }
 
-  /** Thin wrapper for tests/dev tooling — loops resolveNextStep() to completion. */
+  /** Thin wrapper for tests/dev tooling -- loops resolveNextStep() to completion. */
   runToCompletion(battle: TurnBattle): TurnBattleState {
     for (let turn = 0; turn < this.maxTurns; turn++) {
       const step = this.resolveNextStep(battle)
@@ -2949,7 +2949,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * R3 (AR-03) — Chance-gated ailment application supporting multiple ailments
+   * R3 (AR-03) -- Chance-gated ailment application supporting multiple ailments
    * and multi-stack application. Shares reaction triggering across damaging
    * and non-damaging skill execution paths.
    */
@@ -2969,12 +2969,12 @@ export class TurnBattleSystem {
       (skill.appliesAilment ? [skill.appliesAilment] : [])
 
     for (const ailment of ailments) {
-      // Task 11 — ailment rolls route through the injected rng (same
+      // Task 11 -- ailment rolls route through the injected rng (same
       // deterministic seam as composite picks and multicast rolls).
-      // Mission C Task 10b — elementApplicationPercent adds to the base
+      // Mission C Task 10b -- elementApplicationPercent adds to the base
       // chance (parity with the deleted legacy executor).
       if (this.rng.rollChance(resolveAilmentApplicationChance(ailment.chance, actor.entity.stats.elementApplicationPercent))) {
-        // Skip an unresolvable ailment id gracefully — same try/catch
+        // Skip an unresolvable ailment id gracefully -- same try/catch
         // pattern as the bossTrigger lookup in declareActorAction.
         let definition: BuffDefinition | undefined
 
@@ -3007,17 +3007,17 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Phap Tu Reimagined Task 13 (spec §4) — the 'dot' route's detonation.
+   * Phap Tu Reimagined Task 13 (spec §4) -- the 'dot' route's detonation.
    * Consumes EVERY live ailment instance whose definition carries a
-   * `dot` effect (pure-utility ailments are never touched — a scalpel,
+   * `dot` effect (pure-utility ailments are never touched -- a scalpel,
    * not a cleanser); each consumed instance pays
    * (perTick x remainingTurns x stacks) x amp as direct damage through
    * the authoritative vitals pipeline (death mid-loop stops the rest).
    * Each consumed id then re-seeds ONCE at a fixed 1 stack / authored
-   * duration through BuffSystem.apply — which recomputes potency
+   * duration through BuffSystem.apply -- which recomputes potency
    * against the caster's CURRENT stats (never the consumed snapshot).
    * The re-seed is not an application event: no chance roll, no
-   * ailmentStackBonus, and reaction-silent — TurnReactionManager is
+   * ailmentStackBonus, and reaction-silent -- TurnReactionManager is
    * never reached from here. Iterates a snapshot so re-seeded
    * instances are never revisited.
    */
@@ -3061,7 +3061,7 @@ export class TurnBattleSystem {
       }
     }
 
-    // Re-seed ONCE per consumed id — a fixed 1 stack at the ailment's
+    // Re-seed ONCE per consumed id -- a fixed 1 stack at the ailment's
     // authored duration; BuffSystem.apply recomputes potency against
     // the caster's current stats and never reaches the reaction check.
     for (const id of consumedIds) {
@@ -3072,11 +3072,11 @@ export class TurnBattleSystem {
   }
 
   // Sudden Death (roadmap 9.5 Combat Fairness Guards): damage +30%/turn
-  // from turn 11. The unit is ATB ROUNDS — the same contract the
+  // from turn 11. The unit is ATB ROUNDS -- the same contract the
   // 2026-09-12 D2 revision gave perfectClearTurnLimit. Reading the raw
   // totalTurnsElapsed actor-action counter made escalation arrive
   // participant-count times early (a 1v3 stage hit the grace boundary in
-  // ~3 rounds) and compound ~0.3 x actors per round — the reported
+  // ~3 rounds) and compound ~0.3 x actors per round -- the reported
   // abnormal damage ramp.
   private suddenDeathDamageMultiplier(roundsElapsed: number): number {
     const roundsPastGrace = roundsElapsed - 9

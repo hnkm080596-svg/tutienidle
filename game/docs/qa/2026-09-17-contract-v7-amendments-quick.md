@@ -61,10 +61,7 @@ No Confirmed defects.
 
 ### QA-2026-09-17-03: malformed `requests` (non-array) on PeriodicRequestsCommitted -> TypeError classified 'unexpected_error'
 - Severity: Low (Nit)
-- Status: Suspected (static read; not reproduced — reachable only via a malformed producer payload)
-- Invariant: Recoverability — a broken command graph should report as structural_fault.
-- Evidence: `periodicBridge` calls `event.requests.map` unguarded; a non-array payload throws TypeError, recorded as 'unexpected_error' rather than 'structural_fault'. Either way the scheduler faults — classification accuracy only.
-- Test file: none
+- Status: **RESOLVED at `4ab89044`** — `periodicBridge` now structural-faults on non-array `requests` pre-intake (`!Array.isArray(event.requests)` guard).
 
 ### QA-2026-09-17-04: `PeriodicResolution` type retained but unreferenced
 - Severity: Nit
@@ -78,7 +75,7 @@ No Confirmed defects.
 - CapabilityValidatorRegistry integration point is deferred to Buff M2 by plan — re-check wiring then.
 - `PeriodicResolution` dead export — Nit, plan-pinned.
 - QA-2026-09-17-03 (error classification) — Nit, faulting either way.
-- Full `npm run verify` not yet run on this commit (scheduled pre-merge); scoped verification green.
+- Full `npm run verify` now run at final HEAD `d62cc7df` (post review-round-2 fixes + collision tests + ASCII sweep): PASS — 636 files / 5370 tests, 4 expected-fail, type-check + build clean.
 
 ## Pre-existing Failures
 None observed in scope. User WIP files (excluded above) are mid-edit by the user and were not audited.

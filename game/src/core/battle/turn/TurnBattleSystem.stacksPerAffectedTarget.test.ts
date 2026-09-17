@@ -10,7 +10,7 @@ import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import { PHAP_TU_EMPOWERED_ULTS } from '../../../data/skill/PhapTuEmpoweredUlts'
 
-// Mission C Task 10a (audit T3-19 adjacent) — Hau Tho Thanh Luy's
+// Mission C Task 10a (audit T3-19 adjacent) -- Hau Tho Thanh Luy's
 // empowered payload authored `stacksPerAffectedTarget`: the CASTER
 // gains one thanh_luy stack per still-alive target the action hit
 // (SkillEffect.ts:113-118), capped by the buff's maxStacks. Today the
@@ -69,7 +69,7 @@ function harness(enemyCount: number) {
     undefined,
     vi.fn(),
     undefined,
-    new FunctionCombatRng(() => 0.5), // deterministic mid rng — hit/evasion rolls all land
+    new FunctionCombatRng(() => 0.5), // deterministic mid rng -- hit/evasion rolls all land
   )
 
   return { battle, playerParticipant, enemyParticipants, system }
@@ -90,7 +90,7 @@ describe('thanh_luy stacksPerAffectedTarget (Mission C Task 10a)', () => {
     }
   })
 
-  it('dead targets are not imprisoned — only still-alive hits stack', () => {
+  it('dead targets are not imprisoned -- only still-alive hits stack', () => {
     const { battle, playerParticipant, enemyParticipants, system } = harness(3)
 
     // enemy_0 dies to the hit's own damage: give it 1 maxHp so the 4x
