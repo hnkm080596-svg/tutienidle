@@ -56,6 +56,23 @@ import type { ReactionBiasQuery } from '../ReactionBias'
 import type { ReactionRegistry } from '../ReactionRegistry'
 import { ELEMENTAL_REACTION_CAPABILITY } from '../ReactionTypes'
 import { ReactionBatchRunner } from '../ReactionBatchRunner'
+import { ReactionDispatcher } from '../ReactionDispatcher'
+import {
+  resolutionToBatch,
+  type ReactionResolution,
+} from '../ReactionResolution'
+import type { CombatOperationBatch } from '../../battle/contracts/settlement'
+import type { ResolvedCombatOperation } from '../../battle/contracts/operations'
+import type {
+  CombatOperationResult,
+  CombatOperationResultBase,
+} from '../../battle/contracts/results'
+import {
+  BatchResultStore,
+  CombatOperationBatchRunner,
+  isDeferredOperation,
+  resultTypeOfBatchEntry,
+} from '../../battle/runtime/scheduler/CombatOperationBatchRunner'
 import { CombatOperationExecutor } from '../../battle/runtime/scheduler/CombatOperationExecutor'
 import type { CombatAuthorityPorts } from '../../battle/runtime/scheduler/CombatAuthorityPorts'
 
@@ -197,6 +214,25 @@ export interface ReactionTestWorld {
     resource: { kind: 'gain' | 'consume'; targetId: string }[]
     shield: { targetId: string; amount: number }[]
   }
+  /** M5 -- the deferred-registration immediate handler over the world's
+      real gate/system/elements. `batchFactory` defaults to the shared
+      resolutionToBatch; inject a spy to observe the handoff. */
+  makeDispatcher(
+    system: ReactionSystem,
+    opts?: {
+      batchFactory?: (resolution: ReactionResolution) => CombatOperationBatch
+    },
+  ): ReactionDispatcher
+  /** M5 -- settles a dispatcher-produced CombatOperationBatch the way
+      the scheduler's batch frame does: structural validation ->
+      preflight -> ordered ops with deferred materialization through
+      the shared contract runner, execution via the stub ports. The
+      reaction events are the dispatcher's lane (emitted at dispatch);
+      this driver returns the raw op results for assertions. */
+  settleBatch(
+    batch: CombatOperationBatch,
+    opts?: { combatSequence?: number },
+  ): readonly CombatOperationResultBase[]
   /** Scripted op ctx (sequence mints per world). */
   makeCtx(origin?: Partial<CombatOperationOrigin>): CombatAuthorityExecutionContext
   /** Real apply through the system; returns the fabricated committed
@@ -280,6 +316,65 @@ export function createReactionTestWorld(): ReactionTestWorld {
     shield: [],
   }
 
+  /** Recording STUB authority ports shared by the batch runner and the
+      batch-settle driver -- damage/gauge/heal/resource/shield are never
+      reaction-owned authorities; tests assert on recorded calls. */
+  const buildPorts = (
+    overrides?: Partial<CombatAuthorityPorts>,
+  ): CombatAuthorityPorts => ({
+    buffs: system,
+    damage: {
+      dealDamage: (payload) => {
+        stubCalls.damage.push({
+          targetId: payload.targetId,
+          coefficient: payload.coefficient,
+        })
+        return { rawDamage: 100, hpDamage: 100, killed: false }
+      },
+    },
+    gauge: {
+      pushGauge: (targetId, fractionOfMax) => {
+        stubCalls.gauge.push({ targetId, fractionOfMax })
+        return {
+          before: 0,
+          requestedDelta: fractionOfMax,
+          appliedDelta: fractionOfMax,
+          after: fractionOfMax,
+        }
+      },
+    },
+    heal: {
+      heal: (payload) => {
+        stubCalls.heal.push({
+          targetId: payload.targetId,
+          amount: payload.amount,
+        })
+        return {
+          requested: payload.amount,
+          healed: payload.amount,
+          after: payload.amount,
+        }
+      },
+    },
+    resource: {
+      gain: (targetId, _resourceId, amount) => {
+        stubCalls.resource.push({ kind: 'gain', targetId })
+        return { before: 0, requested: amount, applied: amount, after: amount }
+      },
+      consume: (targetId, _resourceId, amount) => {
+        stubCalls.resource.push({ kind: 'consume', targetId })
+        return { before: 0, requested: amount, applied: 0, after: 0 }
+      },
+    },
+    shield: {
+      applyShield: (targetId, amount) => {
+        stubCalls.shield.push({ targetId, amount })
+        return { applied: amount, shieldAfter: amount }
+      },
+    },
+    ...overrides,
+  })
+
   let seq = 0
   let eventSeq = 0
 
@@ -321,64 +416,67 @@ export function createReactionTestWorld(): ReactionTestWorld {
       )
     },
     makeBatchRunner(opts = {}) {
-      const ports: CombatAuthorityPorts = {
-        buffs: system,
-        damage: {
-          dealDamage: (payload) => {
-            stubCalls.damage.push({
-              targetId: payload.targetId,
-              coefficient: payload.coefficient,
-            })
-            return { rawDamage: 100, hpDamage: 100, killed: false }
-          },
-        },
-        gauge: {
-          pushGauge: (targetId, fractionOfMax) => {
-            stubCalls.gauge.push({ targetId, fractionOfMax })
-            return {
-              before: 0,
-              requestedDelta: fractionOfMax,
-              appliedDelta: fractionOfMax,
-              after: fractionOfMax,
-            }
-          },
-        },
-        heal: {
-          heal: (payload) => {
-            stubCalls.heal.push({
-              targetId: payload.targetId,
-              amount: payload.amount,
-            })
-            return {
-              requested: payload.amount,
-              healed: payload.amount,
-              after: payload.amount,
-            }
-          },
-        },
-        resource: {
-          gain: (targetId, _resourceId, amount) => {
-            stubCalls.resource.push({ kind: 'gain', targetId })
-            return { before: 0, requested: amount, applied: amount, after: amount }
-          },
-          consume: (targetId, _resourceId, amount) => {
-            stubCalls.resource.push({ kind: 'consume', targetId })
-            return { before: 0, requested: amount, applied: 0, after: 0 }
-          },
-        },
-        shield: {
-          applyShield: (targetId, amount) => {
-            stubCalls.shield.push({ targetId, amount })
-            return { applied: amount, shieldAfter: amount }
-          },
-        },
-        ...opts.ports,
-      }
+      const ports = buildPorts(opts.ports)
       return new ReactionBatchRunner(
         new CombatOperationExecutor(ports),
         system,
         (id) => alive.has(id),
       )
+    },
+    makeDispatcher(reactionSystem, opts = {}) {
+      return new ReactionDispatcher(
+        gate,
+        reactionSystem,
+        elements,
+        opts.batchFactory ?? resolutionToBatch,
+      )
+    },
+    settleBatch(batch, opts = {}) {
+      const combatSequence = opts.combatSequence ?? ++seq * 100
+      const contractRunner = new CombatOperationBatchRunner({
+        isAlive: (id) => alive.has(id),
+        getBuffInstance: (instanceId) =>
+          system.getInstance({ kind: 'instance', instanceId }),
+      })
+      const ports = buildPorts()
+      const executor = new CombatOperationExecutor(ports)
+      contractRunner.validateBatchStructure(batch)
+      if (!contractRunner.preflight(batch)) {
+        return batch.operations.map((entry) => ({
+          operationId: entry.operationId,
+          type: resultTypeOfBatchEntry(entry),
+          status: 'skipped',
+          reason: 'stale_reaction_snapshot',
+        }) as CombatOperationResult)
+      }
+      const inBatch = new BatchResultStore()
+      const results: CombatOperationResultBase[] = []
+      for (const entry of batch.operations) {
+        let op = entry as ResolvedCombatOperation
+        if (isDeferredOperation(entry)) {
+          const prior = inBatch.get(entry.resultOperationId)
+          if (prior === undefined || prior.status !== 'resolved') {
+            results.push({
+              operationId: entry.operationId,
+              type: 'heal',
+              status: 'skipped',
+              reason: 'dependency_not_resolved',
+            } as CombatOperationResult)
+            continue
+          }
+          op = contractRunner.materialize(entry, inBatch)
+        }
+        const ctx: CombatAuthorityExecutionContext = {
+          operationId: op.operationId,
+          origin: op.origin,
+          events: sink,
+          combatSequence,
+        }
+        const result = executor.execute(op, ctx)
+        inBatch.record(op, result)
+        results.push(result)
+      }
+      return results
     },
     makeCtx,
     applyElement(sourceId, targetId, element, stacks, opts = {}) {

@@ -117,15 +117,12 @@ export class ReactionSystem {
       event.element,
       board,
     )
-    const winner = this.selectCandidate(candidates)
-    if (winner === undefined) {
-      return { kind: 'no_reaction', gate: 'evaluate', reason: 'no_candidates' }
-    }
-
-    const resolution = this.resolveCandidate(winner, event, board)
     const trace: ReactionEvaluationTrace = {
       eventId: event.eventId,
       combatSequence: event.combatSequence,
+      rootActionId: event.origin.rootActionId,
+      sourceId: event.sourceId,
+      targetId: event.targetId,
       board,
       candidates: candidates.map((c) => ({
         reactionId: c.definition.id,
@@ -133,10 +130,28 @@ export class ReactionSystem {
         evaluatedBias: c.evaluatedBias,
         finalWeightScaled: c.finalWeightScaled,
       })),
-      selected: winner.definition.id,
-      preconditions: resolution.preconditions,
-      operationIds: resolution.operations.map((op) => op.operationId),
+      operationIds: [],
     }
-    return { kind: 'resolved', resolution, trace }
+    const winner = this.selectCandidate(candidates)
+    if (winner === undefined) {
+      return {
+        kind: 'no_reaction',
+        gate: 'evaluate',
+        reason: 'no_candidates',
+        trace,
+      }
+    }
+
+    const resolution = this.resolveCandidate(winner, event, board)
+    return {
+      kind: 'resolved',
+      resolution,
+      trace: {
+        ...trace,
+        selected: winner.definition.id,
+        preconditions: resolution.preconditions,
+        operationIds: resolution.operations.map((op) => op.operationId),
+      },
+    }
   }
 }

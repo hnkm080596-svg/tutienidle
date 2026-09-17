@@ -90,8 +90,16 @@ export interface ReactionCandidate {
   }
 }
 
-/** What one ElementalApplicationCommitted evaluation produced. */
+/** What one ElementalApplicationCommitted evaluation produced.
+    Gate-rejected evaluations carry no trace (no board read ever ran);
+    a 'no_candidates' evaluation DOES carry the trace -- the board +
+    evaluated candidates are the debugging record (contract sec.85). */
 export type ReactionEvaluationResult =
   | { kind: 'no_reaction'; gate: Exclude<ReactionGateVerdict, 'evaluate'> }
-  | { kind: 'no_reaction'; gate: 'evaluate'; reason: 'no_candidates' }
+  | {
+      kind: 'no_reaction'
+      gate: 'evaluate'
+      reason: 'no_candidates'
+      trace: ReactionEvaluationTrace
+    }
   | { kind: 'resolved'; resolution: ReactionResolution; trace: ReactionEvaluationTrace }

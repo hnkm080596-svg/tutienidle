@@ -11,7 +11,10 @@ import type {
   BuffInstanceId,
   CombatEntityId,
 } from '../battle/contracts/ids'
-import type { DeferredOperation } from '../battle/contracts/settlement'
+import type {
+  CombatOperationBatch,
+  DeferredOperation,
+} from '../battle/contracts/settlement'
 import type { ResolvedCombatOperation } from '../battle/contracts/operations'
 import type {
   ReactionBoard,
@@ -66,6 +69,11 @@ export interface ReactionResolution {
 export interface ReactionEvaluationTrace {
   readonly eventId: string
   readonly combatSequence: number
+  /** Causal identifiers copied from the event/context (sec.59) so the
+      trace stands alone for formatting + ordering (sec.60). */
+  readonly rootActionId: string
+  readonly sourceId: CombatEntityId
+  readonly targetId: CombatEntityId
   readonly board: ReactionBoard
   readonly candidates: readonly {
     reactionId: ReactionId
@@ -105,6 +113,15 @@ import type { ElementalStateRegistry } from './ElementalStateRegistry'
 /** Which participant roles are consumed by a reaction (spec sec.77/78):
     sinh consumes the parent (child is kept + converted); khac consumes
     BOTH attacker and defender. */
+export function isConsumedParticipantRole(
+  role: ReactionParticipantRole,
+  relation: ReactionRelation,
+): boolean {
+  return relation === 'sinh'
+    ? role === 'parent'
+    : role === 'attacker' || role === 'defender'
+}
+
 export function consumedRoles(
   def: ReactionDefinition,
 ): readonly ReactionParticipantRole[] {
@@ -258,4 +275,33 @@ export function participantBuffIdLookup(
   elements: ElementalStateRegistry,
 ): (p: ReactionParticipantSnapshot) => BuffDefinitionId {
   return (p) => elements.getDefinitionId(p.element)
+}
+
+/** The resolution maps onto the contract's CombatOperationBatch --
+    preconditions gain their 'buff_participant' kind tag; ops pass
+    through in resolution order (consume-first by construction).
+    Shared by the headless batch runner and the M5 dispatcher's
+    batchFactory so both lanes produce identical batches. */
+export function resolutionToBatch(
+  resolution: ReactionResolution,
+): CombatOperationBatch {
+  return {
+    batchId: `rxbatch.${resolution.context.causationEventId}.${resolution.reactionId}`,
+    origin: {
+      kind: 'reaction',
+      originId: resolution.reactionId,
+      sourceId: resolution.context.sourceId,
+      rootActionId: resolution.context.rootActionId,
+      causationEventId: resolution.context.causationEventId,
+      reactionId: resolution.reactionId,
+    },
+    preconditions: resolution.preconditions.map((p) => ({
+      kind: 'buff_participant' as const,
+      instanceId: p.instanceId,
+      expectedSourceId: p.expectedSourceId,
+      expectedTargetId: p.expectedTargetId,
+      expectedStacks: p.expectedStacks,
+    })),
+    operations: resolution.operations,
+  }
 }

@@ -266,11 +266,19 @@ describe('evaluateAfterElementalApplication -- full chain', () => {
     // element (wood/earth/water/metal).
     const trigger = world.applyElement(s, t, 'fire', 3)!
     const result = system.evaluateAfterElementalApplication(trigger)
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       kind: 'no_reaction',
       gate: 'evaluate',
       reason: 'no_candidates',
     })
+    // M5 -- the no_candidates evaluation still leaves a trace: the
+    // board + evaluated (empty) candidate list are the debug record.
+    if (result.kind !== 'no_reaction' || result.gate !== 'evaluate') {
+      throw new Error('unreachable')
+    }
+    expect(result.trace.candidates).toEqual([])
+    expect(result.trace.selected).toBeUndefined()
+    expect(result.trace.operationIds).toEqual([])
   })
 
   it('resolved result carries the trace (contract sec.85)', () => {

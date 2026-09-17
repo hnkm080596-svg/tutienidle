@@ -21,10 +21,7 @@ import type {
   CombatOperationResult,
   CombatOperationResultBase,
 } from '../battle/contracts/results'
-import type {
-  CombatOperationBatch,
-  DeferredOperation,
-} from '../battle/contracts/settlement'
+import type { DeferredOperation } from '../battle/contracts/settlement'
 import type {
   BuffDefinitionId,
   CombatEntityId,
@@ -44,21 +41,11 @@ import {
   reactionSkippedPayload,
 } from './ReactionEvents'
 import {
+  isConsumedParticipantRole,
+  resolutionToBatch,
   type ReactionBatchOutcome,
-  type ReactionParticipantSnapshot,
   type ReactionResolution,
 } from './ReactionResolution'
-
-/** Participants consumed by a reaction (spec sec.77/78): sinh consumes
-    the parent only; khac consumes attacker + defender. */
-function isConsumedParticipant(
-  p: ReactionParticipantSnapshot,
-  relation: 'sinh' | 'khac',
-): boolean {
-  return relation === 'sinh'
-    ? p.role === 'parent'
-    : p.role === 'attacker' || p.role === 'defender'
-}
 
 export class ReactionBatchRunner {
   private readonly batchRunner: CombatOperationBatchRunner
@@ -83,7 +70,7 @@ export class ReactionBatchRunner {
     resolution: ReactionResolution,
     sink: CombatEventSink,
   ): ReactionBatchOutcome {
-    const batch = this.toBatch(resolution)
+    const batch = resolutionToBatch(resolution)
 
     // 1. Preflight -- contract sec.40-42: ALL preconditions before ANY
     //    op; ANY stale participant aborts the whole batch, zero ops
@@ -137,7 +124,7 @@ export class ReactionBatchRunner {
     // 3. Post-commit event (spec sec.50) -- the consumed list is the
     //    pre-consume snapshot of the consumed participants.
     const consumed = resolution.context.participants.filter((p) =>
-      isConsumedParticipant(p, resolution.context.relation),
+      isConsumedParticipantRole(p.role, resolution.context.relation),
     )
     sink.emit(
       reactionResolvedPayload(resolution.context, consumed, (p) => {
@@ -155,30 +142,6 @@ export class ReactionBatchRunner {
     return allResolved
       ? { status: 'resolved', reactionId: resolution.reactionId, results }
       : { status: 'partial', reactionId: resolution.reactionId, results }
-  }
-
-  /** The resolution maps onto the contract's CombatOperationBatch --
-      preconditions gain their 'buff_participant' kind tag. */
-  private toBatch(resolution: ReactionResolution): CombatOperationBatch {
-    return {
-      batchId: `rxbatch.${resolution.context.causationEventId}.${resolution.reactionId}`,
-      origin: {
-        kind: 'reaction',
-        originId: resolution.reactionId,
-        sourceId: resolution.context.sourceId,
-        rootActionId: resolution.context.rootActionId,
-        causationEventId: resolution.context.causationEventId,
-        reactionId: resolution.reactionId,
-      },
-      preconditions: resolution.preconditions.map((p) => ({
-        kind: 'buff_participant' as const,
-        instanceId: p.instanceId,
-        expectedSourceId: p.expectedSourceId,
-        expectedTargetId: p.expectedTargetId,
-        expectedStacks: p.expectedStacks,
-      })),
-      operations: resolution.operations,
-    }
   }
 
   /** Per-op validity gate (contract sec.49): an op whose target is dead
