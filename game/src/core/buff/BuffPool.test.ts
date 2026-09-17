@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { BuffPool } from './BuffPool'
-import type { Buff } from './Buff'
+import type { Buff } from './BuffTypes'
 
 function makeBuff(overrides: Partial<Buff> = {}): Buff {
   return {
