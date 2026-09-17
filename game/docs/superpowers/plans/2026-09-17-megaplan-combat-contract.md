@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Non-trivial production missions MUST follow `game/docs/architecture/architecture-worker-workflow.md` (G0–G5) and return the G5 evidence report.
 
-> **Review revision:** v6 — incorporates code review round 5 (at `57475205`). Round-5 fixes: event queues are **per-execution frames**, not one global FIFO — an op's emissions drain inside ITS barrier before siblings AND before outer queued events (true depth-first consequence trees: `E1→X→E3→Z→Y→E2`, never `E1→X→E2→E3`; batch frames get the same isolation); `PeriodicRequestsCommitted` drops the fabricated `origin` (a lifecycle root isn't a `CombatOperation` — the event carries `holderId`+`rootActionId`; the built-in handler mints each request's OWN `origin{kind:'buff_periodic', originId: instanceId:periodicId, sourceId: req.sourceId, causationEventId}`); group-atomic id reservation everywhere — `enqueueAuthored`, handler-returned op lists, and batches all validate+reserve ALL ids before their first member executes (a produced group never commits op 1 then discovers a bad id in op 2); batch structural validation now runs BEFORE runtime preflight (a malformed graph is a structural fault independent of combat state — a dead target can't hide a duplicate id); `createLifecycleSink(rootActionId)` is a public scheduler API and event ordinals are scheduler-owned per scope (`eventOrdinalByScope`) so two sinks for one scope never collide; `workThisBarrier` resets per ROOT unit (authored op OR root-queue event — lifecycle roots get a fresh budget too); handler-emitted events settle AFTER the handler's returned settlement (locked ordering); `registerImmediateHandler` is one-handler-per-type (duplicate → structural fault); M3 exit criterion + R9 wording fixed (profiles not origins; "settlement guard violation" covers both guards). v5 (`57475205`): round 4. v4 (`aead334b`): round 3. v3 (`5c17f2a3`): round 2. v2 (`eb8587d2`): round 1.
+> **Review revision:** v7 — incorporates code review round 6 (at `239a60bc`). Round-6 fix: an op's `combatSequence` is allocated at **execution-START** — before `executor.execute()` — so a cause's sequence always precedes its effects' (an authority emitting mid-execute can no longer get a lower sequence than the op that emitted it). Semantics locked: `combatSequence` = chronological creation/execution-start order ONLY; the causal tree is built from `causationOperationId`/`causationEventId`/`rootActionId`/`parentOperationId` — `CombatTrace.toString()` renders the tree from causation fields, never by sorting on sequence (depth-first settlement order ≠ numeric order: `A=1,E1=2,E2=3,X=4` settles as `A→E1→X→E2`). v6 (`239a60bc`): round 5 — event queues are **per-execution frames**, not one global FIFO — an op's emissions drain inside ITS barrier before siblings AND before outer queued events (true depth-first consequence trees: `E1→X→E3→Z→Y→E2`, never `E1→X→E2→E3`; batch frames get the same isolation); `PeriodicRequestsCommitted` drops the fabricated `origin` (a lifecycle root isn't a `CombatOperation` — the event carries `holderId`+`rootActionId`; the built-in handler mints each request's OWN `origin{kind:'buff_periodic', originId: instanceId:periodicId, sourceId: req.sourceId, causationEventId}`); group-atomic id reservation everywhere — `enqueueAuthored`, handler-returned op lists, and batches all validate+reserve ALL ids before their first member executes (a produced group never commits op 1 then discovers a bad id in op 2); batch structural validation now runs BEFORE runtime preflight (a malformed graph is a structural fault independent of combat state — a dead target can't hide a duplicate id); `createLifecycleSink(rootActionId)` is a public scheduler API and event ordinals are scheduler-owned per scope (`eventOrdinalByScope`) so two sinks for one scope never collide; `workThisBarrier` resets per ROOT unit (authored op OR root-queue event — lifecycle roots get a fresh budget too); handler-emitted events settle AFTER the handler's returned settlement (locked ordering); `registerImmediateHandler` is one-handler-per-type (duplicate → structural fault); M3 exit criterion + R9 wording fixed (profiles not origins; "settlement guard violation" covers both guards). v5 (`57475205`): round 4. v4 (`aead334b`): round 3. v3 (`5c17f2a3`): round 2. v2 (`eb8587d2`): round 1.
 
 **Goal:** Build the shared combat runtime spine — `core/battle/contracts/` (pure types: operations/results/events/origin/selectors) + `core/battle/runtime/` (implementations: `CombatRng` impls, `ElementalStateRegistry` factory, `StaticCapabilityQuery`, `CombatEventSink`), `CombatScheduler` (sole `combatSequence` allocator + per-operation settlement barrier + exactly-once event dispatch + reaction batch frames), `CombatOperationExecutor` (pure router, zero scheduler knowledge) and authority port interfaces — that Buff System Reimagined, SkillDefinition, and ReactionSystem all plug into.
 
@@ -248,7 +248,10 @@ interface CombatAuthorityExecutionContext {
 
 // contracts/trace.ts — review r2 HIGH 2: op sequence lives on the RECORD, not the op
 interface CombatExecutionRecord {
-  combatSequence: number                  // stamped at execute time — sole allocator: scheduler
+  combatSequence: number                  // allocated at EXECUTION-START — before
+                                          // executor.execute() — so an op's sequence
+                                          // always precedes the events it emits
+                                          // (r6 BLOCKER). Sole allocator: scheduler
   operation: ResolvedCombatOperation
   result: CombatOperationResult
 }
@@ -311,7 +314,12 @@ class CombatTrace {
   records: readonly CombatExecutionRecord[]    // ops carry sequence HERE, not on the op
   recordExecution(record: CombatExecutionRecord): void
   recordEvent(event: CombatEvent): void        // events carry their own stamped sequence
-  toString(): string                           // §85 tree format
+  /** §85 tree format — the CAUSAL tree is built from causation fields
+      (rootActionId / parentOperationId / causationOperationId /
+      causationEventId), NOT by sorting on combatSequence (r6): sequence is
+      chronological creation/execution-start order — depth-first settlement
+      makes numeric order ≠ tree order (A=1,E1=2,E2=3,X=4 settles A→E1→X→E2). */
+  toString(): string
 }
 class CombatSettlementFault extends Error { /* fatal battle state — see M5 */ }
 // Dual guard (review r3 HIGH 5): nesting depth catches recursive batch frames;
@@ -607,9 +615,14 @@ run():
   // quiescent = both empty
 
 executeOpWithBarrier(op):                          // every op — authored, generated,
-  frameEvents: StampedCombatEvent[] = []           //   batch, deferred — gets its own
-  result = executor.execute(op, opSink(op, frameEvents))   // frame + its own barrier
-  recordExecution({sequence: allocateSeq(), op, result})
+  opSequence = allocateSeq()                        //   batch, deferred — gets its own
+  frameEvents: StampedCombatEvent[] = []           //   frame + its own barrier.
+  // r6 BLOCKER — sequence BEFORE execute: an authority emits via opSink DURING
+  // execute; allocating here guarantees seq(op) < seq(every event it emits).
+  // Allocating after execute inverts causality (E1 stamped 100, its parent
+  // op 101) and breaks the canonical total order.
+  result = executor.execute(op, opSink(op, frameEvents))
+  recordExecution({combatSequence: opSequence, op, result})
   workThisBarrier++; if > maxImmediateWorkPerBarrier → FAULT
   drainEvents(frameEvents)                          // §55: ALL of op's consequences
                                                     // settle before its siblings
@@ -701,7 +714,7 @@ Sink factories (r5 HIGH 2):
 // the same event via a lifecycle sink — one lane for both triggers.
 ```
 
-Key invariants (review-locked): `rootEventQueue` drains before `authoredQueue` — an authored op's consequences always settle before the next authored op (§55). Consequence trees are strictly depth-first via per-execution event frames: an op's emissions settle inside ITS barrier before siblings and before outer queued events — canonical order `E1 → X → E3 → Z → Y → E2` (r5 BLOCKER 1; a global FIFO produces `E1 → X → E2 → E3`, which is WRONG). Handler-emitted events settle AFTER the handler's returned settlement (r5 HIGH 4). Batch ops get the same frame isolation — outer events cannot interleave mid-batch (§43).
+Key invariants (review-locked): `rootEventQueue` drains before `authoredQueue` — an authored op's consequences always settle before the next authored op (§55). Consequence trees are strictly depth-first via per-execution event frames: an op's emissions settle inside ITS barrier before siblings and before outer queued events — canonical order `E1 → X → E3 → Z → Y → E2` (r5 BLOCKER 1; a global FIFO produces `E1 → X → E2 → E3`, which is WRONG). Handler-emitted events settle AFTER the handler's returned settlement (r5 HIGH 4). Batch ops get the same frame isolation — outer events cannot interleave mid-batch (§43). **`combatSequence` semantics (r6):** the number is chronological creation/execution-start order — ops stamp at execution-start, events at enqueue-commit. It is NOT a depth-first completion order: `A=1, E1=2, E2=3, X=4` settles `A→E1→X→E2`. Causality lives in the causation fields; trace/debug trees must be built from `causationOperationId`/`causationEventId`/`rootActionId`/`parentOperationId`, never by sorting on `combatSequence`.
 
 - [ ] **Step 1 — Failing tests (executor):** each op type → its port once, payload+origin intact; **missing port → throw (structural fault), NOT a typed `failed` result** (contract §50 — broken wiring is not a combat outcome); result payloads populated (`push_gauge` returns before/after).
 - [ ] **Step 2 — Failing tests (scheduler — the corrected semantics):**
@@ -722,7 +735,9 @@ Key invariants (review-locked): `rootEventQueue` drains before `authoredQueue` �
   - deferred op happy path: materializes using prior in-batch results (fake damage result → heal amount derived); materialized op KEEPS the deferred `operationId`.
   - **periodic bridge (r4 BLOCKER 2 + r5 BLOCKER 2):** stub authority emits `PeriodicRequestsCommitted` via `ctx.events` → built-in handler returns ops → `deal_damage`/`heal` settle in the same barrier with ids `periodic.${eventId}.${i}` and per-request `origin{kind:'buff_periodic', sourceId:req.sourceId, rootActionId:event.rootActionId, causationEventId}`; a lifecycle-scoped sink emits the same event shape; an event carrying requests from MULTIPLE sourceIds produces ops with distinct correct sourceIds (no fabricated shared origin).
   - batch frame: preflight fail → zero ops + skip event; preflight pass → ops run in order, per-op settle, authored ops can't interleave mid-batch; nested batch runs to completion inside parent frame.
-  - sequence ownership: events stamped by scheduler (authorities emit pending events with no envelope); ops' `combatSequence` allocation point locked (stamp at execute-time — record choice in doc).
+  - sequence ownership: events stamped by scheduler (authorities emit pending events with no envelope); ops' `combatSequence` allocated at execution-START before `executor.execute()` (r6 — locked, not a choice).
+  - **sequence causality (r6 BLOCKER — THE guard):** op A emits E1,E2; E1's handler produces X → assert `seq(A) < seq(E1)`, `seq(A) < seq(E2)`, `seq(E1) < seq(X)` — a cause's sequence always precedes its effects'. (The v6 bug stamped `E1 < A` because the op's sequence was allocated after `execute` returned.)
+  - **trace tree vs chronology (r6):** A emits E1,E2; E1→X; X→E3 → sequences `A1,E1=2,E2=3,X=4,E3=5`; assert `CombatTrace.toString()` renders the causal tree `A├E1├X└E3└E2` (parenting by causation fields) — NOT a flat `A,E1,E2,X,E3` sequence sort.
   - **dual guard (r3 HIGH 5):** recursive nesting past `maxSettlementNestingDepth` → fault; FLAT op→event→op→event chain past `maxImmediateWorkPerBarrier` → fault; fault `reason` distinguishes the two (`settlement_depth_exceeded` vs `settlement_work_budget_exceeded`).
   - fault is out-of-band (r3 HIGH 6): `trace.recordFault` + `diagnosticSink.emit` called; NO event queue receives `CombatSettlementFaultEvent` (a halted scheduler can't drain it); scheduler state → faulted; committed op stays `resolved`.
 - [ ] **Step 3 — Implement.**
@@ -816,7 +831,7 @@ The adapter is allowed to ADD a `CombatSystem` method for the reaction channel i
 
 ## Open questions for coordinator
 
-1. RESOLVED (review r2): `combatSequence` stamped by scheduler at `enqueueEvent` (events) / execute time (ops — lives on `CombatExecutionRecord` in the trace, NOT on the op). Every executed op + every stamped event gets one; enqueued-but-never-executed ops get none.
+1. RESOLVED (review r2 + r6): `combatSequence` stamped by scheduler at `enqueueEvent` commit (events) / **execution-START** (ops — allocated before `executor.execute()` so an op's sequence precedes the events it emits; lives on `CombatExecutionRecord` in the trace, NOT on the op). Every executed op + every stamped event gets one; enqueued-but-never-executed ops get none. Semantics: chronological creation/execution-start order — the causal tree comes from causation fields, not sequence order.
 2. RESOLVED (review r3): `PreconditionChecker` stays YAGNI — `buff_participant` + `entity_alive` only; add `resource_at_least`/`stacks_at_least` when a real atomic batch needs it.
 3. RESOLVED (review r2): explicit reaction damage channel accepted (e.g. `applyReactionDamage`), but the infrastructure plan does NOT pin mitigation/resistance rules — `damageProfile` owns the formula.
 4. RESOLVED (review r4, corrected): Xuyên Thổ's "cap 25%" clamps the heal RATIO (`min(0.05·D, 0.25)` — evaluated by StackExpr at resolution time, D≤5 makes it a natural boundary), NOT a max-Hp clamp — `capFractionOfHealTargetMaxHp` was removed from both `DeferredOperation` and `HealOperation` (YAGNI, no real consumer).
