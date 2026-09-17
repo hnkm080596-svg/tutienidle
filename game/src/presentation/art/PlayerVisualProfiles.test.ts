@@ -5,6 +5,7 @@ import {
   getCultivateTexture,
   resolvePlayerVisualProfileId,
 } from '@/presentation/art/PlayerVisualProfiles'
+import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
 
 // Player visual profile catalog (plan §4.1 + §9 unit tests):
 // - chọn đúng profile theo realmId/cultivationPath;
@@ -29,6 +30,31 @@ describe('PlayerVisualProfiles — resolvePlayerVisualProfileId', () => {
     expect(resolvePlayerVisualProfileId({ realmId: 'weird', cultivationPath: 'dao_si' })).toBe(
       'mortal',
     )
+  })
+
+  // T4-39 — the_tu is a valid CultivationPathId and must resolve its own
+  // logical profile (art layer may still fall back to mortal textures).
+  it('the_tu → the_tu', () => {
+    expect(resolvePlayerVisualProfileId({ realmId: 'qi_refining', cultivationPath: 'the_tu' })).toBe(
+      'the_tu',
+    )
+  })
+
+  // phap_tu_an collapsed into phap_tu + cultivationWay (save v66) — the
+  // legacy id stays a mortal fallback, never revived.
+  it('legacy phap_tu_an → mortal fallback (not revived)', () => {
+    expect(resolvePlayerVisualProfileId({ cultivationPath: 'phap_tu_an' })).toBe('mortal')
+  })
+})
+
+describe('PlayerVisualProfiles — profile coverage', () => {
+  it('every PlayerVisualProfileId has a presentation profile entry', () => {
+    const ids = ['mortal', 'phap_tu', 'kiem_tu', 'the_tu'] as const
+
+    for (const id of ids) {
+      expect(PLAYER_VISUAL_PROFILES[id], `missing profile for '${id}'`).toBeDefined()
+      expect(PLAYER_VISUAL_PROFILES[id].id).toBe(id)
+    }
   })
 })
 

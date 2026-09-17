@@ -7,6 +7,7 @@
 // - `phap_tu`: art Pháp Tu mới trong combat; tu luyện tạm dùng fallback
 //   Phàm Nhân đã thống nhất.
 // - `kiem_tu`: CHƯA có art riêng — fallback toàn bộ sang Phàm Nhân.
+// - `the_tu`: CHƯA có art riêng — fallback toàn bộ sang Phàm Nhân.
 //
 // Scenes chỉ nhận PROFILE ID (không cầm Player store/GameManager) qua
 // Phaser registry + event `player_visual_profile_changed`.
@@ -140,6 +141,30 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
     id: 'kiem_tu',
 
     // Chưa có art riêng — toàn bộ fallback Phàm Nhân (plan §2).
+    combatTextureKey: MORTAL_COMBAT_KEY,
+    combatTextureUrl: `/assets/characters/player/mortal/${MORTAL_COMBAT_KEY}.png`,
+    combatSourceSize: { w: 1312, h: 1199 },
+
+    cultivateTextureKey: MORTAL_CULTIVATE_KEY,
+    cultivateTextureUrl: `/assets/characters/player/mortal/${MORTAL_CULTIVATE_KEY}.png`,
+    cultivateSourceSize: { w: 1233, h: 1275 },
+
+    bodyAnchors: standingAnchors({
+      head: { x: 0.55, y: 0.25 },
+      chest: { x: 0.55, y: 0.46 },
+      castHand: { x: 0.32, y: 0.62 },
+      offHand: { x: 0.78, y: 0.47 },
+      feet: { x: 0.55, y: 0.96 },
+    }),
+
+    cultivateBodyAnchors: lotusAnchors(),
+  },
+
+  the_tu: {
+    id: 'the_tu',
+
+    // Chưa có art riêng — toàn bộ fallback Phàm Nhân (cùng policy kiem_tu;
+    // art The Tu là future content).
     combatTextureKey: MORTAL_COMBAT_KEY,
     combatTextureUrl: `/assets/characters/player/mortal/${MORTAL_COMBAT_KEY}.png`,
     combatSourceSize: { w: 1312, h: 1199 },
