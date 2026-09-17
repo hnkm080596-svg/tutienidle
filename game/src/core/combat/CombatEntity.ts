@@ -63,9 +63,9 @@ export interface CombatEntity {
   // retired: the hidden path fuels reactive checks from currentThe, and
   // the visible path has no pool resource at all.
 
-  // Ward — máu phụ hấp thụ damage TRƯỚC currentHp (xem
-  // CombatSystem.resolveHit()). State "sống" như currentHp/currentMp,
-  // reset về 0 khi combatant mới được dựng cho trận.
+  // Ward - bonus HP absorbing damage BEFORE currentHp (see
+  // CombatSystem.resolveHit()). "Living" state like currentHp/currentMp,
+  // reset to 0 when a new combatant is built for the battle.
   currentWard: number
 
   // The Tu Reimagined (plan Task 11, spec 2026-09-15 D3) — Sơn Nhạc

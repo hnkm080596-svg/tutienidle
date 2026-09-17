@@ -70,7 +70,7 @@ export class PillBag {
   get(pillId: string): Readonly<PillStack> | undefined {
     const stack = this.pills.get(pillId)
 
-    // Snapshot — xem MaterialBag.get.
+    // Snapshot - xem MaterialBag.get.
     return stack === undefined ? undefined : { ...stack }
   }
 

@@ -121,7 +121,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.baseStats.might).toBeGreaterThan(0)
   })
 
-  // Dev-stage rule (Mission G) — legacy stat keys are DROPPED, never
+  // Dev-stage rule (Mission G) - legacy stat keys are DROPPED, never
   // translated: a legacy save loses those grants instead of silently
   // carrying renamed keys forward.
   it('save cũ với stat key cũ → key legacy bị drop, không translate', () => {
@@ -162,7 +162,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     player.restoreFromSave(save)
 
-    // Current-shape keys survive; every legacy/retired key drops —
+    // Current-shape keys survive; every legacy/retired key drops -
     // 'attack' is NOT renamed to might, it is gone.
     expect(player.baseStats.defense).toBe(7)
     expect(player.baseStats.might).toBe(createBaseStats().might)

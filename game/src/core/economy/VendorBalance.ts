@@ -110,9 +110,9 @@ export function getUnitSellPrice(material: Material, realmId: string): number | 
     }
 
     case 'essence': {
-      // Cùng một authority thứ bậc realm với realmGrowthFactor — realm
-      // ngoài thang (không thể xảy ra với REALM_TIERS hiện có) fallback
-      // tier thấp nhất qua getRealmTier → 1.
+      // Same realm-tier authority as realmGrowthFactor - an out-of-range
+      // realm (impossible with the current REALM_TIERS) falls back to
+      // the lowest tier via getRealmTier -> 1.
       const tierIndex = Math.max(0, getRealmTier(meta?.realmId ?? realmId) - 1)
 
       return VENDOR_ESSENCE_PRICE_BASE * Math.pow(VENDOR_REALM_GROWTH, tierIndex)

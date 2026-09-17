@@ -1,4 +1,4 @@
-// Damage contract module (Mission G — the dormant class API was removed):
+// Damage contract module (Mission G - the dormant class API was removed):
 // `ActionDamageInfo`, `scaleActionDamage`, `HitResolveOptions` are live
 // turn-engine contracts (TurnBattleSystem, TurnSkillAction,
 // SkillToTurnSkillConverter); `ScheduledBasicImpact` is the parked
@@ -106,6 +106,6 @@ export interface ScheduledBasicImpact {
 
   knockbackDistance?: number
 
-  /** Bản Mệnh Pháp Bảo — attribution thread for the parked artifact port. */
+  /** ban_menh_phap_bao - attribution thread for the parked artifact port. */
   origin?: CombatActionOrigin
 }

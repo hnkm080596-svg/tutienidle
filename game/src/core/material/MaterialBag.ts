@@ -132,7 +132,7 @@ export class MaterialBag {
       materialId,
     )
 
-    // Snapshot — stack sống trong map là state nội bộ, caller chỉ đọc.
+    // Snapshot - the live stack in the map is internal state, callers only read.
     return stack === undefined
       ? undefined
       : { ...stack }

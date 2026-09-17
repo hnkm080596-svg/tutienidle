@@ -245,6 +245,18 @@ describe('D2 - worker assignment ownership boundary', () => {
     expect(system.getState('thanh_van_lam')!.assignedWorkers).toBe(0)
   })
 
+  it('setWorkerAssignment materializes state on a defined site (D4 follow-up)', () => {
+    // D4 made getSiteView observational: UI can now reach assignWorkers
+    // for a defined site whose domain state was never materialized. The
+    // command path must own materialization - silent no-op regressed
+    // the ChiHienQuan allocation flow.
+    const system = createSystem()
+
+    expect(system.getState('thanh_van_lam')).toBeUndefined()
+    expect(system.setWorkerAssignment('thanh_van_lam', 2, 5)).toBe(true)
+    expect(system.getState('thanh_van_lam')!.assignedWorkers).toBe(2)
+  })
+
   it('getState/getAllStates hand out detached snapshots - caller mutation cannot corrupt the domain', () => {
     const system = makeAutoSystem(['thanh_van_lam'])
     system.setWorkerAssignment('thanh_van_lam', 2, 5)

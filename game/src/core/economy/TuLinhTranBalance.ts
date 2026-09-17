@@ -31,7 +31,7 @@ export function getTuLinhTranCost(
 }
 
 /**
- * Active cultivation-speed bonus from Tụ Linh Trận effects — the
+ * Active cultivation-speed bonus from tu_linh_tran effects - the
  * domain-owned read (Mission G Task 39): group-filtered AND
  * deadline-checked, matching activateTuLinhTran's group-stack
  * accounting. Stray cultivationSpeedPercent on other groups is ignored.

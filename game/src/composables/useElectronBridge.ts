@@ -12,13 +12,14 @@ import type { CombatClockBridge } from '../presentation/clock/MainProcessClockSo
 // đó). Bản build web thường (npm run dev/build) không có window.electronAPI
 // -> mọi hàm ở đây no-op ngay, không ảnh hưởng gì tới target web.
 //
-// suspend/resume CHỈ để log/quan sát — KHÔNG có nghĩa vụ đúng đắn nào.
-// GameClock (core/idle/GameClock.ts) đã tự đúng qua Date.now()-diff bất kể
-// lý do gián đoạn (throttle, minimize, OS sleep...); core KHÔNG phụ thuộc
-// event này để catch-up đúng (xem GameManager.updateBattleFixedStep()).
-// KHÔNG nối event này vào OfflineProgressSystem — hệ thống đó chỉ chạy 1
-// lần lúc boot load (app khởi động lại), không dành cho gián đoạn
-// giữa phiên.
+// suspend/resume is for logging/observation ONLY - it carries no
+// correctness obligation. GameClock (core/idle/GameClock.ts) already
+// self-corrects via Date.now() diff regardless of
+// interruption reasons (throttle, minimize, OS sleep...); core does NOT
+// depend on this event for correct catch-up (see
+// GameManager.updateBattleFixedStep()). Do NOT wire this event into
+// OfflineProgressSystem - that system runs once at boot load (app
+// restart), not for mid-session interruptions.
 export interface ElectronBridgeAPI {
   isElectron: true
   // Mỗi onX trả về hàm unsubscribe (preload.ts gỡ đúng ipcRenderer handler

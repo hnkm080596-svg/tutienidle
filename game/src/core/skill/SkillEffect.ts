@@ -18,13 +18,14 @@ export interface SkillEffect {
 
   buffId?: string
 
-  // Pháp Tu Thuần Hệ (E-3, 2026-09-03) — CHỈ dùng cho effect
-  // 'add_stack'/'remove_buff' (trước đây 2 type này là no-op trong
-  // executor legacy, thuộc PassiveSystem). 'add_stack': số tầng cộng
-  // thêm lên buff ĐANG CHẠY (mặc định 1; không tạo mới nếu chưa có);
-  // 'refresh' = true gia hạn duration các instance vừa cộng.
-  // 'remove_buff': 'polarity' lọc theo hướng buff/debuff, 'count' số
-  // instance gỡ tối đa (mặc định 1, theo thứ tự pool).
+  // Phap Tu Thuan He (E-3, 2026-09-03) - ONLY used for 'add_stack' /
+  // 'remove_buff' effects (those two types used to be no-ops in the
+  // removed legacy executor, owned by PassiveSystem). 'add_stack':
+  // stacks added onto a RUNNING buff (default 1; does not create one if
+  // absent); 'refresh' = true extends the duration of topped-up
+  // instances.
+  // 'remove_buff': 'polarity' filters by buff/debuff direction,
+  // 'count' max instances removed (default 1, in pool order).
   refresh?: boolean
 
   polarity?: 'buff' | 'debuff'
@@ -45,20 +46,20 @@ export interface SkillEffect {
   // chung với effect 'debuff' (đi cùng buffId ở trên).
   ailmentChance?: number
 
-  // Chỉ dùng cho effect 'damage' — hệ số scale multiplier theo
-  // attribute của SOURCE lúc cast, cộng dồn qua nhiều entry. 1 phần
-  // tử trong `attributes` = coefficient thường (vd Linh Căn cho
-  // skill hệ pháp thuật); NHIỀU phần tử = "Adaptive" kiểu Last Epoch
-  // (dùng giá trị CAO NHẤT trong nhóm).
+  // ONLY for 'damage' effects - multiplier scaled by the
+  // attributes of the SOURCE at cast time, summed across entries. One
+  // element in `attributes` = a flat coefficient (e.g. Linh Can for
+  // spell-path skills); MULTIPLE elements = Last Epoch-style "Adaptive"
+  // (uses the HIGHEST value in the group).
   attributeScaling?: { attributes: StatType[]; ratioPerPoint: number }[]
 
-  // Pháp Tu Detonate (vd Bạo Viêm "cash in" stack Bỏng) — CHỈ dùng cho
-  // effect 'damage'. Nếu target đang có ailment này, gây bonus damage
-  // = stacks × damagePerStack (true damage, KHÔNG qua Armor/Resistance
-  // — cùng tinh thần primordialPower "bỏ qua mitigation") RỒI xoá hẳn
-  // ailment đó khỏi target — đổi DOT đang chạy lấy 1 cục burst ngay.
-  // Không set = effect 'damage' hoạt động
-  // như cũ (chỉ bắn missile thường).
+  // Phap Tu Detonate (e.g. Bao Viem "cash in" Burn stacks) - ONLY for
+  // 'damage' effect. If the target carries this ailment, deals bonus
+  // damage = stacks * damagePerStack (true damage, bypassing
+  // Armor/Resistance - same spirit as primordialPower's "ignore
+  // mitigation"), THEN removes the ailment entirely - converting a
+  // running DOT into an immediate burst. Unset = 'damage' behaves as
+  // before (plain missile).
   consumesAilmentId?: string
 
   damagePerStack?: number
@@ -84,26 +85,26 @@ export interface SkillEffect {
   // leech pipeline) — leechPercent KHÔNG tự áp dụng cho true damage này.
   healPercentOfDamage?: number
 
-  // Pháp Tu (Thổ Tu, 2026-08-15) — "tự nổ khiên": CHỈ dùng cho effect
-  // 'damage'. Tiêu thụ TOÀN BỘ currentWard của SOURCE (không phải
-  // target) cho 1 cục true damage bonus = currentWard × damagePerWardPoint
-  // (bỏ qua Armor/Resistance, cùng tinh thần consumesAilmentId), rồi
-  // xoá sạch currentWard về 0. Không set = effect 'damage' hoạt động
-  // như cũ.
+  // Phap Tu (Tho Tu, 2026-08-15) - "shield self-detonate": ONLY for the
+  // 'damage' effect. Consumes the SOURCE's ENTIRE currentWard (not the
+  // target) for a true-damage bonus burst = currentWard *
+  // damagePerWardPoint (bypasses Armor/Resistance, same spirit as
+  // consumesAilmentId), then clears currentWard to 0. Unset = 'damage'
+  // behaves as before.
   consumesWardForDamage?: boolean
 
   damagePerWardPoint?: number
 
-  // Kiếm Tu (Ngự Kiếm Thuật, 2026-08-15) — CHỈ dùng cho effect
-  // 'damage'. Bắn (source.realmIndex + 1) missile liên tiếp thay vì
-  // 1, mỗi cái tự roll critical/dodge riêng.
+  // Kiem Tu (Ngu Kiem Thuat, 2026-08-15) - ONLY for 'damage' effects.
+  // Fires (source.realmIndex + 1) missiles in a row instead of 1, each
+  // rolling critical/dodge independently.
   hitCountByRealm?: boolean
 
-  // Pháp Tu Thuần Hệ (E-4, 2026-09-03) — CHỈ dùng cho effect 'damage'.
-  // Bắn SỐ LẦN CỐ ĐỊNH N missile (vd Bát Thuần "8 đợt sóng"), mỗi cái
-  // tự roll critical/dodge riêng — cùng tinh thần hitCountByRealm.
-  // LOẠI TRỪ NHAU: nếu cả hai đều set, hitCount THẮNG (số tường minh
-  // ưu tiên hơn công thức theo cảnh giới).
+  // Phap Tu Thuan He (E-4, 2026-09-03) - ONLY for 'damage' effects.
+  // Fires a FIXED count of N missiles (e.g. Bat Thuan "8 waves"), each
+  // rolling critical/dodge independently - same spirit as
+  // hitCountByRealm. MUTUALLY EXCLUSIVE: if both are set, hitCount WINS
+  // (the explicit number beats the realm formula).
   hitCount?: number
 
   // "Cảnh giới càng cao sát thương càng lớn": cộng thêm ratio ×

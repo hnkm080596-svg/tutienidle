@@ -19,7 +19,7 @@
 export const OVERLAY_LAYERS = {
   /** CombatPauseOverlay — deliberately below the curtain: a route transition always covers the pause prompt. */
   combatPause: 900,
-/** ActionFeedbackLog — bottom-right action history. */
+/** ActionFeedbackLog - bottom-right action history. */
   feedback: 1200,
   /** ToastContainer — transient notifications. */
   toast: 1500,

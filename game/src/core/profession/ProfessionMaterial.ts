@@ -50,7 +50,7 @@ export interface ProfessionMaterialMeta {
 }
 
 /**
- * Authoritative Gỗ/Quáng id constructor — `<realmId>_<kind>_<age>`.
+ * Authoritative wood/ore (Go/Quang) id constructor - `<realmId>_<kind>_<age>`.
  * Parsers (DecomposeSystem ORE_ID_PATTERN) mirror this grammar.
  */
 export function buildProfessionMaterialId(

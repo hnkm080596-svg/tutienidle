@@ -112,9 +112,6 @@
   "// host (immune to Chromium's rAF throttling) — prefer it when present. Plain",
   "// ARCH-013/L04 — the Electron bridge subscriptions are an owned resource:",
   "// RC-3: presentationActive has exactly ONE owner — the coordinator, via this",
-  "// Buff KHÔNG phải Phù/Trận legacy — turn engine resolve effect",
-  "// 'buff'/'debuff' qua buffRegistry.get() (THROW khi thiếu); bỏ dòng",
-  "// này làm registry rỗng và crash giữa trận (fix review 2026-08-26).",
   "// Skill buff-carrying Kiếm Tu cũ đã chuyển node (spec 2026-08-29),",
   "// registry vẫn cần cho buff hệ khác (Thổ Giáp/Độ Kiếp...).",
   "// Task 8 (A11, spec §6.1) — an unwatched battle pauses visibly and resumes",
@@ -152,11 +149,6 @@
   "// Beta Phase 4 (Notification/UX) — rút toast phát sinh TRONG",
   "// GameManager (hiện chỉ loot, xem GameManager.grantItemDrops())",
   "// mỗi tick, đẩy vào notificationStore để ToastContainer hiện.",
-  "// Đang trong trận thì không cộng tu vi — 2 việc loại trừ nhau.",
-  "// Tầm Bảo (gather, trước là \"Thu Thập\") không bị ảnh hưởng: nó tự",
-  "// tính tiến độ qua startedAt/collect(), không phụ thuộc vào nhánh",
-  "// này. Tu vi vẫn tăng cả trong combat; event cultivation_changed chỉ",
-  "// điều khiển pose hình ảnh.",
   "// Tiểu cảnh giới tự tăng (2026-08-28) — tick() bấm breakthrough()",
   "// mỗi khi tu vi đầy, không còn checkbox bật/tắt (đúng tinh thần",
   "// idle game + chủ game quyết định). Đại cảnh giới vẫn qua nghi lễ",
@@ -179,15 +171,11 @@
   "// bumpState() bên dưới CỐ Ý giữ nguyên (chạy mỗi tick cho đồng hồ/",
   "// resource counter): stat đã được tách hẳn khỏi stateVersion.",
   "// ARCH-002 (M7) — the live runtime channel (timed effects, Phu/Tran",
-  "// Entry flow: guest auth, đăng nhập, tạo nhân vật — mọi đường vào game",
-  "// đều đi qua đây để GameRoot hiện. Idempotent: gọi lại khi đã boot là",
   "// Remediation Task 5 — bootInFlight guard trong composable: boot thứ 2",
   "// khi boot đầu còn pending bị skip; guard reset khi fail để retry chạy",
   "// được. Phần dưới chỉ xử lý UI hiển thị theo outcome.",
   "// Fix (2026-08-20) — grant \"Trảm\" save cũ (idempotent).",
   "// Phap Tu Reimagined Task 2 — mortal-path actives (idempotent).",
-  "// huy_quyen (The Tu Reimagined §2.3) shares this seam — learned,",
-  "// not equipped — so the ung_the offer gate reads it on old saves.",
   "// Nhân vật mới: học sẵn tâm pháp + skill + grant khởi đầu.",
   "// Phap Tu Reimagined Task 2 — mortal-path actives.",
   "// Huy Quyen — second mortal basic, learned unequipped; grinding it",
@@ -201,7 +189,6 @@
   "// subscription) driving a detached GameManager — under HMR that is a",
   "// Remediation Task 5 — symmetric cleanup: event-bus handlers, DOM",
   "// listeners, tick + autosave intervals (idempotent, gọi lại một cách an toàn).",
-  "<!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot (intro, hoặc khi transition vào game chưa entered). -->",
   "<!-- GameRoot chỉ hiện khi boot xong -->",
   "<!-- Task 8 (A11) — the unwatched pause. Data-driven by useCombatPause() (visibilitychange -> freezeCombat('tab-hidden')), NOT the curtain above: separate owner (the battle vs. the presentation coordinator), separate z-layer (OVERLAY_LAYERS.combatPause < curtain so the curtain can always cover it), neither may drive the other. -->",
   "/* body có margin mặc định 8px của trình duyệt — .game-root (100vh) bị đẩy lệch xuống đúng 8px đó, khiến phần dưới cùng (bottom bar, tab loadout...) bị tràn khỏi viewport. Reset ở đây vì cả app chưa có global CSS reset nào khác. background/font-family/color áp token từ assets/theme.css (import trong main.ts) — tránh chớp nền trắng mặc định trước khi Vue mount, và mọi component kế thừa font/màu chữ gốc trừ khi tự override. */"
@@ -254,8 +241,7 @@
   "// loại trừ luôn identifier lặp trong cùng khai báo (hiếm khi",
   "// xảy ra, nhưng an toàn hơn khi chỉ dùng span initializer).",
   "/** * Tìm mọi Identifier node có text === name trong toàn bộ sourceFile, trừ * những occurrence NẰM TRONG excludeSpan (chính khai báo — kể cả gọi đệ * quy trong thân hàm). Dùng AST (không phải regex trên text) vì AST tự * nhiên bỏ qua comment — comment nhắc tên hàm không được tính là * \"reference\", tránh false negative (bug gốc: nếu comment nhắc tên hàm * đủ để qua guard, guard sẽ không bắt được orphan thật). */",
-  "/** Regex word-boundary trên template thô (đã strip comment) — đủ bắt @click=\"foo\", :prop=\"foo\", {{ foo() }}, shorthand @foo. */",
-  "/** * onRestoreOk grants starter skills to old saves. huy_quyen once had TWO * grant blocks (the mortal-skill loop + a second standalone block) — a * no-op via the has() guard, but duplicated intent. This guard pins one * seam: the 'huy_quyen' literal may appear at most once inside the * onRestoreOk callback. */"
+  "/** Regex word-boundary trên template thô (đã strip comment) — đủ bắt @click=\"foo\", :prop=\"foo\", {{ foo() }}, shorthand @foo. */"
  ],
  "src/assets/dongFuBuildingAssets.test.ts": [
   "// ImageMagick processes decoding 1254×1254 PNGs) REMOVED — dưới tải",
@@ -1082,11 +1068,9 @@
  "src/components/layout/LeftPanel.building.test.ts": [
   "// i18n (task 2.2 lô 3) — component render qua t() nên assertion qua",
   "// i18n.global.t(key) thay vì raw vi string (pattern HomeResourceStrip.test).",
-  "// not the Pinia store object — mirror that or the realm gate is skipped.",
   "// Tên công trình CHỈ hiện MỘT LẦN DUY NHẤT, trong chính title bar —",
   "// không còn dải header con riêng bên dưới (BuildingPanelHeader.vue",
-  "// đã bị xoá hẳn, thay bằng slot #heading/#header-actions của",
-  "// Mission G Task 36 — mortal (tier 1) cannot take a level-2 building;"
+  "// đã bị xoá hẳn, thay bằng slot #heading/#header-actions của"
  ],
  "src/components/layout/LeftPanel.vue": [
   "// Equipment cố định 30% chỉ hiện cho Hành Trang — 'crafting' (Tứ",
@@ -1107,10 +1091,6 @@
   "// UI-003 (Task 2) — arrow-key tab navigation (WCAG tabs pattern).",
   "<!-- UI-003/004 (Task 2, 2026-09-07) — tabs semantics thật: role=\"tab\" + aria-selected + arrow-key navigation; form errors qua aria-invalid/aria-describedby + live region announcement. -->",
   "<!-- UI-004 — submit-level error là live region (screen reader đọc khi hiện). -->"
- ],
- "src/components/onboarding/CharacterCreationScreen.test.ts": [
-  "// onMounted fires reroll() against the mock service — flush it, then",
-  "// walk name → talent → attributes through the real controls."
  ],
  "src/components/panels/AlchemyView.vue": [
   "// Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —",
@@ -2290,13 +2270,6 @@
   "// contextBridge — interface bên dưới PHẢI khớp đúng shape object export ở",
   "// đó). Bản build web thường (npm run dev/build) không có window.electronAPI",
   "// -> mọi hàm ở đây no-op ngay, không ảnh hưởng gì tới target web.",
-  "// suspend/resume CHỈ để log/quan sát — KHÔNG có nghĩa vụ đúng đắn nào.",
-  "// GameClock (core/idle/GameClock.ts) đã tự đúng qua Date.now()-diff bất kể",
-  "// lý do gián đoạn (throttle, minimize, OS sleep...); core KHÔNG phụ thuộc",
-  "// event này để catch-up đúng (xem GameManager.updateBattleFixedStep()).",
-  "// KHÔNG nối event này vào OfflineProgressSystem — hệ thống đó chỉ chạy 1",
-  "// lần lúc boot load (app khởi động lại), không dành cho gián đoạn",
-  "// giữa phiên.",
   "// Mỗi onX trả về hàm unsubscribe (preload.ts gỡ đúng ipcRenderer handler",
   "// đã đăng ký) — teardown gọi được, không chồng listener qua HMR/remount",
   "// Task 7 (2026-09-10) — main-process clock host bridge, consumed by",
@@ -2352,8 +2325,7 @@
   "// Pháp/Phù Chú gắn theo SLOT nhân vật chứ không theo item cụ thể, xem",
   "// EquipmentSlotState.ts — 1 món đồ nằm im trong túi KHÔNG thừa hưởng",
   "// cấp Cường Hóa/Trận Pháp/Phù Chú của slot đó, chỉ món ĐANG MẶC mới",
-  "// thật sự có những thứ này).",
-  "// Callers must pass quoteMainStatRange() output — never re-derive."
+  "// thật sự có những thứ này)."
  ],
  "src/composables/useGameState.ts": [
   "/** * GameManager là plain class, không phải Vue reactive state (đúng * ý thiết kế — core logic tách biệt khỏi framework, xem ghi chú * trong GameManager.ts). Component con cần gọi method trên nó thì * inject qua đây thay vì prop-drilling qua nhiều tầng panel. * * `stateVersion` là cầu nối reactivity duy nhất: App.vue tick() * tăng nó mỗi giây, và mọi action làm thay đổi bag/equipment (equip, * craft, enhance...) PHẢI gọi `bumpState()` ngay sau khi mutate qua * GameManager để UI phản hồi tức thời thay vì chờ tick kế tiếp. * Component đọc bag chỉ cần `computed(() => { stateVersion.value; return gameManager.xxxBag.getAll() })`. */"
@@ -2512,8 +2484,7 @@
   "// Đầu tư đủ điều kiện Trúc Cơ (nhánh heaven, không cần great_dao).",
   "// ARCH-002 (M7): startTribulation resolves internally — patch the",
   "// Slot state (Cường Hóa) KHÔNG bị reset bởi unequip-all.",
-  "// Modifier equipment đã sync rỗng NGAY lúc trigger (trước cả resolveVictory).",
-  "// Mission G Task 35 — pin the single-owner swap: the breakthrough"
+  "// Modifier equipment đã sync rỗng NGAY lúc trigger (trước cả resolveVictory)."
  ],
  "src/composables/useTribulation.ts": [
   "// Tu t? h?c + trang b? S?N 1 chiA?u c? b?n ngay lA?c ch?n path, tA�nh",
@@ -2655,14 +2626,12 @@
   "// Bản Mệnh Pháp Bảo — combat \"subgun\" (doc §8-11). Action nền + 3",
   "// hướng Công/Thủ/Khống, đọc/ghi qua Battle.artifactRuntime. Không tự",
   "// giữ state ngoài Battle (runtime-only, xem ArtifactRuntime.ts).",
-  "/** * Parked port — the dormant ActionImpactSystem class was removed in * Mission G; only the scheduleBasic member this file calls survives * as the contract (the reimagine provides a real implementation). */",
   "// ---- Cấu hình action nền (doc §8.1/§9) ----",
   "/** \"45% Power của hành mỗi phát\" — ratio của SkillDamageComponent, KHÔNG phải multiplier tổng. */",
   "// ---- Công — Ngũ Hành Liên Châu (doc §8.2) ----",
   "// ---- Thủ — Ngũ Hành Hộ Thể (doc §8.3) ----",
   "// ---- Khống — Ngũ Hành Trấn Linh (doc §8.4) ----",
   "/** element undefined (không hành nào equip) -> damage/VFX trung tính (physical), không tự mở hành. */",
-  "/** Shared cycle formula — used internally by the parked artifact tick. */",
   "/** * Tick chính — gọi mỗi fixed-step TRONG battle 'fighting', ĐỘC LẬP * isIncapacitated() (player bị CC KHÔNG được dừng artifact, doc §11 * điểm 3 + acceptance §15.3). */",
   "// Không có mục tiêu sống lúc activation tới hạn — bỏ qua activation",
   "// này, chờ chu kỳ kế (không dồn/không target quái pending-spawn,",
@@ -2729,7 +2698,6 @@
   "/** Disposes all Tone nodes + caches — called on reset/test teardown. */"
  ],
  "src/core/battle/ActionImpactSystem.ts": [
-  "// Damage contract module (Mission G — the dormant class API was removed):",
   "// Gameplay không phụ thuộc VFX/Phaser — event chỉ mang dữ liệu grid.",
   "/** * Thay thế MissileDamageInfo — cùng shape, tên trung lập hành động. * `scaling` (R3 re-audit, AR-03 gap) — carries the authored per-skill * attributeScaling/manaScalingRatio through to * CombatSystem.resolveActionHit(), which is the only place with a live * `source` entity to evaluate them against. */",
   "/** * The Tu Reimagined (spec 2026-09-15 section 3.4) — Cuong Chien * missing-HP scalar: bonus physical damage proportional to the * attacker's LIVE missing-HP fraction, resolved per hit at impact * (never a stat). `missingHpBonusPerMissingPercent` 0.02 = +2% damage * per 1% missing HP; `missingHpBonusCap` bounds the total bonus * multiplier (2.0 => up to x3 at 100% missing). */",
@@ -2737,34 +2705,24 @@
   "/** false = mục tiêu phụ trong AOE (áp secondaryPercent). */",
   "/** Bản Mệnh Pháp Bảo — attribution cho applyActionHit dispatch milestone. */",
   "/** * Kiem Tu Reimagined Task 2 — skip the accuracy/evasion roll entirely. * Domain providers (e.g. Ngu Kiem Dao phi kiem) decide this; the engine * only executes the flag. */",
-  "/** * Resolved armor policy for PHYSICAL hits — the caller has already made * its roll; the calculator only executes it. `armorBypass` drops the * mitigation term to 0; `armorPierceFraction` (0..1) multiplies the * mitigation down by that fraction. Ignored for elemental/primordial * (no armor term exists there). */",
-  "/** Bản Mệnh Pháp Bảo — attribution thread for the parked artifact port. */"
+  "/** * Resolved armor policy for PHYSICAL hits — the caller has already made * its roll; the calculator only executes it. `armorBypass` drops the * mitigation term to 0; `armorPierceFraction` (0..1) multiplies the * mitigation down by that fraction. Ignored for elemental/primordial * (no armor term exists there). */"
  ],
  "src/core/battle/ActionTargetingSystem.adversarial.test.ts": [
   "// QA adversarial probes (2026-09-04 quick review) — AOE Shape Extension."
  ],
  "src/core/battle/ActionTargetingSystem.test.ts": [
-  "// Combat Grid Rework — selection theo đơn vị GRID.",
   "// Task 3 (D16): the attackRange-gated helpers retired with the stat —",
   "// Quái ở cột 14 (xa cổng) vẫn là candidate — pre-position ngay cả",
   "// khi quái còn xa theo cột.",
   "// rankTargetsByStrategy: lowest_hp hòa HP → gần hơn thắng."
  ],
  "src/core/battle/ActionTargetingSystem.ts": [
-  "// Combat Grid Rework — chọn primary target + vùng ảnh hưởng hoàn toàn",
-  "// theo đơn vị GRID (cột/hàng). Pure functions, không state.",
   "// stat — reach now belongs to action targeting, not Stats.",
   "// nearest: gần theo CỘT trước, hòa thì theo thứ tự danh sách ổn định.",
-  "/** * Strategy-ranked target pick over ALL alive materialized enemies * (2026-08-26 pre-positioning rule): rank every living enemy by strategy * from the avatar's current position, return the first candidate. * Survives the attackRange retirement (Task 3, D16) unchanged — this * picker never gated on reach. Currently consumed by the dormant * ArtifactSystem activation tick. */",
-  "// No single rectangle describes a cross — the turn engine filters"
+  "/** * Strategy-ranked target pick over ALL alive materialized enemies * (2026-08-26 pre-positioning rule): rank every living enemy by strategy * from the avatar's current position, return the first candidate. * Survives the attackRange retirement (Task 3, D16) unchanged — this * picker never gated on reach. Currently consumed by the dormant * ArtifactSystem activation tick. */"
  ],
  "src/core/battle/Battle.ts": [
-  "// reads — no live consumer sees this shape (the turn engine owns",
-  "/** * 1 quái đang sống trong trận — buff pool tách riêng theo từng con. */",
-  "/** * Targetability (plan §5.4) — false khi Player chưa materialize: * không thể bị enemy target, không nhận damage và không cast. KHÔNG * dùng `alive = false` cho pending spawn vì \"chưa xuất hiện\" khác * \"đã chết\". */",
-  "// Buff/debuff phát sinh TRONG trận — tách khỏi buff persistent ngoài",
-  "// trận (ví dụ từ pill). Mỗi quái có buff pool riêng trong",
-  "/** * Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md * §11) — snapshot level/grade/path + timer/rotation/ICD RUNTIME-ONLY * (không persist). undefined = player không có artifact — tick * artifact no-op hoàn toàn trong trường hợp đó. */"
+  "/** * Targetability (plan §5.4) — false khi Player chưa materialize: * không thể bị enemy target, không nhận damage và không cast. KHÔNG * dùng `alive = false` cho pending spawn vì \"chưa xuất hiện\" khác * \"đã chết\". */"
  ],
  "src/core/battle/BattleEvents.ts": [
   "// Event carry vị trí/kết thúc trận — nguồn DUY NHẤT để view (Phaser",
@@ -3670,8 +3628,7 @@
   "/** * Ép 1 slot role cụ thể khi role đó ready; ngược lại rơi về priority * thường (selectAction). Basic = participant.basic (hoặc fallback khi * không set), luôn ready by construction. */",
   "// Kiem Tu Reimagined Task 2 — a dynamic_basic pick travels the SAME",
   "/** * Phap Tu An (Task 11) — uniform pick of `count` DISTINCT defs from a * composite pool via the injected rng (partial Fisher-Yates). All new * An-kit randomness routes through the system's injected rng — never * global Math.random — so tests are deterministic. */",
-  "/** Sets the used slot on cooldown and consumes its resource — call AFTER a successful cast (a target was actually hit). No-op for the basic fallback (slot is null). */",
-  "/** * AOE target collection for TurnBattle — the same shape-filter logic the * retired grid-battle collectAffected() used, but over * TurnBattleParticipant[] (no Battle coupling). The primary target is * always included even when the shape math would exclude it — the * \"primary always hits\" guarantee. */"
+  "/** Sets the used slot on cooldown and consumes its resource — call AFTER a successful cast (a target was actually hit). No-op for the basic fallback (slot is null). */"
  ],
  "src/core/battle/turn/TurnSkillExecution.test.ts": [
   "// Phap Tu Reimagined Task 9 — TurnSkillExecution separates the cast's",
@@ -3875,7 +3832,6 @@
   "// bỏ qua gate cảnh giới/nguyên liệu để test chức năng.",
   "// upgradeCost[0] = chi phí xây (level 0->1, đã trả lúc build()),",
   "// upgradeCost[level] = chi phí nâng từ level hiện tại lên level+1.",
-  "/** * Authoritative upgrade quote — the SAME rules upgrade() enforces * (cost row, max level, realm tier gate, material affordability), read * side only. Panel header state consumes this; upgrade() re-checks. */",
   "/** * BUILDing spec mục 15-16 — cộng dồn effects của MỌI level đã đạt * (level ≤ instance.level). `template.levels` phải sắp theo level * tăng dần để \"level cao nhất đã đạt\" xử lý sau cùng. */",
   "// Linh mạch (chi-hien-quan spec) — engine Linh Tuyền cũ, nguồn giờ là",
   "// gathering_outpost (building spirit_spring đã xóa khỏi data).",
@@ -3954,9 +3910,6 @@
   "// target). Optional — readers use `?? 0`.",
   "// at participant build — two disjoint producers, one per path:",
   "// The Tu Reimagined (spec 2026-09-15 D7/section 7.13) — momentum resource",
-  "// Ward — máu phụ hấp thụ damage TRƯỚC currentHp (xem",
-  "// CombatSystem.resolveHit()). State \"sống\" như currentHp/currentMp,",
-  "// reset về 0 khi combatant mới được dựng cho trận.",
   "// The Tu Reimagined (plan Task 11, spec 2026-09-15 D3) — Sơn Nhạc",
   "// instance (reconciled per-source — newest grant replaces wholesale).",
   "// Phap Tu (Tho Tu, 2026-08-15) — holder turns elapsed since the last",
@@ -4094,7 +4047,6 @@
   "// Phase A0 (2026-09-07) — full cutover to turn-based buff types: the",
   "// Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — hook tại",
   "// CombatSystem.killIfDead(), điểm DUY NHẤT tuyên bố chết của mọi đường",
-  "// Mirror GameManager.startTribulation(): session null — tribulation",
   "// Event damage ban đầu mang killed=true (HP chạm 0), event hiệu chỉnh",
   "// 'survive_lethal' phát SAU guard phải là trạng thái cuối: còn sống.",
   "// Bất Tử Th thể v4 (spec 2026-09-03-talent-catalog-v4-design.md §4.1",
@@ -4136,7 +4088,6 @@
   "// SurviveLethalGuard inside resolveAttack() — predicting it here",
   "// chặn stat cộng dồn từ affix/talent; buff tạm có thể vượt soft cap",
   "// nhưng KHÔNG BAO GIỜ vượt 0.90 tại điểm roll — chặn \"bất tử chặn đòn\".",
-  "/** * Public vì critical phải roll lúc BẮN missile (mang theo suốt * hành trình bay), không còn roll ngay lúc tính damage như trước — * cần gọi được từ các đường bắn missile phía battle, không chỉ nội * bộ CombatSystem. `target` dùng để trừ * Critical Strike Avoidance của phía phòng thủ (chance hiệu lực * không thể âm). */",
   "/** * Trượt (accuracy thua evasion trong contest — xem Accuracy.ts) — * không tính damage, không trừ HP, không tích rage. Chỉ emit * 'dodge' (giữ nguyên tên event/trigger cũ, không đổi PassiveSystem/ * FormationSystem) rồi trả kết quả rỗng — KHÔNG đi qua resolveAttack(). */",
   "// Floor \"tối thiểu 1\" áp SAU finalDamageMultiplier (xem resolveActionHit)",
   "// — mọi đòn trúng đích luôn gây ít nhất 1 sát thương.",
@@ -4173,10 +4124,6 @@
   "// of the damage THẬT SỰ đã trừ (sau DOT RES và HP clamp — overkill",
   "// is authored on the effect (Doc Can = 'wood'), not hardcoded here —",
   "/** * Public — AilmentSystem (DoT tick) dùng chung để đảm bảo chết vì * hiệu ứng theo thời gian cũng emit đúng 'death'/'kill' như chết vì * đòn đánh trực tiếp, không lặp code kiểm tra HP<=0 ở 2 nơi. */",
-  "// Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — đòn lẽ ra",
-  "// chết thành sống sót HP = 1, trừ 1 lượt của trận. KHÔNG kích hoạt",
-  "// trong trận Độ Kiếp (session null — GameManager xoá khi bắt đầu",
-  "// độ kiếp qua setSurviveLethalSession(null)).",
   "// The Tu Reimagined (plan Task 9, D9) — the session's ordered",
   "// ult is spent/on cooldown. Each source returns a result object —",
   "// v4 (spec 2026-09-03 §4.1) — \"độ thân cũng là độ tâm\": tẩy mọi",
@@ -4227,9 +4174,6 @@
   "// combat-skill-flow-element-power-dot-plan.md §3.1 — Primordial",
   "// component cũng cộng ATK vào Power nền, QUA ĐÚNG helper nền dùng",
   "// chung baseMightPlusPower() (tránh hai công thức độc lập).",
-  "/** * R3 re-audit (AR-03 gap) — mọi field scaling authored trên SkillEffect * (attributeScaling/manaScalingRatio) từng chỉ * được cộng vào multiplier bởi executor legacy đã xoá (engine cũ, * KHÔNG phải TurnBattleSystem đang active) — nghĩa là mọi skill Pháp Tu * cast qua turn engine mất trắng phần scaling này. Một helper * DÙNG CHUNG duy nhất (đọc bởi CombatSystem.resolveActionHit()) để * ActionDamageInfo.scaling áp đúng công thức, không lệch giữa 2 pipeline. */",
-  "// Guard attributes rỗng — Math.max() trên mảng rỗng = -Infinity, kéo",
-  "// toàn bộ bonus về -Infinity (parity với executor legacy đã xoá).",
   "/** * Áp multiplier + critical vào 1 số base damage đã tính sẵn — tách * riêng để ElementDamageCalculator.ts (pipeline nhiều component, vd * 20% Physical + 80% Fire) dùng chung. KHÔNG còn floor \"tối thiểu 1\" * ở đây — floor dời xuống bước CUỐI CÙNG của pipeline * (CombatSystem.resolveHit()), sau cả Block/Endurance, để đòn bị * giảm nhiều tầng vẫn luôn gây được ít nhất 1 sát thương. */"
  ],
  "src/core/combat/ElementDamageCalculator.test.ts": [
@@ -4327,18 +4271,8 @@
   "// hay struct nhân vật phức tạp của PlayerData - đây là toàn bộ bề mặt tích hợp.",
   "// sẽ bị ghi đè bởi vị trí ô mà FormationLoadout/DEFAULT resolve cho companion này (Part C)"
  ],
- "src/core/cultivation/CultivationInsight.test.ts": [
-  "// Single owner of the threshold accumulator — online cultivate() and"
- ],
- "src/core/cultivation/CultivationInsight.ts": [
-  "// must settle the SAME way — no second copy of the loop.",
-  "// tick. Non-positive thresholds are meaningless — skip the whole branch."
- ],
  "src/core/cultivation/CultivationSystem.haiNa.test.ts": [
   "// Talent v4 M2 — Hai Nap (spec §4.3 row 19): cultivation that would"
- ],
- "src/core/cultivation/CultivationSystem.test.ts": [
-  "// Mission G — data contract: each realm declares exactly ONE formula"
  ],
  "src/core/cultivation/CultivationSystem.ts": [
   "// Không tích lũy dư quá mức cần để đột phá — chặn ở \"required\" thay",
@@ -4387,13 +4321,9 @@
   "// Kiem Tu Reimagined Task 12 (spec 2026-09-15 §7): van_kiem_quyet was",
   "// repurposed as the Ngu Kiem Dao signature technique — granted by the"
  ],
- "src/core/economy/TuLinhTranBalance.test.ts": [
-  "// Mission G Task 39 — one domain-owned read for the tu_linh_tran buff:"
- ],
  "src/core/economy/TuLinhTranBalance.ts": [
   "// economy-fixes-sinks-plan §3.2 B1 (2026-08-29) — Tụ Linh Trận:",
-  "// đổi Linh Thạch lấy % tốc độ tu luyện tạm thời (buff 24h).",
-  "/** * Active cultivation-speed bonus from Tụ Linh Trận effects — the * domain-owned read (Mission G Task 39): group-filtered AND * deadline-checked, matching activateTuLinhTran's group-stack * accounting. Stray cultivationSpeedPercent on other groups is ignored. */"
+  "// đổi Linh Thạch lấy % tốc độ tu luyện tạm thời (buff 24h)."
  ],
  "src/core/economy/VendorBalance.ts": [
   "// VendorBalance (economy-fixes-sinks-plan §3.2 B2, 2026-08-29) — bảng giá",
@@ -4411,10 +4341,7 @@
   "/** Giá nền phế liệu (byproduct). */",
   "/** Hệ số nhân giá mỗi bậc realm tier. */",
   "/** * Hệ số nhân theo realm CỦA MATERIAL (meta nghề) — giá trị là thuộc tính * nội tại của nguyên liệu. Material không có meta realm (essence/byproduct * data mới) thì fallback theo realmId truyền vào. */",
-  "/** * Đơn giá bán (hạ tương đương) của 1 material theo realm truyền vào — * undefined nếu material KHÔNG nằm trong danh mục bán được. */",
-  "// Cùng một authority thứ bậc realm với realmGrowthFactor — realm",
-  "// ngoài thang (không thể xảy ra với REALM_TIERS hiện có) fallback",
-  "// tier thấp nhất qua getRealmTier → 1."
+  "/** * Đơn giá bán (hạ tương đương) của 1 material theo realm truyền vào — * undefined nếu material KHÔNG nằm trong danh mục bán được. */"
  ],
  "src/core/economy/VendorSystem.ts": [
   "// VendorSystem (economy-fixes-sinks-plan §3.2 B2, 2026-08-29) — Hóa Bán:",
@@ -4590,9 +4517,6 @@
   "// Boss Mechanics — đổi hẳn archetype hành vi (melee/ranged/caster)",
   "// của quái khi vào phase này, áp TRỰC TIẾP lên entity (không qua",
   "// Buff/StatModifier vì archetype không phải stat) — xem",
-  "// Boss Mechanics — triệu hồi thêm quái vào TRẬN ĐANG DIỄN RA khi",
-  "// vào phase này. Legacy drain path (Battle.pendingSummons +",
-  "// GameManager.updateBossSummons) retired with the grid BattleSystem —",
   "/** * Boss Mechanics — DPS check: trận kéo dài quá `afterSeconds` (tính * từ Battle.start(), xem BattleSystem.updateEnrage()) thì áp `buff` * MỘT LẦN lên chính boss (cùng cơ chế permanent buff như * TribulationPhase, tái dùng BuffSystem). `buff` thường là +damage% * mạnh — không giới hạn field nào bắt buộc, data tự quyết theo boss. */"
  ],
  "src/core/equipment/Affix.ts": [
@@ -5058,8 +4982,7 @@
   "// techniqueInsight 90 (min) × 3 realm = 270 -> skillInsight suy ra",
   "// rng 0.5 -> spiritStone floor(0.5*11)+25 = 30, ×3 = 90.",
   "// rng 0.8: guaranteed tinh_hoa (0.7) trượt; pool roll 0.8*35=28 ->",
-  "// qua base_kiem (15) -> equipment_any -> rút template từ registry.",
-  "// Mission G Task 29 — pins the single-table contract: the equipment"
+  "// qua base_kiem (15) -> equipment_any -> rút template từ registry."
  ],
  "src/core/game/BattleLootSystem.talentHooks.test.ts": [
   "// Talent catalog v4 (spec 2026-09-03 §4.4) — 4 hook loot của v3 (Tụ",
@@ -5077,7 +5000,6 @@
  ],
  "src/core/game/BattleLootSystem.ts": [
   "/** Màu tím chuỗi Tinh Hoa Phàm Thể (2026-08-30) — bay về người chơi. */",
-  "// ItemGrade and ItemQuality are the same 5-member union — one table.",
   "// Quái ẩn (spec dot-pha-loi-kiep §4.1c) — đếm kill Luyện Khí/reset",
   "// khi giết quái ẩn.",
   "/** * Cấp phần thưởng + loot khi quái chết (2026-08-24, tách khỏi * GameManager) — sở hữu: * - Session của trận đang diễn ra: ai nhận thưởng (RewardReceiver) và * PlayerData của người chơi (để roll chỉ số chính equipment rớt + * cộng skillInsight). Ephemeral — KHÔNG persist vào save. * - BattleRewardSummary tích luỹ trong trận hiện tại cho * CombatVictoryPanel/CombatDefeatPanel (reset mỗi trận MỚI qua * beginBattle()). * - grantResolvedDrops(): đồ rơi thẳng vào bag tương ứng ngay khi quái * chết — không có bước \"nhặt\" thủ công/loot window. Mỗi lần cộng * thành công đẩy 1 toast 'loot' vào NotificationQueue (Vue layer * drain mỗi tick). * - Drop-system (2026-09-12): QUYẾT ĐỊNH rơi gì thuộc resolveDrops() * (stage/family table + signature + modifiers) — hệ này chỉ orchestrate * cấp phát + notification, không tự roll thêm đường nào. */",
@@ -5110,12 +5032,6 @@
   "// trang bị tâm pháp (khác techniqueInsight ở trên, xem",
   "// skill-insight-and-auto-combat-hud-plan.md mục 3).",
   "// Thiên phú Đại Trí Nhược Ngu/Nghịch Thiên nhân tại đây (plan §6).",
-  "// Kiếm Ý vĩnh viễn (spec 2026-08-29-kiem-the-kiem-y mục 3.1) —",
-  "// đếm boss diệt: boss stage (isBoss) + elite/mini-boss (isElite);",
-  "// boss Độ Kiếp cũng là entity isBoss do defineEnemy tribulation",
-  "// template. CHỈ Kiếm Tu route",
-  "// Bạt Kiếm tiêu thụ tầng, nhưng counter đếm cho MỌI path (thống",
-  "// kê vô hại, đổi path muộn không mất tiến trình).",
   "// Quái ẩn (spec dot-pha-loi-kiep §4.1c) — đếm kill Luyện Khí;",
   "// giết Huyết Mông reset cửa sổ về 0.",
   "// Dọn quái đã chết + đã cấp thưởng khỏi mảng -- tránh phình vô hạn",
@@ -5336,9 +5252,6 @@
   "// Phap Tu Reimagined Task 14 (INV-12) — retired ids must not survive in",
   "// data-level: the legacy reaction-path chain (Ngũ Hành Luân Chuyển /",
   "// Ngũ Hành Hợp Nhất marker pair + the reaction_empowerment self-buff),"
- ],
- "src/core/game/GameManager.decomposeOutput.test.ts": [
-  "// Mission G Task 13 — decompose output is produced by buildings, so the"
  ],
  "src/core/game/GameManager.dotPha.test.ts": [
   "// GameManager facade mới (spec dot-pha-loi-kiep §5.1) — TribulationSystem",
@@ -5805,8 +5718,7 @@
   "// hàm phụ thuộc timer-đếm-ngược-rồi-reset này sửa đúng gốc vấn đề mà",
   "// không cần viết lại vòng lặp catch-up riêng cho từng timer.",
   "// Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — guard giữ lượt",
-  "// sống sót battle-scoped; combatSystem.killIfDead() là điểm tiêu thụ.",
-  "// uses scaleActionDamage/ActionDamageInfo) — only these orphaned"
+  "// sống sót battle-scoped; combatSystem.killIfDead() là điểm tiêu thụ."
  ],
  "src/core/game/GameManager.tuLinhTran.test.ts": [
   "// Stack policy MVP (refresh cùng group) — vẫn CHỈ 1 effect, deadline",
@@ -6016,7 +5928,6 @@
  ],
  "src/core/game/GameManagerSaveRestore.boundary.test.ts": [
   "// M1 (ARCH-001) — the save/restore boundary contract, exercised through",
-  "// save payloads below are not orphans — restore drops entries whose id",
   "// far future — never settles during the test"
  ],
  "src/core/game/GameManagerSaveRestore.onceOnlySettle.test.ts": [
@@ -6158,7 +6069,6 @@
   "// stats are resolved inside the battle ops after the passive reset — the",
   "// Quái ẩn (spec dot-pha-loi-kiep §4.1c) — roll trà trộn pool spawn",
   "// Luyện Khí khi cửa sổ 1000 kill mở.",
-  "/** * Vòng đời wave của 1 Màn (2026-08-24, tách khỏi GameManager): * spawn theo nhịp (SONG SONG, không đợi quái cũ chết), spawn ngay nếu * sân trống, set 'victory' khi đã spawn đủ + hết quái sống, auto-repeat * cycle khi bật chế độ đánh liên tục. */",
   "/** * Điểm vào DUY NHẤT để bắt đầu 1 màn. Quái đầu tiên spawn ngay trong * lệnh gọi này (qua launchBattle — tự nhiên tái dùng * passiveSystem.resetStacks() bên trong, đúng điểm reset stack 1 LẦN/ * màn chứ không phải mỗi wave). * * Transactional (Mission C audit): the lease is acquired first, then * pick + launch run; ANY failure - refused pick, thrown pick, thrown * launch - rolls the lease back and rethrows. A thrown start can never * leave the global slot occupied. */",
   "// C1 (2026-09-08) — the legacy real-time spawn loop (update()) and",
   "// Người chơi CHỦ ĐỘNG thoát trận giữa chừng / player chết — dừng stage",
@@ -6422,8 +6332,7 @@
   "// Guard: amount <= 0 KHÔNG phải remove hợp lệ — amount âm sẽ CỘNG",
   "// ngược vào stack (vector nhân bản tiềm ẩn). NaN cũng bị chặn:",
   "// `existing.amount < NaN` là false nên NaN sẽ lọt qua và trừ NaN",
-  "// khỏi stack (poison amount).",
-  "// Snapshot — stack sống trong map là state nội bộ, caller chỉ đọc."
+  "// khỏi stack (poison amount)."
  ],
  "src/core/material/SourceType.ts": [
   "// 4 nguồn tài nguyên theo MASTER SPEC — ECONOMY & TỨ NGHỆ v1.0, Mục II-V.",
@@ -6508,7 +6417,7 @@
   "// coeff) — balance owns the slope, not diminishing by design.",
   "// StatDomain gate. Ailment-potency lines use `flat` absolutes — percent",
   "/** * Route profile for a PhapTuState — NEUTRAL when there is no state or * no route (INV-11). ngo_dao players never reach this: route state * is not theirs. */",
-  "/** * EffectiveSkill seam: multiplies every damage effect/trigger value by * directMultiplier and every debuff ailmentChance by * ailmentChanceFactor. The result still flows through the existing * +elementApplicationPercent / [0,1] clamp in resolveAilmentApplicationChance — * no second clamp here. Never fakes +1 stack by injecting an add_stack * effect — stack semantics stay in applyRouteToTurnSkill. */",
+  "/** * EffectiveSkill seam: multiplies every damage effect/trigger value by * directMultiplier and every debuff ailmentChance by * ailmentChanceFactor. The result still flows through the existing * +elementApplicationPercent / [0,1] clamp in resolveAilmentApplicationChance - * no second clamp here. Never fakes +1 stack by injecting an add_stack * effect — stack semantics stay in applyRouteToTurnSkill. */",
   "/** * Post-conversion seam: adds ailmentStackBonus onto the built * TurnSkillDefinition's ailment applications. Called by the * orchestration site AFTER toTurnSkillDefinition — the converter never * sees RouteProfile. */",
   "// Mission C Task 10c — an omitted stacks means 1 by engine default",
   "/** * Route stat modifiers for the character modifier pipeline — injected * next to getCultivationPathStatModifiers() in BOTH static aggregators * (menu + battle base). Route can't change mid-battle, so these never * enter getLiveBattleModifiers(). */",
@@ -6541,8 +6450,7 @@
   "// false nên lọt qua, cộng vào stack sẽ poison amount vĩnh viễn.",
   "// Guard: amount <= 0 KHÔNG phải remove hợp lệ — amount âm sẽ CỘNG",
   "// ngược vào stack (vector nhân bản tiềm ẩn). NaN lọt qua guard <= 0",
-  "// nên phải chặn Number.isFinite trước.",
-  "// Snapshot — xem MaterialBag.get."
+  "// nên phải chặn Number.isFinite trước."
  ],
  "src/core/pill/PillEffect.ts": [
   "// 4 effect MVP nghề Đan (2026-08-24, resource-professions-rework §5.1):",
@@ -6691,9 +6599,6 @@
   "// thắng). undefined = chưa từng Trúc Cơ thành công. CHỈ dùng để",
   "// hiện tên tier lúc reveal, KHÔNG BAO GIỜ dùng để gợi ý điều kiện",
   "// trước khi đạt (xem core/breakthrough/FoundationResolver.ts).",
-  "// Beta Phase 4 (Tutorial Carousel) — đã xem/bỏ qua tutorial nhập môn",
-  "// chưa, gate theo nhân vật MỚI (App.vue's onMounted() else-branch) —",
-  "// thêm field + default trong createDefaultPlayer(), tự persist qua",
   "// Pháp Tu profession-tier ladder (2026-08-14, xem",
   "// core/player/CultivationPathKit.ts) — undefined (mặc định của MỌI",
   "// nhân vật hiện có) -> chọn 1 lần DUY NHẤT qua",
@@ -6792,8 +6697,6 @@
   "// nhân vật chưa từng có cơ hội chọn.",
   "// Loi Kiep talent (talent-catalog-v4 §4.3) — permanent +10% all",
   "// Pha Giap talent M2 carry (talent-catalog-v4 §4.3) — half the Pha",
-  "// Idempotency guard cho Realm Passive theo cảnh giới (Nhập Đạo/Kiến",
-  "// Cơ/...) — key = realmId vừa bước vào. Xem",
   "// Timed effect theo thời gian thực (2026-08-24, plan §5.4) — deadline",
   "// tuyệt đối expiresAtMs là authority; load bỏ effect hết hạn. Xem",
   "// Combat AI strategy (combat-gate-teleport-autocast plan §10) — lựa",
@@ -6910,7 +6813,6 @@
  "src/core/presentation/OverlayLayers.ts": [
   "/** * App-level overlay stacking order (A2: one rule, one owner). * * Every full-screen / app-scope overlay takes its z-index from this scale — * never a hardcoded literal. `.game-root` is positioned but creates no * stacking context, and Teleport-to-body overlays share the same root * context, so every entry here competes directly with every other. * * `curtain` is TOPMOST by contract: while the presentation curtain is * closed it must cover every other layer, which is why it sits above even * the save gate and the app error screen (the curtain renders its own * error shell for transition failures; a window of closed-curtain is * bounded by the coordinator's transition deadline). * * Intra-component z-indexes (small values inside one component's own * stacking context) do not belong here — this scale is only for elements * that compete in the app root stacking context. */",
   "/** CombatPauseOverlay — deliberately below the curtain: a route transition always covers the pause prompt. */",
-  "/** ActionFeedbackLog — bottom-right action history. */",
   "/** ToastContainer — transient notifications. */",
   "/** Tooltip — floating contextual info. */",
   "/** ErrorScreen — app-level error surface. */",
@@ -6955,8 +6857,7 @@
   "// sub-object would throw on property read — fall back to defaults.",
   "/** Output = floor(consumed/target × base(grade) × hệ_số(age) × workers). */",
   "// Fairness ceil — phần khoáng lẻ không bị浪费.",
-  "// Regex biên dịch MỘT LẦN — parseOre chạy mỗi stack mỗi tick phân giải.",
-  "// Inverse of buildProfessionMaterialId('ore', realm, age) — the"
+  "// Regex biên dịch MỘT LẦN — parseOre chạy mỗi stack mỗi tick phân giải."
  ],
  "src/core/production/ProductionBalance.simulation.test.ts": [
   "// ProductionBalance.simulation.test.ts (gp123 6F, task D1) — simulation",
@@ -7182,9 +7083,6 @@
   "/** Mapping cố định realm → phẩm nghề (plan §3.1). Nguồn sự thật duy nhất. */",
   "/** Tên hiển thị — UI dùng, không ghép từ id. */"
  ],
- "src/core/profession/ProfessionMaterial.test.ts": [
-  "// Mission G Task 32 — one constructor owns the `<realm>_wood|ore_<age>`"
- ],
  "src/core/profession/ProfessionMaterial.ts": [
   "// ProfessionMaterial (2026-08-25, resource-professions-rework plan §5/§6)",
   "// — metadata nghề gắn lên Material cho vòng kinh tế mới: Địa Giới →",
@@ -7201,8 +7099,7 @@
   "/** Metadata nghề trên Material — shape tuỳ kind (§5.3/§6.1 + 6E C2: gỗ/khoáng dùng `age`). */",
   "/** gp123 6E C2: gỗ/khoáng/thảo đều dùng trục tuổi thống nhất. */",
   "/** Chỉ Linh thảo — đan phương DUY NHẤT mà thảo này nuôi (§6.1). */",
-  "/** Chỉ Linh thảo — base identity chung các biến thể niên đại. */",
-  "/** * Authoritative Gỗ/Quáng id constructor — `<realmId>_<kind>_<age>`. * Parsers (DecomposeSystem ORE_ID_PATTERN) mirror this grammar. */"
+  "/** Chỉ Linh thảo — base identity chung các biến thể niên đại. */"
  ],
  "src/core/profession/ProfessionValidators.test.ts": [
   "// Validator dữ liệu nghề (2026-08-25, plan §5/§6) — lỗi authoring fail",
@@ -7267,8 +7164,7 @@
   "// power level 4: 1+1+1+2 = 5; child level 2: 1+1 = 2 → refund 7.",
   "// Chỉ còn child có level — cha đã về 0 trước đó.",
   "// other_branch không tồn tại → refund 0, KHÔNG đụng state.",
-  "// Reset đúng nhánh chứa cha (test_branch) → child mồ côi cũng bị gỡ.",
-  "// — both UI consumers (NodeTreePanel, NodeInspector) must read through"
+  "// Reset đúng nhánh chứa cha (test_branch) → child mồ côi cũng bị gỡ."
  ],
  "src/core/progression/NodeSystem.ts": [
   "/** * Node level hạ tầng dùng chung (combat-skill-flow-element-power-dot-plan.md * §6.1/§6.8) — `player.nodeLevels` là NGUỒN SỰ THẬT DUY NHẤT của state đã * đầu tư: * - Level 0 = chưa lĩnh ngộ; level >= 1 = đã lĩnh ngộ và thỏa prerequisite. * - maxLevel mặc định 1 → toàn bộ node cũ giữ hành vi mua một lần. * - Modifier KHÔNG còn được push vĩnh viễn vào player.modifiers hay mutate * Skill instance lúc mua nữa — mọi hiệu lực suy ra từ * (registry, nodeLevels) qua aggregateNodeStatModifiers()/ * aggregateNodeSkillModifiers() để recompute luôn cho cùng kết quả * xác định, không cộng hai lần khi load. * * Chi phí theo cấp data-driven: node.upgradeCost = { base, perLevel } * với cost(level L → L+1) = base + floor(L / perLevel). Power 10 cấp * {1,3} → dãy 1,1,1,2,2,2,3,3,3,4; growth/specialization 5 cấp {1,2} → * 1,1,2,2,3 (đúng §6.2/§6.7). Node không khai upgradeCost dùng * insightCost cho MỌI lần mua/nâng (root/keystone một cấp). */",
@@ -7445,9 +7341,6 @@
   "// CHƯA MỞ / ĐÃ MỞ (đủ nguyên liệu là thông hoàn toàn, không có progress",
   "// từng phần). Tuần tự bắt buộc: đường N cần đủ N-1 trong openedMeridianIds."
  ],
- "src/core/realm/RealmPassiveSystem.ts": [
-  "/** * Cấp Realm Passive (Nhập Đạo/Kiến Cơ/...) của cảnh giới `realmId` nếu * có định nghĩa VÀ chưa từng cấp cho nhân vật này — idempotent, giống * hệt pattern GameManager.syncRealmPassive() (skill passive). An toàn * gọi lặp lại ở mọi điểm breakthrough. */"
- ],
  "src/core/realm/RealmTierMap.ts": [
   "/** Chín bậc nội dung dùng chung cho kinh tế và UI progression. */",
   "/** Hợp Thể dùng chung tier kinh tế với Đại Thừa theo quyết định của plan. */"
@@ -7474,12 +7367,7 @@
   "// playtest) — Trúc Cơ hiện tái sử dụng enemyPool Luyện Khí (Stages.ts",
   "// foundationStages chỉ override realmId), khiến thu nhập Linh Thạch/Cảm",
   "// ngộ ở Trúc Cơ bị \"khựng\" bằng Luyện Khí trong khi chi phí token/enhance",
-  "// tăng. Nhân thưởng theo bậc cảnh giới để tiến trình có ý nghĩa.",
-  "// Quy ước: mortal & Luyện Khí ×1 (baseline); từ Trúc Cơ trở lên ×3 mỗi",
-  "// bậc cảnh giới (khớp đường cong thời gian/effort ~×3/realm). enemy.realmId",
-  "// đã được StageWaveSystem override theo stage.requiredRealmId lúc spawn,",
-  "// nên đọc theo enemy.realmId là đúng stage đang đánh (nhất quán với gate",
-  "// rớt Đoán Bảo Thạch qua dữ liệu bảng drop)."
+  "// tăng. Nhân thưởng theo bậc cảnh giới để tiến trình có ý nghĩa."
  ],
  "src/core/reward/SkillInsightBalance.ts": [
   "// skill-insight-and-auto-combat-hud-plan.md mục 12 — \"Cân bằng số Cảm",
@@ -7600,7 +7488,6 @@
  ],
  "src/core/skill/SkillAction.ts": [
   "// Trigger/Action rework (2026-08-31 spec, Phase 2A) — replaces the old",
-  "// Phase 2A — batch-level knockback (Thổ Tu pattern). Read at batch",
   "// Named resource pools every path can grant/consume — mirrors the fields",
   "// already on CombatEntity — empty: the element/sword pools moved off",
   "// pool) — the only pool this action reads off `target` instead of",
@@ -7611,13 +7498,6 @@
   "/** * Một phần trong tổng damage của skill — vd \"20% Physical + 80% Fire\" * là 2 component: { kind: 'physical', ratio: 0.2 } và * { kind: 'element', element: 'fire', ratio: 0.8 }. `ratio` tính * trên base damage của chính component đó (không phải % của final * damage) — xem core/combat/ElementDamageCalculator.ts. */"
  ],
  "src/core/skill/SkillEffect.ts": [
-  "// Pháp Tu Thuần Hệ (E-3, 2026-09-03) — CHỈ dùng cho effect",
-  "// 'add_stack'/'remove_buff' (trước đây 2 type này là no-op trong",
-  "// executor legacy, thuộc PassiveSystem). 'add_stack': số tầng cộng",
-  "// thêm lên buff ĐANG CHẠY (mặc định 1; không tạo mới nếu chưa có);",
-  "// 'refresh' = true gia hạn duration các instance vừa cộng.",
-  "// 'remove_buff': 'polarity' lọc theo hướng buff/debuff, 'count' số",
-  "// instance gỡ tối đa (mặc định 1, theo thứ tự pool).",
   "// Dùng cho effect 'damage' khi skill pha trộn nhiều loại damage",
   "// (vd 20% Physical + 80% Fire) — có mặt thì thay thế hoàn toàn",
   "// 0..1 — tỉ lệ áp dụng debuff SAU KHI đòn đã trúng, roll ĐỘC LẬP",
@@ -7625,18 +7505,6 @@
   "// rõ trong data skill). Unified Buff System (Task 11, 2026-09-01) —",
   "// trước đây riêng cho effect 'ailment' (đi cùng ailmentId), giờ dùng",
   "// chung với effect 'debuff' (đi cùng buffId ở trên).",
-  "// Chỉ dùng cho effect 'damage' — hệ số scale multiplier theo",
-  "// attribute của SOURCE lúc cast, cộng dồn qua nhiều entry. 1 phần",
-  "// tử trong `attributes` = coefficient thường (vd Linh Căn cho",
-  "// skill hệ pháp thuật); NHIỀU phần tử = \"Adaptive\" kiểu Last Epoch",
-  "// (dùng giá trị CAO NHẤT trong nhóm).",
-  "// Pháp Tu Detonate (vd Bạo Viêm \"cash in\" stack Bỏng) — CHỈ dùng cho",
-  "// effect 'damage'. Nếu target đang có ailment này, gây bonus damage",
-  "// = stacks × damagePerStack (true damage, KHÔNG qua Armor/Resistance",
-  "// — cùng tinh thần primordialPower \"bỏ qua mitigation\") RỒI xoá hẳn",
-  "// ailment đó khỏi target — đổi DOT đang chạy lấy 1 cục burst ngay.",
-  "// Không set = effect 'damage' hoạt động",
-  "// như cũ (chỉ bắn missile thường).",
   "// Pháp Tu Thuần Hệ (E-1, 2026-09-03) — CHỈ dùng cho effect 'damage'",
   "// (Vân Mộc Lan Độc + biến thể). SAU KHI missile resolve, đọc TỔNG",
   "// stacks của ailment `spreadsAilmentId` trên PRIMARY target, áp lên",
@@ -7650,20 +7518,6 @@
   "// damage Detonate vừa gây. Tách riêng khỏi leechPercent toàn cục vì",
   "// nhánh Detonate đi thẳng currentHp (không qua missile/CombatSystem's",
   "// leech pipeline) — leechPercent KHÔNG tự áp dụng cho true damage này.",
-  "// Pháp Tu (Thổ Tu, 2026-08-15) — \"tự nổ khiên\": CHỈ dùng cho effect",
-  "// 'damage'. Tiêu thụ TOÀN BỘ currentWard của SOURCE (không phải",
-  "// target) cho 1 cục true damage bonus = currentWard × damagePerWardPoint",
-  "// (bỏ qua Armor/Resistance, cùng tinh thần consumesAilmentId), rồi",
-  "// xoá sạch currentWard về 0. Không set = effect 'damage' hoạt động",
-  "// như cũ.",
-  "// Kiếm Tu (Ngự Kiếm Thuật, 2026-08-15) — CHỈ dùng cho effect",
-  "// 'damage'. Bắn (source.realmIndex + 1) missile liên tiếp thay vì",
-  "// 1, mỗi cái tự roll critical/dodge riêng.",
-  "// Pháp Tu Thuần Hệ (E-4, 2026-09-03) — CHỈ dùng cho effect 'damage'.",
-  "// Bắn SỐ LẦN CỐ ĐỊNH N missile (vd Bát Thuần \"8 đợt sóng\"), mỗi cái",
-  "// tự roll critical/dodge riêng — cùng tinh thần hitCountByRealm.",
-  "// LOẠI TRỪ NHAU: nếu cả hai đều set, hitCount THẮNG (số tường minh",
-  "// ưu tiên hơn công thức theo cảnh giới).",
   "// \"Cảnh giới càng cao sát thương càng lớn\": cộng thêm ratio ×",
   "// source.realmIndex (0-based, 9 đại cảnh giới) vào scalingBonus.",
   "// Pháp Tu Thuần Hệ (E-2, 2026-09-03) — CHỈ dùng cho effect 'buff'",
@@ -7740,13 +7594,6 @@
  "src/core/skill/SkillSystem.castCount.test.ts": [
   "// 9.5 #9 — cast counting revived on the turn engine: the engine reports",
   "// Phap Tu Reimagined Task 2 — linh_bao/huy_quyen join tram in the"
- ],
- "src/core/skill/SkillSystem.huyKiem.test.ts": [
-  "// Important #3 review fix — dead `skillExperienceRatio: 1/18` từ",
-  "// maxLevel 18 cũ vẫn còn trên effect damage của tram, cộng thêm 1 lớp",
-  "// % (skillExperienceRatio * totalExperience / might — công thức",
-  "// executor legacy) ĐÈ LÊN flat bonus trên — double-scale",
-  "// ngoài spec §2 (\"Huy Kiếm là skill DUY NHẤT đi bằng flat, không %\")."
  ],
  "src/core/skill/SkillSystem.targeting.test.ts": [
   "// Engine 22c8007 (Task 10 follow-up, spec §2 biến thể C/D) —",
@@ -8080,16 +7927,12 @@
   "// The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;",
   "// The Tu An (spec 2026-09-15 T4/section 3.2) — reactive chance stats,",
   "// Stored RAW (may exceed REACTIVE_CHANCE_CAP) — cap applies at the",
-  "// Kiếm Tu (2026-08-15) — % khuếch đại TOÀN BỘ effect 'damage' của",
-  "// skill chủ động (không phải đòn đánh thường), xem finalMultiplier",
-  "// của pipeline damage. Nguồn cấp: node/talent/equipment.",
   "// Hỏa Tu (Plans/FirePath, \"Tật Hỏa\" minor, 2026-08-21) — % cộng",
   "// thêm vào tốc độ đạn bay (MissileSystem cũ đã xóa; combat hiện dùng",
   "// ActionImpactSystem). Nền 0, không ảnh",
   "// hưởng path/hành nào chưa có nguồn cấp.",
   "// Hỏa Tu Trúc Cơ (Plans/FirePath mục 6/8, 2026-08-21) — cộng THẲNG",
   "// vào effect.ailmentChance lúc roll áp ailment (xem",
-  "// resolveAilmentApplicationChance), clamp tối đa 1.",
   "// Nền 0 — Hỏa Cầu Thuật Luyện Khí có ailmentChance gốc < 1 (KHÔNG",
   "// còn luôn luôn áp Thiêu Đốt), node \"Dẫn Hỏa\"/\"Hỏa Nguyên\" cộng",
   "// thêm % này.",
@@ -8129,7 +7972,6 @@
   "// sống sót battle-scoped; reset mỗi trận mới, 0 lượt trong trận Độ Kiếp."
  ],
  "src/core/talent/SurviveLethalGuard.ts": [
-  "/** * Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — counter lượt * sống sót qua đòn chí mạng, battle-scoped: * - beginBattle() reset lượt từ thiên phú của player mỗi trận MỚI. * - Trận Độ Kiếp là nghi lễ thật, KHÔNG được phép kích hoạt — contract * là tribulation resolve qua TribulationDirector, không qua * beginBattleCycle/CombatSystem, nên session guard không bao giờ * được gắn cho trận đó. * * Tiêu thụ tại CombatSystem.killIfDead() — điểm DUY NHẤT tuyên bố chết * (HP <= 0 → alive = false) của mọi đường damage. */",
   "/** Trừ 1 lượt nếu còn — true nếu đòn chí mạng lần này được sống sót. */"
  ],
  "src/core/talent/Talent.ts": [
@@ -8472,8 +8314,7 @@
   "// Ngũ Hành Châu — Bản Mệnh Pháp Bảo của Pháp Tu (doc §8). Đây là data",
   "// MÔ TẢ (tên/mô tả milestone cho UI Phase 4) — số liệu THI HÀNH thật",
   "// (coefficient/chu kỳ/ICD...) nằm trong core/artifact/ArtifactSystem.ts,",
-  "// không lặp lại ở đây để tránh 2 nguồn sự thật lệch nhau.",
-  "// chain was removed (Mission G) and the runtime is parked — the copy is"
+  "// không lặp lại ở đây để tránh 2 nguồn sự thật lệch nhau."
  ],
  "src/data/breakthrough/BreakthroughGrades.test.ts": [
   "// Helper full mọi điều kiện Đại Đạo",
@@ -8554,10 +8395,6 @@
   "// reset cảnh giới. Xem composables/useTribulation.ts. Khai TRƯỚC mảng",
   "// `buffs` bên dưới vì được tham chiếu lại trong đó.",
   "// buildTurnBattle(). Spec 2026-09-05 §2.5: fewer slots = stronger buff.",
-  "// Buff/debuff mà skill effect tham chiếu qua buffId (xem",
-  "// data/skill/Skills.ts). Áp lên buff pool riêng",
-  "// theo entity trong trận (Battle.playerBuffs/enemyBuffs) — không",
-  "// phải buff persistent ngoài trận.",
   "// Kiếm Thế / Kiếm Ý (spec 2026-08-29 mục 5.3): sword_wound (thuộc",
   "// Thái Hư Nhất Kiếm) và phieu_van_bo_buff (thuộc Phiêu Vân Bộ) đã",
   "// dọn CÙNG skill — 2 skill chuyển thành passive node route BK, không",
@@ -8712,13 +8549,7 @@
   "// - \"Kiếm Trận\" anchor REMOVED (Kiem Tu Reimagined spec 2026-09-15",
   "// §7) — the sword-zone keystone no longer exists.",
   "// Duration giữ nguyên SỐ (no-rebalance policy Completion plan §Global",
-  "// Constraints): 6s × tickInterval 1s = 6 lượt.",
-  "// LƯU Ý CUTOVER (Task 7 Step 3-4 BLOCKED): TurnBattleSystem/TurnSkillAction",
-  "// hiện KHÔNG gọi ReactionManager (engine turn chưa wire",
-  "// reaction/skill-effect thật) — không có call site nào để swap. Definition",
-  "// này là neo chuẩn cho lúc content migration thật wire reaction vào turn",
-  "// engine: lúc đó chỉ cần apply() 2 definition này thay spawn zone (xem",
-  "// roadmap dòng \"skill-effect conversion\" (SkillEffectResolver retired M13))."
+  "// Constraints): 6s × tickInterval 1s = 6 lượt."
  ],
  "src/data/building/buildings.rework.test.ts": [
   "// Chiêu Hiền Quán (2026-09-02, spec 2026-09-02-chi-hien-quan-design.md)"
@@ -8913,9 +8744,6 @@
   "// của gate Trúc Cơ: Yêu Đan (boss Luyện Khí tầng 10, nguyên liệu",
   "// chính Thông Mạch Đan/Trúc Cơ Đan) + Thiên Địa Chi Kiều (5% từ",
   "// quái ẩn Huyết Mông, nguyên liệu Kỳ Kinh).",
-  "// Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md",
-  "// §6) — đá nâng phẩm, rơi từ quái Trúc Cơ trở lên qua dòng weighted",
-  "// trong StageDropTables (không có bảng thấp hơn nào liệt kê nó).",
   "// Đột Phá Trúc Cơ (Phase 6) — loot \"vô thưởng vô phạt\" (mục 14 spec",
   "// `breakthrough`): KHÔNG stat/effect, KHÔNG mở quest, KHÔNG dùng",
   "// crafting — chỉ tạo manh mối qua description, verbatim đúng spec,",
@@ -9073,13 +8901,6 @@
   "// architecture mục XI."
  ],
  "src/data/realms/realm.ts": [
-  "// Mutually exclusive with realmDurationMultiplier (XOR contract —",
-  "// Rework \"100% mỗi tiểu cảnh giới\" (2026-08-16) — bội số của",
-  "// BASE_CULTIVATION_UNIT_SECONDS (x, xem realmSystem.ts): tổng thời",
-  "// gian tu luyện MỤC TIÊU (giả định tốc độ tu luyện CƠ BẢN, không",
-  "// cộng bonus) để đi hết toàn bộ cảnh giới này, chia không đều cho",
-  "// từng tầng theo đường cong tăng dần. x = 1 ngày -> Luyện Khí =",
-  "// 10 ngày, mỗi đại cảnh giới sau x3 cảnh giới trước.",
   "// Trần tổng bonus vĩnh viễn (cộng dồn qua các pill permanent_stat",
   "// cùng target 1 stat) mà nhân vật có thể hấp thu ở cảnh giới này —",
   "// undefined = cảnh giới chưa thiết kế trần, không giới hạn. Thay",
@@ -9090,13 +8911,6 @@
   "// không được dùng maxLevel/gate của chúng để suy ra rằng người chơi hiện có",
   "// thể tiến xa hơn Trúc Cơ. Khi mở rộng scope phải thiết kế lại gate đại cảnh",
   "// giới, thời gian tu luyện, nội dung và test progression cùng lúc.",
-  "// Phàm Nhân (2026-08-16) — đại cảnh giới THẤP NHẤT, đứng TRƯỚC",
-  "// qi_refining trong mảng này (getRealmIndex()/getGlobalCultivationLevel()",
-  "// đều thuần index-driven, tự động đúng khi chèn ở đầu, không cần sửa",
-  "// realmSystem.ts). Không có nghi lễ Đột Phá riêng như Trúc Cơ — \"nghi",
-  "// lễ\" của Phàm Nhân -> Luyện Khí CHÍNH LÀ chọn Pháp Tu/Kiếm Tu (xem",
-  "// Là tutorial nên dùng nhịp phút/tầng cố định (baseCultivationMinutes),",
-  "// không theo ngân sách thời gian x/10x/30x... của các cảnh giới sau.",
   "// 10 -> 18 (2026-08-20, Realm Passive & Pressure follow-up) — Quán",
   "// Khí (chọn Pháp Tu/Kiếm Tu) giờ mở qua tribulation qi_refining,",
   "// KHÔNG còn bắt buộc",
@@ -9283,10 +9097,6 @@
   "// sau damage — applyAll reorder damage trước, debuff sau).",
   "// ── Chuỗi THIÊN NGÔ (Thủy — kiềm chế + hồi, §2.2): B Tê Cóng, C hồi",
   "// Pháp Lực (self), D trói + tự buff hấp thụ, E sóng càn quét.",
-  "// Biến thể C (§2.2): Tuyền = buff mạnh hơn (+12 regen, 8s — duration",
-  "// override trên effect, turn engine đọc",
-  "// effect.duration ?? definition.duration); Băng Giáp = đổi sang",
-  "// ward phòng thủ.",
   "// Biến thể D (§2.2): Cấm Túc = trói chắc 100%, bỏ hấp thụ; Hấp Lưu",
   "// = trói 50% nhưng leech mạnh hơn, lâu hơn.",
   "// Spec §2.2: leech +35%, 5s — buff định nghĩa 0.20/tầng, 2",
@@ -9439,8 +9249,7 @@
   "/** Thể Tu + Phàm Nhân — generic melee, hệ sống không dùng Skill object. */",
   "/** * Enemy specialAttacks[0] của Thủy Giáp Long (Enemies.ts:1764) — đòn thứ 4 * \"Nuốt Sáng\" (×2.5 damage nước). Turn-based: caller (GameManager adapter) * đếm everyNth theo lượt của enemy; damage multiplier đích thực nằm ở * damage.multiplier (enemy might stat × 2.5 qua resolveActionHit). */",
   "// authored Skill at battle build (single authority — fail-fast on",
-  "// (M7 — dead row removed): both ways resolve their kit at battle build",
-  "// Mortal (no cultivationPath) falls through to GENERIC_PHYSICAL_BASIC —"
+  "// (M7 — dead row removed): both ways resolve their kit at battle build"
  ],
  "src/data/skill/TurnSkillDisplayMeta.test.ts": [
   "// KIEM_PHO_COMBOS deliberately excluded — K11: no combo id may"
@@ -11795,12 +11604,9 @@
  ],
  "src/services/save/SaveSystem.conformance.test.ts": [
   "// Mission A7 — whole-payload round-trip conformance: a save built from a",
-  "// Techniques/skills round-trip only when a template is registered —",
-  "// restore drops orphan entries (dev-stage rule, Mission G) — so the",
   "// Mission B audit — the persisted autoFarmStage lease below only",
   "// Player slice — touch several non-trivial fields.",
   "// A real armed-farm save always carries the perfect-clear row —",
-  "// Techniques/skills registered as templates above — the entries",
   "// Buildings — Chi Hien Quan level 1 sets worker capacity 3 (1+level*2).",
   "// Alchemy — a still-running job (completesAtMs in the future so the",
   "// Decompose — non-default filters, workers within capacity, live timer.",
@@ -12009,11 +11815,6 @@
   "// quang_sat→mortal_ore_common_raw, thanh_linh_moc→mortal_wood_common_raw,",
   "// huyen_thiet→mortal_ore_common_processed, phu_chi→mortal_wood_common_processed",
   "// (gộp amount nếu trùng id đích).",
-  "// - pills cũ map theo effect gần nhất: healing→pill_regen_mortal,",
-  "// cultivation→pill_cultivation_mortal; permanent/buff KHÔNG đổi thành",
-  "// +1 Main Stat (sai bản chất — plan §9) mà hoàn nguyên Linh Thạch",
-  "// 100/stack vào player.spiritStone.",
-  "// Migration IDEMPOTENT: chạy 2 lần không nhân đôi hoàn trả.",
   "// version 44 (2026-08-25, resource-professions-rework plan §10 — rework",
   "// vòng kinh tế \"Địa Giới → Lâm/Quáng/Động Thiên → Bag\"):",
   "// - materials: map cặp raw/processed cũ về material TRỰC TIẾP mới theo",
@@ -12021,10 +11822,6 @@
   "// wood_*_raw/processed → `<realm>_wood_decade`; ore_*_raw/processed →",
   "// `<realm>_ore_decade` (gp123 6E C2: trục tuổi thống nhất); herb_*_raw/processed → thảo Động Thiên decade",
   "// đầu tiên của realm tương ứng (không xác định được đan phương cũ).",
-  "// - Phù/Trận legacy KHAI TỬ (§10.1): talismans/formations trong Bag +",
-  "// socket trên slot quy đổi thành Linh Thạch theo bảng compensation",
-  "// (common 200 / uncommon 500 / rare 1200); xoá toàn bộ state socket.",
-  "// Affix đã roll trên equipment GIỮ NGUYÊN (§10.1.5).",
   "// - Buildings trung gian bị loại bỏ (herb_garden/smelter/",
   "// artisan_workshop/formation_altar/talisman_institute): hoàn trả Linh",
   "// Thạch theo bảng cố định /level; strip gardenPlots/processingJobs.",
@@ -12126,8 +11923,6 @@
   "// đang chạy đều mất khi reload. Manager nào lưu id thay vì full",
   "// object (materials/pills/talismans) đều resolve lại qua registry",
   "// tương ứng lúc restore — xem GameManager.restoreFromSave().",
-  "// version 3: thêm formations (FormationBag) — formation đi theo",
-  "// `equipment` sẵn có, không cần field riêng.",
   "// version 4: thêm crafts (CraftingManager) — lượt craft Đan/Phù/",
   "// Trận đang chạy, nguyên liệu đã trừ nên phải lưu lại tiến độ,",
   "// không thì reload giữa chừng sẽ mất trắng nguyên liệu đã tiêu.",
@@ -12139,9 +11934,6 @@
   "// version 6: hoàn thiện stat (Mana Regen/CDR/Crit Avoidance/Chance",
   "// + hệ thống Tâm Pháp 3 tầng (Tu Luyện/Chiến Đấu/Phá Cảnh — Technique",
   "// đổi hẳn shape sang discriminated union, xem core/technique/Technique.ts).",
-  "// PlayerData thêm totalMonstersKilled. Save",
-  "// cũ (version <6) KHÔNG tương thích, không viết migration — cùng lý do",
-  "// version 5, save cũ tự động bị coi như không tồn tại.",
   "// version 7: MASTER SPEC Economy Phase 4 — thêm Building (Farm/Mine/",
   "// Smelter...), lưu buildings: BuildingInstance[] (xem",
   "// core/building/*). Save cũ (version <7) KHÔNG tương thích, không",
@@ -12150,9 +11942,6 @@
   "// Trận/Yểm Phù chuyển từ EquipmentInstance sang EquipmentSlotState",
   "// (gắn theo SLOT, không theo item cụ thể — xem core/equipment/",
   "// EquipmentSlotState.ts), lưu equipmentSlots: EquipmentSlotState[].",
-  "// EquipmentInstance trong save không còn field enhanceLevel. Save cũ",
-  "// (version <8) KHÔNG tương thích, không viết migration — cùng lý do các",
-  "// version trước.",
   "// version 9: Core Loop Foundation checklist (Mục AFFIX/RARITY) —",
   "// EquipmentInstance đổi `substats: StatModifier[]` thành",
   "// `affixes: RolledAffix[]` (xem core/equipment/RolledAffix.ts) + thêm",
@@ -12175,8 +11964,6 @@
   "// 'unique' cũ), `refineLevel` bị XOÁ thay bằng `forgePoints` (xem",
   "// template (đăng ký lúc bootstrap, không nằm trong save) mất",
   "// `fixedAffixes`, thêm `forgeCost`.",
-  "// version 16: Thám Hiểm rework — save cũ (version <16) KHÔNG tương",
-  "// thích, không viết migration — cùng lý do các version trước.",
   "// version 17: Naming-principles pass (\"nguyen li dat ten\") —",
   "// equipment: EquipmentInstance[]'s `rarity` đổi hẳn value set — 5 bậc",
   "// Ngũ Phẩm mới (hoang_pham/huyen_pham/dia_pham/thien_pham/tien_pham,",
@@ -12377,10 +12164,6 @@
   "// Hai mảng khác object reference nhưng nội dung y hệt — mô phỏng",
   "// GameManager tạo mảng mới mỗi tick dù giá trị buff không đổi."
  ],
- "src/stores/player.legacyGatedModifier.qa.test.ts": [
-  "// QA evidence — stat-system-reimagined domain gate + Mission G dev-stage",
-  "// backfilled — the modifier is dropped at restore so it can never sit in"
- ],
  "src/stores/player.ngoDao.test.ts": [
   "// Thiên phú Ngộ Đạo (talent-direction-choice-plan §6) — tu luyện ONLINE",
   "// tích luỹ tu vi đổi Cảm Ngộ Kỹ năng theo ngưỡng cultivationPerInsight",
@@ -12413,8 +12196,6 @@
   "// lastSavedAt = T0 + 30s - 60s = T0 - 30s — khác hẳn save1 (T0 - 60s)",
   "// Object.assign của save2 đã chạy",
   "// simulate save cũ thiếu field",
-  "// Dev-stage rule (Mission G) — legacy stat keys are DROPPED, never",
-  "// Current-shape keys survive; every legacy/retired key drops —",
   "// M1 (ARCH-001) — the player slice is REPLACE semantics too: fields the",
   "// M1 (ARCH-001) — identity commits only AFTER the whole apply succeeds:",
   "// Identity committed on success — a third call converges via the guard.",
@@ -12446,9 +12227,7 @@
  ],
  "src/stores/player.talentM2.test.ts": [
   "// Talent v4 M2 (spec §4.3) — store-level hooks:",
-  "// base 10/s * 100s = 1000, ramp t1 = x0.5 → 500",
-  "// 2500 tu vi → 1 Cảm Ngộ + 500 dư, bất kể đường nào.",
-  "// 10/s × 250s = 2500 tu vi"
+  "// base 10/s * 100s = 1000, ramp t1 = x0.5 → 500"
  ],
  "src/stores/player.ts": [
   "// App.vue gọi setExternalModifiers() MỖI TICK (10Hz) với mảng MỚI do",
@@ -12497,25 +12276,10 @@
   "// ARCH-002 (M7): formula lives in resolvePlayerFinalStats() — the same",
   "// The character's visual form — derived FROM the entity itself",
   "// PLAYER_VISUAL_PROFILES on the presentation side — this is only the id.",
-  "// Tốc độ tu luyện nền = BASE_CULTIVATION_PER_SECOND, nhân với effect",
-  "// 'cultivation_speed' của thiên phú đã chọn (2026-08-27). Các nguồn",
-  "// buff/tâm pháp/trang bị vẫn KHÔNG có đường thay đổi tốc độ tu luyện.",
-  "// `cultivationPerSecond` là snapshot được LƯU vào save, dùng để tính",
-  "// tiến độ ngoại tuyến lúc load (boot path: useAppLifecycle →",
-  "// CloudSaveCoordinator.load → restoreFromSave). Trả về lượng tu",
-  "// vi THẬT vừa cộng được (sau khi đã chặn ở \"required\", xem",
   "// Guard 0.01 (plan §6) — percent âm hợp lệ (Phàm Cốt −75% → 0.25×)",
   "// nhưng không bao giờ về 0/âm.",
   "// M2 — Hau Tich Bat Phat: per-realm-level ramp (neutral 1 when",
-  "// Tụ Linh Trận (economy-fixes-sinks-plan §3.2 B1, 2026-08-29) —",
-  "// cộng dồn % từ các effect tu_linh_tran đang active. Đọc qua",
-  "// domain getter (Mission G Task 39) — group-filtered + deadline.",
   "// Đếm tu vi dồn suốt đời (không bị đột phá tiêu hao) — nuôi",
-  "// Thiên phú Ngộ Đạo (talent-direction-choice-plan §6) — đổi tu vi",
-  "// tu luyện ONLINE lấy Cảm Ngộ Kỹ năng theo ngưỡng. Chưa đủ ngưỡng",
-  "// thì dồn accumulator sang lần sau.",
-  "// Ngưỡng/counters do CultivationInsight.accrueCultivationInsight",
-  "// sở hữu — chung cho online + offline (task 34, cleanup mission).",
   "// Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — cùng nguồn",
   "// \"gained\" nuôi Kiếm Ý ở trên, xem core/technique/TechniqueTier.ts's",
   "// Gọi bởi App.vue mỗi tick với kết quả từ",
@@ -12559,8 +12323,6 @@
   "// a restore — a plain assign only overwrites, never removes).",
   "// Mission A6 — whitelist before the spread: only keys declared by",
   "// buildGameSave — self-replicating junk.",
-  "// Same whitelist inside baseStats — a key that is not a current",
-  "// player slice — a modifier whose stat is not a current StatType",
   "// Node level (plan §6.1) — save cũ giữa v46 thiếu object này;",
   "// thiếu = chưa lĩnh ngộ node nào, KHÔNG được để undefined kẹo",
   "// getNodeLevel/aggregate crash toàn UI (nguyên nhân \"không xóa",
@@ -12782,6 +12544,9 @@
  "tests/architecture/entityVisualLifecycle.test.ts": [
   "/** * Guard — per-combatant sprite visibility has exactly one owner: * `combat/combat-entity-visual-lifecycle.ts` decides, and * `combat/combat-grid-view.ts` applies (it owns the sprite parts). * * Sources of authority: * - docs/qa/2026-09-12-hp-bar-visibility-quick.md — the user-reported bug: * toggling only sprite.rect left label/shadow/health-bar floating on the * field during intro/countdown. * - docs/roadmap.md \"CombatScene rule\" — CombatScene-owned lifecycle state * extracts into a helper class (same precedent as combat-cast-bar.ts / * combat-position-interpolation.ts) once evidence supports it. * * What this polices under src/game/scenes (non-test .ts, comment-blind): * 1. No sprite-part .setVisible() outside combat-grid-view.ts. * 2. No setSpriteVisible() call outside the two owner files. * 3. The retired ad-hoc field names (turnCountdownPendingIds, * materializingIds, this/scene.playerMaterialized) stay gone. */",
   "// there are bar chrome, not entity-sprite parts) — outside this contract."
+ ],
+ "tests/architecture/equipmentQuoteContract.test.ts": [
+  "/** * G1 source guard (Mission G re-review, 2026-09-19) - Task 37's locked * contract: mainStatRangeQuote is REQUIRED on both the compare context * and buildEquipmentTooltip's parameter, so the type system forces * every tooltip caller through EquipmentSystem.quoteMainStatRange(). * The defect class it closed: `| undefined` let a caller skip the * authoritative quote and silently render '[—]'. * * Behavioral coverage lives in useEquipmentTooltip.test.ts. This static * guard pins the contract text itself: a drift back to `| undefined` * compiles silently, so the required shape is asserted directly. */"
  ],
  "tests/architecture/eslintCoreSeverity.test.ts": [
   "/** * R14.1a guard (AR-33) — effective ESLint severity for `src/core/**`. * * Mission 0 AR-33 evidence: the later `src/**` rule block in eslint.config.js * matches the same files as the earlier `src/core/**` block and downgrades * `@typescript-eslint/no-explicit-any` / `no-unused-vars` from 'error' back * to 'warn' — so the stricter core rules were never effective. This guard * lints real probe strings through the actual ESLint resolution (flat-config * merge included) and asserts the EFFECTIVE severity, so a future re-overlap * fails the suite even if `npm run lint` is not a CI gate. * * Guard rule (R14 charter): enforcement asserts effective behavior, never * the declared configuration. */"
@@ -13019,14 +12784,6 @@
   "// dev`/`npm run build` (target web thuần) tuyệt đối không đổi hành vi.",
   "// Asset URL tương đối — bắt buộc để index.html load đúng qua file://",
   "// khi Electron đóng gói (electron-builder). Không ảnh hưởng dev server/",
-  "// vite preview, cả 2 vẫn phục vụ qua http bình thường.",
-  "// Tách vendor (Vue/Pinia/i18n) và các bảng data tĩnh lớn",
-  "// formation/alchemy/building/progression/quest) ra khỏi chunk",
-  "// entry chính. Các bảng data này vẫn được import tĩnh (đăng ký",
-  "// đồng bộ lúc boot trong App.vue — xem GameManager.register*),",
-  "// nên KHÔNG đổi sang dynamic import; tách riêng ở đây chỉ nhằm",
-  "// cải thiện cache trình duyệt (data tĩnh đổi ít hơn code app) và",
-  "// giảm kích thước 1 chunk index đơn lẻ. Không ảnh hưởng hành vi",
-  "// runtime — chỉ đổi cách Rollup nhóm module vào file."
+  "// vite preview, cả 2 vẫn phục vụ qua http bình thường."
  ]
 }

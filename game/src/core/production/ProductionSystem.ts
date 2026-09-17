@@ -165,11 +165,14 @@ export class ProductionSystem {
     count: number | undefined,
     productionCapacity: number,
   ): boolean {
-    const state = this.states.get(siteId)
-
-    if (!state) {
+    if (!this.getSiteDefinition(siteId)) {
       return false
     }
+
+    // Assignment is a write command - materializing the level-1 default
+    // on a defined site is part of the write (D4: queries no longer
+    // create state, so the command path owns materialization).
+    const state = this.ensureSiteState(siteId)
 
     if (count === undefined) {
       delete state.assignedWorkers

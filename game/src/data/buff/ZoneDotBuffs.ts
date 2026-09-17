@@ -19,12 +19,14 @@ import type { BuffDefinition } from '../../core/buff/BuffTypes'
 // Duration giữ nguyên SỐ (no-rebalance policy Completion plan §Global
 // Constraints): 6s × tickInterval 1s = 6 lượt.
 //
-// LƯU Ý CUTOVER (Task 7 Step 3-4 BLOCKED): TurnBattleSystem/TurnSkillAction
-// hiện KHÔNG gọi ReactionManager (engine turn chưa wire
-// reaction/skill-effect thật) — không có call site nào để swap. Definition
-// này là neo chuẩn cho lúc content migration thật wire reaction vào turn
-// engine: lúc đó chỉ cần apply() 2 definition này thay spawn zone (xem
-// roadmap dòng "skill-effect conversion" (SkillEffectResolver retired M13)).
+// CUTOVER NOTE (Task 7 Step 3-4 BLOCKED): TurnBattleSystem/
+// TurnSkillAction currently does NOT call ReactionManager (the turn
+// engine has not wired real reaction/skill-effect handling) - there is
+// no call site to swap. This definition is the standard anchor for when
+// the real content migration wires reactions into the turn engine: at
+// that point apply() these 2 definitions instead of spawning zones (see
+// the roadmap's "skill-effect conversion" line - SkillEffectResolver
+// retired M13).
 
 export const DUNG_NHAM_BURN_DEFINITION: BuffDefinition = {
   id: 'dung_nham_burn',

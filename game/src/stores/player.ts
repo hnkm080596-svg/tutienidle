@@ -152,13 +152,14 @@ export const usePlayerStore = defineStore('player', {
   },
 
   actions: {
-    // Tốc độ tu luyện nền = BASE_CULTIVATION_PER_SECOND, nhân với effect
-    // 'cultivation_speed' của thiên phú đã chọn (2026-08-27). Các nguồn
-    // buff/tâm pháp/trang bị vẫn KHÔNG có đường thay đổi tốc độ tu luyện.
-    // `cultivationPerSecond` là snapshot được LƯU vào save, dùng để tính
-    // tiến độ ngoại tuyến lúc load (boot path: useAppLifecycle →
-    // CloudSaveCoordinator.load → restoreFromSave). Trả về lượng tu
-    // vi THẬT vừa cộng được (sau khi đã chặn ở "required", xem
+    // Base cultivation speed = BASE_CULTIVATION_PER_SECOND, times the
+    // 'cultivation_speed' of the chosen talent (2026-08-27). Other
+    // sources - buffs/tam phap/equipment - still have NO cultivation-
+    // speed path. `cultivationPerSecond` is the snapshot SAVED into the
+    // save, used to compute offline progress on load (boot path:
+    // useAppLifecycle -> CloudSaveCoordinator.load -> restoreFromSave).
+    // Returns the ACTUAL tu vi just granted (after clamping at
+    // "required", see
     // addCultivation()).
     cultivate(deltaSeconds: number): number {
       // Guard 0.01 (plan §6) — percent âm hợp lệ (Phàm Cốt −75% → 0.25×)
@@ -171,9 +172,9 @@ export const usePlayerStore = defineStore('player', {
         // (cultivationPerSecond * elapsed) inherits the same curve.
         getCultivationRampMultiplier(this.selectedTalentIds, this.realmLevel)
 
-      // Tụ Linh Trận (economy-fixes-sinks-plan §3.2 B1, 2026-08-29) —
-      // cộng dồn % từ các effect tu_linh_tran đang active. Đọc qua
-      // domain getter (Mission G Task 39) — group-filtered + deadline.
+      // Tu Linh Tran (economy-fixes-sinks-plan sec.3.2 B1, 2026-08-29) -
+      // sums % from active tu_linh_tran effects. Read through the domain
+      // getter (Mission G Task 39) - group-filtered + deadline-checked.
       const tuLinhPercent = getActiveCultivationSpeedPercent(
         this.persistentTimedEffects,
         Date.now(),
@@ -193,11 +194,11 @@ export const usePlayerStore = defineStore('player', {
       // technique tier.
       this.totalCultivationGained += gained
 
-      // Thiên phú Ngộ Đạo (talent-direction-choice-plan §6) — đổi tu vi
-      // tu luyện ONLINE lấy Cảm Ngộ Kỹ năng theo ngưỡng. Chưa đủ ngưỡng
-      // thì dồn accumulator sang lần sau.
-      // Ngưỡng/counters do CultivationInsight.accrueCultivationInsight
-      // sở hữu — chung cho online + offline (task 34, cleanup mission).
+      // Ngo Dao talent (talent-direction-choice-plan sec.6) - converts
+      // ONLINE tu vi into skill Cam Ngo at thresholds; an under-threshold
+      // remainder rolls into the next accrual. Thresholds/counters are
+      // owned by CultivationInsight.accrueCultivationInsight - shared
+      // for online + offline (task 34, cleanup mission).
       accrueCultivationInsight(this, gained)
 
       // Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — cùng nguồn
@@ -326,7 +327,7 @@ export const usePlayerStore = defineStore('player', {
         }
       }
 
-      // Same whitelist inside baseStats — a key that is not a current
+      // Same whitelist inside baseStats - a key that is not a current
       // StatType (legacy/renamed/foreign) drops here; dev-stage rule:
       // drop or reject, never translate.
       const allowedStatKeys = new Set(Object.keys(createBaseStats()))
@@ -352,7 +353,7 @@ export const usePlayerStore = defineStore('player', {
       }
 
       // Same whitelist for StatModifier.stat fields persisted on the
-      // player slice — a modifier whose stat is not a current StatType
+      // player slice - a modifier whose stat is not a current StatType
       // drops (never renamed), and a modifier on a domain-gated stat
       // only survives when it declares the OWNING domain: an absent or
       // wrong tag would be rejected by applyDomainGate on every

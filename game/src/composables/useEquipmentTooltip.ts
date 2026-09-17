@@ -73,7 +73,10 @@ export interface EquipmentCompareContext {
 
   slotState: EquipmentSlotState | null
 
-  mainStatRangeQuote: { min: number; max: number } | undefined
+  // G1 - required on purpose (Mission G Task 37): the compiler forces
+  // every caller through EquipmentSystem.quoteMainStatRange(); there is
+  // no un-quoted path.
+  mainStatRangeQuote: { min: number; max: number }
 }
 
 // Tooltip Equipment có cấu trúc (2026-08-15) — loại CUỐI trong đợt
@@ -96,12 +99,9 @@ export function buildEquipmentTooltip(
   slotState: EquipmentSlotState | null,
   zoneRegistry: ZoneRegistry,
   compare: EquipmentCompareContext | undefined,
-  mainStatRangeQuote: { min: number; max: number } | undefined,
+  mainStatRangeQuote: { min: number; max: number },
 ): EquipmentTooltipContent {
   const mainStatValue = formatStat(instance.mainStat.stat, instance.mainStat.flat ?? 0)
-  // R9 (AR-23 4c): the effective range is the EQUIPMENT SYSTEM's quote.
-  // Callers must pass quoteMainStatRange() output — never re-derive.
-  const effectiveMainRangeValues = mainStatRangeQuote
 
   // Delta fields (spec section 4) - computed up front so every stat row can
   // spread { delta, deltaTone }; empty when there is no real compare
@@ -124,12 +124,9 @@ export function buildEquipmentTooltip(
     }
   }
 
-  // R9 (AR-23 4c): range from the domain quote when supplied; the inline
-  // fallback above now owns the legacy path for callers without a
-  // system handle.
-  const effectiveMainRange = effectiveMainRangeValues
-    ? `[${formatStat(instance.mainStat.stat, effectiveMainRangeValues.min)}–${formatStat(instance.mainStat.stat, effectiveMainRangeValues.max)}]`
-    : '[—]'
+  // R9 (AR-23 4c) / G1: the range is ALWAYS the domain quote - the
+  // parameter is required, so there is no '[-]' fallback path.
+  const effectiveMainRange = `[${formatStat(instance.mainStat.stat, mainStatRangeQuote.min)}–${formatStat(instance.mainStat.stat, mainStatRangeQuote.max)}]`
 
   const sections: TooltipSection[] = [
     {

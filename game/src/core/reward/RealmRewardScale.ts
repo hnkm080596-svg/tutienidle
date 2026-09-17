@@ -6,11 +6,11 @@ import { getRealmIndex } from '../realm/realmSystem'
 // ngộ ở Trúc Cơ bị "khựng" bằng Luyện Khí trong khi chi phí token/enhance
 // tăng. Nhân thưởng theo bậc cảnh giới để tiến trình có ý nghĩa.
 //
-// Quy ước: mortal & Luyện Khí ×1 (baseline); từ Trúc Cơ trở lên ×3 mỗi
-// bậc cảnh giới (khớp đường cong thời gian/effort ~×3/realm). enemy.realmId
-// đã được StageWaveSystem override theo stage.requiredRealmId lúc spawn,
-// nên đọc theo enemy.realmId là đúng stage đang đánh (nhất quán với gate
-// rớt Đoán Bảo Thạch qua dữ liệu bảng drop).
+// Convention: mortal & Luyen Khi x1 (baseline); Foundation+ x3 per
+// realm tier (matching the ~x3/realm time/effort curve). enemy.realmId
+// was already overridden by StageWaveSystem to stage.requiredRealmId at
+// spawn, so reading enemy.realmId matches the stage being fought
+// (consistent with the doan_bao_thach drop-table gate).
 const REALM_REWARD_GROWTH_BASE = 3
 
 export function getRealmRewardMultiplier(realmId: string): number {

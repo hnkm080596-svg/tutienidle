@@ -349,7 +349,7 @@ export class DecomposeSystem {
 }
 
 // Regex biên dịch MỘT LẦN — parseOre chạy mỗi stack mỗi tick phân giải.
-// Inverse of buildProfessionMaterialId('ore', realm, age) — the
+// Inverse of buildProfessionMaterialId('ore', realm, age) - the
 // constructor in ProfessionMaterial.ts owns this grammar.
 const ORE_ID_PATTERN = new RegExp(`^(.+)_ore_(${HERB_AGES.join('|')})$`)
 

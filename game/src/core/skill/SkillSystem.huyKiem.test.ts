@@ -26,11 +26,11 @@ describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
     expect((action as { value?: number }).value).toBe(1 + 15)
   })
 
-  // Important #3 review fix — dead `skillExperienceRatio: 1/18` từ
-  // maxLevel 18 cũ vẫn còn trên effect damage của tram, cộng thêm 1 lớp
-  // % (skillExperienceRatio * totalExperience / might — công thức
-  // executor legacy) ĐÈ LÊN flat bonus trên — double-scale
-  // ngoài spec §2 ("Huy Kiếm là skill DUY NHẤT đi bằng flat, không %").
+  // Important #3 review fix - the dead `skillExperienceRatio: 1/18` from
+  // the old maxLevel 18 still sat on tram's damage effect, adding a %
+  // layer (skillExperienceRatio * totalExperience / might - the legacy
+  // executor formula) ON TOP of the flat bonus - a double-scale outside
+  // spec sec.2 ("Huy Kiem is the ONLY skill that runs flat, no %").
   it('action dealDamage của tram KHÔNG còn skillExperienceRatio (flat-only, spec §2)', () => {
     const template = SKILLS.find((skill) => skill.id === 'tram')!
     const action = template.triggers?.[0]?.actions[0]

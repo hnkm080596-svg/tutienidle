@@ -161,7 +161,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
   })
 
   it('grade and quality particle colors are one table across all five ranks', () => {
-    // Mission G Task 29 — pins the single-table contract: the equipment
+    // Mission G Task 29 - pins the single-table contract: the equipment
     // path (quality) and the pill path (grade) must emit the identical
     // color for every rank of the shared 5-member union.
     vi.spyOn(Math, 'random').mockReturnValue(0.99)

@@ -280,12 +280,11 @@ export class CombatSystem {
   }
 
   /**
-   * Public vì critical phải roll lúc BẮN missile (mang theo suốt
-   * hành trình bay), không còn roll ngay lúc tính damage như trước —
-   * cần gọi được từ các đường bắn missile phía battle, không chỉ nội
-   * bộ CombatSystem. `target` dùng để trừ
-   * Critical Strike Avoidance của phía phòng thủ (chance hiệu lực
-   * không thể âm).
+   * Public because critical must roll at missile LAUNCH (carried
+   * through the flight), not at damage-compute time as before - the
+   * battle-side missile paths must be able to call it, not just
+   * CombatSystem internals. `target` supplies the defender's Critical
+   * Strike Avoidance (the effective chance cannot go negative).
    */
   rollCritical(source: CombatEntity, target: CombatEntity): boolean {
     const effectiveChance = clampStatValue('criticalRate', source.stats.criticalRate - target.stats.criticalAvoidance)
@@ -597,10 +596,11 @@ export class CombatSystem {
       return
     }
 
-    // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — đòn lẽ ra
-    // chết thành sống sót HP = 1, trừ 1 lượt của trận. KHÔNG kích hoạt
-    // trong trận Độ Kiếp (session null — GameManager xoá khi bắt đầu
-    // độ kiếp qua setSurviveLethalSession(null)).
+    // Bat Tu The talent (talent-direction-choice-plan sec.6) - a lethal
+    // single hit becomes survive-at-1-HP, consuming one charge of the
+    // battle. Does NOT trigger during tribulation (session null -
+    // GameManager clears it when tribulation starts via
+    // setSurviveLethalSession(null)).
     //
     // The Tu Reimagined (plan Task 9, D9) — the session's ordered
     // extraSources run BEFORE the talent guard: Bat Tu Ba The's ultimate

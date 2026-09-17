@@ -105,10 +105,10 @@ export const TRAN_PHAP_CUU_CUNG_BUFF: BuffDefinition = {
   ],
 }
 
-// Buff/debuff mà skill effect tham chiếu qua buffId (xem
-// data/skill/Skills.ts). Áp lên buff pool riêng
-// theo entity trong trận (Battle.playerBuffs/enemyBuffs) — không
-// phải buff persistent ngoài trận.
+// Buffs/debuffs referenced by skill effects via buffId (see
+// data/skill/Skills.ts). Applied to the per-entity buff pool inside a
+// battle (Battle.playerBuffs/enemyBuffs) - not persistent out-of-battle
+// buffs.
 // Kiếm Thế / Kiếm Ý (spec 2026-08-29 mục 5.3): sword_wound (thuộc
 // Thái Hư Nhất Kiếm) và phieu_van_bo_buff (thuộc Phiêu Vân Bộ) đã
 // dọn CÙNG skill — 2 skill chuyển thành passive node route BK, không

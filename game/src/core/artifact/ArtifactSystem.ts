@@ -22,7 +22,7 @@ import { getArtifactGradeMultiplier } from './ArtifactProgression'
 
 export interface ArtifactSystemDeps {
   /**
-   * Parked port — the dormant ActionImpactSystem class was removed in
+   * Parked port - the dormant ActionImpactSystem class was removed in
    * Mission G; only the scheduleBasic member this file calls survives
    * as the contract (the reimagine provides a real implementation).
    */
@@ -111,7 +111,7 @@ function buildArtifactDamage(element: ElementType | undefined, multiplier: numbe
   }
 }
 
-/** Shared cycle formula — used internally by the parked artifact tick. */
+/** Shared cycle formula - used internally by the parked artifact tick. */
 export function getArtifactCycleSeconds(runtime: Battle['artifactRuntime']): number {
   if (!runtime) {
     return ARTIFACT_BASE_CYCLE_SECONDS

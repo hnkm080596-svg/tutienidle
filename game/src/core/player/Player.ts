@@ -61,10 +61,10 @@ export interface PlayerData {
   // trước khi đạt (xem core/breakthrough/FoundationResolver.ts).
   highestFoundationAchieved?: FoundationType
 
-  // Beta Phase 4 (Tutorial Carousel) — đã xem/bỏ qua tutorial nhập môn
-  // chưa, gate theo nhân vật MỚI (App.vue's onMounted() else-branch) —
-  // thêm field + default trong createDefaultPlayer(), tự persist qua
-  // spread.
+  // Beta Phase 4 (Tutorial Carousel) - whether the intro tutorial was
+  // seen/skipped, gated per NEW character (App.vue's onMounted()
+  // else-branch) - add the field + default in createDefaultPlayer(),
+  // self-persists via spread.
   hasSeenTutorial: boolean
 
   // Pháp Tu profession-tier ladder (2026-08-14, xem
@@ -239,8 +239,8 @@ export interface PlayerData {
   phaGiapCarryStacks: number
   phaGiapCarryRealmId: string | null
 
-  // Idempotency guard cho Realm Passive theo cảnh giới (Nhập Đạo/Kiến
-  // Cơ/...) — key = realmId vừa bước vào. Xem
+  // Idempotency guard for realm-scoped Realm Passives (Nhap Dao/Kien
+  // Co/...) - key = the realmId just entered. See
   // core/realm/RealmPassiveSystem.ts.
   grantedRealmPassiveIds: string[]
 

@@ -49,3 +49,51 @@ Changed-risk-map domains: combat-and-tribulation, economy-and-progression, inven
 ## Verdict
 
 **PASS WITH EVIDENCE** — every ledger hypothesis resolved against current code, tests, or in-worktree runtime; zero Confirmed defects; zero unresolved Suspected items in the task-owned surface. Deferred items are pre-existing or plan-recorded, listed above.
+
+---
+
+## Re-review addendum (2026-09-19) — user verdict REQUEST CHANGES, 2 Medium
+
+External re-review of the merged Mission G disagreed with the INV-G-15
+resolution and flagged a second task-authored rule violation. Both are
+repaired in this round.
+
+### G1 (Medium) — `mainStatRangeQuote` required-quote contract
+
+The deep-QA resolution above treated `| undefined` as positional
+compatibility. The locked Task 37 intent was stronger: the compiler must
+force every tooltip/compare site to resolve the authoritative quote.
+
+Repaired: `EquipmentCompareContext.mainStatRangeQuote` and
+`buildEquipmentTooltip()`'s parameter are now required
+`{ min: number; max: number }` (no `| undefined`). All 11 compile-enumerated
+call/test sites migrated: production callers hoist
+`quoteMainStatRange(...)` and gate the tooltip/compare on quote presence
+(no quote → no tooltip, matching the existing registry-miss convention);
+test sites pass the template's declared range. New source guard
+`tests/architecture/equipmentQuoteContract.test.ts` forbids the
+`| undefined` signature and `mainStatRangeQuote: undefined` literals from
+returning. 13 tooltip tests + guard green; type-check clean.
+
+### G2 (Medium) — P15 violations in G-authored comments
+
+The sweep script (`git blame` scoped to the 41 G commits, TS-tokenizer
+comment classification) found 129 G-authored non-ASCII comment lines:
+48 mechanical glyph cases (`—`, `→`, `×`, `§`) and 81 Vietnamese prose
+lines. All swept: mechanical chars substituted, Vietnamese prose
+translated to English ASCII (contiguous comment runs anchored on
+G-authored lines; adjacent legacy lines within the same sentence included
+for coherence — the C10/whole-run rule). Verified: re-scan reports **0**
+G-authored comment violations (50 remaining non-ASCII lines are all
+non-comment UI/data strings). P15 baseline regenerated: 954 files /
+10,906 violations (was 963 / 11,104). Tokenizer strip-compare of the
+aggregate diff proves the sweep touched comments only — the sole
+non-comment changes are the 6 intended G1 files.
+
+### Verification this round
+
+- `npm run type-check`: green.
+- `npx vitest run` on asciiComments + equipmentQuoteContract guards and
+  all swept test files (SkillSystem.huyKiem, player.talentM2,
+  ActionTargetingSystem, useEquipmentTooltip): 20 tests green.
+- Aggregate-diff strip-compare: zero unintended non-comment changes.

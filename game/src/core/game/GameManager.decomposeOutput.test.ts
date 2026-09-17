@@ -3,7 +3,7 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { materials } from '../../data/materials/materials'
 
-// Mission G Task 13 — decompose output is produced by buildings, so the
+// Mission G Task 13 - decompose output is produced by buildings, so the
 // registry-miss fallback is a fully typed Material (no `as never`).
 describe('deliverDecomposeOutput — typed Material fallback', () => {
   it('an unregistered materialId still lands in the bag under the typed fallback', () => {

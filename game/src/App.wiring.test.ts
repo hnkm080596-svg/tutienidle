@@ -367,7 +367,7 @@ describe('bindPresentationActive — presentationActive has exactly one owner', 
 
 /**
  * onRestoreOk grants starter skills to old saves. huy_quyen once had TWO
- * grant blocks (the mortal-skill loop + a second standalone block) — a
+ * grant blocks (the mortal-skill loop + a second standalone block) - a
  * no-op via the has() guard, but duplicated intent. This guard pins one
  * seam: the 'huy_quyen' literal may appear at most once inside the
  * onRestoreOk callback.

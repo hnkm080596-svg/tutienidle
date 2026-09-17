@@ -55,15 +55,15 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Tách vendor (Vue/Pinia/i18n) và các bảng data tĩnh lớn
+        // Split vendor (Vue/Pinia/i18n) and the large static data tables
         // (materials/skill/enemy/stage/equipment/pill/talisman/buff/
-        // formation/alchemy/building/progression/quest) ra khỏi chunk
-        // entry chính. Các bảng data này vẫn được import tĩnh (đăng ký
-        // đồng bộ lúc boot trong App.vue — xem GameManager.register*),
-        // nên KHÔNG đổi sang dynamic import; tách riêng ở đây chỉ nhằm
-        // cải thiện cache trình duyệt (data tĩnh đổi ít hơn code app) và
-        // giảm kích thước 1 chunk index đơn lẻ. Không ảnh hưởng hành vi
-        // runtime — chỉ đổi cách Rollup nhóm module vào file.
+        // formation/alchemy/building/progression/quest) out of the main
+        // entry chunk. These tables stay statically imported (registered
+        // synchronously at boot in App.vue - see GameManager.register*),
+        // so do NOT switch to dynamic import; the split here only
+        // improves browser caching (static data changes less than app
+        // code) and shrinks the single index chunk. Runtime behavior is
+        // unchanged - only how Rollup groups modules into files.
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (

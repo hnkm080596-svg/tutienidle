@@ -217,7 +217,7 @@ export class GameManager {
   // M13: the legacy engine INSTANCES here served
   // only the retired legacy helpers (EnemyAttackSystem,
   // SkillEffectResolver). The damage contracts stay live (turn engine
-  // uses scaleActionDamage/ActionDamageInfo) — only these orphaned
+  // uses scaleActionDamage/ActionDamageInfo) - only these orphaned
   // fields are gone.
   readonly buffPool = new BuffPool()
   readonly buffSystem = new BuffSystem(this.buffPool)

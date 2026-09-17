@@ -81,6 +81,19 @@ const entries = computed<EquipmentEntry[]>(() => {
       ? gameManager.equipmentOps.getEquipmentTemplate(equippedComparison.itemId)
       : undefined
 
+    // G1 (Mission G Task 37) - the tooltip contract requires the
+    // authoritative range quote. A quote miss = malformed item data, so
+    // the dependent surface drops (same "registry miss -> no tooltip"
+    // rule above): no candidate quote, no tooltip; no equipped quote,
+    // no compare pair.
+    const mainStatRangeQuote = template
+      ? gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry)
+      : undefined
+
+    const equippedMainStatRangeQuote = equippedComparison && equippedTemplate
+      ? gameManager.equipmentSystem.quoteMainStatRange(equippedComparison, gameManager.equipmentRegistry)
+      : undefined
+
     // Registry miss → hiển thị itemId thô thay vì chết cả màn hình
     // (pattern EquipmentHallPanel.vue:126 `template?.name ?? instance.itemId`).
     const displayName = template?.name ?? instance.itemId
@@ -139,22 +152,22 @@ const entries = computed<EquipmentEntry[]>(() => {
         // món đồ này khi nó đang được trang bị. Registry miss → không
         // tooltip (buildEquipmentTooltip đòi template thật, BagCell.tooltip
         // optional) — cell vẫn hiển thị, không chết panel.
-        tooltip: template
+        tooltip: template && mainStatRangeQuote
           ? buildEquipmentTooltip(
               instance,
               template,
               gameManager.affixRegistry,
               instance.equipped ? gameManager.equipmentOps.getSlotState(instance.slot) : null,
               gameManager.zoneRegistry,
-              equippedComparison && equippedTemplate
+              equippedComparison && equippedTemplate && equippedMainStatRangeQuote
                 ? {
                     instance: equippedComparison,
                     template: equippedTemplate,
                     slotState: gameManager.equipmentOps.getSlotState(equippedComparison.slot),
-                    mainStatRangeQuote: gameManager.equipmentSystem.quoteMainStatRange(equippedComparison, gameManager.equipmentRegistry),
+                    mainStatRangeQuote: equippedMainStatRangeQuote,
                   }
                 : undefined,
-              gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
+              mainStatRangeQuote,
             )
           : undefined,
 

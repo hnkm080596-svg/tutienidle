@@ -9,7 +9,7 @@ import {
 } from '../realm/realmSystem'
 
 describe('Cultivation progression curve', () => {
-  // Mission G — data contract: each realm declares exactly ONE formula
+  // Mission G - data contract: each realm declares exactly ONE formula
   // field (minutes-per-level XOR total-duration-budget). The retired
   // baseRequiredCultivation/cultivationMultiplier exponential path is
   // gone; this invariant is the regression net.

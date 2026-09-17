@@ -16,7 +16,7 @@ function effect(overrides: Partial<PersistentTimedEffect>): PersistentTimedEffec
   }
 }
 
-// Mission G Task 39 — one domain-owned read for the tu_linh_tran buff:
+// Mission G Task 39 - one domain-owned read for the tu_linh_tran buff:
 // group-filtered AND deadline-checked (matches activateTuLinhTran's
 // group-stack accounting), not a sum over every active effect.
 describe('getActiveCultivationSpeedPercent', () => {

@@ -24,8 +24,8 @@ function mountScreen() {
 
 async function reachAttributeStep(container: HTMLElement) {
   const next = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
-  // onMounted fires reroll() against the mock service — flush it, then
-  // walk name → talent → attributes through the real controls.
+  // onMounted fires reroll() against the mock service - flush it, then
+  // walk name -> talent -> attributes through the real controls.
   await next()
   await nextTick()
 
