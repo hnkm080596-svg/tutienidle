@@ -253,6 +253,43 @@ describe('CombatSystemDamageAdapter -- standard hit channel', () => {
   })
 })
 
+describe('CombatSystemDamageAdapter -- dispatch tie-break (locked: profile-first)', () => {
+  it("legacy_dot profile beats a contradictory origin.kind 'reaction' (exact profile match owns the channel)", () => {
+    const source = makeEntity('source')
+    const target = makeEntity('target', { maxHp: 500, dotResistancePercent: 0.5 }, { currentHp: 500 })
+    const h = makeHarness([source, target])
+
+    const result = h.adapter.dealDamage(
+      payload({ damageProfile: 'legacy_dot', coefficient: 200 }),
+      h.ctx({ kind: 'reaction' }),
+    )
+
+    // DoT economy proves the channel: dotResistance halves the tick,
+    // the sourceBuffs resolver is consulted, vitals reason is 'dot'.
+    expect(result.hpDamage).toBe(100)
+    expect(h.vitalsEvents.filter((e) => e.entityId === 'target').map((e) => e.reason)).toEqual(['dot'])
+    expect(h.sourceBuffsCalls()).toBe(1)
+  })
+
+  it("origin.kind 'reaction' routes a non-prefixed profile to the reaction channel (origin fallback)", () => {
+    const source = makeEntity('source')
+    const target = makeEntity('target', { maxHp: 500, dotResistancePercent: 0.75 }, { currentHp: 500 })
+    const h = makeHarness([source, target])
+
+    const result = h.adapter.dealDamage(
+      payload({ damageProfile: 'standard_hit', coefficient: 100 }),
+      h.ctx({ kind: 'reaction' }),
+    )
+
+    // dotResistancePercent NOT consumed, reason 'reaction' -- this is
+    // the same dispatch as the 'reaction_*' profile test above, reached
+    // via the origin fallback rather than the profile prefix.
+    expect(result.hpDamage).toBe(100)
+    expect(h.vitalsEvents.map((e) => e.reason)).toEqual(['reaction'])
+    expect(h.sourceBuffsCalls()).toBe(0)
+  })
+})
+
 describe('CombatSystemDamageAdapter -- target validity', () => {
   it('throws CombatOperationSkip(invalid_target_state) on an unresolvable target', () => {
     const source = makeEntity('source')
