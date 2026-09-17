@@ -153,7 +153,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
 
     // Lease loss WITHOUT the persisted-state cleanup (stopAutoFarm clears
     // both — this simulates a lifecycle that freed the slot only).
-    gameManager.stageManager.stop()
+    gameManager.stageManager.release(gameManager.stageManager.get()!)
     expect(gameManager.stageManager.get()).toBeNull()
     expect(playerStore.$state.autoFarmStage?.stageId).toBe(FARM_STAGE.id)
 
@@ -262,8 +262,8 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     // BattleLootSystem session.
     const { playerStore, gameManager, save } = harness()
 
-    expect(gameManager.stageManager.start(FARM_STAGE)).toBe(true)
-    const foreignLease = gameManager.stageManager.get()
+    const foreignLease = gameManager.stageManager.acquire(FARM_STAGE)
+    expect(foreignLease).not.toBeNull()
 
     expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
 
@@ -282,10 +282,10 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
     expect(gameManager.stageManager.get()?.stageId).toBe(FARM_STAGE.id)
 
-    // External path releases the farm lease (e.g. stopRepeat fired on a
-    // stale battle reference), then a foreign owner takes the same stage.
-    gameManager.stageManager.stop()
-    expect(gameManager.stageManager.start(FARM_STAGE)).toBe(true)
+    // External path releases the farm lease (a stale caller that got hold
+    // of the token), then a foreign owner takes the same stage.
+    gameManager.stageManager.release(gameManager.stageManager.get()!)
+    expect(gameManager.stageManager.acquire(FARM_STAGE)).not.toBeNull()
 
     vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
     gameManager.tickOps.update(0.1)

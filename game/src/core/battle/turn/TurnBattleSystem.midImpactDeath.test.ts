@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant, type TurnDeclaredAction } from './TurnBattleSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
@@ -115,9 +115,10 @@ function fixture() {
     state: 'fighting',
   }
 
-  const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, REGISTRY)
+  const combat = new CombatSystem(new EventBus())
+  const system = new TurnBattleSystem(combat, 10_000, REGISTRY)
 
-  return { battle, system, actor, target1, target2 }
+  return { battle, system, actor, target1, target2, combat }
 }
 
 function applyReflect(target: TurnBattleParticipant, def: BuffDefinition) {
@@ -229,5 +230,43 @@ describe('mid-impact actor death stops the rest of the action (audit T3-22b)', (
     expect(target1.entity.currentHp).toBeLessThan(target1.entity.maxHp)
     expect(target2.entity.currentHp).toBe(target2.entity.maxHp)
     expect(result.extraImpacts).toHaveLength(1)
+  })
+
+  it('multi-instance lane: lethal reflect on instance 1 stops the remaining instances on the same target', () => {
+    // Mission C audit — the scaledDamage multi-instance loop (Kiem Tu
+    // Ngu phi kiem runs count = kiemDaoCount through it) checked only
+    // target death between instances: a reflect kill on the caster let
+    // instances 2..N keep swinging from a dead actor.
+    const { battle, system, actor, target1, combat } = fixture()
+    applyReflect(target1, LETHAL_REFLECT)
+
+    const hitSpy = vi.spyOn(combat, 'resolveActionHit')
+
+    const multiInstance: TurnSkillDefinition = {
+      id: 'phi_kiem_x3',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      instances: { count: 3 },
+    }
+    const declared = aoeDeclared(actor, battle)
+    declared.affected = [target1]
+    declared.action = {
+      skillId: multiInstance.id,
+      skill: multiInstance,
+      damage: multiInstance.damage,
+      targeting: multiInstance.targeting,
+      slot: null,
+    }
+    declared.scaledDamage = multiInstance.damage ?? null
+
+    const result = system.applyActionImpact(battle, declared)
+
+    // Instance 1 lands -> reflect kills the actor -> instances 2 and 3
+    // must never resolve (no further hit resolution, no rolls consumed).
+    expect(actor.entity.alive).toBe(false)
+    expect(hitSpy).toHaveBeenCalledTimes(1)
+    expect(target1.entity.currentHp).toBeLessThan(target1.entity.maxHp)
+    expect(result.targetIds).toEqual(['enemy1'])
   })
 })
