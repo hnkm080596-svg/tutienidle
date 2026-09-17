@@ -10,6 +10,11 @@ import type {
   BuffInstanceId,
   CombatEntityId,
 } from '../battle/contracts/ids'
+import type { ReactionDefinition } from './ReactionDefinition'
+import type {
+  ReactionEvaluationTrace,
+  ReactionResolution,
+} from './ReactionResolution'
 
 export type ReactionId = string
 export type ReactionRelation = 'sinh' | 'khac'
@@ -61,3 +66,32 @@ export const ELEMENTAL_REACTION_CAPABILITY = 'elemental_reaction_enabled' as con
 /** Canonical seal ceiling (contract sec.27) -- fixture defs cap at 5;
     real defs author their own maxStacks. Board math never hard-codes it. */
 export const REACTION_MAX_STACKS = 5 as const
+
+// ---------------------------------------------------------------------------
+// M2 -- candidates + evaluation result (contract sec.31-35).
+// ---------------------------------------------------------------------------
+
+/** A qualified relation on the board with its evaluated selection weight
+    (contract sec.31-33). Built by buildCandidates; selected by
+    selectCandidate -- payoff is NEVER inspected during selection. */
+export interface ReactionCandidate {
+  readonly definition: ReactionDefinition
+  /** P^2 for sinh, A*D for khac -- integer, from board stacks. */
+  readonly baseStrength: number
+  /** Exact integer weight: baseStrength * relationBps * elementBps *
+      reactionBps (max 25*10^12 << 2^53 -- contract sec.31). */
+  readonly finalWeightScaled: number
+  /** The bias snapshot evaluated for this candidate (contract sec.80 --
+      queried once per evaluation, recorded in the trace). */
+  readonly evaluatedBias: {
+    relationBps: number
+    elementBps: number
+    reactionBps: number
+  }
+}
+
+/** What one ElementalApplicationCommitted evaluation produced. */
+export type ReactionEvaluationResult =
+  | { kind: 'no_reaction'; gate: Exclude<ReactionGateVerdict, 'evaluate'> }
+  | { kind: 'no_reaction'; gate: 'evaluate'; reason: 'no_candidates' }
+  | { kind: 'resolved'; resolution: ReactionResolution; trace: ReactionEvaluationTrace }
