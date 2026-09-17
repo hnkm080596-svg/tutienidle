@@ -77,12 +77,12 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
   })
 })
 
-// tickAutoFarm (ONLINE path) lacks the cycleSeconds guards that
-// settleAutoFarmOffline (OFFLINE path) has: the offline path rejects
-// `!(cycleSeconds > 0) || !Number.isFinite(cycleSeconds)` up front, the
-// online path only checks `undefined`. saveShapeValidation never inspects
-// perfectClearSeconds, so a malformed save carries the poison straight
-// into the tick loop.
+// tickAutoFarm guards cycleSeconds at consumption (isValidCycleSeconds).
+// The Mission B round-3 eligibility gate (resolveValidAutoFarmStage,
+// shared by startAutoFarm/reconcile) means an armed farm with an invalid
+// cycle can no longer be CREATED through either entry — so these tests
+// arm a VALID farm then corrupt the cycle, exercising the tick guard as
+// the defense-in-depth layer it is.
 function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
   // The slot mock reproduces real StageManager semantics: a ticking farm
   // must hold the lease OBJECT it acquired (Mission B audit — identity,
@@ -140,8 +140,9 @@ describe('Adversarial — online auto-farm tick invariants', () => {
     const ops = buildAutoFarmOps(processDefeatedEnemies)
     const player = createDefaultPlayer()
     player.perfectClearStageIds.push('adv_stage')
-    player.perfectClearSeconds['adv_stage'] = 0
+    player.perfectClearSeconds['adv_stage'] = 100
     armFarm(ops, player, Date.now() - 60_000)
+    player.perfectClearSeconds['adv_stage'] = 0 // corrupt post-arm
 
     expect(() => ops.tickAutoFarm(player)).not.toThrow()
     expect(processDefeatedEnemies.mock.calls.length).toBe(0)
@@ -152,8 +153,9 @@ describe('Adversarial — online auto-farm tick invariants', () => {
     const ops = buildAutoFarmOps(processDefeatedEnemies)
     const player = createDefaultPlayer()
     player.perfectClearStageIds.push('adv_stage')
-    player.perfectClearSeconds['adv_stage'] = NaN
+    player.perfectClearSeconds['adv_stage'] = 100
     armFarm(ops, player, Date.now() - 60_000)
+    player.perfectClearSeconds['adv_stage'] = NaN // corrupt post-arm
 
     ops.tickAutoFarm(player)
 
