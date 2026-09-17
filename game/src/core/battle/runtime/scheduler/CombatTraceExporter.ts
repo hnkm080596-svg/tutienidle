@@ -31,7 +31,8 @@ export type CombatTraceJournalEntry =
   | { kind: 'operation'; sequence: number; record: CombatExecutionRecord }
   | { kind: 'event'; sequence: number; event: CombatEvent }
 
-/** Frozen serializable snapshot of a CombatTrace. */
+/** Serializable snapshot of a CombatTrace -- a deep clone, so later
+    settlement cannot mutate a prior export. */
 export interface CombatTraceExport {
   /** sec.85 tree dump -- exactly `trace.toString()` at export time. */
   readonly tree: string
@@ -54,8 +55,8 @@ export interface CombatTraceExport {
 export class CombatTraceExporter {
   constructor(private readonly trace: CombatTrace) {}
 
-  /** Deep-cloned snapshot: an export taken mid-run stays frozen while
-      settlement keeps mutating the live trace. */
+  /** Deep-cloned snapshot -- later settlement on the live trace does
+      not mutate a prior export. */
   export(): CombatTraceExport {
     const executions = structuredClone(this.trace.records)
     const events = structuredClone(this.trace.events)

@@ -384,3 +384,54 @@ describe('CombatTraceExporter', () => {
     expect(h.diagnosticEvents).toHaveLength(1)
   })
 })
+
+describe('trace determinism (sec.87 -- the trace half)', () => {
+  it('the same scenario twice produces identical exported traces (ops, events, combatSequence)', () => {
+    // Two-level causal chain, RNG-free path: op.A -> E1 -> op.X -> E3
+    // -> op.Z, plus sibling event E2. Exported/journaled traces must be
+    // deep-equal -- same operation order, same event order, same
+    // combatSequence assignment -- proving trace determinism by
+    // mechanism rather than vacuously on an empty dormant trace.
+    const runScenario = (): CombatTraceExport => {
+      const h = makeHarness()
+      h.emissions.set('op.A', [elem('e1'), elem('e2')])
+      h.emissions.set('op.X', [elem('e3')])
+      routeElemental(h, {
+        e1: (event) => ({
+          kind: 'operations',
+          operations: [
+            damageOp('op.X', { ...ORIGIN, causationEventId: event.eventId }),
+          ],
+        }),
+        e2: () => undefined,
+        e3: (event) => ({
+          kind: 'operations',
+          operations: [
+            damageOp('op.Z', { ...ORIGIN, causationEventId: event.eventId }),
+          ],
+        }),
+      })
+      h.scheduler.enqueueAuthored([damageOp('op.A')])
+      h.scheduler.run()
+      return new CombatTraceExporter(h.scheduler.trace).export()
+    }
+
+    const first = runScenario()
+    const second = runScenario()
+
+    expect(second).toEqual(first)
+    expect(second.tree).toBe(first.tree)
+    // Named assertions so a diff reports the drifted axis directly.
+    expect(
+      second.executions.map((r) => r.operation.operationId),
+    ).toEqual(['op.A', 'op.X', 'op.Z'])
+    expect(second.events.map((e) => e.eventId)).toEqual([
+      'evt.op.A.0',
+      'evt.op.A.1',
+      'evt.op.X.0',
+    ])
+    expect(second.journal.map((j) => j.sequence)).toEqual(
+      first.journal.map((j) => j.sequence),
+    )
+  })
+})
