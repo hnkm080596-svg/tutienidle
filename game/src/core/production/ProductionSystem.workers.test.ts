@@ -267,4 +267,31 @@ describe('D2 - worker assignment ownership boundary', () => {
     expect(system.getState('thanh_van_lam')!.assignedWorkers).toBe(2)
     expect(system.getState('thanh_van_lam')!.workerCycles).toHaveLength(0)
   })
+
+  // D4 - the same boundary on the presentation read surface: a UI query
+  // must neither materialize domain state nor hand out a live record.
+  it('getSiteView is observational - no state creation, detached projection', () => {
+    const system = createSystem()
+
+    const before = system.getAllStates()
+    const absentView = system.getSiteView('thanh_van_lam', 0)!
+    expect(absentView.state.level).toBe(1)
+    absentView.state.level = 999
+
+    expect(system.getAllStates()).toEqual(before)
+    expect(system.getState('thanh_van_lam')).toBeUndefined()
+
+    system.ensureSiteState('thanh_van_lam')
+    const view = system.getSiteView('thanh_van_lam', 0)!
+    view.state.level = 999
+    view.state.assignedWorkers = 99
+    view.state.workerCycles!.push(
+      buildProductionCycle('thanh_van_lam', REALM, 1, 100, 1_000_000),
+    )
+
+    const domain = system.getState('thanh_van_lam')!
+    expect(domain.level).toBe(1)
+    expect(domain.assignedWorkers).toBeUndefined()
+    expect(domain.workerCycles).toHaveLength(0)
+  })
 })

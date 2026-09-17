@@ -75,6 +75,32 @@ contract-restoring, and regression-pinned.
 4. Pure inspect vs consuming load — handoff marker has exactly one consumer.
 5. P15 executable — ratchet guard + blame-scoped sweep, zero new violations.
 
+## Round 2 addendum - D4 (re-review of dc4d8b50)
+
+The re-review found one residual Medium: `getSiteView()` still called
+`ensureSiteState()` (a query that materializes domain state) and returned
+the live record in `view.state`, forwarded by
+`GameManagerBuildingOps.getProductionViews()` to Vue.
+
+Fix: the query now reads `this.states.get(siteId)`; an absent site
+projects the identical level-1 idle default `ensureSiteState` would
+create, and the view always carries `this.snapshotState(state)`.
+`ensureSiteState` stays for its command callers (restore reconcile,
+setAutoRestart).
+
+Evidence: red->green regression in ProductionSystem.workers.test.ts -
+the pre-fix query materialized the site AND the mutated `view.state`
+leaked into the domain (both halves failed in one assertion). Scoped
+re-run: 523 tests across production + save + boundary green - no caller
+relied on the create-on-read side effect. Save footprint is unaffected:
+the restore reconcile (`GameManagerSaveRestore` L391) ensures every
+defined site on load regardless, and `tickWorkers` treats an absent
+state identically to an empty one.
+
+Residual (Nit): `ensureSiteState` still returns the live record -
+commands returning domain refs is the existing seed convention; only
+query surfaces were in scope.
+
 ## Residuals (documented, not blocking)
 
 - **E3 (Low, pre-existing)**: triple HP representation in TribulationDirector
