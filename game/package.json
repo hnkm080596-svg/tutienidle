@@ -76,5 +76,10 @@
     "@vue/server-renderer": "3.6.0-rc.3",
     "@vue/shared": "3.6.0-rc.3",
     "@vue/compat": "3.6.0-rc.3"
+  },
+  "allowScripts": {
+    "electron@43.4.1": true,
+    "electron-winstaller@5.4.0": true,
+    "canvas@3.2.3": true
   }
 }
