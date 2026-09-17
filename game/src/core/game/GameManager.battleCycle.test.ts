@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { SeededCombatRng } from '../battle/runtime/rng/SeededCombatRng'
+import { CombatScheduler } from '../battle/runtime/scheduler/CombatScheduler'
+import type { CombatOperationOrigin } from '../battle/contracts/origin'
+import type { CombatEventPayload } from '../battle/contracts/events'
+import type { CombatOperationBatch } from '../battle/contracts/settlement'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { createBaseStats } from '../stats/StatBlock'
@@ -290,6 +294,23 @@ describe('beginBattleCycle — pending-state teardown (spec C1 reset inventory)'
 })
 
 describe('session RNG (spec C3) — one seeded source owns every combat roll', () => {
+  it('mints the session RNG exactly once per beginBattleCycle (P5 T3)', () => {
+    const { gameManager } = harness()
+    let mints = 0
+    gameManager.setBattleRngFactory(() => {
+      mints += 1
+      return new SeededCombatRng(42)
+    })
+
+    gameManager.startBattle(createCombatPlayer(), FAST_ENEMY)
+    gameManager.turnBattleOps.abandonBattle()
+    gameManager.startBattle(createCombatPlayer(), FAST_ENEMY)
+
+    // Exactly one fresh stream per cycle -- never shared, never re-minted
+    // mid-cycle.
+    expect(mints).toBe(2)
+  })
+
   // Rolls exercised: enemy placement, pool/tag picks, hit/evasion,
   // block, crit. The enemy is immortal so no kill runs the out-of-scope
   // loot rolls.
@@ -380,5 +401,103 @@ describe('session RNG (spec C3) — one seeded source owns every combat roll', (
 
     expect(run1.log).not.toEqual(run2.log)
     vi.restoreAllMocks()
+  })
+})
+
+describe('combat-contract scheduler wiring (M4; P5 T2)', () => {
+  const WIRE_ORIGIN: CombatOperationOrigin = {
+    kind: 'skill',
+    originId: 'test.wire',
+    sourceId: 'player',
+    rootActionId: 'action.wire.1',
+  }
+
+  it('beginBattleCycle exposes a fresh live-wired CombatScheduler through the engine', () => {
+    const { gameManager } = harness()
+    gameManager.startBattle(createCombatPlayer(), FAST_ENEMY)
+
+    const scheduler = gameManager.turnBattleOps.getTurnBattleSystem().combatScheduler
+    expect(scheduler).toBeInstanceOf(CombatScheduler)
+    if (scheduler === undefined) {
+      throw new Error('combatScheduler was not injected into TurnBattleSystem')
+    }
+
+    // Kill the enemy ENTITY only -- the participant.alive cache stays
+    // stale-true, so only a resolver reading the LIVE entity can see the
+    // death (exactly what the wiring probes below must prove).
+    const enemy = gameManager.getTurnBattle()!.enemies[0]!
+    enemy.entity.alive = false
+    expect(enemy.alive).toBe(true)
+
+    // (a) A batch whose entity_alive precondition fails must be skipped
+    // atomically as stale -- proving the precondition read-port is wired
+    // to the live roster rather than a phantom lookup.
+    const probe: CombatEventPayload = {
+      type: 'elemental_application_committed',
+      instanceId: 'bi.wire',
+      sourceId: 'player',
+      targetId: enemy.id,
+      definitionId: 'def.wire',
+      element: 'fire',
+      stacksBefore: 0,
+      stacksAfter: 1,
+      requestedStacks: 1,
+      addedStacks: 1,
+      reactionEligibility: 'eligible',
+      origin: WIRE_ORIGIN,
+    }
+    const batch: CombatOperationBatch = {
+      batchId: 'b.wire',
+      origin: WIRE_ORIGIN,
+      preconditions: [{ kind: 'entity_alive', entityId: enemy.id }],
+      operations: [
+        {
+          operationId: 'op.wire.batch',
+          type: 'push_gauge',
+          origin: WIRE_ORIGIN,
+          payload: { targetId: enemy.id, fractionOfMax: 0.5 },
+        },
+      ],
+    }
+    scheduler.registerImmediateHandler('elemental_application_committed', () => ({
+      kind: 'batch',
+      batch,
+    }))
+    scheduler.createLifecycleSink('action.wire.1').emit(probe)
+
+    // (b) An authored gauge op on the dead entity must reach the adapter
+    // and skip as invalid_target_state -- the adapter resolves the LIVE
+    // entity (dead), not the stale participant cache (alive).
+    scheduler.enqueueAuthored([
+      {
+        operationId: 'op.wire.gauge',
+        type: 'push_gauge',
+        origin: WIRE_ORIGIN,
+        payload: { targetId: enemy.id, fractionOfMax: 0.5 },
+      },
+    ])
+
+    scheduler.run()
+
+    expect(scheduler.trace.batchSkips).toEqual([
+      {
+        batchId: 'b.wire',
+        reason: 'stale_reaction_snapshot',
+        operationIds: ['op.wire.batch'],
+      },
+    ])
+    const gaugeRecord = scheduler.trace.records.find(
+      (r) => r.operation.operationId === 'op.wire.gauge',
+    )
+    expect(gaugeRecord?.result.status).toBe('skipped')
+    expect(gaugeRecord?.result.reason).toBe('invalid_target_state')
+    expect(scheduler.state).toBe('running')
+
+    // The next cycle mints a NEW scheduler instance (fresh causal store,
+    // fresh budget, fresh trace).
+    gameManager.startBattle(createCombatPlayer(), FAST_ENEMY)
+    const next = gameManager.turnBattleOps.getTurnBattleSystem().combatScheduler
+    expect(next).toBeInstanceOf(CombatScheduler)
+    expect(next).not.toBe(scheduler)
   })
 })

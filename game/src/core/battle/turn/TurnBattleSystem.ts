@@ -488,9 +488,12 @@ export class TurnBattleSystem {
      * Combat-contract M4 — the per-cycle operation scheduler, built by
      * the composition root (GameManagerTurnBattleOps.mintCycleScheduler).
      * CONSTRUCTED but DORMANT: no authored ops route through it until
-     * the buff/skill cutover lands.
+     * the buff/skill cutover lands (the tests/architecture dormancy
+     * guard greps for call sites). Public + readonly as a dormant
+     * diagnostic surface (P5 T2): tests/tooling may inspect the wired
+     * instance; gameplay code must not drive it.
      */
-    private readonly combatScheduler?: CombatScheduler,
+    readonly combatScheduler?: CombatScheduler,
   ) {}
 
   // Action Playback Task 3 — gauge-delta deferral chuyển từ local vars

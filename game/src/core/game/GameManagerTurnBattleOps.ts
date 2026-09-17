@@ -380,6 +380,15 @@ export class GameManagerTurnBattleOps {
   }
 
   /**
+   * @internal - test/diagnostic read of the LIVE engine instance (the ops
+   * re-mints it wholesale per cycle -- re-read after each beginBattleCycle).
+   * Never for gameplay code.
+   */
+  getTurnBattleSystem(): TurnBattleSystem {
+    return this.turnBattleSystem
+  }
+
+  /**
    * The single predicate for "a turn is in flight". The clock learns about it
    * through a freeze reason, not through a mirrored flag.
    */
