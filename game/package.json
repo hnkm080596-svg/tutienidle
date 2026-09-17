@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
+    "verify": "npm run type-check && npm run build && npx vitest run",
     "test": "vitest run",
     "lab": "vitest run --config vitest.lab.config.mts",
     "lab:watch": "vitest --config vitest.lab.config.mts",
