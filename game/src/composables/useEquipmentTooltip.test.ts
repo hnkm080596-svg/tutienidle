@@ -102,6 +102,8 @@ describe('buildEquipmentTooltip', () => {
       affixRegistry,
       null,
       new ZoneRegistry(),
+      undefined,
+      undefined,
     )
 
     expect(tooltip.name).toContain('Địa')
@@ -127,7 +129,7 @@ describe('buildEquipmentTooltip', () => {
       maxEnhanceLevel: 10,
     }
 
-    const tooltip = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry())
+    const tooltip = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry(), undefined, undefined)
 
     expect(tooltip.gradeLine).toContain('Bát Phẩm')
     expect(tooltip.gradeLine).toContain('Luyện Khí')
@@ -152,7 +154,15 @@ describe('buildEquipmentTooltip', () => {
       mainStats: [{ stat: 'might', min: 12, max: 20 }], maxEnhanceLevel: 10,
     }
 
-    const content = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry())
+    const content = buildEquipmentTooltip(
+      equipment,
+      template,
+      affixRegistry,
+      null,
+      new ZoneRegistry(),
+      undefined,
+      { min: 12, max: 20 },
+    )
 
     const mainRow = content.sections[0]!.rows[0]!
     expect(mainRow.value).toBe('+14')
@@ -185,8 +195,8 @@ describe('buildEquipmentTooltip', () => {
     }
 
     const content = buildEquipmentTooltip(candidate, template, affixRegistry, null, zoneRegistry, {
-      instance: equipped, template, slotState: null,
-    })
+      instance: equipped, template, slotState: null, mainStatRangeQuote: undefined,
+    }, undefined)
 
     expect(content.compareWith?.name).toBe(composeEquipmentDisplayName(equipped, template, zoneRegistry))
     expect(content.compareWith && 'compareWith' in content.compareWith).toBe(false)
@@ -214,8 +224,8 @@ describe('buildEquipmentTooltip', () => {
     }
 
     const content = buildEquipmentTooltip(candidate, template, affixRegistry, null, zoneRegistry, {
-      instance: equipped, template, slotState: null,
-    })
+      instance: equipped, template, slotState: null, mainStatRangeQuote: undefined,
+    }, undefined)
 
     const affixSection = content.sections.find(section => section.label.startsWith('Chỉ Số Phụ'))
     const missingRow = affixSection?.rows.find(row => row.tone === 'muted')
@@ -235,7 +245,7 @@ describe('buildEquipmentTooltip', () => {
       mainStats: [{ stat: 'might', min: 8, max: 12 }], maxEnhanceLevel: 10,
     }
 
-    const content = buildEquipmentTooltip(tienInstance, template, affixRegistry, null, new ZoneRegistry())
+    const content = buildEquipmentTooltip(tienInstance, template, affixRegistry, null, new ZoneRegistry(), undefined, undefined)
 
     expect(content.nameColorVar).toBe('--rank-color-9')
     expect(content.nameTone).toBe('tien')
@@ -252,7 +262,7 @@ describe('buildEquipmentTooltip', () => {
       mainStats: [{ stat: 'might', min: 8, max: 12 }], maxEnhanceLevel: 10,
     }
 
-    const content = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry())
+    const content = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry(), undefined, undefined)
 
     expect(content.slotPreview?.equipmentQualityRank).toBe(professionGradeRank(equipment.grade))
     expect(content.slotPreview?.rarityRank).toBe(itemQualityRank(equipment.quality))
@@ -270,7 +280,7 @@ describe('buildEquipmentTooltip', () => {
     }
     const slotState = { ...createDefaultSlotState('weapon'), enhanceLevel: 45 }
 
-    const content = buildEquipmentTooltip(equipment, template, affixRegistry, slotState, new ZoneRegistry())
+    const content = buildEquipmentTooltip(equipment, template, affixRegistry, slotState, new ZoneRegistry(), undefined, undefined)
 
     const forgeSection = content.sections.find(section => section.rows.some(row => row.label === 'Cường Hóa'))
     const row = forgeSection?.rows.find(r => r.label === 'Cường Hóa')
