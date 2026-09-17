@@ -6,13 +6,25 @@ import type { BuffDefinitionId } from '../../contracts/ids'
 // All five Ngũ Hành members must be mapped (contract §19). Duplicated
 // here rather than imported from core/element/ElementLabels so runtime/
 // keeps its dependency surface to contracts/ + the ElementType type.
-const REQUIRED_ELEMENTS: readonly ElementType[] = [
+// `as const` preserves the literal member union so the exhaustiveness
+// guard below can prove completeness at compile time.
+const REQUIRED_ELEMENTS = [
   'wood',
   'fire',
   'earth',
   'metal',
   'water',
-]
+] as const satisfies readonly ElementType[]
+
+// Compile-time exhaustiveness guard (review M1 fix-r1): if an ElementType
+// member is ever missing from REQUIRED_ELEMENTS, Exclude<...> is non-never
+// and the `true` assignment fails the type-check.
+type _AllElementsMapped =
+  Exclude<ElementType, (typeof REQUIRED_ELEMENTS)[number]> extends never
+    ? true
+    : never
+const _allElementsMappedCheck: _AllElementsMapped = true
+void _allElementsMappedCheck
 
 /**
  * createElementalStateRegistry — validating factory for the shared

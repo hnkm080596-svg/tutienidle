@@ -71,7 +71,7 @@ export interface ConsumeStacksResult {
 export interface HealResult {
   requested: number
   healed: number
-  after: number
+  after?: number
 }
 
 // ---------------------------------------------------------------------------

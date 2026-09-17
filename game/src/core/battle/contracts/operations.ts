@@ -54,6 +54,9 @@ export type BuffModifierLifetime =
   | { type: 'uses'; remaining: number }
   | { type: 'holder_turns'; remaining: number }
   | { type: 'source_turns'; remaining: number }
+  | { type: 'rounds'; remaining: number }
+  | { type: 'battle' }
+  | { type: 'explicit' }
 
 /** The buff-spec BuffModifier shape as a contract alias (buff spec §29). */
 export interface BuffModifierPayload {

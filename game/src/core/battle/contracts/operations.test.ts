@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { CombatOperationOrigin } from './origin'
 import type {
   ApplyBuffOperation,
+  BuffModifierLifetime,
   CombatOperation,
   DealDamageOperation,
   ResolvedCombatOperation,
@@ -175,6 +176,46 @@ describe('CombatOperation union', () => {
     // @ts-expect-error — payload omits sourceId; origin.sourceId is the single canonical source (r2 HIGH 3)
     const bad: ApplyBuffOperation = { type: 'apply_buff', payload: { definitionId: 'd', sourceId: 'e1', targetId: 'e2', stacks: 1, baseChance: 1, reactionEligibility: 'eligible' } }
     void bad
+  })
+
+  it('BuffModifierLifetime covers all 7 spec members — incl. rounds/battle/explicit', () => {
+    const lifetimes: BuffModifierLifetime[] = [
+      { type: 'buff_lifetime' },
+      { type: 'uses', remaining: 1 },
+      { type: 'holder_turns', remaining: 2 },
+      { type: 'source_turns', remaining: 3 },
+      { type: 'rounds', remaining: 1 },
+      { type: 'battle' },
+      { type: 'explicit' },
+    ]
+
+    expect(lifetimes.map((l) => l.type)).toEqual([
+      'buff_lifetime',
+      'uses',
+      'holder_turns',
+      'source_turns',
+      'rounds',
+      'battle',
+      'explicit',
+    ])
+
+    // An add_buff_modifier payload using {type:'battle'} compiles.
+    const op: CombatOperation = {
+      type: 'add_buff_modifier',
+      payload: {
+        selector: { kind: 'instance', instanceId: 'bi.1' },
+        modifier: {
+          id: 'm.battle_scoped',
+          channel: 'potency',
+          operation: 'add',
+          value: 1,
+          reapply: 'replace',
+          priority: 0,
+          lifetime: { type: 'battle' },
+        },
+      },
+    }
+    expect(op.type).toBe('add_buff_modifier')
   })
 
   it('ResolvedCombatOperation has no top-level sourceId', () => {
