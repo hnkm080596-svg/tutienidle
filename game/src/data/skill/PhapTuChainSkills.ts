@@ -241,7 +241,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
     target: 'self',
     effects: [{ type: 'buff', buffId: 'thanh_tuyen' }],
     // Biến thể C (§2.2): Tuyền = buff mạnh hơn (+12 regen, 8s — duration
-    // override trên effect, xem SkillEffectSystem case 'buff' đọc
+    // override trên effect, turn engine đọc
     // effect.duration ?? definition.duration); Băng Giáp = đổi sang
     // ward phòng thủ.
     specializations: [

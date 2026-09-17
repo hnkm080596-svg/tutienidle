@@ -61,16 +61,6 @@ const ALLOWED: AllowedFile[] = [
       'Persistent overworld ward regen (THU_T12 ward-break recovery) — combat-independent vitals recovery, deliberately outside battle (R1 evidence).',
   },
   {
-    path: 'src/core/skill/SkillActionRegistry.ts',
-    contract:
-      'Ward-break detonate: consumes SOURCE ward (currentWard = 0) before delegating damage to combatSystem.applyDirectDamage (R3 ward-consumption path).',
-  },
-  {
-    path: 'src/core/skill/SkillEffectSystem.ts',
-    contract:
-      'Phap Tu ward-consumption bonus (consumesWardForDamage on SOURCE, currentWard = 0) delegating damage to combatSystem.applyDirectDamage (R3).',
-  },
-  {
     path: 'src/core/tribulation/TribulationDirector.ts',
     contract:
       'Mind-tribulation ghost HP snapshot restore (own director entity, not battle participants) — tribulation has its own time/outcome handling.',

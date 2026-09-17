@@ -214,8 +214,8 @@ export class GameManager {
   // sống sót battle-scoped; combatSystem.killIfDead() là điểm tiêu thụ.
   readonly surviveLethalGuard = new SurviveLethalGuard()
 
-  // M13: the ActionImpactSystem/SkillEffectSystem INSTANCES here served
-  // only the retired legacy engine helpers (EnemyAttackSystem,
+  // M13: the legacy engine INSTANCES here served
+  // only the retired legacy helpers (EnemyAttackSystem,
   // SkillEffectResolver). The damage contracts stay live (turn engine
   // uses scaleActionDamage/ActionDamageInfo) — only these orphaned
   // fields are gone.

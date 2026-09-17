@@ -146,7 +146,7 @@ export function resolveRouteProfile(state?: PhapTuState): RouteProfile {
  * EffectiveSkill seam: multiplies every damage effect/trigger value by
  * directMultiplier and every debuff ailmentChance by
  * ailmentChanceFactor. The result still flows through the existing
- * +elementApplicationPercent / min(1, ...) clamp in SkillEffectSystem —
+ * +elementApplicationPercent / [0,1] clamp in resolveAilmentApplicationChance —
  * no second clamp here. Never fakes +1 stack by injecting an add_stack
  * effect — stack semantics stay in applyRouteToTurnSkill.
  */

@@ -2,7 +2,7 @@
 //
 // Regression (review 2026-08-26): App.vue từng bị xóa mất lệnh
 // gameManager.catalogOps.registerBuffs(buffs) — buffRegistry rỗng tại runtime trong
-// khi SkillEffectSystem resolve effect 'buff'/'debuff' qua
+// khi turn engine resolve effect 'buff'/'debuff' qua
 // buffRegistry.get() (THROW khi thiếu) → cast skill đầu tiên crash giữa
 // trận. Test này khóa tính nhất quán dữ liệu: MỌI buffId được tham
 // chiếu bởi skill effect PHẢI tồn tại trong data

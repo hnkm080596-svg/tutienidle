@@ -190,7 +190,7 @@ export class CombatSystem {
     // scaling since the converter used to drop them) plus the general
     // skillDamagePercent stat (equipment/node), which previously
     // had no live consumer in the turn engine at all — same formula
-    // SkillEffectSystem.apply() used for the older, non-turn execution path.
+    // the deleted legacy executor used for the non-turn execution path.
     const scalingBonus = calculateScalingBonus(source, damage.scaling)
 
     const effectiveMultiplier =
@@ -282,8 +282,8 @@ export class CombatSystem {
   /**
    * Public vì critical phải roll lúc BẮN missile (mang theo suốt
    * hành trình bay), không còn roll ngay lúc tính damage như trước —
-   * cần gọi được từ BattleSystem lẫn SkillEffectSystem (2 nơi bắn
-   * missile), không chỉ nội bộ CombatSystem. `target` dùng để trừ
+   * cần gọi được từ các đường bắn missile phía battle, không chỉ nội
+   * bộ CombatSystem. `target` dùng để trừ
    * Critical Strike Avoidance của phía phòng thủ (chance hiệu lực
    * không thể âm).
    */

@@ -2955,7 +2955,7 @@ export class TurnBattleSystem {
       // Task 11 — ailment rolls route through the injected rng (same
       // deterministic seam as composite picks and multicast rolls).
       // Mission C Task 10b — elementApplicationPercent adds to the base
-      // chance (legacy SkillEffectSystem:294 parity).
+      // chance (parity with the deleted legacy executor).
       if (this.rng() < resolveAilmentApplicationChance(ailment.chance, actor.entity.stats.elementApplicationPercent)) {
         // Skip an unresolvable ailment id gracefully — same try/catch
         // pattern as the bossTrigger lookup in declareActorAction.

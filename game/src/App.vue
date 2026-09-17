@@ -298,7 +298,7 @@ gameManager.catalogOps.registerZones(zones)
 gameManager.catalogOps.registerEquipment(equipment)
 gameManager.catalogOps.registerAffixes(affixes)
 gameManager.catalogOps.registerPills(pills)
-// Buff KHÔNG phải Phù/Trận legacy — SkillEffectSystem resolve effect
+// Buff KHÔNG phải Phù/Trận legacy — turn engine resolve effect
 // 'buff'/'debuff' qua buffRegistry.get() (THROW khi thiếu); bỏ dòng
 // này làm registry rỗng và crash giữa trận (fix review 2026-08-26).
 // Skill buff-carrying Kiếm Tu cũ đã chuyển node (spec 2026-08-29),

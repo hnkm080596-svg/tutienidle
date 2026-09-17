@@ -10,8 +10,8 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 
 // Mission C Task 10b — elementApplicationPercent must apply to ailment
-// application rolls in turn combat (legacy SkillEffectSystem already
-// does this; the turn engine rolled the bare chance).
+// application rolls in turn combat (the deleted legacy executor already
+// did this; the turn engine rolled the bare chance).
 
 describe('resolveAilmentApplicationChance', () => {
   it('adds the application percent to the base chance', () => {

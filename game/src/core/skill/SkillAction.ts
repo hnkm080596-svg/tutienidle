@@ -3,10 +3,9 @@ import type { StatType } from '../stats/StatTypes'
 import type { CombatVfxPresetId } from '../battle/CombatAction'
 
 // Trigger/Action rework (2026-08-31 spec, Phase 2A) — replaces the old
-// per-mechanic fields on SkillEffect/Skill with composable actions. Every
-// SkillActionType has a real executor in SkillActionRegistry.ts — the
-// mapped-type registry there is exhaustive, so a missing executor is a
-// compile error, not a silent no-op.
+// per-mechanic fields on SkillEffect/Skill with composable actions. The
+// union is consumed by SkillToTurnSkillConverter into the live turn
+// engine (the mapped-type legacy executor was deleted in Mission G).
 export interface DealDamageAction {
   type: 'dealDamage'
 

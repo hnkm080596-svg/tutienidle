@@ -20,7 +20,7 @@ import type { BuffDefinition } from '../../core/buff/BuffTypes'
 // Constraints): 6s × tickInterval 1s = 6 lượt.
 //
 // LƯU Ý CUTOVER (Task 7 Step 3-4 BLOCKED): TurnBattleSystem/TurnSkillAction
-// hiện KHÔNG gọi ReactionManager/SkillEffectSystem (engine turn chưa wire
+// hiện KHÔNG gọi ReactionManager (engine turn chưa wire
 // reaction/skill-effect thật) — không có call site nào để swap. Definition
 // này là neo chuẩn cho lúc content migration thật wire reaction vào turn
 // engine: lúc đó chỉ cần apply() 2 definition này thay spawn zone (xem

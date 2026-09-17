@@ -333,7 +333,7 @@ export const CORE_SKILLS: Skill[] = [
         // 2026-08-21 â€” Sá»¬A láº¡i quyáº¿t Ä‘á»‹nh ban Ä‘áº§u ("100% luÃ´n Ã¡p"):
         // Há»a Cáº§u Thuáº­t gá»‘c chá»‰ 50% cÆ¡ há»™i Ã¡p ThiÃªu Äá»‘t, node "Dáº«n
         // Há»a" (+15%) vÃ  "Há»a NguyÃªn" (+5%) á»Ÿ TrÃºc CÆ¡ cá»™ng thÃªm qua
-        // stat elementApplicationPercent (xem SkillEffectSystem.ts,
+        // stat elementApplicationPercent (xem resolveAilmentApplicationChance,
         // data/progression/PhapTuNodes.ts) â€” Ä‘á»ƒ node Ä‘Ã³ cÃ³ Ã½ nghÄ©a
         // tháº­t thay vÃ¬ cá»™ng vÃ o con sá»‘ Ä‘Ã£ max.
         ailmentChance: 0.5,

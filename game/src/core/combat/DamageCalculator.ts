@@ -54,7 +54,7 @@ export function calculateBaseDamage(
 /**
  * R3 re-audit (AR-03 gap) — mọi field scaling authored trên SkillEffect
  * (attributeScaling/manaScalingRatio) từng chỉ
- * được cộng vào multiplier bởi SkillEffectSystem.apply() (engine cũ,
+ * được cộng vào multiplier bởi executor legacy đã xoá (engine cũ,
  * KHÔNG phải TurnBattleSystem đang active) — nghĩa là mọi skill Pháp Tu
  * cast qua turn engine mất trắng phần scaling này. Một helper
  * DÙNG CHUNG duy nhất (đọc bởi CombatSystem.resolveActionHit()) để
@@ -72,7 +72,7 @@ export function calculateScalingBonus(source: CombatEntity, scaling: DamageScali
   }
 
   // Guard attributes rỗng — Math.max() trên mảng rỗng = -Infinity, kéo
-  // toàn bộ bonus về -Infinity (xem SkillEffectSystem.apply() gốc).
+  // toàn bộ bonus về -Infinity (parity với executor legacy đã xoá).
   const attributeBonus = (scaling.attributeScaling ?? []).reduce(
     (sum, entry) =>
       sum + (entry.attributes.length === 0 ? 0 : entry.ratioPerPoint * Math.max(...entry.attributes.map(stat => source.stats[stat]))),
