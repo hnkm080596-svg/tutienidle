@@ -34,12 +34,14 @@ import type {
   CombatEvent,
   CombatSettlementFaultEvent,
   PendingCombatEvent,
+  PeriodicOperationSettled,
 } from '../../contracts/events'
+import type { CombatAuthorityExecutionContext } from '../../contracts/context'
 import type { CombatOperationId } from '../../contracts/ids'
 import type { ResolvedCombatOperation } from '../../contracts/operations'
 import type { CombatOperationOrigin } from '../../contracts/origin'
 import type { PeriodicRequestsCommitted } from '../../contracts/events'
-import type { CombatOperationResult } from '../../contracts/results'
+import type { CombatOperationResult, CombatOperationResultStatus } from '../../contracts/results'
 import type {
   CombatOperationBatch,
   DeferredOperation,
@@ -68,6 +70,13 @@ import { CombatTrace } from './CombatTrace'
 
 export const MAX_SETTLEMENT_NESTING_DEPTH = 64
 export const MAX_IMMEDIATE_WORK_PER_BARRIER = 1024
+/** Whole-drain work bound (Lens C M1): mid-run intake (lifecycle-sink /
+    enqueueEvent / enqueueAuthored during an in-flight run) lands on the
+    root queues, and each root unit legitimately resets the per-root
+    budget -- so a cross-root ping-pong could mint unbounded fresh-budget
+    roots forever. This bound caps TOTAL work across every root inside one
+    drain call; the per-root budget still bounds each root's own tree. */
+export const MAX_TOTAL_WORK_PER_RUN = 65536
 
 export type ImmediateEventHandler = (
   event: CombatEvent,
@@ -79,6 +88,10 @@ export interface CombatSchedulerOptions {
   maxSettlementNestingDepth?: number
   /** Flat-chain work budget PER ROOT unit (default 1024). */
   maxImmediateWorkPerBarrier?: number
+  /** Total work budget across ALL roots of one drain call (default
+      65536) -- closes the mid-run-intake livelock hole where each
+      cross-root hop mints a fresh per-root budget. */
+  maxTotalWorkPerRun?: number
   /** Batch precondition read-port (M2: isAlive + getBuffInstance only). */
   preconditions?: PreconditionChecker
   /** Out-of-band fault lane -- receives the stamped fault event. */
@@ -89,6 +102,7 @@ export class CombatScheduler {
   private readonly executor: CombatOperationExecutor
   private readonly maxSettlementNestingDepth: number
   private readonly maxImmediateWorkPerBarrier: number
+  private readonly maxTotalWorkPerRun: number
   private readonly diagnosticSink: CombatDiagnosticSink | undefined
   private readonly batchRunner: CombatOperationBatchRunner
 
@@ -113,6 +127,23 @@ export class CombatScheduler {
   private settlementNestingDepth = 0
   /** Per-ROOT work budget (r5 HIGH 3) -- reset at each root unit. */
   private workThisBarrier = 0
+  /** Whole-drain work budget (Lens C M1) -- reset once per drain call;
+      counts every work unit across ALL roots so mid-run root intake
+      cannot mint unbounded fresh-budget roots. */
+  private workThisRun = 0
+  /** v7.5 -- periodic correlation is SCHEDULER-PRIVATE: the built-in
+      bridge records generatedOpId -> requestId here (post-reservation,
+      v7.6); the post-barrier site reads+deletes it to emit
+      PeriodicOperationSettled. No public op field -- unforgeable. */
+  private readonly periodicRequestByOpId = new Map<CombatOperationId, string>()
+  /** Scratch correlation written by the bridge while building ops;
+      merged into periodicRequestByOpId only AFTER the produced group
+      passes atomic id reservation (v7.6 r6 MINOR 2 hygiene). */
+  private readonly pendingPeriodicCorrelation = new Map<CombatOperationId, string>()
+  /** When set (inside a lifecycle settle()), every executed op's status is
+      collected for the settle() result map. */
+  private executionStatusCollector: Map<CombatOperationId, CombatOperationResultStatus> | null =
+    null
   private schedulerState: 'running' | 'faulted' = 'running'
   /** Single-flight guard (P5 F-E): settlement is not reentrant -- an
       authority/handler calling run() mid-execute is a structural fault. */
@@ -132,6 +163,8 @@ export class CombatScheduler {
       opts?.maxSettlementNestingDepth ?? MAX_SETTLEMENT_NESTING_DEPTH
     this.maxImmediateWorkPerBarrier =
       opts?.maxImmediateWorkPerBarrier ?? MAX_IMMEDIATE_WORK_PER_BARRIER
+    this.maxTotalWorkPerRun =
+      opts?.maxTotalWorkPerRun ?? MAX_TOTAL_WORK_PER_RUN
     this.diagnosticSink = opts?.diagnosticSink
     this.batchRunner = new CombatOperationBatchRunner(
       opts?.preconditions ?? { isAlive: () => true },
@@ -200,14 +233,74 @@ export class CombatScheduler {
   /** PUBLIC lifecycle sink factory (r5 HIGH 2) -- buff lifecycle / proc
       roots emit via this; events land on rootEventQueue. Command-lane
       intake: post-fault creation is a structural fault (the sink's emits
-      would silently drop anyway -- fail fast at creation instead). */
-  createLifecycleSink(rootActionId: string): CombatEventSink {
+      would silently drop anyway -- fail fast at creation instead).
+
+      v7.1 -- returns the sink AND the root transaction's own
+      combatSequence, allocated once at creation (R-C2 roots are real
+      transactions; `status.turn.N.*` needs a truthful sequence for
+      lifecycle-created state e.g. convertsToId). Sole allocator stays
+      the scheduler.
+      v7.2 -- also returns `settle`: runs the drain and reports
+      opId -> status for every op EXECUTED during that call. Lifecycle
+      authorities use it as the spec-sec.28 barrier; it is legal to call
+      it once PER sequential periodic unit (v7.3 -- several settles
+      inside one lifecycle entry).
+      v7.3 -- `uses`-modifier correlation NO LONGER depends on this map:
+      PeriodicOperationSettled events finalize pending marks inside the
+      settlement tree itself. The map remains for diagnostics/tests. */
+  createLifecycleSink(rootActionId: string): {
+    sink: CombatEventSink
+    sequence: number
+    settle(): ReadonlyMap<CombatOperationId, CombatOperationResultStatus>
+  } {
     this.assertAccepting('createLifecycleSink')
-    return new ScopedCombatEventSink(
+    const sequence = this.allocateSeq()
+    const sink = new ScopedCombatEventSink(
       { kind: 'lifecycle', scopeId: rootActionId },
       this.rootEventQueue,
       this.sinkHost,
     )
+    return {
+      sink,
+      sequence,
+      settle: () => this.drainForLifecycle(),
+    }
+  }
+
+  /** The lifecycle barrier (spec sec.28): same drain loop as run(),
+      single-flight guarded, and reports every op EXECUTED during this
+      call (opId -> status). */
+  private drainForLifecycle(): ReadonlyMap<
+    CombatOperationId,
+    CombatOperationResultStatus
+  > {
+    this.assertAccepting('lifecycle settle')
+    if (this.runInFlight) {
+      this.structuralFault(
+        'lifecycle settle(): reentrant call during settlement',
+      )
+    }
+    this.runInFlight = true
+    const collector = new Map<CombatOperationId, CombatOperationResultStatus>()
+    this.executionStatusCollector = collector
+    try {
+      this.drain()
+    } catch (error) {
+      this.schedulerState = 'faulted'
+      if (this.trace.faults.length === 0) {
+        this.trace.recordFault(
+          error instanceof CombatSettlementFault
+            ? 'structural_fault'
+            : 'unexpected_error',
+          this.trace.digest(),
+        )
+      }
+      throw error
+    } finally {
+      this.executionStatusCollector = null
+      this.runInFlight = false
+    }
+    return collector
   }
 
   /** Drains authored ops + root events until quiescent. Throws
@@ -221,29 +314,7 @@ export class CombatScheduler {
     this.assertAccepting('run')
     this.runInFlight = true
     try {
-      while (
-        this.authoredQueue.length > 0 ||
-        this.rootEventQueue.length > 0
-      ) {
-        if (this.schedulerState === 'faulted') break
-        this.workThisBarrier = 0 // fresh budget per ROOT unit
-        const rootEvent = this.rootEventQueue.shift()
-        if (rootEvent !== undefined) {
-          // Root events settle inside a frame-local queue -- symmetric
-          // with op frames (r5 BLOCKER 1 + Option B). Handler emissions
-          // land on THIS frame, share this root unit's work budget, and
-          // drain depth-first before the next queued root event; pushing
-          // them to rootEventQueue would grant each emission a fresh
-          // budget + depth reset (an unguarded ping-pong loop).
-          const frameEvents: CombatEvent[] = []
-          this.settleEvent(rootEvent, frameEvents)
-          this.drainEvents(frameEvents)
-          continue
-        }
-        const op = this.authoredQueue.shift()
-        if (op === undefined) continue
-        this.executeOpWithBarrier(op)
-      }
+      this.drain()
     } catch (error) {
       // Any escape (guard fault, structural fault, authority error) kills
       // the scheduler -- it can never silently continue mid-frame.
@@ -266,6 +337,39 @@ export class CombatScheduler {
     return this.trace
   }
 
+  /** The shared drain loop -- run() and lifecycle settle() both drive it.
+      Each invocation gets a fresh WHOLE-DRAIN work budget (Lens C M1):
+      mid-run root intake (lifecycle-sink emits / enqueueEvent /
+      enqueueAuthored landing on the root queues) still mints fresh
+      per-root budgets, but workThisRun caps the total so a cross-root
+      ping-pong faults instead of livelocking. */
+  private drain(): void {
+    this.workThisRun = 0
+    while (
+      this.authoredQueue.length > 0 ||
+      this.rootEventQueue.length > 0
+    ) {
+      if (this.schedulerState === 'faulted') break
+      this.workThisBarrier = 0 // fresh budget per ROOT unit
+      const rootEvent = this.rootEventQueue.shift()
+      if (rootEvent !== undefined) {
+        // Root events settle inside a frame-local queue -- symmetric
+        // with op frames (r5 BLOCKER 1 + Option B). Handler emissions
+        // land on THIS frame, share this root unit's work budget, and
+        // drain depth-first before the next queued root event; pushing
+        // them to rootEventQueue would grant each emission a fresh
+        // budget + depth reset (an unguarded ping-pong loop).
+        const frameEvents: CombatEvent[] = []
+        this.settleEvent(rootEvent, frameEvents)
+        this.drainEvents(frameEvents)
+        continue
+      }
+      const op = this.authoredQueue.shift()
+      if (op === undefined) continue
+      this.executeOpWithBarrier(op)
+    }
+  }
+
   // ---------------------------------------------------------------------
   // Internals -- the corrected settlement semantics.
   // ---------------------------------------------------------------------
@@ -280,16 +384,29 @@ export class CombatScheduler {
     // seq(op) < seq(every event it emits).
     const combatSequence = this.allocateSeq()
     const frameEvents: CombatEvent[] = []
-    const result = this.executor.execute(
-      op,
-      this.createOperationSink(op, frameEvents),
-    )
+    // v7.2 -- the scheduler builds the WHOLE ctx (it owns the sequence +
+    // the op-scoped sink); the executor never allocates or guesses.
+    const ctx: CombatAuthorityExecutionContext = {
+      operationId: op.operationId,
+      origin: op.origin,
+      events: this.createOperationSink(op, frameEvents),
+      combatSequence,
+    }
+    const result = this.executor.execute(op, ctx)
     this.trace.recordExecution({ combatSequence, operation: op, result })
+    this.executionStatusCollector?.set(op.operationId, result.status)
     this.workThisBarrier++
+    this.workThisRun++
     if (this.workThisBarrier > this.maxImmediateWorkPerBarrier) {
       this.raiseGuardFault(
         'settlement_work_budget_exceeded',
         `work budget ${this.maxImmediateWorkPerBarrier} exceeded at op '${op.operationId}'`,
+      )
+    }
+    if (this.workThisRun > this.maxTotalWorkPerRun) {
+      this.raiseGuardFault(
+        'settlement_work_budget_exceeded',
+        `total work budget ${this.maxTotalWorkPerRun} exceeded at op '${op.operationId}'`,
       )
     }
     // sec.55: ALL of the op's consequences settle before its siblings.
@@ -315,15 +432,27 @@ export class CombatScheduler {
         )
       }
       this.workThisBarrier++
+      this.workThisRun++
       if (this.workThisBarrier > this.maxImmediateWorkPerBarrier) {
         this.raiseGuardFault(
           'settlement_work_budget_exceeded',
           `work budget ${this.maxImmediateWorkPerBarrier} exceeded at event '${event.eventId}'`,
         )
       }
+      if (this.workThisRun > this.maxTotalWorkPerRun) {
+        this.raiseGuardFault(
+          'settlement_work_budget_exceeded',
+          `total work budget ${this.maxTotalWorkPerRun} exceeded at event '${event.eventId}'`,
+        )
+      }
 
       const emitted: CombatEvent[] = []
       const handler = this.handlers.get(event.type)
+      // v7.6 hygiene -- a handler that mints bridge ops records scratch
+      // correlation while building them; it only commits after the
+      // produced group passes atomic reservation below. Clear leftovers
+      // from any earlier frame before invoking this handler.
+      this.pendingPeriodicCorrelation.clear()
       // The handler may emit via the event-scoped sink AND return a
       // settlement -- the returned settlement always runs first.
       const settlement = handler?.(
@@ -349,8 +478,18 @@ export class CombatScheduler {
                 : '',
             ),
           )
+          // v7.6 (r6 MINOR 2) -- the bridge's scratch correlation commits
+          // ONLY now: after the whole group reserved successfully. A
+          // structural fault above never reached this point, so no stale
+          // entries pollute the private map.
+          for (const [opId, reqId] of this.pendingPeriodicCorrelation) {
+            this.periodicRequestByOpId.set(opId, reqId)
+          }
+          this.pendingPeriodicCorrelation.clear()
           for (const op of ops) {
-            this.executeOpWithBarrier(op) // each frame drains before the next sibling
+            // each frame drains before the next sibling
+            const result = this.executeOpWithBarrier(op)
+            this.publishPeriodicOutcome(op, result, frameQueue)
           }
         } else if (settlement.kind === 'batch') {
           this.runBatchFrame(settlement.batch)
@@ -446,6 +585,47 @@ export class CombatScheduler {
     } as CombatOperationResult
     results.recordResult(skipped)
     this.trace.recordSkippedResult(skipped)
+  }
+
+  /** v7.3/v7.5 -- periodic outcome publication: after a bridge-generated
+      op's barrier, emit PeriodicOperationSettled into the ENCLOSING
+      frame (FIFO after already-queued siblings -- deterministic; still
+      inside this root transaction). PRIVATE correlation: the bridge
+      recorded periodicRequestByOpId at generation time -- no public op
+      field, no id parsing (r5 HIGH 3). The buff-side registered handler
+      finalizes `uses` marks and drives manual-trigger continuation.
+
+      STAMPING (v7.5 locked): eventId mints through the canonical
+      per-scope allocator in the op's OWN scope --
+      `evt.${opId}.${scopeOrdinal}` -- the same eventOrdinalByScope
+      counter the op's sink uses (r5 HIGH 2: globally collision-proof by
+      construction). causationOperationId = the periodic op's id;
+      rootActionId copied from the op's origin; combatSequence =
+      allocateSeq() at enqueue (op's seq allocated at ITS
+      execution-start -> seq(op) < seq(settled)); recordEvent exactly
+      once -- this site runs once per periodic op barrier. */
+  private publishPeriodicOutcome(
+    op: ResolvedCombatOperation,
+    result: CombatOperationResult,
+    frameQueue: CombatEvent[],
+  ): void {
+    const requestId = this.periodicRequestByOpId.get(op.operationId)
+    if (requestId === undefined) return
+    this.periodicRequestByOpId.delete(op.operationId) // one-shot entry
+    const settled: PeriodicOperationSettled = {
+      eventId: `evt.${op.operationId}.${this.nextEventOrdinal(op.operationId)}`,
+      type: 'periodic_operation_settled',
+      causationOperationId: op.operationId,
+      requestId,
+      operationId: op.operationId,
+      rootActionId: op.origin.rootActionId,
+      status: result.status,
+      reason: result.reason,
+      combatSequence: this.allocateSeq(), // seq(op) < seq(settled)
+    }
+    this.acceptedEventIds.add(settled.eventId)
+    this.trace.recordEvent(settled)
+    frameQueue.push(settled)
   }
 
   /** THE dedup point (r4 HIGH 1) -- stamps combatSequence only for
@@ -581,8 +761,8 @@ export class CombatScheduler {
 
   private periodicBridge(event: CombatEvent): ImmediateSettlement | void {
     if (event.type !== 'periodic_requests_committed') return
-    const operations = event.requests.map((req, i) =>
-      this.periodicRequestToOp(event, req, i),
+    const operations = event.requests.map((req) =>
+      this.periodicRequestToOp(event, req),
     )
     return { kind: 'operations', operations }
   }
@@ -590,7 +770,6 @@ export class CombatScheduler {
   private periodicRequestToOp(
     event: PeriodicRequestsCommitted,
     req: PeriodicRequestsCommitted['requests'][number],
-    index: number,
   ): ResolvedCombatOperation {
     const origin: CombatOperationOrigin = {
       kind: 'buff_periodic',
@@ -599,7 +778,13 @@ export class CombatScheduler {
       rootActionId: event.rootActionId,
       causationEventId: event.eventId,
     }
-    const operationId = `periodic.${event.eventId}.${index}`
+    // v7.2 -- `periodic.${requestId}` is a naming/debugging convention,
+    // never parsed. The requestId correlation rides in the scheduler's
+    // PRIVATE map (v7.5): written to scratch here, committed to
+    // periodicRequestByOpId only after the produced group passes atomic
+    // reservation in settleEvent (v7.6 hygiene).
+    const operationId = `periodic.${req.requestId}`
+    this.pendingPeriodicCorrelation.set(operationId, req.requestId)
     if ('damageProfile' in req) {
       return {
         operationId,

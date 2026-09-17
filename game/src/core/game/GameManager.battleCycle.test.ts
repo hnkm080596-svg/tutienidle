@@ -463,7 +463,7 @@ describe('combat-contract scheduler wiring (M4; P5 T2)', () => {
       kind: 'batch',
       batch,
     }))
-    scheduler.createLifecycleSink('action.wire.1').emit(probe)
+    scheduler.createLifecycleSink('action.wire.1').sink.emit(probe)
 
     // (b) An authored gauge op on the dead entity must reach the adapter
     // and skip as invalid_target_state -- the adapter resolves the LIVE

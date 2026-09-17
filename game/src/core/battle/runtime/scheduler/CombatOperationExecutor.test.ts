@@ -70,8 +70,14 @@ function makePorts(): { ports: Required<CombatAuthorityPorts>; calls: PortCall[]
       remaining: 0,
       removed: true,
     }),
-    addModifier: rec('buffs.addModifier', { applied: true }),
-    removeModifier: rec('buffs.removeModifier', { removed: true }),
+    addModifier: rec('buffs.addModifier', {
+      applied: true,
+      modifierRuntimeId: 'bmr.1',
+    }),
+    removeModifier: rec('buffs.removeModifier', {
+      removed: true,
+      removedRuntimeIds: ['bmr.1'],
+    }),
     refreshDuration: rec('buffs.refreshDuration', {
       durationBefore: 1,
       durationAfter: 3,
@@ -80,8 +86,21 @@ function makePorts(): { ports: Required<CombatAuthorityPorts>; calls: PortCall[]
       durationBefore: 1,
       durationAfter: 4,
     }),
-    triggerPeriodic: rec('buffs.triggerPeriodic', []),
-    remove: rec('buffs.remove', undefined),
+    triggerPeriodic: rec('buffs.triggerPeriodic', {
+      started: true,
+      firstRequestId: 'req.bi.1.tick.0',
+      candidateUnitCount: 1,
+    }),
+    remove: rec('buffs.remove', { removed: true, instanceId: 'bi.1' }),
+    setStacks: rec('buffs.setStacks', { stacksBefore: 1, stacksAfter: 5 }),
+    setRemainingDuration: rec('buffs.setRemainingDuration', {
+      durationBefore: 1,
+      durationAfter: 9,
+    }),
+    cleanse: rec('buffs.cleanse', {
+      cleansed: ['bi.1'],
+      skipped: ['bi.2'],
+    }),
   }
   const damage: DamageAuthority = {
     dealDamage: rec('damage.dealDamage', {
@@ -122,6 +141,20 @@ function makeSink(): { sink: CombatEventSink; emitted: CombatEventPayload[] } {
   return { sink: { emit: (e) => void emitted.push(e) }, emitted }
 }
 
+/** v7.2 -- the scheduler builds the WHOLE ctx; tests mimic that contract:
+    execute(op, ctx), never execute(op, sink). */
+function ctxFor(
+  op: ResolvedCombatOperation,
+  sink: CombatEventSink,
+): CombatAuthorityExecutionContext {
+  return {
+    operationId: op.operationId,
+    origin: op.origin,
+    events: sink,
+    combatSequence: 1,
+  }
+}
+
 function op(base: {
   operationId: string
   type: ResolvedCombatOperation['type']
@@ -146,7 +179,7 @@ describe('CombatOperationExecutor routing', () => {
     const executor = new CombatOperationExecutor(ports)
     const result = executor.execute(
       op({ operationId: 'op.1', type: 'deal_damage', payload }),
-      sink,
+      ctxFor(op({ operationId: 'op.1', type: 'deal_damage', payload }), sink),
     )
 
     expect(calls).toHaveLength(1)
@@ -255,11 +288,38 @@ describe('CombatOperationExecutor routing', () => {
         }),
         method: 'buffs.remove',
       },
+      {
+        op: op({
+          operationId: 'op.setstacks',
+          type: 'set_buff_stacks',
+          payload: { selector: SELECTOR, stacks: 5 },
+        }),
+        method: 'buffs.setStacks',
+      },
+      {
+        op: op({
+          operationId: 'op.setdur',
+          type: 'set_buff_duration',
+          payload: { selector: SELECTOR, duration: 9 },
+        }),
+        method: 'buffs.setRemainingDuration',
+      },
+      {
+        op: op({
+          operationId: 'op.cleanse',
+          type: 'cleanse_buff',
+          payload: {
+            targetId: 'entity.b',
+            query: { kind: 'debuff', element: 'fire' },
+          },
+        }),
+        method: 'buffs.cleanse',
+      },
     ]
 
     for (const c of cases) {
       calls.length = 0
-      const result = executor.execute(c.op, sink)
+      const result = executor.execute(c.op, ctxFor(c.op, sink))
       expect(calls.map((x) => x.method)).toEqual([c.method])
       expect(calls[0]?.ctx.operationId).toBe(c.op.operationId)
       expect(calls[0]?.ctx.origin).toBe(ORIGIN)
@@ -319,7 +379,7 @@ describe('CombatOperationExecutor routing', () => {
 
     for (const c of cases) {
       calls.length = 0
-      const result = executor.execute(c.op, sink)
+      const result = executor.execute(c.op, ctxFor(c.op, sink))
       expect(calls.map((x) => x.method)).toEqual([c.method])
       expect(result.status).toBe('resolved')
     }
@@ -341,7 +401,16 @@ describe('CombatOperationExecutor routing', () => {
           valueSource: 'cast_snapshot',
         },
       }),
-      sink,
+      ctxFor(op({
+        operationId: 'op.consume',
+        type: 'consume_resource',
+        payload: {
+          targetId: 'entity.a',
+          resourceId: 'the',
+          amount: 3,
+          valueSource: 'cast_snapshot',
+        },
+      }), sink),
     )
 
     expect(calls[0]?.method).toBe('resource.consume')
@@ -365,7 +434,17 @@ describe('CombatOperationExecutor routing', () => {
           reactionEligibility: 'suppressed',
         },
       }),
-      sink,
+      ctxFor(op({
+        operationId: 'op.apply',
+        type: 'apply_buff',
+        payload: {
+          definitionId: 'def.x',
+          targetId: 'entity.b',
+          stacks: 2,
+          baseChance: 0.8,
+          reactionEligibility: 'suppressed',
+        },
+      }), sink),
     )
 
     expect(calls[0]?.args[0]).toEqual({
@@ -390,7 +469,11 @@ describe('CombatOperationExecutor routing', () => {
         type: 'push_gauge',
         payload: { targetId: 'entity.a', fractionOfMax: 0.35 },
       }),
-      sink,
+      ctxFor(op({
+        operationId: 'op.gauge',
+        type: 'push_gauge',
+        payload: { targetId: 'entity.a', fractionOfMax: 0.35 },
+      }), sink),
     )
 
     expect(result.type).toBe('push_gauge')
@@ -403,26 +486,26 @@ describe('CombatOperationExecutor routing', () => {
     })
   })
 
-  it('maps trigger_buff_periodic resolutions to resolutionsEmitted', () => {
+  it('maps trigger_buff_periodic to TriggerPeriodicStartResult (v7.5)', () => {
     const { ports } = makePorts()
-    ports.buffs.triggerPeriodic = () => [
-      { requests: [] },
-      { requests: [] },
-    ]
     const { sink } = makeSink()
     const executor = new CombatOperationExecutor(ports)
 
-    const result = executor.execute(
-      op({
-        operationId: 'op.tp',
-        type: 'trigger_buff_periodic',
-        payload: { selector: SELECTOR },
-      }),
-      sink,
-    )
+    const tp = op({
+      operationId: 'op.tp',
+      type: 'trigger_buff_periodic',
+      payload: { selector: SELECTOR },
+    })
+    const result = executor.execute(tp, ctxFor(tp, sink))
 
     if (result.type !== 'trigger_buff_periodic') throw new Error('narrow')
-    expect(result.result).toEqual({ resolutionsEmitted: 2 })
+    // The op reports series-start metadata verbatim -- it never claims
+    // un-emitted continuation resolutions (r5 BLOCKER 1).
+    expect(result.result).toEqual({
+      started: true,
+      firstRequestId: 'req.bi.1.tick.0',
+      candidateUnitCount: 1,
+    })
   })
 
   it('missing port throws a structural fault, never a failed result', () => {
@@ -436,27 +519,29 @@ describe('CombatOperationExecutor routing', () => {
           type: 'heal',
           payload: { targetId: 'entity.a', amount: 1 },
         }),
-        sink,
-      ),
+        ctxFor(op({
+          operationId: 'op.heal',
+          type: 'heal',
+          payload: { targetId: 'entity.a', amount: 1 },
+        }), sink),
+    ),
     ).toThrow(CombatSettlementFault)
 
     const empty = new CombatOperationExecutor({})
+    const emptyOp = op({
+      operationId: 'op.d',
+      type: 'deal_damage',
+      payload: {
+        targetId: 'e',
+        damageProfile: 'p',
+        coefficient: 1,
+        hitCount: 1,
+        canCrit: false,
+        canMiss: false,
+      },
+    })
     expect(() =>
-      empty.execute(
-        op({
-          operationId: 'op.d',
-          type: 'deal_damage',
-          payload: {
-            targetId: 'e',
-            damageProfile: 'p',
-            coefficient: 1,
-            hitCount: 1,
-            canCrit: false,
-            canMiss: false,
-          },
-        }),
-        sink,
-      ),
+      empty.execute(emptyOp, ctxFor(emptyOp, sink)),
     ).toThrow(CombatSettlementFault)
   })
 
@@ -481,7 +566,18 @@ describe('CombatOperationExecutor routing', () => {
           canMiss: false,
         },
       }),
-      sink,
+      ctxFor(op({
+        operationId: 'op.d',
+        type: 'deal_damage',
+        payload: {
+          targetId: 'e',
+          damageProfile: 'p',
+          coefficient: 1,
+          hitCount: 1,
+          canCrit: false,
+          canMiss: false,
+        },
+      }), sink),
     )
 
     expect(result).toEqual({
@@ -514,8 +610,19 @@ describe('CombatOperationExecutor routing', () => {
             canMiss: false,
           },
         }),
-        sink,
-      ),
+        ctxFor(op({
+          operationId: 'op.d',
+          type: 'deal_damage',
+          payload: {
+            targetId: 'e',
+            damageProfile: 'p',
+            coefficient: 1,
+            hitCount: 1,
+            canCrit: false,
+            canMiss: false,
+          },
+        }), sink),
+    ),
     ).toThrow('boom')
   })
 })

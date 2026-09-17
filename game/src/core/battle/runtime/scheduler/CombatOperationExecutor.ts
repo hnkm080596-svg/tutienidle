@@ -6,8 +6,12 @@
 // port signatures are intent-level inputs; the authority resolves
 // formulas/channels itself.
 //
-// Every authority call receives a CombatAuthorityExecutionContext
-// ({operationId, origin, events: <op-scoped sink>}) -- review r3 BLOCKER 1.
+// Every authority call receives the fully-built
+// CombatAuthorityExecutionContext ({operationId, origin, events:
+// <op-scoped sink>, combatSequence}) -- review r3 BLOCKER 1 + v7.2: the
+// SCHEDULER builds the ctx (it alone knows the execution-start
+// combatSequence and owns the op-scoped sink). The executor never
+// allocates or guesses the sequence.
 //
 // Result mapping:
 // - normal port return            -> { status: 'resolved', <typed payload> }
@@ -24,7 +28,6 @@ import type {
   CombatOperationResult,
   CombatOperationResultReason,
 } from '../../contracts/results'
-import type { CombatEventSink } from '../../contracts/sink'
 
 import type { CombatAuthorityPorts } from './CombatAuthorityPorts'
 import { CombatSettlementFault } from './CombatSettlementFault'
@@ -45,20 +48,16 @@ export class CombatOperationSkip extends Error {
 export class CombatOperationExecutor {
   constructor(private readonly ports: CombatAuthorityPorts) {}
 
-  /** Routes op -> port. `sink` is the OP-SCOPED sink the scheduler creates
-      per execution -- it mints `evt.${op.operationId}.${n}` +
-      `causationOperationId` itself; authorities emit envelope-free
-      payloads. Returns the FULL discriminated result -- batch runners and
-      traces need op-specific payloads (review r2). */
+  /** Routes op -> port. `ctx` is the FULLY-BUILT authority context the
+      scheduler constructs per execution (v7.2): operationId + origin +
+      the OP-SCOPED sink (mints `evt.${op.operationId}.${n}` +
+      `causationOperationId`) + the execution-start combatSequence.
+      Returns the FULL discriminated result -- batch runners and traces
+      need op-specific payloads (review r2). */
   execute(
     op: ResolvedCombatOperation,
-    sink: CombatEventSink,
+    ctx: CombatAuthorityExecutionContext,
   ): CombatOperationResult {
-    const ctx: CombatAuthorityExecutionContext = {
-      operationId: op.operationId,
-      origin: op.origin,
-      events: sink,
-    }
     try {
       return this.dispatch(op, ctx)
     } catch (error) {
@@ -169,7 +168,11 @@ export class CombatOperationExecutor {
           operationId,
           type: 'add_buff_modifier',
           status: 'resolved',
-          result: { modifierId: op.payload.modifier.id, applied: r.applied },
+          result: {
+            modifierId: op.payload.modifier.id,
+            applied: r.applied,
+            modifierRuntimeId: r.modifierRuntimeId,
+          },
         }
       }
       case 'remove_buff_modifier': {
@@ -182,7 +185,11 @@ export class CombatOperationExecutor {
           operationId,
           type: 'remove_buff_modifier',
           status: 'resolved',
-          result: { modifierId: op.payload.modifierId, applied: r.removed },
+          result: {
+            modifierId: op.payload.modifierId,
+            removed: r.removed,
+            removedRuntimeIds: r.removedRuntimeIds,
+          },
         }
       }
       case 'refresh_buff_duration': {
@@ -213,7 +220,9 @@ export class CombatOperationExecutor {
         }
       }
       case 'trigger_buff_periodic': {
-        const resolutions = this.requirePort('buffs').triggerPeriodic(
+        // v7.5 -- the authority returns TriggerPeriodicStartResult (series
+        // start metadata); the op result is that object verbatim.
+        const result = this.requirePort('buffs').triggerPeriodic(
           op.payload.selector,
           op.payload.periodicId,
           ctx,
@@ -222,16 +231,55 @@ export class CombatOperationExecutor {
           operationId,
           type: 'trigger_buff_periodic',
           status: 'resolved',
-          result: { resolutionsEmitted: resolutions.length },
+          result,
         }
       }
       case 'remove_buff': {
-        this.requirePort('buffs').remove(
+        const result = this.requirePort('buffs').remove(
           op.payload.selector,
           op.payload.removalReason,
           ctx,
         )
-        return { operationId, type: 'remove_buff', status: 'resolved' }
+        return { operationId, type: 'remove_buff', status: 'resolved', result }
+      }
+      case 'set_buff_stacks': {
+        const result = this.requirePort('buffs').setStacks(
+          op.payload.selector,
+          op.payload.stacks,
+          ctx,
+        )
+        return {
+          operationId,
+          type: 'set_buff_stacks',
+          status: 'resolved',
+          result,
+        }
+      }
+      case 'set_buff_duration': {
+        const result = this.requirePort('buffs').setRemainingDuration(
+          op.payload.selector,
+          op.payload.duration,
+          ctx,
+        )
+        return {
+          operationId,
+          type: 'set_buff_duration',
+          status: 'resolved',
+          result,
+        }
+      }
+      case 'cleanse_buff': {
+        const result = this.requirePort('buffs').cleanse(
+          op.payload.targetId,
+          op.payload.query,
+          ctx,
+        )
+        return {
+          operationId,
+          type: 'cleanse_buff',
+          status: 'resolved',
+          result,
+        }
       }
       case 'push_gauge': {
         const result = this.requirePort('gauge').pushGauge(

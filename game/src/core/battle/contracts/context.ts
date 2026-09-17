@@ -12,4 +12,10 @@ export interface CombatAuthorityExecutionContext {
   origin: CombatOperationOrigin
   /** Scoped to this op -- mints `evt.${operationId}.${n}`. */
   events: CombatEventSink
+  /** v7.1 (buff-plan review amendment) -- the executing op's OWN
+      combatSequence, allocated at execution-START before this ctx is
+      built (r6). Read channel for authorities stamping internal state
+      (BuffInstance.createdSequence / lastAppliedSequence). Allocation
+      stays with the scheduler -- the ctx is never an allocator. */
+  combatSequence: number
 }

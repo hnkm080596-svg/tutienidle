@@ -112,6 +112,11 @@ export class CombatOperationBatchRunner {
       )
     }
     for (const p of batch.preconditions) {
+      if (typeof p !== 'object' || p === null) {
+        throw new CombatSettlementFault(
+          'batch preflight: precondition must be a non-null object',
+        )
+      }
       if (p.kind === 'entity_alive') {
         if (!this.preconditions.isAlive(p.entityId)) return false
       } else if (p.kind === 'buff_participant') {
@@ -357,7 +362,7 @@ export class CombatOperationBatchRunner {
       case 'heal': {
         const p = entry.payload
         if (!isNonEmptyString(p.targetId)) bad('targetId')
-        if (!isFiniteNumber(p.amount)) bad('amount')
+        if (!isFiniteNumber(p.amount) || p.amount < 0) bad('amount')
         return
       }
       case 'apply_buff': {
@@ -429,6 +434,24 @@ export class CombatOperationBatchRunner {
         if (!isNonEmptyString(p.removalReason)) bad('removalReason')
         return
       }
+      case 'set_buff_stacks': {
+        const p = entry.payload
+        this.assertSelector(p.selector, batchId, index)
+        if (!isFiniteNumber(p.stacks)) bad('stacks')
+        return
+      }
+      case 'set_buff_duration': {
+        const p = entry.payload
+        this.assertSelector(p.selector, batchId, index)
+        if (!isFiniteNumber(p.duration)) bad('duration')
+        return
+      }
+      case 'cleanse_buff': {
+        const p = entry.payload
+        if (!isNonEmptyString(p.targetId)) bad('targetId')
+        if (typeof p.query !== 'object' || p.query === null) bad('query')
+        return
+      }
       case 'push_gauge': {
         const p = entry.payload
         if (!isNonEmptyString(p.targetId)) bad('targetId')
@@ -459,7 +482,7 @@ export class CombatOperationBatchRunner {
       case 'apply_shield': {
         const p = entry.payload
         if (!isNonEmptyString(p.targetId)) bad('targetId')
-        if (!isFiniteNumber(p.amount)) bad('amount')
+        if (!isFiniteNumber(p.amount) || p.amount < 0) bad('amount')
         return
       }
       default: {

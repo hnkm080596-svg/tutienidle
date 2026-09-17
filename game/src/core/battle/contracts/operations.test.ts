@@ -102,9 +102,21 @@ describe('CombatOperation union', () => {
       {
         type: 'remove_buff',
         payload: {
-          selector: { kind: 'holder_definition', holderId: 'entity.b', definitionId: 'hoa_an' },
+          selector: { kind: 'target_definition', targetId: 'entity.b', definitionId: 'hoa_an' },
           removalReason: 'cleansed',
         },
+      },
+      {
+        type: 'set_buff_stacks',
+        payload: { selector: { kind: 'instance', instanceId: 'bi.1' }, stacks: 5 },
+      },
+      {
+        type: 'set_buff_duration',
+        payload: { selector: { kind: 'instance', instanceId: 'bi.1' }, duration: 9 },
+      },
+      {
+        type: 'cleanse_buff',
+        payload: { targetId: 'entity.b', query: { kind: 'debuff', element: 'fire' } },
       },
       { type: 'push_gauge', payload: { targetId: 'entity.a', fractionOfMax: 0.35 } },
       {
@@ -136,6 +148,9 @@ describe('CombatOperation union', () => {
       'extend_buff_duration',
       'trigger_buff_periodic',
       'remove_buff',
+      'set_buff_stacks',
+      'set_buff_duration',
+      'cleanse_buff',
       'push_gauge',
       'gain_resource',
       'consume_resource',
@@ -249,8 +264,8 @@ describe('BuffInstanceSelector', () => {
     ).not.toThrow()
     expect(() =>
       assertValidSelector({
-        kind: 'holder_definition',
-        holderId: 'entity.b',
+        kind: 'target_definition',
+        targetId: 'entity.b',
         definitionId: 'hoa_an',
       }),
     ).not.toThrow()
@@ -268,8 +283,8 @@ describe('BuffInstanceSelector', () => {
       { kind: 'instance', instanceId: 5 },
       { kind: 'identity', definitionId: 'd', sourceId: 'a' },
       { kind: 'identity', definitionId: 'd', sourceId: 'a', targetId: 7 },
-      { kind: 'holder_definition', holderId: 'h' },
-      { kind: 'holder_definition', definitionId: 'd', holderId: 3 },
+      { kind: 'target_definition', targetId: 'h' },
+      { kind: 'target_definition', definitionId: 'd', targetId: 3 },
     ]
 
     for (const bad of malformed) {

@@ -99,6 +99,9 @@ export type CombatOperation =
   | ExtendBuffDurationOperation
   | TriggerBuffPeriodicOperation
   | RemoveBuffOperation
+  | SetBuffStacksOperation
+  | SetBuffDurationOperation
+  | CleanseBuffOperation
   | PushGaugeOperation
   | GainResourceOperation
   | ConsumeResourceOperation
@@ -190,6 +193,31 @@ export interface TriggerBuffPeriodicOperation {
 export interface RemoveBuffOperation {
   type: 'remove_buff'
   payload: { selector: BuffInstanceSelector; removalReason: BuffRemovalReason }
+}
+
+// v7.1 (buff-plan review amendment) -- spec sec.36/38/42/67 parity: every
+// BuffAuthority mutator is reachable via an op (contract sec.8 external
+// mutation rule). Producers arrive with their consumers.
+export interface SetBuffStacksOperation {
+  type: 'set_buff_stacks'
+  payload: { selector: BuffInstanceSelector; stacks: number }
+}
+
+export interface SetBuffDurationOperation {
+  type: 'set_buff_duration'
+  payload: { selector: BuffInstanceSelector; duration: number }
+}
+
+export interface BuffCleanseQuery {
+  kind?: 'buff' | 'debuff' | 'ailment' | 'marker'
+  tags?: readonly string[]
+  element?: ElementType
+  definitionId?: BuffDefinitionId
+}
+
+export interface CleanseBuffOperation {
+  type: 'cleanse_buff'
+  payload: { targetId: CombatEntityId; query: BuffCleanseQuery }
 }
 
 export interface PushGaugeOperation {

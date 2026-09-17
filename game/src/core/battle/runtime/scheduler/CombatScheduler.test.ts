@@ -88,8 +88,10 @@ function elem(instanceId: string): CombatEventPayload {
 function periodicDamageReq(
   sourceId: string,
   targetId = 'entity.b',
+  requestId = `req.${sourceId}.dot.0`,
 ): BuffPeriodicDamageRequest {
   return {
+    requestId,
     instanceId: `bi.${sourceId}`,
     periodicId: 'dot',
     sourceId,
@@ -104,8 +106,13 @@ function periodicDamageReq(
   }
 }
 
-function periodicHealReq(sourceId: string, targetId = 'entity.b'): BuffPeriodicHealRequest {
+function periodicHealReq(
+  sourceId: string,
+  targetId = 'entity.b',
+  requestId = `req.${sourceId}.hot.0`,
+): BuffPeriodicHealRequest {
   return {
+    requestId,
     instanceId: `bi.${sourceId}`,
     periodicId: 'hot',
     sourceId,
@@ -169,16 +176,19 @@ function makeHarness(opts?: CombatSchedulerOptions): Harness {
       addStacks: () => ({ stacksBefore: 0, stacksAfter: 0 }),
       removeStacks: () => ({ stacksBefore: 0, stacksAfter: 0 }),
       consumeStacks: () => ({ consumed: 0, remaining: 0, removed: false }),
-      addModifier: () => ({ applied: true }),
-      removeModifier: () => ({ removed: true }),
+      addModifier: () => ({ applied: true, modifierRuntimeId: 'bmr.1' }),
+      removeModifier: () => ({ removed: true, removedRuntimeIds: ['bmr.1'] }),
       refreshDuration: () => ({ durationBefore: 0, durationAfter: 0 }),
       extendDuration: () => ({ durationBefore: 0, durationAfter: 0 }),
       triggerPeriodic: (_sel, _periodicId, ctx) => {
         calls.push(ctx.operationId)
         emitAll(ctx.operationId, ctx.events)
-        return []
+        return { started: false, candidateUnitCount: 0 }
       },
-      remove: () => undefined,
+      remove: () => ({ removed: false }),
+      setStacks: () => ({ stacksBefore: 0, stacksAfter: 0 }),
+      setRemainingDuration: () => ({ durationBefore: 0, durationAfter: 0 }),
+      cleanse: () => ({ cleansed: [], skipped: [] }),
     } satisfies BuffAuthority,
   }
 
@@ -857,7 +867,7 @@ describe('event sinks + dedup (r4 MEDIUM 3 / r4 HIGH 1)', () => {
     } as unknown as CombatEventPayload
 
     // Lifecycle scope: NEITHER causation field may survive.
-    h.scheduler.createLifecycleSink('action.life.1').emit(smuggled)
+    h.scheduler.createLifecycleSink('action.life.1').sink.emit(smuggled)
     // Operation scope: mints its own causationOperationId; a smuggled
     // causationEventId must not leak through.
     h.emissions.set('op.A', [smuggled])
@@ -1069,7 +1079,7 @@ describe('dual settlement guard (r3 HIGH 5)', () => {
       a1: () => undefined,
       a2: () => undefined,
     })
-    h.scheduler.createLifecycleSink('action.life.1').emit(elem('e1'))
+    h.scheduler.createLifecycleSink('action.life.1').sink.emit(elem('e1'))
     h.scheduler.enqueueAuthored([damageOp('op.A')])
 
     h.scheduler.run()
@@ -1126,18 +1136,18 @@ describe('out-of-band fault lane (r3 HIGH 6)', () => {
 describe('lifecycle roots + periodic bridge (r4 BLOCKER 2 / r5 BLOCKER 2 / r5 HIGH 2+3)', () => {
   it('lifecycle sink emits PeriodicRequestsCommitted while quiescent -> built-in handler mints per-request origins', () => {
     const h = makeHarness()
-    const sink = h.scheduler.createLifecycleSink('status.turn.5.p')
+    const { sink } = h.scheduler.createLifecycleSink('status.turn.5.p')
     sink.emit({
       type: 'periodic_requests_committed',
-      holderId: 'entity.b',
+      trigger: { type: 'interval' },
       rootActionId: 'status.turn.5.p',
       requests: [periodicDamageReq('entity.a'), periodicHealReq('entity.a')],
     })
 
     h.scheduler.run()
     expect(h.calls).toEqual([
-      'periodic.evt.status.turn.5.p.0.0',
-      'periodic.evt.status.turn.5.p.0.1',
+      'periodic.req.entity.a.dot.0',
+      'periodic.req.entity.a.hot.0',
     ])
     const damage = h.damageCalls[0]
     expect(damage?.payload).toMatchObject({
@@ -1160,17 +1170,17 @@ describe('lifecycle roots + periodic bridge (r4 BLOCKER 2 / r5 BLOCKER 2 / r5 HI
 
   it('two lifecycle sinks for one rootActionId mint distinct eventIds (shared ordinal counter)', () => {
     const h = makeHarness()
-    const s1 = h.scheduler.createLifecycleSink('status.turn.5.p')
-    const s2 = h.scheduler.createLifecycleSink('status.turn.5.p')
+    const { sink: s1 } = h.scheduler.createLifecycleSink('status.turn.5.p')
+    const { sink: s2 } = h.scheduler.createLifecycleSink('status.turn.5.p')
     s1.emit({
       type: 'periodic_requests_committed',
-      holderId: 'e',
+      trigger: { type: 'interval' },
       rootActionId: 'status.turn.5.p',
       requests: [],
     })
     s2.emit({
       type: 'periodic_requests_committed',
-      holderId: 'e',
+      trigger: { type: 'interval' },
       rootActionId: 'status.turn.5.p',
       requests: [],
     })
@@ -1190,7 +1200,7 @@ describe('lifecycle roots + periodic bridge (r4 BLOCKER 2 / r5 BLOCKER 2 / r5 HI
     h.emissions.set('op.T', [
       {
         type: 'periodic_requests_committed',
-        holderId: 'entity.b',
+        trigger: { type: 'manual' },
         rootActionId: 'action.turn.1.a',
         requests: [
           periodicDamageReq('entity.a'),
@@ -1211,9 +1221,9 @@ describe('lifecycle roots + periodic bridge (r4 BLOCKER 2 / r5 BLOCKER 2 / r5 HI
     h.scheduler.run()
     expect(h.calls).toEqual([
       'op.T',
-      'periodic.evt.op.T.0.0',
-      'periodic.evt.op.T.0.1',
-      'periodic.evt.op.T.0.2',
+      'periodic.req.entity.a.dot.0',
+      'periodic.req.entity.c.dot.0',
+      'periodic.req.entity.d.hot.0',
     ])
     // Per-request origins -- no fabricated shared sourceId (r5 BLOCKER 2).
     expect(h.damageCalls.map((c) => c.ctx.origin.sourceId)).toEqual([
@@ -1246,10 +1256,234 @@ describe('lifecycle roots + periodic bridge (r4 BLOCKER 2 / r5 BLOCKER 2 / r5 HI
   })
 })
 
+describe('periodic_operation_settled (v7.3/v7.5)', () => {
+  it('one periodic op -> exactly ONE settled event; canonical scope id + causation + seq ordering', () => {
+    const h = makeHarness()
+    const { sink } = h.scheduler.createLifecycleSink('status.turn.5.p')
+    sink.emit({
+      type: 'periodic_requests_committed',
+      trigger: { type: 'interval' },
+      rootActionId: 'status.turn.5.p',
+      requests: [periodicDamageReq('entity.a')],
+    })
+
+    h.scheduler.run()
+    const settled = h.scheduler.trace.events.filter(
+      (e) => e.type === 'periodic_operation_settled',
+    )
+    expect(settled).toHaveLength(1)
+    const s = settled[0]!
+    if (s.type !== 'periodic_operation_settled') throw new Error('narrow')
+    expect(s.requestId).toBe('req.entity.a.dot.0')
+    expect(s.operationId).toBe('periodic.req.entity.a.dot.0')
+    expect(s.causationOperationId).toBe('periodic.req.entity.a.dot.0')
+    expect(s.rootActionId).toBe('status.turn.5.p')
+    expect(s.status).toBe('resolved')
+    // Canonical allocator: the settled eventId mints in the op's OWN scope
+    // (evt.${opId}.${n}), sharing the op-sink counter (r5 HIGH 2).
+    expect(s.eventId).toMatch(/^evt\.periodic\.req\.entity\.a\.dot\.0\.\d+$/)
+    const opRecord = h.scheduler.trace.records.find(
+      (r) => r.operation.operationId === 'periodic.req.entity.a.dot.0',
+    )
+    expect(opRecord?.combatSequence).toBeLessThan(s.combatSequence)
+  })
+
+  it('a NON-periodic op produces NO settled event -- correlation is private, unforgeable (r5 HIGH 3)', () => {
+    const h = makeHarness()
+    // A hostile op id that merely RESEMBLES a bridge-generated id must
+    // never claim a requestId -- no public field exists to forge.
+    h.scheduler.enqueueAuthored([damageOp('periodic.req.forged.dot.0')])
+    h.scheduler.run()
+    expect(
+      h.scheduler.trace.events.filter(
+        (e) => e.type === 'periodic_operation_settled',
+      ),
+    ).toHaveLength(0)
+  })
+
+  it('skipped periodic ops still emit their settled event with the mirrored status', () => {
+    const h = makeHarness()
+    h.skipOps.add('periodic.req.entity.a.dot.0')
+    const { sink } = h.scheduler.createLifecycleSink('status.turn.5.p')
+    sink.emit({
+      type: 'periodic_requests_committed',
+      trigger: { type: 'interval' },
+      rootActionId: 'status.turn.5.p',
+      requests: [periodicDamageReq('entity.a')],
+    })
+
+    h.scheduler.run()
+    const settled = h.scheduler.trace.events.find(
+      (e) => e.type === 'periodic_operation_settled',
+    )
+    if (settled?.type !== 'periodic_operation_settled') throw new Error('missing')
+    expect(settled.status).toBe('skipped')
+    expect(settled.reason).toBe('invalid_target_state')
+  })
+
+  it('settled events share the op scope counter -- zero eventId collisions vs the op sink emissions (r5 HIGH 2 adversarial)', () => {
+    const h = makeHarness()
+    // The periodic op's OWN authority emits an event mid-execute -- its
+    // sink takes ordinal 0 in scope 'periodic.req.entity.a.dot.0', so the
+    // settled event MUST take ordinal 1 (same allocator, no collision).
+    h.emissions.set('periodic.req.entity.a.dot.0', [elem('inner')])
+    routeElemental(h, { inner: () => undefined })
+    const { sink } = h.scheduler.createLifecycleSink('status.turn.5.p')
+    sink.emit({
+      type: 'periodic_requests_committed',
+      trigger: { type: 'interval' },
+      rootActionId: 'status.turn.5.p',
+      requests: [periodicDamageReq('entity.a')],
+    })
+
+    h.scheduler.run()
+    const ids = h.scheduler.trace.events.map((e) => e.eventId)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(ids).toContain('evt.periodic.req.entity.a.dot.0.0')
+    expect(ids).toContain('evt.periodic.req.entity.a.dot.0.1')
+  })
+
+  it('a registered handler sees the settled event and can continue the series (manual-trigger continuation lane)', () => {
+    const h = makeHarness()
+    const continuations: string[] = []
+    h.scheduler.registerImmediateHandler(
+      'periodic_operation_settled',
+      (event, eventSink) => {
+        if (event.type !== 'periodic_operation_settled') return
+        continuations.push(`${event.requestId}:${event.status}`)
+        // The emitter's continuation emits the next unit's single-request
+        // event through its event-scoped sink -- only for the FIRST unit
+        // (the heal unit's own settled event must not re-queue itself).
+        if (event.requestId === 'req.entity.a.dot.0') {
+          eventSink.emit({
+            type: 'periodic_requests_committed',
+            trigger: { type: 'manual' },
+            rootActionId: event.rootActionId,
+            requests: [periodicHealReq('entity.a', 'entity.b', 'req.entity.a.hot.1')],
+          })
+        }
+      },
+    )
+    const { sink } = h.scheduler.createLifecycleSink('status.turn.5.p')
+    sink.emit({
+      type: 'periodic_requests_committed',
+      trigger: { type: 'manual' },
+      rootActionId: 'status.turn.5.p',
+      requests: [periodicDamageReq('entity.a')],
+    })
+
+    h.scheduler.run()
+    expect(continuations).toEqual([
+      'req.entity.a.dot.0:resolved',
+      'req.entity.a.hot.1:resolved',
+    ])
+    // The continuation op also settled inside the same root transaction.
+    expect(h.healCalls[0]?.payload).toEqual({ targetId: 'entity.b', amount: 4 })
+  })
+})
+
+describe('lifecycle sink {sink, sequence, settle} (v7.1/v7.2)', () => {
+  it('sequence is allocated at creation; settle() drains and reports opId -> status', () => {
+    const h = makeHarness()
+    const life = h.scheduler.createLifecycleSink('status.turn.7.p')
+    expect(life.sequence).toBeTypeOf('number')
+    life.sink.emit({
+      type: 'periodic_requests_committed',
+      trigger: { type: 'interval' },
+      rootActionId: 'status.turn.7.p',
+      requests: [periodicDamageReq('entity.a'), periodicHealReq('entity.a')],
+    })
+
+    const statuses = life.settle()
+    expect(statuses.get('periodic.req.entity.a.dot.0')).toBe('resolved')
+    expect(statuses.get('periodic.req.entity.a.hot.0')).toBe('resolved')
+    expect(statuses.size).toBe(2)
+    // Post-settle the scheduler is quiescent and still accepts new work.
+    expect(h.scheduler.state).toBe('running')
+  })
+
+  it('sequential periodic units may settle once each -- several settles per lifecycle entry are legal (v7.3)', () => {
+    const h = makeHarness()
+    const life = h.scheduler.createLifecycleSink('status.turn.8.p')
+    const seen: string[] = []
+    h.scheduler.registerImmediateHandler(
+      'periodic_operation_settled',
+      (event) => {
+        if (event.type === 'periodic_operation_settled') {
+          seen.push(event.requestId)
+        }
+      },
+    )
+    for (let i = 0; i < 2; i++) {
+      life.sink.emit({
+        type: 'periodic_requests_committed',
+        trigger: { type: 'interval' },
+        rootActionId: 'status.turn.8.p',
+        requests: [periodicDamageReq('entity.a', 'entity.b', `req.a.${i}`)],
+      })
+      const statuses = life.settle()
+      expect(statuses.get(`periodic.req.a.${i}`)).toBe('resolved')
+    }
+    expect(seen).toEqual(['req.a.0', 'req.a.1'])
+  })
+
+  it('a lifecycle settle inside an in-flight run() is a reentrancy fault (single-flight)', () => {
+    const h = makeHarness()
+    const life = h.scheduler.createLifecycleSink('action.life.1')
+    h.emissions.set('op.A', [elem('e1')])
+    routeElemental(h, {
+      e1: () => {
+        life.settle() // reentrant -- same rule as run()
+      },
+    })
+    h.scheduler.enqueueAuthored([damageOp('op.A')])
+    expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
+    expect(h.scheduler.state).toBe('faulted')
+  })
+})
+
+describe('execution context + cross-root work budget', () => {
+  it('ctx.combatSequence equals the op record sequence (v7.1 read channel)', () => {
+    const h = makeHarness()
+    h.scheduler.enqueueAuthored([damageOp('op.A')])
+    h.scheduler.run()
+    const record = h.scheduler.trace.records.find(
+      (r) => r.operation.operationId === 'op.A',
+    )
+    expect(h.damageCalls[0]?.ctx.combatSequence).toBe(record?.combatSequence)
+  })
+
+  it('mid-run lifecycle-sink intake mints fresh roots but the WHOLE-DRAIN budget faults the ping-pong (Lens C M1)', () => {
+    // Per-root budget 5: each root unit costs ~2 units (settle + emitted
+    // sibling) -- never trips alone. The ping-pong only stops because the
+    // whole-drain counter accumulates across every minted root.
+    const h = makeHarness({
+      maxImmediateWorkPerBarrier: 5,
+      maxTotalWorkPerRun: 30,
+    })
+    const life = h.scheduler.createLifecycleSink('action.life.1')
+    routeElemental(h, {
+      // Each root event's handler re-emits via the LIFECYCLE sink -> the
+      // emission lands on rootEventQueue -> a NEW root unit with a fresh
+      // per-root budget. Without the whole-drain bound this loops forever.
+      loop: () => {
+        life.sink.emit(elem('loop'))
+      },
+    })
+    life.sink.emit(elem('loop'))
+
+    expect(() => h.scheduler.run()).toThrow(CombatSettlementFault)
+    expect(h.diagnosticEvents[0]?.reason).toBe(
+      'settlement_work_budget_exceeded',
+    )
+    expect(h.scheduler.state).toBe('faulted')
+  })
+})
+
 describe('root event frames (P5 F-A)', () => {
   it('a root-scope emission loop faults on the work budget -- the root lane is guarded', () => {
     const h = makeHarness({ maxImmediateWorkPerBarrier: 5 })
-    const sink = h.scheduler.createLifecycleSink('action.life.1')
+    const { sink } = h.scheduler.createLifecycleSink('action.life.1')
     routeElemental(h, {
       // Each emission re-queues the same event. Before frame-local root
       // queues this looped forever: every emitted event became a new root
@@ -1272,7 +1506,7 @@ describe('root event frames (P5 F-A)', () => {
 
   it('a root event\'s consequence tree drains before the next queued root (Option B)', () => {
     const h = makeHarness()
-    const sink = h.scheduler.createLifecycleSink('action.life.1')
+    const { sink } = h.scheduler.createLifecycleSink('action.life.1')
     routeElemental(h, {
       e1: (_e, s) => {
         s.emit(elem('e3'))
@@ -1317,7 +1551,7 @@ describe('post-fault intake (P5 T1)', () => {
     const h = makeHarness({ maxImmediateWorkPerBarrier: 3 })
     // A pre-fault lifecycle sink stays in hand -- its emits must drop
     // silently once the scheduler halts.
-    const sink = h.scheduler.createLifecycleSink('action.life.1')
+    const { sink } = h.scheduler.createLifecycleSink('action.life.1')
     h.emissions.set('op.A', [elem('loop')])
     routeElemental(h, {
       loop: (_e, s) => {

@@ -68,6 +68,7 @@ function elem(instanceId: string): CombatEventPayload {
 
 function periodicDamageReq(sourceId: string): BuffPeriodicDamageRequest {
   return {
+    requestId: `req.${sourceId}.dot.0`,
     instanceId: `bi.${sourceId}`,
     periodicId: 'dot',
     sourceId,
@@ -204,9 +205,9 @@ describe('CombatTraceExporter', () => {
     })
     // Lifecycle root: a periodic tick with one damage request -- the
     // built-in bridge mints a child op caused by the lifecycle event.
-    h.scheduler.createLifecycleSink('status.turn.1.p').emit({
+    h.scheduler.createLifecycleSink('status.turn.1.p').sink.emit({
       type: 'periodic_requests_committed',
-      holderId: 'entity.b',
+      trigger: { type: 'interval' },
       rootActionId: 'status.turn.1.p',
       requests: [periodicDamageReq('entity.a')],
     })
@@ -238,7 +239,7 @@ describe('CombatTraceExporter', () => {
     expect(parentOfEvt.get('evt.status.turn.1.p.0')).toBe(
       'root:status.turn.1.p',
     )
-    expect(parentOfOp.get('periodic.evt.status.turn.1.p.0.0')).toBe(
+    expect(parentOfOp.get('periodic.req.entity.a.dot.0')).toBe(
       'evt:evt.status.turn.1.p.0',
     )
 
@@ -254,7 +255,7 @@ describe('CombatTraceExporter', () => {
       treeDepth(lineAt(exp.tree, 'evt evt.op.A.0')),
     )
     expect(
-      treeDepth(lineAt(exp.tree, 'op periodic.evt.status.turn.1.p.0.0')),
+      treeDepth(lineAt(exp.tree, 'op periodic.req.entity.a.dot.0')),
     ).toBeGreaterThan(
       treeDepth(lineAt(exp.tree, 'evt evt.status.turn.1.p.0')),
     )

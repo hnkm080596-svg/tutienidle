@@ -13,6 +13,15 @@ import type { ElementType } from '../../element/ElementType'
 import type { BuffInstanceId, CombatEntityId } from './ids'
 
 export interface BuffPeriodicDamageRequest {
+  /** v7.2 -- authority-minted unique id
+      (`req.${instanceId}.${periodicId}.${tickOrdinal}` -- per-instance
+      monotonic counter; rootActionId-scoped minting would collide when
+      two manual triggers share one root transaction). The built-in
+      handler names the generated op `periodic.${requestId}` so the
+      emitter can correlate the settled op status back to this request
+      (uses-consumption gating -- spec sec.34 'removed immediately after
+      resolution'). */
+  requestId: string
   instanceId: BuffInstanceId
   periodicId: string
   sourceId: CombatEntityId
@@ -27,9 +36,17 @@ export interface BuffPeriodicDamageRequest {
   /** Metadata for profiles that scale on stacks. */
   stackCount?: number
   tags?: readonly string[]
+  /** v7.1 -- present iff the periodic def's scaling==='snapshot': the
+      source's offensive context captured at apply (Buff Final Spec
+      sec.25). DamageSystem resolves against THIS instead of live source
+      stats when present; target mitigation still resolves live at
+      tick. */
+  snapshot?: Readonly<Record<string, number>>
 }
 
 export interface BuffPeriodicHealRequest {
+  /** v7.2 -- same correlation contract as damage. */
+  requestId: string
   instanceId: BuffInstanceId
   periodicId: string
   sourceId: CombatEntityId

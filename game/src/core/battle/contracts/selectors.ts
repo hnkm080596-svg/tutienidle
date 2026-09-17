@@ -12,10 +12,12 @@ export type BuffInstanceSelector =
       sourceId: CombatEntityId
       targetId: CombatEntityId
     }
-  // 'holder_definition' resolves the holder's instance of a def regardless
+  // 'target_definition' resolves the TARGET's instance of a def regardless
   // of source (used by consume-for-damage 'any' scope and per_target
-  // instanceScope defs).
-  | { kind: 'holder_definition'; holderId: CombatEntityId; definitionId: BuffDefinitionId }
+  // instanceScope defs). v7.2 rename -- was 'holder_definition'/'holderId';
+  // `targetId` is the canonical persistent subject (no separate holder
+  // identity).
+  | { kind: 'target_definition'; targetId: CombatEntityId; definitionId: BuffDefinitionId }
 
 function requireStringField(value: unknown, field: string, kind: string): void {
   if (typeof value !== 'string' || value.length === 0) {
@@ -52,9 +54,9 @@ export function assertValidSelector(
       requireStringField(s.targetId, 'targetId', kind)
       return
     }
-    case 'holder_definition': {
-      const s = selector as { holderId?: unknown; definitionId?: unknown }
-      requireStringField(s.holderId, 'holderId', kind)
+    case 'target_definition': {
+      const s = selector as { targetId?: unknown; definitionId?: unknown }
+      requireStringField(s.targetId, 'targetId', kind)
       requireStringField(s.definitionId, 'definitionId', kind)
       return
     }

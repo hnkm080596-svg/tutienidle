@@ -75,6 +75,43 @@ export interface HealResult {
 }
 
 // ---------------------------------------------------------------------------
+// v7.1/v7.2/v7.5 additions (buff-plan review amendments).
+// ---------------------------------------------------------------------------
+
+/** spec sec.53/67 -- core mutation APIs never return void. `removed:false`
+    when the selector resolves to no instance. */
+export interface RemoveBuffResult {
+  removed: boolean
+  instanceId?: BuffInstanceId
+  stacksAtRemoval?: number
+}
+
+/** spec sec.42 -- skipped = matched but dispellable:false. */
+export interface CleanseResult {
+  cleansed: BuffInstanceId[]
+  skipped: BuffInstanceId[]
+}
+
+/** v7.5 (r5 BLOCKER 1) -- the trigger_buff_periodic op reports SERIES-START
+    metadata only: later continuation units do not exist yet at return time
+    (they emit via the periodic_operation_settled continuation). Per-request
+    outcomes live on PeriodicRequestsCommitted / PeriodicOperationSettled /
+    the trace, not on the initiating op's result. */
+export interface TriggerPeriodicStartResult {
+  /** false = no live unit was triggerable -- covers BOTH "selector matched
+      nothing" AND "matched but every candidate is dead/invalid" (v7.6
+      r6 MEDIUM 1: explicit all-dead branch; no firstRequestId, no pending
+      continuation). */
+  started: boolean
+  /** The request emitted synchronously, when the series started. */
+  firstRequestId?: string
+  /** Ordered unit list size at trigger time -- candidates, NOT promised
+      resolutions (later units may be skipped on revalidation or
+      skip-settle). */
+  candidateUnitCount: number
+}
+
+// ---------------------------------------------------------------------------
 // Result union -- richer than {status} (review: the trace must reconstruct
 // mutations).
 // ---------------------------------------------------------------------------
@@ -117,30 +154,64 @@ export type CombatOperationResult =
     }
   | {
       operationId: CombatOperationId
-      type: 'add_buff_modifier' | 'remove_buff_modifier'
+      type: 'add_buff_modifier'
       status: CombatOperationResultStatus
       reason?: CombatOperationResultReason
-      result?: { modifierId: string; applied: boolean }
+      /** v7.5 (r5 HIGH 1): modifierRuntimeId is the minted runtime identity
+          of the new entry. */
+      result?: {
+        modifierId: string
+        applied: boolean
+        modifierRuntimeId?: string
+      }
     }
   | {
       operationId: CombatOperationId
-      type: 'refresh_buff_duration' | 'extend_buff_duration'
+      type: 'remove_buff_modifier'
+      status: CombatOperationResultStatus
+      reason?: CombatOperationResultReason
+      /** v7.5 (r5 HIGH 1): remove is locked 'all_matching' -- every runtime
+          generation carrying modifierId is removed and reported. */
+      result?: {
+        modifierId: string
+        removed: boolean
+        removedRuntimeIds: readonly string[]
+      }
+    }
+  | {
+      operationId: CombatOperationId
+      type: 'refresh_buff_duration' | 'extend_buff_duration' | 'set_buff_duration'
       status: CombatOperationResultStatus
       reason?: CombatOperationResultReason
       result?: { durationBefore: number; durationAfter: number }
     }
   | {
       operationId: CombatOperationId
+      type: 'set_buff_stacks'
+      status: CombatOperationResultStatus
+      reason?: CombatOperationResultReason
+      result?: StacksResult
+    }
+  | {
+      operationId: CombatOperationId
+      type: 'cleanse_buff'
+      status: CombatOperationResultStatus
+      reason?: CombatOperationResultReason
+      result?: CleanseResult
+    }
+  | {
+      operationId: CombatOperationId
       type: 'trigger_buff_periodic'
       status: CombatOperationResultStatus
       reason?: CombatOperationResultReason
-      result?: { resolutionsEmitted: number }
+      result?: TriggerPeriodicStartResult
     }
   | {
       operationId: CombatOperationId
       type: 'remove_buff'
       status: CombatOperationResultStatus
       reason?: CombatOperationResultReason
+      result?: RemoveBuffResult
     }
   | {
       operationId: CombatOperationId

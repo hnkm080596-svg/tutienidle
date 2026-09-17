@@ -13,7 +13,13 @@ export class StaticCapabilityQuery implements CombatCapabilityQuery {
   constructor(
     capabilities: ReadonlyMap<CombatEntityId, ReadonlySet<string>> = new Map(),
   ) {
-    this.capabilities = capabilities
+    // Immutable snapshot contract: deep-copy both levels so a caller
+    // mutating its map/sets after construction cannot rewrite history.
+    const copy = new Map<CombatEntityId, ReadonlySet<string>>()
+    for (const [entityId, set] of capabilities) {
+      copy.set(entityId, new Set(set))
+    }
+    this.capabilities = copy
   }
 
   has(entityId: CombatEntityId, capabilityId: string): boolean {
