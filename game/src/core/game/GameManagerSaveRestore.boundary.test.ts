@@ -39,8 +39,11 @@ function makeManager(): GameManager {
   manager.catalogOps.registerEquipment(equipment)
   manager.catalogOps.registerAffixes(affixes)
   manager.catalogOps.registerBuildings(buildings)
-  manager.catalogOps.registerSkillTemplates(SKILLS)
-  manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+  // The fixture entries double as their own registered templates so the
+  // save payloads below are not orphans — restore drops entries whose id
+  // has no registered template (dev-stage rule, Mission G).
+  manager.catalogOps.registerSkillTemplates([...SKILLS, SAVED_SKILL])
+  manager.catalogOps.registerTechniqueTemplates([...TECHNIQUES, SAVED_TECHNIQUE])
   return manager
 }
 
@@ -635,12 +638,14 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
   })
 })
 
-// Stat-key migration (stat-system-reimagined rename pass) — saves written
-// before the rename keep legacy stat keys inside techniques[]/skills[]
+// Stat-key restore contract (post-Mission-G) — saves written before the
+// stat-key rename keep legacy stat keys inside techniques[]/skills[]
 // entries. tierEffects/combatModifiers/passiveModifiers/specializations
 // are authored data: restore re-derives them from the registered template
 // (same contract as name/description), so legacy keys can't stay inert.
-describe('stat-key migration on techniques[]/skills[] restore', () => {
+// An entry with NO registered template is dropped outright — dev-stage
+// rule: never translate, never keep orphan objects.
+describe('stat-key handling on techniques[]/skills[] restore', () => {
   it('legacy technique tierEffects.attackFlat re-derives mightFlat from the template', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
@@ -729,7 +734,7 @@ describe('stat-key migration on techniques[]/skills[] restore', () => {
     expect(restored.effects.length).toBeGreaterThan(0)
   })
 
-  it('entries with no registered template keep the save object with legacy stat keys remapped', () => {
+  it('entries with no registered template are dropped, not kept with remapped keys', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
 
@@ -765,37 +770,19 @@ describe('stat-key migration on techniques[]/skills[] restore', () => {
         flat: 6,
       },
     ]
-    orphanSkill.specializations = [
-      {
-        id: 'spec_a',
-        name: 'Spec A',
-        passiveModifiersOverride: [
-          {
-            id: 'removed_skill:s1',
-            sourceId: 'removed_skill',
-            sourceType: 'skill',
-            stat: 'manaRegenPerSecond' as never,
-            flat: 2,
-          },
-        ],
-      },
-    ]
+
+    // A valid sibling entry still restores — the drop is per-entry.
+    const validSkill = structuredClone(SAVED_SKILL)
 
     manager.saveOps.restoreFromSave(
-      baseSave(player, { techniques: [orphanTechnique], skills: [orphanSkill] }),
+      baseSave(player, {
+        techniques: [orphanTechnique],
+        skills: [orphanSkill, validSkill],
+      }),
     )
 
-    const technique = manager.techniqueManager.get('removed_technique')!
-    expect(
-      (technique.tierEffects!.so_nhap as { attackFlat?: number }).attackFlat,
-    ).toBeUndefined()
-    expect(technique.tierEffects!.so_nhap!.mightFlat).toBe(9)
-    expect(technique.combatModifiers![0]!.stat).toBe('wardRegenPerTurn')
-
-    const skill = manager.skillManager.get('removed_skill')!
-    expect(skill.passiveModifiers![0]!.stat).toBe('might')
-    expect(skill.specializations![0]!.passiveModifiersOverride![0]!.stat).toBe(
-      'manaRegenPerTurn',
-    )
+    expect(manager.techniqueManager.get('removed_technique')).toBeUndefined()
+    expect(manager.skillManager.get('removed_skill')).toBeUndefined()
+    expect(manager.skillManager.get(validSkill.id)).toBeDefined()
   })
 })

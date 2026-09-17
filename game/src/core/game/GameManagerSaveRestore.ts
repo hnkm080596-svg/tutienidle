@@ -1,7 +1,7 @@
 import { SkillManager } from '../skill/SkillManager'
 import type { Skill } from '../skill/Skill'
 import { TechniqueManager } from '../technique/TechniqueManager'
-import type { Technique, TechniqueTierEffect } from '../technique/Technique'
+import type { Technique } from '../technique/Technique'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import { PillRegistry } from '../pill/PillRegistry'
@@ -23,7 +23,6 @@ import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
-import { migrateStatModifiers } from '../stats/statKeyMigration'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
@@ -115,8 +114,8 @@ export class GameManagerSaveRestore {
     // entry is data loss, not recovery — hard-fail before any owner
     // mutation, same contract equipment already had. Skills/techniques
     // are intentionally NOT included here: an unknown template there
-    // keeps the save's own object as-authored by design (see the restore
-    // loops below), not a registry-drift rejection case.
+    // drops the entry at restore (see the restore loops below), not a
+    // registry-drift rejection case.
     for (const entry of save.materials) {
       if (!this.deps.materialRegistry.has(entry.materialId)) {
         throw new Error(`Unknown material in save: ${entry.materialId}`)
@@ -178,7 +177,7 @@ export class GameManagerSaveRestore {
     // Techniques/skills — full replace of the learned sets. The text/
     // backfill refresh below runs on CLONES: the input save is a value
     // and must never be mutated by restore.
-    const restoredTechniques = save.techniques.map((savedTechnique) => {
+    const restoredTechniques = save.techniques.flatMap((savedTechnique) => {
       const technique = structuredClone(savedTechnique)
 
       // Text-refresh-on-load: cung logic voi skill ben duoi -- name/
@@ -186,27 +185,28 @@ export class GameManagerSaveRestore {
       // dang dang ky thay vi giu nguyen ban da dong bang trong save cu.
       const template = this.deps.techniqueTemplates.get(technique.id)
 
-      if (template) {
-        technique.name = template.name
-        technique.description = template.description
-
-        // Stat-key migration (stat-system-reimagined rename pass) —
-        // tierEffects/combatModifiers are authored data and the template
-        // is their authority, same contract as name/description above.
-        // Re-deriving keeps a save frozen with pre-rename keys
-        // (attackFlat, stat:'attack') from silently staying inert.
-        technique.tierEffects = structuredClone(template.tierEffects)
-        technique.combatModifiers = structuredClone(template.combatModifiers)
-      } else {
-        migrateLegacyTechniqueStatKeys(technique)
+      // Dev-stage rule: an entry with no registered template is dropped,
+      // never kept with translated legacy fields.
+      if (!template) {
+        return []
       }
 
-      return technique
+      technique.name = template.name
+      technique.description = template.description
+
+      // tierEffects/combatModifiers are authored data and the template
+      // is their authority, same contract as name/description above.
+      // Re-deriving keeps a save frozen with stale/pre-rename authored
+      // data from silently staying inert.
+      technique.tierEffects = structuredClone(template.tierEffects)
+      technique.combatModifiers = structuredClone(template.combatModifiers)
+
+      return [technique]
     })
 
     this.deps.techniqueManager.restore(restoredTechniques)
 
-    const restoredSkills = save.skills.map((savedSkill) => {
+    const restoredSkills = save.skills.flatMap((savedSkill) => {
       const skill = structuredClone(savedSkill)
 
       // Execution policy rework + development-build no-migration (2026-
@@ -216,14 +216,19 @@ export class GameManagerSaveRestore {
       // vẫn chạy). Đối chiếu template đã đăng ký để hồi phục AUTHORED
       // combat data (execution/targeting/AOE/VFX preset), giữ NGUYÊN
       // progression state của instance (level/equipped/slot/cooldown/
-      // specialization). Template thiếu thì giữ nguyên object save.
+      // specialization). Template thiếu thì entry bị drop (dev-stage
+      // rule: không migrate, không giữ object mồ côi).
       const template = this.deps.skillTemplates.get(skill.id)
 
-      if (!skill.execution && template?.execution) {
+      if (!template) {
+        return []
+      }
+
+      if (!skill.execution && template.execution) {
         skill.execution = structuredClone(template.execution)
       }
 
-      if (!skill.targeting && template?.targeting) {
+      if (!skill.targeting && template.targeting) {
         skill.targeting = structuredClone(template.targeting)
       }
 
@@ -233,32 +238,26 @@ export class GameManagerSaveRestore {
       // that da gap: 1 save cu tung luu "Huy Kiem" luc description bi
       // hong encoding (mojibake) -- sua Skills.ts khong tu hoi phuc cac
       // save da luu truoc do neu thieu buoc nay.
-      if (template) {
-        skill.name = template.name
-        skill.description = template.description
+      skill.name = template.name
+      skill.description = template.description
 
-        // Stat-key migration (stat-system-reimagined rename pass) —
-        // passiveModifiers/specializations are authored data owned by
-        // the template; re-derive so legacy stat keys ('attack',
-        // '*RegenPerSecond') frozen in the save don't stay inert.
-        // selectedSpecializationId lives on the instance (progression)
-        // and is untouched.
-        skill.passiveModifiers = structuredClone(template.passiveModifiers)
-        skill.specializations = structuredClone(template.specializations)
+      // passiveModifiers/specializations are authored data owned by the
+      // template; re-derive so stale authored fields frozen in the save
+      // don't stay inert. selectedSpecializationId lives on the instance
+      // (progression) and is untouched.
+      skill.passiveModifiers = structuredClone(template.passiveModifiers)
+      skill.specializations = structuredClone(template.specializations)
 
-        // effects/triggers are the same authored-combat-data class:
-        // nothing mutates them on the instance (progression lives in
-        // level/selectedSpecializationId; specialization overrides ride
-        // on `specializations` above). A save frozen with a stale shell
-        // (e.g. da_phap_lien_tuyen's empty effects[] pre-fix) must
-        // re-derive, not stay broken through every future battle.
-        skill.effects = structuredClone(template.effects)
-        skill.triggers = structuredClone(template.triggers)
-      } else {
-        migrateLegacySkillStatKeys(skill)
-      }
+      // effects/triggers are the same authored-combat-data class:
+      // nothing mutates them on the instance (progression lives in
+      // level/selectedSpecializationId; specialization overrides ride
+      // on `specializations` above). A save frozen with a stale shell
+      // (e.g. da_phap_lien_tuyen's empty effects[] pre-fix) must
+      // re-derive, not stay broken through every future battle.
+      skill.effects = structuredClone(template.effects)
+      skill.triggers = structuredClone(template.triggers)
 
-      return skill
+      return [skill]
     })
 
     this.deps.skillManager.restore(restoredSkills)
@@ -468,34 +467,3 @@ export class GameManagerSaveRestore {
   }
 }
 
-// Stat-key migration (stat-system-reimagined rename pass) — for save
-// entries whose id has NO registered template the saved object stays
-// authoritative by design (see preflightSaveRegistryReferences), so the
-// legacy key names are remapped in place. With a template present these
-// fields are re-derived instead (see the restore loops above).
-function migrateLegacyTechniqueStatKeys(technique: Technique): void {
-  for (const effect of Object.values(technique.tierEffects ?? {})) {
-    const record = effect as TechniqueTierEffect & { attackFlat?: number }
-
-    if (record.attackFlat !== undefined) {
-      record.mightFlat ??= record.attackFlat
-      delete record.attackFlat
-    }
-  }
-
-  if (technique.combatModifiers) {
-    technique.combatModifiers = migrateStatModifiers(technique.combatModifiers)
-  }
-}
-
-function migrateLegacySkillStatKeys(skill: Skill): void {
-  if (skill.passiveModifiers) {
-    skill.passiveModifiers = migrateStatModifiers(skill.passiveModifiers)
-  }
-  skill.specializations = skill.specializations?.map((specialization) => ({
-    ...specialization,
-    passiveModifiersOverride: specialization.passiveModifiersOverride
-      ? migrateStatModifiers(specialization.passiveModifiersOverride)
-      : specialization.passiveModifiersOverride,
-  }))
-}

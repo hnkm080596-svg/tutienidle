@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
+import { createBaseStats } from '../core/stats/StatBlock'
 import type { GameSave } from '../services/save/SaveSystem'
 
 // QA-002 (Task 9.2) — restoreFromSave phải idempotent theo payload: cùng
@@ -122,10 +123,10 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.baseStats.might).toBeGreaterThan(0)
   })
 
-  // Stat-key migration (stat-system-reimagined rename pass) — saves
-  // written under the old key names must come back with renamed keys,
-  // retired keys dropped, and modifier stat fields remapped.
-  it('save cũ với stat key cũ → migrate sang key mới, key retired bị drop', () => {
+  // Dev-stage rule (Mission G) — legacy stat keys are DROPPED, never
+  // translated: a legacy save loses those grants instead of silently
+  // carrying renamed keys forward.
+  it('save cũ với stat key cũ → key legacy bị drop, không translate', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({
       baseStats: { attack: 10, attackRange: 1, maxMpPercent: 0.2, defense: 7 },
@@ -163,21 +164,16 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     player.restoreFromSave(save)
 
-    expect(player.baseStats.might).toBe(10)
+    // Current-shape keys survive; every legacy/retired key drops —
+    // 'attack' is NOT renamed to might, it is gone.
     expect(player.baseStats.defense).toBe(7)
+    expect(player.baseStats.might).toBe(createBaseStats().might)
     expect('attack' in player.baseStats).toBe(false)
-    // Task 3: retired keys are gone from StatType entirely — the saved
-    // value drops AND no baseline key fills back in.
     expect('maxMpPercent' in player.baseStats).toBe(false)
     expect('attackRange' in player.baseStats).toBe(false)
 
-    expect(player.modifiers.map((modifier) => modifier.stat)).toEqual([
-      'might',
-      'manaRegenPerTurn',
-    ])
-    expect(player.persistentTimedEffects[0]!.modifiers[0]!.stat).toBe(
-      'productionSpeedMultiplier',
-    )
+    expect(player.modifiers).toEqual([])
+    expect(player.persistentTimedEffects[0]!.modifiers).toEqual([])
   })
 
   // M1 (ARCH-001) — the player slice is REPLACE semantics too: fields the

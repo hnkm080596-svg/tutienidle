@@ -1,17 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
+import { createBaseStats } from '../core/stats/StatBlock'
 import type { GameSave } from '../services/save/SaveSystem'
 
-// QA evidence — stat-system-reimagined quick review (Task 12):
-// a save written BEFORE the StatModifier.domain tag existed can persist
-// a timed modifier on a now-gated stat (pill MP regen saved as
-// stat:'manaRegenPerSecond', or a production-speed timed effect saved
-// as 'speedMultiplier'). migrateStatModifier renames the key but never
-// tags domain, so the first post-restore recompute hits
-// applyDomainGate with modifierDomain='universal' on a gated stat.
-// Oracle: restoring a legit legacy payload must not throw when stats
-// recompute.
+// QA evidence — stat-system-reimagined domain gate + Mission G dev-stage
+// rule: a save carrying a legacy stat key (e.g. 'manaRegenPerSecond',
+// 'speedMultiplier') or a domain-less modifier on a now-gated stat is NOT
+// backfilled — the modifier is dropped at restore so it can never sit in
+// state as an always-rejected applyDomainGate zombie. Oracle: restore
+// never throws, the modifier is gone, the stat stays at baseline; a
+// correctly-domained modifier on the same stat survives.
 function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
   const base = {
     name: 'Test',
@@ -50,37 +49,41 @@ function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
 
 const NOW = 1_725_160_000_000
 
-describe('legacy save -> domain gate on gated-stat persisted modifiers (QA)', () => {
+function timedEffectWith(modifier: Record<string, unknown>) {
+  return {
+    id: 'fx-legacy',
+    sourceItemId: 'pill_source',
+    effectGroup: 'pill_fx',
+    durationStackable: false,
+    appliedAtMs: NOW - 1_000,
+    expiresAtMs: NOW + 60_000,
+    modifiers: [modifier],
+  }
+}
+
+describe('legacy save -> domain gate on persisted modifiers (QA)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockImplementation(() => NOW)
   })
 
-  it('restored pre-domain MP-regen pill modifier survives a stat recompute', () => {
+  it('a legacy-keyed persisted modifier is dropped at restore, not backfilled', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({
       persistentTimedEffects: [
-        {
-          id: 'fx-legacy-pill',
-          sourceItemId: 'pill_mp_regen',
-          effectGroup: 'pill_regen',
-          durationStackable: false,
-          appliedAtMs: NOW - 1_000,
-          expiresAtMs: NOW + 60_000,
-          modifiers: [
-            {
-              id: 'pill-regen-mp:pill_mp_regen',
-              sourceId: 'pill_mp_regen',
-              sourceType: 'pill',
-              stat: 'manaRegenPerSecond',
-              flat: 2,
-            },
-          ],
-        },
+        timedEffectWith({
+          id: 'pill-regen-mp:pill_mp_regen',
+          sourceId: 'pill_mp_regen',
+          sourceType: 'pill',
+          stat: 'manaRegenPerSecond',
+          flat: 2,
+        }),
       ],
     })
 
     player.restoreFromSave(save)
+
+    expect(player.persistentTimedEffects[0]!.modifiers).toEqual([])
 
     // Emulate the per-tick feed: GameManager writes timed+slot modifiers
     // into externalModifiers, then finalStats runs the pipeline.
@@ -89,42 +92,63 @@ describe('legacy save -> domain gate on gated-stat persisted modifiers (QA)', ()
       .flatMap((effect) => effect.modifiers)
 
     expect(() => player.finalStats).not.toThrow()
-    // The legacy grant keeps its effect: migrated domain backfill lets
-    // the +2 flat manaRegenPerTurn through the phap_tu gate.
-    expect(player.finalStats.manaRegenPerTurn).toBeGreaterThan(0)
+    expect(player.finalStats.manaRegenPerTurn).toBe(createBaseStats().manaRegenPerTurn)
   })
 
-  it('restored pre-domain production-speed timed modifier survives a stat recompute', () => {
+  it('a domain-less modifier on a gated stat is dropped at restore', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({
       persistentTimedEffects: [
-        {
-          id: 'fx-legacy-prod',
-          sourceItemId: 'site_haste',
-          effectGroup: 'site_speed',
-          durationStackable: false,
-          appliedAtMs: NOW - 1_000,
-          expiresAtMs: NOW + 60_000,
-          modifiers: [
-            {
-              id: 'site-haste',
-              sourceId: 'site_haste',
-              sourceType: 'pill',
-              stat: 'speedMultiplier',
-              percent: 10,
-            },
-          ],
-        },
+        timedEffectWith({
+          id: 'site-haste',
+          sourceId: 'site_haste',
+          sourceType: 'pill',
+          stat: 'productionSpeedMultiplier',
+          percent: 10,
+        }),
       ],
     })
 
     player.restoreFromSave(save)
+
+    expect(player.persistentTimedEffects[0]!.modifiers).toEqual([])
 
     player.externalModifiers = player.persistentTimedEffects
       .filter((effect) => effect.expiresAtMs > Date.now())
       .flatMap((effect) => effect.modifiers)
 
     expect(() => player.finalStats).not.toThrow()
-    expect(player.finalStats.productionSpeedMultiplier).toBeGreaterThan(1)
+    expect(player.finalStats.productionSpeedMultiplier).toBe(
+      createBaseStats().productionSpeedMultiplier,
+    )
+  })
+
+  it('a correctly-domained modifier on a gated stat survives restore', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      persistentTimedEffects: [
+        timedEffectWith({
+          id: 'site-haste',
+          sourceId: 'site_haste',
+          sourceType: 'pill',
+          stat: 'productionSpeedMultiplier',
+          domain: 'production',
+          percent: 10,
+        }),
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    expect(player.persistentTimedEffects[0]!.modifiers).toHaveLength(1)
+
+    player.externalModifiers = player.persistentTimedEffects
+      .filter((effect) => effect.expiresAtMs > Date.now())
+      .flatMap((effect) => effect.modifiers)
+
+    expect(() => player.finalStats).not.toThrow()
+    expect(player.finalStats.productionSpeedMultiplier).toBeGreaterThan(
+      createBaseStats().productionSpeedMultiplier,
+    )
   })
 })

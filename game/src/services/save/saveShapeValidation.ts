@@ -15,10 +15,6 @@ import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQualit
 import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
 import { isHerbAge } from '../../core/production/ProductionTypes'
 import { createBaseStats } from '../../core/stats/StatBlock'
-import {
-  isRetiredStatKey,
-  migrateStatModifierStat,
-} from '../../core/stats/statKeyMigration'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 import { KIEM_PHO_ORB_IDS } from '../../core/kiem-tu/KiemTuState'
 import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
@@ -996,10 +992,9 @@ function validateStringEntries(entries: unknown[], path: string, issues: ShapeIs
 }
 
 // StatModifier element check — `stat` only needs to be a non-empty
-// string, NOT a STAT_TYPES member: restoreFromSave runs
-// migrateStatModifiers after the boundary, so a stale/renamed key is
-// still valid input; a membership check here would brick saves
-// carrying unmigrated keys.
+// string, NOT a STAT_TYPES member: the boundary accepts the shape and
+// restore drops modifiers whose key is not a current StatType
+// (dev-stage rule: drop, never translate).
 function validateStatModifierEntries(entries: unknown[], path: string, issues: ShapeIssue[]) {
   for (let i = 0; i < entries.length; i += 1) {
     const modifier = entries[i]
@@ -1092,14 +1087,6 @@ function validateEquipmentEntries(
 
       requireNonEmptyString(entry.mainStat, 'id', mainStatPath, issues)
       requireNonEmptyString(entry.mainStat, 'sourceId', mainStatPath, issues)
-
-      // Stat-key migration (stat-system-reimagined rename pass) — saves
-      // written before the rename persist 'attack' & co. here; remapping
-      // keeps the STAT_TYPES check below meaningful instead of rejecting
-      // the whole save as corrupted.
-      if (typeof entry.mainStat.stat === 'string') {
-        entry.mainStat.stat = migrateStatModifierStat(entry.mainStat.stat)
-      }
 
       if (entry.mainStat.sourceType !== 'equipment') {
         issues.push({
@@ -1209,50 +1196,39 @@ function validateEquipmentSlotEntries(
       requireNonNegativeNumber(entry, 'enhanceFailStreak', `${path}[${i}]`, issues)
     }
 
-    const migratedEntry = migrateSocketedModifierStatKeys(entry)
+    // Socketed Phu/Tran items persist COPIES of their template
+    // StatModifier list — a stat key that is not a current StatType
+    // (legacy/retired) is an issue now; there is no rename path.
+    for (const key of ['socketedTalisman', 'socketedFormation'] as const) {
+      const item = entry[key]
+
+      if (!isObject(item) || !Array.isArray(item.modifiers)) {
+        continue
+      }
+
+      for (let j = 0; j < item.modifiers.length; j += 1) {
+        const modifier = item.modifiers[j]
+
+        if (
+          isObject(modifier) &&
+          (typeof modifier.stat !== 'string' || !STAT_TYPES.has(modifier.stat))
+        ) {
+          issues.push({
+            path: `${path}[${i}].${key}.modifiers[${j}].stat`,
+            message: 'phải là StatType hợp lệ',
+          })
+        }
+      }
+    }
 
     normalizedEntries.push(
-      migratedEntry.enhanceFailStreak === undefined
-        ? { ...migratedEntry, enhanceFailStreak: 0 }
-        : migratedEntry,
+      entry.enhanceFailStreak === undefined
+        ? { ...entry, enhanceFailStreak: 0 }
+        : entry,
     )
   }
 
   return normalizedEntries
-}
-
-// Socketed Phu/Tran items persist COPIES of their template StatModifier
-// list — saves written before the stat-key rename keep 'attack' & co. in
-// modifier.stat. The copies are live state (stack progress rides along),
-// so remap the key in place instead of discarding the item.
-function migrateSocketedModifierStatKeys(
-  entry: Record<string, unknown>,
-): Record<string, unknown> {
-  let migrated = entry
-
-  for (const key of ['socketedTalisman', 'socketedFormation'] as const) {
-    const item = migrated[key]
-
-    if (!isObject(item) || !Array.isArray(item.modifiers)) {
-      continue
-    }
-
-    migrated = {
-      ...migrated,
-      [key]: {
-        ...item,
-        modifiers: item.modifiers.flatMap((modifier: unknown) =>
-          isObject(modifier) && typeof modifier.stat === 'string'
-            ? isRetiredStatKey(modifier.stat)
-              ? []
-              : [{ ...modifier, stat: migrateStatModifierStat(modifier.stat) }]
-            : [modifier],
-        ),
-      },
-    }
-  }
-
-  return migrated
 }
 
 export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {

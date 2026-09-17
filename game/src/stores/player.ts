@@ -14,10 +14,7 @@ import { calculateOfflineTime } from '../core/idle/GameClock'
 import { buildGameSave, computeRestoreIdentity, loadGame, type GameSave } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
-import {
-  migrateStatModifiers,
-  migrateStatRecordKeys,
-} from '@/core/stats/statKeyMigration'
+import { STAT_DOMAIN } from '@/core/stats/StatDomain'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
 import { getCultivationRampMultiplier, getCultivationSpeedMultiplier, getInsightPerCultivation } from '@/core/talent/TalentEffects'
@@ -367,49 +364,53 @@ export const usePlayerStore = defineStore('player', {
         }
       }
 
-      // Same whitelist inside baseStats — migrateStatRecordKeys passes
-      // unknown keys through, so a foreign stat key would survive onto
-      // $state the same way.
+      // Same whitelist inside baseStats — a key that is not a current
+      // StatType (legacy/renamed/foreign) drops here; dev-stage rule:
+      // drop or reject, never translate.
       const allowedStatKeys = new Set(Object.keys(createBaseStats()))
-      const migratedBaseStats: Record<string, number> = {}
+      const filteredBaseStats: Record<string, number> = {}
 
-      for (const [key, value] of Object.entries(
-        migrateStatRecordKeys(clonedPlayer.baseStats),
-      )) {
+      for (const [key, value] of Object.entries(clonedPlayer.baseStats)) {
         if (allowedStatKeys.has(key)) {
-          migratedBaseStats[key] = value
+          filteredBaseStats[key] = value
         }
       }
 
       const restoredPlayer: PlayerData = {
         ...createDefaultPlayer(),
         ...clonedPlayer,
-        // Stat-key migration (stat-system-reimagined rename pass) —
-        // saves written under the old key names (attack/manaRegenPerSecond/
-        // speedMultiplier/...) get remapped, retired keys (attackRange/
-        // maxMpPercent/manaRegenPercent/poisonRecoveryPercent) drop their
-        // stale values, and keys the save never declared fall back to
-        // createBaseStats() baselines instead of staying undefined. Set
-        // inside the construction literal so the restore writes the
-        // record exactly once.
+        // Keys the save never declared fall back to createBaseStats()
+        // baselines instead of staying undefined. Set inside the
+        // construction literal so the restore writes the record exactly
+        // once.
         baseStats: asBaseStats({
           ...createBaseStats(),
-          ...migratedBaseStats,
+          ...filteredBaseStats,
         }),
       }
 
-      // Same rename pass for StatModifier.stat fields persisted on the
-      // player slice — legacy equipment/talent/buff modifiers kept the
-      // old keys ('attack' & co.) and would stay inert without remap.
-      // Modifiers on RETIRED stats (attackRange & co.) drop entirely.
-      restoredPlayer.modifiers = migrateStatModifiers(restoredPlayer.modifiers ?? [])
-      restoredPlayer.externalModifiers = migrateStatModifiers(
-        restoredPlayer.externalModifiers ?? [],
+      // Same whitelist for StatModifier.stat fields persisted on the
+      // player slice — a modifier whose stat is not a current StatType
+      // drops (never renamed), and a modifier on a domain-gated stat
+      // only survives when it declares the OWNING domain: an absent or
+      // wrong tag would be rejected by applyDomainGate on every
+      // recompute, so the inert zombie is dropped at restore instead.
+      const isCurrentShapeModifier = (modifier: StatModifier): boolean => {
+        if (!allowedStatKeys.has(modifier.stat)) {
+          return false
+        }
+        const owningDomain = STAT_DOMAIN[modifier.stat]
+        return owningDomain === undefined || modifier.domain === owningDomain
+      }
+
+      restoredPlayer.modifiers = (restoredPlayer.modifiers ?? []).filter(isCurrentShapeModifier)
+      restoredPlayer.externalModifiers = (restoredPlayer.externalModifiers ?? []).filter(
+        isCurrentShapeModifier,
       )
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
         (effect) => ({
           ...effect,
-          modifiers: migrateStatModifiers(effect.modifiers ?? []),
+          modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
         }),
       )
 
