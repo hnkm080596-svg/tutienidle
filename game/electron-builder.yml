@@ -24,8 +24,8 @@ files:
 
 win:
   target: nsis
-  # Placeholder — chưa cần file .ico thật ngay, không blocking.
-  icon: build/icon.ico
+  # No custom icon yet — electron-builder falls back to the default
+  # Electron icon until a real build/icon.ico ships.
 
 nsis:
   oneClick: false
