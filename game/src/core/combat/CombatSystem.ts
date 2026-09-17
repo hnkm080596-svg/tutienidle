@@ -14,12 +14,7 @@ import type { ElementType } from '../element/ElementType'
 import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSystem'
 import { clampStatValue } from '../stats/StatMetadata'
 import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
-import type { SkillManager } from '../skill/SkillManager'
-import { SkillTriggerRunner } from '../skill/SkillTriggerRunner'
-import type { SkillEffectContext } from '../skill/SkillEffectSystem'
-import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
-import { BuffPool } from '../buff/BuffPool'
 import { dotRecoveryTriggers } from './DotRecovery'
 import type { Buff, BuffDefinitionCatalog } from '../buff/BuffTypes'
 
@@ -100,21 +95,7 @@ export class CombatSystem {
     extraSources?: SurviveLethalSource[]
   } | null = null
 
-  // Trigger/Action rework Task 10 (2026-08-31 spec) — onKill firing.
-  // buffRegistry is a shared, non-battle-specific
-  // dependency (same kind BattleSystem itself receives via its own
-  // constructor — see BattleSystem.ts) — injected here as an optional final
-  // constructor param so CombatSystem can build a real SkillEffectContext
-  // without crashing on an empty registry `.get()` miss. `skillManager`/
-  // `buffRegistry` are optional; every existing
-  // `new CombatSystem(eventBus)` call site keeps compiling unchanged.
-  private readonly skillTriggerRunner = new SkillTriggerRunner()
-
-  constructor(
-    readonly eventBus: EventBus,
-    private readonly skillManager?: SkillManager,
-    private readonly buffRegistry?: BuffRegistry,
-  ) {
+  constructor(readonly eventBus: EventBus) {
     this.vitals = new EntityVitalsSystem(eventBus)
   }
 
@@ -611,18 +592,15 @@ export class CombatSystem {
    * hiệu ứng theo thời gian cũng emit đúng 'death'/'kill' như chết vì
    * đòn đánh trực tiếp, không lặp code kiểm tra HP<=0 ở 2 nơi.
    */
-  killIfDead(
-    entity: CombatEntity,
-    killerId: string,
-    skillContext?: { killer: CombatEntity; skillId: string },
-  ) {
+  killIfDead(entity: CombatEntity, killerId: string) {
     if (entity.currentHp > 0 || !entity.alive) {
       return
     }
 
     // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — đòn lẽ ra
     // chết thành sống sót HP = 1, trừ 1 lượt của trận. KHÔNG kích hoạt
-    // trong trận Độ Kiếp (session null — GameManager.beginTribulation xoá).
+    // trong trận Độ Kiếp (session null — GameManager xoá khi bắt đầu
+    // độ kiếp qua setSurviveLethalSession(null)).
     //
     // The Tu Reimagined (plan Task 9, D9) — the session's ordered
     // extraSources run BEFORE the talent guard: Bat Tu Ba The's ultimate
@@ -723,78 +701,5 @@ export class CombatSystem {
 
       targetId: entity.id,
     })
-
-    this.fireKillTriggers(entity, skillContext)
-  }
-
-  // Task 10 — onKill fires on the KILLER's own casting skill (known via
-  // skillContext.skillId, which is always the killer's skill). Only
-  // fires when the caller supplied BOTH a killer CombatEntity and a
-  // skillId (see killIfDead's doc): CombatSystem has no entity registry
-  // to resolve a bare killerId string into a CombatEntity, and no
-  // "currently casting skill" concept on its own — callers that only
-  // have a killerId (applyDirectDamage/applyModifiedDirectDamage/
-  // applyDotDamage today) skip firing, same as non-skill deaths
-  // (DoT ticks, ward-break).
-  //
-  // onDeath is intentionally NOT fired here (2026-09-01 review ruling,
-  // overriding the original brief's Step 3 snippet): onDeath is meant to
-  // represent "the DYING entity's OWN skill has an onDeath binding",
-  // which requires enumerating the VICTIM's skills for one with an
-  // onDeath trigger — but CombatSystem/SkillManager only expose lookup
-  // by a single known skillId (skillManager.get(id)), not "all skills
-  // belonging to entity X". skillContext.skillId is the KILLER's skill,
-  // so firing onDeath against it here would attribute the trigger to the
-  // wrong entity's skill. Deferred to a future task once a per-entity
-  // skill-list lookup exists; OnDeathContext/the 'onDeath' TriggerType
-  // (Task 1) stay declared, just unfired from this call site for now.
-  //
-  // buffRegistry is a shared, non-battle-specific
-  // dependency — injected via the constructor (2026-09-01 review fix)
-  // and used for real here when provided; skip firing entirely if
-  // missing rather than constructing an empty throwaway registry
-  // (BuffDefinitionCatalog.get() THROWS on a miss, so an empty throwaway registry
-  // would crash killIfDead() mid-battle-tick the first time a bound
-  // action looked one up — not silently no-op).
-  //
-  // sourceBuffs/targetBuffs ARE still throwaway/stubbed (unchanged from
-  // the original design): those are the per-battle BUFF POOLS for this
-  // battle's specific entities (as opposed to the shared REGISTRY that
-  // defines what buffs exist at all), and CombatSystem has no access to
-  // BattleSystem's real per-battle pools. An onKill action that only
-  // touches CombatEntity fields directly (grantResource/consumeResource)
-  // works correctly through this path; an onKill action that reads/
-  // writes a persistent buff POOL (as opposed to just looking up a
-  // registry definition) will not see/affect the real battle-scoped pool.
-  private fireKillTriggers(
-    victim: CombatEntity,
-    skillContext?: { killer: CombatEntity; skillId: string },
-  ): void {
-    if (!skillContext || !this.skillManager || !this.buffRegistry) {
-      return
-    }
-
-    const skill = this.skillManager.get(skillContext.skillId)
-
-    if (!skill?.triggers?.length) {
-      return
-    }
-
-    const ctx: SkillEffectContext = {
-      combatSystem: this,
-      fireHit: () => ({ landed: true }),
-      buffRegistry: this.buffRegistry,
-      sourceBuffs: new BuffSystem(new BuffPool()),
-      targetBuffs: new BuffSystem(new BuffPool()),
-    }
-
-    this.skillTriggerRunner.fire(
-      'onKill',
-      { source: skillContext.killer, target: victim, skill },
-      skill.triggers,
-      skillContext.killer,
-      victim,
-      ctx,
-    )
   }
 }
