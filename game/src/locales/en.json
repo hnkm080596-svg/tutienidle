@@ -441,6 +441,7 @@
       "workerModeAuto": "Auto",
       "workerModeManual": "Manual",
       "workerAutoHint": "Workers are evenly split across sites with auto-repeat enabled.",
+      "workersReserved": "{count} workers held by Decompose",
       "workerAssignAria": "Assign workers to {name}",
       "linMach": {
         "title": "Spirit Vein",

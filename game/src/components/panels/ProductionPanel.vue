@@ -213,25 +213,48 @@ function upgrade(siteId: string) {
 
 // ================= Chiêu Hiền Quán — phân bổ nhân công (2026-09-02) =================
 
-const workerMode = ref<'auto' | 'manual'>('auto')
+// --- Workforce read model (Mission D / spec D1) ---
+// The panel renders the domain's WorkforceView verbatim - no local
+// capacity math, no local mode flag (audit T4-29/T4-30).
+const workforce = computed(() => {
+  stateVersion.value
 
-const workerCapacity = computed(() => player.autoWorkerCapacity ?? 0)
+  // Track the same tick clock `rows` reads (:96) — reserved/available/
+  // effective totals and the slider :max must refresh every tick too,
+  // not only on bumpState() interactions (T4-30 reintroduction guard).
+  void nowMs.value
+
+  return gameManager.buildingOps.getWorkforceView()
+})
+
+const workerMode = computed(() =>
+  Object.keys(workforce.value.requested).length > 0 ? 'manual' : 'auto',
+)
 
 const assignedTotal = computed(() =>
-  rows.value.reduce((sum, row) => sum + (row.assignedWorkers ?? 0), 0),
+  Object.values(workforce.value.requested).reduce((sum, count) => sum + count, 0),
+)
+
+const effectiveTotal = computed(() =>
+  Object.values(workforce.value.effective).reduce((sum, count) => sum + count, 0),
 )
 
 function setWorkerMode(mode: 'auto' | 'manual') {
-  workerMode.value = mode
-
   if (mode === 'auto') {
-    // Về auto: xóa mọi assignment manual.
+    // Back to auto: clear every manual assignment.
     for (const row of rows.value) {
       gameManager.buildingOps.assignWorkers(row.siteId, undefined)
     }
-
-    bumpState()
+  } else {
+    // Entering manual snapshots the CURRENT allocator grants so the
+    // sliders start from domain truth (mode is derived, so requested
+    // must be non-empty for 'manual' to show).
+    for (const row of rows.value) {
+      gameManager.buildingOps.assignWorkers(row.siteId, workforce.value.effective[row.siteId] ?? 0)
+    }
   }
+
+  bumpState()
 }
 
 function assign(row: SiteRow, count: number) {
@@ -298,7 +321,11 @@ function collectLinMach() {
       <!-- Chiêu Hiền Quán — phân bổ nhân công (2026-09-02) -->
       <div class="worker-allocation">
         <header class="worker-allocation__header">
-          <strong>{{ t('panels.production.workersHeader', { used: workerMode === 'manual' ? assignedTotal : workerCapacity, total: workerCapacity }) }}</strong>
+          <strong>{{ t('panels.production.workersHeader', { used: workerMode === 'manual' ? assignedTotal : effectiveTotal, total: workforce.available }) }}</strong>
+
+          <small v-if="workforce.reserved > 0" class="worker-allocation__reserved">
+            {{ t('panels.production.workersReserved', { count: workforce.reserved }) }}
+          </small>
 
           <div class="worker-allocation__mode">
             <label>
@@ -330,7 +357,7 @@ function collectLinMach() {
             <input
               type="range"
               min="0"
-              :max="workerCapacity"
+              :max="workforce.available"
               :value="row.assignedWorkers ?? 0"
               :aria-label="t('panels.production.workerAssignAria', { name: row.name })"
               @input="assign(row, Number(($event.target as HTMLInputElement).value))"
@@ -533,6 +560,11 @@ function collectLinMach() {
 
 .worker-allocation__auto-hint {
   margin: 0;
+  color: var(--paper-text-soft);
+  font-size: var(--text-xs);
+}
+
+.worker-allocation__reserved {
   color: var(--paper-text-soft);
   font-size: var(--text-xs);
 }

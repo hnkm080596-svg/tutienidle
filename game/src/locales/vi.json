@@ -441,6 +441,7 @@
       "workerModeAuto": "Tự động",
       "workerModeManual": "Phân thủ công",
       "workerAutoHint": "Nhân công tự chia đều các nguồn đang bật lặp lại.",
+      "workersReserved": "Phân Giải đang giữ {count} nhân công",
       "workerAssignAria": "Phân bổ nhân công cho {name}",
       "linMach": {
         "title": "Linh Mạch",
