@@ -1,4 +1,4 @@
-import type { Building } from './Building'
+import type { Building, BuildingUpgradeCost } from './Building'
 import type { BuildingInstance } from './BuildingInstance'
 import { BuildingRegistry } from './BuildingRegistry'
 import { BuildingManager } from './BuildingManager'
@@ -7,7 +7,7 @@ import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { CraftModifiers } from './BuildingLevelEffect'
 import { isTestModeUnlockAll } from '../dev/DevMode'
-import { getRealmTier } from '../realm/RealmTierMap'
+import { getRealmIdForTier, getRealmTier } from '../realm/RealmTierMap'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { PRODUCTION_OFFLINE_CAP_SECONDS } from '../production/ProductionBalance'
 
@@ -214,6 +214,58 @@ export class BuildingSystem {
     instance.level++
 
     return true
+  }
+
+  /**
+   * Authoritative upgrade quote — the SAME rules upgrade() enforces
+   * (cost row, max level, realm tier gate, material affordability), read
+   * side only. Panel header state consumes this; upgrade() re-checks.
+   */
+  quoteUpgrade(
+    instanceId: string,
+    registry: BuildingRegistry,
+    manager: BuildingManager,
+    materialBag: MaterialBag,
+    currentRealmId?: string,
+  ): {
+    template: Building
+    instance: BuildingInstance
+    hasNextLevel: boolean
+    meetsRealmRequirement: boolean
+    requiredRealmId: string
+    nextUpgradeCost: readonly BuildingUpgradeCost[]
+    canAfford: boolean
+  } | null {
+    const instance = manager.get(instanceId)
+
+    if (!instance) {
+      return null
+    }
+
+    const template = registry.get(instance.buildingId)
+
+    const hasNextLevel = instance.level < template.maxLevel
+
+    const nextUpgradeCost = hasNextLevel
+      ? template.upgradeCost[instance.level] ?? []
+      : []
+
+    const meetsRealmRequirement =
+      currentRealmId === undefined || getRealmTier(currentRealmId) >= instance.level + 1
+
+    const canAfford = nextUpgradeCost.every(
+      (entry) => materialBag.has(entry.materialId, entry.amount),
+    )
+
+    return {
+      template,
+      instance,
+      hasNextLevel,
+      meetsRealmRequirement,
+      requiredRealmId: getRealmIdForTier(instance.level + 1),
+      nextUpgradeCost,
+      canAfford,
+    }
   }
 
   /**

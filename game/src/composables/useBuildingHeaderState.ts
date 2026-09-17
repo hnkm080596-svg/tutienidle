@@ -1,7 +1,5 @@
 import { computed, type Ref } from 'vue'
 import { useGameManager, useStateVersion } from './useGameState'
-import { usePlayerStore } from '@/stores/player'
-import { getRealmIdForTier, getRealmTier } from '@/core/realm/RealmTierMap'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 
 // Dời từ BuildingPanelHeader.vue (2026-08-30, bug report: building header
@@ -11,7 +9,6 @@ import { getCurrentRealm } from '@/core/realm/realmSystem'
 // #header-actions — chỉ còn MỘT dải header duy nhất cho mọi building panel.
 export function useBuildingHeaderState(buildingId: Ref<string | undefined>) {
   const gameManager = useGameManager()
-  const player = usePlayerStore()
   const { stateVersion, bumpState } = useStateVersion()
 
   const template = computed(() => {
@@ -34,31 +31,27 @@ export function useBuildingHeaderState(buildingId: Ref<string | undefined>) {
 
   const artPath = computed(() => `/assets/buildings/dong-fu/${buildingId.value}.png`)
 
-  const nextUpgradeCost = computed(() => {
-    if (!template.value || !instance.value) {
-      return []
-    }
+  // Upgrade rules live in BuildingSystem.quoteUpgrade (via buildingOps) —
+  // the header consumes the quote and keeps label formatting only.
+  const quote = computed(() => {
+    stateVersion.value
 
-    return template.value.upgradeCost[instance.value.level] ?? []
+    if (!instance.value) return null
+
+    return gameManager.buildingOps.quoteBuildingUpgrade(instance.value.instanceId)
   })
 
-  const canAffordUpgrade = computed(() =>
-    nextUpgradeCost.value.every(
-      (cost) => gameManager.materialBag.getAmount(cost.materialId) >= cost.amount,
-    ),
-  )
+  const nextUpgradeCost = computed(() => quote.value?.nextUpgradeCost ?? [])
 
-  const hasNextLevel = computed(() =>
-    Boolean(template.value && instance.value && instance.value.level < template.value.maxLevel),
-  )
+  const canAffordUpgrade = computed(() => quote.value?.canAfford ?? false)
 
-  const meetsRealmRequirement = computed(() =>
-    Boolean(instance.value && instance.value.level + 1 <= getRealmTier(player.realmId)),
-  )
+  const hasNextLevel = computed(() => quote.value?.hasNextLevel ?? false)
+
+  const meetsRealmRequirement = computed(() => quote.value?.meetsRealmRequirement ?? false)
 
   const requiredRealmName = computed(() => {
-    if (!instance.value) return ''
-    return getCurrentRealm(getRealmIdForTier(instance.value.level + 1)).name
+    if (!quote.value) return ''
+    return getCurrentRealm(quote.value.requiredRealmId).name
   })
 
   const upgradeCostLabel = computed(() =>
