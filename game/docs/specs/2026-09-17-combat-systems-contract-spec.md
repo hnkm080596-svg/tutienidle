@@ -1,8 +1,8 @@
 # Combat Systems Contract — SkillDefinition × BuffSystem × ReactionSystem
 
 Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
-Version: 1.3
-Applies to: [SkillDefinition v1.1](./2026-09-17-skill-definition-system-spec.md), [Buff System Reimagined v1.2](./2026-09-17-buff-system-reimagined-spec.md), [Reaction System Reimagined v1.0](./2026-09-17-reaction-system-reimagined-spec.md)
+Version: 1.5
+Applies to: [SkillDefinition v1.1](./2026-09-17-skill-definition-system-spec.md), [Buff System Reimagined v1.4](./2026-09-17-buff-system-reimagined-spec.md), [Reaction System Reimagined v1.0](./2026-09-17-reaction-system-reimagined-spec.md)
 Compatibility requirement: None
 Migration requirement: None
 Purpose: Khóa contract runtime giữa Skill, Buff, Reaction và các combat authorities trước implementation.
@@ -131,21 +131,20 @@ It must NOT contain:
 
 ## 4. ResolvedCombatOperation
 
-At runtime, Resolver/Executor produces:
+At runtime, Resolver/Executor produces (addendum v1.5 — canonical shape):
 
 ```ts
-interface ResolvedCombatOperation {
-  operationId: string
-
-  type: CombatOperationType
-
-  sourceId: CombatEntityId
+type ResolvedCombatOperation = CombatOperation & {
+  operationId: CombatOperationId
 
   origin: CombatOperationOrigin
-
-  payload: ResolvedOperationPayload
 }
 ```
+
+**NO top-level `sourceId`** — `origin.sourceId` is the sole operation source
+authority; a second mutable copy could drift. `type`/`payload` come from the
+`CombatOperation` discriminated-union member (there is no separate
+`ResolvedOperationPayload`).
 
 All selectors are already runtime-resolved.
 
@@ -1383,3 +1382,13 @@ Additive deltas locked in the implementation megaplan (`2026-09-17-megaplan-comb
 1. **Typed periodic correlation:** `ResolvedCombatOperation` gains `periodicRequestId?: string` — set ONLY by the built-in periodic bridge on generated ops. The scheduler emits `PeriodicOperationSettled` when `op.periodicRequestId !== undefined`, never by parsing `operationId`. The `periodic.${requestId}` operation-id shape remains as a naming/debugging convention only — it carries no semantics.
 2. **`PeriodicOperationSettled` stamping (locked):** `eventId = 'evt.settled.' + operationId` (deterministic — op ids are globally unique); `causationOperationId = operationId`; `rootActionId` copied from the op's origin (the emitter's continuation needs it to mint follow-on request events); `combatSequence = allocateSeq()` at enqueue (therefore `seq(op) < seq(settled)`); recorded exactly once — the emission site runs once per periodic op's barrier.
 3. **Manual-trigger continuation:** a multi-unit `triggerPeriodic` emits `PeriodicRequestsCommitted` carrying exactly ONE request and queues the remaining units; the emitter's registered `periodic_operation_settled` handler — invoked with the event-scoped sink — finalizes the unit's `uses` marks, then computes and emits the NEXT unit's single-request event through that sink. Every manual request therefore computes against post-settlement state, identical to the lifecycle path (v1.3 rule 2).
+
+---
+
+## Addendum v1.5 (2026-09-17 — locked via Buff megaplan review round 5)
+
+1. **Supersedes §4 `ResolvedCombatOperation` shape:** the canonical type is `CombatOperation & {operationId: CombatOperationId; origin: CombatOperationOrigin}` — **NO top-level `sourceId`** (§4's field is deleted; `origin.sourceId` is the sole operation source authority — a second mutable copy cannot drift). `payload`/`type` come from the `CombatOperation` discriminated union members, not a `ResolvedOperationPayload` field.
+2. **Periodic correlation is scheduler-private (supersedes v1.4 item 1's public field):** `ResolvedCombatOperation` carries NO `periodicRequestId`. The built-in periodic bridge records `operationId → requestId` in a scheduler-internal map when it mints a generated op; the post-barrier emission site reads + deletes that map entry. Gameplay producers cannot set, forge, or collide with the correlation — there is no public field.
+3. **Synthetic event ids use the canonical allocator (supersedes v1.4 item 2's `evt.settled.${opId}`):** `PeriodicOperationSettled.eventId` is minted through the same `eventOrdinalByScope` counter the producing op's own sink uses — `evt.${operationId}.${scopeOrdinal++}` — globally collision-proof by construction (the scope is a globally-unique op id; every id in that scope shares one counter). `causationOperationId`/`rootActionId`/`combatSequence = allocateSeq()` / exactly-once are unchanged from v1.4.
+4. **`trigger_buff_periodic` result contract:** the op's result is `{started: boolean; firstRequestId?: string; candidateUnitCount: number}` — start metadata only. Continuation work has not happened at return time; per-request outcomes are observable via `PeriodicRequestsCommitted`/`PeriodicOperationSettled`/trace, never claimed synchronously. `resolutionsEmitted` is removed.
+5. **Modifier runtime identity on events:** `buff_modifier_added`/`buff_modifier_removed` carry `{instanceId, modifierId, modifierRuntimeId}` — the trace can distinguish same-`modifierId` generations. `remove_buff_modifier` `{selector, modifierId}` removes EVERY runtime entry with that authored id (`all_matching` — a stack of same-id entries is one logical modifier to its author); each removed entry emits its own event with its own `modifierRuntimeId`.

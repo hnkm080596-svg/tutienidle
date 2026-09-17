@@ -1,7 +1,7 @@
 # Buff System Reimagined — Final Architecture Specification
 
 Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
-Version: 1.2
+Version: 1.4
 Compatibility requirement: None
 Migration requirement: None
 Primary reference implementation: Hỏa Ấn
@@ -620,6 +620,10 @@ Natural lifecycle: trigger periodic, then advance lifetime.
 ## 27. Manual Periodic Trigger
 
 ```ts
+// v1.4 addendum — supersedes the old `PeriodicResolution[]` return:
+// a multi-unit trigger is SEQUENTIAL (v1.3 rule 1 — units 2..N are emitted
+// by the periodic_operation_settled continuation AFTER earlier units
+// settle), so the call can truthfully return only series-start metadata.
 triggerPeriodic(
   selector: BuffInstanceSelector,
   options: {
@@ -630,8 +634,18 @@ triggerPeriodic(
       | 'reaction'
       | 'scripted'
   }
-): PeriodicResolution[]
+): TriggerPeriodicStartResult
+
+interface TriggerPeriodicStartResult {
+  started: boolean            // false = selector matched no live unit
+  firstRequestId?: string     // the request emitted synchronously
+  candidateUnitCount: number  // ordered unit list size at trigger time —
+                              // candidates, NOT promised resolutions
+}
 ```
+
+Per-request outcomes are observable via `PeriodicRequestsCommitted` /
+`PeriodicOperationSettled` / combat trace — never claimed by this return.
 
 Không advance duration.
 
@@ -1464,12 +1478,15 @@ class BuffSystem {
 
   setRemainingDuration(...): DurationChangeResult
 
-  addModifier(...): ModifierChangeResult
+  // v1.4 — addModifier reports the minted runtime entry id;
+  // removeModifier removes EVERY entry carrying the authored modifierId
+  // (all_matching) and reports the removed generations.
+  addModifier(...): ModifierChangeResult & { modifierRuntimeId?: string }
 
-  removeModifier(...): ModifierChangeResult
+  removeModifier(...): ModifierChangeResult & { removedRuntimeIds: readonly string[] }
 
   triggerPeriodic(...):
-    PeriodicResolution[]
+    TriggerPeriodicStartResult   // v1.4 — start metadata, not resolutions
 
   remove(...):
     RemoveBuffResult
@@ -1823,3 +1840,10 @@ Clarifications locked during the implementation-plan review. These refine — ne
 3. **`buff_modifier_removed` is emitted on finalization-removal:** the `periodic_operation_settled` handler receives the event-scoped sink; when a `'resolved'` op consumes a `uses:1` modifier to zero, the removal emits `BuffModifierRemoved` through that sink (the uses decrement itself is internal bookkeeping — only the structural removal is an event).
 4. **`reactionEligibility` is application-path metadata, not path capability:** a normal elemental application emits `reactionEligibility:'eligible'`; `'suppressed'` is for recursion-suppressed lanes only (reaction payoff applications, `convertsToId` continuation). Whether a reaction actually runs is the ReactionSystem's gate (`elemental_reaction_enabled` capability + canonical-state registry), never the producer's path flag.
 5. **Interval crossing order (amends v1.2 rule 2's "rounds" phrasing):** crossings sort by absolute tick time inside the window — crossing `j` of a periodic sits at offset `j*intervalSeconds − prevElapsed`; ties break on the canonical comparator. Sequential per-unit settlement is unchanged.
+
+---
+
+## Addendum v1.4 (2026-09-17 — locked via implementation-megaplan review round 5)
+
+1. **§27/§67 `triggerPeriodic` return type (supersedes the synchronous `PeriodicResolution[]` API):** the method returns `TriggerPeriodicStartResult {started: boolean; firstRequestId?: string; candidateUnitCount: number}` — it reports that a sequential series STARTED, never the resolutions of continuation work that has not happened yet. Lifecycle entry points keep `readonly PeriodicResolution[]` — they genuinely emit+settle every unit inside the call. Per-request outcomes remain observable via `PeriodicRequestsCommitted`/`PeriodicOperationSettled`/combat trace.
+2. **Modifier runtime identity on the public surface:** `BuffModifierAdded`/`BuffModifierRemoved` events carry `{instanceId, modifierId, modifierRuntimeId}` — consumers can distinguish same-`modifierId` generations (v1.3 rule 2's entry identity is now observable, not just internal). `addModifier` returns `{applied, modifierRuntimeId?}`. `removeModifier(sel, modifierId)` removes EVERY runtime entry carrying that authored id (`all_matching` semantics — a same-id stack is one logical modifier to its author); each removed entry emits its own `buff_modifier_removed` with its `modifierRuntimeId`, and the result reports `removedRuntimeIds`.

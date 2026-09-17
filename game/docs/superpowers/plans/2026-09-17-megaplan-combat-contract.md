@@ -2,7 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Non-trivial production missions MUST follow `game/docs/architecture/architecture-worker-workflow.md` (G0–G5) and return the G5 evidence report.
 
-> **Review revision:** v7.4 — buff-plan review round 4 (at `b8bd751b`): periodic ops carry TYPED correlation — `ResolvedCombatOperation.periodicRequestId?: string` set by the built-in bridge (scheduler emits `PeriodicOperationSettled` from the field, never parses `operationId`; the `periodic.${requestId}` id stays as a naming convention only). `PeriodicOperationSettled` stamping locked: `eventId = 'evt.settled.' + operationId`, `causationOperationId = operationId`, `rootActionId` copied from the op's origin, `combatSequence = allocateSeq()` at enqueue (→ `seq(op) < seq(settled)`), `recordEvent` exactly once per periodic op. Manual `triggerPeriodic` multi-request triggers run as a settled-event CONTINUATION — each `PeriodicRequestsCommitted` carries ONE request; the emitter's settled-handler emits the next unit's event via the event-scoped sink, so every request computes against post-settlement state.
+> **Review revision:** v7.5 — buff-plan review round 5 (at `cb3a602f`): (a) periodic correlation goes SCHEDULER-PRIVATE — `ResolvedCombatOperation` loses `periodicRequestId`; the built-in bridge records `operationId → requestId` in a scheduler-internal map that the post-barrier site reads+deletes (nothing public to forge/collide — r5 HIGH 3); (b) `PeriodicOperationSettled.eventId` mints through the CANONICAL allocator in the producing op's scope — `evt.${op.operationId}.${scopeOrdinal++}` (the same `eventOrdinalByScope` counter as the op's own sink — globally collision-proof by construction, supersedes v7.4's `evt.settled.${opId}`; r5 HIGH 2); (c) `triggerPeriodic` returns `TriggerPeriodicStartResult {started, firstRequestId?, candidateUnitCount}` — the initiating op reports series-start metadata, never un-emitted continuation resolutions (r5 BLOCKER 1); (d) modifier events gain `modifierRuntimeId` and `remove_buff_modifier` is locked `all_matching` (r5 HIGH 1); (e) spec addendum v1.5 supersedes §4 — `ResolvedCombatOperation` has NO top-level `sourceId` (r5 BLOCKER 3).
+>
+> v7.4 — buff-plan review round 4 (at `b8bd751b`): periodic ops carry TYPED correlation (v7.5 superseded: correlation is now a scheduler-private map, not a public field). `PeriodicOperationSettled` stamping locked. Manual `triggerPeriodic` multi-request triggers run as a settled-event CONTINUATION — each `PeriodicRequestsCommitted` carries ONE request; the emitter's settled-handler emits the next unit's event via the event-scoped sink, so every request computes against post-settlement state.
 >
 > v7.3 — buff-plan review round 3 (at `38e90b3e`): new scheduler-originated `PeriodicOperationSettled` event — after each `periodic.*` generated op's barrier completes, the scheduler emits `{requestId, operationId, status, reason?}` into the enclosing frame, so the periodic emitter can finalize `uses` modifiers inside the SAME causal settlement tree regardless of entry path (manual `triggerPeriodic`, lifecycle boundary, interval crossing); `createLifecycleSink().settle()` may be called once per sequential periodic unit (multiple settles per lifecycle entry are legal).
 >
@@ -19,8 +21,8 @@
 **Tech Stack:** Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 
 **Specs:**
-- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.4 — THE source of truth; supersedes conflicting points in the other specs)
-- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.3 — first real authority consumer)
+- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.5 — THE source of truth; supersedes conflicting points in the other specs)
+- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.4 — first real authority consumer)
 - `game/docs/specs/2026-09-17-skill-definition-system-spec.md` (v1.1 — operation producer)
 - `game/docs/specs/2026-09-17-reaction-system-reimagined-spec.md` (v1.0 — event consumer)
 
@@ -74,14 +76,14 @@ interface CombatOperationOrigin {
 type ResolvedCombatOperation = CombatOperation & {
   operationId: CombatOperationId
   origin: CombatOperationOrigin
-  /** v7.4 — typed periodic correlation metadata, set ONLY by the built-in
-      periodic bridge on generated ops (the request's requestId). The
-      scheduler emits `PeriodicOperationSettled` from this field — it never
-      parses `operationId` strings (the `periodic.${requestId}` id is a
-      readability/debugging convention, not load-bearing metadata). Absent on
-      every non-periodic op. */
-  periodicRequestId?: string
 }
+// v7.5 — periodic correlation is SCHEDULER-PRIVATE: no periodicRequestId
+// field exists on the public op type (a producer could forge/collide it —
+// r5 HIGH 3). The built-in periodic bridge records `operationId → requestId`
+// in a scheduler-internal Map when it mints each generated op; the
+// post-barrier settled-event site reads + deletes that entry. The
+// `periodic.${requestId}` op-id shape remains a naming/debugging convention
+// only — never parsed.
 // (CombatOperation members each carry their own `type` + `payload` — see M1.)
 
 // contracts/selectors.ts — discriminated union; NO optional soup
@@ -193,28 +195,33 @@ interface PeriodicRequestsCommitted extends CombatEventBase {
 type PeriodicTriggerKind =
   | 'holder_turn_start' | 'holder_turn_end' | 'source_turn_start' | 'source_turn_end'
   | 'interval' | 'manual'
-// v7.3/v7.4 — PeriodicOperationSettled is SCHEDULER-ORIGINATED: no authority
+// v7.3/v7.5 — PeriodicOperationSettled is SCHEDULER-ORIGINATED: no authority
 // or handler emits it (it is NOT a member of CombatEventPayload /
-// PendingCombatEvent — the sink unions stay unchanged). After every op
-// carrying `periodicRequestId` (v7.4 — typed correlation metadata set by the
-// built-in bridge; the scheduler NEVER parses operationId strings) completes
-// its barrier, the scheduler enqueues this event into the frame that
-// produced the op. It carries the settled status so the periodic emitter's
-// registered immediate handler can finalize `uses`-modifier pending marks:
-// 'resolved' → consume, anything else → release — and drive manual-trigger
-// continuation (the handler emits the next unit's PeriodicRequestsCommitted
-// through its event-scoped sink). This is the ONLY post-result correlation
-// channel that works for EVERY entry path — manual triggerPeriodic (whose
-// generated ops settle inside the triggering op's own barrier, after the
-// authority returned), lifecycle boundaries, and interval crossings all see
-// it identically.
-// STAMPING (v7.4 — locked): eventId = `evt.settled.${operationId}`
-// (deterministic — op ids are globally unique, so the event id is too);
-// causationOperationId = the periodic op's id; rootActionId copied from the
-// op's origin; combatSequence = scheduler allocateSeq() at enqueue (op's seq
-// was allocated at ITS execution-start, so seq(op) < seq(settled) holds);
-// recorded via recordEvent exactly once — the emission site runs once per
-// periodic op barrier, so exactly-once is structural.
+// PendingCombatEvent — the sink unions stay unchanged). After every op the
+// built-in bridge recorded in the scheduler-private `periodicRequestByOpId`
+// map (v7.5 — correlation lives INSIDE the scheduler; no public op field,
+// nothing to forge or collide — r5 HIGH 3) completes its barrier, the
+// scheduler enqueues this event into the frame that produced the op. It
+// carries the settled status so the periodic emitter's registered immediate
+// handler can finalize `uses`-modifier pending marks: 'resolved' → consume,
+// anything else → release — and drive manual-trigger continuation (the
+// handler emits the next unit's PeriodicRequestsCommitted through its
+// event-scoped sink). This is the ONLY post-result correlation channel that
+// works for EVERY entry path — manual triggerPeriodic (whose generated ops
+// settle inside the triggering op's own barrier, after the authority
+// returned), lifecycle boundaries, and interval crossings all see it
+// identically.
+// STAMPING (v7.5 — locked): eventId mints through the CANONICAL per-scope
+// allocator — `evt.${op.operationId}.${eventOrdinalByScope[op.operationId]++}`,
+// the same scope+counter the op's own sink uses (r5 HIGH 2 — globally
+// collision-proof by construction: the scope is a globally-unique op id and
+// all ids in it share one counter; supersedes v7.4's `evt.settled.${opId}` —
+// a name-encoded id was provably unique only among settled events, not
+// against adversarial sink scopeIds). causationOperationId = the periodic
+// op's id; rootActionId copied from the op's origin; combatSequence =
+// allocateSeq() at enqueue (op's seq allocated at ITS execution-start →
+// seq(op) < seq(settled)); recordEvent exactly once — the emission site runs
+// once per periodic op barrier, so exactly-once is structural.
 interface PeriodicOperationSettled extends CombatEventBase {
   type: 'periodic_operation_settled'
   requestId: string                    // the request that produced the op
@@ -543,6 +550,11 @@ export interface ConsumeBuffStacksOperation {
   payload: { selector: BuffInstanceSelector; stacks: number | 'all'; removalReason: 'consumed' | 'reaction' }
 }
 export interface AddBuffModifierOperation { type: 'add_buff_modifier'; payload: { selector: BuffInstanceSelector; modifier: BuffModifierPayload } }
+// v7.5 — removal semantics locked (r5 HIGH 1): modifierId is the AUTHORED
+// identity; reapply:'stack' can create several runtime entries sharing it.
+// The op removes EVERY entry with that modifierId ('all_matching' — a same-id
+// stack is one logical modifier to its author); each removed entry emits its
+// own buff_modifier_removed carrying its modifierRuntimeId.
 export interface RemoveBuffModifierOperation { type: 'remove_buff_modifier'; payload: { selector: BuffInstanceSelector; modifierId: string } }
 export interface RefreshBuffDurationOperation { type: 'refresh_buff_duration'; payload: { selector: BuffInstanceSelector; duration?: number } }
 export interface ExtendBuffDurationOperation  { type: 'extend_buff_duration';  payload: { selector: BuffInstanceSelector; turns: number; maxRemaining?: number } }
@@ -581,11 +593,24 @@ export type CombatOperationResult =
   | { operationId; type: 'apply_buff'; status; reason?; result?: ApplyBuffResult }
   | { operationId; type: 'add_buff_stacks' | 'remove_buff_stacks'; status; reason?; result?: StacksResult }  // {stacksBefore, stacksAfter}
   | { operationId; type: 'consume_buff_stacks'; status; reason?; result?: ConsumeStacksResult }
-  | { operationId; type: 'add_buff_modifier' | 'remove_buff_modifier'; status; reason?; result?: { modifierId: string; applied: boolean } }
+  | { operationId; type: 'add_buff_modifier'; status; reason?; result?: { modifierId: string; applied: boolean; modifierRuntimeId?: string } }
+  | { operationId; type: 'remove_buff_modifier'; status; reason?; result?: { modifierId: string; removed: boolean; removedRuntimeIds: readonly string[] } }
   | { operationId; type: 'refresh_buff_duration' | 'extend_buff_duration' | 'set_buff_duration'; status; reason?; result?: { durationBefore: number; durationAfter: number } }
   | { operationId; type: 'set_buff_stacks'; status; reason?; result?: StacksResult }
   | { operationId; type: 'cleanse_buff'; status; reason?; result?: CleanseResult }
-  | { operationId; type: 'trigger_buff_periodic'; status; reason?; result?: { resolutionsEmitted: number } }
+  | { operationId; type: 'trigger_buff_periodic'; status; reason?; result?: TriggerPeriodicStartResult }
+// v7.5 — r5 BLOCKER 1: the op reports SERIES-START metadata only — later
+// units don't exist yet at return time (they emit via the settled-event
+// continuation). Per-request outcomes live on PeriodicRequestsCommitted /
+// PeriodicOperationSettled / the trace, not the initiating op's result.
+interface TriggerPeriodicStartResult {
+  started: boolean                 // false = selector matched no live unit
+  firstRequestId?: string          // the request emitted synchronously
+  candidateUnitCount: number       // ordered unit list size at trigger time
+                                   // (candidates, NOT promised resolutions —
+                                   // later units may be skipped on
+                                   // revalidation or skip-settle)
+}
   | { operationId; type: 'remove_buff'; status; reason?; result?: RemoveBuffResult }
   | { operationId; type: 'push_gauge'; status; reason?; result?: { before: number; requestedDelta: number; appliedDelta: number; after: number } }
   | { operationId; type: 'gain_resource' | 'consume_resource'; status; reason?; result?: { before: number; requested: number | 'all'; applied: number; after: number } }
@@ -631,20 +656,23 @@ export interface BuffAuthority {
   addStacks(sel: BuffInstanceSelector, stacks: number, ctx: CombatAuthorityExecutionContext): StacksResult
   removeStacks(sel: BuffInstanceSelector, stacks: number, ctx: CombatAuthorityExecutionContext): StacksResult
   consumeStacks(sel: BuffInstanceSelector, stacks: number | 'all', reason: 'consumed' | 'reaction', ctx: CombatAuthorityExecutionContext): ConsumeStacksResult
-  addModifier(sel: BuffInstanceSelector, mod: BuffModifierPayload, ctx: CombatAuthorityExecutionContext): { applied: boolean }
-  removeModifier(sel: BuffInstanceSelector, modifierId: string, ctx: CombatAuthorityExecutionContext): { removed: boolean }
+  /** v7.5 — all_matching: removes EVERY runtime entry carrying modifierId;
+      reports the removed generations. addModifier reports the minted
+      modifierRuntimeId (the entry's exact runtime identity — r5 HIGH 1). */
+  addModifier(sel: BuffInstanceSelector, mod: BuffModifierPayload, ctx: CombatAuthorityExecutionContext): { applied: boolean; modifierRuntimeId?: string }
+  removeModifier(sel: BuffInstanceSelector, modifierId: string, ctx: CombatAuthorityExecutionContext): { removed: boolean; removedRuntimeIds: readonly string[] }
   refreshDuration(sel: BuffInstanceSelector, duration: number | undefined, ctx: CombatAuthorityExecutionContext): { durationBefore: number; durationAfter: number }
   extendDuration(sel: BuffInstanceSelector, turns: number, maxRemaining: number | undefined, ctx: CombatAuthorityExecutionContext): { durationBefore: number; durationAfter: number }
-  /** Commits periodic use/modifier semantics, then emits
-      `PeriodicRequestsCommitted` (carrying the typed request) via ctx.events —
-      the scheduler's built-in handler converts it to an op (review r4
-      BLOCKER 2). v7.4 — multi-unit triggers emit ONE request now and queue the
-      rest as a settled-event continuation: the emitter's
-      `periodic_operation_settled` handler emits each next unit's
-      single-request event through its event-scoped sink, so EVERY request
-      computes against post-settlement state (r4-review BLOCKER 1). The return
-      value feeds result.resolutionsEmitted only. */
-  triggerPeriodic(sel: BuffInstanceSelector, periodicId: string | undefined, ctx: CombatAuthorityExecutionContext): readonly PeriodicResolution[]
+  /** Commits periodic use/modifier semantics, then emits the FIRST unit's
+      single-request `PeriodicRequestsCommitted` via ctx.events — the
+      scheduler's built-in handler converts it to an op (review r4
+      BLOCKER 2). Multi-unit triggers queue the rest as a settled-event
+      continuation: the emitter's `periodic_operation_settled` handler emits
+      each next unit's single-request event through its event-scoped sink, so
+      EVERY request computes against post-settlement state (r4-review
+      BLOCKER 1). v7.5 — returns TriggerPeriodicStartResult (r5 BLOCKER 1:
+      start metadata only — the op must not claim un-emitted resolutions). */
+  triggerPeriodic(sel: BuffInstanceSelector, periodicId: string | undefined, ctx: CombatAuthorityExecutionContext): TriggerPeriodicStartResult
   remove(sel: BuffInstanceSelector, reason: BuffRemovalReason, ctx: CombatAuthorityExecutionContext): RemoveBuffResult  // v7.2 — spec §53: no void returns
   /** v7.1 — spec §36/§38/§42/§67 required-API parity. cleanse removes every
       dispellable instance on targetId matching query (reason 'cleansed'). */
@@ -814,20 +842,25 @@ settleEvent(event, frameQueue):
     for op of ops:
       result = executeOpWithBarrier(op)             // each op's own frame drains
                                                     // before the next sibling
-      // v7.3/v7.4 — periodic outcome publication: after a periodic op's
-      // barrier, emit the settled event into the ENCLOSING frame (FIFO after
-      // already-queued siblings — deterministic; still inside this root
-      // transaction). Typed correlation: the bridge stamps
-      // `periodicRequestId` on generated ops — the scheduler reads the FIELD,
-      // never parses operationId. The buff-side registered handler finalizes
-      // `uses` marks and drives manual-trigger continuation.
-      if op.periodicRequestId !== undefined:
+      // v7.3/v7.5 — periodic outcome publication: after a bridge-generated
+      // op's barrier, emit the settled event into the ENCLOSING frame (FIFO
+      // after already-queued siblings — deterministic; still inside this
+      // root transaction). PRIVATE correlation: the bridge recorded
+      // periodicRequestByOpId[op.operationId] at generation time — no public
+      // field, no id parsing (r5 HIGH 3). The buff-side registered handler
+      // finalizes `uses` marks and drives manual-trigger continuation.
+      const requestId = periodicRequestByOpId.get(op.operationId)
+      if requestId !== undefined:
+        periodicRequestByOpId.delete(op.operationId)      // one-shot entry
         enqueueInto(frameQueue, PeriodicOperationSettled{
-          eventId: `evt.settled.${op.operationId}`,        // deterministic,
-          causationOperationId: op.operationId,            // unique (op ids
-          rootActionId: op.origin.rootActionId,            // are); seq =
-          combatSequence: allocateSeq(),                   // allocateSeq() →
-          requestId: op.periodicRequestId,                 // seq(op) < seq(this)
+          eventId: `evt.${op.operationId}.${eventOrdinalByScope[op.operationId]++}`,
+                        // canonical allocator, the op's OWN scope — globally
+                        // unique by construction (r5 HIGH 2); the op's sink
+                        // emissions share this counter
+          causationOperationId: op.operationId,
+          rootActionId: op.origin.rootActionId,
+          combatSequence: allocateSeq(),                   // → seq(op) < seq(this)
+          requestId,
           operationId: op.operationId,
           status: result.status, reason: result.reason })
   if {kind:'batch'}: runBatchFrame(settlement.batch)
@@ -897,8 +930,10 @@ Sink factories (r5 HIGH 2):
 // for 'periodic_requests_committed' → {kind:'operations'} — converts each
 // typed request 1:1: BuffPeriodicDamageRequest → DealDamageOperation{payload},
 // BuffPeriodicHealRequest → HealOperation{amount}; ids `periodic.${requestId}`
-// (naming convention) AND `periodicRequestId: req.requestId` (v7.4 — the
-// typed correlation field the settled-event emission reads);
+// (naming convention only); the bridge ALSO records
+// `periodicRequestByOpId[generatedOpId] = req.requestId` in the scheduler's
+// private map (v7.5 — the settled-event emission reads this; correlation is
+// unforgeable because producers never see it);
 // each op mints its OWN origin (r5 BLOCKER 2):
 //   {kind:'buff_periodic', originId:`${req.instanceId}:${req.periodicId}`,
 //    sourceId:req.sourceId, rootActionId:event.rootActionId,
@@ -926,8 +961,8 @@ Key invariants (review-locked): `rootEventQueue` drains before `authoredQueue` �
   - **batch structural preflight (r4 BLOCKER 3):** batch containing a duplicate op id / a deferred ref to a nonexistent id / a deferred ref to a LATER entry / a deferred ref to a non-`deal_damage` entry → `CombatSettlementFault` BEFORE any op executes (spy authority sees zero calls — a broken command graph is not a runtime invalidation).
   - deferred runtime dependency (r4 HIGH 2): referenced damage op `skipped` → deferred entry records `{status:'skipped', reason:'dependency_not_resolved'}` — never a silent heal-0.
   - deferred op happy path: materializes using prior in-batch results (fake damage result → heal amount derived); materialized op KEEPS the deferred `operationId`.
-  - **periodic bridge (r4 BLOCKER 2 + r5 BLOCKER 2):** stub authority emits `PeriodicRequestsCommitted` via `ctx.events` → built-in handler returns ops → `deal_damage`/`heal` settle in the same barrier with ids `periodic.${requestId}` + typed `periodicRequestId` (v7.4 — correlation is a FIELD, not id parsing) and per-request `origin{kind:'buff_periodic', sourceId:req.sourceId, rootActionId:event.rootActionId, causationEventId}`; a lifecycle-scoped sink emits the same event shape; an event carrying requests from MULTIPLE sourceIds produces ops with distinct correct sourceIds (no fabricated shared origin).
-  - **settled-event contract (v7.4 — THE guard):** one periodic op → exactly ONE `PeriodicOperationSettled` in the trace; `causationOperationId === op.operationId`; `eventId === 'evt.settled.' + operationId`; `rootActionId === op.origin.rootActionId`; `seq(op) < seq(settled)`; status mirrors the op's result; a NON-periodic op produces none.
+  - **periodic bridge (r4 BLOCKER 2 + r5 BLOCKER 2):** stub authority emits `PeriodicRequestsCommitted` via `ctx.events` → built-in handler returns ops → `deal_damage`/`heal` settle in the same barrier with ids `periodic.${requestId}` + the scheduler-private `periodicRequestByOpId` map entry (v7.5 — correlation is INTERNAL, not a public field, never id parsing) and per-request `origin{kind:'buff_periodic', sourceId:req.sourceId, rootActionId:event.rootActionId, causationEventId}`; a lifecycle-scoped sink emits the same event shape; an event carrying requests from MULTIPLE sourceIds produces ops with distinct correct sourceIds (no fabricated shared origin); **correlation unforgeable (r5 HIGH 3):** a non-bridge op has no way to claim a requestId — no public field exists; assert no `PeriodicOperationSettled` follows a skill/reaction op even when its `operationId` string resembles `periodic.*`.
+  - **settled-event contract (v7.5 — THE guard):** one periodic op → exactly ONE `PeriodicOperationSettled` in the trace; `causationOperationId === op.operationId`; `eventId` minted via the canonical allocator in the op's own scope (`evt.${op.operationId}.${scopeOrdinal}` — shares `eventOrdinalByScope` with that op's sink emissions); `rootActionId === op.origin.rootActionId`; `seq(op) < seq(settled)`; status mirrors the op's result; a NON-periodic op produces none. **Adversarial-id collision guard (r5 HIGH 2):** synthetic settled event + normal sink events with hostile scope/op ids (e.g. `scopeId='settled.foo'`, `operationId='foo.0'`) → zero eventId collisions in the trace.
   - batch frame: preflight fail → zero ops + skip event; preflight pass → ops run in order, per-op settle, authored ops can't interleave mid-batch; nested batch runs to completion inside parent frame.
   - sequence ownership: events stamped by scheduler (authorities emit pending events with no envelope); ops' `combatSequence` allocated at execution-START before `executor.execute()` (r6 — locked, not a choice).
   - **sequence causality (r6 BLOCKER — THE guard):** op A emits E1,E2; E1's handler produces X → assert `seq(A) < seq(E1)`, `seq(A) < seq(E2)`, `seq(E1) < seq(X)` — a cause's sequence always precedes its effects'. (The v6 bug stamped `E1 < A` because the op's sequence was allocated after `execute` returned.)

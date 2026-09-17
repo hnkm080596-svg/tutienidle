@@ -112,7 +112,7 @@ export interface SkillDefinition {
 export type AuthoredSkillOperation =
   | { type: 'deal_damage'; target: SkillTargetIntent; coefficient?: number; components?: SkillDamageComponent[]; damageType?: 'physical' | 'primordial'; hitCount?: number; canCrit?: boolean; canMiss?: boolean; scaling?: AuthoredScaling; consumeBuff?: { definitionId: BuffDefinitionId; damagePerStack: number; scope?: 'own' | 'any'; healPercentOfDamage?: number }; consumeWard?: { damagePerWardPoint: number }; healPercentOfDamage?: number }
   | { type: 'heal'; target: SkillTargetIntent; amount?: number; fractionOfMaxHp?: number; fractionOfPriorDamage?: { fraction: number; capRatio?: number } }   // authored-level result reference → executor emits a DeferredOperation (pre-minted `operationId`; capRatio clamps the FRACTION at resolution — contract v5 R-C7)
-  | { type: 'apply_buff'; target: SkillTargetIntent; definitionId: BuffDefinitionId; stacks?: number; chance?: number; durationOverride?: number; reactionEligibility?: ReactionEligibility }   // DEFAULT 'suppressed' — elemental defs must opt in (R-S4 adapter maps legacy flag)
+  | { type: 'apply_buff'; target: SkillTargetIntent; definitionId: BuffDefinitionId; stacks?: number; chance?: number; durationOverride?: number; reactionEligibility?: ReactionEligibility }   // DEFAULT 'suppressed' for non-elemental lanes; the adapter writes 'eligible' for appliesAilment(s) unconditionally (r4 — eligibility is path metadata, never the legacy canInitiateWuxingReactions flag; the capability gate decides reactions)
   | { type: 'add_buff_stacks' | 'remove_buff_stacks' | 'consume_buff_stacks'; target: SkillTargetIntent; definitionId: BuffDefinitionId; stacks: number | 'all' }
   | { type: 'add_buff_modifier' | 'remove_buff_modifier'; target: SkillTargetIntent; definitionId: BuffDefinitionId; modifier: AuthoredModifier }
   | { type: 'refresh_buff_duration' | 'extend_buff_duration'; target: SkillTargetIntent; definitionId: BuffDefinitionId; turns?: number }
@@ -282,7 +282,7 @@ export interface OperationResultQuery {
 |---|---|
 | `damage: ActionDamageInfo` (physical/primordial/elemental+scaling) | `deal_damage` op with `components`/`damageType`/`scaling` |
 | `appliesBuff`/`appliesBuffs` (+`externalWardGrant`, target modes) | `apply_buff` ops, `reactionEligibility:'suppressed'` |
-| `appliesAilment(s)` | `apply_buff` ops, `reactionEligibility` ← `canInitiateWuxingReactions` flag (R-S4) |
+| `appliesAilment(s)` | `apply_buff` ops, `reactionEligibility:'eligible'` — unconditional (R-S4 r4-amended: normal elemental applications are eligible; the legacy `canInitiateWuxingReactions` flag is NEVER read — reactions gate on capability + canonical registry) |
 | `consumesAilmentId`+`damagePerStack` | `deal_damage.consumeBuff{scope:'own'}` (legacy 'any' via scope field — E-3 spread semantics separate) |
 | `consumesWardForDamage` | `deal_damage.consumeWard` |
 | `healPercentOfDamage` | `deal_damage.healPercentOfDamage` |
@@ -344,6 +344,6 @@ export interface OperationResultQuery {
 
 ## Open questions for coordinator
 
-1. R-S4 — `reactionEligibility` authored default: 'suppressed' unless authored, with the legacy `canInitiateWuxingReactions` flag lifted into eligibility by the adapter. Confirm the adapter (not the def) should own that mapping until seals.
+1. RESOLVED (r4 ruling): `reactionEligibility` is producer-path metadata — the adapter writes `'eligible'` for `appliesAilment(s)` lanes unconditionally and `'suppressed'` for non-elemental `apply_buff` lanes; the legacy `canInitiateWuxingReactions` flag is never lifted into eligibility (deleted at M-INT anyway). Whether a reaction runs is ReactionSystem's capability+registry gate.
 2. R-S8 — `instances.perInstanceOptions` runtime closure can't be data; executor injects a per-skill options provider keyed by def id. Acceptable, or does the seal batch want a data DSL?
 3. Passive skills: confirm R-S7 deferral (schema supports `type:'passive'`; `PassiveSystem` stays the passive runtime).
