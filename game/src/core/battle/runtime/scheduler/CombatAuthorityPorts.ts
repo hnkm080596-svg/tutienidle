@@ -122,11 +122,13 @@ export interface BuffAuthority {
 export interface DamageAuthority {
   /** Intent in, result out. DamageSystem picks the internal channel from
       damageProfile + origin.kind + canCrit/canMiss -- NOT the executor and
-      NOT a "closest existing method" guess. */
+      NOT a "closest existing method" guess. `landed`/`crit` are
+      hit-channel reports ('skill_hit'): absent = the channel does not
+      dodge/crit -- a resolved op counts as landed, never as crit. */
   dealDamage(
     op: DealDamageOperation['payload'],
     ctx: CombatAuthorityExecutionContext,
-  ): { rawDamage: number; hpDamage: number; killed: boolean }
+  ): { rawDamage: number; hpDamage: number; killed: boolean; landed?: boolean; crit?: boolean }
 }
 
 export interface GaugeAuthority {

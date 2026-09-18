@@ -139,14 +139,16 @@ export class SkillResolver {
     }
 
     // 2 -- composite pool roll (once per plan; picks[0] is this plan's
-    // payload def, picks[1..] drive follow-up subcast plans).
+    // payload def, picks[1..] are the cast's inline extra payload lanes).
+    // The pool lives on the AUTHORED ROOT def (TBS action.skill parity --
+    // an empowerment swap never changes which def owns the pool).
     let compositePicks: readonly SkillId[] | undefined
     let compositeExtraIds: readonly SkillId[] | undefined
-    const subcasts = effective.subcasts
-    if (subcasts?.compositePool !== undefined) {
+    const rootSubcasts = input.definition.subcasts
+    if (rootSubcasts?.compositePool !== undefined) {
       const picks = this.pickComposite(
-        subcasts.compositePool,
-        subcasts.compositeCount ?? 1,
+        rootSubcasts.compositePool,
+        rootSubcasts.compositeCount ?? 1,
       )
       compositePicks = picks
       compositeExtraIds = picks.slice(1)
@@ -195,14 +197,23 @@ export class SkillResolver {
       subcastIndex: input.subcastIndex,
       steps,
       snapshot,
-      cadence: effective.cadence,
-      ...(effective.cost !== undefined ? { cost: effective.cost } : {}),
+      // Commit-scope fields ride the AUTHORED ROOT def (TBS parity:
+      // commitAction/consumeResourceFor read action.skill -- the equipped
+      // base -- never the empowered/composite payload; the empowered
+      // def's own cadence/cost is inert in the equipped lane).
+      cadence: input.definition.cadence,
+      ...(input.definition.cost !== undefined
+        ? { cost: input.definition.cost }
+        : {}),
       ...(effective.grants !== undefined ? { grants: effective.grants } : {}),
       ...(effective.theScaling !== undefined
         ? { theScaling: effective.theScaling }
         : {}),
       ...(effective.detonate !== undefined ? { detonate: effective.detonate } : {}),
-      ...(effective.subcasts !== undefined ? { subcasts: effective.subcasts } : {}),
+      // Follow-up config is ROOT-owned (TBS rootSkill.repeatCasts /
+      // rootSkill.multicast parity -- a picked member's own subcasts
+      // never drive).
+      ...(rootSubcasts !== undefined ? { subcasts: rootSubcasts } : {}),
       ...(compositeExtraIds !== undefined && compositeExtraIds.length > 0
         ? { compositeExtraIds }
         : {}),
