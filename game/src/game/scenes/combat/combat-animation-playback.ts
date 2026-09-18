@@ -7,15 +7,14 @@
 // carries the mechanism.
 import Phaser from 'phaser'
 
-import { resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import {
   combatAnimationKey,
   type CombatAnimationCatalogue,
   type CombatAnimationName,
 } from '@/presentation/art/CombatEntityPresentation'
 import {
-  PLACEHOLDER_ENTITY_KEY,
   presentationFor,
+  resolveCombatEntityKey,
 } from '@/presentation/art/CombatPresentationCatalogue'
 
 import type { CombatScene, CombatScenePayload } from '../CombatScene'
@@ -99,7 +98,7 @@ export class CombatAnimationPlayback {
     // Uniformity (2026-09-19): an unregistered entity resolves to the shared
     // placeholder, never to "nothing" - the placeholder's `kind` matches the
     // mode, so isAnimatedEntity() still gates whether anything plays.
-    return resolveEnemyTextureKey(actorId) ?? PLACEHOLDER_ENTITY_KEY
+    return resolveCombatEntityKey(actorId)
   }
 
   /**

@@ -19,6 +19,7 @@
 // different from the mode, and unregistered entities resolve to the shared
 // `entity-placeholder` entry of the SAME kind rather than to a Rectangle.
 import { PLAYER_VISUAL_PROFILES } from './PlayerVisualProfiles'
+import { COMPANIONS } from '@/data/companion/Companions'
 import {
   ENEMY_SOURCE_SIZE,
   enemyTextureUrl,
@@ -112,6 +113,17 @@ const PLAYER_STATIC_EXTENTS: Record<string, ArtExtent> = {
   'player-mortal-ink-sword-concept-v2': PLAYER_STATIC_EXTENT_MORTAL,
   'player-phap-tu-v1': PLAYER_STATIC_EXTENT_PHAP_TU,
 }
+
+/**
+ * The whole authored file IS the entity's frame - declared for art whose
+ * margins are composition, not trimming waste. The Mortal enemy batch works
+ * this way: a feral dog keeps a bigger margin than a bandit so relative
+ * sizes on screen are the artist's, not normalized to one personHeight.
+ * `staticArtExtentDeclared.test.ts` treats this constant as the untrimmed
+ * sentinel - a declared extent that is NOT this sentinel must equal the
+ * PNG's measured alpha bbox.
+ */
+export const UNTRIMMED_FULL_BOX_EXTENT: ArtExtent = { x: 0, y: 0, w: 1, h: 1 }
 
 export const PLAYER_MORTAL_ATLAS_SHEET_KEY = 'player-mortal-combat-atlas-v2'
 export const PLAYER_MORTAL_ATLAS_SHEET_URL =
@@ -261,6 +273,25 @@ const ENEMY_IDLE_PERIOD_JITTER_MS = 600
  * period. Without it a row of five wolves breathes as one organism, which reads
  * worse than not breathing at all.
  */
+/**
+ * A player profile's measured static extent - hard-fail when a distinct
+ * texture key has none. A silent `?? PLAYER_STATIC_EXTENT_MORTAL` fallback
+ * would size a NEW profile's PNG by the mortal margins instead of its own,
+ * and nothing would notice until the figure rendered wrong.
+ */
+function playerStaticExtent(textureKey: string): ArtExtent {
+  const extent = PLAYER_STATIC_EXTENTS[textureKey]
+
+  if (!extent) {
+    throw new Error(
+      `CombatPresentationCatalogue: no measured static extent for '${textureKey}' - ` +
+        `run scripts/measure-entity-extents.mjs and add it to PLAYER_STATIC_EXTENTS`,
+    )
+  }
+
+  return extent
+}
+
 function idleMotionFor(entityKey: string): IdleMotion {
   let hash = 0
 
@@ -332,8 +363,7 @@ function buildCatalogue(): {
         textureKey: profile.combatTextureKey,
         textureUrl: profile.combatTextureUrl.replace(/^\/+/, ''),
         sourceSize: { ...profile.combatSourceSize },
-        extent:
-          PLAYER_STATIC_EXTENTS[profile.combatTextureKey] ?? PLAYER_STATIC_EXTENT_MORTAL,
+        extent: playerStaticExtent(profile.combatTextureKey),
       },
       profile.combatTextureKey === PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
         ? playerMortalCatalogue(profile.combatTextureKey)
@@ -367,10 +397,29 @@ function buildCatalogue(): {
         textureKey,
         textureUrl: enemyTextureUrl(textureKey),
         sourceSize: { ...ENEMY_SOURCE_SIZE },
-        // The Mortal PNGs are untrimmed: the animal fills its own file.
-        extent: { x: 0, y: 0, w: 1, h: 1 },
+        // Full-box declaration, not a measured one: the PNG margins are
+        // composition (they encode relative creature sizes).
+        extent: UNTRIMMED_FULL_BOX_EXTENT,
       },
       placeholderClips(textureKey),
+    )
+  }
+
+  // Companions join combat with entity.id === definition.id
+  // (companionToCombatEntity) and have NO authored art yet. Registering
+  // them explicitly - pointing at the shared placeholder - is what makes
+  // the missing art show up in placeholderEntityKeys() as tracked debt
+  // instead of hiding behind the wildcard fallback.
+  for (const companion of COMPANIONS) {
+    register(
+      companion.id,
+      {
+        textureKey: PLACEHOLDER_STATIC_TEXTURE_KEY,
+        textureUrl: PLACEHOLDER_STATIC_TEXTURE_URL,
+        sourceSize: { ...PLACEHOLDER_STATIC_SOURCE_SIZE },
+        extent: PLACEHOLDER_STATIC_EXTENT,
+      },
+      placeholderClips(companion.id),
     )
   }
 
@@ -470,6 +519,27 @@ export function placeholderEntityKeys(): readonly string[] {
   }
 
   return keys
+}
+
+/**
+ * Runtime id -> entity key, the ONE resolution shared by combat, the Tran
+ * Phap panel, and the animation layer. Order:
+ *
+ * 1. Mortal enemy prefix match ('mortal_wild_boar_<uuid>' -> texture key)
+ * 2. A registered key passed through verbatim - companion ids ARE entity
+ *    keys (entity.id === definition.id), so 'ho_ly_tinh' resolves to its
+ *    own placeholder-backed entry, not the wildcard
+ * 3. The wildcard placeholder entity - the safety net, never the answer
+ *    for an entity the catalogue knows
+ */
+export function resolveCombatEntityKey(runtimeId: string): string {
+  const textureKey = resolveEnemyTextureKey(runtimeId)
+
+  if (textureKey !== undefined) {
+    return textureKey
+  }
+
+  return CATALOGUE.has(runtimeId) ? runtimeId : PLACEHOLDER_ENTITY_KEY
 }
 
 /** Every animated entity's clips, for preload and animation registration. */

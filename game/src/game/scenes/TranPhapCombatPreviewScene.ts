@@ -16,15 +16,14 @@
 import Phaser from 'phaser'
 import {
   animatedCombatEntities,
-  PLACEHOLDER_ENTITY_KEY,
   PLACEHOLDER_SHEET_KEY,
   PLACEHOLDER_STATIC_TEXTURE_KEY,
   PLACEHOLDER_STATIC_TEXTURE_URL,
   presentationFor,
+  resolveCombatEntityKey,
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
-import { resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import { registerClipCatalogue } from './combat/combat-animation-playback'
 import { PLAYER_VISUAL_PROFILES, type PlayerVisualProfile } from '@/presentation/art/PlayerVisualProfiles'
 import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
@@ -216,7 +215,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     const entityKey =
       id === PLAYER_ID
         ? this.playerProfile.combatTextureKey
-        : (resolveEnemyTextureKey(id) ?? PLACEHOLDER_ENTITY_KEY)
+        : resolveCombatEntityKey(id)
 
     if (presentationFor(entityKey)?.kind !== 'animated') {
       return

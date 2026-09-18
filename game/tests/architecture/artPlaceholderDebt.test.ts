@@ -15,21 +15,23 @@
  * (ship the art, remove the key); it may not grow without someone editing
  * this file and saying so.
  *
- * NOTE the mode asymmetry: in 'static' mode every registered entity owns a
- * real PNG (the mortal batch, both profile PNGs), so the debt set is EMPTY -
- * the meaningful assertion is that nobody registers an entity whose only
- * texture is the silhouette (unregistered entities use the wildcard entry
- * instead). In 'animated' mode the debt is real and long: phap_tu plus every
- * enemy template until their sheets are drawn.
+ * Companions are the one real debt in 'static' mode: every COMPANIONS id is
+ * registered as its own catalogue entry pointing at the shared silhouette,
+ * so spawnable entities without art are ENUMERATED here instead of hiding
+ * behind the wildcard fallback. In 'animated' mode the debt grows further:
+ * phap_tu plus every enemy template until their sheets are drawn.
  */
 import { describe, expect, it } from 'vitest'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { COMPANIONS } from '@/data/companion/Companions'
 import { MORTAL_ENEMY_TEMPLATE_IDS, resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import {
   combatPresentationEntityKeys,
   PLACEHOLDER_ENTITY_KEY,
   placeholderEntityKeys,
 } from '@/presentation/art/CombatPresentationCatalogue'
+
+const COMPANION_ENTITY_KEYS = COMPANIONS.map((companion) => companion.id)
 
 const EXPECTED_PLACEHOLDER_KEYS: readonly string[] =
   ENTITY_ART_MODE === 'animated'
@@ -38,8 +40,9 @@ const EXPECTED_PLACEHOLDER_KEYS: readonly string[] =
         ...MORTAL_ENEMY_TEMPLATE_IDS.map(
           (templateId) => resolveEnemyTextureKey(templateId) ?? templateId,
         ),
+        ...COMPANION_ENTITY_KEYS,
       ]
-    : []
+    : [...COMPANION_ENTITY_KEYS]
 
 describe('placeholder art debt ratchet', () => {
   it('the wildcard placeholder entity itself is registered', () => {

@@ -7,12 +7,11 @@ import Phaser from 'phaser'
 import type { LaneIndex } from '@/core/battle/BattleLane'
 import { HERO_LANE_INDEX } from '@/core/battle/BattleLane'
 import { toVector2Points } from '@/game/support/ActionImpactVfx'
-import { ENEMY_SOURCE_SIZE, resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import { PLAYER_TEXTURE_KEY } from '@/game/support/CombatPreload'
 import {
   atlasFrameName,
-  PLACEHOLDER_ENTITY_KEY,
   presentationFor,
+  resolveCombatEntityKey,
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { resolveEntityDisplaySize } from '@/presentation/geometry/combatEntityScale'
 import { DEPTH_ENTITY_SHADOW, DEPTH_OVERLAY_UI, entitySpriteDepth } from '@/game/support/BattleLayers'
@@ -503,7 +502,7 @@ export class CombatGridView {
     // plan.md); id ngoai batch roi ve placeholder entity CUNG MODE
     // (uniformity 2026-09-19) - Rectangle chi con la double-fallback khi ca
     // placeholder texture cung thieu.
-    const enemyEntityKey = resolveEnemyTextureKey(id) ?? PLACEHOLDER_ENTITY_KEY
+    const enemyEntityKey = resolveCombatEntityKey(id)
     const presentation = presentationFor(enemyEntityKey)
 
     // What the sprite draws: a static entity renders its PNG; an animated
