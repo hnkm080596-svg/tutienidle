@@ -35,6 +35,10 @@ export type SkillValueQuery =
       definitionId: BuffDefinitionId
     }
   | { query: 'hp_percent'; target: SkillTargetIntent }
+  /** live count of still-ALIVE members of the resolved set
+      (stacksPerAffectedTarget parity: Hau Tho Thanh Luy's stacks = alive
+      action targets at apply time). */
+  | { query: 'alive_count'; target: SkillTargetIntent }
   | { query: 'resource_current'; target: SkillTargetIntent; resourceId: string }
   | { query: 'resource_max'; target: SkillTargetIntent; resourceId: string }
   /** CastSnapshot.resourcesConsumed -- the frozen pre-consume capture
@@ -86,6 +90,11 @@ export interface SkillReadContext {
       intent could not resolve (dead/empty set) -- reads against an
       unresolved target return neutral values (0 / false). */
   resolveTarget(intent: SkillTargetIntent): CombatEntityId | undefined
+  /** Set resolution for count leaves (alive_count over
+      'affected_targets'/'all_enemies'/...). Optional -- callers that
+      only model single bindings may omit it; count leaves then count
+      over the single resolved id. */
+  resolveTargetSet?(intent: SkillTargetIntent): readonly CombatEntityId[]
 
   buffStacks(
     definitionId: BuffDefinitionId,
@@ -160,6 +169,15 @@ function evaluateValueQuery(query: SkillValueQuery, ctx: SkillReadContext): numb
       return ctx.buffDuration(query.definitionId, ctx.resolveTarget(query.target))
     case 'hp_percent':
       return ctx.hpPercent(ctx.resolveTarget(query.target))
+    case 'alive_count': {
+      const ids =
+        ctx.resolveTargetSet !== undefined
+          ? ctx.resolveTargetSet(query.target)
+          : ([ctx.resolveTarget(query.target)].filter(
+              (id): id is CombatEntityId => id !== undefined,
+            ) as readonly CombatEntityId[])
+      return ids.reduce<number>((count, id) => count + (ctx.alive(id) ? 1 : 0), 0)
+    }
     case 'resource_current':
       return ctx.resourceCurrent(ctx.resolveTarget(query.target), query.resourceId)
     case 'resource_max':
@@ -218,5 +236,9 @@ export function evaluateSkillCondition(
       return ctx.critLanded()
     case 'any_target_landed':
       return ctx.anyTargetLanded()
+    case 'target_hit_landed':
+      throw new Error(
+        'evaluateSkillCondition: target_hit_landed is a RESOLVE-time gate -- the resolver lowers it to ops_landed_any + var branch; it never evaluates directly',
+      )
   }
 }

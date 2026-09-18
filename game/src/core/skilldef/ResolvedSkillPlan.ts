@@ -88,6 +88,10 @@ export type ResolvedSkillValueQuery =
     }
   | { query: 'hp_percent'; targetId: CombatEntityId | undefined }
   | { query: 'hp_max'; targetId: CombatEntityId | undefined }
+  /** live count of still-ALIVE members of the resolved id set
+      (stacksPerAffectedTarget parity -- set intents resolve to their
+      full member list at RESOLVE). */
+  | { query: 'alive_count'; targetIds: readonly CombatEntityId[] }
   | {
       query: 'resource_current'
       targetId: CombatEntityId | undefined
@@ -210,6 +214,12 @@ export type ResolvedSkillPlanStep =
       condition: ResolvedSkillCondition
       then: readonly ResolvedSkillPlanStep[]
       else?: readonly ResolvedSkillPlanStep[]
+      /** Set only when this branch is the compiled `target_hit_landed`
+          gate: the executor fires the landed-gate hooks around the
+          branch body so orchestration (TBS resolveDeclaredHit parity)
+          can interleave its consequence slots between the hit op and
+          the gated consequence ops. */
+      gate?: ResolvedLandedGate
     }
   | {
       kind: 'for_each_instance'
@@ -230,6 +240,22 @@ export type ResolvedSkillPlanStep =
           (the re-seed lane). */
       operation: ResolvedCombatOperation
     }
+  | {
+      kind: 'detonate'
+      /** executor-expanded consume->burst->re-seed for every
+          periodic-carrying ailment instance on this target (TBS
+          applyDetonate parity -- emitted inside a target_hit_landed
+          branch for damaging defs, bare for non-damaging ones). */
+      targetId: CombatEntityId
+      amp: number
+    }
+
+/** Identifies a compiled `target_hit_landed` branch to the execution
+    hooks: the hit ops the gate reads and the bound target. */
+export interface ResolvedLandedGate {
+  hitOperationIds: readonly CombatOperationId[]
+  targetId: CombatEntityId
+}
 
 // ---------------------------------------------------------------------------
 // ResolvedSkillPlan
@@ -247,15 +273,24 @@ export interface ResolvedSkillPlan {
   steps: readonly ResolvedSkillPlanStep[]
   snapshot: CastSnapshot
 
+  /** CAST_COMMIT gate (R-S9): the plan prechecks cost, requests the
+      commit and pays the cost op only when true. Stamped
+      `input.commitsCast ?? subcastIndex === 0` -- TBS queued executions
+      (repeat/multicast) carry commitsCast:false so their fresh cast
+      identity never re-commits (executionCommitsCast parity). */
+  commitsCast: boolean
+
   // Executor-consumed def-level semantics (copied from the EFFECTIVE def
   // after variant/composite resolution).
   cadence: { cooldownTurns: number; chargeTurns?: number }
   cost?: SkillCastCost
+  /** consumesAllThe parity -- the empowered swap captured theBurned
+      into the snapshot; the executor burns the WHOLE pool as a
+      consume_resource{the,'all'} op at CAST_COMMIT, after the cost
+      op (commitCast ordering parity). */
+  consumesAllThe?: boolean
   grants?: SkillGrants
   theScaling?: { coeff: number }
-  /** detonate sugar -- the executor expands read -> consume('all') ->
-      deal_damage -> suppressed re-seed per dot ailment at EXECUTE. */
-  detonate?: { amp: number }
   /** follow-up driving (multicast/repeat/extra picks) */
   subcasts?: SkillSubcasts
   /** composite picks[1..] -- follow-up payload defs (Task 11 parity). */
@@ -359,6 +394,11 @@ function evaluateResolvedQuery(
       return ctx.hpPercent(query.targetId)
     case 'hp_max':
       return ctx.hpMax(query.targetId)
+    case 'alive_count':
+      return query.targetIds.reduce<number>(
+        (count, id) => count + (ctx.alive(id) ? 1 : 0),
+        0,
+      )
     case 'resource_current':
       return ctx.resourceCurrent(query.targetId, query.resourceId)
     case 'resource_max':

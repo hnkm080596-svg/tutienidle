@@ -33,6 +33,7 @@ import { CombatSystemHealAdapter } from '../../runtime/scheduler/adapters/Combat
 import { ActionGaugeAdapter } from '../../runtime/scheduler/adapters/ActionGaugeAdapter'
 import { EntityResourceAdapter } from '../../runtime/scheduler/adapters/EntityResourceAdapter'
 import { VitalsShieldAdapter } from '../../runtime/scheduler/adapters/VitalsShieldAdapter'
+import { consumeResourceFor } from '../TurnSkillAction'
 import { createDefaultCapabilityValidators } from '../../runtime/capability/DefaultCapabilityValidators'
 import { createElementalStateRegistry } from '../../../reaction/ElementalStateRegistry'
 import { CombatProcSystem } from '../../../proc/CombatProcSystem'
@@ -112,10 +113,32 @@ export function makeTurnRuntime(opts: {
   const executor = new CombatOperationExecutor({
     damage: new CombatSystemDamageAdapter(opts.combatSystem, resolveEntity, {
       resolveSourceGrants: (id: CombatEntityId) => buffs.getCapabilities(id),
+      // skilldef M4e -- skill_hit policy rolls (crit bonus / armor
+      // bypass) consume the shared fixture rng, matching production.
+      rng,
     }),
     heal: new CombatSystemHealAdapter(opts.combatSystem, resolveEntity),
     gauge: new ActionGaugeAdapter(resolveParticipant, resolveEntity),
-    resource: new EntityResourceAdapter(resolveEntity),
+    // skilldef M4e -- skill-cost/consume lanes emit consume_resource
+    // for 'mana'/'ward'; same channel wiring as
+    // GameManagerTurnBattleOps.mintCycleScheduler.
+    resource: new EntityResourceAdapter(resolveEntity, {
+      mana: {
+        read: (entity) => entity.currentMp,
+        spend: (entity, amount) => {
+          consumeResourceFor(entity, { resourceType: 'mana', resourceCost: amount })
+        },
+      },
+      ward: {
+        read: (entity) => entity.currentWard,
+        spend: (entity, amount) => {
+          opts.combatSystem.vitals.spendWard(entity, amount, 'ward_spend', entity.id)
+        },
+        gain: (entity, amount) => {
+          opts.combatSystem.vitals.grantWard(entity, amount, 'ward_grant', entity.id)
+        },
+      },
+    }),
     shield: new VitalsShieldAdapter(opts.combatSystem.vitals, resolveEntity),
     buffs,
   })

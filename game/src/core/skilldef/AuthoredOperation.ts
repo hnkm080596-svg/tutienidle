@@ -68,6 +68,12 @@ export type SkillCondition =
   | { kind: 'var'; name: string; op: 'gte' | 'lt' | 'eq'; value: number }
   | { kind: 'crit_landed' }
   | { kind: 'any_target_landed' }
+  /** The plan's hit-channel ops against THIS target landed (TurnBattleSystem
+      per-hit ailment/detonate gate parity). Single-binding intents only
+      ('loop_target' inside for_each_target, 'primary_target', 'self',
+      'attacker'); compiles to an ops_landed_any read + var branch at
+      RESOLVE -- faults when no preceding deal_damage op targeted it. */
+  | { kind: 'target_hit_landed'; target?: SkillTargetIntent }
 
 // ---------------------------------------------------------------------------
 // Buff selectors -- authored form of BuffInstanceSelector (selectors.ts).
@@ -153,6 +159,18 @@ export type AuthoredSkillOperation =
       }
       consumeWard?: { damagePerWardPoint: ScalarExpression }
       healPercentOfDamage?: ScalarExpression
+      /** Cuong Chien missing-HP scalar (ActionDamageInfo parity) --
+          bonus damage proportional to the attacker's LIVE missing-HP
+          fraction, resolved per hit by the damage authority. */
+      missingHpBonusPerMissingPercent?: number
+      missingHpBonusCap?: number
+      /** Per-landed-HIT consequence ops (TBS resolveDeclaredHit parity):
+          compiled INSIDE each instance's landed gate, after the consume
+          lanes -- ailments/detonate fire once per landed instance hit,
+          not once per target. `target` inside binds via 'loop_target'
+          to the hit's target. Nested deal_damage/if/for_each_target are
+          rejected at validation. */
+      onLanded?: readonly AuthoredSkillOperation[]
     }
   | {
       type: 'heal'
@@ -172,6 +190,10 @@ export type AuthoredSkillOperation =
           'eligible' for appliesAilment(s) unconditionally (r4 -- path
           metadata, never the legacy canInitiateWuxingReactions flag). */
       reactionEligibility?: ReactionEligibility
+      /** son_nhac_ho_the externalWard grant -- orchestration metadata
+          carried onto the resolved op (contract v1.6); the turn runtime
+          replays the source-tagged ward write at settle. */
+      externalWardGrant?: { sourceMaxHpRatio: number }
     }
   | {
       type: 'add_buff_stacks' | 'remove_buff_stacks' | 'consume_buff_stacks'
@@ -209,6 +231,11 @@ export type AuthoredSkillOperation =
       query: AuthoredCleanseQuery
       limit?: number
     }
+  /** detonateDoT parity -- executor-expanded consume->burst->re-seed per
+      periodic-carrying ailment instance on the resolved target. Emitted
+      inside a target_hit_landed gate for damaging defs (TBS fires it
+      per landed hit), ungated for non-damaging ones. */
+  | { type: 'detonate'; target: SkillTargetIntent; amp: number }
   | { type: 'push_gauge'; target: SkillTargetIntent; fractionOfMax: ScalarExpression }
   | {
       type: 'gain_resource' | 'consume_resource'

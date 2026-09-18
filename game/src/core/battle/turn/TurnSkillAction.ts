@@ -241,6 +241,20 @@ export interface TurnSkillDefinition {
   instances?: {
     count: number
     perInstanceOptions?: (instanceIndex: number, target: CombatEntity) => Partial<HitResolveOptions>
+    /**
+     * Skill-definition migration (M4) -- the DECLARATIVE form of
+     * perInstanceOptions. Providers emit BOTH: the closure stays the
+     * legacy resolveDeclaredHit lane's authority until M5; `each` feeds
+     * LegacySkillAdapter -> SkillInstances.each so the plan pipeline
+     * carries the same policies declaratively (hit/crit/armor policies
+     * on the v1.6 contract payload, execute as a coefficient fold).
+     */
+    each?: {
+      guaranteedHit?: boolean
+      execute?: { hpPercentBelow: number; damageMultiplier: number }
+      critChance?: number
+      armorPierce?: { bypassChance: number; pierceFraction: number }
+    }
   }
   /**
    * Emblem-occupying slot def: never selectable by
@@ -339,7 +353,10 @@ export function hasResourceFor(entity: CombatEntity, skill: TurnSkillDefinition)
   return (entity[field] ?? 0) >= skill.resourceCost
 }
 
-export function consumeResourceFor(entity: CombatEntity, skill: TurnSkillDefinition): void {
+export function consumeResourceFor(
+  entity: CombatEntity,
+  skill: Pick<TurnSkillDefinition, 'resourceType' | 'resourceCost'>,
+): void {
   if (!skill.resourceType || skill.resourceType === 'none' || !skill.resourceCost) {
     return
   }
@@ -434,6 +451,19 @@ const FALLBACK_BASIC_ATTACK: ActionDamageInfo = { kind: 'physical', multiplier: 
 const FALLBACK_TARGETING: ActionTargeting = { shape: 'single' }
 
 /**
+ * skilldef M5d -- the Slice-1 hardcoded basic attack is a real def (not
+ * skill:null) so runtime battles route it through the plan pipeline
+ * like every other cast. Identity stays 'basic_attack'; it carries no
+ * slot/cooldown/cost by construction.
+ */
+const FALLBACK_BASIC_SKILL: TurnSkillDefinition = {
+  id: 'basic_attack',
+  cooldownTurns: 0,
+  damage: FALLBACK_BASIC_ATTACK,
+  targeting: FALLBACK_TARGETING,
+}
+
+/**
  * Reaction M4 (R-E) — the sealed no-action. Produced when every
  * candidate is forbidden by the actor's restriction set (Cam Cong):
  * NOT a stun -- declareActorAction converts skillId '' into the same
@@ -503,7 +533,7 @@ function basicAction(participant: TurnBattleParticipant): SelectedAction {
 
   return {
     skillId: 'basic_attack',
-    skill: null,
+    skill: FALLBACK_BASIC_SKILL,
     damage: FALLBACK_BASIC_ATTACK,
     targeting: FALLBACK_TARGETING,
     slot: null,

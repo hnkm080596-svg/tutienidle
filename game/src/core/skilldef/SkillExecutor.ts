@@ -31,6 +31,7 @@ import type { CombatRng } from '../battle/contracts/rng'
 import type { CombatScheduler } from '../battle/runtime/scheduler/CombatScheduler'
 
 import type { SkillCastCommitPort } from './SkillCastCommitPort'
+import type { SkillExecutionHooks } from './SkillExecutionHooks'
 import type { SkillQueryPorts } from './SkillQueryPorts'
 import type {
   OpResultNumberField,
@@ -71,6 +72,10 @@ export interface SkillCastOutcome {
   /** cast-scope flags surfacing through the read context. */
   critLanded: boolean
   anyTargetLanded: boolean
+  /** a damage op connected (damage.landed !== false) -- composite
+      extras fold this into the parent cast's grant gate so a landed
+      extra counts like a landed primary hit (legacy targetIds parity). */
+  anyDamageLanded: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -83,6 +88,11 @@ interface PlanExecutionState {
       damage.landed !== false). */
   anyLanded: boolean
   anyDamageLanded: boolean
+  /** the plan minted at least one hit-channel (skill_hit) op -- the
+      grant gate reads it to distinguish "damaging cast that whiffed"
+      (targetIds stayed empty -- no grant) from "non-damaging cast
+      that applied" (targetIds filled unconditionally -- grant). */
+  hasHitOps: boolean
   critLanded: boolean
   opSeq: number
 }
@@ -109,6 +119,7 @@ export class SkillExecutor {
     private readonly queries: SkillQueryPorts,
     private readonly commitPort: SkillCastCommitPort,
     private readonly rng: CombatRng,
+    private readonly hooks?: SkillExecutionHooks,
   ) {}
 
   /** Executes the plan; when `input` is supplied the executor also drives
@@ -116,7 +127,10 @@ export class SkillExecutor {
       then repeats + the multicast chain as sequential non-committing
       plans (Task 11 parity). Only the committing root cast spawns
       follow-ups; follow-up plans go through executePlan() which never
-      recurses here. */
+      recurses here. `input.driveFollowUps === false` parks the
+      repeat/multicast lane (TBS drives them through its own
+      queuedExecutions); composite extras still expand -- they are
+      lanes of the executing plan, not follow-ups. */
   execute(plan: ResolvedSkillPlan, input?: SkillResolveInput): SkillCastOutcome {
     const followUps: FollowUpContext | undefined =
       input === undefined
@@ -125,6 +139,8 @@ export class SkillExecutor {
     const outcome = this.executePlan(plan, followUps)
     if (
       followUps !== undefined &&
+      input !== undefined &&
+      input.driveFollowUps !== false &&
       // TBS parity (enqueueFollowUpExecutions): only a cast with a live
       // target set queues follow-ups -- a whiffed-into-empty cast
       // commits nothing; a charge-init declare queues nothing either.
@@ -146,16 +162,18 @@ export class SkillExecutor {
   private executePlan(
     plan: ResolvedSkillPlan,
     followUps: FollowUpContext | undefined,
+    suppressGrants = false,
   ): SkillCastOutcome {
     const state: PlanExecutionState = {
       vars: new Map(),
       anyLanded: false,
       anyDamageLanded: false,
+      hasHitOps: false,
       critLanded: false,
       opSeq: 0,
     }
 
-    if (plan.subcastIndex === 0) {
+    if (plan.commitsCast) {
       // PRECHECK (R-S9): insufficient cost blocks the cast -- no commit,
       // no ops, not a whiff.
       if (
@@ -172,6 +190,7 @@ export class SkillExecutor {
           blocked: true,
           critLanded: false,
           anyTargetLanded: false,
+          anyDamageLanded: false,
         }
       }
       // CAST_COMMIT (R-S9): cooldown/charge through the commit port,
@@ -192,11 +211,39 @@ export class SkillExecutor {
           state,
         )
       }
+      // consumesAllThe (commitCast ordering parity: the pool burns to 0
+      // AFTER the cost op; theBurned already froze pre-commit).
+      if (plan.consumesAllThe === true) {
+        this.enqueueAndSettle(
+          this.mintOp(plan, state, {
+            type: 'consume_resource',
+            payload: {
+              targetId: plan.sourceId,
+              resourceId: 'the',
+              amount: 'all',
+            },
+          }),
+          plan,
+          state,
+        )
+      }
+    }
+
+    // Composite extras resolve BEFORE the primary steps (TBS parity:
+    // compositePickedSkills hit ahead of scaledDamage). They are
+    // payload-only inline lanes -- verbatim defs, no commit, no grants,
+    // never driving their own follow-ups; their landed/crit flags fold
+    // into the root cast's outcome.
+    if (followUps !== undefined && plan.compositeExtraIds !== undefined) {
+      this.expandCompositeExtras(plan, followUps, state)
     }
 
     this.runSteps(plan.steps, plan, state)
-    if (plan.detonate !== undefined) this.expandDetonate(plan, state)
-    if (followUps !== undefined) this.expandCompositeExtras(plan, followUps)
+    this.emitGrants(plan, state, suppressGrants)
+    // Final flush point for the orchestration seam: a landed hit whose
+    // authored gate never ran (or whose tail waits for plan end) gets
+    // its consequence tail flushed here before the next plan begins.
+    this.hooks?.onPlanCompleted?.(plan)
     return this.buildOutcome(plan, state)
   }
 
@@ -223,11 +270,25 @@ export class SkillExecutor {
         }
         case 'branch': {
           const taken = evaluateResolvedCondition(step.condition, ctx)
-          this.runSteps(taken ? step.then : (step.else ?? []), plan, state)
+          if (step.gate !== undefined && taken) {
+            // Compiled target_hit_landed gate -- bracket the gated
+            // consequence ops with the orchestration slots (TBS
+            // resolveDeclaredHit: procs/reactive fire pre-ailment,
+            // taken windows/refresh/sweep post-detonate).
+            this.hooks?.onLandedGateEntered?.(step.gate, plan)
+            this.runSteps(step.then, plan, state)
+            this.hooks?.onLandedGateExited?.(step.gate, plan)
+          } else {
+            this.runSteps(taken ? step.then : (step.else ?? []), plan, state)
+          }
           break
         }
         case 'for_each_instance': {
           this.runForEachInstance(step, plan, state)
+          break
+        }
+        case 'detonate': {
+          this.expandDetonate(step, plan, state)
           break
         }
       }
@@ -350,8 +411,16 @@ export class SkillExecutor {
     plan: ResolvedSkillPlan,
     state: PlanExecutionState,
   ): CombatOperationResult {
+    this.hooks?.onOperationWillSettle?.(operation)
     this.scheduler.enqueueAuthored([operation])
     this.scheduler.run()
+    if (
+      operation.type === 'deal_damage' &&
+      (operation.payload as { damageProfile?: string }).damageProfile ===
+        'skill_hit'
+    ) {
+      state.hasHitOps = true
+    }
     const result = this.queries.opResults.lastOpResult(operation.operationId)
     if (result === undefined) {
       throw new SkillExecutorError(
@@ -359,6 +428,7 @@ export class SkillExecutor {
       )
     }
     this.collectOutcome(result, state)
+    this.hooks?.onOperationSettled?.(operation, result, plan)
     return result
   }
 
@@ -384,80 +454,128 @@ export class SkillExecutor {
   }
 
   // -----------------------------------------------------------------------
-  // Detonate -- executor-expanded sugar (Task 13): consume every
-  // dot/periodic ailment instance -> deal_damage scaled by consumed
-  // stacks -> re-seed each at stacks:1 with suppressed eligibility
-  // (utility ailments untouched; the committed re-seed fails the
-  // sec.23 eligibility gate so no reaction evaluation occurs).
+  // Detonate -- TBS applyDetonate parity. Every op mints from the
+  // PRE-SETTLE read snapshot (the burst coefficients read live instance
+  // stacks/remaining/channels), then the whole lane settles as ONE
+  // batch: consume each periodic-carrying instance -> per damage-
+  // periodic burst -> one re-seed per consumed DEFINITION (1 stack,
+  // authored duration, suppressed eligibility -- the committed re-seed
+  // fails the sec.23 eligibility gate so no reaction evaluation
+  // occurs). Utility ailments (no damage periodics) are untouched;
+  // re-seeded instances are never revisited (new instance ids mint at
+  // settle, after the read snapshot was taken).
   // -----------------------------------------------------------------------
 
-  private expandDetonate(plan: ResolvedSkillPlan, state: PlanExecutionState): void {
-    const amp = plan.detonate!.amp
+  private expandDetonate(
+    step: Extract<ResolvedSkillPlanStep, { kind: 'detonate' }>,
+    plan: ResolvedSkillPlan,
+    state: PlanExecutionState,
+  ): void {
     const ctx = this.readCtx(plan, state)
-    for (const targetId of plan.snapshot.declaredTargetIds) {
-      if (!ctx.alive(targetId)) continue
-      const dots = this.queries.buffs
-        .listInstances(targetId)
-        .filter((inst) => inst.kind === 'ailment' && inst.hasPeriodic)
-      if (dots.length === 0) continue
-      let consumedTotal = 0
-      const reseeds: { definitionId: string; instanceId: string }[] = []
-      for (const inst of dots) {
-        const result = this.enqueueAndSettle(
-          this.mintOp(plan, state, {
-            type: 'consume_buff_stacks',
-            payload: {
-              selector: { kind: 'instance', instanceId: inst.instanceId },
-              stacks: 'all',
-              removalReason: 'consumed',
-            },
-          }),
-          plan,
-          state,
-        )
-        if (result.type === 'consume_buff_stacks' && result.status === 'resolved') {
-          const consumed = result.result?.consumed ?? 0
-          if (consumed > 0) {
-            consumedTotal += consumed
-            reseeds.push({
-              definitionId: inst.definitionId,
-              instanceId: inst.instanceId,
-            })
-          }
-        }
-      }
-      if (consumedTotal <= 0) continue
-      this.enqueueAndSettle(
+    const targetId = step.targetId
+    if (!ctx.alive(targetId)) return
+
+    const ops: ResolvedCombatOperation[] = []
+    const consumedIds = new Set<string>()
+
+    for (const inst of this.queries.buffs.listInstances(targetId)) {
+      if (inst.damagePeriodics.length === 0) continue
+
+      // Consume the exact instance; same-id duplicates still consume --
+      // only the re-seed below dedupes by definition id.
+      ops.push(
         this.mintOp(plan, state, {
-          type: 'deal_damage',
+          type: 'consume_buff_stacks',
           payload: {
-            targetId,
-            damageProfile: 'detonate_burst',
-            coefficient: consumedTotal * amp,
-            hitCount: 1,
-            canCrit: false,
-            canMiss: false,
+            selector: { kind: 'instance', instanceId: inst.instanceId },
+            stacks: 'all',
+            removalReason: 'consumed',
           },
         }),
-        plan,
-        state,
       )
-      for (const reseed of reseeds) {
-        this.enqueueAndSettle(
+      consumedIds.add(inst.definitionId)
+
+      // Legacy burst: (resolved per-tick) x remainingTurns x stacks x
+      // amp, summed across the def's damage periodics. Each periodic
+      // keeps its own element (the profile resolves the matching
+      // power/resistance channel); coefficient = authored ratio x
+      // potency/periodic_damage channels x remaining x stacks x amp.
+      for (const periodic of inst.damagePeriodics) {
+        const burst =
+          periodic.coefficient *
+          inst.periodicDamageMult *
+          inst.potencyMult *
+          inst.remainingTurns *
+          inst.stacks *
+          step.amp
+        if (burst <= 0) continue
+        ops.push(
           this.mintOp(plan, state, {
-            type: 'apply_buff',
+            type: 'deal_damage',
             payload: {
-              definitionId: reseed.definitionId,
               targetId,
-              stacks: 1,
-              baseChance: 1,
-              reactionEligibility: 'suppressed',
+              element: periodic.element,
+              damageProfile: 'detonate_burst',
+              coefficient: burst,
+              hitCount: 1,
+              canCrit: false,
+              canMiss: false,
+              tags: periodic.tags,
+              // Legacy parity: the consumed per-tick resolved vs the
+              // INSTANCE's source (a third party may have seeded the
+              // DoT); origin.sourceId stays the caster for attribution.
+              statSourceId: inst.sourceId,
             },
           }),
-          plan,
-          state,
         )
       }
+    }
+
+    // Re-seed ONCE per consumed definition id -- a fixed 1 stack at the
+    // ailment's authored duration; baseChance 1 = the legacy
+    // unconditional re-seed (no chance roll existed on this path).
+    for (const definitionId of consumedIds) {
+      ops.push(
+        this.mintOp(plan, state, {
+          type: 'apply_buff',
+          payload: {
+            definitionId,
+            targetId,
+            stacks: 1,
+            baseChance: 1,
+            reactionEligibility: 'suppressed',
+          },
+        }),
+      )
+    }
+
+    this.enqueueBatchAndSettle(ops, plan, state)
+  }
+
+  /** Batch variant of the barrier: one enqueue + one run() so every op
+      mints against the same pre-settle snapshot (detonate parity --
+      burst coefficients read instance state that the consumes then
+      remove). Results still collect per op. */
+  private enqueueBatchAndSettle(
+    operations: readonly ResolvedCombatOperation[],
+    plan: ResolvedSkillPlan,
+    state: PlanExecutionState,
+  ): void {
+    if (operations.length === 0) return
+    for (const operation of operations) {
+      this.hooks?.onOperationWillSettle?.(operation)
+    }
+    this.scheduler.enqueueAuthored(operations)
+    this.scheduler.run()
+    for (const operation of operations) {
+      const result = this.queries.opResults.lastOpResult(operation.operationId)
+      if (result === undefined) {
+        throw new SkillExecutorError(
+          `SkillExecutor: op '${operation.operationId}' produced no result -- op result port out of sync with the scheduler trace`,
+        )
+      }
+      this.collectOutcome(result, state)
+      this.hooks?.onOperationSettled?.(operation, result, plan)
     }
   }
 
@@ -477,6 +595,7 @@ export class SkillExecutor {
   private expandCompositeExtras(
     plan: ResolvedSkillPlan,
     followUps: FollowUpContext,
+    state: PlanExecutionState,
   ): void {
     for (const extraId of plan.compositeExtraIds ?? []) {
       if (!this.queries.vitals.alive(plan.sourceId)) return
@@ -490,8 +609,76 @@ export class SkillExecutor {
         ...followUps.input,
         definition: extraDef,
         subcastIndex: followUps.nextSubcast.value++,
+        // TBS parity: extras resolve VERBATIM -- the picked def never
+        // re-rolls its own pool/empowerment, the root's declare-side
+        // replay never applies, and an inline lane never re-commits
+        // (cooldown/cost/sink belong to the root cast alone).
+        preResolved: undefined,
+        commitsCast: false,
+        payloadOnly: true,
       })
-      this.executePlan(extraPlan, followUps)
+      const extraOutcome = this.executePlan(extraPlan, followUps, true)
+      // castCritLanded/targetIds parity: the cast's grant gate and
+      // crit flag accumulate across extras + the primary lane.
+      if (extraOutcome.anyTargetLanded || extraOutcome.landed) {
+        state.anyLanded = true
+      }
+      if (extraOutcome.anyDamageLanded) {
+        state.anyDamageLanded = true
+      }
+      if (extraOutcome.critLanded) {
+        state.critLanded = true
+      }
+    }
+  }
+
+  /** theGainOnLandedCast/theGainOnCrit parity -- The grants emit once
+      per cast execution (root plans AND follow-up executions; composite
+      extras suppress them -- they are lanes of the parent cast, not
+      executions). Post-consume ordering rides the CAST_COMMIT consume
+      op settling first; the cap lives in the resource authority. */
+  private emitGrants(
+    plan: ResolvedSkillPlan,
+    state: PlanExecutionState,
+    suppress: boolean,
+  ): void {
+    if (suppress || plan.grants === undefined) return
+    // TBS grantTheFromCast parity -- targetIds.length > 0: a LANDED hit
+    // for damaging casts (whiffed casts grant nothing even when side
+    // ops connected); an alive-targeted application for non-damaging
+    // casts (targetIds fill unconditionally on the legacy lane).
+    const connected = state.hasHitOps ? state.anyDamageLanded : state.anyLanded
+    const landed =
+      (plan.landed ?? 'default') === 'always' ||
+      plan.targetIntent === 'self' ||
+      connected
+    if (landed && plan.grants.theOnLandedCast !== undefined) {
+      this.enqueueAndSettle(
+        this.mintOp(plan, state, {
+          type: 'gain_resource',
+          payload: {
+            targetId: plan.sourceId,
+            resourceId: 'the',
+            amount: plan.grants.theOnLandedCast,
+          },
+        }),
+        plan,
+        state,
+      )
+    }
+    if (state.critLanded && plan.grants.theOnCrit !== undefined) {
+      this.enqueueAndSettle(
+        this.mintOp(plan, state, {
+          type: 'gain_resource',
+          payload: {
+            targetId: plan.sourceId,
+            resourceId: 'the',
+            amount: plan.grants.theOnCrit,
+          },
+        }),
+        plan,
+        state,
+      )
     }
   }
 
@@ -500,7 +687,9 @@ export class SkillExecutor {
     followUps: FollowUpContext,
   ): void {
     // Repeats -- exactly count executions of the ROOT def (each
-    // re-resolves: composite pool re-rolls, empowerment re-checks).
+    // re-resolves the composite pool; empowerment never re-fires on
+    // follow-ups -- subcastIndex!==0, TBS declareQueuedExecution
+    // parity).
     const repeatCount = plan.subcasts?.count ?? 0
     for (let i = 0; i < repeatCount; i++) {
       if (!this.queries.vitals.alive(plan.sourceId)) return
@@ -538,6 +727,11 @@ export class SkillExecutor {
       ...followUps.input,
       definition: def,
       subcastIndex: followUps.nextSubcast.value++,
+      // Follow-up plans re-resolve: the root cast's declare-side replay
+      // never applies (declareQueuedExecution re-picks per execution),
+      // and a follow-up never commits regardless of the root's flag.
+      preResolved: undefined,
+      commitsCast: false,
     })
   }
 
@@ -565,6 +759,7 @@ export class SkillExecutor {
       blocked: false,
       critLanded: state.critLanded,
       anyTargetLanded: state.anyLanded,
+      anyDamageLanded: state.anyDamageLanded,
     }
   }
 

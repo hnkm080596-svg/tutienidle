@@ -164,6 +164,12 @@ export interface DealDamageOperation {
     hitPolicy?: { guaranteedHit?: boolean }
     critPolicy?: { bonusChance?: number }
     armorPolicy?: { bypassChance?: number; pierceFractionOnFail?: number }
+    /** The Tu missing-HP scalar (ActionDamageInfo parity): the
+        authority re-reads the ATTACKER's live missing-HP fraction at
+        hit resolution and folds (1 + min(cap, fraction x perPercent
+        x 100)) into the multiplier -- never a snapshot value. */
+    missingHpBonusPerMissingPercent?: number
+    missingHpBonusCap?: number
   }
 }
 
@@ -185,6 +191,14 @@ export type ApplyBuffRequestPayload = Omit<ApplyBuffRequest, 'sourceId' | 'origi
 export interface ApplyBuffOperation {
   type: 'apply_buff'
   payload: ApplyBuffRequestPayload
+  /** son_nhac_ho_the externalWard grant (The Tu Task 11): orchestration
+      metadata, NOT BuffAuthority input -- when this op settles resolved,
+      the turn runtime writes `target.externalWard =
+      {sourceId, amount: max(0, source.stats.maxHp * sourceMaxHpRatio)}`
+      (replace semantics, exempt from wardMax). The pool's lifecycle is
+      existence-bound to the applied marker instance via
+      reconcileExternalWard at the stat-refresh seam. */
+  externalWardGrant?: { sourceMaxHpRatio: number }
 }
 
 export interface AddBuffStacksOperation {

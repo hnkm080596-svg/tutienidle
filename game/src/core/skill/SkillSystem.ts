@@ -17,6 +17,8 @@ import {
 } from './SkillManager'
 
 import type { ActionTargeting } from '../battle/CombatAction'
+import type { SkillProgressionState } from '../skilldef/SkillProgressionState'
+import type { SkillId } from '../battle/contracts/ids'
 
 // Core Loop Foundation checklist (Mục SKILL, "Skill modifier") — mỗi
 // bậc level cộng thêm % sát thương cho effect 'damage' của skill chủ
@@ -195,6 +197,51 @@ export class SkillSystem {
       effective,
       this.routeProfileProvider?.(skill.id) ?? NEUTRAL_ROUTE_PROFILE,
     )
+  }
+
+  /**
+   * skilldef M5f (R6) -- the canonical persistent-state projection of a
+   * learned skill: level/xp/unlock/equipment/loadout as ONE readonly
+   * SkillProgressionState owned HERE (the save surface), never a field
+   * read scattered across consumers. The legacy `Skill` record still
+   * carries these fields today -- this is the single projection seam
+   * their extraction funnels through when the skill data is redesigned
+   * on SkillDefinition.
+   */
+  progressionOf(skill: Skill): SkillProgressionState {
+    return {
+      skillId: skill.id as SkillId,
+      level: skill.level,
+      experience: skill.experience ?? 0,
+      totalExperience: skill.totalExperience ?? 0,
+      ...(skill.selectedSpecializationId !== undefined
+        ? { selectedSpecializationId: skill.selectedSpecializationId }
+        : {}),
+      unlocked: skill.unlocked,
+      equipped: skill.equipped,
+      loadoutSlots:
+        skill.loadoutSlots ??
+        (skill.loadoutSlot === undefined ? [] : [skill.loadoutSlot]),
+    }
+  }
+
+  /**
+   * skilldef M5f (R6) -- the {definition, progression} pair contract the
+   * resolver's world is built on: `definition` is the specialization-
+   * resolved authored payload (getEffectiveSkill), `progression` the
+   * persistent state layer above. Consumers that need the split read
+   * THIS; getEffectiveSkill stays for callers that only need the
+   * resolved payload until the Skill data is redesigned on
+   * SkillDefinition.
+   */
+  getResolvedSkill(
+    skill: Skill,
+    levelOverride?: number,
+  ): { definition: EffectiveSkill; progression: SkillProgressionState } {
+    return {
+      definition: this.getEffectiveSkill(skill, levelOverride),
+      progression: this.progressionOf(skill),
+    }
   }
 
   /**

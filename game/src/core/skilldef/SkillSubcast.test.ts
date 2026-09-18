@@ -69,11 +69,11 @@ describe('SkillSubcast -- repeat executions', () => {
     const plan = harness.resolver.resolve(makeInput(def))
     harness.executor.execute(plan, makeInput(def))
 
-    // root plan ran fully; the 3 repeats all dropped on a dead source.
-    expect(harness.state.executedOps.map((o) => o.type)).toEqual([
-      'apply_buff',
-      'deal_damage',
-    ])
+    // The self-buff settles first and kills the source; the damage
+    // lane's target_alive(source) branch then evaluates false, so the
+    // root plan's own hit never emits (T3-22b mid-impact death parity)
+    // and all 3 repeats drop on a dead source.
+    expect(harness.state.executedOps.map((o) => o.type)).toEqual(['apply_buff'])
   })
 })
 
@@ -198,18 +198,19 @@ describe('SkillSubcast -- composite extras', () => {
     expect(plan.snapshot.compositePicks).toEqual(['skill.fire', 'skill.metal', 'skill.wood'])
     harness.executor.execute(plan, makeInput(shell))
 
-    // primary payload (fire) then extras (metal, wood) -- each its own
-    // settled plan with sequential subcastIndex.
+    // extras (metal, wood) resolve BEFORE the primary payload (fire)
+    // -- TBS compositePickedSkills parity. Each is its own settled plan;
+    // the extras consume subcastIndex 1,2 while the root stays 0.
     expect(harness.state.executedOps.map((o) => o.type)).toEqual([
-      'deal_damage',
       'heal',
       'push_gauge',
+      'deal_damage',
     ])
-    expect(harness.state.executedOps.map((o) => o.origin.subcastIndex)).toEqual([0, 1, 2])
+    expect(harness.state.executedOps.map((o) => o.origin.subcastIndex)).toEqual([1, 2, 0])
     expect(harness.state.executedOps.map((o) => o.origin.originId)).toEqual([
-      'skill.fire',
       'skill.metal',
       'skill.wood',
+      'skill.fire',
     ])
     // extras never recommit.
     expect(harness.state.commits).toHaveLength(1)

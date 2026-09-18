@@ -53,6 +53,17 @@ export interface FakeBuff {
   stacks: number
   hasPeriodic: boolean
   dispellable: boolean
+  /** detonate-parity fields (default: remaining 0, mults 1, no
+      damage periodics). */
+  remainingTurns?: number
+  periodicDamageMult?: number
+  potencyMult?: number
+  damagePeriodics?: readonly {
+    periodicId: string
+    coefficient: number
+    element: 'fire' | 'physical'
+    tags?: readonly string[]
+  }[]
 }
 
 export interface FakeDamageScript {
@@ -343,6 +354,10 @@ export function makeHarness(options: HarnessOptions = {}): SkillExecutorHarness 
             kind: b.kind,
             stacks: b.stacks,
             hasPeriodic: b.hasPeriodic,
+            remainingTurns: b.remainingTurns ?? 0,
+            periodicDamageMult: b.periodicDamageMult ?? 1,
+            potencyMult: b.potencyMult ?? 1,
+            damagePeriodics: b.damagePeriodics ?? [],
           })),
     },
     vitals: {

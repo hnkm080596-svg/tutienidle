@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { CombatEntityId, SkillId } from '../battle/contracts/ids'
 import type { CombatRng } from '../battle/contracts/rng'
 import type { ResolvedCombatOperation } from '../battle/contracts/operations'
+import { SeededCombatRng } from '../battle/runtime/rng/SeededCombatRng'
 
 import type { ActiveSkillDefinition } from './SkillDefinition'
 import { SkillDefinitionRegistry } from './SkillDefinitionRegistry'
@@ -107,10 +108,18 @@ function resolve(
 }
 
 function operationSteps(plan: ResolvedSkillPlan) {
-  return plan.steps.filter(
-    (s): s is Extract<ResolvedSkillPlanStep, { kind: 'operation' }> =>
-      s.kind === 'operation',
-  )
+  const out: Extract<ResolvedSkillPlanStep, { kind: 'operation' }>[] = []
+  const walk = (steps: readonly ResolvedSkillPlanStep[]): void => {
+    for (const step of steps) {
+      if (step.kind === 'operation') out.push(step)
+      if (step.kind === 'branch') {
+        walk(step.then)
+        if (step.else !== undefined) walk(step.else)
+      }
+    }
+  }
+  walk(plan.steps)
+  return out
 }
 
 function collectOperations(steps: readonly ResolvedSkillPlanStep[]): ResolvedCombatOperation[] {
@@ -251,12 +260,12 @@ describe('SkillResolver -- variants + composite', () => {
         empowerment: {
           theThreshold: 100,
           empoweredSkillId: 'skill.ult.empowered' as SkillId,
-          consumesAllThe: true,
         },
       },
     })
     const empowered = activeDef({
       id: 'skill.ult.empowered' as SkillId,
+      consumesAllThe: true,
       operations: [{ type: 'deal_damage', target: 'primary_target', coefficient: 9 }],
     })
     const plan = resolve([base, empowered], 0, {
@@ -277,11 +286,10 @@ describe('SkillResolver -- variants + composite', () => {
         empowerment: {
           theThreshold: 100,
           empoweredSkillId: 'skill.empowered' as SkillId,
-          consumesAllThe: true,
         },
       },
     })
-    const empowered = activeDef({ id: 'skill.empowered' as SkillId })
+    const empowered = activeDef({ id: 'skill.empowered' as SkillId, consumesAllThe: true })
     const plan = resolve([base, empowered], 0, {
       entityQuery: entityQuery({ the: 99 }),
     })
@@ -331,6 +339,58 @@ describe('SkillResolver -- variants + composite', () => {
     expect(op.origin.originId).toBe('skill.fire')
     if (op.type !== 'deal_damage') throw new Error('unreachable')
     expect(op.payload.coefficient).toBe(7)
+  })
+
+  it('seeded composite (sec.88): identical seeds produce bit-identical plans', () => {
+    const defs = [
+      activeDef({
+        id: 'skill.element_basic' as SkillId,
+        operations: [],
+        subcasts: {
+          compositePool: [
+            'skill.fire' as SkillId,
+            'skill.metal' as SkillId,
+            'skill.wood' as SkillId,
+          ],
+          compositeCount: 2,
+        },
+      }),
+      activeDef({ id: 'skill.fire' as SkillId }),
+      activeDef({ id: 'skill.metal' as SkillId }),
+      activeDef({ id: 'skill.wood' as SkillId }),
+    ]
+    const resolveSeeded = (seed: number) => {
+      const registry = new SkillDefinitionRegistry(defs, {
+        isBuffDefinitionId: () => true,
+      })
+      const resolver = new SkillResolver(registry, new SeededCombatRng(seed))
+      return resolver.resolve({
+        definition: defs[0]!,
+        sourceId: PLAYER,
+        declaredTargetIds: [ENEMY_A],
+        progression,
+        sourceStats: statPort(),
+        entityQuery: entityQuery(),
+        castId: 'cast.3',
+        rootActionId: 'action.turn.1.0',
+        subcastIndex: 0,
+      })
+    }
+
+    const a = resolveSeeded(1337)
+    const b = resolveSeeded(1337)
+    expect(a.snapshot.compositePicks).toEqual(b.snapshot.compositePicks)
+    expect(a.compositeExtraIds).toEqual(b.compositeExtraIds)
+    expect(JSON.stringify(a.steps)).toBe(JSON.stringify(b.steps))
+    // the pick genuinely rides the rng -- different seeds produce at
+    // least two distinct pick sets across a sweep (deterministic:
+    // seeds are fixed, never rolled at test time).
+    const pickSets = new Set(
+      [1, 2, 3, 4, 5].map((seed) =>
+        JSON.stringify(resolveSeeded(seed).snapshot.compositePicks),
+      ),
+    )
+    expect(pickSets.size).toBeGreaterThan(1)
   })
 })
 
@@ -463,8 +523,17 @@ describe('SkillResolver -- instances + consume lanes', () => {
       },
     })
     const plan = resolve([def])
+    // Each instance's lane wraps in nested target_alive(source ->
+    // target) branches (T3-22b mid-impact death parity); instance lanes
+    // hold [hp_percent_below hit branch, consequence gate].
     expect(plan.steps).toHaveLength(2)
-    const branch = plan.steps[0]!
+    const alive = plan.steps[0]!
+    if (alive.kind !== 'branch') throw new Error('expected target_alive wrapper')
+    expect(alive.condition).toEqual({ kind: 'target_alive', targetId: PLAYER })
+    const targetAlive = alive.then[0]!
+    if (targetAlive.kind !== 'branch') throw new Error('expected target_alive(target) wrapper')
+    expect(targetAlive.condition).toEqual({ kind: 'target_alive', targetId: ENEMY_A })
+    const branch = targetAlive.then[0]!
     if (branch.kind !== 'branch') throw new Error('expected branch')
     expect(branch.condition).toEqual({
       kind: 'hp_percent_below',
@@ -490,14 +559,21 @@ describe('SkillResolver -- instances + consume lanes', () => {
       ],
     })
     const plan = resolve([def])
-    // [hit] [read landed] [branch: read stacks + branch{stacks>0}: flat damage + for_each consume]
-    const landedRead = plan.steps[1]!
+    // Per-instance lane inside the target_alive wrapper:
+    // [hit] [read landed] [consume gate: read stacks + branch{stacks>0}]
+    // [read landed] [stamped consequence gate]
+    const alive = plan.steps[0]!
+    if (alive.kind !== 'branch') throw new Error('expected target_alive wrapper')
+    const targetAlive = alive.then[0]!
+    if (targetAlive.kind !== 'branch') throw new Error('expected target_alive(target) wrapper')
+    const lane = targetAlive.then
+    const landedRead = lane[1]!
     if (landedRead.kind !== 'read') throw new Error('expected read')
     expect(landedRead.query).toEqual({
       query: 'ops_landed_any',
       operationIds: [expect.any(String)],
     })
-    const gate = plan.steps[2]!
+    const gate = lane[2]!
     if (gate.kind !== 'branch') throw new Error('expected branch')
     expect(gate.condition).toMatchObject({ kind: 'var', op: 'gte', value: 1 })
     const stacksRead = gate.then[0]!
@@ -523,6 +599,13 @@ describe('SkillResolver -- instances + consume lanes', () => {
     if (forEach.operation.type !== 'consume_buff_stacks') throw new Error('unreachable')
     expect(forEach.operation.payload.stacks).toBe('all')
     expect(forEach.operation.payload.removalReason).toBe('consumed')
+    // The stamped consequence gate trails the consume lane per hit.
+    const consequence = lane[4]!
+    if (consequence.kind !== 'branch') throw new Error('expected consequence gate')
+    expect(consequence.gate).toEqual({
+      hitOperationIds: [expect.any(String)],
+      targetId: ENEMY_A,
+    })
   })
 
   it('compiles consumeWard to read ward -> legacy_flat -> consume_resource all', () => {
@@ -537,7 +620,11 @@ describe('SkillResolver -- instances + consume lanes', () => {
       ],
     })
     const plan = resolve([def])
-    const gate = plan.steps[2]!
+    const alive = plan.steps[0]!
+    if (alive.kind !== 'branch') throw new Error('expected target_alive wrapper')
+    const targetAlive = alive.then[0]!
+    if (targetAlive.kind !== 'branch') throw new Error('expected target_alive(target) wrapper')
+    const gate = targetAlive.then[2]!
     if (gate.kind !== 'branch') throw new Error('expected landed gate')
     const wardRead = gate.then[0]!
     if (wardRead.kind !== 'read') throw new Error('expected ward read')

@@ -4,8 +4,8 @@
 // ActiveSkillDefinition is implemented + production-used this program.
 // PassiveSkillDefinition is schema + validation ONLY -- PassiveSystem
 // remains the passive runtime (R-S7): passives do NOT inherit active
-// fields (spec: "Không ép passive vào schema active với hàng loạt field
-// vô nghĩa").
+// fields (spec: "Khong ep passive vao schema active voi hang loat field
+// vo nghia").
 
 import type { CombatVfxPresetId } from '../battle/CombatAction'
 import type { SkillId } from '../battle/contracts/ids'
@@ -73,7 +73,7 @@ export interface PassiveTriggerDefinition {
 // ---------------------------------------------------------------------------
 
 /** Cast cost -- 'none' for basics (cooldown only), 'mana' for specials,
-    'the' gates Thế Tu ultimates. */
+    'the' gates The Tu ultimates. */
 export interface SkillCastCost {
   resourceType: SkillResourceType
   amount: number
@@ -95,11 +95,10 @@ export interface SkillVariants {
   empowerment?: {
     theThreshold: number
     empoweredSkillId: SkillId
-    consumesAllThe?: boolean
   }
 }
 
-/** theGainOnLandedCast / theGainOnCrit parity -- Thế economy grants. */
+/** theGainOnLandedCast / theGainOnCrit parity -- The economy grants. */
 export interface SkillGrants {
   theOnLandedCast?: number
   theOnCrit?: number
@@ -111,10 +110,10 @@ export interface SkillGrants {
     `each.execute` compiles to a per-instance branch{hp_percent_below}
     folding damageMultiplier into coefficient. */
 export interface SkillInstances {
-  /** may query player state (Ngự Kiếm Đạo kiemDaoCount) */
+  /** may query player state (Ngu Kiem Dao kiemDaoCount) */
   count: ScalarExpression
   each?: {
-    /** phi kiếm never miss -> hitPolicy.guaranteedHit */
+    /** phi kiem never miss -> hitPolicy.guaranteedHit */
     guaranteedHit?: boolean
     /** live-target hp% at EXECUTE -> execute-branch coefficient fold */
     execute?: { hpPercentBelow: ScalarExpression; damageMultiplier: number }
@@ -137,12 +136,18 @@ export interface ActiveSkillDefinition {
   /** authored selector -- never runtime ids; 'enemy'/'ally' do NOT exist
       (use 'primary_target'/'affected_targets'/etc.). */
   targetIntent: SkillTargetIntent
-  /** Cấm Công's tag taxonomy ('attack'|'heal'|'buff'|'cleanse'|'defend'|
+  /** Cam Cong's tag taxonomy ('attack'|'heal'|'buff'|'cleanse'|'defend'|
       'utility' -- free-form strings, reaction plan R-E2 upgrade path). */
   actionTags?: readonly string[]
   /** R8: turn units are the ONLY combat-authoritative cadence. */
   cadence: { cooldownTurns: number; chargeTurns?: number }
   cost?: SkillCastCost
+  /** consumesAllThe parity (Task 13): the resolved payload burns the
+      ENTIRE The pool at CAST_COMMIT, after the cost op. Lives on the
+      def that carries it (the empowered form; a root-level flag burns
+      on its own commit). theBurned captures pre-burn into the
+      snapshot for theScaling. */
+  consumesAllThe?: boolean
   /** ordered; every operation step settles before the next plan step
       (contract sec.55). Empty ONLY for composite-shell defs whose entire
       payload rides subcasts.compositePool. */
@@ -157,10 +162,6 @@ export interface ActiveSkillDefinition {
   counterable?: boolean
   counterSkillId?: SkillId | null
   emblemOnly?: boolean
-  /** detonateDoT -- generic ailment cash-in op sugar (the executor
-      expands read -> consume('all') -> deal_damage -> suppressed
-      re-seed). */
-  detonate?: { amp: number }
   theScaling?: { coeff: number }
   instances?: SkillInstances
   /** R-S5/R-S8 tier-C surface -- fields the adapter could NOT express as

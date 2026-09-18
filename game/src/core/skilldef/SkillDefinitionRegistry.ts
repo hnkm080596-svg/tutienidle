@@ -117,6 +117,7 @@ const VALUE_QUERIES: ReadonlySet<string> = new Set([
   'skill_level',
   'var',
   'cast_outcome',
+  'alive_count',
 ])
 const EXPRESSION_OPS: ReadonlySet<string> = new Set([
   'add',
@@ -136,6 +137,7 @@ const CONDITION_KINDS: ReadonlySet<string> = new Set([
   'var',
   'crit_landed',
   'any_target_landed',
+  'target_hit_landed',
 ])
 const PASSIVE_EVENTS: ReadonlySet<string> = new Set([
   'skill_landed',
@@ -165,6 +167,7 @@ const ACTIVE_ONLY_FIELDS: readonly string[] = [
   'actionTags',
   'cadence',
   'cost',
+  'consumesAllThe',
   'subcasts',
   'variants',
   'landed',
@@ -172,7 +175,6 @@ const ACTIVE_ONLY_FIELDS: readonly string[] = [
   'counterable',
   'counterSkillId',
   'emblemOnly',
-  'detonate',
   'theScaling',
   'instances',
 ]
@@ -294,8 +296,12 @@ function validateActive(
   if (cadence === undefined || typeof cadence !== 'object') {
     fault('invalid_field_value', 'cadence', 'cadence is required on active definitions')
   } else {
-    if (!Number.isInteger(cadence.cooldownTurns) || cadence.cooldownTurns < 0) {
-      fault('invalid_field_value', 'cadence.cooldownTurns', 'cooldownTurns must be an integer >= 0')
+    // Fractional cooldownTurns are legal: the legacy converter copies
+    // Skill.cooldown (authored seconds) verbatim into turn units, so
+    // adapted definitions carry non-integer cadences (2.5 -> ready on
+    // the third turn tick). The decrement semantics are identical.
+    if (!Number.isFinite(cadence.cooldownTurns) || cadence.cooldownTurns < 0) {
+      fault('invalid_field_value', 'cadence.cooldownTurns', 'cooldownTurns must be a finite number >= 0')
     }
     if (
       cadence.chargeTurns !== undefined &&
@@ -389,9 +395,15 @@ function validateActive(
     }
   }
 
-  // A composite shell (all payload inside subcasts.compositePool) may carry
-  // an empty operations list; every other active def needs >= 1 op.
-  if (definition.operations.length === 0 && subcasts?.compositePool === undefined) {
+  // A composite shell (all payload inside subcasts.compositePool) or an
+  // emblemOnly marker (never cast -- slot occupant/presentation lane)
+  // may carry an empty operations list; every other active def needs
+  // >= 1 op.
+  if (
+    definition.operations.length === 0 &&
+    subcasts?.compositePool === undefined &&
+    definition.emblemOnly !== true
+  ) {
     fault('invalid_field_value', 'operations', 'active definitions need at least one operation (or a compositePool shell)')
   }
   validateOperationList(definition.operations, 'operations', deps, false, fault)
@@ -563,6 +575,39 @@ function validateOperation(
       if (op.healPercentOfDamage !== undefined) {
         validateExpression(op.healPercentOfDamage, `${path}.healPercentOfDamage`, fault)
       }
+      if (op.missingHpBonusPerMissingPercent !== undefined && op.missingHpBonusPerMissingPercent < 0) {
+        fault('invalid_field_value', `${path}.missingHpBonusPerMissingPercent`, 'must be >= 0')
+      }
+      if (op.missingHpBonusCap !== undefined && op.missingHpBonusCap < 0) {
+        fault('invalid_field_value', `${path}.missingHpBonusCap`, 'must be >= 0')
+      }
+      for (const [index, landedOp] of (op.onLanded ?? []).entries()) {
+        const lpath = `${path}.onLanded[${index}]`
+        // Per-hit consequence ops: flat lanes only -- no nested damage
+        // hits, control flow, or loops; targets bind via loop_target
+        // (the hit's target) or self (the caster).
+        if (
+          landedOp.type === 'deal_damage' ||
+          landedOp.type === 'if' ||
+          landedOp.type === 'for_each_target' ||
+          landedOp.type === 'read_stacks'
+        ) {
+          fault(
+            'invalid_field_value',
+            lpath,
+            `onLanded does not allow '${landedOp.type}' ops (flat consequence lanes only)`,
+          )
+          continue
+        }
+        if ('target' in landedOp && landedOp.target !== 'loop_target' && landedOp.target !== 'self') {
+          fault(
+            'invalid_field_value',
+            `${lpath}.target`,
+            `onLanded ops must target 'loop_target' or 'self' -- got '${landedOp.target}'`,
+          )
+        }
+        validateOperation(landedOp, lpath, deps, true, fault)
+      }
       return
     }
     case 'heal': {
@@ -592,6 +637,13 @@ function validateOperation(
       if (op.durationOverride !== undefined) validateExpression(op.durationOverride, `${path}.durationOverride`, fault)
       if (op.reactionEligibility !== undefined && !REACTION_ELIGIBILITIES.has(op.reactionEligibility)) {
         fault('invalid_field_value', `${path}.reactionEligibility`, `unknown eligibility '${String(op.reactionEligibility)}'`)
+      }
+      if (
+        op.externalWardGrant !== undefined &&
+        (!Number.isFinite(op.externalWardGrant.sourceMaxHpRatio) ||
+          op.externalWardGrant.sourceMaxHpRatio < 0)
+      ) {
+        fault('invalid_field_value', `${path}.externalWardGrant`, 'sourceMaxHpRatio must be a finite number >= 0')
       }
       return
     }
@@ -641,6 +693,13 @@ function validateOperation(
     case 'cleanse': {
       requireTarget(op.target)
       validateCleanseQuery(op, path, deps, fault)
+      return
+    }
+    case 'detonate': {
+      requireTarget(op.target)
+      if (typeof op.amp !== 'number' || !Number.isFinite(op.amp) || op.amp < 0) {
+        fault('invalid_field_value', `${path}.amp`, 'detonate amp must be a finite number >= 0')
+      }
       return
     }
     case 'push_gauge': {
@@ -1007,6 +1066,26 @@ function validateConditionInner(
       return
     case 'crit_landed':
     case 'any_target_landed':
+      return
+    case 'target_hit_landed':
+      // single-binding intents only -- 'affected_targets'/'all_enemies'
+      // would bind member[0] silently (misleading); use any_target_landed
+      // for the cast-scope check instead.
+      if (condition.target !== undefined) {
+        if (
+          condition.target === 'affected_targets' ||
+          condition.target === 'all_enemies' ||
+          condition.target === 'all_allies' ||
+          condition.target === 'allies_except_self'
+        ) {
+          fault(
+            'malformed_condition',
+            `${path}.target`,
+            `target_hit_landed requires a single-binding intent (loop_target/primary_target/self/attacker), got '${condition.target}' -- use any_target_landed for the cast-scope check`,
+          )
+        }
+        validateTargetIntent(condition.target, `${path}.target`, insideForEach, fault)
+      }
       return
   }
 }

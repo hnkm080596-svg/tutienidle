@@ -89,6 +89,48 @@ export interface SkillResolveInput {
   /** caller-computed scale folded into every deal_damage coefficient
       (sudden-death multiplier parity). */
   coefficientScale?: number
+  /** Composite-extra payload lane (TBS compositePickedSkills parity):
+      the def resolves VERBATIM -- no empowerment swap, no composite
+      re-pick, no subcast config; extras are payload-only inline lanes
+      of the parent cast. */
+  payloadOnly?: boolean
+  /** Charge-init plan (TBS chargeTurns parity): the cast COMMITS now --
+      cooldown through the commit port, cost + consume-all burn as the
+      first scheduled ops -- and defers every authored step and grant to
+      the charge-resolve follow-up. The plan carries no steps, no grants
+      and no composite extras (the deferred resolution owns all of it). */
+  chargeInit?: boolean
+  /** Declare-side resolution replay (TBS parity): the caller already
+      ran the empowerment swap / composite pick / theBurned capture at
+      DECLARE to feed targeting; the plan must execute THAT resolution,
+      never re-roll it. Honored whenever present -- follow-up plans
+      built by resolveFollowUp strip it so repeats/multicast re-resolve
+      (declareQueuedExecution re-picks per execution). */
+  preResolved?: SkillPreResolution
+  /** CAST_COMMIT override -- defaults to `subcastIndex === 0`. TBS
+      queued executions (repeat/multicast) are fresh cast identities
+      that must NOT re-commit (executionCommitsCast parity). */
+  commitsCast?: boolean
+  /** Follow-up driving override -- defaults to true. TBS drives
+      repeats/multicast through its own queuedExecutions lane (drain
+      ordering, intercept windows, target re-collection parity); the
+      executor's internal driving stays OFF there. Composite extras
+      still expand inline -- they are lanes of the executing plan. */
+  driveFollowUps?: boolean
+}
+
+/** The caller's declare-side resolution, replayed verbatim. */
+export interface SkillPreResolution {
+  /** the RESOLVED payload def id (empowered/composite pick, or the
+      root itself for 'original' casts). */
+  effectiveSkillId: SkillId
+  /** composite picks[1..] -- inline extra payload lanes. */
+  extraSkillIds?: readonly SkillId[]
+  /** stamped when the resolution swapped to a variant (empowered). */
+  resolvedVariantId?: SkillId
+  /** theBurned captured at declare (TBS execution.theBurned parity) --
+      feeds theScaling via snapshot.resourcesConsumed. */
+  theBurned?: number
 }
 
 interface ResolveScope {
@@ -115,50 +157,76 @@ export class SkillResolver {
       )
     }
 
-    // 1 -- empowerment variant swap.
+    // 1+2 -- resolution: either the caller's declare-side replay
+    // (preResolved -- TBS already swapped/picked at DECLARE to feed
+    // targeting) or the resolver's own empowerment swap + composite
+    // roll. Empowerment only ever fires on the ROOT cast
+    // (subcastIndex===0 -- TBS declareQueuedExecution parity: follow-up
+    // executions never re-check empowerment); composite pools re-roll
+    // per subcast. payloadOnly resolves stay verbatim either way.
     let effective = input.definition
     let resolvedVariantId: SkillId | undefined
-    const empowerment = effective.variants?.empowerment
+    const empowerment = input.definition.variants?.empowerment
     const resourcesConsumed: Record<string, number> = {}
-    if (
-      empowerment !== undefined &&
-      input.entityQuery.currentThe(input.sourceId) >= empowerment.theThreshold
-    ) {
-      const empowered = this.skills.require(empowerment.empoweredSkillId)
-      if (empowered.kind !== 'active') {
-        throw new SkillResolverError(
-          `SkillResolver: empowerment target '${empowerment.empoweredSkillId}' of '${effective.id}' is not active`,
-        )
-      }
-      effective = empowered
-      resolvedVariantId = empowered.id
-      if (empowerment.consumesAllThe === true) {
-        // theBurned captures BEFORE the consume op zeroes the pool.
-        resourcesConsumed.the = input.entityQuery.currentThe(input.sourceId)
-      }
-    }
-
-    // 2 -- composite pool roll (once per plan; picks[0] is this plan's
-    // payload def, picks[1..] are the cast's inline extra payload lanes).
-    // The pool lives on the AUTHORED ROOT def (TBS action.skill parity --
-    // an empowerment swap never changes which def owns the pool).
     let compositePicks: readonly SkillId[] | undefined
     let compositeExtraIds: readonly SkillId[] | undefined
-    const rootSubcasts = input.definition.subcasts
-    if (rootSubcasts?.compositePool !== undefined) {
-      const picks = this.pickComposite(
-        rootSubcasts.compositePool,
-        rootSubcasts.compositeCount ?? 1,
-      )
-      compositePicks = picks
-      compositeExtraIds = picks.slice(1)
-      const picked = this.skills.require(picks[0]!)
+    const rootSubcasts =
+      input.payloadOnly === true ? undefined : input.definition.subcasts
+    const pre = input.payloadOnly === true ? undefined : input.preResolved
+
+    if (pre !== undefined) {
+      const picked = this.skills.require(pre.effectiveSkillId)
       if (picked.kind !== 'active') {
         throw new SkillResolverError(
-          `SkillResolver: composite pick '${picks[0]}' of '${effective.id}' is not active`,
+          `SkillResolver: preResolved effective '${pre.effectiveSkillId}' of '${effective.id}' is not active`,
         )
       }
       effective = picked
+      resolvedVariantId = pre.resolvedVariantId
+      compositeExtraIds = pre.extraSkillIds
+      if (rootSubcasts?.compositePool !== undefined) {
+        compositePicks = [pre.effectiveSkillId, ...(pre.extraSkillIds ?? [])]
+      }
+      if (pre.theBurned !== undefined) {
+        // theBurned was captured at DECLARE (pre-commit, pre-burn).
+        resourcesConsumed.the = pre.theBurned
+      }
+    } else {
+      if (
+        input.payloadOnly !== true &&
+        input.subcastIndex === 0 &&
+        empowerment !== undefined &&
+        input.entityQuery.currentThe(input.sourceId) >= empowerment.theThreshold
+      ) {
+        const empowered = this.skills.require(empowerment.empoweredSkillId)
+        if (empowered.kind !== 'active') {
+          throw new SkillResolverError(
+            `SkillResolver: empowerment target '${empowerment.empoweredSkillId}' of '${effective.id}' is not active`,
+          )
+        }
+        effective = empowered
+        resolvedVariantId = empowered.id
+        if (empowered.consumesAllThe === true) {
+          // theBurned captures BEFORE the consume op zeroes the pool.
+          resourcesConsumed.the = input.entityQuery.currentThe(input.sourceId)
+        }
+      }
+
+      if (rootSubcasts?.compositePool !== undefined) {
+        const picks = this.pickComposite(
+          rootSubcasts.compositePool,
+          rootSubcasts.compositeCount ?? 1,
+        )
+        compositePicks = picks
+        compositeExtraIds = picks.slice(1)
+        const picked = this.skills.require(picks[0]!)
+        if (picked.kind !== 'active') {
+          throw new SkillResolverError(
+            `SkillResolver: composite pick '${picks[0]}' of '${effective.id}' is not active`,
+          )
+        }
+        effective = picked
+      }
     }
 
     // 3 -- stat scalar capture (frozen inputs the def's formulas read).
@@ -185,8 +253,14 @@ export class SkillResolver {
       opSeq: 0,
       readSeq: 0,
       lastDamageOpId: undefined,
+      hitOpIdsByTarget: new Map(),
     }
-    const steps = this.translateOps(effective.operations, ctx, {})
+    // Charge-init defers every authored step to the resolve follow-up:
+    // the plan still commits (cadence/cost/consume-all ride the plan
+    // fields below) but mints no operation steps.
+    const steps = input.chargeInit === true
+      ? []
+      : this.translateOps(effective.operations, ctx, {})
 
     return {
       castId: input.castId,
@@ -205,19 +279,29 @@ export class SkillResolver {
       ...(input.definition.cost !== undefined
         ? { cost: input.definition.cost }
         : {}),
-      ...(effective.grants !== undefined ? { grants: effective.grants } : {}),
+      commitsCast: input.commitsCast ?? input.subcastIndex === 0,
+      // consumesAllThe rides the EFFECTIVE def (TBS payloadSkill parity:
+      // the empowered form carries the burn; a root-level flag burns on
+      // its own commit -- never on follow-ups, which never commit).
+      ...(effective.consumesAllThe === true ? { consumesAllThe: true } : {}),
+      // Charge-init grants nothing now -- theGainOnLandedCast/theGainOnCrit
+      // fire on the deferred resolve execution, where hits actually land.
+      ...(input.chargeInit !== true && effective.grants !== undefined
+        ? { grants: effective.grants }
+        : {}),
       ...(effective.theScaling !== undefined
         ? { theScaling: effective.theScaling }
         : {}),
-      ...(effective.detonate !== undefined ? { detonate: effective.detonate } : {}),
+      ...(effective.landed !== undefined ? { landed: effective.landed } : {}),
       // Follow-up config is ROOT-owned (TBS rootSkill.repeatCasts /
       // rootSkill.multicast parity -- a picked member's own subcasts
       // never drive).
       ...(rootSubcasts !== undefined ? { subcasts: rootSubcasts } : {}),
-      ...(compositeExtraIds !== undefined && compositeExtraIds.length > 0
+      ...(input.chargeInit !== true &&
+      compositeExtraIds !== undefined &&
+      compositeExtraIds.length > 0
         ? { compositeExtraIds }
         : {}),
-      ...(effective.landed !== undefined ? { landed: effective.landed } : {}),
       targetIntent: effective.targetIntent,
       ...(effective.actionTags !== undefined ? { actionTags: effective.actionTags } : {}),
       ...(effective.emblemOnly !== undefined ? { emblemOnly: effective.emblemOnly } : {}),
@@ -485,6 +569,11 @@ export class SkillResolver {
             query: 'hp_percent',
             targetId: this.resolveIntentSingle(expr.target, ctx, scope),
           }
+        case 'alive_count':
+          return {
+            query: 'alive_count',
+            targetIds: this.resolveIntentSet(expr.target, ctx, scope),
+          }
         case 'resource_current':
           return {
             query: 'resource_current',
@@ -710,6 +799,14 @@ export class SkillResolver {
         return { kind: 'crit_landed' }
       case 'any_target_landed':
         return { kind: 'any_target_landed' }
+      case 'target_hit_landed':
+        // Legal only as the condition of an authored `if` op (lowered
+        // to ops_landed_any + var branch in translateOp); inside scalar
+        // `if` leaves or other condition slots there is no step
+        // emission point, so this position is a structural fault.
+        throw new SkillResolverError(
+          `SkillResolver: target_hit_landed on '${ctx.effective.id}' is only legal as an authored 'if' condition -- not inside expressions or nested condition positions`,
+        )
     }
   }
 
@@ -830,7 +927,54 @@ export class SkillResolver {
         return this.translateApplyShield(op, ctx, scope)
       case 'read_stacks':
         return this.translateReadStacks(op, ctx, scope)
-      case 'if':
+      case 'detonate':
+        // per resolved target -- the executor expands the
+        // consume->burst->re-seed sequence at this step position
+        // (TBS per-hit detonate ordering).
+        return this.resolveIntentSet(op.target, ctx, scope).map((targetId) => ({
+          kind: 'detonate' as const,
+          targetId,
+          amp: op.amp,
+        }))
+      case 'if': {
+        // target_hit_landed (M4) -- lowers to read{ops_landed_any over
+        // the target's minted hit ops} + branch{var>=1}: the TBS
+        // per-landed-hit consequence gate (ailments/detonate fire only
+        // when the hit on THIS target connected).
+        if (op.condition.kind === 'target_hit_landed') {
+          const intent =
+            op.condition.target ??
+            (scope.loopTargetId !== undefined ? 'loop_target' : 'primary_target')
+          const targetId = this.resolveIntentSingle(intent, ctx, scope)
+          if (targetId === undefined) {
+            throw new SkillResolverError(
+              `SkillResolver: target_hit_landed on '${ctx.effective.id}' could not bind '${intent}'`,
+            )
+          }
+          const hitOpIds = ctx.hitOpIdsByTarget.get(targetId) ?? []
+          if (hitOpIds.length === 0) {
+            throw new SkillResolverError(
+              `SkillResolver: target_hit_landed on '${ctx.effective.id}' resolved zero hit ops for target '${targetId}' -- the gate must follow a deal_damage op on the same target`,
+            )
+          }
+          const landedVar = this.nextVar('thl', ctx)
+          return [
+            {
+              kind: 'read',
+              query: { query: 'ops_landed_any', operationIds: hitOpIds },
+              into: landedVar,
+            },
+            {
+              kind: 'branch',
+              condition: { kind: 'var', name: landedVar, op: 'gte', value: 1 },
+              then: this.translateOps(op.then, ctx, scope),
+              ...(op.else !== undefined
+                ? { else: this.translateOps(op.else, ctx, scope) }
+                : {}),
+              gate: { hitOperationIds: hitOpIds, targetId },
+            },
+          ]
+        }
         return [
           {
             kind: 'branch',
@@ -841,6 +985,7 @@ export class SkillResolver {
               : {}),
           },
         ]
+      }
       case 'for_each_target': {
         // RESOLVE-time unroll: each member copy binds loop_target in
         // ops AND conditions (the resolved plan holds zero loop_targets).
@@ -875,18 +1020,22 @@ export class SkillResolver {
         : 1
 
     for (const targetId of targetIds) {
-      const hitOpIds: CombatOperationId[] = []
+      const targetSteps: ResolvedSkillPlanStep[] = []
       for (let i = 0; i < instanceCount; i++) {
         const hit = this.buildHitStep(op, instances, targetId, ctx, scope)
-        steps.push(hit.step)
-        hitOpIds.push(...hit.hitOpIds)
+        const instanceSteps: ResolvedSkillPlanStep[] = [hit.step]
+        // M4 -- register for target_hit_landed gates (per-target
+        // landed-hit consequence parity).
+        const registered = ctx.hitOpIdsByTarget.get(targetId) ?? []
+        registered.push(...hit.hitOpIds)
+        ctx.hitOpIdsByTarget.set(targetId, registered)
 
         // healPercentOfDamage -- per-hit leech, gated on hpDamage > 0.
         // ops_result_sum reads the fired arm's hpDamage (execute-branched
         // hits mint one op per arm; the un-taken arm contributes 0).
         if (op.healPercentOfDamage !== undefined) {
           const hpdVar = this.nextVar('hpd', ctx)
-          steps.push({
+          instanceSteps.push({
             kind: 'read',
             query: {
               query: 'ops_result_sum',
@@ -900,7 +1049,7 @@ export class SkillResolver {
             'folded' in amountResult
               ? { op: 'multiply', values: [{ query: 'var', name: hpdVar }, amountResult.folded] }
               : { op: 'multiply', values: [{ query: 'var', name: hpdVar }, amountResult.late] }
-          steps.push({
+          instanceSteps.push({
             kind: 'branch',
             condition: { kind: 'var', name: hpdVar, op: 'gt', value: 0 },
             then: [
@@ -915,34 +1064,74 @@ export class SkillResolver {
             ],
           })
         }
-      }
 
-      // Landed-gated consume lanes (once per target -- the first landed
-      // instance hit consumes everything; subsequent reads see 0).
-      if (op.consumeBuff !== undefined || op.consumeWard !== undefined) {
-        const landedVar = this.nextVar('landed', ctx)
-        steps.push({
+        // Landed-gated consume lanes -- PER LANDED HIT (TBS :2086-2134
+        // parity: the consume sits inside the hit's landed branch, ahead
+        // of procs/ailments; the first landed instance consumes
+        // everything and later reads see 0).
+        if (op.consumeBuff !== undefined || op.consumeWard !== undefined) {
+          const consumeLandedVar = this.nextVar('clanded', ctx)
+          instanceSteps.push({
+            kind: 'read',
+            query: { query: 'ops_landed_any', operationIds: hit.hitOpIds },
+            into: consumeLandedVar,
+          })
+          const consumeThen: ResolvedSkillPlanStep[] = []
+          if (op.consumeBuff !== undefined) {
+            consumeThen.push(
+              ...this.compileConsumeBuff(op.consumeBuff, targetId, ctx, scope),
+            )
+          }
+          if (op.consumeWard !== undefined) {
+            consumeThen.push(
+              ...this.compileConsumeWard(op.consumeWard, targetId, ctx, scope),
+            )
+          }
+          instanceSteps.push({
+            kind: 'branch',
+            condition: { kind: 'var', name: consumeLandedVar, op: 'gte', value: 1 },
+            then: consumeThen,
+          })
+        }
+
+        // Per-landed-hit consequence gate -- ALWAYS emitted (the stamped
+        // gate is the executor's orchestration seam: procs/reactive
+        // enter on gate-entered, taken windows/refresh/sweep on
+        // gate-exited). onLanded ops compile bound to this hit's target.
+        const consequenceVar = this.nextVar('clgate', ctx)
+        instanceSteps.push({
           kind: 'read',
-          query: { query: 'ops_landed_any', operationIds: hitOpIds },
-          into: landedVar,
+          query: { query: 'ops_landed_any', operationIds: hit.hitOpIds },
+          into: consequenceVar,
         })
-        const consumeThen: ResolvedSkillPlanStep[] = []
-        if (op.consumeBuff !== undefined) {
-          consumeThen.push(
-            ...this.compileConsumeBuff(op.consumeBuff, targetId, ctx, scope),
-          )
-        }
-        if (op.consumeWard !== undefined) {
-          consumeThen.push(
-            ...this.compileConsumeWard(op.consumeWard, targetId, ctx, scope),
-          )
-        }
-        steps.push({
+        const consequenceThen: ResolvedSkillPlanStep[] =
+          op.onLanded !== undefined && op.onLanded.length > 0
+            ? this.translateOps(op.onLanded, ctx, { loopTargetId: targetId })
+            : []
+        instanceSteps.push({
           kind: 'branch',
-          condition: { kind: 'var', name: landedVar, op: 'gte', value: 1 },
-          then: consumeThen,
+          condition: { kind: 'var', name: consequenceVar, op: 'gte', value: 1 },
+          then: consequenceThen,
+          gate: { hitOperationIds: hit.hitOpIds, targetId },
+        })
+
+        // T3-22b parity -- legacy breaks the instance loop on
+        // `!actor.alive || !target.alive`: a kill mid-lane stops every
+        // remaining instance (nested alive checks; the source check
+        // also gates every later target's lane).
+        targetSteps.push({
+          kind: 'branch',
+          condition: { kind: 'target_alive', targetId: ctx.input.sourceId },
+          then: [
+            {
+              kind: 'branch',
+              condition: { kind: 'target_alive', targetId },
+              then: instanceSteps,
+            },
+          ],
         })
       }
+      steps.push(...targetSteps)
     }
     return steps
   }
@@ -1005,6 +1194,12 @@ export class SkillResolver {
         ...(armorPolicy !== undefined ? { armorPolicy } : {}),
         ...(components !== undefined ? { components } : {}),
         ...(op.scaling !== undefined ? { scaling: op.scaling } : {}),
+        ...(op.missingHpBonusPerMissingPercent !== undefined
+          ? { missingHpBonusPerMissingPercent: op.missingHpBonusPerMissingPercent }
+          : {}),
+        ...(op.missingHpBonusCap !== undefined
+          ? { missingHpBonusCap: op.missingHpBonusCap }
+          : {}),
         snapshot: ctx.snapshot.statScalars,
       }
     }
@@ -1422,6 +1617,12 @@ export class SkillResolver {
               ...(durationOverride !== undefined ? { durationOverride } : {}),
               reactionEligibility: op.reactionEligibility ?? 'suppressed',
             },
+            // Orchestration metadata rides the op (contract v1.6) --
+            // the turn runtime replays the source-tagged externalWard
+            // write at settle.
+            ...(op.externalWardGrant !== undefined
+              ? { externalWardGrant: op.externalWardGrant }
+              : {}),
           },
           ctx,
           late,
@@ -1732,4 +1933,7 @@ interface TranslateContext {
   opSeq: number
   readSeq: number
   lastDamageOpId: CombatOperationId | undefined
+  /** hit-channel (skill_hit) opIds minted so far, grouped by targetId --
+      the target_hit_landed gate's ops_landed_any binding (M4). */
+  hitOpIdsByTarget: Map<CombatEntityId, CombatOperationId[]>
 }

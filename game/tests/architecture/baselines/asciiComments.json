@@ -6040,7 +6040,7 @@
   "// Every active skill reachable in the beta loop (Pháp Tu 5 chains × 3 slots +",
   "// specializations, Kiếm Tu) must convert without errors or"
  ],
- "src/core/game/SkillToTurnSkillConverter.test.ts": [
+ "src/core/skilldef/LegacySkillAdapter.converter.test.ts": [
   "// Phase A3 (2026-09-07) — Skill → TurnSkillDefinition converter tests.",
   "// R3 re-audit (AR-03 gap) — authored manaScalingRatio/attributeScaling",
   "// Debuff effect → appliesAilment (bong, chance 1).",
@@ -6051,7 +6051,7 @@
   "// L3 — flat bonus floor(10000/10) = 1000",
   "// Placeholder only — the composite pick + repeatCasts authored by"
  ],
- "src/core/game/SkillToTurnSkillConverter.ts": [
+ "src/core/skilldef/LegacySkillAdapter.ts": [
   "// R3 (AR-03) — Strict Skill → TurnSkillDefinition field mapper.",
   "// Strictness contract (spec §4.2):",
   "// configurations — never silently degrades to physical ×1 might.",
