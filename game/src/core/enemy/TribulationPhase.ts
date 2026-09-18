@@ -1,4 +1,4 @@
-import type { BuffDefinition } from '../buff/BuffDefinition'
+import type { BuffDefinition } from '../buff2/BuffDefinition'
 import type { EnemyArchetype } from './EnemyArchetype'
 
 /**
@@ -8,8 +8,12 @@ import type { EnemyArchetype } from './EnemyArchetype'
  * `duration` = tồn tại vĩnh viễn suốt trận, xem BuffSystem.update()) —
  * tái dùng nguyên cơ chế Buff/BuffManager hiện có, không cần thêm
  * state-machine phase riêng. Nhiều phase check theo thứ tự khai báo
- * (mảng phải sắp XUỐNG DẦN theo hpThresholdPercent), xem
- * BattleSystem.updateTribulationPhases().
+ * (mảng phải sắp XUỐNG DẦN theo hpThresholdPercent).
+ *
+ * buff2 M5 note: the realtime `BattleSystem.updateTribulationPhases` lane
+ * retired with the legacy buff package; `buff` is now typed on the
+ * canonical buff2 BuffDefinition and the phase/enrage fields remain
+ * dormant data pending the turn-side port.
  *
  * Combat Rework Phase 4 (Boss Mechanics) — GENERIC HOÁ: primitive này
  * giờ dùng chung cho CẢ quái Kiếp lẫn Boss thường (Stage.bossEnemyId)

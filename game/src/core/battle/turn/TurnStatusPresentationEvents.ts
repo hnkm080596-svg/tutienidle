@@ -1,6 +1,5 @@
 import type { EventBus } from '../../events/EventBus'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
-import type { BuffPolarity } from '../../buff/BuffTypes'
 import type { BuffRegistry } from '../../buff2/BuffRegistry'
 import type { BuffReadPort } from '../../buff2/BuffQuery'
 import type { CombatEntityId } from '../../battle/contracts/ids'
@@ -24,7 +23,7 @@ export interface TurnStatusSnapshotEntry {
   dotType: string
   stacks: number
   remainingTurns: number
-  polarity: BuffPolarity
+  polarity: 'buff' | 'debuff'
   permanent: boolean
 }
 
