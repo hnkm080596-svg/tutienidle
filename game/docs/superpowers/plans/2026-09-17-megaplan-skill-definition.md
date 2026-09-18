@@ -3,6 +3,8 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Non-trivial production missions MUST follow `game/docs/architecture/architecture-worker-workflow.md` (G0–G5) and return the G5 evidence report.
 >
 > **Review resync v2 (skill-plan review 2026-09-18 — REQUEST CHANGES resolved):** (a) hard prerequisite corrected to the parent program's locked execution order — this plan expands parent M5, which sits AFTER buff M4 + reaction M-INT; that baseline is already merged on master (`d65f28aa` + `0eb2f2c1`); (b) `ResolvedSkillPlan` is now a `ResolvedSkillPlanStep` IR (operation / read / branch) — `read_stacks`/`if`/`for_each_target` are plan steps, never `CombatOperation`s; (c) `SkillDefinition` is the spec's discriminated union `ActiveSkillDefinition | PassiveSkillDefinition` — the passive schema exists, `PassiveSystem` runtime stays a separate deferred lane; (d) state split into THREE layers — `SkillDefinition` / `SkillProgressionState` / `SkillCombatRuntimeState`; (e) R-S8 REJECTED — no id-keyed runtime-closure provider; `instances.each` is declarative per-instance hit options, unrepresentable semantics degrade to loud `adapterUnsupportedMetadata`; (f) mid-plan reads use narrow READONLY query ports (`SkillBuffQuery`/`SkillVitalsQuery`/`SkillResourceQuery`) backed by domain read surfaces (`BuffReadPort` etc.) — NOT the `CombatAuthorityPorts` command surface; (g) authored `remove_buff` (selector) split from `cleanse` (query) matching `RemoveBuffOperation`/`CleanseBuffOperation`; (h) `barrierAfter` removed — contract §55 grants every authored op its own settlement barrier; (i) "ONE pipeline" narrowed to active turn-combat skills; (j) completion gates updated to current P18 OCR + P5 Sequential Multi-Pass Review; (k) R-S5 unsupported semantics classified canonical-field / new-primitive / `adapterUnsupportedMetadata` — never silent canonical schema pollution.
+>
+> **Review resync v2.1 (skill-plan re-review 2026-09-18 — REQUEST CHANGES, contract closure):** the v2 structure was accepted; this round closes four semantic-to-contract bindings: (l) `instances.each` policies get a canonical carrier — contract addendum v1.6 adds `hitPolicy`/`critPolicy`/`armorPolicy` to `DealDamageOperation.payload`; producers DECLARE intent, the DamageAuthority consumes `CombatRng` and performs every hit/crit/armor roll — `SkillExecutor` never rolls crit/armor/accuracy (spec DamageSystem ownership preserved); `execute` stays authored damage intent → compiles to a `branch{hp_percent_below}` over `SkillVitalsQuery` folding `damageMultiplier` into `coefficient`; (m) cleanse parity — authored `cleanse` query mirrors `BuffCleanseQuery` verbatim (`kind`/`polarity`/`tags`/`element`/`definitionId`) plus `limit?: number`; contract v1.6 + buff spec v1.6 add `CleanseBuffOperation.payload.limit` (undefined=all, N=first N cleansed in canonical `sortedForTarget` order) — legacy `remove_buff`-by-polarity `count` (default 1) maps losslessly; (n) R-S9 — cast-commit ownership split: PRECHECK validates cost, CAST_COMMIT commits `cooldownRemainingTurns` through the `SkillCombatRuntimeState` owner via `SkillCastCommitPort` AND emits `ConsumeResourceOperation`, follow-up executions (repeat/multicast/extra composite picks) never recommit/repay (`executionCommitsCast` parity), committed cooldown+cost never roll back on whiff (spec §14: interrupt-before-commit is the only no-commit case); `commitAction`/`consumeResourceFor`/`commitCast` retire from the canonical lane in M4; (o) `ResolvedSkillCondition` — resolved plans carry concrete `targetId`s, never authored `SkillTargetIntent` selectors; `for_each_target` unroll binds `loop_target` in ops AND conditions.
 
 **Goal:** Replace today's THREE converging ACTIVE-skill representations — legacy `Skill`+`SkillEffect[]` (`core/skill/Skill.ts`), the `TriggerBinding[]`/`SkillAction` path (`SkillTriggerRunner`/`SkillActionRegistry`), and the flat `TurnSkillDefinition` turn-engine shape — with ONE active turn-combat skill execution pipeline: immutable `SkillDefinition` (authored intent) → `SkillResolver` (definition + cast snapshot + progression + route → `ResolvedSkillPlan`) → `SkillExecutor` (plan steps → ordered `ResolvedCombatOperation`s through the `CombatScheduler`). `TurnSkillDefinition` survives ONLY as the adapter input during migration; `Skill` progression fields (level/xp/loadout/unlocked/equipped) split off into `SkillProgressionState` owned by `SkillSystem`, and battle-scoped cast state (cooldown/charge/lastCastSequence) into `SkillCombatRuntimeState` owned by the turn runtime. `PassiveSystem` remains a separate event-driven passive runtime — explicitly OUT of this cutover (R-S7).
 
@@ -11,9 +13,9 @@
 **Tech Stack:** Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 
 **Specs:**
-- `game/docs/specs/2026-09-17-skill-definition-system-spec.md` (v1.2 — THE source of truth)
-- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.5 — `ResolvedCombatOperation` (no top-level `sourceId`; `origin.sourceId` is sole authority), origins `kind:'skill'`, `castId`/`subcastIndex`, settlement, `TriggerPeriodicStartResult`)
-- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.5 — consumed ops: `ApplyBuff`, `TriggerBuffPeriodic`, `ConsumeBuffStacks`, `AddBuffStacks`, `RemoveBuff`, `CleanseBuff`; consumed query surface: `BuffReadPort`)
+- `game/docs/specs/2026-09-17-skill-definition-system-spec.md` (v1.3 — THE source of truth)
+- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.6 — `ResolvedCombatOperation` (no top-level `sourceId`; `origin.sourceId` is sole authority), origins `kind:'skill'`, `castId`/`subcastIndex`, settlement, `TriggerPeriodicStartResult`, **addendum v1.6** `DealDamageOperation` hit/crit/armor policies + `CleanseBuffOperation.limit` — this program lands both)
+- `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.6 — consumed ops: `ApplyBuff`, `TriggerBuffPeriodic`, `ConsumeBuffStacks`, `AddBuffStacks`, `RemoveBuff`, `CleanseBuff{query, limit?}`; consumed query surface: `BuffReadPort`)
 
 **Sibling-plan dependency:** Expansion of the Skill scope in `game/docs/superpowers/plans/2026-09-17-combat-systems-reimagined.md` (its M5). Per the parent's LOCKED execution order `M0→M1→M2→M3→M6→M4(+M-INT)→M5→M7`, this program sits AFTER the buff cutover. **Hard prerequisites — the merged atomic post-cutover baseline:** Combat Contract complete (`contracts/**`, scheduler `enqueueAuthored`/`run()`, `CombatAuthorityPorts`, `CombatOperationBatchRunner`/`DeferredOperation`) AND buff megaplan M4 production cutover AND reaction M-INT — i.e. `TurnBattleSystem` runs on buff2 `BuffSystem` as the sole buff/ailment authority, `ElementalStateRegistry` is bound to the five canonical ấn ids, and `TurnReactionManager`/`canInitiateWuxingReactions`/`BuffPool` battle lanes are DELETED. As of `d65f28aa` (+`0eb2f2c1`) this baseline already exists on master — M0 verifies the post-cutover state rather than a pre-cutover one; if absent → BLOCKED. Starting from a pre-cutover tree would force the skill executor to understand BOTH the legacy `BuffPool`/`TurnReactionManager` world and the canonical one — that defeats the cutover architecture. The `SkillExecutor` emits operations — it NEVER calls `BuffSystem`/`CombatSystem` directly.
 
@@ -29,9 +31,9 @@
 
 ## Canonical names (locked across sibling plans)
 
-**Consumes:** `ResolvedCombatOperation`, `CombatOperationOrigin` (`kind:'skill'`, `castId`, `subcastIndex`), `CombatOperation` union (skill executor emits the WHOLE vocabulary — `DealDamage`, `Heal`, `ApplyBuff`, `ConsumeBuffStacks`, `TriggerBuffPeriodic`, `PushGauge`, `GainResource`, `ConsumeResource`, `ApplyShield`), `CombatScheduler` (barriers between ops), `CombatOperationExecutor`, `CombatRng` (composite picks, multicast, ailment rolls — rolls route through scheduler context, NOT embedded in definitions), `ApplyBuffRequest` (`reactionEligibility` set here — the skill is the eligibility AUTHORITY per contract §14–15).
+**Consumes:** `ResolvedCombatOperation`, `CombatOperationOrigin` (`kind:'skill'`, `castId`, `subcastIndex`), `CombatOperation` union (skill executor emits the WHOLE vocabulary — `DealDamage`, `Heal`, `ApplyBuff`, `ConsumeBuffStacks`, `TriggerBuffPeriodic`, `PushGauge`, `GainResource`, `ConsumeResource`, `ApplyShield`), `CombatScheduler` (barriers between ops), `CombatOperationExecutor`, `CombatRng` (composite picks, multicast, ailment rolls — rolls route through scheduler context, NOT embedded in definitions), `ApplyBuffRequest` (`reactionEligibility` set here — the skill is the eligibility AUTHORITY per contract §14–15), contract-v1.6 `DealDamageOperation` policies (`hitPolicy`/`critPolicy`/`armorPolicy` — declared intent; DamageAuthority rolls) + `CleanseBuffOperation.limit`.
 
-**Produces:** `SkillDefinition` (`= ActiveSkillDefinition | PassiveSkillDefinition` — spec §4 discriminated union), `AuthoredSkillOperation` (incl. `remove_buff` selector + `cleanse` query ops — contract `RemoveBuffOperation`/`CleanseBuffOperation` parity), `SkillTargetIntent`, `SkillCondition`, `SkillProgressionState`, `SkillCombatRuntimeState`, `CastSnapshot`, `ResolvedSkillPlan`, `ResolvedSkillPlanStep` (operation/read/branch IR — plan steps are NOT `CombatOperation`s), `SkillResolver`, `SkillExecutor`, `SkillCastOutcome` (`landed`/`whiffed`/`interrupted`/`blocked`), `LandedSemantics` (`landed` = a connection-semantic primary effect successfully connects — spec §20/R-S2), `LegacySkillAdapter` (`Skill`+`EffectiveSkill`+`TurnSkillDefinition` → `SkillDefinition`), `SkillDefinitionRegistry` (startup validation), `SkillBuffQuery`/`SkillVitalsQuery`/`SkillResourceQuery`/`SkillOpResultQuery` (narrow READONLY mid-plan read ports — spec §30/§63; backed by `BuffReadPort`/entity-vitals/resource-owner reads at composition root, NEVER the `CombatAuthorityPorts` command surface), `adapterUnsupportedMetadata` (loud channel for unrepresentable authored semantics — R-S5/R-S8).
+**Produces:** `SkillDefinition` (`= ActiveSkillDefinition | PassiveSkillDefinition` — spec §4 discriminated union), `AuthoredSkillOperation` (incl. `remove_buff` selector + `cleanse` query ops — contract `RemoveBuffOperation`/`CleanseBuffOperation` parity), `SkillTargetIntent`, `SkillCondition`, `SkillProgressionState`, `SkillCombatRuntimeState`, `CastSnapshot`, `ResolvedSkillPlan`, `ResolvedSkillPlanStep` (operation/read/branch IR — plan steps are NOT `CombatOperation`s), `ResolvedSkillCondition` (concrete `targetId` refs — resolved plans never carry authored `SkillTargetIntent` selectors), `SkillResolver`, `SkillExecutor`, `SkillCastOutcome` (`landed`/`whiffed`/`interrupted`/`blocked`), `LandedSemantics` (`landed` = a connection-semantic primary effect successfully connects — spec §20/R-S2), `SkillCastCommitPort` (the ONE executor command surface — CAST_COMMIT cadence commit to the `SkillCombatRuntimeState` owner; resource cost rides the canonical `ConsumeResourceOperation`), `LegacySkillAdapter` (`Skill`+`EffectiveSkill`+`TurnSkillDefinition` → `SkillDefinition`), `SkillDefinitionRegistry` (startup validation), `SkillBuffQuery`/`SkillVitalsQuery`/`SkillResourceQuery`/`SkillOpResultQuery` (narrow READONLY mid-plan read ports — spec §30/§63; backed by `BuffReadPort`/entity-vitals/resource-owner reads at composition root, NEVER the `CombatAuthorityPorts` command surface), `adapterUnsupportedMetadata` (loud channel for unrepresentable authored semantics — R-S5/R-S8).
 
 ## Rulings — locked by plan-review v2 (2026-09-18); M0 verifies, does not re-decide
 
@@ -46,7 +48,8 @@
 | R-S5 | AMENDED — `SkillEffect` fields the turn engine reports-but-can't-execute (`collectUnsupportedSkillSemantics`: `hitCountByRealm`, `realmDamageRatio`, `skillExperienceRatio`, `spreadsAilmentId`, `stacksPerAffectedTarget`, `scope`, `refresh`, `grantsZone`, `zoneElement`, `swordZone*`, `breakDamagePerHit`) get a THREE-TIER classification, never blanket in-schema promotion: **(A) canonical semantic exists** → authored field/op (`hitCount` → `deal_damage.hitCount`; `stacksPerAffectedTarget` → `apply_buff` stacks query); **(B) representable via a new generic primitive** → add the primitive + tests (`spreadsAilmentId` → scoped `apply_buff`); **(C) not yet representable** → `adapterUnsupportedMetadata` on the converted def — loud report, NOT canonical gameplay schema (`grantsZone`/`zoneElement`/`swordZone*` stay tier-C until a real Zone authority/operation exists). | A8: unsupported semantics must stay LOUD; canonical schema must not carry fields whose semantics don't exist. |
 | R-S6 | LOCKED — `Skill.specializations`/`selectedSpecializationId` resolution stays in `SkillSystem.getEffectiveSkill` — the resolver receives the already-specialized authored def + `SkillProgressionState`. Specialization = choosing WHICH authored def resolves; not plan-time branching. | Preserves `SkillSystem.selectSpecialization` API + `EffectiveSkill` contract (`SkillSystem.ts:74`). |
 | R-S7 | LOCKED — passives stay on `PassiveSystem` THIS program. `PassiveSkillDefinition` schema + validation land in M1 (the union is real), but NO passive runtime adapter/migration — `PassiveSystem` is a separate event-driven runtime, explicitly documented as a deferred lane, NOT a "parallel pipeline" violation. Scope phrase everywhere: "ONE active turn-combat skill execution pipeline". | Folding passive triggers into this cutover doubles the blast radius for zero combat-visible gain. |
-| R-S8 | LOCKED — REJECT the id-keyed runtime-closure provider (a `perInstanceOptions` registry keyed by def id is a custom-handler lane: violates declarative-definitions/no-callbacks/inspectable-plan invariants — spec §64). Instead: **`instances.each` is DECLARATIVE per-instance hit options** — `{count: ScalarExpression, each?: {guaranteedHit?: boolean, execute?: {hpPercentBelow: ScalarExpression, damageMultiplier: number}, critChance?: number, armorPierce?: {bypassChance: number, pierceFraction: number}}}` — evaluated per (instance, live target) at EXECUTE with per-instance `CombatRng` rolls; `count` may query player state (Ngự Kiếm Đạo's `kiemDaoCount`); unlock gates ride progression `SkillModification`s. Any semantic `instances.each` cannot express → `adapterUnsupportedMetadata` + the def stays flagged (NOT claimed migrated), never a hidden callback. | Verified consumer `NguKiemDaoProvider.perInstanceOptions` (`NguKiemDaoProvider.ts:68-96`): per-instance guaranteedHit + execute-on-live-hp% + crit chance + armor pierce/bypass — needs roll semantics, not index-scaled coefficients. |
+| R-S8 | LOCKED — REJECT the id-keyed runtime-closure provider (a `perInstanceOptions` registry keyed by def id is a custom-handler lane: violates declarative-definitions/no-callbacks/inspectable-plan invariants — spec §64). Instead: **`instances.each` is DECLARATIVE per-instance hit options** — `{count: ScalarExpression, each?: {guaranteedHit?: boolean, execute?: {hpPercentBelow: ScalarExpression, damageMultiplier: number}, critChance?: number, armorPierce?: {bypassChance: number, pierceFraction: number}}}`. **v2.1 contract carrier:** `instances.count` evaluates at RESOLVE → the plan unrolls per-instance `deal_damage` operation steps; `each` maps onto contract-v1.6 policies — `guaranteedHit`→`hitPolicy`, `critChance`→`critPolicy.bonusChance`, `armorPierce`→`armorPolicy{bypassChance, pierceFractionOnFail}` — DECLARED intent on the payload; the **DamageAuthority consumes `CombatRng` and performs every hit/crit/armor roll at dispatch** — the SkillExecutor never rolls crit/armor/accuracy (spec DamageSystem ownership). `execute` remains authored damage intent → compiles to `branch{hp_percent_below(targetId)}` per instance (post-previous-hit hp% via `SkillVitalsQuery`) folding `damageMultiplier` into `coefficient`. Any semantic this cannot express → `adapterUnsupportedMetadata` + the def stays flagged (NOT claimed migrated), never a hidden callback. | Verified consumer `NguKiemDaoProvider.perInstanceOptions` (`NguKiemDaoProvider.ts:68-96`): per-instance guaranteedHit + execute-on-live-hp% + crit chance + armor pierce/bypass — needs roll semantics, not index-scaled coefficients. `resolveActionHit` executes the RESOLVED outcomes today (`HitResolveOptions`); v1.6 moves the rolls into the DamageAuthority so intent stays declarative. |
+| R-S9 | LOCKED — CAST-COMMIT ownership split (spec §13–15; closes the `commitAction` double-authority gap). **PRECHECK:** `cost` validated at declare (`hasResourceFor` parity via `SkillResourceQuery`) — insufficient → cast blocked, no commit (`insufficientPolicy:'block_cast'`). **CAST_COMMIT** (root cast only, `subcastIndex===0`): (a) `SkillCombatRuntimeState.cooldownRemainingTurns = cadence.cooldownTurns` committed through `SkillCastCommitPort` — the narrow command surface wired to the turn-runtime owner of the state (R6 ownership intact — the executor requests, the owner writes); (b) `cost.amount` emitted as a `ConsumeResourceOperation` through the scheduler (canonical op + vitals events, NOT a direct entity write — replaces `consumeResourceFor`); (c) `CastSnapshot` already frozen — `theBurned` captured BEFORE the consume op zeroes the pool. **PRIMARY:** plan executes; committed cooldown+cost NEVER roll back on whiff/skip — interrupt-before-commit is the only no-commit case (spec §14). **Follow-ups** (`subcastIndex>0`: repeat/multicast/extra composite picks) never recommit/repay — `executionCommitsCast` parity (`source 'repeat'|'multicast'`). **Charge:** `cadence.chargeTurns>0` — the charge-init cast commits cooldown+cost at ITS CAST_COMMIT and records `chargeProgress`; the deferred charge-resolution is a non-committing follow-up plan (`chargingTurnsRemaining`/`pendingChargedSkillId` lane parity). Target-selection failure at declare → no cast exists → no commit (PRECHECK-level failure, not a whiff — preserves today's empty-`affected` no-commit). `commitAction()`/`consumeResourceFor()`/`commitCast()` retire from the canonical lane in M4, deleted with the legacy lane in M5. Ordering parity: consume settles BEFORE the plan; `theGainOnLandedCast`/`theGainOnCrit` ride authored `gain_resource` ops conditioned on `any_target_landed`/`crit_landed` (post-plan — gain-after-consume preserved, `TurnBattleSystem.ts:1967-1971`). | `commitAction` (`TurnSkillAction.ts:652`) fused cooldown+resource today with a "call AFTER successful cast" doc; spec §14 locks cooldown at CAST_COMMIT — the migration must name the owner or the executor double-consumes / never commits. |
 
 ---
 
@@ -79,7 +82,9 @@
 - Create: `game/src/core/skilldef/AuthoredOperation.ts` — `AuthoredSkillOperation` union + target intents + conditions + `AuthoredBuffSelector`/cleanse query + `adapterUnsupportedMetadata`
 - Create: `game/src/core/skilldef/ScalarExpression.ts` — spec §33 pure AST evaluator (`add`/`multiply`/`subtract`/`divide`-guards-zero/`min`/`max`/`clamp`/`if` + `SkillValueQuery` reads) — `instances.count`/`execute.hpPercentBelow` consume it; NO arbitrary callbacks (spec §64)
 - Create: `game/src/core/skilldef/SkillDefinitionRegistry.ts` — catalog + startup validation
-- Test: `SkillDefinition.test.ts`, `SkillDefinitionRegistry.test.ts`
+- Modify: `game/src/core/battle/contracts/operations.ts` — contract addendum v1.6 types: `DealDamageOperation.payload` gains `hitPolicy`/`critPolicy`/`armorPolicy` (declared intent — DamageAuthority rolls); `CleanseBuffOperation.payload` gains `limit?: number`
+- Modify: `game/src/core/buff2/BuffSystem.ts` — `cleanse(targetId, query, limit?, ctx)` honors deterministic `limit` (first N cleansed in `sortedForTarget` order; `skipped` still reports all non-dispellable matches)
+- Test: `SkillDefinition.test.ts`, `SkillDefinitionRegistry.test.ts`, `operations.cleanse-limit.test.ts`
 
 **Interfaces — Produces:**
 
@@ -95,7 +100,7 @@ export interface ActiveSkillDefinition {
   kind: 'active'
   id: SkillId
   name: string
-  targetIntent: SkillTargetIntent          // 'self' | 'enemy' | 'all_enemies' | 'ally' | 'all_allies' — authored, no runtime ids
+  targetIntent: SkillTargetIntent          // authored selector (union below) — never runtime ids; 'enemy'/'ally' do NOT exist — use 'primary_target'/'affected_targets'/etc.
   actionTags?: readonly string[]           // 'attack' | 'heal' | 'buff' | 'cleanse' | 'defend' | 'utility' — Cấm Công's tag taxonomy (reaction plan R-E2 upgrade path)
   cadence: { cooldownTurns: number; chargeTurns?: number }   // R8: turn units are the ONLY combat-authoritative cadence
   cost?: { resourceType: 'none' | 'mana' | 'the'; amount: number }   // 'the' gates Thế Tu ults
@@ -120,10 +125,10 @@ export interface ActiveSkillDefinition {
   instances?: {                             // R-S8 v2 — DECLARATIVE per-instance hit options (replaces the runtime perInstanceOptions closure)
     count: ScalarExpression                 // may query player state (Ngự Kiếm Đạo kiemDaoCount)
     each?: {
-      guaranteedHit?: boolean               // phi kiếm never miss
+      guaranteedHit?: boolean               // → hitPolicy — phi kiếm never miss
       execute?: { hpPercentBelow: ScalarExpression; damageMultiplier: number }   // live-target hp% at EXECUTE
-      critChance?: number                   // per-instance CombatRng roll
-      armorPierce?: { bypassChance: number; pierceFraction: number }             // per-instance roll → bypass, else partial pierce
+      critChance?: number                   // → critPolicy.bonusChance — DamageAuthority rolls per hit (contract v1.6)
+      armorPierce?: { bypassChance: number; pierceFraction: number }             // → armorPolicy — one authority roll: bypass, else mitigation x (1-fraction)
     }
   }
   /** R-S5/R-S8 tier-C surface — fields the adapter could NOT express as
@@ -148,7 +153,7 @@ export interface PassiveSkillDefinition {
 
 // AuthoredOperation.ts — contract §3: intent only, zero runtime ids
 export type AuthoredSkillOperation =
-  | { type: 'deal_damage'; target: SkillTargetIntent; coefficient?: number; components?: SkillDamageComponent[]; damageType?: 'physical' | 'primordial'; hitCount?: number; canCrit?: boolean; canMiss?: boolean; scaling?: AuthoredScaling; consumeBuff?: { definitionId: BuffDefinitionId; damagePerStack: number; scope?: 'own' | 'any'; healPercentOfDamage?: number }; consumeWard?: { damagePerWardPoint: number }; healPercentOfDamage?: number }
+  | { type: 'deal_damage'; target: SkillTargetIntent; coefficient?: number; components?: SkillDamageComponent[]; damageType?: 'physical' | 'primordial'; hitCount?: number; canCrit?: boolean; canMiss?: boolean; scaling?: AuthoredScaling; hitPolicy?: { guaranteedHit?: boolean }; critPolicy?: { bonusChance?: number }; armorPolicy?: { bypassChance?: number; pierceFractionOnFail?: number }; consumeBuff?: { definitionId: BuffDefinitionId; damagePerStack: number; scope?: 'own' | 'any'; healPercentOfDamage?: number }; consumeWard?: { damagePerWardPoint: number }; healPercentOfDamage?: number }   // policies = contract v1.6 DECLARED intent → DamageAuthority rolls (executor never does); instance-level `each` fields override op-level per key; policies are only legal on hit-resolving profiles
   | { type: 'heal'; target: SkillTargetIntent; amount?: number; fractionOfMaxHp?: number; fractionOfPriorDamage?: { fraction: number; capRatio?: number } }   // authored-level result reference → executor emits a DeferredOperation (pre-minted `operationId`; capRatio clamps the FRACTION at resolution — contract v5 R-C7)
   | { type: 'apply_buff'; target: SkillTargetIntent; definitionId: BuffDefinitionId; stacks?: number; chance?: number; durationOverride?: number; reactionEligibility?: ReactionEligibility }   // DEFAULT 'suppressed' for non-elemental lanes; the adapter writes 'eligible' for appliesAilment(s) unconditionally (r4 — eligibility is path metadata, never the legacy canInitiateWuxingReactions flag; the capability gate decides reactions)
   | { type: 'add_buff_stacks' | 'remove_buff_stacks' | 'consume_buff_stacks'; target: SkillTargetIntent; definitionId: BuffDefinitionId; stacks: number | 'all' }
@@ -156,7 +161,7 @@ export type AuthoredSkillOperation =
   | { type: 'refresh_buff_duration' | 'extend_buff_duration'; target: SkillTargetIntent; definitionId: BuffDefinitionId; turns?: number }
   | { type: 'trigger_buff_periodic'; target: SkillTargetIntent; definitionId: BuffDefinitionId; periodicId?: string }   // spec §30 — manual DoT cash-in (detonate under it)
   | { type: 'remove_buff'; target: SkillTargetIntent; selector: AuthoredBuffSelector; reason?: BuffRemovalReason }   // identified-instance removal → RemoveBuffOperation
-  | { type: 'cleanse'; target: SkillTargetIntent; query: { kind?: 'buff' | 'debuff' | 'ailment'; tags?: readonly string[]; element?: ElementId }; count?: number }   // query-based cleanse → CleanseBuffOperation{targetId, query: BuffCleanseQuery} — the legacy 'remove_buff'-by-polarity effect lands HERE, not on remove_buff
+  | { type: 'cleanse'; target: SkillTargetIntent; query: { kind?: 'buff' | 'debuff' | 'ailment' | 'marker'; polarity?: 'buff' | 'debuff'; tags?: readonly string[]; element?: ElementId; definitionId?: BuffDefinitionId }; limit?: number }   // query mirrors BuffCleanseQuery VERBATIM (polarity:'debuff' covers debuff+ailment — legacy polarity parity) + contract-v1.6 limit (undefined=all, N=first N cleansed in sortedForTarget order); legacy 'remove_buff'-by-polarity maps HERE as {query:{polarity}, limit: count ?? 1} — never onto remove_buff
   | { type: 'push_gauge'; target: SkillTargetIntent; fractionOfMax: number }
   | { type: 'gain_resource' | 'consume_resource'; target: SkillTargetIntent; resourceId: string; amount: number | 'all' }
   | { type: 'apply_shield'; target: SkillTargetIntent; amount: number }
@@ -164,11 +169,12 @@ export type AuthoredSkillOperation =
   | { type: 'if'; condition: SkillCondition; then: readonly AuthoredSkillOperation[]; else?: readonly AuthoredSkillOperation[] }
   | { type: 'for_each_target'; target: SkillTargetIntent; ops: readonly AuthoredSkillOperation[] }
 
-export type SkillTargetIntent = 'self' | 'primary_target' | 'affected_targets' | 'all_enemies' | 'allies_except_self' | 'all_allies' | 'attacker' // attacker = reactive context
+export type SkillTargetIntent = 'self' | 'primary_target' | 'affected_targets' | 'all_enemies' | 'allies_except_self' | 'all_allies' | 'attacker' | 'loop_target' // attacker = reactive context; 'loop_target' = the enclosing for_each_target's current member — VALID ONLY inside for_each_target ops/conditions (validation rejects it elsewhere)
 export type SkillCondition =
   | { kind: 'stacks_at_least'; target: SkillTargetIntent; definitionId: BuffDefinitionId; stacks: number }
+  | { kind: 'hp_percent_below'; target: SkillTargetIntent; threshold: ScalarExpression }   // vitals query — execute-threshold branches compile onto this
   | { kind: 'resource_at_least'; resourceId: string; amount: number }
-  | { kind: 'target_alive' }
+  | { kind: 'target_alive'; target?: SkillTargetIntent }   // default 'primary_target' (or 'loop_target' inside for_each)
   | { kind: 'var'; name: string; op: 'gte' | 'lt' | 'eq'; value: number }
   | { kind: 'crit_landed' } | { kind: 'any_target_landed' }
 
@@ -189,7 +195,7 @@ export interface SkillCombatRuntimeState {
 }
 ```
 
-- [ ] **Step 1 — Failing tests (schema):** registry validates unique ids, all `definitionId`/op references resolvable (buff registry + skill registry predicates), `subcasts.compositePool` non-empty when present, `empowerment.empoweredSkillId` exists, active-vs-passive field separation enforced (a `PassiveSkillDefinition` carrying `cadence`/`subcasts`/`detonate`/`instances`/`targetIntent`/`cost`/`variants` fails validation; an `ActiveSkillDefinition` carrying `triggers` fails), `cleanse` queries well-formed, no authored field carries runtime ids (deep-scan guard: reject keys `targetId|sourceId|instanceId|combatSequence` — CON-01 structural test).
+- [ ] **Step 1 — Failing tests (schema):** registry validates unique ids, all `definitionId`/op references resolvable (buff registry + skill registry predicates), `subcasts.compositePool` non-empty when present, `empowerment.empoweredSkillId` exists, active-vs-passive field separation enforced (a `PassiveSkillDefinition` carrying `cadence`/`subcasts`/`detonate`/`instances`/`targetIntent`/`cost`/`variants` fails validation; an `ActiveSkillDefinition` carrying `triggers` fails), `cleanse` queries well-formed (`kind`/`polarity`/`tags`/`element`/`definitionId` mirror `BuffCleanseQuery`; `limit` positive int), `'loop_target'` rejected outside `for_each_target`, `critPolicy` + `canCrit:false` rejected as contradictory, damage policies rejected on non-hit-resolving profiles, no authored field carries runtime ids (deep-scan guard: reject keys `targetId|sourceId|instanceId|combatSequence` — CON-01 structural test).
 - [ ] **Step 2 — Failing tests (state split):** `SkillProgressionState` covers every persistent non-authored `Skill` field (`level`/`experience`/`totalExperience`/`selectedSpecializationId`/`unlocked`/`equipped`/`loadoutSlot(s)`); `SkillCombatRuntimeState` covers battle-scoped fields (`remainingCooldownTurns` → `cooldownRemainingTurns`, charge progress); `unreleased`/`buildTag`/`castTime`(real-time)/`execution`(real-time)/`vfxPresetId` classified as authored-presentation or dropped — the classification table lands in the inventory doc.
 - [ ] **Step 3 — Implement + verify (P3 quick).**
 
@@ -225,6 +231,19 @@ export interface CastSnapshot {
 // Combat mutations stay ResolvedCombatOperations; plan control-flow
 // (mid-plan reads, conditionals) stays SkillExecutor-owned IR — never
 // widened into the CombatOperation union.
+//
+// RESOLVED means resolved: plan steps carry concrete CombatEntityIds,
+// never authored SkillTargetIntent selectors. `for_each_target` unrolls
+// at RESOLVE — each copy binds `loop_target` in ops AND conditions to
+// that member's id (same binding rule as target selectors on ops).
+export type ResolvedSkillCondition =
+  | { kind: 'stacks_at_least'; targetId: CombatEntityId; definitionId: BuffDefinitionId; stacks: number }
+  | { kind: 'hp_percent_below'; targetId: CombatEntityId; threshold: number }   // ScalarExpression already folded at RESOLVE
+  | { kind: 'resource_at_least'; targetId: CombatEntityId; resourceId: string; amount: number }   // authored self-scope → bound to sourceId
+  | { kind: 'target_alive'; targetId: CombatEntityId }
+  | { kind: 'var'; name: string; op: 'gte' | 'lt' | 'eq'; value: number }       // plan-scoped — no entity
+  | { kind: 'crit_landed' } | { kind: 'any_target_landed' }                      // cast-scope — no entity
+
 export type ResolvedSkillPlanStep =
   | {
       kind: 'operation'
@@ -237,7 +256,7 @@ export type ResolvedSkillPlanStep =
     }
   | {
       kind: 'branch'                          // authored `if` → executor evaluates condition live at execute (post-settlement state)
-      condition: SkillCondition
+      condition: ResolvedSkillCondition       // concrete targetIds — NEVER an authored SkillTargetIntent
       then: readonly ResolvedSkillPlanStep[]
       else?: readonly ResolvedSkillPlanStep[]
     }
@@ -269,15 +288,17 @@ export class SkillResolver {
   // roll compositePool, freeze resourcesConsumed BEFORE plan ops, translate each
   // AuthoredSkillOperation → ResolvedSkillPlanStep (deal_damage/apply_buff/… →
   // {kind:'operation'} with selectors resolved to entity ids; read_stacks →
-  // {kind:'read'}; if/for_each_target → {kind:'branch'}; origin
+  // {kind:'read'}; if → {kind:'branch'} with AuthoredSkillCondition →
+  // ResolvedSkillCondition (targetId-bound); for_each_target → per-member
+  // unroll binding loop_target in ops AND conditions; origin
   // {kind:'skill', originId:definitionId, castId, subcastIndex, rootActionId})
 }
 ```
 
-**Target resolution (deterministic, spec §31–33):** `primary_target` → `declaredTargetIds[0]`; `affected_targets` → full declared set; `all_enemies`/`allies_except_self` → resolved at resolve-time from `entityQuery` in STABLE participant order (battle roster order, never set-iteration). `read`/`branch` steps evaluate at EXECUTE via the readonly query ports (R-S3) — the plan stores the authored query/condition, the executor evaluates it live between barriers (post-reaction state visible — contract §63). `for_each_target` unrolls at RESOLVE into per-target step copies in deterministic target order (each `kind:'operation'` step carries a concrete resolved targetId); target validity is rechecked per step at EXECUTE — dead/invalid targets skip their steps (spec §10: no applying effects onto a corpse).
+**Target resolution (deterministic, spec §31–33):** `primary_target` → `declaredTargetIds[0]`; `affected_targets` → full declared set; `all_enemies`/`allies_except_self` → resolved at resolve-time from `entityQuery` in STABLE participant order (battle roster order, never set-iteration). `read`/`branch` steps evaluate at EXECUTE via the readonly query ports (R-S3) — the plan stores the RESOLVED query/condition (concrete `targetId`s, never authored `SkillTargetIntent`s — v2.1 HIGH fix), the executor evaluates it live between barriers (post-reaction state visible — contract §63). `for_each_target` unrolls at RESOLVE into per-member step copies in deterministic target order — each copy binds `loop_target` in ops AND conditions to that member's concrete id (the resolved plan contains zero `loop_target`s); target validity is rechecked per step at EXECUTE — dead/invalid targets skip their steps (spec §10: no applying effects onto a corpse). `instances.count` likewise evaluates at RESOLVE → per-instance `deal_damage` steps; `each.execute` compiles to `branch{hp_percent_below(targetId)}` so instance N+1 sees post-instance-N hp% (live `SkillVitalsQuery` read between barriers).
 
 - [ ] **Step 1 — Failing tests (snapshot):** composite pool rolled once in resolver (same rng sequence → same picks); `consumesAllThe` captures `theBurned` BEFORE the plan's `consume_resource` op zeroes it (Task 13 parity — `theScaling` reads snapshot, not live pool); `statScalars` freeze attribute/mana-scaling inputs.
-- [ ] **Step 2 — Failing tests (plan shape):** authored step order preserved; every `kind:'operation'` step carries a fully-resolved `ResolvedCombatOperation` (settlement is the scheduler's §55 contract — no per-step flag exists); `empowerment` below-threshold → base def plan; `if` compiles to `kind:'branch'` steps with authored conditions (not pre-evaluated); `for_each_target` unrolls at RESOLVE into per-target step copies in deterministic order; `read_stacks` emits a `kind:'read'` plan step, NOT a mutation op.
+- [ ] **Step 2 — Failing tests (plan shape):** authored step order preserved; every `kind:'operation'` step carries a fully-resolved `ResolvedCombatOperation` (settlement is the scheduler's §55 contract — no per-step flag exists); `empowerment` below-threshold → base def plan; `if` compiles to `kind:'branch'` steps carrying `ResolvedSkillCondition` (concrete `targetId`s — zero authored `SkillTargetIntent`s survive resolution); `for_each_target` unrolls at RESOLVE into per-member step copies in deterministic order with `loop_target` bound in ops AND conditions (no `loop_target` remains in a resolved plan); `read_stacks` emits a `kind:'read'` plan step, NOT a mutation op.
 - [ ] **Step 3 — Failing tests (origin):** every emitted op carries `origin{kind:'skill', originId, castId, subcastIndex, rootActionId}`; multicast subcast `subcastIndex` increments.
 - [ ] **Step 4 — Implement + verify (P3 quick).**
 
@@ -290,7 +311,8 @@ export class SkillResolver {
 **Files:**
 - Create: `game/src/core/skilldef/SkillExecutor.ts`
 - Create: `game/src/core/skilldef/SkillQueryPorts.ts` — narrow READONLY mid-plan read ports (R-S3 v2)
-- Test: `SkillExecutor.test.ts`, `SkillPlanReads.test.ts`, `SkillSubcast.test.ts`
+- Create: `game/src/core/skilldef/SkillCastCommitPort.ts` — the ONE executor command surface (R-S9): CAST_COMMIT cadence commit wired to the `SkillCombatRuntimeState` owner; resource cost rides the canonical `ConsumeResourceOperation` instead
+- Test: `SkillExecutor.test.ts`, `SkillPlanReads.test.ts`, `SkillSubcast.test.ts`, `SkillCastCommit.test.ts`
 
 ```ts
 // SkillExecutor.ts — drives ONE ResolvedSkillPlan through the scheduler
@@ -299,11 +321,21 @@ export class SkillExecutor {
     private readonly scheduler: CombatScheduler,
     private readonly resolver: SkillResolver,
     private readonly queries: SkillQueryPorts,        // readonly domain query ports — NEVER CombatAuthorityPorts
+    private readonly commitPort: SkillCastCommitPort, // R-S9: the ONE command surface — cooldown/charge commit only
   )
-  /** Executes plan steps in order — for each {kind:'operation'} step:
-      enqueueAuthored([op]) → run() (full settle — contract §55 barrier)
-      → evaluate the NEXT step's read/branch against post-settlement
-      state via the query ports → repeat. */
+  /** R-S9 CAST_COMMIT seam — runs ONLY for a root cast (subcastIndex===0):
+      (a) commitPort.commit(definition, snapshot) → the turn-runtime owner
+          writes cooldownRemainingTurns / chargeProgress on
+          SkillCombatRuntimeState (executor requests, owner writes — R6);
+      (b) cost.amount enqueues as a ConsumeResourceOperation FIRST — it
+          settles before any plan step (consume-then-execute ordering);
+      Committed cooldown+cost never roll back on whiff (spec §14).
+      Follow-up plans (subcastIndex>0) skip this seam entirely — no
+      recommit, no repay (executionCommitsCast parity).
+      Then executes plan steps in order — for each {kind:'operation'}
+      step: enqueueAuthored([op]) → run() (full settle — contract §55
+      barrier) → evaluate the NEXT step's read/branch against
+      post-settlement state via the query ports → repeat. */
   execute(plan: ResolvedSkillPlan): SkillCastOutcome
   /** Queues follow-up plans: subcasts (repeat/multicast), composite extra picks — each its own ResolvedSkillPlan with subcastIndex++ and its own settle (contract §60). */
   enqueueSubcasts(plan: ResolvedSkillPlan): void
@@ -333,10 +365,28 @@ export interface SkillOpResultQuery {                // backed by scheduler resu
 export interface SkillQueryPorts {
   buffs: SkillBuffQuery; vitals: SkillVitalsQuery; resources: SkillResourceQuery; opResults: SkillOpResultQuery
 }
+
+// SkillCastCommitPort.ts — R-S9: the ONE command surface the executor
+// owns. Cooldown/charge commit is skill-domain battle state — NOT a
+// contract authority domain — so it rides this narrow port instead of a
+// CombatOperation; resource cost DOES ride the canonical
+// ConsumeResourceOperation (vitals/resource authority + events).
+// Composition root wires this to the turn-runtime owner of
+// SkillCombatRuntimeState — the executor requests, the owner writes (R6).
+export interface SkillCastCommitPort {
+  /** CAST_COMMIT for a root cast: writes cooldownRemainingTurns =
+      cadence.cooldownTurns (and chargeProgress for charge-init) onto the
+      owning SkillCombatRuntimeState. Called exactly once per root cast —
+      follow-up plans never reach it. */
+  commit(definition: ActiveSkillDefinition, snapshot: CastSnapshot): void
+}
 ```
 
 **Execution semantics:**
+- CAST_COMMIT (R-S9): a root plan (`subcastIndex===0`) commits BEFORE its first step — `commitPort.commit` writes `cooldownRemainingTurns`/`chargeProgress` through the owner, and `cost` enqueues as the FIRST `ConsumeResourceOperation` (settles before plan steps; snapshot already froze `theBurned`). Follow-up plans skip the seam. Charge: `chargeTurns>0` commits at the charge-init cast's CAST_COMMIT and records `chargeProgress`; the deferred resolution is a non-committing follow-up plan.
+- The executor NEVER rolls hit/crit/armor — those rolls belong to the DamageAuthority at dispatch (contract v1.6 policies are declared intent on the payload). Executor-side rolls stay limited to plan-level concerns already locked: composite picks (RESOLVE) and subcast/multicast continuation — via `CombatRng`.
 - Settlement is the SCHEDULER's contract (§55): the executor enqueues ONE `kind:'operation'` step, `run()` drains the barrier to quiescence, then evaluates the NEXT step's `read`/`branch` against post-settlement state via the query ports (the §94 contract test: apply Hỏa → reaction consumes → `read_stacks` sees 0). No per-step barrier flag exists — every authored op gets its own barrier by contract.
+- Per-instance expansion: `instances.count` folded at RESOLVE → N `deal_damage` steps in authored order; `each` policies stamped as contract-v1.6 `hitPolicy`/`critPolicy`/`armorPolicy` on each instance op; `each.execute` compiled to `branch{hp_percent_below}` per instance (live vitals read between barriers — instance N+1 sees post-N hp%).
 - Target death mid-plan: ops with dead required targets → `{status:'skipped', reason:'invalid_target_state'}`, plan continues (contract §49) — BUT `landed` computes from committed results only.
 - Subcast driving: `subcasts.count`/`multicast` → after parent plan settles, resolver produces `plan(subcastIndex+1)` (composite re-rolled per subcast — Task 11 parity: "re-rolls compositePicks"); enqueue each, execute sequentially.
 - `detonate` sugar expands to plan steps: `read` per dot-ailment → `consume_buff_stacks('all')` → `deal_damage` scaled by read vars → re-seed `apply_buff{stacks:1, reactionEligibility:'suppressed'}` (Task 13 spec: reaction-silent re-seed — the committed event fails the §23 eligibility gate, so no Reaction evaluation occurs).
@@ -345,7 +395,8 @@ export interface SkillQueryPorts {
 - [ ] **Step 2 — Failing tests (outcome):** all-miss plan → `landed:false`; buff-only self cast → `landed:true` (R-S2); dead-target mid-plan → trailing ops skipped, earlier committed, no rollback.
 - [ ] **Step 3 — Failing tests (subcasts):** `multicast{chance:1,maxExtraCasts:2}` → 2 extra plans, each settling before next (order log), composite re-roll per subcast; death between subcasts → remaining queued plans skipped (contract §62).
 - [ ] **Step 4 — Failing tests (detonate/re-seed):** detonate consumes only `kind:'ailment'` instances with `dot`/`periodic` effects (utility ailments untouched — Task 13 semantics), re-seed at authored duration with `suppressed` eligibility.
-- [ ] **Step 5 — Implement + verify (P3 quick).**
+- [ ] **Step 5 — Failing tests (CAST_COMMIT, R-S9 — `SkillCastCommit.test.ts`):** root plan commits `cooldownRemainingTurns` exactly once through the commit port AND enqueues `ConsumeResourceOperation` BEFORE the first plan step (op order log); `cost` insufficient at PRECHECK → cast blocked, zero commit-port calls, zero ops; whiffed plan (all ops skip) → committed cooldown+cost NOT rolled back; `subcastIndex>0` follow-up plans → zero commit-port calls, zero consume ops (no double payment); `chargeTurns>0` → commit fires at the charge-init plan, the deferred resolution plan commits nothing; `consume_resource` settles BEFORE `gain_resource` ops (gain-after-consume ordering); the executor's rng spy shows NO hit/crit/armor rolls — only composite/subcast rolls.
+- [ ] **Step 6 — Implement + verify (P3 quick).**
 
 **Exit criteria:** executor drives plans through the scheduler with real barriers; mid-plan reads see post-settlement state; subcast sequencing + death handoff proven.
 
@@ -377,15 +428,15 @@ export interface SkillQueryPorts {
 | `detonateDoT` | `detonate` sugar (executor expands, M3 step 4) |
 | `theScaling` | `theScaling` (snapshot `theBurned` × coeff on the damage op) |
 | `theGainOnLandedCast`/`theGainOnCrit` | `grants` → `gain_resource` ops conditioned on `any_target_landed`/`crit_landed` |
-| `instances`/`perInstanceOptions` | `instances{count, each}` — DECLARATIVE per-instance hit options (R-S8 v2): the Ngự Kiếm Đạo closure decomposes to `each{guaranteedHit, execute{hpPercentBelow, damageMultiplier}, critChance, armorPierce{bypassChance, pierceFraction}}` + `count` reading `kiemDaoCount`; unlock gates ride progression `SkillModification`s. NO id-keyed runtime-closure provider exists. Semantics `instances.each` cannot express → `adapterUnsupportedMetadata` + def flagged, NOT claimed migrated |
+| `instances`/`perInstanceOptions` | `instances{count, each}` — DECLARATIVE per-instance hit options (R-S8 v2.1): the Ngự Kiếm Đạo closure decomposes to `each{guaranteedHit→hitPolicy, critChance→critPolicy.bonusChance, armorPierce→armorPolicy{bypassChance, pierceFractionOnFail}}` stamped on per-instance `deal_damage` ops (DamageAuthority rolls — contract v1.6), `execute{hpPercentBelow, damageMultiplier}`→`branch{hp_percent_below}` folding into `coefficient`, `count` reading `kiemDaoCount`; unlock gates ride progression `SkillModification`s. NO id-keyed runtime-closure provider exists. Semantics this cannot express → `adapterUnsupportedMetadata` + def flagged, NOT claimed migrated |
 | `counterable`/`counterSkillId`/`emblemOnly`/`presetId`/`targetScope`/`resourceType`/`resourceCost`/`targeting`/`chargeTurns` | same-named authored fields |
-| `Skill.effects` legacy | adapter: `damage`→`deal_damage`, `buff`/`debuff`/`add_stack`→`apply_buff`/`add_buff_stacks`, `heal`→`heal`, `remove_buff`-by-polarity→`cleanse` (query op), `remove_buff`-by-id→`remove_buff` (selector op); `SkillEffectSystem`-only fields (spread/zone/hitCountByRealm…) → R-S5 three-tier classification (canonical / new primitive / `adapterUnsupportedMetadata`) |
+| `Skill.effects` legacy | adapter: `damage`→`deal_damage`, `buff`/`debuff`/`add_stack`→`apply_buff`/`add_buff_stacks`, `heal`→`heal`, `remove_buff`-by-polarity→`cleanse{query:{polarity}, limit: count ?? 1}` (polarity covers debuff+ailment; `count` default 1 preserved — v2.1 contract `limit`, NOT a remove-all), `remove_buff`-by-id→`remove_buff` (selector op); `SkillEffectSystem`-only fields (spread/zone/hitCountByRealm…) → R-S5 three-tier classification (canonical / new primitive / `adapterUnsupportedMetadata`) |
 | `Skill.triggers` (onCast→dealDamage only per converter) | `operations` list from actions (`dealDamage`,`heal`,`applyBuff`,`applyDebuff`,`consumeForDamage`→`consumeBuff`,`consumeResource`/`grantResource` — breakGauge legacy pool → resource op) |
 | `PassiveSkills`/`TalentPassives` | R-S7 LOCKED: passives stay on `PassiveSystem` THIS program — `PassiveSkillDefinition` schema + validation land in M1, NO runtime adapter/migration (passive triggers are a separate event-driven runtime; folding them in now doubles the blast radius for zero combat-visible gain). Documented deferred lane — NOT a "parallel pipeline" violation. Flag for seal batch. |
 
 - [ ] **Step 1 — Failing tests (adapter parity):** for every data/skill producer file, `adapter.convert` output ops == the semantics today's converter produces (`toTurnSkillDefinition` table above); `collectUnsupportedSkillSemantics` parity — adapter reports the SAME unsupported fields (loud channel preserved, R-S5).
 - [ ] **Step 2 — Failing tests (integration):** scripted battle — a buff+ailment skill emits `apply_buff`(suppressed) THEN `apply_buff`(eligible) as separate barriered ops; empowered ult captures `theBurned`; multicast queues extra subcasts; `consumesAilmentId` reads live stacks post-settlement.
-- [ ] **Step 3 — Implement adapter + reroute** the cast lane (`resolveDeclaredHit` internals map onto plan execution — damage/ailments through ops; the hit-resolution details like evasion/crit/armor stay inside the `DamageAuthority`).
+- [ ] **Step 3 — Implement adapter + reroute** the cast lane (`resolveDeclaredHit` internals map onto plan execution — damage/ailments through ops; the hit-resolution details like evasion/crit/armor stay inside the `DamageAuthority`). **CAST_COMMIT wiring (R-S9):** `SkillCastCommitPort` binds to the turn-runtime owner of `SkillCombatRuntimeState`; `commitCast`/`commitAction`/`consumeResourceFor` retire from the canonical lane (still needed by the legacy lane until M5 — the rerouted path must NOT call them: no double cooldown write, no double resource consume); charge-init binds to the same commit seam + `chargeProgress`; the skill-hit damage channel (action-hit profile) consumes the contract-v1.6 policies through `CombatRng` inside the `DamageAuthority` (hit/crit/armor rolls live HERE — parity with `resolveActionHit`'s `HitResolveOptions` outcomes, now authority-rolled).
 - [ ] **Step 4 — Verify (P3 FULL) + P18 OCR + P13/P14 Playwright real battle (inside the implementation worktree) + P4 deep + P5 sequential review passes.**
 
 **Exit criteria:** ONE active turn-combat skill pipeline — every ACTIVE cast in turn combat resolves through `SkillResolver`→`SkillExecutor`→scheduler; adapter lifts all legacy producers; zero regression in the battle suite. `PassiveSystem` untouched — it is a separate runtime, not a parallel pipeline.
@@ -395,7 +446,7 @@ export interface SkillQueryPorts {
 ## Mission 5 — Legacy path retirement + DoD sweep + docs
 
 **Files:**
-- Delete (only after M4 green): `SkillToTurnSkillConverter.ts` (adapter replaces it), `SkillTriggerRunner.ts`/`SkillActionRegistry.ts`/`SkillAction.ts`/`SkillTrigger.ts` IF census confirmed dead in turn path (else keep as non-combat legacy — record decision), `SkillEffectSystem.ts` same
+- Delete (only after M4 green): `SkillToTurnSkillConverter.ts` (adapter replaces it), `SkillTriggerRunner.ts`/`SkillActionRegistry.ts`/`SkillAction.ts`/`SkillTrigger.ts` IF census confirmed dead in turn path (else keep as non-combat legacy — record decision), `SkillEffectSystem.ts` same; `commitCast`/`commitAction`/`consumeResourceFor` (R-S9 — retired from the canonical lane in M4, dead once every cast rides the plan pipeline)
 - Modify: `Skill.ts` — split progression fields out (consumers migrate to `SkillProgressionState`); `SkillSystem.getEffectiveSkill` returns `{definition, progression}` pair; battle-scoped state (`TurnSkillSlot` cooldown home) consolidates under `SkillCombatRuntimeState` owned by the turn runtime
 - Update: `docs/systems/skills.md` or equivalent + roadmap
 
@@ -417,7 +468,10 @@ export interface SkillQueryPorts {
 | §73 | trigger_buff_periodic no lifetime advance | `SkillExecutor.test.ts :: manual tick` |
 | §88 | seeded determinism | `SkillResolver.test.ts :: seeded composite` |
 | spec §4–6 v1.2 | active/passive union + 3-state split | `SkillDefinition.test.ts :: union discrimination + state ownership` |
-| R-S8 v2 | declarative instances, no closures | `SkillExecutor.test.ts :: instances.each rolls per instance` |
+| R-S8 v2.1 + contract v1.6 | declared policies on ops; authority rolls, executor never rolls | `SkillExecutor.test.ts :: instances emit policy-carrying ops, rng spy shows no hit/crit/armor rolls` |
+| contract v1.6 + legacy `count` | cleanse `limit` deterministic — first N in `sortedForTarget`, polarity covers debuff+ailment | `operations.cleanse-limit.test.ts :: remove 1 debuff ≠ remove all` |
+| R-S9 | commit-once: cooldown+cost at CAST_COMMIT, no recommit on follow-ups, no rollback on whiff | `SkillCastCommit.test.ts` |
+| v2.1 HIGH | resolved plans carry zero authored selectors — `loop_target` bound in ops AND conditions | `ResolvedSkillPlan.test.ts :: no SkillTargetIntent in resolved plan` |
 | INV-S2 | one ACTIVE pipeline | `TurnBattleSystem.skilldef.test.ts :: all active casts resolve via plan` |
 
 ## Deferred
@@ -430,5 +484,5 @@ export interface SkillQueryPorts {
 ## Open questions for coordinator
 
 1. RESOLVED (r4 ruling): `reactionEligibility` is producer-path metadata — the adapter writes `'eligible'` for `appliesAilment(s)` lanes unconditionally and `'suppressed'` for non-elemental `apply_buff` lanes; the legacy `canInitiateWuxingReactions` flag is never lifted into eligibility (deleted at M-INT anyway). Whether a reaction runs is ReactionSystem's capability+registry gate.
-2. RESOLVED (review v2): R-S8 — REJECTED the per-skill runtime-closure provider (it is a custom-handler lane violating spec §64 invariants). `instances.each` is declarative per-instance hit options evaluated at EXECUTE with per-instance `CombatRng` rolls; semantics it cannot express → `adapterUnsupportedMetadata` (loud, def flagged — never a hidden callback keyed by def id).
+2. RESOLVED (review v2.1): R-S8 — REJECTED the per-skill runtime-closure provider (it is a custom-handler lane violating spec §64 invariants). `instances.each` is declarative per-instance hit options that compile onto contract-v1.6 `DealDamageOperation` policies — the DamageAuthority consumes `CombatRng` and performs every hit/crit/armor roll at dispatch; `execute` compiles to `branch{hp_percent_below}` (authored damage intent via vitals query). Semantics it cannot express → `adapterUnsupportedMetadata` (loud, def flagged — never a hidden callback keyed by def id).
 3. RESOLVED (review v2): R-S7 LOCKED — `PassiveSkillDefinition` schema + validation land in M1; `PassiveSystem` stays the passive runtime this program (separate event-driven runtime, documented deferred lane). "ONE pipeline" = one ACTIVE turn-combat skill execution pipeline.
