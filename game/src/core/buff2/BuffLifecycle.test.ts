@@ -272,7 +272,7 @@ describe('expiry + liveness ordering (spec sec.28 barrier ordering)', () => {
         if (first) {
           first = false
           // The op's consequence cleanses the instance mid-barrier.
-          w.system.cleanse(targetA, {}, {
+          w.system.cleanse(targetA, {}, undefined, {
             operationId: 'op.cleanse.test',
             origin: { kind: 'skill', originId: 't', sourceId: sourceB, rootActionId: 'r' },
             events: w.sink,

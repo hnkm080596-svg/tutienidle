@@ -59,6 +59,12 @@
 import type { CombatSystem } from '../../../../combat/CombatSystem'
 import type { CombatEntity } from '../../../../combat/CombatEntity'
 import type { ActiveCapabilityGrant } from '../../../contracts/capability'
+import type {
+  ActionDamageInfo,
+  HitResolveOptions,
+} from '../../../ActionImpactSystem'
+import type { CombatRng } from '../../../contracts/rng'
+import { FunctionCombatRng } from '../../rng/FunctionCombatRng'
 import { elementalBasePower } from '../../../../combat/ElementDamageCalculator'
 import { getArmorMitigationPercent } from '../../../../combat/Armor'
 import { getResistanceMitigationPercent } from '../../../../combat/Resistance'
@@ -78,19 +84,28 @@ export interface CombatSystemDamageAdapterDeps {
       (applyDotDamage.sourceGrants). Absent = no recovery contribution,
       matching the engine's own optional parameter. */
   resolveSourceGrants?: (sourceId: CombatEntityId) => readonly ActiveCapabilityGrant[] | undefined
+  /** Contract v1.6 -- the 'skill_hit' channel's DECLARED policy rolls
+      (crit bonus/armor bypass). The authority consumes this rng; the
+      executor/scheduler never roll hit/crit/armor. Defaults to
+      Math.random -- the battle wiring passes the cycle rng. */
+  rng?: CombatRng
 }
 
 export class CombatSystemDamageAdapter implements DamageAuthority {
+  private readonly rng: CombatRng
+
   constructor(
     private readonly combat: CombatSystem,
     private readonly resolveEntity: CombatEntityLookup,
     private readonly deps: CombatSystemDamageAdapterDeps = {},
-  ) {}
+  ) {
+    this.rng = deps.rng ?? new FunctionCombatRng(() => Math.random())
+  }
 
   dealDamage(
     op: DealDamageOperation['payload'],
     ctx: CombatAuthorityExecutionContext,
-  ): { rawDamage: number; hpDamage: number; killed: boolean } {
+  ): { rawDamage: number; hpDamage: number; killed: boolean; landed?: boolean; crit?: boolean } {
     const target = requireLivingEntity(this.resolveEntity, op.targetId)
     const sourceId = ctx.origin.sourceId
 
@@ -139,6 +154,33 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
       return { rawDamage: op.coefficient, hpDamage, killed: !target.alive }
     }
 
+    if (op.damageProfile === 'skill_hit') {
+      // The skill pipeline's hit-resolving channel: full
+      // resolveActionHit semantics (accuracy/evasion, crit, block,
+      // endurance, armor/resistance mitigation, ward/MP-shield absorb,
+      // survive-lethal) instead of the flat channels. DECLARED v1.6
+      // policies resolve HERE via the injected rng -- one roll each,
+      // same consumption order the legacy providers used (crit then
+      // armor).
+      const attacker = this.resolveEntity(op.statSourceId ?? sourceId)
+      if (attacker === undefined) {
+        throw new CombatOperationSkip(
+          'invalid_target_state',
+          `skill_hit attacker '${op.statSourceId ?? sourceId}' is not resolvable in the live battle roster`,
+        )
+      }
+      const damage = this.toActionDamageInfo(op, attacker)
+      const options = this.resolveHitOptions(op)
+      const result = this.combat.resolveActionHit(attacker, target, damage, options)
+      return {
+        rawDamage: result.finalDamage,
+        hpDamage: result.hpDamage,
+        killed: result.targetKilled,
+        landed: !result.dodged,
+        crit: result.critical,
+      }
+    }
+
     if (op.damageProfile === 'reflection') {
       // phan_chinh Reflection: the hit-layer multiplier applies through
       // the REFLECTING holder as attacker; vitals reason 'reflection'.
@@ -165,6 +207,94 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
     }
     const hpDamage = this.combat.applyModifiedDirectDamage(target, op.coefficient, attacker, 'damage')
     return { rawDamage: op.coefficient, hpDamage, killed: !target.alive }
+  }
+
+  /**
+   * Payload -> ActionDamageInfo. Single-kind components keep their own
+   * channel (physical/primordial ride calculateBaseDamage so the
+   * armorPierceFraction path stays reachable); multi-component and
+   * element lanes ride calculateSkillBaseDamage like legacy's
+   * kind:'elemental'. The multiplier folds the The Tu missing-HP
+   * scalar against the ATTACKER's live hp -- applyMissingHpScalar
+   * parity, per hit, never snapshotted.
+   */
+  private toActionDamageInfo(
+    op: DealDamageOperation['payload'],
+    attacker: CombatEntity,
+  ): ActionDamageInfo {
+    let multiplier = op.coefficient
+    const perPercent = op.missingHpBonusPerMissingPercent
+    if (perPercent !== undefined && attacker.maxHp > 0) {
+      const missingFraction = Math.max(0, 1 - attacker.currentHp / attacker.maxHp)
+      const bonus = Math.min(
+        op.missingHpBonusCap ?? Infinity,
+        missingFraction * perPercent * 100,
+      )
+      if (bonus > 0) {
+        multiplier *= 1 + bonus
+      }
+    }
+
+    const scaling = op.scaling !== undefined ? { scaling: op.scaling } : {}
+    const components = op.components ?? []
+    if (components.length === 1 && components[0]!.kind === 'physical') {
+      return { kind: 'physical', multiplier, ...scaling }
+    }
+    if (components.length === 1 && components[0]!.kind === 'primordial') {
+      return { kind: 'primordial', multiplier, ...scaling }
+    }
+    if (components.length > 0) {
+      return { kind: 'elemental', components: [...components], multiplier, ...scaling }
+    }
+    if (op.element !== undefined && op.element !== 'physical') {
+      return {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: op.element, ratio: 1 }],
+        multiplier,
+        ...scaling,
+      }
+    }
+    return { kind: 'physical', multiplier, ...scaling }
+  }
+
+  /**
+   * Payload policies -> resolved HitResolveOptions. Every roll the
+   * legacy perInstanceOptions closure made now happens HERE (the
+   * DamageAuthority owns CombatRng consumption for hit/crit/armor):
+   *   hitPolicy.guaranteedHit     -> skip the accuracy/evasion roll
+   *                                  (canMiss:false maps the same way)
+   *   critPolicy.bonusChance      -> one roll: forced crit on success,
+   *                                  normal crit channel on failure
+   *   armorPolicy.bypassChance    -> one roll: full bypass on success
+   *   armorPolicy.pierceFractionOnFail -> else mitigation x (1-fraction)
+   */
+  private resolveHitOptions(
+    op: DealDamageOperation['payload'],
+  ): Partial<HitResolveOptions> {
+    const options: Partial<HitResolveOptions> = { isPrimary: true }
+
+    if (op.hitPolicy?.guaranteedHit === true || op.canMiss === false) {
+      options.guaranteedHit = true
+    }
+
+    if (op.canCrit === false) {
+      options.critical = false
+    } else if (op.critPolicy?.bonusChance !== undefined) {
+      options.critical = this.rng.roll() < op.critPolicy.bonusChance ? true : undefined
+    }
+
+    if (op.armorPolicy !== undefined) {
+      const bypassed =
+        op.armorPolicy.bypassChance !== undefined &&
+        this.rng.roll() < op.armorPolicy.bypassChance
+      if (bypassed) {
+        options.armorBypass = true
+      } else if (op.armorPolicy.pierceFractionOnFail !== undefined) {
+        options.armorPierceFraction = op.armorPolicy.pierceFractionOnFail
+      }
+    }
+
+    return options
   }
 
   /**

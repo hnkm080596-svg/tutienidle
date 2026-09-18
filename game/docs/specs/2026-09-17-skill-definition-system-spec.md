@@ -1,7 +1,7 @@
 # Skill Definition System — Final Specification
 
-Status: FINAL — **READY FOR IMPLEMENTATION** (v1.2 — synchronized with the combat-systems program's M5 expansion, `2026-09-17-megaplan-skill-definition.md` v2; the 2026-09-17 PARKED ruling is superseded — this spec IS that program's skill mission, and its hard baseline — buff M4 cutover + reaction M-INT — is already merged)
-Version: 1.2
+Status: FINAL — **READY FOR IMPLEMENTATION** (v1.3 — synchronized with the combat-systems program's M5 expansion, `2026-09-17-megaplan-skill-definition.md` v2.1; the 2026-09-17 PARKED ruling is superseded — this spec IS that program's skill mission, and its hard baseline — buff M4 cutover + reaction M-INT — is already merged)
+Version: 1.3
 Scope: Generic combat skill architecture
 Primary consumer: Pháp Tu Reimagined
 Validation kit: Hỏa
@@ -16,7 +16,13 @@ System owner: Skill System
 > - **Scope:** this spec governs the ACTIVE turn-combat skill pipeline. `PassiveSkillDefinition` schema + validation land with it; `PassiveSystem` remains a separate event-driven runtime — its migration is a documented deferred lane, not a parallel-pipeline violation.
 > - **Semantic model vs concrete binding:** §§5–50 define the SEMANTIC model — immutable definition, discriminated union, deterministic ordering, snapshot-at-commit, landed semantics, typed modification language, no deep merge, no arbitrary callbacks. The concrete TURN-MODEL binding — field-level names (`operations`/`cadence`/`targetIntent`/`subcasts`/`instances`), the `ResolvedSkillPlanStep` plan IR (operation/read/branch), and the adapter field map — lives in megaplan v2 M1–M4. Where names differ, the megaplan binding governs implementation and this spec governs invariants: `primary`/`post_resolution` phases bind to authored op ordering + `cast_outcome`-gated plan steps; `once_per_target` binds to `for_each_target`/per-target step expansion; `TargetingDefinition` binds to `targetIntent` + `SkillTargetIntent`.
 
-> **Implementation notes (2026-09-17 — partially superseded by v1.2 amendments above):**
+> **v1.3 amendments (2026-09-18 — locked via Skill megaplan review v2.1, contract closure):**
+> - **Damage intent policies (contract v1.6):** `DealDamageOperation.payload` gains `hitPolicy`/`critPolicy`/`armorPolicy` — DECLARED intent only; the DamageAuthority consumes `CombatRng` and performs every hit/crit/armor roll. Skill never rolls crit/armor/accuracy — §52 DamageSystem ownership of accuracy/crit/mitigation/armor/resolution is preserved; per-instance `instances.each` semantics (guaranteedHit/critChance/armorPierce) compile onto these policies.
+> - **Cleanse parity (contract + buff spec v1.6):** `CleanseBuffOperation.payload` gains `limit?: number` (undefined = all matching dispellable; N = first N cleansed in canonical `sortedForTarget` order); the authored `cleanse` query mirrors `BuffCleanseQuery` verbatim including `polarity` (`'debuff'` covers debuff+ailment). Legacy `remove_buff`-by-polarity `count` (default 1) maps losslessly — never silently widened to remove-all.
+> - **Cast-commit ownership (§13–15 bound, R-S9):** PRECHECK validates cost → CAST_COMMIT commits `cooldownRemainingTurns` through the `SkillCombatRuntimeState` owner (`SkillCastCommitPort`) AND emits `ConsumeResourceOperation` → PRIMARY executes the plan. Committed cooldown+cost never roll back on whiff — interrupt-before-commit remains the only no-commit case (§14). Follow-up executions (repeat/multicast/extra picks) never recommit/repay. Legacy `commitAction`/`consumeResourceFor`/`commitCast` retire from the canonical lane.
+> - **Resolved conditions:** `ResolvedSkillPlan` steps carry `ResolvedSkillCondition` with concrete `targetId`s — resolved plans never contain authored `SkillTargetIntent` selectors; `for_each_target` binds `loop_target` in ops and conditions at resolve-time unroll.
+
+> **Implementation notes (2026-09-17 — partially superseded by v1.2/v1.3 amendments above):**
 > - ~~Depends on the ailment authority described in [2026-09-17-hoa-an-ailment-system-spec.md](./2026-09-17-hoa-an-ailment-system-spec.md)~~ → v1.2: BuffSystem (buff2) là canonical buff/ailment authority; hoa-an spec = context only; authored `*_ailment` ops bind onto contract buff ops (see §24 binding table).
 > - Codebase hiện có hai skill representations sống song song: `Skill.effects: SkillEffect[]` (legacy) và `Skill.triggers: TriggerBinding[]` + `SkillAction` union (Trigger/Action rework 2026-08-31, `SkillActionRegistry`). Spec này mô tả representation thứ ba (`SkillDefinition` + `ResolvedSkillPlan`); §69 yêu cầu một executor đích — khi implement phải ruling rõ mối quan hệ với TriggerBinding path (absorb/replace), tránh ba pipeline tồn tại cùng lúc.
 > - `Skill` interface hiện tại trộn definition + runtime state (level, experience, unlocked, equipped, loadoutSlot, selectedSpecializationId) — spec §3 yêu cầu tách, đây là migration thật.
@@ -636,8 +642,9 @@ Không thêm custom operation chỉ vì một skill mới cần convenience synt
 | `modify_ailment` | `AddBuffModifierOperation` / stack ops |
 | `trigger_ailment_tick` | `TriggerBuffPeriodicOperation` |
 | `consume_ailment` | `ConsumeBuffStacksOperation` |
+| `deal_damage` | `DealDamageOperation` — may carry v1.6 `hitPolicy`/`critPolicy`/`armorPolicy` declared intent; the DamageAuthority rolls, Skill never does |
 | `remove_buff` | `RemoveBuffOperation` — **identified instance via selector** |
-| `cleanse` | `CleanseBuffOperation` — **query-based** (`{kind?, tags?, element?}`, `count?`) — "remove 2 debuffs" là cleanse, KHÔNG phải remove_buff |
+| `cleanse` | `CleanseBuffOperation` — **query-based**: `query` mirrors `BuffCleanseQuery` verbatim (`kind?`/`polarity?`/`tags?`/`element?`/`definitionId?` — `polarity:'debuff'` covers debuff+ailment) + `limit?: number` (contract v1.6: undefined=all, N=first N cleansed in canonical ordering — legacy `count` default 1 preserved). "remove 2 debuffs" là cleanse, KHÔNG phải remove_buff |
 
 ## 25. DamageOperation
 

@@ -21,7 +21,9 @@ import type { BuffInstanceSnapshot } from '../../buff2/BuffInstance'
 import type { BuffLifecycleContext } from '../../buff2/BuffLifecycleContext'
 import type { CombatProcSystem } from '../../proc/CombatProcSystem'
 import type { GaugeDeltaHandler } from './GaugeDeltaHandler'
-import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../contracts/ids'
+import { TurnSkillPlanRuntime, type TurnSkillPlanOrchestration } from './TurnSkillPlanRuntime'
+import type { BuffDefinitionId, CombatEntityId, CombatOperationId, SkillId } from '../contracts/ids'
+import type { SkillCombatRuntimeState } from '../../skilldef/SkillCombatRuntimeState'
 import type { ResolvedCombatOperation } from '../contracts/operations'
 import type { CombatOperationOrigin } from '../contracts/origin'
 import type { StatModifier } from '../../stats/StatCalculator'
@@ -559,6 +561,214 @@ export class TurnBattleSystem {
       throw new Error('TurnBattleSystem: op lane reached without a TurnCombatRuntime (unwired battle)')
     }
     return this.runtime.scheduler
+  }
+
+  // ---------------------------------------------------------------------
+  // skilldef M4e -- the plan pipeline. Built lazily on the first routed
+  // cast; the orchestration surface delegates to the same private
+  // helpers resolveDeclaredHit uses (income/procs/windows/refresh/sweep)
+  // so routed casts replay the consequence chain verbatim between
+  // scheduler barriers.
+  // ---------------------------------------------------------------------
+
+  private planPipelineCache?: TurnSkillPlanRuntime
+
+  private get planPipeline(): TurnSkillPlanRuntime {
+    if (this.runtime === undefined) {
+      throw new Error('TurnBattleSystem: skill plan lane reached without a TurnCombatRuntime (unwired battle)')
+    }
+    this.planPipelineCache ??= new TurnSkillPlanRuntime({
+      rng: this.rng,
+      buffs: this.runtime.buffs,
+      scheduler: this.runtime.scheduler,
+      isBuffDefinitionId: (id) => this.registry?.has(id) ?? false,
+      buffDefinition: (id) =>
+        this.registry !== undefined && this.registry.has(id)
+          ? this.registry.get(id)
+          : undefined,
+      orchestration: this.skillPlanOrchestration(),
+    })
+    return this.planPipelineCache
+  }
+
+  private skillPlanOrchestration(): TurnSkillPlanOrchestration {
+    return {
+      participant: (battle, id) =>
+        battle.players.find((member) => member.id === id) ??
+        battle.enemies.find((enemy) => enemy.id === id),
+      enemiesOf: (battle, sourceId) =>
+        battle.players.some((member) => member.id === sourceId)
+          ? battle.enemies
+          : battle.players,
+      alliesOf: (battle, sourceId) =>
+        battle.players.some((member) => member.id === sourceId)
+          ? battle.players
+          : battle.enemies,
+      // commitAction minus the resource consume + consume-all burn --
+      // both ride consume_resource ops inside the plan (spec sec.14
+      // commit-first ordering; theBurned froze at declare).
+      commitShell: (actor, declared) => {
+        const action = declared.action!
+        if (action.slot) {
+          action.slot.remainingCooldownTurns = action.slot.skill.cooldownTurns
+        }
+        this.onSkillCast?.(
+          actor,
+          declared.execution?.rootSkillId ?? action.skillId,
+        )
+      },
+      grantHitOutcomeIncome: (battle, target, hit) =>
+        this.grantHitOutcomeIncome(battle, target, hit),
+      grantBasicLandedIncome: (battle, actor, skillId) =>
+        this.grantBasicLandedIncome(battle, actor, skillId),
+      // resolveDeclaredHit :2136-2166 parity -- on-hit procs, then the
+      // target's onImpactLanded reactive roll gated on hpDamage > 0,
+      // then the queuedFollowUps FIFO push.
+      runLandedHitProcs: (battle, actor, target, hpDamage) => {
+        if (this.runtime === undefined) return
+        const procRoot = `hit.proc.${battle.totalTurnsElapsed}.${actor.id}.${target.id}.${this.nextOccurrence()}`
+        this.procs.onHitLanded(actor.entity.id, target.entity.id, procRoot)
+        const { firedFollowUp } =
+          hpDamage > 0
+            ? this.procs.rollReactiveTrigger(
+                target.entity.id,
+                'onImpactLanded',
+                { attacker: actor.entity, hpDamage },
+                procRoot,
+              )
+            : { firedFollowUp: false }
+        if (firedFollowUp) {
+          battle.queuedFollowUps = battle.queuedFollowUps ?? []
+          battle.queuedFollowUps.push({
+            actorId: target.id,
+            executionKind: 'reactive_bypass',
+            actionSource: 'follow_up',
+          })
+        }
+      },
+      // Spec 6.2.2 taken-side window -- the same gate as the legacy
+      // lane (hpDamage > 0 = "taken", natural actions only INV-9).
+      resolveTakenWindow: (battle, target, actor, declared, hpDamage) => {
+        if (
+          hpDamage > 0 &&
+          (declared.actionSource === 'normal' ||
+            declared.actionSource === 'skill')
+        ) {
+          this.resolveReactiveProcs(battle, target, 'onImpactLanded', {
+            attacker: actor,
+            outcome: 'taken',
+            intercepted: declared.intercepted === true,
+          })
+        }
+      },
+      resolveEvadeWindow: (battle, target, actor, declared) =>
+        this.resolveEvadeWindow(battle, target, actor, declared),
+      // The Tu Task 11 (D3/INV-12) -- the applyDeclaredBuff externalWard
+      // write: source-tagged REPLACE (recast refreshes to full; a lower
+      // recast lowers the pool). sourceMaxHpRatio reads the GRANTING
+      // tank's live maxHp. The pool stays existence-bound to the marker
+      // instance through reconcileExternalWard at the refresh seam.
+      grantExternalWard: (battle, sourceId, targetId, sourceMaxHpRatio) => {
+        const source =
+          battle.players.find((member) => member.id === sourceId) ??
+          battle.enemies.find((member) => member.id === sourceId)
+        const target =
+          battle.players.find((member) => member.id === targetId) ??
+          battle.enemies.find((member) => member.id === targetId)
+        if (source === undefined || target === undefined) return
+        target.entity.externalWard = {
+          sourceId,
+          amount: Math.max(0, source.entity.stats.maxHp * sourceMaxHpRatio),
+        }
+      },
+      refreshStats: (participant) => this.refreshParticipantStats(participant),
+      sweepBuffDeaths: (battle) => this.sweepBuffDeaths(battle),
+      mintOccurrence: () => this.nextOccurrence(),
+    }
+  }
+
+  /** M4e routing probe -- adapter-covered casts go through the plan
+      pipeline; everything else stays on the legacy lane (unsupported
+      semantics keep their loud catalog report). Charge turns route
+      through their own probes: the init commit (pre-block) and the
+      deferred resolve (charge branch) -- a charge def routed HERE would
+      execute its deferred steps early and double-commit. */
+  private tryPlanCast(
+    battle: TurnBattle,
+    actor: TurnBattleParticipant,
+    declared: TurnDeclaredAction,
+  ) {
+    const skill = declared.action?.skill
+    if (
+      this.runtime === undefined ||
+      declared.isCharging ||
+      skill == null ||
+      (skill.chargeTurns ?? 0) > 0
+    ) {
+      return null
+    }
+    return this.planPipeline.routeCast(battle, actor, declared)
+  }
+
+  /** skilldef M5d -- a runtime-present cast that cannot route is a LOUD
+      no-op, never a silent legacy fallback: the report fires once per
+      cast identity per battle with the reason (adapter-unsupported
+      semantics, a def-less declared action, or a covered def the plan
+      runtime declined -- the last is an internal defect signal). */
+  private readonly unroutedCastReported = new Set<string>()
+
+  private reportUnroutedCast(
+    actor: TurnBattleParticipant,
+    def: TurnSkillDefinition | null | undefined,
+    label?: string,
+    /** true only at call sites that already ran routeCast and got null --
+        distinguishes "declined a covered def" (defect signal) from a
+        plain coverage probe, which stays silent for routable defs. */
+    declined = false,
+  ): void {
+    if (this.runtime === undefined) return
+    const key = def?.id ?? label
+    if (key === undefined || this.unroutedCastReported.has(key)) return
+    const reasons = def == null ? [] : this.planPipeline.unsupportedFor(def)
+    // A covered def is not a reportable event unless the caller knows the
+    // route itself declined (coverage probes stay silent for them).
+    if (def != null && reasons.length === 0 && !declined) return
+    this.unroutedCastReported.add(key)
+    const cause =
+      def == null
+        ? 'the declared action carries no skill definition'
+        : reasons.length > 0
+          ? `adapter-unsupported semantics: ${reasons.join('; ')}`
+          : 'the plan runtime declined an adapter-covered def'
+    console.warn(
+      `[TurnBattleSystem] cast '${key}' (${actor.id}) did not route -- ${cause}; ` +
+        'the cast resolves to a no-op on the plan lane',
+    )
+  }
+
+  /** skilldef M5f (R6) -- battle-scoped cast state projected into the
+      canonical SkillCombatRuntimeState shape at its owner: the slot's
+      cooldown plus the participant's charge progress for one skill
+      identity. Readonly view -- writes stay on the slot/participant
+      fields (today's remainingCooldownTurns/chargingTurnsRemaining
+      homes) until the skill data is redesigned on SkillDefinition. */
+  combatRuntimeStateOf(
+    participant: TurnBattleParticipant,
+    skillId: string,
+  ): SkillCombatRuntimeState | undefined {
+    const slot = [participant.special, participant.ultimate].find(
+      (candidate) => candidate?.skill.id === skillId,
+    )
+    const chargeProgress =
+      participant.pendingChargedSkillId === skillId
+        ? participant.chargingTurnsRemaining
+        : undefined
+    if (slot === undefined && chargeProgress === undefined) return undefined
+    return {
+      skillId: skillId as SkillId,
+      cooldownRemainingTurns: slot?.remainingCooldownTurns ?? 0,
+      ...(chargeProgress !== undefined ? { chargeProgress } : {}),
+    }
   }
 
   /** Enqueue authored ops + settle IMMEDIATELY at the calling seam --
@@ -1683,7 +1893,12 @@ export class TurnBattleSystem {
       opposingSide,
       affected,
       scaledDamage,
-      suddenDeathMultiplier: suddenDeathMultiplierCaptured,
+      // Charge-resolve re-derives the multiplier at resolve time (the
+      // action-selection capture above never ran for a charging actor) --
+      // the declared record carries it so both lanes read one source.
+      suddenDeathMultiplier: chargeResolved
+        ? this.suddenDeathDamageMultiplier(battle.roundsElapsed ?? 0)
+        : suddenDeathMultiplierCaptured,
       compositePickedSkills,
       isFollowUpBypass: false,
       actionSource: action?.skillId === '' ? undefined : action?.slot ? 'skill' : 'normal',
@@ -1734,70 +1949,97 @@ export class TurnBattleSystem {
     // Charge-resolve turn: hits apply từ chargedSkill capture tại declare
     // (pendingChargedSkillId đã clear ở declare -- đọc declared.chargedSkill).
     if (declared.isCharging && declared.chargeResolved) {
-      const chargedSkill = declared.chargedSkill
-      let chargedCrit = false
+      // skilldef M5b -- the deferred resolve routes the charged def
+      // through the plan pipeline verbatim (payloadOnly: the slot root,
+      // never the init's payload resolution), non-committing (the cast
+      // committed at charge-init). Unsupported defs keep the legacy
+      // lane below with their loud catalog report.
+      const routed =
+        this.runtime !== undefined && declared.chargedSkill != null
+          ? this.planPipeline.routeCast(battle, actor, declared)
+          : null
 
-      if (chargedSkill && chargedSkill.damage) {
-        const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
+      if (routed !== null) {
+        targetIds.push(...routed.landedTargetIds)
+        landedTargets.push(...routed.landedTargets)
+        // Fall through -- the shared Tro window at the tail fires once,
+        // same as the legacy lane's own call below.
+      } else if (this.runtime !== undefined) {
+        // M5d -- adapter-unsupported charged def on a live battle: the
+        // deferred resolve reports loudly and fizzles (the charge state
+        // was already consumed at declare).
+        this.reportUnroutedCast(
+          actor,
+          declared.chargedSkill,
+          actor.pendingChargedSkillId ?? declared.action?.skillId,
+          true,
+        )
+      } else {
+        const chargedSkill = declared.chargedSkill
+        let chargedCrit = false
 
-        const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.roundsElapsed ?? 0)
-        const chargedDamage = suddenDeathMultiplier === 1
-          ? chargedSkill.damage
-          : scaleActionDamage(chargedSkill.damage, suddenDeathMultiplier)
+        if (chargedSkill && chargedSkill.damage) {
+          const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
 
-        for (const target of declared.chargeTargetIds) {
-          // Mid-impact death: a reflect/proc kill on the actor stops the
-          // rest of the action -- the dead cannot finish their swing.
-          if (!actor.entity.alive) break
+          const suddenDeathMultiplier = declared.suddenDeathMultiplier
+          const chargedDamage = suddenDeathMultiplier === 1
+            ? chargedSkill.damage
+            : scaleActionDamage(chargedSkill.damage, suddenDeathMultiplier)
 
-          const targetParticipant = opposingSide.find((p) => p.id === target)
+          for (const target of declared.chargeTargetIds) {
+            // Mid-impact death: a reflect/proc kill on the actor stops the
+            // rest of the action -- the dead cannot finish their swing.
+            if (!actor.entity.alive) break
 
-          if (!targetParticipant || !targetParticipant.entity.alive) continue
+            const targetParticipant = opposingSide.find((p) => p.id === target)
 
-          // Same per-hit authority as the normal lane (resolveDeclaredHit):
-          // defender income, leech, consume effects, on-hit procs, the
-          // Reflection queue, ailments, detonate, the taken-side Phan /
-          // evade windows and both stat refreshes are all owned there -
-          // a charged hit must not bypass them. The missing-HP scalar
-          // resolves inside against the actor's live hp, so the scaled
-          // damage packet passes through raw.
-          const hitResult = this.resolveDeclaredHit(
-            battle,
-            actor,
-            targetParticipant,
-            chargedDamage,
-            chargedSkill,
-            declared,
-          )
+            if (!targetParticipant || !targetParticipant.entity.alive) continue
 
-          if (!hitResult.dodged) {
-            targetIds.push(target)
-            landedTargets.push(targetParticipant)
+            // Same per-hit authority as the normal lane (resolveDeclaredHit):
+            // defender income, leech, consume effects, on-hit procs, the
+            // Reflection queue, ailments, detonate, the taken-side Phan /
+            // evade windows and both stat refreshes are all owned there -
+            // a charged hit must not bypass them. The missing-HP scalar
+            // resolves inside against the actor's live hp, so the scaled
+            // damage packet passes through raw.
+            const hitResult = this.resolveDeclaredHit(
+              battle,
+              actor,
+              targetParticipant,
+              chargedDamage,
+              chargedSkill,
+              declared,
+            )
 
-            if (hitResult.critical) {
-              chargedCrit = true
+            if (!hitResult.dodged) {
+              targetIds.push(target)
+              landedTargets.push(targetParticipant)
+
+              if (hitResult.critical) {
+                chargedCrit = true
+              }
             }
           }
         }
+
+        // M8 (ARCH-010) -- the shared per-action The gain below lives past
+        // this branch's early return, so a charged completion fires it
+        // HERE, exactly once. Task 8 -- the gain is the SKILL's authored
+        // field, not slot inference: the charged def carries
+        // theGainOnLandedCast/theGainOnCrit itself. Ordering parity with
+        // the normal path is preserved: the cast resource/cooldown was
+        // already committed at charge-init, so the gain lands on the
+        // post-consume pool -- Bat Kiem Thuat accrues currentThe at hit
+        // completion and Tru Tien Kiem Tran stays reachable. Gated on
+        // LANDED targets like the normal path's targetIds requirement.
+        if (chargedSkill && targetIds.length > 0) {
+          this.grantTheFromCast(actor, chargedSkill, chargedCrit)
+        }
+
+        this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
+
+        return { targetIds, extraImpacts }
       }
-
-      // M8 (ARCH-010) -- the shared per-action The gain below lives past
-      // this branch's early return, so a charged completion fires it
-      // HERE, exactly once. Task 8 -- the gain is the SKILL's authored
-      // field, not slot inference: the charged def carries
-      // theGainOnLandedCast/theGainOnCrit itself. Ordering parity with
-      // the normal path is preserved: the cast resource/cooldown was
-      // already committed at charge-init, so the gain lands on the
-      // post-consume pool -- Bat Kiem Thuat accrues currentThe at hit
-      // completion and Tru Tien Kiem Tran stays reachable. Gated on
-      // LANDED targets like the normal path's targetIds requirement.
-      if (chargedSkill && targetIds.length > 0) {
-        this.grantTheFromCast(actor, chargedSkill, chargedCrit)
-      }
-
-      this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
-
-      return { targetIds, extraImpacts }
     }
 
     // 9.5 #9 -- charge-init commits its cast HERE, not in the
@@ -1806,12 +2048,39 @@ export class TurnBattleSystem {
     // and the block below never ran for them -- their cooldown/resource
     // were never committed (dead isChargeInit branch). The charge-resolve
     // turn returns early above and never reaches this point.
+    // skilldef M5b/M5d -- the commit rides the plan pipeline when the
+    // def is adapter-covered (commitShell + consume ops through the
+    // scheduler); an adapter-unsupported charge def on a live battle
+    // reports loudly and never commits; the engine-unit lane keeps
+    // commitCast (no scheduler exists there to route through).
     if (
       declared.action &&
       (declared.action.skill?.chargeTurns ?? 0) > 0 &&
       executionCommitsCast(declared.execution)
     ) {
-      this.commitCast(actor, declared)
+      const routed =
+        this.runtime !== undefined
+          ? this.planPipeline.routeCast(battle, actor, declared)
+          : null
+      if (routed === null) {
+        if (this.runtime === undefined) {
+          this.commitCast(actor, declared)
+        } else {
+          this.reportUnroutedCast(actor, declared.action.skill, declared.action.skillId, true)
+        }
+      }
+    }
+
+    // M5d -- the coverage signal must not depend on target luck: an
+    // adapter-unsupported non-charge cast reports even when `affected`
+    // collected empty (the gate below would otherwise skip it). The
+    // ROUTE itself stays inside the gate -- committing a zero-target
+    // cast is a commit legacy never performed.
+    if (
+      declared.action &&
+      (declared.action.skill?.chargeTurns ?? 0) === 0
+    ) {
+      this.reportUnroutedCast(actor, declared.action.skill, declared.action.skillId)
     }
 
     if (declared.action && declared.affected.length > 0) {
@@ -1837,16 +2106,41 @@ export class TurnBattleSystem {
         skillId: declared.skillId,
       })
 
-      // Composite-picks lane -- extra picked payloads (element_basic
-      // extras when count > 1) apply their own
-      // damage + ailments here. The PRIMARY payload still resolves via
-      // scaledDamage below, so both lanes may run on one action.
-      // Review fix (MED-3) -- extras go through resolveDeclaredHit, the
-      // same per-hit authority as the primary lane: income, leech,
-      // consume effects, on-hit procs, Reflection queue, ailments,
-      // detonate, the taken/evade windows and the stat refresh are all
-      // owned there -- this lane only collects landing bookkeeping.
-      if (declared.compositePickedSkills?.length) {
+      // skilldef M4e/M5d -- the plan pipeline: adapter-covered casts
+      // route LegacySkillAdapter -> SkillResolver -> SkillExecutor ->
+      // scheduler while the resolveDeclaredHit consequence chain
+      // replays through execution hooks (income/procs/windows/refresh/
+      // sweep fire at the same slots). The legacy lanes below now serve
+      // ONLY the engine-unit configuration (runtime === undefined --
+      // no scheduler exists to route through); a runtime-present cast
+      // the adapter cannot express reports loudly and resolves to a
+      // no-op -- one ACTIVE pipeline, nothing falls back silently.
+      const routed = this.tryPlanCast(battle, actor, declared)
+      const engineUnitLane = this.runtime === undefined
+      if (routed === null && !engineUnitLane) {
+        this.reportUnroutedCast(actor, action.skill, action.skillId, true)
+      }
+
+      if (routed !== null) {
+        targetIds.push(...routed.landedTargetIds)
+        landedTargets.push(...routed.landedTargets)
+        // Non-damaging lane parity (the else-branch below): every
+        // affected target that was ALIVE when its apply op settled is
+        // pushed unconditionally -- the roll's own outcome never gates.
+        if (
+          !declared.scaledDamage &&
+          !declared.compositePickedSkills?.length &&
+          payloadSkill?.targetScope !== 'self'
+        ) {
+          for (const appliedId of routed.appliedTargetIds) {
+            if (!targetIds.includes(appliedId)) {
+              targetIds.push(appliedId)
+            }
+          }
+        }
+      }
+
+      if (engineUnitLane && declared.compositePickedSkills?.length) {
         for (const pickedSkill of declared.compositePickedSkills) {
           if (!pickedSkill.damage) continue
 
@@ -1879,7 +2173,7 @@ export class TurnBattleSystem {
         }
       }
 
-      if (declared.scaledDamage) {
+      if (engineUnitLane && declared.scaledDamage) {
         for (const target of declared.affected) {
           if (!actor.entity.alive) break // mid-impact death (T3-22b)
           // Kiem Tu Reimagined Task 2 -- multi-instance defs (Ngu phi kiem):
@@ -1920,6 +2214,7 @@ export class TurnBattleSystem {
           }
         }
     } else if (
+      engineUnitLane &&
       !declared.compositePickedSkills?.length &&
       payloadSkill?.targetScope !== 'self'
     ) {
@@ -1951,32 +2246,37 @@ export class TurnBattleSystem {
       // on `affected` -- empty for enemy-targeted charge skills). Only
       // non-charge casts commit here.
       if ((action.skill?.chargeTurns ?? 0) === 0) {
-        // Task 9 -- repeat/multicast follow-up executions resolve the
-        // payload WITHOUT re-committing the root's cast: no second
-        // cooldown, no second cast-count (INV-18 structural).
-        if (executionCommitsCast(declared.execution)) {
-          this.commitCast(actor, declared)
-        }
+        if (engineUnitLane) {
+          // Task 9 -- repeat/multicast follow-up executions resolve the
+          // payload WITHOUT re-committing the root's cast: no second
+          // cooldown, no second cast-count (INV-18 structural).
+          if (executionCommitsCast(declared.execution)) {
+            this.commitCast(actor, declared)
+          }
 
-        // Task 8 -- The gain is skill-authored (theGainOnLandedCast /
-        // theGainOnCrit), once per cast that landed >=1 valid target —
-        // slot position is no longer a gain rule and target/hit count
-        // never multiplies it (INV-15). A self-scoped cast always lands
-        // on the caster (its targetIds entry is pushed by the buff
-        // block below -- too late to serve as the landed signal here).
-        // Runs AFTER commitAction so an ultimate's pool consumption
-        // (100 -> 0) is already reflected -- the gain lands on the
-        // post-cast pool, preserving legacy's gain-after-consume
-        // ordering. Deliberately NOT inside the registry gate: The gain
-        // is engine-native resource accrual, not buff-registry content.
-        if (payloadSkill && (targetIds.length > 0 || payloadSkill.targetScope === 'self')) {
-          this.grantTheFromCast(actor, payloadSkill, castCritLanded)
-        }
+          // Task 8 -- The gain is skill-authored (theGainOnLandedCast /
+          // theGainOnCrit), once per cast that landed >=1 valid target --
+          // slot position is no longer a gain rule and target/hit count
+          // never multiplies it (INV-15). A self-scoped cast always lands
+          // on the caster (its targetIds entry is pushed by the buff
+          // block below -- too late to serve as the landed signal here).
+          // Runs AFTER commitAction so an ultimate's pool consumption
+          // (100 -> 0) is already reflected -- the gain lands on the
+          // post-cast pool, preserving legacy's gain-after-consume
+          // ordering. Deliberately NOT inside the registry gate: The gain
+          // is engine-native resource accrual, not buff-registry content.
+          if (payloadSkill && (targetIds.length > 0 || payloadSkill.targetScope === 'self')) {
+            this.grantTheFromCast(actor, payloadSkill, castCritLanded)
+          }
 
-        for (const buffSpec of payloadSkill?.appliesBuffs ??
-          (payloadSkill?.appliesBuff ? [payloadSkill.appliesBuff] : [])) {
-          this.applyDeclaredBuff(battle, actor, buffSpec, declared.affected)
+          for (const buffSpec of payloadSkill?.appliesBuffs ??
+            (payloadSkill?.appliesBuff ? [payloadSkill.appliesBuff] : [])) {
+            this.applyDeclaredBuff(battle, actor, buffSpec, declared.affected)
+          }
         }
+        // Routed casts: the plan owns commit (commitShell), the cost
+        // (consume_resource op), the consume-all burn, the grants and
+        // the appliesBuffs ops -- none of it re-runs here.
 
         if (payloadSkill?.targetScope === 'self') {
           targetIds.push(actor.id)
@@ -2370,32 +2670,50 @@ export class TurnBattleSystem {
     const landedIds: string[] = []
     let hitCount = 0
 
-    if (extraDef.damage) {
-      const scaled = declared.suddenDeathMultiplier === 1
-        ? extraDef.damage
-        : scaleActionDamage(extraDef.damage, declared.suddenDeathMultiplier)
+    // skilldef M5c -- the extra resolves as a non-committing verbatim
+    // plan (extras never commit -- they are inline lanes of the parent
+    // cast); the consequence chain replays through the same hooks as
+    // routed casts. Adapter-unsupported defs keep the legacy lane.
+    const routed =
+      this.runtime !== undefined
+        ? this.planPipeline.routeExtraCast(battle, actor, declared, extraDef, extraTargets)
+        : null
 
-      for (const target of extraTargets) {
-        if (!actor.entity.alive) break // mid-impact death (T3-22b)
-        const count = extraDef.instances?.count ?? 1
+    if (routed !== null) {
+      landedIds.push(...routed.landedTargetIds)
+      hitCount = routed.hitCount
+    } else if (this.runtime !== undefined) {
+      // M5d -- adapter-unsupported extra def on a live battle: loud
+      // no-op (the parent cast already routed or reported).
+      this.reportUnroutedCast(actor, extraDef, extraDef.id, true)
+    } else {
+      if (extraDef.damage) {
+        const scaled = declared.suddenDeathMultiplier === 1
+          ? extraDef.damage
+          : scaleActionDamage(extraDef.damage, declared.suddenDeathMultiplier)
 
-        for (let i = 0; i < count; i++) {
-          if (!target.entity.alive || !actor.entity.alive) break
+        for (const target of extraTargets) {
+          if (!actor.entity.alive) break // mid-impact death (T3-22b)
+          const count = extraDef.instances?.count ?? 1
 
-          const opts = extraDef.instances?.perInstanceOptions?.(i, target.entity)
-          const result = this.resolveDeclaredHit(battle, actor, target, scaled, extraDef, declared, opts)
-          hitCount += 1
+          for (let i = 0; i < count; i++) {
+            if (!target.entity.alive || !actor.entity.alive) break
 
-          if (!result.dodged && !landedIds.includes(target.id)) {
-            landedIds.push(target.id)
+            const opts = extraDef.instances?.perInstanceOptions?.(i, target.entity)
+            const result = this.resolveDeclaredHit(battle, actor, target, scaled, extraDef, declared, opts)
+            hitCount += 1
+
+            if (!result.dodged && !landedIds.includes(target.id)) {
+              landedIds.push(target.id)
+            }
           }
         }
       }
-    }
 
-    for (const buffSpec of extraDef.appliesBuffs ??
-      (extraDef.appliesBuff ? [extraDef.appliesBuff] : [])) {
-      this.applyDeclaredBuff(battle, actor, buffSpec, extraTargets)
+      for (const buffSpec of extraDef.appliesBuffs ??
+        (extraDef.appliesBuff ? [extraDef.appliesBuff] : [])) {
+        this.applyDeclaredBuff(battle, actor, buffSpec, extraTargets)
+      }
     }
 
     if (extraScope === 'self' && !landedIds.includes(actor.id)) {

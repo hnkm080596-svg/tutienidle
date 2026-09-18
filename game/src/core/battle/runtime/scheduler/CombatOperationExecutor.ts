@@ -272,6 +272,7 @@ export class CombatOperationExecutor {
         const result = this.requirePort('buffs').cleanse(
           op.payload.targetId,
           op.payload.query,
+          op.payload.limit,
           ctx,
         )
         return {

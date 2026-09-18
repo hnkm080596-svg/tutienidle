@@ -2,6 +2,8 @@
 
 **Trạng thái:** Live.
 
+**Execution lane (turn combat):** mọi cast active đi qua pipeline `core/skilldef` — `SkillDefinition` (immutable authored data) → `SkillResolver` → `ResolvedSkillPlan` → `SkillExecutor` → `CombatScheduler`. `LegacySkillAdapter` bridge legacy `Skill`/`TurnSkillDefinition` vào `ActiveSkillDefinition`; def nào adapter không biểu diễn được sẽ warn một lần và no-op (không âm thầm fallback). Progression state tách khỏi authored def: `SkillSystem.progressionOf()` → `SkillProgressionState`, `SkillSystem.getResolvedSkill()` → `{definition, progression}`; combat-scoped state (cooldown/charge) qua `TurnBattleSystem` combat-runtime projection → `SkillCombatRuntimeState`. Skill content hiện tại dự kiến redesign trên `SkillDefinition` — phần dưới mô tả content/progression surface legacy.
+
 Core: `core/skill/Skill.ts`, `SkillSystem.ts`, `SkillManager.ts`, `SkillEffectSystem.ts`, `SkillActionRegistry.ts`, `PassiveSystem.ts`, `SkillRuntimeStats.ts`, `SkillLoadoutSlots.ts`. Data: `data/skill/Skills.ts`, `TurnBasicAttacks.ts`, `TurnReactionPathSkills.ts`, `TalentPassives.ts`. Trigger/action guide: `docs/skill-trigger-action-usage-guide.md`.
 
 ## Model `Skill`

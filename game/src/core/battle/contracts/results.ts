@@ -122,7 +122,17 @@ export type CombatOperationResult =
       type: 'deal_damage'
       status: CombatOperationResultStatus
       reason?: CombatOperationResultReason
-      damage?: { rawDamage: number; hpDamage: number; killed: boolean }
+      /** landed/crit are hit-channel outputs the DamageAuthority reports
+          for hit-resolving profiles ('skill_hit'): absent = the channel
+          does not dodge/crit (legacy_flat/dot/reaction) -- a resolved op
+          counts as landed, never as crit. */
+      damage?: {
+        rawDamage: number
+        hpDamage: number
+        killed: boolean
+        landed?: boolean
+        crit?: boolean
+      }
     }
   | {
       operationId: CombatOperationId

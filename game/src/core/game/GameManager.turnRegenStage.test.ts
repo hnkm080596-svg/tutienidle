@@ -12,7 +12,7 @@ import type { StatusVfxAttachedEvent } from '../battle/BattleEvents'
 
 // M8 (ARCH-003) — real stage-loop regression for the per-turn resource
 // contract: the REAL Phap Tu chain kits (resolved through
-// resolvePlayerSpecialUltimate + SkillToTurnSkillConverter +
+// resolvePlayerSpecialUltimate + toTurnSkillDefinition (LegacySkillAdapter) +
 // playerToCombatEntity) apply thanh_tuyen / bang_giap / dia_tru through
 // appliesBuff, and the legacy-named regen stats they grant produce real
 // MP/Ward on the entity-turn cadence — nothing here is a synthetic

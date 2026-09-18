@@ -1,7 +1,7 @@
 # Buff System Reimagined — Final Architecture Specification
 
 Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
-Version: 1.5
+Version: 1.6
 Compatibility requirement: None
 Migration requirement: None
 Primary reference implementation: Hỏa Ấn
@@ -1876,3 +1876,9 @@ Clarifications locked during the implementation-plan review. These refine — ne
 2. **§23 request shape replaced:** `PeriodicDamageRequest` → `BuffPeriodicDamageRequest` (canonical `contracts/periodic.ts` shape): `requestId`, `instanceId`, `periodicId`, `sourceId`, `targetId`, `element?`, `damageProfile`, `coefficient`, `hitCount`, `canCrit`, `canMiss`, `stackCount?`, `tags?`, `snapshot?`. **The request carries NO `origin`/`originId`** — the old `origin:'buff'` fields are deleted. Operation provenance is the scheduler periodic bridge's job: it mints `CombatOperationOrigin{kind:'buff_periodic', originId, sourceId, rootActionId, causationEventId}` when materializing each generated op. The request is pure payload.
 3. **`triggerPeriodic` all-dead branch (clarifies v1.4 rule 1):** when the ordered candidate list is non-empty but every unit is dead/invalid at trigger time, the result is `{started:false, candidateUnitCount: <list size>}` — no `firstRequestId`, no `pendingSeries` entry, zero `PeriodicRequestsCommitted`. `started:false` therefore means "no live unit was triggerable" whether the selector matched nothing or only dead units.
 4. **Known limitation (recorded, not a defect):** `removeModifier`'s `all_matching` semantics cannot remove one specific generation (e.g. only caster A's entry of a same-id stack). If gameplay ever needs exact-entry removal, add a separate `RemoveBuffModifierEntryOperation {modifierRuntimeId}` — do NOT overload `remove_buff_modifier` (v1.4's authored-id semantics stays stable).
+
+---
+
+## Addendum v1.6 (2026-09-18 — locked via Skill megaplan review v2.1, contract closure)
+
+1. **§42 `cleanse` gains `limit?: number` (contract v1.6 parity):** signature becomes `cleanse(targetId, query, limit?, ctx)`. `undefined` → every matching dispellable instance removed (unchanged default); `N` → at most the first N cleansed in canonical `sortedForTarget` order. `skipped` still reports EVERY non-dispellable match — the scan continues for reporting after the removal limit is reached; only removal halts. Consumer: the skill program's `cleanse` authored op + the legacy `SkillEffect.remove_buff`-by-polarity adapter (`count` max, default 1 → `limit: count ?? 1`).

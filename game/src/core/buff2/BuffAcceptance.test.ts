@@ -286,6 +286,7 @@ describe('sec.70 required core tests', () => {
     const r = w.system.cleanse(
       TEST_ENTITIES.targetA,
       { definitionId: 'test_buff.hoa_an' as BuffDefinition['id'] },
+      undefined,
       w.makeCtx(),
     )
     expect(r.cleansed).toEqual([instance.instanceId])
@@ -477,6 +478,7 @@ describe('sec.72 secondary acceptance (non-Hoa status)', () => {
     const r = w.system.cleanse(
       TEST_ENTITIES.targetA,
       { definitionId: 'test_buff.doc' as BuffDefinition['id'] },
+      undefined,
       w.makeCtx(),
     )
     expect(r.cleansed).toHaveLength(1)

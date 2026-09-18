@@ -4,7 +4,7 @@ import type { CombatVfxPresetId } from '../battle/CombatAction'
 
 // Trigger/Action rework (2026-08-31 spec, Phase 2A) — replaces the old
 // per-mechanic fields on SkillEffect/Skill with composable actions. The
-// union is consumed by SkillToTurnSkillConverter into the live turn
+// union is consumed by toTurnSkillDefinition (LegacySkillAdapter) into the live turn
 // engine (the mapped-type legacy executor was deleted in Mission G).
 export interface DealDamageAction {
   type: 'dealDamage'

@@ -15,10 +15,10 @@
 **Tech Stack:** Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 
 **Specs:**
-- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.5 — runtime contract, supersedes conflicting points in the other specs)
+- `game/docs/specs/2026-09-17-combat-systems-contract-spec.md` (v1.6 — runtime contract, supersedes conflicting points in the other specs)
 - `game/docs/specs/2026-09-17-buff-system-reimagined-spec.md` (v1.5)
-- `game/docs/specs/2026-09-17-skill-definition-system-spec.md` (v1.1)
-- `game/docs/specs/2026-09-17-reaction-system-reimagined-spec.md` (v1.0)
+- `game/docs/specs/2026-09-17-skill-definition-system-spec.md` (v1.3)
+- `game/docs/specs/2026-09-17-reaction-system-reimagined-spec.md` (v1.1)
 - `game/docs/specs/2026-09-17-hoa-an-ailment-system-spec.md` (v1.1 — **context only; not implemented in this program**)
 
 ## Global Constraints

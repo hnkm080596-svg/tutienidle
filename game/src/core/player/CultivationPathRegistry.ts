@@ -28,7 +28,7 @@ import { aggregateTurnSkillResourceModifiers } from '../progression/NodeSystem'
 import {
   toTurnSkillDefinition,
   collectUnsupportedSkillSemantics,
-} from '../game/SkillToTurnSkillConverter'
+} from '../skilldef/LegacySkillAdapter'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
