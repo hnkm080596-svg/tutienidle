@@ -336,13 +336,10 @@ export class TribulationOutcomeService {
     gameManager.materialBag.remove(spiritStoneId, Math.min(owned, stoneLoss))
 
     // Task 9b (fix round 2): debuff duration scaling reads the player's
-    // REAL gear. ARCH-002 (M7): resolved through the GameManager ambient
-    // resolver — same post-reset-equivalent union as the tribulation
-    // ghost snapshot, never a caller-threaded stale mirror.
-    gameManager.effectOps.applyPersistentBuff(
-      KIEP_THUONG_DEBUFF,
-      gameManager.resolveAmbientPlayerStats(player as PlayerData),
-    )
+    // REAL gear. buff2 M4: the persistent pool's stats port resolves the
+    // ambient union internally (same post-reset-equivalent view), so the
+    // call carries the def only.
+    gameManager.effectOps.applyPersistentBuff(KIEP_THUONG_DEBUFF)
 
     // Spec SS4.3: losing a Great Dao attempt closes the opportunity
     // FOREVER; later grade rolls cap at Thien Dao (BreakthroughGrades).

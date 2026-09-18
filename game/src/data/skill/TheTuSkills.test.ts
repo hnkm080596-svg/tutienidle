@@ -21,6 +21,7 @@ import { TURN_SKILL_DISPLAY_META } from './TurnSkillDisplayMeta'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 import { collectTheTuKitModifiers } from '../../core/the-tu/TheTuKitModifiers'
+import type { ReactiveTriggerPayload } from '../../core/proc/ProcCapabilities'
 
 // The Tu Reimagined (spec 2026-09-15 section 5, plan Task 6) — the two
 // Hien kits are native TurnSkillDefinitions resolved by owned root;
@@ -190,14 +191,13 @@ describe('buildTheTuKit — node modifiers reach def clones only', () => {
 
     const kit = buildTheTuKit('tran_the', mods)
     const emblemBuff = kit.special?.grantsBuffsAtBuild?.find((def) => def.id === 'phan_chinh')
-    const reflect = emblemBuff?.effects.find(
-      (effect) => effect.type === 'reactiveTrigger' && effect.reflectsDamage !== undefined,
-    )
+    const reflectPayloadOf = (def: { capabilities?: readonly { type: string; payload: unknown }[] } | undefined) =>
+      def?.capabilities
+        ?.map((cap) => cap.payload as ReactiveTriggerPayload)
+        .find((payload) => payload?.trigger === 'onImpactLanded' && payload.reflectsDamage !== undefined)
 
-    expect(reflect?.type === 'reactiveTrigger' && reflect.reflectsDamage?.takenRatio).toBeCloseTo(
-      (BUFF_REGISTRY.get('phan_chinh').effects.find(
-        (effect) => effect.type === 'reactiveTrigger' && effect.reflectsDamage !== undefined,
-      ) as { reflectsDamage: { takenRatio: number } }).reflectsDamage.takenRatio + 0.05,
+    expect(reflectPayloadOf(emblemBuff)?.reflectsDamage?.takenRatio).toBeCloseTo(
+      (reflectPayloadOf(BUFF_REGISTRY.get('phan_chinh'))?.reflectsDamage?.takenRatio ?? 0) + 0.05,
     )
 
     const wardApp = kit.ultimate?.appliesBuffs?.find((application) => application.definitionId === 'son_nhac_ho_the')
@@ -207,11 +207,11 @@ describe('buildTheTuKit — node modifiers reach def clones only', () => {
     expect(wardApp?.externalWardGrant?.sourceMaxHpRatio).toBeCloseTo((baseRatio ?? 0) + 0.1)
 
     const tauntApp = kit.ultimate?.appliesBuffs?.find((application) => application.definitionId === 'khiem_khich')
-    expect(tauntApp?.durationOverride).toBe(BUFF_REGISTRY.get('khiem_khich').duration + 1)
+    expect(tauntApp?.durationOverride).toBe((BUFF_REGISTRY.get('khiem_khich').lifetime.duration ?? 0) + 1)
 
     // The embedded emblem buff is a CLONE — mutating it must not touch the registry.
-    emblemBuff!.effects = []
-    expect(BUFF_REGISTRY.get('phan_chinh').effects.length).toBeGreaterThan(0)
+    emblemBuff!.capabilities = []
+    expect(BUFF_REGISTRY.get('phan_chinh').capabilities?.length).toBeGreaterThan(0)
   })
 })
 
@@ -257,8 +257,8 @@ describe('the_tu_an kit data (spec section 6.1)', () => {
 
     // Clones — mutating the kit's marker must not touch the registry def.
     const marker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ho_mon')!
-    marker.effects = []
-    expect(BUFF_REGISTRY.get('ho_mon').effects.length).toBeGreaterThan(0)
+    marker.capabilities = []
+    expect(BUFF_REGISTRY.get('ho_mon').capabilities?.length).toBeGreaterThan(0)
   })
 
   it('buildTheTuAnKit([]) plants only ung_the — no root, no mechanic marker', () => {

@@ -1,16 +1,21 @@
 /**
- * Combat-contract dormancy guard (M4; P5 T4) -- the per-cycle
- * CombatScheduler is CONSTRUCTED at the composition root
- * (GameManagerTurnBattleOps.mintCycleScheduler) and injected into
- * TurnBattleSystem as a dormant diagnostic surface, but NO production
- * code may drive it until the buff/skill cutover lands.
+ * Combat-scheduler driver-seam guard (buff2 M4 cutover) -- the per-cycle
+ * CombatScheduler is the live combat authority: constructed at the
+ * composition root (GameManagerTurnBattleOps.mintCycleScheduler) and
+ * injected into TurnBattleSystem, which drives it through the documented
+ * op lanes and lifecycle roots.
  *
  * This guard greps production src/ for scheduler intake/driver calls
- * outside the two sanctioned locations:
+ * outside the sanctioned locations:
  * - the scheduler module itself (src/core/battle/runtime/scheduler/**)
  *   defines and self-uses these APIs;
- * - the construction site (GameManagerTurnBattleOps.ts) may construct
- *   and inject the instance (it makes no API calls today).
+ * - the construction sites may build + inject the instance
+ *   (GameManagerTurnBattleOps.ts production, TurnRuntimeFixtures.ts the
+ *   shared headless test runtime);
+ * - SANCTIONED_DRIVERS may call intake APIs (TBS op lanes, the proc
+ *   system's authored op queue, the test fixture's apply/lifecycle
+ *   helpers). No OTHER production file may drive or re-mint the
+ *   scheduler -- a new driver is a boundary violation.
  *
  * Patterns policed:
  * - combatScheduler.run( (including combatScheduler?.run() and the
@@ -20,12 +25,13 @@
  * - .enqueueAuthored( / .enqueueEvent( / .createLifecycleSink( /
  *   .registerImmediateHandler( / .reserveOperationId( on any receiver
  *   (these names are unique to the scheduler surface)
- * - new CombatScheduler anywhere except the construction site (a
- *   second construction site is also a dormancy violation)
+ * - new CombatScheduler anywhere except the construction sites (a
+ *   third construction site is also a violation)
  *
  * Test files are excluded automatically (listProductionTs skips
- * *.test.ts): the wiring test in GameManager.battleCycle.test.ts is
- * the one sanctioned driver.
+ * *.test.ts): test-scope drivers are sanctioned. TurnRuntimeFixtures.ts
+ * is a test-support module that lives under src/, so it is allowlisted
+ * explicitly.
  */
 import { describe, expect, it } from 'vitest'
 import { join, relative } from 'node:path'
@@ -35,7 +41,27 @@ const GAME_ROOT = process.cwd()
 const SRC_DIR = join(GAME_ROOT, 'src')
 
 const SCHEDULER_MODULE_PREFIX = 'src/core/battle/runtime/scheduler/'
-const CONSTRUCTION_SITE = 'src/core/game/GameManagerTurnBattleOps.ts'
+
+/** Files allowed to `new CombatScheduler`. The shared headless fixture
+    mirrors the production mint so tests exercise the same wiring. */
+const CONSTRUCTION_SITES = [
+  'src/core/game/GameManagerTurnBattleOps.ts',
+  'src/core/battle/turn/testing/TurnRuntimeFixtures.ts',
+]
+
+/** Files allowed to call scheduler intake/driver APIs (outside the
+    scheduler module itself). Everything else stays hands-off. */
+const SANCTIONED_DRIVERS = new Set([
+  // TBS op lanes + lifecycle roots (emitAndSettle, applyBuffOp,
+  // runBuffLifecycle, gauge staging).
+  'src/core/battle/turn/TurnBattleSystem.ts',
+  // Proc-authored ops (reactive procs enqueue follow-ups / resource
+  // spends through the scheduler).
+  'src/core/proc/CombatProcSystem.ts',
+  // Shared headless test runtime (apply/lifecycle helpers drive the
+  // same lanes production does).
+  'src/core/battle/turn/testing/TurnRuntimeFixtures.ts',
+])
 
 // Receiver-explicit drive: `combatScheduler.run(` / `combatScheduler?.run(`.
 const SCHEDULER_RUN_RE = /\bcombatScheduler\s*(?:\?\s*)?\.\s*run\s*\(/
@@ -72,9 +98,13 @@ function collectOffenders(): { offenders: Offender[]; constructionSites: string[
     const rel = relative(GAME_ROOT, file).replaceAll('\\', '/')
     const text = readTs(file)
     if (CONSTRUCT_RE.test(text)) constructionSites.push(rel)
-    // The scheduler module owns its API surface; the construction site
-    // may build + inject. Neither is scanned for call patterns.
-    if (rel.startsWith(SCHEDULER_MODULE_PREFIX) || rel === CONSTRUCTION_SITE) {
+    // The scheduler module owns its API surface; sanctioned drivers may
+    // call intake APIs. Neither is scanned for call patterns.
+    if (
+      rel.startsWith(SCHEDULER_MODULE_PREFIX) ||
+      CONSTRUCTION_SITES.includes(rel) ||
+      SANCTIONED_DRIVERS.has(rel)
+    ) {
       continue
     }
     const referencesScheduler = REFERENCES_SCHEDULER_RE.test(text)
@@ -103,14 +133,14 @@ function collectOffenders(): { offenders: Offender[]; constructionSites: string[
   return { offenders, constructionSites }
 }
 
-describe('combat-contract M4 -- CombatScheduler stays dormant outside its module + construction site (P5 T4)', () => {
+describe('combat-scheduler driver seams (buff2 M4) -- only documented lanes drive the live scheduler', () => {
   const { offenders, constructionSites } = collectOffenders()
 
-  it('the composition root still constructs exactly one scheduler (guard cannot silently pass on deleted wiring)', { timeout: SCAN_TIMEOUT }, () => {
-    expect(constructionSites).toEqual([CONSTRUCTION_SITE])
+  it('schedulers are constructed only at the production mint + the shared test fixture (guard cannot silently pass on deleted wiring)', { timeout: SCAN_TIMEOUT }, () => {
+    expect(constructionSites.sort()).toEqual([...CONSTRUCTION_SITES].sort())
   })
 
-  it('no production file outside the scheduler module / construction site drives or re-mints the scheduler', { timeout: SCAN_TIMEOUT }, () => {
+  it('no production file outside the scheduler module / sanctioned drivers drives or re-mints the scheduler', { timeout: SCAN_TIMEOUT }, () => {
     expect(
       offenders.map((o) => `${o.file}:${o.line} [${o.rule}] ${o.text}`),
     ).toEqual([])

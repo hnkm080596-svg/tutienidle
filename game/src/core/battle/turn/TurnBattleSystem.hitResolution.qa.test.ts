@@ -3,9 +3,9 @@ import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '.
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
 // AR-04 QA Probes:
@@ -17,18 +17,32 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 const BURN_BUFF: BuffDefinition = {
   id: 'qa_burn',
   name: 'QA Burn',
+  kind: 'ailment',
+  element: 'fire',
   polarity: 'debuff',
-  duration: 3,
-  stackMode: 'stack',
-  effects: [{ type: 'dot', dpsRatio: 1, element: 'fire' }],
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 3, scaling: 'ailment_scaled' },
+  application: { resistance: 'ailment' },
+  periodic: [
+    {
+      id: 'qa_burn.tick',
+      type: 'damage',
+      element: 'fire',
+      damageProfile: 'legacy_dot',
+      coefficient: 1,
+      scaling: 'dynamic',
+      timing: 'holder_turn_end',
+      stackScaling: 'multiply',
+      canCrit: false,
+      canMiss: false,
+      hitCount: 1,
+    },
+  ],
+  dispellable: true,
 }
 
-const REGISTRY: BuffDefinitionCatalog = {
-  get: (id: string): BuffDefinition => {
-    if (id === BURN_BUFF.id) return BURN_BUFF
-    throw new Error(`unknown buff id: ${id}`)
-  },
-}
+const REGISTRY = makeTestBuffRegistry([BURN_BUFF])
 
 function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, ...overrides.stats })
@@ -61,7 +75,7 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new BuffPool(),
+    
     consecutiveHardCcTurns: 0,
   }
 }
@@ -70,7 +84,6 @@ describe('AR-04: Hit resolution and critical authority', () => {
   it('rolls critical hits naturally in turn battles when criticalRate is 100%', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
     const attacker = makeEntity('attacker', {
       stats: createBaseStats({ criticalRate: 1.0, might: 100, accuracyRating: 9999 }),
@@ -81,6 +94,12 @@ describe('AR-04: Hit resolution and critical authority', () => {
 
     const attackerP = makeParticipant('attacker', attacker, 0)
     const defenderP = makeParticipant('defender', defender, 1)
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [attackerP, defenderP],
+      combatSystem: combat,
+    })
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
     attackerP.basic = {
       id: 'strike',
@@ -111,7 +130,6 @@ describe('AR-04: Hit resolution and critical authority', () => {
 
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
     // Attacker has 0 accuracy, defender has 99999 evasion -> guaranteed dodge.
     const attacker = makeEntity('attacker', {
@@ -123,6 +141,12 @@ describe('AR-04: Hit resolution and critical authority', () => {
 
     const attackerP = makeParticipant('attacker', attacker, 0)
     const defenderP = makeParticipant('defender', defender, 1)
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [attackerP, defenderP],
+      combatSystem: combat,
+    })
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
     const skillWithAilment: TurnSkillDefinition = {
       id: 'fire_strike',
@@ -146,7 +170,9 @@ describe('AR-04: Hit resolution and critical authority', () => {
     // 1. targetIds must NOT contain defender.
     expect(stepResult.targetIds).not.toContain('defender')
     // 2. defender must NOT receive the burn ailment.
-    expect(defenderP.buffs.getAllById('qa_burn')).toHaveLength(0)
+    expect(
+      runtime.buffs.getForTarget('defender').filter((i) => i.definitionId === 'qa_burn'),
+    ).toHaveLength(0)
     vi.restoreAllMocks()
   })
 })

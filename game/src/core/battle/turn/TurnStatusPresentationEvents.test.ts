@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { EventBus } from '../../events/EventBus'
+import { CombatSystem } from '../../combat/CombatSystem'
 import {
   snapshotTurnStatuses,
   diffAndEmitTurnStatusVfx,
   type TurnStatusSnapshotEntry,
 } from './TurnStatusPresentationEvents'
-import { BuffPool } from '../../buff/BuffPool'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
-import type { Buff } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
+import type { BuffDefinitionId } from '../contracts/ids'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { createBaseStats } from '../../stats/StatBlock'
 import type {
@@ -15,10 +16,13 @@ import type {
   StatusVfxUpdatedEvent,
   StatusVfxRemovedEvent,
 } from '../BattleEvents'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // Phase A6 (9.5 #7) — turn-based status presentation feed. Fixture shape
 // copied from TurnActionPresentationEvents.test.ts (per-file fixture
-// convention of this suite); buff fixture shape from BuffPool.test.ts.
+// convention of this suite). buff2 M4: instances are seeded through the
+// shared test runtime's buff authority; def metadata (hidden/polarity)
+// resolves through a test registry.
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
   return {
@@ -32,25 +36,39 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 function makeParticipant(id: string, entity: CombatEntity): TurnBattleParticipant {
   return {
     id, entity, speed: 100, priority: 0, actionGauge: 0, alive: entity.alive,
-    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
+    consecutiveHardCcTurns: 0,
   }
 }
 
-function makeBuff(overrides: Partial<Buff> = {}): Buff {
+function buffDef(
+  id: string,
+  polarity: 'buff' | 'debuff',
+  extra?: Partial<BuffDefinition>,
+): BuffDefinition {
   return {
-    id: 'test_buff',
-    sourceId: 'source_1',
-    targetId: 'player',
-    polarity: 'debuff',
-    duration: 5,
-    remainingTurns: 5,
-    stacks: 1,
-    stackMode: 'refresh',
-    continuousTurns: 0,
-    effects: [],
-    ...overrides,
+    id: id as BuffDefinitionId,
+    name: id,
+    kind: polarity,
+    polarity,
+    instanceScope: 'per_target',
+    stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 5, scaling: 'fixed' },
+    dispellable: true,
+    ...extra,
   }
 }
+
+// 'trung_doc' stays unregistered HERE — buffNameFor resolves its display
+// name through the production BUFF_REGISTRY (real def); the other ids are
+// test-only.
+const REGISTRY = makeTestBuffRegistry([
+  buffDef('burn', 'debuff'),
+  buffDef('ward', 'buff'),
+  buffDef('trung_doc', 'debuff'),
+  buffDef('test_buff', 'debuff'),
+  buffDef('hidden_probe', 'debuff', { hidden: true }),
+  buffDef('totally_unknown_buff_id', 'debuff'),
+])
 
 function makeBattle(participants: { players?: TurnBattleParticipant[]; enemies?: TurnBattleParticipant[] }): TurnBattle {
   return {
@@ -60,28 +78,74 @@ function makeBattle(participants: { players?: TurnBattleParticipant[]; enemies?:
   }
 }
 
+function makeWorld(participants: TurnBattleParticipant[]) {
+  const combat = new CombatSystem(new EventBus())
+  const runtime = makeTurnRuntime({
+    registry: REGISTRY,
+    participants: () => participants,
+    combatSystem: combat,
+  })
+
+  return runtime
+}
+
 describe('snapshotTurnStatuses', () => {
   it('keys entries by targetId:buffId:sourceId reading remainingTurns/stacks/polarity/permanent', () => {
     const player = makeParticipant('player', createCombatant({ id: 'player' }))
-    player.buffs.add(makeBuff({ id: 'burn', targetId: 'player', stacks: 2, remainingTurns: 3 }))
-
     const enemy = makeParticipant('enemy', createCombatant({ id: 'enemy' }))
-    enemy.buffs.add(makeBuff({ id: 'ward', sourceId: 'src_x', targetId: 'enemy', polarity: 'buff', duration: Infinity, remainingTurns: Infinity }))
+    const source = makeParticipant('source_1', createCombatant({ id: 'source_1' }))
+    const srcX = makeParticipant('src_x', createCombatant({ id: 'src_x' }))
+    const runtime = makeWorld([player, enemy, source, srcX])
 
-    const snapshot = snapshotTurnStatuses(makeBattle({ players: [player], enemies: [enemy] }))
+    runtime.applyBuff('burn', player, source, { stacks: 2, durationOverride: 3 })
+    runtime.applyBuff('ward', enemy, srcX, { durationOverride: undefined })
+
+    // ward permanent: reseed with a permanent-clock def via a dedicated
+    // registry lane is overkill — durationOverride undefined lands the
+    // authored 5-turn duration, so use a permanent def instead.
+    const snapshot = snapshotTurnStatuses(
+      makeBattle({ players: [player], enemies: [enemy] }),
+      runtime.buffs,
+      REGISTRY,
+    )
 
     expect(snapshot.size).toBe(2)
     expect(snapshot.get('player:burn:source_1')).toEqual({
       targetId: 'player', dotType: 'burn', stacks: 2, remainingTurns: 3, polarity: 'debuff', permanent: false,
     })
-    expect(snapshot.get('enemy:ward:src_x')!.permanent).toBe(true)
+    expect(snapshot.get('enemy:ward:src_x')).toMatchObject({ polarity: 'buff' })
+  })
+
+  it('permanent-clock instances report permanent: true', () => {
+    const permanentRegistry = makeTestBuffRegistry([
+      buffDef('ward', 'buff', { lifetime: { clock: 'permanent', scaling: 'fixed' } }),
+    ])
+    const enemy = makeParticipant('enemy', createCombatant({ id: 'enemy' }))
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeTurnRuntime({
+      registry: permanentRegistry,
+      participants: () => [enemy],
+      combatSystem: combat,
+    })
+    runtime.applyBuff('ward', enemy)
+
+    const snapshot = snapshotTurnStatuses(
+      makeBattle({ enemies: [enemy] }),
+      runtime.buffs,
+      permanentRegistry,
+    )
+
+    expect(snapshot.get('enemy:ward:enemy')!.permanent).toBe(true)
   })
 
   it('skips hidden buffs (same convention as the buff pipeline)', () => {
     const player = makeParticipant('player', createCombatant({ id: 'player' }))
-    player.buffs.add(makeBuff({ hidden: true }))
+    const runtime = makeWorld([player])
+    runtime.applyBuff('hidden_probe', player)
 
-    expect(snapshotTurnStatuses(makeBattle({ players: [player] })).size).toBe(0)
+    expect(
+      snapshotTurnStatuses(makeBattle({ players: [player] }), runtime.buffs, REGISTRY).size,
+    ).toBe(0)
   })
 })
 
@@ -100,9 +164,12 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const bus = new EventBus()
     const events = collect(bus)
     const player = makeParticipant('player', createCombatant({ id: 'player' }))
-    player.buffs.add(makeBuff({ id: 'trung_doc', remainingTurns: 4 }))
+    const source = makeParticipant('source_1', createCombatant({ id: 'source_1' }))
+    const runtime = makeWorld([player, source])
+    runtime.applyBuff('trung_doc', player, source, { durationOverride: 4 })
+    const battle = makeBattle({ players: [player] })
 
-    diffAndEmitTurnStatusVfx(bus, makeBattle({ players: [player] }), new Map())
+    diffAndEmitTurnStatusVfx(bus, battle, new Map(), runtime.buffs, REGISTRY)
 
     expect(events.attached).toHaveLength(1)
     expect(events.attached[0]).toMatchObject({
@@ -123,9 +190,11 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const bus = new EventBus()
     const events = collect(bus)
     const player = makeParticipant('player', createCombatant({ id: 'player' }))
-    player.buffs.add(makeBuff({ id: 'totally_unknown_buff_id' }))
+    const runtime = makeWorld([player])
+    runtime.applyBuff('totally_unknown_buff_id', player)
+    const battle = makeBattle({ players: [player] })
 
-    diffAndEmitTurnStatusVfx(bus, makeBattle({ players: [player] }), new Map())
+    diffAndEmitTurnStatusVfx(bus, battle, new Map(), runtime.buffs, REGISTRY)
 
     expect(events.attached[0]!.buffName).toBe('totally_unknown_buff_id')
   })
@@ -134,14 +203,16 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const bus = new EventBus()
     const events = collect(bus)
     const player = makeParticipant('player', createCombatant({ id: 'player' }))
-    player.buffs.add(makeBuff({ id: 'burn', stacks: 2, remainingTurns: 5 }))
+    const source = makeParticipant('source_1', createCombatant({ id: 'source_1' }))
+    const runtime = makeWorld([player, source])
+    runtime.applyBuff('burn', player, source, { stacks: 2, durationOverride: 5 })
     const battle = makeBattle({ players: [player] })
 
     const before = new Map<string, TurnStatusSnapshotEntry>([
       ['player:burn:source_1', { targetId: 'player', dotType: 'burn', stacks: 1, remainingTurns: 3, polarity: 'debuff', permanent: false }],
     ])
 
-    diffAndEmitTurnStatusVfx(bus, battle, before)
+    diffAndEmitTurnStatusVfx(bus, battle, before, runtime.buffs, REGISTRY)
     expect(events.updated).toHaveLength(1)
     expect(events.updated[0]).toMatchObject({ statusInstanceId: 'player:burn:source_1', stacks: 2, durationSeconds: 5 })
 
@@ -151,7 +222,7 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const beforeDecayed = new Map<string, TurnStatusSnapshotEntry>([
       ['player:burn:source_1', { targetId: 'player', dotType: 'burn', stacks: 2, remainingTurns: 9, polarity: 'debuff', permanent: false }],
     ])
-    diffAndEmitTurnStatusVfx(bus, battle, beforeDecayed)
+    diffAndEmitTurnStatusVfx(bus, battle, beforeDecayed, runtime.buffs, REGISTRY)
     expect(events.updated).toHaveLength(0)
   })
 
@@ -159,12 +230,13 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const bus = new EventBus()
     const events = collect(bus)
     const player = makeParticipant('player', createCombatant({ id: 'player' }))
+    const runtime = makeWorld([player])
 
     const before = new Map<string, TurnStatusSnapshotEntry>([
       ['player:burn:source_1', { targetId: 'player', dotType: 'burn', stacks: 1, remainingTurns: 1, polarity: 'debuff', permanent: false }],
     ])
 
-    diffAndEmitTurnStatusVfx(bus, makeBattle({ players: [player] }), before)
+    diffAndEmitTurnStatusVfx(bus, makeBattle({ players: [player] }), before, runtime.buffs, REGISTRY)
 
     expect(events.removed).toHaveLength(1)
     expect(events.removed[0]).toMatchObject({ statusInstanceId: 'player:burn:source_1', reason: 'expired' })
@@ -174,18 +246,19 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const bus = new EventBus()
     const events = collect(bus)
     const enemy = makeParticipant('enemy', createCombatant({ id: 'enemy', alive: false }))
+    const runtime = makeWorld([enemy])
 
     const before = new Map<string, TurnStatusSnapshotEntry>([
       ['enemy:burn:source_1', { targetId: 'enemy', dotType: 'burn', stacks: 1, remainingTurns: 2, polarity: 'debuff', permanent: false }],
     ])
 
-    diffAndEmitTurnStatusVfx(bus, makeBattle({ enemies: [enemy] }), before)
+    diffAndEmitTurnStatusVfx(bus, makeBattle({ enemies: [enemy] }), before, runtime.buffs, REGISTRY)
     expect(events.removed[0]!.reason).toBe('target_dead')
 
     // Holder gone from the battle entirely (e.g. dead participants can be
     // filtered out of battle.enemies) — still target_dead.
     events.removed.length = 0
-    diffAndEmitTurnStatusVfx(bus, makeBattle({}), before)
+    diffAndEmitTurnStatusVfx(bus, makeBattle({}), before, runtime.buffs, REGISTRY)
     expect(events.removed[0]!.reason).toBe('target_dead')
   })
 
@@ -193,10 +266,13 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const bus = new EventBus()
     const events = collect(bus)
     const player = makeParticipant('player', createCombatant({ id: 'player' }))
-    player.buffs.add(makeBuff({ id: 'burn', stacks: 1, remainingTurns: 5 }))
+    const source = makeParticipant('source_1', createCombatant({ id: 'source_1' }))
+    const runtime = makeWorld([player, source])
+    runtime.applyBuff('burn', player, source, { stacks: 1, durationOverride: 5 })
+    const battle = makeBattle({ players: [player] })
 
-    const before = snapshotTurnStatuses(makeBattle({ players: [player] }))
-    diffAndEmitTurnStatusVfx(bus, makeBattle({ players: [player] }), before)
+    const before = snapshotTurnStatuses(battle, runtime.buffs, REGISTRY)
+    diffAndEmitTurnStatusVfx(bus, battle, before, runtime.buffs, REGISTRY)
 
     expect(events.attached).toHaveLength(0)
     expect(events.updated).toHaveLength(0)

@@ -11,6 +11,7 @@ import { useI18n } from 'vue-i18n'
 import type { Skill } from '@/core/skill/Skill'
 import { skillResourceTypeLabel } from '@/core/skill/SkillResourceLabels'
 import { describeSkillMechanics } from '@/core/skill/SkillMechanicDescriptions'
+import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import { CAST_LEVELING_THRESHOLDS } from '@/core/skill/SkillSystem'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
@@ -41,7 +42,7 @@ const isMaxLevel = computed(() => !!props.skill && props.skill.level >= props.sk
 const mechanicLines = computed(() => {
   stateVersion.value
 
-  return props.skill ? describeSkillMechanics(props.skill, gameManager.buffRegistry) : []
+  return props.skill ? describeSkillMechanics(props.skill, BUFF_REGISTRY) : []
 })
 
 const upgradeCost = computed(() => {

@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
+import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 // QA adversarial probes (2026-09-04 quick review) — Slice 3 buff/CC wiring.
+// M4: definitions are authored buff2; instances live in the shared runtime
+// store; death sweeps a dead target's instances at the kill boundary
+// (spec sec.40) instead of leaving them on the corpse.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 })
@@ -52,31 +54,61 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
-}
-
-class FixtureRegistry implements BuffDefinitionCatalog {
-  private readonly defs = new Map<string, BuffDefinition>()
-
-  constructor(defs: BuffDefinition[]) {
-    for (const d of defs) this.defs.set(d.id, d)
-  }
-
-  get(id: string): BuffDefinition {
-    const d = this.defs.get(id)
-    if (!d) throw new Error(`missing fixture: ${id}`)
-    return d
-  }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, consecutiveHardCcTurns: 0 }
 }
 
 const STUN: BuffDefinition = {
-  id: 'qa_stun', name: 'Stun', polarity: 'debuff', duration: 2, stackMode: 'refresh',
-  effects: [{ type: 'cc', ccEffect: 'stun' }],
+  id: 'qa_stun',
+  name: 'Stun',
+  kind: 'debuff',
+  polarity: 'debuff',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+  controls: [{ type: 'stun' }],
+  dispellable: true,
 }
 
 const BURN: BuffDefinition = {
-  id: 'qa_burn', name: 'Burn', polarity: 'debuff', duration: 3, stackMode: 'refresh',
-  effects: [{ type: 'dot', dpsRatio: 1, element: 'physical' }],
+  id: 'qa_burn',
+  name: 'Burn',
+  kind: 'debuff',
+  polarity: 'debuff',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' },
+  periodic: [
+    {
+      id: 'qa_burn.tick',
+      type: 'damage',
+      element: 'physical',
+      damageProfile: 'legacy_dot',
+      coefficient: 1,
+      scaling: 'dynamic',
+      timing: 'holder_turn_end',
+      stackScaling: 'multiply',
+      canCrit: false,
+      canMiss: false,
+      hitCount: 1,
+    },
+  ],
+  dispellable: true,
+}
+
+const STUN_DOT: BuffDefinition = {
+  ...BURN,
+  id: 'qa_stun_dot',
+  name: 'StunDot',
+  lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+  controls: [{ type: 'stun' }],
+}
+
+function makeRuntime(participants: () => TurnBattleParticipant[], combat: CombatSystem): TurnRuntimeFixture {
+  return makeTurnRuntime({
+    registry: makeTestBuffRegistry([STUN, BURN, STUN_DOT]),
+    participants,
+    combatSystem: combat,
+  })
 }
 
 describe('Slice 3 adversarial (QA probes)', () => {
@@ -88,16 +120,18 @@ describe('Slice 3 adversarial (QA probes)', () => {
     const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0, speed: 5 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
-    const registry = new FixtureRegistry([STUN])
-    new BuffSystem(playerP.buffs).apply(STUN, enemy, player, registry)
+    const enemyP = makeParticipant('enemy', enemy, 5, 1)
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeRuntime(() => [playerP, enemyP], combat)
+    runtime.applyBuff('qa_stun', playerP, enemyP)
 
     const battle: TurnBattle = {
       players: [playerP],
-      enemies: [makeParticipant('enemy', enemy, 5, 1)],
+      enemies: [enemyP],
       state: 'fighting',
     }
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    const system = new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime)
 
     const step1 = system.resolveNextStep(battle)
     expect(step1.ccBlocked).toBe(true)
@@ -117,37 +151,39 @@ describe('Slice 3 adversarial (QA probes)', () => {
 
     const playerP = makeParticipant('player', player, 10, 0)
     const enemyP = makeParticipant('enemy', enemy, 5, 1)
-
-    const registry = new FixtureRegistry([BURN])
-    new BuffSystem(enemyP.buffs).apply(BURN, player, enemy, registry)
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeRuntime(() => [playerP, enemyP], combat)
+    runtime.applyBuff('qa_burn', enemyP, playerP)
 
     const battle: TurnBattle = { players: [playerP], enemies: [enemyP], state: 'fighting' }
     const hpBefore = enemy.currentHp
+    const playerHpBefore = player.currentHp
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
     // enemy (holder burn) tick buff ở lượt của chính nó → hp giảm.
     expect(enemy.currentHp).toBeLessThan(hpBefore)
-    expect(player.currentHp).toBe(hpBefore)
+    expect(player.currentHp).toBe(playerHpBefore)
   })
 
-  it('INV-S3-3: buff tick tiếp trên holder đã chết? — resolveNextTurn không chọn dead, buff giữ nguyên', () => {
+  it('INV-S3-3: holder đã chết — resolveNextTurn không chọn dead, death sweep dọn instance', () => {
     const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }) })
     const dying = createCombatant({ id: 'dying', currentHp: 1, maxHp: 1, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     const dyingP = makeParticipant('dying', dying, 5, 1)
-
-    const registry = new FixtureRegistry([BURN])
-    new BuffSystem(dyingP.buffs).apply(BURN, player, dying, registry)
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeRuntime(() => [playerP, dyingP], combat)
+    runtime.applyBuff('qa_burn', dyingP, playerP)
 
     const battle: TurnBattle = { players: [playerP], enemies: [dyingP], state: 'fighting' }
 
-    const step = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry).resolveNextStep(battle)
+    const step = new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
-    // player giết dying trước; dying không được chọn làm actor nên buff của nó không tick.
+    // player giết dying trước; dying không được chọn làm actor. buff2: the
+    // death boundary sweeps the corpse's instances (reason 'death').
     expect(step.state).toBe('victory')
-    expect(dyingP.buffs.getAll()).toHaveLength(1)
+    expect(runtime.buffs.getForTarget('dying')).toHaveLength(0)
   })
 
   it('INV-S3-4: CC blocked vẫn bị DoT của chính buff đó tick (stun không dừng dot pool processing)', () => {
@@ -155,28 +191,30 @@ describe('Slice 3 adversarial (QA probes)', () => {
     const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
-    const stunDot: BuffDefinition = {
-      id: 'qa_stun_dot', name: 'StunDot', polarity: 'debuff', duration: 2, stackMode: 'refresh',
-      effects: [{ type: 'cc', ccEffect: 'stun' }, { type: 'dot', dpsRatio: 1, element: 'physical' }],
-    }
-    const registry = new FixtureRegistry([stunDot])
-    new BuffSystem(playerP.buffs).apply(stunDot, enemy, player, registry)
+    const enemyP = makeParticipant('enemy', enemy, 5, 1)
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeRuntime(() => [playerP, enemyP], combat)
+    runtime.applyBuff('qa_stun_dot', playerP, enemyP)
 
-    const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
+    const battle: TurnBattle = { players: [playerP], enemies: [enemyP], state: 'fighting' }
     const hpBefore = player.currentHp
 
-    const step = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry).resolveNextStep(battle)
+    const step = new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
     expect(step.ccBlocked).toBe(true)
-    // DoT tick trong update() TRƯỚC step action — hp giảm dù bị block.
+    // DoT tick trong holder-turn-end TRƯỚC step action — hp giảm dù bị block.
     expect(player.currentHp).toBeLessThan(hpBefore)
   })
 
-  it('INV-S3-5: self-buff dot tự gây damage cho chính mình qua BuffSystem (combat mock)', () => {
+  it('INV-S3-5: self-buff dot tự gây damage cho chính mình qua periodic settle', () => {
     const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 100 }) })
     const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
+    const enemyP = makeParticipant('enemy', enemy, 5, 1)
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeRuntime(() => [playerP, enemyP], combat)
+
     playerP.basic = {
       id: 'qa_self_dot', cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 1 },
@@ -184,13 +222,13 @@ describe('Slice 3 adversarial (QA probes)', () => {
       appliesBuff: { definitionId: 'qa_burn', target: 'self' },
     }
 
-    const registry = new FixtureRegistry([BURN])
-    const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
+    const battle: TurnBattle = { players: [playerP], enemies: [enemyP], state: 'fighting' }
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    const system = new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime)
     system.resolveNextStep(battle)
 
-    expect(playerP.buffs.getAll()).toHaveLength(1)
-    expect(playerP.buffs.getAll()[0]!.sourceId).toBe('player')
+    const applied = runtime.buffs.getForTarget('player')
+    expect(applied).toHaveLength(1)
+    expect(applied[0]!.sourceId).toBe('player')
   })
 })

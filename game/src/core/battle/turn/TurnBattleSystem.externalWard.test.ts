@@ -4,11 +4,10 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { SON_NHAC, TRAN_AP, PHAN_CHINH, SON_NHAC_WARD_RATIO } from '../../../data/skill/TheTuSkills'
-import { SON_NHAC_HO_THE_BUFF } from '../../../data/buff/TheTuBuffs'
+import { SON_NHAC_TURNS } from '../../../data/buff/TheTuBuffs'
+import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 // The Tu Reimagined (plan Task 11, spec section 5.2/7.11, D3/INV-12) —
 // Son Nhac's appliesBuffs grant allies the son_nhac_ho_the marker PLUS
@@ -54,7 +53,13 @@ function createCombatant(overrides: Partial<CombatEntity> = {}, speed = 10): Com
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
+}
+
+function markers(runtime: TurnRuntimeFixture, participant: TurnBattleParticipant) {
+  return runtime.buffs
+    .getForTarget(participant.entity.id)
+    .filter((instance) => instance.definitionId === 'son_nhac_ho_the')
 }
 
 // A Tran The tank with the full kit + one squishy ally + one enemy.
@@ -76,36 +81,40 @@ function makeBattle() {
     targeting: { shape: 'single' },
   }
 
+  const combat = new CombatSystem(new EventBus())
+  const runtime = makeTurnRuntime({
+    registry: BUFF_REGISTRY,
+    participants: () => [tankP, allyP, enemyP],
+    combatSystem: combat,
+  })
   const battle: TurnBattle = { players: [tankP, allyP], enemies: [enemyP], state: 'fighting' }
-  return { battle, tankP, allyP, enemyP }
+  const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
+  return { battle, tankP, allyP, enemyP, combat, system, runtime }
 }
 
 describe('son_nhac external ward contract (D3/INV-12)', () => {
   it('cast grants allies (not the tank) marker + externalWard = ratio x tank.maxHp', () => {
-    const { battle, tankP, allyP } = makeBattle()
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
+    const { battle, tankP, allyP, system, runtime } = makeBattle()
 
     const step = system.resolveNextStep(battle)
 
     expect(step.actorId).toBe('tank')
     expect(step.skillId).toBe('son_nhac')
     // Ally holds the marker + pool; the tank holds NEITHER (INV-12).
-    expect(allyP.buffs.getAllById('son_nhac_ho_the')).toHaveLength(1)
+    expect(markers(runtime, allyP)).toHaveLength(1)
     expect(allyP.entity.externalWard).toEqual({
       sourceId: 'tank',
       amount: 20_000 * SON_NHAC_WARD_RATIO,
     })
     expect(tankP.entity.externalWard).toBeUndefined()
-    expect(tankP.buffs.getAllById('son_nhac_ho_the')).toHaveLength(0)
+    expect(markers(runtime, tankP)).toHaveLength(0)
     // Native ward untouched by the grant.
     expect(allyP.entity.currentWard).toBe(0)
     expect(allyP.entity.stats.wardMax).toBe(0)
   })
 
   it('external ward absorbs BEFORE native ward; ward-break reads the native component only', () => {
-    const { battle, allyP, enemyP } = makeBattle()
-    const combat = new CombatSystem(new EventBus())
-    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY)
+    const { battle, allyP, enemyP, combat, system } = makeBattle()
     system.resolveNextStep(battle) // tank casts son_nhac
 
     // Ally: externalWard 5000, native ward 50 -> hit 100 stays fully
@@ -124,9 +133,7 @@ describe('son_nhac external ward contract (D3/INV-12)', () => {
   })
 
   it('external-only absorb with currentWard 0 does NOT proc ward break', () => {
-    const { battle, allyP, enemyP } = makeBattle()
-    const combat = new CombatSystem(new EventBus())
-    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY)
+    const { battle, allyP, enemyP, combat, system } = makeBattle()
     system.resolveNextStep(battle)
 
     allyP.entity.currentWard = 0
@@ -142,9 +149,7 @@ describe('son_nhac external ward contract (D3/INV-12)', () => {
   })
 
   it('native 50 + external 20, hit 100 -> both depleted -> ward-break procs once', () => {
-    const { battle, allyP, enemyP } = makeBattle()
-    const combat = new CombatSystem(new EventBus())
-    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY)
+    const { battle, allyP, enemyP, combat, system } = makeBattle()
     system.resolveNextStep(battle)
 
     // Shrink the grant: recast-level pool of 20 external + 50 native.
@@ -165,53 +170,51 @@ describe('son_nhac external ward contract (D3/INV-12)', () => {
   })
 
   it('marker expiry clears the externalWard pool via reconcile', () => {
-    const { battle, allyP } = makeBattle()
-    const combat = new CombatSystem(new EventBus())
-    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY)
+    const { battle, allyP, system, runtime } = makeBattle()
     system.resolveNextStep(battle)
     expect(allyP.entity.externalWard).toBeDefined()
 
-    // Expire the marker: both clocks live on the instance and the tick
-    // prefers remainingTime — zero them together, then run the tick.
-    const marker = allyP.buffs.getAllById('son_nhac_ho_the')[0]!
-    marker.remainingTurns = 0
-    marker.remainingTime = 0
-    new BuffSystem(allyP.buffs).update(allyP.entity, combat, BUFF_REGISTRY)
+    // Expire the marker through the holder-turn-end lifecycle boundary.
+    for (let i = 0; i < SON_NHAC_TURNS; i += 1) {
+      runtime.tickHolderTurnsEnd(allyP.entity.id)
+    }
     system.refreshEffectiveStats(battle)
 
-    expect(allyP.buffs.getAllById('son_nhac_ho_the')).toHaveLength(0)
+    expect(markers(runtime, allyP)).toHaveLength(0)
     expect(allyP.entity.externalWard).toBeUndefined()
   })
 
   it('manual marker removal clears the pool; a different-source marker keeps its own pool', () => {
-    const { battle, allyP } = makeBattle()
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
+    const { battle, allyP, system, runtime } = makeBattle()
     system.resolveNextStep(battle)
 
     // Second protector's grant replaces marker + pool wholesale.
     const tank2 = createCombatant({ id: 'tank2', type: 'player', x: 4, row: 3, currentHp: 8_000, maxHp: 8_000 }, 10)
-    new BuffSystem(allyP.buffs).apply(SON_NHAC_HO_THE_BUFF, tank2, allyP.entity, BUFF_REGISTRY)
+    runtime.applyBuff('son_nhac_ho_the', allyP, makeParticipant('tank2', tank2, 10, 0))
     allyP.entity.externalWard = { sourceId: 'tank2', amount: 8_000 * SON_NHAC_WARD_RATIO }
 
-    expect(allyP.buffs.getAllById('son_nhac_ho_the')).toHaveLength(1)
-    expect(allyP.buffs.getAllById('son_nhac_ho_the')[0]!.sourceId).toBe('tank2')
+    expect(markers(runtime, allyP)).toHaveLength(1)
+    expect(markers(runtime, allyP)[0]!.sourceId).toBe('tank2')
 
     // Removing the CURRENT source's marker clears its pool.
-    allyP.buffs.removeAllById('son_nhac_ho_the')
+    runtime.buffs.remove(
+      { kind: 'target_definition', targetId: allyP.entity.id, definitionId: 'son_nhac_ho_the' },
+      'scripted',
+      runtime.makeCtx(),
+    )
     system.refreshEffectiveStats(battle)
     expect(allyP.entity.externalWard).toBeUndefined()
   })
 
   it('recast replaces the pool (no stacking): a lower re-grant lowers it', () => {
-    const { battle, tankP, allyP } = makeBattle()
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
+    const { battle, tankP, allyP, system, runtime } = makeBattle()
     system.resolveNextStep(battle)
     expect(allyP.entity.externalWard!.amount).toBe(5000)
 
     // Simulate a re-grant from a lower-maxHp tank via the same apply path.
     const smallTank = createCombatant({ id: 'tank3', type: 'player', currentHp: 4_000, maxHp: 4_000 }, 10)
     const grantRatio = SON_NHAC.appliesBuffs!.find((a) => a.externalWardGrant)!.externalWardGrant!.sourceMaxHpRatio
-    new BuffSystem(allyP.buffs).apply(SON_NHAC_HO_THE_BUFF, smallTank, allyP.entity, BUFF_REGISTRY)
+    runtime.applyBuff('son_nhac_ho_the', allyP, makeParticipant('tank3', smallTank, 10, 0))
     allyP.entity.externalWard = { sourceId: smallTank.id, amount: smallTank.stats.maxHp * grantRatio }
     system.refreshEffectiveStats(battle)
 
@@ -220,9 +223,7 @@ describe('son_nhac external ward contract (D3/INV-12)', () => {
   })
 
   it('externalWard is exempt from wardMax clamp and never feeds spendWard', () => {
-    const { battle, allyP } = makeBattle()
-    const combat = new CombatSystem(new EventBus())
-    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY)
+    const { battle, allyP, combat, system } = makeBattle()
     system.resolveNextStep(battle)
 
     // Ally has wardMax 0 yet holds 5000 external — no regen clamp applies.

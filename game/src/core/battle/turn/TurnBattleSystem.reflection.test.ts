@@ -4,9 +4,10 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
+import type { BuffRegistry } from '../../buff2/BuffRegistry'
+import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import { PHAN_CHINH_BUFF, PHAN_CHINH_MAXHP_RATIO, PHAN_CHINH_TAKEN_RATIO } from '../../../data/buff/TheTuBuffs'
 import { buildTheTuKit } from '../../../data/skill/TheTuSkills'
 import { collectTheTuKitModifiers } from '../../the-tu/TheTuKitModifiers'
@@ -49,7 +50,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
 const NO_MITIGATION = {
@@ -90,7 +91,13 @@ const NOOP_PLAYER_BASIC = {
   targeting: { shape: 'single' },
 } as const
 
-function makeBattle(tank: CombatEntity, attacker: CombatEntity): { battle: TurnBattle; tankP: TurnBattleParticipant; attackerP: TurnBattleParticipant } {
+function makeBattle(tank: CombatEntity, attacker: CombatEntity, registry: BuffRegistry = BUFF_REGISTRY): {
+  battle: TurnBattle
+  tankP: TurnBattleParticipant
+  attackerP: TurnBattleParticipant
+  combat: CombatSystem
+  runtime: TurnRuntimeFixture
+} {
   const tankP = makeParticipant(tank.id, tank, 10, 0)
   tankP.basic = { ...NOOP_PLAYER_BASIC }
 
@@ -102,29 +109,37 @@ function makeBattle(tank: CombatEntity, attacker: CombatEntity): { battle: TurnB
     targeting: { shape: 'single' },
   }
 
-  return {
-    battle: { players: [tankP], enemies: [attackerP], state: 'fighting' },
-    tankP,
-    attackerP,
-  }
+  const battle: TurnBattle = { players: [tankP], enemies: [attackerP], state: 'fighting' }
+  const combat = new CombatSystem(new EventBus())
+  const runtime = makeTurnRuntime({
+    registry,
+    participants: () => [...battle.players, ...battle.enemies],
+    combatSystem: combat,
+  })
+
+  return { battle, tankP, attackerP, combat, runtime }
 }
 
-function applyPhanChinh(participant: TurnBattleParticipant, definition = PHAN_CHINH_BUFF): void {
-  new BuffSystem(participant.buffs).apply(definition, participant.entity, participant.entity, BUFF_REGISTRY)
+function applyPhanChinh(runtime: TurnRuntimeFixture, participant: TurnBattleParticipant): void {
+  runtime.applyBuff(PHAN_CHINH_BUFF.id, participant)
+}
+
+function systemOf(w: { combat: CombatSystem; runtime: TurnRuntimeFixture }): TurnBattleSystem {
+  return new TurnBattleSystem(w.combat, 10, w.runtime.registry, undefined, w.runtime)
 }
 
 describe('phan_chinh Reflection (taken-only, terminal)', () => {
   it('taken hit -> reflect lands: hpDamage x takenRatio + holder maxHp x maxHpRatio', () => {
     const tank = makeTank('tank')
     const attacker = makeAttacker('enemy')
-    const { battle, tankP } = makeBattle(tank, attacker)
-    applyPhanChinh(tankP)
+    const f = makeBattle(tank, attacker)
+    applyPhanChinh(f.runtime, f.tankP)
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
+    const system = systemOf(f)
     // The tank acts first (speed 10) with a noop; the attacker's hit then
     // triggers the reflection.
-    system.resolveNextStep(battle)
-    system.resolveNextStep(battle)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
 
     const expected = 100 * PHAN_CHINH_TAKEN_RATIO + 10_000 * PHAN_CHINH_MAXHP_RATIO
     expect(10_000 - attacker.currentHp).toBe(expected)
@@ -136,14 +151,14 @@ describe('phan_chinh Reflection (taken-only, terminal)', () => {
     // dodge is deterministic rather than stat-absurd.
     const tank = makeTank('tank', { evasionRate: 1_000_000 })
     const attacker = makeAttacker('enemy', { accuracyRating: 0 })
-    const { battle, tankP } = makeBattle(tank, attacker)
-    applyPhanChinh(tankP)
+    const f = makeBattle(tank, attacker)
+    applyPhanChinh(f.runtime, f.tankP)
 
     const random = vi.spyOn(Math, 'random').mockReturnValue(0.99)
     try {
-      const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
-      system.resolveNextStep(battle)
-      system.resolveNextStep(battle)
+      const system = systemOf(f)
+      system.resolveNextStep(f.battle)
+      system.resolveNextStep(f.battle)
     } finally {
       random.mockRestore()
     }
@@ -156,12 +171,12 @@ describe('phan_chinh Reflection (taken-only, terminal)', () => {
     const tank = makeTank('tank')
     tank.currentWard = 100_000
     const attacker = makeAttacker('enemy')
-    const { battle, tankP } = makeBattle(tank, attacker)
-    applyPhanChinh(tankP)
+    const f = makeBattle(tank, attacker)
+    applyPhanChinh(f.runtime, f.tankP)
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
-    system.resolveNextStep(battle)
-    system.resolveNextStep(battle)
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
 
     expect(tank.currentHp).toBe(10_000)
     expect(attacker.currentHp).toBe(10_000)
@@ -171,27 +186,27 @@ describe('phan_chinh Reflection (taken-only, terminal)', () => {
     const tank = makeTank('tank')
     const attacker = makeAttacker('enemy')
     attacker.currentHp = 10 // reflect (~215) exceeds this
-    const { battle, tankP } = makeBattle(tank, attacker)
-    applyPhanChinh(tankP)
+    const f = makeBattle(tank, attacker)
+    applyPhanChinh(f.runtime, f.tankP)
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
-    system.resolveNextStep(battle)
-    system.resolveNextStep(battle)
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
 
     expect(attacker.alive).toBe(false)
-    expect(battle.state).toBe('victory')
+    expect(f.battle.state).toBe('victory')
   })
 
   it('terminal event: attacker-side phan_chinh does NOT reflect the reflection back', () => {
     const tank = makeTank('tank')
     const attacker = makeAttacker('enemy')
-    const { battle, tankP, attackerP } = makeBattle(tank, attacker)
-    applyPhanChinh(tankP)
-    applyPhanChinh(attackerP)
+    const f = makeBattle(tank, attacker)
+    applyPhanChinh(f.runtime, f.tankP)
+    applyPhanChinh(f.runtime, f.attackerP)
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
-    system.resolveNextStep(battle)
-    system.resolveNextStep(battle)
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
 
     const firstReflect = 100 * PHAN_CHINH_TAKEN_RATIO + 10_000 * PHAN_CHINH_MAXHP_RATIO
     // Attacker took exactly ONE reflection; if its own emblem fired back
@@ -217,12 +232,17 @@ describe('phan_chinh Reflection (taken-only, terminal)', () => {
 
     const tank = makeTank('tank')
     const attacker = makeAttacker('enemy')
-    const { battle, tankP } = makeBattle(tank, attacker)
-    applyPhanChinh(tankP, emblemDef)
+    // The kit-clone seam: the node-adjusted emblem def replaces the base
+    // under its own id in the battle-local registry.
+    const registry = makeTestBuffRegistry(
+      LIVE_BUFFS.map((def) => (def.id === 'phan_chinh' ? emblemDef : def)),
+    )
+    const f = makeBattle(tank, attacker, registry)
+    applyPhanChinh(f.runtime, f.tankP)
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
-    system.resolveNextStep(battle)
-    system.resolveNextStep(battle)
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
 
     const expected =
       100 * (PHAN_CHINH_TAKEN_RATIO + 0.05) + 10_000 * (PHAN_CHINH_MAXHP_RATIO + 0.01)

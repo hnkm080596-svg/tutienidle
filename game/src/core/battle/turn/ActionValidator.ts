@@ -11,8 +11,8 @@
 // ['attack']. Explicit actionTags always win. Untagged + damageless defs
 // carry no inferred tags (always legal under an attack seal).
 
-import type { BuffDefinitionCatalog } from '../../buff/BuffTypes'
-import type { BuffPool } from '../../buff/BuffPool'
+import type { BuffRegistry } from '../../buff2/BuffRegistry'
+import type { BuffInstanceSnapshot } from '../../buff2/BuffInstance'
 import type { SelectedAction, TurnSkillDefinition } from './TurnSkillAction'
 
 /** The tag an action carries when its skill deals damage but authors no
@@ -55,35 +55,34 @@ export function isActionAllowed(
 }
 
 export interface ActionValidator {
-  /** The union of forbiddenActionTags across the participant's live
-      buff instances, resolved through the definition catalog. */
-  forbiddenActionTags(participant: { buffs: BuffPool }): ReadonlySet<string>
+  /** The union of forbiddenActionTags across the entity's live buff
+      instances, resolved through the buff2 registry. */
+  forbiddenActionTags(entityId: string): ReadonlySet<string>
 }
 
-/** Resolves each live buff instance's BuffDefinition through the catalog
-    and unions its forbiddenActionTags. A pool buff whose id is absent
-    from the catalog contributes no tags (def lookup is a data concern
-    elsewhere -- selection must not crash on it). Computed once per
-    action declaration by TurnBattleSystem (contract sec.71). */
-export class BuffPoolActionValidator implements ActionValidator {
-  constructor(private readonly registry: BuffDefinitionCatalog) {}
+/** buff2 M4 -- resolves each live instance's BuffDefinition through the
+    registry and unions its forbiddenActionTags. An instance whose def id
+    is absent contributes no tags (def lookup is a data concern elsewhere
+    -- selection must not crash on it). The instance read is a port so an
+    unwired battle (no buff authority) simply sees no seals. Computed once
+    per action declaration by TurnBattleSystem (contract sec.71). */
+export class Buff2ActionValidator implements ActionValidator {
+  constructor(
+    private readonly registry: BuffRegistry,
+    private readonly getForTarget: (entityId: string) => readonly BuffInstanceSnapshot[],
+  ) {}
 
-  forbiddenActionTags(participant: { buffs: BuffPool }): ReadonlySet<string> {
+  forbiddenActionTags(entityId: string): ReadonlySet<string> {
     const forbidden = new Set<string>()
 
-    for (const buff of participant.buffs.getAll()) {
-      let forbiddenTags: readonly string[] | undefined
-      try {
-        forbiddenTags = this.registry.get(buff.id).forbiddenActionTags
-      } catch {
-        forbiddenTags = undefined
-      }
+    for (const instance of this.getForTarget(entityId)) {
+      const definition = this.registry.tryGet(instance.definitionId)
 
-      if (forbiddenTags === undefined) {
+      if (definition?.forbiddenActionTags === undefined) {
         continue
       }
 
-      for (const tag of forbiddenTags) {
+      for (const tag of definition.forbiddenActionTags) {
         forbidden.add(tag)
       }
     }

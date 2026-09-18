@@ -3,6 +3,8 @@
 // live turn-selection path. The seal forbids 'attack'-tagged actions
 // only -- heal/buff/cleanse actions stay legal, a fully-sealed actor
 // declares an EMPTY turn (action null, skillId '', NOT ccBlocked).
+// M4: the seal instance lives in the shared runtime store; the
+// Buff2ActionValidator reads it through the battle's buff query.
 
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
@@ -10,26 +12,23 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import type { Buff, BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import { BuffPool } from '../../buff/BuffPool'
+import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 const CAM_CONG: BuffDefinition = {
   id: 'test_cam_cong',
   name: 'Cam Cong',
+  kind: 'debuff',
   polarity: 'debuff',
-  duration: 2,
-  stackMode: 'refresh',
-  effects: [],
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
   forbiddenActionTags: ['attack'],
+  dispellable: true,
 }
 
-const CATALOG = new (class implements BuffDefinitionCatalog {
-  get(id: string): BuffDefinition {
-    if (id === CAM_CONG.id) return CAM_CONG
-    throw new Error(`unknown buff id "${id}"`)
-  }
-})()
+const REGISTRY = makeTestBuffRegistry([CAM_CONG])
 
 function createCombatant(id: string): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 10 })
@@ -60,24 +59,9 @@ function makeParticipant(id: string): TurnBattleParticipant {
     priority: 0,
     actionGauge: 0,
     alive: true,
-    buffs: new BuffPool(),
+
     consecutiveHardCcTurns: 0,
   }
-}
-
-function seal(participant: TurnBattleParticipant): void {
-  const instance: Buff = {
-    id: CAM_CONG.id,
-    sourceId: 'source',
-    targetId: participant.id,
-    polarity: 'debuff',
-    duration: 2,
-    remainingTurns: 2,
-    stacks: 1,
-    stackMode: 'refresh',
-    effects: [],
-  }
-  participant.buffs.add(instance)
 }
 
 function attackSkill(id: string): TurnSkillDefinition {
@@ -105,8 +89,28 @@ function makeBattle(actor: TurnBattleParticipant): TurnBattle {
   return { players: [actor], enemies: [victim], state: 'fighting' }
 }
 
-function system(): TurnBattleSystem {
-  return new TurnBattleSystem(new CombatSystem(new EventBus()), 10, CATALOG)
+/** One battle harness: shared runtime + system + the seal lane. */
+function harness(actor: TurnBattleParticipant): {
+  system: TurnBattleSystem
+  runtime: TurnRuntimeFixture
+  battle: TurnBattle
+} {
+  const battle = makeBattle(actor)
+  const combat = new CombatSystem(new EventBus())
+  const runtime = makeTurnRuntime({
+    registry: REGISTRY,
+    participants: () => [actor, ...battle.enemies],
+    combatSystem: combat,
+  })
+  return {
+    system: new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime),
+    runtime,
+    battle,
+  }
+}
+
+function seal(runtime: TurnRuntimeFixture, participant: TurnBattleParticipant): void {
+  runtime.applyBuff('test_cam_cong', participant)
 }
 
 describe('Cam Cong -- forbiddenActionTags restriction (spec sec.81)', () => {
@@ -114,13 +118,10 @@ describe('Cam Cong -- forbiddenActionTags restriction (spec sec.81)', () => {
     const actor = makeParticipant('sealed')
     actor.basic = attackSkill('basic_hit')
     actor.special = { skill: healSkill('self_heal'), remainingCooldownTurns: 0 }
-    seal(actor)
+    const { system, runtime, battle } = harness(actor)
+    seal(runtime, actor)
 
-    const declared = system().declareActorAction(
-      makeBattle(actor),
-      actor,
-      'basic',
-    )
+    const declared = system.declareActorAction(battle, actor, 'basic')
     expect(declared.action?.skillId).toBe('self_heal')
     expect(declared.ccBlocked).toBe(false)
   })
@@ -128,9 +129,10 @@ describe('Cam Cong -- forbiddenActionTags restriction (spec sec.81)', () => {
   it('sealed actor with only attacks yields an empty turn (R-E)', () => {
     const actor = makeParticipant('sealed')
     actor.basic = attackSkill('only_attack')
-    seal(actor)
+    const { system, runtime, battle } = harness(actor)
+    seal(runtime, actor)
 
-    const declared = system().declareActorAction(makeBattle(actor), actor)
+    const declared = system.declareActorAction(battle, actor)
     expect(declared.action).toBeNull()
     expect(declared.skillId).toBe('')
     expect(declared.ccBlocked).toBe(false) // restriction, not a stun
@@ -154,9 +156,10 @@ describe('Cam Cong -- forbiddenActionTags restriction (spec sec.81)', () => {
         },
         remainingCooldownTurns: 0,
       }
-      seal(actor)
+      const { system, runtime, battle } = harness(actor)
+      seal(runtime, actor)
 
-      const declared = system().declareActorAction(makeBattle(actor), actor)
+      const declared = system.declareActorAction(battle, actor)
       expect(declared.action?.skillId).toBe(`tagged_${tag}`)
     }
   })
@@ -174,9 +177,10 @@ describe('Cam Cong -- forbiddenActionTags restriction (spec sec.81)', () => {
       },
       remainingCooldownTurns: 0,
     }
-    seal(actor)
+    const { system, runtime, battle } = harness(actor)
+    seal(runtime, actor)
 
-    const declared = system().declareActorAction(makeBattle(actor), actor)
+    const declared = system.declareActorAction(battle, actor)
     expect(declared.action?.skillId).toBe('ward')
   })
 
@@ -187,8 +191,9 @@ describe('Cam Cong -- forbiddenActionTags restriction (spec sec.81)', () => {
       skill: attackSkill('the_ult'),
       remainingCooldownTurns: 0,
     }
+    const { system, battle } = harness(actor)
     // No seal -- priority order still picks the ultimate.
-    const declared = system().declareActorAction(makeBattle(actor), actor)
+    const declared = system.declareActorAction(battle, actor)
     expect(declared.action?.skillId).toBe('the_ult')
   })
 
@@ -214,9 +219,10 @@ describe('Cam Cong -- forbiddenActionTags restriction (spec sec.81)', () => {
       remainingCooldownTurns: 0,
     }
     actor.basic = attackSkill('basic_hit')
-    seal(actor)
+    const { system, runtime, battle } = harness(actor)
+    seal(runtime, actor)
 
-    const declared = system().declareActorAction(makeBattle(actor), actor)
+    const declared = system.declareActorAction(battle, actor)
     // The resolved payload IS an attack -- the whole action collapses
     // to the sealed empty turn; nothing falls back to a hidden swing.
     expect(declared.action).toBeNull()
@@ -227,11 +233,14 @@ describe('Cam Cong -- forbiddenActionTags restriction (spec sec.81)', () => {
   it('seal expires with the buff instance (fresh declare re-allows)', () => {
     const actor = makeParticipant('sealed')
     actor.basic = attackSkill('basic_hit')
-    seal(actor)
-    // The instance decays: simulate expiry by clearing the pool entry.
-    actor.buffs.clear()
+    const { system, runtime, battle } = harness(actor)
+    seal(runtime, actor)
+    // The instance decays: run it out through the lifecycle boundary.
+    for (let i = 0; i < 2; i += 1) {
+      runtime.tickHolderTurnsEnd(actor.entity.id)
+    }
 
-    const declared = system().declareActorAction(makeBattle(actor), actor)
+    const declared = system.declareActorAction(battle, actor)
     expect(declared.action?.skillId).toBe('basic_hit')
   })
 })

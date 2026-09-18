@@ -12,8 +12,7 @@ import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { CORE_REALM_LEVEL } from '../realm/realmSystem'
 import { buildGameSave, restoreGameSession } from '../../services/save/SaveSystem'
 import { usePlayerStore } from '../../stores/player'
-import { BuffSystem } from '../buff/BuffSystem'
-import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
+import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../battle/contracts/ids'
 import { COMPANIONS, type CompanionDefinition } from '../../data/companion/Companions'
 import { CUONG_QUYEN_MISSING_HP_PER_PERCENT, SON_NHAC_WARD_RATIO } from '../../data/skill/TheTuSkills'
 import type { PlayerData } from '../player/Player'
@@ -122,6 +121,45 @@ function advanceIntoFighting(combatSource: ManualClockSource, battle: TurnBattle
   expect(battle.state).toBe('fighting')
 }
 
+// buff2 M4: applies a registered def through the battle's buff authority
+// (authored op + settle while quiescent) -- the same lane production uses.
+function applyBattleBuff(
+  gameManager: GameManager,
+  definitionId: string,
+  targetId: string,
+  sourceId: string,
+): void {
+  const scheduler = gameManager.turnBattleOps.getTurnBattleSystem().combatScheduler
+  if (scheduler === undefined) {
+    throw new Error('no combat scheduler on the live battle')
+  }
+  const root = `test.apply.${definitionId}.${targetId}`
+  scheduler.enqueueAuthored([
+    {
+      type: 'apply_buff',
+      operationId: `op.${root}` as CombatOperationId,
+      payload: {
+        definitionId: definitionId as BuffDefinitionId,
+        targetId: targetId as CombatEntityId,
+        stacks: 1,
+        baseChance: 1,
+        reactionEligibility: 'eligible',
+      },
+      origin: {
+        kind: 'proc',
+        originId: 'test.apply',
+        sourceId: sourceId as CombatEntityId,
+        rootActionId: root,
+      },
+    },
+  ])
+  scheduler.run()
+}
+
+function hasBuff(gameManager: GameManager, entityId: string, definitionId: string): boolean {
+  return gameManager.getBattleBuffs(entityId).some((i) => i.definitionId === definitionId)
+}
+
 describe('initiation ritual (T1/T6)', () => {
   it('mortal at CORE_REALM_LEVEL -> the_tu grants path, technique, qi_refining', () => {
     const { gameManager } = makeManager()
@@ -213,7 +251,11 @@ describe('cuong_chien battle flow', () => {
     participant.entity.currentHp = 50
     advanceIntoFighting(combatSource, battle)
 
-    expect(advanceUntil(combatSource, () => participant.buffs.getAllById('bat_tu_ba_the').length > 0)).toBe(true)
+    expect(
+      advanceUntil(combatSource, () =>
+        hasBuff(gameManager, participant.entity.id, 'bat_tu_ba_the'),
+      ),
+    ).toBe(true)
     expect(participant.entity.alive).toBe(true)
     expect(participant.entity.currentHp).toBe(1)
     expect(participant.ultimate!.remainingCooldownTurns).toBe(8)
@@ -233,9 +275,8 @@ describe('cuong_chien battle flow', () => {
     participant.special!.remainingCooldownTurns = 99
     participant.ultimate!.remainingCooldownTurns = 99
 
-    const buffs = new BuffSystem(participant.buffs)
-    buffs.apply(BUFF_REGISTRY.get('choang'), enemy.entity, participant.entity, BUFF_REGISTRY)
-    buffs.apply(BUFF_REGISTRY.get('bat_tu_ba_the'), enemy.entity, participant.entity, BUFF_REGISTRY)
+    applyBattleBuff(gameManager, 'choang', participant.entity.id, enemy.entity.id)
+    applyBattleBuff(gameManager, 'bat_tu_ba_the', participant.entity.id, enemy.entity.id)
 
     const turnsBefore = battle.totalTurnsElapsed ?? 0
     const hpBefore = enemy.entity.currentHp
@@ -290,10 +331,16 @@ describe('tran_the battle flow', () => {
     const enemy = battle.enemies[0]!
 
     expect(companion).toBeDefined()
-    expect(tank!.buffs.getAllById('phan_chinh')).toHaveLength(1)
+    expect(
+      gameManager.getBattleBuffs(tank!.entity.id).filter((i) => i.definitionId === 'phan_chinh'),
+    ).toHaveLength(1)
 
-    expect(advanceUntil(combatSource, () => enemy.buffs.getAllById('khiem_khich').length > 0)).toBe(true)
-    expect(tank!.buffs.getAllById('son_nhac')).toHaveLength(1)
+    expect(
+      advanceUntil(combatSource, () => hasBuff(gameManager, enemy.entity.id, 'khiem_khich')),
+    ).toBe(true)
+    expect(
+      gameManager.getBattleBuffs(tank!.entity.id).filter((i) => i.definitionId === 'son_nhac'),
+    ).toHaveLength(1)
     expect(companion!.entity.externalWard?.sourceId).toBe(tank!.entity.id)
     expect(companion!.entity.externalWard!.amount).toBeCloseTo(tank!.entity.stats.maxHp * SON_NHAC_WARD_RATIO)
   })
@@ -321,7 +368,7 @@ describe('tran_the battle flow', () => {
     expect(
       advanceUntil(
         combatSource,
-        () => tank!.entity.currentHp < tankHpBefore && enemyP.buffs.getAllById('khiem_khich').length > 0,
+        () => tank!.entity.currentHp < tankHpBefore && hasBuff(gameManager, enemyP.entity.id, 'khiem_khich'),
       ),
     ).toBe(true)
 
@@ -348,10 +395,10 @@ describe('the_tu_an build wiring (Task 14)', () => {
     expect(participant.basic?.id).toBe('tham_the')
     expect(participant.special?.skill.id).toBe('tu_the')
     expect(participant.ultimate?.skill.id).toBe('bach_ung')
-    expect(participant.buffs.hasAny('ung_the')).toBe(true)
-    expect(participant.buffs.hasAny('phan_mon')).toBe(true)
-    expect(participant.buffs.hasAny('ho_mon')).toBe(false)
-    expect(participant.buffs.hasAny('tro_mon')).toBe(false)
+    expect(hasBuff(gameManager, participant.entity.id, 'ung_the')).toBe(true)
+    expect(hasBuff(gameManager, participant.entity.id, 'phan_mon')).toBe(true)
+    expect(hasBuff(gameManager, participant.entity.id, 'ho_mon')).toBe(false)
+    expect(hasBuff(gameManager, participant.entity.id, 'tro_mon')).toBe(false)
   })
 })
 

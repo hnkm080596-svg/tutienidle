@@ -5,9 +5,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer, resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
-import type { BuffDefinition } from '../buff/BuffTypes'
-import { BuffSystem } from '../buff/BuffSystem'
-import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
+import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../battle/contracts/ids'
 import { PASSIVE_SKILLS } from '../../data/skill/PassiveSkills'
 
 // ARCH-002 (M7) — regression coverage for the stat-refresh / battle-reset
@@ -71,6 +69,43 @@ function makePlayer(overrides: Partial<PlayerData> = {}): PlayerData {
   })
   Object.assign(player, overrides)
   return player
+}
+
+// Applies a registered def through the battle's buff authority -- the same
+// scheduler-backed lane production uses (authored op + settle while
+// quiescent). Tests needing an explicit lifetime pass durationOverride.
+function applyBattleBuff(
+  manager: GameManager,
+  definitionId: string,
+  targetId: string,
+  durationOverride?: number,
+): void {
+  const scheduler = manager.turnBattleOps.getTurnBattleSystem().combatScheduler
+  if (scheduler === undefined) {
+    throw new Error('no combat scheduler on the live battle')
+  }
+  const root = `test.apply.${definitionId}`
+  scheduler.enqueueAuthored([
+    {
+      type: 'apply_buff',
+      operationId: `op.${root}` as CombatOperationId,
+      payload: {
+        definitionId: definitionId as BuffDefinitionId,
+        targetId: targetId as CombatEntityId,
+        stacks: 1,
+        baseChance: 1,
+        durationOverride,
+        reactionEligibility: 'eligible',
+      },
+      origin: {
+        kind: 'proc',
+        originId: 'test.apply',
+        sourceId: targetId as CombatEntityId,
+        rootActionId: root,
+      },
+    },
+  ])
+  scheduler.run()
 }
 
 describe('ARCH-002 M7 — passive stacks are live in-fight and reset before the next snapshot', () => {
@@ -188,7 +223,9 @@ describe('ARCH-002 M7 — buff apply is effective before the next dependent read
     let applied = false
     for (let i = 0; i < 400 && !applied; i++) {
       clock.advance(COMBAT_STEP_SECONDS)
-      applied = monk.buffs.hasAny('kim_giap')
+      applied = manager
+        .getBattleBuffs(monk.entity.id)
+        .some((i) => i.definitionId === 'kim_giap')
     }
 
     expect(applied).toBe(true)
@@ -209,26 +246,13 @@ describe('ARCH-002 M7 — buff apply is effective before the next dependent read
     const participant = manager.getTurnBattle()!.players[0]!
     const baseSpeed = participant.entity.baseStats.speed
 
-    const hasteBuff: BuffDefinition = {
-      id: 'test_haste_1t',
-      name: 'Test Haste',
-      polarity: 'buff',
-      duration: 1,
-      stackMode: 'refresh',
-      effects: [{ type: 'statModifier', stat: 'speed', percent: 0.5 }],
-    }
-
-    new BuffSystem(participant.buffs).apply(
-      hasteBuff,
-      participant.entity,
-      participant.entity,
-      BUFF_REGISTRY,
-    )
+    // sat_na = registered +20% speed buff, duration forced to 1 holder turn.
+    applyBattleBuff(manager, 'sat_na', participant.entity.id, 1)
 
     // One pacing step: the buff is live even though the holder has not
     // taken a turn yet.
     clock.advance(COMBAT_STEP_SECONDS)
-    expect(participant.entity.stats.speed).toBeCloseTo(baseSpeed * 1.5, 4)
+    expect(participant.entity.stats.speed).toBeCloseTo(baseSpeed * 1.2, 4)
 
     // Advance until the holder's declare expires it — effective stats drop
     // back to base on the same step, never past the expiry boundary.
@@ -236,7 +260,7 @@ describe('ARCH-002 M7 — buff apply is effective before the next dependent read
     for (let i = 0; i < 400 && !restored; i++) {
       clock.advance(COMBAT_STEP_SECONDS)
       restored =
-        participant.buffs.getAllById('test_haste_1t').length === 0 &&
+        manager.getBattleBuffs(participant.entity.id).every((i) => i.definitionId !== 'sat_na') &&
         Math.abs(participant.entity.stats.speed - baseSpeed) < 1e-6
     }
 
@@ -257,36 +281,20 @@ describe('ARCH-002 M7 — buff apply is effective before the next dependent read
     const participant = manager.getTurnBattle()!.players[0]!
     const baseSpeed = participant.entity.baseStats.speed
 
-    const stunBuff: BuffDefinition = {
-      id: 'test_stun',
-      name: 'Test Stun',
-      polarity: 'debuff',
-      duration: 5,
-      stackMode: 'refresh',
-      effects: [{ type: 'cc', ccEffect: 'stun' }],
-    }
-    const hasteBuff: BuffDefinition = {
-      id: 'test_haste_cc',
-      name: 'Test Haste CC',
-      polarity: 'buff',
-      duration: 5,
-      stackMode: 'refresh',
-      effects: [{ type: 'statModifier', stat: 'speed', percent: 0.5 }],
-    }
-
-    const pool = new BuffSystem(participant.buffs)
-    pool.apply(stunBuff, participant.entity, participant.entity, BUFF_REGISTRY)
-    pool.apply(hasteBuff, participant.entity, participant.entity, BUFF_REGISTRY)
+    // choang = registered stun (duration forced to 5 holder turns);
+    // sat_na = registered +20% speed buff.
+    applyBattleBuff(manager, 'choang', participant.entity.id, 5)
+    applyBattleBuff(manager, 'sat_na', participant.entity.id)
 
     // The next pacing step folds the haste in even though the holder is
     // stunned — CC must not freeze the stat view.
     clock.advance(COMBAT_STEP_SECONDS)
-    expect(participant.entity.stats.speed).toBeCloseTo(baseSpeed * 1.5, 4)
+    expect(participant.entity.stats.speed).toBeCloseTo(baseSpeed * 1.2, 4)
 
     // Advance through the stunned declare — the refresh at declare is
     // unconditional, so the buff stays live while ccBlocked resolves.
     clock.advance(COMBAT_STEP_SECONDS)
-    expect(participant.entity.stats.speed).toBeCloseTo(baseSpeed * 1.5, 4)
+    expect(participant.entity.stats.speed).toBeCloseTo(baseSpeed * 1.2, 4)
   })
 })
 
@@ -413,7 +421,11 @@ describe('ARCH-002 M7 — resolved base provenance', () => {
     const participant = manager.getTurnBattle()!.players[0]!
     // +12% might must be effective immediately at battle start — before the
     // first fighting step — not wait for the player's first declare.
-    expect(participant.buffs.hasAny('tran_phap_doc_hanh_buff')).toBe(true)
+    expect(
+      manager
+        .getBattleBuffs(participant.entity.id)
+        .some((i) => i.definitionId === 'tran_phap_doc_hanh_buff'),
+    ).toBe(true)
     expect(participant.entity.stats.might).toBeCloseTo(
       participant.entity.baseStats.might * 1.12,
       4,

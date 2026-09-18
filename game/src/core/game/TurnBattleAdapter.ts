@@ -6,7 +6,6 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { TurnSkillDefinition, TurnSkillSlot } from '../battle/turn/TurnSkillAction'
 import type { StatDomain } from '../stats/StatDomain'
-import { BuffPool } from '../buff/BuffPool'
 
 /**
  * Kiem Tu Reimagined (Task 6) — the buildId special/ultimate maps were
@@ -41,7 +40,6 @@ export function toTurnBattleParticipant(
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new BuffPool(),
     consecutiveHardCcTurns: 0,
     basic,
     // stat-system-reimagined review fix (2026-09-15) — the caller
@@ -53,11 +51,8 @@ export function toTurnBattleParticipant(
     // for them.
     activeDomains:
       activeStatDomains !== undefined ? new Set<StatDomain>(activeStatDomains) : undefined,
-    // Review fix (MED-3) — wuxing reaction initiation belongs to the
-    // phap_tu stat domain (both phap_tu ways resolve it via their stat
-    // facet; spec §6: "the domain gate already permits" a future
-    // mixed-element hien). Companions/enemies pass no domains -> false.
-    canInitiateWuxingReactions: activeStatDomains?.includes('phap_tu') ?? false,
+    // buff2 M4 / reaction M-INT -- the legacy wuxing initiation flag is
+    // gone: reaction eligibility rides apply operations (engine inert).
   }
 
   const special = resolvedSpecialUltimate?.special

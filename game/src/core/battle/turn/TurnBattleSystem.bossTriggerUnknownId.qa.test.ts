@@ -4,8 +4,8 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
-import { BuffPool } from '../../buff/BuffPool'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // QA reproduction (Phase A2 adversarial quick, 2026-09-07):
 // TurnBattleSystem's boss-trigger block calls registry.get() unguarded.
@@ -48,7 +48,7 @@ function createCombatant(id: string): CombatEntity {
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
 // No-op skill: no damage, no targets — nothing outside the boss-trigger
@@ -64,23 +64,15 @@ const BASIC: { id: string; cooldownTurns: number; damage: { kind: 'physical'; mu
 const OTHER_DEFINITION: BuffDefinition = {
   id: 'unrelated_buff',
   name: 'Unrelated Buff',
+  kind: 'buff',
   polarity: 'buff',
-  duration: 5,
-  stackMode: 'refresh',
-  effects: [],
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 5, scaling: 'fixed' },
+  dispellable: true,
 }
 
-class SingleEntryRegistry implements BuffDefinitionCatalog {
-  constructor(private readonly definition: BuffDefinition) {}
-
-  get(id: string): BuffDefinition {
-    if (id !== this.definition.id) {
-      throw new Error(`BuffDefinitionCatalog: unknown buff id "${id}"`)
-    }
-
-    return this.definition
-  }
-}
+const REGISTRY = makeTestBuffRegistry([OTHER_DEFINITION])
 
 describe('QA — TurnBattleSystem boss trigger vs unknown buff id (Phase A2 quick)', () => {
   it('resolveNextStep does not throw when the bossTrigger buff id is missing from the registry', () => {
@@ -104,8 +96,13 @@ describe('QA — TurnBattleSystem boss trigger vs unknown buff id (Phase A2 quic
 
     battle.players[0]!.basic = BASIC
 
-    const registry: BuffDefinitionCatalog = new SingleEntryRegistry(OTHER_DEFINITION)
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [battle.players[0]!, enemyParticipant],
+      combatSystem: combat,
+    })
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
     // Turn 1 resolves the player (no bossTrigger — block skipped).
     // Turn 2 resolves the enemy: reaches the boss-trigger block inside

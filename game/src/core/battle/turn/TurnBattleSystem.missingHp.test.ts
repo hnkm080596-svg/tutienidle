@@ -4,7 +4,6 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { buildTheTuKit } from '../../../data/skill/TheTuSkills'
 import { collectTheTuKitModifiers } from '../../the-tu/TheTuKitModifiers'
@@ -47,7 +46,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
 const MISSING_HP_FIELDS = { missingHpBonusPerMissingPercent: 0.02, missingHpBonusCap: 2.0 } as const

@@ -145,6 +145,14 @@ const SEAM_ALLOWLIST_FILES: readonly string[] = [
   // delegates 'the'-pool gains to TheEconomy's single clamp authority
   // (grantThe); consumes mirror consumeResourceFor's direct write.
   'core/battle/runtime/scheduler/adapters/EntityResourceAdapter.ts',
+  // buff2 M4 proc system -- The-cost proc pricing delegates to
+  // TheEconomy's cost authority (resolveProcCost/THE_PROC_COST), the
+  // same seam class as EntityResourceAdapter.
+  'core/proc/CombatProcSystem.ts',
+  // buff2 M4 capability-validator composition point -- its declared
+  // responsibility is registering every owner module's grant schemas,
+  // including the-tu's typed payload validators (TheTuCapabilities).
+  'core/battle/runtime/capability/DefaultCapabilityValidators.ts',
   // Save boundary validates module-owned slices (orb ids, way ownership).
   'services/save/saveShapeValidation.ts',
 ]

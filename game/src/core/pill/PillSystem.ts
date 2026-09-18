@@ -8,7 +8,7 @@ import { getMainStatCap } from '../stats/StatCap'
 import { addCultivation } from '../cultivation/CultivationSystem'
 import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
 import { getRequiredCultivation } from '../realm/realmSystem'
-import type { BuffDefinition } from '../buff/BuffDefinition'
+import type { BuffDefinition } from '../buff2/BuffDefinition'
 
 export function clampToRealmCap(current: number, increase: number, realmId: string): number {
   return Math.max(0, Math.min(increase, getMainStatCap(realmId) - current))

@@ -13,11 +13,12 @@ import { useStateVersion } from '@/composables/useGameState'
 import { buffDisplayName } from '@/core/buff/BuffNames'
 import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import { GAUGE_MAX } from '@/core/battle/turn/ActionGauge'
-import type { Buff } from '@/core/buff/BuffTypes'
+import type { BuffInstanceSnapshot } from '@/core/buff2/BuffInstance'
 import type { TurnBattleParticipant } from '@/core/battle/turn/TurnBattleSystem'
 
 const { t } = useI18n()
-const { isBattleFighting, upcomingActors, battle, roundsElapsed, activeStage } = useTurnBattleInfo()
+const { isBattleFighting, upcomingActors, battle, roundsElapsed, activeStage, buffsForTarget } =
+  useTurnBattleInfo()
 // ARCH-005 (M12): derived projections read the version signal directly —
 // `battle` resolves to the same in-place-mutated object forever, so a
 // computed chained on it never re-invalidates (same rule as
@@ -82,30 +83,35 @@ function label(index: number): string {
 
 // Phase A6 (2026-09-08) — visible buff badges for a party member's chip:
 // hidden buffs skipped (same convention as the buff pipeline), badge text
-// = name ×stacks (remainingTurns), title = description tooltip. Read-only
-// over BuffPool (P17).
-function visibleBuffs(member: { buffs: { getAll(): Buff[] } }): Buff[] {
-  return member.buffs.getAll().filter((buff) => !buff.hidden)
+// = name ×stacks (remaining), title = description tooltip. buff2 M4:
+// snapshots come from the battle's buff authority via the composable;
+// def metadata (hidden/description) resolves through BUFF_REGISTRY.
+// Read-only (P17).
+function visibleBuffs(member: TurnBattleParticipant): BuffInstanceSnapshot[] {
+  return buffsForTarget(member.entity.id).filter(
+    (instance) => BUFF_REGISTRY.tryGet(instance.definitionId)?.hidden !== true,
+  )
 }
 
-function buffBadgeText(buff: Buff): string {
-  const name = buffDisplayName(buff.id)
+function buffBadgeText(buff: BuffInstanceSnapshot): string {
+  const name = buffDisplayName(buff.definitionId)
+  const remaining = buff.remaining === undefined ? '∞' : Math.ceil(buff.remaining)
 
-  return buff.stacks > 1 ? `${name} ×${buff.stacks} (${Math.ceil(buff.remainingTurns)})` : `${name} (${Math.ceil(buff.remainingTurns)})`
+  return buff.stacks > 1 ? `${name} ×${buff.stacks} (${remaining})` : `${name} (${remaining})`
 }
 
-function buffTooltip(buff: Buff): string {
-  const definition = (() => {
-    try {
-      return BUFF_REGISTRY.get(buff.id)
-    } catch {
-      return undefined
-    }
-  })()
+function buffTooltip(buff: BuffInstanceSnapshot): string {
+  const definition = BUFF_REGISTRY.tryGet(buff.definitionId)
 
   const description = definition?.description ?? ''
 
-  return description ? `${buffDisplayName(buff.id)} — ${description}` : buffDisplayName(buff.id)
+  return description
+    ? `${buffDisplayName(buff.definitionId)} — ${description}`
+    : buffDisplayName(buff.definitionId)
+}
+
+function buffPolarity(buff: BuffInstanceSnapshot): string {
+  return BUFF_REGISTRY.tryGet(buff.definitionId)?.polarity ?? 'buff'
 }
 </script>
 
@@ -123,9 +129,9 @@ function buffTooltip(buff: Buff): string {
         <span v-if="!member.entity.alive" class="turn-order-strip__member-dead">†</span>
         <span
           v-for="buff in visibleBuffs(member)"
-          :key="`${buff.id}:${buff.sourceId}`"
+          :key="`${buff.instanceId}:${buff.sourceId}`"
           class="turn-order-strip__buff"
-          :class="`is-${buff.polarity}`"
+          :class="`is-${buffPolarity(buff)}`"
           :title="buffTooltip(buff)"
         >{{ buffBadgeText(buff) }}</span>
         <span

@@ -41,7 +41,6 @@ import {
 import { ManualClockSource } from '../battle/turn/CombatClock'
 import { CombatSystem } from '../combat/CombatSystem'
 import { EventBus } from '../events/EventBus'
-import { BuffPool } from '../buff/BuffPool'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
@@ -64,7 +63,7 @@ const PATH_RUNTIME_STUB_DEPS = {
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../buff/BuffTypes'
+import { makeTestBuffRegistry } from '../battle/turn/testing/TurnRuntimeFixtures'
 
 // Kiem Tu Reimagined Task 13 — spec 2026-09-15 §10 invariant suite.
 // One consolidated contract surface: every INV below cites its spec
@@ -92,11 +91,7 @@ function nguPlayer(realmId = 'golden_core'): PlayerData {
 
 // ---- shared turn-battle harness (same shape as dynamicBasic.test.ts) ----
 
-const EMPTY_CATALOG: BuffDefinitionCatalog = {
-  get: (id: string): BuffDefinition => {
-    throw new Error(`unknown buff id: ${id}`)
-  },
-}
+const EMPTY_CATALOG = makeTestBuffRegistry([])
 
 function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, ...overrides.stats })
@@ -139,7 +134,7 @@ function makeBattle(dynamicBasic: TurnBattleParticipant['dynamicBasic'], defende
     priority: 0,
     actionGauge: 0,
     alive: attacker.alive,
-    buffs: new BuffPool(),
+    
     consecutiveHardCcTurns: 0,
     basic: {
       id: 'fallback_basic',
@@ -156,7 +151,7 @@ function makeBattle(dynamicBasic: TurnBattleParticipant['dynamicBasic'], defende
     priority: 1,
     actionGauge: 0,
     alive: defender.alive,
-    buffs: new BuffPool(),
+    
     consecutiveHardCcTurns: 0,
   }
 

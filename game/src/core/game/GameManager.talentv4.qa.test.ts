@@ -17,8 +17,6 @@ import { pills } from '../../data/pill/pills'
 import { talismans } from '../../data/talisman/talismans'
 import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
-import { BuffSystem } from '../buff/BuffSystem'
-import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 // QA quick-mode adversarial checks (spec 2026-09-03 talent catalog v4
 // M1) — reproduction/invariant tests cho các hypothesis rủi ro cao nhất
@@ -74,7 +72,9 @@ describe('QA talent v4 M1 — invariant wiring', () => {
     const turnPlayer = manager.getTurnBattle()?.players[0]
 
     expect(turnPlayer).toBeDefined()
-    expect(turnPlayer!.buffs.hasAny('kiem_vuc')).toBe(true)
+    expect(
+      manager.getBattleBuffs(turnPlayer!.entity.id).some((i) => i.definitionId === 'kiem_vuc'),
+    ).toBe(true)
   })
 
   it('INV-2b (turn-based): buffApplier applies to the real turn-based player pool, not just the legacy one', () => {
@@ -123,7 +123,9 @@ describe('QA talent v4 M1 — invariant wiring', () => {
     const turnPlayer = manager.getTurnBattle()?.players[0]
 
     expect(turnPlayer).toBeDefined()
-    expect(turnPlayer!.buffs.hasAny('kiem_vuc')).toBe(true)
+    expect(
+      manager.getBattleBuffs(turnPlayer!.entity.id).some((i) => i.definitionId === 'kiem_vuc'),
+    ).toBe(true)
   })
 
   it('INV-3: 2 trận liên tiếp — stack passive reset, buff bùng trận trước KHÔNG kẹt pool trận sau', () => {
@@ -141,12 +143,20 @@ describe('QA talent v4 M1 — invariant wiring', () => {
     for (let i = 0; i < 10; i++) {
       manager.eventBus.emit('critical', { type: 'critical', sourceId: 'player', targetId: 'enemy_1' })
     }
-    expect(manager.getTurnBattle()!.players[0]!.buffs.hasAny('kiem_vuc')).toBe(true)
+    expect(
+      manager
+        .getBattleBuffs(manager.getTurnBattle()!.players[0]!.entity.id)
+        .some((i) => i.definitionId === 'kiem_vuc'),
+    ).toBe(true)
 
     // Battle 2: fresh pool — Kiếm Vực must not leak, stack modifier reset.
     manager.startBattleWithPlayer(player, enemy)
 
-    expect(manager.getTurnBattle()!.players[0]!.buffs.hasAny('kiem_vuc')).toBe(false)
+    expect(
+      manager
+        .getBattleBuffs(manager.getTurnBattle()!.players[0]!.entity.id)
+        .some((i) => i.definitionId === 'kiem_vuc'),
+    ).toBe(false)
 
     const passive = manager.skillManager.get('talent_passive_kiem_quang')!
 
@@ -220,21 +230,28 @@ describe('QA A0 � B?t T? Th? cleanse/grant on the LIVE turn-based pool', () =>
 
     // Seed a real debuff directly on the live turn-based pool (matching
     // how a real enemy hit would have applied it).
-    new BuffSystem(playerParticipant.buffs).apply(
-      BUFF_REGISTRY.get('bong'),
-      playerParticipant.entity,
-      playerParticipant.entity,
-      BUFF_REGISTRY,
-    )
+    manager.turnBattleOps.applyBuffToPlayer('bong')
 
-    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'bong')).toBe(true)
+    expect(
+      manager
+        .getBattleBuffs(playerParticipant.entity.id)
+        .some((b) => b.definitionId === 'bong'),
+    ).toBe(true)
 
     // Force a lethal hit through the real production damage path.
     manager.combatSystem.applyDirectDamage(playerParticipant.entity, 999_999, 'enemy_1')
 
     expect(playerParticipant.entity.alive).toBe(true)
     expect(playerParticipant.entity.currentHp).toBe(1)
-    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'bong')).toBe(false)
-    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'tu_sinh_ngo')).toBe(true)
+    expect(
+      manager
+        .getBattleBuffs(playerParticipant.entity.id)
+        .some((b) => b.definitionId === 'bong'),
+    ).toBe(false)
+    expect(
+      manager
+        .getBattleBuffs(playerParticipant.entity.id)
+        .some((b) => b.definitionId === 'tu_sinh_ngo'),
+    ).toBe(true)
   })
 })

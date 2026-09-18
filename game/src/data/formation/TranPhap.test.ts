@@ -39,12 +39,12 @@ describe('Tran Phap content file', () => {
     }
   })
 
-  it('formation buffs are battle-long party buffs (duration Infinity, polarity buff)', () => {
+  it('formation buffs are battle-long party buffs (permanent clock, polarity buff)', () => {
     for (const formation of TRAN_PHAP_FORMATIONS) {
       const buff = BUFF_REGISTRY.get(formation.buff.definitionId)
 
       expect(buff.polarity).toBe('buff')
-      expect(buff.duration).toBe(Infinity)
+      expect(buff.lifetime.clock).toBe('permanent')
     }
   })
 

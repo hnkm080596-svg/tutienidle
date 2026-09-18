@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildTurnSkillPresentation } from './CombatSkillPresentation'
 import type { TurnBattle, TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
-import { BuffPool } from '../buff/BuffPool'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 
@@ -38,7 +37,7 @@ function battle(overrides: {
     priority: 0,
     actionGauge: 0,
     alive: true,
-    buffs: new BuffPool(),
+    
     consecutiveHardCcTurns: 0,
   }
 

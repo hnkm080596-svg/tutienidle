@@ -69,7 +69,7 @@ function compareInstance(a: BuffInstance, b: BuffInstance): number {
   )
 }
 
-function sourceTypeOf(definition: BuffDefinition): 'buff' | 'debuff' {
+export function sourceTypeOf(definition: BuffDefinition): 'buff' | 'debuff' {
   if (definition.polarity !== undefined) return definition.polarity
   return definition.kind === 'debuff' || definition.kind === 'ailment'
     ? 'debuff'
@@ -162,6 +162,9 @@ export function createBuffReadPort(
             instanceId: instance.instanceId,
             definitionId: instance.definitionId,
             capability,
+            sourceId: instance.sourceId,
+            targetId: instance.targetId,
+            stacks: instance.stacks,
           })
         }
       }

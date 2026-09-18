@@ -8,17 +8,21 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
-import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
+import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
 import type { TurnSkillDefinition } from './TurnSkillAction'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
+import type { ReactiveProcPayload } from '../../proc/ProcCapabilities'
+import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 // The Tu Reimagined (spec 7.1, plan Task 16 / v2.4 P0.1) — the reactive
 // bypass contract: a queued entry resolves as a REAL action through
 // declare -> impact but skips the ENTIRE natural-turn lifecycle (turn
 // counter, round tracking, buff/DoT ticks, cooldowns, regen, resource
 // deltas, charge advance, CC check, gauge).
+// M4: marker instances live in the shared runtime store; phan_mon here
+// is the kit-clone shape (theGainOnSuccess baked on by buildTheTuKit).
 
 const NO_MITIGATION = {
   evasionRate: 0,
@@ -66,21 +70,45 @@ const PAYLOAD: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
-const TICKING_BUFF = {
+const TICKING_BUFF: BuffDefinition = {
   id: 'test_dot_host',
   name: 'host',
-  polarity: 'buff' as const,
-  duration: 5,
-  durationPolicy: 'fixed_holder_turns' as const,
-  stackMode: 'replace' as const,
-  effects: [{ type: 'statModifier' as const, stat: 'might' as const, flat: 0 }],
+  kind: 'buff',
+  polarity: 'buff',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 5, scaling: 'fixed' },
+  statModifiers: [{ stat: 'might', flat: 0 }],
+  dispellable: true,
 }
+
+/** The phan_mon clone the kit produces: authored success gain baked on. */
+const PHAN_MON_KIT: BuffDefinition = (() => {
+  const clone = structuredClone(LIVE_BUFFS.find((def) => def.id === 'phan_mon')!)
+  for (const capability of clone.capabilities ?? []) {
+    if (capability.type === 'reactive_proc') {
+      ;(capability.payload as ReactiveProcPayload).theGainOnSuccess = THE_PROC_GAIN
+    }
+  }
+  return clone
+})()
+
+const KIT_REGISTRY = makeTestBuffRegistry([
+  TICKING_BUFF,
+  ...LIVE_BUFFS.map((def) => (def.id === 'phan_mon' ? PHAN_MON_KIT : def)),
+])
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
-function makeBattle(): { battle: TurnBattle; playerP: TurnBattleParticipant; enemyP: TurnBattleParticipant } {
+function makeBattle(): {
+  battle: TurnBattle
+  playerP: TurnBattleParticipant
+  enemyP: TurnBattleParticipant
+  combat: CombatSystem
+  runtime: TurnRuntimeFixture
+} {
   const player = createCombatant({ id: 'reactor', type: 'player', currentHp: 100_000, maxHp: 100_000 }, 10)
   const enemy = createCombatant({ id: 'enemy', currentHp: 100_000, maxHp: 100_000 }, 9)
 
@@ -105,7 +133,19 @@ function makeBattle(): { battle: TurnBattle; playerP: TurnBattleParticipant; ene
     targeting: { shape: 'single' },
   }
 
-  return { battle: { players: [playerP], enemies: [enemyP], state: 'fighting' }, playerP, enemyP }
+  const combat = new CombatSystem(new EventBus())
+  const runtime = makeTurnRuntime({
+    registry: KIT_REGISTRY,
+    participants: () => [playerP, enemyP],
+    combatSystem: combat,
+  })
+  return { battle: { players: [playerP], enemies: [enemyP], state: 'fighting' }, playerP, enemyP, combat, runtime }
+}
+
+function buffsOf(runtime: TurnRuntimeFixture, participant: TurnBattleParticipant, id: string) {
+  return runtime.buffs
+    .getForTarget(participant.entity.id)
+    .filter((instance) => instance.definitionId === id)
 }
 
 afterEach(() => {
@@ -114,7 +154,7 @@ afterEach(() => {
 
 describe('reactive bypass contract (spec 7.1)', () => {
   it('queued payload entry resolves the payload skill against the captured target through declare -> impact', () => {
-    const { battle, playerP, enemyP } = makeBattle()
+    const { battle, playerP, enemyP, combat, runtime } = makeBattle()
     battle.queuedFollowUps = [
       {
         actorId: 'reactor',
@@ -127,7 +167,7 @@ describe('reactive bypass contract (spec 7.1)', () => {
     ]
 
     const enemyHpBefore = enemyP.entity.currentHp
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY)
+    const system = new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime)
     const step = system.resolveNextStep(battle)
 
     expect(step.actorId).toBe('reactor')
@@ -136,9 +176,9 @@ describe('reactive bypass contract (spec 7.1)', () => {
   })
 
   it('bypass skips the whole natural-turn lifecycle: counters, buffs, cooldowns, regen, rounds', () => {
-    const { battle, playerP } = makeBattle()
-    new BuffSystem(playerP.buffs).apply(TICKING_BUFF, playerP.entity, playerP.entity, BUFF_REGISTRY)
-    const buffTurns = playerP.buffs.getAllById('test_dot_host')[0]!.remainingTurns
+    const { battle, playerP, combat, runtime } = makeBattle()
+    runtime.applyBuff('test_dot_host', playerP)
+    const buffTurns = buffsOf(runtime, playerP, 'test_dot_host')[0]!.remaining
     playerP.entity.currentHp = 90_000 // regen would add if it ticked
     playerP.entity.stats = { ...playerP.entity.stats, hpRegenPerTurn: 100 }
     playerP.entity.baseStats = asBaseStats({ ...playerP.entity.baseStats, hpRegenPerTurn: 100 })
@@ -147,12 +187,12 @@ describe('reactive bypass contract (spec 7.1)', () => {
       { actorId: 'reactor', executionKind: 'reactive_bypass', actionSource: 'counter', triggerContext: { origin: 'enemy_hit', outcome: 'taken' }, payloadSkillId: 'phan_kich', targetIds: ['enemy'] },
     ]
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY)
+    const system = new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime)
     system.resolveNextStep(battle)
 
     expect(battle.totalTurnsElapsed ?? 0).toBe(0) // no turn counter
     expect(battle.roundsElapsed ?? 0).toBe(0) // no round tracking
-    expect(playerP.buffs.getAllById('test_dot_host')[0]!.remainingTurns).toBe(buffTurns) // no buff tick
+    expect(buffsOf(runtime, playerP, 'test_dot_host')[0]!.remaining).toBe(buffTurns) // no buff tick
     expect(playerP.special!.remainingCooldownTurns).toBe(3) // no cooldown tick
     expect(playerP.entity.currentHp).toBe(90_000) // no regen
     expect(playerP.entity.turnsSinceLastHitLanded).toBe(Infinity) // no turnsSinceLastHitLanded advance
@@ -160,58 +200,58 @@ describe('reactive bypass contract (spec 7.1)', () => {
   })
 
   it('a queued entry with no payloadSkillId resolves the actor basic (legacy follow_up semantic)', () => {
-    const { battle, enemyP } = makeBattle()
+    const { battle, enemyP, combat, runtime } = makeBattle()
     battle.queuedFollowUps = [{ actorId: 'reactor', executionKind: 'reactive_bypass', actionSource: 'follow_up' }]
 
     const enemyHpBefore = enemyP.entity.currentHp
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
 
     expect(enemyP.entity.currentHp).toBeLessThan(enemyHpBefore)
   })
 
   it('dead captured targets filter out — the payload resolves nothing', () => {
-    const { battle, enemyP } = makeBattle()
+    const { battle, enemyP, combat, runtime } = makeBattle()
     enemyP.entity.alive = false
     battle.queuedFollowUps = [
       { actorId: 'reactor', executionKind: 'reactive_bypass', actionSource: 'counter', payloadSkillId: 'phan_kich', targetIds: ['enemy'] },
     ]
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
 
     expect(battle.queuedFollowUps).toBeUndefined()
   })
 
   it('dead queued actor is skipped without burning chain depth', () => {
-    const { battle, playerP } = makeBattle()
+    const { battle, playerP, combat, runtime } = makeBattle()
     playerP.entity.alive = false
     battle.queuedFollowUps = [
       { actorId: 'reactor', executionKind: 'reactive_bypass', actionSource: 'counter', payloadSkillId: 'phan_kich', targetIds: ['enemy'] },
     ]
 
-    const step = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY).resolveNextStep(battle)
+    const step = new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
 
     expect(step.actorId).toBe('enemy') // fell through to gauge order
     expect(battle.followUpChainDepth ?? 0).toBe(0)
   })
 
   it('unknown payload id resolves to the basic fallback only when authored payloads are absent', () => {
-    const { battle, playerP, enemyP } = makeBattle()
+    const { battle, playerP, enemyP, combat, runtime } = makeBattle()
     playerP.reactivePayloads = {}
     battle.queuedFollowUps = [
       { actorId: 'reactor', executionKind: 'reactive_bypass', actionSource: 'counter', payloadSkillId: 'nonexistent', targetIds: ['enemy'] },
     ]
 
     const enemyHpBefore = enemyP.entity.currentHp
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
 
     expect(enemyP.entity.currentHp).toBeLessThan(enemyHpBefore)
   })
 
   it('onEvade window: a dodged natural attack queues a counter via the phan_mon marker', () => {
-    const { battle, playerP, enemyP } = makeBattle()
+    const { battle, playerP, enemyP, combat, runtime } = makeBattle()
     playerP.entity.baseStats = asBaseStats({ ...playerP.entity.baseStats, evasionRate: 1_000_000, counterChance: 1 })
     playerP.entity.stats = { ...playerP.entity.stats, evasionRate: 1_000_000, counterChance: 1 }
-    new BuffSystem(playerP.buffs).apply(BUFF_REGISTRY.get('phan_mon'), playerP.entity, playerP.entity, BUFF_REGISTRY)
+    runtime.applyBuff('phan_mon', playerP)
     playerP.entity.currentThe = 15 // exactly the proc cost; no ung_the -> no evade income
 
     // Speed lives on baseStats — refreshParticipantStats recomputes
@@ -226,7 +266,7 @@ describe('reactive bypass contract (spec 7.1)', () => {
     // the proc roll then needs < 0.6 (counterChance clamps at 0.60).
     vi.spyOn(Math, 'random').mockReturnValueOnce(0.999).mockReturnValue(0)
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
     expect(battle.queuedFollowUps).toHaveLength(1)
     const entry = battle.queuedFollowUps![0]!
     expect(entry).toMatchObject({
@@ -242,10 +282,10 @@ describe('reactive bypass contract (spec 7.1)', () => {
   })
 
   it('a TAKEN hit queues the counter through the onImpactLanded proc (outcome taken, not evaded)', () => {
-    const { battle, playerP, enemyP } = makeBattle()
+    const { battle, playerP, enemyP, combat, runtime } = makeBattle()
     playerP.entity.baseStats = asBaseStats({ ...playerP.entity.baseStats, counterChance: 1 })
     playerP.entity.stats = { ...playerP.entity.stats, counterChance: 1 }
-    new BuffSystem(playerP.buffs).apply(BUFF_REGISTRY.get('phan_mon'), playerP.entity, playerP.entity, BUFF_REGISTRY)
+    runtime.applyBuff('phan_mon', playerP)
     playerP.entity.currentThe = 100
 
     // Speed lives on baseStats — refreshParticipantStats recomputes
@@ -258,7 +298,7 @@ describe('reactive bypass contract (spec 7.1)', () => {
     playerP.speed = 1
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
 
     expect(battle.queuedFollowUps).toHaveLength(1)
     expect(battle.queuedFollowUps![0]).toMatchObject({
@@ -273,16 +313,16 @@ describe('reactive bypass contract (spec 7.1)', () => {
   })
 
   it('4-deep chain trips MAX_FOLLOW_UP_CHAIN_DEPTH — queue drops, the next action is a NATURAL turn', () => {
-    const { battle, playerP } = makeBattle()
+    const { battle, playerP, combat, runtime } = makeBattle()
     battle.queuedFollowUps = [
       { actorId: 'reactor', executionKind: 'reactive_bypass', actionSource: 'counter', payloadSkillId: 'phan_kich', targetIds: ['enemy'] },
     ]
     battle.followUpChainDepth = 4
 
-    new BuffSystem(playerP.buffs).apply(TICKING_BUFF, playerP.entity, playerP.entity, BUFF_REGISTRY)
-    const buffTurnsBefore = playerP.buffs.getAllById('test_dot_host')[0]!.remainingTurns
+    runtime.applyBuff('test_dot_host', playerP)
+    const buffTurnsBefore = buffsOf(runtime, playerP, 'test_dot_host')[0]!.remaining
 
-    const step = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, BUFF_REGISTRY).resolveNextStep(battle)
+    const step = new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
 
     // Guard tripped -> gauge order; the faster player wins the race and
     // the action that resolves IS a natural turn (lifecycle ticks).
@@ -290,6 +330,6 @@ describe('reactive bypass contract (spec 7.1)', () => {
     expect(battle.queuedFollowUps).toBeUndefined()
     expect(battle.followUpChainDepth).toBe(0)
     expect(battle.totalTurnsElapsed).toBe(1)
-    expect(playerP.buffs.getAllById('test_dot_host')[0]!.remainingTurns).toBe(buffTurnsBefore - 1)
+    expect(buffsOf(runtime, playerP, 'test_dot_host')[0]!.remaining).toBe(buffTurnsBefore! - 1)
   })
 })

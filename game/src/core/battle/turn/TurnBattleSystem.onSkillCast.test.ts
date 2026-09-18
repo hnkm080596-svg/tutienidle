@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinitionId } from '../contracts/ids'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // 9.5 #9 — cast counting revived on the turn engine. The engine fires
 // onSkillCast(actor, skillId) once per COMMITTED action (same point as
@@ -16,18 +16,14 @@ import { BuffSystem } from '../../buff/BuffSystem'
 // filter to the primary player.
 
 const STUN_DEF: BuffDefinition = {
-  id: 'stun', name: 'Stun', polarity: 'debuff', duration: 10, stackMode: 'refresh',
-  effects: [{ type: 'cc', ccEffect: 'stun' }],
-}
-
-class Registry implements BuffDefinitionCatalog {
-  private readonly defs = new Map<string, BuffDefinition>()
-  constructor(defs: BuffDefinition[]) { for (const d of defs) this.defs.set(d.id, d) }
-  get(id: string): BuffDefinition {
-    const d = this.defs.get(id)
-    if (!d) throw new Error(`missing buff: ${id}`)
-    return d
-  }
+  id: 'qa_stun' as BuffDefinitionId,
+  name: 'Stun',
+  kind: 'debuff',
+  instanceScope: 'per_target',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 10, scaling: 'fixed' },
+  controls: [{ type: 'stun' }],
+  dispellable: true,
 }
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
@@ -48,7 +44,7 @@ function makeParticipant(
 ): TurnBattleParticipant {
   return {
     id, entity: combatEntity, speed, priority, actionGauge: 0,
-    alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0,
+    alive: combatEntity.alive, consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }
@@ -98,12 +94,18 @@ describe('TurnBattleSystem.onSkillCast — committed-cast callback', () => {
   })
 
   it('CC-blocked (stun) → KHÔNG bắn (cast không xảy ra)', () => {
-    const { battle, playerParticipant } = fixture()
-    const registry = new Registry([STUN_DEF])
-    new BuffSystem(playerParticipant.buffs).apply(STUN_DEF, playerParticipant.entity, playerParticipant.entity, registry)
+    const { battle, playerParticipant, enemyParticipant } = fixture()
+    const registry = makeTestBuffRegistry([STUN_DEF])
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeTurnRuntime({
+      registry,
+      participants: () => [playerParticipant, enemyParticipant],
+      combatSystem: combat,
+    })
+    runtime.applyBuff('qa_stun', playerParticipant)
 
     const onSkillCast = vi.fn()
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, registry, undefined, undefined, onSkillCast)
+    const system = new TurnBattleSystem(combat, 10_000, registry, undefined, runtime, onSkillCast)
 
     const declared = system.declareActorAction(battle, playerParticipant)
     expect(declared.ccBlocked).toBe(true)

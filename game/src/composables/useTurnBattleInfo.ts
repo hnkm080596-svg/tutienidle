@@ -57,6 +57,10 @@ export function useTurnBattleInfo() {
     return battle.value?.roundsElapsed ?? 0
   })
 
+  /** buff2 M4 -- live buff snapshots for the turn-strip badges; reads
+      the battle's buff authority through the ops delegate. */
+  const buffsForTarget = (entityId: string) => gameManager.getBattleBuffs(entityId)
+
   const activeStage = computed(() => {
     stateVersion.value
 
@@ -89,6 +93,7 @@ export function useTurnBattleInfo() {
     logEntries,
     roundsElapsed,
     activeStage,
+    buffsForTarget,
     participantNameOf,
   }
 }

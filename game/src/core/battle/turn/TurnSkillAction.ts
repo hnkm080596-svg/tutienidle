@@ -143,12 +143,11 @@ export interface TurnSkillDefinition {
    * participant-local clones (node-adjusted via collectTheTuKitModifiers),
    * so they ride the def object itself, not a registry id.
    */
-  grantsBuffsAtBuild?: import('../../buff/BuffTypes').BuffDefinition[]
+  grantsBuffsAtBuild?: import('../../buff2/BuffDefinition').BuffDefinition[]
   /**
-   * Phase A1 (2026-09-07) — chance-gated ailment application, checked
-   * against TurnReactionManager after applying. Deliberately separate
-   * from appliesBuff (unconditional, no reaction check) — different
-   * semantics, do not merge the two fields.
+   * Phase A1 (2026-09-07) — chance-gated ailment application.
+   * Deliberately separate from appliesBuff (unconditional, no chance
+   * roll) — different semantics, do not merge the two fields.
    */
   appliesAilment?: TurnSkillAilmentApplication
   /**
@@ -220,8 +219,7 @@ export interface TurnSkillDefinition {
    * as direct damage, then re-seeds a FIXED 1 stack at the ailment's
    * AUTHORED duration with potency recomputed against the caster's
    * current stats. Re-seed is not an application event: no chance roll,
-   * no ailmentStackBonus, and reaction-silent — never fires
-   * TurnReactionManager (spec O2/R2).
+   * no ailmentStackBonus (spec O2/R2).
    */
   detonateDoT?: { amp: number }
   /**

@@ -56,10 +56,10 @@ describe('KIEM_PHO_ORBS', () => {
 
   it('kiem_thuong exists as a physical DoT capped at 3 stacks', () => {
     const def = BUFF_REGISTRY.get('kiem_thuong')
-    expect(def.maxStacks).toBe(3)
-    const dot = def.effects.find(e => e.type === 'dot')
+    expect(def.stacking.maxStacks).toBe(3)
+    const dot = def.periodic?.find((p) => p.type === 'damage')
     expect(dot).toBeDefined()
-    expect((dot as { element?: string }).element).toBe('physical')
+    expect(dot?.type === 'damage' && dot.element).toBe('physical')
   })
 })
 

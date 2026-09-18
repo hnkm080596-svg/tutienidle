@@ -4,14 +4,20 @@
 // isActionAllowed, and the sealed selection semantics.
 
 import { describe, expect, it } from 'vitest'
-import type { Buff, BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
-import { BuffPool } from '../../buff/BuffPool'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
+import type { BuffInstanceSnapshot } from '../../buff2/BuffInstance'
+import type {
+  BuffDefinitionId,
+  BuffInstanceId,
+  CombatEntityId,
+} from '../contracts/ids'
 import {
   actionTagsOf,
   actionTagsOfSkill,
-  BuffPoolActionValidator,
+  Buff2ActionValidator,
   isActionAllowed,
 } from './ActionValidator'
+import { makeTestBuffRegistry } from './testing/TurnRuntimeFixtures'
 import {
   NULL_ACTION,
   selectAction,
@@ -51,7 +57,7 @@ function participant(overrides: Partial<TurnBattleParticipant> = {}): TurnBattle
     priority: 0,
     actionGauge: 0,
     alive: true,
-    buffs: new BuffPool(),
+
     consecutiveHardCcTurns: 0,
     ...overrides,
   }
@@ -67,38 +73,38 @@ function skill(id: string, overrides: Partial<TurnSkillDefinition> = {}): TurnSk
   }
 }
 
-function buff(id: string): Buff {
+let instanceSeq = 0
+function snapshot(definitionId: string): BuffInstanceSnapshot {
+  instanceSeq += 1
   return {
-    id,
-    sourceId: 'caster',
-    targetId: 'actor',
-    polarity: 'debuff',
-    duration: 2,
-    remainingTurns: 2,
+    instanceId: `buff.test.${instanceSeq}` as BuffInstanceId,
+    definitionId: definitionId as BuffDefinitionId,
+    sourceId: 'caster' as CombatEntityId,
+    targetId: 'actor' as CombatEntityId,
     stacks: 1,
-    stackMode: 'refresh',
-    effects: [],
-  }
+    remaining: 2,
+    continuousTurns: 0,
+    continuousSeconds: 0,
+    modifiers: [],
+    createdSequence: 0,
+    lastAppliedSequence: 0,
+  } as BuffInstanceSnapshot
 }
 
 function def(id: string, overrides: Partial<BuffDefinition> = {}): BuffDefinition {
   return {
-    id,
+    id: id as BuffDefinitionId,
     name: id,
-    polarity: 'debuff',
-    duration: 2,
-    stackMode: 'refresh',
-    effects: [],
+    kind: 'debuff',
+    instanceScope: 'per_target',
+    stacking: {
+      maxStacks: 1,
+      onReapplyStacks: 'keep',
+      onReapplyDuration: 'refresh',
+    },
+    lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+    dispellable: true,
     ...overrides,
-  }
-}
-
-class MapCatalog implements BuffDefinitionCatalog {
-  constructor(private readonly defs: BuffDefinition[]) {}
-  get(id: string): BuffDefinition {
-    const found = this.defs.find((candidate) => candidate.id === id)
-    if (!found) throw new Error(`unknown buff id "${id}"`)
-    return found
   }
 }
 
@@ -157,27 +163,29 @@ describe('isActionAllowed', () => {
   })
 })
 
-describe('BuffPoolActionValidator.forbiddenActionTags', () => {
-  it('unions tags across live instances via the catalog', () => {
-    const pool = new BuffPool()
-    pool.add(buff('seal_attack'))
-    pool.add(buff('seal_move'))
-    pool.add(buff('plain'))
-    const catalog = new MapCatalog([
+describe('Buff2ActionValidator.forbiddenActionTags', () => {
+  it('unions tags across live instances via the registry', () => {
+    const instances = [
+      snapshot('seal_attack'),
+      snapshot('seal_move'),
+      snapshot('plain'),
+    ]
+    const registry = makeTestBuffRegistry([
       def('seal_attack', { forbiddenActionTags: ['attack'] }),
       def('seal_move', { forbiddenActionTags: ['move', 'attack'] }),
       def('plain'),
     ])
-    const validator = new BuffPoolActionValidator(catalog)
-    const tags = validator.forbiddenActionTags({ buffs: pool })
+    const validator = new Buff2ActionValidator(registry, () => instances)
+    const tags = validator.forbiddenActionTags('actor')
     expect([...tags].sort()).toEqual(['attack', 'move'])
   })
 
-  it('a pool buff missing from the catalog contributes no tags', () => {
-    const pool = new BuffPool()
-    pool.add(buff('ghost'))
-    const validator = new BuffPoolActionValidator(new MapCatalog([]))
-    expect(validator.forbiddenActionTags({ buffs: pool }).size).toBe(0)
+  it('an instance whose def id is absent contributes no tags', () => {
+    const validator = new Buff2ActionValidator(
+      makeTestBuffRegistry([]),
+      () => [snapshot('ghost')],
+    )
+    expect(validator.forbiddenActionTags('actor').size).toBe(0)
   })
 })
 

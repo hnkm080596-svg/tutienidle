@@ -317,10 +317,28 @@ export class CombatScheduler {
       Single-flight + fail-fast post-fault (P5 F-E/T1): reentrant or
       post-fault calls are structural faults, never silent no-ops. */
   run(): CombatTrace {
+    return this.settle('run')
+  }
+
+  /** Settle-only-if-quiescent (buff2 M4 consumer cutover): producers
+      that cannot know whether they fire mid-settlement (event listeners
+      on vitals/damage events inside an in-flight drain) enqueue their
+      authored ops and call this. Mid-run: the enqueue already landed on
+      the root queues, so the in-flight drain executes them -- a second
+      run() would be a re-entry fault, so we return early. Quiescent:
+      equivalent to run(). */
+  runIfQuiescent(): CombatTrace | undefined {
     if (this.runInFlight) {
-      this.structuralFault('run(): reentrant call during settlement')
+      return undefined
     }
-    this.assertAccepting('run')
+    return this.settle('runIfQuiescent')
+  }
+
+  private settle(caller: 'run' | 'runIfQuiescent'): CombatTrace {
+    if (this.runInFlight) {
+      this.structuralFault(`${caller}(): reentrant call during settlement`)
+    }
+    this.assertAccepting(caller)
     this.runInFlight = true
     try {
       this.driveDrain()

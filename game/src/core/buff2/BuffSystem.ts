@@ -62,7 +62,7 @@ import {
   type PendingUseMark,
 } from './BuffPeriodicResolver'
 import type { BuffReadPort } from './BuffQuery'
-import { createBuffReadPort } from './BuffQuery'
+import { createBuffReadPort, sourceTypeOf } from './BuffQuery'
 import type { BuffLifecycleContext } from './BuffLifecycleContext'
 import type { BuffRegistry } from './BuffRegistry'
 import type { BuffStore } from './BuffStore'
@@ -591,6 +591,7 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     for (const instance of this.sortedForTarget(targetId)) {
       const def = this.registry.get(instance.definitionId)
       if (query.kind !== undefined && def.kind !== query.kind) continue
+      if (query.polarity !== undefined && sourceTypeOf(def) !== query.polarity) continue
       if (query.element !== undefined && def.element !== query.element) continue
       if (query.definitionId !== undefined && def.id !== query.definitionId) continue
       if (

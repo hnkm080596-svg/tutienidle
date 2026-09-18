@@ -253,7 +253,13 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
     vi.spyOn(Math, 'random').mockReturnValue(0)
     advanceIntoFighting(combatSource, battle)
 
-    expect(advanceUntil(combatSource, () => protector!.buffs.hasAny('bach_ung'))).toBe(true)
+    expect(
+      advanceUntil(combatSource, () =>
+        gameManager
+          .getBattleBuffs(protector!.entity.id)
+          .some((i) => i.definitionId === 'bach_ung'),
+      ),
+    ).toBe(true)
 
     // Pin the pool under the live buff, then isolate one hit's delta.
     protector!.entity.currentThe = 30
@@ -354,10 +360,10 @@ describe('an save/restore parity', () => {
     advanceIntoFighting(combatSource, battle)
     const participant = battle.players[0]!
     expect(participant.basic?.id).toBe('tham_the')
-    expect(participant.buffs.hasAny('ung_the')).toBe(true)
-    expect(participant.buffs.hasAny('ho_mon')).toBe(true)
-    expect(participant.buffs.hasAny('tro_mon')).toBe(true)
-    expect(participant.buffs.hasAny('phan_mon')).toBe(false)
+    expect(restored.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'ung_the')).toBe(true)
+    expect(restored.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'ho_mon')).toBe(true)
+    expect(restored.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'tro_mon')).toBe(true)
+    expect(restored.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'phan_mon')).toBe(false)
     expect(participant.reactivePayloads?.['tro_kich']).toBeDefined()
   })
 })

@@ -29,8 +29,28 @@ import { ActionGaugeAdapter } from '../battle/runtime/scheduler/adapters/ActionG
 import { EntityResourceAdapter } from '../battle/runtime/scheduler/adapters/EntityResourceAdapter'
 import { VitalsShieldAdapter } from '../battle/runtime/scheduler/adapters/VitalsShieldAdapter'
 export type { ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
-import { BuffSystem } from '../buff/BuffSystem'
-import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
+import { BuffSystem } from '../buff2/BuffSystem'
+import { BuffStore } from '../buff2/BuffStore'
+import { BuffRegistry } from '../buff2/BuffRegistry'
+import { ApplicationResolver } from '../buff2/ApplicationResolver'
+import { GaugeDeltaHandler } from '../battle/turn/GaugeDeltaHandler'
+import { CombatProcSystem } from '../proc/CombatProcSystem'
+import { createElementalStateRegistry } from '../reaction/ElementalStateRegistry'
+import { createDamageProfileCatalog } from '../combat/DamageProfiles'
+import { createDefaultCapabilityValidators } from '../battle/runtime/capability/DefaultCapabilityValidators'
+import type { TurnCombatRuntime } from '../battle/turn/TurnBattleSystem'
+import type { BuffDefinition } from '../buff2/BuffDefinition'
+import type {
+  BuffDefinitionId,
+  BuffInstanceId,
+  CombatOperationId,
+} from '../battle/contracts/ids'
+import type { ResolvedCombatOperation } from '../battle/contracts/operations'
+import type { BuffSnapshotData, BuffInstanceSnapshot } from '../buff2/BuffInstance'
+import type {
+  BuffAppliedEvent,
+  PeriodicOperationSettled,
+} from '../battle/contracts/events'
 import type { TurnSkillDefinition, ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
 import {
@@ -48,7 +68,7 @@ import type { Stage } from '../stage/Stage'
 import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
-import type { Buff, BuffDefinition } from '../buff/BuffTypes'
+import { buffs as LIVE_BUFFS } from '../../data/buff/buffs'
 import type { FormationLoadout, PlayerData } from '../player/Player'
 import { playerToCombatEntity } from '../player/Player'
 import type { Stats } from '../stats/StatBlock'
@@ -281,11 +301,13 @@ export class GameManagerTurnBattleOps {
       // below already pass BUFF_REGISTRY.
       BUFF_REGISTRY,
       undefined,
+      // Runtime slot stays undefined here -- the bootstrap engine is
+      // replaced by beginBattleCycle's minted engine before any combat
+      // step; buff/proc lanes fault loudly if used without it.
       undefined,
       this.onSkillCast,
       this.liveStatModifiers,
       this.combatRng,
-      this.combatScheduler,
     )
     // Presentation facade (Wave-2 split) - owns the PresentationSession +
     // CombatAnimationRuntime + mode flag. Deferred closures keep the
@@ -514,11 +536,19 @@ export class GameManagerTurnBattleOps {
           this.statusVfxBattle === this.turnBattle
             ? this.statusVfxSnapshot
             : new Map<string, TurnStatusSnapshotEntry>()
-        this.statusVfxSnapshot = diffAndEmitTurnStatusVfx(
-          this.deps.eventBus,
-          this.turnBattle,
-          statusBefore,
-        )
+        // buff2 M4 -- status reads bind the minted authority + battle
+        // registry; before-mint steps (intro/countdown) have neither, so
+        // the diff waits for the first post-mint step exactly like the
+        // legacy pools' own construction-time emptiness.
+        if (this.turnRuntime !== undefined && this.battleBuffRegistry !== undefined) {
+          this.statusVfxSnapshot = diffAndEmitTurnStatusVfx(
+            this.deps.eventBus,
+            this.turnBattle,
+            statusBefore,
+            this.turnRuntime.buffs,
+            this.battleBuffRegistry,
+          )
+        }
         this.statusVfxBattle = this.turnBattle
       }
     }
@@ -772,6 +802,64 @@ export class GameManagerTurnBattleOps {
   }
 
   /**
+   * buff2 M4 -- PassiveSystem's "burst" buffApplier lane: applies a def
+   * to the live battle's primary player through an authored op. Fired
+   * from event listeners that can run INSIDE an op settlement (vitals
+   * events emitted mid-frame), so it enqueues and settles only when
+   * quiescent -- mid-run, the in-flight drain executes the op. Unknown
+   * ids stay graceful-skipped (same contract as the legacy
+   * registry.get() try/catch).
+   */
+  applyBuffToPlayer(buffId: string): void {
+    const battle = this.turnBattle
+    const scheduler = this.combatScheduler
+    const registry = this.battleBuffRegistry
+    const player = battle?.players[0]
+    if (
+      battle === null ||
+      player === undefined ||
+      scheduler === undefined ||
+      registry === undefined
+    ) {
+      return
+    }
+    const definitionId = buffId as BuffDefinitionId
+    if (registry.tryGet(definitionId) === undefined) {
+      return
+    }
+    const entityId = player.entity.id as CombatEntityId
+    const root = `passive.${this.battleGeneration}.${battle.totalTurnsElapsed}.${buffId}.${this.nextOpOccurrence()}`
+    scheduler.enqueueAuthored([
+      {
+        type: 'apply_buff',
+        operationId: `buff.${root}.apply` as CombatOperationId,
+        payload: {
+          definitionId,
+          targetId: entityId,
+          stacks: 1,
+          baseChance: 1,
+          reactionEligibility: 'eligible',
+        },
+        origin: {
+          kind: 'proc',
+          originId: 'passive_burst',
+          sourceId: entityId,
+          rootActionId: root,
+        },
+      },
+    ])
+    scheduler.runIfQuiescent()
+  }
+
+  /**
+   * buff2 M4 -- read-only live-buff query for the combat UI (turn-order
+   * strip badges). Returns [] outside battle / before the runtime mints.
+   */
+  getBattleBuffs(entityId: string): readonly BuffInstanceSnapshot[] {
+    return this.turnRuntime?.buffs.getForTarget(entityId as CombatEntityId) ?? []
+  }
+
+  /**
    * Whether a turn battle is actively in progress (intro/countdown/
    * fighting). The TurnBattle object is retained after victory/defeat so
    * consumers can read the terminal result -- callers that need an
@@ -817,6 +905,20 @@ export class GameManagerTurnBattleOps {
    * mutation authority.
    */
   private battleGeneration = 0
+
+  /**
+   * QA-1 (buff2 M4 deep audit) -- monotonic occurrence counter for the
+   * ops-level mint lanes (survive grants, passive converts). Roots that
+   * key only on generation/turn/entity can recur inside one battle (a
+   * second survive event, a second threshold convert in the same turn);
+   * the scheduler reserves operationIds globally and faults on repeats,
+   * so every recurring lane appends this discriminator.
+   */
+  private opOccurrenceSeq = 0
+
+  private nextOpOccurrence(): number {
+    return ++this.opOccurrenceSeq
+  }
 
   /**
    * Mission C Task 8 -- the session RNG for the CURRENT cycle, re-typed
@@ -880,8 +982,22 @@ export class GameManagerTurnBattleOps {
    * the engine mutates.
    */
   private combatScheduler: CombatScheduler | undefined
+  // buff2 M4 -- the battle's combat runtime bundle + battle-local
+  // registry (sealed LIVE catalog + the primary player's kit clones).
+  // Minted per cycle in mintCycleScheduler; consumers bind read lanes
+  // (status strip, survive sources, dot_recovery grants) through it.
+  private turnRuntime: TurnCombatRuntime | undefined
+  private battleBuffRegistry: BuffRegistry | undefined
 
-  private mintCycleScheduler(): void {
+  /**
+   * buff2 M4 -- mints the cycle's combat runtime: the battle-local
+   * registry (sealed LIVE catalog + participant-local kit clones), the
+   * buff2 authority, the op executor's buffs port, batch preconditions,
+   * and the two immediate handlers (periodic settle + gauge-delta).
+   * buildTurnBattle must already have run (kit clones live on the
+   * participants' skill slots).
+   */
+  private mintCycleScheduler(): TurnCombatRuntime {
     const resolveParticipant = (
       id: CombatEntityId,
     ): TurnBattleParticipant | undefined => {
@@ -897,45 +1013,200 @@ export class GameManagerTurnBattleOps {
     const resolveEntity = (id: CombatEntityId): CombatEntity | undefined =>
       resolveParticipant(id)?.entity
 
+    // 1. Battle-local registry -- participant-local kit clones
+    //    (grantsBuffsAtBuild) carry node-adjusted capability payloads;
+    //    buff2 consumers read def payloads from the REGISTRY, so a clone
+    //    must win its def-id slot or the node adjustments are silently
+    //    dead. Only the primary player carries a kit, so same-id clones
+    //    cannot collide.
+    const kitClones = this.collectKitCloneBuffs()
+    const cloneIds = new Set(kitClones.map((definition) => definition.id))
+    const registry = new BuffRegistry({
+      damageProfiles: createDamageProfileCatalog(),
+      capabilityValidators: createDefaultCapabilityValidators(),
+    })
+    for (const definition of LIVE_BUFFS) {
+      if (!cloneIds.has(definition.id)) {
+        registry.register(definition)
+      }
+    }
+    for (const clone of kitClones) {
+      registry.register(clone)
+    }
+    registry.seal()
+    this.battleBuffRegistry = registry
+
+    // 2. The buff2 authority -- deterministic per-battle instance ids.
+    const elemental = createElementalStateRegistry({
+      fire: 'hoa_an' as BuffDefinitionId,
+      water: 'han_tuc' as BuffDefinitionId,
+      wood: 'doc_can' as BuffDefinitionId,
+      metal: 'liet_thuong' as BuffDefinitionId,
+      earth: 'tran_an' as BuffDefinitionId,
+    })
+    let instanceCounter = 0
+    const buffs = new BuffSystem(
+      new BuffStore(
+        () =>
+          `buff.battle.${this.battleGeneration}.${++instanceCounter}` as BuffInstanceId,
+      ),
+      registry,
+      new ApplicationResolver(this.combatRng),
+      { getStats: (id) => resolveEntity(id)?.stats },
+      { isAlive: (id) => resolveEntity(id)?.alive ?? false },
+      {
+        capture: (_profileId, sourceId, fields): BuffSnapshotData => {
+          const stats = resolveEntity(sourceId)?.stats as
+            | Record<string, unknown>
+            | undefined
+          const snapshot: Record<string, number> = {}
+          for (const field of fields) {
+            const value = stats?.[field]
+            if (typeof value === 'number') {
+              snapshot[field] = value
+            }
+          }
+          return snapshot
+        },
+      },
+      elemental,
+    )
+
     const executor = new CombatOperationExecutor({
       damage: new CombatSystemDamageAdapter(this.deps.combatSystem, resolveEntity, {
-        // M3 carryover -- the same resolution declareActorAction hands
-        // BuffSystem.update (the DoT SOURCE's own pool), so authored
-        // dotRecovery triggers stay reachable on legacy_dot ops.
-        resolveSourceBuffs: (id: CombatEntityId): readonly Buff[] | undefined =>
-          resolveParticipant(id)?.buffs.getAll(),
+        // buff2 M4 -- the legacy_dot lane's dot_recovery reads the
+        // SOURCE's live capability grants at tick time.
+        resolveSourceGrants: (id: CombatEntityId) => buffs.getCapabilities(id),
       }),
       heal: new CombatSystemHealAdapter(this.deps.combatSystem, resolveEntity),
       gauge: new ActionGaugeAdapter((id) => resolveParticipant(id), resolveEntity),
       resource: new EntityResourceAdapter(resolveEntity),
       shield: new VitalsShieldAdapter(this.deps.combatSystem.vitals, resolveEntity),
-      // buffs port stays unwired until the buff2 authority lands.
+      buffs,
     })
 
     this.combatScheduler = new CombatScheduler(executor, {
       preconditions: {
         isAlive: (id) => resolveParticipant(id)?.entity.alive ?? false,
         getBuffInstance: (instanceId) => {
-          // Legacy Buff.id is the DEFINITION id (the per-instance key is
-          // (id, sourceId)); a real BuffInstanceId arrives with the buff
-          // authority cutover. Until then this is a fail-closed
-          // best-effort: a wrong first match fails the batch's
-          // expected-source/target/stacks check (stale skip), never a
-          // wrong execute.
-          const battle = this.turnBattle
-          if (battle === null) {
-            return undefined
-          }
-          for (const participant of [...battle.players, ...battle.enemies]) {
-            const buff = participant.buffs.getAll().find((entry) => entry.id === instanceId)
-            if (buff !== undefined) {
-              return { sourceId: buff.sourceId, targetId: buff.targetId, stacks: buff.stacks }
-            }
-          }
-          return undefined
+          const snapshot = buffs.getInstance({ kind: 'instance', instanceId })
+          return snapshot === undefined
+            ? undefined
+            : {
+                sourceId: snapshot.sourceId,
+                targetId: snapshot.targetId,
+                stacks: snapshot.stacks,
+              }
         },
       },
     })
+
+    const gaugeHandler = new GaugeDeltaHandler(registry)
+    const procs = new CombatProcSystem({
+      buffs,
+      rng: this.combatRng,
+      scheduler: this.combatScheduler,
+      resolveEntity,
+    })
+
+    // Immediate handlers (megaplan M4): periodic requests settle back
+    // into the authority; buff_applied feeds the gauge-delta owner.
+    this.combatScheduler.registerImmediateHandler(
+      'periodic_operation_settled',
+      (event, sink) => {
+        buffs.handlePeriodicSettled(event as PeriodicOperationSettled, sink)
+      },
+    )
+    this.combatScheduler.registerImmediateHandler('buff_applied', (event) => {
+      gaugeHandler.handleBuffApplied(event as BuffAppliedEvent)
+    })
+
+    const runtime: TurnCombatRuntime = {
+      buffs,
+      procs,
+      scheduler: this.combatScheduler,
+      gaugeHandler,
+    }
+    this.turnRuntime = runtime
+    return runtime
+  }
+
+  /** The participant-local kit-clone defs riding each player's skill
+      slots (grantsBuffsAtBuild) -- the battle-local registry replaces
+      same-id base defs with these clones. */
+  private collectKitCloneBuffs(): BuffDefinition[] {
+    const battle = this.turnBattle
+    if (battle === null) {
+      return []
+    }
+    const clones: BuffDefinition[] = []
+    for (const participant of battle.players) {
+      for (const slot of [participant.basic, participant.special?.skill, participant.ultimate?.skill]) {
+        clones.push(...(slot?.grantsBuffsAtBuild ?? []))
+      }
+    }
+    return clones
+  }
+
+  /**
+   * buff2 M4 -- battle-entry buff applies (was inside buildTurnBattle
+   * under legacy per-participant pools). Runs post-mint while the battle
+   * is quiescent, before refreshEffectiveStats folds modifiers into
+   * entity.stats:
+   * - Tran Phap formation: ONE shared buff on the whole party (unknown
+   *   ids stay graceful-skipped per review Task 19).
+   * - grantsBuffsAtBuild: participant-local kit clones applied to their
+   *   owner (node-adjusted payloads -- registered into the battle-local
+   *   registry by mintCycleScheduler, which is why applies can resolve
+   *   them by id).
+   */
+  private applyEntryBuffs(): void {
+    const battle = this.turnBattle
+    const system = this.turnBattleSystem
+    const registry = this.battleBuffRegistry
+    if (battle === null || system === undefined || registry === undefined) {
+      return
+    }
+
+    const entries: {
+      definitionId: string
+      sourceId: string
+      targetId: string
+      durationOverride?: number
+    }[] = []
+
+    const playerPath = this.deps.getActivePlayer()
+    if (playerPath?.formationLoadout) {
+      const formationDefinition = TRAN_PHAP_FORMATIONS.find(
+        (candidate) => candidate.id === playerPath.formationLoadout!.formationId,
+      )
+      const formationBuffId = formationDefinition?.buff.definitionId
+      // Unknown ids stay graceful-skipped (review Task 19) -- the apply
+      // would throw on registry lookup, so check membership first.
+      if (formationBuffId !== undefined && registry.tryGet(formationBuffId as BuffDefinitionId) !== undefined) {
+        for (const participant of battle.players) {
+          entries.push({
+            definitionId: formationBuffId,
+            sourceId: participant.entity.id,
+            targetId: participant.entity.id,
+          })
+        }
+      }
+    }
+
+    for (const participant of battle.players) {
+      for (const slot of [participant.basic, participant.special?.skill, participant.ultimate?.skill]) {
+        for (const clone of slot?.grantsBuffsAtBuild ?? []) {
+          entries.push({
+            definitionId: clone.id,
+            sourceId: participant.entity.id,
+            targetId: participant.entity.id,
+          })
+        }
+      }
+    }
+
+    system.applyBuildBuffs(battle, entries)
   }
 
   getBattleGeneration(): number {
@@ -1088,21 +1359,26 @@ export class GameManagerTurnBattleOps {
 
     // A fresh cycle owns a fresh engine - its private pending fields
     // (reactive entries, queued executions, gauge deltas, manual options)
-    // can never carry across a boundary. The operation scheduler mints
-    // alongside it (M4 - constructed but dormant until the buff/skill
-    // cutover routes authored ops through it).
-    this.mintCycleScheduler()
+    // can never carry across a boundary. The combat runtime mints
+    // alongside it (buff2 M4 - battle-local registry + buff authority +
+    // scheduler + proc/gauge owners; the reaction engine stays
+    // production-inert: no dispatcher registration, no capability grant).
+    const runtime = this.mintCycleScheduler()
     this.turnBattleSystem = new TurnBattleSystem(
       this.deps.combatSystem,
       10_000,
-      BUFF_REGISTRY,
+      this.battleBuffRegistry,
       stageRef ? this.buildStageSpawnFactory(stageRef) : undefined,
-      stageRef ? new TurnReactionManager(this.deps.eventBus) : undefined,
+      runtime,
       this.onSkillCast,
       this.liveStatModifiers,
       this.combatRng,
-      this.combatScheduler,
     )
+
+    // buff2 M4 -- entry applies (Tran Phap formation buff + kit-clone
+    // grantsBuffsAtBuild) run AFTER the runtime exists; they were inside
+    // buildTurnBattle under the legacy per-participant pools.
+    this.applyEntryBuffs()
 
     // ARCH-002 (M7) - fold construction-time buffs (formation Tran Phap)
     // and the live runtime modifiers into entity.stats immediately, so no
@@ -1135,23 +1411,94 @@ export class GameManagerTurnBattleOps {
       // FIRST line of survival; the talent guard is the extra life once
       // the ult is spent/on cooldown.
       const playerParticipant = this.turnBattle.players[0]
+      const playerEntityId = playerParticipant?.entity.id as CombatEntityId | undefined
+      const playerBuffs = runtime.buffs
       const extraSurviveSources = playerParticipant
-        ? this.resolvePathRuntime(player).buildSurviveSources?.(player, playerParticipant)
+        ? this.resolvePathRuntime(player).buildSurviveSources?.(
+            player,
+            playerParticipant,
+            // buff2 M4 -- live presence read against the battle's buff
+            // authority (replaces the participant-local BuffPool scan).
+            (definitionId) =>
+              playerBuffs
+                .getForTarget(playerEntityId!)
+                .some((instance) => instance.definitionId === definitionId),
+          )
         : undefined
 
       this.deps.combatSystem.setSurviveLethalSession({
         playerEntityId: playerEntity.id,
         guard: this.deps.surviveLethalGuard,
-        // v4 - Bat Tu The cleanse/grant on save, wired to the LIVE
-        // turn-based player pool.
-        surviveEffects: playerParticipant
-          ? {
-              buffSystem: new BuffSystem(playerParticipant.buffs),
-              registry: BUFF_REGISTRY,
-              grantBuffId: 'tu_sinh_ngo',
-              cleanseDebuffs: true,
-            }
-          : undefined,
+        // v4 - Bat Tu The cleanse/grant on save, bound to the battle's
+        // buff2 authority (buff2 M4): mid-settlement reuses the frame's
+        // ctx (no second root -- the scheduler rejects re-entry);
+        // quiescent mints authored ops and settles.
+        surviveEffects:
+          playerParticipant && playerEntityId !== undefined
+            ? {
+                grantBuffId: 'tu_sinh_ngo' as BuffDefinitionId,
+                cleanseDebuffs: true,
+                apply: (entity, resolved, execCtx) => {
+                  const entityId = entity.id as CombatEntityId
+                  if (execCtx !== undefined) {
+                    if (resolved.cleanseDebuffs) {
+                      playerBuffs.cleanse(entityId, { polarity: 'debuff' }, execCtx)
+                    }
+                    if (resolved.grantBuffId !== undefined) {
+                      playerBuffs.apply(
+                        {
+                          definitionId: resolved.grantBuffId,
+                          sourceId: entityId,
+                          targetId: entityId,
+                          stacks: 1,
+                          baseChance: 1,
+                          durationOverride: resolved.grantBuffDurationOverride,
+                          reactionEligibility: 'eligible',
+                          origin: execCtx.origin,
+                        },
+                        execCtx,
+                      )
+                    }
+                    return
+                  }
+                  const scheduler = this.combatScheduler
+                  if (scheduler === undefined) return
+                  const root = `survive.${this.battleGeneration}.${entity.id}.${this.nextOpOccurrence()}`
+                  const origin = {
+                    kind: 'proc' as const,
+                    originId: 'survive_effects',
+                    sourceId: entityId,
+                    rootActionId: root,
+                  }
+                  const ops: ResolvedCombatOperation[] = []
+                  if (resolved.cleanseDebuffs) {
+                    ops.push({
+                      type: 'cleanse_buff',
+                      operationId: `${root}.cleanse` as CombatOperationId,
+                      payload: { targetId: entityId, query: { polarity: 'debuff' } },
+                      origin,
+                    })
+                  }
+                  if (resolved.grantBuffId !== undefined) {
+                    ops.push({
+                      type: 'apply_buff',
+                      operationId: `${root}.grant` as CombatOperationId,
+                      payload: {
+                        definitionId: resolved.grantBuffId,
+                        targetId: entityId,
+                        stacks: 1,
+                        baseChance: 1,
+                        durationOverride: resolved.grantBuffDurationOverride,
+                        reactionEligibility: 'eligible',
+                      },
+                      origin,
+                    })
+                  }
+                  scheduler.enqueueAuthored(ops)
+                  scheduler.runIfQuiescent()
+                },
+              }
+            : undefined,
         extraSources: extraSurviveSources?.length ? extraSurviveSources : undefined,
       })
     }
@@ -1336,57 +1683,10 @@ export class GameManagerTurnBattleOps {
       ]
     })
 
-    // Tran Phap buff - the active formation applies ONE shared buff to the
-    // whole party at battle start. Unknown buff definition ids are caught and
-    // skipped (graceful, review Task 19) instead of crashing the battle.
-    if (playerPath?.formationLoadout) {
-      const formationDefinition = TRAN_PHAP_FORMATIONS.find(
-        (candidate) => candidate.id === playerPath.formationLoadout!.formationId,
-      )
-
-      if (formationDefinition) {
-        let buffDefinition: BuffDefinition | undefined
-
-        try {
-          buffDefinition = BUFF_REGISTRY.get(formationDefinition.buff.definitionId)
-        } catch {
-          buffDefinition = undefined
-        }
-
-        if (buffDefinition) {
-          for (const participant of [playerParticipant, ...companionParticipants]) {
-            new BuffSystem(participant.buffs).apply(
-              buffDefinition,
-              participant.entity,
-              participant.entity,
-              BUFF_REGISTRY,
-            )
-          }
-        }
-      }
-    }
-
-    // The Tu Reimagined (plan Task 6) -- emblem/build-time buff channel:
-    // any participant slot def carrying grantsBuffsAtBuild applies those
-    // participant-local def clones to its owner (phan_chinh emblem ->
-    // permanent Reflection buff). Self-applied, no registry lookup —
-    // the defs are already node-adjusted clones from buildTheTuKit.
-    for (const participant of [playerParticipant, ...companionParticipants]) {
-      const buildBuffs = [
-        ...(participant.basic?.grantsBuffsAtBuild ?? []),
-        ...(participant.special?.skill.grantsBuffsAtBuild ?? []),
-        ...(participant.ultimate?.skill.grantsBuffsAtBuild ?? []),
-      ]
-
-      for (const definition of buildBuffs) {
-        new BuffSystem(participant.buffs).apply(
-          definition,
-          participant.entity,
-          participant.entity,
-          BUFF_REGISTRY,
-        )
-      }
-    }
+    // buff2 M4 -- the entry-apply lanes (Tran Phap formation buff +
+    // kit-clone grantsBuffsAtBuild) moved out of this builder: they need
+    // the minted buff authority, so beginBattleCycle calls
+    // applyEntryBuffs() after mintCycleScheduler + engine construction.
 
     // Spawn placement (Combat Art Pipeline sections 6/7) - standing positions, no
     // movement. Bosses always center; regular enemies random within region.

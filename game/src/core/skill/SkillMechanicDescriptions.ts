@@ -1,6 +1,6 @@
 import type { Skill } from './Skill'
 import type { SkillEffect } from './SkillEffect'
-import type { BuffRegistry } from '../buff/BuffRegistry'
+import type { BuffRegistry } from '../buff2/BuffRegistry'
 import { ELEMENT_LABELS } from '../element/ElementLabels'
 
 // Pháp Tu Thuần Hệ (Task 12, plan 2026-09-03) — dòng mô tả CƠ CHẾ effect

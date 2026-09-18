@@ -8,9 +8,8 @@ import {
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 import {
   PHAN_CHINH_BUFF,
   PHAN_CHINH_MAXHP_RATIO,
@@ -74,7 +73,7 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new BuffPool(),
+    
     consecutiveHardCcTurns: 0,
   }
 }
@@ -231,24 +230,25 @@ describe('composite extra picks run the declared-hit pipeline', () => {
   it('each landed pick reflects through the defender phan_chinh emblem (2 hits -> 2 reflects)', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY)
 
     const attackerP = makeParticipant('player', makeRegressEntity('player', 100), 0)
     const defenderP = makeParticipant('enemy', makeRegressEntity('enemy', 0), 1)
     defenderP.entity.type = 'enemy'
 
-    new BuffSystem(defenderP.buffs).apply(
-      PHAN_CHINH_BUFF,
-      defenderP.entity,
-      defenderP.entity,
-      BUFF_REGISTRY,
-    )
+    const runtime = makeTurnRuntime({
+      registry: BUFF_REGISTRY,
+      participants: () => [attackerP, defenderP],
+      combatSystem: combat,
+    })
+    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
+
+    runtime.applyBuff(PHAN_CHINH_BUFF.id, defenderP)
 
     // No randomness control needed — every roll in this path is
     // deterministic by construction: hits land (accuracy 9999 vs
     // evasion 0 -> chance 1.0), no crit/block (chance 0), and the
-    // reflect trigger's authored chance is 1.0. The reflect roll still
-    // reads the global Math.random inside BuffSystem, but chance 1.0
+    // reflect trigger's authored chance is 1.0. The reflect roll reads
+    // the runtime rng seam inside CombatProcSystem, but chance 1.0
     // always fires; no reactiveProc effect is in play, so the injected
     // rng seam is not exercised here.
 
@@ -290,17 +290,6 @@ describe('composite extra picks run the declared-hit pipeline', () => {
     // dodge-style value would suppress it). Hits land by construction
     // (accuracy 9999 vs evasion 0), so the global Math.random needs
     // no spy.
-    const system = new TurnBattleSystem(
-      combat,
-      10,
-      BUFF_REGISTRY,
-      /*spawnEnemy*/ undefined,
-      /*reactionManager*/ undefined,
-      /*onSkillCast*/ undefined,
-      /*liveStatModifiers*/ undefined,
-      new FunctionCombatRng(() => 0),
-    )
-
     const attackerP = makeParticipant('player', makeRegressEntity('player', 100), 0)
     const defenderP = makeParticipant('enemy', makeRegressEntity('enemy', 0), 1)
     defenderP.entity.type = 'enemy'
@@ -313,12 +302,26 @@ describe('composite extra picks run the declared-hit pipeline', () => {
     })
     defenderP.entity.stats = { ...defenderP.entity.stats, counterChance: 1 }
     defenderP.entity.currentThe = 100
-    new BuffSystem(defenderP.buffs).apply(
-      BUFF_REGISTRY.get('phan_mon'),
-      defenderP.entity,
-      defenderP.entity,
+
+    const rng = new FunctionCombatRng(() => 0)
+    const runtime = makeTurnRuntime({
+      registry: BUFF_REGISTRY,
+      participants: () => [attackerP, defenderP],
+      combatSystem: combat,
+      rng,
+    })
+    const system = new TurnBattleSystem(
+      combat,
+      10,
       BUFF_REGISTRY,
+      /*spawnEnemy*/ undefined,
+      runtime,
+      /*onSkillCast*/ undefined,
+      /*liveStatModifiers*/ undefined,
+      rng,
     )
+
+    runtime.applyBuff('phan_mon', defenderP)
 
     const battle: TurnBattle = {
       players: [attackerP],

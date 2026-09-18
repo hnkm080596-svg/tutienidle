@@ -291,7 +291,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
     // authored damage, wood always applies trung_doc (chance 1).
     const enemy = battle.enemies[0]!.entity
     const tookDamage = enemy.currentHp < enemy.maxHp
-    const hasAilments = battle.enemies[0]!.buffs.getAll().length > 0
+    const hasAilments = gameManager.getBattleBuffs(battle.enemies[0]!.entity.id).length > 0
     expect(tookDamage || hasAilments).toBe(true)
   })
 
@@ -328,12 +328,10 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
     expect(battle.totalTurnsElapsed ?? 0).toBeGreaterThan(0)
 
     // The participant was built through the REAL adapter chain —
-    // canonical composite pool, repeatCasts, and the phap_tu-domain
-    // reaction capability all stamped by production code.
+    // canonical composite pool and repeatCasts stamped by production code.
     const participant = battle.players[0]!
     expect(participant.basic?.compositePicks?.pool).toHaveLength(5)
     expect(participant.special?.skill.repeatCasts).toBe(2)
-    expect(participant.canInitiateWuxingReactions).toBe(true)
   })
 })
 

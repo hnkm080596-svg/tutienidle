@@ -1,4 +1,8 @@
-import type { BuffDefinition } from '@/core/buff/BuffDefinition'
+import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
+
+// buff2 migration (M4): refresh -> stacking{onReapplyStacks:'keep',
+// onReapplyDuration:'refresh'}; stack -> onReapplyStacks:'add';
+// holder_turns / permanent lifetime; statModifier -> statModifiers[].
 
 export const THUAN_HE_BUFFS: BuffDefinition[] = [
   // ==================================================================
@@ -13,16 +17,19 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     id: 'thanh_tuyen',
     name: 'Thanh Tuyền',
     description: 'Suối thiêng Thanh Tuyền nuôi linh khí — Pháp Lực hồi nhanh hơn.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: 6,
-    stackMode: 'refresh',
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
     // Task 3 (D17): the bespoke manaRegenPercent stat retired — the +10%
     // is now a percent modifier on the live manaRegenPerTurn stat, and
     // both MP-pool grants carry domain:'phap_tu' for the Task-7 gate.
-    effects: [
-      { type: 'statModifier', stat: 'manaRegenPerTurn', flat: 8, domain: 'phap_tu' },
-      { type: 'statModifier', stat: 'manaRegenPerTurn', percent: 0.1, domain: 'phap_tu' },
+    statModifiers: [
+      { stat: 'manaRegenPerTurn', flat: 8, domain: 'phap_tu' },
+      { stat: 'manaRegenPerTurn', percent: 0.1, domain: 'phap_tu' },
     ],
+    dispellable: false,
   },
 
   // Biến thể Thủy C2 "Dưỡng Linh · Băng Giáp" — Thủy phòng thủ.
@@ -30,13 +37,16 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     id: 'bang_giap',
     name: 'Băng Giáp',
     description: 'Giáp băng kết tụ — khiên bền hơn, hồi khiên nhanh hơn.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: 6,
-    stackMode: 'refresh',
-    effects: [
-      { type: 'statModifier', stat: 'wardMax', flat: 50 },
-      { type: 'statModifier', stat: 'wardRegenPerTurn', flat: 5 },
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
+    statModifiers: [
+      { stat: 'wardMax', flat: 50 },
+      { stat: 'wardRegenPerTurn', flat: 5 },
     ],
+    dispellable: false,
   },
 
   // Thủy D "Hồi Lưu Thôn Nộ" — tự buff hấp thụ (leech). leechPercent
@@ -45,10 +55,13 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     id: 'hoi_luu',
     name: 'Hồi Lưu',
     description: 'Vòng nước hồi lưu cuốn sinh lực về bản thân — đòn đánh hút máu.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: 4,
-    stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'leechPercent', flat: 0.2 }],
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 4, scaling: 'ailment_scaled' },
+    statModifiers: [{ stat: 'leechPercent', flat: 0.2 }],
+    dispellable: false,
   },
 
   // Biến thể Mộc C1 "Căn Trì · Cấm Bộ" — root BẢN DÀI của troi_chan
@@ -58,10 +71,14 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     element: 'wood',
     name: 'Câu Mang Căn',
     description: 'Rễ Câu Mang quấn chặt — không thể di chuyển.',
+    kind: 'ailment',
     polarity: 'debuff',
-    duration: 4,
-    stackMode: 'refresh',
-    effects: [{ type: 'cc', ccEffect: 'root' }],
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 4, scaling: 'ailment_scaled' },
+    application: { resistance: 'ailment' },
+    controls: [{ type: 'root' }],
+    dispellable: true,
   },
 
   // Kim B "Thu Giáp Kim Thân" — tự hoá thép. The Tu Reimagined (spec
@@ -70,12 +87,13 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     id: 'kim_giap',
     name: 'Kim Giáp',
     description: 'Thép Nhục Thu bọc thân — phòng ngự tăng mạnh.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: 6,
-    stackMode: 'refresh',
-    effects: [
-      { type: 'statModifier', stat: 'defense', percent: 0.15 },
-    ],
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
+    statModifiers: [{ stat: 'defense', percent: 0.15 }],
+    dispellable: false,
   },
 
   // Thổ C "Địa Trụ Thừa Thiên" — cột đất đỡ đòn.
@@ -83,13 +101,16 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     id: 'dia_tru',
     name: 'Địa Trụ',
     description: 'Cột đất thiêng chống trời — khiên dày, hồi khiên.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: 6,
-    stackMode: 'refresh',
-    effects: [
-      { type: 'statModifier', stat: 'wardMax', flat: 60 },
-      { type: 'statModifier', stat: 'wardRegenPerTurn', flat: 6 },
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
+    statModifiers: [
+      { stat: 'wardMax', flat: 60 },
+      { stat: 'wardRegenPerTurn', flat: 6 },
     ],
+    dispellable: false,
   },
 
   // Ult Thổ "Hậu Thổ Thành Lũy" — +6% defense/tầng, tầng = số địch bị
@@ -98,11 +119,13 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     id: 'thanh_luy',
     name: 'Thành Lũy',
     description: 'Thành đất Hậu Thổ vây quanh — mỗi địch bị nhốt thêm 6% phòng thủ.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: 8,
-    stackMode: 'stack',
-    maxStacks: 8,
-    effects: [{ type: 'statModifier', stat: 'defense', percent: 0.06 }],
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 8, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 8, scaling: 'ailment_scaled' },
+    statModifiers: [{ stat: 'defense', percent: 0.06 }],
+    dispellable: false,
   },
 
   // Biến thể Thổ C "Địa Trụ · Bích" (spec §2.5, review round 1) — khiên
@@ -112,13 +135,16 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     id: 'dia_tru_bich',
     name: 'Địa Trụ · Bích',
     description: 'Tường đất vững chãi — khiên dày và hồi nhanh, đổi lại không phản đòn.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: 6,
-    stackMode: 'refresh',
-    effects: [
-      { type: 'statModifier', stat: 'wardMax', flat: 100 },
-      { type: 'statModifier', stat: 'wardRegenPerTurn', flat: 8 },
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
+    statModifiers: [
+      { stat: 'wardMax', flat: 100 },
+      { stat: 'wardRegenPerTurn', flat: 8 },
     ],
+    dispellable: false,
   },
 
   // Biến thể Thổ C "Địa Trụ · Thứ" (spec §2.5, review round 1) — phản
@@ -130,63 +156,81 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     id: 'dia_tru_thu',
     name: 'Địa Trụ · Thứ',
     description: 'Đất hóa gai nhọn — khiên mỏng hơn nhưng vỡ ra đòn chết người chạm.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: 6,
-    stackMode: 'refresh',
-    effects: [
-      { type: 'statModifier', stat: 'wardMax', flat: 40 },
-      { type: 'statModifier', stat: 'wardBreakDamagePercent', flat: 0.25 },
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
+    statModifiers: [
+      { stat: 'wardMax', flat: 40 },
+      { stat: 'wardBreakDamagePercent', flat: 0.25 },
     ],
+    dispellable: false,
   },
 
   // Node Thế Mãn (spec §4/E-7) — engine ÁP/GỠ theo trạng thái Thế đầy
   // (E-7 sync was TheResourceSystem.updateTheManBuff — retired M13, not
   // yet ported to the turn engine / UltimateSystem trigger reset).
-  // duration Infinity: buff KHÔNG tự hết hạn; id phải khớp chính xác
+  // permanent: buff KHÔNG tự hết hạn; id phải khớp chính xác
   // theManBuffId(element) = `the_man_<element>` (was TheResourceSystem.ts).
   {
     id: 'the_man_fire',
     name: 'Thế Mãn (Hỏa)',
     description: 'Hỏa Thế tràn đầy — Thiêu Đốt lan potency mạnh hơn.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: Infinity,
-    stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'ailmentPotencyPercent', percent: 0.15 }],
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [{ stat: 'ailmentPotencyPercent', percent: 0.15 }],
+    dispellable: false,
   },
   {
     id: 'the_man_water',
     name: 'Thế Mãn (Thủy)',
     description: 'Thủy Thế tràn đầy — Pháp Lực tuôn trào.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: Infinity,
-    stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'manaRegenPerTurn', flat: 6, domain: 'phap_tu' }],
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [{ stat: 'manaRegenPerTurn', flat: 6, domain: 'phap_tu' }],
+    dispellable: false,
   },
   {
     id: 'the_man_wood',
     name: 'Thế Mãn (Mộc)',
     description: 'Mộc Thế tràn đầy — độc tố bám lâu hơn.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: Infinity,
-    stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'ailmentDurationPercent', percent: 0.2 }],
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [{ stat: 'ailmentDurationPercent', percent: 0.2 }],
+    dispellable: false,
   },
   {
     id: 'the_man_metal',
     name: 'Thế Mãn (Kim)',
     description: 'Kim Thế tràn đầy — sát khí bén hơn, chí mạng cao hơn.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: Infinity,
-    stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'criticalRate', percent: 0.08 }],
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [{ stat: 'criticalRate', percent: 0.08 }],
+    dispellable: false,
   },
   {
     id: 'the_man_earth',
     name: 'Thế Mãn (Thổ)',
     description: 'Thổ Thế tràn đầy — thân thể vững như núi.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: Infinity,
-    stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'defense', percent: 0.1 }],
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [{ stat: 'defense', percent: 0.1 }],
+    dispellable: false,
   },
 ]

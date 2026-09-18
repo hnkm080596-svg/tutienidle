@@ -129,6 +129,10 @@ export interface DealDamageOperation {
         resolves against THIS instead of live source stats when present. */
     stackCount?: number
     snapshot?: Readonly<Record<string, number>>
+    /** Stat-resolution source override (detonate_burst): the profile
+        resolves power/mitigation vs THIS entity while origin.sourceId
+        keeps vitals/event attribution. Absent = origin.sourceId. */
+    statSourceId?: CombatEntityId
   }
 }
 
@@ -216,6 +220,11 @@ export interface SetBuffDurationOperation {
 
 export interface BuffCleanseQuery {
   kind?: 'buff' | 'debuff' | 'ailment' | 'marker'
+  /** Effective-polarity filter (StatModifier.sourceType derivation):
+      'debuff' covers kind debuff AND ailment -- the legacy
+      "cleanse all debuffs" parity lane (survive-lethal, cleanse
+      skills). `kind` stays the literal-kind filter. */
+  polarity?: 'buff' | 'debuff'
   tags?: readonly string[]
   element?: ElementType
   definitionId?: BuffDefinitionId

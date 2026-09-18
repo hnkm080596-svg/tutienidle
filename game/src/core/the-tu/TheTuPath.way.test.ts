@@ -385,7 +385,9 @@ describe('battle builds — participant kit is way-resolved', () => {
 
     expect(participant.basic?.id).toBe('cuong_quyen')
     expect(participant.reactivePayloads).toBeUndefined()
-    expect(participant.buffs.hasAny('ung_the')).toBe(false)
+    expect(
+      gameManager.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'ung_the'),
+    ).toBe(false)
   })
 
   it('corrupt pair (the_tu, <foreign way>) fails closed — no way kit resolves', () => {
@@ -398,7 +400,9 @@ describe('battle builds — participant kit is way-resolved', () => {
 
     expect(participant.basic?.id).toBe('generic_physical')
     expect(participant.reactivePayloads).toBeUndefined()
-    expect(participant.buffs.hasAny('ung_the')).toBe(false)
+    expect(
+      gameManager.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'ung_the'),
+    ).toBe(false)
     expect(participant.activeDomains?.has('the_tu_an') ?? false).toBe(false)
   })
 })
@@ -419,7 +423,11 @@ describe('Bất Tử Ba Thể survival — hien-only machinery', () => {
     advanceIntoFighting(combatSource, battle)
 
     expect(
-      advanceUntil(combatSource, () => participant.buffs.getAllById('bat_tu_ba_the').length > 0),
+      advanceUntil(combatSource, () =>
+        gameManager
+          .getBattleBuffs(participant.entity.id)
+          .some((i) => i.definitionId === 'bat_tu_ba_the'),
+      ),
     ).toBe(true)
     expect(participant.entity.alive).toBe(true)
     expect(participant.entity.currentHp).toBe(1)
@@ -442,7 +450,11 @@ describe('Bất Tử Ba Thể survival — hien-only machinery', () => {
       advanceIntoFighting(combatSource, battle)
 
       expect(advanceUntil(combatSource, () => !participant.entity.alive)).toBe(true)
-      expect(participant.buffs.getAllById('bat_tu_ba_the')).toHaveLength(0)
+      expect(
+        gameManager
+          .getBattleBuffs(participant.entity.id)
+          .filter((i) => i.definitionId === 'bat_tu_ba_the'),
+      ).toHaveLength(0)
     },
   )
 })

@@ -1,18 +1,23 @@
 import type { EventBus } from '../../events/EventBus'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 import type { BuffPolarity } from '../../buff/BuffTypes'
+import type { BuffRegistry } from '../../buff2/BuffRegistry'
+import type { BuffReadPort } from '../../buff2/BuffQuery'
+import type { CombatEntityId } from '../../battle/contracts/ids'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 
 // Phase A6 (9.5 #7, 2026-09-12) — turn-based port of the legacy
 // BattleSystem.snapshotStatuses()/emitStatusVfxDiff() pair (retired at
-// C1), reading BuffPool instead of BuffPool. Reuses the SAME
-// status_vfx_* event names and payload field names so CombatVfxSpawner/
-// CombatScene/StatusTooltip need zero structural changes; the tooltip
-// renders the duration number as a turn count (see
+// C1). buff2 M4: reads the battle's buff authority snapshots + the
+// battle-local registry for def fields (hidden/polarity) — the def
+// carries display metadata, the instance carries runtime state. Reuses
+// the SAME status_vfx_* event names and payload field names so
+// CombatVfxSpawner/CombatScene/StatusTooltip need zero structural
+// changes; the tooltip renders the duration number as a turn count (see
 // combat-status-tooltip.ts). GameManagerTurnBattleOps is the sole
 // caller — snapshot before the step mutates, diff-emit at the existing
-// emitTurnBattleEntitySnapshot point. Read-only over the pools (P17):
-// this module never mutates buff state.
+// emitTurnBattleEntitySnapshot point. Read-only over the authority
+// (P17): this module never mutates buff state.
 
 export interface TurnStatusSnapshotEntry {
   targetId: string
@@ -25,33 +30,43 @@ export interface TurnStatusSnapshotEntry {
 
 function collectParticipantStatuses(
   participant: TurnBattleParticipant,
+  buffs: BuffReadPort,
+  registry: BuffRegistry,
   snapshot: Map<string, TurnStatusSnapshotEntry>,
 ): void {
-  for (const buff of participant.buffs.getAll()) {
-    if (buff.hidden) {
+  for (const instance of buffs.getForTarget(participant.entity.id as CombatEntityId)) {
+    const definition = registry.tryGet(instance.definitionId)
+    if (definition === undefined || definition.hidden === true) {
       continue
     }
 
-    snapshot.set(`${participant.id}:${buff.id}:${buff.sourceId}`, {
+    const permanent = instance.remaining === undefined
+    snapshot.set(`${participant.id}:${instance.definitionId}:${instance.sourceId}`, {
       targetId: participant.id,
-      dotType: buff.id,
-      stacks: buff.stacks,
-      remainingTurns: buff.remainingTurns,
-      polarity: buff.polarity,
-      permanent: buff.duration === Infinity,
+      dotType: instance.definitionId,
+      stacks: instance.stacks,
+      remainingTurns: instance.remaining ?? Number.POSITIVE_INFINITY,
+      polarity:
+        definition.polarity ??
+        (definition.kind === 'debuff' || definition.kind === 'ailment' ? 'debuff' : 'buff'),
+      permanent,
     })
   }
 }
 
-export function snapshotTurnStatuses(battle: TurnBattle): Map<string, TurnStatusSnapshotEntry> {
+export function snapshotTurnStatuses(
+  battle: TurnBattle,
+  buffs: BuffReadPort,
+  registry: BuffRegistry,
+): Map<string, TurnStatusSnapshotEntry> {
   const snapshot = new Map<string, TurnStatusSnapshotEntry>()
 
   for (const participant of battle.players) {
-    collectParticipantStatuses(participant, snapshot)
+    collectParticipantStatuses(participant, buffs, registry, snapshot)
   }
 
   for (const participant of battle.enemies) {
-    collectParticipantStatuses(participant, snapshot)
+    collectParticipantStatuses(participant, buffs, registry, snapshot)
   }
 
   return snapshot
@@ -69,8 +84,10 @@ export function diffAndEmitTurnStatusVfx(
   eventBus: EventBus,
   battle: TurnBattle,
   before: Map<string, TurnStatusSnapshotEntry>,
+  buffs: BuffReadPort,
+  registry: BuffRegistry,
 ): Map<string, TurnStatusSnapshotEntry> {
-  const after = snapshotTurnStatuses(battle)
+  const after = snapshotTurnStatuses(battle, buffs, registry)
 
   for (const [key, current] of after) {
     const previous = before.get(key)

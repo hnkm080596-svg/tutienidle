@@ -2,6 +2,7 @@ import type { PlayerData } from './Player'
 import type { TurnSkillDefinition, DynamicBasicProvider } from '../battle/turn/TurnSkillAction'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { SurviveLethalSource } from '../combat/CombatSystem'
+import type { BuffDefinitionId } from '../battle/contracts/ids'
 import type { StatDomain } from '../stats/StatDomain'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { ElementType } from '../element/ElementType'
@@ -47,10 +48,12 @@ export interface CultivationPathRuntime {
     nodes: readonly ProgressionNode[],
     rng: () => number,
   ): DynamicBasicProvider | undefined
-  /** The Tu Bat Tu Ba The survive-lethal source(s); absent elsewhere. */
+  /** The Tu Bat Tu Ba The survive-lethal source(s); absent elsewhere.
+      buff2 M4 -- hasActiveBuff binds the battle's BuffSystem read port. */
   buildSurviveSources?(
     player: PlayerData,
     participant: TurnBattleParticipant,
+    hasActiveBuff: (definitionId: BuffDefinitionId) => boolean,
   ): SurviveLethalSource[]
   /** Emblem/marker slot overrides (Ngu Kiem Dao special/ultimate). */
   emblemSlots?(): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition }

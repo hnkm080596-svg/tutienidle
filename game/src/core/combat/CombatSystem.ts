@@ -14,9 +14,10 @@ import type { ElementType } from '../element/ElementType'
 import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSystem'
 import { clampStatValue } from '../stats/StatMetadata'
 import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
-import { BuffSystem } from '../buff/BuffSystem'
 import { dotRecoveryTriggers } from './DotRecovery'
-import type { Buff, BuffDefinitionCatalog } from '../buff/BuffTypes'
+import type { BuffDefinitionId } from '../battle/contracts/ids'
+import type { ActiveCapabilityGrant } from '../battle/contracts/capability'
+import type { CombatAuthorityExecutionContext } from '../battle/contracts/context'
 
 // Plans/magicpathgeneral Phase 9 (2026-08-21) — DOT RES is a
 // "*Percent" stat (fraction 0..1, same scale as ailmentResistPercent/
@@ -44,10 +45,22 @@ const DOT_RESISTANCE_FLOOR = -1
  * SỰ KIỆN/emit mới theo đúng accuracy→dodge→block như yêu cầu.
  */
 export interface SurviveEffectsPolicy {
-  buffSystem: BuffSystem
-  registry: BuffDefinitionCatalog
-  grantBuffId?: string
+  grantBuffId?: BuffDefinitionId
   cleanseDebuffs?: boolean
+  /** buff2 M4 -- the composition-root-bound buff lane: cleanse + grant
+      ride the battle's buff authority on the settlement's OWN ctx
+      (a lethal inside an op settlement must not mint a second root --
+      the scheduler rejects re-entry), or through scheduler ops when no
+      settlement is running. Bound by the composition root. */
+  apply: (
+    entity: CombatEntity,
+    resolved: {
+      grantBuffId?: BuffDefinitionId
+      grantBuffDurationOverride?: number
+      cleanseDebuffs?: boolean
+    },
+    ctx: CombatAuthorityExecutionContext | undefined,
+  ) => void
 }
 
 /**
@@ -63,7 +76,7 @@ export type SurviveLethalResult =
   | { survived: false }
   | {
       survived: true
-      grantBuffId?: string
+      grantBuffId?: BuffDefinitionId
       grantBuffDurationOverride?: number
       cleanseDebuffs?: boolean
     }
@@ -125,9 +138,9 @@ export class CombatSystem {
     this.surviveLethalSession = session
   }
 
-  applyDirectDamage(target: CombatEntity, amount: number, sourceId: string, reason: VitalsChangeReason = 'damage') {
+  applyDirectDamage(target: CombatEntity, amount: number, sourceId: string, reason: VitalsChangeReason = 'damage', execCtx?: CombatAuthorityExecutionContext) {
     const applied = this.vitals.applyDamage(target, amount, reason, sourceId)
-    this.killIfDead(target, sourceId)
+    this.killIfDead(target, sourceId, execCtx)
     return applied
   }
 
@@ -141,9 +154,9 @@ export class CombatSystem {
     return (1 + (attacker?.stats.finalDamagePercent ?? 0)) * (1 - clampStatValue('finalDamageReductionPercent', defender.stats.finalDamageReductionPercent))
   }
 
-  applyModifiedDirectDamage(target: CombatEntity, rawAmount: number, attacker: CombatEntity, reason: VitalsChangeReason = 'damage') {
+  applyModifiedDirectDamage(target: CombatEntity, rawAmount: number, attacker: CombatEntity, reason: VitalsChangeReason = 'damage', execCtx?: CombatAuthorityExecutionContext) {
     const amount = Math.max(0, rawAmount * this.finalDamageMultiplier(attacker, target))
-    return this.applyDirectDamage(target, amount, attacker.id, reason)
+    return this.applyDirectDamage(target, amount, attacker.id, reason, execCtx)
   }
 
   /**
@@ -157,8 +170,8 @@ export class CombatSystem {
    * construction). Mitigation/resistance is the producing profile's
    * decision -- `amount` arrives already resolved.
    */
-  applyReactionDamage(target: CombatEntity, amount: number, sourceId: string) {
-    return this.applyDirectDamage(target, amount, sourceId, 'reaction')
+  applyReactionDamage(target: CombatEntity, amount: number, sourceId: string, execCtx?: CombatAuthorityExecutionContext) {
+    return this.applyDirectDamage(target, amount, sourceId, 'reaction', execCtx)
   }
 
   applyHealing(target: CombatEntity, amount: number, sourceId: string, reason: VitalsChangeReason = 'healing') {
@@ -543,17 +556,17 @@ export class CombatSystem {
   applyDotDamage(params: {
     sourceId: string
     source: CombatEntity | undefined
-    // stat-system-reimagined Task 4 (D18) -- the source's own buff list,
-    // so authored dotRecovery triggers (Doc Can) can be read at tick
-    // time. Callers resolve it alongside `source` (resolveSourceBuffs);
-    // absent = no recovery contribution.
-    sourceBuffs?: readonly Buff[]
+    // stat-system-reimagined Task 4 (D18) -- the source's own capability
+    // grants, so authored dot_recovery triggers (Doc Can) can be read at
+    // tick time. Callers resolve them alongside `source`
+    // (resolveSourceGrants); absent = no recovery contribution.
+    sourceGrants?: readonly ActiveCapabilityGrant[]
     target: CombatEntity
     rawDamage: number
     element?: ElementType | 'physical'
     effectId: string
-  }) {
-    const { sourceId, source, sourceBuffs, target, rawDamage, element, effectId } = params
+  }, execCtx?: CombatAuthorityExecutionContext) {
+    const { sourceId, source, sourceGrants, target, rawDamage, element, effectId } = params
 
     const mitigation = Math.min(DOT_RESISTANCE_CAP, Math.max(DOT_RESISTANCE_FLOOR, target.stats.dotResistancePercent))
 
@@ -593,13 +606,13 @@ export class CombatSystem {
     // dead/absent sources recover nothing. Reason 'healing', not 'leech':
     // this is an authored recovery trigger that DOES scale with the
     // source's healingEffectivenessPercent, unlike damage-derived leech.
-    const recovery = dotRecoveryTriggers(source, element, sourceBuffs)
+    const recovery = dotRecoveryTriggers(source, element, sourceGrants)
 
     if (source && recovery > 0) {
       this.applyHealing(source, actualHpDamage * recovery, source.id, 'healing')
     }
 
-    this.killIfDead(target, sourceId)
+    this.killIfDead(target, sourceId, execCtx)
 
     // Combat-contract M3 -- returns the HP actually removed (post
     // dotResistance, post 0-clamp) so the DamageAuthority adapter can
@@ -612,7 +625,7 @@ export class CombatSystem {
    * hiệu ứng theo thời gian cũng emit đúng 'death'/'kill' như chết vì
    * đòn đánh trực tiếp, không lặp code kiểm tra HP<=0 ở 2 nơi.
    */
-  killIfDead(entity: CombatEntity, killerId: string) {
+  killIfDead(entity: CombatEntity, killerId: string, execCtx?: CombatAuthorityExecutionContext) {
     if (entity.currentHp > 0 || !entity.alive) {
       return
     }
@@ -632,41 +645,25 @@ export class CombatSystem {
 
     if (surviveSession && entity.id === surviveSession.playerEntityId) {
       const applySurviveResult = (
-        result: { grantBuffId?: string; grantBuffDurationOverride?: number; cleanseDebuffs?: boolean },
+        result: { grantBuffId?: BuffDefinitionId; grantBuffDurationOverride?: number; cleanseDebuffs?: boolean },
       ) => {
         entity.currentHp = 1
 
         // v4 (spec 2026-09-03 §4.1) — "độ thân cũng là độ tâm": tẩy mọi
         // debuff đang bám trên player + áp buff sống sót. Chỉ chạy khi
         // session mang surviveEffects (GameManager wiring set từ battle
-        // hiện tại — BuffSystem của PLAYER, không phải của địch).
-        const effects = surviveSession.surviveEffects
-
-        if (effects) {
-          if (result.cleanseDebuffs !== false) {
-            for (const buff of effects.buffSystem.getAll()) {
-              if (buff.polarity === 'debuff' && buff.targetId === entity.id) {
-                effects.buffSystem.remove(buff.id, buff.sourceId)
-              }
-            }
-          }
-
-          const grantId = result.grantBuffId
-
-          if (grantId) {
-            const grantBuff = effects.registry.get(grantId)
-
-            if (grantBuff) {
-              // clearsCcOnApply (Bat Tu Ba The, Task 9/11) — the grant
-              // path strips the pool's cc effects before the buff lands,
-              // same as the appliesBuffs resolution path.
-              if (grantBuff.clearsCcOnApply) {
-                effects.buffSystem.clearCcEffects()
-              }
-              effects.buffSystem.apply(grantBuff, entity, entity, effects.registry, result.grantBuffDurationOverride)
-            }
-          }
-        }
+        // hiện tại — buff authority của PLAYER, không phải của địch).
+        // buff2 M4 — the wired lane owns the cleanse+grant mechanics;
+        // clearsCcOnApply resolves inside the buff2 apply itself.
+        surviveSession.surviveEffects?.apply(
+          entity,
+          {
+            grantBuffId: result.grantBuffId,
+            grantBuffDurationOverride: result.grantBuffDurationOverride,
+            cleanseDebuffs: result.cleanseDebuffs,
+          },
+          execCtx,
+        )
 
         // Event vitals của đòn damage (emit TRƯỚC killIfDead) đã mang
         // killed = true vì HP chạm 0 — phát thêm event hiệu chỉnh SAU khi

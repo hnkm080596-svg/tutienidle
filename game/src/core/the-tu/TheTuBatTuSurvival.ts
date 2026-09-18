@@ -1,7 +1,7 @@
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SurviveLethalResult, SurviveLethalSource } from '../combat/CombatSystem'
 import type { TurnSkillSlot } from '../battle/turn/TurnSkillAction'
-import type { BuffPool } from '../buff/BuffPool'
+import type { BuffDefinitionId } from '../battle/contracts/ids'
 import { BAT_TU_BA_THE_TURNS } from '../../data/skill/TheTuSkills'
 
 /**
@@ -35,8 +35,10 @@ export class TheTuBatTuSurvival implements SurviveLethalSource {
   constructor(private readonly deps: {
     /** Live read of the participant's ultimate slot (cooldown mutates mid-battle). */
     ultimateSlot: () => TurnSkillSlot | undefined
-    /** The holder's own buff pool — the active-buff check. */
-    buffs: BuffPool
+    /** buff2 M4 — live read of the holder's active instances for a
+        definitionId (the composition root binds the battle's
+        BuffSystem.getForTarget). */
+    hasActiveBuff: (definitionId: BuffDefinitionId) => boolean
   }) {}
 
   trySurvive(_entity: CombatEntity): SurviveLethalResult {
@@ -44,7 +46,7 @@ export class TheTuBatTuSurvival implements SurviveLethalSource {
     // remainingTurns ticks only on the holder's own turns.
     // cleanseDebuffs:false — without it the undefined !== false check
     // in killIfDead blanket-cleansed EVERY debuff on each repeat lethal.
-    if (this.deps.buffs.getAllById('bat_tu_ba_the').length > 0) {
+    if (this.deps.hasActiveBuff('bat_tu_ba_the' as BuffDefinitionId)) {
       return { survived: true, cleanseDebuffs: false }
     }
 
@@ -65,7 +67,7 @@ export class TheTuBatTuSurvival implements SurviveLethalSource {
 
     return {
       survived: true,
-      grantBuffId: 'bat_tu_ba_the',
+      grantBuffId: 'bat_tu_ba_the' as BuffDefinitionId,
       grantBuffDurationOverride: application?.durationOverride ?? BAT_TU_BA_THE_TURNS,
       // Spec: only hard CC is cleansed, via the granted buff's
       // clearsCcOnApply (CombatSystem grant path). No blanket debuff wipe.

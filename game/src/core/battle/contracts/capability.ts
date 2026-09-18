@@ -29,4 +29,11 @@ export interface ActiveCapabilityGrant {
   instanceId: BuffInstanceId
   definitionId: BuffDefinitionId
   capability: CapabilityGrantDefinition
+  /** Instance context (M4 consumer cutover): capability consumers like
+      dot_recovery scale on live stacks and ward-economy consumers match
+      on sourceId -- carrying them on the grant keeps the descriptor
+      self-contained (no instance re-query). */
+  sourceId: CombatEntityId
+  targetId: CombatEntityId
+  stacks: number
 }

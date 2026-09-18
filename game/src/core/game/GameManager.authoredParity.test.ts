@@ -202,22 +202,28 @@ describe('ARCH-008 — authored buff duration rides appliesBuff.duration', () =>
     // registry default 6 would land as 5.988.
     participant.entity.baseStats.ailmentDurationPercent = -0.002
 
-    for (
-      let i = 0;
-      i < 2000 && participant.buffs.getAllById('thanh_tuyen').length === 0;
-      i++
-    ) {
+    const hasThanhTuyen = () =>
+      gameManager
+        .getBattleBuffs(participant.entity.id)
+        .some((i) => i.definitionId === 'thanh_tuyen')
+
+    for (let i = 0; i < 2000 && !hasThanhTuyen(); i++) {
       combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
-    const buff = participant.buffs.getAllById('thanh_tuyen')[0]
+    const buff = gameManager
+      .getBattleBuffs(participant.entity.id)
+      .find((i) => i.definitionId === 'thanh_tuyen')
 
     expect(buff).toBeDefined()
     // Registry default 6 can never produce a duration above 6; the authored
     // override 8 lands just under 8 once the environment's resist/duration
-    // factor applies (audit environment: 8 * 0.998 = 7.984).
-    expect(buff!.duration).toBeGreaterThan(7.5)
-    expect(buff!.duration).toBeLessThanOrEqual(8)
+    // factor applies (audit environment: 8 * 0.998 = 7.984). `remaining` is
+    // the live holder-turns counter -- it may already have spent one turn if
+    // the holder's own turn-end landed before this read, so 6.984 is also
+    // the authored-8 signature while 5.988/4.988 (default 6) is not.
+    expect(buff!.remaining).toBeGreaterThan(6.5)
+    expect(buff!.remaining).toBeLessThanOrEqual(8)
   })
 })
 

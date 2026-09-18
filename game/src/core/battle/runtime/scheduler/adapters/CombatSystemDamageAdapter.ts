@@ -57,7 +57,11 @@
 // the EventBus; M3 invents no new gameplay events.
 
 import type { CombatSystem } from '../../../../combat/CombatSystem'
-import type { Buff } from '../../../../buff/BuffTypes'
+import type { CombatEntity } from '../../../../combat/CombatEntity'
+import type { ActiveCapabilityGrant } from '../../../contracts/capability'
+import { elementalBasePower } from '../../../../combat/ElementDamageCalculator'
+import { getArmorMitigationPercent } from '../../../../combat/Armor'
+import { getResistanceMitigationPercent } from '../../../../combat/Resistance'
 
 import type { CombatAuthorityExecutionContext } from '../../../contracts/context'
 import type { CombatEntityId } from '../../../contracts/ids'
@@ -69,11 +73,11 @@ import { CombatOperationSkip } from '../CombatOperationExecutor'
 import { requireLivingEntity, type CombatEntityLookup } from './lookups'
 
 export interface CombatSystemDamageAdapterDeps {
-  /** Live lookup for the DoT source's buff list -- the legacy_dot
-      channel's dotRecovery trigger reads it (applyDotDamage.sourceBuffs).
-      Absent = no recovery contribution, matching the engine's own
-      optional parameter. */
-  resolveSourceBuffs?: (sourceId: CombatEntityId) => readonly Buff[] | undefined
+  /** Live lookup for the DoT source's capability grants -- the
+      legacy_dot channel's dot_recovery trigger reads them at tick time
+      (applyDotDamage.sourceGrants). Absent = no recovery contribution,
+      matching the engine's own optional parameter. */
+  resolveSourceGrants?: (sourceId: CombatEntityId) => readonly ActiveCapabilityGrant[] | undefined
 }
 
 export class CombatSystemDamageAdapter implements DamageAuthority {
@@ -90,24 +94,63 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
     const target = requireLivingEntity(this.resolveEntity, op.targetId)
     const sourceId = ctx.origin.sourceId
 
-    if (op.damageProfile === 'legacy_dot') {
+    if (op.damageProfile === 'legacy_dot' || op.damageProfile === 'detonate_burst') {
+      // spec sec.24 -- 'dynamic' scaling: the tick resolves against LIVE
+      // source+target stats through the damage authority (the request's
+      // coefficient is intent-level ratio x stacks x modifiers -- the
+      // profile owns the stat formula). 'detonate_burst' shares the
+      // resolution but delivers FLAT (applyDirectDamage, reason
+      // 'damage') -- the detonate consume lane's authored channel,
+      // deliberately outside the closed DoT economy (no dotResistance,
+      // no dotRecovery, no 'dot' vitals reason).
+      const source = this.resolveEntity(op.statSourceId ?? sourceId)
+      const rawDamage = this.resolveLegacyDotAmount(op, source, target)
+
+      if (op.damageProfile === 'detonate_burst') {
+        const hpDamage = this.combat.applyDirectDamage(target, rawDamage, sourceId)
+        return { rawDamage, hpDamage, killed: !target.alive }
+      }
+
       const hpDamage = this.combat.applyDotDamage({
         sourceId,
         // An absent source entity is a supported DoT case in the current
         // engine (dotResistance still applies to the target, recovery
         // contributes nothing) -- not an invalidation.
-        source: this.resolveEntity(sourceId),
-        sourceBuffs: this.deps.resolveSourceBuffs?.(sourceId),
+        source,
+        sourceGrants: this.deps.resolveSourceGrants?.(sourceId),
         target,
-        rawDamage: op.coefficient,
+        rawDamage,
         element: op.element,
         effectId: op.periodicId ?? op.damageProfile,
       })
-      return { rawDamage: op.coefficient, hpDamage, killed: !target.alive }
+      return { rawDamage, hpDamage, killed: !target.alive }
     }
 
     if (op.damageProfile.startsWith('reaction_') || ctx.origin.kind === 'reaction') {
       const hpDamage = this.combat.applyReactionDamage(target, op.coefficient, sourceId)
+      return { rawDamage: op.coefficient, hpDamage, killed: !target.alive }
+    }
+
+    if (op.damageProfile === 'legacy_flat') {
+      // Flat direct damage (legacy applyDirectDamage semantics): NO
+      // hit-layer multiplier, reason 'damage'. The consume-for-damage
+      // lane (consumesAilmentId/consumesWardForDamage) rides this.
+      const hpDamage = this.combat.applyDirectDamage(target, op.coefficient, sourceId)
+      return { rawDamage: op.coefficient, hpDamage, killed: !target.alive }
+    }
+
+    if (op.damageProfile === 'reflection') {
+      // phan_chinh Reflection: the hit-layer multiplier applies through
+      // the REFLECTING holder as attacker; vitals reason 'reflection'.
+      // A dead holder still reflects (legacy passed the entity object).
+      const holder = this.resolveEntity(sourceId)
+      if (holder === undefined) {
+        throw new CombatOperationSkip(
+          'invalid_target_state',
+          `reflection source '${sourceId}' is not resolvable in the live battle roster`,
+        )
+      }
+      const hpDamage = this.combat.applyModifiedDirectDamage(target, op.coefficient, holder, 'reflection')
       return { rawDamage: op.coefficient, hpDamage, killed: !target.alive }
     }
 
@@ -122,5 +165,40 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
     }
     const hpDamage = this.combat.applyModifiedDirectDamage(target, op.coefficient, attacker, 'damage')
     return { rawDamage: op.coefficient, hpDamage, killed: !target.alive }
+  }
+
+  /**
+   * The legacy_dot/detonate_burst profile formula -- the dynamic-scaling
+   * port of the retired BuffSystem.calculateDamagePerTurn: power x ratio
+   * x (1 - mitigation x armorIgnore) x (1 + ailmentPotencyPercent).
+   * 'dynamic' resolves LIVE stats at tick (spec sec.24); an absent
+   * source contributes 0 power but the tick still lands on the target
+   * (legacy parity). op.coefficient arrives intent-level (ratio x
+   * stacks x modifier channels, already folded by the request builder).
+   */
+  private resolveLegacyDotAmount(
+    op: DealDamageOperation['payload'],
+    source: CombatEntity | undefined,
+    target: CombatEntity,
+  ): number {
+    const ratio = op.coefficient
+    const armorIgnoreMultiplier = op.tags?.includes('armor_ignore_by_realm')
+      ? 1 - Math.min(0.9, 0.1 + (source?.realmIndex ?? 0) * 0.1)
+      : 1
+    const potencyMultiplier = 1 + (source?.stats.ailmentPotencyPercent ?? 0)
+
+    if (op.element === undefined || op.element === 'physical') {
+      const power = source?.stats.might ?? 0
+      const mitigation =
+        getArmorMitigationPercent(target.stats.defense, target.realmIndex) * armorIgnoreMultiplier
+      return Math.max(0, power * ratio * (1 - mitigation)) * potencyMultiplier
+    }
+
+    const power = source === undefined ? 0 : elementalBasePower(source, op.element)
+    const resistance = target.stats[`${op.element}Resistance`] ?? 0
+    const penetration = source?.stats[`${op.element}Penetration`] ?? 0
+    const mitigation =
+      getResistanceMitigationPercent(resistance, penetration) * armorIgnoreMultiplier
+    return Math.max(0, power * ratio * (1 - mitigation)) * potencyMultiplier
   }
 }

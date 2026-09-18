@@ -3,11 +3,11 @@ import type { Battle, BattleEnemy } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { BuffPool } from '../buff/BuffPool'
 import { BuffRegistry } from '../buff/BuffRegistry'
+import type { BuffDefinition } from '../buff/BuffTypes'
 import { createBaseStats } from '../stats/StatBlock'
 import { createArtifactRuntime } from './ArtifactRuntime'
 import { createDefaultArtifactProgress } from './ArtifactProgression'
 import { onArtifactHitResolved, updateArtifactActivation, type ArtifactSystemDeps } from './ArtifactSystem'
-import { buffs } from '../../data/buff/buffs'
 
 function createCombatEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ might: 0, woodPower: 100, firePower: 100 })
@@ -39,12 +39,29 @@ function createBattleEnemy(id: string, overrides: Partial<CombatEntity> = {}): B
   }
 }
 
+const LAM_CHAM: BuffDefinition = {
+  id: 'lam_cham',
+  name: 'Làm Chậm',
+  polarity: 'debuff',
+  duration: 4,
+  stackMode: 'refresh',
+  effects: [{ type: 'statModifier', stat: 'speed', percent: -0.3 }],
+}
+
+const TROI_CHAN: BuffDefinition = {
+  id: 'troi_chan',
+  name: 'Trói Chân',
+  polarity: 'debuff',
+  duration: 2.5,
+  stackMode: 'refresh',
+  effects: [{ type: 'cc', ccEffect: 'root' }],
+}
+
 function createBuffRegistry(): BuffRegistry {
   const registry = new BuffRegistry()
 
-  for (const definition of buffs) {
-    registry.register(definition)
-  }
+  registry.register(LAM_CHAM)
+  registry.register(TROI_CHAN)
 
   return registry
 }

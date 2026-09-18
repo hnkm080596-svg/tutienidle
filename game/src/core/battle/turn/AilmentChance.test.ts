@@ -5,14 +5,16 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
+import { makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // Mission C Task 10b — elementApplicationPercent must apply to ailment
 // application rolls in turn combat (the deleted legacy executor already
-// did this; the turn engine rolled the bare chance).
+// did this; the turn engine rolled the bare chance). buff2 M4: the
+// ApplicationResolver owns the roll as MULTIPLICATIVE
+// baseChance x (1 + elementApplicationPercent) x targetResistance.
 
 describe('resolveAilmentApplicationChance', () => {
   it('adds the application percent to the base chance', () => {
@@ -53,11 +55,11 @@ function createCombatant(id: string, type: 'player' | 'enemy', overrides: Partia
 }
 
 function makeParticipant(id: string, entity: CombatEntity, priority: number): TurnBattleParticipant {
-  return { id, entity, speed: 100, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed: 100, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
 describe('applySkillAilments honors elementApplicationPercent', () => {
-  it('a 0.6-chance ailment lands every time for a 0.5-percent actor under a 0.9 roll', () => {
+  it('a 0.6-chance ailment lands for a 0.5-percent actor under a 0.8 roll', () => {
     const playerEntity = createCombatant('player', 'player')
     playerEntity.stats.elementApplicationPercent = 0.5
     const enemyEntity = createCombatant('enemy', 'enemy')
@@ -73,26 +75,38 @@ describe('applySkillAilments honors elementApplicationPercent', () => {
     } as TurnSkillDefinition
 
     const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting' }
+    const combat = new CombatSystem(new EventBus())
+    const rng = new FunctionCombatRng(() => 0.8)
+    const runtime = makeTurnRuntime({
+      registry: BUFF_REGISTRY,
+      participants: () => [player, enemy],
+      combatSystem: combat,
+      rng,
+    })
 
-    // rng 0.9: below 0.6+0.5=1.0 so the ailment lands; would miss a bare
-    // 0.6 chance.
+    // Multiplicative formula: 0.6 x (1 + 0.5) = 0.9; roll 0.8 lands --
+    // it would miss a bare 0.6 chance.
     const system = new TurnBattleSystem(
-      new CombatSystem(new EventBus()),
+      combat,
       100,
       BUFF_REGISTRY,
       undefined,
-      undefined,
+      runtime,
       vi.fn(),
       undefined,
-      new FunctionCombatRng(() => 0.9),
+      rng,
     )
 
     system.resolveNextStep(battle)
 
-    expect(enemy.buffs.hasAny('bong')).toBe(true)
+    expect(
+      runtime.buffs.getForTarget(enemy.entity.id).some(
+        (instance) => instance.definitionId === 'bong',
+      ),
+    ).toBe(true)
   })
 
-  it('without the stat the same 0.9 roll misses a 0.6-chance ailment', () => {
+  it('without the stat the same 0.8 roll misses a 0.6-chance ailment', () => {
     const playerEntity = createCombatant('player', 'player')
     const enemyEntity = createCombatant('enemy', 'enemy')
 
@@ -107,20 +121,32 @@ describe('applySkillAilments honors elementApplicationPercent', () => {
     } as TurnSkillDefinition
 
     const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting' }
+    const combat = new CombatSystem(new EventBus())
+    const rng = new FunctionCombatRng(() => 0.8)
+    const runtime = makeTurnRuntime({
+      registry: BUFF_REGISTRY,
+      participants: () => [player, enemy],
+      combatSystem: combat,
+      rng,
+    })
 
     const system = new TurnBattleSystem(
-      new CombatSystem(new EventBus()),
+      combat,
       100,
       BUFF_REGISTRY,
       undefined,
-      undefined,
+      runtime,
       vi.fn(),
       undefined,
-      new FunctionCombatRng(() => 0.9),
+      rng,
     )
 
     system.resolveNextStep(battle)
 
-    expect(enemy.buffs.hasAny('bong')).toBe(false)
+    expect(
+      runtime.buffs.getForTarget(enemy.entity.id).some(
+        (instance) => instance.definitionId === 'bong',
+      ),
+    ).toBe(false)
   })
 })

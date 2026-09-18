@@ -21,8 +21,7 @@ import { pills } from '../../data/pill/pills'
 import { talismans } from '../../data/talisman/talismans'
 import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
-import { BuffSystem } from '../buff/BuffSystem'
-import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
+
 
 function makeWiredManager(): GameManager {
   const manager = new GameManager()
@@ -133,18 +132,15 @@ describe('GameManager — talent v4 combat passive wiring', () => {
     // → debuff bị tẩy + Tử Sinh Ngộ xuất hiện trên CÙNG pool đó.
     const playerParticipant = manager.getTurnBattle()!.players[0]!
 
-    new BuffSystem(playerParticipant.buffs).apply(
-      BUFF_REGISTRY.get('bong'),
-      playerParticipant.entity,
-      playerParticipant.entity,
-      BUFF_REGISTRY,
-    )
+    manager.turnBattleOps.applyBuffToPlayer('bong')
 
     manager.combatSystem.applyDirectDamage(playerParticipant.entity, 999_999, 'enemy_1')
 
+    const turnBuffs = () => manager.getBattleBuffs(playerParticipant.entity.id)
+
     expect(playerParticipant.entity.currentHp).toBe(1)
-    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'bong')).toBe(false)
-    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'tu_sinh_ngo')).toBe(true)
+    expect(turnBuffs().some((b) => b.definitionId === 'bong')).toBe(false)
+    expect(turnBuffs().some((b) => b.definitionId === 'tu_sinh_ngo')).toBe(true)
   })
 
   it('PassiveSystem hpReader — nối battle player entity (đọc được HP ratio trong trận)', () => {

@@ -4,15 +4,17 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
+import type { CombatAuthorityExecutionContext } from '../contracts/context'
+import type { ResolvedCombatOperation } from '../contracts/operations'
+import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../contracts/ids'
 import { BAT_TU_BA_THE, CUONG_QUYEN, LOAN_DAU } from '../../../data/skill/TheTuSkills'
 import { BAT_TU_BA_THE_BUFF } from '../../../data/buff/TheTuBuffs'
 import { TheTuBatTuSurvival } from '../../the-tu/TheTuBatTuSurvival'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import { selectAction } from './TurnSkillAction'
-import type { BuffDefinition } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 
 // The Tu Reimagined (spec 2026-09-15 section 5.1, plan Task 9,
 // D9/D10/INV-4/5) — Bat Tu Ba The survival contract: lethal -> HP 1 ->
@@ -50,49 +52,62 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
 const STUN: BuffDefinition = {
-  id: 'fixture_stun',
+  id: 'fixture_stun' as BuffDefinitionId,
   name: 'Stun',
   polarity: 'debuff',
-  duration: 5,
-  stackMode: 'refresh',
-  effects: [{ type: 'cc', ccEffect: 'stun' }],
+  kind: 'debuff',
+  instanceScope: 'per_source',
+  dispellable: true,
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 5, scaling: 'fixed' },
+  controls: [{ type: 'stun' }],
 }
 
 // Non-cc debuff (poison/dot) — must survive BOTH the lethal grant and
 // repeat lethals inside the Bat Tu window: only hard CC is cleansed,
 // via clearsCcOnApply on the grant path.
 const POISON: BuffDefinition = {
-  id: 'fixture_poison',
+  id: 'fixture_poison' as BuffDefinitionId,
   name: 'Poison',
   polarity: 'debuff',
-  duration: 5,
-  stackMode: 'refresh',
-  effects: [{ type: 'dot', dpsRatio: 0.2 }],
+  kind: 'ailment',
+  instanceScope: 'per_source',
+  dispellable: true,
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 5, scaling: 'fixed' },
+  periodic: [
+    {
+      id: 'fixture_poison.tick',
+      type: 'damage',
+      element: 'physical',
+      damageProfile: 'legacy_dot',
+      coefficient: 0.2,
+      scaling: 'dynamic',
+      timing: 'holder_turn_end',
+      stackScaling: 'multiply',
+      canCrit: false,
+      canMiss: false,
+      hitCount: 1,
+    },
+  ],
 }
 
 const TU_SINH_NGO: BuffDefinition = {
-  id: 'tu_sinh_ngo',
+  id: 'tu_sinh_ngo' as BuffDefinitionId,
   name: 'Tu Sinh Ngo',
   polarity: 'buff',
-  duration: 1,
-  stackMode: 'refresh',
-  effects: [],
+  kind: 'buff',
+  instanceScope: 'per_source',
+  dispellable: true,
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 1, scaling: 'fixed' },
 }
 
-class FixtureRegistry {
-  constructor(private readonly defs: BuffDefinition[]) {}
-  get(id: string): BuffDefinition {
-    const def = this.defs.find((candidate) => candidate.id === id)
-    if (!def) throw new Error(`unknown buff id "${id}"`)
-    return def
-  }
-}
-
-const REGISTRY = new FixtureRegistry([BAT_TU_BA_THE_BUFF, STUN, POISON, TU_SINH_NGO])
+const REGISTRY = makeTestBuffRegistry([BAT_TU_BA_THE_BUFF, STUN, POISON, TU_SINH_NGO])
 
 function makeTheTuParticipant(id: string, entity: CombatEntity): TurnBattleParticipant {
   const participant = makeParticipant(id, entity, 10, 0)
@@ -102,25 +117,101 @@ function makeTheTuParticipant(id: string, entity: CombatEntity): TurnBattleParti
   return participant
 }
 
-function makeCombatWithSession(player: TurnBattleParticipant, guard: SurviveLethalGuard) {
+function makeCombatWithSession(
+  player: TurnBattleParticipant,
+  guard: SurviveLethalGuard,
+  extraParticipants: TurnBattleParticipant[] = [],
+) {
   const combat = new CombatSystem(new EventBus())
+  const participants = [player, ...extraParticipants]
+  const runtime = makeTurnRuntime({ registry: REGISTRY, participants: () => participants, combatSystem: combat })
   combat.setSurviveLethalSession({
     playerEntityId: player.entity.id,
     guard,
+    // Same bound-lane shape as GameManagerTurnBattleOps: mid-settlement
+    // reuses the frame ctx; quiescent mints authored ops and settles.
     surviveEffects: {
-      buffSystem: new BuffSystem(player.buffs),
-      registry: REGISTRY,
-      grantBuffId: 'tu_sinh_ngo',
+      grantBuffId: 'tu_sinh_ngo' as BuffDefinitionId,
       cleanseDebuffs: true,
+      apply: (entity, resolved, execCtx: CombatAuthorityExecutionContext | undefined) => {
+        const entityId = entity.id as CombatEntityId
+        if (execCtx !== undefined) {
+          if (resolved.cleanseDebuffs) {
+            runtime.buffs.cleanse(entityId, { polarity: 'debuff' }, execCtx)
+          }
+          if (resolved.grantBuffId !== undefined) {
+            runtime.buffs.apply(
+              {
+                definitionId: resolved.grantBuffId,
+                sourceId: entityId,
+                targetId: entityId,
+                stacks: 1,
+                baseChance: 1,
+                durationOverride: resolved.grantBuffDurationOverride,
+                reactionEligibility: 'suppressed',
+                origin: execCtx.origin,
+              },
+              execCtx,
+            )
+          }
+          return
+        }
+        const root = `survive.test.${entity.id}`
+        const origin = {
+          kind: 'proc' as const,
+          originId: 'survive_effects',
+          sourceId: entityId,
+          rootActionId: root,
+        }
+        const ops: ResolvedCombatOperation[] = []
+        if (resolved.cleanseDebuffs) {
+          ops.push({
+            type: 'cleanse_buff',
+            operationId: `${root}.cleanse` as CombatOperationId,
+            payload: { targetId: entityId, query: { polarity: 'debuff' } },
+            origin,
+          })
+        }
+        if (resolved.grantBuffId !== undefined) {
+          ops.push({
+            type: 'apply_buff',
+            operationId: `${root}.grant` as CombatOperationId,
+            payload: {
+              definitionId: resolved.grantBuffId,
+              targetId: entityId,
+              stacks: 1,
+              baseChance: 1,
+              durationOverride: resolved.grantBuffDurationOverride,
+              reactionEligibility: 'suppressed',
+            },
+            origin,
+          })
+        }
+        runtime.scheduler.enqueueAuthored(ops)
+        runtime.scheduler.runIfQuiescent()
+      },
     },
     extraSources: [
       new TheTuBatTuSurvival({
         ultimateSlot: () => player.ultimate,
-        buffs: player.buffs,
+        hasActiveBuff: (definitionId) =>
+          runtime.buffs
+            .getForTarget(player.entity.id)
+            .some((instance) => instance.definitionId === definitionId),
       }),
     ],
   })
-  return combat
+  return { combat, runtime }
+}
+
+function buffsOf(
+  runtime: ReturnType<typeof makeTurnRuntime>,
+  participant: TurnBattleParticipant,
+  definitionId: string,
+) {
+  return runtime.buffs
+    .getForTarget(participant.entity.id)
+    .filter((instance) => instance.definitionId === definitionId)
 }
 
 function makeEnemy(id: string, might = 999_999): CombatEntity {
@@ -135,40 +226,39 @@ function makeEnemy(id: string, might = 999_999): CombatEntity {
 describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   it('lethal hit at low HP -> survives at 1, buff granted for 3 own-turns, ult CD started', () => {
     const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
-    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+    const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard())
 
     combat.applyDirectDamage(player.entity, 9_999, 'enemy')
 
     expect(player.entity.alive).toBe(true)
     expect(player.entity.currentHp).toBe(1)
-    const buff = player.buffs.getAllById('bat_tu_ba_the')[0]
+    const buff = buffsOf(runtime, player, 'bat_tu_ba_the')[0]
     expect(buff).toBeDefined()
-    expect(buff!.remainingTurns).toBe(3)
+    expect(buff!.remaining).toBe(3)
     expect(player.ultimate!.remainingCooldownTurns).toBe(BAT_TU_BA_THE.cooldownTurns)
   })
 
   it('repeat lethal while buffed -> free survive, NO duration refresh, NO CD touch', () => {
     const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
-    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+    const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard())
 
     // Buff already active at 2 remaining turns — a re-grant would reset to 3.
-    new BuffSystem(player.buffs).apply(BAT_TU_BA_THE_BUFF, player.entity, player.entity, REGISTRY)
-    player.buffs.getAllById('bat_tu_ba_the')[0]!.remainingTurns = 2
+    runtime.applyBuff('bat_tu_ba_the', player, player, { durationOverride: 2 })
     player.ultimate!.remainingCooldownTurns = 4 // ticking down from an earlier trigger
 
     combat.applyDirectDamage(player.entity, 9_999, 'enemy')
 
     expect(player.entity.alive).toBe(true)
     expect(player.entity.currentHp).toBe(1)
-    expect(player.buffs.getAllById('bat_tu_ba_the')).toHaveLength(1)
-    expect(player.buffs.getAllById('bat_tu_ba_the')[0]!.remainingTurns).toBe(2)
+    expect(buffsOf(runtime, player, 'bat_tu_ba_the')).toHaveLength(1)
+    expect(buffsOf(runtime, player, 'bat_tu_ba_the')[0]!.remaining).toBe(2)
     expect(player.ultimate!.remainingCooldownTurns).toBe(4)
   })
 
   it('lethal while ult on CD and no talent -> dies', () => {
     const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     player.ultimate!.remainingCooldownTurns = 5
-    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+    const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard())
 
     combat.applyDirectDamage(player.entity, 9_999, 'enemy')
 
@@ -180,7 +270,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     player.ultimate!.remainingCooldownTurns = 5
     const guard = new SurviveLethalGuard()
     guard.beginBattle(['bat_tu_the']) // talent id -> 1 use (getSurviveLethalUsesPerBattle)
-    const combat = makeCombatWithSession(player, guard)
+    const { combat, runtime } = makeCombatWithSession(player, guard)
 
     combat.applyDirectDamage(player.entity, 9_999, 'enemy')
 
@@ -188,7 +278,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     expect(player.entity.currentHp).toBe(1)
     expect(guard.getRemainingUses()).toBe(0)
     // Talent path grants its own buff id, not bat_tu_ba_the.
-    expect(player.buffs.getAllById('bat_tu_ba_the')).toHaveLength(0)
+    expect(buffsOf(runtime, player, 'bat_tu_ba_the')).toHaveLength(0)
   })
 
   it('node-scaled duration reaches the lethal grant via the slot application', () => {
@@ -201,40 +291,41 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
       },
       remainingCooldownTurns: 0,
     }
-    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+    const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard())
 
     combat.applyDirectDamage(player.entity, 9_999, 'enemy')
 
     expect(player.entity.alive).toBe(true)
-    expect(player.buffs.getAllById('bat_tu_ba_the')[0]!.remainingTurns).toBe(4)
+    expect(buffsOf(runtime, player, 'bat_tu_ba_the')[0]!.remaining).toBe(4)
   })
 
   it('lethal grant cleanses an active stun (clearsCcOnApply on the grant path)', () => {
     const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
-    new BuffSystem(player.buffs).apply(STUN, makeEnemy('dummy'), player.entity, REGISTRY)
-    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+    const dummy = makeParticipant('dummy', makeEnemy('dummy'), 0, 0)
+    const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard(), [dummy])
+    runtime.applyBuff('fixture_stun', player, dummy)
 
     combat.applyDirectDamage(player.entity, 9_999, 'enemy')
 
     expect(player.entity.alive).toBe(true)
-    expect(player.buffs.getAllById('fixture_stun')).toHaveLength(0)
+    expect(buffsOf(runtime, player, 'fixture_stun')).toHaveLength(0)
   })
 
   it('cleanses hard CC only — non-cc debuffs survive the grant AND repeat lethals in the window', () => {
     const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
-    const buffs = new BuffSystem(player.buffs)
-    buffs.apply(STUN, makeEnemy('dummy'), player.entity, REGISTRY)
-    buffs.apply(POISON, makeEnemy('dummy'), player.entity, REGISTRY)
-    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+    const dummy = makeParticipant('dummy', makeEnemy('dummy'), 0, 0)
+    const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard(), [dummy])
+    runtime.applyBuff('fixture_stun', player, dummy)
+    runtime.applyBuff('fixture_poison', player, dummy)
 
     // First lethal: grant strips the stun via clearsCcOnApply; the
     // poison is a non-cc debuff and must NOT be blanket-cleansed.
     combat.applyDirectDamage(player.entity, 9_999, 'enemy')
 
     expect(player.entity.alive).toBe(true)
-    expect(player.buffs.getAllById('fixture_stun')).toHaveLength(0)
-    expect(player.buffs.getAllById('fixture_poison')).toHaveLength(1)
-    expect(player.buffs.getAllById('bat_tu_ba_the')).toHaveLength(1)
+    expect(buffsOf(runtime, player, 'fixture_stun')).toHaveLength(0)
+    expect(buffsOf(runtime, player, 'fixture_poison')).toHaveLength(1)
+    expect(buffsOf(runtime, player, 'bat_tu_ba_the')).toHaveLength(1)
 
     // Second lethal inside the window: the already-active free survive
     // used to return no cleanseDebuffs -> undefined !== false wiped
@@ -243,7 +334,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
 
     expect(player.entity.alive).toBe(true)
     expect(player.entity.currentHp).toBe(1)
-    expect(player.buffs.getAllById('fixture_poison')).toHaveLength(1)
+    expect(buffsOf(runtime, player, 'fixture_poison')).toHaveLength(1)
   })
 
   it('active buff suppresses hard-CC blocking without touching consecutiveHardCcTurns', () => {
@@ -251,14 +342,15 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     const enemyP = makeParticipant('enemy', makeEnemy('enemy', 0), 8, 100)
     const battle: TurnBattle = { players: [player], enemies: [enemyP], state: 'fighting' }
 
-    new BuffSystem(player.buffs).apply(STUN, enemyP.entity, player.entity, REGISTRY)
-    new BuffSystem(player.buffs).apply(BAT_TU_BA_THE_BUFF, player.entity, player.entity, REGISTRY)
+    const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard(), [enemyP])
+    runtime.applyBuff('fixture_stun', player, enemyP)
+    runtime.applyBuff('bat_tu_ba_the', player, player)
     player.consecutiveHardCcTurns = 2
     // Ult+special on cooldown so the unblocked action is the basic.
     player.ultimate!.remainingCooldownTurns = 8
     player.special!.remainingCooldownTurns = 4
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, REGISTRY)
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
     const step = system.resolveNextStep(battle)
 
     // Buffed: the stun cannot block — the actor still acts (basic hit).
@@ -276,11 +368,12 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     const enemyP = makeParticipant('enemy', makeEnemy('enemy', 0), 8, 100)
     const battle: TurnBattle = { players: [player], enemies: [enemyP], state: 'fighting' }
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, REGISTRY)
+    const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard(), [enemyP])
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
     const step = system.resolveNextStep(battle)
 
     expect(step.skillId).toBe('bat_tu_ba_the')
-    expect(player.buffs.getAllById('bat_tu_ba_the')).toHaveLength(1)
+    expect(buffsOf(runtime, player, 'bat_tu_ba_the')).toHaveLength(1)
     expect(player.ultimate!.remainingCooldownTurns).toBe(8)
   })
 
@@ -293,18 +386,19 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     const enemyP = makeParticipant('enemy', makeEnemy('enemy', 0), 8, 100)
     const battle: TurnBattle = { players: [player], enemies: [enemyP], state: 'fighting' }
-    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+    const dummy = makeParticipant('dummy', makeEnemy('dummy'), 0, 0)
+    const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard(), [enemyP, dummy])
 
     // Lethal poison ticking on the holder's OWN turn: a might-999k source
-    // x dpsRatio 0.2 resolves ~200k damagePerTurn at apply — far over 50 HP.
-    new BuffSystem(player.buffs).apply(POISON, makeEnemy('dummy'), player.entity, REGISTRY)
+    // x coefficient 0.2 resolves ~200k at tick — far over 50 HP.
+    runtime.applyBuff('fixture_poison', player, dummy)
 
-    const system = new TurnBattleSystem(combat, 10, REGISTRY)
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
     system.declareActorAction(battle, player)
 
     expect(player.entity.alive).toBe(true)
     expect(player.entity.currentHp).toBe(1)
-    expect(player.buffs.getAllById('bat_tu_ba_the')).toHaveLength(1)
+    expect(buffsOf(runtime, player, 'bat_tu_ba_the')).toHaveLength(1)
     // The survival source committed the full 8-turn cooldown DURING this
     // turn's status phase (inside BuffSystem.update); the same turn's
     // cooldown tick must not drop it to 7 — the regression this guards.
@@ -317,7 +411,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     system.declareActorAction(battle, player)
 
     expect(player.entity.alive).toBe(true)
-    expect(player.buffs.getAllById('bat_tu_ba_the')).toHaveLength(1)
+    expect(buffsOf(runtime, player, 'bat_tu_ba_the')).toHaveLength(1)
     expect(player.ultimate!.remainingCooldownTurns).toBe(7)
   })
 
@@ -325,7 +419,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     const enemyP = makeParticipant('enemy', makeEnemy('enemy', 0), 8, 100)
     const battle: TurnBattle = { players: [player], enemies: [enemyP], state: 'fighting' }
-    const combat = makeCombatWithSession(player, new SurviveLethalGuard())
+    const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard(), [enemyP])
 
     // Enemy-turn lethal: the commit happens outside any status phase of
     // the holder, so the full cooldown stands and counts down normally.
@@ -334,7 +428,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     expect(player.entity.alive).toBe(true)
     expect(player.ultimate!.remainingCooldownTurns).toBe(8)
 
-    const system = new TurnBattleSystem(combat, 10, REGISTRY)
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
     system.declareActorAction(battle, player)
 
     expect(player.entity.alive).toBe(true)

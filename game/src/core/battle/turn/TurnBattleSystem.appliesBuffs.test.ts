@@ -1,20 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
+import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant, type TurnCombatRuntime } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
+import type { BuffDefinitionId } from '../contracts/ids'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 // The Tu Reimagined (plan Task 6/11) — `appliesBuffs` plural replaces
 // the singular appliesBuff: one skill applies several buff defs across
 // four target scopes (self / action_targets / allies_except_self /
 // all_enemies), each with an optional durationOverride delivered through
-// BuffSystem.apply's M10 channel. gaugeDelta pushes stay per-definition.
+// the apply-op channel. gaugeDelta pushes stay per-definition.
 
 function createCombatant(id: string): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 10 })
@@ -40,38 +40,48 @@ function createCombatant(id: string): CombatEntity {
 function makeParticipant(id: string, speed: number, priority: number): TurnBattleParticipant {
   const entity = createCombatant(id)
 
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
-class MapCatalog implements BuffDefinitionCatalog {
-  constructor(private readonly defs: BuffDefinition[]) {}
-  get(id: string): BuffDefinition {
-    const def = this.defs.find((candidate) => candidate.id === id)
-    if (!def) throw new Error(`unknown buff id "${id}"`)
-    return def
+function buffDef(id: string, polarity: 'buff' | 'debuff', extra?: Partial<BuffDefinition>): BuffDefinition {
+  return {
+    id: id as BuffDefinitionId,
+    name: id,
+    kind: polarity,
+    polarity,
+    instanceScope: 'per_target',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+    dispellable: true,
+    ...extra,
   }
 }
 
-const SELF_BUFF: BuffDefinition = {
-  id: 'test_self_buff', name: 'S', polarity: 'buff', duration: 2, stackMode: 'refresh', effects: [],
-}
-const HIT_DEBUFF: BuffDefinition = {
-  id: 'test_hit_debuff', name: 'H', polarity: 'debuff', duration: 2, stackMode: 'refresh', effects: [],
-}
-const ALLY_BUFF: BuffDefinition = {
-  id: 'test_ally_buff', name: 'A', polarity: 'buff', duration: 2, stackMode: 'refresh', effects: [],
-}
-const ENEMY_DEBUFF: BuffDefinition = {
-  id: 'test_enemy_debuff', name: 'E', polarity: 'debuff', duration: 2, stackMode: 'refresh', effects: [],
-}
+const SELF_BUFF = buffDef('test_self_buff', 'buff')
+const HIT_DEBUFF = buffDef('test_hit_debuff', 'debuff')
+const ALLY_BUFF = buffDef('test_ally_buff', 'buff')
+const ENEMY_DEBUFF = buffDef('test_enemy_debuff', 'debuff')
 
-const CATALOG = new MapCatalog([SELF_BUFF, HIT_DEBUFF, ALLY_BUFF, ENEMY_DEBUFF])
+const REGISTRY = makeTestBuffRegistry([SELF_BUFF, HIT_DEBUFF, ALLY_BUFF, ENEMY_DEBUFF])
+
+function buffsOf(runtime: TurnCombatRuntime, participant: TurnBattleParticipant, id: string) {
+  return runtime.buffs
+    .getForTarget(participant.entity.id)
+    .filter((instance) => instance.definitionId === id)
+}
 
 function makeBattle(options: {
   skill: TurnSkillDefinition
   allyCount?: number
   enemyCount?: number
-}): { battle: TurnBattle; players: TurnBattleParticipant[]; enemies: TurnBattleParticipant[] } {
+  registry?: ReturnType<typeof makeTestBuffRegistry>
+}): {
+  battle: TurnBattle
+  players: TurnBattleParticipant[]
+  enemies: TurnBattleParticipant[]
+  combat: CombatSystem
+  runtime: TurnRuntimeFixture
+} {
   const players = [makeParticipant('player', 10, 0)]
   for (let i = 0; i < (options.allyCount ?? 0); i++) {
     players.push(makeParticipant(`ally_${i}`, 9, 100 + i))
@@ -85,12 +95,19 @@ function makeBattle(options: {
     enemies.push(enemy)
   }
 
-  return { battle: { players, enemies, state: 'fighting' }, players, enemies }
+  const combat = new CombatSystem(new EventBus())
+  const runtime = makeTurnRuntime({
+    registry: options.registry ?? REGISTRY,
+    participants: () => [...players, ...enemies],
+    combatSystem: combat,
+  })
+
+  return { battle: { players, enemies, state: 'fighting' }, players, enemies, combat, runtime }
 }
 
 describe('appliesBuffs — multi-application resolution', () => {
   it('self target applies to the actor only', () => {
-    const { battle, players, enemies } = makeBattle({
+    const { battle, players, enemies, combat, runtime } = makeBattle({
       skill: {
         id: 's', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 0 },
         targeting: { shape: 'single' }, targetScope: 'self',
@@ -99,15 +116,15 @@ describe('appliesBuffs — multi-application resolution', () => {
       allyCount: 1,
     })
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10, CATALOG).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
-    expect(players[0]!.buffs.getAllById('test_self_buff')).toHaveLength(1)
-    expect(players[1]!.buffs.getAllById('test_self_buff')).toHaveLength(0)
-    expect(enemies[0]!.buffs.getAllById('test_self_buff')).toHaveLength(0)
+    expect(buffsOf(runtime, players[0]!, 'test_self_buff')).toHaveLength(1)
+    expect(buffsOf(runtime, players[1]!, 'test_self_buff')).toHaveLength(0)
+    expect(buffsOf(runtime, enemies[0]!, 'test_self_buff')).toHaveLength(0)
   })
 
   it('action_targets applies to every affected enemy (AOE)', () => {
-    const { battle, enemies } = makeBattle({
+    const { battle, enemies, combat, runtime } = makeBattle({
       skill: {
         id: 's', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 0 },
         targeting: { shape: 'all_lanes' },
@@ -116,14 +133,14 @@ describe('appliesBuffs — multi-application resolution', () => {
       enemyCount: 2,
     })
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10, CATALOG).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
-    expect(enemies[0]!.buffs.getAllById('test_hit_debuff')).toHaveLength(1)
-    expect(enemies[1]!.buffs.getAllById('test_hit_debuff')).toHaveLength(1)
+    expect(buffsOf(runtime, enemies[0]!, 'test_hit_debuff')).toHaveLength(1)
+    expect(buffsOf(runtime, enemies[1]!, 'test_hit_debuff')).toHaveLength(1)
   })
 
   it('allies_except_self hits living allies but never the actor', () => {
-    const { battle, players } = makeBattle({
+    const { battle, players, combat, runtime } = makeBattle({
       skill: {
         id: 's', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 0 },
         targeting: { shape: 'single' }, targetScope: 'self',
@@ -135,15 +152,15 @@ describe('appliesBuffs — multi-application resolution', () => {
     players[2]!.entity.alive = false
     players[2]!.alive = false
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10, CATALOG).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
-    expect(players[0]!.buffs.getAllById('test_ally_buff')).toHaveLength(0)
-    expect(players[1]!.buffs.getAllById('test_ally_buff')).toHaveLength(1)
-    expect(players[2]!.buffs.getAllById('test_ally_buff')).toHaveLength(0)
+    expect(buffsOf(runtime, players[0]!, 'test_ally_buff')).toHaveLength(0)
+    expect(buffsOf(runtime, players[1]!, 'test_ally_buff')).toHaveLength(1)
+    expect(buffsOf(runtime, players[2]!, 'test_ally_buff')).toHaveLength(0)
   })
 
   it('all_enemies hits every living enemy regardless of the declared target', () => {
-    const { battle, enemies } = makeBattle({
+    const { battle, enemies, combat, runtime } = makeBattle({
       skill: {
         id: 's', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 0 },
         targeting: { shape: 'single' },
@@ -155,15 +172,15 @@ describe('appliesBuffs — multi-application resolution', () => {
     enemies[2]!.entity.alive = false
     enemies[2]!.alive = false
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10, CATALOG).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
-    expect(enemies[0]!.buffs.getAllById('test_enemy_debuff')).toHaveLength(1)
-    expect(enemies[1]!.buffs.getAllById('test_enemy_debuff')).toHaveLength(1)
-    expect(enemies[2]!.buffs.getAllById('test_enemy_debuff')).toHaveLength(0)
+    expect(buffsOf(runtime, enemies[0]!, 'test_enemy_debuff')).toHaveLength(1)
+    expect(buffsOf(runtime, enemies[1]!, 'test_enemy_debuff')).toHaveLength(1)
+    expect(buffsOf(runtime, enemies[2]!, 'test_enemy_debuff')).toHaveLength(0)
   })
 
   it('durationOverride reaches the applied instance (pre-modifier base)', () => {
-    const { battle, players } = makeBattle({
+    const { battle, players, combat, runtime } = makeBattle({
       skill: {
         id: 's', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 0 },
         targeting: { shape: 'single' }, targetScope: 'self',
@@ -171,13 +188,13 @@ describe('appliesBuffs — multi-application resolution', () => {
       },
     })
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10, CATALOG).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
-    expect(players[0]!.buffs.getAllById('test_self_buff')[0]?.remainingTurns).toBe(7)
+    expect(buffsOf(runtime, players[0]!, 'test_self_buff')[0]?.remaining).toBe(7)
   })
 
   it('one skill applies several defs in declaration order', () => {
-    const { battle, players, enemies } = makeBattle({
+    const { battle, players, enemies, combat, runtime } = makeBattle({
       skill: {
         id: 's', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 0 },
         targeting: { shape: 'single' },
@@ -191,42 +208,40 @@ describe('appliesBuffs — multi-application resolution', () => {
       enemyCount: 1,
     })
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10, CATALOG).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
-    expect(players[0]!.buffs.getAllById('test_self_buff')).toHaveLength(1)
-    expect(players[1]!.buffs.getAllById('test_ally_buff')).toHaveLength(1)
-    expect(enemies[0]!.buffs.getAllById('test_enemy_debuff')).toHaveLength(1)
+    expect(buffsOf(runtime, players[0]!, 'test_self_buff')).toHaveLength(1)
+    expect(buffsOf(runtime, players[1]!, 'test_ally_buff')).toHaveLength(1)
+    expect(buffsOf(runtime, enemies[0]!, 'test_enemy_debuff')).toHaveLength(1)
   })
 
   it('clearsCcOnApply strips existing cc effects from the target pool', () => {
-    const cleanseDef: BuffDefinition = {
-      id: 'test_cleanse', name: 'C', polarity: 'buff', duration: 2, stackMode: 'refresh',
-      clearsCcOnApply: true, effects: [],
-    }
-    const stunDef: BuffDefinition = {
-      id: 'test_stun', name: 'Stun', polarity: 'debuff', duration: 5, stackMode: 'refresh',
-      effects: [{ type: 'cc', ccEffect: 'stun' }],
-    }
-    const catalog = new MapCatalog([cleanseDef, stunDef])
+    const cleanseDef = buffDef('test_cleanse', 'buff', { clearsCcOnApply: true })
+    const stunDef = buffDef('test_stun', 'debuff', {
+      controls: [{ type: 'stun' }],
+      lifetime: { clock: 'holder_turns', duration: 5, scaling: 'fixed' },
+    })
+    const registry = makeTestBuffRegistry([cleanseDef, stunDef, ALLY_BUFF])
 
-    const { battle, players } = makeBattle({
+    const { battle, players, combat, runtime } = makeBattle({
       skill: {
         id: 's', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 0 },
         targeting: { shape: 'single' }, targetScope: 'self',
         appliesBuffs: [{ definitionId: 'test_cleanse', target: 'allies_except_self' }],
       },
       allyCount: 1,
+      registry,
     })
 
     // The stun must sit on an ALLY, not the actor — a hard-cc'd actor is
     // ccBlocked at declare and could never cast the cleanse itself.
-    new BuffSystem(players[1]!.buffs).apply(stunDef, players[0]!.entity, players[1]!.entity, catalog)
-    expect(players[1]!.buffs.getAllById('test_stun')).toHaveLength(1)
+    runtime.applyBuff('test_stun', players[1]!, players[0]!)
+    expect(buffsOf(runtime, players[1]!, 'test_stun')).toHaveLength(1)
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10, catalog).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10, registry, undefined, runtime).resolveNextStep(battle)
 
-    expect(players[1]!.buffs.getAllById('test_stun')).toHaveLength(0)
-    expect(players[1]!.buffs.getAllById('test_cleanse')).toHaveLength(1)
+    expect(buffsOf(runtime, players[1]!, 'test_stun')).toHaveLength(0)
+    expect(buffsOf(runtime, players[1]!, 'test_cleanse')).toHaveLength(1)
   })
 
   it('the real SON_NHAC def taunts all enemies and shields allies through one cast', () => {
@@ -244,12 +259,18 @@ describe('appliesBuffs — multi-application resolution', () => {
     }
 
     const battle: TurnBattle = { players: [player, ally], enemies: [enemy], state: 'fighting' }
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeTurnRuntime({
+      registry: BUFF_REGISTRY,
+      participants: () => [player, ally, enemy],
+      combatSystem: combat,
+    })
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
 
-    expect(player.buffs.getAllById('son_nhac')).toHaveLength(1)
-    expect(ally.buffs.getAllById('son_nhac_ho_the')).toHaveLength(1)
-    expect(player.buffs.getAllById('son_nhac_ho_the')).toHaveLength(0)
-    expect(enemy.buffs.getAllById('khiem_khich')).toHaveLength(1)
+    expect(buffsOf(runtime, player, 'son_nhac')).toHaveLength(1)
+    expect(buffsOf(runtime, ally, 'son_nhac_ho_the')).toHaveLength(1)
+    expect(buffsOf(runtime, player, 'son_nhac_ho_the')).toHaveLength(0)
+    expect(buffsOf(runtime, enemy, 'khiem_khich')).toHaveLength(1)
   })
 })

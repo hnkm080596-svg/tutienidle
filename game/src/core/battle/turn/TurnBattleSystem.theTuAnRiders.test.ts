@@ -9,21 +9,29 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import { HO_MON_MARKER, TRO_MON_MARKER } from '../../../data/buff/TheTuBuffs'
 import { BAT_TU_BA_THE, TRO_KICH } from '../../../data/skill/TheTuSkills'
+import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
 import { TheTuBatTuSurvival } from '../../the-tu/TheTuBatTuSurvival'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import type { TurnSkillDefinition } from './TurnSkillAction'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
+import type { BuffRegistry } from '../../buff2/BuffRegistry'
+import type { ReactiveProcPayload } from '../../proc/ProcCapabilities'
+import type { CombatAuthorityExecutionContext } from '../contracts/context'
+import type { ResolvedCombatOperation } from '../contracts/operations'
+import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../contracts/ids'
+import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 // The Tu Reimagined (plan Task 20, spec 8.2) — node-rider mechanics on
 // the *_mon marker clones: intercept->ally ward, Tro triggering-ally
 // heal, Tro non-damaging window. The riders are baked onto marker
-// clones at participant build; these tests apply hand-baked clones to
-// exercise the engine read sites.
+// clones at participant build; these tests register hand-baked clones
+// under the same def id (the production kit-clone seam) to exercise
+// the engine read sites.
 
 const NO_MITIGATION = {
   evasionRate: 0,
@@ -80,18 +88,59 @@ const ALLY_SELF_BUFF: TurnSkillDefinition = {
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
-/** Apply a marker clone with hand-baked rider fields. */
-function applyMarker(
-  p: TurnBattleParticipant,
-  base: typeof HO_MON_MARKER | typeof TRO_MON_MARKER,
-  bake: (marker: typeof base) => void,
-): void {
+/** Clone a marker def with hand-baked reactive_proc rider fields — the
+    same capability-payload writes buildTheTuAnKit performs. */
+function markerClone(
+  base: BuffDefinition,
+  bake?: (payload: ReactiveProcPayload) => void,
+): BuffDefinition {
   const clone = structuredClone(base)
-  bake(clone)
-  new BuffSystem(p.buffs).apply(clone, p.entity, p.entity, BUFF_REGISTRY)
+  for (const capability of clone.capabilities ?? []) {
+    if (capability.type === 'reactive_proc') {
+      bake?.(capability.payload as ReactiveProcPayload)
+    }
+  }
+  return clone
+}
+
+/** Live-data registry with the given defs swapped in under their own
+    ids — the kit-clone seam the battle-local registry performs. */
+function registryWith(replacements: readonly BuffDefinition[]) {
+  const byId = new Map(replacements.map((def) => [def.id, def]))
+  return makeTestBuffRegistry(LIVE_BUFFS.map((def) => byId.get(def.id) ?? def))
+}
+
+function world(
+  participants: () => readonly TurnBattleParticipant[],
+  opts: { registry?: ReturnType<typeof makeTestBuffRegistry>; rng?: () => number } = {},
+) {
+  const combat = new CombatSystem(new EventBus())
+  const registry = opts.registry ?? BUFF_REGISTRY
+  const runtime = makeTurnRuntime({
+    registry,
+    participants,
+    combatSystem: combat,
+    rng: opts.rng === undefined ? undefined : new FunctionCombatRng(opts.rng),
+  })
+
+  return { combat, registry, runtime }
+}
+
+function systemOf(w: {
+  combat: CombatSystem
+  registry: BuffRegistry
+  runtime: TurnRuntimeFixture
+}): TurnBattleSystem {
+  return new TurnBattleSystem(w.combat, 10_000, w.registry, undefined, w.runtime)
+}
+
+function buffsOf(runtime: TurnRuntimeFixture, participant: TurnBattleParticipant, id: string) {
+  return runtime.buffs
+    .getForTarget(participant.entity.id)
+    .filter((instance) => instance.definitionId === id)
 }
 
 function declaredEnemyAction(fixture: {
@@ -148,22 +197,6 @@ function declaredAllyAction(
   }
 }
 
-function system(rng?: () => number): TurnBattleSystem {
-  // The rng seam is the LAST constructor param — the reactive-proc
-  // success roll (resolveReactiveProcs) draws from it, so proc outcomes
-  // are scripted here instead of through a Math.random spy.
-  return new TurnBattleSystem(
-    new CombatSystem(new EventBus()),
-    10_000,
-    BUFF_REGISTRY,
-    /*spawnEnemy*/ undefined,
-    /*reactionManager*/ undefined,
-    /*onSkillCast*/ undefined,
-    /*liveStatModifiers*/ undefined,
-    rng === undefined ? undefined : new FunctionCombatRng(rng),
-  )
-}
-
 afterEach(() => {
   vi.restoreAllMocks()
 })
@@ -180,70 +213,70 @@ describe('intercept -> ally ward rider (spec 8.2)', () => {
     const protectorP = makeParticipant('protector', protector, 5, 1)
 
     const battle: TurnBattle = { players: [squishyP, protectorP], enemies: [enemyP], state: 'fighting' }
-    return { battle, enemyP, squishyP, protectorP }
+    const roster = [squishyP, protectorP, enemyP]
+    return { battle, enemyP, squishyP, protectorP, roster }
+  }
+
+  function withHoMon(protectorP: TurnBattleParticipant, ratio?: number) {
+    protectorP.entity.baseStats = asBaseStats({ ...protectorP.entity.baseStats, protectChance: 1 })
+    protectorP.entity.stats = { ...protectorP.entity.stats, protectChance: 1 }
+    protectorP.entity.currentThe = 15
+    return ratio === undefined
+      ? HO_MON_MARKER
+      : markerClone(HO_MON_MARKER, (payload) => {
+          payload.grantsWardToOriginalTarget = { buffDefinitionId: 'ho_ve' as BuffDefinitionId, sourceMaxHpRatio: ratio }
+        })
   }
 
   it('a successful intercept grants the rescued ally an externalWard + the ho_ve marker', () => {
     const f = fixture()
-    f.protectorP.entity.baseStats = asBaseStats({ ...f.protectorP.entity.baseStats, protectChance: 1 })
-    f.protectorP.entity.stats = { ...f.protectorP.entity.stats, protectChance: 1 }
-    f.protectorP.entity.currentThe = 15
-    applyMarker(f.protectorP, HO_MON_MARKER, (marker) => {
-      for (const effect of marker.effects) {
-        if (effect.type === 'reactiveProc') {
-          effect.grantsWardToOriginalTarget = { buffDefinitionId: 'ho_ve', sourceMaxHpRatio: 0.15 }
-        }
-      }
+    const w = world(() => f.roster, {
+      registry: registryWith([withHoMon(f.protectorP, 0.15)]),
     })
+    w.runtime.applyBuff('ho_mon', f.protectorP)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const declared = declaredEnemyAction(f, [f.squishyP])
-    system().applyActionImpact(f.battle, declared)
+    systemOf(w).applyActionImpact(f.battle, declared)
 
     expect(declared.intercepted).toBe(true)
     // Ward = 15% x protector's 50k maxHp, sourced by the protector.
     expect(f.squishyP.entity.externalWard).toEqual({ sourceId: 'protector', amount: 7500 })
-    expect(f.squishyP.buffs.hasAny('ho_ve')).toBe(true)
+    expect(buffsOf(w.runtime, f.squishyP, 'ho_ve')).toHaveLength(1)
     // The protector still took the hit (squishy untouched HP-wise).
     expect(f.squishyP.entity.currentHp).toBe(100_000)
   })
 
   it('the intercept-granted ward survives reconcile — marker sourceId keys to the protector', () => {
     const f = fixture()
-    f.protectorP.entity.baseStats = asBaseStats({ ...f.protectorP.entity.baseStats, protectChance: 1 })
-    f.protectorP.entity.stats = { ...f.protectorP.entity.stats, protectChance: 1 }
-    f.protectorP.entity.currentThe = 15
-    applyMarker(f.protectorP, HO_MON_MARKER, (marker) => {
-      for (const effect of marker.effects) {
-        if (effect.type === 'reactiveProc') {
-          effect.grantsWardToOriginalTarget = { buffDefinitionId: 'ho_ve', sourceMaxHpRatio: 0.15 }
-        }
-      }
+    const w = world(() => f.roster, {
+      registry: registryWith([withHoMon(f.protectorP, 0.15)]),
     })
+    w.runtime.applyBuff('ho_mon', f.protectorP)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
+    const system = systemOf(w)
     const declared = declaredEnemyAction(f, [f.squishyP])
-    system().applyActionImpact(f.battle, declared)
+    system.applyActionImpact(f.battle, declared)
 
     expect(f.squishyP.entity.externalWard).toEqual({ sourceId: 'protector', amount: 7500 })
 
     // Reconcile at the stat-refresh seam (every pool mutation / pacing
     // step) must NOT clear the pool while the granting marker still lives.
-    system().refreshEffectiveStats(f.battle)
+    system.refreshEffectiveStats(f.battle)
 
     expect(f.squishyP.entity.externalWard).toEqual({ sourceId: 'protector', amount: 7500 })
   })
 
   it('no rider -> no ward (base marker stays wardless)', () => {
     const f = fixture()
-    f.protectorP.entity.baseStats = asBaseStats({ ...f.protectorP.entity.baseStats, protectChance: 1 })
-    f.protectorP.entity.stats = { ...f.protectorP.entity.stats, protectChance: 1 }
-    f.protectorP.entity.currentThe = 15
-    new BuffSystem(f.protectorP.buffs).apply(HO_MON_MARKER, f.protectorP.entity, f.protectorP.entity, BUFF_REGISTRY)
+    const w = world(() => f.roster)
+    withHoMon(f.protectorP)
+    w.runtime.applyBuff('ho_mon', f.protectorP)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const declared = declaredEnemyAction(f, [f.squishyP])
-    system().applyActionImpact(f.battle, declared)
+    systemOf(w).applyActionImpact(f.battle, declared)
 
     expect(declared.intercepted).toBe(true)
     expect(f.squishyP.entity.externalWard).toBeUndefined()
@@ -263,31 +296,39 @@ describe('tro riders (spec 8.2)', () => {
     const supporterP = makeParticipant('supporter', supporter, 5, 1)
 
     const battle: TurnBattle = { players: [strikerP, supporterP], enemies: [enemyP], state: 'fighting' }
-    return { battle, enemyP, strikerP, supporterP }
+    const roster = [strikerP, supporterP, enemyP]
+    return { battle, enemyP, strikerP, supporterP, roster }
   }
 
-  function withTroMon(p: TurnBattleParticipant, bake?: (effect: { firesOnNonDamagingAction?: boolean; healsTriggeringAllyMaxHpRatio?: number }) => void) {
+  function withTroMon(
+    p: TurnBattleParticipant,
+    bake?: (payload: ReactiveProcPayload) => void,
+  ): BuffDefinition {
     p.entity.baseStats = asBaseStats({ ...p.entity.baseStats, followUpChance: 1 })
     p.entity.stats = { ...p.entity.stats, followUpChance: 1 }
     p.entity.currentThe = 15
-    applyMarker(p, TRO_MON_MARKER, (marker) => {
-      for (const effect of marker.effects) {
-        if (effect.type === 'reactiveProc') bake?.(effect)
-      }
-    })
     p.reactivePayloads = { tro_kich: { ...TRO_KICH } }
+    // The kit always bakes the authored success gain onto marker clones
+    // (THE_PROC_GAIN + node bonus); a bare marker carries none.
+    return markerClone(TRO_MON_MARKER, (payload) => {
+      payload.theGainOnSuccess = THE_PROC_GAIN
+      bake?.(payload)
+    })
   }
 
   it('tro proc heals the triggering ally by ratio x its maxHp', () => {
     const f = fixture()
     f.strikerP.entity.currentHp = 30_000 // half of 60k
-    withTroMon(f.supporterP, (effect) => {
-      effect.healsTriggeringAllyMaxHpRatio = 0.15
+    const w = world(() => f.roster, {
+      registry: registryWith([withTroMon(f.supporterP, (payload) => {
+        payload.healsTriggeringAllyMaxHpRatio = 0.15
+      })]),
     })
+    w.runtime.applyBuff('tro_mon', f.supporterP)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const declared = declaredAllyAction(f.strikerP, f.strikerP.basic!, f.battle.enemies, [f.enemyP])
-    system().applyActionImpact(f.battle, declared)
+    systemOf(w).applyActionImpact(f.battle, declared)
 
     // 0.15 x 60k = 9000 healed on the triggering ally.
     expect(f.strikerP.entity.currentHp).toBe(39_000)
@@ -298,11 +339,14 @@ describe('tro riders (spec 8.2)', () => {
   it('non-damaging ally action opens no window without the flag — and opens one with it', () => {
     // Without the flag: a self-buff action never triggers Tro.
     let f = fixture()
-    withTroMon(f.supporterP)
+    let w = world(() => f.roster, {
+      registry: registryWith([withTroMon(f.supporterP)]),
+    })
+    w.runtime.applyBuff('tro_mon', f.supporterP)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     let declared = declaredAllyAction(f.strikerP, ALLY_SELF_BUFF, f.battle.enemies, [f.strikerP])
-    system().applyActionImpact(f.battle, declared)
+    systemOf(w).applyActionImpact(f.battle, declared)
 
     expect(f.battle.queuedFollowUps ?? []).toHaveLength(0)
     expect(f.supporterP.entity.currentThe).toBe(15) // no attempt was paid
@@ -311,13 +355,16 @@ describe('tro riders (spec 8.2)', () => {
     // With firesOnNonDamagingAction: the same action queues tro_kich
     // against all living enemies.
     f = fixture()
-    withTroMon(f.supporterP, (effect) => {
-      effect.firesOnNonDamagingAction = true
+    w = world(() => f.roster, {
+      registry: registryWith([withTroMon(f.supporterP, (payload) => {
+        payload.firesOnNonDamagingAction = true
+      })]),
     })
+    w.runtime.applyBuff('tro_mon', f.supporterP)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     declared = declaredAllyAction(f.strikerP, ALLY_SELF_BUFF, f.battle.enemies, [f.strikerP])
-    system().applyActionImpact(f.battle, declared)
+    systemOf(w).applyActionImpact(f.battle, declared)
 
     expect(f.battle.queuedFollowUps).toHaveLength(1)
     expect(f.battle.queuedFollowUps![0]).toMatchObject({
@@ -342,6 +389,7 @@ describe('tro riders (spec 8.2)', () => {
     )
     const enemy2P = makeParticipant('enemy2', enemy2, 3, 101)
     f.battle.enemies.push(enemy2P)
+    f.roster.push(enemy2P)
 
     // Force the dodge: hit chance floors at 5% (Accuracy.ts), so a
     // 0.999 roll misses even through the floor.
@@ -351,19 +399,23 @@ describe('tro riders (spec 8.2)', () => {
     })
     f.enemyP.entity.stats = { ...f.enemyP.entity.stats, evasionRate: 1_000_000 }
 
-    withTroMon(f.supporterP, (effect) => {
-      effect.firesOnNonDamagingAction = true
+    const w = world(() => f.roster, {
+      registry: registryWith([withTroMon(f.supporterP, (payload) => {
+        payload.firesOnNonDamagingAction = true
+      })]),
+      // Two seams, two mechanisms: the HIT check still reads the global
+      // Math.random inside CombatSystem — pin it high so the roll misses
+      // even the 5% floor (forced dodge). The Tro PROC roll reads the
+      // runtime rng — pin that low so the supporter's proc succeeds
+      // through its own authority (followUpChance hard-caps at
+      // REACTIVE_CHANCE_CAP = 0.6, so it needs < 0.6 on its own seam).
+      rng: () => 0,
     })
-    // Two seams, two mechanisms: the HIT check still reads the global
-    // Math.random inside CombatSystem — pin it high so the roll misses
-    // even the 5% floor (forced dodge). The Tro PROC roll reads the
-    // injected this.rng — pin that low so the supporter's proc succeeds
-    // through its own authority (followUpChance hard-caps at
-    // REACTIVE_CHANCE_CAP = 0.6, so it needs < 0.6 on its own seam).
+    w.runtime.applyBuff('tro_mon', f.supporterP)
     vi.spyOn(Math, 'random').mockReturnValue(0.999)
 
     const declared = declaredAllyAction(f.strikerP, f.strikerP.basic!, f.battle.enemies, [f.enemyP])
-    system(() => 0).applyActionImpact(f.battle, declared)
+    systemOf(w).applyActionImpact(f.battle, declared)
 
     // The striker's single-target hit whiffed on the ONLY declared
     // target; the supporter's tro_kich must queue against that one
@@ -386,12 +438,6 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
     defenderP.entity.baseStats = asBaseStats({ ...defenderP.entity.baseStats, counterChance: 1 })
     defenderP.entity.stats = { ...defenderP.entity.stats, counterChance: 1 }
     defenderP.entity.currentThe = 50
-    new BuffSystem(defenderP.buffs).apply(
-      BUFF_REGISTRY.get('phan_mon'),
-      defenderP.entity,
-      defenderP.entity,
-      BUFF_REGISTRY,
-    )
 
     const enemy = createCombatant(
       {
@@ -410,14 +456,20 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
     enemyP.basic = ENEMY_BASIC
 
     const battle: TurnBattle = { players: [defenderP], enemies: [enemyP], state: 'fighting' }
-    return { battle, enemyP, defenderP }
+    const roster = [defenderP, enemyP]
+    return { battle, enemyP, defenderP, roster }
   }
 
   it('a lethal hit kills the phan_mon holder -> no The cost, no rng draw, no queue', () => {
     const f = lethalFixture()
     const rng = vi.fn(() => 0)
+    const w = world(() => f.roster, { rng })
+    w.runtime.applyBuff('phan_mon', f.defenderP)
+    // The seed apply consumes one resolver roll (stream parity) — clear
+    // so the assertion measures only the hit window's draws.
+    rng.mockClear()
 
-    system(rng).applyActionImpact(
+    systemOf(w).applyActionImpact(
       f.battle,
       declaredEnemyAction(f, [f.defenderP]),
     )
@@ -435,40 +487,81 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
     const f = lethalFixture()
     f.defenderP.ultimate = { skill: BAT_TU_BA_THE, remainingCooldownTurns: 0 }
 
-    const combat = new CombatSystem(new EventBus())
-    combat.setSurviveLethalSession({
-      playerEntityId: f.defenderP.entity.id,
+    const rng = vi.fn(() => 0)
+    const w = world(() => f.roster, { rng })
+    const runtime = w.runtime
+    w.runtime.applyBuff('phan_mon', f.defenderP)
+    // Clear the seed-apply's resolver roll — the assertion below counts
+    // only draws the taken window itself performs.
+    rng.mockClear()
+
+    const defenderP = f.defenderP
+    w.combat.setSurviveLethalSession({
+      playerEntityId: defenderP.entity.id,
       guard: new SurviveLethalGuard(),
+      // Same bound-lane shape as GameManagerTurnBattleOps: mid-settlement
+      // reuses the frame ctx; quiescent mints authored ops and settles.
       surviveEffects: {
-        buffSystem: new BuffSystem(f.defenderP.buffs),
-        registry: BUFF_REGISTRY,
-        grantBuffId: 'bat_tu_ba_the',
+        grantBuffId: 'bat_tu_ba_the' as BuffDefinitionId,
         cleanseDebuffs: false,
+        apply: (entity, resolved, execCtx: CombatAuthorityExecutionContext | undefined) => {
+          const entityId = entity.id as CombatEntityId
+          if (execCtx !== undefined) {
+            if (resolved.grantBuffId !== undefined) {
+              runtime.buffs.apply(
+                {
+                  definitionId: resolved.grantBuffId,
+                  sourceId: entityId,
+                  targetId: entityId,
+                  stacks: 1,
+                  baseChance: 1,
+                  durationOverride: resolved.grantBuffDurationOverride,
+                  reactionEligibility: 'suppressed',
+                  origin: execCtx.origin,
+                },
+                execCtx,
+              )
+            }
+            return
+          }
+          runtime.scheduler.enqueueAuthored([
+            {
+              type: 'apply_buff',
+              operationId: 'survive.test.grant' as CombatOperationId,
+              payload: {
+                definitionId: resolved.grantBuffId!,
+                targetId: entityId,
+                stacks: 1,
+                baseChance: 1,
+                durationOverride: resolved.grantBuffDurationOverride,
+                reactionEligibility: 'suppressed',
+              },
+              origin: {
+                kind: 'proc',
+                originId: 'survive_effects',
+                sourceId: entityId,
+                rootActionId: 'survive.test',
+              },
+            },
+          ] satisfies ResolvedCombatOperation[])
+          runtime.scheduler.runIfQuiescent()
+        },
       },
       extraSources: [
         new TheTuBatTuSurvival({
-          ultimateSlot: () => f.defenderP.ultimate,
-          buffs: f.defenderP.buffs,
+          ultimateSlot: () => defenderP.ultimate,
+          hasActiveBuff: (definitionId) =>
+            runtime.buffs
+              .getForTarget(defenderP.entity.id)
+              .some((instance) => instance.definitionId === definitionId),
         }),
       ],
     })
 
-    const rng = vi.fn(() => 0)
-    const sys = new TurnBattleSystem(
-      combat,
-      10_000,
-      BUFF_REGISTRY,
-      /*spawnEnemy*/ undefined,
-      /*reactionManager*/ undefined,
-      /*onSkillCast*/ undefined,
-      /*liveStatModifiers*/ undefined,
-      new FunctionCombatRng(rng),
-    )
+    systemOf(w).applyActionImpact(f.battle, declaredEnemyAction(f, [f.defenderP]))
 
-    sys.applyActionImpact(f.battle, declaredEnemyAction(f, [f.defenderP]))
-
-    expect(f.defenderP.entity.alive).toBe(true)
-    expect(f.defenderP.buffs.getAllById('bat_tu_ba_the')).toHaveLength(1)
+    expect(defenderP.entity.alive).toBe(true)
+    expect(buffsOf(runtime, defenderP, 'bat_tu_ba_the')).toHaveLength(1)
     // Holder survived -> the taken window opened, paid, rolled, queued.
     expect(rng).toHaveBeenCalled()
     expect(f.battle.queuedFollowUps ?? []).toContainEqual(

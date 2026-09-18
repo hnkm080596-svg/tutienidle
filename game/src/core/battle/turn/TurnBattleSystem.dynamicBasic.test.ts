@@ -3,10 +3,11 @@ import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '.
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { TurnSkillDefinition } from './TurnSkillAction'
+import type { BuffDefinitionId } from '../contracts/ids'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // Kiem Tu Reimagined Task 2 — generic engine primitives:
 // guaranteedHit / resolved armor policy / damageMultiplier on
@@ -15,20 +16,16 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 // extraImpacts; forced dynamic_basic manual choice.
 
 const TOUGHNESS_BUFF: BuffDefinition = {
-  id: 'qa_toughness',
+  id: 'qa_toughness' as BuffDefinitionId,
   name: 'QA Toughness',
-  polarity: 'buff',
-  duration: 3,
-  stackMode: 'refresh',
-  effects: [],
+  kind: 'buff',
+  instanceScope: 'per_target',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' },
+  dispellable: true,
 }
 
-const REGISTRY: BuffDefinitionCatalog = {
-  get: (id: string): BuffDefinition => {
-    if (id === TOUGHNESS_BUFF.id) return TOUGHNESS_BUFF
-    throw new Error(`unknown buff id: ${id}`)
-  },
-}
+const REGISTRY = makeTestBuffRegistry([TOUGHNESS_BUFF])
 
 function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, ...overrides.stats })
@@ -60,7 +57,7 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new BuffPool(),
+    
     consecutiveHardCcTurns: 0,
   }
 }
@@ -68,7 +65,6 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
 function makeBattle(extra?: (attacker: TurnBattleParticipant) => void) {
   const eventBus = new EventBus()
   const combat = new CombatSystem(eventBus)
-  const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
   const attacker = makeEntity('attacker', {
     stats: createBaseStats({ might: 100, accuracyRating: 9999 }),
@@ -98,7 +94,14 @@ function makeBattle(extra?: (attacker: TurnBattleParticipant) => void) {
     state: 'fighting',
   }
 
-  return { system, battle, attackerP, defenderP, eventBus }
+  const runtime = makeTurnRuntime({
+    registry: REGISTRY,
+    participants: () => [attackerP, defenderP],
+    combatSystem: combat,
+  })
+  const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
+
+  return { system, battle, attackerP, defenderP, eventBus, runtime }
 }
 
 describe('Task 2 — resolveActionHit options', () => {
@@ -357,7 +360,7 @@ describe('Task 2 — instances + dynamicBasic', () => {
   })
 
   it('ctx.resolveBuff applies a buff through the registry', () => {
-    const { system, battle, attackerP } = makeBattle()
+    const { system, battle, attackerP, runtime } = makeBattle()
 
     attackerP.dynamicBasic = {
       resolveBasic: () => attackerP.basic!,
@@ -370,7 +373,11 @@ describe('Task 2 — instances + dynamicBasic', () => {
     const declared = system.declareActorAction(battle, attackerP)
     system.applyActionImpact(battle, declared)
 
-    expect(attackerP.buffs.getAllById('qa_toughness')).toHaveLength(1)
+    expect(
+      runtime.buffs
+        .getForTarget(attackerP.entity.id)
+        .filter((instance) => instance.definitionId === 'qa_toughness'),
+    ).toHaveLength(1)
   })
 
   it('manual pick and auto resolve of the same def produce identical resolution', () => {

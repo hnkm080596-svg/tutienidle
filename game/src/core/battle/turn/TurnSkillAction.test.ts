@@ -11,7 +11,6 @@ import {
 import type { TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
 
 function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats()
@@ -89,7 +88,7 @@ function participant(overrides: Partial<TurnBattleParticipant> = {}): TurnBattle
     priority: 0,
     actionGauge: 0,
     alive: true,
-    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
+    consecutiveHardCcTurns: 0,
     ...overrides,
   }
 }

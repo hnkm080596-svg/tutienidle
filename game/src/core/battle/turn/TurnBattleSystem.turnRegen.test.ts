@@ -1,15 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
 import { MAX_THE, THE_GAIN_PER_FINISHER, THE_GAIN_PER_LINK } from '../../combat/CombatTypes'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // M8 (ARCH-003 + ARCH-010 + C05/C06) — combat resources & turn-phase
 // contract. MP/Ward regen joins hpRegenPerTurn on the entity-turn cadence
@@ -22,23 +21,30 @@ import { MAX_THE, THE_GAIN_PER_FINISHER, THE_GAIN_PER_LINK } from '../../combat/
 const DOT_DEF: BuffDefinition = {
   id: 'qa_lethal_dot',
   name: 'QA lethal DoT',
+  kind: 'debuff',
   polarity: 'debuff',
-  duration: 10,
-  stackMode: 'refresh',
-  effects: [{ type: 'dot', dpsRatio: 1, element: 'physical' }],
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 10, scaling: 'fixed' },
+  periodic: [
+    {
+      id: 'qa_lethal_dot.tick',
+      type: 'damage',
+      element: 'physical',
+      damageProfile: 'legacy_dot',
+      coefficient: 1,
+      scaling: 'dynamic',
+      timing: 'holder_turn_end',
+      stackScaling: 'multiply',
+      canCrit: false,
+      canMiss: false,
+      hitCount: 1,
+    },
+  ],
+  dispellable: true,
 }
 
-class Registry implements BuffDefinitionCatalog {
-  private readonly defs = new Map<string, BuffDefinition>()
-  constructor(defs: BuffDefinition[]) {
-    for (const d of defs) this.defs.set(d.id, d)
-  }
-  get(id: string): BuffDefinition {
-    const d = this.defs.get(id)
-    if (!d) throw new Error(`missing buff: ${id}`)
-    return d
-  }
-}
+const REGISTRY = makeTestBuffRegistry([DOT_DEF])
 
 function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
@@ -76,7 +82,7 @@ function makeParticipant(
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new BuffPool(),
+    
     consecutiveHardCcTurns: 0,
   }
 }
@@ -255,16 +261,19 @@ describe('TurnBattleSystem — post-status liveness boundary (ARCH-010)', () => 
       currentMp: 0,
     })
 
-    const registry = new Registry([DOT_DEF])
-    const playerBuffs = new BuffPool()
-    new BuffSystem(playerBuffs).apply(DOT_DEF, makeDotSource(), player, registry)
-
     const playerParticipant = makeParticipant('player', player, 100, 0)
-    playerParticipant.buffs = playerBuffs
-
     const enemy = makeDummyEnemy()
+    const dotSource = makeParticipant('dot_source', makeDotSource(), 1, 99)
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [playerParticipant, enemy, dotSource],
+      combatSystem: combat,
+    })
+    runtime.applyBuff('qa_lethal_dot', playerParticipant, dotSource)
+
     const battle = makeBattle([playerParticipant], [enemy])
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, registry)
+    const system = new TurnBattleSystem(combat, 10_000, REGISTRY, undefined, runtime)
 
     system.resolveNextStep(battle)
 
@@ -291,12 +300,16 @@ describe('TurnBattleSystem — post-status liveness boundary (ARCH-010)', () => 
       currentHp: 50,
     })
 
-    const registry = new Registry([DOT_DEF])
-    const playerBuffs = new BuffPool()
-    new BuffSystem(playerBuffs).apply(DOT_DEF, makeDotSource(), player, registry)
-
     const playerParticipant = makeParticipant('player', player, 100, 0)
-    playerParticipant.buffs = playerBuffs
+    const enemy = makeDummyEnemy()
+    const dotSource = makeParticipant('dot_source', makeDotSource(), 1, 99)
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [playerParticipant, enemy, dotSource],
+      combatSystem: combat,
+    })
+    runtime.applyBuff('qa_lethal_dot', playerParticipant, dotSource)
     // Resolve turn: the counter reaches 0 THIS declare, so without the
     // liveness boundary the captured charged hit would fire post-death.
     playerParticipant.chargingTurnsRemaining = 1
@@ -312,9 +325,8 @@ describe('TurnBattleSystem — post-status liveness boundary (ARCH-010)', () => 
       remainingCooldownTurns: 0,
     }
 
-    const enemy = makeDummyEnemy()
     const battle = makeBattle([playerParticipant], [enemy])
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, registry)
+    const system = new TurnBattleSystem(combat, 10_000, REGISTRY, undefined, runtime)
 
     const step = system.resolveNextStep(battle)
 

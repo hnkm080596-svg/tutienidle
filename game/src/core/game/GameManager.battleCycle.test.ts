@@ -70,17 +70,7 @@ function poisonBattleState(gameManager: GameManager) {
   participant.entity.currentWard = 0
   participant.entity.currentThe = 40
   participant.entity.externalWard = { sourceId: 'ext_source', amount: 999 }
-  participant.buffs.add({
-    id: 'cycle_poison_debuff',
-    sourceId: participant.entity.id,
-    targetId: participant.entity.id,
-    polarity: 'debuff',
-    duration: 10,
-    remainingTurns: 10,
-    stacks: 1,
-    stackMode: 'stack',
-    effects: [],
-  })
+  gameManager.turnBattleOps.applyBuffToPlayer('bong')
   if (participant.special) {
     participant.special.remainingCooldownTurns = 3
   }
@@ -95,7 +85,7 @@ function expectFreshPlayerSide(gameManager: GameManager) {
   // the contract is "no carried pool", i.e. effectively zero.
   expect(participant.entity.currentThe ?? 0).toBe(0)
   expect(participant.entity.externalWard).toBeUndefined()
-  expect(participant.buffs.getAll().length).toBe(0)
+  expect(gameManager.getBattleBuffs(participant.entity.id)).toHaveLength(0)
   expect(participant.special?.remainingCooldownTurns ?? 0).toBe(0)
   expect(participant.actionGauge).toBeLessThan(500)
   expect(participant.chargingTurnsRemaining ?? 0).toBe(0)

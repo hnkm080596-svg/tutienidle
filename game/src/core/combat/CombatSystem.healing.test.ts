@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { CombatSystem } from './CombatSystem'
-import { BuffSystem } from '../buff/BuffSystem'
-import { BuffPool } from '../buff/BuffPool'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
-import type { Buff, BuffDefinition, BuffDefinitionCatalog } from '../buff/BuffTypes'
+import type { ActiveCapabilityGrant } from '../battle/contracts/capability'
+import type { BuffDefinitionId, BuffInstanceId, CombatEntityId } from '../battle/contracts/ids'
 
 // stat-system-reimagined Task 4 (D18 / INV-13) — healingEffectivenessPercent:
 // receiver-side amplification of HP restores that are NOT damage-derived
@@ -13,45 +12,6 @@ import type { Buff, BuffDefinition, BuffDefinitionCatalog } from '../buff/BuffTy
 // like Doc Can). leechPercent stays the SOLE leech lever — its output is
 // hpDamage * leechPercent, bitwise unchanged. Ward/MP regen and shield
 // absorb are never scaled either.
-
-const WOOD_DOT: BuffDefinition = {
-  id: 'qa_wood_dot',
-  name: 'QA Wood DoT',
-  polarity: 'debuff',
-  duration: 3,
-  stackMode: 'stack',
-  effects: [{ type: 'dot', dpsRatio: 1, element: 'wood' }],
-}
-
-const FIRE_DOT: BuffDefinition = {
-  id: 'qa_fire_dot',
-  name: 'QA Fire DoT',
-  polarity: 'debuff',
-  duration: 3,
-  stackMode: 'stack',
-  effects: [{ type: 'dot', dpsRatio: 1, element: 'fire' }],
-}
-
-// Doc Can-shaped authored trigger: heal the DoT source for a fraction of
-// the wood damage actually dealt, per stack.
-const DOT_RECOVERY: BuffDefinition = {
-  id: 'qa_dot_recovery',
-  name: 'QA Recovery',
-  polarity: 'buff',
-  duration: 3,
-  stackMode: 'stack',
-  maxStacks: 5,
-  effects: [{ type: 'dotRecovery', element: 'wood', healPercent: 0.25 }],
-}
-
-const REGISTRY: BuffDefinitionCatalog = {
-  get: (id: string): BuffDefinition => {
-    for (const definition of [WOOD_DOT, FIRE_DOT, DOT_RECOVERY]) {
-      if (definition.id === id) return definition
-    }
-    throw new Error(`unknown buff id: ${id}`)
-  },
-}
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats()
@@ -76,15 +36,25 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   }
 }
 
-function makeBuffPoolWith(definition: BuffDefinition, holder: CombatEntity, stacks: number): Buff[] {
-  const pool = new BuffPool()
-  const system = new BuffSystem(pool)
+let grantSeq = 0
 
-  for (let i = 0; i < stacks; i++) {
-    system.apply(definition, holder, holder, REGISTRY)
+/** Doc Can-shaped authored trigger grant: heal the DoT source for a
+    fraction of the wood damage actually dealt, per stack (stacks live
+    on the grant — the buff2 capability descriptor). */
+function dotRecoveryGrant(holder: CombatEntity, stacks: number): ActiveCapabilityGrant {
+  grantSeq += 1
+  return {
+    instanceId: `buff.test.recovery.${grantSeq}` as BuffInstanceId,
+    definitionId: 'qa_dot_recovery' as BuffDefinitionId,
+    capability: {
+      id: 'qa_dot_recovery.recovery',
+      type: 'dot_recovery',
+      payload: { element: 'wood', healPercent: 0.25 },
+    },
+    sourceId: holder.id as CombatEntityId,
+    targetId: holder.id as CombatEntityId,
+    stacks,
   }
-
-  return pool.getAll()
 }
 
 describe('healingEffectivenessPercent (INV-13)', () => {
@@ -151,17 +121,16 @@ describe('healingEffectivenessPercent (INV-13)', () => {
       maxHp: 10_000,
     })
 
-    const sourceBuffs = makeBuffPoolWith(DOT_RECOVERY, source, 1)
+    combat.applyDotDamage({
+      sourceId: source.id,
+      source,
+      sourceGrants: [dotRecoveryGrant(source, 1)],
+      target,
+      rawDamage: 20,
+      element: 'wood',
+      effectId: 'qa_wood_dot',
+    })
 
-    const targetPool = new BuffPool()
-    new BuffSystem(targetPool).apply(WOOD_DOT, source, target, REGISTRY)
-
-    const resolveSource = (id: string) => (id === source.id ? source : undefined)
-    const resolveSourceBuffs = (id: string) => (id === source.id ? sourceBuffs : undefined)
-
-    new BuffSystem(targetPool).update(1, target, combat, REGISTRY, resolveSource, resolveSourceBuffs)
-
-    // might 10 + woodPower 10 = 20 raw, no mitigation -> finalDamage 20.
     // Recovery 0.25 * 20 = 5, amplified 1.5x -> 7.5.
     expect(target.currentHp).toBeCloseTo(10_000 - 20, 5)
     expect(source.currentHp).toBeCloseTo(507.5, 5)
@@ -183,12 +152,10 @@ describe('healingEffectivenessPercent (INV-13)', () => {
 
     const target = createCombatant({ id: 'target', currentHp: 10_000, maxHp: 10_000 })
 
-    const sourceBuffs = makeBuffPoolWith(DOT_RECOVERY, source, 2)
-
     combat.applyDotDamage({
       sourceId: source.id,
       source,
-      sourceBuffs,
+      sourceGrants: [dotRecoveryGrant(source, 2)],
       target,
       rawDamage: 20,
       element: 'wood',
@@ -206,12 +173,10 @@ describe('healingEffectivenessPercent (INV-13)', () => {
     const source = createCombatant({ id: 'source', type: 'player', currentHp: 100, maxHp: 1000 })
     const target = createCombatant({ id: 'target', currentHp: 5, maxHp: 10_000 })
 
-    const sourceBuffs = makeBuffPoolWith(DOT_RECOVERY, source, 1)
-
     combat.applyDotDamage({
       sourceId: source.id,
       source,
-      sourceBuffs,
+      sourceGrants: [dotRecoveryGrant(source, 1)],
       target,
       rawDamage: 100,
       element: 'wood',
@@ -243,12 +208,10 @@ describe('healingEffectivenessPercent (INV-13)', () => {
     const source = createCombatant({ id: 'source', type: 'player', currentHp: 500, maxHp: 1000 })
     const target = createCombatant({ id: 'target', currentHp: 10_000, maxHp: 10_000 })
 
-    const sourceBuffs = makeBuffPoolWith(DOT_RECOVERY, source, 3)
-
     combat.applyDotDamage({
       sourceId: source.id,
       source,
-      sourceBuffs,
+      sourceGrants: [dotRecoveryGrant(source, 3)],
       target,
       rawDamage: 20,
       element: 'fire',
@@ -258,7 +221,7 @@ describe('healingEffectivenessPercent (INV-13)', () => {
     expect(source.currentHp).toBe(500)
   })
 
-  it('missing source buffs or dead source produces no recovery', () => {
+  it('missing source grants or dead source produces no recovery', () => {
     const combat = new CombatSystem(new EventBus())
 
     const source = createCombatant({ id: 'source', type: 'player', currentHp: 500, maxHp: 1000 })
@@ -277,7 +240,7 @@ describe('healingEffectivenessPercent (INV-13)', () => {
     combat.applyDotDamage({
       sourceId: deadSource.id,
       source: deadSource,
-      sourceBuffs: makeBuffPoolWith(DOT_RECOVERY, deadSource, 1),
+      sourceGrants: [dotRecoveryGrant(deadSource, 1)],
       target,
       rawDamage: 20,
       element: 'wood',

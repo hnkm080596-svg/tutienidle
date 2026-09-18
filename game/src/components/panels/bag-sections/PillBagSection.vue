@@ -104,17 +104,18 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
           return { label: 'Buff', value: '—' }
         }
 
-        const modifierLabel = buff.effects
-          .filter((buffEffect) => buffEffect.type === 'statModifier')
+        const modifierLabel = (buff.statModifiers ?? [])
           .map(
             (modifier) =>
               `${statLabel(modifier.stat)} +${formatStat(modifier.stat, modifier.flat ?? modifier.percent ?? 0)}`,
           )
           .join(', ')
 
+        const duration = buff.lifetime.duration
+
         return {
           label: buff.name,
-          value: `${modifierLabel}${buff.duration ? ` (${buff.duration}s)` : ''}`,
+          value: `${modifierLabel}${duration !== undefined ? ` (${duration}${buff.lifetime.clock === 'seconds' ? 's' : ''})` : ''}`,
         }
       }
     }
@@ -198,12 +199,12 @@ function drinkPill(pillId: string) {
       const battleEntity = gameManager.getTurnBattle()?.players[0]?.entity
 
       if (battleEntity?.alive) {
-        gameManager.buffSystem.apply(definition, battleEntity, battleEntity, gameManager.buffRegistry)
+        gameManager.turnBattleOps.applyBuffToPlayer(definition.id)
 
         return
       }
 
-      gameManager.effectOps.applyPersistentBuff(definition, player.finalStats)
+      gameManager.effectOps.applyPersistentBuff(definition)
     },
   }
 

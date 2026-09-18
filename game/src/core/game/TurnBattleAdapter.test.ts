@@ -17,7 +17,7 @@ function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
 const BASIC = { id: 'fixture_basic', cooldownTurns: 0, damage: { kind: 'physical' as const, multiplier: 1 }, targeting: { shape: 'single' as const } }
 
 describe('toTurnBattleParticipant adapter', () => {
-  it('wraps a CombatEntity with real speed stat, priority, fresh buff pool, and basic skill', () => {
+  it('wraps a CombatEntity with real speed stat, priority, and basic skill', () => {
     const combatEntity = entity({ id: 'player_1' })
 
     const participant = toTurnBattleParticipant(combatEntity, 0, BASIC)
@@ -29,8 +29,6 @@ describe('toTurnBattleParticipant adapter', () => {
     expect(participant.actionGauge).toBe(0)
     expect(participant.alive).toBe(true)
     expect(participant.consecutiveHardCcTurns).toBe(0)
-    expect(participant.buffs).toBeDefined()
-    expect(participant.buffs.getAll()).toHaveLength(0)
     expect(participant.basic?.id).toBe('fixture_basic')
   })
 
@@ -70,15 +68,6 @@ describe('toTurnBattleParticipant adapter', () => {
     expect(participant.activeDomains).toBeUndefined()
   })
 
-  // Review fix (MED-3) — reaction initiation is a capability derived
-  // from phap_tu-domain ownership, not player-side membership: both
-  // phap_tu ways flag; kiem_tu/enemies/companions never do.
-  it('phap_tu-domain participants can initiate wuxing reactions; others cannot', () => {
-    expect(toTurnBattleParticipant(entity(), 0, BASIC, ['phap_tu']).canInitiateWuxingReactions).toBe(true)
-    expect(toTurnBattleParticipant(entity(), 0, BASIC, ['kiem_tu']).canInitiateWuxingReactions).toBe(false)
-    expect(toTurnBattleParticipant(entity(), 0, BASIC, ['the_tu_an']).canInitiateWuxingReactions).toBe(false)
-    expect(toTurnBattleParticipant(entity(), 0, BASIC).canInitiateWuxingReactions).toBe(false)
-  })
 })
 
 

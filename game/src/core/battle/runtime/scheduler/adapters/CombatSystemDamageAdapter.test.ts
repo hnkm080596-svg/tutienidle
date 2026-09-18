@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest'
 import type { CombatEntity } from '../../../../combat/CombatEntity'
 import { CombatSystem } from '../../../../combat/CombatSystem'
 import type { EntityVitalsChangedEvent } from '../../../../combat/EntityVitalsSystem'
-import type { Buff } from '../../../../buff/BuffTypes'
+import type { ActiveCapabilityGrant } from '../../../contracts/capability'
 import { EventBus } from '../../../../events/EventBus'
 import { createBaseStats } from '../../../../stats/StatBlock'
 import type { Stats } from '../../../../stats/StatBlock'
@@ -81,18 +81,21 @@ function makeHarness(entities: CombatEntity[]): Harness {
   let buffsCalls = 0
   // Deliberately feeds a recovery trigger if a channel consumes it: the
   // reaction/hit channels must never read this.
-  const recoveryBuff = {
+  const recoveryGrant: ActiveCapabilityGrant = {
+    instanceId: 'inst.recovery',
+    definitionId: 'doc_the',
+    capability: { id: 'test.dot_recovery', type: 'dot_recovery', payload: { healPercent: 1 } },
+    sourceId: 'source',
     targetId: 'source',
     stacks: 1,
-    effects: [{ type: 'dotRecovery', healPercent: 1 }],
-  } as unknown as Buff
-  const resolveSourceBuffs = (): readonly Buff[] => {
+  }
+  const resolveSourceGrants = (): readonly ActiveCapabilityGrant[] => {
     buffsCalls += 1
-    return [recoveryBuff]
+    return [recoveryGrant]
   }
 
   const adapter = new CombatSystemDamageAdapter(combat, (id) => map.get(id), {
-    resolveSourceBuffs,
+    resolveSourceGrants,
   })
 
   const emitted: CombatEventPayload[] = []
@@ -190,14 +193,19 @@ describe('CombatSystemDamageAdapter -- reaction channel', () => {
 describe('CombatSystemDamageAdapter -- legacy_dot channel', () => {
   it("routes 'legacy_dot' to applyDotDamage: dotResistance mitigation, reason 'dot', effectId from periodicId", () => {
     const source = makeEntity('source')
-    const target = makeEntity('target', { maxHp: 500, dotResistancePercent: 0.5 }, { currentHp: 500 })
+    const target = makeEntity(
+      'target',
+      { maxHp: 500, defense: 0, dotResistancePercent: 0.5 },
+      { currentHp: 500 },
+    )
     const h = makeHarness([source, target])
 
     const damageEvents: { effectId?: string }[] = []
     h.bus.on<{ effectId?: string }>('damage', (e) => damageEvents.push(e))
 
     const result = h.adapter.dealDamage(
-      payload({ damageProfile: 'legacy_dot', coefficient: 200, periodicId: 'poison.tick' }),
+      // coefficient is an intent-level ratio: might 10 x 20 = 200 raw.
+      payload({ damageProfile: 'legacy_dot', coefficient: 20, periodicId: 'poison.tick' }),
       h.ctx({ kind: 'buff_periodic' }),
     )
 
@@ -212,12 +220,13 @@ describe('CombatSystemDamageAdapter -- legacy_dot channel', () => {
   })
 
   it('passes the resolved source buffs into the DoT channel (dotRecovery stays reachable)', () => {
-    const source = makeEntity('source', { maxHp: 200 }, { currentHp: 50 })
+    const source = makeEntity('source', { maxHp: 200, woodPower: 90 }, { currentHp: 50 })
     const target = makeEntity('target', { maxHp: 500 }, { currentHp: 500 })
     const h = makeHarness([source, target])
 
     h.adapter.dealDamage(
-      payload({ damageProfile: 'legacy_dot', coefficient: 100, element: 'wood' }),
+      // might 10 + woodPower 90 = 100 base power x coefficient 1 = 100.
+      payload({ damageProfile: 'legacy_dot', coefficient: 1, element: 'wood' }),
       h.ctx({ kind: 'buff_periodic' }),
     )
 
@@ -257,11 +266,15 @@ describe('CombatSystemDamageAdapter -- standard hit channel', () => {
 describe('CombatSystemDamageAdapter -- dispatch tie-break (locked: profile-first)', () => {
   it("legacy_dot profile beats a contradictory origin.kind 'reaction' (exact profile match owns the channel)", () => {
     const source = makeEntity('source')
-    const target = makeEntity('target', { maxHp: 500, dotResistancePercent: 0.5 }, { currentHp: 500 })
+    const target = makeEntity(
+      'target',
+      { maxHp: 500, defense: 0, dotResistancePercent: 0.5 },
+      { currentHp: 500 },
+    )
     const h = makeHarness([source, target])
 
     const result = h.adapter.dealDamage(
-      payload({ damageProfile: 'legacy_dot', coefficient: 200 }),
+      payload({ damageProfile: 'legacy_dot', coefficient: 20 }),
       h.ctx({ kind: 'reaction' }),
     )
 

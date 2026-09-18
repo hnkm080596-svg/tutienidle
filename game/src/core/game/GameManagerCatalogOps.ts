@@ -4,8 +4,8 @@ import type { AffixRegistry } from '../equipment/AffixRegistry'
 import { assertValidEquipmentMainStats } from '../equipment/EquipmentStatPolicy'
 import type { Equipment } from '../equipment/Equipment'
 import type { EquipmentRegistry } from '../equipment/EquipmentRegistry'
-import type { BuffDefinition } from '../buff/BuffDefinition'
-import type { BuffRegistry } from '../buff/BuffRegistry'
+import type { BuffDefinition } from '../buff2/BuffDefinition'
+import type { BuffRegistry } from '../buff2/BuffRegistry'
 import type { Building } from '../building/Building'
 import type { BuildingRegistry } from '../building/BuildingRegistry'
 import type { Enemy } from '../enemy/Enemy'
@@ -91,9 +91,14 @@ export class GameManagerCatalogOps {
   }
 
   registerBuffs(buffs: BuffDefinition[]) {
+    // buff2 M4 -- the canonical catalog is the SEALED BUFF_REGISTRY built
+    // from the same data array, so registration is structural (a def
+    // missing from data cannot exist to be passed). This is now a
+    // drift validator preserving the original crash-early contract: any
+    // id not in the sealed registry throws at boot, not mid-battle.
     for (const buff of buffs) {
       if (!this.deps.buffRegistry.has(buff.id)) {
-        this.deps.buffRegistry.register(buff)
+        throw new Error(`BuffRegistry: unknown buff definition '${buff.id}'`)
       }
     }
   }
