@@ -93,7 +93,7 @@ describe('R5 runtime contract re-audit', () => {
     const { runtime, player } = fixture()
     runtime.notifyReadyActor(player)
     runtime.acknowledgeTurnReady(undefined)
-    expect(runtime.getAnimationState(player.id)).toBe('ready')
+    expect(runtime.getAnimationState(player.id)).toBe('standby')
   })
 
   it('rejects an omitted impact token without applying damage', () => {
@@ -103,7 +103,7 @@ describe('R5 runtime contract re-audit', () => {
     const hp = enemy.entity.currentHp
     runtime.acknowledgeActionImpact(undefined)
     expect(enemy.entity.currentHp).toBe(hp)
-    expect(runtime.getAnimationState(player.id)).toBe('cast')
+    expect(runtime.getAnimationState(player.id)).toBe('standby')
   })
 
   it('rejects an omitted complete token without completing the turn', () => {
@@ -125,6 +125,6 @@ describe('R5 runtime contract re-audit', () => {
     runtime.resetPendingState()
     runtime.notifyReadyActor(player)
     runtime.acknowledgeTurnReady(stale)
-    expect(runtime.getAnimationState(player.id)).toBe('ready')
+    expect(runtime.getAnimationState(player.id)).toBe('standby')
   })
 })

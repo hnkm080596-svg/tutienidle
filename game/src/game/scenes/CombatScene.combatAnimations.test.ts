@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import { PLAYER_ID } from './combat/combatConstants'
 import { combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
+import { PLACEHOLDER_ENTITY_KEY } from '@/presentation/art/CombatPresentationCatalogue'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 
 // Spec B §3.2 (2026-09-11) — enemies are `kind: 'static'`: they have no clips,
@@ -36,7 +37,7 @@ vi.mock('@/presentation/art/CombatPresentationCatalogue', async (importActual) =
       const override = PROMOTED.get(entityKey)
 
       if (override === 'animated') {
-        return { kind: 'animated', clips: {} }
+        return { kind: 'animated', clips: {} as never }
       }
 
       return actual.presentationFor(entityKey)
@@ -126,10 +127,10 @@ describe('CombatScene â€” entityAnimationKeyPrefix()', () => {
     expect(scene.entityAnimationKeyPrefix('mortal_wild_boar_ab12')).toBe('mortal-wild-boar-v1')
   })
 
-  it('enemy ngoÃ i batch (váº«n Rectangle) â†’ undefined', () => {
+  it('enemy ngoÃ i batch â†’ shared placeholder entity key (uniformity 2026-09-19 — never undefined)', () => {
     const scene = createScene()
 
-    expect(scene.entityAnimationKeyPrefix('enemy_1')).toBeUndefined()
+    expect(scene.entityAnimationKeyPrefix('enemy_1')).toBe(PLACEHOLDER_ENTITY_KEY)
   })
 })
 
@@ -147,7 +148,7 @@ describe('CombatScene â€” registerCombatAnimations() guard', () => {
     scene.registerCombatAnimations(
       'entity-x',
       Object.fromEntries(
-        ['idle', 'ready', 'cast', 'sweep_hand', 'punch', 'standby', 'death'].map((name) => [
+        ['idle', 'standby', 'death', 'idle_to_standby', 'standby_to_idle', 'cultivate'].map((name) => [
           name,
           {
             key: combatAnimationKey('entity-x', name as never),
@@ -157,13 +158,13 @@ describe('CombatScene â€” registerCombatAnimations() guard', () => {
             frameHeight: 10,
             frameCount: 1,
             frameRate: 1,
-            repeat: ['cast', 'sweep_hand', 'punch', 'death'].includes(name) ? 0 : -1,
+            repeat: ['idle', 'standby'].includes(name) ? -1 : 0,
           },
         ]),
       ),
     )
 
-    expect(created).toHaveLength(7)
+    expect(created).toHaveLength(6)
     expect(created.map((c) => c.key)).toContain('entity-x-idle')
   })
 
@@ -198,15 +199,15 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     scene.anims = { exists: () => true }
 
     // KhÃ´ng throw dÃ¹ rect khÃ´ng cÃ³ .play â€” guard kind !== 'sprite' cháº·n trÆ°á»›c.
-    expect(() => scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'ready')).not.toThrow()
+    expect(() => scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'idle_to_standby')).not.toThrow()
   })
 
-  it('actorId khÃ´ng map Ä‘Æ°á»£c entity key (enemy ngoÃ i batch) â†’ khÃ´ng play', () => {
+  it('actorId resolves to the STATIC placeholder entity (enemy ngoÃ i batch) â†’ khÃ´ng play', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
 
     scene.anims = { exists: () => true }
-    scene.playCombatAnimation(sprite, 'enemy_1', 'ready')
+    scene.playCombatAnimation(sprite, 'enemy_1', 'idle_to_standby')
 
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toHaveLength(0)
   })
@@ -216,20 +217,25 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     const sprite = makeSprite('sprite')
 
     scene.anims = { exists: () => false }
-    scene.playCombatAnimation(sprite, PLAYER_ID, 'ready')
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'idle_to_standby')
 
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toHaveLength(0)
   })
 
   it('player + clip Ä‘Ã£ Ä‘Äƒng kÃ½ â†’ play(Ä‘Ãºng key theo profile hiá»‡n hÃ nh)', () => {
+    // Promoted to animated for this test - in the shipped 'static' mode the
+    // player plays nothing; the clip-key path is exercised via the same
+    // criterion-7 promotion the enemy tests use.
+    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
+
     const scene = createScene()
     const sprite = makeSprite('sprite')
 
     scene.anims = { exists: () => true }
-    scene.playCombatAnimation(sprite, PLAYER_ID, 'ready')
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'idle_to_standby')
 
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toEqual([
-      combatAnimationKey(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'ready'),
+      combatAnimationKey(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'idle_to_standby'),
     ])
   })
 
@@ -242,9 +248,9 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     const sprite = makeSprite('sprite')
 
     scene.anims = { exists: () => true }
-    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'ready')
-    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'cast')
-    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'standby')
+    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'idle_to_standby')
+    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'death')
+    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'standby_to_idle')
 
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toEqual([])
   })
@@ -258,41 +264,65 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     const sprite = makeSprite('sprite')
 
     scene.anims = { exists: () => true }
-    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'ready')
+    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'idle_to_standby')
 
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls[0]).toBe(
-      combatAnimationKey('mortal-wild-boar-v1', 'ready'),
+      combatAnimationKey('mortal-wild-boar-v1', 'idle_to_standby'),
     )
   })
 
-  it('a one-shot clip returns the player to idle when it completes (B7)', () => {
-    // §4.5: idle is the state every other clip returns to. Without this the
-    // sprite freezes on the last frame of `cast` until something else plays.
+  it('a transition clip chains into its destination loop when it completes (B7)', () => {
+    // idle_to_standby's completion lands on the standby LOOP, not on idle -
+    // the transition is the road into the engaged state, not a detour out.
+    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
+
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
     const profileKey = PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
 
     scene.anims = { exists: () => true }
-    scene.playCombatAnimation(sprite, PLAYER_ID, 'cast')
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'idle_to_standby')
 
-    expect(gameSprite.playCalls).toEqual([combatAnimationKey(profileKey, 'cast')])
+    expect(gameSprite.playCalls).toEqual([combatAnimationKey(profileKey, 'idle_to_standby')])
 
-    gameSprite.emit('animationcomplete', { key: combatAnimationKey(profileKey, 'cast') })
+    gameSprite.emit('animationcomplete', {
+      key: combatAnimationKey(profileKey, 'idle_to_standby'),
+    })
 
     expect(gameSprite.playCalls).toEqual([
-      combatAnimationKey(profileKey, 'cast'),
-      combatAnimationKey(profileKey, 'idle'),
+      combatAnimationKey(profileKey, 'idle_to_standby'),
+      combatAnimationKey(profileKey, 'standby'),
     ])
   })
 
-  it('a DIFFERENT clip completing does not yank the player back to idle', () => {
+  it('a transition the entity never authored snaps straight to its destination loop', () => {
+    // Placeholder catalogues have no transition clips: asking for one must
+    // still REACH the engaged loop, or an unauthored entity would freeze in
+    // the wrong state.
+    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
+
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const profileKey = PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
+    const transitionKey = combatAnimationKey(profileKey, 'idle_to_standby')
+
+    scene.anims = { exists: (key: string) => key !== transitionKey }
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'idle_to_standby')
+
+    expect(gameSprite.playCalls).toEqual([combatAnimationKey(profileKey, 'standby')])
+  })
+
+  it('a DIFFERENT clip completing does not yank the player to the destination', () => {
+    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
+
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
 
     scene.anims = { exists: () => true }
-    scene.playCombatAnimation(sprite, PLAYER_ID, 'cast')
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'idle_to_standby')
 
     gameSprite.emit('animationcomplete', { key: 'some-other-clip' })
 
@@ -303,6 +333,8 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     // Chaining idle off idle would restart a looping clip on every completion;
     // chaining it off death would return a corpse to standing before the
     // destroy handler runs.
+    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
+
     const scene = createScene()
     const profileKey = PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
 
@@ -325,7 +357,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
 
     scene.anims = { exists: () => true }
 
-    expect(() => scene.playCombatAnimation(sprite, undefined, 'cast')).not.toThrow()
+    expect(() => scene.playCombatAnimation(sprite, undefined, 'death')).not.toThrow()
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toHaveLength(0)
   })
 })
@@ -428,6 +460,8 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
   })
 
   it('player â€” KHÃ”NG BAO GIá»œ destroy dÃ¹ cáº£ tween láº«n animation Ä‘á»u xong (giá»¯ vá»‹ trÃ­ cuá»‘i dÆ°á»›i overlay káº¿t quáº£)', () => {
+    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
+
     const scene = createScene()
     const { tweens } = stubTweensCapturingOnComplete()
 
@@ -452,6 +486,8 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
   })
 
   it('reset after player death - onBattleStart() replays idle so the corpse frame does not carry into the new battle', () => {
+    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
+
     const scene = createScene()
     const { tweens } = stubTweensCapturingOnComplete()
 

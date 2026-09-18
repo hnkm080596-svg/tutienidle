@@ -50,6 +50,16 @@ import {
   resolvePlayerVisualProfileId,
   type PlayerVisualProfileId,
 } from '@/presentation/art/PlayerVisualProfiles'
+import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
+import { combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
+import { registerClipCatalogue } from './combat/combat-animation-playback'
+
+// 'char-cultivate' is the legacy 17-frame bridge multiatlas - the sitting
+// pose in ANIMATED mode until player atlases carry a cultivate clip
+// (uniformity plan, 2026-09-19). Its authored sourceSize is 128x132.
+const CULTIVATE_BRIDGE_KEY = 'char-cultivate'
+const CULTIVATE_BRIDGE_SOURCE_SIZE = { w: 128, h: 132 }
 
 interface ResizeSize {
   width: number
@@ -177,6 +187,36 @@ export class MainScene extends Phaser.Scene {
 
     this.player = { sprite, label, sitting: false, profileId }
 
+    if (ENTITY_ART_MODE === 'animated') {
+      // Register every profile's clip set (the profile can switch while Home
+      // is alive - playerVisualProfileHandler swaps profileId) plus the
+      // cultivate bridge loop, then kick the standing pose's idle.
+      for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
+        const clips = animatedArtFormFor(profile.combatTextureKey)
+
+        if (clips) {
+          registerClipCatalogue(this.anims, clips)
+        }
+      }
+
+      if (!this.anims.exists(CULTIVATE_BRIDGE_KEY)) {
+        this.anims.create({
+          key: CULTIVATE_BRIDGE_KEY,
+          frames: this.anims.generateFrameNames(CULTIVATE_BRIDGE_KEY, {
+            prefix: 'frame_',
+            suffix: '.png',
+            start: 0,
+            end: 16,
+            zeroPad: 3,
+          }),
+          frameRate: 8,
+          repeat: -1,
+        })
+      }
+
+      this.playCurrentPoseClip()
+    }
+
     this.applyBackgroundLayout(this.scale.width, this.scale.height)
 
     this.scale.on('resize', this.resizeHandler)
@@ -217,9 +257,19 @@ export class MainScene extends Phaser.Scene {
 
   // Static art theo profile — sourceSize đọc LIVE từ texture hiện hành
   // (mỗi profile/art có kích thước nguồn khác nhau), giữ characterHeight
-  // cố định và tự suy width theo đúng tỉ lệ.
+  // co dinh va tu suy width theo dung ti le. Animated mode reads the active
+  // CLIP's authored sourceSize - the atlas texture's own image is the whole
+  // sheet, which would produce a nonsense aspect.
   private updateSpriteDisplaySize() {
     if (!this.player) {
+      return
+    }
+
+    if (ENTITY_ART_MODE === 'animated') {
+      const sourceSize = this.currentClipSourceSize()
+      const width = this.characterHeight * (sourceSize.w / Math.max(1, sourceSize.h))
+
+      this.player.sprite.setDisplaySize(width, this.characterHeight)
       return
     }
 
@@ -247,8 +297,55 @@ export class MainScene extends Phaser.Scene {
       : profile.combatTextureKey
   }
 
+  /**
+   * The authored sourceSize of whatever the player is drawing right now,
+   * animated mode only: the pose's clip, or the cultivate bridge's 128x132
+   * box when the profile has no cultivate clip yet.
+   */
+  private currentClipSourceSize(): { w: number; h: number } {
+    const profile = this.player
+      ? PLAYER_VISUAL_PROFILES[this.player.profileId]
+      : PLAYER_VISUAL_PROFILES.mortal
+    const clips = animatedArtFormFor(profile.combatTextureKey)
+
+    if (this.player?.sitting) {
+      return clips?.cultivate?.sourceSize ?? CULTIVATE_BRIDGE_SOURCE_SIZE
+    }
+
+    return clips?.idle.sourceSize ?? { w: 1, h: 1 }
+  }
+
+  /**
+   * Animated mode - the pose is a CLIP, not a texture: standing plays the
+   * profile's idle loop, sitting plays its cultivate clip when authored or
+   * the shared bridge multiatlas when it is not. Playing an animation also
+   * swaps the sprite onto that clip's sheet, so no setTexture is needed.
+   */
+  private playCurrentPoseClip() {
+    if (!this.player) {
+      return
+    }
+
+    const profile = PLAYER_VISUAL_PROFILES[this.player.profileId]
+    const clips = animatedArtFormFor(profile.combatTextureKey)
+    const key = this.player.sitting
+      ? (clips?.cultivate?.key ?? CULTIVATE_BRIDGE_KEY)
+      : clips
+        ? combatAnimationKey(profile.combatTextureKey, 'idle')
+        : undefined
+
+    if (key && this.anims.exists(key) && this.player.sprite.anims.currentAnim?.key !== key) {
+      this.player.sprite.play(key)
+    }
+  }
+
   private refreshPlayerTexture() {
     if (!this.player) {
+      return
+    }
+
+    if (ENTITY_ART_MODE === 'animated') {
+      this.playCurrentPoseClip()
       return
     }
 

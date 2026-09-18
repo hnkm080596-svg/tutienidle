@@ -9,6 +9,10 @@ import {
   PLAYER_VISUAL_PROFILES,
   type PlayerVisualProfileId,
 } from '@/presentation/art/PlayerVisualProfiles'
+import {
+  atlasFrameName,
+  presentationFor,
+} from '@/presentation/art/CombatPresentationCatalogue'
 
 import type { CombatScene } from '../CombatScene'
 import { PLAYER_ID } from './combatConstants'
@@ -30,14 +34,24 @@ export class CombatPlayerVisual {
 
     this.scene.playerSourceSize = { ...profile.combatSourceSize }
 
-    this.scene.playerUsesStaticTexture = true
-
     const sprite = this.scene.sprites.get(PLAYER_ID)
 
     if (sprite && sprite.kind === 'sprite') {
       const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
+      const presentation = presentationFor(profile.combatTextureKey)
 
-      if (this.scene.textures.exists(profile.combatTextureKey)) {
+      // Mode-aware swap (uniformity, 2026-09-19): an animated profile trades
+      // in atlas frames - set the idle sheet's first frame and restart the
+      // idle loop; a static profile swaps PNGs as before.
+      if (presentation?.kind === 'animated') {
+        if (this.scene.textures.exists(presentation.clips.idle.sheetKey)) {
+          gameSprite.setTexture(
+            presentation.clips.idle.sheetKey,
+            atlasFrameName(presentation.clips.idle, presentation.clips.idle.firstFrame),
+          )
+          this.scene.playCombatAnimation(sprite, PLAYER_ID, 'idle')
+        }
+      } else if (this.scene.textures.exists(profile.combatTextureKey)) {
         gameSprite.setTexture(profile.combatTextureKey)
       }
 

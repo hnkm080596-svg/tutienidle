@@ -530,13 +530,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   /** KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc nguÃ¡Â»â€œn cÃ¡Â»Â§a texture combat Ã„â€˜ang gÃ¡ÂºÂ¯n trÃƒÂªn player sprite. */
   playerSourceSize = { ...PLAYER_VISUAL_PROFILES.mortal.combatSourceSize }
 
-  /**
-   * Static texture thay atlas idle Ã¢â‚¬â€ art profile lÃƒÂ  PNG tÃ„Â©nh, KHÃƒâ€NG play
-   * animation; resetVisual() phÃ¡ÂºÂ£i bÃ¡Â»Â qua .play().
-   */
-  // Task 8 — public: combat-player-visual.ts ghi trực tiếp qua scene ref.
-  playerUsesStaticTexture = true
-
   // Debug body anchors (plan Ã‚Â§5.4) Ã¢â‚¬â€ dev-only, bÃ¡ÂºÂ­t qua
   // localStorage['debug.playerBodyAnchors']='1'; khÃƒÂ´ng cÃƒÂ³ UI production.
   readonly debugBodyAnchorsEnabled =
@@ -1363,6 +1356,14 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     name: CombatAnimationName,
   ): void {
     this.animationPlayback.playCombatAnimation(sprite, actorId, name)
+  }
+
+  // CombatGridViewHost - kick idle right after sprite creation. No-op for
+  // static-mode entities (playCombatAnimation guards on kind); animated-mode
+  // entities would otherwise sit on a frozen first frame until their first
+  // turn (uniformity, 2026-09-19).
+  startEntityIdle(sprite: EntitySprite, id: string): void {
+    this.playCombatAnimation(sprite, id, 'idle')
   }
 
   private clearSceneState() {

@@ -9,7 +9,11 @@ import { HERO_LANE_INDEX } from '@/core/battle/BattleLane'
 import { toVector2Points } from '@/game/support/ActionImpactVfx'
 import { ENEMY_SOURCE_SIZE, resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import { PLAYER_TEXTURE_KEY } from '@/game/support/CombatPreload'
-import { presentationFor } from '@/presentation/art/CombatPresentationCatalogue'
+import {
+  atlasFrameName,
+  PLACEHOLDER_ENTITY_KEY,
+  presentationFor,
+} from '@/presentation/art/CombatPresentationCatalogue'
 import { resolveEntityDisplaySize } from '@/presentation/geometry/combatEntityScale'
 import { DEPTH_ENTITY_SHADOW, DEPTH_OVERLAY_UI, entitySpriteDepth } from '@/game/support/BattleLayers'
 
@@ -431,11 +435,26 @@ export class CombatGridView {
     // enemy chÆ°a cÃ³ atlas riÃªng, váº«n dÃ¹ng Rectangle mÃ u nhÆ° cÅ© (xem
     // EntitySprite.kind's ghi chÃº).
     if (id === PLAYER_ID) {
-      const textureKey = this.host.textures.exists(this.host.playerProfile.combatTextureKey)
+      const entityKey = this.host.textures.exists(this.host.playerProfile.combatTextureKey)
         ? this.host.playerProfile.combatTextureKey
         : PLAYER_TEXTURE_KEY
+      const presentation = presentationFor(entityKey)
 
-      const gameSprite = this.host.add.sprite(0, 0, textureKey)
+      // Same draw resolution as the enemy branch below: a static entity
+      // renders its PNG, an animated entity renders the first frame of its
+      // idle sheet.
+      const drawKey =
+        presentation?.kind === 'static'
+          ? presentation.texture.textureKey
+          : presentation?.kind === 'animated'
+            ? presentation.clips.idle.sheetKey
+            : entityKey
+      const drawFrame =
+        presentation?.kind === 'animated'
+          ? atlasFrameName(presentation.clips.idle, presentation.clips.idle.firstFrame)
+          : undefined
+
+      const gameSprite = this.host.add.sprite(0, 0, drawKey, drawFrame)
 
       this.host.physics.add.existing(gameSprite)
 
@@ -474,17 +493,34 @@ export class CombatGridView {
 
       this.applySpriteSize(sprite)
       this.host.sprites.set(id, sprite)
+      this.startIdleMotion(sprite, id, entityKey)
+      this.host.startEntityIdle(sprite, id)
 
       return sprite
     }
 
-    // Enemy: Sprite art batch Mortal khi cÃ³ texture khá»›p id (mortal-
-    // enemy-art-batch-plan.md), fallback Rectangle mÃ u cho id ngoÃ i
-    // batch (test fixture / realm khÃ¡c chÆ°a cÃ³ art).
-    const enemyTextureKey = resolveEnemyTextureKey(id)
+    // Enemy: authored PNG khi id khop batch Mortal (mortal-enemy-art-batch-
+    // plan.md); id ngoai batch roi ve placeholder entity CUNG MODE
+    // (uniformity 2026-09-19) - Rectangle chi con la double-fallback khi ca
+    // placeholder texture cung thieu.
+    const enemyEntityKey = resolveEnemyTextureKey(id) ?? PLACEHOLDER_ENTITY_KEY
+    const presentation = presentationFor(enemyEntityKey)
 
-    if (enemyTextureKey && this.host.textures.exists(enemyTextureKey)) {
-      const gameSprite = this.host.add.sprite(0, 0, enemyTextureKey)
+    // What the sprite draws: a static entity renders its PNG; an animated
+    // entity renders the first frame of its idle sheet.
+    const drawKey =
+      presentation?.kind === 'static'
+        ? presentation.texture.textureKey
+        : presentation?.kind === 'animated'
+          ? presentation.clips.idle.sheetKey
+          : undefined
+    const drawFrame =
+      presentation?.kind === 'animated'
+        ? atlasFrameName(presentation.clips.idle, presentation.clips.idle.firstFrame)
+        : undefined
+
+    if (drawKey && presentation && this.host.textures.exists(drawKey)) {
+      const gameSprite = this.host.add.sprite(0, 0, drawKey, drawFrame)
 
       this.host.physics.add.existing(gameSprite)
 
@@ -524,8 +560,11 @@ export class CombatGridView {
         color,
         offsetX: 0,
         row,
-        sourceSize: { ...ENEMY_SOURCE_SIZE },
-        extent: artExtentFor(enemyTextureKey),
+        sourceSize:
+          presentation.kind === 'static'
+            ? { ...presentation.texture.sourceSize }
+            : { ...presentation.clips.idle.sourceSize },
+        extent: artExtentFor(enemyEntityKey),
         // Enemy art x2; Boss Ã—2 quy táº¯c enemy thÆ°á»ng (2026-09-05) â€” khÃ´ng
         // cÃ²n dÃ¹ng CÃ™NG multiplier nhÆ° trÆ°á»›c (xem
         // CombatScene.enemyScale.test.ts). BÃ³ng ellipse dÆ°á»›i chÃ¢n nhÃ¢n
@@ -546,7 +585,8 @@ export class CombatGridView {
       this.host.sprites.set(id, sprite)
       this.applySpriteSize(sprite)
       this.updateEnemyHealthBar(sprite, healthBar.currentHp, healthBar.maxHp)
-      this.startIdleMotion(sprite, id, enemyTextureKey)
+      this.startIdleMotion(sprite, id, enemyEntityKey)
+      this.host.startEntityIdle(sprite, id)
 
       return sprite
     }

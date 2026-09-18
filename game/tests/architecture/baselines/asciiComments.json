@@ -309,6 +309,9 @@
   "// aria-labelledby tới heading h3. Stable per-instance ID (useId) — nhiều",
   "// dialog đồng thời không trùng ID tĩnh."
  ],
+ "src/components/common/EntitySpriteCanvas.vue": [
+  "// EntitySpriteCanvas — Vue-side sprite animation over a TexturePacker atlas."
+ ],
  "src/components/common/ErrorBoundary.vue": [
   "// Beta Phase 4 (Global Error Boundary) — bắt lỗi TRONG render/setup/",
   "// watcher của cây component con (app.config.errorHandler trong",
@@ -370,6 +373,9 @@
   "// Remediation Task 6 (2026-09-05) — aria-labelledby tham chiếu heading",
   "// thật (per-instance useId) thay vì aria-label duplicate.",
   "/* Fit-engine (2026-08-29) — body là ngân sách flex cho nội dung: con chiếm flex thay vì scroll. Con tự paginate khi vượt ngân sách (pattern BagGrid). overflow hidden là rào chặn cuối — panel con KHÔNG được dựa vào nó. */"
+ ],
+ "src/components/common/PlayerPortrait.test.ts": [
+  "// No @vue/test-utils in this project — mount via the public Vue API"
  ],
  "src/components/common/PlayerPortrait.vue": [
   "// Trình bày nhân vật dùng CHUNG (plan Workstream A) — PNG tĩnh mới,",
@@ -823,10 +829,6 @@
  "src/components/game/combat/TurnOrderStrip.test.ts": [
   "// Phase A6 (2026-09-08) — TurnOrderStrip buff badge row: visible buffs",
   "// render as polarity-colored badges with name ×stacks (remainingTurns)",
-  "// 3 instances on the pool (2× bong stacks = 1 instance with 2 stacks +",
-  "// khai_son) + 1 hidden → 2 visible badges.",
-  "// Combat speed gauge + round indicator (2026-09-12) — each combatant chip",
-  "// \"Hiệp 4\", matching the PC predicate `roundsElapsed < limit at",
   "// limit = 15 the window is already gone — the in-progress round is the",
   "// 16th, displayed as \"Hiệp 16/15\" with is-over."
  ],
@@ -842,7 +844,7 @@
   "// Round indicator (2026-09-12) — the CURRENT round (1-based, i.e.",
   "// UI selection). is-over once roundsElapsed >= limit — PC already lost.",
   "// Phase A6 (2026-09-08) — visible buff badges for a party member's chip:",
-  "// = name ×stacks (remainingTurns), title = description tooltip. Read-only",
+  "// = name ×stacks (remaining), title = description tooltip. buff2 M4:",
   "/* Phase A6 — buff duration badges (buff = jade, debuff = danger). */",
   "/* Combat speed gauge (2026-09-12) — thin ATB fill along the bottom edge of each combatant chip. Jade for the party, danger for enemies; a full bar brightens to signal \"ready to act\". */",
   "/* Round indicator (2026-09-12) — completed ATB rounds (+ perfect-clear limit when the launching stage has one). is-over = window missed. */"
@@ -2609,40 +2611,6 @@
   "// cấp ở tầng 3) VỪA vỡ bằng cách so currentWard tick này với tick",
   "// trước, không hook vào pipeline ward-break chung (không đổi"
  ],
- "src/core/artifact/ArtifactSystem.test.ts": [
-  "// Player \"bị stun\" — playerBuffs có ccEffect stun — nhưng",
-  "// updateArtifactActivation() KHÔNG được đọc field này ở đâu cả.",
-  "// Activation đầu tiên fire ngay (timer khởi tạo = 0, doc không yêu",
-  "// cầu \"khởi động nguội\" — subgun đóng góp DPS ngay từ đầu trận).",
-  "// Hit phụ = 55% hit chính (cùng multiplier * 0.55).",
-  "// Gỡ troi_chan thủ công để kiểm tra ICD KHÔNG cho áp lại ngay, dù",
-  "// đủ 3 hit tiếp theo trong cùng window.",
-  "// trần thấp để test cap dễ",
-  "// refresh, không cộng dồn stack",
-  "// Trận MỚI luôn tạo playerBuffs MỚI (BattleSystem.start()) — mô",
-  "// phỏng bằng cách tạo Battle thứ 2 độc lập, không tái dùng buffs cũ."
- ],
- "src/core/artifact/ArtifactSystem.ts": [
-  "// Bản Mệnh Pháp Bảo — combat \"subgun\" (doc §8-11). Action nền + 3",
-  "// hướng Công/Thủ/Khống, đọc/ghi qua Battle.artifactRuntime. Không tự",
-  "// giữ state ngoài Battle (runtime-only, xem ArtifactRuntime.ts).",
-  "// ---- Cấu hình action nền (doc §8.1/§9) ----",
-  "/** \"45% Power của hành mỗi phát\" — ratio của SkillDamageComponent, KHÔNG phải multiplier tổng. */",
-  "// ---- Công — Ngũ Hành Liên Châu (doc §8.2) ----",
-  "// ---- Thủ — Ngũ Hành Hộ Thể (doc §8.3) ----",
-  "// ---- Khống — Ngũ Hành Trấn Linh (doc §8.4) ----",
-  "/** element undefined (không hành nào equip) -> damage/VFX trung tính (physical), không tự mở hành. */",
-  "/** * Tick chính — gọi mỗi fixed-step TRONG battle 'fighting', ĐỘC LẬP * isIncapacitated() (player bị CC KHÔNG được dừng artifact, doc §11 * điểm 3 + acceptance §15.3). */",
-  "// Không có mục tiêu sống lúc activation tới hạn — bỏ qua activation",
-  "// này, chờ chu kỳ kế (không dồn/không target quái pending-spawn,",
-  "// acceptance §15.3).",
-  "// Công tầng 6 \"Liên Châu\" — +1 hit 55% dùng hành KẾ trong vòng xoay",
-  "// (đã advance elementCursor ở trên, nên rotation[cursor] chính là",
-  "// \"hành kế\").",
-  "// Công tầng 18 \"Vạn Tượng Quy Nhất\" — activation thứ 5 phóng MỌI",
-  "// hành đang equip vào primary target, tổng damage cap theo số hành.",
-  "/** * Gọi từ BattleSystem.applyActionHit() khi options.origin?.kind === * 'artifact' — dispatch hiệu ứng milestone theo hướng đang active. * `element` là hành của CHÍNH hit vừa resolve (undefined nếu action * nền dùng physical trung tính). */"
- ],
  "src/core/audio/AudioManager.test.ts": [
   "// AudioManager.test.ts — unit tests for AudioManager (Tone.js-based).",
   "// - NoiseSynth: (duration, time?, velocity?) — NO note!",
@@ -2710,19 +2678,9 @@
  "src/core/battle/ActionTargetingSystem.adversarial.test.ts": [
   "// QA adversarial probes (2026-09-04 quick review) — AOE Shape Extension."
  ],
- "src/core/battle/ActionTargetingSystem.test.ts": [
-  "// Task 3 (D16): the attackRange-gated helpers retired with the stat —",
-  "// Quái ở cột 14 (xa cổng) vẫn là candidate — pre-position ngay cả",
-  "// khi quái còn xa theo cột.",
-  "// rankTargetsByStrategy: lowest_hp hòa HP → gần hơn thắng."
- ],
  "src/core/battle/ActionTargetingSystem.ts": [
   "// stat — reach now belongs to action targeting, not Stats.",
-  "// nearest: gần theo CỘT trước, hòa thì theo thứ tự danh sách ổn định.",
-  "/** * Strategy-ranked target pick over ALL alive materialized enemies * (2026-08-26 pre-positioning rule): rank every living enemy by strategy * from the avatar's current position, return the first candidate. * Survives the attackRange retirement (Task 3, D16) unchanged — this * picker never gated on reach. Currently consumed by the dormant * ArtifactSystem activation tick. */"
- ],
- "src/core/battle/Battle.ts": [
-  "/** * Targetability (plan §5.4) — false khi Player chưa materialize: * không thể bị enemy target, không nhận damage và không cast. KHÔNG * dùng `alive = false` cho pending spawn vì \"chưa xuất hiện\" khác * \"đã chết\". */"
+  "// nearest: gần theo CỘT trước, hòa thì theo thứ tự danh sách ổn định."
  ],
  "src/core/battle/BattleEvents.ts": [
   "// Event carry vị trí/kết thúc trận — nguồn DUY NHẤT để view (Phaser",
@@ -2862,8 +2820,7 @@
   "/** Chebyshev distance từ avatar Player tới target tại thời điểm chấm điểm. */"
  ],
  "src/core/battle/CombatAnimationTypes.ts": [
-  "// R5 (AR-24) — Canonical animation name types for combat presentation.",
-  "/** * Names that have BOTH a clip and a call site. * * `hit`, `basic_attack` and `victory` were removed on 2026-09-11 (Spec B §4.5): * they were declared here and existed nowhere else in the tree — no clip, no * caller — and the animation-set builder's `as` cast asserted they were present * anyway, so `set.hit` type-checked and was `undefined` at runtime. * * Each returns the day it has a clip and a caller together. A name in this union * with nothing behind it is what let that cast lie for as long as it did. */"
+  "// R5 (AR-24) — Canonical animation name types for combat presentation."
  ],
  "src/core/battle/EnemySpawnPlacement.ts": [
   "// EnemySpawnPlacement — pure enemy spawn position resolver, resolved",
@@ -2887,12 +2844,6 @@
   "// trước — xem TurnQueue.ts cho vòng lặp tìm actor kế tiếp.",
   "/** * Tiêu hao gauge sau khi hành động. fractionConsumed=1 (mặc định) = reset * hoàn toàn (lượt thường). fractionConsumed<1 = hành động \"rẻ\" (spec: chỉ * tốn nửa gauge), actor còn lại gần lượt kế hơn. */",
   "/** Hồi gauge tức thời (vd buff \"+300 gauge khi kill\") — clamp trong 0..GAUGE_MAX. */"
- ],
- "src/core/battle/turn/AilmentChance.test.ts": [
-  "// Mission C Task 10b — elementApplicationPercent must apply to ailment"
- ],
- "src/core/battle/turn/AilmentChance.ts": [
-  "/** * Mission C Task 10b — the ONE ailment-application-chance formula for * turn combat: base chance + the actor's elementApplicationPercent, * clamped to [0, 1]. The legacy real-time executors that carried this * formula were deleted in Mission G; this helper is the sole authority. */"
  ],
  "src/core/battle/turn/AoeShape.ts": [
   "// Turn-Based Combat Foundation (spec Phần 4) — mọi shape neo tại Ô MỤC",
@@ -3008,22 +2959,21 @@
   "// The Tu Reimagined (plan Task 6/11) — `appliesBuffs` plural replaces"
  ],
  "src/core/battle/turn/TurnBattleSystem.appliesBuffUnknownId.qa.test.ts": [
-  "// CONTENT-DERIVED ids — skill.appliesBuff.definitionId and"
+  "// TurnBattleSystem reads CONTENT-DERIVED ids — skill.appliesBuff.definitionId",
+  "// and appliesAilments[].buffDefinitionId — and BuffRegistry.get THROWS on an",
+  "// M4: applies ride apply_buff ops through the shared runtime — the guard"
  ],
  "src/core/battle/turn/TurnBattleSystem.batTu.test.ts": [
   "// D9/D10/INV-4/5) — Bat Tu Ba The survival contract: lethal -> HP 1 ->",
-  "// Non-cc debuff (poison/dot) — must survive BOTH the lethal grant and",
-  "// Buff already active at 2 remaining turns — a re-grant would reset to 3.",
-  "// Buffed: the stun cannot block — the actor still acts (basic hit).",
-  "// A stunned actor cannot cast at all — clearsCcOnApply on a self-buff",
-  "// x dpsRatio 0.2 resolves ~200k damagePerTurn at apply — far over 50 HP.",
-  "// cooldown tick must not drop it to 7 — the regression this guards.",
-  "// Bat Tu window (free survive — no new commit), so the cooldown DOES"
+  "// Non-cc debuff (poison/dot) — must survive BOTH the lethal grant and"
  ],
  "src/core/battle/turn/TurnBattleSystem.bossTriggerUnknownId.qa.test.ts": [
   "// corrected id could still fire later — and, critically, resolveNextStep",
   "// No-op skill: no damage, no targets — nothing outside the boss-trigger",
   "// Turn 1 resolves the player (no bossTrigger — block skipped)."
+ ],
+ "src/core/battle/turn/TurnBattleSystem.camCong.test.ts": [
+  "// / contract sec.101): Cấm Công as an action-tag restriction inside the"
  ],
  "src/core/battle/turn/TurnBattleSystem.compositePicks.qa.test.ts": [
   "// M8 flake fix — stats.maxHp must agree with the 1M currentHp/maxHp",
@@ -3035,25 +2985,35 @@
  "src/core/battle/turn/TurnBattleSystem.consumeDamage.test.ts": [
   "// Phase A3 (2026-09-07) — consume-for-damage skill effects (Pháp Tu",
   "// Detonate / Thổ Tu ward burst), ported from legacy SkillEffect's",
-  "// entity.stats.maxHp and clamps currentHp — the fixture's declared vitals"
+  "// entity.stats.maxHp and clamps currentHp — the fixture's declared vitals",
+  "// Base damage 0 — the entire drop is 3 stacks × 50 = 150 true damage.",
+  "// Base damage 0 — the entire drop is 20 ward × 5 = 100 true damage.",
+  "// R1 (AR-01) — consumption bonus damage must go through the authoritative",
+  "// One ward point × 5 damage/point leaves the enemy at exactly 0 HP.",
+  "// 3 stacks × 50 = 150 bonus damage against 101 remaining HP."
  ],
  "src/core/battle/turn/TurnBattleSystem.detonate.test.ts": [
   "// Phap Tu Reimagined Task 13 — spec §4: the empowered ult's two route",
   "// duration with potency recomputed vs the caster's CURRENT stats —",
-  "// Review fix (MED-3) — detonate seeds ailments that must still",
-  "// woodPower 10 -> snapshot 2/tick; choang (stun — untagged, no dot)",
-  "// wood incumbent at application — legitimately amped to 33.75/tick",
+  "// (statSourceId) — a third-party DoT pays its own owner's per-tick.",
+  "// choang (stun — controls, no damage periodic) is a pure-utility",
   "// Utility ailment untouched — same instance, same remaining life.",
-  "// — not the consumed stack's remaining life, not a stack-up.",
-  "// Potency recomputed from the caster's CURRENT stats —",
-  "// form a SINH pair at application — that legitimate check is the",
+  "// Potency recomputed vs the caster's CURRENT stats — the enemy's",
+  "// all — both ailments are DoT so the detonate consumes them, and",
   "// Direct packet floors at 1 + the fresh bong IS a DoT ailment —"
+ ],
+ "src/core/battle/turn/TurnBattleSystem.dotSource.qa.test.ts": [
+  "// entity.stats.maxHp and clamps currentHp — the fixture's declared vitals",
+  "// dotRecovery buff — the trigger query returns 0, so the source can"
  ],
  "src/core/battle/turn/TurnBattleSystem.dynamicBasic.test.ts": [
   "// Kiem Tu Reimagined Task 2 — generic engine primitives:"
  ],
  "src/core/battle/turn/TurnBattleSystem.effectiveSpeed.test.ts": [
-  "// R2 (AR-05) — participant.speed is a synced read-only cache of effective"
+  "// R2 (AR-05) — participant.speed is a synced read-only cache of effective",
+  "// BEFORE the enemy (speed 100) fills the same gauge — 2× rate means",
+  "// enemy priority 1 > player priority 0, so player still wins ties —",
+  "/** * Measures the per-step gauge accumulation rate for one participant by * cloning its gauge fields (no battle mutation) and advancing manually — * mirrors what resolveNextTurn does per step. */"
  ],
  "src/core/battle/turn/TurnBattleSystem.empowerment.test.ts": [
   "// Phap Tu Reimagined Task 10 — ultimate empowerment: the equipped",
@@ -3062,16 +3022,18 @@
  "src/core/battle/turn/TurnBattleSystem.externalWard.test.ts": [
   "// The Tu Reimagined (plan Task 11, spec section 5.2/7.11, D3/INV-12) —",
   "// emblem — never cast",
-  "// prefers remainingTime — zero them together, then run the tick.",
   "// Ally has wardMax 0 yet holds 5000 external — no regen clamp applies.",
   "// spendWard reads currentWard only — external pool invisible to it."
+ ],
+ "src/core/battle/turn/TurnBattleSystem.followUpQueue.test.ts": [
+  "// ARCH-002 (M7): entity.stats is derived from baseStats every refresh —"
  ],
  "src/core/battle/turn/TurnBattleSystem.hoIntercept.test.ts": [
   "// The Tu Reimagined (spec 6.2.1, plan Task 17) — the Ho intercept window:",
   "// — semantically multi-target regardless of how many entries survive",
   "/** Enemy at (0,0); protected ally at (0,2); protector at (5,2) — near. */",
   "/** A declared enemy action against the squishy — the pre-impact state. */",
-  "// The rng seam is the LAST constructor param — the reactive-proc",
+  "// The rng seam is the LAST constructor param — engine rolls draw from",
   "// with guaranteed chance — spec D5: one substitution attempt only.",
   "// The far protector's pool was never touched — no attempt, no gain.",
   "// Injected rng pinned low — the proc roll WOULD succeed if the",
@@ -3124,14 +3086,28 @@
   "// to 1 damage (\"tối thiểu 1\" in resolveAttack) and pollute the deltas.",
   "// Hit chance floors at 5% (Accuracy.ts) — force the roll high so the"
  ],
+ "src/core/battle/turn/TurnBattleSystem.selfBuff.qa.test.ts": [
+  "// entity.stats.maxHp and clamps currentHp — the fixture's declared vitals",
+  "// miss or crit — this suite flaked as \"expected 500 to be greater than"
+ ],
  "src/core/battle/turn/TurnBattleSystem.slice3qa.test.ts": [
   "// QA adversarial probes (2026-09-04 quick review) — Slice 3 buff/CC wiring.",
   "// ARCH-002 (M7): entity.stats is derived from baseStats every refresh —",
-  "// entity.stats.maxHp and clamps currentHp — the fixture's declared vitals"
+  "// entity.stats.maxHp and clamps currentHp — the fixture's declared vitals",
+  "// R2 (AR-05): effective speed lives on entity.stats — the participant",
+  "// duration 2: sau 2 lượt block, buff expire → lượt 3 hành động được.",
+  "// enemy (holder burn) tick buff ở lượt của chính nó → hp giảm.",
+  "// player giết dying trước; dying không được chọn làm actor. buff2: the",
+  "// DoT tick trong holder-turn-end TRƯỚC step action — hp giảm dù bị block."
  ],
  "src/core/battle/turn/TurnBattleSystem.slice4qa.test.ts": [
   "// QA adversarial probes (2026-09-04 quick review) — Slice 4 resource/boss.",
-  "// ARCH-002 (M7): entity.stats is derived from baseStats every refresh —"
+  "// ARCH-002 (M7): entity.stats is derived from baseStats every refresh —",
+  "// Chờ enemy thật sự tới lượt — ATB gauge: player speed 10 tích nhanh",
+  "// hơn nên hành động nhiều lần trước; boss trigger chỉ check khi",
+  "// CHÍNH enemy làm actor (đúng thiết kế — trigger của boss gắn lượt boss).",
+  "// R2 (AR-05): effective speed lives on entity.stats — the participant",
+  "// Enemy speed 100 đi trước — player resources KHÔNG được tick ở step này."
  ],
  "src/core/battle/turn/TurnBattleSystem.slice5qa.test.ts": [
   "// QA adversarial probes (2026-09-04 quick review) — Slice 5 wave/stage."
@@ -3147,11 +3123,9 @@
   "// cumulative damage: at least one 3x hit among ≥4 landed actions.",
   "// Only the first basic hit has landed (multiplier 1 → single-digit"
  ],
- "src/core/battle/turn/TurnBattleSystem.stacksPerAffectedTarget.test.ts": [
-  "// Mission C Task 10a (audit T3-19 adjacent) — Hau Tho Thanh Luy's"
- ],
  "src/core/battle/turn/TurnBattleSystem.stanceBuffs.test.ts": [
   "// The Tu Reimagined (spec 6.1, plan Task 19) — stance/burst semantics:",
+  "// buff2 M4: the phan_mon marker used here is the kit-clone shape —",
   "// 0 - 0 (free) + 20 (success) — the free proc nets the full gain."
  ],
  "src/core/battle/turn/TurnBattleSystem.taunt.test.ts": [
@@ -3165,7 +3139,15 @@
   "// Fixture giá»‘ng há»‡t quy Æ°á»›c CombatSystem.damageFloor.test.ts â€” cáº§n Stats",
   "// Ä‘áº§y Ä‘á»§ vÃ¬ runToCompletion gá»i tháº­t CombatSystem.resolveActionHit().",
   "// ARCH-002 (M7): entity.stats is the derived effective view — a fixture",
-  "// entity.stats.maxHp and clamps currentHp — the fixture's declared vitals"
+  "// entity.stats.maxHp and clamps currentHp — the fixture's declared vitals",
+  "// Turn 1: player acts (round 1 in progress). Turn 2: enemy acts —",
+  "// closed — the boss must wait for its own round-2 action.",
+  "// player — round 1 open",
+  "// boss — closes round 1; 1 < 2, no fire",
+  "// player — action 3, still mid round 2",
+  "// boss — closes round 2; fires",
+  "// rounds (D2 contract) — a round only closes when the slow boss has",
+  "// resolveNextStep calls, so 60 rounds need ~600+ steps — hence the"
  ],
  "src/core/battle/turn/TurnBattleSystem.theEconomy.test.ts": [
   "// The Tu Reimagined (spec 2026-09-15 section 4.1, plan Task 15) — the",
@@ -3180,302 +3162,64 @@
  ],
  "src/core/battle/turn/TurnBattleSystem.theTuAnRiders.test.ts": [
   "// The Tu Reimagined (plan Task 20, spec 8.2) — node-rider mechanics on",
-  "// The rng seam is the LAST constructor param — the reactive-proc",
+  "/** Clone a marker def with hand-baked reactive_proc rider fields — the same capability-payload writes buildTheTuAnKit performs. */",
+  "/** Live-data registry with the given defs swapped in under their own ids — the kit-clone seam the battle-local registry performs. */",
   "// Regression guard — resolveAllyActionWindow once treated",
   "// Math.random inside CombatSystem — pin it high so the roll misses",
-  "// injected this.rng — pin that low so the supporter's proc succeeds",
+  "// runtime rng — pin that low so the supporter's proc succeeds",
   "// intended enemy — not ['enemy', 'enemy2'].",
-  "// on the raw damage amount — a saved holder must still counter."
+  "// The seed apply consumes one resolver roll (stream parity) — clear",
+  "// on the raw damage amount — a saved holder must still counter.",
+  "// Clear the seed-apply's resolver roll — the assertion below counts"
  ],
  "src/core/battle/turn/TurnBattleSystem.troFollowUp.test.ts": [
   "// The Tu Reimagined (spec 6.2.2/6.2.3, plan Task 18) — the Phan taken",
   "// queueing tro_kich against the whole landed set — never on the actor's",
+  "/** Clone a marker def with hand-baked reactive_proc economy fields — the same capability-payload writes buildTheTuAnKit performs (the base registry marker carries no theCost/theGainOnSuccess). */",
+  "/** Live-data registry with the given defs swapped in under their own ids — the kit-clone seam the battle-local registry performs. */",
   "// enemy2 dies to the first hit (1 HP), enemy survives — queue only vs enemy."
  ],
  "src/core/battle/turn/TurnBattleSystem.ts": [
-  "// TurnBattleSystem Slice 1 (spec 2026-09-04) — engine turn-based độc lập,",
+  "// TurnBattleSystem Slice 1 (spec 2026-09-04) -- engine turn-based độc lập,",
   "// headless, KHÔNG nối vào BattleSystem.ts/GameManager. Chứng minh ATB",
   "// gauge (TurnQueue) + targeting + CombatSystem.resolveActionHit chạy",
   "// đúng end-to-end trước khi lớp thêm skill/buff/reaction/hazard zone ở",
-  "/** * Future Systems Task 6 — gauge-delta effect: bắn 1 LẦN ngay khi buff * được áp, đẩy % GAUGE_MAX vào actionGauge của participant nhận buff * (refundGauge đã clamp [0, GAUGE_MAX]). Không phải tick liên tục. */",
-  "/** Đã build đầy đủ (roll template/elite/boss xong) — chỉ chờ hết telegraph. */",
-  "// Turn-Based Wave Redesign (2026-09-06) — quy đổi TRỰC TIẾP từ",
+  "/** Đã build đầy đủ (roll template/elite/boss xong) -- chỉ chờ hết telegraph. */",
+  "// Turn-Based Wave Redesign (2026-09-06) -- quy đổi TRỰC TIẾP từ",
   "// SPAWN_TELEGRAPH_SECONDS của legacy/BattleSystem.ts (0.75s/1.0s/1.4s)",
   "// sang tick (0.1s/tick, khớp BATTLE_FIXED_STEP mà GameManager gọi",
   "// tickPacing() mỗi lần) để giữ đúng cảm giác thời gian người chơi đã quen.",
-  "/** * stat-system-reimagined review fix (2026-09-15) — stat domains this * participant owns (player path -> its domain). Domain deltaDerivers * in calculateEffectiveStats run only for these, so e.g. a kiem_tu * entity gaining attunement mid-battle never emits phap_tu MP deltas. */",
-  "/** * Review fix (MED-3) — wuxing reaction INITIATION is an explicit * capability, not player-side membership: stamped by the adapter for * participants owning the phap_tu stat domain (spec §6/D21 — the * domain gate is what permits a future mixed-element hien route). * Companions/enemies/non-phap_tu players never carry it; their * ailments still participate as incumbents. */",
-  "/** Future Systems Task 7 — charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */",
-  "/** * Phase A3 (2026-09-07) — 1-based counter of this enemy's own actions, * ported from the retired grid-battle specialAttackCounter with the same * everyNth semantics as legacy EnemyAttackSystem.fireEnemyAttack() * (module retired M13 — semantics ported here): * when counter % everyNth === 0, the special attack's damageMultiplier * replaces the basic attack's for that action. Runtime-only, never * resets mid-battle. undefined coerces to 0. */",
-  "/** * Kiem Tu Reimagined Task 2 — path-specific basic owner (Kiem Pho orb * preset / Ngu Kiem Dao). When present it owns the basic slot and the * post-resolution hook; the engine stays content-agnostic. */",
-  "/** * The Tu Reimagined (spec 6.2, plan Task 16) — participant-local * reactive payload defs keyed by skill id (phan_kich/tro_kich clones, * node-adjusted at battle build). QueuedFollowUp.payloadSkillId * resolves through this map — never through a shared registry, so a * node's payload upgrade reaches this participant's copy only. */",
-  "/** * Future Systems Task 9 (2026-09-04) — party: mảng player-side units, * chung 1 ATB queue với enemy (TurnQueue tái dùng nguyên vẹn); thua khi * TOÀN BỘ party chết (đối xứng điều kiện thắng — spec §6). */",
-  "/** * Countdown phase (flow: Countdown → Spawn → Gauge combat → Wave → * Result) — số lượt-pacing còn lại trước khi state chuyển 'fighting'. * GameManager pacing loop tick giảm; engine `resolveNextStep()` KHÔNG * resolve combat trong pha này (chỉ tick countdown khi được gọi qua * `tickCountdown()`), enemies đã spawn đứng yên chờ. */",
-  "/** 0-based index into `waves` — which wave is currently spawning/active. */",
+  "/** Future Systems Task 7 -- charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */",
+  "/** * Future Systems Task 9 (2026-09-04) -- party: mảng player-side units, * chung 1 ATB queue với enemy (TurnQueue tái dùng nguyên vẹn); thua khi * TOÀN BỘ party chết (đối xứng điều kiện thắng -- spec §6). */",
+  "/** * Countdown phase (flow: Countdown → Spawn → Gauge combat → Wave → * Result) -- số lượt-pacing còn lại trước khi state chuyển 'fighting'. * GameManager pacing loop tick giảm; engine `resolveNextStep()` KHÔNG * resolve combat trong pha này (chỉ tick countdown khi được gọi qua * `tickCountdown()`), enemies đã spawn đứng yên chờ. */",
   "/** Quái đã spawn (dạng pending) nhưng CHƯA vào trận thật (battle.enemies). */",
-  "/** * Slice 7 extension (Completion Task 11) — battle log: 1 entry mỗi lượt * resolveActorTurn (append-only, ephemeral — không persist vào save, * combat ephemeral theo nguyên tắc rework). */",
-  "/** * Action Playback (2026-09-05) — counter/follow-up (§6 spec): actors queued * here jump straight to 'ready' after the current turn's standby, bypassing * gauge. FIFO queue (not a single id) so an AOE hit that triggers multiple * counters doesn't drop all but the last one. Defect-fix Task 1: đổi từ * singular — tickPacing (production loop) giờ đọc queue này. * The Tu Reimagined (Task 16) — entries are typed QueuedFollowUp * records carrying provenance (actionSource/triggerContext) and the * queued payload descriptor, not bare actor ids. */",
-  "/** Defect-fix Task 1 — reciprocity guard: đếm consecutive bypass turns qua * queue, reset khi 1 normal gauge turn resolve; cap trong dequeueFollowUpActor() * để 2 entity counter-buff không bounce follow-up lẫn nhau vô hạn. */",
-  "/** * Phap Tu An (Task 11) — prepared follow-up EXECUTIONS (repeat / * multicast) of an already-committed cast. Unlike the actor queue * above, an entry carries its own payload root — the drained actor * does NOT run normal action selection (the descriptor IS the action) * and skips per-turn machinery (buff tick, regen, CC): these are the * remainder of one cast, not a new turn. */",
-  "/** * Luật targeting §4: cùng hàng thì chọn gần nhất theo cột (không thể * nhắm xuyên qua entity đứng gần hơn cùng hàng); không có ai cùng hàng * thì chọn gần nhất toàn bàn cờ theo Chebyshev. * * The Tu Reimagined (plan Task 10, D6/INV-11) — Khiem Khich Taunt reads * the ACTOR's own pool BEFORE positional rules: an active khiem_khich * debuff forces the pick onto its sourceId (the taunter) when that * participant is alive in the opposing side. uniquePerTarget on the def * means a newer taunt already evicted older instances — the last * instance is the newest by construction. Dead/missing taunter falls * through to positional. opts.ignoreTaunt exempts scripted * specialAttacks (their positional pick is part of the authored script). */",
-  "/** Defect-fix Task 1 (2026-09-05) — reciprocity cap: 2 entity cùng holding * counter buff không được bounce follow-up lẫn nhau quá 4 nhịp liên tiếp * (không có normal turn xen vào) — chặn chain vô hạn starving turn order. */",
-  "/** * M8 (ARCH-003) — Ward delayed-regen gate in TURN units. Legacy * BattleSystem measured WARD_REGEN_DELAY_SECONDS = 3 on the wall clock; * the turn engine preserves the same numeric intent against the actor's * own turn cadence: `turnsSinceLastHitLanded` counts the holder's turns * (incremented once per declare, reset to 0 by CombatSystem on every * landed hit) and Ward regen resumes once 3 turns pass unhit. `Infinity` * (never hit) regenerates from the first turn, matching legacy. */",
-  "/** Task 9 — the cast's execution identity (root vs resolved payload). */",
-  "/** * Action Playback Task 3 (2026-09-05) — kết quả PHA declare: mọi thứ đã * quyết định cho lượt của actor (skill, target set, damage đã scale, charge * state) NHƯNG chưa áp damage — applyActionImpact() đọc các field này. */",
+  "/** * Slice 7 extension (Completion Task 11) -- battle log: 1 entry mỗi lượt * resolveActorTurn (append-only, ephemeral -- không persist vào save, * combat ephemeral theo nguyên tắc rework). */",
+  "/** * Action Playback (2026-09-05) -- counter/follow-up (§6 spec): actors queued * here jump straight to 'ready' after the current turn's standby, bypassing * gauge. FIFO queue (not a single id) so an AOE hit that triggers multiple * counters doesn't drop all but the last one. Defect-fix Task 1: đổi từ * singular -- tickPacing (production loop) giờ đọc queue này. * The Tu Reimagined (Task 16) -- entries are typed QueuedFollowUp * records carrying provenance (actionSource/triggerContext) and the * queued payload descriptor, not bare actor ids. */",
+  "/** Defect-fix Task 1 -- reciprocity guard: đếm consecutive bypass turns qua * queue, reset khi 1 normal gauge turn resolve; cap trong dequeueFollowUpActor() * để 2 entity counter-buff không bounce follow-up lẫn nhau vô hạn. */",
+  "/** * Luật targeting §4: cùng hàng thì chọn gần nhất theo cột (không thể * nhắm xuyên qua entity đứng gần hơn cùng hàng); không có ai cùng hàng * thì chọn gần nhất toàn bàn cờ theo Chebyshev. * * The Tu Reimagined (plan Task 10, D6/INV-11) -- Khiem Khich Taunt reads * the ACTOR's own debuffs BEFORE positional rules: an active khiem_khich * instance forces the pick onto its sourceId (the taunter) when that * participant is alive in the opposing side. per_target instanceScope on * the def means a newer taunt already evicted older instances -- the last * instance is the newest by construction. Dead/missing taunter falls * through to positional. opts.ignoreTaunt exempts scripted * specialAttacks (their positional pick is part of the authored script). * * buff2 M4 -- the actor no longer owns a pool; the caller supplies the * taunt read via `getTauntSource` (the battle's BuffSystem query: * newest khiem_khich instance's sourceId on the actor, or undefined). */",
+  "/** Defect-fix Task 1 (2026-09-05) -- reciprocity cap: 2 entity cùng holding * counter buff không được bounce follow-up lẫn nhau quá 4 nhịp liên tiếp * (không có normal turn xen vào) -- chặn chain vô hạn starving turn order. */",
+  "/** * Action Playback Task 3 (2026-09-05) -- kết quả PHA declare: mọi thứ đã * quyết định cho lượt của actor (skill, target set, damage đã scale, charge * state) NHƯNG chưa áp damage -- applyActionImpact() đọc các field này. */",
   "/** Charge-resolve: targetIds capture tại declare (hits áp tại apply). */",
-  "/** Charge-resolve: skill definition capture tại declare (apply đọc từ đây — pendingChargedSkillId đã clear). */",
+  "/** Charge-resolve: skill definition capture tại declare (apply đọc từ đây -- pendingChargedSkillId đã clear). */",
   "/** Sudden-death multiplier capture tại declare (Reaction Path picks scale riêng per-pick). */",
-  "/** * Task 11 — composite picks resolving as EXTRA payloads beyond the * primary resolvedSkill (element_basic extras when count > 1). Each * picked def applies its own damage + ailments through the shared * picks lane. Empty/null for normal casts. */",
-  "/** Defect-fix Task 1 — turn này được grant qua follow-up/counter bypass * queue thay vì normal gauge readiness — completeAction bỏ consume gauge * cho các turn này (bypass không tốn progress của lượt kế tiếp). */",
-  "/** * Task 9 — execution identity: rootSkillId owns cast count/cooldown/ * slot identity; resolvedSkill owns the payload. Absent on charge- * resolve/CC-blocked/empty turns (no cast happens there). */",
-  "/** * The Tu Reimagined (spec 7.1, plan Task 16) — the action's provenance. * Natural declares are 'normal' (basic) or 'skill' (a slotted cast); * queued reactive entries carry 'counter' | 'follow_up' | 'intercept'. * Reactive sources never open new reactive windows by default (INV-9) * — the Ho/Phan/Tro windows gate on this field. */",
-  "/** Composite trigger context captured at queue time — node payload * variants (e.g. post-evasion heavy counter) read this. */",
-  "/** The Tu Reimagined (plan Task 17) — set when a Ho intercept * substituted this action's target; flows into queued entries' * composite triggerContext.intercepted. */",
-  "/** * The Tu Reimagined (spec 7.1, plan Task 16) — provenance axis for the * reactive queue. 'normal'/'skill' describe natural turns; the reactive * sources describe bypass actions queued by a proc window. */",
-  "/** * Composite trigger context (spec 6.2.2, plan Task 16) — each axis is * read independently by node payload variants: a Ho->EVA->Counter chain * produces {origin:'enemy_hit', intercepted:true, outcome:'evaded'}. */",
+  "/** Defect-fix Task 1 -- turn này được grant qua follow-up/counter bypass * queue thay vì normal gauge readiness -- completeAction bỏ consume gauge * cho các turn này (bypass không tốn progress của lượt kế tiếp). */",
   "/** * 'reactive_bypass' declares via declareReactiveBypass (no natural-turn * lifecycle); 'natural_turn' is reserved for future interrupt entries — * no current producer emits it. */",
-  "/** * Kiem Tu Reimagined Task 2 — one extra declared impact produced by a * dynamicBasic provider's onCastResolved (combo payload). Presentation * emits each entry separately; each carries its own preset so distinct * combos stay visually distinguishable. */",
-  "// Phase A1 (2026-09-07) — optional collaborator, same pattern as",
-  "// 9.5 #9 — committed-cast notification. Fires once per action that",
-  "// do not. Generic over actors — consumers filter to the participants",
-  "/** * ARCH-002 (M7) — battle-scoped live-modifier provider. Supplies the * runtime modifier set that cannot bake into the resolved base * (passive stacks, persistent buff pool, timed/socket effects). * Returns StatModifier[] only — the assembly stays in * recomputeEffectiveStats, so this engine never owns a second stat * path and stays headless (the ops layer injects the closure). */",
-  "/** * Phap Tu Reimagined Task 11 — the ONE randomness source for all * new An-kit rolls (composite picks, multicast rolls, ailment * application). Tests inject a scripted rng for determinism. * The default is a LAZY closure — reading Math.random at each call * keeps vi.spyOn(Math, 'random') interception working for callers * that construct the system before installing the spy. */",
-  "// Action Playback Task 3 — gauge-delta deferral chuyển từ local vars",
-  "// của resolveActorTurn cũ thành class fields (applyActionImpact ghi,",
-  "// completeAction tiêu thụ — 2 phase tách nhau qua GameManager khi",
-  "// presentationActive, nên state phải sống trên instance).",
-  "// Defect-fix Task 1 (2026-09-05) — bridge dequeueFollowUpActor() →",
+  "/** * Combat-contract M4 -- the battle-wide CombatRng for ALL engine * rolls (reactive triggers, composite picks, multicast, proc * chances, ailment application; first introduced as the An-kit * roll source in Phap Tu Reimagined Task 11). Tests inject a * scripted/seeded CombatRng for determinism. The * default wraps a LAZY Math.random closure so vi.spyOn(Math, * 'random') interception keeps working for callers that construct * the system before installing the spy. Downstream helpers that * still take `() => number` receive `() => this.rng.roll()` — * identical consumption order. */",
+  "// Defect-fix Task 1 (2026-09-05) -- bridge dequeueFollowUpActor() →",
   "// declareActorAction(): set ngay trước khi trả bypass actor, đọc 1 lần",
-  "// trong declare để populate TurnDeclaredAction.isFollowUpBypass rồi clear.",
-  "// The Tu Reimagined (Task 16) — the bridge carries the whole typed",
-  "/** * Task 11 — same bridge pattern as pendingFollowUpBypassActorId, but * the entry IS the action: dequeueQueuedExecution() sets it, * declareActorAction() consumes it once and builds the declared action * from the descriptor (no selectAction, no turn machinery). */",
-  "/** * R1 (AR-01) test seam — production wiring goes through * GameManager.setSurviveLethalSession on the shared CombatSystem; this * delegation lets engine-level tests exercise the survive-lethal * interception without touching the private combat collaborator. */",
-  "/** * ARCH-002 (M7) — entity.stats is the LIVE effective view, not a * build-time constant: recompute it from the immutable resolved base + * the participant's active buff modifiers + the provider's live runtime * modifiers, then mirror speed into the participant cache (R2/AR-05: * participant.speed is a read-only cache of entity.stats.speed). */",
-  "// The Tu Reimagined (plan Task 11, review P1.1) — externalWard is",
-  "// ARCH-002 (M7) — entity.maxHp is the REAL vitals ceiling (heal clamp,",
-  "// growth keeps currentHp — no free heal.",
-  "/** * ARCH-002 (M7) — refresh every participant's effective stats. Pacing * and actor-peek call this before any gauge/speed read so buff * apply/remove/expire and live runtime modifiers are already folded; * the battle builder also calls it once after construction so * formation buffs are effective before the first tick. */",
-  "/** * Defect-fix Task 1 — shared bởi tickPacing() và peekNextActor(): * dequeue follow-up actor kế tiếp từ queue (nếu có, còn sống, dưới * reciprocity cap). Bỏ qua id của actor chết không tốn chain-depth. */",
-  "// Task 11 — prepared executions (repeat/multicast) drain FIRST: they",
-  "// count / multicast depth cap) — no reciprocity counter needed.",
-  "// Reciprocity guard tripped — drop phần còn lại của queue, quay về",
-  "// normal gauge order thay vì bounce vô hạn.",
-  "// A dead queued actor is skipped without consuming chain-depth —",
-  "/** * Countdown phase pacing (flow: Countdown → Spawn → Gauge combat → * Wave → Result): giảm countdownTurnsRemaining 1 đơn vị/call. Đến 0 → * state chuyển 'fighting' (gauge bắt đầu chạy; enemies đã spawn đứng * sẵn). Gọi từ GameManager pacing loop theo fixed-step, KHÔNG gọi * resolveNextStep trong pha countdown. */",
-  "/** * Gameplay fixes (2026-09-05) — wall-clock pacing: mỗi pacing tick (0.1s * hệ sống) chỉ advance gauge MỘT step cho mọi actor; actor resolve CHỈ * khi gauge đầy. Trước đây updateBattleFixedStep gọi resolveNextStep() * mỗi tick — inner-loop advance tới ready trong CÙNG call khiến 1 turn * = 1 tick (trận chớp mắt, không còn ai kịp thấy gì). * * Trả về actor ready (hoặc vừa resolve). `resolve` = true: turn đã chạy * hoàn tất headless (default path); `resolve` = false: CHỈ advance gauge * và trả ready actor — GameManager presentation path sẽ điều phối * declare/impact/complete qua 3 acknowledge (Action Playback Task 6). */",
-  "// Turn-Based Wave Redesign (2026-09-06) — wave-batch spawn/telegraph",
-  "// chạy MỖI tick (không gate sau completeAction như cơ chế 1-quái-lần",
-  "// trước đây): pending telegraph đếm ngược → materialize khi hết; sân",
-  "// trống + hết pending + còn wave → queue cả wave mới đồng loạt.",
-  "// Pending telegraph decrement KHÔNG phụ thuộc spawnEnemy factory —",
-  "// materialize là việc hệ thống (đã build xong participant), chỉ wave-",
-  "// start MỚI cần factory. Test 2 của plan chạy tickPacing không factory",
-  "// mà vẫn kỳ vọng pending đếm ngược — đúng ngữ nghĩa này.",
-  "// ARCH-002 (M7) — fold every live stat source into entity.stats BEFORE",
-  "// Defect-fix Task 1 — follow-up/counter queue TRƯỚC gauge order: queue",
-  "// là production path duy nhất đọc (peekNextActor không chạy trong loop).",
-  "// MỘT gauge-step duy nhất cho mọi actor trong tick này.",
-  "/** * Slice 7 (Completion Task 10) — tìm actor kế tiếp SẴN SÀNG hành động * mà KHÔNG resolve gì cả. Gauge advancement chạy thật (mutation để * tìm ai tới lượt là thật và GIỮ NGUYÊN), nhưng dừng trước buff tick / * action resolution / turn-counter increment. GameManager manual mode * gọi method này trước để biết có cần pause chờ input player không; * resume sau đó bằng resolveActorTurn(battle, actor, chosenSlot). */",
-  "// Countdown phase: combat chưa bắt đầu — không ai tới lượt.",
-  "// Defect-fix Task 1 — dùng chung dequeue helper với tickPacing (queue",
-  "// FIFO + reciprocity guard thay vì single-id overwrite cũ).",
-  "// ARCH-002 (M7) — same effective-stat refresh as tickPacing so the",
-  "/** * Action Playback Task 3 (2026-09-05) — PHA 1/3: declare action (chọn * skill, tính target set, charge tick, CC check, buff/resource/boss * tick) NHƯNG KHÔNG áp damage. 3 call site resolveActionHit cũ được * hoãn sang applyActionImpact() (Task 3 spec §Task 3). */",
-  "// Task 11 — a queued repeat/multicast execution resolves HERE, ahead",
-  "// descriptor IS the remainder of an already-committed cast — it only",
-  "// The Tu Reimagined (spec 7.1, plan v2.4 P0.1) — a queued reactive",
-  "// Spec 7.1 — dead attackers must not receive queued payloads; the",
-  "// The Tu Reimagined (spec 4.1) — anti-starvation bootstrap: each",
-  "// Future Systems Task 7 — charge state (Thế→Trảm). Charging takes",
-  "// precedence: KHÔNG đụng CC counter Bá Thể (đã bất động tự nhiên,",
-  "// không double penalty); buff tick/hpRegen/resource vẫn chạy (actor",
-  "// vẫn sống); action resolution bị thay thế bởi charge tick/resolve;",
-  "// wave-spawn + win-condition tail CHUNG ở cuối (không return sớm).",
-  "// Review fix (HIGH-2) — `affected` is the single consumed target list:",
-  "// Defect Task 8 (2026-09-05): damage tính lại ở applyActionImpact()",
-  "// (đọc declared.chargedSkill + roundsElapsed độc lập) — không",
-  "// cần tính trùng ở đây.",
-  "// Action Playback Task 5 — onCastBegin reactive trigger TRƯỚC CC-check:",
-  "// punish-on-cast áp hard-CC buff lên actor, CC-check kế tiếp đọc state",
-  "// mới → ccBlocked đúng theo spec §4.2 ordering.",
-  "// CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N",
-  "// lượt của holder (áp ở lượt N-1, block lượt N..N+1, hết sau khi block",
-  "// lượt cuối). Tick trước sẽ làm duration-1 expire trước khi kịp block.",
-  "// Bá Thể: bị hard-CC liên tục >= 3 lượt thì lượt thứ 4 tự gỡ CC và",
-  "// hành động (fairness guard — không ai bị khóa vĩnh viễn).",
-  "// isCharging skip hoàn toàn khối này (Defect-fix Task 2, 2026-09-05):",
-  "// charging đã có hành động thay thế riêng (charge tick/resolve, xem",
-  "// khối phía trên) — actor không hề bị \"chặn\" bởi CC trong lượt này,",
-  "// nên KHÔNG tính vào consecutiveHardCcTurns (tránh Bá Thể clear sớm",
-  "// sai) và ccBlocked phải là false (tránh log mâu thuẫn: ccBlocked=true",
-  "// kèm skillId/damage thật của charge resolve).",
-  "// SUPPRESSED, not reset — consecutiveHardCcTurns is left untouched",
-  "// R3 (AR-06) — provide source entity resolver so elemental penetration",
-  "// and Mộc Tu poison recovery operate with authoritative source context.",
-  "// stat-system-reimagined Task 4 (D18) — the source's OWN buff pool is",
-  "// (Bat Tu Ba The, spec 5.1 — the commit lands mid-phase). tickCooldowns",
-  "// ARCH-002 (M7) — refresh immediately after the buff tick so an",
-  "// M8 (ARCH-010) — post-status liveness boundary: a status/DoT tick",
-  "// that killed the actor ends the turn HERE — no regeneration, no",
-  "// M8 (ARCH-003) — per-turn HP/MP/Ward regeneration through the vitals",
-  "// entity turn — the same cadence family as hpRegenPerTurn (R1/AR-01",
-  "// Phase A2 (2026-09-07) — BuffDefinitionCatalog.get() THROWS on an",
-  "// battle tick). Skip the buff gracefully instead — same",
-  "// ARCH-002 (M7) — unconditional effective-stat refresh at every",
-  "// modifiers all land here — including for CC-blocked and charging",
-  "// Charging turn (tick hoặc resolve): action resolution BỊ THAY THẾ",
-  "// hoàn toàn bởi charge block (tick → không hit; resolve → hits đã push",
-  "// ở charge block). Cooldown của special đã commit ở charge-init lượt",
-  "// trước, không commit lại ở đây.",
-  "// phase — value above its pre-update snapshot, or a slot object",
-  "// that did not exist then — do not tick again in the same turn.",
-  "// ARCH-002 (M7) — the effective-stat refresh moved above the gate",
-  "// Phase A3 (2026-09-07) — enemy specialAttacks reader, ported from",
-  "// (module retired M13 — ported here):",
-  "// (slot null) — explicit skills (special/ultimate slots) are never",
-  "// The Tu Reimagined (plan Task 10, D6) — scripted specials are",
-  "// Task 9 — execution record: rootSkillId owns cast/cooldown/slot",
-  "// Task 10 — ultimate empowerment: enough The swaps the RESOLVED",
-  "// Task 11 — element_basic composite pick: the root skill authored a",
-  "// Task 13 — capture the PRE-BURN pool when the resolved payload is",
-  "// Future Systems Task 7 — charge INITIATION (Thế): KHÔNG resolve",
-  "// ngay — ghi charge state, đòn tự resolve khi charge xong (Trảm).",
-  "// Cooldown/resource vẫn commit như cast thường (commitAction).",
-  "// Task 13 — theScaling (nuke variant): final damage x",
-  "// skillId phản ánh charge state (tick → pending id; resolve → charged",
-  "// id; normal → action.skillId; CC-blocked → '').",
-  "// Task 9 — every real cast records its execution identity here:",
-  "/** * Action Playback Task 3 (2026-09-05) — PHA 2/3: áp damage của declared * action (3 call site resolveActionHit cũ — charge-resolve, normal, * Reaction Path) + commitAction + appliesBuff application. Trả về * targetIds hit thành công. */",
-  "// The Tu Reimagined (spec 6.2.3, plan Task 18) — participants that",
-  "// Task 12 (spec §6, INV-8/D21) + review fix (MED-3) — only",
-  "// Spec 6.2.1 — the Ho window sits between declaration and impact:",
-  "// Charge-resolve turn: hits apply từ chargedSkill capture tại declare",
-  "// (pendingChargedSkillId đã clear ở declare — đọc declared.chargedSkill).",
-  "// rest of the action — the dead cannot finish their swing.",
-  "// M8 (ARCH-010) — the shared per-action The gain below lives past",
-  "// HERE, exactly once. Task 8 — the gain is the SKILL's authored",
-  "// post-consume pool — Bat Kiem Thuat accrues currentThe at hit",
-  "// 9.5 #9 — charge-init commits its cast HERE, not in the",
-  "// and the block below never ran for them — their cooldown/resource",
-  "// Task 9 — payload reads go through the execution's resolvedSkill",
-  "// Task 8 — theGainOnCrit fires once per CAST when any direct hit",
-  "// once below — never per target.",
-  "// R5 (AR-14) — Emit authoritative gameplay 'attack' event on action commit,",
-  "// Composite-picks lane — extra picked payloads (element_basic",
-  "// Review fix (MED-3) — extras go through resolveDeclaredHit, the",
-  "// owned there — this lane only collects landing bookkeeping.",
-  "// Kiem Tu Reimagined Task 2 — multi-instance defs (Ngu phi kiem):",
-  "// between instances stops the rest — a dead caster's",
-  "// like doc_chuong). Skipped when the composite-picks lane ran —",
-  "// Task 13 — same detonate contract on the non-damaging lane.",
-  "// ARCH-002 (M7) — reactions off the applied ailment can grant the",
-  "// on `affected` — empty for enemy-targeted charge skills). Only",
-  "// Task 9 — repeat/multicast follow-up executions resolve the",
-  "// Task 8 — The gain is skill-authored (theGainOnLandedCast /",
-  "// theGainOnCrit), once per cast that landed >=1 valid target —",
-  "// block below — too late to serve as the landed signal here).",
-  "// (100 -> 0) is already reflected — the gain lands on the",
-  "// Kiem Tu Reimagined Task 2 — dynamicBasic post-resolution hook.",
-  "// Spec 6.2.3 — the Tro window: after a player-side action completes",
-  "/** * Kiem Tu Reimagined Task 2 — the FULL landed-hit consequence chain for * ONE declared hit: resolveActionHit + (on landed) leech / consume-for- * damage / on-hit procs / reactive follow-up trigger / ailment appli- * cation + stat refresh on both sides. Multi-instance casts (Ngu phi * kiem) and provider-returned combo impacts loop THIS helper — never * bare CombatSystem.resolveActionHit, which lacks the consequences. */",
-  "// The Tu Reimagined (spec section 3.4, plan Task 7) — the missing-HP",
-  "// The Tu Reimagined (spec 4.1 ordering lock) — defender income",
-  "// require a landed hit — dodged attacks bypass all of them.",
-  "// Spec 4.1 — the acting ung_the combatant's own basic landed: free income",
-  "// R3 (AR-03) + Task 5 (D11) — Leech healing: % of the HP the",
-  "// target THẬT SỰ lost post-absorb — a fully-warded hit feeds",
-  "// Phase A3 — consume-for-damage (Pháp Tu Detonate / Thổ Tu ward",
-  "// ARCH-009 (M9) — proc definitions are read from the ACTOR's",
-  "// — onImpactLanded counter trigger trên TARGET bị hit, gated",
-  "// queuesFollowUp → battle.queuedFollowUps (typed entries).",
-  "// The Tu Reimagined (Task 8) — the context carries the landed",
-  "// Defect-fix Task 1 — FIFO queue: AOE hit trigger counter trên",
-  "// nhiều target không drop tất cả trừ cái cuối.",
-  "// The Tu Reimagined (Task 8, D4/INV-8) — Reflection is a",
-  "// Phase A1 (2026-09-07) / R3 (AR-03) — chance-gated ailment application,",
-  "// Task 13 — detonate (dot-route empowered ult, spec §4):",
-  "// contract — re-seeds never reach TurnReactionManager.",
-  "// Spec 6.2.2 — the taken-side Phan window: a LANDED hit with",
-  "// Spec 6.2.2 — the dodge branch opens the defender's onEvade",
-  "// ARCH-002 (M7) — every pool mutation above (consume-removal —",
-  "// removeAllById runs OUTSIDE the registry gate — on-hit procs on",
-  "// refresh is deliberately not registry-gated either — and runs",
-  "/** * Kiem Tu Reimagined Task 2 — appliesBuff machinery shared by the * action's own appliesBuff and provider extra-impact defs / the * resolveBuff ctx channel. Keeps the gaugeDelta one-shot deferral * (pendingGaugeDeltaTargets consumed in completeAction). */",
-  "// must not crash the tick) — same try/catch pattern as the",
-  "// Kiem Tu Reimagined Task 11 — combo capstones may declare N stacks;",
-  "// Mission C Task 10a — stacksPerAffectedTarget ports the authored",
-  "// supersedes the authored \"0 target -> no buff\" clause — a whiffed-",
-  "// The Tu Reimagined (plan Task 6/11) — the application resolves its",
-  "// gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,",
-  "// delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).",
-  "// clearsCcOnApply (Ba The, Task 9) — applying strips the TARGET",
-  "// The Tu Reimagined (plan Task 11, D3/INV-12) — the grant lands a",
-  "// ARCH-002 (M7) — statModifier buffs are effective NOW, not at the",
-  "/** * The Tu Reimagined (plan Task 6) — resolve a TurnSkillBuffApplication's * target set. 'action_targets' reads the declared action's affected * (pre-resolved by the caller); 'self' the actor; the side scopes the * battle arrays. Legacy 'target' is an alias of 'action_targets'. */",
-  "/** * Kiem Tu Reimagined Task 2 — execute ONE provider-returned extra * impact def: fresh target collection from the def's own targeting, * per-target instance loop through resolveDeclaredHit, optional * appliesBuff. Returns the presentation payload. */",
-  "// same area the gameplay resolution used (A8 — no silent",
-  "/** * Phap Tu An (Task 11) — declare phase for a queued repeat/multicast * execution: the descriptor IS the action (no selectAction, no charge, * no CC). The payload re-resolves — an element_basic composite root * re-rolls its pick per execution, per spec (\"each fire independently * re-rolled\"). The execution carries its source so commit/cast-sink * stay silent and multicast re-roll gating sees the depth. */",
-  "// Task 13 — same pre-burn capture as the normal declare path: a",
-  "// Task 13 — theScaling fold (same as declareActorAction).",
-  "/** * Phap Tu An (Task 11) — enqueue the cast's own follow-up executions: * * - `repeatCasts` on the root skill: each committed cast queues that * many 'repeat' entries (depth 0). Only casts that COMMIT (source * 'original'/'composite'/'empowered' — never a repeat/multicast * itself) spawn repeats, so repeats can never recurse. * - `multicast` on the root skill: original/composite and * multicast-sourced executions roll `chance`; success queues one * 'multicast' entry at depth+1, bounded by * min(maxExtraCasts, MAX_MULTICAST) (P15: the special's repeat fires * never roll — source 'repeat' is excluded; 'empowered' is too). */",
-  "// follow-ups — a whiffed-into-empty cast commits nothing.",
-  "/** * Task 11 — presentation/orchestration seam: is the actor's pending * turn a queued EXECUTION (repeat/multicast) rather than a real turn? * Manual mode must NOT await player input for these — the cast was * already chosen; the follow-up resolves automatically. */",
-  "/** * Phap Tu Reimagined Task 10 — the ONE cast-commit sink: slot * cooldown + resource consume (root identity), the cast-count sink * (always rootSkillId), and the empowered form's consume-all-The * burn. `theBurned` was already captured at DECLARE (Task 13 — the * pre-burn pool feeds theScaling, which resolves before this commit); * here the pool only zeroes. */",
-  "/** * Phap Tu Reimagined Task 8 — the single The-gain hook. Values are * authored on the resolving TurnSkillDefinition: theGainOnLandedCast * applies once per landed cast; theGainOnCrit once more when any * direct hit of the cast crited. The cap reads the battle-snapshotted * entity.maxThe (Truong The nodes, 'no' route) with MAX_THE as the * default — never a hard-coded constant. */",
-  "/** * The Tu Reimagined (spec section 4.1, plan Task 15 ordering lock) — * free income on the DEFENDER's pool per hit outcome, granted * immediately at hit resolution so it is always BEFORE any reactive * window this hit may open (Phan consumes it): * - dodged -> +THE_GAIN_ON_EVADE * - taken (!dodged && hpDamage > 0) -> +THE_GAIN_ON_HIT_TAKEN * - landed but fully absorbed -> nothing (INV-16: not a \"taken\"). * Marker-gated: non-ung_the participants never see this table. */",
-  "/** * The Tu Reimagined (spec 6.2/7.1, plan Tasks 15-18) — one reactive * window pass on a holder's pool: every reactiveProc effect matching * `trigger` attempts in pool order. Per attempt: pay-per-attempt cost * (resolveProcCost — bach_ung freeProcs / tu_the delta already inside) * -> insufficient The means NO roll; the stat channel rolls via * clampStatValue; success credits the gain and pushes the effect's * queuedAction onto the typed bypass queue with the composite context. * Returns per-attempt results so callers (e.g. the Ho intercept * window, Task 17) can act on a successful roll that queues nothing. */",
-  "/** Task 20 — the ally-action window on a non-damaging action; only * effects carrying firesOnNonDamagingAction may roll. */",
-  "// Review fix (MED — dead-holder transaction): a participant killed by",
-  "// the hit that opened this window never performs a proc transaction —",
-  "// Task 20 — the Tro window on a non-damaging ally action opens",
-  "// Task 20 (spec 8.2 \"tro_kich heals ally\") — a successful Tro",
-  "/** * The dodge-side window (spec 6.2.2): the defender's pool gets an * onEvade pass after its +THE_GAIN_ON_EVADE income already landed — * the just-earned income can fund this hit's check (ordering lock, * review P1.6). Natural actions only — reactive actions never open * new windows (INV-9). */",
-  "/** * The Tro window (spec 6.2.3, plan Task 18) — after a player-side * action lands >=1 damaging hit, every OTHER living player-side * participant carrying an onAllyActionComplete reactiveProc (tro_mon * marker) rolls once; success queues its payload against the whole * landed set. Never fires on the actor's own window (ally !== actor) * or on reactive actions (INV-9 — a counter/follow-up hit does not * open another reactive window). */",
-  "// (MED-4) — \"dealt no damage\" gates firesOnNonDamagingAction rolls",
-  "// utility — nothing to inherit) fans out to every living enemy.",
-  "// Review fix (MED-5) — a composite action pushes the same target once",
-  "/** * The Ho intercept window (spec 6.2.1, plan Task 17) — runs at the top * of applyActionImpact, post-declare/pre-impact: on success the * declared target is substituted and the hit resolves fully vs the * protector (dodge/ward/block/procs all live downstream). * Preconditions: actor is enemy-side, the action is a NATURAL * (normal/skill — INV-9, same gate as the Phan/Tro windows) single- * target action by AUTHORED targeting shape (an all_lanes AoE whose * other targets died stays AoE), and the target is a LIVING player- * side participant. Candidates are player-side participants carrying * an onAllyTargeted/intercept reactiveProc (the ho_mon marker), * excluding the original target. Exactly ONE roll: the nearest * protector to the attacker by Chebyshev attempts; no fallback to * further candidates (D5). */",
-  "// INV-9 — reactive/replayed actions (counter/follow_up/intercept and",
-  "// A charge-resolve action's hit lane reads chargeTargetIds — keep it",
-  "// Task 20 (spec 8.2 \"intercept->ally ward\") — the node-baked marker",
-  "// contract as son_nhac_ho_the — reconcileExternalWard owns expiry.",
-  "// protector — sourceId must match the ward's sourceId or the",
-  "/** * Own-basic-lands income (spec 4.1) — the acting participant's own * basic landed a hit. Reads the authored theEconomy.gainOnBasicHit * field off the ung_the marker clone (single channel, review P1). */",
-  "/** * The Tu Reimagined (spec 7.1, plan Task 16/v2.4 P0.1) — a queued * reactive entry declares as a REAL TurnDeclaredAction (targets, * payload skill, scaledDamage) while skipping the entire natural-turn * lifecycle: no turn/round counters, no buff/DoT ticks, no CC check, * no regen/resource deltas, no charge advance, no cooldown ticks. The * impact still flows through applyActionImpact — bypass != a second * damage path. */",
-  "// Spec 6.1 / plan Task 19 — bach_ung's payload upgrade rider merges",
-  "// Queue-time captured targets (spec 6.2 — counter hits the attacker",
-  "// No captured targets — positional fallback keeps the action legal.",
-  "// slotless — no cooldown/resource commit (spec 7.1)",
-  "/** * The Tu Reimagined (spec section 3.4, plan Task 7) — Cuong Chien's * signature scalar: skills authored with scalesWithMissingHp multiply * their damage by (1 + missingHpRatio * coefficient), re-read against * the actor's LIVE hp at each hit. Non-the_tu damage passes through. */",
-  "/** * Action Playback Task 3 (2026-09-05) — PHA 3/3: turn cleanup (gauge * consume, gauge-delta push, wave spawn, win/loss check, battle log). */",
-  "// Defect-fix Task 1 — bypass turn KHÔNG consume gauge (counter-reactor",
-  "// không mất progress của lượt kế tiếp vì side effect của phản ứng).",
-  "// Task 11 — the cast's own follow-up executions queue at action end:",
-  "// Future Systems Task 6 — gauge-delta one-shot push SAU consume",
-  "// (consume đặt gauge về 0; delta cộng lên trên, không bị ghi đè).",
-  "// Slice 7 extension — battle log: 1 entry/lượt, append-only.",
-  "/** * Slice 7 (Completion Task 10) — resolve lượt của MỘT actor ĐÃ peek: * thin wrapper gọi 3 phase Action Playback back-to-back (signature/ * hành vi KHÔNG ĐỔI — mọi caller/test cũ giữ nguyên). */",
-  "/** * Thin wrapper (Slice 7): peekNextActor() + resolveActorTurn() không * forced slot — giữ nguyên signature/hành vi cho mọi caller Slice 1-6 * (auto mode, runToCompletion(), mọi test cũ). */",
-  "// Countdown phase: combat chưa bắt đầu — no-op an toàn (gauge không",
-  "// chạy, không ai hành động; GameManager tick countdown qua",
-  "// tickCountdown() thay vì gọi method này).",
-  "// Trận đã kết thúc (victory/defeat) — KHÔNG ghi đè state thành defeat",
-  "// (code-review fix: peekNextActor trả null cho state != fighting, nhánh",
-  "// dưới chỉ được phép set defeat khi trận thực sự không còn ai sống).",
-  "/** Thin wrapper for tests/dev tooling — loops resolveNextStep() to completion. */",
-  "/** * R3 (AR-03) — Chance-gated ailment application supporting multiple ailments * and multi-stack application. Shares reaction triggering across damaging * and non-damaging skill execution paths. */",
-  "// Task 11 — ailment rolls route through the injected rng (same",
-  "// Mission C Task 10b — elementApplicationPercent adds to the base",
-  "// Skip an unresolvable ailment id gracefully — same try/catch",
-  "/** * Phap Tu Reimagined Task 13 (spec §4) — the 'dot' route's detonation. * Consumes EVERY live ailment instance whose definition carries a * `dot` effect (pure-utility ailments are never touched — a scalpel, * not a cleanser); each consumed instance pays * (perTick x remainingTurns x stacks) x amp as direct damage through * the authoritative vitals pipeline (death mid-loop stops the rest). * Each consumed id then re-seeds ONCE at a fixed 1 stack / authored * duration through BuffSystem.apply — which recomputes potency * against the caster's CURRENT stats (never the consumed snapshot). * The re-seed is not an application event: no chance roll, no * ailmentStackBonus, and reaction-silent — TurnReactionManager is * never reached from here. Iterates a snapshot so re-seeded * instances are never revisited. */",
-  "// Consume the exact instance; same-id duplicates still consume —",
-  "// Re-seed ONCE per consumed id — a fixed 1 stack at the ailment's",
-  "// from turn 11. The unit is ATB ROUNDS — the same contract the",
-  "// ~3 rounds) and compound ~0.3 x actors per round — the reported"
+  "// trong declare để populate TurnDeclaredAction.isFollowUpBypass rồi clear."
  ],
  "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts": [
   "// M8 (ARCH-003 + ARCH-010 + C05/C06) — combat resources & turn-phase",
-  "// through the vitals authority — the *RegenPerTurn stats tick once per"
+  "// through the vitals authority — the *RegenPerTurn stats tick once per",
+  "/** * Punching-bag enemy: speed/maxHp live INSIDE the stats override — * refreshParticipantStats re-syncs participant.speed from entity.stats.speed * and reconciles entity.maxHp to stats.maxHp, so an entity-field-only * override would be folded back to the defaults on the first declare. */",
+  "// Never hit — the delayed-ward gate opens immediately (Infinity).",
+  "// Just hit — the delay counter restarts at 0 on the holder's cadence.",
+  "// DoT killed the player at the status phase — the turn ended there:",
+  "// teardown) — inline fixture carries the same 3-turn shape the",
+  "// Turn 1: charge INITIATION — resource/cooldown commit, no gain yet.",
+  "// Exactly once — not once per charge tick, not zero from the early return.",
+  "// Task 8 — the finisher gain is authored on the skill, not"
  ],
  "src/core/battle/turn/TurnBuffIdentity.test.ts": [
   "// ARCH-009 (M9) — buff identity repair, driven through the REAL",
@@ -3483,38 +3227,15 @@
   "// EXACT matched ingredient instance — a fire DoT applied by the player",
   "// - CC_SCOPE: target-scoped cc queries — a cc buff aimed at another",
   "// order — see ElementReaction.ts's consumption contract).",
-  "// The ENEMY debuffed the player with thach_hoa on an earlier turn —",
-  "// The proc result belongs to the VICTIM (enemy) pool — and carries",
-  "// enemy's hits stun the player. The audit claim is recorded as STALE —",
-  "// 0.2 < every ailment chance (fire 0.5, water 0.5) — deterministic",
-  "// initiate — player-side membership alone no longer fires Boc Hoi.",
-  "// with the incumbent bong — Boc Hoi consumes the incumbent bong AND",
-  "// no bong left — the old bug replayed the reaction off the player's"
- ],
- "src/core/battle/turn/TurnBuffNames.test.ts": [
-  "// Phase A6 (2026-09-08) — throw-safe display-name resolver for buff"
- ],
- "src/core/battle/turn/TurnBuffSystem.adversarial.test.ts": [
-  "// QA adversarial probes (2026-09-04 quick review) — BuffSystem.",
-  "// slow convert thành frozen, other vẫn nguyên.",
-  "// 4 * (1 - 0.75) = 1 — clamp đúng tại cap, không 0/âm."
+  "// enemy's hits stun the player. The audit claim is recorded as STALE —"
  ],
  "src/core/battle/turn/TurnBuffSystem.reactiveTrigger.test.ts": [
   "// Action Playback Task 5 — reactiveTrigger buff effect:",
   "// onCastBegin — roll khi actor bắt đầu cast (punish-on-cast); nếu áp",
   "// hard-CC buff, CC-check kế tiếp block turn (ccBlocked)",
   "// onImpactLanded — roll trên TARGET bị hit (counter); queuesFollowUp",
-  "// đặt battle.queuedFollowUpActorId (counter-turn)"
- ],
- "src/core/battle/turn/TurnBuffSystem.test.ts": [
-  "// third apply — capped at maxStacks 2",
-  "// second apply: nextStacks hits maxStacks -> converts (1:1 với BuffSystem.ts L112-126)",
-  "// third apply: fresh 'slow' instance (stacks=1), không convert lại",
-  "// Apply thứ 2 đã convert slow -> frozen; apply thứ 3 tạo lại 1 instance",
-  "// slow mới (stacks=1). Cả 2 cùng tồn tại — đúng chuỗi sự kiện hệ sống.",
-  "// Chưa chạm maxStacks: stacks tăng bình thường.",
-  "// Apply thứ 2: nextStacks = 2 >= maxStacks 2 → convert NGAY (1:1 hệ sống).",
-  "// ARCH-009 (M9): the query is target-scoped — the stun aims at"
+  "// đặt battle.queuedFollowUpActorId (counter-turn)",
+  "// entity.stats.maxHp and clamps currentHp — the fixture's declared vitals"
  ],
  "src/core/battle/turn/TurnOrderPreview.test.ts": [
   "// Slice 7 extension (Completion Task 11) — turn-order preview: trả N actor",
@@ -3545,36 +3266,6 @@
   "// theo đúng thứ tự đó, số nhỏ hơn = ưu tiên cao hơn).",
   "// Chặn vòng lặp vô hạn nếu mọi actor còn sống đều có speed <= 0."
  ],
- "src/core/battle/turn/TurnReactionManager.rules.test.ts": [
-  "// Phap Tu Reimagined Task 12 — spec §6 rule engine. The 10 authored",
-  "// — the burst is FIRE because fire overcomes metal; metal power and",
-  "// metalResistance 75 must NOT apply — the pair bursts as fire.",
-  "// Same pair, flipped arrival order: the child is STILL fire — the",
-  "// on the child, not just DoT fields — otherwise Fire->Earth Cong",
-  "// earth newcomer — child",
-  "// per ailment instance — potency AND duration consumed together.",
-  "// Re-apply the wood parent — the SAME fire instance pairs again.",
-  "// No phantom reaction — the event means \"the child was amplified\".",
-  "// Fresh instance replaces the amplified one — it may consume its",
-  "// the canonical thach_hoa template — permanently poisoning every",
-  "// fire+wood = sinh (child fire — the newcomer is amped THEN the",
-  "// Review fix (MED-3): companions, mortal actors, kiem_tu — anything",
-  "// sharing the players array without the phap_tu domain — must not",
-  "// trigger reactions. Spec §6: the pair check is a phap_tu-domain",
-  "// The ailment still lands — only reaction INITIATION is gated."
- ],
- "src/core/battle/turn/TurnReactionManager.ts": [
-  "// Phap Tu Reimagined Task 12 — spec §6 sinh/khac RULE engine. The 10",
-  "// amp only — no zone, no self-buff).",
-  "// pair first, then every khac pair, each in canonical ELEMENT_ORDER —",
-  "// First-pass tuning constants (plan constants block) — KHAC_CHE_COEFF",
-  "/** * Called once per successful ailment application (the \"newcomer\"). * Provenance-agnostic incumbents — a pair forms on coexisting * ELEMENTS regardless of applier; initiation gating (player-origin * only, INV-8/D21) is the CALLER's job (applySkillAilments). */",
-  "// The just-applied ingredient instance — ARCH-009 identity is",
-  "// Phase 1 — every CONG MINH (sinh) pair in ELEMENT_ORDER.",
-  "// Review fix (MED-4) — \"potency\" is every numeric magnitude",
-  "// One amplification per instance — a repeat pair event on the",
-  "// Phase 2 — every KHAC CHE (khac) pair in ELEMENT_ORDER. A consumed"
- ],
  "src/core/battle/turn/TurnSkillAction.adversarial.test.ts": [
   "// QA adversarial probes (2026-09-04 quick review) — Slice 2 skill actions.",
   "// cross radius 0: chỉ đúng ô anchor — other (chéo) bị loại."
@@ -3593,7 +3284,7 @@
   "/** * The Tu Reimagined (plan Task 6/11) — multi-buff application contract * (replaces the singular appliesBuff). Each entry resolves its target * set at impact: * - 'self' -> the actor * - 'action_targets' -> declared.affected (the hit's resolved targets) * - 'allies_except_self' -> living same-side participants except actor * - 'all_enemies' -> living opposing-side participants * `durationOverride` is the pre-modifier base delivered to * BuffSystem.apply's M10 channel (node-scaled durations land here). * `externalWardGrant` marks a son_nhac_ho_the-style external ward pool * granted to the target (resolution: Task 11 external-ward contract). */",
   "/** * Legacy singular form (Kiem Tu combo payloads, Phap Tu empowered * ults, companion skills). Resolution normalizes * `appliesBuffs ?? [appliesBuff]` — 'target' means the action's * declared targets, `duration` is the base delivered to BuffSystem. */",
   "/** * The Tu Reimagined (plan Task 6) — buff definitions applied to the * OWNER at participant build (the emblem-buff channel). The defs are * participant-local clones (node-adjusted via collectTheTuKitModifiers), * so they ride the def object itself, not a registry id. */",
-  "/** * Phase A1 (2026-09-07) — chance-gated ailment application, checked * against TurnReactionManager after applying. Deliberately separate * from appliesBuff (unconditional, no reaction check) — different * semantics, do not merge the two fields. */",
+  "/** * Phase A1 (2026-09-07) — chance-gated ailment application. * Deliberately separate from appliesBuff (unconditional, no chance * roll) — different semantics, do not merge the two fields. */",
   "/** * R3 (AR-03) — Multiple ailment applications on landed hit. */",
   "// Phase A3 — Pháp Tu Detonate: consume the target's stacks of this",
   "// Phase A3 — Thổ Tu \"tự nổ khiên\": consume the SOURCE's entire",
@@ -3606,10 +3297,11 @@
   "/** * Extra The granted ONCE per cast action when any of its direct hits * crits (same per-cast rule — a 5-target all-crit cast adds this * once, not per target). Authored by the 'no' route profile. */",
   "/** * Phap Tu Reimagined Task 10 — ultimate empowerment. Attached at * battle build by the orchestrator ONLY when the owning * `linh_ngo_<godUltId>` node is held (the engine stays dumb — A8). * At cast time, `currentThe >= theThreshold` swaps the RESOLVED * payload to `empowered` while the equipped skill keeps cast * count/cooldown identity (execution source 'empowered'). */",
   "/** * The empowered form carries this: at commit, the caster's ENTIRE * currentThe pool burns to 0 (a raised cap burns the whole pool, not * just the threshold). The pre-consume amount is captured into * `execution.theBurned` at DECLARE for theScaling (Task 13) — the * pool is already 0 by the time damage resolves post-commit. */",
-  "/** * Phap Tu Reimagined Task 13 — detonate (the 'dot' route's empowered * expression, spec §4). After the direct component AND the normal * ailment application land, consume every live ailment on each target * whose BuffDefinition carries a `dot` effect (utility ailments are * never touched); each pays (perTick x remainingTurns x stacks) x amp * as direct damage, then re-seeds a FIXED 1 stack at the ailment's * AUTHORED duration with potency recomputed against the caster's * current stats. Re-seed is not an application event: no chance roll, * no ailmentStackBonus, and reaction-silent — never fires * TurnReactionManager (spec O2/R2). */",
+  "/** * Phap Tu Reimagined Task 13 — detonate (the 'dot' route's empowered * expression, spec §4). After the direct component AND the normal * ailment application land, consume every live ailment on each target * whose BuffDefinition carries a `dot` effect (utility ailments are * never touched); each pays (perTick x remainingTurns x stacks) x amp * as direct damage, then re-seeds a FIXED 1 stack at the ailment's * AUTHORED duration with potency recomputed against the caster's * current stats. Re-seed is not an application event: no chance roll, * no ailmentStackBonus (spec O2/R2). */",
   "/** * Phap Tu Reimagined Task 13 — nuke (the 'no' route's empowered * expression, spec §4): the resolved damage packet scales by * (1 + theBurned/100 x coeff); theBurned is the pool captured at * declare before consumesAllThe zeroes it. Linear by design — * Truong The cap-raises are additive payoff, not diminishing. */",
   "/** * Kiem Tu Reimagined Task 2 — multi-instance hit contract (Ngu Kiem Dao * phi kiem). The turn engine resolves `count` INDEPENDENT landed-hit * pipelines per target through resolveDeclaredHit, stopping early when * the target dies. `perInstanceOptions` is called per (instance, live * target) so the provider can resolve execute/crit/armor rolls against * the CURRENT target state (not a declare-time snapshot). */",
   "/** * Emblem-occupying slot def: never selectable by * selectAction/selectForcedAction, never deals damage. Two producers: * - Kiem Tu Reimagined Task 9 — Ngu Kiem Dao HUD emblem markers render * on the bar as slot occupants for presentation to label. * - The Tu Reimagined (spec 2026-09-15 section 5.2) — passive emblems; * their permanent buff lands via grantsBuffsAtBuild. */",
+  "/** * Reaction M4 (contract sec.70-72) — the action's tag classification * for restriction checks (Cam Cong's forbiddenActionTags). When absent * the engine infers ['attack'] iff the def carries `damage` (R-E2); * explicit tags always win (e.g. ['heal'] on a self-heal special). */",
   "/** * Kiem Tu Reimagined Task 2 — post-resolution context handed to a * participant's dynamicBasic provider once the action's own hits have * landed. `resolvedSkillId` is the id of the definition that actually * executed (Hien: the OrbId of the cast orb) — never inferred from * provider closure state. `resolveBuff` is the generic channel combo * `appliesBuff` content routes through; the provider returns extra hit * definitions the engine executes as additive declared impacts. */",
   "/** * Path-specific basic-attack owner (Kiem Pho preset loop / Ngự Kiem Dao). * Attached to TurnBattleParticipant.dynamicBasic; when present it OWNS * the basic slot — participant.basic becomes inert. */",
   "/** Auto path — resolves the definition for the next auto basic cast. */",
@@ -3621,12 +3313,14 @@
   "/** * Task 10 — the The pool captured pre-consume when a `consumesAllThe` * payload commits. Read by theScaling (Task 13); undefined for any * execution that did not burn the pool. */",
   "/** * Task 11 — multicast chain position: 0/undefined for the original * cast, N for the Nth multicast-sourced follow-up. Bounds the re-roll * (a multicast execution rolls again only while depth < * min(multicast.maxExtraCasts, MAX_MULTICAST)). */",
   "/** * Phap Tu An (Task 11) — a queued follow-up execution of an * already-committed cast. Drained by the engine's follow-up path as a * gauge-free bypass action that re-resolves the root skill's payload * (composite picks re-roll per execution). Structurally bounded: * 'repeat' entries number exactly rootSkill.repeatCasts; 'multicast' * entries are depth-capped by MAX_MULTICAST. */",
+  "/** * Reaction M4 (R-E) — the sealed no-action. Produced when every * candidate is forbidden by the actor's restriction set (Cam Cong): * NOT a stun -- declareActorAction converts skillId '' into the same * empty-turn shape as the existing no-action return (action: null). */",
   "/** * Ticks special/ultimate cooldowns down by 1, floored at 0 — cooldown * counts the ACTOR's own turns (this rework's \"tick at the holder's own * turn\" convention, already used by BuffSystem). Call once per actor * per turn, BEFORE selectAction(). * * `exclude` — slots to skip this tick: declareActorAction passes the * slots whose cooldown was (re)committed during THIS turn's pre-action * status phase (e.g. a lethal-DoT survive trigger spending the ult slot * inside BuffSystem.update). A fresh commit starts counting from the * holder's NEXT own turn — it must not lose a turn to the tick that * immediately follows the phase that committed it. */",
   "/** * Basic-slot resolution — the dynamicBasic provider OWNS the slot when * present (Kiem Tu Reimagined Task 2): participant.basic is inert for * those actors. Falls back to the static basic, then the hardcoded * Slice-1 fallback attack. */",
-  "/** * Priority: ultimate (off cooldown + affordable) -> special (same) -> * basic (no cooldown/cost by construction) -> hardcoded fallback basic * attack when the participant has no `basic` set at all (Slice 1 * backward compatibility — see plan Task 4). */",
+  "/** * Priority: ultimate (off cooldown + affordable) -> special (same) -> * basic (no cooldown/cost by construction) -> hardcoded fallback basic * attack when the participant has no `basic` set at all (Slice 1 * backward compatibility — see plan Task 4). * * Reaction M4 — `forbidden` is the actor's action-tag restriction set * (Cam Cong via ActionValidator). Forbidden candidates are skipped in * priority order; when every candidate is sealed the actor gets the * NULL_ACTION empty turn (R-E), never a silently-forbidden pick. */",
   "/** * Slice 7 — 3 skill role cố định mà manual UI ép cast được. Basic luôn * ready (no cooldown/cost by construction); special/ultimate đi qua đúng * readiness checks của selectAction() (cooldown + resource) — slot không * sẵn sàng bị BỎ QUA im lặng (UI disable nút không sẵn sàng trước, đây * chỉ là defensive backstop, không phải error path — spec Slice 7 §2). */",
   "/** * Ép 1 slot role cụ thể khi role đó ready; ngược lại rơi về priority * thường (selectAction). Basic = participant.basic (hoặc fallback khi * không set), luôn ready by construction. */",
   "// Kiem Tu Reimagined Task 2 — a dynamic_basic pick travels the SAME",
+  "// Reaction M4 — a manual pick whose tags are forbidden is rejected",
   "/** * Phap Tu An (Task 11) — uniform pick of `count` DISTINCT defs from a * composite pool via the injected rng (partial Fisher-Yates). All new * An-kit randomness routes through the system's injected rng — never * global Math.random — so tests are deterministic. */",
   "/** Sets the used slot on cooldown and consumes its resource — call AFTER a successful cast (a target was actually hit). No-op for the basic fallback (slot is null). */"
  ],
@@ -3635,7 +3329,12 @@
   "// do — always under rootSkillId."
  ],
  "src/core/battle/turn/TurnStatsRecompute.test.ts": [
-  "// R2 (AR-02) — recomputeEffectiveStats now treats its first argument as an"
+  "// R2 (AR-02) — recomputeEffectiveStats now treats its first argument as an",
+  "// modifier — the query output, not the pool, is the function's input.",
+  "// 2 stacks × +50% increased pool → 70 × (1 + 0.5 + 0.5) = 140.",
+  "// R2: the input is a RESOLVED base — attribute derivation must NOT",
+  "// R2: no re-derivation — the resolved snapshot comes back untouched.",
+  "// R2: (100 resolved) × (1 + 0.5) = 150 — attribute derivation no"
  ],
  "src/core/battle/turn/TurnStatsRecompute.ts": [
   "// R4 (AR-19) — Recomputes effective battle stats from the already-resolved base",
@@ -3644,11 +3343,14 @@
  ],
  "src/core/battle/turn/TurnStatusPresentationEvents.test.ts": [
   "// Phase A6 (9.5 #7) — turn-based status presentation feed. Fixture shape",
+  "// 'trung_doc' stays unregistered HERE — buffNameFor resolves its display",
+  "// registry lane is overkill — durationOverride undefined lands the",
   "// Plain decay (stacks same, remainingTurns lower) must NOT emit —",
   "// filtered out of battle.enemies) — still target_dead."
  ],
  "src/core/battle/turn/TurnStatusPresentationEvents.ts": [
   "// Phase A6 (9.5 #7, 2026-09-12) — turn-based port of the legacy",
+  "// battle-local registry for def fields (hidden/polarity) — the def",
   "// caller — snapshot before the step mutates, diff-emit at the existing"
  ],
  "src/core/battle/turn/WaveSpawnTrigger.adversarial.test.ts": [
@@ -3670,70 +3372,8 @@
   "// KHÔNG BAO GIỜ hiển thị làm lựa chọn hay lộ lý do resolve ra mốc nào",
   "// (mục 10 — hard rule \"không bao giờ báo sai điều kiện\")."
  ],
- "src/core/buff/BuffNames.ts": [
+ "src/core/buff2/BuffNames.ts": [
   "// R4 (AR-19) — Canonical throw-safe display-name resolver for buff badges."
- ],
- "src/core/buff/BuffPool.ts": [
-  "// R4 (AR-19) — Canonical BuffPool.",
-  "// Supports clearCcEffects() for the Bá Thể CC-lock guard."
- ],
- "src/core/buff/BuffSystem.durationPolicy.test.ts": [
-  "// The Tu Reimagined (plan v2.4 review P0) — \"3 holder-turns\" is skill"
- ],
- "src/core/buff/BuffSystem.test.ts": [
-  "// 3 lần áp nhưng trần maxStacks 2 → dừng ở 2 tầng.",
-  "// re-applied làm mới thời gian về full duration.",
-  "// Giả lập tầng đã tích luỹ trên bản cũ — replace KHÔNG reset stacks",
-  "// `{...existing, ...}` giữ nguyên existing.stacks).",
-  "// realmIndex 8 (Kiếp Lôi/tribulation, realm cuối) -> ignore 90% mitigation.",
-  "// trung_doc duration 5s (xem ailments.ts) × 1.1 = 5.5s — sau 5.4s vẫn",
-  "// còn active, sau 5.6s mới hết.",
-  "// Thổ Tu (Thạch Hóa, Plans/magicpathgeneral, 2026-08-21) —",
-  "// Snapshot thủ công 1 definition test riêng (chance=1) thay vì Thạch",
-  "// Hóa thật (0.5) — biên xác định, không phụ thuộc Math.random.",
-  "// Làm Chậm giữ liên tục 2s -> Đóng Băng (BuffSystem.update()'s convert()).",
-  "// Duration buff SAU chuyển hoá phải qua cùng công thức kháng cự như",
-  "// apply() (trước đây lấy trần duration template, kháng cự của đích bị bỏ",
-  "// qua). Ported from AilmentSystem.convert.test.ts (3 cases) — measured",
-  "// E1 — convert-on-max (spec talent v4 2026-09-03 §3.3): buff",
-  "// stackMode 'stack' CÓ convertsToId chạm maxStacks → buff cũ bị remove,",
-  "// buff convert được apply với stacks = 1 (nhịp \"tích → ngưỡng → bùng nổ",
-  "// → tích lại\" của talent v4). Khóa hành vi có sẵn ở handleExisting()",
-  "// case 'stack' — không đổi production code, chỉ chốt không hồi quy.",
-  "// stacks 3 = maxStacks → convert",
-  "// Guard kiến trúc — convert-on-max fire trong handleExisting() case",
-  "// 'stack' (nextStacks >= maxStacks); convert theo thời gian fire",
-  "// Đường thời gian đã được đo ở 3 describe Làm Chậm phía trên — ở đây",
-  "// chỉ chốt 2 template khai báo đúng đường của mình (template thời gian",
-  "// là refresh, không maxStacks; template on-max không có ngưỡng thời gian)."
- ],
- "src/core/buff/BuffSystem.ts": [
-  "// R4 (AR-19) — Canonical BuffSystem.",
-  "/** * Review fix (MED-4) — generic potency amplification for a live Buff. * Scales EVERY numeric magnitude carrier on the buff's effects, not just * DoT fields: statModifier flat/percent, onHitProc and reactiveTrigger * proc chances, gaugeDelta percent, dotRecovery heal. Chance-type fields * clamp at 1. Sign is preserved — a debuff's -0.3 deepens to -0.45 at * x1.5, a buff's +0.3 strengthens to +0.45. Duration is NOT touched here * (callers own their own duration policy — Cong Minh amps it separately). * * Once per INSTANCE: the buff's potencyAmplified flag marks the consumed * amplification — refresh/stack keep the instance, so without it repeat * events compound (x1.5 -> x2.25 -> ...). Returns false when the instance * was already amplified so callers can skip the rest of their amp path. */",
-  "/** * M10 (ARCH-008) — `durationOverride` replaces the registry's authored * duration as the pre-resist base (SkillEffect.duration semantics from * the legacy effect system). undefined keeps `definition.duration`. */",
-  "// Detach from the registry template — runtime mutations",
-  "// The Tu Reimagined (plan v2.4 review P0) — fixed_holder_turns:",
-  "// uniquePerTarget — newest application wins by construction: drop"
- ],
- "src/core/buff/BuffTypes.ts": [
-  "// R4 (AR-19) — Canonical Buff & Status Types.",
-  "// stat-system-reimagined Task 3 — forwarded onto the emitted",
-  "/** * The Tu Reimagined (plan Task 16) — the shared reactive-window name * space. 'onCastBegin'/'onImpactLanded' predate the redesign; 'onEvade' * fires on the dodge branch of the hit loop; 'onAllyTargeted' / * 'onAllyActionComplete' serve the Ho intercept and Tro follow-up * windows (Tasks 17-18). */",
-  "// The Tu Reimagined (spec 2026-09-15 section 5.2) — phan_chinh",
-  "/** * The Tu Reimagined (plan Task 6) — flag-only marker effect: no numeric * payload, presence is the data. Flags: * - displacementImmune: holder ignores displacement/cast-interruption * (flag only; no turn-engine displacement consumer exists today). * - grantsExternalWard: the buff instance marks an externalWard grant — * the reconcile hook keys on this field (plan Task 11, review P1.1). */",
-  "/** * The Tu Reimagined (spec 2026-09-15 sections 4.1/6, plan Task 14) — * the ung_the marker effect: presence marks the holder as an ung_the * reactive combatant eligible for proc windows and the free-income * table. `gainOnBasicHit` is the OWN-basic-lands income channel (review * P1 single-channel lock: THE_GAIN_ON_BASIC lives here because * TurnSkillDefinition has no landed-cast gain field — never both). * Task 15's economy reads this marker; it never flows through * StatModifier. */",
-  "// Task 20 — the remaining free-income channels also live on the",
-  "/** * The Tu Reimagined (spec section 6.2, plan Task 14) — root-purchase * marker planting one reactive mechanic on the holder's pool: * - 'intercept' (ho_mon): substitute as the action's target pre-impact * - 'counter' (phan_mon): queue phan_kich after taken/evaded outcomes * - 'follow_up' (tro_mon): queue tro_kich after another ally's landed * action * `chanceStat` names the derived stat the window rolls; `payloadSkillId` * names the queued bypass-turn payload (intercept has none — the * substitution itself is the effect). Tasks 15-18 consume. */",
-  "/** * What a successful proc queues on the typed follow-up queue. Absent * on 'intercept' — the substitution itself is the effect. targetMode: * 'attacker' = the participant that provoked the window (Phan); * 'triggering_targets' = the triggering action's still-live affected * set (Tro — plural, an ally AoE queues against the whole landed set). */",
-  "/** * Task 20 (spec 8.2 \"intercept->ally ward\") — on a successful * intercept the ORIGINAL target gains this externalWard pool scaled * on the PROTECTOR's maxHp, plus the authored marker buff that keeps * the pool alive (same existence-bound contract as son_nhac_ho_the). * Baked onto the ho_mon marker clone by buildTheTuAnKit. */",
-  "/** * Task 20 (spec 8.2 \"tro_kich heals ally\") — on a successful Tro proc * the TRIGGERING ally is healed by ratio x its own maxHp through the * vitals authority. Baked onto the tro_mon marker clone. */",
-  "/** * Task 20 (spec 8.2 \"follow-up on ANY ally action\") — the Tro window * normally opens only when the ally action landed a damaging hit; * this flag also opens it on non-damaging ally actions (targets = all * living enemies). Baked onto the tro_mon marker clone. */",
-  "/** * The Tu Reimagined (spec section 6.1, plan Task 14/19) — stance-window * economy modifiers read from the HOLDER's pool at reactive-check time: * - procCostFlatDelta: flat cost shift per proc attempt (tu_the: -5, * floored at 0) * - freeProcs: proc attempts cost nothing (bach_ung window) * - payloadAilments: authored payload-upgrade rider — merged into the * queued payload's appliesAilments at resolve time (spec's \"counter * hits +break\" example expressed through the existing ailment * mechanism; NOT an invented damage multiplier). */",
-  "// Phap Tu Reimagined Task 5 — the ELEMENT this ailment belongs to",
-  "/** * The Tu Reimagined (plan v2.4 review P0) — 'fixed_holder_turns' makes * `duration` the literal count of the HOLDER's own turns, skipping both * the target's ailmentResistPercent and the source's * ailmentDurationPercent multipliers in BuffSystem.apply (a caster's * own resist shrinking their own Bat Tu is nonsense). Default/omitted * keeps the legacy 'ailment_scaled' formula — debuffs like khiem_khich * stay scaled since enemy resist legitimately shortens them. */",
-  "/** * The Tu Reimagined (plan Task 10/11) — apply() removes ALL existing * instances of this id regardless of source before adding the new one. * Newest application wins by construction (Taunt newest-wins, * son_nhac_ho_the single-owner marker). */",
-  "/** * The Tu Reimagined (plan Task 9, D10 Ba The) — applying this def * strips every cc-effect buff already in the TARGET's pool * (BuffPool.clearCcEffects). Honored by the appliesBuffs resolution * and the survive-lethal grant path. */",
-  "/** * Runtime marker — this instance already consumed its one amplification * (Cong Minh). refresh/stack modes keep the same Buff instance, so * without the flag each repeat event would re-scale already-amplified * effects into exponential compounding. Set by scaleBuffPotency; a * fresh instance (replace/expire) starts unamplified. */"
  ],
  "src/core/building/Building.ts": [
   "// BUILDing spec mục 22 (Function Entry) — Building nào MỞ TRỰC TIẾP",
@@ -3993,9 +3633,8 @@
  ],
  "src/core/combat/CombatSystem.ailmentDamage.test.ts": [
   "// Plans/magicpathgeneral Phase 9-11 (2026-08-21) — DOT RES + DoT",
-  "// bong: dpsRatio 0.15/tầng (N1 — stackable, spec 2026-09-03 §2.1);",
-  "// nguồn Skill Power = ATK + FirePower",
-  "// (plan §3.2) = 10 + 10 = 20 ->",
+  "// damage-channel semantics the tick lands on — DOT RES mitigation,",
+  "// bong: dpsRatio 0.15/tầng → the periodic request resolves the tick",
   "// 3 raw damage × (1 - 0.3) = 2.1.",
   "// stat-system-reimagined Task 4 (D18) — CombatSystem queries",
   "// Trúng Độc (wood) — the trigger hook runs but the source carries"
@@ -4007,7 +3646,8 @@
  ],
  "src/core/combat/CombatSystem.healing.test.ts": [
   "// stat-system-reimagined Task 4 (D18 / INV-13) — healingEffectivenessPercent:",
-  "// like Doc Can). leechPercent stays the SOLE leech lever — its output is"
+  "// like Doc Can). leechPercent stays the SOLE leech lever — its output is",
+  "/** Doc Can-shaped authored trigger grant: heal the DoT source for a fraction of the wood damage actually dealt, per stack (stacks live on the grant — the buff2 capability descriptor). */"
  ],
  "src/core/combat/CombatSystem.hitOutcomes.test.ts": [
   "// stat-system-reimagined Task 5 (D5/D6/D11, INV-3) — three hit outcomes:",
@@ -4044,7 +3684,7 @@
   "// baseDamage 100 × (1 + 0.5) = 150."
  ],
  "src/core/combat/CombatSystem.surviveLethal.test.ts": [
-  "// Phase A0 (2026-09-07) — full cutover to turn-based buff types: the",
+  "// buff2 M4 — the survive-lethal session binds the battle's buff",
   "// Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — hook tại",
   "// CombatSystem.killIfDead(), điểm DUY NHẤT tuyên bố chết của mọi đường",
   "// Event damage ban đầu mang killed=true (HP chạm 0), event hiệu chỉnh",
@@ -4052,7 +3692,8 @@
   "// Bất Tử Th thể v4 (spec 2026-09-03-talent-catalog-v4-design.md §4.1",
   "// hàng 11) — guard cứu sống ngoài ra: tẩy TOÀN BỘ debuff trên player +",
   "// áp Tử Sinh Ngộ 10s (+30% sát thương cuối, +20% né chí mạng). Session",
-  "// mở rộng trường surviveEffects — GameManager wiring set từ battle."
+  "// mở rộng trường surviveEffects — GameManager wiring set từ battle.",
+  "// buff2 M4 — surviveEffects.apply is the composition-root-bound lane:"
  ],
  "src/core/combat/CombatSystem.ts": [
   "// Plans/magicpathgeneral Phase 9 (2026-08-21) — DOT RES is a",
@@ -4129,8 +3770,8 @@
   "// v4 (spec 2026-09-03 §4.1) — \"độ thân cũng là độ tâm\": tẩy mọi",
   "// debuff đang bám trên player + áp buff sống sót. Chỉ chạy khi",
   "// session mang surviveEffects (GameManager wiring set từ battle",
-  "// hiện tại — BuffSystem của PLAYER, không phải của địch).",
-  "// clearsCcOnApply (Bat Tu Ba The, Task 9/11) — the grant",
+  "// hiện tại — buff authority của PLAYER, không phải của địch).",
+  "// buff2 M4 — the wired lane owns the cleanse+grant mechanics;",
   "// Event vitals của đòn damage (emit TRƯỚC killIfDead) đã mang",
   "// killed = true vì HP chạm 0 — phát thêm event hiệu chỉnh SAU khi",
   "// guard giữ lượt sống sót để consumer (HUD/scene) đọc trạng thái",
@@ -4487,6 +4128,7 @@
   "// attackSpeed là số đòn/giây. Quy đổi về nhịp 0.8-2.5 đòn/giây để một thay đổi",
   "// nhỏ ở Attack không còn tạo burst damage quá lớn. Giá trị <= 2.5 được xem là",
   "// dữ liệu đã theo thang mới, nhờ vậy enemy mới có thể author trực tiếp.",
+  "// buff2 (M5) — capability grants carry owner-typed payloads; the gate",
   "// Quái thường không có Linh Lực (MP là tài nguyên riêng của Pháp",
   "// Tu); boss Pháp Tu author BASE qua special.maxMp (D9/D21).",
   "// Gameplay fixes (2026-09-05) — turn-based pacing: hệ sống author",
@@ -4513,7 +4155,7 @@
   "// EnemyManager.get()/.find() luôn trả về SAI instance."
  ],
  "src/core/enemy/TribulationPhase.ts": [
-  "/** * Độ Kiếp (mục 11/12 spec `breakthrough`) — primitive multi-phase NHẸ * cho quái Kiếp: khi HP tụt xuống dưới `hpThresholdPercent` (0-1), áp * `buff` MỘT LẦN lên chính quái đó qua BuffSystem (buff KHÔNG có * `duration` = tồn tại vĩnh viễn suốt trận, xem BuffSystem.update()) — * tái dùng nguyên cơ chế Buff/BuffManager hiện có, không cần thêm * state-machine phase riêng. Nhiều phase check theo thứ tự khai báo * (mảng phải sắp XUỐNG DẦN theo hpThresholdPercent), xem * BattleSystem.updateTribulationPhases(). * * Combat Rework Phase 4 (Boss Mechanics) — GENERIC HOÁ: primitive này * giờ dùng chung cho CẢ quái Kiếp lẫn Boss thường (Stage.bossEnemyId) * — bất kỳ Enemy nào khai `tribulationPhases` đều được. Không tạo * BossPhaseSystem riêng, chỉ mở rộng thêm 2 field optional bên dưới. */",
+  "/** * Độ Kiếp (mục 11/12 spec `breakthrough`) — primitive multi-phase NHẸ * cho quái Kiếp: khi HP tụt xuống dưới `hpThresholdPercent` (0-1), áp * `buff` MỘT LẦN lên chính quái đó qua BuffSystem (buff KHÔNG có * `duration` = tồn tại vĩnh viễn suốt trận, xem BuffSystem.update()) — * tái dùng nguyên cơ chế Buff/BuffManager hiện có, không cần thêm * state-machine phase riêng. Nhiều phase check theo thứ tự khai báo * (mảng phải sắp XUỐNG DẦN theo hpThresholdPercent). * * buff2 M5 note: the realtime `BattleSystem.updateTribulationPhases` lane * retired with the legacy buff package; `buff` is now typed on the * canonical buff2 BuffDefinition and the phase/enrage fields remain * dormant data pending the turn-side port. * * Combat Rework Phase 4 (Boss Mechanics) — GENERIC HOÁ: primitive này * giờ dùng chung cho CẢ quái Kiếp lẫn Boss thường (Stage.bossEnemyId) * — bất kỳ Enemy nào khai `tribulationPhases` đều được. Không tạo * BossPhaseSystem riêng, chỉ mở rộng thêm 2 field optional bên dưới. */",
   "// Boss Mechanics — đổi hẳn archetype hành vi (melee/ranged/caster)",
   "// của quái khi vào phase này, áp TRỰC TIẾP lên entity (không qua",
   "// Buff/StatModifier vì archetype không phải stat) — xem",
@@ -5609,23 +5251,7 @@
  "src/core/game/GameManager.statRefresh.test.ts": [
   "// ARCH-002 (M7) — regression coverage for the stat-refresh / battle-reset",
   "// effective before the next dependent read — including CC'd/charging actors.",
-  "// - C03: kim_giap on thiet_y_tang — defense sat in the pool without",
-  "// New entry contract: no caller-side stats — ops resolves the base",
-  "// Second battle: baseStats must equal the clean resolved speed again —",
-  "// stats read is updated immediately — before any further step runs —",
-  "// Advance until the holder's declare expires it — effective stats drop",
-  "// stunned — CC must not freeze the stat view.",
-  "// Advance through the stunned declare — the refresh at declare is",
-  "// hpRegen 0 keeps currentHp deterministic — no regen tick could heal",
-  "// Mid-battle +50% maxHp through the timed-effects live channel — the",
-  "// The REAL vitals ceiling (entity.maxHp — heal clamp, regen gate,",
-  "// same step — and growth granted no free HP.",
-  "// A maxHp-stacking passive left hot from a finished battle — the old",
-  "// +12% might must be effective immediately at battle start — before the",
-  "// first fighting step — not wait for the player's first declare.",
-  "// production learn path fills (realm-gate bypassed — the test targets",
-  "// resolved base — powers move in-battle without re-deriving the base.",
-  "// one-directional — below the menu single-pass value (~3.3% at"
+  "// - C03: kim_giap on thiet_y_tang — defense sat in the pool without"
  ],
  "src/core/game/GameManager.talentM3.test.ts": [
   "// M3 (spec 2026-09-03 talent catalog v4 §4.2) — production talent wiring",
@@ -5686,11 +5312,7 @@
   "// substitute target — it never ran. Net: +6 taken, -15 +20 counter."
  ],
  "src/core/game/GameManager.theTuE2E.test.ts": [
-  "// The Tu Reimagined (plan Task 13) — Hien end-to-end: real initiation",
-  "// Set low HP BEFORE the fight starts — the enemy is far faster and",
-  "// The stunned-but-undying actor still acted — no CC-block counter moved.",
-  "// Slow enemy (speed ~30) — the tank casts son_nhac long before its",
-  "// Taunt forced the tank target — the natural-target companion is untouched."
+  "// The Tu Reimagined (plan Task 13) — Hien end-to-end: real initiation"
  ],
  "src/core/game/GameManager.theTuKit.test.ts": [
   "// The Tu Reimagined (plan Task 6) — kit resolution reads the owned root",
@@ -5973,29 +5595,6 @@
  "src/core/game/GameManagerTurnBattleOps.idleDrops.test.ts": [
   "// but strips the tinh_anh tag and every chance<1 signature drop — idle is"
  ],
- "src/core/game/GameManagerTurnBattleOps.ts": [
-  "// Phase A6 (9.5 #7) — last-emitted status snapshot + the battle instance",
-  "/** * 9.5 #9 — engine-side cast notification, filtered to the primary * player. The engine reports every committed cast (enemy, companion, * player); only players[0] writes into the skillCastCounts/skillLevels * mirror via deps.recordPrimaryPlayerCast. Reads this.turnBattle live: * players[0]'s participant identity is rebuilt per battle. */",
-  "/** * ARCH-002 (M7) — battle-scoped live-modifier provider handed to * TurnBattleSystem. Only the primary player has a runtime modifier * channel today (passive stacks, persistent pool, timed/socket * effects); companions and enemies return []. The closure reads the * aggregation owner live, so mid-battle stack/expiry changes fold at * the next effective-stat refresh. */",
-  "// ARCH-002 (M7) — resolved-base authority for the battle snapshot:",
-  "// ARCH-002 (M7) — live runtime modifiers for the engine's",
-  "// (GameManagerPersistentEffectOps) — never a second calculator.",
-  "// M2 — Pha Giap carry: bank/seed the bound passive's stacks across",
-  "// Mission C Task 9 — the cultivation-path boundary: GameManager wires",
-  "// 9.5 #9 — committed-cast sink for the PRIMARY player only",
-  "// Kiem Tu Reimagined Task 11 — registered node defs for the path",
-  "/** * Mission C Task 8 — mints the session RNG for ONE battle cycle. * Scope boundary: only combat rolls consume it (combat formulas, * proc chances, spawn placement, pool/tag/hidden-beast picks, * engine rolls). Loot/alchemy/pill economy randomness stays on * Math.random deliberately — a seeded battle must not pin drops. */",
-  "// ARCH-002 (M7) — non-stage battles still need the live buff",
-  "// Task 11 — a queued repeat/multicast execution is NOT a turn",
-  "// Phase A6 (9.5 #7) — status-icon feed. `before` is the LAST-EMITTED",
-  "// replaced battle (auto-repeat) resets to empty — the scene clears",
-  "/** * Whether a turn battle is actively in progress (intro/countdown/ * fighting). The TurnBattle object is retained after victory/defeat so * consumers can read the terminal result — callers that need an * in-combat gate must use this query, not `getTurnBattle() !== null`. */",
-  "/** * The stage that launched the CURRENT turn battle (null for non-stage * battles like tribulation). Read-only query — combat UI needs the * launching stage's own fields (perfectClearTurnLimit for the round * indicator), not the UI selection, which may point elsewhere. */",
-  "/** * Mission C Task 8 — the session RNG for the CURRENT cycle. Minted by * beginBattleCycle from deps.createBattleRng; every combat roll reads * it (combat formulas via combatSystem.setRandomSource, engine rolls * via the TurnBattleSystem ctor param, spawn placement + pool/tag/ * hidden-beast picks via the spawn closures). */",
-  "// Lazy default — a stored `Math.random` reference would bypass",
-  "/** * Mission C Task 9 — dev/test seam mirroring setBattleRngFactory: swap * the path-runtime resolver (a test registers a fake_path runtime the * shipped registry does not know). `undefined` restores the registry. */",
-  "// The built-in factory returns a LAZY Math.random closure — storing"
- ],
  "src/core/game/GameManagerTurnBattlePresentationOps.ts": [
   "/** Phaser gọi khi ready flourish xong → declare action, phát 'attack'. */",
   "/** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */",
@@ -6102,7 +5701,6 @@
  ],
  "src/core/game/TurnBattleAdapter.test.ts": [
   "// M5 — the adapter takes the way-resolved domain list; path-id ->",
-  "// Review fix (MED-3) — reaction initiation is a capability derived",
   "// The domain list only declares stat-domain ownership — the"
  ],
  "src/core/game/TurnBattleAdapter.ts": [
@@ -6115,8 +5713,6 @@
   "// and is a READ-ONLY CACHE — the engine re-syncs it from",
   "// stat-system-reimagined review fix (2026-09-15) — the caller",
   "// resolveActiveWayStatDomains so the WAY — not the raw path id —",
-  "// Review fix (MED-3) — wuxing reaction initiation belongs to the",
-  "// facet; spec §6: \"the domain gate already permits\" a future",
   "// The Tu An (plan Task 16) — participant-local payload clones the",
   "// Task 20 — participant-build cap authority: entity.maxThe persists"
  ],
@@ -6179,6 +5775,8 @@
   "// The kiem_tu resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep",
   "// Kiem Tu Reimagined Task 13 — spec 2026-09-15 §10 invariant suite.",
   "// invariant. These codify Tasks 1-12 — they intentionally overlap the",
+  "// be rejected on restore — the two sets must never drift.",
+  "// Same drift class one layer over — the hand-authored meta map in",
   "// M6 — the kiem_tu_an flip node is retired: ngu entry is the",
   "// (requiresSkillLevel tram Lv3 — reads the skillLevels mirror, the",
   "// is FREE (no insight cost — no node purchase, no waive record) and",
@@ -7937,8 +7535,7 @@
   "// còn luôn luôn áp Thiêu Đốt), node \"Dẫn Hỏa\"/\"Hỏa Nguyên\" cộng",
   "// thêm % này.",
   "// Hỏa Tu Trúc Cơ (Plans/FirePath mục 8, \"Cộng Minh\" minor) — %",
-  "// khuếch đại burst damage lúc Reaction kích hoạt (xem",
-  "// core/battle/turn/TurnReactionManager.ts). Nền 0.",
+  "// khuếch đại burst damage lúc Reaction kích hoạt. Nền 0.",
   "// Mộc Tu (Plans/PoisonPath, 2026-08-21) — % cộng thêm vào duration",
   "// của MỌI ailment nguồn này áp ra (xem AilmentSystem.apply()), tổng",
   "// quát cùng tinh thần ailmentPotencyPercent (đó là % sát thương/giây,",
@@ -8132,12 +7729,12 @@
  ],
  "src/core/the-tu/TheTuBatTuSurvival.ts": [
   "/** * The Tu Reimagined (spec 2026-09-15 section 5.1, plan Task 9, D9) — * Bat Tu Ba The survive-lethal source for a Cuong Chien participant. * * Ordering contract: this source is inserted BEFORE the talent guard in * the CombatSystem survive session — the ultimate is the first line of * survival; the talent charge is the extra life once the ult is spent. * * Three outcomes, evaluated per lethal hit: * 1. bat_tu_ba_the buff already active -> free survive. No re-grant, * no duration refresh, no cooldown touch (review-#6 fix), no * cleanse — cleanseDebuffs:false on every return keeps * CombatSystem's generic !==false blanket wipe from running on * repeat lethals inside the window. * 2. Ultimate slot off cooldown -> consume the cooldown, grant the * buff at the slot's baked durationOverride (participant-build * resolved: base + batTuDurationBonus — ONE resolved value shared * with the manual cast path, review P0.2). CC strip comes ONLY * from BAT_TU_BA_THE_BUFF.clearsCcOnApply on the grant path — * non-cc debuffs (poison/bleed/stat debuffs) are never cleansed. * 3. Ultimate on cooldown -> survived:false; the talent guard may * still save the holder. * * The grant itself is applied by CombatSystem.killIfDead through the * session's SurviveEffectsPolicy — this source only decides and * declares; HP/buff mutation stays in the vitals/buff authority. */",
-  "/** The holder's own buff pool — the active-buff check. */",
+  "/** buff2 M4 — live read of the holder's active instances for a definitionId (the composition root binds the battle's BuffSystem.getForTarget). */",
   "// cleanseDebuffs:false — without it the undefined !== false check",
   "// the same appliesBuffs application the manual cast consumes —"
  ],
  "src/core/the-tu/TheTuExternalWard.ts": [
-  "/** * The Tu Reimagined (plan Task 11, review P1.1) — the externalWard pool * is EXISTENCE-BOUND to the marker instance that granted it, keyed to * the ward's CURRENT sourceId: the pool survives only while a * grantsExternalWard-carrying marker instance from that same source * still lives in the holder's pool. This must never degrade to \"any * marker with the same id\" — a surviving source-A marker must not * resurrect source-B's spent pool. * * Called at the stat-refresh seam (refreshParticipantStats runs after * every pool mutation that can touch a participant: apply, update * expiry, remove, clearCcEffects) so reconcile stays a single choke * point rather than a call site per mutation kind. */"
+  "/** * The Tu Reimagined (plan Task 11, review P1.1) — the externalWard pool * is EXISTENCE-BOUND to the marker instance that granted it, keyed to * the ward's CURRENT sourceId: the pool survives only while a * grantsExternalWard-carrying marker instance from that same source * still lives in the holder's pool. This must never degrade to \"any * marker with the same id\" — a surviving source-A marker must not * resurrect source-B's spent pool. * * Called at the stat-refresh seam (refreshParticipantStats runs after * every buff mutation that can touch a participant: apply, lifecycle * expiry, remove, CC clear) so reconcile stays a single choke * point rather than a call site per mutation kind. * * buff2 M4 — reads canonical instance snapshots; the marker grant is a * capability payload on the resolved definition (the `marker` * capability owner validates `grantsExternalWard`). */"
  ],
  "src/core/the-tu/TheTuKitModifiers.ts": [
   "// The Tu Reimagined (plan Task 6, review P0.2) — the ONLY node -> kit",
@@ -8345,21 +7942,10 @@
   "// existing Trúc Cơ boss — starting point for playtesting, not a"
  ],
  "src/data/buff/BuffRegistry.test.ts": [
-  "// Completion plan Task 13 — migrate 46 real BuffDefinition →",
-  "// BuffDefinition. No-rebalance: duration GIỮ NGUYÊN SỐ (giây → lượt),",
-  "// convertsAfterContinuousSeconds → convertsAfterContinuousTurns, mọi effect",
-  "// field khác copy nguyên vẹn (BuffTypes effect shapes 1:1 với BuffTypes)."
+  "// M4 — the registry IS the validating buff2 catalog now: every def is"
  ],
  "src/data/buff/BuffRegistry.ts": [
-  "// Completion plan Task 13 — migrate 46 real BuffDefinition entries sang",
-  "// turn-clock shape. Converter tự động thay vì 46×hand-copy (E10 —",
-  "// statModifier/dot/cc/onHitProc field names giống hệt giữa hai khung).",
-  "// No-rebalance policy (Completion plan §Global Constraints): duration GIỮ",
-  "// NGUYÊN SỐ (giây → lượt), convertsAfterContinuousSeconds →",
-  "// convertsAfterContinuousTurns cùng số. `duration: Infinity` (buff vĩnh",
-  "// viễn) giữ nguyên — BuffSystem.update() trừ remainingTurns mỗi lượt",
-  "// holder, Infinity không bao giờ <= 0 → sống vĩnh viễn, khớp semantics hệ sống.",
-  "// Phap Tu Reimagined Task 12 — the definition-level element tag must"
+  "// buff2 migration (M4) — the legacy `toBuffDefinition` load-time"
  ],
  "src/data/buff/buffs.registryConsistency.test.ts": [
   "// Regression (review 2026-08-26): App.vue từng bị xóa mất lệnh",
@@ -8375,25 +7961,14 @@
   "// thêm tham chiếu mới mà quên khai báo, test bắt ngay."
  ],
  "src/data/buff/buffs.test.ts": [
-  "// Unified Buff System (Task 7, 2026-09-01) — parity test: mỗi definition",
-  "// ported từ AilmentTemplate (data/ailment/ailments.ts, KHÔNG bị xoá, vẫn",
-  "// đứng làm nguồn đối chiếu) phải khớp field-for-field, không đổi số liệu.",
-  "// Spec 2026-09-03 phap-tu-thuan-he Task 9 — bong ĐỔI có chủ đích (N1 đã",
-  "// duyệt): stack max 5, dpsRatio 0.15/tầng (1 tầng yếu hơn, 5 tầng = 0.75",
-  "// mạnh hơn bản refresh 0.3 cũ) — \"chồng Thiêu Đốt\" của chuỗi Hỏa mới có",
-  "// nghĩa. Test port-parity cũ được thay bằng test shape stackable mới.",
-  "// Spec §7 — 8 buff mới của chuỗi Thuần (thanh_tuyen/bang_giap/hoi_luu/",
-  "// cau_mang_can/kim_giap/dia_tru/thanh_luy + the_man_<el> ×5).",
-  "// The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;",
-  "// Engine áp/gỡ THEO ID qua theManBuffId() (TheResourceSystem, retired M13) —",
-  "// id phải khớp chính xác `the_man_<element>`."
+  "// M4 — parity test rewritten to the canonical buff2 shape: the same",
+  "// Engine áp/gỡ THEO ID qua theManBuffId() — id phải khớp chính xác `the_man_<element>`."
  ],
  "src/data/buff/buffs.ts": [
   "// Đột Phá Trúc Cơ (Phase 5) — áp lên buff PERSISTENT ngoài trận",
   "// (GameManager.applyPersistentBuff()) khi thất bại Độ Kiếp (mục 13",
   "// spec `breakthrough`) — phạt có cảm giác nhưng không huỷ hoại, KHÔNG",
-  "// reset cảnh giới. Xem composables/useTribulation.ts. Khai TRƯỚC mảng",
-  "// `buffs` bên dưới vì được tham chiếu lại trong đó.",
+  "// reset cảnh giới. Xem composables/useTribulation.ts.",
   "// buildTurnBattle(). Spec 2026-09-05 §2.5: fewer slots = stronger buff.",
   "// Kiếm Thế / Kiếm Ý (spec 2026-08-29 mục 5.3): sword_wound (thuộc",
   "// Thái Hư Nhất Kiếm) và phieu_van_bo_buff (thuộc Phiêu Vân Bộ) đã",
@@ -8415,6 +7990,7 @@
   "// Kiem Tu Reimagined (spec 2026-09-15 §3) — buffs/debuffs authored for"
  ],
  "src/data/buff/LegacyBuffs.ts": [
+  "// buff2 migration (megaplan M4) — mechanical per M1 mapping:",
   "// Pháp Tu (Thổ Tu, 2026-08-15) — Thạch Giáp Trận (special skill,",
   "// xem data/skill/Skills.ts) tự buff wardMax tạm thời lên bản thân,",
   "// tái dùng effect 'buff' có sẵn (zero plumbing mới).",
@@ -8435,7 +8011,7 @@
   "// đây bị đảo ngược. Phase 11 — \"+2% HP Recovery từ Poison Damage\"/tầng",
   "// (từng bị hoãn ở EarthPath vì DoT tick chưa resolve được entity",
   "// NGUỒN). stat-system-reimagined Task 4 (D18): the bespoke",
-  "// 'dotRecovery' trigger on this buff — CombatSystem.applyDotDamage()",
+  "// 'dot_recovery' capability on this buff — CombatSystem.applyDotDamage()",
   "// Spec 2026-08-30-phap-tu-dao-sac §4 — 2 buff nguồn của 2 reaction",
   "// sinh mới (Ngưng Lộ Kim+Thủy / Khai Sơn Thổ+Kim), mirror pattern",
   "// doc_the (stack + refresh, modifiers % hoặc flat).",
@@ -8451,15 +8027,14 @@
   "// Plans/KimPath mục 3 (2026-08-21) — maxStacks 3->5.",
   "// Thổ Tu — Thạch Hóa: 'modifier' (-30% evasionRate) + on-hit-proc",
   "// (50% cơ hội áp 'choang' mỗi đòn đánh trúng) — CẢ HAI cùng 1",
-  "// definition, port thành 2 entries trong effects[] (statModifier +",
-  "// onHitProc), đúng brief mục Step 3.",
+  "// definition, port thành statModifier + 'on_hit_proc' capability",
   "// Plans/EarthPath mục VI — \"Trói Chân\": Root.",
   "// Plans/EarthPath mục V — \"Dung Nham\".",
   "// Plans/KimPath mục 6 (2026-08-21) — \"Huyết Độc\": hợp nhất Trúng",
   "// Độc + Chảy Máu.",
   "// Pháp Tu (Thủy Tu, 2026-08-15) — giữ Làm Chậm LIÊN TỤC đủ",
-  "// convertsAfterContinuousSeconds thì tự chuyển thành Đóng Băng",
-  "// (convertsToOnMaxStacks cũ -> convertsToId mới).",
+  "// convertsAfterContinuousTurns thì tự chuyển thành Đóng Băng (the",
+  "// load — the field is authored as turns directly now).",
   "// Hàn Khí (Chill) — STACK tới 5 lần thì tự chuyển thành Đóng Băng.",
   "// Cuồng Bạo (Haste).",
   "// Suy Nhược (Frailty) — debuff phòng ngự.",
@@ -8478,25 +8053,25 @@
   "// Trọng Kích — bùng nổ chuỗi crit: +30% sát thương cuối 8s.",
   "// Thạch Giáp — Thạch Nham 5s: −50% sát thương nhận vào.",
   "// Vô Ảnh — Sát Na 6s: +30% chí mạng + 20% tốc đánh.",
-  "// Bất Tử Th thể v4 — Tử Sinh Ngộ 10s sau khi guard cứu sống:",
+  "// Bất Tử Thể v4 — Tử Sinh Ngộ 10s sau khi guard cứu sống:",
   "// +30% sát thương cuối + 20% né chí mạng."
  ],
  "src/data/buff/TheTuBuffs.test.ts": [
   "// The Tu Reimagined (spec 2026-09-15 section 5-6, plan Task 6) — buff",
-  "// debuff ON the enemy — enemy resist legitimately shortens Taunt).",
+  "// enemy — enemy resist legitimately shortens Taunt). Effects live in",
   "// Spec-listed rider: \"counter hits +break\" — an ailment application on"
  ],
  "src/data/buff/TheTuBuffs.ts": [
   "// The Tu Reimagined (spec 2026-09-15 sections 5-6, plan Task 6) — the_tu",
   "/** Bat Tu Ba The — undying + Ba The window, counted in the holder's own turns. */",
-  "/** * Phan Chinh — Trấn Thể's permanent Reflection emblem buff. The * reflectsDamage effect is resolved by BuffSystem.rollReactiveTrigger + * TurnBattleSystem inside the taken-only gate (Task 8, D4/INV-8). */",
+  "/** * Phan Chinh — Trấn Thể's permanent Reflection emblem buff. The * reflectsDamage payload is resolved by CombatProcSystem + * TurnBattleSystem inside the taken-only gate (Task 8, D4/INV-8). */",
   "/** Son Nhac — self damage-reduction window (fixed holder-turns). */",
-  "/** * Son Nhac Ho The — marker instance on each protected ally binding an * externalWard pool to this source (plan Task 11). uniquePerTarget: * a newer grant replaces older-source markers so marker and pool always * share one owner. */",
-  "/** * Khiem Khich — Taunt debuff ON the enemy; Buff.sourceId is the * taunter's entity id and selectTarget reads the victim's own pool * (Task 10). uniquePerTarget => newest taunt wins (INV-11). Stays * ailment_scaled: enemy ailment resist legitimately shortens Taunt. */",
+  "/** * Son Nhac Ho The — marker instance on each protected ally binding an * externalWard pool to this source (plan Task 11). uniquePerTarget -> * per_target + latest: a newer grant replaces older-source markers so * marker and pool always share one owner. */",
+  "/** * Khiem Khich — Taunt debuff ON the enemy; the instance's sourceId is the * taunter's entity id and selectTarget reads the victim's own pool * (Task 10). per_target+latest => newest taunt wins (INV-11). Stays * ailment_scaled: enemy ailment resist legitimately shortens Taunt. */",
   "// review P1 — THAM_THE carries no gain field). The *_mon markers carry",
   "/** Tu The — stance window: reactive checks cost less (3 self-turns). */",
   "/** * Bach Ung — burst window: reactive checks are free and payloads gain * the authored upgrade rider (spec section 6.1 \"counter hits +break\": * the payload merges `payloadAilments` into its appliesAilments at * resolve time — a choang stun application through the existing ailment * mechanism, not an invented damage multiplier). */",
-  "/** * Ho Ve — marker on an ally rescued by a successful Ho intercept, * binding their externalWard pool to the protector source (Task 20, * spec 8.2 \"intercept->ally ward\"). Same existence-bound contract as * son_nhac_ho_the: uniquePerTarget + reconcileExternalWard. */"
+  "/** * Ho Ve — marker on an ally rescued by a successful Ho intercept, * binding their externalWard pool to the protector source (Task 20, * spec 8.2 \"intercept->ally ward\"). Same existence-bound contract as * son_nhac_ho_the: per_target + reconcileExternalWard. */"
  ],
  "src/data/buff/ThuanHeBuffs.ts": [
   "// Pháp Tu Thuần Hệ (spec 2026-09-03 §7) — buff mới của 5 chuỗi Thuần.",
@@ -8525,17 +8100,17 @@
   "// keeping Thứ distinct from Bích's pure-shield line.",
   "// Node Thế Mãn (spec §4/E-7) — engine ÁP/GỠ theo trạng thái Thế đầy",
   "// (E-7 sync was TheResourceSystem.updateTheManBuff — retired M13, not",
-  "// duration Infinity: buff KHÔNG tự hết hạn; id phải khớp chính xác"
+  "// permanent: buff KHÔNG tự hết hạn; id phải khớp chính xác"
  ],
  "src/data/buff/ZoneDotBuffs.test.ts": [
   "// Completion plan Task 7 Step 2 — structural assertions cho dot buff",
-  "// definition thay Lava Zone (Dung Nham reaction). dpsRatio quy đổi từ",
+  "// definition thay Lava Zone (Dung Nham reaction). coefficient quy đổi từ",
   "// công thức hệ sống (Task 6 survey):",
   "// - Dung Nham: spawnLavaZone damagePerTick 20 CỐ ĐỊNH (ElementReaction.ts),",
   "// không might-scaling → baseline might 10 (StatBlock.ts) → 20/10 = 2.0",
   "// (damage/tick tại baseline giữ nguyên 20).",
   "// (Kiếm Trận anchor removed — Kiem Tu Reimagined spec 2026-09-15 §7.)",
-  "// Duration giữ nguyên SỐ (no-rebalance policy): 6s tick 1s = 6 lượt."
+  "// Duration giữ nguyên SỐ (no-rebalance policy): 6 lượt."
  ],
  "src/data/buff/ZoneDotBuffs.ts": [
   "// Completion plan Task 7 Step 1 — dot buff definition thay zone-as-dot:",
@@ -8543,13 +8118,13 @@
   "// HazardZoneSystem.spawnLavaZone): hệ sống spawn Lava Zone 6 tick ×",
   "// damagePerTick 20 CỐ ĐỊNH (ElementReaction.ts spawnsLavaZone data,",
   "// không might-scaling). Turn-based dot pipeline damage/tick =",
-  "// power × dpsRatio (BuffSystem.calculateDamagePerTurn, physical",
-  "// dùng stats.might). dpsRatio = 20/10 = 2.0 quy đổi tại baseline",
-  "// might 10 (StatBlock.ts) — damage/tick tại baseline giữ nguyên 20.",
+  "// power × coefficient (DamageSystem, physical dùng stats.might).",
+  "// coefficient = 20/10 = 2.0 quy đổi tại baseline might 10",
+  "// (StatBlock.ts) — damage/tick tại baseline giữ nguyên 20.",
   "// - \"Kiếm Trận\" anchor REMOVED (Kiem Tu Reimagined spec 2026-09-15",
   "// §7) — the sword-zone keystone no longer exists.",
   "// Duration giữ nguyên SỐ (no-rebalance policy Completion plan §Global",
-  "// Constraints): 6s × tickInterval 1s = 6 lượt."
+  "// Constraints): 6 lượt."
  ],
  "src/data/building/buildings.rework.test.ts": [
   "// Chiêu Hiền Quán (2026-09-02, spec 2026-09-02-chi-hien-quan-design.md)"
@@ -8812,6 +8387,7 @@
   "// ngo_dao owns NO tree at all — its way"
  ],
  "src/data/progression/TheTuAnNodes.test.ts": [
+  "// buff2 M4 — kit clones bake node modifiers into capability payloads",
   "// The Tu Reimagined (plan Task 20, spec section 8.2) — the_tu_an tree",
   "// collectTheTuAnMechanicModifiers (review P1.7 — the ONE locked",
   "// T9 — non-mutex: no root excludes another root."
@@ -9486,9 +9062,6 @@
  "src/game/scenes/combat/combat-action-feedback.ts": [
   "// combat-action-feedback (Wave-3 large-file split) — tach tu CombatScene.ts.",
   "// Token is captured AT SPAWN for every delayed ack — a late callback holds",
-  "// Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-cast' TRƯỚC",
-  "// tween lunge (đòn đánh niệm/vung trước khi lao vào), cạnh tween vị",
-  "// trí hiện có (không thay thế).",
   "// Action Playback Task 7 (2026-09-05) / R5 (AR-20) — impact frame tại midpoint",
   "// lunge: damage áp đúng lúc đòn \"trúng\" trên màn hình. Token bắt tại spawn.",
   "/** * Action Playback Task 7 — presentationActive đang bật? Dùng registry * gameManagerRef presence làm proxy (set/unmount cùng subscribe lifecycle). */",
@@ -9498,13 +9071,9 @@
   "/** * Remediation Task 2 — ack engine từ completion THỰC của VFX tween qua * handle, không còn delayedCall tự tính duration trùng lặp. Token * CAPTURE TẠI SPAWN (plan Task 1 Step 5): callback muộn giữ token cũ — * engine đã sang phase/action khác (token mới) thì ack cũ thành stale * no-op ở GameManager, chặn cross-battle mutation. Không spawn được VFX * (projection miss) → ack ngay để engine không treo. */",
   "/** * Action Playback Task 7 (2026-09-05) — 'turn_ready': short flash/pulse * trên sprite actor rồi acknowledgeTurnReady() trong onComplete (5-phase * machine bước 1 → 2). Placeholder visual đơn giản theo plan (không * designed visual — polish sau). */",
   "// Không có sprite (late-join miss) — ack ngay để engine không treo.",
-  "// Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-ready' CẠNH pulse",
-  "// scale hiện có (không thay thế).",
   "// Pulse đơn giản: scale bump rồi trở lại (tween trên rect/sprite GameObject",
   "// — EntitySprite wrapper không expose scale, projection ghi mỗi frame).",
   "/** * Action Playback Task 7 (2026-09-05) — 'turn_standby_complete': tail * event (completeAction ĐÃ chạy trước khi event tới) — presentation-only * bookkeeping, KHÔNG ack gì (không còn wait-gate). */",
-  "// Combat Art Pipeline Task 9 (2026-09-05) — quay lại clip '-standby'",
-  "// (idle-adjacent) khi kết thúc lượt.",
   "// Buff bar (2026-09-02) — floating text tên hiệu ứng CHỈ lần đầu",
   "// attach theo (targetId:buffId) — 2 nguồn cùng buff id chỉ floating 1",
   "// lần; stack tăng không floating lại. Clear ở 2 cleanup sites."
@@ -9517,12 +9086,9 @@
   "// `entityKey` không dùng trực tiếp trong thân hàm (mỗi clip đã tự mang",
   "// đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và",
   "// để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).",
-  "// Frame NAMES, not indices — the clip describes a TexturePacker atlas",
-  "// (Spec B §3.1/§4.2), so a frame is `frame_` + a zero-padded number",
   "/** * Map id RUNTIME (PLAYER_ID hoặc enemy id dạng '<templateId>_<uuid>') * sang ENTITY KEY dùng làm tiền tố animation clip — khớp ĐÚNG cách * CombatPreload.ts build animation set (player theo profile hiện hành, * enemy theo resolveEnemyTextureKey()). undefined khi actor không có * animation set nào (enemy ngoài batch Mortal, vẫn Rectangle) — caller * PHẢI guard trước khi gọi sprite.play(). */",
   "/** * Spec B §3.2 — is this entity's art ANIMATED, or a still image? * * One question, asked of the catalogue, in the one place that plays clips. * A static entity is not a degraded animated one: it has no clips at all, and * asking for one is a no-op rather than a fallback. */",
   "/** * Phát 1 animation clip cho actor NẾU sprite là Sprite thật (kind === * 'sprite') VÀ clip đó đã được registerCombatAnimations() đăng ký — * no-op an toàn cho Rectangle fallback (enemy ngoài batch) hoặc clip * chưa/không tồn tại (test fixture không stub scene.anims đầy đủ). * * Spec B §3.2 (2026-09-11) — AND the entity's art is animated. Before this, * an enemy taking its turn played the 32-frame placeholder, which SWAPPED its * texture from its own Mortal PNG to a numbered stick figure for the length of * the clip. Enemies are static now; their motion is the bob in * `combat-grid-view.ts`. */",
-  "// Spec B §4.5 — `idle` is the state every other clip returns to.",
   "/** * Combat Art Pipeline Task 9 (2026-09-05) — dùng chung bởi onDeath() (event * 'death' thật) và reconcileCombatantSprites() (fallback khi entity mất * khỏi snapshot mà không có event riêng): đánh dấu dying, dọn DoT/cast bar, * phát animation '-death' NẾU sprite là Sprite thật + clip đã đăng ký, và * HOÃN destroy tới khi CẢ tween xoay/mờ CŨ lẫn animation (nếu có) đều xong * — spec §9: cleanup không được cắt ngang animation chết. Không có * animation hợp lệ → animDone giữ true ngay từ đầu, hành vi y hệt trước * Task 9 (chỉ chờ tween). * * Player KHÔNG BAO GIỜ bị destroy ở đây (giữ vị trí cuối dưới overlay kết * quả, xem onBattleEnd) — chỉ tween/animation chạy, isPlayer chặn nhánh * destroy trong finalize(). */",
   "// DoT accumulator — xóa bucket của target chết.",
   "// isPlayer: không destroy (xem doc). Identity check chặn double-",
@@ -9591,15 +9157,18 @@
   "/** * Fake host tối giản — chỉ implement đúng bề mặt API mà * CombatGridView.getOrCreateSprite() (nhánh enemy CÓ texture thật) chạm * tới. applySpriteSize/updateEnemyHealthBar gán SAU khi gridView đã tồn * tại vì getOrCreateSprite() gọi ngược `this.applySpriteSize(...)` (các * method của CHÍNH CombatGridView — trước đây uỷ quyền qua CombatScene, * xem Battlefield Slot Task 2). */",
   "// body actually landed (Spec B §4.3's idle bob).",
   "// Spec B §4.3 — enemies now start an idle-bob tween on creation. The host",
-  "// resolveEnemyTextureKey() trả falsy cho id không nằm trong batch art",
-  "// (id không khớp pattern quái Mortal) → rơi vào nhánh `rect` cuối cùng",
-  "// của getOrCreateSprite(), chỗ trước đây hardcode sizeMultiplier: 1 cho",
-  "// MỌI trường hợp kể cả Boss.",
+  "// CombatGridViewHost.startEntityIdle — kicks the entity's idle state after",
+  "// resolveEnemyTextureKey() trả falsy cho id không nằm trong batch art →",
+  "// entity key rơi về PLACEHOLDER_ENTITY_KEY, render placeholder texture",
+  "// của mode hiện hành thay vì Rectangle (Rectangle chỉ còn double-",
+  "// fallback khi cả placeholder texture cũng thiếu).",
   "// Không được nhỏ hơn enemy thường CÓ texture (nhánh sprite, ×2) — đây",
   "// chính là bug bị lật ngược mà review round 1 tìm ra.",
-  "// Enemy thường rơi cùng nhánh fallback vẫn giữ nguyên size 1 như trước —",
-  "// lựa chọn bảo thủ (conservative), không đổi hình ảnh enemy thường hiện",
-  "// có khi chưa có art.",
+  "// Enemy thường cùng nhánh placeholder giữ ENEMY multiplier như mọi",
+  "// entity có texture — đồng nhất với quái có art thật.",
+  "// Uniformity 2026-09-19: id ngoài batch giờ render placeholder texture",
+  "// CÙNG MODE thay vì Rectangle — Rectangle chỉ còn là double-fallback khi",
+  "// cả placeholder texture cũng không load được.",
   "// Spec B §4.3/§6 B6 — the idle bob",
   "// §3.2 described enemies as static \"như hiện tại\". They were not: walk sway/",
   "// §3.2's calibration says that must stay 122.98 at this depth."
@@ -9651,9 +9220,6 @@
   "// EntitySprite.kind's ghi chÃº).",
   "// The box the art this sprite DRAWS is authored in — not the entity's",
   "// 1.094 aspect onto 0.571 art — 3.44x too wide on screen. Spec B moved",
-  "// Enemy: Sprite art batch Mortal khi cÃ³ texture khá»›p id (mortal-",
-  "// enemy-art-batch-plan.md), fallback Rectangle mÃ u cho id ngoÃ i",
-  "// batch (test fixture / realm khÃ¡c chÆ°a cÃ³ art).",
   "// Enemy art x2; Boss Ã—2 quy táº¯c enemy thÆ°á»ng (2026-09-05) â€” khÃ´ng",
   "// cÃ²n dÃ¹ng CÃ™NG multiplier nhÆ° trÆ°á»›c (xem",
   "// CombatScene.enemyScale.test.ts). BÃ³ng ellipse dÆ°á»›i chÃ¢n nhÃ¢n",
@@ -10109,6 +9675,7 @@
   "// new CombatScene() (khÃ´ng pháº£i Object.create) â€” PHáº¢I cháº¡y constructor",
   "// Ä‘á»ƒ class field resizeHandler/shutdownHandler cÃ³ identity tháº­t: test",
   "// nÃ y verify chÃ­nh tÃ­nh \"cÃ¹ng 1 reference qua cÃ¡c láº§n create\" cá»§a chÃºng.",
+  "// Static-mode entities bob via a tween (uniformity 2026-09-19) — stub the",
   "// Combat tá»± Ä‘á»™ng hoÃ n toÃ n (yÃªu cáº§u 2026-08-26) â€” KHÃ”NG Ä‘Äƒng kÃ½",
   "// báº¥t ká»³ input listener nÃ o ná»¯a (hover circle Ä‘Ã£ gá»¡).",
   "// KÃ­ch hoáº¡t shutdown handler mÃ events.once Ä‘Ã£ Ä‘Äƒng kÃ½.",
@@ -10299,8 +9866,6 @@
   "// qua event 'player_visual_profile_changed' (bridge Ã¡Â»Å¸ PhaserCanvas.vue).",
   "// Task 8 — public: combat-player-visual.ts ghi trực tiếp qua scene ref.",
   "/** KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc nguÃ¡Â»â€œn cÃ¡Â»Â§a texture combat Ã„â€˜ang gÃ¡ÂºÂ¯n trÃƒÂªn player sprite. */",
-  "/** * Static texture thay atlas idle Ã¢â‚¬â€ art profile lÃƒÂ PNG tÃ„Â©nh, KHÃƒâ€NG play * animation; resetVisual() phÃ¡ÂºÂ£i bÃ¡Â»Â qua .play(). */",
-  "// Task 8 — public: combat-player-visual.ts ghi trực tiếp qua scene ref.",
   "// Debug body anchors (plan Ã‚Â§5.4) Ã¢â‚¬â€ dev-only, bÃ¡ÂºÂ­t qua",
   "// localStorage['debug.playerBodyAnchors']='1'; khÃƒÂ´ng cÃƒÂ³ UI production.",
   "// ================= Reward gourd + stream state (plan Ã‚Â§6/Ã‚Â§7) =========",
@@ -10653,7 +10218,6 @@
   "// KHÔNG còn animation atlas idle/cultivate ở scene này.",
   "// Static art theo profile — sourceSize đọc LIVE từ texture hiện hành",
   "// (mỗi profile/art có kích thước nguồn khác nhau), giữ characterHeight",
-  "// cố định và tự suy width theo đúng tỉ lệ.",
   "/** Texture key theo profile + pose đang hiển thị (plan §4.1 bảng). */",
   "// Player luôn đứng giữa Home Scene (HERO_HOME_X = 0, xem BattleLane.ts)",
   "// — không di chuyển/nội suy gì ở đây nữa (khác lúc combat, xem class",
@@ -10697,7 +10261,6 @@
   "// `visualProfileId` -> payload below), not hardcoded — the same id CombatScene",
   "// resetVisual() không dùng ở panel — Map rỗng thoả type, .get() luôn",
   "// undefined (đã guard sẵn trong CombatGridView.resetVisual()).",
-  "// PNG (the sprite's base texture — the player renders static art in",
   "// V10 / §3.6 surface two: the shell addresses the REGION, not this object.",
   "// 2 lớp nền phẳng (sky/ground) — KHÔNG dùng attachBattlefieldBackdrop()",
   "// của combat thật (sao/trăng/núi/đá quá cầu kỳ cho panel test, và",
@@ -10709,8 +10272,7 @@
   "/** * Diff theo combatantId qua chính CombatGridView.getOrCreateSprite() — * KHÔNG tự viết lại logic tạo/xoá sprite: entity còn trong assignment * mới → getOrCreateSprite() no-op nếu id đã có trong this.sprites (chỉ * reposition), animation KHÔNG bị ngắt/reset (đây chính là fix cho bug * \"animation reset về 0 mỗi lần kéo-thả 1 entity\", 2026-09-06); entity * biến mất → destroyEntitySprite() qua CombatGridView; entity mới xuất * hiện → getOrCreateSprite() tạo sprite mới, play() từ frame 0 (đúng — * chưa từng animate trong panel này). */",
   "// Phaser event payloads are untyped at runtime — accept the current",
   "// sprite so it picks up the new profile PNG — same outcome as",
-  "// gridToScreen(sprite.row, column) — refresh it or the unit draws in",
-  "// (playerUsesStaticTexture — no idle clip); everyone else keeps the"
+  "// gridToScreen(sprite.row, column) — refresh it or the unit draws in"
  ],
  "src/game/scenes/TribulationScene.ts": [
   "// Bất Tử Thể có thể cứu player sau event killed=true (CombatSystem",
@@ -10846,7 +10408,6 @@
   "// 2026-09-16 live pass proved the bundle covers every key — cold combat",
   "// slash — R12/AR-30 keeps the literal spelled once (in PlayerVisualProfiles).",
   "// Mortal enemy art batch (mortal-enemy-art-batch-plan.md) — 20 PNG cho",
-  "// 10 loài + bản ferocious; id ngoài batch fallback Rectangle.",
   "// Spec B §4.4 (2026-09-11) — ONE resolver answers what an entity's art is.",
   "// that discarded both of its data parameters (§2.1).",
   "// entity is no longer animated. Enemies are `kind: 'static'` now (§3.2), and a",
@@ -10990,6 +10551,9 @@
   "// trục dọc.",
   "// Lớp phủ màu grading vẫn phủ TRỌN canvas (không lệ thuộc horizon)."
  ],
+ "src/game/support/TribulationPreload.ts": [
+  "// TribulationPreload — the transitional preload net for TribulationScene,"
+ ],
  "src/i18n/index.test.ts": [
   "// Task 21 (item-grade-quality-rework, rework P6) — vi.json/en.json phải",
   "// khớp CẤU TRÚC KEY tuyệt đối (không lệch nhánh nào lệch bên kia), tránh",
@@ -11014,18 +10578,9 @@
   "// errorHandler chạy NGOÀI context setup() của bất kỳ component nào —",
   "// không có \"active pinia\" ngầm định để dựa vào."
  ],
- "src/presentation/art/CombatArtTier.ts": [
-  "// CombatArtTier — which tier of entity DESERVES animation. Policy, once.",
-  "// Spec B §3.2.1",
-  "// fact is legal under A7 — this reports, it does not decide anything the",
-  "/** What an entity's art should be — NOT what it has. See `presentationFor`. */",
-  "/** * ELITE IS DELIBERATELY STATIC. Elites are a reward multiplier applied to an * ordinary template, not a distinct creature, so they share the ordinary one's * art. Animating them would multiply the art bill by every elite-able enemy, * which is the opposite of §3.2's purpose. When an elite deserves its own look * it becomes a boss variant or its own template. */",
-  "/** * WHAT THIS DOES NOT DO: decide whether art exists. * * The catalogue (`presentationFor`) stays the single source of truth for what * has actually been drawn. The tier says what an entity DESERVES; the entry says * what it HAS. Collapsing the two would mean a boss whose atlas has not been * drawn yet either crashes or silently downgrades — and §3.2 exists precisely * because art arrives later than the design for it. * * The two are reconciled by a guard, not by a fallback (§7): an entity whose * tier is `animated` and whose entry is `static` is ART DEBT — listed, expected, * and allowed. Exactly the ratchet Spec A used for cross-layer imports: it may * shrink without ceremony; it may not grow without someone editing this list. * * IT IS NON-EMPTY ON DAY ONE, AND THAT IS THE POINT. Boss variants are built * from the SAME templates as ordinary enemies (`createBossVariant()` multiplies * an existing enemy's stats), so a boss wolf resolves to the ordinary wolf's * texture key. Every mortal template is therefore art debt in its boss form: * `artTierFor` calls it animated, and the only art drawn for that key is a still * PNG. Listing all twenty says that out loud instead of leaving twenty silent * downgrades. * * One consequence is INHERITED rather than introduced: `isBoss` is already * overloaded. Tribulation (Kiếp) enemies set it directly, NOT through * `createBossVariant()`, and the code says why — \"Chỉ tái dùng cờ isBoss để * Combat HUD hiện thanh máu cố định\" (`Enemy.ts:190-196`). They set it to get a * fixed HP bar, not because they are bosses. They carry no texture key of their * own, so they never reach this list — but if the debt list ever turns out to be * mostly Kiếp enemies, the fix is a separate `hasFixedHealthBar` flag on the HUD * side, not a special case buried in `artTierFor`. */"
- ],
  "src/presentation/art/CombatEntityPresentation.ts": [
   "// CombatEntityPresentation — what a combat entity's art IS, as a type.",
   "// Spec B §4.1/§4.2/§4.3",
-  "// Two classes, not one. §3.2 is a deliberate economy on ART COST: the player",
   "// alternative — an animated presentation whose clips happen to be absent — is",
   "// the `Partial<Record<…>>` shape Spec A §4.2 has just finished removing from the",
   "// `{ kind: 'animated', clips: … }`. No playback code is touched, because every",
@@ -11035,7 +10590,6 @@
   "/** * Where the character's own pixels sit inside the authored box, as fractions of * that box — the atlas's `spriteSourceSize` normalised by `sourceSize`. * * Measured from the art, never hand-written. Used by SCALE alone (Spec C §4.1): * anchors do not read it, because they come from the battlefield cell (§3.1). * * `{ x: 0, y: 0, w: 1, h: 1 }` for untrimmed art, which makes every formula in * §3.2 collapse to sizing the box directly. */",
   "/** * The UNTRIMMED box every frame of this clip is authored in — the atlas * JSON's `sourceSize`. * * Added 2026-09-11 after a MEASURED defect: the display size of an animated * sprite was still being derived from the entity's static PNG * (`PlayerVisualProfile.combatSourceSize`, 1312x1199 for the player) while the * sprite was drawing an atlas frame authored at 200x350. The figure rendered * 3.44x too wide. * * It belongs on the CLIP rather than on the entity because it is a property of * the art the clip points at, and two clips of one entity may eventually be * authored at different sizes. `atlasFramesExist` checks it against the JSON * on disk, so it cannot drift silently. * * Note this is the AUTHORED box, not the trimmed pixels. The per-frame trim * offset inside it is spec C's problem (§5.2), and it differs per frame. */",
   "/** * The frame at which this clip's action READS as having happened — a sword * connecting, a palm striking. Absolute (same numbering as `firstFrame`), and * within [firstFrame, lastFrame]. * * Declared here and consumed by spec D, which replaces the current * `ATTACK_LUNGE_DURATION_MS / 2` — half a movement tween, with no relationship * to the art it is timing. NOTHING IN B READS THIS (§6, B8). Changing playback * timing in the same pass as the metadata would make a regression in either * impossible to attribute. * * Absent on looping clips, which have no impact moment. */",
-  "/** Every clip of one animated entity. No partial records (§7). */",
   "/** * Procedural motion for a static entity. Costs no art — this is the whole point * of §3.2's economy, and the reason \"static\" does not have to mean \"dead\". * * Worth stating plainly because the decision described enemies as static \"như * hiện tại\": they were not. Walk sway/bob/tilt were deleted outright on * 2026-08-26 (`combat-grid-view.ts`), leaving rotation 0 and a straight * projected position. So this is a TARGET state, and reaching it means adding a * motion that is not there — cheap, but not a no-op. */",
   "/** * Peak vertical offset, in SCREEN pixels, and NOT scaled by projection depth. * * Decided 2026-09-11: one size for every row. The alternative — scaling * amplitude by the row's depth factor, so a far enemy breathes less — is more * correct perspective and was explicitly not wanted. A far enemy is already * small; scaling its motion too makes it read as frozen. */"
  ],
@@ -11045,15 +10599,7 @@
   "// Hand-written TypeScript beside the profile, not a generated manifest — it",
   "// The honest trade (§3.3): frame counts can drift from the art, because nothing",
   "// specifically to make that drift fail a test rather than a frame, and §7.1",
-  "/** * The placeholder figure's own box inside the 200x350 authored frame, as * fractions, taken from the tallest frame the generator emits. * * Checked against the atlas JSON by tests/architecture/artExtentDeclared.test.ts, * so regenerating the art with different margins fails a test rather than * silently resizing every character (Spec C §2.3). */",
-  "// present while three names were not — so `set.hit` type-checked and was",
-  "// `undefined` at runtime (§2.2). Here the compiler checks the record: add a",
-  "/** * Peak bob, in SCREEN pixels. Small on purpose: this reads as breathing, not as * hovering. Not scaled by projection depth — see `IdleMotion.amplitudePx`. */",
-  "/** * Fallback player entity key — same PNG as the mortal profile, different key. * Used when `combat-grid-view.ts` does not find the current profile's texture * loaded yet. * * Declared HERE rather than imported from `CombatPreload`: that module imports * this one, and the reverse edge would be a cycle. */",
-  "/** * Enemy template ids whose art is drawn: the canonical * `MORTAL_ENEMY_TEMPLATE_IDS` from EnemyArt (R12/AR-30 — one enumeration, * resolved through `resolveEnemyTextureKey` for texture keys). */",
-  "// The player animates (§3.2). Every profile, plus the fallback key.",
-  "/** * One function, one answer per entity. * * `undefined` for an entity with no drawn art at all — a realm whose enemies are * not in the Mortal batch, or a test fixture. Callers keep their existing * Rectangle fallback; this does NOT invent a presentation to avoid returning * nothing, because a silent downgrade is exactly what §3.2.1 refuses. */",
-  "/** * Animated entity keys whose clips still point at the shared placeholder * sheet — derived, not declared, so the answer cannot drift from the * catalogue. This is the placeholder-art debt list; the ratchet guard is * `tests/architecture/artTierDebt.test.ts` (shrink freely, never grow). */"
+  "/** * The placeholder figure's own box inside the 200x350 authored frame, as * fractions, taken from the tallest frame the generator emits. * * Checked against the atlas JSON by tests/architecture/artExtentDeclared.test.ts, * so regenerating the art with different margins fails a test rather than * silently resizing every character (Spec C §2.3). */"
  ],
  "src/presentation/art/PlayerVisualProfiles.test.ts": [
   "// Player visual profile catalog (plan §4.1 + §9 unit tests):",
@@ -12494,16 +12040,6 @@
  ],
  "tests/architecture/ackTokenContract.test.ts": [
   "/** * R14.6c guard — presentation ACKs require a generation token (roadmap R14 * \"all presentation ACKs require generation token\"; R5/AR-20 runtime * contract in CombatAnimationRuntime). * * The runtime already rejects missing/mismatched/stale tokens; behavioral * coverage lives in CombatAnimationRuntime.test.ts. This STATIC guard pins * the contract against silent refactor regressions: each public ack method * must reject a missing or mismatched token BEFORE touching pending state. */"
- ],
- "tests/architecture/animationCatalogue.test.ts": [
-  "/** * Guard (Spec B §7) — the animation catalogue describes clips that can exist. * * Spec: docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md * §4.2, §4.4, §7. * * §3.3 chose hand-written metadata over a generated manifest and accepted the * cost out loud: nothing measures the art. These assertions check the half that * IS checkable — that a clip is internally coherent and reachable. Its sibling * `atlasFramesExist.test.ts` checks the other half, against the file on disk. * * §7.1 states plainly what neither can catch: that a clip LOOKS right. A clip * whose `impactFrame` is inside the range but on the wrong frame — the sword * still rising — passes everything here. That is a judgement made by watching, * and it belongs to spec D. */"
- ],
- "tests/architecture/artTierDebt.test.ts": [
-  "/** * Guard (Spec B §7) — art debt is listed, not discovered. * * Spec: docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md * §3.2.1, §7. * * `artTierFor` says what an entity DESERVES. The catalogue says what it HAS. * §3.2.1 refuses to reconcile the two with a fallback, because a fallback means * a boss whose atlas has not been drawn either crashes or silently downgrades — * and art arriving later than the design for it is the normal case here, not the * exception. * * So they are reconciled by a LIST, with the ratchet Spec A used for cross-layer * imports: it may shrink without ceremony; it may not grow without someone * editing it. * * Boss variants are built from the SAME templates as ordinary enemies * (`createBossVariant()` multiplies an existing enemy's stats), so a boss wolf * resolves to the ordinary wolf's texture key. Every mortal template is * therefore debt in its boss form, and the list is long on day one BY DESIGN. * * Probes this is written against: add a template without adding it to the list * (must go red), and leave a listed entity in place after its entry becomes * animated (must also go red). */",
-  "// Elite is DELIBERATELY static (§3.2.1): an elite is a reward multiplier on",
-  "// what §3.2 is for.",
-  "// reading it here is legal under A7 — this reports, it decides nothing.",
-  "// Same ratchet rule as the tier list above — the set is DERIVED from the"
  ],
  "tests/architecture/assetContainment.test.ts": [
   "/** * R14.6a guard — asset containment (roadmap R14 \"asset destination must * remain under asset root\", A10 canonical catalog). * * Regression classes protected: * - A runtime asset URL that escapes `assets/` (path traversal, absolute * filesystem path, URL scheme, or a `public/` prefix that 404s at serve * time) — checked across every AssetBundleCatalog descriptor AND every * literal `load.*` URL argument in production source. * - `scripts/route-assets.mjs` derives destinations from EXTERNAL filenames * (`name__sub.png` -> `public/assets/name/sub.png`). A `..` segment (or a * crafted absolute segment) escapes the asset root. The script must * resolve each destination and verify containment before moving it. * - Asset-pipeline script write destinations must derive from the declared * roots: `public/assets` (runtime art), `art-source` (source art staging), * `src/assets` (source manifests). A new root constant pointing elsewhere * fails here until reviewed. */"

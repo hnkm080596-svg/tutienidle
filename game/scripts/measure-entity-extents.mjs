@@ -1,4 +1,4 @@
-// Prints normalized ArtExtent {x,y,w,h} (0..1 of source) for each static PNG —
+// Prints normalized ArtExtent {x,y,w,h} (0..1 of source) for each static PNG -
 // the alpha bounding box of the figure, same measurement as opaqueBounds() in
 // pack-mortal-combat-art.mjs. Paste output into the extent constants in
 // src/presentation/art/CombatPresentationCatalogue.ts.

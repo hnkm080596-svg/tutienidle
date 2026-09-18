@@ -13,11 +13,59 @@ import {
   type CombatAnimationCatalogue,
   type CombatAnimationName,
 } from '@/presentation/art/CombatEntityPresentation'
-import { presentationFor } from '@/presentation/art/CombatPresentationCatalogue'
+import {
+  PLACEHOLDER_ENTITY_KEY,
+  presentationFor,
+} from '@/presentation/art/CombatPresentationCatalogue'
 
 import type { CombatScene, CombatScenePayload } from '../CombatScene'
 import { PLAYER_ID } from './combatConstants'
 import type { EntitySprite } from './combatTypes'
+
+/**
+ * Uniform contract (2026-09-19) - transition clips lead INTO a loop, never
+ * back out on their own. Asking for a transition an entity never authored
+ * (placeholder catalogues have none) plays its destination directly, so an
+ * unauthored entity snaps to the right state instead of freezing mid-air.
+ */
+const TRANSITION_DESTINATION: Partial<Record<CombatAnimationName, CombatAnimationName>> = {
+  idle_to_standby: 'standby',
+  standby_to_idle: 'idle',
+}
+
+/**
+ * Register every clip of one entity's catalogue on a scene's AnimationManager.
+ * Shared by CombatScene (combat playback) and TranPhapCombatPreviewScene
+ * (panel rendering) - the registration rule lives in exactly one place so the
+ * two scenes can never build different frame sets from the same clip data.
+ * `anims` is Game-wide: the `exists()` guard keeps re-entry idempotent.
+ */
+export function registerClipCatalogue(
+  anims: Phaser.Animations.AnimationManager,
+  clips: CombatAnimationCatalogue,
+): void {
+  for (const clip of Object.values(clips)) {
+    if (anims.exists(clip.key)) {
+      continue
+    }
+
+    anims.create({
+      key: clip.key,
+      // Frame NAMES, not indices - the clip describes a TexturePacker atlas
+      // (Spec B sec. 3.1/sec. 4.2), so a frame is `frame_` + a zero-padded number
+      // + `.png` rather than an offset into a uniform grid.
+      frames: anims.generateFrameNames(clip.sheetKey, {
+        prefix: clip.framePrefix,
+        suffix: clip.frameSuffix,
+        start: clip.firstFrame,
+        end: clip.lastFrame,
+        zeroPad: clip.zeroPad,
+      }),
+      frameRate: clip.frameRate,
+      repeat: clip.repeat,
+    })
+  }
+}
 
 export class CombatAnimationPlayback {
   constructor(private readonly scene: CombatScene) {}
@@ -33,27 +81,7 @@ export class CombatAnimationPlayback {
   // đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và
   // để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).
   registerCombatAnimations(_entityKey: string, clips: CombatAnimationCatalogue): void {
-    for (const clip of Object.values(clips)) {
-      if (this.scene.anims.exists(clip.key)) {
-        continue
-      }
-
-      this.scene.anims.create({
-        key: clip.key,
-        // Frame NAMES, not indices — the clip describes a TexturePacker atlas
-        // (Spec B §3.1/§4.2), so a frame is `frame_` + a zero-padded number
-        // + `.png` rather than an offset into a uniform grid.
-        frames: this.scene.anims.generateFrameNames(clip.sheetKey, {
-          prefix: clip.framePrefix,
-          suffix: clip.frameSuffix,
-          start: clip.firstFrame,
-          end: clip.lastFrame,
-          zeroPad: clip.zeroPad,
-        }),
-        frameRate: clip.frameRate,
-        repeat: clip.repeat,
-      })
-    }
+    registerClipCatalogue(this.scene.anims, clips)
   }
 
   /**
@@ -69,7 +97,10 @@ export class CombatAnimationPlayback {
       return this.scene.playerProfile.combatTextureKey
     }
 
-    return resolveEnemyTextureKey(actorId)
+    // Uniformity (2026-09-19): an unregistered entity resolves to the shared
+    // placeholder, never to "nothing" - the placeholder's `kind` matches the
+    // mode, so isAnimatedEntity() still gates whether anything plays.
+    return resolveEnemyTextureKey(actorId) ?? PLACEHOLDER_ENTITY_KEY
   }
 
   /**
@@ -113,6 +144,14 @@ export class CombatAnimationPlayback {
     const key = combatAnimationKey(prefix, name)
 
     if (!this.scene.anims.exists(key)) {
+      // A transition the entity never authored snaps to its destination
+      // loop - the engaged state is still reached, just without the road.
+      const destination = TRANSITION_DESTINATION[name]
+
+      if (destination !== undefined) {
+        this.playCombatAnimation(sprite, actorId, destination)
+      }
+
       return
     }
 
@@ -120,8 +159,8 @@ export class CombatAnimationPlayback {
 
     gameSprite.play(key)
 
-    // Spec B §4.5 — `idle` is the state every other clip returns to.
-    //
+    // Spec B sec. 4.5 - a one-shot returns to the state it leads into: transitions
+    // land on their destination loop, everything else lands back on `idle`.
     // Without this a one-shot leaves the sprite frozen on its last frame until
     // something else happens to play. `death` is excluded: it has its own
     // completion handler in onDeath(), which finalises and destroys the sprite,
@@ -130,9 +169,10 @@ export class CombatAnimationPlayback {
       return
     }
 
-    const idleKey = combatAnimationKey(prefix, 'idle')
+    const destination = TRANSITION_DESTINATION[name] ?? 'idle'
+    const destinationKey = combatAnimationKey(prefix, destination)
 
-    if (!this.scene.anims.exists(idleKey) || typeof gameSprite.once !== 'function') {
+    if (!this.scene.anims.exists(destinationKey) || typeof gameSprite.once !== 'function') {
       return
     }
 
@@ -143,7 +183,7 @@ export class CombatAnimationPlayback {
           return
         }
 
-        gameSprite.play(idleKey)
+        gameSprite.play(destinationKey)
       },
     )
   }

@@ -39,4 +39,12 @@ export interface CombatGridViewHost {
    * mọi combatant.
    */
   fallbackSpriteTextureKey(id: string): string | undefined
+
+  /**
+   * Kick the entity's idle state right after sprite creation - a no-op for
+   * entities whose presentation is static (playCombatAnimation guards), and
+   * the reason an animated-mode entity starts on its idle loop rather than a
+   * frozen first frame (uniformity, 2026-09-19).
+   */
+  startEntityIdle(sprite: EntitySprite, id: string): void
 }

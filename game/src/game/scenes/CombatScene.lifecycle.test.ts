@@ -61,6 +61,9 @@ function createSceneWithStubs() {
     },
   )
   scene.physics = { add: { existing: vi.fn() } }
+  // Static-mode entities bob via a tween (uniformity 2026-09-19) — stub the
+  // tween manager so sprite creation doesn't need a real Tweens plugin.
+  scene.tweens = { add: vi.fn(), killTweensOf: vi.fn() }
 
   return { scene, activeResizeListeners, inputOn, inputOff, shutdownHandlers }
 }

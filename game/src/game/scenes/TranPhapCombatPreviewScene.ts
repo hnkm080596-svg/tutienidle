@@ -15,17 +15,17 @@
 // PREVIEW_CELL_SIZE, PREVIEW_GRID_SIZE, previewCellTopLeft() (dead code).
 import Phaser from 'phaser'
 import {
+  animatedCombatEntities,
+  PLACEHOLDER_ENTITY_KEY,
   PLACEHOLDER_SHEET_KEY,
-  PLACEHOLDER_SHEET_URL,
-  PLACEHOLDER_ATLAS_URL,
-  PLACEHOLDER_FRAME_PREFIX,
-  PLACEHOLDER_FRAME_SUFFIX,
-  PLACEHOLDER_ZERO_PAD,
-  PLACEHOLDER_FRAME_COUNT,
-  PLACEHOLDER_FRAME_RATE,
-  PLACEHOLDER_FRAME_WIDTH,
-  PLACEHOLDER_FRAME_HEIGHT,
+  PLACEHOLDER_STATIC_TEXTURE_KEY,
+  PLACEHOLDER_STATIC_TEXTURE_URL,
+  presentationFor,
 } from '@/presentation/art/CombatPresentationCatalogue'
+import { combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
+import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { resolveEnemyTextureKey } from '@/game/support/EnemyArt'
+import { registerClipCatalogue } from './combat/combat-animation-playback'
 import { PLAYER_VISUAL_PROFILES, type PlayerVisualProfile } from '@/presentation/art/PlayerVisualProfiles'
 import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
 import type { FormationAssignmentsPayload } from '@/presentation/contracts/regionEvents'
@@ -58,8 +58,6 @@ export const PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL = FORMATION_MIN_ROAD_HEIGHT
 
 const PANEL_SKY_COLOR = 0x22283a
 const PANEL_GROUND_COLOR = 0x1a1a1a
-
-export const PREVIEW_IDLE_ANIMATION_KEY = 'tran-phap-preview-idle'
 
 export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGridViewHost {
   // Battlefield Perspective Panel (2026-09-06) — chuyển từ flat sang
@@ -123,17 +121,38 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   }
 
   fallbackSpriteTextureKey(_id: string): string | undefined {
-    return PLACEHOLDER_SHEET_KEY
+    // Double-fallback only: the catalogue's placeholder entry is what an
+    // unregistered combatant resolves to; this fires only if THAT texture
+    // failed to load. Same kind as the active mode, so even the last-resort
+    // draw cannot mix static and animated art (uniformity, 2026-09-19).
+    return ENTITY_ART_MODE === 'animated' ? PLACEHOLDER_SHEET_KEY : PLACEHOLDER_STATIC_TEXTURE_KEY
   }
 
   preload(): void {
-    // Placeholder atlas stays: it is the declared fallback for combatants with
-    // no registered presentation (companions have no art yet).
-    this.load.atlas(PLACEHOLDER_SHEET_KEY, PLACEHOLDER_SHEET_URL, PLACEHOLDER_ATLAS_URL)
+    if (ENTITY_ART_MODE === 'animated') {
+      // Every animated entity's sheet - panel combatants resolve through the
+      // same catalogue CombatScene uses, so the same asset set covers them.
+      // Dedupe by sheetKey: several entities share the placeholder atlas.
+      const queued = new Set<string>()
 
-    // Real art, same source CombatScene uses: every profile's static combat
-    // PNG (the sprite's base texture — the player renders static art in
-    // combat, `playerUsesStaticTexture`, so no atlas is needed here).
+      for (const { clips } of animatedCombatEntities()) {
+        for (const clip of Object.values(clips)) {
+          if (queued.has(clip.sheetKey)) {
+            continue
+          }
+
+          queued.add(clip.sheetKey)
+          this.load.atlas(clip.sheetKey, clip.sheetUrl, clip.atlasUrl)
+        }
+      }
+
+      return
+    }
+
+    // Static mode - the placeholder silhouette plus every profile's combat
+    // PNG (same source CombatScene's bundle queues).
+    this.load.image(PLACEHOLDER_STATIC_TEXTURE_KEY, PLACEHOLDER_STATIC_TEXTURE_URL)
+
     for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
       if (!this.textures.exists(profile.combatTextureKey)) {
         this.load.image(profile.combatTextureKey, profile.combatTextureUrl.replace(/^\/+/, ''))
@@ -171,21 +190,43 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     this.gridGraphics = this.add.graphics()
     this.gridView.redrawGridLines()
 
-    if (!this.anims.exists(PREVIEW_IDLE_ANIMATION_KEY)) {
-      this.anims.create({
-        key: PREVIEW_IDLE_ANIMATION_KEY,
-        frames: this.anims.generateFrameNames(PLACEHOLDER_SHEET_KEY, {
-          prefix: PLACEHOLDER_FRAME_PREFIX,
-          suffix: PLACEHOLDER_FRAME_SUFFIX,
-          start: 0,
-          end: PLACEHOLDER_FRAME_COUNT - 1,
-          zeroPad: PLACEHOLDER_ZERO_PAD,
-        }),
-        frameRate: PLACEHOLDER_FRAME_RATE,
-        repeat: -1,
-      })
+    // Animated mode only: register every entity's clip set so startEntityIdle
+    // can play `<entityKey>-idle` - same keys CombatScene would build, via the
+    // shared helper (uniformity, 2026-09-19). Static mode registers nothing.
+    if (ENTITY_ART_MODE === 'animated') {
+      for (const { clips } of animatedCombatEntities()) {
+        registerClipCatalogue(this.anims, clips)
+      }
     }
 
+  }
+
+  /**
+   * CombatGridViewHost - kick the entity's idle loop right after creation.
+   * Resolves the SAME entity key the playback layer would (player -> profile
+   * texture key, everything else -> enemy resolution or the placeholder) and
+   * plays only when that entity is animated; static-mode entities get their
+   * motion from the idle bob, exactly like combat (uniformity, 2026-09-19).
+   */
+  startEntityIdle(sprite: EntitySprite, id: string): void {
+    if (sprite.kind !== 'sprite') {
+      return
+    }
+
+    const entityKey =
+      id === PLAYER_ID
+        ? this.playerProfile.combatTextureKey
+        : (resolveEnemyTextureKey(id) ?? PLACEHOLDER_ENTITY_KEY)
+
+    if (presentationFor(entityKey)?.kind !== 'animated') {
+      return
+    }
+
+    const key = combatAnimationKey(entityKey, 'idle')
+
+    if (this.anims.exists(key)) {
+      ;(sprite.rect as Phaser.GameObjects.Sprite).play(key)
+    }
   }
 
   /**
@@ -238,10 +279,20 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
       if (assignment.combatantId === PLAYER_ID) {
         const existing = this.sprites.get(PLAYER_ID)
 
+        // What the player sprite SHOULD be drawing right now, mode-aware:
+        // the profile PNG in static mode, the idle sheet in animated mode
+        // (comparing against combatTextureKey there would rebuild the sprite
+        // on EVERY sync - its texture is the atlas, not the PNG).
+        const presentation = presentationFor(this.playerProfile.combatTextureKey)
+        const expectedTextureKey =
+          presentation?.kind === 'animated'
+            ? presentation.clips.idle.sheetKey
+            : this.playerProfile.combatTextureKey
+
         if (
           existing &&
           existing.kind === 'sprite' &&
-          (existing.rect as Phaser.GameObjects.Sprite).texture.key !== this.playerProfile.combatTextureKey
+          (existing.rect as Phaser.GameObjects.Sprite).texture.key !== expectedTextureKey
         ) {
           this.gridView.destroyEntitySprite(existing)
           this.sprites.delete(PLAYER_ID)
@@ -260,17 +311,6 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
       // gridToScreen(sprite.row, column) — refresh it or the unit draws in
       // its old cell while the DOM grid shows the new one.
       sprite.row = assignment.row as LaneIndex
-
-      // The player renders the static profile PNG exactly like CombatScene
-      // (playerUsesStaticTexture — no idle clip); everyone else keeps the
-      // placeholder idle until they have authored art.
-      if (
-        sprite.kind === 'sprite' &&
-        assignment.combatantId !== PLAYER_ID &&
-        !(sprite.rect as Phaser.GameObjects.Sprite).anims.isPlaying
-      ) {
-        ;(sprite.rect as Phaser.GameObjects.Sprite).play(PREVIEW_IDLE_ANIMATION_KEY)
-      }
 
       this.gridView.positionSprite(sprite, assignment.column)
     }

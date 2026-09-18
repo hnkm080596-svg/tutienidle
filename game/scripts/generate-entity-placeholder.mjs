@@ -1,4 +1,4 @@
-// Emits entity-placeholder.png — the static-mode placeholder for any entity
+// Emits entity-placeholder.png - the static-mode placeholder for any entity
 // with no authored art (uniformity: unregistered entities render THIS, not a
 // colored Rectangle). Neutral ink silhouette, 128x128, transparent bg.
 import { createCanvas } from 'canvas'

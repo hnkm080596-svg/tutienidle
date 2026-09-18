@@ -89,7 +89,7 @@ describe('CombatAnimationRuntime', () => {
 
     runtime.notifyReadyActor(player)
 
-    expect(runtime.getAnimationState('player')).toBe('ready')
+    expect(runtime.getAnimationState('player')).toBe('standby')
     expect(runtime.isActionPlaybackWaiting()).toBe(true)
     expect(events).toContain('turn_ready')
   })
@@ -104,7 +104,7 @@ describe('CombatAnimationRuntime', () => {
     const token = runtime.getPendingPlaybackToken()!
     runtime.acknowledgeTurnReady(token)
 
-    expect(runtime.getAnimationState('player')).toBe('cast')
+    expect(runtime.getAnimationState('player')).toBe('standby')
     expect(events).toContain('turn_cast_start')
   })
 
@@ -152,7 +152,7 @@ describe('CombatAnimationRuntime', () => {
     runtime.acknowledgeTurnReady('some-other-stale-token')
 
     // Stale ack ignored — actor still pending in the ready phase.
-    expect(runtime.getAnimationState('player')).toBe('ready')
+    expect(runtime.getAnimationState('player')).toBe('standby')
     expect(runtime.getPendingPlaybackToken()).toBe(currentToken)
   })
 
@@ -167,22 +167,22 @@ describe('CombatAnimationRuntime', () => {
 
     // 1. Empty/missing token from presentation -> rejected
     runtime.acknowledgeTurnReady('')
-    expect(runtime.getAnimationState('player')).toBe('ready')
+    expect(runtime.getAnimationState('player')).toBe('standby')
 
     // 2. Mismatched token -> rejected
     runtime.acknowledgeTurnReady('wrong_token')
-    expect(runtime.getAnimationState('player')).toBe('ready')
+    expect(runtime.getAnimationState('player')).toBe('standby')
 
     // 3. Correct token -> accepted, enters cast
     runtime.acknowledgeTurnReady(readyToken)
-    expect(runtime.getAnimationState('player')).toBe('cast')
+    expect(runtime.getAnimationState('player')).toBe('standby')
 
     const impactToken = runtime.getPendingPlaybackToken()!
     expect(impactToken).toBeTruthy()
 
     // 4. Empty/missing token on impact -> rejected
     runtime.acknowledgeActionImpact('')
-    expect(runtime.getAnimationState('player')).toBe('cast')
+    expect(runtime.getAnimationState('player')).toBe('standby')
 
     // 5. Correct token on impact -> accepted, enters standby
     runtime.acknowledgeActionImpact(impactToken)
@@ -218,7 +218,7 @@ describe('CombatAnimationRuntime', () => {
     runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
 
     expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
-    expect(runtime.getAnimationState('player')).toBe('cast')
+    expect(runtime.getAnimationState('player')).toBe('standby')
   })
 
   it('submitTurnChoice declares the paused manual turn and clears the pause', () => {
@@ -236,7 +236,7 @@ describe('CombatAnimationRuntime', () => {
     expect(submitted).toBe(true)
     expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
     expect(runtime.isActionPlaybackWaiting()).toBe(true)
-    expect(runtime.getAnimationState('player')).toBe('cast')
+    expect(runtime.getAnimationState('player')).toBe('standby')
   })
 
   it('submitTurnChoice with no pending pause is a safe no-op (returns false)', () => {
@@ -371,11 +371,11 @@ describe('CombatAnimationRuntime', () => {
 
         // Old token rejected
         runtime.acknowledgeTurnReady(oldToken)
-        expect(runtime.getAnimationState(player.id)).toBe('ready')
+        expect(runtime.getAnimationState(player.id)).toBe('standby')
 
         // New token accepted
         runtime.acknowledgeTurnReady(resume.token)
-        expect(runtime.getAnimationState(player.id)).toBe('cast')
+        expect(runtime.getAnimationState(player.id)).toBe('standby')
       }
     })
 
@@ -386,7 +386,7 @@ describe('CombatAnimationRuntime', () => {
       const readyToken = runtime.getPendingPlaybackToken()!
       runtime.acknowledgeTurnReady(readyToken)
       const oldCastToken = runtime.getPendingPlaybackToken()!
-      expect(runtime.getAnimationState(player.id)).toBe('cast')
+      expect(runtime.getAnimationState(player.id)).toBe('standby')
 
       const resume = runtime.preparePresentationResume()!
       expect(resume).toBeDefined()
@@ -399,7 +399,7 @@ describe('CombatAnimationRuntime', () => {
 
         // Old token rejected
         runtime.acknowledgeActionImpact(oldCastToken)
-        expect(runtime.getAnimationState(player.id)).toBe('cast')
+        expect(runtime.getAnimationState(player.id)).toBe('standby')
 
         // New token accepted -> advances to standby
         runtime.acknowledgeActionImpact(resume.token)
@@ -484,17 +484,17 @@ describe('CombatAnimationRuntime', () => {
 
       // Blocked: acknowledgeTurnReady is rejected
       runtime.acknowledgeTurnReady(token)
-      expect(runtime.getAnimationState(player.id)).toBe('ready')
+      expect(runtime.getAnimationState(player.id)).toBe('standby')
 
       // Unblock: acknowledgeTurnReady is accepted
       blocking = false
       runtime.acknowledgeTurnReady(token)
-      expect(runtime.getAnimationState(player.id)).toBe('cast')
+      expect(runtime.getAnimationState(player.id)).toBe('standby')
 
       // Blocked again: acknowledgeActionImpact is rejected
       blocking = true
       runtime.acknowledgeActionImpact(token)
-      expect(runtime.getAnimationState(player.id)).toBe('cast')
+      expect(runtime.getAnimationState(player.id)).toBe('standby')
 
       // Unblock: accepted
       blocking = false

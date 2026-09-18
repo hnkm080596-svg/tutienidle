@@ -65,6 +65,10 @@ function createScene() {
     add: { existing: vi.fn() },
   }
 
+  // No textures in this harness - sprite creation takes the Rectangle
+  // double-fallback (uniformity 2026-09-19: placeholder texture missing).
+  scene.textures = { exists: () => false }
+
   scene.add = {
     text: vi.fn(() => chainable()),
     rectangle: vi.fn(() => chainable()),

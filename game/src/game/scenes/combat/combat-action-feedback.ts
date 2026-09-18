@@ -7,7 +7,6 @@
 import type {
   ActionImpactEvent,
 } from '@/core/battle/BattleEvents'
-import { combatAnimationForSkill } from '@/presentation/art/CombatPresentationCatalogue'
 
 import type { CombatScene, CombatScenePayload } from '../CombatScene'
 import {
@@ -34,11 +33,10 @@ export class CombatActionFeedback {
       const isPlayer = event.sourceId === PLAYER_ID
       const dx = isPlayer ? ATTACK_LUNGE_PX : -ATTACK_LUNGE_PX
 
-      // Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-cast' TRƯỚC
-      // tween lunge (đòn đánh niệm/vung trước khi lao vào), cạnh tween vị
-      // trí hiện có (không thay thế).
-      scene.playCombatAnimation(attacker, event.sourceId, combatAnimationForSkill(event.skillId))
-
+      // Uniform contract (2026-09-19) - attack readability IS the lunge
+      // tween for every entity. No per-skill clips: cast/sweep_hand/punch
+      // were removed from CombatAnimationName when the per-faction art
+      // split died.
       scene.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
 
       // Action Playback Task 7 (2026-09-05) / R5 (AR-20) — impact frame tại midpoint
@@ -170,9 +168,10 @@ export class CombatActionFeedback {
       return
     }
 
-    // Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-ready' CẠNH pulse
-    // scale hiện có (không thay thế).
-    scene.playCombatAnimation(sprite, event.actorId, 'ready')
+    // Uniform contract (2026-09-19) - turn start engages the standby loop
+    // through its transition. Entities without the transition clip snap
+    // straight to standby (playback resolves the fallback).
+    scene.playCombatAnimation(sprite, event.actorId, 'idle_to_standby')
 
     // Pulse đơn giản: scale bump rồi trở lại (tween trên rect/sprite GameObject
     // — EntitySprite wrapper không expose scale, projection ghi mỗi frame).
@@ -205,9 +204,9 @@ export class CombatActionFeedback {
     const sprite = scene.spriteFor(event.actorId)
 
     if (sprite) {
-      // Combat Art Pipeline Task 9 (2026-09-05) — quay lại clip '-standby'
-      // (idle-adjacent) khi kết thúc lượt.
-      scene.playCombatAnimation(sprite, event.actorId, 'standby')
+      // Uniform contract (2026-09-19) - turn end disengages back to idle
+      // through its transition; entities without it snap straight to idle.
+      scene.playCombatAnimation(sprite, event.actorId, 'standby_to_idle')
 
       scene.tweens.killTweensOf(sprite.rect)
 
