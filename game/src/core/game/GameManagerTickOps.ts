@@ -1,5 +1,5 @@
 import type { AlchemySystem } from '../alchemy/AlchemySystem'
-import type { BuffSystem } from '../buff/BuffSystem'
+import type { BuffPersistence } from '../buff2/BuffPersistence'
 import type { Material } from '../material/Material'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
@@ -53,7 +53,7 @@ export class GameManagerTickOps {
       alchemySystem: AlchemySystem
       pillBag: PillBag
       pillRegistry: PillRegistry
-      buffSystem: BuffSystem
+      persistentBuffs: BuffPersistence
       passiveSystem: PassiveSystem
       turnBattleOps: GameManagerTurnBattleOps
       tribulationDirector: TribulationDirector
@@ -247,7 +247,8 @@ export class GameManagerTickOps {
 
     // R4 (AR-19): Persistent out-of-battle buffs (e.g. Kiếp Thương debuff)
     // decrement duration by deltaSeconds via updateTime().
-    this.deps.buffSystem.updateTime(deltaSeconds)
+    // buff2 M4 -- persistent pool lifetime clock (was buffSystem.updateTime).
+    this.deps.persistentBuffs.onTimePassed(deltaSeconds)
 
     this.deps.passiveSystem.tick(deltaSeconds)
 

@@ -1,75 +1,76 @@
 import { describe, expect, it } from 'vitest'
-import { toBuffDefinition, BUFF_REGISTRY } from './BuffRegistry'
-import type { BuffDefinition } from '../../core/buff/BuffDefinition'
+import { BUFF_REGISTRY } from './BuffRegistry'
 import { buffs as LIVE_BUFFS } from './buffs'
 
-// Completion plan Task 13 — migrate 46 real BuffDefinition →
-// BuffDefinition. No-rebalance: duration GIỮ NGUYÊN SỐ (giây → lượt),
-// convertsAfterContinuousSeconds → convertsAfterContinuousTurns, mọi effect
-// field khác copy nguyên vẹn (BuffTypes effect shapes 1:1 với BuffTypes).
-
-const SAMPLE: BuffDefinition = {
-  id: 'sample_buff',
-  name: 'Sample',
-  description: 'desc',
-  polarity: 'buff',
-  duration: 6,
-  stackMode: 'refresh',
-  convertsToId: 'other',
-  convertsAfterContinuousSeconds: 3,
-  effects: [
-    { type: 'statModifier', stat: 'might', percent: -0.15 },
-    { type: 'dot', dpsRatio: 0.5, element: 'fire', armorIgnorePercentByRealm: true },
-    { type: 'cc', ccEffect: 'stun' },
-    { type: 'onHitProc', chance: 0.2, appliesBuffId: 'other' },
-  ],
-}
-
-describe('toBuffDefinition', () => {
-  it('converts duration/converts fields seconds→turns, keeps the SAME number', () => {
-    const converted = toBuffDefinition(SAMPLE)
-
-    expect(converted.duration).toBe(6)
-    expect(converted.convertsToId).toBe('other')
-    expect(converted.convertsAfterContinuousTurns).toBe(3)
-    expect('convertsAfterContinuousSeconds' in converted).toBe(false)
-  })
-
-  it('copies effects array verbatim (effect template shapes are 1:1)', () => {
-    const converted = toBuffDefinition(SAMPLE)
-
-    expect(converted.effects).toEqual(SAMPLE.effects)
-  })
-
-  it('copies id/name/description/polarity/hidden/stackMode/maxStacks', () => {
-    const converted = toBuffDefinition({
-      ...SAMPLE,
-      hidden: true,
-      maxStacks: 5,
-      duration: Infinity,
-    })
-
-    expect(converted.id).toBe('sample_buff')
-    expect(converted.name).toBe('Sample')
-    expect(converted.description).toBe('desc')
-    expect(converted.polarity).toBe('buff')
-    expect(converted.hidden).toBe(true)
-    expect(converted.maxStacks).toBe(5)
-    expect(converted.duration).toBe(Infinity)
-  })
-})
+// M4 — the registry IS the validating buff2 catalog now: every def is
+// authored in the canonical shape and was already validated at module
+// load (a malformed def would throw on import, before any test runs).
+// These tests pin the migration invariants, not the legacy converter.
 
 describe('BUFF_REGISTRY completeness', () => {
-  it('every live BuffDefinition id has a converted BuffDefinition entry', () => {
+  it('loads every authored definition (sealed, validated)', () => {
     expect(LIVE_BUFFS.length).toBeGreaterThan(40)
 
-    for (const live of LIVE_BUFFS) {
-      const definition = BUFF_REGISTRY.get(live.id)
+    for (const def of LIVE_BUFFS) {
+      const registered = BUFF_REGISTRY.get(def.id)
+      expect(registered, `missing def: ${def.id}`).toBeDefined()
+      expect(registered.name).toBe(def.name)
+    }
+  })
 
-      expect(definition, `missing turn buff: ${live.id}`).toBeDefined()
-      expect(definition.duration).toBe(live.duration)
-      expect(definition.stackMode).toBe(live.stackMode)
-      expect(definition.effects.length).toBe(live.effects.length)
+  it('no def keeps legacy `effects`/`stackMode`/`duration` fields', () => {
+    for (const def of LIVE_BUFFS) {
+      expect('effects' in def, `${def.id} still has effects[]`).toBe(false)
+      expect('stackMode' in def, `${def.id} still has stackMode`).toBe(false)
+      expect('duration' in def, `${def.id} still has top-level duration`).toBe(false)
+    }
+  })
+
+  it('convertsToId refs resolve inside the catalog', () => {
+    for (const def of LIVE_BUFFS) {
+      if (def.convertsToId !== undefined) {
+        const targetId = def.convertsToId
+        expect(() => BUFF_REGISTRY.get(targetId), `${def.id}.convertsToId`).not.toThrow()
+      }
+    }
+  })
+
+  it('dot defs carry a legacy_dot periodic recipe', () => {
+    for (const def of LIVE_BUFFS) {
+      for (const p of def.periodic ?? []) {
+        expect(p.type).toBe('damage')
+        if (p.type !== 'damage') continue
+        expect(p.damageProfile, `${def.id}.${p.id}`).toBe('legacy_dot')
+        expect(p.timing).toBe('holder_turn_end')
+      }
+    }
+  })
+
+  it('capability grants carry owner-validated payloads', () => {
+    const typed = LIVE_BUFFS.flatMap((d) =>
+      (d.capabilities ?? []).map((c) => ({ def: d.id, type: c.type })),
+    )
+    const types = new Set(typed.map((t) => t.type))
+    // every migrated capability family is represented
+    for (const expected of ['on_hit_proc', 'reactive_trigger', 'reactive_proc', 'the_economy', 'reactive_economy', 'dot_recovery', 'marker']) {
+      expect(types.has(expected), `missing capability type ${expected}`).toBe(true)
+    }
+  })
+
+  it('uniquePerTarget defs became per_target + latest', () => {
+    for (const id of ['khiem_khich', 'son_nhac_ho_the', 'ho_ve']) {
+      const def = BUFF_REGISTRY.get(id)
+      expect(def.instanceScope, id).toBe('per_target')
+      expect(def.sourceOwnership, id).toBe('latest')
+    }
+  })
+
+  it('elemental ailments keep their element tag and resistance gate', () => {
+    for (const id of ['bong', 'trung_doc', 'chay_mau', 'te_cong', 'thach_hoa']) {
+      const def = BUFF_REGISTRY.get(id)
+      expect(def.kind, id).toBe('ailment')
+      expect(def.element, id).toBeDefined()
+      expect(def.application?.resistance, id).toBe('ailment')
     }
   })
 })

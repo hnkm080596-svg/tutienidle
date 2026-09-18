@@ -1,9 +1,6 @@
-import type { CombatEntity } from '../combat/CombatEntity'
-import type { BuffSystem } from '../buff/BuffSystem'
-import type { BuffRegistry } from '../buff/BuffRegistry'
-import type { BuffDefinition } from '../buff/BuffDefinition'
-import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
-import { HERO_LANE_INDEX } from '../battle/BattleLane'
+import type { CombatEntityId } from '../battle/contracts/ids'
+import type { BuffPersistence } from '../buff2/BuffPersistence'
+import type { BuffDefinition } from '../buff2/BuffDefinition'
 import type { EquipmentBag } from '../equipment/EquipmentBag'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
@@ -14,7 +11,6 @@ import {
   getTuLinhTranCost,
 } from '../economy/TuLinhTranBalance'
 import type { PlayerData } from '../player/Player'
-import { playerToCombatEntity } from '../player/Player'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import {
   getCultivationPathStatModifiers,
@@ -24,8 +20,6 @@ import { getRouteStatModifiers } from '../phap-tu/PhapTuRoutes'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
 import type { SkillSystem } from '../skill/SkillSystem'
-import type { Stats } from '../stats/StatBlock'
-import { createBaseStats } from '../stats/StatBlock'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { TechniqueManager } from '../technique/TechniqueManager'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
@@ -42,8 +36,7 @@ import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique
 export class GameManagerPersistentEffectOps {
   constructor(
     private readonly deps: {
-      buffSystem: BuffSystem
-      buffRegistry: BuffRegistry
+      persistentBuffs: BuffPersistence
       skillSystem: SkillSystem
       techniqueManager: TechniqueManager
       nodeRegistry: NodeRegistry
@@ -51,7 +44,6 @@ export class GameManagerPersistentEffectOps {
       materialRegistry: MaterialRegistry
       materialBag: MaterialBag
       getActivePlayer: () => PlayerData | undefined
-      getTurnBattle: () => TurnBattle | null
     },
   ) {}
 
@@ -79,7 +71,7 @@ export class GameManagerPersistentEffectOps {
     // provider each tick, menus display via the store getter plus
     // getActiveRuntimeModifiers().
     return [
-      ...this.deps.buffSystem.getActiveModifiers(),
+      ...this.deps.persistentBuffs.getStatModifiers('player' as CombatEntityId),
       // Core Loop Foundation checklist (Muc SKILL) - via
       // getScaledPassiveModifiers() instead of reading
       // skill.passiveModifiers directly, so Specialization + level
@@ -135,7 +127,7 @@ export class GameManagerPersistentEffectOps {
    */
   getLiveBattleModifiers(player: PlayerData): StatModifier[] {
     return [
-      ...this.deps.buffSystem.getActiveModifiers(),
+      ...this.deps.persistentBuffs.getStatModifiers('player' as CombatEntityId),
       ...this.deps.skillSystem.getScaledPassiveModifiers(),
       ...this.getActiveRuntimeModifiers(player),
     ]
@@ -403,68 +395,27 @@ export class GameManagerPersistentEffectOps {
   // somehow exists, then to a fully-populated neutral ghost only if
   // neither is available (today: only reachable if a caller forgets to
   // pass `stats` - see resolvePersistentBuffEntity()).
-  applyPersistentBuff(buff: BuffDefinition, stats?: Stats) {
-    const entity = this.resolvePersistentBuffEntity(stats)
-
-    this.deps.buffSystem.apply(buff, entity, entity, this.deps.buffRegistry)
+  // buff2 M4 -- the request carries ids only; the persistent pool's
+  // stats port resolves the player's ambient stats lazily (the same
+  // resolveAmbientPlayerStats union the caller passed before), and the
+  // subject is always 'player' (playerToCombatEntity's stable id).
+  // reactionEligibility 'suppressed': out-of-battle applies never seed
+  // elemental reaction state.
+  applyPersistentBuff(buff: BuffDefinition) {
+    this.deps.persistentBuffs.apply({
+      definitionId: buff.id,
+      sourceId: 'player' as CombatEntityId,
+      targetId: 'player' as CombatEntityId,
+      stacks: 1,
+      baseChance: 1,
+      reactionEligibility: 'suppressed',
+      origin: {
+        kind: 'scripted',
+        originId: 'persistent',
+        sourceId: 'player' as CombatEntityId,
+        rootActionId: 'persistent',
+      },
+    })
   }
 
-  // Shared entity resolution for applyPersistentBuff() and the per-tick
-  // buffSystem.update() call in tick() - both need 1 CombatEntity to hand
-  // BuffSystem, and neither has one implicitly guaranteed outside battle
-  // (GameManager keeps no persistent player CombatEntity of its own; only
-  // playerToCombatEntity() at battle start, which needs `Stats` already
-  // calculateStats()'d by the Pinia store - GameManager deliberately
-  // avoids calling calculateStats() itself to prevent 2 divergent call
-  // sites, see startBattleWithPlayer()'s note). Preference order: real
-  // in-battle entity > real player entity built from caller-supplied
-  // `stats` (mirrors startBattleWithPlayer()'s own construction) > fully-
-  // populated neutral ghost.
-  private resolvePersistentBuffEntity(stats?: Stats): CombatEntity {
-    // C1 (2026-09-08) - the live in-battle entity now comes from the
-    // turn battle's player participant (was: the legacy mirror battle's
-    // player).
-    const activeBattle = this.deps.getTurnBattle()
-
-    if (activeBattle) {
-      return activeBattle.players[0]!.entity
-    }
-
-    const activePlayer = this.deps.getActivePlayer()
-
-    if (stats && activePlayer) {
-      return playerToCombatEntity(activePlayer, stats)
-    }
-
-    return this.createPersistentBuffGhostEntity()
-  }
-
-  // Fully-populated neutral placeholder CombatEntity (no gear, no active
-  // buffs, every non-optional CombatEntity field explicitly set - NOT an
-  // `as CombatEntity` cast papering over missing fields) used only when
-  // resolvePersistentBuffEntity() has neither a real in-battle entity nor
-  // caller-supplied Stats to build one from. Safe even for a future
-  // persistent buff with a `dot` effect (combatSystem.applyDotDamage()
-  // would read real currentHp/maxHp/alive, not undefined).
-  private createPersistentBuffGhostEntity(): CombatEntity {
-    const stats = createBaseStats()
-    const activePlayer = this.deps.getActivePlayer()
-
-    return {
-      id: 'player',
-      name: activePlayer?.name ?? 'player',
-      type: 'player',
-      baseStats: stats,
-      stats,
-      currentHp: stats.maxHp,
-      maxHp: stats.maxHp,
-      currentMp: stats.maxMp,
-      currentWard: 0,
-      turnsSinceLastHitLanded: Infinity,
-      realmIndex: 0,
-      x: 0,
-      row: HERO_LANE_INDEX,
-      alive: true,
-    }
-  }
 }

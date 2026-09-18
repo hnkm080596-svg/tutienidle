@@ -5,9 +5,9 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
-import type { BuffDefinition } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
+import type { BuffDefinitionId } from '../contracts/ids'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // R2 (AR-05) — participant.speed is a synced read-only cache of effective
 // combat speed. Before this fix, TurnBattleAdapter copied
@@ -16,23 +16,22 @@ import type { BuffDefinition } from '../../buff/BuffTypes'
 // kept incrementing by 100 (stale copy).
 
 const SPEED_BUFF: BuffDefinition = {
-  id: 'qa_speed_buff',
+  id: 'qa_speed_buff' as BuffDefinitionId,
   name: 'QA Speed Buff',
-  polarity: 'buff',
-  duration: 2,
-  maxStacks: 1,
-  stackMode: 'replace',
-  effects: [{ type: 'statModifier', stat: 'speed', percent: 1 }],
+  kind: 'buff',
+  instanceScope: 'per_target',
+  stacking: {
+    maxStacks: 1,
+    onReapplyStacks: 'replace',
+    onReapplyDuration: 'refresh',
+    replaceInstanceOnReapply: true,
+  },
+  lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+  statModifiers: [{ stat: 'speed', percent: 1 }],
+  dispellable: true,
 }
 
-const REGISTRY = {
-  get: (id: string): BuffDefinition => {
-    if (id === SPEED_BUFF.id) {
-      return SPEED_BUFF
-    }
-    throw new Error(`unknown fixture buff id: ${id}`)
-  },
-}
+const REGISTRY = makeTestBuffRegistry([SPEED_BUFF])
 
 const BASIC = {
   id: 'qa_basic',
@@ -66,7 +65,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
 function battleWithPlayerSpeedBuff(): {
@@ -84,12 +83,19 @@ function battleWithPlayerSpeedBuff(): {
   player.basic = BASIC
   enemy.basic = BASIC
 
-  // Pre-apply the +100% speed buff to the player's pool (as if applied
+  const combat = new CombatSystem(new EventBus())
+  const runtime = makeTurnRuntime({
+    registry: REGISTRY,
+    participants: () => [player, enemy],
+    combatSystem: combat,
+  })
+
+  // Pre-apply the +100% speed buff through the authority (as if applied
   // during a previous turn by any buff source).
-  new BuffSystem(player.buffs).apply(SPEED_BUFF, playerEntity, playerEntity, REGISTRY)
+  runtime.applyBuff('qa_speed_buff', player)
 
   const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting' }
-  const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 100, REGISTRY)
+  const system = new TurnBattleSystem(combat, 100, REGISTRY, undefined, runtime)
 
   return { battle, system, player, enemy }
 }

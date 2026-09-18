@@ -23,8 +23,8 @@ export const KIEM_TU_BASIC: TurnSkillDefinition = {
 // Phase A1 (2026-09-07) — each entry gains appliesAilment with the EXACT
 // chance authored on the same skill's legacy Skill definition in Skills.ts
 // (ailmentChance): fire 0.5, water 0.5, wood 1.0, metal 0.4, earth 1.0.
-// These make elemental reactions (TurnReactionManager) reachable in real
-// turn-based combat.
+// These make elemental ailment application reachable in real turn-based
+// combat.
 //
 // TEST FIXTURES ONLY — production Phap Tu basics resolve through the
 // canonical Skill -> TurnSkillDefinition converter (GameManager

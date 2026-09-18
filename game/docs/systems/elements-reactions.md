@@ -2,7 +2,7 @@
 
 **Trạng thái:** Live.
 
-Types: `core/element/ElementType.ts` (5 hành). Reaction data: `core/element/ElementReaction.ts` (`ELEMENT_REACTIONS`). Manager: `core/element/ReactionManager.ts` (legacy path) + `core/battle/turn/TurnReactionManager.ts` (port cho turn engine — authority trong combat hiện tại). Loadout: `core/element/ElementLoadout.ts`, `ElementSlot.ts`.
+Types: `core/element/ElementType.ts` (5 hành). Quan hệ sinh/khắc: `core/element/WuxingRelations.ts` (`SINH_CYCLE`/`KHAC_OVERCOMES`/`relationOf`). Authority trong combat hiện tại: `core/battle/turn/TurnReactionManager.ts` (two-phase rule engine; `KHAC_CHE_COEFF`/`CONG_MINH_AMP`), gated bởi `TurnBattleParticipant.canInitiateWuxingReactions` (stamp ở `TurnBattleAdapter.ts` cho stat domain `phap_tu`). Loadout: `core/element/ElementSlot.ts` + `player.equippedElements`. (Các file `ElementReaction.ts`/`ReactionManager.ts`/`ElementLoadout.ts` tài liệu cũ nhắc tới không tồn tại — reaction data hiện nằm trong `TurnReactionManager` + `WuxingRelations`.)
 
 ## ElementType — chỉ 5 hành
 
@@ -45,8 +45,20 @@ Khi 1 ailment/debuff mới áp thành công lên target, `TurnReactionManager` q
 
 `core/combat/ElementDamageCalculator.ts` — `elementalBasePower` gom power theo hành; mỗi hành là 1 damage type độc lập đấu resistance cùng tên (không còn chu kỳ sinh/khắc trong damage). Linh Căn (attunement) cộng đều 6 hành ([stats.md](./stats.md)).
 
+## Engine mới (`core/reaction/`, chưa wire)
+
+Reaction megaplan M0–M5 đã land trên `feat/reaction-core` một engine phản ứng thay thế — **inert và unwired trong production**:
+
+- `ReactionTriggerGate` (capability `elemental_reaction_enabled` — chưa ai được grant) → `ReactionBoard` (board ấn cùng-source qua `ElementalStateRegistry`) → `ReactionCandidate`/`ReactionBias` (fixed-point selection) → `ReactionResolution` (snapshot + preconditions + consume-first ops) → `ReactionOperations` (payoff data-authored qua `StackExpr`) → batch qua `CombatOperationBatchRunner`.
+- `CANONICAL_REACTIONS` (`data/reaction/`) = 10 cặp sinh/khắc canonical nhưng bind tới `test_*` fixture ids — production registry **không thể** được construct cho tới khi seal batch author ấn thật (`hoa_an`/`han_tuc`/`doc_can`/`liet_thuong`/`tran_an`).
+- `ReactionDispatcher` (M5) tồn tại nhưng **không được register** trên `elemental_application_committed` (r5 BLOCKER 2): registration sequence = author canonical ấn → production `ReactionRegistry` → `ReactionSystem` → `scheduler.registerImmediateHandler` → grant capability — thuộc seal/Ngộ Đạo mission.
+- `ReactionTrace`/`formatReactionTrace`/`compareReactionTraces` = deterministic §85 trace + spec §60 ordering cho debug/digest.
+- Cấm Công (`forbiddenActionTags` + `ActionValidator` trên turn selection) **đã live** trong `TurnBattleSystem` — phần duy nhất của M4 chạm live path.
+- Legacy `TurnReactionManager`/`canInitiateWuxingReactions` giữ nguyên live cho Pháp Tu visible tới khi M-INT (trong buff M4 worktree) xoá — spec chỉ grant auto-reaction cho Ngộ Đạo (hidden Pháp Tu), nên visible path bị retire chứ không preserve.
+
 ## Liên quan
 
 - [buffs.md](./buffs.md) — ailment id (bong, trung_doc, chay_mau, te_cong, thach_hoa…).
 - [skills.md](./skills.md) — `appliesAilment`, reaction path picks.
 - [cultivation-paths.md](./cultivation-paths.md) — Pháp Tu multi-hành.
+- `../architecture/2026-09-17-reaction-inventory.md` — M0 census của đường reaction hiện tại.

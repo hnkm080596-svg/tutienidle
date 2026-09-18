@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
@@ -41,27 +40,48 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, consecutiveHardCcTurns: 0 }
 }
 
-class FixtureRegistry implements BuffDefinitionCatalog {
-  private readonly defs = new Map<string, BuffDefinition>()
-
-  constructor(defs: BuffDefinition[]) {
-    for (const d of defs) this.defs.set(d.id, d)
-  }
-
-  get(id: string): BuffDefinition {
-    const d = this.defs.get(id)
-    if (!d) throw new Error(`missing fixture: ${id}`)
-    return d
-  }
+const STUN: BuffDefinition = {
+  id: 'qa_stun',
+  name: 'Stun',
+  kind: 'debuff',
+  polarity: 'debuff',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 5, scaling: 'fixed' },
+  controls: [{ type: 'stun' }],
+  dispellable: true,
 }
 
 const ENRAGE: BuffDefinition = {
-  id: 'qa_enrage', name: 'Enrage', polarity: 'buff', duration: 999, stackMode: 'refresh',
-  effects: [{ type: 'dot', dpsRatio: 0.1, element: 'physical' }],
+  id: 'qa_enrage',
+  name: 'Enrage',
+  kind: 'buff',
+  polarity: 'buff',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 999, scaling: 'fixed' },
+  periodic: [
+    {
+      id: 'qa_enrage.tick',
+      type: 'damage',
+      element: 'physical',
+      damageProfile: 'legacy_dot',
+      coefficient: 0.1,
+      scaling: 'dynamic',
+      timing: 'holder_turn_end',
+      stackScaling: 'multiply',
+      canCrit: false,
+      canMiss: false,
+      hitCount: 1,
+    },
+  ],
+  dispellable: true,
 }
+
+const REGISTRY = makeTestBuffRegistry([STUN, ENRAGE])
 
 describe('Slice 4 adversarial (QA probes)', () => {
   it('INV-S4-1: resource clamp tại min — decay không xuống dưới 0', () => {
@@ -86,16 +106,18 @@ describe('Slice 4 adversarial (QA probes)', () => {
     const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
-    const stun: BuffDefinition = {
-      id: 'qa_stun', name: 'Stun', polarity: 'debuff', duration: 5, stackMode: 'refresh',
-      effects: [{ type: 'cc', ccEffect: 'stun' }],
-    }
-    const registry = new FixtureRegistry([stun])
-    new BuffSystem(playerP.buffs).apply(stun, enemy, player, registry)
+    const enemyP = makeParticipant('enemy', enemy, 5, 1)
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [playerP, enemyP],
+      combatSystem: combat,
+    })
+    runtime.applyBuff('qa_stun', playerP, enemyP)
 
-    const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
+    const battle: TurnBattle = { players: [playerP], enemies: [enemyP], state: 'fighting' }
 
-    new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime).resolveNextStep(battle)
 
     expect(battle.totalTurnsElapsed).toBe(1)
   })
@@ -107,13 +129,19 @@ describe('Slice 4 adversarial (QA probes)', () => {
     const enemyP = makeParticipant('enemy', enemy, 5, 1)
     enemyP.bossTrigger = { afterTurns: 1, buffDefinitionId: 'qa_enrage', firedAlready: false }
 
-    const battle: TurnBattle = { players: [makeParticipant('player', player, 10, 0)], enemies: [enemyP], state: 'fighting' }
-    const registry = new FixtureRegistry([ENRAGE])
+    const playerP = makeParticipant('player', player, 10, 0)
+    const battle: TurnBattle = { players: [playerP], enemies: [enemyP], state: 'fighting' }
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [playerP, enemyP],
+      combatSystem: combat,
+    })
 
     // Chờ enemy thật sự tới lượt — ATB gauge: player speed 10 tích nhanh
     // hơn nên hành động nhiều lần trước; boss trigger chỉ check khi
     // CHÍNH enemy làm actor (đúng thiết kế — trigger của boss gắn lượt boss).
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
     for (let i = 0; i < 6; i++) {
       const step = system.resolveNextStep(battle)
       if (step.actorId === 'enemy') {
@@ -122,7 +150,9 @@ describe('Slice 4 adversarial (QA probes)', () => {
     }
 
     expect(enemyP.bossTrigger.firedAlready).toBe(true)
-    expect(enemyP.buffs.getAll().some((b) => b.id === 'qa_enrage')).toBe(true)
+    expect(
+      runtime.buffs.getForTarget(enemyP.entity.id).some((i) => i.definitionId === 'qa_enrage'),
+    ).toBe(true)
   })
 
   it('INV-S4-4: resource tick KHÔNG chạy cho actor khác — chỉ owner của pool', () => {

@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant, type TurnDeclaredAction } from './TurnBattleSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinitionId } from '../contracts/ids'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // Mission C Task 7 (audit T3-22b) — a reflect/proc kill on the actor
 // mid-AoE must stop the rest of the action: the dead cannot finish
@@ -15,50 +15,37 @@ import { BuffSystem } from '../../buff/BuffSystem'
 // branch, composite picks, scaledDamage, non-damaging lane) and
 // applyExtraImpact must bail once actor.entity.alive flips false.
 
+function reflectDef(id: string, takenRatio: number): BuffDefinition {
+  return {
+    id: id as BuffDefinitionId,
+    name: id,
+    kind: 'buff',
+    instanceScope: 'per_target',
+    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 99, scaling: 'fixed' },
+    capabilities: [
+      {
+        id: `${id}.reflect`,
+        type: 'reactive_trigger',
+        payload: {
+          trigger: 'onImpactLanded',
+          chance: 1,
+          reflectsDamage: { maxHpRatio: 0, takenRatio },
+        },
+      },
+    ],
+    dispellable: true,
+  }
+}
+
 // Lethal reflect: any landed hit returns enough damage to kill the
 // fragile actor outright.
-const LETHAL_REFLECT: BuffDefinition = {
-  id: 'lethal_reflect',
-  name: 'Lethal Reflect',
-  polarity: 'buff',
-  duration: 99,
-  stackMode: 'refresh',
-  effects: [{
-    type: 'reactiveTrigger',
-    trigger: 'onImpactLanded',
-    chance: 1,
-    reflectsDamage: { maxHpRatio: 0, takenRatio: 100 },
-  }],
-}
+const LETHAL_REFLECT = reflectDef('qa_lethal_reflect', 100)
 
 // Non-lethal reflect: fires but cannot kill.
-const SOFT_REFLECT: BuffDefinition = {
-  id: 'soft_reflect',
-  name: 'Soft Reflect',
-  polarity: 'buff',
-  duration: 99,
-  stackMode: 'refresh',
-  effects: [{
-    type: 'reactiveTrigger',
-    trigger: 'onImpactLanded',
-    chance: 1,
-    reflectsDamage: { maxHpRatio: 0, takenRatio: 0.01 },
-  }],
-}
+const SOFT_REFLECT = reflectDef('qa_soft_reflect', 0.01)
 
-class Registry implements BuffDefinitionCatalog {
-  private readonly defs = new Map<string, BuffDefinition>()
-  constructor(defs: BuffDefinition[]) {
-    for (const d of defs) this.defs.set(d.id, d)
-  }
-  get(id: string): BuffDefinition {
-    const d = this.defs.get(id)
-    if (!d) throw new Error(`missing buff: ${id}`)
-    return d
-  }
-}
-
-const REGISTRY = new Registry([LETHAL_REFLECT, SOFT_REFLECT])
+const REGISTRY = makeTestBuffRegistry([LETHAL_REFLECT, SOFT_REFLECT])
 
 const AOE_SKILL: TurnSkillDefinition = {
   id: 'aoe_test',
@@ -81,7 +68,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
 function makeParticipant(id: string, entity: CombatEntity): TurnBattleParticipant {
   return {
     id, entity, speed: 10, priority: 0, actionGauge: 0, alive: entity.alive,
-    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
+    consecutiveHardCcTurns: 0,
   }
 }
 
@@ -109,20 +96,30 @@ function fixture() {
   const target1 = makeParticipant('enemy1', enemy1)
   const target2 = makeParticipant('enemy2', enemy2)
 
+  const combat = new CombatSystem(new EventBus())
+  const runtime = makeTurnRuntime({
+    registry: REGISTRY,
+    participants: () => [actor, target1, target2],
+    combatSystem: combat,
+  })
+
   const battle: TurnBattle = {
     players: [actor],
     enemies: [target1, target2],
     state: 'fighting',
   }
 
-  const combat = new CombatSystem(new EventBus())
-  const system = new TurnBattleSystem(combat, 10_000, REGISTRY)
+  const system = new TurnBattleSystem(combat, 10_000, REGISTRY, undefined, runtime)
 
-  return { battle, system, actor, target1, target2, combat }
+  return { battle, system, actor, target1, target2, combat, runtime }
 }
 
-function applyReflect(target: TurnBattleParticipant, def: BuffDefinition) {
-  new BuffSystem(target.buffs).apply(def, target.entity, target.entity, REGISTRY)
+function applyReflect(
+  runtime: ReturnType<typeof makeTurnRuntime>,
+  target: TurnBattleParticipant,
+  def: BuffDefinition,
+) {
+  runtime.applyBuff(def.id, target)
 }
 
 function aoeDeclared(actor: TurnBattleParticipant, battle: TurnBattle): TurnDeclaredAction {
@@ -153,9 +150,9 @@ function aoeDeclared(actor: TurnBattleParticipant, battle: TurnBattle): TurnDecl
 
 describe('mid-impact actor death stops the rest of the action (audit T3-22b)', () => {
   it('AoE into two lethal reflectors: target 1 kills the actor, target 2 takes no damage', () => {
-    const { battle, system, actor, target1, target2 } = fixture()
-    applyReflect(target1, LETHAL_REFLECT)
-    applyReflect(target2, LETHAL_REFLECT)
+    const { battle, system, actor, target1, target2, runtime } = fixture()
+    applyReflect(runtime, target1, LETHAL_REFLECT)
+    applyReflect(runtime, target2, LETHAL_REFLECT)
 
     const result = system.applyActionImpact(battle, aoeDeclared(actor, battle))
 
@@ -166,9 +163,9 @@ describe('mid-impact actor death stops the rest of the action (audit T3-22b)', (
   })
 
   it('non-lethal reflection still lets the AoE finish (no over-guard)', () => {
-    const { battle, system, actor, target1, target2 } = fixture()
-    applyReflect(target1, SOFT_REFLECT)
-    applyReflect(target2, SOFT_REFLECT)
+    const { battle, system, actor, target1, target2, runtime } = fixture()
+    applyReflect(runtime, target1, SOFT_REFLECT)
+    applyReflect(runtime, target2, SOFT_REFLECT)
 
     const result = system.applyActionImpact(battle, aoeDeclared(actor, battle))
 
@@ -179,9 +176,9 @@ describe('mid-impact actor death stops the rest of the action (audit T3-22b)', (
   })
 
   it('charge-resolve branch: lethal reflect on target 1 skips remaining charge targets', () => {
-    const { battle, system, actor, target1, target2 } = fixture()
-    applyReflect(target1, LETHAL_REFLECT)
-    applyReflect(target2, LETHAL_REFLECT)
+    const { battle, system, actor, target1, target2, runtime } = fixture()
+    applyReflect(runtime, target1, LETHAL_REFLECT)
+    applyReflect(runtime, target2, LETHAL_REFLECT)
 
     const declared = aoeDeclared(actor, battle)
     declared.isCharging = true
@@ -197,9 +194,9 @@ describe('mid-impact actor death stops the rest of the action (audit T3-22b)', (
   })
 
   it('applyExtraImpact (dynamicBasic provider impact): lethal reflect stops the extra payload', () => {
-    const { battle, system, actor, target1, target2 } = fixture()
-    applyReflect(target1, LETHAL_REFLECT)
-    applyReflect(target2, LETHAL_REFLECT)
+    const { battle, system, actor, target1, target2, runtime } = fixture()
+    applyReflect(runtime, target1, LETHAL_REFLECT)
+    applyReflect(runtime, target2, LETHAL_REFLECT)
 
     // Non-damaging primary (self buff): actor survives its own cast, then
     // the provider's extra impact is the lethal-reflect lane.
@@ -237,8 +234,8 @@ describe('mid-impact actor death stops the rest of the action (audit T3-22b)', (
     // Ngu phi kiem runs count = kiemDaoCount through it) checked only
     // target death between instances: a reflect kill on the caster let
     // instances 2..N keep swinging from a dead actor.
-    const { battle, system, actor, target1, combat } = fixture()
-    applyReflect(target1, LETHAL_REFLECT)
+    const { battle, system, actor, target1, combat, runtime } = fixture()
+    applyReflect(runtime, target1, LETHAL_REFLECT)
 
     const hitSpy = vi.spyOn(combat, 'resolveActionHit')
 

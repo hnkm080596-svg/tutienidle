@@ -10,9 +10,7 @@ import TurnOrderStrip from './TurnOrderStrip.vue'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
 import { createBaseStats } from '@/core/stats/StatBlock'
-import { BuffPool } from '@/core/buff/BuffPool'
-import { BuffSystem } from '@/core/buff/BuffSystem'
-import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
+import type { BuffInstanceSnapshot } from '@/core/buff2/BuffInstance'
 import type { TurnBattle, TurnBattleParticipant } from '@/core/battle/turn/TurnBattleSystem'
 import type { CombatEntity } from '@/core/combat/CombatEntity'
 
@@ -47,8 +45,29 @@ function makeParticipant(id: string): TurnBattleParticipant {
     priority: 0,
     actionGauge: 0,
     alive: true,
-    buffs: new BuffPool(),
+    
     consecutiveHardCcTurns: 0,
+  }
+}
+
+function makeSnapshot(
+  definitionId: string,
+  targetId: string,
+  overrides: Partial<BuffInstanceSnapshot> = {},
+): BuffInstanceSnapshot {
+  return {
+    instanceId: `inst.${definitionId}`,
+    definitionId,
+    sourceId: targetId,
+    targetId,
+    stacks: 1,
+    remaining: 3,
+    continuousTurns: 0,
+    continuousSeconds: 0,
+    modifiers: [],
+    createdSequence: 0,
+    lastAppliedSequence: 0,
+    ...overrides,
   }
 }
 
@@ -58,24 +77,11 @@ function makeBattleFixture() {
   enemy.entity.type = 'enemy'
 
   // Seed: 1 debuff (2 stacks), 1 buff, 1 hidden buff on the player.
-  const buffs = new BuffSystem(player.buffs)
-  const source = player.entity
-
-  buffs.apply(BUFF_REGISTRY.get('bong'), source, player.entity, BUFF_REGISTRY)
-  buffs.apply(BUFF_REGISTRY.get('bong'), source, player.entity, BUFF_REGISTRY)
-
-  const buffDef = BUFF_REGISTRY.get('bong')
-
-  buffs.apply(
-    { ...buffDef, id: 'a6_hidden', name: 'Hidden Buff', hidden: true, duration: 5, stackMode: 'refresh', effects: [] },
-    source,
-    player.entity,
-    BUFF_REGISTRY,
-  )
-
-  const khaiSon = BUFF_REGISTRY.get('khai_son')
-
-  buffs.apply(khaiSon, source, player.entity, BUFF_REGISTRY)
+  const playerBuffs: BuffInstanceSnapshot[] = [
+    makeSnapshot('bong', 'player', { stacks: 2 }),
+    makeSnapshot('khai_son', 'player'),
+    makeSnapshot('ho_ve', 'player'),
+  ]
 
   const battle: TurnBattle = {
     players: [player],
@@ -83,12 +89,13 @@ function makeBattleFixture() {
     state: 'fighting',
   }
 
-  return { battle, player }
+  return { battle, player, playerBuffs }
 }
 
 interface MockGameManager {
   getTurnBattle: ReturnType<typeof vi.fn>
   getActiveTurnBattleStage: ReturnType<typeof vi.fn>
+  getBattleBuffs: ReturnType<typeof vi.fn>
 }
 
 function mountStrip(gm: MockGameManager): HTMLElement {
@@ -110,17 +117,22 @@ function mountStrip(gm: MockGameManager): HTMLElement {
   return container
 }
 
-function makeGameManager(battle: TurnBattle | null, stage: { perfectClearTurnLimit?: number } | null = null): MockGameManager {
+function makeGameManager(
+  battle: TurnBattle | null,
+  stage: { perfectClearTurnLimit?: number } | null = null,
+  buffs: readonly BuffInstanceSnapshot[] = [],
+): MockGameManager {
   return {
     getTurnBattle: vi.fn(() => battle),
     getActiveTurnBattleStage: vi.fn(() => stage),
+    getBattleBuffs: vi.fn(() => buffs),
   }
 }
 
 describe('TurnOrderStrip buff badges (Phase A6)', () => {
   it('renders visible buff badges with name, stacks, remaining turns, and polarity classes', () => {
-    const { battle } = makeBattleFixture()
-    const container = mountStrip(makeGameManager(battle))
+    const { battle, playerBuffs } = makeBattleFixture()
+    const container = mountStrip(makeGameManager(battle, null, playerBuffs))
 
     const badges = Array.from(container.querySelectorAll('.turn-order-strip__buff'))
 
@@ -142,8 +154,8 @@ describe('TurnOrderStrip buff badges (Phase A6)', () => {
   })
 
   it('skips hidden buffs', () => {
-    const { battle } = makeBattleFixture()
-    const container = mountStrip(makeGameManager(battle))
+    const { battle, playerBuffs } = makeBattleFixture()
+    const container = mountStrip(makeGameManager(battle, null, playerBuffs))
 
     const badges = Array.from(container.querySelectorAll('.turn-order-strip__buff'))
 
@@ -153,8 +165,8 @@ describe('TurnOrderStrip buff badges (Phase A6)', () => {
   })
 
   it('renders a description tooltip (title attribute) on each badge', () => {
-    const { battle } = makeBattleFixture()
-    const container = mountStrip(makeGameManager(battle))
+    const { battle, playerBuffs } = makeBattleFixture()
+    const container = mountStrip(makeGameManager(battle, null, playerBuffs))
 
     const badges = Array.from(container.querySelectorAll<HTMLElement>('.turn-order-strip__buff'))
 

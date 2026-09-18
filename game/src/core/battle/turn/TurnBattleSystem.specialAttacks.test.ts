@@ -7,7 +7,6 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
 
 // Phase A3 Task 5 (2026-09-07) — turn-based reader for
 // CombatEntity.specialAttacks (enemy periodic heavy attack). Legacy
@@ -54,7 +53,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
 const BASIC: TurnSkillDefinition = {

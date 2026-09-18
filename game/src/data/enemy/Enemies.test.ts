@@ -110,9 +110,9 @@ describe('Phase A2 boss enrage content', () => {
       const boss = ENEMIES.find((enemy) => enemy.id === id)
       const definition = BUFF_REGISTRY.get(boss!.bossTrigger!.buffDefinitionId)
 
-      expect(definition.duration).toBe(Infinity)
-      expect(definition.effects.some((effect) => effect.type === 'statModifier' && effect.stat === 'might')).toBe(true)
-      expect(definition.effects.some((effect) => effect.type === 'statModifier' && effect.stat === 'speed')).toBe(true)
+      expect(definition.lifetime.clock).toBe('permanent')
+      expect(definition.statModifiers?.some((mod) => mod.stat === 'might')).toBe(true)
+      expect(definition.statModifiers?.some((mod) => mod.stat === 'speed')).toBe(true)
     }
   })
 })

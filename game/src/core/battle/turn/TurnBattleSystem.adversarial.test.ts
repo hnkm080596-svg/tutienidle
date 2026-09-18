@@ -9,7 +9,6 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
 
 // QA adversarial probes (2026-09-04 quick review) — Slice 1 TurnBattleSystem.
 
@@ -42,7 +41,7 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, consecutiveHardCcTurns: 0 }
 }
 
 describe('TurnBattleSystem adversarial (QA probes)', () => {

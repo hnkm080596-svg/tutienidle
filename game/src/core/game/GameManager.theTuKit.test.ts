@@ -108,6 +108,8 @@ describe('the_tu kit resolution (root -> kit at participant build)', () => {
     expect(selectForcedAction(participant, 'special').skillId).not.toBe('phan_chinh')
 
     // Permanent phan_chinh self-buff applied at participant build.
-    expect(participant.buffs.getAllById('phan_chinh')).toHaveLength(1)
+    expect(
+      gameManager.getBattleBuffs(participant.entity.id).filter((i) => i.definitionId === 'phan_chinh'),
+    ).toHaveLength(1)
   })
 })

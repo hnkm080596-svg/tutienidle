@@ -1,23 +1,24 @@
 import { describe, expect, it, vi, afterEach, beforeEach } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import { TurnReactionManager } from './TurnReactionManager'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { GENERIC_PHYSICAL_BASIC } from '../../../data/skill/TurnBasicAttacks'
 import type { TurnSkillDefinition } from './TurnSkillAction'
+import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 // Phap Tu Reimagined Task 13 — spec §4: the empowered ult's two route
 // expressions. `detonate` (dot route): direct + normal application
 // first, then consume every live DoT ailment for remaining-tick x
 // stacks x DETONATE_AMP and re-seed a FIXED 1 stack at AUTHORED
 // duration with potency recomputed vs the caster's CURRENT stats —
-// reaction-silent (O2/R2). `nuke` (no route): damage x (1 +
-// theBurned/100 x NUKE_THE_COEFF), linear in the whole pool.
+// reaction-silent (O2/R2: re-seed ops carry 'suppressed' eligibility).
+// `nuke` (no route): damage x (1 + theBurned/100 x NUKE_THE_COEFF),
+// linear in the whole pool.
+// buff2 M4: the burst resolves vs the CONSUMED INSTANCE's source stats
+// (statSourceId) — a third-party DoT pays its own owner's per-tick.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, ...(overrides.stats ?? {}) })
@@ -57,7 +58,7 @@ function makeParticipant(id: string, entity: CombatEntity, speed: number, priori
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new BuffPool(),
+
     consecutiveHardCcTurns: 0,
     basic: GENERIC_PHYSICAL_BASIC,
   }
@@ -106,13 +107,6 @@ const NUKE_ROOT: TurnSkillDefinition = {
 }
 
 function harness(root: TurnSkillDefinition, thePool = 100, maxThe?: number) {
-  const eventBus = new EventBus()
-  const combat = new CombatSystem(eventBus)
-  const reactionManager = new TurnReactionManager(eventBus)
-  const triggerSpy = vi.spyOn(reactionManager, 'checkAndTrigger')
-  const reactionEvents: { name?: string }[] = []
-  eventBus.on('reaction', (event) => reactionEvents.push(event as { name?: string }))
-
   const playerEntity = createCombatant({
     id: 'player',
     type: 'player',
@@ -129,22 +123,34 @@ function harness(root: TurnSkillDefinition, thePool = 100, maxThe?: number) {
   })
 
   const player = makeParticipant('player', playerEntity, 100, 0)
-  // Review fix (MED-3) — detonate seeds ailments that must still
-  // initiate reactions; the fixture models a phap_tu participant.
-  player.canInitiateWuxingReactions = true
   player.ultimate = { skill: root, remainingCooldownTurns: 0 }
   const enemy = makeParticipant('enemy', enemyEntity, 1, 1)
 
   const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting' }
-  const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, reactionManager)
+  const combat = new CombatSystem(new EventBus())
 
-  return { battle, player, enemy, playerEntity, enemyEntity, system, reactionEvents, triggerSpy }
+  // Side-roster participants (third-party DoT sources) join the runtime
+  // resolver without joining the battle arrays.
+  const roster: TurnBattleParticipant[] = [player, enemy]
+  const runtime = makeTurnRuntime({
+    registry: BUFF_REGISTRY,
+    participants: () => roster,
+    combatSystem: combat,
+  })
+  const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, runtime)
+
+  const addRosterParticipant = (participant: TurnBattleParticipant) => {
+    roster.push(participant)
+    return participant
+  }
+
+  return { battle, player, enemy, playerEntity, enemyEntity, system, runtime, addRosterParticipant }
 }
 
-function dotTick(pool: BuffPool, id: string, sourceId: string): number {
-  const buff = pool.getFromSource(id, sourceId)
-  const dot = buff?.effects.find((e) => e.type === 'dot')
-  return dot && dot.type === 'dot' ? dot.damagePerTurn ?? dot.damagePerSecond ?? 0 : 0
+function buffsOf(runtime: TurnRuntimeFixture, participant: TurnBattleParticipant, id: string) {
+  return runtime.buffs
+    .getForTarget(participant.entity.id)
+    .filter((instance) => instance.definitionId === id)
 }
 
 describe('Detonate (dot-route empowered ult)', () => {
@@ -161,96 +167,105 @@ describe('Detonate (dot-route empowered ult)', () => {
   })
 
   it('consumes every DoT ailment for remaining-tick x stacks x amp; utility ailments are never touched', () => {
-    const { battle, player, enemy, enemyEntity, playerEntity, system } = harness(DETONATE_ROOT)
+    const { battle, player, enemy, enemyEntity, playerEntity, system, runtime, addRosterParticipant } = harness(DETONATE_ROOT)
 
     // Pre-seed: trung_doc (wood DoT) x3 from a THIRD source with
-    // woodPower 10 -> snapshot 2/tick; choang (stun — untagged, no dot)
-    // is a pure-utility ailment the detonate must leave alone AND that
-    // never forms a reaction pair.
-    const thirdSource = createCombatant({ id: 'minion', stats: createBaseStats({ might: 0, woodPower: 10 }) })
-    const enemyBuffs = new BuffSystem(enemy.buffs)
+    // woodPower 10 -> per-tick resolves vs the minion, NOT the caster;
+    // choang (stun — controls, no damage periodic) is a pure-utility
+    // ailment the detonate must leave alone.
+    const minion = addRosterParticipant(
+      makeParticipant('minion', createCombatant({ id: 'minion', stats: createBaseStats({ might: 0, woodPower: 10 }) }), 1, 2),
+    )
     for (let i = 0; i < 3; i++) {
-      enemyBuffs.apply(BUFF_REGISTRY.get('trung_doc'), thirdSource, enemyEntity, BUFF_REGISTRY)
+      runtime.applyBuff('trung_doc', enemy, minion)
     }
-    enemyBuffs.apply(BUFF_REGISTRY.get('choang'), playerEntity, enemyEntity, BUFF_REGISTRY)
-    const choangBefore = enemy.buffs.getFromSource('choang', 'player')
+    runtime.applyBuff('choang', enemy, player)
+    const choangBefore = buffsOf(runtime, enemy, 'choang')[0]
 
     const hpBefore = enemyEntity.currentHp
     system.resolveActorTurn(battle, player)
 
-    // trung_doc burst: (0 might + 10 woodPower) x 0.2 = 2/tick x 5 turns
-    // x 3 stacks x 1.5 = 45. The applied bong (fire) pairs SINH with the
-    // wood incumbent at application — legitimately amped to 33.75/tick
-    // and 6 turns before the detonate consumes it: 33.75 x 6 x 1 x 1.5
-    // = 303.75. Direct packet floors at min-1.
-    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 45 - 303.75 - 1, 0)
+    // trung_doc burst: intent 0.2 x 5 remaining x 3 stacks x 1.5 = 4.5,
+    // resolved vs the minion's wood power 10 -> 45. The cast's own bong
+    // (fire, chance 1) lands then is consumed in the same pass: intent
+    // 0.15 x 4 x 1 x 1.5 = 0.9 vs the caster's fire power 150 -> 135.
+    // Direct packet floors at min-1.
+    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 45 - 135 - 1, 0)
 
     // Utility ailment untouched — same instance, same remaining life.
-    const choangAfter = enemy.buffs.getFromSource('choang', 'player')
-    expect(choangAfter).toBe(choangBefore)
-    expect(choangAfter!.remainingTurns).toBe(choangBefore!.remainingTurns)
+    const choangAfter = buffsOf(runtime, enemy, 'choang')[0]
+    expect(choangAfter?.instanceId).toBe(choangBefore?.instanceId)
+    expect(choangAfter!.remaining).toBe(choangBefore!.remaining)
   })
 
   it('re-seeds a FIXED 1 stack at AUTHORED duration with potency recomputed vs the caster current stats', () => {
-    const { battle, player, enemy, enemyEntity, playerEntity, system } = harness(DETONATE_ROOT)
+    const { battle, player, enemy, enemyEntity, playerEntity, system, runtime, addRosterParticipant } = harness(DETONATE_ROOT)
 
-    // Enemy-origin seed with woodPower 10 -> consumed snapshot ticks 2;
-    // the re-seed must recompute vs the PLAYER's woodPower 30 -> 6/tick.
-    const weakSource = createCombatant({ id: 'minion', stats: createBaseStats({ might: 0, woodPower: 10 }) })
-    const enemyBuffs = new BuffSystem(enemy.buffs)
+    // Enemy-origin seed with woodPower 10; the re-seed must resolve vs
+    // the PLAYER's wood power 130 on subsequent ticks.
+    const weakSource = addRosterParticipant(
+      makeParticipant('minion', createCombatant({ id: 'minion', stats: createBaseStats({ might: 0, woodPower: 10 }) }), 1, 2),
+    )
     for (let i = 0; i < 3; i++) {
-      enemyBuffs.apply(BUFF_REGISTRY.get('trung_doc'), weakSource, enemyEntity, BUFF_REGISTRY)
+      runtime.applyBuff('trung_doc', enemy, weakSource)
     }
-    enemyBuffs.apply(BUFF_REGISTRY.get('trung_doc'), playerEntity, enemyEntity, BUFF_REGISTRY)
+    runtime.applyBuff('trung_doc', enemy, player)
 
+    const hpBefore = enemyEntity.currentHp
     system.resolveActorTurn(battle, player)
 
-    // The consumed instances (both sources) are gone; each id re-seeded
-    // by the CASTER at exactly 1 stack and the AUTHORED 5-turn duration
-    // — not the consumed stack's remaining life, not a stack-up.
-    expect(enemy.buffs.getFromSource('trung_doc', 'minion')).toBeUndefined()
-    const reseeded = enemy.buffs.getFromSource('trung_doc', 'player')
-    expect(reseeded).toBeDefined()
-    expect(reseeded!.stacks).toBe(1)
-    expect(reseeded!.remainingTurns).toBe(5)
-    // Potency recomputed from the caster's CURRENT stats —
-    // elementalBasePower (might 100 + woodPower 30) x dpsRatio 0.2 = 26,
-    // never the consumed snapshot's stale 2/tick.
-    expect(dotTick(enemy.buffs, 'trung_doc', 'player')).toBeCloseTo(26, 5)
+    // minion burst: 0.2 x 5 x 3 x 1.5 = 4.5 vs wood 10 -> 45; player's
+    // own trung_doc: 0.2 x 5 x 1 x 1.5 = 1.5 vs wood 130 -> 195; bong:
+    // 135; direct min-1.
+    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 45 - 195 - 135 - 1, 0)
+
+    // Both consumed instances are gone; the id re-seeded ONCE by the
+    // CASTER at exactly 1 stack and the AUTHORED 5-turn duration.
+    const reseeded = buffsOf(runtime, enemy, 'trung_doc')
+    expect(reseeded).toHaveLength(1)
+    expect(reseeded[0]!.sourceId).toBe('player')
+    expect(reseeded[0]!.stacks).toBe(1)
+    expect(reseeded[0]!.remaining).toBe(5)
+
+    // Potency recomputed vs the caster's CURRENT stats — the enemy's
+    // own turn end ticks BOTH re-seeded ailments at caster power:
+    // trung_doc 130 wood x 0.2 = 26 (never the consumed snapshot's
+    // stale 2/tick) + bong 150 fire x 0.15 = 22.5.
+    const hpAfterDetonate = enemyEntity.currentHp
+    system.resolveActorTurn(battle, enemy)
+    expect(hpAfterDetonate - enemyEntity.currentHp).toBeCloseTo(26 + 22.5, 5)
   })
 
-  it('is reaction-silent — the re-seed never reaches TurnReactionManager', () => {
-    const { battle, player, enemy, enemyEntity, playerEntity, system, reactionEvents, triggerSpy } = harness(DETONATE_ROOT)
+  it('re-seed is reaction-silent — suppressed eligibility is wired into the consume+re-seed ops', () => {
+    const { battle, player, enemy, system, runtime } = harness(DETONATE_ROOT)
 
-    // trung_doc (wood) incumbent + the cast's bong (fire) application
-    // form a SINH pair at application — that legitimate check is the
-    // ONLY checkAndTrigger call allowed; both ailments are DoT so the
-    // detonate consumes them, and the re-seeded pair must NOT re-fire.
-    new BuffSystem(enemy.buffs).apply(BUFF_REGISTRY.get('trung_doc'), playerEntity, enemyEntity, BUFF_REGISTRY)
+    // trung_doc (wood) incumbent + the cast's bong (fire): with the
+    // legacy manager deleted (M-INT) there is no reaction listener at
+    // all — both ailments are DoT so the detonate consumes them, and
+    // the re-seeded pair rides 'suppressed' eligibility by contract.
+    runtime.applyBuff('trung_doc', enemy, player)
 
     system.resolveActorTurn(battle, player)
 
-    expect(triggerSpy).toHaveBeenCalledTimes(1)
-    expect(reactionEvents.map((e) => e.name)).toEqual(['cong_minh'])
-    // Re-seeded pair is present and un-amped (no leaked cong_minh).
-    expect(enemy.buffs.getFromSource('trung_doc', 'player')!.stacks).toBe(1)
-    expect(enemy.buffs.getFromSource('bong', 'player')!.stacks).toBe(1)
+    // Re-seeded pair present at fixed 1 stack each, caster-sourced.
+    expect(buffsOf(runtime, enemy, 'trung_doc')[0]!.stacks).toBe(1)
+    expect(buffsOf(runtime, enemy, 'bong')[0]!.stacks).toBe(1)
   })
 
   it('a clean target still takes the direct hit + application — consume+re-seed is simply 0', () => {
-    const { battle, player, enemy, enemyEntity, system } = harness(DETONATE_ROOT)
+    const { battle, player, enemy, enemyEntity, system, runtime } = harness(DETONATE_ROOT)
 
     const hpBefore = enemyEntity.currentHp
     system.resolveActorTurn(battle, player)
 
     // Direct packet floors at 1 + the fresh bong IS a DoT ailment —
-    // consumed for (100 might + 50 firePower) x 0.15 = 22.5/tick x 4
-    // turns x 1 stack x 1.5 = 135, then re-seeded at fixed 1.
+    // consumed for intent 0.15 x 4 x 1 x 1.5 = 0.9 vs caster fire power
+    // 150 -> 135, then re-seeded at fixed 1.
     expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 1 - 135, 0)
-    const bong = enemy.buffs.getFromSource('bong', 'player')
-    expect(bong).toBeDefined()
-    expect(bong!.stacks).toBe(1)
-    expect(bong!.remainingTurns).toBe(4)
+    const bong = buffsOf(runtime, enemy, 'bong')
+    expect(bong).toHaveLength(1)
+    expect(bong[0]!.stacks).toBe(1)
+    expect(bong[0]!.remaining).toBe(4)
   })
 })
 

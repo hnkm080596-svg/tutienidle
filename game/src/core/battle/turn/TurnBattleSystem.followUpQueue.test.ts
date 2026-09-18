@@ -1,33 +1,29 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinitionId } from '../contracts/ids'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 const COUNTER_DEF: BuffDefinition = {
-  id: 'react_counter',
+  id: 'qa_react_counter' as BuffDefinitionId,
   name: 'Counter Stance',
-  polarity: 'buff',
-  duration: 2,
-  stackMode: 'refresh',
-  effects: [{ type: 'reactiveTrigger', trigger: 'onImpactLanded', chance: 1, queuesFollowUp: true }],
-}
-
-class Registry implements BuffDefinitionCatalog {
-  private readonly defs = new Map<string, BuffDefinition>()
-  constructor(defs: BuffDefinition[]) {
-    for (const d of defs) this.defs.set(d.id, d)
-  }
-  get(id: string): BuffDefinition {
-    const d = this.defs.get(id)
-    if (!d) throw new Error(`missing buff: ${id}`)
-    return d
-  }
+  kind: 'buff',
+  instanceScope: 'per_target',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+  capabilities: [
+    {
+      id: 'qa_react_counter.follow_up',
+      type: 'reactive_trigger',
+      payload: { trigger: 'onImpactLanded', chance: 1, queuesFollowUp: true },
+    },
+  ],
+  dispellable: true,
 }
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
@@ -46,7 +42,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
+    consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }
@@ -63,10 +59,16 @@ function fixture() {
 
   const playerParticipant = makeParticipant('player', player, 100, 0)
   const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
-  const registry = new Registry([COUNTER_DEF])
-  const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, registry)
+  const registry = makeTestBuffRegistry([COUNTER_DEF])
+  const combat = new CombatSystem(new EventBus())
+  const runtime = makeTurnRuntime({
+    registry,
+    participants: () => [playerParticipant, enemyParticipant],
+    combatSystem: combat,
+  })
+  const system = new TurnBattleSystem(combat, 10_000, registry, undefined, runtime)
 
-  new BuffSystem(enemyParticipant.buffs).apply(COUNTER_DEF, player, enemyEntity, registry)
+  runtime.applyBuff('qa_react_counter', enemyParticipant, playerParticipant)
 
   const battle: TurnBattle = {
     players: [playerParticipant],

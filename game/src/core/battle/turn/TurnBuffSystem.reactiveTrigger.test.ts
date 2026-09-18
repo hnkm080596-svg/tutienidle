@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // Action Playback Task 5 — reactiveTrigger buff effect:
 //   onCastBegin    — roll khi actor bắt đầu cast (punish-on-cast); nếu áp
@@ -14,47 +13,55 @@ import { BuffSystem } from '../../buff/BuffSystem'
 //   onImpactLanded — roll trên TARGET bị hit (counter); queuesFollowUp
 //                    đặt battle.queuedFollowUpActorId (counter-turn)
 
+const PERMANENT = { clock: 'permanent', scaling: 'fixed' } as const
+
 const STUN_DEF: BuffDefinition = {
   id: 'react_stun',
   name: 'Punish Stun',
+  kind: 'ailment',
   polarity: 'debuff',
-  duration: 1,
-  stackMode: 'refresh',
-  effects: [{ type: 'cc', ccEffect: 'stun' }],
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 1, scaling: 'ailment_scaled' },
+  application: { resistance: 'ailment' },
+  controls: [{ type: 'stun' }],
+  dispellable: true,
 }
 
 const COUNTER_DEF: BuffDefinition = {
   id: 'react_counter',
   name: 'Counter Stance',
+  kind: 'buff',
   polarity: 'buff',
-  duration: 2,
-  stackMode: 'refresh',
-  effects: [{ type: 'reactiveTrigger', trigger: 'onImpactLanded', chance: 1, queuesFollowUp: true }],
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+  capabilities: [
+    {
+      id: 'react_counter.trigger',
+      type: 'reactive_trigger',
+      payload: { trigger: 'onImpactLanded', chance: 1, queuesFollowUp: true },
+    },
+  ],
+  dispellable: false,
 }
 
 const PUNISH_DEF: BuffDefinition = {
   id: 'react_punish',
   name: 'Punish Stance',
+  kind: 'buff',
   polarity: 'buff',
-  duration: 2,
-  stackMode: 'refresh',
-  effects: [{ type: 'reactiveTrigger', trigger: 'onCastBegin', chance: 1, appliesDefinitionId: 'react_stun' }],
-}
-
-class Registry implements BuffDefinitionCatalog {
-  private readonly defs = new Map<string, BuffDefinition>()
-
-  constructor(defs: BuffDefinition[]) {
-    for (const d of defs) this.defs.set(d.id, d)
-  }
-
-  get(id: string): BuffDefinition {
-    const d = this.defs.get(id)
-
-    if (!d) throw new Error(`missing buff: ${id}`)
-
-    return d
-  }
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+  capabilities: [
+    {
+      id: 'react_punish.trigger',
+      type: 'reactive_trigger',
+      payload: { trigger: 'onCastBegin', chance: 1, appliesDefinitionId: 'react_stun' },
+    },
+  ],
+  dispellable: false,
 }
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
@@ -87,7 +94,7 @@ function makeParticipant(
 ): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
+    consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }
@@ -109,8 +116,8 @@ function fixture(targetBuffs: BuffDefinition[], actorBuffs: BuffDefinition[] = [
   const playerParticipant = makeParticipant('player', player, 100, 0)
   const enemyParticipant = makeParticipant('enemy', enemyEntity, 100, 1)
 
-  const registry = new Registry([...targetBuffs, ...actorBuffs])
-  const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, registry)
+  const registry = makeTestBuffRegistry([...targetBuffs, ...actorBuffs])
+  const combat = new CombatSystem(new EventBus())
 
   const battle: TurnBattle = {
     players: [playerParticipant],
@@ -118,17 +125,24 @@ function fixture(targetBuffs: BuffDefinition[], actorBuffs: BuffDefinition[] = [
     state: 'fighting',
   }
 
-  // Pre-apply reactiveTrigger buffs trực tiếp qua BuffSystem (mô phỏng
+  const runtime = makeTurnRuntime({
+    registry,
+    participants: () => [playerParticipant, enemyParticipant],
+    combatSystem: combat,
+  })
+  const system = new TurnBattleSystem(combat, 10_000, registry, undefined, runtime)
+
+  // Pre-apply reactive_trigger buffs through the authority (mô phỏng
   // buff đã active trước lượt này).
   for (const def of actorBuffs ?? []) {
-    new BuffSystem(playerParticipant.buffs).apply(def, player, player, registry)
+    runtime.applyBuff(def.id, playerParticipant)
   }
 
   for (const def of targetBuffs) {
-    new BuffSystem(enemyParticipant.buffs).apply(def, player, enemyEntity, registry)
+    runtime.applyBuff(def.id, enemyParticipant, playerParticipant)
   }
 
-  return { battle, system, registry, player, enemyEntity }
+  return { battle, system, registry, runtime, player, enemyEntity }
 }
 
 describe('BuffSystem — reactiveTrigger effect', () => {
@@ -164,10 +178,19 @@ describe('BuffSystem — reactiveTrigger effect', () => {
     const NO_FIRE: BuffDefinition = {
       id: 'react_none',
       name: 'No Fire',
+      kind: 'buff',
       polarity: 'buff',
-      duration: 2,
-      stackMode: 'refresh',
-      effects: [{ type: 'reactiveTrigger', trigger: 'onImpactLanded', chance: 0, queuesFollowUp: true }],
+      instanceScope: 'per_source',
+      stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+      lifetime: PERMANENT,
+      capabilities: [
+        {
+          id: 'react_none.trigger',
+          type: 'reactive_trigger',
+          payload: { trigger: 'onImpactLanded', chance: 0, queuesFollowUp: true },
+        },
+      ],
+      dispellable: false,
     }
 
     const { battle, system } = fixture([NO_FIRE])

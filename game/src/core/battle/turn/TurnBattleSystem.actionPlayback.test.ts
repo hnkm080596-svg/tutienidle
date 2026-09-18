@@ -4,7 +4,6 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
 
 // Action Playback Task 3 — equivalence tests cho split
 // resolveActorTurn() → declareActorAction() / applyActionImpact() /
@@ -41,7 +40,7 @@ function makeParticipant(
 ): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
+    consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }

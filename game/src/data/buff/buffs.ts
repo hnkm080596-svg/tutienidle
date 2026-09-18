@@ -1,4 +1,4 @@
-import type { BuffDefinition } from '@/core/buff/BuffDefinition'
+import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
 import { LEGACY_BUFFS } from './LegacyBuffs'
 import { KIEM_PHO_BUFFS } from './KiemPhoBuffs'
 import { THUAN_HE_BUFFS } from './ThuanHeBuffs'
@@ -9,35 +9,24 @@ import { THE_TU_BUFFS } from './TheTuBuffs'
 // Đột Phá Trúc Cơ (Phase 5) — áp lên buff PERSISTENT ngoài trận
 // (GameManager.applyPersistentBuff()) khi thất bại Độ Kiếp (mục 13
 // spec `breakthrough`) — phạt có cảm giác nhưng không huỷ hoại, KHÔNG
-// reset cảnh giới. Xem composables/useTribulation.ts. Khai TRƯỚC mảng
-// `buffs` bên dưới vì được tham chiếu lại trong đó.
+// reset cảnh giới. Xem composables/useTribulation.ts.
+// buff2 migration (M4): a persistent wall debuff -- 'seconds' clock
+// (advanced by onTimePassed), NOT a battle ailment.
 export const KIEP_THUONG_DEBUFF: BuffDefinition = {
   id: 'kiep_thuong',
-
   name: 'Kiếp Thương',
-
   description:
     'Vết thương do Thiên Kiếp để lại sau khi Độ Kiếp thất bại, làm suy giảm toàn thân trong chốc lát.',
-
+  kind: 'debuff',
   polarity: 'debuff',
-
-  duration: 60,
-
-  stackMode: 'refresh',
-
-  effects: [
-    {
-      type: 'statModifier',
-      stat: 'might',
-      percent: -0.15,
-    },
-
-    {
-      type: 'statModifier',
-      stat: 'defense',
-      percent: -0.15,
-    },
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'seconds', duration: 60, scaling: 'fixed' },
+  statModifiers: [
+    { stat: 'might', percent: -0.15 },
+    { stat: 'defense', percent: -0.15 },
   ],
+  dispellable: true,
 }
 
 // Tran Phap formation buffs (B2, 2026-09-14) - one shared battle-long buff
@@ -47,62 +36,77 @@ export const TRAN_PHAP_DOC_HANH_BUFF: BuffDefinition = {
   id: 'tran_phap_doc_hanh_buff',
   name: 'Độc Hành Khí Tức',
   description: 'Một mình gánh trận — +12% công, +12% thủ.',
+  kind: 'buff',
   polarity: 'buff',
-  duration: Infinity,
-  stackMode: 'refresh',
-  effects: [
-    { type: 'statModifier', stat: 'might', percent: 0.12 },
-    { type: 'statModifier', stat: 'defense', percent: 0.12 },
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'permanent', scaling: 'fixed' },
+  statModifiers: [
+    { stat: 'might', percent: 0.12 },
+    { stat: 'defense', percent: 0.12 },
   ],
+  dispellable: false,
 }
 
 export const TRAN_PHAP_LUONG_NGHI_BUFF: BuffDefinition = {
   id: 'tran_phap_luong_nghi_buff',
   name: 'Lưỡng Nghi Khí Tức',
   description: 'Hai cực tương trợ — +10% công.',
+  kind: 'buff',
   polarity: 'buff',
-  duration: Infinity,
-  stackMode: 'refresh',
-  effects: [{ type: 'statModifier', stat: 'might', percent: 0.1 }],
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'permanent', scaling: 'fixed' },
+  statModifiers: [{ stat: 'might', percent: 0.1 }],
+  dispellable: false,
 }
 
 export const TRAN_PHAP_TAM_TAI_BUFF: BuffDefinition = {
   id: 'tran_phap_tam_tai_buff',
   name: 'Tam Tài Khí Tức',
   description: 'Thiên-địa-nhân hợp thế — +6% công, +6% tốc độ.',
+  kind: 'buff',
   polarity: 'buff',
-  duration: Infinity,
-  stackMode: 'refresh',
-  effects: [
-    { type: 'statModifier', stat: 'might', percent: 0.06 },
-    { type: 'statModifier', stat: 'speed', percent: 0.06 },
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'permanent', scaling: 'fixed' },
+  statModifiers: [
+    { stat: 'might', percent: 0.06 },
+    { stat: 'speed', percent: 0.06 },
   ],
+  dispellable: false,
 }
 
 export const TRAN_PHAP_NGU_HANH_BUFF: BuffDefinition = {
   id: 'tran_phap_ngu_hanh_buff',
   name: 'Ngũ Hành Khí Tức',
   description: 'Ngũ hành tương sinh — +4% công, +6% thủ.',
+  kind: 'buff',
   polarity: 'buff',
-  duration: Infinity,
-  stackMode: 'refresh',
-  effects: [
-    { type: 'statModifier', stat: 'might', percent: 0.04 },
-    { type: 'statModifier', stat: 'defense', percent: 0.06 },
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'permanent', scaling: 'fixed' },
+  statModifiers: [
+    { stat: 'might', percent: 0.04 },
+    { stat: 'defense', percent: 0.06 },
   ],
+  dispellable: false,
 }
 
 export const TRAN_PHAP_CUU_CUNG_BUFF: BuffDefinition = {
   id: 'tran_phap_cuu_cung_buff',
   name: 'Cửu Cung Khí Tức',
   description: 'Chín vị trí cùng trận — +2% công, +2% thủ.',
+  kind: 'buff',
   polarity: 'buff',
-  duration: Infinity,
-  stackMode: 'refresh',
-  effects: [
-    { type: 'statModifier', stat: 'might', percent: 0.02 },
-    { type: 'statModifier', stat: 'defense', percent: 0.02 },
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'permanent', scaling: 'fixed' },
+  statModifiers: [
+    { stat: 'might', percent: 0.02 },
+    { stat: 'defense', percent: 0.02 },
   ],
+  dispellable: false,
 }
 
 // Buffs/debuffs referenced by skill effects via buffId (see

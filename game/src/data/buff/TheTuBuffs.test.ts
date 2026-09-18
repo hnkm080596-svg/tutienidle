@@ -1,65 +1,87 @@
 import { describe, expect, it } from 'vitest'
 import { BUFF_REGISTRY } from './BuffRegistry'
+import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
+import type {
+  ReactiveProcPayload,
+  ReactiveTriggerPayload,
+} from '@/core/proc/ProcCapabilities'
+import type {
+  ReactiveEconomyPayload,
+  TheEconomyPayload,
+} from '@/core/the-tu/TheTuCapabilities'
+import type { MarkerPayload } from '@/core/proc/MarkerCapabilities'
 
 // The Tu Reimagined (spec 2026-09-15 section 5-6, plan Task 6) — buff
-// definition authoring. Holder-turn state buffs carry
-// durationPolicy:'fixed_holder_turns' so a caster's own ailment stats
-// can never scale them; khiem_khich stays ailment_scaled (it is a real
-// debuff ON the enemy — enemy resist legitimately shortens Taunt).
+// definition authoring, M4 canonical shape. Holder-turn state buffs keep
+// lifetime.scaling:'fixed' so a caster's own ailment stats can never
+// scale them; khiem_khich stays 'ailment_scaled' (real debuff ON the
+// enemy — enemy resist legitimately shortens Taunt). Effects live in
+// capabilities[] now; payloads narrow via the owner-module types.
 
-describe('TheTuBuffs — registry authoring', () => {
-  it('bat_tu_ba_the — 3 fixed holder-turns, clearsCcOnApply, displacementImmune marker', () => {
+function capPayload<T>(def: BuffDefinition, type: string): T | undefined {
+  const grant = (def.capabilities ?? []).find((c) => c.type === type)
+  return grant === undefined ? undefined : (grant.payload as T)
+}
+function capsPayload<T>(def: BuffDefinition, type: string): T[] {
+  return (def.capabilities ?? [])
+    .filter((c) => c.type === type)
+    .map((c) => c.payload as T)
+}
+const FIXED = { clock: 'holder_turns', scaling: 'fixed' } as const
+
+describe('TheTuBuffs — registry authoring (buff2 shape)', () => {
+  it('bat_tu_ba_the — 3 fixed holder-turns, clearsCcOnApply, displacementImmune marker grant', () => {
     const def = BUFF_REGISTRY.get('bat_tu_ba_the')
 
     expect(def.polarity).toBe('buff')
-    expect(def.duration).toBe(3)
-    expect(def.durationPolicy).toBe('fixed_holder_turns')
+    expect(def.lifetime).toMatchObject({ ...FIXED, duration: 3 })
     expect(def.clearsCcOnApply).toBe(true)
-    expect(def.effects.some((effect) => effect.type === 'marker' && effect.displacementImmune)).toBe(true)
+    expect(capPayload<MarkerPayload>(def, 'marker')?.displacementImmune).toBe(true)
   })
 
-  it('phan_chinh — permanent self buff carrying a reflectsDamage reactive trigger', () => {
+  it('phan_chinh — permanent self buff carrying a reflectsDamage reactive trigger grant', () => {
     const def = BUFF_REGISTRY.get('phan_chinh')
 
     expect(def.polarity).toBe('buff')
-    expect(def.duration).toBe(Infinity)
+    expect(def.lifetime.clock).toBe('permanent')
 
-    const reflect = def.effects.find(
-      (effect) => effect.type === 'reactiveTrigger' && effect.reflectsDamage !== undefined,
-    )
+    const trigger = capPayload<ReactiveTriggerPayload>(def, 'reactive_trigger')
 
-    expect(reflect).toBeDefined()
-    expect(reflect!.type === 'reactiveTrigger' && reflect!.trigger).toBe('onImpactLanded')
-    expect(reflect!.type === 'reactiveTrigger' && reflect!.reflectsDamage!.maxHpRatio).toBeGreaterThan(0)
-    expect(reflect!.type === 'reactiveTrigger' && reflect!.reflectsDamage!.takenRatio).toBeGreaterThan(0)
+    expect(trigger).toBeDefined()
+    expect(trigger!.trigger).toBe('onImpactLanded')
+    expect(trigger!.reflectsDamage!.maxHpRatio).toBeGreaterThan(0)
+    expect(trigger!.reflectsDamage!.takenRatio).toBeGreaterThan(0)
   })
 
   it('son_nhac — fixed holder-turns self DR buff (finalDamageReductionPercent)', () => {
     const def = BUFF_REGISTRY.get('son_nhac')
 
     expect(def.polarity).toBe('buff')
-    expect(def.durationPolicy).toBe('fixed_holder_turns')
-    expect(def.effects).toContainEqual(
-      expect.objectContaining({ type: 'statModifier', stat: 'finalDamageReductionPercent' }),
+    expect(def.lifetime.scaling).toBe('fixed')
+    expect(def.statModifiers).toContainEqual(
+      expect.objectContaining({ stat: 'finalDamageReductionPercent' }),
     )
   })
 
-  it('son_nhac_ho_the — fixed holder-turns, uniquePerTarget, external-ward marker', () => {
+  it('son_nhac_ho_the — fixed holder-turns, per_target+latest, external-ward marker grant', () => {
     const def = BUFF_REGISTRY.get('son_nhac_ho_the')
 
     expect(def.polarity).toBe('buff')
-    expect(def.durationPolicy).toBe('fixed_holder_turns')
-    expect(def.uniquePerTarget).toBe(true)
-    expect(def.effects.some((effect) => effect.type === 'marker' && effect.grantsExternalWard)).toBe(true)
+    expect(def.lifetime.scaling).toBe('fixed')
+    expect(def.instanceScope).toBe('per_target')
+    expect(def.sourceOwnership).toBe('latest')
+    expect(capPayload<MarkerPayload>(def, 'marker')?.grantsExternalWard).toBe(true)
   })
 
-  it('khiem_khich — ailment_scaled taunt debuff, uniquePerTarget (newest taunt wins)', () => {
+  it('khiem_khich — ailment_scaled taunt debuff, per_target+latest (newest taunt wins)', () => {
     const def = BUFF_REGISTRY.get('khiem_khich')
 
     expect(def.polarity).toBe('debuff')
-    expect(def.uniquePerTarget).toBe(true)
-    expect(def.durationPolicy ?? 'ailment_scaled').toBe('ailment_scaled')
-    expect(def.duration).toBeGreaterThan(0)
+    expect(def.instanceScope).toBe('per_target')
+    expect(def.sourceOwnership).toBe('latest')
+    expect(def.lifetime.scaling).toBe('ailment_scaled')
+    expect(def.lifetime.duration).toBeGreaterThan(0)
+    expect(def.application?.resistance).toBe('ailment')
   })
 
   it('an-path marker shells exist — ung_the/ho_mon/phan_mon/tro_mon permanent; tu_the/bach_ung fixed 3', () => {
@@ -67,27 +89,26 @@ describe('TheTuBuffs — registry authoring', () => {
       const def = BUFF_REGISTRY.get(id)
 
       expect(def.polarity, id).toBe('buff')
-      expect(def.duration, id).toBe(Infinity)
+      expect(def.lifetime.clock, id).toBe('permanent')
       expect(def.hidden, id).toBe(true)
+      expect(def.kind, id).toBe('marker')
     }
 
     for (const id of ['tu_the', 'bach_ung']) {
       const def = BUFF_REGISTRY.get(id)
 
-      expect(def.duration, id).toBe(3)
-      expect(def.durationPolicy, id).toBe('fixed_holder_turns')
+      expect(def.lifetime, id).toMatchObject({ ...FIXED, duration: 3 })
     }
   })
 
-  it('ung_the — theEconomy marker owning the own-basic-lands income channel (single channel, P1)', () => {
-    const def = BUFF_REGISTRY.get('ung_the')
-    const economy = def.effects.find((effect) => effect.type === 'theEconomy')
+  it('ung_the — the_economy grant owning the own-basic-lands income channel (single channel, P1)', () => {
+    const economy = capPayload<TheEconomyPayload>(BUFF_REGISTRY.get('ung_the'), 'the_economy')
 
     expect(economy).toBeDefined()
-    expect(economy!.type === 'theEconomy' && economy!.gainOnBasicHit).toBe(4)
+    expect(economy!.gainOnBasicHit).toBe(4)
   })
 
-  it('root markers carry their reactiveProc spec — ho intercepts, phan counters via phan_kich, tro follows via tro_kich', () => {
+  it('root markers carry their reactive_proc grants — ho intercepts, phan counters via phan_kich, tro follows via tro_kich', () => {
     const specs: Record<
       string,
       { triggers: string[]; mechanic: string; chanceStat: string; payload?: string; targetMode?: string }
@@ -110,15 +131,11 @@ describe('TheTuBuffs — registry authoring', () => {
     }
 
     for (const [id, expected] of Object.entries(specs)) {
-      const def = BUFF_REGISTRY.get(id)
-      const procs = def.effects.filter((effect) => effect.type === 'reactiveProc')
+      const procs = capsPayload<ReactiveProcPayload>(BUFF_REGISTRY.get(id), 'reactive_proc')
 
-      expect(procs.map((proc) => proc.type === 'reactiveProc' && proc.trigger), id).toEqual(
-        expected.triggers,
-      )
+      expect(procs.map((p) => p.trigger), id).toEqual(expected.triggers)
 
       for (const proc of procs) {
-        if (proc.type !== 'reactiveProc') continue
         expect(proc.mechanic, id).toBe(expected.mechanic)
         expect(proc.chanceStat, id).toBe(expected.chanceStat)
         expect(proc.queuedAction?.payloadSkillId, id).toBe(expected.payload)
@@ -127,25 +144,24 @@ describe('TheTuBuffs — registry authoring', () => {
     }
   })
 
-  it('tu_the — reactiveEconomy procCostFlatDelta -5, fixed holder-turns', () => {
+  it('tu_the — reactive_economy procCostFlatDelta -5, fixed holder-turns', () => {
     const def = BUFF_REGISTRY.get('tu_the')
-    const economy = def.effects.find((effect) => effect.type === 'reactiveEconomy')
+    const economy = capPayload<ReactiveEconomyPayload>(def, 'reactive_economy')
 
     expect(economy).toBeDefined()
-    expect(economy!.type === 'reactiveEconomy' && economy!.procCostFlatDelta).toBe(-5)
-    expect(def.durationPolicy).toBe('fixed_holder_turns')
+    expect(economy!.procCostFlatDelta).toBe(-5)
+    expect(def.lifetime.scaling).toBe('fixed')
   })
 
-  it('bach_ung — reactiveEconomy freeProcs + authored payload upgrade rider, fixed holder-turns', () => {
+  it('bach_ung — reactive_economy freeProcs + authored payload upgrade rider, fixed holder-turns', () => {
     const def = BUFF_REGISTRY.get('bach_ung')
-    const economy = def.effects.find((effect) => effect.type === 'reactiveEconomy')
+    const economy = capPayload<ReactiveEconomyPayload>(def, 'reactive_economy')
 
     expect(economy).toBeDefined()
-    if (economy?.type !== 'reactiveEconomy') return
-    expect(economy.freeProcs).toBe(true)
+    expect(economy!.freeProcs).toBe(true)
     // Spec-listed rider: "counter hits +break" — an ailment application on
     // the payload hit through the existing appliesAilments mechanism.
-    expect(economy.payloadAilments?.length).toBeGreaterThan(0)
-    expect(def.durationPolicy).toBe('fixed_holder_turns')
+    expect(economy!.payloadAilments?.length).toBeGreaterThan(0)
+    expect(def.lifetime.scaling).toBe('fixed')
   })
 })

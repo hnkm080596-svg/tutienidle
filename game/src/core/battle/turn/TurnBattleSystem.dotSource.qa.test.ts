@@ -4,25 +4,42 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { dotRecoveryTriggers } from '../../combat/DotRecovery'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
+import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 // AR-06 QA Probes:
-// Turn DoT omits its source context if resolveSource is not passed to
-// actorBuffSystem.update(). CombatSystem.applyDotDamage needs source to
-// apply elemental penetration and the dotRecoveryTriggers poison-recovery
-// hook (stat-system-reimagined Task 4: the trigger reads the source's OWN
-// buff pool, resolved via the resolveSourceBuffs parameter).
+// Turn DoT resolves its source context through the buff2 authority: the
+// periodic request carries the instance's sourceId and the damage adapter
+// feeds the source's live capability grants into
+// CombatSystem.applyDotDamage (elemental penetration + dotRecoveryTriggers
+// poison-recovery hook, stat-system-reimagined Task 4 / D18).
 
 const POISON_BUFF: BuffDefinition = {
   id: 'qa_poison',
   name: 'QA Poison',
+  kind: 'debuff',
   polarity: 'debuff',
-  duration: 3,
-  stackMode: 'stack',
-  effects: [{ type: 'dot', dpsRatio: 1, element: 'wood' }],
+  element: 'wood',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' },
+  periodic: [
+    {
+      id: 'qa_poison.tick',
+      type: 'damage',
+      element: 'wood',
+      damageProfile: 'legacy_dot',
+      coefficient: 1,
+      scaling: 'dynamic',
+      timing: 'holder_turn_end',
+      stackScaling: 'multiply',
+      canCrit: false,
+      canMiss: false,
+      hitCount: 1,
+    },
+  ],
+  dispellable: true,
 }
 
 // Doc Can-shaped authored recovery trigger (Task 4 / D18): the SOURCE
@@ -30,19 +47,21 @@ const POISON_BUFF: BuffDefinition = {
 const RECOVERY_BUFF: BuffDefinition = {
   id: 'qa_recovery',
   name: 'QA Recovery',
+  kind: 'buff',
   polarity: 'buff',
-  duration: 3,
-  stackMode: 'stack',
-  maxStacks: 5,
-  effects: [{ type: 'dotRecovery', element: 'wood', healPercent: 0.25 }],
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' },
+  capabilities: [
+    { id: 'qa_recovery.dot_recovery', type: 'dot_recovery', payload: { element: 'wood', healPercent: 0.25 } },
+  ],
+  dispellable: true,
 }
 
-const REGISTRY: BuffDefinitionCatalog = {
-  get: (id: string): BuffDefinition => {
-    if (id === POISON_BUFF.id) return POISON_BUFF
-    if (id === RECOVERY_BUFF.id) return RECOVERY_BUFF
-    throw new Error(`unknown buff id: ${id}`)
-  },
+const REGISTRY = makeTestBuffRegistry([POISON_BUFF, RECOVERY_BUFF])
+
+function makeRuntimeFor(participants: () => TurnBattleParticipant[], combat: CombatSystem): TurnRuntimeFixture {
+  return makeTurnRuntime({ registry: REGISTRY, participants, combatSystem: combat })
 }
 
 function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
@@ -87,7 +106,7 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new BuffPool(),
+    
     consecutiveHardCcTurns: 0,
   }
 }
@@ -96,7 +115,6 @@ describe('AR-06: Turn DoT source context', () => {
   it('supplies living source to DoT tick; source with no recovery buff heals nothing', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
     // Player is the source of the poison, with missing HP, and holds no
     // dotRecovery buff — the trigger query returns 0, so the source can
@@ -107,8 +125,7 @@ describe('AR-06: Turn DoT source context', () => {
       stats: createBaseStats({ speed: 10 }),
     })
 
-    // Enemy has poison applied to its buff pool and is faster (speed
-    // 100 vs 10).
+    // Enemy has poison applied and is faster (speed 100 vs 10).
     const enemy = makeEntity('enemy', {
       currentHp: 10_000,
       maxHp: 10_000,
@@ -117,8 +134,10 @@ describe('AR-06: Turn DoT source context', () => {
 
     const playerP = makeParticipant('player', player, 0)
     const enemyP = makeParticipant('enemy', enemy, 1)
+    const runtime = makeRuntimeFor(() => [playerP, enemyP], combat)
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
-    new BuffSystem(enemyP.buffs).apply(POISON_BUFF, player, enemy, REGISTRY)
+    runtime.applyBuff('qa_poison', enemyP, playerP)
 
     const battle: TurnBattle = {
       players: [playerP],
@@ -131,7 +150,7 @@ describe('AR-06: Turn DoT source context', () => {
     // Resolve enemy turn: enemy ticks poison -> takes DoT damage.
     system.resolveNextStep(battle)
 
-    expect(dotRecoveryTriggers(player, 'wood', playerP.buffs.getAll())).toBe(0)
+    expect(dotRecoveryTriggers(player, 'wood', runtime.buffs.getCapabilities(player.id))).toBe(0)
     expect(player.currentHp).toBeLessThanOrEqual(hpBefore)
     expect(enemy.currentHp).toBeLessThan(10_000)
   })
@@ -139,7 +158,6 @@ describe('AR-06: Turn DoT source context', () => {
   it('resolveSourceBuffs wiring: a dotRecovery buff on the source heals it during the target tick', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
     const healEvents: { targetId?: string; value?: number }[] = []
     eventBus.on('heal', (event) => healEvents.push(event as typeof healEvents[number]))
@@ -158,11 +176,13 @@ describe('AR-06: Turn DoT source context', () => {
 
     const playerP = makeParticipant('player', player, 0)
     const enemyP = makeParticipant('enemy', enemy, 1)
+    const runtime = makeRuntimeFor(() => [playerP, enemyP], combat)
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
     // Doc Can is a self-buff on the SOURCE; the poison sits on the
-    // enemy. Recovery must cross pool boundary via resolveSourceBuffs.
-    new BuffSystem(playerP.buffs).apply(RECOVERY_BUFF, player, player, REGISTRY)
-    new BuffSystem(enemyP.buffs).apply(POISON_BUFF, player, enemy, REGISTRY)
+    // enemy. Recovery must cross instance boundary via sourceGrants.
+    runtime.applyBuff('qa_recovery', playerP)
+    runtime.applyBuff('qa_poison', enemyP, playerP)
 
     const battle: TurnBattle = {
       players: [playerP],
@@ -183,7 +203,6 @@ describe('AR-06: Turn DoT source context', () => {
   it('handles dead or missing source safely without throwing', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
     const player = makeEntity('player', {
       currentHp: 0,
@@ -197,8 +216,10 @@ describe('AR-06: Turn DoT source context', () => {
     const playerP = makeParticipant('player', player, 0)
     playerP.alive = false
     const enemyP = makeParticipant('enemy', enemy, 1)
+    const runtime = makeRuntimeFor(() => [playerP, enemyP], combat)
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
-    new BuffSystem(enemyP.buffs).apply(POISON_BUFF, player, enemy, REGISTRY)
+    runtime.applyBuff('qa_poison', enemyP, playerP)
 
     const battle: TurnBattle = {
       players: [playerP],

@@ -4,7 +4,6 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { CombatEntity } from '../../combat/CombatEntity'
-import { BuffPool } from '../../buff/BuffPool'
 
 // Future Systems Task 9 — party (multi player-side unit): 1 ATB queue
 // chung, thua khi TOÀN BỘ party chết, opposingSide đối diện toàn party.
@@ -28,7 +27,7 @@ function makeParticipant(
 ): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
+    consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }

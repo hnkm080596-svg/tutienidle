@@ -1,20 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { CombatSystem } from './CombatSystem'
+import { CombatSystem, type SurviveEffectsPolicy, type SurviveLethalSource } from './CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 import type { EntityVitalsChangedEvent } from './EntityVitalsSystem'
-// Phase A0 (2026-09-07) — full cutover to turn-based buff types: the
-// survive-lethal session now operates on the LIVE BuffPool during
-// real (turn-based) gameplay. The v4 describe block below builds its
-// fixtures with BuffSystem/BuffPool and BUFF_REGISTRY
-// accordingly.
-import { BuffSystem } from '../buff/BuffSystem'
-import { BuffPool } from '../buff/BuffPool'
-import type { BuffDefinitionCatalog } from '../buff/BuffTypes'
-import { TU_SINH_NGO_BUFF } from '../../data/buff/buffs'
-import type { BuffDefinition } from '../buff/BuffTypes'
+// buff2 M4 — the survive-lethal session binds the battle's buff
+// authority through SurviveEffectsPolicy.apply (mid-settlement ctx or
+// quiescent op mint). The v4 describe block below exercises that lane
+// through a shared TurnRuntimeFixture.
+import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
+import { buffs as LIVE_BUFFS } from '../../data/buff/buffs'
+import type { BuffDefinition } from '../buff2/BuffDefinition'
+import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../battle/contracts/ids'
+import type { CombatAuthorityExecutionContext } from '../battle/contracts/context'
+import type { ResolvedCombatOperation } from '../battle/contracts/operations'
+import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
+import {
+  makeTestBuffRegistry,
+  makeTurnRuntime,
+  type TurnRuntimeFixture,
+} from '../battle/turn/testing/TurnRuntimeFixtures'
 
 // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — hook tại
 // CombatSystem.killIfDead(), điểm DUY NHẤT tuyên bố chết của mọi đường
@@ -45,12 +51,8 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 interface SessionShape {
   guard: SurviveLethalGuard
   playerEntityId: string
-  surviveEffects?: {
-    buffSystem: BuffSystem
-    registry: BuffDefinitionCatalog
-    grantBuffId?: string
-    cleanseDebuffs?: boolean
-  }
+  surviveEffects?: SurviveEffectsPolicy
+  extraSources?: SurviveLethalSource[]
 }
 
 function createSession(talentIds: string[]): SessionShape {
@@ -179,60 +181,141 @@ describe('CombatSystem — Bất Tử Thể (survive_lethal)', () => {
 // hàng 11) — guard cứu sống ngoài ra: tẩy TOÀN BỘ debuff trên player +
 // áp Tử Sinh Ngộ 10s (+30% sát thương cuối, +20% né chí mạng). Session
 // mở rộng trường surviveEffects — GameManager wiring set từ battle.
+// buff2 M4 — surviveEffects.apply is the composition-root-bound lane:
+// mid-settlement reuses the frame ctx; quiescent mints authored ops
+// (same shape GameManagerTurnBattleOps binds).
 describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh Ngộ)', () => {
-  const trungDoc: BuffDefinition = {
-    id: 'trung_doc', name: 'Trúng Độc', polarity: 'debuff',
-    duration: 5, stackMode: 'stack',
-    effects: [{ type: 'dot', dpsRatio: 0.2, element: 'wood' }],
-  }
-  const kiepThuong: BuffDefinition = {
-    id: 'kiep_thuong', name: 'Kiếp Thương', polarity: 'debuff',
-    duration: 60, stackMode: 'refresh',
-    effects: [{ type: 'statModifier', stat: 'might', percent: -0.15 }],
+  const participantOf = (entity: CombatEntity): TurnBattleParticipant => ({
+    id: entity.id,
+    entity,
+    speed: 0,
+    priority: 0,
+    actionGauge: 0,
+    alive: entity.alive,
+    consecutiveHardCcTurns: 0,
+  })
+
+  function world(
+    combat: CombatSystem,
+    participants: TurnBattleParticipant[],
+    registry: ReturnType<typeof makeTestBuffRegistry> | typeof BUFF_REGISTRY = BUFF_REGISTRY,
+  ): TurnRuntimeFixture {
+    return makeTurnRuntime({
+      registry,
+      participants: () => participants,
+      combatSystem: combat,
+    })
   }
 
-  function makeRegistry(): BuffDefinitionCatalog {
-    const registry: BuffDefinitionCatalog = {
-      get: (id) => {
-        if (id === 'trung_doc') return trungDoc
-        if (id === 'kiep_thuong') return kiepThuong
-        if (id === 'tu_sinh_ngo') return TU_SINH_NGO_BUFF as BuffDefinition
-        throw new Error(`unknown fixture buff id: ${id}`)
+  /** The composition-root-bound survive lane (mirrors
+      GameManagerTurnBattleOps): mid-settlement reuses the frame ctx;
+      quiescent mints authored ops and settles. */
+  function bindSurviveEffects(
+    runtime: TurnRuntimeFixture,
+    opts: { grantBuffId?: string; cleanseDebuffs?: boolean } = {},
+  ): SurviveEffectsPolicy {
+    return {
+      grantBuffId: opts.grantBuffId as BuffDefinitionId | undefined,
+      cleanseDebuffs: opts.cleanseDebuffs,
+      apply: (entity, resolved, execCtx: CombatAuthorityExecutionContext | undefined) => {
+        const entityId = entity.id as CombatEntityId
+        if (execCtx !== undefined) {
+          if (resolved.cleanseDebuffs) {
+            runtime.buffs.cleanse(entityId, { polarity: 'debuff' }, execCtx)
+          }
+          if (resolved.grantBuffId !== undefined) {
+            runtime.buffs.apply(
+              {
+                definitionId: resolved.grantBuffId,
+                sourceId: entityId,
+                targetId: entityId,
+                stacks: 1,
+                baseChance: 1,
+                durationOverride: resolved.grantBuffDurationOverride,
+                reactionEligibility: 'eligible',
+                origin: execCtx.origin,
+              },
+              execCtx,
+            )
+          }
+          return
+        }
+        const root = `survive.test.${entity.id}`
+        const origin = {
+          kind: 'proc' as const,
+          originId: 'survive_effects',
+          sourceId: entityId,
+          rootActionId: root,
+        }
+        const ops: ResolvedCombatOperation[] = []
+        if (resolved.cleanseDebuffs) {
+          ops.push({
+            type: 'cleanse_buff',
+            operationId: `${root}.cleanse` as CombatOperationId,
+            payload: { targetId: entityId, query: { polarity: 'debuff' } },
+            origin,
+          })
+        }
+        if (resolved.grantBuffId !== undefined) {
+          ops.push({
+            type: 'apply_buff',
+            operationId: `${root}.grant` as CombatOperationId,
+            payload: {
+              definitionId: resolved.grantBuffId,
+              targetId: entityId,
+              stacks: 1,
+              baseChance: 1,
+              durationOverride: resolved.grantBuffDurationOverride,
+              reactionEligibility: 'eligible',
+            },
+            origin,
+          })
+        }
+        runtime.scheduler.enqueueAuthored(ops)
+        runtime.scheduler.runIfQuiescent()
       },
     }
-
-    return registry
   }
+
+  const buffsOn = (runtime: TurnRuntimeFixture, entityId: string, definitionId: string) =>
+    runtime.buffs.getForTarget(entityId as CombatEntityId)
+      .filter((instance) => instance.definitionId === definitionId)
 
   it('guard cứu sống — mọi debuff bị tẩy, Tử Sinh Ngộ active trên player', () => {
     const combat = new CombatSystem(new EventBus())
-    const registry = makeRegistry()
-    const pool = new BuffPool()
-    const buffs = new BuffSystem(pool)
-
-    const session = createSession(['bat_tu_the'])
-    session.surviveEffects = { buffSystem: buffs, registry, grantBuffId: 'tu_sinh_ngo' }
-    combat.setSurviveLethalSession(session)
 
     const player = createCombatant({ id: 'player', type: 'player', currentHp: 10, maxHp: 1000 })
     const enemy = createCombatant({ id: 'enemy_1', currentHp: 100, maxHp: 100 })
+    const playerP = participantOf(player)
+    const enemyP = participantOf(enemy)
+    const runtime = world(combat, [playerP, enemyP])
 
-    // Player mang 2 debuff trước đòn chí mạng.
-    buffs.apply(trungDoc, enemy, player, registry)
-    buffs.apply(kiepThuong, enemy, player, registry)
-    expect(pool.getAllById('trung_doc')).toHaveLength(1)
-    expect(pool.getAllById('kiep_thuong')).toHaveLength(1)
+    const session = createSession(['bat_tu_the'])
+    session.surviveEffects = bindSurviveEffects(runtime, {
+      grantBuffId: 'tu_sinh_ngo',
+      cleanseDebuffs: true,
+    })
+    combat.setSurviveLethalSession(session)
+
+    // Player mang 2 debuff trước đòn chí mạng (ailment + debuff kinds —
+    // the cleanse lane filters on polarity, not literal kind).
+    runtime.applyBuff('trung_doc', playerP, enemyP)
+    runtime.applyBuff('kiep_thuong', playerP, enemyP)
+    expect(buffsOn(runtime, 'player', 'trung_doc')).toHaveLength(1)
+    expect(buffsOn(runtime, 'player', 'kiep_thuong')).toHaveLength(1)
 
     combat.applyDirectDamage(player, 9999, 'enemy_1')
 
     expect(player.alive).toBe(true)
     expect(player.currentHp).toBe(1)
 
-    // Debuff sạch, Tử Sinh Ngộ active (stacks 1, duration 10).
-    expect(pool.getAllById('trung_doc')).toHaveLength(0)
-    expect(pool.getAllById('kiep_thuong')).toHaveLength(0)
-    expect(pool.getFromSource('tu_sinh_ngo', 'player')).toBeDefined()
-    expect(pool.getFromSource('tu_sinh_ngo', 'player')!.stacks).toBe(1)
+    // Debuff sạch, Tử Sinh Ngộ active (stacks 1).
+    expect(buffsOn(runtime, 'player', 'trung_doc')).toHaveLength(0)
+    expect(buffsOn(runtime, 'player', 'kiep_thuong')).toHaveLength(0)
+    const granted = buffsOn(runtime, 'player', 'tu_sinh_ngo')
+    expect(granted).toHaveLength(1)
+    expect(granted[0]!.stacks).toBe(1)
+    expect(granted[0]!.sourceId).toBe('player')
   })
 
   it('session KHÔNG có surviveEffects (wiring cũ/Độ Kiếp) — guard vẫn cứu, không tẩy không áp gì', () => {
@@ -250,75 +333,72 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
 
   it('chết thật (hết lượt) — KHÔNG tẩy debuff (session có effects nhưng guard hết use)', () => {
     const combat = new CombatSystem(new EventBus())
-    const registry = makeRegistry()
-    const pool = new BuffPool()
-    const buffs = new BuffSystem(pool)
-
-    const session = createSession(['bat_tu_the'])
-    session.surviveEffects = { buffSystem: buffs, registry }
-    combat.setSurviveLethalSession(session)
 
     const player = createCombatant({ id: 'player', type: 'player', currentHp: 10, maxHp: 1000 })
     const enemy = createCombatant({ id: 'enemy_1', currentHp: 100, maxHp: 100 })
+    const playerP = participantOf(player)
+    const enemyP = participantOf(enemy)
+    const runtime = world(combat, [playerP, enemyP])
 
-    buffs.apply(trungDoc, enemy, player, registry)
+    const session = createSession(['bat_tu_the'])
+    session.surviveEffects = bindSurviveEffects(runtime)
+    combat.setSurviveLethalSession(session)
+
+    runtime.applyBuff('trung_doc', playerP, enemyP)
 
     // Lần 1: guard cứu (tẩy debuff).
     combat.applyDirectDamage(player, 9999, 'enemy_1')
     expect(player.alive).toBe(true)
 
     // Gây lại debuff + HP về 1 lần nữa → chết thật, debuff GIỮ NGUYÊN.
-    buffs.apply(trungDoc, enemy, player, registry)
+    runtime.applyBuff('trung_doc', playerP, enemyP)
     player.currentHp = 10
     combat.applyDirectDamage(player, 9999, 'enemy_1')
 
     expect(player.alive).toBe(false)
-    expect(pool.getAllById('trung_doc')).toHaveLength(1)
+    expect(buffsOn(runtime, 'player', 'trung_doc')).toHaveLength(1)
   })
 
   it('AR-18: applies custom grantBuffId and respects cleanseDebuffs policy', () => {
     const customBuff: BuffDefinition = {
       id: 'custom_phoenix_buff',
       name: 'Custom Phoenix',
+      kind: 'buff',
       polarity: 'buff',
-      duration: 5,
-      stackMode: 'refresh',
-      effects: [{ type: 'statModifier', stat: 'might', percent: 0.5 }],
+      instanceScope: 'per_source',
+      stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+      lifetime: { clock: 'holder_turns', duration: 5, scaling: 'fixed' },
+      statModifiers: [{ stat: 'might', percent: 0.5 }],
+      dispellable: false,
     }
-    const registry: BuffDefinitionCatalog = {
-      get: (id) => {
-        if (id === 'trung_doc') return trungDoc
-        if (id === 'custom_phoenix_buff') return customBuff
-        throw new Error(`unknown fixture buff id: ${id}`)
-      },
-    }
+    const trungDoc = LIVE_BUFFS.find((def) => def.id === 'trung_doc')!
+    const registry = makeTestBuffRegistry([customBuff, trungDoc])
     const combat = new CombatSystem(new EventBus())
-    const pool = new BuffPool()
-    const buffs = new BuffSystem(pool)
-
-    const session: SessionShape = {
-      ...createSession(['bat_tu_the']),
-      surviveEffects: {
-        buffSystem: buffs,
-        registry,
-        grantBuffId: 'custom_phoenix_buff',
-        cleanseDebuffs: false,
-      },
-    }
-    combat.setSurviveLethalSession(session)
 
     const player = createCombatant({ id: 'player', type: 'player', currentHp: 10, maxHp: 1000 })
     const enemy = createCombatant({ id: 'enemy_1', currentHp: 100, maxHp: 100 })
+    const playerP = participantOf(player)
+    const enemyP = participantOf(enemy)
+    const runtime = world(combat, [playerP, enemyP], registry)
 
-    buffs.apply(trungDoc, enemy, player, registry)
+    const session: SessionShape = {
+      ...createSession(['bat_tu_the']),
+      surviveEffects: bindSurviveEffects(runtime, {
+        grantBuffId: 'custom_phoenix_buff',
+        cleanseDebuffs: false,
+      }),
+    }
+    combat.setSurviveLethalSession(session)
+
+    runtime.applyBuff('trung_doc', playerP, enemyP)
 
     combat.applyDirectDamage(player, 9999, 'enemy_1')
 
     expect(player.alive).toBe(true)
     expect(player.currentHp).toBe(1)
     // cleanseDebuffs: false -> debuff must NOT be cleansed
-    expect(pool.getAllById('trung_doc')).toHaveLength(1)
+    expect(buffsOn(runtime, 'player', 'trung_doc')).toHaveLength(1)
     // custom buff applied instead of tu_sinh_ngo
-    expect(pool.getFromSource('custom_phoenix_buff', 'player')).toBeDefined()
+    expect(buffsOn(runtime, 'player', 'custom_phoenix_buff')).toHaveLength(1)
   })
 })

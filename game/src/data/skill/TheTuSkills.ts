@@ -1,5 +1,11 @@
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
-import type { BuffDefinition } from '../../core/buff/BuffTypes'
+import type { BuffDefinition } from '../../core/buff2/BuffDefinition'
+import type { BuffDefinitionId } from '../../core/battle/contracts/ids'
+import type {
+  ReactiveProcPayload,
+  ReactiveTriggerPayload,
+} from '../../core/proc/ProcCapabilities'
+import type { TheEconomyPayload } from '../../core/the-tu/TheTuCapabilities'
 import type { TheTuKitModifierValues } from '../../core/the-tu/TheTuKitModifiers'
 import type { TheTuAnMechanicModifierValues } from '../../core/the-tu/TheTuAnMechanicModifiers'
 import { THE_PROC_COST, THE_PROC_GAIN } from '../../core/the-tu/TheEconomy'
@@ -214,6 +220,21 @@ const ZERO_AN_MODS: TheTuAnMechanicModifierValues = {
   troAnyAction: 0,
 }
 
+// buff2 M4 -- node adjustments bake onto the clone's capability PAYLOADS
+// (the def-level `capabilities[]` grants) -- the retired `effects[]`
+// lane is gone; buff2 consumers read registry/clone payloads directly.
+// Payloads are validated at registry registration and these are clones
+// of registered defs, so the schema-type reads below are exact (same
+// narrowing the capability modules do internally for ActiveGrant).
+function defPayloads<T>(
+  definition: BuffDefinition | undefined,
+  type: string,
+): T[] {
+  return (definition?.capabilities ?? [])
+    .filter((grant) => grant.type === type)
+    .map((grant) => grant.payload as T)
+}
+
 export function buildTheTuAnKit(
   ownedRoots: readonly TheTuAnRootId[],
   mods: TheTuAnMechanicModifierValues = ZERO_AN_MODS,
@@ -233,35 +254,33 @@ export function buildTheTuAnKit(
 
   // Trunk economy — node bonuses bake onto the marker clone's authored
   // income fields; the engine reads these, never the constants.
-  const ungThe = kit.basic.grantsBuffsAtBuild.find((def) => def.id === 'ung_the')
-  for (const effect of ungThe?.effects ?? []) {
-    if (effect.type !== 'theEconomy') continue
-    effect.gainOnBasicHit = (effect.gainOnBasicHit ?? 0) + mods.basicGainBonus
-    effect.gainOnEvade = (effect.gainOnEvade ?? 0) + mods.evadeGainBonus
-    effect.gainOnHitTaken = (effect.gainOnHitTaken ?? 0) + mods.takenGainBonus
-    effect.gainPerRound = (effect.gainPerRound ?? 0) + mods.roundGainBonus
+  const ungThe = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'ung_the')
+  for (const payload of defPayloads<TheEconomyPayload>(ungThe, 'the_economy')) {
+    payload.gainOnBasicHit = (payload.gainOnBasicHit ?? 0) + mods.basicGainBonus
+    payload.gainOnEvade = (payload.gainOnEvade ?? 0) + mods.evadeGainBonus
+    payload.gainOnHitTaken = (payload.gainOnHitTaken ?? 0) + mods.takenGainBonus
+    payload.gainPerRound = (payload.gainPerRound ?? 0) + mods.roundGainBonus
   }
 
-  // Every reactiveProc gets the trunk cost/gain adjustments; branch
+  // Every reactive_proc gets the trunk cost/gain adjustments; branch
   // riders land on their own marker's fields below.
-  for (const marker of kit.basic.grantsBuffsAtBuild) {
-    for (const effect of marker.effects) {
-      if (effect.type !== 'reactiveProc') continue
+  for (const marker of kit.basic.grantsBuffsAtBuild ?? []) {
+    for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
       const troDelta = marker.id === 'tro_mon' ? mods.troCostDelta : 0
-      effect.theCost = Math.max(0, (effect.theCost ?? THE_PROC_COST) + mods.procCostDelta + troDelta)
+      payload.theCost = Math.max(0, (payload.theCost ?? THE_PROC_COST) + mods.procCostDelta + troDelta)
       const interceptBonus = marker.id === 'ho_mon' ? mods.interceptTheGainBonus : 0
-      effect.theGainOnSuccess =
-        (effect.theGainOnSuccess ?? THE_PROC_GAIN) + mods.procGainBonus + interceptBonus
+      payload.theGainOnSuccess =
+        (payload.theGainOnSuccess ?? THE_PROC_GAIN) + mods.procGainBonus + interceptBonus
     }
   }
 
   // Ho branch — intercept riders.
   if (mods.interceptWardRatio > 0) {
-    const marker = kit.basic.grantsBuffsAtBuild.find((def) => def.id === 'ho_mon')
-    for (const effect of marker?.effects ?? []) {
-      if (effect.type === 'reactiveProc' && effect.mechanic === 'intercept') {
-        effect.grantsWardToOriginalTarget = {
-          buffDefinitionId: 'ho_ve',
+    const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'ho_mon')
+    for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
+      if (payload.mechanic === 'intercept') {
+        payload.grantsWardToOriginalTarget = {
+          buffDefinitionId: 'ho_ve' as BuffDefinitionId,
           sourceMaxHpRatio: mods.interceptWardRatio,
         }
       }
@@ -270,10 +289,10 @@ export function buildTheTuAnKit(
 
   // Phan branch — evade-context heavy counter payload swap.
   if (mods.evadeCounterMultiplierBonus > 0 && ownedRoots.includes('phan_mon')) {
-    const marker = kit.basic.grantsBuffsAtBuild.find((def) => def.id === 'phan_mon')
-    for (const effect of marker?.effects ?? []) {
-      if (effect.type === 'reactiveProc' && effect.trigger === 'onEvade' && effect.queuedAction) {
-        effect.queuedAction = { ...effect.queuedAction, payloadSkillId: TRONG_PHAN_KICH.id }
+    const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'phan_mon')
+    for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
+      if (payload.trigger === 'onEvade' && payload.queuedAction) {
+        payload.queuedAction = { ...payload.queuedAction, payloadSkillId: TRONG_PHAN_KICH.id }
       }
     }
   }
@@ -312,14 +331,14 @@ export function buildTheTuAnKit(
 
   // Tro branch — marker riders (heal the triggering ally; non-damaging
   // window opt-in). The cost delta already landed in the shared loop.
-  const troMarker = kit.basic.grantsBuffsAtBuild.find((def) => def.id === 'tro_mon')
-  for (const effect of troMarker?.effects ?? []) {
-    if (effect.type !== 'reactiveProc' || effect.mechanic !== 'follow_up') continue
+  const troMarker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'tro_mon')
+  for (const payload of defPayloads<ReactiveProcPayload>(troMarker, 'reactive_proc')) {
+    if (payload.mechanic !== 'follow_up') continue
     if (mods.troHealTriggeringAllyRatio > 0) {
-      effect.healsTriggeringAllyMaxHpRatio = mods.troHealTriggeringAllyRatio
+      payload.healsTriggeringAllyMaxHpRatio = mods.troHealTriggeringAllyRatio
     }
     if (mods.troAnyAction > 0) {
-      effect.firesOnNonDamagingAction = true
+      payload.firesOnNonDamagingAction = true
     }
   }
 
@@ -378,10 +397,10 @@ export function buildTheTuKit(root: TheTuRootId, mods: TheTuKitModifierValues): 
     const emblemBuff: BuffDefinition | undefined = kit.special.grantsBuffsAtBuild?.find(
       (def) => def.id === 'phan_chinh',
     )
-    const reflect = emblemBuff?.effects.find(
-      (effect) => effect.type === 'reactiveTrigger' && effect.reflectsDamage !== undefined,
+    const reflect = defPayloads<ReactiveTriggerPayload>(emblemBuff, 'reactive_trigger').find(
+      (payload) => payload.reflectsDamage !== undefined,
     )
-    if (reflect?.type === 'reactiveTrigger' && reflect.reflectsDamage) {
+    if (reflect?.reflectsDamage) {
       reflect.reflectsDamage = {
         maxHpRatio: reflect.reflectsDamage.maxHpRatio + mods.reflectMaxHpRatioBonus,
         takenRatio: reflect.reflectsDamage.takenRatio + mods.reflectTakenRatioBonus,

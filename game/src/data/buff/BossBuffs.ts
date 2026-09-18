@@ -1,4 +1,7 @@
-import type { BuffDefinition } from '@/core/buff/BuffDefinition'
+import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
+
+// buff2 migration (M4): replace -> stacking.replace + replaceInstanceOnReapply;
+// Infinity -> lifetime permanent.
 
 export const BOSS_BUFFS: BuffDefinition[] = [
   // Phase A2 boss enrage content (2026-09-07) — turn-based twin of the
@@ -13,36 +16,45 @@ export const BOSS_BUFFS: BuffDefinition[] = [
     id: 'foundation_dragon_enrage',
     name: 'Đại Vương Bạo Nộ',
     description: 'Trận đấu kéo dài quá lâu — Giao Sủng điên cuồng.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: Infinity,
-    stackMode: 'replace',
-    effects: [
-      { type: 'statModifier', stat: 'might', percent: 0.5 },
-      { type: 'statModifier', stat: 'speed', percent: 0.2 },
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh', replaceInstanceOnReapply: true },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [
+      { stat: 'might', percent: 0.5 },
+      { stat: 'speed', percent: 0.2 },
     ],
+    dispellable: false,
   },
   {
     id: 'mortal_crocodile_enrage',
     name: 'Cự Ngạc Bạo Nộ',
     description: 'Trận đấu kéo dài quá lâu — Hung Cự Ngạc điên cuồng.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: Infinity,
-    stackMode: 'replace',
-    effects: [
-      { type: 'statModifier', stat: 'might', percent: 0.5 },
-      { type: 'statModifier', stat: 'speed', percent: 0.2 },
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh', replaceInstanceOnReapply: true },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [
+      { stat: 'might', percent: 0.5 },
+      { stat: 'speed', percent: 0.2 },
     ],
+    dispellable: false,
   },
   {
     id: 'qi_refining_serpent_enrage',
     name: 'Giao Xà Bạo Nộ',
     description: 'Trận đấu kéo dài quá lâu — Hung Giao Xà điên cuồng.',
+    kind: 'buff',
     polarity: 'buff',
-    duration: Infinity,
-    stackMode: 'replace',
-    effects: [
-      { type: 'statModifier', stat: 'might', percent: 0.5 },
-      { type: 'statModifier', stat: 'speed', percent: 0.2 },
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh', replaceInstanceOnReapply: true },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [
+      { stat: 'might', percent: 0.5 },
+      { stat: 'speed', percent: 0.2 },
     ],
+    dispellable: false,
   },
 ]

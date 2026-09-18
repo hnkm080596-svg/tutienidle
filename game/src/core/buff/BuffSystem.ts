@@ -356,7 +356,9 @@ export class BuffSystem {
             combatSystem.applyDotDamage({
               sourceId: buff.sourceId,
               source: resolveSource?.(buff.sourceId),
-              sourceBuffs: resolveSourceBuffs?.(buff.sourceId),
+              // buff2 M4 -- this legacy lane is unreachable (no live
+              // caller); dot_recovery grants exist only in the buff2
+              // capability model, so nothing is resolvable here.
               target,
               rawDamage,
               element: effect.element,

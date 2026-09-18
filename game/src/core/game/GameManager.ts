@@ -13,10 +13,10 @@ import type { CombatEntity } from '../combat/CombatEntity'
 
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
-import { BuffPool } from '../buff/BuffPool'
-import { BuffSystem } from '../buff/BuffSystem'
-import { BuffRegistry } from '../buff/BuffRegistry'
-import type { BuffDefinition } from '../buff/BuffDefinition'
+import { BuffPersistence } from '../buff2/BuffPersistence'
+import { createElementalStateRegistry } from '../reaction/ElementalStateRegistry'
+import { FunctionCombatRng } from '../battle/runtime/rng/FunctionCombatRng'
+import type { BuffDefinitionId } from '../battle/contracts/ids'
 
 import { NodeRegistry } from '../progression/NodeRegistry'
 
@@ -154,6 +154,7 @@ import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 
 import type { Stats } from '../stats/StatBlock'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
+import type { CombatRng } from '../battle/contracts/rng'
 import type {
   ClockSource,
   CombatClockState,
@@ -162,7 +163,7 @@ import type {
 import type { TokenState } from '../battle/turn/TurnToken'
 import type { ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
-import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
+import { BUFF_REGISTRY, PERSISTENT_BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 
 /**
@@ -219,9 +220,34 @@ export class GameManager {
   // SkillEffectResolver). The damage contracts stay live (turn engine
   // uses scaleActionDamage/ActionDamageInfo) - only these orphaned
   // fields are gone.
-  readonly buffPool = new BuffPool()
-  readonly buffSystem = new BuffSystem(this.buffPool)
-  readonly buffRegistry = new BuffRegistry()
+  // buff2 M4 -- the persistent (out-of-battle) buff pool: ONE authority
+  // scoped to the 'player' subject (Kiep Thuong-family debuffs). No
+  // scheduler exists out of battle, so the lane uses the local
+  // BuffPersistence driver (its registry carries only non-periodic
+  // defs). Stats resolve through the ambient player path lazily (the
+  // same precedence applyPersistentBuff uses); the sink is a no-op --
+  // persistent events aren't traced.
+  readonly persistentBuffs = new BuffPersistence({
+    ownerId: 'player',
+    registry: PERSISTENT_BUFF_REGISTRY,
+    stats: {
+      getStats: () => {
+        const player = this.activePlayer
+        return player === undefined ? undefined : this.resolveAmbientPlayerStats(player)
+      },
+    },
+    entities: { isAlive: () => true },
+    snapshots: { capture: () => ({}) },
+    elemental: createElementalStateRegistry({
+      fire: 'hoa_an' as BuffDefinitionId,
+      water: 'han_tuc' as BuffDefinitionId,
+      wood: 'doc_can' as BuffDefinitionId,
+      metal: 'liet_thuong' as BuffDefinitionId,
+      earth: 'tran_an' as BuffDefinitionId,
+    }),
+    rng: new FunctionCombatRng(() => Math.random()),
+    sink: { emit: () => {} },
+  })
 
   readonly skillManager = new SkillManager()
   readonly skillSystem = new SkillSystem(this.skillManager, (skill, levelsGained) => {
@@ -249,26 +275,12 @@ export class GameManager {
     // the turn-based one — the legacy battleSystem does not run during
     // real gameplay, so this previously never fired (silent gap, see
     // docs/superpowers/specs/2026-09-07-phase-a2-buff-content-wiring-design.md).
+    // buff2 M4 -- the applier delegates to the ops seam: the battle's
+    // buff authority applies through an authored op (mid-settlement
+    // fires ride the in-flight drain), and the ops layer owns the
+    // unknown-id skip + quiescent-settle decision.
     (buffId) => {
-      const player = this.turnBattleOps.getTurnBattle()?.players[0]
-
-      if (!player) {
-        return
-      }
-
-      let definition: BuffDefinition | undefined
-
-      try {
-        definition = BUFF_REGISTRY.get(buffId)
-      } catch {
-        definition = undefined
-      }
-
-      if (!definition) {
-        return
-      }
-
-      new BuffSystem(player.buffs).apply(definition, player.entity, player.entity, BUFF_REGISTRY)
+      this.turnBattleOps.applyBuffToPlayer(buffId)
     },
     // hpReader — player entity's HP ratio in the current turn-based
     // battle; undefined outside battle (passiveCondition treats this as
@@ -489,7 +501,7 @@ export class GameManager {
     // chung (registerEnemyTemplates dï¿½ dang kï¿½ Huy?t Mï¿½ng qua ENEMIES).
     this.catalogOps = new GameManagerCatalogOps({
       materialRegistry: this.materialRegistry,
-      buffRegistry: this.buffRegistry,
+      buffRegistry: BUFF_REGISTRY,
       buildingRegistry: this.buildingRegistry,
       questRegistry: this.questRegistry,
       alchemyRecipesById: this.alchemyRecipesById,
@@ -548,17 +560,15 @@ export class GameManager {
     })
 
     this.effectOps = new GameManagerPersistentEffectOps({
-      buffSystem: this.buffSystem,
-      buffRegistry: this.buffRegistry,
+      persistentBuffs: this.persistentBuffs,
       skillSystem: this.skillSystem,
       techniqueManager: this.techniqueManager,
       nodeRegistry: this.nodeRegistry,
       equipmentBag: this.equipmentBag,
       materialRegistry: this.materialRegistry,
       materialBag: this.materialBag,
-      // Deferred closures - turnBattleOps/activePlayer assigned later.
+      // Deferred closure - activePlayer assigned later.
       getActivePlayer: () => this.activePlayer,
-      getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
     })
 
     this.economyOps = new GameManagerEconomyOps({
@@ -790,7 +800,7 @@ export class GameManager {
       alchemySystem: this.alchemySystem,
       pillBag: this.pillBag,
       pillRegistry: this.pillRegistry,
-      buffSystem: this.buffSystem,
+      persistentBuffs: this.persistentBuffs,
       passiveSystem: this.passiveSystem,
       turnBattleOps: this.turnBattleOps,
       tribulationDirector: this.tribulationDirector,
@@ -860,6 +870,12 @@ export class GameManager {
     return this.turnBattleOps.getTurnBattle()
   }
 
+  // buff2 M4 -- live buff snapshots for the combat UI (turn-order strip
+  // badges); delegates to the ops read seam ([] outside battle).
+  getBattleBuffs(entityId: string) {
+    return this.turnBattleOps.getBattleBuffs(entityId)
+  }
+
   /** Stage that launched the current turn battle (null for non-stage battles). */
   getActiveTurnBattleStage(): Stage | null {
     return this.turnBattleOps.getActiveTurnBattleStage()
@@ -898,10 +914,11 @@ export class GameManager {
 
   /**
    * Mission C Task 8 — seed every battle cycle's RNG. The factory runs
-   * once per beginBattleCycle; pass `() => mulberry32(seed)` in tests for
-   * deterministic combat. `undefined` restores Math.random.
+   * once per beginBattleCycle; pass `() => new SeededCombatRng(seed)`
+   * in tests for deterministic combat (combat-contract M4: the minted
+   * unit is a typed CombatRng). `undefined` restores Math.random.
    */
-  setBattleRngFactory(factory: (() => () => number) | undefined): void {
+  setBattleRngFactory(factory: (() => CombatRng) | undefined): void {
     this.turnBattleOps.setBattleRngFactory(factory)
   }
 

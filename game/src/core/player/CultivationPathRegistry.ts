@@ -17,6 +17,7 @@ import type { PlayerData } from './Player'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { SurviveLethalSource } from '../combat/CombatSystem'
+import type { BuffDefinitionId } from '../battle/contracts/ids'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { ElementType } from '../element/ElementType'
 import type { CultivationPathRuntime, CultivationPathRuntimeDeps } from './CultivationPathRuntime'
@@ -470,7 +471,7 @@ function createTheTuHienRuntime(deps: CultivationPathRuntimeDeps): CultivationPa
       const kit = resolveTheTuKit(deps, player)
       return kit ? { special: kit.special, ultimate: kit.ultimate } : {}
     },
-    buildSurviveSources(player: PlayerData, participant: TurnBattleParticipant): SurviveLethalSource[] {
+    buildSurviveSources(player: PlayerData, participant: TurnBattleParticipant, hasActiveBuff: (definitionId: BuffDefinitionId) => boolean): SurviveLethalSource[] {
       // The Tu Reimagined (plan Task 9, D9) — Cuong Chien only: the
       // survival source reads the participant's live ultimate slot and
       // buff pool; node-resolved duration comes off the baked kit clone.
@@ -481,7 +482,7 @@ function createTheTuHienRuntime(deps: CultivationPathRuntimeDeps): CultivationPa
       return [
         new TheTuBatTuSurvival({
           ultimateSlot: () => participant.ultimate,
-          buffs: participant.buffs,
+          hasActiveBuff,
         }),
       ]
     },

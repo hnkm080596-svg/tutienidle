@@ -1,4 +1,4 @@
-import type { BuffDefinition } from '../buff/BuffDefinition'
+import type { BuffDefinition } from '../buff2/BuffDefinition'
 import type { StatType } from '../stats/StatTypes'
 
 export type PillEffectType =

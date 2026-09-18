@@ -7,12 +7,15 @@ import { collectTheTuKitModifiers } from '../../core/the-tu/TheTuKitModifiers'
 import { buildTheTuKit } from '../skill/TheTuSkills'
 import { BAT_TU_BA_THE, BAT_TU_BA_THE_TURNS, CUONG_QUYEN, CUONG_QUYEN_MISSING_HP_PER_PERCENT, SON_NHAC_WARD_RATIO } from '../skill/TheTuSkills'
 import { BAT_TU_BA_THE_BUFF, KHIEM_KHICH_DEBUFF, KHIEM_KHICH_TURNS } from '../buff/TheTuBuffs'
-import { BuffPool } from '../../core/buff/BuffPool'
-import { BuffSystem } from '../../core/buff/BuffSystem'
 import type { CombatEntity } from '../../core/combat/CombatEntity'
+import type { CombatEntityId } from '../../core/battle/contracts/ids'
+import type { TurnBattleParticipant } from '../../core/battle/turn/TurnBattleSystem'
+import { CombatSystem } from '../../core/combat/CombatSystem'
+import { EventBus } from '../../core/events/EventBus'
 import { createBaseStats } from '../../core/stats/StatBlock'
 import { STAT_DOMAIN } from '../../core/stats/StatDomain'
 import type { StatType } from '../../core/stats/StatTypes'
+import { makeTestBuffRegistry, makeTurnRuntime } from '../../core/battle/turn/testing/TurnRuntimeFixtures'
 
 function fixtureCombatant(id: string, statOverrides: Parameters<typeof createBaseStats>[0]): CombatEntity {
   const stats = createBaseStats(statOverrides)
@@ -153,16 +156,33 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
     expect(BAT_TU_BA_THE.appliesBuffs?.[0]?.durationOverride).toBeUndefined()
   })
 
-  it('fixed_holder_turns + node override: exactly 4 holder-turns regardless of ailment stats', () => {
-    const pool = new BuffPool()
+  it('fixed duration scaling + node override: exactly 4 holder-turns regardless of ailment stats', () => {
     const source = fixtureCombatant('src', { ailmentDurationPercent: 1 })
     const target = fixtureCombatant('tgt', { ailmentResistPercent: 0.75 })
-    const registry = { get: (id: string) => (id === 'bat_tu_ba_the' ? BAT_TU_BA_THE_BUFF : undefined) as never }
+    const sourceP: TurnBattleParticipant = {
+      id: 'src', entity: source, speed: 0, priority: 0, actionGauge: 0,
+      alive: true, consecutiveHardCcTurns: 0,
+    }
+    const targetP: TurnBattleParticipant = {
+      id: 'tgt', entity: target, speed: 0, priority: 0, actionGauge: 0,
+      alive: true, consecutiveHardCcTurns: 0,
+    }
+    const registry = makeTestBuffRegistry([BAT_TU_BA_THE_BUFF])
+    const runtime = makeTurnRuntime({
+      registry,
+      participants: () => [sourceP, targetP],
+      combatSystem: new CombatSystem(new EventBus()),
+    })
 
-    new BuffSystem(pool).apply(BAT_TU_BA_THE_BUFF, source, target, registry, BAT_TU_BA_THE_TURNS + 1)
+    runtime.applyBuff('bat_tu_ba_the', targetP, sourceP, {
+      durationOverride: BAT_TU_BA_THE_TURNS + 1,
+    })
 
-    expect(BAT_TU_BA_THE_BUFF.durationPolicy).toBe('fixed_holder_turns')
-    expect(pool.getAllById('bat_tu_ba_the')[0]!.remainingTurns).toBe(4)
+    expect(BAT_TU_BA_THE_BUFF.lifetime.scaling).toBe('fixed')
+    const instance = runtime.buffs
+      .getForTarget(target.id as CombatEntityId)
+      .find((entry) => entry.definitionId === 'bat_tu_ba_the')
+    expect(instance?.remaining).toBe(4)
   })
 
   it('taunt duration node delivers +1 enemy turns through the same override channel', () => {
@@ -178,7 +198,7 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
 
     expect(taunt?.durationOverride).toBe(KHIEM_KHICH_TURNS + 1)
     // Khiem Khich stays ailment_scaled — enemy resist may shorten Taunt.
-    expect(KHIEM_KHICH_DEBUFF.durationPolicy ?? 'ailment_scaled').toBe('ailment_scaled')
+    expect(KHIEM_KHICH_DEBUFF.lifetime.scaling).toBe('ailment_scaled')
   })
 
   it('son_nhac ward ratio node feeds the externalWardGrant channel', () => {

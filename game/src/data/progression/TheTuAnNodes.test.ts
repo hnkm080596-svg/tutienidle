@@ -7,7 +7,24 @@ import { collectTheTuAnMechanicModifiers } from '../../core/the-tu/TheTuAnMechan
 import { buildTheTuAnKit, PHAN_KICH } from '../skill/TheTuSkills'
 import { MAX_THE } from '../../core/combat/CombatTypes'
 import { THE_PROC_COST, THE_PROC_GAIN } from '../../core/the-tu/TheEconomy'
+import type { TheEconomyPayload } from '../../core/the-tu/TheTuCapabilities'
+import type { ReactiveProcPayload } from '../../core/proc/ProcCapabilities'
+import type { BuffDefinition } from '../../core/buff2/BuffDefinition'
 import type { StatType } from '../../core/stats/StatTypes'
+
+// buff2 M4 — kit clones bake node modifiers into capability payloads
+// (the retired effects[] channel). These helpers read the typed payloads
+// straight off the clone defs.
+function procPayloads(def: BuffDefinition): ReactiveProcPayload[] {
+  return (def.capabilities ?? [])
+    .filter((capability) => capability.type === 'reactive_proc')
+    .map((capability) => capability.payload as ReactiveProcPayload)
+}
+
+function economyPayload(def: BuffDefinition): TheEconomyPayload | undefined {
+  const grant = (def.capabilities ?? []).find((capability) => capability.type === 'the_economy')
+  return grant?.payload as TheEconomyPayload | undefined
+}
 
 // The Tu Reimagined (plan Task 20, spec section 8.2) — the_tu_an tree
 // data: non-mutex roots (T9), trunk economy nodes feeding
@@ -155,8 +172,7 @@ describe('buildTheTuAnKit modifier baking (participant-local clones)', () => {
   it('bakes economy channels into the ung_the marker theEconomy fields', () => {
     const kit = buildTheTuAnKit([], fullMods)
     const ungThe = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ung_the')!
-    const economy = ungThe.effects.find((effect) => effect.type === 'theEconomy')!
-    expect(economy).toMatchObject({
+    expect(economyPayload(ungThe)).toMatchObject({
       gainOnBasicHit: 6,
       gainOnEvade: 10,
       gainOnHitTaken: 7,
@@ -170,46 +186,33 @@ describe('buildTheTuAnKit modifier baking (participant-local clones)', () => {
       kit.basic.grantsBuffsAtBuild!.map((def) => [def.id, def]),
     )
 
-    for (const effect of markers['ho_mon']!.effects) {
-      if (effect.type === 'reactiveProc') {
-        expect(effect.theCost).toBe(THE_PROC_COST - 3)
-        expect(effect.theGainOnSuccess).toBe(THE_PROC_GAIN + 4 + 8)
-      }
+    for (const effect of procPayloads(markers['ho_mon']!)) {
+      expect(effect.theCost).toBe(THE_PROC_COST - 3)
+      expect(effect.theGainOnSuccess).toBe(THE_PROC_GAIN + 4 + 8)
     }
-    for (const effect of markers['phan_mon']!.effects) {
-      if (effect.type === 'reactiveProc') {
-        expect(effect.theCost).toBe(THE_PROC_COST - 3)
-        expect(effect.theGainOnSuccess).toBe(THE_PROC_GAIN + 4)
-      }
+    for (const effect of procPayloads(markers['phan_mon']!)) {
+      expect(effect.theCost).toBe(THE_PROC_COST - 3)
+      expect(effect.theGainOnSuccess).toBe(THE_PROC_GAIN + 4)
     }
-    for (const effect of markers['tro_mon']!.effects) {
-      if (effect.type === 'reactiveProc') {
-        expect(effect.theCost).toBe(THE_PROC_COST - 3 - 5)
-      }
+    for (const effect of procPayloads(markers['tro_mon']!)) {
+      expect(effect.theCost).toBe(THE_PROC_COST - 3 - 5)
     }
   })
 
   it('bakes the intercept-ward rider onto the ho_mon marker', () => {
     const kit = buildTheTuAnKit(['ho_mon'], fullMods)
     const marker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ho_mon')!
-    const effect = marker.effects.find((candidate) => candidate.type === 'reactiveProc')!
-    if (effect.type !== 'reactiveProc') throw new Error('unreachable')
+    const effect = procPayloads(marker)[0]!
     expect(effect.grantsWardToOriginalTarget).toEqual({ buffDefinitionId: 'ho_ve', sourceMaxHpRatio: 0.15 })
   })
 
   it('bakes the evade-context heavy counter: onEvade swaps to trong_phan_kich payload clone', () => {
     const kit = buildTheTuAnKit(['phan_mon'], fullMods)
     const marker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'phan_mon')!
-    const evadeEffect = marker.effects.find(
-      (candidate) => candidate.type === 'reactiveProc' && candidate.trigger === 'onEvade',
-    )!
-    if (evadeEffect.type !== 'reactiveProc') throw new Error('unreachable')
+    const evadeEffect = procPayloads(marker).find((candidate) => candidate.trigger === 'onEvade')!
     expect(evadeEffect.queuedAction?.payloadSkillId).toBe('trong_phan_kich')
 
-    const takenEffect = marker.effects.find(
-      (candidate) => candidate.type === 'reactiveProc' && candidate.trigger === 'onImpactLanded',
-    )!
-    if (takenEffect.type !== 'reactiveProc') throw new Error('unreachable')
+    const takenEffect = procPayloads(marker).find((candidate) => candidate.trigger === 'onImpactLanded')!
     expect(takenEffect.queuedAction?.payloadSkillId).toBe('phan_kich')
 
     const heavy = kit.reactivePayloads['trong_phan_kich']
@@ -227,8 +230,7 @@ describe('buildTheTuAnKit modifier baking (participant-local clones)', () => {
   it('bakes the tro riders: triggering-ally heal + non-damaging window', () => {
     const kit = buildTheTuAnKit(['tro_mon'], fullMods)
     const marker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'tro_mon')!
-    const effect = marker.effects.find((candidate) => candidate.type === 'reactiveProc')!
-    if (effect.type !== 'reactiveProc') throw new Error('unreachable')
+    const effect = procPayloads(marker)[0]!
     expect(effect.healsTriggeringAllyMaxHpRatio).toBe(0.15)
     expect(effect.firesOnNonDamagingAction).toBe(true)
   })
@@ -253,16 +255,11 @@ describe('buildTheTuAnKit modifier baking (participant-local clones)', () => {
     const kit = buildTheTuAnKit(['ho_mon', 'phan_mon', 'tro_mon'], zero)
 
     const hoMarker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ho_mon')!
-    const hoEffect = hoMarker.effects.find((candidate) => candidate.type === 'reactiveProc')!
-    if (hoEffect.type !== 'reactiveProc') throw new Error('unreachable')
-    expect(hoEffect.grantsWardToOriginalTarget).toBeUndefined()
+    expect(procPayloads(hoMarker)[0]!.grantsWardToOriginalTarget).toBeUndefined()
 
     const phanMarker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'phan_mon')!
-    const evadeEffect = phanMarker.effects.find(
-      (candidate) => candidate.type === 'reactiveProc' && candidate.trigger === 'onEvade',
-    )!
-    if (evadeEffect.type !== 'reactiveProc') throw new Error('unreachable')
-    expect(evadeEffect.queuedAction?.payloadSkillId).toBe('phan_kich')
+    const evadeEffect = procPayloads(phanMarker).find((candidate) => candidate.trigger === 'onEvade')
+    expect(evadeEffect?.queuedAction?.payloadSkillId).toBe('phan_kich')
     expect(kit.reactivePayloads['trong_phan_kich']).toBeUndefined()
     expect(kit.reactivePayloads['phan_kich']?.appliesAilments).toBeUndefined()
   })

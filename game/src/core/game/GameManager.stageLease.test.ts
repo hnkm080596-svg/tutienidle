@@ -1,10 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, type Mock } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { EventBus } from '../events/EventBus'
 import { GameManager } from './GameManager'
 import { StageWaveSystem } from './StageWaveSystem'
 import { StageManager } from '../stage/StageManager'
 import { StageSystem } from '../stage/StageSystem'
+import { FunctionCombatRng } from '../battle/runtime/rng/FunctionCombatRng'
 import { EnemySystem } from '../enemy/EnemySystem'
 import { EnemyManager } from '../enemy/EnemyManager'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
@@ -133,11 +134,11 @@ describe('C2/C7 - refused startStage is a no-op on the running battle AND the RN
     const stageB = stageFixture('rng_stage_b', DUMMY.id)
     gameManager.catalogOps.registerStages([stageA, stageB])
 
-    const streams: Array<() => number> = []
+    const streams: Array<Mock<() => number>> = []
     gameManager.turnBattleOps.setBattleRngFactory(() => {
       const stream = vi.fn(() => 0.5)
       streams.push(stream)
-      return stream
+      return new FunctionCombatRng(stream)
     })
     const setSource = vi.spyOn(gameManager.combatSystem, 'setRandomSource')
 
@@ -148,10 +149,14 @@ describe('C2/C7 - refused startStage is a no-op on the running battle AND the RN
     // Refused: stage B cannot acquire the slot stage A holds.
     expect(gameManager.turnBattleOps.startStage(player, stageB, false)).toBe(false)
 
-    // The running battle's RNG authority is untouched - no install, same
-    // stream still live.
+    // The running battle's RNG authority is untouched - no install, and
+    // the installed source still forwards to the live stream (M4: the
+    // source is a () => rng.roll() wrapper over the CombatRng).
     expect(setSource.mock.calls.length).toBe(installsAfterA)
-    expect(setSource.mock.calls.at(-1)?.[0]).toBe(liveStream)
+    const installed = setSource.mock.calls.at(-1)?.[0]
+    const liveCallsBefore = liveStream.mock.calls.length
+    installed?.()
+    expect(liveStream.mock.calls.length).toBe(liveCallsBefore + 1)
     // C7: the refusal did not even MINT a candidate - the factory stream
     // sequence is identical to a run with no failed start.
     expect(streams).toHaveLength(1)

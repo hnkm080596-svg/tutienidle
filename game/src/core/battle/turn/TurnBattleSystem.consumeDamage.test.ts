@@ -6,10 +6,9 @@ import { EventBus } from '../../events/EventBus'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import type { BuffDefinition } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
+import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 // Phase A3 (2026-09-07) — consume-for-damage skill effects (Pháp Tu
 // Detonate / Thổ Tu ward burst), ported from legacy SkillEffect's
@@ -54,17 +53,37 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
-const REGISTRY = {
-  get: (id: string): BuffDefinition => {
-    if (id === 'qa_dot') {
-      return { id, name: 'QA Dot', polarity: 'debuff', duration: 5, maxStacks: 5, stackMode: 'stack', effects: [{ type: 'dot', dpsRatio: 0.1, element: 'fire' }] }
-    }
-    throw new Error(`unknown fixture buff id: ${id}`)
-  },
+const QA_DOT: BuffDefinition = {
+  id: 'qa_dot',
+  name: 'QA Dot',
+  kind: 'debuff',
+  polarity: 'debuff',
+  element: 'fire',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 5, scaling: 'fixed' },
+  periodic: [
+    {
+      id: 'qa_dot.tick',
+      type: 'damage',
+      element: 'fire',
+      damageProfile: 'legacy_dot',
+      coefficient: 0.1,
+      scaling: 'dynamic',
+      timing: 'holder_turn_end',
+      stackScaling: 'multiply',
+      canCrit: false,
+      canMiss: false,
+      hitCount: 1,
+    },
+  ],
+  dispellable: true,
 }
+
+const REGISTRY = makeTestBuffRegistry([QA_DOT])
 
 const BASIC: TurnSkillDefinition = {
   id: 'qa_basic',
@@ -92,7 +111,10 @@ const WARD_BURST: TurnSkillDefinition = {
   damagePerWardPoint: 5,
 }
 
-function battleWith(actorSkill: TurnSkillDefinition, seedTarget: (p: TurnBattleParticipant) => void) {
+function battleWith(
+  actorSkill: TurnSkillDefinition,
+  seedTarget: (p: TurnBattleParticipant, runtime: TurnRuntimeFixture, source: TurnBattleParticipant) => void,
+) {
   const player = createCombatant('player')
   const enemyEntity = createCombatant('enemy')
   enemyEntity.type = 'enemy'
@@ -104,7 +126,15 @@ function battleWith(actorSkill: TurnSkillDefinition, seedTarget: (p: TurnBattleP
   const enemyParticipant = makeParticipant('enemy', enemyEntity, 1, 1)
   enemyParticipant.basic = BASIC
 
-  seedTarget(enemyParticipant)
+  const eventBus = new EventBus()
+  const combat = new CombatSystem(eventBus)
+  const runtime = makeTurnRuntime({
+    registry: REGISTRY,
+    participants: () => [playerParticipant, enemyParticipant],
+    combatSystem: combat,
+  })
+
+  seedTarget(enemyParticipant, runtime, playerParticipant)
 
   const battle: TurnBattle = {
     players: [playerParticipant],
@@ -112,23 +142,16 @@ function battleWith(actorSkill: TurnSkillDefinition, seedTarget: (p: TurnBattleP
     state: 'fighting',
   }
 
-  const eventBus = new EventBus()
-  const system = new TurnBattleSystem(new CombatSystem(eventBus), 100, {
-    get: (id: string) => REGISTRY.get(id),
-  })
+  const system = new TurnBattleSystem(combat, 100, REGISTRY, undefined, runtime)
 
-  return { battle, playerParticipant, enemyParticipant, system, eventBus }
+  return { battle, playerParticipant, enemyParticipant, system, eventBus, runtime }
 }
 
 describe('consume-for-damage skill effects (Phase A3)', () => {
   it('consumesAilmentId: applies stacks × damagePerStack as true damage, then clears the ailment', () => {
-    const { battle, enemyParticipant, system } = battleWith(DETONATE, (target) => {
-      const buffs = new BuffSystem(target.buffs)
-      const source = createCombatant('player')
+    const { battle, enemyParticipant, system, runtime } = battleWith(DETONATE, (target, rt, source) => {
       // 3 stacks of the ailment on the target.
-      buffs.apply(REGISTRY.get('qa_dot'), source, target.entity, REGISTRY)
-      buffs.apply(REGISTRY.get('qa_dot'), source, target.entity, REGISTRY)
-      buffs.apply(REGISTRY.get('qa_dot'), source, target.entity, REGISTRY)
+      rt.applyBuff('qa_dot', target, source, { stacks: 3 })
     })
 
     const hpBefore = enemyParticipant.entity.currentHp
@@ -139,7 +162,9 @@ describe('consume-for-damage skill effects (Phase A3)', () => {
     // resolveActionHit floors base damage at 1 even with multiplier 0, so the total drop is 150 bonus + 1 base.
     expect(hpBefore - enemyParticipant.entity.currentHp).toBe(151)
     // The ailment is fully cleared afterward.
-    expect(enemyParticipant.buffs.getAllById('qa_dot')).toHaveLength(0)
+    expect(
+      runtime.buffs.getForTarget(enemyParticipant.entity.id).filter((i) => i.definitionId === 'qa_dot'),
+    ).toHaveLength(0)
   })
 
   it('consumesWardForDamage: applies currentWard × damagePerWardPoint as true damage, then zeroes ward', () => {
@@ -194,12 +219,8 @@ describe('consume-for-damage skill effects (Phase A3)', () => {
     })
 
     it('lethal ailment-consumption bonus completes death through the same authority', () => {
-      const { battle, enemyParticipant, system, eventBus } = battleWith(DETONATE, (target) => {
-        const buffs = new BuffSystem(target.buffs)
-        const source = createCombatant('player')
-        buffs.apply(REGISTRY.get('qa_dot'), source, target.entity, REGISTRY)
-        buffs.apply(REGISTRY.get('qa_dot'), source, target.entity, REGISTRY)
-        buffs.apply(REGISTRY.get('qa_dot'), source, target.entity, REGISTRY)
+      const { battle, enemyParticipant, system, eventBus } = battleWith(DETONATE, (target, rt, source) => {
+        rt.applyBuff('qa_dot', target, source, { stacks: 3 })
       })
 
       // 3 stacks × 50 = 150 bonus damage against 101 remaining HP.

@@ -5,7 +5,6 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { CombatEntity } from '../../combat/CombatEntity'
-import { BuffPool } from '../../buff/BuffPool'
 
 // Slice 7 extension (Completion Task 11) — turn-order preview: trả N actor
 // kế tiếp theo gauge-fill order mà KHÔNG mutate battle thật (so gauge
@@ -30,7 +29,7 @@ function makeParticipant(
 ): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
+    consecutiveHardCcTurns: 0,
     basic: { id: `${id}_basic`, cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
   }
 }

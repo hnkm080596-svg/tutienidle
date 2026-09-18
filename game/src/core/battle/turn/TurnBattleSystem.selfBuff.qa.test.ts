@@ -3,32 +3,72 @@ import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '.
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { TurnSkillDefinition } from './TurnSkillAction'
+import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 // AR-03 QA Probes:
 // 1. Pure self-buff execution: targetScope: 'self', damage undefined.
 //    Enemy takes 0 damage; actor receives buff; targetIds contains actor ID.
 // 2. Leech healing: healPercentOfDamage on hit heals source entity via vitals.
+// M4: instances live in the shared runtime store; applies ride apply_buff ops.
 
 const DIA_TRU_BUFF: BuffDefinition = {
   id: 'dia_tru',
   name: 'Địa Trụ',
+  kind: 'buff',
   polarity: 'buff',
-  duration: 3,
-  stackMode: 'refresh',
-  effects: [{ type: 'statModifier', stat: 'wardMax', flat: 100 }],
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' },
+  statModifiers: [{ stat: 'wardMax', flat: 100 }],
+  dispellable: true,
 }
 
-const REGISTRY: BuffDefinitionCatalog = {
-  get: (id: string): BuffDefinition => {
-    if (id === DIA_TRU_BUFF.id) return DIA_TRU_BUFF
-    throw new Error(`unknown buff id: ${id}`)
-  },
+const POISON_BUFF: BuffDefinition = {
+  id: 'trung_doc',
+  name: 'Trúng Độc',
+  kind: 'ailment',
+  element: 'wood',
+  polarity: 'debuff',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 3, scaling: 'ailment_scaled' },
+  application: { resistance: 'ailment' },
+  periodic: [
+    {
+      id: 'trung_doc.tick',
+      type: 'damage',
+      element: 'wood',
+      damageProfile: 'legacy_dot',
+      coefficient: 1,
+      scaling: 'dynamic',
+      timing: 'holder_turn_end',
+      stackScaling: 'multiply',
+      canCrit: false,
+      canMiss: false,
+      hitCount: 1,
+    },
+  ],
+  dispellable: true,
 }
+
+const ROOT_BUFF: BuffDefinition = {
+  id: 'troi_chan',
+  name: 'Trói Chân',
+  kind: 'ailment',
+  element: 'earth',
+  polarity: 'debuff',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 2, scaling: 'ailment_scaled' },
+  application: { resistance: 'ailment' },
+  controls: [{ type: 'root' }],
+  dispellable: true,
+}
+
+const REGISTRY = makeTestBuffRegistry([DIA_TRU_BUFF, POISON_BUFF, ROOT_BUFF])
 
 function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ might: 100, ...overrides.stats })
@@ -72,16 +112,25 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new BuffPool(),
+
     consecutiveHardCcTurns: 0,
   }
+}
+
+function buffsOf(runtime: TurnRuntimeFixture, participant: TurnBattleParticipant, id: string) {
+  return runtime.buffs
+    .getForTarget(participant.entity.id)
+    .filter((instance) => instance.definitionId === id)
+}
+
+function stacksOf(runtime: TurnRuntimeFixture, participant: TurnBattleParticipant, id: string) {
+  return buffsOf(runtime, participant, id).reduce((total, instance) => total + instance.stacks, 0)
 }
 
 describe('AR-03: Self-buff execution and leech healing', () => {
   it('executes a pure self-buff skill without dealing damage to enemy', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
     const player = makeEntity('player')
     const enemy = makeEntity('enemy', { currentHp: 10_000, maxHp: 10_000 })
@@ -89,6 +138,12 @@ describe('AR-03: Self-buff execution and leech healing', () => {
 
     const playerP = makeParticipant('player', player, 0)
     const enemyP = makeParticipant('enemy', enemy, 1)
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [playerP, enemyP],
+      combatSystem: combat,
+    })
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
     // Pure self buff skill
     const selfBuffSkill: TurnSkillDefinition = {
@@ -117,7 +172,7 @@ describe('AR-03: Self-buff execution and leech healing', () => {
     expect(damageEvents).toHaveLength(0)
 
     // 2. Player receives the dia_tru buff.
-    expect(playerP.buffs.getAllById('dia_tru')).toHaveLength(1)
+    expect(buffsOf(runtime, playerP, 'dia_tru')).toHaveLength(1)
 
     // 3. Step result reflects actor as target.
     expect(stepResult.targetIds).toContain('player')
@@ -126,7 +181,6 @@ describe('AR-03: Self-buff execution and leech healing', () => {
   it('heals actor for healPercentOfDamage on landed hit', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
-    const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
     // Player with missing HP
     const player = makeEntity('player', { currentHp: 500, maxHp: 1000 })
@@ -135,6 +189,12 @@ describe('AR-03: Self-buff execution and leech healing', () => {
 
     const playerP = makeParticipant('player', player, 0)
     const enemyP = makeParticipant('enemy', enemy, 1)
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [playerP, enemyP],
+      combatSystem: combat,
+    })
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
     // Wood ultimate style: deals damage + 40% leech
     const leechSkill: TurnSkillDefinition = {
@@ -175,40 +235,18 @@ describe('AR-03: Self-buff execution and leech healing', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
 
-    const POISON_BUFF: BuffDefinition = {
-      id: 'trung_doc',
-      name: 'Trúng Độc',
-      polarity: 'debuff',
-      duration: 3,
-      maxStacks: 5,
-      stackMode: 'stack',
-      effects: [{ type: 'dot', dpsRatio: 1, element: 'wood' }],
-    }
-    const ROOT_BUFF: BuffDefinition = {
-      id: 'troi_chan',
-      name: 'Trói Chân',
-      polarity: 'debuff',
-      duration: 2,
-      stackMode: 'refresh',
-      effects: [{ type: 'cc', ccEffect: 'root' }],
-    }
-
-    const registry: BuffDefinitionCatalog = {
-      get: (id: string): BuffDefinition => {
-        if (id === 'trung_doc') return POISON_BUFF
-        if (id === 'troi_chan') return ROOT_BUFF
-        throw new Error(`unknown buff id: ${id}`)
-      },
-    }
-
-    const system = new TurnBattleSystem(combat, 10, registry)
-
     const player = makeEntity('player')
     const enemy = makeEntity('enemy', { currentHp: 10_000, maxHp: 10_000 })
     enemy.type = 'enemy'
 
     const playerP = makeParticipant('player', player, 0)
     const enemyP = makeParticipant('enemy', enemy, 1)
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [playerP, enemyP],
+      combatSystem: combat,
+    })
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
     // Skill with 2 ailments: 1 root + 2 poison stacks
     const multiAilmentSkill: TurnSkillDefinition = {
@@ -240,7 +278,7 @@ describe('AR-03: Self-buff execution and leech healing', () => {
     }
 
     // Enemy should have both buffs, with trung_doc having 2 stacks.
-    expect(enemyP.buffs.getAllById('troi_chan')).toHaveLength(1)
-    expect(new BuffSystem(enemyP.buffs).getStacks('trung_doc')).toBe(2)
+    expect(buffsOf(runtime, enemyP, 'troi_chan')).toHaveLength(1)
+    expect(stacksOf(runtime, enemyP, 'trung_doc')).toBe(2)
   })
 })

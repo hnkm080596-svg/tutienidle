@@ -1,6 +1,7 @@
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { BuffPool } from '../buff/BuffPool'
-import type { BuffDefinitionCatalog } from '../buff/BuffTypes'
+import type { BuffInstanceSnapshot } from '../buff2/BuffInstance'
+import type { BuffRegistry } from '../buff2/BuffRegistry'
+import type { MarkerPayload } from '../proc/MarkerCapabilities'
 
 /**
  * The Tu Reimagined (plan Task 11, review P1.1) — the externalWard pool
@@ -12,14 +13,18 @@ import type { BuffDefinitionCatalog } from '../buff/BuffTypes'
  * resurrect source-B's spent pool.
  *
  * Called at the stat-refresh seam (refreshParticipantStats runs after
- * every pool mutation that can touch a participant: apply, update
- * expiry, remove, clearCcEffects) so reconcile stays a single choke
+ * every buff mutation that can touch a participant: apply, lifecycle
+ * expiry, remove, CC clear) so reconcile stays a single choke
  * point rather than a call site per mutation kind.
+ *
+ * buff2 M4 — reads canonical instance snapshots; the marker grant is a
+ * capability payload on the resolved definition (the `marker`
+ * capability owner validates `grantsExternalWard`).
  */
 export function reconcileExternalWard(
   entity: CombatEntity,
-  pool: BuffPool,
-  registry: BuffDefinitionCatalog | undefined,
+  instances: readonly BuffInstanceSnapshot[],
+  registry: BuffRegistry | undefined,
 ): void {
   const ward = entity.externalWard
 
@@ -27,22 +32,18 @@ export function reconcileExternalWard(
     return
   }
 
-  const stillOwned = pool.getAll().some((buff) => {
-    if (buff.sourceId !== ward.sourceId) {
+  const stillOwned = instances.some((instance) => {
+    if (instance.sourceId !== ward.sourceId) {
       return false
     }
 
-    let definition
-
-    try {
-      definition = registry?.get(buff.id)
-    } catch {
-      definition = undefined
-    }
+    const definition = registry?.tryGet(instance.definitionId)
 
     return (
-      definition?.effects.some(
-        (effect) => effect.type === 'marker' && effect.grantsExternalWard === true,
+      definition?.capabilities?.some(
+        (capability) =>
+          capability.type === 'marker' &&
+          (capability.payload as MarkerPayload).grantsExternalWard === true,
       ) ?? false
     )
   })

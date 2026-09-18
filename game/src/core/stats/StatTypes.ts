@@ -87,8 +87,7 @@ export type StatType =
   // thêm % này.
   | 'elementApplicationPercent'
   // Hỏa Tu Trúc Cơ (Plans/FirePath mục 8, "Cộng Minh" minor) — %
-  // khuếch đại burst damage lúc Reaction kích hoạt (xem
-  // core/battle/turn/TurnReactionManager.ts). Nền 0.
+  // khuếch đại burst damage lúc Reaction kích hoạt. Nền 0.
   | 'reactionEffectPercent'
   // Mộc Tu (Plans/PoisonPath, 2026-08-21) — % cộng thêm vào duration
   // của MỌI ailment nguồn này áp ra (xem AilmentSystem.apply()), tổng

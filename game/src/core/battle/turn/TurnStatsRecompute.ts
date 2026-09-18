@@ -1,5 +1,6 @@
 // R4 (AR-19) — Recomputes effective battle stats from the already-resolved base
-// and active stat modifiers extracted directly from the canonical BuffSystem.
+// and active stat modifiers supplied by the canonical buff2 BuffSystem query
+// (getStatModifiers returns the legacy StatModifier shape incl. stacks).
 //
 // ARCH-002 (M7): the third argument carries the battle-scoped LIVE modifier
 // set (passive stacks, persistent pool, timed/socket mods) supplied by the
@@ -12,16 +13,12 @@
 import type { Stats } from '../../stats/StatBlock'
 import { calculateEffectiveStats, type StatModifier } from '../../stats/StatCalculator'
 import type { StatDomain } from '../../stats/StatDomain'
-import type { BuffPool } from '../../buff/BuffPool'
-import { BuffSystem } from '../../buff/BuffSystem'
 
 export function recomputeEffectiveStats(
   resolvedBase: Stats,
-  buffs: BuffPool,
+  buffModifiers: readonly StatModifier[],
   liveModifiers: StatModifier[] = [],
   activeDomains?: ReadonlySet<StatDomain>,
 ): Stats {
-  const modifiers = new BuffSystem(buffs).getActiveModifiers()
-
-  return calculateEffectiveStats(resolvedBase, [...modifiers, ...liveModifiers], { activeDomains })
+  return calculateEffectiveStats(resolvedBase, [...buffModifiers, ...liveModifiers], { activeDomains })
 }

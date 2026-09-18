@@ -4,12 +4,13 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import { PHAP_TU_EMPOWERED_ULTS } from '../../../data/skill/PhapTuEmpoweredUlts'
+import { makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
-// Mission C Task 10a (audit T3-19 adjacent) — Hau Tho Thanh Luy's
+// Mission C Task 10a (audit T3-19 adjacent) -- Hau Tho Thanh Luy's
 // empowered payload authored `stacksPerAffectedTarget`: the CASTER
 // gains one thanh_luy stack per still-alive target the action hit
 // (SkillEffect.ts:113-118), capped by the buff's maxStacks. Today the
@@ -39,7 +40,7 @@ function createCombatant(id: string, type: 'player' | 'enemy'): CombatEntity {
 }
 
 function makeParticipant(id: string, entity: CombatEntity, priority: number): TurnBattleParticipant {
-  return { id, entity, speed: 100, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed: 100, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
 function harness(enemyCount: number) {
@@ -60,37 +61,50 @@ function harness(enemyCount: number) {
     state: 'fighting',
   }
 
+  const combat = new CombatSystem(new EventBus())
+  const rng = new FunctionCombatRng(() => 0.5) // deterministic mid rng -- hit/evasion rolls all land
+  const runtime = makeTurnRuntime({
+    registry: BUFF_REGISTRY,
+    participants: () => [playerParticipant, ...enemyParticipants],
+    combatSystem: combat,
+    rng,
+  })
   const system = new TurnBattleSystem(
-    new CombatSystem(new EventBus()),
+    combat,
     100,
     BUFF_REGISTRY,
     undefined,
-    undefined,
+    runtime,
     vi.fn(),
     undefined,
-    () => 0.5, // deterministic mid rng — hit/evasion rolls all land
+    rng,
   )
 
-  return { battle, playerParticipant, enemyParticipants, system }
+  return { battle, playerParticipant, enemyParticipants, system, runtime }
+}
+
+function stacksOn(runtime: ReturnType<typeof makeTurnRuntime>, entityId: string, definitionId: string): number {
+  return runtime.buffs
+    .getForTarget(entityId)
+    .filter((instance) => instance.definitionId === definitionId)
+    .reduce((total, instance) => total + instance.stacks, 0)
 }
 
 describe('thanh_luy stacksPerAffectedTarget (Mission C Task 10a)', () => {
   it('the CASTER gains one thanh_luy stack per living target hit; enemies get none', () => {
-    const { battle, playerParticipant, enemyParticipants, system } = harness(3)
+    const { battle, playerParticipant, enemyParticipants, system, runtime } = harness(3)
 
     system.resolveNextStep(battle)
 
-    const casterBuff = playerParticipant.buffs.getFromSource('thanh_luy', 'player')
-    expect(casterBuff).toBeDefined()
-    expect(casterBuff!.stacks).toBe(3)
+    expect(stacksOn(runtime, playerParticipant.entity.id, 'thanh_luy')).toBe(3)
 
     for (const enemy of enemyParticipants) {
-      expect(enemy.buffs.hasAny('thanh_luy')).toBe(false)
+      expect(stacksOn(runtime, enemy.entity.id, 'thanh_luy')).toBe(0)
     }
   })
 
-  it('dead targets are not imprisoned — only still-alive hits stack', () => {
-    const { battle, playerParticipant, enemyParticipants, system } = harness(3)
+  it('dead targets are not imprisoned -- only still-alive hits stack', () => {
+    const { battle, playerParticipant, enemyParticipants, system, runtime } = harness(3)
 
     // enemy_0 dies to the hit's own damage: give it 1 maxHp so the 4x
     // empowered payload kills it inside the same action.
@@ -99,15 +113,14 @@ describe('thanh_luy stacksPerAffectedTarget (Mission C Task 10a)', () => {
 
     system.resolveNextStep(battle)
 
-    const casterBuff = playerParticipant.buffs.getFromSource('thanh_luy', 'player')
-    expect(casterBuff!.stacks).toBe(2)
+    expect(stacksOn(runtime, playerParticipant.entity.id, 'thanh_luy')).toBe(2)
   })
 
   it('stacks respect the buff maxStacks cap (8)', () => {
-    const { battle, playerParticipant, system } = harness(10)
+    const { battle, playerParticipant, system, runtime } = harness(10)
 
     system.resolveNextStep(battle)
 
-    expect(playerParticipant.buffs.getFromSource('thanh_luy', 'player')!.stacks).toBe(8)
+    expect(stacksOn(runtime, playerParticipant.entity.id, 'thanh_luy')).toBe(8)
   })
 })

@@ -2,7 +2,7 @@ import type { CombatEntity } from './CombatEntity'
 import type { EventBus } from '../events/EventBus'
 import { clampStatValue } from '../stats/StatMetadata'
 
-export type VitalsChangeReason = 'damage' | 'dot' | 'ward_break' | 'healing' | 'leech' | 'regen' | 'reaction' | 'reflection' | 'heavenly_tribulation' | 'survive_lethal' | 'ward_spend' | 'stat_refresh'
+export type VitalsChangeReason = 'damage' | 'dot' | 'ward_break' | 'healing' | 'leech' | 'regen' | 'reaction' | 'reflection' | 'heavenly_tribulation' | 'survive_lethal' | 'ward_spend' | 'ward_grant' | 'stat_refresh'
 
 export interface EntityVitalsChangedEvent {
   type: 'entity_vitals_changed'
@@ -82,6 +82,33 @@ export class EntityVitalsSystem {
     this.emit(target, reason, wardBefore - target.currentWard, hpBefore, wardBefore, mpBefore, sourceId)
 
     return wardBefore - target.currentWard
+  }
+
+  /**
+   * Authoritative ward GRANT (combat-contract M3 -- the apply_shield
+   * channel's only writer; review r2 HIGH 6: never `currentWard += x`
+   * outside the vitals authority). Mirrors spendWard's shape in the
+   * opposite direction: clamps at the live wardMax ceiling (same
+   * ceiling applyTurnRegen uses), dead entities reject the grant (same
+   * boundary as applyHealing -- a ward on a corpse is a phantom), and
+   * every grant emits the vitals event so observation stays uniform.
+   * `amount` on the event is the ward actually gained.
+   */
+  grantWard(target: CombatEntity, amount: number, reason: VitalsChangeReason, sourceId?: string) {
+    if (!target.alive) {
+      return 0
+    }
+
+    const hpBefore = target.currentHp
+    const wardBefore = target.currentWard
+    const mpBefore = target.currentMp
+
+    target.currentWard = Math.min(target.stats.wardMax, target.currentWard + Math.max(0, amount))
+
+    const applied = target.currentWard - wardBefore
+    this.emit(target, reason, applied, hpBefore, wardBefore, mpBefore, sourceId)
+
+    return applied
   }
 
   applyHealing(target: CombatEntity, amount: number, reason: VitalsChangeReason, sourceId?: string) {

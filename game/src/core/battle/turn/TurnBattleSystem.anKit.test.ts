@@ -4,7 +4,7 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { BuffPool } from '../../buff/BuffPool'
+import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
 // Phap Tu Reimagined Task 11 (plan Task 10) — the Phap Tu An kit:
@@ -39,7 +39,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
 /** Five distinct element-basic payloads — ids/damage identify the pick. */
@@ -117,7 +117,7 @@ function harness(rng: () => number = () => 0.5) {
     undefined,
     onSkillCast,
     undefined,
-    rng,
+    new FunctionCombatRng(rng),
   )
 
   return { battle, playerParticipant, enemyParticipant, system, onSkillCast }

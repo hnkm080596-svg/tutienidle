@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import { BuffPool } from '../../buff/BuffPool'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
@@ -37,7 +36,7 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, consecutiveHardCcTurns: 0 }
 }
 
 describe('Slice 5 adversarial (QA probes)', () => {
@@ -68,7 +67,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
     expect(battle.enemies.length).toBeLessThanOrEqual(6)
   })
 
-  it('INV-S5-2: spawned enemy có BuffPool riêng (không share pool với enemy cũ)', () => {
+  it('INV-S5-2: spawned enemy là participant mới hoàn toàn (không thừa hưởng state từ enemy cũ)', () => {
     const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }) })
     const enemyA = createCombatant({ id: 'enemyA', currentHp: 1, maxHp: 1, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }) })
 
@@ -80,10 +79,9 @@ describe('Slice 5 adversarial (QA probes)', () => {
       wave,
     }
 
-    let spawnedPool: BuffPool | undefined
+    let spawned: TurnBattleParticipant | undefined
     const spawnEnemy = (): TurnBattleParticipant => {
-      const spawned = makeParticipant('enemyB', createCombatant({ id: 'enemyB', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }) }), 10, 2)
-      spawnedPool = spawned.buffs
+      spawned = makeParticipant('enemyB', createCombatant({ id: 'enemyB', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }) }), 10, 2)
       return spawned
     }
 
@@ -95,9 +93,13 @@ describe('Slice 5 adversarial (QA probes)', () => {
     battle.enemies = []
     system.tickPacing(battle)
 
-    const enemyAParticipant = { buffs: new BuffPool() }
-    expect(spawnedPool).toBeDefined()
-    expect(spawnedPool).not.toBe(enemyAParticipant.buffs)
+    // buff2 M4: no per-participant pool exists — instance identity lives
+    // in the shared store keyed by targetId. The invariant that remains:
+    // the spawned participant is a fresh object queued by the telegraph
+    // (no state leaks across the spawn boundary).
+    expect(spawned).toBeDefined()
+    expect(battle.wave?.pendingEnemySpawns.length).toBeGreaterThan(0)
+    expect(spawned!.entity.id).toBe('enemyB')
   })
 
   it('INV-S5-3: wave totalEnemyCount=0 với spawnedCount=0 — isStageComplete true ngay khi sân trống', () => {

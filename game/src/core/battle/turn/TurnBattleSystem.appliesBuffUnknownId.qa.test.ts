@@ -4,20 +4,21 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import { BuffPool } from '../../buff/BuffPool'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // Roadmap 9.5 #12 follow-up (flagged 2026-09-07, activated 2026-09-14):
-// TurnBattleSystem calls registry.get() UNGUARDED in two places that read
-// CONTENT-DERIVED ids — skill.appliesBuff.definitionId and
-// appliesAilments[].buffDefinitionId. MapBuffRegistry.get THROWS on an
-// unknown id, so a renamed/drifted buff id crashes every fixed-step tick
+// TurnBattleSystem reads CONTENT-DERIVED ids — skill.appliesBuff.definitionId
+// and appliesAilments[].buffDefinitionId — and BuffRegistry.get THROWS on an
+// unknown id, so a renamed/drifted buff id would crash every fixed-step tick
 // with no error isolation upstream in GameManager's updateBattleFixedStep.
 //
 // Expected: the tick skips the unresolvable buff/ailment gracefully (same
 // try/catch pattern as the bossTrigger block, Phase A2), the rest of the
 // action still commits, and resolveNextStep does NOT throw.
+// M4: applies ride apply_buff ops through the shared runtime — the guard
+// lives at the op-minting lanes (an unknown id never reaches the resolver).
 
 function createCombatant(id: string): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 10 })
@@ -41,31 +42,23 @@ function createCombatant(id: string): CombatEntity {
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
 const OTHER_DEFINITION: BuffDefinition = {
   id: 'unrelated_buff',
   name: 'Unrelated Buff',
+  kind: 'buff',
   polarity: 'buff',
-  duration: 5,
-  stackMode: 'refresh',
-  effects: [],
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 5, scaling: 'fixed' },
+  dispellable: true,
 }
 
-class SingleEntryRegistry implements BuffDefinitionCatalog {
-  constructor(private readonly definition: BuffDefinition) {}
+const REGISTRY = makeTestBuffRegistry([OTHER_DEFINITION])
 
-  get(id: string): BuffDefinition {
-    if (id !== this.definition.id) {
-      throw new Error(`BuffDefinitionCatalog: unknown buff id "${id}"`)
-    }
-
-    return this.definition
-  }
-}
-
-function makeBattle(skill: TurnSkillDefinition): { battle: TurnBattle; enemy: TurnBattleParticipant } {
+function makeBattle(skill: TurnSkillDefinition) {
   const playerParticipant = makeParticipant('player', createCombatant('player'), 10, 0)
   playerParticipant.basic = skill
 
@@ -77,19 +70,28 @@ function makeBattle(skill: TurnSkillDefinition): { battle: TurnBattle; enemy: Tu
     targeting: { shape: 'single' },
   }
 
+  const combat = new CombatSystem(new EventBus())
+  const runtime = makeTurnRuntime({
+    registry: REGISTRY,
+    participants: () => [playerParticipant, enemyParticipant],
+    combatSystem: combat,
+  })
+
   return {
     battle: {
       players: [playerParticipant],
       enemies: [enemyParticipant],
-      state: 'fighting',
+      state: 'fighting' as const,
     },
     enemy: enemyParticipant,
+    combat,
+    runtime,
   }
 }
 
 describe('QA — TurnBattleSystem appliesBuff/appliesAilments vs unknown buff id (9.5 #12)', () => {
   it('resolveNextStep does not throw when appliesBuff.definitionId is missing from the registry', () => {
-    const { battle, enemy } = makeBattle({
+    const { battle, enemy, combat, runtime } = makeBattle({
       id: 'qa_unknown_buff_skill',
       cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 0 },
@@ -97,19 +99,15 @@ describe('QA — TurnBattleSystem appliesBuff/appliesAilments vs unknown buff id
       appliesBuffs: [{ definitionId: 'buff_id_not_in_registry', target: 'action_targets' }],
     })
 
-    const system = new TurnBattleSystem(
-      new CombatSystem(new EventBus()),
-      10,
-      new SingleEntryRegistry(OTHER_DEFINITION),
-    )
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
     expect(() => system.resolveNextStep(battle)).not.toThrow()
-    expect(enemy.buffs.getAll()).toEqual([])
+    expect(runtime.buffs.getForTarget(enemy.entity.id)).toEqual([])
     expect(battle.state).toBe('fighting')
   })
 
   it('resolveNextStep does not throw when appliesAilments[].buffDefinitionId is missing from the registry', () => {
-    const { battle, enemy } = makeBattle({
+    const { battle, enemy, combat, runtime } = makeBattle({
       id: 'qa_unknown_ailment_skill',
       cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 1 },
@@ -117,19 +115,15 @@ describe('QA — TurnBattleSystem appliesBuff/appliesAilments vs unknown buff id
       appliesAilments: [{ buffDefinitionId: 'buff_id_not_in_registry', chance: 1 }],
     })
 
-    const system = new TurnBattleSystem(
-      new CombatSystem(new EventBus()),
-      10,
-      new SingleEntryRegistry(OTHER_DEFINITION),
-    )
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
     expect(() => system.resolveNextStep(battle)).not.toThrow()
-    expect(enemy.buffs.getAll()).toEqual([])
+    expect(runtime.buffs.getForTarget(enemy.entity.id)).toEqual([])
     expect(battle.state).toBe('fighting')
   })
 
   it('a known appliesBuff id still applies (guard must not blanket-swallow)', () => {
-    const { battle, enemy } = makeBattle({
+    const { battle, enemy, combat, runtime } = makeBattle({
       id: 'qa_known_buff_skill',
       cooldownTurns: 0,
       damage: { kind: 'physical', multiplier: 0 },
@@ -137,13 +131,12 @@ describe('QA — TurnBattleSystem appliesBuff/appliesAilments vs unknown buff id
       appliesBuffs: [{ definitionId: 'unrelated_buff', target: 'action_targets' }],
     })
 
-    const system = new TurnBattleSystem(
-      new CombatSystem(new EventBus()),
-      10,
-      new SingleEntryRegistry(OTHER_DEFINITION),
-    )
+    const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
     expect(() => system.resolveNextStep(battle)).not.toThrow()
-    expect(enemy.buffs.getAllById('unrelated_buff')).toHaveLength(1)
+    const applied = runtime.buffs
+      .getForTarget(enemy.entity.id)
+      .filter((instance) => instance.definitionId === 'unrelated_buff')
+    expect(applied).toHaveLength(1)
   })
 })

@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { describeSkillMechanics } from './SkillMechanicDescriptions'
-import { BuffRegistry } from '../buff/BuffRegistry'
+import type { BuffDefinition } from '../buff2/BuffDefinition'
+import type { BuffRegistry } from '../buff2/BuffRegistry'
+import type { BuffDefinitionId } from '../battle/contracts/ids'
 import type { Skill } from './Skill'
 import type { SkillEffect } from './SkillEffect'
+import { makeTestBuffRegistry } from '../battle/turn/testing/TurnRuntimeFixtures'
 
 // Task 12 (plan 2026-09-03-thuan-he) — tooltip mechanic lines: mỗi field
 // engine mới (E-1..E-5) phải có dòng mô tả; skill cũ không field → [].
@@ -23,20 +26,30 @@ function skillWith(effects: SkillEffect[]): Skill {
   } as Skill
 }
 
+function tooltipDef(
+  id: string,
+  name: string,
+  polarity: 'buff' | 'debuff',
+  maxStacks: number,
+): BuffDefinition {
+  return {
+    id: id as BuffDefinitionId,
+    name,
+    kind: polarity === 'debuff' ? 'debuff' : 'buff',
+    polarity,
+    instanceScope: 'per_target',
+    stacking: {
+      maxStacks,
+      onReapplyStacks: 'add',
+      onReapplyDuration: 'refresh',
+    },
+    lifetime: { clock: 'holder_turns', duration: 4, scaling: 'fixed' },
+    dispellable: true,
+  }
+}
+
 function registryWithBong(): BuffRegistry {
-  const registry = new BuffRegistry()
-
-  registry.register({
-    id: 'bong',
-    name: 'Bỏng',
-    polarity: 'debuff',
-    duration: 4,
-    stackMode: 'stack',
-    maxStacks: 5,
-    effects: [],
-  })
-
-  return registry
+  return makeTestBuffRegistry([tooltipDef('bong', 'Bỏng', 'debuff', 5)])
 }
 
 describe('describeSkillMechanics (Task 12 tooltip)', () => {
@@ -106,17 +119,7 @@ describe('describeSkillMechanics (Task 12 tooltip)', () => {
   })
 
   it('E-2 stacksPerAffectedTarget → dòng mỗi target trúng +1 tầng', () => {
-    const registry = new BuffRegistry()
-
-    registry.register({
-      id: 'thanh_luy',
-      name: 'Thành Lũy',
-      polarity: 'buff',
-      duration: 8,
-      stackMode: 'stack',
-      maxStacks: 8,
-      effects: [],
-    })
+    const registry = makeTestBuffRegistry([tooltipDef('thanh_luy', 'Thành Lũy', 'buff', 8)])
 
     const lines = describeSkillMechanics(
       skillWith([{ type: 'buff', buffId: 'thanh_luy', stacksPerAffectedTarget: true, scope: 'source' }]),

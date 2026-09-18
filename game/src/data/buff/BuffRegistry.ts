@@ -1,65 +1,46 @@
-import type { BuffDefinition, BuffEffectTemplate, BuffDefinitionCatalog } from '../../core/buff/BuffTypes'
+import { BuffRegistry } from '../../core/buff2/BuffRegistry'
+import { createDamageProfileCatalog } from '../../core/combat/DamageProfiles'
+import { createDefaultCapabilityValidators } from '../../core/battle/runtime/capability/DefaultCapabilityValidators'
 import { buffs as LIVE_BUFFS } from './buffs'
 
-// Completion plan Task 13 — migrate 46 real BuffDefinition entries sang
-// turn-clock shape. Converter tự động thay vì 46×hand-copy (E10 —
-// statModifier/dot/cc/onHitProc field names giống hệt giữa hai khung).
-//
-// No-rebalance policy (Completion plan §Global Constraints): duration GIỮ
-// NGUYÊN SỐ (giây → lượt), convertsAfterContinuousSeconds →
-// convertsAfterContinuousTurns cùng số. `duration: Infinity` (buff vĩnh
-// viễn) giữ nguyên — BuffSystem.update() trừ remainingTurns mỗi lượt
-// holder, Infinity không bao giờ <= 0 → sống vĩnh viễn, khớp semantics hệ sống.
-//
-// Regen stats (`manaRegenPerTurn`, `wardRegenPerTurn`) pass through as
-// statModifier entries applied via recomputeEffectiveStats()
-// (Completion Task 4).
+// buff2 migration (M4) — the legacy `toBuffDefinition` load-time
+// converter is gone: every data file now authors the canonical
+// BuffDefinition shape directly (stacking/lifetime/application/
+// periodic/statModifiers/controls/capabilities). The registry validates
+// every def at construction (spec sec.56) and freezes them at seal().
 
-export function toBuffDefinition(live: BuffDefinition): BuffDefinition {
-  const effects: BuffEffectTemplate[] = live.effects.map((effect: BuffEffectTemplate) => effect)
-
-  return {
-    id: live.id,
-    name: live.name,
-    description: live.description,
-    polarity: live.polarity,
-    hidden: live.hidden,
-    // Phap Tu Reimagined Task 12 — the definition-level element tag must
-    // reach the registry; the sinh/khac rule engine resolves pair
-    // relations through it.
-    element: live.element,
-    duration: live.duration,
-    durationPolicy: live.durationPolicy,
-    uniquePerTarget: live.uniquePerTarget,
-    clearsCcOnApply: live.clearsCcOnApply,
-    maxStacks: live.maxStacks,
-    stackMode: live.stackMode,
-    convertsToId: live.convertsToId,
-    convertsAfterContinuousTurns: live.convertsAfterContinuousSeconds,
-    effects,
+function buildRegistry(): BuffRegistry {
+  const registry = new BuffRegistry({
+    damageProfiles: createDamageProfileCatalog(),
+    capabilityValidators: createDefaultCapabilityValidators(),
+  })
+  for (const definition of LIVE_BUFFS) {
+    registry.register(definition)
   }
+  registry.seal()
+  return registry
 }
 
-class MapBuffRegistry implements BuffDefinitionCatalog {
-  private readonly definitions = new Map<string, BuffDefinition>()
+export const BUFF_REGISTRY: BuffRegistry = buildRegistry()
 
-  constructor(definitions: BuffDefinition[]) {
-    for (const definition of definitions) {
-      this.definitions.set(definition.id, definition)
+// buff2 M4 -- the persistent (out-of-battle) pool's catalog. BuffPersistence
+// rejects registries containing periodic defs at construction: no scheduler
+// barrier exists out of battle, so periodic requests could never settle.
+// The persistent lane therefore registers only non-periodic defs -- Kiep
+// Thuong-family debuffs and any future non-periodic persistent apply ride
+// this; a periodic def applied here fails closed as "unknown definition".
+function buildPersistentRegistry(): BuffRegistry {
+  const registry = new BuffRegistry({
+    damageProfiles: createDamageProfileCatalog(),
+    capabilityValidators: createDefaultCapabilityValidators(),
+  })
+  for (const definition of LIVE_BUFFS) {
+    if ((definition.periodic?.length ?? 0) === 0) {
+      registry.register(definition)
     }
   }
-
-  get(id: string): BuffDefinition {
-    const definition = this.definitions.get(id)
-
-    if (!definition) {
-      throw new Error(`BuffRegistry: unknown buff id "${id}"`)
-    }
-
-    return definition
-  }
+  registry.seal()
+  return registry
 }
 
-export const BUFF_REGISTRY: BuffDefinitionCatalog = new MapBuffRegistry(
-  LIVE_BUFFS.map(toBuffDefinition),
-)
+export const PERSISTENT_BUFF_REGISTRY: BuffRegistry = buildPersistentRegistry()
