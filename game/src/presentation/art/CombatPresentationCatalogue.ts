@@ -146,7 +146,6 @@ function playerMortalClip(
   frameRate: number,
   extent: AtlasClip['extent'],
   repeat: number,
-  impactFrame?: number,
 ): AtlasClip {
   return {
     key: combatAnimationKey(entityKey, name),
@@ -165,7 +164,6 @@ function playerMortalClip(
     },
     extent,
     repeat,
-    ...(impactFrame === undefined ? {} : { impactFrame }),
   }
 }
 
@@ -180,7 +178,7 @@ function playerMortalCatalogue(entityKey: string): CombatAnimationCatalogue {
   return {
     idle: playerMortalClip(entityKey, 'idle', 0, 31, 8, PLAYER_MORTAL_IDLE_EXTENT, -1),
     standby: playerMortalClip(entityKey, 'standby', 32, 42, 8, PLAYER_MORTAL_STANDBY_EXTENT, -1),
-    death: playerMortalClip(entityKey, 'death', 91, 106, 10, PLAYER_MORTAL_DEATH_EXTENT, 0, 94),
+    death: playerMortalClip(entityKey, 'death', 91, 106, 10, PLAYER_MORTAL_DEATH_EXTENT, 0),
   }
 }
 

@@ -28,7 +28,6 @@ const props = withDefaults(defineProps<EntitySpriteCanvasProps>(), { height: 239
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 let rafId = 0
 let lastStep = 0
-let frameIndex = props.firstFrame
 let disposed = false
 
 interface PackedFrame {

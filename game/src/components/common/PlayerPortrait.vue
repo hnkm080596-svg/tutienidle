@@ -5,12 +5,12 @@ import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalog
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import EntitySpriteCanvas from './EntitySpriteCanvas.vue'
 
-// Trình bày nhân vật dùng CHUNG (plan Workstream A) — PNG tĩnh mới,
-// KHÔNG còn qua AtlasSprite nhiều frame:
-// - variant 'cultivate' → player-mortal-cultivate-v1.png, giữa Động Phủ
-//   (trigger command wheel), CÓ chuyển động CSS khi animated.
-// - variant 'portrait'  → player-mortal-ink-sword-concept-v2.png, tab Nhân Vật,
-//   LUÔN ảnh tĩnh (không bao giờ áp animation tu luyện).
+// Trinh bay nhan vat dung CHUNG (plan Workstream A) - mode-aware figure:
+// static mode draws a PNG; animated mode draws EntitySpriteCanvas (atlas
+// clip). Variants pick WHICH art, not the mode:
+// - variant 'cultivate' -> cultivate PNG / cultivate bridge multiatlas,
+//   giua Dong Phu (trigger command wheel), CO chuyen dong CSS khi animated.
+// - variant 'portrait'  -> portrait PNG / mortal idle clip, tab Nhan Vat.
 //
 // Chuyển động chỉ-Presentation (cultivate + animated):
 // - Float dọc nhẹ 3-5px, chu kỳ chậm; nhịp thở scale 1 → 1.015.
@@ -100,6 +100,7 @@ const portraitHeight = computed(() =>
 
     <EntitySpriteCanvas
       v-if="useCanvas && canvasProps"
+      :key="variant"
       v-bind="canvasProps"
       :height="height"
       class="player-portrait__image"

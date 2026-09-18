@@ -159,17 +159,16 @@ export class CombatAnimationPlayback {
 
     gameSprite.play(key)
 
-    // Spec B sec. 4.5 - a one-shot returns to the state it leads into: transitions
-    // land on their destination loop, everything else lands back on `idle`.
-    // Without this a one-shot leaves the sprite frozen on its last frame until
-    // something else happens to play. `death` is excluded: it has its own
-    // completion handler in onDeath(), which finalises and destroys the sprite,
-    // and returning a corpse to idle would undo it.
-    if (name === 'idle' || name === 'death') {
+    // Only one-shot transitions need a completion handler - they land on their
+    // destination loop. Loops ('idle'/'standby'/'cultivate') never emit
+    // ANIMATION_COMPLETE so a listener would sit stale, and 'death' has its
+    // own lifecycle in beginDeathSequence.
+    const destination = TRANSITION_DESTINATION[name]
+
+    if (destination === undefined) {
       return
     }
 
-    const destination = TRANSITION_DESTINATION[name] ?? 'idle'
     const destinationKey = combatAnimationKey(prefix, destination)
 
     if (!this.scene.anims.exists(destinationKey) || typeof gameSprite.once !== 'function') {

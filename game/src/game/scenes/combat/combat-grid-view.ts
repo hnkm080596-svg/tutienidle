@@ -591,12 +591,9 @@ export class CombatGridView {
       return sprite
     }
 
-    // Host fallback (Battlefield Slot spec §4) — combat thật trả undefined
-    // ở đây LUÔN (xem CombatScene.fallbackSpriteTextureKey()), giữ nguyên
-    // 100% hành vi Rectangle fallback cho enemy ngoài batch Mortal. Panel
-    // Trận Pháp (TranPhapCombatPreviewScene) trả về sheet placeholder
-    // dùng chung — mọi combatant của panel render qua nhánh này, animate
-    // được thay vì Rectangle tĩnh.
+    // Host fallback - double-fallback khi ca placeholder texture cung
+    // thieu. Combat that tra undefined -> Rectangle; panel Tran Phap
+    // tra ve sheet placeholder dung chung cho moi combatant.
     const fallbackTextureKey = this.host.fallbackSpriteTextureKey(id)
 
     if (fallbackTextureKey && this.host.textures.exists(fallbackTextureKey)) {

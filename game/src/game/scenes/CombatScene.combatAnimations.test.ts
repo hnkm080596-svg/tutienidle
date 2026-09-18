@@ -135,7 +135,7 @@ describe('CombatScene â€” entityAnimationKeyPrefix()', () => {
 })
 
 describe('CombatScene â€” registerCombatAnimations() guard', () => {
-  it('this.anims.exists() === false cho má»i clip â†’ create() gá»i Ä‘á»§ 5 láº§n (idle/ready/cast/standby/death)', () => {
+  it('this.anims.exists() === false for every clip -> create() called for all 6 declared', () => {
     const scene = createScene()
     const created: Array<{ key: string }> = []
 

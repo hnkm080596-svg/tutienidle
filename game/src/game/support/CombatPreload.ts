@@ -29,11 +29,9 @@ import {
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import type { CombatAnimationCatalogue } from '@/presentation/art/CombatEntityPresentation'
 
-// Combat uses the static mortal artwork. MainScene keeps its existing atlas;
-// the scenes intentionally use separate texture keys and presentations.
-// The catalogue declares this key (it is a presentation fact: an entity whose
-// art is the mortal PNG under a second key). Re-exported here so the many
-// existing importers do not all have to move at once.
+// The mortal entity key - the shared player fallback. MainScene keeps its
+// own atlas; the scenes intentionally use separate texture keys. Re-exported
+// here so the many existing importers do not all have to move at once.
 export const PLAYER_TEXTURE_KEY = FALLBACK_PLAYER_ENTITY_KEY
 
 // Same PNG as the mortal profile's combatTextureUrl, without the leading

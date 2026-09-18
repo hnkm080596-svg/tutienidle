@@ -110,21 +110,6 @@ export interface AtlasClip {
    * event the playback layer chains on - the uniformity test pins repeat 0.
    */
   repeat: number
-
-  /**
-   * The frame at which this clip's action READS as having happened — a sword
-   * connecting, a palm striking. Absolute (same numbering as `firstFrame`), and
-   * within [firstFrame, lastFrame].
-   *
-   * Declared here and consumed by spec D, which replaces the current
-   * `ATTACK_LUNGE_DURATION_MS / 2` — half a movement tween, with no relationship
-   * to the art it is timing. NOTHING IN B READS THIS (§6, B8). Changing playback
-   * timing in the same pass as the metadata would make a regression in either
-   * impossible to attribute.
-   *
-   * Absent on looping clips, which have no impact moment.
-   */
-  impactFrame?: number
 }
 
 /**

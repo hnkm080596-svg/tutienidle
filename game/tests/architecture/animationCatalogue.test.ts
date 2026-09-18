@@ -14,10 +14,10 @@
  * rather than the emitted presentation, so they validate clip data in EITHER
  * mode: 'static' does not mean the atlases stop needing to be honest.
  *
- * sec. 7.1 states plainly what neither can catch: that a clip LOOKS right. A clip
- * whose `impactFrame` is inside the range but on the wrong frame - the sword
- * still rising - passes everything here. That is a judgement made by watching,
- * and it belongs to spec D.
+ * sec. 7.1 states plainly what neither can catch: that a clip LOOKS right. A
+ * frame range can be internally coherent and still contain the wrong frames -
+ * the sword still rising at the moment it should land. That is a judgement
+ * made by watching, and no metadata field makes it machine-checkable.
  */
 import { describe, expect, it } from 'vitest'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
@@ -75,26 +75,6 @@ describe('combat animation catalogue', () => {
     }
   })
 
-  it('every impactFrame lies inside its own clip', () => {
-    for (const { entityKey, clips } of allAnimatedForms()) {
-      for (const [name, clip] of Object.entries(clips)) {
-        if (clip.impactFrame === undefined) {
-          continue
-        }
-
-        const where = `${entityKey}.${name}`
-
-        expect(clip.impactFrame, `${where}: impactFrame before firstFrame`).toBeGreaterThanOrEqual(
-          clip.firstFrame,
-        )
-
-        expect(clip.impactFrame, `${where}: impactFrame past lastFrame`).toBeLessThanOrEqual(
-          clip.lastFrame,
-        )
-      }
-    }
-  })
-
   it('every animated form declares the three required clips, and only real names', () => {
     // The uniform contract: idle/standby/death are required; transitions and
     // cultivate are optional extras. A declared key that is not in
@@ -139,7 +119,6 @@ describe('combat animation catalogue', () => {
       standby: [32, 42, 8, -1],
       death: [91, 106, 10, 0],
     })
-    expect(clips.death.impactFrame).toBe(94)
   })
 
   it('the combat bundle loads exactly the mode-selected atlases', () => {
