@@ -1,7 +1,7 @@
 # Reaction System Reimagined — Final Specification
 
-Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
-Version: 1.0
+Status: FINAL — **READY FOR IMPLEMENTATION** (unparked + rulings locked 2026-09-18, user ruling; see megaplan ruling table)
+Version: 1.1
 Scope: Ngũ Hành Reaction System
 Owner gameplay: Pháp Tu Ẩn — Ngộ Đạo
 Architecture dependency: Buff System Reimagined v1.0 ([2026-09-17-buff-system-reimagined-spec.md](./2026-09-17-buff-system-reimagined-spec.md))
@@ -12,7 +12,8 @@ Migration requirement: None
 > - Spec này **thay thế** `ELEMENT_REACTIONS`/`TurnReactionManager` hiện tại (pair-table, áp cho mọi elemental application) — xem `docs/systems/elements-reactions.md`. Model mới: same-source board, consume-all, capability-gated.
 > - **RESOLVED (implementation review, buff-plan round 4):** visible Pháp Tu loses automatic reactions — that IS the intent. The legacy `TurnReactionManager`/`canInitiateWuxingReactions` path is spec-nonconforming and retired at M-INT (inside the buff megaplan's M4 worktree); `elemental_reaction_enabled` is granted to nobody until the Ngộ Đạo kit lands (seal batch).
 > - **Ailment rename/rework map (không phải rename thuần):** Hàn Tức ≠ `te_cong` (Tê Cóng hiện là DoT/CC), Liệt Thương ≠ `chay_mau` (Chảy Máu hiện là DoT), Trấn Ấn ≠ `thach_hoa` (Thạch Hóa hiện là CC cứng). Và `Độc Căn` hiện là TÊN mechanic threshold bên trong `trung_doc` (poison root) — name collision cần resolve.
-> - Dependencies: yêu cầu buff spec v1.0 landed (per_source instance, `reactionEligible` trên application commit, removal reason `reaction`, modifier `reapply: max`, `buff_lifetime` modifier lifetime); Cấm Công cần action-tagging trên skill (skill spec §7 `tags` cover) + ActionRestriction enforcement ở turn engine; gauge ops cần `ActionGauge` push API (đã tồn tại `core/battle/turn/ActionGauge.ts`).
+> - Dependencies: yêu cầu buff spec v1.5 landed (per_source instance, `reactionEligibility` trên application commit, removal reason `reaction`, modifier `reapply: max`, `buff_lifetime` modifier lifetime); Cấm Công cần action-tagging trên skill (skill spec §7 `tags` cover) + ActionRestriction enforcement ở turn engine; gauge ops cần `ActionGauge` push API (đã tồn tại `core/battle/turn/ActionGauge.ts`).
+> - **v1.1 (2026-09-18):** sync hai điểm bị Contract v1.5 supersede — (a) §24 tie-break: `canonical ReactionId lexical/order` thay bằng authored `selectionTiePriority` (lower wins; lexical ReactionId bị cấm); (b) `reactionEligible: boolean` thay bằng `reactionEligibility: 'eligible' | 'suppressed'` — runtime metadata trên `ApplyBuffRequest`, không còn là boolean trên event. Các chỗ cũ đã được sửa inline; Contract v1.5 vẫn là source of truth nếu còn sót.
 
 ## 1. Purpose
 
@@ -424,7 +425,7 @@ Không dùng RNG.
 Nếu `finalWeight` bằng nhau:
 
 1. Khắc > Sinh
-2. canonical ReactionId lexical/order
+2. authored `selectionTiePriority` thấp hơn thắng (Contract v1.5 — lexical ReactionId ordering bị cấm)
 
 Không dùng random.
 Không dùng expected damage để chọn.
@@ -500,7 +501,7 @@ Subcast kế tiếp chỉ bắt đầu sau settlement.
 
 ## 28. No Recursive Reaction
 
-Reaction-generated elemental changes mặc định `reactionEligible = false`.
+Reaction-generated elemental changes mặc định `reactionEligibility: 'suppressed'`.
 
 Ví dụ `Mộc → Hỏa` tạo `Hỏa +3` — Hỏa +3 đó không lập tức `Hỏa → Kim` trong cùng transaction.
 
@@ -1069,19 +1070,19 @@ interface ElementalApplicationCommitted {
   stacksAfter: number
   addedStacks: number
 
-  reactionEligible: boolean
+  reactionEligibility: 'eligible' | 'suppressed'
 
   combatSequence: number
 }
 ```
 
-If `reactionEligible = false` → stop immediately.
+If `reactionEligibility = 'suppressed'` → stop immediately.
 
 ## 66. Reaction Eligibility
 
-- Default external elemental skill application: `reactionEligible = true`
-- Reaction-generated elemental application: `reactionEligible = false`
-- Periodic effect: `reactionEligible = false`
+- Default external elemental skill application: `reactionEligibility: 'eligible'`
+- Reaction-generated elemental application: `reactionEligibility: 'suppressed'`
+- Periodic effect: `reactionEligibility: 'suppressed'`
 - Scripted mechanics must explicitly choose
 
 ## 67. Architecture Boundary With Buff System
@@ -1224,7 +1225,7 @@ addedStacks0
 
 Application failed → no reaction.
 Periodic tick → no reaction.
-Reaction-generated stack → `reactionEligible false` → no recursion.
+Reaction-generated stack → `reactionEligibility: 'suppressed'` → no recursion.
 
 ## 76. Required Source Isolation Test
 
