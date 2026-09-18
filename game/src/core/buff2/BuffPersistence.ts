@@ -59,6 +59,11 @@ export interface BuffPersistenceOptions {
 export class BuffPersistence {
   private readonly system: BuffSystem
   private readonly sink: CombatEventSink
+  /** M7 -- synthetic ordering values for the OUT-OF-BATTLE persistent
+      lane only. CombatScheduler remains the sole allocator of
+      canonical `combatSequence` inside a battle; this counter never
+      mixes with any battle's sequence space (persistent applies/
+      removes/lifecycle do not enter a battle trace). */
   private seq = 0
   private applyCount = 0
   private removeCount = 0

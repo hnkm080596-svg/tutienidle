@@ -58,4 +58,68 @@ describe('damage authority rng -- single canonical source', () => {
     // passing with zero sites would prove nothing.
     expect(sites.length).toBeGreaterThanOrEqual(1)
   })
+
+  /**
+   * M7 F-A -- TurnBattleSystem keeps a lazy `Math.random` CombatRng
+   * default ONLY for the engine-unit/test lane (the documented
+   * `vi.spyOn(Math, 'random')` interception contract). Every
+   * NON-TEST construction must bind the shared cycle rng explicitly
+   * -- the 8th positional arg -- so a production root can never
+   * silently mint its own random source onto the canonical path.
+   */
+  it('every production TurnBattleSystem construction injects an explicit CombatRng', () => {
+    const sites: string[] = []
+    for (const file of listProductionTs(SRC)) {
+      const text = readTs(file)
+      let idx = text.indexOf('new TurnBattleSystem(')
+      while (idx >= 0) {
+        // Extract the argument list by paren depth; strip comments so
+        // prose cannot satisfy or trip the assertion.
+        const window = text
+          .slice(idx, idx + 2000)
+          .replace(/\/\/[^\n]*/g, '')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+        const open = window.indexOf('(')
+        let depth = 0
+        let end = -1
+        for (let i = open; i < window.length; i++) {
+          if (window[i] === '(') depth += 1
+          if (window[i] === ')') depth -= 1
+          if (depth === 0) {
+            end = i
+            break
+          }
+        }
+        expect(
+          end >= 0,
+          `TurnBattleSystem construction at ${file}:${idx} exceeds the 2000-char scan window`,
+        ).toBe(true)
+        const argsText = window.slice(open + 1, end)
+        const args: string[] = []
+        let current = ''
+        let nest = 0
+        for (const ch of argsText) {
+          if ('([{'.includes(ch)) nest += 1
+          if (')]}'.includes(ch)) nest -= 1
+          if (ch === ',' && nest === 0) {
+            args.push(current)
+            current = ''
+          } else {
+            current += ch
+          }
+        }
+        args.push(current)
+        const rngArg = args[7]?.trim()
+        sites.push(`${file}@${idx}`)
+        expect(
+          args.length >= 8 && rngArg !== undefined && rngArg !== '' && rngArg !== 'undefined',
+          `TurnBattleSystem construction at ${file}:${idx} must inject an explicit CombatRng (8th arg)`,
+        ).toBe(true)
+        idx = text.indexOf('new TurnBattleSystem(', idx + 1)
+      }
+    }
+    // Both production sites live in GameManagerTurnBattleOps -- the
+    // gate proves they exist rather than silently passing on zero.
+    expect(sites.length).toBeGreaterThanOrEqual(1)
+  })
 })

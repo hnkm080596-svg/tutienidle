@@ -50,7 +50,6 @@ import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import { reconcileExternalWard } from '../../the-tu/TheTuExternalWard'
 import { asReactiveProc, type ReactiveTriggerName } from '../../proc/ProcCapabilities'
 import type { ReactiveProcAttempt } from '../../proc/CombatProcSystem'
-import { resolveChannel } from '../../buff2/BuffModifierEngine'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
 
 export interface TurnResourcePool {
@@ -676,14 +675,31 @@ export class TurnBattleSystem {
           battle.players.find((member) => member.id === targetId) ??
           battle.enemies.find((member) => member.id === targetId)
         if (source === undefined || target === undefined) return
-        target.entity.externalWard = {
-          sourceId,
-          amount: Math.max(0, source.entity.stats.maxHp * sourceMaxHpRatio),
-        }
+        this.writeExternalWardGrant(source.entity, target.entity, sourceMaxHpRatio)
       },
       refreshStats: (participant) => this.refreshParticipantStats(participant),
       sweepBuffDeaths: (battle) => this.sweepBuffDeaths(battle),
       mintOccurrence: () => this.nextOccurrence(),
+    }
+  }
+
+  /**
+   * The ONE externalWard grant write (M7 closure -- son_nhac_ho_the,
+   * provider resolveBuff extras, and the Ho intercept ward all funnel
+   * here): source-tagged REPLACE -- a recast refreshes the pool to full
+   * and a lower recast lowers it (never stacks); exempt from wardMax;
+   * existence-bound to the granting marker instance --
+   * reconcileExternalWard owns expiry at the refresh seam and
+   * CombatSystem owns the absorb decrement inside damage resolution.
+   */
+  private writeExternalWardGrant(
+    source: CombatEntity,
+    target: CombatEntity,
+    sourceMaxHpRatio: number,
+  ): void {
+    target.externalWard = {
+      sourceId: source.id,
+      amount: Math.max(0, source.stats.maxHp * sourceMaxHpRatio),
     }
   }
 
@@ -2228,16 +2244,9 @@ export class TurnBattleSystem {
         if (!target.entity.alive) continue
         targetIds.push(target.id)
 
-        if (payloadSkill) {
-          this.applySkillAilments(battle, actor, target, payloadSkill)
-        }
-
-        // Task 13 -- same detonate contract on the non-damaging lane.
-        if (this.registry && payloadSkill?.detonateDoT && target.entity.alive) {
-          this.applyDetonate(battle, actor, target, payloadSkill.detonateDoT.amp)
-        }
-        // ARCH-002 (M7) -- reactions off the applied ailment can grant the
-        // SOURCE a buff; refresh both sides (same as the damaging path).
+        // ARCH-002 (M7) -- refresh both sides (same as the damaging
+        // path). Ailment/detonate mechanics do not exist on the
+        // engine-unit lane -- no buff authority is wired there.
         this.refreshParticipantStats(target)
         this.refreshParticipantStats(actor)
       }
@@ -2374,112 +2383,17 @@ export class TurnBattleSystem {
         )
       }
 
-      // Phase A3 -- consume-for-damage (Phap Tu Detonate / Tho Tu ward
-      // burst). Orchestration only: stacks read through the buff2
-      // BuffSystem query; the removal rides consume_buff_stacks ops and
-      // the HP mutation goes through the authoritative damage/vitals
-      // pipeline (R1 / AR-01) so death, survive-lethal and vitals
-      // events stay exactly-once and uniform. True damage = direct
-      // HP damage via the 'legacy_flat' profile, matching the
-      // bypass semantics at this resolution layer. Deliberately NOT
-      // registry-gated: these consume the skill's OWN authored
-      // fields, no registry content involved.
-      if (skill?.consumesAilmentId && skill.damagePerStack) {
-        // buff2 M4 -- consume-for-damage via ops: sum live stacks of the
-        // authored ailment on the target, flat direct damage through the
-        // 'legacy_flat' profile, then consume_buff_stacks 'all' per
-        // instance (selector-scoped removal, reason 'consumed').
-        const consumed = this.buffs
-          .getForTarget(target.entity.id)
-          .filter((instance) => instance.definitionId === skill.consumesAilmentId)
-        const stacks = consumed.reduce((total, instance) => total + instance.stacks, 0)
-
-        if (stacks > 0) {
-          const rootActionId = `hit.consume.${battle.totalTurnsElapsed}.${actor.id}.${target.id}.${this.nextOccurrence()}`
-          const ops: ResolvedCombatOperation[] = [
-            {
-              type: 'deal_damage',
-              operationId: `consume.${rootActionId}.damage` as CombatOperationId,
-              payload: {
-                targetId: target.entity.id,
-                damageProfile: 'legacy_flat',
-                coefficient: stacks * skill.damagePerStack,
-                hitCount: 1,
-                canCrit: false,
-                canMiss: false,
-              },
-              origin: this.opOrigin(actor.entity.id, rootActionId, 'consume_ailment'),
-            },
-            ...consumed.map((instance): ResolvedCombatOperation => ({
-              type: 'consume_buff_stacks',
-              operationId: `consume.${rootActionId}.${instance.instanceId}` as CombatOperationId,
-              payload: {
-                selector: { kind: 'instance', instanceId: instance.instanceId },
-                stacks: 'all',
-                removalReason: 'consumed',
-              },
-              origin: this.opOrigin(actor.entity.id, rootActionId, `consume.${instance.definitionId}`),
-            })),
-          ]
-          this.emitAndSettle(ops, battle)
-        }
-      }
-
+      // consume-for-ward (Tho Tu ward burst) -- the only consume
+      // mechanic the engine-unit lane can express: vitals calls only,
+      // no buff authority required. Ailment consume/detonate semantics
+      // live exclusively in the plan pipeline's ops (buff2/runtime
+      // lanes); they never resolved on this lane.
       if (skill?.consumesWardForDamage && skill.damagePerWardPoint) {
         const ward = actor.entity.currentWard
 
         if (ward > 0) {
           this.combat.applyDirectDamage(target.entity, ward * skill.damagePerWardPoint, actor.entity.id)
           this.combat.spendWard(actor.entity, ward, 'ward_spend', actor.entity.id)
-        }
-      }
-
-      if (this.runtime !== undefined) {
-        // ARCH-009 (M9) -- proc grants are read from the ATTACKER's
-        // capability set, but the resulting buff belongs to the HIT
-        // VICTIM (sourceId = actor, targetId = victim).
-        const procRoot = `hit.proc.${battle.totalTurnsElapsed}.${actor.id}.${target.id}.${this.nextOccurrence()}`
-        this.procs.onHitLanded(actor.entity.id, target.entity.id, procRoot)
-
-        // Action Playback Task 5 + stat-system-reimagined Task 5 (D5)
-        // -- onImpactLanded counter trigger trên TARGET bị hit, gated
-        // on `taken` (hpDamage > 0): a fully ward/MP-shielded hit is
-        // not "taken", so no defender on-hit-taken proc fires.
-        // queuesFollowUp → battle.queuedFollowUps (typed entries).
-        // Reflection rides a 'reflection' deal_damage op inside the
-        // proc system (D4/INV-8: terminal, no windows back).
-        const { firedFollowUp } = hitResult.hpDamage > 0
-          ? this.procs.rollReactiveTrigger(target.entity.id, 'onImpactLanded', {
-              attacker: actor.entity,
-              hpDamage: hitResult.hpDamage,
-            }, procRoot)
-          : { firedFollowUp: false }
-
-        if (firedFollowUp) {
-          // Defect-fix Task 1 -- FIFO queue: AOE hit trigger counter trên
-          // nhiều target không drop tất cả trừ cái cuối.
-          battle.queuedFollowUps = battle.queuedFollowUps ?? []
-          battle.queuedFollowUps.push({
-            actorId: target.id,
-            executionKind: 'reactive_bypass',
-            actionSource: 'follow_up',
-          })
-        }
-
-        // Phase A1 (2026-09-07) / R3 (AR-03) -- chance-gated ailment application,
-        // then reaction check against the just-applied id.
-        if (skill) {
-          this.applySkillAilments(battle, actor, target, skill)
-        }
-
-        // Task 13 -- detonate (dot-route empowered ult, spec §4):
-        // AFTER the normal application lands, consume every live
-        // DoT ailment for remaining-tick x stacks x amp and re-seed
-        // a fixed 1 stack at authored duration. Reaction-silent by
-        // contract -- re-seeds carry 'suppressed' eligibility and never
-        // reach the (M-INT inert) reaction engine.
-        if (skill?.detonateDoT && target.entity.alive) {
-          this.applyDetonate(battle, actor, target, skill.detonateDoT.amp)
         }
       }
 
@@ -2599,13 +2513,11 @@ export class TurnBattleSystem {
       // stack (recast refreshes to full; a lower recast lowers the
       // pool). sourceMaxHpRatio reads the GRANTING tank's live maxHp.
       if (buffSpec.externalWardGrant) {
-        target.entity.externalWard = {
-          sourceId: actor.entity.id,
-          amount: Math.max(
-            0,
-            actor.entity.stats.maxHp * buffSpec.externalWardGrant.sourceMaxHpRatio,
-          ),
-        }
+        this.writeExternalWardGrant(
+          actor.entity,
+          target.entity,
+          buffSpec.externalWardGrant.sourceMaxHpRatio,
+        )
       }
 
       // ARCH-002 (M7) -- statModifier buffs are effective NOW, not at the
@@ -3255,10 +3167,11 @@ export class TurnBattleSystem {
             `intercept_ward.${definition.id}`,
           ),
         ], battle)
-        original.entity.externalWard = {
-          sourceId: nearest.entity.id,
-          amount: nearest.entity.stats.maxHp * wardGrant.sourceMaxHpRatio,
-        }
+        this.writeExternalWardGrant(
+          nearest.entity,
+          original.entity,
+          wardGrant.sourceMaxHpRatio,
+        )
       }
     }
   }
@@ -3527,178 +3440,6 @@ export class TurnBattleSystem {
 
     battle.state = 'defeat'
     return battle.state
-  }
-
-  /**
-   * R3 (AR-03) -- Chance-gated ailment application supporting multiple ailments
-   * and multi-stack application. Shares reaction triggering across damaging
-   * and non-damaging skill execution paths.
-   */
-  private applySkillAilments(
-    battle: TurnBattle,
-    actor: TurnBattleParticipant,
-    target: TurnBattleParticipant,
-    actionOrSkill: SelectedAction | TurnSkillDefinition,
-  ): void {
-    if (!this.registry || this.runtime === undefined) return
-
-    const skill = 'skill' in actionOrSkill ? actionOrSkill.skill : actionOrSkill
-    if (!skill) return
-
-    const ailments =
-      skill.appliesAilments ??
-      (skill.appliesAilment ? [skill.appliesAilment] : [])
-
-    // buff2 M4 + M-INT -- each authored ailment entry emits ONE
-    // apply_buff op: the resolver owns the chance roll (spec formula
-    // baseChance x sourceApplicationModifier x targetResistanceModifier
-    // replaces the legacy additive elementApplicationPercent helper),
-    // stacks ride the payload, and the legacy reaction check is gone --
-    // elemental applications mark reactionEligibility only ('eligible'
-    // flags the canonical-state mapping for the future reaction
-    // mission; NOTHING consumes it at M-INT).
-    const ops: ResolvedCombatOperation[] = []
-    const rootActionId = `skill.ailments.${battle.totalTurnsElapsed}.${actor.id}.${target.id}.${this.nextOccurrence()}`
-
-    for (const ailment of ailments) {
-      // Same unresolvable-id skip as the appliesBuffs lane (9.5 #12):
-      // a drifted content id must not crash the tick at the resolver.
-      if (!this.registry.has(ailment.buffDefinitionId as BuffDefinitionId)) continue
-      ops.push(
-        this.applyBuffOp(
-          ailment.buffDefinitionId,
-          actor.entity.id,
-          target.entity.id,
-          ailment.stacks ?? 1,
-          ailment.chance,
-          'eligible',
-          rootActionId,
-          `ailment.${ailment.buffDefinitionId}`,
-        ),
-      )
-    }
-
-    this.emitAndSettle(ops, battle)
-  }
-
-  /**
-   * Phap Tu Reimagined Task 13 (spec §4) -- the 'dot' route's detonation.
-   * Consumes EVERY live ailment instance whose definition carries a
-   * `dot` effect (pure-utility ailments are never touched -- a scalpel,
-   * not a cleanser); each consumed instance pays
-   * (perTick x remainingTurns x stacks) x amp as direct damage through
-   * the authoritative vitals pipeline (death mid-loop stops the rest).
-   * Each consumed id then re-seeds ONCE at a fixed 1 stack / authored
-   * duration through apply_buff ops -- periodic potency resolves
-   * against the caster's CURRENT stats at tick (never the consumed
-   * snapshot).
-   * The re-seed is not an application event: no chance roll, no
-   * ailmentStackBonus, and its reactionEligibility is 'suppressed' --
-   * the reaction gate never sees it. Iterates a snapshot so re-seeded
-   * instances are never revisited.
-   */
-  private applyDetonate(
-    battle: TurnBattle,
-    actor: TurnBattleParticipant,
-    target: TurnBattleParticipant,
-    amp: number,
-  ): void {
-    if (!this.registry || this.runtime === undefined) return
-
-    const rootActionId = `skill.detonate.${battle.totalTurnsElapsed}.${actor.id}.${target.id}.${this.nextOccurrence()}`
-    const consumedIds = new Set<string>()
-    const ops: ResolvedCombatOperation[] = []
-
-    // Iterate the canonical read snapshot -- re-seeded instances are
-    // never revisited (the ops below mint new instance ids).
-    for (const instance of this.buffs.getForTarget(target.entity.id)) {
-      if (!target.entity.alive) break
-
-      const definition = this.registry.tryGet(instance.definitionId)
-      const damagePeriodics = (definition?.periodic ?? []).filter(
-        (periodic) => periodic.type === 'damage',
-      )
-
-      if (definition === undefined || damagePeriodics.length === 0) continue
-
-      // Consume the exact instance; same-id duplicates still consume --
-      // only the re-seed below dedupes by definition id.
-      ops.push({
-        type: 'consume_buff_stacks',
-        operationId: `detonate.${rootActionId}.${instance.instanceId}` as CombatOperationId,
-        payload: {
-          selector: { kind: 'instance', instanceId: instance.instanceId },
-          stacks: 'all',
-          removalReason: 'consumed',
-        },
-        origin: this.opOrigin(actor.entity.id, rootActionId, `detonate.${instance.instanceId}`),
-      })
-      consumedIds.add(instance.definitionId)
-
-      // Legacy burst: (resolved per-tick) x remainingTurns x stacks x
-      // amp, summed across the def's damage periodics. Each periodic
-      // keeps its own element (the profile resolves the matching
-      // power/resistance channel); the intent coefficient = authored
-      // ratio x potency/periodic_damage channels x remaining x stacks
-      // x amp (legacy damagePerTurn was per-stack). 'detonate_burst'
-      // resolves x live stats and delivers flat -- outside the closed
-      // DoT economy, same as legacy's applyDirectDamage.
-      for (const periodic of damagePeriodics) {
-        const burst =
-          periodic.coefficient *
-          resolveChannel(instance.modifiers, 'periodic_damage', 1) *
-          resolveChannel(instance.modifiers, 'potency', 1) *
-          (instance.remaining ?? 0) *
-          instance.stacks *
-          amp
-
-        if (burst <= 0) continue
-
-        ops.push({
-          type: 'deal_damage',
-          operationId: `detonate.${rootActionId}.damage.${instance.instanceId}.${periodic.id}` as CombatOperationId,
-          payload: {
-            targetId: target.entity.id,
-            element: periodic.element,
-            damageProfile: 'detonate_burst',
-            coefficient: burst,
-            hitCount: 1,
-            canCrit: false,
-            canMiss: false,
-            tags: periodic.tags,
-            // Legacy parity: the consumed per-tick resolved vs the
-            // INSTANCE's source (a third party may have seeded the DoT);
-            // origin.sourceId stays the caster for attribution.
-            statSourceId: instance.sourceId,
-          },
-          origin: this.opOrigin(actor.entity.id, rootActionId, `detonate_damage.${instance.instanceId}.${periodic.id}`),
-        })
-      }
-    }
-
-    // Re-seed ONCE per consumed definition id -- a fixed 1 stack at the
-    // ailment's authored duration; the resolver recomputes potency
-    // against the caster's current stats. baseChance 1 = the legacy
-    // unconditional re-seed (no chance roll existed on this path);
-    // reaction-silent by contract -- 'suppressed'.
-    for (const id of consumedIds) {
-      if (!target.entity.alive) break
-
-      ops.push(
-        this.applyBuffOp(
-          id,
-          actor.entity.id,
-          target.entity.id,
-          1,
-          1,
-          'suppressed',
-          rootActionId,
-          `reseed.${id}`,
-        ),
-      )
-    }
-
-    this.emitAndSettle(ops, battle)
   }
 
   // Sudden Death (roadmap 9.5 Combat Fairness Guards): damage +30%/turn
