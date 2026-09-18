@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buffDisplayName } from '../../buff/BuffNames'
-import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
-
-// Phase A6 (2026-09-08) — throw-safe display-name resolver for buff
-// badges. BUFF_REGISTRY.get() THROWS on unknown ids; presentation
-// code needs a soft fallback (raw id) instead.
+import { buffDisplayName } from './BuffNames'
+import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 describe('buffDisplayName', () => {
   it('returns the registry name for a known buff id', () => {

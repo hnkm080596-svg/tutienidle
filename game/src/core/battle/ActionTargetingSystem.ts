@@ -1,9 +1,9 @@
-// [M13 STATUS: PARTIAL] Mixed liveness module: `areaFor` is live
-// (imported by battle/turn/TurnSkillAction); `selectRankedTarget` serves
-// the parked ArtifactSystem. The dead Battle-typed helpers
-// (isHeroGate/collectAffected/findBattleEnemy) were deleted in Mission G.
-// Do not extend the Battle-typed API; new turn-side targeting belongs in
-// battle/turn/.
+// [M13 STATUS: PARTIAL] `areaFor` is live (imported by
+// battle/turn/TurnSkillAction). The dead Battle-typed helpers
+// (isHeroGate/collectAffected/findBattleEnemy) were deleted in Mission G;
+// `selectRankedTarget` + the `Battle` type retired at buff2 M5 with the
+// parked ArtifactSystem/legacy buff package. New turn-side targeting
+// belongs in battle/turn/.
 // Combat Grid Rework — chọn primary target + vùng ảnh hưởng hoàn toàn
 // theo đơn vị GRID (cột/hàng). Pure functions, không state.
 //
@@ -11,19 +11,15 @@
 // (canPlayerReachTarget / canEnemyReachGate / selectPrimaryTargetForEnemy
 // / selectAttackableTarget) were deleted with the retired attackRange
 // stat — reach now belongs to action targeting, not Stats.
-import type { Battle } from './Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActionTargeting, TargetSelectionMode } from './CombatAction'
 import {
   GRID_ROW_COUNT,
   GRID_COLUMN_COUNT,
   getCellsInArea,
-  entityGridPosition,
-  getChebyshevDistance,
   type CellArea,
   type LaneIndex,
 } from './BattleGrid'
-import { rankTargetsByStrategy, type CombatAiStrategy, DEFAULT_COMBAT_AI_STRATEGY } from './CombatAiStrategy'
 
 interface Candidate {
   entity: CombatEntity
@@ -40,40 +36,6 @@ function compareBySelection(a: Candidate, b: Candidate, selection: TargetSelecti
       // nearest: gần theo CỘT trước, hòa thì theo thứ tự danh sách ổn định.
       return a.columnDistance - b.columnDistance
   }
-}
-
-/**
- * Strategy-ranked target pick over ALL alive materialized enemies
- * (2026-08-26 pre-positioning rule): rank every living enemy by strategy
- * from the avatar's current position, return the first candidate.
- * Survives the attackRange retirement (Task 3, D16) unchanged — this
- * picker never gated on reach. Currently consumed by the dormant
- * ArtifactSystem activation tick.
- */
-export function selectRankedTarget(
-  battle: Battle,
-  strategy: CombatAiStrategy = DEFAULT_COMBAT_AI_STRATEGY,
-): CombatEntity | null {
-  const player = battle.player
-
-  if (!battle.playerMaterialized || !player.alive) {
-    return null
-  }
-
-  const candidates = rankTargetsByStrategy(
-    battle.enemies
-      .filter((battleEnemy) => battleEnemy.entity.alive)
-      .map((battleEnemy) => ({
-        entity: battleEnemy.entity,
-        distance: getChebyshevDistance(
-          entityGridPosition(player),
-          entityGridPosition(battleEnemy.entity),
-        ),
-      })),
-    strategy,
-  )
-
-  return candidates[0]?.entity ?? null
 }
 
 export function areaFor(anchorRow: LaneIndex, anchorColumn: number, targeting: ActionTargeting): CellArea | null {

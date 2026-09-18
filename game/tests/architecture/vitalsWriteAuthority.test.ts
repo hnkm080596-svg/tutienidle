@@ -56,11 +56,6 @@ const ALLOWED: AllowedFile[] = [
       'Damage pipeline wrapping EntityVitalsSystem: manaShield absorption (currentMp), survive-lethal HP=1 grace, death flag write after lethal resolution.',
   },
   {
-    path: 'src/core/artifact/ArtifactSystem.ts',
-    contract:
-      'Persistent overworld ward regen (THU_T12 ward-break recovery) — combat-independent vitals recovery, deliberately outside battle (R1 evidence).',
-  },
-  {
     path: 'src/core/tribulation/TribulationDirector.ts',
     contract:
       'Mind-tribulation ghost HP snapshot restore (own director entity, not battle participants) — tribulation has its own time/outcome handling.',

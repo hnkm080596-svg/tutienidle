@@ -2,7 +2,7 @@ import type { ElementType } from '../element/ElementType'
 import type { Stats } from '../stats/StatBlock'
 import type { StatType } from '../stats/StatTypes'
 import { STAT_DOMAIN } from '../stats/StatDomain'
-import type { BuffDefinition } from '../buff/BuffTypes'
+import type { BuffDefinition } from '../buff2/BuffDefinition'
 import type { EnemyDefinition } from './Enemy'
 
 /**
@@ -180,19 +180,28 @@ export function assertEnemyDamageSurface(
   }
 
   for (const buff of buffs) {
-    const chainedIds = [buff.id, buff.convertsToId]
-    for (const effect of buff.effects) {
-      if (effect.type === 'statModifier' && STAT_DOMAIN[effect.stat] !== undefined) {
+    const chainedIds: Array<string | undefined> = [buff.id, buff.convertsToId]
+    for (const modifier of buff.statModifiers ?? []) {
+      if (STAT_DOMAIN[modifier.stat] !== undefined) {
         throw new Error(
-          `[EnemyStatInput] embedded buff "${buff.id}" delivers gated stat "${effect.stat}" ` +
+          `[EnemyStatInput] embedded buff "${buff.id}" delivers gated stat "${modifier.stat}" ` +
             'through a modifier channel -- use a declared special base slot instead',
         )
       }
-      if (effect.type === 'onHitProc') {
-        chainedIds.push(effect.appliesBuffId)
+    }
+    // buff2 (M5) — capability grants carry owner-typed payloads; the gate
+    // scans the two buff-id fields proc/reactive payloads use (ProcCapabilities
+    // appliesBuffId / appliesDefinitionId) so any buff chain authored on an
+    // enemy-embedded def stays reaction-id-checked regardless of grant type.
+    for (const grant of buff.capabilities ?? []) {
+      const payload = grant.payload as
+        | { appliesBuffId?: unknown; appliesDefinitionId?: unknown }
+        | undefined
+      if (typeof payload?.appliesBuffId === 'string') {
+        chainedIds.push(payload.appliesBuffId)
       }
-      if (effect.type === 'reactiveTrigger') {
-        chainedIds.push(effect.appliesDefinitionId)
+      if (typeof payload?.appliesDefinitionId === 'string') {
+        chainedIds.push(payload.appliesDefinitionId)
       }
     }
     for (const id of chainedIds) {

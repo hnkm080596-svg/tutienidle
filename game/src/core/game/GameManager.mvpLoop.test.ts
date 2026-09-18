@@ -7,7 +7,7 @@ import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import type { Stage } from '../stage/Stage'
-import type { BuffDefinition } from '../buff/BuffDefinition'
+import type { BuffDefinition } from '../buff2/BuffDefinition'
 import { isBattleInProgress } from '../battle/BattleTypes'
 
 // Math.random là state TOÀN CỤC theo worker thread — file test chạy
@@ -68,19 +68,21 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     const enrageBuff: BuffDefinition = {
       id: 'mvp_test_enrage',
       name: 'Enrage (test)',
-      polarity: 'buff',
-      duration: Infinity,
-      stackMode: 'stack',
-      effects: [],
+      kind: 'buff',
+      instanceScope: 'per_source',
+      stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+      lifetime: { clock: 'permanent', scaling: 'fixed' },
+      dispellable: false,
     }
 
     const phaseBuff: BuffDefinition = {
       id: 'mvp_test_phase',
       name: 'Phase (test)',
-      polarity: 'buff',
-      duration: Infinity,
-      stackMode: 'stack',
-      effects: [],
+      kind: 'buff',
+      instanceScope: 'per_source',
+      stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+      lifetime: { clock: 'permanent', scaling: 'fixed' },
+      dispellable: false,
     }
 
     const mob = defineEnemy({
