@@ -1,17 +1,26 @@
 # Skill Definition System — Final Specification
 
-Status: FINAL — Ready for implementation planning — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
-Version: 1.1
+Status: FINAL — **READY FOR IMPLEMENTATION** (v1.2 — synchronized with the combat-systems program's M5 expansion, `2026-09-17-megaplan-skill-definition.md` v2; the 2026-09-17 PARKED ruling is superseded — this spec IS that program's skill mission, and its hard baseline — buff M4 cutover + reaction M-INT — is already merged)
+Version: 1.2
 Scope: Generic combat skill architecture
 Primary consumer: Pháp Tu Reimagined
 Validation kit: Hỏa
 System owner: Skill System
 
-> **Implementation notes (2026-09-17):**
-> - Depends on the ailment authority described in [2026-09-17-hoa-an-ailment-system-spec.md](./2026-09-17-hoa-an-ailment-system-spec.md) (`apply_ailment` / `modify_ailment` / `trigger_ailment_tick` / `consume_ailment` operations). Cả hai spec cùng PARKED.
+> **v1.2 amendments (2026-09-18 — locked via Skill megaplan review):**
+> - **Un-parked:** the PARKED ruling predates the combat-systems program; that program schedules this spec as its M5. Baseline already merged on master (`d65f28aa` buff M4 + `0eb2f2c1` reaction engine).
+> - **Authority corrected:** BuffSystem (buff2) is the canonical buff/ailment application-stack-duration authority — the [hoa-an spec](./2026-09-17-hoa-an-ailment-system-spec.md) is CONTEXT ONLY, not an implementation dependency (parent plan ruling). Skill produces `apply_buff`/`add_buff_stacks`/`consume_buff_stacks`/`trigger_buff_periodic`/`remove_buff`/`cleanse` operation INTENT through the [Combat Contract](./2026-09-17-combat-systems-contract-spec.md); the authored `*_ailment` operations in §24 bind onto those buff operations (an ailment IS a `kind:'ailment'` BuffDefinition — buff spec §1).
+> - **Three state layers (§3 rewritten):** `SkillDefinition` / `SkillProgressionState` / `SkillCombatRuntimeState` — the old `SkillRuntimeState` name conflated persistent progression with battle-scoped cast state.
+> - **`remove_buff` vs `cleanse` (§24):** identified-instance removal (`RemoveBuffOperation` — selector) is distinct from query-based cleanse (`CleanseBuffOperation` — `BuffCleanseQuery`); "remove 2 debuffs" is a cleanse.
+> - **`reactionEligibility` (§52):** producer-path metadata on `ApplyBuffRequest`; whether a reaction runs is the ReactionSystem capability+registry gate (`elemental_reaction_enabled`).
+> - **Scope:** this spec governs the ACTIVE turn-combat skill pipeline. `PassiveSkillDefinition` schema + validation land with it; `PassiveSystem` remains a separate event-driven runtime — its migration is a documented deferred lane, not a parallel-pipeline violation.
+> - **Semantic model vs concrete binding:** §§5–50 define the SEMANTIC model — immutable definition, discriminated union, deterministic ordering, snapshot-at-commit, landed semantics, typed modification language, no deep merge, no arbitrary callbacks. The concrete TURN-MODEL binding — field-level names (`operations`/`cadence`/`targetIntent`/`subcasts`/`instances`), the `ResolvedSkillPlanStep` plan IR (operation/read/branch), and the adapter field map — lives in megaplan v2 M1–M4. Where names differ, the megaplan binding governs implementation and this spec governs invariants: `primary`/`post_resolution` phases bind to authored op ordering + `cast_outcome`-gated plan steps; `once_per_target` binds to `for_each_target`/per-target step expansion; `TargetingDefinition` binds to `targetIntent` + `SkillTargetIntent`.
+
+> **Implementation notes (2026-09-17 — partially superseded by v1.2 amendments above):**
+> - ~~Depends on the ailment authority described in [2026-09-17-hoa-an-ailment-system-spec.md](./2026-09-17-hoa-an-ailment-system-spec.md)~~ → v1.2: BuffSystem (buff2) là canonical buff/ailment authority; hoa-an spec = context only; authored `*_ailment` ops bind onto contract buff ops (see §24 binding table).
 > - Codebase hiện có hai skill representations sống song song: `Skill.effects: SkillEffect[]` (legacy) và `Skill.triggers: TriggerBinding[]` + `SkillAction` union (Trigger/Action rework 2026-08-31, `SkillActionRegistry`). Spec này mô tả representation thứ ba (`SkillDefinition` + `ResolvedSkillPlan`); §69 yêu cầu một executor đích — khi implement phải ruling rõ mối quan hệ với TriggerBinding path (absorb/replace), tránh ba pipeline tồn tại cùng lúc.
 > - `Skill` interface hiện tại trộn definition + runtime state (level, experience, unlocked, equipped, loadoutSlot, selectedSpecializationId) — spec §3 yêu cầu tách, đây là migration thật.
-> - `executionPolicy` của spec (`attack_speed`/`cooldown`/`manual`) khác `SkillExecutionPolicy` hiện tại (`attack_speed`/`cooldown`/`cast_time`/`attack_speed_cast`/`channel`); turn engine đang dùng `TurnSkillDefinition.cooldownTurns` — cần map đơn vị castTime/cooldown sang turn model.
+> - `executionPolicy` của spec (`attack_speed`/`cooldown`/`manual`) khác `SkillExecutionPolicy` hiện tại (`attack_speed`/`cooldown`/`cast_time`/`attack_speed_cast`/`channel`); turn engine đang dùng `TurnSkillDefinition.cooldownTurns` — v1.2/R8 RESOLVED: turn units (`cooldownTurns`/`chargeTurns`) là canonical cadence duy nhất; real-time policies là retired authored metadata (see §12 note).
 > - `SkillResourcePoolKey = never` hiện tại (named pools đã dời khỏi `CombatEntity`); `resourceId: 'the'` của spec đòi hỏi một Resource authority — verify owner hiện tại của Thế trước khi implement resource operations.
 
 ## 1. Purpose
@@ -51,8 +60,8 @@ Skill Executor
 ┌───────────────────────────┐
 │ Targeting System          │
 │ Damage System             │
-│ Ailment System            │
-│ Buff System               │
+│ Buff System (buff2 — owns │
+│   buff AND ailment state) │
 │ Resource System           │
 │ Healing / Shield System   │
 └───────────────────────────┘
@@ -69,15 +78,14 @@ Trách nhiệm:
 | SkillExecutor | thứ tự execution |
 | Targeting | mục tiêu hợp lệ |
 | Damage | damage thực tế |
-| Ailment | ailment lifecycle |
-| Buff | buff lifecycle |
+| Buff (buff2) | buff + ailment lifecycle (ailment = `kind:'ailment'` BuffDefinition) |
 | Resource | resource lifecycle |
 | Reaction | elemental reaction |
 | Stat | combat stat |
 | Progression | permanent modifications |
 | Route | stance/path modifications |
 
-## 3. SkillDefinition Is Immutable
+## 3. SkillDefinition Is Immutable — Three State Layers
 
 Definition không chứa runtime state:
 
@@ -88,21 +96,43 @@ Definition không chứa runtime state:
 - current Thế
 - current route
 - temporary combat modifier
+- level / experience / unlock / equipped / loadout / specialization
 
-Runtime state nằm riêng:
+Có BA lớp state riêng biệt — không được trộn:
 
 ```ts
-interface SkillRuntimeState {
+// Persistent player state — SkillSystem owns, save surface
+interface SkillProgressionState {
   skillId: SkillId
 
-  cooldownRemaining: number
+  level: number
+  experience: number
+  totalExperience: number
 
-  charges?: number
-  maxCharges?: number
+  selectedSpecializationId?: string
+
+  unlocked: boolean
+  equipped: boolean
+  loadoutSlots: number[]
+}
+```
+
+```ts
+// Battle-scoped state — turn runtime owns (TurnSkillSlot home), NOT saved
+interface SkillCombatRuntimeState {
+  skillId: SkillId
+
+  cooldownRemainingTurns: number
+
+  chargeProgress?: number
 
   lastCastSequence?: number
 }
 ```
+
+Per-cast execution data (ví dụ `theBurned`, `multicastDepth`) thuộc `SkillCastSnapshot` / execution context — không nằm trong cả ba lớp trên.
+
+Resolver nhận `SkillProgressionState` + `SkillCombatRuntimeState` như READONLY inputs.
 
 Không được mutate static definition trong battle.
 
@@ -331,6 +361,8 @@ interface ActiveSkillExecutionDefinition {
 `execution` chỉ sở hữu cast mechanics.
 Không chứa damage semantics.
 
+**v1.2 — turn binding (R8):** canonical ACTIVE cadence là TURN units — `cadence {cooldownTurns, chargeTurns?}` trong megaplan binding. `castTime`/`cooldown` (giây) và `executionPolicy` ở đây là legacy real-time authored metadata — không phải combat authority trong turn engine; adapter giữ chúng cho tooltip, không đưa vào plan.
+
 ## 13. Cast Lifecycle
 
 Canonical:
@@ -492,6 +524,14 @@ Examples:
 - Ailment application thành công: `landed = true`
 - Ailment application bị resist/fail: `landed = false`
 
+**Offensive debuff**
+
+- Debuff apply thành công: `landed = true`
+
+**Self-utility**
+
+- Self buff/heal/resource cast thành công: `landed = true` (self là valid target) — nhưng không gọi là "hit". `landed` KHÔNG đồng nghĩa "không fail": nó yêu cầu ít nhất một primary effect mang connection semantics kết nối/resolve thành công.
+
 Điều này hỗ trợ skill như `Độc Chưởng` mà không cần fake 0-damage hit.
 
 ## 21. EffectResult phải định nghĩa `connected`
@@ -578,6 +618,7 @@ type SkillOperationDefinition =
 
   | ApplyBuffOperation
   | RemoveBuffOperation
+  | CleanseBuffOperation
 
   | ResourceGainOperation
   | ResourceConsumeOperation
@@ -586,6 +627,17 @@ type SkillOperationDefinition =
 ```
 
 Không thêm custom operation chỉ vì một skill mới cần convenience syntax.
+
+**v1.2 — Combat Contract binding:** authored operations bind onto contract buff ops (ailment = `kind:'ailment'` BuffDefinition):
+
+| Authored | → Contract op |
+|---|---|
+| `apply_ailment` / `apply_buff` | `ApplyBuffOperation` (carries `reactionEligibility`) |
+| `modify_ailment` | `AddBuffModifierOperation` / stack ops |
+| `trigger_ailment_tick` | `TriggerBuffPeriodicOperation` |
+| `consume_ailment` | `ConsumeBuffStacksOperation` |
+| `remove_buff` | `RemoveBuffOperation` — **identified instance via selector** |
+| `cleanse` | `CleanseBuffOperation` — **query-based** (`{kind?, tags?, element?}`, `count?`) — "remove 2 debuffs" là cleanse, KHÔNG phải remove_buff |
 
 ## 25. DamageOperation
 
@@ -681,15 +733,16 @@ interface ApplyAilmentOperation {
 }
 ```
 
-Ailment System sở hữu:
+BuffSystem (buff2) sở hữu:
 
-- RNG
+- RNG (application roll — CombatRng, không skill tự roll)
 - resistance
 - stack
 - refresh
 - duration
 - modifier
-- reaction eligibility
+
+`reactionEligibility` là producer-path metadata do SKILL author/adapter quyết định (§52) — BuffSystem chỉ mang nó qua committed event.
 
 ## 29. ModifyAilmentOperation
 
@@ -724,7 +777,7 @@ interface TriggerAilmentTickOperation {
 }
 ```
 
-Ailment System quyết định tick semantics.
+BuffSystem quyết định tick semantics (`TriggerBuffPeriodicOperation` — không advance lifetime trừ khi lifecycle yêu cầu riêng).
 
 ## 31. ConsumeAilmentOperation
 
@@ -1178,14 +1231,18 @@ Correct:
 ```
 Skill
 ↓
-Apply Ailment
+ApplyBuffOperation (reactionEligibility = eligible | suppressed)
 ↓
-Ailment System commits
+BuffSystem commits → ElementalApplicationCommitted
+↓
+Reaction gate: eligibility → addedStacks>0 → capability (elemental_reaction_enabled)
 ↓
 Reaction System observes state
 ```
 
 Không `skill.triggerReaction()` trừ mechanic đặc biệt cố tình forced reaction và đã được architecture review.
+
+**v1.2:** `reactionEligibility` là producer-path metadata do skill/adapter quyết định lúc author/convert — `'eligible'` cho normal external elemental applications, `'suppressed'` cho reaction-generated/recursive lanes. Việc reaction có thực sự chạy hay không do ReactionSystem's capability+registry gate quyết định (`elemental_reaction_enabled`) — skill KHÔNG quyết định reaction execution, và KHÔNG đọc legacy capability flags của caster.
 
 ## 53. Passive Trigger Contract
 
@@ -1627,15 +1684,18 @@ Tránh nested mutation không kiểm soát.
 
 Static SkillDefinition không lưu vào save.
 
-Persist:
+Persist = `SkillProgressionState`:
 
 - skillId
 - unlock
 - level
-- equipped state
-- progression choices
+- experience / totalExperience
+- equipped state / loadoutSlots
+- progression choices (selectedSpecializationId)
 
-Load: resolve definition from registry.
+`SkillCombatRuntimeState` (cooldown/charge/cast sequence) KHÔNG persist — battle-scoped, recreated per battle.
+
+Load: resolve definition from registry + rehydrate progression state.
 
 Balance values không nằm trong save.
 
@@ -1661,8 +1721,10 @@ Destination architecture vẫn phải là:
 
 ```
 one ResolvedSkillPlan
-one execution pipeline
+one ACTIVE turn-combat execution pipeline
 ```
+
+(PassiveSystem là separate event-driven runtime — documented deferred lane, không tính là "parallel pipeline" — v1.2 scope note.)
 
 ## 70. Required Tests — Core Schema
 
@@ -1713,8 +1775,11 @@ Minimum:
 | Area | Invariant |
 |---|---|
 | Definition | Immutable |
-| State | Separate runtime state |
+| State | THREE layers — Definition / SkillProgressionState / SkillCombatRuntimeState |
 | Active/Passive | Discriminated union |
+| Plan | `ResolvedSkillPlanStep` IR — reads/branches are executor-owned steps, never CombatOperations |
+| Reads | Narrow READONLY query ports — never the CombatAuthorityPorts command surface |
+| Cleanse | `cleanse` (query) ≠ `remove_buff` (identified selector) |
 | Mutation | System-owner only |
 | RNG | Deterministic |
 | Target order | Deterministic |
@@ -1722,7 +1787,7 @@ Minimum:
 | Landed | Resolved after Primary |
 | Post effects | Run after outcome exists |
 | Damage | Damage System |
-| Ailment | Ailment System |
+| Buff + Ailment | BuffSystem (buff2) |
 | Resource | Resource System |
 | Reaction | Reaction System |
 | Expressions | Pure |
