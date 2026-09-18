@@ -81,7 +81,7 @@ describe('CombatAnimationRuntime', () => {
     expect(runtime.getAnimationState('player')).toBe('idle')
   })
 
-  it('notifyReadyActor → pendingReadyActor set → getAnimationState reports ready + emits turn_ready', () => {
+  it('notifyReadyActor → pendingReadyActor set → getAnimationState reports standby + emits turn_ready', () => {
     const { runtime, player, eventBus } = fixture()
 
     const events: string[] = []
@@ -94,7 +94,7 @@ describe('CombatAnimationRuntime', () => {
     expect(events).toContain('turn_ready')
   })
 
-  it('acknowledgeTurnReady → declares action → getAnimationState reports cast + emits turn_cast_start', () => {
+  it('acknowledgeTurnReady → declares action → getAnimationState reports standby + emits turn_cast_start', () => {
     const { runtime, player, eventBus } = fixture()
 
     const events: string[] = []

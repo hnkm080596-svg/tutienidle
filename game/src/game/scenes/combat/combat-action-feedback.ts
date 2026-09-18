@@ -1,8 +1,8 @@
-// combat-action-feedback (Wave-3 large-file split) — tach tu CombatScene.ts.
-// Action visual feedback + presentation ACK pacing: attack lunge with the
-// midpoint impact ack, hit/critical/dodge/cast flashes and floating text,
+// combat-action-feedback (Wave-3 large-file split) - tach tu CombatScene.ts.
+// Action visual feedback + presentation ACK pacing: shared attack lunge
+// with midpoint impact ack, hit/critical/dodge flashes and floating text,
 // action_impact VFX completion ack, turn_ready pulse ack, standby tail.
-// Token is captured AT SPAWN for every delayed ack — a late callback holds
+// Token is captured AT SPAWN for every delayed ack - a late callback holds
 // a stale token the engine rejects (plan Task 1 Step 5; R5 AR-20).
 import type {
   ActionImpactEvent,
@@ -39,8 +39,8 @@ export class CombatActionFeedback {
       // split died.
       scene.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
 
-      // Action Playback Task 7 (2026-09-05) / R5 (AR-20) — impact frame tại midpoint
-      // lunge: damage áp đúng lúc đòn "trúng" trên màn hình. Token bắt tại spawn.
+      // Action Playback Task 7 (2026-09-05) / R5 (AR-20) - impact frame tai midpoint
+      // lunge: damage ap dung luc don "trung" tren man hinh. Token bat tai spawn.
       const token = scene.gameManagerRef?.getPendingPlaybackToken() ?? ''
       if (scene.gameManagerRef && this.isActionPlaybackActive()) {
         scene.time.delayedCall(ATTACK_LUNGE_DURATION_MS / 2, () => {
@@ -54,8 +54,8 @@ export class CombatActionFeedback {
   }
 
   /**
-   * Action Playback Task 7 — presentationActive đang bật? Dùng registry
-   * gameManagerRef presence làm proxy (set/unmount cùng subscribe lifecycle).
+   * Action Playback Task 7 - presentationActive dang bat? Dung registry
+   * gameManagerRef presence lam proxy (set/unmount cung subscribe lifecycle).
    */
   private isActionPlaybackActive(): boolean {
     return this.scene.gameManagerRef !== undefined
@@ -69,9 +69,9 @@ export class CombatActionFeedback {
       return
     }
 
-    // Pop qua boost object — projection ghi kích thước mỗi frame nên
-    // tween scale trực tiếp sẽ bị ghi đè; boost nhân vào kích thước cuối
-    // ở applyEntityDepthScale() (perspective) / setScale (flat).
+    // Pop qua boost object - projection ghi kich thuoc moi frame nen
+    // tween scale truc tiep se bi ghi de; boost nhan vao kich thuoc cuoi
+    // o applyEntityDepthScale() (perspective) / setScale (flat).
     scene.tweens.killTweensOf(target.boost)
     target.boost.value = 1
 
@@ -128,12 +128,12 @@ export class CombatActionFeedback {
   }
 
   /**
-   * Remediation Task 2 — ack engine từ completion THỰC của VFX tween qua
-   * handle, không còn delayedCall tự tính duration trùng lặp. Token
-   * CAPTURE TẠI SPAWN (plan Task 1 Step 5): callback muộn giữ token cũ —
-   * engine đã sang phase/action khác (token mới) thì ack cũ thành stale
-   * no-op ở GameManager, chặn cross-battle mutation. Không spawn được VFX
-   * (projection miss) → ack ngay để engine không treo.
+   * Remediation Task 2 - ack engine tu completion THUC cua VFX tween qua
+   * handle, khong con delayedCall tu tinh duration trung lap. Token
+   * CAPTURE TAI SPAWN (plan Task 1 Step 5): callback muon giu token cu -
+   * engine da sang phase/action khac (token moi) thi ack cu thanh stale
+   * no-op o GameManager, chan cross-battle mutation. Khong spawn duoc VFX
+   * (projection miss) -> ack ngay de engine khong treo.
    */
   onActionImpact(event: ActionImpactEvent) {
     const scene = this.scene
@@ -152,10 +152,10 @@ export class CombatActionFeedback {
   }
 
   /**
-   * Action Playback Task 7 (2026-09-05) — 'turn_ready': short flash/pulse
-   * trên sprite actor rồi acknowledgeTurnReady() trong onComplete (5-phase
-   * machine bước 1 → 2). Placeholder visual đơn giản theo plan (không
-   * designed visual — polish sau).
+   * Action Playback Task 7 (2026-09-05) - 'turn_ready': short flash/pulse
+   * tren sprite actor roi acknowledgeTurnReady() trong onComplete (5-phase
+   * machine buoc 1 -> 2). Placeholder visual don gian theo plan (khong
+   * designed visual - polish sau).
    */
   onTurnReady(event: { actorId: string }) {
     const scene = this.scene
@@ -163,7 +163,7 @@ export class CombatActionFeedback {
     const sprite = scene.spriteFor(event.actorId)
 
     if (!sprite) {
-      // Không có sprite (late-join miss) — ack ngay để engine không treo.
+      // Khong co sprite (late-join miss) - ack ngay de engine khong treo.
       scene.gameManagerRef?.acknowledgeTurnReady(token)
       return
     }
@@ -173,21 +173,20 @@ export class CombatActionFeedback {
     // straight to standby (playback resolves the fallback).
     scene.playCombatAnimation(sprite, event.actorId, 'idle_to_standby')
 
-    // Pulse đơn giản: scale bump rồi trở lại (tween trên rect/sprite GameObject
-    // — EntitySprite wrapper không expose scale, projection ghi mỗi frame).
-    const visual = sprite.rect
-
-    scene.tweens.killTweensOf(visual)
+    // Pop qua boost object - projection ghi scale moi frame nen tween
+    // scale truc tiep tren rect bi ghi de (xem onCritical). boost nhan
+    // vao kich thuoc cuoi o applyEntityDepthScale() / setScale (flat).
+    scene.tweens.killTweensOf(sprite.boost)
+    sprite.boost.value = 1
 
     scene.tweens.add({
-      targets: visual,
-      scaleX: 1.15,
-      scaleY: 1.15,
+      targets: sprite.boost,
+      value: 1.15,
       duration: 250, // was 90 -- too fast to observe (2026-09-07 playtest)
       yoyo: true,
       ease: 'Quad.easeOut',
       onComplete: () => {
-        visual.setScale(1)
+        sprite.boost.value = 1
 
         scene.gameManagerRef?.acknowledgeTurnReady(token)
       },
@@ -195,9 +194,9 @@ export class CombatActionFeedback {
   }
 
   /**
-   * Action Playback Task 7 (2026-09-05) — 'turn_standby_complete': tail
-   * event (completeAction ĐÃ chạy trước khi event tới) — presentation-only
-   * bookkeeping, KHÔNG ack gì (không còn wait-gate).
+   * Action Playback Task 7 (2026-09-05) - 'turn_standby_complete': tail
+   * event (completeAction DA chay truoc khi event toi) - presentation-only
+   * bookkeeping, KHONG ack gi (khong con wait-gate).
    */
   onTurnStandbyComplete(event: { actorId: string }) {
     const scene = this.scene
@@ -214,15 +213,15 @@ export class CombatActionFeedback {
     }
   }
 
-  // Buff bar (2026-09-02) — floating text tên hiệu ứng CHỈ lần đầu
-  // attach theo (targetId:buffId) — 2 nguồn cùng buff id chỉ floating 1
-  // lần; stack tăng không floating lại. Clear ở 2 cleanup sites.
+  // Buff bar (2026-09-02) - floating text ten hieu ung CHI lan dau
+  // attach theo (targetId:buffId) - 2 nguon cung buff id chi floating 1
+  // lan; stack tang khong floating lai. Clear o 2 cleanup sites.
   onStatusAttached(event: StatusVfxAttachedEvent) {
     const scene = this.scene
     const statusKey = `${event.targetId}:${event.dotType}`
-    // Optional chaining defensive: field initializer KHÔNG chạy với
-    // Object.create(prototype) trong test (xem ghi chú class header) —
-    // undefined coi như "chưa floating lần nào".
+    // Optional chaining defensive: field initializer KHONG chay voi
+    // Object.create(prototype) trong test (xem ghi chu class header) -
+    // undefined coi nhu "chua floating lan nao".
     const firstOnTarget = scene.floatedStatusKeys?.has(statusKey) !== true
 
     scene.floatedStatusKeys?.add(statusKey)

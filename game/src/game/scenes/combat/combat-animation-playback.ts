@@ -1,9 +1,9 @@
-// combat-animation-playback (Wave-3 large-file split) — tach tu CombatScene.ts.
+// combat-animation-playback (Wave-3 large-file split) - tach tu CombatScene.ts.
 // Entity animation playback + death sequence: registerCombatAnimations(),
-// id→clip-prefix resolution, play-with-idle-return, and the deferred
+// id->clip-prefix resolution, play-with-idle-return, and the deferred
 // death finalize (animation + rotate/fade tween both done before destroy).
 // All scene state (sprites/dyingIds/dotAccumulators/positionInterp) stays
-// on the scene as Internal module-boundary members — this module only
+// on the scene as Internal module-boundary members - this module only
 // carries the mechanism.
 import Phaser from 'phaser'
 
@@ -71,26 +71,25 @@ export class CombatAnimationPlayback {
   constructor(private readonly scene: CombatScene) {}
 
   /**
-   * Combat Art Pipeline Task 9 (2026-09-05) — đăng ký Phaser
-   * Animation cho MỘT entity (player theo profile, hoặc enemy theo texture
-   * key) từ animation set đã build sẵn. `scene.anims` là AnimationManager
-   * DÙNG CHUNG toàn Game (không riêng theo scene) nên guard `exists()` bắt
-   * buộc — gọi lại nhiều lần qua các trận/scene KHÔNG được tạo trùng key.
+   * Combat Art Pipeline Task 9 (2026-09-05) - dang ky Phaser
+   * Animation cho MOT entity (player theo profile, hoac enemy theo texture
+   * key) tu animation set da build san. `scene.anims` la AnimationManager
+   * DUNG CHUNG toan Game (khong rieng theo scene) nen guard `exists()` bat
+   * buoc - goi lai nhieu lan qua cac tran/scene KHONG duoc tao trung key.
    */
-  // `entityKey` không dùng trực tiếp trong thân hàm (mỗi clip đã tự mang
-  // đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và
-  // để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).
+  // `entityKey` khong dung truc tiep trong than ham (moi clip da tu mang
+  // du key/sheetKey) - giu tham so vi chu ky khop cach goi tai create() va
+  // de log/mo rong sau nay (vd. gan nhan loi khi generateFrameNumbers rong).
   registerCombatAnimations(_entityKey: string, clips: CombatAnimationCatalogue): void {
     registerClipCatalogue(this.scene.anims, clips)
   }
 
   /**
-   * Map id RUNTIME (PLAYER_ID hoặc enemy id dạng '<templateId>_<uuid>')
-   * sang ENTITY KEY dùng làm tiền tố animation clip — khớp ĐÚNG cách
-   * CombatPreload.ts build animation set (player theo profile hiện hành,
-   * enemy theo resolveEnemyTextureKey()). undefined khi actor không có
-   * animation set nào (enemy ngoài batch Mortal, vẫn Rectangle) — caller
-   * PHẢI guard trước khi gọi sprite.play().
+   * Map id RUNTIME (PLAYER_ID hoac enemy id dang '<templateId>_<uuid>')
+   * sang ENTITY KEY dung lam tien to animation clip - khop DUNG cach
+   * CombatPreload.ts build animation set (player theo profile hien hanh,
+   * enemy theo resolveEnemyTextureKey()). Unregistered ids resolve to the
+   * shared placeholder entity (uniformity 2026-09-19) - never undefined.
    */
   entityAnimationKeyPrefix(actorId: string): string | undefined {
     if (actorId === PLAYER_ID) {
@@ -104,7 +103,7 @@ export class CombatAnimationPlayback {
   }
 
   /**
-   * Spec B §3.2 — is this entity's art ANIMATED, or a still image?
+   * Spec B sec.3.2 - is this entity's art ANIMATED, or a still image?
    *
    * One question, asked of the catalogue, in the one place that plays clips.
    * A static entity is not a degraded animated one: it has no clips at all, and
@@ -115,12 +114,12 @@ export class CombatAnimationPlayback {
   }
 
   /**
-   * Phát 1 animation clip cho actor NẾU sprite là Sprite thật (kind ===
-   * 'sprite') VÀ clip đó đã được registerCombatAnimations() đăng ký —
-   * no-op an toàn cho Rectangle fallback (enemy ngoài batch) hoặc clip
-   * chưa/không tồn tại (test fixture không stub scene.anims đầy đủ).
+   * Phat 1 animation clip cho actor NEU sprite la Sprite that (kind ===
+   * 'sprite') VA clip do da duoc registerCombatAnimations() dang ky -
+   * no-op an toan cho Rectangle fallback (enemy ngoai batch) hoac clip
+   * chua/khong ton tai (test fixture khong stub scene.anims day du).
    *
-   * Spec B §3.2 (2026-09-11) — AND the entity's art is animated. Before this,
+   * Spec B sec.3.2 (2026-09-11) - AND the entity's art is animated. Before this,
    * an enemy taking its turn played the 32-frame placeholder, which SWAPPED its
    * texture from its own Mortal PNG to a numbered stick figure for the length of
    * the clip. Enemies are static now; their motion is the bob in
@@ -204,17 +203,17 @@ export class CombatAnimationPlayback {
   }
 
   /**
-   * Combat Art Pipeline Task 9 (2026-09-05) — dùng chung bởi onDeath() (event
-   * 'death' thật) và reconcileCombatantSprites() (fallback khi entity mất
-   * khỏi snapshot mà không có event riêng): đánh dấu dying, dọn DoT/cast bar,
-   * phát animation '-death' NẾU sprite là Sprite thật + clip đã đăng ký, và
-   * HOÃN destroy tới khi CẢ tween xoay/mờ CŨ lẫn animation (nếu có) đều xong
-   * — spec §9: cleanup không được cắt ngang animation chết. Không có
-   * animation hợp lệ → animDone giữ true ngay từ đầu, hành vi y hệt trước
-   * Task 9 (chỉ chờ tween).
+   * Combat Art Pipeline Task 9 (2026-09-05) - dung chung boi onDeath() (event
+   * 'death' that) va reconcileCombatantSprites() (fallback khi entity mat
+   * khoi snapshot ma khong co event rieng): danh dau dying, don DoT/cast bar,
+   * phat animation '-death' NEU sprite la Sprite that + clip da dang ky, va
+   * HOAN destroy toi khi CA tween xoay/mo CU lan animation (neu co) deu xong
+   * - spec sec.9: cleanup khong duoc cat ngang animation chet. Khong co
+   * animation hop le -> animDone giu true ngay tu dau, hanh vi y het truoc
+   * Task 9 (chi cho tween).
    *
-   * Player KHÔNG BAO GIỜ bị destroy ở đây (giữ vị trí cuối dưới overlay kết
-   * quả, xem onBattleEnd) — chỉ tween/animation chạy, isPlayer chặn nhánh
+   * Player KHONG BAO GIO bi destroy o day (giu vi tri cuoi duoi overlay ket
+   * qua, xem onBattleEnd) - chi tween/animation chay, isPlayer chan nhanh
    * destroy trong finalize().
    */
   beginDeathSequence(sprite: EntitySprite, id: string): void {
@@ -227,7 +226,7 @@ export class CombatAnimationPlayback {
       scene.dyingIds.add(id)
     }
 
-    // DoT accumulator — xóa bucket của target chết.
+    // DoT accumulator - xoa bucket cua target chet.
     for (const key of [...scene.dotAccumulators.keys()]) {
       if (key.split('|')[0] === id) {
         scene.dotAccumulators.delete(key)
@@ -250,9 +249,9 @@ export class CombatAnimationPlayback {
         return
       }
 
-      // isPlayer: không destroy (xem doc). Identity check chặn double-
-      // destroy/orphan khi id này đã bị forceFinalizeDeath() dọn sớm (tái
-      // xuất hiện giữa lúc animation/tween cũ còn chạy, xem getOrCreateSprite()).
+      // isPlayer: khong destroy (xem doc). Identity check chan double-
+      // destroy/orphan khi id nay da bi forceFinalizeDeath() don som (tai
+      // xuat hien giua luc animation/tween cu con chay, xem getOrCreateSprite()).
       if (isPlayer || scene.sprites.get(id) !== sprite) {
         return
       }
@@ -264,7 +263,7 @@ export class CombatAnimationPlayback {
     }
 
     if (sprite.kind === 'sprite') {
-      // Spec B §3.2 — this path bypasses playCombatAnimation() because it needs
+      // Spec B sec.3.2 - this path bypasses playCombatAnimation() because it needs
       // the ANIMATION_COMPLETE callback, so it has to ask the same question
       // itself. A static enemy plays no death clip; the rotate/fade tween below
       // is what it dies by, and always was.
@@ -293,7 +292,7 @@ export class CombatAnimationPlayback {
       }
     }
 
-    // A playing death clip IS the body visual — the generic fall/fade tween
+    // A playing death clip IS the body visual - the generic fall/fade tween
     // below is the death visual only for entities with no clip. Running both
     // at once rotates and fades the sprite mid-clip and hides the animation
     // the player is supposed to see.
@@ -326,10 +325,10 @@ export class CombatAnimationPlayback {
   }
 
   /**
-   * Dọn NGAY sprite đang ở giữa death sequence (animation/tween chưa xong) —
-   * dùng khi id đó tái xuất hiện (xem getOrCreateSprite()) để tránh
-   * beginDeathSequence() cũ đóng cửa nhầm sprite mới sau này. Đơn giản hơn
-   * beginDeathSequence(): không cần chờ gì cả, huỷ NGAY.
+   * Don NGAY sprite dang o giua death sequence (animation/tween chua xong) -
+   * dung khi id do tai xuat hien (xem getOrCreateSprite()) de tranh
+   * beginDeathSequence() cu dong cua nham sprite moi sau nay. Don gian hon
+   * beginDeathSequence(): khong can cho gi ca, huy NGAY.
    */
   forceFinalizeDeath(id: string): void {
     const scene = this.scene

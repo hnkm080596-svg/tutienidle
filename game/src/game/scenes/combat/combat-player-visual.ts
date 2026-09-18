@@ -55,6 +55,20 @@ export class CombatPlayerVisual {
         gameSprite.setTexture(profile.combatTextureKey)
       }
 
+      // The new profile's art may carry different authored dimensions -
+      // re-resolve sourceSize/extent so applySpriteSize sizes the NEW art,
+      // not the stale box captured at creation.
+      sprite.sourceSize = presentation?.kind === 'animated'
+        ? { ...presentation.clips.idle.sourceSize }
+        : presentation?.kind === 'static'
+          ? { ...presentation.texture.sourceSize }
+          : undefined
+      sprite.extent = presentation?.kind === 'animated'
+        ? { ...presentation.clips.idle.extent }
+        : presentation?.kind === 'static'
+          ? { ...presentation.texture.extent }
+          : undefined
+
       this.scene.applySpriteSize(sprite)
     }
   }

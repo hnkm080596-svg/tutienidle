@@ -1231,11 +1231,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     return this.gridView.entityHeadY(sprite)
   }
 
-  // CombatGridViewHost (Battlefield Slot spec §1) — combat thật KHÔNG BAO
-  // GIỜ fallback sang texture khác cho enemy ngoài batch Mortal (giữ
-  // nguyên Rectangle như trước fix này) — chỉ panel Trận Pháp
-  // (TranPhapCombatPreviewScene) override hàm này để trả về sheet
-  // placeholder dùng chung.
+  // CombatGridViewHost (Battlefield Slot spec sec.1) - combat that resolves
+  // entity art qua catalogue (unknown -> placeholder texture), nen day chi
+  // con la double-fallback khi ca placeholder cung thieu. Panel Tran Phap
+  // (TranPhapCombatPreviewScene) override ham nay de tra ve sheet/texture
+  // placeholder dung chung theo mode.
   fallbackSpriteTextureKey(_id: string): string | undefined {
     return undefined
   }
@@ -1313,14 +1313,14 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Map id RUNTIME (PLAYER_ID hoặc enemy id dạng '<templateId>_<uuid>')
-   * sang ENTITY KEY dùng làm tiền tố animation clip — khớp ĐÚNG cách
-   * CombatPreload.ts build animation set (player theo profile hiện hành,
-   * enemy theo resolveEnemyTextureKey()). undefined khi actor không có
-   * animation set nào (enemy ngoài batch Mortal, vẫn Rectangle) — caller
-   * PHẢI guard trước khi gọi sprite.play().
+   * Map runtime id (PLAYER_ID or enemy id '<templateId>_<uuid>') to the
+   * entity key used as animation clip prefix - matches how CombatPreload
+   * builds animation sets (player by active profile, enemy by
+   * resolveEnemyTextureKey()). Unknown enemies resolve to the shared
+   * placeholder entity key; undefined only for actors with no animation
+   * set at all - caller must guard before calling sprite.play().
    */
-  // Internal (module boundary — combat-animation-playback).
+  // Internal (module boundary - combat-animation-playback).
   private entityAnimationKeyPrefix(actorId: string): string | undefined {
     return this.animationPlayback.entityAnimationKeyPrefix(actorId)
   }

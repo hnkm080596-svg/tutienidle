@@ -431,9 +431,9 @@ export class CombatGridView {
       .setOrigin(0.5, 0)
       .setDepth(DEPTH_OVERLAY_UI + 1)
 
-    // Player dÃ¹ng artwork theo PROFILE hiá»‡n hÃ nh (body-anchor plan Â§4.3);
-    // enemy chÆ°a cÃ³ atlas riÃªng, váº«n dÃ¹ng Rectangle mÃ u nhÆ° cÅ© (xem
-    // EntitySprite.kind's ghi chÃº).
+    // Player dung artwork theo PROFILE hien hanh (body-anchor plan);
+    // enemy resolves qua catalogue - authored art hoac placeholder cung
+    // mode (uniformity 2026-09-19), Rectangle chi con la double-fallback.
     if (id === PLAYER_ID) {
       const entityKey = this.host.textures.exists(this.host.playerProfile.combatTextureKey)
         ? this.host.playerProfile.combatTextureKey
