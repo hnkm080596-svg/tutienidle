@@ -578,12 +578,15 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     return { removed: true, instanceId: instance.instanceId, stacksAtRemoval }
   }
 
-  /** spec sec.42 -- removes every dispellable instance on targetId
-      matching query (reason 'cleansed'); matched-but-non-dispellable
-      land in `skipped`. */
+  /** spec sec.42 + contract v1.6 -- removes dispellable instances on
+      targetId matching query (reason 'cleansed'); matched-but-non-
+      dispellable land in `skipped`. `limit`: undefined = every matching
+      dispellable instance; N = the first N in canonical sortedForTarget
+      order (limit-bound matches beyond N are simply left, not reported). */
   cleanse(
     targetId: CombatEntityId,
     query: BuffCleanseQuery,
+    limit: number | undefined,
     ctx: CombatAuthorityExecutionContext,
   ): CleanseResult {
     const cleansed: BuffInstanceId[] = []
@@ -604,6 +607,7 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
         skipped.push(instance.instanceId)
         continue
       }
+      if (limit !== undefined && cleansed.length >= limit) continue
       this.removeInstance(instance, 'cleansed', ctx.events, ctx.origin.rootActionId)
       cleansed.push(instance.instanceId)
     }

@@ -106,11 +106,15 @@ export interface BuffAuthority {
     duration: number,
     ctx: CombatAuthorityExecutionContext,
   ): { durationBefore: number; durationAfter: number }
-  /** v7.1 -- spec sec.42: removes every dispellable instance on targetId
-      matching query (reason 'cleansed'). */
+  /** v7.1 -- spec sec.42: removes dispellable instances on targetId
+      matching query (reason 'cleansed'). Contract v1.6 `limit`:
+      undefined = all matching dispellable; N = the first N in canonical
+      sortedForTarget order; `skipped` still reports every matched-but-
+      non-dispellable instance. */
   cleanse(
     targetId: CombatEntityId,
     query: BuffCleanseQuery,
+    limit: number | undefined,
     ctx: CombatAuthorityExecutionContext,
   ): CleanseResult
 }

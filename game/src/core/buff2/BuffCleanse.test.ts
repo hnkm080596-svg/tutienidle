@@ -34,7 +34,7 @@ describe('BuffSystem.cleanse -- spec sec.42', () => {
     applyDef(w, { id: 'test_buff.b', kind: 'debuff', dispellable: false })
     applyDef(w, { id: 'test_buff.c', kind: 'buff', dispellable: true })
 
-    const r = w.system.cleanse(TEST_ENTITIES.targetA, { kind: 'debuff' }, w.makeCtx())
+    const r = w.system.cleanse(TEST_ENTITIES.targetA, { kind: 'debuff' }, undefined, w.makeCtx())
     expect(r.cleansed).toHaveLength(1)
     expect(r.skipped).toHaveLength(1)
     const remaining = w.store.forTarget(TEST_ENTITIES.targetA)
@@ -52,13 +52,14 @@ describe('BuffSystem.cleanse -- spec sec.42', () => {
     const r = w.system.cleanse(
       TEST_ENTITIES.targetA,
       { element: 'fire', tags: ['dot'] },
+      undefined,
       w.makeCtx(),
     )
     expect(r.cleansed).toHaveLength(1)
     const remaining = w.store.forTarget(TEST_ENTITIES.targetA)
     expect(remaining.map((i) => i.definitionId)).toEqual(['test_buff.water'])
 
-    const r2 = w.system.cleanse(TEST_ENTITIES.targetA, { definitionId: 'test_buff.water' }, w.makeCtx())
+    const r2 = w.system.cleanse(TEST_ENTITIES.targetA, { definitionId: 'test_buff.water' }, undefined, w.makeCtx())
     expect(r2.cleansed).toHaveLength(1)
     expect(w.store.forTarget(TEST_ENTITIES.targetA)).toHaveLength(0)
   })
@@ -67,7 +68,7 @@ describe('BuffSystem.cleanse -- spec sec.42', () => {
     const w = makeBuffSystemWorld()
     applyDef(w, { id: 'test_buff.x', tags: ['a'] })
     applyDef(w, { id: 'test_buff.y', tags: ['a', 'b'] })
-    const r = w.system.cleanse(TEST_ENTITIES.targetA, { tags: ['a', 'b'] }, w.makeCtx())
+    const r = w.system.cleanse(TEST_ENTITIES.targetA, { tags: ['a', 'b'] }, undefined, w.makeCtx())
     expect(r.cleansed).toHaveLength(1)
     expect(w.store.forTarget(TEST_ENTITIES.targetA).map((i) => i.definitionId)).toEqual(['test_buff.x'])
   })
@@ -76,7 +77,7 @@ describe('BuffSystem.cleanse -- spec sec.42', () => {
     const w = makeBuffSystemWorld()
     applyDef(w, { id: 'test_buff.ta' }, TEST_ENTITIES.targetA)
     applyDef(w, { id: 'test_buff.tb' }, TEST_ENTITIES.targetB)
-    const r = w.system.cleanse(TEST_ENTITIES.targetA, {}, w.makeCtx())
+    const r = w.system.cleanse(TEST_ENTITIES.targetA, {}, undefined, w.makeCtx())
     expect(r.cleansed).toHaveLength(1)
     expect(w.store.forTarget(TEST_ENTITIES.targetA)).toHaveLength(0)
     expect(w.store.forTarget(TEST_ENTITIES.targetB)).toHaveLength(1)
@@ -85,7 +86,7 @@ describe('BuffSystem.cleanse -- spec sec.42', () => {
   it('non-dispellable non-matches are neither cleansed nor skipped', () => {
     const w = makeBuffSystemWorld()
     applyDef(w, { id: 'test_buff.keep', kind: 'buff', dispellable: false })
-    const r = w.system.cleanse(TEST_ENTITIES.targetA, { kind: 'debuff' }, w.makeCtx())
+    const r = w.system.cleanse(TEST_ENTITIES.targetA, { kind: 'debuff' }, undefined, w.makeCtx())
     expect(r.cleansed).toHaveLength(0)
     expect(r.skipped).toHaveLength(0) // kind didn't match -> not counted
     expect(w.store.all()).toHaveLength(1)

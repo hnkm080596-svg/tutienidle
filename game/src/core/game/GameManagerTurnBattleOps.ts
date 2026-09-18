@@ -1583,7 +1583,7 @@ export class GameManagerTurnBattleOps {
                   const entityId = entity.id as CombatEntityId
                   if (execCtx !== undefined) {
                     if (resolved.cleanseDebuffs) {
-                      playerBuffs.cleanse(entityId, { polarity: 'debuff' }, execCtx)
+                      playerBuffs.cleanse(entityId, { polarity: 'debuff' }, undefined, execCtx)
                     }
                     if (resolved.grantBuffId !== undefined) {
                       playerBuffs.apply(

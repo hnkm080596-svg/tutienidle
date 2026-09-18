@@ -53,7 +53,7 @@ function bindSurviveEffects(runtime: TurnRuntimeFixture): SurviveEffectsPolicy {
       const entityId = target.id as CombatEntityId
       if (execCtx !== undefined) {
         if (resolved.cleanseDebuffs) {
-          runtime.buffs.cleanse(entityId, { polarity: 'debuff' }, execCtx)
+          runtime.buffs.cleanse(entityId, { polarity: 'debuff' }, undefined, execCtx)
         }
         return
       }

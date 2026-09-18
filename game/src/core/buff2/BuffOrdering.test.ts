@@ -81,7 +81,7 @@ describe('canonical sweep ordering (sec.55)', () => {
     seed(w, d.id, { targetId: targetA, sourceId: sourceB })
     seed(w, d.id, { targetId: targetA, sourceId: sourceA })
     seed(w, protected_.id, { targetId: targetA })
-    const r = w.system.cleanse(targetA, {}, w.makeCtx())
+    const r = w.system.cleanse(targetA, {}, undefined, w.makeCtx())
     expect(r.cleansed).toHaveLength(2)
     expect(r.skipped).toHaveLength(1)
     const removed = w.sink.ofType('buff_removed')

@@ -133,6 +133,22 @@ export interface DealDamageOperation {
         resolves power/mitigation vs THIS entity while origin.sourceId
         keeps vitals/event attribution. Absent = origin.sourceId. */
     statSourceId?: CombatEntityId
+    /** Contract v1.6 -- DECLARED hit/crit/armor intent. The producer
+        declares, DamageAuthority consumes CombatRng and performs every
+        roll; the executor/scheduler never roll these. Semantics mirror
+        HitResolveOptions (resolved-outcome options on resolveActionHit):
+          hitPolicy.guaranteedHit     -- skip the accuracy/evasion roll
+          critPolicy.bonusChance      -- extra crit roll chance on top of
+                                        the profile's base channel
+          armorPolicy.bypassChance    -- one roll: full armor bypass
+          armorPolicy.pierceFractionOnFail -- else mitigation x
+                                        (1 - fraction)
+        Policies are only legal on hit-resolving profiles (validation:
+        critPolicy contradicts canCrit:false; policies on non-hit
+        profiles fault). */
+    hitPolicy?: { guaranteedHit?: boolean }
+    critPolicy?: { bonusChance?: number }
+    armorPolicy?: { bypassChance?: number; pierceFractionOnFail?: number }
   }
 }
 
@@ -232,7 +248,17 @@ export interface BuffCleanseQuery {
 
 export interface CleanseBuffOperation {
   type: 'cleanse_buff'
-  payload: { targetId: CombatEntityId; query: BuffCleanseQuery }
+  payload: {
+    targetId: CombatEntityId
+    query: BuffCleanseQuery
+    /** Contract v1.6 -- deterministic cap on dispellable removals:
+        undefined = all matching dispellable instances (legacy behavior);
+        N = the first N in canonical sortedForTarget order. `skipped`
+        still reports every matched-but-non-dispellable instance.
+        Legacy remove_buff-by-polarity parity maps {polarity, count} onto
+        {query:{polarity}, limit: count ?? 1}. */
+    limit?: number
+  }
 }
 
 export interface PushGaugeOperation {
