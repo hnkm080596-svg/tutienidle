@@ -8,7 +8,9 @@
 //
 // No path-specific primitives (CON-23): the vocabulary is generic (sec.5).
 
+import type { DamageScalingConfig } from '../../combat/DamageCalculator'
 import type { ElementType } from '../../element/ElementType'
+import type { SkillDamageComponent } from '../../skill/SkillDamageComponent'
 
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from './ids'
 import type { CombatOperationOrigin } from './origin'
@@ -113,7 +115,10 @@ export interface DealDamageOperation {
     targetId: CombatEntityId
     element?: ElementType | 'physical'
     /** Intent-level profile -- DamageSystem resolves formula/mitigation/crit
-        channel from profile+origin, never the executor. */
+        channel from profile+origin, never the executor. 'skill_hit' is the
+        skill pipeline's hit-resolving channel (wired to full hit
+        resolution -- dodge/crit/armor/components/scaling -- by the
+        DamageAuthority in M3/M4). */
     damageProfile: string
     /** Authored coefficient -- NOT final damage. DamageSystem still applies
         stats/scaling/profile/mitigation/crit. */
@@ -123,6 +128,16 @@ export interface DealDamageOperation {
     canMiss: boolean
     periodicId?: string
     tags?: readonly string[]
+    /** Multi-component damage lanes (20% phys + 80% fire parity) -- the
+        hit-resolving profile splits the coefficient per component.
+        `element` carries the single-lane shorthand. Primordial lanes ride
+        components{kind:'primordial'} -- `element` keeps its ElementType|
+        'physical' union (adapter stat-key indexing stays total). */
+    components?: readonly SkillDamageComponent[]
+    /** Declared scaling inputs -- DamageAuthority resolves each term
+        against `snapshot` (frozen at cast) when present, live stats
+        otherwise. */
+    scaling?: DamageScalingConfig
     /** Buff-periodic forward-carriers (Lens B5): stackCount rides for
         profiles that scale on stacks; snapshot carries the apply-time
         source context for snapshot-scaled periodics -- DamageSystem
