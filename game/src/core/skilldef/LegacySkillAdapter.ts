@@ -456,7 +456,8 @@ function adaptSubcasts(
     // hit declared.affected), and appliesBuffs never run for extras
     // (the shared post-cast lane reads payloadSkill = the PRIMARY pick
     // only). A member that could surface as an extra carrying any of
-    // those shapes stays on the legacy lane.
+    // those shapes reports the whole catalog unsupported -- TBS then
+    // faults the cast loudly (a no-op, never a silent legacy pass).
     if (def.compositePicks.count > 1) {
       for (const member of def.compositePicks.pool) {
         const reasons: string[] = []

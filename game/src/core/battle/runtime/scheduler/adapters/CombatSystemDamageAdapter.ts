@@ -64,7 +64,6 @@ import type {
   HitResolveOptions,
 } from '../../../ActionImpactSystem'
 import type { CombatRng } from '../../../contracts/rng'
-import { FunctionCombatRng } from '../../rng/FunctionCombatRng'
 import { elementalBasePower } from '../../../../combat/ElementDamageCalculator'
 import { getArmorMitigationPercent } from '../../../../combat/Armor'
 import { getResistanceMitigationPercent } from '../../../../combat/Resistance'
@@ -86,9 +85,10 @@ export interface CombatSystemDamageAdapterDeps {
   resolveSourceGrants?: (sourceId: CombatEntityId) => readonly ActiveCapabilityGrant[] | undefined
   /** Contract v1.6 -- the 'skill_hit' channel's DECLARED policy rolls
       (crit bonus/armor bypass). The authority consumes this rng; the
-      executor/scheduler never roll hit/crit/armor. Defaults to
-      Math.random -- the battle wiring passes the cycle rng. */
-  rng?: CombatRng
+      executor/scheduler never roll hit/crit/armor. REQUIRED: canonical
+      combat damage never falls back to an implicit random source --
+      the battle wiring passes the shared cycle rng. */
+  rng: CombatRng
 }
 
 export class CombatSystemDamageAdapter implements DamageAuthority {
@@ -97,9 +97,15 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
   constructor(
     private readonly combat: CombatSystem,
     private readonly resolveEntity: CombatEntityLookup,
-    private readonly deps: CombatSystemDamageAdapterDeps = {},
+    private readonly deps: CombatSystemDamageAdapterDeps,
   ) {
-    this.rng = deps.rng ?? new FunctionCombatRng(() => Math.random())
+    if (deps?.rng === undefined) {
+      throw new Error(
+        'CombatSystemDamageAdapter requires an explicit CombatRng -- ' +
+          'canonical combat damage never falls back to an implicit random source',
+      )
+    }
+    this.rng = deps.rng
   }
 
   dealDamage(

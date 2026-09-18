@@ -9,11 +9,13 @@
 //   gated ops         -> authored ailments/detonate (no events)
 //   landed gate out   -> taken-side window + refresh + sweep
 //
-// Casts whose adaptation reports unsupported semantics stay on the
-// legacy lane -- the catalog keeps the loud report, nothing is
-// silently dropped. An insufficient-resource cast also stays legacy
-// (commitAction never gated: it would commit the negative anyway --
-// the executor's blocked path is for the new pipeline's own callers).
+// Casts whose adaptation reports unsupported semantics cannot route
+// (routeCast returns null): TBS reports them loudly once per cast and
+// the cast resolves as a no-op on the plan lane -- nothing silently
+// falls back to legacy. An insufficient-resource cast still routes and
+// resolves blocked (R-S9 precheck: no commit, no ops). The
+// `runtime === undefined` engine-unit lane is the only remaining
+// legacy path -- a documented non-production test configuration.
 
 import type {
   BuffDefinitionId,
@@ -187,8 +189,8 @@ export class TurnSkillPlanRuntime {
   }
 
   /** Executes the cast through the plan pipeline, or returns null when
-      the cast must stay on the legacy lane (null skill, unsupported
-      adaptation semantics, insufficient resource -- see header). */
+      the cast cannot route (null skill or unsupported adaptation
+      semantics -- TBS reports the unrouted cast loudly; see header). */
   routeCast(
     battle: TurnBattle,
     actor: TurnBattleParticipant,
@@ -294,7 +296,9 @@ export class TurnSkillPlanRuntime {
       and TBS owns their target collection (taunt/opposingSide reads
       live at execute). Returns the extras-lane bookkeeping (deduped
       landed ids + per-instance hitCount), or null when the def is
-      adapter-unsupported so the caller keeps the legacy lane. */
+      adapter-unsupported so the caller reports it and skips the
+      extra -- a loud no-op on runtime battles, never a silent
+      legacy fallback. */
   routeExtraCast(
     battle: TurnBattle,
     actor: TurnBattleParticipant,
@@ -408,8 +412,9 @@ export class TurnSkillPlanRuntime {
   // -----------------------------------------------------------------------
   // Adaptation -- cached per legacy def id; auxiliaries (composite pool
   // members, empowered forms) register with the root. A registry-build
-  // fault (e.g. a drifted buff id the legacy lane skips per-op) reports
-  // unsupported so the cast stays legacy -- nothing fails silently.
+  // fault (e.g. a drifted buff id the legacy lane used to skip per-op)
+  // reports unsupported so the cast is declined -- TBS reports it
+  // loudly and the cast no-ops; nothing fails silently.
   // -----------------------------------------------------------------------
 
   private catalogFor(def: TurnSkillDefinition): AdaptedSkillCatalog {

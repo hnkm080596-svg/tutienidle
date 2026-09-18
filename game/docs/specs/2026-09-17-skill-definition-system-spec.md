@@ -1,6 +1,6 @@
 # Skill Definition System — Final Specification
 
-Status: FINAL — **READY FOR IMPLEMENTATION** (v1.3 — synchronized with the combat-systems program's M5 expansion, `2026-09-17-megaplan-skill-definition.md` v2.1; the 2026-09-17 PARKED ruling is superseded — this spec IS that program's skill mission, and its hard baseline — buff M4 cutover + reaction M-INT — is already merged)
+Status: FINAL — **IMPLEMENTED** (v1.3 — synchronized with the combat-systems program's M5 expansion, `2026-09-17-megaplan-skill-definition.md` v2.1; skill megaplan M0–M5 executed and merged on `master` at `ebf9fca0` — the canonical `TurnSkillDefinition -> LegacySkillAdapter -> SkillDefinition -> SkillResolver -> ResolvedSkillPlan -> SkillExecutor -> CombatScheduler` pipeline is the single production ACTIVE skill lane; parent-program M7 integration closure is tracked in the combat-systems megaplan, not here)
 Version: 1.3
 Scope: Generic combat skill architecture
 Primary consumer: Pháp Tu Reimagined
