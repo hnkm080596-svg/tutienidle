@@ -3,6 +3,7 @@
 - Date: 2026-09-19
 - Mode: quick
 - Verdict: PASS WITH EVIDENCE (all confirmed findings fixed within the implementation loop; regression tests landed)
+- Post-M5d note (2026-09-21+): this record documents M4-era routing, when unrouteable casts still fell through to the legacy lane. M5d retired that fallback: on runtime-present battles an unsupported/unroutable cast is now reported loudly once and resolves as a no-op on the plan lane; insufficient-resource casts route to a `blocked` outcome. `runtime === undefined` is the only remaining legacy lane (engine-unit test configuration). Statements below reading "stay on the legacy lane" describe the M4 contract, not current behavior.
 - Task-owned paths: `src/core/skilldef/{LegacySkillAdapter,SkillExecutionHooks,SkillExecutor,SkillResolver,AuthoredOperation,ResolvedSkillPlan,ScalarExpression,SkillDefinition,SkillDefinitionRegistry,SkillQueryPorts,SkillProgressionState}.ts`, `src/core/skilldef/{LegacySkillAdapter,SkillExecutor,SkillResolver,SkillSubcast}.test.ts`, `src/core/skilldef/SkillExecutor.testkit.ts`, `src/core/battle/contracts/operations.ts`, `src/core/battle/runtime/scheduler/adapters/{CombatSystemDamageAdapter,EntityResourceAdapter}.ts`, `src/core/battle/turn/{TurnBattleSystem,TurnSkillAction,TurnSkillPlanRuntime}.ts`, `src/core/battle/turn/TurnBattleSystem.skillPlan.test.ts`, `src/core/battle/turn/testing/TurnRuntimeFixtures.ts`, `src/core/game/GameManagerTurnBattleOps.ts`, `src/core/kiem-tu/NguKiemDaoProvider.ts`, `tests/architecture/combatSchedulerDormancy.test.ts`
 
 ## Scope and Risk Map

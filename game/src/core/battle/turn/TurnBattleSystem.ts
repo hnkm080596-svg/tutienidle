@@ -688,11 +688,12 @@ export class TurnBattleSystem {
   }
 
   /** M4e routing probe -- adapter-covered casts go through the plan
-      pipeline; everything else stays on the legacy lane (unsupported
-      semantics keep their loud catalog report). Charge turns route
-      through their own probes: the init commit (pre-block) and the
-      deferred resolve (charge branch) -- a charge def routed HERE would
-      execute its deferred steps early and double-commit. */
+      pipeline; adapter-unsupported casts are reported loudly and
+      resolve as a no-op on the plan lane (never a silent legacy
+      fallback). Charge turns route through their own probes: the init
+      commit (pre-block) and the deferred resolve (charge branch) -- a
+      charge def routed HERE would execute its deferred steps early and
+      double-commit. */
   private tryPlanCast(
     battle: TurnBattle,
     actor: TurnBattleParticipant,

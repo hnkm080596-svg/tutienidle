@@ -26,7 +26,14 @@ import type { DealDamageOperation } from '../../../contracts/operations'
 import type { CombatEntityId } from '../../../contracts/ids'
 
 import { CombatOperationSkip } from '../CombatOperationExecutor'
-import { CombatSystemDamageAdapter } from './CombatSystemDamageAdapter'
+import { FunctionCombatRng } from '../../rng/FunctionCombatRng'
+import { ScriptedCombatRng } from '../../rng/ScriptedCombatRng'
+import { SeededCombatRng } from '../../rng/SeededCombatRng'
+import type { CombatRng } from '../../../contracts/rng'
+import {
+  CombatSystemDamageAdapter,
+  type CombatSystemDamageAdapterDeps,
+} from './CombatSystemDamageAdapter'
 
 function makeEntity(
   id: string,
@@ -64,13 +71,16 @@ interface Harness {
   sourceBuffsCalls: () => number
 }
 
-function makeHarness(entities: CombatEntity[]): Harness {
+function makeHarness(
+  entities: CombatEntity[],
+  opts: { rng?: CombatRng; engineSource?: () => number } = {},
+): Harness {
   const bus = new EventBus()
   const combat = new CombatSystem(bus)
   let rolls = 0
   combat.setRandomSource(() => {
     rolls += 1
-    return 0
+    return opts.engineSource === undefined ? 0 : opts.engineSource()
   })
 
   const vitalsEvents: EntityVitalsChangedEvent[] = []
@@ -96,6 +106,7 @@ function makeHarness(entities: CombatEntity[]): Harness {
 
   const adapter = new CombatSystemDamageAdapter(combat, (id) => map.get(id), {
     resolveSourceGrants,
+    rng: opts.rng ?? new FunctionCombatRng(() => 0),
   })
 
   const emitted: CombatEventPayload[] = []
@@ -331,5 +342,169 @@ describe('CombatSystemDamageAdapter -- target validity', () => {
       expect((error as CombatOperationSkip).reason).toBe('invalid_target_state')
     }
     expect(h.vitalsEvents).toHaveLength(0)
+  })
+})
+
+// The adapter is the DamageAuthority: it OWNS every declared-policy
+// roll (crit bonus / armor bypass) on the 'skill_hit' channel. The rng
+// is a required dependency -- canonical combat damage never mints or
+// falls back to an implicit random source. These tests pin the
+// contract; the production wiring (GameManagerTurnBattleOps) binds the
+// shared cycle rng, and the engine's own hit/crit/block rolls ride the
+// same instance via combat.setRandomSource.
+describe('CombatSystemDamageAdapter -- CombatRng contract', () => {
+  it('refuses construction without an explicit CombatRng (no implicit random source)', () => {
+    const combat = new CombatSystem(new EventBus())
+    const entities = new Map<CombatEntityId, CombatEntity>()
+    // What an untyped caller could still pass: the interface makes the
+    // missing dep a compile error, the guard makes it executable.
+    const missing = { resolveSourceGrants: () => undefined }
+    expect(
+      () =>
+        new CombatSystemDamageAdapter(
+          combat,
+          (id: CombatEntityId) => entities.get(id),
+          missing as unknown as CombatSystemDamageAdapterDeps,
+        ),
+    ).toThrow(/explicit CombatRng/)
+  })
+
+  it('critPolicy.bonusChance rolls on the injected rng -- success forces the crit', () => {
+    const attacker = makeEntity('source', { might: 100, criticalRate: 0 })
+    const target = makeEntity('target', { maxHp: 10_000, defense: 0 }, { currentHp: 10_000 })
+    // Adapter roll 0.4 < 0.5 forces the crit; the engine source fails
+    // high everywhere else (no natural crit/block/ignore-resistance).
+    // ScriptedCombatRng throws on a second roll -- exactly one
+    // declared-policy roll is consumed.
+    const h = makeHarness([attacker, target], {
+      rng: new ScriptedCombatRng([0.4]),
+      engineSource: () => 0.999999,
+    })
+
+    const result = h.adapter.dealDamage(
+      payload({
+        damageProfile: 'skill_hit',
+        coefficient: 1,
+        canCrit: true,
+        canMiss: true,
+        hitPolicy: { guaranteedHit: true },
+        critPolicy: { bonusChance: 0.5 },
+      }),
+      h.ctx(),
+    )
+
+    expect(result.landed).toBe(true)
+    expect(result.crit).toBe(true)
+  })
+
+  it('a failed critPolicy.bonusChance roll hands the crit decision back to the engine channel', () => {
+    const run = (engineSource: () => number): boolean | undefined => {
+      const attacker = makeEntity('source', { might: 100, criticalRate: 0.5 })
+      const target = makeEntity('target', { maxHp: 10_000, defense: 0 }, { currentHp: 10_000 })
+      const h = makeHarness([attacker, target], {
+        // 0.9 >= 0.5 -> options.critical stays undefined; the engine's
+        // rollCritical decides on the ENGINE stream.
+        rng: new ScriptedCombatRng([0.9]),
+        engineSource,
+      })
+      return h.adapter.dealDamage(
+        payload({
+          damageProfile: 'skill_hit',
+          coefficient: 1,
+          canCrit: true,
+          canMiss: true,
+          hitPolicy: { guaranteedHit: true },
+          critPolicy: { bonusChance: 0.5 },
+        }),
+        h.ctx(),
+      ).crit
+    }
+
+    expect(run(() => 0.999999)).toBe(false)
+    expect(run(() => 0.1)).toBe(true)
+  })
+
+  it('rolls crit policy before armor policy on the injected rng (legacy perInstanceOptions order)', () => {
+    // Scripted [crit roll, armor roll]. [0.9, 0.1]: crit bonus fails,
+    // armor bypass fires -> uncritted, unmitigated damage. [0.1, 0.9]:
+    // crit bonus fires, bypass fails -> critted, fully mitigated
+    // damage. Swapping which roll feeds which policy changes both
+    // outcomes -- the order is observable, not incidental.
+    const run = (rolls: readonly number[]) => {
+      const attacker = makeEntity('source', { might: 100, criticalRate: 0 })
+      const target = makeEntity(
+        'target',
+        { maxHp: 100_000, defense: 2_000 },
+        { currentHp: 100_000 },
+      )
+      const h = makeHarness([attacker, target], {
+        rng: new ScriptedCombatRng(rolls),
+        engineSource: () => 0.999999,
+      })
+      return h.adapter.dealDamage(
+        payload({
+          damageProfile: 'skill_hit',
+          coefficient: 1,
+          canCrit: true,
+          canMiss: true,
+          hitPolicy: { guaranteedHit: true },
+          critPolicy: { bonusChance: 0.5 },
+          armorPolicy: { bypassChance: 0.5 },
+        }),
+        h.ctx(),
+      )
+    }
+
+    const bypassed = run([0.9, 0.1])
+    expect(bypassed.crit).toBe(false)
+
+    const crittedArmored = run([0.1, 0.9])
+    expect(crittedArmored.crit).toBe(true)
+
+    // Bypassed armor lands far more HP damage than a fully-mitigated
+    // crit on a 2000-defense target -- the second scripted roll really
+    // did feed the armor policy.
+    expect(bypassed.hpDamage).toBeGreaterThan(crittedArmored.hpDamage)
+  })
+
+  it('same-seed streams produce identical skill_hit outcomes; different seeds diverge', () => {
+    const run = (seed: number) => {
+      const rng = new SeededCombatRng(seed)
+      // Production shape (GameManagerTurnBattleOps): ONE CombatRng feeds
+      // the adapter's declared-policy rolls AND the engine's own
+      // hit/crit/block/ignore-resistance rolls.
+      const h = makeHarness(
+        [
+          makeEntity('source', { might: 100, criticalRate: 0.25, accuracyRating: 80 }),
+          makeEntity(
+            'target',
+            { maxHp: 1_000_000, defense: 40, evasionRate: 20, blockChance: 0.1 },
+            { currentHp: 1_000_000 },
+          ),
+        ],
+        { rng, engineSource: () => rng.roll() },
+      )
+      const outcomes: unknown[] = []
+      for (let i = 0; i < 6; i++) {
+        outcomes.push(
+          h.adapter.dealDamage(
+            payload({
+              damageProfile: 'skill_hit',
+              coefficient: 1,
+              canCrit: true,
+              canMiss: true,
+              critPolicy: { bonusChance: 0.2 },
+              armorPolicy: { bypassChance: 0.3, pierceFractionOnFail: 0.5 },
+            }),
+            h.ctx(),
+          ),
+        )
+      }
+      return outcomes
+    }
+
+    expect(run(11)).toEqual(run(11))
+    const streams = new Set([1, 2, 3, 4, 5, 6, 7, 8].map((seed) => JSON.stringify(run(seed))))
+    expect(streams.size).toBeGreaterThan(1)
   })
 })

@@ -16,8 +16,10 @@ import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from '
 //     apply_buff / ... visible in the trace; legacy hits never mint ops)
 //   charge-inits commit through the plan seam; charge-resolves run the
 //     charged def verbatim as a non-committing follow-up plan
-//   unsupported semantics and insufficient-resource casts stay on the
-//     legacy lane (no ops minted, identical outcome)
+//   unsupported casts are reported loudly once and no-op -- nothing
+//     falls back to legacy; insufficient-resource casts route to a
+//     blocked outcome (no commit, no ops) when they reach the
+//     pipeline, or slotReady filters them at selection first
 //   TBS's declare-side resolution (empowerment/composite/theBurned)
 //     replays through preResolved -- the plan never re-rolls it
 //   repeat/multicast executions route too but never re-commit the cast.
@@ -120,8 +122,9 @@ function battleWith(
 }
 
 /** Ops that settled through the scheduler this battle -- the routed-lane
-    receipt. The legacy lane resolves hits without minting ops, so a
-    non-empty skill_hit set is positive proof of routing. */
+    receipt. The engine-unit lane (runtime === undefined) resolves hits
+    without minting ops, so a non-empty skill_hit set is positive proof
+    of routing. */
 function settledOps(runtime: TurnRuntimeFixture) {
   return runtime.scheduler.trace.records.map((r) => ({
     type: r.operation.type,
