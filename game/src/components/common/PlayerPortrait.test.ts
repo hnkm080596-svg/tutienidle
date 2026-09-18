@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// No @vue/test-utils in this project — mount via the public Vue API
+// No @vue/test-utils in this project - mount via the public Vue API
 // (createApp/h), same pattern as SlotView.test.ts.
 import { describe, expect, it } from 'vitest'
 import { createApp, h } from 'vue'

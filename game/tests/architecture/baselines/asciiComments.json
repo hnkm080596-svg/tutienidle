@@ -309,9 +309,6 @@
   "// aria-labelledby tới heading h3. Stable per-instance ID (useId) — nhiều",
   "// dialog đồng thời không trùng ID tĩnh."
  ],
- "src/components/common/EntitySpriteCanvas.vue": [
-  "// EntitySpriteCanvas — Vue-side sprite animation over a TexturePacker atlas."
- ],
  "src/components/common/ErrorBoundary.vue": [
   "// Beta Phase 4 (Global Error Boundary) — bắt lỗi TRONG render/setup/",
   "// watcher của cây component con (app.config.errorHandler trong",
@@ -373,9 +370,6 @@
   "// Remediation Task 6 (2026-09-05) — aria-labelledby tham chiếu heading",
   "// thật (per-instance useId) thay vì aria-label duplicate.",
   "/* Fit-engine (2026-08-29) — body là ngân sách flex cho nội dung: con chiếm flex thay vì scroll. Con tự paginate khi vượt ngân sách (pattern BagGrid). overflow hidden là rào chặn cuối — panel con KHÔNG được dựa vào nó. */"
- ],
- "src/components/common/PlayerPortrait.test.ts": [
-  "// No @vue/test-utils in this project — mount via the public Vue API"
  ],
  "src/components/common/PlayerPortrait.vue": [
   "// Trình bày nhân vật dùng CHUNG (plan Workstream A) — PNG tĩnh mới,",
@@ -10550,9 +10544,6 @@
   "// ratio bằng vị trí (offsetY), không phải bằng cách nén/giãn riêng",
   "// trục dọc.",
   "// Lớp phủ màu grading vẫn phủ TRỌN canvas (không lệ thuộc horizon)."
- ],
- "src/game/support/TribulationPreload.ts": [
-  "// TribulationPreload — the transitional preload net for TribulationScene,"
  ],
  "src/i18n/index.test.ts": [
   "// Task 21 (item-grade-quality-rework, rework P6) — vi.json/en.json phải",

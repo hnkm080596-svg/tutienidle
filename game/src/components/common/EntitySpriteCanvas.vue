@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
-// EntitySpriteCanvas — Vue-side sprite animation over a TexturePacker atlas.
+// EntitySpriteCanvas - Vue-side sprite animation over a TexturePacker atlas.
 // Exists because Vue panels can't play Phaser animations: this component
 // fetches the atlas JSON + PNG once and steps frames on a rAF interval. Only
 // rendered when ENTITY_ART_MODE === 'animated' (callers gate on the constant).
@@ -41,6 +41,13 @@ function frameName(i: number): string {
   return `${props.framePrefix}${String(i).padStart(props.zeroPad, '0')}${props.frameSuffix}`
 }
 
+// Catalogue/Phaser asset paths are written base-relative ('assets/...');
+// fetch() and img.src resolve against the DOCUMENT URL, so a nested route
+// would mis-resolve them. Root them like the sibling IMAGE_URLS do.
+function rootedUrl(url: string): string {
+  return url.startsWith('/') ? url : `/${url}`
+}
+
 function frameTable(atlas: Record<string, unknown>): Record<string, PackedFrame> {
   if (atlas.frames && typeof atlas.frames === 'object' && !Array.isArray(atlas.frames)) {
     return atlas.frames as Record<string, PackedFrame>
@@ -48,7 +55,7 @@ function frameTable(atlas: Record<string, unknown>): Record<string, PackedFrame>
 
   // Multiatlas: [{ textures: [{ image, frames: [{ filename, frame, ... }] }] }]
   const table: Record<string, PackedFrame> = {}
-  const textures = (atlas.textures ?? (atlas as { textures?: unknown }).textures) as
+  const textures = atlas.textures as
     | Array<{ frames?: Array<PackedFrame & { filename: string }> }>
     | undefined
 
@@ -69,12 +76,12 @@ onMounted(async () => {
 
   try {
     const [atlas, image] = await Promise.all([
-      fetch(props.atlasUrl).then((r) => r.json()),
+      fetch(rootedUrl(props.atlasUrl)).then((r) => r.json()),
       new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image()
         img.onload = () => resolve(img)
         img.onerror = reject
-        img.src = props.sheetUrl
+        img.src = rootedUrl(props.sheetUrl)
       }),
     ])
 
@@ -92,11 +99,15 @@ onMounted(async () => {
     canvas.width = source.w
     canvas.height = source.h
     const stepMs = 1000 / props.fps
+    // Step by array position, not frame number: a gap in the atlas (a frame
+    // the range names but the sheet lacks) must not dereference past the
+    // collected list.
+    let cursor = 0
 
     const tick = (t: number) => {
       if (t - lastStep >= stepMs) {
         lastStep = t
-        const f = frames[frameIndex - props.firstFrame]!
+        const f = frames[cursor]!
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         ctx.imageSmoothingEnabled = false
         ctx.drawImage(
@@ -110,13 +121,13 @@ onMounted(async () => {
           f.frame.w,
           f.frame.h,
         )
-        frameIndex = frameIndex >= props.lastFrame ? props.firstFrame : frameIndex + 1
+        cursor = (cursor + 1) % frames.length
       }
       rafId = requestAnimationFrame(tick)
     }
     rafId = requestAnimationFrame(tick)
   } catch {
-    // A missing atlas/sheet leaves an empty canvas — the same placeholder
+    // A missing atlas/sheet leaves an empty canvas - the same placeholder
     // policy as Phaser surfaces: never throw from a figure render.
   }
 })

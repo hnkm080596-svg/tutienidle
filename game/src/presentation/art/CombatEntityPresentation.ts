@@ -104,7 +104,11 @@ export interface AtlasClip {
    */
   extent: ArtExtent
 
-  /** -1 = loop (idle/standby), 0 = play once (death/transitions/cultivate). */
+  /**
+   * -1 = loop (idle/standby/cultivate), 0 = play once (death/transitions).
+   * A transition with -1 would loop forever and never emit the completion
+   * event the playback layer chains on - the uniformity test pins repeat 0.
+   */
   repeat: number
 
   /**

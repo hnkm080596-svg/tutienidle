@@ -54,6 +54,20 @@ describe('ENTITY_ART_MODE uniformity', () => {
     }
   })
 
+  it('declared transition clips are one-shots - a looping transition never reaches its destination', () => {
+    for (const key of combatPresentationEntityKeys()) {
+      const clips = animatedArtFormFor(key)
+
+      for (const name of ['idle_to_standby', 'standby_to_idle'] as const) {
+        const clip = clips?.[name]
+
+        if (clip) {
+          expect(clip.repeat, `entity '${key}' transition '${name}'`).toBe(0)
+        }
+      }
+    }
+  })
+
   it('the shared placeholder resolves to a presentation of the ACTIVE kind', () => {
     expect(presentationFor(PLACEHOLDER_ENTITY_KEY)?.kind).toBe(ENTITY_ART_MODE)
     expect(staticArtFormFor(PLACEHOLDER_ENTITY_KEY)).toBeDefined()

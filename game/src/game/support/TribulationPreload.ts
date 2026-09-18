@@ -1,4 +1,4 @@
-// TribulationPreload — the transitional preload net for TribulationScene,
+// TribulationPreload - the transitional preload net for TribulationScene,
 // fed by the SAME 'tribulation' bundle descriptors AssetLoaderScene loads
 // (A10: one canonical catalog). The scene queues no literal URLs of its
 // own: a new tribulation asset lands here by landing in the catalog first.

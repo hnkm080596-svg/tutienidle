@@ -51,8 +51,8 @@ const useCanvas = ENTITY_ART_MODE === 'animated'
 const idleClip = animatedArtFormFor(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey)?.idle
 
 const CULTIVATE_BRIDGE = {
-  sheetUrl: 'assets/cultivate.png',
-  atlasUrl: 'assets/cultivate.json',
+  sheetUrl: '/assets/cultivate.png',
+  atlasUrl: '/assets/cultivate.json',
   framePrefix: 'frame_',
   frameSuffix: '.png',
   zeroPad: 3,
