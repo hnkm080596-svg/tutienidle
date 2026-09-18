@@ -101,6 +101,29 @@ export function buildNguKiemDaoProvider(
     instances: {
       count: player.kiemTu?.kiemDaoCount ?? 1,
       perInstanceOptions,
+      // Skill-definition M4 -- declarative mirror of the closure above;
+      // LegacySkillAdapter lifts `each` into SkillInstances.each (the
+      // closure remains the legacy resolveDeclaredHit lane's authority).
+      each: {
+        guaranteedHit: true,
+        ...(unlocks.a
+          ? {
+              execute: {
+                hpPercentBelow: Math.min(0.5, 0.1 * getRealmIndex(player.realmId)),
+                damageMultiplier: EXECUTE_MULT,
+              },
+            }
+          : {}),
+        ...(unlocks.e ? { critChance: CASCADE_CRIT_CHANCE } : {}),
+        ...(unlocks.d
+          ? {
+              armorPierce: {
+                bypassChance: CASCADE_PIERCE_CHANCE,
+                pierceFraction: PIERCE_FRACTION,
+              },
+            }
+          : {}),
+      },
     },
   })
 

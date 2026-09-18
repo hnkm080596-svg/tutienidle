@@ -62,7 +62,7 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
   }
 }
 
-function makeBattle(extra?: (attacker: TurnBattleParticipant) => void) {
+function makeBattle(extra?: (attacker: TurnBattleParticipant) => void, engineUnit = false) {
   const eventBus = new EventBus()
   const combat = new CombatSystem(eventBus)
 
@@ -99,7 +99,12 @@ function makeBattle(extra?: (attacker: TurnBattleParticipant) => void) {
     participants: () => [attackerP, defenderP],
     combatSystem: combat,
   })
-  const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
+  // skilldef M5d -- engineUnit drops the runtime so the test exercises
+  // the documented engine-unit legacy lane (closures are adapter-
+  // unsupported by design; runtime battles report them as loud no-ops).
+  const system = engineUnit
+    ? new TurnBattleSystem(combat, 10, REGISTRY)
+    : new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
   return { system, battle, attackerP, defenderP, eventBus, runtime }
 }
@@ -234,9 +239,9 @@ describe('Task 2 — instances + dynamicBasic', () => {
     vi.restoreAllMocks()
   })
 
-  it('perInstanceOptions receives (index, liveTarget) per instance', () => {
+  it('perInstanceOptions receives (index, liveTarget) per instance (engine-unit lane)', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const { system, battle, attackerP, defenderP } = makeBattle()
+    const { system, battle, attackerP, defenderP } = makeBattle(undefined, true)
 
     const seen: Array<[number, number]> = []
 
@@ -331,7 +336,7 @@ describe('Task 2 — instances + dynamicBasic', () => {
   })
 
   it('onCastResolved fires with resolvedSkillId; returned defs become extraImpacts', () => {
-    const { system, battle, attackerP } = makeBattle()
+    const { system, battle, attackerP, runtime } = makeBattle()
 
     const comboHit: TurnSkillDefinition = {
       id: 'combo_extra',
@@ -357,6 +362,21 @@ describe('Task 2 — instances + dynamicBasic', () => {
     expect(result.extraImpacts).toHaveLength(1)
     expect(result.extraImpacts[0]!.presetId).toBe('kiem_combo_flash')
     expect(result.extraImpacts[0]!.landedTargetIds).toContain('defender')
+    expect(result.extraImpacts[0]!.hitCount).toBe(1)
+
+    // skilldef M5c -- the extra routed through the plan pipeline: its
+    // hit minted a skill_hit op (the legacy lane resolves without ops).
+    const extraHits = runtime.scheduler.trace.records.filter(
+      (r) =>
+        r.operation.type === 'deal_damage' &&
+        (r.operation.payload as { damageProfile?: string }).damageProfile === 'skill_hit' &&
+        r.operation.origin.castId?.startsWith('cast.extra.'),
+    )
+    expect(extraHits).toHaveLength(1)
+    // No commit: the extra never paid cost or slotted a cooldown.
+    expect(
+      runtime.scheduler.trace.records.filter((r) => r.operation.type === 'consume_resource'),
+    ).toHaveLength(0)
   })
 
   it('ctx.resolveBuff applies a buff through the registry', () => {

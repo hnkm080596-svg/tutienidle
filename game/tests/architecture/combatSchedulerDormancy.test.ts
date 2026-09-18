@@ -47,6 +47,9 @@ const SCHEDULER_MODULE_PREFIX = 'src/core/battle/runtime/scheduler/'
 const CONSTRUCTION_SITES = [
   'src/core/game/GameManagerTurnBattleOps.ts',
   'src/core/battle/turn/testing/TurnRuntimeFixtures.ts',
+  // skilldef executor testkit (M3): headless scheduler mint for the
+  // SkillExecutor harness -- same category as TurnRuntimeFixtures.
+  'src/core/skilldef/SkillExecutor.testkit.ts',
 ]
 
 /** Files allowed to call scheduler intake/driver APIs (outside the
@@ -61,6 +64,10 @@ const SANCTIONED_DRIVERS = new Set([
   // Shared headless test runtime (apply/lifecycle helpers drive the
   // same lanes production does).
   'src/core/battle/turn/testing/TurnRuntimeFixtures.ts',
+  // skilldef executor (M3): authored plan ops settle through
+  // enqueueAuthored -- the sanctioned intake driver the scheduler was
+  // built for.
+  'src/core/skilldef/SkillExecutor.ts',
 ])
 
 // Receiver-explicit drive: `combatScheduler.run(` / `combatScheduler?.run(`.

@@ -52,6 +52,7 @@ import type {
   PeriodicOperationSettled,
 } from '../battle/contracts/events'
 import type { TurnSkillDefinition, ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
+import { consumeResourceFor } from '../battle/turn/TurnSkillAction'
 import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
 import {
   diffAndEmitTurnStatusVfx,
@@ -1082,10 +1083,34 @@ export class GameManagerTurnBattleOps {
         // buff2 M4 -- the legacy_dot lane's dot_recovery reads the
         // SOURCE's live capability grants at tick time.
         resolveSourceGrants: (id: CombatEntityId) => buffs.getCapabilities(id),
+        // skilldef M4 -- the skill_hit channel's declared policy rolls
+        // (crit bonus / armor bypass) consume the shared cycle rng.
+        rng: this.combatRng,
       }),
       heal: new CombatSystemHealAdapter(this.deps.combatSystem, resolveEntity),
       gauge: new ActionGaugeAdapter((id) => resolveParticipant(id), resolveEntity),
-      resource: new EntityResourceAdapter(resolveEntity),
+      resource: new EntityResourceAdapter(resolveEntity, {
+        // skilldef M4 -- skill costs ride consume_resource ops.
+        // 'mana' -> consumeResourceFor (the mana-cost writer: raw
+        // debit, no clamp, the insufficient check gates first);
+        // 'ward' -> EntityVitalsSystem spend/grant (the vitals
+        // authority owns shield mutation, never a raw field write).
+        mana: {
+          read: (entity) => entity.currentMp,
+          spend: (entity, amount) => {
+            consumeResourceFor(entity, { resourceType: 'mana', resourceCost: amount })
+          },
+        },
+        ward: {
+          read: (entity) => entity.currentWard,
+          spend: (entity, amount) => {
+            this.deps.combatSystem.vitals.spendWard(entity, amount, 'ward_spend', entity.id)
+          },
+          gain: (entity, amount) => {
+            this.deps.combatSystem.vitals.grantWard(entity, amount, 'ward_grant', entity.id)
+          },
+        },
+      }),
       shield: new VitalsShieldAdapter(this.deps.combatSystem.vitals, resolveEntity),
       buffs,
     })
@@ -1583,7 +1608,7 @@ export class GameManagerTurnBattleOps {
                   const entityId = entity.id as CombatEntityId
                   if (execCtx !== undefined) {
                     if (resolved.cleanseDebuffs) {
-                      playerBuffs.cleanse(entityId, { polarity: 'debuff' }, execCtx)
+                      playerBuffs.cleanse(entityId, { polarity: 'debuff' }, undefined, execCtx)
                     }
                     if (resolved.grantBuffId !== undefined) {
                       playerBuffs.apply(

@@ -1,8 +1,8 @@
 # Combat Systems Contract — SkillDefinition × BuffSystem × ReactionSystem
 
 Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
-Version: 1.5
-Applies to: [SkillDefinition v1.1](./2026-09-17-skill-definition-system-spec.md), [Buff System Reimagined v1.5](./2026-09-17-buff-system-reimagined-spec.md), [Reaction System Reimagined v1.0](./2026-09-17-reaction-system-reimagined-spec.md)
+Version: 1.6
+Applies to: [SkillDefinition v1.3](./2026-09-17-skill-definition-system-spec.md), [Buff System Reimagined v1.6](./2026-09-17-buff-system-reimagined-spec.md), [Reaction System Reimagined v1.1](./2026-09-17-reaction-system-reimagined-spec.md)
 Compatibility requirement: None
 Migration requirement: None
 Purpose: Khóa contract runtime giữa Skill, Buff, Reaction và các combat authorities trước implementation.
@@ -1392,3 +1392,35 @@ Additive deltas locked in the implementation megaplan (`2026-09-17-megaplan-comb
 3. **Synthetic event ids use the canonical allocator (supersedes v1.4 item 2's `evt.settled.${opId}`):** `PeriodicOperationSettled.eventId` is minted through the same `eventOrdinalByScope` counter the producing op's own sink uses — `evt.${operationId}.${scopeOrdinal++}` — globally collision-proof by construction (the scope is a globally-unique op id; every id in that scope shares one counter). `causationOperationId`/`rootActionId`/`combatSequence = allocateSeq()` / exactly-once are unchanged from v1.4.
 4. **`trigger_buff_periodic` result contract:** the op's result is `{started: boolean; firstRequestId?: string; candidateUnitCount: number}` — start metadata only. Continuation work has not happened at return time; per-request outcomes are observable via `PeriodicRequestsCommitted`/`PeriodicOperationSettled`/trace, never claimed synchronously. `resolutionsEmitted` is removed.
 5. **Modifier runtime identity on events:** `buff_modifier_added`/`buff_modifier_removed` carry `{instanceId, modifierId, modifierRuntimeId}` — the trace can distinguish same-`modifierId` generations. `remove_buff_modifier` `{selector, modifierId}` removes EVERY runtime entry with that authored id (`all_matching` — a stack of same-id entries is one logical modifier to its author); each removed entry emits its own event with its own `modifierRuntimeId`.
+
+---
+
+## Addendum v1.6 (2026-09-18 — locked via Skill megaplan review v2.1, contract closure)
+
+Additive deltas required by the Skill Definition program (megaplan `2026-09-17-megaplan-skill-definition.md` R-S8/R-S9). No v1.1–v1.5 semantic changes:
+
+1. **Declared hit/crit/armor intent policies on `DealDamageOperation.payload`:** the payload gains three optional INTENT fields — producers declare them; the DamageAuthority consumes seeded `CombatRng` at dispatch and performs every hit/crit/armor roll itself. Producers and executors NEVER roll hit/crit/armor (the spec's DamageSystem ownership of accuracy/crit/armor/resolution is preserved — the fields carry intent, not outcomes). `canCrit`/`canMiss` remain the coarse disable flags; `critPolicy` combined with `canCrit:false` is contradictory and faults at operation validation.
+
+   ```ts
+   hitPolicy?: {
+     /** Skip the accuracy/evasion roll entirely (e.g. Ngự Kiếm phi kiếm never miss). */
+     guaranteedHit?: boolean
+   }
+   critPolicy?: {
+     /** Extra crit roll per hit: success forces a critical; failure falls
+         back to the profile's normal crit roll (HitResolveOptions parity:
+         providers could only FORCE crit, never suppress the normal roll). */
+     bonusChance?: number
+   }
+   armorPolicy?: {
+     /** One roll per hit: success → physical mitigation term = 0 (armorBypass);
+         failure → mitigation multiplied by (1 - pierceFractionOnFail).
+         Ignored for elemental/primordial hits (no armor term exists there). */
+     bypassChance?: number
+     pierceFractionOnFail?: number
+   }
+   ```
+
+   Policies are declared per operation; when `hitCount > 1` the authority rolls per hit within the dispatch. They are consumed only by hit-resolving damage profiles (the skill action-hit channel) — emitting them on a non-hit profile (`legacy_dot`, `detonate_burst`, `reaction_*`, `legacy_flat`, `reflection`) is an authored error and faults at validation, never silently ignored.
+
+2. **`CleanseBuffOperation.payload` gains `limit?: number`:** `undefined` → every matching dispellable instance (current behavior); `N` → at most the first N cleansed in the canonical `BuffSystem` target ordering (`sortedForTarget`). `skipped` still reports every non-dispellable match — the scan continues for reporting after the removal limit is reached, only removal halts. This preserves the legacy `SkillEffect.remove_buff` semantics (`polarity` filter + `count` max, default 1) which the skill adapter maps as `cleanse{query:{polarity}, limit: count ?? 1}` — `polarity:'debuff'` covers `kind:'debuff'` AND `kind:'ailment'` per the existing query contract.

@@ -8,7 +8,9 @@
 //
 // No path-specific primitives (CON-23): the vocabulary is generic (sec.5).
 
+import type { DamageScalingConfig } from '../../combat/DamageCalculator'
 import type { ElementType } from '../../element/ElementType'
+import type { SkillDamageComponent } from '../../skill/SkillDamageComponent'
 
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from './ids'
 import type { CombatOperationOrigin } from './origin'
@@ -113,7 +115,10 @@ export interface DealDamageOperation {
     targetId: CombatEntityId
     element?: ElementType | 'physical'
     /** Intent-level profile -- DamageSystem resolves formula/mitigation/crit
-        channel from profile+origin, never the executor. */
+        channel from profile+origin, never the executor. 'skill_hit' is the
+        skill pipeline's hit-resolving channel (wired to full hit
+        resolution -- dodge/crit/armor/components/scaling -- by the
+        DamageAuthority in M3/M4). */
     damageProfile: string
     /** Authored coefficient -- NOT final damage. DamageSystem still applies
         stats/scaling/profile/mitigation/crit. */
@@ -123,6 +128,16 @@ export interface DealDamageOperation {
     canMiss: boolean
     periodicId?: string
     tags?: readonly string[]
+    /** Multi-component damage lanes (20% phys + 80% fire parity) -- the
+        hit-resolving profile splits the coefficient per component.
+        `element` carries the single-lane shorthand. Primordial lanes ride
+        components{kind:'primordial'} -- `element` keeps its ElementType|
+        'physical' union (adapter stat-key indexing stays total). */
+    components?: readonly SkillDamageComponent[]
+    /** Declared scaling inputs -- DamageAuthority resolves each term
+        against `snapshot` (frozen at cast) when present, live stats
+        otherwise. */
+    scaling?: DamageScalingConfig
     /** Buff-periodic forward-carriers (Lens B5): stackCount rides for
         profiles that scale on stacks; snapshot carries the apply-time
         source context for snapshot-scaled periodics -- DamageSystem
@@ -133,6 +148,28 @@ export interface DealDamageOperation {
         resolves power/mitigation vs THIS entity while origin.sourceId
         keeps vitals/event attribution. Absent = origin.sourceId. */
     statSourceId?: CombatEntityId
+    /** Contract v1.6 -- DECLARED hit/crit/armor intent. The producer
+        declares, DamageAuthority consumes CombatRng and performs every
+        roll; the executor/scheduler never roll these. Semantics mirror
+        HitResolveOptions (resolved-outcome options on resolveActionHit):
+          hitPolicy.guaranteedHit     -- skip the accuracy/evasion roll
+          critPolicy.bonusChance      -- extra crit roll chance on top of
+                                        the profile's base channel
+          armorPolicy.bypassChance    -- one roll: full armor bypass
+          armorPolicy.pierceFractionOnFail -- else mitigation x
+                                        (1 - fraction)
+        Policies are only legal on hit-resolving profiles (validation:
+        critPolicy contradicts canCrit:false; policies on non-hit
+        profiles fault). */
+    hitPolicy?: { guaranteedHit?: boolean }
+    critPolicy?: { bonusChance?: number }
+    armorPolicy?: { bypassChance?: number; pierceFractionOnFail?: number }
+    /** The Tu missing-HP scalar (ActionDamageInfo parity): the
+        authority re-reads the ATTACKER's live missing-HP fraction at
+        hit resolution and folds (1 + min(cap, fraction x perPercent
+        x 100)) into the multiplier -- never a snapshot value. */
+    missingHpBonusPerMissingPercent?: number
+    missingHpBonusCap?: number
   }
 }
 
@@ -154,6 +191,14 @@ export type ApplyBuffRequestPayload = Omit<ApplyBuffRequest, 'sourceId' | 'origi
 export interface ApplyBuffOperation {
   type: 'apply_buff'
   payload: ApplyBuffRequestPayload
+  /** son_nhac_ho_the externalWard grant (The Tu Task 11): orchestration
+      metadata, NOT BuffAuthority input -- when this op settles resolved,
+      the turn runtime writes `target.externalWard =
+      {sourceId, amount: max(0, source.stats.maxHp * sourceMaxHpRatio)}`
+      (replace semantics, exempt from wardMax). The pool's lifecycle is
+      existence-bound to the applied marker instance via
+      reconcileExternalWard at the stat-refresh seam. */
+  externalWardGrant?: { sourceMaxHpRatio: number }
 }
 
 export interface AddBuffStacksOperation {
@@ -232,7 +277,17 @@ export interface BuffCleanseQuery {
 
 export interface CleanseBuffOperation {
   type: 'cleanse_buff'
-  payload: { targetId: CombatEntityId; query: BuffCleanseQuery }
+  payload: {
+    targetId: CombatEntityId
+    query: BuffCleanseQuery
+    /** Contract v1.6 -- deterministic cap on dispellable removals:
+        undefined = all matching dispellable instances (legacy behavior);
+        N = the first N in canonical sortedForTarget order. `skipped`
+        still reports every matched-but-non-dispellable instance.
+        Legacy remove_buff-by-polarity parity maps {polarity, count} onto
+        {query:{polarity}, limit: count ?? 1}. */
+    limit?: number
+  }
 }
 
 export interface PushGaugeOperation {

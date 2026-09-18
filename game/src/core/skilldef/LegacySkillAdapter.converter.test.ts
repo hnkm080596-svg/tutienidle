@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './SkillToTurnSkillConverter'
+// skilldef M5e -- the bridge moved into LegacySkillAdapter.ts when the
+// converter module retired; these tests keep covering the same functions.
+import { toTurnSkillDefinition, collectUnsupportedSkillSemantics } from './LegacySkillAdapter'
 import { SKILLS } from '../../data/skill/Skills'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillManager } from '../skill/SkillManager'

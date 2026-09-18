@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { toTurnSkillDefinition } from './SkillToTurnSkillConverter'
+import { toTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
 import { PHAP_TU_KIT_IDS, SKILLS } from '../../data/skill/Skills'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 import { SkillManager } from '../skill/SkillManager'

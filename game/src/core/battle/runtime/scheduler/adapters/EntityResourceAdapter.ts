@@ -33,6 +33,7 @@
 import { grantThe } from '../../../../the-tu/TheEconomy'
 
 import type { CombatAuthorityExecutionContext } from '../../../contracts/context'
+import type { CombatEntity } from '../../../../combat/CombatEntity'
 import type { CombatEntityId } from '../../../contracts/ids'
 import type { ConsumeResourceValueSource } from '../../../contracts/operations'
 
@@ -43,6 +44,23 @@ import { CombatSettlementFault } from '../CombatSettlementFault'
 import { requireEntity, type CombatEntityLookup } from './lookups'
 
 const RESOURCE_THE = 'the'
+
+/** skilldef M4 -- a wired resource pool beyond 'the'. The composition
+    root owns the write path (mana -> entity.currentMp direct write,
+    matching consumeResourceFor; ward -> EntityVitalsSystem.spendWard,
+    keeping the vitals authority on shield mutation). Channels are the
+    adapter's extension seam: a resourceId with no wired channel still
+    faults loudly. */
+export interface EntityResourceChannel {
+  /** current pool value (the insufficient check reads it). */
+  read(entity: CombatEntity): number
+  /** numeric spend -- called only after the insufficient check. */
+  spend(entity: CombatEntity, amount: number): void
+  /** 'all' drain -- defaults to spend(entity, read(entity)). */
+  drain?(entity: CombatEntity): void
+  /** gain_resource lane -- absent faults on gain attempts. */
+  gain?(entity: CombatEntity, amount: number): void
+}
 
 interface GainResult {
   before: number
@@ -59,7 +77,10 @@ interface ConsumeResult {
 }
 
 export class EntityResourceAdapter implements ResourceAuthority {
-  constructor(private readonly resolveEntity: CombatEntityLookup) {}
+  constructor(
+    private readonly resolveEntity: CombatEntityLookup,
+    private readonly channels?: Readonly<Record<string, EntityResourceChannel>>,
+  ) {}
 
   gain(
     targetId: CombatEntityId,
@@ -68,12 +89,24 @@ export class EntityResourceAdapter implements ResourceAuthority {
     _ctx: CombatAuthorityExecutionContext,
   ): GainResult {
     const entity = requireEntity(this.resolveEntity, targetId)
-    this.requireChannel(resourceId)
     this.requireWellFormedAmount(amount, 'gain_resource')
 
-    const before = entity.currentThe ?? 0
-    grantThe(entity, amount)
-    const after = entity.currentThe ?? 0
+    if (resourceId === RESOURCE_THE) {
+      const before = entity.currentThe ?? 0
+      grantThe(entity, amount)
+      const after = entity.currentThe ?? 0
+      return { before, requested: amount, applied: after - before, after }
+    }
+
+    const channel = this.requireChannel(resourceId)
+    if (channel.gain === undefined) {
+      throw new CombatSettlementFault(
+        `EntityResourceAdapter: channel '${resourceId}' has no gain lane wired`,
+      )
+    }
+    const before = channel.read(entity)
+    channel.gain(entity, amount)
+    const after = channel.read(entity)
     return { before, requested: amount, applied: after - before, after }
   }
 
@@ -85,7 +118,8 @@ export class EntityResourceAdapter implements ResourceAuthority {
     _ctx: CombatAuthorityExecutionContext,
   ): ConsumeResult {
     const entity = requireEntity(this.resolveEntity, targetId)
-    this.requireChannel(resourceId)
+    const channel =
+      resourceId === RESOURCE_THE ? undefined : this.requireChannel(resourceId)
     if (amount === 'all' && valueSource === 'cast_snapshot') {
       // 'all' resolves at execution; 'cast_snapshot' asserts the amount
       // was frozen at cast -- contradictory, so fault loudly rather than
@@ -107,10 +141,30 @@ export class EntityResourceAdapter implements ResourceAuthority {
       this.requireWellFormedAmount(amount, 'consume_resource')
     }
 
-    const before = entity.currentThe ?? 0
+    if (channel === undefined) {
+      const before = entity.currentThe ?? 0
+      if (amount === 'all') {
+        entity.currentThe = 0
+        return { before, requested: 'all', applied: before, after: 0 }
+      }
+      if (before < amount) {
+        throw new CombatOperationSkip(
+          'insufficient_resource',
+          `entity '${targetId}' has ${before} '${resourceId}', cannot consume ${amount}`,
+        )
+      }
+      entity.currentThe = before - amount
+      return { before, requested: amount, applied: amount, after: entity.currentThe }
+    }
+
+    const before = channel.read(entity)
     if (amount === 'all') {
-      entity.currentThe = 0
-      return { before, requested: 'all', applied: before, after: 0 }
+      if (channel.drain !== undefined) {
+        channel.drain(entity)
+      } else {
+        channel.spend(entity, before)
+      }
+      return { before, requested: 'all', applied: before, after: channel.read(entity) }
     }
     if (before < amount) {
       throw new CombatOperationSkip(
@@ -118,16 +172,18 @@ export class EntityResourceAdapter implements ResourceAuthority {
         `entity '${targetId}' has ${before} '${resourceId}', cannot consume ${amount}`,
       )
     }
-    entity.currentThe = before - amount
-    return { before, requested: amount, applied: amount, after: entity.currentThe }
+    channel.spend(entity, amount)
+    return { before, requested: amount, applied: amount, after: channel.read(entity) }
   }
 
-  private requireChannel(resourceId: string): void {
-    if (resourceId !== RESOURCE_THE) {
+  private requireChannel(resourceId: string): EntityResourceChannel {
+    const channel = this.channels?.[resourceId]
+    if (channel === undefined) {
       throw new CombatSettlementFault(
-        `EntityResourceAdapter: no channel wired for resourceId '${resourceId}' (only 'the' is served in M3)`,
+        `EntityResourceAdapter: no channel wired for resourceId '${resourceId}'`,
       )
     }
+    return channel
   }
 
   private requireWellFormedAmount(amount: number, opType: string): void {

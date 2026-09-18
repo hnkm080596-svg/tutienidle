@@ -221,7 +221,7 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
         const entityId = entity.id as CombatEntityId
         if (execCtx !== undefined) {
           if (resolved.cleanseDebuffs) {
-            runtime.buffs.cleanse(entityId, { polarity: 'debuff' }, execCtx)
+            runtime.buffs.cleanse(entityId, { polarity: 'debuff' }, undefined, execCtx)
           }
           if (resolved.grantBuffId !== undefined) {
             runtime.buffs.apply(
