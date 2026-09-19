@@ -13,21 +13,21 @@ import { SeededCombatRng } from '../battle/runtime/rng/SeededCombatRng'
 import type { CompanionInstance } from '../../data/companion/Companions'
 import type { Stage } from '../stage/Stage'
 
-// M7.5 — real production journeys. These tests drive the FULL production
+// M7.5 -- real production journeys. These tests drive the FULL production
 // composition (GameManager -> beginBattleCycle -> mintCycleScheduler ->
 // TurnBattleSystem with the plan runtime) on REAL authored content lifted
 // through the strict Skill -> TurnSkillDefinition converter. Every cast
 // therefore travels TurnSkillDefinition -> SkillDefinition -> SkillResolver
-// -> SkillExecutor -> CombatScheduler -> authority adapters — the canonical
+// -> SkillExecutor -> CombatScheduler -> authority adapters -- the canonical
 // pipeline, not the engine-unit (runtime === undefined) test lane.
 //
 // Journey 1 (ngu_hanh wood): doc_chuong -> trung_doc -> periodic DoT ->
 // death -> victory. doc_chuong deals ZERO direct damage by authored
-// contract, so every point of enemy HP loss is the buff-periodic lane —
+// contract, so every point of enemy HP loss is the buff-periodic lane --
 // clean attribution of the apply -> lifecycle -> damage -> death chain.
 //
 // Journey 2 (ngo_dao via the real ritual): da_phap_lien_tuyen composite +
-// repeatCasts, van_phap_tuy_tam composite + multicast — one commit per
+// repeatCasts, van_phap_tuy_tam composite + multicast -- one commit per
 // cast (no duplicate cast count, no cooldown recommit, no phantom action).
 
 const LING_BAO_L3 = CAST_LEVELING_THRESHOLDS.linh_bao!.lv3
@@ -74,12 +74,12 @@ function expectNoLoudNoopWarnings(warnSpy: ReturnType<typeof vi.spyOn>) {
   }
 }
 
-describe('M7.5a — production journey: authored ailment skill through the canonical pipeline', () => {
+describe('M7.5a -- production journey: authored ailment skill through the canonical pipeline', () => {
   it('doc_chuong applies trung_doc via BuffSystem, periodic ticks settle damage through the scheduler, the enemy dies and the stage reports victory', () => {
     const { gameManager, player, combatSource } = makeManager(7)
 
     // Real ngu_hanh wood kit: basic = authored doc_chuong (0 direct
-    // damage, trung_doc chance 1). No special learned — every player
+    // damage, trung_doc chance 1). No special learned -- every player
     // action is a doc_chuong cast, so ALL enemy HP loss is DoT.
     player.cultivationPath = 'phap_tu'
     player.cultivationWay = 'ngu_hanh'
@@ -89,14 +89,14 @@ describe('M7.5a — production journey: authored ailment skill through the canon
       might: 1_500,
       attunement: 1_500,
       maxMp: 10_000,
-      maxHp: 200_000, // survives the full DoT ramp — the enemy dies first
+      maxHp: 200_000, // survives the full DoT ramp -- the enemy dies first
     } as typeof player.baseStats
 
     expect(gameManager.progressionOps.learnSkill('doc_chuong')).toBe(true)
 
     const enemy = makeEnemy('m75_poison_dummy', {
       maxHp: 30_000,
-      might: 120, // real incoming hits — damage settles on the player too
+      might: 120, // real incoming hits -- damage settles on the player too
       attackSpeed: 1,
       criticalRate: 0,
       criticalDamage: 1.5,
@@ -157,7 +157,7 @@ describe('M7.5a — production journey: authored ailment skill through the canon
     // Battle reached a real result through the wave flow.
     expect(battle?.state).toBe('victory')
 
-    // doc_chuong committed through the canonical cast sink (root id —
+    // doc_chuong committed through the canonical cast sink (root id --
     // INV-18/20 cast identity), once per cast with no phantom casts: the
     // authored skill has no repeat/multicast, so cast count == log count.
     const docCasts = player.skillCastCounts?.['doc_chuong'] ?? 0
@@ -180,25 +180,25 @@ describe('M7.5a — production journey: authored ailment skill through the canon
     // Incoming hits settled through DamageSystem on the player.
     expect(playerTookDamage).toBe(true)
 
-    // No unsupported authored semantics were hit — nothing silently
+    // No unsupported authored semantics were hit -- nothing silently
     // dropped, nothing fell back off the canonical lane.
     expectNoLoudNoopWarnings(warnSpy)
     warnSpy.mockRestore()
   })
 })
 
-describe('M7.5b — production journey: An kit repeat + multicast with exactly-once commit', () => {
-  it('the real ritual-granted kit fires repeat/multicast executions that share one cast commit — no duplicate cast, cooldown, or phantom action', () => {
+describe('M7.5b -- production journey: An kit repeat + multicast with exactly-once commit', () => {
+  it('the real ritual-granted kit fires repeat/multicast executions that share one cast commit -- no duplicate cast, cooldown, or phantom action', () => {
     const { gameManager, player, combatSource } = makeManager(11)
 
-    // The REAL ritual path — grants van_phap_tuy_tam (composite +
+    // The REAL ritual path -- grants van_phap_tuy_tam (composite +
     // multicast via the innate dao passive) and da_phap_lien_tuyen
     // (composite + repeatCasts) as authored, converted content.
     player.skillCastCounts = { linh_bao: LING_BAO_L3 }
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(true)
 
     const enemy = makeEnemy('m75_an_dummy', {
-      maxHp: 5_000_000, // survives the whole window — we want many casts
+      maxHp: 5_000_000, // survives the whole window -- we want many casts
       might: 0,
       attackSpeed: 1,
       criticalRate: 0,
@@ -217,7 +217,7 @@ describe('M7.5b — production journey: An kit repeat + multicast with exactly-o
     expect(specialSlot.skill.id).toBe('da_phap_lien_tuyen')
     expect(battle.players[0]!.basic?.id).toBe('van_phap_tuy_tam')
     // The ritual resolution stamped the real fields (production adapter
-    // chain — not a test-authored def).
+    // chain -- not a test-authored def).
     expect(specialSlot.skill.repeatCasts).toBe(2)
     expect(battle.players[0]!.basic?.multicast?.chance).toBeGreaterThan(0)
 
@@ -242,7 +242,7 @@ describe('M7.5b — production journey: An kit repeat + multicast with exactly-o
       const cooldown = current.players[0]!.special!.remainingCooldownTurns
 
       if (specialCasts === prevSpecialCasts && prevCooldown !== undefined && cooldown !== undefined) {
-        // Between casts the committed cooldown may only tick down — a
+        // Between casts the committed cooldown may only tick down -- a
         // recommit (repeat/multicast repaying the slot) shows as an
         // increase with no new cast.
         if (cooldown > prevCooldown) {
@@ -267,7 +267,7 @@ describe('M7.5b — production journey: An kit repeat + multicast with exactly-o
     expect(basicCasts).toBeGreaterThanOrEqual(1)
 
     // Repeat: every da_phap_lien_tuyen cast produced exactly
-    // 1 + repeatCasts executions, each logged under the ROOT id — and the
+    // 1 + repeatCasts executions, each logged under the ROOT id -- and the
     // three executions of one cast are consecutive (queued executions
     // drain before any other actor's turn).
     const specialEntries = log.filter((entry) => entry.skillId === 'da_phap_lien_tuyen')
@@ -280,7 +280,7 @@ describe('M7.5b — production journey: An kit repeat + multicast with exactly-o
       expect(run).toEqual([run[0], run[0]! + 1, run[0]! + 2])
     }
 
-    // Multicast: the basic's executions outnumber its casts — extra
+    // Multicast: the basic's executions outnumber its casts -- extra
     // executions chained off the multicast roll under the same root id.
     const basicEntries = log.filter((entry) => entry.skillId === 'van_phap_tuy_tam')
     expect(basicEntries.length).toBeGreaterThan(basicCasts)
@@ -294,7 +294,7 @@ describe('M7.5b — production journey: An kit repeat + multicast with exactly-o
     //   composite/repeat extras never produced phantom casts.
     expect(player.skillCastCounts?.['da_phap_lien_tuyen']).toBe(specialCasts)
 
-    // The picked payloads resolved — real damage reached the enemy
+    // The picked payloads resolved -- real damage reached the enemy
     // through the pipeline.
     const enemyEntity = finalBattle.enemies[0]!.entity
     expect(enemyEntity.currentHp).toBeLessThan(enemyEntity.maxHp)
@@ -304,11 +304,11 @@ describe('M7.5b — production journey: An kit repeat + multicast with exactly-o
   })
 })
 
-describe('M7.5b — production journey: authored charge skill (van_du_kiem_khach ultimate)', () => {
+describe('M7.5b -- production journey: authored charge skill (van_du_kiem_khach ultimate)', () => {
   it('chargeTurns: 2 initiates once, defers the resolve across charging turns, and the resolving hit lands without recommit', () => {
     const { gameManager, player, combatSource } = makeManager(13)
 
-    // Real companion kit — Vân Du Kiếm Khách's ultimate is authored with
+    // Real companion kit -- Van Du Kiem Khach's ultimate is authored with
     // chargeTurns: 2 (Tuyet Kiem Nhat Thu). The instance must sit at the
     // authored ultimate unlock realm for the slot to resolve.
     const instance: CompanionInstance = {
@@ -395,7 +395,7 @@ describe('M7.5b — production journey: authored charge skill (van_du_kiem_khach
     }
 
     // Charge init: the authored 2-turn charge committed the cooldown once
-    // and deferred the payload — chargingTurnsRemaining counts down 2 -> 1
+    // and deferred the payload -- chargingTurnsRemaining counts down 2 -> 1
     // across the companion's own charging turns, then the resolve clears
     // it. (charging persists on the participant between turns, so only
     // ticks where the companion itself logged an entry are actor turns.)
@@ -409,7 +409,7 @@ describe('M7.5b — production journey: authored charge skill (van_du_kiem_khach
     expect(initTick.ultCooldown).toBe(companion.ultimate!.skill.cooldownTurns)
 
     // No phantom actions: every companion turn inside the charge window is
-    // the pending ultimate — no basic/special slipped in mid-charge.
+    // the pending ultimate -- no basic/special slipped in mid-charge.
     const chargeWindow = ticks.filter(
       (tick) => tick.charging !== undefined || tick.pending === 'van_du_kiem_khach_ultimate',
     )
@@ -420,7 +420,7 @@ describe('M7.5b — production journey: authored charge skill (van_du_kiem_khach
       }
     }
 
-    // The deferred resolve landed the authored hit — and it did NOT
+    // The deferred resolve landed the authored hit -- and it did NOT
     // re-initiate a cast: a recommit would be a fresh charge-init and
     // charging would jump back to 2 instead of clearing.
     const resolveIndex = ticks.findIndex(
@@ -435,7 +435,7 @@ describe('M7.5b — production journey: authored charge skill (van_du_kiem_khach
     expect(resolveTick.skillIds).toContain('van_du_kiem_khach_ultimate')
     expect(ticks[resolveIndex - 1]!.enemyHp - resolveTick.enemyHp).toBeGreaterThan(0)
 
-    // Normal actions resumed after the resolve — the battle didn't freeze
+    // Normal actions resumed after the resolve -- the battle didn't freeze
     // on the cleared charge state.
     expect(normalTurnsAfterResolve).toBeGreaterThanOrEqual(2)
 

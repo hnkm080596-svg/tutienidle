@@ -122,4 +122,63 @@ describe('damage authority rng -- single canonical source', () => {
     // gate proves they exist rather than silently passing on zero.
     expect(sites.length).toBeGreaterThanOrEqual(1)
   })
+
+  /**
+   * M7.5c -- the runtime===undefined engine lane is the RETIRED active-
+   * skill execution representation, kept only as the engine-unit test
+   * lane. A production root that constructs TurnBattleSystem without a
+   * TurnCombatRuntime silently routes every cast through it. The ONE
+   * legitimate undefined-runtime site is the documented bootstrap
+   * placeholder in GameManagerTurnBattleOps -- inert by construction
+   * (stepTurnBattle early-returns until beginBattleCycle replaces it).
+   * Assert at most one production site may omit the runtime arg (5th).
+   */
+  it('at most one production TurnBattleSystem construction may omit the TurnCombatRuntime (5th arg)', () => {
+    const runtimeLess: string[] = []
+    for (const file of listProductionTs(SRC)) {
+      const text = readTs(file)
+      let idx = text.indexOf('new TurnBattleSystem(')
+      while (idx >= 0) {
+        const window = text
+          .slice(idx, idx + 2000)
+          .replace(/\/\/[^\n]*/g, '')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+        const open = window.indexOf('(')
+        let depth = 0
+        let end = -1
+        for (let i = open; i < window.length; i++) {
+          if (window[i] === '(') depth += 1
+          if (window[i] === ')') depth -= 1
+          if (depth === 0) {
+            end = i
+            break
+          }
+        }
+        const argsText = end >= 0 ? window.slice(open + 1, end) : ''
+        const args: string[] = []
+        let current = ''
+        let nest = 0
+        for (const ch of argsText) {
+          if ('([{'.includes(ch)) nest += 1
+          if (')]}'.includes(ch)) nest -= 1
+          if (ch === ',' && nest === 0) {
+            args.push(current)
+            current = ''
+          } else {
+            current += ch
+          }
+        }
+        args.push(current)
+        const runtimeArg = args[4]?.trim()
+        if (runtimeArg === undefined || runtimeArg === '' || runtimeArg === 'undefined') {
+          runtimeLess.push(`${file}@${idx}`)
+        }
+        idx = text.indexOf('new TurnBattleSystem(', idx + 1)
+      }
+    }
+    expect(
+      runtimeLess.length,
+      `production TurnBattleSystem sites without a TurnCombatRuntime must be the single documented bootstrap placeholder: ${runtimeLess.join(', ')}`,
+    ).toBeLessThanOrEqual(1)
+  })
 })
