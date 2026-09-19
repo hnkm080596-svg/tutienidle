@@ -194,10 +194,15 @@ semantics are intentionally abandoned.
   an actual re-grant.
 - **Hidden-mage resurrection → idempotent party re-grant** to the entire
   CURRENT allied party (hidden mage + surviving companions + resurrected
-  companions): holders keep their single instance (per_source + keep ⇒
-  addedStacks=0, no event, no duplicate capability); entities that lost it
-  regain it. This is a lifecycle-layer seam — ReactionSystem never sees
-  resurrection logic (§9.3).
+  companions): holders keep their single instance; entities that lost it
+  regain it. **Event-idempotent, not just state-idempotent** — `BuffSystem.
+  apply` emits `buff_applied` even on a no-change reapply (:323 — only
+  `elemental_application_committed`/`stacks`/`duration` events are
+  suppressed), so the grant seam must SKIP holders already carrying the aura
+  (check the live instance before applying) rather than blindly reapply:
+  holders get zero events, missing holders get exactly one `buff_applied`.
+  This is a lifecycle-layer seam — ReactionSystem never sees resurrection
+  logic (§9.3).
 
 **Consume scope (FINAL — "ALL means ALL SOURCES"):** `consumeBuff{scope:'any'}`
 and `detonate` consume every caster's instances of the def — A3 + B2 both go.
@@ -383,6 +388,14 @@ Mode: read-only + docs. Produce
   consume-compiled lane. Runtime `BuffInstanceSelector.kind:'identity'`
   (`contracts/selectors.ts` :9-14) already supports the triple — this is an
   authored/resolver-layer gap, not a new authority.
+  **Cardinality pin (regression risk):** `resolveSelector` (:507-525)
+  resolves target via `resolveIntentSingle` = `resolveIntentSet(...)[0]` —
+  first target only — while today's ops iterate `resolveIntentSet`
+  (:1655/:1693/:1722/:1748) supporting `affected_targets`/`all_enemies`/
+  `all_allies`. Do NOT reuse `resolveSelector` on multi-target ops. Add
+  `resolveSelectorSet` emitting one identity selector per resolved target;
+  the SOURCE intent must resolve exactly one entity. Regression tests:
+  `all_enemies` and `all_allies` target intents produce one op per target.
 - **S0.5P — INSTANCE-LOCAL PENETRATION: ACTIVE-CONTRACT EXTENSION (not a small
   primitive).** `metalPenetration` is a real `StatBlock` stat (:134) and
   `CombatSystemDamageAdapter.resolveLegacyDotAmount` :335 reads
@@ -402,8 +415,12 @@ Mode: read-only + docs. Produce
   Required extension (amend the ACTIVE contract via its addendum mechanism —
   backward-compatible optional fields, no authority redesign):
   1. `BuffModifierChannel` += `'elemental_penetration'`
-     (`contracts/operations.ts:47`); `ReactionDefinition`'s apply_status
-     modifier-channel union (:32) accepts it (or aliases the contract union).
+     (`contracts/operations.ts:47`). Pin the payoff-step surface correctly:
+     `duong_kim` rides `add_child_modifier` — extend THAT step's channel
+     union `'potency' | 'periodic_damage'` += `'elemental_penetration'` and
+     add `operation?: 'add'|'multiply'|'set'` (default `'multiply'`). The
+     `apply_status.modifier` union does NOT need the channel — do not widen
+     a surface no content uses.
   2. `BuffPeriodicDamageRequest` += `elementalPenetrationBonus?: number`
      (`contracts/periodic.ts:15`) — the resolver folds the channel value HERE,
      not into `coefficient` (it is a mitigation input, not a damage
@@ -416,14 +433,24 @@ Mode: read-only + docs. Produce
      in the elemental-damage branch — additive at RESOLUTION time only.
      **Never** mutate `source.stats`, never bake it into snapshots.
   5. **Legality guard (mirrors the hitPolicy declared-intent pattern,
-     `operations.ts:151-163`):** `elementalPenetrationBonus` is legal ONLY when
-     `origin.kind === 'buff_periodic'` AND `element` is an `ElementType` (not
-     `'physical'` — physical has no resistance-penetration channel) AND the
-     damage profile supports resistance penetration. Structural validation
-     rejects `element:'physical' + bonus`, or any non-periodic lane
-     (skill/reaction packets) carrying the field. It is not enough to say
-     "physical ignores it" — illegal carriers fault loudly.
-  6. Contract-spec addendum records the new field + channel + adapter rule +
+     `operations.ts:151-163`):** `elementalPenetrationBonus` is legal ONLY
+     when `origin.kind === 'buff_periodic'` AND `damageProfile ===
+     'legacy_dot'` AND `element` is an `ElementType` (not `'physical'`).
+     Pinned exactly — `legacy_dot` is the only periodic profile that reaches
+     `resolveLegacyDotAmount` (:118-128; `detonate_burst` shares the formula
+     but is never `buff_periodic` origin). No `profile.supportsPenetration`
+     abstraction without a consumer — a future penetration-capable periodic
+     profile opens the contract when it arrives. Structural validation
+     rejects `element:'physical' + bonus`, non-`legacy_dot` profiles, or any
+     non-periodic lane (skill/reaction packets) carrying the field — illegal
+     carriers fault loudly, not silently ignored.
+  6. **`uses`-lifetime marking:** add `'elemental_penetration'` to
+     `BuffPeriodicResolver.DAMAGE_CHANNELS` (:76). Without it, a `uses:1`
+     penetration modifier folds but is never pending-marked → never consumed
+     → lives forever (contract-correct for ALL lifetimes, not just the
+     `buff_lifetime` Dưỡng Kim currently uses). Test: `uses:1` penetration
+     modifier consumed by exactly one resolved tick.
+  7. Contract-spec addendum records the new field + channel + adapter rule +
      legality bounds.
 
   **Semantics — additive penetration points, NOT a multiplier.** Penetration
@@ -482,7 +509,29 @@ Mode: read-only + docs. Produce
   runtime consumers/parity tests depend on `spreadsAilmentId`/`spreadStackPercent`/
   `spreadRefreshesPrimary` — then DELETE the three dead authored fields
   (§4.3). A found consumer escalates to a canonical spread-primitive design.
-- **S0.13** Design rulings are in §15 — all resolved; no open items.
+- **S0.13 — PRIMITIVE: apply-result-dependent payoff modifier.** Defect
+  found: `apply_status` emits `apply_buff` then `add_buff_modifier`
+  (identity selector, `ReactionOperations.ts:226-248`) with NO dependency —
+  a resisted apply returns `{applied:false}` (`BuffSystem.ts:178`, op still
+  settles `'resolved'`), the batch continues, and the modifier's identity
+  selector finds a STALE same-source `reaction_bleed` instance → the payoff
+  modifier lands on the old instance despite the resist. This breaks D-5's
+  "resisted payoff → payoff absent" rule.
+  **Fix:** extend `DeferredOperation` (`contracts/settlement.ts:48` — the
+  existing result-dependent mechanism, currently only
+  `heal_from_damage_result` → `deal_damage`) with a new kind, e.g.
+  `add_modifier_on_apply_result` — `{resultOperationId → apply_buff op,
+  modifier}` — that materializes to `add_buff_modifier` on
+  `{kind:'instance', instanceId: result.instanceId}` ONLY when
+  `result.applied === true` (`ApplyBuffResult` carries `instanceId` on
+  success, :352-363). Binding the returned instanceId also fixes the
+  selector staleness generally — the modifier always lands on the exact
+  instance the apply committed, never a same-identity ancestor. Never
+  post-hoc board queries to guess success.
+  **Acceptance:** target holds an existing `reaction_bleed` (potency mod
+  +10%) → resisted reapply → stacks/duration/modifier unchanged; only
+  `buff_application_failed` emitted; no `add_buff_modifier` materializes.
+- **S0.14** Design rulings are in §15 — all resolved; no open items.
 
 ## 7. S1 — Seal Replacement + Consumer Migration
 
@@ -769,11 +818,16 @@ build the seam dormant:
 
 - The composition/lifecycle layer exposes the re-grant routine (same grant
   loop as §9.2 over living `battle.players`, sourced by the Ẩn entity).
+- **Event-idempotent grant, not blind reapply:** `BuffSystem.apply` emits
+  `buff_applied` even when `addedStacks=0`/`created=false` (:323). The seam
+  checks each living participant for an existing `van_phap_than_hoa`
+  instance (same source+def identity) and applies ONLY to missing holders —
+  existing holders produce zero events, missing holders produce exactly one
+  `buff_applied`, and `per_source`+`keep` remains the structural guarantee
+  that a duplicate can never form even if the check is bypassed.
 - Trigger surface: a lifecycle call (e.g. `onParticipantRevived(entityId)`)
   that any future revive mechanic must invoke when the revived entity is the
-  Ẩn aura source. Idempotency is free: same source+def on a holder that still
-  has the instance → `per_source`+`keep` ⇒ `addedStacks=0` → no event, no
-  duplicate.
+  Ẩn aura source.
 - Today the seam is exercised only by tests driving a revive transition
   directly (mirroring `perfectClear.test.ts:281`'s flag-set pattern). Document
   that any future resurrection content MUST call this seam — ReactionSystem
@@ -840,7 +894,10 @@ fix content/wiring; do not reflexively redesign the engine.
   (`invalid_target_state`); no rollback, no crash.
 - Resisted payoff: ailment resistance rejects a `cam_cong`/`defense_break`/
   `reaction_bleed`/`defense_erosion` apply → payoff absent, board consumed,
-  no rollback.
+  no rollback. Includes the stale-instance case: resisted `reaction_bleed`
+  reapply onto an existing same-source instance leaves stacks/duration/
+  modifier untouched — the S0.13 deferred modifier never materializes
+  (`buff_application_failed` only).
 - Cấm Công: attack rejected; heal/buff/cleanse/defend/utility legal; turn
   still occurs (production `cam_cong` def).
 - Aura lifecycle: Cases A–F from §9.5.
