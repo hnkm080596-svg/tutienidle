@@ -73,7 +73,10 @@ Production Skill / proc / entry producer (reactionEligibility=eligible)
 
 This is a content migration + production wiring mission. It does not redesign
 SkillDefinition, BuffSystem, ReactionSystem, CombatScheduler, DamageAuthority,
-GaugeAuthority, ActionValidator, or CombatTrace.
+GaugeAuthority, ActionValidator, or CombatTrace. It DOES extend the ACTIVE
+combat contract with one backward-compatible optional field for
+instance-local elemental penetration (§6 S0.5P) — an addendum, not a
+redesign.
 
 ## 1. Source of Truth
 
@@ -145,8 +148,10 @@ instance (spec §33: Sinh modifier lifetime = child ailment lifetime; §36
 modifier block `id=duong_kim, reapply=max, lifetime=Liệt Thương lifetime` — the
 same child-bound shape as Dưỡng Viêm's periodic potency). Interpretation: the
 Liệt Thương child's own periodic metal damage gains the penetration. NOT a
-caster-wide stat grant. Implemented via a generic penetration mechanism — no
-relabeling of `potency`, no `if (reactionId === 'duong_kim')` branch (§8.1).
+caster-wide stat grant. Implemented via the §6 S0.5P ACTIVE-CONTRACT extension
+(`elemental_penetration` channel → `elementalPenetrationBonus` on periodic
+request + damage op) — no relabeling of `potency`, no `if (reactionId ===
+'duong_kim')` branch, no `source.stats` mutation.
 
 **D3 — Reaction enablement = the Vạn Pháp Thân Hòa aura (FINAL).** The Ẩn tâm
 pháp applies `van_phap_than_hoa` at battle entry to the hidden mage and ALL
@@ -240,8 +245,13 @@ All five migrate to duration **3** (D-2) and `maxStacks:5 add/refresh` (D-6);
   Post-migration it detonates the canonical seal board — intended.
 - **`spreadsAilmentId`:** `PhapTuChainSkills` :473,:494,:511 (`trung_doc`) —
   DEAD authored fields: `UNSUPPORTED_EFFECT_FIELDS` in `LegacySkillAdapter` :601 —
-  reported, never executed. Retarget ids anyway; classify in S0 whether the
-  mechanic is re-authored or deleted.
+  reported, never executed, and no spread mechanic exists in the new spec.
+  **Terminal disposition: DELETE the three authored fields in S1** — a
+  "rename the dead field and keep it" outcome is forbidden (it would be a
+  retained non-running mechanic, exactly the stale semantics this mission
+  removes). S0 verifies zero runtime consumers/parity tests expect spread
+  behavior; if a hidden consumer is found, escalate to a canonical spread
+  primitive design before touching S1.
 - **`add_stack` chains:** `PhapTuChainSkills` :87 (`bong`+1), :441,:958
   (`trung_doc`+2), :655,:672,:687 (`chay_mau` +1/+2/+3). Mapped into
   `appliesAilments` folding — they become eligible seal applications.
@@ -360,18 +370,46 @@ Mode: read-only + docs. Produce
     accept an `AuthoredBuffSelector` (or add `source?: SkillTargetIntent`).
   - Runtime `BuffInstanceSelector.kind:'identity'` (`contracts/selectors.ts` :9-14)
     supports the exact triple already — engine-side capability confirmed.
-- **S0.5 — PRIMITIVE CHECK B (penetration):** `metalPenetration` is a real
-  `StatBlock` stat (:134); `CombatSystemDamageAdapter.resolveLegacyDotAmount`
-  :335 reads `source.stats[${element}Penetration]` for elemental damage
-  (including `legacy_dot` periodic ticks). But `add_child_modifier` channels are
-  the closed union `'potency' | 'periodic_damage'` (`ReactionDefinition.ts` :32)
-  folding into the damage COEFFICIENT (`BuffPeriodicResolver.ts` :103), and
-  `DealDamageOperation` has no penetration payload field. **Verdict: NOT
-  expressible today.** Primitive (§8.1): a new instance-modifier channel, e.g.
-  `'elemental_penetration'`, resolved like existing channels and carried onto
-  the periodic damage op as an additive penetration term the adapter consumes
-  for that instance's damage (element from `op.element`). No per-reaction
-  branches.
+- **S0.5P — INSTANCE-LOCAL PENETRATION: ACTIVE-CONTRACT EXTENSION (not a small
+  primitive).** `metalPenetration` is a real `StatBlock` stat (:134) and
+  `CombatSystemDamageAdapter.resolveLegacyDotAmount` :335 reads
+  `source.stats[${element}Penetration]` for elemental damage — but THREE closed
+  contract surfaces block instance-local penetration today:
+  - `contracts/operations.ts:47-52` — `BuffModifierChannel` is a closed union
+    (`'potency'|'periodic_damage'|'next_periodic_damage'|'duration'|
+    'application_chance'`); no penetration member.
+  - `contracts/periodic.ts:15` — `BuffPeriodicDamageRequest` has no
+    penetration field.
+  - `contracts/operations.ts:112` — `DealDamageOperation.payload` has no
+    penetration field (element/damageProfile/coefficient/hit policies/
+    components/scaling/stackCount/snapshot/statSourceId only).
+  - `2026-09-17-combat-systems-contract-spec.md` is **FINAL — ACTIVE CONTRACT
+    v1.6** — this is a contract extension, not an internal helper.
+
+  Required extension (amend the ACTIVE contract via its addendum mechanism —
+  backward-compatible optional fields, no authority redesign):
+  1. `BuffModifierChannel` += `'elemental_penetration'`
+     (`contracts/operations.ts:47`); `ReactionDefinition`'s apply_status
+     modifier-channel union (:32) accepts it (or aliases the contract union).
+  2. `BuffPeriodicDamageRequest` += `elementalPenetrationBonus?: number`
+     (`contracts/periodic.ts:15`) — the resolver folds the channel value HERE,
+     not into `coefficient` (it is a mitigation input, not a damage
+     multiplier).
+  3. The scheduler's periodic request→op 1:1 bridge forwards it onto
+     `DealDamageOperation.payload.elementalPenetrationBonus?: number`
+     (`contracts/operations.ts:112`).
+  4. `CombatSystemDamageAdapter`: `effectivePenetration =
+     (source?.stats[${element}Penetration] ?? 0) + (op.elementalPenetrationBonus ?? 0)`
+     in the elemental-damage branch — additive at RESOLUTION time only.
+     **Never** mutate `source.stats`, never bake it into snapshots; physical
+     ops ignore the field.
+  5. Contract-spec addendum records the new field + channel + adapter rule.
+
+  **Required isolation test (acceptance):** two Liệt Thương instances carrying
+  different `duong_kim` penetration modifiers must tick different damage —
+  the bonus stays bound to ITS instance's requests; no leak to the sibling
+  instance, to skill damage, or to other elemental ops (which never carry the
+  field). No `if (reactionId === …)` branches anywhere.
 - **S0.6** Inventory `reactionEligibility:'eligible'` producers (§8.3) —
   purpose: document intentional eligibility (D-7), NOT suppress non-skill lanes.
 - **S0.7** Inventory presentation/log surfaces for `reaction_resolved`,
@@ -389,7 +427,19 @@ Mode: read-only + docs. Produce
 - **S0.10** Locate the resurrection seam owner: no production dead→alive
   transition exists (§5). Design the dormant lifecycle hook (§9.3) and record
   where a future revive mechanic must call it.
-- **S0.11** Design rulings are in §15 — all resolved; no open items.
+- **S0.11** Docs amendment sweep — THREE spec items (amendment notes, not
+  silent rewrites): (a) reaction spec §"Ailment rename/rework map" :14 — D1
+  supersedes the `≠` claims; (b) reaction spec §2 :45 + :13 — aura model
+  supersedes "Reaction exclusive to Ngộ Đạo"; (c) **unpark**
+  `2026-09-17-hoa-an-ailment-system-spec.md` — its header is `PARKED` (:3) and
+  :9 asks the open question "Hỏa Ấn thay thế `bong` hay tồn tại song song" —
+  D1 resolves it: `bong → hoa_an` destructive migration. Flip status to
+  active + record the D1 amendment; S5 cannot implement from a PARKED spec.
+- **S0.12** Spread-field disposition (terminal, before S1): verify zero
+  runtime consumers/parity tests depend on `spreadsAilmentId`/`spreadStackPercent`/
+  `spreadRefreshesPrimary` — then DELETE the three dead authored fields
+  (§4.3). A found consumer escalates to a canonical spread-primitive design.
+- **S0.13** Design rulings are in §15 — all resolved; no open items.
 
 ## 7. S1 — Seal Replacement + Consumer Migration
 
@@ -459,13 +509,10 @@ in the elemental registry, never reaction states.
 `CANONICAL_REACTIONS` already encodes all ten relations (ids, priorities
 10–100, formulas). Changes:
 
-- **`duong_kim`:** replace `add_child_modifier{channel:'potency'}` with the
-  penetration mechanism (D-2): new instance-modifier channel
-  `'elemental_penetration'` resolved like existing channels, carried onto the
-  child's periodic damage op as an additive penetration term (element from
-  `op.element`) — the adapter adds it to `source.stats[${element}Penetration]`
-  for THAT instance's damage. Child-instance scope (locked): amplifies the
-  Liệt Thương child's own periodic metal damage, dies with the child.
+- **`duong_kim`:** replace `add_child_modifier{channel:'potency'}` with
+  `channel:'elemental_penetration'` via the S0.5P contract extension —
+  child-instance scope (locked): the bonus rides only the Liệt Thương child's
+  own periodic metal damage requests and dies with the child.
 - **`REACTION_STATUS_BUFF_IDS`:** rebind to the four production defs below.
 - **Locked values (verbatim):** Tụ Thủy `maxRemaining:5`; Xuyên Thổ
   `fraction = min(0.05×D, 0.25)` × actual resolved reaction damage
@@ -476,22 +523,67 @@ in the elemental registry, never reaction states.
   Đoạn Mộc bleed `stacks:1+floor(A/2)` + potency modifier `1+0.05×D` (already
   encoded :147-155).
 
-### 8.2 Secondary production status defs (complete semantics)
+### 8.2 Secondary production status defs (literal shapes — nothing left to the implementer)
 
-All four: `kind:'debuff'`, `polarity:'debuff'`, `instanceScope:'per_source'`,
-`application.resistance:'ailment'` (D-5: payoffs are resistible — apply
-attempt → resistance roll), `dispellable:true`, non-elemental (`element`
-unset → never in the elemental registry → structurally cannot react, §30 spec).
+All four share: `kind:'debuff'`, `polarity:'debuff'`, `element: undefined`
+(non-elemental status — never in the elemental registry → structurally cannot
+react, spec §30), `instanceScope:'per_source'`,
+`application:{resistance:'ailment'}` (D-5: payoffs are resistible — apply
+attempt → resistance roll), `dispellable:true`, `lifetime.scaling:'fixed'`
+(debuffs, not ailments — `ailment_scaled` is for the five seals),
+`lifetime.clock:'holder_turns'`, no `removeOnSourceDeath` (default false —
+payoff debuffs persist through caster death, consistent with the seals).
+Values marked *(authored)* are spec-silent tuning knobs, not architecture.
 
-| id | stacks | duration | semantics |
-|---|---|---|---|
-| `defense_break` | `maxStacks:5`, `add` | base 1-3 via reaction `durationOverride:min(3,ceil(D/2))` | `statModifiers:[{stat:'defense', percent:-0.04}]` — percent multiplies stacks at StatCalculator → **each stack = −4% defense**; reaction applies A stacks. Do NOT double-encode 4%×A in both places. |
-| `defense_erosion` | `maxStacks:5`, `add` | base `duration:4` holder turns (authored default — spec silent; intentionally longer-lived than break's 1-3 override: "erosion" is the persistent variant) | same channel: `statModifiers:[{stat:'defense', percent:-0.04}]` per stack; reaction applies A stacks, no override |
-| `cam_cong` | `maxStacks:1`, `keep` | base `duration:1` (always overridden by Trấn Thủy's `durationOverride:clamp(D-2,1,2)`) | `forbiddenActionTags:['attack']` — NOT stun; heal/buff/cleanse/defend/utility stay legal; holder still takes turns |
-| `reaction_bleed` | `maxStacks:5`, `add` | base `duration:3` holder turns (authored default — spec silent) | periodic non-elemental DoT via `legacy_dot` profile; reaction applies `1+floor(A/2)` stacks with child modifier `potency ×(1+0.05×D)` (already encoded). MUST NOT enter the ElementalStateRegistry → can never trigger Reaction (§30). |
+```ts
+defense_break:
+  stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' }
+  lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' }
+    // base only — Trấn Thủy/Dung Kim always supplies durationOverride
+    // min(3, ceil(D/2)) (already encoded :136)
+  statModifiers: [{ stat: 'defense', percent: -0.04 }]
+    // percent multiplies stacks at StatCalculator → each stack = −4% defense;
+    // reaction applies A stacks. Do NOT double-encode 4%×A in both places.
 
-Spec-silent fields marked "authored default" are tunable content, not locked
-architecture.
+defense_erosion:
+  stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' }
+  lifetime: { clock: 'holder_turns', duration: 4, scaling: 'fixed' }
+    // *(authored)* longer-lived than break's 1-3 override: "erosion" is the
+    // persistent variant; reaction applies A stacks, no override
+  statModifiers: [{ stat: 'defense', percent: -0.04 }]  // −4% defense per stack
+
+cam_cong:
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' }
+  lifetime: { clock: 'holder_turns', duration: 1, scaling: 'fixed' }
+    // base only — Trấn Thủy always supplies durationOverride clamp(D-2,1,2)
+  forbiddenActionTags: ['attack']   // NOT stun — heal/buff/cleanse/defend/
+                                    // utility stay legal; holder still takes turns
+
+reaction_bleed:
+  stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' }
+  lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' }  // *(authored)*
+  periodic: [{
+    id: 'reaction_bleed.dot',
+    type: 'damage',
+    element: 'physical',        // REQUIRED by PeriodicDamageDefinition (:62) —
+                                // "non-elemental status" means the DEF has no
+                                // element tag; the damage packet still needs a
+                                // channel. 'physical' is the only coherent
+                                // choice (non-elemental wound → armor
+                                // mitigation, might power — not a wuxing
+                                // element that would imply elemental damage).
+    damageProfile: 'legacy_dot',
+    coefficient: 0.2,           // *(authored)* spec pins no number; mid-tier
+                                // legacy DoT value
+    scaling: 'dynamic',
+    timing: 'holder_turn_end',
+    stackScaling: 'multiply',
+    canCrit: false, canMiss: false, hitCount: 1,
+  }]
+  // reaction applies 1+floor(A/2) stacks + child modifier
+  // {id:'doan_moc', channel:'potency', value:1+0.05×D} (already encoded
+  // :147-155). MUST NOT enter the ElementalStateRegistry.
+```
 
 ### 8.3 `reactionEligibility` producer audit (D-4/D-7 — document intent)
 
@@ -550,11 +642,39 @@ Lifecycle semantics fall out of the buff model — no latch question:
   NO aura until an actual re-grant (§9.3).
 - No snapshot, no membership set — the gate asks the live buff board per event.
 
-**`van_phap_than_hoa` def:** `kind:'buff'`, `polarity:'buff'`,
-`lifetime:{clock:'permanent'}`, `dispellable:false`, `maxStacks:1`,
-`onReapplyStacks:'keep'`, `onReapplyDuration:'keep'`, no statModifiers,
-`capabilities:[{id:'van_phap_than_hoa.reaction', type:'elemental_reaction_enabled', payload:{}}]`,
-`removeOnSourceDeath` never set true. (Cleanse skips `dispellable:false`.)
+**`van_phap_than_hoa` def (literal — every required field pinned):**
+
+```ts
+{
+  id: 'van_phap_than_hoa',
+  kind: 'buff',
+  polarity: 'buff',
+  element: undefined,            // non-elemental
+  instanceScope: 'per_source',   // REQUIRED — the resurrection-re-grant
+                                 // idempotency proof depends on it
+  stacking: {
+    maxStacks: 1,
+    onReapplyStacks: 'keep',
+    onReapplyDuration: 'keep',
+  },
+  lifetime: {
+    clock: 'permanent',
+    scaling: 'fixed',
+    removeOnSourceDeath: false,  // EXPLICIT — the Ẩn-death invariant is
+                                 // gameplay-locked, never left to the
+                                 // implementation default
+  },
+  dispellable: false,            // cleanse() gate skips it
+  capabilities: [
+    { id: 'van_phap_than_hoa.reaction',
+      type: 'elemental_reaction_enabled',
+      payload: {} },
+  ],
+}
+```
+
+No statModifiers, no periodic, no `application` block (composition applies it;
+resistance is meaningless for a self-granted aura).
 
 **Capability type registration:** `CapabilityType` is an open string; unknown
 types throw at `BuffRegistry` registration (:340 → validator `:33`). Register
@@ -637,9 +757,13 @@ Exactly once, inside the existing mint. Boards remain same-source
 - **Case E — cleanse:** cleanse attempts on `van_phap_than_hoa` → aura remains
   (`dispellable:false` — assert via the cleanse lane, not just the flag).
 - **Case F — no Ẩn:** no tâm pháp → no aura → seals apply, zero reactions.
-- Positive: eligible skill-origin AND eligible proc-origin seal applies react;
-  suppressed cannot. Ordinary-mage + companion + hidden-path applications all
-  covered.
+- Positive: eligible skill-origin seal applies react; suppressed cannot.
+  Ordinary-mage + companion + hidden-path applications all covered.
+- **Origin-agnosticism proof (synthetic):** a direct `ApplyBuffRequest` with
+  `origin.kind:'proc'` + `reactionEligibility:'eligible'` on a canonical seal
+  from an aura holder MUST react — proving the gate ignores origin.
+  Production `CombatProcSystem` stays `'suppressed'` per §8.3 — this mission
+  does NOT flip it.
 - Registration-exactly-once guard; second-`ReactionRegistry`/board-store guard.
 
 ## 10. S4 — Production-Data Re-Proof Matrix
@@ -679,7 +803,8 @@ fix content/wiring; do not reflexively redesign the engine.
 `dan_hoa_quyet`, `xich_viem_xuyen_tam` (+ `xich_viem_next_tick` modifier),
 `phan_thien_hoa_vuc`, `cuu_tieu_viem_bao` — authored through the canonical
 SkillDefinition pipeline only; locked spec: `2026-09-17-hoa-an-ailment-system-
-spec.md` + buff spec §60-63 + skilldef spec §61/§71. Same-source consume uses
+spec.md` **(unparked + D1-amended at S0.11 — never implement from a PARKED
+spec)** + buff spec §60-63 + skilldef spec §61/§71. Same-source consume uses
 the §6 S0.4 primitive (own-scope consume); generic `any` lanes unchanged
 (D-4). If a mechanic cannot be expressed, classify the missing primitive and
 add the smallest generic one; never a skill-specific escape hatch. These are
@@ -757,6 +882,10 @@ After migration, assert absent in production:
 - `core/reaction` never imports path/way/skill-content modules.
 - `reaction_bleed`/`defense_break`/`defense_erosion`/`cam_cong` never enter
   the `ElementalStateRegistry` — structural non-reactability.
+- Instance-local penetration exists ONLY via the §6 S0.5P contract fields —
+  guard: no `source.stats` mutation for penetration, no alternative
+  penetration injection path (no statModifier hack, no profile bypass), and
+  the bonus provably stays bound to its own instance's damage requests.
 
 ## 14. Gates
 
