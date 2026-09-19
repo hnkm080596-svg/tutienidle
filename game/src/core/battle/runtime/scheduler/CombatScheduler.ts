@@ -613,6 +613,21 @@ export class CombatScheduler {
         } else {
           op = entry
         }
+        // sec.49 per-op validity gate: a mid-batch death (or an instance
+        // consumed earlier in this frame) earns a typed skip, not a
+        // dispatch against a corpse -- the batch continues regardless.
+        const invalid = this.batchRunner.opTargetSkipReason(op)
+        if (invalid !== undefined) {
+          const skipped = {
+            operationId: op.operationId,
+            type: op.type,
+            status: 'skipped',
+            reason: invalid,
+          } as CombatOperationResult
+          this.trace.recordSkippedResult(skipped)
+          results.record(op, skipped)
+          continue
+        }
         const result = this.executeOpWithBarrier(op)
         results.record(op, result)
       }

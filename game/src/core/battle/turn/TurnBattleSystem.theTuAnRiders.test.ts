@@ -12,6 +12,7 @@ import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
+import type { CombatRng } from '../contracts/rng'
 import { HO_MON_MARKER, TRO_MON_MARKER } from '../../../data/buff/TheTuBuffs'
 import { BAT_TU_BA_THE, TRO_KICH } from '../../../data/skill/TheTuSkills'
 import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
@@ -115,7 +116,11 @@ function registryWith(replacements: readonly BuffDefinition[]) {
 
 function world(
   participants: () => readonly TurnBattleParticipant[],
-  opts: { registry?: ReturnType<typeof makeTestBuffRegistry>; rng?: () => number } = {},
+  opts: {
+    registry?: ReturnType<typeof makeTestBuffRegistry>
+    rng?: () => number
+    combatRng?: CombatRng
+  } = {},
 ) {
   const combat = new CombatSystem(new EventBus())
   const registry = opts.registry ?? BUFF_REGISTRY
@@ -123,7 +128,9 @@ function world(
     registry,
     participants,
     combatSystem: combat,
-    rng: opts.rng === undefined ? undefined : new FunctionCombatRng(opts.rng),
+    rng:
+      opts.combatRng ??
+      (opts.rng === undefined ? undefined : new FunctionCombatRng(opts.rng)),
   })
 
   return { combat, registry, runtime }
@@ -462,12 +469,17 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
 
   it('a lethal hit kills the phan_mon holder -> no The cost, no rng draw, no queue', () => {
     const f = lethalFixture()
-    const rng = vi.fn(() => 0)
-    const w = world(() => f.roster, { rng })
+    // The hit channel draws roll() (accuracy/crit/block); the reactive
+    // window's ONLY draw is rollChance -- split the channels so the
+    // assertion pins the window specifically, not the hit's own rolls.
+    const roll = vi.fn(() => 0)
+    const rollChance = vi.fn((_chance: number) => true)
+    const w = world(() => f.roster, { combatRng: { roll, rollChance } })
     w.runtime.applyBuff('phan_mon', f.defenderP)
-    // The seed apply consumes one resolver roll (stream parity) — clear
+    // The seed apply consumes resolver rolls (stream parity) -- clear
     // so the assertion measures only the hit window's draws.
-    rng.mockClear()
+    roll.mockClear()
+    rollChance.mockClear()
 
     systemOf(w).applyActionImpact(
       f.battle,
@@ -475,9 +487,11 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
     )
 
     expect(f.defenderP.entity.alive).toBe(false)
-    // The window never opened: no cost paid, no success credit, no draw.
+    // The window never opened: no cost paid, no success credit, and the
+    // proc's chance draw (rollChance) never happened -- the hit's own
+    // roll()s are a separate, legitimate channel.
     expect(f.defenderP.entity.currentThe).toBe(50)
-    expect(rng).not.toHaveBeenCalled()
+    expect(rollChance).not.toHaveBeenCalled()
     expect(f.battle.queuedFollowUps ?? []).toHaveLength(0)
   })
 

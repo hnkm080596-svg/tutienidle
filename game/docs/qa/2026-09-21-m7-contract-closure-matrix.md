@@ -149,6 +149,11 @@ All twelve are implemented as **A** rows in `src/core/battle/turn/TurnBattleSyst
 | Unsupported runtime cast = loud no-op | A | contract suite `unrouted cast`; B `TurnBattleSystem.skillPlan.test.ts` 'a def with unexpressible semantics (runtime-closure perInstanceOptions) reports loudly and no-ops' |
 | Unsupported runtime cast never uses production legacy fallback | A | contract suite; B `damageAuthorityRng.test.ts` + `inventory` §3 (runtime-present lane throws without a runtime; only `runtime === undefined` engine-unit lane retains legacy semantics) |
 
+### M7.3 implementation findings closed while building the suite
+
+- **§49 gate existed only headlessly (fixed).** The contract's per-op validity gate (`invalid_target_state` on a dead target / vanished selector instance, batch continues) lived only in the headless `ReactionBatchRunner`; the production `CombatScheduler.runBatchFrame` dispatched every batch op unconditionally — an `apply_buff` payoff on a mid-batch-killed target committed on a corpse. The gate moved into the shared `CombatOperationBatchRunner.opTargetSkipReason` (new optional `PreconditionChecker.getBuffInstanceBySelector` probe resolving all three selector kinds); the scheduler frame and the headless runner now consult the same authority. Both composition roots (`GameManagerTurnBattleOps.mintCycleScheduler`, `makeTurnRuntime`) wire the probe. §96 whole-stack evidence is the acceptance.
+- **Fixture RNG channel gap (fixed).** `makeTurnRuntime` injected `CombatRng` into the application resolver, damage-adapter policy rolls and proc system, but never bound `combatSystem.setRandomSource` — the accuracy/evasion/crit/block rolls inside `resolveActionHit` ran on unseeded `Math.random` while production binds the same instance (`GameManagerTurnBattleOps:1245`). The fixture now binds `setRandomSource(() => rng.roll())`, matching production and enabling the M7.4 same-seed determinism proof. One pre-existing test (`theTuAnRiders` dead-holder no-draw assertion) was updated to pin `rollChance` specifically — the hit channel's `roll()` draws are a separate legitimate channel.
+
 ## Part 4 — Addenda v1.2–v1.6
 
 | Addendum item | Requirement | Cls | Evidence |

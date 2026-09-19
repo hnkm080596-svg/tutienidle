@@ -1128,6 +1128,7 @@ export class GameManagerTurnBattleOps {
                 stacks: snapshot.stacks,
               }
         },
+        getBuffInstanceBySelector: (selector) => buffs.getInstance(selector),
       },
     })
 

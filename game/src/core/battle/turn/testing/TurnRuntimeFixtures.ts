@@ -35,7 +35,10 @@ import { EntityResourceAdapter } from '../../runtime/scheduler/adapters/EntityRe
 import { VitalsShieldAdapter } from '../../runtime/scheduler/adapters/VitalsShieldAdapter'
 import { consumeResourceFor } from '../TurnSkillAction'
 import { createDefaultCapabilityValidators } from '../../runtime/capability/DefaultCapabilityValidators'
-import { createElementalStateRegistry } from '../../../reaction/ElementalStateRegistry'
+import {
+  createElementalStateRegistry,
+  type ElementalStateRegistry,
+} from '../../../reaction/ElementalStateRegistry'
 import { CombatProcSystem } from '../../../proc/CombatProcSystem'
 import { createDamageProfileCatalog } from '../../../combat/DamageProfiles'
 import type { TurnBattleParticipant, TurnCombatRuntime } from '../TurnBattleSystem'
@@ -67,8 +70,18 @@ export function makeTurnRuntime(opts: {
   participants: () => readonly TurnBattleParticipant[]
   combatSystem: CombatSystem
   rng?: CombatRng
+  /** M7 -- share ONE ElementalStateRegistry between the BuffSystem and
+      fixture reaction components (board/gate/dispatcher) built in the
+      same test; defaults to the canonical five-element map. */
+  elements?: ElementalStateRegistry
 }): TurnRuntimeFixture {
   const rng = opts.rng ?? new FunctionCombatRng(() => Math.random())
+  // Production binds the SAME rng instance via
+  // combatSystem.setRandomSource (GameManagerTurnBattleOps): the
+  // accuracy/evasion/crit/block rolls inside resolveActionHit must
+  // consume the injected stream too, or fixture battles run those
+  // channels on unseeded Math.random -- no determinism proof possible.
+  opts.combatSystem.setRandomSource(() => rng.roll())
   const resolveParticipant = (
     id: CombatEntityId,
   ): TurnBattleParticipant | undefined =>
@@ -101,13 +114,14 @@ export function makeTurnRuntime(opts: {
     },
     // Tests bind the same canonical five-element map -- fixture defs do
     // not carry elemental-state semantics.
-    createElementalStateRegistry({
-      fire: 'hoa_an' as BuffDefinitionId,
-      water: 'han_tuc' as BuffDefinitionId,
-      wood: 'doc_can' as BuffDefinitionId,
-      metal: 'liet_thuong' as BuffDefinitionId,
-      earth: 'tran_an' as BuffDefinitionId,
-    }),
+    opts.elements ??
+      createElementalStateRegistry({
+        fire: 'hoa_an' as BuffDefinitionId,
+        water: 'han_tuc' as BuffDefinitionId,
+        wood: 'doc_can' as BuffDefinitionId,
+        metal: 'liet_thuong' as BuffDefinitionId,
+        earth: 'tran_an' as BuffDefinitionId,
+      }),
   )
 
   const executor = new CombatOperationExecutor({
@@ -156,6 +170,7 @@ export function makeTurnRuntime(opts: {
               stacks: snapshot.stacks,
             }
       },
+      getBuffInstanceBySelector: (selector) => buffs.getInstance(selector),
     },
   })
 
