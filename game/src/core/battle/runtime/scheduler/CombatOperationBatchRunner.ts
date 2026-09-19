@@ -40,6 +40,14 @@ export interface PreconditionChecker {
   getBuffInstance?(
     instanceId: BuffInstanceId,
   ): { sourceId: CombatEntityId; targetId: CombatEntityId; stacks: number } | undefined
+  /** sec.49 selector probe -- resolves any BuffInstanceSelector kind
+      (instance/identity/target_definition), unlike getBuffInstance which
+      preflights 'instance'-keyed participants only. Absent = selector
+      ops are unverifiable and the per-op gate skips nothing for them
+      (fail-open on the probe, matching the optional getBuffInstance). */
+  getBuffInstanceBySelector?(
+    selector: BuffInstanceSelector,
+  ): { targetId: CombatEntityId } | undefined
 }
 
 export function isDeferredOperation(
@@ -137,6 +145,36 @@ export class CombatOperationBatchRunner {
       }
     }
     return true
+  }
+
+  /** contract sec.49 -- per-op validity gate: an op whose payload target
+      is dead, or whose buff selector no longer resolves (or resolves to
+      an instance on a dead holder), earns a typed 'invalid_target_state'
+      result and the batch continues. Ops on instances consumed earlier
+      in THIS batch legitimately skip -- consumption is the batch's own
+      doing. Selector ops are unverifiable without the selector probe ->
+      no skip (the probe is optional; a composition that wires it gets
+      the full gate). Single authority: the production scheduler frame
+      and the headless ReactionBatchRunner both consult this method. */
+  opTargetSkipReason(
+    op: ResolvedCombatOperation,
+  ): 'invalid_target_state' | undefined {
+    const payload = op.payload as Record<string, unknown>
+    if ('targetId' in payload && typeof payload.targetId === 'string') {
+      return this.preconditions.isAlive(payload.targetId as CombatEntityId)
+        ? undefined
+        : 'invalid_target_state'
+    }
+    if ('selector' in payload) {
+      const probe = this.preconditions.getBuffInstanceBySelector
+      if (probe === undefined) return undefined
+      const instance = probe(payload.selector as BuffInstanceSelector)
+      if (instance === undefined) return 'invalid_target_state'
+      return this.preconditions.isAlive(instance.targetId)
+        ? undefined
+        : 'invalid_target_state'
+    }
+    return undefined
   }
 
   /** r4 BLOCKER 3 -- structural validation BEFORE any mutation:

@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
+import {
+  ENGINE_LANE_BUFF_WARNING,
+  TurnBattleSystem,
+  UNROUTED_CAST_WARNING,
+  type TurnBattle,
+  type TurnBattleParticipant,
+} from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
@@ -264,9 +270,13 @@ describe('TurnBattleSystem -- skill plan routing (skilldef M4e)', () => {
 
     // M5d -- runtime-present unsupported casts never fall back to the
     // legacy lane: the cast fizzles (no damage, no ops) and the report
-    // names the unexpressible semantics.
+    // names the unexpressible semantics. The UNROUTED_CAST_WARNING
+    // assertion is the positive control for the M7.5 journey oracle:
+    // the same stable code the journeys assert ABSENT is proven here to
+    // mark a genuinely unrouted cast.
     expect(enemyParticipant.entity.currentHp).toBe(enemyParticipant.entity.maxHp)
     expect(skillHitResults(runtime)).toHaveLength(0)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining(UNROUTED_CAST_WARNING))
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining("'qa_closure'"),
     )
@@ -532,5 +542,54 @@ describe('TurnBattleSystem -- skill plan routing (skilldef M4e)', () => {
 
     expect(enemyParticipant.entity.alive).toBe(false)
     expect(runtime.buffs.getForTarget(enemyParticipant.entity.id)).toHaveLength(0)
+  })
+})
+
+describe('engine-unit lane (runtime === undefined)', () => {
+  // M7 closure -- the documented test-only engine lane must not reach
+  // runtime-owned systems. A valid skill carrying appliesBuffs used to
+  // crash here: applyDeclaredBuff -> emitAndSettle -> the scheduler
+  // getter's unwired-battle fault. The lane now reports the unsupported
+  // application once per definition and skips it.
+  it('a valid appliesBuffs cast does not crash -- the buff application reports loudly once and skips', () => {
+    const BUFF_CARRY: TurnSkillDefinition = {
+      id: 'qa_buff_carry',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      appliesBuffs: [{ definitionId: 'qa_mark', target: 'action_targets' }],
+    }
+    const player = createCombatant('player')
+    const enemyEntity = createCombatant('enemy')
+    enemyEntity.type = 'enemy'
+    const playerParticipant = makeParticipant('player', player, 100, 0)
+    playerParticipant.basic = BASIC
+    playerParticipant.special = { skill: BUFF_CARRY, remainingCooldownTurns: 0 }
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 1, 1)
+    enemyParticipant.basic = BASIC
+    const combat = new CombatSystem(new EventBus())
+    const battle: TurnBattle = {
+      players: [playerParticipant],
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+    // Registry present + runtime absent -- the historical crash combo.
+    const system = new TurnBattleSystem(combat, 100, REGISTRY)
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    expect(() => system.resolveNextStep(battle)).not.toThrow()
+    // The hit itself still resolves on the engine-native lane -- only
+    // the authored buff application is skipped, loudly.
+    expect(enemyParticipant.entity.currentHp).toBeLessThan(enemyParticipant.entity.maxHp)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining(ENGINE_LANE_BUFF_WARNING))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('qa_mark'))
+
+    // Several more player casts dedup to the same single report.
+    for (let i = 0; i < 4; i++) system.resolveNextStep(battle)
+    const engineLaneWarns = warn.mock.calls.filter((args) =>
+      args.map(String).join(' ').includes(ENGINE_LANE_BUFF_WARNING),
+    )
+    expect(engineLaneWarns).toHaveLength(1)
+    warn.mockRestore()
   })
 })

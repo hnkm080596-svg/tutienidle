@@ -256,20 +256,11 @@ The largest blast radius. **ONE ATOMIC WORKTREE MISSION — do NOT split into se
 
 ## Mission 7 — Battle wiring + contract hardening
 
-**Files:**
-- Modify: `game/src/core/battle/turn/TurnBattleSystem.ts` — migrated skill/buff flows execute through `CombatScheduler` barriers; `combatSequence` single-source; multicast subcast settlement (§60–61); target-death retarget handoff (§62)
-- Create: `game/src/core/battle/runtime/scheduler/CombatTraceExporter.ts` — §85 debug trace dump (dev builds)
-- Modify: combat log / presentation event adapters for new event shapes + `origin` tags (`skill`/`buff_periodic`/`reaction`)
-- Test: `game/src/core/battle/turn/TurnBattleSystem.contract.test.ts` — §91–102 contract suite
-- Docs: update `game/docs/systems/buffs.md`, `elements-reactions.md`, `skills.md`, `combat-overview.md`; roadmap entry
+**Implementation-detail authority:** `2026-09-19-megaplan-final-battle-wiring.md` — M7 checkpoints (M7.0–M7.5), the authority/composition audits, contract-closure matrix, canonical acceptance scope, determinism/trace closure, runtime/deletion/DoD closure, and all gate requirements live there. This parent owns execution order only — do not maintain a second M7 implementation plan here.
 
-- [ ] **Step 1 — Wire migrated operations through scheduler** (buff apply chain first, then skill effects).
-- [ ] **Step 2 — Contract tests §91–102** end-to-end on real engine + fixture content.
-- [ ] **Step 3 — Determinism suite:** same seed + same commands → identical trace/final state (§87).
-- [ ] **Step 4 — Verify (P3 full) + P13/P14 Playwright** real battle (skill→buff→tick→death→log, origins distinct).
-- [ ] **Step 5 — P4 deep + P5 sequential review passes.**
+**Scope (locked):** M7 is the final runtime-architecture closure mission — prove and harden the existing pipeline (`TurnSkillDefinition -> LegacySkillAdapter -> SkillDefinition -> SkillResolver -> ResolvedSkillPlan -> SkillExecutor -> CombatScheduler -> CombatOperationExecutor -> domain authorities`), NOT a rewrite. One atomic worktree; checkpoints are not independently mergeable.
 
-**Exit criteria:** contract §104 DoD items all green; `TurnReactionManager` already DELETED at M4's M-INT — visible Pháp Tu has NO automatic reactions (spec-correct); `ReactionDispatcher` still unregistered pending canonical content; no ấn content shipped.
+**Exit criteria:** contract §104 DoD items all green; CON-01..CON-23 evidenced; `TurnReactionManager` already DELETED at M4's M-INT — visible Pháp Tu has NO automatic reactions (spec-correct); `ReactionDispatcher` still unregistered pending canonical content; no ấn content shipped; P3 full + P13/P14 Playwright + P4 deep + P5 passes at 0 Blocker / 0 High / 0 Medium.
 
 ---
 

@@ -1,6 +1,6 @@
 # Combat Systems Contract — SkillDefinition × BuffSystem × ReactionSystem
 
-Status: FINAL — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
+Status: FINAL — **ACTIVE CONTRACT** (implemented across the combat-systems program; runtime composition closed under M7 `../superpowers/plans/2026-09-19-megaplan-final-battle-wiring.md` — coverage evidence in `../qa/2026-09-21-m7-contract-closure-matrix.md` and `../qa/2026-09-21-m7-contract-closure-deep.md`. The note below describing pre-contract infra is historical context, not current state. Production Reaction content/activation remains a separate deferred batch; the contract's reaction semantics are proven against fixture composition.)
 Version: 1.6
 Applies to: [SkillDefinition v1.3](./2026-09-17-skill-definition-system-spec.md), [Buff System Reimagined v1.6](./2026-09-17-buff-system-reimagined-spec.md), [Reaction System Reimagined v1.1](./2026-09-17-reaction-system-reimagined-spec.md)
 Compatibility requirement: None

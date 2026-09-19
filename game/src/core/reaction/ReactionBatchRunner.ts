@@ -2,11 +2,11 @@
 // batch driver (megaplan M3). The PRODUCTION path runs the scheduler's
 // own batch frame on the same CombatOperationBatch shape (M-INT); this
 // runner exists so the semantics are provable headlessly before wiring.
-// It delegates atomic preflight + deferred materialization to the
-// contract's CombatOperationBatchRunner/BatchResultStore -- one
-// authority for batch semantics -- and adds the reaction-specific
-// per-op validity gate (contract sec.49) plus the resolved/skipped
-// event emissions (spec sec.50).
+// It delegates atomic preflight, deferred materialization AND the
+// per-op validity gate (contract sec.49) to the contract's
+// CombatOperationBatchRunner/BatchResultStore -- one authority for
+// batch semantics, shared with the production scheduler frame -- and
+// adds only the resolved/skipped event emissions (spec sec.50).
 //
 // Preflight-all -> ordered execution -> typed skips. No interleaving
 // (sec.43), no rollback once the first op commits (sec.48). A stale
@@ -35,7 +35,6 @@ import {
   type PreconditionChecker,
 } from '../battle/runtime/scheduler/CombatOperationBatchRunner'
 import type { BuffReadPort } from '../buff2/BuffQuery'
-import type { BuffInstanceSelector } from '../battle/contracts/selectors'
 import {
   reactionResolvedPayload,
   reactionSkippedPayload,
@@ -59,6 +58,7 @@ export class ReactionBatchRunner {
       isAlive: (id) => this.alive(id),
       getBuffInstance: (instanceId) =>
         this.buffs.getInstance({ kind: 'instance', instanceId }),
+      getBuffInstanceBySelector: (selector) => this.buffs.getInstance(selector),
     }
     this.batchRunner = new CombatOperationBatchRunner(preconditions)
   }
@@ -147,13 +147,15 @@ export class ReactionBatchRunner {
   /** Per-op validity gate (contract sec.49): an op whose target is dead
       or whose buff instance no longer exists earns a typed skip without
       dispatching. Ops on instances consumed earlier in THIS batch
-      legitimately skip -- consumption is the batch's own doing. */
+      legitimately skip -- consumption is the batch's own doing. The
+      gate itself lives on CombatOperationBatchRunner so the production
+      scheduler frame enforces the identical check. */
   private executeOne(
     op: ResolvedCombatOperation,
     resolution: ReactionResolution,
     sink: CombatEventSink,
   ): CombatOperationResult {
-    const invalid = this.invalidTargetReason(op)
+    const invalid = this.batchRunner.opTargetSkipReason(op)
     if (invalid !== undefined) {
       return {
         operationId: op.operationId,
@@ -169,25 +171,6 @@ export class ReactionBatchRunner {
       combatSequence: resolution.context.combatSequence,
     }
     return this.executor.execute(op, ctx)
-  }
-
-  private invalidTargetReason(
-    op: ResolvedCombatOperation,
-  ): 'invalid_target_state' | undefined {
-    const payload = op.payload as Record<string, unknown>
-    if ('targetId' in payload && typeof payload.targetId === 'string') {
-      return this.alive(payload.targetId as CombatEntityId)
-        ? undefined
-        : 'invalid_target_state'
-    }
-    if ('selector' in payload) {
-      const instance = this.buffs.getInstance(
-        payload.selector as BuffInstanceSelector,
-      )
-      if (instance === undefined) return 'invalid_target_state'
-      return this.alive(instance.targetId) ? undefined : 'invalid_target_state'
-    }
-    return undefined
   }
 
   /** contract settlement.ts + sec.49: a deferred op materializes from

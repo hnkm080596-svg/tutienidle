@@ -64,6 +64,10 @@ const SANCTIONED_DRIVERS = new Set([
   // Shared headless test runtime (apply/lifecycle helpers drive the
   // same lanes production does).
   'src/core/battle/turn/testing/TurnRuntimeFixtures.ts',
+  // M7 fixture-reaction helper -- registers the fixture dispatcher on
+  // the fixture scheduler's immediate lane (test-only composition;
+  // production registers no dispatcher).
+  'src/core/battle/turn/testing/FixtureReaction.ts',
   // skilldef executor (M3): authored plan ops settle through
   // enqueueAuthored -- the sanctioned intake driver the scheduler was
   // built for.
