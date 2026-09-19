@@ -5,8 +5,10 @@ v1 draft of this mission. Do NOT implement v1.
 Program: Post-M7 Combat Content Activation
 Mission: Five-Seal Migration + Vạn Pháp Thân Hòa Aura + Production Reaction Wiring
 Execution mode: ONE ATOMIC WORKTREE
-Baseline: `master @ 1d8ab0531631155b7aaa64bf49b40dd6b15c5a65` (M7 Final Battle
-Wiring merged — verified via `git log`)
+M7 code baseline: `1d8ab0531631155b7aaa64bf49b40dd6b15c5a65` (M7 Final Battle
+Wiring merge — verified via `git log`)
+Execution baseline: current `master` tip (`ee7c6057` at last revision — this
+doc is itself committed on master; record the real HEAD at S0.1)
 
 > v2 rewrite notes: v1 assumed the five canonical seals were new statuses living
 > beside the five legacy elemental ailments. That assumption is rejected. The
@@ -345,31 +347,42 @@ the id change.
 Mode: read-only + docs. Produce
 `game/docs/architecture/2026-09-19-seal-migration-inventory.md`.
 
-- **S0.1** Record `git rev-parse HEAD` = `1d8ab053…` and `git status --short`.
+- **S0.1** Record actual `git rev-parse HEAD` (execution baseline — master has
+  moved past `1d8ab053` via this plan's own doc commits) and verify it
+  descends from the M7 closure commit `1d8ab053`; record
+  `git status --short`.
 - **S0.2** Execute the §4 census in full; classify every reference: migrate /
   delete / keep-noncanonical. Explicit disposition table per mechanic — nothing
   survives "accidentally". Re-verify each §4.4 orphan has zero producers.
 - **S0.3** Prove no engine code path reads the five old ids directly outside
   data modules (the mechanics carry ids as data; assert by grep + guard).
-- **S0.4 — PRIMITIVE CHECK A (consume-my-seal):** Can `SkillDefinition` author
-  "consume stacks of MY `hoa_an` on this target"?
-  - `deal_damage.consumeBuff{scope:'own'}` exists (`AuthoredOperation.ts` :154-159)
-    and the stack READ is source-scoped (`SkillResolver.compileConsumeBuff`
-    :1317-1327 binds `ctx.input.sourceId`) — BUT the emitted `for_each_instance`
-    consume filter is `{targetId, definitionId}` only (`SkillResolver.ts` :1362-1375;
-    `ResolvedSkillPlan.ts` :229-236 has NO `sourceId` field). Verdict: the damage
-    side is own-scoped; the consume side currently strips every source's
-    instance. Required primitive: `sourceId?` on the `for_each_instance` filter
-    (smallest fix) — needed for the Hỏa kit's same-source consume. Generic
-    `scope:'any'` consume lanes stay all-source (D-4) — do not collapse the two.
-  - Standalone `consume_buff_stacks` authored op takes only
-    `{target, definitionId}` → always resolves `target_definition` (any source,
-    `SkillResolver.ts` :1669/:1643). `AuthoredBuffSelector` (:84-95) already has
-    an `identity` shape (source+target intents) — currently only `remove_buff`
-    exposes `selector`. Smallest generic primitive: let the authored stack ops
-    accept an `AuthoredBuffSelector` (or add `source?: SkillTargetIntent`).
-  - Runtime `BuffInstanceSelector.kind:'identity'` (`contracts/selectors.ts` :9-14)
-    supports the exact triple already — engine-side capability confirmed.
+- **S0.4 — PRIMITIVE CHECK A: SAME-SOURCE AUTHORED BUFF ACCESS (broad audit,
+  not just consume).** Hỏa spec §62 requires Hỏa skills to act on the caster's
+  OWN `hoa_an` instance only — read stacks, next-tick modifier, manual tick,
+  potency modifier, duration extension, consume. Every authored buff-targeting
+  surface currently collapses to `target_definition` (any source) via
+  `SkillResolver.targetDefinitionSelector` (:1639):
+  - `add_buff_stacks`/`remove_buff_stacks`/`consume_buff_stacks` (:1669)
+  - `add_buff_modifier`/`remove_buff_modifier` (:1694)
+  - `refresh_buff_duration`/`extend_buff_duration` (:1723)
+  - `trigger_buff_periodic` (:1749) — Phần Thiên's manual tick
+  - standalone `read_stacks` op (:248 authored shape — verify; the
+    `buff_stacks` QUERY already supports `source` at :556-558)
+  - `deal_damage.consumeBuff{scope:'own'}` — read is source-scoped
+    (:1317-1327) but the emitted `for_each_instance` consume filter is
+    `{targetId, definitionId}` only (`ResolvedSkillPlan.ts` :229-236, no
+    `sourceId`) — own-priced damage strips every source's board.
+  Blast radius: a target can simultaneously hold the player's `hoa_an` AND a
+  companion's `hoa_an` — Xích Viêm/Phần Thiên would read or mutate the other
+  caster's board, violating the same-source ownership this mission's Reaction
+  board relies on.
+  **Primitive:** expose `AuthoredBuffSelector` (identity kind —
+  `definitionId + source intent + target intent`, :79-95, already used by
+  `remove_buff`) on ALL buff-targeting authored ops — no per-op `own`
+  booleans; plus `sourceId?` on the `for_each_instance` filter for the
+  consume-compiled lane. Runtime `BuffInstanceSelector.kind:'identity'`
+  (`contracts/selectors.ts` :9-14) already supports the triple — this is an
+  authored/resolver-layer gap, not a new authority.
 - **S0.5P — INSTANCE-LOCAL PENETRATION: ACTIVE-CONTRACT EXTENSION (not a small
   primitive).** `metalPenetration` is a real `StatBlock` stat (:134) and
   `CombatSystemDamageAdapter.resolveLegacyDotAmount` :335 reads
@@ -401,15 +414,45 @@ Mode: read-only + docs. Produce
   4. `CombatSystemDamageAdapter`: `effectivePenetration =
      (source?.stats[${element}Penetration] ?? 0) + (op.elementalPenetrationBonus ?? 0)`
      in the elemental-damage branch — additive at RESOLUTION time only.
-     **Never** mutate `source.stats`, never bake it into snapshots; physical
-     ops ignore the field.
-  5. Contract-spec addendum records the new field + channel + adapter rule.
+     **Never** mutate `source.stats`, never bake it into snapshots.
+  5. **Legality guard (mirrors the hitPolicy declared-intent pattern,
+     `operations.ts:151-163`):** `elementalPenetrationBonus` is legal ONLY when
+     `origin.kind === 'buff_periodic'` AND `element` is an `ElementType` (not
+     `'physical'` — physical has no resistance-penetration channel) AND the
+     damage profile supports resistance penetration. Structural validation
+     rejects `element:'physical' + bonus`, or any non-periodic lane
+     (skill/reaction packets) carrying the field. It is not enough to say
+     "physical ignores it" — illegal carriers fault loudly.
+  6. Contract-spec addendum records the new field + channel + adapter rule +
+     legality bounds.
 
-  **Required isolation test (acceptance):** two Liệt Thương instances carrying
-  different `duong_kim` penetration modifiers must tick different damage —
-  the bonus stays bound to ITS instance's requests; no leak to the sibling
-  instance, to skill damage, or to other elemental ops (which never carry the
-  field). No `if (reactionId === …)` branches anywhere.
+  **Semantics — additive penetration points, NOT a multiplier.** Penetration
+  scale: 1 point = 1% net resistance (`Resistance.ts:15-20`,
+  `net = resistance - penetration`). `modifierPayload`
+  (`ReactionOperations.ts:95-109`) currently hard-codes `operation:'multiply'`
+  — wrong for this channel: with base penetration 0, `multiply` yields 0.
+  Therefore `add_child_modifier` gains a generic `operation` field
+  (`'add'|'multiply'|'set'`, matching `BuffModifierPayload.operation`;
+  default `'multiply'` preserves the three existing potency modifiers), and
+  `duong_kim` authors:
+
+  ```ts
+  { kind: 'add_child_modifier',
+    modifierId: 'duong_kim',
+    channel: 'elemental_penetration',
+    operation: 'add',
+    value: 4 * P }        // +4 points per consumed stack — NOT 1+0.04×P
+  ```
+
+  `resolveChannel(instance.modifiers, 'elemental_penetration', 0)` →
+  `elementalPenetrationBonus`.
+
+  **Numeric acceptance (mandatory):** P=5 ⇒ bonus `+20` penetration points ⇒
+  a target with 40 Metal Resistance resolves as net 20 for that instance's
+  ticks. Plus the isolation test: two Liệt Thương instances carrying different
+  `duong_kim` modifiers tick different damage — the bonus stays bound to ITS
+  instance's requests; no leak to the sibling instance, to skill damage, or to
+  other elemental ops. No `if (reactionId === …)` branches anywhere.
 - **S0.6** Inventory `reactionEligibility:'eligible'` producers (§8.3) —
   purpose: document intentional eligibility (D-7), NOT suppress non-skill lanes.
 - **S0.7** Inventory presentation/log surfaces for `reaction_resolved`,
@@ -509,10 +552,13 @@ in the elemental registry, never reaction states.
 `CANONICAL_REACTIONS` already encodes all ten relations (ids, priorities
 10–100, formulas). Changes:
 
-- **`duong_kim`:** replace `add_child_modifier{channel:'potency'}` with
-  `channel:'elemental_penetration'` via the S0.5P contract extension —
-  child-instance scope (locked): the bonus rides only the Liệt Thương child's
-  own periodic metal damage requests and dies with the child.
+- **`duong_kim`:** replace `add_child_modifier{channel:'potency',
+  value:1+0.04×P}` with `{channel:'elemental_penetration', operation:'add',
+  value:4*P}` via the S0.5P contract extension — additive penetration POINTS
+  (1pt = 1% net resistance), child-instance scope (locked): rides only the
+  Liệt Thương child's own periodic metal damage requests, dies with the
+  child. Requires the new generic `operation` field on the payoff step (the
+  existing emitter hard-codes `'multiply'`).
 - **`REACTION_STATUS_BUFF_IDS`:** rebind to the four production defs below.
 - **Locked values (verbatim):** Tụ Thủy `maxRemaining:5`; Xuyên Thổ
   `fraction = min(0.05×D, 0.25)` × actual resolved reaction damage
@@ -537,15 +583,17 @@ Values marked *(authored)* are spec-silent tuning knobs, not architecture.
 
 ```ts
 defense_break:
+  name: 'Phá Giáp'
   stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' }
   lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' }
-    // base only — Trấn Thủy/Dung Kim always supplies durationOverride
+    // base only — Dung Kim always supplies durationOverride
     // min(3, ceil(D/2)) (already encoded :136)
   statModifiers: [{ stat: 'defense', percent: -0.04 }]
     // percent multiplies stacks at StatCalculator → each stack = −4% defense;
     // reaction applies A stacks. Do NOT double-encode 4%×A in both places.
 
 defense_erosion:
+  name: 'Xói Giáp'
   stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' }
   lifetime: { clock: 'holder_turns', duration: 4, scaling: 'fixed' }
     // *(authored)* longer-lived than break's 1-3 override: "erosion" is the
@@ -553,6 +601,7 @@ defense_erosion:
   statModifiers: [{ stat: 'defense', percent: -0.04 }]  // −4% defense per stack
 
 cam_cong:
+  name: 'Cấm Công'
   stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' }
   lifetime: { clock: 'holder_turns', duration: 1, scaling: 'fixed' }
     // base only — Trấn Thủy always supplies durationOverride clamp(D-2,1,2)
@@ -560,6 +609,9 @@ cam_cong:
                                     // utility stay legal; holder still takes turns
 
 reaction_bleed:
+  name: 'Xuất Huyết'   // NOT 'Chảy Máu' — that name retired with the
+                       // chay_mau → liet_thuong migration (the metal seal is
+                       // 'Liệt Thương'); do not reuse it for the bleed status
   stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' }
   lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' }  // *(authored)*
   periodic: [{
@@ -647,6 +699,7 @@ Lifecycle semantics fall out of the buff model — no latch question:
 ```ts
 {
   id: 'van_phap_than_hoa',
+  name: 'Vạn Pháp Thân Hòa',
   kind: 'buff',
   polarity: 'buff',
   element: undefined,            // non-elemental
@@ -804,9 +857,11 @@ fix content/wiring; do not reflexively redesign the engine.
 `phan_thien_hoa_vuc`, `cuu_tieu_viem_bao` — authored through the canonical
 SkillDefinition pipeline only; locked spec: `2026-09-17-hoa-an-ailment-system-
 spec.md` **(unparked + D1-amended at S0.11 — never implement from a PARKED
-spec)** + buff spec §60-63 + skilldef spec §61/§71. Same-source consume uses
-the §6 S0.4 primitive (own-scope consume); generic `any` lanes unchanged
-(D-4). If a mechanic cannot be expressed, classify the missing primitive and
+spec)** + buff spec §60-63 + skilldef spec §61/§71. Same-source access (read
+stacks, modifiers, duration ops, manual tick, consume — spec §62) uses the
+§6 S0.4 identity-selector primitive across ALL buff-targeting ops; generic
+`any` lanes unchanged (D-4). If a mechanic cannot be expressed, classify the
+missing primitive and
 add the smallest generic one; never a skill-specific escape hatch. These are
 ordinary-Pháp-Tu route skills — they apply seals and only react while an aura
 holder (D-3).
@@ -884,8 +939,10 @@ After migration, assert absent in production:
   the `ElementalStateRegistry` — structural non-reactability.
 - Instance-local penetration exists ONLY via the §6 S0.5P contract fields —
   guard: no `source.stats` mutation for penetration, no alternative
-  penetration injection path (no statModifier hack, no profile bypass), and
-  the bonus provably stays bound to its own instance's damage requests.
+  penetration injection path (no statModifier hack, no profile bypass),
+  structural validation rejects the field on `element:'physical'` or
+  non-`buff_periodic` origins, and the bonus provably stays bound to its own
+  instance's damage requests.
 
 ## 14. Gates
 
