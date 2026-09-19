@@ -143,3 +143,19 @@ Production Reaction boundary: fixture composition only — fixture `ElementalSta
 
 - All checkpoints complete; all gates pass; 0 Blocker / 0 High / 0 Medium.
 - Update this plan + parent roadmap: Combat Systems Reimagined runtime architecture CLOSED; production Reaction/content activation remains a separate later batch (seal batch owns canonical reaction content, dispatcher registration, Ngo Dao grant, payoff defs, Cam Cong production buff).
+
+## Execution log
+
+| Checkpoint | State | Evidence |
+|---|---|---|
+| M7.0 | DONE | `docs/architecture/2026-09-21-m7-final-battle-wiring-inventory.md` — composition roots, authority write audit, sequence allocators, retired-architecture sweep |
+| M7.1 | DONE (`9bf0dbd4`) | externalWard write through adapter seam; dead legacy helper removal; production `TurnBattleSystem` construction guard (`damageAuthorityRng.test.ts`) |
+| M7.2 | DONE | `docs/qa/2026-09-21-m7-contract-closure-matrix.md` §1–105 + addenda + CON/DoD classification; contract spec status `FINAL — ACTIVE CONTRACT` |
+| M7.3 | DONE (`2a89ddb9`) | `TurnBattleSystem.contract.test.ts` — 22 whole-stack acceptance tests (§§91–102 + skill stack incl. charge + composite no-repay); §49 per-op validity gate moved into shared `CombatOperationBatchRunner`; fixture `setRandomSource` bind |
+| M7.4 | DONE (`ca9835c9`) | `TurnBattleSystem.determinism.test.ts` — 7 tests: same-seed parity, controlled divergence, causal-graph reconstruction, stale-batch export; `FixtureReaction.ts` shared composition + dormancy allowlist |
+| M7.5a | DONE | `GameManager.skillPipelineJourney.test.ts` journey 1 — real wood path `doc_chuong` → `trung_doc` DoT → enemy death → victory |
+| M7.5b | DONE | Journeys 2–3 — real An kit (`da_phap_lien_tuyen` repeat + `van_phap_tuy_tam` multicast, exactly-once commit/cooldown) + companion `van_du_kiem_khach_ultimate` charge (`chargeTurns: 2`, deferred resolve, no mid-charge action) |
+| M7.5c | DONE (`267ec23d`) | Deletion sweep: TurnReactionManager/wuxing/BuffPool/converter/per-id lanes all absent or comments-only; engine lane test-only; construction guard extended to runtime arg |
+| M7.5d | DONE (`6714f86a`) | `docs/qa/2026-09-21-m7-contract-closure-deep.md` — CON-01..23 PASS with mechanism + named test + notes; production boundary proofs; DoD emphasis mapping |
+| M7.5e | DONE | Playwright real-battle in worktree: `create-to-combat.spec.ts` (2.2m) + `turn-combat-hud.spec.ts` (3.5m) PASS serially; parallel 2-worker run starved RAF (contention, not regression — serial rerun green) |
+| Gates | IN PROGRESS | `npm run verify`, P18 OCR, P4 deep QA, P5 sequential review |

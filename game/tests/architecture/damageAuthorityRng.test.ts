@@ -21,6 +21,46 @@ import { listProductionTs, readTs } from './helpers/scanTs'
 const SRC = join(process.cwd(), 'src')
 const ADAPTER = join(SRC, 'core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts')
 
+/** Parse the positional args of `new TurnBattleSystem(...)` at `idx` in
+    `text`: comments are stripped first (prose cannot satisfy or trip an
+    assertion), the arg list is found by paren depth within a 2000-char
+    window, and split on top-level commas (nesting tracked via
+    ()[]{}). Returns undefined when the window truncates the call. */
+function constructionArgs(text: string, idx: number): string[] | undefined {
+  const window = text
+    .slice(idx, idx + 2000)
+    .replace(/\/\/[^\n]*/g, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+  const open = window.indexOf('(')
+  let depth = 0
+  let end = -1
+  for (let i = open; i < window.length; i++) {
+    if (window[i] === '(') depth += 1
+    if (window[i] === ')') depth -= 1
+    if (depth === 0) {
+      end = i
+      break
+    }
+  }
+  if (end < 0) return undefined
+  const argsText = window.slice(open + 1, end)
+  const args: string[] = []
+  let current = ''
+  let nest = 0
+  for (const ch of argsText) {
+    if ('([{'.includes(ch)) nest += 1
+    if (')]}'.includes(ch)) nest -= 1
+    if (ch === ',' && nest === 0) {
+      args.push(current)
+      current = ''
+    } else {
+      current += ch
+    }
+  }
+  args.push(current)
+  return args
+}
+
 describe('damage authority rng -- single canonical source', () => {
   it('the canonical adapter never references an implicit random source', () => {
     const source = readTs(ADAPTER)
@@ -73,46 +113,15 @@ describe('damage authority rng -- single canonical source', () => {
       const text = readTs(file)
       let idx = text.indexOf('new TurnBattleSystem(')
       while (idx >= 0) {
-        // Extract the argument list by paren depth; strip comments so
-        // prose cannot satisfy or trip the assertion.
-        const window = text
-          .slice(idx, idx + 2000)
-          .replace(/\/\/[^\n]*/g, '')
-          .replace(/\/\*[\s\S]*?\*\//g, '')
-        const open = window.indexOf('(')
-        let depth = 0
-        let end = -1
-        for (let i = open; i < window.length; i++) {
-          if (window[i] === '(') depth += 1
-          if (window[i] === ')') depth -= 1
-          if (depth === 0) {
-            end = i
-            break
-          }
-        }
+        const args = constructionArgs(text, idx)
         expect(
-          end >= 0,
+          args !== undefined,
           `TurnBattleSystem construction at ${file}:${idx} exceeds the 2000-char scan window`,
         ).toBe(true)
-        const argsText = window.slice(open + 1, end)
-        const args: string[] = []
-        let current = ''
-        let nest = 0
-        for (const ch of argsText) {
-          if ('([{'.includes(ch)) nest += 1
-          if (')]}'.includes(ch)) nest -= 1
-          if (ch === ',' && nest === 0) {
-            args.push(current)
-            current = ''
-          } else {
-            current += ch
-          }
-        }
-        args.push(current)
-        const rngArg = args[7]?.trim()
+        const rngArg = args![7]?.trim()
         sites.push(`${file}@${idx}`)
         expect(
-          args.length >= 8 && rngArg !== undefined && rngArg !== '' && rngArg !== 'undefined',
+          args!.length >= 8 && rngArg !== undefined && rngArg !== '' && rngArg !== 'undefined',
           `TurnBattleSystem construction at ${file}:${idx} must inject an explicit CombatRng (8th arg)`,
         ).toBe(true)
         idx = text.indexOf('new TurnBattleSystem(', idx + 1)
@@ -139,37 +148,12 @@ describe('damage authority rng -- single canonical source', () => {
       const text = readTs(file)
       let idx = text.indexOf('new TurnBattleSystem(')
       while (idx >= 0) {
-        const window = text
-          .slice(idx, idx + 2000)
-          .replace(/\/\/[^\n]*/g, '')
-          .replace(/\/\*[\s\S]*?\*\//g, '')
-        const open = window.indexOf('(')
-        let depth = 0
-        let end = -1
-        for (let i = open; i < window.length; i++) {
-          if (window[i] === '(') depth += 1
-          if (window[i] === ')') depth -= 1
-          if (depth === 0) {
-            end = i
-            break
-          }
-        }
-        const argsText = end >= 0 ? window.slice(open + 1, end) : ''
-        const args: string[] = []
-        let current = ''
-        let nest = 0
-        for (const ch of argsText) {
-          if ('([{'.includes(ch)) nest += 1
-          if (')]}'.includes(ch)) nest -= 1
-          if (ch === ',' && nest === 0) {
-            args.push(current)
-            current = ''
-          } else {
-            current += ch
-          }
-        }
-        args.push(current)
-        const runtimeArg = args[4]?.trim()
+        const args = constructionArgs(text, idx)
+        expect(
+          args !== undefined,
+          `TurnBattleSystem construction at ${file}:${idx} exceeds the 2000-char scan window`,
+        ).toBe(true)
+        const runtimeArg = args![4]?.trim()
         if (runtimeArg === undefined || runtimeArg === '' || runtimeArg === 'undefined') {
           runtimeLess.push(`${file}@${idx}`)
         }
