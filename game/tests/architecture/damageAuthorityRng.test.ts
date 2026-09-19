@@ -20,6 +20,57 @@ import { listProductionTs, readTs } from './helpers/scanTs'
 
 const SRC = join(process.cwd(), 'src')
 const ADAPTER = join(SRC, 'core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts')
+const BOOTSTRAP_FILE = join(SRC, 'core/game/GameManagerTurnBattleOps.ts')
+
+/** Replace comments with spaces -- offsets preserved, so prose tokens
+    can neither satisfy nor trip a structural assertion and every index
+    still addresses the original text. */
+function maskComments(text: string): string {
+  return text
+    .replace(/\/\/[^\n]*/g, (match) => ' '.repeat(match.length))
+    .replace(/\/\*[\s\S]*?\*\//g, (match) => ' '.repeat(match.length))
+}
+
+/** The [openBrace, closeBrace) span of the `constructor(...)` body of
+    `className` in comment-masked source: anchored at the class
+    declaration so a helper class earlier in the file cannot shadow the
+    lookup; paren-match the parameter list first (the inline deps object
+    type nests braces INSIDE the parens), then brace-match the body. */
+function constructorBodySpan(
+  masked: string,
+  className: string,
+): { start: number; end: number } | undefined {
+  const classIdx = masked.search(new RegExp(`\\bclass\\s+${className}\\b`))
+  if (classIdx < 0) return undefined
+  const kw = masked.slice(classIdx).search(/\bconstructor\s*\(/)
+  if (kw < 0) return undefined
+  const ctorAt = classIdx + kw
+  const openParen = masked.indexOf('(', ctorAt)
+  let depth = 0
+  let closeParen = -1
+  for (let i = openParen; i < masked.length; i++) {
+    if (masked[i] === '(') depth += 1
+    if (masked[i] === ')') {
+      depth -= 1
+      if (depth === 0) {
+        closeParen = i
+        break
+      }
+    }
+  }
+  if (closeParen < 0) return undefined
+  const openBrace = masked.indexOf('{', closeParen)
+  if (openBrace < 0) return undefined
+  depth = 0
+  for (let i = openBrace; i < masked.length; i++) {
+    if (masked[i] === '{') depth += 1
+    if (masked[i] === '}') {
+      depth -= 1
+      if (depth === 0) return { start: openBrace, end: i }
+    }
+  }
+  return undefined
+}
 
 /** Parse the positional args of `new TurnBattleSystem(...)` at `idx` in
     `text`: comments are stripped first (prose cannot satisfy or trip an
@@ -138,12 +189,14 @@ describe('damage authority rng -- single canonical source', () => {
    * lane. A production root that constructs TurnBattleSystem without a
    * TurnCombatRuntime silently routes every cast through it. The ONE
    * legitimate undefined-runtime site is the documented bootstrap
-   * placeholder in GameManagerTurnBattleOps -- inert by construction
-   * (stepTurnBattle early-returns until beginBattleCycle replaces it).
-   * Assert at most one production site may omit the runtime arg (5th).
+   * placeholder in the GameManagerTurnBattleOps CONSTRUCTOR -- inert by
+   * construction (stepTurnBattle early-returns until beginBattleCycle
+   * replaces it). The guard asserts the exact approved identity -- file
+   * AND constructor-body membership -- so an unrelated future
+   * runtime-less site fails even when the total count stays one.
    */
-  it('at most one production TurnBattleSystem construction may omit the TurnCombatRuntime (5th arg)', () => {
-    const runtimeLess: string[] = []
+  it('the only runtime-omitting TurnBattleSystem construction is the GameManagerTurnBattleOps bootstrap constructor', () => {
+    const runtimeLess: { file: string; idx: number }[] = []
     for (const file of listProductionTs(SRC)) {
       const text = readTs(file)
       let idx = text.indexOf('new TurnBattleSystem(')
@@ -155,14 +208,29 @@ describe('damage authority rng -- single canonical source', () => {
         ).toBe(true)
         const runtimeArg = args![4]?.trim()
         if (runtimeArg === undefined || runtimeArg === '' || runtimeArg === 'undefined') {
-          runtimeLess.push(`${file}@${idx}`)
+          runtimeLess.push({ file, idx })
         }
         idx = text.indexOf('new TurnBattleSystem(', idx + 1)
       }
     }
     expect(
-      runtimeLess.length,
-      `production TurnBattleSystem sites without a TurnCombatRuntime must be the single documented bootstrap placeholder: ${runtimeLess.join(', ')}`,
-    ).toBeLessThanOrEqual(1)
+      runtimeLess.map((site) => site.file),
+      `production TurnBattleSystem sites without a TurnCombatRuntime must be exactly the documented bootstrap placeholder: ${runtimeLess.map((s) => `${s.file}@${s.idx}`).join(', ')}`,
+    ).toEqual([BOOTSTRAP_FILE])
+    const span = constructorBodySpan(maskComments(readTs(BOOTSTRAP_FILE)), 'GameManagerTurnBattleOps')
+    expect(span !== undefined, 'GameManagerTurnBattleOps constructor not found').toBe(true)
+    const site = runtimeLess[0]!
+    expect(
+      site.idx > span!.start && site.idx < span!.end,
+      `the runtime-less site at ${BOOTSTRAP_FILE}:${site.idx} must sit inside the constructor body (the bootstrap placeholder -- not a runtime-bound method like beginBattleCycle)`,
+    ).toBe(true)
+    // Structural identity: the placeholder assigns the disposable engine
+    // to `this.turnBattleSystem` -- an unrelated runtime-less
+    // construction inside the same constructor still fails.
+    const assignment = maskComments(readTs(BOOTSTRAP_FILE)).slice(Math.max(0, site.idx - 80), site.idx)
+    expect(
+      /this\.turnBattleSystem\s*=\s*$/.test(assignment),
+      `the runtime-less site at ${BOOTSTRAP_FILE}:${site.idx} must be the \`this.turnBattleSystem =\` bootstrap assignment`,
+    ).toBe(true)
   })
 })

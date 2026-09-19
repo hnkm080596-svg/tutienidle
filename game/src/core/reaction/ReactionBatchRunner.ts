@@ -2,11 +2,11 @@
 // batch driver (megaplan M3). The PRODUCTION path runs the scheduler's
 // own batch frame on the same CombatOperationBatch shape (M-INT); this
 // runner exists so the semantics are provable headlessly before wiring.
-// It delegates atomic preflight + deferred materialization to the
-// contract's CombatOperationBatchRunner/BatchResultStore -- one
-// authority for batch semantics -- and adds the reaction-specific
-// per-op validity gate (contract sec.49) plus the resolved/skipped
-// event emissions (spec sec.50).
+// It delegates atomic preflight, deferred materialization AND the
+// per-op validity gate (contract sec.49) to the contract's
+// CombatOperationBatchRunner/BatchResultStore -- one authority for
+// batch semantics, shared with the production scheduler frame -- and
+// adds only the resolved/skipped event emissions (spec sec.50).
 //
 // Preflight-all -> ordered execution -> typed skips. No interleaving
 // (sec.43), no rollback once the first op commits (sec.48). A stale

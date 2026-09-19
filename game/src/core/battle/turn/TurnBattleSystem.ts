@@ -445,6 +445,11 @@ export interface TurnCombatRuntime {
   gaugeHandler: GaugeDeltaHandler
 }
 
+/** Stable machine-readable codes on the engine's loud reports -- tests
+    and journey oracles match THESE, never English prose. */
+export const UNROUTED_CAST_WARNING = '[TurnBattleSystem][UNROUTED_CAST]'
+export const ENGINE_LANE_BUFF_WARNING = '[TurnBattleSystem][ENGINE_LANE_BUFF]'
+
 export class TurnBattleSystem {
   constructor(
     private readonly combat: CombatSystem,
@@ -734,6 +739,11 @@ export class TurnBattleSystem {
       runtime declined -- the last is an internal defect signal). */
   private readonly unroutedCastReported = new Set<string>()
 
+  /** M7 closure -- the engine-unit lane (runtime === undefined) owns no
+     buff authority: authored appliesBuff(s) applications report once per
+     definition and skip. Dedup key is the buff definition id. */
+  private readonly engineLaneBuffReported = new Set<string>()
+
   private reportUnroutedCast(
     actor: TurnBattleParticipant,
     def: TurnSkillDefinition | null | undefined,
@@ -758,7 +768,7 @@ export class TurnBattleSystem {
           ? `adapter-unsupported semantics: ${reasons.join('; ')}`
           : 'the plan runtime declined an adapter-covered def'
     console.warn(
-      `[TurnBattleSystem] cast '${key}' (${actor.id}) did not route -- ${cause}; ` +
+      `${UNROUTED_CAST_WARNING} cast '${key}' (${actor.id}) did not route -- ${cause}; ` +
         'the cast resolves to a no-op on the plan lane',
     )
   }
@@ -2449,6 +2459,20 @@ export class TurnBattleSystem {
     buffSpec: TurnSkillBuffApplication,
     actionTargets: TurnBattleParticipant[],
   ): void {
+    // M7 closure -- the engine-unit lane (runtime === undefined) does
+    // NOT support buff semantics: appliesBuff(s) authored on a skill are
+    // reported once per definition and skipped, never reaching the
+    // runtime-owned scheduler (whose getter faults by design here).
+    if (this.runtime === undefined) {
+      if (!this.engineLaneBuffReported.has(buffSpec.definitionId)) {
+        this.engineLaneBuffReported.add(buffSpec.definitionId)
+        console.warn(
+          `${ENGINE_LANE_BUFF_WARNING} buff '${buffSpec.definitionId}' declared by ${actor.id} ` +
+            'skipped -- the engine-unit lane (runtime === undefined) owns no buff authority',
+        )
+      }
+      return
+    }
     if (!this.registry) return
 
     // Skip an unresolvable buff id gracefully (renamed/drifted content

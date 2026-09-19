@@ -8,6 +8,7 @@ import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
+import { UNROUTED_CAST_WARNING } from '../battle/turn/TurnBattleSystem'
 import { defineEnemy } from '../enemy/Enemy'
 import { SeededCombatRng } from '../battle/runtime/rng/SeededCombatRng'
 import type { CompanionInstance } from '../../data/companion/Companions'
@@ -33,6 +34,15 @@ import type { Stage } from '../stage/Stage'
 const LING_BAO_L3 = CAST_LEVELING_THRESHOLDS.linh_bao!.lv3
 
 const UNSUPPORTED_PATTERNS = [
+  // The loud no-op report's stable machine-readable code -- the real
+  // emission TurnBattleSystem.reportUnroutedCast warns with (the
+  // TurnBattleSystem.skillPlan.test.ts closure-def fixture proves a
+  // genuine unrouted cast emits this exact token, so an absent match
+  // here is positive evidence, not a stale oracle).
+  UNROUTED_CAST_WARNING,
+  'did not route',
+  'adapter-unsupported semantics',
+  'resolves to a no-op on the plan lane',
   'unsupported authored semantics',
   'rejected by strict converter',
   'executes partially',

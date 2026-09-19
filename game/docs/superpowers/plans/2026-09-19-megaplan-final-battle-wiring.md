@@ -1,6 +1,6 @@
 # Megaplan — M7: Final Battle Wiring & Contract Closure
 
-Status: **ACTIVE — approved implementation-detail authority for Combat Systems Reimagined M7**
+Status: **COMPLETE — 2026-09-21 — runtime architecture closed; all gates green, external review closed at 0 Blocker / 0 High / 0 Medium**
 Baseline: `4f00f642` (master, post Skill-Definition findings closure)
 Parent: `2026-09-17-combat-systems-reimagined.md` (owns execution order only; M7 detail lives HERE)
 Atomic rule: ONE worktree, checkpoints are NOT independently mergeable — merge only when all checkpoints complete and all gates pass at 0 Blocker / 0 High / 0 Medium.
@@ -159,3 +159,4 @@ Production Reaction boundary: fixture composition only — fixture `ElementalSta
 | M7.5d | DONE (`6714f86a`) | `docs/qa/2026-09-21-m7-contract-closure-deep.md` — CON-01..23 PASS with mechanism + named test + notes; production boundary proofs; DoD emphasis mapping |
 | M7.5e | DONE | Playwright real-battle in worktree: `create-to-combat.spec.ts` (2.2m) + `turn-combat-hud.spec.ts` (3.5m) PASS serially; parallel 2-worker run starved RAF (contention, not regression — serial rerun green) |
 | Gates | DONE | `npm run verify` 683f/5821t green; P18 OCR 100% coverage (1 Low fixed `877f9022`); P4 deep QA `docs/qa/2026-09-19-m7-battle-wiring-deep.md` PASS WITH EVIDENCE; P5 3 sequential passes clean (Pass 1 fixed deferred-after-invalid-skip cascade coverage); roadmap row added |
+| External review closure | DONE | 3 Medium findings fixed: engine-lane `applyDeclaredBuff` crash closed (runtime-absent guard + `ENGINE_LANE_BUFF_WARNING` loud-skip, regression test in `skillPlan.test.ts`); runtime-less construction guard is now exact-identity (file + `constructor` body + `this.turnBattleSystem` assignment) instead of count-based; journey oracle matches the real warning via exported `UNROUTED_CAST_WARNING` code + full phrase set, with the `qa_closure` fixture as positive control. `npm run verify` re-green (683f/5823t). |
