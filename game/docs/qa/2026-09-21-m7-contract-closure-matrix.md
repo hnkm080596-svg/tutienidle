@@ -107,9 +107,9 @@ New M7 evidence artifacts referenced below:
 | 82 | Registry validation (unique ids, unique tie priority, complete payloads) | B | `ReactionRegistry.test.ts` |
 | 83 | Dependency direction (core systems never reach upward) | B | `tests/architecture/` import-direction guards (`statDomainWhitelist.test.ts`, `invariants.test.ts`); `skillDefProducerSources.test.ts` |
 | 84 | Suggested shared contract layer | C | Advisory placement guidance only — already satisfied by `src/core/battle/contracts/`; no behavioral requirement to test. |
-| 85 | Debug trace requirement | B | `CombatTraceExporter.test.ts`; `ReactionTrace.test.ts`; `ReactionSnapshot.test.ts` 'resolved result carries the trace (contract sec.85)'; A: M7.4 exporter evidence |
+| 85 | Debug trace requirement | B | `CombatTraceExporter.test.ts`; `ReactionTrace.test.ts`; `ReactionSnapshot.test.ts` 'resolved result carries the trace (contract sec.85)'; A: `TurnBattleSystem.determinism.test.ts` 'exposes executions/events/faults/batchSkips/skippedResults/journal + causal fields', 'a stale batch lands in batchSkips AND skippedResults' |
 | 86 | No hidden mutation | A | `inventory` §5 bypass audit; B `CombatScheduler.test.ts` 'sinks strip smuggled causation fields' |
-| 87 | Determinism contract | A | M7.4 same-seed whole-battle test; B `BuffAcceptance.test.ts` 'determinism: identical command stream on two worlds -> identical state + event order', `ReactionDeterminism.test.ts`, `CombatTraceExporter.test.ts` 'the same scenario twice produces identical exported traces', `TurnBattleSystem.rngContract.test.ts` |
+| 87 | Determinism contract | A | `TurnBattleSystem.determinism.test.ts` 'identical seed + identical commands -> identical state and exported trace', 'rolls on opposite sides of the 0.5 hit threshold diverge exactly'; B `BuffAcceptance.test.ts` 'determinism: identical command stream on two worlds -> identical state + event order', `ReactionDeterminism.test.ts`, `CombatTraceExporter.test.ts` 'the same scenario twice produces identical exported traces', `TurnBattleSystem.rngContract.test.ts` |
 | 88 | RNG ownership | A | `tests/architecture/damageAuthorityRng.test.ts` (adapter never mints rng; every production TBS construction injects `CombatRng`); B `CombatSystemDamageAdapter.test.ts` rng-contract suite, `SkillCastCommit.test.ts` 'the executor rng spy sees NO hit/crit/armor rolls on policy-carrying plans', `TurnBattleSystem.rngContract.test.ts` |
 | 89 | Forbidden cross-authority mutation | A | `inventory` §5 audit (externalWard write seam unified; no second gameplay authority); B same sinks-strip test |
 | 90 | Forbidden core special cases | A | M7.5 deletion sweep; B `LegacySkillCoverage.test.ts` producer census (no per-id handler lane), `skillDefProducerSources.test.ts` |
@@ -204,7 +204,7 @@ Full per-invariant deep evidence (implementation + named test + file) lives in `
 | CON-19 | Immediate events exactly once | B | `CombatScheduler.test.ts` exactly-once; contract suite §97 |
 | CON-20 | Scheduler alone owns combatSequence | A | `inventory` §6 allocator sweep + `CombatScheduler.test.ts` 'op sequence is allocated at execution-START'; BuffPersistence synthetic seq documented as out-of-battle |
 | CON-21 | Tie-break = authored priority, never id spelling | B | `ReactionRegistry.test.ts` unique-priority validation; `ReactionSelection.test.ts` |
-| CON-22 | All runtime mutations causally traceable | B | `CombatScheduler.test.ts` causation rows; `CombatTraceExporter.test.ts` 'export reconstructs a multi-root causal tree'; A M7.4 causal-graph evidence |
+| CON-22 | All runtime mutations causally traceable | B | `CombatScheduler.test.ts` causation rows; `CombatTraceExporter.test.ts` 'export reconstructs a multi-root causal tree'; A `TurnBattleSystem.determinism.test.ts` causal-graph pair |
 | CON-23 | No path-specific special-case logic in core | A | M7.5 deletion sweep; B `LegacySkillCoverage.test.ts` (no per-id handlers), `operations.test.ts` (uniform op validation) |
 
 ## Part 6 — Definition of Done (§104) mapping
@@ -234,8 +234,8 @@ Full per-invariant deep evidence (implementation + named test + file) lives in `
 | Cấm Công uses generic action restriction state | B | `TurnBattleSystem.camCong.test.ts`; `BuffAcceptance.test.ts` 'control status' |
 | Skill, Periodic, Reaction damage origins distinct | A | contract suite §100; B origin stamping rows |
 | Exactly-once event handling is tested | B | `CombatScheduler.test.ts` exactly-once row; contract suite §97 |
-| Causal trace reconstructs cast → operation → event → Reaction → payoff | A | M7.4 causal-graph test; B `CombatTraceExporter.test.ts` multi-root tree, `CombatScheduler.test.ts` causation rows, `ReactionTrace.test.ts` |
-| Same initial state + same seed → identical trace and combat state | A | M7.4 same-seed whole-battle test; B `BuffAcceptance.test.ts` determinism row, `ReactionDeterminism.test.ts`, `CombatTraceExporter.test.ts` identical-export row, `TurnBattleSystem.rngContract.test.ts` |
+| Causal trace reconstructs cast → operation → event → Reaction → payoff | A | `TurnBattleSystem.determinism.test.ts` 'the named chain apply_buff -> committed event -> reaction ops -> resolved event resolves', 'every causation field resolves to a real parent inside the export'; B `CombatTraceExporter.test.ts` multi-root tree, `CombatScheduler.test.ts` causation rows, `ReactionTrace.test.ts` |
+| Same initial state + same seed → identical trace and combat state | A | `TurnBattleSystem.determinism.test.ts` same-seed parity + controlled-divergence pair; B `BuffAcceptance.test.ts` determinism row, `ReactionDeterminism.test.ts`, `CombatTraceExporter.test.ts` identical-export row, `TurnBattleSystem.rngContract.test.ts` |
 
 Explicit DoD emphasis items:
 
@@ -244,7 +244,7 @@ Explicit DoD emphasis items:
 - **Skill cast commit** — B `SkillCastCommit.test.ts` (all 7 rows); A contract suite Part 3 rows.
 - **Scheduler settlement barriers** — B `CombatScheduler.test.ts` §55/§56 rows; A contract suite §§94/98.
 - **Periodic correlation** — B `CombatScheduler.test.ts` settled-event rows (v1.4/v1.5); `BuffAcceptance.test.ts` manual-tick row.
-- **Causal provenance** — B scheduler causation + `CombatTraceExporter.test.ts`; A M7.4 causal-graph reconstruction.
+- **Causal provenance** — B scheduler causation + `CombatTraceExporter.test.ts`; A `TurnBattleSystem.determinism.test.ts` causal-graph reconstruction.
 - **Stale Reaction semantics** — B `ReactionBatch.test.ts` sec.95; A contract suite §95.
 - **Sequence ownership** — A `inventory` §6 + B `CombatScheduler.test.ts` ctx.sequence row.
 

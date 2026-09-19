@@ -6,21 +6,15 @@ import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
-import type { ElementType } from '../../element/ElementType'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import type { BuffDefinitionId, CombatEntityId } from '../contracts/ids'
 import type { ElementalApplicationCommitted } from '../contracts/events'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
-import { createElementalStateRegistry } from '../../reaction/ElementalStateRegistry'
-import { BuffSystemBoardQuery } from '../../reaction/ReactionBoard'
-import { ReactionTriggerGate } from '../../reaction/ReactionTriggerGate'
-import { ReactionSystem } from '../../reaction/ReactionSystem'
-import { ReactionDispatcher } from '../../reaction/ReactionDispatcher'
-import { ReactionRegistry } from '../../reaction/ReactionRegistry'
-import { resolutionToBatch } from '../../reaction/ReactionResolution'
-import { ELEMENTAL_REACTION_CAPABILITY } from '../../reaction/ReactionTypes'
-import type { ReactionDefinition } from '../../reaction/ReactionDefinition'
-import { StaticCapabilityQuery } from '../runtime/capability/StaticCapabilityQuery'
+import {
+  attachFixtureReaction as attachFixtureReactionComposition,
+  createFixtureElementalStates,
+  fixtureElementalDef,
+} from './testing/FixtureReaction'
 
 // M7 contract closure (contract spec sec.91-102 + skill whole-stack
 // acceptance, megaplan M7.3). ONE canonical composition:
@@ -80,27 +74,7 @@ function makeParticipant(id: string, entity: CombatEntity, speed: number, priori
 // TurnRuntimeFixtures binds into the BuffSystem's ElementalStateRegistry.
 // ---------------------------------------------------------------------------
 
-const ELEMENT_IDS: Record<ElementType, string> = {
-  fire: 'hoa_an',
-  water: 'han_tuc',
-  wood: 'doc_can',
-  metal: 'liet_thuong',
-  earth: 'tran_an',
-}
-
-function elementalDef(element: ElementType): BuffDefinition {
-  return {
-    id: ELEMENT_IDS[element] as BuffDefinitionId,
-    name: `Contract Seal ${element}`,
-    kind: 'ailment',
-    element,
-    instanceScope: 'per_source',
-    stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' },
-    application: { resistance: 'none' },
-    dispellable: true,
-  }
-}
+const elementalDef = fixtureElementalDef
 
 const QA_BLEED: BuffDefinition = {
   id: 'qa_bleed',
@@ -209,89 +183,7 @@ const REGISTRY = makeTestBuffRegistry([
   QA_EXPIRING,
 ])
 
-const ELEMENTS = createElementalStateRegistry(
-  Object.fromEntries(
-    (Object.entries(ELEMENT_IDS) as [ElementType, string][]).map(([e, id]) => [
-      e,
-      id as BuffDefinitionId,
-    ]),
-  ) as Record<ElementType, BuffDefinitionId>,
-)
-
-// ---------------------------------------------------------------------------
-// Fixture reaction defs -- all 10 canonical pairs (registry coverage rule).
-// Payoff damage rides the 'reaction' damage-profile channel the real
-// CombatSystemDamageAdapter resolves by origin.kind 'reaction'.
-// ---------------------------------------------------------------------------
-
-function makeContractReactionDefs(): ReactionDefinition[] {
-  const sinh = (
-    id: string,
-    parent: ElementType,
-    child: ElementType,
-    selectionTiePriority: number,
-  ): ReactionDefinition => ({
-    id: id as ReactionDefinition['id'],
-    relation: 'sinh',
-    selectionTiePriority,
-    elements: { parent, child },
-    payoff: { steps: [{ kind: 'add_child_stacks', stacks: { op: 'const', value: 1 } }] },
-  })
-  const khac = (
-    id: string,
-    attacker: ElementType,
-    defender: ElementType,
-    selectionTiePriority: number,
-    extraSteps: ReactionDefinition['payoff']['steps'] = [],
-  ): ReactionDefinition => ({
-    id: id as ReactionDefinition['id'],
-    relation: 'khac',
-    selectionTiePriority,
-    elements: { attacker, defender },
-    payoff: {
-      steps: [
-        {
-          kind: 'reaction_damage',
-          coefficient: { op: 'const', value: 1 },
-          damageProfile: 'reaction',
-          element: 'attacker',
-        },
-        ...extraSteps,
-      ],
-    },
-  })
-  return [
-    sinh('duong_viem', 'wood', 'fire', 10),
-    sinh('luyen_tho', 'fire', 'earth', 20),
-    sinh('duong_kim', 'earth', 'metal', 30),
-    sinh('tu_thuy', 'metal', 'water', 40),
-    sinh('nhuan_moc', 'water', 'wood', 50),
-    khac('tuc_viem', 'water', 'fire', 60),
-    khac('dung_kim', 'fire', 'metal', 70),
-    khac('doan_moc', 'metal', 'wood', 80),
-    khac('xuyen_tho', 'wood', 'earth', 90),
-    // tran_thuy carries the kill-sized payoff + trailing apply_status the
-    // sec.96 whole-stack scenario needs (the other khac defs stay lethal-
-    // neutral so unrelated scenarios keep their targets alive).
-    {
-      id: 'tran_thuy' as ReactionDefinition['id'],
-      relation: 'khac',
-      selectionTiePriority: 100,
-      elements: { attacker: 'earth', defender: 'water' },
-      payoff: {
-        steps: [
-          {
-            kind: 'reaction_damage',
-            coefficient: { op: 'const', value: 999_999_999 },
-            damageProfile: 'reaction',
-            element: 'attacker',
-          },
-          { kind: 'apply_status', definitionId: QA_BLEED.id },
-        ],
-      },
-    },
-  ]
-}
+const ELEMENTS = createFixtureElementalStates()
 
 // ---------------------------------------------------------------------------
 // Battle + runtime builders.
@@ -373,25 +265,12 @@ function battleWith(
 /** The deferred production wiring shape -- fixture-only composition.
     Grants elemental_reaction_enabled to the listed sources. */
 function attachFixtureReaction(runtime: TurnRuntimeFixture, grantedSourceIds: string[]) {
-  const capabilities = new StaticCapabilityQuery(
-    new Map(
-      grantedSourceIds.map((id) => [
-        id as CombatEntityId,
-        new Set([ELEMENTAL_REACTION_CAPABILITY]),
-      ]),
-    ),
-  )
-  const boardQuery = new BuffSystemBoardQuery(runtime.buffs, ELEMENTS)
-  const gate = new ReactionTriggerGate(capabilities, ELEMENTS)
-  const reactionRegistry = new ReactionRegistry(makeContractReactionDefs(), ELEMENTS, (id) =>
-    REGISTRY.has(id as BuffDefinitionId),
-  )
-  const reactionSystem = new ReactionSystem(reactionRegistry, boardQuery, gate)
-  const dispatcher = new ReactionDispatcher(gate, reactionSystem, ELEMENTS, resolutionToBatch)
-  runtime.scheduler.registerImmediateHandler('elemental_application_committed', (event, sink) =>
-    dispatcher.onElementalApplicationCommitted(event as ElementalApplicationCommitted, sink),
-  )
-  return { capabilities, boardQuery, gate, reactionRegistry, reactionSystem, dispatcher }
+  return attachFixtureReactionComposition({
+    runtime,
+    registry: REGISTRY,
+    elements: ELEMENTS,
+    grantedSourceIds,
+  })
 }
 
 // ---------------------------------------------------------------------------
