@@ -273,4 +273,6 @@ Explicit DoD emphasis items:
 
 Every contract section §1–§105, every addendum item v1.2–v1.6, every CON-01–23 invariant, and every §104 DoD item appears exactly once above with an A/B/C classification. No requirement is unmapped. Sections with no standalone row (§77/§78 listed with the modifier contract, §84 advisory) are explicitly classified C or B with reasons.
 
+Deep per-invariant evidence (verdict + mechanism + named test + notes) lives in `2026-09-21-m7-contract-closure-deep.md`.
+
 Production boundary note: Reaction rows classify against the fixture composition (`src/core/reaction/testing/ReactionTestFixtures.ts`). Production reaction remains inert — `ReactionGate.production.test.ts` proves the minted runtime carries no reaction members and grants `elemental_reaction_enabled` to nobody; M7 does not change that.
