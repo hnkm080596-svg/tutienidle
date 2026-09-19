@@ -158,4 +158,4 @@ Production Reaction boundary: fixture composition only — fixture `ElementalSta
 | M7.5c | DONE (`267ec23d`) | Deletion sweep: TurnReactionManager/wuxing/BuffPool/converter/per-id lanes all absent or comments-only; engine lane test-only; construction guard extended to runtime arg |
 | M7.5d | DONE (`6714f86a`) | `docs/qa/2026-09-21-m7-contract-closure-deep.md` — CON-01..23 PASS with mechanism + named test + notes; production boundary proofs; DoD emphasis mapping |
 | M7.5e | DONE | Playwright real-battle in worktree: `create-to-combat.spec.ts` (2.2m) + `turn-combat-hud.spec.ts` (3.5m) PASS serially; parallel 2-worker run starved RAF (contention, not regression — serial rerun green) |
-| Gates | IN PROGRESS | `npm run verify`, P18 OCR, P4 deep QA, P5 sequential review |
+| Gates | DONE | `npm run verify` 683f/5821t green; P18 OCR 100% coverage (1 Low fixed `877f9022`); P4 deep QA `docs/qa/2026-09-19-m7-battle-wiring-deep.md` PASS WITH EVIDENCE; P5 3 sequential passes clean (Pass 1 fixed deferred-after-invalid-skip cascade coverage); roadmap row added |

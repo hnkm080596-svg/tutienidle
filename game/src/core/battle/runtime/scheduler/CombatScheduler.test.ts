@@ -663,6 +663,53 @@ describe('batch runtime semantics (sec.40-44)', () => {
     ])
   })
 
+  it('a deferred op whose prior earned invalid_target_state cascades to dependency_not_resolved', () => {
+    // sec.49 + r4 HIGH 2 -- the per-op gate skips the dead-target damage
+    // op; the deferred heal must NOT materialize off a skipped result
+    // (no silent heal-0), so it earns its own typed skip instead.
+    const h = makeHarness({
+      preconditions: { isAlive: (id) => id !== 'entity.b', getBuffInstance: () => undefined },
+    })
+    h.emissions.set('op.A', [elem('e1')])
+    routeElemental(h, {
+      e1: () => ({
+        kind: 'batch',
+        batch: batchOf('b.1', [
+          damageOp('batch.B1'),
+          {
+            kind: 'heal_from_damage_result',
+            operationId: 'batch.B2',
+            resultOperationId: 'batch.B1',
+            healTarget: 'source',
+            fraction: 0.5,
+            origin: ORIGIN,
+          },
+        ]),
+      }),
+    })
+    h.scheduler.enqueueAuthored([damageOp('op.A')])
+
+    h.scheduler.run()
+    // Neither authority port ran: the gate skipped B1 before dispatch
+    // and the deferred entry never materialized.
+    expect(h.calls).toEqual(['op.A', 'h:e1'])
+    expect(h.scheduler.trace.skippedResults).toEqual([
+      {
+        operationId: 'batch.B1',
+        type: 'deal_damage',
+        status: 'skipped',
+        reason: 'invalid_target_state',
+      },
+      {
+        operationId: 'batch.B2',
+        type: 'heal',
+        status: 'skipped',
+        reason: 'dependency_not_resolved',
+      },
+    ])
+    expect(h.scheduler.state).not.toBe('faulted')
+  })
+
   it('preflight pass -> ops run in order; authored ops cannot interleave mid-batch', () => {
     const h = makeHarness({ preconditions: aliveChecker })
     h.emissions.set('op.A', [elem('e1')])
