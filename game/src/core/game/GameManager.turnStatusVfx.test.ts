@@ -87,7 +87,7 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     }
 
     expect(attached.length).toBeGreaterThan(0)
-    const ailment = attached.find((e) => e.dotType === 'trung_doc')
+    const ailment = attached.find((e) => e.dotType === 'doc_can')
     expect(ailment).toBeDefined()
     expect(ailment!.targetId.startsWith('status_vfx_dummy')).toBe(true)
     // durationSeconds carries TURNS now — trung_doc's authored duration.

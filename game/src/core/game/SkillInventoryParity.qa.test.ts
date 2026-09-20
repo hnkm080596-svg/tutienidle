@@ -102,7 +102,7 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
       expect(turnSkill.appliesAilments).toHaveLength(2)
       const ids = turnSkill.appliesAilments?.map((a) => a.buffDefinitionId)
       expect(ids).toContain('troi_chan')
-      expect(ids).toContain('trung_doc')
+      expect(ids).toContain('doc_can')
     })
 
     it('Wood ultimate (doc_vien_bao_can) preserves leech healing and poison consume', () => {
@@ -112,7 +112,7 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
       const turnSkill = toTurnSkillDefinition(skill, effective)
 
       expect(turnSkill.healPercentOfDamage).toBe(0.4)
-      expect(turnSkill.consumesAilmentId).toBe('trung_doc')
+      expect(turnSkill.consumesAilmentId).toBe('doc_can')
       expect(turnSkill.damagePerStack).toBe(30)
     })
 
@@ -123,7 +123,7 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
       const effective = skillSystem.getEffectiveSkill(manager.get(skill.id)!)
       const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
 
-      const bong = turnSkill.appliesAilments?.find((a) => a.buffDefinitionId === 'bong')
+      const bong = turnSkill.appliesAilments?.find((a) => a.buffDefinitionId === 'hoa_an')
       expect(bong?.stacks).toBe(2)
     })
   })

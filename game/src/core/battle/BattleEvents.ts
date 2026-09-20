@@ -200,3 +200,32 @@ export interface StatusVfxRemovedEvent {
   /** Target chết / cleanse / hết hạn — renderer tự dọn đúng instance. */
   reason: 'expired' | 'cleansed' | 'target_dead'
 }
+
+// Canonical-seals S5.3 -- elemental-reaction observation feed. Drained
+// from the scheduler event journal at the post-step boundary by
+// GameManagerTurnBattleOps and re-emitted here; observational only --
+// the renderer floats the payoff name, it never decides anything.
+export interface ReactionVfxResolvedEvent {
+  type: 'reaction_resolved'
+
+  reactionId: string
+
+  relation: 'sinh' | 'khac'
+
+  sourceId: string
+
+  targetId: string
+
+  /** Pre-consume snapshot -- which seals the reaction consumed. */
+  consumed: readonly { buffId: string; stacks: number }[]
+}
+
+/** reaction_skipped rides the bus for tooling/tests; the scene renders
+    nothing for it (a stale-snapshot skip carries no player signal). */
+export interface ReactionVfxSkippedEvent {
+  type: 'reaction_skipped'
+
+  reactionId: string
+
+  reason: 'stale_reaction_snapshot'
+}

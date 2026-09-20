@@ -230,6 +230,45 @@ describe('CombatSystemDamageAdapter -- legacy_dot channel', () => {
     expect(damageEvents[0]?.effectId).toBe('poison.tick')
   })
 
+  it('elementalPenetrationBonus ADDS points to the source stat at resolution -- 40 resistance resolves as net 20 with +20 (canonical-seals addendum)', () => {
+    const source = makeEntity('source', { might: 0, metalPower: 100, metalPenetration: 0 })
+    const target = makeEntity(
+      'target',
+      { maxHp: 10_000, metalResistance: 40, dotResistancePercent: 0 },
+      { currentHp: 10_000 },
+    )
+    const h = makeHarness([source, target])
+
+    // power = might 0 + metalPower 100 = 100, coefficient 1.
+    // baseline: net resistance 40 -> mitigation 0.4 -> hpDamage 60.
+    const baseline = h.adapter.dealDamage(
+      payload({ damageProfile: 'legacy_dot', coefficient: 1, element: 'metal' }),
+      h.ctx({ kind: 'buff_periodic' }),
+    )
+    expect(baseline.hpDamage).toBe(60)
+
+    // bonus +20: net resistance 20 -> mitigation 0.2 -> hpDamage 80.
+    const withBonus = h.adapter.dealDamage(
+      payload({
+        damageProfile: 'legacy_dot',
+        coefficient: 1,
+        element: 'metal',
+        elementalPenetrationBonus: 20,
+      }),
+      h.ctx({ kind: 'buff_periodic' }),
+    )
+    expect(withBonus.hpDamage).toBe(80)
+
+    // Never a stats mutation -- a third op without the bonus resolves
+    // against the untouched source stat again.
+    expect(source.stats.metalPenetration).toBe(0)
+    const again = h.adapter.dealDamage(
+      payload({ damageProfile: 'legacy_dot', coefficient: 1, element: 'metal' }),
+      h.ctx({ kind: 'buff_periodic' }),
+    )
+    expect(again.hpDamage).toBe(60)
+  })
+
   it('passes the resolved source buffs into the DoT channel (dotRecovery stays reachable)', () => {
     const source = makeEntity('source', { maxHp: 200, woodPower: 90 }, { currentHp: 50 })
     const target = makeEntity('target', { maxHp: 500 }, { currentHp: 500 })

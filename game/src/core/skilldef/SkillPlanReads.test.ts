@@ -63,7 +63,11 @@ describe('SkillPlanReads -- read steps see post-settlement state', () => {
   it('late bindings patch coefficient against stacks visible post-settlement', () => {
     const def = makeDef({
       operations: [
-        { type: 'add_buff_stacks', target: 'primary_target', definitionId: 'ailment.burn', stacks: 2 },
+        {
+          type: 'add_buff_stacks',
+          selector: { kind: 'target_definition', target: 'primary_target', definitionId: 'ailment.burn' },
+          stacks: 2,
+        },
         {
           type: 'deal_damage',
           target: 'primary_target',

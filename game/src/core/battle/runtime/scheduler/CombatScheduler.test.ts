@@ -1284,6 +1284,55 @@ describe('lifecycle roots + periodic bridge (r4 BLOCKER 2 / r5 BLOCKER 2 / r5 HI
     }
   })
 
+  it('forwards elementalPenetrationBonus to the deal_damage payload (canonical-seals addendum)', () => {
+    const h = makeHarness()
+    const { sink } = h.scheduler.createLifecycleSink('status.turn.5.p')
+    sink.emit({
+      type: 'periodic_requests_committed',
+      trigger: { type: 'interval' },
+      rootActionId: 'status.turn.5.p',
+      requests: [
+        { ...periodicDamageReq('entity.a'), elementalPenetrationBonus: 20 },
+      ],
+    })
+    h.scheduler.run()
+    expect(h.damageCalls[0]?.payload.elementalPenetrationBonus).toBe(20)
+  })
+
+  it('faults a penetration bonus on illegal carriers: non-legacy_dot profile / physical element / non-finite (canonical-seals addendum)', () => {
+    const emit = (bonus: number, overrides: Partial<BuffPeriodicDamageRequest> = {}) => {
+      const h = makeHarness()
+      const { sink } = h.scheduler.createLifecycleSink('status.turn.5.p')
+      sink.emit({
+        type: 'periodic_requests_committed',
+        trigger: { type: 'interval' },
+        rootActionId: 'status.turn.5.p',
+        requests: [
+          {
+            ...periodicDamageReq('entity.a'),
+            ...overrides,
+            elementalPenetrationBonus: bonus,
+          },
+        ],
+      })
+      return h
+    }
+    expect(() => emit(20, { damageProfile: 'test' }).scheduler.run()).toThrow(
+      CombatSettlementFault,
+    )
+    expect(() => emit(20, { element: 'physical' }).scheduler.run()).toThrow(
+      CombatSettlementFault,
+    )
+    expect(() => emit(Number.NaN).scheduler.run()).toThrow(CombatSettlementFault)
+    expect(() => emit(Number.POSITIVE_INFINITY).scheduler.run()).toThrow(
+      CombatSettlementFault,
+    )
+    // The legal carrier itself passes.
+    const ok = emit(20)
+    expect(() => ok.scheduler.run()).not.toThrow()
+    expect(ok.damageCalls[0]?.payload.elementalPenetrationBonus).toBe(20)
+  })
+
   it('registerImmediateHandler is one-per-type -- duplicate registration is a structural fault', () => {
     const h = makeHarness()
     h.scheduler.registerImmediateHandler('elemental_application_committed', () => undefined)

@@ -86,11 +86,15 @@ export const TEST_ELEMENT_BUFF_IDS: Record<ElementType, BuffDefinitionId> = {
   earth: 'test_seal_earth' as BuffDefinitionId,
 }
 
+// Status ids match the production payoff defs (canonical-seals S2 --
+// data/reaction/ReactionDefinitions.ts emits these ids; the fixture
+// registers synthetic SHAPES under them so payoff tests exercise the
+// real production ids without a core->data import).
 export const TEST_STATUS_BUFF_IDS = {
-  bleed: 'test_bleed' as BuffDefinitionId,
-  defenseBreak: 'test_defense_break' as BuffDefinitionId,
-  defenseErosion: 'test_defense_erosion' as BuffDefinitionId,
-  camCong: 'test_cam_cong' as BuffDefinitionId,
+  bleed: 'reaction_bleed' as BuffDefinitionId,
+  defenseBreak: 'defense_break' as BuffDefinitionId,
+  defenseErosion: 'defense_erosion' as BuffDefinitionId,
+  camCong: 'cam_cong' as BuffDefinitionId,
 } as const
 
 function elementalDef(element: ElementType): BuffDefinition {
@@ -454,13 +458,13 @@ export function createReactionTestWorld(): ReactionTestWorld {
       for (const entry of batch.operations) {
         let op = entry as ResolvedCombatOperation
         if (isDeferredOperation(entry)) {
-          const prior = inBatch.get(entry.resultOperationId)
-          if (prior === undefined || prior.status !== 'resolved') {
+          const skipReason = contractRunner.deferredSkipReason(entry, inBatch)
+          if (skipReason !== undefined) {
             results.push({
               operationId: entry.operationId,
-              type: 'heal',
+              type: resultTypeOfBatchEntry(entry),
               status: 'skipped',
-              reason: 'dependency_not_resolved',
+              reason: skipReason,
             } as CombatOperationResult)
             continue
           }

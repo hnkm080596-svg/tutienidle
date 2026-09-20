@@ -236,6 +236,7 @@ export function makeBuffSystemWorld(opts?: {
   battleId?: string
   damageProfiles?: BuffDamageProfileCatalog
   elementalMap?: Map<BuffDefinitionId, ElementType>
+  capabilityValidators?: CapabilityValidatorRegistry
 }): BuffSystemWorld {
   const world = makeBuffWorld(opts)
   const rng = makeTestRng()

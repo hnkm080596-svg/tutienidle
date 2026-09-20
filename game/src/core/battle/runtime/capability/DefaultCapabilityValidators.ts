@@ -11,6 +11,7 @@ import { registerMarkerCapabilities } from '../../../proc/MarkerCapabilities'
 import { registerTheTuCapabilities } from '../../../the-tu/TheTuCapabilities'
 import { registerGaugeDeltaCapabilities } from '../../turn/GaugeDeltaHandler'
 import { registerDotRecoveryCapabilities } from '../../../combat/DotRecoveryCapabilities'
+import { registerReactionCapabilities } from '../../../reaction/ReactionCapabilities'
 
 export function createDefaultCapabilityValidators(): CapabilityValidatorRegistry {
   const validators = createCapabilityValidatorRegistry()
@@ -19,5 +20,6 @@ export function createDefaultCapabilityValidators(): CapabilityValidatorRegistry
   registerTheTuCapabilities(validators)
   registerGaugeDeltaCapabilities(validators)
   registerDotRecoveryCapabilities(validators)
+  registerReactionCapabilities(validators)
   return validators
 }

@@ -58,13 +58,13 @@ function buffDef(
   }
 }
 
-// 'trung_doc' stays unregistered HERE — buffNameFor resolves its display
+// 'doc_can' stays unregistered HERE -- buffNameFor resolves its display
 // name through the production BUFF_REGISTRY (real def); the other ids are
 // test-only.
 const REGISTRY = makeTestBuffRegistry([
   buffDef('burn', 'debuff'),
   buffDef('ward', 'buff'),
-  buffDef('trung_doc', 'debuff'),
+  buffDef('doc_can', 'debuff'),
   buffDef('test_buff', 'debuff'),
   buffDef('hidden_probe', 'debuff', { hidden: true }),
   buffDef('totally_unknown_buff_id', 'debuff'),
@@ -166,16 +166,16 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const player = makeParticipant('player', createCombatant({ id: 'player' }))
     const source = makeParticipant('source_1', createCombatant({ id: 'source_1' }))
     const runtime = makeWorld([player, source])
-    runtime.applyBuff('trung_doc', player, source, { durationOverride: 4 })
+    runtime.applyBuff('doc_can', player, source, { durationOverride: 4 })
     const battle = makeBattle({ players: [player] })
 
     diffAndEmitTurnStatusVfx(bus, battle, new Map(), runtime.buffs, REGISTRY)
 
     expect(events.attached).toHaveLength(1)
     expect(events.attached[0]).toMatchObject({
-      statusInstanceId: 'player:trung_doc:source_1',
+      statusInstanceId: 'player:doc_can:source_1',
       targetId: 'player',
-      dotType: 'trung_doc',
+      dotType: 'doc_can',
       stacks: 1,
       durationSeconds: 4,
       polarity: 'debuff',
@@ -183,7 +183,7 @@ describe('diffAndEmitTurnStatusVfx', () => {
     })
     // buffName resolves through BUFF_REGISTRY for a known id.
     expect(events.attached[0]!.buffName).toBeTruthy()
-    expect(events.attached[0]!.buffName).not.toBe('trung_doc')
+    expect(events.attached[0]!.buffName).not.toBe('doc_can')
   })
 
   it('falls back to the raw id for a buff the registry does not know', () => {

@@ -328,7 +328,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         type: 'debuff',
 
-        buffId: 'bong',
+        buffId: 'hoa_an',
 
         // 2026-08-21 â€” Sá»¬A láº¡i quyáº¿t Ä‘á»‹nh ban Ä‘áº§u ("100% luÃ´n Ã¡p"):
         // Há»a Cáº§u Thuáº­t gá»‘c chá»‰ 50% cÆ¡ há»™i Ã¡p ThiÃªu Äá»‘t, node "Dáº«n
@@ -397,7 +397,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         type: 'debuff',
 
-        buffId: 'trung_doc',
+        buffId: 'doc_can',
 
         ailmentChance: 1,
       },
@@ -463,7 +463,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         type: 'debuff',
 
-        buffId: 'te_cong',
+        buffId: 'han_tuc',
 
         // 2026-08-21 â€” cÃ¹ng quyáº¿t Ä‘á»‹nh vá»›i Há»a Cáº§u Thuáº­t (xem ghi chÃº
         // á»Ÿ Ä‘Ã³): base 50%, KHÃ”NG luÃ´n luÃ´n Ã¡p â€” Thá»§y Dáº«n (Luyá»‡n KhÃ­)
@@ -537,7 +537,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         type: 'debuff',
 
-        buffId: 'chay_mau',
+        buffId: 'liet_thuong',
 
         ailmentChance: 0.4,
       },
@@ -604,7 +604,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         type: 'debuff',
 
-        buffId: 'thach_hoa',
+        buffId: 'tran_an',
 
         ailmentChance: 1,
       },

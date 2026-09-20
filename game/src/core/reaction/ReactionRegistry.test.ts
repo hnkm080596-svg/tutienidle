@@ -170,7 +170,7 @@ describe('ReactionRegistry validation', () => {
         steps: [
           {
             kind: 'apply_status',
-            definitionId: 'test_bleed' as BuffDefinitionId,
+            definitionId: 'reaction_bleed' as BuffDefinitionId,
             when: { role: 'parent', op: 'gte', value: 1 }, // khac has no parent
           },
         ],

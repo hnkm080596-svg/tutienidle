@@ -194,7 +194,8 @@ function adaptOne(
     operations.push(adaptDamageOp(def))
   } else if (!isSelfScope) {
     // Non-damaging enemy-scope lane (TBS :1926-1947 parity): ailments
-    // then detonate, per affected target, unconditionally.
+    // then detonate then same-source seal interactions, per affected
+    // target, unconditionally.
     const inner: AuthoredSkillOperation[] = []
     for (const ailment of ailmentList(def)) {
       inner.push(adaptAilment(ailment, 'loop_target'))
@@ -202,13 +203,18 @@ function adaptOne(
     if (def.detonateDoT !== undefined) {
       inner.push({ type: 'detonate', target: 'loop_target', amp: def.detonateDoT.amp })
     }
+    inner.push(...adaptAilmentInteractions(def, 'loop_target'))
     if (inner.length > 0) {
       operations.push({ type: 'for_each_target', target: 'affected_targets', ops: inner })
     }
-  } else if (ailmentList(def).length > 0 || def.detonateDoT !== undefined) {
-    // Self-scope ailment/detonate payloads never fire in the legacy
-    // lane (the non-damaging block requires enemy scope) -- report
-    // rather than emit never-firing ops.
+  } else if (
+    ailmentList(def).length > 0 ||
+    def.detonateDoT !== undefined ||
+    (def.ailmentInteractions ?? []).length > 0
+  ) {
+    // Self-scope ailment/detonate/interaction payloads never fire in
+    // the legacy lane (the non-damaging block requires enemy scope) --
+    // report rather than emit never-firing ops.
     report(`${reportPrefix}.appliesAilments(self-scope: lane never fires)`)
   }
 
@@ -306,9 +312,20 @@ function adaptDamageOp(
       ? {
           definitionId: def.consumesAilmentId as BuffDefinitionId,
           damagePerStack: def.damagePerStack as ScalarExpression,
-          // TBS :2091-2094 -- consumes every instance of the id with NO
-          // source filter.
-          scope: 'any' as const,
+          // TBS :2091-2094 -- legacy consumes every instance of the id
+          // with NO source filter; Hoa An seal skills (spec sec.62 Cuu
+          // Tieu) opt into same-source 'own'.
+          scope: def.consumesAilmentScope ?? ('any' as const),
+        }
+      : undefined
+  const scaleBuff =
+    def.scalesWithAilmentStacks !== undefined
+      ? {
+          definitionId: def.scalesWithAilmentStacks.ailmentId as BuffDefinitionId,
+          damagePerStack: def.scalesWithAilmentStacks.damagePerStack as ScalarExpression,
+          // Spec sec.7 -- a caster's seal skills read only their own
+          // instance.
+          scope: 'own' as const,
         }
       : undefined
   const consumeWard =
@@ -317,7 +334,9 @@ function adaptDamageOp(
       : undefined
 
   // Per-landed-hit consequence ops (resolveDeclaredHit parity):
-  // ailments then detonate, inside the hit's landed gate.
+  // ailments then detonate then same-source seal interactions, inside
+  // the hit's landed gate (Phan Thien order: apply -> tick -> modify ->
+  // extend).
   const onLanded: AuthoredSkillOperation[] = []
   for (const ailment of ailmentList(def)) {
     onLanded.push(adaptAilment(ailment, 'loop_target'))
@@ -325,11 +344,13 @@ function adaptDamageOp(
   if (def.detonateDoT !== undefined) {
     onLanded.push({ type: 'detonate', target: 'loop_target', amp: def.detonateDoT.amp })
   }
+  onLanded.push(...adaptAilmentInteractions(def, 'loop_target'))
 
   return {
     ...base,
     ...lane,
     ...(consumeBuff !== undefined ? { consumeBuff } : {}),
+    ...(scaleBuff !== undefined ? { scaleBuff } : {}),
     ...(consumeWard !== undefined ? { consumeWard } : {}),
     ...(def.healPercentOfDamage !== undefined
       ? { healPercentOfDamage: def.healPercentOfDamage as ScalarExpression }
@@ -354,6 +375,38 @@ function adaptAilment(
       ? { stacks: ailment.stacks as ScalarExpression }
       : {}),
   }
+}
+
+/** Hoa An spec sec.62 -- same-source seal interactions compile to
+    selector-bound buff ops against the caster's OWN instance on the
+    bound target (identity selector source:'self'). `routes` was already
+    filtered at the route seam (applyRouteToTurnSkill) -- the adapter
+    emits every surviving entry verbatim. */
+function adaptAilmentInteractions(
+  def: TurnSkillDefinition,
+  target: SkillTargetIntent,
+): AuthoredSkillOperation[] {
+  const ops: AuthoredSkillOperation[] = []
+  for (const interaction of def.ailmentInteractions ?? []) {
+    const selector = {
+      kind: 'identity' as const,
+      definitionId: interaction.buffId as BuffDefinitionId,
+      source: 'self' as const,
+      target,
+    }
+    switch (interaction.kind) {
+      case 'trigger_periodic':
+        ops.push({ type: 'trigger_buff_periodic', selector })
+        break
+      case 'add_modifier':
+        ops.push({ type: 'add_buff_modifier', selector, modifier: interaction.modifier })
+        break
+      case 'extend_duration':
+        ops.push({ type: 'extend_buff_duration', selector, turns: interaction.turns })
+        break
+    }
+  }
+  return ops
 }
 
 // ---------------------------------------------------------------------------
@@ -598,9 +651,6 @@ const UNSUPPORTED_EFFECT_FIELDS = [
   'hitCount',
   'realmDamageRatio',
   'skillExperienceRatio',
-  'spreadsAilmentId',
-  'spreadStackPercent',
-  'spreadRefreshesPrimary',
   'stacksPerAffectedTarget',
   // Mission C Task 10d — real authored fields (SkillEffect.ts:11,28;
   // PhapTuChainSkills.ts) that the turn engine cannot execute; report
@@ -737,6 +787,18 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
   if (damageEffect?.consumesAilmentId && damageEffect.damagePerStack) {
     turnSkill.consumesAilmentId = damageEffect.consumesAilmentId
     turnSkill.damagePerStack = damageEffect.damagePerStack
+    if (damageEffect.consumesAilmentScope !== undefined) {
+      turnSkill.consumesAilmentScope = damageEffect.consumesAilmentScope
+    }
+  }
+
+  // Hoa An (spec 2026-09-17 sec.62) -- same-source stack-scaled direct
+  // damage (Xich Viem) + post-landing seal interactions (Phan Thien).
+  if (damageEffect?.scalesWithAilmentStacks !== undefined) {
+    turnSkill.scalesWithAilmentStacks = damageEffect.scalesWithAilmentStacks
+  }
+  if (damageEffect?.ailmentInteractions !== undefined) {
+    turnSkill.ailmentInteractions = damageEffect.ailmentInteractions
   }
 
   if (damageEffect?.consumesWardForDamage && damageEffect.damagePerWardPoint) {
@@ -846,6 +908,9 @@ function isDamageEffect(effect: SkillEffect): effect is SkillEffect & {
   components?: SkillDamageComponent[]
   consumesAilmentId?: string
   damagePerStack?: number
+  consumesAilmentScope?: 'own' | 'any'
+  scalesWithAilmentStacks?: { ailmentId: string; damagePerStack: number }
+  ailmentInteractions?: SkillEffect['ailmentInteractions']
   consumesWardForDamage?: boolean
   damagePerWardPoint?: number
   healPercentOfDamage?: number

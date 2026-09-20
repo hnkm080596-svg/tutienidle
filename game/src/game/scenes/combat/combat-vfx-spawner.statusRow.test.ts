@@ -117,12 +117,12 @@ function makeFakeScene(viewport: { width: number; height: number }, sprites: Map
 function makeEvent(overrides: Partial<StatusVfxAttachedEvent> = {}): StatusVfxAttachedEvent {
   return {
     type: 'status_vfx_attached',
-    statusInstanceId: 'enemy:bong:src',
+    statusInstanceId: 'enemy:hoa_an:src',
     targetId: 'enemy',
-    dotType: 'bong',
+    dotType: 'hoa_an',
     stacks: 1,
     durationSeconds: 4,
-    buffName: 'Bỏng',
+    buffName: 'Hỏa Ấn',
     polarity: 'debuff',
     permanent: false,
     ...overrides,
@@ -145,7 +145,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
 
     expect(scene.statuses.size).toBe(1)
 
-    const entry = scene.statuses.get('enemy:bong:src') as {
+    const entry = scene.statuses.get('enemy:hoa_an:src') as {
       targetId: string
       buffId: string
       polarity: string
@@ -158,11 +158,11 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     }
 
     expect(entry.targetId).toBe('enemy')
-    expect(entry.buffId).toBe('bong')
+    expect(entry.buffId).toBe('hoa_an')
     expect(entry.polarity).toBe('debuff')
     expect(entry.permanent).toBe(false)
     expect(entry.stacks).toBe(1)
-    expect(entry.buffName).toBe('Bỏng')
+    expect(entry.buffName).toBe('Hỏa Ấn')
     expect(entry.remainingTime).toBe(4)
     expect(entry.icon.angle).toBe(45) // diamond
     expect(entry.stackLabel.visible).toBe(false) // stacks 1 → ẩn
@@ -177,15 +177,15 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
 
     spawner.onStatusAttached(
       makeEvent({
-        statusInstanceId: 'player:khai_son:src',
+        statusInstanceId: 'player:thach_giap_buff:src',
         targetId: 'player',
-        dotType: 'khai_son',
+        dotType: 'thach_giap_buff',
         buffName: 'Khai Sơn',
         polarity: 'buff',
       }),
     )
 
-    const entry = scene.statuses.get('player:khai_son:src') as { icon: FakeGameObject }
+    const entry = scene.statuses.get('player:thach_giap_buff:src') as { icon: FakeGameObject }
 
     expect(entry.icon.angle).toBe(0)
   })
@@ -193,7 +193,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
   it('stacks > 1 → stack label hiện số', () => {
     spawner.onStatusAttached(makeEvent({ stacks: 3 }))
 
-    const entry = scene.statuses.get('enemy:bong:src') as { stackLabel: FakeGameObject }
+    const entry = scene.statuses.get('enemy:hoa_an:src') as { stackLabel: FakeGameObject }
 
     expect(entry.stackLabel.visible).toBe(true)
     expect(entry.stackLabel.text).toBe('3')
@@ -204,14 +204,14 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     const createdBefore = scene.created.length
 
     spawner.onStatusUpdated({
-      statusInstanceId: 'enemy:bong:src',
+      statusInstanceId: 'enemy:hoa_an:src',
       stacks: 2,
       durationSeconds: 5,
     })
 
     expect(scene.created.length).toBe(createdBefore)
 
-    const entry = scene.statuses.get('enemy:bong:src') as {
+    const entry = scene.statuses.get('enemy:hoa_an:src') as {
       stacks: number
       remainingTime: number | undefined
       stackLabel: FakeGameObject
@@ -226,9 +226,9 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
   it('remove → destroy icon + label, entry khỏi map', () => {
     spawner.onStatusAttached(makeEvent())
 
-    spawner.onStatusRemoved({ statusInstanceId: 'enemy:bong:src' })
+    spawner.onStatusRemoved({ statusInstanceId: 'enemy:hoa_an:src' })
 
-    const entry = scene.statuses.get('enemy:bong:src') as { icon: FakeGameObject; stackLabel: FakeGameObject }
+    const entry = scene.statuses.get('enemy:hoa_an:src') as { icon: FakeGameObject; stackLabel: FakeGameObject }
 
     expect(entry).toBeUndefined()
   })
@@ -237,7 +237,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     spawner.onStatusAttached(makeEvent())
     spawner.updateStatusIconPositions()
 
-    const entry = scene.statuses.get('enemy:bong:src') as { icon: FakeGameObject }
+    const entry = scene.statuses.get('enemy:hoa_an:src') as { icon: FakeGameObject }
 
     expect(entry.icon.y).toBe(ENEMY_SPRITE.rect.y + STATUS_FOOT_ROW_OFFSET_Y)
     // 1 icon: x = giữa sprite
@@ -251,7 +251,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     )
     spawner.updateStatusIconPositions()
 
-    const first = scene.statuses.get('enemy:bong:src') as { icon: FakeGameObject }
+    const first = scene.statuses.get('enemy:hoa_an:src') as { icon: FakeGameObject }
     const second = scene.statuses.get('enemy:te_cong:src') as { icon: FakeGameObject }
 
     // rowWidth = 2*(10+4)-4 = 24; startX = 300 - 12 + 5 = 293; icon2 = 293+14 = 307
@@ -271,7 +271,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     )
     spawner.updateStatusIconPositions()
 
-    const temporary = scene.statuses.get('enemy:bong:src') as { icon: FakeGameObject }
+    const temporary = scene.statuses.get('enemy:hoa_an:src') as { icon: FakeGameObject }
     const permanent = scene.statuses.get('enemy:vinh_cuu:src') as { icon: FakeGameObject }
 
     // permanent row nằm DƯỚI temporary row (dưới chân, xa sprite hơn)

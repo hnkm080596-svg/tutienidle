@@ -387,6 +387,9 @@ export class SkillResolver {
             if (op.consumeBuff !== undefined) {
               collectFromExpr(op.consumeBuff.damagePerStack)
             }
+            if (op.scaleBuff !== undefined) {
+              collectFromExpr(op.scaleBuff.damagePerStack)
+            }
             if (op.consumeWard !== undefined) {
               collectFromExpr(op.consumeWard.damagePerWardPoint)
             }
@@ -504,33 +507,35 @@ export class SkillResolver {
     return this.resolveIntentSet(intent, ctx, scope)[0]
   }
 
-  private resolveSelector(
+  /** Selector TARGET keeps set cardinality: one resolved selector per
+      member of the resolved target set. An identity SOURCE binds exactly
+      one entity (validation rejects set-valued source intents) shared by
+      every emitted selector. */
+  private resolveSelectorSet(
     selector: AuthoredBuffSelector,
     ctx: TranslateContext,
     scope: ResolveScope,
-  ): BuffInstanceSelector | undefined {
+  ): readonly BuffInstanceSelector[] {
     switch (selector.kind) {
-      case 'target_definition': {
-        const targetId = this.resolveIntentSingle(selector.target, ctx, scope)
-        return targetId !== undefined
-          ? {
-              kind: 'target_definition',
-              targetId,
-              definitionId: selector.definitionId,
-            }
-          : undefined
-      }
+      case 'target_definition':
+        return this.resolveIntentSet(selector.target, ctx, scope).map(
+          (targetId) => ({
+            kind: 'target_definition' as const,
+            targetId,
+            definitionId: selector.definitionId,
+          }),
+        )
       case 'identity': {
         const sourceId = this.resolveIntentSingle(selector.source, ctx, scope)
-        const targetId = this.resolveIntentSingle(selector.target, ctx, scope)
-        return sourceId !== undefined && targetId !== undefined
-          ? {
-              kind: 'identity',
-              definitionId: selector.definitionId,
-              sourceId,
-              targetId,
-            }
-          : undefined
+        if (sourceId === undefined) return []
+        return this.resolveIntentSet(selector.target, ctx, scope).map(
+          (targetId) => ({
+            kind: 'identity' as const,
+            definitionId: selector.definitionId,
+            sourceId,
+            targetId,
+          }),
+        )
       }
     }
   }
@@ -1022,8 +1027,33 @@ export class SkillResolver {
     for (const targetId of targetIds) {
       const targetSteps: ResolvedSkillPlanStep[] = []
       for (let i = 0; i < instanceCount; i++) {
-        const hit = this.buildHitStep(op, instances, targetId, ctx, scope)
-        const instanceSteps: ResolvedSkillPlanStep[] = [hit.step]
+        const instanceSteps: ResolvedSkillPlanStep[] = []
+        // scaleBuff (Hoa An spec sec.62) -- live same-source stack read
+        // BEFORE the hit, folded into the hit's coefficient by late
+        // binding (no consume; the seal survives).
+        let scaleBinding: { stacksVar: string; rateExpr: ResolvedScalarExpression } | undefined
+        if (op.scaleBuff !== undefined) {
+          const stacksVar = this.nextVar('sstacks', ctx)
+          const scopeSourceId =
+            op.scaleBuff.scope !== 'any' ? ctx.input.sourceId : undefined
+          instanceSteps.push({
+            kind: 'read',
+            query: {
+              query: 'buff_stacks',
+              targetId,
+              definitionId: op.scaleBuff.definitionId,
+              ...(scopeSourceId !== undefined ? { sourceId: scopeSourceId } : {}),
+            },
+            into: stacksVar,
+          })
+          const rateResult = this.fold(op.scaleBuff.damagePerStack, ctx, scope)
+          scaleBinding = {
+            stacksVar,
+            rateExpr: 'folded' in rateResult ? rateResult.folded : rateResult.late,
+          }
+        }
+        const hit = this.buildHitStep(op, instances, targetId, ctx, scope, scaleBinding)
+        instanceSteps.push(hit.step)
         // M4 -- register for target_hit_landed gates (per-target
         // landed-hit consequence parity).
         const registered = ctx.hitOpIdsByTarget.get(targetId) ?? []
@@ -1147,6 +1177,7 @@ export class SkillResolver {
     targetId: CombatEntityId,
     ctx: TranslateContext,
     scope: ResolveScope,
+    scaleBinding?: { stacksVar: string; rateExpr: ResolvedScalarExpression },
   ): { step: ResolvedSkillPlanStep; hitOpIds: CombatOperationId[] } {
     const each = instances?.each
 
@@ -1164,7 +1195,35 @@ export class SkillResolver {
     ): DealDamageOperation['payload'] => {
       const coeffResult = this.fold(op.coefficient ?? 1, ctx, scope)
       let coefficient: number
-      if ('folded' in coeffResult) {
+      if (scaleBinding !== undefined) {
+        // scaleBuff -- (authored coefficient + live stacks x rate) is
+        // ALWAYS a late binding: the read var exists only at EXECUTE.
+        const baseExpr: ResolvedScalarExpression =
+          'folded' in coeffResult ? coeffResult.folded : coeffResult.late
+        late.push({
+          field: 'coefficient',
+          expr: {
+            op: 'multiply',
+            values: [
+              {
+                op: 'add',
+                values: [
+                  baseExpr,
+                  {
+                    op: 'multiply',
+                    values: [
+                      { query: 'var', name: scaleBinding.stacksVar },
+                      scaleBinding.rateExpr,
+                    ],
+                  },
+                ],
+              },
+              coefficientScale * multiplier,
+            ],
+          },
+        })
+        coefficient = 0
+      } else if ('folded' in coeffResult) {
         coefficient = coeffResult.folded * coefficientScale * multiplier
       } else {
         late.push({
@@ -1360,7 +1419,11 @@ export class SkillResolver {
       flatStep,
       {
         kind: 'for_each_instance',
-        filter: { targetId, definitionId: consume.definitionId },
+        filter: {
+          targetId,
+          definitionId: consume.definitionId,
+          ...(scopeSourceId !== undefined ? { sourceId: scopeSourceId } : {}),
+        },
         operation: {
           type: 'consume_buff_stacks',
           payload: {
@@ -1636,13 +1699,6 @@ export class SkillResolver {
   // stacks / modifier / duration / periodic / remove / cleanse ops
   // -----------------------------------------------------------------------
 
-  private targetDefinitionSelector(
-    targetId: CombatEntityId,
-    definitionId: BuffDefinitionId,
-  ): BuffInstanceSelector {
-    return { kind: 'target_definition', targetId, definitionId }
-  }
-
   private translateStacksOp(
     op: Extract<
       AuthoredSkillOperation,
@@ -1652,7 +1708,7 @@ export class SkillResolver {
     scope: ResolveScope,
   ): ResolvedSkillPlanStep[] {
     const steps: ResolvedSkillPlanStep[] = []
-    for (const targetId of this.resolveIntentSet(op.target, ctx, scope)) {
+    for (const selector of this.resolveSelectorSet(op.selector, ctx, scope)) {
       const late: ResolvedLateBinding[] = []
       let stacks: number | 'all'
       if (op.stacks === 'all') {
@@ -1666,7 +1722,6 @@ export class SkillResolver {
           stacks = 0
         }
       }
-      const selector = this.targetDefinitionSelector(targetId, op.definitionId)
       const operation: CombatOperation =
         op.type === 'add_buff_stacks'
           ? { type: 'add_buff_stacks', payload: { selector, stacks: stacks as number } }
@@ -1690,8 +1745,7 @@ export class SkillResolver {
     scope: ResolveScope,
   ): ResolvedSkillPlanStep[] {
     const steps: ResolvedSkillPlanStep[] = []
-    for (const targetId of this.resolveIntentSet(op.target, ctx, scope)) {
-      const selector = this.targetDefinitionSelector(targetId, op.definitionId)
+    for (const selector of this.resolveSelectorSet(op.selector, ctx, scope)) {
       const operation: CombatOperation =
         op.type === 'add_buff_modifier'
           ? {
@@ -1719,8 +1773,7 @@ export class SkillResolver {
     scope: ResolveScope,
   ): ResolvedSkillPlanStep[] {
     const steps: ResolvedSkillPlanStep[] = []
-    for (const targetId of this.resolveIntentSet(op.target, ctx, scope)) {
-      const selector = this.targetDefinitionSelector(targetId, op.definitionId)
+    for (const selector of this.resolveSelectorSet(op.selector, ctx, scope)) {
       const operation: CombatOperation =
         op.type === 'refresh_buff_duration'
           ? {
@@ -1745,8 +1798,7 @@ export class SkillResolver {
     scope: ResolveScope,
   ): ResolvedSkillPlanStep[] {
     const steps: ResolvedSkillPlanStep[] = []
-    for (const targetId of this.resolveIntentSet(op.target, ctx, scope)) {
-      const selector = this.targetDefinitionSelector(targetId, op.definitionId)
+    for (const selector of this.resolveSelectorSet(op.selector, ctx, scope)) {
       steps.push(
         this.operationStep(
           {
@@ -1768,17 +1820,19 @@ export class SkillResolver {
     ctx: TranslateContext,
     scope: ResolveScope,
   ): ResolvedSkillPlanStep[] {
-    const selector = this.resolveSelector(op.selector, ctx, scope)
-    if (selector === undefined) return []
-    return [
-      this.operationStep(
-        {
-          type: 'remove_buff',
-          payload: { selector, removalReason: op.reason ?? 'scripted' },
-        },
-        ctx,
-      ),
-    ]
+    const steps: ResolvedSkillPlanStep[] = []
+    for (const selector of this.resolveSelectorSet(op.selector, ctx, scope)) {
+      steps.push(
+        this.operationStep(
+          {
+            type: 'remove_buff',
+            payload: { selector, removalReason: op.reason ?? 'scripted' },
+          },
+          ctx,
+        ),
+      )
+    }
+    return steps
   }
 
   private translateCleanse(
@@ -1915,6 +1969,9 @@ export class SkillResolver {
           query: 'buff_stacks',
           targetId,
           definitionId: op.definitionId,
+          ...(op.source !== undefined
+            ? { sourceId: this.resolveIntentSingle(op.source, ctx, scope) }
+            : {}),
         },
         into: op.into,
       },

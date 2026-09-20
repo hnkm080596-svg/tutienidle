@@ -62,6 +62,11 @@ export interface RouteProfile {
   empoweredUlt?: PhapTuUltimateVariant
   statModifiers: StatModifier[]
   critTheGain?: number
+  /** The route this profile was resolved FOR (absent on NEUTRAL) --
+   * the route seam uses it to gate `routes`-tagged authored payload
+   * entries (Hoa An spec 2026-09-17 sec.62: Xich Viem's DoT-only
+   * next-tick modifier). */
+  route?: PhapTuRoute
 }
 
 /** No route picked (or no Phap Tu state): every factor is identity. */
@@ -79,6 +84,7 @@ export const NEUTRAL_ROUTE_PROFILE: RouteProfile = {
 // on a zero-base stat is a no-op.
 export const PHAP_TU_ROUTES: Record<PhapTuRoute, RouteProfile> = {
   dot: {
+    route: 'dot',
     directMultiplier: 0.85,
     ailmentChanceFactor: 1.25,
     ailmentStackBonus: 1,
@@ -103,6 +109,7 @@ export const PHAP_TU_ROUTES: Record<PhapTuRoute, RouteProfile> = {
     empoweredUlt: 'detonate',
   },
   no: {
+    route: 'no',
     directMultiplier: 1.15,
     ailmentChanceFactor: 0.50,
     ailmentStackBonus: 0,
@@ -181,12 +188,23 @@ export function applyRouteToEffectiveSkill(effective: EffectiveSkill, profile: R
 
 /**
  * Post-conversion seam: adds ailmentStackBonus onto the built
- * TurnSkillDefinition's ailment applications. Called by the
- * orchestration site AFTER toTurnSkillDefinition — the converter never
+ * TurnSkillDefinition's ailment applications AND filters `routes`-gated
+ * ailment interactions to the active route (Hoa An spec sec.62 --
+ * Xich Viem's DoT-only modifier never reaches a 'no'-route payload;
+ * a route-gated entry under NEUTRAL strips too). Called by the
+ * orchestration site AFTER toTurnSkillDefinition -- the converter never
  * sees RouteProfile.
  */
 export function applyRouteToTurnSkill(turnSkill: TurnSkillDefinition, profile: RouteProfile): TurnSkillDefinition {
-  if (profile.ailmentStackBonus === 0) {
+  const interactions = turnSkill.ailmentInteractions?.filter(
+    (entry) =>
+      entry.routes === undefined ||
+      (profile.route !== undefined && entry.routes.includes(profile.route)),
+  )
+  const interactionsChanged =
+    interactions !== undefined && interactions.length !== (turnSkill.ailmentInteractions?.length ?? 0)
+
+  if (profile.ailmentStackBonus === 0 && !interactionsChanged) {
     return turnSkill
   }
 
@@ -200,8 +218,13 @@ export function applyRouteToTurnSkill(turnSkill: TurnSkillDefinition, profile: R
 
   return {
     ...turnSkill,
-    ...(turnSkill.appliesAilment ? { appliesAilment: addBonus(turnSkill.appliesAilment) } : {}),
-    ...(turnSkill.appliesAilments ? { appliesAilments: turnSkill.appliesAilments.map(addBonus) } : {}),
+    ...(profile.ailmentStackBonus !== 0 && turnSkill.appliesAilment
+      ? { appliesAilment: addBonus(turnSkill.appliesAilment) }
+      : {}),
+    ...(profile.ailmentStackBonus !== 0 && turnSkill.appliesAilments
+      ? { appliesAilments: turnSkill.appliesAilments.map(addBonus) }
+      : {}),
+    ...(interactionsChanged ? { ailmentInteractions: interactions } : {}),
   }
 }
 

@@ -4,6 +4,7 @@
 // existing ActionGauge.ts/TurnQueue.ts one-concern-per-file pattern.
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { SkillResourceType } from '../../skill/SkillTypes'
+import type { SkillAilmentInteraction } from '../../skill/SkillEffect'
 import type { ActionDamageInfo, HitResolveOptions } from '../ActionImpactSystem'
 import type { ActionTargeting, CombatVfxPresetId } from '../CombatAction'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
@@ -160,6 +161,18 @@ export interface TurnSkillDefinition {
   // damagePerStack. Only meaningful together with damagePerStack.
   consumesAilmentId?: string
   damagePerStack?: number
+  // Phase A3 + Hoa An (spec 2026-09-17 sec.62) -- scope of the
+  // consumesAilmentId consume: 'any' = every source's instance (legacy
+  // parity, the adapter's default); 'own' = same-source only.
+  consumesAilmentScope?: 'own' | 'any'
+  // Hoa An (spec sec.62 Xich Viem shared/no) -- scale the direct hit's
+  // coefficient by SAME-SOURCE ailment stacks without consuming:
+  // coefficient += live stacks x damagePerStack per hit target.
+  scalesWithAilmentStacks?: { ailmentId: string; damagePerStack: number }
+  // Hoa An (spec sec.62) -- same-source seal interactions appended inside
+  // the landed gate AFTER ailment applications, in authored order
+  // (Phan Thien: apply -> manual tick -> potency modifier -> extend).
+  ailmentInteractions?: readonly SkillAilmentInteraction[]
   // Phase A3 — Thổ Tu "tự nổ khiên": consume the SOURCE's entire
   // currentWard for bonus true damage, then zero it. Ported from legacy
   // SkillEffect.consumesWardForDamage/damagePerWardPoint. Only meaningful

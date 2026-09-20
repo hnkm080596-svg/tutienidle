@@ -40,7 +40,7 @@ describe('toTurnSkillDefinition', () => {
       manaScalingRatio: 0.001,
     })
     // Debuff effect → appliesAilment (bong, chance 1).
-    expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'bong', chance: 1 })
+    expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'hoa_an', chance: 1 })
   })
 
   it('applies the selected specialization override through getEffectiveSkill (Tán Diễm AoE branch)', () => {
@@ -59,7 +59,7 @@ describe('toTurnSkillDefinition', () => {
     if (turnSkill.damage && turnSkill.damage.kind === 'elemental') {
       expect(turnSkill.damage.multiplier).toBeCloseTo(1, 5)
     }
-    expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'bong', chance: 0.7 })
+    expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'hoa_an', chance: 0.7 })
   })
 
   it('maps an ultimate with consume-for-damage fields (Detonate/ward-burst)', () => {
@@ -76,7 +76,7 @@ describe('toTurnSkillDefinition', () => {
       {
         type: 'damage',
         value: 2,
-        consumesAilmentId: 'bong',
+        consumesAilmentId: 'hoa_an',
         damagePerStack: 40,
         consumesWardForDamage: true,
         damagePerWardPoint: 6,
@@ -88,7 +88,7 @@ describe('toTurnSkillDefinition', () => {
     const effective = skillSystem.getEffectiveSkill(synthetic)
     const turnSkill = toTurnSkillDefinition(synthetic, effective)
 
-    expect(turnSkill.consumesAilmentId).toBe('bong')
+    expect(turnSkill.consumesAilmentId).toBe('hoa_an')
     expect(turnSkill.damagePerStack).toBe(40)
     expect(turnSkill.consumesWardForDamage).toBe(true)
     expect(turnSkill.damagePerWardPoint).toBe(6)
@@ -181,7 +181,7 @@ describe('toTurnSkillDefinition', () => {
 
       expect(turnSkill.appliesAilments).toHaveLength(2)
       expect(turnSkill.appliesAilments).toContainEqual({ buffDefinitionId: 'troi_chan', chance: 0.8 })
-      expect(turnSkill.appliesAilments).toContainEqual({ buffDefinitionId: 'trung_doc', chance: 0.6 })
+      expect(turnSkill.appliesAilments).toContainEqual({ buffDefinitionId: 'doc_can', chance: 0.6 })
     })
 
     it('folds add_stack effect into ailment stacks count (Tam Muội Tụ Diễm)', () => {
@@ -195,7 +195,7 @@ describe('toTurnSkillDefinition', () => {
       const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
 
       // Debuff 1 stack + add_stack 1 stack = 2 stacks.
-      const bongAilment = turnSkill.appliesAilments?.find((a) => a.buffDefinitionId === 'bong')
+      const bongAilment = turnSkill.appliesAilments?.find((a) => a.buffDefinitionId === 'hoa_an')
       expect(bongAilment).toBeDefined()
       expect(bongAilment?.stacks).toBe(2)
     })
@@ -265,8 +265,9 @@ describe('toTurnSkillDefinition', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)
 
-      // van_moc_lan_doc carries the spread fields the turn engine cannot
-      // execute (spreadsAilmentId/spreadStackPercent/spreadRefreshesPrimary).
+      // van_moc_lan_doc carries an authored scope the turn engine cannot
+      // execute (the spread fields were removed with the legacy ailment
+      // migration -- canonical seals never spread).
       const wood = structuredClone(SKILLS.find((s) => s.id === 'van_moc_lan_doc')!)
       manager.add(wood)
 
@@ -275,8 +276,7 @@ describe('toTurnSkillDefinition', () => {
         skillSystem.getEffectiveSkill(wood),
       )
 
-      expect(woodReport).toContain('effect.spreadsAilmentId')
-      expect(woodReport).toContain('effect.spreadStackPercent')
+      expect(woodReport).toContain('effect.scope')
 
       // A clean kit reports nothing.
       const tram = structuredClone(SKILLS.find((s) => s.id === 'tram')!)
@@ -293,7 +293,7 @@ describe('toTurnSkillDefinition', () => {
       const effective = skillSystem.getEffectiveSkill(skill)
       effective.effects = [
         { type: 'damage', scope: 'primary_target', value: 1 },
-        { type: 'add_stack', buffId: 'chay_mau', stacks: 2, refresh: true },
+        { type: 'add_stack', buffId: 'liet_thuong', stacks: 2, refresh: true },
       ] as typeof effective.effects
 
       const report = collectUnsupportedSkillSemantics(skill, effective)

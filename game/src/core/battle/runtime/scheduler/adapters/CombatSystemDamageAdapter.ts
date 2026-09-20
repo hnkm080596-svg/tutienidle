@@ -332,7 +332,12 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
 
     const power = source === undefined ? 0 : elementalBasePower(source, op.element)
     const resistance = target.stats[`${op.element}Resistance`] ?? 0
-    const penetration = source?.stats[`${op.element}Penetration`] ?? 0
+    // canonical-seals addendum: the instance-local bonus ADDS penetration
+    // points at resolution -- never a source.stats mutation (structural
+    // validation already confined the field to this profile+origin lane).
+    const penetration =
+      (source?.stats[`${op.element}Penetration`] ?? 0) +
+      (op.elementalPenetrationBonus ?? 0)
     const mitigation =
       getResistanceMitigationPercent(resistance, penetration) * armorIgnoreMultiplier
     return Math.max(0, power * ratio * (1 - mitigation)) * potencyMultiplier

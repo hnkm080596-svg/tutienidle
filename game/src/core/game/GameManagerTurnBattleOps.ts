@@ -35,7 +35,17 @@ import { BuffRegistry } from '../buff2/BuffRegistry'
 import { ApplicationResolver } from '../buff2/ApplicationResolver'
 import { GaugeDeltaHandler } from '../battle/turn/GaugeDeltaHandler'
 import { CombatProcSystem } from '../proc/CombatProcSystem'
-import { createElementalStateRegistry } from '../reaction/ElementalStateRegistry'
+import { CANONICAL_ELEMENTAL_SEALS, createElementalStateRegistry } from '../reaction/ElementalStateRegistry'
+import { validateCanonicalSealBinding } from '../reaction/CanonicalSealBinding'
+import { BuffSystemBoardQuery } from '../reaction/ReactionBoard'
+import { ReactionTriggerGate } from '../reaction/ReactionTriggerGate'
+import { ReactionRegistry } from '../reaction/ReactionRegistry'
+import { ReactionSystem } from '../reaction/ReactionSystem'
+import { ReactionDispatcher } from '../reaction/ReactionDispatcher'
+import { resolutionToBatch } from '../reaction/ReactionResolution'
+import { BuffSystemCapabilityQuery } from '../battle/runtime/capability/BuffSystemCapabilityQuery'
+import { CANONICAL_REACTIONS } from '../../data/reaction/ReactionDefinitions'
+import { VAN_PHAP_THAN_HOA_ID } from '../../data/buff/ReactionStatusBuffs'
 import { createDamageProfileCatalog } from '../combat/DamageProfiles'
 import { createDefaultCapabilityValidators } from '../battle/runtime/capability/DefaultCapabilityValidators'
 import type { TurnCombatRuntime } from '../battle/turn/TurnBattleSystem'
@@ -49,7 +59,10 @@ import type { ResolvedCombatOperation } from '../battle/contracts/operations'
 import type { BuffSnapshotData, BuffInstanceSnapshot } from '../buff2/BuffInstance'
 import type {
   BuffAppliedEvent,
+  ElementalApplicationCommitted,
   PeriodicOperationSettled,
+  ReactionResolvedEvent,
+  ReactionSkippedEvent,
 } from '../battle/contracts/events'
 import type { TurnSkillDefinition, ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import { consumeResourceFor } from '../battle/turn/TurnSkillAction'
@@ -161,6 +174,12 @@ export class GameManagerTurnBattleOps {
   // attach on first observation; a replaced battle resets via identity.
   private statusVfxSnapshot = new Map<string, TurnStatusSnapshotEntry>()
   private statusVfxBattle: TurnBattle | null = null
+
+  // Canonical-seals S5.3 -- reaction observation drain. Cursor into the
+  // minted scheduler's event journal; reset by battle identity exactly
+  // like the status snapshot pair.
+  private reactionEventCursor = 0
+  private reactionVfxBattle: TurnBattle | null = null
 
   // Wave-2 sub-splits: presentation facade owns CombatAnimationRuntime +
   // PresentationSession + mode; rewardOps owns the grant/terminal flags;
@@ -551,6 +570,12 @@ export class GameManagerTurnBattleOps {
           )
         }
         this.statusVfxBattle = this.turnBattle
+
+        // Canonical-seals S5.3 -- reaction_resolved/reaction_skipped
+        // reach the UI through the same post-step boundary as the
+        // status feed: drain the journal's NEW reaction events and
+        // re-emit them on the eventBus. Observational only.
+        this.drainReactionVfxEvents()
       }
     }
 
@@ -604,6 +629,50 @@ export class GameManagerTurnBattleOps {
     for (const command of queued) {
       command()
     }
+  }
+
+  /**
+   * Canonical-seals S5.3 -- re-emit NEW reaction_resolved /
+   * reaction_skipped journal events onto the UI eventBus (each exactly
+   * once per battle; the cursor resets on battle identity like the
+   * status feed). Observational: the scene floats the payoff name; it
+   * never feeds gameplay back.
+   */
+  private drainReactionVfxEvents(): void {
+    const scheduler = this.turnRuntime?.scheduler
+
+    if (scheduler === undefined) {
+      return
+    }
+
+    const events = scheduler.trace.events
+    const start = this.reactionVfxBattle === this.turnBattle ? this.reactionEventCursor : 0
+
+    for (let i = start; i < events.length; i++) {
+      const event = events[i]!
+
+      if (event.type === 'reaction_resolved') {
+        const resolved = event as ReactionResolvedEvent
+        this.deps.eventBus.emit('reaction_resolved', {
+          type: 'reaction_resolved',
+          reactionId: resolved.reactionId,
+          relation: resolved.relation,
+          sourceId: resolved.sourceId,
+          targetId: resolved.targetId,
+          consumed: resolved.consumed,
+        })
+      } else if (event.type === 'reaction_skipped') {
+        const skipped = event as ReactionSkippedEvent
+        this.deps.eventBus.emit('reaction_skipped', {
+          type: 'reaction_skipped',
+          reactionId: skipped.reactionId,
+          reason: skipped.reason,
+        })
+      }
+    }
+
+    this.reactionEventCursor = events.length
+    this.reactionVfxBattle = this.turnBattle
   }
 
   /**
@@ -1043,13 +1112,11 @@ export class GameManagerTurnBattleOps {
     this.battleBuffRegistry = registry
 
     // 2. The buff2 authority -- deterministic per-battle instance ids.
-    const elemental = createElementalStateRegistry({
-      fire: 'hoa_an' as BuffDefinitionId,
-      water: 'han_tuc' as BuffDefinitionId,
-      wood: 'doc_can' as BuffDefinitionId,
-      metal: 'liet_thuong' as BuffDefinitionId,
-      earth: 'tran_an' as BuffDefinitionId,
-    })
+    const elemental = createElementalStateRegistry(CANONICAL_ELEMENTAL_SEALS)
+    // Canonical-seals S1 (plan sec.7.2): the five seal defs must exist in
+    // the sealed battle registry with the canonical shape -- malformed
+    // canonical content prevents battle mint entirely.
+    validateCanonicalSealBinding(elemental, registry)
     let instanceCounter = 0
     const buffs = new BuffSystem(
       new BuffStore(
@@ -1152,6 +1219,47 @@ export class GameManagerTurnBattleOps {
       gaugeHandler.handleBuffApplied(event as BuffAppliedEvent)
     })
 
+    // Canonical-seals S3 (plan sec.9.4): the production reaction
+    // switch. Exactly one dispatcher per minted runtime -- the
+    // scheduler's duplicate-handler guard enforces single
+    // registration. The gate reads the live capability off BuffSystem
+    // so eligibility follows van_phap_than_hoa instances, never a
+    // static latch; the registry validates CANONICAL_REACTIONS against
+    // the sealed battle registry at mint (unknown payoff ids fault the
+    // battle, same authority as validateCanonicalSealBinding).
+    const reactionBoardQuery = new BuffSystemBoardQuery(buffs, elemental)
+    const reactionCapabilityQuery = new BuffSystemCapabilityQuery(
+      buffs.getCapabilities,
+    )
+    const reactionGate = new ReactionTriggerGate(
+      reactionCapabilityQuery,
+      elemental,
+    )
+    const reactionRegistry = new ReactionRegistry(
+      CANONICAL_REACTIONS,
+      elemental,
+      (id) => registry.has(id as BuffDefinitionId),
+    )
+    const reactionSystem = new ReactionSystem(
+      reactionRegistry,
+      reactionBoardQuery,
+      reactionGate,
+    )
+    const reactionDispatcher = new ReactionDispatcher(
+      reactionGate,
+      reactionSystem,
+      elemental,
+      resolutionToBatch,
+    )
+    this.combatScheduler.registerImmediateHandler(
+      'elemental_application_committed',
+      (event, sink) =>
+        reactionDispatcher.onElementalApplicationCommitted(
+          event as ElementalApplicationCommitted,
+          sink,
+        ),
+    )
+
     const runtime: TurnCombatRuntime = {
       buffs,
       procs,
@@ -1225,6 +1333,28 @@ export class GameManagerTurnBattleOps {
       }
     }
 
+    // Canonical-seals S3 (plan sec.9.4): the An's aura grants
+    // elemental-reaction capability to every living allied
+    // participant. The gate is the path runtime's semantic flag --
+    // CultivationPathRegistry owns the Ngo Dao + ngo_dao_hon_don
+    // predicate (battleLifecyclePathBoundary); the source is the An
+    // entity (players[0]); enemies never receive it.
+    const anSource = battle.players[0]
+    if (
+      anSource !== undefined &&
+      playerPath !== undefined &&
+      this.deps.resolvePathRuntime(playerPath).grantsElementalReactionAura?.(playerPath) === true
+    ) {
+      for (const participant of battle.players) {
+        if (!participant.entity.alive) continue
+        entries.push({
+          definitionId: VAN_PHAP_THAN_HOA_ID,
+          sourceId: anSource.entity.id,
+          targetId: participant.entity.id,
+        })
+      }
+    }
+
     for (const participant of battle.players) {
       for (const slot of [participant.basic, participant.special?.skill, participant.ultimate?.skill]) {
         for (const clone of slot?.grantsBuffsAtBuild ?? []) {
@@ -1238,6 +1368,67 @@ export class GameManagerTurnBattleOps {
     }
 
     system.applyBuildBuffs(battle, entries)
+  }
+
+  /**
+   * Canonical-seals S3 (plan sec.9.4) -- DORMANT seam. No production
+   * revive path exists yet; when one materializes it calls this with
+   * the revived entity's id. Re-grants van_phap_than_hoa party-wide
+   * ONLY when the revived entity is the aura source (the An,
+   * players[0]) and the Ngo Dao gate still holds. Event-idempotent:
+   * participants already holding an instance from this source are
+   * skipped entirely -- a no-change reapply would still emit
+   * buff_applied (plan sec.9.3), so grants target only missing
+   * holders. A fallen ALLY's revival does nothing here; an ally whose
+   * own aura instance was removed on death does not regain it.
+   */
+  public regrantAuraOnSourceRevived(revivedEntityId: CombatEntityId): void {
+    const battle = this.turnBattle
+    const system = this.turnBattleSystem
+    const runtime = this.turnRuntime
+    if (battle === null || system === undefined || runtime === undefined) {
+      return
+    }
+    const anSource = battle.players[0]
+    if (anSource === undefined || revivedEntityId !== anSource.entity.id) {
+      return
+    }
+    const playerPath = this.deps.getActivePlayer()
+    if (
+      playerPath === undefined ||
+      this.deps.resolvePathRuntime(playerPath).grantsElementalReactionAura?.(playerPath) !== true
+    ) {
+      return
+    }
+    const entries: {
+      definitionId: string
+      sourceId: string
+      targetId: string
+    }[] = []
+    for (const participant of battle.players) {
+      if (!participant.entity.alive) continue
+      const existing = runtime.buffs.getInstance({
+        kind: 'identity',
+        definitionId: VAN_PHAP_THAN_HOA_ID,
+        sourceId: anSource.entity.id,
+        targetId: participant.entity.id,
+      })
+      if (existing === undefined) {
+        entries.push({
+          definitionId: VAN_PHAP_THAN_HOA_ID,
+          sourceId: anSource.entity.id,
+          targetId: participant.entity.id,
+        })
+      }
+    }
+    // The re-grant rides the same authored-op lane but under its own
+    // root namespace -- a re-grant inside the entry turn would
+    // otherwise re-reserve the build-time operationIds.
+    system.applyBuildBuffs(
+      battle,
+      entries,
+      `aura.regrant.${this.battleGeneration}.${battle.totalTurnsElapsed}.${this.nextOpOccurrence()}`,
+    )
   }
 
   private commitCycleRng(rng: CombatRng): void {
@@ -1326,6 +1517,8 @@ export class GameManagerTurnBattleOps {
     this.turnBattleStartedAtMs = null
     this.statusVfxSnapshot.clear()
     this.statusVfxBattle = null
+    this.reactionEventCursor = 0
+    this.reactionVfxBattle = null
   }
 
   /**

@@ -17,8 +17,8 @@ import {
 // R4 canonical buff lifecycle reaudit (buff2 M4 port) -- a DoT tick that
 // kills its holder mid-boundary must NOT let a second DoT tick after
 // the survive-lethal cleanse removes it. The parity mechanism is the
-// per-unit revalidation in emitLifecycleUnit: the bong tick settles
-// (kill -> survive -> cleanse), then trung_doc's unit looks itself up
+// per-unit revalidation in emitLifecycleUnit: the doc_can tick settles
+// (kill -> survive -> cleanse), then hoa_an's unit looks itself up
 // in the store, finds nothing, and emits no request.
 
 function entity(id: string): CombatEntity {
@@ -101,8 +101,8 @@ describe('R4 canonical buff lifecycle reaudit', () => {
       surviveEffects: bindSurviveEffects(runtime),
     })
 
-    runtime.applyBuff('bong', targetP, sourceP)
-    runtime.applyBuff('trung_doc', targetP, sourceP)
+    runtime.applyBuff('hoa_an', targetP, sourceP)
+    runtime.applyBuff('doc_can', targetP, sourceP)
     target.currentHp = 1
 
     const damageEffects: string[] = []
@@ -111,7 +111,7 @@ describe('R4 canonical buff lifecycle reaudit', () => {
     })
 
     // Drive the holder-turn-end boundary through the shared runtime:
-    // the bong tick kills the holder -> survive -> cleanse -> trung_doc
+    // the doc_can tick kills the holder -> survive -> cleanse -> hoa_an
     // is gone before its unit emits.
     runtime.tickHolderTurnsEnd(target.id)
 
@@ -125,6 +125,6 @@ describe('R4 canonical buff lifecycle reaudit', () => {
     expect(debuffs).toHaveLength(0)
     expect(target.alive).toBe(true)
     expect(target.currentHp).toBe(1)
-    expect(damageEffects).toEqual(['bong.dot'])
+    expect(damageEffects).toEqual(['doc_can.dot'])
   })
 })

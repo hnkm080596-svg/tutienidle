@@ -58,6 +58,13 @@ export interface SkillDefinitionValidationDeps {
   isSkillId?(id: SkillId): boolean
 }
 
+const SET_VALUED_TARGET_INTENTS: ReadonlySet<string> = new Set<SkillTargetIntent>([
+  'affected_targets',
+  'all_enemies',
+  'all_allies',
+  'allies_except_self',
+])
+
 const SKILL_TARGET_INTENTS: ReadonlySet<string> = new Set<SkillTargetIntent>([
   'self',
   'primary_target',
@@ -83,6 +90,7 @@ const MODIFIER_CHANNELS: ReadonlySet<string> = new Set([
   'next_periodic_damage',
   'duration',
   'application_chance',
+  'elemental_penetration',
 ])
 const MODIFIER_OPERATIONS: ReadonlySet<string> = new Set(['add', 'multiply', 'set'])
 const MODIFIER_REAPPLY: ReadonlySet<string> = new Set(['replace', 'stack', 'max', 'min'])
@@ -507,6 +515,12 @@ function validateOperation(
   const requireBuffRef = (id: BuffDefinitionId | undefined, field = 'definitionId'): void => {
     validateBuffRef(id, `${path}.${field}`, deps, fault)
   }
+  const requireSingleBindingTarget = (
+    target: SkillTargetIntent | undefined,
+    field: string,
+  ): void => {
+    validateSingleBindingIntent(target, `${path}.${field}`, insideForEach, fault)
+  }
 
   switch (op.type) {
     case 'deal_damage': {
@@ -569,6 +583,10 @@ function validateOperation(
         requireBuffRef(op.consumeBuff.definitionId, 'consumeBuff.definitionId')
         validateExpression(op.consumeBuff.damagePerStack, `${path}.consumeBuff.damagePerStack`, fault)
       }
+      if (op.scaleBuff !== undefined) {
+        requireBuffRef(op.scaleBuff.definitionId, 'scaleBuff.definitionId')
+        validateExpression(op.scaleBuff.damagePerStack, `${path}.scaleBuff.damagePerStack`, fault)
+      }
       if (op.consumeWard !== undefined) {
         validateExpression(op.consumeWard.damagePerWardPoint, `${path}.consumeWard.damagePerWardPoint`, fault)
       }
@@ -599,12 +617,34 @@ function validateOperation(
           )
           continue
         }
-        if ('target' in landedOp && landedOp.target !== 'loop_target' && landedOp.target !== 'self') {
+        const landedBindingOk = (t: SkillTargetIntent | undefined): boolean =>
+          t === 'loop_target' || t === 'self'
+        if ('target' in landedOp && !landedBindingOk(landedOp.target)) {
           fault(
             'invalid_field_value',
             `${lpath}.target`,
             `onLanded ops must target 'loop_target' or 'self' -- got '${landedOp.target}'`,
           )
+        }
+        if ('selector' in landedOp && landedOp.selector !== undefined) {
+          const landedSelector = landedOp.selector
+          if (!landedBindingOk(landedSelector.target)) {
+            fault(
+              'invalid_field_value',
+              `${lpath}.selector.target`,
+              `onLanded selector targets must be 'loop_target' or 'self' -- got '${landedSelector.target}'`,
+            )
+          }
+          if (
+            landedSelector.kind === 'identity' &&
+            !landedBindingOk(landedSelector.source)
+          ) {
+            fault(
+              'invalid_field_value',
+              `${lpath}.selector.source`,
+              `onLanded selector sources must be 'loop_target' or 'self' -- got '${landedSelector.source}'`,
+            )
+          }
         }
         validateOperation(landedOp, lpath, deps, true, fault)
       }
@@ -650,8 +690,7 @@ function validateOperation(
     case 'add_buff_stacks':
     case 'remove_buff_stacks':
     case 'consume_buff_stacks': {
-      requireTarget(op.target)
-      requireBuffRef(op.definitionId)
+      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, fault)
       if (op.stacks === 'all') {
         if (op.type !== 'consume_buff_stacks') {
           fault('invalid_field_value', `${path}.stacks`, `'all' is only legal on consume_buff_stacks`)
@@ -663,23 +702,20 @@ function validateOperation(
     }
     case 'add_buff_modifier':
     case 'remove_buff_modifier': {
-      requireTarget(op.target)
-      requireBuffRef(op.definitionId)
+      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, fault)
       validateModifier(op.modifier, `${path}.modifier`, fault)
       return
     }
     case 'refresh_buff_duration':
     case 'extend_buff_duration': {
-      requireTarget(op.target)
-      requireBuffRef(op.definitionId)
+      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, fault)
       if (op.turns !== undefined && (!Number.isInteger(op.turns) || op.turns < 0)) {
         fault('invalid_field_value', `${path}.turns`, 'turns must be an integer >= 0')
       }
       return
     }
     case 'trigger_buff_periodic': {
-      requireTarget(op.target)
-      requireBuffRef(op.definitionId)
+      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, fault)
       return
     }
     case 'remove_buff': {
@@ -722,8 +758,14 @@ function validateOperation(
       return
     }
     case 'read_stacks': {
-      requireTarget(op.target)
+      // single-binding only: a set-valued target/source has no defined
+      // `into` variable binding (resolveIntentSingle would silently take
+      // member[0]).
+      requireSingleBindingTarget(op.target, 'target')
       requireBuffRef(op.definitionId)
+      if (op.source !== undefined) {
+        requireSingleBindingTarget(op.source, 'source')
+      }
       if (typeof op.into !== 'string' || op.into.length === 0) {
         fault('invalid_field_value', `${path}.into`, 'into must be a non-empty var name')
       }
@@ -778,6 +820,24 @@ function validateTargetIntent(
   }
   if (target === 'loop_target' && !insideForEach) {
     fault('loop_target_outside_for_each', path, `'loop_target' is only valid inside for_each_target`)
+  }
+}
+
+/** Single-binding positions (reads, identity selector source): a
+    set-valued intent would silently truncate to member[0] -- reject it. */
+function validateSingleBindingIntent(
+  target: SkillTargetIntent | undefined,
+  path: string,
+  insideForEach: boolean,
+  fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
+): void {
+  validateTargetIntent(target, path, insideForEach, fault)
+  if (target !== undefined && SET_VALUED_TARGET_INTENTS.has(target)) {
+    fault(
+      'invalid_field_value',
+      path,
+      `'${target}' is set-valued -- this position requires a single-binding intent (self/primary_target/attacker/loop_target)`,
+    )
   }
 }
 
@@ -845,7 +905,14 @@ function validateSelector(
       return
     case 'identity':
       validateBuffRef(selector.definitionId, `${path}.definitionId`, deps, fault)
-      validateTargetIntent(selector.source, `${path}.source`, insideForEach, fault)
+      // identity source binds exactly one entity -- a set-valued source
+      // intent would silently truncate to member[0].
+      validateSingleBindingIntent(
+        selector.source,
+        `${path}.source`,
+        insideForEach,
+        fault,
+      )
       validateTargetIntent(selector.target, `${path}.target`, insideForEach, fault)
       return
     default:
@@ -1072,12 +1139,7 @@ function validateConditionInner(
       // would bind member[0] silently (misleading); use any_target_landed
       // for the cast-scope check instead.
       if (condition.target !== undefined) {
-        if (
-          condition.target === 'affected_targets' ||
-          condition.target === 'all_enemies' ||
-          condition.target === 'all_allies' ||
-          condition.target === 'allies_except_self'
-        ) {
+        if (SET_VALUED_TARGET_INTENTS.has(condition.target)) {
           fault(
             'malformed_condition',
             `${path}.target`,

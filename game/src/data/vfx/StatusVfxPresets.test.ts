@@ -16,9 +16,11 @@ describe('StatusVfxPresets — map theo buff id (buff bar)', () => {
   })
 
   it('DoT nguyên tố → diamond màu hệ', () => {
-    expect(getStatusVfxPreset('bong')).toMatchObject({ color: 0xff7a45, shape: 'diamond' })
-    expect(getStatusVfxPreset('trung_doc')).toMatchObject({ color: 0x58e878, shape: 'diamond' })
-    expect(getStatusVfxPreset('te_cong')).toMatchObject({ color: 0x58c8ff, shape: 'diamond' })
+    expect(getStatusVfxPreset('hoa_an')).toMatchObject({ color: 0xff7a45, shape: 'diamond' })
+    expect(getStatusVfxPreset('doc_can')).toMatchObject({ color: 0x58e878, shape: 'diamond' })
+    expect(getStatusVfxPreset('han_tuc')).toMatchObject({ color: 0x58c8ff, shape: 'diamond' })
+    expect(getStatusVfxPreset('liet_thuong')).toMatchObject({ color: 0xe5484d, shape: 'diamond' })
+    expect(getStatusVfxPreset('tran_an')).toMatchObject({ color: 0xd4a72c, shape: 'diamond' })
   })
 
   it('statModifier debuff → square', () => {
@@ -27,8 +29,15 @@ describe('StatusVfxPresets — map theo buff id (buff bar)', () => {
   })
 
   it('buff tạm → circle', () => {
-    expect(getStatusVfxPreset('khai_son').shape).toBe('circle')
     expect(getStatusVfxPreset('thach_giap_buff').shape).toBe('circle')
+  })
+
+  it('reaction payoff statuses + aura có preset riêng (S5.3)', () => {
+    expect(getStatusVfxPreset('defense_break').shape).toBe('square')
+    expect(getStatusVfxPreset('defense_erosion').shape).toBe('square')
+    expect(getStatusVfxPreset('reaction_bleed').shape).toBe('diamond')
+    expect(getStatusVfxPreset('cam_cong').shape).toBe('diamond')
+    expect(getStatusVfxPreset('van_phap_than_hoa')).toMatchObject({ shape: 'circle' })
   })
 
   it('id lạ + polarity → placeholder theo polarity', () => {

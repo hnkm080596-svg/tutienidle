@@ -7,8 +7,9 @@
 // Snapshot vars: P = parent stacks, A = attacker stacks, D = defender
 // stacks -- all pre-consume (contract sec.38).
 //
-// Status/buff ids referenced by apply_status steps are the fixture
-// status defs (test_*); the real content lands with the seal batch.
+// Status/buff ids referenced by apply_status steps resolve to the four
+// production payoff defs in data/buff/ReactionStatusBuffs.ts
+// (canonical-seals S2 -- no test_* ids in production data).
 
 import type { BuffDefinitionId } from '../../core/battle/contracts/ids'
 import type { ReactionDefinition } from '../../core/reaction/ReactionDefinition'
@@ -31,11 +32,26 @@ const P = stacks('parent')
 const A = stacks('attacker')
 const D = stacks('defender')
 
+/** Presentation display names (canonical-seals S5.3) -- the UI floats
+    these on reaction_resolved; ids stay the internal key. */
+export const REACTION_DISPLAY_NAMES: Record<string, string> = {
+  duong_viem: 'Dưỡng Viêm',
+  luyen_tho: 'Luyện Thổ',
+  duong_kim: 'Dưỡng Kim',
+  tu_thuy: 'Tụ Thủy',
+  nhuan_moc: 'Nhuận Mộc',
+  tuc_viem: 'Tức Viêm',
+  dung_kim: 'Dung Kim',
+  doan_moc: 'Đoạn Mộc',
+  xuyen_tho: 'Xuyên Thổ',
+  tran_thuy: 'Trấn Thủy',
+}
+
 export const REACTION_STATUS_BUFF_IDS = {
-  bleed: 'test_bleed' as BuffDefinitionId,
-  defenseBreak: 'test_defense_break' as BuffDefinitionId,
-  defenseErosion: 'test_defense_erosion' as BuffDefinitionId,
-  camCong: 'test_cam_cong' as BuffDefinitionId,
+  bleed: 'reaction_bleed' as BuffDefinitionId,
+  defenseBreak: 'defense_break' as BuffDefinitionId,
+  defenseErosion: 'defense_erosion' as BuffDefinitionId,
+  camCong: 'cam_cong' as BuffDefinitionId,
 } as const
 
 const sinh = (
@@ -88,8 +104,12 @@ export const CANONICAL_REACTIONS: readonly ReactionDefinition[] = [
     {
       kind: 'add_child_modifier',
       modifierId: 'duong_kim',
-      channel: 'potency',
-      value: add(c(1), mul(c(0.04), P)),
+      channel: 'elemental_penetration',
+      // Additive penetration POINTS (1pt = 1% net resistance) bound to
+      // the Liet Thuong child's own periodic metal damage requests --
+      // not a potency multiplier (S0.5P contract extension).
+      operation: 'add',
+      value: mul(c(4), P),
     },
   ]),
   sinh('tu_thuy', 'metal', 'water', 40, [

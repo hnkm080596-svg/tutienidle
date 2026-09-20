@@ -45,17 +45,6 @@ function describeEffect(
     })
   }
 
-  if (effect.spreadsAilmentId) {
-    const name = buffName(registry, effect.spreadsAilmentId)
-    const percent = effect.spreadStackPercent ?? 1
-    const percentText = percent >= 1 ? 'toàn bộ' : `${Math.round(percent * 100)}%`
-
-    lines.push({
-      key: `spread-${index}`,
-      text: `Lan ${percentText} tầng ${name} từ mục tiêu chính sang mọi mục tiêu trúng đòn.`,
-    })
-  }
-
   if (effect.grantsZone) {
     const element = effect.zoneElement ?? 'metal'
 

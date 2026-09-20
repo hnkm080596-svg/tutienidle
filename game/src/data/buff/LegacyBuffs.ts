@@ -32,102 +32,30 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: false,
   },
 
-  // Thổ Tu ("Độc Thế" reaction, Thổ+Mộc, Plans/EarthPath mục VII,
-  // 2026-08-21) — KHÔNG có `duration` (permanent, xem BuffSystem.
-  // update()'s `remainingTime === undefined` guard — Buff này KHÔNG tự
-  // hết hạn, chỉ tích/giữ nguyên tới hết trận) — port thành
-  // `duration: Infinity` (xem BuffSystem.test.ts's "buff gần như vĩnh
-  // viễn"). `percent` nhân với `stacks` ở StatCalculator.runPipeline() —
-  // đúng "+5%/tầng, tối đa 5 tầng = +25%". Plans/magicpathgeneral Phase
-  // 7/8 (2026-08-21) — đổi tên hiển thị "Độc Thế" -> "Độc Căn" (id GIỮ
-  // NGUYÊN 'doc_the', xem ElementReaction.ts's `appliesBuffId:
-  // 'doc_the'`): plan định nghĩa rõ "Độc Căn" LÀ Reaction Reward Buff
-  // cấp cho CASTER khi Mộc+Thổ reaction thành công (buff NÀY, đúng y
-  // hệt), còn "Mộc Thế" là Pure Buff riêng của Mộc (xem
-  // data/progression/PhapTuNodes.ts's WOOD_TRUC_CO_PURE) — 2 tên trước
-  // đây bị đảo ngược. Phase 11 — "+2% HP Recovery từ Poison Damage"/tầng
-  // (từng bị hoãn ở EarthPath vì DoT tick chưa resolve được entity
-  // NGUỒN). stat-system-reimagined Task 4 (D18): the bespoke
-  // poisonRecoveryPercent stat retired; the heal is now an authored
-  // 'dot_recovery' capability on this buff — CombatSystem.applyDotDamage()
-  // reads it via dotRecoveryTriggers() (A8: generic grant, no
-  // content-ID check), the recovered HP scales with the receiver's
-  // healingEffectivenessPercent.
+  // --- Canonical Ngu Hanh seals (canonical-seals/reaction megaplan S1,
+  // 2026-09-19) -- the five elemental ailments are THE canonical reaction
+  // seals: one semantic representation per element, keyed by
+  // ElementalStateRegistry. Locked: duration 3 holder turns, maxStacks 5
+  // add/refresh, per_source, ailment resistance. `tran_an` is a pure
+  // stacking setup state -- spec sec.5 defines no standalone mechanics
+  // (the legacy -30% evasionRate + on-hit choang proc are retired, not
+  // preserved). Orphaned old-reaction products (doc_the/ngung_lo/
+  // khai_son/hoai_tu/dung_nham/huyet_doc) are deleted with the migration
+  // -- zero producers remained.
   {
-    id: 'doc_the',
-    name: 'Độc Căn',
-    description:
-      'Độc trên mục tiêu chuyển hóa thành sức mạnh của bản thân — mỗi tầng tăng Sát Thương Độc + hồi máu từ Trúng Độc, tối đa 5 tầng.',
-    kind: 'buff',
-    polarity: 'buff',
-    element: 'wood',
-    instanceScope: 'per_source',
-    stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'permanent', scaling: 'fixed' },
-    statModifiers: [{ stat: 'ailmentPotencyPercent', percent: 0.05 }],
-    capabilities: [
-      {
-        id: 'doc_the.dot_recovery',
-        type: 'dot_recovery',
-        payload: { element: 'wood', healPercent: 0.02 },
-      },
-    ],
-    dispellable: false,
-  },
-
-  // Spec 2026-08-30-phap-tu-dao-sac §4 — 2 buff nguồn của 2 reaction
-  // sinh mới (Ngưng Lộ Kim+Thủy / Khai Sơn Thổ+Kim), mirror pattern
-  // doc_the (stack + refresh, modifiers % hoặc flat).
-  {
-    id: 'ngung_lo',
-    name: 'Ngưng Lộ',
-    description: 'Sương ngưng trên thép hóa dòng suối tinh khiết — hồi Pháp Lực nhanh hơn.',
-    kind: 'buff',
-    polarity: 'buff',
-    instanceScope: 'per_source',
-    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
-    statModifiers: [
-      // Task 3 (D17): MP pool stat — declare the phap_tu credential so
-      // the Task-7 domain gate keeps accepting this grant.
-      { stat: 'manaRegenPerTurn', flat: 5, domain: 'phap_tu' },
-    ],
-    dispellable: false,
-  },
-  {
-    id: 'khai_son',
-    name: 'Khai Sơn',
-    description: 'Mỏ kim loại lộ ra từ núi bật gốc — thân thể cứng như quặng.',
-    kind: 'buff',
-    polarity: 'buff',
-    instanceScope: 'per_source',
-    stacking: { maxStacks: 3, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
-    statModifiers: [{ stat: 'defense', percent: 0.08 }],
-    dispellable: false,
-  },
-
-  // --- Ported from data/ailment/ailments.ts (Task 7, Unified Buff
-  // System, 2026-09-01) — field-for-field, no balance changes. ---
-
-  // Pháp Tu Thuần Hệ (spec 2026-09-03 §2.1/§7, N1 đã duyệt) — `bong`
-  // ĐỔI refresh → stack max 5, dpsRatio 0.3 → 0.15/tầng: "chồng Thiêu
-  // Đốt" của chuỗi Hỏa (A/B/C đắp, D kích nổ ×stack) mới có nghĩa.
-  // 1 tầng yếu hơn bản cũ, 5 tầng = 0.75 mạnh hơn. Ảnh hưởng Bạo Viêm/
-  // Hỏa Cầu cũ — chấp nhận theo N1 (dev phase, không migration).
-  {
-    id: 'bong',
+    id: 'hoa_an',
     element: 'fire',
-    name: 'Bỏng',
+    name: 'Hỏa Ấn',
+    description: 'Ấn ký Hỏa ngấm vào mục tiêu — mỗi tầng đốt cháy theo sức mạnh nguyên tố.',
     kind: 'ailment',
     polarity: 'debuff',
     instanceScope: 'per_source',
     stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 4, scaling: 'ailment_scaled' },
+    lifetime: { clock: 'holder_turns', duration: 3, scaling: 'ailment_scaled' },
     application: { resistance: 'ailment' },
     periodic: [
       {
-        id: 'bong.dot',
+        id: 'hoa_an.dot',
         type: 'damage',
         element: 'fire',
         damageProfile: 'legacy_dot',
@@ -143,21 +71,20 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Plans/PoisonPath mục 5 (2026-08-21) — chốt số liệu baseline: duration
-  // 6->5, dpsRatio 0.15->0.2 ("Poison Damage: 20% Skill Power/tick").
   {
-    id: 'trung_doc',
+    id: 'doc_can',
     element: 'wood',
-    name: 'Trúng Độc',
+    name: 'Độc Căn',
+    description: 'Độc khí Mộc rễ sâu — mỗi tầng gặm nhấm theo sức mạnh nguyên tố.',
     kind: 'ailment',
     polarity: 'debuff',
     instanceScope: 'per_source',
     stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 5, scaling: 'ailment_scaled' },
+    lifetime: { clock: 'holder_turns', duration: 3, scaling: 'ailment_scaled' },
     application: { resistance: 'ailment' },
     periodic: [
       {
-        id: 'trung_doc.dot',
+        id: 'doc_can.dot',
         type: 'damage',
         element: 'wood',
         damageProfile: 'legacy_dot',
@@ -173,21 +100,20 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Pháp Tu (Kim Tu, 2026-08-15) — element 'metal' (đổi từ 'physical').
-  // Plans/KimPath mục 3 (2026-08-21) — maxStacks 3->5.
   {
-    id: 'chay_mau',
+    id: 'liet_thuong',
     element: 'metal',
-    name: 'Chảy Máu',
+    name: 'Liệt Thương',
+    description: 'Vết thương Kim rạch mở — mỗi tầng rỉ máu theo sức mạnh nguyên tố.',
     kind: 'ailment',
     polarity: 'debuff',
     instanceScope: 'per_source',
     stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 5, scaling: 'ailment_scaled' },
+    lifetime: { clock: 'holder_turns', duration: 3, scaling: 'ailment_scaled' },
     application: { resistance: 'ailment' },
     periodic: [
       {
-        id: 'chay_mau.dot',
+        id: 'liet_thuong.dot',
         type: 'damage',
         element: 'metal',
         damageProfile: 'legacy_dot',
@@ -204,18 +130,19 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
   },
 
   {
-    id: 'te_cong',
+    id: 'han_tuc',
     element: 'water',
-    name: 'Tê Cóng',
+    name: 'Hàn Tức',
+    description: 'Hàn khí Thủy thấm vào tứ chi — mỗi tầng đông lạnh theo sức mạnh nguyên tố.',
     kind: 'ailment',
     polarity: 'debuff',
     instanceScope: 'per_source',
-    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 4, scaling: 'ailment_scaled' },
+    stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 3, scaling: 'ailment_scaled' },
     application: { resistance: 'ailment' },
     periodic: [
       {
-        id: 'te_cong.dot',
+        id: 'han_tuc.dot',
         type: 'damage',
         element: 'water',
         damageProfile: 'legacy_dot',
@@ -231,56 +158,19 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
+  // tran_an -- PURE stacking setup state (reaction-system spec sec.5):
+  // no standalone mechanics, feeds reactions only.
   {
-    id: 'hoai_tu',
+    id: 'tran_an',
     element: 'earth',
-    name: 'Hoại Tử',
+    name: 'Trấn Ấn',
+    description: 'Ấn ký Thổ trấn giữ mục tiêu — chồng tầng chờ phản ứng nguyên tố.',
     kind: 'ailment',
     polarity: 'debuff',
     instanceScope: 'per_source',
-    stacking: { maxStacks: 4, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 8, scaling: 'ailment_scaled' },
+    stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+    lifetime: { clock: 'holder_turns', duration: 3, scaling: 'ailment_scaled' },
     application: { resistance: 'ailment' },
-    periodic: [
-      {
-        id: 'hoai_tu.dot',
-        type: 'damage',
-        element: 'earth',
-        damageProfile: 'legacy_dot',
-        coefficient: 0.1,
-        scaling: 'dynamic',
-        timing: 'holder_turn_end',
-        stackScaling: 'multiply',
-        canCrit: false,
-        canMiss: false,
-        hitCount: 1,
-      },
-    ],
-    dispellable: true,
-  },
-
-  // Thổ Tu — Thạch Hóa: 'modifier' (-30% evasionRate) + on-hit-proc
-  // (50% cơ hội áp 'choang' mỗi đòn đánh trúng) — CẢ HAI cùng 1
-  // definition, port thành statModifier + 'on_hit_proc' capability
-  // (CombatProcSystem owns the roll at the hit seam).
-  {
-    id: 'thach_hoa',
-    element: 'earth',
-    name: 'Thạch Hóa',
-    kind: 'ailment',
-    polarity: 'debuff',
-    instanceScope: 'per_source',
-    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 4, scaling: 'ailment_scaled' },
-    application: { resistance: 'ailment' },
-    statModifiers: [{ stat: 'evasionRate', percent: -0.3 }],
-    capabilities: [
-      {
-        id: 'thach_hoa.on_hit',
-        type: 'on_hit_proc',
-        payload: { chance: 0.5, appliesBuffId: 'choang' },
-      },
-    ],
     dispellable: true,
   },
 
@@ -299,64 +189,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Plans/EarthPath mục V — "Dung Nham".
-  {
-    id: 'dung_nham',
-    element: 'fire',
-    name: 'Dung Nham',
-    kind: 'ailment',
-    polarity: 'debuff',
-    instanceScope: 'per_source',
-    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 4, scaling: 'ailment_scaled' },
-    application: { resistance: 'ailment' },
-    periodic: [
-      {
-        id: 'dung_nham.dot',
-        type: 'damage',
-        element: 'fire',
-        damageProfile: 'legacy_dot',
-        coefficient: 0.2,
-        scaling: 'dynamic',
-        timing: 'holder_turn_end',
-        stackScaling: 'multiply',
-        canCrit: false,
-        canMiss: false,
-        hitCount: 1,
-      },
-    ],
-    dispellable: true,
-  },
 
-  // Plans/KimPath mục 6 (2026-08-21) — "Huyết Độc": hợp nhất Trúng
-  // Độc + Chảy Máu.
-  {
-    id: 'huyet_doc',
-    element: 'metal',
-    name: 'Huyết Độc',
-    kind: 'ailment',
-    polarity: 'debuff',
-    instanceScope: 'per_source',
-    stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
-    lifetime: { clock: 'holder_turns', duration: 5, scaling: 'ailment_scaled' },
-    application: { resistance: 'ailment' },
-    periodic: [
-      {
-        id: 'huyet_doc.dot',
-        type: 'damage',
-        element: 'metal',
-        damageProfile: 'legacy_dot',
-        coefficient: 0.3,
-        scaling: 'dynamic',
-        timing: 'holder_turn_end',
-        stackScaling: 'multiply',
-        canCrit: false,
-        canMiss: false,
-        hitCount: 1,
-      },
-    ],
-    dispellable: true,
-  },
 
   {
     id: 'choang',

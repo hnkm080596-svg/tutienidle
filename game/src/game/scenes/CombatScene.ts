@@ -14,7 +14,9 @@ import type {
   StatusVfxAttachedEvent,
   StatusVfxUpdatedEvent,
   StatusVfxRemovedEvent,
+  ReactionVfxResolvedEvent,
 } from '@/core/battle/BattleEvents'
+import { REACTION_DISPLAY_NAMES } from '@/data/reaction/ReactionDefinitions'
 import {
   GRID_ROW_COUNT,
   GRID_COLUMN_COUNT,
@@ -653,6 +655,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       ['status_vfx_attached', (event: StatusVfxAttachedEvent) => this.onStatusAttached(event)],
       ['status_vfx_updated', (event: StatusVfxUpdatedEvent) => this.onStatusUpdated(event)],
       ['status_vfx_removed', (event: StatusVfxRemovedEvent) => this.onStatusRemoved(event)],
+      ['reaction_resolved', (event: ReactionVfxResolvedEvent) => this.onReactionResolved(event)],
       ['entity_vitals_changed', (event: EntityVitalsChangedEvent) => this.onVitalsChanged(event)],
       ['reward_particle', (event: BattleRewardParticleEvent) => this.onRewardParticle(event)],
     ]
@@ -1972,6 +1975,23 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private onStatusRemoved(event: StatusVfxRemovedEvent) {
     this.vfxSpawner.onStatusRemoved(event)
+  }
+
+  // Canonical-seals S5.3 -- observational reaction payoff: float the
+  // reaction's display name over the reaction target. Presentation only
+  // (the event is a drained journal entry, never an input).
+  private onReactionResolved(event: ReactionVfxResolvedEvent) {
+    const sprite = this.spriteFor(event.targetId)
+
+    if (!sprite) {
+      return
+    }
+
+    this.showFloatingText(
+      sprite,
+      REACTION_DISPLAY_NAMES[event.reactionId] ?? event.reactionId,
+      event.relation === 'sinh' ? '#7ee787' : '#ff9d5c',
+    )
   }
 
   updateStatusIconPositions() {

@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest'
 import type { DeferredOperation } from '../battle/contracts/settlement'
 import type { ResolvedCombatOperation } from '../battle/contracts/operations'
+import type { CombatOperationResult } from '../battle/contracts/results'
 import { CANONICAL_REACTIONS } from '../../data/reaction/ReactionDefinitions'
 import { ReactionRegistry } from './ReactionRegistry'
 import type { ReactionResolution } from './ReactionResolution'
@@ -141,7 +142,7 @@ describe('dung_kim (fire->metal khac)', () => {
 })
 
 describe('doan_moc (metal->wood khac)', () => {
-  it('bleed stacks 1+floor(A/2) + modifier targets the IDENTITY selector', () => {
+  it('bleed stacks 1+floor(A/2) + modifier rides a deferred apply-result op', () => {
     const { world, system } = makeWorld()
     const s = TEST_ENTITIES.sourceA
     const t = TEST_ENTITIES.targetA
@@ -154,24 +155,26 @@ describe('doan_moc (metal->wood khac)', () => {
     const apply = opsOfType(resolution, 'apply_buff')[0]!
     expect(apply.payload.definitionId).toBe(TEST_STATUS_BUFF_IDS.bleed)
     expect(apply.payload.stacks).toBe(3) // 1 + floor(4/2)
-    const mod = opsOfType(resolution, 'add_buff_modifier')[0]!
-    // The bleed instance does not exist at resolution time -- the
-    // modifier targets (definitionId, sourceId, targetId), NOT an
-    // instanceId (spec sec.78 doan_moc note).
-    expect(mod.payload.selector).toEqual({
-      kind: 'identity',
-      definitionId: TEST_STATUS_BUFF_IDS.bleed,
-      sourceId: s,
-      targetId: t,
-    })
-    expect(mod.payload.modifier).toMatchObject({
+
+    // canonical-seals addendum -- the modifier is a deferred op bound to
+    // the apply's RESULT (exact instanceId on applied:true), never a
+    // post-hoc identity lookup that could land on a stale instance.
+    const deferred = resolution.operations.find((op) => !('type' in op))! as Extract<
+      DeferredOperation,
+      { kind: 'add_modifier_on_apply_result' }
+    >
+    expect(deferred.kind).toBe('add_modifier_on_apply_result')
+    expect(deferred.resultOperationId).toBe(apply.operationId)
+    expect(deferred.modifier).toMatchObject({
       id: 'doan_moc',
       channel: 'potency',
       operation: 'multiply',
       reapply: 'max',
       lifetime: { type: 'buff_lifetime' },
     })
-    expect(mod.payload.modifier.value).toBeCloseTo(1.1) // 1 + 0.05*D(2)
+    expect(deferred.modifier.value).toBeCloseTo(1.1) // 1 + 0.05*D(2)
+    // No resolved add_buff_modifier op is emitted for this step.
+    expect(opsOfType(resolution, 'add_buff_modifier')).toHaveLength(0)
 
     world.makeBatchRunner().execute(resolution, world.sink)
     const bleed = world.system.getByDefinition(
@@ -182,6 +185,75 @@ describe('doan_moc (metal->wood khac)', () => {
     expect(
       bleed.modifiers.find((m) => m.id === 'doan_moc')!.value,
     ).toBeCloseTo(1.1)
+  })
+
+  it('resisted reapply skips the modifier with application_roll_failed -- the stale instance is untouched', () => {
+    const { world, system } = makeWorld()
+    const s = TEST_ENTITIES.sourceA
+    const t = TEST_ENTITIES.targetA
+    // First doan_moc commits: bleed + modifier on the fresh instance.
+    const first = resolve(world, system, s, t, [
+      ['metal', 4],
+      ['wood', 2],
+    ])
+    expect(
+      world.makeBatchRunner().execute(first.resolution, world.sink).status,
+    ).toBe('resolved')
+    const bleed = world.system.getByDefinition(t, TEST_STATUS_BUFF_IDS.bleed)[0]!
+    const stacksBefore = bleed.stacks
+    const remainingBefore = bleed.remaining
+    const modifiersBefore = bleed.modifiers.length
+
+    // Second doan_moc resolution; force the reapply's application roll to
+    // fail (rollChance(1) consumes the queued 1 -> 1 < 1 -> applied:false).
+    const second = resolve(world, system, s, t, [
+      ['metal', 2],
+      ['wood', 2],
+    ])
+    world.sink.clear()
+    world.rng.queue(1)
+    const outcome = world.makeBatchRunner().execute(second.resolution, world.sink)
+
+    expect(outcome.status).toBe('partial')
+    if (outcome.status !== 'partial') throw new Error('unreachable')
+    const results = outcome.results as readonly CombatOperationResult[]
+    // apply_buff resolved with applied:false; the deferred modifier
+    // skipped -- never attached to the stale same-identity instance.
+    const applyResult = results.find((r) => r.type === 'apply_buff')!
+    expect(applyResult.status).toBe('resolved')
+    const modResult = results.find((r) => r.type === 'add_buff_modifier')!
+    expect(modResult.status).toBe('skipped')
+    expect(modResult.reason).toBe('application_roll_failed')
+
+    // The stale instance keeps stacks/duration/modifier; only the failed
+    // application event was emitted for the attempt.
+    expect(bleed.stacks).toBe(stacksBefore)
+    expect(bleed.remaining).toBe(remainingBefore)
+    expect(bleed.modifiers).toHaveLength(modifiersBefore)
+    expect(world.sink.ofType('buff_application_failed')).toHaveLength(1)
+    expect(world.sink.ofType('buff_applied')).toHaveLength(0)
+    expect(world.sink.ofType('buff_modifier_added')).toHaveLength(0)
+  })
+
+  it('a skipped apply_buff yields dependency_not_resolved on the deferred modifier', () => {
+    const { world, system } = makeWorld()
+    const s = TEST_ENTITIES.sourceA
+    const t = TEST_ENTITIES.targetA
+    const { resolution } = resolve(world, system, s, t, [
+      ['metal', 4],
+      ['wood', 2],
+    ])
+    // Target dies between resolution and execution: apply_buff skips
+    // invalid_target_state, so the deferred modifier cannot resolve.
+    world.alive.delete(t)
+    const outcome = world.makeBatchRunner().execute(resolution, world.sink)
+    expect(outcome.status).toBe('partial')
+    if (outcome.status !== 'partial') throw new Error('unreachable')
+    const modResult = (
+      outcome.results as readonly CombatOperationResult[]
+    ).find((r) => r.type === 'add_buff_modifier')!
+    expect(modResult.status).toBe('skipped')
+    expect(modResult.reason).toBe('dependency_not_resolved')
   })
 })
 
@@ -209,7 +281,10 @@ describe('xuyen_tho (wood->earth khac)', () => {
       'apply_buff',
       'heal_from_damage_result',
     ])
-    const deferred = resolution.operations[4]! as DeferredOperation
+    const deferred = resolution.operations[4]! as Extract<
+      DeferredOperation,
+      { kind: 'heal_from_damage_result' }
+    >
     expect(deferred.operationId).toBe(`rx.${eventId}.xuyen_tho.heal`)
     expect(deferred.kind).toBe('heal_from_damage_result')
     expect(deferred.fraction).toBeCloseTo(0.15)
@@ -250,7 +325,7 @@ describe('xuyen_tho (wood->earth khac)', () => {
     ])
     const deferred = resolution.operations.find(
       (op) => !('type' in op),
-    )! as DeferredOperation
+    )! as Extract<DeferredOperation, { kind: 'heal_from_damage_result' }>
     expect(deferred.fraction).toBeCloseTo(0.25) // min(0.05*5, 0.25)
   })
 

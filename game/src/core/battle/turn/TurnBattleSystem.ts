@@ -907,6 +907,11 @@ export class TurnBattleSystem {
       targetId: string
       durationOverride?: number
     }[],
+    // Canonical-seals S3: post-entry callers (the aura re-grant seam)
+    // must mint their own rootActionId namespace -- the default
+    // 'entry' scheme re-reserves the build-time operationIds when it
+    // fires again inside the same turn.
+    rootActionId = `battle.entry.${battle.totalTurnsElapsed}`,
   ): void {
     if (entries.length === 0) return
     const ops = entries.map((entry, index) =>
@@ -917,7 +922,7 @@ export class TurnBattleSystem {
         1,
         1,
         'eligible',
-        `battle.entry.${battle.totalTurnsElapsed}`,
+        rootActionId,
         `entry.${index}.${entry.definitionId}`,
         entry.durationOverride,
       ),

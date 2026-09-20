@@ -603,10 +603,12 @@ export class CombatScheduler {
         if (this.schedulerState === 'faulted') return
         let op: ResolvedCombatOperation
         if (isDeferredOperation(entry)) {
-          const prior = results.get(entry.resultOperationId)
-          if (prior === undefined || prior.status !== 'resolved') {
-            // r4 HIGH 2 -- never a silent heal-0.
-            this.recordDeferredSkip(entry, results)
+          // r4 HIGH 2 -- never a silent materialization on a skipped
+          // dependency; the runner is the single authority on which
+          // pre-materialize outcomes skip vs proceed.
+          const skipReason = this.batchRunner.deferredSkipReason(entry, results)
+          if (skipReason !== undefined) {
+            this.recordDeferredSkip(entry, results, skipReason)
             continue
           }
           op = this.batchRunner.materialize(entry, results)
@@ -641,12 +643,13 @@ export class CombatScheduler {
   private recordDeferredSkip(
     entry: DeferredOperation,
     results: BatchResultStore,
+    reason: 'dependency_not_resolved' | 'application_roll_failed',
   ): void {
     const skipped = {
       operationId: entry.operationId,
-      type: 'heal',
+      type: resultTypeOfBatchEntry(entry),
       status: 'skipped',
-      reason: 'dependency_not_resolved',
+      reason,
     } as CombatOperationResult
     results.recordResult(skipped)
     this.trace.recordSkippedResult(skipped)
@@ -885,6 +888,21 @@ export class CombatScheduler {
       ) {
         this.structuralFault('periodicBridge: malformed damage request fields')
       }
+      // canonical-seals addendum -- the penetration bonus is a
+      // legacy_dot + elemental carrier only (origin is 'buff_periodic'
+      // by construction here); fault other lanes, never silently drop.
+      if (req.elementalPenetrationBonus !== undefined) {
+        if (
+          !Number.isFinite(req.elementalPenetrationBonus) ||
+          req.damageProfile !== 'legacy_dot' ||
+          req.element === undefined ||
+          req.element === 'physical'
+        ) {
+          this.structuralFault(
+            'periodicBridge: elementalPenetrationBonus on an illegal carrier',
+          )
+        }
+      }
     } else if (!Number.isFinite(req.amount)) {
       this.structuralFault('periodicBridge: heal request missing finite amount')
     }
@@ -928,6 +946,9 @@ export class CombatScheduler {
           // to the damage authority -- the request is useless without them.
           ...(req.stackCount !== undefined ? { stackCount: req.stackCount } : {}),
           ...(req.snapshot !== undefined ? { snapshot: req.snapshot } : {}),
+          ...(req.elementalPenetrationBonus !== undefined
+            ? { elementalPenetrationBonus: req.elementalPenetrationBonus }
+            : {}),
         },
       }
     }

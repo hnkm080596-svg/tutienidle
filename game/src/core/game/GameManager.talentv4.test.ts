@@ -132,14 +132,14 @@ describe('GameManager — talent v4 combat passive wiring', () => {
     // → debuff bị tẩy + Tử Sinh Ngộ xuất hiện trên CÙNG pool đó.
     const playerParticipant = manager.getTurnBattle()!.players[0]!
 
-    manager.turnBattleOps.applyBuffToPlayer('bong')
+    manager.turnBattleOps.applyBuffToPlayer('hoa_an')
 
     manager.combatSystem.applyDirectDamage(playerParticipant.entity, 999_999, 'enemy_1')
 
     const turnBuffs = () => manager.getBattleBuffs(playerParticipant.entity.id)
 
     expect(playerParticipant.entity.currentHp).toBe(1)
-    expect(turnBuffs().some((b) => b.definitionId === 'bong')).toBe(false)
+    expect(turnBuffs().some((b) => b.definitionId === 'hoa_an')).toBe(false)
     expect(turnBuffs().some((b) => b.definitionId === 'tu_sinh_ngo')).toBe(true)
   })
 

@@ -83,7 +83,7 @@ const DETONATE_ROOT: TurnSkillDefinition = {
       // detonate bursts: hp delta = 1 + consumed-tick damage.
       damage: { kind: 'physical', multiplier: 0 },
       targeting: { shape: 'single' },
-      appliesAilments: [{ buffDefinitionId: 'bong', chance: 1 }],
+      appliesAilments: [{ buffDefinitionId: 'hoa_an', chance: 1 }],
     },
   },
 }
@@ -169,7 +169,7 @@ describe('Detonate (dot-route empowered ult)', () => {
   it('consumes every DoT ailment for remaining-tick x stacks x amp; utility ailments are never touched', () => {
     const { battle, player, enemy, enemyEntity, playerEntity, system, runtime, addRosterParticipant } = harness(DETONATE_ROOT)
 
-    // Pre-seed: trung_doc (wood DoT) x3 from a THIRD source with
+    // Pre-seed: doc_can (wood DoT) x3 from a THIRD source with
     // woodPower 10 -> per-tick resolves vs the minion, NOT the caster;
     // choang (stun — controls, no damage periodic) is a pure-utility
     // ailment the detonate must leave alone.
@@ -177,7 +177,7 @@ describe('Detonate (dot-route empowered ult)', () => {
       makeParticipant('minion', createCombatant({ id: 'minion', stats: createBaseStats({ might: 0, woodPower: 10 }) }), 1, 2),
     )
     for (let i = 0; i < 3; i++) {
-      runtime.applyBuff('trung_doc', enemy, minion)
+      runtime.applyBuff('doc_can', enemy, minion)
     }
     runtime.applyBuff('choang', enemy, player)
     const choangBefore = buffsOf(runtime, enemy, 'choang')[0]
@@ -185,12 +185,12 @@ describe('Detonate (dot-route empowered ult)', () => {
     const hpBefore = enemyEntity.currentHp
     system.resolveActorTurn(battle, player)
 
-    // trung_doc burst: intent 0.2 x 5 remaining x 3 stacks x 1.5 = 4.5,
-    // resolved vs the minion's wood power 10 -> 45. The cast's own bong
+    // doc_can burst: intent 0.2 x 3 remaining x 3 stacks x 1.5 = 2.7,
+    // resolved vs the minion's wood power 10 -> 27. The cast's own hoa_an
     // (fire, chance 1) lands then is consumed in the same pass: intent
-    // 0.15 x 4 x 1 x 1.5 = 0.9 vs the caster's fire power 150 -> 135.
+    // 0.15 x 3 x 1 x 1.5 = 0.675 vs the caster's fire power 150 -> 101.25.
     // Direct packet floors at min-1.
-    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 45 - 135 - 1, 0)
+    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 27 - 101.25 - 1, 0)
 
     // Utility ailment untouched — same instance, same remaining life.
     const choangAfter = buffsOf(runtime, enemy, 'choang')[0]
@@ -207,30 +207,30 @@ describe('Detonate (dot-route empowered ult)', () => {
       makeParticipant('minion', createCombatant({ id: 'minion', stats: createBaseStats({ might: 0, woodPower: 10 }) }), 1, 2),
     )
     for (let i = 0; i < 3; i++) {
-      runtime.applyBuff('trung_doc', enemy, weakSource)
+      runtime.applyBuff('doc_can', enemy, weakSource)
     }
-    runtime.applyBuff('trung_doc', enemy, player)
+    runtime.applyBuff('doc_can', enemy, player)
 
     const hpBefore = enemyEntity.currentHp
     system.resolveActorTurn(battle, player)
 
-    // minion burst: 0.2 x 5 x 3 x 1.5 = 4.5 vs wood 10 -> 45; player's
-    // own trung_doc: 0.2 x 5 x 1 x 1.5 = 1.5 vs wood 130 -> 195; bong:
-    // 135; direct min-1.
-    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 45 - 195 - 135 - 1, 0)
+    // minion burst: 0.2 x 3 x 3 x 1.5 = 2.7 vs wood 10 -> 27; player's
+    // own doc_can: 0.2 x 3 x 1 x 1.5 = 0.9 vs wood 130 -> 117; hoa_an:
+    // 101.25; direct min-1.
+    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 27 - 117 - 101.25 - 1, 0)
 
     // Both consumed instances are gone; the id re-seeded ONCE by the
-    // CASTER at exactly 1 stack and the AUTHORED 5-turn duration.
-    const reseeded = buffsOf(runtime, enemy, 'trung_doc')
+    // CASTER at exactly 1 stack and the AUTHORED 3-turn duration.
+    const reseeded = buffsOf(runtime, enemy, 'doc_can')
     expect(reseeded).toHaveLength(1)
     expect(reseeded[0]!.sourceId).toBe('player')
     expect(reseeded[0]!.stacks).toBe(1)
-    expect(reseeded[0]!.remaining).toBe(5)
+    expect(reseeded[0]!.remaining).toBe(3)
 
     // Potency recomputed vs the caster's CURRENT stats — the enemy's
     // own turn end ticks BOTH re-seeded ailments at caster power:
-    // trung_doc 130 wood x 0.2 = 26 (never the consumed snapshot's
-    // stale 2/tick) + bong 150 fire x 0.15 = 22.5.
+    // doc_can 130 wood x 0.2 = 26 (never the consumed snapshot's
+    // stale 2/tick) + hoa_an 150 fire x 0.15 = 22.5.
     const hpAfterDetonate = enemyEntity.currentHp
     system.resolveActorTurn(battle, enemy)
     expect(hpAfterDetonate - enemyEntity.currentHp).toBeCloseTo(26 + 22.5, 5)
@@ -239,17 +239,17 @@ describe('Detonate (dot-route empowered ult)', () => {
   it('re-seed is reaction-silent — suppressed eligibility is wired into the consume+re-seed ops', () => {
     const { battle, player, enemy, system, runtime } = harness(DETONATE_ROOT)
 
-    // trung_doc (wood) incumbent + the cast's bong (fire): with the
+    // doc_can (wood) incumbent + the cast's hoa_an (fire): with the
     // legacy manager deleted (M-INT) there is no reaction listener at
     // all — both ailments are DoT so the detonate consumes them, and
     // the re-seeded pair rides 'suppressed' eligibility by contract.
-    runtime.applyBuff('trung_doc', enemy, player)
+    runtime.applyBuff('doc_can', enemy, player)
 
     system.resolveActorTurn(battle, player)
 
     // Re-seeded pair present at fixed 1 stack each, caster-sourced.
-    expect(buffsOf(runtime, enemy, 'trung_doc')[0]!.stacks).toBe(1)
-    expect(buffsOf(runtime, enemy, 'bong')[0]!.stacks).toBe(1)
+    expect(buffsOf(runtime, enemy, 'doc_can')[0]!.stacks).toBe(1)
+    expect(buffsOf(runtime, enemy, 'hoa_an')[0]!.stacks).toBe(1)
   })
 
   it('a clean target still takes the direct hit + application — consume+re-seed is simply 0', () => {
@@ -258,14 +258,14 @@ describe('Detonate (dot-route empowered ult)', () => {
     const hpBefore = enemyEntity.currentHp
     system.resolveActorTurn(battle, player)
 
-    // Direct packet floors at 1 + the fresh bong IS a DoT ailment —
-    // consumed for intent 0.15 x 4 x 1 x 1.5 = 0.9 vs caster fire power
-    // 150 -> 135, then re-seeded at fixed 1.
-    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 1 - 135, 0)
-    const bong = buffsOf(runtime, enemy, 'bong')
-    expect(bong).toHaveLength(1)
-    expect(bong[0]!.stacks).toBe(1)
-    expect(bong[0]!.remaining).toBe(4)
+    // Direct packet floors at 1 + the fresh hoa_an IS a DoT ailment --
+    // consumed for intent 0.15 x 3 x 1 x 1.5 = 0.675 vs caster fire power
+    // 150 -> 101.25, then re-seeded at fixed 1.
+    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 1 - 101.25, 0)
+    const hoaAn = buffsOf(runtime, enemy, 'hoa_an')
+    expect(hoaAn).toHaveLength(1)
+    expect(hoaAn[0]!.stacks).toBe(1)
+    expect(hoaAn[0]!.remaining).toBe(3)
   })
 })
 

@@ -157,6 +157,16 @@ export type AuthoredSkillOperation =
         scope?: 'own' | 'any'
         healPercentOfDamage?: number
       }
+      /** Hoa An spec sec.62 (Xich Viem shared/No) -- scale the DIRECT
+          hit's coefficient by ailment stacks WITHOUT consuming:
+          coefficient += live stacks x damagePerStack per hit target.
+          'own' (default) reads the source's own instance; 'any' sums
+          every source's instance on the target. */
+      scaleBuff?: {
+        definitionId: BuffDefinitionId
+        damagePerStack: ScalarExpression
+        scope?: 'own' | 'any'
+      }
       consumeWard?: { damagePerWardPoint: ScalarExpression }
       healPercentOfDamage?: ScalarExpression
       /** Cuong Chien missing-HP scalar (ActionDamageInfo parity) --
@@ -197,26 +207,27 @@ export type AuthoredSkillOperation =
     }
   | {
       type: 'add_buff_stacks' | 'remove_buff_stacks' | 'consume_buff_stacks'
-      target: SkillTargetIntent
-      definitionId: BuffDefinitionId
+      /** Buff-targeting mutation ops bind an authored selector -- an
+          'identity' selector pins the source's own instance (same-source
+          seal access); the TARGET intent may be set-valued (one resolved
+          selector per member) while 'identity.source' must bind a single
+          entity. */
+      selector: AuthoredBuffSelector
       stacks: ScalarExpression | 'all'
     }
   | {
       type: 'add_buff_modifier' | 'remove_buff_modifier'
-      target: SkillTargetIntent
-      definitionId: BuffDefinitionId
+      selector: AuthoredBuffSelector
       modifier: AuthoredModifier
     }
   | {
       type: 'refresh_buff_duration' | 'extend_buff_duration'
-      target: SkillTargetIntent
-      definitionId: BuffDefinitionId
+      selector: AuthoredBuffSelector
       turns?: number
     }
   | {
       type: 'trigger_buff_periodic'
-      target: SkillTargetIntent
-      definitionId: BuffDefinitionId
+      selector: AuthoredBuffSelector
       periodicId?: string
     }
   | {
@@ -246,9 +257,14 @@ export type AuthoredSkillOperation =
   | { type: 'apply_shield'; target: SkillTargetIntent; amount: ScalarExpression }
   | {
       type: 'read_stacks'
+      /** READ op -- binds ONE holder's summed stacks into `into`. `target`
+          and `source` are single-binding intents only (a set would have no
+          defined variable binding); `source` scopes the sum to instances
+          applied by that source (absent = any source). */
       target: SkillTargetIntent
       definitionId: BuffDefinitionId
       into: string
+      source?: SkillTargetIntent
     }
   | {
       type: 'if'

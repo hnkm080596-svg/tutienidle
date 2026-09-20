@@ -250,7 +250,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
     const wood = pool.find((entry) => entry.id === 'doc_chuong')!
     expect(wood.damage).toBeUndefined()
     expect(wood.appliesAilment?.buffDefinitionId ?? wood.appliesAilments?.[0]?.buffDefinitionId).toBe(
-      'trung_doc',
+      'doc_can',
     )
 
     // Authored scaling survives conversion — hoa_cau_thuat carries

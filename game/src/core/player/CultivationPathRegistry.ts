@@ -456,6 +456,14 @@ function createPhapTuNgoDaoRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
           : undefined,
       }
     },
+    grantsElementalReactionAura() {
+      // Canonical-seals S3 (plan sec.9.4) -- the aura gate lives HERE,
+      // inside the path-authority dispatch site: the factory key already
+      // pins phap_tu:ngo_dao, so the only live check is whether the
+      // dao passive is learned (ritual-granted; a corrupt save missing
+      // it gets no aura and the kit assert above fails loudly anyway).
+      return deps.skillManager.has(PHAP_TU_AN_PASSIVE_ID)
+    },
   }
 }
 

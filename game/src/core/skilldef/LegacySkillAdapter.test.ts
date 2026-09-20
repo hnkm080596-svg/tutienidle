@@ -457,7 +457,7 @@ describe('LegacySkillAdapter -- Skill/EffectiveSkill path', () => {
     expect(hit.coefficient).toBeCloseTo(1.3, 5)
     expect(hit.onLanded?.[0]).toMatchObject({
       type: 'apply_buff',
-      definitionId: 'bong',
+      definitionId: 'hoa_an',
       reactionEligibility: 'eligible',
       chance: 1,
     })

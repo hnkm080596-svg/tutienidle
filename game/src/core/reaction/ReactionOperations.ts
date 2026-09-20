@@ -8,14 +8,19 @@
 // - add_child_stacks -> AddBuffStacksOperation on the child INSTANCE
 //   (never ApplyBuff -- contract sec.75/93: structurally incapable of
 //   producing ElementalApplicationCommitted, INV-R14 no recursion).
-// - add_child_modifier -> AddBuffModifierOperation {operation:'multiply',
-//   reapply:'max', lifetime:{type:'buff_lifetime'}} on the child instance.
+// - add_child_modifier -> AddBuffModifierOperation {operation:
+//   step.operation ?? 'multiply', reapply:'max', lifetime:
+//   {type:'buff_lifetime'}} on the child instance -- 'elemental_penetration'
+//   authors additive points (duong_kim), potency stays a multiplier
+//   (canonical-seals addendum).
 // - extend_child_duration -> ExtendBuffDurationOperation (authored cap).
 // - reaction_damage -> DealDamageOperation (canCrit:false, canMiss:false,
 //   element = attacker element, origin.kind 'reaction' -- R-A).
 // - apply_status -> ApplyBuffOperation(reactionEligibility:'suppressed')
-//   [+ AddBuffModifierOperation on the identity selector -- the instance
-//   does not exist at resolution time (spec sec.78)].
+//   [+ add_modifier_on_apply_result DeferredOperation -- the modifier
+//   binds the EXACT instanceId the successful apply returns; an identity
+//   lookup could land on a stale same-identity instance after a resisted
+//   reapply (canonical-seals addendum)].
 // - push_gauge -> PushGaugeOperation (negative = pushback).
 // - heal_from_damage -> DeferredOperation positioned after the damage
 //   op; the RATIO cap is applied at resolution (fraction = min(eval,
@@ -27,6 +32,7 @@ import type {
   AddBuffModifierOperation,
   AddBuffStacksOperation,
   ApplyBuffOperation,
+  BuffModifierChannel,
   BuffModifierPayload,
   ConsumeBuffStacksOperation,
   DealDamageOperation,
@@ -94,13 +100,14 @@ function instanceSelector(
 
 function modifierPayload(
   modifierId: string,
-  channel: 'potency' | 'periodic_damage',
+  channel: BuffModifierChannel,
   value: number,
+  operation: BuffModifierPayload['operation'] = 'multiply',
 ): BuffModifierPayload {
   return {
     id: modifierId,
     channel,
-    operation: 'multiply',
+    operation,
     value,
     reapply: 'max',
     priority: 0,
@@ -147,6 +154,7 @@ export function emitPayoffOperations(
               step.modifierId,
               step.channel,
               evalStackExpr(step.value, context),
+              step.operation ?? 'multiply',
             ),
           },
         })
@@ -224,26 +232,21 @@ export function emitPayoffOperations(
           },
         })
         if (step.modifier !== undefined) {
-          // The status instance does not exist at resolution time --
-          // target by (definitionId, sourceId, targetId) identity
-          // (spec sec.78 doan_moc note).
+          // The status instance does not exist at resolution time and
+          // the apply's roll decides attachment: a deferred op binds the
+          // EXACT instanceId the successful apply returns -- an identity
+          // lookup could land on a stale same-identity instance after a
+          // resisted reapply (canonical-seals addendum).
           ops.push({
-            type: 'add_buff_modifier',
+            kind: 'add_modifier_on_apply_result',
             operationId: opId(context, `pay.${i}.modifier`),
+            resultOperationId: opId(context, `pay.${i}`),
+            modifier: modifierPayload(
+              step.modifier.modifierId,
+              step.modifier.channel,
+              evalStackExpr(step.modifier.value, context),
+            ),
             origin: origin(context),
-            payload: {
-              selector: {
-                kind: 'identity',
-                definitionId: step.definitionId,
-                sourceId: context.sourceId,
-                targetId: context.targetId,
-              },
-              modifier: modifierPayload(
-                step.modifier.modifierId,
-                step.modifier.channel,
-                evalStackExpr(step.modifier.value, context),
-              ),
-            },
           })
         }
         break

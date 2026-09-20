@@ -230,12 +230,12 @@ describe('QA A0 � B?t T? Th? cleanse/grant on the LIVE turn-based pool', () =>
 
     // Seed a real debuff directly on the live turn-based pool (matching
     // how a real enemy hit would have applied it).
-    manager.turnBattleOps.applyBuffToPlayer('bong')
+    manager.turnBattleOps.applyBuffToPlayer('hoa_an')
 
     expect(
       manager
         .getBattleBuffs(playerParticipant.entity.id)
-        .some((b) => b.definitionId === 'bong'),
+        .some((b) => b.definitionId === 'hoa_an'),
     ).toBe(true)
 
     // Force a lethal hit through the real production damage path.
@@ -246,7 +246,7 @@ describe('QA A0 � B?t T? Th? cleanse/grant on the LIVE turn-based pool', () =>
     expect(
       manager
         .getBattleBuffs(playerParticipant.entity.id)
-        .some((b) => b.definitionId === 'bong'),
+        .some((b) => b.definitionId === 'hoa_an'),
     ).toBe(false)
     expect(
       manager

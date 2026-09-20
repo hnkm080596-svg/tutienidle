@@ -14,19 +14,49 @@ function byId(id: string): BuffDefinition {
 function dotOf(def: BuffDefinition): PeriodicDamageDefinition {
   return def.periodic!.find((p) => p.type === 'damage') as PeriodicDamageDefinition
 }
-function capOf(def: BuffDefinition, type: string) {
-  return (def.capabilities ?? []).find((c) => c.type === type)
-}
 const REFRESH = { onReapplyStacks: 'keep', onReapplyDuration: 'refresh' } as const
 const ADD = { onReapplyStacks: 'add', onReapplyDuration: 'refresh' } as const
 
 describe('buffs.ts — ported definitions match original values (buff2 shape)', () => {
-  it('bong (dot) — stacking add max 5, coefficient 0.15/tầng fire', () => {
-    const bong = byId('bong')
+  // canonical-seals S1 -- the five canonical seals replaced the legacy
+  // elemental ailments (locked: duration 3, maxStacks 5 add/refresh,
+  // per_source, ailment resistance, dispellable).
+  it('canonical seals — locked shared shape per element', () => {
+    const expected: Record<string, { element: string; coefficient: number }> = {
+      hoa_an: { element: 'fire', coefficient: 0.15 },
+      doc_can: { element: 'wood', coefficient: 0.2 },
+      liet_thuong: { element: 'metal', coefficient: 0.2 },
+      han_tuc: { element: 'water', coefficient: 0.25 },
+    }
+    for (const [id, want] of Object.entries(expected)) {
+      const seal = byId(id)
+      expect(seal.kind, id).toBe('ailment')
+      expect(seal.element, id).toBe(want.element)
+      expect(seal.instanceScope, id).toBe('per_source')
+      expect(seal.stacking, id).toMatchObject({ ...ADD, maxStacks: 5 })
+      expect(seal.lifetime, id).toMatchObject({ clock: 'holder_turns', duration: 3, scaling: 'ailment_scaled' })
+      expect(seal.application?.resistance, id).toBe('ailment')
+      expect(seal.dispellable, id).toBe(true)
+      expect(dotOf(seal), `${id}.dot`).toMatchObject({
+        id: `${id}.dot`,
+        element: want.element,
+        coefficient: want.coefficient,
+        damageProfile: 'legacy_dot',
+      })
+    }
+  })
 
-    expect(bong.stacking).toMatchObject({ ...ADD, maxStacks: 5 })
-    expect(bong.lifetime.duration).toBe(4)
-    expect(dotOf(bong)).toMatchObject({ coefficient: 0.15, element: 'fire', damageProfile: 'legacy_dot' })
+  it('tran_an — PURE stacking setup state: no standalone mechanics', () => {
+    const tranAn = byId('tran_an')
+
+    expect(tranAn.element).toBe('earth')
+    expect(tranAn.stacking).toMatchObject({ ...ADD, maxStacks: 5 })
+    expect(tranAn.lifetime).toMatchObject({ clock: 'holder_turns', duration: 3, scaling: 'ailment_scaled' })
+    expect(tranAn.application?.resistance).toBe('ailment')
+    expect(tranAn.periodic).toBeUndefined()
+    expect(tranAn.statModifiers).toBeUndefined()
+    expect(tranAn.capabilities).toBeUndefined()
+    expect(tranAn.controls).toBeUndefined()
   })
 
   describe('buff mới chuỗi Thuần (spec §7)', () => {
@@ -106,11 +136,6 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
       }
     })
 
-    it('ngung_lo/khai_son giữ nguyên', () => {
-      expect(byId('ngung_lo').statModifiers).toContainEqual({ stat: 'manaRegenPerTurn', flat: 5, domain: 'phap_tu' })
-      expect(byId('khai_son').statModifiers).toContainEqual({ stat: 'defense', percent: 0.08 })
-    })
-
     it('dia_tru_bich — wardMax +100 + wardRegenPerTurn +8, no retaliate stat', () => {
       const b = byId('dia_tru_bich')
 
@@ -126,8 +151,8 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
       expect(b.statModifiers).toContainEqual({ stat: 'wardBreakDamagePercent', flat: 0.25 })
     })
 
-    it('all 63 definitions (6 inline + 22 legacy + 1 Kiem Pho + 14 thuan-he + 5 talent + 3 boss + 12 the_tu) are present', () => {
-      expect(buffs).toHaveLength(63)
+    it('all 62 definitions (6 inline + 16 legacy + 1 Kiem Pho + 14 thuan-he + 5 talent + 3 boss + 12 the_tu + 5 reaction) are present', () => {
+      expect(buffs).toHaveLength(62)
     })
   })
 
@@ -144,30 +169,10 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
     expect(lamCham.statModifiers).toContainEqual({ stat: 'speed', percent: -0.3 })
   })
 
-  it('thach_hoa — carries BOTH its statModifier AND on_hit_proc grant in one definition', () => {
-    const thachHoa = byId('thach_hoa')
-
-    expect(thachHoa.statModifiers).toContainEqual({ stat: 'evasionRate', percent: -0.3 })
-    expect(capOf(thachHoa, 'on_hit_proc')!.payload).toMatchObject({ chance: 0.5, appliesBuffId: 'choang' })
-  })
-
   it('van_kiem_vu — armor ignore rides the periodic tags', () => {
     const dot = dotOf(byId('van_kiem_vu'))
 
     expect(dot).toMatchObject({ coefficient: 2, element: 'metal' })
     expect(dot.tags).toContain('armor_ignore_by_realm')
-  })
-
-  // stat-system-reimagined Task 4 (D18): Doc Can's heal half is a
-  // 'dot_recovery' capability on the buff (damage-side consumption).
-  it('doc_the — permanent + stack max 5 + ailmentPotency + dot_recovery grant', () => {
-    const docThe = byId('doc_the')
-
-    expect(docThe.lifetime.clock).toBe('permanent')
-    expect(docThe.stacking).toMatchObject({ ...ADD, maxStacks: 5 })
-    expect(docThe.statModifiers).toContainEqual({ stat: 'ailmentPotencyPercent', percent: 0.05 })
-    expect(capOf(docThe, 'dot_recovery')!.payload).toMatchObject({ element: 'wood', healPercent: 0.02 })
-    expect(docThe.statModifiers).toHaveLength(1)
-    expect(docThe.capabilities).toHaveLength(1)
   })
 })

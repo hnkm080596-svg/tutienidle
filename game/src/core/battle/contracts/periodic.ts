@@ -36,6 +36,13 @@ export interface BuffPeriodicDamageRequest {
   /** Metadata for profiles that scale on stacks. */
   stackCount?: number
   tags?: readonly string[]
+  /** Instance-local penetration bonus (canonical-seals addendum): the
+      folded 'elemental_penetration' channel value -- ADDITIVE points on
+      the Resistance.ts scale (1 = 1% net resistance), resolved on top of
+      the source stat; never a stats mutation. Legal iff damageProfile
+      === 'legacy_dot' AND element is an ElementType -- the bridge and
+      batch validators fault any other carrier. */
+  elementalPenetrationBonus?: number
   /** v7.1 -- present iff the periodic def's scaling==='snapshot': the
       source's offensive context captured at apply (Buff Final Spec
       sec.25). DamageSystem resolves against THIS instead of live source

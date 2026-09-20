@@ -4,7 +4,7 @@ import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 describe('buffDisplayName', () => {
   it('returns the registry name for a known buff id', () => {
-    expect(buffDisplayName('bong')).toBe(BUFF_REGISTRY.get('bong').name)
+    expect(buffDisplayName('hoa_an')).toBe(BUFF_REGISTRY.get('hoa_an').name)
   })
 
   it('falls back to the raw id for an unknown buff id without throwing', () => {

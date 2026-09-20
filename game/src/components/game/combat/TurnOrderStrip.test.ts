@@ -78,8 +78,8 @@ function makeBattleFixture() {
 
   // Seed: 1 debuff (2 stacks), 1 buff, 1 hidden buff on the player.
   const playerBuffs: BuffInstanceSnapshot[] = [
-    makeSnapshot('bong', 'player', { stacks: 2 }),
-    makeSnapshot('khai_son', 'player'),
+    makeSnapshot('hoa_an', 'player', { stacks: 2 }),
+    makeSnapshot('thach_giap_buff', 'player'),
     makeSnapshot('ho_ve', 'player'),
   ]
 
@@ -136,15 +136,15 @@ describe('TurnOrderStrip buff badges (Phase A6)', () => {
 
     const badges = Array.from(container.querySelectorAll('.turn-order-strip__buff'))
 
-    // 3 instances on the pool (2× bong stacks = 1 instance with 2 stacks +
-    // khai_son) + 1 hidden → 2 visible badges.
+    // 3 instances on the pool (2x hoa_an stacks = 1 instance with 2 stacks +
+    // thach_giap_buff) + 1 hidden → 2 visible badges.
     expect(badges).toHaveLength(2)
 
-    const bongBadge = badges.find((badge) => badge.textContent?.includes('Bỏng'))
+    const sealBadge = badges.find((badge) => badge.textContent?.includes('Hỏa Ấn'))
 
-    expect(bongBadge).toBeDefined()
-    expect(bongBadge!.className).toContain('is-debuff')
-    expect(bongBadge!.textContent).toContain('×2')
+    expect(sealBadge).toBeDefined()
+    expect(sealBadge!.className).toContain('is-debuff')
+    expect(sealBadge!.textContent).toContain('×2')
 
     const buffBadge = badges.find((badge) => badge.className.includes('is-buff'))
 

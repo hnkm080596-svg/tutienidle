@@ -48,16 +48,7 @@ describe('SkillDetailView — dòng cơ chế Thuần hệ (Task 12)', () => {
     mounted.unmount()
   })
 
-  it('skill có spreadsAilmentId (Vân Mộc Lan Độc) → hiện dòng lan Độc', () => {
-    const skill = SKILLS.find(s => s.id === 'van_moc_lan_doc')!
 
-    expect(skill.effects.some(e => e.spreadsAilmentId !== undefined)).toBe(true)
-
-    const mounted = mountDetail(skill)
-
-    expect(mounted.container.querySelector('.skill-detail__mechanics')!.textContent).toContain('Lan')
-    mounted.unmount()
-  })
 })
 
 // Task 16 — cast-leveled skills (tram/linh_bao/huy_quyen) show cast

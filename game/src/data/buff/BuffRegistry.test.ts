@@ -51,8 +51,11 @@ describe('BUFF_REGISTRY completeness', () => {
       (d.capabilities ?? []).map((c) => ({ def: d.id, type: c.type })),
     )
     const types = new Set(typed.map((t) => t.type))
-    // every migrated capability family is represented
-    for (const expected of ['on_hit_proc', 'reactive_trigger', 'reactive_proc', 'the_economy', 'reactive_economy', 'dot_recovery', 'marker']) {
+    // every migrated capability family WITH live content is represented
+    // (on_hit_proc/dot_recovery lost their only carriers in the seal
+    // migration -- the engine mechanisms remain, content intentionally
+    // empty).
+    for (const expected of ['reactive_trigger', 'reactive_proc', 'the_economy', 'reactive_economy', 'marker']) {
       expect(types.has(expected), `missing capability type ${expected}`).toBe(true)
     }
   })
@@ -65,8 +68,8 @@ describe('BUFF_REGISTRY completeness', () => {
     }
   })
 
-  it('elemental ailments keep their element tag and resistance gate', () => {
-    for (const id of ['bong', 'trung_doc', 'chay_mau', 'te_cong', 'thach_hoa']) {
+  it('canonical seals keep their element tag and resistance gate', () => {
+    for (const id of ['hoa_an', 'doc_can', 'liet_thuong', 'han_tuc', 'tran_an']) {
       const def = BUFF_REGISTRY.get(id)
       expect(def.kind, id).toBe('ailment')
       expect(def.element, id).toBeDefined()

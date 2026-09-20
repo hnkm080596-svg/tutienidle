@@ -29,8 +29,13 @@ export type { StackExpr } from './StackExpr'
     NOT authored here. */
 export type ReactionPayoffStep =
   | { kind: 'add_child_stacks'; stacks: StackExpr }                       // sinh conversion -> AddBuffStacksOperation (NOT ApplyBuff -- contract sec.75)
-  | { kind: 'add_child_modifier'; modifierId: string; channel: 'potency' | 'periodic_damage'; value: StackExpr }
-      // emits AddBuffModifierOperation { operation:'multiply', reapply:'max', lifetime:{type:'buff_lifetime'} }
+  | { kind: 'add_child_modifier'; modifierId: string;
+      channel: 'potency' | 'periodic_damage' | 'elemental_penetration';
+      operation?: 'add' | 'multiply' | 'set'; value: StackExpr }
+      // emits AddBuffModifierOperation { operation: step.operation ?? 'multiply',
+      //   reapply:'max', lifetime:{type:'buff_lifetime'} } -- penetration is
+      //   additive points (duong_kim authors operation:'add'), potency is a
+      //   multiplier (canonical-seals addendum).
   | { kind: 'extend_child_duration'; turns: StackExpr; maxRemaining: number } // ExtendBuffDurationOperation, authored cap (spec sec.37)
   | { kind: 'reaction_damage'; coefficient: StackExpr; damageProfile: string; element: 'attacker' } // DealDamageOperation origin.kind 'reaction', canCrit:false (R-A)
   | { kind: 'apply_status'; definitionId: BuffDefinitionId; stacks?: StackExpr; durationOverride?: StackExpr;

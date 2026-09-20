@@ -14,7 +14,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
 import { BuffPersistence } from '../buff2/BuffPersistence'
-import { createElementalStateRegistry } from '../reaction/ElementalStateRegistry'
+import { CANONICAL_ELEMENTAL_SEALS, createElementalStateRegistry } from '../reaction/ElementalStateRegistry'
 import { FunctionCombatRng } from '../battle/runtime/rng/FunctionCombatRng'
 import type { BuffDefinitionId } from '../battle/contracts/ids'
 
@@ -138,7 +138,7 @@ import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
-import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
+import { PHAP_TU_KIT_IDS, PHAP_TU_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
 import {
   NEUTRAL_ROUTE_PROFILE,
   resolveRouteProfile,
@@ -238,13 +238,7 @@ export class GameManager {
     },
     entities: { isAlive: () => true },
     snapshots: { capture: () => ({}) },
-    elemental: createElementalStateRegistry({
-      fire: 'hoa_an' as BuffDefinitionId,
-      water: 'han_tuc' as BuffDefinitionId,
-      wood: 'doc_can' as BuffDefinitionId,
-      metal: 'liet_thuong' as BuffDefinitionId,
-      earth: 'tran_an' as BuffDefinitionId,
-    }),
+    elemental: createElementalStateRegistry(CANONICAL_ELEMENTAL_SEALS),
     rng: new FunctionCombatRng(() => Math.random()),
     sink: { emit: () => {} },
   })
@@ -488,7 +482,11 @@ export class GameManager {
 
       const element = player.phapTu.element
 
-      if (!element || !PHAP_TU_KIT_IDS[element].includes(skillId)) {
+      if (
+        !element ||
+        (!PHAP_TU_KIT_IDS[element].includes(skillId) &&
+          !PHAP_TU_ROUTE_SKILL_IDS[element].includes(skillId))
+      ) {
         return NEUTRAL_ROUTE_PROFILE
       }
 

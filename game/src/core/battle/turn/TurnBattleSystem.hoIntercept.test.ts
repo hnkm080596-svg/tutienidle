@@ -544,7 +544,7 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
     const chargedWithAilment: TurnSkillDefinition = {
       ...ENEMY_CHARGED,
       id: 'enemy_charged_burn',
-      appliesAilments: [{ buffDefinitionId: 'bong', chance: 1 }],
+      appliesAilments: [{ buffDefinitionId: 'hoa_an', chance: 1 }],
     }
     f.enemyP.special = { skill: chargedWithAilment, remainingCooldownTurns: 0 }
 
@@ -556,7 +556,7 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
 
     expect(targetIds).toEqual(['squishy'])
     expect(
-      f.runtime.buffs.getForTarget('squishy').filter((i) => i.definitionId === 'bong'),
+      f.runtime.buffs.getForTarget('squishy').filter((i) => i.definitionId === 'hoa_an'),
     ).toHaveLength(1)
   })
 })

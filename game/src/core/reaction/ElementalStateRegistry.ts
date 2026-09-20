@@ -8,4 +8,7 @@
 // (megaplan: "do not create parallel contract types").
 
 export type { ElementalStateRegistry } from '../battle/contracts/elemental'
-export { createElementalStateRegistry } from '../battle/runtime/elemental/ElementalStateRegistryImpl'
+export {
+  CANONICAL_ELEMENTAL_SEALS,
+  createElementalStateRegistry,
+} from '../battle/runtime/elemental/ElementalStateRegistryImpl'

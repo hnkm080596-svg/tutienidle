@@ -3,6 +3,38 @@ import type { SkillDamageComponent } from './SkillDamageComponent'
 import type { StatType } from '../stats/StatTypes'
 import type { EffectScope } from '../battle/CombatAction'
 import type { ElementType } from '../element/ElementType'
+import type { BuffModifierPayload } from '../battle/contracts/operations'
+import type { PhapTuRoute } from '../phap-tu/PhapTuState'
+
+// Phap Tu Hoa An (spec 2026-09-17 sec.62) -- a generic post-landing
+// interaction with the caster's SAME-SOURCE instance of `buffId` on the
+// hit target (spec sec.7: a caster's seal skills touch only their own
+// instance). Each entry compiles to one authored op inside the landed
+// gate, AFTER the skill's ailment applications, in authored order
+// (Phan Thien: apply -> manual tick -> potency modifier -> extend).
+// `routes` gates the entry to the listed Phap Tu routes -- the route
+// seam (applyRouteToTurnSkill) strips non-matching entries; undefined
+// = all routes.
+export type SkillAilmentInteraction =
+  | {
+      kind: 'trigger_periodic'
+      buffId: string
+      routes?: readonly PhapTuRoute[]
+    }
+  | {
+      kind: 'add_modifier'
+      buffId: string
+      // Keyed modifier -- spec sec.27: identity = id + appliedBy source
+      // (the executor stamps appliedBy); same-key default 'replace'.
+      modifier: Omit<BuffModifierPayload, 'appliedBy'>
+      routes?: readonly PhapTuRoute[]
+    }
+  | {
+      kind: 'extend_duration'
+      buffId: string
+      turns: number
+      routes?: readonly PhapTuRoute[]
+    }
 
 export interface SkillEffect {
   type: SkillEffectType
@@ -64,19 +96,24 @@ export interface SkillEffect {
 
   damagePerStack?: number
 
-  // Pháp Tu Thuần Hệ (E-1, 2026-09-03) — CHỈ dùng cho effect 'damage'
-  // (Vân Mộc Lan Độc + biến thể). SAU KHI missile resolve, đọc TỔNG
-  // stacks của ailment `spreadsAilmentId` trên PRIMARY target, áp lên
-  // MỌI target phụ trong cùng action (scope 'affected_targets', trừ
-  // primary) qua BuffSystem.apply() — mỗi lần apply = +1 stack theo
-  // stackMode của buff, nên số lần apply = ceil(total ×
-  // `spreadStackPercent`) (mặc định 1 = 100%). Primary không đổi (trừ
-  // khi `spreadRefreshesPrimary` → gia hạn duration primary).
-  spreadsAilmentId?: string
+  // Phap Tu Hoa An (spec 2026-09-17 sec.62 Cuu Tieu) -- scope of the
+  // consumesAilmentId consume. 'any' = legacy parity: every source's
+  // instance of the ailment on the target is read + consumed (Detonate
+  // semantics). 'own' = same-source only -- the caster's own instance
+  // (spec sec.7 default for Hoa seal skills). Unset = 'any'.
+  consumesAilmentScope?: 'own' | 'any'
 
-  spreadStackPercent?: number
+  // Phap Tu Hoa An (spec 2026-09-17 sec.62 Xich Viem shared/no) -- 'damage'
+  // effects only: scale the DIRECT hit's coefficient by same-source
+  // ailment stacks WITHOUT consuming. Bonus = live same-source stack
+  // count x damagePerStack, folded into the hit coefficient per target.
+  scalesWithAilmentStacks?: { ailmentId: string; damagePerStack: number }
 
-  spreadRefreshesPrimary?: boolean
+  // Phap Tu Hoa An (spec 2026-09-17 sec.62) -- 'damage' effects only:
+  // same-source seal interactions that run inside the landed gate after
+  // ailment applications (see SkillAilmentInteraction above). Never a
+  // direct state mutation -- each entry is an authored ailment op.
+  ailmentInteractions?: readonly SkillAilmentInteraction[]
 
   // Pháp Tu Lifedrain (Mộc Tu) — CHỈ có ý nghĩa cùng consumesAilmentId/
   // damagePerStack. Hồi máu cho SOURCE = healPercentOfDamage × bonus

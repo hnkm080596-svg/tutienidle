@@ -396,6 +396,18 @@ Mode: read-only + docs. Produce
   `resolveSelectorSet` emitting one identity selector per resolved target;
   the SOURCE intent must resolve exactly one entity. Regression tests:
   `all_enemies` and `all_allies` target intents produce one op per target.
+  **Read/mutation split:** `AuthoredBuffSelector + resolveSelectorSet` is
+  for MUTATION ops only. Standalone `read_stacks` binds ONE `into` variable
+  — "many selectors → one variable" is meaningless, and `ScalarExpression.
+  buff_stacks` already carries `source?: SkillTargetIntent` (:556-558 — the
+  better same-source read primitive). Pin: `read_stacks` gains
+  `source?: SkillTargetIntent`, keeps single-binding target/source intents;
+  the definition validator REJECTS set-valued source intents on it.
+  **onLanded validator regression:** the `onLanded` gate checks
+  `'target' in landedOp` (`SkillDefinitionRegistry.ts:602-606`) — once a
+  buff op's target moves inside `selector.target`, the
+  `'loop_target'|'self' only` rule is silently bypassed. The validator must
+  inspect `selector.target` with the same restriction.
 - **S0.5P — INSTANCE-LOCAL PENETRATION: ACTIVE-CONTRACT EXTENSION (not a small
   primitive).** `metalPenetration` is a real `StatBlock` stat (:134) and
   `CombatSystemDamageAdapter.resolveLegacyDotAmount` :335 reads
@@ -450,8 +462,22 @@ Mode: read-only + docs. Produce
      → lives forever (contract-correct for ALL lifetimes, not just the
      `buff_lifetime` Dưỡng Kim currently uses). Test: `uses:1` penetration
      modifier consumed by exactly one resolved tick.
-  7. Contract-spec addendum records the new field + channel + adapter rule +
-     legality bounds.
+  7. **Authoring allowlist:** `AuthoredModifier = Omit<BuffModifierPayload,
+     'appliedBy'>` (`AuthoredOperation.ts:99`) — widening `BuffModifierChannel`
+     auto-admits `'elemental_penetration'` to SkillDefinition authoring, but
+     `SkillDefinitionRegistry.MODIFIER_CHANNELS` (:80, enforced :864) is a
+     separate runtime allowlist → type-checks clean, startup rejects. Update
+     the allowlist + a validator test asserting an authored
+     `elemental_penetration` modifier registers. (Generic-channel choice per
+     this plan — do NOT narrow `AuthoredModifier` to hide it.)
+  8. **Numeric validation:** `elementalPenetrationBonus` is
+     `undefined | finite number` on BOTH surfaces — `assertPeriodicRequestShape`
+     (`CombatScheduler.ts:867`, validates coefficient/hitCount/booleans today)
+     and the resolved `deal_damage` batch validator must reject `NaN`/
+     `Infinity`. `>= 0` NOT required — the generic channel may later carry
+     penetration debuffs.
+  9. Contract-spec addendum records the new field + channel + adapter rule +
+     legality + numeric bounds.
 
   **Semantics — additive penetration points, NOT a multiplier.** Penetration
   scale: 1 point = 1% net resistance (`Resistance.ts:15-20`,
@@ -509,28 +535,57 @@ Mode: read-only + docs. Produce
   runtime consumers/parity tests depend on `spreadsAilmentId`/`spreadStackPercent`/
   `spreadRefreshesPrimary` — then DELETE the three dead authored fields
   (§4.3). A found consumer escalates to a canonical spread-primitive design.
-- **S0.13 — PRIMITIVE: apply-result-dependent payoff modifier.** Defect
-  found: `apply_status` emits `apply_buff` then `add_buff_modifier`
-  (identity selector, `ReactionOperations.ts:226-248`) with NO dependency —
-  a resisted apply returns `{applied:false}` (`BuffSystem.ts:178`, op still
+- **S0.13 — PRIMITIVE: apply-result-dependent payoff modifier (full
+  deferred-settlement contract, not just a new kind).** Defect found:
+  `apply_status` emits `apply_buff` then `add_buff_modifier` (identity
+  selector, `ReactionOperations.ts:226-248`) with NO dependency — a
+  resisted apply returns `{applied:false}` (`BuffSystem.ts:178`, op still
   settles `'resolved'`), the batch continues, and the modifier's identity
   selector finds a STALE same-source `reaction_bleed` instance → the payoff
   modifier lands on the old instance despite the resist. This breaks D-5's
   "resisted payoff → payoff absent" rule.
-  **Fix:** extend `DeferredOperation` (`contracts/settlement.ts:48` — the
-  existing result-dependent mechanism, currently only
-  `heal_from_damage_result` → `deal_damage`) with a new kind, e.g.
-  `add_modifier_on_apply_result` — `{resultOperationId → apply_buff op,
-  modifier}` — that materializes to `add_buff_modifier` on
-  `{kind:'instance', instanceId: result.instanceId}` ONLY when
-  `result.applied === true` (`ApplyBuffResult` carries `instanceId` on
-  success, :352-363). Binding the returned instanceId also fixes the
-  selector staleness generally — the modifier always lands on the exact
-  instance the apply committed, never a same-identity ancestor. Never
-  post-hoc board queries to guess success.
+
+  **The deferred machinery is hard-coded to heal in SIX places** — all must
+  become kind-driven:
+  - `isDeferredOperation` accepts only `'heal_from_damage_result'`
+    (`CombatOperationBatchRunner.ts:53-56`)
+  - `resultTypeOfBatchEntry` always returns `'heal'` (:61-64) — now maps
+    `heal_from_damage_result`→`'heal'`,
+    `add_modifier_on_apply_result`→`'add_buff_modifier'`
+  - `validateDeferred` requires `ref.type === 'deal_damage'` (:303-349) —
+    now per-kind: `heal_from_damage_result` references ONLY `deal_damage`;
+    `add_modifier_on_apply_result` references ONLY `apply_buff`
+  - `materialize` returns only `HealOperation` (:567-582)
+  - `CombatScheduler.recordDeferredSkip` hard-codes result type `'heal'`
+    (:641, via :592) — derives from `resultTypeOfBatchEntry` instead
+  - `ReactionBatchRunner.materializeDeferred` (:181-196) AND
+    `ReactionTestFixtures` (:447-467) each duplicate deferred logic
+    assuming damage→heal — THREE settlement paths must route through ONE
+    shared materialization authority (the contract-layer
+    `CombatOperationBatchRunner.materialize`), not three per-kind copies.
+
+  **Pinned result semantics** (a resisted `apply_buff` is
+  `status:'resolved'` — `prior.status === 'resolved'` alone is NOT
+  sufficient):
+  - prior referenced op `skipped` → deferred records skip
+    `dependency_not_resolved` (existing behavior, unchanged)
+  - prior `apply_buff` `resolved` + `applied:false` → deferred
+    `add_buff_modifier` records skip with
+    `reason:'application_roll_failed'` — never materializes
+  - `applied:true` but `instanceId` absent → structural fault (result
+    contract violation, fail loudly)
+  - `applied:true` + `instanceId` → materialize `add_buff_modifier` on
+    `{kind:'instance', instanceId: result.instanceId}` (`ApplyBuffResult`
+    carries it, `BuffSystem.ts:354`). Binding the returned instanceId also
+    kills selector staleness generally — the modifier always lands on the
+    exact instance the apply committed, never a same-identity ancestor.
+    Never post-hoc board queries to guess success.
+
   **Acceptance:** target holds an existing `reaction_bleed` (potency mod
   +10%) → resisted reapply → stacks/duration/modifier unchanged; only
-  `buff_application_failed` emitted; no `add_buff_modifier` materializes.
+  `buff_application_failed` emitted; deferred recorded skipped with
+  `application_roll_failed`; identical behavior through the production
+  scheduler, `ReactionBatchRunner`, and the fixture path.
 - **S0.14** Design rulings are in §15 — all resolved; no open items.
 
 ## 7. S1 — Seal Replacement + Consumer Migration

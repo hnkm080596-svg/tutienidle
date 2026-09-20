@@ -1,12 +1,14 @@
 # Hỏa Ấn — Ailment System Specification
 
-Status: Ready for Implementation — **PARKED: lưu trữ, chỉ xử lý sau khi toàn bộ mission hiện tại chạy xong** (user ruling 2026-09-17)
+Status: **ACTIVE — READY FOR IMPLEMENTATION** (unparked 2026-09-20 for the canonical-seals/Ngộ-Đạo reaction activation batch; rulings in megaplan `2026-09-19-megaplan-canonical-seals-ngo-dao-reaction-v2.md`)
 Version: 1.1
 Domain: Pháp Tu — Hỏa
 System Owner: Ailment System
 Consumers: Skill System, Damage System, Reaction System, Route System, Combat UI, Combat Log, Progression System
 
 > **Implementation note (2026-09-17):** Hiện tại không có `AilmentSystem` riêng — ailment là debuff/DoT trong `BuffSystem`/`TurnBuffSystem` (R4 canonical authority, xem `docs/systems/buffs.md`). Spec này giả định một ailment authority chuyên trách; khi implement phải quyết định map "Ailment System" lên `TurnBuffSystem` hiện hữu hay tách subsystem mới. `bong` (fire DoT) đã tồn tại — cần ruling: Hỏa Ấn thay thế `bong` hay tồn tại song song.
+>
+> **RESOLVED (2026-09-20, seal-batch ruling D1):** "Ailment System" maps onto the canonical `BuffSystem` (buff2) — elemental ailments are `kind:'ailment'` buff defs with `instanceScope:'per_source'`. Hỏa Ấn **replaces** `bong` by destructive migration (`bong→hoa_an` — no coexistence, no alias); same for the other four elements. Do not implement against the pre-resolution wording above.
 
 ## 1. Design Intent
 

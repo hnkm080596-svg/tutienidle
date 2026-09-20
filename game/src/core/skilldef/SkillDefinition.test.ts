@@ -49,6 +49,36 @@ describe('SkillDefinition validation -- schema shape', () => {
     expect(validateSkillDefinition(activeDef(), deps)).toEqual([])
   })
 
+  it('accepts the elemental_penetration modifier channel; still rejects unknown channels (canonical-seals addendum)', () => {
+    const penOp = {
+      type: 'add_buff_modifier' as const,
+      selector: {
+        kind: 'target_definition' as const,
+        target: 'primary_target' as const,
+        definitionId: 'test_buff.x' as BuffDefinitionId,
+      },
+      modifier: {
+        id: 'duong_kim',
+        channel: 'elemental_penetration' as const,
+        operation: 'add' as const,
+        value: 4,
+        reapply: 'replace' as const,
+        priority: 0,
+        lifetime: { type: 'uses' as const, remaining: 1 },
+      },
+    }
+    expect(
+      validateSkillDefinition(activeDef({ operations: [penOp] }), deps),
+    ).toEqual([])
+    const badChannel = {
+      ...penOp,
+      modifier: { ...penOp.modifier, channel: 'mana' },
+    } as unknown as typeof penOp
+    expect(
+      codes(activeDef({ operations: [badChannel] })),
+    ).toContain('invalid_field_value')
+  })
+
   it('accepts a well-formed PassiveSkillDefinition', () => {
     expect(validateSkillDefinition(passiveDef(), deps)).toEqual([])
   })
@@ -446,5 +476,119 @@ describe('evaluateSkillCondition -- authored conditions', () => {
     expect(evaluateSkillCondition({ kind: 'var', name: 'x', op: 'eq', value: 42 }, ctx)).toBe(true)
     expect(evaluateSkillCondition({ kind: 'crit_landed' }, ctx)).toBe(true)
     expect(evaluateSkillCondition({ kind: 'any_target_landed' }, ctx)).toBe(false)
+  })
+})
+
+describe('SkillDefinition validation -- same-source buff access (canonical-seals S0.4)', () => {
+  const identitySelector = {
+    kind: 'identity' as const,
+    definitionId: 'hoa_an' as BuffDefinitionId,
+    source: 'self' as const,
+    target: 'primary_target' as const,
+  }
+
+  it('accepts identity + target_definition selectors on buff mutation ops', () => {
+    expect(
+      validateSkillDefinition(
+        activeDef({
+          operations: [
+            {
+              type: 'add_buff_stacks',
+              selector: identitySelector,
+              stacks: 1,
+            },
+            {
+              type: 'trigger_buff_periodic',
+              selector: {
+                kind: 'target_definition',
+                target: 'all_enemies',
+                definitionId: 'hoa_an',
+              },
+            },
+          ],
+        }),
+        deps,
+      ),
+    ).toEqual([])
+  })
+
+  it('rejects a set-valued SOURCE on an identity selector', () => {
+    const op: AuthoredSkillOperation = {
+      type: 'add_buff_modifier',
+      selector: {
+        kind: 'identity',
+        definitionId: 'hoa_an',
+        source: 'all_allies',
+        target: 'primary_target',
+      },
+      modifier: {
+        id: 'm.1',
+        channel: 'potency',
+        operation: 'add',
+        value: 1,
+        reapply: 'replace',
+        priority: 0,
+        lifetime: { type: 'buff_lifetime' },
+      },
+    }
+    expect(codes(activeDef({ operations: [op] }))).toContain('invalid_field_value')
+  })
+
+  it('rejects set-valued target/source on read_stacks', () => {
+    const setTarget: AuthoredSkillOperation = {
+      type: 'read_stacks',
+      target: 'all_enemies',
+      definitionId: 'hoa_an',
+      into: 'x',
+    }
+    expect(codes(activeDef({ operations: [setTarget] }))).toContain(
+      'invalid_field_value',
+    )
+    const setSource: AuthoredSkillOperation = {
+      type: 'read_stacks',
+      target: 'primary_target',
+      source: 'affected_targets',
+      definitionId: 'hoa_an',
+      into: 'x',
+    }
+    expect(codes(activeDef({ operations: [setSource] }))).toContain(
+      'invalid_field_value',
+    )
+  })
+
+  it('onLanded inspects selector.target/source, not only op.target', () => {
+    const hit: AuthoredSkillOperation = {
+      type: 'deal_damage',
+      target: 'primary_target',
+      coefficient: 1,
+      onLanded: [
+        {
+          type: 'add_buff_stacks',
+          selector: {
+            kind: 'identity',
+            definitionId: 'hoa_an',
+            source: 'self',
+            target: 'primary_target', // bypass: top-level has no target now
+          },
+          stacks: 1,
+        },
+      ],
+    }
+    expect(codes(activeDef({ operations: [hit] }))).toContain(
+      'invalid_field_value',
+    )
+    const legal: AuthoredSkillOperation = {
+      ...hit,
+      onLanded: [
+        {
+          type: 'add_buff_stacks',
+          selector: { ...identitySelector, target: 'loop_target' },
+          stacks: 1,
+        },
+      ],
+    }
+    expect(
+      validateSkillDefinition(activeDef({ operations: [legal] }), deps),
+    ).toEqual([])
   })
 })

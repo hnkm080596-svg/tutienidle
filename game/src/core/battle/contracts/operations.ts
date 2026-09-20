@@ -50,6 +50,10 @@ export type BuffModifierChannel =
   | 'next_periodic_damage'
   | 'duration'
   | 'application_chance'
+  // Instance-local penetration pool (canonical-seals addendum): folded
+  // into BuffPeriodicDamageRequest.elementalPenetrationBonus, never
+  // mutates source.stats. Points on the Resistance.ts scale (1 = 1%).
+  | 'elemental_penetration'
 
 export type BuffModifierLifetime =
   | { type: 'buff_lifetime' }
@@ -148,6 +152,13 @@ export interface DealDamageOperation {
         resolves power/mitigation vs THIS entity while origin.sourceId
         keeps vitals/event attribution. Absent = origin.sourceId. */
     statSourceId?: CombatEntityId
+    /** Instance-local penetration bonus (canonical-seals addendum):
+        ADDITIVE points on top of the source's elemental penetration
+        stat at damage resolution -- never a stats mutation. Legal iff
+        origin.kind === 'buff_periodic' AND damageProfile ===
+        'legacy_dot' AND element is an ElementType (never 'physical' /
+        undefined); structural validation faults any other carrier. */
+    elementalPenetrationBonus?: number
     /** Contract v1.6 -- DECLARED hit/crit/armor intent. The producer
         declares, DamageAuthority consumes CombatRng and performs every
         roll; the executor/scheduler never roll these. Semantics mirror

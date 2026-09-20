@@ -37,6 +37,7 @@ import type {
 } from './BuffDefinition'
 import type { BuffInstance } from './BuffInstance'
 import type { BuffModifier } from './BuffModifier'
+import type { BuffModifierChannel } from '../battle/contracts/operations'
 import { resolveChannel } from './BuffModifierEngine'
 
 export interface PendingUseMark {
@@ -57,7 +58,7 @@ export interface PeriodicRequestComputation {
     reserve. */
 function collectUseMarks(
   instance: BuffInstance,
-  channels: readonly ('periodic_damage' | 'potency' | 'next_periodic_damage')[],
+  channels: readonly BuffModifierChannel[],
   requestId: string,
 ): PendingUseMark[] {
   const marks: PendingUseMark[] = []
@@ -65,7 +66,7 @@ function collectUseMarks(
     if (
       m.pendingRequestId === undefined &&
       m.lifetime.type === 'uses' &&
-      channels.includes(m.channel as 'periodic_damage' | 'potency' | 'next_periodic_damage')
+      channels.includes(m.channel)
     ) {
       marks.push({ instanceId: instance.instanceId, modifierRuntimeId: m.modifierRuntimeId })
     }
@@ -73,7 +74,12 @@ function collectUseMarks(
   return marks
 }
 
-const DAMAGE_CHANNELS = ['periodic_damage', 'potency', 'next_periodic_damage'] as const
+const DAMAGE_CHANNELS = [
+  'periodic_damage',
+  'potency',
+  'next_periodic_damage',
+  'elemental_penetration',
+] as const
 
 export function computePeriodicRequest(
   instance: BuffInstance,
@@ -103,6 +109,13 @@ export function computePeriodicRequest(
     resolveChannel(instance.modifiers, 'periodic_damage', 1) *
     resolveChannel(instance.modifiers, 'potency', 1) *
     resolveChannel(instance.modifiers, 'next_periodic_damage', 1)
+  // canonical-seals addendum: additive penetration points (0-base; NOT a
+  // coefficient multiplier) ride the request to the damage authority.
+  const penetrationBonus = resolveChannel(
+    instance.modifiers,
+    'elemental_penetration',
+    0,
+  )
 
   const request: BuffPeriodicDamageRequest = {
     requestId,
@@ -118,6 +131,9 @@ export function computePeriodicRequest(
     canMiss: p.canMiss,
     stackCount: instance.stacks,
     ...(p.tags !== undefined ? { tags: p.tags } : {}),
+    ...(penetrationBonus !== 0
+      ? { elementalPenetrationBonus: penetrationBonus }
+      : {}),
     ...(p.scaling === 'snapshot' && instance.snapshots?.[p.id] !== undefined
       ? { snapshot: instance.snapshots[p.id] }
       : {}),

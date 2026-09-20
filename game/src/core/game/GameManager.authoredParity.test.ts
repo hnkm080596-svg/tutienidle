@@ -117,7 +117,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
 
     expect(basic.id).toBe('doc_chuong')
     expect(basic.damage).toBeUndefined()
-    expect(basic.appliesAilments).toContainEqual({ buffDefinitionId: 'trung_doc', chance: 1 })
+    expect(basic.appliesAilments).toContainEqual({ buffDefinitionId: 'doc_can', chance: 1 })
   })
 
   it('phap_tu fire basic carries authored elemental components, scaling and ailment chance', () => {
@@ -145,7 +145,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
       ])
     }
 
-    expect(basic.appliesAilments).toContainEqual({ buffDefinitionId: 'bong', chance: 0.5 })
+    expect(basic.appliesAilments).toContainEqual({ buffDefinitionId: 'hoa_an', chance: 0.5 })
   })
 
   it('kiem_tu without learned tram falls back to the static build basic (physical x1, no authored scaling)', () => {

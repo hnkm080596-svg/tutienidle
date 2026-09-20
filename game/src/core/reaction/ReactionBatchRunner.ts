@@ -174,23 +174,23 @@ export class ReactionBatchRunner {
   }
 
   /** contract settlement.ts + sec.49: a deferred op materializes from
-      the referenced in-batch deal_damage result. A non-resolved
-      reference yields dependency_not_resolved -- never a silent 0.
-      The materialized heal then validates live target state like any
-      other op. */
+      the referenced in-batch result. The batch runner is the single
+      authority on pre-materialize skip outcomes (dependency_not_resolved
+      / application_roll_failed) -- never a silent 0. The materialized op
+      then validates live target state like any other op. */
   private materializeDeferred(
     deferred: DeferredOperation,
     inBatch: BatchResultStore,
     resolution: ReactionResolution,
     sink: CombatEventSink,
   ): CombatOperationResultBase {
-    const referenced = inBatch.get(deferred.resultOperationId)
-    if (referenced?.status !== 'resolved') {
+    const skipReason = this.batchRunner.deferredSkipReason(deferred, inBatch)
+    if (skipReason !== undefined) {
       return {
         operationId: deferred.operationId,
         type: resultTypeOfBatchEntry(deferred),
         status: 'skipped',
-        reason: 'dependency_not_resolved',
+        reason: skipReason,
       } as CombatOperationResult
     }
     const op = this.batchRunner.materialize(deferred, inBatch)

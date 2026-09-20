@@ -70,7 +70,7 @@ function poisonBattleState(gameManager: GameManager) {
   participant.entity.currentWard = 0
   participant.entity.currentThe = 40
   participant.entity.externalWard = { sourceId: 'ext_source', amount: 999 }
-  gameManager.turnBattleOps.applyBuffToPlayer('bong')
+  gameManager.turnBattleOps.applyBuffToPlayer('hoa_an')
   if (participant.special) {
     participant.special.remainingCooldownTurns = 3
   }
@@ -422,19 +422,17 @@ describe('combat-contract scheduler wiring (M4; P5 T2)', () => {
     // (a) A batch whose entity_alive precondition fails must be skipped
     // atomically as stale -- proving the precondition read-port is wired
     // to the live roster rather than a phantom lookup.
+    // The probe registers on 'buff_stacks_changed' -- an unclaimed type:
+    // 'elemental_application_committed' is now production-owned by the
+    // canonical-seals S3 dispatcher (registerImmediateHandler faults on
+    // duplicates, which is exactly the single-registration guarantee).
     const probe: CombatEventPayload = {
-      type: 'elemental_application_committed',
+      type: 'buff_stacks_changed',
+      rootActionId: 'action.wire.1',
       instanceId: 'bi.wire',
-      sourceId: 'player',
-      targetId: enemy.id,
-      definitionId: 'def.wire',
-      element: 'fire',
       stacksBefore: 0,
       stacksAfter: 1,
-      requestedStacks: 1,
       addedStacks: 1,
-      reactionEligibility: 'eligible',
-      origin: WIRE_ORIGIN,
     }
     const batch: CombatOperationBatch = {
       batchId: 'b.wire',
@@ -449,7 +447,7 @@ describe('combat-contract scheduler wiring (M4; P5 T2)', () => {
         },
       ],
     }
-    scheduler.registerImmediateHandler('elemental_application_committed', () => ({
+    scheduler.registerImmediateHandler('buff_stacks_changed', () => ({
       kind: 'batch',
       batch,
     }))

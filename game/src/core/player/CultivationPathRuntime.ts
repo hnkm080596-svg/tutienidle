@@ -57,6 +57,15 @@ export interface CultivationPathRuntime {
   ): SurviveLethalSource[]
   /** Emblem/marker slot overrides (Ngu Kiem Dao special/ultimate). */
   emblemSlots?(): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition }
+  /**
+   * Canonical-seals S3 -- whether the player's party carries the
+   * elemental-reaction aura (van_phap_than_hoa) at battle entry. Only
+   * the Ngo Dao An runtime answers true, and only while
+   * ngo_dao_hon_don is learned; every other runtime omits the member
+   * (undefined = false). The ops layer consumes this flag -- it never
+   * evaluates path identity itself (battleLifecyclePathBoundary).
+   */
+  grantsElementalReactionAura?(player: PlayerData): boolean
 }
 
 /**

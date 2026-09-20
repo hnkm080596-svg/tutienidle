@@ -331,6 +331,7 @@ export class SkillExecutor {
         (inst) =>
           (filter.definitionId === undefined ||
             inst.definitionId === filter.definitionId) &&
+          (filter.sourceId === undefined || inst.sourceId === filter.sourceId) &&
           (filter.kind === undefined || inst.kind === filter.kind) &&
           (filter.periodicOnly !== true || inst.hasPeriodic),
       )

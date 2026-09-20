@@ -53,7 +53,9 @@ export interface PreconditionChecker {
 export function isDeferredOperation(
   entry: ResolvedCombatOperation | DeferredOperation,
 ): entry is DeferredOperation {
-  return 'kind' in entry && entry.kind === 'heal_from_damage_result'
+  // Any `kind` marks deferred intent -- resolved ops never carry one.
+  // Kind legality is validateDeferred's job (unknown kind -> fault).
+  return 'kind' in entry
 }
 
 /** The CombatOperationResult `type` a batch entry would produce -- used
@@ -61,7 +63,10 @@ export function isDeferredOperation(
 export function resultTypeOfBatchEntry(
   entry: ResolvedCombatOperation | DeferredOperation,
 ): CombatOperationResult['type'] {
-  return isDeferredOperation(entry) ? 'heal' : entry.type
+  if (!isDeferredOperation(entry)) return entry.type
+  return entry.kind === 'heal_from_damage_result'
+    ? 'heal'
+    : 'add_buff_modifier'
 }
 
 /** Typed store backing BatchResultContext -- also retains the executed op
@@ -306,22 +311,38 @@ export class CombatOperationBatchRunner {
     index: number,
     batchId: string,
   ): void {
-    if (entry.kind !== 'heal_from_damage_result') {
-      this.fail(batchId, index, `unknown deferred kind`)
-    }
     if (!isNonEmptyString(entry.resultOperationId)) {
       this.fail(batchId, index, `deferred '${entry.operationId}': blank resultOperationId`)
     }
-    if (entry.healTarget !== 'source' && entry.healTarget !== 'target') {
-      this.fail(batchId, index, `deferred '${entry.operationId}': bad healTarget`)
-    }
-    // Lens C5: fraction must be finite AND non-negative -- a negative
-    // fraction materializes a negative heal, bypassing the literal-heal
-    // `amount >= 0` validation.
-    if (!isFiniteNumber(entry.fraction) || entry.fraction < 0) {
-      this.fail(batchId, index, `deferred '${entry.operationId}': bad fraction`)
-    }
     this.assertOrigin(entry.origin, batchId, index)
+
+    // Per-kind declared dependency (canonical-seals addendum): a heal may
+    // only reference a deal_damage; an apply-result modifier may only
+    // reference an apply_buff.
+    let requiredRefType: 'deal_damage' | 'apply_buff'
+    switch (entry.kind) {
+      case 'heal_from_damage_result': {
+        requiredRefType = 'deal_damage'
+        if (entry.healTarget !== 'source' && entry.healTarget !== 'target') {
+          this.fail(batchId, index, `deferred '${entry.operationId}': bad healTarget`)
+        }
+        // Lens C5: fraction must be finite AND non-negative -- a negative
+        // fraction materializes a negative heal, bypassing the literal-heal
+        // `amount >= 0` validation.
+        if (!isFiniteNumber(entry.fraction) || entry.fraction < 0) {
+          this.fail(batchId, index, `deferred '${entry.operationId}': bad fraction`)
+        }
+        break
+      }
+      case 'add_modifier_on_apply_result': {
+        requiredRefType = 'apply_buff'
+        this.assertModifierShape(entry.modifier, batchId, index)
+        break
+      }
+      default:
+        this.fail(batchId, index, `unknown deferred kind`)
+    }
+
     // Scan defensively -- later entries have not been shape-checked yet
     // and could be non-objects (a raw TypeError is not a structural fault).
     const refIndex = entries.findIndex(
@@ -346,12 +367,26 @@ export class CombatOperationBatchRunner {
       )
     }
     const ref = entries[refIndex]
-    if (ref === undefined || isDeferredOperation(ref) || ref.type !== 'deal_damage') {
+    if (ref === undefined || isDeferredOperation(ref) || ref.type !== requiredRefType) {
       this.fail(
         batchId,
         index,
-        `deferred '${entry.operationId}' must reference an earlier deal_damage entry`,
+        `deferred '${entry.operationId}' must reference an earlier ${requiredRefType} entry`,
       )
+    }
+  }
+
+  private assertModifierShape(
+    modifier: unknown,
+    batchId: string,
+    index: number,
+  ): void {
+    if (
+      typeof modifier !== 'object' ||
+      modifier === null ||
+      !isNonEmptyString((modifier as { id?: unknown }).id)
+    ) {
+      this.fail(batchId, index, 'bad modifier')
     }
   }
 
@@ -419,6 +454,20 @@ export class CombatOperationBatchRunner {
         if (!isFiniteNumber(p.hitCount)) bad('hitCount')
         if (typeof p.canCrit !== 'boolean') bad('canCrit')
         if (typeof p.canMiss !== 'boolean') bad('canMiss')
+        // canonical-seals addendum -- the penetration bonus is a
+        // buff_periodic+legacy_dot+elemental carrier only; any other
+        // lane is a broken command graph, never silently ignored.
+        if (p.elementalPenetrationBonus !== undefined) {
+          if (
+            !isFiniteNumber(p.elementalPenetrationBonus) ||
+            entry.origin.kind !== 'buff_periodic' ||
+            p.damageProfile !== 'legacy_dot' ||
+            p.element === undefined ||
+            p.element === 'physical'
+          ) {
+            bad('elementalPenetrationBonus')
+          }
+        }
         return
       }
       case 'heal': {
@@ -460,10 +509,7 @@ export class CombatOperationBatchRunner {
       case 'add_buff_modifier': {
         const p = entry.payload
         this.assertSelector(p.selector, batchId, index)
-        const mod: unknown = p.modifier
-        if (typeof mod !== 'object' || mod === null || !isNonEmptyString((mod as { id?: unknown }).id)) {
-          bad('modifier')
-        }
+        this.assertModifierShape(p.modifier, batchId, index)
         return
       }
       case 'remove_buff_modifier': {
@@ -559,39 +605,108 @@ export class CombatOperationBatchRunner {
     }
   }
 
+  /** The typed skip a deferred entry earns BEFORE materialization, or
+      undefined when it must materialize. Single authority consulted by
+      every settlement path (production scheduler frame, headless
+      ReactionBatchRunner, test fixtures):
+        - referenced result absent / non-resolved
+          -> 'dependency_not_resolved' (r4 HIGH 2: never a silent
+             materialization on a skipped dependency)
+        - 'add_modifier_on_apply_result' whose apply_buff resolved with
+          {applied:false} -> 'application_roll_failed' (status
+          'resolved' is NOT application success -- contract sec.17)
+      A resolved wrong-type reference is a structural fault -- batch
+      validation owns it statically; this is the standalone-call
+      defense. */
+  deferredSkipReason(
+    entry: DeferredOperation,
+    results: BatchResultContext,
+  ): 'dependency_not_resolved' | 'application_roll_failed' | undefined {
+    const prior = results.get(entry.resultOperationId)
+    if (prior === undefined || prior.status !== 'resolved') {
+      return 'dependency_not_resolved'
+    }
+    if (entry.kind === 'add_modifier_on_apply_result') {
+      if (prior.type !== 'apply_buff') {
+        throw new CombatSettlementFault(
+          `deferred op '${entry.operationId}' references '${entry.resultOperationId}' (${prior.type}) -- expected apply_buff`,
+        )
+      }
+      if (prior.result?.applied === false) {
+        return 'application_roll_failed'
+      }
+    }
+    return undefined
+  }
+
   /** Materialize a deferred op at its position (R-C7). The referenced
-      result must be a RESOLVED deal_damage record -- the scheduler
-      pre-checks status and records dependency_not_resolved skips, so a
-      non-resolved result reaching here is a structural fault. The
-      producer-minted operationId is preserved (R-C2). */
+      result must be a RESOLVED record of the kind's declared dependency
+      type -- deferredSkipReason pre-checks the skippable outcomes, so a
+      non-resolved or non-materializable result reaching here is a
+      structural fault. The producer-minted operationId is preserved
+      (R-C2). */
   materialize(
     deferred: DeferredOperation,
     results: BatchResultContext,
   ): ResolvedCombatOperation {
-    const prior = results.get(deferred.resultOperationId)
-    const priorOp = results.getOperation(deferred.resultOperationId)
-    if (
-      prior === undefined ||
-      prior.status !== 'resolved' ||
-      prior.type !== 'deal_damage' ||
-      prior.damage === undefined ||
-      priorOp === undefined ||
-      priorOp.type !== 'deal_damage'
-    ) {
-      throw new CombatSettlementFault(
-        `deferred op '${deferred.operationId}' cannot materialize: '${deferred.resultOperationId}' is not a resolved deal_damage result`,
-      )
-    }
-    const amount = prior.damage.hpDamage * deferred.fraction
-    const targetId =
-      deferred.healTarget === 'source'
-        ? priorOp.origin.sourceId
-        : priorOp.payload.targetId
-    return {
-      operationId: deferred.operationId,
-      type: 'heal',
-      origin: deferred.origin,
-      payload: { targetId, amount },
+    switch (deferred.kind) {
+      case 'heal_from_damage_result': {
+        const prior = results.get(deferred.resultOperationId)
+        const priorOp = results.getOperation(deferred.resultOperationId)
+        if (
+          prior === undefined ||
+          prior.status !== 'resolved' ||
+          prior.type !== 'deal_damage' ||
+          prior.damage === undefined ||
+          priorOp === undefined ||
+          priorOp.type !== 'deal_damage'
+        ) {
+          throw new CombatSettlementFault(
+            `deferred op '${deferred.operationId}' cannot materialize: '${deferred.resultOperationId}' is not a resolved deal_damage result`,
+          )
+        }
+        const amount = prior.damage.hpDamage * deferred.fraction
+        const targetId =
+          deferred.healTarget === 'source'
+            ? priorOp.origin.sourceId
+            : priorOp.payload.targetId
+        return {
+          operationId: deferred.operationId,
+          type: 'heal',
+          origin: deferred.origin,
+          payload: { targetId, amount },
+        }
+      }
+      case 'add_modifier_on_apply_result': {
+        const prior = results.get(deferred.resultOperationId)
+        if (
+          prior === undefined ||
+          prior.status !== 'resolved' ||
+          prior.type !== 'apply_buff'
+        ) {
+          throw new CombatSettlementFault(
+            `deferred op '${deferred.operationId}' cannot materialize: '${deferred.resultOperationId}' is not a resolved apply_buff result`,
+          )
+        }
+        const instanceId = prior.result?.instanceId
+        if (prior.result?.applied !== true || instanceId === undefined) {
+          // deferredSkipReason maps applied:false to a skip BEFORE this
+          // site; a failed/malformed application reaching materialize is
+          // a caller contract breach -- structural, never an attach.
+          throw new CombatSettlementFault(
+            `deferred op '${deferred.operationId}' cannot materialize: '${deferred.resultOperationId}' did not settle a successful application`,
+          )
+        }
+        return {
+          operationId: deferred.operationId,
+          type: 'add_buff_modifier',
+          origin: deferred.origin,
+          payload: {
+            selector: { kind: 'instance', instanceId },
+            modifier: deferred.modifier,
+          },
+        }
+      }
     }
   }
 

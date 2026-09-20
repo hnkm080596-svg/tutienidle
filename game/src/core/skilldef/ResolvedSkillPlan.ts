@@ -229,6 +229,9 @@ export type ResolvedSkillPlanStep =
       filter: {
         targetId: CombatEntityId
         definitionId?: BuffDefinitionId
+        /** same-source lanes: only instances applied by this source match
+            (absent = any source). */
+        sourceId?: CombatEntityId
         kind?: 'buff' | 'debuff' | 'ailment' | 'marker'
         /** detonate lane: only instances whose def carries periodic
             effects (utility ailments untouched). */

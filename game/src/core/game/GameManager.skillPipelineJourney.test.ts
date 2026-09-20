@@ -154,7 +154,7 @@ describe('M7.5a -- production journey: authored ailment skill through the canoni
       const enemyParticipant = battle.enemies[0]
       if (enemyParticipant !== undefined) {
         const buffs = gameManager.getBattleBuffs(enemyParticipant.entity.id)
-        if (!sawTrungDoc && buffs.some((buff) => buff.definitionId === 'trung_doc')) {
+        if (!sawTrungDoc && buffs.some((buff) => buff.definitionId === 'doc_can')) {
           sawTrungDoc = true
           hpWhenDocSeen = enemyParticipant.entity.currentHp
         }

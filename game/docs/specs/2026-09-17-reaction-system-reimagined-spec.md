@@ -14,6 +14,9 @@ Migration requirement: None
 > - **Ailment rename/rework map (không phải rename thuần):** Hàn Tức ≠ `te_cong` (Tê Cóng hiện là DoT/CC), Liệt Thương ≠ `chay_mau` (Chảy Máu hiện là DoT), Trấn Ấn ≠ `thach_hoa` (Thạch Hóa hiện là CC cứng). Và `Độc Căn` hiện là TÊN mechanic threshold bên trong `trung_doc` (poison root) — name collision cần resolve.
 > - Dependencies: yêu cầu buff spec v1.5 landed (per_source instance, `reactionEligibility` trên application commit, removal reason `reaction`, modifier `reapply: max`, `buff_lifetime` modifier lifetime); Cấm Công cần action-tagging trên skill (skill spec §7 `tags` cover) + ActionRestriction enforcement ở turn engine; gauge ops cần `ActionGauge` push API (đã tồn tại `core/battle/turn/ActionGauge.ts`).
 > - **v1.1 (2026-09-18):** sync hai điểm bị Contract v1.5 supersede — (a) §24 tie-break: `canonical ReactionId lexical/order` thay bằng authored `selectionTiePriority` (lower wins; lexical ReactionId bị cấm); (b) `reactionEligible: boolean` thay bằng `reactionEligibility: 'eligible' | 'suppressed'` — runtime metadata trên `ApplyBuffRequest`, không còn là boolean trên event. Các chỗ cũ đã được sửa inline; Contract v1.5 vẫn là source of truth nếu còn sót.
+> - **v1.2 (2026-09-20, seal-batch activation rulings — megaplan `2026-09-19-megaplan-canonical-seals-ngo-dao-reaction-v2.md`):**
+>   (a) §2 "Reaction Is Exclusive To Ngộ Đạo" is SUPERSEDED by the Vạn Pháp Thân Hòa model — the hidden path owns the ENABLING MECHANISM, not exclusive production: its tâm pháp applies the `van_phap_than_hoa` aura to itself + ALL allied participants (companions included) at battle entry, and idempotently re-grants on hidden-mage resurrection. ANY allied entity holding the aura (`elemental_reaction_enabled` capability) may trigger Reaction from its own canonical seal applications; the board stays same-source/same-target — the aura does not merge casters' boards. "Visible Pháp Tu loses automatic reactions" narrows to: an entity WITHOUT the aura does not react.
+>   (b) The :14 rename-map `≠` claims are SUPERSEDED by destructive migration: `bong→hoa_an`, `te_cong→han_tuc`, `trung_doc→doc_can`, `chay_mau→liet_thuong`, `thach_hoa→tran_an` — the five legacy ids cease to exist (no aliases, no dual state); `doc_the` (the old "Độc Căn" reward buff) is deleted as an orphan, freeing the name for the wood seal.
 
 ## 1. Purpose
 
@@ -43,6 +46,8 @@ Reaction System quyết định:
 Các system owner khác thực thi operation tương ứng.
 
 ## 2. Reaction Is Exclusive To Ngộ Đạo
+
+> **SUPERSEDED (v1.2, 2026-09-20):** Ngộ Đạo owns the enabling mechanism — `van_phap_than_hoa` party aura — not exclusive reaction production. Any allied holder reacts from its own canonical seals; non-holders never react. Kept below for history.
 
 Visible Pháp Tu:
 

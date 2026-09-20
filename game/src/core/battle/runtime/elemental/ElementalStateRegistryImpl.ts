@@ -26,6 +26,18 @@ type _AllElementsMapped =
 const _allElementsMappedCheck: _AllElementsMapped = true
 void _allElementsMappedCheck
 
+// Canonical seal<->element binding (contract sec.19, canonical-seals S1).
+// The single source of truth both ElementalStateRegistry construction
+// sites (battle mint + persistent lane) must use -- mapping anything else
+// desyncs reaction state from the canonical seal defs.
+export const CANONICAL_ELEMENTAL_SEALS: Readonly<Record<ElementType, BuffDefinitionId>> = {
+  fire: 'hoa_an' as BuffDefinitionId,
+  water: 'han_tuc' as BuffDefinitionId,
+  wood: 'doc_can' as BuffDefinitionId,
+  metal: 'liet_thuong' as BuffDefinitionId,
+  earth: 'tran_an' as BuffDefinitionId,
+}
+
 /**
  * createElementalStateRegistry -- validating factory for the shared
  * element <-> buff-definitionId authority (contract sec.19).

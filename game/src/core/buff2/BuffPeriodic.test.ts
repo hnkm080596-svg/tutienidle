@@ -238,6 +238,49 @@ describe('modifier channels + pending uses', () => {
     expect(removed[0]!.modifierRuntimeId).toBe(entry.modifierRuntimeId)
   })
 
+  it('elemental_penetration folds ADDITIVE points onto the request, never the coefficient (canonical-seals addendum)', () => {
+    const w = makeBuffSystemWorld()
+    const d = def(w, dotDef())
+    const instance = apply(w, d.id)
+    instance.modifiers.push({
+      ...modifier({
+        channel: 'elemental_penetration',
+        operation: 'add',
+        value: 20,
+        lifetime: { type: 'buff_lifetime' },
+      }),
+      modifierRuntimeId: w.mintModifierRuntimeId(instance.instanceId),
+      instanceId: instance.instanceId,
+    })
+    w.system.onHolderTurnEnd(TEST_ENTITIES.targetA, w.makeLctx())
+    const req = lastRequests(w)[0]!
+    expect(req.elementalPenetrationBonus).toBe(20)
+    // Coefficient untouched -- penetration is not a potency multiplier.
+    expect(req.coefficient).toBe(2)
+  })
+
+  it('uses:1 elemental_penetration entries pending-mark and consume like the other damage channels', () => {
+    const w = makeBuffSystemWorld()
+    const d = def(w, dotDef())
+    const instance = apply(w, d.id)
+    const entry: BuffModifier = {
+      ...modifier({
+        channel: 'elemental_penetration',
+        operation: 'add',
+        value: 4,
+      }),
+      modifierRuntimeId: w.mintModifierRuntimeId(instance.instanceId),
+      instanceId: instance.instanceId,
+    }
+    instance.modifiers.push(entry)
+    w.system.onHolderTurnEnd(TEST_ENTITIES.targetA, w.makeLctx())
+    const req = lastRequests(w)[0]!
+    expect(req.elementalPenetrationBonus).toBe(4)
+    expect(entry.pendingRequestId).toBe(req.requestId)
+    w.settlePeriodic(req.requestId, 'resolved')
+    expect(instance.modifiers).toHaveLength(0)
+  })
+
   it('skipped settled event releases the mark -- a later tick refolds it', () => {
     const w = makeBuffSystemWorld()
     const d = def(w, dotDef())

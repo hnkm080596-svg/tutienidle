@@ -68,24 +68,6 @@ describe('describeSkillMechanics (Task 12 tooltip)', () => {
     expect(lines[0]!.text).toContain('8 lần')
   })
 
-  it('E-1 spreadsAilmentId → dòng lan, percent mặc định toàn bộ; 0.5 → 50%', () => {
-    const registry = registryWithBong()
-
-    const full = describeSkillMechanics(
-      skillWith([{ type: 'damage', value: 5, spreadsAilmentId: 'bong' }]),
-      registry,
-    )
-
-    expect(full[0]!.text).toContain('toàn bộ tầng Bỏng')
-
-    const half = describeSkillMechanics(
-      skillWith([{ type: 'damage', value: 5, spreadsAilmentId: 'bong', spreadStackPercent: 0.5 }]),
-      registry,
-    )
-
-    expect(half[0]!.text).toContain('50% tầng Bỏng')
-  })
-
   it('E-5 grantsZone + zoneElement → dòng vùng theo hành; không khai → Kim', () => {
     const zone = describeSkillMechanics(
       skillWith([{ type: 'damage', value: 5, grantsZone: true, zoneElement: 'fire' }]),

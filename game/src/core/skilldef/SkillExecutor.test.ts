@@ -371,8 +371,11 @@ describe('SkillExecutor -- spec DoD rows', () => {
       operations: [
         {
           type: 'trigger_buff_periodic',
-          target: 'primary_target',
-          definitionId: 'ailment.burn' as BuffDefinitionId,
+          selector: {
+            kind: 'target_definition' as const,
+            target: 'primary_target' as const,
+            definitionId: 'ailment.burn' as BuffDefinitionId,
+          },
           periodicId: 'burn.tick',
         },
       ],

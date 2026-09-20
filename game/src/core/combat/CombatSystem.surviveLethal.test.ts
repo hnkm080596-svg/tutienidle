@@ -299,9 +299,9 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
 
     // Player mang 2 debuff trước đòn chí mạng (ailment + debuff kinds —
     // the cleanse lane filters on polarity, not literal kind).
-    runtime.applyBuff('trung_doc', playerP, enemyP)
+    runtime.applyBuff('doc_can', playerP, enemyP)
     runtime.applyBuff('kiep_thuong', playerP, enemyP)
-    expect(buffsOn(runtime, 'player', 'trung_doc')).toHaveLength(1)
+    expect(buffsOn(runtime, 'player', 'doc_can')).toHaveLength(1)
     expect(buffsOn(runtime, 'player', 'kiep_thuong')).toHaveLength(1)
 
     combat.applyDirectDamage(player, 9999, 'enemy_1')
@@ -310,7 +310,7 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
     expect(player.currentHp).toBe(1)
 
     // Debuff sạch, Tử Sinh Ngộ active (stacks 1).
-    expect(buffsOn(runtime, 'player', 'trung_doc')).toHaveLength(0)
+    expect(buffsOn(runtime, 'player', 'doc_can')).toHaveLength(0)
     expect(buffsOn(runtime, 'player', 'kiep_thuong')).toHaveLength(0)
     const granted = buffsOn(runtime, 'player', 'tu_sinh_ngo')
     expect(granted).toHaveLength(1)
@@ -344,19 +344,19 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
     session.surviveEffects = bindSurviveEffects(runtime)
     combat.setSurviveLethalSession(session)
 
-    runtime.applyBuff('trung_doc', playerP, enemyP)
+    runtime.applyBuff('doc_can', playerP, enemyP)
 
     // Lần 1: guard cứu (tẩy debuff).
     combat.applyDirectDamage(player, 9999, 'enemy_1')
     expect(player.alive).toBe(true)
 
     // Gây lại debuff + HP về 1 lần nữa → chết thật, debuff GIỮ NGUYÊN.
-    runtime.applyBuff('trung_doc', playerP, enemyP)
+    runtime.applyBuff('doc_can', playerP, enemyP)
     player.currentHp = 10
     combat.applyDirectDamage(player, 9999, 'enemy_1')
 
     expect(player.alive).toBe(false)
-    expect(buffsOn(runtime, 'player', 'trung_doc')).toHaveLength(1)
+    expect(buffsOn(runtime, 'player', 'doc_can')).toHaveLength(1)
   })
 
   it('AR-18: applies custom grantBuffId and respects cleanseDebuffs policy', () => {
@@ -371,7 +371,7 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
       statModifiers: [{ stat: 'might', percent: 0.5 }],
       dispellable: false,
     }
-    const trungDoc = LIVE_BUFFS.find((def) => def.id === 'trung_doc')!
+    const trungDoc = LIVE_BUFFS.find((def) => def.id === 'doc_can')!
     const registry = makeTestBuffRegistry([customBuff, trungDoc])
     const combat = new CombatSystem(new EventBus())
 
@@ -390,14 +390,14 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
     }
     combat.setSurviveLethalSession(session)
 
-    runtime.applyBuff('trung_doc', playerP, enemyP)
+    runtime.applyBuff('doc_can', playerP, enemyP)
 
     combat.applyDirectDamage(player, 9999, 'enemy_1')
 
     expect(player.alive).toBe(true)
     expect(player.currentHp).toBe(1)
     // cleanseDebuffs: false -> debuff must NOT be cleansed
-    expect(buffsOn(runtime, 'player', 'trung_doc')).toHaveLength(1)
+    expect(buffsOn(runtime, 'player', 'doc_can')).toHaveLength(1)
     // custom buff applied instead of tu_sinh_ngo
     expect(buffsOn(runtime, 'player', 'custom_phoenix_buff')).toHaveLength(1)
   })

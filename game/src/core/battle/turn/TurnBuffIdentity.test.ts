@@ -4,9 +4,9 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { GENERIC_PHYSICAL_BASIC } from '../../../data/skill/TurnBasicAttacks'
-import { makeTurnRuntime } from './testing/TurnRuntimeFixtures'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 
 // ARCH-009 (M9) — buff identity repair, driven through the REAL
 // TurnBattleSystem + BUFF_REGISTRY (no helper-only shortcuts):
@@ -23,6 +23,46 @@ import { makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 //  - MULTI_SOURCE_SELECTION: when several sources supply a valid
 //    ingredient, the OLDEST applied instance is consumed (pool insertion
 //    order — see ElementReaction.ts's consumption contract).
+
+// Test fixtures: the engine keeps the on_hit_proc mechanism but no
+// production def carries it after the legacy ailment migration. These
+// synthetic defs mirror the retired thach_hoa/choang shapes so AUD-C04
+// identity coverage stays exercised.
+const TEST_STUN: BuffDefinition = {
+  id: 'test_choang',
+  name: 'Choáng',
+  kind: 'ailment',
+  polarity: 'debuff',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 1.5, scaling: 'ailment_scaled' },
+  application: { resistance: 'ailment' },
+  controls: [{ type: 'stun' }],
+  dispellable: true,
+}
+
+const TEST_ON_HIT_PROC: BuffDefinition = {
+  id: 'test_thach_hoa',
+  element: 'earth',
+  name: 'Thạch Hóa',
+  kind: 'ailment',
+  polarity: 'debuff',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 4, scaling: 'ailment_scaled' },
+  application: { resistance: 'ailment' },
+  statModifiers: [{ stat: 'evasionRate', percent: -0.3 }],
+  capabilities: [
+    {
+      id: 'test_thach_hoa.on_hit',
+      type: 'on_hit_proc',
+      payload: { chance: 0.5, appliesBuffId: 'test_choang' },
+    },
+  ],
+  dispellable: true,
+}
+
+const TEST_REGISTRY = makeTestBuffRegistry([TEST_STUN, TEST_ON_HIT_PROC])
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
@@ -79,8 +119,8 @@ function makeEngine(
   participants: () => readonly TurnBattleParticipant[],
 ): { system: TurnBattleSystem; combat: CombatSystem; runtime: ReturnType<typeof makeTurnRuntime> } {
   const combat = new CombatSystem(eventBus)
-  const runtime = makeTurnRuntime({ registry: BUFF_REGISTRY, participants, combatSystem: combat })
-  const system = new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, runtime)
+  const runtime = makeTurnRuntime({ registry: TEST_REGISTRY, participants, combatSystem: combat })
+  const system = new TurnBattleSystem(combat, 10_000, TEST_REGISTRY, undefined, runtime)
   return { system, combat, runtime }
 }
 
@@ -106,7 +146,7 @@ describe('ARCH-009 (M9) — on-hit proc writes to the VICTIM pool (AUD-C04)', ()
 
     // The ENEMY debuffed the player with thach_hoa on an earlier turn --
     // the proc grant lives on the HOLDER (player) instance.
-    runtime.applyBuff('thach_hoa', player, enemy)
+    runtime.applyBuff('test_thach_hoa', player, enemy)
 
     const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting' }
 
@@ -119,15 +159,15 @@ describe('ARCH-009 (M9) — on-hit proc writes to the VICTIM pool (AUD-C04)', ()
     // The proc result belongs to the VICTIM (enemy) read -- and carries
     // the identity of the hit that triggered it, not the thach_hoa caster.
     const enemyBuffs = runtime.buffs.getForTarget(enemy.entity.id)
-    const choang = enemyBuffs.find((i) => i.definitionId === 'choang' && i.sourceId === 'player')
+    const choang = enemyBuffs.find((i) => i.definitionId === 'test_choang' && i.sourceId === 'player')
     expect(choang).toMatchObject({ sourceId: 'player', targetId: 'enemy' })
     expect(runtime.buffs.hasControl(enemy.entity.id, 'stun')).toBe(true)
 
     // The holder read is untouched by the proc result and the holder is
     // NOT stunned (old bug left choang in the holder pool and stunned it).
     const playerBuffs = runtime.buffs.getForTarget(player.entity.id)
-    expect(playerBuffs.some((i) => i.definitionId === 'choang')).toBe(false)
-    expect(playerBuffs.some((i) => i.definitionId === 'thach_hoa')).toBe(true)
+    expect(playerBuffs.some((i) => i.definitionId === 'test_choang')).toBe(false)
+    expect(playerBuffs.some((i) => i.definitionId === 'test_thach_hoa')).toBe(true)
     expect(runtime.buffs.hasControl(player.entity.id, 'stun')).toBe(false)
 
     // Engine-level consequence: the stunned victim's next declare is
@@ -161,7 +201,7 @@ describe('ARCH-009 (M9) — on-hit proc writes to the VICTIM pool (AUD-C04)', ()
 
     // Authored direction: tho_cau_thuat puts thach_hoa on the TARGET, so
     // the enemy holds it and its hits can stun the player.
-    runtime.applyBuff('thach_hoa', enemy, player)
+    runtime.applyBuff('test_thach_hoa', enemy, player)
 
     const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting' }
 
@@ -170,10 +210,10 @@ describe('ARCH-009 (M9) — on-hit proc writes to the VICTIM pool (AUD-C04)', ()
     system.resolveActorTurn(battle, enemy)
 
     const playerBuffs = runtime.buffs.getForTarget(player.entity.id)
-    const choang = playerBuffs.find((i) => i.definitionId === 'choang' && i.sourceId === 'enemy')
+    const choang = playerBuffs.find((i) => i.definitionId === 'test_choang' && i.sourceId === 'enemy')
     expect(choang).toMatchObject({ sourceId: 'enemy', targetId: 'player' })
     expect(runtime.buffs.hasControl(player.entity.id, 'stun')).toBe(true)
-    expect(runtime.buffs.getForTarget(enemy.entity.id).some((i) => i.definitionId === 'choang')).toBe(false)
+    expect(runtime.buffs.getForTarget(enemy.entity.id).some((i) => i.definitionId === 'test_choang')).toBe(false)
     expect(runtime.buffs.hasControl(enemy.entity.id, 'stun')).toBe(false)
 
     const playerStep = system.resolveActorTurn(battle, player)
@@ -200,7 +240,7 @@ describe('ARCH-009 (M9) — target-scoped CC queries', () => {
     // Foreign-target instance: a stun whose targetId is the enemy. buff2
     // reads are target-scoped -- the instance cannot control the player
     // even though it lives in the same store.
-    runtime.applyBuff('choang', enemy, enemy)
+    runtime.applyBuff('test_choang', enemy, enemy)
 
     const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting' }
 

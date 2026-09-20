@@ -11,6 +11,7 @@ import {
   BatchResultStore,
   CombatOperationBatchRunner,
   isDeferredOperation,
+  resultTypeOfBatchEntry,
   type PreconditionChecker,
 } from './CombatOperationBatchRunner'
 import { CombatSettlementFault } from './CombatSettlementFault'
@@ -317,6 +318,257 @@ describe('materialize (r4 HIGH 2 / R-C7)', () => {
     })
     expect(() =>
       runner.materialize(deferred('op.h', 'op.d'), skipped),
+    ).toThrow(CombatSettlementFault)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// canonical-seals addendum -- add_modifier_on_apply_result deferred kind +
+// elementalPenetrationBonus carrier legality.
+// ---------------------------------------------------------------------------
+
+const PERIODIC_ORIGIN: CombatOperationOrigin = {
+  kind: 'buff_periodic',
+  originId: 'bi.entity.a:dot',
+  sourceId: 'entity.a',
+  rootActionId: 'action.turn.3.p.1',
+}
+
+function applyBuffOp(operationId: string): ResolvedCombatOperation {
+  return {
+    operationId,
+    type: 'apply_buff',
+    origin: ORIGIN,
+    payload: {
+      definitionId: 'test_bleed',
+      targetId: 'entity.b',
+      stacks: 2,
+      baseChance: 1,
+      reactionEligibility: 'suppressed',
+    },
+  }
+}
+
+function deferredModifier(
+  operationId: string,
+  resultOperationId: string,
+): Extract<DeferredOperation, { kind: 'add_modifier_on_apply_result' }> {
+  return {
+    kind: 'add_modifier_on_apply_result',
+    operationId,
+    resultOperationId,
+    modifier: {
+      id: 'doan_moc',
+      channel: 'potency',
+      operation: 'multiply',
+      value: 1.25,
+      reapply: 'max',
+      priority: 0,
+      lifetime: { type: 'buff_lifetime' },
+    },
+    origin: ORIGIN,
+  }
+}
+
+function storeWithApplyResult(result: {
+  applied: boolean
+  instanceId?: string
+}): BatchResultStore {
+  const store = new BatchResultStore()
+  store.record(applyBuffOp('op.a'), {
+    operationId: 'op.a',
+    type: 'apply_buff',
+    status: 'resolved',
+    result,
+  })
+  return store
+}
+
+describe('add_modifier_on_apply_result (canonical-seals addendum)', () => {
+  const runner = new CombatOperationBatchRunner(noopChecker)
+
+  it('is a deferred entry producing an add_buff_modifier result type', () => {
+    const entry = deferredModifier('op.m', 'op.1')
+    expect(isDeferredOperation(entry)).toBe(true)
+    expect(resultTypeOfBatchEntry(entry)).toBe('add_buff_modifier')
+    expect(resultTypeOfBatchEntry(deferred('op.h', 'op.1'))).toBe('heal')
+  })
+
+  it('accepts an apply_buff reference; rejects deal_damage/heal references', () => {
+    expect(() =>
+      runner.validateBatchStructure(
+        batch([applyBuffOp('op.1'), deferredModifier('op.m', 'op.1')]),
+      ),
+    ).not.toThrow()
+    expect(() =>
+      runner.validateBatchStructure(
+        batch([damageOp('op.1'), deferredModifier('op.m', 'op.1')]),
+      ),
+    ).toThrow(CombatSettlementFault)
+    // The heal kind still cannot reference apply_buff.
+    expect(() =>
+      runner.validateBatchStructure(
+        batch([applyBuffOp('op.1'), deferred('op.h', 'op.1')]),
+      ),
+    ).toThrow(CombatSettlementFault)
+  })
+
+  it('rejects a malformed modifier payload', () => {
+    const bad = {
+      ...deferredModifier('op.m', 'op.1'),
+      modifier: { id: '' },
+    } as unknown as DeferredOperation
+    expect(() =>
+      runner.validateBatchStructure(batch([applyBuffOp('op.1'), bad])),
+    ).toThrow(CombatSettlementFault)
+  })
+
+  it('deferredSkipReason: dependency_not_resolved / application_roll_failed / proceed', () => {
+    // Missing prior.
+    expect(
+      runner.deferredSkipReason(deferredModifier('op.m', 'op.a'), new BatchResultStore()),
+    ).toBe('dependency_not_resolved')
+    // Skipped prior.
+    const skipped = new BatchResultStore()
+    skipped.recordResult({
+      operationId: 'op.a',
+      type: 'apply_buff',
+      status: 'skipped',
+      reason: 'invalid_target_state',
+    })
+    expect(
+      runner.deferredSkipReason(deferredModifier('op.m', 'op.a'), skipped),
+    ).toBe('dependency_not_resolved')
+    // resolved + applied:false -> application_roll_failed ('resolved' is
+    // NOT application success -- contract sec.17).
+    expect(
+      runner.deferredSkipReason(
+        deferredModifier('op.m', 'op.a'),
+        storeWithApplyResult({ applied: false }),
+      ),
+    ).toBe('application_roll_failed')
+    // resolved + applied:true -> materialize.
+    expect(
+      runner.deferredSkipReason(
+        deferredModifier('op.m', 'op.a'),
+        storeWithApplyResult({ applied: true, instanceId: 'bi.9' }),
+      ),
+    ).toBeUndefined()
+    // resolved wrong-type prior -> structural fault, not a skip.
+    const wrongType = new BatchResultStore()
+    wrongType.record(damageOp('op.d'), {
+      operationId: 'op.d',
+      type: 'deal_damage',
+      status: 'resolved',
+      damage: { rawDamage: 1, hpDamage: 1, killed: false },
+    })
+    expect(() =>
+      runner.deferredSkipReason(deferredModifier('op.m', 'op.d'), wrongType),
+    ).toThrow(CombatSettlementFault)
+  })
+
+  it('materializes onto the EXACT returned instanceId; faults on applied:false / missing instanceId', () => {
+    const op = runner.materialize(
+      deferredModifier('op.m', 'op.a'),
+      storeWithApplyResult({ applied: true, instanceId: 'bi.9' }),
+    )
+    expect(op).toEqual({
+      operationId: 'op.m',
+      type: 'add_buff_modifier',
+      origin: ORIGIN,
+      payload: {
+        selector: { kind: 'instance', instanceId: 'bi.9' },
+        modifier: deferredModifier('op.m', 'op.a').modifier,
+      },
+    })
+    expect(() =>
+      runner.materialize(
+        deferredModifier('op.m', 'op.a'),
+        storeWithApplyResult({ applied: false }),
+      ),
+    ).toThrow(CombatSettlementFault)
+    expect(() =>
+      runner.materialize(
+        deferredModifier('op.m', 'op.a'),
+        storeWithApplyResult({ applied: true }),
+      ),
+    ).toThrow(CombatSettlementFault)
+  })
+})
+
+describe('deal_damage elementalPenetrationBonus (canonical-seals addendum)', () => {
+  const runner = new CombatOperationBatchRunner(noopChecker)
+
+  function periodicDamage(
+    overrides: {
+      bonus?: number
+      element?: 'fire' | 'physical'
+      damageProfile?: string
+      origin?: CombatOperationOrigin
+    } = {},
+  ): ResolvedCombatOperation {
+    return {
+      operationId: 'op.p',
+      type: 'deal_damage',
+      origin: overrides.origin ?? PERIODIC_ORIGIN,
+      payload: {
+        targetId: 'entity.b',
+        damageProfile: overrides.damageProfile ?? 'legacy_dot',
+        coefficient: 1,
+        hitCount: 1,
+        canCrit: false,
+        canMiss: false,
+        ...(overrides.element !== undefined
+          ? { element: overrides.element }
+          : { element: 'fire' }),
+        ...(overrides.bonus !== undefined
+          ? { elementalPenetrationBonus: overrides.bonus }
+          : {}),
+      },
+    }
+  }
+
+  it('accepts the legal carrier (buff_periodic + legacy_dot + ElementType)', () => {
+    expect(() =>
+      runner.validateBatchStructure(batch([periodicDamage({ bonus: 20 })])),
+    ).not.toThrow()
+    // Negative stays legal -- the generic channel may debuff penetration.
+    expect(() =>
+      runner.validateBatchStructure(batch([periodicDamage({ bonus: -5 })])),
+    ).not.toThrow()
+  })
+
+  it('rejects physical/undefined element, wrong profile, wrong origin, non-finite', () => {
+    expect(() =>
+      runner.validateBatchStructure(
+        batch([periodicDamage({ bonus: 20, element: 'physical' })]),
+      ),
+    ).toThrow(CombatSettlementFault)
+    expect(() =>
+      runner.validateBatchStructure(
+        batch([periodicDamage({ bonus: 20, damageProfile: 'test' })]),
+      ),
+    ).toThrow(CombatSettlementFault)
+    expect(() =>
+      runner.validateBatchStructure(
+        batch([periodicDamage({ bonus: 20, origin: ORIGIN })]),
+      ),
+    ).toThrow(CombatSettlementFault)
+    expect(() =>
+      runner.validateBatchStructure(
+        batch([periodicDamage({ bonus: Number.NaN })]),
+      ),
+    ).toThrow(CombatSettlementFault)
+    expect(() =>
+      runner.validateBatchStructure(
+        batch([periodicDamage({ bonus: Number.POSITIVE_INFINITY })]),
+      ),
+    ).toThrow(CombatSettlementFault)
+    // element absent is illegal too.
+    const noElement = periodicDamage({ bonus: 20 })
+    delete (noElement.payload as { element?: unknown }).element
+    expect(() =>
+      runner.validateBatchStructure(batch([noElement])),
     ).toThrow(CombatSettlementFault)
   })
 })

@@ -98,7 +98,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
         multiplier: 1.6,
       },
       targeting: { shape: 'single' },
-      appliesAilment: { buffDefinitionId: 'bong', chance: 0.5 },
+      appliesAilment: { buffDefinitionId: 'hoa_an', chance: 0.5 },
       presetId: 'fire_burst',
     },
     ultimate: {
@@ -110,7 +110,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
         multiplier: 2.8,
       },
       targeting: { shape: 'single' },
-      appliesAilment: { buffDefinitionId: 'bong', chance: 1, stacks: 2 },
+      appliesAilment: { buffDefinitionId: 'hoa_an', chance: 1, stacks: 2 },
       presetId: 'fire_burst',
     },
   },
@@ -138,7 +138,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       cooldownTurns: 4,
       damage: { kind: 'physical', multiplier: 2 },
       targeting: { shape: 'square', laneRadius: 1 },
-      appliesAilment: { buffDefinitionId: 'thach_hoa', chance: 0.4 },
+      appliesAilment: { buffDefinitionId: 'tran_an', chance: 0.4 },
       presetId: 'earth_shockwave',
     },
     ultimate: {
@@ -220,7 +220,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
         multiplier: 1,
       },
       targeting: { shape: 'single' },
-      appliesAilment: { buffDefinitionId: 'trung_doc', chance: 0.5 },
+      appliesAilment: { buffDefinitionId: 'doc_can', chance: 0.5 },
       presetId: 'wood_spikes',
     },
     special: {
@@ -232,7 +232,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
         multiplier: 1.4,
       },
       targeting: { shape: 'square', laneRadius: 1 },
-      appliesAilment: { buffDefinitionId: 'trung_doc', chance: 1 },
+      appliesAilment: { buffDefinitionId: 'doc_can', chance: 1 },
       presetId: 'wood_spikes',
     },
     // Van Doc Quy Tong: detonate - consumes the target's Trung Doc stacks
@@ -246,7 +246,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
         multiplier: 1.8,
       },
       targeting: { shape: 'single' },
-      consumesAilmentId: 'trung_doc',
+      consumesAilmentId: 'doc_can',
       damagePerStack: 15,
       presetId: 'wood_spikes',
     },
@@ -314,7 +314,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
         multiplier: 1,
       },
       targeting: { shape: 'single' },
-      appliesAilment: { buffDefinitionId: 'te_cong', chance: 0.4 },
+      appliesAilment: { buffDefinitionId: 'han_tuc', chance: 0.4 },
       presetId: 'claw',
     },
     special: {
@@ -340,7 +340,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       targeting: { shape: 'row' },
       appliesAilments: [
         { buffDefinitionId: 'han_khi', chance: 1, stacks: 2 },
-        { buffDefinitionId: 'te_cong', chance: 0.5 },
+        { buffDefinitionId: 'han_tuc', chance: 0.5 },
       ],
       presetId: 'water_surge',
     },
@@ -408,7 +408,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
         multiplier: 1.2,
       },
       targeting: { shape: 'single' },
-      appliesAilment: { buffDefinitionId: 'chay_mau', chance: 0.4 },
+      appliesAilment: { buffDefinitionId: 'liet_thuong', chance: 0.4 },
       presetId: 'metal_slash',
     },
     special: {
@@ -420,7 +420,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
         multiplier: 2.1,
       },
       targeting: { shape: 'square', laneRadius: 1, columnRadius: 1 },
-      appliesAilment: { buffDefinitionId: 'chay_mau', chance: 0.8 },
+      appliesAilment: { buffDefinitionId: 'liet_thuong', chance: 0.8 },
       presetId: 'metal_slash',
     },
     // Kim Quang Pha Giap: a wide blade strip that cracks metal resistance
@@ -465,7 +465,7 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
         multiplier: 1,
       },
       targeting: { shape: 'single' },
-      appliesAilment: { buffDefinitionId: 'thach_hoa', chance: 0.3 },
+      appliesAilment: { buffDefinitionId: 'tran_an', chance: 0.3 },
       presetId: 'earth_shockwave',
     },
     special: {

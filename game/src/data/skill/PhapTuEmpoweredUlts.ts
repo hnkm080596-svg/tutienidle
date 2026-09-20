@@ -42,8 +42,8 @@ const FIRE_PAYLOAD: TurnSkillDefinition = {
     scaling: { ...ATTUNEMENT_SCALING },
   },
   targeting: { shape: 'all_lanes', columnRadius: 1 },
-  appliesAilment: { buffDefinitionId: 'bong', chance: 1 },
-  appliesAilments: [{ buffDefinitionId: 'bong', chance: 1 }],
+  appliesAilment: { buffDefinitionId: 'hoa_an', chance: 1 },
+  appliesAilments: [{ buffDefinitionId: 'hoa_an', chance: 1 }],
 }
 
 const WATER_PAYLOAD: TurnSkillDefinition = {
@@ -57,8 +57,8 @@ const WATER_PAYLOAD: TurnSkillDefinition = {
     scaling: { ...ATTUNEMENT_SCALING },
   },
   targeting: { shape: 'all_lanes' },
-  appliesAilment: { buffDefinitionId: 'te_cong', chance: 1 },
-  appliesAilments: [{ buffDefinitionId: 'te_cong', chance: 1 }],
+  appliesAilment: { buffDefinitionId: 'han_tuc', chance: 1 },
+  appliesAilments: [{ buffDefinitionId: 'han_tuc', chance: 1 }],
 }
 
 const WOOD_PAYLOAD: TurnSkillDefinition = {
@@ -76,7 +76,7 @@ const WOOD_PAYLOAD: TurnSkillDefinition = {
   appliesAilments: [
     { buffDefinitionId: 'troi_chan', chance: 1 },
     // debuff 1 stack + authored add_stack +2 = 3 (converter merge rule).
-    { buffDefinitionId: 'trung_doc', chance: 1, stacks: 3 },
+    { buffDefinitionId: 'doc_can', chance: 1, stacks: 3 },
   ],
 }
 
@@ -91,7 +91,7 @@ const METAL_PAYLOAD: TurnSkillDefinition = {
     scaling: { ...ATTUNEMENT_SCALING },
   },
   targeting: { shape: 'single' },
-  consumesAilmentId: 'chay_mau',
+  consumesAilmentId: 'liet_thuong',
   damagePerStack: 80,
 }
 

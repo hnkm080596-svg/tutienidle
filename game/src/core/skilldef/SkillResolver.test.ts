@@ -594,7 +594,11 @@ describe('SkillResolver -- instances + consume lanes', () => {
     expect(flat.late![0]!.field).toBe('coefficient')
     const forEach = stacksGate.then[1]!
     if (forEach.kind !== 'for_each_instance') throw new Error('expected for_each_instance')
-    expect(forEach.filter).toEqual({ targetId: ENEMY_A, definitionId: 'ailment.burn' })
+    expect(forEach.filter).toEqual({
+      targetId: ENEMY_A,
+      definitionId: 'ailment.burn',
+      sourceId: PLAYER,
+    })
     expect(forEach.operation.type).toBe('consume_buff_stacks')
     if (forEach.operation.type !== 'consume_buff_stacks') throw new Error('unreachable')
     expect(forEach.operation.payload.stacks).toBe('all')
@@ -738,5 +742,146 @@ describe('SkillResolver -- structural guards + determinism', () => {
     if (op.type !== 'deal_damage') throw new Error('unreachable')
     expect(op.payload.scaling).toEqual(def.operations[0]!.type === 'deal_damage' ? def.operations[0]!.scaling : undefined)
     expect(op.payload.snapshot).toEqual(plan.snapshot.statScalars)
+  })
+})
+
+describe('SkillResolver -- same-source authored buff access (canonical-seals S0.4)', () => {
+  it('identity selector binds source+target on buff mutation ops', () => {
+    const def = activeDef({
+      operations: [
+        {
+          type: 'add_buff_stacks',
+          selector: {
+            kind: 'identity',
+            definitionId: 'hoa_an',
+            source: 'self',
+            target: 'primary_target',
+          },
+          stacks: 2,
+        },
+      ],
+    })
+    const ops = operationSteps(resolve([def]))
+    expect(ops).toHaveLength(1)
+    expect(ops[0]!.operation).toMatchObject({
+      type: 'add_buff_stacks',
+      payload: {
+        selector: {
+          kind: 'identity',
+          definitionId: 'hoa_an',
+          sourceId: PLAYER,
+          targetId: ENEMY_A,
+        },
+        stacks: 2,
+      },
+    })
+  })
+
+  it('selector TARGET keeps set cardinality -- one selector per resolved member', () => {
+    const def = activeDef({
+      operations: [
+        {
+          type: 'add_buff_stacks',
+          selector: {
+            kind: 'target_definition',
+            target: 'all_enemies',
+            definitionId: 'hoa_an',
+          },
+          stacks: 1,
+        },
+        {
+          type: 'extend_buff_duration',
+          selector: {
+            kind: 'identity',
+            definitionId: 'hoa_an',
+            source: 'self',
+            target: 'all_enemies',
+          },
+          turns: 2,
+        },
+      ],
+    })
+    const ops = operationSteps(resolve([def]))
+    expect(ops).toHaveLength(4)
+    const selectors = ops.map(
+      (o) => (o.operation.payload as { selector: unknown }).selector,
+    )
+    expect(selectors).toEqual([
+      { kind: 'target_definition', targetId: ENEMY_A, definitionId: 'hoa_an' },
+      { kind: 'target_definition', targetId: ENEMY_B, definitionId: 'hoa_an' },
+      {
+        kind: 'identity',
+        definitionId: 'hoa_an',
+        sourceId: PLAYER,
+        targetId: ENEMY_A,
+      },
+      {
+        kind: 'identity',
+        definitionId: 'hoa_an',
+        sourceId: PLAYER,
+        targetId: ENEMY_B,
+      },
+    ])
+  })
+
+  it('read_stacks binds an optional same-source intent', () => {
+    const def = activeDef({
+      operations: [
+        {
+          type: 'read_stacks',
+          target: 'primary_target',
+          source: 'self',
+          definitionId: 'hoa_an',
+          into: 'seals',
+        },
+      ],
+    })
+    const plan = resolve([def])
+    expect(plan.steps[0]).toEqual({
+      kind: 'read',
+      query: {
+        query: 'buff_stacks',
+        targetId: ENEMY_A,
+        definitionId: 'hoa_an',
+        sourceId: PLAYER,
+      },
+      into: 'seals',
+    })
+  })
+
+  it("consumeBuff scope 'own' binds sourceId into the per-instance consume filter", () => {
+    const mkDef = (scope: 'own' | 'any') =>
+      activeDef({
+        operations: [
+          {
+            type: 'deal_damage',
+            target: 'primary_target',
+            coefficient: 1,
+            consumeBuff: { definitionId: 'hoa_an', damagePerStack: 10, scope },
+          },
+        ],
+      })
+    const findFilter = (
+      steps: readonly ResolvedSkillPlanStep[],
+    ): { targetId: string; definitionId?: string; sourceId?: string } | undefined => {
+      for (const step of steps) {
+        if (step.kind === 'for_each_instance') return step.filter
+        if (step.kind === 'branch') {
+          const hit =
+            findFilter(step.then) ??
+            (step.else !== undefined ? findFilter(step.else) : undefined)
+          if (hit !== undefined) return hit
+        }
+      }
+      return undefined
+    }
+    const own = findFilter(resolve([mkDef('own')]).steps)
+    expect(own).toEqual({
+      targetId: ENEMY_A,
+      definitionId: 'hoa_an',
+      sourceId: PLAYER,
+    })
+    const any = findFilter(resolve([mkDef('any')]).steps)
+    expect(any).toEqual({ targetId: ENEMY_A, definitionId: 'hoa_an' })
   })
 })
