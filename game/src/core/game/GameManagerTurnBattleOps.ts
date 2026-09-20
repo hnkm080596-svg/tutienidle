@@ -1724,8 +1724,9 @@ export class GameManagerTurnBattleOps {
     // (reactive entries, queued executions, gauge deltas, manual options)
     // can never carry across a boundary. The combat runtime mints
     // alongside it (buff2 M4 - battle-local registry + buff authority +
-    // scheduler + proc/gauge owners; the reaction engine stays
-    // production-inert: no dispatcher registration, no capability grant).
+    // scheduler + proc/gauge owners; mintCycleScheduler also wires the
+    // reaction engine: dispatcher registered on the scheduler, the
+    // capability granted party-wide by the Van Phap Than Hoa aura).
     const runtime = this.mintCycleScheduler()
     this.turnBattleSystem = new TurnBattleSystem(
       this.deps.combatSystem,

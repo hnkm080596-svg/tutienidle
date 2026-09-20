@@ -2,7 +2,7 @@
 
 **Trạng thái:** Live.
 
-Types: `core/element/ElementType.ts` (5 hành). Quan hệ sinh/khắc: `core/element/WuxingRelations.ts` (`SINH_CYCLE`/`KHAC_OVERCOMES`/`relationOf`). Authority trong combat hiện tại: `core/battle/turn/TurnReactionManager.ts` (two-phase rule engine; `KHAC_CHE_COEFF`/`CONG_MINH_AMP`), gated bởi `TurnBattleParticipant.canInitiateWuxingReactions` (stamp ở `TurnBattleAdapter.ts` cho stat domain `phap_tu`). Loadout: `core/element/ElementSlot.ts` + `player.equippedElements`. (Các file `ElementReaction.ts`/`ReactionManager.ts`/`ElementLoadout.ts` tài liệu cũ nhắc tới không tồn tại — reaction data hiện nằm trong `TurnReactionManager` + `WuxingRelations`.)
+Types: `core/element/ElementType.ts` (5 hành). Quan hệ sinh/khắc: `core/element/WuxingRelations.ts` (`SINH_CYCLE`/`KHAC_OVERCOMES`/`relationOf`). Authority trong combat: `core/reaction/` (canonical engine — mục Engine bên dưới), production-wired trong `GameManagerTurnBattleOps.ts`. Loadout: `core/element/ElementSlot.ts` + `player.equippedElements`.
 
 ## ElementType — chỉ 5 hành
 
@@ -16,49 +16,58 @@ Types: `core/element/ElementType.ts` (5 hành). Quan hệ sinh/khắc: `core/ele
   - Luyện Khí: 2 slot; mỗi 2 đại cảnh giới kế +1; trần `MAX_ELEMENT_SLOTS = 5`.
 - `canEquipElement`/`equipElement`/`unequipElement` — domain gate; UI ở loadout section của panel.
 
-## Phản ứng (`ELEMENT_REACTIONS`)
+## Canonical ấn (seals)
 
-Khi 1 ailment/debuff mới áp thành công lên target, `TurnReactionManager` quét buff **đang có** trên target, tìm cặp khớp `ELEMENT_REACTIONS[existing][new]` (và ngược lại) → kích **tối đa 1 lần mỗi call**.
+5 ailment nguyên tố **là** canonical reaction seals — def trong `data/buff/LegacyBuffs.ts`, bind một-semantic-per-element trong `ElementalStateRegistry`. Locked: duration 3 holder turns, maxStacks 5 add/refresh, `per_source`, ailment resistance.
 
-`ElementReactionDefinition` hỗ trợ: `baseDamage` + `powerScalingRatio` (true damage bỏ qua Armor/Res), `percentOfTargetCurrentHp`, `keepsAilmentId` (giữ 1 vế thay vì tiêu cả 2), `appliesAilmentId` (tạo ailment mới), `appliesBuffId` (cấp buff lên **source**), `maxHpReductionPercent` (trừ vĩnh viễn % maxHp, trần cộng dồn `MAX_HP_REDUCTION_CAP_PERCENT = 0.3`/trận), `spawnsLavaZone` (legacy — turn engine bỏ, zone = DoT qua AOE/buff), `relation: 'sinh' | 'khac'` (nhãn).
-
-## Bảng phản ứng hiện có
-
-| Cặp | Tên | Hệ quả |
+| id | Tên | Element |
 |---|---|---|
-| Bỏng (Hỏa) + Tê Cóng (Thủy) | Bốc Hơi | 60 true dmg, giữ Tê Cóng, khắc |
-| Bỏng + Trúng Độc (Mộc) | Độc Viêm | 10% currentHp target, sinh |
-| Tê Cóng + Trúng Độc | Độc Thủy | 65 true dmg, giữ Tê Cóng, sinh |
-| Thạch Hóa (Thổ) + Bỏng | Dung Nham | áp ailment `dung_nham` (DoT), sinh |
-| Thạch Hóa + Tê Cóng | Trói Chân | áp `troi_chan` (root), khắc |
-| Thạch Hóa + Trúng Độc | Độc Thế | buff nguồn `doc_the` (self-stack), khắc |
-| Thạch Hóa + Chảy Máu (Kim) | Khai Sơn | 50 dmg + buff nguồn `khai_son` (+8% def/tầng), sinh |
-| Chảy Máu + Bỏng | Thiêu Huyết | 85 dmg + trừ 3% maxHp vĩnh viễn, khắc |
-| Chảy Máu + Trúng Độc | Huyết Độc | gộp thành ailment `huyet_doc` mạnh hơn, khắc |
-| Chảy Máu + Tê Cóng | Ngưng Lộ | 40 dmg + buff nguồn `ngung_lo` (+5 manaRegen), sinh |
+| `hoa_an` | Hỏa Ấn | fire |
+| `doc_can` | Độc Căn | wood |
+| `liet_thuong` | Liệt Thương | metal |
+| `han_tuc` | Hàn Tức | water |
+| `tran_an` | Trấn Ấn | earth |
 
-(Thủy+Kim chủ ý không phản ứng — "Kim không cần tương tác với mọi hệ".)
+4/5 seals mang 1 periodic DoT (`<id>.dot`, `legacy_dot` profile, element riêng); `tran_an` không có periodic — pure stacking setup state. Apply của def đã bind emit `elemental_application_committed` TRƯỚC generic buff events, kèm `reactionEligibility` (`'eligible'` mặc định; `'suppressed'` cho recursion/conversion lanes) — event này feed reaction engine. Legacy ailment ids (`bong`/`trung_doc`/`chay_mau`/`te_cong`/`thach_hoa`) đã destructive-migrate sang seals; các product cũ (`doc_the`/`ngung_lo`/`khai_son`/`hoai_tu`/`dung_nham`/`huyet_doc`) bị xoá cùng migration.
 
-`reactionEffectPercent` trên stat khuếch đại `baseDamage` lúc kích.
+## Phản ứng (`CANONICAL_REACTIONS`)
+
+10 cặp canonical trong `data/reaction/ReactionDefinitions.ts` — 5 **sinh** (consume HẾT parent stacks; child giữ + được convert) + 5 **khắc** (consume cả hai). Payoff là pure data (`payoff.steps`: `add_child_stacks`, `add_child_modifier`, `push_gauge`, `extend_child_duration`, `reaction_damage`, `apply_status`, `heal_from_damage`); `StackExpr` đọc snapshot P (parent) / A (attacker) / D (defender) pre-consume. `reaction_damage` bắt buộc damageProfile thuộc reaction channel (`'reaction'` hoặc `'reaction_*'`, phải tồn tại trong catalog) — `ReactionRegistry` seal từ chối mọi profile khác (không được lọt qua DoT channel).
+
+| Cặp | Tên | Hệ quả | Quan hệ |
+|---|---|---|---|
+| Độc Căn → Hỏa Ấn | Dưỡng Viêm | child +⌈P/2⌉ tầng; child modifier periodic_damage 1+0.05·P | sinh |
+| Hỏa Ấn → Trấn Ấn | Luyện Thổ | child +⌈P/2⌉; gauge −0.03·P max | sinh |
+| Trấn Ấn → Liệt Thương | Dưỡng Kim | child +⌈P/2⌉; child modifier +4·P penetration points | sinh |
+| Liệt Thương → Hàn Tức | Tụ Thủy | child +⌈P/2⌉; extend child duration ⌊P/2⌋ (max remaining 5) | sinh |
+| Hàn Tức → Độc Căn | Nhuận Mộc | child +⌈P/2⌉; child modifier periodic_damage 1+0.05·P | sinh |
+| Hàn Tức khắc Hỏa Ấn | Tức Viêm | reaction dmg 0.2·(A+D)+0.08·D; gauge −0.03·A | khắc |
+| Hỏa Ấn khắc Liệt Thương | Dung Kim | reaction dmg 0.35·(A+D); áp `defense_break` A tầng, duration min(3, ⌈D/2⌉) | khắc |
+| Liệt Thương khắc Độc Căn | Đoạn Mộc | reaction dmg 0.15·(A+D); áp `reaction_bleed` 1+⌊A/2⌋ tầng kèm potency 1+0.05·D | khắc |
+| Độc Căn khắc Trấn Ấn | Xuyên Thổ | reaction dmg 0.15·(A+D); áp `defense_erosion` A tầng; heal source 0.05·D reaction damage (cap 0.25) | khắc |
+| Trấn Ấn khắc Hàn Tức | Trấn Thủy | reaction dmg 0.1·(A+D); gauge −0.04·A; áp `cam_cong` khi A≥3, duration clamp(D−1, 2, 3) | khắc |
+
+Status payoff defs (`reaction_bleed`/`defense_break`/`defense_erosion`/`cam_cong`) nằm trong `data/buff/ReactionStatusBuffs.ts`. `reactionEffectPercent` không còn consumer trong canonical engine (legacy amplifier của `TurnReactionManager` đã xoá).
+
+## Engine (`core/reaction/`)
+
+Pipeline live: `ReactionTriggerGate` (capability `elemental_reaction_enabled` — granted party-wide bởi aura `van_phap_than_hoa`, source là An entity ẩn lúc vào trận) → `ReactionBoard` (board ấn cùng-source qua `ElementalStateRegistry`) → `ReactionCandidate`/`ReactionBias` (fixed-point selection, tie theo `selectionTiePriority`) → `ReactionResolution` (snapshot + preconditions + consume-first ops) → `ReactionOperations` → batch qua `CombatOperationBatchRunner`. State do reaction tạo ra không recursive (`reactionEligibility: 'suppressed'`).
+
+Production wiring (`GameManagerTurnBattleOps`): per-cycle `mintCycleScheduler` construct `ReactionRegistry` (seal `CANONICAL_REACTIONS`) + `ReactionSystem` + `ReactionDispatcher`, register immediate handler `elemental_application_committed` trên scheduler; capability đọc qua `BuffSystemCapabilityQuery`. Reaction-generated events drain sau batch trả về (synchronous settlement model).
+
+`ReactionTrace`/`formatReactionTrace`/`compareReactionTraces` = deterministic §85 trace + spec §60 ordering cho debug/digest. `REACTION_DISPLAY_NAMES` = display names UI float trên `reaction_resolved`.
+
+Cấm Công (`forbiddenActionTags` + `ActionValidator` trên turn selection) live trong `TurnBattleSystem`.
+
+Legacy: `TurnReactionManager`/`canInitiateWuxingReactions`/`ELEMENT_REACTIONS` đã xoá (M-INT `d65f28aa`) — canonical engine là reaction authority duy nhất.
 
 ## Element damage
 
 `core/combat/ElementDamageCalculator.ts` — `elementalBasePower` gom power theo hành; mỗi hành là 1 damage type độc lập đấu resistance cùng tên (không còn chu kỳ sinh/khắc trong damage). Linh Căn (attunement) cộng đều 6 hành ([stats.md](./stats.md)).
 
-## Engine mới (`core/reaction/`, chưa wire)
-
-Reaction megaplan M0–M5 đã land trên `feat/reaction-core` một engine phản ứng thay thế — **inert và unwired trong production**:
-
-- `ReactionTriggerGate` (capability `elemental_reaction_enabled` — chưa ai được grant) → `ReactionBoard` (board ấn cùng-source qua `ElementalStateRegistry`) → `ReactionCandidate`/`ReactionBias` (fixed-point selection) → `ReactionResolution` (snapshot + preconditions + consume-first ops) → `ReactionOperations` (payoff data-authored qua `StackExpr`) → batch qua `CombatOperationBatchRunner`.
-- `CANONICAL_REACTIONS` (`data/reaction/`) = 10 cặp sinh/khắc canonical nhưng bind tới `test_*` fixture ids — production registry **không thể** được construct cho tới khi seal batch author ấn thật (`hoa_an`/`han_tuc`/`doc_can`/`liet_thuong`/`tran_an`).
-- `ReactionDispatcher` (M5) tồn tại nhưng **không được register** trên `elemental_application_committed` (r5 BLOCKER 2): registration sequence = author canonical ấn → production `ReactionRegistry` → `ReactionSystem` → `scheduler.registerImmediateHandler` → grant capability — thuộc seal/Ngộ Đạo mission.
-- `ReactionTrace`/`formatReactionTrace`/`compareReactionTraces` = deterministic §85 trace + spec §60 ordering cho debug/digest.
-- Cấm Công (`forbiddenActionTags` + `ActionValidator` trên turn selection) **đã live** trong `TurnBattleSystem` — phần duy nhất của M4 chạm live path.
-- Legacy `TurnReactionManager`/`canInitiateWuxingReactions` giữ nguyên live cho Pháp Tu visible tới khi M-INT (trong buff M4 worktree) xoá — spec chỉ grant auto-reaction cho Ngộ Đạo (hidden Pháp Tu), nên visible path bị retire chứ không preserve.
-
 ## Liên quan
 
-- [buffs.md](./buffs.md) — ailment id (bong, trung_doc, chay_mau, te_cong, thach_hoa…).
+- [buffs.md](./buffs.md) — seal/ailment ids, `ElementalStateRegistry`, aura `van_phap_than_hoa`.
 - [skills.md](./skills.md) — `appliesAilment`, reaction path picks.
 - [cultivation-paths.md](./cultivation-paths.md) — Pháp Tu multi-hành.
-- `../architecture/2026-09-17-reaction-inventory.md` — M0 census của đường reaction hiện tại.
+- `../architecture/2026-09-17-reaction-inventory.md` — M0 census của đường reaction cũ.

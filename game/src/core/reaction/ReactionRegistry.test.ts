@@ -254,4 +254,29 @@ describe('ReactionRegistry validation', () => {
       validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/unknown damage profile 'reactoin'/)
   })
+
+  it.each(['legacy_dot', 'detonate_burst'])(
+    "throws on reaction_damage authored with the '%s' profile -- a pre-origin lane that escapes the reaction channel at dispatch",
+    (damageProfile) => {
+      const { w, buffExists } = setup()
+      const defs = makeCanonicalReactionDefs()
+      defs[5] = {
+        ...defs[5]!,
+        payoff: {
+          steps: [
+            {
+              kind: 'reaction_damage',
+              coefficient: { op: 'const', value: 1 },
+              damageProfile, // a KNOWN catalog name -- passes existence,
+              // fails the reaction-channel seal
+              element: 'attacker',
+            },
+          ],
+        },
+      }
+      expect(() =>
+        validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
+      ).toThrow(/reaction-channel damage profile/)
+    },
+  )
 })

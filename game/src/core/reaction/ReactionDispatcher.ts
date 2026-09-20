@@ -3,13 +3,12 @@
 // return the batch the scheduler's CombatOperationBatchRunner
 // preflights + runs inside its batch frame (contract settlement.ts).
 //
-// REGISTRATION IS DEFERRED (r5 BLOCKER 2): no valid production
-// ReactionRegistry exists while CANONICAL_REACTIONS stays
-// test_*-bound, so M-INT registers nothing. The seal/Ngo Dao mission
-// performs the wiring: author canonical states -> production registry
-// -> ReactionSystem -> scheduler.registerImmediateHandler(
-// 'elemental_application_committed', dispatcher) -> grant
-// elemental_reaction_enabled.
+// REGISTRATION IS LIVE (seal/Ngo Dao mission): production wiring sits in
+// GameManagerTurnBattleOps -- a production ReactionRegistry over
+// CANONICAL_REACTIONS -> ReactionSystem -> this dispatcher ->
+// scheduler.registerImmediateHandler('elemental_application_committed')
+// -> elemental_reaction_enabled granted via the BuffSystem capability
+// query.
 //
 // EVENT ORDERING: the dispatcher emits `reaction_resolved` at dispatch
 // time -- the scheduler drains handler-emitted events AFTER the

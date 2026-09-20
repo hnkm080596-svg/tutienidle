@@ -37,7 +37,7 @@ Hai pha tách để presentation có thể diễn đòn (playback) trước khi 
 
 Mỗi `TurnBattleParticipant` có 3 slot (`TurnSkillSlotRole`): `basic` (không cooldown/cost), `special`, `ultimate`. Auto-priority mỗi lượt: **ultimate → special → basic** → fallback `basic_attack` hardcoded nếu không có slot nào. Cooldown `remainingCooldownTurns` giảm 1 mỗi lượt của owner; skill còn cần đủ `resourceCost` (`SkillResourceType`: linh lực/pháp lực/kiếm thế/kiếm ý…).
 
-`TurnSkillDefinition` hỗ trợ: `damage` (physical/element/true…), `targeting` (shape/scope), `targetScope: 'self'`, `resourceType`/`resourceCost`, `compositePicks` (reaction-path pool — chọn 2 pick), `appliesBuff`, `appliesAilment(s)` (chance-gated, check TurnReactionManager), `consumesAilmentId`+`damagePerStack` (detonate), `consumesWardForDamage` (Thổ Tu tự nổ khiên), `healPercentOfDamage`, `chargeTurns` (Thế→Trảm), `counterable`/`counterSkillId`, `presetId` (VFX).
+`TurnSkillDefinition` hỗ trợ: `damage` (physical/element/true…), `targeting` (shape/scope), `targetScope: 'self'`, `resourceType`/`resourceCost`, `compositePicks` (reaction-path pool — chọn 2 pick), `appliesBuff`, `appliesAilment(s)` (chance-gated, apply qua `apply_buff` ops → `elemental_application_committed` feed canonical reaction gate), `consumesAilmentId`+`damagePerStack` (detonate), `consumesWardForDamage` (Thổ Tu tự nổ khiên), `healPercentOfDamage`, `chargeTurns` (Thế→Trảm), `counterable`/`counterSkillId`, `presetId` (VFX).
 
 ## Counter & charge
 

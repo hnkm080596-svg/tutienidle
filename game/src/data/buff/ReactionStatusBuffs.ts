@@ -56,7 +56,8 @@ export const REACTION_STATUS_BUFFS: BuffDefinition[] = [
     instanceScope: 'per_source',
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
     // Base only -- Tran Thuy always supplies durationOverride
-    // clamp(D - 2, 1, 2).
+    // clamp(D - 1, 2, 3) (the holder's declare decrements before
+    // selection, so N suppressed declares need engine clock N+1).
     lifetime: { clock: 'holder_turns', duration: 1, scaling: 'fixed' },
     application: { resistance: 'ailment' },
     // NOT stun: heal/buff/cleanse/defend/utility stay legal and the

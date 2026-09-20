@@ -125,11 +125,19 @@ function statusDef(id: BuffDefinitionId, extra?: Partial<BuffDefinition>): BuffD
   }
 }
 
-/** The fixture khac defs author damageProfile 'test_profile'; the
-    registry's damage-profile check accepts that plus the production
-    'reaction' id so mixed fixture/production data still seals. */
+/** Fixture damage-profile catalog for the reaction lane -- mirrors the
+    production names the registry tests need: the 'reaction' channel
+    profile (and the 'reaction_*' prefix the adapter also routes), plus
+    'legacy_dot'/'detonate_burst' so tests can reach the channel rule
+    instead of stopping at the existence check. Channel membership is
+    enforced by the registry itself, not this predicate. */
 export function fixtureDamageProfileExists(profile: string): boolean {
-  return profile === 'test_profile' || profile === 'reaction'
+  return (
+    profile === 'reaction' ||
+    profile.startsWith('reaction_') ||
+    profile === 'legacy_dot' ||
+    profile === 'detonate_burst'
+  )
 }
 
 /** Fixture CANONICAL_REACTIONS -- the locked ids/priorities with minimal
@@ -165,7 +173,7 @@ export function makeCanonicalReactionDefs(): ReactionDefinition[] {
         {
           kind: 'reaction_damage',
           coefficient: { op: 'const', value: 1 },
-          damageProfile: 'test_profile',
+          damageProfile: 'reaction',
           element: 'attacker',
         },
       ],

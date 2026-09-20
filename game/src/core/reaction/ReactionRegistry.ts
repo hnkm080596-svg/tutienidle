@@ -121,18 +121,32 @@ function validatePayoffBuffIds(
     against the SAME catalog the damage authority validates periodic
     defs with (createDamageProfileCatalog). A typo'd profile currently
     only surfaces when the damage op settles; seal it at registry
-    construction like the buff-id check above. */
+    construction like the buff-id check above.
+
+    Channel seal (post-review): the profile must also be a
+    REACTION-channel profile ('reaction' or 'reaction_*'). The damage
+    adapter dispatches 'legacy_dot'/'detonate_burst' ahead of
+    origin.kind, so a reaction_damage step authored with one of those
+    names would seal clean yet silently route through the DoT economy
+    (dotResistance/dotRecovery, 'dot' attribution) -- the exact
+    invariant this file exists to lock. */
 function validateDamageProfiles(
   def: ReactionDefinition,
   damageProfileExists: (profile: string) => boolean,
 ): void {
   for (const step of def.payoff.steps) {
-    if (
-      step.kind === 'reaction_damage' &&
-      !damageProfileExists(step.damageProfile)
-    ) {
+    if (step.kind !== 'reaction_damage') continue
+    if (!damageProfileExists(step.damageProfile)) {
       throw new Error(
         `ReactionRegistry: '${def.id}' reaction_damage references unknown damage profile '${step.damageProfile}'`,
+      )
+    }
+    if (
+      step.damageProfile !== 'reaction' &&
+      !step.damageProfile.startsWith('reaction_')
+    ) {
+      throw new Error(
+        `ReactionRegistry: '${def.id}' reaction_damage must use a reaction-channel damage profile ('reaction' or 'reaction_*'), got '${step.damageProfile}' -- non-reaction profiles can escape the reaction channel at dispatch`,
       )
     }
   }

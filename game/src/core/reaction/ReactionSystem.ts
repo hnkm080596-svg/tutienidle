@@ -5,9 +5,10 @@
 // payoff-emission seam for M4's ReactionOperations).
 //
 // The bias query is consulted ONCE per evaluation and the normalized
-// snapshot is recorded per candidate (contract sec.80). The engine is
-// production-INERT: no scheduler registration, no capability grant --
-// M-INT wires nothing.
+// snapshot is recorded per candidate (contract sec.80). Production
+// wiring is live: GameManagerTurnBattleOps registers the dispatcher
+// for 'elemental_application_committed' and capability flows through
+// the BuffSystem capability query.
 
 import type { ElementType } from '../element/ElementType'
 import type { CombatEntityId } from '../battle/contracts/ids'

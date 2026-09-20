@@ -11,13 +11,14 @@ import {
   makeTurnRuntime,
 } from '../battle/turn/testing/TurnRuntimeFixtures'
 
-// Reaction megaplan r5 B2/B3 + r6 B2 (M-INT): the canonical
-// ElementalStateRegistry is installed in the minted turn runtime, but the
-// reaction engine stays production-inert -- NO ReactionDispatcher /
-// ReactionSystem / ReactionRegistry is constructed and nobody is granted
-// `elemental_reaction_enabled`. A canonical application therefore emits
-// `elemental_application_committed` and nothing consumes it. Activation
-// is deferred to the seal/Ngo-Dao batch.
+// Reaction gate wiring coverage (post-activation): production DOES wire
+// the reaction engine -- GameManagerTurnBattleOps constructs
+// ReactionRegistry / ReactionSystem / ReactionDispatcher and registers
+// the 'elemental_application_committed' immediate handler on the
+// scheduler. This file pins the complement: a minted runtime WITHOUT
+// that registration stays inert. The fixture omits the dispatcher, so a
+// canonical application emits `elemental_application_committed` and
+// nothing consumes it -- the gate is the wiring, not the emission path.
 
 const HOA_AN_DEF: BuffDefinition = {
   id: 'hoa_an' as BuffDefinitionId,
@@ -70,8 +71,8 @@ function fixture() {
   return { player, enemy, playerParticipant, enemyParticipant, registry, runtime }
 }
 
-describe('M-INT production-inert reaction gate', () => {
-  it('visible phap tu: a canonical hoa_an application emits the committed event and triggers NO reaction', () => {
+describe('reaction gate without dispatcher wiring (runtime stays inert)', () => {
+  it('a canonical hoa_an application on an unwired runtime emits the committed event and triggers NO reaction', () => {
     const { playerParticipant, enemyParticipant, enemy, runtime } = fixture()
 
     runtime.applyBuff('hoa_an', enemyParticipant, playerParticipant)
@@ -81,9 +82,8 @@ describe('M-INT production-inert reaction gate', () => {
     const committed = runtime.events.filter((e) => e.type === 'elemental_application_committed')
     expect(committed).toHaveLength(1)
 
-    // ...and nothing consumes it: no reaction damage, no reaction-originated
-    // events, no follow-up ops -- the visible-Phap-Tu lane is inert by
-    // construction (spec: no automatic reaction for the current path).
+    // ...and nothing consumes it on an unwired runtime: no reaction
+    // damage, no reaction-originated events, no follow-up ops.
     expect(enemy.currentHp).toBe(enemy.maxHp)
     const reactionEvents = runtime.events.filter(
       (e) => e.type !== 'elemental_application_committed' && /reaction/i.test(e.type),
@@ -91,20 +91,20 @@ describe('M-INT production-inert reaction gate', () => {
     expect(reactionEvents).toHaveLength(0)
   })
 
-  it('no production dispatcher before canonical content: the minted runtime carries no reaction members', () => {
+  it('an unwired runtime carries no reaction members and no downstream reaction events', () => {
     const { runtime } = fixture()
 
-    // The runtime mirrors GameManagerTurnBattleOps.mintCycleScheduler -- its
-    // surface is buffs/procs/scheduler/gaugeHandler only. Any future
-    // dispatcher registration must add a member here deliberately; this
-    // assertion fails loudly if one appears without the seal-batch content.
+    // The fixture's runtime surface is buffs/procs/scheduler/gaugeHandler
+    // only -- production keeps the same member shape (the dispatcher is
+    // registered ON the scheduler, not held as a runtime member), so this
+    // assertion pins that the unwired lane adds nothing either.
     for (const key of Object.keys(runtime)) {
       expect(key).not.toMatch(/reaction/i)
     }
 
-    // The scheduler registers handlers only for periodic settlement and
-    // gauge deltas -- a canonical application + full lifecycle tick emits
-    // the committed event and nothing downstream.
+    // Without the dispatcher registration the scheduler has no consumer:
+    // a canonical application + full lifecycle tick emits the committed
+    // event and nothing downstream.
     const { playerParticipant, enemyParticipant, runtime: rt } = fixture()
     rt.applyBuff('hoa_an', enemyParticipant, playerParticipant)
     rt.tickHolderTurnsEnd(enemyParticipant.entity.id)

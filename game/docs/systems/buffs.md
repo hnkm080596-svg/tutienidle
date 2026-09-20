@@ -41,7 +41,7 @@ Modifiers: `{id, channel, operation, value, reapply, priority, lifetime}` — ch
 
 Application: multiplicative chance — `baseChance × (1 + elementApplicationPercent) × (1 − min(cap, ailmentResistPercent))`, đúng 1 `rollChance` per apply. `ailmentResistPercent` **cap 75%**.
 
-Elemental: def bind canonical trong `ElementalStateRegistry` → apply emit `elemental_application_committed` TRƯỚC generic buff events, kèm `reactionEligibility` (`'eligible'` mặc định; `'suppressed'` cho recursion/conversion lanes). Reaction engine production-inert — không dispatcher/grant (seal batch).
+Elemental: def bind canonical trong `ElementalStateRegistry` → apply emit `elemental_application_committed` TRƯỚC generic buff events, kèm `reactionEligibility` (`'eligible'` mặc định; `'suppressed'` cho recursion/conversion lanes). Reaction engine **live**: `ReactionDispatcher` registered trên scheduler (`GameManagerTurnBattleOps`), capability `elemental_reaction_enabled` granted party-wide qua aura `van_phap_than_hoa` ([elements-reactions.md](./elements-reactions.md)).
 
 ## Ailment
 
@@ -49,19 +49,20 @@ Ailment = `kind:'ailment'` trong cùng buff2 — không có AilmentSystem riêng
 
 | id | Tên | Element | Ghi chú |
 |---|---|---|---|
-| `bong` | Bỏng | fire | periodic DoT |
-| `trung_doc` | Trúng Độc | wood | DoT + `dot_recovery` capability (Độc Căn) |
-| `chay_mau` | Chảy Máu | metal | DoT |
-| `te_cong` | Tê Cóng | water | DoT/CC + `convertsToId` |
-| `hoai_tu` | Hoại Tử | earth | DoT |
-| `thach_hoa` | Thạch Hóa | — | stat + `on_hit_proc` capability |
+| `hoa_an` | Hỏa Ấn | fire | canonical seal — periodic DoT |
+| `doc_can` | Độc Căn | wood | canonical seal — DoT |
+| `liet_thuong` | Liệt Thương | metal | canonical seal — DoT |
+| `han_tuc` | Hàn Tức | water | canonical seal — DoT |
+| `tran_an` | Trấn Ấn | earth | canonical seal — pure stacking setup, không DoT |
 | `kiep_thuong` | Kiếp Thương | — | persistent debuff 60s (BuffPersistence) |
+
+5 seals trên là canonical reaction seals (duration 3 holder turns, maxStacks 5, `per_source`, ailment resistance — [elements-reactions.md](./elements-reactions.md)). Legacy ids `bong`/`trung_doc`/`chay_mau`/`te_cong`/`thach_hoa` đã destructive-migrate sang seals; `hoai_tu` và các reaction-product cũ (`doc_the`/`ngung_lo`/`khai_son`/`dung_nham`/`huyet_doc`) bị xoá cùng migration. Non-canonical ailments/controls còn lại trong `LegacyBuffs.ts`: `troi_chan`, `choang`, `dong_bang`, `lam_cham`, `han_khi`, `cuong_bao`, `suy_nhuoc`, `uy_ap`, `giap_ran`, `van_kiem_vu`.
 
 Capability homes (thay legacy effect union): `on_hit_proc`/`reactive_trigger`/`reactive_proc`/`reactive_economy`/`the_economy` → `core/proc/`; `marker`/`the_tu` → TheTu module; `gauge_delta` → `GaugeDeltaHandler`; `dot_recovery` → `DotRecovery`.
 
-## Độc Căn (poison root)
+## dot_recovery capability
 
-`trung_doc` mang capability `dot_recovery` — `DotRecoveryCapabilities` sở hữu payload; `CombatSystem`/`DotRecovery` resolve heal khi DoT tick (đọc live stacks).
+Capability type `dot_recovery` vẫn tồn tại trong contracts (`DotRecoveryCapabilities` sở hữu payload; `CombatSystem`/`DotRecovery` resolve heal khi DoT tick) nhưng **không còn production carrier** — carrier duy nhất (`trung_doc`) bị xoá trong seal migration.
 
 ## Nguồn áp
 
@@ -70,5 +71,5 @@ Skill (`appliesBuff`/`appliesAilment(s)` qua scheduler ops), formation/entry buf
 ## Liên quan
 
 - [damage-pipeline.md](./damage-pipeline.md) — periodic damage requests (`legacy_dot` profile).
-- [elements-reactions.md](./elements-reactions.md) — reaction engine (production-inert).
+- [elements-reactions.md](./elements-reactions.md) — reaction engine (live: dispatcher + capability grant).
 - [skills.md](./skills.md) — `ailmentChance`, `consumesAilmentId` (scheduler consume op).

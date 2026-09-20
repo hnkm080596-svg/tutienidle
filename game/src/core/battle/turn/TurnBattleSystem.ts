@@ -1970,7 +1970,9 @@ export class TurnBattleSystem {
     // ops (every application marks 'eligible'; the elemental registry
     // owns which definitionIds map to canonical states). The reaction
     // GATE moved to the 'elemental_reaction_enabled' capability grant --
-    // granted to nobody at M-INT, so the engine stays production-inert.
+    // granted party-wide in production by the Van Phap Than Hoa aura
+    // (battle entry, ReactionStatusBuffs.ts), and the registered
+    // dispatcher consumes the committed events this lane emits.
 
     // Spec 6.2.1 -- the Ho window sits between declaration and impact:
     // a successful protectChance roll rewrites declared.affected before
