@@ -11,6 +11,7 @@ import type { DeferredOperation } from '../battle/contracts/settlement'
 import type { ResolvedCombatOperation } from '../battle/contracts/operations'
 import type { CombatOperationResult } from '../battle/contracts/results'
 import { CANONICAL_REACTIONS } from '../../data/reaction/ReactionDefinitions'
+import { createDamageProfileCatalog } from '../combat/DamageProfiles'
 import { ReactionRegistry } from './ReactionRegistry'
 import type { ReactionResolution } from './ReactionResolution'
 import { ELEMENTAL_REACTION_CAPABILITY } from './ReactionTypes'
@@ -27,6 +28,7 @@ function makeWorld() {
     CANONICAL_REACTIONS,
     world.elements,
     () => true,
+    createDamageProfileCatalog().has,
   )
   const system = world.makeReactionSystem(registry)
   world.capabilities.grant(TEST_ENTITIES.sourceA, ELEMENTAL_REACTION_CAPABILITY)
@@ -366,18 +368,20 @@ describe('tran_thuy (earth->water khac)', () => {
     ).toHaveLength(0)
 
     const { world: world2, system: system2 } = makeWorld()
-    // A3 D3 -> gate opens; durationOverride clamp(3-2,1,2) = 1.
+    // A3 D3 -> gate opens; durationOverride clamp(3-1,2,3) = 2 (the
+    // holder's declare decrements before selection, so N blocked
+    // declares translate to engine clock N+1).
     const high = resolve(world2, system2, s, t, [
       ['earth', 3],
       ['water', 3],
     ])
     const apply = opsOfType(high.resolution, 'apply_buff')[0]!
     expect(apply.payload.definitionId).toBe(TEST_STATUS_BUFF_IDS.camCong)
-    expect(apply.payload.durationOverride).toBe(1)
+    expect(apply.payload.durationOverride).toBe(2)
     expect(apply.payload.reactionEligibility).toBe('suppressed')
   })
 
-  it('D4 yields the 2-turn seal duration', () => {
+  it('D4 yields the 3-turn seal duration (two blocked declares)', () => {
     const { world, system } = makeWorld()
     const s = TEST_ENTITIES.sourceA
     const t = TEST_ENTITIES.targetA
@@ -386,6 +390,6 @@ describe('tran_thuy (earth->water khac)', () => {
       ['water', 4],
     ])
     const apply = opsOfType(resolution, 'apply_buff')[0]!
-    expect(apply.payload.durationOverride).toBe(2) // clamp(4-2,1,2)
+    expect(apply.payload.durationOverride).toBe(3) // clamp(4-1,2,3)
   })
 })

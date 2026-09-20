@@ -244,6 +244,19 @@ export type ResolvedSkillPlanStep =
       operation: ResolvedCombatOperation
     }
   | {
+      kind: 'on_apply_result'
+      /** Result-gated continuation (Hoa An spec sec.11 + sec.36): the
+          operation executes ONLY when the referenced apply_buff op
+          resolved applied:true, its selector rebound to the returned
+          instanceId. A resisted/skipped apply produces NO continuation
+          (no tick, no modifier, no extension) -- the same skip class
+          as the batch runner's application_roll_failed, expressed at
+          plan level because plan steps settle one barrier per op. */
+      resultOperationId: CombatOperationId
+      operation: ResolvedCombatOperation
+      late?: readonly ResolvedLateBinding[]
+    }
+  | {
       kind: 'detonate'
       /** executor-expanded consume->burst->re-seed for every
           periodic-carrying ailment instance on this target (TBS

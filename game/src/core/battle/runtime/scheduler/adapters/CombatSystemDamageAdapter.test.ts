@@ -4,8 +4,10 @@
 // (review-locked rule): the profile dispatches, origin is context.
 //   'legacy_dot'  -> applyDotDamage (dotResistance / dotRecovery economy)
 //   'reaction_*' or origin.kind 'reaction' -> reaction channel
-//     (applyReactionDamage: NO hit-layer modifiers, NO dotResistance /
-//     dotRecovery, vitals reason 'reaction', canCrit:false by construction)
+//     (applyReactionDamage: elemental power x coefficient mitigated by
+//     the target's matching resistance; NO hit-layer modifiers, NO
+//     dotResistance / dotRecovery, vitals reason 'reaction', canCrit:false
+//     by construction)
 //   everything else -> standard hit channel (applyModifiedDirectDamage
 //     semantics: finalDamagePercent/finalDamageReductionPercent)
 
@@ -152,15 +154,17 @@ describe('CombatSystemDamageAdapter -- reaction channel', () => {
     // dotResistancePercent 0.75 would leave only 25 HP damage if this
     // tick routed through the DoT economy; dotRecovery on the source
     // would heal it. Neither may fire on the reaction channel.
-    const source = makeEntity('source', {}, { currentHp: 10 })
+    const source = makeEntity('source', { might: 10, firePower: 90 }, { currentHp: 10 })
     const target = makeEntity('target', { maxHp: 500, dotResistancePercent: 0.75 }, { currentHp: 500 })
     const h = makeHarness([source, target])
 
     const result = h.adapter.dealDamage(
-      payload({ damageProfile: 'reaction_khac_che', coefficient: 100, element: 'fire', canCrit: false }),
+      payload({ damageProfile: 'reaction_khac_che', coefficient: 1, element: 'fire', canCrit: false }),
       h.ctx({ kind: 'reaction', reactionId: 'khac_che' }),
     )
 
+    // elementalBasePower = might 10 + firePower 90 = 100; coefficient 1;
+    // fireResistance 0 -> raw 100 through the vitals channel.
     expect(result).toEqual({ rawDamage: 100, hpDamage: 100, killed: false })
     expect(target.currentHp).toBe(400)
     expect(h.vitalsEvents.map((e) => e.reason)).toEqual(['reaction'])
@@ -170,6 +174,78 @@ describe('CombatSystemDamageAdapter -- reaction channel', () => {
     // canCrit:false honored by construction -- the channel consumes no
     // rolls at all (no crit/miss roll exists on the direct path).
     expect(h.rngCalls()).toBe(0)
+  })
+
+  it('mitigates through the TARGET resistance channel matching the op element (0 vs 40 -> different damage)', () => {
+    // The locked ruling: khac damage carries the ATTACKER's element so
+    // the target's matching resistance applies -- elementless flat
+    // damage was rejected. Same source, same coefficient: the only
+    // variable is the target's metalResistance.
+    const source = makeEntity('source', { might: 0, metalPower: 100, metalPenetration: 0 })
+    const t0 = makeEntity('target0', { maxHp: 10_000, metalResistance: 0 })
+    const t40 = makeEntity('target40', { maxHp: 10_000, metalResistance: 40 })
+    const h = makeHarness([source, t0, t40])
+
+    const op = (targetId: string): DealDamageOperation['payload'] =>
+      payload({
+        damageProfile: 'reaction',
+        coefficient: 1.5,
+        element: 'metal',
+        targetId,
+        canCrit: false,
+      })
+    const r0 = h.adapter.dealDamage(op('target0'), h.ctx({ kind: 'reaction' }))
+    const r40 = h.adapter.dealDamage(op('target40'), h.ctx({ kind: 'reaction' }))
+
+    // power 100 x 1.5 = 150 raw; mitigation 0 -> 150, 0.4 -> 90.
+    expect(r0.rawDamage).toBe(150)
+    expect(r0.hpDamage).toBe(150)
+    expect(r40.rawDamage).toBe(90)
+    expect(r40.hpDamage).toBe(90)
+    expect(r0.hpDamage).not.toBe(r40.hpDamage)
+  })
+
+  it('reads the resistance channel matching the ATTACKER element -- a walled element mitigates, an open element lands full', () => {
+    // Same source, same coefficient: only the op's element changes which
+    // resistance channel the target contributes.
+    const source = makeEntity('source', { might: 0, metalPower: 100, firePower: 100 })
+    const target = makeEntity(
+      'target',
+      { maxHp: 10_000, metalResistance: 80, fireResistance: 0 },
+      { currentHp: 10_000 },
+    )
+    const h = makeHarness([source, target])
+
+    const metal = h.adapter.dealDamage(
+      payload({ damageProfile: 'reaction', coefficient: 1, element: 'metal', canCrit: false }),
+      h.ctx({ kind: 'reaction' }),
+    )
+    const fire = h.adapter.dealDamage(
+      payload({ damageProfile: 'reaction', coefficient: 1, element: 'fire', canCrit: false }),
+      h.ctx({ kind: 'reaction' }),
+    )
+
+    // metal: net 80 -> capped 0.75 -> 25; fire: net 0 -> 100.
+    expect(metal.hpDamage).toBe(25)
+    expect(fire.hpDamage).toBe(100)
+  })
+
+  it('source penetration offsets target resistance on the reaction channel', () => {
+    const source = makeEntity('source', { might: 0, metalPower: 100, metalPenetration: 20 })
+    const target = makeEntity(
+      'target',
+      { maxHp: 10_000, metalResistance: 40 },
+      { currentHp: 10_000 },
+    )
+    const h = makeHarness([source, target])
+
+    const result = h.adapter.dealDamage(
+      payload({ damageProfile: 'reaction', coefficient: 1, element: 'metal', canCrit: false }),
+      h.ctx({ kind: 'reaction' }),
+    )
+
+    // net 40 - 20 = 20 -> mitigation 0.2 -> 100 x 0.8.
+    expect(result.hpDamage).toBe(80)
   })
 
   it("routes origin.kind 'reaction' to the reaction channel even when the profile is not reaction_* (origin is context)", () => {

@@ -204,9 +204,12 @@ export const CANONICAL_REACTIONS: readonly ReactionDefinition[] = [
     {
       kind: 'apply_status',
       definitionId: REACTION_STATUS_BUFF_IDS.camCong,
-      // D in 1..3 -> 1 turn; D in 4..5 -> 2 turns (piecewise, encoded as
-      // clamp(D - 2, 1, 2)).
-      durationOverride: min(c(2), max(c(1), add(D, c(-2)))),
+      // D in 1..3 -> one blocked declare; D in 4..5 -> two. The holder's
+      // declare runs holder_turn_end BEFORE action validation, so N
+      // suppressed declares need engine duration N+1 (remaining 1
+      // expires in the very declare it should suppress) -- clamp(D-1,
+      // 2, 3).
+      durationOverride: min(c(3), max(c(2), add(D, c(-1)))),
       when: { role: 'attacker', op: 'gte', value: 3 },
     },
   ]),

@@ -14,6 +14,7 @@ import type { ReactionBoard } from './ReactionTypes'
 import { ELEMENTAL_REACTION_CAPABILITY } from './ReactionTypes'
 import {
   createReactionTestWorld,
+  fixtureDamageProfileExists,
   makeCanonicalReactionDefs,
   TEST_ELEMENT_BUFF_IDS,
   TEST_ENTITIES,
@@ -27,6 +28,7 @@ function makeWorld() {
     defs,
     world.elements,
     (id) => world.registry.get(id) !== undefined,
+    fixtureDamageProfileExists,
   )
   const system = world.makeReactionSystem(registry)
   world.capabilities.grant(

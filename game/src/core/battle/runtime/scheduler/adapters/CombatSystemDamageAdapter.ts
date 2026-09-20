@@ -12,8 +12,10 @@
 //        defs to this profile to preserve behavior.
 //   damageProfile 'reaction_*' OR origin.kind 'reaction'
 //     -> CombatSystem.applyReactionDamage -- the reaction channel (M3
-//        contract extension): flat direct damage via the vitals
-//        authority, reason 'reaction', NO hit-layer modifiers, NO
+//        contract extension): elemental power x coefficient mitigated
+//        by the target's matching resistance (the attacker-element
+//        ruling), delivered via the vitals authority with reason
+//        'reaction', NO hit-layer modifiers, NO
 //        dotResistance/dotRecovery, and no crit/miss roll exists on the
 //        path (canCrit:false honored by construction). NEVER
 //        applyDotDamage -- that would consume dotResistancePercent, fire
@@ -31,8 +33,10 @@
 //   each take an already-resolved scalar; profile producers own the
 //   formula that computes it (stats/scaling/mitigation layering is the
 //   profile's decision -- review r2 HIGH 5).
-// - element -> applyDotDamage.element (dot economy is the only channel
-//   whose signature carries it).
+// - element -> applyDotDamage.element for the dot economy; the
+//   reaction channel reads it for the attacker-element resistance
+//   lane (canonical reaction_damage authors element:'attacker',
+//   resolved to a concrete element at emission).
 // - periodicId -> applyDotDamage.effectId (falls back to the profile id
 //   when no periodicId rides along) so the 'damage' event keeps its
 //   per-effect attribution.
@@ -46,11 +50,13 @@
 //   the standard-hit attacker entity (its stats feed
 //   finalDamagePercent), and the vitals event sourceId.
 //
-// Result semantics: rawDamage = the intent-level requested amount
-// (payload.coefficient); hpDamage = the vitals-truth HP actually removed
-// (channel post-processing and the 0-clamp included -- hpDamage may
-// diverge from rawDamage in EITHER direction); killed = the target's
-// post-resolution liveness.
+// Result semantics: rawDamage = the channel-resolved amount handed to
+// the vitals authority (profile formula applied: bare coefficient on
+// the flat lanes, power-scaled on the elemental/reaction lanes);
+// hpDamage = the vitals-truth HP actually removed (channel
+// post-processing and the 0-clamp included -- hpDamage may diverge from
+// rawDamage in EITHER direction); killed = the target's post-resolution
+// liveness.
 //
 // ctx.events is intentionally unused: the underlying calls already emit
 // their legacy domain events ('damage', 'entity_vitals_changed') through
@@ -148,8 +154,9 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
     }
 
     if (op.damageProfile.startsWith('reaction_') || ctx.origin.kind === 'reaction') {
-      const hpDamage = this.combat.applyReactionDamage(target, op.coefficient, sourceId)
-      return { rawDamage: op.coefficient, hpDamage, killed: !target.alive }
+      const rawDamage = this.resolveReactionAmount(op, sourceId, target)
+      const hpDamage = this.combat.applyReactionDamage(target, rawDamage, sourceId)
+      return { rawDamage, hpDamage, killed: !target.alive }
     }
 
     if (op.damageProfile === 'legacy_flat') {
@@ -301,6 +308,39 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
     }
 
     return options
+  }
+
+  /**
+   * The reaction profile formula -- khac damage carries the ATTACKER's
+   * element so the target's matching elemental resistance applies
+   * (reaction spec sec.68: the DamageSystem owns stats/mitigation/
+   * resistance; the elementless/true-damage variant was rejected at
+   * review, which is why the op still carries `element`). Resolution:
+   *   power = elementalBasePower(source, element)   [might + elementPower]
+   *   raw   = power x coefficient x (1 - netResistanceMitigation)
+   * where net = (resistance - penetration)/100 clamped to [-1, 0.75].
+   * NO hit-layer modifiers, NO dotResistance/dotRecovery, NO crit/miss
+   * (canCrit:false/canMiss:false stay structural), and no
+   * ailmentPotency -- that multiplier is the DoT economy's, not the
+   * reaction channel's. An elementless reaction op keeps the legacy
+   * flat coefficient lane -- every canonical reaction_damage authors
+   * element:'attacker' so that lane is unreachable from production
+   * data.
+   */
+  private resolveReactionAmount(
+    op: DealDamageOperation['payload'],
+    sourceId: CombatEntityId,
+    target: CombatEntity,
+  ): number {
+    if (op.element === undefined || op.element === 'physical') {
+      return Math.max(0, op.coefficient)
+    }
+    const source = this.resolveEntity(op.statSourceId ?? sourceId)
+    const power = source === undefined ? 0 : elementalBasePower(source, op.element)
+    const resistance = target.stats[`${op.element}Resistance`] ?? 0
+    const penetration = source?.stats[`${op.element}Penetration`] ?? 0
+    const mitigation = getResistanceMitigationPercent(resistance, penetration)
+    return Math.max(0, power * op.coefficient * (1 - mitigation))
   }
 
   /**

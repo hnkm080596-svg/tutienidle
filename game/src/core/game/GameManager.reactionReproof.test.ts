@@ -610,12 +610,15 @@ describe('S4 -- death during reaction settlement', () => {
     const enemy = battle.enemies[0]!
     const enemyId = enemy.entity.id
 
-    // doan_moc's authored damage is FLAT coefficient 0.15*(A+D) -- the
-    // reaction channel never reads source power. A lethal blow on a
-    // 1-hp target therefore needs A+D >= 7: pre-stack BOTH seals to 5
-    // with suppressed applies (they join the elemental board without
-    // triggering), then let one eligible liet_thuong commit fire at
-    // A=5, D=5 -> 1.5 damage kills.
+    // doan_moc's authored damage resolves through the attacker's
+    // metal channel: elementalBasePower x 0.15*(A+D) mitigated by the
+    // target's metalResistance. A lethal blow on a 1-hp target only
+    // needs positive power: pre-stack BOTH seals to 5 with suppressed
+    // applies (they join the elemental board without triggering), pin
+    // metalPower so the resolved amount is source-driven, then let
+    // one eligible liet_thuong commit fire at A=5, D=5.
+    const an = battle.players[0]!
+    an.entity.stats.metalPower = 100
     enqueueOps(gameManager, [
       ...Array.from({ length: 5 }, (_, i) =>
         sealOp('doc_can', anId, enemyId, 'suppressed', 'reproof.death.seed', `doc.${i}`),
@@ -730,8 +733,92 @@ describe('S4 -- resisted production payoff', () => {
   })
 })
 
-describe('S4 -- cam_cong production definition', () => {
-  it('the production seal forbids attack-tagged actions while leaving legal actions usable', () => {
+describe('S4 -- khac reaction damage resolves through the elemental channel', () => {
+  /** doan_moc through production data; returns the settled hpDamage of
+      the reaction's deal_damage op. Attacker element = metal
+      (liet_thuong), authored coefficient 0.15*(A+D). */
+  function driveDoanMoc(metalResistance: number, fireResistance: number): number {
+    const { gameManager, player } = makeNgoDaoManager()
+    gameManager.startBattleWithPlayer(player, spawnDummy())
+    const battle = gameManager.getTurnBattle()!
+    const an = battle.players[0]!
+    const enemy = battle.enemies[0]!
+    const enemyId = enemy.entity.id
+
+    // Pin the channel: power = might 0 + metalPower 100 = 100;
+    // coefficient 0.15*(1+1) = 0.3 -> pre-mitigation 30.
+    an.entity.stats.might = 0
+    an.entity.stats.metalPower = 100
+    enemy.entity.stats.metalResistance = metalResistance
+    enemy.entity.stats.fireResistance = fireResistance
+
+    applyBuffs(gameManager, battle, [
+      { definitionId: 'liet_thuong', sourceId: an.entity.id, targetId: enemyId },
+      { definitionId: 'doc_can', sourceId: an.entity.id, targetId: enemyId },
+    ])
+
+    const op = trace(gameManager).records.find(
+      (r) => r.operation.type === 'deal_damage' && r.operation.origin.kind === 'reaction',
+    )!
+    expect(op.result.status).toBe('resolved')
+    const damage = op.result.type === 'deal_damage' ? op.result.damage : undefined
+    return damage!.hpDamage
+  }
+
+  it('the target matching-resistance channel mitigates the reaction burst (0 vs 40 -> different damage)', () => {
+    // net 0 -> 30; net 40 -> mitigation 0.4 -> 18. The old flat model
+    // would have dealt 0.3 to both.
+    expect(driveDoanMoc(0, 0)).toBe(30)
+    expect(driveDoanMoc(40, 0)).toBe(18)
+  })
+
+  it('the ATTACKER element selects which resistance channel the target contributes (metal vs fire)', () => {
+    // Walled fire does nothing for a metal-attacker burst -- the op
+    // reads metalResistance only.
+    expect(driveDoanMoc(0, 80)).toBe(30)
+    expect(driveDoanMoc(40, 80)).toBe(18)
+  })
+})
+
+describe('S4 -- cam_cong production duration translation', () => {
+  const HEAL_SKILL: TurnSkillDefinition = {
+    id: 'reproof_heal',
+    cooldownTurns: 0,
+    targeting: { shape: 'single' },
+    targetScope: 'self',
+    actionTags: ['heal'],
+  }
+
+  /** Drive a REAL tran_thuy through production data: seed the pair
+      with suppressed applies so the completing eligible commit fires
+      at the authored A/D counts -- A = 4 (3 seeded + 1 eligible
+      tran_an) >= the authored `when: attacker >= 3` gate; D =
+      `defenderStacks` han_tuc. The reaction's own apply_status mints
+      cam_cong -- no manual buff authoring. */
+  function driveTranThuy(
+    gameManager: GameManager,
+    battle: TurnBattle,
+    anId: CombatEntityId,
+    enemyId: CombatEntityId,
+    defenderStacks: number,
+  ): void {
+    enqueueOps(gameManager, [
+      ...Array.from({ length: 3 }, (_, i) =>
+        sealOp('tran_an', anId, enemyId, 'suppressed', 'reproof.camcong.seed', `att.${i}`),
+      ),
+      ...Array.from({ length: defenderStacks }, (_, i) =>
+        sealOp('han_tuc', anId, enemyId, 'suppressed', 'reproof.camcong.seed', `def.${i}`),
+      ),
+    ])
+    applyBuffs(
+      gameManager,
+      battle,
+      [{ definitionId: 'tran_an', sourceId: anId, targetId: enemyId }],
+      'reproof.camcong.trigger',
+    )
+  }
+
+  it('tran_thuy at defender D<=3 mints cam_cong on engine clock 2 -- the next enemy attack is blocked exactly once', () => {
     const { gameManager, player } = makeNgoDaoManager()
     gameManager.startBattleWithPlayer(player, spawnDummy())
     const battle = gameManager.getTurnBattle()!
@@ -739,44 +826,63 @@ describe('S4 -- cam_cong production definition', () => {
     const enemy = battle.enemies[0]!
     const enemyId = enemy.entity.id
 
-    // durationOverride 3: the holder's own declare runs its
-    // holder_turn_end status phase BEFORE selection (decrement + expiry
-    // sweep), so a remaining-1 seal would expire in the very declare it
-    // should suppress -- the same reason Tran Thuy always supplies a
-    // durationOverride rather than the base 1.
-    applyBuffs(gameManager, battle, [
-      { definitionId: 'cam_cong', sourceId: anId, targetId: enemyId, durationOverride: 3 },
-    ])
-    expect(buffIds(gameManager, enemyId)).toContain('cam_cong')
+    driveTranThuy(gameManager, battle, anId, enemyId, 3)
 
-    // The dummy's only action is a physical basic -> attack-tagged ->
-    // forbidden. The sealed actor still takes its (empty) turn: this is
-    // an action restriction, NOT hard control. (3 -> 2 at this declare's
-    // status phase; the seal survives.)
-    const sealed = system(gameManager).declareActorAction(battle, enemy, 'basic')
-    expect(sealed.action).toBeNull()
-    expect(sealed.skillId).toBe('')
-    expect(sealed.ccBlocked).toBe(false)
+    const resolved = resolvedEvents(gameManager)
+    expect(resolved).toHaveLength(1)
+    expect(resolved[0]!.reactionId).toBe('tran_thuy')
+    // The holder's own declare runs holder_turn_end BEFORE selection:
+    // authored N blocked turns translate to engine clock N+1 = 2.
+    const camCong = buffInstances(gameManager, enemyId, 'cam_cong')[0]!
+    expect(camCong.remaining).toBe(2)
 
-    // A non-attack action stays legal: with the seal still active
-    // (2 -> 1), the forced-basic declare falls back onto the
-    // heal-tagged special.
-    const healSkill: TurnSkillDefinition = {
-      id: 'reproof_heal',
-      cooldownTurns: 0,
-      targeting: { shape: 'single' },
-      targetScope: 'self',
-      actionTags: ['heal'],
-    }
-    enemy.special = { skill: healSkill, remainingCooldownTurns: 0 }
-    const fallback = system(gameManager).declareActorAction(battle, enemy, 'basic')
-    expect(fallback.skillId).toBe('reproof_heal')
-    expect(fallback.ccBlocked).toBe(false)
+    // Declare 1 (2 -> 1 survives): the attack basic is forbidden, so
+    // the forced declare falls back onto the heal-tagged special --
+    // attack blocked AND utility stays legal in one shot.
+    enemy.special = { skill: HEAL_SKILL, remainingCooldownTurns: 0 }
+    const suppressed = system(gameManager).declareActorAction(battle, enemy, 'basic')
+    expect(suppressed.skillId).toBe('reproof_heal')
+    expect(suppressed.ccBlocked).toBe(false)
 
-    // Expiry restores legality (1 -> 0 at this declare's status phase):
-    // the attack basic is selectable again.
+    // Declare 2 (1 -> 0 expires): the attack basic is selectable again
+    // -- exactly one enemy attack was suppressed.
     const released = system(gameManager).declareActorAction(battle, enemy, 'basic')
     expect(released.skillId).toBe('generic_physical')
+    expect(buffIds(gameManager, enemyId)).not.toContain('cam_cong')
+  })
+
+  it('tran_thuy at defender D>=4 mints cam_cong on engine clock 3 -- the next two enemy attacks are blocked', () => {
+    const { gameManager, player } = makeNgoDaoManager()
+    gameManager.startBattleWithPlayer(player, spawnDummy())
+    const battle = gameManager.getTurnBattle()!
+    const anId = battle.players[0]!.entity.id
+    const enemy = battle.enemies[0]!
+    const enemyId = enemy.entity.id
+
+    driveTranThuy(gameManager, battle, anId, enemyId, 4)
+
+    const resolved = resolvedEvents(gameManager)
+    expect(resolved).toHaveLength(1)
+    expect(resolved[0]!.reactionId).toBe('tran_thuy')
+    const camCong = buffInstances(gameManager, enemyId, 'cam_cong')[0]!
+    expect(camCong.remaining).toBe(3)
+
+    // Declare 1 (3 -> 2 survives): attack forbidden, no fallback
+    // available -> empty declare (restriction, not hard control).
+    const first = system(gameManager).declareActorAction(battle, enemy, 'basic')
+    expect(first.action).toBeNull()
+    expect(first.ccBlocked).toBe(false)
+
+    // Declare 2 (2 -> 1 survives): still active -- the attack is
+    // forbidden again, and the heal fallback stays legal.
+    enemy.special = { skill: HEAL_SKILL, remainingCooldownTurns: 0 }
+    const second = system(gameManager).declareActorAction(battle, enemy, 'basic')
+    expect(second.skillId).toBe('reproof_heal')
+
+    // Declare 3 (1 -> 0 expires): the attack basic is selectable --
+    // exactly two enemy attacks were suppressed.
+    const third = system(gameManager).declareActorAction(battle, enemy, 'basic')
+    expect(third.skillId).toBe('generic_physical')
     expect(buffIds(gameManager, enemyId)).not.toContain('cam_cong')
   })
 })

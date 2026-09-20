@@ -287,6 +287,10 @@ export class SkillExecutor {
           this.runForEachInstance(step, plan, state)
           break
         }
+        case 'on_apply_result': {
+          this.runOnApplyResult(step, plan, state)
+          break
+        }
         case 'detonate': {
           this.expandDetonate(step, plan, state)
           break
@@ -341,6 +345,44 @@ export class SkillExecutor {
       this.enqueueAndSettle(cloned, plan, state)
       index += 1
     }
+  }
+
+  /** Hoa An spec sec.11/36 -- a gated continuation runs ONLY when its
+      bound apply_buff resolved applied:true, with the selector rebound
+      to the returned instanceId (an identity re-query could land on a
+      stale same-identity instance after a resisted reapply). A
+      resisted/skipped apply enqueues nothing -- the same observability
+      class as an untaken branch arm. */
+  private runOnApplyResult(
+    step: Extract<ResolvedSkillPlanStep, { kind: 'on_apply_result' }>,
+    plan: ResolvedSkillPlan,
+    state: PlanExecutionState,
+  ): void {
+    const prior = this.queries.opResults.lastOpResult(step.resultOperationId)
+    const instanceId =
+      prior?.status === 'resolved' &&
+      prior.type === 'apply_buff' &&
+      prior.result?.applied === true
+        ? prior.result.instanceId
+        : undefined
+    if (instanceId === undefined) return
+    const ctx = this.readCtx(plan, state)
+    const operation = this.applyLateBindings(
+      {
+        kind: 'operation',
+        operation: step.operation,
+        ...(step.late !== undefined ? { late: step.late } : {}),
+      },
+      ctx,
+    )
+    const materialized = {
+      ...operation,
+      payload: {
+        ...(operation.payload as Record<string, unknown>),
+        selector: { kind: 'instance', instanceId },
+      },
+    } as ResolvedCombatOperation
+    this.enqueueAndSettle(materialized, plan, state)
   }
 
   private cloneForInstance(

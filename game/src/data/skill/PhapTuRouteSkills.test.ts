@@ -181,7 +181,9 @@ describe('PhapTuRouteSkills -- adapted authored ops', () => {
       reactionEligibility: 'eligible',
       chance: 0.7,
     })
-    // every buff-targeting op binds the caster's OWN instance.
+    // every buff-targeting op binds the caster's OWN instance AND is
+    // result-gated on the apply (spec sec.11/36): a resisted reapply
+    // must not tick/modify/extend the stale instance.
     for (const op of onLanded.slice(1)) {
       expect((op as { selector: object }).selector).toEqual({
         kind: 'identity',
@@ -189,6 +191,7 @@ describe('PhapTuRouteSkills -- adapted authored ops', () => {
         source: 'self',
         target: 'loop_target',
       })
+      expect((op as { gateOnApplyResult?: boolean }).gateOnApplyResult).toBe(true)
     }
     expect(onLanded[2]).toMatchObject({
       modifier: {
@@ -362,18 +365,99 @@ describe('PhapTuRouteSkills -- execution (real scheduler, fake authorities)', ()
     ])
     const [apply, tick, mod, extend] = harness.state.executedOps.slice(1)
     expect(apply?.payload).toMatchObject({ definitionId: 'hoa_an' })
+    // The gated continuations bind the EXACT instance the apply
+    // returned -- not an identity re-query (spec sec.36: bind by
+    // ApplyBuffResult.instanceId).
+    const appliedSeal = harness.state.buffs.find((b) => b.definitionId === 'hoa_an')!
     for (const op of [tick, mod, extend]) {
-      expect((op?.payload as { selector: object }).selector).toMatchObject({
-        kind: 'identity',
-        definitionId: 'hoa_an',
-        sourceId: PLAYER,
-        targetId: ENEMY_A,
+      expect((op?.payload as { selector: object }).selector).toEqual({
+        kind: 'instance',
+        instanceId: appliedSeal.instanceId,
       })
     }
     expect(mod?.payload).toMatchObject({
       modifier: { id: 'phan_thien_potency', value: 1.5, appliedBy: PLAYER },
     })
     expect(extend?.payload).toMatchObject({ turns: 2 })
+  })
+
+  it('phan_thien_hoa_vuc: a resisted apply produces NO continuation (spec sec.11)', () => {
+    const def = rootOf('phan_thien_hoa_vuc')
+    const harness = makeHarness({ defs: [def], applyHook: () => 'resist' })
+    spawn(harness, PLAYER)
+    spawn(harness, ENEMY_A)
+
+    harness.executor.execute(harness.resolver.resolve(makeInput(def)), makeInput(def))
+
+    // apply_buff resolved applied:false -> tick/modifier/extend never
+    // materialize; no instance exists to mutate.
+    expect(harness.state.executedOps.map((o) => o.type)).toEqual([
+      'deal_damage',
+      'apply_buff',
+    ])
+    expect(harness.state.buffs).toHaveLength(0)
+  })
+
+  it('phan_thien_hoa_vuc: a resisted reapply leaves the stale instance byte-identical (no tick, no modifier, no extend)', () => {
+    const def = rootOf('phan_thien_hoa_vuc')
+    const harness = makeHarness({ defs: [def], applyHook: () => 'resist' })
+    spawn(harness, PLAYER)
+    spawn(harness, ENEMY_A)
+    const stale = seedBuff(harness, {
+      definitionId: 'hoa_an' as BuffDefinitionId,
+      targetId: ENEMY_A,
+      sourceId: PLAYER,
+      kind: 'ailment',
+      stacks: 3,
+      hasPeriodic: true,
+      dispellable: false,
+      remainingTurns: 4,
+    })
+
+    harness.executor.execute(harness.resolver.resolve(makeInput(def)), makeInput(def))
+
+    // The resisted reapply resolves applied:false; the three gated
+    // follow-ups never enqueue -- the prior own-source instance is
+    // untouched (stacks, duration, no new instance minted).
+    expect(harness.state.executedOps.map((o) => o.type)).toEqual([
+      'deal_damage',
+      'apply_buff',
+    ])
+    expect(harness.state.buffs).toHaveLength(1)
+    expect(harness.state.buffs[0]).toBe(stale)
+    expect(stale.stacks).toBe(3)
+    expect(stale.remainingTurns).toBe(4)
+  })
+
+  it('phan_thien_hoa_vuc: a successful reapply binds the RETURNED instance, not the stale identity match', () => {
+    const def = rootOf('phan_thien_hoa_vuc')
+    const harness = makeHarness({ defs: [def] })
+    spawn(harness, PLAYER)
+    spawn(harness, ENEMY_A)
+    // A stale same-identity instance exists -- an identity re-query
+    // would land on it. The gate must bind the apply's returned id.
+    seedBuff(harness, {
+      definitionId: 'hoa_an' as BuffDefinitionId,
+      targetId: ENEMY_A,
+      sourceId: PLAYER,
+      kind: 'ailment',
+      stacks: 1,
+      hasPeriodic: true,
+      dispellable: false,
+    })
+
+    harness.executor.execute(harness.resolver.resolve(makeInput(def)), makeInput(def))
+
+    const fresh = harness.state.buffs.find(
+      (b) => b.definitionId === 'hoa_an' && b.stacks === 1 && b.kind === 'buff',
+    )!
+    const [tick, mod, extend] = harness.state.executedOps.slice(2)
+    for (const op of [tick, mod, extend]) {
+      expect((op?.payload as { selector: object }).selector).toEqual({
+        kind: 'instance',
+        instanceId: fresh.instanceId,
+      })
+    }
   })
 
   it('cuu_tieu_viem_bao bursts off and consumes ONLY the caster own instance', () => {

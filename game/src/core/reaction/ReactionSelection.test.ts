@@ -13,6 +13,7 @@ import type { ElementalBoardQuery } from './ReactionBoard'
 import type { ReactionGateCheck } from './ReactionTriggerGate'
 import type { ReactionBoard } from './ReactionTypes'
 import {
+  fixtureDamageProfileExists,
   makeCanonicalReactionDefs,
   TEST_ELEMENT_BUFF_IDS,
   TEST_ENTITIES,
@@ -25,6 +26,7 @@ const registry = new ReactionRegistry(
   makeCanonicalReactionDefs(),
   elements,
   buffExists,
+  fixtureDamageProfileExists,
 )
 
 // These tests drive buildCandidates/selectCandidate on fabricated
@@ -136,7 +138,12 @@ describe('ReactionSystem candidate+selection facade', () => {
           ? { ...d, payoff: dvm.payoff }
           : d,
     )
-    const swappedRegistry = new ReactionRegistry(swapped, elements, buffExists)
+    const swappedRegistry = new ReactionRegistry(
+      swapped,
+      elements,
+      buffExists,
+      fixtureDamageProfileExists,
+    )
     const baseline = new ReactionSystem(registry, noBoard, noGate)
     const variant = new ReactionSystem(swappedRegistry, noBoard, noGate)
     const b = board({ wood: 3, fire: 3, earth: 1, water: 3, metal: 1 })

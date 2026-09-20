@@ -381,11 +381,26 @@ function adaptAilment(
     selector-bound buff ops against the caster's OWN instance on the
     bound target (identity selector source:'self'). `routes` was already
     filtered at the route seam (applyRouteToTurnSkill) -- the adapter
-    emits every surviving entry verbatim. */
+    emits every surviving entry verbatim.
+
+    When the same def also APPLIES the interacted seal, the op is
+    result-gated (spec sec.11/36): it runs only on a successful apply
+    and binds the returned instanceId -- a resisted reapply must not
+    tick/modify/extend the stale instance. A def that does not apply
+    the seal (e.g. xich_viem's next-tick modifier on a pre-existing
+    Hoa An) keeps the plain identity lookup. */
 function adaptAilmentInteractions(
   def: TurnSkillDefinition,
   target: SkillTargetIntent,
 ): AuthoredSkillOperation[] {
+  const appliedSealIds = new Set(
+    ailmentList(def).map((ailment) => ailment.buffDefinitionId),
+  )
+  // The buffs lane mints apply_buff ops through the same resolver --
+  // an interaction on a buffs-lane-applied id is equally result-gated.
+  for (const buff of buffList(def)) {
+    appliedSealIds.add(buff.definitionId)
+  }
   const ops: AuthoredSkillOperation[] = []
   for (const interaction of def.ailmentInteractions ?? []) {
     const selector = {
@@ -394,15 +409,28 @@ function adaptAilmentInteractions(
       source: 'self' as const,
       target,
     }
+    const gate = appliedSealIds.has(interaction.buffId)
+      ? { gateOnApplyResult: true }
+      : {}
     switch (interaction.kind) {
       case 'trigger_periodic':
-        ops.push({ type: 'trigger_buff_periodic', selector })
+        ops.push({ type: 'trigger_buff_periodic', selector, ...gate })
         break
       case 'add_modifier':
-        ops.push({ type: 'add_buff_modifier', selector, modifier: interaction.modifier })
+        ops.push({
+          type: 'add_buff_modifier',
+          selector,
+          modifier: interaction.modifier,
+          ...gate,
+        })
         break
       case 'extend_duration':
-        ops.push({ type: 'extend_buff_duration', selector, turns: interaction.turns })
+        ops.push({
+          type: 'extend_buff_duration',
+          selector,
+          turns: interaction.turns,
+          ...gate,
+        })
         break
     }
   }

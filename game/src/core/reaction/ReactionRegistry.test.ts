@@ -7,6 +7,7 @@ import type { ReactionDefinition } from './ReactionDefinition'
 import { ReactionRegistry, validateReactionDefinitions } from './ReactionRegistry'
 import {
   createReactionTestWorld,
+  fixtureDamageProfileExists,
   makeCanonicalReactionDefs,
   TEST_ELEMENT_BUFF_IDS,
 } from './testing/ReactionTestFixtures'
@@ -25,6 +26,7 @@ describe('ReactionRegistry validation', () => {
       makeCanonicalReactionDefs(),
       w.elements,
       buffExists,
+      fixtureDamageProfileExists,
     )
     expect(registry.all()).toHaveLength(10)
     expect(registry.get('duong_viem').elements.parent).toBe('wood')
@@ -35,7 +37,7 @@ describe('ReactionRegistry validation', () => {
     const defs = makeCanonicalReactionDefs()
     defs.push({ ...defs[0]! })
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/duplicate reaction id/)
   })
 
@@ -44,7 +46,7 @@ describe('ReactionRegistry validation', () => {
     const defs = makeCanonicalReactionDefs()
     defs.push({ ...defs[0]!, id: 'duong_viem_alias' })
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/duplicate selectionTiePriority/)
   })
 
@@ -53,7 +55,7 @@ describe('ReactionRegistry validation', () => {
     const defs = makeCanonicalReactionDefs()
     defs[0] = { ...defs[0]!, elements: { parent: 'wood' } }
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/requires parent \+ child/)
   })
 
@@ -62,7 +64,7 @@ describe('ReactionRegistry validation', () => {
     const defs = makeCanonicalReactionDefs()
     defs[5] = { ...defs[5]!, elements: { attacker: 'water' } }
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/requires attacker \+ defender/)
   })
 
@@ -74,7 +76,7 @@ describe('ReactionRegistry validation', () => {
       elements: { parent: 'wood', child: 'fire', attacker: 'water' },
     }
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/must not carry attacker\/defender/)
   })
 
@@ -83,7 +85,7 @@ describe('ReactionRegistry validation', () => {
     const defs = makeCanonicalReactionDefs()
     defs[0] = { ...defs[0]!, elements: { parent: 'fire', child: 'fire' } }
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/self-element/)
   })
 
@@ -96,7 +98,7 @@ describe('ReactionRegistry validation', () => {
       elements: { parent: 'wood', child: 'metal' },
     }
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/not a canonical sinh pair/)
   })
 
@@ -115,7 +117,7 @@ describe('ReactionRegistry validation', () => {
       },
     }
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/unknown buff/)
   })
 
@@ -125,7 +127,7 @@ describe('ReactionRegistry validation', () => {
       (d) => d.id !== 'duong_viem',
     )
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/canonical pair 'sinh:wood>fire'/)
   })
 
@@ -138,7 +140,7 @@ describe('ReactionRegistry validation', () => {
       selectionTiePriority: 999,
     })
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/defined by both/)
   })
 
@@ -157,7 +159,7 @@ describe('ReactionRegistry validation', () => {
       },
     }
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/role 'attacker'/)
   })
 
@@ -177,7 +179,7 @@ describe('ReactionRegistry validation', () => {
       },
     }
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/when-role 'parent'/)
   })
 
@@ -196,7 +198,7 @@ describe('ReactionRegistry validation', () => {
       },
     }
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/step 'add_child_stacks' requires role 'child'/)
   })
 
@@ -217,7 +219,7 @@ describe('ReactionRegistry validation', () => {
       },
     }
     expect(() =>
-      validateReactionDefinitions(defs, w.elements, buffExists),
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
     ).toThrow(/requires a preceding reaction_damage/)
   })
 
@@ -227,7 +229,29 @@ describe('ReactionRegistry validation', () => {
       makeCanonicalReactionDefs(),
       w.elements,
       buffExists,
+      fixtureDamageProfileExists,
     )
     expect(() => registry.get('nope')).toThrow(/unknown reaction id/)
+  })
+
+  it('throws on a reaction_damage step referencing an unknown damage profile', () => {
+    const { w, buffExists } = setup()
+    const defs = makeCanonicalReactionDefs()
+    defs[5] = {
+      ...defs[5]!,
+      payoff: {
+        steps: [
+          {
+            kind: 'reaction_damage',
+            coefficient: { op: 'const', value: 1 },
+            damageProfile: 'reactoin', // the catalog's 'reaction' typo'd
+            element: 'attacker',
+          },
+        ],
+      },
+    }
+    expect(() =>
+      validateReactionDefinitions(defs, w.elements, buffExists, fixtureDamageProfileExists),
+    ).toThrow(/unknown damage profile 'reactoin'/)
   })
 })

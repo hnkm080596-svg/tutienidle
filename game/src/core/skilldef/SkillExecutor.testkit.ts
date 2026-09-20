@@ -81,6 +81,12 @@ interface HarnessOptions {
   /** applies run through this hook AFTER the buff instance lands --
       simulates settlement-time reaction consumption (contract sec.94). */
   onBuffApplied?: (inst: FakeBuff) => void
+  /** applies consult this hook FIRST: returning 'resist' yields
+      {applied:false} with no minted instance and no onBuffApplied --
+      the resisted-application lane (Hoa An spec sec.11). */
+  applyHook?: (
+    req: Parameters<BuffAuthority['apply']>[0],
+  ) => 'resist' | undefined
   rng?: CombatRng
 }
 
@@ -146,6 +152,9 @@ export function makeHarness(options: HarnessOptions = {}): SkillExecutorHarness 
   const buffAuthority: BuffAuthority = {
     apply(req) {
       requireAlive(req.targetId)
+      if (options.applyHook?.(req) === 'resist') {
+        return { applied: false }
+      }
       const inst: FakeBuff = {
         instanceId: `buff.${instanceSeq++}` as BuffInstanceId,
         definitionId: req.definitionId,

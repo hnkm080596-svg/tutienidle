@@ -14,6 +14,7 @@ import type {
   PushGaugeOperation,
 } from '../battle/contracts/operations'
 import { CANONICAL_REACTIONS } from '../../data/reaction/ReactionDefinitions'
+import { createDamageProfileCatalog } from '../combat/DamageProfiles'
 import { ReactionRegistry } from './ReactionRegistry'
 import type { ReactionResolution } from './ReactionResolution'
 import { ELEMENTAL_REACTION_CAPABILITY } from './ReactionTypes'
@@ -30,6 +31,7 @@ function makeWorld() {
     CANONICAL_REACTIONS,
     world.elements,
     () => true,
+    createDamageProfileCatalog().has,
   )
   const system = world.makeReactionSystem(registry)
   world.capabilities.grant(TEST_ENTITIES.sourceA, ELEMENTAL_REACTION_CAPABILITY)

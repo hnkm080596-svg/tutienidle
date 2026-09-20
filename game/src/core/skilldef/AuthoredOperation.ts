@@ -219,16 +219,26 @@ export type AuthoredSkillOperation =
       type: 'add_buff_modifier' | 'remove_buff_modifier'
       selector: AuthoredBuffSelector
       modifier: AuthoredModifier
+      /** Hoa An spec sec.11/36 result gate: resolve to an
+          `on_apply_result` plan step bound to the preceding apply_buff
+          for the same definition+target -- the op runs only when that
+          apply returned applied:true and binds its returned
+          instanceId, so a resisted reapply can never mutate the stale
+          instance. Set by adaptAilmentInteractions when the same def
+          applies the interacted seal. */
+      gateOnApplyResult?: boolean
     }
   | {
       type: 'refresh_buff_duration' | 'extend_buff_duration'
       selector: AuthoredBuffSelector
       turns?: number
+      gateOnApplyResult?: boolean
     }
   | {
       type: 'trigger_buff_periodic'
       selector: AuthoredBuffSelector
       periodicId?: string
+      gateOnApplyResult?: boolean
     }
   | {
       type: 'remove_buff'

@@ -21,7 +21,12 @@ const buffExists = (id: string) => BUFF_REGISTRY.has(id as BuffDefinitionId)
 
 describe('CANONICAL_REACTIONS -- production registry construction', () => {
   it('constructs a ReactionRegistry against the sealed battle registry; all 10 canonical pairs present', () => {
-    const registry = new ReactionRegistry(CANONICAL_REACTIONS, elements, buffExists)
+    const registry = new ReactionRegistry(
+      CANONICAL_REACTIONS,
+      elements,
+      buffExists,
+      createDamageProfileCatalog().has,
+    )
     expect(registry.all()).toHaveLength(10)
 
     const pairs = new Set(

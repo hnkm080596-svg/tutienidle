@@ -52,11 +52,11 @@
 
 ## Findings
 
-### QA-2026-09-20-001: cam_cong at D≤3 suppresses zero enemy declares (design note — NOT a defect)
-- Severity: Low (design observation; spec-faithful data)
+### QA-2026-09-20-001: cam_cong at D≤3 suppresses zero enemy declares — RESOLVED by review fix
+- Severity: originally Low (design observation); elevated to High by post-push code review
 - Invariant: GAME-1
-- Mechanism: `tran_thuy` authors `durationOverride = clamp(D-2,1,2)` (spec §46: "D 1–3 → 1 holder turn"). `declareActorAction` runs `onHolderTurnEnd` at declare-start before selection (TurnBattleSystem.ts:1588) — a duration-1 `holder_turns` instance decrements 1→0 and is swept before the first selection it could restrict. Duration 1 therefore suppresses 0 declares; duration 2 suppresses exactly 1.
-- Disposition: spec §83 explicitly classifies duration values as provisional/tunable ("2-turn Attack Seal" is listed). The authored data is verbatim-faithful; the decrement-before-select ordering is the engine's uniform pre-existing `holder_turns` convention shared by every control def. Recorded as a balance/design observation for a future tuning pass — the restriction mechanism itself is proven (S4 sealed→fallback→expiry test; live cam_cong instance in browser).
+- Mechanism: `tran_thuy` authored `durationOverride = clamp(D-2,1,2)` (spec §46: "D 1–3 → 1 holder turn"). `declareActorAction` runs `onHolderTurnEnd` at declare-start before selection (TurnBattleSystem.ts:1588) — a duration-1 `holder_turns` instance decrements 1→0 and is swept before the first selection it could restrict. Duration 1 therefore suppressed 0 declares; duration 2 suppressed exactly 1.
+- Resolution: the production translation now encodes "N blocked declares" as engine clock `N+1` — `clamp(D-1,2,3)` (D≤3 → 2, D4–5 → 3). The global holder-turn lifecycle is unchanged. Re-proofed end-to-end by the production tran_thuy drives in `GameManager.reactionReproof.test.ts` (D3 blocks exactly one declare; D4 blocks exactly two; heal fallback stays legal; expiry restores).
 
 ### QA-2026-09-20-002: `applyBuffToPlayer` mints `reactionEligibility:'eligible'` on player→player (latent seam — NOT a defect)
 - Severity: Low

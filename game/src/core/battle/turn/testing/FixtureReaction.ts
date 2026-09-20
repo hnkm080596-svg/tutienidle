@@ -28,6 +28,7 @@ import { resolutionToBatch } from '../../../reaction/ReactionResolution'
 import { ELEMENTAL_REACTION_CAPABILITY } from '../../../reaction/ReactionTypes'
 import type { ReactionDefinition } from '../../../reaction/ReactionDefinition'
 import { StaticCapabilityQuery } from '../../runtime/capability/StaticCapabilityQuery'
+import { createDamageProfileCatalog } from '../../../combat/DamageProfiles'
 import type { TurnRuntimeFixture } from './TurnRuntimeFixtures'
 
 // ---------------------------------------------------------------------------
@@ -180,6 +181,7 @@ export function attachFixtureReaction(opts: {
     makeFixtureReactionDefs(),
     opts.elements,
     (id) => opts.registry.has(id as BuffDefinitionId),
+    createDamageProfileCatalog().has,
   )
   const reactionSystem = new ReactionSystem(reactionRegistry, boardQuery, gate)
   const dispatcher = new ReactionDispatcher(gate, reactionSystem, opts.elements, resolutionToBatch)

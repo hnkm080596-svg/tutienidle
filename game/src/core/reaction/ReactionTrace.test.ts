@@ -10,6 +10,7 @@ import { formatReactionTrace } from './ReactionTrace'
 import { ELEMENTAL_REACTION_CAPABILITY } from './ReactionTypes'
 import {
   createReactionTestWorld,
+  fixtureDamageProfileExists,
   makeCanonicalReactionDefs,
   TEST_ENTITIES,
   type ReactionTestWorld,
@@ -21,6 +22,7 @@ function makeWorld() {
     makeCanonicalReactionDefs(),
     world.elements,
     () => true,
+    fixtureDamageProfileExists,
   )
   const system = world.makeReactionSystem(registry)
   world.capabilities.grant(

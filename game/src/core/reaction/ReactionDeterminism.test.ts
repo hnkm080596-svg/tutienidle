@@ -20,6 +20,7 @@ import {
 } from './ReactionTypes'
 import {
   createReactionTestWorld,
+  fixtureDamageProfileExists,
   makeCanonicalReactionDefs,
   TEST_ENTITIES,
   type ReactionTestWorld,
@@ -39,6 +40,7 @@ function makeWorld() {
     makeCanonicalReactionDefs(),
     world.elements,
     () => true,
+    fixtureDamageProfileExists,
   )
   const system = world.makeReactionSystem(registry)
   for (const source of [TEST_ENTITIES.sourceA, TEST_ENTITIES.sourceB]) {

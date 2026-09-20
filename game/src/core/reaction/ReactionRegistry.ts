@@ -117,6 +117,27 @@ function validatePayoffBuffIds(
   }
 }
 
+/** megaplan sec.8.4 -- every referenced damage profile must resolve
+    against the SAME catalog the damage authority validates periodic
+    defs with (createDamageProfileCatalog). A typo'd profile currently
+    only surfaces when the damage op settles; seal it at registry
+    construction like the buff-id check above. */
+function validateDamageProfiles(
+  def: ReactionDefinition,
+  damageProfileExists: (profile: string) => boolean,
+): void {
+  for (const step of def.payoff.steps) {
+    if (
+      step.kind === 'reaction_damage' &&
+      !damageProfileExists(step.damageProfile)
+    ) {
+      throw new Error(
+        `ReactionRegistry: '${def.id}' reaction_damage references unknown damage profile '${step.damageProfile}'`,
+      )
+    }
+  }
+}
+
 /** M4 -- a StackExpr 'stacks' reference or a `when` role must be a role
     the relation actually has (sinh: parent/child; khac:
     attacker/defender). Catching it at seal beats a mid-combat throw
@@ -235,6 +256,7 @@ export function validateReactionDefinitions(
   defs: readonly ReactionDefinition[],
   elements: ElementalStateRegistry,
   buffExists: (id: string) => boolean,
+  damageProfileExists: (profile: string) => boolean,
 ): void {
   const ids = new Set<ReactionId>()
   const priorities = new Set<number>()
@@ -255,6 +277,7 @@ export function validateReactionDefinitions(
 
     validateElements(def, elements)
     validatePayoffBuffIds(def, buffExists)
+    validateDamageProfiles(def, damageProfileExists)
     validatePayoffRoles(def)
 
     const key = pairKey(def)
@@ -284,8 +307,9 @@ export class ReactionRegistry {
     defs: readonly ReactionDefinition[],
     elements: ElementalStateRegistry,
     buffExists: (id: string) => boolean,
+    damageProfileExists: (profile: string) => boolean,
   ) {
-    validateReactionDefinitions(defs, elements, buffExists)
+    validateReactionDefinitions(defs, elements, buffExists, damageProfileExists)
     for (const def of defs) {
       this.byId.set(def.id, def)
       this.ordered.push(def)

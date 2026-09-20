@@ -752,6 +752,11 @@ D 1–3 → 1 holder turn
 D 4–5 → 2 holder turns
 ```
 
+Engine translation (post-review fix): a holder's declare runs
+`holder_turn_end` BEFORE action validation, so "N suppressed declares"
+is authored as engine clock `N+1` — `clamp(D-1, 2, 3)` (D≤3 → 2,
+D4–5 → 3). The global holder-turn lifecycle is unchanged.
+
 Cấm Công means: cannot use actions tagged `attack`.
 
 Still allowed: buff, heal, cleanse, defend, utility, resource.

@@ -1239,6 +1239,9 @@ export class GameManagerTurnBattleOps {
       CANONICAL_REACTIONS,
       elemental,
       (id) => registry.has(id as BuffDefinitionId),
+      // megaplan sec.8.4 -- referenced damage profiles validate against
+      // the SAME catalog the periodic defs seal with.
+      createDamageProfileCatalog().has,
     )
     const reactionSystem = new ReactionSystem(
       reactionRegistry,

@@ -125,6 +125,13 @@ function statusDef(id: BuffDefinitionId, extra?: Partial<BuffDefinition>): BuffD
   }
 }
 
+/** The fixture khac defs author damageProfile 'test_profile'; the
+    registry's damage-profile check accepts that plus the production
+    'reaction' id so mixed fixture/production data still seals. */
+export function fixtureDamageProfileExists(profile: string): boolean {
+  return profile === 'test_profile' || profile === 'reaction'
+}
+
 /** Fixture CANONICAL_REACTIONS -- the locked ids/priorities with minimal
     payoff steps (M4 authors the real payoff data). Covers all 10
     canonical pairs so registry coverage validation passes. */

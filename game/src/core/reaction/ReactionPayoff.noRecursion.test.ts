@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { CANONICAL_REACTIONS } from '../../data/reaction/ReactionDefinitions'
+import { createDamageProfileCatalog } from '../combat/DamageProfiles'
 import { ReactionRegistry } from './ReactionRegistry'
 import { ELEMENTAL_REACTION_CAPABILITY } from './ReactionTypes'
 import {
@@ -20,6 +21,7 @@ function makeWorld() {
     CANONICAL_REACTIONS,
     world.elements,
     () => true,
+    createDamageProfileCatalog().has,
   )
   const system = world.makeReactionSystem(registry)
   world.capabilities.grant(TEST_ENTITIES.sourceA, ELEMENTAL_REACTION_CAPABILITY)

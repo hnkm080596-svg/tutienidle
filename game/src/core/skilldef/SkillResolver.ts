@@ -254,6 +254,7 @@ export class SkillResolver {
       readSeq: 0,
       lastDamageOpId: undefined,
       hitOpIdsByTarget: new Map(),
+      applyOpIds: new Map(),
     }
     // Charge-init defers every authored step to the resolve follow-up:
     // the plan still commits (cadence/cost/consume-all ride the plan
@@ -1668,31 +1669,68 @@ export class SkillResolver {
               'durationOverride',
             )
           : undefined
-      steps.push(
-        this.operationStep(
-          {
-            type: 'apply_buff',
-            payload: {
-              definitionId: op.definitionId,
-              targetId,
-              stacks,
-              baseChance,
-              ...(durationOverride !== undefined ? { durationOverride } : {}),
-              reactionEligibility: op.reactionEligibility ?? 'suppressed',
-            },
-            // Orchestration metadata rides the op (contract v1.6) --
-            // the turn runtime replays the source-tagged externalWard
-            // write at settle.
-            ...(op.externalWardGrant !== undefined
-              ? { externalWardGrant: op.externalWardGrant }
-              : {}),
+      const step = this.operationStep(
+        {
+          type: 'apply_buff',
+          payload: {
+            definitionId: op.definitionId,
+            targetId,
+            stacks,
+            baseChance,
+            ...(durationOverride !== undefined ? { durationOverride } : {}),
+            reactionEligibility: op.reactionEligibility ?? 'suppressed',
           },
-          ctx,
-          late,
-        ),
+          // Orchestration metadata rides the op (contract v1.6) --
+          // the turn runtime replays the source-tagged externalWard
+          // write at settle.
+          ...(op.externalWardGrant !== undefined
+            ? { externalWardGrant: op.externalWardGrant }
+            : {}),
+        },
+        ctx,
+        late,
       )
+      ctx.applyOpIds.set(
+        `${op.definitionId}::${targetId}`,
+        step.operation.operationId,
+      )
+      steps.push(step)
     }
     return steps
+  }
+
+  /** Hoa An spec sec.11/36 -- an authored `gateOnApplyResult` op becomes
+      an `on_apply_result` plan step per produced operation: bound to the
+      most recent apply_buff for the SAME definition+target, materializing
+      its selector to the returned instanceId only on applied:true. The
+      gate needs a preceding apply in this resolve's translated
+      sequence -- authoring one without it is a structural fault. */
+  private gateOnApplyResult(
+    op: AuthoredSkillOperation & { gateOnApplyResult?: boolean },
+    steps: ResolvedSkillPlanStep[],
+    ctx: TranslateContext,
+  ): ResolvedSkillPlanStep[] {
+    if (op.gateOnApplyResult !== true) return steps
+    return steps.map((step) => {
+      if (step.kind !== 'operation') return step
+      const selector = (step.operation.payload as { selector?: BuffInstanceSelector })
+        .selector
+      const resultOperationId =
+        selector !== undefined && selector.kind !== 'instance'
+          ? ctx.applyOpIds.get(`${selector.definitionId}::${selector.targetId}`)
+          : undefined
+      if (resultOperationId === undefined) {
+        throw new SkillResolverError(
+          `SkillResolver: gateOnApplyResult on '${op.type}' has no preceding apply_buff for the same definition+target`,
+        )
+      }
+      return {
+        kind: 'on_apply_result' as const,
+        resultOperationId,
+        operation: step.operation,
+        ...(step.late !== undefined ? { late: step.late } : {}),
+      }
+    })
   }
 
   // -----------------------------------------------------------------------
@@ -1761,7 +1799,7 @@ export class SkillResolver {
             }
       steps.push(this.operationStep(operation, ctx))
     }
-    return steps
+    return this.gateOnApplyResult(op, steps, ctx)
   }
 
   private translateDurationOp(
@@ -1789,7 +1827,7 @@ export class SkillResolver {
             }
       steps.push(this.operationStep(operation, ctx))
     }
-    return steps
+    return this.gateOnApplyResult(op, steps, ctx)
   }
 
   private translateTriggerPeriodic(
@@ -1812,7 +1850,7 @@ export class SkillResolver {
         ),
       )
     }
-    return steps
+    return this.gateOnApplyResult(op, steps, ctx)
   }
 
   private translateRemoveBuff(
@@ -1993,4 +2031,7 @@ interface TranslateContext {
   /** hit-channel (skill_hit) opIds minted so far, grouped by targetId --
       the target_hit_landed gate's ops_landed_any binding (M4). */
   hitOpIdsByTarget: Map<CombatEntityId, CombatOperationId[]>
+  /** Most recent apply_buff opId per 'definitionId::targetId' -- the
+      on_apply_result gate's binding (Hoa An spec sec.11/36). */
+  applyOpIds: Map<string, CombatOperationId>
 }
