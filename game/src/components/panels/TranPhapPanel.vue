@@ -46,9 +46,11 @@ import { FORMATION_ASSIGNMENTS_EVENT, type FormationAssignmentsPayload } from '@
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import {
   PLACEHOLDER_ATLAS_URL,
+  PLACEHOLDER_ENTITY_KEY,
   PLACEHOLDER_FRAME_COUNT,
   PLACEHOLDER_FRAME_RATE,
   PLACEHOLDER_SHEET_URL,
+  presentationFor,
 } from '@/presentation/art/CombatPresentationCatalogue'
 import type { SlotState } from '@/presentation/contracts/SlotState'
 
@@ -156,7 +158,17 @@ function combatantCards(): { combatantId: string; label: string; artUrl?: string
 
   for (const instance of player.companions) {
     if (!placed.has(instance.definitionId)) {
-      cards.push({ combatantId: instance.definitionId, label: instance.definitionId })
+      // ENTITY_ART_MODE contract: the card shows the same form kind combat
+      // draws - static mode renders the entity's static texture (shared
+      // silhouette while companions have no authored art); animated mode
+      // falls through to the placeholder idle loop below.
+      const form =
+        presentationFor(instance.definitionId) ?? presentationFor(PLACEHOLDER_ENTITY_KEY)
+      cards.push({
+        combatantId: instance.definitionId,
+        label: instance.definitionId,
+        artUrl: form?.kind === 'static' ? form.texture.textureUrl : undefined,
+      })
     }
   }
 

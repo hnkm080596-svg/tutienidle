@@ -179,7 +179,7 @@ describe('TranPhapPanel', () => {
     mounted.unmount()
   })
 
-  it('queue stand for a companion renders the placeholder idle canvas (no authored art yet)', async () => {
+  it('queue stand for a companion renders the static-mode placeholder silhouette (ENTITY_ART_MODE contract)', async () => {
     const mounted = mountPanel(({ player }) => {
       player.companions = [ownedCompanion('ho_ly_tinh')]
     })
@@ -192,7 +192,11 @@ describe('TranPhapPanel', () => {
     const companionCard = cards[1]!
 
     expect(companionCard.querySelector('.queue-stand__base')).not.toBeNull()
-    expect(companionCard.querySelector('canvas.queue-stand__art')).not.toBeNull()
+
+    const img = companionCard.querySelector<HTMLImageElement>('img.queue-stand__art')
+
+    expect(img).not.toBeNull()
+    expect(img!.getAttribute('src') ?? '').toContain('entity-placeholder')
     expect(companionCard.textContent ?? '').toContain('ho_ly_tinh')
 
     mounted.unmount()
