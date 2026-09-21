@@ -1838,6 +1838,66 @@ Each enforcement rule should protect a real regression class discovered by Missi
 
 ---
 
+# Phase P7 — Progression Consolidation
+
+**Status: SHIPPED 2026-09-21** (worktree `.agent-worktrees/p7-progression-consolidation`,
+branch `feat/p7-progression-consolidation`; mission graph + per-mission
+spec/plan docs under `docs/p7/`). Eight missions, each independently
+spec'd → planned → implemented → gated (P3 verify, P18 OCR, P13/P14
+runtime where triggered, P4 QA, P5 sequential) → committed.
+
+- **M1 `ce32f140` (v68)** — canonical identity-spine cut to semantic
+  English: `cultivationPath` = `sword|spell|body`; `cultivationWay` =
+  `sword_pathway|hidden_sword_pathway|spell_pathway|hidden_spell_pathway|
+  body_pathway|hidden_body_pathway`. Leaf content ids unchanged (D6:
+  spine English, leaves VN — `docs/p7/naming-migration.md`).
+- **M2 `cca7f91b` (v69)** — realm-entry passive ownership moved to the
+  canonical Way `realmRewards[realmId] → passiveSkillId` ladder
+  (`data/progression/RealmPassiveLadder.ts`); technique passive channel
+  retired (`Technique.passiveSkillIdsByRealm`, `innateSkillId`).
+- **M3 `e9a0bd32` (v70)** — canonical Technique authority: exactly ONE
+  canonical Technique per committed Way (`data/technique/Techniques.ts`,
+  six entries), granted at initiation; no learn-by-drop, no generic
+  list/equip. Progression = `grade` (realm-ceiling-capped, Nâng Cảnh
+  transaction via `realmAdvanceOps`) + `rank` (≤10) + `mastery`
+  (300·grade/rank) + `quality`. `tu_linh_quyet` REMOVED entirely
+  (locked product decision).
+- **M4 `05eba824` (v71)** — combat role contract: Basic/Special/Ultimate
+  role resolution replaces the generic skill loadout; mortal pick
+  `mortalBasicSkillId` is mortal-only (preflight rejects post-path).
+- **M5 `c4b31df8` (v72)** — unified `BodyProgressionSystem` +
+  `BodyChapter` registry (`core/realm/body/`): body_refinement +
+  meridian chapters own state, invest, modifiers, integrity; flat
+  fields retired; save preflight delegates to the authority.
+- **M6 `8ff4c975`** — technique-gated node prerequisites:
+  `requiredTechniqueRank`/`requiredTechniqueGrade` schema kinds +
+  evaluator + `player.techniqueProgress` mirror republished by
+  `TechniqueSystem` (skillCastCounts sink precedent). Schema-only —
+  no authored gates yet.
+- **M7 `d8c2cb42`** — progression UI consolidation: `SkillPathPanel` =
+  way identity + `TechniqueBand` (canonical technique card + sections +
+  grade action) + node tree + resolved roles; `RealmPanel` =
+  realm + `BodyRefinementSection` + `MeridianSection` (read-only,
+  meridian invest parked M13); `TechniquePanel`/`LuyenThePanel`/
+  `TechniqueCodex` retired; Scripture Pavilion = lore-only; wheel +
+  i18n keys consolidated under owning panels.
+- **M8** — integration sweep: save-version decision (NO final bump —
+  v72 already rejects all older saves; M6/M7 changed nothing
+  persisted), dead-authority sweep clean (`tu_linh_quyet`,
+  `passiveSkillIdsByRealm`, `innateSkillId`, `learnByDrop`,
+  `openedMeridianIds`, `luyenTheTiers`, `scripturePavilionTab`,
+  retired panel ids — zero live references; `RETIRED_SKILL_ENTRY_KEYS`
+  is the intentional rejection list), docs sync.
+
+**Canonical progression after P7:** Phàm Nhân (no technique) → Lễ Nhập
+Môn chooses Path + Way → canonical Way owns technique grant, realm
+passives, node-tree tag, stat facet. One authority per progression
+rule/state; saves ≤ v71 rejected (no translators, dev-phase
+convention).
+
+---
+
+
 # 0.7. Architecture Repair dependency order
 
 Primary combat chain:

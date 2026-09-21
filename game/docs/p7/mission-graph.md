@@ -38,3 +38,16 @@ Refined from the user's M1–M8 guideline. Each mission = one coherent authority
 - M4's minimal UI change (strip → read-only role display) keeps the intermediate state valid; full widget removal happens in M7.
 - M5's panel re-point is mechanical (same UI, new read source); structural IA change is M7's job.
 - If ChatGPT review forces a boundary change, update this graph rather than smearing authorities across commits.
+
+## Completion ledger (2026-09-21)
+
+| # | Status | Commit | Gates |
+|---|---|---|---|
+| M1 | DONE | `ce32f140` (v68) | verify + runtime two-path + review |
+| M2 | DONE | `cca7f91b` (v69) | verify + runtime + review; balance oracle regenerated |
+| M3 | DONE | `e9a0bd32` (v70) | verify + runtime + review |
+| M4 | DONE | `05eba824` (v71) | verify + OCR + runtime + QA + P5 + external IMPL_PASS |
+| M5 | DONE | `c4b31df8` (v72) | verify + OCR + runtime (tick auto-invest live) + QA + P5 + external IMPL_PASS |
+| M6 | DONE | `8ff4c975` | verify + OCR + runtime (mirror republish + fail-closed live) + QA + P5 + external IMPL_PASS |
+| M7 | DONE | `d8c2cb42` | verify 719f/6337t + OCR clean + runtime 30/30 + QA + P5; external bridge down (SEND_FAILED, documented) |
+| M8 | DONE | — | save decision: no bump (v72 boundary stands); dead-authority sweep clean; docs synced; final verify + merge |
