@@ -5,7 +5,7 @@ import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData } from '../player/Player'
 import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
-import { CULTIVATION_PATH_MODULES } from '../player/CultivationPathKit'
+import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
@@ -112,35 +112,13 @@ export class GameManagerRealmAdvanceOps {
   }
 
   /**
-   * A combat technique may carry `innateSkillId` (signature combat
-   * innate) - auto-learn + equip that passive skill the moment the
-   * technique is equipped, same pattern as syncRealmPassive()
-   * (idempotent via skillManager.has(); un-equipping the technique later
-   * does NOT remove the skill - "learned is kept" system-wide).
+   * Equip a learned technique. P7-M2 - pure technique operation: the
+   * passives a technique used to smuggle in via innateSkillId are now
+   * declared way content (PathWayDefinition.passiveSkillIds), granted by
+   * chooseCultivationPath at initiation.
    */
   equipTechnique(techniqueId: string): boolean {
-    const success = this.deps.techniqueSystem.equip(techniqueId)
-
-    if (!success) {
-      return false
-    }
-
-    const technique = this.deps.techniqueManager.get(techniqueId)
-
-    if (technique?.innateSkillId && !this.deps.skillManager.has(technique.innateSkillId)) {
-      const template = this.deps.skillTemplates.get(technique.innateSkillId)
-
-      if (template) {
-        this.deps.skillSystem.learn(template)
-
-        // innateSkillId is always a passive (see Technique.ts) - not part
-        // of the Skill Loadout, uses equipWithoutSlot() like every other
-        // passive (syncRealmPassive()).
-        this.deps.skillSystem.equipWithoutSlot(technique.innateSkillId)
-      }
-    }
-
-    return true
+    return this.deps.techniqueSystem.equip(techniqueId)
   }
 
   unequipTechnique(techniqueId: string): boolean {
@@ -195,16 +173,15 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    if (
-      techniqueTemplate.innateSkillId !== undefined &&
-      !this.deps.skillTemplates.has(techniqueTemplate.innateSkillId)
-    ) {
-      return false
-    }
-
     const grantedSkillIds: readonly string[] = way.skillIds ?? []
 
     if (grantedSkillIds.some((skillId) => !this.deps.skillTemplates.has(skillId))) {
+      return false
+    }
+
+    // P7-M2 - initiation passives are way-declared now; their templates
+    // get the same pre-commit check (was techniqueTemplate.innateSkillId).
+    if ((way.passiveSkillIds ?? []).some((skillId) => !this.deps.skillTemplates.has(skillId))) {
       return false
     }
 
@@ -226,8 +203,7 @@ export class GameManagerRealmAdvanceOps {
     // skillIds learn + equip into slots in order. sword basics come
     // from the orb preset via the dynamicBasic provider; both body
     // ways resolve their kit at battle build; hidden_spell_pathway's third kit
-    // member is a technique-carried passive (innateSkillId), not a
-    // loadout skill.
+    // member is a passiveSkillIds passive, not a loadout skill.
     for (const skillId of way.unequipSkillIds ?? []) {
       this.deps.skillSystem.unequip(skillId)
     }
@@ -236,6 +212,16 @@ export class GameManagerRealmAdvanceOps {
       this.deps.progressionOps.learnSkill(skillId)
       this.deps.skillSystem.equipToSlot(skillId, index)
     })
+
+    // P7-M2 - way-declared initiation passives (replaces the technique's
+    // innateSkillId grant): learned + equipped WITHOUT a loadout slot,
+    // same shape as syncRealmPassive below.
+    for (const passiveId of way.passiveSkillIds ?? []) {
+      if (!this.deps.skillManager.has(passiveId)) {
+        this.deps.progressionOps.learnSkill(passiveId)
+        this.deps.skillSystem.equipWithoutSlot(passiveId)
+      }
+    }
     // Phap Tu Reimagined (Task 6) — no auto-Fire starter: choosing
     // spell leaves player.spellPath { element: null, route: null } until
     // progressionOps.selectSpellPathElement() commits the atomic choice.
@@ -322,21 +308,19 @@ export class GameManagerRealmAdvanceOps {
 
   /**
    * Unlocks + auto-equips the passive skill for the player's current
-   * realm - call right after a successful breakthrough(). The passive
-   * source now comes from the EQUIPPED technique
-   * (Technique.passiveSkillIdsByRealm, merged 2026-08-15 - no separate
-   * 'cultivation' slot), no longer fixed per realm (the old
-   * RealmData.unlockSkillId) - swapping technique also swaps the 9 future
-   * passives, while already-learned passives stay. No equipped technique
-   * means no passive is learned. Idempotent (checks skillManager.has()
-   * before learn) so repeat calls or post-load calls are safe.
+   * realm - call right after a successful breakthrough(). P7-M2: the
+   * passive source is the COMMITTED WAY's realmRewards record
+   * (way -> realmRewards[realm] -> passiveSkillId; ways compose the
+   * canonical ladder from data/progression/RealmPassiveLadder), no
+   * longer the equipped technique - a technique swap cannot change the
+   * realm passives a player receives, and a way-less/corrupt pair
+   * grants nothing. Idempotent (checks skillManager.has()
+   * before learn) so repeat calls are safe.
    */
   syncRealmPassive(player: PlayerData) {
     const realm = getCurrentRealm(player.realmId)
 
-    const technique = this.deps.techniqueManager.getEquipped()
-
-    const skillId = technique?.passiveSkillIdsByRealm?.[realm.id]
+    const skillId = getActiveWayDefinition(player)?.realmRewards?.[realm.id]?.passiveSkillId
 
     if (!skillId) {
       return
@@ -364,7 +348,7 @@ export class GameManagerRealmAdvanceOps {
    * Realm Passive & Pressure System (2026-08-20) - grants the PERMANENT
    * buff (Nhap Dao/Kien Co/..., see data/realm/RealmPassives.ts) of the
    * CURRENT realm; named apart from syncRealmPassive() above (that is
-   * the technique-based passive SKILL, this is the stat modifier by
+   * the way-reward passive SKILL, this is the stat modifier by
    * Breakthrough Grade/foundation type) to avoid mixing the two
    * concepts. Idempotent (see RealmPassiveSystem.grantRealmPassive()) -
    * called at the same 3 points as syncRealmPassive()

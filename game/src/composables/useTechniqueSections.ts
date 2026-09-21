@@ -1,31 +1,28 @@
 import type { Technique } from '@/core/technique/Technique'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '@/core/technique/TechniqueTier'
 import { statLabel } from '@/core/stats/StatLabels'
-import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { COMBAT_TECHNIQUE_TYPES } from '@/data/technique/CombatTechniqueTypes'
 import type { TooltipSection } from './useTooltip'
-import type { GameManager } from '@/core/game/GameManager'
 
 /**
- * Trích từ TechniqueSlotCard.vue (2026-08-20) — dùng chung cho tooltip
- * (hover) VÀ khối thông tin inline mới ở LoadoutManager.vue's tab Tâm
- * Pháp (PLAN HOÀN CHỈNH mục 5/9 rework — không còn ô "Đã Học" để bấm
- * đổi công pháp, thay bằng đọc thẳng thông tin công pháp đang mang).
- * Pháp Tu Redesign (magicpath) — Tâm Pháp không còn cộng chỉ số dưới
- * bất kỳ hình thức nào ngoài `tierEffects` (đúng ĐÚNG tier hiện tại,
- * xem TechniqueTier.ts — giờ suy từ techniqueExperience thay vì
+ * Extracted from TechniqueSlotCard.vue (2026-08-20) - shared by the
+ * (hover) tooltip AND the inline info block in LoadoutManager.vue's Tam
+ * Phap tab (PLAN HOAN CHINH item 5/9 rework - no "Da Hoc" cell to click
+ * for technique switching; reads the equipped technique's info
+ * directly). Phap Tu Redesign (magicpath) - Tam Phap grants no stats in
+ * any form outside `tierEffects` (exactly the CURRENT tier, see
+ * TechniqueTier.ts - now derived from techniqueExperience instead of
  * player.realmId).
+ *
+ * P7-M2 - no passive rows here: realm-entry passives are way-owned
+ * (realmRewards/passiveSkillIds), the technique display has no business
+ * rendering way-owned rewards.
  */
 export function buildTechniqueSections(
   technique: Technique,
-  gameManager: GameManager,
   techniqueInsight: number,
 ): TooltipSection[] {
   const sections: TooltipSection[] = []
-
-  function skillName(skillId: string): string {
-    return gameManager.skillManager.get(skillId)?.name ?? skillId
-  }
 
   const combatRows: { label: string; value: string }[] = []
 
@@ -38,10 +35,6 @@ export function buildTechniqueSections(
       combatRows.push({ label: 'Chỉ số chính', value: config.mainStats.map(statLabel).join(' / ') })
       combatRows.push({ label: 'Chỉ số phụ', value: config.substatPool.map(statLabel).join(', ') })
     }
-  }
-
-  if (technique.innateSkillId) {
-    combatRows.push({ label: 'Tuyệt kỹ nội tại', value: skillName(technique.innateSkillId) })
   }
 
   if (technique.resourceLabel) {
@@ -76,18 +69,6 @@ export function buildTechniqueSections(
 
   if (combatRows.length > 0) {
     sections.push({ label: 'Chiến Đấu', rows: combatRows })
-  }
-
-  const cultivationRows: { label: string; value: string }[] = []
-
-  if (technique.passiveSkillIdsByRealm) {
-    for (const [realmId, skillId] of Object.entries(technique.passiveSkillIdsByRealm)) {
-      cultivationRows.push({ label: getCurrentRealm(realmId).name, value: skillName(skillId) })
-    }
-  }
-
-  if (cultivationRows.length > 0) {
-    sections.push({ label: 'Tu Luyện', rows: cultivationRows })
   }
 
   return sections

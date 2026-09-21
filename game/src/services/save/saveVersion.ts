@@ -72,4 +72,10 @@
 // spell_pathway/hidden_spell_pathway/body_pathway/hidden_body_pathway);
 // PlayerData.phapTu -> spellPath, PlayerData.kiemTu -> swordPath. Save
 // v67 is rejected (dev phase, no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 68 as const
+// v69 (2026-09-21, P7-M2 realm-passive ownership): Technique snapshot
+// drops passiveSkillIdsByRealm + innateSkillId - the realm-entry
+// passive ladder moves to the committed way's realmRewards (composed
+// from data/progression/RealmPassiveLadder) and initiation passives to
+// PathWayDefinition.passiveSkillIds. Save v68 is rejected (dev phase,
+// no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 69 as const

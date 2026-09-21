@@ -72,8 +72,6 @@ export const TECHNIQUES: Technique[] = [
   },
 
   // Phap Tu An (Task 7, phap-tu-reimagined) — tâm pháp của path ẩn.
-  // innateSkillId carries the dao passive: equipTechnique auto-learns +
-  // equipWithoutSlot's ngo_dao_hon_don (no new wiring needed).
   {
     id: 'ngo_dao_chan_quyet',
 
@@ -87,8 +85,6 @@ export const TECHNIQUES: Technique[] = [
       'Chân quyết của kẻ ngộ đạo giữa muôn pháp — vạn pháp tùy tâm, đa pháp liên tuyên.',
 
     resourceLabel: 'Pháp Lực',
-
-    innateSkillId: 'ngo_dao_hon_don',
 
     tierEffects: {
       so_nhap: { maxMpIncreasePercent: 0.03, manaRegenIncreasePercent: 0.005, hpRegenFlat: 0.5, mpRegenFlat: 0.5 },
@@ -124,9 +120,6 @@ export const TECHNIQUES: Technique[] = [
 
     element: 'metal',
 
-    // Nội tại chiến đấu — passive_kiem_tam_lanh (xem data/skill/Skills.ts).
-    innateSkillId: 'passive_kiem_tam_lanh_liet',
-
     // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — kiếm tu thiên hồi máu.
     tierEffects: {
       so_nhap: { hpRegenFlat: 1.5, mpRegenFlat: 0.25 },
@@ -155,9 +148,6 @@ export const TECHNIQUES: Technique[] = [
 
     requiredRealmLevel: 3,
 
-    // Nội tại chiến đấu — passive_tai_hu_edge (xem data/skill/Skills.ts).
-    innateSkillId: 'passive_thai_hu_kiem_y',
-
     // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — kiếm tu thiên hồi máu.
     tierEffects: {
       so_nhap: { hpRegenFlat: 1, mpRegenFlat: 0.5 },
@@ -181,9 +171,6 @@ export const TECHNIQUES: Technique[] = [
     description: 'Luyện thân cứng như kim thạch, phòng ngự vượt trội.',
 
     combatTypeId: 'def',
-
-    // Nội tại chiến đấu — passive_iron_body_resolve.
-    innateSkillId: 'passive_kim_cang_y_chi',
 
     // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — thể tu hồi máu mạnh.
     tierEffects: {
@@ -234,22 +221,6 @@ export const TECHNIQUES: Technique[] = [
 
     description:
       'Công pháp tu luyện căn bản nhất, giúp người mới nhập môn cảm ngộ linh khí trời đất.',
-
-    // 9 passive học được khi đột phá vào đúng cảnh giới, chỉ khi tâm
-    // pháp này đang trang bị — xem GameManager.syncRealmPassive() và
-    // Technique.passiveSkillIdsByRealm. Đây là "cấp skill" (không phải
-    // Tâm Pháp tự cộng chỉ số), skill tự có pipeline stat riêng.
-    passiveSkillIdsByRealm: {
-      qi_refining: 'passive_linh_khi_cam_ung',
-      foundation_establishment: 'passive_truc_co_y_chi',
-      golden_core: 'passive_kim_dan_chi_quang',
-      nascent_soul: 'passive_nguyen_anh_minh_triet',
-      soul_transformation: 'passive_hoa_than_chi_uy',
-      void_refinement: 'passive_luyen_hu_bo',
-      body_integration: 'passive_hop_the_chi_khu',
-      mahayana: 'passive_dai_thua_dao_tam',
-      tribulation: 'passive_do_kiep_chi_tam',
-    },
 
     // PLAN HOÀN CHỈNH mục 5.1 — Tụ Linh Quyết: Công/Phòng phẳng
     // +15/+25/+35/+70 theo đúng 4 tier, giữ NGUYÊN giá trị doc yêu cầu

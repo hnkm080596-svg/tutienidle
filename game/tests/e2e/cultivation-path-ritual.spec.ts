@@ -462,6 +462,11 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     const hiddenCard = page.locator('.quan-khi-panel__hidden-card')
     await expect(hiddenCard).toHaveCount(1)
     await expect(hiddenCard).toContainText('Ngộ Đạo')
+    // P7-M2 - the kit line lists the way-declared passive (sealedKitSkillNames
+    // reads way.passiveSkillIds, no longer the technique's innateSkillId).
+    // The player has not learned the kit yet, so get() misses and the card
+    // falls back to the raw id (pre-existing ?? id fallback).
+    await expect(hiddenCard).toContainText('ngo_dao_hon_don')
 
     await chooseWay(page, /Ngộ Đạo Chân Quyết/)
 

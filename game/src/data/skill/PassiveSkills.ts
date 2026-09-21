@@ -1,10 +1,10 @@
 import type { Skill } from '../../core/skill/Skill'
 
-// 9 passive â€” má»—i cáº£nh giá»›i má»Ÿ khÃ³a 1, nguá»“n map náº±m á»Ÿ tÃ¢m phÃ¡p tu
-// luyá»‡n (xem Technique.passiveSkillIdsByRealm trong
-// data/technique/Techniques.ts vÃ  GameManager.syncRealmPassive()).
-// Má»—i cÃ¡i dÃ¹ng passiveTrigger khÃ¡c nhau â€” khÃ´ng dÃ¹ng chung 1 Ä‘iá»u
-// kiá»‡n tÃ­ch stack.
+// 9 passives - one unlocked per major realm. P7-M2: the realm -> skill
+// map lives in data/progression/RealmPassiveLadder.ts, composed into
+// each way's realmRewards and delivered by
+// GameManagerRealmAdvanceOps.syncRealmPassive(). Each uses its own
+// passiveTrigger - no shared stacking condition.
 export const PASSIVE_SKILLS: Skill[] = [
   {
     id: 'passive_linh_khi_cam_ung',

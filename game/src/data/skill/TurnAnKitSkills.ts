@@ -26,9 +26,9 @@ export const AN_SPECIAL_FIRES = 3
 export const AN_MULTICAST_CHANCE = 0.25
 
 /**
- * van_phap_tuy_tam — the composite pick that makes each cast land a
+ * van_phap_tuy_tam - the composite pick that makes each cast land a
  * random element. `multicastOwned` = the player holds ngo_dao_hon_don
- * (granted at the ritual via innateSkillId): the dao passive expresses
+ * (granted at the ritual via hidden_spell_pathway.passiveSkillIds): the dao passive expresses
  * as the `multicast` field on the basic def. `elementPool` is the
  * GameManager-built canonical conversion of the five authored basics.
  */

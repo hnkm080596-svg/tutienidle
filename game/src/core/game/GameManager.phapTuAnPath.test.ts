@@ -94,7 +94,8 @@ describe('ngo_dao way — ritual offer gate', () => {
     expect(basic?.equipped).toBe(true)
     expect(special?.equipped).toBe(true)
 
-    // Dao passive via the technique's innateSkillId — equipped without slot.
+    // Dao passive via the way's passiveSkillIds (P7-M2 - was the
+    // technique's innateSkillId) - equipped without slot.
     expect(gameManager.skillManager.has('ngo_dao_hon_don')).toBe(true)
     expect(gameManager.skillManager.get('ngo_dao_hon_don')?.equipped).toBe(true)
   })
@@ -161,9 +162,9 @@ describe('ngo_dao way — ritual offer gate', () => {
     expect(gameManager.skillManager.has('ngo_dao_hon_don')).toBe(false)
   })
 
-  it('chooseCultivationPath(spell, ngo_dao) fails atomically when the innate passive template is missing', () => {
+  it('chooseCultivationPath(spell, ngo_dao) fails atomically when the passive template is missing', () => {
     // Same boundary, different seam: the dao passive arrives via
-    // ngo_dao_chan_quyet.innateSkillId — its template must exist too.
+    // hidden_spell_pathway.passiveSkillIds - its template must exist too.
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(
       SKILLS.filter((skill) => skill.id !== 'ngo_dao_hon_don'),

@@ -39,6 +39,7 @@ import {
   TU_THE_BUFF,
   UNG_THE_BUFF,
 } from '../../data/buff/TheTuBuffs'
+import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 
 // Cultivation Path Framework (spec 2026-09-16, M5) — the The Tu path
 // module: the two way definitions + the path machinery they own.
@@ -211,6 +212,11 @@ export const BODY_PATHWAY: PathWayDefinition = {
   // no loadout tuple. M9 — the ritual strips the two Thể Tu mortal
   // basics so a lingering tram/huy_quyen cannot occupy the mortal slot.
   unequipSkillIds: ['tram', 'huy_quyen'],
+  // P7-M2 - canonical realm-entry passive ladder (delivered by
+  // syncRealmPassive); the initiation passive below replaces the
+  // retired kim_cang_bat_hoai_the.innateSkillId grant.
+  realmRewards: composeRealmRewards(),
+  passiveSkillIds: ['passive_kim_cang_y_chi'],
   stats: BODY_PATHWAY_STATS,
   // P1 - the fixed tree tag (cuong_chien XOR tran_the root-mutex tree).
   nodeTreeTag: 'the_tu',
@@ -226,11 +232,14 @@ export const BODY_PATHWAY: PathWayDefinition = {
   // plant (bat_tu_ba_the survival, phan_chinh reflect emblem, son_nhac
   // ward + ho_the ally ward, khiem_khich taunt).
   ownedContent: {
-    skillIds: Object.values(THE_TU_KIT_BY_ROOT).flatMap((kit) => [
-      kit.basic.id,
-      kit.special.id,
-      kit.ultimate.id,
-    ]),
+    skillIds: [
+      ...Object.values(THE_TU_KIT_BY_ROOT).flatMap((kit) => [
+        kit.basic.id,
+        kit.special.id,
+        kit.ultimate.id,
+      ]),
+      'passive_kim_cang_y_chi',
+    ],
     buffIds: [
       BAT_TU_BA_THE_BUFF.id,
       PHAN_CHINH_BUFF.id,
@@ -246,6 +255,9 @@ export const HIDDEN_BODY_PATHWAY: PathWayDefinition = {
   pathId: 'body',
   name: 'Thể Tu Ẩn — Ứng Thế Thần Quyết',
   techniqueId: 'ung_the_than_quyet',
+  // P7-M2 - canonical realm-entry passive ladder; no initiation passive
+  // (ung_the_than_quyet carried none).
+  realmRewards: composeRealmRewards(),
   // Former hidden_body kit — hidden way. Offered at the Initiation
   // Ritual only when the mortal skill huy_quyen reaches Lv3. Owns the
   // 'hidden_body' stat domain (reactive chances) and the The pool.

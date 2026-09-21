@@ -30,7 +30,7 @@ describe('GameManager — cultivation path realm rewards', () => {
     expect(gameManager.techniqueManager.getEquipped()?.insight).toBe(42)
   })
 
-  it('Kiếm Tu không có reward Trúc Cơ trong data thì không nhận nhầm reward Pháp Tu', () => {
+  it('Kiếm Tu ở Trúc Cơ chỉ có record passive — không nhận nhầm technique/artifact Pháp Tu', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
@@ -39,7 +39,11 @@ describe('GameManager — cultivation path realm rewards', () => {
     player.cultivationWay = 'sword_pathway'
     player.realmId = 'foundation_establishment'
 
-    expect(gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)).toBe(false)
+    // P7-M2 - sword's composed record is passive-only; the op reports
+    // the reward exists (true) but grants no technique/artifact itself
+    // (passive delivery is syncRealmPassive's channel).
+    expect(gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)).toBe(true)
     expect(player.artifact).toBeUndefined()
+    expect(gameManager.techniqueManager.getEquipped()).toBeUndefined()
   })
 })

@@ -101,9 +101,12 @@ describe('way definitions — authored content carried over from kits', () => {
       'phap_tu_linh_luc_regen',
       'phap_tu_ho_the',
     ])
+    // P7-M2 - the way's own record composes over the canonical ladder:
+    // technique + artifact merge in, the canonical passive stands.
     expect(way?.realmRewards?.foundation_establishment).toEqual({
       techniqueId: 'dai_ngu_hanh_quyet_truc_co',
       artifactId: 'ngu_hanh_chau',
+      passiveSkillId: 'passive_truc_co_y_chi',
     })
   })
 

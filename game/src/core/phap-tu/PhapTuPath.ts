@@ -9,6 +9,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { SPELL_KIT_IDS, SPELL_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
 import { VAN_PHAP_THAN_HOA_ID } from '../../data/buff/ReactionStatusBuffs'
+import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 
 // Cultivation Path Framework (spec 2026-09-16, M4) — the Phap Tu path
@@ -239,12 +240,15 @@ export const SPELL_PATHWAY: PathWayDefinition = {
     },
   ],
   stats: SPELL_WAY_STATS,
-  realmRewards: {
+  // P7-M2 - canonical realm-entry passive ladder composed with the
+  // way's own Truc Co kit reward (technique + artifact merge into the
+  // same record; the canonical passive stands).
+  realmRewards: composeRealmRewards({
     foundation_establishment: {
       techniqueId: 'dai_ngu_hanh_quyet_truc_co',
       artifactId: 'ngu_hanh_chau',
     },
-  },
+  }),
   // P1 - spell_pathway owns the element/route machinery (elemental_casting:
   // element commit, route switch, route profiles, MP pills, the element
   // node-tree tabs) and the The resource pool. empowered_ult is
@@ -292,7 +296,7 @@ export const SPELL_PATHWAY: PathWayDefinition = {
 
 // Ngo Dao required kit (review round-4, MEDIUM) — the ritual grants
 // exactly these three skills atomically: two loadout actives + the dao
-// passive carried by ngo_dao_chan_quyet.innateSkillId (the skillIds
+// passive declared on the way's passiveSkillIds (the skillIds
 // list cannot express a passive member). Battle construction asserts
 // the full set is learned; a partial kit is corrupt progression state
 // and must fail loudly, never silently drop a slot. P1-M2 — the kit's
@@ -313,10 +317,14 @@ export const HIDDEN_SPELL_PATHWAY: PathWayDefinition = {
   // domain (the shared SPELL_WAY_STATS facet) so its MP-shield line
   // passes the domain gate. M9 — the two loadout actives ride the
   // generic skillIds channel (learned + equipped at slots 0/1); the
-  // kit's third member is the dao passive carried by the technique's
-  // innateSkillId, not a loadout skill. Modifier ids keep the ngo_dao
+  // kit's third member is the dao passive declared on passiveSkillIds
+  // (P7-M2 - replaces the retired technique innateSkillId), not a
+  // loadout skill. Modifier ids keep the ngo_dao
   // name now that 'phap_tu_an' is no longer a path id.
   skillIds: [HIDDEN_SPELL_BASIC_ID, HIDDEN_SPELL_SPECIAL_ID],
+  passiveSkillIds: [HIDDEN_SPELL_PASSIVE_ID],
+  // P7-M2 - canonical realm-entry passive ladder.
+  realmRewards: composeRealmRewards(),
   statModifiers: [
     {
       id: 'ngo_dao_linh_luc',

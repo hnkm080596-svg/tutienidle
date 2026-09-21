@@ -112,7 +112,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
     description: technique.description,
 
-    sections: buildTechniqueSections(technique, gameManager, techniqueInsight.value),
+    sections: buildTechniqueSections(technique, techniqueInsight.value),
   }
 })
 </script>

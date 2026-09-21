@@ -6,6 +6,7 @@ import type {
 } from '../player/CultivationPathKit'
 import type { PlayerData } from '../player/Player'
 import { freshSwordPathState, KIEM_PHO_ORB_IDS, MORTAL_PRECURSOR_SKILL_IDS } from './KiemTuState'
+import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 import { KIEM_PHO_BUFFS } from '../../data/buff/KiemPhoBuffs'
 import {
   KIEM_DAO_CASCADE_EMBLEM,
@@ -179,6 +180,11 @@ export const SWORD_PATHWAY: PathWayDefinition = {
   // (NOT unlearn: a Pham Nhan save can still use them; the precursor
   // equip gate blocks re-equip post-path).
   unequipSkillIds: MORTAL_PRECURSOR_SKILL_IDS,
+  // P7-M2 - canonical realm-entry passive ladder (delivered by
+  // syncRealmPassive); the initiation passive below replaces the
+  // retired ngu_kiem.innateSkillId grant.
+  realmRewards: composeRealmRewards(),
+  passiveSkillIds: ['passive_kiem_tam_lanh_liet'],
   // M7 — the facet declares domain OWNERSHIP only (resolveActiveWayStatDomains
   // is the authority now that the path-keyed domain map is gone); Kiem Tu
   // has no totals-driven emission channel, so collectModifiers is a no-op.
@@ -195,7 +201,7 @@ export const SWORD_PATHWAY: PathWayDefinition = {
   // bleed the orbs plant; declared by reference so a def rename breaks
   // the build instead of drifting.
   ownedContent: {
-    skillIds: KIEM_PHO_ORB_IDS,
+    skillIds: [...KIEM_PHO_ORB_IDS, 'passive_kiem_tam_lanh_liet'],
     buffIds: KIEM_PHO_BUFFS.map((buff) => buff.id),
   },
   // P1-M3 - the preset axis lives on player.swordPath (written by
@@ -217,6 +223,9 @@ export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
   pathId: 'sword',
   name: 'Kiếm Tu Ẩn — Vạn Kiếm Quyết',
   techniqueId: 'van_kiem_quyet',
+  // P7-M2 - canonical realm-entry passive ladder; no initiation passive
+  // (van_kiem_quyet carried none).
+  realmRewards: composeRealmRewards(),
   // Ritual-only entry, permanent, FREE — the exact port of the retired
   // kiem_tu_an node's skillCastCount {tram, 3} gate (reads the
   // skillLevels mirror). A mortal without tram Lv3 at the ritual can

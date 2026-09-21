@@ -23,7 +23,7 @@ Refined from the user's M1–M8 guideline. Each mission = one coherent authority
 | M5 | **Unified BodyProgression authority** | `BodyProgressionSystem` + `BodyChapter` registry; body_refinement + meridian chapters migrated (engines, persisted fields → chapter-keyed state); invest paths unified; chapter-derived Đại Đạo fact exposed; deferred resolver re-pointed; existing panels re-pointed to new reads (IA in M7). | M1 |
 | M6 | **Technique-gated node prerequisites** | `requiredTechniqueRank`/`requiredTechniqueGrade` schema + evaluator + tests; no authored gates. | M3 |
 | M7 | **Progression UI consolidation** | SkillPathPanel = way identity + technique card + node tree + resolved roles; RealmPanel = realm + body chapter subviews; remove `TechniquePanel`, `LuyenThePanel`, loadout widgets; Scripture Pavilion → lore-only; wheel catalog + i18n updates. | M2–M6 |
-| M8 | **Integration sweep + final validation** | Save version bump (v68) + shape validation; dead-authority sweep (incl. `TuLinhTranBalance` whitelist); docs sync (roadmap, naming-conventions amendment); `npm run verify`; adversarial QA; P5 sequential review; merge gate. | all |
+| M8 | **Integration sweep + final validation** | Save version decision (final bump if accumulated cuts require it — v68 is M1's, v69 M2's) + shape validation; dead-authority sweep (incl. `TuLinhTranBalance` whitelist); docs sync (roadmap, naming-conventions amendment); `npm run verify`; adversarial QA; P5 sequential review; merge gate. | all |
 
 ## Non-goals (phase-level)
 

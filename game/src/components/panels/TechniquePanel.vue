@@ -32,7 +32,7 @@ const equippedTechnique = computed(() => {
 const techniqueSections = computed(() => {
   const technique = equippedTechnique.value
 
-  return technique ? buildTechniqueSections(technique, gameManager, technique.insight ?? 0) : []
+  return technique ? buildTechniqueSections(technique, technique.insight ?? 0) : []
 })
 
 function close() {

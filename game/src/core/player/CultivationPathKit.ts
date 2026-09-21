@@ -69,11 +69,16 @@ export const CULTIVATION_PATH_WAY_IDS = {
 export interface CultivationPathRealmReward {
   techniqueId?: string
   artifactId?: ArtifactId
+  // P7-M2 - realm-entry passive grant, delivered by syncRealmPassive
+  // (NOT by grantCultivationPathRealmReward). Ways compose their table
+  // from CANONICAL_REALM_PASSIVE_LADDER; null is an authored directive
+  // suppressing the canonical pick for this realm.
+  passiveSkillId?: string | null
 }
 
 // Ritual-time offer gate, evaluated live against the player (never
 // stored). requiresSkillLevel reads the skillLevels mirror (hidden_body_pathway's
-// huy_quyen Lv3; hidden_sword_pathway's tram Lv3 — exact port of the kiem_tu_an node's
+// huy_quyen Lv3; hidden_sword_pathway's tram Lv3 - exact port of the kiem_tu_an node's
 // skillCastCount level gate, which reads skillLevels). The linh_bao
 // gate for hidden_spell_pathway is cast-count based, so it gets a bespoke field:
 // requiresSkillCastLevel is evaluated by isCultivationPathOffered via
@@ -237,9 +242,16 @@ export interface PathWayDefinition {
 
   // Skills learned + equipped into Skill Loadout slots IN ORDER at path
   // choice (slot index = array position). M9 — the hidden_spell_pathway kit rides
-  // this channel too; its third member is a technique-carried passive,
-  // not a loadout skill, so it is not listed here.
+  // this channel too; its third member is a passive, not a loadout
+  // skill, so it lives on passiveSkillIds instead.
   skillIds?: readonly string[]
+
+  // P7-M2 - passives learned + equipped WITHOUT a loadout slot at path
+  // initiation (replaces the retired technique-carried innateSkillId).
+  // Declared way content: every member must also appear in
+  // ownedContent.skillIds (contract-tested) and is template-preflighted
+  // by chooseCultivationPath before the path/way commit.
+  passiveSkillIds?: readonly string[]
 
   // Skills unequipped (NOT unlearned) from the loadout at ritual
   // commit — the mortal-precursor strip. Declared per way so the

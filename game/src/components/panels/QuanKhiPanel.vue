@@ -73,14 +73,10 @@ const availableWays = computed(() => {
 })
 
 // A sealed way's kit names — resolved live from the way declaration
-// (loadout skillIds + the technique-carried innate passive) so the card
+// (loadout skillIds + the way's initiation passives, P7-M2) so the card
 // never drifts from authored content.
 function sealedKitSkillNames(way: PathWayDefinition): string[] {
-  const skillIds = [...(way.skillIds ?? [])]
-  const innateId = gameManager.techniqueManager.get(way.techniqueId)?.innateSkillId
-  if (innateId) {
-    skillIds.push(innateId)
-  }
+  const skillIds = [...(way.skillIds ?? []), ...(way.passiveSkillIds ?? [])]
   return skillIds.map(id => gameManager.skillManager.get(id)?.name ?? id)
 }
 

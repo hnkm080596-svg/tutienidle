@@ -18,6 +18,12 @@ const SAVE_KEY = resolveSaveKey()
 // documents which concrete version the rework cut over from).
 const PRE_REWORK_VERSION = 61
 
+// P7-M2 (v69) - the version live on master immediately before the
+// realm-passive ownership cut removed Technique.passiveSkillIdsByRealm +
+// innateSkillId. Same "anything !== CURRENT" contract; the literal pins
+// the concrete boundary this mission cut over.
+const PRE_M2_VERSION = 68
+
 // vitest runs environment: 'node' — no real localStorage, so a minimal
 // in-memory polyfill is stubbed (same pattern as SaveSystem.test.ts).
 class MemoryStorage implements Storage {
@@ -85,6 +91,30 @@ describe('Phap Tu Reimagined save cutover', () => {
     const outcome = loadGame()
 
     expect(outcome).toEqual({ status: 'incompatible', foundVersion: PRE_REWORK_VERSION, raw })
+  })
+
+  it('rejects a save stamped with the pre-M2 version (68) as incompatible', () => {
+    const player = createDefaultPlayer()
+    // Intentionally NOT GameSave: version 68 is outside the current literal
+    // type, so the payload is built as a raw record like preReworkSaveRaw().
+    const save: Record<string, unknown> = {
+      version: PRE_M2_VERSION,
+      player,
+      techniques: [],
+      skills: [],
+      materials: [],
+      equipment: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      equipmentSlots: [],
+    }
+    const raw = JSON.stringify(save)
+
+    localStorage.setItem(SAVE_KEY, raw)
+
+    expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M2_VERSION, raw })
   })
 
   it('loads a save stamped with the current version', () => {

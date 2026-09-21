@@ -81,22 +81,11 @@ export interface Technique {
 
   requiredRealmLevel?: number
 
-  // Tu Luyện — map realmId -> id của passive skill được học/equip khi
-  // đột phá vào đúng cảnh giới đó (chỉ có ý nghĩa khi technique này
-  // đang trang bị). Xem GameManager.syncRealmPassive(). Đây là "cấp
-  // skill" (SkillSystem tự có pipeline stat riêng), KHÔNG phải Tâm
-  // Pháp tự cộng chỉ số — vẫn giữ, không thuộc phạm vi loại bỏ.
-  passiveSkillIdsByRealm?: Record<string, string>
-
   // Chiến Đấu nội tại (optional — chỉ tâm pháp có phần chiến đấu mới
   // khai). Tra CombatTechniqueTypeConfig (data/technique/
   // CombatTechniqueTypes.ts) — chỉ mang tính tổ chức nội dung/hiển thị
   // UI, KHÔNG ràng buộc runtime cứng nhắc.
   combatTypeId?: string
-
-  // Skill passive tự học + equip khi tâm pháp này được trang bị (xem
-  // GameManager.equipTechnique()).
-  innateSkillId?: string
 
   // Pháp Tu profession-tier ladder — gắn identity Ngũ Hành cho UI.
   // `resourceLabel` đổi TÊN HIỂN THỊ của thanh Rage (CombatHud.vue)

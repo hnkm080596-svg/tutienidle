@@ -29,6 +29,7 @@ import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
+import { CANONICAL_REALM_PASSIVE_LADDER } from '../../data/progression/RealmPassiveLadder'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { SKILLS } from '../../data/skill/Skills'
@@ -188,7 +189,9 @@ function expectWellFormedWay(way: PathWayDefinition, moduleId: CultivationPathId
   if (way.realmRewards) {
     for (const [realmId, reward] of Object.entries(way.realmRewards)) {
       expect(
-        reward.techniqueId !== undefined || reward.artifactId !== undefined,
+        reward.techniqueId !== undefined ||
+          reward.artifactId !== undefined ||
+          reward.passiveSkillId !== undefined,
         `${moduleId}.${wayKey}: realmRewards['${realmId}'] grants nothing`,
       ).toBe(true)
     }
@@ -434,5 +437,116 @@ describe('P7-M1 identity spine', () => {
     expect(
       getActiveWayDefinition({ cultivationPath: 'sword', cultivationWay: undefined }),
     ).toBeUndefined()
+  })
+})
+
+describe('P7-M2 realm passive ownership', () => {
+  it("every way's passiveSkillIds is a subset of its ownedContent.skillIds", () => {
+    const violations: string[] = []
+
+    for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayKey, way] of Object.entries(pathModule.ways)) {
+        const owned = new Set(way.ownedContent?.skillIds ?? [])
+
+        for (const passiveId of way.passiveSkillIds ?? []) {
+          if (!owned.has(passiveId)) {
+            violations.push(`${pathId}.${wayKey}: passive '${passiveId}' granted but not owned`)
+          }
+        }
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([])
+  })
+
+  it('every realmRewards record declares at least one field (null passive = authored suppression)', () => {
+    const violations: string[] = []
+
+    for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayKey, way] of Object.entries(pathModule.ways)) {
+        for (const [realmId, reward] of Object.entries(way.realmRewards ?? {})) {
+          if (
+            reward.techniqueId === undefined &&
+            reward.artifactId === undefined &&
+            reward.passiveSkillId === undefined
+          ) {
+            violations.push(`${pathId}.${wayKey}: realmRewards['${realmId}'] is an empty record`)
+          }
+        }
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([])
+  })
+
+  it('all declared passives resolve to known skill defs', () => {
+    const violations: string[] = []
+
+    for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayKey, way] of Object.entries(pathModule.ways)) {
+        const owner = `${pathId}.${wayKey}`
+
+        for (const passiveId of way.passiveSkillIds ?? []) {
+          if (!KNOWN_SKILL_IDS.has(passiveId)) {
+            violations.push(`${owner}: passiveSkillIds member '${passiveId}' resolves to no known skill def`)
+          }
+        }
+
+        for (const [realmId, reward] of Object.entries(way.realmRewards ?? {})) {
+          if (reward.passiveSkillId != null && !KNOWN_SKILL_IDS.has(reward.passiveSkillId)) {
+            violations.push(`${owner}: realmRewards['${realmId}'].passiveSkillId '${reward.passiveSkillId}' resolves to no known skill def`)
+          }
+        }
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([])
+  })
+
+  it('all declared passives resolve to defs of type passive', () => {
+    const skillTypeById = new Map(SKILLS.map((skill) => [skill.id, skill.type]))
+    const violations: string[] = []
+
+    for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayKey, way] of Object.entries(pathModule.ways)) {
+        const owner = `${pathId}.${wayKey}`
+
+        for (const passiveId of way.passiveSkillIds ?? []) {
+          if (skillTypeById.get(passiveId) !== 'passive') {
+            violations.push(`${owner}: passiveSkillIds member '${passiveId}' is not a passive def`)
+          }
+        }
+
+        for (const [realmId, reward] of Object.entries(way.realmRewards ?? {})) {
+          if (reward.passiveSkillId != null && skillTypeById.get(reward.passiveSkillId) !== 'passive') {
+            violations.push(
+              `${owner}: realmRewards['${realmId}'].passiveSkillId '${reward.passiveSkillId}' is not a passive def`,
+            )
+          }
+        }
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([])
+  })
+
+  it('every way composes the canonical ladder unmodified (no override/suppression at M2)', () => {
+    const violations: string[] = []
+
+    for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayKey, way] of Object.entries(pathModule.ways)) {
+        for (const [realmId, passiveSkillId] of Object.entries(CANONICAL_REALM_PASSIVE_LADDER)) {
+          const actual = way.realmRewards?.[realmId]?.passiveSkillId
+
+          if (actual !== passiveSkillId) {
+            violations.push(
+              `${pathId}.${wayKey}: realmRewards['${realmId}'].passiveSkillId is ${String(actual)}, expected canonical '${passiveSkillId}'`,
+            )
+          }
+        }
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([])
   })
 })
