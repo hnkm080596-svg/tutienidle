@@ -79,7 +79,7 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
     expect(gameManager.skillManager.has('kiem_tran_luong_nghi')).toBe(false)
     expect(gameManager.skillManager.has('bat_kiem_thuat')).toBe(false)
     // The merged technique still lands (path kit contract unchanged).
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('ngu_kiem')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('sword_control_art')
   })
 
   it('chooseCultivationPath(spell) leaves swordPath undefined', () => {

@@ -81,30 +81,30 @@ describe('way definitions — authored content carried over from kits', () => {
   it("sword hien keeps the ngu_kiem technique and metal element", () => {
     const way = CULTIVATION_PATH_MODULES.sword.ways.sword_pathway
 
-    expect(way?.techniqueId).toBe('ngu_kiem')
+    expect(way?.techniqueId).toBe('sword_control_art')
     expect(way?.element).toBe('metal')
   })
 
   it('sword ngu exists in the catalog with the van_kiem_quyet technique and the tram Lv3 gate', () => {
     const way = CULTIVATION_PATH_MODULES.sword.ways.hidden_sword_pathway
 
-    expect(way?.techniqueId).toBe('van_kiem_quyet')
+    expect(way?.techniqueId).toBe('myriad_swords_art')
     expect(way?.offerGate).toEqual({ requiresSkillLevel: { skillId: 'tram', level: 3 } })
   })
 
   it('spell spell_pathway carries the base kit stats and the foundation_establishment reward', () => {
     const way = CULTIVATION_PATH_MODULES.spell.ways.spell_pathway
 
-    expect(way?.techniqueId).toBe('dai_ngu_hanh_chan_quyet')
+    expect(way?.techniqueId).toBe('five_elements_art')
     expect(way?.statModifiers?.map((modifier) => modifier.id)).toEqual([
       'phap_tu_linh_luc',
       'phap_tu_linh_luc_regen',
       'phap_tu_ho_the',
     ])
-    // P7-M2 - the way's own record composes over the canonical ladder:
-    // technique + artifact merge in, the canonical passive stands.
+    // P7-M2/M3 - the way's own record composes over the canonical
+    // ladder: artifact merges in, the canonical passive stands (the
+    // Truc Co technique swap folded into five_elements_art.gradeEffects[2]).
     expect(way?.realmRewards?.foundation_establishment).toEqual({
-      techniqueId: 'dai_ngu_hanh_quyet_truc_co',
       artifactId: 'ngu_hanh_chau',
       passiveSkillId: 'passive_truc_co_y_chi',
     })
@@ -113,7 +113,7 @@ describe('way definitions — authored content carried over from kits', () => {
   it('spell ngo_dao carries the an kit stats and the linh_bao cast gate', () => {
     const way = CULTIVATION_PATH_MODULES.spell.ways.hidden_spell_pathway
 
-    expect(way?.techniqueId).toBe('ngo_dao_chan_quyet')
+    expect(way?.techniqueId).toBe('dao_insight_art')
     expect(way?.statModifiers?.map((modifier) => modifier.id)).toEqual([
       'ngo_dao_linh_luc',
       'ngo_dao_linh_luc_regen',
@@ -125,14 +125,14 @@ describe('way definitions — authored content carried over from kits', () => {
   it("body hien keeps the kim_cang_bat_hoai_the technique and metal element", () => {
     const way = CULTIVATION_PATH_MODULES.body.ways.body_pathway
 
-    expect(way?.techniqueId).toBe('kim_cang_bat_hoai_the')
+    expect(way?.techniqueId).toBe('diamond_body_art')
     expect(way?.element).toBe('metal')
   })
 
   it('body ung_the carries the an kit: ung_the_than_quyet, huy_quyen gate, the economy capability', () => {
     const way = CULTIVATION_PATH_MODULES.body.ways.hidden_body_pathway
 
-    expect(way?.techniqueId).toBe('ung_the_than_quyet')
+    expect(way?.techniqueId).toBe('responsive_body_art')
     expect(way?.offerGate).toEqual({ requiresSkillLevel: { skillId: 'huy_quyen', level: 3 } })
     expect(way?.capabilities?.static).toContain('body.essence_economy')
   })
@@ -141,12 +141,12 @@ describe('way definitions — authored content carried over from kits', () => {
 describe('getActiveWayDefinition — strict persisted pair', () => {
   it('resolves the way for every valid (path, way) pair', () => {
     const cases: Array<[string, string, string]> = [
-      ['sword', 'sword_pathway', 'ngu_kiem'],
-      ['sword', 'hidden_sword_pathway', 'van_kiem_quyet'],
-      ['spell', 'spell_pathway', 'dai_ngu_hanh_chan_quyet'],
-      ['spell', 'hidden_spell_pathway', 'ngo_dao_chan_quyet'],
-      ['body', 'body_pathway', 'kim_cang_bat_hoai_the'],
-      ['body', 'hidden_body_pathway', 'ung_the_than_quyet'],
+      ['sword', 'sword_pathway', 'sword_control_art'],
+      ['sword', 'hidden_sword_pathway', 'myriad_swords_art'],
+      ['spell', 'spell_pathway', 'five_elements_art'],
+      ['spell', 'hidden_spell_pathway', 'dao_insight_art'],
+      ['body', 'body_pathway', 'diamond_body_art'],
+      ['body', 'hidden_body_pathway', 'responsive_body_art'],
     ]
 
     for (const [pathId, wayId, techniqueId] of cases) {

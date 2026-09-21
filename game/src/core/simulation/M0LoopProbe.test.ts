@@ -79,8 +79,8 @@ describe('P6-M0 loop probe', () => {
     const player = createDefaultPlayer()
 
     // --- bootstrap replication (onNewCharacter semantics) ---
-    gm.realmAdvanceOps.learnTechnique('tu_linh_quyet')
-    gm.realmAdvanceOps.equipTechnique('tu_linh_quyet')
+    // P7-M3 - no mortal technique grant (tu_linh_quyet retired); the
+    // Way grants its canonical art at initiation.
     gm.progressionOps.learnSkill('tram')
     gm.progressionOps.setSkillLoadoutSlot(player, 0, 'tram')
     gm.progressionOps.learnSkill('linh_bao')

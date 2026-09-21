@@ -1,41 +1,40 @@
 import type { Technique } from './Technique'
 
+// P7-M3 - 0-or-1 canonical technique holder. A committed Way owns
+// exactly one canonical Technique (D9); the retired list/equip model
+// (add/remove/getEquipped/learned-set) is gone. Grant validation lives
+// in TechniqueSystem; save contract validation lives in the v70
+// preflight - this class only stores the single live instance.
 export class TechniqueManager {
-  private techniques: Technique[] = []
+  private active: Technique | null = null
 
-  add(technique: Technique) {
-    this.techniques.push(technique)
+  getActive(): Technique | undefined {
+    return this.active ?? undefined
   }
 
-  remove(techniqueId: string) {
-    this.techniques = this.techniques.filter((technique) => technique.id !== techniqueId)
+  setActive(technique: Technique | null) {
+    this.active = technique
   }
 
-  get(techniqueId: string) {
-    return this.techniques.find((technique) => technique.id === techniqueId)
+  get(techniqueId: string): Technique | undefined {
+    return this.active?.id === techniqueId ? this.active : undefined
   }
 
-  getAll() {
-    return [...this.techniques]
+  getAll(): Technique[] {
+    // Snapshot-shaped for the save boundary - shallow copies so callers
+    // cannot mutate live progression through the returned entries.
+    return this.active ? [{ ...this.active }] : []
   }
 
   /**
-   * M1 (ARCH-001) — session-restore boundary: replace the whole learned
-   * set with a DETACHED copy of the payload. The input is a value —
-   * mutating it afterwards must not leak into live state (A3).
+   * Session-restore boundary: the v70 preflight guarantees <= 1 entry
+   * matching the active Way; keep only the first, detached (A3).
    */
   restore(techniques: Technique[]) {
-    this.techniques = techniques.map((technique) => structuredClone(technique))
-  }
-
-  // Tâm Pháp hợp nhất (2026-08-15) — CHỈ 1 tâm pháp trang bị cho toàn
-  // hệ thống (trước đây getEquippedInSlot() có 3 overload theo type,
-  // xoá hẳn — không còn khái niệm slot).
-  getEquipped(): Technique | undefined {
-    return this.techniques.find((technique) => technique.equipped)
+    this.active = techniques.length > 0 ? structuredClone(techniques[0]!) : null
   }
 
   has(techniqueId: string) {
-    return this.techniques.some((technique) => technique.id === techniqueId)
+    return this.active?.id === techniqueId
   }
 }

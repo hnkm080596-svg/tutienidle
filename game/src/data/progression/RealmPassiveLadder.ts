@@ -21,10 +21,10 @@ export const CANONICAL_REALM_PASSIVE_LADDER: Readonly<Record<string, string>> = 
 
 /**
  * Builds a way's realmRewards table: every canonical realm gets the
- * canonical passive; the way's own records overlay it - techniqueId /
- * artifactId merge into the same record, a passiveSkillId string
- * replaces the canonical pick, and passiveSkillId: null suppresses it
- * (an authored "no passive at this realm" directive).
+ * canonical passive; the way's own records overlay it - artifactId
+ * merges into the same record, a passiveSkillId string replaces the
+ * canonical pick, and passiveSkillId: null suppresses it (an authored
+ * "no passive at this realm" directive).
  */
 export function composeRealmRewards(
   overrides: Readonly<Record<string, CultivationPathRealmReward>> = {},

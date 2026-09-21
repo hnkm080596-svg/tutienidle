@@ -41,16 +41,14 @@ describe('realm passive ladder composition (P7-M2)', () => {
     )
   })
 
-  it('technique/artifact overrides merge into the record without touching the passive', () => {
+  it('artifact overrides merge into the record without touching the passive', () => {
     const table = composeRealmRewards({
       foundation_establishment: {
-        techniqueId: 'dai_ngu_hanh_quyet_truc_co',
         artifactId: 'ngu_hanh_chau',
       },
     })
 
     expect(table.foundation_establishment).toEqual({
-      techniqueId: 'dai_ngu_hanh_quyet_truc_co',
       artifactId: 'ngu_hanh_chau',
       passiveSkillId: CANONICAL_REALM_PASSIVE_LADDER.foundation_establishment,
     })
@@ -58,10 +56,10 @@ describe('realm passive ladder composition (P7-M2)', () => {
 
   it('non-ladder realms in overrides pass through verbatim', () => {
     const table = composeRealmRewards({
-      some_future_realm: { techniqueId: 't1' },
+      some_future_realm: { artifactId: 'ngu_hanh_chau' },
     })
 
-    expect(table.some_future_realm).toEqual({ techniqueId: 't1' })
+    expect(table.some_future_realm).toEqual({ artifactId: 'ngu_hanh_chau' })
     expect(table.qi_refining?.passiveSkillId).toBe(
       CANONICAL_REALM_PASSIVE_LADDER.qi_refining,
     )

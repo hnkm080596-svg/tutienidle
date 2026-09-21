@@ -26,9 +26,9 @@ const DOAN_BAO_THACH: Material = {
   description: 'test fixture',
 }
 
-function enemyWithInsight(techniqueInsight: number, flags: Partial<Pick<Enemy, 'isElite' | 'isBoss'>> = {}) {
+function enemyWithInsight(techniqueMastery: number, flags: Partial<Pick<Enemy, 'isElite' | 'isBoss'>> = {}) {
   return {
-    rewards: { techniqueInsight, spiritStone: 0 },
+    rewards: { techniqueMastery, spiritStone: 0 },
     ...flags,
   } as Pick<Enemy, 'rewards' | 'isElite' | 'isBoss'>
 }
@@ -46,11 +46,11 @@ describe('ArtifactProgression (doc §5)', () => {
     }
   })
 
-  it('getArtifactExperienceReward: base = max(1, floor(techniqueInsight * 0.25)), elite x2, boss x5', () => {
+  it('getArtifactExperienceReward: base = max(1, floor(techniqueMastery * 0.25)), elite x2, boss x5', () => {
     expect(getArtifactExperienceReward(enemyWithInsight(10))).toBe(2)
     expect(getArtifactExperienceReward(enemyWithInsight(10, { isElite: true }))).toBe(4)
     expect(getArtifactExperienceReward(enemyWithInsight(10, { isBoss: true }))).toBe(10)
-    // sàn tối thiểu 1 dù techniqueInsight rất nhỏ
+    // san toi thieu 1 du techniqueMastery rat nho
     expect(getArtifactExperienceReward(enemyWithInsight(0))).toBe(1)
   })
 

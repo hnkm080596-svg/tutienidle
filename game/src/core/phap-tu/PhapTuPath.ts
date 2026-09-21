@@ -209,7 +209,7 @@ export const SPELL_PATHWAY: PathWayDefinition = {
   id: 'spell_pathway',
   pathId: 'spell',
   name: 'Pháp Tu — Đại Ngũ Hành Chân Quyết',
-  techniqueId: 'dai_ngu_hanh_chan_quyet',
+  techniqueId: 'five_elements_art',
   // MP-pool + mana-shield grants carry domain:'spell' so the domain
   // gate keeps accepting them once those stats are gated to the
   // spell domain.
@@ -241,11 +241,12 @@ export const SPELL_PATHWAY: PathWayDefinition = {
   ],
   stats: SPELL_WAY_STATS,
   // P7-M2 - canonical realm-entry passive ladder composed with the
-  // way's own Truc Co kit reward (technique + artifact merge into the
-  // same record; the canonical passive stands).
+  // way's own Truc Co kit reward (artifact merges into the same
+  // record; the canonical passive stands). P7-M3 - the retired
+  // dai_ngu_hanh_quyet_truc_co technique swap folded into
+  // five_elements_art.gradeEffects[2], so no techniqueId here.
   realmRewards: composeRealmRewards({
     foundation_establishment: {
-      techniqueId: 'dai_ngu_hanh_quyet_truc_co',
       artifactId: 'ngu_hanh_chau',
     },
   }),
@@ -312,7 +313,7 @@ export const HIDDEN_SPELL_PATHWAY: PathWayDefinition = {
   id: 'hidden_spell_pathway',
   pathId: 'spell',
   name: 'Pháp Tu Ẩn — Ngộ Đạo Chân Quyết',
-  techniqueId: 'ngo_dao_chan_quyet',
+  techniqueId: 'dao_insight_art',
   // Former phap_tu_an kit — hidden way. Owns the same 'spell' stat
   // domain (the shared SPELL_WAY_STATS facet) so its MP-shield line
   // passes the domain gate. M9 — the two loadout actives ride the

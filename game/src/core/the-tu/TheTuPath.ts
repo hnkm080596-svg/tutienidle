@@ -206,7 +206,7 @@ export const BODY_PATHWAY: PathWayDefinition = {
   pathId: 'body',
   name: 'Thể Tu — Kim Cang Bất Hoại Thể',
   element: 'metal',
-  techniqueId: 'kim_cang_bat_hoai_the',
+  techniqueId: 'diamond_body_art',
   // The Tu Reimagined (T5) — root-mutex kit: the chosen progression
   // root (cuong_chien XOR tran_the) resolves the kit at battle build;
   // no loadout tuple. M9 — the ritual strips the two Thể Tu mortal
@@ -254,9 +254,9 @@ export const HIDDEN_BODY_PATHWAY: PathWayDefinition = {
   id: 'hidden_body_pathway',
   pathId: 'body',
   name: 'Thể Tu Ẩn — Ứng Thế Thần Quyết',
-  techniqueId: 'ung_the_than_quyet',
+  techniqueId: 'responsive_body_art',
   // P7-M2 - canonical realm-entry passive ladder; no initiation passive
-  // (ung_the_than_quyet carried none).
+  // (responsive_body_art carries none).
   realmRewards: composeRealmRewards(),
   // Former hidden_body kit — hidden way. Offered at the Initiation
   // Ritual only when the mortal skill huy_quyen reaches Lv3. Owns the

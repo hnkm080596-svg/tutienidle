@@ -20,6 +20,11 @@ import { MAIN_STAT_KEYS } from '../stats/StatTypes'
 import type { Technique } from '../technique/Technique'
 import type { TechniqueManager } from '../technique/TechniqueManager'
 import type { TechniqueSystem } from '../technique/TechniqueSystem'
+import {
+  canAdvanceTechniqueGrade,
+  getTechniqueGradeCeiling,
+  getTechniqueGradeUpgradeCost,
+} from '../technique/TechniqueProgression'
 import type {
   BreakthroughOutcomeService,
   BreakthroughOutcomeResult,
@@ -38,8 +43,7 @@ import type { TemplateRegistry } from './TemplateRegistry'
  *
  * Public access: `gameManager.realmAdvanceOps.*` (no GameManager facade).
  * Also satisfies the BreakthroughConsequencesContext contract consumed by
- * BreakthroughOutcomeService (techniqueManager + the 4 sync/learn/equip
- * methods below).
+ * BreakthroughOutcomeService (the 2 realm-passive syncs below).
  */
 export class GameManagerRealmAdvanceOps {
   readonly techniqueManager: TechniqueManager
@@ -63,14 +67,9 @@ export class GameManagerRealmAdvanceOps {
     this.techniqueManager = deps.techniqueManager
   }
 
-  /** Grants the major-realm reward of the cultivation path data kit. */
+  /** Grants the major-realm reward of the cultivation path data kit (P7-M3: artifact-only). */
   grantCultivationPathRealmReward(player: PlayerData, realmId: string): boolean {
-    return grantPathRealmReward(player, realmId, {
-      getEquippedTechnique: () => this.deps.techniqueManager.getEquipped(),
-      getTechnique: techniqueId => this.deps.techniqueManager.get(techniqueId),
-      learnTechnique: techniqueId => this.learnTechnique(techniqueId),
-      equipTechnique: techniqueId => this.equipTechnique(techniqueId),
-    })
+    return grantPathRealmReward(player, realmId)
   }
 
   /**
@@ -101,38 +100,32 @@ export class GameManagerRealmAdvanceOps {
     return this.deps.breakthroughOutcomeService.breakthrough(player, this)
   }
 
-  learnTechnique(techniqueId: string): boolean {
+  /**
+   * P7-M3 - grant the Way's canonical Technique into the 0-or-1 holder.
+   * `player.realmId` must already be the post-promotion realm:
+   * chooseCultivationPath calls this AFTER the mortal -> qi_refining
+   * promotion so grant() enforces the grade ceiling against qi_refining.
+   */
+  grantCanonicalTechnique(techniqueId: string, player: PlayerData): boolean {
     const template = this.deps.techniqueTemplates.get(techniqueId)
 
     if (!template) {
       return false
     }
 
-    return this.deps.techniqueSystem.learn(template)
-  }
-
-  /**
-   * Equip a learned technique. P7-M2 - pure technique operation: the
-   * passives a technique used to smuggle in via innateSkillId are now
-   * declared way content (PathWayDefinition.passiveSkillIds), granted by
-   * chooseCultivationPath at initiation.
-   */
-  equipTechnique(techniqueId: string): boolean {
-    return this.deps.techniqueSystem.equip(techniqueId)
-  }
-
-  unequipTechnique(techniqueId: string): boolean {
-    return this.deps.techniqueSystem.unequip(techniqueId)
+    return this.deps.techniqueSystem.grant(template, player.realmId)
   }
 
   /**
    * Phap Tu profession-tier ladder (2026-08-14, merged combat technique
    * 2026-08-15) - "choose profession", ONE TIME ONLY, PERMANENT (see
    * PlayerData.cultivationPath) - auto-grants the fixed kit of that tier:
-   * 1 merged technique (OVERWRITES the equipped one, including the
-   * starter) + 3 fixed skills (basic/special/ultimate, OVERWRITING any
-   * skills holding those 3 slots). NOT a free-build system - reuses
-   * learnTechnique()/equipTechnique()/learnSkill()/equipToSlot() intact.
+   * the way's ONE canonical technique + its fixed skills
+   * (basic/special/ultimate, OVERWRITING any skills holding those slots).
+   * NOT a free-build system - reuses the canonical grant + learnSkill()/
+   * equipToSlot() intact. P7-M3: the technique grant runs after the
+   * mortal -> qi_refining promotion so the grade ceiling reads the
+   * committed realm.
    *
    * Initiation Ritual (2026-08-16) - choosing the path IS the mortal ->
    * qi_refining breakthrough ritual ("advancing to a new realm always has
@@ -173,6 +166,20 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
+    // P7-M3 (D9) - a mortal holds NO technique. A pre-existing entry
+    // (even the canonical id) is corrupt progression; reject pre-commit
+    // so path/way/realm/slices stay untouched. grant() repeats this
+    // check defensively.
+    if (this.deps.techniqueManager.getActive() !== undefined) {
+      return false
+    }
+
+    // Defensive: grant() would refuse a template whose grade exceeds the
+    // post-promotion (qi_refining) ceiling - fail the whole ritual first.
+    if (techniqueTemplate.grade > getTechniqueGradeCeiling('qi_refining')) {
+      return false
+    }
+
     const grantedSkillIds: readonly string[] = way.skillIds ?? []
 
     if (grantedSkillIds.some((skillId) => !this.deps.skillTemplates.has(skillId))) {
@@ -192,9 +199,6 @@ export class GameManagerRealmAdvanceOps {
     if (!applyPathChoice(player, pathId, wayId).ok) {
       return false
     }
-
-    this.learnTechnique(way.techniqueId)
-    this.equipTechnique(way.techniqueId)
 
     // M9 — the post-commit loadout contract is way-DECLARED, never a
     // concrete path/way branch: unequipSkillIds strips the mortal
@@ -258,6 +262,12 @@ export class GameManagerRealmAdvanceOps {
       // advances (TribulationOutcomeService), where forged swords exist.
     }
 
+    // P7-M3 - canonical Technique grant runs AFTER the realm promotion
+    // so grant() enforces the grade ceiling against qi_refining (D9/D10).
+    // Preflight guarantees this cannot fail (template exists, holder
+    // empty, grade within ceiling).
+    this.grantCanonicalTechnique(way.techniqueId, player)
+
     return true
   }
 
@@ -304,6 +314,36 @@ export class GameManagerRealmAdvanceOps {
     }
 
     return tryUpgradeArtifactGrade(player.artifact, this.deps.materialBag)
+  }
+
+  /**
+   * P7-M3 (D4) - canonical Technique grade-advance transaction: rank 10
+   * + below the realm ceiling + OUTSIDE combat + 100 x targetGrade
+   * current-tier spirit stones; resets rank/mastery for the new grade.
+   * The combat guard is enforced HERE, not just in the UI.
+   */
+  tryAdvanceTechniqueGrade(player: PlayerData): boolean {
+    const technique = this.deps.techniqueManager.getActive()
+
+    if (!technique || !canAdvanceTechniqueGrade(technique, player.realmId)) {
+      return false
+    }
+
+    const battle = this.deps.getTurnBattle()
+
+    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+      return false
+    }
+
+    const cost = getTechniqueGradeUpgradeCost(technique.grade + 1, player.realmId)
+
+    if (this.deps.materialBag.getAmount(cost.materialId) < cost.amount) {
+      return false
+    }
+
+    this.deps.materialBag.remove(cost.materialId, cost.amount)
+
+    return this.deps.techniqueSystem.advanceTechniqueGrade()
   }
 
   /**

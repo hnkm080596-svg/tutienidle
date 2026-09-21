@@ -60,8 +60,11 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
 
     // Reset để chọn lại (case 2: đủ stat nhưng Luyện Th thể 5/6) —
     // M2: path + way là 1 cặp ghi nguyên tử, reset phải xoá cả hai.
+    // P7-M3: the technique holder is part of the ritual's atomic
+    // contract too - a non-empty holder rejects the re-choice.
     player.cultivationPath = undefined
     player.cultivationWay = undefined
+    gameManager.techniqueManager.setActive(null)
     player.realmId = 'mortal'
     player.realmLevel = 12
     player.bodyRefinementCompletedTiers = 5

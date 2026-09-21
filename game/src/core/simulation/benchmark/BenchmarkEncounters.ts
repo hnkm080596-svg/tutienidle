@@ -28,7 +28,7 @@ export interface BenchmarkDefinition {
 // maxHp ~100 + way modifiers, qi_refining Lv1. Real qi_refining mobs
 // sit near hp 200 / might 20 / armor 10.
 
-const BASE_REWARDS = { techniqueInsight: 0, spiritStone: 0 }
+const BASE_REWARDS = { techniqueMastery: 0, spiritStone: 0 }
 
 // Moderate fight - expected TTK tens of steps, enough hits both ways
 // that kit identity shows but nobody one-shots.

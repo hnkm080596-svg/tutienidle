@@ -78,4 +78,10 @@
 // from data/progression/RealmPassiveLadder) and initiation passives to
 // PathWayDefinition.passiveSkillIds. Save v68 is rejected (dev phase,
 // no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 69 as const
+// v70 (2026-09-21, P7-M3 canonical technique): Technique snapshot is the
+// rank/mastery/grade/quality model (insight/insightMultiplier/
+// tierEffects/requiredRealm*/unlocked/equipped gone; gradeEffects in).
+// The holder is 0-or-1 and must equal the committed way's techniqueId
+// (mortal = empty) - enforced by the restore preflight. Save v69 is
+// rejected (dev phase, no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 70 as const

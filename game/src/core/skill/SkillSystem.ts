@@ -357,11 +357,11 @@ export class SkillSystem {
   }
 
   /**
-   * Equip KHÔNG qua slot — CHỈ dùng cho PASSIVE (passive không thuộc
-   * Skill Loadout, xem syncRealmPassive()/equipTechnique()).
-   * Execution policy rework (plan §8.6): scheduler chỉ đọc loadout nên
-   * active skill PHẢI equip qua slot — không còn luồng "equipped nhưng
-   * không có slot" cho active.
+   * Equip KHONG qua slot - CHI dung cho PASSIVE (passive khong thuoc
+   * Skill Loadout, xem syncRealmPassive()).
+   * Execution policy rework (plan sec. 8.6): scheduler chi doc loadout nen
+   * active skill PHAI equip qua slot - khong con luong "equipped nhung
+   * khong co slot" cho active.
    */
   equipWithoutSlot(skillId: string): boolean {
     const skill = this.manager.get(skillId)

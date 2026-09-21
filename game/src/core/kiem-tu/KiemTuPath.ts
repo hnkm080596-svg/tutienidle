@@ -173,7 +173,7 @@ export const SWORD_PATHWAY: PathWayDefinition = {
   pathId: 'sword',
   name: 'Kiếm Tu — Ngự Kiếm Tâm Kinh',
   element: 'metal',
-  techniqueId: 'ngu_kiem',
+  techniqueId: 'sword_control_art',
   // Kiem Tu Reimagined (spec 2026-09-15) — no authored skill grants:
   // sword_pathway basics come from the Kiem Pho orb preset (KiemPhoProvider).
   // M9 — the ritual strips the mortal precursor skills from the loadout
@@ -222,9 +222,9 @@ export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
   id: 'hidden_sword_pathway',
   pathId: 'sword',
   name: 'Kiếm Tu Ẩn — Vạn Kiếm Quyết',
-  techniqueId: 'van_kiem_quyet',
+  techniqueId: 'myriad_swords_art',
   // P7-M2 - canonical realm-entry passive ladder; no initiation passive
-  // (van_kiem_quyet carried none).
+  // (myriad_swords_art carries none).
   realmRewards: composeRealmRewards(),
   // Ritual-only entry, permanent, FREE — the exact port of the retired
   // kiem_tu_an node's skillCastCount {tram, 3} gate (reads the

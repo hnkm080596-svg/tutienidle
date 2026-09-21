@@ -44,7 +44,7 @@ function createDummy() {
   return defineEnemy({
     id: 'qa_dummy', name: 'Dummy', level: 1, realmId: 'mortal', lane: 'ground',
     statsInput: { ...ENEMY_STATS },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -150,7 +150,7 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
     const enemy = defineEnemy({
       id: 'refight_dummy', name: 'Refight Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage: Stage = {
       id: 'refight_stage', name: 'Refight Stage', description: '', floor: 1,
@@ -194,7 +194,7 @@ describe('Future Systems Task 10 — party manual pause', () => {
     const enemy = defineEnemy({
       id: 'party_dummy', name: 'Party Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 10_000_000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage: Stage = {
       id: 'party_stage', name: 'Party Stage', description: '', floor: 1,
@@ -250,7 +250,7 @@ describe('Gameplay fixes — refight chain', () => {
     const enemy = defineEnemy({
       id: 'refight3_dummy', name: 'Refight3', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage: Stage = {
       id: 'refight3_stage', name: 'Refight3 Stage', description: '', floor: 1,

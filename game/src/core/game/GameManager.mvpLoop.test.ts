@@ -104,7 +104,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
 
     const boss = defineEnemy({
@@ -122,7 +122,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
       isBoss: true,
       // createBossVariant() nhân maxHp x7 -> 105 HP thật khi vào trận.
       tribulationPhases: [

@@ -29,7 +29,7 @@ export const QUESTS: Quest[] = [
     name: '[Hàng Ngày] Thu Thập Hồi Xuân Thảo',
     description: 'Nộp 5 Hồi Xuân Thảo mỗi ngày để nhận thưởng.',
     condition: { kind: 'collect', materialId: 'hoi_xuan_thao_qi_refining_decade', amount: 5 },
-    reward: { reward: { techniqueInsight: 15 } },
+    reward: { reward: { skillInsight: 15 } },
     cadence: 'daily',
   },
   {
@@ -64,7 +64,7 @@ export const QUESTS: Quest[] = [
   // Trúc Cơ content pass M1 (2026-08-29) — 5 quest chuỗi Trúc Cơ,
   // tham chiếu quái `foundation_*` mới (data/enemy/Enemies.ts) + sink
   // Linh Khoáng hiện có. Phần thưởng tài nguyên (spiritStone/
-  // techniqueInsight/cultivation) — QuestItemReward chưa hỗ trợ
+  // skillInsight/cultivation) - QuestItemReward chua ho tro
   // equipment, thưởng trang bị lần đầu dời sau (spec mục 4.3 ghi chú).
   // Số liệu thưởng first pass, cân bằng kỹ hơn để sau.
   {
@@ -72,7 +72,7 @@ export const QUESTS: Quest[] = [
     name: 'Diệt Địa Tinh Giám',
     description: 'Yêu thú Địa Tinh Giám quấy phá hậu sơn Thanh Vân — diệt 15 con.',
     condition: { kind: 'kill', enemyId: 'foundation_stone_fungus', amount: 15 },
-    reward: { reward: { techniqueInsight: 120 } },
+    reward: { reward: { skillInsight: 120 } },
     cadence: 'once',
     requiredRealmId: 'foundation_establishment',
   },
@@ -99,7 +99,7 @@ export const QUESTS: Quest[] = [
     name: 'Diệt Giao Sủng',
     description: 'Giao Sủng trú ngụ hàn thạch đàm — đánh bại 10 con.',
     condition: { kind: 'kill', enemyId: 'foundation_flood_dragon_whelp', amount: 10 },
-    reward: { reward: { techniqueInsight: 200 } },
+    reward: { reward: { skillInsight: 200 } },
     cadence: 'once',
     requiredRealmId: 'foundation_establishment',
   },

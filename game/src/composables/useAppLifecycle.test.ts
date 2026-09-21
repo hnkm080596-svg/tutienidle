@@ -78,8 +78,6 @@ function makeStubs() {
       },
       learnSkill: vi.fn(),
       setSkillLoadoutSlot: vi.fn(),
-      learnTechnique: vi.fn(),
-      equipTechnique: vi.fn(),
       materialRegistry: { has: () => false },
       materialBag: { add: vi.fn() },
       productionSystem: { getSiteDefinitions: () => [] },

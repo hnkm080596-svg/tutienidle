@@ -96,7 +96,7 @@ describe('Kiếm Tu way definitions', () => {
   it('hien way: ngu_kiem technique, no gate, no skillIds (orb preset supplies basics)', () => {
     expect(SWORD_PATHWAY.id).toBe('sword_pathway')
     expect(SWORD_PATHWAY.pathId).toBe('sword')
-    expect(SWORD_PATHWAY.techniqueId).toBe('ngu_kiem')
+    expect(SWORD_PATHWAY.techniqueId).toBe('sword_control_art')
     expect(SWORD_PATHWAY.offerGate).toBeUndefined()
     expect(SWORD_PATHWAY.skillIds).toBeUndefined()
   })
@@ -104,7 +104,7 @@ describe('Kiếm Tu way definitions', () => {
   it('ngu way: van_kiem_quyet technique + tram Lv3 offerGate (port of the retired flip-node prereq)', () => {
     expect(HIDDEN_SWORD_PATHWAY.id).toBe('hidden_sword_pathway')
     expect(HIDDEN_SWORD_PATHWAY.pathId).toBe('sword')
-    expect(HIDDEN_SWORD_PATHWAY.techniqueId).toBe('van_kiem_quyet')
+    expect(HIDDEN_SWORD_PATHWAY.techniqueId).toBe('myriad_swords_art')
     expect(HIDDEN_SWORD_PATHWAY.offerGate).toEqual({
       requiresSkillLevel: { skillId: 'tram', level: 3 },
     })

@@ -10,8 +10,8 @@ import { calculateStats, type StatModifier } from '../stats/StatCalculator'
 // tier fields are now plain authoring percents emitted as
 // {stat, percent, domain:'spell'} modifiers so the Task-7 domain gate
 // accepts them once MP stats are gated.
-describe('GameManager — technique tier MP modifiers (spell domain)', () => {
-  it('Đại Ngũ Hành equipped (Sơ Nhập) → percent modifiers on maxMp/manaRegenPerTurn carry domain spell', () => {
+describe('GameManager — technique grade MP modifiers (spell domain)', () => {
+  it('Tiểu Ngũ Hành active (rank 0 / Sơ Nhập) → percent modifiers on maxMp/manaRegenPerTurn carry domain spell', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
@@ -23,16 +23,16 @@ describe('GameManager — technique tier MP modifiers (spell domain)', () => {
     // cultivationPath undefined, so the path+way pair must be set explicitly.
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
+    player.realmId = 'qi_refining'
 
-    gameManager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_chan_quyet')
-    gameManager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
+    gameManager.realmAdvanceOps.grantCanonicalTechnique('five_elements_art', player)
 
     const modifiers = gameManager.effectOps.getAggregatedModifiers(player)
 
     expect(modifiers).toContainEqual(
       expect.objectContaining({
         sourceType: 'technique',
-        sourceId: 'dai_ngu_hanh_chan_quyet',
+        sourceId: 'five_elements_art',
         stat: 'maxMp',
         percent: 0.03,
         domain: 'spell',
@@ -41,7 +41,7 @@ describe('GameManager — technique tier MP modifiers (spell domain)', () => {
     expect(modifiers).toContainEqual(
       expect.objectContaining({
         sourceType: 'technique',
-        sourceId: 'dai_ngu_hanh_chan_quyet',
+        sourceId: 'five_elements_art',
         stat: 'manaRegenPerTurn',
         percent: 0.005,
         domain: 'spell',
@@ -77,24 +77,24 @@ describe('GameManager — technique tier MP modifiers (spell domain)', () => {
     }
   })
 
-  it('tier KHÔNG phát thêm modifier khi insight tăng tier — grant phát lại theo tier mới, không cộng dồn', () => {
+  it('rank band KHÔNG phát thêm modifier khi mastery tăng rank — grant phát lại theo band mới, không cộng dồn', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
 
-    gameManager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_chan_quyet')
-    gameManager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
-
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
+    player.realmId = 'qi_refining'
+    gameManager.realmAdvanceOps.grantCanonicalTechnique('five_elements_art', player)
+
     const before = gameManager.effectOps
       .getAggregatedModifiers(player)
       .filter((modifier) => modifier.sourceType === 'technique')
 
-    // Đại Thành tier (insight >= 30% of 3000): mỗi stat vẫn ĐÚNG MỘT
-    // modifier entry, chỉ giá trị đổi theo tier.
-    gameManager.rewardOps.gainEquippedTechniqueInsight(900)
+    // Dai Thanh band (rank 3: 900 mastery at 300/rank) - each stat
+    // keeps EXACTLY ONE modifier entry, only the value changes.
+    gameManager.techniqueSystem.gainMastery(900)
 
     const after = gameManager.effectOps
       .getAggregatedModifiers(player)
@@ -113,7 +113,7 @@ describe('GameManager — technique tier MP modifiers (spell domain)', () => {
   // not own the spell domain must not receive the MP family, even
   // though the technique still legally authors the fields -- the
   // domain gate cannot perform this credential check, emission does.
-  it('body player + kim_cang_bat_hoai_the emits NO MP-family modifiers; hpRegenPerTurn still emits', () => {
+  it('body player + diamond_body_art emits NO MP-family modifiers; hpRegenPerTurn still emits', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
@@ -122,9 +122,9 @@ describe('GameManager — technique tier MP modifiers (spell domain)', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'body'
     player.cultivationWay = 'body_pathway'
+    player.realmId = 'qi_refining'
 
-    gameManager.realmAdvanceOps.learnTechnique('kim_cang_bat_hoai_the')
-    gameManager.realmAdvanceOps.equipTechnique('kim_cang_bat_hoai_the')
+    gameManager.realmAdvanceOps.grantCanonicalTechnique('diamond_body_art', player)
 
     const modifiers = gameManager.effectOps.getAggregatedModifiers(player)
 
@@ -140,14 +140,14 @@ describe('GameManager — technique tier MP modifiers (spell domain)', () => {
     expect(modifiers).toContainEqual(
       expect.objectContaining({
         sourceType: 'technique',
-        sourceId: 'kim_cang_bat_hoai_the',
+        sourceId: 'diamond_body_art',
         stat: 'hpRegenPerTurn',
         flat: 2,
       }),
     )
   })
 
-  it('sword player + ngu_kiem emits NO MP-family modifiers; hpRegenPerTurn still emits', () => {
+  it('sword player + sword_control_art emits NO MP-family modifiers; hpRegenPerTurn still emits', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
@@ -156,9 +156,9 @@ describe('GameManager — technique tier MP modifiers (spell domain)', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'sword'
     player.cultivationWay = 'sword_pathway'
+    player.realmId = 'qi_refining'
 
-    gameManager.realmAdvanceOps.learnTechnique('ngu_kiem')
-    gameManager.realmAdvanceOps.equipTechnique('ngu_kiem')
+    gameManager.realmAdvanceOps.grantCanonicalTechnique('sword_control_art', player)
 
     const modifiers = gameManager.effectOps.getAggregatedModifiers(player)
 
@@ -172,14 +172,14 @@ describe('GameManager — technique tier MP modifiers (spell domain)', () => {
     expect(modifiers).toContainEqual(
       expect.objectContaining({
         sourceType: 'technique',
-        sourceId: 'ngu_kiem',
+        sourceId: 'sword_control_art',
         stat: 'hpRegenPerTurn',
         flat: 1.5,
       }),
     )
   })
 
-  it('ngo_dao way player + ngo_dao_chan_quyet still emits the MP family (the hidden way owns the spell domain)', () => {
+  it('hidden-spell way player + dao_insight_art still emits the MP family (the hidden way owns the spell domain)', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
@@ -188,16 +188,16 @@ describe('GameManager — technique tier MP modifiers (spell domain)', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'hidden_spell_pathway'
+    player.realmId = 'qi_refining'
 
-    gameManager.realmAdvanceOps.learnTechnique('ngo_dao_chan_quyet')
-    gameManager.realmAdvanceOps.equipTechnique('ngo_dao_chan_quyet')
+    gameManager.realmAdvanceOps.grantCanonicalTechnique('dao_insight_art', player)
 
     const modifiers = gameManager.effectOps.getAggregatedModifiers(player)
 
     expect(modifiers).toContainEqual(
       expect.objectContaining({
         sourceType: 'technique',
-        sourceId: 'ngo_dao_chan_quyet',
+        sourceId: 'dao_insight_art',
         stat: 'maxMp',
         percent: 0.03,
         domain: 'spell',
@@ -206,7 +206,7 @@ describe('GameManager — technique tier MP modifiers (spell domain)', () => {
     expect(modifiers).toContainEqual(
       expect.objectContaining({
         sourceType: 'technique',
-        sourceId: 'ngo_dao_chan_quyet',
+        sourceId: 'dao_insight_art',
         stat: 'manaRegenPerTurn',
         flat: 0.5,
         domain: 'spell',

@@ -427,9 +427,9 @@ export const PASSIVE_SKILLS: Skill[] = [
     equipped: false,
   },
 
-  // Ná»™i táº¡i chiáº¿n Ä‘áº¥u cá»§a TÃ¢m PhÃ¡p Chiáº¿n Äáº¥u â€” tá»± há»c + equip khi
-  // technique tÆ°Æ¡ng á»©ng Ä‘Æ°á»£c trang bá»‹ (xem GameManager.equipTechnique()),
-  // KHÃ”NG liÃªn quan tá»›i há»‡ thá»‘ng 9 passive theo cáº£nh giá»›i á»Ÿ trÃªn.
+  // Combat innate of the retired thai_hu_kiem_quyet - P7-M3: the
+  // technique is gone and nothing grants this passive today (orphan
+  // catalog entry, same status as its retired parent).
   {
     id: 'passive_thai_hu_kiem_y',
 

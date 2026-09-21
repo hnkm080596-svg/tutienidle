@@ -189,8 +189,7 @@ function expectWellFormedWay(way: PathWayDefinition, moduleId: CultivationPathId
   if (way.realmRewards) {
     for (const [realmId, reward] of Object.entries(way.realmRewards)) {
       expect(
-        reward.techniqueId !== undefined ||
-          reward.artifactId !== undefined ||
+        reward.artifactId !== undefined ||
           reward.passiveSkillId !== undefined,
         `${moduleId}.${wayKey}: realmRewards['${realmId}'] grants nothing`,
       ).toBe(true)
@@ -466,7 +465,6 @@ describe('P7-M2 realm passive ownership', () => {
       for (const [wayKey, way] of Object.entries(pathModule.ways)) {
         for (const [realmId, reward] of Object.entries(way.realmRewards ?? {})) {
           if (
-            reward.techniqueId === undefined &&
             reward.artifactId === undefined &&
             reward.passiveSkillId === undefined
           ) {

@@ -1,18 +1,15 @@
 import type { Technique } from '@/core/technique/Technique'
-import { getTechniqueInsightTotalRequired, getTechniqueTier } from '@/core/technique/TechniqueTier'
+import { getTechniqueEffects } from '@/core/technique/TechniqueProgression'
 import { statLabel } from '@/core/stats/StatLabels'
 import { COMBAT_TECHNIQUE_TYPES } from '@/data/technique/CombatTechniqueTypes'
 import type { TooltipSection } from './useTooltip'
 
 /**
  * Extracted from TechniqueSlotCard.vue (2026-08-20) - shared by the
- * (hover) tooltip AND the inline info block in LoadoutManager.vue's Tam
- * Phap tab (PLAN HOAN CHINH item 5/9 rework - no "Da Hoc" cell to click
- * for technique switching; reads the equipped technique's info
- * directly). Phap Tu Redesign (magicpath) - Tam Phap grants no stats in
- * any form outside `tierEffects` (exactly the CURRENT tier, see
- * TechniqueTier.ts - now derived from techniqueExperience instead of
- * player.realmId).
+ * (hover) tooltip AND the inline info block in TechniquePanel.vue.
+ * P7-M3 - effect rows resolve via getTechniqueEffects(technique): the
+ * active grade's table at the current rank band (rank/mastery/grade
+ * model, see TechniqueProgression.ts).
  *
  * P7-M2 - no passive rows here: realm-entry passives are way-owned
  * (realmRewards/passiveSkillIds), the technique display has no business
@@ -20,7 +17,6 @@ import type { TooltipSection } from './useTooltip'
  */
 export function buildTechniqueSections(
   technique: Technique,
-  techniqueInsight: number,
 ): TooltipSection[] {
   const sections: TooltipSection[] = []
 
@@ -41,9 +37,7 @@ export function buildTechniqueSections(
     combatRows.push({ label: 'Tài nguyên', value: technique.resourceLabel })
   }
 
-  const tierEffect = technique.tierEffects?.[
-    getTechniqueTier(techniqueInsight, getTechniqueInsightTotalRequired(technique))
-  ]
+  const tierEffect = getTechniqueEffects(technique)
 
   if (tierEffect) {
     if (tierEffect.mightFlat !== undefined) {

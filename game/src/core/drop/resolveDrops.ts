@@ -33,7 +33,7 @@ export interface DropResult {
    * derives it from this value through the existing getSkillInsightReward(),
    * so it inherits the same multiplier without a second code path (spec E12).
    */
-  techniqueInsight: number
+  techniqueMastery: number
 
   currencyMultiplier: number
 
@@ -107,7 +107,7 @@ export function resolveDrops(input: ResolveDropsInput): DropResult {
   //   3. One rng() per pool draw (1 + extraRolls total), for which weighted
   //      entry is selected.
   //   4. One rng() for the spiritStone amount, then one for the
-  //      techniqueInsight amount.
+  //      techniqueMastery amount.
   // On top of that base order: ANY entry above that carries an `amount`
   // range (guaranteed, signature, or pool) consumes one EXTRA rng() call
   // inline, immediately after its own selection roll and before the next
@@ -165,8 +165,8 @@ export function resolveDrops(input: ResolveDropsInput): DropResult {
 
     spiritStone: currency ? Math.floor(rollAmount(currency.spiritStone, rng) * currencyMultiplier) : 0,
 
-    techniqueInsight: currency
-      ? Math.floor(rollAmount(currency.techniqueInsight, rng) * currencyMultiplier)
+    techniqueMastery: currency
+      ? Math.floor(rollAmount(currency.techniqueMastery, rng) * currencyMultiplier)
       : 0,
 
     currencyMultiplier,

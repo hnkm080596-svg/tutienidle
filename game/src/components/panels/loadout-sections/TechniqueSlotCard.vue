@@ -4,17 +4,11 @@
 // LoadoutManager.vue và TechniqueCodex.vue — cùng đọc chung nguồn qua
 // techniqueManager, tránh nhiều nơi tự vẽ nhiều kiểu khác nhau.
 //
-// Tâm Pháp hợp nhất (2026-08-15) — KHÔNG còn 3 slot riêng (cultivation/
-// combat/breakthrough), chỉ còn ĐÚNG 1 tâm pháp trang bị cho toàn hệ
-// thống — bỏ hẳn prop `slot`, đọc thẳng gameManager.techniqueManager.
-// getEquipped() (không cần tham số).
-//
-// PLAN HOÀN CHỈNH mục 5/9 rework (2026-08-20) — Tâm Pháp KHÔNG còn
-// tháo/lắp thủ công được nữa (hoàn toàn theo nghề nghiệp đã chọn, xem
-// CultivationPathKit.ts) — đã bỏ hẳn onClick/unequipTechnique, card giờ
-// THUẦN hiển thị. Tier giờ suy từ player.techniqueExperience (thanh
-// kinh nghiệm riêng của Tâm Pháp) thay vì player.realmId, xem
-// TechniqueTier.ts — thêm hẳn thanh exp hiện tiến độ lên tier kế tiếp.
+// P7-M3 - canonical 0-or-1 technique: doc thang
+// gameManager.techniqueManager.getActive() (khong can tham so). Card
+// gio THUAN hien thi rank/mastery/grade/quality: band label suy tu
+// rank (getTechniqueTierForRank), thanh exp = mastery / cost(grade),
+// day khi rank cham cap 10 (xem TechniqueProgression.ts).
 //
 // Tooltip có cấu trúc (xem TechniqueTooltipContent trong
 // composables/useTooltip.ts) — hình + 2 khối (Chiến Đấu/Tu Luyện), xây
@@ -29,7 +23,13 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import type { TechniqueTooltipContent } from '@/composables/useTooltip'
 import { buildTechniqueSections } from '@/composables/useTechniqueSections'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
-import { getTechniqueInsightTotalRequired, getTechniqueTierProgress, TECHNIQUE_TIER_LABELS } from '@/core/technique/TechniqueTier'
+import {
+  getTechniqueMasteryForNextRank,
+  getTechniqueTierForRank,
+  TECHNIQUE_RANK_CAP,
+  TECHNIQUE_TIER_LABELS,
+} from '@/core/technique/TechniqueProgression'
+import { ITEM_QUALITY_LABELS } from '@/core/item/ItemQuality'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 // UI redesign Step 12 (Tâm Pháp, spec mục 15) — "Tâm pháp hiện tại
@@ -51,47 +51,44 @@ const { stateVersion } = useStateVersion()
 const equipped = computed(() => {
   stateVersion.value
 
-  return gameManager.techniqueManager.getEquipped()
+  return gameManager.techniqueManager.getActive()
 })
 
-const techniqueInsight = computed(() => equipped.value?.insight ?? 0)
-const tierProgress = computed(() => {
+// Band badge: four-tier vocabulary suy tu rank + Canh (grade) hien tai.
+const currentTierLabel = computed(() => {
   const technique = equipped.value
-  return getTechniqueTierProgress(techniqueInsight.value, technique ? getTechniqueInsightTotalRequired(technique) : undefined)
+
+  return technique ? `${TECHNIQUE_TIER_LABELS[getTechniqueTierForRank(technique.rank)]} · Cảnh ${technique.grade}` : ''
 })
 
-const currentTierLabel = computed(() => TECHNIQUE_TIER_LABELS[tierProgress.value.tier])
-
-// Thanh exp — undefined nextThreshold nghĩa là đã Viên Mãn (MAX, hiện
-// đầy 100% thay vì chia cho undefined).
+// Thanh exp = mastery / cost(grade); rank cap -> full (không còn rank
+// kế để tiến).
 const tierExpValue = computed(() => {
-  const { lowerBound, nextThreshold } = tierProgress.value
+  const technique = equipped.value
 
-  if (nextThreshold === undefined) {
-    return 1
-  }
-
-  return techniqueInsight.value - lowerBound
+  return technique && technique.rank < TECHNIQUE_RANK_CAP ? technique.mastery : 1
 })
 
 const tierExpMax = computed(() => {
-  const { lowerBound, nextThreshold } = tierProgress.value
+  const technique = equipped.value
 
-  if (nextThreshold === undefined) {
-    return 1
-  }
-
-  return nextThreshold - lowerBound
+  return technique && technique.rank < TECHNIQUE_RANK_CAP
+    ? getTechniqueMasteryForNextRank(technique.grade)
+    : 1
 })
 
 const tierExpLabel = computed(() => {
-  const { nextThreshold } = tierProgress.value
+  const technique = equipped.value
 
-  if (nextThreshold === undefined) {
-    return 'Viên Mãn'
+  if (!technique) {
+    return ''
   }
 
-  return `${formatNumber(techniqueInsight.value)} / ${formatNumber(nextThreshold)}`
+  if (technique.rank >= TECHNIQUE_RANK_CAP) {
+    return `Cấp ${TECHNIQUE_RANK_CAP} · Viên Mãn · ${ITEM_QUALITY_LABELS[technique.quality]}`
+  }
+
+  return `Cấp ${technique.rank} · ${formatNumber(technique.mastery)} / ${formatNumber(getTechniqueMasteryForNextRank(technique.grade))} · ${ITEM_QUALITY_LABELS[technique.quality]}`
 })
 
 const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
@@ -112,7 +109,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
     description: technique.description,
 
-    sections: buildTechniqueSections(technique, techniqueInsight.value),
+    sections: buildTechniqueSections(technique),
   }
 })
 </script>

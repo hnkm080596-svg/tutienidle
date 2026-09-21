@@ -40,13 +40,13 @@ import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 const DUMMY = defineEnemy({
   id: 'lease_dummy', name: 'Lease Dummy', level: 1, realmId: 'mortal', lane: 'ground',
   statsInput: { maxHp: 10, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 const FRAGILE_DUMMY = defineEnemy({
   id: 'lease_fragile', name: 'Fragile Dummy', level: 1, realmId: 'mortal', lane: 'ground',
   statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 function stageFixture(id: string, enemyId: string): Stage {

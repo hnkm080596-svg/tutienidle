@@ -30,7 +30,7 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
     expect(loot.getSummary().spiritStone).toBe(8)
   })
 
-  it('Cảm Ngộ Kỹ năng suy ra từ techniqueInsight đã resolve', () => {
+  it('Cảm Ngộ Kỹ năng suy ra từ techniqueMastery đã resolve', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, loot, player } = createLootTestSetup({
       realmId: 'qi_refining',
@@ -39,7 +39,7 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
 
     killEnemy()
 
-    // qi_refining techniqueInsight min 35 -> round(35 * 0.6) = 21
+    // qi_refining techniqueMastery min 35 -> round(35 * 0.6) = 21
     // (M2 baseline cut, spec §4.3 row 18).
     expect(player.skillInsight).toBe(21)
     expect(loot.getSummary().skillInsight).toBe(21)
@@ -170,7 +170,7 @@ describe('BattleLootSystem — talent v3 retired KHÔNG còn bonus (spec v4 §4.
 
   it('talent v4 combat (kiem_quang) — loot nền KHÔNG bị ảnh hưởng (combat passive không đụng loot)', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const { killEnemy, loot, player, giveReward } = createLootTestSetup({
+    const { killEnemy, loot, player, giveReward, gainMastery } = createLootTestSetup({
       realmId: 'qi_refining',
       talentIds: ['kiem_quang'],
       stage: QI_REFINING_STAGE,
@@ -178,7 +178,10 @@ describe('BattleLootSystem — talent v3 retired KHÔNG còn bonus (spec v4 §4.
 
     killEnemy()
 
-    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 8, techniqueInsight: 35 })
+    // P7-M3 - mastery buffers; verify the untouched 35 via the flush.
+    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 8 })
+    loot.settleTechniqueMastery()
+    expect(gainMastery).toHaveBeenCalledWith(35)
     expect(player.skillInsight).toBe(21) // M2 baseline: round(35 * 0.6)
     expect(loot.getSummary().spiritStone).toBe(8)
   })

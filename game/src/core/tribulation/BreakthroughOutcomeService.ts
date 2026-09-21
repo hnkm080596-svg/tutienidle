@@ -1,23 +1,24 @@
 /**
- * R8.2 Slice 2 — Domain owner of minor-realm breakthrough consequences
+ * R8.2 Slice 2 - Domain owner of minor-realm breakthrough consequences
  * (AR-10 continuation; Slice 1 moved the tribulation chain).
  *
  * This service sequences the FULL consequence set of a successful
  * breakthrough that previously lived in the Vue composable
  * useBreakthrough.ts: realm passive sync (idempotent, every success),
- * the KC technique grant, artifact awakening, and the banked artifact
- * tier release. It returns a typed result; the Vue adapter only displays
+ * artifact awakening, and the banked artifact tier release. It returns
+ * a typed result; the Vue adapter only displays
  * the announcement (A7).
  *
  * Characterization evidence (2026-09-11): CultivationSystem.breakthrough()
- * never crosses a major realm — major transitions belong to the
- * tribulation chain (Slice 1 service). The technique-grant and
- * artifact-awakening branches keyed on realmId change in the old Vue code
- * are therefore unreachable in the production flow; they are preserved
- * VERBATIM here (documented-dead) so their eventual removal is an
- * evidence-based cleanup, not a silent behavior change.
+ * never crosses a major realm - major transitions belong to the
+ * tribulation chain (Slice 1 service). P7-M3 removed the documented-dead
+ * technique-swap branch that lived here (the spell Truc Co technique is
+ * now folded into five_elements_art.gradeEffects[2]); the artifact-
+ * awakening branch stays verbatim (documented-dead) so its eventual
+ * removal remains an evidence-based cleanup, not a silent behavior
+ * change.
  *
- * Writer contract (A3/A6): same pattern as TribulationOutcomeService —
+ * Writer contract (A3/A6): same pattern as TribulationOutcomeService -
  * the caller passes the Pinia player store instance (which satisfies
  * PlayerData), never `store.$state`: writing an absent optional key
  * (artifact is declared in defaults as undefined; treat any future
@@ -25,10 +26,8 @@
  * (probe evidence 2026-09-11). Core stays Pinia-free (structural typing).
  */
 import type { PlayerData } from '../player/Player'
-import type { TechniqueManager } from '../technique/TechniqueManager'
 import { advanceArtifactRealmLevel } from '../artifact/ArtifactProgression'
 import { resolveExpectedArtifactId } from '../artifact/Artifact'
-import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import { getCurrentRealm } from '../realm/realmSystem'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
@@ -63,11 +62,8 @@ export type BreakthroughPlayerWriter = PlayerData & {
  * GameManagerRealmAdvanceOps. Previously the whole GameManager.
  */
 export interface BreakthroughConsequencesContext {
-  readonly techniqueManager: TechniqueManager
   syncRealmPassive(player: PlayerData): void
   syncRealmStatPassive(player: PlayerData): void
-  learnTechnique(techniqueId: string): boolean
-  equipTechnique(techniqueId: string): boolean
 }
 
 export class BreakthroughOutcomeService {
@@ -104,18 +100,7 @@ export class BreakthroughOutcomeService {
       // at max minor level and never crosses realms; major transitions go
       // through the tribulation chain (Slice 1). Preserved verbatim from
       // useTribulation-era useBreakthrough.ts so removal is a separate,
-      // evidence-based decision (A12). The technique grant duplicates
-      // grantCultivationPathRealmReward's spell branch by design.
-      // M4 (R6): the spell_pathway realm technique is way-owned — a collapsed
-      // ('spell','hidden_spell_pathway') player must not inherit it.
-      if (hasStaticPathCapability(player, 'spell.elemental_casting') && player.realmId === 'foundation_establishment') {
-        const inheritedInsight = context.techniqueManager.getEquipped()?.insight ?? 0
-        context.learnTechnique('dai_ngu_hanh_quyet_truc_co')
-        const nextTechnique = context.techniqueManager.get('dai_ngu_hanh_quyet_truc_co')
-        if (nextTechnique) nextTechnique.insight = Math.max(nextTechnique.insight ?? 0, inheritedInsight)
-        context.equipTechnique('dai_ngu_hanh_quyet_truc_co')
-      }
-
+      // evidence-based decision (A12).
       if (player.realmId === 'foundation_establishment' && !player.artifact) {
         const artifactId = resolveExpectedArtifactId(player)
 

@@ -53,7 +53,7 @@ function makeEnemy() {
       criticalDamage: 1.5,
       armor: 0,
     },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 

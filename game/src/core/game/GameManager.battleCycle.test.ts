@@ -52,7 +52,7 @@ function createCombatPlayer(): CombatEntity {
 const FAST_ENEMY = defineEnemy({
   id: 'cycle_fast_mob', name: 'Fast Mob', level: 1, realmId: 'mortal', lane: 'ground',
   statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-  rewards: { techniqueInsight: 5, spiritStone: 3 },
+  rewards: { techniqueMastery: 5, spiritStone: 3 },
 })
 
 const CYCLE_STAGE: Stage = {
@@ -191,14 +191,14 @@ describe('repeat policy — a repeat cycle is provably a fresh battle', () => {
     // Cycle 1 kills grant rewards into the accumulated session.
     fightUntil(gameManager, combatSource, () => {
       const s = gameManager.getBattleRewardSummary()
-      return s.techniqueInsight > 0 || s.spiritStone > 0
+      return s.techniqueMastery > 0 || s.spiritStone > 0
     })
     const cycle1Loot = gameManager.getBattleRewardSummary()
 
     fightUntilNextBattle(gameManager, combatSource)
 
     const cycle2Loot = gameManager.getBattleRewardSummary()
-    expect(cycle2Loot.techniqueInsight).toBeGreaterThanOrEqual(cycle1Loot.techniqueInsight)
+    expect(cycle2Loot.techniqueMastery).toBeGreaterThanOrEqual(cycle1Loot.techniqueMastery)
     expect(cycle2Loot.spiritStone).toBeGreaterThanOrEqual(cycle1Loot.spiritStone)
     expect(gameManager.getActiveTurnBattleStage()?.id).toBe(CYCLE_STAGE.id)
   })
@@ -209,7 +209,7 @@ describe('repeat policy — a repeat cycle is provably a fresh battle', () => {
     const killer = defineEnemy({
       id: 'cycle_killer', name: 'Killer', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 100000, might: 999999, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage: Stage = {
       id: 'cycle_kill_stage', name: 'Kill Stage', description: '',
@@ -311,7 +311,7 @@ describe('session RNG (spec C3) — one seeded source owns every combat roll', (
       criticalRate: 0.5, criticalDamage: 1.5, armor: 0,
       evasionRate: 0.4,
     },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 
   const RNG_STAGE: Stage = {

@@ -1,29 +1,21 @@
 import type { ElementType } from '../element/ElementType'
+import type { ItemQuality } from '../item/ItemQuality'
 import type { StatModifier } from '../stats/StatCalculator'
 
-// PLAN HOÀN CHỈNH mục 5 — Tâm Pháp giờ CÓ cộng chỉ số trở lại, theo
-// đúng 4 cảnh giới Sơ Nhập/Tiểu Thành/Đại Thành/Viên Mãn (đảo ngược có
-// chủ đích quyết định "Tâm Pháp KHÔNG còn cộng chỉ số" ở dưới — user
-// đã yêu cầu tường minh kèm bảng số liệu cụ thể, xem plan). Rework
-// 2026-08-20 — tier giờ tính từ player.techniqueExperience (thanh kinh
-// nghiệm THẬT của riêng Tâm Pháp, nuôi bởi tu luyện), KHÔNG còn suy
-// thẳng từ đại cảnh giới người chơi — xem TechniqueTier.ts's
-// getTechniqueTier(). Vẫn "không cần chức năng tháo, lắp công pháp,
-// hoàn toàn dựa vào nghề nghiệp" (nguyên văn yêu cầu) — chỉ đổi driver
-// của tier, không đổi việc equip là tự động.
+// P7-M3 - Canonical Technique model. A Way owns exactly ONE canonical
+// Technique (see data/technique/Techniques.ts + CultivationPathWay.
+// techniqueId). Progression vocabulary: `rank` (0..TECHNIQUE_RANK_CAP)
+// inside a `grade` (realm-gated, 1..getTechniqueGradeCeiling(realmId)),
+// fed by `mastery` (the renamed techniqueInsight reward channel), with
+// `quality` = ItemQuality display axis. Rank bands still resolve to the
+// four legacy tiers (So Nhap/Tieu Thanh/Dai Thanh/Vien Man) via
+// getTechniqueTierForRank - see TechniqueProgression.ts.
 export type TechniqueTier = 'so_nhap' | 'tieu_thanh' | 'dai_thanh' | 'vien_man'
 
-// Shape chung cho MỌI tâm pháp — mỗi field optional vì Tụ Linh Quyết
-// (Công/Phòng phẳng) và Đại Ngũ Hành (%Linh lực tối đa + %Hồi Linh)
-// dùng field khác nhau; Kiếm Tu/Thể Tu (chưa thiết kế, mục 5.3) để
-// tierEffects rỗng — kiến trúc vẫn hỗ trợ sẵn không cần đổi type.
-// manaRegenIncreasePercent là % TĂNG THÊM lên stat manaRegenPerTurn
-// (Increased, cùng pipeline percent chuẩn của StatCalculator.ts) —
-// KHÔNG phải % của maxMp (tránh phụ thuộc vòng vào giá trị maxMp chưa
-// tính xong lúc gộp modifier, xem GameManager.getTechniqueTierModifiers
-// ()). stat-system-reimagined Task 3 (D17): the old bespoke stat keys
-// (maxMpPercent/manaRegenPercent) retired — these are plain authoring
-// fields that emit percent modifiers on the live stats.
+// Per-band stat block - same shape as the retired tierEffects entries.
+// manaRegenIncreasePercent is an Increased-percent on manaRegenPerTurn
+// (NOT a percent of maxMp - avoids the circular dependency on a not-yet
+// computed maxMp, same contract as before).
 export interface TechniqueTierEffect {
   mightFlat?: number
 
@@ -33,27 +25,21 @@ export interface TechniqueTierEffect {
 
   manaRegenIncreasePercent?: number
 
-  // Yêu cầu 2026-08-26 — Tâm pháp cộng thêm 2 chỉ số MẶC ĐỊNH HP/lượt và
-  // MP/lượt: flat TỰU TRỰC lên stats hpRegenPerTurn/manaRegenPerTurn
-  // (không phải percent — giá trị tuyệt đối hồi theo tier).
   hpRegenFlat?: number
 
   mpRegenFlat?: number
 }
 
 /**
- * Pháp Tu Redesign (magicpath, 2026-08-18) — Tâm Pháp KHÔNG còn cộng
- * chỉ số dưới BẤT KỲ hình thức nào (đã xoá `modifiers`/`mechanic`/
- * `breakthroughEffect` — mọi đường cộng stat cũ, kể cả cultivationRate
- * đã bị xoá hoàn toàn khỏi Stats). Tâm Pháp giờ THUẦN là lớp giới
- * thiệu/hướng dẫn — giải thích path chơi ra sao bằng lore (description),
- * tự động trang bị khi chọn path, không còn cơ chế "đầu tư" nào ở tầng
- * này. Chỉ số thật giờ đến từ Node Tree (core/progression/) + Equipment
- * + Skill passive — xem [[tienhiep-phap-tu-magicpath]].
+ * Canonical technique: authored template data (id/name/description/
+ * icon/element/resourceLabel/combatTypeId/gradeEffects/combatModifiers)
+ * plus live progression state (grade/rank/mastery/quality). The same
+ * object serves as both template (Techniques.ts) and instance
+ * (TechniqueManager) - grant() structured-clones the template.
  *
- * PLAN HOÀN CHỈNH mục 5 — NGOẠI LỆ DUY NHẤT cho quyết định trên:
- * `tierEffects` tái lập cộng chỉ số, nhưng theo ĐÚNG 4 cảnh giới tâm
- * pháp (không phải "đầu tư" tự do như hệ cũ đã xoá) — xem TechniqueTier.
+ * gradeEffects[grade][tierBand] replaces the retired `tierEffects`:
+ * effect lookup resolves the band from `rank` inside the table of the
+ * highest authored grade <= current grade (see getTechniqueEffects).
  */
 export interface Technique {
   id: string
@@ -62,54 +48,45 @@ export interface Technique {
 
   description: string
 
-  // Insight belongs to each technique. Luyện Khí techniques use a
-  // multiplier of 3 relative to the mortal Tụ Linh Quyết baseline.
-  insight?: number
-
-  insightMultiplier?: number
-
-  // Path ảnh minh hoạ (vd '/assets/techniques/xich_viem.png') — khai
-  // NGAY TRÊN data item thay vì bảng tra tập trung (2026-08-15, theo
-  // yêu cầu: icon thuộc về khai báo data của từng món, không nằm
-  // chung 1 hệ thống như core/assets/AssetPaths.ts — bảng đó giờ chỉ
-  // còn giữ path KHÔNG gắn liền với 1 id cụ thể trong data, vd backdrop
-  // Stage/icon Building/khung UI dùng chung). Optional — technique
-  // chưa có ảnh thật thì tooltip chỉ đơn giản không hiện <img>.
+  // Path anh minh hoa (vd '/assets/techniques/xich_viem.png') - declared
+  // on the data item itself (2026-08-15 convention: icon belongs to the
+  // item's own declaration, not a shared lookup). Optional - tooltip
+  // simply renders no <img> without one.
   icon?: string
 
-  requiredRealmId?: string
-
-  requiredRealmLevel?: number
-
-  // Chiến Đấu nội tại (optional — chỉ tâm pháp có phần chiến đấu mới
-  // khai). Tra CombatTechniqueTypeConfig (data/technique/
-  // CombatTechniqueTypes.ts) — chỉ mang tính tổ chức nội dung/hiển thị
-  // UI, KHÔNG ràng buộc runtime cứng nhắc.
+  // Chien Dau noi tai (optional - only combat-focused techniques
+  // declare). See CombatTechniqueTypeConfig (data/technique/
+  // CombatTechniqueTypes.ts) - display/organization only, no hard
+  // runtime binding.
   combatTypeId?: string
 
-  // Pháp Tu profession-tier ladder — gắn identity Ngũ Hành cho UI.
-  // `resourceLabel` đổi TÊN HIỂN THỊ của thanh Rage (CombatHud.vue)
-  // khi tâm pháp này đang trang bị — KHÔNG phải resource mới.
+  // Phap Tu profession-tier ladder - attaches the Ngu Hanh identity for
+  // UI. `resourceLabel` renames the Rage bar (CombatHud.vue) while this
+  // technique is active - NOT a new resource.
   element?: ElementType
 
   resourceLabel?: string
 
-  // PLAN HOÀN CHỈNH mục 5 — hiệu ứng chỉ số theo tier, xem
-  // TechniqueTierEffect. Optional/từng-tier-optional vì Kiếm Tu/Thể Tu
-  // chưa thiết kế (mục 5.3) — technique nào không khai coi như không
-  // cộng gì (giữ hành vi cũ, không lỗi).
-  tierEffects?: Partial<Record<TechniqueTier, TechniqueTierEffect>>
+  // P7-M3 progression state. Templates declare grade 1 / rank 0 /
+  // mastery 0 / quality 'hoang'; runtime mutates via TechniqueSystem
+  // (gainMastery / advanceTechniqueGrade / setTechniqueQuality).
+  grade: number
 
-  // Combat-gate-teleport-autocast plan §9 — modifier chiến đấu CỐ ĐỊNH
-  // (không theo tier) chỉ có hiệu lực khi technique đang EQUIPPED.
-  // KHÔNG đưa bonus này vào tierEffects và KHÔNG scale theo tier; tổng
-  // hợp DUY NHẤT qua GameManager.getAggregatedModifiers() để không
-  // double-apply (plan §19 rủi ro 9). (Task 3, D16: the old +2 range
-  // grant retired with the attackRange stat — no technique currently
-  // declares combatModifiers.)
+  rank: number
+
+  mastery: number
+
+  quality: ItemQuality
+
+  // Effects per grade -> per rank-band (technique tier vocabulary).
+  // Optional/band-optional - an undeclared band contributes nothing.
+  gradeEffects?: Partial<Record<number, Partial<Record<TechniqueTier, TechniqueTierEffect>>>>
+
+  // Combat-gate-teleport-autocast plan sec. 9 - fixed combat modifiers
+  // (not band-scaled) active while the technique is the active one.
+  // Aggregated ONLY via GameManager.getAggregatedModifiers() so they
+  // never double-apply (plan sec. 19 risk 9). (Task 3, D16: the old +2
+  // range grant retired with the attackRange stat - no technique
+  // currently declares combatModifiers.)
   combatModifiers?: StatModifier[]
-
-  unlocked: boolean
-
-  equipped: boolean
 }

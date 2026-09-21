@@ -8,12 +8,12 @@ import type { EnemyReward } from '../enemy/Enemy'
 // M2 (spec 2026-09-03 §4.3 row 18): baseline insight economy cut ~40%
 // (1 -> 0.6) as Van Dao's declared cost — the talent's insight_gain
 // multiplier buys it back for its holder.
-export const SKILL_INSIGHT_PER_TECHNIQUE_INSIGHT = 0.6
+export const SKILL_INSIGHT_PER_TECHNIQUE_MASTERY = 0.6
 
-export function getSkillInsightReward(reward: Pick<EnemyReward, 'techniqueInsight' | 'skillInsight'>): number {
+export function getSkillInsightReward(reward: Pick<EnemyReward, 'techniqueMastery' | 'skillInsight'>): number {
   if (reward.skillInsight !== undefined) {
     return reward.skillInsight
   }
 
-  return Math.round(reward.techniqueInsight * SKILL_INSIGHT_PER_TECHNIQUE_INSIGHT)
+  return Math.round(reward.techniqueMastery * SKILL_INSIGHT_PER_TECHNIQUE_MASTERY)
 }

@@ -349,6 +349,11 @@ export class GameManagerAutoFarmOps {
       // combat, so the heal-on-kill target is an explicit null (opt-out) -
       // never a dead enemy standing in as `player`.
       this.deps.battleLoot.processDefeatedEnemies(killedEntities, null, stage)
+
+      // P7-M3 - the idle channel has no victory terminal; mastery
+      // settles per cycle here instead. Both callers (tickAutoFarm,
+      // settleAutoFarmOffline) inherit per-cycle delivery.
+      this.deps.battleLoot.settleTechniqueMastery()
     } finally {
       // Restore the default so a real battle started later in the same tick
       // is not silently farmed at idle rates.

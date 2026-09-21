@@ -53,17 +53,17 @@ export function getArtifactExpRequired(level: number): number {
 }
 
 /**
- * `base = max(1, floor(techniqueInsight × 0.25))`, elite ×2, boss ×5
- * (doc §5.2). Hệ số 0.25 (giảm từ 0.5, balance 2026-08-28) cố ý kéo dài
- * thời gian luyện pháp bảo: artifact phải CHỦ ĐỘNG farm mới theo kịp
- * trần nhân vật, không mặc định luôn dính trần. Không yêu cầu artifact
- * kết liễu hoặc đã gây damage; hàm này chỉ đọc reward đã resolve sẵn
- * trên `enemy` (elite/boss variant đã ghi đè `rewards` lúc spawn, xem
- * applyEnemyTags (tinh_anh tag)/createBossVariant), không tự phân biệt tier theo
- * field khác.
+ * `base = max(1, floor(techniqueMastery x 0.25))`, elite x2, boss x5
+ * (doc sec. 5.2). He so 0.25 (giam tu 0.5, balance 2026-08-28) co y keo dai
+ * thoi gian luyen phap bao: artifact phai CHU DONG farm moi theo kip
+ * tran nhan vat, khong mac dinh luon dinh tran. Khong yeu cau artifact
+ * ket lieu hoac da gay damage; ham nay chi doc reward da resolve san
+ * tren `enemy` (elite/boss variant da ghi de `rewards` luc spawn, xem
+ * applyEnemyTags (tinh_anh tag)/createBossVariant), khong tu phan biet tier theo
+ * field khac.
  */
 export function getArtifactExperienceReward(enemy: Pick<Enemy, 'rewards' | 'isElite' | 'isBoss'>): number {
-  const base = Math.max(1, Math.floor(enemy.rewards.techniqueInsight * 0.25))
+  const base = Math.max(1, Math.floor(enemy.rewards.techniqueMastery * 0.25))
 
   if (enemy.isBoss) {
     return base * 5

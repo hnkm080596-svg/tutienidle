@@ -546,9 +546,10 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       }
     },
     onNewCharacter: () => {
-      // Nhân vật mới: học sẵn tâm pháp + skill + grant khởi đầu.
-      gameManager.realmAdvanceOps.learnTechnique('tu_linh_quyet')
-      gameManager.realmAdvanceOps.equipTechnique('tu_linh_quyet')
+      // Nhan vat moi: hoc san skill + grant khoi dau.
+      // P7-M3 - KHONG con tam phap khoi dau: Pham Nhan khong giu
+      // canonical technique (tu_linh_quyet da retire); Way cap tai
+      // initiation ritual.
       gameManager.progressionOps.learnSkill('tram')
       gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
       // Phap Tu Reimagined Task 2 — mortal-path actives.

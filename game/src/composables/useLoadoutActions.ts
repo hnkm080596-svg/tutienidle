@@ -26,8 +26,8 @@ export function useLoadoutActions() {
   return {
     // Tâm Pháp KHÔNG còn equip/unequip thủ công (PLAN HOÀN CHỈNH mục
     // 5/9 rework, 2026-08-20) — hoàn toàn theo nghề nghiệp đã chọn qua
-    // GameManager.chooseCultivationPath(), gọi thẳng equipTechnique()/
-    // GameManager không qua đây nữa. Đã gỡ 2 wrapper action tương ứng.
+    // GameManager.chooseCultivationPath() (P7-M3: canonical grant, 0-or-1
+    // holder). Da go 2 wrapper action tuong ung.
 
     unequipSkill: (skillId: string) => withBump(gameManager.progressionOps.unequipSkill(skillId)),
 

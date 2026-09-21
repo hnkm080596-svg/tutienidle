@@ -426,7 +426,7 @@ export class GameManager {
   // Public: callers use gameManager.catalogOps.* directly (no facade).
   readonly catalogOps: GameManagerCatalogOps
 
-  // Reward issuing (player RewardReceiver, technique insight, giveReward).
+  // Reward issuing (player RewardReceiver, skill insight, giveReward).
   // Public: callers use gameManager.rewardOps.* directly (no facade).
   readonly rewardOps: GameManagerRewardOps
 
@@ -434,7 +434,7 @@ export class GameManager {
   // Public: callers use gameManager.progressionOps.* directly (no facade).
   readonly progressionOps: GameManagerProgressionOps
 
-  // Realm advance: technique learn/equip, cultivation path, artifact,
+  // Realm advance: canonical technique grant, cultivation path, artifact,
   // realm passives, body refinement, breakthrough gate.
   // Public: callers use gameManager.realmAdvanceOps.* directly (no facade).
   readonly realmAdvanceOps: GameManagerRealmAdvanceOps
@@ -535,7 +535,6 @@ export class GameManager {
 
     this.rewardOps = new GameManagerRewardOps({
       rewardSystem: this.rewardSystem,
-      techniqueManager: this.techniqueManager,
       materialRegistry: this.materialRegistry,
       materialBag: this.materialBag,
       notifications: this.notifications,
@@ -618,9 +617,7 @@ export class GameManager {
       equipmentSystem: this.equipmentSystem,
       affixRegistry: this.affixRegistry,
       zoneRegistry: this.zoneRegistry,
-      techniqueManager: this.techniqueManager,
       techniqueSystem: this.techniqueSystem,
-      techniqueTemplates: this.techniqueTemplates,
       enemySystem: this.enemySystem,
       rewardSystem: this.rewardSystem,
       stageManager: this.stageManager,

@@ -33,7 +33,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       criticalDamage: 1.5,
       armor: 0,
     },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 
   function stage(overrides: Partial<Stage> = {}): Stage {

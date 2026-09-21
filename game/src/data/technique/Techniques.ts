@@ -1,28 +1,20 @@
 import type { Technique } from '../../core/technique/Technique'
 
-// Pháp Tu Redesign (magicpath, 2026-08-18) — Tâm Pháp KHÔNG còn cộng
-// chỉ số dưới bất kỳ hình thức nào (đã xoá modifiers/mechanic/
-// breakthroughEffect khỏi Technique.ts, cùng lúc cultivationRate bị
-// xoá HOÀN TOÀN khỏi Stats — tốc độ tu luyện giờ cố định
-// BASE_CULTIVATION_PER_SECOND, xem core/realm/realmSystem.ts). Tâm
-// Pháp giờ THUẦN là lớp giới thiệu/hướng dẫn (description hoa mỹ giải
-// thích path chơi ra sao), tự động trang bị khi chọn path — mọi chỉ
-// số thật chuyển sang Node Tree (core/progression/) khi nội dung
-// "class chính thức" được xây (xem [[tienhiep-phap-tu-magicpath]]).
+// P7-M3 - Canonical Technique catalog. Exactly ONE canonical technique
+// per committed Way (D12), granted at initiation (no learn-by-drop, no
+// generic list/equip). Ids are semantic English on the M1 spine. Each
+// entry is a grant template: grade 1 / rank 0 / mastery 0 / quality
+// 'hoang'. Progression semantics live in core/technique/
+// TechniqueProgression.ts; live instances in TechniqueManager.
+//
+// Grade effects: gradeEffects[grade][rankBand]. The spell Truc Co
+// variant (retired dai_ngu_hanh_quyet_truc_co) is FOLDED into
+// five_elements_art.gradeEffects[2] - earned via the grade-advance
+// transaction, not a technique swap.
 export const TECHNIQUES: Technique[] = [
-  // Pháp Tu Redesign (magicpath, 2026-08-18) — THAY hẳn 5 tâm pháp
-  // Ngũ Hành riêng (xich_viem/thanh_dang/huyen_bang/huyen_thiet/
-  // hau_tho, đã xoá) bằng 1 tâm pháp DUY NHẤT, tự động trang bị khi
-  // chọn path "Pháp Tu" (xem CultivationPathKit.ts). KHÔNG khai
-  // `element` (Pháp Tu giờ multi-element qua Element Loadout, không
-  // còn 1 hành cố định) — identity/skill của TỪNG hành giờ đến từ
-  // Node Tree khi unlock hành đó (xem data/progression/PhapTuNodes.ts),
-  // technique này chỉ còn vai trò flavor + tài nguyên chung (Rage bar
-  // "Pháp Lực", MP bar "Linh Lực").
+  // spell_pathway - carries the folded Truc Co table at grade 2.
   {
-    id: 'dai_ngu_hanh_chan_quyet',
-
-    insightMultiplier: 3,
+    id: 'five_elements_art',
 
     name: 'Tiểu Ngũ Hành Quyết',
 
@@ -33,49 +25,36 @@ export const TECHNIQUES: Technique[] = [
 
     resourceLabel: 'Pháp Lực',
 
-    // PLAN HOÀN CHỈNH mục 5.2 — Đại Ngũ Hành: %Linh lực tối đa
-    // 3→4→5→10, %Hồi Linh (Increased manaRegenPerTurn, KHÔNG phải %
-    // maxMp — xem Technique.ts's TechniqueTierEffect) 0.5→0.75→1.5→2,
-    // giá trị Đại Thành đã chốt lại với user (doc gốc ghi nhầm 0.1%).
-    tierEffects: {
-      so_nhap: { maxMpIncreasePercent: 0.03, manaRegenIncreasePercent: 0.005, hpRegenFlat: 0.5, mpRegenFlat: 0.5 },
-      tieu_thanh: { maxMpIncreasePercent: 0.04, manaRegenIncreasePercent: 0.0075, hpRegenFlat: 0.75, mpRegenFlat: 0.75 },
-      dai_thanh: { maxMpIncreasePercent: 0.05, manaRegenIncreasePercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
-      vien_man: { maxMpIncreasePercent: 0.1, manaRegenIncreasePercent: 0.02, hpRegenFlat: 2, mpRegenFlat: 2 },
+    // Grade 1 = old dai_ngu_hanh_chan_quyet table (PLAN HOAN CHINH
+    // muc 5.2 - %Linh luc toi da 3->4->5->10, %Hoi Linh Increased
+    // manaRegenPerTurn 0.5->0.75->1.5->2).
+    // Grade 2 = folded dai_ngu_hanh_quyet_truc_co table (Dai Ngu Hanh
+    // Quyet - ban Truc Co ke thua, %Linh luc 5->7->10->15, %Hoi Linh
+    // 1->1.5->2.5->4).
+    gradeEffects: {
+      1: {
+        so_nhap: { maxMpIncreasePercent: 0.03, manaRegenIncreasePercent: 0.005, hpRegenFlat: 0.5, mpRegenFlat: 0.5 },
+        tieu_thanh: { maxMpIncreasePercent: 0.04, manaRegenIncreasePercent: 0.0075, hpRegenFlat: 0.75, mpRegenFlat: 0.75 },
+        dai_thanh: { maxMpIncreasePercent: 0.05, manaRegenIncreasePercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
+        vien_man: { maxMpIncreasePercent: 0.1, manaRegenIncreasePercent: 0.02, hpRegenFlat: 2, mpRegenFlat: 2 },
+      },
+      2: {
+        so_nhap: { maxMpIncreasePercent: 0.05, manaRegenIncreasePercent: 0.01, hpRegenFlat: 1, mpRegenFlat: 1 },
+        tieu_thanh: { maxMpIncreasePercent: 0.07, manaRegenIncreasePercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
+        dai_thanh: { maxMpIncreasePercent: 0.1, manaRegenIncreasePercent: 0.025, hpRegenFlat: 2.5, mpRegenFlat: 2.5 },
+        vien_man: { maxMpIncreasePercent: 0.15, manaRegenIncreasePercent: 0.04, hpRegenFlat: 4, mpRegenFlat: 4 },
+      },
     },
 
-    // Task 3 (D16): the fixed +2 range combat modifier retired with the
-    // attackRange stat — reach is now action targeting, not a character
-    // stat, so this technique grants no combatModifiers.
-
-    unlocked: false,
-
-    equipped: false,
+    grade: 1,
+    rank: 0,
+    mastery: 0,
+    quality: 'hoang',
   },
 
+  // hidden_spell_pathway (Phap Tu An) - Ngo Dao signature.
   {
-    id: 'dai_ngu_hanh_quyet_truc_co',
-    insightMultiplier: 4,
-    name: 'Đại Ngũ Hành Quyết',
-    icon: '/assets/techniques/dai_ngu_hanh_chan_quyet.png',
-    description: 'Bản Trúc Cơ kế thừa Tiểu Ngũ Hành Quyết, dung nạp linh lực sâu hơn và điều động ngũ hành mạnh hơn.',
-    requiredRealmId: 'foundation_establishment',
-    resourceLabel: 'Pháp Lực',
-    tierEffects: {
-      so_nhap: { maxMpIncreasePercent: 0.05, manaRegenIncreasePercent: 0.01, hpRegenFlat: 1, mpRegenFlat: 1 },
-      tieu_thanh: { maxMpIncreasePercent: 0.07, manaRegenIncreasePercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
-      dai_thanh: { maxMpIncreasePercent: 0.1, manaRegenIncreasePercent: 0.025, hpRegenFlat: 2.5, mpRegenFlat: 2.5 },
-      vien_man: { maxMpIncreasePercent: 0.15, manaRegenIncreasePercent: 0.04, hpRegenFlat: 4, mpRegenFlat: 4 },
-    },
-    unlocked: false,
-    equipped: false,
-  },
-
-  // Phap Tu An (Task 7, phap-tu-reimagined) — tâm pháp của path ẩn.
-  {
-    id: 'ngo_dao_chan_quyet',
-
-    insightMultiplier: 3,
+    id: 'dao_insight_art',
 
     name: 'Ngộ Đạo Chân Quyết',
 
@@ -86,28 +65,24 @@ export const TECHNIQUES: Technique[] = [
 
     resourceLabel: 'Pháp Lực',
 
-    tierEffects: {
-      so_nhap: { maxMpIncreasePercent: 0.03, manaRegenIncreasePercent: 0.005, hpRegenFlat: 0.5, mpRegenFlat: 0.5 },
-      tieu_thanh: { maxMpIncreasePercent: 0.04, manaRegenIncreasePercent: 0.0075, hpRegenFlat: 0.75, mpRegenFlat: 0.75 },
-      dai_thanh: { maxMpIncreasePercent: 0.05, manaRegenIncreasePercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
-      vien_man: { maxMpIncreasePercent: 0.1, manaRegenIncreasePercent: 0.02, hpRegenFlat: 2, mpRegenFlat: 2 },
+    gradeEffects: {
+      1: {
+        so_nhap: { maxMpIncreasePercent: 0.03, manaRegenIncreasePercent: 0.005, hpRegenFlat: 0.5, mpRegenFlat: 0.5 },
+        tieu_thanh: { maxMpIncreasePercent: 0.04, manaRegenIncreasePercent: 0.0075, hpRegenFlat: 0.75, mpRegenFlat: 0.75 },
+        dai_thanh: { maxMpIncreasePercent: 0.05, manaRegenIncreasePercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
+        vien_man: { maxMpIncreasePercent: 0.1, manaRegenIncreasePercent: 0.02, hpRegenFlat: 2, mpRegenFlat: 2 },
+      },
     },
 
-    unlocked: false,
-
-    equipped: false,
+    grade: 1,
+    rank: 0,
+    mastery: 0,
+    quality: 'hoang',
   },
 
-  // Kiếm Tu (2026-08-15) — nhánh SONG SONG với Ngũ Hành Pháp Tu (Phàm
-  // Nhân -> Pháp Tu -> Ngũ Hành / -> Kiếm Tu / -> Thể Tu sau này), tái
-  // dùng NGUYÊN VẸN cùng cơ chế "chọn 1 lần, cấp trọn kit" (xem
-  // CultivationPathKit.ts) thay vì xây hệ thống chọn nghề riêng —
-  // KHÔNG phải 1 trong 5 hành, chỉ đứng chung 1 danh sách lựa chọn cho
-  // đơn giản.
+  // sword_pathway - Ngu Kiem signature (old ngu_kiem table).
   {
-    id: 'ngu_kiem',
-
-    insightMultiplier: 3,
+    id: 'sword_control_art',
 
     name: 'Ngự Kiếm Tâm Kinh',
 
@@ -120,49 +95,50 @@ export const TECHNIQUES: Technique[] = [
 
     element: 'metal',
 
-    // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — kiếm tu thiên hồi máu.
-    tierEffects: {
-      so_nhap: { hpRegenFlat: 1.5, mpRegenFlat: 0.25 },
-      tieu_thanh: { hpRegenFlat: 2, mpRegenFlat: 0.5 },
-      dai_thanh: { hpRegenFlat: 3, mpRegenFlat: 1 },
-      vien_man: { hpRegenFlat: 4, mpRegenFlat: 1.5 },
+    gradeEffects: {
+      1: {
+        so_nhap: { hpRegenFlat: 1.5, mpRegenFlat: 0.25 },
+        tieu_thanh: { hpRegenFlat: 2, mpRegenFlat: 0.5 },
+        dai_thanh: { hpRegenFlat: 3, mpRegenFlat: 1 },
+        vien_man: { hpRegenFlat: 4, mpRegenFlat: 1.5 },
+      },
     },
 
-    unlocked: false,
-
-    equipped: false,
+    grade: 1,
+    rank: 0,
+    mastery: 0,
+    quality: 'hoang',
   },
 
+  // hidden_sword_pathway - Ngu Kiem Dao signature (old van_kiem_quyet).
   {
-    id: 'thai_hu_kiem_quyet',
+    id: 'myriad_swords_art',
 
-    name: 'Thái Hư Kiếm Quyết',
+    name: 'Vạn Kiếm Quyết',
 
-    icon: '/assets/techniques/tai_hu_sword.png',
+    icon: '/assets/techniques/van_kiem_quyet.png',
 
-    description: 'Một bộ kiếm quyết lấy hư vô làm ý, kiếm thế vô cùng vô tận.',
+    description:
+      'Tâm pháp Ngự Kiếm Đạo — vạn kiếm quy tông, mỗi phi kiếm tự quyết sát chiêu.',
 
-    combatTypeId: 'crit',
-
-    requiredRealmId: 'qi_refining',
-
-    requiredRealmLevel: 3,
-
-    // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — kiếm tu thiên hồi máu.
-    tierEffects: {
-      so_nhap: { hpRegenFlat: 1, mpRegenFlat: 0.5 },
-      tieu_thanh: { hpRegenFlat: 1.5, mpRegenFlat: 0.75 },
-      dai_thanh: { hpRegenFlat: 2, mpRegenFlat: 1.5 },
-      vien_man: { hpRegenFlat: 3, mpRegenFlat: 2 },
+    gradeEffects: {
+      1: {
+        so_nhap: { hpRegenFlat: 1, mpRegenFlat: 1 },
+        tieu_thanh: { hpRegenFlat: 2, mpRegenFlat: 2 },
+        dai_thanh: { hpRegenFlat: 3, mpRegenFlat: 3 },
+        vien_man: { hpRegenFlat: 4, mpRegenFlat: 4 },
+      },
     },
 
-    unlocked: false,
-
-    equipped: false,
+    grade: 1,
+    rank: 0,
+    mastery: 0,
+    quality: 'hoang',
   },
 
+  // body_pathway - old kim_cang_bat_hoai_the table.
   {
-    id: 'kim_cang_bat_hoai_the',
+    id: 'diamond_body_art',
 
     name: 'Kim Cang Bất Hoại Thể',
 
@@ -172,25 +148,24 @@ export const TECHNIQUES: Technique[] = [
 
     combatTypeId: 'def',
 
-    // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — thể tu hồi máu mạnh.
-    tierEffects: {
-      so_nhap: { hpRegenFlat: 2, mpRegenFlat: 0.25 },
-      tieu_thanh: { hpRegenFlat: 3, mpRegenFlat: 0.5 },
-      dai_thanh: { hpRegenFlat: 4, mpRegenFlat: 0.75 },
-      vien_man: { hpRegenFlat: 6, mpRegenFlat: 1 },
+    gradeEffects: {
+      1: {
+        so_nhap: { hpRegenFlat: 2, mpRegenFlat: 0.25 },
+        tieu_thanh: { hpRegenFlat: 3, mpRegenFlat: 0.5 },
+        dai_thanh: { hpRegenFlat: 4, mpRegenFlat: 0.75 },
+        vien_man: { hpRegenFlat: 6, mpRegenFlat: 1 },
+      },
     },
 
-    unlocked: false,
-
-    equipped: false,
+    grade: 1,
+    rank: 0,
+    mastery: 0,
+    quality: 'hoang',
   },
 
-  // The Tu Reimagined (spec 2026-09-15, T1/T6) — ung_the signature
-  // technique, granted by the Initiation Ritual when huy_quyen is Lv3.
-  // Defensive/reactive body art: same def typing as kim_cang, leaning
-  // on regen so the hidden path survives long enough to proc.
+  // hidden_body_pathway - old ung_the_than_quyet table.
   {
-    id: 'ung_the_than_quyet',
+    id: 'responsive_body_art',
 
     name: 'Ứng Thế Thần Quyết',
 
@@ -200,69 +175,18 @@ export const TECHNIQUES: Technique[] = [
 
     combatTypeId: 'def',
 
-    tierEffects: {
-      so_nhap: { hpRegenFlat: 1.5, mpRegenFlat: 0.5 },
-      tieu_thanh: { hpRegenFlat: 2.5, mpRegenFlat: 0.75 },
-      dai_thanh: { hpRegenFlat: 3.5, mpRegenFlat: 1 },
-      vien_man: { hpRegenFlat: 5, mpRegenFlat: 1.5 },
+    gradeEffects: {
+      1: {
+        so_nhap: { hpRegenFlat: 1.5, mpRegenFlat: 0.5 },
+        tieu_thanh: { hpRegenFlat: 2.5, mpRegenFlat: 0.75 },
+        dai_thanh: { hpRegenFlat: 3.5, mpRegenFlat: 1 },
+        vien_man: { hpRegenFlat: 5, mpRegenFlat: 1.5 },
+      },
     },
 
-    unlocked: false,
-
-    equipped: false,
-  },
-
-  {
-    id: 'tu_linh_quyet',
-
-    name: 'Tụ Linh Quyết',
-
-    icon: '/assets/techniques/spirit_gathering_scripture.png',
-
-    description:
-      'Công pháp tu luyện căn bản nhất, giúp người mới nhập môn cảm ngộ linh khí trời đất.',
-
-    // PLAN HOÀN CHỈNH mục 5.1 — Tụ Linh Quyết: Công/Phòng phẳng
-    // +15/+25/+35/+70 theo đúng 4 tier, giữ NGUYÊN giá trị doc yêu cầu
-    // để tiếp tục balance sau (không tự ý làm tròn/đổi).
-    tierEffects: {
-      so_nhap: { mightFlat: 15, defenseFlat: 15, hpRegenFlat: 1, mpRegenFlat: 0.5 },
-      tieu_thanh: { mightFlat: 25, defenseFlat: 25, hpRegenFlat: 1.5, mpRegenFlat: 0.75 },
-      dai_thanh: { mightFlat: 35, defenseFlat: 35, hpRegenFlat: 2, mpRegenFlat: 1.5 },
-      vien_man: { mightFlat: 70, defenseFlat: 70, hpRegenFlat: 3, mpRegenFlat: 2 },
-    },
-
-    unlocked: false,
-
-    equipped: false,
-  },
-
-  // Van Kiem Quyet — Kiem Tu Reimagined (spec 2026-09-15 §7 kept-list):
-  // REPURPOSED as the Ngu Kiem Dao signature technique — learned and
-  // equipped by the ngu way's ritual kit, NOT lootable. Tier
-  // effect numbers kept from the orphaned version (content-pass owns
-  // the real tuning); the old breakthroughEffect block died earlier.
-  {
-    id: 'van_kiem_quyet',
-
-    name: 'Vạn Kiếm Quyết',
-
-    icon: '/assets/techniques/van_kiem_quyet.png',
-
-    description:
-      'Tâm pháp Ngự Kiếm Đạo — vạn kiếm quy tông, mỗi phi kiếm tự quyết sát chiêu.',
-
-    // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — tâm pháp Elite hồi
-    // đều cả hai chỉ số.
-    tierEffects: {
-      so_nhap: { hpRegenFlat: 1, mpRegenFlat: 1 },
-      tieu_thanh: { hpRegenFlat: 2, mpRegenFlat: 2 },
-      dai_thanh: { hpRegenFlat: 3, mpRegenFlat: 3 },
-      vien_man: { hpRegenFlat: 4, mpRegenFlat: 4 },
-    },
-
-    unlocked: false,
-
-    equipped: false,
+    grade: 1,
+    rank: 0,
+    mastery: 0,
+    quality: 'hoang',
   },
 ]

@@ -3,9 +3,9 @@
 // data, không chỉ những cái đã học. Đã học → dùng lại TechniqueSlotCard
 // (Phase 6, equip/unequip y hệt Động Phủ/LoadoutManager). Chưa học →
 // hiện tên/mô tả (sẵn trên template tĩnh, KHÔNG lộ stat/modifiers),
-// làm mờ, không click được — cơ chế HỌC (qua item drop, xem
-// GameManager.grantItemDrops()'s case 'technique') đã hoạt động sẵn,
-// panel này chỉ là UI browse, không thêm cơ chế mới.
+// lam mo, khong click duoc - P7-M3: canonical techniques chi den tu
+// Way tai initiation (learn-by-drop retired), panel nay chi la UI
+// browse, khong them co che moi.
 import { computed } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import TechniqueSlotCard from '../loadout-sections/TechniqueSlotCard.vue'
@@ -25,7 +25,7 @@ const techniqueRows = computed(() => {
     id: technique.id,
     name: technique.name,
     description: technique.description,
-    owned: gameManager.techniqueManager.has(technique.id),
+    owned: gameManager.techniqueManager.getActive()?.id === technique.id,
   }))
 })
 

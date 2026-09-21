@@ -67,7 +67,6 @@ export const CULTIVATION_PATH_WAY_IDS = {
 } as const satisfies Record<CultivationPathId, readonly CultivationWayId[]>
 
 export interface CultivationPathRealmReward {
-  techniqueId?: string
   artifactId?: ArtifactId
   // P7-M2 - realm-entry passive grant, delivered by syncRealmPassive
   // (NOT by grantCultivationPathRealmReward). Ways compose their table
@@ -227,9 +226,9 @@ export interface PathWayDefinition {
   // one (identity + UI color).
   element?: ElementType
 
-  // Tam Phap merge (2026-08-15) — ONE technique, auto-learned+equipped
-  // by GameManagerRealmAdvanceOps.chooseCultivationPath(), OVERWRITING
-  // whatever is equipped (including the starter 'tu_linh_quyet').
+  // P7-M3 - the way's ONE canonical technique, granted by
+  // GameManagerRealmAdvanceOps.chooseCultivationPath() into the 0-or-1
+  // holder after the mortal -> qi_refining promotion.
   techniqueId: string
 
   // Base stats of the cultivation way. Aggregated from data on each

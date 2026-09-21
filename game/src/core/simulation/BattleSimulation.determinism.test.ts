@@ -14,7 +14,7 @@ import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 const WEAK_ENEMY = defineEnemy({
   id: 'simdet_weak', name: 'Weak', level: 1, realmId: 'mortal', lane: 'ground',
   statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 const VARIANCE_ENEMY = defineEnemy({
@@ -23,7 +23,7 @@ const VARIANCE_ENEMY = defineEnemy({
     maxHp: 500, might: 5, attackSpeed: 1,
     criticalRate: 0, criticalDamage: 1.5, armor: 0, evasionRate: 0.2,
   },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 function ngoDaoBuild(): SimBuildSnapshot {

@@ -1,4 +1,3 @@
-import type { Technique } from '../technique/Technique'
 import type { ElementType } from '../element/ElementType'
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import type { OrbId } from '../kiem-tu/KiemTuState'
@@ -349,23 +348,20 @@ export function applyPathChoice(
   return { ok: true }
 }
 
-export interface CultivationPathRewardDeps {
-  getEquippedTechnique: () => Technique | undefined
-  getTechnique: (techniqueId: string) => Technique | undefined
-  learnTechnique: (techniqueId: string) => boolean
-  equipTechnique: (techniqueId: string) => boolean
-}
-
 export function getCultivationPathStatModifiers(player: PlayerData) {
   const way = getActiveWayDefinition(player)
 
   return [...(way?.statModifiers ?? [])]
 }
 
+// P7-M3 - realm rewards are artifact-only delivery (the canonical
+// technique is granted once at initiation; the retired spell Truc Co
+// technique swap folded into five_elements_art.gradeEffects[2]). The
+// passiveSkillId field on the record is delivered by syncRealmPassive,
+// NOT here.
 export function grantCultivationPathRealmReward(
   player: PlayerData,
   realmId: string,
-  deps: CultivationPathRewardDeps,
 ): boolean {
   if (!player.cultivationPath) {
     return false
@@ -375,20 +371,6 @@ export function grantCultivationPathRealmReward(
 
   if (!reward) {
     return false
-  }
-
-  if (reward.techniqueId) {
-    const inheritedInsight = deps.getEquippedTechnique()?.insight ?? 0
-
-    deps.learnTechnique(reward.techniqueId)
-
-    const nextTechnique = deps.getTechnique(reward.techniqueId)
-
-    if (nextTechnique) {
-      nextTechnique.insight = Math.max(nextTechnique.insight ?? 0, inheritedInsight)
-    }
-
-    deps.equipTechnique(reward.techniqueId)
   }
 
   if (reward.artifactId && !player.artifact) {

@@ -7,7 +7,7 @@ import { defineEnemy } from '../enemy/Enemy'
 const DUMMY = defineEnemy({
   id: 'adv_dummy', name: 'Adv Dummy', level: 1, realmId: 'mortal', lane: 'ground',
   statsInput: { maxHp: 10, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-  rewards: { techniqueInsight: 0, spiritStone: 5 },
+  rewards: { techniqueMastery: 0, spiritStone: 5 },
 })
 const STAGE = {
   id: 'adv_stage', name: 'Adv Stage', description: '', floor: 1,
@@ -113,6 +113,7 @@ function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
       beginBattle: vi.fn(),
       setChannel: vi.fn(),
       setSession: vi.fn(),
+      settleTechniqueMastery: vi.fn(),
       processDefeatedEnemies,
     },
     stageWaves: { pickEnemyForTurnSpawn: () => null },

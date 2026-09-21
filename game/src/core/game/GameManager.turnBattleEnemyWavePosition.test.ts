@@ -42,7 +42,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
 
     const stage: Stage = {

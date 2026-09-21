@@ -49,7 +49,7 @@ function enemyDefinition(): EnemyDefinition {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: MINIMAL_STATS_INPUT,
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   }
 }
 

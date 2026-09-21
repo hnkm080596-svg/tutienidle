@@ -40,7 +40,7 @@ function mountRewardList(summary: BattleRewardSummary): MountedRewardList {
 describe('RewardList', () => {
   it('renders 5 li elements when all 5 reward fields are populated', () => {
     const summary: BattleRewardSummary = {
-      techniqueInsight: 1234,
+      techniqueMastery: 1234,
       skillInsight: 567,
       artifactInsight: 89,
       spiritStone: 42,
@@ -53,7 +53,7 @@ describe('RewardList', () => {
 
   it('renders 0 li elements when summary is empty', () => {
     const summary: BattleRewardSummary = {
-      techniqueInsight: 0,
+      techniqueMastery: 0,
       skillInsight: 0,
       artifactInsight: 0,
       spiritStone: 0,
@@ -66,7 +66,7 @@ describe('RewardList', () => {
 
   it('renders 1 li when only spiritStone > 0', () => {
     const summary: BattleRewardSummary = {
-      techniqueInsight: 0,
+      techniqueMastery: 0,
       skillInsight: 0,
       artifactInsight: 0,
       spiritStone: 99,
@@ -81,7 +81,7 @@ describe('RewardList', () => {
 
   it('skips reward lines with value 0', () => {
     const summary: BattleRewardSummary = {
-      techniqueInsight: 0,
+      techniqueMastery: 0,
       skillInsight: 500,
       artifactInsight: 0,
       spiritStone: 0,
@@ -96,7 +96,7 @@ describe('RewardList', () => {
 
   it('renders multiple items correctly', () => {
     const summary: BattleRewardSummary = {
-      techniqueInsight: 0,
+      techniqueMastery: 0,
       skillInsight: 0,
       artifactInsight: 0,
       spiritStone: 0,

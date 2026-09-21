@@ -423,8 +423,7 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     expect(player.swordPath).toEqual(freshSwordPathState())
     // Free commit — nothing was deducted, so there is no waive record.
     expect(player.skillInsight).toBe(insightBefore)
-    expect(gameManager.techniqueManager.has('van_kiem_quyet')).toBe(true)
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('van_kiem_quyet')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('myriad_swords_art')
 
     // One-way: the way is written AT the ritual — there is no node to
     // repurchase and no re-choice; both the authority and the ritual
@@ -435,13 +434,21 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     expect(player.cultivationWay).toBe('hidden_sword_pathway')
   })
 
-  it('the ritual still commits when van_kiem_quyet is already learned (learn is idempotent)', () => {
+  it('a non-empty technique holder rejects the ritual atomically - path/way/realm/state unchanged (P7-M3)', () => {
+    // A mortal holding ANY technique is corrupt progression (way-less
+    // players hold none). The ritual must fail BEFORE applyPathChoice
+    // writes, leaving every committed slice untouched.
     const { gameManager, player } = mortalAtRitual(3)
-    expect(gameManager.realmAdvanceOps.learnTechnique('van_kiem_quyet')).toBe(true)
+    gameManager.techniqueManager.setActive(
+      structuredClone(TECHNIQUES.find(technique => technique.id === 'myriad_swords_art')!),
+    )
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', player)).toBe(true)
-    expect(player.cultivationWay).toBe('hidden_sword_pathway')
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('van_kiem_quyet')
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', player)).toBe(false)
+    expect(player.cultivationPath).toBeUndefined()
+    expect(player.cultivationWay).toBeUndefined()
+    expect(player.swordPath).toBeUndefined()
+    expect(player.realmId).toBe('mortal')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('myriad_swords_art')
   })
 
   it('chooseCultivationPath(sword, ngu) fails atomically when the signature technique template is missing — nothing committed', () => {
@@ -452,7 +459,7 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     gameManager.setCombatClockSource(new ManualClockSource())
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(
-      TECHNIQUES.filter(technique => technique.id !== 'van_kiem_quyet'),
+      TECHNIQUES.filter(technique => technique.id !== 'myriad_swords_art'),
     )
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
     const player = createDefaultPlayer()

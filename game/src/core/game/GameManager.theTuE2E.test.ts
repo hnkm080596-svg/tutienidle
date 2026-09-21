@@ -41,7 +41,7 @@ function makeDummy(id: string, statsInput: Partial<typeof TANKY_DUMMY> = {}) {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: { ...TANKY_DUMMY, ...statsInput },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -168,9 +168,8 @@ describe('initiation ritual (T1/T6)', () => {
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)).toBe(true)
     expect(player.cultivationPath).toBe('body')
     expect(player.realmId).toBe('qi_refining')
-    const technique = gameManager.techniqueManager.get('kim_cang_bat_hoai_the')
-    expect(technique?.unlocked).toBe(true)
-    expect(technique?.equipped).toBe(true)
+    const technique = gameManager.techniqueManager.getActive()
+    expect(technique?.id).toBe('diamond_body_art')
   })
 
   it('hidden_body refused without huy_quyen Lv3; accepted once the mirror shows it (INV-1)', () => {
@@ -184,7 +183,7 @@ describe('initiation ritual (T1/T6)', () => {
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)).toBe(true)
     expect(player.cultivationPath).toBe('body')
     expect(player.cultivationWay).toBe('hidden_body_pathway')
-    expect(gameManager.techniqueManager.get('ung_the_than_quyet')?.equipped).toBe(true)
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('responsive_body_art')
   })
 })
 

@@ -24,6 +24,13 @@ const PRE_REWORK_VERSION = 61
 // the concrete boundary this mission cut over.
 const PRE_M2_VERSION = 68
 
+// P7-M3 (v70) - the version live on master immediately before the
+// canonical-technique cut moved Technique snapshots to
+// rank/mastery/grade/quality with the 0-or-1 way-matched holder. Same
+// "anything !== CURRENT" contract; the literal pins the concrete
+// boundary this mission cut over.
+const PRE_M3_VERSION = 69
+
 // vitest runs environment: 'node' — no real localStorage, so a minimal
 // in-memory polyfill is stubbed (same pattern as SaveSystem.test.ts).
 class MemoryStorage implements Storage {
@@ -115,6 +122,30 @@ describe('Phap Tu Reimagined save cutover', () => {
     localStorage.setItem(SAVE_KEY, raw)
 
     expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M2_VERSION, raw })
+  })
+
+  it('rejects a save stamped with the pre-M3 version (69) as incompatible', () => {
+    const player = createDefaultPlayer()
+    // Intentionally NOT GameSave: version 69 is outside the current literal
+    // type, so the payload is built as a raw record like preReworkSaveRaw().
+    const save: Record<string, unknown> = {
+      version: PRE_M3_VERSION,
+      player,
+      techniques: [],
+      skills: [],
+      materials: [],
+      equipment: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      equipmentSlots: [],
+    }
+    const raw = JSON.stringify(save)
+
+    localStorage.setItem(SAVE_KEY, raw)
+
+    expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M3_VERSION, raw })
   })
 
   it('loads a save stamped with the current version', () => {

@@ -9,7 +9,7 @@ import { useTooltip } from '@/composables/useTooltip'
 
 vi.mock('@/composables/useGameState', () => ({
   useGameManager: () => ({
-    techniqueManager: { getEquipped: () => undefined },
+    techniqueManager: { getActive: () => undefined },
   }),
   useStateVersion: () => ({ stateVersion: ref(0) }),
 }))

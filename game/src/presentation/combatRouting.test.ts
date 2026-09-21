@@ -68,7 +68,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     stage = stageFixture('cr_stage', enemy.id)
     gameManager.catalogOps.registerEnemyTemplates([enemy])

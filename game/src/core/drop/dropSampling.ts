@@ -26,7 +26,7 @@ export function seededRng(seed: number): () => number {
 
 export interface DropExpectation {
   spiritStonePerKill: number
-  techniqueInsightPerKill: number
+  techniqueMasteryPerKill: number
   itemsPerKill: number
 
   /** Fraction of kills where resolveDrops produced zero equipment items. */
@@ -54,7 +54,7 @@ export function sampleDropExpectation(
   const familyTable = familyDropTableFor(familyId)
 
   let spiritStone = 0
-  let techniqueInsight = 0
+  let techniqueMastery = 0
   let items = 0
   let killsWithoutEquipment = 0
 
@@ -62,7 +62,7 @@ export function sampleDropExpectation(
     const result = resolveDrops({ modifiers, channel: 'active', stageTable, familyTable, rng })
 
     spiritStone += result.spiritStone
-    techniqueInsight += result.techniqueInsight
+    techniqueMastery += result.techniqueMastery
     items += result.items.length
 
     const gotEquipment = result.items.some(
@@ -76,7 +76,7 @@ export function sampleDropExpectation(
 
   return {
     spiritStonePerKill: spiritStone / sampleSize,
-    techniqueInsightPerKill: techniqueInsight / sampleSize,
+    techniqueMasteryPerKill: techniqueMastery / sampleSize,
     itemsPerKill: items / sampleSize,
     noEquipmentRate: killsWithoutEquipment / sampleSize,
   }

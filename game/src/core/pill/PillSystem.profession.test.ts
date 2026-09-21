@@ -21,7 +21,7 @@ function _makeEnemyData(): Enemy {
     id: 'enemy_x',
     level: 1,
     realmId: 'mortal',
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
     lane: 'ground',
     name: 'Quái',
     type: 'enemy',

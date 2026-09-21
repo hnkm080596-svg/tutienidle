@@ -15,7 +15,7 @@ import type { PlayerData } from '../player/Player'
 const WEAK_ENEMY = defineEnemy({
   id: 'sim_weak_mob', name: 'Weak Mob', level: 1, realmId: 'mortal', lane: 'ground',
   statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 const STRONG_ENEMY = defineEnemy({
@@ -24,7 +24,7 @@ const STRONG_ENEMY = defineEnemy({
     maxHp: 1_000_000, might: 9_999, attackSpeed: 1,
     criticalRate: 0, criticalDamage: 1.5, armor: 0, evasionRate: 0,
   },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 const MULTI_STAGE: Stage = {

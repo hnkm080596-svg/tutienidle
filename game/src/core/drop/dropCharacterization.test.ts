@@ -31,7 +31,7 @@ describe('drop characterization - the numbers this design is judged on', () => {
 
       console.log(
         `${label.padEnd(34)} stone/kill=${result.spiritStonePerKill.toFixed(2)}` +
-          ` insight/kill=${result.techniqueInsightPerKill.toFixed(2)}` +
+          ` insight/kill=${result.techniqueMasteryPerKill.toFixed(2)}` +
           ` items/kill=${result.itemsPerKill.toFixed(2)}` +
           ` noEquipmentRate=${(result.noEquipmentRate * 100).toFixed(1)}%`,
       )

@@ -46,7 +46,7 @@ function createDummy() {
   return defineEnemy({
     id: 'playback_dummy', name: 'Playback Dummy', level: 1, realmId: 'mortal', lane: 'ground',
     statsInput: { ...ENEMY_STATS },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 

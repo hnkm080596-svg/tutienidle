@@ -73,7 +73,7 @@ function makeEnemy(id: string, statsInput: Parameters<typeof defineEnemy>[0]['st
     realmId: 'mortal',
     lane: 'ground',
     statsInput,
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 

@@ -97,12 +97,14 @@ describe('realm-entry passive — way-owned (P7-M2)', () => {
     expect(gameManager.skillManager.has(CANONICAL_REALM_PASSIVE_LADDER.qi_refining!)).toBe(false)
   })
 
-  it('equipTechnique alone grants no passive — the technique is no longer the passive owner', () => {
+  it('the technique grant alone delivers no passive — the technique is not the passive owner', () => {
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.realmAdvanceOps.learnTechnique('ngu_kiem')).toBe(true)
-    expect(gameManager.realmAdvanceOps.equipTechnique('ngu_kiem')).toBe(true)
+    player.realmId = 'qi_refining'
+    player.realmLevel = 1
+
+    expect(gameManager.realmAdvanceOps.grantCanonicalTechnique('myriad_swords_art', player)).toBe(true)
     expect(gameManager.skillManager.has('passive_kiem_tam_lanh_liet')).toBe(false)
   })
 
@@ -114,7 +116,7 @@ describe('realm-entry passive — way-owned (P7-M2)', () => {
     expect(player.cultivationPath).toBeUndefined()
     expect(player.cultivationWay).toBeUndefined()
     expect(player.realmId).toBe('mortal')
-    expect(gameManager.techniqueManager.get('kim_cang_bat_hoai_the')).toBeUndefined()
+    expect(gameManager.techniqueManager.getActive()).toBeUndefined()
     expect(gameManager.skillManager.has('passive_kim_cang_y_chi')).toBe(false)
   })
 
@@ -122,8 +124,8 @@ describe('realm-entry passive — way-owned (P7-M2)', () => {
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
 
-    gameManager.realmAdvanceOps.learnTechnique('ngu_kiem')
-    gameManager.realmAdvanceOps.equipTechnique('ngu_kiem')
+    player.realmId = 'qi_refining'
+    gameManager.realmAdvanceOps.grantCanonicalTechnique('myriad_swords_art', player)
 
     player.cultivationPath = 'sword'
     player.cultivationWay = 'sword_pathway'
@@ -132,7 +134,7 @@ describe('realm-entry passive — way-owned (P7-M2)', () => {
     // The composed record exists ({passiveSkillId} only) - the op
     // reports the way's reward, but technique/artifact stay untouched.
     expect(gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)).toBe(true)
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('ngu_kiem')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('myriad_swords_art')
     expect(player.artifact).toBeUndefined()
 
     // Delivery is syncRealmPassive's channel.

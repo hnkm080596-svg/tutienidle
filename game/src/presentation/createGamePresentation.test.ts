@@ -168,7 +168,7 @@ describe('createGamePresentation and runAdmitted', () => {
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage = stageFixture('admit_stage', enemy.id)
     gameManager.catalogOps.registerEnemyTemplates([enemy])
@@ -226,7 +226,7 @@ describe('createGamePresentation and runAdmitted', () => {
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage = stageFixture('ext_stage', enemy.id)
     gameManager.catalogOps.registerEnemyTemplates([enemy])
@@ -354,7 +354,7 @@ describe('createGamePresentation and runAdmitted', () => {
         maxHp: 500, might: 0, attackSpeed: 1, 
         criticalRate: 0, criticalDamage: 1.5, armor: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage = stageFixture('kind_stage', enemy.id)
     gameManager.catalogOps.registerEnemyTemplates([enemy])

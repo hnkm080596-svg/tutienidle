@@ -34,7 +34,7 @@ export interface QuestItemReward {
 }
 
 export interface QuestReward {
-  // Tái dùng RewardSystem hiện có (spiritStone/cultivation/techniqueInsight).
+  // Tai dung RewardSystem hien co (spiritStone/cultivation/skillInsight).
   reward?: Reward
 
   itemDrops?: QuestItemReward[]

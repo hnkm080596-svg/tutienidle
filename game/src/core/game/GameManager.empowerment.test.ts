@@ -24,7 +24,7 @@ function makeManager() {
   const bossTemplate = defineEnemy({
     id: 'empower_boss', name: 'Empower Boss', level: 1, realmId: 'mortal', lane: 'ground', isBoss: true,
     statsInput: { maxHp: 1_000_000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 
   const stage: Stage = {

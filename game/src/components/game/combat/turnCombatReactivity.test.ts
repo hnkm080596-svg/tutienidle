@@ -97,7 +97,7 @@ function createDummyEnemy() {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: { ...ENEMY_STATS_INPUT },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 

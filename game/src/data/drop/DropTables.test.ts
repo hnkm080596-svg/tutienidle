@@ -48,10 +48,10 @@ describe('drop tables - shape', () => {
   it('every stage table can pay currency', () => {
     for (const table of STAGE_DROP_TABLES) {
       expect(table.currency.spiritStone.min).toBeGreaterThan(0)
-      expect(table.currency.techniqueInsight.min).toBeGreaterThan(0)
+      expect(table.currency.techniqueMastery.min).toBeGreaterThan(0)
       expect(table.currency.spiritStone.max).toBeGreaterThanOrEqual(table.currency.spiritStone.min)
-      expect(table.currency.techniqueInsight.max).toBeGreaterThanOrEqual(
-        table.currency.techniqueInsight.min,
+      expect(table.currency.techniqueMastery.max).toBeGreaterThanOrEqual(
+        table.currency.techniqueMastery.min,
       )
     }
   })

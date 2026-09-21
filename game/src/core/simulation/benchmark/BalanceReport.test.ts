@@ -452,7 +452,7 @@ describe('baseline recipe seams (real battles)', () => {
             maxHp: 500, might: 0, attackSpeed: 1,
             criticalRate: 0, criticalDamage: 1.5, armor: 0,
           },
-          rewards: { techniqueInsight: 0, spiritStone: 0 },
+          rewards: { techniqueMastery: 0, spiritStone: 0 },
         }),
       },
     })
@@ -475,7 +475,7 @@ describe('baseline recipe seams (real battles)', () => {
               maxHp: 1, might: 0, attackSpeed: 1,
               criticalRate: 0, criticalDamage: 1.5, armor: 0,
             },
-            rewards: { techniqueInsight: 0, spiritStone: 0 },
+            rewards: { techniqueMastery: 0, spiritStone: 0 },
           }),
         },
       }),

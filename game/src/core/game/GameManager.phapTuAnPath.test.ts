@@ -109,7 +109,7 @@ describe('ngo_dao way — ritual offer gate', () => {
     expect(player.cultivationPath).toBeUndefined()
     expect(player.cultivationWay).toBeUndefined()
     expect(player.realmId).toBe('mortal')
-    expect(gameManager.techniqueManager.getEquipped()).toBeUndefined()
+    expect(gameManager.techniqueManager.getActive()).toBeUndefined()
   })
 
   it('post-ritual linh_bao casts never reopen the option (path already set)', () => {
@@ -229,7 +229,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
         armor: 0,
         evasionRate: 0, // deterministic hits — see actionPlayback harness note
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     return enemy
   }
@@ -361,7 +361,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
         maxHp: 1_000_000, might: 0, attackSpeed: 1,
         criticalRate: 0, criticalDamage: 1.5, armor: 0, evasionRate: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
   }
 

@@ -117,7 +117,7 @@ describe('chooseCultivationPath — body ritual', () => {
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)).toBe(true)
     expect(player.cultivationPath).toBe('body')
     expect(player.cultivationWay).toBe('body_pathway')
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('kim_cang_bat_hoai_the')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('diamond_body_art')
     expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
     expect(gameManager.skillManager.get('huy_quyen')!.equipped).toBe(false)
     expect(player.realmId).toBe('qi_refining')
@@ -130,7 +130,7 @@ describe('chooseCultivationPath — body ritual', () => {
     expect(player.cultivationPath).toBeUndefined()
     expect(player.cultivationWay).toBeUndefined()
     expect(player.realmId).toBe('mortal')
-    expect(gameManager.techniqueManager.getEquipped()).toBeUndefined()
+    expect(gameManager.techniqueManager.getActive()).toBeUndefined()
   })
 
   it('(body, ung_the) at Lv3 writes the base body id + ung_the way and strips mortal skills', () => {
@@ -139,7 +139,7 @@ describe('chooseCultivationPath — body ritual', () => {
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)).toBe(true)
     expect(player.cultivationPath).toBe('body')
     expect(player.cultivationWay).toBe('hidden_body_pathway')
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('ung_the_than_quyet')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('responsive_body_art')
     expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
     expect(gameManager.skillManager.get('huy_quyen')!.equipped).toBe(false)
     expect(player.realmId).toBe('qi_refining')

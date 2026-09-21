@@ -111,8 +111,7 @@ describe('sword ngu way — ritual offer gate (tram Lv3)', () => {
     // The way-agnostic slice is created at commit; van_kiem_quyet is
     // the way's signature technique (learned AND equipped).
     expect(player.swordPath).toEqual(freshSwordPathState())
-    expect(gameManager.techniqueManager.has('van_kiem_quyet')).toBe(true)
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('van_kiem_quyet')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('myriad_swords_art')
 
     // The ritual is the mortal -> qi_refining breakthrough.
     expect(player.realmId).toBe('qi_refining')

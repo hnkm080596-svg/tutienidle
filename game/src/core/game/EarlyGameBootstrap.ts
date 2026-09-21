@@ -45,9 +45,9 @@ export function bootstrapEarlyGamePlayer(
   gameManager: GameManager,
   player: PlayerData,
 ): void {
-  // Nhan vat moi: hoc san tam phap + skill (onNewCharacter core subset).
-  gameManager.realmAdvanceOps.learnTechnique('tu_linh_quyet')
-  gameManager.realmAdvanceOps.equipTechnique('tu_linh_quyet')
+  // Nhan vat moi: hoc san skill (onNewCharacter core subset).
+  // P7-M3 - NO technique at boot: mortals hold no canonical technique
+  // (tu_linh_quyet retired); the Way grants its own at initiation.
   gameManager.progressionOps.learnSkill('tram')
   gameManager.progressionOps.setSkillLoadoutSlot(player, 0, 'tram')
  // Phap Tu Reimagined Task 2 - mortal-path actives.

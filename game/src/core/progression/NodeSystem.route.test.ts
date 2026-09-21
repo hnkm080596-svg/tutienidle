@@ -280,7 +280,7 @@ describe('GameManagerProgressionOps.switchRoute', () => {
       defineEnemy({
         id: 'route_probe', name: 'Probe', level: 1, realmId: 'mortal', lane: 'ground',
         statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-        rewards: { techniqueInsight: 0, spiritStone: 0 },
+        rewards: { techniqueMastery: 0, spiritStone: 0 },
       }),
     ])
     gameManager.catalogOps.registerStages([stageFixture('route_stage', 'route_probe')])
@@ -314,7 +314,7 @@ describe('GameManagerProgressionOps.switchRoute', () => {
       defineEnemy({
         id: 'route_probe', name: 'Probe', level: 1, realmId: 'mortal', lane: 'ground',
         statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-        rewards: { techniqueInsight: 0, spiritStone: 0 },
+        rewards: { techniqueMastery: 0, spiritStone: 0 },
       }),
     ])
     gameManager.catalogOps.registerStages([stageFixture('route_stage', 'route_probe')])

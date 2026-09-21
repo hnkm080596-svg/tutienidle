@@ -10,6 +10,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import TechniqueSlotCard from './loadout-sections/TechniqueSlotCard.vue'
 import { buildTechniqueSections } from '@/composables/useTechniqueSections'
@@ -17,23 +18,70 @@ import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
+import {
+  canAdvanceTechniqueGrade,
+  getTechniqueGradeUpgradeCost,
+} from '@/core/technique/TechniqueProgression'
+import { formatNumber } from '@/core/format/NumberFormatter'
 
 const ui = useUiStore()
+const player = usePlayerStore()
 const gameManager = useGameManager()
-const { stateVersion } = useStateVersion()
+const { stateVersion, bumpState } = useStateVersion()
 const { t } = useI18n()
 
 const equippedTechnique = computed(() => {
   stateVersion.value
 
-  return gameManager.techniqueManager.getEquipped()
+  return gameManager.techniqueManager.getActive()
 })
 
 const techniqueSections = computed(() => {
   const technique = equippedTechnique.value
 
-  return technique ? buildTechniqueSections(technique, technique.insight ?? 0) : []
+  return technique ? buildTechniqueSections(technique) : []
 })
+
+// P7-M3 - Canh transaction (Nang Canh): the only player-facing grade
+// mutation, runs through RealmAdvanceOps.tryAdvanceTechniqueGrade
+// (in-combat / rank<10 / ceiling / insufficient-material rejects all
+// happen inside the op - the button only surfaces cost + outcome).
+const gradeUpgradeCost = computed(() => {
+  stateVersion.value
+
+  const technique = equippedTechnique.value
+
+  return technique && technique.grade < 99
+    ? getTechniqueGradeUpgradeCost(technique.grade + 1, player.$state.realmId)
+    : undefined
+})
+
+const canUpgradeGrade = computed(() => {
+  stateVersion.value
+
+  const technique = equippedTechnique.value
+  const cost = gradeUpgradeCost.value
+
+  return technique !== undefined && cost !== undefined
+    && canAdvanceTechniqueGrade(technique, player.$state.realmId)
+    && gameManager.materialBag.getAmount(cost.materialId) >= cost.amount
+})
+
+function materialName(materialId: string): string {
+  return gameManager.materialRegistry.get(materialId)?.name ?? materialId
+}
+
+function ownedAmount(materialId: string): number {
+  stateVersion.value
+
+  return gameManager.materialBag.getAmount(materialId)
+}
+
+function upgradeGrade(): void {
+  if (gameManager.realmAdvanceOps.tryAdvanceTechniqueGrade(player.$state)) {
+    bumpState()
+  }
+}
 
 function close() {
   ui.closeHomeOverlays()
@@ -61,6 +109,17 @@ function close() {
         </div>
 
         <EmptyState v-if="techniqueSections.length === 0" size="sm">{{ t('panels.technique.emptyNoBonus') }}</EmptyState>
+
+        <button
+          class="technique-panel__grade-btn"
+          :disabled="!canUpgradeGrade"
+          @click="upgradeGrade"
+        >
+          Nâng Cảnh
+          <template v-if="gradeUpgradeCost">
+            — {{ formatNumber(gradeUpgradeCost.amount) }} {{ materialName(gradeUpgradeCost.materialId) }} ({{ formatNumber(ownedAmount(gradeUpgradeCost.materialId)) }})
+          </template>
+        </button>
       </div>
 
       <EmptyState v-else size="md">{{ t('panels.technique.emptyNoTechnique') }}</EmptyState>
@@ -92,5 +151,27 @@ function close() {
   margin: 0;
   padding: 0;
   font-size: var(--text-sm);
+}
+
+.technique-panel__grade-btn {
+  margin-top: 8px;
+  padding: 6px 14px;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--paper-text);
+  background: transparent;
+  border: 1px solid var(--mineral-gold);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.technique-panel__grade-btn:hover:not(:disabled) {
+  color: var(--mineral-gold);
+}
+
+.technique-panel__grade-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 </style>

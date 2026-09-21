@@ -114,10 +114,9 @@ export interface PlayerData {
   // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —
   // Tu vi tích được suốt đời save (đếm dồn, KHÔNG BAO GIỜ giảm — khác
   // `cultivation`, bị tiêu hao lúc đột phá). Tăng trong stores/
-  // player.ts's cultivate() (ĐÚNG lượng tu vi thật vừa cộng, cùng nguồn
-  // nuôi techniqueExperience bên dưới). Sau spec 2026-08-29, nguồn
-  // tầng Kiếm Ý đổi sang bossKillCount (xem dưới) — field này còn nuôi
-  // technique tier + thống kê.
+  // player.ts's cultivate() (DUNG luong tu vi that vua cong). Sau spec
+  // 2026-08-29, nguon tang Kiem Y doi sang bossKillCount (xem duoi) -
+  // field nay con thong ke.
   totalCultivationGained: number
 
   // Tổng boss/elite đã diệt vĩnh viễn suốt đời save (boss stage isBoss +
@@ -144,12 +143,6 @@ export interface PlayerData {
   // chỉ set, không bao giờ clear. Resolver cap ở Thiên Đạo khi true.
   greatDaoOpportunityLost: boolean
 
-  // Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — thay driver cũ
-  // (đại cảnh giới người chơi) của getTechniqueTier(), xem
-  // core/technique/TechniqueTier.ts. Đếm dồn suốt đời save (không reset
-  // khi đột phá, cùng nguồn với totalCultivationGained) — technique chỉ
-  // có ĐÚNG 1 cái trong đời save (permanent path choice) nên 1 số vô
-  // hướng là đủ, không cần key theo techniqueId.
   // Cảm ngộ Kỹ năng (skill-insight-and-auto-combat-hud-plan.md) — thay
   // HẲN skillPoints cũ (không còn cấp khi đột phá tiểu cảnh giới, xem
   // CultivationSystem.breakthrough()). Nhận từ chiến đấu (hạ quái, xem
@@ -548,16 +541,14 @@ export function resetBattleScopedResources(entity: CombatEntity): void {
 }
 
 /**
- * `addTechniqueInsight` nuôi Cảm ngộ Tâm Pháp CỦA riêng tâm pháp đang
- * trang bị (xem GameManager.gainEquippedTechniqueInsight()) — tách
- * biệt khỏi Cảm ngộ Kỹ năng (player.skillInsight), cấp trực tiếp trong
- * GameManager.grantBattleRewardIfNeeded() vì KHÔNG cần trang bị tâm
- * pháp vẫn nhận được (xem skill-insight-and-auto-combat-hud-plan.md
- * mục 3).
+ * `addSkillInsight` cong thang vao Cam ngo Ky nang (player.skillInsight)
+ * - kenh reward truc tiep cho quest/direct grants (P7-M3: doi ten tu
+ * addTechniqueInsight; technique gio an techniqueMastery qua
+ * TechniqueSystem.gainMastery, KHONG qua receiver nay).
  *
- * `addSpiritStone` (plan Workstream F) — GameManager inject implementation
- * cộng vào MaterialBag (SPIRIT_STONE_MATERIAL_ID); PlayerData không còn
- * giữ currency nào cả.
+ * `addSpiritStone` (plan Workstream F) - GameManager inject implementation
+ * cong vao MaterialBag (SPIRIT_STONE_MATERIAL_ID); PlayerData khong con
+ * giu currency nao ca.
  */
 export function createPlayerRewardReceiver(
   player: PlayerData,
@@ -565,7 +556,7 @@ export function createPlayerRewardReceiver(
   addSpiritStone?: (amount: number) => void,
 ): RewardReceiver {
   return {
-    addTechniqueInsight(amount: number) {
+    addSkillInsight(amount: number) {
       addInsight?.(amount)
       // Cố ý không làm gì — xem ghi chú JSDoc phía trên.
     },

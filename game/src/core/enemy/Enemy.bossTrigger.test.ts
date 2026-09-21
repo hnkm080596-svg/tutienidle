@@ -18,7 +18,7 @@ describe('Enemy bossTrigger config threading', () => {
         armor: 0,
         evasionRate: 0,
       },
-      rewards: { techniqueInsight: 1, spiritStone: 1 },
+      rewards: { techniqueMastery: 1, spiritStone: 1 },
       bossTrigger: { afterTurns: 60, buffDefinitionId: 'fixture_enrage' },
     })
 
@@ -41,7 +41,7 @@ describe('Enemy bossTrigger config threading', () => {
         armor: 0,
         evasionRate: 0,
       },
-      rewards: { techniqueInsight: 1, spiritStone: 1 },
+      rewards: { techniqueMastery: 1, spiritStone: 1 },
       bossTrigger: { afterTurns: 60, buffDefinitionId: 'fixture_enrage' },
     })
 
@@ -66,7 +66,7 @@ describe('Enemy bossTrigger config threading', () => {
         armor: 0,
         evasionRate: 0,
       },
-      rewards: { techniqueInsight: 1, spiritStone: 1 },
+      rewards: { techniqueMastery: 1, spiritStone: 1 },
     })
 
     expect(enemy.bossTrigger).toBeUndefined()

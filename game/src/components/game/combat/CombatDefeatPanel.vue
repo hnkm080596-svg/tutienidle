@@ -66,7 +66,7 @@ const isCultivationGap = computed(() => {
 const hasAnyReward = computed(() => {
   stateVersion.value
 
-  return summary.value.techniqueInsight > 0 || summary.value.skillInsight > 0 || summary.value.artifactInsight > 0 || summary.value.spiritStone > 0 || summary.value.items.length > 0
+  return summary.value.techniqueMastery > 0 || summary.value.skillInsight > 0 || summary.value.artifactInsight > 0 || summary.value.spiritStone > 0 || summary.value.items.length > 0
 })
 
 const isAutoRetrying = ref(false)

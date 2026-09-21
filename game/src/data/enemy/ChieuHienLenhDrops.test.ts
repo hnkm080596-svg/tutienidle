@@ -132,7 +132,7 @@ describe('daily_chieu_hien_lenh quest', () => {
     const rewardSystem = new RewardSystem()
     const receiver: RewardReceiver & { spiritStone: number } = {
       spiritStone: 0,
-      addTechniqueInsight() {},
+      addSkillInsight() {},
       addCultivation() {},
       addSpiritStone(amount) {
         this.spiritStone += amount

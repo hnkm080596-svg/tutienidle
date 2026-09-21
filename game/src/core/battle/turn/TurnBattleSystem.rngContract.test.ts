@@ -36,7 +36,7 @@ const RNG_TANK = defineEnemy({
     armor: 0,
     evasionRate: 0.4,
   },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 const RNG_SCOUT = defineEnemy({
@@ -54,7 +54,7 @@ const RNG_SCOUT = defineEnemy({
     armor: 0,
     evasionRate: 0.1,
   },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 // A mixed pool + eliteChance so pool picks, elite rolls AND spawn

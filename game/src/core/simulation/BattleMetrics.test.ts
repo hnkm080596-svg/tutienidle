@@ -178,7 +178,7 @@ describe('BattleMetrics semantics', () => {
     const tanky = defineEnemy({
       id: 'simres_tanky', name: 'Tanky', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 999999, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     gameManager.turnBattleOps.startBattleWithPlayer(player, tanky)
     const scheduler = gameManager.turnBattleOps.getTurnBattleSystem()?.combatScheduler
@@ -247,7 +247,7 @@ describe('BattleMetrics semantics', () => {
     const tanky = defineEnemy({
       id: 'simres_tanky', name: 'Tanky', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 999999, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     gameManager.turnBattleOps.startBattleWithPlayer(player, tanky)
     clock.advance(0.1) // baseline sample
@@ -286,7 +286,7 @@ describe('BattleMetrics semantics', () => {
     const tanky = defineEnemy({
       id: 'simres_tanky', name: 'Tanky', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 999999, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     gameManager.turnBattleOps.startBattleWithPlayer(player, tanky)
     const enemyId = gameManager.getTurnBattle()?.enemies[0]?.entity.id
@@ -337,7 +337,7 @@ describe('BattleMetrics semantics', () => {
     const tanky = defineEnemy({
       id: 'simres_tanky', name: 'Tanky', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 999999, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     gameManager.turnBattleOps.startBattleWithPlayer(player, tanky)
     const scheduler = gameManager.turnBattleOps.getTurnBattleSystem()?.combatScheduler

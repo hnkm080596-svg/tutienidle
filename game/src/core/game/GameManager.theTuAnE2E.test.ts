@@ -42,7 +42,7 @@ function makeDummy(id: string, statsInput: Partial<typeof TANKY_DUMMY> = {}) {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: { ...TANKY_DUMMY, ...statsInput },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 

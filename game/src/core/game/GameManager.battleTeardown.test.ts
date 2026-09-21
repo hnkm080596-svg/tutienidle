@@ -68,7 +68,7 @@ function createWeakPlayer(): CombatEntity {
 const FAST_ENEMY = defineEnemy({
   id: 'teardown_fast_mob', name: 'Fast Mob', level: 1, realmId: 'mortal', lane: 'ground',
   statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-  rewards: { techniqueInsight: 5, spiritStone: 3 },
+  rewards: { techniqueMastery: 5, spiritStone: 3 },
 })
 
 const STRONG_ENEMY = defineEnemy({
@@ -77,7 +77,7 @@ const STRONG_ENEMY = defineEnemy({
     maxHp: 1_000_000, might: 9_999, attackSpeed: 1,
     criticalRate: 0, criticalDamage: 1.5, armor: 0, evasionRate: 0,
   },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 // Immortal + harmless: a battle against it stays in 'fighting' until
@@ -89,7 +89,7 @@ const PUNCHING_BAG = defineEnemy({
     maxHp: 1_000_000, might: 0, attackSpeed: 1,
     criticalRate: 0, criticalDamage: 1.5, armor: 0, evasionRate: 0,
   },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 const TEARDOWN_STAGE: Stage = {
