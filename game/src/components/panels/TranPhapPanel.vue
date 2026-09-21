@@ -28,7 +28,7 @@ import { TRAN_PHAP_FORMATIONS } from '@/data/formation/TranPhap'
 import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
-import SlotView from '@/components/common/SlotView.vue'
+import AtlasIdleSprite from '@/components/common/AtlasIdleSprite.vue'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 // Battlefield Perspective Panel (2026-09-06) - the canvas is larger than the
 // pure grid to leave room for perspective depth (spec section 3). The size now
@@ -44,6 +44,12 @@ import { formationSlotStyle } from '@/presentation/geometry/formationSlotBoxes'
 import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
 import { FORMATION_ASSIGNMENTS_EVENT, type FormationAssignmentsPayload } from '@/presentation/contracts/regionEvents'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import {
+  PLACEHOLDER_ATLAS_URL,
+  PLACEHOLDER_FRAME_COUNT,
+  PLACEHOLDER_FRAME_RATE,
+  PLACEHOLDER_SHEET_URL,
+} from '@/presentation/art/CombatPresentationCatalogue'
 import type { SlotState } from '@/presentation/contracts/SlotState'
 
 const ui = useUiStore()
@@ -131,19 +137,20 @@ function slotStateAt(row: number, column: number): SlotState {
 // Danh sách quân "chưa được xếp vào ô nào" — kéo từ đây vào lưới.
 // Player luôn là 1 lá bài cố định (id 'player'), cộng thêm mọi
 // companion đã thu phục (Task 11) chưa được gán ô.
-function combatantCards(): { combatantId: string; label: string; icon?: string }[] {
+function combatantCards(): { combatantId: string; label: string; artUrl?: string }[] {
   const placed = new Set(currentAssignments.value.map((a) => a.combatantId))
-  const cards: { combatantId: string; label: string; icon?: string }[] = []
+  const cards: { combatantId: string; label: string; artUrl?: string }[] = []
 
   if (!placed.has('player')) {
-    // The queue card is the entity's face — the same profile PNG the combat
-    // surfaces draw (entity-derived visualProfileId -> shared profile
-    // catalogue), not a monogram. Companions have no art yet: they keep the
-    // monogram fallback until companion art exists.
+    // The queue stand shows the entity's own art — the same profile PNG the
+    // combat surfaces draw (entity-derived visualProfileId -> shared profile
+    // catalogue). The player art is a static texture in battle too. Companions
+    // have no authored art yet: they mirror the battlefield's placeholder idle
+    // loop (AtlasIdleSprite) until companion art exists.
     cards.push({
       combatantId: 'player',
       label: player.name,
-      icon: PLAYER_VISUAL_PROFILES[player.visualProfileId]?.combatTextureUrl,
+      artUrl: PLAYER_VISUAL_PROFILES[player.visualProfileId]?.combatTextureUrl,
     })
   }
 
@@ -369,16 +376,32 @@ watch([currentAssignments, () => player.visualProfileId], () => {
         @dragover.prevent
         @drop="(event) => removeAssignment((event as DragEvent).dataTransfer?.getData('text/plain') ?? '')"
       >
-        <SlotView
+        <div
           v-for="card in combatantCards()"
           :key="card.combatantId"
-          :item="card"
-          :label="card.label"
-          :icon="card.icon"
+          class="tran-phap-panel__card queue-stand"
+          role="button"
+          :aria-label="card.label"
           draggable="true"
-          class="tran-phap-panel__card"
-          @dragstart="(event: Event) => (event as DragEvent).dataTransfer?.setData('text/plain', card.combatantId)"
-        />
+          v-tooltip="card.label"
+          @dragstart="(event) => (event as DragEvent).dataTransfer?.setData('text/plain', card.combatantId)"
+        >
+          <!-- Battlefield-slot look for the queue: a projected trapezoid base
+               with the combatant's art standing on it, idling until dragged. -->
+          <span class="queue-stand__base fx-border-beam fx-border-beam--clip" aria-hidden="true">
+            <span class="fx-border-beam__fx" aria-hidden="true" />
+          </span>
+          <img v-if="card.artUrl" class="queue-stand__art" :src="card.artUrl" :alt="card.label" />
+          <AtlasIdleSprite
+            v-else
+            class="queue-stand__art"
+            :image-url="PLACEHOLDER_SHEET_URL"
+            :atlas-url="PLACEHOLDER_ATLAS_URL"
+            :frame-count="PLACEHOLDER_FRAME_COUNT"
+            :frame-rate="PLACEHOLDER_FRAME_RATE"
+          />
+          <span class="queue-stand__label">{{ card.label }}</span>
+        </div>
       </div>
 
       <button type="button" class="tran-phap-panel__confirm" :disabled="!selectedFormation" @click="onConfirm">
@@ -535,12 +558,62 @@ watch([currentAssignments, () => player.visualProfileId], () => {
   flex-wrap: wrap;
 }
 
-/* Queue cards are SlotView slots containing a combatant — shrink the
-   default 100%-width grid slot to a fixed chip in the wrapping queue row. */
-.tran-phap-panel__card {
-  width: 64px;
+/* Queue stands: each waiting combatant stands on a projected trapezoid
+   base — the same slot family as the battlefield cells — with its art
+   anchored above the base (static profile PNG for the player, placeholder
+   idle loop for companions). The card is the drag source; the base is the
+   slot visual. */
+.tran-phap-panel__card.queue-stand {
+  position: relative;
+  width: 84px;
+  height: 110px;
   flex: 0 0 auto;
   cursor: grab;
+}
+
+.queue-stand__base {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 16px;
+  height: 26px;
+  /* Narrow-top trapezoid reads as the nearest projected floor cell. The
+     same polygon is republished for the beam layer's clip variant. */
+  clip-path: polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%);
+  background: rgba(76, 175, 80, 0.18);
+  --fx-beam-clip: polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%);
+  --fx-beam-fill: rgba(76, 175, 80, 0.18);
+}
+
+/* The base is clipped, so the beam cannot trigger on its own :hover area
+   alone (the art overflows above it) — light it whenever the card hovers. */
+.queue-stand:hover .queue-stand__base > .fx-border-beam__fx {
+  opacity: 1;
+  animation: fx-border-beam-spin var(--fx-beam-duration, 2.4s) linear infinite;
+}
+
+.queue-stand__art {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  height: 68px;
+  max-width: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.queue-stand__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-size: var(--text-xs, 11px);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 .tran-phap-panel__confirm {
