@@ -585,6 +585,7 @@ export class GameManager {
       skillTemplates: this.skillTemplates,
       nodeRegistry: this.nodeRegistry,
       materialBag: this.materialBag,
+      pillBag: this.pillBag,
       breakthroughOutcomeService: this.breakthroughOutcomeService,
       progressionOps: this.progressionOps,
       // Deferred closures - turnBattleOps/activePlayer are assigned later.
@@ -822,7 +823,7 @@ export class GameManager {
     this.tickOps = new GameManagerTickOps({
       getActivePlayer: () => this.activePlayer,
       tickTimedEffects: (player) => this.effectOps.tickTimedEffects(player),
-      investBodyRefinement: (player) => this.realmAdvanceOps.investBodyRefinement(player),
+      investBodyChapter: (player) => this.realmAdvanceOps.investBodyChapter(player, 'body_refinement'),
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,

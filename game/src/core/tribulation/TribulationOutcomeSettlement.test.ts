@@ -51,13 +51,13 @@ function investForGreatDao(player: ReturnType<typeof usePlayerStore>, gameManage
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
   player.selectedTalentIds = ['pham_cot']
   player.realmLevel = 12
-  player.bodyRefinementCompletedTiers = 6
+  player.bodyProgression.body_refinement.completedTiers = 6
   player.mortalPerfectionAchieved = true
   player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
   gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
   player.realmLevel = 18
   player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
-  player.openedMeridianIds = MERIDIANS.map((m) => m.id)
+  player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
   gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 }
 

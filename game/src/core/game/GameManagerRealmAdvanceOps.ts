@@ -2,14 +2,24 @@ import type { ArtifactPath } from '../artifact/Artifact'
 import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
+import type { PillBag } from '../pill/PillBag'
 import type { PlayerData } from '../player/Player'
 import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
-import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
-import { TINH_HOA_PHAM_THE_MATERIAL_ID, BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
+import {
+  computeBreakthroughGrade,
+  getBodyRefinementCompletedTiers,
+  investBodyChapterState,
+} from '../realm/body/BodyProgressionSystem'
+import {
+  getBodyChapterDefinition,
+  type BodyChapterCurrency,
+  type BodyChapterId,
+} from '../realm/body/BodyChapter'
+import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
 import { CORE_REALM_LEVEL, getCurrentRealm } from '../realm/realmSystem'
 import type { Skill } from '../skill/Skill'
@@ -58,6 +68,7 @@ export class GameManagerRealmAdvanceOps {
       skillTemplates: TemplateRegistry<Skill>
       nodeRegistry: NodeRegistry
       materialBag: MaterialBag
+      pillBag: PillBag
       breakthroughOutcomeService: BreakthroughOutcomeService
       progressionOps: GameManagerProgressionOps
       getTurnBattle: () => TurnBattle | null
@@ -255,7 +266,7 @@ export class GameManagerRealmAdvanceOps {
       // moment Quan Khi is pressed, NOT asked again after entering Luyen
       // Khi. It is one of the Truc Co tribulation conditions.
       player.mortalPerfectionAchieved =
-        player.bodyRefinementCompletedTiers >= BODY_REFINEMENT_TIERS.length &&
+        getBodyRefinementCompletedTiers(player) >= BODY_REFINEMENT_TIERS.length &&
         MAIN_STAT_KEYS.every((stat) => player.baseStats[stat] >= getMainStatCap('mortal'))
 
       player.realmId = 'qi_refining'
@@ -413,21 +424,32 @@ export class GameManagerRealmAdvanceOps {
   }
 
   /**
-   * Invests Tinh Hoa Pham The (held in materialBag) into the in-progress
-   * Luyen The tier - see core/realm/BodyRefinementSystem.ts. Returns the
-   * amount of Tinh Hoa actually consumed (0 when no tier remains or none
-   * is held).
+   * P7-M5 - unified body-progression invest: reads the chapter's
+   * currency descriptor (material OR pill bag - thong_mach_dan is a
+   * pill), hands the available amount + aux count to
+   * BodyProgressionSystem.investBodyChapterState, and debits ONLY the
+   * consumed amount from the chapter's own bag on success. Returns the
+   * amount actually consumed (0 when gated/complete/empty).
    */
-  investBodyRefinement(player: PlayerData): number {
-    const available = this.deps.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
+  investBodyChapter(player: PlayerData, chapterId: BodyChapterId): number {
+    const chapter = getBodyChapterDefinition(chapterId)
+    const bag = this.bodyChapterBag(chapter.currency)
+    const available = bag.getAmount(chapter.currency.id)
+    const auxOwned = chapter.auxCurrency
+      ? this.bodyChapterBag(chapter.auxCurrency).getAmount(chapter.auxCurrency.id)
+      : 0
 
-    const consumed = investTinhHoa(player, available)
+    const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
 
     if (consumed > 0) {
-      this.deps.materialBag.remove(TINH_HOA_PHAM_THE_MATERIAL_ID, consumed)
+      bag.remove(chapter.currency.id, consumed)
     }
 
     return consumed
+  }
+
+  private bodyChapterBag(currency: BodyChapterCurrency): { getAmount(id: string): number; remove(id: string, amount: number): boolean } {
+    return currency.bag === 'pill' ? this.deps.pillBag : this.deps.materialBag
   }
 
   /**

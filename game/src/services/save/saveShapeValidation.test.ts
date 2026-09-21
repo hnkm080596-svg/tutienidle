@@ -1656,7 +1656,6 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     'completedStageIds',
     'perfectClearStageIds',
     'grantedRealmPassiveIds',
-    'openedMeridianIds',
   ])('từ chối %s chứa phần tử non-string', (field) => {
     const save = validSave()
 
@@ -1836,6 +1835,89 @@ describe('validateGameSaveShape — cycle/site consistency (Mission A review)', 
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('productionSites[0].workerCycles[1].siteId')
+  })
+})
+
+// P7-M5 (v72) - bodyProgression is a REQUIRED chapter-keyed record; the
+// boundary delegates shape checks to the BodyProgression authority
+// (each chapter validates its own slice).
+describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  it('từ chối khi bodyProgression vắng mặt / không phải object', () => {
+    const save = validSave()
+
+    delete playerOf(save).bodyProgression
+    expect(validateGameSaveShape(save).ok).toBe(false)
+
+    const save2 = validSave()
+    playerOf(save2).bodyProgression = 7
+
+    const result = validateGameSaveShape(save2)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.bodyProgression')
+  })
+
+  it('từ chối body_refinement slice có member sai kiểu với chapter-keyed path', () => {
+    const save = validSave()
+
+    playerOf(save).bodyProgression = {
+      body_refinement: { completedTiers: 'x', currentTierProgress: -1 },
+      meridian: { openedIds: [] },
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.bodyProgression.body_refinement.completedTiers')
+    expect(pathsOf(result)).toContain('player.bodyProgression.body_refinement.currentTierProgress')
+  })
+
+  it('từ chối meridian.openedIds không phải array / chứa non-string với indexed path', () => {
+    const save = validSave()
+
+    playerOf(save).bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: 'nope' },
+    }
+    expect(validateGameSaveShape(save).ok).toBe(false)
+
+    const save2 = validSave()
+    playerOf(save2).bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: ['nham_mach', 7] },
+    }
+
+    const result = validateGameSaveShape(save2)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.bodyProgression.meridian.openedIds[1]')
+  })
+
+  it('chấp nhận mid-progress + completed canonical states', () => {
+    const save = validSave()
+
+    playerOf(save).bodyProgression = {
+      body_refinement: { completedTiers: 3, currentTierProgress: 100 },
+      meridian: { openedIds: ['nham_mach', 'doi_mach'] },
+    }
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    const save2 = validSave()
+    playerOf(save2).bodyProgression = {
+      body_refinement: { completedTiers: 6, currentTierProgress: 0 },
+      meridian: {
+        openedIds: [
+          'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
+          'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
+          'ky_kinh_thien_dia_chi_kieu',
+        ],
+      },
+    }
+    expect(validateGameSaveShape(save2).ok).toBe(true)
   })
 })
 

@@ -901,3 +901,85 @@ describe('v71 mortalBasicSkillId preflight', () => {
     expect(manager.skillManager.getAll()).toEqual([])
   })
 })
+
+// P7-M5 (v72) - bodyProgression integrity is the last preflight check,
+// delegated to the BodyProgression authority: a corrupt chapter slice is
+// corrupt progression state and fails closed BEFORE any owner mutation.
+describe('v72 bodyProgression preflight + rehydration', () => {
+  it.each([
+    ['non-integer completedTiers', (p: PlayerData) => { p.bodyProgression.body_refinement.completedTiers = 1.5 }],
+    ['completedTiers out of range', (p: PlayerData) => { p.bodyProgression.body_refinement.completedTiers = 7 }],
+    ['progress at/above the active-tier cap', (p: PlayerData) => {
+      p.bodyProgression.body_refinement.completedTiers = 0
+      p.bodyProgression.body_refinement.currentTierProgress = 51
+    }],
+    ['residue progress at 6/6', (p: PlayerData) => {
+      p.bodyProgression.body_refinement.completedTiers = 6
+      p.bodyProgression.body_refinement.currentTierProgress = 1
+    }],
+    ['unknown meridian id', (p: PlayerData) => { p.bodyProgression.meridian.openedIds = ['huyen_mach'] }],
+    ['non-prefix meridian order', (p: PlayerData) => { p.bodyProgression.meridian.openedIds = ['doi_mach'] }],
+    ['non-array meridian openedIds', (p: PlayerData) => { p.bodyProgression.meridian.openedIds = 42 as never }],
+    ['missing bodyProgression record', (p: PlayerData) => { p.bodyProgression = undefined as never }],
+    ['missing meridian slice', (p: PlayerData) => { p.bodyProgression = { body_refinement: { completedTiers: 0, currentTierProgress: 0 } } as never }],
+  ])('rejects %s before any owner mutation', (_label, corrupt) => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    corrupt(player)
+    const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL)] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/BodyProgression integrity/i)
+    // Zero-mutation: preflight threw before the skills slice replaced
+    // the live set (an applied restore would carry SAVED_SKILL).
+    expect(manager.skillManager.getAll()).toEqual([])
+  })
+
+  it('accepts canonical default + mid-progress + complete states', () => {
+    const manager = makeManager()
+
+    expect(() => manager.saveOps.restoreFromSave(baseSave(createDefaultPlayer()))).not.toThrow()
+
+    const mid = createDefaultPlayer()
+    mid.bodyProgression.body_refinement.completedTiers = 3
+    mid.bodyProgression.body_refinement.currentTierProgress = 100
+    mid.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
+    expect(() => manager.saveOps.restoreFromSave(baseSave(mid))).not.toThrow()
+  })
+
+  it('rehydrates body modifiers from canonical state - persisted stale slices are corrected', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+
+    player.bodyProgression.body_refinement.completedTiers = 1
+    player.bodyProgression.meridian.openedIds = ['nham_mach']
+    // Stale persisted slices: a completed-tier id the state no longer
+    // backs + a fabricated meridian entry. Chapter state wins.
+    player.modifiers = [
+      {
+        id: 'luyen-the:luyen_mach:maxHp',
+        sourceId: 'luyen_mach',
+        sourceType: 'realm',
+        stat: 'maxHp',
+        percent: 0.08,
+      },
+      {
+        id: 'bat-mach:doc_mach:strength',
+        sourceId: 'doc_mach',
+        sourceType: 'realm',
+        stat: 'strength',
+        percent: 0.05,
+      },
+    ]
+
+    // Simulate the store-level restore already applied (the active
+    // player IS the payload player - saveOps rehydrates on it).
+    manager.setActivePlayer(player)
+    manager.saveOps.restoreFromSave(baseSave(player))
+
+    const ids = player.modifiers.map(m => m.id)
+    expect(ids).not.toContain('luyen-the:luyen_mach:maxHp')
+    expect(ids).not.toContain('bat-mach:doc_mach:strength')
+    expect(ids.some(id => id.startsWith('luyen-the:luyen_bi:'))).toBe(true)
+    expect(ids).toContain('bat-mach:nham_mach:maxHp')
+  })
+})

@@ -20,6 +20,7 @@ import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/pla
 import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
 import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
 import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
+import { validateBodyProgressionPersistedState } from '../../core/realm/body/BodyProgressionSystem'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -229,8 +230,6 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   requireNonNegativeNumber(player, 'totalSkillInsightGained', 'player', issues)
   requireNonNegativeNumber(player, 'cultivationInsightAccumulator', 'player', issues)
   requireNonNegativeNumber(player, 'attributePoints', 'player', issues)
-  requireNonNegativeNumber(player, 'bodyRefinementCompletedTiers', 'player', issues)
-  requireNonNegativeNumber(player, 'bodyRefinementCurrentTierProgress', 'player', issues)
   requireNonNegativeNumber(player, 'breakthroughGrade', 'player', issues)
 
   const purchasedNodeIds = requireArray(player, 'purchasedNodeIds', 'player', issues)
@@ -448,6 +447,13 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     pathModule.validatePersistedState?.(player, (issue) => issues.push(issue))
   }
 
+  // P7-M5 (v72) - body progression is module-owned too: the boundary
+  // only checks the top-level record exists/is an object (inside the
+  // delegated validator), then each chapter validates its own slice.
+  // The retired flat fields (bodyRefinementCompletedTiers /
+  // bodyRefinementCurrentTierProgress / openedMeridianIds) are gone.
+  validateBodyProgressionPersistedState(player, (issue) => issues.push(issue))
+
   // Talent v4 M2 (v61) — 5 field mới: ngân tu vi tràn (Hải Nạp), tầng
   // Lôi Kiếp, ledger mua node miễn phí (Vấn Đạo), tầng Phá Giáp mang
   // sang trận sau + cảnh giới lúc bank.
@@ -470,14 +476,9 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.phaGiapCarryRealmId', message: 'phải là string hoặc null' })
   }
 
-  // Spec dot-pha-loi-kiep §6.1 — 4 field v54 (Bát Mạch, cửa sổ quái ẩn,
-  // snapshot hoàn hảo, mất vĩnh viễn Đại Đào).
-  const openedMeridianIds = requireArray(player, 'openedMeridianIds', 'player', issues)
-
-  if (openedMeridianIds) {
-    validateStringEntries(openedMeridianIds, 'player.openedMeridianIds', issues)
-  }
-
+  // Spec dot-pha-loi-kiep sec.6.1 - the v54 fields (hidden-beast window,
+  // mortal-perfection snapshot, great-dao loss). Bat Mach moved into
+  // player.bodyProgression.meridian at v72 (delegated validator above).
   requireNonNegativeNumber(player, 'luyenKhiKillsSinceBeast', 'player', issues)
   if (typeof player.mortalPerfectionAchieved !== 'boolean') {
     issues.push({ path: 'player.mortalPerfectionAchieved', message: 'phải là boolean' })

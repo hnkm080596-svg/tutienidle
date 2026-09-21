@@ -32,7 +32,7 @@ describe('GameManager — facade TribulationDirector', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.realmLevel = 12
-    player.bodyRefinementCompletedTiers = 3
+    player.bodyProgression.body_refinement.completedTiers = 3
 
     // KHÔNG có Trúc Cơ Đan trong túi → human
     expect(gameManager.startTribulation(player, 'foundation_establishment')).toBe(true)

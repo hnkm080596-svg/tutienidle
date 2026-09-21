@@ -4,6 +4,10 @@ import { MERIDIANS } from '../realm/Meridians'
 import { MAIN_STAT_KEYS } from '../../core/stats/StatTypes'
 import { getMainStatCap } from '../../core/stats/StatCap'
 import { BODY_REFINEMENT_TIERS } from '../realm/BodyRefinement'
+import {
+  getBodyRefinementCompletedTiers,
+  getOpenedMeridianCount,
+} from '../../core/realm/body/BodyProgressionSystem'
 
 // 4 bậc Kiến Cơ (spec dot-pha-loi-kiep §4.2) — điều kiện ẨN, KHÔNG
 // hiển thị trước; công bố SAU khi đạt. great_dao chỉ người chơi hội tụ
@@ -35,13 +39,13 @@ export function resolveKienCoGrade(player: PlayerData, hasTrucCoDan: boolean): K
   // Vĩnh viễn: thua kiếp Đại Đạo → cap Thiên (spec §4.3)
   const greatDaoBlocked = player.greatDaoOpportunityLost
 
-  const earthReady = hasTrucCoDan && player.bodyRefinementCompletedTiers >= EARTH_BODY_TIERS
+  const earthReady = hasTrucCoDan && getBodyRefinementCompletedTiers(player) >= EARTH_BODY_TIERS
   const heavenReady =
     earthReady &&
-    player.bodyRefinementCompletedTiers >= HEAVEN_BODY_TIERS &&
-    player.openedMeridianIds.length >= HEAVEN_MERIDIAN_COUNT
+    getBodyRefinementCompletedTiers(player) >= HEAVEN_BODY_TIERS &&
+    getOpenedMeridianCount(player) >= HEAVEN_MERIDIAN_COUNT
 
-  if (!greatDaoBlocked && heavenReady && player.openedMeridianIds.length >= GREAT_DAO_MERIDIAN_COUNT) {
+  if (!greatDaoBlocked && heavenReady && getOpenedMeridianCount(player) >= GREAT_DAO_MERIDIAN_COUNT) {
     const hasPhamCot = player.selectedTalentIds.includes('pham_cot')
 
     if (

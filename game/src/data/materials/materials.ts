@@ -20,8 +20,8 @@ import type { HerbAge } from '@/core/production/ProductionTypes'
 const legacyMaterials: Material[] = [
   // Realm Passive & Pressure System (2026-08-20) — currency Luyện Thể,
   // CHỈ rơi từ 20 quái Phàm Nhân (data/enemy/Enemies.ts), đầu tư qua
-  // GameManager.investBodyRefinement() để lấp đầy 6 tầng (xem
-  // data/realm/LuyenThe.ts/core/realm/BodyRefinementSystem.ts). id khớp
+  // realmAdvanceOps.investBodyChapter() de lap day 6 tang (xem
+  // data/realm/BodyRefinement.ts/core/realm/body/). id khop
   // TINH_HOA_PHAM_THE_MATERIAL_ID.
   {
     id: 'tinh_hoa_pham_the',

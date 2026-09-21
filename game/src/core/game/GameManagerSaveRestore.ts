@@ -30,6 +30,10 @@ import { DecomposeSystem, type DecomposeOutputEntry } from '../production/Decomp
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
+import {
+  applyAllBodyModifiers,
+  assertBodyProgressionIntegrity,
+} from '../realm/body/BodyProgressionSystem'
 import type { StatModifier } from '../stats/StatCalculator'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
 import { NotificationQueue } from './NotificationQueue'
@@ -217,6 +221,15 @@ export class GameManagerSaveRestore {
         )
       }
     }
+
+    // P7-M5 (v72) - body progression integrity is the LAST preflight
+    // check, delegated to the BodyProgression authority in one call
+    // (shape already passed): completedTiers integral + 0..6, progress
+    // under the active-tier cap / zero at 6, openedIds a strict prefix
+    // of canonical MERIDIANS order. A corrupt slice is corrupt
+    // progression state - reject before any owner mutation, same
+    // hard-fail seam as the technique-holder contract above.
+    assertBodyProgressionIntegrity(save.player)
   }
 
   /**
@@ -539,6 +552,18 @@ export class GameManagerSaveRestore {
       // M3 — Hoa Hau Thong Than: x2 pill yield applies to offline settle too.
       getAlchemyDoublePill(this.deps.getActivePlayer()?.selectedTalentIds)?.yieldMultiplier ?? 1,
     )
+
+    // P7-M5 (v72) - body modifier rehydration: chapter state is the
+    // authority, persisted player.modifiers body slices are NOT trusted.
+    // Rebuild the luyen-the:/bat-mach: slices exactly once from the
+    // restored canonical state (corrects stale/missing entries); runs
+    // BEFORE the hash commit so a rehydrate throw leaves the payload
+    // uncommitted.
+    const bodyPlayer = this.deps.getActivePlayer()
+
+    if (bodyPlayer) {
+      applyAllBodyModifiers(bodyPlayer)
+    }
 
     // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:
     // restore converges the active set to current eligibility BEFORE

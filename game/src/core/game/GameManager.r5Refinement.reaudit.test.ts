@@ -14,18 +14,19 @@ describe('R5 headless body refinement ownership', () => {
     const material = manager.materialRegistry.get(TINH_HOA_PHAM_THE_MATERIAL_ID)
     manager.materialBag.add(material, 1)
     manager.tickOps.update(0.1)
-    expect.soft(player.bodyRefinementCurrentTierProgress).toBe(1)
+    expect.soft(player.bodyProgression.body_refinement.currentTierProgress).toBe(1)
     expect.soft(manager.materialBag.getAmount(material.id)).toBe(0)
     // Control proves eligibility and the domain operation itself are valid.
-    if (player.bodyRefinementCurrentTierProgress === 0) {
-      expect(manager.realmAdvanceOps.investBodyRefinement(player)).toBe(1)
-      expect(player.bodyRefinementCurrentTierProgress).toBe(1)
+    if (player.bodyProgression.body_refinement.currentTierProgress === 0) {
+      expect(manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')).toBe(1)
+      expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(1)
     }
   })
 
   // F7 (QA-2026-09-09-RR7): exactly-once domain side effect per update.
-  // investTinhHoa is idempotent on progress, so progress cannot distinguish
-  // one attempt from two; the attempt count itself is the oracle.
+  // The chapter invest is idempotent on progress, so progress cannot
+  // distinguish one attempt from two; the attempt count itself is the
+  // oracle. P7-M5 - the tick calls the unified investBodyChapter op.
   it('attempts body refinement auto-invest exactly once per update', () => {
     const manager = new GameManager()
     manager.catalogOps.registerMaterials(materials)
@@ -33,7 +34,7 @@ describe('R5 headless body refinement ownership', () => {
     player.realmId = 'qi_refining'
     manager.setActivePlayer(player)
 
-    const investSpy = vi.spyOn(manager.realmAdvanceOps, 'investBodyRefinement')
+    const investSpy = vi.spyOn(manager.realmAdvanceOps, 'investBodyChapter')
 
     manager.tickOps.update(0.1)
 

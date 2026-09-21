@@ -38,6 +38,13 @@ const PRE_M3_VERSION = 69
 // literal pins the concrete boundary this mission cut over.
 const PRE_M4_VERSION = 70
 
+// P7-M5 (v72) - the version live on master immediately before the
+// unified body-progression cut folded the three flat body fields into
+// the chapter-keyed player.bodyProgression record. Same "anything !==
+// CURRENT" contract; the literal pins the concrete boundary this
+// mission cut over.
+const PRE_M5_VERSION = 71
+
 // vitest runs environment: 'node' — no real localStorage, so a minimal
 // in-memory polyfill is stubbed (same pattern as SaveSystem.test.ts).
 class MemoryStorage implements Storage {
@@ -177,6 +184,30 @@ describe('Phap Tu Reimagined save cutover', () => {
     localStorage.setItem(SAVE_KEY, raw)
 
     expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M4_VERSION, raw })
+  })
+
+  it('rejects a save stamped with the pre-M5 version (71) as incompatible', () => {
+    const player = createDefaultPlayer()
+    // Intentionally NOT GameSave: version 71 is outside the current literal
+    // type, so the payload is built as a raw record like preReworkSaveRaw().
+    const save: Record<string, unknown> = {
+      version: PRE_M5_VERSION,
+      player,
+      techniques: [],
+      skills: [],
+      materials: [],
+      equipment: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      equipmentSlots: [],
+    }
+    const raw = JSON.stringify(save)
+
+    localStorage.setItem(SAVE_KEY, raw)
+
+    expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M5_VERSION, raw })
   })
 
   it('loads a save stamped with the current version', () => {

@@ -8,6 +8,7 @@ import { SKILLS } from '../../data/skill/Skills'
 import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import type { GameSave } from '../../services/save/SaveSystem'
 import type { Skill } from '../skill/Skill'
+import { createDefaultBodyProgression } from '../realm/body/BodyChapter'
 
 // Bug report 2026-08-26: "nhan vat khong gay sat thuong nua du van tele".
 // Root cause - save nhan vat CU (development build, khong migration) luu
@@ -17,7 +18,7 @@ import type { Skill } from '../skill/Skill'
 // Fix: restoreFromSave doi chieu template de hoi phuc authored data.
 function buildLegacySave(skills: Skill[]): GameSave {
   return {
-    player: {},
+    player: { bodyProgression: createDefaultBodyProgression() },
     techniques: [],
     skills,
     materials: [],

@@ -17,6 +17,10 @@ import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ArtifactProgress } from '../artifact/Artifact'
 import type { CompanionInstance } from '../../data/companion/Companions'
 import type { SwordPathState } from '../kiem-tu/KiemTuState'
+import {
+  createDefaultBodyProgression,
+  type BodyProgressionState,
+} from '../realm/body/BodyChapter'
 
 export interface PlayerData {
   name: string
@@ -132,11 +136,6 @@ export interface PlayerData {
   // tang khong giam - counter thong ke/dieu kien chung.
   bossKillCount: number
 
-  // Bat Mach (spec dot-pha-loi-kiep sec.4.1a) - id cac duong Ky Kinh da
-  // thong (tuan tu, xem core/realm/MeridianSystem.ts). 9/9 gom Ky Kinh
-  // Thien Dia Chi Kieu la dieu kien Dai Dao Truc Co.
-  openedMeridianIds: string[]
-
   // Quai an (spec dot-pha-loi-kiep sec.4.1c) - dem kill quai Luyen Khi tu
   // lan giet quai an gan nhat; du 1000 mo cua so quai an tra tron pool
   // spawn (giet quai an reset ve 0).
@@ -211,18 +210,15 @@ export interface PlayerData {
   // single-active cardinality). null = khong co auto-farm nao dang chay.
   autoFarmStage: { stageId: string; lastCheckedMs: number } | null
 
-  // Luyen The (Realm Passive & Pressure System, 2026-08-20) - 6 tang
-  // ren the Pham Nhan, xem data/realm/LuyenThe.ts. bodyRefinementCompletedTiers
-  // dem so tang DA HOAN THANH (0-6, tuan tu), bodyRefinementCurrentTierProgress
-  // la Tinh Hoa Pham The da dau tu vao tang DANG DO (0..cap cua tang
-  // bodyRefinementCompletedTiers). Xem core/realm/BodyRefinementSystem.ts.
-  bodyRefinementCompletedTiers: number
-
-  bodyRefinementCurrentTierProgress: number
+  // P7-M5 - the ONE canonical body progression record (chapter-keyed:
+  // body_refinement tiers + meridian openedIds today). Owned by
+  // core/realm/body/BodyProgressionSystem; consumers read derived facts
+  // through it, never the slices directly.
+  bodyProgression: BodyProgressionState
 
   // Bac Nhap Dao (1-6) - chot DUY NHAT 1 lan luc Le Nhap Mon (Pham
-  // Nhan -> Luyen Khi, xem GameManager.chooseCultivationPath()) tu
-  // bodyRefinementCompletedTiers tai thoi diem do, dung cho ca Nhap Dao
+  // Nhan -> Luyen Khi, xem GameManager.chooseCultivationPath()) tu so
+  // tang body_refinement da hoan thanh tai thoi diem do, dung cho ca Nhap Dao
   // (data/realm/RealmPassives.ts) lan Realm Pressure (xem
   // core/combat/RealmPressure.ts). Mac dinh 6 (khong bi ap che) cho
   // save cu/nhan vat chua tung qua Pham Nhan - KHONG hoi to phat
@@ -383,7 +379,6 @@ export function createDefaultPlayer(): PlayerData {
 
     totalCultivationGained: 0,
     bossKillCount: 0,
-    openedMeridianIds: [],
     luyenKhiKillsSinceBeast: 0,
     mortalPerfectionAchieved: false,
     greatDaoOpportunityLost: false,
@@ -396,8 +391,7 @@ export function createDefaultPlayer(): PlayerData {
     nodeLevels: {},
     nodeFreePurchaseRecord: {},
 
-    bodyRefinementCompletedTiers: 0,
-    bodyRefinementCurrentTierProgress: 0,
+    bodyProgression: createDefaultBodyProgression(),
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
     tribulationBonusStacks: 0,

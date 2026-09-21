@@ -23,9 +23,9 @@ function createGreatDaoReadyPlayer(): PlayerData {
   player.realmId = 'qi_refining'
   player.realmLevel = 18
   player.selectedTalentIds = ['pham_cot']
-  player.bodyRefinementCompletedTiers = 6
+  player.bodyProgression.body_refinement.completedTiers = 6
   player.mortalPerfectionAchieved = true
-  player.openedMeridianIds = MERIDIANS.map((m) => m.id)
+  player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
   player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
   return player
 }

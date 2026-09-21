@@ -91,4 +91,12 @@
 // mortalBasicSkillId (mortal-only precursor pick; post-path presence is
 // corrupt). Save v70 is rejected (dev phase, no migration, no compat
 // translator).
-export const CURRENT_SAVE_VERSION = 71 as const
+// v72 (2026-09-21, P7-M5 unified body progression): the three flat body
+// fields (bodyRefinementCompletedTiers /
+// bodyRefinementCurrentTierProgress / openedMeridianIds) fold into ONE
+// chapter-keyed record, player.bodyProgression = { body_refinement:
+// {completedTiers, currentTierProgress}, meridian: {openedIds} } -
+// shape validation delegates to the BodyProgression authority and the
+// restore preflight asserts chapter integrity before any owner mutation.
+// Save v71 is rejected (dev phase, no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 72 as const

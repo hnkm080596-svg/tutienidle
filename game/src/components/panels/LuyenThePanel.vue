@@ -2,8 +2,8 @@
 // Realm Passive & Pressure System (2026-08-20) — panel Luyện Thể, cùng
 // pattern overlay với SkillPathPanel.vue/TechniquePanel.vue/
 // RealmPanel.vue. Tinh Hoa Phàm Thể tự động nạp tiến độ (2026-08-30):
-// quái rơi → stream tím bay về người chơi → App.vue investBodyRefinement()
-// (xem core/realm/BodyRefinementSystem.ts) — tuần tự, đầy 1 tầng mới
+// quai roi -> stream tim bay ve nguoi choi -> domain tick investBodyChapter()
+// (xem core/realm/body/BodyRefinementChapter.ts) - tuan tu, day 1 tang moi
 // sang tầng kế. Panel chỉ HIỂN THỊ tiến độ, không còn nút/nắm tay.
 //
 // KHÔNG còn giới hạn riêng Phàm Nhân (2026-08-22) — CẢ truy cập LẪN
@@ -11,7 +11,7 @@
 // trong túi (chưa kịp tiêu hết trước khi rời Phàm Nhân) vẫn tiếp tục
 // đổi được thành chỉ số thay vì kẹt vĩnh viễn. requiredRealmLevel (pace theo
 // tầng Phàm Nhân) tự bypass sau khi rời realm — xem
-// BodyRefinementSystem.isTierRequiredRealmLevelMet(). Bậc Nhập Đạo (thưởng lúc Lễ
+// BodyRefinementChapter.isTierRequiredRealmLevelMet(). Bac Nhap Dao (thuong luc Le
 // Nhập Môn) vẫn CHỈ chốt theo tiến độ tại đúng thời điểm ritual đó
 // (GameManager.chooseCultivationPath(), không đổi) — đầu tư thêm sau
 // đó vẫn lên chỉ số trực tiếp (buildTierModifiers) nhưng không kéo
@@ -30,7 +30,8 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { BODY_REFINEMENT_TIERS } from '@/data/realm/BodyRefinement'
-import { getActiveTierIndex, getTierCap, isActiveTierUnlocked, isTierRequiredRealmLevelMet } from '@/core/realm/BodyRefinementSystem'
+import { getActiveTierIndex, getRefinementCurrentTierProgress, getTierCap, isActiveTierUnlocked, isTierRequiredRealmLevelMet } from '@/core/realm/body/BodyRefinementChapter'
+import { getBodyChapterProgress } from '@/core/realm/body/BodyProgressionSystem'
 import { statLabel } from '@/core/stats/StatLabels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
@@ -55,8 +56,19 @@ const tierUnlocked = computed(() => {
   return isActiveTierUnlocked(player.$state)
 })
 
+// P7-M5 - the canonical chapter progress read: completed tiers come from
+// the BodyProgression authority (never the chapter slice directly).
+const chapterProgress = computed(() => {
+  stateVersion.value
+
+  return getBodyChapterProgress(player.$state, 'body_refinement')
+})
+
 const tierRows = computed(() => {
   stateVersion.value
+
+  const completedTiers = chapterProgress.value.completed
+  const currentTierProgress = getRefinementCurrentTierProgress(player.$state)
 
   return BODY_REFINEMENT_TIERS.map((tier, index) => {
     const cap = getTierCap(index)
@@ -64,11 +76,11 @@ const tierRows = computed(() => {
     let progress = 0
     let status: 'done' | 'active' | 'realm_locked' | 'locked' = 'locked'
 
-    if (index < player.bodyRefinementCompletedTiers) {
+    if (index < completedTiers) {
       progress = cap
       status = 'done'
-    } else if (index === player.bodyRefinementCompletedTiers) {
-      progress = player.bodyRefinementCurrentTierProgress
+    } else if (index === completedTiers) {
+      progress = currentTierProgress
       // requiredRealmLevel gate (2026-08-20) — tầng ĐÚNG lượt đầu tư nhưng
       // chưa đạt Phàm Nhân tầng yêu cầu vẫn hiện riêng biệt (không lẫn
       // với các tầng sau, còn chưa tới lượt hoàn toàn). Tự bypass sau
@@ -100,7 +112,7 @@ function close() {
   <OverlayPanel :open="ui.standalonePanel === 'luyen_the'" :title="t('panels.luyenThe.title')" width="min(560px, 90vw)" height="85vh" @close="close">
     <div class="luyen-the-panel__card">
       <div class="luyen-the-panel__summary">
-        <span>{{ t('panels.luyenThe.summary', { completed: player.bodyRefinementCompletedTiers }) }}</span>
+        <span>{{ t('panels.luyenThe.summary', { completed: chapterProgress.completed }) }}</span>
       </div>
 
       <p class="luyen-the-panel__note">

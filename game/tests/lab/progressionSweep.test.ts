@@ -15,7 +15,7 @@
  *  - attribute points: 5 creation + 12/realm prior (min breakthrough
  *    path) + (L-1) this realm, split 50/50 vitality/strength.
  *  - body refinement (mortal): every tier whose requiredRealmLevel <= L
- *    completed via investBodyRefinement with enough Tinh Hoa.
+ *    completed via investBodyChapter with enough Tinh Hoa.
  *  - gear: 6 slots, best quality of 30 real rolls/slot at that level.
  *  - enhancement: every equipped slot pushed to +ENHANCE_TARGET via
  *    enhanceSlot with real spirit-stone spend.
@@ -135,7 +135,7 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
   // The material bag caps Tinh Hoa at 1000/stack, so feed batches.
   for (let batch = 0; batch < 80; batch++) {
     lab.cheat.addMaterial('tinh_hoa_pham_the', 1_000)
-    if (lab.manager.realmAdvanceOps.investBodyRefinement(lab.player) <= 0) break
+    if (lab.manager.realmAdvanceOps.investBodyChapter(lab.player, 'body_refinement') <= 0) break
   }
 
   // Enhancement - real spend; enhance can fail so retry until target.
