@@ -493,8 +493,9 @@
         "stateNext": "Kế tiếp",
         "stateLocked": "Chưa mở",
         "cost": "{count} Thông Mạch Đan",
-        "realmGate": "Luyện Khí tầng {level}",
-        "auxGate": "cần Thiên Địa Chi Kiều"
+        "realmGate": "{realm} tầng {level}",
+        "auxGate": "cần Thiên Địa Chi Kiều",
+        "pageLocked": "Mở khóa ở {realm}"
       }
     },
     "settings": {

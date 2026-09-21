@@ -967,6 +967,9 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     expect(() => manager.saveOps.restoreFromSave(baseSave(createDefaultPlayer()))).not.toThrow()
 
     const mid = createDefaultPlayer()
+    // M-E (D2): meridian progress needs the qi_refining page unlocked -
+    // a mortal + opened meridian is now an integrity violation.
+    mid.realmId = 'qi_refining'
     mid.bodyProgression.body_refinement.completedTiers = 3
     mid.bodyProgression.body_refinement.currentTierProgress = 100
     mid.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
@@ -977,6 +980,9 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
 
+    // M-E (D2): the meridian progress below is only legit with the
+    // qi_refining page unlocked.
+    player.realmId = 'qi_refining'
     player.bodyProgression.body_refinement.completedTiers = 1
     player.bodyProgression.meridian.openedIds = ['nham_mach']
     // Stale persisted slices: a completed-tier id the state no longer

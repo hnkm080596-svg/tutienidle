@@ -140,4 +140,59 @@ describe('MeridianSection (P7-M7)', () => {
 
     view.unmount()
   })
+
+  // M-E (D2) - page model: a mortal player's realm index is below the
+  // qi_refining page's, so the whole page renders locked-preview - no
+  // 'next' affordance, no cost/gate lines, page-level lock label.
+  it('renders the qi_refining page as locked-preview for a mortal player', async () => {
+    const view = mountSection(MeridianSection, (player) => {
+      player.$state.realmId = 'mortal'
+      player.$state.realmLevel = 10
+      setBodyProgression(player, { meridian: { openedIds: [] } })
+    })
+
+    await nextTick()
+
+    expect(view.container.textContent).toContain(
+      i18n.global.t('panels.realm.meridian.pageLocked', { realm: 'Luyện Khí' }),
+    )
+
+    const rows = view.container.querySelectorAll('.meridian-section__row')
+    expect(rows.length).toBe(9)
+    for (const row of rows) {
+      expect(row.classList.contains('meridian-section__row--locked')).toBe(true)
+    }
+    expect(view.container.querySelector('.meridian-section__row--next')).toBeNull()
+    expect(view.container.querySelector('.meridian-section__row-gate')).toBeNull()
+
+    view.unmount()
+  })
+
+  // M-E (D2) - an unlocked page past its own realm keeps sequential
+  // rows but suppresses the realm-pace label (it only paces inside the
+  // page's realm).
+  it('suppresses the pace label once past the page realm (Truc Co)', async () => {
+    const view = mountSection(MeridianSection, (player) => {
+      player.$state.realmId = 'foundation_establishment'
+      player.$state.realmLevel = 1
+      setBodyProgression(player, {
+        meridian: { openedIds: ['nham_mach', 'doi_mach'] },
+      })
+    })
+
+    await nextTick()
+
+    const rows = view.container.querySelectorAll('.meridian-section__row')
+    expect(rows[2]!.classList.contains('meridian-section__row--next')).toBe(true)
+    // Cost still shows (the sequential contract is realm-independent)...
+    expect(rows[2]!.textContent).toContain(
+      i18n.global.t('panels.realm.meridian.cost', { count: 4 }),
+    )
+    // ...but the pace label does not render cross-realm.
+    expect(view.container.textContent).not.toContain(
+      i18n.global.t('panels.realm.meridian.realmGate', { realm: 'Luyện Khí', level: 6 }),
+    )
+
+    view.unmount()
+  })
 })

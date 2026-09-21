@@ -120,6 +120,10 @@ describe('BodyProgressionSystem - integrity gate', () => {
     const player = createDefaultPlayer()
     expect(() => assertBodyProgressionIntegrity(player)).not.toThrow()
 
+    // M-E (D2): meridian progress requires the qi_refining page
+    // unlocked - a mortal + opened meridian is now an integrity
+    // violation, so legit progress fixtures carry the page realm.
+    player.realmId = 'qi_refining'
     player.bodyProgression.body_refinement.completedTiers = 2
     player.bodyProgression.body_refinement.currentTierProgress = 5
     player.bodyProgression.meridian.openedIds = ['nham_mach']
@@ -152,6 +156,7 @@ describe('BodyProgressionSystem - integrity gate', () => {
 
   it('accepts a fully-completed canonical state', () => {
     const player = createDefaultPlayer()
+    player.realmId = 'qi_refining'
     player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
     expect(() => assertBodyProgressionIntegrity(player)).not.toThrow()

@@ -493,8 +493,9 @@
         "stateNext": "Next",
         "stateLocked": "Sealed",
         "cost": "{count} Meridian Pills",
-        "realmGate": "Qi Refining floor {level}",
-        "auxGate": "requires Heaven-Earth Bridge"
+        "realmGate": "{realm} floor {level}",
+        "auxGate": "requires Heaven-Earth Bridge",
+        "pageLocked": "Unlocks at {realm}"
       }
     },
     "settings": {

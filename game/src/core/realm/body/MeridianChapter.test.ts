@@ -73,6 +73,25 @@ describe('MeridianChapter - Bat Mach (spec dot-pha-loi-kiep sec.4.1a)', () => {
     expect(consumed).toBe(2) // Doi Mach cost 2
     expect(meridianChapter.progress(player).completed).toBe(2)
   })
+
+  // M-E (D2) - the qi_refining PAGE is realm-locked: a mortal player's
+  // realm index is below the page's, so investment is structurally
+  // impossible even with materials in hand. (Spec-time finding: the
+  // old realmId-equality pace check let mortal invest - masked only
+  // by the parked caller.)
+  it('M-E: Pham Nhan KHONG dau tu duoc du page-material du (page locked)', () => {
+    const player = createDefaultPlayer()
+    player.realmId = 'mortal'
+    player.realmLevel = 20
+    player.bodyProgression.meridian.openedIds = []
+    expect(meridianChapter.invest(player, 999, 99)).toBe(0)
+    expect(player.bodyProgression.meridian.openedIds).toEqual([])
+
+    // Same for a later meridian mid-sequence.
+    player.bodyProgression.meridian.openedIds = ['nham_mach']
+    expect(meridianChapter.invest(player, 999, 99)).toBe(0)
+    expect(player.bodyProgression.meridian.openedIds).toEqual(['nham_mach'])
+  })
 })
 
 describe('MeridianChapter - chapter contract', () => {
@@ -173,5 +192,26 @@ describe('MeridianChapter - persisted state + integrity', () => {
     // would slip the prefix loop silently).
     player.bodyProgression.meridian.openedIds = 42 as never
     expect(meridianChapter.integrityIssues(player).length).toBeGreaterThan(0)
+  })
+
+  // M-E (D2) cross-field invariant: strict-prefix passes but an opened
+  // meridian on a still-locked page is semantically impossible (realm
+  // index never decreases, invest gate makes it unreachable) - restore
+  // would otherwise emit bat-mach:* modifiers on a locked page.
+  it('integrityIssues flags an opened meridian on a page locked at player realm', () => {
+    const player = createLuyenKhiPlayer()
+
+    // Mortal + an opened qi_refining meridian: prefix-valid, page-invalid.
+    player.realmId = 'mortal'
+    player.bodyProgression.meridian.openedIds = ['nham_mach']
+    expect(meridianChapter.integrityIssues(player).length).toBeGreaterThan(0)
+
+    // Same payload at qi_refining -> legit.
+    player.realmId = 'qi_refining'
+    expect(meridianChapter.integrityIssues(player)).toHaveLength(0)
+
+    // Foundation keeps the page unlocked - still legit.
+    player.realmId = 'foundation_establishment'
+    expect(meridianChapter.integrityIssues(player)).toHaveLength(0)
   })
 })

@@ -15,6 +15,7 @@ import {
 import type { PlayerData } from '../../player/Player'
 import type { StatModifier } from '../../stats/StatCalculator'
 import type { BodyChapterDefinition, BodyProgressionIssue } from './BodyChapter'
+import { isMeridianPageUnlocked } from './MeridianPages'
 
 const MODIFIER_PREFIX = 'bat-mach:'
 
@@ -53,10 +54,20 @@ export const meridianChapter: BodyChapterDefinition = {
       return 0
     }
 
-    // Gate tang chi pace tien do TRONG Luyen Khi (pattern
-    // BodyRefinementChapter.isTierRequiredRealmLevelMet) - roi Luyen Khi
-    // roi thi mo thang, chi con rang buoc tuan tu.
-    if (player.realmId === 'qi_refining' && player.realmLevel < next.requiredRealmLevel) {
+    // M-E (D2) - PAGE LOCK: the next meridian's page must be unlocked
+    // (player realm index >= page realm index). A mortal player can
+    // never invest even with materials - previously only the parked
+    // caller masked this, since the pace check below was scoped to
+    // realmId === 'qi_refining'.
+    if (!isMeridianPageUnlocked(player, next.pageRealmId)) {
+      return 0
+    }
+
+    // Gate tang chi pace tien do TRONG page realm (pattern
+    // BodyRefinementChapter.isTierRequiredRealmLevelMet) - roi page
+    // realm roi thi mo thang, chi con rang buoc tuan tu. Keyed on
+    // next.pageRealmId so a future page paces inside ITS realm.
+    if (player.realmId === next.pageRealmId && player.realmLevel < next.requiredRealmLevel) {
       return 0
     }
 
@@ -154,6 +165,20 @@ export const meridianChapter: BodyChapterDefinition = {
           known
             ? `meridian.openedIds[${index}] = '${actual}' vi pham thu tu tuan tu (ky vong '${expected}')`
             : `meridian.openedIds[${index}] = '${actual}' khong thuoc MERIDIANS`,
+        )
+      }
+    }
+
+    // M-E (D2) cross-field invariant: an opened meridian whose page is
+    // still locked at player.realmId is a strict-prefix pass but
+    // semantically impossible - realm index never decreases and the
+    // invest gate makes it unreachable, so restore would otherwise
+    // emit bat-mach:* modifiers on a locked page.
+    for (const id of openedIds) {
+      const meridian = MERIDIANS.find((m) => m.id === id)
+      if (meridian && !isMeridianPageUnlocked(player, meridian.pageRealmId)) {
+        issues.push(
+          `meridian '${id}' da mo nhung page '${meridian.pageRealmId}' chua mo khoa o realm '${player.realmId}'`,
         )
       }
     }
