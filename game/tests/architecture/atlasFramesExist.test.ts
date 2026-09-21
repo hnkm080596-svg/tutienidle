@@ -6,11 +6,11 @@ import { describe, expect, it } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
-import {
-  COMBAT_ANIMATION_NAMES,
-  presentationFor,
-} from '@/presentation/art/CombatPresentationCatalogue'
-import type { AtlasClip } from '@/presentation/art/CombatEntityPresentation'
+import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
+import type {
+  AtlasClip,
+  CombatAnimationCatalogue,
+} from '@/presentation/art/CombatEntityPresentation'
 import { SCAN_TIMEOUT } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
@@ -33,14 +33,21 @@ function publicPath(url: string): string {
   return join(GAME_ROOT, 'public', url)
 }
 
-function mortalClips(): Record<string, AtlasClip> {
-  const presentation = presentationFor(MORTAL_ENTITY_KEY)
+function mortalClips(): CombatAnimationCatalogue {
+  // The dormant ANIMATED form - validated in either ENTITY_ART_MODE so the
+  // clip data stays honest while 'static' is the emitted kind.
+  const clips = animatedArtFormFor(MORTAL_ENTITY_KEY)
 
-  if (!presentation || presentation.kind !== 'animated') {
-    throw new Error(`Expected animated mortal presentation for '${MORTAL_ENTITY_KEY}'`)
+  if (!clips) {
+    throw new Error(`Expected animated form for '${MORTAL_ENTITY_KEY}'`)
   }
 
-  return presentation.clips
+  return clips
+}
+
+/** Every declared clip as a flat list - optional members absent, never undefined. */
+function clipList(catalogue: CombatAnimationCatalogue): AtlasClip[] {
+  return Object.values(catalogue).filter((clip): clip is AtlasClip => clip !== undefined)
 }
 
 function frameName(clip: AtlasClip, index: number): string {
@@ -92,22 +99,34 @@ describe('mortal combat atlas frames', () => {
     () => {
       const declaredFrameNames = new Set<string>()
 
-      for (const name of COMBAT_ANIMATION_NAMES) {
-        const clip = clips[name]
-
-        if (!clip) {
-          throw new Error(`${name}: clip not declared`)
-        }
-
+      for (const clip of clipList(clips)) {
         for (let index = clip.firstFrame; index <= clip.lastFrame; index++) {
           const key = frameName(clip, index)
           declaredFrameNames.add(key)
-          expect(atlas.frames[key], `${name}: missing ${key}`).toBeDefined()
+          expect(atlas.frames[key], `${clip.key}: missing ${key}`).toBeDefined()
           expect(key).toMatch(/^frame_\d{3}\.png$/)
         }
       }
 
-      expect(Object.keys(atlas.frames).sort()).toEqual([...declaredFrameNames].sort())
+      // The atlas still CARRIES the pre-contract attack frames (43-90:
+      // cast/sweep_hand/punch + the old 'ready' loop at 32-42 was remapped to
+      // standby). They are dead art until the sheet is repacked - enumerated
+      // so the file's contents stay fully explained rather than shrinking the
+      // assertion to a subset check.
+      const DEAD_FRAME_RANGES: Array<[number, number]> = [[43, 90]]
+      const deadFrameNames = new Set<string>()
+
+      for (const [first, last] of DEAD_FRAME_RANGES) {
+        for (let index = first; index <= last; index++) {
+          deadFrameNames.add(`frame_${String(index).padStart(3, '0')}.png`)
+        }
+      }
+
+      const unexplained = Object.keys(atlas.frames).filter(
+        (key) => !declaredFrameNames.has(key) && !deadFrameNames.has(key),
+      )
+
+      expect(unexplained, 'atlas frames outside clips and dead ranges').toEqual([])
     },
     SCAN_TIMEOUT,
   )
@@ -115,22 +134,16 @@ describe('mortal combat atlas frames', () => {
   it(
     'keeps all mortal clips on one sheet with consistent source frames',
     () => {
-      expect(new Set(Object.values(clips).map((clip) => clip.sheetKey))).toEqual(
+      expect(new Set(clipList(clips).map((clip) => clip.sheetKey))).toEqual(
         new Set([idleClip.sheetKey]),
       )
 
-      for (const name of COMBAT_ANIMATION_NAMES) {
-        const clip = clips[name]
-
-        if (!clip) {
-          throw new Error(`${name}: clip not declared`)
-        }
-
+      for (const clip of clipList(clips)) {
         for (let index = clip.firstFrame; index <= clip.lastFrame; index++) {
           const frame = atlas.frames[frameName(clip, index)]!
 
-          expect(frame.trimmed, `${name} frame ${index} is not trimmed`).toBe(true)
-          expect(frame.sourceSize, `${name} frame ${index} sourceSize drift`).toEqual(
+          expect(frame.trimmed, `${clip.key} frame ${index} is not trimmed`).toBe(true)
+          expect(frame.sourceSize, `${clip.key} frame ${index} sourceSize drift`).toEqual(
             clip.sourceSize,
           )
           expect(frame.frame.x).toBeGreaterThanOrEqual(0)
@@ -150,7 +163,7 @@ describe('mortal combat atlas frames', () => {
           expect(
             frame.spriteSourceSize.w !== clip.sourceSize.w ||
               frame.spriteSourceSize.h !== clip.sourceSize.h,
-            `${name} frame ${index} is identity-trimmed`,
+            `${clip.key} frame ${index} is identity-trimmed`,
           ).toBe(true)
         }
       }

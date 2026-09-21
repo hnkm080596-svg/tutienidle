@@ -32,11 +32,17 @@ export interface CombatGridViewHost {
   entityFootMaxY: number
 
   /**
-   * Texture key dùng cho sprite khi id không phải PLAYER_ID và không khớp
-   * resolveEnemyTextureKey() — combat thật trả undefined (giữ NGUYÊN
-   * Rectangle fallback cho enemy ngoài batch Mortal, hành vi hiện tại
-   * không đổi); panel Trận Pháp trả về sheet placeholder dùng chung cho
-   * mọi combatant.
+   * Texture key dung cho sprite khi placeholder texture cua entity khong
+   * ton tai (double-fallback). Combat that tra undefined -> Rectangle;
+   * panel Tran Phap tra ve sheet placeholder dung chung cho moi combatant.
    */
   fallbackSpriteTextureKey(id: string): string | undefined
+
+  /**
+   * Kick the entity's idle state right after sprite creation - a no-op for
+   * entities whose presentation is static (playCombatAnimation guards), and
+   * the reason an animated-mode entity starts on its idle loop rather than a
+   * frozen first frame (uniformity, 2026-09-19).
+   */
+  startEntityIdle(sprite: EntitySprite, id: string): void
 }

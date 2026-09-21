@@ -3,9 +3,12 @@
 // Spec B §4.1/§4.2/§4.3
 // (docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md).
 //
-// Two classes, not one. §3.2 is a deliberate economy on ART COST: the player
-// (and later, bosses) get real per-clip animation; ordinary enemies get one
-// still image plus a procedural motion that costs no art at all.
+// Two classes, not one - but WHICH class an entity is no longer per-entity
+// policy. `ENTITY_ART_MODE` (EntityArtMode.ts, locked 2026-09-19) picks one
+// form for the WHOLE roster: 'static' = one PNG plus procedural motion for
+// everyone; 'animated' = the 5+1 clip set for everyone. Per-entity tiers
+// (player animated / enemies static / bosses deserving more) were rejected -
+// no shipped state may mix the two kinds.
 //
 // A DISCRIMINATED UNION, so a consumer has to decide which it is holding. The
 // alternative — an animated presentation whose clips happen to be absent — is
@@ -101,27 +104,31 @@ export interface AtlasClip {
    */
   extent: ArtExtent
 
-  /** -1 = loop (idle/ready/standby), 0 = play once (attack/death). */
-  repeat: number
-
   /**
-   * The frame at which this clip's action READS as having happened — a sword
-   * connecting, a palm striking. Absolute (same numbering as `firstFrame`), and
-   * within [firstFrame, lastFrame].
-   *
-   * Declared here and consumed by spec D, which replaces the current
-   * `ATTACK_LUNGE_DURATION_MS / 2` — half a movement tween, with no relationship
-   * to the art it is timing. NOTHING IN B READS THIS (§6, B8). Changing playback
-   * timing in the same pass as the metadata would make a regression in either
-   * impossible to attribute.
-   *
-   * Absent on looping clips, which have no impact moment.
+   * -1 = loop (idle/standby/cultivate), 0 = play once (death/transitions).
+   * A transition with -1 would loop forever and never emit the completion
+   * event the playback layer chains on - the uniformity test pins repeat 0.
    */
-  impactFrame?: number
+  repeat: number
 }
 
-/** Every clip of one animated entity. No partial records (§7). */
-export type CombatAnimationCatalogue = Record<CombatAnimationName, AtlasClip>
+/**
+ * One entity's clip set - the uniform contract (2026-09-19).
+ *
+ * The three combat states are REQUIRED - the interface is written member by
+ * member so the compiler checks it (add a required clip and every catalogue
+ * stops compiling until it has one). Transitions and cultivate are optional:
+ * an entity without them snaps to the destination loop (playback resolves the
+ * fallback) or keeps a static cultivate PNG on non-combat surfaces.
+ */
+export interface CombatAnimationCatalogue {
+  idle: AtlasClip
+  standby: AtlasClip
+  death: AtlasClip
+  idle_to_standby?: AtlasClip
+  standby_to_idle?: AtlasClip
+  cultivate?: AtlasClip
+}
 
 /** One still image. What a `kind: 'static'` entity actually draws. */
 export interface StaticEntityArt {

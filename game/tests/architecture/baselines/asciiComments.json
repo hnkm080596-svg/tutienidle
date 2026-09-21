@@ -2814,8 +2814,7 @@
   "/** Chebyshev distance từ avatar Player tới target tại thời điểm chấm điểm. */"
  ],
  "src/core/battle/CombatAnimationTypes.ts": [
-  "// R5 (AR-24) — Canonical animation name types for combat presentation.",
-  "/** * Names that have BOTH a clip and a call site. * * `hit`, `basic_attack` and `victory` were removed on 2026-09-11 (Spec B §4.5): * they were declared here and existed nowhere else in the tree — no clip, no * caller — and the animation-set builder's `as` cast asserted they were present * anyway, so `set.hit` type-checked and was `undefined` at runtime. * * Each returns the day it has a clip and a caller together. A name in this union * with nothing behind it is what let that cast lie for as long as it did. */"
+  "// R5 (AR-24) — Canonical animation name types for combat presentation."
  ],
  "src/core/battle/EnemySpawnPlacement.ts": [
   "// EnemySpawnPlacement — pure enemy spawn position resolver, resolved",
@@ -9047,9 +9046,6 @@
  "src/game/scenes/combat/combat-action-feedback.ts": [
   "// combat-action-feedback (Wave-3 large-file split) — tach tu CombatScene.ts.",
   "// Token is captured AT SPAWN for every delayed ack — a late callback holds",
-  "// Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-cast' TRƯỚC",
-  "// tween lunge (đòn đánh niệm/vung trước khi lao vào), cạnh tween vị",
-  "// trí hiện có (không thay thế).",
   "// Action Playback Task 7 (2026-09-05) / R5 (AR-20) — impact frame tại midpoint",
   "// lunge: damage áp đúng lúc đòn \"trúng\" trên màn hình. Token bắt tại spawn.",
   "/** * Action Playback Task 7 — presentationActive đang bật? Dùng registry * gameManagerRef presence làm proxy (set/unmount cùng subscribe lifecycle). */",
@@ -9059,13 +9055,9 @@
   "/** * Remediation Task 2 — ack engine từ completion THỰC của VFX tween qua * handle, không còn delayedCall tự tính duration trùng lặp. Token * CAPTURE TẠI SPAWN (plan Task 1 Step 5): callback muộn giữ token cũ — * engine đã sang phase/action khác (token mới) thì ack cũ thành stale * no-op ở GameManager, chặn cross-battle mutation. Không spawn được VFX * (projection miss) → ack ngay để engine không treo. */",
   "/** * Action Playback Task 7 (2026-09-05) — 'turn_ready': short flash/pulse * trên sprite actor rồi acknowledgeTurnReady() trong onComplete (5-phase * machine bước 1 → 2). Placeholder visual đơn giản theo plan (không * designed visual — polish sau). */",
   "// Không có sprite (late-join miss) — ack ngay để engine không treo.",
-  "// Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-ready' CẠNH pulse",
-  "// scale hiện có (không thay thế).",
   "// Pulse đơn giản: scale bump rồi trở lại (tween trên rect/sprite GameObject",
   "// — EntitySprite wrapper không expose scale, projection ghi mỗi frame).",
   "/** * Action Playback Task 7 (2026-09-05) — 'turn_standby_complete': tail * event (completeAction ĐÃ chạy trước khi event tới) — presentation-only * bookkeeping, KHÔNG ack gì (không còn wait-gate). */",
-  "// Combat Art Pipeline Task 9 (2026-09-05) — quay lại clip '-standby'",
-  "// (idle-adjacent) khi kết thúc lượt.",
   "// Buff bar (2026-09-02) — floating text tên hiệu ứng CHỈ lần đầu",
   "// attach theo (targetId:buffId) — 2 nguồn cùng buff id chỉ floating 1",
   "// lần; stack tăng không floating lại. Clear ở 2 cleanup sites."
@@ -9078,12 +9070,9 @@
   "// `entityKey` không dùng trực tiếp trong thân hàm (mỗi clip đã tự mang",
   "// đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và",
   "// để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).",
-  "// Frame NAMES, not indices — the clip describes a TexturePacker atlas",
-  "// (Spec B §3.1/§4.2), so a frame is `frame_` + a zero-padded number",
   "/** * Map id RUNTIME (PLAYER_ID hoặc enemy id dạng '<templateId>_<uuid>') * sang ENTITY KEY dùng làm tiền tố animation clip — khớp ĐÚNG cách * CombatPreload.ts build animation set (player theo profile hiện hành, * enemy theo resolveEnemyTextureKey()). undefined khi actor không có * animation set nào (enemy ngoài batch Mortal, vẫn Rectangle) — caller * PHẢI guard trước khi gọi sprite.play(). */",
   "/** * Spec B §3.2 — is this entity's art ANIMATED, or a still image? * * One question, asked of the catalogue, in the one place that plays clips. * A static entity is not a degraded animated one: it has no clips at all, and * asking for one is a no-op rather than a fallback. */",
   "/** * Phát 1 animation clip cho actor NẾU sprite là Sprite thật (kind === * 'sprite') VÀ clip đó đã được registerCombatAnimations() đăng ký — * no-op an toàn cho Rectangle fallback (enemy ngoài batch) hoặc clip * chưa/không tồn tại (test fixture không stub scene.anims đầy đủ). * * Spec B §3.2 (2026-09-11) — AND the entity's art is animated. Before this, * an enemy taking its turn played the 32-frame placeholder, which SWAPPED its * texture from its own Mortal PNG to a numbered stick figure for the length of * the clip. Enemies are static now; their motion is the bob in * `combat-grid-view.ts`. */",
-  "// Spec B §4.5 — `idle` is the state every other clip returns to.",
   "/** * Combat Art Pipeline Task 9 (2026-09-05) — dùng chung bởi onDeath() (event * 'death' thật) và reconcileCombatantSprites() (fallback khi entity mất * khỏi snapshot mà không có event riêng): đánh dấu dying, dọn DoT/cast bar, * phát animation '-death' NẾU sprite là Sprite thật + clip đã đăng ký, và * HOÃN destroy tới khi CẢ tween xoay/mờ CŨ lẫn animation (nếu có) đều xong * — spec §9: cleanup không được cắt ngang animation chết. Không có * animation hợp lệ → animDone giữ true ngay từ đầu, hành vi y hệt trước * Task 9 (chỉ chờ tween). * * Player KHÔNG BAO GIỜ bị destroy ở đây (giữ vị trí cuối dưới overlay kết * quả, xem onBattleEnd) — chỉ tween/animation chạy, isPlayer chặn nhánh * destroy trong finalize(). */",
   "// DoT accumulator — xóa bucket của target chết.",
   "// isPlayer: không destroy (xem doc). Identity check chặn double-",
@@ -9152,15 +9141,18 @@
   "/** * Fake host tối giản — chỉ implement đúng bề mặt API mà * CombatGridView.getOrCreateSprite() (nhánh enemy CÓ texture thật) chạm * tới. applySpriteSize/updateEnemyHealthBar gán SAU khi gridView đã tồn * tại vì getOrCreateSprite() gọi ngược `this.applySpriteSize(...)` (các * method của CHÍNH CombatGridView — trước đây uỷ quyền qua CombatScene, * xem Battlefield Slot Task 2). */",
   "// body actually landed (Spec B §4.3's idle bob).",
   "// Spec B §4.3 — enemies now start an idle-bob tween on creation. The host",
-  "// resolveEnemyTextureKey() trả falsy cho id không nằm trong batch art",
-  "// (id không khớp pattern quái Mortal) → rơi vào nhánh `rect` cuối cùng",
-  "// của getOrCreateSprite(), chỗ trước đây hardcode sizeMultiplier: 1 cho",
-  "// MỌI trường hợp kể cả Boss.",
+  "// CombatGridViewHost.startEntityIdle — kicks the entity's idle state after",
+  "// resolveEnemyTextureKey() trả falsy cho id không nằm trong batch art →",
+  "// entity key rơi về PLACEHOLDER_ENTITY_KEY, render placeholder texture",
+  "// của mode hiện hành thay vì Rectangle (Rectangle chỉ còn double-",
+  "// fallback khi cả placeholder texture cũng thiếu).",
   "// Không được nhỏ hơn enemy thường CÓ texture (nhánh sprite, ×2) — đây",
   "// chính là bug bị lật ngược mà review round 1 tìm ra.",
-  "// Enemy thường rơi cùng nhánh fallback vẫn giữ nguyên size 1 như trước —",
-  "// lựa chọn bảo thủ (conservative), không đổi hình ảnh enemy thường hiện",
-  "// có khi chưa có art.",
+  "// Enemy thường cùng nhánh placeholder giữ ENEMY multiplier như mọi",
+  "// entity có texture — đồng nhất với quái có art thật.",
+  "// Uniformity 2026-09-19: id ngoài batch giờ render placeholder texture",
+  "// CÙNG MODE thay vì Rectangle — Rectangle chỉ còn là double-fallback khi",
+  "// cả placeholder texture cũng không load được.",
   "// Spec B §4.3/§6 B6 — the idle bob",
   "// §3.2 described enemies as static \"như hiện tại\". They were not: walk sway/",
   "// §3.2's calibration says that must stay 122.98 at this depth."
@@ -9212,9 +9204,6 @@
   "// EntitySprite.kind's ghi chÃº).",
   "// The box the art this sprite DRAWS is authored in — not the entity's",
   "// 1.094 aspect onto 0.571 art — 3.44x too wide on screen. Spec B moved",
-  "// Enemy: Sprite art batch Mortal khi cÃ³ texture khá»›p id (mortal-",
-  "// enemy-art-batch-plan.md), fallback Rectangle mÃ u cho id ngoÃ i",
-  "// batch (test fixture / realm khÃ¡c chÆ°a cÃ³ art).",
   "// Enemy art x2; Boss Ã—2 quy táº¯c enemy thÆ°á»ng (2026-09-05) â€” khÃ´ng",
   "// cÃ²n dÃ¹ng CÃ™NG multiplier nhÆ° trÆ°á»›c (xem",
   "// CombatScene.enemyScale.test.ts). BÃ³ng ellipse dÆ°á»›i chÃ¢n nhÃ¢n",
@@ -9670,6 +9659,7 @@
   "// new CombatScene() (khÃ´ng pháº£i Object.create) â€” PHáº¢I cháº¡y constructor",
   "// Ä‘á»ƒ class field resizeHandler/shutdownHandler cÃ³ identity tháº­t: test",
   "// nÃ y verify chÃ­nh tÃ­nh \"cÃ¹ng 1 reference qua cÃ¡c láº§n create\" cá»§a chÃºng.",
+  "// Static-mode entities bob via a tween (uniformity 2026-09-19) — stub the",
   "// Combat tá»± Ä‘á»™ng hoÃ n toÃ n (yÃªu cáº§u 2026-08-26) â€” KHÃ”NG Ä‘Äƒng kÃ½",
   "// báº¥t ká»³ input listener nÃ o ná»¯a (hover circle Ä‘Ã£ gá»¡).",
   "// KÃ­ch hoáº¡t shutdown handler mÃ events.once Ä‘Ã£ Ä‘Äƒng kÃ½.",
@@ -9860,8 +9850,6 @@
   "// qua event 'player_visual_profile_changed' (bridge Ã¡Â»Å¸ PhaserCanvas.vue).",
   "// Task 8 — public: combat-player-visual.ts ghi trực tiếp qua scene ref.",
   "/** KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc nguÃ¡Â»â€œn cÃ¡Â»Â§a texture combat Ã„â€˜ang gÃ¡ÂºÂ¯n trÃƒÂªn player sprite. */",
-  "/** * Static texture thay atlas idle Ã¢â‚¬â€ art profile lÃƒÂ PNG tÃ„Â©nh, KHÃƒâ€NG play * animation; resetVisual() phÃ¡ÂºÂ£i bÃ¡Â»Â qua .play(). */",
-  "// Task 8 — public: combat-player-visual.ts ghi trực tiếp qua scene ref.",
   "// Debug body anchors (plan Ã‚Â§5.4) Ã¢â‚¬â€ dev-only, bÃ¡ÂºÂ­t qua",
   "// localStorage['debug.playerBodyAnchors']='1'; khÃƒÂ´ng cÃƒÂ³ UI production.",
   "// ================= Reward gourd + stream state (plan Ã‚Â§6/Ã‚Â§7) =========",
@@ -10214,7 +10202,6 @@
   "// KHÔNG còn animation atlas idle/cultivate ở scene này.",
   "// Static art theo profile — sourceSize đọc LIVE từ texture hiện hành",
   "// (mỗi profile/art có kích thước nguồn khác nhau), giữ characterHeight",
-  "// cố định và tự suy width theo đúng tỉ lệ.",
   "/** Texture key theo profile + pose đang hiển thị (plan §4.1 bảng). */",
   "// Player luôn đứng giữa Home Scene (HERO_HOME_X = 0, xem BattleLane.ts)",
   "// — không di chuyển/nội suy gì ở đây nữa (khác lúc combat, xem class",
@@ -10258,7 +10245,6 @@
   "// `visualProfileId` -> payload below), not hardcoded — the same id CombatScene",
   "// resetVisual() không dùng ở panel — Map rỗng thoả type, .get() luôn",
   "// undefined (đã guard sẵn trong CombatGridView.resetVisual()).",
-  "// PNG (the sprite's base texture — the player renders static art in",
   "// V10 / §3.6 surface two: the shell addresses the REGION, not this object.",
   "// 2 lớp nền phẳng (sky/ground) — KHÔNG dùng attachBattlefieldBackdrop()",
   "// của combat thật (sao/trăng/núi/đá quá cầu kỳ cho panel test, và",
@@ -10270,8 +10256,7 @@
   "/** * Diff theo combatantId qua chính CombatGridView.getOrCreateSprite() — * KHÔNG tự viết lại logic tạo/xoá sprite: entity còn trong assignment * mới → getOrCreateSprite() no-op nếu id đã có trong this.sprites (chỉ * reposition), animation KHÔNG bị ngắt/reset (đây chính là fix cho bug * \"animation reset về 0 mỗi lần kéo-thả 1 entity\", 2026-09-06); entity * biến mất → destroyEntitySprite() qua CombatGridView; entity mới xuất * hiện → getOrCreateSprite() tạo sprite mới, play() từ frame 0 (đúng — * chưa từng animate trong panel này). */",
   "// Phaser event payloads are untyped at runtime — accept the current",
   "// sprite so it picks up the new profile PNG — same outcome as",
-  "// gridToScreen(sprite.row, column) — refresh it or the unit draws in",
-  "// (playerUsesStaticTexture — no idle clip); everyone else keeps the"
+  "// gridToScreen(sprite.row, column) — refresh it or the unit draws in"
  ],
  "src/game/scenes/TribulationScene.ts": [
   "// Bất Tử Thể có thể cứu player sau event killed=true (CombatSystem",
@@ -10407,7 +10392,6 @@
   "// 2026-09-16 live pass proved the bundle covers every key — cold combat",
   "// slash — R12/AR-30 keeps the literal spelled once (in PlayerVisualProfiles).",
   "// Mortal enemy art batch (mortal-enemy-art-batch-plan.md) — 20 PNG cho",
-  "// 10 loài + bản ferocious; id ngoài batch fallback Rectangle.",
   "// Spec B §4.4 (2026-09-11) — ONE resolver answers what an entity's art is.",
   "// that discarded both of its data parameters (§2.1).",
   "// entity is no longer animated. Enemies are `kind: 'static'` now (§3.2), and a",
@@ -10575,18 +10559,9 @@
   "// errorHandler chạy NGOÀI context setup() của bất kỳ component nào —",
   "// không có \"active pinia\" ngầm định để dựa vào."
  ],
- "src/presentation/art/CombatArtTier.ts": [
-  "// CombatArtTier — which tier of entity DESERVES animation. Policy, once.",
-  "// Spec B §3.2.1",
-  "// fact is legal under A7 — this reports, it does not decide anything the",
-  "/** What an entity's art should be — NOT what it has. See `presentationFor`. */",
-  "/** * ELITE IS DELIBERATELY STATIC. Elites are a reward multiplier applied to an * ordinary template, not a distinct creature, so they share the ordinary one's * art. Animating them would multiply the art bill by every elite-able enemy, * which is the opposite of §3.2's purpose. When an elite deserves its own look * it becomes a boss variant or its own template. */",
-  "/** * WHAT THIS DOES NOT DO: decide whether art exists. * * The catalogue (`presentationFor`) stays the single source of truth for what * has actually been drawn. The tier says what an entity DESERVES; the entry says * what it HAS. Collapsing the two would mean a boss whose atlas has not been * drawn yet either crashes or silently downgrades — and §3.2 exists precisely * because art arrives later than the design for it. * * The two are reconciled by a guard, not by a fallback (§7): an entity whose * tier is `animated` and whose entry is `static` is ART DEBT — listed, expected, * and allowed. Exactly the ratchet Spec A used for cross-layer imports: it may * shrink without ceremony; it may not grow without someone editing this list. * * IT IS NON-EMPTY ON DAY ONE, AND THAT IS THE POINT. Boss variants are built * from the SAME templates as ordinary enemies (`createBossVariant()` multiplies * an existing enemy's stats), so a boss wolf resolves to the ordinary wolf's * texture key. Every mortal template is therefore art debt in its boss form: * `artTierFor` calls it animated, and the only art drawn for that key is a still * PNG. Listing all twenty says that out loud instead of leaving twenty silent * downgrades. * * One consequence is INHERITED rather than introduced: `isBoss` is already * overloaded. Tribulation (Kiếp) enemies set it directly, NOT through * `createBossVariant()`, and the code says why — \"Chỉ tái dùng cờ isBoss để * Combat HUD hiện thanh máu cố định\" (`Enemy.ts:190-196`). They set it to get a * fixed HP bar, not because they are bosses. They carry no texture key of their * own, so they never reach this list — but if the debt list ever turns out to be * mostly Kiếp enemies, the fix is a separate `hasFixedHealthBar` flag on the HUD * side, not a special case buried in `artTierFor`. */"
- ],
  "src/presentation/art/CombatEntityPresentation.ts": [
   "// CombatEntityPresentation — what a combat entity's art IS, as a type.",
   "// Spec B §4.1/§4.2/§4.3",
-  "// Two classes, not one. §3.2 is a deliberate economy on ART COST: the player",
   "// alternative — an animated presentation whose clips happen to be absent — is",
   "// the `Partial<Record<…>>` shape Spec A §4.2 has just finished removing from the",
   "// `{ kind: 'animated', clips: … }`. No playback code is touched, because every",
@@ -10596,7 +10571,6 @@
   "/** * Where the character's own pixels sit inside the authored box, as fractions of * that box — the atlas's `spriteSourceSize` normalised by `sourceSize`. * * Measured from the art, never hand-written. Used by SCALE alone (Spec C §4.1): * anchors do not read it, because they come from the battlefield cell (§3.1). * * `{ x: 0, y: 0, w: 1, h: 1 }` for untrimmed art, which makes every formula in * §3.2 collapse to sizing the box directly. */",
   "/** * The UNTRIMMED box every frame of this clip is authored in — the atlas * JSON's `sourceSize`. * * Added 2026-09-11 after a MEASURED defect: the display size of an animated * sprite was still being derived from the entity's static PNG * (`PlayerVisualProfile.combatSourceSize`, 1312x1199 for the player) while the * sprite was drawing an atlas frame authored at 200x350. The figure rendered * 3.44x too wide. * * It belongs on the CLIP rather than on the entity because it is a property of * the art the clip points at, and two clips of one entity may eventually be * authored at different sizes. `atlasFramesExist` checks it against the JSON * on disk, so it cannot drift silently. * * Note this is the AUTHORED box, not the trimmed pixels. The per-frame trim * offset inside it is spec C's problem (§5.2), and it differs per frame. */",
   "/** * The frame at which this clip's action READS as having happened — a sword * connecting, a palm striking. Absolute (same numbering as `firstFrame`), and * within [firstFrame, lastFrame]. * * Declared here and consumed by spec D, which replaces the current * `ATTACK_LUNGE_DURATION_MS / 2` — half a movement tween, with no relationship * to the art it is timing. NOTHING IN B READS THIS (§6, B8). Changing playback * timing in the same pass as the metadata would make a regression in either * impossible to attribute. * * Absent on looping clips, which have no impact moment. */",
-  "/** Every clip of one animated entity. No partial records (§7). */",
   "/** * Procedural motion for a static entity. Costs no art — this is the whole point * of §3.2's economy, and the reason \"static\" does not have to mean \"dead\". * * Worth stating plainly because the decision described enemies as static \"như * hiện tại\": they were not. Walk sway/bob/tilt were deleted outright on * 2026-08-26 (`combat-grid-view.ts`), leaving rotation 0 and a straight * projected position. So this is a TARGET state, and reaching it means adding a * motion that is not there — cheap, but not a no-op. */",
   "/** * Peak vertical offset, in SCREEN pixels, and NOT scaled by projection depth. * * Decided 2026-09-11: one size for every row. The alternative — scaling * amplitude by the row's depth factor, so a far enemy breathes less — is more * correct perspective and was explicitly not wanted. A far enemy is already * small; scaling its motion too makes it read as frozen. */"
  ],
@@ -10606,15 +10580,7 @@
   "// Hand-written TypeScript beside the profile, not a generated manifest — it",
   "// The honest trade (§3.3): frame counts can drift from the art, because nothing",
   "// specifically to make that drift fail a test rather than a frame, and §7.1",
-  "/** * The placeholder figure's own box inside the 200x350 authored frame, as * fractions, taken from the tallest frame the generator emits. * * Checked against the atlas JSON by tests/architecture/artExtentDeclared.test.ts, * so regenerating the art with different margins fails a test rather than * silently resizing every character (Spec C §2.3). */",
-  "// present while three names were not — so `set.hit` type-checked and was",
-  "// `undefined` at runtime (§2.2). Here the compiler checks the record: add a",
-  "/** * Peak bob, in SCREEN pixels. Small on purpose: this reads as breathing, not as * hovering. Not scaled by projection depth — see `IdleMotion.amplitudePx`. */",
-  "/** * Fallback player entity key — same PNG as the mortal profile, different key. * Used when `combat-grid-view.ts` does not find the current profile's texture * loaded yet. * * Declared HERE rather than imported from `CombatPreload`: that module imports * this one, and the reverse edge would be a cycle. */",
-  "/** * Enemy template ids whose art is drawn: the canonical * `MORTAL_ENEMY_TEMPLATE_IDS` from EnemyArt (R12/AR-30 — one enumeration, * resolved through `resolveEnemyTextureKey` for texture keys). */",
-  "// The player animates (§3.2). Every profile, plus the fallback key.",
-  "/** * One function, one answer per entity. * * `undefined` for an entity with no drawn art at all — a realm whose enemies are * not in the Mortal batch, or a test fixture. Callers keep their existing * Rectangle fallback; this does NOT invent a presentation to avoid returning * nothing, because a silent downgrade is exactly what §3.2.1 refuses. */",
-  "/** * Animated entity keys whose clips still point at the shared placeholder * sheet — derived, not declared, so the answer cannot drift from the * catalogue. This is the placeholder-art debt list; the ratchet guard is * `tests/architecture/artTierDebt.test.ts` (shrink freely, never grow). */"
+  "/** * The placeholder figure's own box inside the 200x350 authored frame, as * fractions, taken from the tallest frame the generator emits. * * Checked against the atlas JSON by tests/architecture/artExtentDeclared.test.ts, * so regenerating the art with different margins fails a test rather than * silently resizing every character (Spec C §2.3). */"
  ],
  "src/presentation/art/PlayerVisualProfiles.test.ts": [
   "// Player visual profile catalog (plan §4.1 + §9 unit tests):",
@@ -12055,16 +12021,6 @@
  ],
  "tests/architecture/ackTokenContract.test.ts": [
   "/** * R14.6c guard — presentation ACKs require a generation token (roadmap R14 * \"all presentation ACKs require generation token\"; R5/AR-20 runtime * contract in CombatAnimationRuntime). * * The runtime already rejects missing/mismatched/stale tokens; behavioral * coverage lives in CombatAnimationRuntime.test.ts. This STATIC guard pins * the contract against silent refactor regressions: each public ack method * must reject a missing or mismatched token BEFORE touching pending state. */"
- ],
- "tests/architecture/animationCatalogue.test.ts": [
-  "/** * Guard (Spec B §7) — the animation catalogue describes clips that can exist. * * Spec: docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md * §4.2, §4.4, §7. * * §3.3 chose hand-written metadata over a generated manifest and accepted the * cost out loud: nothing measures the art. These assertions check the half that * IS checkable — that a clip is internally coherent and reachable. Its sibling * `atlasFramesExist.test.ts` checks the other half, against the file on disk. * * §7.1 states plainly what neither can catch: that a clip LOOKS right. A clip * whose `impactFrame` is inside the range but on the wrong frame — the sword * still rising — passes everything here. That is a judgement made by watching, * and it belongs to spec D. */"
- ],
- "tests/architecture/artTierDebt.test.ts": [
-  "/** * Guard (Spec B §7) — art debt is listed, not discovered. * * Spec: docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md * §3.2.1, §7. * * `artTierFor` says what an entity DESERVES. The catalogue says what it HAS. * §3.2.1 refuses to reconcile the two with a fallback, because a fallback means * a boss whose atlas has not been drawn either crashes or silently downgrades — * and art arriving later than the design for it is the normal case here, not the * exception. * * So they are reconciled by a LIST, with the ratchet Spec A used for cross-layer * imports: it may shrink without ceremony; it may not grow without someone * editing it. * * Boss variants are built from the SAME templates as ordinary enemies * (`createBossVariant()` multiplies an existing enemy's stats), so a boss wolf * resolves to the ordinary wolf's texture key. Every mortal template is * therefore debt in its boss form, and the list is long on day one BY DESIGN. * * Probes this is written against: add a template without adding it to the list * (must go red), and leave a listed entity in place after its entry becomes * animated (must also go red). */",
-  "// Elite is DELIBERATELY static (§3.2.1): an elite is a reward multiplier on",
-  "// what §3.2 is for.",
-  "// reading it here is legal under A7 — this reports, it decides nothing.",
-  "// Same ratchet rule as the tier list above — the set is DERIVED from the"
  ],
  "tests/architecture/assetContainment.test.ts": [
   "/** * R14.6a guard — asset containment (roadmap R14 \"asset destination must * remain under asset root\", A10 canonical catalog). * * Regression classes protected: * - A runtime asset URL that escapes `assets/` (path traversal, absolute * filesystem path, URL scheme, or a `public/` prefix that 404s at serve * time) — checked across every AssetBundleCatalog descriptor AND every * literal `load.*` URL argument in production source. * - `scripts/route-assets.mjs` derives destinations from EXTERNAL filenames * (`name__sub.png` -> `public/assets/name/sub.png`). A `..` segment (or a * crafted absolute segment) escapes the asset root. The script must * resolve each destination and verify containment before moving it. * - Asset-pipeline script write destinations must derive from the declared * roots: `public/assets` (runtime art), `art-source` (source art staging), * `src/assets` (source manifests). A new root constant pointing elsewhere * fails here until reviewed. */"

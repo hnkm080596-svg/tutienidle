@@ -101,15 +101,15 @@ describe('R14.6b — no stray preload enumeration outside the catalog', () => {
     //   thanhVanLoadList(variant), the same source the catalog enumerates.
     // - TranPhapCombatPreviewScene: PLACEHOLDER_* constants declared by the
     //   combat presentation catalogue (enumerated in the combat bundle).
-    // - TribulationScene: literal 'assets/cultivate.json' — in the
-    //   tribulation bundle (checked by the literal-url test above).
+    // - TribulationPreload: descriptor-fed net reading
+    //   getTribulationDescriptors() — the same enumeration the bundle uses.
     const allowedFeeders = new Set([
       'game/support/CombatPreload.ts',
       'game/scenes/AssetLoaderScene.ts',
       'game/support/InkWashUiPhaser.ts',
       'game/scenes/CombatScene.ts',
       'game/scenes/TranPhapCombatPreviewScene.ts',
-      'game/scenes/TribulationScene.ts',
+      'game/support/TribulationPreload.ts',
     ])
 
     for (const file of corpus) {

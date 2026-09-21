@@ -6,11 +6,11 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
-import {
-  COMBAT_ANIMATION_NAMES,
-  presentationFor,
-} from '@/presentation/art/CombatPresentationCatalogue'
-import type { AtlasClip } from '@/presentation/art/CombatEntityPresentation'
+import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
+import type {
+  AtlasClip,
+  CombatAnimationCatalogue,
+} from '@/presentation/art/CombatEntityPresentation'
 import { SCAN_TIMEOUT } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
@@ -25,14 +25,15 @@ function publicPath(url: string): string {
   return join(GAME_ROOT, 'public', url)
 }
 
-function mortalClips(): Record<string, AtlasClip> {
-  const presentation = presentationFor(MORTAL_ENTITY_KEY)
+function mortalClips(): CombatAnimationCatalogue {
+  // The dormant ANIMATED form - validated in either ENTITY_ART_MODE.
+  const clips = animatedArtFormFor(MORTAL_ENTITY_KEY)
 
-  if (!presentation || presentation.kind !== 'animated') {
-    throw new Error(`Expected animated mortal presentation for '${MORTAL_ENTITY_KEY}'`)
+  if (!clips) {
+    throw new Error(`Expected animated form for '${MORTAL_ENTITY_KEY}'`)
   }
 
-  return presentation.clips
+  return clips
 }
 
 function frameName(clip: AtlasClip, index: number): string {
@@ -58,12 +59,9 @@ describe('mortal art extents', () => {
   it(
     'declares the measured tallest trimmed frame for every clip',
     () => {
-      for (const name of COMBAT_ANIMATION_NAMES) {
-        const clip = clips[name]
-
-        if (!clip) {
-          throw new Error(`${name}: clip not declared`)
-        }
+      for (const clip of Object.values(clips).filter(
+        (c): c is AtlasClip => c !== undefined,
+      )) {
 
         let tallest: AtlasFrame | undefined
 
@@ -71,7 +69,7 @@ describe('mortal art extents', () => {
           const frame = atlas.frames[frameName(clip, index)]
 
           if (!frame) {
-            throw new Error(`${name}: missing frame ${index}`)
+            throw new Error(`${clip.key}: missing frame ${index}`)
           }
 
           if (!tallest || frame.spriteSourceSize.h > tallest.spriteSourceSize.h) {
@@ -80,7 +78,7 @@ describe('mortal art extents', () => {
         }
 
         if (!tallest) {
-          throw new Error(`${name}: empty clip range`)
+          throw new Error(`${clip.key}: empty clip range`)
         }
 
         const { sourceSize, spriteSourceSize } = tallest

@@ -7,7 +7,16 @@ import {
   addInkWashNineSlice,
   queueInkWashUiAtlas,
 } from '@/game/support/InkWashUiPhaser'
+import { queueTribulationAssets } from '@/game/support/TribulationPreload'
+import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import {
+  getCultivateTexture,
+  PLAYER_VISUAL_PROFILES,
+} from '@/presentation/art/PlayerVisualProfiles'
 
+// 'char-cultivate' is the legacy 17-frame bridge multiatlas - the cultivate
+// presentation in ANIMATED mode until player atlases carry a cultivate clip
+// (uniformity plan, 2026-09-19). Static mode draws the profile cultivate PNG.
 const CULTIVATE_KEY = 'char-cultivate'
 const FRAME_RATE = 8
 
@@ -74,9 +83,10 @@ export class TribulationScene extends Phaser.Scene {
   }
 
   preload() {
-    if (!this.textures.exists(CULTIVATE_KEY)) {
-      this.load.multiatlas(CULTIVATE_KEY, 'assets/cultivate.json', 'assets')
-    }
+    // Descriptor-fed (A10): the mode-appropriate cultivate art is whatever
+    // the 'tribulation' bundle enumerates - cultivate PNG in static mode,
+    // the char-cultivate bridge multiatlas in animated mode.
+    queueTribulationAssets(this)
     queueInkWashUiAtlas(this)
   }
 
@@ -97,18 +107,36 @@ export class TribulationScene extends Phaser.Scene {
       fontFamily: 'serif', fontSize: '32px', color: '#ddecff', letterSpacing: 8,
     }).setOrigin(0.5).setShadow(0, 0, '#72bfff', 16)
 
-    if (!this.anims.exists(CULTIVATE_KEY)) {
-      this.anims.create({
-        key: CULTIVATE_KEY,
-        frames: this.anims.generateFrameNames(CULTIVATE_KEY, { prefix: 'frame_', suffix: '.png', start: 0, end: 16, zeroPad: 3 }),
-        frameRate: FRAME_RATE,
-        repeat: -1,
-      })
-    }
+    if (ENTITY_ART_MODE === 'animated') {
+      if (!this.anims.exists(CULTIVATE_KEY)) {
+        this.anims.create({
+          key: CULTIVATE_KEY,
+          frames: this.anims.generateFrameNames(CULTIVATE_KEY, { prefix: 'frame_', suffix: '.png', start: 0, end: 16, zeroPad: 3 }),
+          frameRate: FRAME_RATE,
+          repeat: -1,
+        })
+      }
 
-    this.player = this.add.sprite(width / 2, height * 0.62, CULTIVATE_KEY, 'frame_000.png')
-      .play(CULTIVATE_KEY)
-      .setDisplaySize(128, 132)
+      this.player = this.add.sprite(width / 2, height * 0.62, CULTIVATE_KEY, 'frame_000.png')
+        .play(CULTIVATE_KEY)
+        .setDisplaySize(128, 132)
+    } else {
+      // Static mode - the profile's cultivate PNG; size from the live source
+      // image so a differently-shaped artwork never distorts.
+      const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
+      const profile =
+        (registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]) ||
+        PLAYER_VISUAL_PROFILES.mortal
+      const textureKey = getCultivateTexture(profile).key
+
+      this.player = this.add.sprite(width / 2, height * 0.62, textureKey)
+
+      const source = this.textures.get(textureKey).getSourceImage()
+      const sourceW = 'width' in source ? Number(source.width) : 128
+      const sourceH = 'height' in source ? Number(source.height) : 132
+
+      this.player.setDisplaySize(132 * (sourceW / Math.max(1, sourceH)), 132)
+    }
 
     const bus = readOptionalGate(this.registry, 'eventBus')
     if (bus) {

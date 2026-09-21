@@ -424,14 +424,17 @@ export class CombatAnimationRuntime {
   }
 
   /** Which animation clip an actor should currently show, derived purely
-   * from which phase (if any) is pending for it. */
+   * from which phase (if any) is pending for it. Any pending phase means
+   * the actor is engaged - 'standby'; the transition clips that lead in
+   * and out are fired by the phase-change EVENTS at the playback layer,
+   * not by this state query (uniform contract, 2026-09-19). */
   getAnimationState(actorId: string): CombatAnimationName {
     if (this.pendingReadyActor?.id === actorId) {
-      return 'ready'
+      return 'standby'
     }
 
     if (this.pendingDeclaredAction?.actor.id === actorId) {
-      return 'cast'
+      return 'standby'
     }
 
     if (this.pendingImpact?.actor.id === actorId) {

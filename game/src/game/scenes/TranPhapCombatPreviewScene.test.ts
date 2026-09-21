@@ -4,7 +4,6 @@ import {
   PANEL_WIDTH,
   PANEL_HEIGHT,
   PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL,
-  PREVIEW_IDLE_ANIMATION_KEY,
   TranPhapCombatPreviewScene,
 } from './TranPhapCombatPreviewScene'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
@@ -31,7 +30,7 @@ describe('TranPhapCombatPreviewScene — standing-slot grid size (standing-slot 
 // sheet for EVERY combatant even though the player has real profile art. The
 // panel now sends { assignments, playerProfileId } and the scene resolves the
 // player's current profile PNG — static art exactly like CombatScene's
-// playerUsesStaticTexture path; combatants with no registered presentation
+// static-art path; combatants with no registered presentation
 // (companions — no art exists yet) keep the placeholder idle animation.
 describe('TranPhapCombatPreviewScene — real art resolution', () => {
   function fakeSprite(id: string, textureKey = 'ph') {
@@ -133,7 +132,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     expect(afterRect.texture.key).toBe(PLAYER_VISUAL_PROFILES.phap_tu.combatTextureKey)
   })
 
-  it('companion without registered presentation keeps the placeholder idle', () => {
+  it('companion without registered presentation resolves placeholder art of the active mode', () => {
     const scene = bareScene()
 
     scene.syncAssignments({
@@ -144,7 +143,27 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     const sprite = scene.sprites.get('tran_mac')!
     const played = (sprite.rect as unknown as { played: string[] }).played
 
-    expect(played).toEqual([PREVIEW_IDLE_ANIMATION_KEY])
+    // ENTITY_ART_MODE is 'static' today: the placeholder is a PNG and no clip
+    // plays. In 'animated' mode startEntityIdle would play the placeholder
+    // entity's idle key - the grid view, not syncAssignments, kicks that off.
+    expect(played).toEqual([])
+  })
+
+  it('startEntityIdle no-ops in static mode — placeholder is a PNG, not a clip', () => {
+    const scene = bareScene()
+
+    scene.syncAssignments({
+      assignments: [{ row: 1, column: 0, combatantId: 'tran_mac' }],
+      playerProfileId: 'mortal',
+    })
+
+    const sprite = scene.sprites.get('tran_mac')!
+
+    scene.startEntityIdle(sprite as never, 'tran_mac')
+
+    const played = (sprite.rect as unknown as { played: string[] }).played
+
+    expect(played).toEqual([])
   })
 
   it('cell->cell move updates the sprite row — preview shows the unit in the new cell', () => {

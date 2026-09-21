@@ -67,6 +67,9 @@ function createScene() {
     },
   )
   scene.physics = { add: { existing: vi.fn() } }
+  // No textures in this harness - sprite creation takes the Rectangle
+  // double-fallback (uniformity 2026-09-19: placeholder texture missing).
+  scene.textures = { exists: () => false }
   scene.time = { now: 0, delayedCall: vi.fn() }
   scene.characterWidth = 40
   scene.characterHeight = 50

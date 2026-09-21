@@ -48,7 +48,7 @@ const TEXTURE_KEY_BY_ID = new Map<string, string>(
 /**
  * Texture key cho enemy id runtime ('mortal_wild_boar_<uuid>' khớp
  * 'mortal-wild-boar-v1'). undefined khi không thuộc batch Mortal —
- * caller fallback Rectangle màu như cũ.
+ * caller resolves to the shared placeholder entity (uniformity 2026-09-19).
  */
 export function resolveEnemyTextureKey(enemyId: string): string | undefined {
   for (const templateId of MORTAL_ENEMY_TEMPLATE_IDS) {

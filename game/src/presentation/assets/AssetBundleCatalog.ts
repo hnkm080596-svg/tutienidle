@@ -37,7 +37,13 @@ import {
   resolveEnemyTextureKey,
 } from '@/game/support/EnemyArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
-import { animatedCombatEntities } from '@/presentation/art/CombatPresentationCatalogue'
+import {
+  animatedCombatEntities,
+  animatedArtFormFor,
+  PLACEHOLDER_STATIC_TEXTURE_KEY,
+  PLACEHOLDER_STATIC_TEXTURE_URL,
+} from '@/presentation/art/CombatPresentationCatalogue'
+import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 
 export type AssetBundleId = 'core-ui' | 'home' | 'combat' | 'tribulation'
 
@@ -118,6 +124,45 @@ export function getHomeDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
+  if (ENTITY_ART_MODE === 'animated') {
+    // Animated mode - MainScene plays the player atlas's idle clip (standing)
+    // and the cultivate bridge (sitting). The PNGs above stay loaded too:
+    // PlayerPortrait and panel surfaces still read them.
+    for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
+      const clips = animatedArtFormFor(profile.combatTextureKey)
+
+      if (!clips) {
+        continue
+      }
+
+      for (const clip of Object.values(clips)) {
+        if (seenKeys.has(clip.sheetKey)) {
+          continue
+        }
+
+        seenKeys.add(clip.sheetKey)
+        descriptors.push({
+          kind: 'atlas',
+          key: clip.sheetKey,
+          textureUrl: clip.sheetUrl,
+          atlasUrl: clip.atlasUrl,
+        })
+      }
+    }
+
+    // Legacy cultivate bridge - shared 17-frame multiatlas until the player
+    // atlases carry a cultivate clip (uniformity plan, 2026-09-19).
+    if (!seenKeys.has('char-cultivate')) {
+      seenKeys.add('char-cultivate')
+      descriptors.push({
+        kind: 'multiatlas',
+        key: 'char-cultivate',
+        jsonUrl: 'assets/cultivate.json',
+        basePath: 'assets',
+      })
+    }
+  }
+
   // Dong Fu DOM layers (for the current variant)
   const variant = peekThanhVanVariant()
   for (const layer of dongFuLayerList(variant)) {
@@ -143,6 +188,13 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
 
   // Mortal fallback player art
   addImage(PLAYER_TEXTURE_KEY, PLAYER_TEXTURE_URL)
+
+  // Static-mode placeholder silhouette - what every unregistered entity
+  // draws instead of a Rectangle (uniformity, 2026-09-19). In 'animated'
+  // mode the placeholder is the shared atlas, covered by the clip loop below.
+  if (ENTITY_ART_MODE === 'static') {
+    addImage(PLACEHOLDER_STATIC_TEXTURE_KEY, PLACEHOLDER_STATIC_TEXTURE_URL)
+  }
 
   // Thanh Van modular backdrop layers
   for (const entry of thanhVanLoadList(peekThanhVanVariant())) {
@@ -187,20 +239,46 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
 }
 
 export function getTribulationDescriptors(): readonly AssetResourceDescriptor[] {
-  return [
-    {
+  const descriptors: AssetResourceDescriptor[] = []
+
+  if (ENTITY_ART_MODE === 'animated') {
+    // Legacy bridge until player atlases carry a cultivate clip: the shared
+    // 17-frame cultivate multiatlas IS the cultivate presentation.
+    descriptors.push({
       kind: 'multiatlas',
       key: 'char-cultivate',
       jsonUrl: 'assets/cultivate.json',
       basePath: 'assets',
-    },
-    {
-      kind: 'atlas',
-      key: INK_WASH_UI_ATLAS_KEY,
-      textureUrl: INK_WASH_UI_ATLAS_IMAGE_URL,
-      atlasUrl: INK_WASH_UI_ATLAS_DATA_URL,
-    },
-  ]
+    })
+  } else {
+    // Static mode - the cultivate PNG, same source HomeScene's sitting pose
+    // reads. Profiles share the mortal cultivate art, so dedupe by key.
+    const seenKeys = new Set<string>()
+
+    for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
+      if (
+        profile.cultivateTextureKey &&
+        profile.cultivateTextureUrl &&
+        !seenKeys.has(profile.cultivateTextureKey)
+      ) {
+        seenKeys.add(profile.cultivateTextureKey)
+        descriptors.push({
+          kind: 'image',
+          key: profile.cultivateTextureKey,
+          url: profile.cultivateTextureUrl,
+        })
+      }
+    }
+  }
+
+  descriptors.push({
+    kind: 'atlas',
+    key: INK_WASH_UI_ATLAS_KEY,
+    textureUrl: INK_WASH_UI_ATLAS_IMAGE_URL,
+    atlasUrl: INK_WASH_UI_ATLAS_DATA_URL,
+  })
+
+  return descriptors
 }
 
 export function getBundleDescriptors(bundleId: AssetBundleId): readonly AssetResourceDescriptor[] {

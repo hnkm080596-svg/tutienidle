@@ -17,6 +17,7 @@ import { GOURD_TEXTURE_KEY } from '@/game/support/RewardGourd'
 import { resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { animatedCombatEntities } from '@/presentation/art/CombatPresentationCatalogue'
+import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 
 describe('AssetBundleCatalog', () => {
   it('core-ui contains ink-wash-ui atlas descriptor', () => {
@@ -80,10 +81,23 @@ describe('AssetBundleCatalog', () => {
     }
   })
 
-  it('tribulation descriptors contain char-cultivate multiatlas and ink-wash-ui atlas', () => {
+  it('tribulation descriptors carry the mode-appropriate cultivate art plus ink-wash-ui atlas', () => {
     const descriptors = getTribulationDescriptors()
     const keys = descriptors.map((d) => d.key)
-    expect(keys).toContain('char-cultivate')
+
+    if (ENTITY_ART_MODE === 'animated') {
+      // The legacy 17-frame bridge multiatlas IS the cultivate presentation.
+      expect(keys).toContain('char-cultivate')
+    } else {
+      // Static mode draws the profile cultivate PNGs (mortal shared art).
+      for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
+        if (profile.cultivateTextureKey) {
+          expect(keys).toContain(profile.cultivateTextureKey)
+        }
+      }
+      expect(keys).not.toContain('char-cultivate')
+    }
+
     expect(keys).toContain('ink-wash-ui')
   })
 
@@ -111,7 +125,9 @@ describe('AssetBundleCatalog', () => {
 
     expect(keys.length).toBe(uniqueKeys.size)
     expect(keys).toContain('ink-wash-ui')
-    expect(keys).toContain('char-cultivate')
+    if (ENTITY_ART_MODE === 'animated') {
+      expect(keys).toContain('char-cultivate')
+    }
     expect(keys).toContain(PLAYER_TEXTURE_KEY)
   })
 })

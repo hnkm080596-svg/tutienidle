@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import EntitySpriteCanvas from './EntitySpriteCanvas.vue'
 
-// Trình bày nhân vật dùng CHUNG (plan Workstream A) — PNG tĩnh mới,
-// KHÔNG còn qua AtlasSprite nhiều frame:
-// - variant 'cultivate' → player-mortal-cultivate-v1.png, giữa Động Phủ
-//   (trigger command wheel), CÓ chuyển động CSS khi animated.
-// - variant 'portrait'  → player-mortal-ink-sword-concept-v2.png, tab Nhân Vật,
-//   LUÔN ảnh tĩnh (không bao giờ áp animation tu luyện).
+// Trinh bay nhan vat dung CHUNG (plan Workstream A) - mode-aware figure:
+// static mode draws a PNG; animated mode draws EntitySpriteCanvas (atlas
+// clip). Variants pick WHICH art, not the mode:
+// - variant 'cultivate' -> cultivate PNG / cultivate bridge multiatlas,
+//   giua Dong Phu (trigger command wheel), CO chuyen dong CSS khi animated.
+// - variant 'portrait'  -> portrait PNG / mortal idle clip, tab Nhan Vat.
 //
 // Chuyển động chỉ-Presentation (cultivate + animated):
 // - Float dọc nhẹ 3-5px, chu kỳ chậm; nhịp thở scale 1 → 1.015.
@@ -38,6 +42,44 @@ const IMAGE_URLS = {
 
 const imageUrl = IMAGE_URLS[props.variant]
 
+// Animated mode - the figure plays the same clips combat would. `portrait`
+// draws the mortal idle loop from the catalogue's dormant animated form;
+// `cultivate` draws the shared 17-frame bridge multiatlas until player
+// atlases carry a cultivate clip (uniformity plan, 2026-09-19).
+const useCanvas = ENTITY_ART_MODE === 'animated'
+
+const idleClip = animatedArtFormFor(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey)?.idle
+
+const CULTIVATE_BRIDGE = {
+  sheetUrl: '/assets/cultivate.png',
+  atlasUrl: '/assets/cultivate.json',
+  framePrefix: 'frame_',
+  frameSuffix: '.png',
+  zeroPad: 3,
+  firstFrame: 0,
+  lastFrame: 16,
+  fps: 8,
+} as const
+
+const canvasProps = computed(() => {
+  if (props.variant === 'cultivate') {
+    return CULTIVATE_BRIDGE
+  }
+
+  return idleClip
+    ? {
+        sheetUrl: idleClip.sheetUrl,
+        atlasUrl: idleClip.atlasUrl,
+        framePrefix: idleClip.framePrefix,
+        frameSuffix: idleClip.frameSuffix,
+        zeroPad: idleClip.zeroPad,
+        firstFrame: idleClip.firstFrame,
+        lastFrame: idleClip.lastFrame,
+        fps: idleClip.frameRate,
+      }
+    : undefined
+})
+
 const portraitHeight = computed(() =>
   typeof props.height === 'number' ? `${props.height}px` : props.height,
 )
@@ -56,7 +98,15 @@ const portraitHeight = computed(() =>
     <span v-if="animated && variant === 'cultivate'" class="player-portrait__qi-ring" aria-hidden="true" />
     <span v-if="variant === 'portrait'" class="player-portrait__taiji" aria-hidden="true" />
 
+    <EntitySpriteCanvas
+      v-if="useCanvas && canvasProps"
+      :key="variant"
+      v-bind="canvasProps"
+      :height="height"
+      class="player-portrait__image"
+    />
     <img
+      v-else
       class="player-portrait__image"
       :src="imageUrl"
       alt=""

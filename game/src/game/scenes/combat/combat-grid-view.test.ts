@@ -13,6 +13,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { CombatGridView } from './combat-grid-view'
 import { BOSS_DISPLAY_SCALE_MULTIPLIER, ENEMY_DISPLAY_SCALE_MULTIPLIER } from './combatConstants'
+import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import type { CombatGridViewHost } from './CombatGridViewHost'
 
 /**
@@ -63,6 +64,9 @@ function createFakeScene() {
     // interface always declared `tweens`; this fixture simply never supplied it,
     // and the cast below hid that until something read it.
     tweens: { add: vi.fn(), killTweensOf: vi.fn() },
+    // CombatGridViewHost.startEntityIdle — kicks the entity's idle state after
+    // creation (clip in animated mode, no-op where a static bob already runs).
+    startEntityIdle: vi.fn(),
     fallbackSpriteTextureKey: () => undefined,
   }
 
@@ -114,11 +118,11 @@ describe('CombatGridView.getOrCreateSprite() — Task 9.5 boss sizeMultiplier', 
     expect(sprite.sizeMultiplier).toBe(ENEMY_DISPLAY_SCALE_MULTIPLIER)
   })
 
-  it('nhánh fallback Rectangle (chưa có texture, host.fallbackSpriteTextureKey() = undefined): Boss vẫn KHÔNG được nhỏ hơn enemy thường có texture — round 1 review, tránh inversion', () => {
-    // resolveEnemyTextureKey() trả falsy cho id không nằm trong batch art
-    // (id không khớp pattern quái Mortal) → rơi vào nhánh `rect` cuối cùng
-    // của getOrCreateSprite(), chỗ trước đây hardcode sizeMultiplier: 1 cho
-    // MỌI trường hợp kể cả Boss.
+  it('id ngoài batch → placeholder sprite CÙNG MODE (uniformity 2026-09-19): Boss vẫn KHÔNG được nhỏ hơn enemy thường — round 1 review, tránh inversion', () => {
+    // resolveEnemyTextureKey() trả falsy cho id không nằm trong batch art →
+    // entity key rơi về PLACEHOLDER_ENTITY_KEY, render placeholder texture
+    // của mode hiện hành thay vì Rectangle (Rectangle chỉ còn double-
+    // fallback khi cả placeholder texture cũng thiếu).
     const { gridView } = createFakeScene()
 
     const bossSprite = gridView.getOrCreateSprite('unknown_id_no_art_boss', 0xd94a4a, 'Boss X', 4, {
@@ -127,23 +131,22 @@ describe('CombatGridView.getOrCreateSprite() — Task 9.5 boss sizeMultiplier', 
       isBoss: true,
     })
 
-    expect(bossSprite.kind).toBe('rect')
+    expect(bossSprite.kind).toBe('sprite')
     expect(bossSprite.sizeMultiplier).toBe(BOSS_DISPLAY_SCALE_MULTIPLIER)
     // Không được nhỏ hơn enemy thường CÓ texture (nhánh sprite, ×2) — đây
     // chính là bug bị lật ngược mà review round 1 tìm ra.
     expect(bossSprite.sizeMultiplier).toBeGreaterThanOrEqual(ENEMY_DISPLAY_SCALE_MULTIPLIER)
 
-    // Enemy thường rơi cùng nhánh fallback vẫn giữ nguyên size 1 như trước —
-    // lựa chọn bảo thủ (conservative), không đổi hình ảnh enemy thường hiện
-    // có khi chưa có art.
+    // Enemy thường cùng nhánh placeholder giữ ENEMY multiplier như mọi
+    // entity có texture — đồng nhất với quái có art thật.
     const regularSprite = gridView.getOrCreateSprite('unknown_id_no_art_regular', 0xd94a4a, 'Regular X', 4, {
       currentHp: 100,
       maxHp: 100,
       isBoss: false,
     })
 
-    expect(regularSprite.kind).toBe('rect')
-    expect(regularSprite.sizeMultiplier).toBe(1)
+    expect(regularSprite.kind).toBe('sprite')
+    expect(regularSprite.sizeMultiplier).toBe(ENEMY_DISPLAY_SCALE_MULTIPLIER)
   })
 })
 
@@ -158,8 +161,13 @@ describe('CombatGridView.getOrCreateSprite() — host.fallbackSpriteTextureKey()
     expect(sprite.kind).toBe('sprite')
   })
 
-  it('host trả undefined (như CombatScene thật) → vẫn rơi về Rectangle fallback y hệt trước khi có branch mới — KHÔNG regression cho combat thật', () => {
-    const { gridView } = createFakeScene()
+  it('placeholder texture cũng thiếu + host trả undefined (như CombatScene thật) → Rectangle double-fallback — KHÔNG regression cho combat thật', () => {
+    // Uniformity 2026-09-19: id ngoài batch giờ render placeholder texture
+    // CÙNG MODE thay vì Rectangle — Rectangle chỉ còn là double-fallback khi
+    // cả placeholder texture cũng không load được.
+    const { scene, gridView } = createFakeScene()
+
+    scene.textures = { exists: () => false }
 
     const sprite = gridView.getOrCreateSprite('some_enemy_outside_mortal_batch', 0xd94a4a, 'Test', 0, {
       currentHp: 10,
@@ -346,13 +354,25 @@ describe('CombatGridView — idle motion for static entities', () => {
     expect(sprite.footY).toBe(200)
   })
 
-  it('the player gets no bob — it moves because its frames do', () => {
+  it('the player gets the same bob as every static entity (uniformity 2026-09-19)', () => {
+    // Before the uniform contract the player was the lone animated entity
+    // and moved through its own frames. In 'static' mode the player is a
+    // static entity like everything else - same PNG, same bob.
     const { scene, gridView } = createFakeScene()
 
     const player = gridView.getOrCreateSprite('player', 0x4a90d9, 'Player', 4)
 
-    expect(player.idle).toBeUndefined()
-    expect((scene.tweens as { add: ReturnType<typeof vi.fn> }).add).not.toHaveBeenCalled()
+    if (ENTITY_ART_MODE === 'static') {
+      expect(player.idle).toBeDefined()
+      expect(
+        (scene.tweens as { add: ReturnType<typeof vi.fn> }).add,
+      ).toHaveBeenCalled()
+    } else {
+      expect(player.idle).toBeUndefined()
+      expect(
+        (scene.tweens as { add: ReturnType<typeof vi.fn> }).add,
+      ).not.toHaveBeenCalled()
+    }
   })
 
   it('destroying a sprite kills its bob, which outlives the GameObject otherwise', () => {

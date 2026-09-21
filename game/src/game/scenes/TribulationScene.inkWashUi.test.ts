@@ -7,13 +7,22 @@ import {
   queueInkWashUiAtlas,
 } from '@/game/support/InkWashUiPhaser'
 
-vi.mock('@/game/support/InkWashUiPhaser', () => ({
-  queueInkWashUiAtlas: vi.fn(),
-  addInkWashNineSlice: vi.fn(),
-}))
+vi.mock('@/game/support/InkWashUiPhaser', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/game/support/InkWashUiPhaser')>()
+
+  return {
+    ...actual,
+    queueInkWashUiAtlas: vi.fn(),
+    addInkWashNineSlice: vi.fn(),
+  }
+})
 
 interface SceneHarness {
-  textures: { exists: (key: string) => boolean }
+  textures: {
+    exists: (key: string) => boolean
+    get: (key: string) => { getSourceImage: () => { width: number; height: number } }
+  }
   load: { multiatlas: ReturnType<typeof vi.fn> }
   scale: {
     width: number
@@ -59,7 +68,11 @@ describe('TribulationScene ink-wash viewport frame', () => {
     const frame = { setSize: vi.fn() } as unknown as Phaser.GameObjects.NineSlice
 
     vi.mocked(addInkWashNineSlice).mockReturnValue(frame)
-    harness.textures = { exists: () => true }
+    harness.textures = {
+      exists: () => true,
+      // Static mode sizes the cultivate sprite from the live source image.
+      get: () => ({ getSourceImage: () => ({ width: 1233, height: 1275 }) }),
+    }
     harness.load = { multiatlas: vi.fn() }
     harness.scale = {
       width: 1600,

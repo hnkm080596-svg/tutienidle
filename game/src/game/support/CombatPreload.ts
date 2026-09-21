@@ -23,14 +23,15 @@ import { peekThanhVanVariant, thanhVanLoadList } from './ThanhVanArt'
 import {
   animatedCombatEntities,
   FALLBACK_PLAYER_ENTITY_KEY,
+  PLACEHOLDER_STATIC_TEXTURE_KEY,
+  PLACEHOLDER_STATIC_TEXTURE_URL,
 } from '@/presentation/art/CombatPresentationCatalogue'
+import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import type { CombatAnimationCatalogue } from '@/presentation/art/CombatEntityPresentation'
 
-// Combat uses the static mortal artwork. MainScene keeps its existing atlas;
-// the scenes intentionally use separate texture keys and presentations.
-// The catalogue declares this key (it is a presentation fact: an entity whose
-// art is the mortal PNG under a second key). Re-exported here so the many
-// existing importers do not all have to move at once.
+// The mortal entity key - the shared player fallback. MainScene keeps its
+// own atlas; the scenes intentionally use separate texture keys. Re-exported
+// here so the many existing importers do not all have to move at once.
 export const PLAYER_TEXTURE_KEY = FALLBACK_PLAYER_ENTITY_KEY
 
 // Same PNG as the mortal profile's combatTextureUrl, without the leading
@@ -41,7 +42,8 @@ export const PLAYER_TEXTURE_URL = PLAYER_VISUAL_PROFILES.mortal.combatTextureUrl
 )
 
 // Mortal enemy art batch (mortal-enemy-art-batch-plan.md) — 20 PNG cho
-// 10 loài + bản ferocious; id ngoài batch fallback Rectangle.
+// 10 loai + ban ferocious; id ngoai batch roi ve placeholder entity
+// (Rectangle chi khi ca placeholder cung thieu).
 // R12/AR-30: the id list is owned by EnemyArt (MORTAL_ENEMY_TEMPLATE_IDS);
 // this re-export keeps the preload surface stable for existing importers.
 export const ENEMY_TEMPLATE_IDS = MORTAL_ENEMY_TEMPLATE_IDS
@@ -111,6 +113,13 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
   }
 
   queueOnce(PLAYER_TEXTURE_KEY, PLAYER_TEXTURE_URL)
+
+  // Static-mode placeholder - the silhouette unregistered entities draw
+  // instead of a Rectangle (uniformity, 2026-09-19). In 'animated' mode the
+  // placeholder is the shared 32-frame sheet, queued by the atlas loop below.
+  if (ENTITY_ART_MODE === 'static') {
+    queueOnce(PLACEHOLDER_STATIC_TEXTURE_KEY, PLACEHOLDER_STATIC_TEXTURE_URL)
+  }
 
   // Thanh Vân modular art — load ĐÚNG variant phiên hiện tại (sky + 6
   // layer mùa).
