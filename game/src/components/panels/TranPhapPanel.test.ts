@@ -20,6 +20,7 @@ import { useUiStore } from '@/stores/ui'
 import { TRAN_PHAP_FORMATIONS } from '@/data/formation/TranPhap'
 import type { CompanionInstance } from '@/data/companion/Companions'
 import { i18n } from '@/i18n'
+import { vTooltip } from '@/directives/tooltip'
 
 vi.mock('@/presentation/host/useDynamicRegion', () => ({
   useDynamicRegion: () => ({
@@ -58,6 +59,7 @@ function mountPanel(prepare?: (deps: {
 
   app.use(pinia)
   app.use(i18n)
+  app.directive('tooltip', vTooltip)
   app.provide(GAME_MANAGER_KEY, gameManager)
   app.provide(STATE_VERSION_KEY, stateVersion)
   app.provide(BUMP_STATE_KEY, () => {
@@ -158,20 +160,44 @@ describe('TranPhapPanel', () => {
     mounted.unmount()
   })
 
-  it('queue card for the player shows the entity-derived profile art, not a bare monogram', async () => {
+  it('queue stand for the player shows the entity-derived profile art standing on a slot base', async () => {
     const mounted = mountPanel()
     await mounted.open()
 
     const card = mounted.container.querySelector<HTMLElement>('.tran-phap-panel__card')
 
     expect(card).not.toBeNull()
+    expect(card!.querySelector('.queue-stand__base')).not.toBeNull()
 
-    const img = card!.querySelector<HTMLImageElement>('img.slot-view__item-icon')
+    const img = card!.querySelector<HTMLImageElement>('img.queue-stand__art')
 
     expect(img).not.toBeNull()
     expect(img!.getAttribute('src') ?? '').toContain(
       'player-mortal-ink-sword-concept-v2',
     )
+
+    mounted.unmount()
+  })
+
+  it('queue stand for a companion renders the static-mode placeholder silhouette (ENTITY_ART_MODE contract)', async () => {
+    const mounted = mountPanel(({ player }) => {
+      player.companions = [ownedCompanion('ho_ly_tinh')]
+    })
+    await mounted.open()
+
+    const cards = mounted.container.querySelectorAll<HTMLElement>('.tran-phap-panel__card')
+
+    expect(cards).toHaveLength(2)
+
+    const companionCard = cards[1]!
+
+    expect(companionCard.querySelector('.queue-stand__base')).not.toBeNull()
+
+    const img = companionCard.querySelector<HTMLImageElement>('img.queue-stand__art')
+
+    expect(img).not.toBeNull()
+    expect(img!.getAttribute('src') ?? '').toContain('entity-placeholder')
+    expect(companionCard.textContent ?? '').toContain('ho_ly_tinh')
 
     mounted.unmount()
   })
