@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PHAP_TU_NODES } from './PhapTuNodes'
-import { PHAP_TU_KIT_IDS, SKILLS } from '../skill/Skills'
+import { SPELL_KIT_IDS, SKILLS } from '../skill/Skills'
 import { TECHNIQUES } from '../technique/Techniques'
 import { PHAP_TU_ULTIMATE_IDS } from '../skill/PhapTuUltimates'
 import { GameManager } from '../../core/game/GameManager'
@@ -10,7 +10,7 @@ import type { ElementType } from '../../core/element/ElementType'
 
 // Phap Tu Reimagined (2026-09-15 plan, Task 6) — the new tree replaces
 // the old unlocksElement/keystoneReaction/reaction_path architecture:
-// 5 mutex element roots committed atomically by selectPhapTuElement,
+// 5 mutex element roots committed atomically by selectSpellPathElement,
 // growth + unlock + The lanes + route-tagged specialization nodes.
 
 const ELEMENT_ROOT_IDS: Record<ElementType, string> = {
@@ -56,7 +56,7 @@ describe('PhapTuNodes reimagined — element roots', () => {
     for (const element of ELEMENTS) {
       const root = node(ELEMENT_ROOT_IDS[element])
 
-      expect(root?.effect.unlocksSkillIds).toEqual([PHAP_TU_KIT_IDS[element][0]])
+      expect(root?.effect.unlocksSkillIds).toEqual([SPELL_KIT_IDS[element][0]])
       expect('unlocksElement' in (root?.effect ?? {})).toBe(false)
     }
   })
@@ -71,7 +71,7 @@ describe('PhapTuNodes reimagined — element roots', () => {
 describe('PhapTuNodes reimagined — per-element branch', () => {
   it('moi element co: power growth, ailment growth, damage growth, special unlock, phap tuong unlock, tu the, truong the', () => {
     for (const element of ELEMENTS) {
-      const [basic, special] = PHAP_TU_KIT_IDS[element]
+      const [basic, special] = SPELL_KIT_IDS[element]
       const godUlt = PHAP_TU_ULTIMATE_IDS[element]
       const rootId = ELEMENT_ROOT_IDS[element]
 
@@ -87,7 +87,7 @@ describe('PhapTuNodes reimagined — per-element branch', () => {
       // The realm-gated special unlock grants the kit's remaining slots
       // together (special + chain-E ult) — spec §3.3 needs the ult's
       // base form castable WITHOUT the phap-tuong node.
-      expect(specialNode?.effect.unlocksSkillIds).toEqual([special, PHAP_TU_KIT_IDS[element][2]])
+      expect(specialNode?.effect.unlocksSkillIds).toEqual([special, SPELL_KIT_IDS[element][2]])
       expect(specialNode?.prerequisites).toContainEqual({ kind: 'node', nodeId: rootId })
 
       expect(ultNode?.effect.unlocksSkillIds).toEqual([godUlt])
@@ -167,8 +167,8 @@ describe('PhapTuNodes reimagined — element authority', () => {
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
     return { gameManager, player }
   }
 
@@ -184,37 +184,37 @@ describe('PhapTuNodes reimagined — element authority', () => {
     }
   })
 
-  it('selectPhapTuElement commit atomic: root lv1 + basic learned + phapTu {element, route}', () => {
+  it('selectSpellPathElement commit atomic: root lv1 + basic learned + spellPath {element, route}', () => {
     const { gameManager, player } = phapTuManager()
 
-    expect(gameManager.progressionOps.selectPhapTuElement('water', 'no', player)).toBe(true)
+    expect(gameManager.progressionOps.selectSpellPathElement('water', 'no', player)).toBe(true)
 
-    expect(player.phapTu).toEqual({ element: 'water', route: 'no' })
+    expect(player.spellPath).toEqual({ element: 'water', route: 'no' })
     expect(player.nodeLevels['thuy_linh_ngo']).toBe(1)
     expect(gameManager.skillManager.has('thuy_tien_thuat')).toBe(true)
   })
 
-  it('selectPhapTuElement reject khi khong phai phap_tu, khi da chon, khi route sai', () => {
+  it('selectSpellPathElement reject khi khong phai spell, khi da chon, khi route sai', () => {
     const { gameManager, player } = phapTuManager()
 
-    player.cultivationPath = 'kiem_tu'
-    expect(gameManager.progressionOps.selectPhapTuElement('fire', 'dot', player)).toBe(false)
-    expect(player.phapTu).toEqual({ element: null, route: null })
+    player.cultivationPath = 'sword'
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', 'dot', player)).toBe(false)
+    expect(player.spellPath).toEqual({ element: null, route: null })
 
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
     expect(
-      gameManager.progressionOps.selectPhapTuElement('fire', 'invalid' as 'dot', player),
+      gameManager.progressionOps.selectSpellPathElement('fire', 'invalid' as 'dot', player),
     ).toBe(false)
-    expect(player.phapTu).toEqual({ element: null, route: null })
+    expect(player.spellPath).toEqual({ element: null, route: null })
 
-    expect(gameManager.progressionOps.selectPhapTuElement('fire', 'dot', player)).toBe(true)
-    expect(gameManager.progressionOps.selectPhapTuElement('water', 'no', player)).toBe(false)
-    expect(player.phapTu).toEqual({ element: 'fire', route: 'dot' })
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', 'dot', player)).toBe(true)
+    expect(gameManager.progressionOps.selectSpellPathElement('water', 'no', player)).toBe(false)
+    expect(player.spellPath).toEqual({ element: 'fire', route: 'dot' })
     expect(player.nodeLevels['thuy_linh_ngo']).toBeUndefined()
   })
 
-  it('selectPhapTuElement fails atomically when the root unlock skill template is missing', () => {
+  it('selectSpellPathElement fails atomically when the root unlock skill template is missing', () => {
     // Review round-4 (atomicity): the root was purchased and {element,
     // route} committed even when learnSkill() could not succeed —
     // leaving an element committed without its basic. Verify the whole
@@ -225,24 +225,24 @@ describe('PhapTuNodes reimagined — element authority', () => {
     )
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
 
-    expect(gameManager.progressionOps.selectPhapTuElement('fire', 'dot', player)).toBe(false)
-    expect(player.phapTu).toEqual({ element: null, route: null })
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', 'dot', player)).toBe(false)
+    expect(player.spellPath).toEqual({ element: null, route: null })
     expect(player.nodeLevels['hoa_linh_ngo']).toBeUndefined()
   })
 
-  it('chooseCultivationPath(phap_tu) KHONG auto-chon Fire: phapTu null/null, hoa_cau_thuat chua learn', () => {
+  it('chooseCultivationPath(spell) KHONG auto-chon Fire: spellPath null/null, hoa_cau_thuat chua learn', () => {
     const { gameManager, player } = phapTuManager()
     player.cultivationPath = undefined
     player.cultivationWay = undefined
     player.realmId = 'mortal'
     player.realmLevel = 12
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player)).toBe(true)
-    expect(player.cultivationPath).toBe('phap_tu')
-    expect(player.phapTu).toEqual({ element: null, route: null })
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player)).toBe(true)
+    expect(player.cultivationPath).toBe('spell')
+    expect(player.spellPath).toEqual({ element: null, route: null })
     expect(player.nodeLevels['hoa_linh_ngo']).toBeUndefined()
     expect(gameManager.skillManager.has('hoa_cau_thuat')).toBe(false)
   })
@@ -250,7 +250,7 @@ describe('PhapTuNodes reimagined — element authority', () => {
   it('elementTag gate: node element khac khong aggregate/purchase duoc', () => {
     const { gameManager, player } = phapTuManager()
 
-    gameManager.progressionOps.selectPhapTuElement('fire', 'dot', player)
+    gameManager.progressionOps.selectSpellPathElement('fire', 'dot', player)
 
     player.skillInsight = 100
     player.nodeLevels['thuy_dot_chance'] = 3

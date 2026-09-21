@@ -8,22 +8,20 @@ import { createPlayerRewardReceiver } from '../player/Player'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { Reward } from '../reward/Reward'
 import type { RewardReceiver, RewardSystem } from '../reward/RewardSystem'
-import type { TechniqueManager } from '../technique/TechniqueManager'
-import { getTechniqueInsightTotalRequired } from '../technique/TechniqueTier'
 
 /**
- * Reward-issuing operations: the shared player RewardReceiver, equipped
- * technique insight, and the raw rewardSystem.give passthrough.
- * Extracted from GameManager (large-file split). The receiver contract
- * (insight into the equipped technique, spirit stones into MaterialBag at
- * the CURRENT realm tier with delivered-vs-overflow accounting + quest
- * notification) is unchanged - moved verbatim.
+ * Reward-issuing operations: the shared player RewardReceiver and the
+ * raw rewardSystem.give passthrough. Extracted from GameManager
+ * (large-file split). P7-M3: the receiver's skill-insight channel feeds
+ * player.skillInsight directly (technique mastery is a separate battle
+ * channel settled by BattleLootSystem); spirit stones go to MaterialBag
+ * at the CURRENT realm tier with delivered-vs-overflow accounting +
+ * quest notification.
  */
 export class GameManagerRewardOps {
   constructor(
     private readonly deps: {
       rewardSystem: RewardSystem
-      techniqueManager: TechniqueManager
       materialRegistry: MaterialRegistry
       materialBag: MaterialBag
       notifications: NotificationQueue
@@ -33,13 +31,18 @@ export class GameManagerRewardOps {
 
   /**
    * Shared RewardReceiver for every direct-to-player reward (battle victory,
-   * quest claim...): insight goes to the equipped technique, spirit stones go
-   * to MaterialBag (Plan Workstream F).
+   * quest claim...): skill insight goes to player.skillInsight, spirit
+   * stones go to MaterialBag (Plan Workstream F).
    */
   buildPlayerRewardReceiver(player: PlayerData): RewardReceiver {
     return createPlayerRewardReceiver(
       player,
-      (amount) => this.gainEquippedTechniqueInsight(amount),
+      (amount) => {
+        // Same accounting as the per-kill battle path in
+        // BattleLootSystem.processDefeatedEnemies().
+        player.skillInsight += amount
+        player.totalSkillInsightGained += amount
+      },
       (amount) => {
         // Award the spirit-stone tier matching the CURRENT realm (same tier
         // breakthrough/enhance/building costs demand at that realm) - never a
@@ -61,25 +64,6 @@ export class GameManagerRewardOps {
       },
     )
   }
-
-  /**
-   * Advances the equipped Phap Tu technique's insight (battle victory +
-   * quest claim rewards alike, via buildPlayerRewardReceiver()).
-   */
-  gainEquippedTechniqueInsight(amount: number): number {
-    const technique = this.deps.techniqueManager.getEquipped()
-
-    if (!technique || amount <= 0) {
-      return 0
-    }
-
-    const before = technique.insight ?? 0
-    const cap = getTechniqueInsightTotalRequired(technique)
-    technique.insight = Math.min(cap, before + amount)
-
-    return technique.insight - before
-  }
-
   giveReward(receiver: RewardReceiver, reward: Reward) {
     this.deps.rewardSystem.give(receiver, reward)
   }

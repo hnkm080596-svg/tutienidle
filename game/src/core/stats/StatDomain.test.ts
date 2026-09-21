@@ -16,12 +16,12 @@ import {
 } from './StatDomain'
 
 // Task 1 (D10) -- domain gate infrastructure. Task 7 populated
-// STAT_DOMAIN/DOMAIN_SOURCE_WHITELIST with the real phap_tu gate; tests
+// STAT_DOMAIN/DOMAIN_SOURCE_WHITELIST with the real spell gate; tests
 // that register temporary entries restore the production registry after
 // each run (a bare `delete` would strip the real registration).
 
 const GATED_STAT = 'maxMp'
-const GATED_DOMAIN = 'phap_tu'
+const GATED_DOMAIN = 'spell'
 
 const PRODUCTION_STAT_DOMAIN = { ...STAT_DOMAIN }
 
@@ -45,15 +45,15 @@ afterEach(() => {
 })
 
 describe('domain gate (D10)', () => {
-  it('INV-9: a phap_tu-domain modifier targeting universal stats applies normally', () => {
+  it('INV-9: a spell-domain modifier targeting universal stats applies normally', () => {
     const base = createBaseStats()
 
     // A domain tag on a universal stat must be a no-op: identical
     // outcome to the same modifier without a domain. Compared pairwise
     // so attribute derivation can never make the assertion drift.
     const tagged = calculateStats(base, [
-      mod({ stat: 'might', domain: 'phap_tu', flat: 5 }),
-      mod({ stat: 'firePower', domain: 'phap_tu', flat: 7 }),
+      mod({ stat: 'might', domain: 'spell', flat: 5 }),
+      mod({ stat: 'firePower', domain: 'spell', flat: 7 }),
     ])
     const untagged = calculateStats(base, [
       mod({ stat: 'might', flat: 5 }),
@@ -79,7 +79,7 @@ describe('domain gate (D10)', () => {
     const base = createBaseStats()
 
     expect(() =>
-      calculateStats(base, [mod({ stat: GATED_STAT, domain: 'kiem_tu', flat: 50 })]),
+      calculateStats(base, [mod({ stat: GATED_STAT, domain: 'sword', flat: 50 })]),
     ).toThrow(/domain/i)
   })
 
@@ -106,12 +106,12 @@ describe('domain gate (D10)', () => {
     expect(accepted.maxMp).toBe(50)
   })
 
-  it('ungated stats accept absent or foreign domains regardless of the phap_tu gate', () => {
+  it('ungated stats accept absent or foreign domains regardless of the spell gate', () => {
     const base = createBaseStats()
 
     const result = calculateStats(base, [
       mod({ stat: 'wardMax', flat: 33 }),
-      mod({ stat: 'might', domain: 'kiem_tu', flat: 10 }),
+      mod({ stat: 'might', domain: 'sword', flat: 10 }),
     ])
 
     expect(result.wardMax).toBe(33)
@@ -148,15 +148,15 @@ describe('domain gate (D10)', () => {
     expect(domainViolations).toHaveLength(1)
   })
 
-  it('Task 7: the real phap_tu gate is populated -- MP/reaction stats are gated', () => {
-    expect(STAT_DOMAIN.maxMp).toBe('phap_tu')
-    expect(STAT_DOMAIN.manaRegenPerTurn).toBe('phap_tu')
-    expect(STAT_DOMAIN.manaShieldPercent).toBe('phap_tu')
-    expect(STAT_DOMAIN.reactionEffectPercent).toBe('phap_tu')
+  it('Task 7: the real spell gate is populated -- MP/reaction stats are gated', () => {
+    expect(STAT_DOMAIN.maxMp).toBe('spell')
+    expect(STAT_DOMAIN.manaRegenPerTurn).toBe('spell')
+    expect(STAT_DOMAIN.manaShieldPercent).toBe('spell')
+    expect(STAT_DOMAIN.reactionEffectPercent).toBe('spell')
   })
 
-  it('Task 7: DOMAIN_SOURCE_WHITELIST declares the phap_tu emitters', () => {
-    const entries = DOMAIN_SOURCE_WHITELIST.phap_tu ?? []
+  it('Task 7: DOMAIN_SOURCE_WHITELIST declares the spell emitters', () => {
+    const entries = DOMAIN_SOURCE_WHITELIST.spell ?? []
     const files = entries.map((e) => e.file)
 
     expect(files).toContain('data/progression/PhapTu*')
@@ -185,22 +185,22 @@ describe('domain gate (D10)', () => {
   it('deriver-emitted gated stat with the WRONG domain is rejected (derivers cannot bypass the gate)', () => {
     // Review fix (2026-09-15): deltaDeriver output is system-generated,
     // so applyDomainGate is its only guard — the whitelist lint never
-    // scans it. A kiem_tu deriver must not be able to emit maxMp.
+    // scans it. A sword deriver must not be able to emit maxMp.
     const resolved = calculateStats(createBaseStats(), [])
 
-    registerDomainDeltaDeriver('kiem_tu', () => [
-      mod({ stat: GATED_STAT, domain: 'kiem_tu', flat: 999 }),
+    registerDomainDeltaDeriver('sword', () => [
+      mod({ stat: GATED_STAT, domain: 'sword', flat: 999 }),
     ])
 
     try {
       expect(() =>
         calculateEffectiveStats(resolved, [mod({ stat: 'attunement', flat: 5 })], {
-          activeDomains: new Set(['kiem_tu' as const]),
+          activeDomains: new Set(['sword' as const]),
         }),
       ).toThrow(/domain/i)
       expect(domainViolations).toHaveLength(1)
     } finally {
-      unregisterDomainDeltaDeriver('kiem_tu')
+      unregisterDomainDeltaDeriver('sword')
     }
   })
 
@@ -211,7 +211,7 @@ describe('domain gate (D10)', () => {
       calculateStats(base, [mod({ stat: 'cultivationPercent', flat: 0.5 })]),
     ).toThrow(/domain/i)
     expect(() =>
-      calculateStats(base, [mod({ stat: 'realmPassivePercent', domain: 'phap_tu', flat: 0.5 })]),
+      calculateStats(base, [mod({ stat: 'realmPassivePercent', domain: 'spell', flat: 0.5 })]),
     ).toThrow(/domain/i)
   })
 })

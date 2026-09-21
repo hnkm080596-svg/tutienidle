@@ -3,7 +3,7 @@
 // rejects them, INV-9): any id listed here auto-levels by
 // totalExperience in recordCast(). tram's curve is the existing one;
 // linh_bao/huy_quyen are the mortal-path actives - linh_bao Lv3 is the
-// ngo_dao offer gate, huy_quyen Lv3 the ung_the gate - so the
+// hidden_spell_pathway offer gate, huy_quyen Lv3 the hidden_body_pathway gate - so the
 // thresholds are also read directly by chooseCultivationPath.
 //
 // P1 - extracted from SkillSystem into a leaf module: the cultivation
@@ -11,7 +11,7 @@
 // getCastLeveledSkillLevel, and NodeSystem consumes the path authority -
 // keeping this table on SkillSystem would close the import cycle
 // NodeSystem -> CultivationPathSystem -> Kit -> SkillSystem ->
-// PhapTuRoutes -> NodeSystem. This module imports nothing.
+// SpellPathRoutes -> NodeSystem. This module imports nothing.
 export const CAST_LEVELING_THRESHOLDS: Record<string, { lv2: number; lv3: number }> = {
   tram:      { lv2: 1000, lv3: 10000 },
   linh_bao:  { lv2: 1000, lv3: 10000 },
@@ -40,7 +40,7 @@ export function getCastLeveledSkillLevel(skillId: string, totalExperience: numbe
  * source. */
 export const HUY_KIEM_L3_CASTS = CAST_LEVELING_THRESHOLDS.tram!.lv3
 
-/** Cast threshold for Huy Quyen reaching Lv3 - the ung_the way offer
+/** Cast threshold for Huy Quyen reaching Lv3 - the hidden_body_pathway way offer
  * gate at the Initiation Ritual (spec 2026-09-15 T6, see PathOfferGate
  * in CultivationPathKit.ts). */
 export const HUY_QUYEN_L3_CASTS = CAST_LEVELING_THRESHOLDS.huy_quyen!.lv3

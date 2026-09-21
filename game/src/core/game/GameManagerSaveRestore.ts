@@ -1,7 +1,15 @@
 import { SkillManager } from '../skill/SkillManager'
 import type { Skill } from '../skill/Skill'
-import { TechniqueManager } from '../technique/TechniqueManager'
+import type { TechniqueSystem } from '../technique/TechniqueSystem'
 import type { Technique } from '../technique/Technique'
+import {
+  getTechniqueGradeCeiling,
+  getTechniqueMasteryForNextRank,
+  TECHNIQUE_RANK_CAP,
+} from '../technique/TechniqueProgression'
+import { ITEM_QUALITY_ORDER } from '../item/ItemQuality'
+import { getActiveWayDefinition } from '../player/CultivationPathKit'
+import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import { PillRegistry } from '../pill/PillRegistry'
@@ -22,6 +30,10 @@ import { DecomposeSystem, type DecomposeOutputEntry } from '../production/Decomp
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
+import {
+  applyAllBodyModifiers,
+  assertBodyProgressionIntegrity,
+} from '../realm/body/BodyProgressionSystem'
 import type { StatModifier } from '../stats/StatCalculator'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
 import { NotificationQueue } from './NotificationQueue'
@@ -31,7 +43,9 @@ import { TemplateRegistry } from './TemplateRegistry'
 export interface GameManagerSaveRestoreDeps {
   skillManager: SkillManager
   skillTemplates: TemplateRegistry<Skill>
-  techniqueManager: TechniqueManager
+  // P7-M6 - restore routes through the single writer so the
+  // techniqueProgress mirror republishes from the canonical holder.
+  techniqueSystem: TechniqueSystem
   techniqueTemplates: TemplateRegistry<Technique>
   materialRegistry: MaterialRegistry
   materialBag: MaterialBag
@@ -147,6 +161,77 @@ export class GameManagerSaveRestore {
         throw new Error(`Unknown production site in save: ${site.siteId}`)
       }
     }
+
+    // P7-M3 (v70) - techniques DO get hard validation here (upgraded
+    // from the old "unknown id drops silently" restore): the holder is
+    // 0-or-1 and MUST equal the committed way's techniqueId; a way-less
+    // (mortal) save must carry none. A mismatch is corrupt progression
+    // state, not drift - reject before any owner mutation.
+    const activeWay = getActiveWayDefinition(save.player)
+
+    if (activeWay) {
+      const entry = save.techniques[0]
+
+      if (save.techniques.length !== 1 || entry?.id !== activeWay.techniqueId) {
+        throw new Error(
+          `Technique holder contract violated in save: way '${activeWay.id}' requires exactly '${activeWay.techniqueId}', found ${save.techniques.length} entries`,
+        )
+      }
+
+      if (!this.deps.techniqueTemplates.has(entry.id)) {
+        throw new Error(`Unknown technique in save: ${entry.id}`)
+      }
+
+      const ceiling = getTechniqueGradeCeiling(save.player.realmId)
+      const cost = getTechniqueMasteryForNextRank(entry.grade)
+
+      if (
+        !Number.isInteger(entry.grade) ||
+        entry.grade < 1 ||
+        entry.grade > ceiling ||
+        !Number.isInteger(entry.rank) ||
+        entry.rank < 0 ||
+        entry.rank > TECHNIQUE_RANK_CAP ||
+        !Number.isInteger(entry.mastery) ||
+        entry.mastery < 0 ||
+        (entry.rank < TECHNIQUE_RANK_CAP && entry.mastery >= cost) ||
+        (entry.rank >= TECHNIQUE_RANK_CAP && entry.mastery !== 0) ||
+        !ITEM_QUALITY_ORDER.includes(entry.quality)
+      ) {
+        throw new Error(`Invalid technique progression state in save: ${entry.id}`)
+      }
+    } else if (save.techniques.length !== 0) {
+      throw new Error('Technique holder contract violated in save: way-less player carries a technique')
+    }
+
+    // P7-M4 (v71) - mortalBasicSkillId is the MORTAL-ONLY basic pick:
+    // absent = the runtime's tram default; present = a precursor id the
+    // player could have learned. Post-path presence is corrupt (the
+    // ritual clears the pick inside the commit block - a way player can
+    // never carry one) - reject before any owner mutation, same
+    // hard-fail seam as the technique-holder contract above.
+    const mortalPick = save.player.mortalBasicSkillId
+
+    if (mortalPick !== undefined) {
+      if (!isMortalPrecursorSkillId(mortalPick)) {
+        throw new Error(`Invalid mortalBasicSkillId in save: ${String(mortalPick)}`)
+      }
+
+      if (save.player.cultivationPath !== undefined) {
+        throw new Error(
+          `mortalBasicSkillId persisted post-path in save: '${mortalPick}' on path '${save.player.cultivationPath}'`,
+        )
+      }
+    }
+
+    // P7-M5 (v72) - body progression integrity is the LAST preflight
+    // check, delegated to the BodyProgression authority in one call
+    // (shape already passed): completedTiers integral + 0..6, progress
+    // under the active-tier cap / zero at 6, openedIds a strict prefix
+    // of canonical MERIDIANS order. A corrupt slice is corrupt
+    // progression state - reject before any owner mutation, same
+    // hard-fail seam as the technique-holder contract above.
+    assertBodyProgressionIntegrity(save.player)
   }
 
   /**
@@ -197,18 +282,24 @@ export class GameManagerSaveRestore {
 
       technique.name = template.name
       technique.description = template.description
+      technique.icon = template.icon
+      technique.element = template.element
+      technique.resourceLabel = template.resourceLabel
+      technique.combatTypeId = template.combatTypeId
 
-      // tierEffects/combatModifiers are authored data and the template
+      // gradeEffects/combatModifiers are authored data and the template
       // is their authority, same contract as name/description above.
       // Re-deriving keeps a save frozen with stale/pre-rename authored
-      // data from silently staying inert.
-      technique.tierEffects = structuredClone(template.tierEffects)
+      // data from silently staying inert. Persisted grade/rank/mastery/
+      // quality are progression state - the template's defaults do NOT
+      // overwrite them.
+      technique.gradeEffects = structuredClone(template.gradeEffects)
       technique.combatModifiers = structuredClone(template.combatModifiers)
 
       return [technique]
     })
 
-    this.deps.techniqueManager.restore(restoredTechniques)
+    this.deps.techniqueSystem.restore(restoredTechniques)
 
     const restoredSkills = save.skills.flatMap((savedSkill) => {
       const skill = structuredClone(savedSkill)
@@ -463,6 +554,18 @@ export class GameManagerSaveRestore {
       // M3 — Hoa Hau Thong Than: x2 pill yield applies to offline settle too.
       getAlchemyDoublePill(this.deps.getActivePlayer()?.selectedTalentIds)?.yieldMultiplier ?? 1,
     )
+
+    // P7-M5 (v72) - body modifier rehydration: chapter state is the
+    // authority, persisted player.modifiers body slices are NOT trusted.
+    // Rebuild the luyen-the:/bat-mach: slices exactly once from the
+    // restored canonical state (corrects stale/missing entries); runs
+    // BEFORE the hash commit so a rehydrate throw leaves the payload
+    // uncommitted.
+    const bodyPlayer = this.deps.getActivePlayer()
+
+    if (bodyPlayer) {
+      applyAllBodyModifiers(bodyPlayer)
+    }
 
     // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:
     // restore converges the active set to current eligibility BEFORE

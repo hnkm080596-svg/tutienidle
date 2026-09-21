@@ -2,7 +2,7 @@ import type { PlayerData } from '../player/Player'
 import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } from './ProgressionNode'
 import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 
-import type { PhapTuRoute } from '../phap-tu/PhapTuState'
+import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
 import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
@@ -92,18 +92,27 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
     // Kiem Tu Reimagined (spec K20) — the Cuu Cung cap guard. Lives in
     // hasPrerequisite so canPurchaseNode blocks the buy BEFORE insight
     // is deducted or the node recorded. Mortal realm (index 0) fails —
-    // ngu cannot be entered there anyway. M6: way membership replaces
-    // the retired kiemTu.mode discriminator.
+    // hidden_sword_pathway cannot be entered there anyway. M6: way membership replaces
+    // the retired swordPath.mode discriminator.
     case 'kiemDaoBelowCap': {
-      const state = player.kiemTu
+      const state = player.swordPath
       const realmIndex = getRealmIndex(player.realmId)
 
-      if (!state || !hasStaticPathCapability(player, 'kiem_tu.ngu_kiem_dao') || realmIndex < 1) {
+      if (!state || !hasStaticPathCapability(player, 'sword.sword_riding') || realmIndex < 1) {
         return false
       }
 
       return state.kiemDaoCount < kiemDaoCap(realmIndex)
     }
+
+    // P7-M6 - technique gates read the mirror only; absent mirror fails
+    // closed for any positive requirement (a rank:0/grade:0 gate would
+    // pass - authored thresholds stay >= 1 by data discipline).
+    case 'techniqueRank':
+      return (player.techniqueProgress?.rank ?? 0) >= prerequisite.rank
+
+    case 'techniqueGrade':
+      return (player.techniqueProgress?.grade ?? 0) >= prerequisite.grade
   }
 }
 
@@ -119,23 +128,23 @@ function meetsPrerequisites(player: PlayerData, node: ProgressionNode): boolean 
  * reject them, so an inactive node's levels can never take effect.
  */
 export function isNodeRouteActive(player: PlayerData, node: ProgressionNode): boolean {
-  return node.routeTag === undefined || player.phapTu.route === node.routeTag
+  return node.routeTag === undefined || player.spellPath.route === node.routeTag
 }
 
 /**
  * Phap Tu Reimagined Task 6 — element-branch membership: a node with
- * elementTag is active only while phapTu.element matches (untagged
+ * elementTag is active only while spellPath.element matches (untagged
  * nodes are always active). Same gate points as routeTag: aggregators
  * skip inactive-element nodes, purchase/upgrade reject them. While
- * phapTu.element is null (pre-selection) every element node counts as
- * active so selectPhapTuElement can purchase its root — unreachable
+ * spellPath.element is null (pre-selection) every element node counts as
+ * active so selectSpellPathElement can purchase its root — unreachable
  * branch children still fail their root prerequisite.
  */
 export function isNodeElementActive(player: PlayerData, node: ProgressionNode): boolean {
   return (
     node.elementTag === undefined ||
-    player.phapTu.element === null ||
-    player.phapTu.element === node.elementTag
+    player.spellPath.element === null ||
+    player.spellPath.element === node.elementTag
   )
 }
 
@@ -492,19 +501,19 @@ export function switchRoute(
 
   registry: { getAll(): ProgressionNode[] },
 
-  route: PhapTuRoute,
+  route: SpellPathRoute,
 ): number {
-  const oldRoute = player.phapTu.route
+  const oldRoute = player.spellPath.route
 
-  // Review fix (HIGH-2): this is the only writer of phapTu.route besides
-  // the atomic (element, route) commit in selectPhapTuElement — it needs
+  // Review fix (HIGH-2): this is the only writer of spellPath.route besides
+  // the atomic (element, route) commit in selectSpellPathElement — it needs
   // the same commitment gate. Without it a pre-commit call stamps route
-  // onto {element: null} and permanently poisons selectPhapTuElement's
-  // null-check invariant; a non-phap_tu player's dirty route state would
+  // onto {element: null} and permanently poisons selectSpellPathElement's
+  // null-check invariant; a non-spell player's dirty route state would
   // also leak universal route stats via getRouteStatModifiers.
   if (
-    !hasStaticPathCapability(player, 'phap_tu.elemental_casting') ||
-    player.phapTu.element === null ||
+    !hasStaticPathCapability(player, 'spell.elemental_casting') ||
+    player.spellPath.element === null ||
     oldRoute === null ||
     oldRoute === route
   ) {
@@ -543,7 +552,7 @@ export function switchRoute(
 
   player.skillInsight += refund
 
-  player.phapTu.route = route
+  player.spellPath.route = route
 
   return refund
 }
@@ -583,15 +592,15 @@ export function previewRouteSwitch(
 
   registry: { getAll(): ProgressionNode[] },
 ): RouteSwitchPreview {
-  const oldRoute = player.phapTu.route
+  const oldRoute = player.spellPath.route
 
   const preview: RouteSwitchPreview = { refund: 0, forfeited: 0, resetNodeCount: 0 }
 
   // Same gate as switchRoute (HIGH-2) — never preview a switch the
   // domain would reject.
   if (
-    !hasStaticPathCapability(player, 'phap_tu.elemental_casting') ||
-    player.phapTu.element === null ||
+    !hasStaticPathCapability(player, 'spell.elemental_casting') ||
+    player.spellPath.element === null ||
     oldRoute === null
   ) {
     return preview

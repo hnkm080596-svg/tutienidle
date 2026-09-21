@@ -123,9 +123,7 @@ describe('skill level-up notification (T4-37)', () => {
       cost: 0,
       target: 'enemy',
       effects: [{ type: 'damage', value: 100, damageType: 'physical' }],
-      unlocked: false,
-      equipped: false,
-    }
+      }
   }
 
   it('single-level gain pushes messageKey notifications.skillLevelUp', () => {

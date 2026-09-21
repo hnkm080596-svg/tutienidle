@@ -12,8 +12,8 @@ const { t } = useI18n()
 
 <template>
   <ul class="reward-list">
-    <li v-if="summary.techniqueInsight > 0" class="reward-list__item">
-      {{ t('combat.rewards.techniqueInsight') }} <span class="reward-list__value">+{{ formatNumber(summary.techniqueInsight) }}</span>
+    <li v-if="summary.techniqueMastery > 0" class="reward-list__item">
+      {{ t('combat.rewards.techniqueInsight') }} <span class="reward-list__value">+{{ formatNumber(summary.techniqueMastery) }}</span>
     </li>
     <li v-if="summary.skillInsight > 0" class="reward-list__item">
       {{ t('combat.rewards.skillInsight') }} <span class="reward-list__value">+{{ formatNumber(summary.skillInsight) }}</span>

@@ -23,7 +23,7 @@ import type { ResolvedModifierChannel } from './CombatBuild'
 import type { SkillSystem } from '../skill/SkillSystem'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { TechniqueManager } from '../technique/TechniqueManager'
-import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
+import { getTechniqueEffects } from '../technique/TechniqueProgression'
 
 /**
  * Persistent/live modifier authority: static aggregation (buff + equipped
@@ -146,11 +146,11 @@ export class GameManagerPersistentEffectOps {
     ]
   }
 
-  /** Fixed combat modifiers of the equipped technique (plan §9). */
+  /** Fixed combat modifiers of the active technique (plan sec. 9). */
   private getTechniqueCombatModifiers(): StatModifier[] {
-    const technique = this.deps.techniqueManager.getEquipped()
+    const technique = this.deps.techniqueManager.getActive()
 
-    if (!technique?.equipped || !technique.combatModifiers) {
+    if (!technique?.combatModifiers) {
       return []
     }
 
@@ -158,23 +158,19 @@ export class GameManagerPersistentEffectOps {
   }
 
   /**
-   * PLAN HOAN CHINH §5 rework (2026-08-20) - stat effects of the EQUIPPED
-   * technique at its CURRENT tier (getTechniqueTier(), now computed from
-   * techniqueExperience - the technique's own XP bar, see
-   * TechniqueTier.ts). manaRegenIncreasePercent deliberately maps into
-   * percent OF the manaRegenPerTurn stat (standard Increased, see
+   * P7-M3 - stat effects of the ACTIVE canonical technique at its
+   * current grade+rank band (getTechniqueEffects, see
+   * TechniqueProgression.ts). manaRegenIncreasePercent deliberately maps
+   * into percent OF the manaRegenPerTurn stat (standard Increased, see
    * StatCalculator.ts's runPipeline) instead of %maxMp - %maxMp would
    * create a dependency cycle (maxMp is not computed yet at this merge
-   * step). Task 3 (D17): MP-pool modifiers carry domain:'phap_tu' so the
+   * step). Task 3 (D17): MP-pool modifiers carry domain:'spell' so the
    * Task-7 gate accepts them once maxMp/manaRegenPerTurn are gated.
    */
   private getTechniqueTierModifiers(player: PlayerData): StatModifier[] {
-    const technique = this.deps.techniqueManager.getEquipped()
+    const technique = this.deps.techniqueManager.getActive()
 
-    const effect =
-      technique?.tierEffects?.[
-        getTechniqueTier(technique.insight ?? 0, getTechniqueInsightTotalRequired(technique))
-      ]
+    const effect = technique ? getTechniqueEffects(technique) : undefined
 
     if (!effect) {
       return []
@@ -202,37 +198,37 @@ export class GameManagerPersistentEffectOps {
       })
     }
 
-    // MP is a phap_tu-domain resource (D9): emit the MP family only when
-    // the player's active WAY owns that stat domain (both phap_tu ways
-    // declare 'phap_tu' via their stat facet — M7 routes this through
+    // MP is a spell-domain resource (D9): emit the MP family only when
+    // the player's active WAY owns that stat domain (both spell ways
+    // declare 'spell' via their stat facet — M7 routes this through
     // resolveActiveWayStatDomains, the facet authority). applyDomainGate
     // checks stat<->modifier domain match, never path ownership -- this
     // emission gate is the credential check it cannot perform, so a
-    // the_tu/kiem_tu technique's authored MP fields can no longer
-    // self-issue phap_tu credentials onto a player with no MP pool.
+    // body/sword technique's authored MP fields can no longer
+    // self-issue spell credentials onto a player with no MP pool.
     // The authoring field stays legal; emission decides.
-    const ownsPhapTuDomain =
-      resolveActiveWayStatDomains(player)?.includes('phap_tu') ?? false
+    const ownsSpellPathDomain =
+      resolveActiveWayStatDomains(player)?.includes('spell') ?? false
 
-    if (ownsPhapTuDomain && effect.maxMpIncreasePercent !== undefined) {
+    if (ownsSpellPathDomain && effect.maxMpIncreasePercent !== undefined) {
       modifiers.push({
         id: `technique-tier:${technique!.id}:maxMp`,
         sourceId: technique!.id,
         sourceType: 'technique',
         stat: 'maxMp',
         percent: effect.maxMpIncreasePercent,
-        domain: 'phap_tu',
+        domain: 'spell',
       })
     }
 
-    if (ownsPhapTuDomain && effect.manaRegenIncreasePercent !== undefined) {
+    if (ownsSpellPathDomain && effect.manaRegenIncreasePercent !== undefined) {
       modifiers.push({
         id: `technique-tier:${technique!.id}:manaRegen`,
         sourceId: technique!.id,
         sourceType: 'technique',
         stat: 'manaRegenPerTurn',
         percent: effect.manaRegenIncreasePercent,
-        domain: 'phap_tu',
+        domain: 'spell',
       })
     }
 
@@ -249,14 +245,14 @@ export class GameManagerPersistentEffectOps {
       })
     }
 
-    if (ownsPhapTuDomain && effect.mpRegenFlat !== undefined) {
+    if (ownsSpellPathDomain && effect.mpRegenFlat !== undefined) {
       modifiers.push({
         id: `technique-tier:${technique!.id}:mpRegen`,
         sourceId: technique!.id,
         sourceType: 'technique',
         stat: 'manaRegenPerTurn',
         flat: effect.mpRegenFlat,
-        domain: 'phap_tu',
+        domain: 'spell',
       })
     }
 

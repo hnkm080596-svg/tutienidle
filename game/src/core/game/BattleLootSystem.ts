@@ -50,9 +50,7 @@ import type { TemplateRegistry } from './TemplateRegistry'
 import type { StageManager } from '../stage/StageManager'
 import type { Stage } from '../stage/Stage'
 import type { EnemySystem } from '../enemy/EnemySystem'
-import type { TechniqueManager } from '../technique/TechniqueManager'
 import type { TechniqueSystem } from '../technique/TechniqueSystem'
-import type { Technique } from '../technique/Technique'
 import type { ZoneRegistry } from '../stage/ZoneRegistry'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
@@ -93,9 +91,7 @@ export interface BattleLootSystemDeps {
   equipmentSystem: EquipmentSystem
   affixRegistry: AffixRegistry
   zoneRegistry: ZoneRegistry
-  techniqueManager: TechniqueManager
   techniqueSystem: TechniqueSystem
-  techniqueTemplates: TemplateRegistry<Technique>
   enemySystem: EnemySystem
   rewardSystem: RewardSystem
   stageManager: StageManager
@@ -109,21 +105,26 @@ export interface BattleLootSystemDeps {
 }
 
 /**
- * Cấp phần thưởng + loot khi quái chết (2026-08-24, tách khỏi
- * GameManager) — sở hữu:
- * - Session của trận đang diễn ra: ai nhận thưởng (RewardReceiver) và
- *   PlayerData của người chơi (để roll chỉ số chính equipment rớt +
- *   cộng skillInsight). Ephemeral — KHÔNG persist vào save.
- * - BattleRewardSummary tích luỹ trong trận hiện tại cho
- *   CombatVictoryPanel/CombatDefeatPanel (reset mỗi trận MỚI qua
+ * Cap phan thuong + loot khi quai chet (2026-08-24, tach khoi
+ * GameManager) - so huu:
+ * - Session cua tran dang dien ra: ai nhan thuong (RewardReceiver) va
+ *   PlayerData cua nguoi choi (de roll chi so chinh equipment rot +
+ *   cong skillInsight). Ephemeral - KHONG persist vao save.
+ * - BattleRewardSummary tich luy trong tran hien tai cho
+ *   CombatVictoryPanel/CombatDefeatPanel (reset moi tran MOI qua
  *   beginBattle()).
- * - grantResolvedDrops(): đồ rơi thẳng vào bag tương ứng ngay khi quái
- *   chết — không có bước "nhặt" thủ công/loot window. Mỗi lần cộng
- *   thành công đẩy 1 toast 'loot' vào NotificationQueue (Vue layer
- *   drain mỗi tick).
- * - Drop-system (2026-09-12): QUYẾT ĐỊNH rơi gì thuộc resolveDrops()
- *   (stage/family table + signature + modifiers) — hệ này chỉ orchestrate
- *   cấp phát + notification, không tự roll thêm đường nào.
+ * - grantResolvedDrops(): do roi thang vao bag tuong ung ngay khi quai
+ *   chet - khong co buoc "nhat" thu cong/loot window. Moi lan cong
+ *   thanh cong day 1 toast 'loot' vao NotificationQueue (Vue layer
+ *   drain moi tick).
+ * - Drop-system (2026-09-12): QUYET DINH roi gi thuoc resolveDrops()
+ *   (stage/family table + signature + modifiers) - he nay chi orchestrate
+ *   cap phat + notification, khong tu roll them duong nao.
+ * - P7-M3: techniqueMastery la kenh PENDING - kill cong don, chi
+ *   settleTechniqueMastery() (victory terminal / per auto-farm cycle)
+ *   moi flush qua TechniqueSystem.gainMastery. Consume-and-zero vi
+ *   repeat cycle giu loot session (preserveLootSession: beginBattle
+ *   bi skip) - khong consume thi cycle sau tra lai cung buffer.
  */
 export class BattleLootSystem {
   private summary: BattleRewardSummary = createEmptyBattleRewardSummary()
@@ -139,6 +140,11 @@ export class BattleLootSystem {
   // Kênh drop hiện tại — 'active' mặc định; auto-farm idle bật 'idle'
   // qua setChannel() rồi khôi phục sau mỗi cycle (Task 9 wiring).
   private channel: DropChannel = 'active'
+
+  // P7-M3 - technique mastery tich luy theo kill, flush MOT lan o
+  // terminal (victory) hoac cuoi moi auto-farm cycle. Defeat KHONG
+  // flush - buffer vut di voi session.
+  private pendingTechniqueMastery = 0
 
   /**
   * P6 - loot/drop RNG seam. Economy randomness deliberately stays off
@@ -163,8 +169,32 @@ export class BattleLootSystem {
   beginBattle() {
     this.receiver = null
     this.player = null
+    this.pendingTechniqueMastery = 0
 
     this.summary = createEmptyBattleRewardSummary()
+  }
+
+  /**
+   * P7-M3 - flush pending technique mastery vao canonical technique
+   * qua TechniqueSystem.gainMastery. Consume-and-zero TRUOC khi goi:
+   * repeat cycles giu loot session (beginBattle bi skip) nen buffer
+   * con lai se bi tra lai o victory ke. Summary chi ghi luong THAT SU
+   * duoc tieu thu (gained) - rank-cap clipping khong inflate so lieu.
+   */
+  settleTechniqueMastery(sourceId?: string) {
+    const amount = this.pendingTechniqueMastery
+    this.pendingTechniqueMastery = 0
+
+    if (amount <= 0) {
+      return
+    }
+
+    const { gained } = this.deps.techniqueSystem.gainMastery(amount)
+    this.summary.techniqueMastery += gained
+
+    if (gained > 0 && sourceId) {
+      this.emitRewardParticle(sourceId, 'insight', 0x78e6d0)
+    }
   }
 
   // startBattleWithPlayer() gọi sau beginBattle().
@@ -257,7 +287,7 @@ export class BattleLootSystem {
           // Scale thưởng theo cảnh giới stage (Trúc Cơ ×3, xem
           // RealmRewardScale) — Trúc Cơ tái sử dụng enemyPool Luyện Khí
           // nên phải nhân thưởng để thu nhập không bị khựng. Nhân cả
-          // techniqueInsight (tác dụng phụ: artifact EXP + skill insight
+          // techniqueMastery (tac dung phu: artifact EXP + skill insight
           // tăng theo ở Trúc Cơ, đã được duyệt 2026-08-28). Currency now
           // comes from the stage drop table (already multiplied by the
           // modifier currency coefficient inside resolveDrops) — the
@@ -266,30 +296,25 @@ export class BattleLootSystem {
           const stoneMultiplier = talentStoneMultiplier * realmRewardMultiplier
           const rewards: EnemyReward = {
             spiritStone: Math.floor(drops.spiritStone * stoneMultiplier),
-            techniqueInsight: Math.floor(drops.techniqueInsight * realmRewardMultiplier),
+            techniqueMastery: Math.floor(drops.techniqueMastery * realmRewardMultiplier),
           }
+
+          // P7-M3 - technique mastery gom PENDING, KHONG cap ngay: chi
+          // settleTechniqueMastery() (victory / auto-farm cycle) moi
+          // flush qua gainMastery. Defeat giu buffer toi luc session
+          // vut - khong tra.
+          this.pendingTechniqueMastery += rewards.techniqueMastery
 
           // Tu vi giờ CHỈ đến từ tu luyện (2026-08-20) — EnemyReward
-          // không còn field cultivation.
-          const equippedTechnique = this.deps.techniqueManager.getEquipped()
-          const insightBeforeReward = equippedTechnique?.insight ?? 0
-
-          this.giveReward(this.receiver, rewards)
-
-          // Summary phải phản ánh lượng THẬT SỰ vào Tâm Pháp, kể cả khi
-          // không trang bị hoặc đã chạm trần (xem gainEquippedTechniqueInsight()).
-          const techniqueInsightGained = Math.max(
-            0,
-            (equippedTechnique?.insight ?? 0) - insightBeforeReward,
-          )
-          this.summary.techniqueInsight += techniqueInsightGained
-
-          if (techniqueInsightGained > 0) {
-            this.emitRewardParticle(battleEnemy.entity.id, 'insight', 0x78e6d0)
-          }
+          // khong con field cultivation. Spirit stone di qua receiver
+          // (MaterialBag); techniqueMastery KHONG di qua RewardSystem
+          // (khong phai Reward field) va skillInsight co duong inline
+          // rieng ben duoi - truyen CHI spiritStone de tranh moi field
+          // collision qua receiver.
+          this.giveReward(this.receiver, { spiritStone: rewards.spiritStone })
 
           // Cảm ngộ Kỹ năng — LUÔN cấp thẳng vào player, KHÔNG cần
-          // trang bị tâm pháp (khác techniqueInsight ở trên, xem
+          // so huu tam phap (khac techniqueMastery o tren, xem
           // skill-insight-and-auto-combat-hud-plan.md mục 3).
           // Thiên phú Đại Trí Nhược Ngu/Nghịch Thiên nhân tại đây (plan §6).
           const baseSkillInsight = getSkillInsightReward(rewards)
@@ -592,29 +617,8 @@ export class BattleLootSystem {
           grantEquipment(undefined)
           break
 
-        // Phá Cảnh Tâm Pháp — rơi thẳng vào danh sách tâm pháp ĐÃ HỌC
-        // (unlocked), giống cách nhặt equipment KHÔNG cần bước
-        // "học" riêng như Đan/Phù/Trận. techniqueSystem.learn() tự
-        // no-op nếu đã sở hữu (xem TechniqueSystem.ts) — chỉ toast
-        // khi THỰC SỰ học mới (learn() trả true), tránh spam toast
-        // trùng lặp mỗi lần rớt trúng công pháp đã sở hữu.
-        case 'technique': {
-          const itemId = drop.itemId
-          const template = itemId ? this.deps.techniqueTemplates.get(itemId) : undefined
-
-          if (itemId && template && this.deps.techniqueSystem.learn(template)) {
-            this.emitRewardParticle(sourceId, 'item', 0xffd54f)
-            this.pushLootNotification(`Học được: ${template.name}`, {
-              icon: template.icon,
-              name: template.name,
-              amountLabel: 'Học được',
-              accentColorVar: '--gold-500',
-            })
-            this.addBattleRewardItem('technique', itemId, template.name, 1)
-          }
-
-          break
-        }
+        // P7-M3 — learn-by-drop retired: DropKind has no 'technique'
+        // member, canonical techniques come from the Way at initiation.
       }
     }
 

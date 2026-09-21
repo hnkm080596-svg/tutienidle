@@ -21,11 +21,12 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import NodeTreePanel from './loadout-sections/NodeTreePanel.vue'
+import NodeTreePanel from './skill-path/NodeTreePanel.vue'
 import NodeInspector from './skill-path/NodeInspector.vue'
 import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
 import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
+import TechniqueBand from './skill-path/TechniqueBand.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import {
@@ -47,32 +48,39 @@ const { stateVersion } = useStateVersion()
 // Kiem Tu also has a real Node Tree (KiemTuNodes.ts). purchaseNode() is
 // only reachable through NodeInspector.vue, which renders when showTree.
 //
-// The Tu Reimagined (T22) — the_tu/the_tu_an mỗi path có 1 cây thật
+// The Tu Reimagined (T22) — body/hidden_body mỗi path có 1 cây thật
 // (TheTuNodes/TheTuAnNodes) dưới branchTag trùng path id: single-tag
 // pass-through view qua viewBranchTags(), toàn bộ root (mutex cho Hiện,
 // non-mutex cho Ẩn) render trong cùng một tree.
 //
 // P1 - tree selection resolves on the WAY's declared nodeTreeTag, never
 // a concrete way predicate: kiem hien -> 'kiem_pho', ngu -> 'ngu_kiem',
-// the_tu hien -> 'the_tu', ung_the -> 'the_tu_an'. Ways without a fixed
-// tree (ngu_hanh - element-driven; ngo_dao - none) declare no tag; the
+// body hien -> 'body', ung_the -> 'hidden_body'. Ways without a fixed
+// tree (spell_pathway - element-driven; ngo_dao - none) declare no tag; the
 // resolver fails closed on a corrupt pair.
 const wayNodeTreeTag = computed(() => getActiveWayDefinition(player)?.nodeTreeTag)
 
+// P7-M7 - way identity line: the committed way's self-describing name
+// (e.g. 'Kiem Tu - Ngu Kiem Tam Kinh'), or Phan Nhan for a way-less
+// mortal. Resolved through the canonical way read, never an id literal.
+const wayIdentity = computed(
+  () => getActiveWayDefinition(player)?.name ?? t('panels.skillPath.mortalName'),
+)
+
 const hasElementalCasting = computed(
-  () => hasStaticPathCapability(player, 'phap_tu.elemental_casting'),
+  () => hasStaticPathCapability(player, 'spell.elemental_casting'),
 )
 
 const showTree = computed(
   () =>
-    // M4 (R6): the Phap Tu element tree is ngu_hanh machinery - the
-    // 'phap_tu.elemental_casting' capability is the gate - a collapsed
-    // ('phap_tu','ngo_dao') player owns no element branches.
+    // M4 (R6): the Phap Tu element tree is spell_pathway machinery - the
+    // 'spell.elemental_casting' capability is the gate - a collapsed
+    // ('spell','hidden_spell_pathway') player owns no element branches.
     hasElementalCasting.value || wayNodeTreeTag.value !== undefined,
 )
 
-// ---- Nhánh phap_tu (Hành -> Node Tree) ----
-// Task 16: element tabs always visible for phap_tu — the element-root
+// ---- Nhánh spell (Hành -> Node Tree) ----
+// Task 16: element tabs always visible for spell — the element-root
 // pick happens IN the tree (element+route atomic commit), so the tree
 // must render before any elemental skill is learned. Default tab = the
 // committed element once the element axis resolves one.
@@ -89,7 +97,7 @@ watch(
   },
 )
 
-// ---- Nhánh kiem_tu (Kiem Tu Reimagined spec §6) — ONE tree, two
+// ---- Nhánh sword (Kiem Tu Reimagined spec §6) — ONE tree, two
 // branchTags rendered together: 'kiem_pho' (orb branches) + 'ngu_kiem'
 // (hidden root + Ngu branch). Node-level visibility is mode-filtered
 // inside NodeTreePanel — this tag only selects WHICH view; the re-
@@ -143,7 +151,7 @@ watch(
 // Thư viện duy nhất: mọi active skill đã học, không phụ thuộc loadout/path.
 const learnedSkills = computed<Skill[]>(() => {
   stateVersion.value
-  return gameManager.skillManager.getAll().filter(skill => skill.unlocked && skill.type === 'active')
+  return gameManager.skillManager.getAll().filter(skill => skill.type === 'active')
 })
 
 const selectedSkillId = ref<string | null>(null)
@@ -196,9 +204,11 @@ function close() {
 
 <template>
   <OverlayPanel :open="ui.standalonePanel === 'skill'" :title="t('panels.skillPath.title')" width="min(1400px, 94vw)" height="min(760px, 88vh)" @close="close">
-      <template #subtitle><span v-if="showTree" class="skill-path-panel__subtitle">{{ t('panels.skillPath.subtitle') }}</span></template>
+      <template #subtitle><span class="skill-path-panel__subtitle">{{ wayIdentity }}</span></template>
       <template #header-actions><span v-if="showTree" class="skill-path-panel__points">✦ {{ player.skillInsight }} {{ t('panels.nodeTree.labels.insight') }}</span></template>
       <div class="skill-path-panel">
+        <TechniqueBand />
+
         <div class="skill-path-panel__body">
           <div class="skill-path-panel__col skill-path-panel__col--left">
             <SkillPathList :skills="learnedSkills" :selected-id="selectedSkillId" @select="onSelectSkill" />

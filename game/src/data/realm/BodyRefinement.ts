@@ -5,7 +5,7 @@ import type { StatType } from '../../core/stats/StatTypes'
 export const TINH_HOA_PHAM_THE_MATERIAL_ID = 'tinh_hoa_pham_the'
 
 // Luyện Thể (Realm Passive & Pressure System, 2026-08-20) — 6 tầng rèn
-// thể TUẦN TỰ, độc quyền Phàm Nhân (xem core/realm/BodyRefinementSystem.ts).
+// the TUAN TU, doc quyen Pham Nhan (xem core/realm/body/BodyRefinementChapter.ts).
 // Mỗi tầng ứng với ĐÚNG 1 (hoặc 2, tầng cuối) StatType theo tài liệu
 // Plan gốc — số liệu (cap/percent) là first pass, cần tinh chỉnh qua
 // playtest giống mọi hằng số cân bằng khác trong codebase.
@@ -17,11 +17,11 @@ export interface BodyRefinementTierDefinition {
   description: string
 
   // Tinh Hoa Phàm Thể cần để làm ĐẦY tầng này (tuần tự — phải làm đầy
-  // tầng trước mới được đầu tư vào tầng sau, xem BodyRefinementSystem.ts).
+  // tang truoc moi duoc dau tu vao tang sau, xem BodyRefinementChapter.ts).
   cap: number
 
   // Stat được cộng percent khi tầng này đầy (scale tuyến tính theo
-  // progress/cap lúc CHƯA đầy — xem BodyRefinementSystem.buildTierModifiers()).
+  // progress/cap luc CHUA day - xem body/BodyRefinementChapter.applyModifiers()).
   stats: StatType[]
 
   // % cộng vào MỖI stat trong `stats` lúc tầng đầy 100%.
@@ -30,7 +30,7 @@ export interface BodyRefinementTierDefinition {
   // Phàm Nhân tầng tối thiểu để BẮT ĐẦU đầu tư tầng này (2026-08-20,
   // yêu cầu cụ thể: Bì/Nhục/Cốt/Huyết/Tạng/Mạch mở lần lượt ở tầng
   // 2/4/6/8/10/12) — ĐỘC LẬP với thứ tự tuần tự (phải làm đầy tầng
-  // trước MỚI tới lượt tầng này, xem BodyRefinementSystem.investTinhHoa());
+  // truoc MOI toi luot tang nay, xem body/BodyRefinementChapter.invest());
   // cả 2 điều kiện đều phải thoả. Tầng cuối (Luyện Mạch) mở cùng cửa
   // sổ Quán Khí (tầng 12 trở đi, xem TribulationOutcomeService)
   // — cố ý, chừa tầng 12-18 làm cửa sổ hoàn thiện trước khi Quán Khí.

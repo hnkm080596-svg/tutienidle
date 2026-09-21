@@ -8,7 +8,7 @@ import { getRealmIndex } from '../realm/realmSystem'
 import { KIEM_PHO_ORBS, unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 
-// Kiem Tu Reimagined Task 6 — the hien (Kiem Pho) DynamicBasicProvider.
+// Kiem Tu Reimagined Task 6 — the sword_pathway (Kiem Pho) DynamicBasicProvider.
 // Owns the battle-scoped matcher state (preset snapshot + cursor + log)
 // in closure — A3: never on PlayerData, never persisted. Auto-repeat
 // reuses participants, so resetForBattle() re-inits from the persisted

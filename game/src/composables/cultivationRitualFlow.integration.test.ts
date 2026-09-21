@@ -44,11 +44,11 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     expect(player.realmId).toBe('mortal')
     expect(useUiStore().standalonePanel).toBe('quan_khi')
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
     expect(player.realmId).toBe('qi_refining')
     expect(player.realmLevel).toBe(1)
-    expect(player.cultivationPath).toBe('phap_tu')
-    expect(player.cultivationWay).toBe('ngu_hanh')
+    expect(player.cultivationPath).toBe('spell')
+    expect(player.cultivationWay).toBe('spell_pathway')
 
     player.realmLevel = 12
 
@@ -59,9 +59,11 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     expect(player.realmId).toBe('foundation_establishment')
     expect(player.realmLevel).toBe(1)
     expect(player.artifact?.artifactId).toBe('ngu_hanh_chau')
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('dai_ngu_hanh_quyet_truc_co')
+    // P7-M3 - the Truc Co variant folded into gradeEffects[2]: the
+    // holder keeps five_elements_art and advances grade via Nang Canh.
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('five_elements_art')
     expect(gameManager.effectOps.getAggregatedModifiers(player.$state).filter(
-      modifier => modifier.sourceId === 'phap_tu',
+      modifier => modifier.sourceId === 'spell',
     )).toHaveLength(3)
   })
 })

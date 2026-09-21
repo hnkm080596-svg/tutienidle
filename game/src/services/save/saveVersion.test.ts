@@ -18,6 +18,33 @@ const SAVE_KEY = resolveSaveKey()
 // documents which concrete version the rework cut over from).
 const PRE_REWORK_VERSION = 61
 
+// P7-M2 (v69) - the version live on master immediately before the
+// realm-passive ownership cut removed Technique.passiveSkillIdsByRealm +
+// innateSkillId. Same "anything !== CURRENT" contract; the literal pins
+// the concrete boundary this mission cut over.
+const PRE_M2_VERSION = 68
+
+// P7-M3 (v70) - the version live on master immediately before the
+// canonical-technique cut moved Technique snapshots to
+// rank/mastery/grade/quality with the 0-or-1 way-matched holder. Same
+// "anything !== CURRENT" contract; the literal pins the concrete
+// boundary this mission cut over.
+const PRE_M3_VERSION = 69
+
+// P7-M4 (v71) - the version live on master immediately before the
+// combat-role contract retired the generic skill loadout (skill entries
+// carry no loadoutSlot/loadoutSlots/equipped/unlocked; learned =
+// SkillManager membership). Same "anything !== CURRENT" contract; the
+// literal pins the concrete boundary this mission cut over.
+const PRE_M4_VERSION = 70
+
+// P7-M5 (v72) - the version live on master immediately before the
+// unified body-progression cut folded the three flat body fields into
+// the chapter-keyed player.bodyProgression record. Same "anything !==
+// CURRENT" contract; the literal pins the concrete boundary this
+// mission cut over.
+const PRE_M5_VERSION = 71
+
 // vitest runs environment: 'node' — no real localStorage, so a minimal
 // in-memory polyfill is stubbed (same pattern as SaveSystem.test.ts).
 class MemoryStorage implements Storage {
@@ -85,6 +112,102 @@ describe('Phap Tu Reimagined save cutover', () => {
     const outcome = loadGame()
 
     expect(outcome).toEqual({ status: 'incompatible', foundVersion: PRE_REWORK_VERSION, raw })
+  })
+
+  it('rejects a save stamped with the pre-M2 version (68) as incompatible', () => {
+    const player = createDefaultPlayer()
+    // Intentionally NOT GameSave: version 68 is outside the current literal
+    // type, so the payload is built as a raw record like preReworkSaveRaw().
+    const save: Record<string, unknown> = {
+      version: PRE_M2_VERSION,
+      player,
+      techniques: [],
+      skills: [],
+      materials: [],
+      equipment: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      equipmentSlots: [],
+    }
+    const raw = JSON.stringify(save)
+
+    localStorage.setItem(SAVE_KEY, raw)
+
+    expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M2_VERSION, raw })
+  })
+
+  it('rejects a save stamped with the pre-M3 version (69) as incompatible', () => {
+    const player = createDefaultPlayer()
+    // Intentionally NOT GameSave: version 69 is outside the current literal
+    // type, so the payload is built as a raw record like preReworkSaveRaw().
+    const save: Record<string, unknown> = {
+      version: PRE_M3_VERSION,
+      player,
+      techniques: [],
+      skills: [],
+      materials: [],
+      equipment: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      equipmentSlots: [],
+    }
+    const raw = JSON.stringify(save)
+
+    localStorage.setItem(SAVE_KEY, raw)
+
+    expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M3_VERSION, raw })
+  })
+
+  it('rejects a save stamped with the pre-M4 version (70) as incompatible', () => {
+    const player = createDefaultPlayer()
+    // Intentionally NOT GameSave: version 70 is outside the current literal
+    // type, so the payload is built as a raw record like preReworkSaveRaw().
+    const save: Record<string, unknown> = {
+      version: PRE_M4_VERSION,
+      player,
+      techniques: [],
+      skills: [],
+      materials: [],
+      equipment: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      equipmentSlots: [],
+    }
+    const raw = JSON.stringify(save)
+
+    localStorage.setItem(SAVE_KEY, raw)
+
+    expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M4_VERSION, raw })
+  })
+
+  it('rejects a save stamped with the pre-M5 version (71) as incompatible', () => {
+    const player = createDefaultPlayer()
+    // Intentionally NOT GameSave: version 71 is outside the current literal
+    // type, so the payload is built as a raw record like preReworkSaveRaw().
+    const save: Record<string, unknown> = {
+      version: PRE_M5_VERSION,
+      player,
+      techniques: [],
+      skills: [],
+      materials: [],
+      equipment: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      equipmentSlots: [],
+    }
+    const raw = JSON.stringify(save)
+
+    localStorage.setItem(SAVE_KEY, raw)
+
+    expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M5_VERSION, raw })
   })
 
   it('loads a save stamped with the current version', () => {

@@ -39,7 +39,9 @@ export class GameManagerTickOps {
     private readonly deps: {
       getActivePlayer: () => PlayerData | undefined
       tickTimedEffects: (player: PlayerData) => void
-      investBodyRefinement: (player: PlayerData) => void
+      // P7-M5 - the tick auto-invests the body_refinement chapter through
+      // the unified BodyProgression op (Tinh Hoa Pham The -> Luyen The).
+      investBodyChapter: (player: PlayerData) => void
       questSystem: QuestSystem
       questRegistry: QuestRegistry
       questManager: QuestManager
@@ -114,7 +116,7 @@ export class GameManagerTickOps {
     // đăng ký qua setActivePlayer() sau boot/load.
     if (activePlayer) {
       this.deps.tickTimedEffects(activePlayer)
-      this.deps.investBodyRefinement(activePlayer)
+      this.deps.investBodyChapter(activePlayer)
 
       // R8.1 (AR-09) - realm-transition reconciliation: the writer set
       // the flag; activate newly eligible quests on the first tick

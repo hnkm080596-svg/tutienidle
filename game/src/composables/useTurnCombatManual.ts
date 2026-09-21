@@ -91,7 +91,7 @@ export function useTurnCombatManual() {
     bumpState()
   }
 
-  // Kiem Tu Reimagined Task 7 — hien manual orb picker. When the player
+  // Kiem Tu Reimagined Task 7 — sword_pathway manual orb picker. When the player
   // participant carries a dynamicBasic provider (Kiem Pho / Ngu Kiem
   // Dao) its manualOptions() are the ONLY legal manual picks — the
   // generic 3-slot basic button is replaced by these buttons.

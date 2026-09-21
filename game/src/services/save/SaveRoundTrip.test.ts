@@ -78,14 +78,15 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     expect(materials).toContainEqual({ materialId: TEST_MATERIAL.id, amount: 42 })
   })
 
-  // Spec dot-pha-loi-kiep §6.1 — 4 fields mới v54: openedMeridianIds,
-  // luyenKhiKillsSinceBeast, mortalPerfectionAchieved,
-  // greatDaoOpportunityLost phải sống sót qua round-trip JSON.
+  // Spec dot-pha-loi-kiep sec.6.1 - the v54 fields (meridian opened
+  // ids inside bodyProgression since v72, luyenKhiKillsSinceBeast,
+  // mortalPerfectionAchieved, greatDaoOpportunityLost) must survive
+  // the JSON round-trip.
   it('save v54 với 4 fields đột phá mới round-trip nguyên vẹn', () => {
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
 
-    player.openedMeridianIds = ['nham_mach', 'doi_mach']
+    player.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
     player.luyenKhiKillsSinceBeast = 500
     player.mortalPerfectionAchieved = true
     player.greatDaoOpportunityLost = false
@@ -101,22 +102,47 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     const playerData = (roundTripped as { player: typeof player }).player
 
-    expect(playerData.openedMeridianIds).toEqual(['nham_mach', 'doi_mach'])
+    expect(playerData.bodyProgression.meridian.openedIds).toEqual(['nham_mach', 'doi_mach'])
     expect(playerData.luyenKhiKillsSinceBeast).toBe(500)
     expect(playerData.mortalPerfectionAchieved).toBe(true)
     expect(playerData.greatDaoOpportunityLost).toBe(false)
   })
 
-  // Cultivation Path Framework M2 (v65) — the way id persists beside the
-  // legacy-effective path id; an unchosen player serializes with the key
-  // absent (undefined drops out of JSON) and validates clean.
-  it('cultivationPath + cultivationWay round-trip nguyên vẹn (v65)', () => {
+  // P7-M5 (v72) - the chapter-keyed bodyProgression record round-trips
+  // byte-faithful across default / mid-progress / complete states.
+  it.each([
+    {
+      label: 'default',
+      state: {
+        body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+        meridian: { openedIds: [] as string[] },
+      },
+    },
+    {
+      label: 'mid-progress',
+      state: {
+        body_refinement: { completedTiers: 3, currentTierProgress: 120 },
+        meridian: { openedIds: ['nham_mach', 'doi_mach'] },
+      },
+    },
+    {
+      label: 'complete',
+      state: {
+        body_refinement: { completedTiers: 6, currentTierProgress: 0 },
+        meridian: {
+          openedIds: [
+            'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
+            'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
+            'ky_kinh_thien_dia_chi_kieu',
+          ],
+        },
+      },
+    },
+  ])('bodyProgression ($label) round-trip nguyen ven', ({ state }) => {
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
 
-    player.realmId = 'qi_refining'
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngo_dao'
+    player.bodyProgression = JSON.parse(JSON.stringify(state))
 
     const save = buildGameSave(player, gameManager)
     const roundTripped: unknown = JSON.parse(JSON.stringify(save))
@@ -129,8 +155,33 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     const playerData = (roundTripped as { player: typeof player }).player
 
-    expect(playerData.cultivationPath).toBe('phap_tu')
-    expect(playerData.cultivationWay).toBe('ngo_dao')
+    expect(playerData.bodyProgression).toEqual(state)
+  })
+
+  // Cultivation Path Framework M2 (v65) — the way id persists beside the
+  // legacy-effective path id; an unchosen player serializes with the key
+  // absent (undefined drops out of JSON) and validates clean.
+  it('cultivationPath + cultivationWay round-trip nguyên vẹn (v65)', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    player.realmId = 'qi_refining'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'hidden_spell_pathway'
+
+    const save = buildGameSave(player, gameManager)
+    const roundTripped: unknown = JSON.parse(JSON.stringify(save))
+
+    expect(validateGameSaveShape(roundTripped)).toMatchObject({
+      ok: true,
+      issues: [],
+      discardedEquipmentCount: 0,
+    })
+
+    const playerData = (roundTripped as { player: typeof player }).player
+
+    expect(playerData.cultivationPath).toBe('spell')
+    expect(playerData.cultivationWay).toBe('hidden_spell_pathway')
   })
 
   it('cultivationWay vắng mặt trên save chưa chọn path vẫn hợp lệ', () => {

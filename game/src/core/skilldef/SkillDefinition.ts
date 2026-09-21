@@ -9,7 +9,7 @@
 
 import type { CombatVfxPresetId } from '../battle/CombatAction'
 import type { SkillId } from '../battle/contracts/ids'
-import type { CultivationPathId, PathWayId } from '../player/CultivationPathKit'
+import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
 import type { SkillResourceType } from '../skill/SkillTypes'
 
 import type {
@@ -29,7 +29,7 @@ import type { ScalarExpression } from './ScalarExpression'
 export type SkillRequirement =
   | { kind: 'realm'; realmId: string; minLevel?: number }
   | { kind: 'path'; pathId: CultivationPathId }
-  | { kind: 'way'; pathId: CultivationPathId; wayId: PathWayId }
+  | { kind: 'way'; pathId: CultivationPathId; wayId: CultivationWayId }
   | { kind: 'node'; nodeId: string; minLevel?: number }
   | { kind: 'skill'; skillId: SkillId; minLevel?: number }
 

@@ -45,13 +45,27 @@ describe('EarlyGameSession', () => {
     expect(s.runStage('mortal_dong_1')).toBe('defeat')
 
     // The loop step: cultivate -> breakthrough -> retry -> victory.
-    grindToBreakthrough(s)
-    expect(s.runStage('mortal_dong_1')).toBe('victory')
+    // P7-M3: without tu_linh_quyet's so_nhap stats the flip takes a few
+    // mortal breakthroughs (CANONICAL_EARLY_LOOP lands it at mortal:3) -
+    // bound the honest grind; mortal starter compensation is M4 scope.
+    let attempts = 0
+    while (s.runStage('mortal_dong_1') !== 'victory' && attempts < 5) {
+      expect(grindToBreakthrough(s)).toBe(true)
+      attempts++
+    }
+    expect(attempts).toBeGreaterThan(0)
     expect(s.player.completedStageIds).toContain('mortal_dong_1')
 
     // Grind the mortal ladder to the second floor's gate.
     while (s.player.realmLevel < 14 && grindToBreakthrough(s)) {
       // keep climbing
+    }
+    // P7-M3: raw cultivation alone no longer covers dong_2 without
+    // tu_linh_quyet - spend the earned attribute points exactly like the
+    // canonical loop's allocate_all(strength) step. Allocation stops at
+    // the per-stat mortal cap (getMainStatCap) with points unspent.
+    while (s.allocateAttribute('strength')) {
+      // keep allocating until the cap or empty pool
     }
     expect(s.runStage('mortal_dong_2')).toBe('victory')
     expect(s.player.completedStageIds).toEqual(
@@ -73,10 +87,10 @@ describe('EarlyGameSession', () => {
     }
 
     expect(s.runTribulation('qi_refining')).toBe('victory')
-    expect(s.performRitual('kiem_tu', 'hien')).toBe(true)
+    expect(s.performRitual('sword', 'sword_pathway')).toBe(true)
     expect(s.player.realmId).toBe('qi_refining')
-    expect(s.player.cultivationPath).toBe('kiem_tu')
-    expect(s.player.cultivationWay).toBe('hien')
+    expect(s.player.cultivationPath).toBe('sword')
+    expect(s.player.cultivationWay).toBe('sword_pathway')
 
     // Positive-cost node purchase: actual skillInsight reduction, not just
     // a catalog cost > 0.
@@ -94,35 +108,35 @@ describe('EarlyGameSession', () => {
       s.runStage('mortal_dong_1')
       while (s.player.realmLevel < 12) grindToBreakthrough(s)
       s.runTribulation('qi_refining')
-      s.performRitual('kiem_tu', 'hien')
+      s.performRitual('sword', 'sword_pathway')
       return s.snapshot()
     }
     expect(run()).toEqual(run())
   })
 
-  // P6 characterization evidence (2026-09-21): the loop clears mortal
- // floors 1-7 then walls at mortal_dong_8 - the first ferocious-tier
-  // floor. The wall survives the FULL mortal growth ceiling (mortal:18,
-  // tram lv2, 3 refinement tiers, all gear equipped, strength AND
-  // vitality specs): ~12/17 kills per attempt. This is a balance/content
- // finding, not a harness defect - the loop + all growth seams are
-  // proven upstream. Pinned as expected-failure until the balance pass
-  // (user's new plan) retunes the ferocious tier or the mortal power
-  // curve; flip back to `toBeNull()` + the two asserts below then.
+  // P6 characterization evidence (2026-09-21): the loop cleared mortal
+  // floors 1-7 then walled at mortal_dong_8 - the first ferocious-tier
+  // floor. P7-M3 re-characterization: removing tu_linh_quyet pulled the
+  // wall forward to mortal_dong_5 (defeated at mortal:14 even after the
+  // growth cycle) - the locked "mortal holds no technique" cut is an
+  // intentional power loss whose compensation is deferred (mortal
+  // starter basics = M4 scope, plus the same pending balance pass).
+  // Still a balance/content finding, not a harness defect; flip back to
+  // `toBeNull()` + the two asserts below once tuning lands.
   it('canonical loop: fresh pinned character reaches qi_refining floor 1 victory', { timeout: 60000 }, () => {
     const s = new EarlyGameSession({ seed: 11, profile: PINNED })
     const report = runLoop(s, CANONICAL_EARLY_LOOP)
     console.log('LOOP\n' + JSON.stringify(report, null, 1))
-    const dong8Index = report.steps.findIndex(
-      (r) => r.step.kind === 'stage_until_victory' && r.step.stageId === 'mortal_dong_8',
+    const dong5Index = report.steps.findIndex(
+      (r) => r.step.kind === 'stage_until_victory' && r.step.stageId === 'mortal_dong_5',
     )
-    // Characterization: every step before the ferocious wall succeeds,
-    // and the wall is exactly mortal_dong_8.
-    expect(dong8Index).toBeGreaterThan(0)
-    expect(report.failedAt).toBe(dong8Index)
-    expect(report.snapshot.completedStageIds).toContain('mortal_dong_7')
+    // Characterization: every step before the wall succeeds, and the
+    // wall is exactly mortal_dong_5 under the M3 no-starter-technique model.
+    expect(dong5Index).toBeGreaterThan(0)
+    expect(report.failedAt).toBe(dong5Index)
+    expect(report.snapshot.completedStageIds).toContain('mortal_dong_4')
     // TODO(balance): expect(report.failedAt).toBeNull()
-    // expect(report.snapshot.cultivationPath).toBe('kiem_tu')
+    // expect(report.snapshot.cultivationPath).toBe('sword')
     // expect(report.snapshot.completedStageIds).toContain('qi_refining_forest')
   })
 
@@ -133,7 +147,7 @@ describe('EarlyGameSession', () => {
     s.runStage('mortal_dong_1')
     while (s.player.realmLevel < 12) grindToBreakthrough(s)
     s.runTribulation('qi_refining')
-    s.performRitual('phap_tu', 'ngo_dao')
+    s.performRitual('spell', 'hidden_spell_pathway')
     expect(s.player).toBe(playerRef)
     expect(s.gameManager).toBe(gmRef)
   })

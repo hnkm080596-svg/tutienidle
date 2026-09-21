@@ -2,42 +2,37 @@
 
 **Trạng thái:** Live.
 
-Core: `core/technique/Technique.ts`, `TechniqueSystem.ts`, `TechniqueManager.ts`, `TechniqueTier.ts`. Data: `data/technique/Techniques.ts`. UI: `TechniquePanel.vue` (standalone `technique`) + `ScripturePavilionPanel.vue`.
+Core: `core/technique/Technique.ts`, `TechniqueSystem.ts`, `TechniqueManager.ts`, `TechniqueProgression.ts`. Data: `data/technique/Techniques.ts`. UI: `panels/skill-path/TechniqueBand.vue` trong `SkillPathPanel` (P7-M7 — `TechniquePanel.vue` standalone đã gỡ; `ScripturePavilionPanel` chỉ còn lore).
 
-## Mô hình
+## Mô hình (P7-M3 — canonical)
 
-- Chỉ **1 tâm pháp trang bị** cho toàn hệ thống — `TechniqueSystem.equip()` tự unequip cái cũ; không còn chia slot theo loại.
-- `learn()` thêm vào `TechniqueManager` (unlocked, chưa equipped); `chooseCultivationPath()` tự học+equip tâm pháp của path.
-- `insight` — thanh kinh nghiệm riêng của tâm pháp, nuôi bởi Cảm ngộ Tâm Pháp từ combat (vào tâm pháp đang equip; hết trần/không equip thì mất).
+- **Đúng 1 công pháp canonical cho mỗi Way đã commit** (6 Way ↔ 6 công pháp), granted tự động lúc Nhập Đạo. Không còn learn-by-drop, không còn danh sách/equip giao hoán — `equipTechnique` là delegate thuần vào authority Way.
+- Phàm Nhân **không có** công pháp canonical (không có pathway technique).
+- `TechniqueManager` giữ instance sống (holder); `TechniqueSystem` là writer duy nhất (grant/advance/restore) và publish mirror `player.techniqueProgress` {rank, grade} cho NodeSystem prerequisite (P7-M6).
+- `combatTypeId` gắn công pháp vào loại combat (crit/def/...); `resourceLabel` đổi nhãn thanh tài nguyên (vd "Pháp Lực").
 
-## Tier: Sơ Nhập → Tiểu Thành → Đại Thành → Viên Mãn
+## Progression: rank / mastery / grade
 
-`getTechniqueTierProgress(insight)` — tổng yêu cầu `BASE_TECHNIQUE_INSIGHT_REQUIRED × insightMultiplier` (mặc định 1000), chia share so_nhap 10% / tieu_thanh 20% / dai_thanh 30% / vien_man 40% (ngưỡng lũy kế 0/0.1/0.3/0.6).
+- **Rank** 0→10 (`TECHNIQUE_RANK_CAP`): mỗi rank cần `mastery` = `300 × grade` (`getTechniqueMasteryForNextRank`). Mastery nuôi từ combat.
+- **Rank band** (display): 0 Sơ Nhập / 1-2 Tiểu Thành / 3-5 Đại Thành / 6-10 Viên Mãn (`getTechniqueTierForRank`).
+- **Grade** 1→trần = realm index hiện tại (`getTechniqueGradeCeiling`). Nâng grade yêu cầu rank 10 + trả `100 × targetGrade` Linh Thạch theo realm tier (`getTechniqueGradeUpgradeCost`) — action duy nhất phía người chơi là nút **Nâng Cảnh** trong TechniqueBand (`realmAdvanceOps.tryAdvanceTechniqueGrade`).
+- **Effect đang chạy** = `gradeEffects[grade cao nhất đã author ≤ technique.grade][rank band]` (`getTechniqueEffects`) — không author = 0.
 
-`tierEffects` cấp theo tier (xem `TechniqueTierEffect`):
+## Catalog (`TECHNIQUES`, 6 entries — grant template grade 1 / rank 0 / quality 'hoang')
 
-- `attackFlat` / `defenseFlat` — cộng phẳng.
-- `maxMpPercent`, `manaRegenPercent` — % lên maxMp và `manaRegenPerSecond` (Increased, qua pipeline percent chuẩn — **không** phải % của maxMp).
-- `hpRegenFlat` / `mpRegenFlat` — hồi phẳng HP/lượt và MP/s.
-
-`combatModifiers` — modifier thêm độc lập tier (ví dụ Tiểu Ngũ Hành Quyết: `+2 attackRange` cố định), tổng hợp qua `GameManager.getAggregatedModifiers()`.
-
-## Tâm pháp hiện có (`TECHNIQUES`)
-
-| id | Tên | Realm | Vai trò |
+| id | Tên | Way | Ghi chú |
 |---|---|---|---|
-| `tu_linh_quyet` | Tụ Linh Quyết | — | khởi đầu, Công/Phòng phẳng |
-| `dai_ngu_hanh_chan_quyet` | Tiểu Ngũ Hành Quyết | — | Pháp Tu (Luyện Khí), ×3 insight |
-| `dai_ngu_hanh_quyet_truc_co` | Đại Ngũ Hành Quyết | foundation_establishment | Pháp Tu Trúc Cơ, ×4 insight |
-| `ngu_kiem` | Ngự Kiếm Tâm Kinh | — | Kiếm Tu |
-| `thai_hu_kiem_quyet` | Thái Hư Kiếm Quyết | — | Kiếm Tu nâng cao |
-| `kim_cang_bat_hoai_the` | Kim Cang Bất Hoại Thể | — | hướng Thể Tu (placeholder content) |
-| `van_kiem_quyet` | Vạn Kiếm Quyết | — | Kiếm Tu |
+| `five_elements_art` | Tiểu Ngũ Hành Quyết | `spell_pathway` | grade 2 = bảng Trúc Cơ fold từ `dai_ngu_hanh_quyet_truc_co` đã gỡ |
+| `dao_insight_art` | Ngộ Đạo Chân Quyết | `hidden_spell_pathway` | Ngộ Đạo signature |
+| `sword_control_art` | Ngự Kiếm Tâm Kinh | `sword_pathway` | combatType `crit`, element metal |
+| `myriad_swords_art` | Vạn Kiếm Quyết | `hidden_sword_pathway` | Ngự Kiếm Đạo signature |
+| `diamond_body_art` | Kim Cang Bất Hoại Thể | `body_pathway` | combatType `def` |
+| `responsive_body_art` | Ứng Thế Thần Quyết | `hidden_body_pathway` | combatType `def` |
 
-`requiredRealmId` gate trang bị; `resourceLabel` đổi nhãn thanh tài nguyên (vd "Pháp Lực").
+`tu_linh_quyet` (Tụ Linh Quyết) đã **REMOVE hoàn toàn** theo quyết định product P7 — không còn generic starter technique.
 
 ## Liên quan
 
-- [cultivation-paths.md](./cultivation-paths.md) — path tự trang bị tâm pháp.
+- [cultivation-paths.md](./cultivation-paths.md) — Way tự grant công pháp lúc initiation.
 - [stats.md](./stats.md) — `sourceType: 'technique'`.
-- [drops-loot.md](./drops-loot.md) — nguồn Cảm ngộ Tâm Pháp.
+- [drops-loot.md](./drops-loot.md) — nguồn mastery tâm pháp.

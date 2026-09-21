@@ -16,10 +16,10 @@ describe('BattleLootSystem — DropResult consumer', () => {
 
   it('grants what the resolver returned, not what the enemy authored', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const { killEnemy, materialBag, giveReward } = createLootTestSetup({
+    const { killEnemy, materialBag, giveReward, loot, gainMastery } = createLootTestSetup({
       // Old-style per-enemy rewards are deliberately empty/zero — if any
       // loot still flows, it came from the tables, not from the enemy.
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
       realmId: 'mortal',
       family: 'boar',
       stage: { stageId: 'mortal_5', requiredRealmId: 'mortal', floor: 5 },
@@ -34,10 +34,9 @@ describe('BattleLootSystem — DropResult consumer', () => {
     // Currency comes from the stage table (mortal min: 1 stone / 5
     // insight), NOT from enemy.rewards which authored 0/0.
     expect(giveReward).toHaveBeenCalledTimes(1)
-    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({
-      spiritStone: 1,
-      techniqueInsight: 5,
-    })
+    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 1 })
+    loot.settleTechniqueMastery()
+    expect(gainMastery).toHaveBeenCalledWith(5)
   })
 
   it('equipment_any draws a template through the equipment registry', () => {

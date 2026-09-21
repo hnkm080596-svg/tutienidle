@@ -4,12 +4,13 @@ import { createDefaultPlayer } from '../player/Player'
 import { SKILLS } from '../../data/skill/Skills'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { TECHNIQUES } from '../../data/technique/Techniques'
-import { freshKiemTuState, MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
+import { MORTAL_PRECURSOR_SKILL_IDS } from '../skill/MortalPrecursors'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
 import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
-import { KIEM_TU_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { SWORD_BASIC } from '../../data/skill/TurnBasicAttacks'
 
-// The kiem_tu resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
+// The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
 // surface is stubbed; nothing here is invoked for this path.
 const PATH_RUNTIME_STUB_DEPS = {
   skillManager: {},
@@ -17,14 +18,14 @@ const PATH_RUNTIME_STUB_DEPS = {
   skillTemplates: {},
   nodeRegistry: { getAll: () => [] },
   getNodeLevel: () => 0,
-  getPhapTuElement: () => undefined,
+  getSpellPathElement: () => undefined,
   routeProfileProvider: () => {
     throw new Error('unused')
   },
 } as unknown as CultivationPathRuntimeDeps
 
 // Kiem Tu Reimagined (spec 2026-09-15 K1/K3/K19) — path choice commits
-// way 'hien' with the canonical fresh state; NO route lock, no
+// way 'sword_pathway' with the canonical fresh state; NO route lock, no
 // legacy skill grants, no keystone purchase. Mortal precursor skills
 // (the whole set, table-driven) become uncastable/unequippable the
 // moment ANY path is chosen.
@@ -48,50 +49,49 @@ function setupMortalWithPathReady(tramTotalCasts: number) {
   player.skillLevels = { tram: tramTotalCasts >= 10000 ? 3 : tramTotalCasts >= 1000 ? 2 : 1 }
 
   gameManager.progressionOps.learnSkill('tram')
-  gameManager.skillSystem.equipToSlot('tram', 0)
 
   return { gameManager, player }
 }
 
 describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
-  it('chooseCultivationPath(kiem_tu) sets the canonical fresh state', () => {
+  it('chooseCultivationPath(sword) sets the canonical fresh state', () => {
     const { gameManager, player } = setupMortalWithPathReady(0)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
-    expect(player.cultivationPath).toBe('kiem_tu')
-    expect(player.cultivationWay).toBe('hien')
-    expect(player.kiemTu).toEqual(freshKiemTuState())
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
+    expect(player.cultivationPath).toBe('sword')
+    expect(player.cultivationWay).toBe('sword_pathway')
+    expect(player.swordPath).toEqual(freshSwordPathState())
   })
 
   it('no route lock: tram cast counts never alter the fresh hien state', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
-    expect(player.cultivationWay).toBe('hien')
-    expect(player.kiemTu).toEqual(freshKiemTuState())
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
+    expect(player.cultivationWay).toBe('sword_pathway')
+    expect(player.swordPath).toEqual(freshSwordPathState())
   })
 
   it('grants NO legacy kiem-tran/bat-kiem skill — hien basics come from the orb preset', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
 
-    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)
 
     expect(gameManager.skillManager.has('kiem_tran_luong_nghi')).toBe(false)
     expect(gameManager.skillManager.has('bat_kiem_thuat')).toBe(false)
     // The merged technique still lands (path kit contract unchanged).
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('ngu_kiem')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('sword_control_art')
   })
 
-  it('chooseCultivationPath(phap_tu) leaves kiemTu undefined', () => {
+  it('chooseCultivationPath(spell) leaves swordPath undefined', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player)).toBe(true)
-    expect(player.kiemTu).toBeUndefined()
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player)).toBe(true)
+    expect(player.swordPath).toBeUndefined()
   })
 
-  it('freshKiemTuState returns a detached copy each call', () => {
-    const a = freshKiemTuState()
-    const b = freshKiemTuState()
+  it('freshSwordPathState returns a detached copy each call', () => {
+    const a = freshSwordPathState()
+    const b = freshSwordPathState()
 
     a.preset.push('orb_chem')
 
@@ -99,42 +99,41 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
   })
 })
 
-describe('K3 — mortal precursor lock post-path', () => {
+describe('K3 — mortal precursor pick lock post-path', () => {
   it.each(MORTAL_PRECURSOR_SKILL_IDS)(
-    'precursor %s cannot re-equip into a loadout slot once a path is chosen',
+    'precursor %s cannot be re-picked once a path is chosen',
     skillId => {
       const { gameManager, player } = setupMortalWithPathReady(10_000)
 
-      gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
+      gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)
 
-      // Gate runs BEFORE the learned/exists check — precursor ids reject
-      // unconditionally for path players (covers linh_bao/huy_quyen the
-      // day they get authored, no test change needed).
+      // The mortal-only write rejects unconditionally for path players
+      // (gate runs BEFORE the learned/exists check).
       expect(
-        gameManager.progressionOps.setSkillLoadoutSlot(player, 0, skillId),
+        gameManager.progressionOps.setMortalBasicSkill(player, skillId),
       ).toBe(false)
     },
   )
 
-  it('precursor equip still works for a mortal (no path chosen)', () => {
+  it('precursor pick still works for a mortal (no path chosen)', () => {
     const { gameManager, player } = setupMortalWithPathReady(0)
 
-    expect(gameManager.progressionOps.setSkillLoadoutSlot(player, 0, 'tram')).toBe(true)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
   })
 
-  it('kiem_tu basic no longer resolves to authored tram (mortal-only)', () => {
+  it('sword basic no longer resolves to authored tram (mortal-only)', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
 
-    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)
 
     // The authored-skill seam: post-path, no Skill object backs the
-    // basic (orbs take over at Task 6; the static KIEM_TU_BASIC fallback
+    // basic (orbs take over at Task 6; the static SWORD_BASIC fallback
     // — which coincidentally carries id 'tram' — is a separate def with
     // no authored scaling/cast-count semantics). Mission C Task 9 moved
     // the resolution behind the path-runtime boundary — assert through
     // it: the resolved basic IS the static authored def, by identity.
     const runtime = resolveCultivationPathRuntime(player, PATH_RUNTIME_STUB_DEPS)
 
-    expect(runtime.resolveBasic(player)).toBe(KIEM_TU_BASIC)
+    expect(runtime.resolveBasic(player)).toBe(SWORD_BASIC)
   })
 })

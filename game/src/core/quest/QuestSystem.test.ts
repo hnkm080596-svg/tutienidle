@@ -25,7 +25,7 @@ function createReceiver(): RewardReceiver & { spiritStone: number; cultivation: 
     spiritStone: 0,
     cultivation: 0,
     insight: 0,
-    addTechniqueInsight(amount) {
+    addSkillInsight(amount) {
       this.insight += amount
     },
     addCultivation(amount) {
@@ -126,7 +126,7 @@ describe('QuestSystem', () => {
     manager.incrementProgress('collect_test', 5)
 
     const receiver = {
-      addTechniqueInsight: vi.fn(),
+      addSkillInsight: vi.fn(),
       addCultivation: vi.fn(),
       addSpiritStone: vi.fn(() => {
         throw new Error('sink exploded')

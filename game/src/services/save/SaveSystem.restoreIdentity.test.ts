@@ -78,12 +78,12 @@ describe('restore identity (AR-12)', () => {
   // different payload and must not be skipped by the idempotency guard.
   it.each([
     ['techniques', (save: GameSave) => {
-      save.techniques = [{ id: 't1', name: 'T', description: '', unlocked: true, equipped: false }]
+      save.techniques = [{ id: 't1', name: 'T', description: '', grade: 1, rank: 0, mastery: 0, quality: 'hoang' }]
     }],
     ['skills', (save: GameSave) => {
       save.skills = [{
         id: 's1', name: 'S', description: '', type: 'active', level: 1, maxLevel: 10,
-        cooldown: 1, target: 'enemy', effects: [], unlocked: true, equipped: false,
+        cooldown: 1, target: 'enemy', effects: [],
       }]
     }],
     ['equipment', (save: GameSave) => {

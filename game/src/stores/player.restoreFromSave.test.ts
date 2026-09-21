@@ -29,8 +29,7 @@ function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
     nodeLevels: {},
     purchasedNodeIds: [],
     completedStageIds: [],
-    bodyRefinementCompletedTiers: 0,
-    bodyRefinementCurrentTierProgress: 0,
+    bodyProgression: { body_refinement: { completedTiers: 0, currentTierProgress: 0 }, meridian: { openedIds: [] } },
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
     persistentTimedEffects: [],
@@ -181,9 +180,9 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     const player = usePlayerStore()
 
     // Simulate a previous session that set every optional field.
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'ngu'
-    player.kiemTu = { preset: ['orb_bo'], kiemY: 5, kiemDaoCount: 2, kiemDaoBase: 1 }
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'hidden_sword_pathway'
+    player.swordPath = { preset: ['orb_bo'], kiemY: 5, kiemDaoCount: 2, kiemDaoBase: 1 }
     player.artifact = { artifactId: 'a', tier: 1, exp: 5 } as never
     player.highestFoundationAchieved = 'great_dao' as never
     player.formationLoadout = { formationId: 'f', assignments: [{ row: 0, column: 0, combatantId: 'c' }] }
@@ -195,7 +194,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     expect(player.cultivationPath).toBeUndefined()
     expect(player.cultivationWay).toBeUndefined()
-    expect(player.kiemTu).toBeUndefined()
+    expect(player.swordPath).toBeUndefined()
     expect(player.artifact).toBeUndefined()
     expect(player.highestFoundationAchieved).toBeUndefined()
     expect(player.formationLoadout).toBeNull()

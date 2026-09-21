@@ -36,9 +36,7 @@ export type LeftPanelMode =
  */
 export type StandalonePanel =
   | 'skill'
-  | 'technique'
   | 'realm'
-  | 'luyen_the'
   | 'quan_khi'
   | 'quest'
   | 'artifact'

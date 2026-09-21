@@ -55,7 +55,7 @@ export class GameManagerPillOps {
 
     // Mission E Task 2 (audit T1-10): type 'material' pills (Thong Mach
     // Dan / Truc Co Dan) are not consumables - their sinks live outside
-    // this path (MeridianSystem, breakthrough gate). Domain-side reject
+    // this path (meridian chapter, breakthrough gate). Domain-side reject
     // so every caller inherits it (A2); the pill stays in the bag.
     if (pill.type === 'material') {
       return { ok: false, reason: 'material_pill' }

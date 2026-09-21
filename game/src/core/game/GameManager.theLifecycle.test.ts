@@ -64,7 +64,7 @@ describe('auto-repeat cycle resets currentThe (INV-14)', () => {
     const bossTemplate = defineEnemy({
       id: 'the_reset_boss', name: 'Reset Boss', level: 1, realmId: 'mortal', lane: 'ground', isBoss: true,
       statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
 
     const stage: Stage = {

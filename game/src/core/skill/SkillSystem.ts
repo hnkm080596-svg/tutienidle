@@ -24,16 +24,16 @@ import type { ActionTargeting } from '../battle/CombatAction'
 import type { SkillProgressionState } from '../skilldef/SkillProgressionState'
 import type { SkillId } from '../battle/contracts/ids'
 
-// Core Loop Foundation checklist (Mục SKILL, "Skill modifier") — mỗi
-// bậc level cộng thêm % sát thương cho effect 'damage' của skill chủ
-// động. Passive dùng CHUNG cơ chế perLevelFlat/perLevelPercent đã có
-// sẵn trên StatModifier (giống TechniqueSystem.getActiveModifiers()),
-// không cần hằng số riêng.
+// Core Loop Foundation checklist (Muc SKILL, "Skill modifier") - moi
+// bac level cong them % sat thuong cho effect 'damage' cua skill chu
+// dong. Passive dung CHUNG co che perLevelFlat/perLevelPercent da co
+// san tren StatModifier (giong TechniqueSystem.getActiveModifiers()),
+// khong can hang so rieng.
 const ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL = 0.05
 
 export const HUY_KIEM_CASTS_PER_LEVEL = 10
 
-/** Mỗi 10 cast vĩnh viễn +1 flat damage cho Huy Kiếm — KHÔNG trần. */
+/** Moi 10 cast vinh vien +1 flat damage cho Huy Kiem - KHONG tran. */
 export function getHuyKiemFlatDamageBonus(totalExperience: number): number {
   return Math.floor(Math.max(0, totalExperience) / HUY_KIEM_CASTS_PER_LEVEL)
 }
@@ -58,15 +58,15 @@ export interface EffectiveSkill {
 
   passiveTrigger?: PassiveTrigger
 
-  // Talent v4 (spec 2026-09-03 §3.3 E2) — 2 field passive mở rộng
-  // phải xuyên qua getEffectiveSkill() để PassiveSystem đọc được từ
-  // EffectiveSkill (không đọc thẳng Skill instance).
+  // Talent v4 (spec 2026-09-03 sec.3.3 E2) - 2 field passive mo rong
+  // phai xuyen qua getEffectiveSkill() de PassiveSystem doc duoc tu
+  // EffectiveSkill (khong doc thang Skill instance).
   passiveCondition?: Skill['passiveCondition']
 
   passiveConvertsTo?: Skill['passiveConvertsTo']
 
-  // Pháp Tu Thuần Hệ (Task 10) — specialization.targetingOverride: có
-  // thì thay targeting skill gốc (xem SkillSpecialization).
+  // Phap Tu Thuan He (Task 10) - specialization.targetingOverride: co
+  // thi thay targeting skill goc (xem SkillSpecialization).
   targeting?: ActionTargeting
 }
 
@@ -76,18 +76,18 @@ export class SkillSystem {
     private readonly onLevelUp?: (skill: Skill, levelsGained: number) => void,
   ) {}
 
-  // Kiếm Tu (2026-08-28) — NodeSystem.hasPrerequisite() chỉ nhận
-  // PlayerData (không có SkillManager) nên không đọc totalExperience/
-  // level của skill trực tiếp. Sink này đồng bộ mirror
-  // player.skillCastCounts/skillLevels mỗi lần recordCast() — GameManager
-  // nối vào activePlayer (xem GameManager's constructor).
+  // Kiem Tu (2026-08-28) - NodeSystem.hasPrerequisite() chi nhan
+  // PlayerData (khong co SkillManager) nen khong doc totalExperience/
+  // level cua skill truc tiep. Sink nay dong bo mirror
+  // player.skillCastCounts/skillLevels moi lan recordCast() - GameManager
+  // noi vao activePlayer (xem GameManager's constructor).
   private castCountSink?: (skillId: string, totalExperience: number, level: number) => void
 
   setCastCountSink(sink: (skillId: string, totalExperience: number, level: number) => void): void {
     this.castCountSink = sink
   }
 
-  // Phap Tu Reimagined Task 3 — route profile provider. The GameManager
+  // Phap Tu Reimagined Task 3 - route profile provider. The GameManager
   // closure does ALL scoping (path + element + kit membership) so this
   // class keeps no PlayerData dependency; without a provider every
   // skill resolves under the neutral profile.
@@ -98,14 +98,14 @@ export class SkillSystem {
   }
 
   /**
-   * Hiệu lực THẬT SỰ của 1 skill tại thời điểm hiện tại — áp
-   * Specialization (nếu đã chọn, "behavior-changing node" thay hẳn
-   * effects/passiveModifiers/passiveTrigger gốc) + scale effect
-   * 'damage' theo level. MỌI nơi đọc effects/passiveModifiers/
-   * passiveTrigger của 1 skill đã học (combat cast, PassiveSystem
-   * trigger/tick, tổng hợp modifier) đều phải qua hàm này thay vì đọc
-   * thẳng field trên Skill, để 1 điểm duy nhất quyết định "skill này
-   * đang hoạt động thế nào".
+   * Hieu luc THAT SU cua 1 skill tai thoi diem hien tai - ap
+   * Specialization (neu da chon, "behavior-changing node" thay han
+   * effects/passiveModifiers/passiveTrigger goc) + scale effect
+   * 'damage' theo level. MOI noi doc effects/passiveModifiers/
+   * passiveTrigger cua 1 skill da hoc (combat cast, PassiveSystem
+   * trigger/tick, tong hop modifier) deu phai qua ham nay thay vi doc
+   * thang field tren Skill, de 1 diem duy nhat quyet dinh "skill nay
+   * dang hoat dong the nao".
    */
   getEffectiveSkill(skill: Skill, levelOverride?: number): EffectiveSkill {
     const specialization = skill.specializations?.find(
@@ -130,7 +130,7 @@ export class SkillSystem {
       return { ...effect, value: scaleDamageValue(effect.value) }
     })
 
-    // Trigger/Action rework (2026-08-31 spec) — mirrors the effects
+    // Trigger/Action rework (2026-08-31 spec) - mirrors the effects
     // mapping above for skills already migrated to `triggers`: a
     // `dealDamage` action's `value` gets the same per-level/flat-bonus
     // treatment `effect.value` gets. Skills still on `effects` have
@@ -155,9 +155,9 @@ export class SkillSystem {
 
       passiveTrigger: specialization?.passiveTriggerOverride ?? skill.passiveTrigger,
 
-      // Talent v4 E2 — condition/convert không thuộc specialization
-      // override (đúng theo spec: 2 field này là ngữ nghĩa talent,
-      // luôn xuyên qua từ Skill gốc).
+      // Talent v4 E2 - condition/convert khong thuoc specialization
+      // override (dung theo spec: 2 field nay la ngu nghia talent,
+      // luon xuyen qua tu Skill goc).
       passiveCondition: skill.passiveCondition,
 
       passiveConvertsTo: skill.passiveConvertsTo,
@@ -165,7 +165,7 @@ export class SkillSystem {
       targeting: specialization?.targeting ?? skill.targeting,
     }
 
-    // Phap Tu Reimagined Task 3 — route seam 1 (effective surface):
+    // Phap Tu Reimagined Task 3 - route seam 1 (effective surface):
     // direct damage + ailment chance factors. Turn-runtime fields
     // (ailmentStackBonus) apply post-conversion at the orchestration
     // site via applyRouteToTurnSkill.
@@ -177,7 +177,7 @@ export class SkillSystem {
 
   /**
    * skilldef M5f (R6) -- the canonical persistent-state projection of a
-   * learned skill: level/xp/unlock/equipment/loadout as ONE readonly
+   * learned skill: level/xp/cast-count/specialization as ONE readonly
    * SkillProgressionState owned HERE (the save surface), never a field
    * read scattered across consumers. The legacy `Skill` record still
    * carries these fields today -- this is the single projection seam
@@ -193,11 +193,6 @@ export class SkillSystem {
       ...(skill.selectedSpecializationId !== undefined
         ? { selectedSpecializationId: skill.selectedSpecializationId }
         : {}),
-      unlocked: skill.unlocked,
-      equipped: skill.equipped,
-      loadoutSlots:
-        skill.loadoutSlots ??
-        (skill.loadoutSlot === undefined ? [] : [skill.loadoutSlot]),
     }
   }
 
@@ -221,11 +216,11 @@ export class SkillSystem {
   }
 
   /**
-   * MỌI passive skill đang unlocked (không chỉ equipped — passive
-   * luôn có hiệu lực 1 khi mở khoá, giống pattern cũ) cộng dồn vào
+   * MOI passive skill da hoc (learned = manager membership; passive
+   * luon co hieu luc 1 khi da hoc, giong pattern cu) cong don vao
    * player.modifiers, scale flat/percent theo level (perLevelFlat/
-   * perLevelPercent, CHUNG công thức TechniqueSystem.getActiveModifiers()).
-   * Đọc qua getEffectiveSkill() để tôn trọng Specialization đã chọn.
+   * perLevelPercent, CHUNG cong thuc TechniqueSystem.getActiveModifiers()).
+   * Doc qua getEffectiveSkill() de ton trong Specialization da chon.
    */
   getScaledPassiveModifiers(): StatModifier[] {
     const modifiers: StatModifier[] = []
@@ -259,7 +254,7 @@ export class SkillSystem {
     return true
   }
 
-  /** Chi phí Cảm ngộ Kỹ năng để nâng skill này lên level kế tiếp — undefined nếu đã tối đa. */
+  /** Chi phi Cam ngo Ky nang de nang skill nay len level ke tiep - undefined neu da toi da. */
   getSkillUpgradeInsightCost(skillId: string): number | undefined {
     const skill = this.manager.get(skillId)
 
@@ -271,10 +266,10 @@ export class SkillSystem {
   }
 
   /**
-   * skill-insight-and-auto-combat-hud-plan.md mục 5 — thay HẲN
-   * gainExperience()/XP-per-cast cũ: người chơi CHỦ ĐỘNG nâng cấp
-   * ngoài combat, tiêu thẳng player.skillInsight. No-op hoàn toàn (KHÔNG
-   * mutate gì) nếu skill không tồn tại/đã max level/không đủ Cảm ngộ.
+   * skill-insight-and-auto-combat-hud-plan.md muc 5 - thay HAN
+   * gainExperience()/XP-per-cast cu: nguoi choi CHU DONG nang cap
+   * ngoai combat, tieu thang player.skillInsight. No-op hoan toan (KHONG
+   * mutate gi) neu skill khong ton tai/da max level/khong du Cam ngo.
    */
   upgradeSkill(skillId: string, player: PlayerData): boolean {
     const skill = this.manager.get(skillId)
@@ -297,6 +292,11 @@ export class SkillSystem {
     return true
   }
 
+  // P7-M4 -- learn() is the ONLY skill-state write: SkillManager
+  // membership IS the learned authority (the retired unlocked/equipped/
+  // loadout flags had no second writer). A held entry is learned;
+  // learned passives always apply; combat resolves roles from the way
+  // kit, never from per-skill slot state.
   learn(skill: Skill): boolean {
     if (this.manager.has(skill.id)) {
       return false
@@ -304,9 +304,6 @@ export class SkillSystem {
 
     this.manager.add({
       ...structuredClone(skill),
-
-      unlocked: true,
-      equipped: false,
 
       experience: skill.experience ?? 0,
       totalExperience: skill.totalExperience ?? 0,
@@ -316,82 +313,7 @@ export class SkillSystem {
   }
 
   /**
-   * PLAN HOÀN CHỈNH mục 8/12 — Skill Loadout: set 1 skill ĐÃ HỌC vào
-   * ĐÚNG 1 trong N slot. Dọn các trường hợp trùng trước khi gán: (1)
-   * skill KHÁC đang chiếm sẵn slotIndex này — bật ra; (2) CHÍNH skill
-   * này đang ở 1 slot khác — dời hẳn qua slot mới. Validate slotIndex
-   * hợp lệ theo tiến trình cảnh giới (getSkillLoadoutSlotCount) là việc
-   * của GameManager.setSkillLoadoutSlot() — hàm này thuần domain, không
-   * biết gì về realm. Execution policy rework (plan §8.6): KHÔNG còn
-   * mutual-exclusion isBasicAttack — mọi active đều là loadout bình thường.
-   */
-  equipToSlot(skillId: string, slotIndex: number): boolean {
-    const skill = this.manager.get(skillId)
-
-    if (!skill || !skill.unlocked) {
-      return false
-    }
-
-    for (const other of this.manager.getAll()) {
-      if (other.id !== skillId && (other.loadoutSlots?.includes(slotIndex) || other.loadoutSlot === slotIndex)) {
-        other.loadoutSlots = (other.loadoutSlots ?? []).filter(index => index !== slotIndex)
-        other.loadoutSlot = other.loadoutSlots[0]
-        other.equipped = other.loadoutSlots.length > 0
-      }
-    }
-
-    skill.equipped = true
-    skill.loadoutSlots = [...new Set([...(skill.loadoutSlots ?? []), slotIndex])].sort((a, b) => a - b)
-    skill.loadoutSlot = skill.loadoutSlots[0]
-
-    return true
-  }
-
-  unequipFromSlot(slotIndex: number): boolean {
-    const skill = this.manager.getEquippedInSlot(slotIndex)
-    if (!skill) return false
-    skill.loadoutSlots = (skill.loadoutSlots ?? []).filter(index => index !== slotIndex)
-    skill.loadoutSlot = skill.loadoutSlots[0]
-    skill.equipped = skill.loadoutSlots.length > 0
-    return true
-  }
-
-  /**
-   * Equip KHÔNG qua slot — CHỈ dùng cho PASSIVE (passive không thuộc
-   * Skill Loadout, xem syncRealmPassive()/equipTechnique()).
-   * Execution policy rework (plan §8.6): scheduler chỉ đọc loadout nên
-   * active skill PHẢI equip qua slot — không còn luồng "equipped nhưng
-   * không có slot" cho active.
-   */
-  equipWithoutSlot(skillId: string): boolean {
-    const skill = this.manager.get(skillId)
-
-    if (!skill || !skill.unlocked) {
-      return false
-    }
-
-    skill.equipped = true
-
-    return true
-  }
-
-  unequip(skillId: string): boolean {
-    const skill =
-      this.manager.get(skillId)
-
-    if (!skill) {
-      return false
-    }
-
-    skill.equipped = false
-    skill.loadoutSlot = undefined
-    skill.loadoutSlots = []
-
-    return true
-  }
-
-  /**
-   * 9.5 #9 — record ONE committed cast reported by the turn engine
+   * 9.5 #9 - record ONE committed cast reported by the turn engine
    * (TurnBattleSystem.onSkillCast, wired via GameManagerTurnBattleOps for
    * the primary player only). Generic per learned skill: totalExperience
    * is the cast counter the PlayerData skillCastCounts mirror reflects.
@@ -411,7 +333,7 @@ export class SkillSystem {
     skill.totalExperience = (skill.totalExperience ?? 0) + 1
 
     // Cast-leveled skills (CAST_LEVELING_THRESHOLDS) auto-level by cast
-    // count — upgradeSkill rejects them. tram additionally keeps its
+    // count - upgradeSkill rejects them. tram additionally keeps its
     // legacy per-cast `experience` tick (save-mirror parity).
     const targetLevel = getCastLeveledSkillLevel(skill.id, skill.totalExperience)
 

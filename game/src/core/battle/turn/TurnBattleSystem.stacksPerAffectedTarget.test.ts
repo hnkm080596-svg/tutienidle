@@ -47,7 +47,7 @@ function harness(enemyCount: number) {
   const playerEntity = createCombatant('player', 'player')
   const playerParticipant = makeParticipant('player', playerEntity, 0)
   playerParticipant.ultimate = {
-    skill: PHAP_TU_EMPOWERED_ULTS.earth.nuke,
+    skill: PHAP_TU_EMPOWERED_ULTS.earth!.nuke!,
     remainingCooldownTurns: 0,
   }
 

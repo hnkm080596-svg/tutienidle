@@ -11,12 +11,16 @@ import { addCultivation } from '../cultivation/CultivationSystem'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { FoundationType } from '../breakthrough/FoundationType'
-import type { CultivationPathId, PathWayId } from './CultivationPathKit'
-import { createPhapTuState, type PhapTuState } from '../phap-tu/PhapTuState'
+import type { CultivationPathId, CultivationWayId } from './CultivationPathKit'
+import { createSpellPathState, type SpellPathState } from '../phap-tu/PhapTuState'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ArtifactProgress } from '../artifact/Artifact'
 import type { CompanionInstance } from '../../data/companion/Companions'
-import type { KiemTuState } from '../kiem-tu/KiemTuState'
+import type { SwordPathState } from '../kiem-tu/KiemTuState'
+import {
+  createDefaultBodyProgression,
+  type BodyProgressionState,
+} from '../realm/body/BodyChapter'
 
 export interface PlayerData {
   name: string
@@ -27,38 +31,38 @@ export interface PlayerData {
   cultivation: number
   cultivationPerSecond: number
 
-  // Hai Nap talent (talent-catalog-v4 §4.3) — cultivation that would
+  // Hai Nap talent (talent-catalog-v4 sec.4.3) - cultivation that would
   // overflow past the current level cap banks here and pours into the
   // next tier on breakthrough. Owned by CultivationSystem.
   cultivationOvercharge: number
 
-  /** Pool nhân công tự động dùng chung cho mọi ProductionSite. */
+  /** Pool nhan cong tu dong dung chung cho moi ProductionSite. */
   autoWorkerCapacity: number
 
   baseStats: BaseStats
 
-  // Modifier "tĩnh", gắn trực tiếp với nhân vật: equipment, talent,
-  // reincarnation... Người chơi tự thêm/bớt qua các hành động rõ ràng
-  // (trang bị vũ khí, chọn talent...).
+  // Modifier "tinh", gan truc tiep voi nhan vat: equipment, talent,
+  // reincarnation... Nguoi choi tu them/bot qua cac hanh dong ro rang
+  // (trang bi vu khi, chon talent...).
   modifiers: StatModifier[]
 
-  // Modifier "động", được GameManager tổng hợp lại mỗi tick từ
+  // Modifier "dong", duoc GameManager tong hop lai moi tick tu
   // BuffSystem + TechniqueSystem (xem GameManager.getAggregatedModifiers()).
-  // Store không tự tính modifier này — chỉ nhận và lưu để finalStats dùng.
+  // Store khong tu tinh modifier nay - chi nhan va luu de finalStats dung.
   externalModifiers: StatModifier[]
 
-  // Linh Thạch KHÔNG còn là currency trên PlayerData (plan Workstream
-  // F) — số dư duy nhất là materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID).
+  // Linh Thach KHONG con la currency tren PlayerData (plan Workstream
+  // F) - so du duy nhat la materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID).
 
-  // Ba Thiên Phú được chốt khi tạo nhân vật. Hiệu ứng gameplay sẽ được
-  // nối vào stat/effect system theo talent-system-plan.md.
+  // Ba Thien Phu duoc chot khi tao nhan vat. Hieu ung gameplay se duoc
+  // noi vao stat/effect system theo talent-system-plan.md.
   selectedTalentIds: string[]
 
-  // Đột Phá Trúc Cơ (Phase 5) — Căn Cơ CAO NHẤT từng đạt qua Độ Kiếp
-  // thắng lợi (mục 16 spec `breakthrough` — "được reveal" sau khi
-  // thắng). undefined = chưa từng Trúc Cơ thành công. CHỈ dùng để
-  // hiện tên tier lúc reveal, KHÔNG BAO GIỜ dùng để gợi ý điều kiện
-  // trước khi đạt (xem core/breakthrough/FoundationResolver.ts).
+  // Dot Pha Truc Co (Phase 5) - Can Co CAO NHAT tung dat qua Do Kiep
+  // thang loi (muc 16 spec `breakthrough` - "duoc reveal" sau khi
+  // thang). undefined = chua tung Truc Co thanh cong. CHI dung de
+  // hien ten tier luc reveal, KHONG BAO GIO dung de goi y dieu kien
+  // truoc khi dat (xem core/breakthrough/FoundationResolver.ts).
   highestFoundationAchieved?: FoundationType
 
   // Beta Phase 4 (Tutorial Carousel) - whether the intro tutorial was
@@ -67,173 +71,166 @@ export interface PlayerData {
   // self-persists via spread.
   hasSeenTutorial: boolean
 
-  // Pháp Tu profession-tier ladder (2026-08-14, xem
-  // core/player/CultivationPathKit.ts) — undefined (mặc định của MỌI
-  // nhân vật hiện có) -> chọn 1 lần DUY NHẤT qua
-  // GameManager.chooseCultivationPath() -> VĨNH VIỄN (không có thao
-  // tác "đổi lại"/respec — đúng tinh thần "nghề nghiệp", một khi chọn
-  // thì gắn bó). Việc chọn tự cấp Tâm Pháp Tu Luyện + Tâm Pháp Chiến
-  // Đấu + đúng 3 skill cố định của tier đó — KHÔNG phải hệ thống
-  // build tự do, chỉ là 1 bộ nội dung đã thiết kế sẵn được mở khoá.
+  // Phap Tu profession-tier ladder (2026-08-14, xem
+  // core/player/CultivationPathKit.ts) - undefined (mac dinh cua MOI
+  // nhan vat hien co) -> chon 1 lan DUY NHAT qua
+  // GameManager.chooseCultivationPath() -> VINH VIEN (khong co thao
+  // tac "doi lai"/respec - dung tinh than "nghe nghiep", mot khi chon
+  // thi gan bo). Viec chon tu cap Tam Phap Tu Luyen + Tam Phap Chien
+  // Dau + dung 3 skill co dinh cua tier do - KHONG phai he thong
+  // build tu do, chi la 1 bo noi dung da thiet ke san duoc mo khoa.
   //
-  // Phàm Nhân (2026-08-16) — GIỜ CŨNG là 1 đại cảnh giới thật (REALMS[0],
-  // xem data/realms/realm.ts), khác field này (vốn là trạng thái "chưa
-  // chọn nghề", độc lập với realmId). 2 khái niệm trùng tên nhưng KHÔNG
-  // phải 1: chọn path chính là nghi lễ đột phá Phàm Nhân -> Luyện Khí
-  // (xem GameManager.chooseCultivationPath()), nên trên thực tế
-  // cultivationPath luôn undefined trong lúc realmId === 'mortal' và
-  // luôn có giá trị ngay khi realmId rời khỏi 'mortal' — save cũ
-  // (tạo trước khi Phàm Nhân tồn tại, đã ở qi_refining+ mà chưa chọn
-  // path) là NGOẠI LỆ duy nhất, xem CharacterPanel.vue's
+  // Pham Nhan (2026-08-16) - GIO CUNG la 1 dai canh gioi that (REALMS[0],
+  // xem data/realms/realm.ts), khac field nay (von la trang thai "chua
+  // chon nghe", doc lap voi realmId). 2 khai niem trung ten nhung KHONG
+  // phai 1: chon path chinh la nghi le dot pha Pham Nhan -> Luyen Khi
+  // (xem GameManager.chooseCultivationPath()), nen tren thuc te
+  // cultivationPath luon undefined trong luc realmId === 'mortal' va
+  // luon co gia tri ngay khi realmId roi khoi 'mortal' - save cu
+  // (tao truoc khi Pham Nhan ton tai, da o qi_refining+ ma chua chon
+  // path) la NGOAI LE duy nhat, xem CharacterPanel.vue's
   // canChooseCultivationPath.
   cultivationPath?: CultivationPathId
 
-  // Cultivation Path Framework (spec 2026-09-16, M7) — the chosen WAY
-  // inside the path (e.g. 'ngu_hanh', 'ngo_dao'), written together with
+  // Cultivation Path Framework (spec 2026-09-16, M7) - the chosen WAY
+  // inside the path (e.g. 'spell_pathway', 'hidden_spell_pathway'), written together with
   // cultivationPath by CultivationPathSystem.applyPathChoice() inside
   // the Initiation Ritual transaction. Post-M7 the union is exactly the
-  // three base ids and the pair is atomic — a way-less or foreign-way
+  // three base ids and the pair is atomic - a way-less or foreign-way
   // pair is corrupt and fails closed everywhere.
-  cultivationWay?: PathWayId
+  cultivationWay?: CultivationWayId
 
-  // Phap Tu Reimagined (spec 2026-09-14) — persistent path-choice
+  // P7-M4 - the mortal basic pick: which learned precursor the player
+  // fights with before initiation ('tram' | 'linh_bao' | 'huy_quyen';
+  // absent -> 'tram'). Mortal-scoped: written only via
+  // progressionOps.setMortalBasicSkill() while cultivationPath is
+  // unset, and cleared by the ritual commit. A post-path save carrying
+  // it is corrupt (save-v71 preflight rejects).
+  mortalBasicSkillId?: string
+
+  // Phap Tu Reimagined (spec 2026-09-14) - persistent path-choice
   // authority for the normal Phap Tu path: { element, route } commit
-  // atomically via selectPhapTuElement(). Present from character
-  // creation (both null until the ritual + atomic pick); ngo_dao
-  // holders carry the same inert shape — the (path, way) pair, not
+  // atomically via selectSpellPathElement(). Present from character
+  // creation (both null until the ritual + atomic pick); hidden_spell_pathway
+  // holders carry the same inert shape - the (path, way) pair, not
   // this state, is what matters.
-  phapTu: PhapTuState
+  spellPath: SpellPathState
 
-  // Kiem Tu Reimagined (spec 2026-09-15 K1) — the ONE canonical path
-  // state. Written at applyPathChoice('kiem_tu', way) inside the
-  // ritual; way membership lives on cultivationWay ('hien'|'ngu') —
+  // Kiem Tu Reimagined (spec 2026-09-15 K1) - the ONE canonical path
+  // state. Written at applyPathChoice('sword', way) inside the
+  // ritual; way membership lives on cultivationWay ('sword_pathway'|'hidden_sword_pathway') -
   // the retired mode field is gone.
-  kiemTu?: KiemTuState
+  swordPath?: SwordPathState
 
-  // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
-  // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —
-  // Tu vi tích được suốt đời save (đếm dồn, KHÔNG BAO GIỜ giảm — khác
-  // `cultivation`, bị tiêu hao lúc đột phá). Tăng trong stores/
-  // player.ts's cultivate() (ĐÚNG lượng tu vi thật vừa cộng, cùng nguồn
-  // nuôi techniqueExperience bên dưới). Sau spec 2026-08-29, nguồn
-  // tầng Kiếm Ý đổi sang bossKillCount (xem dưới) — field này còn nuôi
-  // technique tier + thống kê.
+  // Kiem Tu (2026-08-15) - Kiem Y VINH VIEN: dem don suot doi save,
+  // KHONG BAO GIO giam (khac `cultivation`, bi tieu hao luc dot pha) -
+  // Tu vi tich duoc suot doi save (dem don, KHONG BAO GIO giam - khac
+  // `cultivation`, bi tieu hao luc dot pha). Tang trong stores/
+  // player.ts's cultivate() (DUNG luong tu vi that vua cong). Sau spec
+  // 2026-08-29, nguon tang Kiem Y doi sang bossKillCount (xem duoi) -
+  // field nay con thong ke.
   totalCultivationGained: number
 
-  // Tổng boss/elite đã diệt vĩnh viễn suốt đời save (boss stage isBoss +
-  // boss Độ Kiếp + elite/mini-boss, đếm trong BattleLootSystem), chỉ
-  // tăng không giảm — counter thống kê/điều kiện chung.
+  // Tong boss/elite da diet vinh vien suot doi save (boss stage isBoss +
+  // boss Do Kiep + elite/mini-boss, dem trong BattleLootSystem), chi
+  // tang khong giam - counter thong ke/dieu kien chung.
   bossKillCount: number
 
-  // Bát Mạch (spec dot-pha-loi-kiep §4.1a) — id các đường Kỳ Kinh đã
-  // thông (tuần tự, xem core/realm/MeridianSystem.ts). 9/9 gồm Kỳ Kinh
-  // Thiên Địa Chi Kiều là điều kiện Đại Đạo Trúc Cơ.
-  openedMeridianIds: string[]
-
-  // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — đếm kill quái Luyện Khí từ
-  // lần giết quái ẩn gần nhất; đủ 1000 mở cửa sổ quái ẩn trà trộn pool
-  // spawn (giết quái ẩn reset về 0).
+  // Quai an (spec dot-pha-loi-kiep sec.4.1c) - dem kill quai Luyen Khi tu
+  // lan giet quai an gan nhat; du 1000 mo cua so quai an tra tron pool
+  // spawn (giet quai an reset ve 0).
   luyenKhiKillsSinceBeast: number
 
-  // Đại Đạo Trúc Cơ (spec §4.2/§4.3) — snapshot "hoàn hảo Phàm Nhân"
-  // (5/5 main stat 10/10 + Luyện Th thể 6/6) chốt lúc bấm Quán Khí,
-  // KHÔNG hồi cứu sau khi vào Luyện Khí.
+  // Dai Dao Truc Co (spec sec.4.2/sec.4.3) - snapshot "hoan hao Pham Nhan"
+  // (5/5 main stat 10/10 + Luyen Th the 6/6) chot luc bam Quan Khi,
+  // KHONG hoi cuu sau khi vao Luyen Khi.
   mortalPerfectionAchieved: boolean
 
-  // Thua kiếp Đại Đạo → mất VĨNH VIỄN cơ hội Đại Đạo (spec §4.3) —
-  // chỉ set, không bao giờ clear. Resolver cap ở Thiên Đạo khi true.
+  // Thua kiep Dai Dao -> mat VINH VIEN co hoi Dai Dao (spec sec.4.3) -
+  // chi set, khong bao gio clear. Resolver cap o Thien Dao khi true.
   greatDaoOpportunityLost: boolean
 
-  // Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — thay driver cũ
-  // (đại cảnh giới người chơi) của getTechniqueTier(), xem
-  // core/technique/TechniqueTier.ts. Đếm dồn suốt đời save (không reset
-  // khi đột phá, cùng nguồn với totalCultivationGained) — technique chỉ
-  // có ĐÚNG 1 cái trong đời save (permanent path choice) nên 1 số vô
-  // hướng là đủ, không cần key theo techniqueId.
-  // Cảm ngộ Kỹ năng (skill-insight-and-auto-combat-hud-plan.md) — thay
-  // HẲN skillPoints cũ (không còn cấp khi đột phá tiểu cảnh giới, xem
-  // CultivationSystem.breakthrough()). Nhận từ chiến đấu (hạ quái, xem
-  // GameManager.grantBattleRewardIfNeeded()), tiêu vào mở node tree
-  // (NodeSystem.ts's insightCost) và nâng cấp skill
-  // (SkillSystem.upgradeSkill()) — 1 hồ điểm DUY NHẤT cho cả 2 việc.
+  // Cam ngo Ky nang (skill-insight-and-auto-combat-hud-plan.md) - thay
+  // HAN skillPoints cu (khong con cap khi dot pha tieu canh gioi, xem
+  // CultivationSystem.breakthrough()). Nhan tu chien dau (ha quai, xem
+  // GameManager.grantBattleRewardIfNeeded()), tieu vao mo node tree
+  // (NodeSystem.ts's insightCost) va nang cap skill
+  // (SkillSystem.upgradeSkill()) - 1 ho diem DUY NHAT cho ca 2 viec.
   skillInsight: number
 
-  // Chỉ tăng, không giảm — thống kê/điều kiện progression về sau.
+  // Chi tang, khong giam - thong ke/dieu kien progression ve sau.
   totalSkillInsightGained: number
 
-  // Thiên phú Ngộ Đạo (talent-direction-choice-plan §6) — tu vi tu luyện
-  // online tích luỹ vào đây, đủ ngưỡng cultivationPerInsight thì đổi 1
-  // điểm Cảm Ngộ Kỹ năng; phần dư giữ lại cho lần sau. Chỉ tu luyện
-  // online — tiến độ offline là thiết kế riêng sau này.
+  // Thien phu Ngo Dao (talent-direction-choice-plan sec.6) - tu vi tu luyen
+  // online tich luy vao day, du nguong cultivationPerInsight thi doi 1
+  // diem Cam Ngo Ky nang; phan du giu lai cho lan sau. Chi tu luyen
+  // online - tien do offline la thiet ke rieng sau nay.
   cultivationInsightAccumulator: number
 
-  // PLAN HOÀN CHỈNH mục 2 — điểm Main Stat CHƯA phân phối, cấp mỗi khi
-  // đột phá TIỂU cảnh giới (xem CultivationSystem.breakthrough()) —
-  // KHÁC skillInsight (giờ chỉ đến từ chiến đấu, không còn cấp cùng
-  // lúc với attributePoints nữa) — tiêu vào baseStats.{strength,dexterity,intelligence,
-  // attunement,vitality} qua GameManager.allocateAttributePoint(), có
-  // trần riêng từng stat theo đại cảnh giới (xem core/stats/StatCap.ts).
+  // PLAN HOAN CHINH muc 2 - diem Main Stat CHUA phan phoi, cap moi khi
+  // dot pha TIEU canh gioi (xem CultivationSystem.breakthrough()) -
+  // KHAC skillInsight (gio chi den tu chien dau, khong con cap cung
+  // luc voi attributePoints nua) - tieu vao baseStats.{strength,dexterity,intelligence,
+  // attunement,vitality} qua GameManager.allocateAttributePoint(), co
+  // tran rieng tung stat theo dai canh gioi (xem core/stats/StatCap.ts).
   attributePoints: number
 
-  // Pháp Tu Redesign — id của MỌI ProgressionNode đã mua, xuyên suốt
-  // MỌI path (Node Tree là hạ tầng CHUNG, không tách riêng theo path)
-  // — xem core/progression/NodeSystem.ts.
+  // Phap Tu Redesign - id cua MOI ProgressionNode da mua, xuyen suot
+  // MOI path (Node Tree la ha tang CHUNG, khong tach rieng theo path)
+  // - xem core/progression/NodeSystem.ts.
   purchasedNodeIds: string[]
 
-  // Node level (combat-skill-flow-element-power-dot-plan.md §6.1) —
-  // NGUỒN SỰ THẬT duy nhất của state đã đầu tư: level 0 = chưa lĩnh
-  // ngộ, >=1 = đã lĩnh ngộ (mức stack). purchasedNodeIds giữ lại làm
-  // compat read-only, luôn đồng bộ = các id có level >= 1.
+  // Node level (combat-skill-flow-element-power-dot-plan.md sec.6.1) -
+  // NGUON SU THAT duy nhat cua state da dau tu: level 0 = chua linh
+  // ngo, >=1 = da linh ngo (muc stack). purchasedNodeIds giu lai lam
+  // compat read-only, luon dong bo = cac id co level >= 1.
   nodeLevels: Record<string, number>
 
-  // Van Dao talent (talent-catalog-v4 §4.3) — nodeId -> times a node
+  // Van Dao talent (talent-catalog-v4 sec.4.3) - nodeId -> times a node
   // purchase or upgrade went free via the talent roll. Kept after the
   // talent is removed so refund accounting stays honest.
   nodeFreePurchaseRecord: Record<string, number>
 
-  // Màn chỉ mở tuần tự: thắng một màn mới mở màn kế tiếp.
+  // Man chi mo tuan tu: thang mot man moi mo man ke tiep.
   completedStageIds: string[]
 
-  // Auto-farm Hoàn Mỹ (2026-09-04 spec) — stage đã đạt điều kiện "Hoàn
-  // Mỹ" (spec v3 D1: all party alive at victory + roundsElapsed <
+  // Auto-farm Hoan My (2026-09-04 spec) - stage da dat dieu kien "Hoan
+  // My" (spec v3 D1: all party alive at victory + roundsElapsed <
   // stage.perfectClearTurnLimit - rounds, not actor actions). Ghi 1
-  // LẦN lúc đạt lần đầu, không cập nhật lại sau đó.
+  // LAN luc dat lan dau, khong cap nhat lai sau do.
   perfectClearStageIds: string[]
 
-  // Wall-clock giây của lần đạt Hoàn Mỹ đầu tiên cho stage đó — dùng
-  // làm cycleSeconds = giá trị này / 2 cho auto-farm. Đây là 1 trong
-  // đúng 2-3 chỗ combat được phép đọc Date.now() (xem plan
+  // Wall-clock giay cua lan dat Hoan My dau tien cho stage do - dung
+  // lam cycleSeconds = gia tri nay / 2 cho auto-farm. Day la 1 trong
+  // dung 2-3 cho combat duoc phep doc Date.now() (xem plan
   // 2026-09-04-stage-auto-farm.md's Global Constraints).
   perfectClearSeconds: Record<string, number>
 
-  // Stage đang auto-farm (chỉ 1 tại 1 thời điểm, khớp StageManager's
-  // single-active cardinality). null = không có auto-farm nào đang chạy.
+  // Stage dang auto-farm (chi 1 tai 1 thoi diem, khop StageManager's
+  // single-active cardinality). null = khong co auto-farm nao dang chay.
   autoFarmStage: { stageId: string; lastCheckedMs: number } | null
 
-  // Luyện Thể (Realm Passive & Pressure System, 2026-08-20) — 6 tầng
-  // rèn thể Phàm Nhân, xem data/realm/LuyenThe.ts. bodyRefinementCompletedTiers
-  // đếm số tầng ĐÃ HOÀN THÀNH (0-6, tuần tự), bodyRefinementCurrentTierProgress
-  // là Tinh Hoa Phàm Thể đã đầu tư vào tầng ĐANG DỞ (0..cap của tầng
-  // bodyRefinementCompletedTiers). Xem core/realm/BodyRefinementSystem.ts.
-  bodyRefinementCompletedTiers: number
+  // P7-M5 - the ONE canonical body progression record (chapter-keyed:
+  // body_refinement tiers + meridian openedIds today). Owned by
+  // core/realm/body/BodyProgressionSystem; consumers read derived facts
+  // through it, never the slices directly.
+  bodyProgression: BodyProgressionState
 
-  bodyRefinementCurrentTierProgress: number
-
-  // Bậc Nhập Đạo (1-6) — chốt DUY NHẤT 1 lần lúc Lễ Nhập Môn (Phàm
-  // Nhân -> Luyện Khí, xem GameManager.chooseCultivationPath()) từ
-  // bodyRefinementCompletedTiers tại thời điểm đó, dùng cho cả Nhập Đạo
-  // (data/realm/RealmPassives.ts) lẫn Realm Pressure (xem
-  // core/combat/RealmPressure.ts). Mặc định 6 (không bị áp chế) cho
-  // save cũ/nhân vật chưa từng qua Phàm Nhân — KHÔNG hồi tố phạt
-  // nhân vật chưa từng có cơ hội chọn.
+  // Bac Nhap Dao (1-6) - chot DUY NHAT 1 lan luc Le Nhap Mon (Pham
+  // Nhan -> Luyen Khi, xem GameManager.chooseCultivationPath()) tu so
+  // tang body_refinement da hoan thanh tai thoi diem do, dung cho ca Nhap Dao
+  // (data/realm/RealmPassives.ts) lan Realm Pressure (xem
+  // core/combat/RealmPressure.ts). Mac dinh 6 (khong bi ap che) cho
+  // save cu/nhan vat chua tung qua Pham Nhan - KHONG hoi to phat
+  // nhan vat chua tung co co hoi chon.
   breakthroughGrade: number
 
-  // Loi Kiep talent (talent-catalog-v4 §4.3) — permanent +10% all
+  // Loi Kiep talent (talent-catalog-v4 sec.4.3) - permanent +10% all
   // attributes per successful tribulation while the talent is held.
   // Owned by TribulationOutcomeService's victory path.
   tribulationBonusStacks: number
 
-  // Pha Giap talent M2 carry (talent-catalog-v4 §4.3) — half the Pha
+  // Pha Giap talent M2 carry (talent-catalog-v4 sec.4.3) - half the Pha
   // Giap passive's metalPenetration stacks bank at battle end and
   // re-seed the next battle; resets when realmId changes.
   phaGiapCarryStacks: number
@@ -244,42 +241,52 @@ export interface PlayerData {
   // core/realm/RealmPassiveSystem.ts.
   grantedRealmPassiveIds: string[]
 
-  // Timed effect theo thời gian thực (2026-08-24, plan §5.4) — deadline
-  // tuyệt đối expiresAtMs là authority; load bỏ effect hết hạn. Xem
+  // Timed effect theo thoi gian thuc (2026-08-24, plan sec.5.4) - deadline
+  // tuyet doi expiresAtMs la authority; load bo effect het han. Xem
   // PersistentTimedEffect.ts / GameManager.getActiveRuntimeModifiers().
   persistentTimedEffects: PersistentTimedEffect[]
 
 
-  // Combat AI strategy (combat-gate-teleport-autocast plan §10) — lựa
-  // chọn gameplay lâu dài của người chơi, áp dụng ngay và tự lưu khi đổi.
-  // Save thiếu field/giá trị sai → fallback DEFAULT (development build,
-  // không migration).
+  // Combat AI strategy (combat-gate-teleport-autocast plan sec.10) - lua
+  // chon gameplay lau dai cua nguoi choi, ap dung ngay va tu luu khi doi.
+  // Save thieu field/gia tri sai -> fallback DEFAULT (development build,
+  // khong migration).
   combatAiStrategy: CombatAiStrategy
 
-  // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
-  // §10.2) — undefined trước Trúc Cơ hoặc khi nghề chưa có definition
-  // (Kiếm Tu/Thể Tu, xem ARTIFACT_ID_BY_CULTIVATION_PATH). KHÔNG phải
-  // array inventory — mỗi nhân vật chỉ có đúng MỘT bản mệnh, không
-  // roll/nhặt/craft/equip/đổi sang pháp bảo nghề khác.
+  // Ban Menh Phap Bao (2026-08-27, foundation-artifact-system-plan.md
+  // sec.10.2) - undefined truoc Truc Co hoac khi nghe chua co definition
+  // (Kiem Tu/The Tu, xem ARTIFACT_ID_BY_CULTIVATION_PATH). KHONG phai
+  // array inventory - moi nhan vat chi co dung MOT ban menh, khong
+  // roll/nhat/craft/equip/doi sang phap bao nghe khac.
   artifact?: ArtifactProgress
 
-  // Kiếm Tu (2026-08-28) — mirror của Skill.totalExperience/level cho
-  // TỪNG skill (key = skillId), ghi mỗi lần cast trong
+  // Kiem Tu (2026-08-28) - mirror cua Skill.totalExperience/level cho
+  // TUNG skill (key = skillId), ghi moi lan cast trong
   // SkillSystem.recordCast() qua sink (xem
-  // GameManager's skillSystem.setCastCountSink()). Tồn tại VÌ
-  // NodeSystem.hasPrerequisite() chỉ nhận PlayerData — không có
-  // SkillManager để tra totalExperience/level trực tiếp. Skill instance
-  // thật vẫn sống trong SkillManager (KHÔNG nằm trong PlayerData); đây
-  // chỉ là bản sao đọc-thôi phục vụ prerequisite `skillCastCount`.
+  // GameManager's skillSystem.setCastCountSink()). Ton tai VI
+  // NodeSystem.hasPrerequisite() chi nhan PlayerData - khong co
+  // SkillManager de tra totalExperience/level truc tiep. Skill instance
+  // that van song trong SkillManager (KHONG nam trong PlayerData); day
+  // chi la ban sao doc-thoi phuc vu prerequisite `skillCastCount`.
   skillCastCounts?: Record<string, number>
 
   skillLevels?: Record<string, number>
 
-  // Companion Roster (2026-09-05) — gacha-recruited combatants owned by
-  // the player. Không có equipment/node-tree kỹ năng riêng từng nhân vật
-  // (bộ kỹ năng cố định trong CompanionDefinition, xem
-  // data/companion/Companions.ts) — đây là field mới DUY NHẤT feature
-  // này cần trên PlayerData.
+  // P7-M6 - read-only mirror of the canonical technique holder's
+  // {rank, grade}. The holder lives in TechniqueManager (0-or-1, no
+  // list/unequip); TechniqueSystem's progress sink republishes this pair
+  // on every write that can change it (grant/rank-up/grade-advance/
+  // restore). Exists VI NodeSystem.hasPrerequisite() chi nhan
+  // PlayerData - techniqueRank/techniqueGrade prerequisites cannot
+  // reach the manager. undefined = no technique held. One record keeps
+  // the pair atomic - advanceTechniqueGrade changes both at once.
+  techniqueProgress?: { rank: number; grade: number }
+
+  // Companion Roster (2026-09-05) - gacha-recruited combatants owned by
+  // the player. Khong co equipment/node-tree ky nang rieng tung nhan vat
+  // (bo ky nang co dinh trong CompanionDefinition, xem
+  // data/companion/Companions.ts) - day la field moi DUY NHAT feature
+  // nay can tren PlayerData.
   companions: CompanionInstance[]
 
   // Companion Gacha (2026-09-12) - pity counter: pulls since the last
@@ -290,17 +297,17 @@ export interface PlayerData {
   // from duplicate pulls on constellation-maxed companions.
   duyenPhan: number
 
-  // Trận Pháp (2026-09-05) — trận pháp đang active + vị trí gán từng ô.
-  // null = người chơi chưa từng cấu hình trận pháp nào; buildTurnBattle()
-  // sẽ fallback về DEFAULT_PARTY_FORMATION (Combat Art Pipeline spec §7).
+  // Tran Phap (2026-09-05) - tran phap dang active + vi tri gan tung o.
+  // null = nguoi choi chua tung cau hinh tran phap nao; buildTurnBattle()
+  // se fallback ve DEFAULT_PARTY_FORMATION (Combat Art Pipeline spec sec.7).
   formationLoadout: FormationLoadout | null
 
   lastSavedAt: number
 }
 
-// Trận Pháp (2026-09-05) — type đủ nhỏ nên khai báo inline luôn ở đây
-// (chưa có consumer nào khác cần tách riêng module), khác với
-// CompanionInstance ở Task 11 phải tách file vì có nhiều consumer dùng lại.
+// Tran Phap (2026-09-05) - type du nho nen khai bao inline luon o day
+// (chua co consumer nao khac can tach rieng module), khac voi
+// CompanionInstance o Task 11 phai tach file vi co nhieu consumer dung lai.
 export interface FormationSlotAssignment {
   row: number
   column: number
@@ -334,49 +341,60 @@ export function createDefaultPlayer(): PlayerData {
     autoFarmStage: null,
     hasSeenTutorial: false,
 
-    // PHẢI khai báo tường minh (dù `undefined`) — Pinia Options Store
-    // dựng reactive property bằng toRefs() snapshot 1 LẦN lúc khởi tạo
-    // store; field nào KHÔNG có mặt như 1 key ở đây thì
-    // player.cultivationPath (đọc qua store instance) sẽ KHÔNG BAO GIỜ
-    // phản ứng khi GameManager.chooseCultivationPath() gán giá trị qua
-    // player.$state sau này (bug thật đã gặp: technique/skill equip
-    // đúng nhưng UI gate không tự chuyển vì thiếu dòng này).
+    // PHAI khai bao tuong minh (du `undefined`) - Pinia Options Store
+    // dung reactive property bang toRefs() snapshot 1 LAN luc khoi tao
+    // store; field nao KHONG co mat nhu 1 key o day thi
+    // player.cultivationPath (doc qua store instance) se KHONG BAO GIO
+    // phan ung khi GameManager.chooseCultivationPath() gan gia tri qua
+    // player.$state sau nay (bug that da gap: technique/skill equip
+    // dung nhung UI gate khong tu chuyen vi thieu dong nay).
     cultivationPath: undefined,
 
-    // MUST be declared explicitly (even as `undefined`) — same Pinia
+    // MUST be declared explicitly (even as `undefined`) - same Pinia
     // toRefs() snapshot reason as cultivationPath above: applyPathChoice
     // assigns this field through player.$state inside the ritual.
     cultivationWay: undefined,
 
-    // Required (non-optional) field — present from creation; both
+    // MUST be declared explicitly (even as `undefined`) - same Pinia
+    // toRefs() snapshot reason as cultivationPath above:
+    // progressionOps.setMortalBasicSkill() assigns this field through
+    // player.$state.
+    mortalBasicSkillId: undefined,
+
+    // Required (non-optional) field - present from creation; both
     // members stay null until the ritual + atomic element/route pick.
-    phapTu: createPhapTuState(),
+    spellPath: createSpellPathState(),
 
-    // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
-    // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
-    kiemTu: undefined,
+    // PHAI khai bao tuong minh (du `undefined`) - cung ly do
+    // cultivationPath o tren (toRefs() snapshot 1 lan luc init store).
+    swordPath: undefined,
 
-    // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
-    // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
+    // PHAI khai bao tuong minh (du `undefined`) - cung ly do
+    // cultivationPath o tren (toRefs() snapshot 1 lan luc init store).
     artifact: undefined,
 
-    // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
-    // cultivationPath ở trên: TribulationOutcomeService gán field này
-    // qua store proxy, không phải qua player.$state — key thiếu ở đây
-    // thì write rơi ra ngoài $state, không bao giờ vào save và không bị
+    // PHAI khai bao tuong minh (du `undefined`) - cung ly do
+    // cultivationPath o tren: TribulationOutcomeService gan field nay
+    // qua store proxy, khong phai qua player.$state - key thieu o day
+    // thi write roi ra ngoai $state, khong bao gio vao save va khong bi
     // restore reset (M1, ARCH-001).
     highestFoundationAchieved: undefined,
 
-    // PHẢI khai báo tường minh (rỗng, không undefined) — cùng lý do
-    // Pinia toRefs() snapshot ở trên: sink của SkillSystem ghi field
-    // con (`skillCastCounts[skillId] = ...`) sau khi store đã khởi
-    // tạo, nên object chứa PHẢI tồn tại sẵn làm key reactive từ đầu.
+    // PHAI khai bao tuong minh (rong, khong undefined) - cung ly do
+    // Pinia toRefs() snapshot o tren: sink cua SkillSystem ghi field
+    // con (`skillCastCounts[skillId] = ...`) sau khi store da khoi
+    // tao, nen object chua PHAI ton tai san lam key reactive tu dau.
     skillCastCounts: {},
     skillLevels: {},
 
+    // PHAI khai bao tuong minh (du `undefined`) - cung ly do
+    // cultivationPath o tren (toRefs() snapshot + restore whitelist):
+    // TechniqueSystem's progress sink assigns this field through
+    // player.$state after store init.
+    techniqueProgress: undefined,
+
     totalCultivationGained: 0,
     bossKillCount: 0,
-    openedMeridianIds: [],
     luyenKhiKillsSinceBeast: 0,
     mortalPerfectionAchieved: false,
     greatDaoOpportunityLost: false,
@@ -389,8 +407,7 @@ export function createDefaultPlayer(): PlayerData {
     nodeLevels: {},
     nodeFreePurchaseRecord: {},
 
-    bodyRefinementCompletedTiers: 0,
-    bodyRefinementCurrentTierProgress: 0,
+    bodyProgression: createDefaultBodyProgression(),
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
     tribulationBonusStacks: 0,
@@ -413,11 +430,11 @@ export function createDefaultPlayer(): PlayerData {
 }
 
 /**
- * ARCH-002 (M7) — the single raw -> resolved stat assembly for the player.
+ * ARCH-002 (M7) - the single raw -> resolved stat assembly for the player.
  * Extracted from the player store's `finalStats` getter so the battle entry
  * path can resolve the same value WITHOUT reading the store's
  * `externalModifiers` mirror (a per-tick cache that can hold stale
- * battle-scoped modifiers — the ARCH-002 leak channel).
+ * battle-scoped modifiers - the ARCH-002 leak channel).
  *
  * `externalModifiers` here is the caller-provided modifier list: the store
  * passes its mirror field; the battle ops pass the fresh static aggregation
@@ -444,8 +461,8 @@ export function resolvePlayerStatAssembly(
   // attribute derivation (INV-6), and the emitted modifiers are the ONLY
   // gated channels (INV-10). M4 moved the Phap Tu attunement emitter
   // behind the way facet (collectActiveWayStatModifiers); M5 moves the
-  // The Tu channels the same way — hien's vitality->enduranceThreshold
-  // and ung_the's attribute->chance emissions are declared on the way
+  // The Tu channels the same way - body_pathway's vitality->enduranceThreshold
+  // and hidden_body_pathway's attribute->chance emissions are declared on the way
   // stat facets in core/the-tu/TheTuPath.ts, keyed by cultivationWay.
   const attributeTotals = resolveAttributeTotals(player.baseStats, allModifiers)
   const pathModifiers = collectActiveWayStatModifiers(player, attributeTotals)
@@ -464,16 +481,16 @@ export function resolvePlayerFinalStats(
 }
 
 /**
- * Chuyển PlayerData thành CombatEntity để đưa vào BattleSystem.
- * `stats` phải là finalStats đã tính sẵn (baseStats + modifiers +
- * externalModifiers) — hàm này KHÔNG tự gọi calculateStats, để
- * tránh phụ thuộc ngược vào StatCalculator theo 2 cách khác nhau
- * tại 2 nơi (store đã có finalStats getter, dùng lại luôn).
+ * Chuyen PlayerData thanh CombatEntity de dua vao BattleSystem.
+ * `stats` phai la finalStats da tinh san (baseStats + modifiers +
+ * externalModifiers) - ham nay KHONG tu goi calculateStats, de
+ * tranh phu thuoc nguoc vao StatCalculator theo 2 cach khac nhau
+ * tai 2 noi (store da co finalStats getter, dung lai luon).
  *
- * currentHp luôn khởi tạo bằng maxHp: giống enemyToCombatEntity(),
- * PlayerData không lưu HP giữa các trận — HP là state "sống" chỉ
- * tồn tại trong lúc battle đang diễn ra (do BattleSystem quản lý),
- * không phải state cần persist vào save file.
+ * currentHp luon khoi tao bang maxHp: giong enemyToCombatEntity(),
+ * PlayerData khong luu HP giua cac tran - HP la state "song" chi
+ * ton tai trong luc battle dang dien ra (do BattleSystem quan ly),
+ * khong phai state can persist vao save file.
  */
 export function playerToCombatEntity(
   player: PlayerData,
@@ -504,23 +521,23 @@ export function playerToCombatEntity(
 
     currentWard: 0,
 
-    // Vô cực — "chưa từng bị đánh" lúc trận vừa bắt đầu, để Ward có
-    // thể hồi ngay từ đầu trận thay vì phải chờ 1 khoảng WARD_REGEN_
-    // DELAY_SECONDS giả tạo dù chưa hề ăn đòn nào (xem CombatEntity.ts).
+    // Vo cuc - "chua tung bi danh" luc tran vua bat dau, de Ward co
+    // the hoi ngay tu dau tran thay vi phai cho 1 khoang WARD_REGEN_
+    // DELAY_SECONDS gia tao du chua he an don nao (xem CombatEntity.ts).
     turnsSinceLastHitLanded: Infinity,
 
     realmIndex: getRealmIndex(player.realmId),
 
-    // Realm Pressure (xem core/combat/RealmPressure.ts) — CHỈ player có
-    // giá trị thật (enemy không breakthrough nên không có khái niệm
-    // này, enemyToCombatEntity() để undefined).
+    // Realm Pressure (xem core/combat/RealmPressure.ts) - CHI player co
+    // gia tri that (enemy khong breakthrough nen khong co khai niem
+    // nay, enemyToCombatEntity() de undefined).
     breakthroughGrade: player.breakthroughGrade,
 
-    // Placeholder — BattleSystem.start() set lại thành HERO_HOME_X
-    // ngay khi trận bắt đầu (xem core/battle/BattleLane.ts).
+    // Placeholder - BattleSystem.start() set lai thanh HERO_HOME_X
+    // ngay khi tran bat dau (xem core/battle/BattleLane.ts).
     x: 0,
 
-    // Hero luôn đứng cố định lane giữa (2026-08-22, top-down 5-lane).
+    // Hero luon dung co dinh lane giua (2026-08-22, top-down 5-lane).
     row: CENTER_LANE_INDEX,
 
     alive: true,
@@ -532,11 +549,11 @@ export function playerToCombatEntity(
 }
 
 /**
- * Phap Tu Reimagined Task 8 (INV-14) — battle-instance-scoped resource
+ * Phap Tu Reimagined Task 8 (INV-14) - battle-instance-scoped resource
  * reset, the ONE home for fields that must not survive a battle
  * boundary. currentThe is the breaking change: legacy let it ride
  * entity reuse across a farm session; now every fresh participant
- * build AND every auto-repeat restartTurnBattleCycle zeroes it — for
+ * build AND every auto-repeat restartTurnBattleCycle zeroes it - for
  * Phap Tu, Bat Kiem, and any future path sharing the pool.
  *
  * Call sites: playerToCombatEntity (fresh build) +
@@ -548,16 +565,14 @@ export function resetBattleScopedResources(entity: CombatEntity): void {
 }
 
 /**
- * `addTechniqueInsight` nuôi Cảm ngộ Tâm Pháp CỦA riêng tâm pháp đang
- * trang bị (xem GameManager.gainEquippedTechniqueInsight()) — tách
- * biệt khỏi Cảm ngộ Kỹ năng (player.skillInsight), cấp trực tiếp trong
- * GameManager.grantBattleRewardIfNeeded() vì KHÔNG cần trang bị tâm
- * pháp vẫn nhận được (xem skill-insight-and-auto-combat-hud-plan.md
- * mục 3).
+ * `addSkillInsight` cong thang vao Cam ngo Ky nang (player.skillInsight)
+ * - kenh reward truc tiep cho quest/direct grants (P7-M3: doi ten tu
+ * addTechniqueInsight; technique gio an techniqueMastery qua
+ * TechniqueSystem.gainMastery, KHONG qua receiver nay).
  *
- * `addSpiritStone` (plan Workstream F) — GameManager inject implementation
- * cộng vào MaterialBag (SPIRIT_STONE_MATERIAL_ID); PlayerData không còn
- * giữ currency nào cả.
+ * `addSpiritStone` (plan Workstream F) - GameManager inject implementation
+ * cong vao MaterialBag (SPIRIT_STONE_MATERIAL_ID); PlayerData khong con
+ * giu currency nao ca.
  */
 export function createPlayerRewardReceiver(
   player: PlayerData,
@@ -565,9 +580,9 @@ export function createPlayerRewardReceiver(
   addSpiritStone?: (amount: number) => void,
 ): RewardReceiver {
   return {
-    addTechniqueInsight(amount: number) {
+    addSkillInsight(amount: number) {
       addInsight?.(amount)
-      // Cố ý không làm gì — xem ghi chú JSDoc phía trên.
+      // Co y khong lam gi - xem ghi chu JSDoc phia tren.
     },
 
     addCultivation(amount: number) {

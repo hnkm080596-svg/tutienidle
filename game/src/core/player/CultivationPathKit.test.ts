@@ -3,6 +3,7 @@ import {
   CULTIVATION_PATH_MODULES,
   getActiveWayDefinition,
   isCultivationPathOffered,
+  type CultivationWayId,
 } from './CultivationPathKit'
 import { listOfferableWays } from './CultivationPathSystem'
 import { createDefaultPlayer } from './Player'
@@ -19,7 +20,7 @@ import { SKILLS } from '../../data/skill/Skills'
 
 describe('CULTIVATION_PATH_MODULES — catalog shape', () => {
   it('contains exactly the three base path ids', () => {
-    expect(Object.keys(CULTIVATION_PATH_MODULES).sort()).toEqual(['kiem_tu', 'phap_tu', 'the_tu'])
+    expect(Object.keys(CULTIVATION_PATH_MODULES).sort()).toEqual(['body', 'spell', 'sword'])
   })
 
   it('module.id matches its catalog key; way ids are unique per path; way.pathId === catalog key', () => {
@@ -37,9 +38,9 @@ describe('CULTIVATION_PATH_MODULES — catalog shape', () => {
   })
 
   it('declares exactly the six current ways', () => {
-    expect(Object.keys(CULTIVATION_PATH_MODULES.kiem_tu.ways).sort()).toEqual(['hien', 'ngu'])
-    expect(Object.keys(CULTIVATION_PATH_MODULES.phap_tu.ways).sort()).toEqual(['ngo_dao', 'ngu_hanh'])
-    expect(Object.keys(CULTIVATION_PATH_MODULES.the_tu.ways).sort()).toEqual(['hien', 'ung_the'])
+    expect(Object.keys(CULTIVATION_PATH_MODULES.sword.ways).sort()).toEqual(['hidden_sword_pathway', 'sword_pathway'])
+    expect(Object.keys(CULTIVATION_PATH_MODULES.spell.ways).sort()).toEqual(['hidden_spell_pathway', 'spell_pathway'])
+    expect(Object.keys(CULTIVATION_PATH_MODULES.body.ways).sort()).toEqual(['body_pathway', 'hidden_body_pathway'])
   })
 
   it('every way techniqueId resolves against the technique templates', () => {
@@ -77,39 +78,42 @@ describe('CULTIVATION_PATH_MODULES — catalog shape', () => {
 })
 
 describe('way definitions — authored content carried over from kits', () => {
-  it("kiem_tu hien keeps the ngu_kiem technique and metal element", () => {
-    const way = CULTIVATION_PATH_MODULES.kiem_tu.ways.hien
+  it("sword hien keeps the ngu_kiem technique and metal element", () => {
+    const way = CULTIVATION_PATH_MODULES.sword.ways.sword_pathway
 
-    expect(way?.techniqueId).toBe('ngu_kiem')
+    expect(way?.techniqueId).toBe('sword_control_art')
     expect(way?.element).toBe('metal')
   })
 
-  it('kiem_tu ngu exists in the catalog with the van_kiem_quyet technique and the tram Lv3 gate', () => {
-    const way = CULTIVATION_PATH_MODULES.kiem_tu.ways.ngu
+  it('sword ngu exists in the catalog with the van_kiem_quyet technique and the tram Lv3 gate', () => {
+    const way = CULTIVATION_PATH_MODULES.sword.ways.hidden_sword_pathway
 
-    expect(way?.techniqueId).toBe('van_kiem_quyet')
+    expect(way?.techniqueId).toBe('myriad_swords_art')
     expect(way?.offerGate).toEqual({ requiresSkillLevel: { skillId: 'tram', level: 3 } })
   })
 
-  it('phap_tu ngu_hanh carries the base kit stats and the foundation_establishment reward', () => {
-    const way = CULTIVATION_PATH_MODULES.phap_tu.ways.ngu_hanh
+  it('spell spell_pathway carries the base kit stats and the foundation_establishment reward', () => {
+    const way = CULTIVATION_PATH_MODULES.spell.ways.spell_pathway
 
-    expect(way?.techniqueId).toBe('dai_ngu_hanh_chan_quyet')
+    expect(way?.techniqueId).toBe('five_elements_art')
     expect(way?.statModifiers?.map((modifier) => modifier.id)).toEqual([
       'phap_tu_linh_luc',
       'phap_tu_linh_luc_regen',
       'phap_tu_ho_the',
     ])
+    // P7-M2/M3 - the way's own record composes over the canonical
+    // ladder: artifact merges in, the canonical passive stands (the
+    // Truc Co technique swap folded into five_elements_art.gradeEffects[2]).
     expect(way?.realmRewards?.foundation_establishment).toEqual({
-      techniqueId: 'dai_ngu_hanh_quyet_truc_co',
       artifactId: 'ngu_hanh_chau',
+      passiveSkillId: 'passive_truc_co_y_chi',
     })
   })
 
-  it('phap_tu ngo_dao carries the an kit stats and the linh_bao cast gate', () => {
-    const way = CULTIVATION_PATH_MODULES.phap_tu.ways.ngo_dao
+  it('spell ngo_dao carries the an kit stats and the linh_bao cast gate', () => {
+    const way = CULTIVATION_PATH_MODULES.spell.ways.hidden_spell_pathway
 
-    expect(way?.techniqueId).toBe('ngo_dao_chan_quyet')
+    expect(way?.techniqueId).toBe('dao_insight_art')
     expect(way?.statModifiers?.map((modifier) => modifier.id)).toEqual([
       'ngo_dao_linh_luc',
       'ngo_dao_linh_luc_regen',
@@ -118,37 +122,37 @@ describe('way definitions — authored content carried over from kits', () => {
     expect(way?.offerGate).toEqual({ requiresSkillCastLevel: { skillId: 'linh_bao', level: 3 } })
   })
 
-  it("the_tu hien keeps the kim_cang_bat_hoai_the technique and metal element", () => {
-    const way = CULTIVATION_PATH_MODULES.the_tu.ways.hien
+  it("body hien keeps the kim_cang_bat_hoai_the technique and metal element", () => {
+    const way = CULTIVATION_PATH_MODULES.body.ways.body_pathway
 
-    expect(way?.techniqueId).toBe('kim_cang_bat_hoai_the')
+    expect(way?.techniqueId).toBe('diamond_body_art')
     expect(way?.element).toBe('metal')
   })
 
-  it('the_tu ung_the carries the an kit: ung_the_than_quyet, huy_quyen gate, the economy capability', () => {
-    const way = CULTIVATION_PATH_MODULES.the_tu.ways.ung_the
+  it('body ung_the carries the an kit: ung_the_than_quyet, huy_quyen gate, the economy capability', () => {
+    const way = CULTIVATION_PATH_MODULES.body.ways.hidden_body_pathway
 
-    expect(way?.techniqueId).toBe('ung_the_than_quyet')
+    expect(way?.techniqueId).toBe('responsive_body_art')
     expect(way?.offerGate).toEqual({ requiresSkillLevel: { skillId: 'huy_quyen', level: 3 } })
-    expect(way?.capabilities?.static).toContain('the_tu.the_economy')
+    expect(way?.capabilities?.static).toContain('body.essence_economy')
   })
 })
 
 describe('getActiveWayDefinition — strict persisted pair', () => {
   it('resolves the way for every valid (path, way) pair', () => {
     const cases: Array<[string, string, string]> = [
-      ['kiem_tu', 'hien', 'ngu_kiem'],
-      ['kiem_tu', 'ngu', 'van_kiem_quyet'],
-      ['phap_tu', 'ngu_hanh', 'dai_ngu_hanh_chan_quyet'],
-      ['phap_tu', 'ngo_dao', 'ngo_dao_chan_quyet'],
-      ['the_tu', 'hien', 'kim_cang_bat_hoai_the'],
-      ['the_tu', 'ung_the', 'ung_the_than_quyet'],
+      ['sword', 'sword_pathway', 'sword_control_art'],
+      ['sword', 'hidden_sword_pathway', 'myriad_swords_art'],
+      ['spell', 'spell_pathway', 'five_elements_art'],
+      ['spell', 'hidden_spell_pathway', 'dao_insight_art'],
+      ['body', 'body_pathway', 'diamond_body_art'],
+      ['body', 'hidden_body_pathway', 'responsive_body_art'],
     ]
 
     for (const [pathId, wayId, techniqueId] of cases) {
       const way = getActiveWayDefinition({
-        cultivationPath: pathId as 'kiem_tu',
-        cultivationWay: wayId,
+        cultivationPath: pathId as 'sword',
+        cultivationWay: wayId as CultivationWayId,
       })
       expect(way?.id, `${pathId}/${wayId}`).toBe(wayId)
       expect(way?.techniqueId).toBe(techniqueId)
@@ -156,11 +160,11 @@ describe('getActiveWayDefinition — strict persisted pair', () => {
   })
 
   it('fails closed on a way-less save, a foreign way, or no path', () => {
-    expect(getActiveWayDefinition({ cultivationPath: 'the_tu' })).toBeUndefined()
+    expect(getActiveWayDefinition({ cultivationPath: 'body' })).toBeUndefined()
     expect(
-      getActiveWayDefinition({ cultivationPath: 'the_tu', cultivationWay: 'ngo_dao' }),
+      getActiveWayDefinition({ cultivationPath: 'body', cultivationWay: 'hidden_spell_pathway' }),
     ).toBeUndefined()
-    expect(getActiveWayDefinition({ cultivationWay: 'hien' })).toBeUndefined()
+    expect(getActiveWayDefinition({ cultivationWay: 'sword_pathway' })).toBeUndefined()
     expect(getActiveWayDefinition({})).toBeUndefined()
   })
 })
@@ -169,15 +173,15 @@ describe('isCultivationPathOffered — way offer gates', () => {
   it('ungated ways are always offered', () => {
     const player = createDefaultPlayer()
 
-    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.kiem_tu.ways.hien!, player)).toBe(true)
-    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.phap_tu.ways.ngu_hanh!, player)).toBe(
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.sword.ways.sword_pathway!, player)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.spell.ways.spell_pathway!, player)).toBe(
       true,
     )
-    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.the_tu.ways.hien!, player)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.body.ways.body_pathway!, player)).toBe(true)
   })
 
   it('ung_the keeps the huy_quyen Lv3 requiresSkillLevel gate (skillLevels mirror)', () => {
-    const way = CULTIVATION_PATH_MODULES.the_tu.ways.ung_the!
+    const way = CULTIVATION_PATH_MODULES.body.ways.hidden_body_pathway!
 
     const below = createDefaultPlayer()
     below.skillLevels = { huy_quyen: 2 }
@@ -192,7 +196,7 @@ describe('isCultivationPathOffered — way offer gates', () => {
   })
 
   it('ngo_dao gates on linh_bao cast level via skillCastCounts + CAST_LEVELING_THRESHOLDS', () => {
-    const way = CULTIVATION_PATH_MODULES.phap_tu.ways.ngo_dao!
+    const way = CULTIVATION_PATH_MODULES.spell.ways.hidden_spell_pathway!
     const lv3Casts = CAST_LEVELING_THRESHOLDS.linh_bao!.lv3
 
     const below = createDefaultPlayer()
@@ -212,7 +216,7 @@ describe('isCultivationPathOffered — way offer gates', () => {
   })
 
   it('the ngu way gate evaluates tram Lv3', () => {
-    const ngu = CULTIVATION_PATH_MODULES.kiem_tu.ways.ngu!
+    const ngu = CULTIVATION_PATH_MODULES.sword.ways.hidden_sword_pathway!
 
     const below = createDefaultPlayer()
     below.skillLevels = { tram: 2 }
@@ -233,12 +237,12 @@ describe('listOfferableWays — ritual offers', () => {
     const offered = listOfferableWays(player).map((offer) => `${offer.pathId}/${offer.wayId}`)
 
     expect(offered).toEqual([
-      'phap_tu/ngu_hanh',
-      'kiem_tu/hien',
-      'the_tu/hien',
-      'phap_tu/ngo_dao',
-      'kiem_tu/ngu',
-      'the_tu/ung_the',
+      'spell/spell_pathway',
+      'sword/sword_pathway',
+      'body/body_pathway',
+      'spell/hidden_spell_pathway',
+      'sword/hidden_sword_pathway',
+      'body/hidden_body_pathway',
     ])
     expect(listOfferableWays(player).every((offer) => offer.eligible)).toBe(true)
   })
@@ -250,9 +254,9 @@ describe('listOfferableWays — ritual offers', () => {
     const eligible = offers.filter((offer) => offer.eligible)
 
     expect(eligible.map((offer) => `${offer.pathId}/${offer.wayId}`)).toEqual([
-      'phap_tu/ngu_hanh',
-      'kiem_tu/hien',
-      'the_tu/hien',
+      'spell/spell_pathway',
+      'sword/sword_pathway',
+      'body/body_pathway',
     ])
     for (const offer of offers.filter((o) => !o.eligible)) {
       expect(offer.reason, `${offer.pathId}/${offer.wayId}`).toBeDefined()
@@ -262,7 +266,7 @@ describe('listOfferableWays — ritual offers', () => {
   it('ngo_dao follows the linh_bao cast threshold exactly', () => {
     const player = createDefaultPlayer()
     const ngoDao = (p: typeof player) =>
-      listOfferableWays(p).find((o) => o.pathId === 'phap_tu' && o.wayId === 'ngo_dao')
+      listOfferableWays(p).find((o) => o.pathId === 'spell' && o.wayId === 'hidden_spell_pathway')
 
     player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 - 1 }
     expect(ngoDao(player)?.eligible).toBe(false)
@@ -274,7 +278,7 @@ describe('listOfferableWays — ritual offers', () => {
   it('ung_the follows the huy_quyen Lv3 mirror exactly', () => {
     const player = createDefaultPlayer()
     const ungThe = () =>
-      listOfferableWays(player).find((o) => o.pathId === 'the_tu' && o.wayId === 'ung_the')
+      listOfferableWays(player).find((o) => o.pathId === 'body' && o.wayId === 'hidden_body_pathway')
 
     player.skillLevels = { huy_quyen: 2 }
     expect(ungThe()?.eligible).toBe(false)
@@ -284,21 +288,21 @@ describe('listOfferableWays — ritual offers', () => {
   })
 })
 
-describe('stat domains — the_tu_an domain ownership', () => {
-  it('the ung_the way facet owns the the_tu_an domain; hien owns the_tu', () => {
-    expect(CULTIVATION_PATH_MODULES.the_tu.ways.ung_the?.stats?.domains).toEqual(['the_tu_an'])
-    expect(CULTIVATION_PATH_MODULES.the_tu.ways.hien?.stats?.domains).toEqual(['the_tu'])
+describe('stat domains — hidden_body domain ownership', () => {
+  it('the ung_the way facet owns the hidden_body domain; hien owns body', () => {
+    expect(CULTIVATION_PATH_MODULES.body.ways.hidden_body_pathway?.stats?.domains).toEqual(['hidden_body'])
+    expect(CULTIVATION_PATH_MODULES.body.ways.body_pathway?.stats?.domains).toEqual(['body'])
   })
 
-  it('DOMAIN_SOURCE_WHITELIST declares the the_tu / the_tu_an emitter homes', () => {
-    const theTuFiles = (DOMAIN_SOURCE_WHITELIST.the_tu ?? []).map((e) => e.file)
-    const theTuAnFiles = (DOMAIN_SOURCE_WHITELIST.the_tu_an ?? []).map((e) => e.file)
+  it('DOMAIN_SOURCE_WHITELIST declares the body / hidden_body emitter homes', () => {
+    const bodyFiles = (DOMAIN_SOURCE_WHITELIST.body ?? []).map((e) => e.file)
+    const hiddenBodyFiles = (DOMAIN_SOURCE_WHITELIST.hidden_body ?? []).map((e) => e.file)
 
-    expect(theTuFiles).toContain('data/progression/TheTu*')
-    expect(theTuFiles).toContain('data/skill/TheTu*')
-    expect(theTuFiles).toContain('data/buff/TheTu*')
-    expect(theTuAnFiles).toContain('data/progression/TheTuAn*')
-    expect(theTuAnFiles).toContain('data/skill/TheTu*')
-    expect(theTuAnFiles).toContain('data/buff/TheTu*')
+    expect(bodyFiles).toContain('data/progression/TheTu*')
+    expect(bodyFiles).toContain('data/skill/TheTu*')
+    expect(bodyFiles).toContain('data/buff/TheTu*')
+    expect(hiddenBodyFiles).toContain('data/progression/TheTuAn*')
+    expect(hiddenBodyFiles).toContain('data/skill/TheTu*')
+    expect(hiddenBodyFiles).toContain('data/buff/TheTu*')
   })
 })

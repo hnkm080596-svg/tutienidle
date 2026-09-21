@@ -12,6 +12,7 @@ import { TribulationOutcomeService } from './TribulationOutcomeService'
 import { asBaseStats } from '../stats/StatBlock'
 import { pills } from '../../data/pill/pills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
+import { SKILLS } from '../../data/skill/Skills'
 import { MERIDIANS } from '../../data/realm/Meridians'
 import type { ActiveTribulationState } from './TribulationDirector'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
@@ -89,16 +90,17 @@ describe('TribulationOutcomeService — victory parity', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerPills(pills)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     const player = usePlayerStore()
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12
-    player.bodyRefinementCompletedTiers = 6
+    player.bodyProgression.body_refinement.completedTiers = 6
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
-    player.openedMeridianIds = MERIDIANS.map((m: { id: string }) => m.id)
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
     // ARCH-002 (M7): startTribulation resolves stats internally — patch
@@ -133,7 +135,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
     player.realmId = 'qi_refining'
-    player.openedMeridianIds = MERIDIANS.map((m: { id: string }) => m.id)
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)

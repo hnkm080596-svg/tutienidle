@@ -11,7 +11,7 @@
  * certain drop needs. 'pool' is weighted and drawn N times, which is the only
  * shape in which "this modifier adds a roll" means anything.
  */
-export type DropKind = 'material' | 'equipment' | 'equipment_any' | 'pill' | 'technique'
+export type DropKind = 'material' | 'equipment' | 'equipment_any' | 'pill'
 
 export interface AmountRange {
   min: number
@@ -50,7 +50,7 @@ export interface StageDropTable extends DropTable {
 
   currency: {
     spiritStone: AmountRange
-    techniqueInsight: AmountRange
+    techniqueMastery: AmountRange
   }
 }
 

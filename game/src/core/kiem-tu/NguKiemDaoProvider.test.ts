@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createDefaultPlayer } from '../player/Player'
-import { freshKiemTuState } from './KiemTuState'
+import { freshSwordPathState } from './KiemTuState'
 import {
   CASCADE_CRIT_CHANCE,
   CASCADE_PIERCE_CHANCE,
@@ -25,10 +25,10 @@ import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 
 function makeNguPlayer(realmId = 'golden_core') {
   const player = createDefaultPlayer()
-  player.cultivationPath = 'kiem_tu'
-  player.cultivationWay = 'ngu'
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'hidden_sword_pathway'
   player.realmId = realmId
-  player.kiemTu = freshKiemTuState()
+  player.swordPath = freshSwordPathState()
   return player
 }
 
@@ -39,8 +39,8 @@ function makeTarget(over: Partial<Pick<CombatEntity, 'currentHp' | 'maxHp'>> = {
 describe('NguKiemDaoProvider — resolveBasic', () => {
   it('resolves ngu_kiem_thuat with instances.count = kiemDaoCount and base multiplier', () => {
     const player = makeNguPlayer()
-    player.kiemTu!.kiemDaoCount = 4
-    player.kiemTu!.kiemDaoBase = 2.2
+    player.swordPath!.kiemDaoCount = 4
+    player.swordPath!.kiemDaoBase = 2.2
 
     const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false })
     const def = provider.resolveBasic({} as TurnBattleParticipant)
@@ -54,7 +54,7 @@ describe('NguKiemDaoProvider — resolveBasic', () => {
     const player = makeNguPlayer()
     const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false })
 
-    player.kiemTu!.kiemDaoCount = 3
+    player.swordPath!.kiemDaoCount = 3
 
     expect(provider.resolveBasic({} as TurnBattleParticipant).instances?.count).toBe(3)
   })
@@ -165,10 +165,10 @@ describe('manual + cast hooks', () => {
     } as never
 
     provider.onCastResolved?.(ctx)
-    expect(player.kiemTu!.kiemY).toBe(1)
+    expect(player.swordPath!.kiemY).toBe(1)
 
     provider.onCastResolved?.(ctx)
-    expect(player.kiemTu!.kiemY).toBe(2)
+    expect(player.swordPath!.kiemY).toBe(2)
   })
 
   it('onCastResolved returns no extra impacts (ngu has no combos)', () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { freshKiemTuState } from '../kiem-tu/KiemTuState'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 
@@ -29,7 +29,7 @@ function makeDummyEnemy(id: string) {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: { ...ENEMY_STATS_INPUT },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -40,10 +40,10 @@ function setup(preset: string[] = ['orb_dam', 'orb_dam', 'orb_dam']) {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
   const player = createDefaultPlayer()
-  player.cultivationPath = 'kiem_tu'
-  player.cultivationWay = 'hien'
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'sword_pathway'
   player.realmId = 'golden_core'
-  player.kiemTu = { ...freshKiemTuState(), preset: preset as never }
+  player.swordPath = { ...freshSwordPathState(), preset: preset as never }
 
   gameManager.setActivePlayer(player)
   gameManager.progressionOps.learnSkill('tram')
@@ -62,7 +62,7 @@ function advanceTurns(gameManager: GameManager, combatSource: ManualClockSource,
 }
 
 describe('GameManager — Kiem Pho hien wiring', () => {
-  it('kiem_tu hien participant carries dynamicBasic; other paths do not', () => {
+  it('sword hien participant carries dynamicBasic; other paths do not', () => {
     const { gameManager } = setup()
     const participant = gameManager.getTurnBattle()!.players[0]!
 

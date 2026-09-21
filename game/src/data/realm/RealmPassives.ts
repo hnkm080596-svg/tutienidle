@@ -19,7 +19,7 @@ export interface RealmPassiveDefinition {
 
 // Nhập Đạo (mục XI tài liệu) — Phàm Nhân -> Luyện Khí. Hiệu ứng nền
 // scale THẲNG theo breakthroughGrade (1-6, chốt lúc Lễ Nhập Môn, xem
-// core/realm/BodyRefinementSystem.ts) — KHÔNG tự chứa Realm Pressure
+// core/realm/body/BodyProgressionSystem.ts) - KHONG tu chua Realm Pressure
 // (×2.00/×0.50), Combat System tự đọc breakthroughGrade để tính Pressure
 // riêng (xem core/combat/RealmPressure.ts) — 2 hệ thống tách biệt đúng
 // architecture mục XI.
@@ -28,11 +28,11 @@ const NHAP_DAO_PERCENT_PER_GRADE = 0.03
 function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
   const percent = player.breakthroughGrade * NHAP_DAO_PERCENT_PER_GRADE
 
-  // Task 3 (D17): the MP-pool stats carry domain:'phap_tu' so the
+  // Task 3 (D17): the MP-pool stats carry domain:'spell' so the
   // Task-7 domain gate keeps accepting these grants once maxMp /
-  // manaRegenPerTurn are gated to the phap_tu domain.
+  // manaRegenPerTurn are gated to the spell domain.
   const universalStats: StatModifier['stat'][] = ['maxHp', 'hpRegenPerTurn']
-  const phapTuStats: StatModifier['stat'][] = ['maxMp', 'manaRegenPerTurn']
+  const spellPathStats: StatModifier['stat'][] = ['maxMp', 'manaRegenPerTurn']
 
   return [
     ...universalStats.map((stat) => ({
@@ -42,13 +42,13 @@ function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
       stat,
       percent,
     })),
-    ...phapTuStats.map((stat) => ({
+    ...spellPathStats.map((stat) => ({
       id: `realm-passive:nhap_dao:${stat}`,
       sourceId: 'nhap_dao',
       sourceType: 'realm' as const,
       stat,
       percent,
-      domain: 'phap_tu' as const,
+      domain: 'spell' as const,
     })),
   ]
 }

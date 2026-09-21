@@ -54,7 +54,7 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
       // minh field authored này không còn quyết định vị trí hiển thị.
       lane: 'air',
       statsInput: MINIMAL_STATS_INPUT,
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
 
     // Battlefield region redesign (spec §6, 2026-09-05) — Boss không còn
@@ -84,7 +84,7 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
       realmId: 'qi_refining',
       lane: 'ground',
       statsInput: MINIMAL_STATS_INPUT,
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
 
     const seenLanes = new Set<number>()

@@ -30,6 +30,7 @@ import type { Quest } from '../quest/Quest'
 import { buildGameSave, restoreGameSession, type GameSave } from '../../services/save/SaveSystem'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 import { usePlayerStore } from '../../stores/player'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 
 function makeManager(): GameManager {
@@ -43,7 +44,7 @@ function makeManager(): GameManager {
   // save payloads below are not orphans - restore drops entries whose id
   // has no registered template (dev-stage rule, Mission G).
   manager.catalogOps.registerSkillTemplates([...SKILLS, SAVED_SKILL])
-  manager.catalogOps.registerTechniqueTemplates([...TECHNIQUES, SAVED_TECHNIQUE])
+  manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   return manager
 }
 
@@ -82,8 +83,6 @@ const LIVE_SKILL: Skill = {
   cooldown: 1,
   target: 'enemy',
   effects: [],
-  unlocked: true,
-  equipped: false,
 }
 
 const SAVED_SKILL: Skill = {
@@ -96,24 +95,42 @@ const SAVED_SKILL: Skill = {
   cooldown: 2,
   target: 'enemy',
   effects: [],
-  unlocked: true,
-  equipped: false,
 }
 
 const LIVE_TECHNIQUE: Technique = {
   id: 'live_only_technique',
   name: 'Live-only technique',
   description: 'seeded live, absent from the payload',
-  unlocked: true,
-  equipped: false,
+  grade: 1,
+  rank: 0,
+  mastery: 0,
+  quality: 'hoang',
+}
+
+// P7-M3 (v70) - the holder contract is way-owned: a save carrying a
+// technique is only valid when the PLAYER slice commits a (path, way)
+// pair and the entry id equals way.techniqueId. The canonical sword art
+// doubles as the "saved" fixture; authored fields re-derive from the
+// template on restore, so the payload markers live on the progression
+// fields (rank/mastery/quality).
+function swordCommittedPlayer(): PlayerData {
+  const player = createDefaultPlayer()
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'sword_pathway'
+  player.swordPath = freshSwordPathState()
+  player.realmId = 'qi_refining'
+  player.realmLevel = 1
+  return player
 }
 
 const SAVED_TECHNIQUE: Technique = {
-  id: 'saved_technique',
+  id: 'sword_control_art',
   name: 'Saved technique',
   description: 'payload entry',
-  unlocked: true,
-  equipped: false,
+  grade: 1,
+  rank: 2,
+  mastery: 100,
+  quality: 'huyen',
 }
 
 const TEST_QUEST: Quest = {
@@ -178,17 +195,47 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
     expect(manager.skillManager.has('live_only_skill')).toBe(false)
   })
 
-  it('techniques: an empty slice clears the live set; a saved set replaces it', () => {
+  it('techniques: an empty slice clears the live set (way-less player); a saved set replaces it', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-    manager.techniqueManager.add(structuredClone(LIVE_TECHNIQUE))
+    manager.techniqueManager.setActive(structuredClone(LIVE_TECHNIQUE))
 
     manager.saveOps.restoreFromSave(baseSave(player, { techniques: [] }))
     expect(manager.techniqueManager.getAll()).toEqual([])
 
-    manager.saveOps.restoreFromSave(baseSave(player, { techniques: [structuredClone(SAVED_TECHNIQUE)] }))
-    expect(manager.techniqueManager.getAll().map((technique) => technique.id)).toEqual(['saved_technique'])
+    manager.saveOps.restoreFromSave(
+      baseSave(swordCommittedPlayer(), { techniques: [structuredClone(SAVED_TECHNIQUE)] }),
+    )
+    expect(manager.techniqueManager.getAll().map((technique) => technique.id)).toEqual(['sword_control_art'])
     expect(manager.techniqueManager.has('live_only_technique')).toBe(false)
+    expect(manager.techniqueManager.getActive()?.mastery).toBe(100)
+  })
+
+  // P7-M6 - the restore republishes player.techniqueProgress from the
+  // CANONICAL holder (save.techniques[0]) through the sink; whatever the
+  // bound player's mirror claimed before restore is overwritten.
+  it('techniqueProgress mirror republishes from the canonical holder on restore', () => {
+    const manager = makeManager()
+    const player = swordCommittedPlayer()
+    player.techniqueProgress = { rank: 99, grade: 9 }
+    manager.setActivePlayer(player)
+
+    manager.saveOps.restoreFromSave(
+      baseSave(player, { techniques: [structuredClone(SAVED_TECHNIQUE)] }),
+    )
+
+    expect(player.techniqueProgress).toEqual({ rank: 2, grade: 1 })
+  })
+
+  it('an empty techniques slice clears the bound player mirror to the default', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    player.techniqueProgress = { rank: 3, grade: 1 }
+    manager.setActivePlayer(player)
+
+    manager.saveOps.restoreFromSave(baseSave(player, { techniques: [] }))
+
+    expect(player.techniqueProgress).toBeUndefined()
   })
 
   it('materials + pills: empty slices clear the bags; saved stacks replace them', () => {
@@ -369,10 +416,10 @@ describe('M1 (ARCH-001) — the input save is a value', () => {
     const legacySkill = structuredClone(SKILLS.find((skill) => skill.id === 'tram') ?? SKILLS[0]!)
     delete legacySkill.execution
     legacySkill.name = 'stale saved name'
-    const legacyTechnique = structuredClone(TECHNIQUES[0]!)
+    const legacyTechnique = structuredClone(TECHNIQUES.find((technique) => technique.id === 'sword_control_art')!)
     legacyTechnique.name = 'stale saved technique name'
 
-    const save = baseSave(player, {
+    const save = baseSave(swordCommittedPlayer(), {
       skills: [legacySkill],
       techniques: [legacyTechnique],
       materials: [{ materialId: materials[0]!.id, amount: 3 }],
@@ -393,7 +440,7 @@ describe('M1 (ARCH-001) — the input save is a value', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
 
-    const save = baseSave(player, {
+    const save = baseSave(swordCommittedPlayer(), {
       skills: [structuredClone(SAVED_SKILL)],
       techniques: [structuredClone(SAVED_TECHNIQUE)],
       equipment: [savedItem('saved-item')],
@@ -407,7 +454,7 @@ describe('M1 (ARCH-001) — the input save is a value', () => {
     manager.saveOps.restoreFromSave(save)
 
     save.skills[0]!.level = 99
-    save.techniques[0]!.name = 'payload-side mutation'
+    save.techniques[0]!.mastery = 9
     save.equipment[0]!.forgeUsesRemaining = 0
     save.equipment[0]!.affixes[0]!.value = 999
     save.buildings[0]!.level = 9
@@ -417,7 +464,7 @@ describe('M1 (ARCH-001) — the input save is a value', () => {
     save.quests!.active[0]!.progress = 999
 
     expect(manager.skillManager.get('saved_skill')!.level).toBe(3)
-    expect(manager.techniqueManager.get('saved_technique')!.name).toBe('Saved technique')
+    expect(manager.techniqueManager.get('sword_control_art')!.mastery).toBe(100)
     expect(manager.equipmentBag.get('saved-item')!.forgeUsesRemaining).toBe(20)
     expect(manager.equipmentBag.get('saved-item')!.affixes[0]!.value).toBe(3)
     expect(manager.buildingManager.get('b1')!.level).toBe(1)
@@ -429,7 +476,11 @@ describe('M1 (ARCH-001) — the input save is a value', () => {
 })
 
 describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
-  function populatedSave(manager: GameManager, player: PlayerData): GameSave {
+  function populatedSave(manager: GameManager, _player: PlayerData): GameSave {
+    // P7-M3 - the technique slice forces the player slice to carry the
+    // matching (path, way) commit; the caller's player arg is replaced
+    // by the committed shape so the save passes the v70 holder contract.
+    const player = swordCommittedPlayer()
     return baseSave(player, {
       skills: [structuredClone(SAVED_SKILL)],
       techniques: [structuredClone(SAVED_TECHNIQUE)],
@@ -637,55 +688,33 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
 })
 
 // Stat-key restore contract (post-Mission-G) — saves written before the
-// stat-key rename keep legacy stat keys inside techniques[]/skills[]
-// entries. tierEffects/combatModifiers/passiveModifiers/specializations
-// are authored data: restore re-derives them from the registered template
-// (same contract as name/description), so legacy keys can't stay inert.
-// An entry with NO registered template is dropped outright — dev-stage
-// rule: never translate, never keep orphan objects.
+// stat-key rename keep legacy stat keys inside skills[] entries.
+// gradeEffects/combatModifiers/passiveModifiers/specializations are
+// authored data: restore re-derives them from the registered template
+// (same contract as name/description), so stale keys can't stay inert.
+// P7-M3 — a technique entry with NO registered template is no longer a
+// silent drop: the v70 holder contract rejects the whole save in the
+// preflight. Skills keep the drop rule.
 describe('stat-key handling on techniques[]/skills[] restore', () => {
-  it('legacy technique tierEffects.attackFlat re-derives mightFlat from the template', () => {
+  it('stale technique gradeEffects re-derive from the registered template', () => {
     const manager = makeManager()
-    const player = createDefaultPlayer()
+    const player = swordCommittedPlayer()
 
-    // Pre-rename save shape: tu_linh_quyet persisted attackFlat instead
-    // of mightFlat across every tier.
-    const legacy = structuredClone(
-      TECHNIQUES.find((technique) => technique.id === 'tu_linh_quyet')!,
-    )
-    legacy.unlocked = true
-    legacy.equipped = true
-    for (const effect of Object.values(legacy.tierEffects ?? {})) {
-      const record = effect as { attackFlat?: number; mightFlat?: number }
-      record.attackFlat = record.mightFlat
-      delete record.mightFlat
-    }
-    expect(
-      (legacy.tierEffects!.so_nhap as { attackFlat?: number }).attackFlat,
-    ).toBe(15)
+    // Save authored with stale/unknown gradeEffects keys — restore must
+    // re-derive the authored table from the template, not trust the
+    // persisted copy.
+    const stale = structuredClone(SAVED_TECHNIQUE)
+    stale.gradeEffects = { 1: { so_nhap: { mightFlat: 999 } } }
 
-    manager.saveOps.restoreFromSave(baseSave(player, { techniques: [legacy] }))
+    manager.saveOps.restoreFromSave(baseSave(player, { techniques: [stale] }))
 
-    const restored = manager.techniqueManager.get('tu_linh_quyet')!
-    expect(restored.tierEffects!.so_nhap).toEqual({
-      mightFlat: 15,
-      defenseFlat: 15,
-      hpRegenFlat: 1,
-      mpRegenFlat: 0.5,
-    })
-    expect(restored.tierEffects!.vien_man).toEqual({
-      mightFlat: 70,
-      defenseFlat: 70,
-      hpRegenFlat: 3,
-      mpRegenFlat: 2,
-    })
-
-    // End-to-end: the might bonus reaches the aggregated modifiers again
-    // (insight 0 -> so_nhap tier -> +15 might from the template).
-    const modifiers = manager.effectOps.getAggregatedModifiers(player)
-    expect(modifiers).toContainEqual(
-      expect.objectContaining({ stat: 'might', flat: 15 }),
-    )
+    const restored = manager.techniqueManager.get('sword_control_art')!
+    const template = TECHNIQUES.find((technique) => technique.id === 'sword_control_art')!
+    expect(restored.gradeEffects).toEqual(template.gradeEffects)
+    // Persisted progression state is NOT template-owned.
+    expect(restored.rank).toBe(2)
+    expect(restored.mastery).toBe(100)
+    expect(restored.quality).toBe('huyen')
   })
 
   it('legacy skill passiveModifiers stat:"attack" re-derives stat:"might" from the template', () => {
@@ -696,8 +725,6 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
       SKILLS.find((skill) => skill.id === 'passive_linh_khi_cam_ung')!,
     )
     ;(legacy.passiveModifiers![0] as { stat: string }).stat = 'attack'
-    legacy.unlocked = true
-    legacy.equipped = true
 
     manager.saveOps.restoreFromSave(baseSave(player, { skills: [legacy] }))
 
@@ -721,7 +748,6 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
       SKILLS.find((skill) => skill.id === 'da_phap_lien_tuyen')!,
     )
     stale.effects = []
-    stale.unlocked = true
 
     manager.saveOps.restoreFromSave(baseSave(player, { skills: [stale] }))
 
@@ -732,30 +758,9 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     expect(restored.effects.length).toBeGreaterThan(0)
   })
 
-  it('entries with no registered template are dropped, not kept with remapped keys', () => {
+  it('skill entries with no registered template are dropped, not kept with remapped keys', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-
-    const orphanTechnique: Technique = {
-      id: 'removed_technique',
-      name: 'Removed technique',
-      description: 'template gone from the catalog',
-      unlocked: true,
-      equipped: false,
-      tierEffects: { so_nhap: { mightFlat: undefined, defenseFlat: 3 } },
-      combatModifiers: [
-        {
-          id: 'removed_technique:ward',
-          sourceId: 'removed_technique',
-          sourceType: 'technique',
-          stat: 'wardRegenPerSecond' as never,
-          flat: 4,
-        },
-      ],
-    }
-    // Simulate the legacy field name on the saved object.
-    ;(orphanTechnique.tierEffects!.so_nhap as { attackFlat?: number }).attackFlat = 9
-    delete (orphanTechnique.tierEffects!.so_nhap as { mightFlat?: number }).mightFlat
 
     const orphanSkill = structuredClone(SAVED_SKILL)
     ;(orphanSkill as { id: string }).id = 'removed_skill'
@@ -774,13 +779,234 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
 
     manager.saveOps.restoreFromSave(
       baseSave(player, {
-        techniques: [orphanTechnique],
         skills: [orphanSkill, validSkill],
       }),
     )
 
-    expect(manager.techniqueManager.get('removed_technique')).toBeUndefined()
     expect(manager.skillManager.get('removed_skill')).toBeUndefined()
     expect(manager.skillManager.get(validSkill.id)).toBeDefined()
+  })
+})
+
+// P7-M3 (v70) — technique holder contract preflight: 0-or-1 entries,
+// the single entry must equal the committed way's techniqueId, a
+// way-less player must carry none, and rank/mastery/grade/quality must
+// be valid (rank cap 10 => mastery 0). Every rejection happens BEFORE
+// any owner mutation.
+describe('v70 technique holder preflight', () => {
+  it('rejects a way-less (mortal) save carrying any technique', () => {
+    const manager = makeManager()
+    const save = baseSave(createDefaultPlayer(), {
+      techniques: [structuredClone(SAVED_TECHNIQUE)],
+    })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/way-less/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects a way player save carrying zero techniques', () => {
+    const manager = makeManager()
+    const save = baseSave(swordCommittedPlayer(), { techniques: [] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/contract/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects a multi-entry techniques slice', () => {
+    const manager = makeManager()
+    const save = baseSave(swordCommittedPlayer(), {
+      techniques: [structuredClone(SAVED_TECHNIQUE), structuredClone(SAVED_TECHNIQUE)],
+    })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/contract/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects a technique id that is not the committed way technique', () => {
+    const manager = makeManager()
+    const wrong = structuredClone(SAVED_TECHNIQUE)
+    wrong.id = 'five_elements_art' // spell way's technique, not sword's
+
+    const save = baseSave(swordCommittedPlayer(), { techniques: [wrong] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/contract/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects an unknown technique id even when it matches the way contract', () => {
+    // Reach the template branch: the id equals way.techniqueId, but the
+    // manager's registry lacks the template.
+    const narrow = new GameManager()
+    narrow.catalogOps.registerSkillTemplates(SKILLS)
+    narrow.catalogOps.registerTechniqueTemplates(
+      TECHNIQUES.filter((technique) => technique.id !== 'sword_control_art'),
+    )
+
+    const save = baseSave(swordCommittedPlayer(), {
+      techniques: [structuredClone(SAVED_TECHNIQUE)],
+    })
+
+    expect(() => narrow.saveOps.restoreFromSave(save)).toThrow(/Unknown technique/i)
+  })
+
+  it.each([
+    ['grade 0', { grade: 0 }],
+    ['grade above the realm ceiling', { grade: 99 }],
+    ['negative rank', { rank: -1 }],
+    ['rank above cap', { rank: 11 }],
+    ['negative mastery', { mastery: -1 }],
+    ['mastery >= rank cost', { mastery: 300 }],
+    ['invalid quality', { quality: 'mythic' }],
+  ])('rejects invalid progression state: %s', (_label, patch) => {
+    const manager = makeManager()
+    const bad = { ...structuredClone(SAVED_TECHNIQUE), ...patch } as Technique
+    const save = baseSave(swordCommittedPlayer(), { techniques: [bad] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects rank 10 with nonzero mastery', () => {
+    const manager = makeManager()
+    const bad = { ...structuredClone(SAVED_TECHNIQUE), rank: 10, mastery: 5 } as Technique
+    const save = baseSave(swordCommittedPlayer(), { techniques: [bad] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+})
+
+// P7-M4 (v71) - mortalBasicSkillId preflight: absent = tram default;
+// present = a precursor member AND a still-mortal player (the ritual
+// clears the pick inside the commit block, so post-path presence is
+// corrupt). Every rejection happens BEFORE any owner mutation - the
+// same hard-fail seam as the technique-holder contract above.
+describe('v71 mortalBasicSkillId preflight', () => {
+  it.each(['tram', 'linh_bao', 'huy_quyen'])(
+    'restores a mortal save carrying a valid pick (%s)',
+    (skillId) => {
+      const manager = makeManager()
+      const player = createDefaultPlayer()
+      player.mortalBasicSkillId = skillId
+
+      expect(() => manager.saveOps.restoreFromSave(baseSave(player))).not.toThrow()
+    },
+  )
+
+  it('restores a mortal save carrying no pick (absent = tram default)', () => {
+    const manager = makeManager()
+
+    expect(() => manager.saveOps.restoreFromSave(baseSave(createDefaultPlayer()))).not.toThrow()
+  })
+
+  it.each(['hoa_cau_thuat', 'khong_ton_tai', '', 7])(
+    'rejects a non-precursor pick (%s) before any owner mutation',
+    (value) => {
+      const manager = makeManager()
+      const player = createDefaultPlayer()
+      player.mortalBasicSkillId = value as string
+      const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL)] })
+
+      expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid mortalBasicSkillId/i)
+      // Zero-mutation: preflight threw before the skills slice replaced
+      // the live set (an applied restore would carry SAVED_SKILL).
+      expect(manager.skillManager.getAll()).toEqual([])
+    },
+  )
+
+  it('rejects a post-path pick before any owner mutation', () => {
+    const manager = makeManager()
+    const player = swordCommittedPlayer()
+    player.mortalBasicSkillId = 'huy_quyen'
+    const save = baseSave(player, {
+      techniques: [structuredClone(SAVED_TECHNIQUE)],
+      skills: [structuredClone(SAVED_SKILL)],
+    })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/mortalBasicSkillId persisted post-path/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+    expect(manager.skillManager.getAll()).toEqual([])
+  })
+})
+
+// P7-M5 (v72) - bodyProgression integrity is the last preflight check,
+// delegated to the BodyProgression authority: a corrupt chapter slice is
+// corrupt progression state and fails closed BEFORE any owner mutation.
+describe('v72 bodyProgression preflight + rehydration', () => {
+  it.each([
+    ['non-integer completedTiers', (p: PlayerData) => { p.bodyProgression.body_refinement.completedTiers = 1.5 }],
+    ['completedTiers out of range', (p: PlayerData) => { p.bodyProgression.body_refinement.completedTiers = 7 }],
+    ['progress at/above the active-tier cap', (p: PlayerData) => {
+      p.bodyProgression.body_refinement.completedTiers = 0
+      p.bodyProgression.body_refinement.currentTierProgress = 51
+    }],
+    ['residue progress at 6/6', (p: PlayerData) => {
+      p.bodyProgression.body_refinement.completedTiers = 6
+      p.bodyProgression.body_refinement.currentTierProgress = 1
+    }],
+    ['unknown meridian id', (p: PlayerData) => { p.bodyProgression.meridian.openedIds = ['huyen_mach'] }],
+    ['non-prefix meridian order', (p: PlayerData) => { p.bodyProgression.meridian.openedIds = ['doi_mach'] }],
+    ['non-array meridian openedIds', (p: PlayerData) => { p.bodyProgression.meridian.openedIds = 42 as never }],
+    ['missing bodyProgression record', (p: PlayerData) => { p.bodyProgression = undefined as never }],
+    ['missing meridian slice', (p: PlayerData) => { p.bodyProgression = { body_refinement: { completedTiers: 0, currentTierProgress: 0 } } as never }],
+  ])('rejects %s before any owner mutation', (_label, corrupt) => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    corrupt(player)
+    const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL)] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/BodyProgression integrity/i)
+    // Zero-mutation: preflight threw before the skills slice replaced
+    // the live set (an applied restore would carry SAVED_SKILL).
+    expect(manager.skillManager.getAll()).toEqual([])
+  })
+
+  it('accepts canonical default + mid-progress + complete states', () => {
+    const manager = makeManager()
+
+    expect(() => manager.saveOps.restoreFromSave(baseSave(createDefaultPlayer()))).not.toThrow()
+
+    const mid = createDefaultPlayer()
+    mid.bodyProgression.body_refinement.completedTiers = 3
+    mid.bodyProgression.body_refinement.currentTierProgress = 100
+    mid.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
+    expect(() => manager.saveOps.restoreFromSave(baseSave(mid))).not.toThrow()
+  })
+
+  it('rehydrates body modifiers from canonical state - persisted stale slices are corrected', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+
+    player.bodyProgression.body_refinement.completedTiers = 1
+    player.bodyProgression.meridian.openedIds = ['nham_mach']
+    // Stale persisted slices: a completed-tier id the state no longer
+    // backs + a fabricated meridian entry. Chapter state wins.
+    player.modifiers = [
+      {
+        id: 'luyen-the:luyen_mach:maxHp',
+        sourceId: 'luyen_mach',
+        sourceType: 'realm',
+        stat: 'maxHp',
+        percent: 0.08,
+      },
+      {
+        id: 'bat-mach:doc_mach:strength',
+        sourceId: 'doc_mach',
+        sourceType: 'realm',
+        stat: 'strength',
+        percent: 0.05,
+      },
+    ]
+
+    // Simulate the store-level restore already applied (the active
+    // player IS the payload player - saveOps rehydrates on it).
+    manager.setActivePlayer(player)
+    manager.saveOps.restoreFromSave(baseSave(player))
+
+    const ids = player.modifiers.map(m => m.id)
+    expect(ids).not.toContain('luyen-the:luyen_mach:maxHp')
+    expect(ids).not.toContain('bat-mach:doc_mach:strength')
+    expect(ids.some(id => id.startsWith('luyen-the:luyen_bi:'))).toBe(true)
+    expect(ids).toContain('bat-mach:nham_mach:maxHp')
   })
 })

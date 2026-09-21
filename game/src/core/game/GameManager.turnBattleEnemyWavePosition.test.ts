@@ -42,7 +42,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
 
     const stage: Stage = {
@@ -60,11 +60,11 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
     gameManager.catalogOps.registerEnemyTemplates([mob])
     gameManager.catalogOps.registerStages([stage])
 
-    expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
-    expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
-
     const player = createDefaultPlayer()
     player.baseStats = asBaseStats({ ...player.baseStats, might: 999  })
+
+    expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
 
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
 

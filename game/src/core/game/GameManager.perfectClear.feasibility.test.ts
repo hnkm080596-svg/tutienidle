@@ -33,7 +33,7 @@ describe('perfect clear feasibility on a real floor shape', () => {
       criticalDamage: 1.5,
       armor: 0,
     },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 
   // Multi-hit variant: 3000 HP dummy vs player might 1000 -> ~3 landed
@@ -53,7 +53,7 @@ describe('perfect clear feasibility on a real floor shape', () => {
       criticalDamage: 1.5,
       armor: 0,
     },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 
   // Floors built by the production builder (9 + floor enemies, waves

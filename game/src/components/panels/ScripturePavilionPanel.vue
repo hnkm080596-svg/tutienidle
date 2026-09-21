@@ -1,39 +1,14 @@
 <script setup lang="ts">
-// Tàng Kinh Các (Home Hub Phase 7) — 2 tab con: Công Pháp (catalog
-// đã/chưa học) và Lore (manh mối đã nhặt được, xem mục V/XV.6 tài
-// liệu beta — "Không leak Đại Đạo").
-import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import TechniqueCodex from './scripture/TechniqueCodex.vue'
+// Tang Kinh Cac - P7-M7 lore-only: the technique catalog tab retired
+// with TechniqueCodex (the canonical technique lives on the
+// SkillPathPanel band). Only the lore collection remains.
 import LoreCodex from './scripture/LoreCodex.vue'
-import TabBar from '@/components/common/TabBar.vue'
-import { useUiStore } from '@/stores/ui'
-
-const ui = useUiStore()
-
-const { t } = useI18n()
-
-const tabs = computed(() => [
-  { id: 'technique' as const, label: t('panels.scripture.tabs.technique') },
-  { id: 'lore' as const, label: t('panels.scripture.tabs.lore') },
-])
 </script>
 
 <template>
   <div class="scripture-pavilion">
-    <div class="scripture-pavilion__nav">
-      <TabBar
-        :tabs="tabs"
-        :model-value="ui.scripturePavilionTab"
-        layout="row"
-        @update:model-value="ui.setScripturePavilionTab($event as 'technique' | 'lore')"
-      />
-    </div>
-
     <div class="scripture-pavilion__body">
-      <TechniqueCodex v-if="ui.scripturePavilionTab === 'technique'" />
-
-      <LoreCodex v-else />
+      <LoreCodex />
     </div>
   </div>
 </template>
@@ -45,11 +20,6 @@ const tabs = computed(() => [
   height: 100%;
   min-height: 0;
   font-family: var(--font-body);
-}
-
-.scripture-pavilion__nav {
-  flex: 0 0 auto;
-  padding: 6px 8px 0;
 }
 
 .scripture-pavilion__body {

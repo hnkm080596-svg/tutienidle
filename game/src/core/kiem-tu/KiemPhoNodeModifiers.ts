@@ -4,7 +4,7 @@ import type { KiemPhoCombo, KiemPhoComboModifier } from './KiemPhoSystem'
 import { nodeWayApplies } from '../progression/NodeSystem'
 
 // Kiem Tu Reimagined Task 11 (spec §4.2) — converts purchased nodes
-// carrying `effect.kiemTuComboModifier` into the runtime modifier hooks
+// carrying `effect.swordPathComboModifier` into the runtime modifier hooks
 // KiemPhoProvider applies at combo-fire time. Data → behavior mapping
 // lives HERE so node defs stay declarative and the provider never
 // learns node ids.
@@ -25,7 +25,7 @@ export function collectKiemPhoComboModifiers(
   const modifiers: KiemPhoComboModifier[] = []
 
   for (const node of nodes) {
-    const data = node.effect.kiemTuComboModifier
+    const data = node.effect.swordPathComboModifier
 
     if (!data || (player.nodeLevels?.[node.id] ?? 0) <= 0 || !nodeWayApplies(player, node)) {
       continue

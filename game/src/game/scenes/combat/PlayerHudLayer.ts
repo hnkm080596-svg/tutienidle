@@ -141,7 +141,7 @@ export class PlayerHudLayer {
    * MP ngay dưới HP (cách HUD_GAP), Kiếm dưới MP. bottom inset = 0 từ
    * 6A-T3 nên không cần chừa chỗ bar DOM nào. Thế (Pháp Tu) shares the
    * Kiếm slot — the two readers are mutually exclusive by path
-   * (kiem_tu vs phap_tu), so a second slot would just be a gap.
+   * (sword vs spell), so a second slot would just be a gap.
    */
   layout(width: number, height: number): void {
     this.viewport = { width, height }

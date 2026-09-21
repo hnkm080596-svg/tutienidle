@@ -60,14 +60,14 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
   })
 
   describe('buff mới chuỗi Thuần (spec §7)', () => {
-    it('thanh_tuyen — buff 6 holder-turns refresh, manaRegenPerTurn +8 flat + +10% (phap_tu domain)', () => {
+    it('thanh_tuyen — buff 6 holder-turns refresh, manaRegenPerTurn +8 flat + +10% (spell domain)', () => {
       const b = byId('thanh_tuyen')
 
       expect(b.polarity).toBe('buff')
       expect(b.lifetime).toMatchObject({ clock: 'holder_turns', duration: 6 })
       expect(b.stacking).toMatchObject(REFRESH)
-      expect(b.statModifiers).toContainEqual({ stat: 'manaRegenPerTurn', flat: 8, domain: 'phap_tu' })
-      expect(b.statModifiers).toContainEqual({ stat: 'manaRegenPerTurn', percent: 0.1, domain: 'phap_tu' })
+      expect(b.statModifiers).toContainEqual({ stat: 'manaRegenPerTurn', flat: 8, domain: 'spell' })
+      expect(b.statModifiers).toContainEqual({ stat: 'manaRegenPerTurn', percent: 0.1, domain: 'spell' })
     })
 
     it('bang_giap — buff 6 holder-turns refresh, wardMax +50 + wardRegenPerTurn +5', () => {
@@ -117,9 +117,9 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
 
     // Engine áp/gỡ THEO ID qua theManBuffId() — id phải khớp chính xác `the_man_<element>`.
     it('the_man_<el> ×5 — permanent, effects theo bảng §4', () => {
-      const expected: Record<string, { stat: string; flat?: number; percent?: number; domain?: 'phap_tu' }[]> = {
+      const expected: Record<string, { stat: string; flat?: number; percent?: number; domain?: 'spell' }[]> = {
         the_man_fire: [{ stat: 'ailmentPotencyPercent', percent: 0.15 }],
-        the_man_water: [{ stat: 'manaRegenPerTurn', flat: 6, domain: 'phap_tu' }],
+        the_man_water: [{ stat: 'manaRegenPerTurn', flat: 6, domain: 'spell' }],
         the_man_wood: [{ stat: 'ailmentDurationPercent', percent: 0.2 }],
         the_man_metal: [{ stat: 'criticalRate', percent: 0.08 }],
         the_man_earth: [{ stat: 'defense', percent: 0.1 }],

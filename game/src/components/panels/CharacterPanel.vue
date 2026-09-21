@@ -32,7 +32,7 @@ const { allocateAttributePoint } = useLoadoutActions()
 // M9 - the entry is kiem-way machinery. P1 - the generic authority read
 // resolves the committed pair through the catalog (fail closed on a
 // way-less/corrupt pair), never a raw path id.
-const showQuanKhiEntry = computed(() => isActivePath(player, 'kiem_tu'))
+const showQuanKhiEntry = computed(() => isActivePath(player, 'sword'))
 
 function openQuanKhi() {
   ui.openStandalonePanel('quan_khi')

@@ -15,6 +15,7 @@ import { pills } from '../../data/pill/pills'
 import { GameManager } from '../../core/game/GameManager'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
 import { createDefaultPlayer, type PlayerData } from '../../core/player/Player'
+import { freshSwordPathState } from '../../core/kiem-tu/KiemTuState'
 import { usePlayerStore } from '../../stores/player'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
@@ -27,13 +28,18 @@ const NOW = 1_725_160_000_000
 // Techniques/skills round-trip only when a template is registered -
 // restore drops orphan entries (dev-stage rule, Mission G) - so the
 // fixtures double as their own registered templates.
+// P7-M3 - the seeded technique must satisfy the v70 holder contract:
+// id == committed way's techniqueId and the player carries the way
+// commit (set in populateSource).
 const CONF_TECHNIQUE: Technique = {
-  id: 'conf_tech',
+  id: 'sword_control_art',
   name: 'Conf Tech',
   description: 'd',
-  unlocked: true,
-  equipped: false,
-  tierEffects: {},
+  grade: 1,
+  rank: 0,
+  mastery: 0,
+  quality: 'hoang',
+  gradeEffects: {},
 }
 
 const CONF_SKILL: Skill = {
@@ -46,8 +52,6 @@ const CONF_SKILL: Skill = {
   cooldown: 0,
   target: 'self',
   effects: [],
-  unlocked: true,
-  equipped: false,
 }
 
 function createRegisteredManager(): GameManager {
@@ -122,7 +126,18 @@ function populateSource(player: PlayerData, manager: GameManager): void {
 
   // Techniques/skills registered as templates above - the entries
   // round-trip through restore's template re-derive unchanged.
-  manager.techniqueManager.restore([structuredClone(CONF_TECHNIQUE)])
+  // Way commit required by the v70 technique holder contract - the
+  // sword path-state slice is part of the atomic commit
+  // (applyPathChoice shape; the shape validator requires it).
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'sword_pathway'
+  player.swordPath = freshSwordPathState()
+  player.realmId = 'qi_refining'
+  player.realmLevel = 1
+  // P7-M6 - canonical seam: bind the player first so the progress sink
+  // publishes techniqueProgress, exactly like production restore order.
+  manager.setActivePlayer(player)
+  manager.techniqueSystem.restore([structuredClone(CONF_TECHNIQUE)])
   manager.skillManager.restore([structuredClone(CONF_SKILL)])
 
   // Bags.
@@ -133,8 +148,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     makeInstance({
       instanceId: 'conf-item',
       itemId: 'base_kiem',
-      equipped: false,
-      realmLevel: 2,
+        realmLevel: 2,
       zoneId: 'thanh_van_dong',
       mainStat: {
         id: 'conf-item-main',

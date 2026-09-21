@@ -22,15 +22,16 @@ import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { ElementType } from '../element/ElementType'
 import type { CultivationPathRuntime, CultivationPathRuntimeDeps } from './CultivationPathRuntime'
 import { hasPathCapability, resolveActiveWayStatDomains } from './CultivationPathSystem'
+import { getActiveWayDefinition } from './CultivationPathKit'
 
-import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
+import { isMortalPrecursorSkillId, MORTAL_DEFAULT_BASIC_ID } from '../skill/MortalPrecursors'
 import { aggregateTurnSkillResourceModifiers } from '../progression/NodeSystem'
 import {
   toTurnSkillDefinition,
   collectUnsupportedSkillSemantics,
 } from '../skilldef/LegacySkillAdapter'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
-import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
+import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { PHAP_TU_EMPOWERED_ULTS } from '../../data/skill/PhapTuEmpoweredUlts'
 import {
@@ -38,32 +39,32 @@ import {
   applyAnKitToSpecial,
 } from '../../data/skill/TurnAnKitSkills'
 import {
-  PHAP_TU_AN_BASIC_ID,
-  PHAP_TU_AN_PASSIVE_ID,
-  PHAP_TU_AN_REQUIRED_SKILLS,
-  PHAP_TU_AN_SPECIAL_ID,
+  HIDDEN_SPELL_BASIC_ID,
+  HIDDEN_SPELL_PASSIVE_ID,
+  HIDDEN_SPELL_REQUIRED_SKILLS,
+  HIDDEN_SPELL_SPECIAL_ID,
 } from '../phap-tu/PhapTuPath'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 import {
-  PHAP_TU_EMPOWERMENT_THE_THRESHOLD,
-  PHAP_TU_THE_GAIN_BASIC,
-  PHAP_TU_THE_GAIN_SPECIAL,
+  SPELL_EMPOWERMENT_ESSENCE_THRESHOLD,
+  SPELL_ESSENCE_GAIN_BASIC,
+  SPELL_ESSENCE_GAIN_SPECIAL,
   applyRouteToTurnSkill,
   resolveMaxThe,
   resolveRouteProfile,
 } from '../phap-tu/PhapTuRoutes'
-import { isPhapTuNgoDao, isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
+import { isHiddenSpellPathway, isSpellPathway } from '../phap-tu/PhapTuPath'
 import {
   buildTheTuAnKit,
   buildTheTuKit,
   type TheTuAnKit,
   type TheTuKit,
 } from '../../data/skill/TheTuSkills'
-import { collectTheTuKitModifiers } from '../the-tu/TheTuKitModifiers'
-import { collectTheTuAnMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
-import { TheTuBatTuSurvival } from '../the-tu/TheTuBatTuSurvival'
-import { isTheTuHien, isTheTuUngThe } from '../the-tu/TheTuPath'
-import { isKiemTuHien, isKiemTuNgu } from '../kiem-tu/KiemTuPath'
+import { collectBodyKitModifiers } from '../the-tu/TheTuKitModifiers'
+import { collectHiddenBodyMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
+import { BodyBatTuSurvival } from '../the-tu/TheTuBatTuSurvival'
+import { isBodyPathway, isHiddenBodyPathway } from '../the-tu/TheTuPath'
+import { isSwordPathway, isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
 import {
@@ -80,32 +81,32 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Review round-4 (MEDIUM) — the ngo_dao kit is a fixed three-skill
- * set granted atomically at the ritual (PHAP_TU_AN_REQUIRED_SKILLS is
+ * Review round-4 (MEDIUM) — the hidden_spell_pathway kit is a fixed three-skill
+ * set granted atomically at the ritual (HIDDEN_SPELL_REQUIRED_SKILLS is
  * the single authority). A save/registry missing ANY member is corrupt
  * progression state — fail loudly at battle build instead of silently
  * dropping the special button or the dao multicast. Called from both
  * battle-build resolvers so each enforces the contract independently.
  */
 function assertNgoDaoKitLearned(deps: CultivationPathRuntimeDeps, player: PlayerData) {
-  if (!isPhapTuNgoDao(player)) {
+  if (!isHiddenSpellPathway(player)) {
     return
   }
 
-  const missing = PHAP_TU_AN_REQUIRED_SKILLS.filter(
+  const missing = HIDDEN_SPELL_REQUIRED_SKILLS.filter(
     (skillId) => !deps.skillManager.has(skillId),
   )
 
   if (missing.length > 0) {
     throw new Error(
-      `[GameManager] ngo_dao kit incomplete — missing learned skills: ${missing.join(', ')}`,
+      `[GameManager] hidden_spell_pathway kit incomplete — missing learned skills: ${missing.join(', ')}`,
     )
   }
 }
 
 /**
  * Review fix (HIGH-1) — the An composite pool is the CANONICAL
- * conversion of the five authored element basics (PHAP_TU_KIT_IDS[el][0]
+ * conversion of the five authored element basics (SPELL_KIT_IDS[el][0]
  * templates through getEffectiveSkill + toTurnSkillDefinition), not a
  * static duplicate table. A missing/invalid template throws here —
  * authoring errors must surface loudly at battle build, never silently
@@ -113,7 +114,7 @@ function assertNgoDaoKitLearned(deps: CultivationPathRuntimeDeps, player: Player
  */
 function resolveAnElementBasicPool(deps: CultivationPathRuntimeDeps): TurnSkillDefinition[] {
   return ELEMENT_ORDER.map((element) => {
-    const templateId = PHAP_TU_KIT_IDS[element][0]
+    const templateId = SPELL_KIT_IDS[element][0]
     const template = deps.skillTemplates.get(templateId)
 
     if (!template) {
@@ -125,28 +126,28 @@ function resolveAnElementBasicPool(deps: CultivationPathRuntimeDeps): TurnSkillD
 }
 
 /**
- * Task 8 — attach the authored The-gain fields to a phap_tu kit
+ * Task 8 — attach the authored The-gain fields to a spell kit
  * TurnSkillDefinition at battle build. Base values come from
- * PHAP_TU_THE_GAIN_* (basic +5 / special +15 / ultimate +0); the 'no'
+ * SPELL_ESSENCE_GAIN_* (basic +5 / special +15 / ultimate +0); the 'no'
  * route profile contributes theGainOnCrit; tu_the_<element> nodes add
  * per-level deltas via aggregateTurnSkillResourceModifiers — all of it
- * scoped to this authored skill id. Non-ngu_hanh ways (incl. ngo_dao —
+ * scoped to this authored skill id. Non-spell_pathway ways (incl. hidden_spell_pathway —
  * its kit has no The loop) return the def unchanged.
  */
-function applyPhapTuTheGains(
+function applySpellPathEssenceGains(
   deps: CultivationPathRuntimeDeps,
   def: TurnSkillDefinition,
   player: PlayerData,
   baseGainOnLandedCast: number,
 ): TurnSkillDefinition {
-  if (!isPhapTuNguHanh(player)) {
+  if (!isSpellPathway(player)) {
     return def
   }
 
   const nodeMods = aggregateTurnSkillResourceModifiers(deps.nodeRegistry, player).get(def.id)
   const theGainOnLandedCast = baseGainOnLandedCast + (nodeMods?.theGainOnLandedCast ?? 0)
   const theGainOnCrit =
-    (resolveRouteProfile(player.phapTu).critTheGain ?? 0) + (nodeMods?.theGainOnCrit ?? 0)
+    (resolveRouteProfile(player.spellPath).critTheGain ?? 0) + (nodeMods?.theGainOnCrit ?? 0)
 
   return {
     ...def,
@@ -162,7 +163,7 @@ function applyPhapTuTheGains(
  * profile picks the payload variant ('dot' -> detonate, 'no' -> nuke,
  * none -> nuke default).
  */
-function applyPhapTuEmpowerment(
+function applySpellPathEmpowerment(
   deps: CultivationPathRuntimeDeps,
   def: TurnSkillDefinition,
   player: PlayerData,
@@ -174,13 +175,13 @@ function applyPhapTuEmpowerment(
     return def
   }
 
-  const variant = resolveRouteProfile(player.phapTu).empoweredUlt ?? 'nuke'
+  const variant = resolveRouteProfile(player.spellPath).empoweredUlt ?? 'nuke'
   const empowered = PHAP_TU_EMPOWERED_ULTS[element]?.[variant]
 
   return empowered
     ? {
         ...def,
-        empowerment: { theThreshold: PHAP_TU_EMPOWERMENT_THE_THRESHOLD, empowered },
+        empowerment: { theThreshold: SPELL_EMPOWERMENT_ESSENCE_THRESHOLD, empowered },
       }
     : def
 }
@@ -188,7 +189,7 @@ function applyPhapTuEmpowerment(
 /**
  * The canonical authored-Skill -> TurnSkillDefinition basic pipeline
  * (moved from GameManager.resolvePlayerBasicAttack). `strict` paths
- * (phap_tu ways) fail loudly on a missing required basic or a converter
+ * (spell ways) fail loudly on a missing required basic or a converter
  * rejection — authored-data defects must surface, never silently degrade.
  */
 function resolveAuthoredBasic(
@@ -234,23 +235,23 @@ function resolveAuthoredBasic(
     // Task 11 — the An basic carries its composite pick (uniform
     // element_basic pool) plus `multicast` when the player owns the
     // ngo_dao_hon_don dao passive (granted at the ritual).
-    const resolved = isPhapTuNgoDao(player)
+    const resolved = isHiddenSpellPathway(player)
       ? applyAnKitToBasic(
           converted,
-          deps.skillManager.has(PHAP_TU_AN_PASSIVE_ID),
+          deps.skillManager.has(HIDDEN_SPELL_PASSIVE_ID),
           resolveAnElementBasicPool(deps),
         )
       : converted
 
     return {
-      ...applyPhapTuTheGains(deps, resolved, player, PHAP_TU_THE_GAIN_BASIC),
+      ...applySpellPathEssenceGains(deps, resolved, player, SPELL_ESSENCE_GAIN_BASIC),
       cooldownTurns: 0,
       resourceType: 'none',
       resourceCost: undefined,
     }
   } catch (error) {
     // Review round-2 (LOW): phap paths have no static fallback — the
-    // PHAP_TU_BASICS table was a second authority that drifted from
+    // SPELL_BASICS table was a second authority that drifted from
     // authored skills. A converter rejection is an authored-data
     // defect; fail loudly instead of silently running wrong gameplay.
     if (strict) {
@@ -268,14 +269,14 @@ function resolveAuthoredBasic(
 /**
  * The Tu Reimagined (plan Task 6) — resolve the owned branch root
  * (cuong_chien XOR tran_the, excludesNode mutex) into a participant-
- * local kit clone with collectTheTuKitModifiers baked in. No root ->
+ * local kit clone with collectBodyKitModifiers baked in. No root ->
  * undefined (INV-3 fallback is the caller's job).
  */
-function resolveTheTuKit(
+function resolveBodyKit(
   deps: CultivationPathRuntimeDeps,
   player: PlayerData,
 ): TheTuKit | undefined {
-  const mods = collectTheTuKitModifiers(deps.nodeRegistry, player)
+  const mods = collectBodyKitModifiers(deps.nodeRegistry, player)
 
   if (deps.getNodeLevel('cuong_chien', player) > 0) {
     return buildTheTuKit('cuong_chien', mods)
@@ -294,7 +295,7 @@ function resolveTheTuKit(
  * T9) only decide which mechanic markers get planted on the built
  * basic clone's grantsBuffsAtBuild.
  */
-function resolveTheTuAnKit(
+function resolveHiddenBodyKit(
   deps: CultivationPathRuntimeDeps,
   player: PlayerData,
 ): TheTuAnKit {
@@ -304,7 +305,7 @@ function resolveTheTuAnKit(
 
   // Plan Task 20 — trunk economy + branch riders ride the one locked
   // channel; baked into participant-local marker/payload clones here.
-  const mods = collectTheTuAnMechanicModifiers(deps.nodeRegistry, player)
+  const mods = collectHiddenBodyMechanicModifiers(deps.nodeRegistry, player)
 
   return buildTheTuAnKit(ownedRoots, mods)
 }
@@ -321,20 +322,24 @@ function sharedMembers(deps: CultivationPathRuntimeDeps) {
 }
 
 /**
- * Mortal / pham_nhan — the slot-0 loadout occupant is the player's
- * chosen basic-tier skill (spec 2026-09-15 section 2.3: huy_quyen is
- * cast as a basic while mortal, its casts feeding the ung_the offer
- * gate). Restricted to the cast-leveled basics family — any other
- * slot-0 occupant (e.g. bat_kiem_thuat) keeps the creation-granted tram
- * as the combat basic.
+ * Mortal / pham_nhan — the persisted mortalBasicSkillId pick is the
+ * player's chosen basic-tier skill (spec 2026-09-15 section 2.3:
+ * huy_quyen is cast as a basic while mortal, its casts feeding the
+ * hidden_body_pathway offer gate). Restricted to the precursor family —
+ * an absent/illegal/unlearned pick resolves the tram default.
  */
 function createMortalRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
-      const equipped = deps.skillManager.getEquippedInSlot(0)
+      // P7-M4 — the persisted pick is the mortal basic; the precursor
+      // whitelist + learned membership guard it (a post-path or corrupt
+      // pick resolves the tram default). NO slot read exists anymore.
+      const pick = player.mortalBasicSkillId
       const authoredBasicId =
-        equipped && equipped.id in CAST_LEVELING_THRESHOLDS ? equipped.id : 'tram'
+        pick !== undefined && isMortalPrecursorSkillId(pick) && deps.skillManager.has(pick)
+          ? pick
+          : MORTAL_DEFAULT_BASIC_ID
 
       return (
         resolveAuthoredBasic(deps, player, authoredBasicId, false) ??
@@ -348,7 +353,7 @@ function createMortalRuntime(deps: CultivationPathRuntimeDeps): CultivationPathR
   }
 }
 
-function createKiemTuRuntime(deps: CultivationPathRuntimeDeps, ngu: boolean): CultivationPathRuntime {
+function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolean): CultivationPathRuntime {
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
@@ -359,57 +364,69 @@ function createKiemTuRuntime(deps: CultivationPathRuntimeDeps, ngu: boolean): Cu
       return BASIC_ATTACKS_BY_BUILD[player.cultivationPath!] ?? GENERIC_PHYSICAL_BASIC
     },
     resolveSpecialUltimate: () => undefined,
-    buildDynamicBasic: ngu
+    buildDynamicBasic: hidden
       ? (player, nodes, rng) =>
           buildNguKiemDaoProvider(player, collectKiemDaoCascadeUnlocks(player, nodes), rng)
       : (player, nodes) =>
           buildKiemPhoProvider(player, collectKiemPhoComboModifiers(player, nodes)),
-    emblemSlots: ngu
+    emblemSlots: hidden
       ? () => ({ special: TU_KIEM_Y_EMBLEM, ultimate: KIEM_DAO_CASCADE_EMBLEM })
       : undefined,
+    // P7-M4 — display label for the provider-backed basic (Kiếm Phổ orb
+    // machinery / Ngự Kiếm Đạo cascade), matching kiemBarBridge's wording.
+    describeDynamicBasic: () => ({ name: hidden ? 'Ngự Kiếm Đạo' : 'Kiếm Phổ' }),
   }
 }
 
-function createPhapTuNguHanhRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
+function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
-      const element = deps.getPhapTuElement()
-      const authoredBasicId = element ? PHAP_TU_KIT_IDS[element]?.[0] : undefined
+      const element = deps.getSpellPathElement()
+      const authoredBasicId = element ? SPELL_KIT_IDS[element]?.[0] : undefined
 
       return (
         resolveAuthoredBasic(deps, player, authoredBasicId, true) ??
+        // P7-M4 - way-authored starter fallback: linh_bao fights as the
+        // basic until the element kit supersedes (authored-read — the
+        // starter comes off the committed way definition, no literal).
+        resolveAuthoredBasic(
+          deps,
+          player,
+          getActiveWayDefinition(player)?.starterBasicSkillId,
+          false,
+        ) ??
         (player.cultivationPath ? BASIC_ATTACKS_BY_BUILD[player.cultivationPath] : undefined) ??
         GENERIC_PHYSICAL_BASIC
       )
     },
     resolveSpecialUltimate(player) {
-      const element = deps.getPhapTuElement()
+      const element = deps.getSpellPathElement()
 
       if (!element) {
         return {}
       }
 
-      const [, specialId, ultimateId] = PHAP_TU_KIT_IDS[element]
+      const [, specialId, ultimateId] = SPELL_KIT_IDS[element]
       const specialSkill = deps.skillManager.get(specialId)
       const ultimateSkill = deps.skillManager.get(ultimateId)
 
       return {
         special: specialSkill
-          ? applyPhapTuTheGains(
+          ? applySpellPathEssenceGains(
               deps,
               applyRouteToTurnSkill(
                 toTurnSkillDefinition(specialSkill, deps.skillSystem.getEffectiveSkill(specialSkill)),
                 deps.routeProfileProvider(specialSkill.id),
               ),
               player,
-              PHAP_TU_THE_GAIN_SPECIAL,
+              SPELL_ESSENCE_GAIN_SPECIAL,
             )
           : undefined,
         ultimate: ultimateSkill
-          ? applyPhapTuEmpowerment(
+          ? applySpellPathEmpowerment(
               deps,
-              applyPhapTuTheGains(
+              applySpellPathEssenceGains(
                 deps,
                 applyRouteToTurnSkill(
                   toTurnSkillDefinition(
@@ -430,13 +447,13 @@ function createPhapTuNguHanhRuntime(deps: CultivationPathRuntimeDeps): Cultivati
   }
 }
 
-function createPhapTuNgoDaoRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
+function createHiddenSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
       assertNgoDaoKitLearned(deps, player)
       return (
-        resolveAuthoredBasic(deps, player, PHAP_TU_AN_BASIC_ID, true) ?? GENERIC_PHYSICAL_BASIC
+        resolveAuthoredBasic(deps, player, HIDDEN_SPELL_BASIC_ID, true) ?? GENERIC_PHYSICAL_BASIC
       )
     },
     resolveSpecialUltimate(player) {
@@ -445,7 +462,7 @@ function createPhapTuNgoDaoRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       // (ngo_dao_hon_don), no ultimate TurnSkillDefinition.
       assertNgoDaoKitLearned(deps, player)
 
-      const specialSkill = deps.skillManager.get(PHAP_TU_AN_SPECIAL_ID)
+      const specialSkill = deps.skillManager.get(HIDDEN_SPELL_SPECIAL_ID)
 
       return {
         special: specialSkill
@@ -459,28 +476,38 @@ function createPhapTuNgoDaoRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
     grantsElementalReactionAura(player) {
       // Canonical-seals S3 (plan sec.9.4) -- the aura gate lives HERE,
       // inside the path-authority dispatch site. P1 - the check itself is
-      // now the conditional capability 'phap_tu.reaction_aura' declared on
-      // the ngo_dao way (predicate: ngo_dao_hon_don learned; skill
+      // now the conditional capability 'spell.reaction_aura' declared on
+      // the hidden_spell_pathway way (predicate: ngo_dao_hon_don learned; skill
       // membership arrives via deps.hasSkill - SkillManager is the owner).
       // A corrupt save missing the passive gets no aura and the kit assert
       // above still fails loudly.
-      return hasPathCapability(player, 'phap_tu.reaction_aura', {
+      return hasPathCapability(player, 'spell.reaction_aura', {
         hasSkill: (skillId) => deps.skillManager.has(skillId),
       })
     },
   }
 }
 
-function createTheTuHienRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
+function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
-      // The Tu Reimagined (spec section 5, INV-3) — root-owned kit, else
-      // the generic melee fallback only.
-      return resolveTheTuKit(deps, player)?.basic ?? GENERIC_PHYSICAL_BASIC
+      // The Tu Reimagined (spec section 5, INV-3) — root-owned kit;
+      // P7-M4 way-authored starter fallback (huy_quyen) sits between the
+      // kit and the generic melee fallback.
+      return (
+        resolveBodyKit(deps, player)?.basic ??
+        resolveAuthoredBasic(
+          deps,
+          player,
+          getActiveWayDefinition(player)?.starterBasicSkillId,
+          false,
+        ) ??
+        GENERIC_PHYSICAL_BASIC
+      )
     },
     resolveSpecialUltimate(player) {
-      const kit = resolveTheTuKit(deps, player)
+      const kit = resolveBodyKit(deps, player)
       return kit ? { special: kit.special, ultimate: kit.ultimate } : {}
     },
     buildSurviveSources(player: PlayerData, participant: TurnBattleParticipant, hasActiveBuff: (definitionId: BuffDefinitionId) => boolean): SurviveLethalSource[] {
@@ -492,7 +519,7 @@ function createTheTuHienRuntime(deps: CultivationPathRuntimeDeps): CultivationPa
       }
 
       return [
-        new TheTuBatTuSurvival({
+        new BodyBatTuSurvival({
           ultimateSlot: () => participant.ultimate,
           hasActiveBuff,
         }),
@@ -501,16 +528,16 @@ function createTheTuHienRuntime(deps: CultivationPathRuntimeDeps): CultivationPa
   }
 }
 
-function createTheTuUngTheRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
+function createHiddenBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
       // Spec section 6.1 — fixed kit granted at path choice; the built
       // clone's grantsBuffsAtBuild plants ung_the + owned-root markers.
-      return resolveTheTuAnKit(deps, player).basic
+      return resolveHiddenBodyKit(deps, player).basic
     },
     resolveSpecialUltimate(player) {
-      const kit = resolveTheTuAnKit(deps, player)
+      const kit = resolveHiddenBodyKit(deps, player)
       return {
         special: kit.special,
         ultimate: kit.ultimate,
@@ -530,12 +557,12 @@ export type CultivationPathRuntimeFactory = (
 ) => CultivationPathRuntime
 
 export const CULTIVATION_PATH_RUNTIME_FACTORIES: Record<string, CultivationPathRuntimeFactory> = {
-  'kiem_tu:hien': (deps) => createKiemTuRuntime(deps, false),
-  'kiem_tu:ngu': (deps) => createKiemTuRuntime(deps, true),
-  'phap_tu:ngu_hanh': createPhapTuNguHanhRuntime,
-  'phap_tu:ngo_dao': createPhapTuNgoDaoRuntime,
-  'the_tu:hien': createTheTuHienRuntime,
-  'the_tu:ung_the': createTheTuUngTheRuntime,
+  'sword:sword_pathway': (deps) => createSwordPathRuntime(deps, false),
+  'sword:hidden_sword_pathway': (deps) => createSwordPathRuntime(deps, true),
+  'spell:spell_pathway': createSpellPathwayRuntime,
+  'spell:hidden_spell_pathway': createHiddenSpellPathwayRuntime,
+  'body:body_pathway': createBodyPathwayRuntime,
+  'body:hidden_body_pathway': createHiddenBodyPathwayRuntime,
 }
 
 /**

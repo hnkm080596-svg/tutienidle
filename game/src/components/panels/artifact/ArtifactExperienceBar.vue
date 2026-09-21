@@ -2,8 +2,8 @@
 // Bản Mệnh Pháp Bảo — vùng 2 (doc §12.1): cảnh giới/tầng, trần theo
 // player, EXP hiện tại/yêu cầu, trạng thái chạm trần. 3 trạng thái
 // (doc §12.1): đang luyện / đầy chờ chủ nhân / đạt trần content — kết
-// hợp toán %/label kiểu TechniquePanel.vue với union trạng thái +
-// dòng message kiểu LuyenThePanel.vue.
+// hop toan %/label voi union trang thai + dong message (cu y kieu
+// cac panel progression da gop vao SkillPath/Realm o P7-M7).
 import { computed } from 'vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import Bar from '@/components/common/primitives/Bar.vue'

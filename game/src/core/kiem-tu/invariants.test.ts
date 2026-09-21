@@ -7,7 +7,8 @@ import { join, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
-import { freshKiemTuState, KIEM_PHO_ORB_IDS, MORTAL_PRECURSOR_SKILL_IDS, type OrbId } from './KiemTuState'
+import { freshSwordPathState, KIEM_PHO_ORB_IDS, type OrbId } from './KiemTuState'
+import { MORTAL_PRECURSOR_SKILL_IDS } from '../skill/MortalPrecursors'
 import {
   initKiemPhoBattle,
   nextOrb,
@@ -45,9 +46,9 @@ import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '.
 import { createBaseStats } from '../stats/StatBlock'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
 import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
-import { KIEM_TU_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { SWORD_BASIC } from '../../data/skill/TurnBasicAttacks'
 
-// The kiem_tu resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
+// The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
 // surface is stubbed; nothing here is invoked for this path.
 const PATH_RUNTIME_STUB_DEPS = {
   skillManager: {},
@@ -55,7 +56,7 @@ const PATH_RUNTIME_STUB_DEPS = {
   skillTemplates: {},
   nodeRegistry: { getAll: () => [] },
   getNodeLevel: () => 0,
-  getPhapTuElement: () => undefined,
+  getSpellPathElement: () => undefined,
   routeProfileProvider: () => {
     throw new Error('unused')
   },
@@ -74,18 +75,18 @@ import { makeTestBuffRegistry } from '../battle/turn/testing/TurnRuntimeFixtures
 function hienPlayer(preset: OrbId[], realmId = 'qi_refining'): PlayerData {
   const player = createDefaultPlayer()
   player.realmId = realmId
-  player.cultivationPath = 'kiem_tu'
-  player.cultivationWay = 'hien'
-  player.kiemTu = { ...freshKiemTuState(), preset }
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'sword_pathway'
+  player.swordPath = { ...freshSwordPathState(), preset }
   return player
 }
 
 function nguPlayer(realmId = 'golden_core'): PlayerData {
   const player = createDefaultPlayer()
   player.realmId = realmId
-  player.cultivationPath = 'kiem_tu'
-  player.cultivationWay = 'ngu'
-  player.kiemTu = freshKiemTuState()
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'hidden_sword_pathway'
+  player.swordPath = freshSwordPathState()
   return player
 }
 
@@ -191,9 +192,9 @@ describe('INV-1 — way single-owner', () => {
 
     const before = [provider.resolveBasic(participant).id, provider.resolveBasic(participant).id]
 
-    player.kiemTu!.kiemY = 777_777
-    player.kiemTu!.kiemDaoCount = 9
-    player.kiemTu!.kiemDaoBase = 42
+    player.swordPath!.kiemY = 777_777
+    player.swordPath!.kiemDaoCount = 9
+    player.swordPath!.kiemDaoBase = 42
 
     expect(provider.resolveBasic(participant).id).toBe('orb_dam')
     expect(before).toEqual(['orb_dam', 'orb_chem'])
@@ -201,13 +202,13 @@ describe('INV-1 — way single-owner', () => {
 
   it('ngu provider output never depends on the persisted preset', () => {
     const player = nguPlayer()
-    player.kiemTu!.kiemDaoCount = 3
-    player.kiemTu!.kiemDaoBase = 2
+    player.swordPath!.kiemDaoCount = 3
+    player.swordPath!.kiemDaoBase = 2
 
     const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false })
     const before = provider.resolveBasic({} as TurnBattleParticipant)
 
-    player.kiemTu!.preset = ['orb_quet', 'orb_hat', 'orb_bo']
+    player.swordPath!.preset = ['orb_quet', 'orb_hat', 'orb_bo']
 
     const after = provider.resolveBasic({} as TurnBattleParticipant)
     expect(after.instances?.count).toBe(before.instances?.count)
@@ -390,26 +391,26 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
   it('the ngu offer stays listed but ineligible below tram Lv3, eligible at Lv3', () => {
     const locked = mortalAtRitual(2)
     const lockedOffer = listOfferableWays(locked.player).find(
-      offer => offer.pathId === 'kiem_tu' && offer.wayId === 'ngu',
+      offer => offer.pathId === 'sword' && offer.wayId === 'hidden_sword_pathway',
     )
     expect(lockedOffer).toBeDefined()
     expect(lockedOffer!.eligible).toBe(false)
     expect(lockedOffer!.reason).toContain('tram')
     // Both the authority and the ritual reject the ineligible way.
-    expect(applyPathChoice(locked.player, 'kiem_tu', 'ngu').ok).toBe(false)
+    expect(applyPathChoice(locked.player, 'sword', 'hidden_sword_pathway').ok).toBe(false)
     expect(
-      locked.gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', locked.player),
+      locked.gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', locked.player),
     ).toBe(false)
     expect(locked.player.cultivationPath).toBeUndefined()
     expect(locked.player.cultivationWay).toBeUndefined()
 
     const ready = mortalAtRitual(3)
     const readyOffer = listOfferableWays(ready.player).find(
-      offer => offer.pathId === 'kiem_tu' && offer.wayId === 'ngu',
+      offer => offer.pathId === 'sword' && offer.wayId === 'hidden_sword_pathway',
     )
     expect(readyOffer!.eligible).toBe(true)
     expect(
-      ready.gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', ready.player),
+      ready.gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', ready.player),
     ).toBe(true)
   })
 
@@ -417,34 +418,41 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     const { gameManager, player } = mortalAtRitual(3)
     const insightBefore = player.skillInsight
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', player)).toBe(true)
-    expect(player.cultivationPath).toBe('kiem_tu')
-    expect(player.cultivationWay).toBe('ngu')
-    expect(player.kiemTu).toEqual(freshKiemTuState())
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', player)).toBe(true)
+    expect(player.cultivationPath).toBe('sword')
+    expect(player.cultivationWay).toBe('hidden_sword_pathway')
+    expect(player.swordPath).toEqual(freshSwordPathState())
     // Free commit — nothing was deducted, so there is no waive record.
     expect(player.skillInsight).toBe(insightBefore)
-    expect(gameManager.techniqueManager.has('van_kiem_quyet')).toBe(true)
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('van_kiem_quyet')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('myriad_swords_art')
 
     // One-way: the way is written AT the ritual — there is no node to
     // repurchase and no re-choice; both the authority and the ritual
     // reject a second attempt.
-    expect(applyPathChoice(player, 'kiem_tu', 'hien').ok).toBe(false)
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(false)
-    expect(player.cultivationPath).toBe('kiem_tu')
-    expect(player.cultivationWay).toBe('ngu')
+    expect(applyPathChoice(player, 'sword', 'sword_pathway').ok).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(false)
+    expect(player.cultivationPath).toBe('sword')
+    expect(player.cultivationWay).toBe('hidden_sword_pathway')
   })
 
-  it('the ritual still commits when van_kiem_quyet is already learned (learn is idempotent)', () => {
+  it('a non-empty technique holder rejects the ritual atomically - path/way/realm/state unchanged (P7-M3)', () => {
+    // A mortal holding ANY technique is corrupt progression (way-less
+    // players hold none). The ritual must fail BEFORE applyPathChoice
+    // writes, leaving every committed slice untouched.
     const { gameManager, player } = mortalAtRitual(3)
-    expect(gameManager.realmAdvanceOps.learnTechnique('van_kiem_quyet')).toBe(true)
+    gameManager.techniqueManager.setActive(
+      structuredClone(TECHNIQUES.find(technique => technique.id === 'myriad_swords_art')!),
+    )
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', player)).toBe(true)
-    expect(player.cultivationWay).toBe('ngu')
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('van_kiem_quyet')
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', player)).toBe(false)
+    expect(player.cultivationPath).toBeUndefined()
+    expect(player.cultivationWay).toBeUndefined()
+    expect(player.swordPath).toBeUndefined()
+    expect(player.realmId).toBe('mortal')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('myriad_swords_art')
   })
 
-  it('chooseCultivationPath(kiem_tu, ngu) fails atomically when the signature technique template is missing — nothing committed', () => {
+  it('chooseCultivationPath(sword, ngu) fails atomically when the signature technique template is missing — nothing committed', () => {
     // Same preflight boundary the flip node used to need a rollback for:
     // the ritual verifies way.techniqueId BEFORE applyPathChoice writes,
     // so a missing van_kiem_quyet template fails the whole choice.
@@ -452,7 +460,7 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     gameManager.setCombatClockSource(new ManualClockSource())
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(
-      TECHNIQUES.filter(technique => technique.id !== 'van_kiem_quyet'),
+      TECHNIQUES.filter(technique => technique.id !== 'myriad_swords_art'),
     )
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
     const player = createDefaultPlayer()
@@ -463,10 +471,10 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('tram')
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
     expect(player.cultivationWay).toBeUndefined()
-    expect(player.kiemTu).toBeUndefined()
+    expect(player.swordPath).toBeUndefined()
     expect(player.realmId).toBe('mortal')
   })
 
@@ -498,10 +506,10 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     const nguNode = KIEM_TU_NODES.find(n => n.branchTag === 'ngu_kiem')
     expect(orbNode).toBeDefined()
     expect(nguNode).toBeDefined()
-    expect(orbNode!.requiredCultivationPath).toBe('kiem_tu')
-    expect(orbNode!.requiredWay).toBe('hien')
-    expect(nguNode!.requiredCultivationPath).toBe('kiem_tu')
-    expect(nguNode!.requiredWay).toBe('ngu')
+    expect(orbNode!.requiredCultivationPath).toBe('sword')
+    expect(orbNode!.requiredWay).toBe('sword_pathway')
+    expect(nguNode!.requiredCultivationPath).toBe('sword')
+    expect(nguNode!.requiredWay).toBe('hidden_sword_pathway')
   })
 })
 
@@ -541,7 +549,7 @@ describe('INV-9 — cascade bounds', () => {
 
   it('execute is damage-scale only (survives SurviveLethalGuard); break-on-death consumes no further RNG', () => {
     const player = nguPlayer('golden_core') // threshold min(0.5, 0.3) = 0.3
-    player.kiemTu!.kiemDaoCount = 5 // multi-instance required for the break-on-death half
+    player.swordPath!.kiemDaoCount = 5 // multi-instance required for the break-on-death half
     const rng = vi.fn(() => 0)
     const provider = buildNguKiemDaoProvider(player, { a: true, e: true, d: true }, rng)
     const def = provider.resolveBasic({} as TurnBattleParticipant)
@@ -573,15 +581,15 @@ describe('INV-10/11 — economy + base monotonic', () => {
   it('gain gate at cap: no banking past kiemDaoCap; conversion only inside gainKiemY', () => {
     const player = nguPlayer('qi_refining') // cap 2, forgeCost 9999
     gainKiemY(player, 9_999)
-    expect(player.kiemTu!.kiemDaoCount).toBe(2)
+    expect(player.swordPath!.kiemDaoCount).toBe(2)
 
     gainKiemY(player, 50_000) // fully gated at cap — nothing banks
-    expect(player.kiemTu!.kiemDaoCount).toBe(2)
-    expect(player.kiemTu!.kiemY).toBe(0)
+    expect(player.swordPath!.kiemDaoCount).toBe(2)
+    expect(player.swordPath!.kiemY).toBe(0)
   })
 
   it('merge is exactly-once per breakthrough: snapshot before reset, kiemY untouched, base monotonic', () => {
-    const state = { ...freshKiemTuState(), kiemDaoCount: 4, kiemDaoBase: 1, kiemY: 123 }
+    const state = { ...freshSwordPathState(), kiemDaoCount: 4, kiemDaoBase: 1, kiemY: 123 }
     const before = state.kiemDaoBase
 
     applyBreakthroughMerge(state) // base = 1 * (1 + 0.3*4) = 2.2
@@ -616,7 +624,7 @@ describe('INV-12 — no dead ids in production content (Task 12 sweep)', () => {
     /spawnSwordZone/, /KiemTuResourceSystem/, /KiemYSystem/,
     /MAX_SWORD_INTENT/, /MAX_KIEM_THE/, /MAX_KIEM_Y_TEMP_CAP/,
     /KIEM_Y_DMG_TAKEN_GAIN_PER_MAXHP_PERCENT/,
-    /kiemTuRoute/, /KiemTuRoute/, /usesSwordIntentResource/,
+    /swordPathRoute/, /KiemTuRoute/, /usesSwordIntentResource/,
     /onhit_/, /tuLucActive/, /tuLucElapsed/, /tuLucDamageTakenPercent/,
     /KIEM_TRAN_BURN/, /dispatchOnHitEffect/, /OnHitEffectKind/,
   ]
@@ -655,7 +663,7 @@ describe('INV-13 — manual/auto parity', () => {
 
 describe('INV-14 — `the` isolation', () => {
   it('no kiem-tu source file reads or writes currentThe', () => {
-    const kiemTuDirs = [
+    const swordPathDirs = [
       join(srcRoot, 'core', 'kiem-tu'),
       join(srcRoot, 'data', 'progression'),
     ]
@@ -667,7 +675,7 @@ describe('INV-14 — `the` isolation', () => {
     ]
 
     const files = [
-      ...kiemTuDirs.flatMap(listSourceFiles),
+      ...swordPathDirs.flatMap(listSourceFiles),
       ...extraFiles,
     ].filter((f) => /KiemTu|kiem-tu|KiemPho|NguKiem/i.test(f) && !f.endsWith('.test.ts'))
 
@@ -680,7 +688,7 @@ describe('INV-14 — `the` isolation', () => {
 
 describe('INV-15 — precursor lock (K3)', () => {
   it.each(MORTAL_PRECURSOR_SKILL_IDS)(
-    'precursor %s is unequippable once any cultivation path is chosen',
+    'precursor %s cannot be re-picked once any cultivation path is chosen',
     (skillId) => {
       const gameManager = new GameManager()
       gameManager.catalogOps.registerSkillTemplates(SKILLS)
@@ -692,14 +700,14 @@ describe('INV-15 — precursor lock (K3)', () => {
       player.skillCastCounts = { tram: 0 }
       gameManager.setActivePlayer(player)
       gameManager.progressionOps.learnSkill('tram')
-      gameManager.skillSystem.equipToSlot('tram', 0)
+      gameManager.progressionOps.setMortalBasicSkill(player, 'tram')
 
-      expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
-      expect(gameManager.progressionOps.setSkillLoadoutSlot(player, 0, skillId)).toBe(false)
+      expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
+      expect(gameManager.progressionOps.setMortalBasicSkill(player, skillId)).toBe(false)
     },
   )
 
-  it('kiem_tu basic resolution no longer routes through authored precursor skills', () => {
+  it('sword basic resolution no longer routes through authored precursor skills', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
@@ -709,14 +717,14 @@ describe('INV-15 — precursor lock (K3)', () => {
     player.realmLevel = 12
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('tram')
-    gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)
 
     // Mission C Task 9 — resolution now lives behind the path-runtime
     // boundary; the resolved basic is the static authored def (object
     // identity), not a Skill-backed conversion of the precursor 'tram'.
     const runtime = resolveCultivationPathRuntime(player, PATH_RUNTIME_STUB_DEPS)
 
-    expect(runtime.resolveBasic(player)).toBe(KIEM_TU_BASIC)
+    expect(runtime.resolveBasic(player)).toBe(SWORD_BASIC)
     expect(unlockedOrbs(1)).toContain('orb_dam')
   })
 })

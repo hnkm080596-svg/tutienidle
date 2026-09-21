@@ -157,10 +157,8 @@ describe('TalentPassives v4 — shape & nhịp engine của 11 passive', () => {
     expect(skill.passiveConvertsTo).toBeUndefined()
   })
 
-  it('mọi passive equipped + unlocked (PassiveSystem chỉ quét equipped)', () => {
+  it('mọi talent passive đều là type passive (membership = learned authority)', () => {
     for (const skill of TALENT_PASSIVE_SKILLS) {
-      expect(skill.equipped).toBe(true)
-      expect(skill.unlocked).toBe(true)
       expect(skill.type).toBe('passive')
     }
   })

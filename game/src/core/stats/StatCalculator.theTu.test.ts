@@ -10,21 +10,21 @@ import { applyDomainGate } from './StatDomain'
 import { clampStatValue } from './StatMetadata'
 import { collectActiveWayStatModifiers } from '../player/CultivationPathSystem'
 import {
-  theTuAnReactiveModifiers,
-  theTuEnduranceModifiers,
+  hiddenBodyReactiveModifiers,
+  bodyEnduranceModifiers,
 } from '../the-tu/TheTuPath'
 import { createDefaultPlayer, resolvePlayerFinalStats } from '../player/Player'
 import { REACTIVE_CHANCE_CAP } from './TheTuStatChannels'
 
 // The Tu Reimagined (spec 2026-09-15 section 3) — Task 3:
-//  - three new derived chance stats live in the the_tu_an domain,
+//  - three new derived chance stats live in the hidden_body domain,
 //    emitted by BOTH channels (assembly emitter + domain delta deriver).
 //  - emitters emit RAW uncapped values; REACTIVE_CHANCE_CAP applies only
 //    at consumption (clampStatValue at the roll/display site) so a mid-
 //    battle attribute debuff composes correctly against an over-cap base.
 //  - vitality -> enduranceThreshold leaves the universal derivation and
-//    becomes a the_tu-domain channel; the four defensive stats are
-//    gated to the_tu.
+//    becomes a body-domain channel; the four defensive stats are
+//    gated to body.
 
 function statMod(overrides: Partial<StatModifier>): StatModifier {
   return {
@@ -37,28 +37,34 @@ function statMod(overrides: Partial<StatModifier>): StatModifier {
 }
 
 // M7 — the persisted pair: a path id alone is corrupt (way-less saves
-// resolve nothing), so the helper takes the (path, way) pair. The
-// 'ung_the' argument is the former 'the_tu_an' shorthand.
+// resolve nothing), so the helper always stamps an atomic (path, way)
+// pair. 'hidden_body_pathway' selects the body's hidden way.
+const BASE_WAY = {
+  body: 'body_pathway',
+  spell: 'spell_pathway',
+  sword: 'sword_pathway',
+} as const
+
 function playerWithPath(
-  path: 'the_tu' | 'phap_tu' | 'kiem_tu' | 'ung_the' | undefined,
+  path: keyof typeof BASE_WAY | 'hidden_body_pathway' | undefined,
 ) {
   const player = createDefaultPlayer()
 
-  if (path === 'ung_the') {
-    player.cultivationPath = 'the_tu'
-    player.cultivationWay = 'ung_the'
+  if (path === 'hidden_body_pathway') {
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'hidden_body_pathway'
     return player
   }
 
   if (path !== undefined) {
     player.cultivationPath = path
-    player.cultivationWay = path === 'phap_tu' ? 'ngu_hanh' : 'hien'
+    player.cultivationWay = BASE_WAY[path]
   }
 
   return player
 }
 
-describe('the_tu_an reactive chance stats — assembly emission', () => {
+describe('hidden_body reactive chance stats — assembly emission', () => {
   it('emits domain-tagged raw chance modifiers from attribute totals', () => {
     const totals = resolveAttributeTotals(
       createBaseStats({ strength: 100, dexterity: 100, intelligence: 100, vitality: 100 }),
@@ -67,14 +73,14 @@ describe('the_tu_an reactive chance stats — assembly emission', () => {
 
     // M5 — the emitter is totals-driven (facet internals); the way gate
     // is the facet resolution below.
-    const mods = theTuAnReactiveModifiers(totals, 'the_tu_an:attributes')
+    const mods = hiddenBodyReactiveModifiers(totals, 'hidden_body:attributes')
 
     const byStat = new Map(mods.map((m) => [m.stat, m]))
     expect(byStat.get('counterChance')?.flat).toBeCloseTo(0.8, 5)
     expect(byStat.get('protectChance')?.flat).toBeCloseTo(0.7, 5)
     expect(byStat.get('followUpChance')?.flat).toBeCloseTo(0.7, 5)
     for (const m of mods) {
-      expect(m.domain).toBe('the_tu_an')
+      expect(m.domain).toBe('hidden_body')
     }
   })
 
@@ -84,22 +90,22 @@ describe('the_tu_an reactive chance stats — assembly emission', () => {
       [],
     )
 
-    const mods = collectActiveWayStatModifiers(playerWithPath('ung_the'), totals)
+    const mods = collectActiveWayStatModifiers(playerWithPath('hidden_body_pathway'), totals)
 
-    expect(mods).toEqual(theTuAnReactiveModifiers(totals, 'the_tu_an:attributes'))
+    expect(mods).toEqual(hiddenBodyReactiveModifiers(totals, 'hidden_body:attributes'))
   })
 
-  it('emits NO the_tu_an-domain modifier for non-ung_the players (no leak across ways)', () => {
+  it('emits NO hidden_body-domain modifier for non-ung_the players (no leak across ways)', () => {
     const totals = resolveAttributeTotals(createBaseStats({ strength: 100, dexterity: 100 }), [])
 
-    for (const path of ['the_tu', 'phap_tu', 'kiem_tu', undefined] as const) {
+    for (const path of ['body', 'spell', 'sword', undefined] as const) {
       const mods = collectActiveWayStatModifiers(playerWithPath(path), totals)
-      expect(mods.filter((m) => m.domain === 'the_tu_an')).toEqual([])
+      expect(mods.filter((m) => m.domain === 'hidden_body')).toEqual([])
     }
   })
 
   it('resolvePlayerFinalStats stores the RAW value — over cap is correct pre-consumption', () => {
-    const player = playerWithPath('ung_the')
+    const player = playerWithPath('hidden_body_pathway')
     player.baseStats.strength = 100
     player.baseStats.dexterity = 100
     player.baseStats.intelligence = 100
@@ -112,8 +118,8 @@ describe('the_tu_an reactive chance stats — assembly emission', () => {
     expect(stats.followUpChance).toBeCloseTo(0.7, 5)
   })
 
-  it('non-the_tu_an players resolve to 0 chance stats', () => {
-    const player = playerWithPath('the_tu')
+  it('non-hidden_body players resolve to 0 chance stats', () => {
+    const player = playerWithPath('body')
     player.baseStats.strength = 100
     player.baseStats.dexterity = 100
 
@@ -125,11 +131,11 @@ describe('the_tu_an reactive chance stats — assembly emission', () => {
   })
 })
 
-describe('the_tu_an reactive chance stats — cap at consumption', () => {
+describe('hidden_body reactive chance stats — cap at consumption', () => {
   // Review-locked contract (P0.1): emitters/deriver emit raw linear
   // values; clampStatValue at the roll/display site applies the cap.
   it('raw 0.80 with a -0.05 effective delta stays capped at 0.60', () => {
-    const player = playerWithPath('ung_the')
+    const player = playerWithPath('hidden_body_pathway')
     player.baseStats.strength = 100
     player.baseStats.dexterity = 100
     const resolved = resolvePlayerFinalStats(player, [])
@@ -139,7 +145,7 @@ describe('the_tu_an reactive chance stats — cap at consumption', () => {
     const effective = calculateEffectiveStats(
       resolved,
       [statMod({ stat: 'strength', flat: -12.5 })],
-      { activeDomains: new Set(['the_tu_an']) },
+      { activeDomains: new Set(['hidden_body']) },
     )
 
     // raw effective = 0.75 — over the cap, so the roll still clamps 0.60.
@@ -148,7 +154,7 @@ describe('the_tu_an reactive chance stats — cap at consumption', () => {
   })
 
   it('raw 0.80 with a -0.25 effective delta rolls at 0.55', () => {
-    const player = playerWithPath('ung_the')
+    const player = playerWithPath('hidden_body_pathway')
     player.baseStats.strength = 100
     player.baseStats.dexterity = 100
     const resolved = resolvePlayerFinalStats(player, [])
@@ -156,15 +162,15 @@ describe('the_tu_an reactive chance stats — cap at consumption', () => {
     const effective = calculateEffectiveStats(
       resolved,
       [statMod({ stat: 'strength', flat: -62.5 })],
-      { activeDomains: new Set(['the_tu_an']) },
+      { activeDomains: new Set(['hidden_body']) },
     )
 
     expect(effective.counterChance).toBeCloseTo(0.55, 5)
     expect(clampStatValue('counterChance', effective.counterChance)).toBeCloseTo(0.55, 5)
   })
 
-  it('delta deriver is domain-gated: no the_tu_an context -> no chance delta', () => {
-    const player = playerWithPath('ung_the')
+  it('delta deriver is domain-gated: no hidden_body context -> no chance delta', () => {
+    const player = playerWithPath('hidden_body_pathway')
     player.baseStats.strength = 100
     player.baseStats.dexterity = 100
     const resolved = resolvePlayerFinalStats(player, [])
@@ -172,7 +178,7 @@ describe('the_tu_an reactive chance stats — cap at consumption', () => {
     const effective = calculateEffectiveStats(
       resolved,
       [statMod({ stat: 'strength', flat: -62.5 })],
-      { activeDomains: new Set(['kiem_tu']) },
+      { activeDomains: new Set(['sword']) },
     )
 
     expect(effective.counterChance).toBeCloseTo(0.8, 5)
@@ -186,85 +192,85 @@ describe('the_tu_an reactive chance stats — cap at consumption', () => {
   })
 })
 
-describe('the_tu domain migration — endurance channel', () => {
+describe('body domain migration — endurance channel', () => {
   it('vitality -> enduranceThreshold emits only for hien-way players', () => {
     const totals = resolveAttributeTotals(createBaseStats({ vitality: 50 }), [])
 
-    const theTu = collectActiveWayStatModifiers(playerWithPath('the_tu'), totals)
-    expect(theTu).toHaveLength(1)
-    expect(theTu[0]!.stat).toBe('enduranceThreshold')
-    expect(theTu[0]!.flat).toBeCloseTo(50, 5)
-    expect(theTu[0]!.domain).toBe('the_tu')
-    expect(theTu).toEqual(theTuEnduranceModifiers(totals.vitality, 'the_tu:vitality'))
+    const body = collectActiveWayStatModifiers(playerWithPath('body'), totals)
+    expect(body).toHaveLength(1)
+    expect(body[0]!.stat).toBe('enduranceThreshold')
+    expect(body[0]!.flat).toBeCloseTo(50, 5)
+    expect(body[0]!.domain).toBe('body')
+    expect(body).toEqual(bodyEnduranceModifiers(totals.vitality, 'body:vitality'))
 
-    for (const path of ['ung_the', 'phap_tu', 'kiem_tu', undefined] as const) {
+    for (const path of ['hidden_body_pathway', 'spell', 'sword', undefined] as const) {
       const mods = collectActiveWayStatModifiers(playerWithPath(path), totals)
-      expect(mods.filter((m) => m.domain === 'the_tu')).toEqual([])
+      expect(mods.filter((m) => m.domain === 'body')).toEqual([])
     }
   })
 
-  it('per-path matrix: only the_tu derives enduranceThreshold from vitality', () => {
-    for (const path of ['the_tu', 'ung_the', 'phap_tu', 'kiem_tu', undefined] as const) {
+  it('per-path matrix: only body derives enduranceThreshold from vitality', () => {
+    for (const path of ['body', 'hidden_body_pathway', 'spell', 'sword', undefined] as const) {
       const player = playerWithPath(path)
       player.baseStats.vitality = 50
 
       const stats = resolvePlayerFinalStats(player, [])
 
-      // base 10 + (the_tu only) vitality x 1.
-      expect(stats.enduranceThreshold).toBeCloseTo(path === 'the_tu' ? 60 : 10, 5)
+      // base 10 + (body only) vitality x 1.
+      expect(stats.enduranceThreshold).toBeCloseTo(path === 'body' ? 60 : 10, 5)
     }
   })
 
-  it('mid-battle vitality delta re-emits enduranceThreshold only for the_tu', () => {
-    const theTuPlayer = playerWithPath('the_tu')
-    theTuPlayer.baseStats.vitality = 50
-    const resolved = resolvePlayerFinalStats(theTuPlayer, [])
+  it('mid-battle vitality delta re-emits enduranceThreshold only for body', () => {
+    const bodyPlayer = playerWithPath('body')
+    bodyPlayer.baseStats.vitality = 50
+    const resolved = resolvePlayerFinalStats(bodyPlayer, [])
 
     const buffed = calculateEffectiveStats(
       resolved,
       [statMod({ stat: 'vitality', flat: 10 })],
-      { activeDomains: new Set(['the_tu']) },
+      { activeDomains: new Set(['body']) },
     )
     expect(buffed.enduranceThreshold).toBeCloseTo(70, 5)
 
     const wrongDomain = calculateEffectiveStats(
       resolved,
       [statMod({ stat: 'vitality', flat: 10 })],
-      { activeDomains: new Set(['the_tu_an']) },
+      { activeDomains: new Set(['hidden_body']) },
     )
     expect(wrongDomain.enduranceThreshold).toBeCloseTo(60, 5)
   })
 })
 
-describe('the_tu domain gate — four defensive stats', () => {
-  it('untagged modifier on a the_tu-gated stat throws in dev/test', () => {
+describe('body domain gate — four defensive stats', () => {
+  it('untagged modifier on a body-gated stat throws in dev/test', () => {
     for (const stat of ['blockChance', 'blockEffectiveness', 'enduranceThreshold', 'endurancePercent'] as const) {
       expect(() => applyDomainGate([statMod({ stat, flat: 1 })])).toThrow(/StatDomain/)
     }
   })
 
-  it('wrong-domain modifier is rejected; the_tu-tagged is accepted', () => {
+  it('wrong-domain modifier is rejected; body-tagged is accepted', () => {
     expect(() =>
-      applyDomainGate([statMod({ stat: 'blockChance', flat: 1, domain: 'kiem_tu' })]),
+      applyDomainGate([statMod({ stat: 'blockChance', flat: 1, domain: 'sword' })]),
     ).toThrow(/StatDomain/)
 
     const accepted = applyDomainGate([
-      statMod({ stat: 'blockChance', flat: 1, domain: 'the_tu' }),
-      statMod({ stat: 'counterChance', flat: 0.1, domain: 'the_tu_an' }),
+      statMod({ stat: 'blockChance', flat: 1, domain: 'body' }),
+      statMod({ stat: 'counterChance', flat: 0.1, domain: 'hidden_body' }),
     ])
     expect(accepted).toHaveLength(2)
   })
 
   it('universal stats still accept any-domain modifiers', () => {
-    const accepted = applyDomainGate([statMod({ stat: 'evasionRate', flat: 5, domain: 'kiem_tu' })])
+    const accepted = applyDomainGate([statMod({ stat: 'evasionRate', flat: 5, domain: 'sword' })])
     expect(accepted).toHaveLength(1)
   })
 })
 
 // INV-13: the attribute->chance derivation is the ONLY source of the
 // three chance stats — no node/buff/technique/kit may author a modifier
-// for them. The whitelist gate alone cannot catch a the_tu_an-tagged
-// modifier inside a whitelisted TheTu* file, so this scan asserts the
+// for them. The whitelist gate alone cannot catch a hidden_body-tagged
+// modifier inside a whitelisted Body* file, so this scan asserts the
 // authoring rule directly (files may not exist yet — the guard is for
 // the tasks that add them).
 describe('INV-13 — no authored chance-stat modifiers', () => {
@@ -280,7 +286,7 @@ describe('INV-13 — no authored chance-stat modifiers', () => {
     for (const child of Object.values(record)) scan(child, hits, visited)
   }
 
-  it('no TheTu*/TheTuAn* data module emits chance-stat modifiers', () => {
+  it('no Body*/TheTuAn* data module emits chance-stat modifiers', () => {
     const modules = import.meta.glob('../../data/**/TheTu*.ts', { eager: true })
     const hits: string[] = []
 

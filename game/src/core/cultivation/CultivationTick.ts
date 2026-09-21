@@ -63,8 +63,5 @@ export function cultivateTick(
   // for online + offline (task 34, cleanup mission).
   accrueCultivationInsight(player, gained)
 
-  // Techniques have their own experience track (2026-08-20) - the same
-  // "gained" feeds Kiem Y above, see core/technique/TechniqueTier.ts's
-  // getTechniqueTier().
   return gained
 }

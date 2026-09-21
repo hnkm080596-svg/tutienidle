@@ -50,7 +50,7 @@ describe('NodeSystem — routeTag gating', () => {
   it('routeTag node unpurchasable when route mismatches', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
-    player.phapTu = { element: 'fire', route: 'no' }
+    player.spellPath = { element: 'fire', route: 'no' }
 
     expect(canPurchaseNode(player, registry.get('dot_spec_1'))).toBe(false)
     expect(purchaseNode(player, registry.get('dot_spec_1'))).toBe(false)
@@ -63,7 +63,7 @@ describe('NodeSystem — routeTag gating', () => {
   it('routeTag node unpurchasable when no route picked at all', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
-    player.phapTu = { element: null, route: null }
+    player.spellPath = { element: null, route: null }
 
     expect(canPurchaseNode(player, registry.get('dot_spec_1'))).toBe(false)
     expect(canPurchaseNode(player, registry.get('no_spec_1'))).toBe(false)
@@ -77,13 +77,13 @@ describe('NodeSystem — routeTag gating', () => {
     })
     const reg = { getAll: () => [statNode] }
     const player = createDefaultPlayer()
-    player.phapTu = { element: 'fire', route: 'dot' }
+    player.spellPath = { element: 'fire', route: 'dot' }
     player.skillInsight = 100
 
     purchaseNode(player, statNode)
     expect(aggregateNodeStatModifiers(reg, player)).toHaveLength(1)
 
-    player.phapTu.route = 'no'
+    player.spellPath.route = 'no'
     expect(aggregateNodeStatModifiers(reg, player)).toHaveLength(0)
   })
 })
@@ -92,9 +92,9 @@ describe('switchRoute', () => {
   it('refunds 75% of actual paid and clears route-tagged levels', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route: 'dot' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1')) // cost 2
     upgradeNode(player, registry.get('dot_spec_1')) // +3 (base2 + floor(1/1))
@@ -107,15 +107,15 @@ describe('switchRoute', () => {
     expect(player.nodeLevels['dot_spec_1']).toBeUndefined()
     expect(player.purchasedNodeIds).not.toContain('dot_spec_1')
     expect(player.skillInsight).toBe(before + refunded)
-    expect(player.phapTu.route).toBe('no')
+    expect(player.spellPath.route).toBe('no')
   })
 
   it('switching A->B->A pays the tax twice', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route: 'dot' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route: 'dot' }
     const start = player.skillInsight
 
     purchaseNode(player, registry.get('dot_spec_1')) // -2
@@ -126,15 +126,15 @@ describe('switchRoute', () => {
 
     // 2 paid + 2 paid, 1 + 1 refunded -> net -2 over the round trip.
     expect(player.skillInsight).toBe(start - 2)
-    expect(player.phapTu.route).toBe('dot')
+    expect(player.spellPath.route).toBe('dot')
   })
 
   it('untagged nodes keep their levels across a switch', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route: 'dot' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('shared_1'))
     purchaseNode(player, registry.get('dot_spec_1'))
@@ -148,9 +148,9 @@ describe('switchRoute', () => {
   it('respects nodeFreePurchaseRecord — waived insight is not refunded', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route: 'dot' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1'))
     // Simulate Van Dao having waived the 2-cost purchase.
@@ -167,36 +167,36 @@ describe('switchRoute', () => {
   })
 
   // Review fix (HIGH-2) — switchRoute is the ONLY remaining writer of
-  // phapTu.route (selectPhapTuElement already guards path + null
+  // spellPath.route (selectSpellPathElement already guards path + null
   // fields). Without the same commitment gate here, a pre-commit call
   // would stamp route onto {element: null}, permanently poisoning
-  // selectPhapTuElement — and a non-phap_tu player's dirty route state
+  // selectSpellPathElement — and a non-spell player's dirty route state
   // would leak universal route stats.
   it('rejects when no element+route is committed — never writes route', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: null, route: null }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: null, route: null }
 
     expect(switchRoute(player, registry, 'dot')).toBe(0)
-    expect(player.phapTu).toEqual({ element: null, route: null })
+    expect(player.spellPath).toEqual({ element: null, route: null })
   })
 
-  it('rejects a non-phap_tu player even with committed phapTu state', () => {
+  it('rejects a non-spell player even with committed spellPath state', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngo_dao'
-    player.phapTu = { element: null, route: null }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'hidden_spell_pathway'
+    player.spellPath = { element: null, route: null }
 
     expect(switchRoute(player, registry, 'dot')).toBe(0)
-    expect(player.phapTu.route).toBeNull()
+    expect(player.spellPath.route).toBeNull()
 
     // Dirty state that cannot exist via production writes must not be
     // re-routed either.
-    player.cultivationPath = 'kiem_tu'
-    player.phapTu = { element: 'fire', route: 'dot' }
+    player.cultivationPath = 'sword'
+    player.spellPath = { element: 'fire', route: 'dot' }
     expect(switchRoute(player, registry, 'no')).toBe(0)
-    expect(player.phapTu.route).toBe('dot')
+    expect(player.spellPath.route).toBe('dot')
   })
 })
 
@@ -207,9 +207,9 @@ describe('previewRouteSwitch', () => {
   it('matches switchRoute refund and forfeited math exactly', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route: 'dot' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1')) // cost 2
     upgradeNode(player, registry.get('dot_spec_1')) // +3
@@ -224,16 +224,16 @@ describe('previewRouteSwitch', () => {
 
     // Preview mutated nothing — the switch then refunds the same amount.
     expect(player.nodeLevels['dot_spec_1']).toBe(2)
-    expect(player.phapTu.route).toBe('dot')
+    expect(player.spellPath.route).toBe('dot')
     expect(switchRoute(player, registry, 'no')).toBe(preview.refund)
   })
 
   it('waived insight (nodeFreePurchaseRecord) is excluded from the preview', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route: 'dot' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route: 'dot' }
 
     purchaseNode(player, registry.get('dot_spec_1'))
     player.nodeFreePurchaseRecord = { dot_spec_1: 2 }
@@ -247,7 +247,7 @@ describe('previewRouteSwitch', () => {
 
   it('no route committed → empty preview', () => {
     const player = createDefaultPlayer()
-    player.phapTu = { element: null, route: null }
+    player.spellPath = { element: null, route: null }
 
     const preview = previewRouteSwitch(player, registry)
 
@@ -272,22 +272,22 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     gameManager.setCombatClockSource(new ManualClockSource())
     const player = createDefaultPlayer()
     player.baseStats = asBaseStats({ ...player.baseStats, might: 100, speed: 100 })
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route: 'dot' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route: 'dot' }
 
     gameManager.catalogOps.registerEnemyTemplates([
       defineEnemy({
         id: 'route_probe', name: 'Probe', level: 1, realmId: 'mortal', lane: 'ground',
         statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-        rewards: { techniqueInsight: 0, spiritStone: 0 },
+        rewards: { techniqueMastery: 0, spiritStone: 0 },
       }),
     ])
     gameManager.catalogOps.registerStages([stageFixture('route_stage', 'route_probe')])
     gameManager.setActivePlayer(player)
 
     expect(gameManager.progressionOps.switchRoute('no', player)).toBe(true)
-    expect(player.phapTu.route).toBe('no')
+    expect(player.spellPath.route).toBe('no')
 
     // The committed element's basic must be learned — round-3 fail-fast
     // throws when a required basic is missing.
@@ -297,7 +297,7 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('route_stage')!, false)
 
     expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
-    expect(player.phapTu.route).toBe('no')
+    expect(player.spellPath.route).toBe('no')
   })
 
   it('allows switching after the battle reaches a terminal state', () => {
@@ -306,15 +306,15 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     gameManager.setCombatClockSource(clock)
     const player = createDefaultPlayer()
     player.baseStats = asBaseStats({ ...player.baseStats, might: 100, speed: 100 })
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route: 'dot' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route: 'dot' }
 
     gameManager.catalogOps.registerEnemyTemplates([
       defineEnemy({
         id: 'route_probe', name: 'Probe', level: 1, realmId: 'mortal', lane: 'ground',
         statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-        rewards: { techniqueInsight: 0, spiritStone: 0 },
+        rewards: { techniqueMastery: 0, spiritStone: 0 },
       }),
     ])
     gameManager.catalogOps.registerStages([stageFixture('route_stage', 'route_probe')])
@@ -334,25 +334,25 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     // must look at battle state, not object existence.
     expect(gameManager.getTurnBattle()?.state).toBe('victory')
     expect(gameManager.progressionOps.switchRoute('no', player)).toBe(true)
-    expect(player.phapTu.route).toBe('no')
+    expect(player.spellPath.route).toBe('no')
   })
 
-  it('rejects uncommitted / non-phap_tu players even out of combat', () => {
+  it('rejects uncommitted / non-spell players even out of combat', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
     // Path chosen but element+route not yet committed — there is no
-    // route to switch FROM; writing one would poison selectPhapTuElement.
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: null, route: null }
+    // route to switch FROM; writing one would poison selectSpellPathElement.
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: null, route: null }
     expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
-    expect(player.phapTu).toEqual({ element: null, route: null })
+    expect(player.spellPath).toEqual({ element: null, route: null })
 
     // Hidden path never owns ordinary route state.
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngo_dao'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'hidden_spell_pathway'
     expect(gameManager.progressionOps.switchRoute('dot', player)).toBe(false)
-    expect(player.phapTu).toEqual({ element: null, route: null })
+    expect(player.spellPath).toEqual({ element: null, route: null })
   })
 })

@@ -1,5 +1,5 @@
 ﻿import { describe, expect, it } from 'vitest'
-import { PHAP_TU_KIT_IDS, SKILLS } from './Skills'
+import { SPELL_KIT_IDS, SKILLS } from './Skills'
 import { ELEMENT_ORDER } from '../../core/element/ElementLabels'
 
 // Spec 2026-09-03 phap-tu-thuan-he §2/§3 (Task 10) — 5 chuỗi thần SHK,
@@ -26,25 +26,25 @@ const NEW_ULT_IDS = [
 ]
 
 describe('Data chuỗi thần thoại 3-skill (Future Systems Task 1)', () => {
-  it('PHAP_TU_KIT_IDS đủ 5 hành × 3 slot (Future Systems Task 1), ĐÚNG id chuỗi 3', () => {
-    expect(Object.keys(PHAP_TU_KIT_IDS).sort()).toEqual([...ELEMENT_ORDER].sort())
+  it('SPELL_KIT_IDS đủ 5 hành × 3 slot (Future Systems Task 1), ĐÚNG id chuỗi 3', () => {
+    expect(Object.keys(SPELL_KIT_IDS).sort()).toEqual([...ELEMENT_ORDER].sort())
 
     for (const element of ELEMENT_ORDER) {
-      expect(PHAP_TU_KIT_IDS[element]).toEqual(NEW_CHAIN_IDS[element])
+      expect(SPELL_KIT_IDS[element]).toEqual(NEW_CHAIN_IDS[element])
     }
   })
 
   it('A là root hiện có của hành (đã tồn tại trước redesign)', () => {
-    expect(PHAP_TU_KIT_IDS.fire[0]).toBe('hoa_cau_thuat')
-    expect(PHAP_TU_KIT_IDS.water[0]).toBe('thuy_tien_thuat')
-    expect(PHAP_TU_KIT_IDS.wood[0]).toBe('doc_chuong')
-    expect(PHAP_TU_KIT_IDS.metal[0]).toBe('diem_kim_thuat')
-    expect(PHAP_TU_KIT_IDS.earth[0]).toBe('tho_cau_thuat')
+    expect(SPELL_KIT_IDS.fire[0]).toBe('hoa_cau_thuat')
+    expect(SPELL_KIT_IDS.water[0]).toBe('thuy_tien_thuat')
+    expect(SPELL_KIT_IDS.wood[0]).toBe('doc_chuong')
+    expect(SPELL_KIT_IDS.metal[0]).toBe('diem_kim_thuat')
+    expect(SPELL_KIT_IDS.earth[0]).toBe('tho_cau_thuat')
   })
 
   it('20 skill mới B–E: có trong SKILLS, active, có effects', () => {
     for (const element of ELEMENT_ORDER) {
-      for (const skillId of PHAP_TU_KIT_IDS[element].slice(1)) {
+      for (const skillId of SPELL_KIT_IDS[element].slice(1)) {
         const skill = SKILLS.find(s => s.id === skillId)
 
         expect(skill, `thiếu skill ${skillId}`).toBeDefined()
@@ -57,7 +57,7 @@ describe('Data chuỗi thần thoại 3-skill (Future Systems Task 1)', () => {
 
   it('id N2b: skill chuỗi KHÔNG mang hậu tố _b/_c/_d/_e', () => {
     for (const element of ELEMENT_ORDER) {
-      for (const skillId of PHAP_TU_KIT_IDS[element]) {
+      for (const skillId of SPELL_KIT_IDS[element]) {
         expect(skillId, `id ${skillId} vi phạm N2b`).not.toMatch(/_[bcde]$/)
       }
     }
@@ -65,7 +65,7 @@ describe('Data chuỗi thần thoại 3-skill (Future Systems Task 1)', () => {
 
   it('mọi effect damage của skill chuỗi có manaScalingRatio + attributeScaling (attunement) — quy tắc §1.3', () => {
     for (const element of ELEMENT_ORDER) {
-      for (const skillId of PHAP_TU_KIT_IDS[element]) {
+      for (const skillId of SPELL_KIT_IDS[element]) {
         const skill = SKILLS.find(s => s.id === skillId)!
 
         for (const effect of skill.effects) {
@@ -99,13 +99,12 @@ describe('Data chuỗi thần thoại 3-skill (Future Systems Task 1)', () => {
     }
   })
 
-  it('5 ult mới: có trong SKILLS, buildTag ult, unlocked false, không requiredRealmId', () => {
+  it('5 ult mới: có trong SKILLS, buildTag ult, không requiredRealmId', () => {
     for (const id of NEW_ULT_IDS) {
       const skill = SKILLS.find(s => s.id === id)
 
       expect(skill, `thiếu ult ${id}`).toBeDefined()
       expect(skill!.buildTag).toBe('ult')
-      expect(skill!.unlocked).toBe(false)
       expect(skill!.requiredRealmId).toBeUndefined()
       expect(skill!.execution).toEqual({ kind: 'cast_time', castTime: 1.5 })
     }
@@ -142,13 +141,10 @@ describe('Data chuỗi thần thoại 3-skill (Future Systems Task 1)', () => {
     expect(new Set(allIds).size).toBe(allIds.length)
   })
 
-  it('skill mới KHÔNG unlocked mặc định (phải mua qua node chuỗi)', () => {
+  it('element kit skills tồn tại trong catalog (mua qua node chuỗi)', () => {
     for (const element of ELEMENT_ORDER) {
-      for (const skillId of PHAP_TU_KIT_IDS[element].slice(1)) {
-        const skill = SKILLS.find(s => s.id === skillId)
-
-        expect(skill!.unlocked).toBe(false)
-        expect(skill!.equipped).toBe(false)
+      for (const skillId of SPELL_KIT_IDS[element].slice(1)) {
+        expect(SKILLS.find(s => s.id === skillId), `thiếu ${skillId}`).toBeDefined()
       }
     }
   })
@@ -162,7 +158,7 @@ describe('Data chuỗi thần thoại 3-skill (Future Systems Task 1)', () => {
       earth: 'earth',
     }
 
-    for (const [chainKey, chain] of Object.entries(PHAP_TU_KIT_IDS)) {
+    for (const [chainKey, chain] of Object.entries(SPELL_KIT_IDS)) {
       for (const skillId of chain) {
         const skill = SKILLS.find(s => s.id === skillId)
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { freshKiemTuState } from '../kiem-tu/KiemTuState'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
@@ -18,7 +18,7 @@ import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 // the NguKiemDao domain functions, the kiemDaoBelowCap prereq blocks
 // purchase BEFORE insight is deducted, and requiredWay-tagged nodes are
 // inert + unpurchasable across the way boundary (M6 — the retired
-// kiemTuMode field / kiem_tu_an flip node are gone; way membership is
+// swordPathMode field / kiem_tu_an flip node are gone; way membership is
 // the gate).
 
 const CUU_CUNG_OUTER_IDS = [
@@ -40,10 +40,10 @@ function setup() {
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 
   const player = createDefaultPlayer()
-  player.cultivationPath = 'kiem_tu'
-  player.cultivationWay = 'hien'
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'sword_pathway'
   player.realmId = 'mahayana'
-  player.kiemTu = freshKiemTuState()
+  player.swordPath = freshSwordPathState()
   player.skillInsight = 100_000
 
   gameManager.setActivePlayer(player)
@@ -55,14 +55,14 @@ function setup() {
 // cultivationWay is the whole switch (no kiem_tu_an prereq chain any
 // more — ngu nodes need only requiredWay + realm + kiemDaoBelowCap).
 function asNgu(player: ReturnType<typeof createDefaultPlayer>, outers: number = CUU_CUNG_OUTER_IDS.length) {
-  player.cultivationWay = 'ngu'
+  player.cultivationWay = 'hidden_sword_pathway'
   player.nodeLevels = {}
   for (const id of CUU_CUNG_OUTER_IDS.slice(0, outers)) {
     player.nodeLevels[id] = 1
   }
 }
 
-describe('kiemTu tree — Cuu Cung grants', () => {
+describe('swordPath tree — Cuu Cung grants', () => {
   it('purchasing an outer node grants kiemY through the domain function', () => {
     const { gameManager, player } = setup()
     asNgu(player, 0)
@@ -75,53 +75,53 @@ describe('kiemTu tree — Cuu Cung grants', () => {
     expect(gameManager.progressionOps.purchaseNode('cuu_cung_kham', player)).toBe(true)
     // gainKiemY converts greedily at forgeCost — the grant stays banked
     // when below the qi_refining forge cost (9,999).
-    expect(player.kiemTu!.kiemY).toBe(grant)
-    expect(player.kiemTu!.kiemDaoCount).toBe(1)
+    expect(player.swordPath!.kiemY).toBe(grant)
+    expect(player.swordPath!.kiemDaoCount).toBe(1)
   })
 
   it('kiemYGrant exceeding forge cost auto-converts to kiemDao', () => {
     const { gameManager, player } = setup()
     asNgu(player, 0)
     player.realmId = 'qi_refining'
-    player.kiemTu!.kiemY = 9_000
+    player.swordPath!.kiemY = 9_000
 
     // cuu_cung_kham grants ~half a forge — the banked total crosses
     // 9,999 so the purchase converts one sword.
     expect(gameManager.progressionOps.purchaseNode('cuu_cung_kham', player)).toBe(true)
-    expect(player.kiemTu!.kiemDaoCount).toBe(2)
-    expect(player.kiemTu!.kiemY).toBe(9_000 + 5_000 - 9_999)
+    expect(player.swordPath!.kiemDaoCount).toBe(2)
+    expect(player.swordPath!.kiemY).toBe(9_000 + 5_000 - 9_999)
   })
 
   it('kiemDaoBelowCap blocks purchase at cap BEFORE insight is deducted', () => {
     const { gameManager, player } = setup()
     asNgu(player, 0)
     player.realmId = 'qi_refining'
-    player.kiemTu!.kiemDaoCount = kiemDaoCap(1) // 2 — at cap
+    player.swordPath!.kiemDaoCount = kiemDaoCap(1) // 2 — at cap
 
     const insightBefore = player.skillInsight
     expect(gameManager.progressionOps.canPurchaseNode('cuu_cung_kham', player)).toBe(false)
     expect(gameManager.progressionOps.purchaseNode('cuu_cung_kham', player)).toBe(false)
     expect(player.skillInsight).toBe(insightBefore)
     expect(player.nodeLevels.cuu_cung_kham).toBeUndefined()
-    expect(player.kiemTu!.kiemY).toBe(0) // no grant leaked
+    expect(player.swordPath!.kiemY).toBe(0) // no grant leaked
   })
 
   it('trung_cung requires all 8 outers and grants +1 kiemDaoCount', () => {
     const { gameManager, player } = setup()
     asNgu(player, 7) // one outer missing
-    player.kiemTu!.kiemDaoCount = 1
+    player.swordPath!.kiemDaoCount = 1
 
     expect(gameManager.progressionOps.canPurchaseNode('cuu_cung_trung', player)).toBe(false)
     player.nodeLevels[CUU_CUNG_OUTER_IDS[7]!] = 1
     expect(gameManager.progressionOps.canPurchaseNode('cuu_cung_trung', player)).toBe(true)
     expect(gameManager.progressionOps.purchaseNode('cuu_cung_trung', player)).toBe(true)
-    expect(player.kiemTu!.kiemDaoCount).toBe(2)
+    expect(player.swordPath!.kiemDaoCount).toBe(2)
   })
 
   it('trung_cung is also cap-guarded', () => {
     const { gameManager, player } = setup()
     asNgu(player)
-    player.kiemTu!.kiemDaoCount = kiemDaoCap(getRealmIndex(player.realmId))
+    player.swordPath!.kiemDaoCount = kiemDaoCap(getRealmIndex(player.realmId))
 
     const insightBefore = player.skillInsight
     expect(gameManager.progressionOps.canPurchaseNode('cuu_cung_trung', player)).toBe(false)
@@ -130,7 +130,7 @@ describe('kiemTu tree — Cuu Cung grants', () => {
   })
 })
 
-describe('kiemTu tree — way boundary', () => {
+describe('swordPath tree — way boundary', () => {
   it('ngu player cannot purchase hien orb nodes (inert trap prevented)', () => {
     const { gameManager, player } = setup()
     asNgu(player)
@@ -140,7 +140,7 @@ describe('kiemTu tree — way boundary', () => {
 
   it('hien player cannot purchase ngu nodes', () => {
     const { gameManager, player } = setup()
-    player.cultivationWay = 'hien'
+    player.cultivationWay = 'sword_pathway'
     player.nodeLevels = { ngu_kiem_sac: 1 } // inconsistent save shape — gate still holds
     expect(gameManager.progressionOps.canPurchaseNode('ngu_cascade_a', player)).toBe(false)
     expect(gameManager.progressionOps.purchaseNode('ngu_cascade_a', player)).toBe(false)
@@ -149,20 +149,20 @@ describe('kiemTu tree — way boundary', () => {
   it('hien orb node statModifiers do not aggregate on the ngu way', () => {
     const { gameManager, player } = setup()
     player.nodeLevels = { orb_dam_1: 5 }
-    player.cultivationWay = 'ngu'
+    player.cultivationWay = 'hidden_sword_pathway'
     const nguMods = aggregateNodeStatModifiers(gameManager.nodeRegistry, player)
     expect(nguMods.filter(m => m.sourceId === 'orb_dam_1')).toEqual([])
 
-    player.cultivationWay = 'hien'
+    player.cultivationWay = 'sword_pathway'
     const hienMods = aggregateNodeStatModifiers(gameManager.nodeRegistry, player)
     expect(hienMods.filter(m => m.sourceId === 'orb_dam_1').length).toBeGreaterThan(0)
   })
 })
 
-describe('kiemTu tree — collectors', () => {
+describe('swordPath tree — collectors', () => {
   it('purchased orb capstone surfaces as a combo modifier that boosts matching combos', () => {
     const { gameManager, player } = setup()
-    player.cultivationWay = 'hien'
+    player.cultivationWay = 'sword_pathway'
     player.nodeLevels = { orb_dam_capstone: 1 }
 
     const modifiers = collectKiemPhoComboModifiers(player, KIEM_TU_NODES)
@@ -183,7 +183,7 @@ describe('kiemTu tree — collectors', () => {
 
   it('capstones granting DIFFERENT buffs compose on one combo (no overwrite)', () => {
     const { gameManager, player } = setup()
-    player.cultivationWay = 'hien'
+    player.cultivationWay = 'sword_pathway'
     player.nodeLevels = { orb_chem_capstone: 1, orb_bo_capstone: 1, orb_hat_capstone: 1 }
 
     const modifiers = collectKiemPhoComboModifiers(player, KIEM_TU_NODES)
@@ -208,7 +208,7 @@ describe('kiemTu tree — collectors', () => {
 
   it('capstone modifiers stay inert on the ngu way', () => {
     const { gameManager, player } = setup()
-    player.cultivationWay = 'ngu'
+    player.cultivationWay = 'hidden_sword_pathway'
     player.nodeLevels = { orb_dam_capstone: 1 }
     expect(collectKiemPhoComboModifiers(player, KIEM_TU_NODES)).toEqual([])
   })

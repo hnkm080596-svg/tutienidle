@@ -28,7 +28,7 @@ function makeDummyEnemy() {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: { ...ENEMY_STATS_INPUT },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -39,7 +39,7 @@ describe('GameManager — turn-engine cast counting wiring (9.5 #9)', () => {
     gameManager.setCombatClockSource(combatSource)
 
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
+    player.cultivationPath = 'sword'
 
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.setActivePlayer(player)
@@ -47,7 +47,7 @@ describe('GameManager — turn-engine cast counting wiring (9.5 #9)', () => {
 
     gameManager.startBattleWithPlayer(player, makeDummyEnemy())
 
-    // intro + countdown + vài lượt fighting — tram là basic của kiem_tu.
+    // intro + countdown + vài lượt fighting — tram là basic của sword.
     // Advance until the player's first cast lands (gauge fill depends on
     // attackSpeed; the cap keeps a broken wiring from hanging the test).
     for (let i = 0; i < 200 && !player.skillCastCounts?.['tram']; i++) {

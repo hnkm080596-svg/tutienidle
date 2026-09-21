@@ -23,8 +23,9 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import type { PlayerData } from '../player/Player'
 import { playerToCombatEntity, resolvePlayerStatAssembly } from '../player/Player'
-import type { CultivationPathId, PathCapability, PathWayId } from '../player/CultivationPathKit'
+import type { CultivationPathId, PathCapability, CultivationWayId } from '../player/CultivationPathKit'
 import { getActivePath, getActiveWay } from '../player/CultivationPathSystem'
+import { resolveCombatSkillRoles } from '../player/CultivationPathRoles'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { PartyFormationSlot } from './PartyFormation'
@@ -60,7 +61,6 @@ export interface ResolvedCombatKit {
   readonly reactivePayloads?: Record<string, TurnSkillDefinition>
   /** NO maxThe here - the build consumed it into entity.maxThe. */
   readonly statDomains?: readonly StatDomain[]
-  readonly emblem?: { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition }
   /**
    * Session-scoped: ops mints the provider with the cycle RNG stream.
    * Closes over the node snapshot taken at resolve time - the only
@@ -101,7 +101,7 @@ export interface ResolvedCompanionBuild {
 
 export interface ResolvedCombatBuild {
   /** Committed pair via catalog resolution - undefined = mortal/fail-closed. */
-  readonly identity: { path: CultivationPathId; way: PathWayId } | undefined
+  readonly identity: { path: CultivationPathId; way: CultivationWayId } | undefined
   readonly capabilities: ReadonlySet<PathCapability>
   /** undefined on the raw-entity path - ops supplies the entity. */
   readonly stats: Stats | undefined
@@ -214,34 +214,33 @@ export function resolveCombatBuild(
   const entity = primaryEntityOverride ?? playerToCombatEntity(source, assembly.stats, deps.getSkillLevels())
 
   // --- Kit (M2) ----------------------------------------------------------
+  // P7-M4 - role composition goes through the ONE seam
+  // (resolveCombatSkillRoles): emblem precedence, reactive payloads and
+  // the kit-declared The cap arrive resolved; the UI accessor consumes
+  // the same composition so build and display cannot drift apart.
   // The node registry is read ONCE here; the provider thunk closes over the
-  // snapshot so no registry read can occur after resolve returns. Call
-  // order mirrors the retired adapter argument evaluation (basic ->
-  // statDomains -> specialUltimate): partial runtime fakes throw at the
-  // same point they used to.
+  // snapshot so no registry read can occur after resolve returns.
   const nodes = deps.getProgressionNodes()
-  const basic = runtime?.resolveBasic(source) ?? GENERIC_PHYSICAL_BASIC
+  const roles = runtime ? resolveCombatSkillRoles(source, runtime) : undefined
   const statDomains = runtime?.resolveStatDomains(source)
-  const specialUltimate = runtime?.resolveSpecialUltimate(source)
   const kit: ResolvedCombatKit = {
-    basic,
-    special: specialUltimate?.special,
-    ultimate: specialUltimate?.ultimate,
-    reactivePayloads: specialUltimate?.reactivePayloads,
+    basic: roles?.basic ?? GENERIC_PHYSICAL_BASIC,
+    special: roles?.special,
+    ultimate: roles?.ultimate,
+    reactivePayloads: roles?.reactivePayloads,
     statDomains,
-    emblem: runtime?.emblemSlots?.(),
     buildDynamicBasic: runtime?.buildDynamicBasic
       ? (rng) => runtime.buildDynamicBasic!(source, nodes, rng)
       : undefined,
   }
 
-  // entity.maxThe - the single write, per-path: an ultimate-declared cap
+  // entity.maxThe - the single write, per-path: a kit-declared cap
   // wins on both branches; otherwise the MINTED entity resolves through
   // the runtime (ops:1678 + the adapter stamp folded into one) while a
   // raw override keeps its own cap - resolveMaxThe never runs on the raw
   // path (today it never did; the adapter stamp was the only write).
-  if (specialUltimate?.maxThe !== undefined) {
-    entity.maxThe = specialUltimate.maxThe
+  if (roles?.maxThe !== undefined) {
+    entity.maxThe = roles.maxThe
   } else if (primaryEntityOverride === undefined) {
     entity.maxThe = runtime?.resolveMaxThe(source)
   }
@@ -315,7 +314,7 @@ export function resolveCombatBuild(
     }
   }
 
-  if (capabilities.has('phap_tu.reaction_aura')) {
+  if (capabilities.has('spell.reaction_aura')) {
     for (const ally of allies) {
       if (!ally.alive) continue
       entryBuffs.push({
@@ -326,12 +325,13 @@ export function resolveCombatBuild(
     }
   }
 
-  // Kit-clone build buffs from the EFFECTIVE post-emblem slots - the same
+  // Kit-clone build buffs from the EFFECTIVE slots - the seam already
+  // resolved emblem precedence into kit.special/ultimate, so the same
   // read applyEntryBuffs ran on the assembled participant (basic, then
-  // special, then ultimate).
+  // special, then ultimate) holds.
   entryBuffs.push(
     ...collectClones(
-      [kit.basic, kit.emblem?.special ?? kit.special, kit.emblem?.ultimate ?? kit.ultimate],
+      [kit.basic, kit.special, kit.ultimate],
       entity.id,
     ),
   )

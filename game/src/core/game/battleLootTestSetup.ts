@@ -65,7 +65,6 @@ export interface LootTestSetupOptions {
   materialIds?: string[]
   equipmentTemplates?: { id: string; name: string }[]
   pillTemplates?: { id: string; name: string; grade: string; icon?: string }[]
-  techniqueTemplates?: { id: string; name: string; icon?: string }[]
 }
 
 export function createLootTestSetup(options: LootTestSetupOptions = {}) {
@@ -83,7 +82,6 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
 
   const equipmentTemplates = options.equipmentTemplates ?? []
   const pillTemplates = options.pillTemplates ?? []
-  const techniqueTemplates = options.techniqueTemplates ?? []
 
   // EquipmentBag.add() returns AutoDissolveReward[] (soft-cap audit
   // 2026-08-31) — the mock must return an array to match the real contract.
@@ -97,7 +95,9 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
   const createInstance = vi.fn<EquipmentSystem['createInstance']>(
     () => TEST_EQUIPMENT_INSTANCE as EquipmentInstance,
   )
-  const learnTechnique = vi.fn(() => true)
+  // P7-M3 - the pending-mastery flush consumes through gainMastery;
+  // default the mock to "consumed everything" so summaries read honest.
+  const gainMastery = vi.fn((amount: number) => ({ gained: amount, rankUps: 0 }))
   // Heal-on-kill talents are retired (v4 catalog) so the stub never heals;
   // it also must NOT write currentHp directly — this helper is a non-test
   // file and the R14 vitalsWriteAuthority guard scans it as production code.
@@ -108,7 +108,7 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
     realmId: options.realmId ?? 'mortal',
     family: options.family,
     signatureDrops: options.signatureDrops,
-    rewards: options.rewards ?? { techniqueInsight: 0, spiritStone: 0 },
+    rewards: options.rewards ?? { techniqueMastery: 0, spiritStone: 0 },
   } as unknown as Enemy
 
   const stage = options.stage
@@ -133,11 +133,7 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
     equipmentSystem: { createInstance },
     affixRegistry: {},
     zoneRegistry: { has: () => false, getZoneForStage: () => undefined },
-    techniqueManager: { getEquipped: () => undefined },
-    techniqueSystem: { learn: learnTechnique },
-    techniqueTemplates: {
-      get: (id: string) => techniqueTemplates.find((template) => template.id === id),
-    },
+    techniqueSystem: { gainMastery },
     enemySystem: {
       get: () => enemy,
       despawn: vi.fn(),
@@ -176,7 +172,7 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
     eventBus,
     notifications,
     createInstance,
-    learnTechnique,
+    gainMastery,
     killEnemy,
   }
 }

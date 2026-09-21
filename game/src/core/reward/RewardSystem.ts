@@ -1,7 +1,7 @@
 import type { Reward } from './Reward'
 
 export interface RewardReceiver {
-  addTechniqueInsight(amount: number): void
+  addSkillInsight(amount: number): void
 
   addCultivation(amount: number): void
 
@@ -13,9 +13,9 @@ export class RewardSystem {
     receiver: RewardReceiver,
     reward: Reward,
   ) {
-    if (reward.techniqueInsight !== undefined) {
-      receiver.addTechniqueInsight(
-        reward.techniqueInsight,
+    if (reward.skillInsight !== undefined) {
+      receiver.addSkillInsight(
+        reward.skillInsight,
       )
     }
 

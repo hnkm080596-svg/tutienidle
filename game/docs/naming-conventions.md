@@ -27,8 +27,8 @@ Cấm dùng từ "phẩm" để chỉ trục 5-bậc chất lượng, và ngư�
 ## Family language map
 
 Thuần Eng: realms (`mortal`, `qi_refining`, `foundation_establishment`…), buildings, enemies, pills, stages, stats, battle states.
-Thuần VN pinyin: skills (prefix cơ chế `passive_` được phép đứng trước gốc VN), techniques, materials flavor (thảo mộc/kim loại/xương), zones.
-Giữ nguyên đã đạt N3: CultivationPathId `phap_tu/kiem_tu`.
+Thuần VN pinyin: skills, materials flavor (thảo mộc/kim loại/xương), zones, leaf content ids under a Way (nodes, buffs, orb ids…).
+**Amended 2026-09-21 (P7-M1, decision D6):** path/way/technique identity = mechanic family → English: `CultivationPathId` = `sword|spell|body`; `CultivationWayId` = `*_pathway`; canonical technique ids (`five_elements_art`…) = English. VN grandfathering for `phap_tu/kiem_tu` rescinded — direct identity cut, no compat layer.
 
 ## Save v41
 

@@ -6,9 +6,9 @@ import { defineEnemy } from '../enemy/Enemy'
 
 // skill-insight-and-auto-combat-hud-plan.md mục 3/11 — Cảm ngộ Kỹ năng
 // (skillInsight) LUÔN cấp khi hạ quái, KHÔNG cần trang bị tâm pháp
-// (khác Cảm ngộ Tâm Pháp/techniqueInsight), và chỉ cấp đúng 1 lần cho
+// (khac Cam ngo Tam Phap/techniqueMastery), va chi cap dung 1 lan cho
 // mỗi con quái chết dù nhiều tick cùng xử lý (guard rewardGranted).
-function makeEnemy(techniqueInsight: number) {
+function makeEnemy(techniqueMastery: number) {
   return defineEnemy({
     id: 'skill_insight_test_enemy',
     name: 'Quái',
@@ -19,7 +19,7 @@ function makeEnemy(techniqueInsight: number) {
       maxHp: 1, might: 0, attackSpeed: 1,
       criticalRate: 0, criticalDamage: 1.5, armor: 0,
     },
-    rewards: { techniqueInsight, spiritStone: 0 },
+    rewards: { techniqueMastery, spiritStone: 0 },
   })
 }
 

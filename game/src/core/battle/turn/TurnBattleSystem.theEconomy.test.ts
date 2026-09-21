@@ -27,7 +27,7 @@ import { MAX_THE } from '../../combat/CombatTypes'
 import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
 // The Tu Reimagined (spec 2026-09-15 section 4.1, plan Task 15) — the
-// the_tu_an proc-fuel economy: pay-per-attempt cost, +THE_PROC_GAIN on
+// hidden_body proc-fuel economy: pay-per-attempt cost, +THE_PROC_GAIN on
 // success only, free income table gated on the ung_the marker, single
 // clamp through entity.maxThe ?? MAX_THE. buff2 M4: economy reads run
 // through the battle runtime's capability grants.
@@ -191,7 +191,7 @@ describe('TheEconomy — pool cap + pay-per-attempt', () => {
   })
 })
 
-describe('the_tu_an free income (marker-gated, ordering before reactive windows)', () => {
+describe('hidden_body free income (marker-gated, ordering before reactive windows)', () => {
   it('taken hit income: +6 lands on the defender BEFORE the onImpactLanded window runs', () => {
     const { battle, playerP, combat, runtime } = makeBattle()
     runtime.applyBuff('ung_the', playerP)

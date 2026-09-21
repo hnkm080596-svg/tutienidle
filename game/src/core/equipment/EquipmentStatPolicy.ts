@@ -74,7 +74,7 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
     tendency: 'Thủ',
     mainStats: ['defense'],
     // The Tu Reimagined (spec 2026-09-15 section 3.3): block/endurance
-    // are the_tu-domain stats — domain-gated data can't be authored
+    // are body-domain stats — domain-gated data can't be authored
     // untagged, so they leave the equipment pools entirely.
     // generic thorns stat retired with the stat (spec section 7.13/T12).
     substats: [

@@ -119,12 +119,12 @@ describe('BattleLootSystem — EXP Bản Mệnh Pháp Bảo (doc §5.2)', () => 
     vi.restoreAllMocks()
   })
 
-  it('quái chết cấp đúng EXP theo base = max(1, floor(techniqueInsight*0.25))', () => {
+  it('quái chết cấp đúng EXP theo base = max(1, floor(techniqueMastery*0.25))', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.999) // pool draw trượt đá, cô lập EXP
 
     const { killEnemy, loot, player } = createLootTestSetup({
       realmId: 'foundation_establishment',
-      rewards: { techniqueInsight: 10, spiritStone: 0 },
+      rewards: { techniqueMastery: 10, spiritStone: 0 },
       stage: FOUNDATION_STAGE,
       materialIds: ['doan_bao_thach'],
     })
@@ -142,7 +142,7 @@ describe('BattleLootSystem — EXP Bản Mệnh Pháp Bảo (doc §5.2)', () => 
 
     const { killEnemy, loot } = createLootTestSetup({
       realmId: 'foundation_establishment',
-      rewards: { techniqueInsight: 10, spiritStone: 0 },
+      rewards: { techniqueMastery: 10, spiritStone: 0 },
       stage: FOUNDATION_STAGE,
       materialIds: ['doan_bao_thach'],
     })

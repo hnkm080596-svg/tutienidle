@@ -1,6 +1,6 @@
 // The Tu Reimagined — cultivation-path framework M5+M7: Thể Tu
 // way-normalisation spec contract tests. Post-M7 cultivationPath is the
-// BASE id ('the_tu') and cultivationWay the discriminator — there is
+// BASE id ('body') and cultivationWay the discriminator — there is
 // exactly one persisted shape. EVERY Thể Tu way-specific gate (kit
 // build, Bất Tử Ba Thể survival, path stat emission, node-tree access,
 // the Thế resource bar / stat domain) resolves on the WAY —
@@ -36,15 +36,15 @@ import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
 import { buildTheTuAnKit, buildTheTuKit } from '../../data/skill/TheTuSkills'
-import { collectTheTuAnMechanicModifiers } from './TheTuAnMechanicModifiers'
-import { collectTheTuKitModifiers } from './TheTuKitModifiers'
+import { collectHiddenBodyMechanicModifiers } from './TheTuAnMechanicModifiers'
+import { collectBodyKitModifiers } from './TheTuKitModifiers'
 import {
-  isTheTuHien,
-  isTheTuUngThe,
-  THE_TU_HIEN_WAY,
-  THE_TU_UNG_THE_WAY,
-  theTuAnReactiveModifiers,
-  theTuEnduranceModifiers,
+  isBodyPathway,
+  isHiddenBodyPathway,
+  BODY_PATHWAY,
+  HIDDEN_BODY_PATHWAY,
+  hiddenBodyReactiveModifiers,
+  bodyEnduranceModifiers,
 } from './TheTuPath'
 
 const TOT10 = { strength: 10, dexterity: 10, intelligence: 10, attunement: 0, vitality: 10 }
@@ -57,10 +57,10 @@ function nodeById(id: string) {
   return node!
 }
 
-function theTuPlayer(overrides: Partial<PlayerData> = {}): PlayerData {
+function bodyPlayer(overrides: Partial<PlayerData> = {}): PlayerData {
   const player = createDefaultPlayer()
-  player.cultivationPath = 'the_tu'
-  player.cultivationWay = 'hien'
+  player.cultivationPath = 'body'
+  player.cultivationWay = 'body_pathway'
   player.realmId = 'qi_refining'
   player.skillInsight = 99
   Object.assign(player, overrides)
@@ -70,15 +70,15 @@ function theTuPlayer(overrides: Partial<PlayerData> = {}): PlayerData {
 /** The single persisted shape post-M7: BASE path id + the way. */
 function ungThePlayer(overrides: Partial<PlayerData> = {}): PlayerData {
   const player = createDefaultPlayer()
-  player.cultivationPath = 'the_tu'
-  player.cultivationWay = 'ung_the'
+  player.cultivationPath = 'body'
+  player.cultivationWay = 'hidden_body_pathway'
   player.realmId = 'qi_refining'
   player.skillInsight = 99
   Object.assign(player, overrides)
   return player
 }
 
-const UNG_THE_SHAPES = [['(the_tu, ung_the)', ungThePlayer]] as const
+const UNG_THE_SHAPES = [['(body, ung_the)', ungThePlayer]] as const
 
 const TANKY_DUMMY = {
   maxHp: 100_000,
@@ -97,7 +97,7 @@ function makeDummy(id: string, statsInput: Partial<typeof TANKY_DUMMY> = {}) {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: { ...TANKY_DUMMY, ...statsInput },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -142,76 +142,76 @@ function startBattle(gameManager: GameManager, player: PlayerData): TurnBattle {
 
 describe('Thể Tu way predicates — strict base pairs', () => {
   it.each([
-    [{ cultivationPath: 'the_tu', cultivationWay: 'hien' }, true],
-    [{ cultivationPath: 'the_tu', cultivationWay: 'ung_the' }, false],
-    [{ cultivationPath: 'the_tu' }, false],
-    [{ cultivationPath: 'phap_tu', cultivationWay: 'hien' }, false],
+    [{ cultivationPath: 'body', cultivationWay: 'body_pathway' }, true],
+    [{ cultivationPath: 'body', cultivationWay: 'hidden_body_pathway' }, false],
+    [{ cultivationPath: 'body' }, false],
+    [{ cultivationPath: 'spell', cultivationWay: 'sword_pathway' }, false],
     [{}, false],
     [undefined, false],
-  ])('isTheTuHien(%o) → %s', (slice, expected) => {
-    expect(isTheTuHien(slice as PlayerData | undefined)).toBe(expected)
+  ])('isBodyPathway(%o) → %s', (slice, expected) => {
+    expect(isBodyPathway(slice as PlayerData | undefined)).toBe(expected)
   })
 
   it.each([
-    [{ cultivationPath: 'the_tu', cultivationWay: 'ung_the' }, true],
-    [{ cultivationPath: 'the_tu', cultivationWay: 'hien' }, false],
-    [{ cultivationPath: 'the_tu' }, false],
-    [{ cultivationPath: 'phap_tu', cultivationWay: 'ung_the' }, false],
+    [{ cultivationPath: 'body', cultivationWay: 'hidden_body_pathway' }, true],
+    [{ cultivationPath: 'body', cultivationWay: 'body_pathway' }, false],
+    [{ cultivationPath: 'body' }, false],
+    [{ cultivationPath: 'spell', cultivationWay: 'hidden_body_pathway' }, false],
     [{}, false],
     [undefined, false],
-  ])('isTheTuUngThe(%o) → %s', (slice, expected) => {
-    expect(isTheTuUngThe(slice as PlayerData | undefined)).toBe(expected)
+  ])('isHiddenBodyPathway(%o) → %s', (slice, expected) => {
+    expect(isHiddenBodyPathway(slice as PlayerData | undefined)).toBe(expected)
   })
 
-  it('corrupt pair (the_tu, <foreign way>) fails closed on BOTH predicates', () => {
+  it('corrupt pair (body, <foreign way>) fails closed on BOTH predicates', () => {
     for (const corrupt of [
-      { cultivationPath: 'the_tu', cultivationWay: 'ngo_dao' },
-      { cultivationPath: 'the_tu', cultivationWay: 'ngu' },
+      { cultivationPath: 'body', cultivationWay: 'hidden_spell_pathway' },
+      { cultivationPath: 'body', cultivationWay: 'hidden_sword_pathway' },
     ] as const) {
-      expect(isTheTuHien(corrupt as PlayerData)).toBe(false)
-      expect(isTheTuUngThe(corrupt as PlayerData)).toBe(false)
+      expect(isBodyPathway(corrupt as PlayerData)).toBe(false)
+      expect(isHiddenBodyPathway(corrupt as PlayerData)).toBe(false)
     }
   })
 })
 
 describe('Thể Tu way definitions', () => {
-  it('hien way emits the endurance facet on the the_tu domain', () => {
-    expect(THE_TU_HIEN_WAY.id).toBe('hien')
-    expect(THE_TU_HIEN_WAY.pathId).toBe('the_tu')
-    expect(THE_TU_HIEN_WAY.stats?.domains).toEqual(['the_tu'])
-    expect(THE_TU_HIEN_WAY.stats?.collectModifiers(theTuPlayer(), TOT10)).toEqual(
-      theTuEnduranceModifiers(TOT10.vitality, 'the_tu:vitality'),
+  it('hien way emits the endurance facet on the body domain', () => {
+    expect(BODY_PATHWAY.id).toBe('body_pathway')
+    expect(BODY_PATHWAY.pathId).toBe('body')
+    expect(BODY_PATHWAY.stats?.domains).toEqual(['body'])
+    expect(BODY_PATHWAY.stats?.collectModifiers(bodyPlayer(), TOT10)).toEqual(
+      bodyEnduranceModifiers(TOT10.vitality, 'body:vitality'),
     )
   })
 
-  it('ung_the way declares the Thế economy capability + the the_tu_an facet', () => {
-    expect(THE_TU_UNG_THE_WAY.id).toBe('ung_the')
-    expect(THE_TU_UNG_THE_WAY.pathId).toBe('the_tu')
-    expect(THE_TU_UNG_THE_WAY.capabilities?.static).toContain('the_tu.the_economy')
-    expect(THE_TU_UNG_THE_WAY.stats?.domains).toEqual(['the_tu_an'])
-    expect(THE_TU_UNG_THE_WAY.stats?.collectModifiers(ungThePlayer(), TOT10)).toEqual(
-      theTuAnReactiveModifiers(TOT10, 'the_tu_an:attributes'),
+  it('ung_the way declares the Thế economy capability + the hidden_body facet', () => {
+    expect(HIDDEN_BODY_PATHWAY.id).toBe('hidden_body_pathway')
+    expect(HIDDEN_BODY_PATHWAY.pathId).toBe('body')
+    expect(HIDDEN_BODY_PATHWAY.capabilities?.static).toContain('body.essence_economy')
+    expect(HIDDEN_BODY_PATHWAY.stats?.domains).toEqual(['hidden_body'])
+    expect(HIDDEN_BODY_PATHWAY.stats?.collectModifiers(ungThePlayer(), TOT10)).toEqual(
+      hiddenBodyReactiveModifiers(TOT10, 'hidden_body:attributes'),
     )
   })
 })
 
 describe('node trees — way stamps + bidirectional isolation', () => {
-  it('every THE_TU_NODES node is stamped requiredWay hien on base path the_tu', () => {
+  it('every THE_TU_NODES node is stamped requiredWay hien on base path body', () => {
     for (const node of THE_TU_NODES) {
-      expect(node.requiredCultivationPath, node.id).toBe('the_tu')
-      expect(node.requiredWay, node.id).toBe('hien')
+      expect(node.requiredCultivationPath, node.id).toBe('body')
+      expect(node.requiredWay, node.id).toBe('body_pathway')
     }
   })
 
-  it('every THE_TU_AN_NODES node is stamped requiredWay ung_the on BASE path the_tu', () => {
+  it('every THE_TU_AN_NODES node is stamped requiredWay ung_the on BASE path body', () => {
     for (const node of THE_TU_AN_NODES) {
-      expect(node.requiredCultivationPath, node.id).toBe('the_tu')
-      expect(node.requiredWay, node.id).toBe('ung_the')
+      expect(node.requiredCultivationPath, node.id).toBe('body')
+      expect(node.requiredWay, node.id).toBe('hidden_body_pathway')
     }
   })
 
   it('hien purchases the Hiện tree; the Ứng Thế tree rejects the way', () => {
-    const player = theTuPlayer()
+    const player = bodyPlayer()
 
     expect(purchaseNode(player, nodeById('cuong_chien'))).toBe(true)
     expect(purchaseNode(player, nodeById('minor_cuong_huyet_no'))).toBe(true)
@@ -234,17 +234,17 @@ describe('node trees — way stamps + bidirectional isolation', () => {
   )
 
   it('hien mutex still selects exactly one root — NodeSystem-owned excludesNode unchanged', () => {
-    const cuong = theTuPlayer()
+    const cuong = bodyPlayer()
     expect(purchaseNode(cuong, nodeById('cuong_chien'))).toBe(true)
     expect(purchaseNode(cuong, nodeById('tran_the'))).toBe(false)
 
-    const tran = theTuPlayer()
+    const tran = bodyPlayer()
     expect(purchaseNode(tran, nodeById('tran_the'))).toBe(true)
     expect(purchaseNode(tran, nodeById('cuong_chien'))).toBe(false)
   })
 
   it('aggregateNodeStatModifiers ignores the cross-way tree in BOTH directions', () => {
-    const hien = theTuPlayer()
+    const hien = bodyPlayer()
     hien.nodeLevels = { minor_ung_the_the_chat: 2 }
     expect(aggregateNodeStatModifiers(NODE_REGISTRY, hien)).toEqual([])
 
@@ -261,35 +261,35 @@ describe('node trees — way stamps + bidirectional isolation', () => {
       const player = build()
       player.nodeLevels = { cuong_chien: 1, minor_cuong_huyet_no: 1 }
 
-      expect(collectTheTuKitModifiers(NODE_REGISTRY, player).missingHpBonusBonus).toBe(0)
-      expect(collectTheTuAnMechanicModifiers(NODE_REGISTRY, player).maxTheBonus).toBe(0)
+      expect(collectBodyKitModifiers(NODE_REGISTRY, player).missingHpBonusBonus).toBe(0)
+      expect(collectHiddenBodyMechanicModifiers(NODE_REGISTRY, player).maxTheBonus).toBe(0)
     },
   )
 
   it('hien way-gated collectors ignore leaked Ứng Thế node levels', () => {
-    const player = theTuPlayer()
+    const player = bodyPlayer()
     player.nodeLevels = { ho_mon: 1, minor_ung_the_bi_the: 1 }
 
-    expect(collectTheTuAnMechanicModifiers(NODE_REGISTRY, player).maxTheBonus).toBe(0)
-    expect(collectTheTuKitModifiers(NODE_REGISTRY, player).missingHpBonusBonus).toBe(0)
+    expect(collectHiddenBodyMechanicModifiers(NODE_REGISTRY, player).maxTheBonus).toBe(0)
+    expect(collectBodyKitModifiers(NODE_REGISTRY, player).missingHpBonusBonus).toBe(0)
   })
 })
 
 describe('stat facets — collectActiveWayStatModifiers is the sole channel', () => {
-  it('hien emits the endurance threshold on the the_tu domain', () => {
-    const mods = collectActiveWayStatModifiers(theTuPlayer(), TOT10)
+  it('hien emits the endurance threshold on the body domain', () => {
+    const mods = collectActiveWayStatModifiers(bodyPlayer(), TOT10)
 
     expect(mods).toHaveLength(1)
-    expect(mods[0]).toMatchObject({ stat: 'enduranceThreshold', domain: 'the_tu' })
+    expect(mods[0]).toMatchObject({ stat: 'enduranceThreshold', domain: 'body' })
   })
 
   it.each(UNG_THE_SHAPES)(
-    '%s emits the three reactive chances on the the_tu_an domain',
+    '%s emits the three reactive chances on the hidden_body domain',
     (_label, build) => {
       const mods = collectActiveWayStatModifiers(build(), TOT10)
 
       expect(mods).toHaveLength(3)
-      expect(mods.map((m) => m.domain)).toEqual(['the_tu_an', 'the_tu_an', 'the_tu_an'])
+      expect(mods.map((m) => m.domain)).toEqual(['hidden_body', 'hidden_body', 'hidden_body'])
       expect(mods.map((m) => m.stat).sort()).toEqual([
         'counterChance',
         'followUpChance',
@@ -313,9 +313,9 @@ describe('stat facets — collectActiveWayStatModifiers is the sole channel', ()
   })
 
   it('way-owned stat domains resolve from the way, not the raw path id', () => {
-    expect(resolveActiveWayStatDomains(theTuPlayer())).toEqual(['the_tu'])
+    expect(resolveActiveWayStatDomains(bodyPlayer())).toEqual(['body'])
     for (const [, build] of UNG_THE_SHAPES) {
-      expect(resolveActiveWayStatDomains(build())).toEqual(['the_tu_an'])
+      expect(resolveActiveWayStatDomains(build())).toEqual(['hidden_body'])
     }
     expect(resolveActiveWayStatDomains(createDefaultPlayer())).toBeUndefined()
   })
@@ -338,8 +338,8 @@ describe('battle builds — participant kit is way-resolved', () => {
       expect(participant.ultimate?.skill.id).toBe('bach_ung')
       expect(participant.reactivePayloads).toBeDefined()
       expect(participant.entity.maxThe).toBe(MAX_THE + 30)
-      expect(participant.activeDomains?.has('the_tu_an')).toBe(true)
-      expect(participant.activeDomains?.has('the_tu')).toBe(false)
+      expect(participant.activeDomains?.has('hidden_body')).toBe(true)
+      expect(participant.activeDomains?.has('body')).toBe(false)
     },
   )
 
@@ -355,13 +355,13 @@ describe('battle builds — participant kit is way-resolved', () => {
 
       expect(participant.basic?.id).toBe('tham_the')
       expect(participant.ultimate?.skill.id).toBe('bach_ung')
-      expect(participant.activeDomains?.has('the_tu_an')).toBe(true)
+      expect(participant.activeDomains?.has('hidden_body')).toBe(true)
     },
   )
 
-  it('hien + cuong_chien → cường quyền / loạn đấu / bất tử ba thể on the the_tu domain', () => {
+  it('hien + cuong_chien → cường quyền / loạn đấu / bất tử ba thể on the body domain', () => {
     const { gameManager } = makeManager()
-    const player = theTuPlayer()
+    const player = bodyPlayer()
     player.nodeLevels = { cuong_chien: 1 }
 
     const battle = startBattle(gameManager, player)
@@ -371,13 +371,13 @@ describe('battle builds — participant kit is way-resolved', () => {
     expect(participant.special?.skill.id).toBe('loan_dau')
     expect(participant.ultimate?.skill.id).toBe('bat_tu_ba_the')
     expect(participant.reactivePayloads).toBeUndefined()
-    expect(participant.activeDomains?.has('the_tu')).toBe(true)
-    expect(participant.activeDomains?.has('the_tu_an')).toBe(false)
+    expect(participant.activeDomains?.has('body')).toBe(true)
+    expect(participant.activeDomains?.has('hidden_body')).toBe(false)
   })
 
   it('hien leaked ho_mon levels never resolve the Ứng Thế kit', () => {
     const { gameManager } = makeManager()
-    const player = theTuPlayer()
+    const player = bodyPlayer()
     player.nodeLevels = { cuong_chien: 1, ho_mon: 1, phan_mon: 1 }
 
     const battle = startBattle(gameManager, player)
@@ -390,9 +390,9 @@ describe('battle builds — participant kit is way-resolved', () => {
     ).toBe(false)
   })
 
-  it('corrupt pair (the_tu, <foreign way>) fails closed — no way kit resolves', () => {
+  it('corrupt pair (body, <foreign way>) fails closed — no way kit resolves', () => {
     const { gameManager } = makeManager()
-    const player = ungThePlayer({ cultivationWay: 'ngo_dao' })
+    const player = ungThePlayer({ cultivationWay: 'hidden_spell_pathway' })
     player.nodeLevels = { cuong_chien: 1, ho_mon: 1 }
 
     const battle = startBattle(gameManager, player)
@@ -403,14 +403,14 @@ describe('battle builds — participant kit is way-resolved', () => {
     expect(
       gameManager.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'ung_the'),
     ).toBe(false)
-    expect(participant.activeDomains?.has('the_tu_an') ?? false).toBe(false)
+    expect(participant.activeDomains?.has('hidden_body') ?? false).toBe(false)
   })
 })
 
 describe('Bất Tử Ba Thể survival — hien-only machinery', () => {
   it('hien survives a lethal hit once via the Cuồng Chiến ultimate', () => {
     const { gameManager, combatSource } = makeManager()
-    const player = theTuPlayer()
+    const player = bodyPlayer()
     player.nodeLevels = { cuong_chien: 1 }
     player.baseStats = asBaseStats({ ...player.baseStats, speed: 1 })
 
@@ -461,14 +461,14 @@ describe('Bất Tử Ba Thể survival — hien-only machinery', () => {
 
 describe('way-authored kits still compose from the node collectors', () => {
   it('buildTheTuKit + buildTheTuAnKit remain data factories — way resolution lives in the GameManager', () => {
-    const hienMods = collectTheTuKitModifiers(
+    const hienMods = collectBodyKitModifiers(
       NODE_REGISTRY,
-      theTuPlayer({ nodeLevels: { minor_cuong_huyet_no: 1 } }),
+      bodyPlayer({ nodeLevels: { minor_cuong_huyet_no: 1 } }),
     )
     const hienKit = buildTheTuKit('cuong_chien', hienMods)
     expect(hienKit.basic.id).toBe('cuong_quyen')
 
-    const ungTheMods = collectTheTuAnMechanicModifiers(
+    const ungTheMods = collectHiddenBodyMechanicModifiers(
       NODE_REGISTRY,
       ungThePlayer({ nodeLevels: { minor_ung_the_bi_the: 1 } }),
     )
@@ -478,10 +478,10 @@ describe('way-authored kits still compose from the node collectors', () => {
   })
 
   it('getActiveWayDefinition resolves the way object for both persisted eras', () => {
-    expect(getActiveWayDefinition(theTuPlayer())?.id).toBe('hien')
+    expect(getActiveWayDefinition(bodyPlayer())?.id).toBe('body_pathway')
     for (const [, build] of UNG_THE_SHAPES) {
-      expect(getActiveWayDefinition(build())?.id).toBe('ung_the')
-      expect(getActiveWayDefinition(build())?.capabilities?.static).toContain('the_tu.the_economy')
+      expect(getActiveWayDefinition(build())?.id).toBe('hidden_body_pathway')
+      expect(getActiveWayDefinition(build())?.capabilities?.static).toContain('body.essence_economy')
     }
     expect(getActiveWayDefinition(createDefaultPlayer())).toBeUndefined()
   })

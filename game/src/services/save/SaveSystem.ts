@@ -63,7 +63,7 @@ export { CURRENT_SAVE_VERSION }
 // field BẮT BUỘC MỚI `skillPoints: number`/`unlockedElements: ElementType[]`/
 // `equippedElements: ElementType[]` (cả hai đã retired cùng
 // ElementLoadout ở Phap Tu Reimagined Task 14 — element authority giờ
-// là `player.phapTu.element`), CỘNG THÊM baseStats (Stats) lúc đó có
+// là `player.spellPath.element`), CỘNG THÊM baseStats (Stats) lúc đó có
 // thêm 6 field wind/lightning (đã bị XOÁ lại ở spec
 // 2026-08-30-phap-tu-dao-sac §5 — bỏ Phong/Lôi toàn hệ). Lịch sử
 // version giữ nguyên để truy vết.
@@ -83,7 +83,7 @@ export { CURRENT_SAVE_VERSION }
 // `baseStats.cultivationRate` KHÔNG khớp shape mới — không viết
 // migration, cùng convention mọi version trước.
 // version 27: Pháp Tu Redesign — gộp 5 CultivationPathId Ngũ Hành
-// (phap_tu_hoa/moc/thuy/kim/tho) thành 1 "phap_tu" duy nhất (xem
+// (phap_tu_hoa/moc/thuy/kim/tho) thành 1 "spell" duy nhất (xem
 // CultivationPathKit.ts) VÀ player: PlayerData xoá field
 // `totalMonstersKilled` (mồ côi, xem RewardSystem.ts). Save cũ có
 // `player.cultivationPath` là 1 trong 5 giá trị cũ (KHÔNG còn hợp lệ

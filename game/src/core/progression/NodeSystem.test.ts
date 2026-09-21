@@ -120,6 +120,70 @@ describe('prerequisite skillCastCount', () => {
   })
 })
 
+// P7-M6 - technique-gated prerequisites read the read-only mirror
+// player.techniqueProgress (canonical holder lives in TechniqueManager;
+// TechniqueSystem's progress sink republishes the pair - same mirror
+// contract as skillCastCounts/skillLevels for `skillCastCount`).
+describe('prerequisite techniqueRank / techniqueGrade (P7-M6)', () => {
+  it('techniqueRank - passes at/above mirror rank, fails below, fails closed without a technique', () => {
+    const player = playerWith({ techniqueProgress: { rank: 5, grade: 2 } })
+
+    expect(hasPrerequisite(player, { kind: 'techniqueRank', rank: 5 })).toBe(true)
+    expect(hasPrerequisite(player, { kind: 'techniqueRank', rank: 6 })).toBe(false)
+
+    const noTechnique = playerWith({})
+
+    expect(hasPrerequisite(noTechnique, { kind: 'techniqueRank', rank: 1 })).toBe(false)
+  })
+
+  it('techniqueGrade - passes at/above mirror grade, fails below, fails closed without a technique', () => {
+    const player = playerWith({ techniqueProgress: { rank: 0, grade: 3 } })
+
+    expect(hasPrerequisite(player, { kind: 'techniqueGrade', grade: 3 })).toBe(true)
+    expect(hasPrerequisite(player, { kind: 'techniqueGrade', grade: 4 })).toBe(false)
+
+    const noTechnique = playerWith({})
+
+    expect(hasPrerequisite(noTechnique, { kind: 'techniqueGrade', grade: 1 })).toBe(false)
+  })
+
+  it('techniqueRank gate blocks purchase below threshold without deducting insight', () => {
+    const player = playerWith({ skillInsight: 5, techniqueProgress: { rank: 2, grade: 1 } })
+
+    const node = minorNode({
+      insightCost: 3,
+      prerequisites: [{ kind: 'techniqueRank', rank: 4 }],
+    })
+
+    expect(canPurchaseNode(player, node)).toBe(false)
+    expect(purchaseNode(player, node)).toBe(false)
+    expect(player.skillInsight).toBe(5)
+    expect(getNodeLevel(player, 'test_minor')).toBe(0)
+    expect(player.purchasedNodeIds).toEqual([])
+
+    player.techniqueProgress = { rank: 4, grade: 1 }
+
+    expect(purchaseNode(player, node)).toBe(true)
+    expect(player.skillInsight).toBe(2)
+    expect(getNodeLevel(player, 'test_minor')).toBe(1)
+  })
+
+  it('technique-kind revealWhen gates purchase until the mirror reveals it', () => {
+    const player = playerWith({ skillInsight: 5, techniqueProgress: { rank: 0, grade: 1 } })
+
+    const node = minorNode({
+      insightCost: 1,
+      revealWhen: { kind: 'techniqueGrade', grade: 2 },
+    })
+
+    expect(canPurchaseNode(player, node)).toBe(false)
+
+    player.techniqueProgress = { rank: 0, grade: 2 }
+
+    expect(canPurchaseNode(player, node)).toBe(true)
+  })
+})
+
 describe('cost theo cấp data-driven (plan §6.2/§6.7)', () => {
   it('Power {base:1, perLevel:3} → dãy 1,1,1,2,2,2,3,3,3,4', () => {
     const costs: number[] = []
@@ -280,63 +344,63 @@ describe('canPurchaseNode', () => {
 // inert for every other path at purchase, upgrade, and aggregation
 // (the render layer is not the gameplay authority).
 describe('nodePathApplies — cultivation path ownership gate', () => {
-  const theTuNode = () =>
+  const bodyNode = () =>
     minorNode({
       id: 'the_tu_only',
-      requiredCultivationPath: 'the_tu',
+      requiredCultivationPath: 'body',
       effect: {
         statModifiers: [{ id: 'the_tu_only:vit', sourceId: 'the_tu_only', sourceType: 'talent', stat: 'vitality', flat: 3 }],
       },
     })
 
-  const theTuAnNode = () => minorNode({ id: 'the_tu_an_only', requiredCultivationPath: 'the_tu' })
+  const hiddenBodyNode = () => minorNode({ id: 'the_tu_an_only', requiredCultivationPath: 'body' })
 
-  it('a the_tu node is NOT purchasable by a phap_tu player even with insight and prereqs satisfied', () => {
-    const player = playerWith({ cultivationPath: 'phap_tu', skillInsight: 50 })
+  it('a body node is NOT purchasable by a spell player even with insight and prereqs satisfied', () => {
+    const player = playerWith({ cultivationPath: 'spell', skillInsight: 50 })
 
-    expect(canPurchaseNode(player, theTuNode())).toBe(false)
-    expect(purchaseNode(player, theTuNode())).toBe(false)
+    expect(canPurchaseNode(player, bodyNode())).toBe(false)
+    expect(purchaseNode(player, bodyNode())).toBe(false)
     expect(getNodeLevel(player, 'the_tu_only')).toBe(0)
   })
 
-  it('a the_tu node owned by a kiem_tu player aggregates NOTHING; a the_tu player gets the stats', () => {
-    const registry = { getAll: () => [theTuNode()] }
+  it('a body node owned by a sword player aggregates NOTHING; a body player gets the stats', () => {
+    const registry = { getAll: () => [bodyNode()] }
 
-    const kiemTuPlayer = playerWith({ cultivationPath: 'kiem_tu', nodeLevels: { the_tu_only: 2 } })
-    expect(aggregateNodeStatModifiers(registry, kiemTuPlayer)).toEqual([])
+    const swordPathPlayer = playerWith({ cultivationPath: 'sword', nodeLevels: { the_tu_only: 2 } })
+    expect(aggregateNodeStatModifiers(registry, swordPathPlayer)).toEqual([])
 
-    const theTuPlayer = playerWith({ cultivationPath: 'the_tu', nodeLevels: { the_tu_only: 2 } })
-    const mods = aggregateNodeStatModifiers(registry, theTuPlayer)
+    const bodyPlayer = playerWith({ cultivationPath: 'body', nodeLevels: { the_tu_only: 2 } })
+    const mods = aggregateNodeStatModifiers(registry, bodyPlayer)
     expect(mods).toHaveLength(1)
     expect(mods[0]!.flat).toBe(3)
   })
 
   it('a base-path stamp with no requiredWay is path-level only — way membership is the inner gate (M7)', () => {
-    const registry = { getAll: () => [theTuAnNode()] }
-    // The node carries only requiredCultivationPath ('the_tu' base id):
+    const registry = { getAll: () => [hiddenBodyNode()] }
+    // The node carries only requiredCultivationPath ('body' base id):
     // EITHER way inside the path owns it at path level. requiredWay (a
     // sibling gate, NodeSystem.way.test.ts) is what separates hien from
     // ung_the inside the family.
-    const theTuPlayer = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'hien', skillInsight: 50 })
+    const bodyPlayer = playerWith({ cultivationPath: 'body', cultivationWay: 'body_pathway', skillInsight: 50 })
 
-    expect(canPurchaseNode(theTuPlayer, theTuAnNode())).toBe(true)
+    expect(canPurchaseNode(bodyPlayer, hiddenBodyNode())).toBe(true)
 
-    const ungThePlayer = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'ung_the', skillInsight: 50 })
-    expect(canPurchaseNode(ungThePlayer, theTuAnNode())).toBe(true)
+    const ungThePlayer = playerWith({ cultivationPath: 'body', cultivationWay: 'hidden_body_pathway', skillInsight: 50 })
+    expect(canPurchaseNode(ungThePlayer, hiddenBodyNode())).toBe(true)
   })
 
   it('canUpgradeNode rejects a wrong-path owner even when the node has levels', () => {
-    const node = { ...theTuNode(), maxLevel: 5, upgradeCost: { base: 1, perLevel: 2 } }
+    const node = { ...bodyNode(), maxLevel: 5, upgradeCost: { base: 1, perLevel: 2 } }
 
-    const theTuPlayer = playerWith({ cultivationPath: 'the_tu', skillInsight: 50, nodeLevels: { the_tu_only: 1 } })
-    expect(canUpgradeNode(theTuPlayer, node)).toBe(true)
+    const bodyPlayer = playerWith({ cultivationPath: 'body', skillInsight: 50, nodeLevels: { the_tu_only: 1 } })
+    expect(canUpgradeNode(bodyPlayer, node)).toBe(true)
 
-    const phapTuPlayer = playerWith({ cultivationPath: 'phap_tu', skillInsight: 50, nodeLevels: { the_tu_only: 1 } })
-    expect(canUpgradeNode(phapTuPlayer, node)).toBe(false)
+    const spellPathPlayer = playerWith({ cultivationPath: 'spell', skillInsight: 50, nodeLevels: { the_tu_only: 1 } })
+    expect(canUpgradeNode(spellPathPlayer, node)).toBe(false)
   })
 
   it('path-agnostic nodes (requiredCultivationPath undefined) still work for every path', () => {
-    const player = playerWith({ cultivationPath: 'kiem_tu', skillInsight: 10 })
+    const player = playerWith({ cultivationPath: 'sword', skillInsight: 10 })
 
     expect(canPurchaseNode(player, minorNode())).toBe(true)
     expect(purchaseNode(player, minorNode())).toBe(true)

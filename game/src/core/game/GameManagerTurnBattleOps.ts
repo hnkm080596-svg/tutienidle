@@ -1012,18 +1012,14 @@ export class GameManagerTurnBattleOps {
   private battleRngFactoryOverride: (() => CombatRng) | undefined
 
   /**
-   * Mission C Task 9 -- dev/test seam mirroring setBattleRngFactory: swap
-   * the path-runtime resolver (a test registers a fake_path runtime the
-   * shipped registry does not know). `undefined` restores the registry.
+   * P7-M4 -- the path-runtime resolver override moved UP to the
+   * GameManager's shared binding (deps.resolvePathRuntime is already
+   * override-aware): combat and the resolved-role UI accessor resolve
+   * identically, they cannot diverge. This private delegate is kept so
+   * call sites stay readable.
    */
-  setPathRuntimeResolver(resolver: ((player: PlayerData) => CultivationPathRuntime) | undefined): void {
-    this.pathRuntimeOverride = resolver
-  }
-
-  private pathRuntimeOverride: ((player: PlayerData) => CultivationPathRuntime) | undefined
-
   private resolvePathRuntime(player: PlayerData): CultivationPathRuntime {
-    return (this.pathRuntimeOverride ?? this.deps.resolvePathRuntime)(player)
+    return this.deps.resolvePathRuntime(player)
   }
 
   /**
@@ -1308,7 +1304,7 @@ export class GameManagerTurnBattleOps {
     }
 
     // P2 - the build declares every entry buff (Tran Phap formation x
-    // allies, the phap_tu.reaction_aura grant x living allies, kit-clone
+    // allies, the spell.reaction_aura grant x living allies, kit-clone
     // grantsBuffsAtBuild from the effective post-emblem slots). The only
     // remaining ops-side check is battle-local registry membership:
     // unknown ids stay graceful-skipped (review Task 19) because the
@@ -1967,15 +1963,9 @@ export class GameManagerTurnBattleOps {
       playerParticipant.dynamicBasic = dynamicBasic
     }
 
-    // Emblem/marker slot overrides (Ngu Kiem Dao -- spec §5.4: display
-    // lanes, never resolvable actions).
-    const emblemSlots = build.kit.emblem
-    if (emblemSlots?.special) {
-      playerParticipant.special = { skill: emblemSlots.special, remainingCooldownTurns: 0 }
-    }
-    if (emblemSlots?.ultimate) {
-      playerParticipant.ultimate = { skill: emblemSlots.ultimate, remainingCooldownTurns: 0 }
-    }
+    // P7-M4 - no emblem overwrite here: resolveCombatSkillRoles already
+    // folded the emblem precedence into kit.special/ultimate, which the
+    // participant build above stamped.
 
     // Companion Roster - each companion in player.companions is rebuilt as a
     // fresh CombatEntity/participant per battle. Missing definition or missing

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from '../game/GameManager'
 import { createDefaultPlayer } from './Player'
-import { freshKiemTuState } from '../kiem-tu/KiemTuState'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { SkillManager } from '../skill/SkillManager'
@@ -14,8 +14,11 @@ import { NEUTRAL_ROUTE_PROFILE } from '../phap-tu/PhapTuRoutes'
 import { resolveCultivationPathRuntime } from './CultivationPathRegistry'
 import type { CultivationPathRuntimeDeps } from './CultivationPathRuntime'
 import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { SPELL_PATHWAY, HIDDEN_SPELL_PATHWAY } from '../phap-tu/PhapTuPath'
+import { BODY_PATHWAY, HIDDEN_BODY_PATHWAY } from '../the-tu/TheTuPath'
+import { SWORD_PATHWAY, HIDDEN_SWORD_PATHWAY } from '../kiem-tu/KiemTuPath'
 
-// Mission C Task 9 — the path-runtime boundary is the ONLY dispatch site
+// Mission C Task 9 - the path-runtime boundary is the ONLY dispatch site
 // for cultivation-path combat integration. GameManagerTurnBattleOps
 // consumes the runtime interface; it never branches on path identity.
 
@@ -27,7 +30,7 @@ function makeDeps(): CultivationPathRuntimeDeps {
     skillTemplates: new TemplateRegistry<Skill>(),
     nodeRegistry: new NodeRegistry(),
     getNodeLevel: () => 0,
-    getPhapTuElement: () => undefined,
+    getSpellPathElement: () => undefined,
     routeProfileProvider: () => NEUTRAL_ROUTE_PROFILE,
   }
 }
@@ -39,19 +42,19 @@ const ENEMY = defineEnemy({
   realmId: 'mortal',
   lane: 'ground',
   statsInput: { maxHp: 1_000_000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-  rewards: { techniqueInsight: 0, spiritStone: 0 },
+  rewards: { techniqueMastery: 0, spiritStone: 0 },
 })
 
 describe('CultivationPathRuntime registry', () => {
   it('dispatches every authored path:way pair plus the mortal fallback', () => {
     const deps = makeDeps()
     const pairs: Array<[string, string]> = [
-      ['kiem_tu', 'hien'],
-      ['kiem_tu', 'ngu'],
-      ['phap_tu', 'ngu_hanh'],
-      ['phap_tu', 'ngo_dao'],
-      ['the_tu', 'hien'],
-      ['the_tu', 'ung_the'],
+      ['sword', 'sword_pathway'],
+      ['sword', 'hidden_sword_pathway'],
+      ['spell', 'spell_pathway'],
+      ['spell', 'hidden_spell_pathway'],
+      ['body', 'body_pathway'],
+      ['body', 'hidden_body_pathway'],
     ]
 
     for (const [path, way] of pairs) {
@@ -65,21 +68,135 @@ describe('CultivationPathRuntime registry', () => {
     expect(resolveCultivationPathRuntime(mortal, deps).resolveBasic(mortal)).toBe(GENERIC_PHYSICAL_BASIC)
   })
 
-  it('kiem_tu runtimes expose the dynamic-basic provider; ngu adds emblem slots', () => {
+  it('mortal runtime resolves the persisted mortalBasicSkillId pick', () => {
+    const deps = makeDeps()
+    const skillTemplates = deps.skillTemplates as TemplateRegistry<Skill>
+    for (const skill of SKILLS) {
+      skillTemplates.register(skill.id, skill)
+    }
+    for (const id of ['tram', 'linh_bao', 'huy_quyen']) {
+      (deps.skillSystem as SkillSystem).learn(skillTemplates.get(id)!)
+    }
+
+    const picked = createDefaultPlayer()
+    picked.mortalBasicSkillId = 'linh_bao'
+    expect(resolveCultivationPathRuntime(picked, deps).resolveBasic(picked)?.id).toBe('linh_bao')
+
+    const fist = createDefaultPlayer()
+    fist.mortalBasicSkillId = 'huy_quyen'
+    expect(resolveCultivationPathRuntime(fist, deps).resolveBasic(fist)?.id).toBe('huy_quyen')
+
+    const unset = createDefaultPlayer()
+    expect(resolveCultivationPathRuntime(unset, deps).resolveBasic(unset)?.id).toBe('tram')
+  })
+
+  it('illegal or unlearned picks fall back to the tram default', () => {
+    const deps = makeDeps()
+    const skillTemplates = deps.skillTemplates as TemplateRegistry<Skill>
+    for (const skill of SKILLS) {
+      skillTemplates.register(skill.id, skill)
+    }
+    (deps.skillSystem as SkillSystem).learn(skillTemplates.get('tram')!)
+
+    const illegal = createDefaultPlayer()
+    illegal.mortalBasicSkillId = 'hoa_cau_thuat'
+    expect(resolveCultivationPathRuntime(illegal, deps).resolveBasic(illegal)?.id).toBe('tram')
+
+    const unlearned = createDefaultPlayer()
+    unlearned.mortalBasicSkillId = 'huy_quyen'
+    expect(resolveCultivationPathRuntime(unlearned, deps).resolveBasic(unlearned)?.id).toBe('tram')
+  })
+
+  // P7-M4 sec.4.5b - path starter basics: the way declares
+  // starterBasicSkillId; the runtime resolves it THROUGH the committed
+  // way definition as a fallback until the way's own kit supersedes.
+  describe('path starter basics (way-authored fallback)', () => {
+    function depsWithLearned(ids: readonly string[]): CultivationPathRuntimeDeps {
+      const deps = makeDeps()
+      const skillTemplates = deps.skillTemplates as TemplateRegistry<Skill>
+      for (const skill of SKILLS) {
+        skillTemplates.register(skill.id, skill)
+      }
+      for (const id of ids) {
+        (deps.skillSystem as SkillSystem).learn(skillTemplates.get(id)!)
+      }
+      return deps
+    }
+
+    it('authored contract — starter ids live on the way definitions', () => {
+      expect(SPELL_PATHWAY.starterBasicSkillId).toBe('linh_bao')
+      expect(BODY_PATHWAY.starterBasicSkillId).toBe('huy_quyen')
+      expect(SWORD_PATHWAY.starterBasicSkillId).toBeUndefined()
+      expect(HIDDEN_SWORD_PATHWAY.starterBasicSkillId).toBeUndefined()
+      expect(HIDDEN_SPELL_PATHWAY.starterBasicSkillId).toBeUndefined()
+      expect(HIDDEN_BODY_PATHWAY.starterBasicSkillId).toBeUndefined()
+    })
+
+    it('spell_pathway resolves linh_bao as basic until an element is picked', () => {
+      const deps = depsWithLearned(['linh_bao', 'hoa_cau_thuat'])
+      const player = createDefaultPlayer()
+      player.cultivationPath = 'spell'
+      player.cultivationWay = 'spell_pathway'
+
+      expect(resolveCultivationPathRuntime(player, deps).resolveBasic(player)?.id).toBe('linh_bao')
+    })
+
+    it('the element kit supersedes the starter once the element commits', () => {
+      const deps = depsWithLearned(['linh_bao', 'hoa_cau_thuat'])
+      deps.getSpellPathElement = () => 'fire'
+      const player = createDefaultPlayer()
+      player.cultivationPath = 'spell'
+      player.cultivationWay = 'spell_pathway'
+
+      expect(resolveCultivationPathRuntime(player, deps).resolveBasic(player)?.id).toBe('hoa_cau_thuat')
+    })
+
+    it('body_pathway resolves huy_quyen as basic until a root node exists', () => {
+      const deps = depsWithLearned(['huy_quyen'])
+      const player = createDefaultPlayer()
+      player.cultivationPath = 'body'
+      player.cultivationWay = 'body_pathway'
+
+      expect(resolveCultivationPathRuntime(player, deps).resolveBasic(player)?.id).toBe('huy_quyen')
+    })
+
+    it('the owned root kit supersedes the starter', () => {
+      const deps = depsWithLearned(['huy_quyen'])
+      deps.getNodeLevel = (nodeId) => (nodeId === 'cuong_chien' ? 1 : 0)
+      const player = createDefaultPlayer()
+      player.cultivationPath = 'body'
+      player.cultivationWay = 'body_pathway'
+
+      expect(resolveCultivationPathRuntime(player, deps).resolveBasic(player)?.id).toBe('cuong_quyen')
+    })
+
+    it('an unlearned starter is skipped to the next fallback (defensive check)', () => {
+      const deps = depsWithLearned([])
+      const player = createDefaultPlayer()
+      player.cultivationPath = 'spell'
+      player.cultivationWay = 'spell_pathway'
+
+      const basic = resolveCultivationPathRuntime(player, deps).resolveBasic(player)
+      expect(basic).toBeDefined()
+      expect(basic?.id).not.toBe('linh_bao')
+    })
+  })
+
+  it('sword runtimes expose the dynamic-basic provider; ngu adds emblem slots', () => {
     const deps = makeDeps()
 
     const hien = createDefaultPlayer()
-    hien.cultivationPath = 'kiem_tu'
-    hien.cultivationWay = 'hien'
-    hien.kiemTu = freshKiemTuState()
+    hien.cultivationPath = 'sword'
+    hien.cultivationWay = 'sword_pathway'
+    hien.swordPath = freshSwordPathState()
     const hienRuntime = resolveCultivationPathRuntime(hien, deps)
     expect(hienRuntime.buildDynamicBasic?.(hien, [], () => 0.5)).toBeDefined()
     expect(hienRuntime.emblemSlots?.()).toBeUndefined()
 
     const ngu = createDefaultPlayer()
-    ngu.cultivationPath = 'kiem_tu'
-    ngu.cultivationWay = 'ngu'
-    ngu.kiemTu = freshKiemTuState()
+    ngu.cultivationPath = 'sword'
+    ngu.cultivationWay = 'hidden_sword_pathway'
+    ngu.swordPath = freshSwordPathState()
     const nguRuntime = resolveCultivationPathRuntime(ngu, deps)
     expect(nguRuntime.buildDynamicBasic?.(ngu, [], () => 0.5)).toBeDefined()
     const emblems = nguRuntime.emblemSlots?.()
@@ -113,16 +230,16 @@ describe('CultivationPathRuntime registry', () => {
     expect(participant.entity.maxThe).toBe(7)
   })
 
-  it('kiem_tu ngu parity through the real build: provider + emblem slots survive the boundary', () => {
+  it('sword ngu parity through the real build: provider + emblem slots survive the boundary', () => {
     const gameManager = new GameManager()
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'ngu'
-    player.kiemTu = { ...freshKiemTuState(), kiemDaoCount: 2 }
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'hidden_sword_pathway'
+    player.swordPath = { ...freshSwordPathState(), kiemDaoCount: 2 }
     gameManager.setActivePlayer(player)
 
     gameManager.startBattleWithPlayer(player, ENEMY)

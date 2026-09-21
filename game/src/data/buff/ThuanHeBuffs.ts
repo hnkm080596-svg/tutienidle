@@ -24,10 +24,10 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
     // Task 3 (D17): the bespoke manaRegenPercent stat retired — the +10%
     // is now a percent modifier on the live manaRegenPerTurn stat, and
-    // both MP-pool grants carry domain:'phap_tu' for the Task-7 gate.
+    // both MP-pool grants carry domain:'spell' for the Task-7 gate.
     statModifiers: [
-      { stat: 'manaRegenPerTurn', flat: 8, domain: 'phap_tu' },
-      { stat: 'manaRegenPerTurn', percent: 0.1, domain: 'phap_tu' },
+      { stat: 'manaRegenPerTurn', flat: 8, domain: 'spell' },
+      { stat: 'manaRegenPerTurn', percent: 0.1, domain: 'spell' },
     ],
     dispellable: false,
   },
@@ -194,7 +194,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     instanceScope: 'per_source',
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
     lifetime: { clock: 'permanent', scaling: 'fixed' },
-    statModifiers: [{ stat: 'manaRegenPerTurn', flat: 6, domain: 'phap_tu' }],
+    statModifiers: [{ stat: 'manaRegenPerTurn', flat: 6, domain: 'spell' }],
     dispellable: false,
   },
   {

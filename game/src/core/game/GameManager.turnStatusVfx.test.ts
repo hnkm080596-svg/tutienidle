@@ -30,7 +30,7 @@ function makeDummyEnemy() {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: { ...ENEMY_STATS_INPUT },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -59,16 +59,16 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     gameManager.eventBus.on<StatusVfxRemovedEvent>('status_vfx_removed', (e) => removed.push(e))
 
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'wood', route: 'dot' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'wood', route: 'dot' }
 
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerEnemyTemplates([makeDummyEnemy()])
     gameManager.catalogOps.registerStages([stageFixture()])
     gameManager.setActivePlayer(player)
     // The element basic must be LEARNED — the committed element alone
-    // does not grant it (selectPhapTuElement does, via the root's
+    // does not grant it (selectSpellPathElement does, via the root's
     // unlocksSkillIds). The old static fallback masked the missing skill.
     expect(gameManager.progressionOps.learnSkill('doc_chuong')).toBe(true)
 

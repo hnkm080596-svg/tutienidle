@@ -9,15 +9,15 @@
 // display (clampStatValue) — calculateEffectiveStats composes
 // base + temp + derived(delta), so a clamped base would drop off cap
 // early under a negative attribute delta.
-export const THE_TU_AN_STR_COUNTER_PER_POINT = 0.004
-export const THE_TU_AN_DEX_COUNTER_PER_POINT = 0.004
-export const THE_TU_AN_VIT_PROTECT_PER_POINT = 0.004
-export const THE_TU_AN_DEX_PROTECT_PER_POINT = 0.003
-export const THE_TU_AN_DEX_FOLLOWUP_PER_POINT = 0.004
-export const THE_TU_AN_INT_FOLLOWUP_PER_POINT = 0.003
+export const HIDDEN_BODY_STR_COUNTER_PER_POINT = 0.004
+export const HIDDEN_BODY_DEX_COUNTER_PER_POINT = 0.004
+export const HIDDEN_BODY_VIT_PROTECT_PER_POINT = 0.004
+export const HIDDEN_BODY_DEX_PROTECT_PER_POINT = 0.003
+export const HIDDEN_BODY_DEX_FOLLOWUP_PER_POINT = 0.004
+export const HIDDEN_BODY_INT_FOLLOWUP_PER_POINT = 0.003
 export const REACTIVE_CHANCE_CAP = 0.6
 
-// the_tu (Hien) channel: vitality -> enduranceThreshold, moved out of
+// body (body_pathway) channel: vitality -> enduranceThreshold, moved out of
 // the universal attribute derivation (spec 3.3 — block/endurance is
 // body-path identity, like MP is Phap Tu's).
-export const THE_TU_VITALITY_ENDURANCE_THRESHOLD_PER_POINT = 1
+export const BODY_VITALITY_ENDURANCE_THRESHOLD_PER_POINT = 1

@@ -21,9 +21,9 @@ import { createDefaultPlayer, type PlayerData } from '../player/Player'
 function hienPlayer(preset: OrbId[], realmId = 'qi_refining'): PlayerData {
   const player = createDefaultPlayer()
   player.realmId = realmId
-  player.cultivationPath = 'kiem_tu'
-  player.cultivationWay = 'hien'
-  player.kiemTu = {
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'sword_pathway'
+  player.swordPath = {
     preset,
     kiemY: 0,
     kiemDaoCount: 1,
@@ -70,7 +70,7 @@ describe('initKiemPhoBattle + nextOrb', () => {
   it('preset snapshot is detached from PlayerData (A3)', () => {
     const player = hienPlayer(['orb_dam'] as OrbId[])
     const state = initKiemPhoBattle(player)
-    player.kiemTu!.preset = ['orb_bo']
+    player.swordPath!.preset = ['orb_bo']
 
     expect(state.preset).toEqual(['orb_dam'])
   })

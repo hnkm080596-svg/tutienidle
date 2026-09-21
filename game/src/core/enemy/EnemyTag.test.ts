@@ -27,7 +27,7 @@ const BASE = defineEnemy({
     resistances: { fire: 12 },
     elemental: { element: 'fire', power: 10 },
   },
-  rewards: { techniqueInsight: 40, spiritStone: 12 },
+  rewards: { techniqueMastery: 40, spiritStone: 12 },
 })
 
 describe('applyEnemyTags (D3)', () => {

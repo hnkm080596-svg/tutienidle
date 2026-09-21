@@ -44,7 +44,7 @@ function createTestEnemy() {
       criticalDamage: 1.5,
       armor: 0,
     },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -74,7 +74,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // --- Class: chọn Kiếm Tu (path THẬT đã ship, không phải fixture)
     // — tự cấp Tâm Pháp (Technique) + 3 skill cố định.
     player.realmLevel = 12
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
 
     const attackAfterClass = calculateStats(player.baseStats, [
       ...player.modifiers,
@@ -101,7 +101,6 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // Reimagined — hien basics come from the orb preset, so the generic
     // authored skill here is tam_muoi_chan_hoa).
     gameManager.progressionOps.learnSkill('tam_muoi_chan_hoa')
-    gameManager.skillSystem.equipToSlot('tam_muoi_chan_hoa', 0)
 
     const rawSkill = gameManager.skillManager.get('tam_muoi_chan_hoa')!
 

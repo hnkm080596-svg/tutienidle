@@ -167,7 +167,7 @@ describe('catalog v4 invariants (M1 combat)', () => {
     }
   })
 
-  it('mọi talent combat_passive trỏ đúng passive skill tồn tại + equipped (PassiveSystem chỉ quét equipped)', () => {
+  it('mọi talent combat_passive trỏ đúng passive skill tồn tại (membership = learned authority)', () => {
     const passiveIds = new Set(TALENT_PASSIVE_SKILLS.map((skill) => skill.id))
 
     for (const talent of CHARACTER_CREATION_TALENTS) {
@@ -178,7 +178,6 @@ describe('catalog v4 invariants (M1 combat)', () => {
           const skill = TALENT_PASSIVE_SKILLS.find((entry) => entry.id === effect.passiveSkillId)
 
           expect(skill!.type).toBe('passive')
-          expect(skill!.equipped).toBe(true)
           expect(skill!.passiveTrigger).toBeDefined()
           expect((skill!.passiveModifiers ?? []).length).toBeGreaterThan(0)
         }

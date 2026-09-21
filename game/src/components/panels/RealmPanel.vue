@@ -4,7 +4,10 @@ import { useI18n } from 'vue-i18n'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
+import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import GameButton from '@/components/common/GameButton.vue'
+import BodyRefinementSection from '@/components/panels/realm/BodyRefinementSection.vue'
+import MeridianSection from '@/components/panels/realm/MeridianSection.vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
@@ -86,6 +89,19 @@ function majorBreakthrough() {
           <strong>{{ row.name }}</strong><span>{{ row.description }}</span>
         </article>
       </div>
+
+      <!-- P7-M7 - unified body progression subviews (the retired
+           LuyenThePanel's tier block + the Bat Mach read-only list). -->
+      <div class="realm-panel__body">
+        <div class="realm-panel__body-col">
+          <Eyebrow>{{ t('panels.realm.bodyRefinement.title') }}</Eyebrow>
+          <BodyRefinementSection />
+        </div>
+        <div class="realm-panel__body-col">
+          <Eyebrow>{{ t('panels.realm.meridian.title') }}</Eyebrow>
+          <MeridianSection />
+        </div>
+      </div>
     </div>
   </OverlayPanel>
 </template>
@@ -123,6 +139,11 @@ function majorBreakthrough() {
    không phân biệt được tiêu đề/nội dung (2026-08-30 frontend-design pass). */
 .realm-panel__passives article strong { font-size: var(--text-md); color: var(--text-primary); }
 .realm-panel__passives article span { color: var(--text-muted); font-size: var(--text-sm); }
+/* P7-M7 - body chapter subviews side by side on wide cards, stacked
+   on narrow (same container-query convention as the realm nodes). */
+.realm-panel__body { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px; }
+.realm-panel__body-col { display: flex; flex-direction: column; gap: 8px; }
+.realm-panel__body-col .eyebrow { margin: 0; }
 @keyframes realm-breathe { 50% { transform: scale(1.08); opacity: .65; } }
 /* UI-006 (Task 4) — reduced motion: aura đứng yên. */
 @media (prefers-reduced-motion: reduce) { .realm-panel__aura { animation: none; } }

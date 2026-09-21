@@ -9,9 +9,9 @@ import { CAST_LEVELING_THRESHOLDS, HUY_QUYEN_L3_CASTS } from '../skill/SkillSyst
 // The Tu Reimagined (spec 2026-09-15, T6 + section 2.3) — Task 2:
 // 1. huy_quyen is a mortal cast-leveled basic (Lv2@1k, Lv3@10k casts),
 //    learned wherever tram is granted, NOT insight-upgradeable.
-// 2. the_tu_an is offered at the Initiation Ritual iff huy_quyen is Lv3
+// 2. hidden_body is offered at the Initiation Ritual iff huy_quyen is Lv3
 //    (live read of the skillLevels mirror at offer/choose time).
-// 3. Choosing either the_tu path equips its technique and strips the
+// 3. Choosing either body path equips its technique and strips the
 //    mortal loadout skills (tram + huy_quyen).
 
 function setup() {
@@ -33,7 +33,6 @@ function setupMortal(huyQuyenCasts = 0) {
 
   gameManager.progressionOps.learnSkill('tram')
   gameManager.progressionOps.learnSkill('huy_quyen')
-  gameManager.skillSystem.equipToSlot('tram', 0)
 
   return { gameManager, player }
 }
@@ -92,56 +91,57 @@ describe('isCultivationPathOffered — ritual offer gate', () => {
     const below = createDefaultPlayer()
     below.skillLevels = { huy_quyen: 2 }
 
-    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.the_tu.ways.hien!, below)).toBe(true)
-    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.phap_tu.ways.ngu_hanh!, below)).toBe(true)
-    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.kiem_tu.ways.hien!, below)).toBe(true)
-    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.the_tu.ways.ung_the!, below)).toBe(false)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.body.ways.body_pathway!, below)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.spell.ways.spell_pathway!, below)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.sword.ways.sword_pathway!, below)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.body.ways.hidden_body_pathway!, below)).toBe(false)
 
     const met = createDefaultPlayer()
     met.skillLevels = { huy_quyen: 3 }
 
-    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.the_tu.ways.ung_the!, met)).toBe(true)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.body.ways.hidden_body_pathway!, met)).toBe(true)
   })
 
   it('missing huy_quyen mirror (never learned) hides ung_the', () => {
     const player = createDefaultPlayer()
 
-    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.the_tu.ways.ung_the!, player)).toBe(false)
+    expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.body.ways.hidden_body_pathway!, player)).toBe(false)
   })
 })
 
-describe('chooseCultivationPath — the_tu ritual', () => {
-  it('(the_tu, hien) equips kim_cang_bat_hoai_the and strips tram + huy_quyen', () => {
+describe('chooseCultivationPath — body ritual', () => {
+  it('(body, hien) grants diamond_body_art and clears the mortal pick (precursors stay learned)', () => {
     const { gameManager, player } = setupMortal(0)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)).toBe(true)
-    expect(player.cultivationPath).toBe('the_tu')
-    expect(player.cultivationWay).toBe('hien')
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('kim_cang_bat_hoai_the')
-    expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
-    expect(gameManager.skillManager.get('huy_quyen')!.equipped).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)).toBe(true)
+    expect(player.cultivationPath).toBe('body')
+    expect(player.cultivationWay).toBe('body_pathway')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('diamond_body_art')
+    expect(gameManager.skillManager.has('tram')).toBe(true)
+    expect(gameManager.skillManager.has('huy_quyen')).toBe(true)
+    expect(player.mortalBasicSkillId).toBeUndefined()
     expect(player.realmId).toBe('qi_refining')
   })
 
-  it('(the_tu, ung_the) is rejected when huy_quyen is below Lv3 — zero mutation', () => {
+  it('(body, ung_the) is rejected when huy_quyen is below Lv3 — zero mutation', () => {
     const { gameManager, player } = setupMortal(9999)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
     expect(player.cultivationWay).toBeUndefined()
     expect(player.realmId).toBe('mortal')
-    expect(gameManager.techniqueManager.getEquipped()).toBeUndefined()
+    expect(gameManager.techniqueManager.getActive()).toBeUndefined()
   })
 
-  it('(the_tu, ung_the) at Lv3 writes the base the_tu id + ung_the way and strips mortal skills', () => {
+  it('(body, ung_the) at Lv3 writes the base body id + ung_the way (precursors stay learned)', () => {
     const { gameManager, player } = setupMortal(10000)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)).toBe(true)
-    expect(player.cultivationPath).toBe('the_tu')
-    expect(player.cultivationWay).toBe('ung_the')
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('ung_the_than_quyet')
-    expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
-    expect(gameManager.skillManager.get('huy_quyen')!.equipped).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)).toBe(true)
+    expect(player.cultivationPath).toBe('body')
+    expect(player.cultivationWay).toBe('hidden_body_pathway')
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('responsive_body_art')
+    expect(gameManager.skillManager.has('tram')).toBe(true)
+    expect(gameManager.skillManager.has('huy_quyen')).toBe(true)
     expect(player.realmId).toBe('qi_refining')
   })
 })

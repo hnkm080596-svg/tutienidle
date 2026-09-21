@@ -7,7 +7,7 @@ import { SKILLS } from './Skills'
 // Thổ khống chế chậm. Đều là policy 'cast_time' — cast time khai trên
 // execution (nguồn sự thật runtime), field castTime legacy giữ đồng bộ
 // cho UI/tooltip.
-const PHAP_TU_RHYTHM: Record<string, { castTime: number; cooldown: number }> = {
+const SPELL_RHYTHM: Record<string, { castTime: number; cooldown: number }> = {
   hoa_cau_thuat: { castTime: 1.6, cooldown: 4 },
   thuy_tien_thuat: { castTime: 0.9, cooldown: 1 },
   doc_chuong: { castTime: 1.2, cooldown: 2 },
@@ -17,7 +17,7 @@ const PHAP_TU_RHYTHM: Record<string, { castTime: number; cooldown: number }> = {
 
 describe('Skills — nhịp 5 skill Pháp Tu (Task 4, plan §3.3)', () => {
   it('mỗi hành một nhịp riêng theo baseline plan §3.3', () => {
-    for (const [skillId, expected] of Object.entries(PHAP_TU_RHYTHM)) {
+    for (const [skillId, expected] of Object.entries(SPELL_RHYTHM)) {
       const skill = SKILLS.find(candidate => candidate.id === skillId)
 
       expect(skill, `thiếu skill ${skillId}`).toBeTruthy()
@@ -33,14 +33,14 @@ describe('Skills — nhịp 5 skill Pháp Tu (Task 4, plan §3.3)', () => {
   })
 
   it('5 nhịp KHÔNG trùng nhau (đa dạng nhịp thật sự)', () => {
-    const keys = Object.keys(PHAP_TU_RHYTHM)
+    const keys = Object.keys(SPELL_RHYTHM)
 
     for (const a of keys) {
       for (const b of keys) {
         if (a >= b) continue
 
-        const rhythmA = PHAP_TU_RHYTHM[a]!
-        const rhythmB = PHAP_TU_RHYTHM[b]!
+        const rhythmA = SPELL_RHYTHM[a]!
+        const rhythmB = SPELL_RHYTHM[b]!
 
         const different =
           rhythmA.castTime !== rhythmB.castTime ||

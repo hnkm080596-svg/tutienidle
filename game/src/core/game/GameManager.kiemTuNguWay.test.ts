@@ -6,7 +6,7 @@ import {
   applyPathChoice,
   listOfferableWays,
 } from '../player/CultivationPathSystem'
-import { freshKiemTuState } from '../kiem-tu/KiemTuState'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
@@ -48,10 +48,10 @@ function mortalAtRitual(tramLevel: number) {
 
 const nguOffer = (player: ReturnType<typeof createDefaultPlayer>) =>
   listOfferableWays(player).find(
-    offer => offer.pathId === 'kiem_tu' && offer.wayId === 'ngu',
+    offer => offer.pathId === 'sword' && offer.wayId === 'hidden_sword_pathway',
   )
 
-describe('kiem_tu ngu way — ritual offer gate (tram Lv3)', () => {
+describe('sword ngu way — ritual offer gate (tram Lv3)', () => {
   it('listOfferableWays lists ngu ineligible below tram Lv3 (locked card + reason), eligible at Lv3', () => {
     const locked = mortalAtRitual(2)
     const lockedOffer = nguOffer(locked.player)
@@ -64,7 +64,7 @@ describe('kiem_tu ngu way — ritual offer gate (tram Lv3)', () => {
 
     // The ungated hien way is unaffected by the tram gate.
     const hienOffer = listOfferableWays(locked.player).find(
-      offer => offer.pathId === 'kiem_tu' && offer.wayId === 'hien',
+      offer => offer.pathId === 'sword' && offer.wayId === 'sword_pathway',
     )
     expect(hienOffer!.eligible).toBe(true)
 
@@ -77,42 +77,41 @@ describe('kiem_tu ngu way — ritual offer gate (tram Lv3)', () => {
   it('applyPathChoice rejects ngu below Lv3 — zero mutation', () => {
     const { player } = mortalAtRitual(2)
 
-    const result = applyPathChoice(player, 'kiem_tu', 'ngu')
+    const result = applyPathChoice(player, 'sword', 'hidden_sword_pathway')
 
     expect(result.ok).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
     expect(player.cultivationWay).toBeUndefined()
-    expect(player.kiemTu).toBeUndefined()
+    expect(player.swordPath).toBeUndefined()
   })
 
-  it('chooseCultivationPath(kiem_tu, ngu) rejects below Lv3 even though the ritual lists the card', () => {
+  it('chooseCultivationPath(sword, ngu) rejects below Lv3 even though the ritual lists the card', () => {
     const { gameManager, player } = mortalAtRitual(2)
 
     expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', player),
+      gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', player),
     ).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
     expect(player.cultivationWay).toBeUndefined()
     expect(player.realmId).toBe('mortal')
   })
 
-  it('at Lv3 the ritual commits cultivationPath kiem_tu + cultivationWay ngu and grants the way kit', () => {
+  it('at Lv3 the ritual commits cultivationPath sword + cultivationWay ngu and grants the way kit', () => {
     const { gameManager, player } = mortalAtRitual(3)
 
     expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', player),
+      gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', player),
     ).toBe(true)
 
     // ngu never had a hidden path id — both kiem ways persist
-    // 'kiem_tu'; cultivationWay is the discriminator.
-    expect(player.cultivationPath).toBe('kiem_tu')
-    expect(player.cultivationWay).toBe('ngu')
+    // 'sword'; cultivationWay is the discriminator.
+    expect(player.cultivationPath).toBe('sword')
+    expect(player.cultivationWay).toBe('hidden_sword_pathway')
 
     // The way-agnostic slice is created at commit; van_kiem_quyet is
     // the way's signature technique (learned AND equipped).
-    expect(player.kiemTu).toEqual(freshKiemTuState())
-    expect(gameManager.techniqueManager.has('van_kiem_quyet')).toBe(true)
-    expect(gameManager.techniqueManager.getEquipped()?.id).toBe('van_kiem_quyet')
+    expect(player.swordPath).toEqual(freshSwordPathState())
+    expect(gameManager.techniqueManager.getActive()?.id).toBe('myriad_swords_art')
 
     // The ritual is the mortal -> qi_refining breakthrough.
     expect(player.realmId).toBe('qi_refining')
@@ -124,7 +123,7 @@ describe('kiem_tu ngu way — ritual offer gate (tram Lv3)', () => {
     const insightBefore = player.skillInsight
 
     expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', player),
+      gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', player),
     ).toBe(true)
 
     expect(player.skillInsight).toBe(insightBefore)
@@ -135,27 +134,27 @@ describe('kiem_tu ngu way — ritual offer gate (tram Lv3)', () => {
     const { gameManager, player } = mortalAtRitual(3)
 
     expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'ngu', player),
+      gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', player),
     ).toBe(true)
 
     // The authority fails closed on any second choice — even the
     // always-offered hien way cannot reopen the ritual.
-    expect(applyPathChoice(player, 'kiem_tu', 'hien').ok).toBe(false)
+    expect(applyPathChoice(player, 'sword', 'sword_pathway').ok).toBe(false)
     expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player),
+      gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player),
     ).toBe(false)
 
-    expect(player.cultivationPath).toBe('kiem_tu')
-    expect(player.cultivationWay).toBe('ngu')
+    expect(player.cultivationPath).toBe('sword')
+    expect(player.cultivationWay).toBe('hidden_sword_pathway')
   })
 })
 
-describe('kiem_tu ngu way — subtree isolation', () => {
-  function committed(way: 'hien' | 'ngu', tramLevel = 3) {
+describe('sword ngu way — subtree isolation', () => {
+  function committed(way: 'sword_pathway' | 'hidden_sword_pathway', tramLevel = 3) {
     const { gameManager, player } = mortalAtRitual(tramLevel)
 
     expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', way, player),
+      gameManager.realmAdvanceOps.chooseCultivationPath('sword', way, player),
     ).toBe(true)
     // The ritual lands the player at qi_refining Lv1 — enough insight
     // for the cheap test nodes below.
@@ -165,7 +164,7 @@ describe('kiem_tu ngu way — subtree isolation', () => {
   }
 
   it('ngu nodes are purchasable only on the ngu way', () => {
-    const ngu = committed('ngu')
+    const ngu = committed('hidden_sword_pathway')
 
     // ngu_kiem_sac carries no prereq besides the way/path stamps — the
     // way gate alone decides.
@@ -177,7 +176,7 @@ describe('kiem_tu ngu way — subtree isolation', () => {
     ).toBe(true)
     expect(ngu.player.nodeLevels['ngu_kiem_sac']).toBe(1)
 
-    const hien = committed('hien')
+    const hien = committed('sword_pathway')
     expect(
       hien.gameManager.progressionOps.canPurchaseNode('ngu_kiem_sac', hien.player),
     ).toBe(false)
@@ -188,7 +187,7 @@ describe('kiem_tu ngu way — subtree isolation', () => {
   })
 
   it('hien orb nodes are unpurchasable on the ngu way (inert trap prevented)', () => {
-    const ngu = committed('ngu')
+    const ngu = committed('hidden_sword_pathway')
 
     // orb_dam_1's only other gate is realm qi_refining — the ritual
     // leaves the player there, so requiredWay alone blocks the buy.
@@ -203,15 +202,15 @@ describe('kiem_tu ngu way — subtree isolation', () => {
     // ...and the same node buys normally for a hien player at the
     // same realm — the isolation runs both directions, not a blanket
     // kiem-node lock.
-    const hien = committed('hien')
+    const hien = committed('sword_pathway')
     expect(
       hien.gameManager.progressionOps.purchaseNode('orb_dam_1', hien.player),
     ).toBe(true)
   })
 
   it('non-kiem-tu players cannot purchase ngu nodes at any way', () => {
-    const { gameManager, player } = committed('ngu')
-    player.cultivationPath = 'phap_tu' // corrupt save shape — path gate still holds
+    const { gameManager, player } = committed('hidden_sword_pathway')
+    player.cultivationPath = 'spell' // corrupt save shape — path gate still holds
 
     expect(
       gameManager.progressionOps.canPurchaseNode('ngu_kiem_sac', player),
@@ -222,7 +221,7 @@ describe('kiem_tu ngu way — subtree isolation', () => {
   })
 
   it('devResetBranch refunds ngu nodes normally — the non-refundable flip-node exception is gone', () => {
-    const { gameManager, player } = committed('ngu')
+    const { gameManager, player } = committed('hidden_sword_pathway')
     const insightBefore = player.skillInsight
 
     // Two cheap ngu buys: ngu_kiem_sac (cost 1) + cuu_cung_kham
@@ -241,7 +240,7 @@ describe('kiem_tu ngu way — subtree isolation', () => {
 
     // The way itself is never refunded away — resetting the branch is
     // a node operation, not a path operation.
-    expect(player.cultivationWay).toBe('ngu')
-    expect(player.kiemTu).toBeDefined()
+    expect(player.cultivationWay).toBe('hidden_sword_pathway')
+    expect(player.swordPath).toBeDefined()
   })
 })

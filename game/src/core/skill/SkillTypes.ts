@@ -26,7 +26,7 @@ export type SkillEffectType =
 // 'rage' ĐÃ GỠ (spec mục 5.4 — Phá Thiên Nhất Kích chuyển thành node,
 // không còn consumer nào). 'sword_intent' ĐÃ GỠ (Kiem Tu Reimagined
 // spec 2026-09-15 §7 — no battle pool; Ngu's Kiem Y is persisted
-// PlayerData.kiemTu state, not a cast resource).
+// PlayerData.swordPath state, not a cast resource).
 export type SkillResourceType =
   | 'none'
   | 'mana'

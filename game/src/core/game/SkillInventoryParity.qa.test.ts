@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { toTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
-import { PHAP_TU_KIT_IDS, SKILLS } from '../../data/skill/Skills'
+import { SPELL_KIT_IDS, SKILLS } from '../../data/skill/Skills'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
@@ -22,7 +22,7 @@ describe('R3: Reachable Beta Content Inventory Parity', () => {
 
   describe('Pháp Tu 5 Pure Chains (15 skills + specializations)', () => {
     for (const element of ELEMENT_ORDER) {
-      const [basicId, specialId, ultimateId] = PHAP_TU_KIT_IDS[element]
+      const [basicId, specialId, ultimateId] = SPELL_KIT_IDS[element]
 
       it(`converts ${element} chain: ${basicId}, ${specialId}, ${ultimateId}`, () => {
         const { manager, skillSystem } = createFresh()

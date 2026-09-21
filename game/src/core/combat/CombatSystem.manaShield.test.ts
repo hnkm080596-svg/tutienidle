@@ -6,7 +6,7 @@ import type { CombatEntity } from './CombatEntity'
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   // dexterity:0/evasionRate:0 — hit chance 100% đảm bảo, cùng lý do đã
-  // ghi trong BattleSystem.kiemTu.test.ts (calculateStats() tự cộng
+  // ghi trong BattleSystem.swordPath.test.ts (calculateStats() tự cộng
   // thêm evasionRate dẫn xuất từ dexterity).
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 

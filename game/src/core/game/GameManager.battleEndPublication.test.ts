@@ -70,7 +70,7 @@ function dummyEnemy(id: string, statsInput: typeof FRAGILE_ENEMY) {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: { ...statsInput },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 

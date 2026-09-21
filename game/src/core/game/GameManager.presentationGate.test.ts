@@ -5,6 +5,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { asBaseStats, createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+import { toTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
 import type { Stage } from '../stage/Stage'
 import { createDefaultPlayer } from '../player/Player'
 
@@ -73,7 +74,7 @@ function startGatedStage(gameManager: GameManager): void {
   const enemy = defineEnemy({
     id: 'gate_dummy', name: 'Gate Dummy', level: 1, realmId: 'mortal', lane: 'ground',
     statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
   const stage = stageFixture('gate_stage')
   stage.enemyPool = [{ enemyId: enemy.id, weight: 1 }]
@@ -109,7 +110,6 @@ function createBasicSkill(): Skill {
     cooldown: 0, cost: 0, target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
     execution: { kind: 'attack_speed' }, resourceType: 'none',
-    unlocked: true, equipped: true, loadoutSlot: 0, loadoutSlots: [0],
   }
 }
 
@@ -121,11 +121,18 @@ function battleReady(): { gameManager: GameManager; combatSource: ManualClockSou
   const player = createPlaybackPlayer()
   gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
   gameManager.progressionOps.learnSkill('basic_test')
-  gameManager.skillSystem.equipToSlot('basic_test', 0)
+  const basicSkill = gameManager.skillManager.get('basic_test')!
+  gameManager.setPathRuntimeResolver(() => ({
+    resolveBasic: () =>
+      toTurnSkillDefinition(basicSkill, gameManager.skillSystem.getEffectiveSkill(basicSkill)),
+    resolveSpecialUltimate: () => undefined,
+    resolveMaxThe: () => 0,
+    resolveStatDomains: () => undefined,
+  }))
   gameManager.startBattle(player, defineEnemy({
     id: 'playback_dummy', name: 'Playback Dummy', level: 1, realmId: 'mortal', lane: 'ground',
     statsInput: { ...ENEMY_STATS },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   }))
 
   // Intro 20 ticks (2026-09-07 plan Task 4) + countdown 30 ticks.
@@ -183,7 +190,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     const enemy = defineEnemy({
       id: 'session_dummy', name: 'Session Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage = stageFixture('session_stage')
     stage.enemyPool = [{ enemyId: enemy.id, weight: 1 }]
@@ -298,7 +305,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     const enemy = defineEnemy({
       id: 'session_dummy2', name: 'Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 500, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage = stageFixture('session_stage_nested')
     stage.enemyPool = [{ enemyId: enemy.id, weight: 1 }]

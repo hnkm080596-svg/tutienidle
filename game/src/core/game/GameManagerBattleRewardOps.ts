@@ -148,6 +148,12 @@ export class GameManagerBattleRewardOps {
       this.publishBattleEnd(turnBattle.state)
 
       if (turnBattle.state === 'victory') {
+        // P7-M3 - pending technique mastery flushes ONLY on the victory
+        // terminal (defeat never pays). Consume-and-zero inside
+        // settleTechniqueMastery guards the preserveLootSession repeat
+        // cycle from re-paying the same buffer next victory.
+        this.deps.battleLoot.settleTechniqueMastery(turnBattle.players[0]?.entity.id)
+
         this.recordPerfectClearIfEligible(turnBattle)
 
         // Stage completion: push completedStageIds exactly once per stage

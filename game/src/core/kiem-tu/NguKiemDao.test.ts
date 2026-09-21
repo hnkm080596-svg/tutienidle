@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createDefaultPlayer } from '../player/Player'
-import { freshKiemTuState } from './KiemTuState'
+import { freshSwordPathState } from './KiemTuState'
 import { GameManager } from '../game/GameManager'
 import {
   KIEM_DAO_MERGE_BONUS,
@@ -17,10 +17,10 @@ import {
 
 function makeNguPlayer(realmId: string) {
   const player = createDefaultPlayer()
-  player.cultivationPath = 'kiem_tu'
-  player.cultivationWay = 'ngu'
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'hidden_sword_pathway'
   player.realmId = realmId
-  player.kiemTu = freshKiemTuState()
+  player.swordPath = freshSwordPathState()
   return player
 }
 
@@ -49,8 +49,8 @@ describe('gainKiemY', () => {
 
     gainKiemY(player, 500)
 
-    expect(player.kiemTu!.kiemY).toBe(500)
-    expect(player.kiemTu!.kiemDaoCount).toBe(1)
+    expect(player.swordPath!.kiemY).toBe(500)
+    expect(player.swordPath!.kiemDaoCount).toBe(1)
   })
 
   it('converts exactly at forgeCost and keeps the remainder', () => {
@@ -58,19 +58,19 @@ describe('gainKiemY', () => {
 
     // LK cap is 2 — one forge at 9999 fills it.
     gainKiemY(player, 9_999)
-    expect(player.kiemTu!.kiemDaoCount).toBe(2)
-    expect(player.kiemTu!.kiemY).toBe(0)
+    expect(player.swordPath!.kiemDaoCount).toBe(2)
+    expect(player.swordPath!.kiemY).toBe(0)
   })
 
   it('gain is a no-op at cap — banked Y does not grow', () => {
     const player = makeNguPlayer('qi_refining')
 
     gainKiemY(player, 9_999)
-    expect(player.kiemTu!.kiemDaoCount).toBe(2)
+    expect(player.swordPath!.kiemDaoCount).toBe(2)
 
     gainKiemY(player, 1)
-    expect(player.kiemTu!.kiemDaoCount).toBe(2)
-    expect(player.kiemTu!.kiemY).toBe(0)
+    expect(player.swordPath!.kiemDaoCount).toBe(2)
+    expect(player.swordPath!.kiemY).toBe(0)
   })
 
   it('multi-forge: one large gain converts repeatedly until cap', () => {
@@ -78,43 +78,43 @@ describe('gainKiemY', () => {
 
     gainKiemY(player, 16_899 * 3 + 123)
 
-    expect(player.kiemTu!.kiemDaoCount).toBe(4)
+    expect(player.swordPath!.kiemDaoCount).toBe(4)
     // Cap reached — per the gain-gate the remaining amount is NOT banked
     // once count hits cap mid-gain (the while loop stops at cap; the
     // leftover below forgeCost stays banked).
-    expect(player.kiemTu!.kiemY).toBeLessThan(forgeCost(3))
+    expect(player.swordPath!.kiemY).toBeLessThan(forgeCost(3))
   })
 
   it('uses the CURRENT realm forgeCost — cost rises after breakthrough', () => {
     const player = makeNguPlayer('foundation_establishment') // forgeCost(2) = 12_999
 
     gainKiemY(player, 9_999)
-    expect(player.kiemTu!.kiemDaoCount).toBe(1)
-    expect(player.kiemTu!.kiemY).toBe(9_999)
+    expect(player.swordPath!.kiemDaoCount).toBe(1)
+    expect(player.swordPath!.kiemY).toBe(9_999)
 
     gainKiemY(player, 3_000)
-    expect(player.kiemTu!.kiemDaoCount).toBe(2)
-    expect(player.kiemTu!.kiemY).toBe(0)
+    expect(player.swordPath!.kiemDaoCount).toBe(2)
+    expect(player.swordPath!.kiemY).toBe(0)
   })
 
-  it('is a no-op for hien players and missing kiemTu state', () => {
+  it('is a no-op for hien players and missing swordPath state', () => {
     const player = makeNguPlayer('qi_refining')
-    player.cultivationWay = 'hien'
+    player.cultivationWay = 'sword_pathway'
 
     gainKiemY(player, 9_999)
-    expect(player.kiemTu!.kiemY).toBe(0)
-    expect(player.kiemTu!.kiemDaoCount).toBe(1)
+    expect(player.swordPath!.kiemY).toBe(0)
+    expect(player.swordPath!.kiemDaoCount).toBe(1)
 
     const noPath = createDefaultPlayer()
-    noPath.kiemTu = undefined
+    noPath.swordPath = undefined
     gainKiemY(noPath, 9_999)
-    expect(noPath.kiemTu).toBeUndefined()
+    expect(noPath.swordPath).toBeUndefined()
   })
 })
 
 describe('applyBreakthroughMerge', () => {
   it('snapshots count into base BEFORE reset: count 3 / base 1 → base 1.9, count 1', () => {
-    const state = { ...freshKiemTuState(), kiemDaoCount: 3, kiemDaoBase: 1 }
+    const state = { ...freshSwordPathState(), kiemDaoCount: 3, kiemDaoBase: 1 }
 
     applyBreakthroughMerge(state)
 
@@ -124,7 +124,7 @@ describe('applyBreakthroughMerge', () => {
 
   it('kiemY is untouched by the merge', () => {
     const state = {
-      ...freshKiemTuState(),
+      ...freshSwordPathState(),
       kiemDaoCount: 4,
       kiemDaoBase: 2,
       kiemY: 777,
@@ -137,7 +137,7 @@ describe('applyBreakthroughMerge', () => {
   })
 
   it('compounds across merges (base multiplies, not adds)', () => {
-    const state = { ...freshKiemTuState(), kiemDaoCount: 2, kiemDaoBase: 1 }
+    const state = { ...freshSwordPathState(), kiemDaoCount: 2, kiemDaoBase: 1 }
 
     applyBreakthroughMerge(state) // base = 1 * 1.6 = 1.6, count 1
     state.kiemDaoCount = 3
@@ -153,18 +153,18 @@ describe('realm-advance merge hook (GameManagerRealmAdvanceOps)', () => {
     const gameManager = new GameManager()
 
     const ngu = makeNguPlayer('golden_core')
-    ngu.kiemTu!.kiemDaoCount = 4
-    gameManager.realmAdvanceOps.applyKiemTuRealmTransition(ngu)
+    ngu.swordPath!.kiemDaoCount = 4
+    gameManager.realmAdvanceOps.applySwordPathRealmTransition(ngu)
 
-    expect(ngu.kiemTu!.kiemDaoCount).toBe(1)
-    expect(ngu.kiemTu!.kiemDaoBase).toBeCloseTo(1 + KIEM_DAO_MERGE_BONUS * 4, 10)
+    expect(ngu.swordPath!.kiemDaoCount).toBe(1)
+    expect(ngu.swordPath!.kiemDaoBase).toBeCloseTo(1 + KIEM_DAO_MERGE_BONUS * 4, 10)
 
     const hien = makeNguPlayer('golden_core')
-    hien.cultivationWay = 'hien'
-    hien.kiemTu!.kiemDaoCount = 4
-    gameManager.realmAdvanceOps.applyKiemTuRealmTransition(hien)
+    hien.cultivationWay = 'sword_pathway'
+    hien.swordPath!.kiemDaoCount = 4
+    gameManager.realmAdvanceOps.applySwordPathRealmTransition(hien)
 
-    expect(hien.kiemTu!.kiemDaoCount).toBe(4)
-    expect(hien.kiemTu!.kiemDaoBase).toBe(1)
+    expect(hien.swordPath!.kiemDaoCount).toBe(4)
+    expect(hien.swordPath!.kiemDaoBase).toBe(1)
   })
 })

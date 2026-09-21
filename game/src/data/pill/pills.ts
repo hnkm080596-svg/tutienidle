@@ -64,7 +64,7 @@ export function buildTieredPills(): Pill[] {
 
 // Đan đặc biệt (spec dot-pha-loi-kiep §4.1b) — 2 đan của gate Trúc
 // Cơ, type 'material' KHÔNG uống: Thông Mạch Đan tiêu qua
-// MeridianSystem.investThongMachDan(), Trúc Cơ Đan là vật chứng bậc
+// meridian chapter (core/realm/body/MeridianChapter.ts), Truc Co Dan la vat chung bac
 // Địa/Thiên (CÓ trong túi lúc bấm đột phá, không tiêu).
 const SPECIAL_PILLS: Pill[] = [
   {

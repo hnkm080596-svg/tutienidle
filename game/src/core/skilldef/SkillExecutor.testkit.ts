@@ -480,9 +480,6 @@ export const PROGRESSION = {
   level: 3,
   experience: 0,
   totalExperience: 10,
-  unlocked: true,
-  equipped: true,
-  loadoutSlots: [0],
 }
 
 export function makeInput(

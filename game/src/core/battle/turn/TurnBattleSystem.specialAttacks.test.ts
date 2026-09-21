@@ -83,7 +83,7 @@ function bossBattle() {
       armor: 0,
       evasionRate: 0,
     },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
     specialAttacks: [{ everyNth: 4, damageMultiplier: 3, presetId: 'water_surge' }],
   })
 

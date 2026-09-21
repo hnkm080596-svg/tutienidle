@@ -3,7 +3,7 @@ import { THE_TU_NODES } from './TheTuNodes'
 import { NodeRegistry } from '../../core/progression/NodeRegistry'
 import { canPurchaseNode, getNodeLevel, purchaseNode } from '../../core/progression/NodeSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
-import { collectTheTuKitModifiers } from '../../core/the-tu/TheTuKitModifiers'
+import { collectBodyKitModifiers } from '../../core/the-tu/TheTuKitModifiers'
 import { buildTheTuKit } from '../skill/TheTuSkills'
 import { BAT_TU_BA_THE, BAT_TU_BA_THE_TURNS, CUONG_QUYEN, CUONG_QUYEN_MISSING_HP_PER_PERCENT, SON_NHAC_WARD_RATIO } from '../skill/TheTuSkills'
 import { BAT_TU_BA_THE_BUFF, KHIEM_KHICH_DEBUFF, KHIEM_KHICH_TURNS } from '../buff/TheTuBuffs'
@@ -37,18 +37,18 @@ function fixtureCombatant(id: string, statOverrides: Parameters<typeof createBas
   } as CombatEntity
 }
 
-// The Tu Reimagined (plan Task 12, spec section 8.1) — the_tu tree data:
+// The Tu Reimagined (plan Task 12, spec section 8.1) — body tree data:
 // mutex roots, realm gates, collector->kit delivery, INV-13 authoring ban.
 
-// Every node in this tree carries requiredCultivationPath 'the_tu' +
-// requiredWay 'hien' — the fixture player owns both so the purchase/
+// Every node in this tree carries requiredCultivationPath 'body' +
+// requiredWay 'body_pathway' — the fixture player owns both so the purchase/
 // upgrade gates hold.
 function playerWith(overrides: Partial<ReturnType<typeof createDefaultPlayer>> = {}) {
   return {
     ...createDefaultPlayer(),
     skillInsight: 99,
-    cultivationPath: 'the_tu' as const,
-    cultivationWay: 'hien' as const,
+    cultivationPath: 'body' as const,
+    cultivationWay: 'body_pathway' as const,
     ...overrides,
   }
 }
@@ -129,7 +129,7 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
     purchaseNode(player, growth)
     player.nodeLevels[growth.id] = 3
 
-    const mods = collectTheTuKitModifiers(registry, player)
+    const mods = collectBodyKitModifiers(registry, player)
     expect(mods.missingHpBonusBonus).toBeCloseTo(0.005 * 3)
 
     const kit = buildTheTuKit('cuong_chien', mods)
@@ -146,7 +146,7 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
     purchaseNode(player, node('cuong_chien'))
     purchaseNode(player, node('major_bat_tu_tuc_menh'))
 
-    const mods = collectTheTuKitModifiers(registry, player)
+    const mods = collectBodyKitModifiers(registry, player)
     expect(mods.batTuDurationBonus).toBe(1)
 
     const kit = buildTheTuKit('cuong_chien', mods)
@@ -192,7 +192,7 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
     purchaseNode(player, node('tran_the'))
     purchaseNode(player, node('major_khiem_khich_dien'))
 
-    const mods = collectTheTuKitModifiers(registry, player)
+    const mods = collectBodyKitModifiers(registry, player)
     const kit = buildTheTuKit('tran_the', mods)
     const taunt = kit.ultimate.appliesBuffs?.find((entry) => entry.definitionId === 'khiem_khich')
 
@@ -208,7 +208,7 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
     purchaseNode(player, node('tran_the'))
     purchaseNode(player, node('major_son_nhac_bao_bi'))
 
-    const mods = collectTheTuKitModifiers(registry, player)
+    const mods = collectBodyKitModifiers(registry, player)
     const kit = buildTheTuKit('tran_the', mods)
     const ward = kit.ultimate.appliesBuffs?.find((entry) => entry.definitionId === 'son_nhac_ho_the')
 
@@ -227,12 +227,12 @@ describe('TheTuNodes — authoring contract (INV-13 + single render path)', () =
     }
   })
 
-  it('every gated-stat modifier declares domain the_tu', () => {
+  it('every gated-stat modifier declares domain body', () => {
     for (const candidate of THE_TU_NODES) {
       for (const modifier of candidate.effect.statModifiers ?? []) {
         const gate = STAT_DOMAIN[modifier.stat]
         if (gate && gate !== 'universal') {
-          expect(modifier.domain, `${candidate.id}:${modifier.stat} missing domain tag`).toBe('the_tu')
+          expect(modifier.domain, `${candidate.id}:${modifier.stat} missing domain tag`).toBe('body')
         }
       }
     }

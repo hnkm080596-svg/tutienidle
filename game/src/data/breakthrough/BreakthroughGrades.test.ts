@@ -16,9 +16,9 @@ function createGreatDaoPlayer(): PlayerData {
   const player = createReadyPlayer()
   player.realmLevel = 18
   player.selectedTalentIds = ['pham_cot']
-  player.bodyRefinementCompletedTiers = 6
+  player.bodyProgression.body_refinement.completedTiers = 6
   player.mortalPerfectionAchieved = true
-  player.openedMeridianIds = MERIDIANS.map((m) => m.id) // 9/9 gồm Kỳ Kinh
+  player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id) // 9/9 gồm Kỳ Kinh
   // 5/5 main stat 30/30 (cap Luyện Khí — StatCap.ts)
   player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
   return player
@@ -37,25 +37,25 @@ describe('resolveKienCoGrade — 4 bậc Kiến Cơ (spec §4.2)', () => {
 
   it('Địa Đạo: Trúc Cơ Đan + Luyện Th thể full 3 tầng đầu', () => {
     const player = createReadyPlayer()
-    player.bodyRefinementCompletedTiers = 3
+    player.bodyProgression.body_refinement.completedTiers = 3
     expect(resolveKienCoGrade(player, true)).toBe('earth')
     // thiếu đan → rơi về Nhân
     expect(resolveKienCoGrade(player, false)).toBe('human')
     // chỉ 2 tầng → không đủ
     const thin = createReadyPlayer()
-    thin.bodyRefinementCompletedTiers = 2
+    thin.bodyProgression.body_refinement.completedTiers = 2
     expect(resolveKienCoGrade(thin, true)).toBe('human')
   })
 
   it('Thiên Đạo: đan + Luyện Th thể 6/6 + 6/8 kinh mạch', () => {
     const player = createReadyPlayer()
-    player.bodyRefinementCompletedTiers = 6
-    player.openedMeridianIds = MERIDIANS.slice(0, 6).map((m) => m.id)
+    player.bodyProgression.body_refinement.completedTiers = 6
+    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 6).map((m) => m.id)
     expect(resolveKienCoGrade(player, true)).toBe('heaven')
     // chỉ 5 đường → Địa
     const thin = createReadyPlayer()
-    thin.bodyRefinementCompletedTiers = 6
-    thin.openedMeridianIds = MERIDIANS.slice(0, 5).map((m) => m.id)
+    thin.bodyProgression.body_refinement.completedTiers = 6
+    thin.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 5).map((m) => m.id)
     expect(resolveKienCoGrade(thin, true)).toBe('earth')
   })
 
@@ -67,7 +67,7 @@ describe('resolveKienCoGrade — 4 bậc Kiến Cơ (spec §4.2)', () => {
   it('Đại Đạo thiếu TỪNG điều kiện → rơi về Thiên', () => {
     // thiếu Kỳ Kinh (8/9)
     const noKyKinh = createGreatDaoPlayer()
-    noKyKinh.openedMeridianIds = MERIDIANS.slice(0, 8).map((m) => m.id)
+    noKyKinh.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 8).map((m) => m.id)
     expect(resolveKienCoGrade(noKyKinh, true)).toBe('heaven')
     // thiếu Phàm Cốt
     const noTalent = createGreatDaoPlayer()

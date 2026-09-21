@@ -48,7 +48,7 @@ export type StatType =
   | 'manaShieldPercent'
   | 'leechPercent'
   // The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;
-  // reflection is a the_tu mechanic (phan_chinh), not a stat.
+  // reflection is a body mechanic (phan_chinh), not a stat.
   // stat-system-reimagined Task 4 (D18) -- receiver-side amplification of
   // HP restores that are NOT damage-derived: hpRegenPerTurn ticks, direct
   // heal effects, authored recovery triggers (dotRecovery). NEVER scales
@@ -58,7 +58,7 @@ export type StatType =
   | 'hpRegenPerTurn'
   | 'manaRegenPerTurn'
   // The Tu An (spec 2026-09-15 T4/section 3.2) — reactive chance stats,
-  // the_tu_an-gated. Derived ONLY from attributes via the two-channel
+  // hidden_body-gated. Derived ONLY from attributes via the two-channel
   // emission (CultivationPathSystem); INV-13 forbids authored modifiers.
   // Stored RAW (may exceed REACTIVE_CHANCE_CAP) — cap applies at the
   // roll/display site via clampStatValue, never inside the pipeline.

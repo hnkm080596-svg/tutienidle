@@ -68,7 +68,7 @@ function createDummy() {
   return defineEnemy({
     id: 'companion_kit_dummy', name: 'Companion Kit Dummy', level: 1, realmId: 'mortal', lane: 'ground',
     statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 

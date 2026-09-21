@@ -55,9 +55,7 @@ export const CORE_SKILLS: Skill[] = [
 
     resourceType: 'none',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   // Phap Tu Reimagined Task 2 — the two mortal-path actives learned
@@ -110,9 +108,7 @@ export const CORE_SKILLS: Skill[] = [
 
     resourceType: 'none',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   // The Tu Reimagined (spec 2026-09-15, T6/section 2.3) — huy_quyen is
@@ -160,9 +156,7 @@ export const CORE_SKILLS: Skill[] = [
 
     resourceType: 'none',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   // ------------------------------------------------------------------
@@ -202,9 +196,7 @@ export const CORE_SKILLS: Skill[] = [
 
     resourceType: 'none',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -242,9 +234,7 @@ export const CORE_SKILLS: Skill[] = [
 
     resourceType: 'none',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -270,9 +260,7 @@ export const CORE_SKILLS: Skill[] = [
 
     resourceType: 'none',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
 
@@ -351,9 +339,7 @@ export const CORE_SKILLS: Skill[] = [
 
     buildTag: 'burst',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   // Má»™c Tu (Plans/PoisonPath, 2026-08-21) â€” THAY Háº²N kit 3-skill+1-
@@ -409,9 +395,7 @@ export const CORE_SKILLS: Skill[] = [
 
     buildTag: 'core',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   // Thá»§y Tu (Plans/waterpath, 2026-08-21) â€” THAY Háº²N kit 3-skill+1-
@@ -481,9 +465,7 @@ export const CORE_SKILLS: Skill[] = [
 
     buildTag: 'core',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   // Kim Tu (Plans/KimPath, 2026-08-21) - THAY HAN kit 3-skill+1-passive
@@ -549,9 +531,7 @@ export const CORE_SKILLS: Skill[] = [
 
     buildTag: 'core',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   // Thá»• Tu (Plans/EarthPath, 2026-08-21) â€” THAY Háº²N kit 3-skill+1-
@@ -616,9 +596,7 @@ export const CORE_SKILLS: Skill[] = [
 
     buildTag: 'core',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -663,9 +641,7 @@ export const CORE_SKILLS: Skill[] = [
 
     buildTag: 'burst',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
 ]

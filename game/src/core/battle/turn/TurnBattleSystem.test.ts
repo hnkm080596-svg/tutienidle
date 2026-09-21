@@ -1013,7 +1013,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
         armor: 0,
         evasionRate: 0,
       },
-      rewards: { techniqueInsight: 1, spiritStone: 1 },
+      rewards: { techniqueMastery: 1, spiritStone: 1 },
       bossTrigger: { afterTurns: 60, buffDefinitionId: 'mortal_crocodile_enrage' },
     })
 

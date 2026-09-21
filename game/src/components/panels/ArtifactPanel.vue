@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
-// §12.1) — panel standalone, cùng pattern QuestPanel.vue/TechniquePanel.vue.
+// muc 12.1) - panel standalone, cung pattern QuestPanel.vue/SkillPathPanel.vue.
 // Phải render đúng state "nghề chưa có definition" (Kiếm Tu, doc §4)
 // không crash khi player.artifact undefined.
 import { computed } from 'vue'
@@ -45,7 +45,7 @@ const definition = computed(() => (artifactId.value ? ARTIFACTS[artifactId.value
 
 const cultivationPathLabel = computed(() => {
   // M5 — the active way (cultivationWay authoritative) names the path,
-  // so a collapsed ('the_tu','ung_the') save labels Ứng Thế correctly.
+  // so a collapsed ('body','hidden_body_pathway') save labels Ứng Thế correctly.
   const way = getActiveWayDefinition(player)
 
   return way?.name ?? t('panels.artifact.noPath')

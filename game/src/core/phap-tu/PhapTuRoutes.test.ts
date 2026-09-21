@@ -9,13 +9,13 @@ import { calculateStats } from '../stats/StatCalculator'
 import { createBaseStats } from '../stats/StatBlock'
 import {
   NEUTRAL_ROUTE_PROFILE,
-  PHAP_TU_ROUTES,
+  SPELL_PATH_ROUTES,
   applyRouteToEffectiveSkill,
   applyRouteToTurnSkill,
   resolveRouteProfile,
 } from './PhapTuRoutes'
 
-describe('PhapTuRoutes', () => {
+describe('SpellPathRoutes', () => {
   it('dot route scales damage down and ailment chance up', () => {
     const eff = applyRouteToEffectiveSkill(
       {
@@ -24,7 +24,7 @@ describe('PhapTuRoutes', () => {
           { type: 'debuff', buffId: 'bong', ailmentChance: 0.5 },
         ],
       } as EffectiveSkill,
-      PHAP_TU_ROUTES.dot,
+      SPELL_PATH_ROUTES.dot,
     )
 
     expect(eff.effects[0]).toMatchObject({ value: 85 })
@@ -42,7 +42,7 @@ describe('PhapTuRoutes', () => {
           },
         ],
       } as unknown as EffectiveSkill,
-      PHAP_TU_ROUTES.dot,
+      SPELL_PATH_ROUTES.dot,
     )
 
     expect(eff.triggers![0]!.actions[0]).toMatchObject({ value: 85 })
@@ -62,7 +62,7 @@ describe('PhapTuRoutes', () => {
           { type: 'debuff', buffId: 'bong', ailmentChance: 0.5 },
         ],
       } as EffectiveSkill,
-      PHAP_TU_ROUTES.no,
+      SPELL_PATH_ROUTES.no,
     )
 
     expect(eff.effects[0]!.value).toBeCloseTo(115)
@@ -77,7 +77,7 @@ describe('PhapTuRoutes', () => {
       appliesAilments: [{ buffDefinitionId: 'bong', chance: 0.5 }],
     } as TurnSkillDefinition
 
-    const routed = applyRouteToTurnSkill(turnSkill, PHAP_TU_ROUTES.dot)
+    const routed = applyRouteToTurnSkill(turnSkill, SPELL_PATH_ROUTES.dot)
     // Mission C Task 10c — an omitted stacks means 1 by engine default
     // (TurnBattleSystem ailment.stacks ?? 1), so the bonus ADDS to the
     // implicit stack, not to zero.
@@ -87,11 +87,11 @@ describe('PhapTuRoutes', () => {
     expect(neutral.appliesAilments![0]!.stacks).toBeUndefined()
   })
 
-  it('route stat modifiers carry the phap_tu domain and full StatModifier identity', () => {
-    for (const modifier of PHAP_TU_ROUTES.dot.statModifiers) {
-      expect(modifier.domain).toBe('phap_tu')
+  it('route stat modifiers carry the spell domain and full StatModifier identity', () => {
+    for (const modifier of SPELL_PATH_ROUTES.dot.statModifiers) {
+      expect(modifier.domain).toBe('spell')
       expect(modifier.sourceType).toBe('realm')
-      expect(modifier.sourceId).toBe('phap_tu')
+      expect(modifier.sourceId).toBe('spell')
       expect(modifier.id).toBeTruthy()
     }
   })
@@ -101,18 +101,18 @@ describe('PhapTuRoutes', () => {
 // element's kit sees route factors; mortal skills / passives / other
 // elements / other paths resolve neutral.
 describe('route scoping via SkillSystem provider', () => {
-  function phapTuPlayer(element: 'fire', route: 'dot' | 'no') {
+  function spellPathPlayer(element: 'fire', route: 'dot' | 'no') {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element, route }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element, route }
     return player
   }
 
   it('dot route scales the selected kit basic but not linh_bao', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
-    const player = phapTuPlayer('fire', 'dot')
+    const player = spellPathPlayer('fire', 'dot')
     gameManager.setActivePlayer(player)
 
     gameManager.progressionOps.learnSkill('hoa_cau_thuat')
@@ -129,17 +129,17 @@ describe('route scoping via SkillSystem provider', () => {
     expect(routedHoaCau.effects[1]).toMatchObject({ ailmentChance: 0.625 })
 
     // Mortal skill outside the kit: identical under 'dot' vs 'no'.
-    player.phapTu.route = 'no'
+    player.spellPath.route = 'no'
     expect(gameManager.skillSystem.getEffectiveSkill(linhBao)).toEqual(routedLinhBao)
   })
 
-  it('no element yet -> every skill resolves neutral even on phap_tu', () => {
+  it('no element yet -> every skill resolves neutral even on spell', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: null, route: null }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: null, route: null }
     gameManager.setActivePlayer(player)
 
     gameManager.progressionOps.learnSkill('hoa_cau_thuat')
@@ -148,11 +148,11 @@ describe('route scoping via SkillSystem provider', () => {
     expect(gameManager.skillSystem.getEffectiveSkill(hoaCau).effects[0]).toMatchObject({ value: 1 })
   })
 
-  it('non-phap_tu path never sees route factors', () => {
+  it('non-spell path never sees route factors', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
+    player.cultivationPath = 'sword'
     gameManager.setActivePlayer(player)
 
     gameManager.progressionOps.learnSkill('hoa_cau_thuat')
@@ -167,9 +167,9 @@ describe('route scoping via SkillSystem provider', () => {
 describe('route stat modifiers aggregation', () => {
   function routedPlayer(route: 'dot' | 'no') {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route }
     return player
   }
 
@@ -181,7 +181,7 @@ describe('route stat modifiers aggregation', () => {
     const battleBase = gameManager.effectOps.getBattleBaseModifiers(player)
     const live = gameManager.effectOps.getLiveBattleModifiers(player)
 
-    for (const routeMod of PHAP_TU_ROUTES.dot.statModifiers) {
+    for (const routeMod of SPELL_PATH_ROUTES.dot.statModifiers) {
       expect(menu).toContainEqual(routeMod)
       expect(battleBase).toContainEqual(routeMod)
       expect(live).not.toContainEqual(routeMod)
@@ -194,7 +194,7 @@ describe('route stat modifiers aggregation', () => {
     const player = routedPlayer('no')
 
     const mods = gameManager.effectOps.getBattleBaseModifiers(player)
-    const routeMods = mods.filter((m) => m.sourceId === 'phap_tu' && m.id.startsWith('phap_tu_route_'))
+    const routeMods = mods.filter((m) => m.sourceId === 'spell' && m.id.startsWith('phap_tu_route_'))
 
     expect(routeMods).toHaveLength(2)
     calculateStats(createBaseStats(), routeMods)
@@ -204,30 +204,30 @@ describe('route stat modifiers aggregation', () => {
   it('no route -> no route modifiers anywhere', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route: null }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route: null }
 
     expect(gameManager.effectOps.getAggregatedModifiers(player)).not.toContainEqual(
-      expect.objectContaining({ sourceId: 'phap_tu', id: expect.stringContaining('route') }),
+      expect.objectContaining({ sourceId: 'spell', id: expect.stringContaining('route') }),
     )
   })
 
-  it('non-phap_tu path with a committed route -> no route modifiers (dirty-state defense)', () => {
+  it('non-spell path with a committed route -> no route modifiers (dirty-state defense)', () => {
     // Review fix (HIGH-2): criticalRate/criticalDamage/ailmentPotency are
     // universal stats — a route value that leaked onto a phap_tu_an or
-    // kiem_tu player must not reach the aggregators.
+    // sword player must not reach the aggregators.
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngo_dao'
-    player.phapTu = { element: 'fire', route: 'no' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'hidden_spell_pathway'
+    player.spellPath = { element: 'fire', route: 'no' }
 
     expect(gameManager.effectOps.getAggregatedModifiers(player)).not.toContainEqual(
-      expect.objectContaining({ sourceId: 'phap_tu', id: expect.stringContaining('route') }),
+      expect.objectContaining({ sourceId: 'spell', id: expect.stringContaining('route') }),
     )
     expect(gameManager.effectOps.getBattleBaseModifiers(player)).not.toContainEqual(
-      expect.objectContaining({ sourceId: 'phap_tu', id: expect.stringContaining('route') }),
+      expect.objectContaining({ sourceId: 'spell', id: expect.stringContaining('route') }),
     )
   })
 })

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Quán Khí (2026-08-20, Realm Passive & Pressure follow-up) — tách
 // path-choices ("Bước Vào Pháp Tu/Kiếm Tu") ra khỏi CharacterPanel.vue
-// thành overlay riêng, cùng pattern SkillPathPanel.vue/TechniquePanel.vue.
+// thanh overlay rieng, cung pattern SkillPathPanel.vue.
 // Mở qua TribulationOutcomeService sau khi thắng kiếp Quán Khí
 // (targetRealmId 'qi_refining'), hoặc qua entry button trên
 // CharacterPanel.vue cho Kiếm Tu — panel này KHÔNG tự kiểm tra lại
@@ -17,10 +17,10 @@ import {
   CULTIVATION_PATH_MODULES,
   type CultivationPathId,
   type PathWayDefinition,
-  type PathWayId,
+  type CultivationWayId,
 } from '@/core/player/CultivationPathKit'
 import {
-  getKiemTuPreset,
+  getSwordScrollPreset,
   hasStaticPathCapability,
   isActivePath,
   listOfferableWays,
@@ -47,8 +47,8 @@ const cooldownSeconds = computed(() => {
 })
 
 // Phap Tu Reimagined (Task 16) — the ritual offers exactly what the
-// path authority lists: ngo_dao appears ONLY when linh_bao is already
-// Lv3 at ritual time; ung_the appears ONLY when huy_quyen is Lv3 (same
+// path authority lists: hidden_spell_pathway appears ONLY when linh_bao is already
+// Lv3 at ritual time; hidden_body_pathway appears ONLY when huy_quyen is Lv3 (same
 // isCultivationPathOffered predicate the ritual enforces inside
 // applyPathChoice); no locked-card tease when ineligible (spec §11).
 // Offerability is evaluated live per render — eligibility is never
@@ -67,27 +67,23 @@ const availableWays = computed(() => {
       way: CULTIVATION_PATH_MODULES[offer.pathId].ways[offer.wayId],
     }))
     .filter(
-      (entry): entry is { pathId: CultivationPathId; wayId: PathWayId; way: PathWayDefinition } =>
+      (entry): entry is { pathId: CultivationPathId; wayId: CultivationWayId; way: PathWayDefinition } =>
         entry.way !== undefined,
     )
 })
 
 // A sealed way's kit names — resolved live from the way declaration
-// (loadout skillIds + the technique-carried innate passive) so the card
+// (loadout skillIds + the way's initiation passives, P7-M2) so the card
 // never drifts from authored content.
 function sealedKitSkillNames(way: PathWayDefinition): string[] {
-  const skillIds = [...(way.skillIds ?? [])]
-  const innateId = gameManager.techniqueManager.get(way.techniqueId)?.innateSkillId
-  if (innateId) {
-    skillIds.push(innateId)
-  }
+  const skillIds = [...(way.skillIds ?? []), ...(way.passiveSkillIds ?? [])]
   return skillIds.map(id => gameManager.skillManager.get(id)?.name ?? id)
 }
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
 // (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng
 // thay vì browser confirm() mặc định).
-const pendingChoice = ref<{ pathId: CultivationPathId; wayId: PathWayId } | null>(null)
+const pendingChoice = ref<{ pathId: CultivationPathId; wayId: CultivationWayId } | null>(null)
 
 const pendingWay = computed(() =>
   pendingChoice.value
@@ -97,7 +93,7 @@ const pendingWay = computed(() =>
 
 const pendingPathName = computed(() => pendingWay.value?.name ?? '')
 
-function choosePath(pathId: CultivationPathId, wayId: PathWayId) {
+function choosePath(pathId: CultivationPathId, wayId: CultivationWayId) {
   pendingChoice.value = { pathId, wayId }
 }
 
@@ -139,27 +135,27 @@ function close() {
 }
 
 // Kiem Tu specialization card below — shown only after the player has
-// chosen the kiem_tu path (read-only display; the way was locked at
+// chosen the sword path (read-only display; the way was locked at
 // the Initiation Ritual — there is no in-panel conversion).
-const isKiemTu = computed(() => {
+const isSwordPath = computed(() => {
   stateVersion.value
 
   // P1 - the generic authority read resolves the committed pair through
-  // the catalog: a way-less/corrupt kiem_tu save is NOT kiem (fail closed).
-  return isActivePath(player, 'kiem_tu')
+  // the catalog: a way-less/corrupt sword save is NOT kiem (fail closed).
+  return isActivePath(player, 'sword')
 })
 
-// Cultivation Path Framework (M6/M9) — the hien/ngu way is canonical on
+// Cultivation Path Framework (M6/M9) — the sword/hidden way is canonical on
 // PlayerData.cultivationWay. P1 - read through the declared capability:
-// 'kiem_tu.ngu_kiem_dao' only resolves for the ('kiem_tu','ngu') pair.
-const kiemTuWay = computed(() => {
+// 'sword.sword_riding' only resolves for the ('sword','hidden_sword_pathway') pair.
+const swordPathWay = computed(() => {
   stateVersion.value
 
-  return hasStaticPathCapability(player, 'kiem_tu.ngu_kiem_dao') ? 'ngu' : 'hien'
+  return hasStaticPathCapability(player, 'sword.sword_riding') ? 'hidden_sword_pathway' : 'sword_pathway'
 })
 
 const specNameDisplay = computed(() =>
-  kiemTuWay.value === 'ngu'
+  swordPathWay.value === 'hidden_sword_pathway'
     ? t('panels.quanKhi.specNames.nguKiemDao')
     : t('panels.quanKhi.specNames.kiemPho'),
 )
@@ -178,7 +174,7 @@ const realmIndex = computed(() => {
 const presetOrbs = computed<OrbId[]>(() => {
   stateVersion.value
 
-  return [...(getKiemTuPreset(player) ?? [])]
+  return [...(getSwordScrollPreset(player) ?? [])]
 })
 
 const presetBattleLocked = computed(() => {
@@ -234,7 +230,7 @@ function removeOrbAt(index: number) {
       <div class="quan-khi-panel__choices">
         <template v-for="kit in availableWays" :key="`${kit.pathId}/${kit.wayId}`">
           <!-- Sealed hidden-path card (Task 16, M9) — renders for any
-               way declaring sealedOffer (today: ngo_dao); names the
+               way declaring sealedOffer (today: hidden_spell_pathway); names the
                way, carries the permanent warning, no node-tree entry
                point. -->
           <div v-if="kit.way.sealedOffer" class="quan-khi-panel__hidden-card">
@@ -271,23 +267,23 @@ function removeOrbAt(index: number) {
     <!-- Kiem Tu Reimagined (spec 2026-09-15) — shows the active
          specialization (Kiem Pho / Ngu Kiem Dao) read from
          player.cultivationWay. -->
-    <div v-if="isKiemTu" class="quan-khi-panel__card">
+    <div v-if="isSwordPath" class="quan-khi-panel__card">
       <div class="quan-khi-panel__route-card">
         <p class="quan-khi-panel__hint">
           {{ t('panels.quanKhi.sections.kiemTuSpec.hintPrefix') }} <strong class="quan-khi-panel__route-name">{{ specNameDisplay }}</strong>{{ t('panels.quanKhi.sections.kiemTuSpec.hintSuffix') }}
         </p>
         <p class="quan-khi-panel__warning">
-          {{ kiemTuWay === 'ngu'
+          {{ swordPathWay === 'hidden_sword_pathway'
             ? t('panels.quanKhi.sections.kiemTuSpec.nguDescription')
             : t('panels.quanKhi.sections.kiemTuSpec.hienDescription') }}
         </p>
       </div>
     </div>
 
-    <!-- Kiem Pho preset editor — hien only (ngu never reads preset).
+    <!-- Kiem Pho preset editor — sword_pathway only (hidden_sword_pathway never reads preset).
          Strip = current persisted sequence, palette = realm-unlocked
          orbs; both write through setKiemPhoPreset(). -->
-    <div v-if="isKiemTu && kiemTuWay === 'hien'" class="quan-khi-panel__card">
+    <div v-if="isSwordPath && swordPathWay === 'sword_pathway'" class="quan-khi-panel__card">
       <div class="quan-khi-panel__route-card">
         <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.title') }}</p>
         <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.hint') }}</p>

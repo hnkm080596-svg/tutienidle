@@ -79,10 +79,10 @@ describe('P6-M0 loop probe', () => {
     const player = createDefaultPlayer()
 
     // --- bootstrap replication (onNewCharacter semantics) ---
-    gm.realmAdvanceOps.learnTechnique('tu_linh_quyet')
-    gm.realmAdvanceOps.equipTechnique('tu_linh_quyet')
+    // P7-M3 - no mortal technique grant (tu_linh_quyet retired); the
+    // Way grants its canonical art at initiation.
     gm.progressionOps.learnSkill('tram')
-    gm.progressionOps.setSkillLoadoutSlot(player, 0, 'tram')
+    gm.progressionOps.setMortalBasicSkill(player, 'tram')
     gm.progressionOps.learnSkill('linh_bao')
     gm.progressionOps.learnSkill('huy_quyen')
     // onCharacterCreated semantics: pinned profile (hap_linh, vit3/str2)
@@ -150,7 +150,7 @@ describe('P6-M0 loop probe', () => {
 
     // --- step 5: ritual ---
     log['offerable'] = gm.catalogOps ? undefined : undefined
-    const ritualOk = gm.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
+    const ritualOk = gm.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)
     log['ritual'] = ritualOk
     log['post_ritual'] = snap(player)
 

@@ -23,7 +23,7 @@ export const OVERLAY_LAYERS = {
   feedback: 1200,
   /** ToastContainer — transient notifications. */
   toast: 1500,
-  /** Full-screen panels (OverlayPanel default, ConfirmModal, RadialSkillSelector). */
+  /** Full-screen panels (OverlayPanel default, ConfirmModal). */
   panel: 1800,
   /** Blocking modals above panels (OfflineSummaryModal, LoreCodexModal, TutorialOverlay). */
   modal: 1900,

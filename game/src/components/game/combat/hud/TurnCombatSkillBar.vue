@@ -59,10 +59,10 @@ const {
 // multicast storm). The emblem tooltip explains basic-slot-only
 // multicast — the one place the rule surfaces in combat.
 // M4 (R6): the hidden way drives the emblem. P1 - the emblem IS the
-// aura indicator: it renders exactly when the 'phap_tu.reaction_aura'
-// capability resolves (ngo_dao + the learned dao passive), via the
+// aura indicator: it renders exactly when the 'spell.reaction_aura'
+// capability resolves (hidden_spell_pathway + the learned dao passive), via the
 // bound GameManager facade.
-const isAnPath = computed(() => gameManager.hasPathCapability('phap_tu.reaction_aura'))
+const isAnPath = computed(() => gameManager.hasPathCapability('spell.reaction_aura'))
 
 const anEmblemMeta = computed(() => turnSkillDisplayMetaOf('ngo_dao_hon_don'))
 
@@ -133,7 +133,7 @@ function tapSlot(role: TurnSkillSlotRole): void {
 <template>
   <div v-if="visible" class="turn-combat-skill-bar">
     <div class="turn-combat-skill-bar__slots">
-      <!-- Kiem Tu Reimagined — the hien orb picker OWNS the basic slot:
+      <!-- Kiem Tu Reimagined — the sword_pathway orb picker OWNS the basic slot:
            provider.manualOptions() are the only legal manual picks. -->
       <template v-if="hasDynamicBasic">
         <button

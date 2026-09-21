@@ -571,7 +571,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
 }
 
 /* Queue stands: each waiting combatant stands on a projected trapezoid
-   base — the same slot family as the battlefield cells — with its art
+   base - the same slot family as the battlefield cells - with its art
    anchored above the base (static profile PNG for the player, placeholder
    idle loop for companions). The card is the drag source; the base is the
    slot visual. */
@@ -598,7 +598,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
 }
 
 /* The base is clipped, so the beam cannot trigger on its own :hover area
-   alone (the art overflows above it) — light it whenever the card hovers. */
+   alone (the art overflows above it) - light it whenever the card hovers. */
 .queue-stand:hover .queue-stand__base > .fx-border-beam__fx {
   opacity: 1;
   animation: fx-border-beam-spin var(--fx-beam-duration, 2.4s) linear infinite;

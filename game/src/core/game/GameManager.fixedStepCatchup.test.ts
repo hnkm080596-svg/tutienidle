@@ -5,6 +5,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+import { toTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
 
 // Originally (2026-08-24) this locked the fixed-step catch-up the WORLD tick
 // performed for combat: one lumped deltaSeconds had to produce the same number
@@ -65,10 +66,6 @@ function createBasicSkill(): Skill {
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
     execution: { kind: 'attack_speed' },
     resourceType: 'none',
-    unlocked: true,
-    equipped: true,
-    loadoutSlot: 0,
-    loadoutSlots: [0],
   }
 }
 
@@ -83,7 +80,7 @@ function createStubbornEnemy() {
     // đánh lại player cũng không đáng kể (might=0) để player.alive luôn
     // true suốt bài test, không ảnh hưởng số đòn đếm được.
     statsInput: { ...ATTACKER_STATS_INPUT, maxHp: 10_000_000, might: 0, armor: 0 },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -96,7 +93,14 @@ describe('CombatClock — chunking invariant + no world-tick catch-up for combat
 
     gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
     gameManager.progressionOps.learnSkill('basic_test')
-    gameManager.skillSystem.equipToSlot('basic_test', 0)
+    const basicSkill = gameManager.skillManager.get('basic_test')!
+  gameManager.setPathRuntimeResolver(() => ({
+    resolveBasic: () =>
+      toTurnSkillDefinition(basicSkill, gameManager.skillSystem.getEffectiveSkill(basicSkill)),
+    resolveSpecialUltimate: () => undefined,
+    resolveMaxThe: () => 0,
+    resolveStatDomains: () => undefined,
+  }))
 
     gameManager.startBattle(player, createStubbornEnemy())
 

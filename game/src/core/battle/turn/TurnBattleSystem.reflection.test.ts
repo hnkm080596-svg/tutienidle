@@ -10,7 +10,7 @@ import type { BuffRegistry } from '../../buff2/BuffRegistry'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import { PHAN_CHINH_BUFF, PHAN_CHINH_MAXHP_RATIO, PHAN_CHINH_TAKEN_RATIO } from '../../../data/buff/TheTuBuffs'
 import { buildTheTuKit } from '../../../data/skill/TheTuSkills'
-import { collectTheTuKitModifiers } from '../../the-tu/TheTuKitModifiers'
+import { collectBodyKitModifiers } from '../../the-tu/TheTuKitModifiers'
 import { createDefaultPlayer } from '../../player/Player'
 import type { ProgressionNode } from '../../progression/ProgressionNode'
 
@@ -215,18 +215,18 @@ describe('phan_chinh Reflection (taken-only, terminal)', () => {
     expect(10_000 - tank.currentHp).toBe(100)
   })
 
-  it('node-adjusted emblem clone (collectTheTuKitModifiers) raises the reflect amount', () => {
+  it('node-adjusted emblem clone (collectBodyKitModifiers) raises the reflect amount', () => {
     const node: ProgressionNode = {
       id: 'tt_reflect_1',
       name: 'reflect',
       type: 'minor',
       insightCost: 1,
-      effect: { theTuKitModifiers: { reflectTakenRatioBonus: 0.05, reflectMaxHpRatioBonus: 0.01 } },
+      effect: { bodyKitModifiers: { reflectTakenRatioBonus: 0.05, reflectMaxHpRatioBonus: 0.01 } },
     }
     const player = createDefaultPlayer()
     player.nodeLevels = { tt_reflect_1: 1 }
 
-    const mods = collectTheTuKitModifiers({ getAll: () => [node] }, player)
+    const mods = collectBodyKitModifiers({ getAll: () => [node] }, player)
     const kit = buildTheTuKit('tran_the', mods)
     const emblemDef = kit.special.grantsBuffsAtBuild!.find((def) => def.id === 'phan_chinh')!
 

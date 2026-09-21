@@ -20,6 +20,7 @@ import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/pla
 import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
 import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
 import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
+import { validateBodyProgressionPersistedState } from '../../core/realm/body/BodyProgressionSystem'
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -229,8 +230,6 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   requireNonNegativeNumber(player, 'totalSkillInsightGained', 'player', issues)
   requireNonNegativeNumber(player, 'cultivationInsightAccumulator', 'player', issues)
   requireNonNegativeNumber(player, 'attributePoints', 'player', issues)
-  requireNonNegativeNumber(player, 'bodyRefinementCompletedTiers', 'player', issues)
-  requireNonNegativeNumber(player, 'bodyRefinementCurrentTierProgress', 'player', issues)
   requireNonNegativeNumber(player, 'breakthroughGrade', 'player', issues)
 
   const purchasedNodeIds = requireArray(player, 'purchasedNodeIds', 'player', issues)
@@ -328,6 +327,29 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
   }
 
+  // P7-M6 - techniqueProgress is an optional derived mirror of the
+  // canonical technique holder ({rank, grade}). Shape is type-checked;
+  // consistency vs techniques[] is deliberately NOT enforced here - the
+  // holder republishes the mirror through TechniqueSystem.restore.
+  if (player.techniqueProgress !== undefined) {
+    const progress = player.techniqueProgress
+
+    if (!isObject(progress)) {
+      issues.push({ path: 'player.techniqueProgress', message: 'phải là object hoặc vắng mặt' })
+    } else {
+      for (const key of ['rank', 'grade'] as const) {
+        const value = (progress as Record<string, unknown>)[key]
+
+        if (!isNonNegativeFiniteNumber(value) || !Number.isInteger(value)) {
+          issues.push({
+            path: `player.techniqueProgress.${key}`,
+            message: 'phải là số nguyên >= 0',
+          })
+        }
+      }
+    }
+  }
+
   // artifact optional (ArtifactProgress) — a malformed grade/experience
   // makes ArtifactPanel index ARTIFACT_GRADE_ORDER → -1 / NaN exp bar.
   if (player.artifact !== undefined) {
@@ -377,7 +399,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // the 3 BASE ids (the CULTIVATION_PATH_MODULES keys). M7 removed the
   // legacy _an ids from the union, so a save carrying one fails this
   // enum check and is rejected — dev-phase policy, no migration.
-  // cultivationWay is an optional PathWayId content string — shape-check
+  // cultivationWay is an optional CultivationWayId content string — shape-check
   // the type only; catalog membership belongs to the path authority,
   // not the save boundary.
   if (
@@ -400,8 +422,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // realmId in the same commit, so the save boundary rejects every
   // incoherent shape instead of loading a permanently soft-locked
   // player: both-set-or-neither, the way must be owned by its path
-  // module, a mortal can never carry the pair, and 'kiem_tu' requires
-  // its kiemTu slice (provider attach + NguKiemDao reads assume it).
+  // module, a mortal can never carry the pair, and 'sword' requires
+  // its swordPath slice (provider attach + NguKiemDao reads assume it).
   const hasPath = player.cultivationPath !== undefined
   const hasWay = player.cultivationWay !== undefined
 
@@ -433,15 +455,27 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     })
   }
 
+  // P7-M4 (v71) - mortalBasicSkillId's precursor/mortal-only contract
+  // is enforced at the restore preflight (preflightSaveRegistryReferences,
+  // same hard-fail seam as the way technique-holder check), not here:
+  // the shape layer stays structural for the player slice.
+
   // P1-M6 — persisted path-state validation is MODULE-OWNED: the
   // boundary keeps the identity-pair contract above (enum, atomic
   // pair, way membership, mortal gate) and iterates each module's
   // validatePersistedState hook generically for its own slices
-  // (phap_tu -> player.phapTu, kiem_tu -> player.kiemTu; the_tu owns
+  // (spell -> player.spellPath, sword -> player.swordPath; body owns
   // no slice). A new path carries its own rules — no save-layer edit.
   for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
     pathModule.validatePersistedState?.(player, (issue) => issues.push(issue))
   }
+
+  // P7-M5 (v72) - body progression is module-owned too: the boundary
+  // only checks the top-level record exists/is an object (inside the
+  // delegated validator), then each chapter validates its own slice.
+  // The retired flat fields (bodyRefinementCompletedTiers /
+  // bodyRefinementCurrentTierProgress / openedMeridianIds) are gone.
+  validateBodyProgressionPersistedState(player, (issue) => issues.push(issue))
 
   // Talent v4 M2 (v61) — 5 field mới: ngân tu vi tràn (Hải Nạp), tầng
   // Lôi Kiếp, ledger mua node miễn phí (Vấn Đạo), tầng Phá Giáp mang
@@ -465,14 +499,9 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.phaGiapCarryRealmId', message: 'phải là string hoặc null' })
   }
 
-  // Spec dot-pha-loi-kiep §6.1 — 4 field v54 (Bát Mạch, cửa sổ quái ẩn,
-  // snapshot hoàn hảo, mất vĩnh viễn Đại Đào).
-  const openedMeridianIds = requireArray(player, 'openedMeridianIds', 'player', issues)
-
-  if (openedMeridianIds) {
-    validateStringEntries(openedMeridianIds, 'player.openedMeridianIds', issues)
-  }
-
+  // Spec dot-pha-loi-kiep sec.6.1 - the v54 fields (hidden-beast window,
+  // mortal-perfection snapshot, great-dao loss). Bat Mach moved into
+  // player.bodyProgression.meridian at v72 (delegated validator above).
   requireNonNegativeNumber(player, 'luyenKhiKillsSinceBeast', 'player', issues)
   if (typeof player.mortalPerfectionAchieved !== 'boolean') {
     issues.push({ path: 'player.mortalPerfectionAchieved', message: 'phải là boolean' })
@@ -692,6 +721,35 @@ function validateIdEntries(entries: unknown[], path: string, issues: ShapeIssue[
     }
 
     requireString(entry, 'id', `${path}[${i}]`, issues)
+  }
+}
+
+// P7-M4 (v71) - skill entries REJECT the retired loadout surface
+// outright (no sanitize-and-load: structuredClone on restore would
+// silently carry stale keys into the next save). Learned = membership;
+// combat roles resolve from the way kit - these fields have no writer.
+const RETIRED_SKILL_ENTRY_KEYS = ['loadoutSlot', 'loadoutSlots', 'equipped', 'unlocked'] as const
+
+function validateSkillEntries(entries: unknown[], path: string, issues: ShapeIssue[]) {
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i]
+
+    if (!isObject(entry)) {
+      issues.push({ path: `${path}[${i}]`, message: 'phải là object' })
+
+      continue
+    }
+
+    requireString(entry, 'id', `${path}[${i}]`, issues)
+
+    for (const retiredKey of RETIRED_SKILL_ENTRY_KEYS) {
+      if (Object.prototype.hasOwnProperty.call(entry, retiredKey)) {
+        issues.push({
+          path: `${path}[${i}].${retiredKey}`,
+          message: 'field đã retire (v71 - learned = membership; roles resolve from the way kit)',
+        })
+      }
+    }
   }
 }
 
@@ -1203,7 +1261,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   }
 
   if (skills) {
-    validateIdEntries(skills, 'skills', issues)
+    validateSkillEntries(skills, 'skills', issues)
   }
 
   if (buildings) {

@@ -13,7 +13,7 @@ import { i18n } from '@/i18n'
  * Zero player-state writes remain here.
  *
  * Previously (2026-08-20) this composable owned the whole consequence
- * chain: realm passive sync, the phap_tu KC technique grant, artifact
+ * chain: realm passive sync, the spell KC technique grant, artifact
  * awakening, and the banked artifact tier release. All migrated verbatim
  * to the domain service — behavior parity pinned by
  * BreakthroughOutcomeService.test.ts and the pre-existing

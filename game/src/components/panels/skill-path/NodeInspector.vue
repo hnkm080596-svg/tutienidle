@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// PhapTuPanel plan mục 10/17/29 + node level (combat-skill-flow-element-
+// SpellPathPanel plan mục 10/17/29 + node level (combat-skill-flow-element-
 // power-dot-plan.md §6.2) — bottom panel: chi tiết node đang CHỌN + nút
 // mua/nâng cấp. Node nhiều cấp hiển thị `Cấp x/max`, Power nhận mỗi cấp
 // + tổng đang nhận, chi phí cấp kế; nút "Lĩnh Ngộ" ở level 0, "Nâng
@@ -25,7 +25,7 @@ import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builder
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import type { ElementType } from '@/core/element/ElementType'
-import type { PhapTuRoute } from '@/core/phap-tu/PhapTuState'
+import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
 const { t } = useI18n()
@@ -41,14 +41,14 @@ const emit = defineEmits<{ unlocked: [node: ProgressionNode] }>()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { purchaseNode, upgradeNode, selectPhapTuElement } = useLoadoutActions()
+const { purchaseNode, upgradeNode, selectSpellPathElement } = useLoadoutActions()
 
 const ELEMENT_ROOT_ID_SET = new Set<string>(Object.values(PHAP_TU_ELEMENT_ROOT_IDS))
-const PHAP_TU_ROUTE_IDS: readonly PhapTuRoute[] = ['dot', 'no']
+const SPELL_PATH_ROUTE_IDS: readonly SpellPathRoute[] = ['dot', 'no']
 
 // Task 16 — element roots are NOT purchasable through purchaseNode()
 // (the op rejects them): clicking one opens the blocking route pick,
-// and the atomic selectPhapTuElement() transaction commits
+// and the atomic selectSpellPathElement() transaction commits
 // element+route together (INV-13 — no element-without-route state).
 const isElementRoot = computed(() => props.node !== null && ELEMENT_ROOT_ID_SET.has(props.node.id))
 
@@ -159,6 +159,14 @@ const lockedReasons = computed(() => {
       }))
     } else if (prereq.kind === 'kiemDaoBelowCap') {
       reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.kiemDaoCap'))
+    } else if (prereq.kind === 'techniqueRank') {
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', {
+        rank: prereq.rank,
+      }))
+    } else if (prereq.kind === 'techniqueGrade') {
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.techniqueGrade', {
+        grade: prereq.grade,
+      }))
     } else {
       reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade'))
     }
@@ -186,7 +194,7 @@ function onPurchase() {
   }
 }
 
-function onRoutePick(route: PhapTuRoute) {
+function onRoutePick(route: SpellPathRoute) {
   const node = props.node
 
   routePickOpen.value = false
@@ -195,7 +203,7 @@ function onRoutePick(route: PhapTuRoute) {
     return
   }
 
-  if (selectPhapTuElement(node.elementTag, route)) {
+  if (selectSpellPathElement(node.elementTag, route)) {
     emit('unlocked', node)
   }
 }
@@ -279,7 +287,7 @@ function onUpgrade() {
 
     <!-- Blocking route pick (spec §3.3 + plan Task 16: "blocking
          choice, no dismiss") — element+route commit atomically via
-         selectPhapTuElement; the modal only collects input, it is not
+         selectSpellPathElement; the modal only collects input, it is not
          the guarantee. No cancel: the element root was clicked
          deliberately, the route half is mandatory. -->
     <Teleport to="body">
@@ -290,7 +298,7 @@ function onUpgrade() {
 
           <div class="route-pick__options">
             <GameButton
-              v-for="route in PHAP_TU_ROUTE_IDS"
+              v-for="route in SPELL_PATH_ROUTE_IDS"
               :key="route"
               class="route-pick__option"
               variant="ghost"

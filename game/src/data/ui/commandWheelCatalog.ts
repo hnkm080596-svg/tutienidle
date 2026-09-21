@@ -84,22 +84,8 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     target: { kind: 'standalone', panel: 'skill' },
     available: ALWAYS_AVAILABLE,
   },
-  {
-    id: 'technique',
-    ring: 1,
-    label: 'Tâm Pháp',
-    target: { kind: 'standalone', panel: 'technique' },
-    available: ALWAYS_AVAILABLE,
-  },
 
   // ---- Ring 2 — hệ thống phát triển ----
-  {
-    id: 'luyen_the',
-    ring: 2,
-    label: 'Luyện Thể',
-    target: { kind: 'standalone', panel: 'luyen_the' },
-    available: ALWAYS_AVAILABLE,
-  },
   {
     id: 'quest',
     ring: 2,

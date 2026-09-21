@@ -29,7 +29,7 @@ function run(seed: number) {
   }
   mark('lvl12')
   marks.push({ label: 'trib', outcome: s.runTribulation('qi_refining'), insight: s.player.skillInsight })
-  s.performRitual('kiem_tu', 'hien')
+  s.performRitual('sword', 'sword_pathway')
   mark('post_ritual')
   return marks
 }

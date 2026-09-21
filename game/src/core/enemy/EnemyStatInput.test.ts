@@ -103,7 +103,7 @@ describe('enemy input gate (D9/D21)', () => {
       realmId: 'mortal',
       lane: 'ground',
       statsInput: { ...baseInput },
-      rewards: { techniqueInsight: 1, spiritStone: 1 },
+      rewards: { techniqueMastery: 1, spiritStone: 1 },
       ...overrides,
     }
   }

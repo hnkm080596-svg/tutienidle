@@ -167,7 +167,7 @@ describe('equipmentInstanceMatchesSnapshot', () => {
     // EquipmentStatPolicy keeps domain-gated stats out of equipment pools,
     // so domain is never authored on a real mainStat; the snapshot simply
     // does not observe it.
-    instance.mainStat.domain = 'the_tu'
+    instance.mainStat.domain = 'body'
 
     expect(snapshot.mainStat.domain).toBeUndefined()
     expect(equipmentInstanceMatchesSnapshot(instance, snapshot)).toBe(true)

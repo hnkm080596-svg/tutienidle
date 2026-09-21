@@ -5,8 +5,8 @@ import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { getNodeLevel, isNodeElementActive, isNodeRouteActive, nodeWayApplies } from '../progression/NodeSystem'
 import { MAX_THE } from '../combat/CombatTypes'
-import { isPhapTuNguHanh } from './PhapTuPath'
-import type { PhapTuState, PhapTuRoute } from './PhapTuState'
+import { isSpellPathway } from './PhapTuPath'
+import type { SpellPathState, SpellPathRoute } from './PhapTuState'
 
 // Phap Tu Reimagined (spec 2026-09-14 §4) — the ONE owner of route
 // semantics. A route is the Phap Tu KIT's stance, not a character
@@ -22,29 +22,29 @@ import type { PhapTuState, PhapTuRoute } from './PhapTuState'
 // The converter itself stays generic.
 
 /** Extra The granted on a direct-hit crit under the 'no' route. */
-export const PHAP_TU_THE_GAIN_CRIT = 3
+export const SPELL_ESSENCE_GAIN_CRIT = 3
 
 // Task 8 — authored per-skill The gains for the NORMAL Phap Tu kit
 // (spec 2026-09-14 §3.1/§4): basic +5 / special +15 per landed cast;
 // the ultimate grants nothing (it consumes the pool). These are base
 // values — tu_the_<element> nodes add per-level deltas through
 // aggregateTurnSkillResourceModifiers() at battle build.
-export const PHAP_TU_THE_GAIN_BASIC = 5
-export const PHAP_TU_THE_GAIN_SPECIAL = 15
+export const SPELL_ESSENCE_GAIN_BASIC = 5
+export const SPELL_ESSENCE_GAIN_SPECIAL = 15
 
 /**
  * Task 10 — the empowered form of a chain-E ultimate. The route picks
  * WHICH payload variant resolves ('dot' -> detonate, 'no' -> nuke);
  * Task 13 differentiates them via detonateDoT/theScaling fields.
  */
-export type PhapTuUltimateVariant = 'detonate' | 'nuke'
+export type SpellPathUltimateVariant = 'detonate' | 'nuke'
 
 /**
  * Empowerment gate — spec P13: a CONSTANT 100, deliberately not
  * MAX_THE. A raised cap lets the player bank past the threshold and
  * burn the whole stockpile (consume always takes ALL).
  */
-export const PHAP_TU_EMPOWERMENT_THE_THRESHOLD = 100
+export const SPELL_EMPOWERMENT_ESSENCE_THRESHOLD = 100
 
 // Task 13 (spec §4) — the two empowered-ult route expressions, tuned
 // here as the single owner. DETONATE_AMP multiplies each consumed DoT
@@ -59,14 +59,14 @@ export interface RouteProfile {
   directMultiplier: number
   ailmentChanceFactor: number
   ailmentStackBonus: number
-  empoweredUlt?: PhapTuUltimateVariant
+  empoweredUlt?: SpellPathUltimateVariant
   statModifiers: StatModifier[]
   critTheGain?: number
   /** The route this profile was resolved FOR (absent on NEUTRAL) --
    * the route seam uses it to gate `routes`-tagged authored payload
    * entries (Hoa An spec 2026-09-17 sec.62: Xich Viem's DoT-only
    * next-tick modifier). */
-  route?: PhapTuRoute
+  route?: SpellPathRoute
 }
 
 /** No route picked (or no Phap Tu state): every factor is identity. */
@@ -78,11 +78,11 @@ export const NEUTRAL_ROUTE_PROFILE: RouteProfile = {
 }
 
 // Route stat modifiers are full StatModifiers (post-stat-rework
-// contract): sourceType 'realm'/sourceId 'phap_tu' matches
-// CULTIVATION_PATH_MODULES way grants, domain 'phap_tu' keeps them inside the
+// contract): sourceType 'realm'/sourceId 'spell' matches
+// CULTIVATION_PATH_MODULES way grants, domain 'spell' keeps them inside the
 // StatDomain gate. Ailment-potency lines use `flat` absolutes — percent
 // on a zero-base stat is a no-op.
-export const PHAP_TU_ROUTES: Record<PhapTuRoute, RouteProfile> = {
+export const SPELL_PATH_ROUTES: Record<SpellPathRoute, RouteProfile> = {
   dot: {
     route: 'dot',
     directMultiplier: 0.85,
@@ -91,19 +91,19 @@ export const PHAP_TU_ROUTES: Record<PhapTuRoute, RouteProfile> = {
     statModifiers: [
       {
         id: 'phap_tu_route_dot_potency',
-        sourceId: 'phap_tu',
+        sourceId: 'spell',
         sourceType: 'realm',
         stat: 'ailmentPotencyPercent',
         flat: 0.30,
-        domain: 'phap_tu',
+        domain: 'spell',
       },
       {
         id: 'phap_tu_route_dot_duration',
-        sourceId: 'phap_tu',
+        sourceId: 'spell',
         sourceType: 'realm',
         stat: 'ailmentDurationPercent',
         flat: 0.20,
-        domain: 'phap_tu',
+        domain: 'spell',
       },
     ],
     empoweredUlt: 'detonate',
@@ -116,37 +116,37 @@ export const PHAP_TU_ROUTES: Record<PhapTuRoute, RouteProfile> = {
     statModifiers: [
       {
         id: 'phap_tu_route_no_critrate',
-        sourceId: 'phap_tu',
+        sourceId: 'spell',
         sourceType: 'realm',
         stat: 'criticalRate',
         flat: 0.08,
-        domain: 'phap_tu',
+        domain: 'spell',
       },
       {
         id: 'phap_tu_route_no_critdmg',
-        sourceId: 'phap_tu',
+        sourceId: 'spell',
         sourceType: 'realm',
         stat: 'criticalDamage',
         flat: 0.25,
-        domain: 'phap_tu',
+        domain: 'spell',
       },
     ],
     empoweredUlt: 'nuke',
-    critTheGain: PHAP_TU_THE_GAIN_CRIT,
+    critTheGain: SPELL_ESSENCE_GAIN_CRIT,
   },
 }
 
 /**
- * Route profile for a PhapTuState — NEUTRAL when there is no state or
- * no route (INV-11). ngo_dao players never reach this: route state
+ * Route profile for a SpellPathState — NEUTRAL when there is no state or
+ * no route (INV-11). hidden_spell_pathway players never reach this: route state
  * is not theirs.
  */
-export function resolveRouteProfile(state?: PhapTuState): RouteProfile {
+export function resolveRouteProfile(state?: SpellPathState): RouteProfile {
   if (!state?.route) {
     return NEUTRAL_ROUTE_PROFILE
   }
 
-  return PHAP_TU_ROUTES[state.route]
+  return SPELL_PATH_ROUTES[state.route]
 }
 
 /**
@@ -236,15 +236,15 @@ export function applyRouteToTurnSkill(turnSkill: TurnSkillDefinition, profile: R
  */
 export function getRouteStatModifiers(player: PlayerData): StatModifier[] {
   // Review fix (HIGH-2): route bonuses are universal stats — gate on the
-  // owning path so leaked/dirty phapTu.route state on ngo_dao or
-  // kiem_tu players cannot inject crit/ailment modifiers.
-  // M4 (R6): the WAY is the gate — a collapsed ('phap_tu','ngo_dao')
-  // player owns no route machinery even with dirty phapTu state.
-  if (!isPhapTuNguHanh(player)) {
+  // owning path so leaked/dirty spellPath.route state on hidden_spell_pathway or
+  // sword players cannot inject crit/ailment modifiers.
+  // M4 (R6): the WAY is the gate — a collapsed ('spell','hidden_spell_pathway')
+  // player owns no route machinery even with dirty spellPath state.
+  if (!isSpellPathway(player)) {
     return []
   }
 
-  return resolveRouteProfile(player.phapTu).statModifiers
+  return resolveRouteProfile(player.spellPath).statModifiers
 }
 
 /**
@@ -252,18 +252,18 @@ export function getRouteStatModifiers(player: PlayerData): StatModifier[] {
  * here -> CombatEntity.maxThe battle snapshot -> engine clamp).
  * MAX_THE + active `truong_the_<element>` contribution (theCapPerLevel
  * x node level, route/element-gated like every other node effect).
- * Query-derived, never persisted on PlayerData. Non-phap_tu players —
+ * Query-derived, never persisted on PlayerData. Non-spell players —
  * incl. Bat Kiem — get MAX_THE.
  */
 export function resolveMaxThe(
   registry: { getAll(): ProgressionNode[] },
   player: PlayerData,
 ): number {
-  // M4 (R6): the The pool is ngu_hanh machinery — ngo_dao has no The
+  // M4 (R6): the The pool is spell_pathway machinery — ngo_dao has no The
   // tree, so the WAY is the gate (the requiredWay stamp also filters
   // truong_the in the loop below; this check keeps the early-out cheap
   // and self-documenting).
-  if (!isPhapTuNguHanh(player)) {
+  if (!isSpellPathway(player)) {
     return MAX_THE
   }
 

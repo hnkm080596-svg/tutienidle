@@ -26,7 +26,7 @@ export const HIDDEN_BEASTS: Enemy[] = [
       elemental: { element: 'water', power: 18 },
     },
     rewards: {
-      techniqueInsight: 500,
+      techniqueMastery: 500,
       spiritStone: 150,
     },
     signatureDrops: [

@@ -27,7 +27,7 @@ const SRC_ROOT = join(GAME_ROOT, 'src')
 // the reason the file is not a producer.
 const NON_DATA_DEF_SOURCE_FILES: Record<string, string> = {
   'core/battle/turn/TurnSkillAction.ts': 'contract declaration + engine fallback leg (selectAction -> basic_attack)',
-  'core/kiem-tu/KiemPhoProvider.ts': 'kiem_tu:hien runtime leg (combo extras via onCastResolved)',
+  'core/kiem-tu/KiemPhoProvider.ts': 'sword:sword_pathway runtime leg (combo extras via onCastResolved)',
   'core/player/CultivationPathRegistry.ts': 'runtime-seam leg (resolveAuthoredBasic forced fields)',
   'core/skilldef/LegacySkillAdapter.ts': 'the adapter itself -- field-map comments + reads, not a producer',
   'core/skilldef/ResolvedSkillPlan.ts': 'plan IR field references, not a producer',

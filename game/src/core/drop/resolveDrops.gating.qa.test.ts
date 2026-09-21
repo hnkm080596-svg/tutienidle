@@ -48,7 +48,9 @@ describe('drop QA — van_kiem_quyet is never lootable', () => {
       rng: () => 0,
     })
 
-    expect(result.items.some((item) => item.kind === 'technique')).toBe(false)
+    // P7-M3 - the 'technique' DropKind is retired entirely; the old
+    // tu_linh_quyet signature line can never resolve.
+    expect(result.items.some((item) => item.itemId === 'tu_linh_quyet')).toBe(false)
     // The boss keeps its other signature line (great_dao_seed).
     expect(result.items.some((item) => item.itemId === 'great_dao_seed')).toBe(true)
   })

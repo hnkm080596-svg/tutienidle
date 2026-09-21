@@ -31,14 +31,15 @@ export interface EnemySpecialAttack {
 }
 
 export interface EnemyReward {
-  // Cảm ngộ Tâm Pháp — CHỈ vào tâm pháp đang trang bị (undefined/hết
-  // trần thì mất trắng, xem GameManager.gainEquippedTechniqueInsight()).
-  techniqueInsight: number
+  // Technique Mastery (P7-M3 rename of techniqueInsight) - tich luy
+  // pending roi flush vao canonical technique qua
+  // TechniqueSystem.gainMastery o VICTORY (active) / per-cycle (idle).
+  techniqueMastery: number
 
   // Cảm ngộ Kỹ năng — LUÔN cấp bất kể có trang bị tâm pháp hay không
   // (skill-insight-and-auto-combat-hud-plan.md mục 3), xem
   // GameManager.grantBattleRewardIfNeeded(). Optional — undefined thì
-  // suy ra từ techniqueInsight qua getSkillInsightReward() (xem
+  // suy ra tu techniqueMastery qua getSkillInsightReward() (xem
   // core/reward/SkillInsightBalance.ts), tránh phải sửa lại TOÀN BỘ
   // data enemy hiện có (72 entry) chỉ để thêm 1 con số phase-đầu tạm.
   skillInsight?: number

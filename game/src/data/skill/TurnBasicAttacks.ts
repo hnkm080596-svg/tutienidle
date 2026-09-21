@@ -2,7 +2,7 @@
 // TurnSkillDefinition cho 8 builds + enemy special, theo Slice 2 spec §3
 // ("straight field copy, not a redesign"):
 // - Kiếm Tu: 'tram' (Huy Kiếm, dealDamage value 1 physical, resourceType none)
-// - 5 Pháp Tu Thuần: skill đầu mỗi chuỗi PHAP_TU_KIT_IDS, mỗi skill 1
+// - 5 Pháp Tu Thuần: skill đầu mỗi chuỗi SPELL_KIT_IDS, mỗi skill 1
 //   component element ratio 1 (Skills.ts L140/374/319/450/532)
 // - Thể Tu + Phàm Nhân (chưa chọn đạo): KHÔNG dùng Skill object — hệ sống
 //   dùng generic melee (basic attack qua might stat), map thành
@@ -12,8 +12,9 @@
 //   damageMultiplier 2.5) — mọiNth counter là trách nhiệm của caller
 //   (GameManager adapter), định nghĩa skill ở đây chỉ là shape damage.
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
+import type { CultivationPathId } from '../../core/player/CultivationPathKit'
 
-export const KIEM_TU_BASIC: TurnSkillDefinition = {
+export const SWORD_BASIC: TurnSkillDefinition = {
   id: 'tram',
   cooldownTurns: 0,
   damage: { kind: 'physical', multiplier: 1 },
@@ -32,7 +33,7 @@ export const KIEM_TU_BASIC: TurnSkillDefinition = {
 // is not an authority and must not re-enter a production path (it has no
 // authored manaScalingRatio/attributeScaling). doc_chuong mirrors the
 // authored shape: ailment-only, no direct damage.
-export const PHAP_TU_BASICS: Record<'fire' | 'water' | 'wood' | 'metal' | 'earth', TurnSkillDefinition> = {
+export const SPELL_BASICS: Record<'fire' | 'water' | 'wood' | 'metal' | 'earth', TurnSkillDefinition> = {
   fire: { id: 'hoa_cau_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'fire', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'hoa_an', chance: 0.5 } },
   water: { id: 'thuy_tien_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'water', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'han_tuc', chance: 0.5 } },
   wood: { id: 'doc_chuong', cooldownTurns: 0, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'doc_can', chance: 1 } },
@@ -48,8 +49,8 @@ export const GENERIC_PHYSICAL_BASIC: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
-export const BASIC_ATTACKS_BY_BUILD: Record<string, TurnSkillDefinition> = {
-  kiem_tu: KIEM_TU_BASIC,
+export const BASIC_ATTACKS_BY_BUILD: Partial<Record<CultivationPathId, TurnSkillDefinition>> = {
+  sword: SWORD_BASIC,
 }
 
 /**
@@ -73,6 +74,6 @@ export const THUY_GIAP_LONG_WATER_SURGE: TurnSkillDefinition = {
 // and fall back to GENERIC_PHYSICAL_BASIC directly, never via this map.
 // Mortal (no cultivationPath) falls through to GENERIC_PHYSICAL_BASIC -
 // the removed 'pham_nhan' row only ever mapped to that same fallback.
-export const REQUIRED_BUILD_IDS = [
-  'kiem_tu',
+export const REQUIRED_BUILD_IDS: readonly CultivationPathId[] = [
+  'sword',
 ] as const

@@ -1,7 +1,7 @@
 import type { ElementType } from '../../core/element/ElementType'
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
 import type { DamageScalingConfig } from '../../core/combat/DamageCalculator'
-import { DETONATE_AMP, NUKE_THE_COEFF, type PhapTuUltimateVariant } from '../../core/phap-tu/PhapTuRoutes'
+import { DETONATE_AMP, NUKE_THE_COEFF, type SpellPathUltimateVariant } from '../../core/phap-tu/PhapTuRoutes'
 
 // Phap Tu Reimagined Task 10 — the god-ult (Phap Tuong) payload table.
 // These are native TurnSkillDefinitions, NOT Skill objects: the legacy
@@ -118,7 +118,7 @@ const EARTH_PAYLOAD: TurnSkillDefinition = {
  * gains detonateDoT, 'nuke' gains theScaling (Task 13) — the table
  * shape is the seam Task 10 wires.
  */
-export const PHAP_TU_EMPOWERED_ULTS: Record<ElementType, Record<PhapTuUltimateVariant, TurnSkillDefinition>> = {
+export const PHAP_TU_EMPOWERED_ULTS: Record<ElementType, Record<SpellPathUltimateVariant, TurnSkillDefinition>> = {
   fire: {
     detonate: { ...FIRE_PAYLOAD, detonateDoT: { amp: DETONATE_AMP } },
     nuke: { ...FIRE_PAYLOAD, theScaling: { coeff: NUKE_THE_COEFF } },

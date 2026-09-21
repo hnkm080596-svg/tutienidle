@@ -31,7 +31,7 @@ function result(seed = 20260922) {
   return runBattle({
     seed,
     build: ngoDaoBuild(),
-    ritual: { pathId: 'phap_tu', wayId: 'ngo_dao' },
+    ritual: { pathId: 'spell', wayId: 'hidden_spell_pathway' },
     encounter: { kind: 'stage', stageId: 'mortal_dong_1' },
   })
 }
@@ -172,13 +172,13 @@ describe('BattleMetrics semantics', () => {
     gameManager.catalogOps.registerEnemyTemplates(ENEMIES)
     gameManager.catalogOps.registerStages(STAGES)
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
+    player.cultivationPath = 'sword'
     gameManager.setActivePlayer(player)
     const collector = new BattleMetricsCollector(gameManager)
     const tanky = defineEnemy({
       id: 'simres_tanky', name: 'Tanky', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 999999, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     gameManager.turnBattleOps.startBattleWithPlayer(player, tanky)
     const scheduler = gameManager.turnBattleOps.getTurnBattleSystem()?.combatScheduler
@@ -241,13 +241,13 @@ describe('BattleMetrics semantics', () => {
     gameManager.catalogOps.registerEnemyTemplates(ENEMIES)
     gameManager.catalogOps.registerStages(STAGES)
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
+    player.cultivationPath = 'sword'
     gameManager.setActivePlayer(player)
     const collector = new BattleMetricsCollector(gameManager)
     const tanky = defineEnemy({
       id: 'simres_tanky', name: 'Tanky', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 999999, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     gameManager.turnBattleOps.startBattleWithPlayer(player, tanky)
     clock.advance(0.1) // baseline sample
@@ -286,7 +286,7 @@ describe('BattleMetrics semantics', () => {
     const tanky = defineEnemy({
       id: 'simres_tanky', name: 'Tanky', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 999999, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     gameManager.turnBattleOps.startBattleWithPlayer(player, tanky)
     const enemyId = gameManager.getTurnBattle()?.enemies[0]?.entity.id
@@ -337,7 +337,7 @@ describe('BattleMetrics semantics', () => {
     const tanky = defineEnemy({
       id: 'simres_tanky', name: 'Tanky', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 999999, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     gameManager.turnBattleOps.startBattleWithPlayer(player, tanky)
     const scheduler = gameManager.turnBattleOps.getTurnBattleSystem()?.combatScheduler
@@ -445,7 +445,7 @@ describe('BattleMetrics semantics', () => {
     const refingerprint = runBattle({
       seed: 20260922,
       build: ngoDaoBuild(),
-      ritual: { pathId: 'phap_tu', wayId: 'ngo_dao' },
+      ritual: { pathId: 'spell', wayId: 'hidden_spell_pathway' },
       encounter: { kind: 'stage', stageId: 'mortal_dong_1' },
     })
     expect(refingerprint.fingerprint).toBe(r.fingerprint)

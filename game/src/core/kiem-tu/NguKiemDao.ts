@@ -1,6 +1,6 @@
 import type { PlayerData } from '../player/Player'
-import type { KiemTuState } from './KiemTuState'
-import { isKiemTuNgu } from './KiemTuPath'
+import type { SwordPathState } from './KiemTuState'
+import { isHiddenSwordPathway } from './KiemTuPath'
 import { getRealmIndex } from '../realm/realmSystem'
 
 // Kiem Tu Reimagined Task 8 (spec 2026-09-15 K14/K15) — Ngu Kiem Dao
@@ -27,12 +27,12 @@ export const PIERCE_FRACTION = 0.6
 
 function assertRealmIndex(realmIndex: number): void {
   if (realmIndex < 1) {
-    throw new RangeError(`kiem-tu ngu economy requires realmIndex >= 1, got ${realmIndex}`)
+    throw new RangeError(`hidden_sword_pathway economy requires realmIndex >= 1, got ${realmIndex}`)
   }
 }
 
 /** Kiem Y cost of forging one Kiem Dao at this realm (asserts r>=1 —
- *  mortal cannot enter ngu, so r=0 is a contract violation). */
+ *  mortal cannot enter hidden_sword_pathway, so r=0 is a contract violation). */
 export function forgeCost(realmIndex: number): number {
   assertRealmIndex(realmIndex)
   return Math.ceil(9_999 * Math.pow(1.3, realmIndex - 1))
@@ -46,14 +46,14 @@ export function kiemDaoCap(realmIndex: number): number {
 
 /**
  * The ONLY Kiem Y entry point (A3). No-op entirely when the player is
- * not on the ngu way (cultivationWay is the discriminator — M6) or
+ * not on the hidden_sword_pathway way (cultivationWay is the discriminator — M6) or
  * when already at the realm cap — a capped forge does not bank Y.
  * Otherwise adds `amount` and converts greedily at the CURRENT realm's
  * forgeCost until under cost or at cap.
  */
 export function gainKiemY(player: PlayerData, amount: number): void {
-  const state = player.kiemTu
-  if (!state || !isKiemTuNgu(player) || amount <= 0) {
+  const state = player.swordPath
+  if (!state || !isHiddenSwordPathway(player) || amount <= 0) {
     return
   }
 
@@ -75,15 +75,15 @@ export function gainKiemY(player: PlayerData, amount: number): void {
 
 /**
  * Trung Cung purchase grant (spec §5.4) — +N live swords WITHOUT
- * spending Kiem Y, clamped at the current realm cap. ngu-only; the
+ * spending Kiem Y, clamped at the current realm cap. hidden_sword_pathway-only; the
  * kiemDaoBelowCap prereq should already have rejected a capped buy —
  * this clamp is the second line of defense.
  */
 export function grantKiemDao(player: PlayerData, amount: number): void {
-  const state = player.kiemTu
+  const state = player.swordPath
   const realmIndex = getRealmIndex(player.realmId)
 
-  if (!state || !isKiemTuNgu(player) || amount <= 0 || realmIndex < 1) {
+  if (!state || !isHiddenSwordPathway(player) || amount <= 0 || realmIndex < 1) {
     return
   }
 
@@ -97,7 +97,7 @@ export function grantKiemDao(player: PlayerData, amount: number): void {
  * Banked Kiem Y carries over untouched (it converts at the NEW realm's
  * forgeCost on the next gain).
  */
-export function applyBreakthroughMerge(state: KiemTuState): void {
+export function applyBreakthroughMerge(state: SwordPathState): void {
   const mergedCount = state.kiemDaoCount
   state.kiemDaoBase *= 1 + KIEM_DAO_MERGE_BONUS * mergedCount
   state.kiemDaoCount = 1

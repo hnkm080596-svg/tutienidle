@@ -163,7 +163,7 @@ function foundationBeast(params: {
       elemental: { element: params.element, power: params.power },
     },
     rewards: {
-      techniqueInsight: insight,
+      techniqueMastery: insight,
       spiritStone: stone,
     },
   })

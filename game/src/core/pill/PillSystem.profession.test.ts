@@ -21,7 +21,7 @@ function _makeEnemyData(): Enemy {
     id: 'enemy_x',
     level: 1,
     realmId: 'mortal',
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
     lane: 'ground',
     name: 'Quái',
     type: 'enemy',
@@ -43,7 +43,7 @@ function setup() {
 
 // M10 (ARCH-008) — hoi_xuan_dan retired; hoi_linh_dan keeps the regen
 // profession-pill path covered (realm gate still fires before its
-// phap_tu gate, so the wrong_realm test is unaffected).
+// spell gate, so the wrong_realm test is unaffected).
 const REGEN_PILL = 'hoi_linh_dan_mortal'
 const PERMANENT_PILL = 'to_cot_dan_mortal'
 const CULTIVATION_PILL = 'tu_linh_dan_mortal'
@@ -202,8 +202,8 @@ describe('Pill nghề — Hỏa Hầu Thông Thần +50% hiệu quả (M3)', () 
   it('đan hồi MP (regen): mpPerSecond ×1.5 trong timed effect', async () => {
     const { gameManager, player } = setup()
     player.selectedTalentIds = ['hoa_hau_thong_than']
-    player.cultivationPath = 'phap_tu' // MP regen pill gate
-    player.cultivationWay = 'ngu_hanh' // M4: the gate is way-owned
+    player.cultivationPath = 'spell' // MP regen pill gate
+    player.cultivationWay = 'spell_pathway' // M4: the gate is way-owned
 
     await registerPill(gameManager, 'hoi_linh_dan_mortal')
 

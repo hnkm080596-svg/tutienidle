@@ -1,21 +1,21 @@
 /**
- * B3 progression sweep (2026-09-14) — for each of the 30 chapter floors,
+ * B3 progression sweep (2026-09-14) - for each of the 30 chapter floors,
  * finds the minimum realmLevel at which the INTENDED-power player
  * clears, through the real engine. Output feeds the beta gate: if a
  * floor needs gate+N levels, N is the grind the floor demands.
  *
  * Intended build (documented, deterministic where possible):
  *  - realm/realmLevel swept from the stage gate to 18.
- *  - cultivationPath 'phap_tu' for qi_refining+ (Quán Khí at mortal 12
+ *  - cultivationPath 'spell' for qi_refining+ (Quan Khi at mortal 12
  *    is the breakthrough, so qi/foundation players always have it).
  *  - technique dai_ngu_hanh_chan_quyet learned+equipped (the kit grant),
  *    dai_ngu_hanh_quyet_truc_co at foundation (realm reward upgrade).
  *  - realm passive synced via syncRealmPassive (real breakthrough path).
- *  - talent 'tat_phong' (kill-stacking speed — a reasonable combat pick).
+ *  - talent 'tat_phong' (kill-stacking speed - a reasonable combat pick).
  *  - attribute points: 5 creation + 12/realm prior (min breakthrough
  *    path) + (L-1) this realm, split 50/50 vitality/strength.
  *  - body refinement (mortal): every tier whose requiredRealmLevel <= L
- *    completed via investBodyRefinement with enough Tinh Hoa.
+ *    completed via investBodyChapter with enough Tinh Hoa.
  *  - gear: 6 slots, best quality of 30 real rolls/slot at that level.
  *  - enhancement: every equipped slot pushed to +ENHANCE_TARGET via
  *    enhanceSlot with real spirit-stone spend.
@@ -34,7 +34,7 @@ import { STAGES } from '@/data/stage/Stages'
 import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import { PHAP_TU_NODES } from '@/data/progression/PhapTuNodes'
-import { getTechniqueInsightTotalRequired } from '@/core/technique/TechniqueTier'
+
 import type { Stage } from '@/core/stage/Stage'
 
 const REALM_PRIOR_MIN_LEVELS: Record<string, number> = {
@@ -63,27 +63,25 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
   lab.player.completedStageIds.push(...stageList.slice(0, stageIndex).map((s) => s.id))
 
   if (realmId !== 'mortal') {
-    lab.player.cultivationPath = 'phap_tu'
-    lab.player.cultivationWay = 'ngu_hanh'
-    lab.manager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_chan_quyet')
-    lab.manager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
-    if (realmId === 'foundation_establishment') {
-      lab.manager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_quyet_truc_co')
-      lab.manager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_quyet_truc_co')
-    }
-    // Technique tier — insight is per-learned-technique (single
-    // technique per save); set the equipped one to Vien Man (60%).
-    const equipped = lab.manager.techniqueManager.getEquipped()
+    lab.player.cultivationPath = 'spell'
+    lab.player.cultivationWay = 'spell_pathway'
+    lab.manager.realmAdvanceOps.grantCanonicalTechnique('five_elements_art', lab.player)
+    // P7-M3 - the Truc Co variant folded into gradeEffects[2]: a
+    // foundation player runs grade 2 (rank in the vien_man band to
+    // mirror the old "insight 60% -> Vien Man" probe intent).
+    const equipped = lab.manager.techniqueManager.getActive()
     if (equipped) {
-      equipped.insight = Math.ceil(getTechniqueInsightTotalRequired(equipped) * 0.6)
+      equipped.rank = 6
+      if (realmId === 'foundation_establishment') {
+        equipped.grade = 2
+      }
     }
     lab.manager.progressionOps.learnSkill('hoa_cau_thuat')
-    lab.manager.skillSystem.equipToSlot('hoa_cau_thuat', 0)
     lab.manager.realmAdvanceOps.syncRealmPassive(lab.player)
 
-    // Skill leveling + node tree — the intended qi/foundation power
+    // Skill leveling + node tree - the intended qi/foundation power
     // stack. Buy every fire-branch node (element tree + lap_dao +
-    // thuan_fire; never da_phap — it excludes thuan) until the insight
+    // thuan_fire; never da_phap - it excludes thuan) until the insight
     // budget is exhausted; max the root skill.
     lab.cheat.grantSkillInsight(50_000)
     const wantedTags = new Set(['fire', 'lap_dao', 'thuan_fire'])
@@ -133,14 +131,14 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
   }
   lab.player.modifiers = lab.manager.equipmentOps.getEquipmentModifiers()
 
-  // Body refinement — mortal-only tiers gated by requiredRealmLevel.
+  // Body refinement - mortal-only tiers gated by requiredRealmLevel.
   // The material bag caps Tinh Hoa at 1000/stack, so feed batches.
   for (let batch = 0; batch < 80; batch++) {
     lab.cheat.addMaterial('tinh_hoa_pham_the', 1_000)
-    if (lab.manager.realmAdvanceOps.investBodyRefinement(lab.player) <= 0) break
+    if (lab.manager.realmAdvanceOps.investBodyChapter(lab.player, 'body_refinement') <= 0) break
   }
 
-  // Enhancement — real spend; enhance can fail so retry until target.
+  // Enhancement - real spend; enhance can fail so retry until target.
   // Cost is realm ore + spirit stones, resolved per level.
   for (const slot of EQUIPMENT_SLOTS) {
     for (let attempt = 0; attempt < 80; attempt++) {
@@ -155,7 +153,7 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
   }
   lab.player.modifiers = lab.manager.equipmentOps.getEquipmentModifiers()
 
-  // Permanent-stat pills — a few of each family.
+  // Permanent-stat pills - a few of each family.
   const noopTarget = { addCultivation: () => {}, heal: () => {}, applyBuff: () => {} }
   for (const familyId of STAT_PILL_FAMILIES) {
     const pillId = `${familyId}_${realmId}`
@@ -165,7 +163,7 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
     }
   }
 
-  // Companions — the party lever. Pull with real tokens until we own
+  // Companions - the party lever. Pull with real tokens until we own
   // the three hoang picks, then feed them up to the realm cap and field
   // them through a committed Ngu Hanh Tran loadout (5 cells).
   lab.cheat.addMaterial('chieu_hien_lenh', 200)
@@ -207,7 +205,7 @@ function attempt(lab: Lab, stage: Stage): { state: string; rounds: number | stri
   }
 }
 
-describe('B3 progression sweep — min clearing realmLevel per floor', () => {
+describe('B3 progression sweep - min clearing realmLevel per floor', () => {
   it('prints the clearability table', () => {
     const stageList: Stage[] = STAGES.slice().sort(
       (a, b) =>

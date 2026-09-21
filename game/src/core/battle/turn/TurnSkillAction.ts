@@ -141,7 +141,7 @@ export interface TurnSkillDefinition {
   /**
    * The Tu Reimagined (plan Task 6) — buff definitions applied to the
    * OWNER at participant build (the emblem-buff channel). The defs are
-   * participant-local clones (node-adjusted via collectTheTuKitModifiers),
+   * participant-local clones (node-adjusted via collectBodyKitModifiers),
    * so they ride the def object itself, not a registry id.
    */
   grantsBuffsAtBuild?: import('../../buff2/BuffDefinition').BuffDefinition[]

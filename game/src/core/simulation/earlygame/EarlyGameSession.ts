@@ -16,7 +16,7 @@ import { createDefaultPlayer, type PlayerData } from '../../player/Player'
 import { canBreakthrough, breakthrough } from '../../cultivation/CultivationSystem'
 import { cultivateTick } from '../../cultivation/CultivationTick'
 import { driveTurnBattleToTerminal } from '../BattleDriver'
-import type { CultivationPathId, PathWayId } from '../../player/CultivationPathKit'
+import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
 import {
   applyCreationProfile,
   bootstrapEarlyGamePlayer,
@@ -185,7 +185,7 @@ export class EarlyGameSession {
       : 'defeat'
   }
 
-  performRitual(path: CultivationPathId, way: PathWayId): boolean {
+  performRitual(path: CultivationPathId, way: CultivationWayId): boolean {
     return this.gameManager.realmAdvanceOps.chooseCultivationPath(path, way, this.player)
   }
 
@@ -200,7 +200,7 @@ export class EarlyGameSession {
   /** Invest held Tinh Hoa Pham The into body refinement - the
    * material -> tier -> stats growth link, through the real op. */
   investRefinement(): number {
-    return this.gameManager.realmAdvanceOps.investBodyRefinement(this.player)
+    return this.gameManager.realmAdvanceOps.investBodyChapter(this.player, 'body_refinement')
   }
 
   /** Equip every unequipped bag item into its slot (best-first by item

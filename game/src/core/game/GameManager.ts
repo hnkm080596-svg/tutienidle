@@ -138,14 +138,14 @@ import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
-import { PHAP_TU_KIT_IDS, PHAP_TU_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
+import { SPELL_KIT_IDS, SPELL_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
 import {
   NEUTRAL_ROUTE_PROFILE,
   resolveRouteProfile,
   type RouteProfile,
 } from '../phap-tu/PhapTuRoutes'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
-import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
+import type { CultivationPathRuntime, CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
 import {
   getActiveElement,
   getActiveRoute,
@@ -426,15 +426,15 @@ export class GameManager {
   // Public: callers use gameManager.catalogOps.* directly (no facade).
   readonly catalogOps: GameManagerCatalogOps
 
-  // Reward issuing (player RewardReceiver, technique insight, giveReward).
+  // Reward issuing (player RewardReceiver, skill insight, giveReward).
   // Public: callers use gameManager.rewardOps.* directly (no facade).
   readonly rewardOps: GameManagerRewardOps
 
-  // Node Tree / skill loadout / talent-sync progression operations.
+  // Node Tree / combat roles / talent-sync progression operations.
   // Public: callers use gameManager.progressionOps.* directly (no facade).
   readonly progressionOps: GameManagerProgressionOps
 
-  // Realm advance: technique learn/equip, cultivation path, artifact,
+  // Realm advance: canonical technique grant, cultivation path, artifact,
   // realm passives, body refinement, breakthrough gate.
   // Public: callers use gameManager.realmAdvanceOps.* directly (no facade).
   readonly realmAdvanceOps: GameManagerRealmAdvanceOps
@@ -477,16 +477,29 @@ export class GameManager {
       this.activePlayer.skillLevels[skillId] = level
     })
 
+    // P7-M6 - mirror player.techniqueProgress each time the canonical
+    // holder's {rank, grade} can change (grant/rank-up/grade-advance/
+    // restore). Same contract as the cast-count sink above: NodeSystem's
+    // techniqueRank/techniqueGrade prerequisites read PlayerData only.
+    // `progress ?? undefined` keeps the declared-default shape - an
+    // emptied holder returns the key to its undefined default rather
+    // than leaving a stale record or a deleted key.
+    this.techniqueSystem.setProgressSink((progress) => {
+      if (!this.activePlayer) return
+
+      this.activePlayer.techniqueProgress = progress ?? undefined
+    })
+
     // Phap Tu Reimagined Task 3 — ONE scoping closure for both route
     // seams: the provider feeds getEffectiveSkill's effective-surface
     // application AND the post-conversion applyRouteToTurnSkill call at
     // the orchestration sites below. Neutral unless the active player
-    // is normal phap_tu with an element and the skill is a kit member.
+    // is normal spell with an element and the skill is a kit member.
     this.routeProfileProvider = (skillId) => {
       const player = this.activePlayer
 
       // P1 - the gate is the declared capability, not the way predicate.
-      if (player === undefined || !hasStaticPathCapability(player, 'phap_tu.elemental_casting')) {
+      if (player === undefined || !hasStaticPathCapability(player, 'spell.elemental_casting')) {
         return NEUTRAL_ROUTE_PROFILE
       }
 
@@ -494,8 +507,8 @@ export class GameManager {
 
       if (
         !element ||
-        (!PHAP_TU_KIT_IDS[element].includes(skillId) &&
-          !PHAP_TU_ROUTE_SKILL_IDS[element].includes(skillId))
+        (!SPELL_KIT_IDS[element].includes(skillId) &&
+          !SPELL_ROUTE_SKILL_IDS[element].includes(skillId))
       ) {
         return NEUTRAL_ROUTE_PROFILE
       }
@@ -535,7 +548,6 @@ export class GameManager {
 
     this.rewardOps = new GameManagerRewardOps({
       rewardSystem: this.rewardSystem,
-      techniqueManager: this.techniqueManager,
       materialRegistry: this.materialRegistry,
       materialBag: this.materialBag,
       notifications: this.notifications,
@@ -544,12 +556,33 @@ export class GameManager {
         this.questOps.notifyQuestMaterialGained(materialId, amount),
     })
 
+    // P7-M4 — ONE override-aware path-runtime binding shared by combat
+    // (turnBattleOps) and presentation (progressionOps.getResolvedSkillRoles):
+    // a test-installed resolver (setPathRuntimeResolver) resolves
+    // identically for both consumers — the UI can never diverge from combat.
+    const pathRuntimeDeps: CultivationPathRuntimeDeps = {
+      skillManager: this.skillManager,
+      skillSystem: this.skillSystem,
+      skillTemplates: this.skillTemplates,
+      nodeRegistry: this.nodeRegistry,
+      getNodeLevel: (nodeId, p) => this.progressionOps.getNodeLevel(nodeId, p),
+      getSpellPathElement: () => this.progressionOps.getSpellPathElement(),
+      routeProfileProvider: this.routeProfileProvider,
+    }
+    this.pathRuntimeResolver = (player) =>
+      (this.pathRuntimeResolverOverride ??
+        ((p: PlayerData) => resolveCultivationPathRuntime(p, pathRuntimeDeps)))(player)
+
     this.progressionOps = new GameManagerProgressionOps({
       nodeRegistry: this.nodeRegistry,
       skillTemplates: this.skillTemplates,
       skillSystem: this.skillSystem,
       skillManager: this.skillManager,
       getActivePlayer: () => this.activePlayer,
+      // P7-M4 — the shared override-aware binding (above), NOT a second
+      // deps-literal: combat and the resolved-role display consume the
+      // same runtime resolution.
+      resolvePathRuntime: this.pathRuntimeResolver,
       // Lazy read — turnBattleOps is constructed after progressionOps.
       isTurnBattleInProgress: () => this.turnBattleOps?.isTurnBattleInProgress() ?? false,
       // Deferred closure - turnBattleOps is assigned later.
@@ -565,6 +598,7 @@ export class GameManager {
       skillTemplates: this.skillTemplates,
       nodeRegistry: this.nodeRegistry,
       materialBag: this.materialBag,
+      pillBag: this.pillBag,
       breakthroughOutcomeService: this.breakthroughOutcomeService,
       progressionOps: this.progressionOps,
       // Deferred closures - turnBattleOps/activePlayer are assigned later.
@@ -618,9 +652,7 @@ export class GameManager {
       equipmentSystem: this.equipmentSystem,
       affixRegistry: this.affixRegistry,
       zoneRegistry: this.zoneRegistry,
-      techniqueManager: this.techniqueManager,
       techniqueSystem: this.techniqueSystem,
-      techniqueTemplates: this.techniqueTemplates,
       enemySystem: this.enemySystem,
       rewardSystem: this.rewardSystem,
       stageManager: this.stageManager,
@@ -714,7 +746,7 @@ export class GameManager {
     this.saveOps = new GameManagerSaveRestore({
       skillManager: this.skillManager,
       skillTemplates: this.skillTemplates,
-      techniqueManager: this.techniqueManager,
+      techniqueSystem: this.techniqueSystem,
       techniqueTemplates: this.techniqueTemplates,
       materialRegistry: this.materialRegistry,
       materialBag: this.materialBag,
@@ -790,17 +822,10 @@ export class GameManager {
       buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
       // Mission C Task 9 — the ONLY path-dispatch call left in the
       // orchestration layer: every basic/special/maxThe/provider/survive
-      // resolution funnels through the registry runtime.
-      resolvePathRuntime: (player) =>
-        resolveCultivationPathRuntime(player, {
-          skillManager: this.skillManager,
-          skillSystem: this.skillSystem,
-          skillTemplates: this.skillTemplates,
-          nodeRegistry: this.nodeRegistry,
-          getNodeLevel: (nodeId, p) => this.progressionOps.getNodeLevel(nodeId, p),
-          getPhapTuElement: () => this.progressionOps.getPhapTuElement(),
-          routeProfileProvider: this.routeProfileProvider,
-        }),
+      // resolution funnels through the registry runtime. P7-M4 — the
+      // shared override-aware binding (constructed above): the UI
+      // accessor consumes the identical resolution.
+      resolvePathRuntime: this.pathRuntimeResolver,
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
     })
 
@@ -811,7 +836,7 @@ export class GameManager {
     this.tickOps = new GameManagerTickOps({
       getActivePlayer: () => this.activePlayer,
       tickTimedEffects: (player) => this.effectOps.tickTimedEffects(player),
-      investBodyRefinement: (player) => this.realmAdvanceOps.investBodyRefinement(player),
+      investBodyChapter: (player) => this.realmAdvanceOps.investBodyChapter(player, 'body_refinement'),
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,
@@ -867,6 +892,14 @@ export class GameManager {
   private readonly pathCapabilityDeps: PathCapabilityDeps = {
     hasSkill: (skillId) => this.skillManager.has(skillId),
   }
+
+  // P7-M4 — dev/test runtime-resolver override, owned HERE (was
+  // turnBattleOps.pathRuntimeOverride): the shared binding consults it
+  // so combat AND the resolved-role display see the same runtime.
+  private pathRuntimeResolverOverride:
+    | ((player: PlayerData) => CultivationPathRuntime)
+    | undefined
+  private readonly pathRuntimeResolver: (player: PlayerData) => CultivationPathRuntime
 
   /**
    * App.vue đăng ký player sau boot/load — update() dùng để tick expiry
@@ -988,7 +1021,10 @@ export class GameManager {
   setPathRuntimeResolver(
     resolver: ((player: PlayerData) => CultivationPathRuntime) | undefined,
   ): void {
-    this.turnBattleOps.setPathRuntimeResolver(resolver)
+    // P7-M4 — the override lives on the SHARED binding (constructed in
+    // the ctor): combat and the resolved-role UI accessor resolve
+    // through the same seam.
+    this.pathRuntimeResolverOverride = resolver
   }
 
   freezeCombat(reason: FreezeReason): void {

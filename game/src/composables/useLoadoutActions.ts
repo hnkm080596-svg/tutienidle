@@ -2,13 +2,13 @@ import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '../stores/player'
 import type { MainStatKey } from '../core/stats/StatTypes'
 import type { ElementType } from '../core/element/ElementType'
-import type { PhapTuRoute } from '../core/phap-tu/PhapTuState'
+import type { SpellPathRoute } from '../core/phap-tu/PhapTuState'
 
 /**
- * Modifier từ technique/skill không "tĩnh" như equipment — đã được
- * gộp lại mỗi tick qua getAggregatedModifiers() (xem tick() trong
- * App.vue), nên equip/unequip ở đây chỉ cần bumpState() để UI re-render
- * đúng slot, không cần đồng bộ modifiers thủ công như useEquipmentActions.
+ * Modifier tu technique/skill khong "tinh" nhu equipment - da duoc
+ * gop lai moi tick qua getAggregatedModifiers() (xem tick() trong
+ * App.vue), nen cac ghi progression o day chi can bumpState() de UI
+ * re-render, khong can dong bo modifiers thu cong nhu useEquipmentActions.
  */
 export function useLoadoutActions() {
   const gameManager = useGameManager()
@@ -24,41 +24,40 @@ export function useLoadoutActions() {
   }
 
   return {
-    // Tâm Pháp KHÔNG còn equip/unequip thủ công (PLAN HOÀN CHỈNH mục
-    // 5/9 rework, 2026-08-20) — hoàn toàn theo nghề nghiệp đã chọn qua
-    // GameManager.chooseCultivationPath(), gọi thẳng equipTechnique()/
-    // GameManager không qua đây nữa. Đã gỡ 2 wrapper action tương ứng.
+    // Tam Phap KHONG con equip/unequip thu cong (PLAN HOAN CHINH muc
+    // 5/9 rework, 2026-08-20) - hoan toan theo nghe nghiep da chon qua
+    // GameManager.chooseCultivationPath() (P7-M3: canonical grant, 0-or-1
+    // holder). Da go 2 wrapper action tuong ung.
 
-    unequipSkill: (skillId: string) => withBump(gameManager.progressionOps.unequipSkill(skillId)),
+    // P7-M4 - the ONLY role write left in the UI: pick which learned
+    // precursor the MORTAL player fights with. Post-path the op rejects
+    // (the K3 precursor gate) - way kits own roles from then on.
+    setMortalBasicSkill: (skillId: string) =>
+      withBump(gameManager.progressionOps.setMortalBasicSkill(player.$state, skillId)),
 
-    // PLAN HOÀN CHỈNH mục 8/12 — thay hẳn equipSkill(skillId) cũ (theo
-    // category cố định). skillId null = dọn trống slot đó.
-    setSkillLoadoutSlot: (slotIndex: number, skillId: string | null) =>
-      withBump(gameManager.progressionOps.setSkillLoadoutSlot(player.$state, slotIndex, skillId)),
-
-    // Core Loop Foundation checklist (Mục SKILL) — "behavior-changing
+    // Core Loop Foundation checklist (Muc SKILL) - "behavior-changing
     // node".
     selectSkillSpecialization: (skillId: string, specializationId: string) =>
       withBump(gameManager.progressionOps.selectSkillSpecialization(skillId, specializationId)),
 
-    // Node Tree — GameManager method (unlocksSkillIds cần skillTemplates).
+    // Node Tree - GameManager method (unlocksSkillIds can skillTemplates).
     purchaseNode: (nodeId: string) => withBump(gameManager.progressionOps.purchaseNode(nodeId, player.$state)),
 
-    // Node level (plan §6.2) — nâng node đã lĩnh ngộ lên +1 cấp.
+    // Node level (plan sec.6.2) - nang node da linh ngo len +1 cap.
     upgradeNode: (nodeId: string) => withBump(gameManager.progressionOps.upgradeNode(nodeId, player.$state)),
 
-    // Phap Tu Reimagined (Task 16) — atomic element+route commit at the
+    // Phap Tu Reimagined (Task 16) - atomic element+route commit at the
     // element root (INV-13); the blocking modal only collects input.
-    selectPhapTuElement: (element: ElementType, route: PhapTuRoute) =>
-      withBump(gameManager.progressionOps.selectPhapTuElement(element, route, player.$state)),
+    selectSpellPathElement: (element: ElementType, route: SpellPathRoute) =>
+      withBump(gameManager.progressionOps.selectSpellPathElement(element, route, player.$state)),
 
-    // Route respec (spec P3) — out-of-combat only (op enforces), resets
+    // Route respec (spec P3) - out-of-combat only (op enforces), resets
     // old-route nodes and refunds floor(actualPaid x 0.75).
-    switchPhapTuRoute: (route: PhapTuRoute) =>
+    switchSpellPathRoute: (route: SpellPathRoute) =>
       withBump(gameManager.progressionOps.switchRoute(route, player.$state)),
 
-    // Reset development một nhánh (plan §6.10) — hoàn Cảm Ngộ đã tiêu;
-    // bump vô điều kiện (reset về 0 level cũng là thay đổi state UI).
+    // Reset development mot nhanh (plan sec.6.10) - hoan Cam Ngo da tieu;
+    // bump vo dieu kien (reset ve 0 level cung la thay doi state UI).
     devResetBranch: (branchTag: string) => {
       gameManager.progressionOps.devResetBranch(branchTag, player.$state)
 
@@ -67,8 +66,8 @@ export function useLoadoutActions() {
       return true
     },
 
-    // PLAN HOÀN CHỈNH mục 2 — Main Stat allocation, hồ điểm riêng biệt
-    // hoàn toàn với Skill Point/Node Tree ở trên.
+    // PLAN HOAN CHINH muc 2 - Main Stat allocation, ho diem rieng biet
+    // hoan toan voi Skill Point/Node Tree o tren.
     allocateAttributePoint: (stat: MainStatKey) => withBump(gameManager.progressionOps.allocateAttributePoint(player.$state, stat)),
   }
 }

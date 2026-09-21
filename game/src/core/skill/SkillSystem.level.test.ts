@@ -17,8 +17,6 @@ function skill(overrides: Partial<Skill> = {}): Skill {
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'damage', value: 100, damageType: 'physical' }],
-    unlocked: false,
-    equipped: false,
     ...overrides,
   }
 }
@@ -116,7 +114,6 @@ describe('SkillSystem.getEffectiveSkill level scaling', () => {
         perLevelPercent: 0.05,
       }],
     }))
-    system.equipWithoutSlot('test_skill')
 
     expect(system.getScaledPassiveModifiers()[0]).toMatchObject({ flat: 14, percent: 0.2 })
   })

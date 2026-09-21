@@ -35,7 +35,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
 
     rewards: {
-      techniqueInsight: 20,
+      techniqueMastery: 20,
       spiritStone: 5,
     },
 
@@ -74,7 +74,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
 
     rewards: {
-      techniqueInsight: 40,
+      techniqueMastery: 40,
       spiritStone: 10,
 
     },
@@ -128,7 +128,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
 
     rewards: {
-      techniqueInsight: 30,
+      techniqueMastery: 30,
       spiritStone: 8,
     },
   }),
@@ -166,7 +166,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
 
     rewards: {
-      techniqueInsight: 35,
+      techniqueMastery: 35,
       spiritStone: 8,
     },
 
@@ -206,7 +206,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 10 },
     },
     rewards: {
-      techniqueInsight: 25,
+      techniqueMastery: 25,
       spiritStone: 6,
     },
   }),
@@ -230,7 +230,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 12 },
     },
     rewards: {
-      techniqueInsight: 50,
+      techniqueMastery: 50,
       spiritStone: 12,
     },
   }),
@@ -256,7 +256,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 10 },
     },
     rewards: {
-      techniqueInsight: 30,
+      techniqueMastery: 30,
       spiritStone: 7,
     },
   }),
@@ -280,7 +280,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 12 },
     },
     rewards: {
-      techniqueInsight: 55,
+      techniqueMastery: 55,
       spiritStone: 14,
     },
   }),
@@ -306,7 +306,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 10 },
     },
     rewards: {
-      techniqueInsight: 35,
+      techniqueMastery: 35,
       spiritStone: 8,
     },
   }),
@@ -330,7 +330,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 12 },
     },
     rewards: {
-      techniqueInsight: 65,
+      techniqueMastery: 65,
       spiritStone: 16,
     },
   }),
@@ -355,7 +355,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 11 },
     },
     rewards: {
-      techniqueInsight: 40,
+      techniqueMastery: 40,
       spiritStone: 10,
     },
   }),
@@ -379,7 +379,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 10 },
     },
     rewards: {
-      techniqueInsight: 75,
+      techniqueMastery: 75,
       spiritStone: 18,
     },
   }),
@@ -404,7 +404,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 11 },
     },
     rewards: {
-      techniqueInsight: 45,
+      techniqueMastery: 45,
       spiritStone: 11,
     },
   }),
@@ -428,7 +428,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 10 },
     },
     rewards: {
-      techniqueInsight: 85,
+      techniqueMastery: 85,
       spiritStone: 20,
     },
   }),
@@ -454,7 +454,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 12 },
     },
     rewards: {
-      techniqueInsight: 50,
+      techniqueMastery: 50,
       spiritStone: 12,
     },
   }),
@@ -479,7 +479,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 13 },
     },
     rewards: {
-      techniqueInsight: 95,
+      techniqueMastery: 95,
       spiritStone: 23,
     },
   }),
@@ -505,7 +505,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 12 },
     },
     rewards: {
-      techniqueInsight: 55,
+      techniqueMastery: 55,
       spiritStone: 14,
     },
   }),
@@ -530,7 +530,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 13 },
     },
     rewards: {
-      techniqueInsight: 110,
+      techniqueMastery: 110,
       spiritStone: 27,
     },
   }),
@@ -556,7 +556,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 12 },
     },
     rewards: {
-      techniqueInsight: 65,
+      techniqueMastery: 65,
       spiritStone: 16,
     },
   }),
@@ -581,7 +581,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 14 },
     },
     rewards: {
-      techniqueInsight: 125,
+      techniqueMastery: 125,
       spiritStone: 31,
     },
   }),
@@ -607,7 +607,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 12 },
     },
     rewards: {
-      techniqueInsight: 75,
+      techniqueMastery: 75,
       spiritStone: 18,
     },
   }),
@@ -638,7 +638,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 14 },
     },
     rewards: {
-      techniqueInsight: 145,
+      techniqueMastery: 145,
       spiritStone: 35,
     },
     signatureDrops: [
@@ -683,7 +683,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 2 },
     },
     rewards: {
-      techniqueInsight: 5,
+      techniqueMastery: 5,
       spiritStone: 1,
     },
   }),
@@ -707,7 +707,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 3 },
     },
     rewards: {
-      techniqueInsight: 10,
+      techniqueMastery: 10,
       spiritStone: 2,
     },
   }),
@@ -730,7 +730,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 3 },
     },
     rewards: {
-      techniqueInsight: 6,
+      techniqueMastery: 6,
       spiritStone: 1,
     },
   }),
@@ -754,7 +754,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 4 },
     },
     rewards: {
-      techniqueInsight: 12,
+      techniqueMastery: 12,
       spiritStone: 2,
     },
   }),
@@ -777,7 +777,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 3 },
     },
     rewards: {
-      techniqueInsight: 7,
+      techniqueMastery: 7,
       spiritStone: 1,
     },
   }),
@@ -801,7 +801,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 4 },
     },
     rewards: {
-      techniqueInsight: 14,
+      techniqueMastery: 14,
       spiritStone: 2,
     },
   }),
@@ -824,7 +824,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 4 },
     },
     rewards: {
-      techniqueInsight: 8,
+      techniqueMastery: 8,
       spiritStone: 2,
     },
   }),
@@ -848,7 +848,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 5 },
     },
     rewards: {
-      techniqueInsight: 16,
+      techniqueMastery: 16,
       spiritStone: 4,
     },
   }),
@@ -871,7 +871,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 4 },
     },
     rewards: {
-      techniqueInsight: 9,
+      techniqueMastery: 9,
       spiritStone: 2,
     },
   }),
@@ -895,7 +895,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 6 },
     },
     rewards: {
-      techniqueInsight: 18,
+      techniqueMastery: 18,
       spiritStone: 4,
     },
   }),
@@ -918,7 +918,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 5 },
     },
     rewards: {
-      techniqueInsight: 10,
+      techniqueMastery: 10,
       spiritStone: 2,
     },
   }),
@@ -942,7 +942,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 7 },
     },
     rewards: {
-      techniqueInsight: 20,
+      techniqueMastery: 20,
       spiritStone: 4,
     },
   }),
@@ -965,7 +965,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 6 },
     },
     rewards: {
-      techniqueInsight: 12,
+      techniqueMastery: 12,
       spiritStone: 2,
     },
   }),
@@ -989,7 +989,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 8 },
     },
     rewards: {
-      techniqueInsight: 24,
+      techniqueMastery: 24,
       spiritStone: 4,
     },
   }),
@@ -1012,7 +1012,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 6 },
     },
     rewards: {
-      techniqueInsight: 13,
+      techniqueMastery: 13,
       spiritStone: 3,
     },
   }),
@@ -1036,7 +1036,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 9 },
     },
     rewards: {
-      techniqueInsight: 26,
+      techniqueMastery: 26,
       spiritStone: 6,
     },
   }),
@@ -1059,7 +1059,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 8 },
     },
     rewards: {
-      techniqueInsight: 15,
+      techniqueMastery: 15,
       spiritStone: 3,
     },
   }),
@@ -1083,7 +1083,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 11 },
     },
     rewards: {
-      techniqueInsight: 30,
+      techniqueMastery: 30,
       spiritStone: 6,
     },
   }),
@@ -1106,7 +1106,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 9 },
     },
     rewards: {
-      techniqueInsight: 18,
+      techniqueMastery: 18,
       spiritStone: 4,
     },
   }),
@@ -1136,7 +1136,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 12 },
     },
     rewards: {
-      techniqueInsight: 36,
+      techniqueMastery: 36,
       spiritStone: 8,
     },
     signatureDrops: [

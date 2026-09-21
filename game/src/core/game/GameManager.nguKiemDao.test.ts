@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { freshKiemTuState } from '../kiem-tu/KiemTuState'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { forgeCost } from '../kiem-tu/NguKiemDao'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
@@ -29,7 +29,7 @@ function makeDummyEnemy(id: string) {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: { ...ENEMY_STATS_INPUT },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -40,10 +40,10 @@ function setup(kiemDaoCount = 3) {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
   const player = createDefaultPlayer()
-  player.cultivationPath = 'kiem_tu'
-  player.cultivationWay = 'ngu'
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'hidden_sword_pathway'
   player.realmId = 'golden_core'
-  player.kiemTu = { ...freshKiemTuState(), kiemDaoCount }
+  player.swordPath = { ...freshSwordPathState(), kiemDaoCount }
 
   gameManager.setActivePlayer(player)
   gameManager.progressionOps.learnSkill('tram')
@@ -90,7 +90,7 @@ describe('GameManager — ngu participant wiring', () => {
 
     advanceTurns(combatSource, 2)
 
-    expect(player.kiemTu!.kiemY).toBeGreaterThanOrEqual(2)
-    expect(player.kiemTu!.kiemY).toBeLessThanOrEqual(forgeCost(3))
+    expect(player.swordPath!.kiemY).toBeGreaterThanOrEqual(2)
+    expect(player.swordPath!.kiemY).toBeLessThanOrEqual(forgeCost(3))
   })
 })

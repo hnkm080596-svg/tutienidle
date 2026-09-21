@@ -1,9 +1,9 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { OrbId } from '../kiem-tu/KiemTuState'
-import type { TheTuKitModifierValues } from '../the-tu/TheTuKitModifiers'
-import type { TheTuAnMechanicModifierValues } from '../the-tu/TheTuAnMechanicModifiers'
-import type { CultivationPathId, PathWayId } from '../player/CultivationPathKit'
+import type { BodyKitModifierValues } from '../the-tu/TheTuKitModifiers'
+import type { HiddenBodyMechanicModifierValues } from '../the-tu/TheTuAnMechanicModifiers'
+import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
 
 export type NodeType = 'minor' | 'major'
 
@@ -34,11 +34,18 @@ export type NodePrerequisite =
   // mirror Skill.totalExperience — nguồn sự thật save).
   | { kind: 'skillCastCount'; skillId: string; level?: number; count?: number }
   // Kiem Tu Reimagined (spec K20) — Cuu Cung preflight: holds only while
-  // the player is in ngu mode AND kiemDaoCount < kiemDaoCap(realmIndex).
+  // the player is in hidden_sword_pathway mode AND kiemDaoCount < kiemDaoCap(realmIndex).
   // Evaluated inside canPurchaseNode, so a capped sword pool blocks the
   // purchase BEFORE insight is deducted — including the Y-grant outer
   // nodes (no Y may accumulate past cap).
   | { kind: 'kiemDaoBelowCap' }
+  // P7-M6 - technique-gated prerequisites. `>=` threshold semantics like
+  // kind:'realm' (progression gate, purchase-only - a bought node stays
+  // bought even though advanceTechniqueGrade resets rank to 0). Reads
+  // the read-only mirror player.techniqueProgress; absent mirror fails
+  // closed for any positive requirement. No authored gates yet.
+  | { kind: 'techniqueRank'; rank: number }
+  | { kind: 'techniqueGrade'; grade: number }
 
 /**
  * Những gì 1 node THẬT SỰ làm khi mua — optional field, không phải
@@ -74,7 +81,7 @@ export interface NodeEffect {
 
   // Kiem Tu Reimagined (spec §6, Cuu Cung) — lump Kiem Y granted ONCE
   // at purchase through gainKiemY() (the domain owner — conversion and
-  // the cap rule live there; nodes never touch player.kiemTu).
+  // the cap rule live there; nodes never touch player.swordPath).
   kiemYGrant?: number
 
   // Kiem Tu Reimagined (spec §5.4, Trung Cung) — direct +N kiemDaoCount
@@ -91,7 +98,7 @@ export interface NodeEffect {
   // KiemPhoNodeModifiers converts purchased nodes carrying this field
   // into KiemPhoComboModifier hooks at battle-build time; it is the
   // ONLY channel through which a node may alter a combo.
-  kiemTuComboModifier?: {
+  swordPathComboModifier?: {
     // matches(combo): combo pattern contains >= count of `orb`.
     minOrbCount: { orb: OrbId; count: number }
     // Multiplies the combo's bonus damage by (1 + x) — no-op on
@@ -107,19 +114,19 @@ export interface NodeEffect {
     priority?: number
   }
 
-  // The Tu Reimagined (plan Task 6) — the ONLY node -> the_tu kit
+  // The Tu Reimagined (plan Task 6) — the ONLY node -> body kit
   // channel. Each channel value is the PER-LEVEL contribution;
-  // collectTheTuKitModifiers(registry, player) sums them over owned
+  // collectBodyKitModifiers(registry, player) sums them over owned
   // levels and the participant build bakes the totals into
   // participant-local kit/buff def clones.
-  theTuKitModifiers?: Partial<TheTuKitModifierValues>
+  bodyKitModifiers?: Partial<BodyKitModifierValues>
 
   // The Tu Reimagined (plan Task 20, review P1.7) — the ONLY node ->
-  // the_tu_an channel. Trunk economy channels (cap/cost/gain) plus
+  // hidden_body channel. Trunk economy channels (cap/cost/gain) plus
   // branch consequence riders (intercept ward, heavy counter payload,
-  // Tro heal/cost) summed by collectTheTuAnMechanicModifiers and baked
+  // Tro heal/cost) summed by collectHiddenBodyMechanicModifiers and baked
   // into participant-local def clones by buildTheTuAnKit.
-  theTuAnMechanicModifiers?: Partial<TheTuAnMechanicModifierValues>
+  hiddenBodyMechanicModifiers?: Partial<HiddenBodyMechanicModifierValues>
 }
 
 /**
@@ -203,7 +210,7 @@ export interface ProgressionNode {
    * alone is ambiguous across paths. undefined = way-agnostic, so all
    * existing (untagged) nodes keep working for every way.
    */
-  requiredWay?: PathWayId
+  requiredWay?: CultivationWayId
 
   effect: NodeEffect
 
@@ -212,12 +219,12 @@ export interface ProgressionNode {
   branchTag?: string
 
   // Phap Tu Reimagined — route membership: node only has effect while
-  // the player's phapTu.route matches (aggregators skip inactive-route
+  // the player's spellPath.route matches (aggregators skip inactive-route
   // nodes; INV-19 forbids shared nodes depending on route-tagged ones).
   routeTag?: 'dot' | 'no'
 
   // Phap Tu Reimagined — element-branch membership for the normal
   // Phap Tu tree; a node with elementTag belongs to that element's
-  // branch and is purchasable only while phapTu.element matches.
+  // branch and is purchasable only while spellPath.element matches.
   elementTag?: ElementType
 }

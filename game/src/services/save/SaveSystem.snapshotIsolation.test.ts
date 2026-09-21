@@ -75,7 +75,7 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
     gameManager.skillManager.add(liveSkill)
 
     const liveTechnique = structuredClone(TECHNIQUES[0]!)
-    gameManager.techniqueManager.add(liveTechnique)
+    gameManager.techniqueManager.setActive(liveTechnique)
 
     const liveItem = makeInstance({ instanceId: 'iso-item', itemId: 'base_kiem' })
     gameManager.equipmentBag.add(liveItem)
@@ -128,7 +128,7 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
     const liveSkill = structuredClone(SKILLS[0]!)
     liveSkill.level = 1
     gameManager.skillManager.add(liveSkill)
-    gameManager.techniqueManager.add(structuredClone(TECHNIQUES[0]!))
+    gameManager.techniqueManager.setActive(structuredClone(TECHNIQUES[0]!))
     const liveItem = makeInstance({ instanceId: 'iso-item', itemId: 'base_kiem' })
     gameManager.equipmentBag.add(liveItem)
     gameManager.buildingManager.add({

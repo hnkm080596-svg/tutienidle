@@ -150,8 +150,8 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
     player.realmId = 'qi_refining'
     player.cultivationPath = pathId
     player.cultivationWay = wayId
-    if (pathId === 'kiem_tu') {
-      player.kiemTu = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
+    if (pathId === 'sword') {
+      player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
     }
 
     return save
@@ -167,12 +167,12 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
   })
 
   it.each([
-    ['kiem_tu', 'hien'],
-    ['kiem_tu', 'ngu'],
-    ['phap_tu', 'ngu_hanh'],
-    ['phap_tu', 'ngo_dao'],
-    ['the_tu', 'hien'],
-    ['the_tu', 'ung_the'],
+    ['sword', 'sword_pathway'],
+    ['sword', 'hidden_sword_pathway'],
+    ['spell', 'spell_pathway'],
+    ['spell', 'hidden_spell_pathway'],
+    ['body', 'body_pathway'],
+    ['body', 'hidden_body_pathway'],
   ])(
     'chấp nhận cặp (path %s, way %s) post-ritual',
     (pathId, wayId) => {
@@ -194,7 +194,7 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
     },
   )
 
-  it.each(['khong_ton_tai', 'ngu', '', 7, null, { id: 'phap_tu' }])(
+  it.each(['khong_ton_tai', 'hidden_sword_pathway', '', 7, null, { id: 'spell' }])(
     'từ chối cultivationPath = %j ngoài union (enum check — M0 gap)',
     (value) => {
       const save = validSave()
@@ -208,7 +208,7 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
     },
   )
 
-  it.each(['hien', 'ngu_hanh', 'ngo_dao', 'ung_the', 'ngu', 'bat_ky_way_naotn'])(
+  it.each(['sword_pathway', 'spell_pathway', 'hidden_spell_pathway', 'hidden_body_pathway', 'hidden_sword_pathway', 'bat_ky_way_naotn'])(
     'từ chối cultivationWay = %s khi cultivationPath vắng mặt (pair nguyên tử)',
     (wayId) => {
       const save = validSave()
@@ -222,7 +222,7 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
     },
   )
 
-  it.each(['kiem_tu', 'phap_tu', 'the_tu'])(
+  it.each(['sword', 'spell', 'body'])(
     'từ chối cultivationPath = %s khi cultivationWay vắng mặt (way-less là corrupt post-M7)',
     (pathId) => {
       const save = validSave()
@@ -238,11 +238,11 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
   )
 
   it.each([
-    ['kiem_tu', 'ngo_dao'],
-    ['kiem_tu', 'ung_the'],
-    ['phap_tu', 'hien'],
-    ['the_tu', 'ngu_hanh'],
-    ['phap_tu', 'bat_ky_way_naotn'],
+    ['sword', 'hidden_spell_pathway'],
+    ['sword', 'hidden_body_pathway'],
+    ['spell', 'sword_pathway'],
+    ['body', 'spell_pathway'],
+    ['spell', 'bat_ky_way_naotn'],
   ])(
     'từ chối way ngoại path: (path %s, way %s) — way phải thuộc module của path',
     (pathId, wayId) => {
@@ -256,8 +256,8 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
   it('từ chối pair khi realmId vẫn mortal (nghi lễ thăng cảnh trong cùng commit)', () => {
     const save = validSave()
 
-    playerOf(save).cultivationPath = 'phap_tu'
-    playerOf(save).cultivationWay = 'ngu_hanh'
+    playerOf(save).cultivationPath = 'spell'
+    playerOf(save).cultivationWay = 'spell_pathway'
 
     const result = validateGameSaveShape(save)
 
@@ -265,21 +265,21 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
     expect(pathsOf(result)).toContain('player.cultivationPath')
   })
 
-  it("từ chối ('kiem_tu', <way>) khi player.kiemTu vắng mặt (slice nguyên tử)", () => {
+  it("từ chối ('sword', <way>) khi player.swordPath vắng mặt (slice nguyên tử)", () => {
     const save = validSave()
     const player = playerOf(save)
 
     player.realmId = 'qi_refining'
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'hien'
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'sword_pathway'
 
     const result = validateGameSaveShape(save)
 
     expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('player.kiemTu')
+    expect(pathsOf(result)).toContain('player.swordPath')
   })
 
-  it.each([[7], [null], [{ id: 'hien' }], [['hien']], [true]])(
+  it.each([[7], [null], [{ id: 'sword_pathway' }], [['sword_pathway']], [true]])(
     'từ chối cultivationWay = %j không phải string',
     (value) => {
       const save = validSave()
@@ -297,67 +297,67 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
     const save = validSave()
 
     playerOf(save).realmId = 'qi_refining'
-    playerOf(save).cultivationPath = 'phap_tu'
-    playerOf(save).cultivationWay = 'ngo_dao'
+    playerOf(save).cultivationPath = 'spell'
+    playerOf(save).cultivationWay = 'hidden_spell_pathway'
 
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
 })
 
-describe('validateGameSaveShape — phapTu atomic (element ↔ route)', () => {
+describe('validateGameSaveShape — spellPath atomic (element ↔ route)', () => {
   // Review round-2 (LOW): writers commit {element, route} atomically, so a
   // half-set pair is corrupt. The validator must enforce the invariant,
   // not just each field's type.
   it.each([
     [{ element: null, route: 'no' }],
     [{ element: 'fire', route: null }],
-  ])('từ chối cặp lệch %j', (phapTu) => {
+  ])('từ chối cặp lệch %j', (spellPath) => {
     const save = validSave()
 
-    ;(save.player as Record<string, unknown>).cultivationPath = 'phap_tu'
-    ;(save.player as Record<string, unknown>).phapTu = phapTu
+    ;(save.player as Record<string, unknown>).cultivationPath = 'spell'
+    ;(save.player as Record<string, unknown>).spellPath = spellPath
 
     const result = validateGameSaveShape(save)
 
     expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('player.phapTu')
+    expect(pathsOf(result)).toContain('player.spellPath')
   })
 
-  it('chấp nhận {null, null} và cặp hợp lệ trên phap_tu', () => {
-    for (const phapTu of [
+  it('chấp nhận {null, null} và cặp hợp lệ trên spell', () => {
+    for (const spellPath of [
       { element: null, route: null },
       { element: 'fire', route: 'dot' },
     ]) {
       const save = validSave()
 
       ;(save.player as Record<string, unknown>).realmId = 'qi_refining'
-      ;(save.player as Record<string, unknown>).cultivationPath = 'phap_tu'
-      ;(save.player as Record<string, unknown>).cultivationWay = 'ngu_hanh'
-      ;(save.player as Record<string, unknown>).phapTu = phapTu
+      ;(save.player as Record<string, unknown>).cultivationPath = 'spell'
+      ;(save.player as Record<string, unknown>).cultivationWay = 'spell_pathway'
+      ;(save.player as Record<string, unknown>).spellPath = spellPath
 
       expect(validateGameSaveShape(save).ok).toBe(true)
     }
   })
 
   it.each([
-    ['kiem_tu', undefined],
+    ['sword', undefined],
     // M4+M7: element ownership is way-gated — the ngo_dao way and a
-    // way-less phap_tu save both reject it.
-    ['phap_tu', 'ngo_dao'],
-    ['phap_tu', undefined],
+    // way-less spell save both reject it.
+    ['spell', 'hidden_spell_pathway'],
+    ['spell', undefined],
   ])(
-    'từ chối route/element state trên %s/%s — chỉ ngu_hanh sở hữu nó',
+    'từ chối route/element state trên %s/%s — chỉ spell_pathway sở hữu nó',
     (path, way) => {
       const save = validSave()
 
       ;(save.player as Record<string, unknown>).cultivationPath = path
       ;(save.player as Record<string, unknown>).cultivationWay = way
-      ;(save.player as Record<string, unknown>).phapTu = { element: 'fire', route: 'dot' }
+      ;(save.player as Record<string, unknown>).spellPath = { element: 'fire', route: 'dot' }
 
       const result = validateGameSaveShape(save)
 
       expect(result.ok).toBe(false)
-      expect(pathsOf(result)).toContain('player.phapTu')
+      expect(pathsOf(result)).toContain('player.spellPath')
     },
   )
 })
@@ -365,39 +365,39 @@ describe('validateGameSaveShape — phapTu atomic (element ↔ route)', () => {
 describe('validateGameSaveShape — module-owned persisted slices (P1-M6)', () => {
   // The boundary iterates CULTIVATION_PATH_MODULES' validatePersistedState
   // hooks generically - each module owns the rules for its own fields.
-  // These regressions pin the moved rules: phapTu is required on EVERY
-  // save (mortal and other-path included), kiemTu is required once the
-  // committed pair is kiem_tu, and a corrupt kiemTu is rejected wherever
+  // These regressions pin the moved rules: spellPath is required on EVERY
+  // save (mortal and other-path included), swordPath is required once the
+  // committed pair is sword, and a corrupt swordPath is rejected wherever
   // it appears.
-  it.each([['mortal'], ['kiem_tu'], ['the_tu']])(
-    'từ chối save thiếu player.phapTu (path/commit %s)',
+  it.each([['mortal'], ['sword'], ['body']])(
+    'từ chối save thiếu player.spellPath (path/commit %s)',
     (pathId) => {
       const save = validSave()
       const player = save.player as Record<string, unknown>
 
-      delete player.phapTu
+      delete player.spellPath
       if (pathId !== 'mortal') {
         player.realmId = 'qi_refining'
         player.cultivationPath = pathId
-        player.cultivationWay = 'hien'
-        if (pathId === 'kiem_tu') {
-          player.kiemTu = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
+        player.cultivationWay = pathId === 'sword' ? 'sword_pathway' : 'body_pathway'
+        if (pathId === 'sword') {
+          player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
         }
       }
 
       const result = validateGameSaveShape(save)
 
       expect(result.ok).toBe(false)
-      expect(pathsOf(result)).toContain('player.phapTu')
+      expect(pathsOf(result)).toContain('player.spellPath')
     },
   )
 
   it.each([
-    ['phap_tu', 'ngu_hanh'],
-    ['the_tu', 'ung_the'],
+    ['spell', 'spell_pathway'],
+    ['body', 'hidden_body_pathway'],
     ['mortal', undefined],
   ])(
-    'từ chối kiemTu hỏng trên save ngoài kiem_tu (%s/%s) — shape-check chạy mọi save',
+    'từ chối swordPath hỏng trên save ngoài sword (%s/%s) — shape-check chạy mọi save',
     (pathId, wayId) => {
       const save = validSave()
       const player = save.player as Record<string, unknown>
@@ -407,12 +407,12 @@ describe('validateGameSaveShape — module-owned persisted slices (P1-M6)', () =
         player.cultivationPath = pathId
         player.cultivationWay = wayId
       }
-      player.kiemTu = { preset: 'not-an-array', kiemY: Number.NaN, kiemDaoCount: 0 }
+      player.swordPath = { preset: 'not-an-array', kiemY: Number.NaN, kiemDaoCount: 0 }
 
       const result = validateGameSaveShape(save)
 
       expect(result.ok).toBe(false)
-      expect(pathsOf(result).some((path) => path.startsWith('player.kiemTu'))).toBe(true)
+      expect(pathsOf(result).some((path) => path.startsWith('player.swordPath'))).toBe(true)
     },
   )
 })
@@ -1656,7 +1656,6 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     'completedStageIds',
     'perfectClearStageIds',
     'grantedRealmPassiveIds',
-    'openedMeridianIds',
   ])('từ chối %s chứa phần tử non-string', (field) => {
     const save = validSave()
 
@@ -1750,6 +1749,56 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
+  // P7-M6 - techniqueProgress is an optional derived mirror; shape is
+  // type-checked but consistency vs techniques[] is NOT (the canonical
+  // holder republishes the mirror on restore).
+  it.each([Number.NaN, -1, 1.5])('từ chối techniqueProgress.rank = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).techniqueProgress = { rank: value, grade: 1 }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.techniqueProgress.rank')
+  })
+
+  it.each([Number.NaN, -2, 0.5])('từ chối techniqueProgress.grade = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).techniqueProgress = { rank: 3, grade: value }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.techniqueProgress.grade')
+  })
+
+  it.each([42, 'rank3', null])('từ chối techniqueProgress = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).techniqueProgress = value
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.techniqueProgress')
+  })
+
+  it('chấp nhận techniqueProgress vắng mặt / undefined / hợp lệ', () => {
+    const absent = validSave()
+    delete playerOf(absent).techniqueProgress
+    expect(validateGameSaveShape(absent).ok).toBe(true)
+
+    const undef = validSave()
+    playerOf(undef).techniqueProgress = undefined
+    expect(validateGameSaveShape(undef).ok).toBe(true)
+
+    const valid = validSave()
+    playerOf(valid).techniqueProgress = { rank: 7, grade: 3 }
+    expect(validateGameSaveShape(valid).ok).toBe(true)
+  })
+
   it.each([
     'hasSeenTutorial',
     'autoWorkerCapacity',
@@ -1836,5 +1885,141 @@ describe('validateGameSaveShape — cycle/site consistency (Mission A review)', 
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('productionSites[0].workerCycles[1].siteId')
+  })
+})
+
+// P7-M5 (v72) - bodyProgression is a REQUIRED chapter-keyed record; the
+// boundary delegates shape checks to the BodyProgression authority
+// (each chapter validates its own slice).
+describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  it('từ chối khi bodyProgression vắng mặt / không phải object', () => {
+    const save = validSave()
+
+    delete playerOf(save).bodyProgression
+    expect(validateGameSaveShape(save).ok).toBe(false)
+
+    const save2 = validSave()
+    playerOf(save2).bodyProgression = 7
+
+    const result = validateGameSaveShape(save2)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.bodyProgression')
+  })
+
+  it('từ chối body_refinement slice có member sai kiểu với chapter-keyed path', () => {
+    const save = validSave()
+
+    playerOf(save).bodyProgression = {
+      body_refinement: { completedTiers: 'x', currentTierProgress: -1 },
+      meridian: { openedIds: [] },
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.bodyProgression.body_refinement.completedTiers')
+    expect(pathsOf(result)).toContain('player.bodyProgression.body_refinement.currentTierProgress')
+  })
+
+  it('từ chối meridian.openedIds không phải array / chứa non-string với indexed path', () => {
+    const save = validSave()
+
+    playerOf(save).bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: 'nope' },
+    }
+    expect(validateGameSaveShape(save).ok).toBe(false)
+
+    const save2 = validSave()
+    playerOf(save2).bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: ['nham_mach', 7] },
+    }
+
+    const result = validateGameSaveShape(save2)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.bodyProgression.meridian.openedIds[1]')
+  })
+
+  it('chấp nhận mid-progress + completed canonical states', () => {
+    const save = validSave()
+
+    playerOf(save).bodyProgression = {
+      body_refinement: { completedTiers: 3, currentTierProgress: 100 },
+      meridian: { openedIds: ['nham_mach', 'doi_mach'] },
+    }
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    const save2 = validSave()
+    playerOf(save2).bodyProgression = {
+      body_refinement: { completedTiers: 6, currentTierProgress: 0 },
+      meridian: {
+        openedIds: [
+          'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
+          'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
+          'ky_kinh_thien_dia_chi_kieu',
+        ],
+      },
+    }
+    expect(validateGameSaveShape(save2).ok).toBe(true)
+  })
+})
+
+// P7-M4 (v71) - retired-key rejection lives at this shape layer; the
+// mortalBasicSkillId precursor/mortal-only contract lives at the
+// restore preflight (GameManagerSaveRestore.boundary.test.ts), so the
+// pick cases below only assert the shape layer stays pick-agnostic.
+describe('validateGameSaveShape — v71 retired skill fields', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  function withSkillEntry(extra: Record<string, unknown>): Record<string, unknown> {
+    const save = validSave()
+    save.skills = [
+      { id: 'tram', name: 'Trảm', type: 'active', level: 1, ...extra },
+    ]
+
+    return save
+  }
+
+  // P7-M4 - every retired key rejects (parameterized, not just unlocked):
+  // learned = SkillManager membership, roles resolve from the way kit -
+  // the boundary refuses to sanitize-and-load stale loadout state.
+  it.each(['loadoutSlot', 'loadoutSlots', 'equipped', 'unlocked'])(
+    'từ chối skill entry mang retired key %s',
+    (key) => {
+      const result = validateGameSaveShape(withSkillEntry({ [key]: key === 'loadoutSlots' ? [0] : key === 'loadoutSlot' ? 0 : true }))
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain(`skills[0].${key}`)
+    },
+  )
+
+  it('chấp nhận skill entry không mang retired key nào', () => {
+    expect(validateGameSaveShape(withSkillEntry({})).ok).toBe(true)
+  })
+
+  it.each(['tram', 'linh_bao', 'huy_quyen'])(
+    'chấp nhận mortalBasicSkillId = %s trên player chưa chọn path',
+    (skillId) => {
+      const save = validSave()
+      playerOf(save).mortalBasicSkillId = skillId
+
+      expect(validateGameSaveShape(save).ok).toBe(true)
+    },
+  )
+
+  it('player mặc định không mang mortalBasicSkillId (absent = tram default)', () => {
+    const save = validSave()
+
+    expect(playerOf(save).mortalBasicSkillId).toBeUndefined()
+    expect(validateGameSaveShape(save).ok).toBe(true)
   })
 })

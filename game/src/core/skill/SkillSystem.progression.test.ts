@@ -26,8 +26,6 @@ function skill(overrides: Partial<Skill> = {}): Skill {
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'damage', value: 100, damageType: 'physical' }],
-    unlocked: true,
-    equipped: true,
     ...overrides,
   }
 }
@@ -47,10 +45,8 @@ describe('SkillSystem.progressionOf (skilldef M5f R6)', () => {
         experience: 7,
         totalExperience: 42,
         selectedSpecializationId: 'spec_a',
-        loadoutSlots: [0, 2],
       }),
     )
-    system.equipToSlot('test_skill', 0)
 
     expect(system.progressionOf(learned)).toEqual({
       skillId: 'test_skill',
@@ -58,18 +54,7 @@ describe('SkillSystem.progressionOf (skilldef M5f R6)', () => {
       experience: 7,
       totalExperience: 42,
       selectedSpecializationId: 'spec_a',
-      unlocked: true,
-      equipped: true,
-      loadoutSlots: [0, 2],
     })
-  })
-
-  it('folds the legacy loadoutSlot singular into loadoutSlots', () => {
-    const { system, learned } = setup(
-      skill({ loadoutSlot: 1, loadoutSlots: undefined }),
-    )
-
-    expect(system.progressionOf(learned).loadoutSlots).toEqual([1])
   })
 
   it('omits selectedSpecializationId when none is chosen', () => {

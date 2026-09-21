@@ -13,7 +13,7 @@ function scriptedRng(values: number[]): () => number {
 const STAGE: StageDropTable = {
   realmId: 'mortal',
   floors: { min: 1, max: 10 },
-  currency: { spiritStone: { min: 2, max: 2 }, techniqueInsight: { min: 10, max: 10 } },
+  currency: { spiritStone: { min: 2, max: 2 }, techniqueMastery: { min: 10, max: 10 } },
   guaranteed: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: { min: 1, max: 1 }, chance: 0.7 }],
   pool: [{ kind: 'material', itemId: 'stage_item', weight: 50 }],
 }
@@ -80,7 +80,7 @@ describe('resolveDrops - amount roll interleaving', () => {
     const localStage: StageDropTable = {
       realmId: 'test',
       floors: { min: 1, max: 1 },
-      currency: { spiritStone: { min: 0, max: 0 }, techniqueInsight: { min: 0, max: 0 } },
+      currency: { spiritStone: { min: 0, max: 0 }, techniqueMastery: { min: 0, max: 0 } },
       guaranteed: [{ kind: 'material', itemId: 'wide_amount_item', amount: { min: 1, max: 5 }, chance: 1 }],
       pool: [
         { kind: 'material', itemId: 'pool_low', weight: 50 },
@@ -108,7 +108,7 @@ describe('resolveDrops - currency', () => {
     const plain = resolveDrops({ modifiers: [], channel: 'active', stageTable: STAGE, rng: scriptedRng([0.99]) })
 
     expect(plain.spiritStone).toBe(2)
-    expect(plain.techniqueInsight).toBe(10)
+    expect(plain.techniqueMastery).toBe(10)
 
     const both = resolveDrops({
       modifiers: [BOSS_MODIFIER, TINH_ANH_MODIFIER],
@@ -118,7 +118,7 @@ describe('resolveDrops - currency', () => {
     })
 
     expect(both.spiritStone).toBe(8)
-    expect(both.techniqueInsight).toBe(40)
+    expect(both.techniqueMastery).toBe(40)
     expect(both.currencyMultiplier).toBe(4)
     expect(both.qualityBonusSteps).toBe(1)
   })
@@ -127,7 +127,7 @@ describe('resolveDrops - currency', () => {
 describe('resolveDrops - signature drops (spec E7/E11)', () => {
   const SIGNATURE: SignatureDrop[] = [
     { kind: 'material', itemId: 'great_dao_seed', chance: 1, requiresModifier: 'boss' },
-    { kind: 'technique', itemId: 'tu_linh_quyet', chance: 1 },
+    { kind: 'material', itemId: 'dao_herb', chance: 1 },
   ]
 
   it('skips a line whose required modifier is absent', () => {
@@ -138,7 +138,7 @@ describe('resolveDrops - signature drops (spec E7/E11)', () => {
       rng: scriptedRng([0, 0]),
     })
 
-    expect(result.items.map((item) => item.itemId)).toEqual(['tu_linh_quyet'])
+    expect(result.items.map((item) => item.itemId)).toEqual(['dao_herb'])
   })
 
   it('grants it when the modifier is present', () => {
@@ -149,13 +149,13 @@ describe('resolveDrops - signature drops (spec E7/E11)', () => {
       rng: scriptedRng([0, 0]),
     })
 
-    expect(result.items.map((item) => item.itemId)).toEqual(['great_dao_seed', 'tu_linh_quyet'])
+    expect(result.items.map((item) => item.itemId)).toEqual(['great_dao_seed', 'dao_herb'])
   })
 
   it('on idle keeps only the certain lines', () => {
     const idleSignature: SignatureDrop[] = [
       { kind: 'material', itemId: 'great_dao_seed', chance: 0.5, requiresModifier: 'boss' },
-      { kind: 'technique', itemId: 'tu_linh_quyet', chance: 1, requiresModifier: 'boss' },
+      { kind: 'material', itemId: 'dao_herb', chance: 1, requiresModifier: 'boss' },
     ]
 
     const result = resolveDrops({
@@ -165,6 +165,6 @@ describe('resolveDrops - signature drops (spec E7/E11)', () => {
       rng: scriptedRng([0, 0]),
     })
 
-    expect(result.items.map((item) => item.itemId)).toEqual(['tu_linh_quyet'])
+    expect(result.items.map((item) => item.itemId)).toEqual(['dao_herb'])
   })
 })

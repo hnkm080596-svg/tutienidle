@@ -33,7 +33,7 @@ describe('debug turn battle rewards', () => {
       realmId: 'mortal',
       lane: 'ground',
       statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 5, spiritStone: 2 },
+      rewards: { techniqueMastery: 5, spiritStone: 2 },
     })
 
     gameManager.startBattleWithPlayer(player, enemy)

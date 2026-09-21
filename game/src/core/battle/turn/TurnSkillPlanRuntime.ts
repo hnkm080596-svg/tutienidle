@@ -380,9 +380,6 @@ export class TurnSkillPlanRuntime {
       level: actor.entity.skillLevels?.[levelKey] ?? 1,
       experience: 0,
       totalExperience: 0,
-      unlocked: true,
-      equipped: true,
-      loadoutSlots: [],
     }
   }
 

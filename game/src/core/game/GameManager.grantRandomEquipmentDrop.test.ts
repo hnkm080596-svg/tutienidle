@@ -49,7 +49,7 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
       },
       // KHÔNG khai signatureDrops — cô lập đúng đường equipment_any của
       // stage pool (quái thường = 1 pool draw → đúng 1 món).
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
 
     gameManager.startBattleWithPlayer(player, enemy)

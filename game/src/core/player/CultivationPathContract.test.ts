@@ -4,18 +4,22 @@
  * contract to every registered path module, so a NEW path/way is held
  * to the same shape the moment it is added to the catalog.
  *
- * Also pins the node-side wiring: way ids are PATH-SCOPED ('hien'
- * exists under both kiem_tu and the_tu), so a node carrying
- * `requiredWay` must also carry `requiredCultivationPath`, and the
+ * Also pins the node-side wiring: way ids are globally unique but
+ * still PATH-OWNED ('sword_pathway' belongs to the sword module
+ * alone), so a node carrying `requiredWay` must also carry
+ * `requiredCultivationPath`, and the
  * pair must resolve in the catalog — otherwise a way-gated node would
  * open to a same-named way on the wrong path.
  */
 import { describe, expect, it } from 'vitest'
 import {
   CULTIVATION_PATH_MODULES,
-  PHAP_TU_AN_REQUIRED_SKILLS,
+  CULTIVATION_PATH_WAY_IDS,
+  getActiveWayDefinition,
+  HIDDEN_SPELL_REQUIRED_SKILLS,
   type CultivationPathId,
   type CultivationPathModule,
+  type CultivationWayId,
   type PathWayDefinition,
 } from './CultivationPathKit'
 import { createDefaultPlayer } from './Player'
@@ -25,6 +29,8 @@ import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
+import { CANONICAL_REALM_PASSIVE_LADDER } from '../../data/progression/RealmPassiveLadder'
+import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { SKILLS } from '../../data/skill/Skills'
@@ -104,7 +110,6 @@ function expectWellFormedWay(way: PathWayDefinition, moduleId: CultivationPathId
 
   for (const [label, ids] of [
     ['skillIds', way.skillIds],
-    ['unequipSkillIds', way.unequipSkillIds],
     ['ownedContent.skillIds', way.ownedContent?.skillIds],
     ['ownedContent.buffIds', way.ownedContent?.buffIds],
   ] as const) {
@@ -112,6 +117,15 @@ function expectWellFormedWay(way: PathWayDefinition, moduleId: CultivationPathId
       expect(ids.every((id) => typeof id === 'string' && id.trim().length > 0)).toBe(true)
       expect(new Set(ids).size, `${moduleId}.${wayKey}: duplicate ${label}`).toBe(ids.length)
     }
+  }
+
+  // P7-M4 - a declared starter basic is always a mortal precursor
+  // (the only skills a fresh way player can already know).
+  if (way.starterBasicSkillId !== undefined) {
+    expect(
+      isMortalPrecursorSkillId(way.starterBasicSkillId),
+      `${moduleId}.${wayKey}: starterBasicSkillId must be a mortal precursor`,
+    ).toBe(true)
   }
 
   // P1-M2 - a declared ownedContent must own something.
@@ -184,7 +198,8 @@ function expectWellFormedWay(way: PathWayDefinition, moduleId: CultivationPathId
   if (way.realmRewards) {
     for (const [realmId, reward] of Object.entries(way.realmRewards)) {
       expect(
-        reward.techniqueId !== undefined || reward.artifactId !== undefined,
+        reward.artifactId !== undefined ||
+          reward.passiveSkillId !== undefined,
         `${moduleId}.${wayKey}: realmRewards['${realmId}'] grants nothing`,
       ).toBe(true)
     }
@@ -307,23 +322,23 @@ describe('cultivation path catalog contract (M10)', () => {
   })
 
   it("ngo_dao's ownedContent.skillIds is the kit declaration of record (P1-M2)", () => {
-    const ngoDao = CULTIVATION_PATH_MODULES.phap_tu.ways.ngo_dao
+    const ngoDao = CULTIVATION_PATH_MODULES.spell.ways.hidden_spell_pathway
     expect(ngoDao).toBeDefined()
 
     // Same reference - the export derives FROM the way declaration, so
     // the kit cannot drift away from the ownership record.
-    expect(PHAP_TU_AN_REQUIRED_SKILLS).toBe(ngoDao?.ownedContent?.skillIds)
+    expect(HIDDEN_SPELL_REQUIRED_SKILLS).toBe(ngoDao?.ownedContent?.skillIds)
     expect(ngoDao?.ownedContent?.skillIds).toHaveLength(3)
     // The Ngo Dao aura buff the runtime grant plants (carrier A).
     expect(ngoDao?.ownedContent?.buffIds).toContain('van_phap_than_hoa')
   })
 
   it('every module owning a persisted slice declares validatePersistedState (P1-M6)', () => {
-    // Persisted-slice ownership: kiem_tu creates player.kiemTu via
-    // createInitialState at ritual commit; phap_tu owns the birth field
-    // player.phapTu (createDefaultPlayer) even without a slice factory.
-    // the_tu owns no persisted slice (nodeLevels belongs to NodeSystem).
-    const SLICE_OWNERS: ReadonlySet<string> = new Set(['kiem_tu', 'phap_tu'])
+    // Persisted-slice ownership: sword creates player.swordPath via
+    // createInitialState at ritual commit; spell owns the birth field
+    // player.spellPath (createDefaultPlayer) even without a slice factory.
+    // body owns no persisted slice (nodeLevels belongs to NodeSystem).
+    const SLICE_OWNERS: ReadonlySet<string> = new Set(['sword', 'spell'])
 
     for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
       const ownsSlice =
@@ -340,16 +355,18 @@ describe('cultivation path catalog contract (M10)', () => {
 
   it('contract runner is infra-independent (proves out on a fake module)', () => {
     const fake: CultivationPathModule = {
-      id: 'kiem_tu',
+      id: 'sword',
       name: 'Fake Path',
+      // 'demo' is deliberately not a CultivationWayId — the runner must
+      // prove out on infra that never joined the canonical catalog.
       ways: {
         demo: {
           id: 'demo',
-          pathId: 'kiem_tu',
+          pathId: 'sword',
           name: 'Demo Way',
           techniqueId: 'fake_technique',
         },
-      },
+      } as unknown as CultivationPathModule['ways'],
     }
     // A structurally valid fake passes every per-way check.
     for (const [wayKey, way] of Object.entries(fake.ways)) {
@@ -379,6 +396,161 @@ describe('cultivation path catalog contract (M10)', () => {
         !Object.prototype.hasOwnProperty.call(CULTIVATION_PATH_MODULES, node.requiredCultivationPath)
       ) {
         violations.push(`${node.id}: requiredCultivationPath '${node.requiredCultivationPath}' not in catalog`)
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([])
+  })
+})
+
+describe('P7-M1 identity spine', () => {
+  it('each path module declares exactly its canonical way set', () => {
+    for (const pathId of Object.keys(CULTIVATION_PATH_MODULES) as CultivationPathId[]) {
+      const module = CULTIVATION_PATH_MODULES[pathId]
+      expect([...Object.keys(module.ways)].sort()).toEqual(
+        [...CULTIVATION_PATH_WAY_IDS[pathId]].sort(),
+      )
+      for (const wayId of Object.keys(module.ways)) {
+        expect(module.ways[wayId as CultivationWayId]?.pathId).toBe(pathId)
+      }
+    }
+  })
+
+  it('covers all six CultivationWayId members exactly once', () => {
+    const all = Object.values(CULTIVATION_PATH_MODULES).flatMap((m) => Object.keys(m.ways))
+    expect(all.sort()).toEqual([
+      'body_pathway',
+      'hidden_body_pathway',
+      'hidden_spell_pathway',
+      'hidden_sword_pathway',
+      'spell_pathway',
+      'sword_pathway',
+    ])
+  })
+
+  it('getActiveWayDefinition resolves all six pairs and fails closed cross-path', () => {
+    for (const [pathId, wayIds] of Object.entries(CULTIVATION_PATH_WAY_IDS)) {
+      for (const wayId of wayIds) {
+        expect(
+          getActiveWayDefinition({
+            cultivationPath: pathId as CultivationPathId,
+            cultivationWay: wayId,
+          }),
+        ).toBeDefined()
+      }
+    }
+    expect(
+      getActiveWayDefinition({ cultivationPath: 'sword', cultivationWay: 'spell_pathway' }),
+    ).toBeUndefined()
+    expect(
+      getActiveWayDefinition({ cultivationPath: 'sword', cultivationWay: undefined }),
+    ).toBeUndefined()
+  })
+})
+
+describe('P7-M2 realm passive ownership', () => {
+  it("every way's passiveSkillIds is a subset of its ownedContent.skillIds", () => {
+    const violations: string[] = []
+
+    for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayKey, way] of Object.entries(pathModule.ways)) {
+        const owned = new Set(way.ownedContent?.skillIds ?? [])
+
+        for (const passiveId of way.passiveSkillIds ?? []) {
+          if (!owned.has(passiveId)) {
+            violations.push(`${pathId}.${wayKey}: passive '${passiveId}' granted but not owned`)
+          }
+        }
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([])
+  })
+
+  it('every realmRewards record declares at least one field (null passive = authored suppression)', () => {
+    const violations: string[] = []
+
+    for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayKey, way] of Object.entries(pathModule.ways)) {
+        for (const [realmId, reward] of Object.entries(way.realmRewards ?? {})) {
+          if (
+            reward.artifactId === undefined &&
+            reward.passiveSkillId === undefined
+          ) {
+            violations.push(`${pathId}.${wayKey}: realmRewards['${realmId}'] is an empty record`)
+          }
+        }
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([])
+  })
+
+  it('all declared passives resolve to known skill defs', () => {
+    const violations: string[] = []
+
+    for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayKey, way] of Object.entries(pathModule.ways)) {
+        const owner = `${pathId}.${wayKey}`
+
+        for (const passiveId of way.passiveSkillIds ?? []) {
+          if (!KNOWN_SKILL_IDS.has(passiveId)) {
+            violations.push(`${owner}: passiveSkillIds member '${passiveId}' resolves to no known skill def`)
+          }
+        }
+
+        for (const [realmId, reward] of Object.entries(way.realmRewards ?? {})) {
+          if (reward.passiveSkillId != null && !KNOWN_SKILL_IDS.has(reward.passiveSkillId)) {
+            violations.push(`${owner}: realmRewards['${realmId}'].passiveSkillId '${reward.passiveSkillId}' resolves to no known skill def`)
+          }
+        }
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([])
+  })
+
+  it('all declared passives resolve to defs of type passive', () => {
+    const skillTypeById = new Map(SKILLS.map((skill) => [skill.id, skill.type]))
+    const violations: string[] = []
+
+    for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayKey, way] of Object.entries(pathModule.ways)) {
+        const owner = `${pathId}.${wayKey}`
+
+        for (const passiveId of way.passiveSkillIds ?? []) {
+          if (skillTypeById.get(passiveId) !== 'passive') {
+            violations.push(`${owner}: passiveSkillIds member '${passiveId}' is not a passive def`)
+          }
+        }
+
+        for (const [realmId, reward] of Object.entries(way.realmRewards ?? {})) {
+          if (reward.passiveSkillId != null && skillTypeById.get(reward.passiveSkillId) !== 'passive') {
+            violations.push(
+              `${owner}: realmRewards['${realmId}'].passiveSkillId '${reward.passiveSkillId}' is not a passive def`,
+            )
+          }
+        }
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([])
+  })
+
+  it('every way composes the canonical ladder unmodified (no override/suppression at M2)', () => {
+    const violations: string[] = []
+
+    for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayKey, way] of Object.entries(pathModule.ways)) {
+        for (const [realmId, passiveSkillId] of Object.entries(CANONICAL_REALM_PASSIVE_LADDER)) {
+          const actual = way.realmRewards?.[realmId]?.passiveSkillId
+
+          if (actual !== passiveSkillId) {
+            violations.push(
+              `${pathId}.${wayKey}: realmRewards['${realmId}'].passiveSkillId is ${String(actual)}, expected canonical '${passiveSkillId}'`,
+            )
+          }
+        }
       }
     }
 

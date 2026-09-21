@@ -1,6 +1,5 @@
-import type { Technique } from '../technique/Technique'
 import type { ElementType } from '../element/ElementType'
-import type { PhapTuRoute } from '../phap-tu/PhapTuState'
+import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import type { PlayerData } from './Player'
@@ -14,7 +13,7 @@ import {
   type PathConditionalRead,
   type PathSubpathAxis,
   type PathWayDefinition,
-  type PathWayId,
+  type CultivationWayId,
   type PathWayRead,
 } from './CultivationPathKit'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
@@ -22,13 +21,13 @@ import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
 // D12 (stat-system-reimagined spec section 5): Linh Can (attunement)
-// feeds MP through the phap_tu domain gate. M4 — the emitter and its
+// feeds MP through the spell domain gate. M4 — the emitter and its
 // tuning constants moved to the Phap Tu path module
 // (core/phap-tu/PhapTuPath.ts) where the way definitions live; the
 // constants are re-exported here so existing consumers keep working.
 export {
-  PHAP_TU_ATTUNEMENT_MANA_REGEN_PER_POINT,
-  PHAP_TU_ATTUNEMENT_MAX_MP_PER_POINT,
+  SPELL_ATTUNEMENT_MANA_REGEN_PER_POINT,
+  SPELL_ATTUNEMENT_MAX_MP_PER_POINT,
 } from '../phap-tu/PhapTuPath'
 
 // M8 — mid-battle domain delta derivers are MODULE-DECLARED on each
@@ -40,7 +39,7 @@ export {
 // and a foreign-domain delta never leaks stats cross-way.
 // P1 - registration is EAGER at module eval, same lifecycle as the
 // pre-P1 framework: the Kit -> SkillSystem edge that closed the
-// NodeSystem -> here -> Kit -> SkillSystem -> PhapTuRoutes ->
+// NodeSystem -> here -> Kit -> SkillSystem -> SpellPathRoutes ->
 // NodeSystem cycle is severed (the cast-leveling table lives in the
 // leaf core/skill/CastLeveling.ts), so the catalog is fully
 // initialized before this module body runs.
@@ -63,7 +62,7 @@ for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
 /** One offerable (path, way) pair for the Initiation Ritual offer list. */
 export interface PathWayOffer {
   pathId: CultivationPathId
-  wayId: PathWayId
+  wayId: CultivationWayId
   /** Live offerGate evaluation at THIS moment — never stored. */
   eligible: boolean
   /** Why an ineligible way cannot be picked (display/debug text). */
@@ -73,9 +72,9 @@ export interface PathWayOffer {
 export type PathChoiceResult = { ok: true } | { ok: false; reason: string }
 
 // Offer order — preserves the pre-framework ritual list: the three base
-// ways first (phap/kiem/the), then the gated hidden ways in the same
-// path order (ngo_dao before ung_the), so the sealed cards stay last.
-const RITUAL_PATH_ORDER: readonly CultivationPathId[] = ['phap_tu', 'kiem_tu', 'the_tu']
+// ways first (spell/sword/body), then the gated hidden ways in the same
+// path order (hidden_spell_pathway before hidden_body_pathway), so the sealed cards stay last.
+const RITUAL_PATH_ORDER: readonly CultivationPathId[] = ['spell', 'sword', 'body']
 
 function offerGateReason(way: PathWayDefinition): string | undefined {
   const requiredSkill = way.offerGate?.requiresSkillLevel
@@ -135,7 +134,7 @@ export function getActivePath(player: PathWayRead): CultivationPathId | undefine
  * cultivationWay is authoritative; a way-less save is corrupt post-M7
  * and resolves nothing.
  */
-export function getActiveWay(player: PathWayRead): PathWayId | undefined {
+export function getActiveWay(player: PathWayRead): CultivationWayId | undefined {
   return getActiveWayDefinition(player)?.id
 }
 
@@ -151,7 +150,7 @@ export function isActivePath(player: PathWayRead, path: CultivationPathId): bool
   return getActiveWayDefinition(player)?.pathId === path
 }
 
-export function isActiveWay(player: PathWayRead, way: PathWayId): boolean {
+export function isActiveWay(player: PathWayRead, way: CultivationWayId): boolean {
   return getActiveWayDefinition(player)?.id === way
 }
 
@@ -231,8 +230,8 @@ export function hasStaticPathCapability(player: PathWayRead, capability: PathCap
 // way definitions carry no executable callbacks (spec section 8.1).
 // Resolution gates on the axis's requiresCapability (a static capability
 // the same way declares) and fails closed on absent axes, absent slices,
-// and corrupt pairs. State ownership stays where it already is (phapTu
-// slice, kiemTu slice, nodeLevels) - these reads expose it, never write.
+// and corrupt pairs. State ownership stays where it already is (spellPath
+// slice, swordPath slice, nodeLevels) - these reads expose it, never write.
 // ---------------------------------------------------------------------------
 
 function subpathAxisResolves(player: PathWayRead, axis: PathSubpathAxis | undefined): boolean {
@@ -243,28 +242,28 @@ function subpathAxisResolves(player: PathWayRead, axis: PathSubpathAxis | undefi
   )
 }
 
-/** The committed element - ngu_hanh only; undefined for any other way. */
+/** The committed element - spell_pathway only; undefined for any other way. */
 export function getActiveElement(player: PathConditionalRead): ElementType | undefined {
   if (!subpathAxisResolves(player, getActiveWayDefinition(player)?.subpaths?.element)) {
     return undefined
   }
-  return player.phapTu?.element ?? undefined
+  return player.spellPath?.element ?? undefined
 }
 
-/** The committed route - ngu_hanh only; undefined for any other way. */
-export function getActiveRoute(player: PathConditionalRead): PhapTuRoute | undefined {
+/** The committed route - spell_pathway only; undefined for any other way. */
+export function getActiveRoute(player: PathConditionalRead): SpellPathRoute | undefined {
   if (!subpathAxisResolves(player, getActiveWayDefinition(player)?.subpaths?.route)) {
     return undefined
   }
-  return player.phapTu?.route ?? undefined
+  return player.spellPath?.route ?? undefined
 }
 
-/** The persisted Kiem Pho preset - kiem_tu hien only (defensive copy). */
-export function getKiemTuPreset(player: PathConditionalRead): readonly OrbId[] | undefined {
+/** The persisted Kiem Pho preset - sword_pathway only (defensive copy). */
+export function getSwordScrollPreset(player: PathConditionalRead): readonly OrbId[] | undefined {
   if (!subpathAxisResolves(player, getActiveWayDefinition(player)?.subpaths?.preset)) {
     return undefined
   }
-  const preset = player.kiemTu?.preset
+  const preset = player.swordPath?.preset
   return preset === undefined ? undefined : [...preset]
 }
 
@@ -274,7 +273,7 @@ export function getKiemTuPreset(player: PathConditionalRead): readonly OrbId[] |
  * written; a way-less or mismatched pair is corrupt and emits nothing —
  * and delegates to the way's PathWayStatFacet. resolvePlayerFinalStats
  * calls this before calculateStats so facet emissions are gated by
- * their own domain tags. Ways with no totals-driven channel (kiem_tu)
+ * their own domain tags. Ways with no totals-driven channel (sword)
  * emit nothing.
  */
 export function collectActiveWayStatModifiers(
@@ -288,12 +287,12 @@ export function collectActiveWayStatModifiers(
 
 /**
  * M5 — the active way's OWNED stat domains, resolved from the way's
- * stat facet — the single authority post-M7 (hien -> 'the_tu', ung_the
- * -> 'the_tu_an', both phap_tu ways -> 'phap_tu', both kiem_tu ways ->
- * 'kiem_tu'). Consumed by GameManagerTurnBattleOps when stamping
+ * stat facet — the single authority post-M7 (body_pathway -> 'body', hidden_body_pathway
+ * -> 'hidden_body', both spell ways -> 'spell', both sword ways ->
+ * 'sword'). Consumed by GameManagerTurnBattleOps when stamping
  * participant.activeDomains — the mid-battle domain deltaDerivers gate
  * on it, so the WAY — never the raw path id — decides the domain (a
- * path-level lookup would give 'the_tu' for ('the_tu','ung_the')).
+ * path-level lookup would give 'body' for ('body','hidden_body_pathway')).
  * Corrupt/way-less pairs resolve nothing.
  */
 export function resolveActiveWayStatDomains(player: PathWayRead): readonly StatDomain[] | undefined {
@@ -309,13 +308,13 @@ export function resolveActiveWayStatDomains(player: PathWayRead): readonly StatD
  *
  * On success writes cultivationWay AND cultivationPath (the BASE path
  * id directly — M7 removed the legacy-id adapter), then creates the
- * path-state slice where the path declares one (today only kiem_tu ->
- * freshKiemTuState()).
+ * path-state slice where the path declares one (today only sword ->
+ * freshSwordPathState()).
  */
 export function applyPathChoice(
   player: PlayerData,
   pathId: CultivationPathId,
-  wayId: PathWayId,
+  wayId: CultivationWayId,
 ): PathChoiceResult {
   const pathModule = CULTIVATION_PATH_MODULES[pathId]
 
@@ -341,19 +340,12 @@ export function applyPathChoice(
   player.cultivationPath = pathId
 
   // State-slice lifecycle — created at commit by the authority through
-  // the module contract. Only kiem_tu declares createInitialState
-  // today: the canonical fresh player.kiemTu is way-agnostic (the Kiem
-  // Y fields start at ngu's defaults; hien simply never reads them).
+  // the module contract. Only sword declares createInitialState
+  // today: the canonical fresh player.swordPath is way-agnostic (the Kiem
+  // Y fields start at hidden_sword_pathway's defaults; sword_pathway simply never reads them).
   pathModule.createInitialState?.(player)
 
   return { ok: true }
-}
-
-export interface CultivationPathRewardDeps {
-  getEquippedTechnique: () => Technique | undefined
-  getTechnique: (techniqueId: string) => Technique | undefined
-  learnTechnique: (techniqueId: string) => boolean
-  equipTechnique: (techniqueId: string) => boolean
 }
 
 export function getCultivationPathStatModifiers(player: PlayerData) {
@@ -362,10 +354,14 @@ export function getCultivationPathStatModifiers(player: PlayerData) {
   return [...(way?.statModifiers ?? [])]
 }
 
+// P7-M3 - realm rewards are artifact-only delivery (the canonical
+// technique is granted once at initiation; the retired spell Truc Co
+// technique swap folded into five_elements_art.gradeEffects[2]). The
+// passiveSkillId field on the record is delivered by syncRealmPassive,
+// NOT here.
 export function grantCultivationPathRealmReward(
   player: PlayerData,
   realmId: string,
-  deps: CultivationPathRewardDeps,
 ): boolean {
   if (!player.cultivationPath) {
     return false
@@ -375,20 +371,6 @@ export function grantCultivationPathRealmReward(
 
   if (!reward) {
     return false
-  }
-
-  if (reward.techniqueId) {
-    const inheritedInsight = deps.getEquippedTechnique()?.insight ?? 0
-
-    deps.learnTechnique(reward.techniqueId)
-
-    const nextTechnique = deps.getTechnique(reward.techniqueId)
-
-    if (nextTechnique) {
-      nextTechnique.insight = Math.max(nextTechnique.insight ?? 0, inheritedInsight)
-    }
-
-    deps.equipTechnique(reward.techniqueId)
   }
 
   if (reward.artifactId && !player.artifact) {

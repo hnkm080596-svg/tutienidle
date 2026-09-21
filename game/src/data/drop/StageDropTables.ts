@@ -26,7 +26,7 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
   {
     realmId: 'mortal',
     floors: { min: 1, max: 10 },
-    currency: { spiritStone: { min: 1, max: 2 }, techniqueInsight: { min: 5, max: 8 } },
+    currency: { spiritStone: { min: 1, max: 2 }, techniqueMastery: { min: 5, max: 8 } },
     guaranteed: [
       // Was rollMortalEssenceAmount(isBoss) hardcoded in BattleLootSystem;
       // the boss branch is gone - a boss simply draws more often.
@@ -44,7 +44,7 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
   {
     realmId: 'qi_refining',
     floors: { min: 1, max: 10 },
-    currency: { spiritStone: { min: 8, max: 12 }, techniqueInsight: { min: 35, max: 45 } },
+    currency: { spiritStone: { min: 8, max: 12 }, techniqueMastery: { min: 35, max: 45 } },
     guaranteed: [],
     pool: [
       // Ore is the qi_refining realm's general-purpose crafting material,
@@ -59,7 +59,7 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
   {
     realmId: 'foundation_establishment',
     floors: { min: 1, max: 10 },
-    currency: { spiritStone: { min: 25, max: 35 }, techniqueInsight: { min: 90, max: 120 } },
+    currency: { spiritStone: { min: 25, max: 35 }, techniqueMastery: { min: 90, max: 120 } },
     guaranteed: [],
     pool: [
       // Doan Bao Thach used to be gated by an explicit realm check. The

@@ -8,6 +8,7 @@ import { asBaseStats } from '../core/stats/StatBlock'
 import { CHARACTER_CREATION_TALENTS, getTalentDefinition } from '../data/talent/Talents'
 import { pills } from '../data/pill/pills'
 import { TECHNIQUES } from '../data/technique/Techniques'
+import { SKILLS } from '../data/skill/Skills'
 import { MERIDIANS } from '../data/realm/Meridians'
 import { makeInstance } from '../core/equipment/EquipmentInstance.fixture'
 import { PROFESSION_GRADE_BY_REALM } from '../core/profession/ProfessionGrade'
@@ -36,12 +37,13 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
   it('chooseCultivationPath khi 5/5 stat 10/10 + 6/6 Luyện Th thể → mortalPerfectionAchieved = true', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     const player = usePlayerStore()
     player.realmLevel = 12
-    player.bodyRefinementCompletedTiers = 6
+    player.bodyProgression.body_refinement.completedTiers = 6
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
     expect(player.mortalPerfectionAchieved).toBe(true)
   })
 
@@ -50,40 +52,45 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     // giữa 2 case (giữ nguyên realm mortal tầng 12).
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     const player = usePlayerStore()
     player.realmLevel = 12
-    player.bodyRefinementCompletedTiers = 6
+    player.bodyProgression.body_refinement.completedTiers = 6
     player.baseStats = { ...player.baseStats, strength: 9, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
     expect(player.mortalPerfectionAchieved).toBe(false)
 
     // Reset để chọn lại (case 2: đủ stat nhưng Luyện Th thể 5/6) —
     // M2: path + way là 1 cặp ghi nguyên tử, reset phải xoá cả hai.
+    // P7-M3: the technique holder is part of the ritual's atomic
+    // contract too - a non-empty holder rejects the re-choice.
     player.cultivationPath = undefined
     player.cultivationWay = undefined
+    gameManager.techniqueManager.setActive(null)
     player.realmId = 'mortal'
     player.realmLevel = 12
-    player.bodyRefinementCompletedTiers = 5
+    player.bodyProgression.body_refinement.completedTiers = 5
     player.baseStats = { ...player.baseStats, strength: 10 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
     expect(player.mortalPerfectionAchieved).toBe(false)
   })
 
   it('snapshot chốt tại thời điểm Quán Khí — KHÔNG hồi cứu sau khi vào Luyện Khí', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     const player = usePlayerStore()
     player.realmLevel = 12
-    player.bodyRefinementCompletedTiers = 6
+    player.bodyProgression.body_refinement.completedTiers = 6
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     expect(player.mortalPerfectionAchieved).toBe(true)
 
     // Sau khi vào Luyện Khí, "hoàn hảo" không đổi dù stat/luyện thể đổi
-    player.bodyRefinementCompletedTiers = 0
+    player.bodyProgression.body_refinement.completedTiers = 0
     expect(player.mortalPerfectionAchieved).toBe(true)
   })
 })
@@ -109,24 +116,25 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
   it('thắng kiếp Đại Đạo Trúc Cơ: Phàm Cốt chuyển thành Phàm Nhân Chi Cốt + highestFoundationAchieved = great_dao', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
     // Dựng nhân vật đủ mọi điều kiện Đại Đạo
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12
-    player.bodyRefinementCompletedTiers = 6
+    player.bodyProgression.body_refinement.completedTiers = 6
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
     // Quán Khí trước (vào Luyện Khí)
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     expect(player.realmId).toBe('qi_refining')
 
     // Đầu tư tiếp để đủ điều kiện Đại Đạo ở Luyện Khí
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
-    player.openedMeridianIds = MERIDIANS.map((m) => m.id)
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
     const trucCoDan = gameManager.pillRegistry.get('truc_co_dan')!
     gameManager.pillBag.add(trucCoDan, 1)
 
@@ -157,19 +165,20 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
   it('thua kiếp Đại Đạo: greatDaoOpportunityLost vĩnh viễn + KHÔNG đổi talent; lần xét sau cap Thiên', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12
-    player.bodyRefinementCompletedTiers = 6
+    player.bodyProgression.body_refinement.completedTiers = 6
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
 
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
-    player.openedMeridianIds = MERIDIANS.map((m) => m.id)
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
     // HP thấp → thua kiếp Đại Đạo
@@ -215,15 +224,16 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
   it('victory realm mới → mọi item equipped=false + modifier equipment sync rỗng; slot state GIỮ enhanceLevel', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12
-    player.bodyRefinementCompletedTiers = 6
+    player.bodyProgression.body_refinement.completedTiers = 6
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     expect(player.realmId).toBe('qi_refining')
 
     // Mặc 1 món đồ ĐÚNG phẩm hiện tại (qi_refining → bat_pham, Task 16 gate).
@@ -248,7 +258,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     // Đầu tư đủ điều kiện Trúc Cơ (nhánh heaven, không cần great_dao).
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
-    player.openedMeridianIds = MERIDIANS.map((m) => m.id)
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
 
     // ARCH-002 (M7): startTribulation resolves internally — patch the
     // RAW base so the tribulation ghost survives the strikes.
@@ -279,6 +289,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
   it('triggerBreakthroughAction auto-unequip TRƯỚC khi vào kiếp', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -315,6 +326,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     // target must come from the realm ladder, not a local map.
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -328,6 +340,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
   it('foundation_establishment+ — canTriggerBreakthrough từ chối, action trả false', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     const player = usePlayerStore()
 
     player.realmId = 'foundation_establishment'

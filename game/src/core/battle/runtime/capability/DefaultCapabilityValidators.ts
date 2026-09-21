@@ -8,7 +8,7 @@ import { createCapabilityValidatorRegistry } from './CapabilityValidatorRegistry
 import type { CapabilityValidatorRegistry } from './CapabilityValidatorRegistry'
 import { registerProcCapabilities } from '../../../proc/ProcCapabilities'
 import { registerMarkerCapabilities } from '../../../proc/MarkerCapabilities'
-import { registerTheTuCapabilities } from '../../../the-tu/TheTuCapabilities'
+import { registerBodyCapabilities } from '../../../the-tu/TheTuCapabilities'
 import { registerGaugeDeltaCapabilities } from '../../turn/GaugeDeltaHandler'
 import { registerDotRecoveryCapabilities } from '../../../combat/DotRecoveryCapabilities'
 import { registerReactionCapabilities } from '../../../reaction/ReactionCapabilities'
@@ -17,7 +17,7 @@ export function createDefaultCapabilityValidators(): CapabilityValidatorRegistry
   const validators = createCapabilityValidatorRegistry()
   registerProcCapabilities(validators)
   registerMarkerCapabilities(validators)
-  registerTheTuCapabilities(validators)
+  registerBodyCapabilities(validators)
   registerGaugeDeltaCapabilities(validators)
   registerDotRecoveryCapabilities(validators)
   registerReactionCapabilities(validators)

@@ -8,6 +8,8 @@ import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
+import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
+import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { TURN_SKILL_DISPLAY_META } from '../../data/skill/TurnSkillDisplayMeta'
 import { COMPANIONS } from '../../data/companion/Companions'
 
@@ -87,6 +89,35 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
 
       for (const prerequisite of node.prerequisites ?? []) {
         expect(prerequisite.kind, `${node.id} still gates on kind:element`).not.toBe('element')
+      }
+    }
+  })
+
+  // P7-M6 - the techniqueRank/techniqueGrade prerequisite kinds exist as
+  // schema + evaluator only; NO authored node may carry a technique gate
+  // yet (mission constraint - remove this pin when content authors one).
+  it('no authored node carries a technique-gated prerequisite yet (P7-M6 schema-only)', () => {
+    const allNodes = [
+      ...PHAP_TU_NODES,
+      ...PHAP_TU_AN_NODES,
+      ...KIEM_TU_NODES,
+      ...THE_TU_NODES,
+      ...THE_TU_AN_NODES,
+    ]
+
+    for (const node of allNodes) {
+      for (const prerequisite of node.prerequisites ?? []) {
+        expect(
+          prerequisite.kind === 'techniqueRank' || prerequisite.kind === 'techniqueGrade',
+          `${node.id} authors a technique gate before content missions allow it`,
+        ).toBe(false)
+      }
+
+      if (node.revealWhen) {
+        expect(
+          node.revealWhen.kind === 'techniqueRank' || node.revealWhen.kind === 'techniqueGrade',
+          `${node.id} authors a technique reveal gate before content missions allow it`,
+        ).toBe(false)
       }
     }
   })

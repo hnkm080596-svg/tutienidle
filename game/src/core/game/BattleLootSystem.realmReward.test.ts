@@ -35,34 +35,40 @@ describe('BattleLootSystem — realm reward scaling', () => {
   it('Luyện Khí ×1 — currency stage-table đi nguyên qua', () => {
     // rng 0: mọi amount roll về min — qi_refining table: 8 thạch / 35 cảm ngộ.
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const { killEnemy, giveReward, loot } = createLootTestSetup({
+    const { killEnemy, giveReward, loot, gainMastery } = createLootTestSetup({
       realmId: 'qi_refining',
       stage: { stageId: 'qr_5', requiredRealmId: 'qi_refining', floor: 5 },
     })
 
     killEnemy()
 
-    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 8, techniqueInsight: 35 })
+    // P7-M3 - mastery buffers until settleTechniqueMastery, it never
+    // passes through RewardSystem.
+    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 8 })
+    loot.settleTechniqueMastery()
+    expect(gainMastery).toHaveBeenCalledWith(35)
     expect(loot.getSummary().spiritStone).toBe(8)
   })
 
   it('Trúc Cơ ×3 — currency stage-table nhân 3', () => {
     // rng 0 -> foundation table min: 25 thạch / 90 cảm ngộ, sau ×3.
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const { killEnemy, giveReward, loot } = createLootTestSetup({
+    const { killEnemy, giveReward, loot, gainMastery } = createLootTestSetup({
       realmId: 'foundation_establishment',
       stage: { stageId: 'fe_5', requiredRealmId: 'foundation_establishment', floor: 5 },
     })
 
     killEnemy()
 
-    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 75, techniqueInsight: 270 })
+    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 75 })
+    loot.settleTechniqueMastery()
+    expect(gainMastery).toHaveBeenCalledWith(270)
     expect(loot.getSummary().spiritStone).toBe(75)
   })
 
   it('Trúc Cơ ×3 + talent v3 retired (tu_bao) — không còn bonus ×1.5 (effect rỗng, spec v4 §4.4)', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const { killEnemy, giveReward, loot } = createLootTestSetup({
+    const { killEnemy, giveReward, loot, gainMastery } = createLootTestSetup({
       realmId: 'foundation_establishment',
       talentIds: ['tu_bao'],
       stage: { stageId: 'fe_5', requiredRealmId: 'foundation_establishment', floor: 5 },
@@ -71,11 +77,13 @@ describe('BattleLootSystem — realm reward scaling', () => {
     killEnemy()
 
     // Tụ Bảo retired — chỉ còn realm ×3, đúng hành vi "save cũ an toàn".
-    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 75, techniqueInsight: 270 })
+    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 75 })
+    loot.settleTechniqueMastery()
+    expect(gainMastery).toHaveBeenCalledWith(270)
     expect(loot.getSummary().spiritStone).toBe(75)
   })
 
-  it('Trúc Cơ — Cảm Ngộ Kỹ năng suy ra từ techniqueInsight cũng ×3', () => {
+  it('Trúc Cơ — Cảm Ngộ Kỹ năng suy ra từ techniqueMastery cũng ×3', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, player, loot } = createLootTestSetup({
       realmId: 'foundation_establishment',
@@ -84,7 +92,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
 
     killEnemy()
 
-    // techniqueInsight 90 (min) × 3 realm = 270 -> skillInsight suy ra
+    // techniqueMastery 90 (min) x 3 realm = 270 -> skillInsight suy ra
     // round(270 x 0.6) = 162 (M2 baseline ratio, SkillInsightBalance.ts).
     expect(player.skillInsight).toBe(162)
     expect(loot.getSummary().skillInsight).toBe(162)
@@ -93,14 +101,16 @@ describe('BattleLootSystem — realm reward scaling', () => {
   it('Trúc Cơ — hệ số áp lên giá trị resolver trả về (mid-range)', () => {
     // rng 0.5 -> spiritStone floor(0.5*11)+25 = 30, ×3 = 90.
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
-    const { killEnemy, giveReward } = createLootTestSetup({
+    const { killEnemy, giveReward, loot, gainMastery } = createLootTestSetup({
       realmId: 'foundation_establishment',
       stage: { stageId: 'fe_5', requiredRealmId: 'foundation_establishment', floor: 5 },
     })
 
     killEnemy()
 
-    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 90, techniqueInsight: 315 })
+    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 90 })
+    loot.settleTechniqueMastery()
+    expect(gainMastery).toHaveBeenCalledWith(315)
   })
 
   it('equipment rơi qua pool draw dùng quality cho particle và rank accent', () => {

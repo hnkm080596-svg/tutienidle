@@ -22,7 +22,7 @@ import type { Stage } from '../stage/Stage'
 // -> SkillExecutor -> CombatScheduler -> authority adapters -- the canonical
 // pipeline, not the engine-unit (runtime === undefined) test lane.
 //
-// Journey 1 (ngu_hanh wood): doc_chuong -> trung_doc -> periodic DoT ->
+// Journey 1 (spell_pathway wood): doc_chuong -> trung_doc -> periodic DoT ->
 // death -> victory. doc_chuong deals ZERO direct damage by authored
 // contract, so every point of enemy HP loss is the buff-periodic lane --
 // clean attribution of the apply -> lifecycle -> damage -> death chain.
@@ -73,7 +73,7 @@ function makeEnemy(id: string, statsInput: Parameters<typeof defineEnemy>[0]['st
     realmId: 'mortal',
     lane: 'ground',
     statsInput,
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -88,12 +88,12 @@ describe('M7.5a -- production journey: authored ailment skill through the canoni
   it('doc_chuong applies trung_doc via BuffSystem, periodic ticks settle damage through the scheduler, the enemy dies and the stage reports victory', () => {
     const { gameManager, player, combatSource } = makeManager(7)
 
-    // Real ngu_hanh wood kit: basic = authored doc_chuong (0 direct
+    // Real spell_pathway wood kit: basic = authored doc_chuong (0 direct
     // damage, trung_doc chance 1). No special learned -- every player
     // action is a doc_chuong cast, so ALL enemy HP loss is DoT.
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'wood', route: 'dot' }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'wood', route: 'dot' }
     player.baseStats = {
       ...player.baseStats,
       might: 1_500,
@@ -205,7 +205,7 @@ describe('M7.5b -- production journey: An kit repeat + multicast with exactly-on
     // multicast via the innate dao passive) and da_phap_lien_tuyen
     // (composite + repeatCasts) as authored, converted content.
     player.skillCastCounts = { linh_bao: LING_BAO_L3 }
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'hidden_spell_pathway', player)).toBe(true)
 
     const enemy = makeEnemy('m75_an_dummy', {
       maxHp: 5_000_000, // survives the whole window -- we want many casts

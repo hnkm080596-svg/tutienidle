@@ -29,7 +29,7 @@ describe('GameManager continuous repeat stage', () => {
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage: Stage = {
       id: 'repeat_defeat_stage',
@@ -82,7 +82,7 @@ describe('GameManager continuous repeat stage', () => {
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, spiritStone: 1 },
+      rewards: { techniqueMastery: 0, spiritStone: 1 },
     })
     const stage: Stage = {
       id: 'repeat_stage',
@@ -101,7 +101,7 @@ describe('GameManager continuous repeat stage', () => {
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
     // Execution policy rework (plan §8.6) — Trảm chiếm slot mặc định 0.
-    expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
     const rewardParticles: BattleRewardParticleEvent[] = []
     gameManager.eventBus.on<BattleRewardParticleEvent>('reward_particle', event => rewardParticles.push(event))
 
@@ -133,7 +133,7 @@ describe('GameManager continuous repeat stage', () => {
     const enemy = defineEnemy({
       id: 'countdown_dummy', name: 'Countdown Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 10, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const stage: Stage = {
       id: 'countdown_stage', name: 'Countdown Stage', description: '', floor: 1,

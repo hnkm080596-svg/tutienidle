@@ -31,7 +31,7 @@ import { BAT_TU_BA_THE_TURNS } from '../../data/skill/TheTuSkills'
  * session's SurviveEffectsPolicy — this source only decides and
  * declares; HP/buff mutation stays in the vitals/buff authority.
  */
-export class TheTuBatTuSurvival implements SurviveLethalSource {
+export class BodyBatTuSurvival implements SurviveLethalSource {
   constructor(private readonly deps: {
     /** Live read of the participant's ultimate slot (cooldown mutates mid-battle). */
     ultimateSlot: () => TurnSkillSlot | undefined

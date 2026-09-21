@@ -35,7 +35,7 @@ function makeEnemy(id = 'sr_enemy'): ReturnType<typeof defineEnemy> {
       criticalDamage: 1.5,
       armor: 0,
     },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 }
 
@@ -371,8 +371,6 @@ describe('ARCH-002 M7 review R1 — tribulation ghost snapshot cannot leak passi
       cooldown: 0,
       target: 'self',
       effects: [],
-      unlocked: true,
-      equipped: true,
       passiveModifiers: [
         {
           id: 'test_maxhp_passive',
@@ -471,11 +469,11 @@ describe('M9 retained M7 debt — live attunement stacks re-derive elemental pow
     player.baseStats = asBaseStats({ ...player.baseStats, attunement: 100 })
     manager.setActivePlayer(player)
 
-    // Learn + equip the REAL passive through the same collection the
-    // production learn path fills (realm-gate bypassed — the test targets
-    // the stack/live-modifier channel, not the unlock gate).
+    // Learn the REAL passive through the same collection the production
+    // learn path fills (realm-gate bypassed — the test targets the
+    // stack/live-modifier channel, not the unlock gate).
     const template = PASSIVE_SKILLS.find((skill) => skill.id === 'passive_dai_thua_dao_tam')!
-    manager.skillManager.add({ ...structuredClone(template), unlocked: true, equipped: true })
+    manager.skillManager.add(structuredClone(template))
 
     manager.startBattleWithPlayer(player, makeEnemy())
     advanceUntilFighting(manager, clock)

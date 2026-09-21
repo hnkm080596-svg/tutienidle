@@ -142,11 +142,11 @@ function checkModifier(modifier: FoundModifier): WhitelistViolation | null {
 }
 
 describe('domain source whitelist (INV-11)', () => {
-  it('predicate check: phap_tu tag in a non-whitelisted file is rejected', () => {
+  it('predicate check: spell domain tag in a non-whitelisted file is rejected', () => {
     const violation = checkModifier({
       files: new Set(['src/data/enemy/ExampleEnemy.ts']),
       stat: 'maxMp',
-      domain: 'phap_tu',
+      domain: 'spell',
     })
     expect(violation).not.toBeNull()
   })
@@ -164,7 +164,7 @@ describe('domain source whitelist (INV-11)', () => {
     const violation = checkModifier({
       files: new Set(['src/data/realm/RealmPassives.ts']),
       stat: 'might',
-      domain: 'phap_tu',
+      domain: 'spell',
     })
     expect(violation).not.toBeNull()
   })

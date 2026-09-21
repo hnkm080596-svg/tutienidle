@@ -26,7 +26,7 @@ function makeGameManager(): MockGameManager {
 
   return {
     getBattleRewardSummary: vi.fn(() => ({
-      techniqueInsight: 0,
+      techniqueMastery: 0,
       skillInsight: 0,
       artifactInsight: 0,
       spiritStone: 0,

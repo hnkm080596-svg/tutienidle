@@ -7,7 +7,7 @@ import type { ArtifactDefinition } from '../../core/artifact/Artifact'
 export const NGU_HANH_CHAU_DEFINITION: ArtifactDefinition = {
   id: 'ngu_hanh_chau',
   name: 'Ngũ Hành Châu',
-  cultivationPathId: 'phap_tu',
+  cultivationPathId: 'spell',
   unlockRealmId: 'foundation_establishment',
   // Milestone descriptions advertise combat effects; the combat presentation
   // chain was removed (Mission G) and the runtime is parked - the copy is

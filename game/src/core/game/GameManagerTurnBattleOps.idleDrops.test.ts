@@ -36,7 +36,7 @@ const FARM_ENEMY = defineEnemy({
     criticalDamage: 1.5,
     armor: 0,
   },
-  rewards: { techniqueInsight: 0, spiritStone: 5 },
+  rewards: { techniqueMastery: 0, spiritStone: 5 },
   signatureDrops: [{ kind: 'material', itemId: 'idle_probe_mat', chance: 0.999 }],
 })
 

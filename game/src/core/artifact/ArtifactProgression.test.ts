@@ -26,9 +26,9 @@ const DOAN_BAO_THACH: Material = {
   description: 'test fixture',
 }
 
-function enemyWithInsight(techniqueInsight: number, flags: Partial<Pick<Enemy, 'isElite' | 'isBoss'>> = {}) {
+function enemyWithInsight(techniqueMastery: number, flags: Partial<Pick<Enemy, 'isElite' | 'isBoss'>> = {}) {
   return {
-    rewards: { techniqueInsight, spiritStone: 0 },
+    rewards: { techniqueMastery, spiritStone: 0 },
     ...flags,
   } as Pick<Enemy, 'rewards' | 'isElite' | 'isBoss'>
 }
@@ -46,11 +46,11 @@ describe('ArtifactProgression (doc §5)', () => {
     }
   })
 
-  it('getArtifactExperienceReward: base = max(1, floor(techniqueInsight * 0.25)), elite x2, boss x5', () => {
+  it('getArtifactExperienceReward: base = max(1, floor(techniqueMastery * 0.25)), elite x2, boss x5', () => {
     expect(getArtifactExperienceReward(enemyWithInsight(10))).toBe(2)
     expect(getArtifactExperienceReward(enemyWithInsight(10, { isElite: true }))).toBe(4)
     expect(getArtifactExperienceReward(enemyWithInsight(10, { isBoss: true }))).toBe(10)
-    // sàn tối thiểu 1 dù techniqueInsight rất nhỏ
+    // san toi thieu 1 du techniqueMastery rat nho
     expect(getArtifactExperienceReward(enemyWithInsight(0))).toBe(1)
   })
 
@@ -165,7 +165,7 @@ describe('getArtifactExpStatus (doc §12.1)', () => {
 describe('normalizeArtifactProgress (doc §10.2)', () => {
   it('Kiếm Tu (chưa có definition) luôn artifact = undefined dù save có state cũ', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
+    player.cultivationPath = 'sword'
     player.realmId = 'foundation_establishment'
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
 
@@ -174,10 +174,10 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
     expect(player.artifact).toBeUndefined()
   })
 
-  it("('phap_tu','ngo_dao') KHÔNG được nhận ngu_hanh_chau — artifact là way-owned (review F1)", () => {
+  it("('spell','hidden_spell_pathway') KHÔNG được nhận ngu_hanh_chau — artifact là way-owned (review F1)", () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngo_dao'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'hidden_spell_pathway'
     player.realmId = 'foundation_establishment'
     player.realmLevel = 5
 
@@ -186,9 +186,9 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
     expect(player.artifact).toBeUndefined()
   })
 
-  it('way-less/corrupt pair (phap_tu, không way) resolves no artifact — fail closed', () => {
+  it('way-less/corrupt pair (spell, không way) resolves no artifact — fail closed', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
+    player.cultivationPath = 'spell'
     player.realmId = 'foundation_establishment'
     player.realmLevel = 5
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
@@ -208,8 +208,8 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
 
   it('Pháp Tu đã Trúc Cơ nhưng thiếu state -> tự tạo default lúc boot', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
     player.realmId = 'foundation_establishment'
     player.realmLevel = 5
 
@@ -220,8 +220,8 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
 
   it('Pháp Tu chưa tới Trúc Cơ thì không tạo state dù thiếu', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
     player.realmId = 'qi_refining'
 
     normalizeArtifactProgress(player)
@@ -231,8 +231,8 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
 
   it('artifactId lệch cultivationPath -> bỏ và tái thức tỉnh nếu đủ gate', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
     player.realmId = 'foundation_establishment'
     player.artifact = { ...createDefaultArtifactProgress('ngu_hanh_chau'), artifactId: 'other' as never }
 
@@ -243,8 +243,8 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
 
   it('grade/path sai enum -> fallback pham/undefined, không mất realm/level/exp hợp lệ', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
     player.realmId = 'foundation_establishment'
     player.realmLevel = 5
     player.artifact = {
@@ -266,8 +266,8 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
 
   it('realm/level của artifact không được vượt player', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
     player.realmId = 'foundation_establishment'
     player.realmLevel = 4
     player.artifact = {
@@ -286,8 +286,8 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
 
   it('EXP âm/NaN -> reset 0; EXP vượt requirement -> clamp về đúng requirement', () => {
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
     player.realmId = 'foundation_establishment'
     player.realmLevel = 5
     player.artifact = {

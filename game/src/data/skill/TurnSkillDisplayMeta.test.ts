@@ -14,7 +14,7 @@ import { TURN_SKILL_DISPLAY_META, turnSkillDisplayMetaOf } from './TurnSkillDisp
 // silently falling back to a role label in the HUD.
 
 // Production TurnSkillDefinition sources: BASIC_ATTACKS_BY_BUILD (build
-// basics, incl. PHAP_TU_BASICS + GENERIC_PHYSICAL_BASIC) and
+// basics, incl. SPELL_BASICS + GENERIC_PHYSICAL_BASIC) and
 // THUY_GIAP_LONG_WATER_SURGE (TurnBasicAttacks.ts), BAT_KIEM_THUAT +
 // TRU_TIEN_KIEM_TRAN (BatKiemThuat.ts), and COMPANIONS
 // basic/special/ultimate kits (data/companion/Companions.ts).
