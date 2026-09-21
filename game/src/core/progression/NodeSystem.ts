@@ -104,6 +104,15 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
 
       return state.kiemDaoCount < kiemDaoCap(realmIndex)
     }
+
+    // P7-M6 - technique gates read the mirror only; absent mirror fails
+    // closed for any positive requirement (a rank:0/grade:0 gate would
+    // pass - authored thresholds stay >= 1 by data discipline).
+    case 'techniqueRank':
+      return (player.techniqueProgress?.rank ?? 0) >= prerequisite.rank
+
+    case 'techniqueGrade':
+      return (player.techniqueProgress?.grade ?? 0) >= prerequisite.grade
   }
 }
 

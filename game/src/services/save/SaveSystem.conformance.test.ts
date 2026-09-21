@@ -134,7 +134,10 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   player.swordPath = freshSwordPathState()
   player.realmId = 'qi_refining'
   player.realmLevel = 1
-  manager.techniqueManager.restore([structuredClone(CONF_TECHNIQUE)])
+  // P7-M6 - canonical seam: bind the player first so the progress sink
+  // publishes techniqueProgress, exactly like production restore order.
+  manager.setActivePlayer(player)
+  manager.techniqueSystem.restore([structuredClone(CONF_TECHNIQUE)])
   manager.skillManager.restore([structuredClone(CONF_SKILL)])
 
   // Bags.

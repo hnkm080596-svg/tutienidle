@@ -1749,6 +1749,56 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
+  // P7-M6 - techniqueProgress is an optional derived mirror; shape is
+  // type-checked but consistency vs techniques[] is NOT (the canonical
+  // holder republishes the mirror on restore).
+  it.each([Number.NaN, -1, 1.5])('từ chối techniqueProgress.rank = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).techniqueProgress = { rank: value, grade: 1 }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.techniqueProgress.rank')
+  })
+
+  it.each([Number.NaN, -2, 0.5])('từ chối techniqueProgress.grade = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).techniqueProgress = { rank: 3, grade: value }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.techniqueProgress.grade')
+  })
+
+  it.each([42, 'rank3', null])('từ chối techniqueProgress = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).techniqueProgress = value
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.techniqueProgress')
+  })
+
+  it('chấp nhận techniqueProgress vắng mặt / undefined / hợp lệ', () => {
+    const absent = validSave()
+    delete playerOf(absent).techniqueProgress
+    expect(validateGameSaveShape(absent).ok).toBe(true)
+
+    const undef = validSave()
+    playerOf(undef).techniqueProgress = undefined
+    expect(validateGameSaveShape(undef).ok).toBe(true)
+
+    const valid = validSave()
+    playerOf(valid).techniqueProgress = { rank: 7, grade: 3 }
+    expect(validateGameSaveShape(valid).ok).toBe(true)
+  })
+
   it.each([
     'hasSeenTutorial',
     'autoWorkerCapacity',

@@ -39,6 +39,13 @@ export type NodePrerequisite =
   // purchase BEFORE insight is deducted — including the Y-grant outer
   // nodes (no Y may accumulate past cap).
   | { kind: 'kiemDaoBelowCap' }
+  // P7-M6 - technique-gated prerequisites. `>=` threshold semantics like
+  // kind:'realm' (progression gate, purchase-only - a bought node stays
+  // bought even though advanceTechniqueGrade resets rank to 0). Reads
+  // the read-only mirror player.techniqueProgress; absent mirror fails
+  // closed for any positive requirement. No authored gates yet.
+  | { kind: 'techniqueRank'; rank: number }
+  | { kind: 'techniqueGrade'; grade: number }
 
 /**
  * Những gì 1 node THẬT SỰ làm khi mua — optional field, không phải

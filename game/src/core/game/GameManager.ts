@@ -477,6 +477,19 @@ export class GameManager {
       this.activePlayer.skillLevels[skillId] = level
     })
 
+    // P7-M6 - mirror player.techniqueProgress each time the canonical
+    // holder's {rank, grade} can change (grant/rank-up/grade-advance/
+    // restore). Same contract as the cast-count sink above: NodeSystem's
+    // techniqueRank/techniqueGrade prerequisites read PlayerData only.
+    // `progress ?? undefined` keeps the declared-default shape - an
+    // emptied holder returns the key to its undefined default rather
+    // than leaving a stale record or a deleted key.
+    this.techniqueSystem.setProgressSink((progress) => {
+      if (!this.activePlayer) return
+
+      this.activePlayer.techniqueProgress = progress ?? undefined
+    })
+
     // Phap Tu Reimagined Task 3 — ONE scoping closure for both route
     // seams: the provider feeds getEffectiveSkill's effective-surface
     // application AND the post-conversion applyRouteToTurnSkill call at
@@ -733,7 +746,7 @@ export class GameManager {
     this.saveOps = new GameManagerSaveRestore({
       skillManager: this.skillManager,
       skillTemplates: this.skillTemplates,
-      techniqueManager: this.techniqueManager,
+      techniqueSystem: this.techniqueSystem,
       techniqueTemplates: this.techniqueTemplates,
       materialRegistry: this.materialRegistry,
       materialBag: this.materialBag,

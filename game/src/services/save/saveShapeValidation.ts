@@ -327,6 +327,29 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
   }
 
+  // P7-M6 - techniqueProgress is an optional derived mirror of the
+  // canonical technique holder ({rank, grade}). Shape is type-checked;
+  // consistency vs techniques[] is deliberately NOT enforced here - the
+  // holder republishes the mirror through TechniqueSystem.restore.
+  if (player.techniqueProgress !== undefined) {
+    const progress = player.techniqueProgress
+
+    if (!isObject(progress)) {
+      issues.push({ path: 'player.techniqueProgress', message: 'phải là object hoặc vắng mặt' })
+    } else {
+      for (const key of ['rank', 'grade'] as const) {
+        const value = (progress as Record<string, unknown>)[key]
+
+        if (!isNonNegativeFiniteNumber(value) || !Number.isInteger(value)) {
+          issues.push({
+            path: `player.techniqueProgress.${key}`,
+            message: 'phải là số nguyên >= 0',
+          })
+        }
+      }
+    }
+  }
+
   // artifact optional (ArtifactProgress) — a malformed grade/experience
   // makes ArtifactPanel index ARTIFACT_GRADE_ORDER → -1 / NaN exp bar.
   if (player.artifact !== undefined) {

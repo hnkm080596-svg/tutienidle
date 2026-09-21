@@ -159,6 +159,14 @@ const lockedReasons = computed(() => {
       }))
     } else if (prereq.kind === 'kiemDaoBelowCap') {
       reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.kiemDaoCap'))
+    } else if (prereq.kind === 'techniqueRank') {
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', {
+        rank: prereq.rank,
+      }))
+    } else if (prereq.kind === 'techniqueGrade') {
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.techniqueGrade', {
+        grade: prereq.grade,
+      }))
     } else {
       reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade'))
     }

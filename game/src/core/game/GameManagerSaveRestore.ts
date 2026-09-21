@@ -1,6 +1,6 @@
 import { SkillManager } from '../skill/SkillManager'
 import type { Skill } from '../skill/Skill'
-import { TechniqueManager } from '../technique/TechniqueManager'
+import type { TechniqueSystem } from '../technique/TechniqueSystem'
 import type { Technique } from '../technique/Technique'
 import {
   getTechniqueGradeCeiling,
@@ -43,7 +43,9 @@ import { TemplateRegistry } from './TemplateRegistry'
 export interface GameManagerSaveRestoreDeps {
   skillManager: SkillManager
   skillTemplates: TemplateRegistry<Skill>
-  techniqueManager: TechniqueManager
+  // P7-M6 - restore routes through the single writer so the
+  // techniqueProgress mirror republishes from the canonical holder.
+  techniqueSystem: TechniqueSystem
   techniqueTemplates: TemplateRegistry<Technique>
   materialRegistry: MaterialRegistry
   materialBag: MaterialBag
@@ -297,7 +299,7 @@ export class GameManagerSaveRestore {
       return [technique]
     })
 
-    this.deps.techniqueManager.restore(restoredTechniques)
+    this.deps.techniqueSystem.restore(restoredTechniques)
 
     const restoredSkills = save.skills.flatMap((savedSkill) => {
       const skill = structuredClone(savedSkill)

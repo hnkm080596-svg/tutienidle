@@ -272,6 +272,16 @@ export interface PlayerData {
 
   skillLevels?: Record<string, number>
 
+  // P7-M6 - read-only mirror of the canonical technique holder's
+  // {rank, grade}. The holder lives in TechniqueManager (0-or-1, no
+  // list/unequip); TechniqueSystem's progress sink republishes this pair
+  // on every write that can change it (grant/rank-up/grade-advance/
+  // restore). Exists VI NodeSystem.hasPrerequisite() chi nhan
+  // PlayerData - techniqueRank/techniqueGrade prerequisites cannot
+  // reach the manager. undefined = no technique held. One record keeps
+  // the pair atomic - advanceTechniqueGrade changes both at once.
+  techniqueProgress?: { rank: number; grade: number }
+
   // Companion Roster (2026-09-05) - gacha-recruited combatants owned by
   // the player. Khong co equipment/node-tree ky nang rieng tung nhan vat
   // (bo ky nang co dinh trong CompanionDefinition, xem
@@ -376,6 +386,12 @@ export function createDefaultPlayer(): PlayerData {
     // tao, nen object chua PHAI ton tai san lam key reactive tu dau.
     skillCastCounts: {},
     skillLevels: {},
+
+    // PHAI khai bao tuong minh (du `undefined`) - cung ly do
+    // cultivationPath o tren (toRefs() snapshot + restore whitelist):
+    // TechniqueSystem's progress sink assigns this field through
+    // player.$state after store init.
+    techniqueProgress: undefined,
 
     totalCultivationGained: 0,
     bossKillCount: 0,

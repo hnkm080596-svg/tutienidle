@@ -15,7 +15,35 @@ import {
 // GameManagerRealmAdvanceOps (material spend) calling
 // advanceTechniqueGrade here.
 export class TechniqueSystem {
+  // P7-M6 - read-only mirror publisher: fires the holder's {rank, grade}
+  // to the PlayerData techniqueProgress field exactly where the pair can
+  // change (grant/rank-up/grade-advance/restore). GameManager binds the
+  // sink to the active player; NodeSystem's techniqueRank/techniqueGrade
+  // prerequisites read the mirror because hasPrerequisite only sees
+  // PlayerData (same contract as SkillSystem's castCountSink).
+  private progressSink?: (progress: { rank: number; grade: number } | null) => void
+
   constructor(private readonly manager: TechniqueManager) {}
+
+  setProgressSink(sink: (progress: { rank: number; grade: number } | null) => void): void {
+    this.progressSink = sink
+  }
+
+  private publishProgress(): void {
+    const active = this.manager.getActive()
+
+    this.progressSink?.(active ? { rank: active.rank, grade: active.grade } : null)
+  }
+
+  /**
+   * Session-restore boundary routed through the single writer: restores
+   * the canonical holder AND republishes the mirror, so a stale or
+   * forged persisted techniqueProgress self-corrects on every restore.
+   */
+  restore(techniques: Technique[]): void {
+    this.manager.restore(techniques)
+    this.publishProgress()
+  }
 
   /**
    * Grant the Way's canonical technique. `realmId` is the player's
@@ -40,6 +68,7 @@ export class TechniqueSystem {
       mastery: 0,
       quality: template.quality,
     }))
+    this.publishProgress()
 
     return true
   }
@@ -72,6 +101,11 @@ export class TechniqueSystem {
       technique.mastery = 0
     }
 
+    // Mastery itself is unmirrored - republish only when rank moved.
+    if (rankUps > 0) {
+      this.publishProgress()
+    }
+
     return { gained: consumed, rankUps }
   }
 
@@ -89,6 +123,7 @@ export class TechniqueSystem {
     technique.grade += 1
     technique.rank = 0
     technique.mastery = 0
+    this.publishProgress()
     return true
   }
 

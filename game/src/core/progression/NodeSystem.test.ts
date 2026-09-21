@@ -120,6 +120,70 @@ describe('prerequisite skillCastCount', () => {
   })
 })
 
+// P7-M6 - technique-gated prerequisites read the read-only mirror
+// player.techniqueProgress (canonical holder lives in TechniqueManager;
+// TechniqueSystem's progress sink republishes the pair - same mirror
+// contract as skillCastCounts/skillLevels for `skillCastCount`).
+describe('prerequisite techniqueRank / techniqueGrade (P7-M6)', () => {
+  it('techniqueRank - passes at/above mirror rank, fails below, fails closed without a technique', () => {
+    const player = playerWith({ techniqueProgress: { rank: 5, grade: 2 } })
+
+    expect(hasPrerequisite(player, { kind: 'techniqueRank', rank: 5 })).toBe(true)
+    expect(hasPrerequisite(player, { kind: 'techniqueRank', rank: 6 })).toBe(false)
+
+    const noTechnique = playerWith({})
+
+    expect(hasPrerequisite(noTechnique, { kind: 'techniqueRank', rank: 1 })).toBe(false)
+  })
+
+  it('techniqueGrade - passes at/above mirror grade, fails below, fails closed without a technique', () => {
+    const player = playerWith({ techniqueProgress: { rank: 0, grade: 3 } })
+
+    expect(hasPrerequisite(player, { kind: 'techniqueGrade', grade: 3 })).toBe(true)
+    expect(hasPrerequisite(player, { kind: 'techniqueGrade', grade: 4 })).toBe(false)
+
+    const noTechnique = playerWith({})
+
+    expect(hasPrerequisite(noTechnique, { kind: 'techniqueGrade', grade: 1 })).toBe(false)
+  })
+
+  it('techniqueRank gate blocks purchase below threshold without deducting insight', () => {
+    const player = playerWith({ skillInsight: 5, techniqueProgress: { rank: 2, grade: 1 } })
+
+    const node = minorNode({
+      insightCost: 3,
+      prerequisites: [{ kind: 'techniqueRank', rank: 4 }],
+    })
+
+    expect(canPurchaseNode(player, node)).toBe(false)
+    expect(purchaseNode(player, node)).toBe(false)
+    expect(player.skillInsight).toBe(5)
+    expect(getNodeLevel(player, 'test_minor')).toBe(0)
+    expect(player.purchasedNodeIds).toEqual([])
+
+    player.techniqueProgress = { rank: 4, grade: 1 }
+
+    expect(purchaseNode(player, node)).toBe(true)
+    expect(player.skillInsight).toBe(2)
+    expect(getNodeLevel(player, 'test_minor')).toBe(1)
+  })
+
+  it('technique-kind revealWhen gates purchase until the mirror reveals it', () => {
+    const player = playerWith({ skillInsight: 5, techniqueProgress: { rank: 0, grade: 1 } })
+
+    const node = minorNode({
+      insightCost: 1,
+      revealWhen: { kind: 'techniqueGrade', grade: 2 },
+    })
+
+    expect(canPurchaseNode(player, node)).toBe(false)
+
+    player.techniqueProgress = { rank: 0, grade: 2 }
+
+    expect(canPurchaseNode(player, node)).toBe(true)
+  })
+})
+
 describe('cost theo cấp data-driven (plan §6.2/§6.7)', () => {
   it('Power {base:1, perLevel:3} → dãy 1,1,1,2,2,2,3,3,3,4', () => {
     const costs: number[] = []

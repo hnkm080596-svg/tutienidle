@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { Technique } from './Technique'
 import { TechniqueManager } from './TechniqueManager'
 import { TechniqueSystem } from './TechniqueSystem'
@@ -188,6 +188,102 @@ describe('TechniqueSystem.advanceTechniqueGrade', () => {
   it('refuses with no active technique', () => {
     const { system } = makeSystem()
     expect(system.advanceTechniqueGrade()).toBe(false)
+  })
+})
+
+// P7-M6 - the progress sink republishes the holder's {rank, grade} to
+// the PlayerData mirror exactly where the pair can change. The sink is
+// the ONLY channel that keeps player.techniqueProgress honest for
+// NodeSystem techniqueRank/techniqueGrade prerequisites.
+describe('TechniqueSystem progress sink (P7-M6)', () => {
+  it('grant fires the sink with {rank: 0, grade: template.grade} on success only', () => {
+    const { system } = makeSystem()
+    const sink = vi.fn()
+    system.setProgressSink(sink)
+
+    expect(system.grant({ ...FIVE_ELEMENTS, grade: 1, rank: 7, mastery: 50 }, 'qi_refining')).toBe(true)
+    expect(sink).toHaveBeenCalledTimes(1)
+    expect(sink).toHaveBeenLastCalledWith({ rank: 0, grade: 1 })
+  })
+
+  it('grant noop/refusal paths do not fire', () => {
+    const { system } = makeSystem()
+    const sink = vi.fn()
+    system.setProgressSink(sink)
+
+    // grade ceiling refuse on an EMPTY holder -> no holder, no publish
+    expect(system.grant({ ...FIVE_ELEMENTS, grade: 9 }, 'qi_refining')).toBe(false)
+
+    system.grant({ ...FIVE_ELEMENTS }, 'qi_refining')
+    sink.mockClear()
+
+    // same-id defensive noop -> nothing changed
+    expect(system.grant({ ...FIVE_ELEMENTS }, 'qi_refining')).toBe(true)
+    // different-id refuse
+    expect(system.grant({ ...DAO_INSIGHT }, 'qi_refining')).toBe(false)
+
+    expect(sink).not.toHaveBeenCalled()
+  })
+
+  it('gainMastery fires only when rank actually increases', () => {
+    const { system } = makeSystem()
+    const sink = vi.fn()
+    system.setProgressSink(sink)
+
+    system.grant({ ...FIVE_ELEMENTS }, 'qi_refining')
+    sink.mockClear()
+
+    // mastery accrual without a rank-up stays silent (mastery unmirrored)
+    expect(system.gainMastery(100)).toEqual({ gained: 100, rankUps: 0 })
+    expect(sink).not.toHaveBeenCalled()
+
+    // rank-up republishes the new pair
+    expect(system.gainMastery(200)).toEqual({ gained: 200, rankUps: 1 })
+    expect(sink).toHaveBeenCalledTimes(1)
+    expect(sink).toHaveBeenLastCalledWith({ rank: 1, grade: 1 })
+  })
+
+  it('advanceTechniqueGrade republishes {rank: 0, grade + 1}; refusal stays silent', () => {
+    const { system } = makeSystem()
+    const sink = vi.fn()
+    system.setProgressSink(sink)
+
+    system.grant({ ...FIVE_ELEMENTS }, 'qi_refining')
+    expect(system.advanceTechniqueGrade()).toBe(false)
+    sink.mockClear()
+
+    system.gainMastery(3000)
+    sink.mockClear()
+
+    expect(system.advanceTechniqueGrade()).toBe(true)
+    expect(sink).toHaveBeenCalledTimes(1)
+    expect(sink).toHaveBeenLastCalledWith({ rank: 0, grade: 2 })
+  })
+
+  it('setTechniqueQuality does not fire (quality is unmirrored)', () => {
+    const { system } = makeSystem()
+    const sink = vi.fn()
+    system.setProgressSink(sink)
+
+    system.grant({ ...FIVE_ELEMENTS }, 'qi_refining')
+    sink.mockClear()
+
+    expect(system.setTechniqueQuality('thien')).toBe(true)
+    expect(sink).not.toHaveBeenCalled()
+  })
+
+  it('restore republishes the holder pair, or null when the payload is empty', () => {
+    const { manager, system } = makeSystem()
+    const sink = vi.fn()
+    system.setProgressSink(sink)
+
+    system.restore([{ ...FIVE_ELEMENTS, rank: 6, grade: 3, mastery: 42 }])
+    expect(manager.getActive()?.rank).toBe(6)
+    expect(sink).toHaveBeenLastCalledWith({ rank: 6, grade: 3 })
+
+    system.restore([])
+    expect(manager.getActive()).toBeUndefined()
+    expect(sink).toHaveBeenLastCalledWith(null)
   })
 })
 

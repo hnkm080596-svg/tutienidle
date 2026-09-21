@@ -156,6 +156,8 @@
           "skillJoin": "và",
           "skill": "Cần {skill} đạt {requirement}",
           "kiemDaoCap": "Kiếm Đạo đã đạt trần của cảnh giới",
+          "techniqueRank": "Cần tâm pháp đạt tầng {rank}",
+          "techniqueGrade": "Cần tâm pháp đạt phẩm {grade}",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
         },
         "routePick": {

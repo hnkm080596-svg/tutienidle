@@ -134,7 +134,6 @@ export function runBattle(input: BattleSimulationInput): BattleSimulationResult 
   // restore() already deep-clones its payload, so the caller's arrays
   // are never held by reference.
   gameManager.skillManager.restore(input.build.skills)
-  gameManager.techniqueManager.restore(input.build.techniques)
 
   // Detached player + wall-clock strip BEFORE setActivePlayer (its
   // tickTimedEffects would read Date.now() on a populated list).
@@ -142,6 +141,12 @@ export function runBattle(input: BattleSimulationInput): BattleSimulationResult 
   const timedEffectsStripped = player.persistentTimedEffects.length
   player.persistentTimedEffects = []
   gameManager.setActivePlayer(player)
+
+  // P7-M6 - technique restore runs through TechniqueSystem (the single
+  // writer) AFTER the player binds: the progress sink republishes
+  // player.techniqueProgress, which postRitual purchase_node writes can
+  // legitimately evaluate via techniqueRank/techniqueGrade prerequisites.
+  gameManager.techniqueSystem.restore(input.build.techniques)
 
   if (input.ritual !== undefined) {
     if (player.cultivationPath) {

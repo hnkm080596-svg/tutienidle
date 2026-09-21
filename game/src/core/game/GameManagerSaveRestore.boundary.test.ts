@@ -211,6 +211,33 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
     expect(manager.techniqueManager.getActive()?.mastery).toBe(100)
   })
 
+  // P7-M6 - the restore republishes player.techniqueProgress from the
+  // CANONICAL holder (save.techniques[0]) through the sink; whatever the
+  // bound player's mirror claimed before restore is overwritten.
+  it('techniqueProgress mirror republishes from the canonical holder on restore', () => {
+    const manager = makeManager()
+    const player = swordCommittedPlayer()
+    player.techniqueProgress = { rank: 99, grade: 9 }
+    manager.setActivePlayer(player)
+
+    manager.saveOps.restoreFromSave(
+      baseSave(player, { techniques: [structuredClone(SAVED_TECHNIQUE)] }),
+    )
+
+    expect(player.techniqueProgress).toEqual({ rank: 2, grade: 1 })
+  })
+
+  it('an empty techniques slice clears the bound player mirror to the default', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    player.techniqueProgress = { rank: 3, grade: 1 }
+    manager.setActivePlayer(player)
+
+    manager.saveOps.restoreFromSave(baseSave(player, { techniques: [] }))
+
+    expect(player.techniqueProgress).toBeUndefined()
+  })
+
   it('materials + pills: empty slices clear the bags; saved stacks replace them', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()

@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { runBattle, runBattles } from './BattleSimulation'
 import type { BattleSimulationInput, SimBuildSnapshot } from './BattleSimulation'
+import { GameManager } from '../game/GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
@@ -176,6 +177,46 @@ describe('runBattle', () => {
     })
     expect(result.diagnostics.timedEffectsStripped).toBe(1)
     expect(player.persistentTimedEffects).toHaveLength(1) // caller untouched
+  })
+
+  // P7-M6 - the technique restore runs through the canonical seam AFTER
+  // the player binds, so the progress sink publishes the mirror onto the
+  // sim clone. Observable seam: capture the PlayerData handed to
+  // setActivePlayer (the live activePlayer the sink mutates); post-run
+  // it must carry the holder's {rank, grade}. Without this, an authored
+  // technique-gated node purchased via postRitual writes would fail in
+  // sim while working in production.
+  it('publishes player.techniqueProgress on the bound sim player after technique restore', () => {
+    const boundPlayers: PlayerData[] = []
+    const original = GameManager.prototype.setActivePlayer
+    const spy = vi
+      .spyOn(GameManager.prototype, 'setActivePlayer')
+      .mockImplementation(function (this: GameManager, player: PlayerData) {
+        boundPlayers.push(player)
+        return original.call(this, player)
+      })
+
+    try {
+      const snapshot = build(strongPlayer())
+      snapshot.techniques = [{
+        id: 'sword_control_art',
+        name: 'fixture',
+        description: 'fixture',
+        grade: 3,
+        rank: 7,
+        mastery: 0,
+        quality: 'hoang',
+      }]
+
+      runBattle({ seed: 1, build: snapshot, encounter: { kind: 'enemy', enemy: WEAK_ENEMY } })
+
+      expect(boundPlayers).toHaveLength(1)
+      expect(boundPlayers[0]!.techniqueProgress).toEqual({ rank: 7, grade: 3 })
+      // The caller's snapshot player stays untouched (clone boundary).
+      expect(snapshot.player.techniqueProgress).toBeUndefined()
+    } finally {
+      spy.mockRestore()
+    }
   })
 })
 
