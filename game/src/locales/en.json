@@ -120,7 +120,14 @@
     },
     "skillPath": {
       "title": "Skills",
-      "subtitle": "Library by Realm · Five Element Path",
+      "mortalName": "Mortal",
+      "technique": {
+        "title": "Mental Method",
+        "heroLabel": "Mental Method",
+        "emptyNoBonus": "No additional information",
+        "emptyNoTechnique": "No technique yet — complete the Entry Ceremony to receive one automatically",
+        "gradeAction": "Advance Grade"
+      },
       "colTitles": {
         "loadoutActive": "Active Spell Arts"
       },
@@ -307,13 +314,6 @@
         "group": "Cave Dwelling Command Wheel"
       }
     },
-    "luyenThe": {
-      "title": "Body Refinement",
-      "summary": "Tiers completed: {completed}/6",
-      "note": "Mortal Body Essence from defeated enemies flows back and feeds progress automatically — no action needed.",
-      "tierLock": "Locked — requires Mortal floor {level}",
-      "empty": "All Body Refinement tiers completed."
-    },
     "tranPhap": {
       "title": "Formation",
       "confirm": "Save Formation"
@@ -478,6 +478,23 @@
         "comingSoon": "Coming soon",
         "unlocked": "Attuned",
         "locked": "Not unlocked"
+      },
+      "bodyRefinement": {
+        "title": "Body Refinement",
+        "summary": "Tiers completed: {completed}/6",
+        "note": "Mortal Body Essence from defeated enemies flows back and feeds progress automatically — no action needed.",
+        "tierLock": "Locked — requires Mortal floor {level}",
+        "empty": "All Body Refinement tiers completed."
+      },
+      "meridian": {
+        "title": "Eight Extraordinary Meridians",
+        "summary": "Opened: {completed}/{total}",
+        "stateOpened": "Opened",
+        "stateNext": "Next",
+        "stateLocked": "Sealed",
+        "cost": "{count} Meridian Pills",
+        "realmGate": "Mortal floor {level}",
+        "auxGate": "requires Heaven-Earth Bridge"
       }
     },
     "settings": {
@@ -521,12 +538,6 @@
         "volume": "Volume"
       }
     },
-    "technique": {
-      "title": "Mental Method",
-      "heroLabel": "Mental Method",
-      "emptyNoBonus": "No additional information",
-      "emptyNoTechnique": "No technique yet — complete the Entry Ceremony to receive one automatically"
-    },
     "quest": {
       "title": "Quests",
       "groups": {
@@ -539,12 +550,6 @@
         "claim": "Claim Reward"
       },
       "empty": "No quests available yet."
-    },
-    "scripture": {
-      "tabs": {
-        "technique": "Techniques",
-        "lore": "Lore"
-      }
     },
     "buildingPopover": {
       "costTitle": "Build Cost",
@@ -699,7 +704,6 @@
       "unknownActor": "??",
       "unknownSkill": "unknown skill"
     },
-
     "offline": {
       "title": "CLOSED-DOOR RETREAT ENDED",
       "labels": {
@@ -1031,11 +1035,21 @@
   },
   "actionFeedback": {
     "ops": {
-      "equip": { "label": "Equip" },
-      "enhance": { "label": "Enhance" },
-      "wash": { "label": "Wash" },
-      "refine": { "label": "Refine" },
-      "dissolve": { "label": "Dissolve" }
+      "equip": {
+        "label": "Equip"
+      },
+      "enhance": {
+        "label": "Enhance"
+      },
+      "wash": {
+        "label": "Wash"
+      },
+      "refine": {
+        "label": "Refine"
+      },
+      "dissolve": {
+        "label": "Dissolve"
+      }
     },
     "success": "{label} succeeded",
     "failed": "Cannot {label}: {reason}"

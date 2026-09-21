@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import Tooltip from '@/components/common/Tooltip.vue'
-import TechniqueSlotCard from '@/components/panels/loadout-sections/TechniqueSlotCard.vue'
+import TechniqueSlotCard from '@/components/panels/skill-path/TechniqueSlotCard.vue'
 import buildingPopoverSource from '@/components/game/BuildingDetailPopover.vue?raw'
 import { useTooltip } from '@/composables/useTooltip'
 

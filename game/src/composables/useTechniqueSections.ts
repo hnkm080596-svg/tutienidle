@@ -6,7 +6,7 @@ import type { TooltipSection } from './useTooltip'
 
 /**
  * Extracted from TechniqueSlotCard.vue (2026-08-20) - shared by the
- * (hover) tooltip AND the inline info block in TechniquePanel.vue.
+ * (hover) tooltip AND the inline info block in TechniqueBand.vue.
  * P7-M3 - effect rows resolve via getTechniqueEffects(technique): the
  * active grade's table at the current rank band (rank/mastery/grade
  * model, see TechniqueProgression.ts).

@@ -1,26 +1,26 @@
 import { type ComputedRef, computed, onBeforeUnmount, ref, watch } from 'vue'
 
 /**
- * Fit-refactor đợt 4 (2026-08-29) — phân trang đo theo NGÂN SÁCH CHIỀU CAO
- * thật của container (ResizeObserver), thay scroll. Cùng tinh thần
- * useBagPagination (width-first grid) nhưng height-first cho list dọc:
- * pageSize = floor((height - padding) / rowHeight), tự lùi trang khi
- * container co lại, không mất item.
+ * Fit-refactor dot 4 (2026-08-29) - phan trang do theo NGAN SACH CHIEU CAO
+ * that cua container (ResizeObserver), thay scroll. Cung tinh than
+ * useBagPagination (width-first grid) nhung height-first cho list doc:
+ * pageSize = floor((height - padding) / rowHeight), tu lui trang khi
+ * container co lai, khong mat item.
  *
- * Fit-refactor đợt 5 (2026-08-29, review fix) — chọn capacity theo LOẠI
- * layout bằng tùy chọn `columnWidth`:
- * - KHÔNG truyền (mặc định): list dọc 1 cột — pageSize = số HÀNG thuần,
- *   đúng Hóa Luyện dissolve-list (EquipmentHallPanel).
- * - TRUYỀN columnWidth (px, đã gồm gap): flex-wrap grid — pageSize =
- *   rows × columns, columns = floor(width / columnWidth) đo THẬT từ
- *   contentRect (responsive theo chiều rộng, giống width-first của
- *   useBagGridLayout). Trước đó codex grid (Lore/TechniqueCodex) dùng
- *   pageSize kiểu list dọc nên mỗi trang chỉ lấp đúng 1 cột, trang
- *   thưa và không tận dụng số cột.
+ * Fit-refactor dot 5 (2026-08-29, review fix) - chon capacity theo LOAI
+ * layout bang tuy chon `columnWidth`:
+ * - KHONG truyen (mac dinh): list doc 1 cot - pageSize = so HANG thuan,
+ *   dung Hoa Luyen dissolve-list (EquipmentHallPanel).
+ * - TRUYEN columnWidth (px, da gom gap): flex-wrap grid - pageSize =
+ *   rows x columns, columns = floor(width / columnWidth) do THAT tu
+ *   contentRect (responsive theo chieu rong, giong width-first cua
+ *   useBagGridLayout). Truoc do codex grid (LoreCodex) dung
+ *   pageSize kieu list doc nen moi trang chi lap dung 1 cot, trang
+ *   thua va khong tan dung so cot.
  *
- * Dùng cho các list vô hạn độ dài trong overlay panel (Hóa Luyện items,
- * codex grid...) —.list giới hạn độ dài (recipes 8 đan phương...) KHÔNG
- * dùng, chúng fit flex tự nhiên.
+ * Dung cho cac list vo han do dai trong overlay panel (Hoa Luyen items,
+ * codex grid...) -.list gioi han do dai (recipes 8 dan phuong...) KHONG
+ * dung, chung fit flex tu nhien.
  */
 export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: number, options?: {
   padding?: number

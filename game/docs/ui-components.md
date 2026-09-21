@@ -49,16 +49,15 @@ và ấn—không được che hoặc nhận input của nội dung.
 3. [Common — common/ (20)](#3-common--common-20)
 4. [Layout — layout/ (4)](#4-layout--layout-4)
 5. [Panels — panels/ (22)](#5-panels--panels-22)
-6. [Panel con — skill-path (5)](#6-panel-con--skill-path-5)
+6. [Panel con — skill-path (8)](#6-panel-con--skill-path-8)
 7. [Panel con — bag-sections (4)](#7-panel-con--bag-sections-4)
-8. [Panel con — loadout-sections (4)](#8-panel-con--loadout-sections-4)
-9. [Panel con — scripture (2)](#9-panel-con--scripture-2)
-10. [Panel con — artifact (4)](#10-panel-con--artifact-4)
-11. [Combat — game/combat/ (10)](#11-combat--gamecombat-10)
-12. [Combat HUD — game/combat/hud/ (6)](#12-combat-hud--gamecombathud-6)
-13. [Game / Scene — game/ (7)](#13-game--scene--game-7)
-14. [Onboarding — onboarding/ (2)](#14-onboarding--onboarding-2)
-15. [Quy ước pattern toàn UI](#15-quy-ước-pattern-toàn-ui)
+8. [Panel con — scripture (1)](#8-panel-con--scripture-1)
+9. [Panel con — artifact (4)](#9-panel-con--artifact-4)
+10. [Combat — game/combat/ (10)](#10-combat--gamecombat-10)
+11. [Combat HUD — game/combat/hud/ (6)](#11-combat-hud--gamecombathud-6)
+12. [Game / Scene — game/ (7)](#12-game--scene--game-7)
+13. [Onboarding — onboarding/ (2)](#13-onboarding--onboarding-2)
+14. [Quy ước pattern toàn UI](#14-quy-ước-pattern-toàn-ui)
 
 ---
 
@@ -383,12 +382,12 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 - **Màu sắc**: node complete `--jade`, current `--chrome-300` + glow bạc; Bar default house style; override `--bar-track: --ink-950`.
 - **Đặc tả**: OverlayPanel `min(1120px,94vw) × min(760px,90vh)`; node hình khiên `50% 50% 12px 12px` nối ::after.
 
-### LuyenThePanel
+### BodyRefinementSection + MeridianSection (realm/)
 
-- **Đường dẫn**: `game/src/components/panels/LuyenThePanel.vue`
-- **Chức năng**: Overlay Luyện Thể — đầu tư Tinh Hoa theo tầng, toggle tự động, 6 tier (done/active/realm_locked/locked).
-- **Primitives**: Bar 5px, GameButton secondary (invest), EmptyState lg.
-- **Màu sắc**: active tier viền `--chrome-300`; khóa realm `--crimson`; auto label `--jade`.
+- **Đường dẫn**: `game/src/components/panels/realm/BodyRefinementSection.vue`, `game/src/components/panels/realm/MeridianSection.vue`
+- **Chức năng**: P7-M7 — subview body progression bên trong RealmPanel (LuyenThePanel standalone đã gỡ). BodyRefinement = 6 tier Luyện Thể read-only (done/active/realm_locked/locked), Tinh Hoa tự đầu tư qua tick; Meridian = 9 Bát Mạch read-only (opened/next/locked, invest M13 parked — chỉ hiển thị status + gate của mạch kế).
+- **Primitives**: Bar 5px (refinement), EmptyState lg; Eyebrow tiêu đề section đặt ở RealmPanel.
+- **Màu sắc**: active tier viền `--chrome-300`; khóa realm `--crimson`; meridian opened `--jade`, next `--chrome-300`.
 
 ### QuanKhiPanel
 
@@ -400,15 +399,15 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 ### SkillPathPanel
 
 - **Đường dẫn**: `game/src/components/panels/SkillPathPanel.vue`
-- **Chức năng**: Overlay Kỹ Năng 3 cột (1400px): trái SkillPathList/ElementPathList, giữa NodeTreePanel (Pháp Tu) hoặc SkillDetailView, phải SkillLoadoutStrip, đáy NodeInspector.
+- **Chức năng**: Overlay Kỹ Năng (1400px): subtitle = way identity (`getActiveWayDefinition().name`, Phàm Nhân khi chưa Nhập Đạo); TechniqueBand full-width đầu panel (hero TechniqueSlotCard + StatRow sections + nút Nâng Cảnh — P7-M7, thay TechniquePanel đã gỡ); 3 cột trái SkillPathList, giữa NodeTreePanel hoặc SkillDetailView, phải SkillLoadoutStrip; đáy NodeInspector.
 - **Màu sắc**: viền chia cột `--ink-line`; điểm Cảm Ngộ `--chrome-100`; cây ẩn Huy Kiếm: node `--jade` glow 18px.
 - **Đặc tả**: grid `20% / auto / 22%`; node Huy Kiếm elip 112×72px.
 
-### TechniquePanel
+### TechniqueBand (skill-path/)
 
-- **Đường dẫn**: `game/src/components/panels/TechniquePanel.vue`
-- **Chức năng**: Overlay Tâm Pháp — thẻ hero (TechniqueSlotCard), thanh EXP tier (**Bar 5px**), nhóm Chiến Đấu/Tu Luyện (**Eyebrow + StatRow bordered**).
-- **Đặc tả**: OverlayPanel `min(560px, 90vw)`.
+- **Đường dẫn**: `game/src/components/panels/skill-path/TechniqueBand.vue`
+- **Chức năng**: P7-M7 — dải Tâm Pháp canonical trong SkillPathPanel (port TechniquePanel): thẻ hero (TechniqueSlotCard size hero), nhóm Chiến Đấu (**Eyebrow + StatRow bordered**), nút Nâng Cảnh với cost label; EmptyState khi chưa có công pháp (Phàm Nhân).
+- **Màu sắc**: nút grade viền `--mineral-gold`, hover text gold; border-bottom `--ink-line`.
 
 ### InventoryPanel / BagGrid
 
@@ -477,7 +476,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 ### ScripturePavilionPanel
 
 - **Đường dẫn**: `game/src/components/panels/ScripturePavilionPanel.vue`
-- **Chức năng**: Tàng Kinh Các — **TabBar layout row 2 tab** (Công Pháp / Lore) đổi TechniqueCodex / LoreCodex.
+- **Chức năng**: Tàng Kinh Các — lore-only từ P7-M7 (TechniqueCodex + tab Công Pháp đã gỡ; công pháp canonical hiển thị trên SkillPathPanel TechniqueBand): render trực tiếp `LoreCodex` grid manh mối đã nhặt.
 - **Đặc tả**: gần như không màu riêng — chỉ khung điều phối.
 
 ### LoreCodexModal
@@ -508,7 +507,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ---
 
-## 6. Panel con — skill-path (4)
+## 6. Panel con — skill-path (8)
 
 ### SkillPathList
 
@@ -525,7 +524,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 ### SkillLoadoutStrip
 
 - **Đường dẫn**: `game/src/components/panels/skill-path/SkillLoadoutStrip.vue`
-- **Chức năng**: Dải "Pháp Thuật Đang Vận Hành" — ô loadout (SlotView) mở RadialSkillSelector; nút specialization (**Chips** `--chip-active-bg: --ink-700`); slot khóa mờ opacity .45.
+- **Chức năng**: Dải "Pháp Thuật Đang Vận Hành" — resolved Basic/Special/Ultimate roles (P7-M4 contract; RadialSkillSelector + generic loadout đã gỡ); Phàm Nhân có mortal precursor chooser; slot khóa mờ opacity .45.
 - **Đặc tả**: slot flex `1 1 30%` min-width 64px tự wrap.
 
 ### NodeInspector
@@ -533,6 +532,33 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 - **Đường dẫn**: `game/src/components/panels/skill-path/NodeInspector.vue`
 - **Chức năng**: Đáy SkillPathPanel — chi tiết node: badge cấp, trạng thái (Đã Lĩnh Ngộ `--jade` / Có Thể `--chrome-100` / Chưa Đủ `--text-muted`), lý do khóa `--crimson`, stat ảnh hưởng (**StatRow bordered**), nút Lĩnh Ngộ/Nâng Cấp (GameButton sm viền `--chrome-100`); EmptyState lg.
 - **Đặc tả**: badge pill 999px.
+
+### TechniqueSlotCard
+
+- **Đường dẫn**: `game/src/components/panels/skill-path/TechniqueSlotCard.vue` (P7-M7: chuyển từ `loadout-sections/` đã giải thể)
+- **Chức năng**: Thẻ Tâm Pháp trang bị (thuần hiển thị) — SlotView + tên + badge tier + **Bar 4px** + "X/Y" hoặc "Viên Mãn"; biến thể `hero` layout dọc + badge "ĐANG TU LUYỆN" (dùng trong TechniqueBand).
+- **Màu sắc**: badge tier viền `--chrome-500`; status `--jade`; Bar house style.
+- **Đặc tả**: normal icon 56px / hero icon 46% width; v-tooltip cấu trúc.
+
+### NodeTreePanel
+
+- **Đường dẫn**: `game/src/components/panels/skill-path/NodeTreePanel.vue` (P7-M7: chuyển từ `loadout-sections/`)
+- **Chức năng**: Cây node theo branch — depth thật, node card click chọn, SVG SkillConnections, animation unlock 2 pha (flow 750ms → pulse/ring 500ms).
+- **Màu sắc**: node `--ink-800`; purchased nền `--branch-color` 18%; viền theo `--branch-color` (màu hành); unlocking `--chrome-300` + glow 14px.
+- **Đặc tả**: node 140px; tier cách 22px; locked opacity .5 vẫn click.
+
+### SkillConnections
+
+- **Đường dẫn**: `game/src/components/panels/skill-path/SkillConnections.vue` (P7-M7: chuyển từ `loadout-sections/`)
+- **Chức năng**: Layer SVG đường nối parent→child — 3 trạng thái locked/active/unlocking.
+- **Màu sắc**: stroke `--branch-color` opacity .3/.75; unlocking `--chrome-300` 2.5px + drop-shadow.
+- **Đặc tả**: bezier; unlocking `stroke-dasharray: 10 8` animation flow 750ms.
+
+### TechniqueBand
+
+- **Đường dẫn**: `game/src/components/panels/skill-path/TechniqueBand.vue` (P7-M7, port từ TechniquePanel đã gỡ)
+- **Chức năng**: Dải Tâm Pháp canonical đầu SkillPathPanel — hero card + StatRow sections + nút Nâng Cảnh; EmptyState `emptyNoTechnique` khi Phàm Nhân chưa có công pháp.
+- **Đặc tả**: flex-wrap `12px 14px` padding, border-bottom `--ink-line`; grade button viền `--mineral-gold`.
 
 ---
 
@@ -566,45 +592,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ---
 
-## 8. Panel con — loadout-sections (4)
-
-### TechniqueSlotCard
-
-- **Đường dẫn**: `game/src/components/panels/loadout-sections/TechniqueSlotCard.vue`
-- **Chức năng**: Thẻ Tâm Pháp trang bị (thuần hiển thị) — SlotView + tên + badge tier + **Bar 4px** + "X/Y" hoặc "Viên Mãn"; biến thể `hero` layout dọc + badge "ĐANG TU LUYỆN".
-- **Màu sắc**: badge tier viền `--chrome-500`; status `--jade`; Bar house style.
-- **Đặc tả**: normal icon 56px / hero icon 46% width; v-tooltip cấu trúc.
-
-### RadialSkillSelector
-
-- **Đường dẫn**: `game/src/components/panels/loadout-sections/RadialSkillSelector.vue`
-- **Chức năng**: Overlay chọn skill vòng tròn — skill viable xếp quanh tâm (trigonometry JS), tâm hiện slot + nút Gỡ.
-- **Màu sắc**: backdrop `--scrim`; tâm `--ink-900` viền `2px --chrome-300` + glow; Gỡ `--crimson`; current `--jade`.
-- **Đặc tả**: tâm 88px; item 72px; bán kính min 108px tự tính.
-
-### NodeTreePanel
-
-- **Đường dẫn**: `game/src/components/panels/loadout-sections/NodeTreePanel.vue`
-- **Chức năng**: Cây node Pháp Tu theo branch — depth thật, node card click chọn, SVG SkillConnections, animation unlock 2 pha (flow 750ms → pulse/ring 500ms).
-- **Màu sắc**: node `--ink-800`; purchased nền `--branch-color` 18%; viền theo `--branch-color` (màu hành); unlocking `--chrome-300` + glow 14px.
-- **Đặc tả**: node 140px; tier cách 22px; locked opacity .5 vẫn click.
-
-### SkillConnections
-
-- **Đường dẫn**: `game/src/components/panels/loadout-sections/SkillConnections.vue`
-- **Chức năng**: Layer SVG đường nối parent→child — 3 trạng thái locked/active/unlocking.
-- **Màu sắc**: stroke `--branch-color` opacity .3/.75; unlocking `--chrome-300` 2.5px + drop-shadow.
-- **Đặc tả**: bezier; unlocking `stroke-dasharray: 10 8` animation flow 750ms.
-
----
-
-## 9. Panel con — scripture (2)
-
-### TechniqueCodex
-
-- **Đường dẫn**: `game/src/components/panels/scripture/TechniqueCodex.vue`
-- **Chức năng**: Tab Công Pháp — 1 thẻ hero + grid SlotView mọi công pháp; chưa học "???" mờ không click.
-- **Đặc tả**: slot 56px flex wrap; locked opacity .45 `pointer-events: none`.
+## 8. Panel con — scripture (1)
 
 ### LoreCodex
 
@@ -614,7 +602,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ---
 
-## 10. Panel con — artifact (4)
+## 9. Panel con — artifact (4)
 
 ### ArtifactOverview
 
@@ -644,7 +632,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ---
 
-## 11. Combat — game/combat/ (10)
+## 10. Combat — game/combat/ (10)
 
 ### CombatSceneOverlay
 
@@ -712,7 +700,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ---
 
-## 12. Combat HUD — game/combat/hud/ (6)
+## 11. Combat HUD — game/combat/hud/ (6)
 
 ### CombatBuildHud
 
@@ -751,7 +739,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ---
 
-## 13. Game / Scene — game/ (7)
+## 12. Game / Scene — game/ (7)
 
 ### PhaserCanvas
 
@@ -801,7 +789,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ---
 
-## 14. Onboarding — onboarding/ (2)
+## 13. Onboarding — onboarding/ (2)
 
 ### AuthEntryScreen
 
@@ -819,7 +807,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ---
 
-## 15. Quy ước pattern toàn UI
+## 14. Quy ước pattern toàn UI
 
 > Sau primitives refactor (2026-08-29), các pattern từng bị ~90 chỗ tự viết đã **hợp nhất** về 1 nguồn sự thật. Bảng này là quy ước bắt buộc khi viết UI mới.
 
@@ -856,7 +844,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ---
 
-## 16. Fit-refactor (2026-08-29) — panel tự co giãn mọi tỉ lệ
+## 15. Fit-refactor (2026-08-29) — panel tự co giãn mọi tỉ lệ
 
 Spec đã được thực hiện qua branch `ui-fit-refactor` (merged 2026-08-29) — nguồn tham khảo: git history của branch.
 

@@ -3,9 +3,8 @@
 // (category 'other', vô thưởng vô phạt — xem data/materials/materials.ts's
 // Tàn Quyển Trúc Cơ/Ngọc Giản Cũ/Nhật Ký Tu Sĩ/Mảnh Bia), click mở
 // LoreCodexModal (Phase 2) đọc trọn mô tả — CHỈ hiện item ĐÃ NHẶT
-// được, không liệt kê toàn bộ danh sách như TechniqueCodex (đúng tinh
-// thần "manh mối phải tự tìm thấy", không phải browse catalog biết
-// trước).
+// duoc, khong liet ke toan bo danh sach da co (dung tinh than "manh
+// moi phai tu tim thay", khong phai browse catalog biet truoc).
 import { computed, ref } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import EmptyState from '../../common/primitives/EmptyState.vue'

@@ -12,12 +12,12 @@
 Hai union tách biệt (sống ở presentation vì đây là chỗ 2 layer gặp nhau hợp lệ; `stores/ui.ts` re-export):
 
 - `LeftPanelMode` — trang chiếm panel trái: `character | inventory | exploration | settings | equipment_hall | pill_room | worker_lodge | scripture_pavilion | stage_select | vendor | null`.
-- `StandalonePanel` — overlay full-screen mount trực tiếp trong `GameRoot.vue`: `skill | technique | realm | luyen_the | quan_khi | quest | artifact | tran_phap | null`.
+- `StandalonePanel` — overlay full-screen mount trực tiếp trong `GameRoot.vue`: `skill | realm | quan_khi | quest | artifact | tran_phap | companion | null` (P7-M7: `technique`/`luyen_the` đã gỡ — Tâm Pháp hiển thị trong `SkillPathPanel` TechniqueBand, Luyện Thể/Bát Mạch trong `RealmPanel` body sections).
 
 ## Component
 
 - `components/common/` — primitive: `GamePanel`, `GameButton`, `TabBar`, `Tooltip`, `ToastContainer`, `ConfirmModal`, `OverlayPanel`, `SlotView`, `LoadingScreen`, `ErrorScreen`, `SaveIncompatibleScreen`, `OfflineSummaryModal`, `TutorialOverlay`, `WorldAnnouncementOverlay`, `ActionFeedbackLog`, `InkWashBackdrop`, `SceneHeader`, `PlayerPortrait`, `NotificationBadge`, `BreakthroughRequirementPanel`, `dialogFocus*` (a11y), `primitives/`.
-- `components/panels/` — feature panel theo hệ thống: `CharacterPanel`, `InventoryPanel` + `BagGrid`, `EquipmentPaperdoll`, `EquipmentHallPanel`, `PillRoomPanel`, `AlchemyView`, `ProductionPanel`, `WorkerLodgePanel`, `VendorPanel`, `QuestPanel`, `StageSelectPanel`, `RealmPanel`, `TechniquePanel`, `ScripturePavilionPanel`, `SkillPathPanel`, `LuyenThePanel`, `QuanKhiPanel`, `ArtifactPanel`, `TranPhapPanel`, `SettingsPanel`, `BuildingConstructionGate`, `LoreCodexModal`; subfolder `artifact/`, `bag-sections/`, `equipment-hall/`, `loadout-sections/`, `scripture/`, `skill-path/`.
+- `components/panels/` — feature panel theo hệ thống: `CharacterPanel`, `InventoryPanel` + `BagGrid`, `EquipmentPaperdoll`, `EquipmentHallPanel`, `PillRoomPanel`, `AlchemyView`, `ProductionPanel`, `WorkerLodgePanel`, `VendorPanel`, `QuestPanel`, `StageSelectPanel`, `RealmPanel`, `ScripturePavilionPanel` (lore-only từ P7-M7), `SkillPathPanel`, `QuanKhiPanel`, `ArtifactPanel`, `TranPhapPanel`, `SettingsPanel`, `BuildingConstructionGate`, `LoreCodexModal`; subfolder `artifact/`, `bag-sections/`, `equipment-hall/`, `realm/` (BodyRefinementSection + MeridianSection — P7-M7), `scripture/`, `skill-path/` (gồm cả NodeTreePanel/SkillConnections/TechniqueSlotCard/TechniqueBand chuyển từ `loadout-sections/` đã giải thể).
 
 ## Store (`stores/`, Pinia)
 

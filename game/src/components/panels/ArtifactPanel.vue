@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
-// §12.1) — panel standalone, cùng pattern QuestPanel.vue/TechniquePanel.vue.
+// muc 12.1) - panel standalone, cung pattern QuestPanel.vue/SkillPathPanel.vue.
 // Phải render đúng state "nghề chưa có definition" (Kiếm Tu, doc §4)
 // không crash khi player.artifact undefined.
 import { computed } from 'vue'

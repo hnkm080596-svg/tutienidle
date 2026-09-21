@@ -120,7 +120,14 @@
     },
     "skillPath": {
       "title": "Kỹ Năng",
-      "subtitle": "Thư viện theo cảnh giới · Con đường Ngũ Hành",
+      "mortalName": "Phàm Nhân",
+      "technique": {
+        "title": "Tâm Pháp",
+        "heroLabel": "Tâm Pháp",
+        "emptyNoBonus": "Không có thông tin bổ sung",
+        "emptyNoTechnique": "Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận",
+        "gradeAction": "Nâng Cảnh"
+      },
       "colTitles": {
         "loadoutActive": "Pháp Thuật Đang Vận Hành"
       },
@@ -307,13 +314,6 @@
         "group": "Bảng lệnh Động Phủ"
       }
     },
-    "luyenThe": {
-      "title": "Luyện Thể",
-      "summary": "Bậc đã hoàn thành: {completed}/6",
-      "note": "Tinh Hoa Phàm Thể từ quái tự bay về và nạp tiến độ — không cần thao tác.",
-      "tierLock": "Khóa — cần Phàm Nhân tầng {level}",
-      "empty": "Đã hoàn thành toàn bộ Luyện Thể."
-    },
     "tranPhap": {
       "title": "Trận Pháp",
       "confirm": "Lưu Trận Pháp"
@@ -478,6 +478,23 @@
         "comingSoon": "Sắp ra mắt",
         "unlocked": "Đã lĩnh ngộ",
         "locked": "Chưa mở"
+      },
+      "bodyRefinement": {
+        "title": "Luyện Thể",
+        "summary": "Bậc đã hoàn thành: {completed}/6",
+        "note": "Tinh Hoa Phàm Thể từ quái tự bay về và nạp tiến độ — không cần thao tác.",
+        "tierLock": "Khóa — cần Phàm Nhân tầng {level}",
+        "empty": "Đã hoàn thành toàn bộ Luyện Thể."
+      },
+      "meridian": {
+        "title": "Kỳ Kinh Bát Mạch",
+        "summary": "Đã mở: {completed}/{total}",
+        "stateOpened": "Đã mở",
+        "stateNext": "Kế tiếp",
+        "stateLocked": "Chưa mở",
+        "cost": "{count} Thông Mạch Đan",
+        "realmGate": "Phàm Nhân tầng {level}",
+        "auxGate": "cần Thiên Địa Chi Kiều"
       }
     },
     "settings": {
@@ -521,12 +538,6 @@
         "volume": "Âm lượng"
       }
     },
-    "technique": {
-      "title": "Tâm Pháp",
-      "heroLabel": "Tâm Pháp",
-      "emptyNoBonus": "Không có thông tin bổ sung",
-      "emptyNoTechnique": "Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận"
-    },
     "quest": {
       "title": "Nhiệm Vụ",
       "groups": {
@@ -539,12 +550,6 @@
         "claim": "Nhận Thưởng"
       },
       "empty": "Chưa có nhiệm vụ nào khả dụng."
-    },
-    "scripture": {
-      "tabs": {
-        "technique": "Công Pháp",
-        "lore": "Lore"
-      }
     },
     "buildingPopover": {
       "costTitle": "Chi phí xây dựng",
@@ -1030,11 +1035,21 @@
   },
   "actionFeedback": {
     "ops": {
-      "equip": { "label": "Trang Bị" },
-      "enhance": { "label": "Cường Hóa" },
-      "wash": { "label": "Tẩy Luyện" },
-      "refine": { "label": "Tinh Luyện" },
-      "dissolve": { "label": "Hóa Luyện" }
+      "equip": {
+        "label": "Trang Bị"
+      },
+      "enhance": {
+        "label": "Cường Hóa"
+      },
+      "wash": {
+        "label": "Tẩy Luyện"
+      },
+      "refine": {
+        "label": "Tinh Luyện"
+      },
+      "dissolve": {
+        "label": "Hóa Luyện"
+      }
     },
     "success": "{label} thành công",
     "failed": "Không thể {label}: {reason}"

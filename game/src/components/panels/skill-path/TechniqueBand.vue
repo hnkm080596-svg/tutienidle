@@ -1,20 +1,15 @@
 <script setup lang="ts">
-// Tách khỏi LoadoutManager.vue (2026-08-20, yêu cầu "Kỹ năng và tâm
-// pháp giờ cần tách ra thành 2 panel mới, không phụ thuộc vào left
-// panel nữa") — nội dung tab 'technique' cũ dời sang NGUYÊN VẸN (đọc
-// công pháp ĐANG trang bị qua techniqueManager + buildTechniqueSections(),
-// KHÔNG có "Đã Học" để đổi — Tâm Pháp hoàn toàn theo nghề nghiệp, xem
-// CultivationPathKit.ts), chỉ đổi khung ngoài từ "1 trong 2 tab của
-// LoadoutManager" sang overlay toàn màn hình độc lập, cùng pattern
-// BreakthroughRequirementPanel.vue (panel lớn không thuộc LeftPanel).
+// P7-M7 - canonical technique band inside SkillPathPanel, ported
+// verbatim from the retired TechniquePanel.vue (hero card + sections +
+// Nang Canh). Reads the 0-or-1 technique through
+// techniqueManager.getActive(); the ONLY player-facing grade mutation
+// stays inside realmAdvanceOps.tryAdvanceTechniqueGrade.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import TechniqueSlotCard from './loadout-sections/TechniqueSlotCard.vue'
+import TechniqueSlotCard from './TechniqueSlotCard.vue'
 import { buildTechniqueSections } from '@/composables/useTechniqueSections'
-import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
@@ -24,7 +19,6 @@ import {
 } from '@/core/technique/TechniqueProgression'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
-const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
@@ -42,10 +36,6 @@ const techniqueSections = computed(() => {
   return technique ? buildTechniqueSections(technique) : []
 })
 
-// P7-M3 - Canh transaction (Nang Canh): the only player-facing grade
-// mutation, runs through RealmAdvanceOps.tryAdvanceTechniqueGrade
-// (in-combat / rank<10 / ceiling / insufficient-material rejects all
-// happen inside the op - the button only surfaces cost + outcome).
 const gradeUpgradeCost = computed(() => {
   stateVersion.value
 
@@ -82,78 +72,90 @@ function upgradeGrade(): void {
     bumpState()
   }
 }
-
-function close() {
-  ui.closeHomeOverlays()
-}
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'technique'" :title="t('panels.technique.title')" width="min(560px, 90vw)" @close="close">
-      <div class="technique-panel__hero">
-        <TechniqueSlotCard :label="t('panels.technique.heroLabel')" size="hero" />
+  <div class="technique-band">
+    <template v-if="equippedTechnique">
+      <div class="technique-band__hero">
+        <Eyebrow>{{ t('panels.skillPath.technique.title') }}</Eyebrow>
+        <TechniqueSlotCard :label="t('panels.skillPath.technique.heroLabel')" size="hero" />
       </div>
 
-      <!-- Bỏ thanh tier-exp lặp lại (2026-08-30, frontend-design pass):
-           TechniqueSlotCard's biến thể hero ở trên ĐÃ tự vẽ thanh + nhãn
-           tier-exp giống hệt, không cần vẽ lại lần 2 ở đây. -->
-      <div v-if="equippedTechnique" class="technique-panel__detail">
-        <div v-for="section in techniqueSections" :key="section.label" class="technique-panel__group">
+      <div class="technique-band__detail">
+        <div v-for="section in techniqueSections" :key="section.label" class="technique-band__group">
           <Eyebrow as="h5">{{ section.label }}</Eyebrow>
 
-          <ul class="technique-panel__rows">
+          <ul class="technique-band__rows">
             <StatRow v-for="row in section.rows" :key="row.label" :label="row.label" bordered>
               {{ row.value }}
             </StatRow>
           </ul>
         </div>
 
-        <EmptyState v-if="techniqueSections.length === 0" size="sm">{{ t('panels.technique.emptyNoBonus') }}</EmptyState>
+        <EmptyState v-if="techniqueSections.length === 0" size="sm">{{ t('panels.skillPath.technique.emptyNoBonus') }}</EmptyState>
 
         <button
-          class="technique-panel__grade-btn"
+          class="technique-band__grade-btn"
           :disabled="!canUpgradeGrade"
           @click="upgradeGrade"
         >
-          Nâng Cảnh
+          {{ t('panels.skillPath.technique.gradeAction') }}
           <template v-if="gradeUpgradeCost">
             — {{ formatNumber(gradeUpgradeCost.amount) }} {{ materialName(gradeUpgradeCost.materialId) }} ({{ formatNumber(ownedAmount(gradeUpgradeCost.materialId)) }})
           </template>
         </button>
       </div>
+    </template>
 
-      <EmptyState v-else size="md">{{ t('panels.technique.emptyNoTechnique') }}</EmptyState>
-  </OverlayPanel>
+    <EmptyState v-else size="sm" class="technique-band__empty">{{ t('panels.skillPath.technique.emptyNoTechnique') }}</EmptyState>
+  </div>
 </template>
 
 <style scoped>
-.technique-panel__hero {
+.technique-band {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.technique-band__hero {
+  flex: 0 0 min(240px, 100%);
   display: flex;
   flex-direction: column;
 }
 
-.technique-panel__detail {
+.technique-band__hero .eyebrow {
+  margin-bottom: 6px;
+}
+
+.technique-band__detail {
+  flex: 1 1 260px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.technique-panel__group {
+.technique-band__group {
   margin-bottom: 6px;
 }
 
-.technique-panel__group .eyebrow {
+.technique-band__group .eyebrow {
   margin: 0 0 4px;
 }
 
-.technique-panel__rows {
+.technique-band__rows {
   list-style: none;
   margin: 0;
   padding: 0;
   font-size: var(--text-sm);
 }
 
-.technique-panel__grade-btn {
+.technique-band__grade-btn {
+  align-self: flex-start;
   margin-top: 8px;
   padding: 6px 14px;
   font-family: var(--font-body);
@@ -166,12 +168,16 @@ function close() {
   cursor: pointer;
 }
 
-.technique-panel__grade-btn:hover:not(:disabled) {
+.technique-band__grade-btn:hover:not(:disabled) {
   color: var(--mineral-gold);
 }
 
-.technique-panel__grade-btn:disabled {
+.technique-band__grade-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.technique-band__empty {
+  flex: 1 1 auto;
 }
 </style>

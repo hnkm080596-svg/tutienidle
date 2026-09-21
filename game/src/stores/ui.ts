@@ -41,22 +41,22 @@ import type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/pa
 
 // Phù/Trận legacy khai tử — bag chỉ còn 3 tab.
 export type BagTab = 'equipment' | 'material' | 'pill'
-export type ScripturePavilionTab = 'technique' | 'lore'
 // 'passive' đã gỡ (2026-08-20) — 9 ô Passive Cảnh Giới dời sang
 // CharacterPanel.vue (useRealmStatPassives.ts).
 
-// Kỹ Năng/Tâm Pháp overlay đứng ĐỘC LẬP với LeftPanel (2026-08-20) —
-// SkillPathPanel.vue/TechniquePanel.vue, cùng pattern
-// BreakthroughRequirementPanel.vue (overlay toàn màn hình, mount thẳng
-// trong GameRoot.vue, KHÔNG qua leftPanelMode). Union riêng (không gộp
-// vào LeftPanelMode) vì 2 panel này không thuộc nhóm "trang chức năng
-// chiếm 100% panel trái" ở đầu file.
+// Ky Nang overlay dung DOC LAP voi LeftPanel (2026-08-20) -
+// SkillPathPanel.vue, cung pattern BreakthroughRequirementPanel.vue
+// (overlay toan man hinh, mount thang trong GameRoot.vue, KHONG qua
+// leftPanelMode). Union rieng (khong gop vao LeftPanelMode) vi panel
+// nay khong thuoc nhom "trang chuc nang chiem 100% panel trai" o dau
+// file. P7-M7 - 'technique'/'luyen_the' da go: canonical technique
+// hien thi trong SkillPathPanel's TechniqueBand, body progression
+// trong RealmPanel's body sections.
 //
 // Realm Passive & Pressure System (2026-08-20) — 'realm'
 // (RealmPanel.vue, kế thừa RealmPassivePanel.vue đã gỡ — tách khỏi
 // CharacterPanel.vue's "Passive Cảnh Giới" cũ + nội dung Nhập Đạo/Kiến
-// Cơ MỚI) và 'luyen_the' (LuyenThePanel.vue, 6 tầng rèn thể Phàm
-// Nhân) — cùng pattern 2 panel trên. 'quan_khi' (QuanKhiPanel.vue,
+// Co MOI) - cung pattern panel tren. 'quan_khi' (QuanKhiPanel.vue,
 // follow-up cùng ngày) — tách
 // path-choices ("Bước Vào Pháp Tu/Kiếm Tu") khỏi CharacterPanel.vue,
 // mở qua nút "Quán Khí" bên cạnh Đột Phá thay vì liệt kê thẳng.
@@ -146,13 +146,10 @@ export const useUiStore = defineStore('ui', {
       pill: { mode: 'default', direction: 'asc' },
     } as BagSortStateMap,
 
-    // Tàng Kinh Các (Home Hub) — 2 tab con: Công Pháp/Lore.
-    scripturePavilionTab: 'technique' as ScripturePavilionTab,
-
-    // Động Phủ quick nav — "Kỹ Năng"/"Tâm Pháp" mở 1 trong 2 overlay
-    // ĐỘC LẬP (xem StandalonePanel ở trên), thay cho loadoutTab cũ (2
-    // tab của chung 1 LoadoutManager.vue, đã xoá). Transient (KHÔNG lưu
-    // save) — cùng nhóm isAuto.
+    // Dong Phu quick nav - command wheel entries mo cac overlay DOC
+    // LAP (xem StandalonePanel o tren), thay cho loadoutTab cu (2 tab
+    // cua chung 1 LoadoutManager.vue, da xoa). Transient (KHONG luu
+    // save) - cung nhom isAuto.
     standalonePanel: null as StandalonePanel,
 
 
@@ -311,10 +308,6 @@ export const useUiStore = defineStore('ui', {
       sort.mode = 'default'
 
       sort.direction = 'asc'
-    },
-
-    setScripturePavilionTab(tab: ScripturePavilionTab) {
-      this.scripturePavilionTab = tab
     },
 
     // Cùng pattern toggleLeft() — bấm lại panel đang mở sẽ đóng, bấm

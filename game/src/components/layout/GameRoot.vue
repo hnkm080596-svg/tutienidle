@@ -17,9 +17,7 @@ import FunctionOverlayPanel from './FunctionOverlayPanel.vue'
 // close transition and panel-internal state keep working exactly as with
 // the old static imports.
 const SkillPathPanel = defineAsyncComponent(() => import('../panels/SkillPathPanel.vue'))
-const TechniquePanel = defineAsyncComponent(() => import('../panels/TechniquePanel.vue'))
 const RealmPanel = defineAsyncComponent(() => import('../panels/RealmPanel.vue'))
-const LuyenThePanel = defineAsyncComponent(() => import('../panels/LuyenThePanel.vue'))
 const QuanKhiPanel = defineAsyncComponent(() => import('../panels/QuanKhiPanel.vue'))
 const QuestPanel = defineAsyncComponent(() => import('../panels/QuestPanel.vue'))
 const ArtifactPanel = defineAsyncComponent(() => import('../panels/ArtifactPanel.vue'))
@@ -111,16 +109,13 @@ function closeSidePanels() {
         <RightPanel />
         <FunctionOverlayPanel />
 
-        <!-- Kỹ Năng/Tâm Pháp (2026-08-20) — tách khỏi LeftPanel thành
-             overlay toàn màn hình độc lập (ui.standalonePanel), cùng
-             pattern BreakthroughRequirementPanel bên dưới. -->
+        <!-- Ky Nang (2026-08-20) - tach khoi LeftPanel thanh overlay
+             toan man hinh doc lap (ui.standalonePanel), cung pattern
+             BreakthroughRequirementPanel ben duoi. P7-M7: Tam Phap +
+             Luyen The da gop vao SkillPathPanel/RealmPanel. -->
         <SkillPathPanel v-if="mountedStandalone.has('skill')" />
 
-        <TechniquePanel v-if="mountedStandalone.has('technique')" />
-
         <RealmPanel v-if="mountedStandalone.has('realm')" />
-
-        <LuyenThePanel v-if="mountedStandalone.has('luyen_the')" />
 
         <QuanKhiPanel v-if="mountedStandalone.has('quan_khi')" />
 

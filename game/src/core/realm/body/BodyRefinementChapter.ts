@@ -20,7 +20,7 @@ export function getTierCap(tierIndex: number): number {
 
 // Tang DANG DO (0-based, thuan theo THU TU hoan thanh) - undefined khi
 // da hoan thanh ca 6 tang (khong con gi de dau tu tiep, xem
-// LuyenThePanel.vue's read-only state). KHONG xet requiredRealmLevel -
+// BodyRefinementSection.vue's read-only state). KHONG xet requiredRealmLevel -
 // tang tra ve co the van dang khoa theo canh gioi, xem
 // isActiveTierUnlocked().
 export function getActiveTierIndex(player: PlayerData): number | undefined {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Quán Khí (2026-08-20, Realm Passive & Pressure follow-up) — tách
 // path-choices ("Bước Vào Pháp Tu/Kiếm Tu") ra khỏi CharacterPanel.vue
-// thành overlay riêng, cùng pattern SkillPathPanel.vue/TechniquePanel.vue.
+// thanh overlay rieng, cung pattern SkillPathPanel.vue.
 // Mở qua TribulationOutcomeService sau khi thắng kiếp Quán Khí
 // (targetRealmId 'qi_refining'), hoặc qua entry button trên
 // CharacterPanel.vue cho Kiếm Tu — panel này KHÔNG tự kiểm tra lại

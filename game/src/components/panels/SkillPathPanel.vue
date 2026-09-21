@@ -21,11 +21,12 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import NodeTreePanel from './loadout-sections/NodeTreePanel.vue'
+import NodeTreePanel from './skill-path/NodeTreePanel.vue'
 import NodeInspector from './skill-path/NodeInspector.vue'
 import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
 import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
+import TechniqueBand from './skill-path/TechniqueBand.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import {
@@ -58,6 +59,13 @@ const { stateVersion } = useStateVersion()
 // tree (spell_pathway - element-driven; ngo_dao - none) declare no tag; the
 // resolver fails closed on a corrupt pair.
 const wayNodeTreeTag = computed(() => getActiveWayDefinition(player)?.nodeTreeTag)
+
+// P7-M7 - way identity line: the committed way's self-describing name
+// (e.g. 'Kiem Tu - Ngu Kiem Tam Kinh'), or Phan Nhan for a way-less
+// mortal. Resolved through the canonical way read, never an id literal.
+const wayIdentity = computed(
+  () => getActiveWayDefinition(player)?.name ?? t('panels.skillPath.mortalName'),
+)
 
 const hasElementalCasting = computed(
   () => hasStaticPathCapability(player, 'spell.elemental_casting'),
@@ -196,9 +204,11 @@ function close() {
 
 <template>
   <OverlayPanel :open="ui.standalonePanel === 'skill'" :title="t('panels.skillPath.title')" width="min(1400px, 94vw)" height="min(760px, 88vh)" @close="close">
-      <template #subtitle><span v-if="showTree" class="skill-path-panel__subtitle">{{ t('panels.skillPath.subtitle') }}</span></template>
+      <template #subtitle><span class="skill-path-panel__subtitle">{{ wayIdentity }}</span></template>
       <template #header-actions><span v-if="showTree" class="skill-path-panel__points">✦ {{ player.skillInsight }} {{ t('panels.nodeTree.labels.insight') }}</span></template>
       <div class="skill-path-panel">
+        <TechniqueBand />
+
         <div class="skill-path-panel__body">
           <div class="skill-path-panel__col skill-path-panel__col--left">
             <SkillPathList :skills="learnedSkills" :selected-id="selectedSkillId" @select="onSelectSkill" />

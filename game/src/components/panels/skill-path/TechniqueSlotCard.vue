@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Home Hub Phase 6 — trích từ LoadoutManager.vue's khối "slot công
-// pháp" (icon/tên/level-bar), dùng chung cho CharacterPanel.vue,
-// LoadoutManager.vue và TechniqueCodex.vue — cùng đọc chung nguồn qua
-// techniqueManager, tránh nhiều nơi tự vẽ nhiều kiểu khác nhau.
+// Home Hub Phase 6 - trich tu LoadoutManager.vue's khoi "slot cong
+// phap" (icon/ten/level-bar). P7-M7: nguoi dung duy nhat con lai la
+// TechniqueBand.vue (hero variant) - doc chung nguon qua
+// techniqueManager, tranh nhieu noi tu ve nhieu kieu khac nhau.
 //
 // P7-M3 - canonical 0-or-1 technique: doc thang
 // gameManager.techniqueManager.getActive() (khong can tham so). Card
@@ -10,11 +10,11 @@
 // rank (getTechniqueTierForRank), thanh exp = mastery / cost(grade),
 // day khi rank cham cap 10 (xem TechniqueProgression.ts).
 //
-// Tooltip có cấu trúc (xem TechniqueTooltipContent trong
-// composables/useTooltip.ts) — hình + 2 khối (Chiến Đấu/Tu Luyện), xây
-// qua buildTechniqueSections() (đã tách ra composables/useTechniqueSections.ts
-// để LoadoutManager.vue's tab Tâm Pháp dùng lại y hệt cho khối thông
-// tin inline mới, không chỉ lúc hover).
+// Tooltip co cau truc (xem TechniqueTooltipContent trong
+// composables/useTooltip.ts) - hinh + khoi Chien Dau, xay qua
+// buildTechniqueSections() (composables/useTechniqueSections.ts) -
+// TechniqueBand.vue dung lai y het cho khoi thong tin inline, khong
+// chi luc hover.
 import { computed } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import Bar from '../../common/primitives/Bar.vue'
@@ -32,12 +32,11 @@ import {
 import { ITEM_QUALITY_LABELS } from '@/core/item/ItemQuality'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
-// UI redesign Step 12 (Tâm Pháp, spec mục 15) — "Tâm pháp hiện tại
-// lớn, các tâm pháp khác nhỏ hơn" cần 1 biến thể hero (icon lớn, layout
-// dọc, badge trạng thái) CHỈ cho LoadoutManager.vue's tab Tâm Pháp —
-// CharacterPanel.vue (khối header hẹp) và TechniqueCodex.vue (danh
-// sách thư viện, xem Step 20) vẫn dùng layout ngang gọn mặc định,
-// KHÔNG đổi 2 chỗ đó — prop optional, mặc định giữ nguyên hành vi cũ.
+// UI redesign Step 12 (Tam Phap, spec muc 15) - "Tam phap hien tai
+// lon, cac tam phap khac nho hon" can 1 bien the hero (icon lon,
+// layout doc, badge trang thai). P7-M7: hero variant chi con
+// TechniqueBand.vue dung; 'normal' giu mac dinh cho moi noi khac -
+// prop optional, mac dinh giu nguyen hanh vi cu.
 withDefaults(defineProps<{
   label: string
   size?: 'normal' | 'hero'
