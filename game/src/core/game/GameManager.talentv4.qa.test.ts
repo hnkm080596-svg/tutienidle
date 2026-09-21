@@ -19,8 +19,8 @@ import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
 
 // QA quick-mode adversarial checks (spec 2026-09-03 talent catalog v4
-// M1) — reproduction/invariant tests cho các hypothesis rủi ro cao nhất
-// của wiring combat passive. Không sửa production code trong QA run.
+// M1) - reproduction/invariant tests cho cac hypothesis rui ro cao nhat
+// cua wiring combat passive. Khong sua production code trong QA run.
 function makeWiredManager(): GameManager {
   const manager = new GameManager()
 
@@ -43,22 +43,22 @@ function makeWiredManager(): GameManager {
 
 describe('QA talent v4 M1 — invariant wiring', () => {
   it('INV-2: buffApplier với battle đang chạy — buff bùng nổ vào pool ĐÚNG player, không crash khi battle null', () => {
-    // Phase A2 cutover (2026-09-07): buffApplier giờ nhắm turn-based
-    // battle (legacy battleSystem không chạy trong gameplay thật —
-    // xem spec Phase A2). Test này giữ 2 bất biến: no-crash ngoài trận
-    // và buff bùng nổ vào pool ĐÚNG player trong trận (INV-2b kiểm
-    // chứng sâu hơn qua startStage).
+    // Phase A2 cutover (2026-09-07): buffApplier gio nham turn-based
+    // battle (legacy battleSystem khong chay trong gameplay that -
+    // xem spec Phase A2). Test nay giu 2 bat bien: no-crash ngoai tran
+    // va buff bung no vao pool DUNG player trong tran (INV-2b kiem
+    // chung sau hon qua startStage).
     const manager = makeWiredManager()
     const player = createDefaultPlayer()
 
     player.selectedTalentIds = ['kiem_quang']
     manager.setActivePlayer(player)
 
-    // Ngoài trận: buffApplier không crash (turnBattle null → no-op an toàn).
+    // Ngoai tran: buffApplier khong crash (turnBattle null -> no-op an toan).
     expect(() => manager.passiveSystem.tick(1)).not.toThrow()
 
-    // Trong trận: player được grant passive; crit event → stack; đủ 10
-    // tầng → buff kiem_vuc phải nằm trong pool của turn-based player.
+    // Trong tran: player duoc grant passive; crit event -> stack; du 10
+    // tang -> buff kiem_vuc phai nam trong pool cua turn-based player.
     const enemy = ENEMIES[0]!
 
     manager.startBattleWithPlayer(player, enemy)
@@ -85,7 +85,7 @@ describe('QA talent v4 M1 — invariant wiring', () => {
     manager.setActivePlayer(player)
     manager.progressionOps.syncTalentCombatPassive(player)
 
-    // STAGES[0] requires the qi_refining realm — a fresh default player
+    // STAGES[0] requires the qi_refining realm - a fresh default player
     // (mortal) would be rejected by isStageUnlocked. Register a
     // realm-free stage fixture instead (same pattern as
     // GameManager.stageRestart.test.ts).
@@ -137,7 +137,7 @@ describe('QA talent v4 M1 — invariant wiring', () => {
 
     const enemy = ENEMIES[0]!
 
-    // Battle 1: trigger Kiếm Vực (Phase A2 cutover — assert on the
+    // Battle 1: trigger Kiem Vuc (Phase A2 cutover - assert on the
     // turn-based pool).
     manager.startBattleWithPlayer(player, enemy)
     for (let i = 0; i < 10; i++) {
@@ -149,7 +149,7 @@ describe('QA talent v4 M1 — invariant wiring', () => {
         .some((i) => i.definitionId === 'kiem_vuc'),
     ).toBe(true)
 
-    // Battle 2: fresh pool — Kiếm Vực must not leak, stack modifier reset.
+    // Battle 2: fresh pool - Kiem Vuc must not leak, stack modifier reset.
     manager.startBattleWithPlayer(player, enemy)
 
     expect(
@@ -164,12 +164,12 @@ describe('QA talent v4 M1 — invariant wiring', () => {
   })
 
   it('INV-4: talent passive KHÔNG nằm trong save payload (runtime grant — không persistence)', () => {
-    // Talent passive được grant runtime qua syncTalentCombatPassive —
-    // kiểm chứng chúng KHÔNG tự lọt vào các collection mà SaveSystem
-    // persist từ SkillManager (save chỉ lưu skill data thật qua
-    // manager snapshot — passive talent có id talent_passive_* riêng
-    // cú pháp, assert không có skill nào mang prefix này được đánh dấu
-    // là "learned technique" trong payload nguồn của build save).
+    // Talent passive duoc grant runtime qua syncTalentCombatPassive -
+    // kiem chung chung KHONG tu lot vao cac collection ma SaveSystem
+    // persist tu SkillManager (save chi luu skill data that qua
+    // manager snapshot - passive talent co id talent_passive_* rieng
+    // cu phap, assert khong co skill nao mang prefix nay duoc danh dau
+    // la "learned technique" trong payload nguon cua build save).
     const manager = makeWiredManager()
     const player = createDefaultPlayer()
 
@@ -179,11 +179,9 @@ describe('QA talent v4 M1 — invariant wiring', () => {
     const allSkills = manager.skillManager.getAll()
     const talentPassives = allSkills.filter((skill) => skill.id.startsWith('talent_passive_'))
 
-    // Passive ĐÚNG được grant runtime (1 cái), nhưng KHÔNG loadout/
-    // unlocked-equipped qua save — passive không chiếm slot:
+    // Passive DUNG duoc grant runtime (1 cai) - membership la learned
+    // authority; passive khong con slot/equip state de lot vao save.
     expect(talentPassives).toHaveLength(1)
-    expect(talentPassives[0]!.loadoutSlot).toBeUndefined()
-    expect(talentPassives[0]!.loadoutSlots).toBeUndefined()
   })
 
   it('INV-1: đổi talent liên tục qua save edit — chỉ 1 passive tồn tại mỗi lúc, không nhân đôi', () => {
@@ -202,7 +200,7 @@ describe('QA talent v4 M1 — invariant wiring', () => {
         TALENT_PASSIVE_SKILLS.some((template) => template.id === skill.id),
       )
 
-      // can_than có 2 passive (chính + phản) — mọi talent khác đúng 1.
+      // can_than co 2 passive (chinh + phan) - moi talent khac dung 1.
       const expected = talentId === 'can_than' ? 2 : 1
 
       expect(active).toHaveLength(expected)

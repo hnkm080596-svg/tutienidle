@@ -31,6 +31,13 @@ const PRE_M2_VERSION = 68
 // boundary this mission cut over.
 const PRE_M3_VERSION = 69
 
+// P7-M4 (v71) - the version live on master immediately before the
+// combat-role contract retired the generic skill loadout (skill entries
+// carry no loadoutSlot/loadoutSlots/equipped/unlocked; learned =
+// SkillManager membership). Same "anything !== CURRENT" contract; the
+// literal pins the concrete boundary this mission cut over.
+const PRE_M4_VERSION = 70
+
 // vitest runs environment: 'node' — no real localStorage, so a minimal
 // in-memory polyfill is stubbed (same pattern as SaveSystem.test.ts).
 class MemoryStorage implements Storage {
@@ -146,6 +153,30 @@ describe('Phap Tu Reimagined save cutover', () => {
     localStorage.setItem(SAVE_KEY, raw)
 
     expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M3_VERSION, raw })
+  })
+
+  it('rejects a save stamped with the pre-M4 version (70) as incompatible', () => {
+    const player = createDefaultPlayer()
+    // Intentionally NOT GameSave: version 70 is outside the current literal
+    // type, so the payload is built as a raw record like preReworkSaveRaw().
+    const save: Record<string, unknown> = {
+      version: PRE_M4_VERSION,
+      player,
+      techniques: [],
+      skills: [],
+      materials: [],
+      equipment: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      equipmentSlots: [],
+    }
+    const raw = JSON.stringify(save)
+
+    localStorage.setItem(SAVE_KEY, raw)
+
+    expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M4_VERSION, raw })
   })
 
   it('loads a save stamped with the current version', () => {

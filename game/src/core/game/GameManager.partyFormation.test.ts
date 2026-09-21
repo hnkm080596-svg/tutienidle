@@ -5,7 +5,6 @@ import { createBaseStats } from '../stats/StatBlock'
 import { HERO_LANE_INDEX, HERO_COLUMN } from '../battle/BattleLane'
 import { createDefaultPlayer } from '../player/Player'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { Skill } from '../skill/Skill'
 import { COMPANIONS } from '../../data/companion/Companions'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import type { TranPhapDefinition } from '../../data/formation/TranPhap'
@@ -39,16 +38,6 @@ function createPlayer(): CombatEntity {
   }
 }
 
-function createBasicSkill(): Skill {
-  return {
-    id: 'basic_test', name: 'Basic', description: '', type: 'active', level: 1, maxLevel: 10,
-    cooldown: 0, cost: 0, target: 'enemy',
-    effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
-    execution: { kind: 'attack_speed' }, resourceType: 'none',
-    unlocked: true, equipped: true, loadoutSlot: 0, loadoutSlots: [0],
-  }
-}
-
 function createDummy() {
   return defineEnemy({
     id: 'formation_dummy', name: 'Formation Dummy', level: 1, realmId: 'mortal', lane: 'ground',
@@ -61,10 +50,6 @@ describe('GameManager.buildTurnBattle — reads DEFAULT_PARTY_FORMATION when no 
   it('places the player at the MOCKED formation slot, not at HERO_LANE_INDEX/HERO_COLUMN — proves buildTurnBattle() is driven by DEFAULT_PARTY_FORMATION', () => {
     const gameManager = new GameManager()
     const player = createPlayer()
-
-    gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
-    gameManager.progressionOps.learnSkill('basic_test')
-    gameManager.skillSystem.equipToSlot('basic_test', 0)
     gameManager.startBattle(player, createDummy())
 
     const battle = gameManager.getTurnBattle()!
@@ -111,10 +96,6 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
       const gameManager = new GameManager()
       const playerEntity = createPlayer()
       const playerData = createDefaultPlayer()
-
-      gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
-      gameManager.progressionOps.learnSkill('basic_test')
-      gameManager.skillSystem.equipToSlot('basic_test', 0)
 
       // formationLoadout phải set TRƯỚC setActivePlayer/startBattle —
       // GameManager.setActivePlayer() giữ THAM CHIẾU TRỰC TIẾP tới
@@ -183,10 +164,6 @@ describe('GameManager.buildTurnBattle — formation buff definitionId không res
       const gameManager = new GameManager()
       const playerEntity = createPlayer()
       const playerData = createDefaultPlayer()
-
-      gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
-      gameManager.progressionOps.learnSkill('basic_test')
-      gameManager.skillSystem.equipToSlot('basic_test', 0)
 
       playerData.formationLoadout = {
         formationId: TEST_FORMATION_WITH_MISSING_BUFF.id,

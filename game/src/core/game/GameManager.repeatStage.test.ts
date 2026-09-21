@@ -101,7 +101,7 @@ describe('GameManager continuous repeat stage', () => {
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
     // Execution policy rework (plan §8.6) — Trảm chiếm slot mặc định 0.
-    expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
     const rewardParticles: BattleRewardParticleEvent[] = []
     gameManager.eventBus.on<BattleRewardParticleEvent>('reward_particle', event => rewardParticles.push(event))
 

@@ -433,6 +433,11 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     })
   }
 
+  // P7-M4 (v71) - mortalBasicSkillId's precursor/mortal-only contract
+  // is enforced at the restore preflight (preflightSaveRegistryReferences,
+  // same hard-fail seam as the way technique-holder check), not here:
+  // the shape layer stays structural for the player slice.
+
   // P1-M6 — persisted path-state validation is MODULE-OWNED: the
   // boundary keeps the identity-pair contract above (enum, atomic
   // pair, way membership, mortal gate) and iterates each module's
@@ -692,6 +697,35 @@ function validateIdEntries(entries: unknown[], path: string, issues: ShapeIssue[
     }
 
     requireString(entry, 'id', `${path}[${i}]`, issues)
+  }
+}
+
+// P7-M4 (v71) - skill entries REJECT the retired loadout surface
+// outright (no sanitize-and-load: structuredClone on restore would
+// silently carry stale keys into the next save). Learned = membership;
+// combat roles resolve from the way kit - these fields have no writer.
+const RETIRED_SKILL_ENTRY_KEYS = ['loadoutSlot', 'loadoutSlots', 'equipped', 'unlocked'] as const
+
+function validateSkillEntries(entries: unknown[], path: string, issues: ShapeIssue[]) {
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i]
+
+    if (!isObject(entry)) {
+      issues.push({ path: `${path}[${i}]`, message: 'phải là object' })
+
+      continue
+    }
+
+    requireString(entry, 'id', `${path}[${i}]`, issues)
+
+    for (const retiredKey of RETIRED_SKILL_ENTRY_KEYS) {
+      if (Object.prototype.hasOwnProperty.call(entry, retiredKey)) {
+        issues.push({
+          path: `${path}[${i}].${retiredKey}`,
+          message: 'field đã retire (v71 - learned = membership; roles resolve from the way kit)',
+        })
+      }
+    }
   }
 }
 
@@ -1203,7 +1237,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   }
 
   if (skills) {
-    validateIdEntries(skills, 'skills', issues)
+    validateSkillEntries(skills, 'skills', issues)
   }
 
   if (buildings) {

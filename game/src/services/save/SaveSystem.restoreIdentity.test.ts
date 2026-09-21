@@ -83,7 +83,7 @@ describe('restore identity (AR-12)', () => {
     ['skills', (save: GameSave) => {
       save.skills = [{
         id: 's1', name: 'S', description: '', type: 'active', level: 1, maxLevel: 10,
-        cooldown: 1, target: 'enemy', effects: [], unlocked: true, equipped: false,
+        cooldown: 1, target: 'enemy', effects: [],
       }]
     }],
     ['equipment', (save: GameSave) => {

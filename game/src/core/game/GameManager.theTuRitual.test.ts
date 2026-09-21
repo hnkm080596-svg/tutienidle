@@ -33,7 +33,6 @@ function setupMortal(huyQuyenCasts = 0) {
 
   gameManager.progressionOps.learnSkill('tram')
   gameManager.progressionOps.learnSkill('huy_quyen')
-  gameManager.skillSystem.equipToSlot('tram', 0)
 
   return { gameManager, player }
 }
@@ -111,15 +110,16 @@ describe('isCultivationPathOffered — ritual offer gate', () => {
 })
 
 describe('chooseCultivationPath — body ritual', () => {
-  it('(body, hien) equips kim_cang_bat_hoai_the and strips tram + huy_quyen', () => {
+  it('(body, hien) grants diamond_body_art and clears the mortal pick (precursors stay learned)', () => {
     const { gameManager, player } = setupMortal(0)
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)).toBe(true)
     expect(player.cultivationPath).toBe('body')
     expect(player.cultivationWay).toBe('body_pathway')
     expect(gameManager.techniqueManager.getActive()?.id).toBe('diamond_body_art')
-    expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
-    expect(gameManager.skillManager.get('huy_quyen')!.equipped).toBe(false)
+    expect(gameManager.skillManager.has('tram')).toBe(true)
+    expect(gameManager.skillManager.has('huy_quyen')).toBe(true)
+    expect(player.mortalBasicSkillId).toBeUndefined()
     expect(player.realmId).toBe('qi_refining')
   })
 
@@ -133,15 +133,15 @@ describe('chooseCultivationPath — body ritual', () => {
     expect(gameManager.techniqueManager.getActive()).toBeUndefined()
   })
 
-  it('(body, ung_the) at Lv3 writes the base body id + ung_the way and strips mortal skills', () => {
+  it('(body, ung_the) at Lv3 writes the base body id + ung_the way (precursors stay learned)', () => {
     const { gameManager, player } = setupMortal(10000)
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)).toBe(true)
     expect(player.cultivationPath).toBe('body')
     expect(player.cultivationWay).toBe('hidden_body_pathway')
     expect(gameManager.techniqueManager.getActive()?.id).toBe('responsive_body_art')
-    expect(gameManager.skillManager.get('tram')!.equipped).toBe(false)
-    expect(gameManager.skillManager.get('huy_quyen')!.equipped).toBe(false)
+    expect(gameManager.skillManager.has('tram')).toBe(true)
+    expect(gameManager.skillManager.has('huy_quyen')).toBe(true)
     expect(player.realmId).toBe('qi_refining')
   })
 })

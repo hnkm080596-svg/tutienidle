@@ -5,6 +5,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats, asBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+import { toTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
 import { createDefaultPlayer } from '../player/Player'
 import type { Stage } from '../stage/Stage'
 
@@ -36,7 +37,6 @@ function createBasicSkill(): Skill {
     cooldown: 0, cost: 0, target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
     execution: { kind: 'attack_speed' }, resourceType: 'none',
-    unlocked: true, equipped: true, loadoutSlot: 0, loadoutSlots: [0],
   }
 }
 
@@ -57,7 +57,14 @@ function battleReady(): { gameManager: GameManager; combatSource: ManualClockSou
 
   gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
   gameManager.progressionOps.learnSkill('basic_test')
-  gameManager.skillSystem.equipToSlot('basic_test', 0)
+  const basicSkill = gameManager.skillManager.get('basic_test')!
+  gameManager.setPathRuntimeResolver(() => ({
+    resolveBasic: () =>
+      toTurnSkillDefinition(basicSkill, gameManager.skillSystem.getEffectiveSkill(basicSkill)),
+    resolveSpecialUltimate: () => undefined,
+    resolveMaxThe: () => 0,
+    resolveStatDomains: () => undefined,
+  }))
   gameManager.startBattle(player, createDummy())
 
   for (let i = 0; i < 30; i++) {

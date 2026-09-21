@@ -75,7 +75,7 @@ describe('ngo_dao way — ritual offer gate', () => {
     expect(player.cultivationWay).toBeUndefined()
   })
 
-  it('chooseCultivationPath(spell, ngo_dao) at Lv3: base path id + way set, technique equipped, an kit in slots 0/1, passive learned', () => {
+  it('chooseCultivationPath(spell, ngo_dao) at Lv3: base path id + way set, technique granted, an kit + passive learned', () => {
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
 
@@ -88,16 +88,14 @@ describe('ngo_dao way — ritual offer gate', () => {
     // No element/route/The authority — an has none.
     expect(player.spellPath).toEqual({ element: null, route: null })
 
-    // Two actives granted into loadout slots.
-    const basic = gameManager.skillManager.get('van_phap_tuy_tam')
-    const special = gameManager.skillManager.get('da_phap_lien_tuyen')
-    expect(basic?.equipped).toBe(true)
-    expect(special?.equipped).toBe(true)
+    // P7-M4 - learn-only: kit actives enter membership; combat resolves
+    // them through the way kit, not slot state.
+    expect(gameManager.skillManager.has('van_phap_tuy_tam')).toBe(true)
+    expect(gameManager.skillManager.has('da_phap_lien_tuyen')).toBe(true)
 
     // Dao passive via the way's passiveSkillIds (P7-M2 - was the
-    // technique's innateSkillId) - equipped without slot.
+    // technique's innateSkillId).
     expect(gameManager.skillManager.has('ngo_dao_hon_don')).toBe(true)
-    expect(gameManager.skillManager.get('ngo_dao_hon_don')?.equipped).toBe(true)
   })
 
   it('chooseCultivationPath rejects a way that belongs to another path — zero mutation', () => {

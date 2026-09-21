@@ -164,7 +164,7 @@ describe('Admitted session handoff (ARCH-004 / L03)', () => {
     player.cultivation = 0
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('tram')
-    gameManager.progressionOps.setSkillLoadoutSlot(player, 0, 'tram')
+    gameManager.progressionOps.setMortalBasicSkill(player, 'tram')
     stats = calculateStats({ ...player.baseStats }, [])
     gameManager.setPresentationMode('interactive')
 

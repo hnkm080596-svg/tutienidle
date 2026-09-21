@@ -82,16 +82,16 @@ import {
 const player = usePlayerStore()
 const ui = useUiStore()
 
-// Automation flags persistence (2026-08-26, uiFlagsPersistence.ts) —
-// $subscribe bắt MỌI đường mutation (kể cả gán trực tiếp
+// Automation flags persistence (2026-08-26, uiFlagsPersistence.ts) -
+// $subscribe bat MOI duong mutation (ke ca gan truc tiep
 // `ui.battleRunMode = ...` trong CombatVictoryPanel/StageSelectPanel),
-// ghi snapshot vào localStorage. Ghi rẻ (JSON nhỏ), skip khi snapshot
-// không đổi để tránh ghi lặp vô nghĩa mỗi tick.
-// (2026-08-30) isAutoConsumeTinhHoa đã GỠ — Luyện Thể tự đầu tư qua
-// essence stream; chỉ còn battleRunMode + combatInputMode.
-// Mission A4 — dirty check theo composite battleRunMode|combatInputMode
-// trong installAutomationFlagsPersistence: thay đổi chỉ mỗi
-// combatInputMode vẫn phải ghi. Giữ disposer để Mission B6 gắn
+// ghi snapshot vao localStorage. Ghi re (JSON nho), skip khi snapshot
+// khong doi de tranh ghi lap vo nghia moi tick.
+// (2026-08-30) isAutoConsumeTinhHoa da GO - Luyen The tu dau tu qua
+// essence stream; chi con battleRunMode + combatInputMode.
+// Mission A4 - dirty check theo composite battleRunMode|combatInputMode
+// trong installAutomationFlagsPersistence: thay doi chi moi
+// combatInputMode van phai ghi. Giu disposer de Mission B6 gan
 // unmount cleanup.
 const automationFlagsUnsubscribe = installAutomationFlagsPersistence(ui)
 const notification = useNotificationStore()
@@ -99,13 +99,13 @@ const { t } = useI18n()
 const offlineSummary = useOfflineSummaryStore()
 const saveIssue = useSaveIssueStore()
 
-// Beta Phase 4 (Boot Loading Screen) — Boot → Load Save → Initialize →
-// Home. Set true ở cuối onMounted() sau khi mọi thứ (load save/đăng
-// ký data/tick loop) đã sẵn sàng.
+// Beta Phase 4 (Boot Loading Screen) - Boot -> Load Save -> Initialize ->
+// Home. Set true o cuoi onMounted() sau khi moi thu (load save/dang
+// ky data/tick loop) da san sang.
 const isBooted = ref(false)
-// GameClock chỉ đo thời gian (pure clock). GameManager chỉ điều
-// phối các system. Việc "mỗi giây thì làm gì" là trách nhiệm của
-// vòng lặp tick() dưới đây — nơi duy nhất biết cả 2 bên.
+// GameClock chi do thoi gian (pure clock). GameManager chi dieu
+// phoi cac system. Viec "moi giay thi lam gi" la trach nhiem cua
+// vong lap tick() duoi day - noi duy nhat biet ca 2 ben.
 const clock = new GameClock()
 const gameManager = new GameManager()
 
@@ -120,7 +120,7 @@ gameManager.setPresentationMode('interactive')
 // countdown arrives one step at a time, in step with what is drawn.
 //
 // Task 7: under Electron, window.electronAPI.combatClock is the main-process
-// host (immune to Chromium's rAF throttling) — prefer it when present. Plain
+// host (immune to Chromium's rAF throttling) - prefer it when present. Plain
 // web builds have no window.electronAPI and keep the RAF-driven fallback.
 // The engine only ever sees the ClockSource interface either way.
 const combatClockSource = window.electronAPI
@@ -128,7 +128,7 @@ const combatClockSource = window.electronAPI
   : new RafClockSource()
 gameManager.setCombatClockSource(combatClockSource)
 
-// ARCH-013/L04 — the Electron bridge subscriptions are an owned resource:
+// ARCH-013/L04 - the Electron bridge subscriptions are an owned resource:
 // ipcRenderer.on handlers have no auto-dispose, so unmount must call the
 // disposer useElectronBridge returns or a remount/HMR would stack a second
 // quit-flush save. Disposed again before each re-subscribe (entered twice).
@@ -185,7 +185,7 @@ const presentation = createGamePresentation({
 })
 const routeAdapter = createVueRouteAdapter(coordinator, compositeRenderer)
 
-// RC-3: presentationActive has exactly ONE owner — the coordinator, via this
+// RC-3: presentationActive has exactly ONE owner - the coordinator, via this
 // binding. It is true only while the COMMITTED route is combat and the
 // combat session is attached. CombatScene must never assert this for
 // itself (self-report is the pattern the coordinator design rejected).
@@ -285,8 +285,8 @@ gameManager.catalogOps.registerPills(pills)
 // 'buff'/'debuff' effects via buffRegistry.get() (THROWS on miss);
 // dropping this line leaves the registry empty and crashes mid-battle
 // (review fix 2026-08-26).
-// Skill buff-carrying Kiếm Tu cũ đã chuyển node (spec 2026-08-29),
-// registry vẫn cần cho buff hệ khác (Thổ Giáp/Độ Kiếp...).
+// Skill buff-carrying Kiem Tu cu da chuyen node (spec 2026-08-29),
+// registry van can cho buff he khac (Tho Giap/Do Kiep...).
 gameManager.catalogOps.registerBuffs(buffs)
 gameManager.catalogOps.registerTalismans(talismans)
 gameManager.catalogOps.registerFormations(formations)
@@ -301,7 +301,7 @@ gameManager.catalogOps.registerQuests(QUESTS)
 
 const { breakthrough } = useBreakthrough(gameManager)
 
-// Task 8 (A11, spec §6.1) — an unwatched battle pauses visibly and resumes
+// Task 8 (A11, spec sec.6.1) - an unwatched battle pauses visibly and resumes
 // only on Continue; returning to the tab is not consent to resume. Gated on
 // getCombatClockState() !== 'stopped' so the overlay never appears outside
 // combat (no battle mounted == nothing to pause).
@@ -310,10 +310,10 @@ const { isPaused: isCombatPaused, continueBattle, dispose: disposeCombatPause } 
   { isCombatActive: () => gameManager.getCombatClockState() !== 'stopped' },
 )
 
-// Cầu nối reactivity chung cho các panel đọc bag/equipment — xem
-// composables/useGameState.ts. tick() tự tăng mỗi giây; các action
-// mutate GameManager từ panel (equip/craft/enhance...) gọi bumpState()
-// ngay sau đó để UI phản hồi tức thời, không chờ tick kế tiếp.
+// Cau noi reactivity chung cho cac panel doc bag/equipment - xem
+// composables/useGameState.ts. tick() tu tang moi giay; cac action
+// mutate GameManager tu panel (equip/craft/enhance...) goi bumpState()
+// ngay sau do de UI phan hoi tuc thoi, khong cho tick ke tiep.
 const stateVersion = ref(0)
 
 function bumpState() {
@@ -324,10 +324,10 @@ provide(GAME_MANAGER_KEY, gameManager)
 provide(STATE_VERSION_KEY, stateVersion)
 provide(BUMP_STATE_KEY, bumpState)
 
-// Remediation Task 5 (2026-09-05) — lifecycle idempotence extract sang
+// Remediation Task 5 (2026-09-05) - lifecycle idempotence extract sang
 // useAppLifecycle.ts (tick/autosave interval guard, bootInFlight guard,
-// symmetric event-bus/DOM listener cleanup). App.vue giữ phần tick có
-// phụ thuộc UI (cultivate/bumpState/notification dedupe).
+// symmetric event-bus/DOM listener cleanup). App.vue giu phan tick co
+// phu thuoc UI (cultivate/bumpState/notification dedupe).
 const lifecycle = useAppLifecycle({
   clock,
   scheduleInterval: (callback, timeoutMs) => window.setInterval(callback, timeoutMs),
@@ -350,22 +350,22 @@ const lifecycle = useAppLifecycle({
   coordinator: cloudSaveCoordinator,
   player,
   gameManager,
-  // Fix (2026-09-06) — bootGame() tự startTickLoop(tick) khi boot thành
-  // công (xem useAppLifecycle.ts). `tick` là function declaration nên đã
-  // hoisted, tham chiếu được ở đây dù định nghĩa vật lý nằm sau (dưới).
+  // Fix (2026-09-06) - bootGame() tu startTickLoop(tick) khi boot thanh
+  // cong (xem useAppLifecycle.ts). `tick` la function declaration nen da
+  // hoisted, tham chieu duoc o day du dinh nghia vat ly nam sau (duoi).
   tick,
   offlineSummary,
   saveIssue,
   entryStage,
-  // Composable giữ player dạng loose (không import Pinia store type vào
-  // core-facing signature) — cast TẠI BIÊN này khớp đúng loại thật.
+  // Composable giu player dang loose (khong import Pinia store type vao
+  // core-facing signature) - cast TAI BIEN nay khop dung loai that.
   restoreGameSession: (playerOwner, manager, save) =>
     restoreGameSession(playerOwner as Parameters<typeof restoreGameSession>[0], manager, save as Parameters<typeof restoreGameSession>[2]),
   persistPlayer: async () => {
     const result = await player.save(gameManager)
 
-    // Cảnh báo autosave fail chỉ 1 lần cho mỗi chuỗi fail — reset cờ khi
-    // ghi thành công lại để chuỗi fail kế tiếp vẫn được báo.
+    // Canh bao autosave fail chi 1 lan cho moi chuoi fail - reset co khi
+    // ghi thanh cong lai de chuoi fail ke tiep van duoc bao.
     if (result.status !== 'ok' && !saveFailureNotified) {
       saveFailureNotified = true
       notification.push('error', 'Không lưu được tiến trình — bộ nhớ trình duyệt đầy. Hãy hóa luyện bớt trang bị.')
@@ -379,7 +379,7 @@ const lifecycle = useAppLifecycle({
   onError: (message) => {
     bootError.value = message
   },
-  // B2 — a retried character creation after a failed first save cannot
+  // B2 - a retried character creation after a failed first save cannot
   // roll its starter grants back in memory; the composable calls this to
   // recover on a clean process (same convention as resetSaveFromSettings).
   hardReset: () => window.location.reload(),
@@ -388,9 +388,9 @@ const lifecycle = useAppLifecycle({
   remoteSync: remoteSaveSync,
 })
 
-// Cảnh báo autosave fail chỉ 1 lần cho mỗi chuỗi fail — autosave chạy
-// mỗi 15s nên nếu toast mỗi tick thì spam; reset cờ khi ghi thành công
-// lại để chuỗi fail kế tiếp vẫn được báo.
+// Canh bao autosave fail chi 1 lan cho moi chuoi fail - autosave chay
+// moi 15s nen neu toast moi tick thi spam; reset co khi ghi thanh cong
+// lai de chuoi fail ke tiep van duoc bao.
 let saveFailureNotified = false
 
 function persistProgress() {
@@ -400,7 +400,7 @@ function persistProgress() {
 function resetSaveFromSettings() {
   lifecycle.suppressPersistence()
 
-  // Mission A review — deleteSave() returns false on storage failure;
+  // Mission A review - deleteSave() returns false on storage failure;
   // reloading anyway would boot back into the same save the user tried
   // to delete.
   if (deleteSave()) {
@@ -410,12 +410,12 @@ function resetSaveFromSettings() {
   }
 }
 
-// Cultivation ⇄ combat (2026-08-20) — không còn nút bấm thủ công, tu
-// luyện là trạng thái SUY RA THẲNG từ isFighting mỗi tick (chiến đấu
-// thì không tu luyện, không chiến đấu thì tự tu luyện). Theo dõi giá
-// trị isFighting của tick TRƯỚC để chỉ emit 'cultivation_changed' đúng
-// lúc chuyển trạng thái (MainScene.ts's onCultivationChanged() đổi
-// pose ngồi thiền) — tránh emit lặp lại mỗi tick.
+// Cultivation <-> combat (2026-08-20) - khong con nut bam thu cong, tu
+// luyen la trang thai SUY RA THANG tu isFighting moi tick (chien dau
+// thi khong tu luyen, khong chien dau thi tu tu luyen). Theo doi gia
+// tri isFighting cua tick TRUOC de chi emit 'cultivation_changed' dung
+// luc chuyen trang thai (MainScene.ts's onCultivationChanged() doi
+// pose ngoi thien) - tranh emit lap lai moi tick.
 let wasFighting = false
 
 function tick() {
@@ -425,20 +425,20 @@ function tick() {
     return
   }
 
-  // W9.2 (2026-08-27) — tab bị throttle/treo lâu có thể trả về delta
-  // rất lớn trong một tick. Clamp theo đúng trần offline 24h để thời
-  // gian "đuổi kịp" không vượt offline cap; combat đã có trần catch-up
-  // riêng trong GameManager.updateBattleFixedStep().
+  // W9.2 (2026-08-27) - tab bi throttle/treo lau co the tra ve delta
+  // rat lon trong mot tick. Clamp theo dung tran offline 24h de thoi
+  // gian "duoi kip" khong vuot offline cap; combat da co tran catch-up
+  // rieng trong GameManager.updateBattleFixedStep().
   const simulatedDelta = Math.min(deltaSeconds, DEFAULT_MAX_OFFLINE_SECONDS)
 
   if (simulatedDelta > 0) {
-    // GameManager luôn được update trước, để battle (nếu có) và
-    // buff/skill cooldown luôn chạy đúng nhịp thời gian thực.
+    // GameManager luon duoc update truoc, de battle (neu co) va
+    // buff/skill cooldown luon chay dung nhip thoi gian thuc.
     gameManager.tickOps.update(simulatedDelta)
 
-    // Beta Phase 4 (Notification/UX) — rút toast phát sinh TRONG
-    // GameManager (hiện chỉ loot, xem GameManager.grantItemDrops())
-    // mỗi tick, đẩy vào notificationStore để ToastContainer hiện.
+    // Beta Phase 4 (Notification/UX) - rut toast phat sinh TRONG
+    // GameManager (hien chi loot, xem GameManager.grantItemDrops())
+    // moi tick, day vao notificationStore de ToastContainer hien.
     for (const event of gameManager.drainNotifications()) {
       notification.push(
         event.kind,
@@ -467,10 +467,10 @@ function tick() {
 
     player.cultivate(simulatedDelta)
 
-    // Tiểu cảnh giới tự tăng (2026-08-28) — tick() bấm breakthrough()
-    // mỗi khi tu vi đầy, không còn checkbox bật/tắt (đúng tinh thần
-    // idle game + chủ game quyết định). Đại cảnh giới vẫn qua nghi lễ
-    // riêng (Quán Khí/Trúc Cơ/Độ Kiếp), xem useTribulation.ts.
+    // Tieu canh gioi tu tang (2026-08-28) - tick() bam breakthrough()
+    // moi khi tu vi day, khong con checkbox bat/tat (dung tinh than
+    // idle game + chu game quyet dinh). Dai canh gioi van qua nghi le
+    // rieng (Quan Khi/Truc Co/Do Kiep), xem useTribulation.ts.
     if (player.cultivation >= player.cultivationRequired) {
       breakthrough()
     }
@@ -479,10 +479,10 @@ function tick() {
     // owned by GameManager.update() (domain authority, exactly-once per
     // tick). App must not call it again; bumpState() below refreshes the UI.
 
-    // Đột Phá Trúc Cơ — phản ứng thắng/thua Độ Kiếp NGAY (battle
-    // Tribulation không qua Stage/Combat Scene result modal nào cả, xem
+    // Dot Pha Truc Co - phan ung thang/thua Do Kiep NGAY (battle
+    // Tribulation khong qua Stage/Combat Scene result modal nao ca, xem
     // useTribulation.ts's resolveVictory/resolveDefeat + World
-    // Announcement — đây vẫn là luồng kết quả DUY NHẤT cho Tribulation).
+    // Announcement - day van la luong ket qua DUY NHAT cho Tribulation).
     //
     // F1 fix (2026-09-13): `presentation` is required - without it the
     // outcome is applied but the coordinator never issues
@@ -491,25 +491,25 @@ function tick() {
     // tests/architecture/tribulationOutcomeWiring.test.ts.
     checkTribulationOutcomeAction(player, gameManager, presentation)
 
-    // Combat UI Redesign — Auto-refight (thắng/thua Stage thì tự đánh
-    // tiếp) KHÔNG còn chạy tức thời ở tick() nữa: CombatVictoryPanel.vue
-    // hiện kết quả trước, TỰ đếm ngược 3s rồi mới gọi lại startBattle()
-    // (đúng spec mục 15/19 — người chơi phải kịp thấy màn hình
-    // Thắng/Thua). Xem CombatResultModal.vue cho toàn bộ logic đó.
+    // Combat UI Redesign - Auto-refight (thang/thua Stage thi tu danh
+    // tiep) KHONG con chay tuc thoi o tick() nua: CombatVictoryPanel.vue
+    // hien ket qua truoc, TU dem nguoc 3s roi moi goi lai startBattle()
+    // (dung spec muc 15/19 - nguoi choi phai kip thay man hinh
+    // Thang/Thua). Xem CombatResultModal.vue cho toan bo logic do.
 
-    // Buff/Technique có thể vừa hết hạn hoặc vừa được thêm trong
-    // update() ở trên -> đồng bộ lại modifier cho player mỗi tick.
+    // Buff/Technique co the vua het han hoac vua duoc them trong
+    // update() o tren -> dong bo lai modifier cho player moi tick.
     //
-    // perf-optimize-pass Task 5: getAggregatedModifiers() vẫn dựng mảng
-    // MỚI mỗi tick (signature GameManager giữ nguyên), nhưng
-    // setExternalModifiers() nay tự dirty-check nội dung và BỎ QUA lần
-    // gán trùng — nên `finalStats` chỉ invalidate khi buff/technique
-    // thật sự đổi, không còn recompute 10 lần/giây. Đây là lý do
-    // bumpState() bên dưới CỐ Ý giữ nguyên (chạy mỗi tick cho đồng hồ/
-    // resource counter): stat đã được tách hẳn khỏi stateVersion.
+    // perf-optimize-pass Task 5: getAggregatedModifiers() van dung mang
+    // MOI moi tick (signature GameManager giu nguyen), nhung
+    // setExternalModifiers() nay tu dirty-check noi dung va BO QUA lan
+    // gan trung - nen `finalStats` chi invalidate khi buff/technique
+    // that su doi, khong con recompute 10 lan/giay. Day la ly do
+    // bumpState() ben duoi CO Y giu nguyen (chay moi tick cho dong ho/
+    // resource counter): stat da duoc tach han khoi stateVersion.
     player.setExternalModifiers([
       ...gameManager.effectOps.getAggregatedModifiers(player.$state),
-      // ARCH-002 (M7) — the live runtime channel (timed effects, Phu/Tran
+      // ARCH-002 (M7) - the live runtime channel (timed effects, Phu/Tran
       // sockets) is part of the same modifier union the battle provider
       // serves; the menu shows what combat actually uses.
       ...gameManager.effectOps.getActiveRuntimeModifiers(player.$state),
@@ -523,22 +523,20 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
   // Entry flow: guest auth, login, character creation - every route
   // into the game funnels through here so GameRoot can mount.
   // Idempotent: calling again once booted is a no-op.
-  // Remediation Task 5 — bootInFlight guard trong composable: boot thứ 2
-  // khi boot đầu còn pending bị skip; guard reset khi fail để retry chạy
-  // được. Phần dưới chỉ xử lý UI hiển thị theo outcome.
+  // Remediation Task 5 - bootInFlight guard trong composable: boot thu 2
+  // khi boot dau con pending bi skip; guard reset khi fail de retry chay
+  // duoc. Phan duoi chi xu ly UI hien thi theo outcome.
   const outcome = await lifecycle.bootGame({
     createNewCharacter,
     onRestoreOk: () => {
-      // Fix (2026-08-20) — grant "Trảm" save cũ (idempotent).
+      // Fix (2026-08-20) - grant "Tram" save cu (idempotent). P7-M4:
+      // learn-only - the mortal runtime resolves an absent pick as tram.
       if (!gameManager.skillManager.has('tram')) {
         gameManager.progressionOps.learnSkill('tram')
-        gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
-      } else if (!gameManager.skillManager.getEquippedInSlot(0)) {
-        gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
       }
-      // Phap Tu Reimagined Task 2 — mortal-path actives (idempotent).
+      // Phap Tu Reimagined Task 2 - mortal-path actives (idempotent).
       // huy_quyen (The Tu Reimagined sec.2.3) shares this seam - learned,
-      // not equipped - so the hidden_body_pathway offer gate reads it on old saves.
+      // so the hidden_body_pathway offer gate reads it on old saves.
       for (const mortalSkillId of ['linh_bao', 'huy_quyen']) {
         if (!gameManager.skillManager.has(mortalSkillId)) {
           gameManager.progressionOps.learnSkill(mortalSkillId)
@@ -549,12 +547,12 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       // Nhan vat moi: hoc san skill + grant khoi dau.
       // P7-M3 - KHONG con tam phap khoi dau: Pham Nhan khong giu
       // canonical technique (tu_linh_quyet da retire); Way cap tai
-      // initiation ritual.
+      // initiation ritual. P7-M4: tram is the runtime default pick -
+      // a fresh mortal carries no mortalBasicSkillId.
       gameManager.progressionOps.learnSkill('tram')
-      gameManager.progressionOps.setSkillLoadoutSlot(player.$state, 0, 'tram')
-      // Phap Tu Reimagined Task 2 — mortal-path actives.
+      // Phap Tu Reimagined Task 2 - mortal-path actives.
       gameManager.progressionOps.learnSkill('linh_bao')
-      // Huy Quyen — second mortal basic, learned unequipped; grinding it
+      // Huy Quyen - second mortal basic, learned; grinding it
       // to Lv3 (10.000 casts) is what reveals hidden_body_pathway at the ritual.
       gameManager.progressionOps.learnSkill('huy_quyen')
 
@@ -570,8 +568,8 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
         gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, instance)
       }
 
-      // Starter pack đủ xây 3 base (Linh Tuyền/Khí Đường/Đan Phòng) —
-      // id theo trục tuổi thống nhất (gp123 6E C2).
+      // Starter pack du xay 3 base (Linh Tuyen/Khi Duong/Dan Phong) -
+      // id theo truc tuoi thong nhat (gp123 6E C2).
       for (const [materialId, amount] of [
         ['mortal_wood_decade', 15],
         ['mortal_ore_decade', 6],
@@ -592,9 +590,9 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
   })
 
   if (outcome.status === 'entered') {
-    // No-op (undefined) ngay nếu không chạy trong Electron (window.electronAPI
-    // không tồn tại ở bản web) — xem composables/useElectronBridge.ts.
-    // Dispose lần trước nếu có: boot 'entered' hai lần không được chồng
+    // No-op (undefined) ngay neu khong chay trong Electron (window.electronAPI
+    // khong ton tai o ban web) - xem composables/useElectronBridge.ts.
+    // Dispose lan truoc neu co: boot 'entered' hai lan khong duoc chong
     // subscription.
     electronBridgeDispose?.()
     electronBridgeDispose = useElectronBridge(gameManager)
@@ -630,7 +628,7 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
 
   // The first durable save now lives inside the boot transaction
   // (useAppLifecycle.bootGame): 'entered' is only returned after the write
-  // commits, and the tick loop never starts on a failed save — the old
+  // commits, and the tick loop never starts on a failed save - the old
   // post-boot save block here let the runtime tick on an unpersisted
   // character (audit T1-8).
   await bootGame(true)
@@ -653,9 +651,9 @@ onUnmounted(() => {
 
   clock.stop()
 
-  // ARCH-013/L04 — combat counts on its own clock source: an unmounted App
+  // ARCH-013/L04 - combat counts on its own clock source: an unmounted App
   // that leaves it running keeps a live rAF loop (or main-process IPC
-  // subscription) driving a detached GameManager — under HMR that is a
+  // subscription) driving a detached GameManager - under HMR that is a
   // second invisible game advancing alongside the new mount.
   combatClockSource.stop()
   electronBridgeDispose?.()
@@ -667,8 +665,8 @@ onUnmounted(() => {
     clearTimeout(introHandle)
   }
 
-  // Remediation Task 5 — symmetric cleanup: event-bus handlers, DOM
-  // listeners, tick + autosave intervals (idempotent, gọi lại một cách an toàn).
+  // Remediation Task 5 - symmetric cleanup: event-bus handlers, DOM
+  // listeners, tick + autosave intervals (idempotent, goi lai mot cach an toan).
   lifecycle.stopAll()
   window.removeEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
 
@@ -722,11 +720,11 @@ onUnmounted(() => {
          transition into the game has not entered). -->
     <LoadingScreen v-if="!isBooted" />
 
-    <!-- GameRoot chỉ hiện khi boot xong -->
+    <!-- GameRoot chi hien khi boot xong -->
     <GameRoot v-if="isBooted" />
   </ErrorBoundary>
 
-  <!-- Task 8 (A11) — the unwatched pause. Data-driven by useCombatPause()
+  <!-- Task 8 (A11) - the unwatched pause. Data-driven by useCombatPause()
        (visibilitychange -> freezeCombat('tab-hidden')), NOT the curtain
        above: separate owner (the battle vs. the presentation coordinator),
        separate z-layer (OVERLAY_LAYERS.combatPause < curtain so the
@@ -749,13 +747,13 @@ onUnmounted(() => {
 </template>
 
 <style>
-/* body có margin mặc định 8px của trình duyệt — .game-root (100vh)
-   bị đẩy lệch xuống đúng 8px đó, khiến phần dưới cùng (bottom bar,
-   tab loadout...) bị tràn khỏi viewport. Reset ở đây vì cả app chưa
-   có global CSS reset nào khác. background/font-family/color áp token
-   từ assets/theme.css (import trong main.ts) — tránh chớp nền trắng
-   mặc định trước khi Vue mount, và mọi component kế thừa font/màu chữ
-   gốc trừ khi tự override. */
+/* body co margin mac dinh 8px cua trinh duyet - .game-root (100vh)
+   bi day lech xuong dung 8px do, khien phan duoi cung (bottom bar,
+   tab loadout...) bi tran khoi viewport. Reset o day vi ca app chua
+   co global CSS reset nao khac. background/font-family/color ap token
+   tu assets/theme.css (import trong main.ts) - tranh chop nen trang
+   mac dinh truoc khi Vue mount, va moi component ke thua font/mau chu
+   goc tru khi tu override. */
 html,
 body {
   margin: 0;

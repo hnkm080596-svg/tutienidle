@@ -1838,3 +1838,56 @@ describe('validateGameSaveShape — cycle/site consistency (Mission A review)', 
     expect(pathsOf(result)).toContain('productionSites[0].workerCycles[1].siteId')
   })
 })
+
+// P7-M4 (v71) - retired-key rejection lives at this shape layer; the
+// mortalBasicSkillId precursor/mortal-only contract lives at the
+// restore preflight (GameManagerSaveRestore.boundary.test.ts), so the
+// pick cases below only assert the shape layer stays pick-agnostic.
+describe('validateGameSaveShape — v71 retired skill fields', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  function withSkillEntry(extra: Record<string, unknown>): Record<string, unknown> {
+    const save = validSave()
+    save.skills = [
+      { id: 'tram', name: 'Trảm', type: 'active', level: 1, ...extra },
+    ]
+
+    return save
+  }
+
+  // P7-M4 - every retired key rejects (parameterized, not just unlocked):
+  // learned = SkillManager membership, roles resolve from the way kit -
+  // the boundary refuses to sanitize-and-load stale loadout state.
+  it.each(['loadoutSlot', 'loadoutSlots', 'equipped', 'unlocked'])(
+    'từ chối skill entry mang retired key %s',
+    (key) => {
+      const result = validateGameSaveShape(withSkillEntry({ [key]: key === 'loadoutSlots' ? [0] : key === 'loadoutSlot' ? 0 : true }))
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain(`skills[0].${key}`)
+    },
+  )
+
+  it('chấp nhận skill entry không mang retired key nào', () => {
+    expect(validateGameSaveShape(withSkillEntry({})).ok).toBe(true)
+  })
+
+  it.each(['tram', 'linh_bao', 'huy_quyen'])(
+    'chấp nhận mortalBasicSkillId = %s trên player chưa chọn path',
+    (skillId) => {
+      const save = validSave()
+      playerOf(save).mortalBasicSkillId = skillId
+
+      expect(validateGameSaveShape(save).ok).toBe(true)
+    },
+  )
+
+  it('player mặc định không mang mortalBasicSkillId (absent = tram default)', () => {
+    const save = validSave()
+
+    expect(playerOf(save).mortalBasicSkillId).toBeUndefined()
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})

@@ -28,6 +28,7 @@ import {
   BUMP_STATE_KEY,
 } from '@/composables/useGameState'
 import { GameManager } from '@/core/game/GameManager'
+import { toTurnSkillDefinition } from '@/core/skilldef/LegacySkillAdapter'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '@/core/battle/turn/CombatClock'
 import { defineEnemy } from '@/core/enemy/Enemy'
 import { createBaseStats } from '@/core/stats/StatBlock'
@@ -82,10 +83,6 @@ function createBasicSkill(): Skill {
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
     execution: { kind: 'attack_speed' },
     resourceType: 'none',
-    unlocked: true,
-    equipped: true,
-    loadoutSlot: 0,
-    loadoutSlots: [0],
   }
 }
 
@@ -143,7 +140,14 @@ describe('ARCH-005 (M12) — combat HUD reactivity over the in-place-mutated Tur
 
     gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
     gameManager.progressionOps.learnSkill('basic_test')
-    gameManager.skillSystem.equipToSlot('basic_test', 0)
+    const basicSkill = gameManager.skillManager.get('basic_test')!
+    gameManager.setPathRuntimeResolver(() => ({
+      resolveBasic: () =>
+        toTurnSkillDefinition(basicSkill, gameManager.skillSystem.getEffectiveSkill(basicSkill)),
+      resolveSpecialUltimate: () => undefined,
+      resolveMaxThe: () => 0,
+      resolveStatDomains: () => undefined,
+    }))
 
     gameManager.startBattle(player, createDummyEnemy())
 

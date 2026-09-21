@@ -12,18 +12,18 @@ import type { SkillManager } from '../skill/SkillManager'
 import type { RouteProfile } from '../phap-tu/PhapTuRoutes'
 
 /**
- * Mission C Task 9 (spec C4, audit T5-44) — the cultivation-path combat
+ * Mission C Task 9 (spec C4, audit T5-44) - the cultivation-path combat
  * boundary. GameManagerTurnBattleOps consumes THIS interface; it never
  * branches on path/way identity. Dispatch lives exclusively in
  * CultivationPathRegistry (the path-authority dir per the
  * cultivationPathIsolation architecture guard).
  */
 export interface CultivationPathRuntime {
-  /** The battle basic — authored Skill pipeline, kit slot, or generic melee. */
+  /** The battle basic - authored Skill pipeline, kit slot, or generic melee. */
   resolveBasic(player: PlayerData): TurnSkillDefinition
   /**
    * Kit slots or emblem markers for special/ultimate. Carries the full
-   * shape TurnBattleAdapter stamps onto the participant — dropping
+   * shape TurnBattleAdapter stamps onto the participant - dropping
    * reactivePayloads/maxThe deletes the hidden_body reactive channel.
    */
   resolveSpecialUltimate(player: PlayerData):
@@ -39,7 +39,7 @@ export interface CultivationPathRuntime {
   /** Stat-domain gate for battle stat derivation (active way's domains). */
   resolveStatDomains(player: PlayerData): readonly StatDomain[] | undefined
   /**
-   * Kiem Tu sword_pathway/hidden_sword_pathway dynamic-basic provider — undefined for other paths.
+   * Kiem Tu sword_pathway/hidden_sword_pathway dynamic-basic provider - undefined for other paths.
    * `rng` is the session battle RNG (Mission C Task 8): provider-side
    * rolls (Ngu cascade-crit/pierce) must not fall back to Math.random.
    */
@@ -58,6 +58,13 @@ export interface CultivationPathRuntime {
   /** Emblem/marker slot overrides (Ngu Kiem Dao special/ultimate). */
   emblemSlots?(): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition }
   /**
+   * P7-M4 - presentation-only label for a provider-backed basic (the
+   * role display cannot show a TurnSkillDefinition that only exists
+   * inside the provider closure). Sword ways return their authored
+   * machinery label; absent elsewhere.
+   */
+  describeDynamicBasic?(): { name: string }
+  /**
    * Canonical-seals S3 -- whether the player's party carries the
    * elemental-reaction aura (van_phap_than_hoa) at battle entry. Only
    * the Ngo Dao An runtime answers true, and only while
@@ -69,11 +76,11 @@ export interface CultivationPathRuntime {
 }
 
 /**
- * The resolver deps slice the path factories need — supplied by
+ * The resolver deps slice the path factories need - supplied by
  * GameManager (it owns the skill/progression registries, A3).
  */
 export interface CultivationPathRuntimeDeps {
-  skillManager: Pick<SkillManager, 'get' | 'has' | 'getEquippedInSlot'>
+  skillManager: Pick<SkillManager, 'get' | 'has'>
   skillSystem: { getEffectiveSkill(skill: Skill, levelOverride?: number): EffectiveSkill }
   skillTemplates: { get(id: string): Skill | undefined }
   nodeRegistry: { getAll(): ProgressionNode[] }

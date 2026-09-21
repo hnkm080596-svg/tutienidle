@@ -33,8 +33,6 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     expect(gameManager.progressionOps.purchaseNode('unlock_tru_tien', player)).toBe(true)
 
     expect(gameManager.skillManager.has('tram')).toBe(true)
-    // learn() KHÔNG tự equip — đúng tinh thần "học" khác "trang bị".
-    expect(gameManager.skillManager.get('tram')?.equipped).toBe(false)
     expect(player.skillInsight).toBe(3)
     expect(player.purchasedNodeIds).toEqual(['unlock_tru_tien'])
   })

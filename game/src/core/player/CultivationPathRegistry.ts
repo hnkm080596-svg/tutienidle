@@ -22,8 +22,9 @@ import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { ElementType } from '../element/ElementType'
 import type { CultivationPathRuntime, CultivationPathRuntimeDeps } from './CultivationPathRuntime'
 import { hasPathCapability, resolveActiveWayStatDomains } from './CultivationPathSystem'
+import { getActiveWayDefinition } from './CultivationPathKit'
 
-import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
+import { isMortalPrecursorSkillId, MORTAL_DEFAULT_BASIC_ID } from '../skill/MortalPrecursors'
 import { aggregateTurnSkillResourceModifiers } from '../progression/NodeSystem'
 import {
   toTurnSkillDefinition,
@@ -321,20 +322,24 @@ function sharedMembers(deps: CultivationPathRuntimeDeps) {
 }
 
 /**
- * Mortal / pham_nhan — the slot-0 loadout occupant is the player's
- * chosen basic-tier skill (spec 2026-09-15 section 2.3: huy_quyen is
- * cast as a basic while mortal, its casts feeding the hidden_body_pathway offer
- * gate). Restricted to the cast-leveled basics family — any other
- * slot-0 occupant (e.g. bat_kiem_thuat) keeps the creation-granted tram
- * as the combat basic.
+ * Mortal / pham_nhan — the persisted mortalBasicSkillId pick is the
+ * player's chosen basic-tier skill (spec 2026-09-15 section 2.3:
+ * huy_quyen is cast as a basic while mortal, its casts feeding the
+ * hidden_body_pathway offer gate). Restricted to the precursor family —
+ * an absent/illegal/unlearned pick resolves the tram default.
  */
 function createMortalRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
-      const equipped = deps.skillManager.getEquippedInSlot(0)
+      // P7-M4 — the persisted pick is the mortal basic; the precursor
+      // whitelist + learned membership guard it (a post-path or corrupt
+      // pick resolves the tram default). NO slot read exists anymore.
+      const pick = player.mortalBasicSkillId
       const authoredBasicId =
-        equipped && equipped.id in CAST_LEVELING_THRESHOLDS ? equipped.id : 'tram'
+        pick !== undefined && isMortalPrecursorSkillId(pick) && deps.skillManager.has(pick)
+          ? pick
+          : MORTAL_DEFAULT_BASIC_ID
 
       return (
         resolveAuthoredBasic(deps, player, authoredBasicId, false) ??
@@ -367,6 +372,9 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
     emblemSlots: hidden
       ? () => ({ special: TU_KIEM_Y_EMBLEM, ultimate: KIEM_DAO_CASCADE_EMBLEM })
       : undefined,
+    // P7-M4 — display label for the provider-backed basic (Kiếm Phổ orb
+    // machinery / Ngự Kiếm Đạo cascade), matching kiemBarBridge's wording.
+    describeDynamicBasic: () => ({ name: hidden ? 'Ngự Kiếm Đạo' : 'Kiếm Phổ' }),
   }
 }
 
@@ -379,6 +387,15 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
 
       return (
         resolveAuthoredBasic(deps, player, authoredBasicId, true) ??
+        // P7-M4 - way-authored starter fallback: linh_bao fights as the
+        // basic until the element kit supersedes (authored-read — the
+        // starter comes off the committed way definition, no literal).
+        resolveAuthoredBasic(
+          deps,
+          player,
+          getActiveWayDefinition(player)?.starterBasicSkillId,
+          false,
+        ) ??
         (player.cultivationPath ? BASIC_ATTACKS_BY_BUILD[player.cultivationPath] : undefined) ??
         GENERIC_PHYSICAL_BASIC
       )
@@ -475,9 +492,19 @@ function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivation
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
-      // The Tu Reimagined (spec section 5, INV-3) — root-owned kit, else
-      // the generic melee fallback only.
-      return resolveBodyKit(deps, player)?.basic ?? GENERIC_PHYSICAL_BASIC
+      // The Tu Reimagined (spec section 5, INV-3) — root-owned kit;
+      // P7-M4 way-authored starter fallback (huy_quyen) sits between the
+      // kit and the generic melee fallback.
+      return (
+        resolveBodyKit(deps, player)?.basic ??
+        resolveAuthoredBasic(
+          deps,
+          player,
+          getActiveWayDefinition(player)?.starterBasicSkillId,
+          false,
+        ) ??
+        GENERIC_PHYSICAL_BASIC
+      )
     },
     resolveSpecialUltimate(player) {
       const kit = resolveBodyKit(deps, player)

@@ -18,9 +18,4 @@ export interface SkillProgressionState {
   /** specialization selection -- resolved into the effective definition
       BEFORE the resolver sees it (R-S6). */
   selectedSpecializationId?: string
-  unlocked: boolean
-  equipped: boolean
-  /** union of legacy loadoutSlot + loadoutSlots -- slot indices the
-      skill occupies on the loadout bar. */
-  loadoutSlots: number[]
 }

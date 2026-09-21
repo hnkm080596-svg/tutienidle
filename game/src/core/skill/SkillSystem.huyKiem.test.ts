@@ -59,7 +59,6 @@ describe('Huy Kiếm — 3 level mốc 1000/10000 cast', () => {
     const system = new SkillSystem(manager)
     const template = SKILLS.find((skill) => skill.id === 'tram')!
     system.learn(template)
-    system.equipToSlot('tram', 0)
     const skill = manager.get('tram')!
 
     for (let cast = 0; cast < 999; cast++) system.recordCast('tram')

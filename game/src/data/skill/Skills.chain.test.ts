@@ -99,13 +99,12 @@ describe('Data chuỗi thần thoại 3-skill (Future Systems Task 1)', () => {
     }
   })
 
-  it('5 ult mới: có trong SKILLS, buildTag ult, unlocked false, không requiredRealmId', () => {
+  it('5 ult mới: có trong SKILLS, buildTag ult, không requiredRealmId', () => {
     for (const id of NEW_ULT_IDS) {
       const skill = SKILLS.find(s => s.id === id)
 
       expect(skill, `thiếu ult ${id}`).toBeDefined()
       expect(skill!.buildTag).toBe('ult')
-      expect(skill!.unlocked).toBe(false)
       expect(skill!.requiredRealmId).toBeUndefined()
       expect(skill!.execution).toEqual({ kind: 'cast_time', castTime: 1.5 })
     }
@@ -142,13 +141,10 @@ describe('Data chuỗi thần thoại 3-skill (Future Systems Task 1)', () => {
     expect(new Set(allIds).size).toBe(allIds.length)
   })
 
-  it('skill mới KHÔNG unlocked mặc định (phải mua qua node chuỗi)', () => {
+  it('element kit skills tồn tại trong catalog (mua qua node chuỗi)', () => {
     for (const element of ELEMENT_ORDER) {
       for (const skillId of SPELL_KIT_IDS[element].slice(1)) {
-        const skill = SKILLS.find(s => s.id === skillId)
-
-        expect(skill!.unlocked).toBe(false)
-        expect(skill!.equipped).toBe(false)
+        expect(SKILLS.find(s => s.id === skillId), `thiếu ${skillId}`).toBeDefined()
       }
     }
   })

@@ -222,7 +222,6 @@ interface RuntimeFixtureState {
   label: string
   player: PlayerData
   nodes?: readonly ProgressionNode[]
-  equipSlot0?: string
   /** Kit slots this state must produce (the way's unconditional kit
       surface) -- an absent required slot is a producer defect, not an
       optional lane. Mortal/sword legs legitimately return undefined. */
@@ -238,7 +237,7 @@ function censusPlayer(mutate: (player: PlayerData) => void = () => {}): PlayerDa
 const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
   [MORTAL_LEG]: () => [
     { label: 'default', player: censusPlayer() },
-    { label: 'equipped_basic', player: censusPlayer(), equipSlot0: 'huy_quyen' },
+    { label: 'picked_basic', player: censusPlayer((p) => { p.mortalBasicSkillId = 'huy_quyen' }) },
   ],
 
   'sword:sword_pathway': () =>
@@ -354,18 +353,9 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
 function runtimeDepsFor(
   player: PlayerData,
   nodes: readonly ProgressionNode[],
-  equipSlot0: string | undefined,
 ): { deps: CultivationPathRuntimeDeps; skillSystem: SkillSystem; manager: SkillManager } {
   const manager = new SkillManager()
   for (const skill of SKILLS) manager.add(structuredClone(skill))
-
-  if (equipSlot0 !== undefined) {
-    const equipped = manager.get(equipSlot0)
-    if (equipped !== undefined) {
-      equipped.equipped = true
-      equipped.loadoutSlot = 0
-    }
-  }
 
   const skillSystem = new SkillSystem(manager)
 
@@ -517,7 +507,7 @@ function collectCastableDefs(): Census {
   // An-kit mutated clones through the SAME code path production uses.
   for (const [legKey, fixtureStates] of Object.entries(RUNTIME_FIXTURES)) {
     for (const state of fixtureStates()) {
-      const { deps } = runtimeDepsFor(state.player, state.nodes ?? [], state.equipSlot0)
+      const { deps } = runtimeDepsFor(state.player, state.nodes ?? [])
       const runtime = resolveCultivationPathRuntime(state.player, deps)
       const prefix = `runtime:${legKey}:${state.label}`
 
@@ -609,7 +599,7 @@ function collectCastableDefs(): Census {
   }
 
   // An-kit mutator clones over the real converter output (the element
-  // pool the orchestrator builds). The equipped basic gets the
+  // pool the orchestrator builds). The resolved basic gets the
   // production forced fields post-mutation; pool members stay raw.
   const matrixDeps = runtimeDepsFor(
     censusPlayer((p) => {
@@ -617,7 +607,6 @@ function collectCastableDefs(): Census {
       p.cultivationWay = 'hidden_spell_pathway'
     }),
     [],
-    undefined,
   )
   const elementPool = ELEMENT_ORDER.map((element) => {
     const template = matrixDeps.manager.get(SPELL_KIT_IDS[element][0])!

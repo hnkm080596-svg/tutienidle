@@ -35,15 +35,12 @@ describe('realm-entry passive — way-owned (P7-M2)', () => {
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
     expect(player.realmId).toBe('qi_refining')
 
-    // Canonical ladder entry at qi_refining (syncRealmPassive seam).
+    // Canonical ladder entry at qi_refining (syncRealmPassive seam) -
+    // membership IS the active authority (learned passives always apply).
     expect(gameManager.skillManager.has(CANONICAL_REALM_PASSIVE_LADDER.qi_refining!)).toBe(true)
-    expect(
-      gameManager.skillManager.get(CANONICAL_REALM_PASSIVE_LADDER.qi_refining!)?.equipped,
-    ).toBe(true)
 
     // Way-declared initiation passive (was ngu_kiem.innateSkillId).
     expect(gameManager.skillManager.has('passive_kiem_tam_lanh_liet')).toBe(true)
-    expect(gameManager.skillManager.get('passive_kiem_tam_lanh_liet')?.equipped).toBe(true)
   })
 
   it('body ritual grants the way initiation passive', () => {
@@ -52,7 +49,6 @@ describe('realm-entry passive — way-owned (P7-M2)', () => {
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)).toBe(true)
     expect(gameManager.skillManager.has('passive_kim_cang_y_chi')).toBe(true)
-    expect(gameManager.skillManager.get('passive_kim_cang_y_chi')?.equipped).toBe(true)
   })
 
   it('syncRealmPassive is idempotent on repeat calls', () => {
@@ -141,9 +137,6 @@ describe('realm-entry passive — way-owned (P7-M2)', () => {
     gameManager.realmAdvanceOps.syncRealmPassive(player)
     expect(
       gameManager.skillManager.has(CANONICAL_REALM_PASSIVE_LADDER.foundation_establishment!),
-    ).toBe(true)
-    expect(
-      gameManager.skillManager.get(CANONICAL_REALM_PASSIVE_LADDER.foundation_establishment!)?.equipped,
     ).toBe(true)
   })
 })

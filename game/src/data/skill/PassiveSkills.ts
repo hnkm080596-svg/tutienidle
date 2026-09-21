@@ -48,9 +48,7 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'hit',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -95,9 +93,7 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'damage_taken',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -142,9 +138,7 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'critical',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -182,9 +176,7 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'per_second',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -229,9 +221,7 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'kill',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -276,9 +266,7 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'cast',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -323,9 +311,7 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'attack',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -375,9 +361,7 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'hit',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -422,9 +406,7 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'per_second',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   // Combat innate of the retired thai_hu_kiem_quyet - P7-M3: the
@@ -470,9 +452,7 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'critical',
 
-    unlocked: false,
 
-    equipped: false,
   },
 
   {
@@ -515,8 +495,6 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     passiveTrigger: 'damage_taken',
 
-    unlocked: false,
 
-    equipped: false,
   },
 ]

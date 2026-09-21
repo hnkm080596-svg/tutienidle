@@ -30,6 +30,7 @@ import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { CANONICAL_REALM_PASSIVE_LADDER } from '../../data/progression/RealmPassiveLadder'
+import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { SKILLS } from '../../data/skill/Skills'
@@ -109,7 +110,6 @@ function expectWellFormedWay(way: PathWayDefinition, moduleId: CultivationPathId
 
   for (const [label, ids] of [
     ['skillIds', way.skillIds],
-    ['unequipSkillIds', way.unequipSkillIds],
     ['ownedContent.skillIds', way.ownedContent?.skillIds],
     ['ownedContent.buffIds', way.ownedContent?.buffIds],
   ] as const) {
@@ -117,6 +117,15 @@ function expectWellFormedWay(way: PathWayDefinition, moduleId: CultivationPathId
       expect(ids.every((id) => typeof id === 'string' && id.trim().length > 0)).toBe(true)
       expect(new Set(ids).size, `${moduleId}.${wayKey}: duplicate ${label}`).toBe(ids.length)
     }
+  }
+
+  // P7-M4 - a declared starter basic is always a mortal precursor
+  // (the only skills a fresh way player can already know).
+  if (way.starterBasicSkillId !== undefined) {
+    expect(
+      isMortalPrecursorSkillId(way.starterBasicSkillId),
+      `${moduleId}.${wayKey}: starterBasicSkillId must be a mortal precursor`,
+    ).toBe(true)
   }
 
   // P1-M2 - a declared ownedContent must own something.

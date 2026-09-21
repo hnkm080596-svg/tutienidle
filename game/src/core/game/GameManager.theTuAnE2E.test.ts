@@ -288,7 +288,7 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
   })
 })
 
-describe('mortal basic wiring — huy_quyen is castable as the slot-0 basic (spec 2.3)', () => {
+describe('mortal basic wiring — huy_quyen is castable as the picked basic (spec 2.3)', () => {
   function mortalWithBasic(basicSkillId: string | null) {
     const { gameManager, combatSource } = makeManager()
     const player = createDefaultPlayer()
@@ -299,12 +299,12 @@ describe('mortal basic wiring — huy_quyen is castable as the slot-0 basic (spe
       gameManager.progressionOps.learnSkill(skillId)
     }
     if (basicSkillId !== null) {
-      gameManager.progressionOps.setSkillLoadoutSlot(player, 0, basicSkillId)
+      gameManager.progressionOps.setMortalBasicSkill(player, basicSkillId)
     }
     return { gameManager, combatSource, player }
   }
 
-  it('huy_quyen equipped at slot 0 becomes the battle basic and accrues huy_quyen casts', () => {
+  it('huy_quyen picked as the mortal basic becomes the battle basic and accrues huy_quyen casts', () => {
     const { gameManager, combatSource, player } = mortalWithBasic('huy_quyen')
     const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_mortal_hq'))
     expect(battle.players[0]!.basic?.id).toBe('huy_quyen')
@@ -314,7 +314,7 @@ describe('mortal basic wiring — huy_quyen is castable as the slot-0 basic (spe
     expect(advanceUntil(combatSource, () => (player.skillCastCounts?.['huy_quyen'] ?? 0) > 0)).toBe(true)
   })
 
-  it('tram equipped at slot 0 keeps recording tram casts (kiem-route parity)', () => {
+  it('tram picked as the mortal basic keeps recording tram casts (kiem-route parity)', () => {
     const { gameManager, combatSource, player } = mortalWithBasic('tram')
     const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_mortal_tram'))
     expect(battle.players[0]!.basic?.id).toBe('tram')
@@ -324,10 +324,10 @@ describe('mortal basic wiring — huy_quyen is castable as the slot-0 basic (spe
     expect(advanceUntil(combatSource, () => (player.skillCastCounts?.['tram'] ?? 0) > 0)).toBe(true)
   })
 
-  it('a non-basic-tier slot-0 occupant falls back to the creation-granted tram', () => {
+  it('a non-precursor pick is rejected and falls back to the creation-granted tram', () => {
     const { gameManager, combatSource, player } = mortalWithBasic(null)
     gameManager.progressionOps.learnSkill('bat_kiem_thuat')
-    gameManager.progressionOps.setSkillLoadoutSlot(player, 0, 'bat_kiem_thuat')
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'bat_kiem_thuat')).toBe(false)
 
     const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_mortal_bk'))
     expect(battle.players[0]!.basic?.id).toBe('tram')

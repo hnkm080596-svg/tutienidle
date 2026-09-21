@@ -5,7 +5,7 @@ import type {
   CultivationWayId,
 } from '../player/CultivationPathKit'
 import type { PlayerData } from '../player/Player'
-import { freshSwordPathState, KIEM_PHO_ORB_IDS, MORTAL_PRECURSOR_SKILL_IDS } from './KiemTuState'
+import { freshSwordPathState, KIEM_PHO_ORB_IDS } from './KiemTuState'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 import { KIEM_PHO_BUFFS } from '../../data/buff/KiemPhoBuffs'
 import {
@@ -176,10 +176,9 @@ export const SWORD_PATHWAY: PathWayDefinition = {
   techniqueId: 'sword_control_art',
   // Kiem Tu Reimagined (spec 2026-09-15) — no authored skill grants:
   // sword_pathway basics come from the Kiem Pho orb preset (KiemPhoProvider).
-  // M9 — the ritual strips the mortal precursor skills from the loadout
-  // (NOT unlearn: a Pham Nhan save can still use them; the precursor
-  // equip gate blocks re-equip post-path).
-  unequipSkillIds: MORTAL_PRECURSOR_SKILL_IDS,
+  // P7-M4 — mortal precursor skills stay learned past initiation; the
+  // ritual clears mortalBasicSkillId inside the commit block and the
+  // mortal-only pick gate blocks re-selection post-path.
   // P7-M2 - canonical realm-entry passive ladder (delivered by
   // syncRealmPassive); the initiation passive below replaces the
   // retired ngu_kiem.innateSkillId grant.
@@ -231,8 +230,8 @@ export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
   // skillLevels mirror). A mortal without tram Lv3 at the ritual can
   // never enter hidden_sword_pathway — there is no mid-progression flip any more.
   offerGate: { requiresSkillLevel: { skillId: 'tram', level: 3 } },
-  // M9 — same mortal-precursor strip as sword_pathway.
-  unequipSkillIds: MORTAL_PRECURSOR_SKILL_IDS,
+  // P7-M4 - same mortal-precursor contract as sword_pathway (learned
+  // skills kept; pick cleared at commit; mortal-only gate).
   // M7 — same shared-domain facet as sword_pathway: 'sword', no totals-driven
   // channel.
   stats: {

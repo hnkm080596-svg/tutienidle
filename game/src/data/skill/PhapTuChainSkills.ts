@@ -42,8 +42,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'hoa_an', ailmentChance: 0.75 },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'tam_muoi_chan_hoa',
@@ -107,8 +105,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'chuc_dung_dan_no',
@@ -171,8 +167,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'hoa_ha_cuu_thien',
@@ -197,8 +191,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'hoa_an', ailmentChance: 1 },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
 
   // ── Chuỗi THIÊN NGÔ (Thủy — kiềm chế + hồi, §2.2): B Tê Cóng, C hồi
@@ -225,8 +217,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'han_tuc', ailmentChance: 0.8 },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'thanh_tuyen_duong_linh',
@@ -259,8 +249,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'hoi_luu_thon_no',
@@ -327,8 +315,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'bac_hai_cuong_lan',
@@ -353,8 +339,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'han_tuc', ailmentChance: 1 },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
 
   // ── Chuỗi CÂU MANG (Mộc — nhiễm độc lan, §2.3): B đắp Trúng Độc,
@@ -381,8 +365,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'doc_can', ailmentChance: 1 },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'cau_mang_can_tri',
@@ -443,8 +425,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'van_moc_lan_doc',
@@ -505,8 +485,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'doc_vien_bao_can',
@@ -532,8 +510,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
 
   // ── Chuỗi NHỤC THU (Kim — nghiền nát kim loại, KHÔNG kiếm pháp,
@@ -552,8 +528,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
     target: 'self',
     effects: [{ type: 'buff', buffId: 'kim_giap' }],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'kim_lang_toan_phong',
@@ -616,8 +590,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'kim_chung_cong_huong',
@@ -678,8 +650,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'kim_luan_tran_ap',
@@ -704,8 +674,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
 
   // ── Chuỗi HẬU THỔ (Thổ — phòng tuyến, §2.5): B Thạch Hóa + chấn,
@@ -733,8 +701,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'choang', ailmentChance: 0.2 },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'dia_tru_thua_thien',
@@ -768,8 +734,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'con_lon_chan_dia',
@@ -830,8 +794,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'cuu_tru_dia_lao',
@@ -857,8 +819,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'troi_chan', ailmentChance: 1 },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
   },
 
   // ── 5 ULTIMATE Thuần hệ (spec §3) — Thế đầy 100 (+bonus) → reset 0.
@@ -889,8 +849,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
     ],
     resourceType: 'none',
     buildTag: 'ult',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'bat_thu_can_quet',
@@ -918,8 +876,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
     ],
     resourceType: 'none',
     buildTag: 'ult',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'kien_moc_thong_thien',
@@ -947,8 +903,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
     ],
     resourceType: 'none',
     buildTag: 'ult',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'kim_phat_thu_sat',
@@ -974,8 +928,6 @@ export const PHAP_TU_SKILLS: Skill[] = [
     ],
     resourceType: 'none',
     buildTag: 'ult',
-    unlocked: false,
-    equipped: false,
   },
   {
     id: 'hau_tho_thanh_luy',
@@ -1002,7 +954,5 @@ export const PHAP_TU_SKILLS: Skill[] = [
     ],
     resourceType: 'none',
     buildTag: 'ult',
-    unlocked: false,
-    equipped: false,
   },
 ]

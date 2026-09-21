@@ -210,6 +210,9 @@ export const SPELL_PATHWAY: PathWayDefinition = {
   pathId: 'spell',
   name: 'Pháp Tu — Đại Ngũ Hành Chân Quyết',
   techniqueId: 'five_elements_art',
+  // P7-M4 - starter basic: the mortal linh_bao precursor stays the
+  // basic until selectSpellPathElement() commits the element kit.
+  starterBasicSkillId: 'linh_bao',
   // MP-pool + mana-shield grants carry domain:'spell' so the domain
   // gate keeps accepting them once those stats are gated to the
   // spell domain.
@@ -296,11 +299,11 @@ export const SPELL_PATHWAY: PathWayDefinition = {
 }
 
 // Ngo Dao required kit (review round-4, MEDIUM) — the ritual grants
-// exactly these three skills atomically: two loadout actives + the dao
-// passive declared on the way's passiveSkillIds (the skillIds
+// exactly these three skills atomically (learn-only): two actives +
+// the dao passive declared on the way's passiveSkillIds (the skillIds
 // list cannot express a passive member). Battle construction asserts
 // the full set is learned; a partial kit is corrupt progression state
-// and must fail loudly, never silently drop a slot. P1-M2 — the kit's
+// and must fail loudly, never silently drop a role. P1-M2 — the kit's
 // declaration of record is the way's ownedContent.skillIds below;
 // HIDDEN_SPELL_REQUIRED_SKILLS derives FROM it (single source) and is
 // re-exported from CultivationPathKit so existing consumers keep their
@@ -316,11 +319,11 @@ export const HIDDEN_SPELL_PATHWAY: PathWayDefinition = {
   techniqueId: 'dao_insight_art',
   // Former phap_tu_an kit — hidden way. Owns the same 'spell' stat
   // domain (the shared SPELL_WAY_STATS facet) so its MP-shield line
-  // passes the domain gate. M9 — the two loadout actives ride the
-  // generic skillIds channel (learned + equipped at slots 0/1); the
-  // kit's third member is the dao passive declared on passiveSkillIds
-  // (P7-M2 - replaces the retired technique innateSkillId), not a
-  // loadout skill. Modifier ids keep the ngo_dao
+  // passes the domain gate. M9 — the two actives ride the generic
+  // skillIds channel (learn-only; the path runtime resolves basic/
+  // special roles from the kit, P7-M4); the kit's third member is the
+  // dao passive declared on passiveSkillIds (P7-M2 - replaces the
+  // retired technique innateSkillId). Modifier ids keep the ngo_dao
   // name now that 'phap_tu_an' is no longer a path id.
   skillIds: [HIDDEN_SPELL_BASIC_ID, HIDDEN_SPELL_SPECIAL_ID],
   passiveSkillIds: [HIDDEN_SPELL_PASSIVE_ID],

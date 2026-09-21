@@ -11,6 +11,7 @@ import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { COMPANIONS } from '../../data/companion/Companions'
 import { GameManager } from './GameManager'
 import { resolveCombatBuild, type CombatBuildDeps } from './CombatBuild'
+import { resolveCombatSkillRoles } from '../player/CultivationPathRoles'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
 import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
@@ -348,14 +349,16 @@ describe('resolveCombatBuild — kit composition (M2)', () => {
 
       const runtime = resolveCultivationPathRuntime(player, runtimeDeps)
       const build = resolveCombatBuild(player, runtime, makeDeps())
-      const specialUltimate = runtime.resolveSpecialUltimate(player)
+      const roles = resolveCombatSkillRoles(player, runtime)
 
-      expect(build.kit.basic).toEqual(runtime.resolveBasic(player))
-      expect(build.kit.special).toEqual(specialUltimate?.special)
-      expect(build.kit.ultimate).toEqual(specialUltimate?.ultimate)
-      expect(build.kit.reactivePayloads).toEqual(specialUltimate?.reactivePayloads)
+      // P7-M4 - the build kit IS the seam's composition (emblem
+      // precedence folded in: hidden_sword's kit.special reads the
+      // emblem def, not the raw resolveSpecialUltimate value).
+      expect(build.kit.basic).toEqual(roles.basic)
+      expect(build.kit.special).toEqual(roles.special)
+      expect(build.kit.ultimate).toEqual(roles.ultimate)
+      expect(build.kit.reactivePayloads).toEqual(roles.reactivePayloads)
       expect(build.kit.statDomains).toEqual(runtime.resolveStatDomains(player))
-      expect(build.kit.emblem).toEqual(runtime.emblemSlots?.())
     }
   })
 

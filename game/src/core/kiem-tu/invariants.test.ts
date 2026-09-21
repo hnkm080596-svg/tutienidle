@@ -7,7 +7,8 @@ import { join, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
-import { freshSwordPathState, KIEM_PHO_ORB_IDS, MORTAL_PRECURSOR_SKILL_IDS, type OrbId } from './KiemTuState'
+import { freshSwordPathState, KIEM_PHO_ORB_IDS, type OrbId } from './KiemTuState'
+import { MORTAL_PRECURSOR_SKILL_IDS } from '../skill/MortalPrecursors'
 import {
   initKiemPhoBattle,
   nextOrb,
@@ -687,7 +688,7 @@ describe('INV-14 — `the` isolation', () => {
 
 describe('INV-15 — precursor lock (K3)', () => {
   it.each(MORTAL_PRECURSOR_SKILL_IDS)(
-    'precursor %s is unequippable once any cultivation path is chosen',
+    'precursor %s cannot be re-picked once any cultivation path is chosen',
     (skillId) => {
       const gameManager = new GameManager()
       gameManager.catalogOps.registerSkillTemplates(SKILLS)
@@ -699,10 +700,10 @@ describe('INV-15 — precursor lock (K3)', () => {
       player.skillCastCounts = { tram: 0 }
       gameManager.setActivePlayer(player)
       gameManager.progressionOps.learnSkill('tram')
-      gameManager.skillSystem.equipToSlot('tram', 0)
+      gameManager.progressionOps.setMortalBasicSkill(player, 'tram')
 
       expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
-      expect(gameManager.progressionOps.setSkillLoadoutSlot(player, 0, skillId)).toBe(false)
+      expect(gameManager.progressionOps.setMortalBasicSkill(player, skillId)).toBe(false)
     },
   )
 

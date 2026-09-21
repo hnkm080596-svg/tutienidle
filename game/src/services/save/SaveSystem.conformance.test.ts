@@ -52,8 +52,6 @@ const CONF_SKILL: Skill = {
   cooldown: 0,
   target: 'self',
   effects: [],
-  unlocked: true,
-  equipped: false,
 }
 
 function createRegisteredManager(): GameManager {
@@ -147,8 +145,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     makeInstance({
       instanceId: 'conf-item',
       itemId: 'base_kiem',
-      equipped: false,
-      realmLevel: 2,
+        realmLevel: 2,
       zoneId: 'thanh_van_dong',
       mainStat: {
         id: 'conf-item-main',

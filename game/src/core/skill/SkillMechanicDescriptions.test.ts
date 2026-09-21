@@ -21,8 +21,6 @@ function skillWith(effects: SkillEffect[]): Skill {
     target: 'enemy',
     effects,
     resourceType: 'none',
-    unlocked: true,
-    equipped: false,
   } as Skill
 }
 

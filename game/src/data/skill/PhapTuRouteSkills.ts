@@ -44,8 +44,6 @@ export const PHAP_TU_ROUTE_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'hoa_an', ailmentChance: 0.7 },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
     buildTag: 'dot',
   },
 
@@ -91,8 +89,6 @@ export const PHAP_TU_ROUTE_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
     buildTag: 'dot',
   },
 
@@ -141,8 +137,6 @@ export const PHAP_TU_ROUTE_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'hoa_an', ailmentChance: 0.7 },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
     buildTag: 'dot',
   },
 
@@ -174,8 +168,6 @@ export const PHAP_TU_ROUTE_SKILLS: Skill[] = [
       },
     ],
     resourceType: 'none',
-    unlocked: false,
-    equipped: false,
     buildTag: 'burst',
   },
 ]

@@ -16,12 +16,19 @@ import {
 import type { Skill } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
-import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
-import { MORTAL_PRECURSOR_SKILL_IDS, type OrbId } from '../kiem-tu/KiemTuState'
+import { type OrbId } from '../kiem-tu/KiemTuState'
+import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
 import { gainKiemY, grantKiemDao } from '../kiem-tu/NguKiemDao'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import { isBattleInProgress } from '../battle/BattleTypes'
+import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
+import {
+  resolveCombatSkillRoles,
+  type ResolvedDefRole,
+  type ResolvedSkillRoles,
+} from '../player/CultivationPathRoles'
+import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
@@ -35,10 +42,10 @@ import type { MainStatKey } from '../stats/StatTypes'
 import type { TemplateRegistry } from './TemplateRegistry'
 
 /**
- * Node Tree / skill loadout / talent-sync progression operations.
+ * Node Tree / combat roles / talent-sync progression operations.
  * Extracted from GameManager (large-file split): owns the orchestration
  * between NodeRegistry + SkillSystem/SkillManager + PlayerData for the
- * purchase/upgrade/loadout/specialization contract. All rule logic stays
+ * purchase/upgrade/role/specialization contract. All rule logic stays
  * in the domain systems (NodeSystem, SkillSystem) - this class only
  * sequences them (A5). Moved verbatim.
  *
@@ -52,7 +59,7 @@ export class GameManagerProgressionOps {
       skillSystem: SkillSystem
       skillManager: SkillManager
       getActivePlayer: () => PlayerData | undefined
-      // Phap Tu Reimagined Task 4 — combat-state read for switchRoute's
+      // Phap Tu Reimagined Task 4 - combat-state read for switchRoute's
       // out-of-combat gate (route is static during battle). Owned by the
       // battle owner: a retained terminal TurnBattle does NOT count as
       // in-progress, so the gate is a state query, not object existence.
@@ -60,11 +67,15 @@ export class GameManagerProgressionOps {
       // Deferred closure - turnBattleOps is assigned after this ops class
       // is constructed (same pattern as realmAdvanceOps/effectOps).
       getTurnBattle: () => TurnBattle | null
+      // P7-M4 - the SHARED override-aware path-runtime binding (the
+      // GameManager owns the override so combat + this UI accessor
+      // resolve identically; setPathRuntimeResolver affects both).
+      resolvePathRuntime: (player: PlayerData) => CultivationPathRuntime
     },
   ) {}
 
   /**
-   * Talent v4 (spec 2026-09-03 §4.1) - grant/revoke the hidden passive
+   * Talent v4 (spec 2026-09-03 sec.4.1) - grant/revoke the hidden passive
    * skill of the currently-chosen combat talents into SkillManager.
    * Idempotent: revokes every old talent passive before granting (talent
    * swapped via save edit does not double up, no leak between players).
@@ -82,7 +93,7 @@ export class GameManagerProgressionOps {
       }
     }
 
-    // Grant by FIRST talent (collectTalentEffects sorts by spec §3.2 id):
+    // Grant by FIRST talent (collectTalentEffects sorts by spec sec.3.2 id):
     // each combat talent declares 1-2 combat_passive effects.
     for (const effect of collectTalentEffects(player.selectedTalentIds)) {
       if (effect.kind === 'combat_passive') {
@@ -122,13 +133,13 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * Phap Tu Redesign (magicpath) - purchase 1 ProgressionNode (LĨNH NGỘ,
+   * Phap Tu Redesign (magicpath) - purchase 1 ProgressionNode (LINH NGO,
    * 0->1). Calls the pure `purchaseNode()` (core/progression/NodeSystem.ts)
    * first - that function handles everything registry-free. Only
    * `unlocksSkillIds` still needs learnSkill() (skillTemplates live here).
    * Does NOT auto-equip the newly unlocked skill.
    *
-   * §6.8 - no more Skill-instance mutation / player.modifiers push at
+   * sec.6.8 - no more Skill-instance mutation / player.modifiers push at
    * purchase: every effect is derived from (registry, nodeLevels) via
    * getAggregatedModifiers, always recomputed for the same deterministic
    * result.
@@ -138,7 +149,7 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    // Phap Tu Reimagined (Task 6) — element roots commit through the
+    // Phap Tu Reimagined (Task 6) - element roots commit through the
     // atomic selectSpellPathElement() only; public purchase of a root would
     // split the element+route invariant (element != null implies route
     // != null).
@@ -172,7 +183,7 @@ export class GameManagerProgressionOps {
       this.deps.skillSystem.selectSpecialization(selectsSpec.skillId, selectsSpec.specializationId)
     }
 
-    // Kiem Tu Reimagined Task 11 (spec §5.4/§6) — Cuu Cung grants run
+    // Kiem Tu Reimagined Task 11 (spec sec.5.4/sec.6) - Cuu Cung grants run
     // through the NguKiemDao domain functions (the domain owns the cap
     // rule; nodes never touch player.swordPath directly). The
     // kiemDaoBelowCap prereq already blocked capped buys upstream.
@@ -188,12 +199,12 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * Phap Tu Reimagined (Task 6) — the ONLY public writer of
+   * Phap Tu Reimagined (Task 6) - the ONLY public writer of
    * player.spellPath.element. Atomic: validates eligibility + route +
    * root purchasability FIRST, then purchases the element root through
    * the generic NodeSystem primitive, applies unlock effects, and
    * finally commits { element, route }. Any failure leaves spellPath
-   * untouched — element != null implies route != null always.
+   * untouched - element != null implies route != null always.
    */
   selectSpellPathElement(element: ElementType, route: SpellPathRoute, player: PlayerData): boolean {
     // Cultivation Path Framework (M4, R6): element/route machinery is
@@ -227,7 +238,7 @@ export class GameManagerProgressionOps {
 
     // Transaction boundary (review round-4, atomicity hardening): every
     // skill the root unlocks must be learnable BEFORE the purchase
-    // spends insight + commits { element, route } — a missing template
+    // spends insight + commits { element, route } - a missing template
     // would leave the element committed without its basic.
     for (const skillId of root.effect.unlocksSkillIds ?? []) {
       if (!this.deps.skillTemplates.has(skillId)) {
@@ -249,7 +260,7 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * Upgrade a comprehended node by +1 level with Cam Ngo (§6.2) - cost
+   * Upgrade a comprehended node by +1 level with Cam Ngo (sec.6.2) - cost
    * per node data; cannot exceed maxLevel; failure mutates nothing.
    */
   upgradeNode(nodeId: string, player: PlayerData): boolean {
@@ -302,7 +313,7 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * Dev-reset a branch (§6.10) - refunds exactly the total Cam Ngo spent
+   * Dev-reset a branch (sec.6.10) - refunds exactly the total Cam Ngo spent
    * (derived from level/cost data), cascades orphan child nodes; modifiers
    * update via the aggregators (no reverse subtraction of old modifiers).
    */
@@ -311,7 +322,7 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * Phap Tu Reimagined Task 4 — switch the route commitment. Out of
+   * Phap Tu Reimagined Task 4 - switch the route commitment. Out of
    * combat ONLY: a route is static during battle (INV-16), so this
    * rejects while a turn battle is active. The domain function owns
    * the 75% refund + route-tagged level cleanup.
@@ -322,7 +333,7 @@ export class GameManagerProgressionOps {
     }
 
     // Review fix (HIGH-2): switching requires the atomic
-    // (element, route) commit on the normal spell path — otherwise
+    // (element, route) commit on the normal spell path - otherwise
     // there is no committed route to switch FROM. The domain function
     // enforces the same invariant; the op must not report success for
     // a rejected write.
@@ -340,7 +351,7 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * skill-insight-and-auto-combat-hud-plan.md §5 - upgrade a skill with
+   * skill-insight-and-auto-combat-hud-plan.md sec.5 - upgrade a skill with
    * Skill Insight, pure passthrough to SkillSystem (already has
    * skillManager via its own constructor, needs nothing else here).
    */
@@ -353,10 +364,10 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * PLAN HOAN CHINH §2 - spend 1 attributePoint into EXACTLY 1 Main Stat.
+   * PLAN HOAN CHINH sec.2 - spend 1 attributePoint into EXACTLY 1 Main Stat.
    * No-op (returns false) when out of points or the stat hit the current
    * major-realm cap (getMainStatCap()) - cap is per-stat, there is NO
-   * shared cap across all 5 (per the doc's "Nguyen tac" §2).
+   * shared cap across all 5 (per the doc's "Nguyen tac" sec.2).
    */
   allocateAttributePoint(player: PlayerData, stat: MainStatKey): boolean {
     if (player.attributePoints <= 0) {
@@ -374,53 +385,80 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * PLAN HOAN CHINH §8/12 - "Set Skill into Loadout" (tier 4), fully
-   * separate from learnSkill()/purchaseNode() (tier 3, "learn").
-   * skillId === null CLEARS that slot (unequips the occupant if any).
-   * slotIndex is validated against realm progression HERE (not in
-   * SkillSystem - the pure domain does not know realms).
+   * P7-M4 - the ONLY role write in the game: pick which learned
+   * precursor the mortal player fights with. Mortal-scoped - once ANY
+   * cultivation path is chosen the pick can never be written (the K3
+   * precursor gate). SkillManager membership is the learned authority
+   * (spec sec.4.3a - a held entry IS learned).
    */
-  setSkillLoadoutSlot(player: PlayerData, slotIndex: number, skillId: string | null): boolean {
-    if (skillId === null) {
-      const current = this.deps.skillManager.getEquippedInSlot(slotIndex)
-
-      return current ? this.deps.skillSystem.unequipFromSlot(slotIndex) : false
-    }
-
-    if (slotIndex < 0 || slotIndex >= getSkillLoadoutSlotCount(player.realmId)) {
+  setMortalBasicSkill(player: PlayerData, skillId: string): boolean {
+    if (player.cultivationPath !== undefined) {
       return false
     }
 
-    // Kiem Tu Reimagined K3 — mortal precursor skills are pre-path only:
-    // once ANY cultivation path is chosen they can never re-enter a
-    // loadout slot. Runs before the learned-check so the gate covers
-    // precursor ids not yet authored (linh_bao/huy_quyen).
-    if (
-      player.cultivationPath !== undefined &&
-      (MORTAL_PRECURSOR_SKILL_IDS as readonly string[]).includes(skillId)
-    ) {
+    if (!isMortalPrecursorSkillId(skillId)) {
       return false
     }
 
-    if (!this.deps.skillManager.has(skillId) || !this.deps.skillManager.get(skillId)!.unlocked) {
+    if (!this.deps.skillManager.has(skillId)) {
       return false
     }
 
-    return this.deps.skillSystem.equipToSlot(skillId, slotIndex)
-  }
+    player.mortalBasicSkillId = skillId
 
-  unequipSkill(skillId: string): boolean {
-    return this.deps.skillSystem.unequip(skillId)
+    return true
   }
 
   /**
-   * Kiem Tu Reimagined (spec §6) — write the sword_pathway preset. Persisted on
+   * P7-M4 - the resolved-role read for the UI (the retired
+   * getLoadoutSkills/getActiveSkills display surface). Consumes the SAME
+   * override-aware path-runtime binding combat uses (deps.resolvePathRuntime
+   * is the shared GameManager binding - setPathRuntimeResolver affects
+   * both), then composes roles through the shared seam: emblem
+   * precedence, nominal-vs-dynamic basic are already resolved.
+   *
+   * Dynamic basics (sword ways) surface as {kind:'dynamic'} with the
+   * provider's display label - there is no def to show.
+   */
+  getResolvedSkillRoles(player: PlayerData): ResolvedSkillRoles {
+    const runtime = this.deps.resolvePathRuntime(player)
+    const roles = resolveCombatSkillRoles(player, runtime)
+    // TurnSkillDefinition carries no display name - resolve learned
+    // instance first, then the authored template, then the raw id.
+    const decorate = (def?: TurnSkillDefinition): ResolvedDefRole | undefined => {
+      if (def === undefined) {
+        return undefined
+      }
+
+      const skill = this.deps.skillManager.get(def.id)
+
+      return {
+        def,
+        name: skill?.name ?? this.deps.skillTemplates.get(def.id)?.name ?? def.id,
+        skill,
+      }
+    }
+
+    return {
+      basic: roles.basicIsDynamic
+        ? {
+            kind: 'dynamic',
+            label: runtime.describeDynamicBasic?.().name ?? 'Cơ Bản',
+          }
+        : { kind: 'def', def: roles.basic, name: decorate(roles.basic)!.name, skill: this.deps.skillManager.get(roles.basic.id) },
+      special: decorate(roles.special),
+      ultimate: decorate(roles.ultimate),
+    }
+  }
+
+  /**
+   * Kiem Tu Reimagined (spec sec.6) - write the sword_pathway preset. Persisted on
    * PlayerData.swordPath.preset; the battle cursor/log are runtime-only and
    * never persist. Out-of-combat only: a mid-battle rewrite would desync
    * the provider's snapshotted preset from PlayerData.
    */
   setKiemPhoPreset(player: PlayerData, preset: OrbId[]): boolean {
-    // M6 — way membership is the gate (the retired swordPath.mode
+    // M6 - way membership is the gate (the retired swordPath.mode
     // discriminator became cultivationWay; preset is sword_pathway machinery).
     // P1 - the 'sword.sword_scroll' capability carries that membership.
     if (!player.swordPath || !hasStaticPathCapability(player, 'sword.sword_scroll')) {
@@ -441,7 +479,7 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * Combat AI strategy (plan §10) - PlayerData is the single source of
+   * Combat AI strategy (plan sec.10) - PlayerData is the single source of
    * truth; the UI keeps no state of its own. Validated through the shared
    * isCombatAiStrategy(); returns false on a bad value. Saved via the
    * existing save scheduling (autosave/visibilitychange) after the UI

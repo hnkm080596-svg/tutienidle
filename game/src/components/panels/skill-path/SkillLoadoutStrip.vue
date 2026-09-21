@@ -1,105 +1,197 @@
 <script setup lang="ts">
-// Trích từ LoadoutManager.vue's khối TRÊN của tab 'skill' (2026-08-20)
-// — dời NGUYÊN VẸN vào SkillPathPanel.vue (cả 2 nhánh spell/sword
-// đều cần dải Loadout này, xem SpellPathPanel plan mục 13 "PHÁP THUẬT
-// ĐANG VẬN HÀNH"), tách thành component riêng thay vì lặp lại markup ở
-// 2 chỗ trong SkillPathPanel.vue.
+// P7-M4 - resolved-role display (the retired slot loadout's
+// replacement). The three combat roles come straight from
+// progressionOps.getResolvedSkillRoles - the same override-aware seam
+// combat consumes, so what renders here is what fights. No slot count,
+// no locked tiers, no equip/unequip.
+//
+// The ONLY write left in the strip: a MORTAL player picks which learned
+// precursor fights as their basic (setMortalBasicSkill - the game's
+// single role write, pre-path only). Sword ways show their provider
+// label (Kiem Pho / Ngu Kiem Dao); special/ultimate that resolve to
+// nothing render muted.
 import { computed, ref } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import Chip from '../../common/primitives/Chip.vue'
-import RadialSkillSelector from '../loadout-sections/RadialSkillSelector.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import { usePlayerStore } from '@/stores/player'
-import { getSkillLoadoutSlotCount, MAX_SKILL_LOADOUT_SLOTS } from '@/core/skill/SkillLoadoutSlots'
+import { MORTAL_DEFAULT_BASIC_ID, MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
+import type { Skill } from '@/core/skill/Skill'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
-const { selectSkillSpecialization } = useLoadoutActions()
+const { selectSkillSpecialization, setMortalBasicSkill } = useLoadoutActions()
 
-const skillLoadoutSlotCount = computed(() => {
-  stateVersion.value
+type RoleKey = 'basic' | 'special' | 'ultimate'
 
-  return getSkillLoadoutSlotCount(player.realmId)
-})
-
-const skillLoadoutSlots = computed(() => {
-  stateVersion.value
-
-  return Array.from({ length: MAX_SKILL_LOADOUT_SLOTS }, (_, index) => ({
-    index,
-    locked: index >= skillLoadoutSlotCount.value,
-    skill: gameManager.skillManager.getEquippedInSlot(index),
-  }))
-})
-
-const openSlotIndex = ref<number | null>(null)
-
-function openSlot(index: number) {
-  openSlotIndex.value = index
+const ROLE_KEYS: readonly RoleKey[] = ['basic', 'special', 'ultimate']
+const ROLE_LABELS: Record<RoleKey, string> = {
+  basic: 'Cơ Bản',
+  special: 'Đặc Biệt',
+  ultimate: 'Tuyệt Kỹ',
 }
 
-// Execution policy rework (plan §8.6) — KHÔNG còn "Đòn Cơ Bản" hiện
-// riêng: Trảm/Ngự Kiếm đều là loadout skill ở slot 0 như mọi skill khác.
+const roles = computed(() => {
+  stateVersion.value
 
+  return gameManager.progressionOps.getResolvedSkillRoles(player.$state)
+})
+
+// The chooser is mortal-only - the write op rejects post-path anyway,
+// but the card shouldn't offer a dead affordance.
+const isMortal = computed(() => player.cultivationPath === undefined)
+
+const mortalChoices = computed<Skill[]>(() => {
+  stateVersion.value
+
+  return MORTAL_PRECURSOR_SKILL_IDS
+    .map((id) => gameManager.skillManager.get(id))
+    .filter((skill): skill is Skill => skill !== undefined)
+})
+
+interface RoleCard {
+  key: RoleKey
+  /** Display name (accessor-resolved: learned > template > id). */
+  name?: string
+  /** Learned instance - present iff the role def is learned. */
+  skill?: Skill
+  /** Provider-backed basic (sword ways) - display label, no def. */
+  dynamicLabel?: string
+  empty: boolean
+}
+
+const roleCards = computed<Record<RoleKey, RoleCard>>(() => {
+  const resolved = roles.value
+  const card = (entry: { name: string; skill?: Skill } | undefined, key: RoleKey): RoleCard =>
+    entry === undefined
+      ? { key, empty: true }
+      : { key, name: entry.name, skill: entry.skill, empty: false }
+
+  return {
+    basic:
+      resolved.basic.kind === 'dynamic'
+        ? { key: 'basic', dynamicLabel: resolved.basic.label, empty: false }
+        : { key: 'basic', name: resolved.basic.name, skill: resolved.basic.skill, empty: false },
+    special: card(resolved.special, 'special'),
+    ultimate: card(resolved.ultimate, 'ultimate'),
+  }
+})
+
+const openRole = ref<RoleKey | null>(null)
+
+function skillOf(key: RoleKey): Skill | undefined {
+  return roleCards.value[key].skill
+}
+
+function isEmptyRole(key: RoleKey): boolean {
+  return roleCards.value[key].empty
+}
+
+// A card opens when it has something to show beneath it: the mortal
+// basic card opens the precursor chooser; a def-backed card with a
+// learned specialization-bearing skill opens its chips.
+function roleHasPanel(key: RoleKey): boolean {
+  if (key === 'basic') {
+    if (isMortal.value) {
+      return mortalChoices.value.length > 0
+    }
+  }
+
+  return (skillOf(key)?.specializations?.length ?? 0) > 0
+}
+
+function toggleRole(key: RoleKey) {
+  if (!roleHasPanel(key)) {
+    return
+  }
+
+  openRole.value = openRole.value === key ? null : key
+}
+
+const openedSkill = computed(() => {
+  if (openRole.value === null) {
+    return undefined
+  }
+
+  return skillOf(openRole.value)
+})
+
+function isPickedPrecursor(skillId: string): boolean {
+  // Absent pick = the runtime's default basic.
+  return (player.mortalBasicSkillId ?? MORTAL_DEFAULT_BASIC_ID) === skillId
+}
 </script>
 
 <template>
   <div class="skill-loadout-strip">
-    <div v-if="skillLoadoutSlotCount > 0" class="skill-loadout">
+    <div class="skill-roles">
       <button
-        v-for="slot in skillLoadoutSlots"
-        :key="slot.index"
+        v-for="key in ROLE_KEYS"
+        :key="key"
         type="button"
-        class="skill-loadout__slot"
-        :class="{ 'is-locked': slot.locked }"
-        :disabled="slot.locked"
-        @click="openSlot(slot.index)"
+        class="skill-role"
+        :class="{ 'is-empty': isEmptyRole(key), 'is-open': openRole === key }"
+        :disabled="!roleHasPanel(key)"
+        @click="toggleRole(key)"
       >
-        <SlotView
-          class="loadout-card__icon"
-          :item="slot.skill ?? null"
-          :label="slot.skill?.name ?? `Ô ${slot.index + 1}`"
-        />
+        <span class="skill-role__label">{{ ROLE_LABELS[key] }}</span>
 
-        <span v-if="slot.locked" class="skill-loadout__slot-lock">Khóa</span>
-
-        <template v-else-if="slot.skill">
-          <span class="loadout-card__level-label">Lv. {{ slot.skill.level }}/{{ slot.skill.maxLevel }}</span>
+        <template v-if="roleCards[key].dynamicLabel">
+          <span class="skill-role__dynamic">{{ roleCards[key].dynamicLabel }}</span>
         </template>
 
-        <span v-else class="loadout-card__empty">Trống</span>
+        <template v-else-if="isEmptyRole(key)">
+          <span class="skill-role__empty">—</span>
+        </template>
+
+        <template v-else>
+          <SlotView
+            class="skill-role__icon"
+            :item="roleCards[key].skill ?? null"
+            :label="roleCards[key].name ?? ''"
+          />
+          <span v-if="roleCards[key].skill" class="skill-role__level">
+            Lv. {{ roleCards[key].skill!.level }}/{{ roleCards[key].skill!.maxLevel }}
+          </span>
+        </template>
       </button>
     </div>
 
-    <p v-else class="skill-loadout-strip__passive-summary">
-      Trảm — đòn đánh cơ bản duy nhất khi chưa nhập môn.
-    </p>
-
-    <!-- Core Loop Foundation checklist (Mục SKILL) — "behavior-
-         changing node" của skill đang ở slot ĐANG MỞ. -->
+    <!-- Mortal precursor chooser - under the opened basic card only. -->
     <div
-      v-if="openSlotIndex !== null && skillLoadoutSlots[openSlotIndex]?.skill?.specializations?.length"
+      v-if="openRole === 'basic' && isMortal && mortalChoices.length"
       class="loadout-specializations"
     >
       <Chip
-        v-for="spec in skillLoadoutSlots[openSlotIndex]!.skill!.specializations"
+        v-for="skill in mortalChoices"
+        :key="skill.id"
+        class="loadout-specializations__btn"
+        :active="isPickedPrecursor(skill.id)"
+        v-tooltip="{ title: skill.name, description: skill.description }"
+        @click="setMortalBasicSkill(skill.id)"
+      >
+        {{ skill.name }}
+      </Chip>
+    </div>
+
+    <!-- Specialization chips - under the opened role card only. -->
+    <div
+      v-if="openedSkill?.specializations?.length"
+      class="loadout-specializations"
+    >
+      <Chip
+        v-for="spec in openedSkill.specializations"
         :key="spec.id"
         class="loadout-specializations__btn"
-        :active="skillLoadoutSlots[openSlotIndex]!.skill!.selectedSpecializationId === spec.id"
+        :active="openedSkill.selectedSpecializationId === spec.id"
         v-tooltip="{ title: spec.name, description: spec.description }"
-        @click="selectSkillSpecialization(skillLoadoutSlots[openSlotIndex]!.skill!.id, spec.id)"
+        @click="selectSkillSpecialization(openedSkill.id, spec.id)"
       >
         {{ spec.name }}
       </Chip>
     </div>
-
-    <RadialSkillSelector
-      v-if="openSlotIndex !== null"
-      :slot-index="openSlotIndex"
-      @close="openSlotIndex = null"
-    />
   </div>
 </template>
 
@@ -110,34 +202,13 @@ function openSlot(index: number) {
   gap: 6px;
 }
 
-.skill-loadout-strip__passive-summary {
-  margin: 0;
-  padding: 8px;
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
-}
-
-.loadout-card__icon {
-  width: 100%;
-}
-
-.loadout-card__level-label {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-}
-
-.loadout-card__empty {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-}
-
-.skill-loadout {
+.skill-roles {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.skill-loadout__slot {
+.skill-role {
   flex: 1 1 30%;
   min-width: 64px;
   display: flex;
@@ -153,18 +224,46 @@ function openSlot(index: number) {
   color: var(--text-primary);
 }
 
-.skill-loadout__slot:hover:not(.is-locked) {
+.skill-role:hover:not(:disabled) {
   border-color: var(--chrome-300);
 }
 
-.skill-loadout__slot.is-locked {
-  opacity: 0.45;
-  cursor: not-allowed;
+.skill-role:disabled {
+  cursor: default;
 }
 
-.skill-loadout__slot-lock {
+.skill-role.is-empty {
+  opacity: 0.45;
+}
+
+.skill-role.is-open {
+  border-color: var(--chrome-300);
+}
+
+.skill-role__label {
   font-size: var(--text-xs);
   color: var(--text-muted);
+}
+
+.skill-role__icon {
+  width: 100%;
+}
+
+.skill-role__level {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.skill-role__empty {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  padding: 10px 0;
+}
+
+.skill-role__dynamic {
+  font-size: var(--text-xs);
+  color: var(--paper-text-soft);
+  padding: 10px 0;
 }
 
 .loadout-specializations {

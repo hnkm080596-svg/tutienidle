@@ -101,7 +101,6 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // Reimagined — hien basics come from the orb preset, so the generic
     // authored skill here is tam_muoi_chan_hoa).
     gameManager.progressionOps.learnSkill('tam_muoi_chan_hoa')
-    gameManager.skillSystem.equipToSlot('tam_muoi_chan_hoa', 0)
 
     const rawSkill = gameManager.skillManager.get('tam_muoi_chan_hoa')!
 

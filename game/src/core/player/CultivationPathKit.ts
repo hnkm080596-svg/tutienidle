@@ -21,7 +21,7 @@ import {
   validateSwordPathPersistedState,
 } from '../kiem-tu/KiemTuPath'
 
-// M4 — the hidden_spell_pathway kit identity lives in the Phap Tu path module
+// M4 - the hidden_spell_pathway kit identity lives in the Phap Tu path module
 // (core/phap-tu/PhapTuPath.ts); re-exported so existing consumers keep
 // their import site.
 export {
@@ -31,15 +31,15 @@ export {
   HIDDEN_SPELL_SPECIAL_ID,
 } from '../phap-tu/PhapTuPath'
 
-// Pháp Tu Redesign (magicpath, 2026-08-18) — 5 path Ngũ Hành cũ
-// (phap_tu_hoa/moc/thuy/kim/tho) đã GỘP thành 1 "spell" duy nhất
-// (mục 1 magicpath: "Pháp Tu không còn được thiết kế thành nhiều hệ
-// nguyên tố tách biệt"). Kiếm Tu vẫn đứng RIÊNG (nhánh song song, cơ
-// chế kit cố định KHÁC hẳn — chưa đi qua Element/Node Tree). Thêm giá
-// trị mới khi Thể Tu được thiết kế sau này — KHÔNG BAO GIỜ tái cấu
-// trúc union này, chỉ mở rộng thêm string.
+// Phap Tu Redesign (magicpath, 2026-08-18) - 5 path Ngu Hanh cu
+// (phap_tu_hoa/moc/thuy/kim/tho) da GOP thanh 1 "spell" duy nhat
+// (muc 1 magicpath: "Phap Tu khong con duoc thiet ke thanh nhieu he
+// nguyen to tach biet"). Kiem Tu van dung RIENG (nhanh song song, co
+// che kit co dinh KHAC han - chua di qua Element/Node Tree). Them gia
+// tri moi khi The Tu duoc thiet ke sau nay - KHONG BAO GIO tai cau
+// truc union nay, chi mo rong them string.
 //
-// Cultivation Path Framework (spec 2026-09-16, M7) — the persisted
+// Cultivation Path Framework (spec 2026-09-16, M7) - the persisted
 // union is now exactly the three BASE path ids. The hidden variants
 // (hidden_spell_pathway under spell, hidden_body_pathway under body, hidden_sword_pathway under sword)
 // are WAYS on player.cultivationWay, never path ids: the transition-
@@ -186,10 +186,10 @@ export interface PathWaySubpaths {
   root?: PathSubpathAxis
 }
 
-// Cultivation Path Framework (spec 2026-09-16, M4) — a way's stat
+// Cultivation Path Framework (spec 2026-09-16, M4) - a way's stat
 // contribution channel: totals-driven emission reading the RESOLVED
 // attribute totals (resolveAttributeTotals) and emitting domain-tagged
-// StatModifiers BEFORE calculateStats runs — the D12 assembly-time
+// StatModifiers BEFORE calculateStats runs - the D12 assembly-time
 // channel. `domains` declares which StatDomains the facet emits into
 // (catalog/documentation contract; the runtime gate enforces the
 // modifier's own domain tag regardless).
@@ -201,7 +201,7 @@ export interface PathWayStatFacet {
 
   domains: readonly StatDomain[]
 
-  // M8 — the way's MID-BATTLE domain delta channel (INV-10): each
+  // M8 - the way's MID-BATTLE domain delta channel (INV-10): each
   // entry declares the DomainDeltaDeriver for a domain this facet
   // owns. The framework registers every declared deriver at catalog
   // load (CultivationPathSystem); calculateEffectiveStats invokes a
@@ -210,7 +210,7 @@ export interface PathWayStatFacet {
   deltaDerivers?: Readonly<Partial<Record<StatDomain, DomainDeltaDeriver>>>
 }
 
-// Cultivation Path Framework (spec 2026-09-16, M1) — PathWayDefinition
+// Cultivation Path Framework (spec 2026-09-16, M1) - PathWayDefinition
 // is the CultivationPathKit fields re-scoped to a WAY inside a path
 // module. Same data, new home; no behavior change.
 export interface PathWayDefinition {
@@ -222,7 +222,7 @@ export interface PathWayDefinition {
 
   // Phap Tu has no fixed kit element: the chosen element lives on
   // player.spellPath.element (single authority, picked at the element-root
-  // node). Optional — only the base ways of sword / body declare
+  // node). Optional - only the base ways of sword / body declare
   // one (identity + UI color).
   element?: ElementType
 
@@ -239,30 +239,35 @@ export interface PathWayDefinition {
   // cannot overwrite player progress.
   realmRewards?: Readonly<Record<string, CultivationPathRealmReward>>
 
-  // Skills learned + equipped into Skill Loadout slots IN ORDER at path
-  // choice (slot index = array position). M9 — the hidden_spell_pathway kit rides
-  // this channel too; its third member is a passive, not a loadout
-  // skill, so it lives on passiveSkillIds instead.
+  // Skills learned at path choice (learn-only; combat roles resolve
+  // from the kit via the path runtime, P7-M4). M9 - the
+  // hidden_spell_pathway kit rides this channel too; its third member
+  // is a passive, not an active, so it lives on passiveSkillIds instead.
   skillIds?: readonly string[]
 
-  // P7-M2 - passives learned + equipped WITHOUT a loadout slot at path
-  // initiation (replaces the retired technique-carried innateSkillId).
+  // P7-M2 - passives learned at path initiation (replaces the retired
+  // technique-carried innateSkillId).
   // Declared way content: every member must also appear in
   // ownedContent.skillIds (contract-tested) and is template-preflighted
   // by chooseCultivationPath before the path/way commit.
   passiveSkillIds?: readonly string[]
 
-  // Skills unequipped (NOT unlearned) from the loadout at ritual
-  // commit — the mortal-precursor strip. Declared per way so the
-  // ritual orchestrator never branches on concrete path/way ids.
-  unequipSkillIds?: readonly string[]
+  // P7-M4 - the way's STARTER basic: a learned precursor skill the
+  // runtime resolves as the basic fallback until the way's own kit
+  // supersedes it (spell: element kit; body: root kit). Absent = the
+  // kit fully owns basic resolution from initiation (sword orb
+  // machinery, both hidden ways' fixed kits). The ritual preflights
+  // the template and learns it inside the commit block, so a
+  // successful initiation always yields a learned starter. Resolved
+  // through getActiveWayDefinition - never a literal inside runtimes.
+  starterBasicSkillId?: string
 
-  // Ritual offer gate — consumed by isCultivationPathOffered, the
+  // Ritual offer gate - consumed by isCultivationPathOffered, the
   // single predicate both the offer panel and chooseCultivationPath
   // consult.
   offerGate?: PathOfferGate
 
-  // M9 — the offer panel renders this way as a sealed hidden-path card
+  // M9 - the offer panel renders this way as a sealed hidden-path card
   // (named way, permanent-choice warning, danger styling) instead of a
   // plain choice button. Presentation flag on the way so the panel
   // never branches on a concrete way id.
@@ -280,10 +285,10 @@ export interface PathWayDefinition {
     buffIds?: readonly string[]
   }
 
-  // M4 — totals-driven stat contribution (the D12 assembly channel):
+  // M4 - totals-driven stat contribution (the D12 assembly channel):
   // collectActiveWayStatModifiers resolves the active way and calls
   // this facet's collectModifiers during resolvePlayerFinalStats.
-  // Module-level declaration, never persisted. M7 — every way declares
+  // Module-level declaration, never persisted. M7 - every way declares
   // a facet: `domains` is the authoritative owned-domain list consumed
   // by resolveActiveWayStatDomains; ways with no totals-driven channel
   // (both sword ways) emit nothing from collectModifiers.
@@ -324,10 +329,10 @@ export interface PathStateIssue {
 // M1 -- one module per base path; ways keyed by CultivationWayId.
 export interface CultivationPathModule {
   id: CultivationPathId
-  name: string // e.g. 'Kiếm Tu'
+  name: string // e.g. 'Kiem Tu'
   ways: Readonly<Partial<Record<CultivationWayId, PathWayDefinition>>>
 
-  // M8 — optional path-state slice factory, invoked by applyPathChoice
+  // M8 - optional path-state slice factory, invoked by applyPathChoice
   // at ritual commit. The MODULE owns which PlayerData field it writes
   // (sword -> player.swordPath); the framework never branches on the
   // concrete path to create slices.
@@ -358,7 +363,7 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, Cultiv
   spell: {
     id: 'spell',
     name: 'Pháp Tu',
-    // M4 — the way definitions live in the path module
+    // M4 - the way definitions live in the path module
     // (core/phap-tu/PhapTuPath.ts) alongside the machinery they own:
     // the shared 'spell' stat facet, the way predicates, and the
     // hidden_spell_pathway kit identity.
@@ -374,16 +379,16 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, Cultiv
   sword: {
     id: 'sword',
     name: 'Kiếm Tu',
-    // M6 — the way definitions live in the path module
+    // M6 - the way definitions live in the path module
     // (core/kiem-tu/KiemTuPath.ts) alongside the machinery they own:
     // the way predicates and the hidden_sword_pathway ritual-only offer gate. sword
-    // never had a hidden-variant path id — both ways persist
+    // never had a hidden-variant path id - both ways persist
     // cultivationPath 'sword'; cultivationWay is the discriminator.
     ways: {
       sword_pathway: SWORD_PATHWAY,
       hidden_sword_pathway: HIDDEN_SWORD_PATHWAY,
     },
-    // M8 — the path owns its state slice: the canonical fresh
+    // M8 - the path owns its state slice: the canonical fresh
     // player.swordPath is way-agnostic (the Kiem Y fields start at hidden_sword_pathway's
     // defaults; sword_pathway simply never reads them).
     createInitialState: createSwordPathInitialState,
@@ -395,7 +400,7 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, Cultiv
   body: {
     id: 'body',
     name: 'Thể Tu',
-    // M5 — the way definitions live in the path module
+    // M5 - the way definitions live in the path module
     // (core/the-tu/TheTuPath.ts) alongside the machinery they own: the
     // way predicates and the per-way stat facets ('body' endurance /
     // 'hidden_body' reactive chances).
@@ -407,7 +412,7 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, Cultiv
 }
 
 /**
- * Structural read shape for the active-way resolver — PlayerData and
+ * Structural read shape for the active-way resolver - PlayerData and
  * presentation-side player slices both satisfy it; fields stay
  * nullable because slices keep the persisted `| null` convention.
  */
@@ -417,10 +422,10 @@ export interface PathWayRead {
 }
 
 /**
- * M7 — resolves the ACTIVE way definition straight from the persisted
+ * M7 - resolves the ACTIVE way definition straight from the persisted
  * (cultivationPath, cultivationWay) pair against the module catalog.
  * There is no fallback: a path with no way, a way id the path module
- * does not own, or an absent path all return undefined — a way-less
+ * does not own, or an absent path all return undefined - a way-less
  * save is corrupt post-M7 (the ritual writes both fields atomically).
  */
 export function getActiveWayDefinition(player: PathWayRead): PathWayDefinition | undefined {
@@ -436,12 +441,12 @@ export function getActiveWayDefinition(player: PathWayRead): PathWayDefinition |
   return CULTIVATION_PATH_MODULES[player.cultivationPath]?.ways[player.cultivationWay]
 }
 
-// Nghi Lễ Nhập Môn (2026-08-16) — gate cũ (mốc realmLevel cố định
-// trong qi_refining) đã bị THAY THẾ: chọn nghề giờ CHÍNH LÀ nghi lễ
-// đột phá Phàm Nhân -> Luyện Khí, nên điều kiện mở khoá gắn với việc
-// hoàn thành Phàm Nhân cảnh (realmId === 'mortal' && realmLevel ===
-// maxLevel), xem CharacterPanel.vue's canChooseCultivationPath. Không
-// còn hằng số riêng ở đây nữa — đọc thẳng maxLevel của REALMS.
+// Nghi Le Nhap Mon (2026-08-16) - gate cu (moc realmLevel co dinh
+// trong qi_refining) da bi THAY THE: chon nghe gio CHINH LA nghi le
+// dot pha Pham Nhan -> Luyen Khi, nen dieu kien mo khoa gan voi viec
+// hoan thanh Pham Nhan canh (realmId === 'mortal' && realmLevel ===
+// maxLevel), xem CharacterPanel.vue's canChooseCultivationPath. Khong
+// con hang so rieng o day nua - doc thang maxLevel cua REALMS.
 
 // Single offer predicate consumed by BOTH the Quan Khi offer list
 // (QuanKhiPanel.vue via listOfferableWays) and

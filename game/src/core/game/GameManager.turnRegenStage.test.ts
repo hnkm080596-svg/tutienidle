@@ -99,7 +99,7 @@ function buildHarness(element: 'water' | 'earth', playerSpeed: number): Harness 
   // is the player's first cast (turn 1) and regen starts immediately.
   const specialId = element === 'water' ? 'thanh_tuyen_duong_linh' : 'dia_tru_thua_thien'
   const template = SKILLS.find((skill) => skill.id === specialId)!
-  gameManager.skillManager.add({ ...template, unlocked: true })
+  gameManager.skillManager.add(template)
   // The committed element's basic is required at battle build (round-3
   // fail-fast: missing required basic throws, no melee substitute).
   expect(

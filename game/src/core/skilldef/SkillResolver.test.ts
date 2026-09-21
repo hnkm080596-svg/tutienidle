@@ -80,7 +80,7 @@ function activeDef(overrides: Partial<ActiveSkillDefinition> = {}): ActiveSkillD
   }
 }
 
-const progression = { skillId: 'skill.test' as SkillId, level: 3, experience: 0, totalExperience: 10, unlocked: true, equipped: true, loadoutSlots: [0] }
+const progression = { skillId: 'skill.test' as SkillId, level: 3, experience: 0, totalExperience: 10 }
 
 function resolve(
   defs: readonly ActiveSkillDefinition[],

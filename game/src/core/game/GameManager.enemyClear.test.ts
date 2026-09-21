@@ -125,7 +125,7 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
     gameManager.catalogOps.registerStages([stage])
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
-    expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
 
     // KHÔNG auto-repeat — mục tiêu là state 'victory' cuối cùng.
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)

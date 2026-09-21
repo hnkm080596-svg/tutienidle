@@ -80,6 +80,11 @@ describe('App save restore coordinator', () => {
       (save: GameSave) => { save.equipment[0]!.affixes[0]!.affixId = 'removed-boot-affix' },
       'Unknown equipment affix in save: removed-boot-affix',
     ],
+    [
+      'non-precursor mortalBasicSkillId',
+      (save: GameSave) => { save.player.mortalBasicSkillId = 'hoa_cau_thuat' },
+      'Invalid mortalBasicSkillId in save: hoa_cau_thuat',
+    ],
   ] as const)(
     'rejects %s before Pinia or any manager owner mutates and returns a handled result',
     (_case, corrupt, expectedMessage) => {

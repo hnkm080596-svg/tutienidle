@@ -12,6 +12,7 @@ import { TribulationOutcomeService } from './TribulationOutcomeService'
 import { asBaseStats } from '../stats/StatBlock'
 import { pills } from '../../data/pill/pills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
+import { SKILLS } from '../../data/skill/Skills'
 import { MERIDIANS } from '../../data/realm/Meridians'
 import type { ActiveTribulationState } from './TribulationDirector'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
@@ -89,6 +90,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerPills(pills)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     const player = usePlayerStore()
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12

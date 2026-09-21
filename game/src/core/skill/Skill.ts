@@ -119,17 +119,6 @@ export interface Skill {
   // Override preset VFX impact; mặc định suy từ element.
   vfxPresetId?: CombatVfxPresetId
 
-  // PLAN HOÀN CHỈNH mục 8/12 — vị trí (0-4) trong Skill Loadout, chỉ
-  // có ý nghĩa khi equipped === true. undefined = đã HỌC (unlocked)
-  // nhưng CHƯA được set vào Loadout — đây chính là ranh giới "Skill
-  // Tree = học" (unlocked) vs "Skill Loadout = set" (equipped +
-  // loadoutSlot), xem SkillSystem.equipToSlot()/SkillManager.
-  // getLoadoutSkills().
-  loadoutSlot?: number
-
-  // A learned technique can occupy multiple loadout slots.
-  loadoutSlots?: number[]
-
   // Bắt buộc khi type === 'passive' — xem PassiveSystem.
   passiveTrigger?: PassiveTrigger
 
@@ -152,10 +141,6 @@ export interface Skill {
   // 'ult' (spec 2026-08-29-kiem-the-kiem-y) — ult manual Kiếm Tu,
   // KHÔNG thuộc loadout scheduler.
   buildTag?: 'core' | 'dot' | 'burst' | 'ult'
-
-  unlocked: boolean
-
-  equipped: boolean
 
   // "Nộ kỹ tạm thời chưa ra mắt" (2026-08-15) — reserved flag; the
   // real-time cast gate that read it was retired with SkillSystem's

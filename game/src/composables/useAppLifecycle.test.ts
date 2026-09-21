@@ -72,12 +72,6 @@ function makeStubs() {
         on: vi.fn(),
         off: vi.fn(),
       },
-      skillManager: {
-        has: () => false,
-        getEquippedInSlot: () => undefined,
-      },
-      learnSkill: vi.fn(),
-      setSkillLoadoutSlot: vi.fn(),
       materialRegistry: { has: () => false },
       materialBag: { add: vi.fn() },
       productionSystem: { getSiteDefinitions: () => [] },

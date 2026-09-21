@@ -9,6 +9,7 @@ import {
 } from '../technique/TechniqueProgression'
 import { ITEM_QUALITY_ORDER } from '../item/ItemQuality'
 import { getActiveWayDefinition } from '../player/CultivationPathKit'
+import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import { PillRegistry } from '../pill/PillRegistry'
@@ -195,6 +196,26 @@ export class GameManagerSaveRestore {
       }
     } else if (save.techniques.length !== 0) {
       throw new Error('Technique holder contract violated in save: way-less player carries a technique')
+    }
+
+    // P7-M4 (v71) - mortalBasicSkillId is the MORTAL-ONLY basic pick:
+    // absent = the runtime's tram default; present = a precursor id the
+    // player could have learned. Post-path presence is corrupt (the
+    // ritual clears the pick inside the commit block - a way player can
+    // never carry one) - reject before any owner mutation, same
+    // hard-fail seam as the technique-holder contract above.
+    const mortalPick = save.player.mortalBasicSkillId
+
+    if (mortalPick !== undefined) {
+      if (!isMortalPrecursorSkillId(mortalPick)) {
+        throw new Error(`Invalid mortalBasicSkillId in save: ${String(mortalPick)}`)
+      }
+
+      if (save.player.cultivationPath !== undefined) {
+        throw new Error(
+          `mortalBasicSkillId persisted post-path in save: '${mortalPick}' on path '${save.player.cultivationPath}'`,
+        )
+      }
     }
   }
 

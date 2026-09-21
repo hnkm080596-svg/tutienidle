@@ -5,6 +5,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+import { toTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
 
 // Slice 7 (Completion Task 10) — manual mode: khi bật, engine PAUSE khi
 // tới lượt player và chờ submitTurnChoice() trước khi resolve; enemy và
@@ -55,10 +56,6 @@ function createBasicSkill(): Skill {
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
     execution: { kind: 'attack_speed' },
     resourceType: 'none',
-    unlocked: true,
-    equipped: true,
-    loadoutSlot: 0,
-    loadoutSlots: [0],
   }
 }
 
@@ -83,7 +80,14 @@ function startManualBattle(): { gameManager: GameManager; combatSource: ManualCl
 
   gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
   gameManager.progressionOps.learnSkill('basic_test')
-  gameManager.skillSystem.equipToSlot('basic_test', 0)
+  const basicSkill = gameManager.skillManager.get('basic_test')!
+  gameManager.setPathRuntimeResolver(() => ({
+    resolveBasic: () =>
+      toTurnSkillDefinition(basicSkill, gameManager.skillSystem.getEffectiveSkill(basicSkill)),
+    resolveSpecialUltimate: () => undefined,
+    resolveMaxThe: () => 0,
+    resolveStatDomains: () => undefined,
+  }))
 
   gameManager.startBattle(player, createDummyEnemy())
 

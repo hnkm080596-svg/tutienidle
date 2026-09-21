@@ -23,8 +23,6 @@ function activeSkill(id: string, overrides: Partial<Skill> = {}): Skill {
     cost: 0,
     target: 'enemy',
     effects: [],
-    unlocked: false,
-    equipped: false,
     ...overrides,
   }
 }

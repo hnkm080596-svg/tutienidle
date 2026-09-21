@@ -4,7 +4,8 @@ import { createDefaultPlayer } from '../player/Player'
 import { SKILLS } from '../../data/skill/Skills'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { TECHNIQUES } from '../../data/technique/Techniques'
-import { freshSwordPathState, MORTAL_PRECURSOR_SKILL_IDS } from '../kiem-tu/KiemTuState'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
+import { MORTAL_PRECURSOR_SKILL_IDS } from '../skill/MortalPrecursors'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
 import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
 import { SWORD_BASIC } from '../../data/skill/TurnBasicAttacks'
@@ -48,7 +49,6 @@ function setupMortalWithPathReady(tramTotalCasts: number) {
   player.skillLevels = { tram: tramTotalCasts >= 10000 ? 3 : tramTotalCasts >= 1000 ? 2 : 1 }
 
   gameManager.progressionOps.learnSkill('tram')
-  gameManager.skillSystem.equipToSlot('tram', 0)
 
   return { gameManager, player }
 }
@@ -99,27 +99,26 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
   })
 })
 
-describe('K3 — mortal precursor lock post-path', () => {
+describe('K3 — mortal precursor pick lock post-path', () => {
   it.each(MORTAL_PRECURSOR_SKILL_IDS)(
-    'precursor %s cannot re-equip into a loadout slot once a path is chosen',
+    'precursor %s cannot be re-picked once a path is chosen',
     skillId => {
       const { gameManager, player } = setupMortalWithPathReady(10_000)
 
       gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)
 
-      // Gate runs BEFORE the learned/exists check — precursor ids reject
-      // unconditionally for path players (covers linh_bao/huy_quyen the
-      // day they get authored, no test change needed).
+      // The mortal-only write rejects unconditionally for path players
+      // (gate runs BEFORE the learned/exists check).
       expect(
-        gameManager.progressionOps.setSkillLoadoutSlot(player, 0, skillId),
+        gameManager.progressionOps.setMortalBasicSkill(player, skillId),
       ).toBe(false)
     },
   )
 
-  it('precursor equip still works for a mortal (no path chosen)', () => {
+  it('precursor pick still works for a mortal (no path chosen)', () => {
     const { gameManager, player } = setupMortalWithPathReady(0)
 
-    expect(gameManager.progressionOps.setSkillLoadoutSlot(player, 0, 'tram')).toBe(true)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
   })
 
   it('sword basic no longer resolves to authored tram (mortal-only)', () => {

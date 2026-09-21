@@ -103,7 +103,7 @@ describe('C1 - stage launch is a transaction (lease rolls back on throw)', () =>
 
     // Path-runtime resolution (Ngo Dao missing-skill class) throws inside
     // the launch chain - after acquire, before commit.
-    gameManager.turnBattleOps.setPathRuntimeResolver(() => {
+    gameManager.setPathRuntimeResolver(() => {
       throw new Error('path runtime boom')
     })
 
@@ -111,7 +111,7 @@ describe('C1 - stage launch is a transaction (lease rolls back on throw)', () =>
     expect(gameManager.stageManager.getActive()).toBeNull()
 
     // The slot is free: a fixed retry starts instead of soft-locking.
-    gameManager.turnBattleOps.setPathRuntimeResolver(undefined)
+    gameManager.setPathRuntimeResolver(undefined)
     expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
   })
 
@@ -258,7 +258,7 @@ describe('C6 - a thrown launch destroys the previous battle (no zombie)', () => 
     // Path runtime throws inside the launch chain - after the new
     // cycle's commit section already reset the pending/token/queue,
     // installed its RNG and ran the per-cycle service resets.
-    gameManager.turnBattleOps.setPathRuntimeResolver(() => {
+    gameManager.setPathRuntimeResolver(() => {
       throw new Error('path runtime boom')
     })
 
@@ -273,7 +273,7 @@ describe('C6 - a thrown launch destroys the previous battle (no zombie)', () => 
     expect(battleEnds).toEqual(['defeat'])
 
     // Known-idle: a fixed retry runs the canonical cycle immediately.
-    gameManager.turnBattleOps.setPathRuntimeResolver(undefined)
+    gameManager.setPathRuntimeResolver(undefined)
     expect(gameManager.turnBattleOps.startStage(player, stageB, false)).toBe(true)
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
   })
@@ -286,7 +286,7 @@ describe('C6 - a thrown launch destroys the previous battle (no zombie)', () => 
     // The stub runtime resolves maxThe (first call site) then throws on
     // resolveBasic - inside buildTurnBattle, AFTER enemySystem.spawn
     // already registered the bootstrap enemy.
-    gameManager.turnBattleOps.setPathRuntimeResolver(() => ({
+    gameManager.setPathRuntimeResolver(() => ({
       resolveMaxThe: () => 100,
       resolveBasic: () => {
         throw new Error('path runtime boom')
@@ -317,7 +317,7 @@ describe('C6 - a thrown launch destroys the previous battle (no zombie)', () => 
     // runs during cycle construction, so the repeat restart's
     // beginBattleCycle hits it - a path the wave system's launch
     // transaction does NOT wrap (no acquire happens on repeat).
-    gameManager.turnBattleOps.setPathRuntimeResolver(() => {
+    gameManager.setPathRuntimeResolver(() => {
       throw new Error('repeat construction boom')
     })
 
@@ -341,7 +341,7 @@ describe('C6 - a thrown launch destroys the previous battle (no zombie)', () => 
     expect(battleEnds).toEqual(['victory'])
 
     // The slot is usable again immediately.
-    gameManager.turnBattleOps.setPathRuntimeResolver(undefined)
+    gameManager.setPathRuntimeResolver(undefined)
     expect(gameManager.turnBattleOps.startStage(player, stageA, false)).toBe(true)
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
   })
@@ -356,7 +356,7 @@ describe('C6 - a thrown launch destroys the previous battle (no zombie)', () => 
     // Battle A accumulated 4 stacks on its bound passive.
     gameManager.skillManager.get('talent_passive_pha_giap')!.passiveModifiers![0]!.stacks = 4
 
-    gameManager.turnBattleOps.setPathRuntimeResolver(() => {
+    gameManager.setPathRuntimeResolver(() => {
       throw new Error('path runtime boom')
     })
 
@@ -386,7 +386,7 @@ describe('C6 - a thrown launch destroys the previous battle (no zombie)', () => 
     // resolveSpecialUltimate) then throws inside buildSurviveSources -
     // the first throw-prone site AFTER `this.turnBattle` was reassigned
     // to the half-built new battle.
-    gameManager.turnBattleOps.setPathRuntimeResolver(() => ({
+    gameManager.setPathRuntimeResolver(() => ({
       resolveMaxThe: () => 100,
       resolveBasic: () => undefined,
       resolveStatDomains: () => undefined,
@@ -406,7 +406,7 @@ describe('C6 - a thrown launch destroys the previous battle (no zombie)', () => 
     expect(gameManager.getTurnBattle()).toBeNull()
 
     // Known-idle: a fixed retry runs the canonical cycle immediately.
-    gameManager.turnBattleOps.setPathRuntimeResolver(undefined)
+    gameManager.setPathRuntimeResolver(undefined)
     expect(() => gameManager.startBattleWithPlayer(player, DUMMY)).not.toThrow()
   })
 

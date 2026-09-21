@@ -77,7 +77,6 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
       }
     }
     lab.manager.progressionOps.learnSkill('hoa_cau_thuat')
-    lab.manager.skillSystem.equipToSlot('hoa_cau_thuat', 0)
     lab.manager.realmAdvanceOps.syncRealmPassive(lab.player)
 
     // Skill leveling + node tree - the intended qi/foundation power

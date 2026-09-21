@@ -73,14 +73,14 @@ export class GameManagerRealmAdvanceOps {
   }
 
   /**
-   * Kiem Tu Reimagined (spec K15) — Ngu Kiem Dao breakthrough merge.
+   * Kiem Tu Reimagined (spec K15) - Ngu Kiem Dao breakthrough merge.
    * Call ONCE per major-realm advance, AFTER the realmId write: the
    * forged swords fold into kiemDaoBase and the live count resets to 1
    * (banked Kiem Y carries into the new realm's forgeCost). No-op for
    * sword_pathway / non-sword players.
    */
   applySwordPathRealmTransition(player: PlayerData): void {
-    // M6 — way membership is the discriminator (swordPath.mode retired).
+    // M6 - way membership is the discriminator (swordPath.mode retired).
     // P1 - the 'sword.sword_riding' capability carries that membership;
     // the slice presence check stays (corrupt saves fail closed).
     if (player.swordPath && hasStaticPathCapability(player, 'sword.sword_riding')) {
@@ -92,7 +92,7 @@ export class GameManagerRealmAdvanceOps {
    * R8.2 Slice 2 (AR-10): facade for the minor-realm breakthrough outcome
    * chain. The service owns all consequences (passive sync, banked
    * artifact release, and the documented-dead major-realm branches);
-   * this orchestrator only delegates (A5 — no formula logic here).
+   * this orchestrator only delegates (A5 - no formula logic here).
    * `player` must be the Pinia store instance, NOT `store.$state`
    * (same absent-key write semantics as TribulationOutcomeService).
    */
@@ -146,7 +146,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    // M2 — the (path, way) pair resolves its way definition from the
+    // M2 - the (path, way) pair resolves its way definition from the
     // module catalog; an unknown pair yields no way and fails closed.
     // Way OFFERABILITY is no longer checked here: applyPathChoice owns
     // the offerGate evaluation.
@@ -158,7 +158,7 @@ export class GameManagerRealmAdvanceOps {
 
     // Transaction boundary (review round-4, atomicity hardening): verify
     // every registry entry the ritual grants BEFORE committing
-    // cultivationPath — a missing template must fail the whole choice,
+    // cultivationPath - a missing template must fail the whole choice,
     // never leave the path committed with a partial kit.
     const techniqueTemplate = this.deps.techniqueTemplates.get(way.techniqueId)
 
@@ -192,7 +192,14 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    // Path/way commit — the authority validates the pair, evaluates the
+    // P7-M4 - the way's starter basic gets the same pre-commit template
+    // check: a way whose starter cannot resolve a template fails the
+    // whole ritual before the path/way commit.
+    if (way.starterBasicSkillId !== undefined && !this.deps.skillTemplates.has(way.starterBasicSkillId)) {
+      return false
+    }
+
+    // Path/way commit - the authority validates the pair, evaluates the
     // offerGate live, and writes cultivationWay + the base
     // cultivationPath id plus the path-state slice (sword). Zero
     // mutation on failure, so an ineligible/wrong-path pick stops here.
@@ -200,33 +207,40 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    // M9 — the post-commit loadout contract is way-DECLARED, never a
-    // concrete path/way branch: unequipSkillIds strips the mortal
-    // precursor basics (NOT unlearn — a Pham Nhan save can still use
-    // them; the precursor equip gate blocks re-equip post-path), then
-    // skillIds learn + equip into slots in order. sword basics come
-    // from the orb preset via the dynamicBasic provider; both body
-    // ways resolve their kit at battle build; hidden_spell_pathway's third kit
-    // member is a passiveSkillIds passive, not a loadout skill.
-    for (const skillId of way.unequipSkillIds ?? []) {
-      this.deps.skillSystem.unequip(skillId)
-    }
+    // P7-M4 - the mortal-only basic pick ends at initiation: cleared
+    // INSIDE the post-commit region (every pre-commit failure above
+    // preserves it byte-identically). A way player can never carry one -
+    // the v71 save boundary rejects post-path presence.
+    delete player.mortalBasicSkillId
 
-    way.skillIds?.forEach((skillId, index) => {
+    // P7-M4 - the post-commit kit contract is learn-only: way.skillIds
+    // enter SkillManager membership (the learned authority); combat
+    // resolves roles from the way kit, not a generic slot loadout.
+    // sword basics come from the orb preset via the dynamicBasic
+    // provider; both body ways resolve their kit at battle build;
+    // hidden_spell_pathway's third kit member is a passiveSkillIds
+    // passive, not an active.
+    way.skillIds?.forEach((skillId) => {
       this.deps.progressionOps.learnSkill(skillId)
-      this.deps.skillSystem.equipToSlot(skillId, index)
     })
 
+    // P7-M4 - starter learnedness pin: the way's starter basic is
+    // learned inside the commit block (idempotent - boot already taught
+    // it; this repairs a save whose starter entry is missing). A
+    // successful initiation always yields a learned starter.
+    if (way.starterBasicSkillId !== undefined) {
+      this.deps.progressionOps.learnSkill(way.starterBasicSkillId)
+    }
+
     // P7-M2 - way-declared initiation passives (replaces the technique's
-    // innateSkillId grant): learned + equipped WITHOUT a loadout slot,
-    // same shape as syncRealmPassive below.
+    // innateSkillId grant). P7-M4: learn-only - learned passives always
+    // apply (membership is the authority; no equip switch remains).
     for (const passiveId of way.passiveSkillIds ?? []) {
       if (!this.deps.skillManager.has(passiveId)) {
         this.deps.progressionOps.learnSkill(passiveId)
-        this.deps.skillSystem.equipWithoutSlot(passiveId)
       }
     }
-    // Phap Tu Reimagined (Task 6) — no auto-Fire starter: choosing
+    // Phap Tu Reimagined (Task 6) - no auto-Fire starter: choosing
     // spell leaves player.spellPath { element: null, route: null } until
     // progressionOps.selectSpellPathElement() commits the atomic choice.
 
@@ -236,7 +250,7 @@ export class GameManagerRealmAdvanceOps {
       // final Luyen The value at the moment of the Initiation Ritual.
       player.breakthroughGrade = computeBreakthroughGrade(player)
 
-      // Spec dot-pha-loi-kiep §4.2 - the "perfect Pham Nhan" snapshot
+      // Spec dot-pha-loi-kiep sec.4.2 - the "perfect Pham Nhan" snapshot
       // (5/5 main stats at mortal cap + Luyen The tier 6/6) locks at the
       // moment Quan Khi is pressed, NOT asked again after entering Luyen
       // Khi. It is one of the Truc Co tribulation conditions.
@@ -254,9 +268,9 @@ export class GameManagerRealmAdvanceOps {
 
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)
-      // M6 — NO applySwordPathRealmTransition here: hidden_sword_pathway can now be picked at
+      // M6 - NO applySwordPathRealmTransition here: hidden_sword_pathway can now be picked at
       // this very ritual, so the pre-M6 "hidden_sword_pathway cannot exist at mortal"
-      // assumption is false. The slice was JUST created (kiemDaoCount 1 —
+      // assumption is false. The slice was JUST created (kiemDaoCount 1 -
       // nothing forged this realm); merging it would hand out a free
       // kiemDaoBase bump at entry. The merge stays on real major-realm
       // advances (TribulationOutcomeService), where forged swords exist.
@@ -272,7 +286,7 @@ export class GameManagerRealmAdvanceOps {
   }
 
   /**
-   * Ban Menh Phap Bao (doc §7.1) - choose/switch the Cong/Thu/Khong
+   * Ban Menh Phap Bao (doc sec.7.1) - choose/switch the Cong/Thu/Khong
    * direction. Switchable MULTIPLE times outside combat (unlike
    * chooseCultivationPath() above - that is permanent, this is a "free
    * out-of-combat swap for testing"). Keeps EXP/tier/grade, applies from
@@ -297,7 +311,7 @@ export class GameManagerRealmAdvanceOps {
   }
 
   /**
-   * Ban Menh Phap Bao (doc §5.3) - upgrade grade with Doan Bao Thach,
+   * Ban Menh Phap Bao (doc sec.5.3) - upgrade grade with Doan Bao Thach,
    * OUTSIDE combat only (the real transaction lives in the pure-core
    * tryUpgradeArtifactGrade() - the combat guard is enforced HERE, not
    * just in the UI).
@@ -352,7 +366,7 @@ export class GameManagerRealmAdvanceOps {
    * passive source is the COMMITTED WAY's realmRewards record
    * (way -> realmRewards[realm] -> passiveSkillId; ways compose the
    * canonical ladder from data/progression/RealmPassiveLadder), no
-   * longer the equipped technique - a technique swap cannot change the
+   * longer the technique - a technique swap cannot change the
    * realm passives a player receives, and a way-less/corrupt pair
    * grants nothing. Idempotent (checks skillManager.has()
    * before learn) so repeat calls are safe.
@@ -378,10 +392,9 @@ export class GameManagerRealmAdvanceOps {
 
     this.deps.skillSystem.learn(template)
 
-    // Passives do NOT belong to the Skill Loadout (no slot contention
-    // with active skills) - equipWithoutSlot() behaves exactly like the
-    // old equip() did for passives.
-    this.deps.skillSystem.equipWithoutSlot(skillId)
+    // P7-M4 - learning alone activates the passive: learned passives
+    // always apply (SkillManager membership is the authority; the
+    // equipWithoutSlot channel is retired).
   }
 
   /**

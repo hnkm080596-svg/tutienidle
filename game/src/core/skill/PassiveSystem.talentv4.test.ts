@@ -39,8 +39,6 @@ function makeHarness(options: {
     cooldown: 0,
     target: 'self',
     effects: [],
-    unlocked: true,
-    equipped: false,
     ...options.skill,
   }
 
@@ -187,9 +185,7 @@ describe('PassiveSystem — E2 passiveCondition + passiveConvertsTo (spec talent
       cooldown: 0,
       target: 'self',
       effects: [],
-      unlocked: true,
-      equipped: false,
-      passiveTrigger: 'critical',
+          passiveTrigger: 'critical',
       passiveModifiers: [mod],
       passiveConvertsTo: { buffId: 'kiem_vuc' },
     }

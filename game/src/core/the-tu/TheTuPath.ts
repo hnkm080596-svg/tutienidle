@@ -207,11 +207,14 @@ export const BODY_PATHWAY: PathWayDefinition = {
   name: 'Thể Tu — Kim Cang Bất Hoại Thể',
   element: 'metal',
   techniqueId: 'diamond_body_art',
+  // P7-M4 - starter basic: the mortal huy_quyen precursor stays the
+  // basic until a root kit (cuong_chien XOR tran_the) is purchased.
+  starterBasicSkillId: 'huy_quyen',
   // The Tu Reimagined (T5) — root-mutex kit: the chosen progression
-  // root (cuong_chien XOR tran_the) resolves the kit at battle build;
-  // no loadout tuple. M9 — the ritual strips the two Thể Tu mortal
-  // basics so a lingering tram/huy_quyen cannot occupy the mortal slot.
-  unequipSkillIds: ['tram', 'huy_quyen'],
+  // root (cuong_chien XOR tran_the) resolves the kit at battle build.
+  // P7-M4 — mortal precursor skills stay learned past initiation; the
+  // ritual clears mortalBasicSkillId inside the commit block and the
+  // mortal-only pick gate blocks re-selection post-path.
   // P7-M2 - canonical realm-entry passive ladder (delivered by
   // syncRealmPassive); the initiation passive below replaces the
   // retired kim_cang_bat_hoai_the.innateSkillId grant.
@@ -290,7 +293,7 @@ export const HIDDEN_BODY_PATHWAY: PathWayDefinition = {
   subpaths: {
     root: { state: 'player.nodeLevels' },
   },
-  // M9 — same mortal-basic strip as body_pathway.
-  unequipSkillIds: ['tram', 'huy_quyen'],
+  // P7-M4 - same mortal-precursor contract as body_pathway (learned
+  // skills kept; pick cleared at commit; mortal-only gate).
   stats: HIDDEN_BODY_PATHWAY_STATS,
 }

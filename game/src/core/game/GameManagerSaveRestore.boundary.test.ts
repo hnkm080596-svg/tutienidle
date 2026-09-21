@@ -83,8 +83,6 @@ const LIVE_SKILL: Skill = {
   cooldown: 1,
   target: 'enemy',
   effects: [],
-  unlocked: true,
-  equipped: false,
 }
 
 const SAVED_SKILL: Skill = {
@@ -97,8 +95,6 @@ const SAVED_SKILL: Skill = {
   cooldown: 2,
   target: 'enemy',
   effects: [],
-  unlocked: true,
-  equipped: false,
 }
 
 const LIVE_TECHNIQUE: Technique = {
@@ -702,8 +698,6 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
       SKILLS.find((skill) => skill.id === 'passive_linh_khi_cam_ung')!,
     )
     ;(legacy.passiveModifiers![0] as { stat: string }).stat = 'attack'
-    legacy.unlocked = true
-    legacy.equipped = true
 
     manager.saveOps.restoreFromSave(baseSave(player, { skills: [legacy] }))
 
@@ -727,7 +721,6 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
       SKILLS.find((skill) => skill.id === 'da_phap_lien_tuyen')!,
     )
     stale.effects = []
-    stale.unlocked = true
 
     manager.saveOps.restoreFromSave(baseSave(player, { skills: [stale] }))
 
@@ -853,5 +846,58 @@ describe('v70 technique holder preflight', () => {
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
     expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+})
+
+// P7-M4 (v71) - mortalBasicSkillId preflight: absent = tram default;
+// present = a precursor member AND a still-mortal player (the ritual
+// clears the pick inside the commit block, so post-path presence is
+// corrupt). Every rejection happens BEFORE any owner mutation - the
+// same hard-fail seam as the technique-holder contract above.
+describe('v71 mortalBasicSkillId preflight', () => {
+  it.each(['tram', 'linh_bao', 'huy_quyen'])(
+    'restores a mortal save carrying a valid pick (%s)',
+    (skillId) => {
+      const manager = makeManager()
+      const player = createDefaultPlayer()
+      player.mortalBasicSkillId = skillId
+
+      expect(() => manager.saveOps.restoreFromSave(baseSave(player))).not.toThrow()
+    },
+  )
+
+  it('restores a mortal save carrying no pick (absent = tram default)', () => {
+    const manager = makeManager()
+
+    expect(() => manager.saveOps.restoreFromSave(baseSave(createDefaultPlayer()))).not.toThrow()
+  })
+
+  it.each(['hoa_cau_thuat', 'khong_ton_tai', '', 7])(
+    'rejects a non-precursor pick (%s) before any owner mutation',
+    (value) => {
+      const manager = makeManager()
+      const player = createDefaultPlayer()
+      player.mortalBasicSkillId = value as string
+      const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL)] })
+
+      expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid mortalBasicSkillId/i)
+      // Zero-mutation: preflight threw before the skills slice replaced
+      // the live set (an applied restore would carry SAVED_SKILL).
+      expect(manager.skillManager.getAll()).toEqual([])
+    },
+  )
+
+  it('rejects a post-path pick before any owner mutation', () => {
+    const manager = makeManager()
+    const player = swordCommittedPlayer()
+    player.mortalBasicSkillId = 'huy_quyen'
+    const save = baseSave(player, {
+      techniques: [structuredClone(SAVED_TECHNIQUE)],
+      skills: [structuredClone(SAVED_SKILL)],
+    })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/mortalBasicSkillId persisted post-path/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+    expect(manager.skillManager.getAll()).toEqual([])
   })
 })

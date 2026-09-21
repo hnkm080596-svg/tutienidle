@@ -84,4 +84,11 @@
 // The holder is 0-or-1 and must equal the committed way's techniqueId
 // (mortal = empty) - enforced by the restore preflight. Save v69 is
 // rejected (dev phase, no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 70 as const
+// v71 (2026-09-21, P7-M4 combat-role contract): the generic skill
+// loadout is retired - Skill entries carry NO loadoutSlot/loadoutSlots/
+// equipped/unlocked keys (learned = SkillManager membership; combat
+// roles resolve from the committed way kit). PlayerData gains optional
+// mortalBasicSkillId (mortal-only precursor pick; post-path presence is
+// corrupt). Save v70 is rejected (dev phase, no migration, no compat
+// translator).
+export const CURRENT_SAVE_VERSION = 71 as const

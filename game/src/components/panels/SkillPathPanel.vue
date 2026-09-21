@@ -143,7 +143,7 @@ watch(
 // Thư viện duy nhất: mọi active skill đã học, không phụ thuộc loadout/path.
 const learnedSkills = computed<Skill[]>(() => {
   stateVersion.value
-  return gameManager.skillManager.getAll().filter(skill => skill.unlocked && skill.type === 'active')
+  return gameManager.skillManager.getAll().filter(skill => skill.type === 'active')
 })
 
 const selectedSkillId = ref<string | null>(null)

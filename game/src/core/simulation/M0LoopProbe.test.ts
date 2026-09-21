@@ -82,7 +82,7 @@ describe('P6-M0 loop probe', () => {
     // P7-M3 - no mortal technique grant (tu_linh_quyet retired); the
     // Way grants its canonical art at initiation.
     gm.progressionOps.learnSkill('tram')
-    gm.progressionOps.setSkillLoadoutSlot(player, 0, 'tram')
+    gm.progressionOps.setMortalBasicSkill(player, 'tram')
     gm.progressionOps.learnSkill('linh_bao')
     gm.progressionOps.learnSkill('huy_quyen')
     // onCharacterCreated semantics: pinned profile (hap_linh, vit3/str2)
