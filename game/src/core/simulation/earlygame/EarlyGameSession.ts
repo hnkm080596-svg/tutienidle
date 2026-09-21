@@ -10,6 +10,12 @@
 // DESIGN (a seeded battle must not pin drops) - fingerprints therefore
 // normalize material drops and volatile ids/timestamps out.
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../../battle/turn/CombatClock'
+import {
+  restoreGameSession,
+  type GameSessionPlayerOwner,
+  type RestoreGameSessionResult,
+} from '../../../services/save/SaveSystem'
+import type { GameSave } from '../../../services/save/saveTypes'
 import { SeededCombatRng } from '../../battle/runtime/rng/SeededCombatRng'
 import { GameManager } from '../../game/GameManager'
 import { createDefaultPlayer, type PlayerData } from '../../player/Player'
@@ -79,7 +85,9 @@ const MAX_TRIBULATION_TICKS = 2000
 export class EarlyGameSession {
   readonly gameManager: GameManager
   readonly clock: ManualClockSource
-  readonly player: PlayerData
+  // M-C: NOT readonly - restoreCheckpoint() swaps it for the restored
+  // player object (restore semantics = replacement, not merge).
+  player: PlayerData
   readonly nowMs: number
   readonly seedValue: number
 
@@ -164,8 +172,15 @@ export class EarlyGameSession {
     })
   }
 
-  /** Real Quan Khi drive: tickOps.update + scripted correct answers. */
+  /** Real Quan Khi drive: tickOps.update + scripted correct answers.
+   * M-C: canTriggerBreakthrough precheck first - the production entry
+   * (triggerBreakthroughAction) refuses below realmLevel 12 BEFORE
+   * reaching startTribulation; the session mirrors that contract so a
+   * journey can't drive a tribulation the game would never admit. */
   runTribulation(targetRealmId: string): TribulationRunResult {
+    if (!this.gameManager.realmAdvanceOps.canTriggerBreakthrough(this.player)) {
+      return 'refused'
+    }
     if (!this.gameManager.startTribulation(this.player, targetRealmId)) {
       return 'refused'
     }
@@ -217,6 +232,25 @@ export class EarlyGameSession {
       }
     }
     return equipped
+  }
+
+  /** M-C save/restore checkpoint leg: the REAL production restore path
+   * (restoreGameSession, SaveSystem.ts) - the seam only wraps it and
+   * re-points the session at the restored player $state; it does NOT
+   * reimplement player restoration and does NOT own the player owner:
+   * the caller supplies a fresh owner (the suite uses a real Pinia
+   * store, keeping stores/* out of this simulation file). The previous
+   * player reference is abandoned (restore = replacement, not merge);
+   * continuing a journey on it would alias stale state. */
+  restoreCheckpoint(
+    save: GameSave,
+    playerOwner: GameSessionPlayerOwner,
+  ): RestoreGameSessionResult {
+    const result = restoreGameSession(playerOwner, this.gameManager, save)
+    if (result.status === 'ok') {
+      this.player = playerOwner.$state
+    }
+    return result
   }
 
   snapshot(): EarlyGameSnapshot {
