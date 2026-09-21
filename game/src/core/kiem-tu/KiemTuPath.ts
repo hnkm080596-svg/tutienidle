@@ -2,10 +2,10 @@ import type {
   CultivationPathId,
   PathStateIssue,
   PathWayDefinition,
-  PathWayId,
+  CultivationWayId,
 } from '../player/CultivationPathKit'
 import type { PlayerData } from '../player/Player'
-import { freshKiemTuState, KIEM_PHO_ORB_IDS, MORTAL_PRECURSOR_SKILL_IDS } from './KiemTuState'
+import { freshSwordPathState, KIEM_PHO_ORB_IDS, MORTAL_PRECURSOR_SKILL_IDS } from './KiemTuState'
 import { KIEM_PHO_BUFFS } from '../../data/buff/KiemPhoBuffs'
 import {
   KIEM_DAO_CASCADE_EMBLEM,
@@ -16,19 +16,19 @@ import {
 // Cultivation Path Framework (spec 2026-09-16, M6) — the Kiem Tu path
 // module: the two way definitions + the way membership predicates.
 //
-//   hien — Kiem Pho (preset-combo): the orb preset lives on
-//     player.kiemTu.preset; combat basics come from the KiemPho
+//   sword_pathway — Kiem Pho (preset-combo): the orb preset lives on
+//     player.swordPath.preset; combat basics come from the KiemPho
 //     dynamicBasic provider.
-//   ngu — Ngu Kiem Dao (hidden): ritual-only entry gated by tram Lv3,
+//   hidden_sword_pathway — Ngu Kiem Dao (hidden): ritual-only entry gated by tram Lv3,
 //     permanent; combat action is provider-injected (ngu_kiem_thuat +
 //     emblem slots). The Kiem Y -> Kiem Dao economy lives on the same
-//     player.kiemTu slice — ngu was NEVER a separate path id (the old
-//     kiemTu.mode discriminator retired in M6; cultivationWay is the
+//     player.swordPath slice — hidden_sword_pathway was NEVER a separate path id (the old
+//     swordPath.mode discriminator retired in M6; cultivationWay is the
 //     discriminator now).
 //
 // Dependency direction: this file is a leaf — it never imports back
 // into the catalog/authority. The only runtime import is the sibling
-// KiemTuState slice factory (createInitialState below), so domain code
+// SwordPathState slice factory (createInitialState below), so domain code
 // (NodeSystem/NguKiemDao) can consume the way predicates without a
 // runtime cycle.
 
@@ -38,28 +38,28 @@ import {
  * satisfy it; the fields stay nullable because slices keep the
  * persisted `| null` convention.
  */
-export interface KiemTuWayRead {
+export interface SwordPathWayRead {
   cultivationPath?: CultivationPathId | null
-  cultivationWay?: PathWayId | null
+  cultivationWay?: CultivationWayId | null
 }
 
 /**
  * M8 — the module-owned state-slice factory, invoked by
  * CultivationPathSystem.applyPathChoice via the module contract
- * (createInitialState). The canonical fresh player.kiemTu is
- * way-agnostic: the Kiem Y / Kiem Dao fields start at ngu's defaults
- * and hien simply never reads them.
+ * (createInitialState). The canonical fresh player.swordPath is
+ * way-agnostic: the Kiem Y / Kiem Dao fields start at hidden_sword_pathway's defaults
+ * and sword_pathway simply never reads them.
  */
-export function createKiemTuInitialState(player: PlayerData): void {
-  player.kiemTu = freshKiemTuState()
+export function createSwordPathInitialState(player: PlayerData): void {
+  player.swordPath = freshSwordPathState()
 }
 
 // ---------------------------------------------------------------------------
 // P1-M6 - module-owned persisted-slice validation. The save boundary
 // iterates this hook generically for EVERY save; the module owns ALL
-// rules for player.kiemTu: optional shape (a malformed present copy
-// silently degraded hien combat - empty preset -> nextOrb NaN), and
-// REQUIRED once the committed pair is kiem_tu (applyPathChoice creates
+// rules for player.swordPath: optional shape (a malformed present copy
+// silently degraded sword_pathway combat - empty preset -> nextOrb NaN), and
+// REQUIRED once the committed pair is sword (applyPathChoice creates
 // the slice atomically; provider attach + NguKiemDao reads assume it).
 // The payload is untrusted - narrow with guards, never cast.
 // ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ function isNonNegativeFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0
 }
 
-export function validateKiemTuPersistedState(
+export function validateSwordPathPersistedState(
   playerPayload: unknown,
   emit: (issue: PathStateIssue) => void,
 ): void {
@@ -79,43 +79,43 @@ export function validateKiemTuPersistedState(
     return
   }
 
-  if (playerPayload.cultivationPath === 'kiem_tu' && playerPayload.kiemTu === undefined) {
+  if (playerPayload.cultivationPath === 'sword' && playerPayload.swordPath === undefined) {
     emit({
-      path: 'player.kiemTu',
-      message: "bắt buộc khi cultivationPath là 'kiem_tu' (applyPathChoice tạo slice nguyên tử)",
+      path: 'player.swordPath',
+      message: "bắt buộc khi cultivationPath là 'sword' (applyPathChoice tạo slice nguyên tử)",
     })
   }
 
-  const kiemTu = playerPayload.kiemTu
+  const swordPath = playerPayload.swordPath
 
-  if (kiemTu === undefined) {
+  if (swordPath === undefined) {
     return
   }
 
-  if (!isRecord(kiemTu)) {
-    emit({ path: 'player.kiemTu', message: 'phải là object hoặc vắng mặt' })
+  if (!isRecord(swordPath)) {
+    emit({ path: 'player.swordPath', message: 'phải là object hoặc vắng mặt' })
     return
   }
 
-  // M6 retired kiemTu.mode - a save still carrying it predates the
+  // M6 retired swordPath.mode - a save still carrying it predates the
   // way model (or was hand-edited); reject rather than persist the
   // dead key forever.
-  if ('mode' in kiemTu) {
+  if ('mode' in swordPath) {
     emit({
-      path: 'player.kiemTu.mode',
+      path: 'player.swordPath.mode',
       message: 'field đã bị retire từ v66 (cultivationWay thay thế)',
     })
   }
 
-  const preset = kiemTu.preset
+  const preset = swordPath.preset
 
   if (!Array.isArray(preset) || preset.length < 1 || preset.length > 9) {
-    emit({ path: 'player.kiemTu.preset', message: 'phải là array 1-9 phần tử' })
+    emit({ path: 'player.swordPath.preset', message: 'phải là array 1-9 phần tử' })
   } else {
     for (const orbId of preset) {
       if (!KIEM_PHO_ORB_IDS.some((id) => id === orbId)) {
         emit({
-          path: 'player.kiemTu.preset',
+          path: 'player.swordPath.preset',
           message: `orb id không hợp lệ: ${String(orbId)}`,
         })
         break
@@ -123,58 +123,58 @@ export function validateKiemTuPersistedState(
     }
   }
 
-  if (!isNonNegativeFiniteNumber(kiemTu.kiemY)) {
-    emit({ path: 'player.kiemTu.kiemY', message: 'phải là number hữu hạn >= 0' })
+  if (!isNonNegativeFiniteNumber(swordPath.kiemY)) {
+    emit({ path: 'player.swordPath.kiemY', message: 'phải là number hữu hạn >= 0' })
   }
 
-  if (typeof kiemTu.kiemDaoCount !== 'number' || !Number.isFinite(kiemTu.kiemDaoCount) || kiemTu.kiemDaoCount < 1) {
-    emit({ path: 'player.kiemTu.kiemDaoCount', message: 'phải là number hữu hạn >= 1' })
+  if (typeof swordPath.kiemDaoCount !== 'number' || !Number.isFinite(swordPath.kiemDaoCount) || swordPath.kiemDaoCount < 1) {
+    emit({ path: 'player.swordPath.kiemDaoCount', message: 'phải là number hữu hạn >= 1' })
   }
 
-  if (typeof kiemTu.kiemDaoBase !== 'number' || !Number.isFinite(kiemTu.kiemDaoBase) || kiemTu.kiemDaoBase < 1) {
-    emit({ path: 'player.kiemTu.kiemDaoBase', message: 'phải là number hữu hạn >= 1' })
+  if (typeof swordPath.kiemDaoBase !== 'number' || !Number.isFinite(swordPath.kiemDaoBase) || swordPath.kiemDaoBase < 1) {
+    emit({ path: 'player.swordPath.kiemDaoBase', message: 'phải là number hữu hạn >= 1' })
   }
 }
 
 /**
- * hien membership — the gate for ALL Kiem Pho machinery: the preset
+ * sword_pathway membership — the gate for ALL Kiem Pho machinery: the preset
  * write op (setKiemPhoPreset), the KiemPho dynamicBasic provider, the
- * preset HUD/editor surfaces, and the hien node subtree.
+ * preset HUD/editor surfaces, and the sword_pathway node subtree.
  *
  * Reads the RAW fields, same contract as NodeSystem.nodeWayApplies:
  * cultivationWay is authoritative once the ritual writes it. A
- * legacy-shaped player (cultivationPath only, no way) is NOT hien —
+ * legacy-shaped player (cultivationPath only, no way) is NOT sword_pathway —
  * the gate fails closed so way machinery never runs for a state the
  * path authority did not commit.
  */
-export function isKiemTuHien(player: KiemTuWayRead | null | undefined): boolean {
-  return player?.cultivationPath === 'kiem_tu' && player?.cultivationWay === 'hien'
+export function isSwordPathway(player: SwordPathWayRead | null | undefined): boolean {
+  return player?.cultivationPath === 'sword' && player?.cultivationWay === 'sword_pathway'
 }
 
 /**
- * ngu membership — the gate for the hidden way's machinery: the
+ * hidden_sword_pathway membership — the gate for the hidden way's machinery: the
  * NguKiemDao economy (gainKiemY/grantKiemDao/merge), the
- * NguKiemDaoProvider attach, the kiemDaoBelowCap prereq, and the ngu
- * node subtree. kiem_tu never had a hidden-variant path id, so a
- * single era exists: ('kiem_tu', 'ngu') — the WAY id is the check.
+ * NguKiemDaoProvider attach, the kiemDaoBelowCap prereq, and the hidden_sword_pathway
+ * node subtree. sword never had a hidden-variant path id, so a
+ * single era exists: ('sword', 'hidden_sword_pathway') — the WAY id is the check.
  */
-export function isKiemTuNgu(player: KiemTuWayRead | null | undefined): boolean {
-  return player?.cultivationPath === 'kiem_tu' && player?.cultivationWay === 'ngu'
+export function isHiddenSwordPathway(player: SwordPathWayRead | null | undefined): boolean {
+  return player?.cultivationPath === 'sword' && player?.cultivationWay === 'hidden_sword_pathway'
 }
 
 // ---------------------------------------------------------------------------
-// Way definitions — consumed by CULTIVATION_PATH_MODULES.kiem_tu.ways in
+// Way definitions — consumed by CULTIVATION_PATH_MODULES.sword.ways in
 // CultivationPathKit (the catalog is the single aggregation point).
 // ---------------------------------------------------------------------------
 
-export const KIEM_TU_HIEN_WAY: PathWayDefinition = {
-  id: 'hien',
-  pathId: 'kiem_tu',
+export const SWORD_PATHWAY: PathWayDefinition = {
+  id: 'sword_pathway',
+  pathId: 'sword',
   name: 'Kiếm Tu — Ngự Kiếm Tâm Kinh',
   element: 'metal',
   techniqueId: 'ngu_kiem',
   // Kiem Tu Reimagined (spec 2026-09-15) — no authored skill grants:
-  // hien basics come from the Kiem Pho orb preset (KiemPhoProvider).
+  // sword_pathway basics come from the Kiem Pho orb preset (KiemPhoProvider).
   // M9 — the ritual strips the mortal precursor skills from the loadout
   // (NOT unlearn: a Pham Nhan save can still use them; the precursor
   // equip gate blocks re-equip post-path).
@@ -183,13 +183,13 @@ export const KIEM_TU_HIEN_WAY: PathWayDefinition = {
   // is the authority now that the path-keyed domain map is gone); Kiem Tu
   // has no totals-driven emission channel, so collectModifiers is a no-op.
   stats: {
-    domains: ['kiem_tu'],
+    domains: ['sword'],
     collectModifiers: () => [],
   },
-  // P1 - hien owns the Kiem Pho preset-combo machinery: the preset write
+  // P1 - sword_pathway owns the Kiem Pho preset-combo machinery: the preset write
   // op, the preset HUD/editor surfaces, and the 'kiem_pho' node-tree tag.
   capabilities: {
-    static: ['kiem_tu.kiem_pho'],
+    static: ['sword.sword_scroll'],
   },
   // P1-M2 - the orb defs the preset composes from and the kiem_thuong
   // bleed the orbs plant; declared by reference so a def rename breaks
@@ -198,13 +198,13 @@ export const KIEM_TU_HIEN_WAY: PathWayDefinition = {
     skillIds: KIEM_PHO_ORB_IDS,
     buffIds: KIEM_PHO_BUFFS.map((buff) => buff.id),
   },
-  // P1-M3 - the preset axis lives on player.kiemTu (written by
-  // setKiemPhoPreset); hien owns it, ngu never reads it. Data-only
+  // P1-M3 - the preset axis lives on player.swordPath (written by
+  // setKiemPhoPreset); sword_pathway owns it, hidden_sword_pathway never reads it. Data-only
   // declaration - the read lives in CultivationPathSystem.
   subpaths: {
     preset: {
-      requiresCapability: 'kiem_tu.kiem_pho',
-      state: 'player.kiemTu.preset',
+      requiresCapability: 'sword.sword_scroll',
+      state: 'player.swordPath.preset',
     },
   },
   // P1 - the fixed tree tag the panel renders (replaces the module
@@ -212,29 +212,29 @@ export const KIEM_TU_HIEN_WAY: PathWayDefinition = {
   nodeTreeTag: 'kiem_pho',
 }
 
-export const KIEM_TU_NGU_WAY: PathWayDefinition = {
-  id: 'ngu',
-  pathId: 'kiem_tu',
+export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
+  id: 'hidden_sword_pathway',
+  pathId: 'sword',
   name: 'Kiếm Tu Ẩn — Vạn Kiếm Quyết',
   techniqueId: 'van_kiem_quyet',
   // Ritual-only entry, permanent, FREE — the exact port of the retired
   // kiem_tu_an node's skillCastCount {tram, 3} gate (reads the
   // skillLevels mirror). A mortal without tram Lv3 at the ritual can
-  // never enter ngu — there is no mid-progression flip any more.
+  // never enter hidden_sword_pathway — there is no mid-progression flip any more.
   offerGate: { requiresSkillLevel: { skillId: 'tram', level: 3 } },
-  // M9 — same mortal-precursor strip as hien.
+  // M9 — same mortal-precursor strip as sword_pathway.
   unequipSkillIds: MORTAL_PRECURSOR_SKILL_IDS,
-  // M7 — same shared-domain facet as hien: 'kiem_tu', no totals-driven
+  // M7 — same shared-domain facet as sword_pathway: 'sword', no totals-driven
   // channel.
   stats: {
-    domains: ['kiem_tu'],
+    domains: ['sword'],
     collectModifiers: () => [],
   },
-  // P1 - ngu owns the Ngu Kiem Dao machinery: the Kiem Y -> Kiem Dao
+  // P1 - hidden_sword_pathway owns the Ngu Kiem Dao machinery: the Kiem Y -> Kiem Dao
   // economy + realm merge, the provider-injected combat action, the
   // emblem slots, and the 'ngu_kiem' node-tree tag.
   capabilities: {
-    static: ['kiem_tu.ngu_kiem_dao'],
+    static: ['sword.sword_riding'],
   },
   // P1-M2 - the provider-injected action plus the two emblem defs the
   // combat slots carry (emblemOnly markers, never real casts).

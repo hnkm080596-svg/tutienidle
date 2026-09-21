@@ -1,7 +1,7 @@
 // Cultivation Path Framework — M6: Kiếm Tu way-normalisation contract
-// tests. kiem_tu never had a hidden-variant path id — BOTH ways
-// persist cultivationPath 'kiem_tu' and cultivationWay ('hien'|'ngu')
-// is the sole discriminator (the retired kiemTu.mode field is gone).
+// tests. sword never had a hidden-variant path id — BOTH ways
+// persist cultivationPath 'sword' and cultivationWay ('sword_pathway'|'hidden_sword_pathway')
+// is the sole discriminator (the retired swordPath.mode field is gone).
 // Every kiem way-specific gate (Kiem Pho preset/provider, the Ngu Kiem
 // Dao economy + provider, the node subtrees) resolves on the WAY.
 //
@@ -25,10 +25,10 @@ import {
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { gainKiemY, grantKiemDao } from './NguKiemDao'
 import {
-  isKiemTuHien,
-  isKiemTuNgu,
-  KIEM_TU_HIEN_WAY,
-  KIEM_TU_NGU_WAY,
+  isSwordPathway,
+  isHiddenSwordPathway,
+  SWORD_PATHWAY,
+  HIDDEN_SWORD_PATHWAY,
 } from './KiemTuPath'
 
 const NODE_REGISTRY = { getAll: () => KIEM_TU_NODES }
@@ -39,93 +39,93 @@ function nodeById(id: string) {
   return node!
 }
 
-function kiemTuPlayer(way: 'hien' | 'ngu'): PlayerData {
+function swordPathPlayer(way: 'sword_pathway' | 'hidden_sword_pathway'): PlayerData {
   const player = createDefaultPlayer()
-  player.cultivationPath = 'kiem_tu'
+  player.cultivationPath = 'sword'
   player.cultivationWay = way
   player.realmId = 'qi_refining'
   player.skillInsight = 99
-  player.kiemTu = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
+  player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
   return player
 }
 
 describe('Kiếm Tu way predicates — strict pair doctrine', () => {
   it.each([
-    [{ cultivationPath: 'kiem_tu', cultivationWay: 'hien' }, true],
-    [{ cultivationPath: 'kiem_tu', cultivationWay: 'ngu' }, false],
-    // kiem_tu has exactly one persisted era — but the WAY field is
+    [{ cultivationPath: 'sword', cultivationWay: 'sword_pathway' }, true],
+    [{ cultivationPath: 'sword', cultivationWay: 'hidden_sword_pathway' }, false],
+    // sword has exactly one persisted era — but the WAY field is
     // still authoritative: a way-less kiem player is not hien.
-    [{ cultivationPath: 'kiem_tu' }, false],
-    [{ cultivationPath: 'the_tu', cultivationWay: 'hien' }, false],
-    [{ cultivationPath: 'phap_tu', cultivationWay: 'hien' }, false],
+    [{ cultivationPath: 'sword' }, false],
+    [{ cultivationPath: 'body', cultivationWay: 'sword_pathway' }, false],
+    [{ cultivationPath: 'spell', cultivationWay: 'sword_pathway' }, false],
     [{}, false],
     [undefined, false],
     [null, false],
-  ])('isKiemTuHien(%o) → %s', (slice, expected) => {
-    expect(isKiemTuHien(slice as PlayerData | undefined | null)).toBe(expected)
+  ])('isSwordPathway(%o) → %s', (slice, expected) => {
+    expect(isSwordPathway(slice as PlayerData | undefined | null)).toBe(expected)
   })
 
   it.each([
-    [{ cultivationPath: 'kiem_tu', cultivationWay: 'ngu' }, true],
-    [{ cultivationPath: 'kiem_tu', cultivationWay: 'hien' }, false],
-    [{ cultivationPath: 'kiem_tu' }, false],
-    // Cross-path way bleed: 'ngu' exists only under kiem_tu, but a
+    [{ cultivationPath: 'sword', cultivationWay: 'hidden_sword_pathway' }, true],
+    [{ cultivationPath: 'sword', cultivationWay: 'sword_pathway' }, false],
+    [{ cultivationPath: 'sword' }, false],
+    // Cross-path way bleed: 'hidden_sword_pathway' exists only under sword, but a
     // corrupt foreign pair must still fail closed.
-    [{ cultivationPath: 'the_tu', cultivationWay: 'ngu' }, false],
-    [{ cultivationPath: 'phap_tu_an', cultivationWay: 'ngu' }, false],
+    [{ cultivationPath: 'body', cultivationWay: 'hidden_sword_pathway' }, false],
+    [{ cultivationPath: 'phap_tu_an', cultivationWay: 'hidden_sword_pathway' }, false],
     [{}, false],
     [undefined, false],
     [null, false],
-  ])('isKiemTuNgu(%o) → %s', (slice, expected) => {
-    expect(isKiemTuNgu(slice as PlayerData | undefined | null)).toBe(expected)
+  ])('isHiddenSwordPathway(%o) → %s', (slice, expected) => {
+    expect(isHiddenSwordPathway(slice as PlayerData | undefined | null)).toBe(expected)
   })
 
   it('corrupt pairs fail closed on BOTH predicates', () => {
     for (const pair of [
-      { cultivationPath: 'kiem_tu', cultivationWay: 'ung_the' },
-      { cultivationPath: 'kiem_tu', cultivationWay: 'ngo_dao' },
-      { cultivationPath: 'the_tu', cultivationWay: 'ngu' },
+      { cultivationPath: 'sword', cultivationWay: 'hidden_body_pathway' },
+      { cultivationPath: 'sword', cultivationWay: 'hidden_spell_pathway' },
+      { cultivationPath: 'body', cultivationWay: 'hidden_sword_pathway' },
     ] as const) {
-      expect(isKiemTuHien(pair as PlayerData)).toBe(false)
-      expect(isKiemTuNgu(pair as PlayerData)).toBe(false)
+      expect(isSwordPathway(pair as PlayerData)).toBe(false)
+      expect(isHiddenSwordPathway(pair as PlayerData)).toBe(false)
     }
   })
 })
 
 describe('Kiếm Tu way definitions', () => {
   it('hien way: ngu_kiem technique, no gate, no skillIds (orb preset supplies basics)', () => {
-    expect(KIEM_TU_HIEN_WAY.id).toBe('hien')
-    expect(KIEM_TU_HIEN_WAY.pathId).toBe('kiem_tu')
-    expect(KIEM_TU_HIEN_WAY.techniqueId).toBe('ngu_kiem')
-    expect(KIEM_TU_HIEN_WAY.offerGate).toBeUndefined()
-    expect(KIEM_TU_HIEN_WAY.skillIds).toBeUndefined()
+    expect(SWORD_PATHWAY.id).toBe('sword_pathway')
+    expect(SWORD_PATHWAY.pathId).toBe('sword')
+    expect(SWORD_PATHWAY.techniqueId).toBe('ngu_kiem')
+    expect(SWORD_PATHWAY.offerGate).toBeUndefined()
+    expect(SWORD_PATHWAY.skillIds).toBeUndefined()
   })
 
   it('ngu way: van_kiem_quyet technique + tram Lv3 offerGate (port of the retired flip-node prereq)', () => {
-    expect(KIEM_TU_NGU_WAY.id).toBe('ngu')
-    expect(KIEM_TU_NGU_WAY.pathId).toBe('kiem_tu')
-    expect(KIEM_TU_NGU_WAY.techniqueId).toBe('van_kiem_quyet')
-    expect(KIEM_TU_NGU_WAY.offerGate).toEqual({
+    expect(HIDDEN_SWORD_PATHWAY.id).toBe('hidden_sword_pathway')
+    expect(HIDDEN_SWORD_PATHWAY.pathId).toBe('sword')
+    expect(HIDDEN_SWORD_PATHWAY.techniqueId).toBe('van_kiem_quyet')
+    expect(HIDDEN_SWORD_PATHWAY.offerGate).toEqual({
       requiresSkillLevel: { skillId: 'tram', level: 3 },
     })
-    expect(KIEM_TU_NGU_WAY.skillIds).toBeUndefined()
+    expect(HIDDEN_SWORD_PATHWAY.skillIds).toBeUndefined()
   })
 })
 
 describe('node stamps — requiredCultivationPath + requiredWay', () => {
-  it('every kiem node is stamped on the kiem_tu path with a way', () => {
+  it('every kiem node is stamped on the sword path with a way', () => {
     for (const node of KIEM_TU_NODES) {
-      expect(node.requiredCultivationPath, node.id).toBe('kiem_tu')
-      expect(node.requiredWay, node.id).toMatch(/^(hien|ngu)$/)
+      expect(node.requiredCultivationPath, node.id).toBe('sword')
+      expect(node.requiredWay, node.id).toMatch(/^(sword_pathway|hidden_sword_pathway)$/)
     }
   })
 
   it('orb-branch nodes are hien; ngu_kiem-tag nodes are ngu', () => {
     for (const node of KIEM_TU_NODES) {
       if (node.branchTag === 'kiem_pho') {
-        expect(node.requiredWay, node.id).toBe('hien')
+        expect(node.requiredWay, node.id).toBe('sword_pathway')
       } else if (node.branchTag === 'ngu_kiem') {
-        expect(node.requiredWay, node.id).toBe('ngu')
+        expect(node.requiredWay, node.id).toBe('hidden_sword_pathway')
       }
     }
   })
@@ -133,7 +133,7 @@ describe('node stamps — requiredCultivationPath + requiredWay', () => {
   it('the retired flip node + mode machinery are gone', () => {
     expect(KIEM_TU_NODES.some((node) => node.id === 'kiem_tu_an')).toBe(false)
     expect(
-      KIEM_TU_NODES.some((node) => 'kiemTuModeSwitch' in node.effect),
+      KIEM_TU_NODES.some((node) => 'swordPathModeSwitch' in node.effect),
     ).toBe(false)
     // No node prereq may point at the retired id.
     for (const node of KIEM_TU_NODES) {
@@ -147,31 +147,31 @@ describe('node stamps — requiredCultivationPath + requiredWay', () => {
   })
 
   it('hien player buys orb nodes but not ngu nodes; ngu player buys ngu nodes but not orb nodes', () => {
-    const hien = kiemTuPlayer('hien')
+    const hien = swordPathPlayer('sword_pathway')
     expect(purchaseNode(hien, nodeById('orb_dam_1'))).toBe(true)
     expect(purchaseNode(hien, nodeById('ngu_kiem_sac'))).toBe(false)
 
-    const ngu = kiemTuPlayer('ngu')
+    const ngu = swordPathPlayer('hidden_sword_pathway')
     expect(purchaseNode(ngu, nodeById('ngu_kiem_sac'))).toBe(true)
     expect(purchaseNode(ngu, nodeById('orb_dam_1'))).toBe(false)
   })
 
-  it('cross-path way bleed: a the_tu/hien player cannot buy kiem orb nodes', () => {
-    const theTu = createDefaultPlayer()
-    theTu.cultivationPath = 'the_tu'
-    theTu.cultivationWay = 'hien' // same way id, different path — path stamp must hold
-    theTu.realmId = 'qi_refining'
-    theTu.skillInsight = 99
+  it('cross-path way bleed: a body/hien player cannot buy kiem orb nodes', () => {
+    const body = createDefaultPlayer()
+    body.cultivationPath = 'body'
+    body.cultivationWay = 'sword_pathway' // same way id, different path — path stamp must hold
+    body.realmId = 'qi_refining'
+    body.skillInsight = 99
 
-    expect(purchaseNode(theTu, nodeById('orb_dam_1'))).toBe(false)
+    expect(purchaseNode(body, nodeById('orb_dam_1'))).toBe(false)
   })
 
   it('aggregateNodeStatModifiers ignores cross-way levels both directions', () => {
-    const hien = kiemTuPlayer('hien')
+    const hien = swordPathPlayer('sword_pathway')
     hien.nodeLevels = { ngu_kiem_sac: 3 }
     expect(aggregateNodeStatModifiers(NODE_REGISTRY, hien)).toEqual([])
 
-    const ngu = kiemTuPlayer('ngu')
+    const ngu = swordPathPlayer('hidden_sword_pathway')
     ngu.nodeLevels = { orb_dam_1: 3 }
     expect(aggregateNodeStatModifiers(NODE_REGISTRY, ngu)).toEqual([])
   })
@@ -187,20 +187,20 @@ describe('way-resolved stat/domain channels', () => {
   }
 
   it('kiem ways have no stat facet — collectActiveWayStatModifiers emits nothing', () => {
-    expect(collectActiveWayStatModifiers(kiemTuPlayer('hien'), TOT10)).toEqual([])
-    expect(collectActiveWayStatModifiers(kiemTuPlayer('ngu'), TOT10)).toEqual([])
+    expect(collectActiveWayStatModifiers(swordPathPlayer('sword_pathway'), TOT10)).toEqual([])
+    expect(collectActiveWayStatModifiers(swordPathPlayer('hidden_sword_pathway'), TOT10)).toEqual([])
   })
 
-  it('both kiem ways resolve the kiem_tu stat domain', () => {
-    expect(resolveActiveWayStatDomains(kiemTuPlayer('hien'))).toEqual(['kiem_tu'])
-    expect(resolveActiveWayStatDomains(kiemTuPlayer('ngu'))).toEqual(['kiem_tu'])
+  it('both kiem ways resolve the sword stat domain', () => {
+    expect(resolveActiveWayStatDomains(swordPathPlayer('sword_pathway'))).toEqual(['sword'])
+    expect(resolveActiveWayStatDomains(swordPathPlayer('hidden_sword_pathway'))).toEqual(['sword'])
   })
 
   it('getActiveWayDefinition resolves the persisted pair; a way-less kiem save fails closed (M7)', () => {
-    expect(getActiveWayDefinition(kiemTuPlayer('ngu'))?.id).toBe('ngu')
-    expect(getActiveWayDefinition(kiemTuPlayer('hien'))?.id).toBe('hien')
+    expect(getActiveWayDefinition(swordPathPlayer('hidden_sword_pathway'))?.id).toBe('hidden_sword_pathway')
+    expect(getActiveWayDefinition(swordPathPlayer('sword_pathway'))?.id).toBe('sword_pathway')
 
-    const wayLess = kiemTuPlayer('hien')
+    const wayLess = swordPathPlayer('sword_pathway')
     delete wayLess.cultivationWay
     // M7: the LEGACY_PATH_TO_WAY lenient fallback is gone — a persisted
     // path without a way resolves nothing instead of guessing hien.
@@ -211,23 +211,23 @@ describe('way-resolved stat/domain channels', () => {
 
 describe('ngu economy — way-gated writes', () => {
   it('gainKiemY/grantKiemDao are no-ops off the ngu way', () => {
-    const hien = kiemTuPlayer('hien')
+    const hien = swordPathPlayer('sword_pathway')
     gainKiemY(hien, 50_000)
     grantKiemDao(hien, 5)
-    expect(hien.kiemTu!.kiemY).toBe(0)
-    expect(hien.kiemTu!.kiemDaoCount).toBe(1)
+    expect(hien.swordPath!.kiemY).toBe(0)
+    expect(hien.swordPath!.kiemDaoCount).toBe(1)
 
     const mortal = createDefaultPlayer()
-    mortal.kiemTu = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
+    mortal.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
     gainKiemY(mortal, 50_000)
     grantKiemDao(mortal, 5)
-    expect(mortal.kiemTu.kiemY).toBe(0)
-    expect(mortal.kiemTu.kiemDaoCount).toBe(1)
+    expect(mortal.swordPath.kiemY).toBe(0)
+    expect(mortal.swordPath.kiemDaoCount).toBe(1)
   })
 
   it('ngu player banks Kiem Y toward the realm forgeCost', () => {
-    const ngu = kiemTuPlayer('ngu')
+    const ngu = swordPathPlayer('hidden_sword_pathway')
     gainKiemY(ngu, 100)
-    expect(ngu.kiemTu!.kiemY).toBe(100)
+    expect(ngu.swordPath!.kiemY).toBe(100)
   })
 })

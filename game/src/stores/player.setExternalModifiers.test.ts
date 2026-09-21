@@ -110,7 +110,7 @@ describe('player store — setExternalModifiers dirty-check', () => {
     // signature-equal (domain decides whether the gate delivers it);
     // a stale signature would keep the untagged array and still throw.
     store.setExternalModifiers([
-      { id: 'mod:mp', sourceId: 'mod:mp', sourceType: 'buff', stat: 'maxMp', flat: 100, domain: 'phap_tu' },
+      { id: 'mod:mp', sourceId: 'mod:mp', sourceType: 'buff', stat: 'maxMp', flat: 100, domain: 'spell' },
     ])
 
     expect(store.finalStats.maxMp).toBe(100)

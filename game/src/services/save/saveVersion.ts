@@ -40,18 +40,18 @@
 // phaGiapCarryRealmId. Save v60 bị từ chối (dev phase, không migration).
 // v62 (phap-tu-reimagined): Phap Tu path/state/combat rework —
 // PlayerData loses unlockedElements/equippedElements (element authority
-// is now player.phapTu.element), CombatEntity loses skillStats +
+// is now player.spellPath.element), CombatEntity loses skillStats +
 // currentHoaThe/ThoThe/KimThe pools, reaction-path skills/buffs/nodes
 // retired. Save v61 bị từ chối (dev phase, không migration).
-// v63 (2026-09-15, kiem-tu-reimagined spec): PlayerData.kiemTu replaces
-// kiemTuRoute + the sword-intent ecosystem (canonical state model:
+// v63 (2026-09-15, kiem-tu-reimagined spec): PlayerData.swordPath replaces
+// swordPathRoute + the sword-intent ecosystem (canonical state model:
 // mode/preset/kiemY/kiemDaoCount/kiemDaoBase). Save v62 bị từ chối
 // (dev phase, không migration).
 // v64 (2026-09-15, the-tu-reimagined spec T1): CultivationPathId mở rộng
 // 'the_tu' + 'the_tu_an' — save cũ chứa path id lạ bị từ chối (dev phase,
 // không migration).
 // v65 (2026-09-16, cultivation-path-framework M2): PlayerData thêm field
-// TUỸ CHỌN `cultivationWay?: PathWayId` (way đã chọn trong path, ghi
+// TUỸ CHỌN `cultivationWay?: CultivationWayId` (way đã chọn trong path, ghi
 // bởi CultivationPathSystem.applyPathChoice trong Nghi Lễ Nhập Môn).
 // `cultivationPath` vẫn mang union 5 id legacy trong thời kỳ chuyển
 // tiếp — giờ được kiểm tra enum membership khi hiện diện. Save v64 bị
@@ -66,4 +66,10 @@
 // lost `activeCycle` - workers-as-fuel (spec D3); workerCycles is the
 // only cycle kind. Save v66 is rejected (dev phase, no migration); a
 // stale `activeCycle` in an old payload is tolerated + whitelisted out.
-export const CURRENT_SAVE_VERSION = 67 as const
+// v68 (2026-09-17, P7-M1 identity-spine cut): CultivationPathId values
+// kiem_tu/phap_tu/the_tu -> sword/spell/body; CultivationWayId becomes
+// the strict six-value union (sword_pathway/hidden_sword_pathway/
+// spell_pathway/hidden_spell_pathway/body_pathway/hidden_body_pathway);
+// PlayerData.phapTu -> spellPath, PlayerData.kiemTu -> swordPath. Save
+// v67 is rejected (dev phase, no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 68 as const

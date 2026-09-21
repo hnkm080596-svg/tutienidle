@@ -153,7 +153,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // Nghi Kiếm Trận (2 kiếm) — đúng 1 active skill duy nhất của route,
     // thay bộ 3 skill kit cũ.
     player.realmLevel = 12
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
 
     // Spawn telegraph (2026-08-24): quái materialize trễ hơn (0.75–1.4s)
     // khiến trận dài thêm ~2-3s, realm pressure tích lũy thêm — cộng

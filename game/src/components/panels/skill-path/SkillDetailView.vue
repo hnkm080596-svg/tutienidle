@@ -3,7 +3,7 @@
 // KHÔNG có Node Tree (Kiếm Tu/Phàm Nhân, xem SkillPathList.vue) — đọc
 // thông tin kỹ năng ĐÃ có sẵn (cố định theo kit/Trảm). Nâng cấp bằng
 // Cảm ngộ Kỹ năng (skill-insight-and-auto-combat-hud-plan.md mục 5)
-// ÁP DỤNG CHO MỌI skill đã học, không riêng nhánh phap_tu — khác
+// ÁP DỤNG CHO MỌI skill đã học, không riêng nhánh spell — khác
 // NodeTreePanel.vue/NodeInspector.vue vốn là nơi MỞ node (unlock), còn
 // đây là nơi NÂNG CẤP skill đã mở.
 import { computed } from 'vue'

@@ -42,8 +42,8 @@ describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉ
   it('Pháp Tu thắng Độ Kiếp Trúc Cơ -> nhận đúng 1 Ngũ Hành Châu tầng 1/EXP 0/Phàm phẩm', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
 
     winFoundationTribulation(player, gameManager)
 
@@ -56,8 +56,8 @@ describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉ
   it('Kiếm Tu thắng Độ Kiếp Trúc Cơ -> KHÔNG nhận artifact nào (chưa có definition)', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'hien'
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'sword_pathway'
 
     winFoundationTribulation(player, gameManager)
 
@@ -70,8 +70,8 @@ describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉ
   it('idempotent — gọi lại không tạo/ghi đè artifact đã có', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
     player.realmId = 'foundation_establishment'
     player.artifact = { ...createDefaultArtifactProgress('ngu_hanh_chau'), experience: 42 }
 

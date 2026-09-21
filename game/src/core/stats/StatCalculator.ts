@@ -82,7 +82,7 @@ const ATTRIBUTE_MAX_HP_PER_POINT = 8
 const ATTRIBUTE_HP_REGEN_PER_POINT = 0.1
 // The Tu Reimagined (spec 2026-09-15 section 3.3): vitality ->
 // enduranceThreshold moved OUT of the universal derivation into the
-// the_tu domain channel (theTuEnduranceModifiers in TheTuPath.ts;
+// body domain channel (bodyEnduranceModifiers in TheTuPath.ts;
 // the deriver is declared on the way facet's deltaDerivers and
 // registered from the catalog by CultivationPathSystem).
 
@@ -304,7 +304,7 @@ export function calculateStats(baseStats: BaseStats, modifiers: StatModifier[]):
  * D12 ordering contract (stat-system-reimagined spec section 5): runs ONE
  * runPipeline pass over base + persistent modifiers and returns the 5
  * resolved attribute values. Assembly call sites use the totals to emit
- * domain-gated modifiers (phap_tu attunement -> MP) BEFORE calculateStats
+ * domain-gated modifiers (spell attunement -> MP) BEFORE calculateStats
  * -- the read is not a second derivation, and the emitted modifiers feed
  * back through the single pipeline (INV-6 intact).
  */
@@ -332,8 +332,8 @@ export function resolveAttributeTotals(
 // Review fix (2026-09-15): derivers are globally registered but must run
 // ONLY for entities that own the domain — the caller declares the
 // entity's domains via EffectiveStatContext. A globally-registered
-// phap_tu deriver would otherwise leak maxMp/manaRegenPerTurn onto a
-// kiem_tu entity that gains attunement mid-battle.
+// spell deriver would otherwise leak maxMp/manaRegenPerTurn onto a
+// sword entity that gains attunement mid-battle.
 export interface EffectiveStatContext {
   // Stat domains the entity owns (player path -> its domain; enemies and
   // context-free callers declare none). A domain's deltaDeriver runs only
@@ -425,7 +425,7 @@ export function calculateEffectiveStats(
   const deltaModifiers = deriveAttributeModifiers(attributeDelta)
 
   // D12: domain deltaDerivers run after the universal delta derivation --
-  // e.g. phap_tu re-emits attunement->MP as domain-gated delta modifiers.
+  // e.g. spell re-emits attunement->MP as domain-gated delta modifiers.
   // Each runs ONLY when the entity owns that domain (context-active).
   for (const [domain, deriver] of DOMAIN_DELTA_DERIVERS) {
     if (context.activeDomains?.has(domain)) {

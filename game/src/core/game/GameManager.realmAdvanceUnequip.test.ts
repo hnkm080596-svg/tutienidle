@@ -37,7 +37,7 @@ describe('GameManager — chooseCultivationPath realm advance và trang bị đa
     })
     manager.equipmentBag.add(weapon)
 
-    expect(manager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player)).toBe(true)
+    expect(manager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player)).toBe(true)
     expect(player.realmId).toBe('qi_refining')
     expect(weapon.equipped).toBe(true)
   })

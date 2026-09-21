@@ -3,14 +3,14 @@ import type { ProgressionNode } from '../progression/ProgressionNode'
 import { getNodeLevel, nodePathApplies, nodeWayApplies } from '../progression/NodeSystem'
 
 // The Tu Reimagined (plan Task 6, review P0.2) — the ONLY node -> kit
-// channel for the_tu. Nodes declare `effect.theTuKitModifiers` (flat,
+// channel for body. Nodes declare `effect.bodyKitModifiers` (flat,
 // per-level); this collector sums them by channel over owned node levels
 // and the participant build bakes the totals into participant-local def
 // clones (kit skills + the phan_chinh buff def). Registry/singleton defs
 // are NEVER mutated — a shared-def mutation would leak node state across
 // participants, battles, and tests.
 
-export interface TheTuKitModifierValues {
+export interface BodyKitModifierValues {
   /** Adds to cuong_quyen/loan_dau damage.missingHpBonusPerMissingPercent. */
   missingHpBonusBonus: number
   /** Adds to the phan_chinh reflectsDamage.maxHpRatio. */
@@ -25,9 +25,9 @@ export interface TheTuKitModifierValues {
   batTuDurationBonus: number
 }
 
-export type TheTuKitModifierChannel = keyof TheTuKitModifierValues
+export type BodyKitModifierChannel = keyof BodyKitModifierValues
 
-const ZERO_MODIFIERS: TheTuKitModifierValues = {
+const ZERO_MODIFIERS: BodyKitModifierValues = {
   missingHpBonusBonus: 0,
   reflectMaxHpRatioBonus: 0,
   reflectTakenRatioBonus: 0,
@@ -37,15 +37,15 @@ const ZERO_MODIFIERS: TheTuKitModifierValues = {
 }
 
 /**
- * Aggregates `node.effect.theTuKitModifiers` across every node the
+ * Aggregates `node.effect.bodyKitModifiers` across every node the
  * player owns, each channel scaled linearly by node level (authored
  * value = per-level contribution).
  */
-export function collectTheTuKitModifiers(
+export function collectBodyKitModifiers(
   registry: { getAll(): ProgressionNode[] },
   player: PlayerData,
-): TheTuKitModifierValues {
-  const totals: TheTuKitModifierValues = { ...ZERO_MODIFIERS }
+): BodyKitModifierValues {
+  const totals: BodyKitModifierValues = { ...ZERO_MODIFIERS }
 
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
@@ -58,8 +58,8 @@ export function collectTheTuKitModifiers(
       continue
     }
 
-    for (const [channel, perLevel] of Object.entries(node.effect.theTuKitModifiers ?? {})) {
-      const key = channel as TheTuKitModifierChannel
+    for (const [channel, perLevel] of Object.entries(node.effect.bodyKitModifiers ?? {})) {
+      const key = channel as BodyKitModifierChannel
       totals[key] += (perLevel ?? 0) * level
     }
   }

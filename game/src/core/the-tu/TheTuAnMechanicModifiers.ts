@@ -3,7 +3,7 @@ import type { ProgressionNode } from '../progression/ProgressionNode'
 import { getNodeLevel, nodePathApplies, nodeWayApplies } from '../progression/NodeSystem'
 
 // The Tu Reimagined (plan Task 20, review P1.7) — the ONE locked node ->
-// ung_the channel. Nodes declare `effect.theTuAnMechanicModifiers`
+// ung_the channel. Nodes declare `effect.hiddenBodyMechanicModifiers`
 // (flat, per-level); this collector sums them by channel over owned node
 // levels and the participant build bakes the totals into participant-
 // local def clones (buildTheTuAnKit) and the entity's maxThe cap.
@@ -11,7 +11,7 @@ import { getNodeLevel, nodePathApplies, nodeWayApplies } from '../progression/No
 // the shared trunk (spec 8.2) — they feed all three mechanic branches
 // and stay node-shaped "what happens after", never probability.
 
-export interface TheTuAnMechanicModifierValues {
+export interface HiddenBodyMechanicModifierValues {
   /** Flat addition to the participant's The cap (MAX_THE + bonus). */
   maxTheBonus: number
   /** Flat shift on EVERY reactiveProc attempt's base cost (negative = cheaper). */
@@ -45,9 +45,9 @@ export interface TheTuAnMechanicModifierValues {
   troAnyAction: number
 }
 
-export type TheTuAnMechanicModifierChannel = keyof TheTuAnMechanicModifierValues
+export type HiddenBodyMechanicModifierChannel = keyof HiddenBodyMechanicModifierValues
 
-const ZERO_MODIFIERS: TheTuAnMechanicModifierValues = {
+const ZERO_MODIFIERS: HiddenBodyMechanicModifierValues = {
   maxTheBonus: 0,
   procCostDelta: 0,
   procGainBonus: 0,
@@ -65,28 +65,28 @@ const ZERO_MODIFIERS: TheTuAnMechanicModifierValues = {
 }
 
 /**
- * Aggregates `node.effect.theTuAnMechanicModifiers` across every node
+ * Aggregates `node.effect.hiddenBodyMechanicModifiers` across every node
  * the player owns, each channel scaled linearly by node level (authored
- * value = per-level contribution). Mirrors collectTheTuKitModifiers.
+ * value = per-level contribution). Mirrors collectBodyKitModifiers.
  */
-export function collectTheTuAnMechanicModifiers(
+export function collectHiddenBodyMechanicModifiers(
   registry: { getAll(): ProgressionNode[] },
   player: PlayerData,
-): TheTuAnMechanicModifierValues {
-  const totals: TheTuAnMechanicModifierValues = { ...ZERO_MODIFIERS }
+): HiddenBodyMechanicModifierValues {
+  const totals: HiddenBodyMechanicModifierValues = { ...ZERO_MODIFIERS }
 
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    // Same ownership gate as collectTheTuKitModifiers — nodePathApplies
+    // Same ownership gate as collectBodyKitModifiers — nodePathApplies
     // is the single authority; callers must not be trusted to pre-filter.
     // M3: the way-membership gate rides the same line.
     if (level <= 0 || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 
-    for (const [channel, perLevel] of Object.entries(node.effect.theTuAnMechanicModifiers ?? {})) {
-      const key = channel as TheTuAnMechanicModifierChannel
+    for (const [channel, perLevel] of Object.entries(node.effect.hiddenBodyMechanicModifiers ?? {})) {
+      const key = channel as HiddenBodyMechanicModifierChannel
       totals[key] += (perLevel ?? 0) * level
     }
   }

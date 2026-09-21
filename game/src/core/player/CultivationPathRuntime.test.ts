@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from '../game/GameManager'
 import { createDefaultPlayer } from './Player'
-import { freshKiemTuState } from '../kiem-tu/KiemTuState'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { SkillManager } from '../skill/SkillManager'
@@ -27,7 +27,7 @@ function makeDeps(): CultivationPathRuntimeDeps {
     skillTemplates: new TemplateRegistry<Skill>(),
     nodeRegistry: new NodeRegistry(),
     getNodeLevel: () => 0,
-    getPhapTuElement: () => undefined,
+    getSpellPathElement: () => undefined,
     routeProfileProvider: () => NEUTRAL_ROUTE_PROFILE,
   }
 }
@@ -46,12 +46,12 @@ describe('CultivationPathRuntime registry', () => {
   it('dispatches every authored path:way pair plus the mortal fallback', () => {
     const deps = makeDeps()
     const pairs: Array<[string, string]> = [
-      ['kiem_tu', 'hien'],
-      ['kiem_tu', 'ngu'],
-      ['phap_tu', 'ngu_hanh'],
-      ['phap_tu', 'ngo_dao'],
-      ['the_tu', 'hien'],
-      ['the_tu', 'ung_the'],
+      ['sword', 'sword_pathway'],
+      ['sword', 'hidden_sword_pathway'],
+      ['spell', 'spell_pathway'],
+      ['spell', 'hidden_spell_pathway'],
+      ['body', 'body_pathway'],
+      ['body', 'hidden_body_pathway'],
     ]
 
     for (const [path, way] of pairs) {
@@ -65,21 +65,21 @@ describe('CultivationPathRuntime registry', () => {
     expect(resolveCultivationPathRuntime(mortal, deps).resolveBasic(mortal)).toBe(GENERIC_PHYSICAL_BASIC)
   })
 
-  it('kiem_tu runtimes expose the dynamic-basic provider; ngu adds emblem slots', () => {
+  it('sword runtimes expose the dynamic-basic provider; ngu adds emblem slots', () => {
     const deps = makeDeps()
 
     const hien = createDefaultPlayer()
-    hien.cultivationPath = 'kiem_tu'
-    hien.cultivationWay = 'hien'
-    hien.kiemTu = freshKiemTuState()
+    hien.cultivationPath = 'sword'
+    hien.cultivationWay = 'sword_pathway'
+    hien.swordPath = freshSwordPathState()
     const hienRuntime = resolveCultivationPathRuntime(hien, deps)
     expect(hienRuntime.buildDynamicBasic?.(hien, [], () => 0.5)).toBeDefined()
     expect(hienRuntime.emblemSlots?.()).toBeUndefined()
 
     const ngu = createDefaultPlayer()
-    ngu.cultivationPath = 'kiem_tu'
-    ngu.cultivationWay = 'ngu'
-    ngu.kiemTu = freshKiemTuState()
+    ngu.cultivationPath = 'sword'
+    ngu.cultivationWay = 'hidden_sword_pathway'
+    ngu.swordPath = freshSwordPathState()
     const nguRuntime = resolveCultivationPathRuntime(ngu, deps)
     expect(nguRuntime.buildDynamicBasic?.(ngu, [], () => 0.5)).toBeDefined()
     const emblems = nguRuntime.emblemSlots?.()
@@ -113,16 +113,16 @@ describe('CultivationPathRuntime registry', () => {
     expect(participant.entity.maxThe).toBe(7)
   })
 
-  it('kiem_tu ngu parity through the real build: provider + emblem slots survive the boundary', () => {
+  it('sword ngu parity through the real build: provider + emblem slots survive the boundary', () => {
     const gameManager = new GameManager()
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'ngu'
-    player.kiemTu = { ...freshKiemTuState(), kiemDaoCount: 2 }
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'hidden_sword_pathway'
+    player.swordPath = { ...freshSwordPathState(), kiemDaoCount: 2 }
     gameManager.setActivePlayer(player)
 
     gameManager.startBattleWithPlayer(player, ENEMY)

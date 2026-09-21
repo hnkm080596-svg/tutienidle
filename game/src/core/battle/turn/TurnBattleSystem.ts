@@ -111,8 +111,8 @@ export interface TurnBattleParticipant {
   /**
    * stat-system-reimagined review fix (2026-09-15) -- stat domains this
    * participant owns (player path -> its domain). Domain deltaDerivers
-   * in calculateEffectiveStats run only for these, so e.g. a kiem_tu
-   * entity gaining attunement mid-battle never emits phap_tu MP deltas.
+   * in calculateEffectiveStats run only for these, so e.g. a sword
+   * entity gaining attunement mid-battle never emits spell MP deltas.
    */
   activeDomains?: ReadonlySet<StatDomain>
   /** Future Systems Task 7 -- charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */
@@ -3325,7 +3325,7 @@ export class TurnBattleSystem {
    * The Tu Reimagined (spec section 3.4, plan Task 7) -- Cuong Chien's
    * signature scalar: skills authored with scalesWithMissingHp multiply
    * their damage by (1 + missingHpRatio * coefficient), re-read against
-   * the actor's LIVE hp at each hit. Non-the_tu damage passes through.
+   * the actor's LIVE hp at each hit. Non-body damage passes through.
    */
   private applyMissingHpScalar(damage: ActionDamageInfo, actor: CombatEntity): ActionDamageInfo {
     const perPercent = damage.missingHpBonusPerMissingPercent

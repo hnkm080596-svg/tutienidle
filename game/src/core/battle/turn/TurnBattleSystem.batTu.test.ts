@@ -11,7 +11,7 @@ import type { ResolvedCombatOperation } from '../contracts/operations'
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../contracts/ids'
 import { BAT_TU_BA_THE, CUONG_QUYEN, LOAN_DAU } from '../../../data/skill/TheTuSkills'
 import { BAT_TU_BA_THE_BUFF } from '../../../data/buff/TheTuBuffs'
-import { TheTuBatTuSurvival } from '../../the-tu/TheTuBatTuSurvival'
+import { BodyBatTuSurvival } from '../../the-tu/TheTuBatTuSurvival'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import { selectAction } from './TurnSkillAction'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
@@ -109,7 +109,7 @@ const TU_SINH_NGO: BuffDefinition = {
 
 const REGISTRY = makeTestBuffRegistry([BAT_TU_BA_THE_BUFF, STUN, POISON, TU_SINH_NGO])
 
-function makeTheTuParticipant(id: string, entity: CombatEntity): TurnBattleParticipant {
+function makeBodyParticipant(id: string, entity: CombatEntity): TurnBattleParticipant {
   const participant = makeParticipant(id, entity, 10, 0)
   participant.basic = CUONG_QUYEN
   participant.special = { skill: LOAN_DAU, remainingCooldownTurns: 0 }
@@ -192,7 +192,7 @@ function makeCombatWithSession(
       },
     },
     extraSources: [
-      new TheTuBatTuSurvival({
+      new BodyBatTuSurvival({
         ultimateSlot: () => player.ultimate,
         hasActiveBuff: (definitionId) =>
           runtime.buffs
@@ -225,7 +225,7 @@ function makeEnemy(id: string, might = 999_999): CombatEntity {
 
 describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   it('lethal hit at low HP -> survives at 1, buff granted for 3 own-turns, ult CD started', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard())
 
     combat.applyDirectDamage(player.entity, 9_999, 'enemy')
@@ -239,7 +239,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   })
 
   it('repeat lethal while buffed -> free survive, NO duration refresh, NO CD touch', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard())
 
     // Buff already active at 2 remaining turns — a re-grant would reset to 3.
@@ -256,7 +256,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   })
 
   it('lethal while ult on CD and no talent -> dies', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     player.ultimate!.remainingCooldownTurns = 5
     const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard())
 
@@ -266,7 +266,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   })
 
   it('talent guard stacks as the second line when the ult is exhausted', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     player.ultimate!.remainingCooldownTurns = 5
     const guard = new SurviveLethalGuard()
     guard.beginBattle(['bat_tu_the']) // talent id -> 1 use (getSurviveLethalUsesPerBattle)
@@ -282,7 +282,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   })
 
   it('node-scaled duration reaches the lethal grant via the slot application', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     // Participant-build clone carries the resolved override (base 3 + 1 node).
     player.ultimate = {
       skill: {
@@ -300,7 +300,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   })
 
   it('lethal grant cleanses an active stun (clearsCcOnApply on the grant path)', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     const dummy = makeParticipant('dummy', makeEnemy('dummy'), 0, 0)
     const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard(), [dummy])
     runtime.applyBuff('fixture_stun', player, dummy)
@@ -312,7 +312,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   })
 
   it('cleanses hard CC only — non-cc debuffs survive the grant AND repeat lethals in the window', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     const dummy = makeParticipant('dummy', makeEnemy('dummy'), 0, 0)
     const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard(), [dummy])
     runtime.applyBuff('fixture_stun', player, dummy)
@@ -338,7 +338,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   })
 
   it('active buff suppresses hard-CC blocking without touching consecutiveHardCcTurns', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 500, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 500, maxHp: 1_000 }))
     const enemyP = makeParticipant('enemy', makeEnemy('enemy', 0), 8, 100)
     const battle: TurnBattle = { players: [player], enemies: [enemyP], state: 'fighting' }
 
@@ -364,7 +364,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     // A stunned actor cannot cast at all — clearsCcOnApply on a self-buff
     // is only reachable through the lethal grant (covered above). The
     // manual path just proves the skill applies its own buff.
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 500, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 500, maxHp: 1_000 }))
     const enemyP = makeParticipant('enemy', makeEnemy('enemy', 0), 8, 100)
     const battle: TurnBattle = { players: [player], enemies: [enemyP], state: 'fighting' }
 
@@ -378,12 +378,12 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   })
 
   it('selectAction DOES auto-pick the ultimate when off-CD (T11-accepted, do not gate)', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player' }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player' }))
     expect(selectAction(player).skillId).toBe('bat_tu_ba_the')
   })
 
   it('own-turn lethal DoT -> Bat Tu fires -> committed ult CD does NOT tick again that same turn', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     const enemyP = makeParticipant('enemy', makeEnemy('enemy', 0), 8, 100)
     const battle: TurnBattle = { players: [player], enemies: [enemyP], state: 'fighting' }
     const dummy = makeParticipant('dummy', makeEnemy('dummy'), 0, 0)
@@ -416,7 +416,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   })
 
   it('enemy-turn lethal commits CD=8 -> the holder\'s NEXT own turn still ticks it to 7', () => {
-    const player = makeTheTuParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
+    const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     const enemyP = makeParticipant('enemy', makeEnemy('enemy', 0), 8, 100)
     const battle: TurnBattle = { players: [player], enemies: [enemyP], state: 'fighting' }
     const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard(), [enemyP])

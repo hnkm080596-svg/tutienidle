@@ -377,7 +377,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // the 3 BASE ids (the CULTIVATION_PATH_MODULES keys). M7 removed the
   // legacy _an ids from the union, so a save carrying one fails this
   // enum check and is rejected — dev-phase policy, no migration.
-  // cultivationWay is an optional PathWayId content string — shape-check
+  // cultivationWay is an optional CultivationWayId content string — shape-check
   // the type only; catalog membership belongs to the path authority,
   // not the save boundary.
   if (
@@ -400,8 +400,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // realmId in the same commit, so the save boundary rejects every
   // incoherent shape instead of loading a permanently soft-locked
   // player: both-set-or-neither, the way must be owned by its path
-  // module, a mortal can never carry the pair, and 'kiem_tu' requires
-  // its kiemTu slice (provider attach + NguKiemDao reads assume it).
+  // module, a mortal can never carry the pair, and 'sword' requires
+  // its swordPath slice (provider attach + NguKiemDao reads assume it).
   const hasPath = player.cultivationPath !== undefined
   const hasWay = player.cultivationWay !== undefined
 
@@ -437,7 +437,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // boundary keeps the identity-pair contract above (enum, atomic
   // pair, way membership, mortal gate) and iterates each module's
   // validatePersistedState hook generically for its own slices
-  // (phap_tu -> player.phapTu, kiem_tu -> player.kiemTu; the_tu owns
+  // (spell -> player.spellPath, sword -> player.swordPath; body owns
   // no slice). A new path carries its own rules — no save-layer edit.
   for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
     pathModule.validatePersistedState?.(player, (issue) => issues.push(issue))

@@ -9,8 +9,8 @@ import type { StatDomain } from '../stats/StatDomain'
 
 /**
  * Kiem Tu Reimagined (Task 6) — the buildId special/ultimate maps were
- * removed: hien Kiem Pho has no special/ult (the preset IS the kit) and
- * ngu emblems arrive via resolvedSpecialUltimate (Task 9). The legacy
+ * removed: sword_pathway Kiem Pho has no special/ult (the preset IS the kit) and
+ * hidden_sword_pathway emblems arrive via resolvedSpecialUltimate (Task 9). The legacy
  * Bạt Kiếm/Kiếm Trận kit they pointed at retires in Task 12.
  */
 
@@ -23,7 +23,7 @@ export function toTurnBattleParticipant(
     special?: TurnSkillDefinition
     ultimate?: TurnSkillDefinition
     reactivePayloads?: Record<string, TurnSkillDefinition>
-    /** Task 20 — the_tu_an proc-fuel cap (MAX_THE + node bonus); stamped
+    /** Task 20 — hidden_body proc-fuel cap (MAX_THE + node bonus); stamped
      * onto the entity here so every Thế transaction clamps via
      * `entity.maxThe ?? MAX_THE` (TheEconomy.theCap). */
     maxThe?: number
@@ -45,8 +45,8 @@ export function toTurnBattleParticipant(
     // stat-system-reimagined review fix (2026-09-15) — the caller
     // resolves which stat domains the participant owns (M5: via
     // resolveActiveWayStatDomains so the WAY — not the raw path id —
-    // decides), scoping domain deltaDerivers (phap_tu attunement->MP,
-    // the_tu_an reactive chances) in calculateEffectiveStats.
+    // decides), scoping domain deltaDerivers (spell attunement->MP,
+    // hidden_body reactive chances) in calculateEffectiveStats.
     // Enemies/companions pass no domains -> no domain derivers ever run
     // for them.
     activeDomains:

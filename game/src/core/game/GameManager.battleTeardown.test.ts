@@ -113,7 +113,7 @@ function registerNgoDaoCatalogs(gameManager: GameManager, player: PlayerData) {
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
   gameManager.setActivePlayer(player)
-  expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(true)
+  expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'hidden_spell_pathway', player)).toBe(true)
 }
 
 function fightUntil(combatSource: ManualClockSource, predicate: () => boolean, label: string) {

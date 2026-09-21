@@ -37,7 +37,7 @@ const MULTI_STAGE: Stage = {
 
 function strongPlayer(): PlayerData {
   const player = createDefaultPlayer()
-  player.cultivationPath = 'kiem_tu'
+  player.cultivationPath = 'sword'
   return player
 }
 
@@ -108,7 +108,7 @@ describe('runBattle', () => {
     const result = runBattle({
       seed: 20260922,
       build: build(preRitualPlayer()),
-      ritual: { pathId: 'phap_tu', wayId: 'ngo_dao' },
+      ritual: { pathId: 'spell', wayId: 'hidden_spell_pathway' },
       encounter: { kind: 'stage', stageId: 'mortal_dong_1' },
       maxSteps: 8,
       advanceChunkSeconds: 0.25,
@@ -121,7 +121,7 @@ describe('runBattle', () => {
     const result = runBattle({
       seed: 20260922,
       build: build(preRitualPlayer()),
-      ritual: { pathId: 'phap_tu', wayId: 'ngo_dao' },
+      ritual: { pathId: 'spell', wayId: 'hidden_spell_pathway' },
       encounter: { kind: 'enemy', enemy: WEAK_ENEMY },
     })
     expect(result.outcome).toBe('victory')
@@ -132,7 +132,7 @@ describe('runBattle', () => {
       runBattle({
         seed: 1,
         build: build(strongPlayer()),
-        ritual: { pathId: 'kiem_tu', wayId: 'hien' },
+        ritual: { pathId: 'sword', wayId: 'sword_pathway' },
         encounter: { kind: 'enemy', enemy: WEAK_ENEMY },
       }),
     ).toThrow()

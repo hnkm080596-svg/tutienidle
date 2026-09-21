@@ -23,7 +23,7 @@ describe('qr probe', () => {
     for (let i = 0; i < 10; i++) s.runStage('mortal_dong_2')
     const equipped = s.equipAll()
     s.runTribulation('qi_refining')
-    s.performRitual('kiem_tu', 'hien')
+    s.performRitual('sword', 'sword_pathway')
     const tinhHoa = (s.gameManager.materialBag as unknown as { getAmount?: (id: string) => number })
       .getAmount?.('tinh_hoa_pham_the')
     console.log('FARM', JSON.stringify({

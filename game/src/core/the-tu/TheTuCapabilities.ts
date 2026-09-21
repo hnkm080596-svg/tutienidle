@@ -1,4 +1,4 @@
-// TheTuCapabilities.ts -- megaplan M4 (r4 HIGH 3, BLOCKER 3): typed
+// BodyCapabilities.ts -- megaplan M4 (r4 HIGH 3, BLOCKER 3): typed
 // payload schemas + validators for the The Tu economy capability types.
 // Path economy stays in the path module -- TheEconomy consumes these
 // grants at its existing gain seams via the narrowers below.
@@ -97,7 +97,7 @@ export function asReactiveEconomy(grant: ActiveCapabilityGrant): ReactiveEconomy
 }
 
 /** Registers every The Tu economy capability validator. */
-export function registerTheTuCapabilities(validators: CapabilityValidatorRegistry): void {
+export function registerBodyCapabilities(validators: CapabilityValidatorRegistry): void {
   validators.register('the_economy', validateTheEconomy)
   validators.register('reactive_economy', validateReactiveEconomy)
 }

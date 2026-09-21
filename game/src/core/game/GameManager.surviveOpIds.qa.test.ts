@@ -59,7 +59,7 @@ describe('survive-effects op minting (QA deep audit)', () => {
     const { gameManager } = makeManager()
     const player = mortalAtGate()
     player.selectedTalentIds = ['bat_tu_the']
-    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'hien', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)
     gameManager.progressionOps.purchaseNode('cuong_chien', player)
     gameManager.progressionOps.syncTalentCombatPassive(player)
     gameManager.setActivePlayer(player)

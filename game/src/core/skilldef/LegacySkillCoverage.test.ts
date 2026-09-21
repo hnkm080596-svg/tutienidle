@@ -4,7 +4,7 @@ import { COMPANIONS, type CompanionInstance } from '../../data/companion/Compani
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
-import { PHAP_TU_KIT_IDS, SKILLS } from '../../data/skill/Skills'
+import { SPELL_KIT_IDS, SKILLS } from '../../data/skill/Skills'
 import {
   buildTheTuAnKit,
   buildTheTuKit,
@@ -13,10 +13,10 @@ import { applyAnKitToBasic, applyAnKitToSpecial } from '../../data/skill/TurnAnK
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 import { isKiemPhoProviderHandle } from '../kiem-tu/KiemPhoProvider'
-import { freshKiemTuState, KIEM_PHO_ORB_IDS } from '../kiem-tu/KiemTuState'
+import { freshSwordPathState, KIEM_PHO_ORB_IDS } from '../kiem-tu/KiemTuState'
 import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
 import { TemplateRegistry } from '../game/TemplateRegistry'
-import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
+import { isSpellPathway } from '../phap-tu/PhapTuPath'
 import {
   NEUTRAL_ROUTE_PROFILE,
   resolveRouteProfile,
@@ -97,10 +97,10 @@ const DATA_MODULE_SOURCES = import.meta.glob(
 // Exported functions in def-adjacent data modules that PRODUCE defs. A
 // census leg must invoke each (tracked in `exercisedProducerFns`).
 const DEF_PRODUCER_FUNCTIONS: Record<string, string> = {
-  '../../data/skill/TheTuSkills.ts#buildTheTuKit': 'the_tu:hien runtime leg + direct matrix',
-  '../../data/skill/TheTuSkills.ts#buildTheTuAnKit': 'the_tu:ung_the runtime leg + direct matrix',
-  '../../data/skill/TurnAnKitSkills.ts#applyAnKitToBasic': 'phap_tu:ngo_dao runtime leg + direct matrix',
-  '../../data/skill/TurnAnKitSkills.ts#applyAnKitToSpecial': 'phap_tu:ngo_dao runtime leg + direct matrix',
+  '../../data/skill/TheTuSkills.ts#buildTheTuKit': 'body:hien runtime leg + direct matrix',
+  '../../data/skill/TheTuSkills.ts#buildTheTuAnKit': 'body:ung_the runtime leg + direct matrix',
+  '../../data/skill/TurnAnKitSkills.ts#applyAnKitToBasic': 'spell:ngo_dao runtime leg + direct matrix',
+  '../../data/skill/TurnAnKitSkills.ts#applyAnKitToSpecial': 'spell:ngo_dao runtime leg + direct matrix',
 }
 
 // Exported functions in def-adjacent data modules that do NOT produce
@@ -225,7 +225,7 @@ interface RuntimeFixtureState {
   equipSlot0?: string
   /** Kit slots this state must produce (the way's unconditional kit
       surface) -- an absent required slot is a producer defect, not an
-      optional lane. Mortal/kiem_tu legs legitimately return undefined. */
+      optional lane. Mortal/sword legs legitimately return undefined. */
   requiredSlots?: readonly ('special' | 'ultimate')[]
 }
 
@@ -241,19 +241,19 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
     { label: 'equipped_basic', player: censusPlayer(), equipSlot0: 'huy_quyen' },
   ],
 
-  'kiem_tu:hien': () =>
+  'sword:sword_pathway': () =>
     KIEM_PHO_ORB_IDS.map((orb) => ({
       label: `preset:${orb}`,
       player: censusPlayer((p) => {
-        p.cultivationPath = 'kiem_tu'
-        p.cultivationWay = 'hien'
+        p.cultivationPath = 'sword'
+        p.cultivationWay = 'sword_pathway'
         p.realmId = 'tribulation'
-        p.kiemTu = { ...freshKiemTuState(), preset: [orb] }
+        p.swordPath = { ...freshSwordPathState(), preset: [orb] }
       }),
       nodes: KIEM_TU_NODES,
     })),
 
-  'kiem_tu:ngu': () =>
+  'sword:hidden_sword_pathway': () =>
     (
       [
         { a: false, e: false, d: false },
@@ -265,10 +265,10 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
     ).map((unlocks) => ({
       label: `unlocks:${JSON.stringify(unlocks)}`,
       player: censusPlayer((p) => {
-        p.cultivationPath = 'kiem_tu'
-        p.cultivationWay = 'ngu'
+        p.cultivationPath = 'sword'
+        p.cultivationWay = 'hidden_sword_pathway'
         p.realmId = 'tribulation'
-        p.kiemTu = { ...freshKiemTuState(), kiemDaoCount: 3, kiemDaoBase: 2 }
+        p.swordPath = { ...freshSwordPathState(), kiemDaoCount: 3, kiemDaoBase: 2 }
         p.nodeLevels = {
           ngu_cascade_a: unlocks.a ? 1 : 0,
           ngu_cascade_e: unlocks.e ? 1 : 0,
@@ -278,15 +278,15 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
       nodes: KIEM_TU_NODES,
     })),
 
-  'phap_tu:ngu_hanh': () =>
+  'spell:spell_pathway': () =>
     ELEMENT_ORDER.flatMap((element) => [
       ...(['dot', 'no'] as const).map((route) => ({
         label: `${element}:${route}:empowered`,
         player: censusPlayer((p) => {
-          p.cultivationPath = 'phap_tu'
-          p.cultivationWay = 'ngu_hanh'
+          p.cultivationPath = 'spell'
+          p.cultivationWay = 'spell_pathway'
           p.realmId = 'tribulation'
-          p.phapTu = { element, route }
+          p.spellPath = { element, route }
           p.nodeLevels = { [`linh_ngo_${PHAP_TU_ULTIMATE_IDS[element]}`]: 1 }
         }),
         requiredSlots: ['special', 'ultimate'] as const,
@@ -294,21 +294,21 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
       {
         label: `${element}:base`,
         player: censusPlayer((p) => {
-          p.cultivationPath = 'phap_tu'
-          p.cultivationWay = 'ngu_hanh'
+          p.cultivationPath = 'spell'
+          p.cultivationWay = 'spell_pathway'
           p.realmId = 'tribulation'
-          p.phapTu = { element, route: null }
+          p.spellPath = { element, route: null }
         }),
         requiredSlots: ['special', 'ultimate'] as const,
       },
     ]),
 
-  'phap_tu:ngo_dao': () => [
+  'spell:hidden_spell_pathway': () => [
     {
       label: 'kit',
       player: censusPlayer((p) => {
-        p.cultivationPath = 'phap_tu'
-        p.cultivationWay = 'ngo_dao'
+        p.cultivationPath = 'spell'
+        p.cultivationWay = 'hidden_spell_pathway'
         p.realmId = 'tribulation'
       }),
       // The An ult slot is a passive (ngo_dao_hon_don) -- only the
@@ -317,7 +317,7 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
     },
   ],
 
-  'the_tu:hien': () =>
+  'body:body_pathway': () =>
     (
       [
         { label: 'no_root', nodeLevels: {} as Record<string, number>, requiredSlots: [] },
@@ -327,14 +327,14 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
     ).map(({ label, nodeLevels, requiredSlots }) => ({
       label,
       player: censusPlayer((p) => {
-        p.cultivationPath = 'the_tu'
-        p.cultivationWay = 'hien'
+        p.cultivationPath = 'body'
+        p.cultivationWay = 'body_pathway'
         p.nodeLevels = nodeLevels
       }),
       requiredSlots,
     })),
 
-  'the_tu:ung_the': () =>
+  'body:hidden_body_pathway': () =>
     (
       [
         { label: 'no_roots', nodeLevels: {} as Record<string, number>, requiredSlots: [] },
@@ -343,8 +343,8 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
     ).map(({ label, nodeLevels, requiredSlots }) => ({
       label,
       player: censusPlayer((p) => {
-        p.cultivationPath = 'the_tu'
-        p.cultivationWay = 'ung_the'
+        p.cultivationPath = 'body'
+        p.cultivationWay = 'hidden_body_pathway'
         p.nodeLevels = nodeLevels
       }),
       requiredSlots,
@@ -370,14 +370,14 @@ function runtimeDepsFor(
   const skillSystem = new SkillSystem(manager)
 
   // Mirrors GameManager.routeProfileProvider: neutral unless the active
-  // player is ngu_hanh and the skill belongs to its element kit.
+  // player is spell_pathway and the skill belongs to its element kit.
   const routeProfileProvider = (skillId: string): RouteProfile => {
-    if (!isPhapTuNguHanh(player)) return NEUTRAL_ROUTE_PROFILE
-    const element = player.phapTu.element
-    if (!element || !PHAP_TU_KIT_IDS[element].includes(skillId)) {
+    if (!isSpellPathway(player)) return NEUTRAL_ROUTE_PROFILE
+    const element = player.spellPath.element
+    if (!element || !SPELL_KIT_IDS[element].includes(skillId)) {
       return NEUTRAL_ROUTE_PROFILE
     }
-    return resolveRouteProfile(player.phapTu)
+    return resolveRouteProfile(player.spellPath)
   }
   skillSystem.setRouteProfileProvider(routeProfileProvider)
 
@@ -396,7 +396,7 @@ function runtimeDepsFor(
       skillTemplates,
       nodeRegistry,
       getNodeLevel: (nodeId, p) => getNodeLevel(p, nodeId),
-      getPhapTuElement: () => player.phapTu.element ?? undefined,
+      getSpellPathElement: () => player.spellPath.element ?? undefined,
       routeProfileProvider,
     },
   }
@@ -527,9 +527,9 @@ function collectCastableDefs(): Census {
       for (const slot of state.requiredSlots ?? []) {
         requireDef(`${prefix}.${slot}`, slots?.[slot])
       }
-      // Non-required slots stay optional: kiem_tu ways legitimately
+      // Non-required slots stay optional: sword ways legitimately
       // return undefined (their combat surface is the provider), and
-      // the_tu no-root states produce no kit.
+      // body no-root states produce no kit.
       if (slots !== undefined) {
         if (!(state.requiredSlots ?? []).includes('special')) {
           push(`${prefix}.special`, slots.special)
@@ -613,17 +613,17 @@ function collectCastableDefs(): Census {
   // production forced fields post-mutation; pool members stay raw.
   const matrixDeps = runtimeDepsFor(
     censusPlayer((p) => {
-      p.cultivationPath = 'phap_tu'
-      p.cultivationWay = 'ngo_dao'
+      p.cultivationPath = 'spell'
+      p.cultivationWay = 'hidden_spell_pathway'
     }),
     [],
     undefined,
   )
   const elementPool = ELEMENT_ORDER.map((element) => {
-    const template = matrixDeps.manager.get(PHAP_TU_KIT_IDS[element][0])!
+    const template = matrixDeps.manager.get(SPELL_KIT_IDS[element][0])!
     return toTurnSkillDefinition(template, matrixDeps.skillSystem.getEffectiveSkill(template))
   })
-  const anSpecialTemplate = matrixDeps.manager.get(PHAP_TU_KIT_IDS.fire[1])!
+  const anSpecialTemplate = matrixDeps.manager.get(SPELL_KIT_IDS.fire[1])!
   for (const multicast of [true, false] as const) {
     requireDef(`AnKit:basic:multicast=${multicast}`, {
       ...applyAnKitToBasic(elementPool[0]!, multicast, elementPool),

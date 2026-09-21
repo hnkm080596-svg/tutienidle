@@ -36,7 +36,7 @@ function ngoDaoBuild(): SimBuildSnapshot {
 
 function plainBuild(): SimBuildSnapshot {
   const player = createDefaultPlayer()
-  player.cultivationPath = 'kiem_tu'
+  player.cultivationPath = 'sword'
   return { player, skills: [], techniques: [] }
 }
 
@@ -45,7 +45,7 @@ describe('determinism', () => {
     const input = {
       seed: 20260922,
       build: ngoDaoBuild(),
-      ritual: { pathId: 'phap_tu' as const, wayId: 'ngo_dao' },
+      ritual: { pathId: 'spell' as const, wayId: 'hidden_spell_pathway' as const },
       encounter: { kind: 'stage' as const, stageId: 'mortal_dong_1' },
     }
     const a = runBattle(input)
@@ -73,7 +73,7 @@ describe('determinism', () => {
     const base = {
       seed: 4242,
       build: ngoDaoBuild(),
-      ritual: { pathId: 'phap_tu' as const, wayId: 'ngo_dao' },
+      ritual: { pathId: 'spell' as const, wayId: 'hidden_spell_pathway' as const },
       encounter: { kind: 'stage' as const, stageId: 'mortal_dong_1' },
     }
     const results = [0.1, 0.033, 0.25].map((chunk) =>
@@ -102,7 +102,7 @@ describe('determinism', () => {
 
   it('batch runs stay isolated and order-stable', () => {
     const inputs = [
-      { seed: 5, build: ngoDaoBuild(), ritual: { pathId: 'phap_tu' as const, wayId: 'ngo_dao' }, encounter: { kind: 'stage' as const, stageId: 'mortal_dong_1' } },
+      { seed: 5, build: ngoDaoBuild(), ritual: { pathId: 'spell' as const, wayId: 'hidden_spell_pathway' as const }, encounter: { kind: 'stage' as const, stageId: 'mortal_dong_1' } },
       { seed: 5, build: plainBuild(), encounter: { kind: 'enemy' as const, enemy: WEAK_ENEMY } },
       { seed: 5, build: plainBuild(), encounter: { kind: 'enemy' as const, enemy: VARIANCE_ENEMY } },
     ]

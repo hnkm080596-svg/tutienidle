@@ -2,12 +2,12 @@ import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 
 // The Tu Reimagined (spec 2026-09-15 section 8.1, plan Task 12) — the
-// visible the_tu tree: a shared stat trunk feeding two excludesNode
+// visible body tree: a shared stat trunk feeding two excludesNode
 // mutex roots (INV-2). One branchTag 'the_tu' renders the whole tree in
 // a single view — the mutex is a GATE (excludesNode), not hidden UI.
 //
 // Path gate: every node in this tree carries requiredCultivationPath
-// 'the_tu' (stamped once at the export below) — NodeSystem.
+// 'body' (stamped once at the export below) — NodeSystem.
 // nodePathApplies enforces it at purchase/upgrade/aggregation, so the
 // domain rejects wrong-path ownership even if the render/offer layer
 // is bypassed. Realm gates are data: roots + trunk open at
@@ -16,11 +16,11 @@ import type { StatModifier } from '../../core/stats/StatCalculator'
 //
 // Delivery channels (only these exist — A8, no invented riders):
 //   - statModifiers: character stats; gated stats (blockChance,
-//     blockEffectiveness, endurance*) MUST tag domain 'the_tu' or the
+//     blockEffectiveness, endurance*) MUST tag domain 'body' or the
 //     StatDomain gate rejects them. Chance stats are NEVER authored
 //     here (INV-13 — the attribute deriver is the only source).
-//   - effect.theTuKitModifiers: numeric kit channels summed by
-//     collectTheTuKitModifiers and baked into participant-local def
+//   - effect.bodyKitModifiers: numeric kit channels summed by
+//     collectBodyKitModifiers and baked into participant-local def
 //     clones by buildTheTuKit (missing-HP scalar, Bat Tu duration,
 //     reflection ratios, taunt duration, Son Nhac ward ratio).
 //
@@ -36,7 +36,7 @@ function stat(nodeId: string, statKey: StatModifier['stat'], flat?: number, perL
     id: `node:${nodeId}:${statKey}`,
     sourceId: nodeId,
     sourceType: 'talent',
-    domain: 'the_tu',
+    domain: 'body',
     stat: statKey,
     ...(flat !== undefined ? { flat } : {}),
     ...(perLevelFlat !== undefined ? { perLevelFlat } : {}),
@@ -48,7 +48,7 @@ function statPercent(nodeId: string, statKey: StatModifier['stat'], percent: num
     id: `node:${nodeId}:${statKey}`,
     sourceId: nodeId,
     sourceType: 'talent',
-    domain: 'the_tu',
+    domain: 'body',
     stat: statKey,
     percent,
     ...(perLevelPercent !== undefined ? { perLevelPercent } : {}),
@@ -114,7 +114,7 @@ const TRUNK_QI: ProgressionNode[] = [
   },
 ]
 
-// Deeper trunk — block/endurance are the_tu-gated stats (Task 3
+// Deeper trunk — block/endurance are body-gated stats (Task 3
 // migration); the domain tag on each modifier is REQUIRED for delivery.
 const TRUNK_FOUNDATION: ProgressionNode[] = [
   {
@@ -174,7 +174,7 @@ const CUONG_BRANCH: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'cuong_chien' }],
-    effect: { theTuKitModifiers: { missingHpBonusBonus: 0.005 } },
+    effect: { bodyKitModifiers: { missingHpBonusBonus: 0.005 } },
     branchTag: 'the_tu',
   },
   {
@@ -214,7 +214,7 @@ const CUONG_BRANCH: ProgressionNode[] = [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'cuong_chien' },
     ],
-    effect: { theTuKitModifiers: { batTuDurationBonus: 1 } },
+    effect: { bodyKitModifiers: { batTuDurationBonus: 1 } },
     branchTag: 'the_tu',
   },
   {
@@ -228,7 +228,7 @@ const CUONG_BRANCH: ProgressionNode[] = [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'minor_cuong_huyet_no' },
     ],
-    effect: { theTuKitModifiers: { missingHpBonusBonus: 0.01 } },
+    effect: { bodyKitModifiers: { missingHpBonusBonus: 0.01 } },
     branchTag: 'the_tu',
   },
 ]
@@ -262,7 +262,7 @@ const TRAN_BRANCH: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'tran_the' }],
-    effect: { theTuKitModifiers: { reflectTakenRatioBonus: 0.02 } },
+    effect: { bodyKitModifiers: { reflectTakenRatioBonus: 0.02 } },
     branchTag: 'the_tu',
   },
   {
@@ -275,7 +275,7 @@ const TRAN_BRANCH: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'tran_the' }],
-    effect: { theTuKitModifiers: { reflectMaxHpRatioBonus: 0.004 } },
+    effect: { bodyKitModifiers: { reflectMaxHpRatioBonus: 0.004 } },
     branchTag: 'the_tu',
   },
   {
@@ -302,7 +302,7 @@ const TRAN_BRANCH: ProgressionNode[] = [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'tran_the' },
     ],
-    effect: { theTuKitModifiers: { tauntTurnsBonus: 1 } },
+    effect: { bodyKitModifiers: { tauntTurnsBonus: 1 } },
     branchTag: 'the_tu',
   },
   {
@@ -316,13 +316,13 @@ const TRAN_BRANCH: ProgressionNode[] = [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'tran_the' },
     ],
-    effect: { theTuKitModifiers: { sonNhacWardRatioBonus: 0.05 } },
+    effect: { bodyKitModifiers: { sonNhacWardRatioBonus: 0.05 } },
     branchTag: 'the_tu',
   },
 ]
 
 // M5 — path/way stamps once here: every node belongs to the BASE
-// the_tu path family (NodeSystem.nodePathApplies resolves both eras to
+// body path family (NodeSystem.nodePathApplies resolves both eras to
 // the family) and to the HIEN way only (nodeWayApplies). An ung_the
 // player can neither purchase nor aggregate this tree; the An tree
 // carries the matching ung_the stamp.
@@ -336,7 +336,7 @@ export const THE_TU_NODES: ProgressionNode[] = [
 ].map(
   (node): ProgressionNode => ({
     ...node,
-    requiredCultivationPath: 'the_tu',
-    requiredWay: 'hien',
+    requiredCultivationPath: 'body',
+    requiredWay: 'body_pathway',
   }),
 )

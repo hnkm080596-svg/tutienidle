@@ -75,13 +75,13 @@ export interface ArtifactDefinition {
 }
 
 // The artifact a player's path entitles them to is WAY-owned content:
-// ngu_hanh grants ngu_hanh_chau at foundation_establishment via
-// realmRewards while ngo_dao — same base path id — deliberately has
+// spell_pathway grants ngu_hanh_chau at foundation_establishment via
+// realmRewards while hidden_spell_pathway — same base path id — deliberately has
 // none. Deriving from the active way's realmRewards keeps the way
 // definition the single authority; a corrupt/way-less pair resolves
 // no artifact (fail-closed), and Kiếm Tu/Thể Tu keep no placeholder
 // (doc §10.1). Mọi call site phải đi qua resolver này thay vì
-// hardcode 'phap_tu'.
+// hardcode 'spell'.
 export function resolveExpectedArtifactId(player: PathWayRead): ArtifactId | undefined {
   const way = getActiveWayDefinition(player)
 

@@ -923,7 +923,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   // Task 16 — The bar poll mỗi frame từ reader đăng ký trong
   // PhaserCanvas (chỉ nơi có gameManager — xem theBarBridge.ts).
-  // null = ẩn bar (không phải phap_tu / không battle / chưa chọn hành).
+  // null = ẩn bar (không phải spell / không battle / chưa chọn hành).
   private pollTheBar(): void {
     const the = this.registry ? readTheBar(this.registry) : null
 

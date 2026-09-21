@@ -15,7 +15,7 @@
 // no entry carried authored manaScalingRatio/attributeScaling).
 // GameManager builds the pool through the canonical
 // SkillSystem.getEffectiveSkill -> toTurnSkillDefinition pipeline and
-// injects it — one source of truth for "what a phap_tu basic does".
+// injects it — one source of truth for "what a spell basic does".
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
 import { MAX_MULTICAST } from '../../core/battle/turn/TurnSkillAction'
 

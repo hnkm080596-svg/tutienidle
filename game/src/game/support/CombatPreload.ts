@@ -67,7 +67,7 @@ export function animatedCombatAnimationSets(): Array<{
  * Queue mọi texture combat cần — DEDUPE THEO TEXTURE KEY trong chính
  * một lần queue (P2 cleanup, dong-fu plan): `textures.exists()` không
  * nhận biết key vừa được queue trong CÙNG lượt gọi, và các Player
- * profile dùng trùng key (kiem_tu tái dùng Mortal combat art,
+ * profile dùng trùng key (sword tái dùng Mortal combat art,
  * cultivate chung 'player-mortal-cultivate-v1') nên guard exists một
  * mình là chưa đủ. Một Set cục bộ chặn queue trùng; guard
  * textures.exists() vẫn giữ cho các lần gọi sau khi load hoàn tất.
@@ -139,7 +139,7 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
   }
 
   // Player visual profiles — preload texture cho MỌI profile có thể
-  // dùng trong combat (kiem_tu tái dùng mortal nên không cần key riêng).
+  // dùng trong combat (sword tái dùng mortal nên không cần key riêng).
   for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
     queueOnce(profile.combatTextureKey, profile.combatTextureUrl)
 

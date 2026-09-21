@@ -5,9 +5,9 @@ import { getRealmIndex } from '../realm/realmSystem'
 import { unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
 
 // Kiem Tu Reimagined Task 4 (spec 2026-09-15 §4) — KiemPhoSystem: the
-// hien battle-runtime matcher. Owns preset snapshot + cursor + cast log
+// sword_pathway battle-runtime matcher. Owns preset snapshot + cursor + cast log
 // + tail-match. State here is BATTLE-RUNTIME only (A3): the preset is
-// persisted on PlayerData.kiemTu.preset, the cursor/log are not — each
+// persisted on PlayerData.swordPath.preset, the cursor/log are not — each
 // battle starts at slot 1 with an empty log.
 //
 // The combo TABLE is data (Task 5, data/skill/KiemPhoCombos.ts) — this
@@ -44,7 +44,7 @@ export interface KiemPhoComboModifier {
 }
 
 export interface KiemPhoBattleState {
-  /** Snapshot of PlayerData.kiemTu.preset at battle start. */
+  /** Snapshot of PlayerData.swordPath.preset at battle start. */
   preset: OrbId[]
   /** 0-based auto-cast cursor — each battle starts at 0. */
   cursor: number
@@ -71,11 +71,11 @@ export function validatePreset(preset: OrbId[], realmIndex: number): boolean {
 }
 
 /** Battle-start snapshot. Hien-only — callers must check
- *  isKiemTuHien(player) before constructing (M6: way membership). */
+ *  isSwordPathway(player) before constructing (M6: way membership). */
 export function initKiemPhoBattle(player: PlayerData): KiemPhoBattleState {
-  const kiemTu = player.kiemTu
+  const swordPath = player.swordPath
   return {
-    preset: [...(kiemTu?.preset ?? [])],
+    preset: [...(swordPath?.preset ?? [])],
     cursor: 0,
     log: [],
     comboMaxLength: realmComboMax(getRealmIndex(player.realmId)),

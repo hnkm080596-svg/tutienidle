@@ -1,5 +1,5 @@
 import type { ElementType } from '../element/ElementType'
-import type { PhapTuRoute } from '../phap-tu/PhapTuState'
+import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import type { DomainDeltaDeriver, StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
@@ -9,30 +9,30 @@ import type { ArtifactId } from '../artifact/Artifact'
 import type { PlayerData } from './Player'
 import { getCastLeveledSkillLevel } from '../skill/CastLeveling'
 import {
-  PHAP_TU_NGO_DAO_WAY,
-  PHAP_TU_NGU_HANH_WAY,
-  validatePhapTuPersistedState,
+  HIDDEN_SPELL_PATHWAY,
+  SPELL_PATHWAY,
+  validateSpellPathPersistedState,
 } from '../phap-tu/PhapTuPath'
-import { THE_TU_HIEN_WAY, THE_TU_UNG_THE_WAY } from '../the-tu/TheTuPath'
+import { BODY_PATHWAY, HIDDEN_BODY_PATHWAY } from '../the-tu/TheTuPath'
 import {
-  createKiemTuInitialState,
-  KIEM_TU_HIEN_WAY,
-  KIEM_TU_NGU_WAY,
-  validateKiemTuPersistedState,
+  createSwordPathInitialState,
+  SWORD_PATHWAY,
+  HIDDEN_SWORD_PATHWAY,
+  validateSwordPathPersistedState,
 } from '../kiem-tu/KiemTuPath'
 
-// M4 — the ngo_dao kit identity lives in the Phap Tu path module
+// M4 — the hidden_spell_pathway kit identity lives in the Phap Tu path module
 // (core/phap-tu/PhapTuPath.ts); re-exported so existing consumers keep
 // their import site.
 export {
-  PHAP_TU_AN_BASIC_ID,
-  PHAP_TU_AN_PASSIVE_ID,
-  PHAP_TU_AN_REQUIRED_SKILLS,
-  PHAP_TU_AN_SPECIAL_ID,
+  HIDDEN_SPELL_BASIC_ID,
+  HIDDEN_SPELL_PASSIVE_ID,
+  HIDDEN_SPELL_REQUIRED_SKILLS,
+  HIDDEN_SPELL_SPECIAL_ID,
 } from '../phap-tu/PhapTuPath'
 
 // Pháp Tu Redesign (magicpath, 2026-08-18) — 5 path Ngũ Hành cũ
-// (phap_tu_hoa/moc/thuy/kim/tho) đã GỘP thành 1 "phap_tu" duy nhất
+// (phap_tu_hoa/moc/thuy/kim/tho) đã GỘP thành 1 "spell" duy nhất
 // (mục 1 magicpath: "Pháp Tu không còn được thiết kế thành nhiều hệ
 // nguyên tố tách biệt"). Kiếm Tu vẫn đứng RIÊNG (nhánh song song, cơ
 // chế kit cố định KHÁC hẳn — chưa đi qua Element/Node Tree). Thêm giá
@@ -41,14 +41,30 @@ export {
 //
 // Cultivation Path Framework (spec 2026-09-16, M7) — the persisted
 // union is now exactly the three BASE path ids. The hidden variants
-// (ngo_dao under phap_tu, ung_the under the_tu, ngu under kiem_tu)
+// (hidden_spell_pathway under spell, hidden_body_pathway under body, hidden_sword_pathway under sword)
 // are WAYS on player.cultivationWay, never path ids: the transition-
 // era 'phap_tu_an'/'the_tu_an' ids and the LEGACY_PATH_TO_WAY adapter
 // are deleted; saves carrying them fail the v66 shape check.
-export type CultivationPathId = 'kiem_tu' | 'phap_tu' | 'the_tu'
+//
+// P7-M1 -- the identity spine is semantic English: 'sword'|'spell'|'body'
+// paths, each with a canonical + hidden way in the strict union below.
+export type CultivationPathId = 'sword' | 'spell' | 'body'
 
-// Path-scoped way id (content string, like node ids — spec §24).
-export type PathWayId = string
+// P7-M1 -- strict six-way union replaces the open way-id string.
+// Each path owns a two-member sub-union; the pair (path, way) remains
+// the atomic identity.
+export type SwordWayId = 'sword_pathway' | 'hidden_sword_pathway'
+export type SpellWayId = 'spell_pathway' | 'hidden_spell_pathway'
+export type BodyWayId = 'body_pathway' | 'hidden_body_pathway'
+export type CultivationWayId = SwordWayId | SpellWayId | BodyWayId
+
+// The canonical way-id set each path owns -- the catalog contract's
+// completeness/pairing source (contract test asserts module keys match).
+export const CULTIVATION_PATH_WAY_IDS = {
+  sword: ['sword_pathway', 'hidden_sword_pathway'],
+  spell: ['spell_pathway', 'hidden_spell_pathway'],
+  body: ['body_pathway', 'hidden_body_pathway'],
+} as const satisfies Record<CultivationPathId, readonly CultivationWayId[]>
 
 export interface CultivationPathRealmReward {
   techniqueId?: string
@@ -56,10 +72,10 @@ export interface CultivationPathRealmReward {
 }
 
 // Ritual-time offer gate, evaluated live against the player (never
-// stored). requiresSkillLevel reads the skillLevels mirror (ung_the's
-// huy_quyen Lv3; ngu's tram Lv3 — exact port of the kiem_tu_an node's
+// stored). requiresSkillLevel reads the skillLevels mirror (hidden_body_pathway's
+// huy_quyen Lv3; hidden_sword_pathway's tram Lv3 — exact port of the kiem_tu_an node's
 // skillCastCount level gate, which reads skillLevels). The linh_bao
-// gate for ngo_dao is cast-count based, so it gets a bespoke field:
+// gate for hidden_spell_pathway is cast-count based, so it gets a bespoke field:
 // requiresSkillCastLevel is evaluated by isCultivationPathOffered via
 // skillCastCounts + CAST_LEVELING_THRESHOLDS (through
 // getCastLeveledSkillLevel), replacing the bespoke isPhapTuAnEligible
@@ -78,30 +94,30 @@ export type PathOfferGate = {
 // ---------------------------------------------------------------------------
 
 export type PathCapability =
-  // phap_tu - ngu_hanh element machinery, the The pool, node-empowered ult
-  | 'phap_tu.elemental_casting'
-  | 'phap_tu.the_pool'
-  | 'phap_tu.empowered_ult'
-  // phap_tu - ngo_dao conditional aura (predicate: ngo_dao_hon_don learned)
-  | 'phap_tu.reaction_aura'
-  // kiem_tu
-  | 'kiem_tu.kiem_pho'
-  | 'kiem_tu.ngu_kiem_dao'
-  // the_tu
-  | 'the_tu.the_economy'
+  // spell - spell_pathway element machinery, the The pool, node-empowered ult
+  | 'spell.elemental_casting'
+  | 'spell.essence_pool'
+  | 'spell.empowered_ult'
+  // spell - ngo_dao conditional aura (predicate: ngo_dao_hon_don learned)
+  | 'spell.reaction_aura'
+  // sword
+  | 'sword.sword_scroll'
+  | 'sword.sword_riding'
+  // body
+  | 'body.essence_economy'
 
 /**
  * The narrow player shape conditional capability predicates and subpath
  * reads may consume - the identity pair plus the slices the current
- * capabilities read (phapTu for element, nodeLevels for node ownership,
- * kiemTu for the preset). Every slice is OPTIONAL at the contract
+ * capabilities read (spellPath for element, nodeLevels for node ownership,
+ * swordPath for the preset). Every slice is OPTIONAL at the contract
  * boundary: the module's predicate knows which slices it needs and
  * null-guards them, and narrow presentation slices (KiemBarPlayerState
- * carries only kiemTu, TheBarPlayerState only phapTu+nodeLevels) satisfy
+ * carries only swordPath, TheBarPlayerState only spellPath+nodeLevels) satisfy
  * the same shape. PlayerData is a superset.
  */
 export type PathConditionalRead = PathWayRead &
-  Partial<Pick<PlayerData, 'nodeLevels' | 'phapTu' | 'kiemTu'>>
+  Partial<Pick<PlayerData, 'nodeLevels' | 'spellPath' | 'swordPath'>>
 
 /**
  * Runtime dependencies a conditional capability may consume - learned-skill
@@ -138,30 +154,30 @@ export interface PathCapabilityFacet {
  * `requiresCapability` names the STATIC capability authorizing the axis -
  * contract-tested to be a capability the SAME way declares. The concrete
  * reads live in CultivationPathSystem (getActiveElement/getActiveRoute/
- * getKiemTuPreset) - way definitions never carry executable callbacks.
+ * getSwordScrollPreset) - way definitions never carry executable callbacks.
  */
 export interface PathSubpathAxis {
   requiresCapability?: PathCapability
-  /** Persisted field path, e.g. 'player.phapTu.element'. */
+  /** Persisted field path, e.g. 'player.spellPath.element'. */
   state: string
 }
 
 /**
  * The in-way branch axes a way may formalize. Keys are the canonical axis
- * ids. Absent axis = the way does not own that branch (ngo_dao has no
- * element axis even if a stale phapTu.element lingers - reads fail closed).
- * An axis without a canonical reader (the_tu `root`) is a declared
+ * ids. Absent axis = the way does not own that branch (hidden_spell_pathway has no
+ * element axis even if a stale spellPath.element lingers - reads fail closed).
+ * An axis without a canonical reader (body `root`) is a declared
  * ownership record - the documentation of which slice the branch lives in.
  */
 export interface PathWaySubpaths {
-  /** ngu_hanh: player.phapTu.element - commit via selectPhapTuElement. */
+  /** spell_pathway: player.spellPath.element - commit via selectSpellPathElement. */
   element?: PathSubpathAxis
-  /** ngu_hanh: player.phapTu.route - same atomic commit; switchRoute writes. */
+  /** spell_pathway: player.spellPath.route - same atomic commit; switchRoute writes. */
   route?: PathSubpathAxis
-  /** kiem_tu hien: player.kiemTu.preset - write via setKiemPhoPreset. */
+  /** sword_pathway: player.swordPath.preset - write via setKiemPhoPreset. */
   preset?: PathSubpathAxis
-  /** the_tu: the root node family on player.nodeLevels (mutex on hien,
-   * non-mutex on ung_the). Ownership record only - node investment stays
+  /** body: the root node family on player.nodeLevels (mutex on body_pathway,
+   * non-mutex on hidden_body_pathway). Ownership record only - node investment stays
    * owned by NodeSystem; no external reader exists today. */
   root?: PathSubpathAxis
 }
@@ -194,15 +210,15 @@ export interface PathWayStatFacet {
 // is the CultivationPathKit fields re-scoped to a WAY inside a path
 // module. Same data, new home; no behavior change.
 export interface PathWayDefinition {
-  id: PathWayId
+  id: CultivationWayId
 
-  pathId: CultivationPathId // base path id ('phap_tu' etc)
+  pathId: CultivationPathId // base path id ('spell' etc)
 
   name: string
 
   // Phap Tu has no fixed kit element: the chosen element lives on
-  // player.phapTu.element (single authority, picked at the element-root
-  // node). Optional — only the hien ways of Kiem Tu / The Tu declare
+  // player.spellPath.element (single authority, picked at the element-root
+  // node). Optional — only the base ways of sword / body declare
   // one (identity + UI color).
   element?: ElementType
 
@@ -220,7 +236,7 @@ export interface PathWayDefinition {
   realmRewards?: Readonly<Record<string, CultivationPathRealmReward>>
 
   // Skills learned + equipped into Skill Loadout slots IN ORDER at path
-  // choice (slot index = array position). M9 — the ngo_dao kit rides
+  // choice (slot index = array position). M9 — the hidden_spell_pathway kit rides
   // this channel too; its third member is a technique-carried passive,
   // not a loadout skill, so it is not listed here.
   skillIds?: readonly string[]
@@ -259,7 +275,7 @@ export interface PathWayDefinition {
   // Module-level declaration, never persisted. M7 — every way declares
   // a facet: `domains` is the authoritative owned-domain list consumed
   // by resolveActiveWayStatDomains; ways with no totals-driven channel
-  // (both kiem_tu ways) emit nothing from collectModifiers.
+  // (both sword ways) emit nothing from collectModifiers.
   stats?: PathWayStatFacet
 
   // P1 - the way's capability facet (module runtime, same facet shape as
@@ -271,14 +287,14 @@ export interface PathWayDefinition {
 
   // P1-M3 - formalized in-way branch axes with module-owned reads.
   // Resolved by the canonical reads in CultivationPathSystem
-  // (getActiveElement / getActiveRoute / getKiemTuPreset); consumers
+  // (getActiveElement / getActiveRoute / getSwordScrollPreset); consumers
   // never read this field directly.
   subpaths?: PathWaySubpaths
 
   // P1 - the node-tree view tag this way renders in SkillPathPanel
-  // (kiem hien -> 'kiem_pho', ngu -> 'ngu_kiem', the_tu hien -> 'the_tu',
-  // ung_the -> 'the_tu_an'). Ways without a fixed tree (ngu_hanh's tag
-  // is the browsed element; ngo_dao shows no tree) declare none - the
+  // (kiem hien -> 'kiem_pho', ngu -> 'ngu_kiem', body hien -> 'body',
+  // ung_the -> 'hidden_body'). Ways without a fixed tree (spell_pathway's tag
+  // is the browsed element; hidden_spell_pathway shows no tree) declare none - the
   // panel never branches on a concrete way id.
   nodeTreeTag?: string
 }
@@ -289,20 +305,20 @@ export interface PathWayDefinition {
  * Lives in core so path modules never import services/.
  */
 export interface PathStateIssue {
-  /** JSON path relative to save root, e.g. 'player.phapTu.element'. */
+  /** JSON path relative to save root, e.g. 'player.spellPath.element'. */
   readonly path: string
   readonly message: string
 }
 
-// M1 — one module per base path; ways keyed by PathWayId.
+// M1 -- one module per base path; ways keyed by CultivationWayId.
 export interface CultivationPathModule {
   id: CultivationPathId
   name: string // e.g. 'Kiếm Tu'
-  ways: Readonly<Record<PathWayId, PathWayDefinition>>
+  ways: Readonly<Partial<Record<CultivationWayId, PathWayDefinition>>>
 
   // M8 — optional path-state slice factory, invoked by applyPathChoice
   // at ritual commit. The MODULE owns which PlayerData field it writes
-  // (kiem_tu -> player.kiemTu); the framework never branches on the
+  // (sword -> player.swordPath); the framework never branches on the
   // concrete path to create slices.
   createInitialState?: (player: PlayerData) => void
 
@@ -311,15 +327,15 @@ export interface CultivationPathModule {
    * payload (untrusted - narrow with guards, do not cast to PlayerData).
    * Runs for EVERY save; the module itself decides presence/shape/pair
    * rules, e.g.:
-   *   phap_tu: player.phapTu required + shaped on every save (mortal and
+   *   spell: player.spellPath required + shaped on every save (mortal and
    *            other-path saves included); element/route only under the
-   *            committed ngu_hanh way.
-   *   kiem_tu: player.kiemTu optional shape; REQUIRED when the committed
-   *            pair is kiem_tu - the module reads the raw pair fields
+   *            committed spell_pathway way.
+   *   sword: player.swordPath optional shape; REQUIRED when the committed
+   *            pair is sword - the module reads the raw pair fields
    *            itself to decide.
    * The boundary supplies no path knowledge - modules are the only place
    * that knows which fields they own. Modules owning no persisted slice
-   * (the_tu) declare no hook.
+   * (body) declare no hook.
    */
   validatePersistedState?(
     playerPayload: unknown,
@@ -328,53 +344,53 @@ export interface CultivationPathModule {
 }
 
 export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, CultivationPathModule>> = {
-  phap_tu: {
-    id: 'phap_tu',
+  spell: {
+    id: 'spell',
     name: 'Pháp Tu',
     // M4 — the way definitions live in the path module
     // (core/phap-tu/PhapTuPath.ts) alongside the machinery they own:
-    // the shared 'phap_tu' stat facet, the way predicates, and the
-    // ngo_dao kit identity.
+    // the shared 'spell' stat facet, the way predicates, and the
+    // hidden_spell_pathway kit identity.
     ways: {
-      ngu_hanh: PHAP_TU_NGU_HANH_WAY,
-      ngo_dao: PHAP_TU_NGO_DAO_WAY,
+      spell_pathway: SPELL_PATHWAY,
+      hidden_spell_pathway: HIDDEN_SPELL_PATHWAY,
     },
-    // P1-M6 - the module owns player.phapTu validation (required shape
-    // on every save; element/route pair ownership is ngu_hanh-only).
-    validatePersistedState: validatePhapTuPersistedState,
+    // P1-M6 - the module owns player.spellPath validation (required shape
+    // on every save; element/route pair ownership is spell_pathway-only).
+    validatePersistedState: validateSpellPathPersistedState,
   },
 
-  kiem_tu: {
-    id: 'kiem_tu',
+  sword: {
+    id: 'sword',
     name: 'Kiếm Tu',
     // M6 — the way definitions live in the path module
     // (core/kiem-tu/KiemTuPath.ts) alongside the machinery they own:
-    // the way predicates and the ngu ritual-only offer gate. kiem_tu
+    // the way predicates and the hidden_sword_pathway ritual-only offer gate. sword
     // never had a hidden-variant path id — both ways persist
-    // cultivationPath 'kiem_tu'; cultivationWay is the discriminator.
+    // cultivationPath 'sword'; cultivationWay is the discriminator.
     ways: {
-      hien: KIEM_TU_HIEN_WAY,
-      ngu: KIEM_TU_NGU_WAY,
+      sword_pathway: SWORD_PATHWAY,
+      hidden_sword_pathway: HIDDEN_SWORD_PATHWAY,
     },
     // M8 — the path owns its state slice: the canonical fresh
-    // player.kiemTu is way-agnostic (the Kiem Y fields start at ngu's
-    // defaults; hien simply never reads them).
-    createInitialState: createKiemTuInitialState,
-    // P1-M6 - the module owns player.kiemTu validation (optional shape;
-    // required once the committed pair is kiem_tu).
-    validatePersistedState: validateKiemTuPersistedState,
+    // player.swordPath is way-agnostic (the Kiem Y fields start at hidden_sword_pathway's
+    // defaults; sword_pathway simply never reads them).
+    createInitialState: createSwordPathInitialState,
+    // P1-M6 - the module owns player.swordPath validation (optional shape;
+    // required once the committed pair is sword).
+    validatePersistedState: validateSwordPathPersistedState,
   },
 
-  the_tu: {
-    id: 'the_tu',
+  body: {
+    id: 'body',
     name: 'Thể Tu',
     // M5 — the way definitions live in the path module
     // (core/the-tu/TheTuPath.ts) alongside the machinery they own: the
-    // way predicates and the per-way stat facets ('the_tu' endurance /
-    // 'the_tu_an' reactive chances).
+    // way predicates and the per-way stat facets ('body' endurance /
+    // 'hidden_body' reactive chances).
     ways: {
-      hien: THE_TU_HIEN_WAY,
-      ung_the: THE_TU_UNG_THE_WAY,
+      body_pathway: BODY_PATHWAY,
+      hidden_body_pathway: HIDDEN_BODY_PATHWAY,
     },
   },
 }
@@ -386,7 +402,7 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, Cultiv
  */
 export interface PathWayRead {
   cultivationPath?: CultivationPathId | null
-  cultivationWay?: PathWayId | null
+  cultivationWay?: CultivationWayId | null
 }
 
 /**

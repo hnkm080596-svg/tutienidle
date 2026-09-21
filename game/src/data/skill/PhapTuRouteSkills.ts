@@ -10,7 +10,7 @@ import type { Skill } from '../../core/skill/Skill'
 //
 // Route mechanics ride the generic seams -- no skill-local route logic:
 //   - application factor / +1 stack: RouteProfile via
-//     PHAP_TU_ROUTE_SKILL_IDS membership (applyRouteToEffectiveSkill /
+//     SPELL_ROUTE_SKILL_IDS membership (applyRouteToEffectiveSkill /
 //     applyRouteToTurnSkill).
 //   - route-gated payloads: per-interaction `routes` (Xich Viem's
 //     DoT-only next-tick modifier).

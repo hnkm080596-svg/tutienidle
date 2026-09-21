@@ -16,7 +16,7 @@ import { createDefaultPlayer, type PlayerData } from '../../player/Player'
 import { canBreakthrough, breakthrough } from '../../cultivation/CultivationSystem'
 import { cultivateTick } from '../../cultivation/CultivationTick'
 import { driveTurnBattleToTerminal } from '../BattleDriver'
-import type { CultivationPathId, PathWayId } from '../../player/CultivationPathKit'
+import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
 import {
   applyCreationProfile,
   bootstrapEarlyGamePlayer,
@@ -185,7 +185,7 @@ export class EarlyGameSession {
       : 'defeat'
   }
 
-  performRitual(path: CultivationPathId, way: PathWayId): boolean {
+  performRitual(path: CultivationPathId, way: CultivationWayId): boolean {
     return this.gameManager.realmAdvanceOps.chooseCultivationPath(path, way, this.player)
   }
 

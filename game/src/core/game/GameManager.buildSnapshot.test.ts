@@ -74,7 +74,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // --- Class: chọn Kiếm Tu (path THẬT đã ship, không phải fixture)
     // — tự cấp Tâm Pháp (Technique) + 3 skill cố định.
     player.realmLevel = 12
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
 
     const attackAfterClass = calculateStats(player.baseStats, [
       ...player.modifiers,

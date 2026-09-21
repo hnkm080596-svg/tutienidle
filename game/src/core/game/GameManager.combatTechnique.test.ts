@@ -8,21 +8,21 @@ import { calculateStats, type StatModifier } from '../stats/StatCalculator'
 // stat-system-reimagined Task 3 (D16/D17) — the old fixed +2 range
 // combatModifiers retired with the attackRange stat; the technique MP
 // tier fields are now plain authoring percents emitted as
-// {stat, percent, domain:'phap_tu'} modifiers so the Task-7 domain gate
+// {stat, percent, domain:'spell'} modifiers so the Task-7 domain gate
 // accepts them once MP stats are gated.
-describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
-  it('Đại Ngũ Hành equipped (Sơ Nhập) → percent modifiers on maxMp/manaRegenPerTurn carry domain phap_tu', () => {
+describe('GameManager — technique tier MP modifiers (spell domain)', () => {
+  it('Đại Ngũ Hành equipped (Sơ Nhập) → percent modifiers on maxMp/manaRegenPerTurn carry domain spell', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const player = createDefaultPlayer()
-    // MP modifiers emit only when the path owns the phap_tu domain
+    // MP modifiers emit only when the path owns the spell domain
     // (emission gate in getTechniqueTierModifiers) -- default player has
     // cultivationPath undefined, so the path+way pair must be set explicitly.
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
 
     gameManager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_chan_quyet')
     gameManager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
@@ -35,7 +35,7 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
         sourceId: 'dai_ngu_hanh_chan_quyet',
         stat: 'maxMp',
         percent: 0.03,
-        domain: 'phap_tu',
+        domain: 'spell',
       }),
     )
     expect(modifiers).toContainEqual(
@@ -44,7 +44,7 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
         sourceId: 'dai_ngu_hanh_chan_quyet',
         stat: 'manaRegenPerTurn',
         percent: 0.005,
-        domain: 'phap_tu',
+        domain: 'spell',
       }),
     )
     // mpRegenFlat rides the same gated stat.
@@ -52,7 +52,7 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
       expect.objectContaining({
         stat: 'manaRegenPerTurn',
         flat: 0.5,
-        domain: 'phap_tu',
+        domain: 'spell',
       }),
     )
     // HP regen stays a universal-stat grant (no domain credential).
@@ -64,7 +64,7 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
     ).toBeUndefined()
 
     // Percent applies to the live stats through the normal pipeline.
-    // cultivationPath 'phap_tu' also pulls the kit's +100 maxMp flat
+    // cultivationPath 'spell' also pulls the kit's +100 maxMp flat
     // (phap_tu_linh_luc) into the same aggregation.
     const stats = calculateStats(player.baseStats, modifiers as StatModifier[])
 
@@ -86,8 +86,8 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
     gameManager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
 
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
     const before = gameManager.effectOps
       .getAggregatedModifiers(player)
       .filter((modifier) => modifier.sourceType === 'technique')
@@ -109,19 +109,19 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
     ).toBe(0.05)
   })
 
-  // Emission gate (MP is a phap_tu-domain resource): a path that does
-  // not own the phap_tu domain must not receive the MP family, even
+  // Emission gate (MP is a spell-domain resource): a path that does
+  // not own the spell domain must not receive the MP family, even
   // though the technique still legally authors the fields -- the
   // domain gate cannot perform this credential check, emission does.
-  it('the_tu player + kim_cang_bat_hoai_the emits NO MP-family modifiers; hpRegenPerTurn still emits', () => {
+  it('body player + kim_cang_bat_hoai_the emits NO MP-family modifiers; hpRegenPerTurn still emits', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const player = createDefaultPlayer()
-    player.cultivationPath = 'the_tu'
-    player.cultivationWay = 'hien'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
 
     gameManager.realmAdvanceOps.learnTechnique('kim_cang_bat_hoai_the')
     gameManager.realmAdvanceOps.equipTechnique('kim_cang_bat_hoai_the')
@@ -147,15 +147,15 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
     )
   })
 
-  it('kiem_tu player + ngu_kiem emits NO MP-family modifiers; hpRegenPerTurn still emits', () => {
+  it('sword player + ngu_kiem emits NO MP-family modifiers; hpRegenPerTurn still emits', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'hien'
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'sword_pathway'
 
     gameManager.realmAdvanceOps.learnTechnique('ngu_kiem')
     gameManager.realmAdvanceOps.equipTechnique('ngu_kiem')
@@ -179,15 +179,15 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
     )
   })
 
-  it('ngo_dao way player + ngo_dao_chan_quyet still emits the MP family (the hidden way owns the phap_tu domain)', () => {
+  it('ngo_dao way player + ngo_dao_chan_quyet still emits the MP family (the hidden way owns the spell domain)', () => {
     const gameManager = new GameManager()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngo_dao'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'hidden_spell_pathway'
 
     gameManager.realmAdvanceOps.learnTechnique('ngo_dao_chan_quyet')
     gameManager.realmAdvanceOps.equipTechnique('ngo_dao_chan_quyet')
@@ -200,7 +200,7 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
         sourceId: 'ngo_dao_chan_quyet',
         stat: 'maxMp',
         percent: 0.03,
-        domain: 'phap_tu',
+        domain: 'spell',
       }),
     )
     expect(modifiers).toContainEqual(
@@ -209,7 +209,7 @@ describe('GameManager — technique tier MP modifiers (phap_tu domain)', () => {
         sourceId: 'ngo_dao_chan_quyet',
         stat: 'manaRegenPerTurn',
         flat: 0.5,
-        domain: 'phap_tu',
+        domain: 'spell',
       }),
     )
   })

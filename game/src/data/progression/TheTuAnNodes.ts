@@ -7,7 +7,7 @@ import type { StatModifier } from '../../core/stats/StatCalculator'
 // branchTag 'the_tu_an' renders the whole tree in a single view.
 //
 // Path gate: every node in this tree carries requiredCultivationPath
-// 'the_tu' + requiredWay 'ung_the' (stamped once at the export below)
+// 'body' + requiredWay 'hidden_body_pathway' (stamped once at the export below)
 // — NodeSystem.
 // nodePathApplies enforces it at purchase/upgrade/aggregation, so the
 // domain rejects wrong-path ownership even if the offer layer is
@@ -18,10 +18,10 @@ import type { StatModifier } from '../../core/stats/StatCalculator'
 // Delivery channels (only these exist — A8, no invented riders):
 //   - statModifiers: attribute stats only (vit/dex/str/int — universal,
 //     untagged domain). Chance stats are NEVER authored here (INV-13 —
-//     the the_tu_an attribute deriver is the only source of
+//     the hidden_body attribute deriver is the only source of
 //     protectChance/counterChance/followUpChance).
-//   - effect.theTuAnMechanicModifiers: numeric channels summed by
-//     collectTheTuAnMechanicModifiers and baked into participant-local
+//   - effect.hiddenBodyMechanicModifiers: numeric channels summed by
+//     collectHiddenBodyMechanicModifiers and baked into participant-local
 //     marker/payload clones by buildTheTuAnKit. Trunk economy channels
 //     (cap/cost/gain) feed ALL three branches; branch channels are
 //     consequence riders only — never probability.
@@ -105,7 +105,7 @@ const TRUNK_QI: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'realm', realmId: 'qi_refining' }],
-    effect: { theTuAnMechanicModifiers: { maxTheBonus: 10 } },
+    effect: { hiddenBodyMechanicModifiers: { maxTheBonus: 10 } },
     branchTag: 'the_tu_an',
   },
   {
@@ -118,7 +118,7 @@ const TRUNK_QI: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'realm', realmId: 'qi_refining' }],
-    effect: { theTuAnMechanicModifiers: { procCostDelta: -1 } },
+    effect: { hiddenBodyMechanicModifiers: { procCostDelta: -1 } },
     branchTag: 'the_tu_an',
   },
   {
@@ -131,7 +131,7 @@ const TRUNK_QI: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'realm', realmId: 'qi_refining' }],
-    effect: { theTuAnMechanicModifiers: { procGainBonus: 2 } },
+    effect: { hiddenBodyMechanicModifiers: { procGainBonus: 2 } },
     branchTag: 'the_tu_an',
   },
 ]
@@ -147,7 +147,7 @@ const TRUNK_FOUNDATION: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
-    effect: { theTuAnMechanicModifiers: { evadeGainBonus: 1 } },
+    effect: { hiddenBodyMechanicModifiers: { evadeGainBonus: 1 } },
     branchTag: 'the_tu_an',
   },
   {
@@ -160,7 +160,7 @@ const TRUNK_FOUNDATION: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
-    effect: { theTuAnMechanicModifiers: { takenGainBonus: 1 } },
+    effect: { hiddenBodyMechanicModifiers: { takenGainBonus: 1 } },
     branchTag: 'the_tu_an',
   },
   {
@@ -173,7 +173,7 @@ const TRUNK_FOUNDATION: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
-    effect: { theTuAnMechanicModifiers: { basicGainBonus: 1 } },
+    effect: { hiddenBodyMechanicModifiers: { basicGainBonus: 1 } },
     branchTag: 'the_tu_an',
   },
   {
@@ -186,7 +186,7 @@ const TRUNK_FOUNDATION: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
-    effect: { theTuAnMechanicModifiers: { roundGainBonus: 1 } },
+    effect: { hiddenBodyMechanicModifiers: { roundGainBonus: 1 } },
     branchTag: 'the_tu_an',
   },
 ]
@@ -245,7 +245,7 @@ const HO_BRANCH: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'ho_mon' }],
-    effect: { theTuAnMechanicModifiers: { interceptTheGainBonus: 4 } },
+    effect: { hiddenBodyMechanicModifiers: { interceptTheGainBonus: 4 } },
     branchTag: 'the_tu_an',
   },
   {
@@ -272,7 +272,7 @@ const HO_BRANCH: ProgressionNode[] = [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'ho_mon' },
     ],
-    effect: { theTuAnMechanicModifiers: { interceptWardRatio: 0.15 } },
+    effect: { hiddenBodyMechanicModifiers: { interceptWardRatio: 0.15 } },
     branchTag: 'the_tu_an',
   },
   {
@@ -286,7 +286,7 @@ const HO_BRANCH: ProgressionNode[] = [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'major_ho_bi' },
     ],
-    effect: { theTuAnMechanicModifiers: { interceptWardRatio: 0.1 } },
+    effect: { hiddenBodyMechanicModifiers: { interceptWardRatio: 0.1 } },
     branchTag: 'the_tu_an',
   },
 ]
@@ -317,7 +317,7 @@ const PHAN_BRANCH: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'phan_mon' }],
-    effect: { theTuAnMechanicModifiers: { counterChoangChance: 0.08 } },
+    effect: { hiddenBodyMechanicModifiers: { counterChoangChance: 0.08 } },
     branchTag: 'the_tu_an',
   },
   {
@@ -331,7 +331,7 @@ const PHAN_BRANCH: ProgressionNode[] = [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'phan_mon' },
     ],
-    effect: { theTuAnMechanicModifiers: { evadeCounterMultiplierBonus: 0.6 } },
+    effect: { hiddenBodyMechanicModifiers: { evadeCounterMultiplierBonus: 0.6 } },
     branchTag: 'the_tu_an',
   },
 ]
@@ -362,7 +362,7 @@ const TRO_BRANCH: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'tro_mon' }],
-    effect: { theTuAnMechanicModifiers: { troCostDelta: -2 } },
+    effect: { hiddenBodyMechanicModifiers: { troCostDelta: -2 } },
     branchTag: 'the_tu_an',
   },
   {
@@ -376,7 +376,7 @@ const TRO_BRANCH: ProgressionNode[] = [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'tro_mon' },
     ],
-    effect: { theTuAnMechanicModifiers: { troHealTriggeringAllyRatio: 0.15 } },
+    effect: { hiddenBodyMechanicModifiers: { troHealTriggeringAllyRatio: 0.15 } },
     branchTag: 'the_tu_an',
   },
   {
@@ -390,14 +390,14 @@ const TRO_BRANCH: ProgressionNode[] = [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'tro_mon' },
     ],
-    effect: { theTuAnMechanicModifiers: { troAnyAction: 1 } },
+    effect: { hiddenBodyMechanicModifiers: { troAnyAction: 1 } },
     branchTag: 'the_tu_an',
   },
 ]
 
 // M5 — path/way stamps once here: every node belongs to the BASE
-// 'the_tu' path (direct equality in NodeSystem.nodePathApplies) and to
-// the UNG_THE way only (nodeWayApplies). A hien player can neither
+// 'body' path (direct equality in NodeSystem.nodePathApplies) and to
+// the hidden_body_pathway way only (nodeWayApplies). A body_pathway player can neither
 // purchase nor aggregate this tree; the branchTag stays 'the_tu_an' —
 // it is the tree-view display key, not the gameplay gate.
 export const THE_TU_AN_NODES: ProgressionNode[] = [
@@ -412,7 +412,7 @@ export const THE_TU_AN_NODES: ProgressionNode[] = [
 ].map(
   (node): ProgressionNode => ({
     ...node,
-    requiredCultivationPath: 'the_tu',
-    requiredWay: 'ung_the',
+    requiredCultivationPath: 'body',
+    requiredWay: 'hidden_body_pathway',
   }),
 )

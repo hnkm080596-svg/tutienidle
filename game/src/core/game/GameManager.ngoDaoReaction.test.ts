@@ -96,7 +96,7 @@ function makeNgoDaoManager(withCompanion = false) {
   gameManager.setActivePlayer(player)
   player.skillCastCounts = { linh_bao: LING_BAO_L3 }
   expect(
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player),
+    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'hidden_spell_pathway', player),
   ).toBe(true)
 
   if (withCompanion) {
@@ -359,7 +359,7 @@ describe('S3 -- aura lifecycle (death / revival / re-grant)', () => {
 
     // Corrupt-state probe: the way no longer reads ngo_dao at re-grant
     // time -> the seam must refuse, not resurrect a stale capability.
-    player.cultivationWay = 'ngu_hanh'
+    player.cultivationWay = 'spell_pathway'
     battle.players[0]!.entity.alive = true
     gameManager.turnBattleOps.regrantAuraOnSourceRevived(anId)
 

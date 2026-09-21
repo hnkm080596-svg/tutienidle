@@ -80,7 +80,7 @@ function fakeResult(overrides: {
 }
 
 const RECIPE_A: BaselineRecipe = {
-  id: 'a', primary: true, ritual: { pathId: 'kiem_tu', wayId: 'hien' },
+  id: 'a', primary: true, ritual: { pathId: 'sword', wayId: 'sword_pathway' },
   postRitual: [], kitSkillIds: ['orb_dam'],
   expectedEconomy: { mustGenerate: [], mustSpend: [], notActiveAtThisPowerPoint: [], mustCast: [] },
 }
@@ -398,7 +398,7 @@ describe('evaluateGates', () => {
 })
 
 describe('kit-surface declaration (real recipes)', () => {
-  it('ngu_hanh classifies a foreign-element origin as other_skill', () => {
+  it('spell_pathway classifies a foreign-element origin as other_skill', () => {
     // The recipe resolves fire/dot only - a water-basic damage op on
     // this row is leakage, not kit. If kitSkillIds regressed to the
     // full five-element whitelist this assertion fails (kit_skill
@@ -435,7 +435,7 @@ describe('kit-surface declaration (real recipes)', () => {
 })
 
 describe('baseline recipe seams (real battles)', () => {
-  it('the_tu/hien purchases cuong_chien through the registered node catalog', () => {
+  it('body/hien purchases cuong_chien through the registered node catalog', () => {
     const recipe = BASELINE_RECIPES.find((r) => r.id === 'the_tu_hien')!
     // Would throw "postRitual write rejected" if the catalog closure
     // missed THE_TU_NODES or the writer refused.
@@ -465,7 +465,7 @@ describe('baseline recipe seams (real battles)', () => {
       runBattle({
         seed: 11,
         build: { player: mortalSourcePlayer(), skills: [], techniques: [] },
-        ritual: { pathId: 'kiem_tu', wayId: 'hien' },
+        ritual: { pathId: 'sword', wayId: 'sword_pathway' },
         postRitual: [{ type: 'purchase_node', nodeId: 'nonexistent_node' }],
         encounter: {
           kind: 'enemy',

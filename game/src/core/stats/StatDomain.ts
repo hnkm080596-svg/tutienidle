@@ -18,10 +18,10 @@ import type { StatType } from './StatTypes'
 
 export type StatDomain =
   | 'universal'
-  | 'phap_tu'
-  | 'the_tu'
-  | 'the_tu_an'
-  | 'kiem_tu'
+  | 'spell'
+  | 'body'
+  | 'hidden_body'
+  | 'sword'
   | 'production'
   | 'cultivation'
   | 'equipment_meta'
@@ -30,27 +30,27 @@ export type StatDomain =
 
 // Stat -> owning domain. Stats absent from this registry are universal:
 // they accept modifiers from every domain (INV-9). Task 7 populated the
-// phap_tu gate (D10/D17/D19): MP is a Phap Tu resource+shield, and
+// spell gate (D10/D17/D19): MP is a Phap Tu resource+shield, and
 // reactionEffectPercent exists only inside the hidden Phap Tu path.
 // Tests may register temporary entries via direct mutation.
 export const STAT_DOMAIN: Partial<Record<StatType, StatDomain>> = {
-  maxMp: 'phap_tu',
-  manaRegenPerTurn: 'phap_tu',
-  manaShieldPercent: 'phap_tu',
-  reactionEffectPercent: 'phap_tu',
+  maxMp: 'spell',
+  manaRegenPerTurn: 'spell',
+  manaShieldPercent: 'spell',
+  reactionEffectPercent: 'spell',
 
   // The Tu Reimagined (spec 2026-09-15 section 3.3, T8) — block and
-  // endurance are body-path identity: only the_tu-domain modifiers may
-  // move them, and the_tu_an's three reactive chances accept only
-  // the_tu_an-domain emission (which in practice is the attribute
+  // endurance are body-path identity: only body-domain modifiers may
+  // move them, and hidden_body's three reactive chances accept only
+  // hidden_body-domain emission (which in practice is the attribute
   // deriver — INV-13 forbids authored modifiers for them entirely).
-  blockChance: 'the_tu',
-  blockEffectiveness: 'the_tu',
-  enduranceThreshold: 'the_tu',
-  endurancePercent: 'the_tu',
-  counterChance: 'the_tu_an',
-  protectChance: 'the_tu_an',
-  followUpChance: 'the_tu_an',
+  blockChance: 'body',
+  blockEffectiveness: 'body',
+  enduranceThreshold: 'body',
+  endurancePercent: 'body',
+  counterChance: 'hidden_body',
+  protectChance: 'hidden_body',
+  followUpChance: 'hidden_body',
 
   // Task 9 (D15): non-combat meta stats are gated to their owning domain
   // (same mechanism as path stats), not evicted. No authored emitter
@@ -76,7 +76,7 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
   string,
   Array<{ file: string; stats?: StatType[] }>
 > = {
-  phap_tu: [
+  spell: [
     // The whole Phap Tu node tree + its builders file.
     { file: 'data/progression/PhapTu*' },
     // Reserved per spec 2.1 -- no data/buff/PhapTu*.ts exists yet.
@@ -94,24 +94,24 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
     { file: 'data/buff/LegacyBuffs.ts', stats: ['manaRegenPerTurn'] },
   ],
 
-  // The Tu Reimagined (T8) — two separate domains: 'the_tu' owns the
+  // The Tu Reimagined (T8) — two separate domains: 'body' owns the
   // visible path's defensive stats (block/endurance migration in Task 3)
-  // and kit-authored modifiers; 'the_tu_an' owns the hidden path's
+  // and kit-authored modifiers; 'hidden_body' owns the hidden path's
   // reactive chance stats (counterChance/protectChance/followUpChance).
-  the_tu: [
+  body: [
     { file: 'data/progression/TheTu*' },
     { file: 'data/skill/TheTu*' },
     { file: 'data/buff/TheTu*' },
     // Techniques.ts houses kim_cang_bat_hoai_the — its block/endurance
-    // stat rows are the_tu emissions by content ownership.
+    // stat rows are body emissions by content ownership.
     {
       file: 'data/technique/Techniques.ts',
       stats: ['blockChance', 'blockEffectiveness', 'enduranceThreshold', 'endurancePercent'],
     },
   ],
-  the_tu_an: [
+  hidden_body: [
     { file: 'data/progression/TheTuAn*' },
-    // The hidden path's kit skills + buffs live in the TheTu* files
+    // The hidden path's kit skills + buffs live in the Body* files
     // (one content file per path family); the chance-stat emitter is a
     // core-side deriver, not file-scanned. Unscoped rows: the domain
     // currently owns ONLY the three reactive chance stats (Task 3).
@@ -134,8 +134,8 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
 // (PathWayDefinition.stats.domains) is the single authority, read
 // through resolveActiveWayStatDomains (M7 removed the path-keyed
 // CULTIVATION_PATH_STAT_DOMAINS map — domain ownership is way-scoped:
-// ngo_dao under phap_tu owns 'phap_tu', ung_the under the_tu owns
-// 'the_tu_an'). Meta domains (production/cultivation/equipment_meta/
+// hidden_spell_pathway under spell owns 'spell', hidden_body_pathway under body owns
+// 'hidden_body'). Meta domains (production/cultivation/equipment_meta/
 // artifact/realm) never appear there.
 
 export interface DomainViolation {

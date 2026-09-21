@@ -47,7 +47,7 @@ describe('player store — artifact normalize on restore (doc §10.2)', () => {
     const store = usePlayerStore()
 
     store.restoreFromSave(
-      buildMinimalSave({ cultivationPath: 'phap_tu', cultivationWay: 'ngu_hanh', realmId: 'foundation_establishment', realmLevel: 3 }),
+      buildMinimalSave({ cultivationPath: 'spell', cultivationWay: 'spell_pathway', realmId: 'foundation_establishment', realmLevel: 3 }),
     )
 
     expect(store.artifact).toEqual(createDefaultArtifactProgress('ngu_hanh_chau'))
@@ -58,7 +58,7 @@ describe('player store — artifact normalize on restore (doc §10.2)', () => {
 
     store.restoreFromSave(
       buildMinimalSave({
-        cultivationPath: 'kiem_tu', cultivationWay: 'hien',
+        cultivationPath: 'sword', cultivationWay: 'sword_pathway',
         realmId: 'foundation_establishment',
         artifact: createDefaultArtifactProgress('ngu_hanh_chau'),
       }),
@@ -81,7 +81,7 @@ describe('player store — artifact normalize on restore (doc §10.2)', () => {
 
     store.restoreFromSave(
       buildMinimalSave({
-        cultivationPath: 'phap_tu', cultivationWay: 'ngu_hanh',
+        cultivationPath: 'spell', cultivationWay: 'spell_pathway',
         realmId: 'foundation_establishment',
         realmLevel: 5,
         artifact: validArtifact,
@@ -96,7 +96,7 @@ describe('player store — artifact normalize on restore (doc §10.2)', () => {
 
     store.restoreFromSave(
       buildMinimalSave({
-        cultivationPath: 'phap_tu', cultivationWay: 'ngu_hanh',
+        cultivationPath: 'spell', cultivationWay: 'spell_pathway',
         realmId: 'foundation_establishment',
         realmLevel: 5,
         artifact: {
@@ -119,7 +119,7 @@ describe('player store — artifact normalize on restore (doc §10.2)', () => {
 
     store.restoreFromSave(
       buildMinimalSave({
-        cultivationPath: 'phap_tu', cultivationWay: 'ngu_hanh',
+        cultivationPath: 'spell', cultivationWay: 'spell_pathway',
         realmId: 'foundation_establishment',
         realmLevel: 3,
         artifact: {

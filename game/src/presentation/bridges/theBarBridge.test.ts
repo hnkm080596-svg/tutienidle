@@ -4,7 +4,7 @@
 // Pinia/Phaser.
 import { describe, expect, it } from 'vitest'
 import { MAX_THE } from '@/core/combat/CombatTypes'
-import { PHAP_TU_EMPOWERMENT_THE_THRESHOLD } from '@/core/phap-tu/PhapTuRoutes'
+import { SPELL_EMPOWERMENT_ESSENCE_THRESHOLD } from '@/core/phap-tu/PhapTuRoutes'
 import { PHAP_TU_ULTIMATE_IDS } from '@/data/skill/PhapTuUltimates'
 import { hasPathCapability } from '@/core/player/CultivationPathSystem'
 import type { PathCapability } from '@/core/player/CultivationPathKit'
@@ -25,11 +25,11 @@ function fakeBattle(
   return { state, players: [{ entity }], enemies: [] } as unknown as TurnBattle
 }
 
-function phapTuPlayer(overrides: Partial<TheBarPlayerState> = {}): TheBarPlayerState {
+function spellPathPlayer(overrides: Partial<TheBarPlayerState> = {}): TheBarPlayerState {
   return {
-    cultivationPath: 'phap_tu',
-    cultivationWay: 'ngu_hanh',
-    phapTu: { element: 'fire', route: 'dot' },
+    cultivationPath: 'spell',
+    cultivationWay: 'spell_pathway',
+    spellPath: { element: 'fire', route: 'dot' },
     nodeLevels: {},
     ...overrides,
   }
@@ -48,16 +48,16 @@ function makeReader(battle: TurnBattle | null, player: TheBarPlayerState) {
 }
 
 describe('makeTheBarReader — Task 16 The bar mapping', () => {
-  it('phap_tu + element committed + fighting → snapshot voi threshold co dinh', () => {
+  it('spell + element committed + fighting → snapshot voi threshold co dinh', () => {
     const reader = makeReader(
       fakeBattle('fighting', { currentThe: 40, maxThe: MAX_THE }),
-      phapTuPlayer(),
+      spellPathPlayer(),
     )
 
     expect(reader()).toEqual({
       current: 40,
       max: MAX_THE,
-      threshold: PHAP_TU_EMPOWERMENT_THE_THRESHOLD,
+      threshold: SPELL_EMPOWERMENT_ESSENCE_THRESHOLD,
       empowered: false,
       label: 'Thế',
     })
@@ -66,7 +66,7 @@ describe('makeTheBarReader — Task 16 The bar mapping', () => {
   it('truong_the-raised max surfaces in the snapshot (marker stays at 100)', () => {
     const reader = makeReader(
       fakeBattle('fighting', { currentThe: 105, maxThe: 130 }),
-      phapTuPlayer(),
+      spellPathPlayer(),
     )
 
     const snap = reader()
@@ -79,26 +79,26 @@ describe('makeTheBarReader — Task 16 The bar mapping', () => {
     const godUltId = PHAP_TU_ULTIMATE_IDS.fire
     const reader = makeReader(
       fakeBattle('fighting', { currentThe: 0 }),
-      phapTuPlayer({ nodeLevels: { [`linh_ngo_${godUltId}`]: 1 } }),
+      spellPathPlayer({ nodeLevels: { [`linh_ngo_${godUltId}`]: 1 } }),
     )
 
     expect(reader()?.empowered).toBe(true)
   })
 
   it('không có battle → null', () => {
-    expect(makeReader(null, phapTuPlayer())()).toBeNull()
+    expect(makeReader(null, spellPathPlayer())()).toBeNull()
   })
 
   it('battle không diễn ra (victory/defeat) → null', () => {
     for (const state of ['victory', 'defeat'] as const) {
-      expect(makeReader(fakeBattle(state, { currentThe: 30 }), phapTuPlayer())()).toBeNull()
+      expect(makeReader(fakeBattle(state, { currentThe: 30 }), spellPathPlayer())()).toBeNull()
     }
   })
 
-  it('ngo_dao way owns NO The pool → null (spec P6)', () => {
+  it('hidden_spell_pathway way owns NO The pool → null (spec P6)', () => {
     const reader = makeReader(
       fakeBattle('fighting', { currentThe: 30 }),
-      phapTuPlayer({ cultivationPath: 'phap_tu', cultivationWay: 'ngo_dao' }),
+      spellPathPlayer({ cultivationPath: 'spell', cultivationWay: 'hidden_spell_pathway' }),
     )
 
     expect(reader()).toBeNull()
@@ -107,7 +107,7 @@ describe('makeTheBarReader — Task 16 The bar mapping', () => {
   it('chưa chọn hành (element null) → null', () => {
     const reader = makeReader(
       fakeBattle('fighting', { currentThe: 30 }),
-      phapTuPlayer({ phapTu: { element: null, route: null } }),
+      spellPathPlayer({ spellPath: { element: null, route: null } }),
     )
 
     expect(reader()).toBeNull()
@@ -130,7 +130,7 @@ describe('registerTheBarReader / readTheBar — registry round-trip', () => {
     const registry = fakeRegistry()
     const reader = makeReader(
       fakeBattle('fighting', { currentThe: 55 }),
-      phapTuPlayer(),
+      spellPathPlayer(),
     )
 
     registerTheBarReader(registry, reader)

@@ -73,10 +73,10 @@ describe('EarlyGameSession', () => {
     }
 
     expect(s.runTribulation('qi_refining')).toBe('victory')
-    expect(s.performRitual('kiem_tu', 'hien')).toBe(true)
+    expect(s.performRitual('sword', 'sword_pathway')).toBe(true)
     expect(s.player.realmId).toBe('qi_refining')
-    expect(s.player.cultivationPath).toBe('kiem_tu')
-    expect(s.player.cultivationWay).toBe('hien')
+    expect(s.player.cultivationPath).toBe('sword')
+    expect(s.player.cultivationWay).toBe('sword_pathway')
 
     // Positive-cost node purchase: actual skillInsight reduction, not just
     // a catalog cost > 0.
@@ -94,7 +94,7 @@ describe('EarlyGameSession', () => {
       s.runStage('mortal_dong_1')
       while (s.player.realmLevel < 12) grindToBreakthrough(s)
       s.runTribulation('qi_refining')
-      s.performRitual('kiem_tu', 'hien')
+      s.performRitual('sword', 'sword_pathway')
       return s.snapshot()
     }
     expect(run()).toEqual(run())
@@ -122,7 +122,7 @@ describe('EarlyGameSession', () => {
     expect(report.failedAt).toBe(dong8Index)
     expect(report.snapshot.completedStageIds).toContain('mortal_dong_7')
     // TODO(balance): expect(report.failedAt).toBeNull()
-    // expect(report.snapshot.cultivationPath).toBe('kiem_tu')
+    // expect(report.snapshot.cultivationPath).toBe('sword')
     // expect(report.snapshot.completedStageIds).toContain('qi_refining_forest')
   })
 
@@ -133,7 +133,7 @@ describe('EarlyGameSession', () => {
     s.runStage('mortal_dong_1')
     while (s.player.realmLevel < 12) grindToBreakthrough(s)
     s.runTribulation('qi_refining')
-    s.performRitual('phap_tu', 'ngo_dao')
+    s.performRitual('spell', 'hidden_spell_pathway')
     expect(s.player).toBe(playerRef)
     expect(s.gameManager).toBe(gmRef)
   })

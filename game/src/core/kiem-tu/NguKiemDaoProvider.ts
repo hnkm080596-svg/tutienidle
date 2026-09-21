@@ -14,7 +14,7 @@ import {
 } from './NguKiemDao'
 import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
 
-// Kiem Tu Reimagined Task 9 (spec §5.2) — the ngu (Ngu Kiem Dao)
+// Kiem Tu Reimagined Task 9 (spec §5.2) — the hidden_sword_pathway (Ngu Kiem Dao)
 // DynamicBasicProvider. resolveBasic live-reads kiemDaoBase /
 // kiemDaoCount from PlayerData EVERY cast — a mid-battle forge is
 // immediately reflected (there is no battle-scoped state to reset:
@@ -97,9 +97,9 @@ export function buildNguKiemDaoProvider(
 
   const resolveDef = (): TurnSkillDefinition => ({
     ...NGU_KIEM_THUAT,
-    damage: { kind: 'physical', multiplier: player.kiemTu?.kiemDaoBase ?? 1 },
+    damage: { kind: 'physical', multiplier: player.swordPath?.kiemDaoBase ?? 1 },
     instances: {
-      count: player.kiemTu?.kiemDaoCount ?? 1,
+      count: player.swordPath?.kiemDaoCount ?? 1,
       perInstanceOptions,
       // Skill-definition M4 -- declarative mirror of the closure above;
       // LegacySkillAdapter lifts `each` into SkillInstances.each (the
@@ -134,7 +134,7 @@ export function buildNguKiemDaoProvider(
 
     resolveManualPick: (defId: string) => (defId === NGU_KIEM_THUAT.id ? resolveDef() : null),
 
-    // ngu owns no battle-scoped cursor/log — nothing to reset.
+    // hidden_sword_pathway owns no battle-scoped cursor/log — nothing to reset.
     resetForBattle: () => {},
 
     // +1 Kiem Y per resolved cast — the domain owner call lives HERE

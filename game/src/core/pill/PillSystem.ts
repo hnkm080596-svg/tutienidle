@@ -150,11 +150,11 @@ export class PillSystem {
       (effect) => effect.type === 'regen' && (effect.mpPerSecond ?? 0) > 0,
     )
 
-    // M4 (R6): MP pills stay ngu_hanh-only - P1 - the declared
-    // 'phap_tu.elemental_casting' capability is the check: it excludes
-    // ngo_dao (which owns no element machinery) without a concrete
+    // M4 (R6): MP pills stay spell_pathway-only - P1 - the declared
+    // 'spell.elemental_casting' capability is the check: it excludes
+    // hidden_spell_pathway (which owns no element machinery) without a concrete
     // way predicate.
-    if (hasManaRegen && !hasStaticPathCapability(player, 'phap_tu.elemental_casting')) {
+    if (hasManaRegen && !hasStaticPathCapability(player, 'spell.elemental_casting')) {
       return 'requires_phap_tu'
     }
 
@@ -241,9 +241,9 @@ export class PillSystem {
 
               flat: (effect.mpPerSecond ?? 0) * potencyMultiplier,
 
-              // Task 3 (D17): MP pool stat — phap_tu credential so the
+              // Task 3 (D17): MP pool stat — spell credential so the
               // Task-7 domain gate keeps accepting this grant.
-              domain: 'phap_tu',
+              domain: 'spell',
             },
           ],
         }

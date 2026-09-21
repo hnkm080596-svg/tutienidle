@@ -9,9 +9,9 @@ import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 //
 //   branchTag 'kiem_pho' — 5 orb branches (hien way). Each branch: 5
 //   growth nodes realm-gated to the orb's own unlock realm (spec K13)
-//   + 1 keystone capstone carrying effect.kiemTuComboModifier — the
+//   + 1 keystone capstone carrying effect.swordPathComboModifier — the
 //   ONLY channel a node may alter a combo (spec §4.2). All stamped
-//   requiredWay 'hien' — inert and unpurchasable on the ngu way.
+//   requiredWay 'sword_pathway' — inert and unpurchasable on the ngu way.
 //
 //   branchTag 'ngu_kiem' — the ngu way subtree (Cultivation Path
 //   Framework M6: way membership replaces the retired kiem_tu_an flip
@@ -64,7 +64,7 @@ interface OrbBranchSpec {
   capstone: {
     name: string
     description: string
-    modifier: NonNullable<ProgressionNode['effect']['kiemTuComboModifier']>
+    modifier: NonNullable<ProgressionNode['effect']['swordPathComboModifier']>
   }
 }
 
@@ -196,7 +196,7 @@ const ORB_NODES: ProgressionNode[] = ORB_BRANCHES.flatMap(branch => {
       { kind: 'node', nodeId: `${branch.orb}_4` },
       { kind: 'node', nodeId: `${branch.orb}_5` },
     ],
-    effect: { kiemTuComboModifier: branch.capstone.modifier },
+    effect: { swordPathComboModifier: branch.capstone.modifier },
     branchTag: 'kiem_pho',
   }
 
@@ -355,20 +355,20 @@ const CUU_CUNG_NODES: ProgressionNode[] = [
 ]
 
 // M6 — path + way membership stamped at export (same pattern as
-// TheTuNodes): 'hien' owns the orb branches, 'ngu' owns everything in
+// TheTuNodes): 'sword_pathway' owns the orb branches, 'hidden_sword_pathway' owns everything in
 // the hidden subtree. requiredCultivationPath is REQUIRED alongside —
-// 'hien' is a way id under BOTH kiem_tu and the_tu, and the retired
-// kiemTuMode field used to carry the path scoping implicitly. The
-// kiem_tu_an flip node is gone; requiredWay is the only kiem-way gate.
+// way ids are globally unique but still module-owned, so the pair
+// (not the way alone) is the atomic gate. The
+// hidden-sword flip node is gone; requiredWay is the only sword-way gate.
 export const KIEM_TU_NODES: ProgressionNode[] = [
   ...ORB_NODES.map(node => ({
     ...node,
-    requiredCultivationPath: 'kiem_tu' as const,
-    requiredWay: 'hien',
+    requiredCultivationPath: 'sword' as const,
+    requiredWay: 'sword_pathway' as const,
   })),
   ...[...NGU_CASCADE_NODES, ...NGU_GROWTH_NODES, ...CUU_CUNG_NODES].map(node => ({
     ...node,
-    requiredCultivationPath: 'kiem_tu' as const,
-    requiredWay: 'ngu',
+    requiredCultivationPath: 'sword' as const,
+    requiredWay: 'hidden_sword_pathway' as const,
   })),
 ]

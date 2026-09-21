@@ -24,7 +24,7 @@ export interface CultivationPathRuntime {
   /**
    * Kit slots or emblem markers for special/ultimate. Carries the full
    * shape TurnBattleAdapter stamps onto the participant — dropping
-   * reactivePayloads/maxThe deletes the the_tu_an reactive channel.
+   * reactivePayloads/maxThe deletes the hidden_body reactive channel.
    */
   resolveSpecialUltimate(player: PlayerData):
     | {
@@ -39,7 +39,7 @@ export interface CultivationPathRuntime {
   /** Stat-domain gate for battle stat derivation (active way's domains). */
   resolveStatDomains(player: PlayerData): readonly StatDomain[] | undefined
   /**
-   * Kiem Tu hien/ngu dynamic-basic provider — undefined for other paths.
+   * Kiem Tu sword_pathway/hidden_sword_pathway dynamic-basic provider — undefined for other paths.
    * `rng` is the session battle RNG (Mission C Task 8): provider-side
    * rolls (Ngu cascade-crit/pierce) must not fall back to Math.random.
    */
@@ -78,6 +78,6 @@ export interface CultivationPathRuntimeDeps {
   skillTemplates: { get(id: string): Skill | undefined }
   nodeRegistry: { getAll(): ProgressionNode[] }
   getNodeLevel(nodeId: string, player: PlayerData): number
-  getPhapTuElement(): ElementType | undefined
+  getSpellPathElement(): ElementType | undefined
   routeProfileProvider(skillId: string): RouteProfile
 }

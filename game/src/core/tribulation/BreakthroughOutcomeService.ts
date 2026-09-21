@@ -105,10 +105,10 @@ export class BreakthroughOutcomeService {
       // through the tribulation chain (Slice 1). Preserved verbatim from
       // useTribulation-era useBreakthrough.ts so removal is a separate,
       // evidence-based decision (A12). The technique grant duplicates
-      // grantCultivationPathRealmReward's phap_tu branch by design.
-      // M4 (R6): the ngu_hanh realm technique is way-owned — a collapsed
-      // ('phap_tu','ngo_dao') player must not inherit it.
-      if (hasStaticPathCapability(player, 'phap_tu.elemental_casting') && player.realmId === 'foundation_establishment') {
+      // grantCultivationPathRealmReward's spell branch by design.
+      // M4 (R6): the spell_pathway realm technique is way-owned — a collapsed
+      // ('spell','hidden_spell_pathway') player must not inherit it.
+      if (hasStaticPathCapability(player, 'spell.elemental_casting') && player.realmId === 'foundation_establishment') {
         const inheritedInsight = context.techniqueManager.getEquipped()?.insight ?? 0
         context.learnTechnique('dai_ngu_hanh_quyet_truc_co')
         const nextTechnique = context.techniqueManager.get('dai_ngu_hanh_quyet_truc_co')

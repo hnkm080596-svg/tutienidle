@@ -1,8 +1,8 @@
 // Kiem Tu Reimagined (spec 2026-09-15 K1/K6/K14) — the ONE canonical
 // state model for the path. Cultivation Path Framework M6: the
 // discriminator moved OFF this slice — player.cultivationWay
-// ('hien'|'ngu') is the membership check (isKiemTuHien/isKiemTuNgu);
-// hien (Kiem Pho preset-combo) never reads kiemY/kiemDao*; ngu (Ngu
+// ('sword_pathway'|'hidden_sword_pathway') is the membership check (isSwordPathway/isHiddenSwordPathway);
+// sword_pathway (Kiem Pho preset-combo) never reads kiemY/kiemDao*; hidden_sword_pathway (Ngu
 // Kiem Dao) never reads preset. All mutations go through the owning
 // ops — applyPathChoice (create), NguKiemDao (economy),
 // GameManagerRealmAdvanceOps (breakthrough merge).
@@ -21,9 +21,9 @@ export const KIEM_PHO_ORB_IDS: readonly OrbId[] = [
   'orb_quet',
 ]
 
-export interface KiemTuState {
+export interface SwordPathState {
   /** Hien: the 1..9-orb auto-cast loop, persisted. Edited out of combat
-   *  only (setKiemPhoPreset op). Meaningless to ngu. */
+   *  only (setKiemPhoPreset op). Meaningless to hidden_sword_pathway. */
   preset: OrbId[]
 
   /** Ngu: banked Kiem Y — converts to Kiem Dao inside the gain hook at
@@ -40,8 +40,8 @@ export interface KiemTuState {
 }
 
 /** Spec-locked fresh state at path choice (K1). Way-agnostic: the
- *  same defaults serve hien (preset) and ngu (economy zeros). */
-export function freshKiemTuState(): KiemTuState {
+ *  same defaults serve sword_pathway (preset) and hidden_sword_pathway (economy zeros). */
+export function freshSwordPathState(): SwordPathState {
   return {
     preset: ['orb_dam'],
     kiemY: 0,

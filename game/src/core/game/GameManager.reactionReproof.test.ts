@@ -93,7 +93,7 @@ function makeNgoDaoManager(withCompanion = false) {
   gameManager.setActivePlayer(player)
   player.skillCastCounts = { linh_bao: LING_BAO_L3 }
   expect(
-    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player),
+    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'hidden_spell_pathway', player),
   ).toBe(true)
 
   if (withCompanion) {
@@ -958,7 +958,7 @@ describe('S4 -- deterministic replay', () => {
 })
 
 describe('S4 -- capability isolation', () => {
-  it('an ordinary visible phap_tu battle: seals commit but the gate suppresses every reaction', () => {
+  it('an ordinary visible spell battle: seals commit but the gate suppresses every reaction', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
@@ -967,11 +967,11 @@ describe('S4 -- capability isolation', () => {
     player.realmId = 'mortal'
     player.realmLevel = 12
     gameManager.setActivePlayer(player)
-    // The REAL ngu_hanh ritual: grants the element kit (the strict
+    // The REAL spell_pathway ritual: grants the element kit (the strict
     // authored-basic gate requires it) and leaves no aura -- the
     // visible path never carries van_phap_than_hoa.
     expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngu_hanh', player),
+      gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player),
     ).toBe(true)
     gameManager.startBattleWithPlayer(player, spawnDummy())
 

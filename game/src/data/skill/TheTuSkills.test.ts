@@ -20,15 +20,15 @@ import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from './TurnBasicAttac
 import { TURN_SKILL_DISPLAY_META } from './TurnSkillDisplayMeta'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { ProgressionNode } from '../../core/progression/ProgressionNode'
-import { collectTheTuKitModifiers } from '../../core/the-tu/TheTuKitModifiers'
+import { collectBodyKitModifiers } from '../../core/the-tu/TheTuKitModifiers'
 import type { ReactiveTriggerPayload } from '../../core/proc/ProcCapabilities'
 
 // The Tu Reimagined (spec 2026-09-15 section 5, plan Task 6) — the two
 // Hien kits are native TurnSkillDefinitions resolved by owned root;
-// node bonuses reach them ONLY through collectTheTuKitModifiers applied
+// node bonuses reach them ONLY through collectBodyKitModifiers applied
 // to participant-local def clones (registry defs never mutate).
 
-describe('the_tu kit data', () => {
+describe('body kit data', () => {
   it('cuong_quyen — physical basic carrying the missing-HP scalar fields', () => {
     expect(CUONG_QUYEN.id).toBe('cuong_quyen')
     expect(CUONG_QUYEN.cooldownTurns).toBe(0)
@@ -96,11 +96,11 @@ describe('the_tu kit data', () => {
     })
   })
 
-  it('no-root hien resolves the generic melee fallback directly (INV-3, M7)', () => {
-    // The generic the_tu row was dead content (kit resolution + the
+  it('no-root body_pathway resolves the generic melee fallback directly (INV-3, M7)', () => {
+    // The generic body row was dead content (kit resolution + the
     // `?? GENERIC_PHYSICAL_BASIC` fallback own the behavior); the map
     // no longer carries it.
-    expect(BASIC_ATTACKS_BY_BUILD['the_tu']).toBeUndefined()
+    expect(BASIC_ATTACKS_BY_BUILD['body']).toBeUndefined()
     expect(GENERIC_PHYSICAL_BASIC.id).toBe('generic_physical')
   })
 
@@ -124,11 +124,11 @@ describe('buildTheTuKit — node modifiers reach def clones only', () => {
     return { getAll: () => nodes }
   }
 
-  function makeNode(id: string, theTuKitModifiers: NonNullable<ProgressionNode['effect']['theTuKitModifiers']>, maxLevel = 1): ProgressionNode {
-    return { id, name: id, type: 'minor', insightCost: 1, maxLevel, effect: { theTuKitModifiers } }
+  function makeNode(id: string, bodyKitModifiers: NonNullable<ProgressionNode['effect']['bodyKitModifiers']>, maxLevel = 1): ProgressionNode {
+    return { id, name: id, type: 'minor', insightCost: 1, maxLevel, effect: { bodyKitModifiers } }
   }
 
-  it('collectTheTuKitModifiers sums channel values across owned node levels', () => {
+  it('collectBodyKitModifiers sums channel values across owned node levels', () => {
     const registry = registryWith([
       makeNode('tt_scalar_1', { missingHpBonusBonus: 0.005 }, 3),
       makeNode('tt_battu_1', { batTuDurationBonus: 1 }),
@@ -137,7 +137,7 @@ describe('buildTheTuKit — node modifiers reach def clones only', () => {
     const player = createDefaultPlayer()
     player.nodeLevels = { tt_scalar_1: 2, tt_battu_1: 1, tt_taunt_1: 1 }
 
-    const mods = collectTheTuKitModifiers(registry, player)
+    const mods = collectBodyKitModifiers(registry, player)
 
     expect(mods.missingHpBonusBonus).toBeCloseTo(0.01)
     expect(mods.batTuDurationBonus).toBe(1)
@@ -149,13 +149,13 @@ describe('buildTheTuKit — node modifiers reach def clones only', () => {
     const registry = registryWith([makeNode('tt_scalar_1', { missingHpBonusBonus: 0.005 })])
     const player = createDefaultPlayer()
 
-    const mods = collectTheTuKitModifiers(registry, player)
+    const mods = collectBodyKitModifiers(registry, player)
 
     expect(mods.missingHpBonusBonus).toBe(0)
   })
 
   it('cuong_chien clone: scalar node raises missingHpBonusPerMissingPercent; duration node raises the buff durationOverride', () => {
-    const mods = collectTheTuKitModifiers(
+    const mods = collectBodyKitModifiers(
       registryWith([
         makeNode('tt_scalar_1', { missingHpBonusBonus: 0.01 }),
         makeNode('tt_battu_1', { batTuDurationBonus: 1 }),
@@ -182,7 +182,7 @@ describe('buildTheTuKit — node modifiers reach def clones only', () => {
     const player = createDefaultPlayer()
     player.nodeLevels = { tt_reflect: 1, tt_ward: 1, tt_taunt: 1 }
 
-    const mods = collectTheTuKitModifiers(
+    const mods = collectBodyKitModifiers(
       registryWith([
         makeNode('tt_reflect', { reflectMaxHpRatioBonus: 0.01, reflectTakenRatioBonus: 0.05 }),
         makeNode('tt_ward', { sonNhacWardRatioBonus: 0.1 }),

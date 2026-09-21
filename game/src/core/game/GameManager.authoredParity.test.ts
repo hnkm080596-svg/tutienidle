@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { freshKiemTuState } from '../kiem-tu/KiemTuState'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { pills } from '../../data/pill/pills'
@@ -54,12 +54,12 @@ function makeManager() {
 }
 
 describe('ARCH-008 — production basic consumes canonical resolved output', () => {
-  it('kiem_tu basic is NOT authored tram — the orb preset takes over (K3 mortal-precursor lock)', () => {
+  it('sword basic is NOT authored tram — the orb preset takes over (K3 mortal-precursor lock)', () => {
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'hien'
-    player.kiemTu = freshKiemTuState()
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'sword_pathway'
+    player.swordPath = freshSwordPathState()
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('tram')
@@ -101,12 +101,12 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     expect(player.skillCastCounts?.['tram'] ?? 0).toBeGreaterThan(0)
   })
 
-  it('phap_tu wood basic doc_chuong executes authored pure-ailment semantics (no phantom x1 damage)', () => {
+  it('spell wood basic doc_chuong executes authored pure-ailment semantics (no phantom x1 damage)', () => {
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'wood', route: null }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'wood', route: null }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('doc_chuong')
@@ -120,12 +120,12 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     expect(basic.appliesAilments).toContainEqual({ buffDefinitionId: 'doc_can', chance: 1 })
   })
 
-  it('phap_tu fire basic carries authored elemental components, scaling and ailment chance', () => {
+  it('spell fire basic carries authored elemental components, scaling and ailment chance', () => {
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'fire', route: null }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'fire', route: null }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('hoa_cau_thuat')
@@ -148,11 +148,11 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     expect(basic.appliesAilments).toContainEqual({ buffDefinitionId: 'hoa_an', chance: 0.5 })
   })
 
-  it('kiem_tu without learned tram falls back to the static build basic (physical x1, no authored scaling)', () => {
+  it('sword without learned tram falls back to the static build basic (physical x1, no authored scaling)', () => {
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'hien'
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'sword_pathway'
 
     gameManager.setActivePlayer(player)
 
@@ -183,9 +183,9 @@ describe('ARCH-008 — authored buff duration rides appliesBuff.duration', () =>
   it('duong_linh_tuyen specialization applies thanh_tuyen for 7.984 turns, not the registry-default 5.988', () => {
     const { gameManager, combatSource } = makeManager()
     const player = createDefaultPlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = { element: 'water', route: null }
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = { element: 'water', route: null }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('thanh_tuyen_duong_linh')

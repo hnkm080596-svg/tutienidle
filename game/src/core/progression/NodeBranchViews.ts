@@ -24,7 +24,7 @@ export const HIDDEN_BRANCH_TAGS: readonly string[] = ['da_phap']
  *  views render BOTH tags — visibility inside the tree is governed by
  *  the requiredWay display filter in NodeTreePanel (opposite-way nodes
  *  hidden). */
-const KIEM_TU_VIEW_TAGS = ['kiem_pho', 'ngu_kiem'] as const
+const SWORD_PATH_VIEW_TAGS = ['kiem_pho', 'ngu_kiem'] as const
 
 /**
  * The tags a tree view for `viewTag` must render. Element views match
@@ -38,8 +38,8 @@ export function viewBranchTags(viewTag: string): readonly string[] {
     return []
   }
 
-  if ((KIEM_TU_VIEW_TAGS as readonly string[]).includes(viewTag)) {
-    return KIEM_TU_VIEW_TAGS
+  if ((SWORD_PATH_VIEW_TAGS as readonly string[]).includes(viewTag)) {
+    return SWORD_PATH_VIEW_TAGS
   }
 
   return [viewTag]

@@ -4,7 +4,7 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { asBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
-import { SKILLS, PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
+import { SKILLS, SPELL_KIT_IDS } from '../../data/skill/Skills'
 import type { Stage } from '../stage/Stage'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { EntityVitalsChangedEvent } from '../combat/EntityVitalsSystem'
@@ -80,9 +80,9 @@ function buildHarness(element: 'water' | 'earth', playerSpeed: number): Harness 
   gameManager.eventBus.on<StatusVfxAttachedEvent>('status_vfx_attached', (event) => attached.push(event))
 
   const player = createDefaultPlayer()
-  player.cultivationPath = 'phap_tu'
-  player.cultivationWay = 'ngu_hanh'
-  player.phapTu = { element, route: null }
+  player.cultivationPath = 'spell'
+  player.cultivationWay = 'spell_pathway'
+  player.spellPath = { element, route: null }
   // Speed boost: the player must take >= 3 unhit turns between enemy hits
   // for the Ward delay gate to open inside the real loop.
   player.baseStats = asBaseStats({ ...player.baseStats, speed: playerSpeed })
@@ -103,7 +103,7 @@ function buildHarness(element: 'water' | 'earth', playerSpeed: number): Harness 
   // The committed element's basic is required at battle build (round-3
   // fail-fast: missing required basic throws, no melee substitute).
   expect(
-    gameManager.progressionOps.learnSkill(PHAP_TU_KIT_IDS[element][0]),
+    gameManager.progressionOps.learnSkill(SPELL_KIT_IDS[element][0]),
   ).toBe(true)
 
   return {

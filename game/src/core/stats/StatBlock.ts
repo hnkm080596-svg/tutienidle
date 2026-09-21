@@ -92,7 +92,7 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     ailmentResistPercent: 0,
     ailmentPotencyPercent: 0,
     // The Tu An reactive chances (spec 2026-09-15 section 3.2) — base 0;
-    // the only source is the the_tu_an attribute->chance emission.
+    // the only source is the hidden_body attribute->chance emission.
     counterChance: 0,
     protectChance: 0,
     followUpChance: 0,

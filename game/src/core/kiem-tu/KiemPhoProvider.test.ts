@@ -12,9 +12,9 @@ import type { DynamicBasicCastContext } from '../battle/turn/TurnSkillAction'
 function hienPlayer(preset: OrbId[], realmId = 'qi_refining'): PlayerData {
   const player = createDefaultPlayer()
   player.realmId = realmId
-  player.cultivationPath = 'kiem_tu'
-  player.cultivationWay = 'hien'
-  player.kiemTu = { preset, kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'sword_pathway'
+  player.swordPath = { preset, kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
   return player
 }
 

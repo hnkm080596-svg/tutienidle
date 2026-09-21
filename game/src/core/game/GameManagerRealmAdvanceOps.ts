@@ -3,7 +3,7 @@ import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData } from '../player/Player'
-import type { CultivationPathId, PathWayId } from '../player/CultivationPathKit'
+import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import { CULTIVATION_PATH_MODULES } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
@@ -78,14 +78,14 @@ export class GameManagerRealmAdvanceOps {
    * Call ONCE per major-realm advance, AFTER the realmId write: the
    * forged swords fold into kiemDaoBase and the live count resets to 1
    * (banked Kiem Y carries into the new realm's forgeCost). No-op for
-   * hien / non-kiem-tu players.
+   * sword_pathway / non-sword players.
    */
-  applyKiemTuRealmTransition(player: PlayerData): void {
-    // M6 — way membership is the discriminator (kiemTu.mode retired).
-    // P1 - the 'kiem_tu.ngu_kiem_dao' capability carries that membership;
+  applySwordPathRealmTransition(player: PlayerData): void {
+    // M6 — way membership is the discriminator (swordPath.mode retired).
+    // P1 - the 'sword.sword_riding' capability carries that membership;
     // the slice presence check stays (corrupt saves fail closed).
-    if (player.kiemTu && hasStaticPathCapability(player, 'kiem_tu.ngu_kiem_dao')) {
-      applyBreakthroughMerge(player.kiemTu)
+    if (player.swordPath && hasStaticPathCapability(player, 'sword.sword_riding')) {
+      applyBreakthroughMerge(player.swordPath)
     }
   }
 
@@ -166,7 +166,7 @@ export class GameManagerRealmAdvanceOps {
    * IDENTICAL to useBreakthrough.ts/useTribulation.ts after every major
    * breakthrough.
    */
-  chooseCultivationPath(pathId: CultivationPathId, wayId: PathWayId, player: PlayerData): boolean {
+  chooseCultivationPath(pathId: CultivationPathId, wayId: CultivationWayId, player: PlayerData): boolean {
     if (
       player.cultivationPath ||
       player.realmId !== 'mortal' ||
@@ -210,7 +210,7 @@ export class GameManagerRealmAdvanceOps {
 
     // Path/way commit — the authority validates the pair, evaluates the
     // offerGate live, and writes cultivationWay + the base
-    // cultivationPath id plus the path-state slice (kiem_tu). Zero
+    // cultivationPath id plus the path-state slice (sword). Zero
     // mutation on failure, so an ineligible/wrong-path pick stops here.
     if (!applyPathChoice(player, pathId, wayId).ok) {
       return false
@@ -223,9 +223,9 @@ export class GameManagerRealmAdvanceOps {
     // concrete path/way branch: unequipSkillIds strips the mortal
     // precursor basics (NOT unlearn — a Pham Nhan save can still use
     // them; the precursor equip gate blocks re-equip post-path), then
-    // skillIds learn + equip into slots in order. kiem_tu basics come
-    // from the orb preset via the dynamicBasic provider; both the_tu
-    // ways resolve their kit at battle build; ngo_dao's third kit
+    // skillIds learn + equip into slots in order. sword basics come
+    // from the orb preset via the dynamicBasic provider; both body
+    // ways resolve their kit at battle build; hidden_spell_pathway's third kit
     // member is a technique-carried passive (innateSkillId), not a
     // loadout skill.
     for (const skillId of way.unequipSkillIds ?? []) {
@@ -237,8 +237,8 @@ export class GameManagerRealmAdvanceOps {
       this.deps.skillSystem.equipToSlot(skillId, index)
     })
     // Phap Tu Reimagined (Task 6) — no auto-Fire starter: choosing
-    // phap_tu leaves player.phapTu { element: null, route: null } until
-    // progressionOps.selectPhapTuElement() commits the atomic choice.
+    // spell leaves player.spellPath { element: null, route: null } until
+    // progressionOps.selectSpellPathElement() commits the atomic choice.
 
     if (player.realmId === 'mortal') {
       // Realm Passive & Pressure System (2026-08-20) - lock the Nhap Dao
@@ -264,8 +264,8 @@ export class GameManagerRealmAdvanceOps {
 
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)
-      // M6 — NO applyKiemTuRealmTransition here: ngu can now be picked at
-      // this very ritual, so the pre-M6 "ngu cannot exist at mortal"
+      // M6 — NO applySwordPathRealmTransition here: hidden_sword_pathway can now be picked at
+      // this very ritual, so the pre-M6 "hidden_sword_pathway cannot exist at mortal"
       // assumption is false. The slice was JUST created (kiemDaoCount 1 —
       // nothing forged this realm); merging it would hand out a free
       // kiemDaoBase bump at entry. The merge stays on real major-realm

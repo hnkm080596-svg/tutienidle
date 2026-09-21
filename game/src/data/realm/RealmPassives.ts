@@ -28,11 +28,11 @@ const NHAP_DAO_PERCENT_PER_GRADE = 0.03
 function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
   const percent = player.breakthroughGrade * NHAP_DAO_PERCENT_PER_GRADE
 
-  // Task 3 (D17): the MP-pool stats carry domain:'phap_tu' so the
+  // Task 3 (D17): the MP-pool stats carry domain:'spell' so the
   // Task-7 domain gate keeps accepting these grants once maxMp /
-  // manaRegenPerTurn are gated to the phap_tu domain.
+  // manaRegenPerTurn are gated to the spell domain.
   const universalStats: StatModifier['stat'][] = ['maxHp', 'hpRegenPerTurn']
-  const phapTuStats: StatModifier['stat'][] = ['maxMp', 'manaRegenPerTurn']
+  const spellPathStats: StatModifier['stat'][] = ['maxMp', 'manaRegenPerTurn']
 
   return [
     ...universalStats.map((stat) => ({
@@ -42,13 +42,13 @@ function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
       stat,
       percent,
     })),
-    ...phapTuStats.map((stat) => ({
+    ...spellPathStats.map((stat) => ({
       id: `realm-passive:nhap_dao:${stat}`,
       sourceId: 'nhap_dao',
       sourceType: 'realm' as const,
       stat,
       percent,
-      domain: 'phap_tu' as const,
+      domain: 'spell' as const,
     })),
   ]
 }

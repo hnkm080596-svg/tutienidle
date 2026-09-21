@@ -372,12 +372,6 @@
   "/* Fit-engine (2026-08-29) — body là ngân sách flex cho nội dung: con chiếm flex thay vì scroll. Con tự paginate khi vượt ngân sách (pattern BagGrid). overflow hidden là rào chặn cuối — panel con KHÔNG được dựa vào nó. */"
  ],
  "src/components/common/PlayerPortrait.vue": [
-  "// Trình bày nhân vật dùng CHUNG (plan Workstream A) — PNG tĩnh mới,",
-  "// KHÔNG còn qua AtlasSprite nhiều frame:",
-  "// - variant 'cultivate' → player-mortal-cultivate-v1.png, giữa Động Phủ",
-  "// (trigger command wheel), CÓ chuyển động CSS khi animated.",
-  "// - variant 'portrait' → player-mortal-ink-sword-concept-v2.png, tab Nhân Vật,",
-  "// LUÔN ảnh tĩnh (không bao giờ áp animation tu luyện).",
   "// Chuyển động chỉ-Presentation (cultivate + animated):",
   "// - Float dọc nhẹ 3-5px, chu kỳ chậm; nhịp thở scale 1 → 1.015.",
   "// - Aura pulse ĐỘC LẬP (không scale toàn bộ hit target).",
@@ -803,12 +797,11 @@
   "// Phap Tu An (Task 16) — the path owns no active ultimate: the slot is",
   "// emblem (spec §3.3 — \"NOT a button\"; its agency lives in the",
   "// multicast — the one place the rule surfaces in combat.",
-  "// M4 (R6): the hidden way drives the emblem — the strict ('phap_tu',",
   "// Sync persisted mode → GameManager khi bar mount lần đầu (reload page:",
   "// ui flag persist, GameManager flag mặc định false).",
   "// Hien owns the basic slot via the orb picker — drop it from the role",
   "// Kiem Tu Reimagined Task 7 — orb display names come from",
-  "<!-- Kiem Tu Reimagined — the hien orb picker OWNS the basic slot: provider.manualOptions() are the only legal manual picks. -->",
+  "<!-- Kiem Tu Reimagined — the sword_pathway orb picker OWNS the basic slot: provider.manualOptions() are the only legal manual picks. -->",
   "<!-- Phap Tu An — ult slot is the dao passive emblem, never a button (no dead ult control; spec §3.3). -->",
   "/* Phap Tu An (Task 16) — passive emblem replaces the ult slot button: always-on dao passive, reads as an emblem not a disabled control. */"
  ],
@@ -1130,7 +1123,7 @@
   "// Phải render đúng state \"nghề chưa có definition\" (Kiếm Tu, doc §4)",
   "// không crash khi player.artifact undefined.",
   "// M5 — the active way (cultivationWay authoritative) names the path,",
-  "// so a collapsed ('the_tu','ung_the') save labels Ứng Thế correctly.",
+  "// so a collapsed ('body','hidden_body_pathway') save labels Ứng Thế correctly.",
   "// Artifact Pham is a 5-step axis — same ramp positions the Chat"
  ],
  "src/components/panels/bag-sections/BagCell.ts": [
@@ -1233,7 +1226,6 @@
   "// là đường mở lại panel sau khi Quán Khí; flow đột phá thống nhất đi qua",
   "// đã bỏ slot quan_khi). Chỉ hiện khi đã chọn Kiếm Tu (route switch chỉ có",
   "// ý nghĩa ở đó).",
-  "// M9 — the entry is kiem-way machinery, gated by the module predicates",
   "// M5 — the active way (cultivationWay authoritative) drives the kit",
   "// Thiên Phú (talent-direction-choice-plan §7) — hiển thị thiên phú đã chọn",
   "// (tên + description) đọc từ selectedTalentIds qua getTalentDefinition;",
@@ -1501,12 +1493,11 @@
   "// The Tu Reimagined (T22) — path-id tree tags get i18n labels instead",
   "// The Tu Reimagined (T22) — The Tu Hien kit declares element 'metal';",
   "// Phap Tu Reimagined (Task 16) — route respec toggle (P3). A route is a",
-  "// M4 (R6): route switching is ngu_hanh machinery — the WAY gate keeps",
   "// Node level (plan §6.1) — badge `level/max` cho node nhiều cấp.",
   "// Phap Tu Reimagined (Task 16) — a node belongs to a view when either",
   "// HIDDEN_BRANCH_TAGS (the future An tree surface — Task 7's path owns",
   "// Kiem Tu Reimagined — revealWhen hides the node until the prereq",
-  "// the (unrevealed) hidden root, ngu sees the Ngu branch — the",
+  "// the (unrevealed) hidden root, hidden_sword_pathway sees the hidden branch — the",
   "// M3 — way-tagged nodes follow the same display rule as mode-tagged",
   "// Không kỳ vọng chu trình (data hand-authored, luôn là cây thật),",
   "// nhưng vẫn chặn bằng `guard` cho chắc — 1 node lặp lại trong",
@@ -1696,13 +1687,12 @@
   "// 1 world announcement giống mọi lần đổi đại cảnh giới khác.",
   "// Kiem Tu specialization card below — shown only after the player has",
   "// the Initiation Ritual — there is no in-panel conversion).",
-  "// M9 — way-strict module predicates, never the raw path id: a",
-  "// Cultivation Path Framework (M6/M9) — the hien/ngu way is canonical on",
+  "// Cultivation Path Framework (M6/M9) — the sword/hidden way is canonical on",
   "// Kiem Tu Reimagined (spec §11) — out-of-combat Kiem Pho preset editor.",
   "// PlayerData stays the single source of truth — no draft copy to sync.",
-  "<!-- Sealed hidden-path card (Task 16, M9) — renders for any way declaring sealedOffer (today: ngo_dao); names the way, carries the permanent warning, no node-tree entry point. -->",
+  "<!-- Sealed hidden-path card (Task 16, M9) — renders for any way declaring sealedOffer (today: hidden_spell_pathway); names the way, carries the permanent warning, no node-tree entry point. -->",
   "<!-- Kiem Tu Reimagined (spec 2026-09-15) — shows the active specialization (Kiem Pho / Ngu Kiem Dao) read from player.cultivationWay. -->",
-  "<!-- Kiem Pho preset editor — hien only (ngu never reads preset). Strip = current persisted sequence, palette = realm-unlocked orbs; both write through setKiemPhoPreset(). -->",
+  "<!-- Kiem Pho preset editor — sword_pathway only (hidden_sword_pathway never reads preset). Strip = current persisted sequence, palette = realm-unlocked orbs; both write through setKiemPhoPreset(). -->",
   "/* Câu duy nhất trước 1 quyết định vĩnh viễn — xứng đáng cỡ chữ lớn hơn text-sm mặc định (2026-08-30 frontend-design pass). */",
   "/* Khối \"đường đã chốt\" — card thật thay vì văn bản trần (2026-08-30). */",
   "/* Nghi thức chọn con đường vĩnh viễn — giữ crimson gradient chủ đích (signaling quyết định không hoàn tác), đè lên variant danger phẳng. */",
@@ -1792,7 +1782,7 @@
   "/* Audio — on/off + master volume. */"
  ],
  "src/components/panels/skill-path/NodeInspector.vue": [
-  "// PhapTuPanel plan mục 10/17/29 + node level (combat-skill-flow-element-",
+  "// SpellPathPanel plan mục 10/17/29 + node level (combat-skill-flow-element-",
   "// power-dot-plan.md §6.2) — bottom panel: chi tiết node đang CHỌN + nút",
   "// mua/nâng cấp. Node nhiều cấp hiển thị `Cấp x/max`, Power nhận mỗi cấp",
   "// + tổng đang nhận, chi phí cấp kế; nút \"Lĩnh Ngộ\" ở level 0, \"Nâng",
@@ -1805,7 +1795,7 @@
   "// Task 16 — element/route membership gates (isNodeElementActive /",
   "<!-- Badge `Cấp x/max` cho node nhiều cấp (plan §6.2). -->",
   "<!-- Ẩn NỘI DUNG chi phí khi ĐÃ hiện trong danh sách lý do khoá phía trên (2026-08-30 frontend-design pass: 2 chỗ cùng nói \"Cần X Cảm Ngộ\" khi node đang khoá vì thiếu điểm) — giữ span rỗng để layout space-between với nút không bị lệch. -->",
-  "<!-- Blocking route pick (spec §3.3 + plan Task 16: \"blocking choice, no dismiss\") — element+route commit atomically via selectPhapTuElement; the modal only collects input, it is not the guarantee. No cancel: the element root was clicked deliberately, the route half is mandatory. -->",
+  "<!-- Blocking route pick (spec §3.3 + plan Task 16: \"blocking choice, no dismiss\") — element+route commit atomically via selectSpellPathElement; the modal only collects input, it is not the guarantee. No cancel: the element root was clicked deliberately, the route half is mandatory. -->",
   "/* Tên node là \"hero\" của khối inspector — trước đây chỉ 14px, gần như cùng cỡ mô tả bên dưới (2026-08-30 frontend-design pass). */",
   "/* Badge `Cấp x/max` — node nhiều cấp (plan §6.2). */",
   "/* Dòng chi phí đứng ngay cạnh nút hành động — nâng cỡ để dẫn mắt tới quyết định thay vì chìm cùng cỡ với mô tả (2026-08-30 pass). */",
@@ -1824,7 +1814,7 @@
   "// KHÔNG có Node Tree (Kiếm Tu/Phàm Nhân, xem SkillPathList.vue) — đọc",
   "// thông tin kỹ năng ĐÃ có sẵn (cố định theo kit/Trảm). Nâng cấp bằng",
   "// Cảm ngộ Kỹ năng (skill-insight-and-auto-combat-hud-plan.md mục 5)",
-  "// ÁP DỤNG CHO MỌI skill đã học, không riêng nhánh phap_tu — khác",
+  "// ÁP DỤNG CHO MỌI skill đã học, không riêng nhánh spell — khác",
   "// NodeTreePanel.vue/NodeInspector.vue vốn là nơi MỞ node (unlock), còn",
   "// đây là nơi NÂNG CẤP skill đã mở.",
   "// Task 12 (2026-09-03) — dòng cơ chế engine (hitCount/spread/zone/",
@@ -1836,8 +1826,8 @@
  ],
  "src/components/panels/skill-path/SkillLoadoutStrip.vue": [
   "// Trích từ LoadoutManager.vue's khối TRÊN của tab 'skill' (2026-08-20)",
-  "// — dời NGUYÊN VẸN vào SkillPathPanel.vue (cả 2 nhánh phap_tu/kiem_tu",
-  "// đều cần dải Loadout này, xem PhapTuPanel plan mục 13 \"PHÁP THUẬT",
+  "// — dời NGUYÊN VẸN vào SkillPathPanel.vue (cả 2 nhánh spell/sword",
+  "// đều cần dải Loadout này, xem SpellPathPanel plan mục 13 \"PHÁP THUẬT",
   "// ĐANG VẬN HÀNH\"), tách thành component riêng thay vì lặp lại markup ở",
   "// 2 chỗ trong SkillPathPanel.vue.",
   "// Execution policy rework (plan §8.6) — KHÔNG còn \"Đòn Cơ Bản\" hiện",
@@ -1867,16 +1857,13 @@
   "// SkillLoadoutStrip: skill nào equip vào 5 ô đó mới là thứ thật sự",
   "// vận hành trong combat (xem scheduler auto-cast thống nhất của",
   "// BattleSystem), \"equip cả 1 Hành\" không cộng thêm ý nghĩa nào khác.",
-  "// The Tu Reimagined (T22) — the_tu/the_tu_an mỗi path có 1 cây thật",
+  "// The Tu Reimagined (T22) — body/hidden_body mỗi path có 1 cây thật",
   "// (TheTuNodes/TheTuAnNodes) dưới branchTag trùng path id: single-tag",
   "// pass-through view qua viewBranchTags(), toàn bộ root (mutex cho Hiện,",
   "// non-mutex cho Ẩn) render trong cùng một tree.",
-  "// M5 — tree selection resolves on the WAY, never the raw path id: the",
-  "// M9 — way-strict module predicates, never the raw path id: a",
-  "// M4 (R6): the Phap Tu element tree is ngu_hanh machinery — a",
-  "// ---- Nhánh phap_tu (Hành -> Node Tree) ----",
-  "// Task 16: element tabs always visible for phap_tu — the element-root",
-  "// ---- Nhánh kiem_tu (Kiem Tu Reimagined spec §6) — ONE tree, two",
+  "// ---- Nhánh spell (Hành -> Node Tree) ----",
+  "// Task 16: element tabs always visible for spell — the element-root",
+  "// ---- Nhánh sword (Kiem Tu Reimagined spec §6) — ONE tree, two",
   "// inside NodeTreePanel — this tag only selects WHICH view; the re-",
   "// Skill Node unlock animation (2026-08-21, Plans/SkillNode) — NodeInspector",
   "// emit 'unlocked' NGAY SAU khi purchaseNode() thành công (KHÔNG đổi",
@@ -1893,8 +1880,6 @@
   "// root được chọn TRONG cây (element+route atomic commit), nên không",
   "// thể gate theo skill đang chọn (trước khi commit, player chưa có",
   "// skill elemental nào). Kiem Tu giữ nguyên — route chốt lúc chọn path.",
-  "// Kiem Tu + ca hai The Tu: cay co dinh cua path — luon hien, khong",
-  "// M6/M9 — module predicates are the discriminator; inside a",
   "<!-- Phap Tu element tabs (Task 16) — browse all 5 branches; the committed element is marked, others render locked. -->",
   "/* Fit-refactor đợt 5 — cột tree sâu wheel-scroll ẩn thanh (theme ẩn sẵn toàn cục), fade edge báo còn nội dung; ngân sách chiều cao do flex body. */",
   "/* Fit-refactor đợt 3 — card hẹp (< 900px theo CARD, không phải viewport) thì stack 3 cột thành khối dọc: mỗi cột co giãn theo nội dung thay vì ép cột trái 70px. Cột trái thành accordion ngang bằng flex-wrap chips. */",
@@ -2209,7 +2194,7 @@
   "/** * Bấm \"Bắt Đầu\" ở StageSelectPanel.vue — admission trước startSelectedStage (F07). * Chỉ khi startStage thành công mới đóng panel, emit pose, và vào combat UI. */"
  ],
  "src/composables/useBreakthrough.ts": [
-  "/** * R8.2 Slice 2 (AR-10): outcome authority lives in * BreakthroughOutcomeService (core) via the GameManager facade * `breakthroughWithConsequences`. This adapter keeps ONLY presentation: * the major-realm world announcement driven by the typed result. * Zero player-state writes remain here. * * Previously (2026-08-20) this composable owned the whole consequence * chain: realm passive sync, the phap_tu KC technique grant, artifact * awakening, and the banked artifact tier release. All migrated verbatim * to the domain service — behavior parity pinned by * BreakthroughOutcomeService.test.ts and the pre-existing * cultivationRitualFlow.integration tests. * * `gameManagerOverride` (Auto Đột Phá) — App.vue's tick() calls this * composable directly but is NOT inside its own provide() subtree (inject * would throw), so it passes its local GameManager instance. Every other * caller keeps the inject behavior. */",
+  "/** * R8.2 Slice 2 (AR-10): outcome authority lives in * BreakthroughOutcomeService (core) via the GameManager facade * `breakthroughWithConsequences`. This adapter keeps ONLY presentation: * the major-realm world announcement driven by the typed result. * Zero player-state writes remain here. * * Previously (2026-08-20) this composable owned the whole consequence * chain: realm passive sync, the spell KC technique grant, artifact * awakening, and the banked artifact tier release. All migrated verbatim * to the domain service — behavior parity pinned by * BreakthroughOutcomeService.test.ts and the pre-existing * cultivationRitualFlow.integration tests. * * `gameManagerOverride` (Auto Đột Phá) — App.vue's tick() calls this * composable directly but is NOT inside its own provide() subtree (inject * would throw), so it passes its local GameManager instance. Every other * caller keeps the inject behavior. */",
   "// Beta Phase 4 (World Announcement) — major-realm change is a"
  ],
  "src/composables/useBuildingHeaderState.ts": [
@@ -2500,7 +2485,7 @@
  "src/composables/useTurnCombatManual.ts": [
   "/** * Slice 7 (Completion Task 10 + master plan Task 5 hợp nhất) — cầu nối * reactivity giữa turn-based engine (GameManager/TurnBattle) và Vue cho * manual UI. Cầu nối duy nhất là stateVersion (App.vue tick + bumpState) * như các composable combat khác — KHÔNG setInterval/rAF riêng. * * ARCH-005 (M12): EVERY derived computed below reads stateVersion.value * directly — the engine mutates the TurnBattle object in place, so * `battle` resolves to the same reference forever and a computed * chained on it is never invalidated again after first eval (the skill * bar stayed invisible in live combat; 2026-09-14 audit). Same rule as * useTurnBattleInfo. */",
   "/** Bấm 1 slot role — chỉ khi đang pause chờ choice; slot không ready đã bị disable ở UI. */",
-  "// Kiem Tu Reimagined Task 7 — hien manual orb picker. When the player",
+  "// Kiem Tu Reimagined Task 7 — sword_pathway manual orb picker. When the player",
   "// Dao) its manualOptions() are the ONLY legal manual picks — the"
  ],
  "src/core/alchemy/AlchemySystem.test.ts": [
@@ -2558,7 +2543,7 @@
   "// Phẩm (cảnh giới tương quan) của pháp bảo hiện chưa có trục riêng —",
   "// thêm sau nếu design cần. Type/values giữ nguyên, chỉ label text.",
   "/** Tầng artifact mở khoá milestone này (1/3/6/12/18, doc §7.2). */",
-  "// realmRewards while ngo_dao — same base path id — deliberately has",
+  "// realmRewards while hidden_spell_pathway — same base path id — deliberately has",
   "// no artifact (fail-closed), and Kiếm Tu/Thể Tu keep no placeholder",
   "// (doc §10.1). Mọi call site phải đi qua resolver này thay vì",
   "/** * State cấp player — KHÔNG dùng array inventory vì mỗi nhân vật chỉ * có một bản mệnh (doc §10.2). Scope MVP dừng ở Trúc Cơ tầng 18 nên * `realmId` hiện luôn là 'foundation_establishment'; field vẫn giữ * dạng string (không literal) để mở path lên Kim Đan sau này không * phải đổi shape. */"
@@ -2594,7 +2579,7 @@
   "// trận bắt đầu — đổi hướng/nâng phẩm/element giữa trận chỉ có hiệu",
   "// lực từ trận kế, khớp đúng thiết kế (GameManager.setArtifactPath()/",
   "// tryUpgradeArtifactGrade() đã chặn đổi giữa combat).",
-  "/** Elements the artifact rotates through on activation. When this lane is * ported to the turn engine, derive from player.phapTu.element (a phap_tu * holder has exactly 1 element) — the equippedElements loadout authority * was retired in Task 14. */",
+  "/** Elements the artifact rotates through on activation. When this lane is * ported to the turn engine, derive from player.spellPath.element (a spell * holder has exactly 1 element) — the equippedElements loadout authority * was retired in Task 14. */",
   "/** Per-target ICD cho nhánh Khống (doc §8.4) — keyed theo targetId. */",
   "/** Số hit artifact đã trúng target này trong cửa sổ hiện tại (Ngũ Hành Phược, tầng 6). */",
   "/** ICD trước khi được phép áp Trói Chân lại lên CHÍNH target này — chặn root-lock. */",
@@ -2993,8 +2978,7 @@
   "// choang (stun — controls, no damage periodic) is a pure-utility",
   "// Utility ailment untouched — same instance, same remaining life.",
   "// Potency recomputed vs the caster's CURRENT stats — the enemy's",
-  "// all — both ailments are DoT so the detonate consumes them, and",
-  "// Direct packet floors at 1 + the fresh bong IS a DoT ailment —"
+  "// all — both ailments are DoT so the detonate consumes them, and"
  ],
  "src/core/battle/turn/TurnBattleSystem.dotSource.qa.test.ts": [
   "// entity.stats.maxHp and clamps currentHp — the fixture's declared vitals",
@@ -3162,7 +3146,6 @@
   "// Math.random inside CombatSystem — pin it high so the roll misses",
   "// runtime rng — pin that low so the supporter's proc succeeds",
   "// intended enemy — not ['enemy', 'enemy2'].",
-  "// The seed apply consumes one resolver roll (stream parity) — clear",
   "// on the raw damage amount — a saved holder must still counter.",
   "// Clear the seed-apply's resolver roll — the assertion below counts"
  ],
@@ -3277,7 +3260,7 @@
   "/** * Phap Tu An (Task 11) — multicast passive (ngo_dao_hon_don), attached * to the An basic def by the orchestrator. After an original/composite * or multicast-sourced execution of this skill completes, roll * `chance` via the injected rng — success queues one more execution * (source 'multicast'), which re-rolls its own pick and may roll again. * Total extra executions per cast are bounded by * min(maxExtraCasts, MAX_MULTICAST). */",
   "/** * The Tu Reimagined (plan Task 6/11) — multi-buff application contract * (replaces the singular appliesBuff). Each entry resolves its target * set at impact: * - 'self' -> the actor * - 'action_targets' -> declared.affected (the hit's resolved targets) * - 'allies_except_self' -> living same-side participants except actor * - 'all_enemies' -> living opposing-side participants * `durationOverride` is the pre-modifier base delivered to * BuffSystem.apply's M10 channel (node-scaled durations land here). * `externalWardGrant` marks a son_nhac_ho_the-style external ward pool * granted to the target (resolution: Task 11 external-ward contract). */",
   "/** * Legacy singular form (Kiem Tu combo payloads, Phap Tu empowered * ults, companion skills). Resolution normalizes * `appliesBuffs ?? [appliesBuff]` — 'target' means the action's * declared targets, `duration` is the base delivered to BuffSystem. */",
-  "/** * The Tu Reimagined (plan Task 6) — buff definitions applied to the * OWNER at participant build (the emblem-buff channel). The defs are * participant-local clones (node-adjusted via collectTheTuKitModifiers), * so they ride the def object itself, not a registry id. */",
+  "/** * The Tu Reimagined (plan Task 6) — buff definitions applied to the * OWNER at participant build (the emblem-buff channel). The defs are * participant-local clones (node-adjusted via collectBodyKitModifiers), * so they ride the def object itself, not a registry id. */",
   "/** * Phase A1 (2026-09-07) — chance-gated ailment application. * Deliberately separate from appliesBuff (unconditional, no chance * roll) — different semantics, do not merge the two fields. */",
   "/** * R3 (AR-03) — Multiple ailment applications on landed hit. */",
   "// Phase A3 — Pháp Tu Detonate: consume the target's stacks of this",
@@ -3337,7 +3320,6 @@
  ],
  "src/core/battle/turn/TurnStatusPresentationEvents.test.ts": [
   "// Phase A6 (9.5 #7) — turn-based status presentation feed. Fixture shape",
-  "// 'trung_doc' stays unregistered HERE — buffNameFor resolves its display",
   "// registry lane is overkill — durationOverride undefined lands the",
   "// Plain decay (stacks same, remainingTurns lower) must NOT emit —",
   "// filtered out of battle.enemies) — still target_dead."
@@ -3660,7 +3642,7 @@
  ],
  "src/core/combat/CombatSystem.manaShield.test.ts": [
   "// dexterity:0/evasionRate:0 — hit chance 100% đảm bảo, cùng lý do đã",
-  "// ghi trong BattleSystem.kiemTu.test.ts (calculateStats() tự cộng",
+  "// ghi trong BattleSystem.swordPath.test.ts (calculateStats() tự cộng",
   "// thêm evasionRate dẫn xuất từ dexterity).",
   "// Pháp Tu Redesign (magicpath) — \"linh lực giảm sát thương nhận vào\":",
   "// currentMp giảm sát thương theo %, phần giảm đó THẬT SỰ trừ vào mana",
@@ -4400,7 +4382,7 @@
  "src/core/equipment/EquipmentStatPolicy.ts": [
   "// Spec 2026-08-30-phap-tu-dao-sac §5 — windResistance/",
   "// lightningResistance đã xoá cùng element Phong/Lôi.",
-  "// are the_tu-domain stats — domain-gated data can't be authored",
+  "// are body-domain stats — domain-gated data can't be authored",
   "// Dùng chung bởi GameManager.catalogOps.registerEquipment() (validate 1 lần lúc",
   "// startup, TASK.md yêu cầu) VÀ EquipmentSystem.createInstance() (validate",
   "// lại lúc roll, phòng template lọt qua chưa đăng ký) — tránh 2 nơi tự copy",
@@ -4640,12 +4622,10 @@
   "// khi giết quái ẩn.",
   "/** * Cấp phần thưởng + loot khi quái chết (2026-08-24, tách khỏi * GameManager) — sở hữu: * - Session của trận đang diễn ra: ai nhận thưởng (RewardReceiver) và * PlayerData của người chơi (để roll chỉ số chính equipment rớt + * cộng skillInsight). Ephemeral — KHÔNG persist vào save. * - BattleRewardSummary tích luỹ trong trận hiện tại cho * CombatVictoryPanel/CombatDefeatPanel (reset mỗi trận MỚI qua * beginBattle()). * - grantResolvedDrops(): đồ rơi thẳng vào bag tương ứng ngay khi quái * chết — không có bước \"nhặt\" thủ công/loot window. Mỗi lần cộng * thành công đẩy 1 toast 'loot' vào NotificationQueue (Vue layer * drain mỗi tick). * - Drop-system (2026-09-12): QUYẾT ĐỊNH rơi gì thuộc resolveDrops() * (stage/family table + signature + modifiers) — hệ này chỉ orchestrate * cấp phát + notification, không tự roll thêm đường nào. */",
   "// Receiver để phát thưởng khi battle hiện tại kết thúc thắng —",
-  "// xem setSessionReceiver() và processDefeatedEnemies().",
   "// PlayerData của trận đang diễn ra — cần cho việc roll equipment",
   "// rớt ra (chỉ số chính scale theo cảnh giới người chơi).",
   "// Kênh drop hiện tại — 'active' mặc định; auto-farm idle bật 'idle'",
   "// qua setChannel() rồi khôi phục sau mỗi cycle (Task 9 wiring).",
-  "// Reset mỗi khi 1 TRẬN MỚI bắt đầu (startBattle) — xoá cả session.",
   "// startBattleWithPlayer() gọi sau beginBattle().",
   "/** * Nhiều quái có thể chết cùng lúc/liên tục (wave) -- quét TOÀN BỘ * `enemies` mỗi tick, cấp thưởng cho con nào vừa chết mà chưa * xử lý (rewardGranted là cờ chống lặp thưởng), rồi dọn khỏi mảng * in-place. Không còn gate theo battle.state === 'victory' như model * 1v1 cũ -- quái chết giữa chừng lúc battle vẫn 'fighting' vẫn phải * cấp thưởng ngay, không đợi cả trận kết thúc. * * `healTarget` (F3, 2026-09-13) is the entity heal-on-kill applies to: * a real battle passes its live player entity; the auto-farm idle * channel passes null (no player entity is fighting) instead of * standing a dead enemy in as `player`. */",
   "// Thiên phú Huyết Chiến — diệt quái hồi % max HP (plan §6). Đặt",
@@ -4875,7 +4855,7 @@
  "src/core/game/GameManager.castCount.test.ts": [
   "// 9.5 #9 — production wiring regression: turn-engine casts of the",
   "// through TurnBattleSystem.onSkillCast → SkillSystem.recordCast →",
-  "// intro + countdown + vài lượt fighting — tram là basic của kiem_tu.",
+  "// intro + countdown + vài lượt fighting — tram là basic của sword.",
   "// Chỉ cast của player chính được mirror — enemy 'generic_physical'",
   "// (và mọi actor khác) không bao giờ ghi vào đây."
  ],
@@ -4984,7 +4964,7 @@
  ],
  "src/core/game/GameManager.kiemPhoPreset.test.ts": [
   "// Kiem Tu Reimagined Task 7 — the setKiemPhoPreset op contract:",
-  "// PlayerData.kiemTu.preset (the persisted field — cursor/log never",
+  "// PlayerData.swordPath.preset (the persisted field — cursor/log never",
   "// qi_refining unlocks orb_dam only — orb_chem lands at realm index 2."
  ],
  "src/core/game/GameManager.kiemTuNguWay.test.ts": [
@@ -5002,7 +4982,7 @@
   "// The way itself is never refunded away — resetting the branch is"
  ],
  "src/core/game/GameManager.kiemTuState.test.ts": [
-  "// The kiem_tu resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep",
+  "// The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep",
   "// Kiem Tu Reimagined (spec 2026-09-15 K1/K3/K19) — path choice commits",
   "// Gate runs BEFORE the learned/exists check — precursor ids reject",
   "// — which coincidentally carries id 'tram' — is a separate def with",
@@ -5165,10 +5145,10 @@
   "// route — the round-4 transaction boundary requires it registered.",
   "// No element/route/The authority — an has none.",
   "// Dao passive via the technique's innateSkillId — equipped without slot.",
-  "// M6 — way membership is the discriminator (kiemTu.mode retired);",
+  "// M6 — way membership is the discriminator (swordPath.mode retired);",
   "// grants were verified — a missing template left the path committed",
   "// ngo_dao_chan_quyet.innateSkillId — its template must exist too.",
-  "// Kit statModifiers are domain:'phap_tu' — the way must claim that",
+  "// Kit statModifiers are domain:'spell' — the way must claim that",
   "// P14 review fix (HIGH-1 + integration gap) — the An composite pool must",
   "// tests drive the REAL production path — ritual -> startBattleWithPlayer",
   "// -> resolved participant — the same chain the browser pass crashed on.",
@@ -5482,10 +5462,8 @@
   "// Node levels (plan §6.8) - node modifiers derived from (registry,",
   "// combat-gate-teleport-autocast plan §9 - combatModifiers of the",
   "// (No technique currently declares combatModifiers — the old +2",
-  "/** * ARCH-002 (M7) — the STATIC partition of the aggregation: sources that * cannot change during a battle (technique tier, cultivation path, node * levels, equipped-technique combat modifiers). The battle entry ops * resolve the entity's baseStats from this list via * resolvePlayerFinalStats() — duration/stack-bound sources are excluded * on purpose so they reach combat ONLY through getLiveBattleModifiers() * (baking them into the resolved base would double-apply and re-leak * stale stacks between battles). */",
-  "/** * ARCH-002 (M7) — the LIVE partition: modifiers bound to runtime state * that can change mid-battle — the persistent buff pool (Kiep Thuong * debuffs et al), scaled passive-skill stacks (PassiveSystem mutates * stacks on combat events), timed effects and Phu/Tran sockets. * TurnBattleSystem reads this through its liveStatModifiers provider at * every effective-stat refresh; the menu mirror keeps showing the same * union via getAggregatedModifiers() + getActiveRuntimeModifiers(). */",
   "/** Fixed combat modifiers of the equipped technique (plan §9). */",
-  "/** * PLAN HOAN CHINH §5 rework (2026-08-20) - stat effects of the EQUIPPED * technique at its CURRENT tier (getTechniqueTier(), now computed from * techniqueExperience - the technique's own XP bar, see * TechniqueTier.ts). manaRegenIncreasePercent deliberately maps into * percent OF the manaRegenPerTurn stat (standard Increased, see * StatCalculator.ts's runPipeline) instead of %maxMp - %maxMp would * create a dependency cycle (maxMp is not computed yet at this merge * step). Task 3 (D17): MP-pool modifiers carry domain:'phap_tu' so the * Task-7 gate accepts them once maxMp/manaRegenPerTurn are gated. */"
+  "/** * PLAN HOAN CHINH §5 rework (2026-08-20) - stat effects of the EQUIPPED * technique at its CURRENT tier (getTechniqueTier(), now computed from * techniqueExperience - the technique's own XP bar, see * TechniqueTier.ts). manaRegenIncreasePercent deliberately maps into * percent OF the manaRegenPerTurn stat (standard Increased, see * StatCalculator.ts's runPipeline) instead of %maxMp - %maxMp would * create a dependency cycle (maxMp is not computed yet at this merge * step). Task 3 (D17): MP-pool modifiers carry domain:'spell' so the * Task-7 gate accepts them once maxMp/manaRegenPerTurn are gated. */"
  ],
  "src/core/game/GameManagerPillOps.ts": [
   "/** * Pill consumption (2026-08-24, plan §5.2) - ATOMIC: all validation + * apply succeed before the pill is removed from PillBag. Profession * pills (with realmId): exact-realm gate + 4 MVP effects; legacy pills * (no realmId) keep the old behavior. `random` injects the main-stat * roll. */",
@@ -5500,19 +5478,18 @@
   "/** * Phap Tu Redesign (magicpath) - purchase 1 ProgressionNode (LĨNH NGỘ, * 0->1). Calls the pure `purchaseNode()` (core/progression/NodeSystem.ts) * first - that function handles everything registry-free. Only * `unlocksSkillIds` still needs learnSkill() (skillTemplates live here). * Does NOT auto-equip the newly unlocked skill. * * §6.8 - no more Skill-instance mutation / player.modifiers push at * purchase: every effect is derived from (registry, nodeLevels) via * getAggregatedModifiers, always recomputed for the same deterministic * result. */",
   "// Phap Tu Reimagined (Task 6) — element roots commit through the",
   "// Kiem Tu Reimagined Task 11 (spec §5.4/§6) — Cuu Cung grants run",
-  "/** * Phap Tu Reimagined (Task 6) — the ONLY public writer of * player.phapTu.element. Atomic: validates eligibility + route + * root purchasability FIRST, then purchases the element root through * the generic NodeSystem primitive, applies unlock effects, and * finally commits { element, route }. Any failure leaves phapTu * untouched — element != null implies route != null always. */",
-  "// ngu_hanh-only — the WAY is the gate, so the post-M7 collapsed",
+  "/** * Phap Tu Reimagined (Task 6) — the ONLY public writer of * player.spellPath.element. Atomic: validates eligibility + route + * root purchasability FIRST, then purchases the element root through * the generic NodeSystem primitive, applies unlock effects, and * finally commits { element, route }. Any failure leaves spellPath * untouched — element != null implies route != null always. */",
   "// spends insight + commits { element, route } — a missing template",
   "/** * Upgrade a comprehended node by +1 level with Cam Ngo (§6.2) - cost * per node data; cannot exceed maxLevel; failure mutates nothing. */",
   "/** * Dev-reset a branch (§6.10) - refunds exactly the total Cam Ngo spent * (derived from level/cost data), cascades orphan child nodes; modifiers * update via the aggregators (no reverse subtraction of old modifiers). */",
   "/** * Phap Tu Reimagined Task 4 — switch the route commitment. Out of * combat ONLY: a route is static during battle (INV-16), so this * rejects while a turn battle is active. The domain function owns * the 75% refund + route-tagged level cleanup. */",
-  "// (element, route) commit on the normal phap_tu path — otherwise",
+  "// (element, route) commit on the normal spell path — otherwise",
   "/** * skill-insight-and-auto-combat-hud-plan.md §5 - upgrade a skill with * Skill Insight, pure passthrough to SkillSystem (already has * skillManager via its own constructor, needs nothing else here). */",
   "/** * PLAN HOAN CHINH §2 - spend 1 attributePoint into EXACTLY 1 Main Stat. * No-op (returns false) when out of points or the stat hit the current * major-realm cap (getMainStatCap()) - cap is per-stat, there is NO * shared cap across all 5 (per the doc's \"Nguyen tac\" §2). */",
   "/** * PLAN HOAN CHINH §8/12 - \"Set Skill into Loadout\" (tier 4), fully * separate from learnSkill()/purchaseNode() (tier 3, \"learn\"). * skillId === null CLEARS that slot (unequips the occupant if any). * slotIndex is validated against realm progression HERE (not in * SkillSystem - the pure domain does not know realms). */",
   "// Kiem Tu Reimagined K3 — mortal precursor skills are pre-path only:",
-  "/** * Kiem Tu Reimagined (spec §6) — write the hien preset. Persisted on * PlayerData.kiemTu.preset; the battle cursor/log are runtime-only and * never persist. Out-of-combat only: a mid-battle rewrite would desync * the provider's snapshotted preset from PlayerData. */",
-  "// M6 — way membership is the gate (the retired kiemTu.mode",
+  "/** * Kiem Tu Reimagined (spec §6) — write the sword_pathway preset. Persisted on * PlayerData.swordPath.preset; the battle cursor/log are runtime-only and * never persist. Out-of-combat only: a mid-battle rewrite would desync * the provider's snapshotted preset from PlayerData. */",
+  "// M6 — way membership is the gate (the retired swordPath.mode",
   "/** * Combat AI strategy (plan §10) - PlayerData is the single source of * truth; the UI keeps no state of its own. Validated through the shared * isCombatAiStrategy(); returns false on a bad value. Saved via the * existing save scheduling (autosave/visibilitychange) after the UI * bumpState(). */"
  ],
  "src/core/game/GameManagerQuestOps.ts": [
@@ -5527,8 +5504,8 @@
   "// 9.8 — quest reward material tràn túi → push toast qua sink."
  ],
  "src/core/game/GameManagerRealmAdvanceOps.ts": [
-  "/** * Kiem Tu Reimagined (spec K15) — Ngu Kiem Dao breakthrough merge. * Call ONCE per major-realm advance, AFTER the realmId write: the * forged swords fold into kiemDaoBase and the live count resets to 1 * (banked Kiem Y carries into the new realm's forgeCost). No-op for * hien / non-kiem-tu players. */",
-  "// M6 — way membership is the discriminator (kiemTu.mode retired).",
+  "/** * Kiem Tu Reimagined (spec K15) — Ngu Kiem Dao breakthrough merge. * Call ONCE per major-realm advance, AFTER the realmId write: the * forged swords fold into kiemDaoBase and the live count resets to 1 * (banked Kiem Y carries into the new realm's forgeCost). No-op for * sword_pathway / non-sword players. */",
+  "// M6 — way membership is the discriminator (swordPath.mode retired).",
   "/** * R8.2 Slice 2 (AR-10): facade for the minor-realm breakthrough outcome * chain. The service owns all consequences (passive sync, banked * artifact release, and the documented-dead major-realm branches); * this orchestrator only delegates (A5 — no formula logic here). * `player` must be the Pinia store instance, NOT `store.$state` * (same absent-key write semantics as TribulationOutcomeService). */",
   "// M2 — the (path, way) pair resolves its way definition from the",
   "// cultivationPath — a missing template must fail the whole choice,",
@@ -5537,7 +5514,7 @@
   "// precursor basics (NOT unlearn — a Pham Nhan save can still use",
   "// Phap Tu Reimagined (Task 6) — no auto-Fire starter: choosing",
   "// Spec dot-pha-loi-kiep §4.2 - the \"perfect Pham Nhan\" snapshot",
-  "// M6 — NO applyKiemTuRealmTransition here: ngu can now be picked at",
+  "// M6 — NO applySwordPathRealmTransition here: hidden_sword_pathway can now be picked at",
   "// assumption is false. The slice was JUST created (kiemDaoCount 1 —",
   "/** * Ban Menh Phap Bao (doc §7.1) - choose/switch the Cong/Thu/Khong * direction. Switchable MULTIPLE times outside combat (unlike * chooseCultivationPath() above - that is permanent, this is a \"free * out-of-combat swap for testing\"). Keeps EXP/tier/grade, applies from * the next battle (runtime artifact snapshot at battle start; not * re-read mid-fight). Does NOT use window.confirm - unlike * QuanKhiPanel.vue (that choice is irreversible, this one is not). */",
   "/** * Ban Menh Phap Bao (doc §5.3) - upgrade grade with Doan Bao Thach, * OUTSIDE combat only (the real transaction lives in the pure-core * tryUpgradeArtifactGrade() - the combat guard is enforced HERE, not * just in the UI). */"
@@ -5681,8 +5658,8 @@
   "// Adapter chuyển CombatEntity (đã có từ playerToCombatEntity/",
   "// enemyToCombatEntity) thành TurnBattleParticipant, đọc speed THẬT từ",
   "// Stat System (stats.speed, đã rename ở conversion trước).",
-  "/** * Kiem Tu Reimagined (Task 6) — the buildId special/ultimate maps were * removed: hien Kiem Pho has no special/ult (the preset IS the kit) and * ngu emblems arrive via resolvedSpecialUltimate (Task 9). The legacy * Bạt Kiếm/Kiếm Trận kit they pointed at retires in Task 12. */",
-  "/** Task 20 — the_tu_an proc-fuel cap (MAX_THE + node bonus); stamped * onto the entity here so every Thế transaction clamps via * `entity.maxThe ?? MAX_THE` (TheEconomy.theCap). */",
+  "/** * Kiem Tu Reimagined (Task 6) — the buildId special/ultimate maps were * removed: sword_pathway Kiem Pho has no special/ult (the preset IS the kit) and * hidden_sword_pathway emblems arrive via resolvedSpecialUltimate (Task 9). The legacy * Bạt Kiếm/Kiếm Trận kit they pointed at retires in Task 12. */",
+  "/** Task 20 — hidden_body proc-fuel cap (MAX_THE + node bonus); stamped * onto the entity here so every Thế transaction clamps via * `entity.maxThe ?? MAX_THE` (TheEconomy.theCap). */",
   "// and is a READ-ONLY CACHE — the engine re-syncs it from",
   "// stat-system-reimagined review fix (2026-09-15) — the caller",
   "// resolveActiveWayStatDomains so the WAY — not the raw path id —",
@@ -5745,7 +5722,7 @@
   "// Trọng số 55/100 vs 1/100 — biên đủ rộng để không flaky."
  ],
  "src/core/kiem-tu/invariants.test.ts": [
-  "// The kiem_tu resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep",
+  "// The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep",
   "// Kiem Tu Reimagined Task 13 — spec 2026-09-15 §10 invariant suite.",
   "// invariant. These codify Tasks 1-12 — they intentionally overlap the",
   "// be rejected on restore — the two sets must never drift.",
@@ -5772,7 +5749,7 @@
   "// Log cleared — a 4th cast starts fresh."
  ],
  "src/core/kiem-tu/KiemPhoProvider.ts": [
-  "// Kiem Tu Reimagined Task 6 — the hien (Kiem Pho) DynamicBasicProvider.",
+  "// Kiem Tu Reimagined Task 6 — the sword_pathway (Kiem Pho) DynamicBasicProvider.",
   "// in closure — A3: never on PlayerData, never persisted. Auto-repeat",
   "// preset (spec §4.1: cursor starts at slot 1, log empty).",
   "// Spec §4.2 default: same target as the completing cast — 'single'",
@@ -5789,7 +5766,7 @@
  ],
  "src/core/kiem-tu/KiemPhoSystem.ts": [
   "// Kiem Tu Reimagined Task 4 (spec 2026-09-15 §4) — KiemPhoSystem: the",
-  "// persisted on PlayerData.kiemTu.preset, the cursor/log are not — each",
+  "// persisted on PlayerData.swordPath.preset, the cursor/log are not — each",
   "// The combo TABLE is data (Task 5, data/skill/KiemPhoCombos.ts) — this",
   "/** Spec §4.2 — combo definition shape. `presetId` is REQUIRED and * unique per combo: the fired payload is the ONLY discovery signal * (K11/INV-7) — two combos sharing a preset are indistinguishable. * `name` is a data/debug label ONLY — K11 forbids surfacing it in * combat presentation (no combo id resolves to display text). */",
   "/** Resolved buff collection — a combo may carry several authored * buffs and multiple capstone modifiers may each contribute one. * Entries with the same definitionId merge their stacks. */",
@@ -5797,32 +5774,22 @@
   "/** 0-based auto-cast cursor — each battle starts at 0. */",
   "/** K12 — combo length cap by realm: <3→3, 3..5→4, >=6→5. realmIndex is * the existing 0-based index (mortal=0, qi_refining=1, ...). */",
   "/** Preset legality (spec §6): 1..9 orbs, every orb unlocked at the * player's realm. Enforced by the setKiemPhoPreset op (Task 7). */",
-  "/** Battle-start snapshot. Hien-only — callers must check * isKiemTuHien(player) before constructing (M6: way membership). */",
+  "/** Battle-start snapshot. Hien-only — callers must check * isSwordPathway(player) before constructing (M6: way membership). */",
   "/** Auto-cast pick (spec §4.1): preset[cursor], cursor advances mod * preset.length. Manual picks do NOT call this — they leave the cursor * where auto left it. */",
   "/** Append the cast orb to the log, then longest-first tail-match down * to len 3, capped by realmComboMax. First match fires and CLEARS the * whole log — a combo can never chain into a second combo on the same * cast (one fire per cast by construction, spec §4.1). * * `combos` is the authored table — injected, not imported (A6). * `modifiers` are the purchased-node capstone hooks (spec §4.2): on a * match they run sorted `priority ASC, nodeId ASC`, each `apply` * receiving the running DERIVED copy — the canonical table entry is * never mutated. */"
  ],
  "src/core/kiem-tu/KiemTuPath.ts": [
   "// Cultivation Path Framework (spec 2026-09-16, M6) — the Kiem Tu path",
-  "// hien — Kiem Pho (preset-combo): the orb preset lives on",
-  "// ngu — Ngu Kiem Dao (hidden): ritual-only entry gated by tram Lv3,",
-  "// player.kiemTu slice — ngu was NEVER a separate path id (the old",
+  "// sword_pathway — Kiem Pho (preset-combo): the orb preset lives on",
+  "// hidden_sword_pathway — Ngu Kiem Dao (hidden): ritual-only entry gated by tram Lv3,",
+  "// player.swordPath slice — hidden_sword_pathway was NEVER a separate path id (the old",
   "// Dependency direction: this file is a leaf — it never imports back",
   "/** * Structural read shape for the way predicates — PlayerData and the * presentation-side player slices (e.g. KiemBarPlayerState) both * satisfy it; the fields stay nullable because slices keep the * persisted `| null` convention. */",
-  "/** * M8 — the module-owned state-slice factory, invoked by * CultivationPathSystem.applyPathChoice via the module contract * (createInitialState). The canonical fresh player.kiemTu is * way-agnostic: the Kiem Y / Kiem Dao fields start at ngu's defaults * and hien simply never reads them. */",
-  "/** * hien membership — the gate for ALL Kiem Pho machinery: the preset * write op (setKiemPhoPreset), the KiemPho dynamicBasic provider, the * preset HUD/editor surfaces, and the hien node subtree. * * Reads the RAW fields, same contract as NodeSystem.nodeWayApplies: * cultivationWay is authoritative once the ritual writes it. A * legacy-shaped player (cultivationPath only, no way) is NOT hien — * the gate fails closed so way machinery never runs for a state the * path authority did not commit. */",
-  "/** * ngu membership — the gate for the hidden way's machinery: the * NguKiemDao economy (gainKiemY/grantKiemDao/merge), the * NguKiemDaoProvider attach, the kiemDaoBelowCap prereq, and the ngu * node subtree. kiem_tu never had a hidden-variant path id, so a * single era exists: ('kiem_tu', 'ngu') — the WAY id is the check. */",
-  "// Way definitions — consumed by CULTIVATION_PATH_MODULES.kiem_tu.ways in",
-  "// Kiem Tu Reimagined (spec 2026-09-15) — no authored skill grants:",
-  "// M9 — the ritual strips the mortal precursor skills from the loadout",
-  "// M7 — the facet declares domain OWNERSHIP only (resolveActiveWayStatDomains",
-  "// Ritual-only entry, permanent, FREE — the exact port of the retired",
-  "// never enter ngu — there is no mid-progression flip any more.",
-  "// M9 — same mortal-precursor strip as hien.",
-  "// M7 — same shared-domain facet as hien: 'kiem_tu', no totals-driven"
+  "/** * M8 — the module-owned state-slice factory, invoked by * CultivationPathSystem.applyPathChoice via the module contract * (createInitialState). The canonical fresh player.swordPath is * way-agnostic: the Kiem Y / Kiem Dao fields start at hidden_sword_pathway's defaults * and sword_pathway simply never reads them. */"
  ],
  "src/core/kiem-tu/KiemTuPath.way.test.ts": [
   "// Cultivation Path Framework — M6: Kiếm Tu way-normalisation contract",
-  "// tests. kiem_tu never had a hidden-variant path id — BOTH ways"
+  "// tests. sword never had a hidden-variant path id — BOTH ways"
  ],
  "src/core/kiem-tu/KiemTuState.ts": [
   "// Kiem Tu Reimagined (spec 2026-09-15 K1/K6/K14) — the ONE canonical",
@@ -5855,7 +5822,7 @@
   "// selectAction must fall through to basic — emblem slots are display markers."
  ],
  "src/core/kiem-tu/NguKiemDaoProvider.ts": [
-  "// Kiem Tu Reimagined Task 9 (spec §5.2) — the ngu (Ngu Kiem Dao)",
+  "// Kiem Tu Reimagined Task 9 (spec §5.2) — the hidden_sword_pathway (Ngu Kiem Dao)",
   "// kiemDaoCount from PlayerData EVERY cast — a mid-battle forge is",
   "// Roll Cascade (spec §5.2) resolves per sword instance against the",
   "// Roll 1 (a): execute — hp% < min(0.5, 0.1 * realmIndex) → ×EXECUTE_MULT",
@@ -5864,7 +5831,7 @@
   "// guaranteedHit is unconditional — phi kiem never miss.",
   "/** * Purchased nodes → cascade unlocks (spec §5.2 a/e/d). Effect-driven: * any node carrying `effect.cascadeUnlock` contributes its slot — the * authored ids live in KiemTuNodes data, not here. */",
   "// M3 — the way-membership gate applies here too (this collector",
-  "// ngu owns no battle-scoped cursor/log — nothing to reset.",
+  "// hidden_sword_pathway owns no battle-scoped cursor/log — nothing to reset.",
   "// +1 Kiem Y per resolved cast — the domain owner call lives HERE"
  ],
  "src/core/material/Material.ts": [
@@ -5955,16 +5922,16 @@
  ],
  "src/core/phap-tu/PhapTuPath.ts": [
   "// Cultivation Path Framework (spec 2026-09-16, M4) — the Phap Tu path",
-  "// ngu_hanh — ordinary Phap Tu (kit dai_ngu_hanh_chan_quyet): the",
+  "// spell_pathway — ordinary Phap Tu (kit dai_ngu_hanh_chan_quyet): the",
   "// authority — INV-13 atomic commit unchanged).",
   "// ngo_dao — Phap Tu An (kit ngo_dao_chan_quyet): hidden way offered",
   "// Dependency direction: this file is a leaf — type-only imports only.",
-  "// feeds MP through the phap_tu domain gate — the path's own conversion",
-  "/** * The phap_tu-domain attunement -> MP modifier pair. Shared by the way * stat facet (assembly-time emission, id prefix 'phap_tu:attunement') * and the 'phap_tu' domain deltaDeriver registered in * CultivationPathSystem (mid-battle deltas, prefix * 'phap_tu:attunement_delta') — one emitter, two channels (INV-10). */"
+  "// feeds MP through the spell domain gate — the path's own conversion",
+  "/** * The spell-domain attunement -> MP modifier pair. Shared by the way * stat facet (assembly-time emission, id prefix 'spell:attunement') * and the 'spell' domain deltaDeriver registered in * CultivationPathSystem (mid-battle deltas, prefix * 'spell:attunement_delta') — one emitter, two channels (INV-10). */"
  ],
  "src/core/phap-tu/PhapTuPath.way.test.ts": [
   "// Cultivation Path Framework (M4+M7, spec 2026-09-16, audit R6) — way",
-  "/** Dirty ngo_dao state — an element/route pair that could only leak in * through corruption (ngo_dao owns no phapTu commitment). */",
+  "/** Dirty ngo_dao state — an element/route pair that could only leak in * through corruption (ngo_dao owns no spellPath commitment). */",
   "// Legacy-shaped (path only, no way) fails closed — the authority"
  ],
  "src/core/phap-tu/PhapTuRoutes.test.ts": [
@@ -5987,18 +5954,17 @@
   "// ailment's remaining tick damage (flat — it does NOT scale with The",
   "// coeff) — balance owns the slope, not diminishing by design.",
   "// StatDomain gate. Ailment-potency lines use `flat` absolutes — percent",
-  "/** * Route profile for a PhapTuState — NEUTRAL when there is no state or * no route (INV-11). ngo_dao players never reach this: route state * is not theirs. */",
+  "/** * Route profile for a SpellPathState — NEUTRAL when there is no state or * no route (INV-11). hidden_spell_pathway players never reach this: route state * is not theirs. */",
   "/** * EffectiveSkill seam: multiplies every damage effect/trigger value by * directMultiplier and every debuff ailmentChance by * ailmentChanceFactor. The result still flows through the existing * +elementApplicationPercent / [0,1] clamp in resolveAilmentApplicationChance - * no second clamp here. Never fakes +1 stack by injecting an add_stack * effect — stack semantics stay in applyRouteToTurnSkill. */",
-  "/** * Post-conversion seam: adds ailmentStackBonus onto the built * TurnSkillDefinition's ailment applications. Called by the * orchestration site AFTER toTurnSkillDefinition — the converter never * sees RouteProfile. */",
   "// Mission C Task 10c — an omitted stacks means 1 by engine default",
   "/** * Route stat modifiers for the character modifier pipeline — injected * next to getCultivationPathStatModifiers() in BOTH static aggregators * (menu + battle base). Route can't change mid-battle, so these never * enter getLiveBattleModifiers(). */",
   "// Review fix (HIGH-2): route bonuses are universal stats — gate on the",
-  "// M4 (R6): the WAY is the gate — a collapsed ('phap_tu','ngo_dao')",
-  "/** * Task 8 — the The-cap query (ownership chain: player.nodeLevels -> * here -> CombatEntity.maxThe battle snapshot -> engine clamp). * MAX_THE + active `truong_the_<element>` contribution (theCapPerLevel * x node level, route/element-gated like every other node effect). * Query-derived, never persisted on PlayerData. Non-phap_tu players — * incl. Bat Kiem — get MAX_THE. */",
-  "// M4 (R6): the The pool is ngu_hanh machinery — ngo_dao has no The"
+  "// M4 (R6): the WAY is the gate — a collapsed ('spell','hidden_spell_pathway')",
+  "/** * Task 8 — the The-cap query (ownership chain: player.nodeLevels -> * here -> CombatEntity.maxThe battle snapshot -> engine clamp). * MAX_THE + active `truong_the_<element>` contribution (theCapPerLevel * x node level, route/element-gated like every other node effect). * Query-derived, never persisted on PlayerData. Non-spell players — * incl. Bat Kiem — get MAX_THE. */",
+  "// M4 (R6): the The pool is spell_pathway machinery — ngo_dao has no The"
  ],
  "src/core/phap-tu/PhapTuState.ts": [
-  "/** * M9 — the atomic {element, route} commit (INV-13) is owned HERE, on * the state authority, not inline in the orchestrator: every writer of * player.phapTu goes through this so the pair can never half-commit. */"
+  "/** * M9 — the atomic {element, route} commit (INV-13) is owned HERE, on * the state authority, not inline in the orchestrator: every writer of * player.spellPath goes through this so the pair can never half-commit. */"
  ],
  "src/core/pill/Pill.ts": [
   "// Path ảnh minh hoạ — khai NGAY TRÊN data item (2026-08-15), xem",
@@ -6068,37 +6034,34 @@
   "// bậc Kiến Cơ) — KHÔNG được uống trực tiếp."
  ],
  "src/core/player/CultivationPathContract.test.ts": [
-  "/** * Cultivation Path Framework contract runner (M10, spec §28) — * `runCultivationPathContractTests(module)` applies the structural way * contract to every registered path module, so a NEW path/way is held * to the same shape the moment it is added to the catalog. * * Also pins the node-side wiring: way ids are PATH-SCOPED ('hien' * exists under both kiem_tu and the_tu), so a node carrying * `requiredWay` must also carry `requiredCultivationPath`, and the * pair must resolve in the catalog — otherwise a way-gated node would * open to a same-named way on the wrong path. */"
+  "/** * Cultivation Path Framework contract runner (M10, spec §28) — * `runCultivationPathContractTests(module)` applies the structural way * contract to every registered path module, so a NEW path/way is held * to the same shape the moment it is added to the catalog. * * Also pins the node-side wiring: way ids are globally unique but * still PATH-OWNED ('sword_pathway' belongs to the sword module * alone), so a node carrying `requiredWay` must also carry * `requiredCultivationPath`, and the * pair must resolve in the catalog — otherwise a way-gated node would * open to a same-named way on the wrong path. */"
  ],
  "src/core/player/CultivationPathKit.test.ts": [
   "// Cultivation Path Framework (spec 2026-09-16, M1+M7) — the kit catalog"
  ],
  "src/core/player/CultivationPathKit.ts": [
-  "// M4 — the ngo_dao kit identity lives in the Phap Tu path module",
+  "// M4 — the hidden_spell_pathway kit identity lives in the Phap Tu path module",
   "// Pháp Tu Redesign (magicpath, 2026-08-18) — 5 path Ngũ Hành cũ",
-  "// (phap_tu_hoa/moc/thuy/kim/tho) đã GỘP thành 1 \"phap_tu\" duy nhất",
+  "// (phap_tu_hoa/moc/thuy/kim/tho) đã GỘP thành 1 \"spell\" duy nhất",
   "// (mục 1 magicpath: \"Pháp Tu không còn được thiết kế thành nhiều hệ",
   "// nguyên tố tách biệt\"). Kiếm Tu vẫn đứng RIÊNG (nhánh song song, cơ",
   "// chế kit cố định KHÁC hẳn — chưa đi qua Element/Node Tree). Thêm giá",
   "// trị mới khi Thể Tu được thiết kế sau này — KHÔNG BAO GIỜ tái cấu",
   "// trúc union này, chỉ mở rộng thêm string.",
   "// Cultivation Path Framework (spec 2026-09-16, M7) — the persisted",
-  "// Path-scoped way id (content string, like node ids — spec §24).",
-  "// huy_quyen Lv3; ngu's tram Lv3 — exact port of the kiem_tu_an node's",
+  "// huy_quyen Lv3; hidden_sword_pathway's tram Lv3 — exact port of the kiem_tu_an node's",
   "// Cultivation Path Framework (spec 2026-09-16, M4) — a way's stat",
   "// StatModifiers BEFORE calculateStats runs — the D12 assembly-time",
   "// M8 — the way's MID-BATTLE domain delta channel (INV-10): each",
   "// Cultivation Path Framework (spec 2026-09-16, M1) — PathWayDefinition",
-  "// node). Optional — only the hien ways of Kiem Tu / The Tu declare",
+  "// node). Optional — only the base ways of sword / body declare",
   "// Tam Phap merge (2026-08-15) — ONE technique, auto-learned+equipped",
-  "// choice (slot index = array position). M9 — the ngo_dao kit rides",
+  "// choice (slot index = array position). M9 — the hidden_spell_pathway kit rides",
   "// commit — the mortal-precursor strip. Declared per way so the",
   "// Ritual offer gate — consumed by isCultivationPathOffered, the",
   "// M9 — the offer panel renders this way as a sealed hidden-path card",
-  "// (currentThe/maxThe on CombatEntity). UI never checks path ids —",
   "// M4 — totals-driven stat contribution (the D12 assembly channel):",
   "// Module-level declaration, never persisted. M7 — every way declares",
-  "// M1 — one module per base path; ways keyed by PathWayId.",
   "// e.g. 'Kiếm Tu'",
   "// M8 — optional path-state slice factory, invoked by applyPathChoice",
   "// M4 — the way definitions live in the path module",
@@ -6117,7 +6080,7 @@
  ],
  "src/core/player/CultivationPathRegistry.ts": [
   "/** * Mission C Task 9 (spec C4, audit T5-44) — the SINGLE dispatch site for * cultivation-path combat integration. Every isKiemTuX / isPhapTuX / * isTheTuX branch that used to live in GameManager/GameManagerTurnBattleOps * resolves here into a CultivationPathRuntime; the battle orchestrator * consumes the interface only (architecture guard: * tests/architecture/battleLifecyclePathBoundary.test.ts). * * The factory bodies are the moved GameManager resolvers * (resolvePlayerBasicAttack / resolvePlayerSpecialUltimate / * resolveTheTuKit / resolveTheTuAnKit / authoredBasicSkillId / * assertNgoDaoKitLearned / applyPhapTuTheGains / applyPhapTuEmpowerment / * resolveAnElementBasicPool / buildTheTuBatTuSurvival) — relocated * verbatim modulo `this.` -> deps, per the plan's move-don't-rewrite rule. */",
-  "/** * Review round-4 (MEDIUM) — the ngo_dao kit is a fixed three-skill * set granted atomically at the ritual (PHAP_TU_AN_REQUIRED_SKILLS is * the single authority). A save/registry missing ANY member is corrupt * progression state — fail loudly at battle build instead of silently * dropping the special button or the dao multicast. Called from both * battle-build resolvers so each enforces the contract independently. */"
+  "/** * Review round-4 (MEDIUM) — the hidden_spell_pathway kit is a fixed three-skill * set granted atomically at the ritual (HIDDEN_SPELL_REQUIRED_SKILLS is * the single authority). A save/registry missing ANY member is corrupt * progression state — fail loudly at battle build instead of silently * dropping the special button or the dao multicast. Called from both * battle-build resolvers so each enforces the contract independently. */"
  ],
  "src/core/player/CultivationPathRuntime.test.ts": [
   "// Mission C Task 9 — the path-runtime boundary is the ONLY dispatch site"
@@ -6125,8 +6088,8 @@
  "src/core/player/CultivationPathRuntime.ts": [
   "/** * Mission C Task 9 (spec C4, audit T5-44) — the cultivation-path combat * boundary. GameManagerTurnBattleOps consumes THIS interface; it never * branches on path/way identity. Dispatch lives exclusively in * CultivationPathRegistry (the path-authority dir per the * cultivationPathIsolation architecture guard). */",
   "/** The battle basic — authored Skill pipeline, kit slot, or generic melee. */",
-  "/** * Kit slots or emblem markers for special/ultimate. Carries the full * shape TurnBattleAdapter stamps onto the participant — dropping * reactivePayloads/maxThe deletes the the_tu_an reactive channel. */",
-  "/** * Kiem Tu hien/ngu dynamic-basic provider — undefined for other paths. * `rng` is the session battle RNG (Mission C Task 8): provider-side * rolls (Ngu cascade-crit/pierce) must not fall back to Math.random. */",
+  "/** * Kit slots or emblem markers for special/ultimate. Carries the full * shape TurnBattleAdapter stamps onto the participant — dropping * reactivePayloads/maxThe deletes the hidden_body reactive channel. */",
+  "/** * Kiem Tu sword_pathway/hidden_sword_pathway dynamic-basic provider — undefined for other paths. * `rng` is the session battle RNG (Mission C Task 8): provider-side * rolls (Ngu cascade-crit/pierce) must not fall back to Math.random. */",
   "/** * The resolver deps slice the path factories need — supplied by * GameManager (it owns the skill/progression registries, A3). */"
  ],
  "src/core/player/CultivationPathSystem.test.ts": [
@@ -6134,7 +6097,7 @@
   "// domain gate — emitted once at assembly from resolved attribute totals,"
  ],
  "src/core/player/CultivationPathSystem.ts": [
-  "// feeds MP through the phap_tu domain gate. M4 — the emitter and its",
+  "// feeds MP through the spell domain gate. M4 — the emitter and its",
   "// M8 — mid-battle domain delta derivers are MODULE-DECLARED on each",
   "// domain (resolveActiveWayStatDomains), never the base — INV-10 holds:",
   "// Cultivation Path Framework (spec 2026-09-16, M2) — path/way authority.",
@@ -6192,7 +6155,7 @@
   "// Phap Tu Reimagined (spec 2026-09-14) — persistent path-choice",
   "// holders carry the same inert shape — the (path, way) pair, not",
   "// Kiem Tu Reimagined (spec 2026-09-15 K1) — the ONE canonical path",
-  "// ritual; way membership lives on cultivationWay ('hien'|'ngu') —",
+  "// ritual; way membership lives on cultivationWay ('sword_pathway'|'hidden_sword_pathway') —",
   "// Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,",
   "// KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —",
   "// Tu vi tích được suốt đời save (đếm dồn, KHÔNG BAO GIỜ giảm — khác",
@@ -6319,7 +6282,7 @@
   "// con (`skillCastCounts[skillId] = ...`) sau khi store đã khởi",
   "// tạo, nên object chứa PHẢI tồn tại sẵn làm key reactive từ đầu.",
   "/** * ARCH-002 (M7) — the single raw -> resolved stat assembly for the player. * Extracted from the player store's `finalStats` getter so the battle entry * path can resolve the same value WITHOUT reading the store's * `externalModifiers` mirror (a per-tick cache that can hold stale * battle-scoped modifiers — the ARCH-002 leak channel). * * `externalModifiers` here is the caller-provided modifier list: the store * passes its mirror field; the battle ops pass the fresh static aggregation * (`GameManagerPersistentEffectOps.getBattleBaseModifiers`). */",
-  "// The Tu channels the same way — hien's vitality->enduranceThreshold",
+  "// The Tu channels the same way — body_pathway's vitality->enduranceThreshold",
   "/** * Chuyển PlayerData thành CombatEntity để đưa vào BattleSystem. * `stats` phải là finalStats đã tính sẵn (baseStats + modifiers + * externalModifiers) — hàm này KHÔNG tự gọi calculateStats, để * tránh phụ thuộc ngược vào StatCalculator theo 2 cách khác nhau * tại 2 nơi (store đã có finalStats getter, dùng lại luôn). * * currentHp luôn khởi tạo bằng maxHp: giống enemyToCombatEntity(), * PlayerData không lưu HP giữa các trận — HP là state \"sống\" chỉ * tồn tại trong lúc battle đang diễn ra (do BattleSystem quản lý), * không phải state cần persist vào save file. */",
   "// Vô cực — \"chưa từng bị đánh\" lúc trận vừa bắt đầu, để Ward có",
   "// thể hồi ngay từ đầu trận thay vì phải chờ 1 khoảng WARD_REGEN_",
@@ -6706,7 +6669,7 @@
  "src/core/progression/NodeSystem.route.test.ts": [
   "// Phap Tu Reimagined Task 4 — routeTag gating + switchRoute refund.",
   "// Review fix (HIGH-2) — switchRoute is the ONLY remaining writer of",
-  "// selectPhapTuElement — and a non-phap_tu player's dirty route state",
+  "// selectSpellPathElement — and a non-spell player's dirty route state",
   "// Task 16 — the respec confirm dialog's \"regain X, lose Y\" numbers come",
   "// untagged — not counted",
   "// Preview mutated nothing — the switch then refunds the same amount.",
@@ -6751,7 +6714,7 @@
   "// is deducted or the node recorded. Mortal realm (index 0) fails —",
   "/** Prerequisite (chỉ gate việc LĨNH NGỘ level 0→1, không gate nâng cấp). */",
   "/** * Phap Tu Reimagined Task 4 — route membership: a routeTag node only * exists while the player's route matches (untagged nodes are always * active). Aggregators skip inactive-route nodes and purchase/upgrade * reject them, so an inactive node's levels can never take effect. */",
-  "/** * Phap Tu Reimagined Task 6 — element-branch membership: a node with * elementTag is active only while phapTu.element matches (untagged * nodes are always active). Same gate points as routeTag: aggregators * skip inactive-element nodes, purchase/upgrade reject them. While * phapTu.element is null (pre-selection) every element node counts as * active so selectPhapTuElement can purchase its root — unreachable * branch children still fail their root prerequisite. */",
+  "/** * Phap Tu Reimagined Task 6 — element-branch membership: a node with * elementTag is active only while spellPath.element matches (untagged * nodes are always active). Same gate points as routeTag: aggregators * skip inactive-element nodes, purchase/upgrade reject them. While * spellPath.element is null (pre-selection) every element node counts as * active so selectSpellPathElement can purchase its root — unreachable * branch children still fail their root prerequisite. */",
   "/** Đủ điều kiện LĨNH NGỘ (0→1): chưa có level, đủ prereq, đủ Cảm Ngộ cost cấp 1. */",
   "// Kiem Tu Reimagined — a hidden node is never purchasable before its",
   "/** Đủ điều kiện NÂNG CẤP (L→L+1): đã lĩnh ngộ, chưa max, đủ Cảm Ngộ. */",
@@ -6773,7 +6736,7 @@
   "// trạng thái không còn hợp lệ).",
   "// Hoàn Cảm Ngộ vào player (§6.10).",
   "/** * Phap Tu Reimagined Task 4 — switch the route half of the atomic * (element, route) commitment. Out-of-combat only (the orchestration op * enforces the no-active-battle rule). For every node tagged with the * OLD route: level -> 0, nodeLevels/purchasedNodeIds entries cleared, * floor(actualPaid x 0.75) refunded using nodeFreePurchaseRecord * exactly like devResetBranch. Nodes tagged with the NEW route are not * auto-bought — the player re-invests. Untagged nodes are untouched. * No The-pool clear is needed: currentThe is battle-scoped (INV-14) * and switching is out-of-combat, so banked The cannot exist at switch * time (INV-16 holds by construction). * Returns total refunded. */",
-  "// the atomic (element, route) commit in selectPhapTuElement — it needs",
+  "// the atomic (element, route) commit in selectSpellPathElement — it needs",
   "/** Insight ACTUALLY paid into a node across its levels — Van Dao waived * amounts are deducted (same accounting as devResetBranch/switchRoute). */",
   "/** The 25% respec tax — paid insight that is NOT returned. */",
   "/** * Task 16 — read-only preview of switchRoute()'s refund math for the * \"you regain X, lose Y\" UI. Shares paidForNodeLevels with switchRoute * (A9 — one implementation); mutates nothing. */",
@@ -6789,7 +6752,7 @@
  "src/core/progression/NodeSystem.way.test.ts": [
   "// Cultivation Path Framework (M3, spec 2026-09-16 §24) — requiredWay",
   "// way-agnostic — all existing (untagged) nodes keep working.",
-  "// M4 (R6): resolveMaxThe is ngu_hanh machinery — ngo_dao owns no"
+  "// M4 (R6): resolveMaxThe is spell_pathway machinery — ngo_dao owns no"
  ],
  "src/core/progression/ProgressionNode.ts": [
   "/** * Pháp Tu Redesign (magicpath mục 31) — điều kiện unlock 1 node, AND * logic (node.prerequisites là mảng, TOÀN BỘ phải thoả). Discriminated * union theo đúng phong cách SkillDamageComponent/TribulationPhase đã * có — không phải generic scripting/callback. */",
@@ -6825,7 +6788,7 @@
   "// Kiem Tu Reimagined (spec §4.2) — DATA form of a combo capstone.",
   "// Multiplies the combo's bonus damage by (1 + x) — no-op on",
   "// Deterministic apply order — ascending, nodeId tiebreak. Default 0.",
-  "// The Tu Reimagined (plan Task 6) — the ONLY node -> the_tu kit",
+  "// The Tu Reimagined (plan Task 6) — the ONLY node -> body kit",
   "// The Tu Reimagined (plan Task 20, review P1.7) — the ONLY node ->",
   "/** * Node Tree (magicpath mục 7/30) — hạ tầng CHUNG cho mọi path (Pháp * Tu/Kiếm Tu/Thể Tu), mỗi path tự định nghĩa cây node riêng chạy trên * CÙNG type này — không tạo NodeSystem riêng cho từng path. `cost` * data-driven, KHÔNG suy ra tự động từ `type` (mục 30: \"Cost không * được hard-code theo loại node\"). */",
   "// Node role (combat-skill-flow-element-power-dot-plan.md §6.4) —",
@@ -7076,14 +7039,6 @@
   "// rõ trong data skill). Unified Buff System (Task 11, 2026-09-01) —",
   "// trước đây riêng cho effect 'ailment' (đi cùng ailmentId), giờ dùng",
   "// chung với effect 'debuff' (đi cùng buffId ở trên).",
-  "// Pháp Tu Thuần Hệ (E-1, 2026-09-03) — CHỈ dùng cho effect 'damage'",
-  "// (Vân Mộc Lan Độc + biến thể). SAU KHI missile resolve, đọc TỔNG",
-  "// stacks của ailment `spreadsAilmentId` trên PRIMARY target, áp lên",
-  "// MỌI target phụ trong cùng action (scope 'affected_targets', trừ",
-  "// primary) qua BuffSystem.apply() — mỗi lần apply = +1 stack theo",
-  "// stackMode của buff, nên số lần apply = ceil(total ×",
-  "// `spreadStackPercent`) (mặc định 1 = 100%). Primary không đổi (trừ",
-  "// khi `spreadRefreshesPrimary` → gia hạn duration primary).",
   "// Pháp Tu Lifedrain (Mộc Tu) — CHỈ có ý nghĩa cùng consumesAilmentId/",
   "// damagePerStack. Hồi máu cho SOURCE = healPercentOfDamage × bonus",
   "// damage Detonate vừa gây. Tách riêng khỏi leechPercent toàn cục vì",
@@ -7182,11 +7137,6 @@
   "// sẵn trên StatModifier (giống TechniqueSystem.getActiveModifiers()),",
   "// không cần hằng số riêng.",
   "/** Mỗi 10 cast vĩnh viễn +1 flat damage cho Huy Kiếm — KHÔNG trần. */",
-  "// Phap Tu Reimagined Task 2 + The Tu Reimagined (spec 2026-09-15, T6) —",
-  "// linh_bao/huy_quyen are the mortal-path actives — linh_bao Lv3 is the",
-  "// ngo_dao offer gate, huy_quyen Lv3 the ung_the gate — so the",
-  "/** Ngưỡng cast Huy Kiếm đạt Lv3 — route Kiếm Tu chốt Bạt Kiếm khi * tram ≥ mốc này (spec 2026-08-29-kiem-the-kiem-y mục 1). Re-aliases * the threshold table — no second constant source. */",
-  "/** Ngưỡng cast Hủy Quyền đạt Lv3 — cổng offer way ung_the tại Nghi Lễ * Nhập Môn (spec 2026-09-15 T6, xem PathOfferGate trong * CultivationPathKit.ts). */",
   "// Talent v4 (spec 2026-09-03 §3.3 E2) — 2 field passive mở rộng",
   "// phải xuyên qua getEffectiveSkill() để PassiveSystem đọc được từ",
   "// EffectiveSkill (không đọc thẳng Skill instance).",
@@ -7241,7 +7191,7 @@
   "// R3 re-audit (AR-03 gap) — authored manaScalingRatio/attributeScaling",
   "// Debuff effect → appliesAilment (bong, chance 1).",
   "// Tán Diễm: AoE square radius 1, value 1, chance 0.7.",
-  "// Find an ultimate in PHAP_TU_KIT_IDS with consumesAilmentId — fall back",
+  "// Find an ultimate in SPELL_KIT_IDS with consumesAilmentId — fall back",
   "// A chain skill with mana cost — the first non-basic chain entry with",
   "// M10 (ARCH-008) — the spec's authored duration:8 must survive",
   "// L3 — flat bonus floor(10000/10) = 1000",
@@ -7423,7 +7373,7 @@
  "src/core/stats/StatDomain.ts": [
   "// The Tu Reimagined (spec 2026-09-15 section 3.3, T8) — block and",
   "// deriver — INV-13 forbids authored modifiers for them entirely).",
-  "// The Tu Reimagined (T8) — two separate domains: 'the_tu' owns the",
+  "// The Tu Reimagined (T8) — two separate domains: 'body' owns the",
   "// Techniques.ts houses kim_cang_bat_hoai_the — its block/endurance",
   "// CULTIVATION_PATH_STAT_DOMAINS map — domain ownership is way-scoped:"
  ],
@@ -7709,7 +7659,7 @@
  "src/core/the-tu/TheTuAnMechanicModifiers.ts": [
   "// The Tu Reimagined (plan Task 20, review P1.7) — the ONE locked node ->",
   "// the shared trunk (spec 8.2) — they feed all three mechanic branches",
-  "// Same ownership gate as collectTheTuKitModifiers — nodePathApplies"
+  "// Same ownership gate as collectBodyKitModifiers — nodePathApplies"
  ],
  "src/core/the-tu/TheTuBatTuSurvival.ts": [
   "/** * The Tu Reimagined (spec 2026-09-15 section 5.1, plan Task 9, D9) — * Bat Tu Ba The survive-lethal source for a Cuong Chien participant. * * Ordering contract: this source is inserted BEFORE the talent guard in * the CombatSystem survive session — the ultimate is the first line of * survival; the talent charge is the extra life once the ult is spent. * * Three outcomes, evaluated per lethal hit: * 1. bat_tu_ba_the buff already active -> free survive. No re-grant, * no duration refresh, no cooldown touch (review-#6 fix), no * cleanse — cleanseDebuffs:false on every return keeps * CombatSystem's generic !==false blanket wipe from running on * repeat lethals inside the window. * 2. Ultimate slot off cooldown -> consume the cooldown, grant the * buff at the slot's baked durationOverride (participant-build * resolved: base + batTuDurationBonus — ONE resolved value shared * with the manual cast path, review P0.2). CC strip comes ONLY * from BAT_TU_BA_THE_BUFF.clearsCcOnApply on the grant path — * non-cc debuffs (poison/bleed/stat debuffs) are never cleansed. * 3. Ultimate on cooldown -> survived:false; the talent guard may * still save the holder. * * The grant itself is applied by CombatSystem.killIfDead through the * session's SurviveEffectsPolicy — this source only decides and * declares; HP/buff mutation stays in the vitals/buff authority. */",
@@ -7727,15 +7677,15 @@
  ],
  "src/core/the-tu/TheTuPath.ts": [
   "// Cultivation Path Framework (spec 2026-09-16, M5) — the The Tu path",
-  "// hien — ordinary The Tu (kit kim_cang_bat_hoai_the): the root-mutex",
+  "// body_pathway — ordinary The Tu (kit kim_cang_bat_hoai_the): the root-mutex",
   "// ung_the — The Tu An (kit ung_the_than_quyet): hidden way offered",
-  "// — same D12 two-channel pattern as phap_tu (assembly emitter here,",
+  "// — same D12 two-channel pattern as spell (assembly emitter here,",
   "// Dependency direction: this file is a leaf — type-only imports plus",
-  "/** * The ung_the-domain attribute -> reactive-chance modifier triple * (spec 2026-09-15 section 3). Shared by the way stat facet (assembly- * time emission, id prefix 'the_tu_an:attributes') and the 'the_tu_an' * domain deltaDeriver registered in CultivationPathSystem (mid-battle * deltas, prefix 'the_tu_an:attributes_delta') — one emitter, two * channels (INV-10). * * RAW uncapped linear values — REACTIVE_CHANCE_CAP is a metadata bound * consumed at the roll/display site, never inside the pipeline, so a * mid-battle attribute debuff composes against an over-cap base. */"
+  "/** * The hidden_body-domain attribute -> reactive-chance modifier triple * (spec 2026-09-15 section 3). Shared by the way stat facet (assembly- * time emission, id prefix 'hidden_body:attributes') and the 'hidden_body' * domain deltaDeriver registered in CultivationPathSystem (mid-battle * deltas, prefix 'hidden_body:attributes_delta') — one emitter, two * channels (INV-10). * * RAW uncapped linear values — REACTIVE_CHANCE_CAP is a metadata bound * consumed at the roll/display site, never inside the pipeline, so a * mid-battle attribute debuff composes against an over-cap base. */"
  ],
  "src/core/the-tu/TheTuPath.way.test.ts": [
   "// The Tu Reimagined — cultivation-path framework M5+M7: Thể Tu",
-  "// BASE id ('the_tu') and cultivationWay the discriminator — there is",
+  "// BASE id ('body') and cultivationWay the discriminator — there is",
   "// exactly one persisted shape. EVERY Thể Tu way-specific gate (kit",
   "// build, Bất Tử Ba Thể survival, path stat emission, node-tree access,",
   "// the Thế resource bar / stat domain) resolves on the WAY —",
@@ -7753,7 +7703,7 @@
   "/** * R8.2 Slice 2 — Domain owner of minor-realm breakthrough consequences * (AR-10 continuation; Slice 1 moved the tribulation chain). * * This service sequences the FULL consequence set of a successful * breakthrough that previously lived in the Vue composable * useBreakthrough.ts: realm passive sync (idempotent, every success), * the KC technique grant, artifact awakening, and the banked artifact * tier release. It returns a typed result; the Vue adapter only displays * the announcement (A7). * * Characterization evidence (2026-09-11): CultivationSystem.breakthrough() * never crosses a major realm — major transitions belong to the * tribulation chain (Slice 1 service). The technique-grant and * artifact-awakening branches keyed on realmId change in the old Vue code * are therefore unreachable in the production flow; they are preserved * VERBATIM here (documented-dead) so their eventual removal is an * evidence-based cleanup, not a silent behavior change. * * Writer contract (A3/A6): same pattern as TribulationOutcomeService — * the caller passes the Pinia player store instance (which satisfies * PlayerData), never `store.$state`: writing an absent optional key * (artifact is declared in defaults as undefined; treat any future * optional keys accordingly) does not reflect through the store proxy * (probe evidence 2026-09-11). Core stays Pinia-free (structural typing). */",
   "/** True when realmId changed — impossible today (see header), kept for parity. */",
   "// Banked artifact tier release on every success (doc SS5.1) — the",
-  "// M4 (R6): the ngu_hanh realm technique is way-owned — a collapsed"
+  "// M4 (R6): the spell_pathway realm technique is way-owned — a collapsed"
  ],
  "src/core/tribulation/TribulationDirector.loiKiep.test.ts": [
   "// Talent v4 M2 — Loi Kiep (spec §4.3 row 17): lightning intensity x2"
@@ -7834,12 +7784,12 @@
   "// Loi Kiep (M2): every survived kiếp banks a permanent all-attribute",
   "// stack — including the announcement-only Quan Khi ritual below.",
   "// 1 — same owner helper as the minor-tier breakthrough pour.",
-  "// Kiem Tu Reimagined (spec K15) — ngu merge fires exactly once per"
+  "// Kiem Tu Reimagined (spec K15) — hidden_sword_pathway merge fires exactly once per"
  ],
  "src/core/tribulation/TribulationOutcomeSettlement.test.ts": [
   "/** Player ready to survive the authored foundation_establishment kiếp. */",
   "/** Player invested enough for the Đại Đạo grade (spec §4.2/§4.4). */",
-  "// The phap_tu ritual grants dai_ngu_hanh_chan_quyet — the round-4"
+  "// The spell ritual grants dai_ngu_hanh_chan_quyet — the round-4"
  ],
  "src/core/ui/DesignFrame.ts": [
   "// Nguồn DUY NHẤT cho kích thước khung thiết kế 16:9 cố định (xem",
@@ -7945,8 +7895,7 @@
   "// thêm tham chiếu mới mà quên khai báo, test bắt ngay."
  ],
  "src/data/buff/buffs.test.ts": [
-  "// M4 — parity test rewritten to the canonical buff2 shape: the same",
-  "// Engine áp/gỡ THEO ID qua theManBuffId() — id phải khớp chính xác `the_man_<element>`."
+  "// M4 — parity test rewritten to the canonical buff2 shape: the same"
  ],
  "src/data/buff/buffs.ts": [
   "// Đột Phá Trúc Cơ (Phase 5) — áp lên buff PERSISTENT ngoài trận",
@@ -7979,43 +7928,7 @@
   "// xem data/skill/Skills.ts) tự buff wardMax tạm thời lên bản thân,",
   "// tái dùng effect 'buff' có sẵn (zero plumbing mới).",
   "// The Tu Reimagined (spec 2026-09-15 T12): generic thorns stat retired —",
-  "// Thổ Tu (\"Độc Thế\" reaction, Thổ+Mộc, Plans/EarthPath mục VII,",
-  "// 2026-08-21) — KHÔNG có `duration` (permanent, xem BuffSystem.",
-  "// update()'s `remainingTime === undefined` guard — Buff này KHÔNG tự",
-  "// hết hạn, chỉ tích/giữ nguyên tới hết trận) — port thành",
-  "// `duration: Infinity` (xem BuffSystem.test.ts's \"buff gần như vĩnh",
-  "// viễn\"). `percent` nhân với `stacks` ở StatCalculator.runPipeline() —",
-  "// đúng \"+5%/tầng, tối đa 5 tầng = +25%\". Plans/magicpathgeneral Phase",
-  "// 7/8 (2026-08-21) — đổi tên hiển thị \"Độc Thế\" -> \"Độc Căn\" (id GIỮ",
-  "// NGUYÊN 'doc_the', xem ElementReaction.ts's `appliesBuffId:",
-  "// 'doc_the'`): plan định nghĩa rõ \"Độc Căn\" LÀ Reaction Reward Buff",
-  "// cấp cho CASTER khi Mộc+Thổ reaction thành công (buff NÀY, đúng y",
-  "// hệt), còn \"Mộc Thế\" là Pure Buff riêng của Mộc (xem",
-  "// data/progression/PhapTuNodes.ts's WOOD_TRUC_CO_PURE) — 2 tên trước",
-  "// đây bị đảo ngược. Phase 11 — \"+2% HP Recovery từ Poison Damage\"/tầng",
-  "// (từng bị hoãn ở EarthPath vì DoT tick chưa resolve được entity",
-  "// NGUỒN). stat-system-reimagined Task 4 (D18): the bespoke",
-  "// 'dot_recovery' capability on this buff — CombatSystem.applyDotDamage()",
-  "// Spec 2026-08-30-phap-tu-dao-sac §4 — 2 buff nguồn của 2 reaction",
-  "// sinh mới (Ngưng Lộ Kim+Thủy / Khai Sơn Thổ+Kim), mirror pattern",
-  "// doc_the (stack + refresh, modifiers % hoặc flat).",
-  "// Task 3 (D17): MP pool stat — declare the phap_tu credential so",
-  "// System, 2026-09-01) — field-for-field, no balance changes. ---",
-  "// Pháp Tu Thuần Hệ (spec 2026-09-03 §2.1/§7, N1 đã duyệt) — `bong`",
-  "// ĐỔI refresh → stack max 5, dpsRatio 0.3 → 0.15/tầng: \"chồng Thiêu",
-  "// Đốt\" của chuỗi Hỏa (A/B/C đắp, D kích nổ ×stack) mới có nghĩa.",
-  "// 1 tầng yếu hơn bản cũ, 5 tầng = 0.75 mạnh hơn. Ảnh hưởng Bạo Viêm/",
-  "// Hỏa Cầu cũ — chấp nhận theo N1 (dev phase, không migration).",
-  "// Plans/PoisonPath mục 5 (2026-08-21) — chốt số liệu baseline: duration",
-  "// Pháp Tu (Kim Tu, 2026-08-15) — element 'metal' (đổi từ 'physical').",
-  "// Plans/KimPath mục 3 (2026-08-21) — maxStacks 3->5.",
-  "// Thổ Tu — Thạch Hóa: 'modifier' (-30% evasionRate) + on-hit-proc",
-  "// (50% cơ hội áp 'choang' mỗi đòn đánh trúng) — CẢ HAI cùng 1",
-  "// definition, port thành statModifier + 'on_hit_proc' capability",
   "// Plans/EarthPath mục VI — \"Trói Chân\": Root.",
-  "// Plans/EarthPath mục V — \"Dung Nham\".",
-  "// Plans/KimPath mục 6 (2026-08-21) — \"Huyết Độc\": hợp nhất Trúng",
-  "// Độc + Chảy Máu.",
   "// Pháp Tu (Thủy Tu, 2026-08-15) — giữ Làm Chậm LIÊN TỤC đủ",
   "// convertsAfterContinuousTurns thì tự chuyển thành Đóng Băng (the",
   "// load — the field is authored as turns directly now).",
@@ -8344,9 +8257,9 @@
  "src/data/progression/KiemTuNodes.ts": [
   "// Kiem Tu Reimagined (spec 2026-09-15 §6) — the tree after the legacy",
   "// branchTag 'kiem_pho' — 5 orb branches (hien way). Each branch: 5",
-  "// + 1 keystone capstone carrying effect.kiemTuComboModifier — the",
+  "// + 1 keystone capstone carrying effect.swordPathComboModifier — the",
   "// ONLY channel a node may alter a combo (spec §4.2). All stamped",
-  "// requiredWay 'hien' — inert and unpurchasable on the ngu way.",
+  "// requiredWay 'sword_pathway' — inert and unpurchasable on the ngu way.",
   "// branchTag 'ngu_kiem' — the ngu way subtree (Cultivation Path",
   "// node — entry is ritual-only now): 3 cascade unlock nodes (a/e/d),",
   "// 3 per-instance growth nodes (generic statModifiers — every phi",
@@ -8355,7 +8268,7 @@
  "src/data/progression/PhapTuAnNodes.ts": [
   "// Phap Tu Reimagined (Task 7) — Phap Tu An is a separate",
   "// the deeper tree gets its own spec (design doc §5.3). This stub keeps",
-  "// Cultivation Path Framework (M4) — phap_tu_an is now the 'ngo_dao'",
+  "// Cultivation Path Framework (M4) — hidden_spell_pathway is now the 'hidden_spell_pathway'",
   "// stays empty by design — if a deeper Ngo Dao tree ever lands it"
  ],
  "src/data/progression/PhapTuNodes.builders.ts": [
@@ -8368,12 +8281,12 @@
  "src/data/progression/PhapTuNodes.ts": [
   "// Phap Tu Reimagined (2026-09-15 plan, Task 6) — new tree shape:",
   "// Cultivation Path Framework (M4) — every node in this tree is stamped",
-  "// ngo_dao owns NO tree at all — its way"
+  "// hidden_spell_pathway owns NO tree at all — its way"
  ],
  "src/data/progression/TheTuAnNodes.test.ts": [
   "// buff2 M4 — kit clones bake node modifiers into capability payloads",
   "// The Tu Reimagined (plan Task 20, spec section 8.2) — the_tu_an tree",
-  "// collectTheTuAnMechanicModifiers (review P1.7 — the ONE locked",
+  "// collectHiddenBodyMechanicModifiers (review P1.7 — the ONE locked",
   "// T9 — non-mutex: no root excludes another root."
  ],
  "src/data/progression/TheTuAnNodes.ts": [
@@ -8385,13 +8298,13 @@
   "// consequence riders only — never probability."
  ],
  "src/data/progression/TheTuNodes.test.ts": [
-  "// The Tu Reimagined (plan Task 12, spec section 8.1) — the_tu tree data:",
-  "// requiredWay 'hien' — the fixture player owns both so the purchase/"
+  "// The Tu Reimagined (plan Task 12, spec section 8.1) — body tree data:",
+  "// requiredWay 'body_pathway' — the fixture player owns both so the purchase/"
  ],
  "src/data/progression/TheTuNodes.ts": [
   "// The Tu Reimagined (spec 2026-09-15 section 8.1, plan Task 12) — the",
   "// a single view — the mutex is a GATE (excludesNode), not hidden UI.",
-  "// 'the_tu' (stamped once at the export below) — NodeSystem.",
+  "// 'body' (stamped once at the export below) — NodeSystem.",
   "// Delivery channels (only these exist — A8, no invented riders):",
   "// here (INV-13 — the attribute deriver is the only source)."
  ],
@@ -8645,7 +8558,6 @@
   "// Biến thể C/D = SkillSpecialization (effectsOverride/targetingOverride",
   "// theo node selectsSpecialization E-8 — id specialization khớp",
   "// ── Chuỗi CHÚC DUNG (Hỏa — bùng nổ dồn, §2.1): A/B/C chồng Thiêu",
-  "// Đốt (bong stack — N1), D kích nổ TOÀN BỘ Bỏng, E nuke lan cả hàng.",
   "// Biến thể C (§2.1) — mua node selectsSpecialization là ĐỔI HẲN",
   "// hành vi (E-8). 'tam_muoi_tu_diem': single + đắp THÊM 1 tầng qua",
   "// add_stack (E-3 — buff đã chạy mới cộng, chưa có = no-op; debuff",
@@ -8670,11 +8582,6 @@
   "// C rễ cấm di chuyển, D LAN độc (E-1), E kích nổ + hút máu.",
   "// Biến thể C (§2.3): Cấm Bộ = root BẢN DÀI (buff riêng cau_mang_can",
   "// 4s, troi_chan 100%), bỏ độc; Thâm Độc = bỏ root, đắp +2 tầng độc.",
-  "// E-1 spread ĐẶT TRÊN EFFECT SCOPE 'primary_target' (ruling",
-  "// reviewer): resolver chạy damage scope primary ĐÚNG 1 LẦN với",
-  "// ctx.targetBuffs = pool primary → đọc stack primary, áp cho",
-  "// target phụ. Để scope mặc định (affected_targets) sẽ chạy mỗi",
-  "// target một lần → N× duplicate.",
   "// Biến thể D (§2.3): Quảng = all_lanes spread 50%; Thâm = area",
   "// Spec §2.3: Quảng = all_lanes columnRadius 1.",
   "// ── Chuỗi NHỤC THU (Kim — nghiền nát kim loại, KHÔNG kiếm pháp,",
@@ -8770,21 +8677,21 @@
   "// --- ung_the (The Tu An) — fixed kit granted at path choice (spec 6.1) ---",
   "// Reactive payloads (spec 6.2) — real TurnSkillDefinitions resolved as",
   "/** * Trong Phan Kich — the post-evasion heavy-counter payload variant * (spec 8.2 \"post-evasion heavy counter\"). Never in the registry slot * rotation: buildTheTuAnKit clones it into reactivePayloads and swaps * the phan_mon marker's onEvade queuedAction to this id only when the * evadeCounterMultiplierBonus node channel is owned. Base multiplier * equals phan_kich's — the node bonus is the whole delta. */",
-  "/** * Participant-build factory for ung_the (plan Task 14): returns * participant-local CLONES of the fixed kit with the marker set baked * into basic.grantsBuffsAtBuild — ung_the always, plus one marker per * owned root (non-mutex, T9). The ops' existing grantsBuffsAtBuild seam * applies them to the participant's pool; registry defs never mutate. * * Task 20 (review P1.7): `mods` is the collectTheTuAnMechanicModifiers * total — trunk economy lands on the ung_the marker's theEconomy fields * + every reactiveProc's theCost/theGainOnSuccess; branch riders land on * their marker's own fields (intercept ward, evade payload swap, Tro * heal/non-damaging). maxThe rides the kit for the adapter to stamp on * the participant's entity. */",
+  "/** * Participant-build factory for ung_the (plan Task 14): returns * participant-local CLONES of the fixed kit with the marker set baked * into basic.grantsBuffsAtBuild — ung_the always, plus one marker per * owned root (non-mutex, T9). The ops' existing grantsBuffsAtBuild seam * applies them to the participant's pool; registry defs never mutate. * * Task 20 (review P1.7): `mods` is the collectHiddenBodyMechanicModifiers * total — trunk economy lands on the ung_the marker's theEconomy fields * + every reactiveProc's theCost/theGainOnSuccess; branch riders land on * their marker's own fields (intercept ward, evade payload swap, Tro * heal/non-damaging). maxThe rides the kit for the adapter to stamp on * the participant's entity. */",
   "// Trunk economy — node bonuses bake onto the marker clone's authored",
   "// Ho branch — intercept riders.",
   "// Phan branch — evade-context heavy counter payload swap.",
   "// Break rider — the counter payload gains a choang application",
   "// Tro branch — marker riders (heal the triggering ally; non-damaging",
   "/** The Tu Reimagined (plan Task 16) — the An kit also carries the * reactive payload clones the typed follow-up queue resolves. Task 20: * `maxThe` is the participant's proc-fuel cap (MAX_THE + node bonus), * stamped onto the entity by the adapter at participant build. */",
-  "/** * Participant-build factory: returns participant-local CLONES with * collectTheTuKitModifiers totals baked in (review P0.2/INV-5 — the * registry defs are never mutated; each battle builds fresh copies). */"
+  "/** * Participant-build factory: returns participant-local CLONES with * collectBodyKitModifiers totals baked in (review P0.2/INV-5 — the * registry defs are never mutated; each battle builds fresh copies). */"
  ],
  "src/data/skill/TurnAnKitSkills.ts": [
   "// Phap Tu Reimagined Task 11 — Phap Tu An kit resolution semantics.",
   "// - van_phap_tuy_tam (basic): compositePicks 'element_basic' — every cast",
   "// - da_phap_lien_tuyen (special): same pick + repeatCasts — fires exactly",
   "// An basic — each basic execution may chain extra casts, depth-capped.",
-  "// injects it — one source of truth for \"what a phap_tu basic does\".",
+  "// injects it — one source of truth for \"what a spell basic does\".",
   "/** * van_phap_tuy_tam — the composite pick that makes each cast land a * random element. `multicastOwned` = the player holds ngo_dao_hon_don * (granted at the ritual via innateSkillId): the dao passive expresses * as the `multicast` field on the basic def. `elementPool` is the * GameManager-built canonical conversion of the five authored basics. */",
   "/** * da_phap_lien_tuyen — composite pick + repeatCasts. repeatCasts counts * the EXTRA executions after the original: AN_SPECIAL_FIRES - 1 repeats * + the original = exactly AN_SPECIAL_FIRES fires per cast. */"
  ],
@@ -8796,7 +8703,7 @@
   "// Turn-Based Combat Completion (Task 5) — mapping nội dung THẬT lên",
   "// TurnSkillDefinition cho 8 builds + enemy special, theo Slice 2 spec §3",
   "// - Kiếm Tu: 'tram' (Huy Kiếm, dealDamage value 1 physical, resourceType none)",
-  "// - 5 Pháp Tu Thuần: skill đầu mỗi chuỗi PHAP_TU_KIT_IDS, mỗi skill 1",
+  "// - 5 Pháp Tu Thuần: skill đầu mỗi chuỗi SPELL_KIT_IDS, mỗi skill 1",
   "// - Thể Tu + Phàm Nhân (chưa chọn đạo): KHÔNG dùng Skill object — hệ sống",
   "// dùng generic melee (basic attack qua might stat), map thành",
   "// TurnSkillDefinition physical multiplier 1 tương đương",
@@ -8835,8 +8742,8 @@
   "// Thể Tu + Phàm Nhân — generic melee (không dùng Skill object).",
   "// Enemy special — Thủy Giáp Long \"Nuốt Sáng\" (TurnBasicAttacks.ts:",
   "// everyNth 4, damage ×2.5).",
-  "// The Tu Reimagined (spec 2026-09-15 section 5, TheTuSkills.ts) —",
-  "// The Tu Reimagined (spec 2026-09-15 section 6, TheTuSkills.ts) —",
+  "// The Tu Reimagined (spec 2026-09-15 section 5, BodySkills.ts) —",
+  "// The Tu Reimagined (spec 2026-09-15 section 6, BodySkills.ts) —",
   "// Phap Tu An kit (Task 16) — dong bo tu Skills.ts; ngo_dao_hon_don's",
   "// Kiem Tu Reimagined (spec 2026-09-15 §3/§4.3) — the five Kiem Pho",
   "// DELIBERATELY absent: K11 forbids any combo-name surface — the fired",
@@ -9024,7 +8931,6 @@
   "// convey nghĩa CHỈ bằng màu (UX guideline) — shape là kênh thứ hai.",
   "// Placeholder = hình học thuần; asset thật thay sau không đụng layout.",
   "// CC — diamond (kế thừa hình icon cũ)",
-  "// DoT nguyên tố — diamond màu hệ",
   "// statModifier debuff — square",
   "// buff tạm — circle",
   "// 1. Map trực tiếp theo id",
@@ -9042,45 +8948,6 @@
   "// BreakthroughButton biến mất do v-if tắt ngay sau khi bấm,",
   "// cultivation reset) — mouseleave tự nhiên không kịp fire, tooltip",
   "// sẽ dính màn hình vĩnh viễn nếu không dọn ở đây."
- ],
- "src/game/scenes/combat/combat-action-feedback.ts": [
-  "// combat-action-feedback (Wave-3 large-file split) — tach tu CombatScene.ts.",
-  "// Token is captured AT SPAWN for every delayed ack — a late callback holds",
-  "// Action Playback Task 7 (2026-09-05) / R5 (AR-20) — impact frame tại midpoint",
-  "// lunge: damage áp đúng lúc đòn \"trúng\" trên màn hình. Token bắt tại spawn.",
-  "/** * Action Playback Task 7 — presentationActive đang bật? Dùng registry * gameManagerRef presence làm proxy (set/unmount cùng subscribe lifecycle). */",
-  "// Pop qua boost object — projection ghi kích thước mỗi frame nên",
-  "// tween scale trực tiếp sẽ bị ghi đè; boost nhân vào kích thước cuối",
-  "// ở applyEntityDepthScale() (perspective) / setScale (flat).",
-  "/** * Remediation Task 2 — ack engine từ completion THỰC của VFX tween qua * handle, không còn delayedCall tự tính duration trùng lặp. Token * CAPTURE TẠI SPAWN (plan Task 1 Step 5): callback muộn giữ token cũ — * engine đã sang phase/action khác (token mới) thì ack cũ thành stale * no-op ở GameManager, chặn cross-battle mutation. Không spawn được VFX * (projection miss) → ack ngay để engine không treo. */",
-  "/** * Action Playback Task 7 (2026-09-05) — 'turn_ready': short flash/pulse * trên sprite actor rồi acknowledgeTurnReady() trong onComplete (5-phase * machine bước 1 → 2). Placeholder visual đơn giản theo plan (không * designed visual — polish sau). */",
-  "// Không có sprite (late-join miss) — ack ngay để engine không treo.",
-  "// Pulse đơn giản: scale bump rồi trở lại (tween trên rect/sprite GameObject",
-  "// — EntitySprite wrapper không expose scale, projection ghi mỗi frame).",
-  "/** * Action Playback Task 7 (2026-09-05) — 'turn_standby_complete': tail * event (completeAction ĐÃ chạy trước khi event tới) — presentation-only * bookkeeping, KHÔNG ack gì (không còn wait-gate). */",
-  "// Buff bar (2026-09-02) — floating text tên hiệu ứng CHỈ lần đầu",
-  "// attach theo (targetId:buffId) — 2 nguồn cùng buff id chỉ floating 1",
-  "// lần; stack tăng không floating lại. Clear ở 2 cleanup sites."
- ],
- "src/game/scenes/combat/combat-animation-playback.ts": [
-  "// combat-animation-playback (Wave-3 large-file split) — tach tu CombatScene.ts.",
-  "// id→clip-prefix resolution, play-with-idle-return, and the deferred",
-  "// on the scene as Internal module-boundary members — this module only",
-  "/** * Combat Art Pipeline Task 9 (2026-09-05) — đăng ký Phaser * Animation cho MỘT entity (player theo profile, hoặc enemy theo texture * key) từ animation set đã build sẵn. `scene.anims` là AnimationManager * DÙNG CHUNG toàn Game (không riêng theo scene) nên guard `exists()` bắt * buộc — gọi lại nhiều lần qua các trận/scene KHÔNG được tạo trùng key. */",
-  "// `entityKey` không dùng trực tiếp trong thân hàm (mỗi clip đã tự mang",
-  "// đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và",
-  "// để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).",
-  "/** * Map id RUNTIME (PLAYER_ID hoặc enemy id dạng '<templateId>_<uuid>') * sang ENTITY KEY dùng làm tiền tố animation clip — khớp ĐÚNG cách * CombatPreload.ts build animation set (player theo profile hiện hành, * enemy theo resolveEnemyTextureKey()). undefined khi actor không có * animation set nào (enemy ngoài batch Mortal, vẫn Rectangle) — caller * PHẢI guard trước khi gọi sprite.play(). */",
-  "/** * Spec B §3.2 — is this entity's art ANIMATED, or a still image? * * One question, asked of the catalogue, in the one place that plays clips. * A static entity is not a degraded animated one: it has no clips at all, and * asking for one is a no-op rather than a fallback. */",
-  "/** * Phát 1 animation clip cho actor NẾU sprite là Sprite thật (kind === * 'sprite') VÀ clip đó đã được registerCombatAnimations() đăng ký — * no-op an toàn cho Rectangle fallback (enemy ngoài batch) hoặc clip * chưa/không tồn tại (test fixture không stub scene.anims đầy đủ). * * Spec B §3.2 (2026-09-11) — AND the entity's art is animated. Before this, * an enemy taking its turn played the 32-frame placeholder, which SWAPPED its * texture from its own Mortal PNG to a numbered stick figure for the length of * the clip. Enemies are static now; their motion is the bob in * `combat-grid-view.ts`. */",
-  "/** * Combat Art Pipeline Task 9 (2026-09-05) — dùng chung bởi onDeath() (event * 'death' thật) và reconcileCombatantSprites() (fallback khi entity mất * khỏi snapshot mà không có event riêng): đánh dấu dying, dọn DoT/cast bar, * phát animation '-death' NẾU sprite là Sprite thật + clip đã đăng ký, và * HOÃN destroy tới khi CẢ tween xoay/mờ CŨ lẫn animation (nếu có) đều xong * — spec §9: cleanup không được cắt ngang animation chết. Không có * animation hợp lệ → animDone giữ true ngay từ đầu, hành vi y hệt trước * Task 9 (chỉ chờ tween). * * Player KHÔNG BAO GIỜ bị destroy ở đây (giữ vị trí cuối dưới overlay kết * quả, xem onBattleEnd) — chỉ tween/animation chạy, isPlayer chặn nhánh * destroy trong finalize(). */",
-  "// DoT accumulator — xóa bucket của target chết.",
-  "// isPlayer: không destroy (xem doc). Identity check chặn double-",
-  "// destroy/orphan khi id này đã bị forceFinalizeDeath() dọn sớm (tái",
-  "// xuất hiện giữa lúc animation/tween cũ còn chạy, xem getOrCreateSprite()).",
-  "// Spec B §3.2 — this path bypasses playCombatAnimation() because it needs",
-  "// A playing death clip IS the body visual — the generic fall/fade tween",
-  "/** * Dọn NGAY sprite đang ở giữa death sequence (animation/tween chưa xong) — * dùng khi id đó tái xuất hiện (xem getOrCreateSprite()) để tránh * beginDeathSequence() cũ đóng cửa nhầm sprite mới sau này. Đơn giản hơn * beginDeathSequence(): không cần chờ gì cả, huỷ NGAY. */"
  ],
  "src/game/scenes/combat/combat-cast-bar.ts": [
   "// R5 (AR-29) — CombatCastBar encapsulates its own private castBars map.",
@@ -9199,21 +9066,12 @@
   "// ChÃ­ Máº¡ng Ã¡p qua setScale vÃ¬ geometry flat lÃ tÄ©nh. setScale PHáº¢I",
   "// cháº¡y vÃ´ Ä‘iá»u kiá»‡n: tween yoyo káº¿t thÃºc giá»¯a 2 frame, frame káº¿",
   "// value===1 nhÆ°ng rect váº«n giá»¯ scale frame trÆ°á»›c náº¿u bá» qua.",
-  "// Player dÃ¹ng artwork theo PROFILE hiá»‡n hÃ nh (body-anchor plan Â§4.3);",
-  "// enemy chÆ°a cÃ³ atlas riÃªng, váº«n dÃ¹ng Rectangle mÃ u nhÆ° cÅ© (xem",
-  "// EntitySprite.kind's ghi chÃº).",
   "// The box the art this sprite DRAWS is authored in — not the entity's",
   "// 1.094 aspect onto 0.571 art — 3.44x too wide on screen. Spec B moved",
   "// Enemy art x2; Boss Ã—2 quy táº¯c enemy thÆ°á»ng (2026-09-05) â€” khÃ´ng",
   "// cÃ²n dÃ¹ng CÃ™NG multiplier nhÆ° trÆ°á»›c (xem",
   "// CombatScene.enemyScale.test.ts). BÃ³ng ellipse dÆ°á»›i chÃ¢n nhÃ¢n",
   "// theo cÃ¹ng multiplier trong applyEntityDepthScale().",
-  "// Host fallback (Battlefield Slot spec §4) — combat thật trả undefined",
-  "// ở đây LUÔN (xem CombatScene.fallbackSpriteTextureKey()), giữ nguyên",
-  "// 100% hành vi Rectangle fallback cho enemy ngoài batch Mortal. Panel",
-  "// Trận Pháp (TranPhapCombatPreviewScene) trả về sheet placeholder",
-  "// dùng chung — mọi combatant của panel render qua nhánh này, animate",
-  "// được thay vì Rectangle tĩnh.",
   "// sizeMultiplier: 1 (KHÔNG ENEMY_DISPLAY_SCALE_MULTIPLIER) — nhánh",
   "// này chỉ có panel Trận Pháp chạm tới (combat thật luôn nhận",
   "// fallbackSpriteTextureKey() === undefined, xem branch trước đó);",
@@ -9459,8 +9317,7 @@
   "// resetVisual() only — Phaser.Scene subclass đã có sẵn `tweens`.",
   "// resetVisual() only — host không cần interpolate thật vẫn thoả type",
   "// bằng 1 Map rỗng (xem TranPhapCombatPreviewScene, Task 4).",
-  "// S3 (AR-29): read-only view — hosts must not mutate interpolation state.",
-  "/** * Texture key dùng cho sprite khi id không phải PLAYER_ID và không khớp * resolveEnemyTextureKey() — combat thật trả undefined (giữ NGUYÊN * Rectangle fallback cho enemy ngoài batch Mortal, hành vi hiện tại * không đổi); panel Trận Pháp trả về sheet placeholder dùng chung cho * mọi combatant. */"
+  "// S3 (AR-29): read-only view — hosts must not mutate interpolation state."
  ],
  "src/game/scenes/combat/combatTestHarness.ts": [
   "// combatTestHarness (Remediation Task 8, 2026-09-05) — typed adapter thay",
@@ -9476,25 +9333,6 @@
   "// combatTextFormat (ui-discoverability-refactor-plan.md §3.2) — tách từ",
   "// CombatScene.ts: formatDotDamageText là hàm thuần, test trực tiếp.",
   "/** * Format số DoT hiển thị (hàm thuần, test trực tiếp) — tổng ≥1 làm tròn * qua formatter chung; 0<x<1 hiện 1 chữ số thập phân với sàn 0.1 nên * KHÔNG bao giờ render \"-0.0\" (fix 2026-08-26). */"
- ],
- "src/game/scenes/combat/combatTypes.ts": [
-  "// combatTypes (ui-discoverability-refactor-plan.md §3.2) — kiểu dùng chung",
-  "// giữa CombatScene orchestrator và các combat module. Refactor thuần —",
-  "// định nghĩa DI CHUYỂN từ CombatScene.ts, KHÔNG đổi shape nào.",
-  "// Player = Sprite profile art, enemy = Sprite Mortal art batch HOẶC",
-  "// Rectangle màu (id ngoài batch). `kind` phân biệt để biết dùng",
-  "// — mọi thao tác position/scale/rotation/alpha khác đều dùng chung API.",
-  "/** * Kích thước nguồn của texture sprite này — player theo profile hiện * hành (scene.playerSourceSize), enemy art batch 1254². Bắt buộc cho * mọi kind='sprite' để setDisplaySize giữ đúng tỉ lệ khung hình. */",
-  "/** * How much of its authored box this sprite's art fills (Spec C §4.1). * * Undefined for a Rectangle fallback and for the Tran Phap preview panel, * where it defaults to a full box — those cases have no trimmed art. */",
-  "/** * The character's size on screen, as resolved by Spec C §4.3 — NOT the * sprite's box. Task 4's anchors read these, and storing them here is what * stops the two halves computing them differently. */",
-  "// Combat AI rework (plan §12.1) + enemy art x2 (2026-08-26) — player",
-  "// sprite ×2, enemy PNG ×2 (fallback Rectangle ×1).",
-  "// 2.5D presentation (2026-08-24) — bóng ellipse trên mặt đất (chỉ tạo",
-  "// ở perspective), foot point + column float lần chiếu gần nhất phục vụ",
-  "// depth sort, và boost object cho tween pop (Chí Mạng) KHÔNG đụng vào",
-  "// scale/geometry mà projection ghi mỗi frame.",
-  "/** * Spec B §4.3 — procedural idle motion for a `kind: 'static'` entity. * * A PLAIN OBJECT tweened separately from `rect`, for the same reason `boost` * is: `positionSprite()` writes the sprite's position from the projection * every frame, so a tween on `rect.y` would be overwritten within a frame. * The projection reads this offset instead. * * Absent on animated entities, which move because their frames do. */",
-  "// Thời điểm snapshot tạo segment (cadence đo từ đây)."
  ],
  "src/game/scenes/combat/PlayerHudLayer.test.ts": [
   "// 6A-T4 (2026-09-01) — PlayerHudLayer: HP/MP/Kiếm bars + labels vẽ",
@@ -9923,7 +9761,7 @@
   "// The Tu Reimagined (T22) — Son Nhac Ho The shield layer rides the",
   "// Task 16 — The bar poll mỗi frame từ reader đăng ký trong",
   "// PhaserCanvas (chỉ nơi có gameManager — xem theBarBridge.ts).",
-  "// null = ẩn bar (không phải phap_tu / không battle / chưa chọn hành).",
+  "// null = ẩn bar (không phải spell / không battle / chưa chọn hành).",
   "/** * Depth sort entity sprite theo projected foot Y (gÃ¡ÂºÂ§n Ã„â€˜ÃƒÂ¨ xa). min/max * lÃƒÂ BIÃƒÅ N CÃ¡Â»Â Ã„ÂÃ¡Â»Å NH cÃ¡Â»Â§a mÃ¡ÂºÂ·t Ã„â€˜Ã†Â°Ã¡Â»Âng (entityFootMinY/MaxY Ã„â€˜Ã¡ÂºÂ·t tÃ¡Â»Â« * projection.bounds() mÃ¡Â»â€”i layout) Ã¢â‚¬â€ KHÃƒâ€NG tÃƒÂ­nh lÃ¡ÂºÂ¡i tÃ¡Â»Â« tÃ¡ÂºÂ­p entity Ã„â€˜ang * sÃ¡Â»â€˜ng: spawn/death cÃ¡Â»Â§a 1 entity khÃƒÂ´ng remap depth cÃ¡Â»Â§a entity khÃƒÂ¡c vÃƒÂ * upright VFX (chÃ¡Â»â€˜t depth lÃƒÂºc spawn) luÃƒÂ´n cÃƒÂ¹ng thÃ†Â°Ã¡Â»â€ºc vÃ¡Â»â€ºi entity. */",
   "/** * DÃƒÂ nh khoÃ¡ÂºÂ£ng trÃƒÂªn (Top Bar + Status Bar) vÃƒÂ dÃ†Â°Ã¡Â»â€ºi (Event Bar + * Control Bar) cho DOM chrome cÃ¡Â»Â§a CombatSceneOverlay.vue (xem * DesignFrame.ts's COMBAT_*_HEIGHT) Ã¢â‚¬â€ battlefield thÃ¡ÂºÂ­t chÃ¡Â»â€° vÃ¡ÂºÂ½ trong * khoÃ¡ÂºÂ£ng CÃƒâ€™N LÃ¡ÂºÂ I Ã¡Â»Å¸ giÃ¡Â»Â¯a. * * 2.5D migration Ã¢â‚¬â€ layout chÃ¡Â»â€° cÃƒÂ²n 2 viÃ¡Â»â€¡c: * 1. DÃ¡Â»Â±ng/resize projection (flat hoÃ¡ÂºÂ·c perspective theo flag) tÃ¡Â»Â« * viewport + insets. Insets Ã†Â°u tiÃƒÂªn sÃ¡Â»â€˜ Ã„ÂO THÃ¡ÂºÂ¬T cÃ¡Â»Â§a bar DOM qua * getCombatInsets() (WS1), fallback cÃƒÂ´ng thÃ¡Â»Â©c tÃ¡Â»Â· lÃ¡Â»â€¡ legacy khi chÃ†Â°a * cÃƒÂ³ phÃƒÂ©p Ã„â€˜o Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn. * 2. VÃ¡ÂºÂ½ lÃ¡ÂºÂ¡i mÃ¡Â»Âi lÃ¡Â»â€ºp phÃ¡Â»Â¥ thuÃ¡Â»â„¢c hÃƒÂ¬nh hÃ¡Â»Âc: nÃ¡Â»Ân, lÃ†Â°Ã¡Â»â€ºi, entity, chrome Ã¢â‚¬â€ * NGAY TRONG LÃ¡ÂºÂ¦N GÃ¡Â»Å’I Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng cÃƒÂ³ frame nÃƒÂ o hiÃ¡Â»â€¡n vÃ¡Â»â€¹ trÃƒÂ­ stale. */",
   "// Guard chÃ¡Â»â€˜ng resize bÃ¡ÂºÂ¯n vÃƒÂ o scene Ã„â€˜ang STOPPED: listener trÃƒÂªn",
@@ -9976,11 +9814,6 @@
   "// Ã„ÂÃ¡Â»â€°nh Ã„â€˜Ã¡ÂºÂ§u sprite theo anchor hiÃ¡Â»â€¡n hÃƒÂ nh Ã¢â‚¬â€ mÃ¡Â»Âi chrome treo trÃƒÂªn Ã„â€˜Ã¡ÂºÂ§u",
   "// (HP bar / cast bar / DOT icon / text bay) Ã„â€˜i qua Ã„â€˜ÃƒÂ¢y Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng phÃ¡Â»Â¥",
   "// thuÃ¡Â»â„¢c origin (foot anchor Ã¡Â»Å¸ perspective, center anchor Ã¡Â»Å¸ flat).",
-  "// CombatGridViewHost (Battlefield Slot spec §1) — combat thật KHÔNG BAO",
-  "// GIỜ fallback sang texture khác cho enemy ngoài batch Mortal (giữ",
-  "// nguyên Rectangle như trước fix này) — chỉ panel Trận Pháp",
-  "// (TranPhapCombatPreviewScene) override hàm này để trả về sheet",
-  "// placeholder dùng chung.",
   "// Task 8 (perf-optimize-pass phần 2) — logic đầy đủ chuyển sang",
   "// combat/combat-grid-view.ts (đã có sẵn getOrCreateSprite tương đương",
   "// — chỉ còn thiếu wiring); wrapper giữ nguyên chữ ký public.",
@@ -9998,8 +9831,6 @@
   "// `entityKey` không dùng trực tiếp trong thân hàm (mỗi clip đã tự mang",
   "// đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và",
   "// để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).",
-  "// Internal (module boundary — combat-animation-playback).",
-  "/** * Map id RUNTIME (PLAYER_ID hoặc enemy id dạng '<templateId>_<uuid>') * sang ENTITY KEY dùng làm tiền tố animation clip — khớp ĐÚNG cách * CombatPreload.ts build animation set (player theo profile hiện hành, * enemy theo resolveEnemyTextureKey()). undefined khi actor không có * animation set nào (enemy ngoài batch Mortal, vẫn Rectangle) — caller * PHẢI guard trước khi gọi sprite.play(). */",
   "// Internal (module boundary — combat-animation-playback).",
   "/** * Spec B §3.2 — is this entity's art ANIMATED, or a still image? * * One question, asked of the catalogue, in the one place that plays clips. * A static entity is not a degraded animated one: it has no clips at all, and * asking for one is a no-op rather than a fallback. */",
   "// Internal (module boundary — combat-animation-playback).",
@@ -10395,13 +10226,13 @@
   "// Spec B §4.4 (2026-09-11) — ONE resolver answers what an entity's art is.",
   "// that discarded both of its data parameters (§2.1).",
   "// entity is no longer animated. Enemies are `kind: 'static'` now (§3.2), and a",
-  "/** * Queue mọi texture combat cần — DEDUPE THEO TEXTURE KEY trong chính * một lần queue (P2 cleanup, dong-fu plan): `textures.exists()` không * nhận biết key vừa được queue trong CÙNG lượt gọi, và các Player * profile dùng trùng key (kiem_tu tái dùng Mortal combat art, * cultivate chung 'player-mortal-cultivate-v1') nên guard exists một * mình là chưa đủ. Một Set cục bộ chặn queue trùng; guard * textures.exists() vẫn giữ cho các lần gọi sau khi load hoàn tất. * An toàn gọi từ cả MainScene.preload() và CombatScene.preload(). * * Combat Art Pipeline Task 9 (2026-09-05) — THÊM (không thay) queue * spritesheet placeholder (1 frame = ảnh gốc, xem CombatAnimationSet.ts) * cho từng entity CẠNH các ảnh PNG tĩnh cũ, KHÔNG bỏ ảnh tĩnh cũ: MainScene * (Home Scene, ngoài phạm vi task này) và nhánh fallback của * combat-grid-view.ts/combat-player-visual.ts vẫn dùng key tĩnh nguyên bản * (PLAYER_TEXTURE_KEY/profile.combatTextureKey/enemy texture key) làm * texture THẬT của Sprite; đổi các key đó thành spritesheet-only sẽ làm vỡ * MỌI chỗ đang add.sprite()/setTexture() bằng key tĩnh đó (MainScene player * đứng ở Nhà, không hề animate — tự comment trong MainScene.ts). CombatScene * chỉ cần các sheetKey RIÊNG (hậu tố '-idle-sheet'…) để chạy Animation, nên * load thêm là đủ, không cần sửa consumer nào khác ngoài 2 file brief này. */",
+  "/** * Queue mọi texture combat cần — DEDUPE THEO TEXTURE KEY trong chính * một lần queue (P2 cleanup, dong-fu plan): `textures.exists()` không * nhận biết key vừa được queue trong CÙNG lượt gọi, và các Player * profile dùng trùng key (sword tái dùng Mortal combat art, * cultivate chung 'player-mortal-cultivate-v1') nên guard exists một * mình là chưa đủ. Một Set cục bộ chặn queue trùng; guard * textures.exists() vẫn giữ cho các lần gọi sau khi load hoàn tất. * An toàn gọi từ cả MainScene.preload() và CombatScene.preload(). * * Combat Art Pipeline Task 9 (2026-09-05) — THÊM (không thay) queue * spritesheet placeholder (1 frame = ảnh gốc, xem CombatAnimationSet.ts) * cho từng entity CẠNH các ảnh PNG tĩnh cũ, KHÔNG bỏ ảnh tĩnh cũ: MainScene * (Home Scene, ngoài phạm vi task này) và nhánh fallback của * combat-grid-view.ts/combat-player-visual.ts vẫn dùng key tĩnh nguyên bản * (PLAYER_TEXTURE_KEY/profile.combatTextureKey/enemy texture key) làm * texture THẬT của Sprite; đổi các key đó thành spritesheet-only sẽ làm vỡ * MỌI chỗ đang add.sprite()/setTexture() bằng key tĩnh đó (MainScene player * đứng ở Nhà, không hề animate — tự comment trong MainScene.ts). CombatScene * chỉ cần các sheetKey RIÊNG (hậu tố '-idle-sheet'…) để chạy Animation, nên * load thêm là đủ, không cần sửa consumer nào khác ngoài 2 file brief này. */",
   "// Atlas, not spritesheet (Spec B §3.1): frames are addressed by name so",
   "// Thanh Vân modular art — load ĐÚNG variant phiên hiện tại (sky + 6",
   "// layer mùa).",
   "// Reward gourd art — PNG thật thay placeholder.",
   "// Player visual profiles — preload texture cho MỌI profile có thể",
-  "// dùng trong combat (kiem_tu tái dùng mortal nên không cần key riêng).",
+  "// dùng trong combat (sword tái dùng mortal nên không cần key riêng).",
   "// The placeholder atlas, for ANIMATED entities only (Spec B §3.2) —"
  ],
  "src/game/support/EnemyArt.test.ts": [
@@ -10570,7 +10401,6 @@
   "/** * One animation clip, as a range of NAMED frames inside a trimmed * TexturePacker atlas (§3.1). * * Frames are addressed by name rather than by index into a uniform grid, because * a trimmed atlas's JSON carries `sourceSize` and `spriteSourceSize` per frame — * exactly the data spec C needs to plant a foot on a grid cell without guessing. * A uniform grid pads every frame to the same box and throws that away. * * There is deliberately no `frameCount`: it is `lastFrame - firstFrame + 1`, and * two ways to state one number is the defect Spec A logged as V9. */",
   "/** * Where the character's own pixels sit inside the authored box, as fractions of * that box — the atlas's `spriteSourceSize` normalised by `sourceSize`. * * Measured from the art, never hand-written. Used by SCALE alone (Spec C §4.1): * anchors do not read it, because they come from the battlefield cell (§3.1). * * `{ x: 0, y: 0, w: 1, h: 1 }` for untrimmed art, which makes every formula in * §3.2 collapse to sizing the box directly. */",
   "/** * The UNTRIMMED box every frame of this clip is authored in — the atlas * JSON's `sourceSize`. * * Added 2026-09-11 after a MEASURED defect: the display size of an animated * sprite was still being derived from the entity's static PNG * (`PlayerVisualProfile.combatSourceSize`, 1312x1199 for the player) while the * sprite was drawing an atlas frame authored at 200x350. The figure rendered * 3.44x too wide. * * It belongs on the CLIP rather than on the entity because it is a property of * the art the clip points at, and two clips of one entity may eventually be * authored at different sizes. `atlasFramesExist` checks it against the JSON * on disk, so it cannot drift silently. * * Note this is the AUTHORED box, not the trimmed pixels. The per-frame trim * offset inside it is spec C's problem (§5.2), and it differs per frame. */",
-  "/** * The frame at which this clip's action READS as having happened — a sword * connecting, a palm striking. Absolute (same numbering as `firstFrame`), and * within [firstFrame, lastFrame]. * * Declared here and consumed by spec D, which replaces the current * `ATTACK_LUNGE_DURATION_MS / 2` — half a movement tween, with no relationship * to the art it is timing. NOTHING IN B READS THIS (§6, B8). Changing playback * timing in the same pass as the metadata would make a regression in either * impossible to attribute. * * Absent on looping clips, which have no impact moment. */",
   "/** * Procedural motion for a static entity. Costs no art — this is the whole point * of §3.2's economy, and the reason \"static\" does not have to mean \"dead\". * * Worth stating plainly because the decision described enemies as static \"như * hiện tại\": they were not. Walk sway/bob/tilt were deleted outright on * 2026-08-26 (`combat-grid-view.ts`), leaving rotation 0 and a straight * projected position. So this is a TARGET state, and reaching it means adding a * motion that is not there — cheap, but not a no-op. */",
   "/** * Peak vertical offset, in SCREEN pixels, and NOT scaled by projection depth. * * Decided 2026-09-11: one size for every row. The alternative — scaling * amplitude by the row's depth factor, so a far enemy breathes less — is more * correct perspective and was explicitly not wanted. A far enemy is already * small; scaling its motion too makes it read as frozen. */"
  ],
@@ -10664,18 +10494,14 @@
   "// Updated EVERY FRAME via CombatScene.update() polling (no event emit —",
   "// registry gate (see PhaserCanvas.vue) — the reader is registered by",
   "// is not on the Kiem Tu path → CombatScene hides the bar.",
-  "// hien (Kiem Pho): the bar shows preset-strip progress — `current` is",
+  "// sword_pathway (Kiem Pho): the bar shows preset-strip progress — `current` is",
   "// The Tu Reimagined (T22) — Son Nhac Ho The external-ward layer: a",
   "// entity carries a pool (max = holder maxHp — shield fraction of HP).",
   "/** Phần state player mà reader cần — structural, không import Pinia store * (bridge tách khỏi Vue để CombatScene/PhaserCanvas không kéo store). */",
-  "// The Tu Reimagined (T22) — the active way's usesTheResource flag",
-  "// Read via getActiveWayDefinition — the persisted (path, way) pair",
-  "/** * Đọc snapshot Kiếm bar HIỆN TẠI từ battle đang chạy. null = ẩn bar. * Way xác định từ player.cultivationWay (M6 — the retired * kiemTu.mode discriminator); the battle-scoped provider snapshot * supplies cursor/log (runtime, never persisted). */",
+  "/** * Đọc snapshot Kiếm bar HIỆN TẠI từ battle đang chạy. null = ẩn bar. * Way xác định từ player.cultivationWay (M6 — the retired * swordPath.mode discriminator); the battle-scoped provider snapshot * supplies cursor/log (runtime, never persisted). */",
   "// TurnBattle participant shape — the human player's CombatEntity is",
-  "// The Tu An (T22) — The proc-fuel pool, gated by the active way's",
-  "// No resource pool for this path — still surface a live shield.",
   "// The participant's provider owns the live cursor/log — the",
-  "// ngu — bar = Kiem Y progress toward the next forge at the"
+  "// hidden_sword_pathway — bar = Kiem Y progress toward the next forge at the"
  ],
  "src/presentation/bridges/theBarBridge.test.ts": [
   "// Phap Tu Reimagined (Task 16) — direct coverage for makeTheBarReader"
@@ -10684,14 +10510,12 @@
   "// Phap Tu Reimagined (Task 16) — The bar HUD for the normal Phap Tu",
   "// emit — same contract as kiemBarBridge.ts).",
   "// registry — it never holds GameManager. The reader is registered from",
-  "// ngu_hanh (ngo_dao owns NO The pool — spec P6), or no element has",
+  "// spell_pathway (hidden_spell_pathway owns NO The pool — spec P6), or no element has",
   "/** resolveMaxThe() snapshot — may exceed the threshold via truong_the. */",
   "/** Empowerment marker (spec P13) — a fixed 100, NOT max. */",
   "/** phap-tuong unlock owned (linh_ngo_<godUlt>) — the ult empowers. */",
   "/** Structural slice of the player store this reader needs — the bridge * stays free of Vue/Pinia imports so scenes never drag the store in. */",
-  "// M4 (R6): the The pool is ngu_hanh machinery — the element check",
-  "// TurnBattle participant shape — the human player's CombatEntity is",
-  "// at threshold the ult consumes the whole pool (spec §3.3)."
+  "// TurnBattle participant shape — the human player's CombatEntity is"
  ],
  "src/presentation/clock/RafClockSource.test.ts": [
   "// after that stop, and each fired frame re-armed again — a ghost loop",
@@ -11228,7 +11052,7 @@
   "// field BẮT BUỘC MỚI `skillPoints: number`/`unlockedElements: ElementType[]`/",
   "// `equippedElements: ElementType[]` (cả hai đã retired cùng",
   "// ElementLoadout ở Phap Tu Reimagined Task 14 — element authority giờ",
-  "// là `player.phapTu.element`), CỘNG THÊM baseStats (Stats) lúc đó có",
+  "// là `player.spellPath.element`), CỘNG THÊM baseStats (Stats) lúc đó có",
   "// thêm 6 field wind/lightning (đã bị XOÁ lại ở spec",
   "// 2026-08-30-phap-tu-dao-sac §5 — bỏ Phong/Lôi toàn hệ). Lịch sử",
   "// version giữ nguyên để truy vết.",
@@ -11248,7 +11072,7 @@
   "// `baseStats.cultivationRate` KHÔNG khớp shape mới — không viết",
   "// migration, cùng convention mọi version trước.",
   "// version 27: Pháp Tu Redesign — gộp 5 CultivationPathId Ngũ Hành",
-  "// (phap_tu_hoa/moc/thuy/kim/tho) thành 1 \"phap_tu\" duy nhất (xem",
+  "// (phap_tu_hoa/moc/thuy/kim/tho) thành 1 \"spell\" duy nhất (xem",
   "// CultivationPathKit.ts) VÀ player: PlayerData xoá field",
   "// `totalMonstersKilled` (mồ côi, xem RewardSystem.ts). Save cũ có",
   "// `player.cultivationPath` là 1 trong 5 giá trị cũ (KHÔNG còn hợp lệ",
@@ -11529,7 +11353,7 @@
   "// trước.",
   "// version 53 (2026-08-29, kiem-the-kiem-y spec): thêm",
   "// `bossKillCount: number` (tầng Kiếm Ý vĩnh viễn theo boss diệt);",
-  "// kiemTuRoute chốt vĩnh viễn lúc chọn path; gỡ skill Kiếm Tu cũ (mỗi",
+  "// swordPathRoute chốt vĩnh viễn lúc chọn path; gỡ skill Kiếm Tu cũ (mỗi",
   "// route 1 active skill); gỡ rage. Chi tiết xem saveVersion.ts.",
   "// version 54 (2026-08-29, dot-pha-loi-kiep spec): thêm 4 field BẮT",
   "// BUỘC `openedMeridianIds: string[]` (Bát Mạch đã thông),",
@@ -11539,7 +11363,7 @@
   "// Phá Lệnh (token materials) + quái Kiếp. Save v53 bị từ chối (dev",
   "// phase, không migration). Chi tiết xem saveVersion.ts.",
   "// version 65 (2026-09-16, cultivation-path-framework M2): player thêm",
-  "// field TUỲ CHỌN `cultivationWay?: PathWayId` (way trong path, xem",
+  "// field TUỲ CHỌN `cultivationWay?: CultivationWayId` (way trong path, xem",
   "// còn union 3 base id, các id '_an' thành way. Save v64 trở xuống bị",
   "// từ chối — cùng convention mọi version trước.",
   "/** v44: luôn rỗng — Phù legacy đã khai tử, quy đổi Linh Thạch (§10.1). */",
@@ -11601,7 +11425,7 @@
   "// 'the_tu' + 'the_tu_an' — save cũ chứa path id lạ bị từ chối (dev phase,",
   "// không migration).",
   "// v65 (2026-09-16, cultivation-path-framework M2): PlayerData thêm field",
-  "// TUỸ CHỌN `cultivationWay?: PathWayId` (way đã chọn trong path, ghi",
+  "// TUỸ CHỌN `cultivationWay?: CultivationWayId` (way đã chọn trong path, ghi",
   "// bởi CultivationPathSystem.applyPathChoice trong Nghi Lễ Nhập Môn).",
   "// `cultivationPath` vẫn mang union 5 id legacy trong thời kỳ chuyển",
   "// tiếp — giờ được kiểm tra enum membership khi hiện diện. Save v64 bị",
@@ -11769,7 +11593,6 @@
   "// \"giống nhau\" và ta sẽ bỏ sót thay đổi thật. Chữ ký copy giá trị ra",
   "// string nên bắt được đúng trường hợp này.",
   "// WeakMap theo store instance (KHÔNG phải biến module dùng chung) để",
-  "// mỗi pinia instance — nhất là trong test, mỗi test tạo pinia mới — có",
   "// snapshot riêng, và snapshot tự thu hồi cùng store. Không đụng vào",
   "// Đúng giá trị mà state đang giữ sau lần gán gần nhất (proxy reactive",
   "// của Pinia). Nếu nơi khác thay mảng này (load save, $reset, $patch)",
@@ -11803,12 +11626,6 @@
   "// ARCH-002 (M7): formula lives in resolvePlayerFinalStats() — the same",
   "// The character's visual form — derived FROM the entity itself",
   "// PLAYER_VISUAL_PROFILES on the presentation side — this is only the id.",
-  "// Guard 0.01 (plan §6) — percent âm hợp lệ (Phàm Cốt −75% → 0.25×)",
-  "// nhưng không bao giờ về 0/âm.",
-  "// M2 — Hau Tich Bat Phat: per-realm-level ramp (neutral 1 when",
-  "// Đếm tu vi dồn suốt đời (không bị đột phá tiêu hao) — nuôi",
-  "// Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — cùng nguồn",
-  "// \"gained\" nuôi Kiếm Ý ở trên, xem core/technique/TechniqueTier.ts's",
   "// Gọi bởi App.vue mỗi tick với kết quả từ",
   "// GameManager.getAggregatedModifiers(). Store không tự tính",
   "// buff/technique modifier, chỉ lưu lại để finalStats dùng.",
@@ -11836,7 +11653,6 @@
   "// lastSavedAt phải được cập nhật TRƯỚC khi ghi file,",
   "// nếu không offline progress lần sau sẽ bị tính dư",
   "// (vì file lưu mốc thời gian cũ hơn thời điểm save thật).",
-  "// R10 (AR-12): this.$state is a live reactive Pinia proxy —",
   "// R10 (AR-12) — payload-identity guard: WHOLE-payload hash (qua",
   "// computeRestoreIdentity — exclude lastSavedAt), không còn",
   "// fingerprint 2-field. Cùng save gọi lại = no-op; save KHÁC (dù",
@@ -12046,10 +11862,12 @@
   "/** * Cultivation Path Framework isolation guard (M10, spec §28). * * The framework's core law: generic systems MUST NOT branch on concrete * path/way identity. Path/way modules may know their own ids; content * (data/**, artifact maps, visual profiles) legitimately keys on them. * * Two checks, both dependency/branch-level rather than literal-grep: * * 1. MODULE ISOLATION (dependency direction, A6) — a path module * (core/kiem-tu, core/phap-tu, core/the-tu) never imports upward into * orchestration/presentation/persistence, and never imports a sibling * path module. The catalog (core/player/CultivationPathKit) is the * single aggregation point allowed to know every module. * * 2. IDENTITY-BRANCHING — outside the authority dir (core/player), the * three module dirs, save shape validation, and tests, no file may * compare cultivationPath / cultivationWay / pathId / wayId (or a * getActivePath()/getActiveWay() read) to a concrete literal, nor * switch on the identity fields. Comparisons against DECLARED data * (node.requiredCultivationPath, catalog lookups, domain-capability * checks on stat domains) are the approved shape and are not flagged. */",
   "// Check 1 — module isolation",
   "// Check 2 — identity branching",
+  "// their base prefixes inside the quoted alternation. P7-M1 — the",
   "// Check 3 — predicate/seam import allowlist (review cycle 2, F3)",
   "// (predicates, economy ops, providers) — but each site is an intentional",
   "// Orchestration layer — the battle-provider/ritual seams are owned here.",
-  "// Typed NodeEffect channels (elementTag/routeTag, kiemDaoCap) — the"
+  "// Typed NodeEffect channels (elementTag/routeTag, kiemDaoCap) — the",
+  "// P7-M1 — retired field names stay in the pattern so legacy reads can't"
  ],
  "tests/architecture/dynamicRegionHost.test.ts": [
   "/** * Guard (V4) — a Phaser.Game is constructed in exactly one place. * * Spec: docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md * §5 and §7. * * Two shells used to hand-roll construction, dynamic import, resize * observation, teardown and error handling, in two different bodies of code. * Neither was wrong — but under §2 a static shell hosting a dynamic region is * the STANDARD composition, so region three and region four would each have * been another copy, and Mission 0 §13 warns that reusing a renderer does not * make a hosting lifecycle correct. * * Scope limit: source-shaped. A construction through an aliased constructor * (`const G = Phaser.Game; new G(...)`) would slip past it. */",
@@ -12163,7 +11981,7 @@
   "// DOM assertion on the outcome — victory OR defeat, both end the battle."
  ],
  "tests/e2e/cultivation-path-ritual.spec.ts": [
-  "/** * P14 runtime oracle for the Cultivation Path Framework — the M10 * six-way ritual matrix, deferred out of the isolated worktree. * * Every test drives the real loop: * boot -> create -> save -> seed realmLevel 12 (+ gate mirrors for * hidden ways) -> reload -> RealmPanel \"Quan Khi\" -> tribulation * fast-forward -> victory -> QuanKhiPanel offers -> choose (path, way) * -> ConfirmModal -> realm advances, kit committed -> save oracle. * * Save-oracle fields: player.cultivationPath/cultivationWay (the atomic * pair), the way-owned slices (kiemTu without the retired mode key, * phapTu pending the element pick), and the top-level * techniques/skills manager arrays (equipped technique + learned kit). */",
+  "/** * P14 runtime oracle for the Cultivation Path Framework — the M10 * six-way ritual matrix, deferred out of the isolated worktree. * * Every test drives the real loop: * boot -> create -> save -> seed realmLevel 12 (+ gate mirrors for * hidden ways) -> reload -> RealmPanel \"Quan Khi\" -> tribulation * fast-forward -> victory -> QuanKhiPanel offers -> choose (path, way) * -> ConfirmModal -> realm advances, kit committed -> save oracle. * * Save-oracle fields: player.cultivationPath/cultivationWay (the atomic * pair), the way-owned slices (swordPath without the retired mode key, * spellPath pending the element pick), and the top-level * techniques/skills manager arrays (equipped technique + learned kit). */",
   "// CAST_LEVELING_THRESHOLDS[skillId].lv3 (SkillSystem.ts) — the cast",
   "/** * Drives the Quan Khi tribulation to victory and leaves the QuanKhiPanel * offer list on screen (the outcome service opens standalonePanel * 'quan_khi' on the mortal -> qi_refining kiếp). */",
   "/** Clicks a way card by its \"Bước Vào {name}\" button and confirms. */",
@@ -12286,7 +12104,7 @@
   "// ARCH-002 (M7): startStage resolves stats internally from the player —"
  ],
  "tests/lab/progressionSweep.test.ts": [
-  "/** * B3 progression sweep (2026-09-14) — for each of the 30 chapter floors, * finds the minimum realmLevel at which the INTENDED-power player * clears, through the real engine. Output feeds the beta gate: if a * floor needs gate+N levels, N is the grind the floor demands. * * Intended build (documented, deterministic where possible): * - realm/realmLevel swept from the stage gate to 18. * - cultivationPath 'phap_tu' for qi_refining+ (Quán Khí at mortal 12 * is the breakthrough, so qi/foundation players always have it). * - technique dai_ngu_hanh_chan_quyet learned+equipped (the kit grant), * dai_ngu_hanh_quyet_truc_co at foundation (realm reward upgrade). * - realm passive synced via syncRealmPassive (real breakthrough path). * - talent 'tat_phong' (kill-stacking speed — a reasonable combat pick). * - attribute points: 5 creation + 12/realm prior (min breakthrough * path) + (L-1) this realm, split 50/50 vitality/strength. * - body refinement (mortal): every tier whose requiredRealmLevel <= L * completed via investBodyRefinement with enough Tinh Hoa. * - gear: 6 slots, best quality of 30 real rolls/slot at that level. * - enhancement: every equipped slot pushed to +ENHANCE_TARGET via * enhanceSlot with real spirit-stone spend. * - pills: 3 of each permanent-stat pill family via usePill (models a * player who did some farming, not infinite grind). * - skill: hoa_cau_thuat in slot 0 for qi_refining+, upgraded to L10; * all fire/lap_dao/thuan_fire nodes purchasable at the realm bought. * - technique at Vien Man insight (60% of its requirement). * - companions: ho_ly_tinh + khai_son_luc_si + linh_hac pulled/fed to * the realm cap, fielded through a committed ngu_hanh_tran loadout. * - enhancement: +30 per slot (a deep-grind bound, not early-game). */",
+  "/** * B3 progression sweep (2026-09-14) — for each of the 30 chapter floors, * finds the minimum realmLevel at which the INTENDED-power player * clears, through the real engine. Output feeds the beta gate: if a * floor needs gate+N levels, N is the grind the floor demands. * * Intended build (documented, deterministic where possible): * - realm/realmLevel swept from the stage gate to 18. * - cultivationPath 'spell' for qi_refining+ (Quán Khí at mortal 12 * is the breakthrough, so qi/foundation players always have it). * - technique dai_ngu_hanh_chan_quyet learned+equipped (the kit grant), * dai_ngu_hanh_quyet_truc_co at foundation (realm reward upgrade). * - realm passive synced via syncRealmPassive (real breakthrough path). * - talent 'tat_phong' (kill-stacking speed — a reasonable combat pick). * - attribute points: 5 creation + 12/realm prior (min breakthrough * path) + (L-1) this realm, split 50/50 vitality/strength. * - body refinement (mortal): every tier whose requiredRealmLevel <= L * completed via investBodyRefinement with enough Tinh Hoa. * - gear: 6 slots, best quality of 30 real rolls/slot at that level. * - enhancement: every equipped slot pushed to +ENHANCE_TARGET via * enhanceSlot with real spirit-stone spend. * - pills: 3 of each permanent-stat pill family via usePill (models a * player who did some farming, not infinite grind). * - skill: hoa_cau_thuat in slot 0 for qi_refining+, upgraded to L10; * all fire/lap_dao/thuan_fire nodes purchasable at the realm bought. * - technique at Vien Man insight (60% of its requirement). * - companions: ho_ly_tinh + khai_son_luc_si + linh_hac pulled/fed to * the realm cap, fielded through a committed ngu_hanh_tran loadout. * - enhancement: +30 per slot (a deep-grind bound, not early-game). */",
   "// Technique tier — insight is per-learned-technique (single",
   "// Skill leveling + node tree — the intended qi/foundation power",
   "// thuan_fire; never da_phap — it excludes thuan) until the insight",

@@ -115,8 +115,8 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const player = createDefaultPlayer()
 
     player.realmId = 'qi_refining'
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngo_dao'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'hidden_spell_pathway'
 
     const save = buildGameSave(player, gameManager)
     const roundTripped: unknown = JSON.parse(JSON.stringify(save))
@@ -129,8 +129,8 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     const playerData = (roundTripped as { player: typeof player }).player
 
-    expect(playerData.cultivationPath).toBe('phap_tu')
-    expect(playerData.cultivationWay).toBe('ngo_dao')
+    expect(playerData.cultivationPath).toBe('spell')
+    expect(playerData.cultivationWay).toBe('hidden_spell_pathway')
   })
 
   it('cultivationWay vắng mặt trên save chưa chọn path vẫn hợp lệ', () => {

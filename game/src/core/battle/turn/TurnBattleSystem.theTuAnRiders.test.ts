@@ -16,7 +16,7 @@ import type { CombatRng } from '../contracts/rng'
 import { HO_MON_MARKER, TRO_MON_MARKER } from '../../../data/buff/TheTuBuffs'
 import { BAT_TU_BA_THE, TRO_KICH } from '../../../data/skill/TheTuSkills'
 import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
-import { TheTuBatTuSurvival } from '../../the-tu/TheTuBatTuSurvival'
+import { BodyBatTuSurvival } from '../../the-tu/TheTuBatTuSurvival'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
@@ -562,7 +562,7 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
         },
       },
       extraSources: [
-        new TheTuBatTuSurvival({
+        new BodyBatTuSurvival({
           ultimateSlot: () => defenderP.ultimate,
           hasActiveBuff: (definitionId) =>
             runtime.buffs

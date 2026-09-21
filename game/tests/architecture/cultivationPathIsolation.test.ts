@@ -82,8 +82,10 @@ function resolveToSrc(specifier: string, fromFile: string): string | null {
 // ---------------------------------------------------------------------------
 
 // Path + way literals, longest-first so '_an' remnants match before
-// their base prefixes inside the quoted alternation.
-const CONCRETE_ID = String.raw`(?:kiem_tu_an|phap_tu_an|the_tu_an|kiem_tu|phap_tu|the_tu|ngu_hanh|ngo_dao|ung_the|hien|ngu)`
+// their base prefixes inside the quoted alternation. P7-M1 — the
+// canonical English ids join the retired VN set: the guard covers
+// both so no literal of EITHER vocabulary may branch on identity.
+const CONCRETE_ID = String.raw`(?:hidden_sword_pathway|hidden_spell_pathway|hidden_body_pathway|sword_pathway|spell_pathway|body_pathway|kiem_tu_an|phap_tu_an|the_tu_an|kiem_tu|phap_tu|the_tu|ngu_hanh|ngo_dao|ung_the|hien|ngu|sword|spell|body)`
 const IDENTITY_FIELD = String.raw`(?:cultivationPath|cultivationWay|pathId|wayId)`
 const IDENTITY_READ = String.raw`(?:\b${IDENTITY_FIELD}\b|getActivePath\s*\([^)]*\)|getActiveWay\s*\([^)]*\))`
 
@@ -165,10 +167,12 @@ const SEAM_ALLOWLIST_FILES: readonly string[] = [
 // ---------------------------------------------------------------------------
 // Check 4 - slice inference (P1): direct field reads INTO a module-owned
 // persisted slice are slice inference outside the owners. The canonical
-// reads (getActiveElement/getActiveRoute/getKiemTuPreset) and capability
-// checks in core/player are the only generic path into phapTu/kiemTu.
+// reads (getActiveElement/getActiveRoute/getSwordScrollPreset) and capability
+// checks in core/player are the only generic path into spellPath/swordPath.
+// P7-M1 — retired field names stay in the pattern so legacy reads can't
+// resurface unchecked.
 // ---------------------------------------------------------------------------
-const SLICE_READ_PATTERN = /\.(?:kiemTu|phapTu)\b/
+const SLICE_READ_PATTERN = /\.(?:swordPath|spellPath|kiemTu|phapTu)\b/
 
 // Legit slice readers: the write/commit ops (GameManagerProgressionOps
 // owns selectPhapTuElement/setKiemPhoPreset; RealmAdvanceOps owns the

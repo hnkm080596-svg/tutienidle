@@ -6,7 +6,7 @@
  *
  * Intended build (documented, deterministic where possible):
  *  - realm/realmLevel swept from the stage gate to 18.
- *  - cultivationPath 'phap_tu' for qi_refining+ (Quán Khí at mortal 12
+ *  - cultivationPath 'spell' for qi_refining+ (Quán Khí at mortal 12
  *    is the breakthrough, so qi/foundation players always have it).
  *  - technique dai_ngu_hanh_chan_quyet learned+equipped (the kit grant),
  *    dai_ngu_hanh_quyet_truc_co at foundation (realm reward upgrade).
@@ -63,8 +63,8 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
   lab.player.completedStageIds.push(...stageList.slice(0, stageIndex).map((s) => s.id))
 
   if (realmId !== 'mortal') {
-    lab.player.cultivationPath = 'phap_tu'
-    lab.player.cultivationWay = 'ngu_hanh'
+    lab.player.cultivationPath = 'spell'
+    lab.player.cultivationWay = 'spell_pathway'
     lab.manager.realmAdvanceOps.learnTechnique('dai_ngu_hanh_chan_quyet')
     lab.manager.realmAdvanceOps.equipTechnique('dai_ngu_hanh_chan_quyet')
     if (realmId === 'foundation_establishment') {

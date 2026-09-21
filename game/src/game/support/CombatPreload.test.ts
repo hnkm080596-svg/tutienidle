@@ -1,7 +1,7 @@
 // P2 cleanup (dong-fu plan) — queueCombatAssets không được queue trùng
 // một texture key trong cùng lượt gọi: `textures.exists()` không nhận
 // biết key mới chỉ được queue, và các Player profile dùng trùng key
-// (kiem_tu = mortal combat key; cultivate key chung 3 profile).
+// (sword = mortal combat key; cultivate key chung 3 profile).
 import { describe, expect, it } from 'vitest'
 import { PLAYER_TEXTURE_KEY, PLAYER_TEXTURE_URL, queueCombatAssets } from './CombatPreload'
 

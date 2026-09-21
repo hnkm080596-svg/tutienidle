@@ -45,7 +45,7 @@ const definition = computed(() => (artifactId.value ? ARTIFACTS[artifactId.value
 
 const cultivationPathLabel = computed(() => {
   // M5 — the active way (cultivationWay authoritative) names the path,
-  // so a collapsed ('the_tu','ung_the') save labels Ứng Thế correctly.
+  // so a collapsed ('body','hidden_body_pathway') save labels Ứng Thế correctly.
   const way = getActiveWayDefinition(player)
 
   return way?.name ?? t('panels.artifact.noPath')

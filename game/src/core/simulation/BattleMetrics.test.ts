@@ -31,7 +31,7 @@ function result(seed = 20260922) {
   return runBattle({
     seed,
     build: ngoDaoBuild(),
-    ritual: { pathId: 'phap_tu', wayId: 'ngo_dao' },
+    ritual: { pathId: 'spell', wayId: 'hidden_spell_pathway' },
     encounter: { kind: 'stage', stageId: 'mortal_dong_1' },
   })
 }
@@ -172,7 +172,7 @@ describe('BattleMetrics semantics', () => {
     gameManager.catalogOps.registerEnemyTemplates(ENEMIES)
     gameManager.catalogOps.registerStages(STAGES)
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
+    player.cultivationPath = 'sword'
     gameManager.setActivePlayer(player)
     const collector = new BattleMetricsCollector(gameManager)
     const tanky = defineEnemy({
@@ -241,7 +241,7 @@ describe('BattleMetrics semantics', () => {
     gameManager.catalogOps.registerEnemyTemplates(ENEMIES)
     gameManager.catalogOps.registerStages(STAGES)
     const player = createDefaultPlayer()
-    player.cultivationPath = 'kiem_tu'
+    player.cultivationPath = 'sword'
     gameManager.setActivePlayer(player)
     const collector = new BattleMetricsCollector(gameManager)
     const tanky = defineEnemy({
@@ -445,7 +445,7 @@ describe('BattleMetrics semantics', () => {
     const refingerprint = runBattle({
       seed: 20260922,
       build: ngoDaoBuild(),
-      ritual: { pathId: 'phap_tu', wayId: 'ngo_dao' },
+      ritual: { pathId: 'spell', wayId: 'hidden_spell_pathway' },
       encounter: { kind: 'stage', stageId: 'mortal_dong_1' },
     })
     expect(refingerprint.fingerprint).toBe(r.fingerprint)

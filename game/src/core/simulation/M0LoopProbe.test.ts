@@ -150,7 +150,7 @@ describe('P6-M0 loop probe', () => {
 
     // --- step 5: ritual ---
     log['offerable'] = gm.catalogOps ? undefined : undefined
-    const ritualOk = gm.realmAdvanceOps.chooseCultivationPath('kiem_tu', 'hien', player)
+    const ritualOk = gm.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)
     log['ritual'] = ritualOk
     log['post_ritual'] = snap(player)
 

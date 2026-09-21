@@ -16,7 +16,7 @@ import type { Skill } from '../skill/Skill'
 import type { Technique } from '../technique/Technique'
 import type { Enemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
-import type { CultivationPathId, PathWayId } from '../player/CultivationPathKit'
+import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
@@ -27,7 +27,7 @@ import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { ENEMIES } from '../../data/enemy/Enemies'
 import { STAGES } from '../../data/stage/Stages'
 import type { ElementType } from '../element/ElementType'
-import type { PhapTuRoute } from '../phap-tu/PhapTuState'
+import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { BattleMetricsCollector, type BattleMetrics } from './BattleMetrics'
 
 // Detached post-ritual build identity - PlayerData alone is NOT enough:
@@ -56,7 +56,7 @@ export type SimEncounter =
 // entry maps 1:1 onto a public GameManagerProgressionOps writer.
 // A recipe needing a new setup operation extends the union explicitly.
 export type SimulationCanonicalWrite =
-  | { type: 'select_phap_tu_element'; element: ElementType; route: PhapTuRoute }
+  | { type: 'select_phap_tu_element'; element: ElementType; route: SpellPathRoute }
   | { type: 'purchase_node'; nodeId: string }
 
 export interface BattleSimulationInput {
@@ -65,7 +65,7 @@ export interface BattleSimulationInput {
   // Optional PAIR - both required together. Runs the real
   // chooseCultivationPath; the snapshot's player must be pre-ritual
   // (the ritual legitimately rejects an already-chosen player).
-  ritual?: { pathId: CultivationPathId; wayId: PathWayId }
+  ritual?: { pathId: CultivationPathId; wayId: CultivationWayId }
   // Ordered canonical post-ritual writes (P5 BaselineRecipe setup) -
   // executed through the public progressionOps surface AFTER the ritual,
   // BEFORE battle start. A write returning false fails the run loudly.
@@ -168,7 +168,7 @@ export function runBattle(input: BattleSimulationInput): BattleSimulationResult 
     let ok: boolean
     switch (write.type) {
       case 'select_phap_tu_element':
-        ok = gameManager.progressionOps.selectPhapTuElement(write.element, write.route, player)
+        ok = gameManager.progressionOps.selectSpellPathElement(write.element, write.route, player)
         break
       case 'purchase_node':
         ok = gameManager.progressionOps.purchaseNode(write.nodeId, player)

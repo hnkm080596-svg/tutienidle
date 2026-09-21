@@ -1308,7 +1308,7 @@ export class GameManagerTurnBattleOps {
     }
 
     // P2 - the build declares every entry buff (Tran Phap formation x
-    // allies, the phap_tu.reaction_aura grant x living allies, kit-clone
+    // allies, the spell.reaction_aura grant x living allies, kit-clone
     // grantsBuffsAtBuild from the effective post-emblem slots). The only
     // remaining ops-side check is battle-local registry membership:
     // unknown ids stay graceful-skipped (review Task 19) because the

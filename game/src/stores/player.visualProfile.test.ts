@@ -16,18 +16,18 @@ describe('player store — visualProfileId', () => {
     expect(store.visualProfileId).toBe('mortal')
   })
 
-  it('phap_tu path -> phap_tu profile', () => {
+  it('spell path -> phap_tu profile', () => {
     const store = usePlayerStore()
 
-    store.cultivationPath = 'phap_tu'
+    store.cultivationPath = 'spell'
 
     expect(store.visualProfileId).toBe('phap_tu')
   })
 
-  it('kiem_tu path -> kiem_tu profile id (art layer falls back to mortal)', () => {
+  it('sword path -> kiem_tu profile id (art layer falls back to mortal)', () => {
     const store = usePlayerStore()
 
-    store.cultivationPath = 'kiem_tu'
+    store.cultivationPath = 'sword'
 
     expect(store.visualProfileId).toBe('kiem_tu')
   })

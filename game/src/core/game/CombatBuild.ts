@@ -23,7 +23,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import type { PlayerData } from '../player/Player'
 import { playerToCombatEntity, resolvePlayerStatAssembly } from '../player/Player'
-import type { CultivationPathId, PathCapability, PathWayId } from '../player/CultivationPathKit'
+import type { CultivationPathId, PathCapability, CultivationWayId } from '../player/CultivationPathKit'
 import { getActivePath, getActiveWay } from '../player/CultivationPathSystem'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 import type { ProgressionNode } from '../progression/ProgressionNode'
@@ -101,7 +101,7 @@ export interface ResolvedCompanionBuild {
 
 export interface ResolvedCombatBuild {
   /** Committed pair via catalog resolution - undefined = mortal/fail-closed. */
-  readonly identity: { path: CultivationPathId; way: PathWayId } | undefined
+  readonly identity: { path: CultivationPathId; way: CultivationWayId } | undefined
   readonly capabilities: ReadonlySet<PathCapability>
   /** undefined on the raw-entity path - ops supplies the entity. */
   readonly stats: Stats | undefined
@@ -315,7 +315,7 @@ export function resolveCombatBuild(
     }
   }
 
-  if (capabilities.has('phap_tu.reaction_aura')) {
+  if (capabilities.has('spell.reaction_aura')) {
     for (const ally of allies) {
       if (!ally.alive) continue
       entryBuffs.push({

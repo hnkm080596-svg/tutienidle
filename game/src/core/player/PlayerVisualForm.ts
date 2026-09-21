@@ -10,25 +10,25 @@ export type PlayerVisualProfileId = 'mortal' | 'phap_tu' | 'kiem_tu' | 'the_tu'
 /**
  * Pick the visual form from entity state:
  * - `cultivationPath` decides once the character has entered a path
- *   (phap_tu/kiem_tu/the_tu);
+ *   (spell/sword/body);
  * - still mortal (no path) or an unknown value -> `mortal`;
- * - `kiem_tu`/`the_tu` return their own ids (the logical form) - the art
- *   layer falls back to mortal while no dedicated art exists.
- * - `phap_tu_an` collapsed into phap_tu + cultivationWay (save v66) -
- *   the legacy id must NOT be revived here.
+ * - `sword`/`body` return their own profile ids (the logical form) - the
+ *   art layer falls back to mortal while no dedicated art exists.
+ * - the hidden ways collapse into the base path + cultivationWay (save
+ *   v66) - no hidden-path profile id exists here.
  */
 export function resolvePlayerVisualProfileId(input: {
   realmId?: string
   cultivationPath?: string
 }): PlayerVisualProfileId {
   switch (input?.cultivationPath) {
-    case 'phap_tu':
+    case 'spell':
       return 'phap_tu'
 
-    case 'kiem_tu':
+    case 'sword':
       return 'kiem_tu'
 
-    case 'the_tu':
+    case 'body':
       return 'the_tu'
 
     default:

@@ -16,12 +16,12 @@ describe('PlayerVisualProfiles — resolvePlayerVisualProfileId', () => {
     expect(resolvePlayerVisualProfileId({})).toBe('mortal')
   })
 
-  it('phap_tu → phap_tu; kiem_tu → kiem_tu', () => {
-    expect(resolvePlayerVisualProfileId({ realmId: 'qi_refining', cultivationPath: 'phap_tu' })).toBe(
+  it('spell → phap_tu; sword → kiem_tu', () => {
+    expect(resolvePlayerVisualProfileId({ realmId: 'qi_refining', cultivationPath: 'spell' })).toBe(
       'phap_tu',
     )
 
-    expect(resolvePlayerVisualProfileId({ realmId: 'qi_refining', cultivationPath: 'kiem_tu' })).toBe(
+    expect(resolvePlayerVisualProfileId({ realmId: 'qi_refining', cultivationPath: 'sword' })).toBe(
       'kiem_tu',
     )
   })
@@ -34,8 +34,8 @@ describe('PlayerVisualProfiles — resolvePlayerVisualProfileId', () => {
 
   // T4-39 - the_tu is a valid CultivationPathId and must resolve its own
   // logical profile (art layer may still fall back to mortal textures).
-  it('the_tu -> the_tu', () => {
-    expect(resolvePlayerVisualProfileId({ realmId: 'qi_refining', cultivationPath: 'the_tu' })).toBe(
+  it('body -> the_tu', () => {
+    expect(resolvePlayerVisualProfileId({ realmId: 'qi_refining', cultivationPath: 'body' })).toBe(
       'the_tu',
     )
   })

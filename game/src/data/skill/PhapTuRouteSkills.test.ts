@@ -4,7 +4,7 @@ import type { BuffDefinitionId, CombatEntityId } from '../../core/battle/contrac
 import type { EffectiveSkill } from '../../core/skill/SkillSystem'
 import type { Skill } from '../../core/skill/Skill'
 
-import { SKILLS, PHAP_TU_KIT_IDS, PHAP_TU_ROUTE_SKILL_IDS } from './Skills'
+import { SKILLS, SPELL_KIT_IDS, SPELL_ROUTE_SKILL_IDS } from './Skills'
 import { PHAP_TU_ROUTE_SKILLS } from './PhapTuRouteSkills'
 import {
   adaptSkill,
@@ -14,7 +14,7 @@ import {
 import type { AuthoredSkillOperation } from '../../core/skilldef/AuthoredOperation'
 import {
   NEUTRAL_ROUTE_PROFILE,
-  PHAP_TU_ROUTES,
+  SPELL_PATH_ROUTES,
   applyRouteToEffectiveSkill,
   applyRouteToTurnSkill,
 } from '../../core/phap-tu/PhapTuRoutes'
@@ -49,9 +49,9 @@ describe('PhapTuRouteSkills -- catalog membership', () => {
     for (const id of ids) {
       expect(SKILLS.find((s) => s.id === id)).toBeDefined()
     }
-    expect(PHAP_TU_ROUTE_SKILL_IDS.fire).toEqual(ids)
+    expect(SPELL_ROUTE_SKILL_IDS.fire).toEqual(ids)
     // the [basic, special, ultimate] kit slots stay untouched.
-    expect(PHAP_TU_KIT_IDS.fire).toEqual([
+    expect(SPELL_KIT_IDS.fire).toEqual([
       'hoa_cau_thuat',
       'tam_muoi_chan_hoa',
       'hoa_ha_cuu_thien',
@@ -217,10 +217,10 @@ describe('PhapTuRouteSkills -- route seam', () => {
   it('dot route keeps the routes:[dot] interaction; no route and neutral strip it', () => {
     const turnSkill = turnDefOf('xich_viem_xuyen_tam')
 
-    const dot = applyRouteToTurnSkill(turnSkill, PHAP_TU_ROUTES.dot)
+    const dot = applyRouteToTurnSkill(turnSkill, SPELL_PATH_ROUTES.dot)
     expect(dot.ailmentInteractions).toHaveLength(1)
 
-    const no = applyRouteToTurnSkill(turnSkill, PHAP_TU_ROUTES.no)
+    const no = applyRouteToTurnSkill(turnSkill, SPELL_PATH_ROUTES.no)
     expect(no.ailmentInteractions).toEqual([])
 
     const neutral = applyRouteToTurnSkill(turnSkill, NEUTRAL_ROUTE_PROFILE)
@@ -234,25 +234,25 @@ describe('PhapTuRouteSkills -- route seam', () => {
 
   it('non-gated interactions (phan_thien) survive every route', () => {
     const turnSkill = turnDefOf('phan_thien_hoa_vuc')
-    for (const profile of [PHAP_TU_ROUTES.dot, PHAP_TU_ROUTES.no, NEUTRAL_ROUTE_PROFILE]) {
+    for (const profile of [SPELL_PATH_ROUTES.dot, SPELL_PATH_ROUTES.no, NEUTRAL_ROUTE_PROFILE]) {
       expect(applyRouteToTurnSkill(turnSkill, profile).ailmentInteractions).toHaveLength(3)
     }
   })
 
   it('dot route adds +1 stack to seal applications; no route does not', () => {
     const turnSkill = turnDefOf('dan_hoa_quyet')
-    const dot = applyRouteToTurnSkill(turnSkill, PHAP_TU_ROUTES.dot)
+    const dot = applyRouteToTurnSkill(turnSkill, SPELL_PATH_ROUTES.dot)
     expect(dot.appliesAilments).toEqual([{ buffDefinitionId: 'hoa_an', chance: 0.7, stacks: 2 }])
-    const no = applyRouteToTurnSkill(turnSkill, PHAP_TU_ROUTES.no)
+    const no = applyRouteToTurnSkill(turnSkill, SPELL_PATH_ROUTES.no)
     expect(no.appliesAilments).toEqual([{ buffDefinitionId: 'hoa_an', chance: 0.7 }])
   })
 
   it('effective seam scales ailment chance and direct damage per route', () => {
     const eff = effectiveOf(skill('dan_hoa_quyet'))
-    const dot = applyRouteToEffectiveSkill(eff, PHAP_TU_ROUTES.dot)
+    const dot = applyRouteToEffectiveSkill(eff, SPELL_PATH_ROUTES.dot)
     expect(dot.effects[0]).toMatchObject({ type: 'damage', value: 1.1 * 0.85 })
     expect(dot.effects[1]).toMatchObject({ type: 'debuff', ailmentChance: 0.7 * 1.25 })
-    const no = applyRouteToEffectiveSkill(eff, PHAP_TU_ROUTES.no)
+    const no = applyRouteToEffectiveSkill(eff, SPELL_PATH_ROUTES.no)
     expect(no.effects[0]).toMatchObject({ value: 1.1 * 1.15 })
     expect(no.effects[1]).toMatchObject({ ailmentChance: 0.7 * 0.5 })
   })
@@ -318,7 +318,7 @@ describe('PhapTuRouteSkills -- execution (real scheduler, fake authorities)', ()
   })
 
   it('xich_viem DoT payload adds xich_viem_next_tick onto the own-source instance', () => {
-    const dotTurn = applyRouteToTurnSkill(turnDefOf('xich_viem_xuyen_tam'), PHAP_TU_ROUTES.dot)
+    const dotTurn = applyRouteToTurnSkill(turnDefOf('xich_viem_xuyen_tam'), SPELL_PATH_ROUTES.dot)
     const def = adaptTurnSkillDefinition(dotTurn).root
     const harness = makeHarness({ defs: [def] })
     spawn(harness, PLAYER)

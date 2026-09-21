@@ -136,7 +136,7 @@ export interface FormationStackSave {
 // trước.
 // version 53 (2026-08-29, kiem-the-kiem-y spec): thêm
 // `bossKillCount: number` (tầng Kiếm Ý vĩnh viễn theo boss diệt);
-// kiemTuRoute chốt vĩnh viễn lúc chọn path; gỡ skill Kiếm Tu cũ (mỗi
+// swordPathRoute chốt vĩnh viễn lúc chọn path; gỡ skill Kiếm Tu cũ (mỗi
 // route 1 active skill); gỡ rage. Chi tiết xem saveVersion.ts.
 // version 54 (2026-08-29, dot-pha-loi-kiep spec): thêm 4 field BẮT
 // BUỘC `openedMeridianIds: string[]` (Bát Mạch đã thông),
@@ -146,7 +146,7 @@ export interface FormationStackSave {
 // Phá Lệnh (token materials) + quái Kiếp. Save v53 bị từ chối (dev
 // phase, không migration). Chi tiết xem saveVersion.ts.
 // version 65 (2026-09-16, cultivation-path-framework M2): player thêm
-// field TUỲ CHỌN `cultivationWay?: PathWayId` (way trong path, xem
+// field TUỲ CHỌN `cultivationWay?: CultivationWayId` (way trong path, xem
 // core/player/CultivationPathKit.ts). M7 (v66): `cultivationPath` thu
 // còn union 3 base id, các id '_an' thành way. Save v64 trở xuống bị
 // từ chối — cùng convention mọi version trước.

@@ -44,18 +44,18 @@ function makeManager() {
   return gameManager
 }
 
-function makeTheTuPlayer(nodeLevels: Record<string, number>) {
+function makeBodyPlayer(nodeLevels: Record<string, number>) {
   const player = createDefaultPlayer()
-  player.cultivationPath = 'the_tu'
-  player.cultivationWay = 'hien'
+  player.cultivationPath = 'body'
+  player.cultivationWay = 'body_pathway'
   player.nodeLevels = nodeLevels
   return player
 }
 
-describe('the_tu kit resolution (root -> kit at participant build)', () => {
+describe('body kit resolution (root -> kit at participant build)', () => {
   it('cuong_chien root -> cuong_quyen / loan_dau / bat_tu_ba_the', () => {
     const gameManager = makeManager()
-    const player = makeTheTuPlayer({ cuong_chien: 1 })
+    const player = makeBodyPlayer({ cuong_chien: 1 })
 
     gameManager.setActivePlayer(player)
     gameManager.startBattleWithPlayer(player, makeDummyEnemy('kit_cuong'))
@@ -64,12 +64,12 @@ describe('the_tu kit resolution (root -> kit at participant build)', () => {
     expect(participant.basic?.id).toBe('cuong_quyen')
     expect(participant.special?.skill.id).toBe('loan_dau')
     expect(participant.ultimate?.skill.id).toBe('bat_tu_ba_the')
-    expect(participant.activeDomains?.has('the_tu')).toBe(true)
+    expect(participant.activeDomains?.has('body')).toBe(true)
   })
 
   it('tran_the root -> tran_ap / phan_chinh emblem / son_nhac', () => {
     const gameManager = makeManager()
-    const player = makeTheTuPlayer({ tran_the: 1 })
+    const player = makeBodyPlayer({ tran_the: 1 })
 
     gameManager.setActivePlayer(player)
     gameManager.startBattleWithPlayer(player, makeDummyEnemy('kit_tran'))
@@ -82,7 +82,7 @@ describe('the_tu kit resolution (root -> kit at participant build)', () => {
 
   it('no root -> GENERIC_PHYSICAL_BASIC only, no special/ultimate', () => {
     const gameManager = makeManager()
-    const player = makeTheTuPlayer({})
+    const player = makeBodyPlayer({})
 
     gameManager.setActivePlayer(player)
     gameManager.startBattleWithPlayer(player, makeDummyEnemy('kit_none'))
@@ -95,7 +95,7 @@ describe('the_tu kit resolution (root -> kit at participant build)', () => {
 
   it('emblem special is never selected by selectAction/selectForcedAction but its buff lands at build', () => {
     const gameManager = makeManager()
-    const player = makeTheTuPlayer({ tran_the: 1 })
+    const player = makeBodyPlayer({ tran_the: 1 })
 
     gameManager.setActivePlayer(player)
     gameManager.startBattleWithPlayer(player, makeDummyEnemy('kit_emblem'))

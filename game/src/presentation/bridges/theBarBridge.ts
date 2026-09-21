@@ -8,15 +8,15 @@
 // scene calls it through the registry key each frame.
 //
 // Reader returns null when there is no live battle, the way is not
-// ngu_hanh (ngo_dao owns NO The pool — spec P6), or no element has
+// spell_pathway (hidden_spell_pathway owns NO The pool — spec P6), or no element has
 // been committed -> CombatScene hides the bar.
 
 import { MAX_THE } from '@/core/combat/CombatTypes'
-import { PHAP_TU_EMPOWERMENT_THE_THRESHOLD } from '@/core/phap-tu/PhapTuRoutes'
+import { SPELL_EMPOWERMENT_ESSENCE_THRESHOLD } from '@/core/phap-tu/PhapTuRoutes'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { GameManager } from '@/core/game/GameManager'
-import type { PhapTuState } from '@/core/phap-tu/PhapTuState'
-import type { CultivationPathId, PathWayId } from '@/core/player/CultivationPathKit'
+import type { SpellPathState } from '@/core/phap-tu/PhapTuState'
+import type { CultivationPathId, CultivationWayId } from '@/core/player/CultivationPathKit'
 import {
   getActiveElement,
   hasStaticPathCapability,
@@ -50,8 +50,8 @@ export const THE_BAR_READER_KEY = 'theBarReader' as const
  * stays free of Vue/Pinia imports so scenes never drag the store in. */
 export interface TheBarPlayerState {
   cultivationPath?: CultivationPathId | null
-  cultivationWay?: PathWayId | null
-  phapTu: PhapTuState
+  cultivationWay?: CultivationWayId | null
+  spellPath: SpellPathState
   nodeLevels: Record<string, number>
 }
 
@@ -73,15 +73,15 @@ export function makeTheBarReader(
 
     const player = getPlayer()
 
-    // M4 (R6): the The pool is ngu_hanh machinery - P1 - the declared
-    // 'phap_tu.the_pool' capability is the gate, durable for the
-    // collapsed ('phap_tu','ngo_dao') shape.
-    if (!hasStaticPathCapability(player, 'phap_tu.the_pool')) {
+    // M4 (R6): the The pool is spell_pathway machinery - P1 - the declared
+    // 'spell.essence_pool' capability is the gate, durable for the
+    // collapsed ('spell','hidden_spell_pathway') shape.
+    if (!hasStaticPathCapability(player, 'spell.essence_pool')) {
       return null
     }
 
     // Canonical subpath read - the committed element under the owning
-    // way's axis (undefined for ngo_dao / uncommitted / corrupt pairs).
+    // way's axis (undefined for hidden_spell_pathway / uncommitted / corrupt pairs).
     const element = getActiveElement(player)
 
     if (!element) {
@@ -101,12 +101,12 @@ export function makeTheBarReader(
 
     // Empowered = the phap-tuong unlock node for this element is owned;
     // at threshold the ult consumes the whole pool (spec section 3.3). P1 -
-    // node ownership surfaces as the 'phap_tu.empowered_ult' capability;
+    // node ownership surfaces as the 'spell.empowered_ult' capability;
     // the bridge reads it through the bound facade (SkillManager is not
     // a bridge dependency).
-    const empowered = gameManager.hasPathCapability('phap_tu.empowered_ult')
+    const empowered = gameManager.hasPathCapability('spell.empowered_ult')
 
-    return { current, max, threshold: PHAP_TU_EMPOWERMENT_THE_THRESHOLD, empowered, label: 'Thế' }
+    return { current, max, threshold: SPELL_EMPOWERMENT_ESSENCE_THRESHOLD, empowered, label: 'Thế' }
   }
 }
 

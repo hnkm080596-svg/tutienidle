@@ -128,7 +128,7 @@ function makeAnPlayerWithCompanion() {
   registerE2ECompanion()
   const { gameManager, combatSource } = makeManager()
   const player = mortalAtGate()
-  gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)
+  gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)
   gameManager.progressionOps.purchaseNode('ho_mon', player)
   gameManager.progressionOps.purchaseNode('phan_mon', player)
   // vit+dex -> protectChance, str+dex -> counterChance: 200s reach the
@@ -217,7 +217,7 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
   it('solo An has no Ho/Tro windows — self-hit pays only the counter check (spec 6.3)', () => {
     const { gameManager, combatSource } = makeManager()
     const player = mortalAtGate()
-    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)
     gameManager.progressionOps.purchaseNode('ho_mon', player)
     gameManager.progressionOps.purchaseNode('phan_mon', player)
     player.baseStats = asBaseStats({ ...player.baseStats, vitality: 200, dexterity: 200, strength: 200, might: 10, speed: 1 })
@@ -338,7 +338,7 @@ describe('an save/restore parity', () => {
   it('path + root nodes round-trip; the rebuilt battle plants the markers', () => {
     const { gameManager } = makeManager()
     const player = mortalAtGate()
-    gameManager.realmAdvanceOps.chooseCultivationPath('the_tu', 'ung_the', player)
+    gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)
     gameManager.progressionOps.purchaseNode('ho_mon', player)
     gameManager.progressionOps.purchaseNode('tro_mon', player)
 
@@ -351,8 +351,8 @@ describe('an save/restore parity', () => {
     expect(result.status).toBe('ok')
 
     const restoredPlayer = playerStore.$state
-    expect(restoredPlayer.cultivationPath).toBe('the_tu')
-    expect(restoredPlayer.cultivationWay).toBe('ung_the')
+    expect(restoredPlayer.cultivationPath).toBe('body')
+    expect(restoredPlayer.cultivationWay).toBe('hidden_body_pathway')
     expect(restoredPlayer.nodeLevels?.ho_mon).toBe(1)
     expect(restoredPlayer.nodeLevels?.tro_mon).toBe(1)
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Trích từ LoadoutManager.vue's khối TRÊN của tab 'skill' (2026-08-20)
-// — dời NGUYÊN VẸN vào SkillPathPanel.vue (cả 2 nhánh phap_tu/kiem_tu
-// đều cần dải Loadout này, xem PhapTuPanel plan mục 13 "PHÁP THUẬT
+// — dời NGUYÊN VẸN vào SkillPathPanel.vue (cả 2 nhánh spell/sword
+// đều cần dải Loadout này, xem SpellPathPanel plan mục 13 "PHÁP THUẬT
 // ĐANG VẬN HÀNH"), tách thành component riêng thay vì lặp lại markup ở
 // 2 chỗ trong SkillPathPanel.vue.
 import { computed, ref } from 'vue'

@@ -43,23 +43,23 @@ describe('toTurnBattleParticipant adapter', () => {
   it('a resolved domain list grants the declared active domains', () => {
     // M5 — the adapter takes the way-resolved domain list; path-id ->
     // domain mapping lives upstream (resolveActiveWayStatDomains).
-    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['phap_tu'])
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['spell'])
 
-    expect(participant.activeDomains?.has('phap_tu')).toBe(true)
+    expect(participant.activeDomains?.has('spell')).toBe(true)
   })
 
-  it('kiem_tu domains grant kiem_tu — and NOT phap_tu', () => {
-    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['kiem_tu'])
+  it('sword domains grant sword — and NOT spell', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['sword'])
 
-    expect(participant.activeDomains?.has('kiem_tu')).toBe(true)
-    expect(participant.activeDomains?.has('phap_tu')).toBe(false)
+    expect(participant.activeDomains?.has('sword')).toBe(true)
+    expect(participant.activeDomains?.has('spell')).toBe(false)
   })
 
-  it('the the_tu_an way domain is distinct from the hien family domain', () => {
-    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['the_tu_an'])
+  it('the hidden_body way domain is distinct from the hien family domain', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['hidden_body'])
 
-    expect(participant.activeDomains?.has('the_tu_an')).toBe(true)
-    expect(participant.activeDomains?.has('the_tu')).toBe(false)
+    expect(participant.activeDomains?.has('hidden_body')).toBe(true)
+    expect(participant.activeDomains?.has('body')).toBe(false)
   })
 
   it('no domains (enemy/companion) leaves activeDomains undefined', () => {
@@ -72,8 +72,8 @@ describe('toTurnBattleParticipant adapter', () => {
 
 
 describe('Kiem Tu Reimagined Task 6 — no buildId special/ultimate map', () => {
-  it('kiem_tu domains grant NO special/ultimate — hien kit is the orb preset; ngu emblems arrive via override (Task 9)', () => {
-    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['kiem_tu'])
+  it('sword domains grant NO special/ultimate — hien kit is the orb preset; ngu emblems arrive via override (Task 9)', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['sword'])
 
     expect(participant.special).toBeUndefined()
     expect(participant.ultimate).toBeUndefined()
@@ -128,7 +128,7 @@ describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)
   it('populates special/ultimate from the resolved override when provided', () => {
     const combatEntity = entity()
 
-    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['phap_tu'], {
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['spell'], {
       special: SPECIAL,
       ultimate: ULTIMATE,
     })
@@ -143,7 +143,7 @@ describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)
 
     // The domain list only declares stat-domain ownership — the
     // special/ultimate slots come solely from the resolved override.
-    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['phap_tu'], { special: SPECIAL })
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['spell'], { special: SPECIAL })
 
     expect(participant.special?.skill.id).toBe('tam_muoi_chan_hoa')
   })
@@ -151,7 +151,7 @@ describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)
   it('omits both slots when no override is resolved', () => {
     const combatEntity = entity()
 
-    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['phap_tu'])
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['spell'])
 
     expect(participant.special).toBeUndefined()
     expect(participant.ultimate).toBeUndefined()
@@ -160,11 +160,11 @@ describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)
   it('a Kiem Tu player gets slots only via the resolved override (ngu emblems, Task 9) — domains alone map nothing', () => {
     const combatEntity = entity()
 
-    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['kiem_tu'])
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['sword'])
     expect(participant.special).toBeUndefined()
     expect(participant.ultimate).toBeUndefined()
 
-    const withEmblems = toTurnBattleParticipant(combatEntity, 0, BASIC, ['kiem_tu'], {
+    const withEmblems = toTurnBattleParticipant(combatEntity, 0, BASIC, ['sword'], {
       special: SPECIAL,
       ultimate: ULTIMATE,
     })

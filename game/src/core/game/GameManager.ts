@@ -138,7 +138,7 @@ import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
-import { PHAP_TU_KIT_IDS, PHAP_TU_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
+import { SPELL_KIT_IDS, SPELL_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
 import {
   NEUTRAL_ROUTE_PROFILE,
   resolveRouteProfile,
@@ -481,12 +481,12 @@ export class GameManager {
     // seams: the provider feeds getEffectiveSkill's effective-surface
     // application AND the post-conversion applyRouteToTurnSkill call at
     // the orchestration sites below. Neutral unless the active player
-    // is normal phap_tu with an element and the skill is a kit member.
+    // is normal spell with an element and the skill is a kit member.
     this.routeProfileProvider = (skillId) => {
       const player = this.activePlayer
 
       // P1 - the gate is the declared capability, not the way predicate.
-      if (player === undefined || !hasStaticPathCapability(player, 'phap_tu.elemental_casting')) {
+      if (player === undefined || !hasStaticPathCapability(player, 'spell.elemental_casting')) {
         return NEUTRAL_ROUTE_PROFILE
       }
 
@@ -494,8 +494,8 @@ export class GameManager {
 
       if (
         !element ||
-        (!PHAP_TU_KIT_IDS[element].includes(skillId) &&
-          !PHAP_TU_ROUTE_SKILL_IDS[element].includes(skillId))
+        (!SPELL_KIT_IDS[element].includes(skillId) &&
+          !SPELL_ROUTE_SKILL_IDS[element].includes(skillId))
       ) {
         return NEUTRAL_ROUTE_PROFILE
       }
@@ -798,7 +798,7 @@ export class GameManager {
           skillTemplates: this.skillTemplates,
           nodeRegistry: this.nodeRegistry,
           getNodeLevel: (nodeId, p) => this.progressionOps.getNodeLevel(nodeId, p),
-          getPhapTuElement: () => this.progressionOps.getPhapTuElement(),
+          getSpellPathElement: () => this.progressionOps.getSpellPathElement(),
           routeProfileProvider: this.routeProfileProvider,
         }),
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),

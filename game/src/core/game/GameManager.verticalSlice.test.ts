@@ -44,7 +44,7 @@ function harness(seed: number) {
   player.realmLevel = 12
   player.skillCastCounts = { linh_bao: LING_BAO_L3 }
   gameManager.setActivePlayer(player)
-  expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', 'ngo_dao', player)).toBe(true)
+  expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'hidden_spell_pathway', player)).toBe(true)
 
   const reactions: string[] = []
   gameManager.eventBus.on<{ reactionId: string }>('reaction_resolved', (e) => {

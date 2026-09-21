@@ -6,8 +6,8 @@ import type {
   ReactiveTriggerPayload,
 } from '../../core/proc/ProcCapabilities'
 import type { TheEconomyPayload } from '../../core/the-tu/TheTuCapabilities'
-import type { TheTuKitModifierValues } from '../../core/the-tu/TheTuKitModifiers'
-import type { TheTuAnMechanicModifierValues } from '../../core/the-tu/TheTuAnMechanicModifiers'
+import type { BodyKitModifierValues } from '../../core/the-tu/TheTuKitModifiers'
+import type { HiddenBodyMechanicModifierValues } from '../../core/the-tu/TheTuAnMechanicModifiers'
 import { THE_PROC_COST, THE_PROC_GAIN } from '../../core/the-tu/TheEconomy'
 import { MAX_THE } from '../../core/combat/CombatTypes'
 import {
@@ -20,7 +20,7 @@ import {
 } from '../buff/TheTuBuffs'
 
 // The Tu Reimagined (spec 2026-09-15 section 5, plan Task 6) — the two
-// Hien kits are NATIVE TurnSkillDefinitions (not Skill objects; the_tu
+// body_pathway kits are NATIVE TurnSkillDefinitions (not Skill objects; body
 // has no cast-leveled skills). Kit resolution reads the owned root at
 // participant build: cuong_chien / tran_the are an excludesNode mutex
 // pair (INV-2), no root -> GENERIC_PHYSICAL_BASIC only (INV-3).
@@ -200,14 +200,14 @@ const THE_TU_AN_ROOT_MARKERS: Record<TheTuAnRootId, BuffDefinition> = {
  * owned root (non-mutex, T9). The ops' existing grantsBuffsAtBuild seam
  * applies them to the participant's pool; registry defs never mutate.
  *
- * Task 20 (review P1.7): `mods` is the collectTheTuAnMechanicModifiers
+ * Task 20 (review P1.7): `mods` is the collectHiddenBodyMechanicModifiers
  * total — trunk economy lands on the ung_the marker's theEconomy fields
  * + every reactiveProc's theCost/theGainOnSuccess; branch riders land on
  * their marker's own fields (intercept ward, evade payload swap, Tro
  * heal/non-damaging). maxThe rides the kit for the adapter to stamp on
  * the participant's entity.
  */
-const ZERO_AN_MODS: TheTuAnMechanicModifierValues = {
+const ZERO_AN_MODS: HiddenBodyMechanicModifierValues = {
   maxTheBonus: 0,
   procCostDelta: 0,
   procGainBonus: 0,
@@ -241,7 +241,7 @@ function defPayloads<T>(
 
 export function buildTheTuAnKit(
   ownedRoots: readonly TheTuAnRootId[],
-  mods: TheTuAnMechanicModifierValues = ZERO_AN_MODS,
+  mods: HiddenBodyMechanicModifierValues = ZERO_AN_MODS,
 ): TheTuAnKit {
   const kit: TheTuAnKit = {
     basic: structuredClone(THAM_THE),
@@ -373,10 +373,10 @@ export type TheTuRootId = keyof typeof THE_TU_KIT_BY_ROOT
 
 /**
  * Participant-build factory: returns participant-local CLONES with
- * collectTheTuKitModifiers totals baked in (review P0.2/INV-5 — the
+ * collectBodyKitModifiers totals baked in (review P0.2/INV-5 — the
  * registry defs are never mutated; each battle builds fresh copies).
  */
-export function buildTheTuKit(root: TheTuRootId, mods: TheTuKitModifierValues): TheTuKit {
+export function buildTheTuKit(root: TheTuRootId, mods: BodyKitModifierValues): TheTuKit {
   const source = THE_TU_KIT_BY_ROOT[root]
   const kit: TheTuKit = {
     basic: structuredClone(source.basic),

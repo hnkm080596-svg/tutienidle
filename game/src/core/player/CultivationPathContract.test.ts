@@ -4,18 +4,22 @@
  * contract to every registered path module, so a NEW path/way is held
  * to the same shape the moment it is added to the catalog.
  *
- * Also pins the node-side wiring: way ids are PATH-SCOPED ('hien'
- * exists under both kiem_tu and the_tu), so a node carrying
- * `requiredWay` must also carry `requiredCultivationPath`, and the
+ * Also pins the node-side wiring: way ids are globally unique but
+ * still PATH-OWNED ('sword_pathway' belongs to the sword module
+ * alone), so a node carrying `requiredWay` must also carry
+ * `requiredCultivationPath`, and the
  * pair must resolve in the catalog — otherwise a way-gated node would
  * open to a same-named way on the wrong path.
  */
 import { describe, expect, it } from 'vitest'
 import {
   CULTIVATION_PATH_MODULES,
-  PHAP_TU_AN_REQUIRED_SKILLS,
+  CULTIVATION_PATH_WAY_IDS,
+  getActiveWayDefinition,
+  HIDDEN_SPELL_REQUIRED_SKILLS,
   type CultivationPathId,
   type CultivationPathModule,
+  type CultivationWayId,
   type PathWayDefinition,
 } from './CultivationPathKit'
 import { createDefaultPlayer } from './Player'
@@ -307,23 +311,23 @@ describe('cultivation path catalog contract (M10)', () => {
   })
 
   it("ngo_dao's ownedContent.skillIds is the kit declaration of record (P1-M2)", () => {
-    const ngoDao = CULTIVATION_PATH_MODULES.phap_tu.ways.ngo_dao
+    const ngoDao = CULTIVATION_PATH_MODULES.spell.ways.hidden_spell_pathway
     expect(ngoDao).toBeDefined()
 
     // Same reference - the export derives FROM the way declaration, so
     // the kit cannot drift away from the ownership record.
-    expect(PHAP_TU_AN_REQUIRED_SKILLS).toBe(ngoDao?.ownedContent?.skillIds)
+    expect(HIDDEN_SPELL_REQUIRED_SKILLS).toBe(ngoDao?.ownedContent?.skillIds)
     expect(ngoDao?.ownedContent?.skillIds).toHaveLength(3)
     // The Ngo Dao aura buff the runtime grant plants (carrier A).
     expect(ngoDao?.ownedContent?.buffIds).toContain('van_phap_than_hoa')
   })
 
   it('every module owning a persisted slice declares validatePersistedState (P1-M6)', () => {
-    // Persisted-slice ownership: kiem_tu creates player.kiemTu via
-    // createInitialState at ritual commit; phap_tu owns the birth field
-    // player.phapTu (createDefaultPlayer) even without a slice factory.
-    // the_tu owns no persisted slice (nodeLevels belongs to NodeSystem).
-    const SLICE_OWNERS: ReadonlySet<string> = new Set(['kiem_tu', 'phap_tu'])
+    // Persisted-slice ownership: sword creates player.swordPath via
+    // createInitialState at ritual commit; spell owns the birth field
+    // player.spellPath (createDefaultPlayer) even without a slice factory.
+    // body owns no persisted slice (nodeLevels belongs to NodeSystem).
+    const SLICE_OWNERS: ReadonlySet<string> = new Set(['sword', 'spell'])
 
     for (const [pathId, pathModule] of Object.entries(CULTIVATION_PATH_MODULES)) {
       const ownsSlice =
@@ -340,16 +344,18 @@ describe('cultivation path catalog contract (M10)', () => {
 
   it('contract runner is infra-independent (proves out on a fake module)', () => {
     const fake: CultivationPathModule = {
-      id: 'kiem_tu',
+      id: 'sword',
       name: 'Fake Path',
+      // 'demo' is deliberately not a CultivationWayId — the runner must
+      // prove out on infra that never joined the canonical catalog.
       ways: {
         demo: {
           id: 'demo',
-          pathId: 'kiem_tu',
+          pathId: 'sword',
           name: 'Demo Way',
           techniqueId: 'fake_technique',
         },
-      },
+      } as unknown as CultivationPathModule['ways'],
     }
     // A structurally valid fake passes every per-way check.
     for (const [wayKey, way] of Object.entries(fake.ways)) {
@@ -383,5 +389,50 @@ describe('cultivation path catalog contract (M10)', () => {
     }
 
     expect(violations, violations.join('\n')).toEqual([])
+  })
+})
+
+describe('P7-M1 identity spine', () => {
+  it('each path module declares exactly its canonical way set', () => {
+    for (const pathId of Object.keys(CULTIVATION_PATH_MODULES) as CultivationPathId[]) {
+      const module = CULTIVATION_PATH_MODULES[pathId]
+      expect([...Object.keys(module.ways)].sort()).toEqual(
+        [...CULTIVATION_PATH_WAY_IDS[pathId]].sort(),
+      )
+      for (const wayId of Object.keys(module.ways)) {
+        expect(module.ways[wayId as CultivationWayId]?.pathId).toBe(pathId)
+      }
+    }
+  })
+
+  it('covers all six CultivationWayId members exactly once', () => {
+    const all = Object.values(CULTIVATION_PATH_MODULES).flatMap((m) => Object.keys(m.ways))
+    expect(all.sort()).toEqual([
+      'body_pathway',
+      'hidden_body_pathway',
+      'hidden_spell_pathway',
+      'hidden_sword_pathway',
+      'spell_pathway',
+      'sword_pathway',
+    ])
+  })
+
+  it('getActiveWayDefinition resolves all six pairs and fails closed cross-path', () => {
+    for (const [pathId, wayIds] of Object.entries(CULTIVATION_PATH_WAY_IDS)) {
+      for (const wayId of wayIds) {
+        expect(
+          getActiveWayDefinition({
+            cultivationPath: pathId as CultivationPathId,
+            cultivationWay: wayId,
+          }),
+        ).toBeDefined()
+      }
+    }
+    expect(
+      getActiveWayDefinition({ cultivationPath: 'sword', cultivationWay: 'spell_pathway' }),
+    ).toBeUndefined()
+    expect(
+      getActiveWayDefinition({ cultivationPath: 'sword', cultivationWay: undefined }),
+    ).toBeUndefined()
   })
 })

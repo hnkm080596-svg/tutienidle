@@ -62,7 +62,7 @@ export function buildTechniqueSections(
     }
 
     // Task 3 (D17): the tier fields are plain authoring percents that
-    // become {stat, percent, domain:'phap_tu'} modifiers — display them
+    // become {stat, percent, domain:'spell'} modifiers — display them
     // as % directly (the retired bespoke stat keys no longer exist to
     // feed formatStat()).
     if (tierEffect.maxMpIncreasePercent !== undefined) {

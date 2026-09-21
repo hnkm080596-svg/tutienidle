@@ -10,8 +10,8 @@ import {
 } from './NodeSystem'
 import { collectKiemDaoCascadeUnlocks } from '../kiem-tu/NguKiemDaoProvider'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
-import { collectTheTuKitModifiers } from '../the-tu/TheTuKitModifiers'
-import { collectTheTuAnMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
+import { collectBodyKitModifiers } from '../the-tu/TheTuKitModifiers'
+import { collectHiddenBodyMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
 import { resolveMaxThe } from '../phap-tu/PhapTuRoutes'
 import { MAX_THE } from '../combat/CombatTypes'
 import { createDefaultPlayer } from '../player/Player'
@@ -43,7 +43,7 @@ function minorNode(overrides: Partial<ProgressionNode> = {}): ProgressionNode {
 }
 
 function ungTheNode(overrides: Partial<ProgressionNode> = {}): ProgressionNode {
-  return minorNode({ id: 'ung_the_only', requiredWay: 'ung_the', ...overrides })
+  return minorNode({ id: 'ung_the_only', requiredWay: 'hidden_body_pathway', ...overrides })
 }
 
 describe('nodeWayApplies — cultivation way membership gate', () => {
@@ -52,8 +52,8 @@ describe('nodeWayApplies — cultivation way membership gate', () => {
     const tagged = ungTheNode()
 
     const mortal = playerWith()
-    const hien = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'hien' })
-    const ungThe = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'ung_the' })
+    const hien = playerWith({ cultivationPath: 'body', cultivationWay: 'body_pathway' })
+    const ungThe = playerWith({ cultivationPath: 'body', cultivationWay: 'hidden_body_pathway' })
 
     for (const player of [mortal, hien, ungThe]) {
       expect(nodeWayApplies(player, agnostic)).toBe(true)
@@ -65,7 +65,7 @@ describe('nodeWayApplies — cultivation way membership gate', () => {
   })
 
   it('an ung_the node is NOT purchasable by a hien-way player or a mortal, even with insight', () => {
-    const hien = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'hien', skillInsight: 50 })
+    const hien = playerWith({ cultivationPath: 'body', cultivationWay: 'body_pathway', skillInsight: 50 })
     const mortal = playerWith({ skillInsight: 50 })
 
     expect(canPurchaseNode(hien, ungTheNode())).toBe(false)
@@ -78,7 +78,7 @@ describe('nodeWayApplies — cultivation way membership gate', () => {
   })
 
   it('a matching-way player purchases and aggregates the node normally', () => {
-    const player = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'ung_the', skillInsight: 50 })
+    const player = playerWith({ cultivationPath: 'body', cultivationWay: 'hidden_body_pathway', skillInsight: 50 })
 
     expect(canPurchaseNode(player, ungTheNode())).toBe(true)
     expect(purchaseNode(player, ungTheNode())).toBe(true)
@@ -93,10 +93,10 @@ describe('nodeWayApplies — cultivation way membership gate', () => {
   it('canUpgradeNode rejects a wrong-way owner even when the node has levels', () => {
     const node = ungTheNode({ maxLevel: 5, upgradeCost: { base: 1, perLevel: 2 } })
 
-    const ungThe = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'ung_the', skillInsight: 50, nodeLevels: { ung_the_only: 1 } })
+    const ungThe = playerWith({ cultivationPath: 'body', cultivationWay: 'hidden_body_pathway', skillInsight: 50, nodeLevels: { ung_the_only: 1 } })
     expect(canUpgradeNode(ungThe, node)).toBe(true)
 
-    const hien = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'hien', skillInsight: 50, nodeLevels: { ung_the_only: 1 } })
+    const hien = playerWith({ cultivationPath: 'body', cultivationWay: 'body_pathway', skillInsight: 50, nodeLevels: { ung_the_only: 1 } })
     expect(canUpgradeNode(hien, node)).toBe(false)
 
     const mortal = playerWith({ skillInsight: 50, nodeLevels: { ung_the_only: 1 } })
@@ -112,14 +112,14 @@ describe('nodeWayApplies — cultivation way membership gate', () => {
     })
     const registry = { getAll: () => [node] }
 
-    for (const way of [undefined, 'hien'] as const) {
+    for (const way of [undefined, 'body_pathway'] as const) {
       const player = playerWith({ cultivationWay: way, nodeLevels: { ung_the_only: 2 } })
 
       expect(aggregateNodeStatModifiers(registry, player)).toEqual([])
       expect(aggregateTurnSkillResourceModifiers(registry, player).size).toBe(0)
     }
 
-    const ungThe = playerWith({ cultivationWay: 'ung_the', nodeLevels: { ung_the_only: 2 } })
+    const ungThe = playerWith({ cultivationWay: 'hidden_body_pathway', nodeLevels: { ung_the_only: 2 } })
     expect(aggregateNodeStatModifiers(registry, ungThe)).toHaveLength(1)
     expect(aggregateTurnSkillResourceModifiers(registry, ungThe).get('cuong_quyen')?.theGainOnLandedCast).toBe(8)
   })
@@ -129,75 +129,75 @@ describe('requiredWay — domain collectors honor the same gate', () => {
   it('collectKiemPhoComboModifiers skips a way-mismatched node even with owned levels', () => {
     const node = minorNode({
       id: 'ngu_combo_node',
-      requiredWay: 'ngu',
+      requiredWay: 'hidden_sword_pathway',
       effect: {
-        kiemTuComboModifier: {
+        swordPathComboModifier: {
           minOrbCount: { orb: 'orb_dam', count: 2 },
           bonusDamageMultiplier: 0.5,
         },
       },
     })
 
-    const hien = playerWith({ cultivationPath: 'kiem_tu', cultivationWay: 'hien', nodeLevels: { ngu_combo_node: 1 } })
+    const hien = playerWith({ cultivationPath: 'sword', cultivationWay: 'sword_pathway', nodeLevels: { ngu_combo_node: 1 } })
     expect(collectKiemPhoComboModifiers(hien, [node])).toEqual([])
 
-    const ngu = playerWith({ cultivationPath: 'kiem_tu', cultivationWay: 'ngu', nodeLevels: { ngu_combo_node: 1 } })
+    const ngu = playerWith({ cultivationPath: 'sword', cultivationWay: 'hidden_sword_pathway', nodeLevels: { ngu_combo_node: 1 } })
     expect(collectKiemPhoComboModifiers(ngu, [node])).toHaveLength(1)
   })
 
   it('collectKiemDaoCascadeUnlocks skips a way-mismatched node even with owned levels', () => {
     const node = minorNode({
       id: 'ngu_cascade_node',
-      requiredWay: 'ngu',
+      requiredWay: 'hidden_sword_pathway',
       effect: { cascadeUnlock: 'a' },
     })
 
-    const hien = playerWith({ cultivationPath: 'kiem_tu', cultivationWay: 'hien', nodeLevels: { ngu_cascade_node: 1 } })
+    const hien = playerWith({ cultivationPath: 'sword', cultivationWay: 'sword_pathway', nodeLevels: { ngu_cascade_node: 1 } })
     expect(collectKiemDaoCascadeUnlocks(hien, [node])).toEqual({ a: false, e: false, d: false })
 
-    const ngu = playerWith({ cultivationPath: 'kiem_tu', cultivationWay: 'ngu', nodeLevels: { ngu_cascade_node: 1 } })
+    const ngu = playerWith({ cultivationPath: 'sword', cultivationWay: 'hidden_sword_pathway', nodeLevels: { ngu_cascade_node: 1 } })
     expect(collectKiemDaoCascadeUnlocks(ngu, [node])).toEqual({ a: true, e: false, d: false })
   })
 
-  it('collectTheTuKitModifiers / collectTheTuAnMechanicModifiers skip way-mismatched nodes', () => {
+  it('collectBodyKitModifiers / collectHiddenBodyMechanicModifiers skip way-mismatched nodes', () => {
     const kitNode = minorNode({
       id: 'ung_the_kit_node',
-      requiredWay: 'ung_the',
-      effect: { theTuKitModifiers: { missingHpBonusBonus: 0.5 } },
+      requiredWay: 'hidden_body_pathway',
+      effect: { bodyKitModifiers: { missingHpBonusBonus: 0.5 } },
     })
     const anNode = minorNode({
       id: 'ung_the_an_node',
-      requiredWay: 'ung_the',
-      effect: { theTuAnMechanicModifiers: { maxTheBonus: 7 } },
+      requiredWay: 'hidden_body_pathway',
+      effect: { hiddenBodyMechanicModifiers: { maxTheBonus: 7 } },
     })
     const registry = { getAll: () => [kitNode, anNode] }
 
-    const hien = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'hien', nodeLevels: { ung_the_kit_node: 2, ung_the_an_node: 2 } })
-    expect(collectTheTuKitModifiers(registry, hien).missingHpBonusBonus).toBe(0)
-    expect(collectTheTuAnMechanicModifiers(registry, hien).maxTheBonus).toBe(0)
+    const hien = playerWith({ cultivationPath: 'body', cultivationWay: 'body_pathway', nodeLevels: { ung_the_kit_node: 2, ung_the_an_node: 2 } })
+    expect(collectBodyKitModifiers(registry, hien).missingHpBonusBonus).toBe(0)
+    expect(collectHiddenBodyMechanicModifiers(registry, hien).maxTheBonus).toBe(0)
 
-    const ungThe = playerWith({ cultivationPath: 'the_tu', cultivationWay: 'ung_the', nodeLevels: { ung_the_kit_node: 2, ung_the_an_node: 2 } })
-    expect(collectTheTuKitModifiers(registry, ungThe).missingHpBonusBonus).toBe(1)
-    expect(collectTheTuAnMechanicModifiers(registry, ungThe).maxTheBonus).toBe(14)
+    const ungThe = playerWith({ cultivationPath: 'body', cultivationWay: 'hidden_body_pathway', nodeLevels: { ung_the_kit_node: 2, ung_the_an_node: 2 } })
+    expect(collectBodyKitModifiers(registry, ungThe).missingHpBonusBonus).toBe(1)
+    expect(collectHiddenBodyMechanicModifiers(registry, ungThe).maxTheBonus).toBe(14)
   })
 
   it('resolveMaxThe skips a way-mismatched node even with owned levels', () => {
     const node = minorNode({
       id: 'ngo_dao_the_cap',
-      requiredWay: 'ngo_dao',
+      requiredWay: 'hidden_spell_pathway',
       effect: { theCapPerLevel: 5 },
     })
     const registry = { getAll: () => [node] }
 
-    // M4 (R6): resolveMaxThe is ngu_hanh machinery — ngo_dao owns no
+    // M4 (R6): resolveMaxThe is spell_pathway machinery — ngo_dao owns no
     // The pool at all, so even a way-MATCHING the-cap node contributes
     // nothing for a ngo_dao player (both persisted shapes). The loop's
     // nodeWayApplies check remains for way-mismatched nodes inside the
-    // ngu_hanh tree.
-    const nguHanh = playerWith({ cultivationPath: 'phap_tu', cultivationWay: 'ngu_hanh', nodeLevels: { ngo_dao_the_cap: 2 } })
+    // spell_pathway tree.
+    const nguHanh = playerWith({ cultivationPath: 'spell', cultivationWay: 'spell_pathway', nodeLevels: { ngo_dao_the_cap: 2 } })
     expect(resolveMaxThe(registry, nguHanh)).toBe(MAX_THE)
 
-    const ngoDao = playerWith({ cultivationPath: 'phap_tu', cultivationWay: 'ngo_dao', nodeLevels: { ngo_dao_the_cap: 2 } })
+    const ngoDao = playerWith({ cultivationPath: 'spell', cultivationWay: 'hidden_spell_pathway', nodeLevels: { ngo_dao_the_cap: 2 } })
     expect(resolveMaxThe(registry, ngoDao)).toBe(MAX_THE)
   })
 })

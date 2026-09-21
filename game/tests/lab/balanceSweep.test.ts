@@ -72,8 +72,8 @@ function runFloor(lab: Lab, stage: Stage): SimResult {
 
 function buildPlayer(lab: Lab, realmId: string, floor: number, geared: boolean, stageList: Stage[], stageIndex: number): void {
   lab.cheat.setRealm(realmId, floor)
-  lab.player.cultivationPath = 'phap_tu'
-  lab.player.cultivationWay = 'ngu_hanh'
+  lab.player.cultivationPath = 'spell'
+  lab.player.cultivationWay = 'spell_pathway'
   lab.player.attributePoints = (REALM_PRIOR_MIN_LEVELS[realmId] ?? 0) + Math.max(0, floor - 1)
   lab.player.completedStageIds.push(...stageList.slice(0, stageIndex).map((s) => s.id))
 

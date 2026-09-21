@@ -5,12 +5,12 @@ import type {
   ProgressionNode,
 } from '../../core/progression/ProgressionNode'
 import type { StatModifier } from '../../core/stats/StatCalculator'
-import { PHAP_TU_KIT_IDS } from '../skill/Skills'
+import { SPELL_KIT_IDS } from '../skill/Skills'
 import { PHAP_TU_ULTIMATE_IDS } from '../skill/PhapTuUltimates'
 
 // Phap Tu Reimagined (2026-09-15 plan, Task 6) — node builders for the
 // new tree: 5 mutex element roots (committed atomically by
-// GameManagerProgressionOps.selectPhapTuElement, NOT public purchase),
+// GameManagerProgressionOps.selectSpellPathElement, NOT public purchase),
 // growth + unlock lanes, The lanes, and route-tagged specialization
 // (3 'dot' + 3 'no' + truong_the tagged 'no' per element).
 
@@ -49,12 +49,12 @@ function stat(
 ): StatModifier {
   return {
     id: `${nodeId}_${statKey}`,
-    sourceId: 'phap_tu',
+    sourceId: 'spell',
     sourceType: 'realm',
     stat: statKey,
     flat,
     perLevelFlat,
-    domain: 'phap_tu',
+    domain: 'spell',
   }
 }
 
@@ -69,13 +69,13 @@ function elementRoot(element: ElementType): ProgressionNode {
   return {
     id: rootId,
     name: ELEMENT_NAMES[element],
-    description: `Mo hanh ${ELEMENT_LABELS[element]} — chon nguyen to Phap Tu (atomic voi route, qua selectPhapTuElement).`,
+    description: `Mo hanh ${ELEMENT_LABELS[element]} — chon nguyen to Phap Tu (atomic voi route, qua selectSpellPathElement).`,
     type: 'major',
     role: 'root',
     insightCost: 0,
     prerequisites: excludes,
     elementTag: element,
-    effect: { unlocksSkillIds: [PHAP_TU_KIT_IDS[element][0]] },
+    effect: { unlocksSkillIds: [SPELL_KIT_IDS[element][0]] },
   }
 }
 
@@ -127,7 +127,7 @@ function unlockNode(
 }
 
 export function buildElementBranch(element: ElementType): ProgressionNode[] {
-  const [basicId, specialId, ultimateId] = PHAP_TU_KIT_IDS[element]
+  const [basicId, specialId, ultimateId] = SPELL_KIT_IDS[element]
   const godUltId = PHAP_TU_ULTIMATE_IDS[element]
   const label = ELEMENT_LABELS[element]
 

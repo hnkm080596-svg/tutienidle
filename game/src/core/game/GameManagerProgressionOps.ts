@@ -25,11 +25,11 @@ import { isBattleInProgress } from '../battle/BattleTypes'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
-import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
+import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
-import type { PhapTuRoute } from '../phap-tu/PhapTuState'
-import { commitPhapTuElementRoute } from '../phap-tu/PhapTuState'
+import type { SpellPathRoute } from '../phap-tu/PhapTuState'
+import { commitSpellPathElementRoute } from '../phap-tu/PhapTuState'
 import { getMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { TemplateRegistry } from './TemplateRegistry'
@@ -99,15 +99,15 @@ export class GameManagerProgressionOps {
 
   /**
    * Phap Tu Reimagined (Task 6B) - the player's chosen Phap Tu element.
-   * PlayerData.phapTu is the sole authority (committed atomically by
-   * selectPhapTuElement); lap_dao_thuan_<el> keystones no longer exist.
+   * PlayerData.spellPath is the sole authority (committed atomically by
+   * selectSpellPathElement); lap_dao_thuan_<el> keystones no longer exist.
    * undefined = not Phap Tu / element not chosen yet.
    */
-  getPhapTuElement(): ElementType | undefined {
+  getSpellPathElement(): ElementType | undefined {
     const activePlayer = this.deps.getActivePlayer()
 
     // P1 - the canonical subpath read owns the way gate (element axis
-    // requires 'phap_tu.elemental_casting' on the active way).
+    // requires 'spell.elemental_casting' on the active way).
     return activePlayer === undefined ? undefined : getActiveElement(activePlayer)
   }
 
@@ -139,7 +139,7 @@ export class GameManagerProgressionOps {
     }
 
     // Phap Tu Reimagined (Task 6) — element roots commit through the
-    // atomic selectPhapTuElement() only; public purchase of a root would
+    // atomic selectSpellPathElement() only; public purchase of a root would
     // split the element+route invariant (element != null implies route
     // != null).
     if (
@@ -174,7 +174,7 @@ export class GameManagerProgressionOps {
 
     // Kiem Tu Reimagined Task 11 (spec §5.4/§6) — Cuu Cung grants run
     // through the NguKiemDao domain functions (the domain owns the cap
-    // rule; nodes never touch player.kiemTu directly). The
+    // rule; nodes never touch player.swordPath directly). The
     // kiemDaoBelowCap prereq already blocked capped buys upstream.
     if (node.effect.kiemYGrant) {
       gainKiemY(player, node.effect.kiemYGrant)
@@ -189,23 +189,23 @@ export class GameManagerProgressionOps {
 
   /**
    * Phap Tu Reimagined (Task 6) — the ONLY public writer of
-   * player.phapTu.element. Atomic: validates eligibility + route +
+   * player.spellPath.element. Atomic: validates eligibility + route +
    * root purchasability FIRST, then purchases the element root through
    * the generic NodeSystem primitive, applies unlock effects, and
-   * finally commits { element, route }. Any failure leaves phapTu
+   * finally commits { element, route }. Any failure leaves spellPath
    * untouched — element != null implies route != null always.
    */
-  selectPhapTuElement(element: ElementType, route: PhapTuRoute, player: PlayerData): boolean {
+  selectSpellPathElement(element: ElementType, route: SpellPathRoute, player: PlayerData): boolean {
     // Cultivation Path Framework (M4, R6): element/route machinery is
-    // ngu_hanh-only - P1 - the declared 'phap_tu.elemental_casting'
-    // capability is the gate, so the post-M7 collapsed ('phap_tu',
-    // 'ngo_dao') shape cannot commit an element. The requiredWay stamp
+    // spell_pathway-only - P1 - the declared 'spell.elemental_casting'
+    // capability is the gate, so the post-M7 collapsed ('spell',
+    // 'hidden_spell_pathway') shape cannot commit an element. The requiredWay stamp
     // on PHAP_TU_NODES is the second layer.
-    if (!hasStaticPathCapability(player, 'phap_tu.elemental_casting')) {
+    if (!hasStaticPathCapability(player, 'spell.elemental_casting')) {
       return false
     }
 
-    if (player.phapTu.element !== null || player.phapTu.route !== null) {
+    if (player.spellPath.element !== null || player.spellPath.route !== null) {
       return false
     }
 
@@ -243,7 +243,7 @@ export class GameManagerProgressionOps {
       this.learnSkill(skillId)
     }
 
-    commitPhapTuElementRoute(player, element, route)
+    commitSpellPathElementRoute(player, element, route)
 
     return true
   }
@@ -322,14 +322,14 @@ export class GameManagerProgressionOps {
     }
 
     // Review fix (HIGH-2): switching requires the atomic
-    // (element, route) commit on the normal phap_tu path — otherwise
+    // (element, route) commit on the normal spell path — otherwise
     // there is no committed route to switch FROM. The domain function
     // enforces the same invariant; the op must not report success for
     // a rejected write.
     if (
-      !hasStaticPathCapability(player, 'phap_tu.elemental_casting') ||
-      player.phapTu.element === null ||
-      player.phapTu.route === null
+      !hasStaticPathCapability(player, 'spell.elemental_casting') ||
+      player.spellPath.element === null ||
+      player.spellPath.route === null
     ) {
       return false
     }
@@ -414,16 +414,16 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * Kiem Tu Reimagined (spec §6) — write the hien preset. Persisted on
-   * PlayerData.kiemTu.preset; the battle cursor/log are runtime-only and
+   * Kiem Tu Reimagined (spec §6) — write the sword_pathway preset. Persisted on
+   * PlayerData.swordPath.preset; the battle cursor/log are runtime-only and
    * never persist. Out-of-combat only: a mid-battle rewrite would desync
    * the provider's snapshotted preset from PlayerData.
    */
   setKiemPhoPreset(player: PlayerData, preset: OrbId[]): boolean {
-    // M6 — way membership is the gate (the retired kiemTu.mode
-    // discriminator became cultivationWay; preset is hien machinery).
-    // P1 - the 'kiem_tu.kiem_pho' capability carries that membership.
-    if (!player.kiemTu || !hasStaticPathCapability(player, 'kiem_tu.kiem_pho')) {
+    // M6 — way membership is the gate (the retired swordPath.mode
+    // discriminator became cultivationWay; preset is sword_pathway machinery).
+    // P1 - the 'sword.sword_scroll' capability carries that membership.
+    if (!player.swordPath || !hasStaticPathCapability(player, 'sword.sword_scroll')) {
       return false
     }
 
@@ -435,7 +435,7 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    player.kiemTu.preset = [...preset]
+    player.swordPath.preset = [...preset]
 
     return true
   }

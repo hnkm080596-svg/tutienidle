@@ -71,7 +71,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Đòn đặc biệt của Thủy Giáp Long — sóng nước dâng quét ngang, mỗi 4 lượt.',
   },
 
-  // The Tu Reimagined (spec 2026-09-15 section 5, TheTuSkills.ts) —
+  // The Tu Reimagined (spec 2026-09-15 section 5, BodySkills.ts) —
   // Hien kits: Cuong Chien (missing-HP berserker) + Tran The (tank).
   cuong_quyen: {
     name: 'Cuồng Quyền',
@@ -98,7 +98,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Thân như núi lớn: hộ thể cho đồng đội, khiêu khích kẻ địch, giảm sát thương bản thân. Hồi 6 lượt.',
   },
 
-  // The Tu Reimagined (spec 2026-09-15 section 6, TheTuSkills.ts) —
+  // The Tu Reimagined (spec 2026-09-15 section 6, BodySkills.ts) —
   // An kit (fixed at path choice) + reactive payload defs.
   tham_the: {
     name: 'Thám Thế',

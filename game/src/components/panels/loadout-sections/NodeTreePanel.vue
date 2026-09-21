@@ -36,7 +36,7 @@ import SkillConnections from './SkillConnections.vue'
 import type { SkillConnectionEntry, SkillConnectionRect } from './SkillConnections.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import type { ElementType } from '@/core/element/ElementType'
-import type { PhapTuRoute } from '@/core/phap-tu/PhapTuState'
+import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
 const props = defineProps<{
@@ -57,7 +57,7 @@ const { t } = useI18n()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { switchPhapTuRoute } = useLoadoutActions()
+const { switchSpellPathRoute } = useLoadoutActions()
 
 function branchLabel(branchTag: string | undefined): string {
   if (!branchTag) {
@@ -90,14 +90,14 @@ function branchColor(branchTag: string | undefined): string {
 // Phap Tu Reimagined (Task 16) — route respec toggle (P3). A route is a
 // stance, not a node: the toggle lives in the tree header and only
 // shows for normal Phap Tu once the atomic element+route commit exists.
-const PHAP_TU_ROUTE_IDS: readonly PhapTuRoute[] = ['dot', 'no']
+const SPELL_PATH_ROUTE_IDS: readonly SpellPathRoute[] = ['dot', 'no']
 
-const phapTuRoute = computed<PhapTuRoute | null>(() => {
+const spellPathRoute = computed<SpellPathRoute | null>(() => {
   stateVersion.value
 
   // P1 - the canonical route read carries the way gate: the axis is
-  // declared on ngu_hanh and gated by 'phap_tu.elemental_casting', so a
-  // collapsed ('phap_tu','ngo_dao') player resolves nothing.
+  // declared on spell_pathway and gated by 'spell.elemental_casting', so a
+  // collapsed ('spell','hidden_spell_pathway') player resolves nothing.
   return getActiveRoute(player) ?? null
 })
 
@@ -109,7 +109,7 @@ const inBattle = computed(() => {
   return battle !== null && isBattleInProgress(battle.state)
 })
 
-const pendingRoute = ref<PhapTuRoute | null>(null)
+const pendingRoute = ref<SpellPathRoute | null>(null)
 
 const routePreview = computed(() => {
   stateVersion.value
@@ -121,8 +121,8 @@ const routePreview = computed(() => {
   return previewRouteSwitch(player.$state, gameManager.nodeRegistry)
 })
 
-function onRouteClick(route: PhapTuRoute) {
-  if (route === phapTuRoute.value || inBattle.value) {
+function onRouteClick(route: SpellPathRoute) {
+  if (route === spellPathRoute.value || inBattle.value) {
     return
   }
 
@@ -135,7 +135,7 @@ function confirmRouteSwitch() {
   pendingRoute.value = null
 
   if (route !== null) {
-    switchPhapTuRoute(route)
+    switchSpellPathRoute(route)
   }
 }
 
@@ -183,8 +183,8 @@ const branches = computed(() => {
   // Kiem Tu Reimagined — revealWhen hides the node until the prereq
   // holds against the live player (the hidden-path root never renders
   // early; canPurchaseNode re-checks the same gate). Mode-tagged nodes
-  // only render in their own mode's view: hien sees the orb branches +
-  // the (unrevealed) hidden root, ngu sees the Ngu branch — the
+  // only render in their own mode's view: sword_pathway sees the orb branches +
+  // the (unrevealed) hidden root, hidden_sword_pathway sees the hidden branch — the
   // abandoned mode's nodes vanish entirely.
   // M3 — way-tagged nodes follow the same display rule as mode-tagged
   // ones: a node authored for another way does not render at all.
@@ -546,13 +546,13 @@ onBeforeUnmount(() => {
 
       <!-- Route respec toggle (P3) — Phap Tu only, once element+route
            committed; switching refunds 75% of old-route investment. -->
-      <div v-if="phapTuRoute" class="node-tree__route" role="group" :aria-label="t('panels.nodeTree.routes.aria')">
+      <div v-if="spellPathRoute" class="node-tree__route" role="group" :aria-label="t('panels.nodeTree.routes.aria')">
         <button
-          v-for="route in PHAP_TU_ROUTE_IDS"
+          v-for="route in SPELL_PATH_ROUTE_IDS"
           :key="route"
           type="button"
           class="node-tree__route-option"
-          :class="{ 'is-active': route === phapTuRoute }"
+          :class="{ 'is-active': route === spellPathRoute }"
           :disabled="inBattle"
           @click="onRouteClick(route)"
         >

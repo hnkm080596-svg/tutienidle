@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createDefaultPlayer, resolvePlayerFinalStats, resolvePlayerStatAssembly, type PlayerData } from '../player/Player'
-import { freshKiemTuState } from '../kiem-tu/KiemTuState'
-import { createPhapTuState } from '../phap-tu/PhapTuState'
+import { freshSwordPathState } from '../kiem-tu/KiemTuState'
+import { createSpellPathState } from '../phap-tu/PhapTuState'
 import type { StatModifier } from '../stats/StatCalculator'
 import { resolveAttributeTotals, calculateStats } from '../stats/StatCalculator'
 import { collectActiveWayStatModifiers, resolvePathCapabilities } from '../player/CultivationPathSystem'
@@ -21,7 +21,7 @@ import { TemplateRegistry } from './TemplateRegistry'
 import type { Skill } from '../skill/Skill'
 import { NEUTRAL_ROUTE_PROFILE } from '../phap-tu/PhapTuRoutes'
 import { SKILLS } from '../../data/skill/Skills'
-import { PHAP_TU_AN_REQUIRED_SKILLS } from '../phap-tu/PhapTuPath'
+import { HIDDEN_SPELL_REQUIRED_SKILLS } from '../phap-tu/PhapTuPath'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { BuffDefinition } from '../buff2/BuffDefinition'
 import type { BuffDefinitionId } from '../battle/contracts/ids'
@@ -69,9 +69,9 @@ function makePlayer(overrides: Partial<PlayerData> = {}): PlayerData {
 describe('resolvePlayerStatAssembly (Player.ts extraction)', () => {
   it('returns stats identical to resolvePlayerFinalStats for the same inputs', () => {
     const player = makePlayer()
-    player.cultivationPath = 'phap_tu'
-    player.cultivationWay = 'ngu_hanh'
-    player.phapTu = createPhapTuState()
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath = createSpellPathState()
     player.baseStats.attunement = 8
     const external: StatModifier[] = [
       { id: 'test:ext', sourceId: 'test', sourceType: 'buff', stat: 'might', flat: 5 },
@@ -137,13 +137,13 @@ describe('resolveCombatBuild — skeleton (M1)', () => {
 
   it('way player: identity = committed pair, capabilities resolve through the dep', () => {
     const player = makePlayer()
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'hien'
-    player.kiemTu = freshKiemTuState()
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'sword_pathway'
+    player.swordPath = freshSwordPathState()
     const build = resolveCombatBuild(player, makeRuntime(), makeDeps())
 
-    expect(build.identity).toEqual({ path: 'kiem_tu', way: 'hien' })
-    expect(build.capabilities.has('kiem_tu.kiem_pho')).toBe(true)
+    expect(build.identity).toEqual({ path: 'sword', way: 'sword_pathway' })
+    expect(build.capabilities.has('sword.sword_scroll')).toBe(true)
   })
 
   it('modifierChannels carry player_bag + battle-base channels + way_facet with attribution intact', () => {
@@ -170,9 +170,9 @@ describe('resolveCombatBuild — skeleton (M1)', () => {
   it('every resolved channel modifier retains id/sourceId/sourceType (attribution)', () => {
     const manager = new GameManager()
     const player = makePlayer()
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'hien'
-    player.kiemTu = freshKiemTuState()
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'sword_pathway'
+    player.swordPath = freshSwordPathState()
     player.modifiers.push({
       id: 'test:bag', sourceId: 'item', sourceType: 'equipment', stat: 'might', flat: 2,
     })
@@ -281,7 +281,7 @@ function makeRuntimeDeps(): CultivationPathRuntimeDeps {
   for (const skill of SKILLS) {
     skillTemplates.register(skill.id, skill)
   }
-  for (const skillId of PHAP_TU_AN_REQUIRED_SKILLS) {
+  for (const skillId of HIDDEN_SPELL_REQUIRED_SKILLS) {
     const skill = SKILLS.find((candidate) => candidate.id === skillId)
     if (skill) {
       skillManager.add(skill)
@@ -293,7 +293,7 @@ function makeRuntimeDeps(): CultivationPathRuntimeDeps {
     skillTemplates,
     nodeRegistry: new NodeRegistry(),
     getNodeLevel: () => 0,
-    getPhapTuElement: () => undefined,
+    getSpellPathElement: () => undefined,
     routeProfileProvider: () => NEUTRAL_ROUTE_PROFILE,
   }
 }
@@ -331,20 +331,20 @@ describe('resolveCombatBuild — kit composition (M2)', () => {
   it('kit fields equal the runtime outputs for every authored way', () => {
     const runtimeDeps = makeRuntimeDeps()
     const pairs: Array<[PlayerData['cultivationPath'], PlayerData['cultivationWay']]> = [
-      ['kiem_tu', 'hien'],
-      ['kiem_tu', 'ngu'],
-      ['phap_tu', 'ngu_hanh'],
-      ['phap_tu', 'ngo_dao'],
-      ['the_tu', 'hien'],
-      ['the_tu', 'ung_the'],
+      ['sword', 'sword_pathway'],
+      ['sword', 'hidden_sword_pathway'],
+      ['spell', 'spell_pathway'],
+      ['spell', 'hidden_spell_pathway'],
+      ['body', 'body_pathway'],
+      ['body', 'hidden_body_pathway'],
     ]
 
     for (const [path, way] of pairs) {
       const player = makePlayer()
       player.cultivationPath = path
       player.cultivationWay = way
-      if (path === 'kiem_tu') player.kiemTu = freshKiemTuState()
-      if (path === 'phap_tu') player.phapTu = createPhapTuState()
+      if (path === 'sword') player.swordPath = freshSwordPathState()
+      if (path === 'spell') player.spellPath = createSpellPathState()
 
       const runtime = resolveCultivationPathRuntime(player, runtimeDeps)
       const build = resolveCombatBuild(player, runtime, makeDeps())
@@ -549,7 +549,7 @@ describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)',
       ],
     }
     const deps = makeDeps({
-      resolveCapabilities: () => new Set<PathCapability>(['phap_tu.reaction_aura']),
+      resolveCapabilities: () => new Set<PathCapability>(['spell.reaction_aura']),
     })
 
     const build = resolveCombatBuild(player, makeRuntime(), deps)
@@ -577,7 +577,7 @@ describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)',
       resolveSpecialUltimate: () => ({ ultimate: fakeSkill('kit_ult', [fakeBuffDef('player_clone')]) }),
     })
     const deps = makeDeps({
-      resolveCapabilities: () => new Set<PathCapability>(['phap_tu.reaction_aura']),
+      resolveCapabilities: () => new Set<PathCapability>(['spell.reaction_aura']),
     })
 
     const build = resolveCombatBuild(player, runtime, deps)
@@ -635,8 +635,8 @@ describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)',
 
   it('fail-closed pair: a corrupt way resolves mortal semantics (identity undefined)', () => {
     const player = makePlayer()
-    player.cultivationPath = 'kiem_tu'
-    player.cultivationWay = 'ngo_dao' as never // a way kiem_tu does not own
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'hidden_spell_pathway' as never // a way sword does not own
 
     const build = resolveCombatBuild(player, makeRuntime(), makeDeps())
 

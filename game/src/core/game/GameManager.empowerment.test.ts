@@ -7,7 +7,7 @@ import type { Stage } from '../stage/Stage'
 import { SKILLS } from '../../data/skill/Skills'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
-import { PHAP_TU_EMPOWERMENT_THE_THRESHOLD } from '../phap-tu/PhapTuRoutes'
+import { SPELL_EMPOWERMENT_ESSENCE_THRESHOLD } from '../phap-tu/PhapTuRoutes'
 
 // Phap Tu Reimagined Task 10 — the empowerment ATTACH lives in
 // orchestration (A8): resolvePlayerSpecialUltimate adds `empowerment`
@@ -39,8 +39,8 @@ function makeManager() {
   gameManager.catalogOps.registerStages([stage])
 
   const player = createDefaultPlayer()
-  player.cultivationPath = 'phap_tu'
-  player.cultivationWay = 'ngu_hanh'
+  player.cultivationPath = 'spell'
+  player.cultivationWay = 'spell_pathway'
   // The realm-gated special node (golden_core) grants the kit's
   // remaining slots — [special, chain-E ult] — so a golden_core player
   // with insight can learn the ultimate.
@@ -64,7 +64,7 @@ describe('god-ult empowerment attach (Task 10)', () => {
   it('no linh_ngo node -> the chain-E ultimate carries NO empowerment', () => {
     const { gameManager, player, stage } = makeManager()
 
-    gameManager.progressionOps.selectPhapTuElement('fire', 'no', player)
+    gameManager.progressionOps.selectSpellPathElement('fire', 'no', player)
     learnKitUltimate(gameManager, player, 'tam_muoi_chan_hoa')
     expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
 
@@ -76,7 +76,7 @@ describe('god-ult empowerment attach (Task 10)', () => {
   it('linh_ngo owned -> empowerment attaches; route picks the variant payload', () => {
     const { gameManager, player, stage } = makeManager()
 
-    gameManager.progressionOps.selectPhapTuElement('fire', 'no', player)
+    gameManager.progressionOps.selectSpellPathElement('fire', 'no', player)
     learnKitUltimate(gameManager, player, 'tam_muoi_chan_hoa')
     player.nodeLevels[`linh_ngo_${PHAP_TU_ULTIMATE_IDS.fire}`] = 1
 
@@ -84,7 +84,7 @@ describe('god-ult empowerment attach (Task 10)', () => {
 
     const ult = ultimateSkillOf(gameManager)
     expect(ult?.id).toBe('hoa_ha_cuu_thien')
-    expect(ult?.empowerment?.theThreshold).toBe(PHAP_TU_EMPOWERMENT_THE_THRESHOLD)
+    expect(ult?.empowerment?.theThreshold).toBe(SPELL_EMPOWERMENT_ESSENCE_THRESHOLD)
     expect(ult?.empowerment?.empowered.id).toBe('tat_phuong_giang_the')
     expect(ult?.empowerment?.empowered.consumesAllThe).toBe(true)
   })
@@ -92,7 +92,7 @@ describe('god-ult empowerment attach (Task 10)', () => {
   it('the empowered payload follows the route variant key (dot -> detonate entry)', () => {
     const { gameManager, player, stage } = makeManager()
 
-    gameManager.progressionOps.selectPhapTuElement('water', 'dot', player)
+    gameManager.progressionOps.selectSpellPathElement('water', 'dot', player)
     learnKitUltimate(gameManager, player, 'thanh_tuyen_duong_linh')
     player.nodeLevels[`linh_ngo_${PHAP_TU_ULTIMATE_IDS.water}`] = 1
 

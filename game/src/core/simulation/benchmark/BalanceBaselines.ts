@@ -7,8 +7,8 @@
 import { createDefaultPlayer, type PlayerData } from '../../player/Player'
 import { CAST_LEVELING_THRESHOLDS } from '../../skill/SkillSystem'
 import { reachableKiemPhoComboIds } from '../../kiem-tu/KiemPhoProvider'
-import { PHAP_TU_BASICS } from '../../../data/skill/TurnBasicAttacks'
-import type { CultivationPathId, PathWayId } from '../../player/CultivationPathKit'
+import { SPELL_BASICS } from '../../../data/skill/TurnBasicAttacks'
+import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
 import type {
   SimBuildSnapshot,
   SimulationCanonicalWrite,
@@ -36,7 +36,7 @@ export interface BaselineRecipe {
   id: string
   // Gate rows vs reported-only alternates (spec names three paths).
   primary: boolean
-  ritual: { pathId: CultivationPathId; wayId: PathWayId }
+  ritual: { pathId: CultivationPathId; wayId: CultivationWayId }
   postRitual: readonly SimulationCanonicalWrite[]
   // The recipe's LIVE kit at the entry power point - `skill` origins
   // inside this set bucket as kit_skill in damageByMechanic.
@@ -77,8 +77,8 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
   {
     id: 'kiem_tu_hien',
     primary: true,
-    ritual: { pathId: 'kiem_tu', wayId: 'hien' },
-    // freshKiemTuState preset is functional at ritual - no writes.
+    ritual: { pathId: 'sword', wayId: 'sword_pathway' },
+    // freshSwordPathState preset is functional at ritual - no writes.
     postRitual: [],
     // qi_refining (realmIndex 1) unlocks orb_dam only; the other orbs
     // are learned into the loadout but unreachable as basics here.
@@ -97,7 +97,7 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
   {
     id: 'phap_tu_ngu_hanh',
     primary: true,
-    ritual: { pathId: 'phap_tu', wayId: 'ngu_hanh' },
+    ritual: { pathId: 'spell', wayId: 'spell_pathway' },
     // Element+route commit is the atomic canonical writer; the free
     // element root unlocks the kit basic.
     postRitual: [
@@ -109,7 +109,7 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     // this row is foreign leakage and must land in other_skill.
     kitSkillIds: ['hoa_cau_thuat'],
     expectedEconomy: {
-      // +5 the per landed cast (applyPhapTuTheGains) + mana regen.
+      // +5 the per landed cast (applySpellPathEssenceGains) + mana regen.
       mustGenerate: ['theGained', 'mpGained'],
       // manaShieldPercent 0.25 drains mp on hits taken.
       mustSpend: ['mpSpent'],
@@ -121,8 +121,8 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
   {
     id: 'the_tu_hien',
     primary: true,
-    ritual: { pathId: 'the_tu', wayId: 'hien' },
-    // cuong_chien root -> resolveTheTuKit produces the kit at battle
+    ritual: { pathId: 'body', wayId: 'body_pathway' },
+    // cuong_chien root -> resolveBodyKit produces the kit at battle
     // build. Purchased via the public progressionOps writer.
     postRitual: [{ type: 'purchase_node', nodeId: 'cuong_chien' }],
     kitSkillIds: ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the'],
@@ -132,7 +132,7 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
       // attrition.
       mustGenerate: ['healingReceived'],
       mustSpend: [],
-      // The* channels are ung_the-owned - hien never touches them.
+      // The* channels are hidden_body_pathway-owned - body_pathway never touches them.
       notActiveAtThisPowerPoint: ['theGained', 'theSpent'],
       mustCast: ['cuong_quyen'],
     },
@@ -143,7 +143,7 @@ export const ALTERNATE_RECIPES: readonly BaselineRecipe[] = [
   {
     id: 'phap_tu_ngo_dao',
     primary: false,
-    ritual: { pathId: 'phap_tu', wayId: 'ngo_dao' },
+    ritual: { pathId: 'spell', wayId: 'hidden_spell_pathway' },
     postRitual: [],
     // van_phap_tuy_tam/da_phap_lien_tuyen strikes resolve as element-
     // skill damage ops (diem_kim_thuat, tho_cau_thuat, ...) - the
@@ -151,7 +151,7 @@ export const ALTERNATE_RECIPES: readonly BaselineRecipe[] = [
     kitSkillIds: [
       'van_phap_tuy_tam',
       'da_phap_lien_tuyen',
-      ...Object.values(PHAP_TU_BASICS).map((b) => b.id),
+      ...Object.values(SPELL_BASICS).map((b) => b.id),
     ],
     expectedEconomy: {
       ...NO_ECONOMY,
@@ -161,7 +161,7 @@ export const ALTERNATE_RECIPES: readonly BaselineRecipe[] = [
   {
     id: 'the_tu_ung_the',
     primary: false,
-    ritual: { pathId: 'the_tu', wayId: 'ung_the' },
+    ritual: { pathId: 'body', wayId: 'hidden_body_pathway' },
     // Non-mutex roots plant the proc-window markers (ho/phan/tro_mon)
     // at battle build - without them the kit is the bare ung_the marker
     // and no reactive window ever opens (all free at qi_refining).
@@ -173,7 +173,7 @@ export const ALTERNATE_RECIPES: readonly BaselineRecipe[] = [
     kitSkillIds: ['tham_the', 'tu_the', 'bach_ung', 'phan_kich', 'tro_kich', 'trong_phan_kich'],
     expectedEconomy: {
       mustGenerate: ['theGained'],
-      // Reactive procs spend the pool (TheEconomy is ung_the-owned).
+      // Reactive procs spend the pool (TheEconomy is hidden_body_pathway-owned).
       mustSpend: ['theSpent'],
       notActiveAtThisPowerPoint: [],
       mustCast: ['tham_the'],
@@ -182,11 +182,11 @@ export const ALTERNATE_RECIPES: readonly BaselineRecipe[] = [
   {
     id: 'kiem_tu_ngu',
     primary: false,
-    ritual: { pathId: 'kiem_tu', wayId: 'ngu' },
+    ritual: { pathId: 'sword', wayId: 'hidden_sword_pathway' },
     postRitual: [],
     kitSkillIds: ['ngu_kiem_thuat'],
     expectedEconomy: {
-      // Kiem Y / Kiem Dao gauges are buff-state on player.kiemTu -
+      // Kiem Y / Kiem Dao gauges are buff-state on player.swordPath -
       // no ledger channel sees them (recorded limitation).
       ...NO_ECONOMY,
       mustCast: ['ngu_kiem_thuat'],

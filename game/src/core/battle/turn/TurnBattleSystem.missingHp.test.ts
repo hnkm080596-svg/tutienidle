@@ -6,7 +6,7 @@ import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { buildTheTuKit } from '../../../data/skill/TheTuSkills'
-import { collectTheTuKitModifiers } from '../../the-tu/TheTuKitModifiers'
+import { collectBodyKitModifiers } from '../../the-tu/TheTuKitModifiers'
 import { createDefaultPlayer } from '../../player/Player'
 import type { ProgressionNode } from '../../progression/ProgressionNode'
 
@@ -173,18 +173,18 @@ describe('missing-HP scalar (spec section 3.4)', () => {
     expect(1_000_000 - enemy.currentHp).toBe(100)
   })
 
-  it('node-adjusted def copy (collectTheTuKitModifiers -> buildTheTuKit) increases the scalar', () => {
+  it('node-adjusted def copy (collectBodyKitModifiers -> buildTheTuKit) increases the scalar', () => {
     const node: ProgressionNode = {
       id: 'tt_scalar_1',
       name: 'scalar',
       type: 'minor',
       insightCost: 1,
-      effect: { theTuKitModifiers: { missingHpBonusBonus: 0.01 } },
+      effect: { bodyKitModifiers: { missingHpBonusBonus: 0.01 } },
     }
     const player = createDefaultPlayer()
     player.nodeLevels = { tt_scalar_1: 1 }
 
-    const mods = collectTheTuKitModifiers({ getAll: () => [node] }, player)
+    const mods = collectBodyKitModifiers({ getAll: () => [node] }, player)
     const kit = buildTheTuKit('cuong_chien', mods)
 
     // 50% missing: 0.5 x (0.02 + 0.01) x 100 = 1.5 -> x2.5 damage.

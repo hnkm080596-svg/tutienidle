@@ -4,7 +4,7 @@
 // CLOSED-UNION actions on production seams only - a step needing a debug
 // hook is a gap, not a script entry.
 import { getRequiredCultivation } from '../../realm/realmSystem'
-import type { CultivationPathId, PathWayId } from '../../player/CultivationPathKit'
+import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
 import type { EarlyGameSession, EarlyGameSnapshot, StageRunResult, TribulationRunResult } from './EarlyGameSession'
 
 export type LoopStep =
@@ -26,7 +26,7 @@ export type LoopStep =
    * floor `runs` times, then equip + refine + allocate the spoils. */
   | { kind: 'growth_cycle'; runs: number }
   | { kind: 'tribulation'; targetRealmId: string }
-  | { kind: 'ritual'; path: CultivationPathId; way: PathWayId }
+  | { kind: 'ritual'; path: CultivationPathId; way: CultivationWayId }
   | { kind: 'purchase_node'; nodeId: string }
 
 export interface LoopStepRecord {
@@ -69,7 +69,7 @@ export const CANONICAL_EARLY_LOOP: readonly LoopStep[] = [
   { kind: 'stage_until_victory', stageId: 'mortal_dong_10', maxAttempts: 8 },
   { kind: 'growth_cycle', runs: 10 },
   { kind: 'tribulation', targetRealmId: 'qi_refining' },
-  { kind: 'ritual', path: 'kiem_tu', way: 'hien' },
+  { kind: 'ritual', path: 'sword', way: 'sword_pathway' },
   { kind: 'purchase_node', nodeId: 'orb_dam_1' },
   { kind: 'stage_until_victory', stageId: 'qi_refining_forest', maxAttempts: 10 },
 ]

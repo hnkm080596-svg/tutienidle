@@ -37,7 +37,7 @@ export const STAT_METADATA: Partial<Record<StatType, StatMetadata>> = {
   healingEffectivenessPercent: { unit: 'percent', min: 0 },
   // The Tu An reactive chances — hard cap REACTIVE_CHANCE_CAP applied
   // ONLY at consumption (clampStatValue). Stored values may exceed it;
-  // never clamp inside an emitter/deriver (StatCalculator.theTu.test).
+  // never clamp inside an emitter/deriver (StatCalculator.body.test).
   counterChance: { unit: 'percent', min: 0, max: REACTIVE_CHANCE_CAP },
   protectChance: { unit: 'percent', min: 0, max: REACTIVE_CHANCE_CAP },
   followUpChance: { unit: 'percent', min: 0, max: REACTIVE_CHANCE_CAP },

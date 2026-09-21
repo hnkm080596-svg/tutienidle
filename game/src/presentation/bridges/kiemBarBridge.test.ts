@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { MAX_THE } from '@/core/combat/CombatTypes'
 import type { TurnBattle, TurnBattleState } from '@/core/battle/turn/TurnBattleSystem'
 import type { GameManager } from '@/core/game/GameManager'
-import { freshKiemTuState, type KiemTuState, type OrbId } from '@/core/kiem-tu/KiemTuState'
+import { freshSwordPathState, type SwordPathState, type OrbId } from '@/core/kiem-tu/KiemTuState'
 import type { KiemPhoBattleState } from '@/core/kiem-tu/KiemPhoSystem'
 import {
   KIEM_BAR_READER_KEY,
@@ -50,27 +50,27 @@ function makeReader(battle: TurnBattle | null, player: KiemBarPlayerState) {
   return makeKiemBarReader(gameManager, () => player)
 }
 
-function hienPlayer(preset: OrbId[] = ['orb_dam', 'orb_chem']): KiemBarPlayerState {
+function swordPathwayPlayer(preset: OrbId[] = ['orb_dam', 'orb_chem']): KiemBarPlayerState {
   return {
     realmId: 'golden_core',
-    cultivationPath: 'kiem_tu',
-    cultivationWay: 'hien',
-    kiemTu: { ...freshKiemTuState(), preset },
+    cultivationPath: 'sword',
+    cultivationWay: 'sword_pathway',
+    swordPath: { ...freshSwordPathState(), preset },
   }
 }
 
-describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
-  it('hien + provider → strip model from the live snapshot', () => {
+describe('makeKiemBarReader — sword_pathway (Kiem Pho) mapping', () => {
+  it('sword_pathway + provider → strip model from the live snapshot', () => {
     const reader = makeReader(
       fakeBattle('fighting', fakeProvider({ cursor: 1, log: ['orb_dam'] })),
-      hienPlayer(),
+      swordPathwayPlayer(),
     )
 
     expect(reader()).toEqual({
       current: 1,
       max: 2,
       label: 'Kiếm Phổ',
-      mode: 'hien',
+      mode: 'kiem_pho',
       preset: ['orb_dam', 'orb_chem'],
       cursor: 1,
       nextOrb: 'orb_chem',
@@ -78,12 +78,12 @@ describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
     })
   })
 
-  it('hien without a provider falls back to the persisted preset (cursor 0)', () => {
-    const reader = makeReader(fakeBattle('fighting'), hienPlayer(['orb_dam']))
+  it('sword_pathway without a provider falls back to the persisted preset (cursor 0)', () => {
+    const reader = makeReader(fakeBattle('fighting'), swordPathwayPlayer(['orb_dam']))
 
     expect(reader()).toMatchObject({
       label: 'Kiếm Phổ',
-      mode: 'hien',
+      mode: 'kiem_pho',
       preset: ['orb_dam'],
       cursor: 0,
       nextOrb: 'orb_dam',
@@ -93,28 +93,28 @@ describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
   })
 
   it('countdown state still counts as in-battle → snapshot', () => {
-    const reader = makeReader(fakeBattle('countdown', fakeProvider()), hienPlayer())
+    const reader = makeReader(fakeBattle('countdown', fakeProvider()), swordPathwayPlayer())
 
     expect(reader()?.label).toBe('Kiếm Phổ')
   })
 
   it('no battle / battle ended → null', () => {
-    expect(makeReader(null, hienPlayer())()).toBeNull()
+    expect(makeReader(null, swordPathwayPlayer())()).toBeNull()
 
     for (const state of ['victory', 'defeat'] as const) {
-      expect(makeReader(fakeBattle(state, fakeProvider()), hienPlayer())()).toBeNull()
+      expect(makeReader(fakeBattle(state, fakeProvider()), swordPathwayPlayer())()).toBeNull()
     }
   })
 
-  it('player without kiemTu (not Kiem Tu) → null', () => {
+  it('player without swordPath (not Kiem Tu) → null', () => {
     const reader = makeReader(fakeBattle('fighting', fakeProvider()), { realmId: 'golden_core' })
 
     expect(reader()).toBeNull()
   })
 
-  it('ngu way → Kiem Y / forgeCost(realm) progress + sword count label', () => {
-    const kiemTu: KiemTuState = {
-      ...freshKiemTuState(),
+  it('hidden_sword_pathway way → Kiem Y / forgeCost(realm) progress + sword count label', () => {
+    const swordPath: SwordPathState = {
+      ...freshSwordPathState(),
       kiemY: 5_000,
       kiemDaoCount: 3,
       kiemDaoBase: 1.9,
@@ -122,16 +122,16 @@ describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
     // golden_core = realmIndex 3 → forgeCost(3) = 16_899.
     const reader = makeReader(fakeBattle('fighting'), {
       realmId: 'golden_core',
-      cultivationPath: 'kiem_tu',
-      cultivationWay: 'ngu',
-      kiemTu,
+      cultivationPath: 'sword',
+      cultivationWay: 'hidden_sword_pathway',
+      swordPath,
     })
 
     expect(reader()).toEqual({
       current: 5_000,
       max: 16_899,
       label: 'Kiếm Ý · 3 kiếm',
-      mode: 'ngu',
+      mode: 'ngu_kiem',
       kiemDaoCount: 3,
       kiemDaoBase: 1.9,
     })
@@ -139,19 +139,19 @@ describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
 })
 
 describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
-  it('ung_the way (the_tu.the_economy capability) → {currentThe, maxThe ?? MAX_THE, "Thế"}', () => {
+  it('hidden_body_pathway way (body.the_economy capability) → {currentThe, maxThe ?? MAX_THE, "Thế"}', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
+      { realmId: 'golden_core', cultivationPath: 'body', cultivationWay: 'hidden_body_pathway' },
     )
 
     expect(reader()).toEqual({ current: 45, max: MAX_THE, label: 'Thế', externalWard: undefined })
   })
 
-  it('a way-less the_tu save resolves no way — Thế bar stays hidden (M7 fail-closed)', () => {
+  it('a way-less body save resolves no way — Thế bar stays hidden (M7 fail-closed)', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu' },
+      { realmId: 'golden_core', cultivationPath: 'body' },
     )
 
     expect(reader()).toBeNull()
@@ -160,16 +160,16 @@ describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
   it('entity-baked maxThe wins over MAX_THE (node bonus)', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, { currentThe: 100, maxThe: 120, stats: { maxHp: 400 } }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
+      { realmId: 'golden_core', cultivationPath: 'body', cultivationWay: 'hidden_body_pathway' },
     )
 
     expect(reader()!.max).toBe(120)
   })
 
-  it('the_tu (Hiện — no Thế pool) without externalWard → null', () => {
+  it('body (Hiện — no Thế pool) without externalWard → null', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu' },
+      { realmId: 'golden_core', cultivationPath: 'body' },
     )
 
     expect(reader()).toBeNull()
@@ -181,11 +181,11 @@ describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
         externalWard: { sourceId: 'p', amount: 60 },
         stats: { maxHp: 400 },
       }),
-      hienPlayer(),
+      swordPathwayPlayer(),
     )
 
     expect(reader()).toMatchObject({
-      mode: 'hien',
+      mode: 'kiem_pho',
       externalWard: { current: 60, max: 400 },
     })
   })
@@ -196,7 +196,7 @@ describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
         externalWard: { sourceId: 'p', amount: 25 },
         stats: { maxHp: 200 },
       }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu' },
+      { realmId: 'golden_core', cultivationPath: 'body' },
     )
 
     expect(reader()).toEqual({
@@ -207,14 +207,14 @@ describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
     })
   })
 
-  it('ung_the with externalWard → Thế bar + shield layer together', () => {
+  it('hidden_body_pathway with externalWard → Thế bar + shield layer together', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, {
         currentThe: 30,
         externalWard: { sourceId: 'p', amount: 50 },
         stats: { maxHp: 250 },
       }),
-      { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
+      { realmId: 'golden_core', cultivationPath: 'body', cultivationWay: 'hidden_body_pathway' },
     )
 
     expect(reader()).toEqual({
@@ -240,12 +240,12 @@ describe('registerKiemBarReader / readKiemBar — registry round-trip', () => {
 
   it('register then read → the reader snapshot passes through', () => {
     const registry = fakeRegistry()
-    const reader = makeReader(fakeBattle('fighting', fakeProvider()), hienPlayer())
+    const reader = makeReader(fakeBattle('fighting', fakeProvider()), swordPathwayPlayer())
 
     registerKiemBarReader(registry, reader)
 
     expect(registry.get(KIEM_BAR_READER_KEY)).toBeDefined()
-    expect(readKiemBar(registry)?.mode).toBe('hien')
+    expect(readKiemBar(registry)?.mode).toBe('kiem_pho')
   })
 
   it('no reader registered → readKiemBar returns null (no throw)', () => {

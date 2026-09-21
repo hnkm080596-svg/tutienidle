@@ -4,7 +4,7 @@ import type { StatType } from '../stats/StatTypes'
 import type { EffectScope } from '../battle/CombatAction'
 import type { ElementType } from '../element/ElementType'
 import type { BuffModifierPayload } from '../battle/contracts/operations'
-import type { PhapTuRoute } from '../phap-tu/PhapTuState'
+import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 
 // Phap Tu Hoa An (spec 2026-09-17 sec.62) -- a generic post-landing
 // interaction with the caster's SAME-SOURCE instance of `buffId` on the
@@ -19,7 +19,7 @@ export type SkillAilmentInteraction =
   | {
       kind: 'trigger_periodic'
       buffId: string
-      routes?: readonly PhapTuRoute[]
+      routes?: readonly SpellPathRoute[]
     }
   | {
       kind: 'add_modifier'
@@ -27,13 +27,13 @@ export type SkillAilmentInteraction =
       // Keyed modifier -- spec sec.27: identity = id + appliedBy source
       // (the executor stamps appliedBy); same-key default 'replace'.
       modifier: Omit<BuffModifierPayload, 'appliedBy'>
-      routes?: readonly PhapTuRoute[]
+      routes?: readonly SpellPathRoute[]
     }
   | {
       kind: 'extend_duration'
       buffId: string
       turns: number
-      routes?: readonly PhapTuRoute[]
+      routes?: readonly SpellPathRoute[]
     }
 
 export interface SkillEffect {

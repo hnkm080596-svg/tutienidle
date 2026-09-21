@@ -3,7 +3,7 @@ import { THE_TU_AN_NODES } from './TheTuAnNodes'
 import { NodeRegistry } from '../../core/progression/NodeRegistry'
 import { getNodeLevel, purchaseNode, upgradeNode } from '../../core/progression/NodeSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
-import { collectTheTuAnMechanicModifiers } from '../../core/the-tu/TheTuAnMechanicModifiers'
+import { collectHiddenBodyMechanicModifiers } from '../../core/the-tu/TheTuAnMechanicModifiers'
 import { buildTheTuAnKit, PHAN_KICH } from '../skill/TheTuSkills'
 import { MAX_THE } from '../../core/combat/CombatTypes'
 import { THE_PROC_COST, THE_PROC_GAIN } from '../../core/the-tu/TheEconomy'
@@ -28,7 +28,7 @@ function economyPayload(def: BuffDefinition): TheEconomyPayload | undefined {
 
 // The Tu Reimagined (plan Task 20, spec section 8.2) — the_tu_an tree
 // data: non-mutex roots (T9), trunk economy nodes feeding
-// collectTheTuAnMechanicModifiers (review P1.7 — the ONE locked
+// collectHiddenBodyMechanicModifiers (review P1.7 — the ONE locked
 // channel), realm gates, INV-13 authoring ban on chance stats.
 
 function playerWith(overrides: Partial<ReturnType<typeof createDefaultPlayer>> = {}) {
@@ -75,8 +75,8 @@ describe('the_tu_an node tree (spec 8.2)', () => {
     const registry = registryWithNodes()
     const player = playerWith({
       realmId: 'qi_refining',
-      cultivationPath: 'the_tu',
-      cultivationWay: 'ung_the',
+      cultivationPath: 'body',
+      cultivationWay: 'hidden_body_pathway',
     })
 
     buy(player, registry, 'ho_mon')
@@ -112,14 +112,14 @@ describe('the_tu_an node tree (spec 8.2)', () => {
   })
 
   it('economy nodes live on the trunk — never gated behind a mechanic root', () => {
-    const economy = THE_TU_AN_NODES.filter((candidate) => candidate.effect.theTuAnMechanicModifiers !== undefined)
+    const economy = THE_TU_AN_NODES.filter((candidate) => candidate.effect.hiddenBodyMechanicModifiers !== undefined)
     const trunkEconomy = economy.filter(
       (candidate) =>
         !(candidate.prerequisites ?? []).some((p) => p.kind === 'node' && ['ho_mon', 'phan_mon', 'tro_mon'].includes(p.nodeId)),
     )
     // At least cap + cost + gain channels exist on the trunk.
     const channels = new Set(
-      trunkEconomy.flatMap((candidate) => Object.keys(candidate.effect.theTuAnMechanicModifiers ?? {})),
+      trunkEconomy.flatMap((candidate) => Object.keys(candidate.effect.hiddenBodyMechanicModifiers ?? {})),
     )
     for (const channel of ['maxTheBonus', 'procCostDelta', 'procGainBonus']) {
       expect(channels.has(channel), `trunk economy channel '${channel}'`).toBe(true)
@@ -127,19 +127,19 @@ describe('the_tu_an node tree (spec 8.2)', () => {
   })
 })
 
-describe('collectTheTuAnMechanicModifiers', () => {
+describe('collectHiddenBodyMechanicModifiers', () => {
   it('sums per-level channels across owned nodes; unowned contribute nothing', () => {
     const registry = registryWithNodes()
     const player = playerWith({
       realmId: 'qi_refining',
-      cultivationPath: 'the_tu',
-      cultivationWay: 'ung_the',
+      cultivationPath: 'body',
+      cultivationWay: 'hidden_body_pathway',
     })
 
-    expect(collectTheTuAnMechanicModifiers(registry, player).maxTheBonus).toBe(0)
+    expect(collectHiddenBodyMechanicModifiers(registry, player).maxTheBonus).toBe(0)
 
     buy(player, registry, 'minor_ung_the_bi_the', 3)
-    const mods = collectTheTuAnMechanicModifiers(registry, player)
+    const mods = collectHiddenBodyMechanicModifiers(registry, player)
     expect(mods.maxTheBonus).toBe(30)
     expect(mods.procCostDelta).toBe(0)
   })

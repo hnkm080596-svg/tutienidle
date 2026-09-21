@@ -53,6 +53,6 @@ export function bootstrapEarlyGamePlayer(
  // Phap Tu Reimagined Task 2 - mortal-path actives.
   gameManager.progressionOps.learnSkill('linh_bao')
  // Huy Quyen - second mortal basic, learned unequipped; grinding it
-  // to Lv3 (10.000 casts) is what reveals ung_the at the ritual.
+  // to Lv3 (10.000 casts) is what reveals hidden_body_pathway at the ritual.
   gameManager.progressionOps.learnSkill('huy_quyen')
 }

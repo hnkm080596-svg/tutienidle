@@ -13,7 +13,7 @@ export interface ArtifactRuntimeSnapshot {
   path?: ArtifactPath
 
   /** Elements the artifact rotates through on activation. When this lane is
-   *  ported to the turn engine, derive from player.phapTu.element (a phap_tu
+   *  ported to the turn engine, derive from player.spellPath.element (a spell
    *  holder has exactly 1 element) — the equippedElements loadout authority
    *  was retired in Task 14. */
   rotationElements: ElementType[]

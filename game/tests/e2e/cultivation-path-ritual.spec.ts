@@ -23,8 +23,8 @@ import {
  *   -> ConfirmModal -> realm advances, kit committed -> save oracle.
  *
  * Save-oracle fields: player.cultivationPath/cultivationWay (the atomic
- * pair), the way-owned slices (kiemTu without the retired mode key,
- * phapTu pending the element pick), and the top-level
+ * pair), the way-owned slices (swordPath without the retired mode key,
+ * spellPath pending the element pick), and the top-level
  * techniques/skills manager arrays (equipped technique + learned kit).
  */
 const SAVE_KEY = GUEST_SAVE_KEY
@@ -44,14 +44,14 @@ interface SaveShape {
     cultivation: number
     cultivationPath?: string
     cultivationWay?: string
-    kiemTu?: {
+    swordPath?: {
       preset?: string[]
       kiemY?: number
       kiemDaoCount?: number
       kiemDaoBase?: number
       mode?: string
     }
-    phapTu?: { element: string | null; route: string | null }
+    spellPath?: { element: string | null; route: string | null }
     artifact?: { artifactId?: string }
     skillLevels?: Record<string, number>
     skillCastCounts?: Record<string, number>
@@ -283,7 +283,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     assertNoBrowserErrors(collected)
   })
 
-  test('kiem_tu/hien: ritual -> preset editor surface', async ({ page }) => {
+  test('sword/sword_pathway: ritual -> preset editor surface', async ({ page }) => {
     test.setTimeout(210_000)
     const collected = collectBrowserErrors(page)
 
@@ -300,11 +300,11 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
 
     const save = await saveAndRead(page)
     expect(save.player.realmId).toBe('qi_refining')
-    expect(save.player.cultivationPath).toBe('kiem_tu')
-    expect(save.player.cultivationWay).toBe('hien')
-    expect(save.player.kiemTu).toBeDefined()
-    expect(save.player.kiemTu!.mode).toBeUndefined()
-    expect(Array.isArray(save.player.kiemTu!.preset)).toBe(true)
+    expect(save.player.cultivationPath).toBe('sword')
+    expect(save.player.cultivationWay).toBe('sword_pathway')
+    expect(save.player.swordPath).toBeDefined()
+    expect(save.player.swordPath!.mode).toBeUndefined()
+    expect(Array.isArray(save.player.swordPath!.preset)).toBe(true)
     expect(save.techniques.find((t) => t.id === 'ngu_kiem')?.equipped).toBe(true)
 
     // Hien surface — the preset editor only renders for the hien way.
@@ -354,7 +354,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     assertNoBrowserErrors(collected)
   })
 
-  test('kiem_tu/ngu: tram gate -> ritual entry -> ngu slice', async ({ page }) => {
+  test('sword/hidden_sword_pathway: tram gate -> ritual entry -> ngu slice', async ({ page }) => {
     test.setTimeout(210_000)
     const collected = collectBrowserErrors(page)
 
@@ -372,13 +372,13 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
 
     const save = await saveAndRead(page)
     expect(save.player.realmId).toBe('qi_refining')
-    expect(save.player.cultivationPath).toBe('kiem_tu')
-    expect(save.player.cultivationWay).toBe('ngu')
-    expect(save.player.kiemTu).toBeDefined()
-    expect(save.player.kiemTu!.mode).toBeUndefined()
-    expect(save.player.kiemTu!.kiemY).toBe(0)
-    expect(save.player.kiemTu!.kiemDaoCount).toBe(1)
-    expect(save.player.kiemTu!.kiemDaoBase).toBe(1)
+    expect(save.player.cultivationPath).toBe('sword')
+    expect(save.player.cultivationWay).toBe('hidden_sword_pathway')
+    expect(save.player.swordPath).toBeDefined()
+    expect(save.player.swordPath!.mode).toBeUndefined()
+    expect(save.player.swordPath!.kiemY).toBe(0)
+    expect(save.player.swordPath!.kiemDaoCount).toBe(1)
+    expect(save.player.swordPath!.kiemDaoBase).toBe(1)
     expect(save.techniques.find((t) => t.id === 'van_kiem_quyet')?.equipped).toBe(true)
 
     // Ngu surface — spec card names Ngự Kiếm Đạo, no preset editor.
@@ -391,7 +391,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     assertNoBrowserErrors(collected)
   })
 
-  test('phap_tu/ngu_hanh: ritual -> element tree + artifact entitlement', async ({ page }) => {
+  test('spell/spell_pathway: ritual -> element tree + artifact entitlement', async ({ page }) => {
     test.setTimeout(240_000)
     const collected = collectBrowserErrors(page)
 
@@ -405,9 +405,9 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
 
     const save = await saveAndRead(page)
     expect(save.player.realmId).toBe('qi_refining')
-    expect(save.player.cultivationPath).toBe('phap_tu')
-    expect(save.player.cultivationWay).toBe('ngu_hanh')
-    expect(save.player.phapTu).toEqual({ element: null, route: null })
+    expect(save.player.cultivationPath).toBe('spell')
+    expect(save.player.cultivationWay).toBe('spell_pathway')
+    expect(save.player.spellPath).toEqual({ element: null, route: null })
     expect(save.techniques.find((t) => t.id === 'dai_ngu_hanh_chan_quyet')?.equipped).toBe(true)
 
     // Element tree surface — 5 element tabs render for ngu_hanh only.
@@ -446,7 +446,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     assertNoBrowserErrors(collected)
   })
 
-  test('phap_tu/ngo_dao: linh_bao gate -> sealed card -> skill triple, no artifact', async ({ page }) => {
+  test('spell/hidden_spell_pathway: linh_bao gate -> sealed card -> skill triple, no artifact', async ({ page }) => {
     test.setTimeout(240_000)
     const collected = collectBrowserErrors(page)
 
@@ -467,8 +467,8 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
 
     const save = await saveAndRead(page)
     expect(save.player.realmId).toBe('qi_refining')
-    expect(save.player.cultivationPath).toBe('phap_tu')
-    expect(save.player.cultivationWay).toBe('ngo_dao')
+    expect(save.player.cultivationPath).toBe('spell')
+    expect(save.player.cultivationWay).toBe('hidden_spell_pathway')
     expect(save.techniques.find((t) => t.id === 'ngo_dao_chan_quyet')?.equipped).toBe(true)
 
     const learnedIds = save.skills.map((skill) => skill.id)
@@ -511,7 +511,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
 
     // P1-M7 - combat assertion: entering battle grants van_phap_than_hoa
     // to the An entity through the runtime-owned seam
-    // (grantsElementalReactionAura -> 'phap_tu.reaction_aura' capability,
+    // (grantsElementalReactionAura -> 'spell.reaction_aura' capability,
     // gated on the learned ngo_dao_hon_don passive the ritual granted).
     // getBattleBuffs is the read-only live-buff query the combat UI uses.
     await startStageOneBattle(page)
@@ -548,7 +548,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     assertNoBrowserErrors(collected)
   })
 
-  test('the_tu/hien: ritual -> kit resolution', async ({ page }) => {
+  test('body/body_pathway: ritual -> kit resolution', async ({ page }) => {
     test.setTimeout(210_000)
     const collected = collectBrowserErrors(page)
 
@@ -562,14 +562,14 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
 
     const save = await saveAndRead(page)
     expect(save.player.realmId).toBe('qi_refining')
-    expect(save.player.cultivationPath).toBe('the_tu')
-    expect(save.player.cultivationWay).toBe('hien')
+    expect(save.player.cultivationPath).toBe('body')
+    expect(save.player.cultivationWay).toBe('body_pathway')
     expect(save.techniques.find((t) => t.id === 'kim_cang_bat_hoai_the')?.equipped).toBe(true)
 
     assertNoBrowserErrors(collected)
   })
 
-  test('the_tu/ung_the: huy_quyen gate -> ritual entry', async ({ page }) => {
+  test('body/hidden_body_pathway: huy_quyen gate -> ritual entry', async ({ page }) => {
     test.setTimeout(210_000)
     const collected = collectBrowserErrors(page)
 
@@ -587,8 +587,8 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
 
     const save = await saveAndRead(page)
     expect(save.player.realmId).toBe('qi_refining')
-    expect(save.player.cultivationPath).toBe('the_tu')
-    expect(save.player.cultivationWay).toBe('ung_the')
+    expect(save.player.cultivationPath).toBe('body')
+    expect(save.player.cultivationWay).toBe('hidden_body_pathway')
     expect(save.techniques.find((t) => t.id === 'ung_the_than_quyet')?.equipped).toBe(true)
 
     assertNoBrowserErrors(collected)

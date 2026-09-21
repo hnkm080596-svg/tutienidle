@@ -538,7 +538,7 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       }
       // Phap Tu Reimagined Task 2 — mortal-path actives (idempotent).
       // huy_quyen (The Tu Reimagined sec.2.3) shares this seam - learned,
-      // not equipped - so the ung_the offer gate reads it on old saves.
+      // not equipped - so the hidden_body_pathway offer gate reads it on old saves.
       for (const mortalSkillId of ['linh_bao', 'huy_quyen']) {
         if (!gameManager.skillManager.has(mortalSkillId)) {
           gameManager.progressionOps.learnSkill(mortalSkillId)
@@ -554,7 +554,7 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       // Phap Tu Reimagined Task 2 — mortal-path actives.
       gameManager.progressionOps.learnSkill('linh_bao')
       // Huy Quyen — second mortal basic, learned unequipped; grinding it
-      // to Lv3 (10.000 casts) is what reveals ung_the at the ritual.
+      // to Lv3 (10.000 casts) is what reveals hidden_body_pathway at the ritual.
       gameManager.progressionOps.learnSkill('huy_quyen')
 
       for (const buildingId of ['teleport_array', 'gathering_outpost']) {

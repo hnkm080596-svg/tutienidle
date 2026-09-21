@@ -11,12 +11,12 @@ import { addCultivation } from '../cultivation/CultivationSystem'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { FoundationType } from '../breakthrough/FoundationType'
-import type { CultivationPathId, PathWayId } from './CultivationPathKit'
-import { createPhapTuState, type PhapTuState } from '../phap-tu/PhapTuState'
+import type { CultivationPathId, CultivationWayId } from './CultivationPathKit'
+import { createSpellPathState, type SpellPathState } from '../phap-tu/PhapTuState'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ArtifactProgress } from '../artifact/Artifact'
 import type { CompanionInstance } from '../../data/companion/Companions'
-import type { KiemTuState } from '../kiem-tu/KiemTuState'
+import type { SwordPathState } from '../kiem-tu/KiemTuState'
 
 export interface PlayerData {
   name: string
@@ -89,26 +89,26 @@ export interface PlayerData {
   cultivationPath?: CultivationPathId
 
   // Cultivation Path Framework (spec 2026-09-16, M7) — the chosen WAY
-  // inside the path (e.g. 'ngu_hanh', 'ngo_dao'), written together with
+  // inside the path (e.g. 'spell_pathway', 'hidden_spell_pathway'), written together with
   // cultivationPath by CultivationPathSystem.applyPathChoice() inside
   // the Initiation Ritual transaction. Post-M7 the union is exactly the
   // three base ids and the pair is atomic — a way-less or foreign-way
   // pair is corrupt and fails closed everywhere.
-  cultivationWay?: PathWayId
+  cultivationWay?: CultivationWayId
 
   // Phap Tu Reimagined (spec 2026-09-14) — persistent path-choice
   // authority for the normal Phap Tu path: { element, route } commit
-  // atomically via selectPhapTuElement(). Present from character
-  // creation (both null until the ritual + atomic pick); ngo_dao
+  // atomically via selectSpellPathElement(). Present from character
+  // creation (both null until the ritual + atomic pick); hidden_spell_pathway
   // holders carry the same inert shape — the (path, way) pair, not
   // this state, is what matters.
-  phapTu: PhapTuState
+  spellPath: SpellPathState
 
   // Kiem Tu Reimagined (spec 2026-09-15 K1) — the ONE canonical path
-  // state. Written at applyPathChoice('kiem_tu', way) inside the
-  // ritual; way membership lives on cultivationWay ('hien'|'ngu') —
+  // state. Written at applyPathChoice('sword', way) inside the
+  // ritual; way membership lives on cultivationWay ('sword_pathway'|'hidden_sword_pathway') —
   // the retired mode field is gone.
-  kiemTu?: KiemTuState
+  swordPath?: SwordPathState
 
   // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
   // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —
@@ -350,11 +350,11 @@ export function createDefaultPlayer(): PlayerData {
 
     // Required (non-optional) field — present from creation; both
     // members stay null until the ritual + atomic element/route pick.
-    phapTu: createPhapTuState(),
+    spellPath: createSpellPathState(),
 
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
-    kiemTu: undefined,
+    swordPath: undefined,
 
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
@@ -444,8 +444,8 @@ export function resolvePlayerStatAssembly(
   // attribute derivation (INV-6), and the emitted modifiers are the ONLY
   // gated channels (INV-10). M4 moved the Phap Tu attunement emitter
   // behind the way facet (collectActiveWayStatModifiers); M5 moves the
-  // The Tu channels the same way — hien's vitality->enduranceThreshold
-  // and ung_the's attribute->chance emissions are declared on the way
+  // The Tu channels the same way — body_pathway's vitality->enduranceThreshold
+  // and hidden_body_pathway's attribute->chance emissions are declared on the way
   // stat facets in core/the-tu/TheTuPath.ts, keyed by cultivationWay.
   const attributeTotals = resolveAttributeTotals(player.baseStats, allModifiers)
   const pathModifiers = collectActiveWayStatModifiers(player, attributeTotals)
