@@ -68,6 +68,9 @@ function mountPanel(prepare?: (deps: {
 
   const player = usePlayerStore(pinia)
 
+  // P7-M9 (decisions D3 + M9-F1): Tran Phap unlocks at Tru Co - the panel tests
+  // run on a foundation player (the wheel slot is locked below it).
+  player.realmId = 'foundation_establishment'
   gameManager.setActivePlayer(player.$state)
 
   prepare?.({ gameManager, player })

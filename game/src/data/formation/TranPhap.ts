@@ -2,7 +2,10 @@
 // 2026-09-07: local pattern space is 3x3 (9 standing slots), mapped onto
 // PLAYER_SIDE_REGION absolutes via localCellToAbsolute() in
 // FormationPlacement.ts. Each formation carries ONE shared buff - there
-// is no per-cell role. All formations are unlocked from the start.
+// is no per-cell role. All formations unlock together at Tru Co
+// (P7-M9, decision D3/M9-F1 - see FORMATION_UNLOCK_REALM_ID in
+// FormationPlacement.ts); already-committed loadouts still resolve
+// via the ungated resolvePartyFormation().
 //
 // B2 production roster (2026-09-14): the spec's tradeoff guideline is
 // "fewer slots = stronger buff", so the ladder runs 1/2/3/5/9 cells.

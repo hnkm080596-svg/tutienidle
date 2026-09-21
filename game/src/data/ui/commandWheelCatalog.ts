@@ -44,6 +44,12 @@ export interface CommandWheelSlot {
 export interface CommandWheelDisabledContext {
   hasFoundationRealm: boolean
   hasArtifactDefinition: boolean
+  // P7-M9: per-domain unlock booleans resolved in DongFuCommandWheel.vue
+  // from the AUTHORITATIVE predicates (isCompanionDomainUnlocked /
+  // isFormationUnlocked) — the slots must not key off hasFoundationRealm
+  // or the wheel drifts from the domain gate when a threshold moves.
+  companionDomainUnlocked: boolean
+  formationUnlocked: boolean
 }
 
 const NEVER_AVAILABLE = () => false
@@ -124,23 +130,26 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   },
   // Trận Pháp (Combat Art Roster spec, 2026-09-05) — SHIPPED, mở
   // TranPhapPanel.vue để kéo-thả gán player/companion vào lưới 6x6.
+  // P7-M9 (decisions D3 + M9-F1): Trận unlocks cùng party/companion progression
+  // ở Trúc Cơ — render với lock badge trước đó (phap_bao precedent).
   {
     id: 'formation_slot',
     ring: 2,
     label: 'Trận',
     target: { kind: 'standalone', panel: 'tran_phap' },
     available: ALWAYS_AVAILABLE,
+    disabledReason: (context) => (context.formationUnlocked ? null : 'Cần đạt Trúc Cơ'),
   },
   // Companion Roster (companion-gacha spec, 2026-09-12) - SHIPPED.
   // Opens CompanionPanel.vue (roster by grade, detail, feed control).
-  // No realm gate: companions are available from the start, same
-  // always-available shape as the quest/tran_phap slots.
+  // P7-M9 (decision D4): the Companion domain begins at Tru Co.
   {
     id: 'companion_roster',
     ring: 2,
     label: 'Đồng Đội',
     target: { kind: 'standalone', panel: 'companion' },
     available: ALWAYS_AVAILABLE,
+    disabledReason: (context) => (context.companionDomainUnlocked ? null : 'Cần đạt Trúc Cơ'),
   },
 
   // ---- Ring 3 — building thật (dual-entry với hotspot background) ----

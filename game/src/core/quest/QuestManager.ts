@@ -57,6 +57,17 @@ export class QuestManager {
     return progress
   }
 
+  /**
+   * Remove an active progress entry entirely (P7-M9). Used by
+   * QuestSystem.reconcileActiveQuests to drop quests whose realm gate is
+   * no longer satisfied — stale progress restored from a save must not
+   * keep counting or pay out. 'once' completions live in
+   * completedOnceIds and are unaffected.
+   */
+  deactivate(questId: string): void {
+    this.state.active = this.state.active.filter((progress) => progress.questId !== questId)
+  }
+
   incrementProgress(questId: string, amount: number): void {
     const progress = this.getProgress(questId)
 

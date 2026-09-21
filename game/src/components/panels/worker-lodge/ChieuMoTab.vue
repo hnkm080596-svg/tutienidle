@@ -48,6 +48,17 @@ const pullDisabled = computed(() => pullInFlight.value || tokenCount.value < 1)
 // The reveal card binds ONLY to the last result the ops layer returned.
 const lastResult = ref<PullCompanionResult | null>(null)
 
+function pullErrorMessage(reason: Extract<PullCompanionResult, { ok: false }>['reason']): string {
+  switch (reason) {
+    case 'missing_token':
+      return t('chieuMo.errors.missingToken', { token: tokenName.value })
+    case 'realm_locked':
+      return t('chieuMo.errors.realmLocked')
+    case 'no_active_player':
+      return t('chieuMo.errors.noActivePlayer')
+  }
+}
+
 function onPull() {
   if (pullDisabled.value) {
     return
@@ -59,12 +70,7 @@ function onPull() {
     const result = gameManager.companionOps.pullCompanion()
 
     if (!result.ok) {
-      useNotificationStore().push(
-        'warning',
-        result.reason === 'missing_token'
-          ? t('chieuMo.errors.missingToken', { token: tokenName.value })
-          : t('chieuMo.errors.noActivePlayer'),
-      )
+      useNotificationStore().push('warning', pullErrorMessage(result.reason))
 
       return
     }

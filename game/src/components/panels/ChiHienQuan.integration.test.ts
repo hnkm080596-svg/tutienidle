@@ -222,7 +222,10 @@ function mountWorkerLodge(prepare?: (deps: ReturnType<typeof makeDeps> & { playe
 
   const player = usePlayerStore(deps.pinia)
 
-  player.realmId = 'mortal'
+  // P7-M9 (decision D4): the gacha tabs only exist once the Companion
+  // domain unlocks at Tru Co, so the default mount runs a foundation
+  // player; the realm-gate test mounts mortal explicitly.
+  player.realmId = 'foundation_establishment'
   deps.gameManager.setActivePlayer(player.$state)
 
   // Panel computeds cache on stateVersion - any state the first render
@@ -275,6 +278,21 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
 
     expect(text).toContain('Nhân công')
     expect(text).toContain('3')
+
+    deps.app.unmount()
+  })
+
+  it('mortal player only sees the nhan_cong tab (gacha tabs hidden below Tru Co)', async () => {
+    const deps = mountWorkerLodge()
+
+    deps.player.realmId = 'mortal'
+    await nextTick()
+
+    const tabs = Array.from(
+      deps.container.querySelectorAll<HTMLButtonElement>('.worker-lodge-panel__tabs button'),
+    ).map((tab) => tab.textContent?.trim())
+
+    expect(tabs).toEqual(['Nhân Công'])
 
     deps.app.unmount()
   })

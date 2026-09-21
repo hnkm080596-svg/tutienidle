@@ -16,6 +16,7 @@ import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composabl
 import { VUE_ROUTE_ADAPTER_KEY, type Route } from '@/presentation/PresentationContracts'
 import type { VueRouteAdapter } from '@/presentation/VueRouteAdapter'
 import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
 import { i18n } from '@/i18n'
 
@@ -141,28 +142,59 @@ describe('DongFuCommandWheel', () => {
     expect(mounted.slot('scripture_pavilion')).not.toBeNull()
   })
 
-  // Trận Pháp (Combat Art Roster spec, 2026-09-05) — SHIPPED: formation_slot
-  // không còn future, render nút mở TranPhapPanel.vue ngay (không có gate
-  // disabledReason như phap_bao, mọi trận pháp mở sẵn từ đầu).
-  it('slot Trận render và mở được ngay từ đầu', async () => {
+  // P7-M9 (decisions D3 + M9-F1): formation_slot renders with a lock badge below
+  // Tru Co (phap_bao precedent) and opens TranPhapPanel once unlocked.
+  it('slot Trận disabled trước Trúc Cơ, mở TranPhapPanel sau khi unlock', async () => {
     await mounted.open()
 
-    const slot = mounted.slot('formation_slot')
+    const locked = mounted.slot('formation_slot')
 
-    expect(slot).not.toBeNull()
+    expect(locked).not.toBeNull()
+    expect(locked!.classList.contains('is-disabled')).toBe(true)
+
+    locked!.click()
+    await nextTick()
+
+    expect(mounted.ui.standalonePanel).not.toBe('tran_phap')
+
+    usePlayerStore().realmId = 'foundation_establishment'
+    await nextTick()
+
+    const unlocked = mounted.slot('formation_slot')
+
+    expect(unlocked!.classList.contains('is-disabled')).toBe(false)
+
+    unlocked!.click()
+    await nextTick()
+
+    expect(mounted.ui.standalonePanel).toBe('tran_phap')
+    expect(mounted.ui.isCommandWheelOpen).toBe(false)
   })
 
-  // Companion Roster (companion-gacha Task 10, 2026-09-12) - SHIPPED:
-  // companion_roster renders with no realm gate and opens CompanionPanel
-  // (standalonePanel 'companion'), closing the wheel like every shortcut.
-  it('slot Đồng Đội render và mở standalonePanel companion', async () => {
+  // Companion Roster (companion-gacha Task 10, 2026-09-12) - SHIPPED.
+  // P7-M9 (decision D4): the Companion domain begins at Tru Co - the
+  // roster slot is locked below it and opens CompanionPanel after.
+  it('slot Đồng Đội disabled trước Trúc Cơ, mở standalonePanel companion sau khi unlock', async () => {
     await mounted.open()
 
-    const slot = mounted.slot('companion_roster')
+    const locked = mounted.slot('companion_roster')
 
-    expect(slot).not.toBeNull()
+    expect(locked).not.toBeNull()
+    expect(locked!.classList.contains('is-disabled')).toBe(true)
 
-    slot!.click()
+    locked!.click()
+    await nextTick()
+
+    expect(mounted.ui.standalonePanel).not.toBe('companion')
+
+    usePlayerStore().realmId = 'foundation_establishment'
+    await nextTick()
+
+    const unlocked = mounted.slot('companion_roster')
+
+    expect(unlocked!.classList.contains('is-disabled')).toBe(false)
+
+    unlocked!.click()
     await nextTick()
 
     expect(mounted.ui.standalonePanel).toBe('companion')

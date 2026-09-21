@@ -591,6 +591,7 @@
     "pull": "Recruit (1 {token})",
     "errors": {
       "missingToken": "No {token} available.",
+      "realmLocked": "Requires Foundation Establishment.",
       "noActivePlayer": "No active player data."
     },
     "result": {
@@ -613,6 +614,7 @@
       "unknownDefinition": "Unknown companion.",
       "constellationMaxed": "Constellation already maxed.",
       "insufficientDuyenPhan": "Not enough Duyen Phan.",
+      "realmLocked": "Requires Foundation Establishment.",
       "noActivePlayer": "No active player data."
     },
     "empty": "No companions available to exchange."
@@ -676,6 +678,7 @@
         "notFeedable": "This material cannot be fed to companions.",
         "levelMaxed": "Companion is at the realm cap.",
         "insufficientMaterial": "Not enough material.",
+        "realmLocked": "Requires Foundation Establishment.",
         "noActivePlayer": "No active player data."
       }
     },

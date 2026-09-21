@@ -33,11 +33,15 @@ const FEED_MATERIAL: Material = {
   sourceType: 'monster',
 }
 
-const MORTAL_MAX_LEVEL = REALMS.find((realm) => realm.id === 'mortal')!.maxLevel
+// P7-M9 (decision D4): the Companion domain unlocks at Tru Co, so the
+// success-path tests run on a foundation_establishment player; the
+// realm-gate describe below covers the locked realms explicitly.
+const FOUNDATION_MAX_LEVEL = REALMS.find((realm) => realm.id === 'foundation_establishment')!.maxLevel
 
-function makeManager(): { manager: GameManager; player: PlayerData } {
+function makeManager(realmId = 'foundation_establishment'): { manager: GameManager; player: PlayerData } {
   const manager = new GameManager()
   const player = createDefaultPlayer()
+  player.realmId = realmId
   manager.setActivePlayer(player)
   return { manager, player }
 }
@@ -233,8 +237,10 @@ describe('feedCompanion', () => {
     const { manager, player } = makeManager()
     manager.materialRegistry.register(FEED_MATERIAL)
     manager.materialBag.add(FEED_MATERIAL, 5)
-    // Player is mortal; a mortal companion at realm maxLevel is capped.
-    player.companions.push(ownedInstance({ realmLevel: MORTAL_MAX_LEVEL }))
+    // Player is at foundation; a foundation companion at realm maxLevel is capped.
+    player.companions.push(
+      ownedInstance({ realmId: 'foundation_establishment', realmLevel: FOUNDATION_MAX_LEVEL }),
+    )
 
     const result = manager.companionOps.feedCompanion('inst-1', FEED_MATERIAL.id, 2)
 
@@ -331,6 +337,57 @@ describe('feedCompanion', () => {
     expect(manager.materialBag.getAmount(FEED_MATERIAL.id)).toBe(0)
     expect(player.companions[0]!.realmLevel).toBe(2)
     expect(player.companions[0]!.exp).toBe(10)
+  })
+})
+
+// P7-M9 (decision D4): the Companion domain begins at Tru Co. The realm
+// gate runs BEFORE every other check (token, definition, instance) and
+// preserves all balances.
+describe('companion realm gate', () => {
+  it('pullCompanion rejects realm_locked at mortal and qi_refining, token untouched', () => {
+    for (const realmId of ['mortal', 'qi_refining']) {
+      const { manager, player } = makeManager(realmId)
+      manager.materialBag.add(PULL_TOKEN, 2)
+
+      expect(manager.companionOps.pullCompanion()).toEqual({ ok: false, reason: 'realm_locked' })
+      expect(manager.materialBag.getAmount(PULL_TOKEN.id)).toBe(2)
+      expect(player.duyenPhan).toBe(0)
+      expect(player.companions).toHaveLength(0)
+      expect(player.companionPullsSinceRare).toBe(0)
+    }
+  })
+
+  it('the realm gate fires before the token check', () => {
+    const { manager } = makeManager('mortal')
+
+    // No token in the bag: realm_locked, not missing_token.
+    expect(manager.companionOps.pullCompanion()).toEqual({ ok: false, reason: 'realm_locked' })
+  })
+
+  it('exchangeCompanion rejects realm_locked below Tru Co, duyenPhan untouched', () => {
+    const { manager, player } = makeManager('qi_refining')
+    player.duyenPhan = 1000
+
+    expect(manager.companionOps.exchangeCompanion(COMPANIONS[0]!.id)).toEqual({
+      ok: false,
+      reason: 'realm_locked',
+    })
+    expect(player.duyenPhan).toBe(1000)
+    expect(player.companions).toHaveLength(0)
+  })
+
+  it('feedCompanion rejects realm_locked below Tru Co, bag untouched', () => {
+    const { manager, player } = makeManager('mortal')
+    manager.materialRegistry.register(FEED_MATERIAL)
+    manager.materialBag.add(FEED_MATERIAL, 5)
+    player.companions.push(ownedInstance())
+
+    expect(manager.companionOps.feedCompanion('inst-1', FEED_MATERIAL.id, 2)).toEqual({
+      ok: false,
+      reason: 'realm_locked',
+    })
+    expect(manager.materialBag.getAmount(FEED_MATERIAL.id)).toBe(5)
+    expect(player.companions[0]!.exp).toBe(0)
   })
 })
 

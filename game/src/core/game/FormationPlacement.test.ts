@@ -16,6 +16,15 @@ function ownedCompanion(definitionId: string): CompanionInstance {
   }
 }
 
+// P7-M9 (decisions D3 + M9-F1): formation commits require the unlocked domain
+// (Tru Co+); resolvePartyFormation stays ungated so grandfathered
+// loadouts still resolve.
+function unlockedPlayer() {
+  const player = createDefaultPlayer()
+  player.realmId = 'foundation_establishment'
+  return player
+}
+
 describe('localCellToAbsolute', () => {
   it('converts local slot (0,0) to the region origin', () => {
     expect(localCellToAbsolute({ row: 0, column: 0 })).toEqual({ row: 3, column: 0 })
@@ -56,7 +65,7 @@ describe('resolvePartyFormation', () => {
 // stale draft could persist rows battle construction would silently skip.
 describe('commitFormationLoadout', () => {
   it('rejects an unknown formationId without touching formationLoadout', () => {
-    const player = createDefaultPlayer()
+    const player = unlockedPlayer()
 
     expect(
       commitFormationLoadout(player, { formationId: 'khong_ton_tai', assignments: [] }),
@@ -65,7 +74,7 @@ describe('commitFormationLoadout', () => {
   })
 
   it('rejects a combatantId that is neither player nor an owned companion', () => {
-    const player = createDefaultPlayer()
+    const player = unlockedPlayer()
 
     expect(
       commitFormationLoadout(player, {
@@ -77,7 +86,7 @@ describe('commitFormationLoadout', () => {
   })
 
   it('rejects an assignment outside the formation cellPattern', () => {
-    const player = createDefaultPlayer()
+    const player = unlockedPlayer()
 
     // doc_hanh_tran lights exactly one cell: { row: 1, column: 2 }.
     expect(
@@ -90,7 +99,7 @@ describe('commitFormationLoadout', () => {
   })
 
   it('rejects a duplicate combatantId', () => {
-    const player = createDefaultPlayer()
+    const player = unlockedPlayer()
 
     expect(
       commitFormationLoadout(player, {
@@ -105,7 +114,7 @@ describe('commitFormationLoadout', () => {
   })
 
   it('rejects two combatants stacked on the same cell', () => {
-    const player = createDefaultPlayer()
+    const player = unlockedPlayer()
     player.companions = [ownedCompanion('ho_ly_tinh')]
 
     expect(
@@ -121,7 +130,7 @@ describe('commitFormationLoadout', () => {
   })
 
   it('commits a legal loadout as a detached copy', () => {
-    const player = createDefaultPlayer()
+    const player = unlockedPlayer()
     player.companions = [ownedCompanion('ho_ly_tinh')]
 
     const draft = {
@@ -147,7 +156,7 @@ describe('commitFormationLoadout', () => {
 describe('GameManagerTurnBattleOps.setFormationLoadout', () => {
   it('exposes the validating commit through gameManager.turnBattleOps', () => {
     const gameManager = new GameManager()
-    const player = createDefaultPlayer()
+    const player = unlockedPlayer()
     gameManager.setActivePlayer(player)
 
     expect(
@@ -165,5 +174,42 @@ describe('GameManagerTurnBattleOps.setFormationLoadout', () => {
       }),
     ).toBe(false)
     expect(player.formationLoadout?.formationId).toBe('doc_hanh_tran')
+  })
+})
+
+// P7-M9 (decisions D3 + M9-F1): Tran Phap unlocks at Tru Co with the companion
+// domain. The commit rejects below the threshold without touching state;
+// resolvePartyFormation is NOT gated, so a grandfathered loadout keeps
+// resolving in combat.
+describe('formation realm gate', () => {
+  const LEGAL_LOADOUT = {
+    formationId: 'doc_hanh_tran',
+    assignments: [{ row: 1, column: 2, combatantId: 'player' }],
+  }
+
+  it.each(['mortal', 'qi_refining'])('rejects commits at %s without touching formationLoadout', (realmId) => {
+    const player = createDefaultPlayer()
+    player.realmId = realmId
+
+    expect(commitFormationLoadout(player, LEGAL_LOADOUT)).toBe(false)
+    expect(player.formationLoadout).toBeNull()
+  })
+
+  it('accepts the same commit at foundation_establishment', () => {
+    const player = unlockedPlayer()
+
+    expect(commitFormationLoadout(player, LEGAL_LOADOUT)).toBe(true)
+    expect(player.formationLoadout?.formationId).toBe('doc_hanh_tran')
+  })
+
+  it('resolvePartyFormation still resolves a grandfathered loadout at mortal', () => {
+    const player = createDefaultPlayer()
+
+    player.formationLoadout = {
+      formationId: 'doc_hanh_tran',
+      assignments: [{ row: 1, column: 2, combatantId: 'player' }],
+    }
+
+    expect(resolvePartyFormation(player)).toEqual([{ combatantId: 'player', row: 5, column: 4 }])
   })
 })

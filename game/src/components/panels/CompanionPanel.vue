@@ -275,6 +275,8 @@ function feedErrorMessage(reason: Extract<FeedCompanionResult, { ok: false }>['r
       return t('companion.feed.errors.levelMaxed')
     case 'insufficient_material':
       return t('companion.feed.errors.insufficientMaterial')
+    case 'realm_locked':
+      return t('companion.feed.errors.realmLocked')
     case 'no_active_player':
       return t('companion.feed.errors.noActivePlayer')
   }

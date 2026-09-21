@@ -24,6 +24,7 @@ import {
   isCompanionLevelMaxed,
   MAX_CONSTELLATION_RANK,
 } from '../companion/CompanionProgression'
+import { isCompanionDomainUnlocked } from '../companion/CompanionAvailability'
 
 // Pull currency. The registry entry ships in Task 6; the ops layer only
 // needs the id because MaterialBag stacks carry their own Material object.
@@ -44,15 +45,15 @@ const DUYEN_PHAN_PER_PULL = 1
 
 export type PullCompanionResult =
   | { ok: true; outcome: CompanionPullOutcome; duyenPhan: number; pullsSinceRare: number }
-  | { ok: false; reason: 'missing_token' | 'no_active_player' }
+  | { ok: false; reason: 'missing_token' | 'realm_locked' | 'no_active_player' }
 
 export type ExchangeCompanionResult =
   | { ok: true; definition: CompanionDefinition; kind: 'new' | 'constellation_up'; constellationRankAfter?: number; duyenPhan: number }
-  | { ok: false; reason: 'unknown_definition' | 'constellation_maxed' | 'insufficient_duyen_phan' | 'no_active_player' }
+  | { ok: false; reason: 'unknown_definition' | 'constellation_maxed' | 'insufficient_duyen_phan' | 'realm_locked' | 'no_active_player' }
 
 export type FeedCompanionResult =
   | { ok: true; expGained: number; levelsGained: number; realmBreakthroughs: string[]; clampedExp: number }
-  | { ok: false; reason: 'unknown_instance' | 'unknown_material' | 'not_feedable' | 'level_maxed' | 'insufficient_material' | 'no_active_player' }
+  | { ok: false; reason: 'unknown_instance' | 'unknown_material' | 'not_feedable' | 'level_maxed' | 'insufficient_material' | 'realm_locked' | 'no_active_player' }
 
 export interface GameManagerCompanionOpsDeps {
   materialBag: MaterialBag
@@ -77,6 +78,10 @@ export class GameManagerCompanionOps {
 
     if (!player) {
       return { ok: false, reason: 'no_active_player' }
+    }
+
+    if (!isCompanionDomainUnlocked(player.realmId)) {
+      return { ok: false, reason: 'realm_locked' }
     }
 
     if (!this.deps.materialBag.has(COMPANION_PULL_TOKEN_ID, 1)) {
@@ -131,6 +136,10 @@ export class GameManagerCompanionOps {
       return { ok: false, reason: 'no_active_player' }
     }
 
+    if (!isCompanionDomainUnlocked(player.realmId)) {
+      return { ok: false, reason: 'realm_locked' }
+    }
+
     const definition = COMPANIONS.find((entry) => entry.id === definitionId)
 
     if (!definition) {
@@ -183,6 +192,10 @@ export class GameManagerCompanionOps {
 
     if (!player) {
       return { ok: false, reason: 'no_active_player' }
+    }
+
+    if (!isCompanionDomainUnlocked(player.realmId)) {
+      return { ok: false, reason: 'realm_locked' }
     }
 
     const index = player.companions.findIndex((instance) => instance.instanceId === instanceId)

@@ -65,6 +65,19 @@ export class QuestSystem {
 
       manager.ensureActive(quest)
     }
+
+    // P7-M9 - the inverse pass: a quest whose gate is no longer
+    // satisfied must not keep stale active progress (e.g. restored from
+    // a save written before its realm gate existed). Dropping it here —
+    // the same lifecycle seam that activates — keeps progress events and
+    // claims ineligible without touching their player-free signatures.
+    // Progress re-arms from zero if the quest ever becomes eligible
+    // again; 'once' completions are tracked separately and unaffected.
+    for (const progress of [...manager.getActive()]) {
+      if (registry.has(progress.questId) && !isUnlocked(registry.get(progress.questId), player)) {
+        manager.deactivate(progress.questId)
+      }
+    }
   }
 
   /**

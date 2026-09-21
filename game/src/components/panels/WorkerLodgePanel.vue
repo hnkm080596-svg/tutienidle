@@ -7,10 +7,12 @@
 // body) / chieu_mo (ChieuMoTab - token pull) / duyen_phan
 // (DuyenPhanTab - pick-your-own exchange). Pattern copied from
 // EquipmentHallPanel.vue.
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { usePlayerStore } from '@/stores/player'
 import { getWorkerCapacityForLevel } from '@/core/production/WorkerCapacity'
+import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import TabBar from '@/components/common/TabBar.vue'
 import ChieuMoTab from './worker-lodge/ChieuMoTab.vue'
 import DuyenPhanTab from './worker-lodge/DuyenPhanTab.vue'
@@ -21,8 +23,14 @@ const { t } = useI18n()
 
 const gameManager = useGameManager()
 
+const player = usePlayerStore()
+
 const { stateVersion } = useStateVersion()
 
+// P7-M9 (decision D4): the two gacha tabs only exist once the Companion
+// domain unlocks at Tru Co; nhan_cong (worker capacity) stays available
+// in every realm. The domain ops enforce the same gate — this is the
+// presentation mirror, not a second authority.
 const TABS = [
   { id: 'nhan_cong', label: t('workerLodge.tabs.nhanCong') },
   { id: 'chieu_mo', label: t('workerLodge.tabs.chieuMo') },
@@ -31,11 +39,24 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
+const visibleTabs = computed(() =>
+  isCompanionDomainUnlocked(player.realmId) ? TABS : TABS.filter((tab) => tab.id === 'nhan_cong'),
+)
+
 const activeTab = ref<TabId>('nhan_cong')
 
 function switchTab(tab: TabId) {
   activeTab.value = tab
 }
+
+// Close the invariant: if realm state ever changes below Tru Co while a
+// gacha tab is selected (state replacement/restore mid-session), fall
+// back to nhan_cong so no hidden tab keeps rendering.
+watch(visibleTabs, (tabs) => {
+  if (!tabs.some((tab) => tab.id === activeTab.value)) {
+    activeTab.value = 'nhan_cong'
+  }
+})
 
 const instance = computed(() => {
   stateVersion.value
@@ -66,7 +87,7 @@ const nextCapacity = computed(() => {
 
     <TabBar
       class="worker-lodge-panel__tabs"
-      :tabs="TABS.map((tab) => ({ id: tab.id, label: tab.label }))"
+      :tabs="visibleTabs.map((tab) => ({ id: tab.id, label: tab.label }))"
       :model-value="activeTab"
       @update:model-value="switchTab($event as TabId)"
     />

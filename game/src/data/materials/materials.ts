@@ -77,10 +77,11 @@ const legacyMaterials: Material[] = [
   },
 
   // Companion gacha (2026-09-12, companion-gacha plan Task 6) - pull
-  // token for Chieu Hien Quan. Sources: floor-10 chapter boss
-  // signatureDrops (requiresModifier 'boss', x1/x2/x3 by chapter, see
-  // data/enemy/Enemies.ts) + daily_chieu_hien_lenh quest. Sink:
-  // GameManagerCompanionOps.pullCompanion() spends 1 per pull.
+  // token for Chieu Hien Quan. Sources (Tru Co+ only, P7-M9/D4):
+  // foundation floor-10 boss signatureDrops x3 (requiresModifier 'boss',
+  // see FoundationEnemies.ts) + daily_chieu_hien_lenh quest
+  // (realm-gated). Sink: GameManagerCompanionOps.pullCompanion() spends
+  // 1 per pull.
   {
     id: 'chieu_hien_lenh',
     name: 'Chiêu Hiền Lệnh',

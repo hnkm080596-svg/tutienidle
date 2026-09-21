@@ -10,6 +10,17 @@ import { PLAYER_SIDE_REGION, standingSlotPosition } from '../battle/BattlefieldR
 import type { FormationLoadout, PlayerData } from '../player/Player'
 import { DEFAULT_PARTY_FORMATION, type PartyFormationSlot } from './PartyFormation'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
+import { getRealmIndex } from '../realm/realmSystem'
+
+// Formation unlock (P7-M9, decisions D3 + M9-F1) - D3 rules Tran Phap
+// is not usable Mortal progression and gates it independently; M9-F1
+// pins that gate at Tru Co. resolvePartyFormation() stays UNGATED so a
+// grandfathered save's committed loadout still resolves in combat.
+export const FORMATION_UNLOCK_REALM_ID = 'foundation_establishment'
+
+export function isFormationUnlocked(realmId: string): boolean {
+  return getRealmIndex(realmId) >= getRealmIndex(FORMATION_UNLOCK_REALM_ID)
+}
 
 // Converts a local standing-slot index (0..STANDING_SLOT_COUNT-1 on each
 // axis, within the player's own 3x3 grid) into an absolute battlefield
@@ -52,6 +63,10 @@ export function resolvePartyFormation(player: PlayerData): PartyFormationSlot[] 
 // On success stores a detached copy so later edits of the caller's draft
 // cannot mutate the committed loadout.
 export function commitFormationLoadout(player: PlayerData, loadout: FormationLoadout): boolean {
+  if (!isFormationUnlocked(player.realmId)) {
+    return false
+  }
+
   const formation = TRAN_PHAP_FORMATIONS.find((entry) => entry.id === loadout.formationId)
 
   if (!formation) {

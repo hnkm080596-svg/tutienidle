@@ -59,6 +59,9 @@ export const QUESTS: Quest[] = [
     condition: { kind: 'kill', amount: 20 },
     reward: { itemDrops: [{ kind: 'material', itemId: 'chieu_hien_lenh', amount: 1 }] },
     cadence: 'daily',
+    // P7-M9 (decision D4) - the Companion domain begins at Tru Co; the
+    // token daily only exists from that realm onward.
+    requiredRealmId: 'foundation_establishment',
   },
 
   // Trúc Cơ content pass M1 (2026-08-29) — 5 quest chuỗi Trúc Cơ,

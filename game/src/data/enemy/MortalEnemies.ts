@@ -646,10 +646,6 @@ export const MORTAL_ENEMIES: Enemy[] = [
       // nguyên liệu chính Thông Mạch Đan/Trúc Cơ Đan. chance:1 nên boss
       // idle (auto-farm) vẫn rơi theo E11.
       { kind: 'material', itemId: 'yeu_dan_hung_giao', amount: { min: 1, max: 1 }, chance: 1, requiresModifier: 'boss' },
-      // Companion gacha (Task 6) - chapter-2 floor-10 boss drops 2x
-      // Chieu Hien Lenh; boss-only via requiresModifier, chance:1 keeps
-      // the idle channel eligible (spec E11).
-      { kind: 'material', itemId: 'chieu_hien_lenh', amount: { min: 2, max: 2 }, chance: 1, requiresModifier: 'boss' },
     ],
   }),
 
@@ -1139,10 +1135,5 @@ export const MORTAL_ENEMIES: Enemy[] = [
       techniqueMastery: 36,
       spiritStone: 8,
     },
-    signatureDrops: [
-      // Companion gacha (Task 6) - chapter-1 floor-10 boss drops 1x
-      // Chieu Hien Lenh; boss-only via requiresModifier.
-      { kind: 'material', itemId: 'chieu_hien_lenh', amount: { min: 1, max: 1 }, chance: 1, requiresModifier: 'boss' },
-    ],
   }),
 ]

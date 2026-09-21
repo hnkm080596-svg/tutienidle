@@ -18,6 +18,8 @@ import {
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
+import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
+import { isFormationUnlocked } from '@/core/game/FormationPlacement'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'
 
 const ui = useUiStore()
@@ -35,6 +37,10 @@ const navigation = useBuildingNavigation()
 const disabledContext = computed<CommandWheelDisabledContext>(() => ({
   hasFoundationRealm: getRealmIndex(player.realmId) >= getRealmIndex('foundation_establishment'),
   hasArtifactDefinition: Boolean(resolveExpectedArtifactId(player)),
+  // P7-M9: the M9 slots consume the authoritative domain predicates so
+  // the wheel never drifts from ops/commit gates when a threshold moves.
+  companionDomainUnlocked: isCompanionDomainUnlocked(player.realmId),
+  formationUnlocked: isFormationUnlocked(player.realmId),
 }))
 
 function disabledReason(slot: CommandWheelSlot): string | null {

@@ -163,6 +163,9 @@ describe('CompanionPanel', () => {
 
   it('feeds a material stack through gameManager.feedCompanion', async () => {
     const mounted = mountPanel(({ player, gameManager }) => {
+      // P7-M9: feedCompanion is realm-gated to Tru Co - this test needs an
+      // unlocked player (the other panel tests stay on mortal state).
+      player.realmId = 'foundation_establishment'
       player.companions = [ownedInstance()]
       gameManager.materialBag.add(FEED_MATERIAL, 5)
     })

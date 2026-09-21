@@ -5,6 +5,8 @@ import { QUESTS } from '../quest/quests'
 import { resolveDrops } from '../../core/drop/resolveDrops'
 import { modifiersFor } from '../../core/drop/DropContext'
 import { COMPANION_PULL_TOKEN_ID } from '../../core/game/GameManagerCompanionOps'
+import { getRealmIndex } from '../../core/realm/realmSystem'
+import { COMPANION_UNLOCK_REALM_ID } from '../../core/companion/CompanionAvailability'
 import { QuestRegistry } from '../../core/quest/QuestRegistry'
 import { QuestManager } from '../../core/quest/QuestManager'
 import { QuestSystem } from '../../core/quest/QuestSystem'
@@ -16,11 +18,11 @@ import { RewardSystem } from '../../core/reward/RewardSystem'
 import type { RewardReceiver } from '../../core/reward/RewardSystem'
 import type { PlayerData } from '../../core/player/Player'
 
-// Companion gacha Task 6 - Chieu Hien Lenh token economy: registry
-// entry, floor-10 chapter boss signatureDrops, daily quest income.
+// Companion gacha Task 6 - Chieu Hien Lenh token economy. P7-M9
+// (decision D4): the Companion domain begins at Tru Co, so the ONLY
+// drop source left is the foundation floor-10 boss; Mortal/Luyen Khi
+// enemies and the daily quest must not produce the token below Tru Co.
 const BOSS_TOKEN_AMOUNTS: Readonly<Record<string, number>> = {
-  mortal_ferocious_giant_crocodile: 1,
-  ferocious_flood_serpent: 2,
   foundation_ferocious_flood_dragon_whelp: 3,
 }
 
@@ -94,18 +96,44 @@ describe('Chieu Hien Lenh boss signatureDrops', () => {
   })
 
   it('idle channel still yields the token (chance:1 survives the E11 gate)', () => {
-    const serpent = ENEMIES.find((entry) => entry.id === 'ferocious_flood_serpent')!
+    const whelp = ENEMIES.find((entry) => entry.id === 'foundation_ferocious_flood_dragon_whelp')!
 
     const result = resolveDrops({
       modifiers: modifiersFor({ channel: 'idle', isBoss: true, isElite: false }),
       channel: 'idle',
-      signatureDrops: serpent.signatureDrops,
+      signatureDrops: whelp.signatureDrops,
       rng: () => 0,
     })
 
     const token = result.items.find((item) => item.itemId === COMPANION_PULL_TOKEN_ID)
     expect(token).toBeDefined()
-    expect(token!.amount).toBe(2)
+    expect(token!.amount).toBe(3)
+  })
+})
+
+// D4 hard rule: Mortal stages -> NO Companion-specific drops; Luyen Khi
+// stages -> NO Companion-specific drops. Asserted at the data level so a
+// re-added line fails here instead of leaking tokens into early realms.
+describe('Chieu Hien Lenh realm restriction', () => {
+  it('no mortal or qi_refining enemy drops the token', () => {
+    const offenders = ENEMIES.filter(
+      (enemy) =>
+        (enemy.realmId === 'mortal' || enemy.realmId === 'qi_refining') &&
+        enemy.signatureDrops?.some((drop) => drop.itemId === COMPANION_PULL_TOKEN_ID),
+    )
+
+    expect(offenders.map((enemy) => enemy.id)).toEqual([])
+  })
+
+  it('no quest below Tru Co rewards the token', () => {
+    const offenders = QUESTS.filter(
+      (quest) =>
+        quest.reward.itemDrops?.some((drop) => drop.itemId === COMPANION_PULL_TOKEN_ID) &&
+        (!quest.requiredRealmId ||
+          getRealmIndex(quest.requiredRealmId) < getRealmIndex(COMPANION_UNLOCK_REALM_ID)),
+    )
+
+    expect(offenders.map((quest) => quest.id)).toEqual([])
   })
 })
 
@@ -142,7 +170,7 @@ describe('daily_chieu_hien_lenh quest', () => {
     return { registry, manager, system, bags, rewardSystem, receiver, materialBag }
   }
 
-  it('exists in QUESTS as a kill-generic daily paying 1 token', () => {
+  it('exists in QUESTS as a kill-generic daily paying 1 token, gated to Tru Co', () => {
     const quest = QUESTS.find((entry) => entry.id === 'daily_chieu_hien_lenh')
 
     expect(quest).toBeDefined()
@@ -151,11 +179,50 @@ describe('daily_chieu_hien_lenh quest', () => {
     expect(quest!.reward.itemDrops).toEqual([
       { kind: 'material', itemId: COMPANION_PULL_TOKEN_ID, amount: 1 },
     ])
+    expect(quest!.requiredRealmId).toBe('foundation_establishment')
   })
 
-  it('claims itemDrops into materialBag via the normal claim path', () => {
-    const { registry, manager, system, bags, rewardSystem, receiver, materialBag } = setup()
+  it('never activates below Tru Co', () => {
+    const { registry, manager, system, bags } = setup()
     const player = { realmId: 'qi_refining' } as unknown as PlayerData
+
+    system.reconcileActiveQuests(registry, manager, player)
+
+    for (let index = 0; index < 20; index++) {
+      system.onEnemyDefeated(registry, manager, 'wild_wolf', undefined)
+    }
+
+    expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(false)
+  })
+
+  it('drops stale active progress on reconcile below Tru Co (grandfathered save)', () => {
+    const { registry, manager, system, bags } = setup()
+    const player = { realmId: 'foundation_establishment' } as unknown as PlayerData
+
+    // Grandfathered state: the daily was activated while eligible (or
+    // restored from a pre-gate save) and already has progress.
+    system.reconcileActiveQuests(registry, manager, player)
+    manager.incrementProgress('daily_chieu_hien_lenh', 7)
+    expect(manager.getProgress('daily_chieu_hien_lenh')?.progress).toBe(7)
+
+    // Realm gate now fails (save predates Truc Co / content moved) —
+    // reconcile removes the stale entry instead of letting it count.
+    player.realmId = 'qi_refining'
+    system.reconcileActiveQuests(registry, manager, player)
+
+    expect(manager.getProgress('daily_chieu_hien_lenh')).toBeUndefined()
+
+    for (let index = 0; index < 20; index++) {
+      system.onEnemyDefeated(registry, manager, 'wild_wolf', undefined)
+    }
+
+    expect(manager.getProgress('daily_chieu_hien_lenh')).toBeUndefined()
+    expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(false)
+  })
+
+  it('claims itemDrops into materialBag via the normal claim path at Tru Co', () => {
+    const { registry, manager, system, bags, rewardSystem, receiver, materialBag } = setup()
+    const player = { realmId: 'foundation_establishment' } as unknown as PlayerData
 
     system.reconcileActiveQuests(registry, manager, player)
 

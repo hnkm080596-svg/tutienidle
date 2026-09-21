@@ -39,6 +39,24 @@ Refined from the user's M1–M8 guideline. Each mission = one coherent authority
 - M5's panel re-point is mechanical (same UI, new read source); structural IA change is M7's job.
 - If ChatGPT review forces a boundary change, update this graph rather than smearing authorities across commits.
 
+---
+
+# Post-P7 — Mortal Chapter Consolidation Missions
+
+Follow-up graph from the Mortal Chapter decisions reconciliation (D1–D6). Each mission keeps the same spec → plan → implement → gates → external review → merge workflow.
+
+| # | Mission | Authority boundary | Depends on |
+|---|---|---|---|
+| M9 (A+B) | **Companion domain & Ring-2 realm gating** | `isCompanionDomainUnlocked` (CompanionAvailability) gates pull/exchange/feed + wheel `companion_roster` + Chi Hien Quan gacha tabs at `foundation_establishment`; `isFormationUnlocked` (M9-F1) gates formation commits + wheel `formation_slot`; `daily_chieu_hien_lenh` realm-gated with stale-active reconcile closure; Mortal/LK `chieu_hien_lenh` drops removed. | P7 M1–M8 |
+| M-C | **MortalChapterJourney suite** | Canonical happy-path + boundary + save/restore journey on `EarlyGameSession`; retires `M0LoopProbe`. | M9 |
+| M-E | **Meridian page model** | `pageRealmId` on `MeridianDefinition`; monotonic page-unlock predicate; paged `MeridianSection`. | M9 |
+| M-F | **Body base-stat re-emit (D1 spec)** | `BaseStatBodyChapter.collectBaseStatDeltas` + `assembledBase = baseStats + body deltas` before derivation; `percentAtFullTier` → `baseGains`; magnitudes deferred to balance phase. | M9 |
+| M-D | **Perfection economy simulation** | Deterministic T_normal vs T_perfect measurement + drop-rate feasibility report (analysis only). | independent |
+| M-G | **Beta companion roster** | `than_nong` (healer) + `khai_minh` (buffer) definitions; existing-10 disposition stays "future content". | M9 |
+| M-H | **Terminology sweep** | Residual naming cleanup. | all |
+
+Locked product decisions carried into this graph: no save migration (grandfathering only); existing companion roster retained as post-Beta content; balance numbers owned by a later dedicated phase; Formation unlock = `foundation_establishment` (M9-F1, independently re-decidable).
+
 ## Completion ledger (2026-09-21)
 
 | # | Status | Commit | Gates |

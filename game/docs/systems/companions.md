@@ -27,7 +27,8 @@ Core: `core/companion/CompanionProgression.ts` (exp curve, stats, kit, feed), `C
 
 ## Chiêu Mộ (gacha)
 
-- **Token:** `chieu_hien_lenh` (Chiêu Hiền Lệnh, `category: 'other'`, không bán được ở Ký Bảo Các). **1 token = 1 pull** (không 10-pull). Nguồn: `signatureDrops` boss tầng 10 — `mortal_ferocious_giant_crocodile` (ch1) ×1, `ferocious_flood_serpent` (ch2) ×2, `foundation_ferocious_flood_dragon_whelp` (ch3) ×3, `chance:1 requiresModifier:'boss'` — + quest daily `daily_chieu_hien_lenh` (kill 20 bất kỳ → 1 token).
+- **Realm gate (P7-M9, decision D4):** toàn domain Companion (pull/exchange/feed, wheel `companion_roster`, 2 tab gacha Chiêu Hiền Quán) chỉ mở từ `foundation_establishment` — authority `isCompanionDomainUnlocked` trong `core/companion/CompanionAvailability.ts`; ops trả `realm_locked`. Tab `nhan_cong` (worker capacity) không gate. Companion đã sở hữu (save cũ) vẫn hoạt động trong combat — gate chỉ chặn acquire/UI mới.
+- **Token:** `chieu_hien_lenh` (Chiêu Hiền Lệnh, `category: 'other'`, không bán được ở Ký Bảo Các). **1 token = 1 pull** (không 10-pull). Nguồn duy nhất từ Trúc Cơ: `signatureDrops` boss tầng 10 `foundation_ferocious_flood_dragon_whelp` (ch3) ×3, `chance:1 requiresModifier:'boss'` — + quest daily `daily_chieu_hien_lenh` (kill 20 bất kỳ → 1 token, `requiredRealmId: 'foundation_establishment'`). Phàm Nhân/Luyện Khí KHÔNG có nguồn token (P7-M9 gỡ drop boss mortal + qi_refining).
 - **Rate** (`COMPANION_BASE_RATES`): hoang 0.8399 / huyen 0.10 / dia 0.05 / thien 0.01 / tien 0.0001. `effectiveCompanionRates` **lọc grade không có definition trong pool rồi renormalize** (MVP 0 Tiên → tien bị loại, không phải crash slot — `pickDefinitionOfGrade` throw trên pool rỗng).
 - **Pity:** `counter += 1 → pityActive = counter >= 30 → roll (pityActive ? trọng số {dia:5, thien:1, tien:0.01} — sàn Địa) → grade >= dia thì reset counter` (kể cả trúng tự nhiên).
 - **Trùng → Cung Mệnh:** duplicate pull → `constellationRank +1` (max 6, `+10%` base stats/bậc + perk authored tại C2/C4/C6); đã C6 → `duyenPhanBonus +5` (pull không thể reject sau roll).
@@ -41,13 +42,13 @@ Core: `core/companion/CompanionProgression.ts` (exp curve, stats, kit, feed), `C
 ## UI
 
 - **Chiêu Hiền Quán** (`WorkerLodgePanel.vue`): 3 tab — `nhan_cong` (nhân công cũ), `chieu_mo` (`worker-lodge/ChieuMoTab.vue`: nút Pull + số token, pity `x/30`, DP, reveal card theo `PullCompanionResult` — UI chỉ render kết quả, không tự roll), `duyen_phan` (`DuyenPhanTab.vue`: danh sách đổi theo grade + giá + trạng thái owned/Cn/disabled-reason).
-- **Panel Đồng Đội** (`CompanionPanel.vue`, standalone `companion`, wheel entry `companion_roster` — không realm gate): grid theo Chất → detail (cảnh giới/tầng, EXP bar, stats `companionStatsAt`, 6 ô Cung Mệnh + perk C2/C4/C6, skill + mốc mở, nút Nuôi disable khi `level_maxed`, hint gán ô qua Trận Pháp).
+- **Panel Đồng Đội** (`CompanionPanel.vue`, standalone `companion`, wheel entry `companion_roster` — realm-gated Trúc Cơ, P7-M9): grid theo Chất → detail (cảnh giới/tầng, EXP bar, stats `companionStatsAt`, 6 ô Cung Mệnh + perk C2/C4/C6, skill + mốc mở, nút Nuôi disable khi `level_maxed`, hint gán ô qua Trận Pháp).
 
 ## Trận Pháp (`TranPhapPanel.vue`)
 
-- `TranPhapDefinition`: `cellPattern` — **lưới cục bộ 3×3** (9 ô standing), map lên `PLAYER_SIDE_REGION` của combat grid qua `localCellToAbsolute`. Mỗi trận mang **1 buff chung** (`buff.definitionId`). Tất cả formation mở sẵn từ đầu.
+- `TranPhapDefinition`: `cellPattern` — **lưới cục bộ 3×3** (9 ô standing), map lên `PLAYER_SIDE_REGION` của combat grid qua `localCellToAbsolute`. Mỗi trận mang **1 buff chung** (`buff.definitionId`). Formation unlock cùng mốc Trúc Cơ (P7-M9, decision M9-F1 — `FORMATION_UNLOCK_REALM_ID` trong `FormationPlacement.ts`, wheel `formation_slot` lock badge; `resolvePartyFormation` không gate → loadout đã commit vẫn resolve).
 - `player.formationLoadout: { formationId, assignments: FormationSlotAssignment[] }` — gán player/companion vào ô; `resolvePartyFormation` đọc lúc build battle ([combat-overview.md](./combat-overview.md)).
-- `TRAN_PHAP_FORMATIONS` hiện chỉ có `hon_don_tran` (**TEST-ONLY** — mở cả 9 ô để stress wiring; formation thật là content pass sau).
+- `TRAN_PHAP_FORMATIONS`: roster 5 trận theo ladder 1/2/3/5/9 ô (`doc_hanh_tran` → `cuu_cung_tran`); unlock tại Trúc Cơ (M9-F1).
 
 ## Vào trận
 

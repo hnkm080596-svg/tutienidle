@@ -92,6 +92,8 @@ function exchangeErrorMessage(reason: Extract<ExchangeCompanionResult, { ok: fal
       return t('duyenPhan.errors.constellationMaxed', { max: MAX_CONSTELLATION_RANK })
     case 'insufficient_duyen_phan':
       return t('duyenPhan.errors.insufficientDuyenPhan')
+    case 'realm_locked':
+      return t('duyenPhan.errors.realmLocked')
     case 'no_active_player':
       return t('duyenPhan.errors.noActivePlayer')
   }

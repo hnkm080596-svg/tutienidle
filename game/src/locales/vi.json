@@ -591,6 +591,7 @@
     "pull": "Chiêu Mộ (1 {token})",
     "errors": {
       "missingToken": "Không có {token}.",
+      "realmLocked": "Cần đạt Trúc Cơ.",
       "noActivePlayer": "Chưa có dữ liệu người chơi."
     },
     "result": {
@@ -613,6 +614,7 @@
       "unknownDefinition": "Đồng đội không tồn tại.",
       "constellationMaxed": "Cung Mệnh đã đạt tối đa.",
       "insufficientDuyenPhan": "Không đủ Duyên Phận.",
+      "realmLocked": "Cần đạt Trúc Cơ.",
       "noActivePlayer": "Chưa có dữ liệu người chơi."
     },
     "empty": "Chưa có đồng đội nào để đổi."
@@ -676,6 +678,7 @@
         "notFeedable": "Nguyên liệu này không thể nuôi đồng đội.",
         "levelMaxed": "Đồng đội đã đạt trần cảnh giới.",
         "insufficientMaterial": "Không đủ nguyên liệu.",
+        "realmLocked": "Cần đạt Trúc Cơ.",
         "noActivePlayer": "Chưa có dữ liệu người chơi."
       }
     },
