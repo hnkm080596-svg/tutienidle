@@ -21,7 +21,7 @@ import type { BuffDefinitionId } from '../battle/contracts/ids'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { ElementType } from '../element/ElementType'
 import type { CultivationPathRuntime, CultivationPathRuntimeDeps } from './CultivationPathRuntime'
-import { resolveActiveWayStatDomains } from './CultivationPathSystem'
+import { hasPathCapability, resolveActiveWayStatDomains } from './CultivationPathSystem'
 
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { aggregateTurnSkillResourceModifiers } from '../progression/NodeSystem'
@@ -456,13 +456,17 @@ function createPhapTuNgoDaoRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
           : undefined,
       }
     },
-    grantsElementalReactionAura() {
+    grantsElementalReactionAura(player) {
       // Canonical-seals S3 (plan sec.9.4) -- the aura gate lives HERE,
-      // inside the path-authority dispatch site: the factory key already
-      // pins phap_tu:ngo_dao, so the only live check is whether the
-      // dao passive is learned (ritual-granted; a corrupt save missing
-      // it gets no aura and the kit assert above fails loudly anyway).
-      return deps.skillManager.has(PHAP_TU_AN_PASSIVE_ID)
+      // inside the path-authority dispatch site. P1 - the check itself is
+      // now the conditional capability 'phap_tu.reaction_aura' declared on
+      // the ngo_dao way (predicate: ngo_dao_hon_don learned; skill
+      // membership arrives via deps.hasSkill - SkillManager is the owner).
+      // A corrupt save missing the passive gets no aura and the kit assert
+      // above still fails loudly.
+      return hasPathCapability(player, 'phap_tu.reaction_aura', {
+        hasSkill: (skillId) => deps.skillManager.has(skillId),
+      })
     },
   }
 }

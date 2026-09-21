@@ -46,7 +46,11 @@ export const CUONG_QUYEN: TurnSkillDefinition = {
 
 export const LOAN_DAU: TurnSkillDefinition = {
   id: 'loan_dau',
-  cooldownTurns: 4,
+  // P5 tuning (three-path baseline): 4 -> 5 holder-turns. The Cuong
+  // Chien kit is fully single-target, so its multi-enemy pace must sit
+  // honestly behind the AoE paths; at 4 the benchmark eps-tied it with
+  // Phap Tu Ngu Hanh and the path had no identifiable weakness.
+  cooldownTurns: 5,
   damage: {
     kind: 'physical',
     multiplier: 2,

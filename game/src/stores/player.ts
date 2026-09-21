@@ -16,9 +16,8 @@ import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFact
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
 import type { GameManager } from '@/core/game/GameManager'
-import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
-import { getCultivationRampMultiplier, getCultivationSpeedMultiplier } from '@/core/talent/TalentEffects'
-import { getActiveCultivationSpeedPercent } from '@/core/economy/TuLinhTranBalance'
+import { getRequiredCultivation } from '@/core/realm/realmSystem'
+import { cultivateTick } from '@/core/cultivation/CultivationTick'
 import { accrueCultivationInsight } from '@/core/cultivation/CultivationInsight'
 import type { StatModifier } from '@/core/stats/StatCalculator'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
@@ -42,7 +41,7 @@ import {
 // string nên bắt được đúng trường hợp này.
 //
 // WeakMap theo store instance (KHÔNG phải biến module dùng chung) để
-// mỗi pinia instance — nhất là trong test, mỗi test tạo pinia mới — có
+// m-i pinia instance - nh-t l- trong test, m-i test t-o pinia m-i - c-
 // snapshot riêng, và snapshot tự thu hồi cùng store. Không đụng vào
 // state/save shape.
 interface ExternalModifierSnapshot {
@@ -162,49 +161,11 @@ export const usePlayerStore = defineStore('player', {
     // "required", see
     // addCultivation()).
     cultivate(deltaSeconds: number): number {
-      // Guard 0.01 (plan §6) — percent âm hợp lệ (Phàm Cốt −75% → 0.25×)
-      // nhưng không bao giờ về 0/âm.
-      this.cultivationPerSecond =
-        BASE_CULTIVATION_PER_SECOND *
-        Math.max(0.01, getCultivationSpeedMultiplier(this.selectedTalentIds)) *
-        // M2 — Hau Tich Bat Phat: per-realm-level ramp (neutral 1 when
-        // absent). Multiplied into the saved rate so the offline grant
-        // (cultivationPerSecond * elapsed) inherits the same curve.
-        getCultivationRampMultiplier(this.selectedTalentIds, this.realmLevel)
-
-      // Tu Linh Tran (economy-fixes-sinks-plan sec.3.2 B1, 2026-08-29) -
-      // sums % from active tu_linh_tran effects. Read through the domain
-      // getter (Mission G Task 39) - group-filtered + deadline-checked.
-      const tuLinhPercent = getActiveCultivationSpeedPercent(
-        this.persistentTimedEffects,
-        Date.now(),
-      )
-
-      if (tuLinhPercent > 0) {
-        this.cultivationPerSecond *= 1 + tuLinhPercent
-      }
-
-      const before = this.cultivation
-
-      addCultivation(this, this.cultivationPerSecond * deltaSeconds)
-
-      const gained = this.cultivation - before
-
-      // Đếm tu vi dồn suốt đời (không bị đột phá tiêu hao) — nuôi
-      // technique tier.
-      this.totalCultivationGained += gained
-
-      // Ngo Dao talent (talent-direction-choice-plan sec.6) - converts
-      // ONLINE tu vi into skill Cam Ngo at thresholds; an under-threshold
-      // remainder rolls into the next accrual. Thresholds/counters are
-      // owned by CultivationInsight.accrueCultivationInsight - shared
-      // for online + offline (task 34, cleanup mission).
-      accrueCultivationInsight(this, gained)
-
-      // Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — cùng nguồn
-      // "gained" nuôi Kiếm Ý ở trên, xem core/technique/TechniqueTier.ts's
-      // getTechniqueTier().
-      return gained
+   // P6-M1 - the shared production cultivation tick owns the whole
+      // step (speed composition, timed modifiers, clamped write, lifetime
+      // accrual, insight conversion). The store only supplies the
+      // wall-clock now.
+      return cultivateTick(this, deltaSeconds, Date.now())
     },
 
     breakthrough(): boolean {
@@ -266,7 +227,7 @@ export const usePlayerStore = defineStore('player', {
       // (vì file lưu mốc thời gian cũ hơn thời điểm save thật).
       this.lastSavedAt = Date.now()
 
-      // R10 (AR-12): this.$state is a live reactive Pinia proxy —
+   // R10 (AR-12): this.$state is a live reactive Pinia proxy -
       // buildGameSave() owns making a detached-value snapshot safe from
       // that (JSON round-trip, not structuredClone, since structuredClone
       // cannot handle Proxy objects at any nesting depth). Callers just

@@ -1,20 +1,24 @@
 import type { ElementType } from '../element/ElementType'
+import type { PhapTuRoute } from '../phap-tu/PhapTuState'
+import type { OrbId } from '../kiem-tu/KiemTuState'
 import type { DomainDeltaDeriver, StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import type { StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { ArtifactId } from '../artifact/Artifact'
 import type { PlayerData } from './Player'
-import { getCastLeveledSkillLevel } from '../skill/SkillSystem'
+import { getCastLeveledSkillLevel } from '../skill/CastLeveling'
 import {
   PHAP_TU_NGO_DAO_WAY,
   PHAP_TU_NGU_HANH_WAY,
+  validatePhapTuPersistedState,
 } from '../phap-tu/PhapTuPath'
 import { THE_TU_HIEN_WAY, THE_TU_UNG_THE_WAY } from '../the-tu/TheTuPath'
 import {
   createKiemTuInitialState,
   KIEM_TU_HIEN_WAY,
   KIEM_TU_NGU_WAY,
+  validateKiemTuPersistedState,
 } from '../kiem-tu/KiemTuPath'
 
 // M4 — the ngo_dao kit identity lives in the Phap Tu path module
@@ -63,6 +67,103 @@ export interface CultivationPathRealmReward {
 export type PathOfferGate = {
   requiresSkillLevel?: { skillId: string; level: number }
   requiresSkillCastLevel?: { skillId: string; level: number }
+}
+
+// ---------------------------------------------------------------------------
+// P1 - Canonical Path Authority (spec 2026-09-20 section P1): the capability
+// contract. A capability is a '<path>.<thing>' authority string derived from
+// the committed (path, way) pair plus owning-domain state - the semantic
+// consumers ask about, never a second identity source. No new capability may
+// be added without a real downstream consumer (M0 inventory table).
+// ---------------------------------------------------------------------------
+
+export type PathCapability =
+  // phap_tu - ngu_hanh element machinery, the The pool, node-empowered ult
+  | 'phap_tu.elemental_casting'
+  | 'phap_tu.the_pool'
+  | 'phap_tu.empowered_ult'
+  // phap_tu - ngo_dao conditional aura (predicate: ngo_dao_hon_don learned)
+  | 'phap_tu.reaction_aura'
+  // kiem_tu
+  | 'kiem_tu.kiem_pho'
+  | 'kiem_tu.ngu_kiem_dao'
+  // the_tu
+  | 'the_tu.the_economy'
+
+/**
+ * The narrow player shape conditional capability predicates and subpath
+ * reads may consume - the identity pair plus the slices the current
+ * capabilities read (phapTu for element, nodeLevels for node ownership,
+ * kiemTu for the preset). Every slice is OPTIONAL at the contract
+ * boundary: the module's predicate knows which slices it needs and
+ * null-guards them, and narrow presentation slices (KiemBarPlayerState
+ * carries only kiemTu, TheBarPlayerState only phapTu+nodeLevels) satisfy
+ * the same shape. PlayerData is a superset.
+ */
+export type PathConditionalRead = PathWayRead &
+  Partial<Pick<PlayerData, 'nodeLevels' | 'phapTu' | 'kiemTu'>>
+
+/**
+ * Runtime dependencies a conditional capability may consume - learned-skill
+ * membership lives in SkillManager, not PlayerData, so it arrives as an
+ * injected predicate (GameManager binds skillManager.has). Predicates never
+ * receive the manager itself - one narrow function, no state authority leak.
+ */
+export interface PathCapabilityDeps {
+  hasSkill(skillId: string): boolean
+}
+
+/**
+ * A way's capability facet - the same module-runtime facet shape as `stats`:
+ * `static` lists capabilities implied by way membership alone (pure data);
+ * `conditional` maps a capability to its module-owned predicate evaluated
+ * against player state + injected deps. Static wins first in resolution;
+ * a capability MUST NOT appear in both (the contract test enforces it).
+ */
+export interface PathCapabilityFacet {
+  static?: readonly PathCapability[];
+  conditional?: Readonly<
+    Partial<
+      Record<
+        PathCapability,
+        (player: PathConditionalRead, deps: PathCapabilityDeps) => boolean
+      >
+    >
+  >
+}
+
+/**
+ * P1-M3 - one formalized in-way branch axis, DATA ONLY (spec section 8.1):
+ * `state` records the persisted field the axis owns (the ownership record);
+ * `requiresCapability` names the STATIC capability authorizing the axis -
+ * contract-tested to be a capability the SAME way declares. The concrete
+ * reads live in CultivationPathSystem (getActiveElement/getActiveRoute/
+ * getKiemTuPreset) - way definitions never carry executable callbacks.
+ */
+export interface PathSubpathAxis {
+  requiresCapability?: PathCapability
+  /** Persisted field path, e.g. 'player.phapTu.element'. */
+  state: string
+}
+
+/**
+ * The in-way branch axes a way may formalize. Keys are the canonical axis
+ * ids. Absent axis = the way does not own that branch (ngo_dao has no
+ * element axis even if a stale phapTu.element lingers - reads fail closed).
+ * An axis without a canonical reader (the_tu `root`) is a declared
+ * ownership record - the documentation of which slice the branch lives in.
+ */
+export interface PathWaySubpaths {
+  /** ngu_hanh: player.phapTu.element - commit via selectPhapTuElement. */
+  element?: PathSubpathAxis
+  /** ngu_hanh: player.phapTu.route - same atomic commit; switchRoute writes. */
+  route?: PathSubpathAxis
+  /** kiem_tu hien: player.kiemTu.preset - write via setKiemPhoPreset. */
+  preset?: PathSubpathAxis
+  /** the_tu: the root node family on player.nodeLevels (mutex on hien,
+   * non-mutex on ung_the). Ownership record only - node investment stays
+   * owned by NodeSystem; no external reader exists today. */
+  root?: PathSubpathAxis
 }
 
 // Cultivation Path Framework (spec 2026-09-16, M4) — a way's stat
@@ -140,11 +241,17 @@ export interface PathWayDefinition {
   // never branches on a concrete way id.
   sealedOffer?: boolean
 
-  // The combat HUD's path resource bar reads this flag (data-driven):
-  // the way's battle participant carries the The pool
-  // (currentThe/maxThe on CombatEntity). UI never checks path ids —
-  // only this flag.
-  usesTheResource?: boolean
+  // P1-M2 - content this way owns (catalog-validated, unique across
+  // ways): skills granted or exclusive to the way; buff/marker def ids
+  // it plants at build. Pure data (spec section 8.1). The aura's
+  // APPLICATION stays runtime-owned (grantsElementalReactionAura) -
+  // ownedContent declares OWNERSHIP, not timing. Consumers never read
+  // this field directly; the contract suite validates refs resolve and
+  // no id is claimed by two ways.
+  ownedContent?: {
+    skillIds?: readonly string[]
+    buffIds?: readonly string[]
+  }
 
   // M4 — totals-driven stat contribution (the D12 assembly channel):
   // collectActiveWayStatModifiers resolves the active way and calls
@@ -154,6 +261,37 @@ export interface PathWayDefinition {
   // by resolveActiveWayStatDomains; ways with no totals-driven channel
   // (both kiem_tu ways) emit nothing from collectModifiers.
   stats?: PathWayStatFacet
+
+  // P1 - the way's capability facet (module runtime, same facet shape as
+  // `stats`). Static members are pure data resolved by way membership;
+  // conditional members are module-owned predicates evaluated with the
+  // injected PathCapabilityDeps. Resolved by resolvePathCapabilities in
+  // CultivationPathSystem - consumers never read this field directly.
+  capabilities?: PathCapabilityFacet
+
+  // P1-M3 - formalized in-way branch axes with module-owned reads.
+  // Resolved by the canonical reads in CultivationPathSystem
+  // (getActiveElement / getActiveRoute / getKiemTuPreset); consumers
+  // never read this field directly.
+  subpaths?: PathWaySubpaths
+
+  // P1 - the node-tree view tag this way renders in SkillPathPanel
+  // (kiem hien -> 'kiem_pho', ngu -> 'ngu_kiem', the_tu hien -> 'the_tu',
+  // ung_the -> 'the_tu_an'). Ways without a fixed tree (ngu_hanh's tag
+  // is the browsed element; ngo_dao shows no tree) declare none - the
+  // panel never branches on a concrete way id.
+  nodeTreeTag?: string
+}
+
+/**
+ * P1-M6 - layer-neutral issue emitted by module persisted-state
+ * validators; the save boundary adapts it to its local ShapeIssue.
+ * Lives in core so path modules never import services/.
+ */
+export interface PathStateIssue {
+  /** JSON path relative to save root, e.g. 'player.phapTu.element'. */
+  readonly path: string
+  readonly message: string
 }
 
 // M1 — one module per base path; ways keyed by PathWayId.
@@ -167,6 +305,26 @@ export interface CultivationPathModule {
   // (kiem_tu -> player.kiemTu); the framework never branches on the
   // concrete path to create slices.
   createInitialState?: (player: PlayerData) => void
+
+  /**
+   * P1-M6 - validate this module's persisted fields from the RAW player
+   * payload (untrusted - narrow with guards, do not cast to PlayerData).
+   * Runs for EVERY save; the module itself decides presence/shape/pair
+   * rules, e.g.:
+   *   phap_tu: player.phapTu required + shaped on every save (mortal and
+   *            other-path saves included); element/route only under the
+   *            committed ngu_hanh way.
+   *   kiem_tu: player.kiemTu optional shape; REQUIRED when the committed
+   *            pair is kiem_tu - the module reads the raw pair fields
+   *            itself to decide.
+   * The boundary supplies no path knowledge - modules are the only place
+   * that knows which fields they own. Modules owning no persisted slice
+   * (the_tu) declare no hook.
+   */
+  validatePersistedState?(
+    playerPayload: unknown,
+    emit: (issue: PathStateIssue) => void,
+  ): void
 }
 
 export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, CultivationPathModule>> = {
@@ -181,6 +339,9 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, Cultiv
       ngu_hanh: PHAP_TU_NGU_HANH_WAY,
       ngo_dao: PHAP_TU_NGO_DAO_WAY,
     },
+    // P1-M6 - the module owns player.phapTu validation (required shape
+    // on every save; element/route pair ownership is ngu_hanh-only).
+    validatePersistedState: validatePhapTuPersistedState,
   },
 
   kiem_tu: {
@@ -199,6 +360,9 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, Cultiv
     // player.kiemTu is way-agnostic (the Kiem Y fields start at ngu's
     // defaults; hien simply never reads them).
     createInitialState: createKiemTuInitialState,
+    // P1-M6 - the module owns player.kiemTu validation (optional shape;
+    // required once the committed pair is kiem_tu).
+    validatePersistedState: validateKiemTuPersistedState,
   },
 
   the_tu: {

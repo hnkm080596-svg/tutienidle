@@ -19,6 +19,7 @@ import {
 import { getRouteStatModifiers } from '../phap-tu/PhapTuRoutes'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
+import type { ResolvedModifierChannel } from './CombatBuild'
 import type { SkillSystem } from '../skill/SkillSystem'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { TechniqueManager } from '../technique/TechniqueManager'
@@ -97,28 +98,40 @@ export class GameManagerPersistentEffectOps {
   }
 
   /**
-   * ARCH-002 (M7) — the STATIC partition of the aggregation: sources that
+   * ARCH-002 (M7) - the STATIC partition of the aggregation: sources that
    * cannot change during a battle (technique tier, cultivation path, node
    * levels, equipped-technique combat modifiers). The battle entry ops
    * resolve the entity's baseStats from this list via
-   * resolvePlayerFinalStats() — duration/stack-bound sources are excluded
+   * resolvePlayerFinalStats() - duration/stack-bound sources are excluded
    * on purpose so they reach combat ONLY through getLiveBattleModifiers()
    * (baking them into the resolved base would double-apply and re-leak
    * stale stacks between battles).
    */
   getBattleBaseModifiers(player: PlayerData): StatModifier[] {
+    // P2 - the flat list delegates to the named channels so callers that
+    // need attribution (the canonical combat build) and callers that do
+    // not (existing menus/tests) share ONE aggregation.
+    return this.getBattleBaseChannels(player).flatMap((channel) => channel.modifiers)
+  }
+
+  /**
+   * P2 - the same five calls as getBattleBaseModifiers, named for source
+   * attribution (BuildStatChannel vocabulary). Flattening in declared
+   * order reproduces the legacy flat list exactly.
+   */
+  getBattleBaseChannels(player: PlayerData): readonly ResolvedModifierChannel[] {
     return [
-      ...this.getTechniqueTierModifiers(player),
-      ...getCultivationPathStatModifiers(player),
-      ...getRouteStatModifiers(player),
-      ...aggregateNodeStatModifiers(this.deps.nodeRegistry, player),
-      ...this.getTechniqueCombatModifiers(),
+      { channel: 'technique_tier', partition: 'static', modifiers: this.getTechniqueTierModifiers(player) },
+      { channel: 'cultivation_path', partition: 'static', modifiers: getCultivationPathStatModifiers(player) },
+      { channel: 'phap_tu_route', partition: 'static', modifiers: getRouteStatModifiers(player) },
+      { channel: 'node_levels', partition: 'static', modifiers: aggregateNodeStatModifiers(this.deps.nodeRegistry, player) },
+      { channel: 'technique_combat', partition: 'static', modifiers: this.getTechniqueCombatModifiers() },
     ]
   }
 
   /**
-   * ARCH-002 (M7) — the LIVE partition: modifiers bound to runtime state
-   * that can change mid-battle — the persistent buff pool (Kiep Thuong
+   * ARCH-002 (M7) - the LIVE partition: modifiers bound to runtime state
+   * that can change mid-battle - the persistent buff pool (Kiep Thuong
    * debuffs et al), scaled passive-skill stacks (PassiveSystem mutates
    * stacks on combat events), timed effects and Phu/Tran sockets.
    * TurnBattleSystem reads this through its liveStatModifiers provider at

@@ -27,8 +27,7 @@ import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { PHAP_TU_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
-import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
-import { isKiemTuHien } from '../kiem-tu/KiemTuPath'
+import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { commitPhapTuElementRoute } from '../phap-tu/PhapTuState'
 import { getMainStatCap } from '../stats/StatCap'
@@ -107,11 +106,9 @@ export class GameManagerProgressionOps {
   getPhapTuElement(): ElementType | undefined {
     const activePlayer = this.deps.getActivePlayer()
 
-    if (activePlayer === undefined || !isPhapTuNguHanh(activePlayer)) {
-      return undefined
-    }
-
-    return activePlayer.phapTu.element ?? undefined
+    // P1 - the canonical subpath read owns the way gate (element axis
+    // requires 'phap_tu.elemental_casting' on the active way).
+    return activePlayer === undefined ? undefined : getActiveElement(activePlayer)
   }
 
   learnSkill(skillId: string): boolean {
@@ -200,10 +197,11 @@ export class GameManagerProgressionOps {
    */
   selectPhapTuElement(element: ElementType, route: PhapTuRoute, player: PlayerData): boolean {
     // Cultivation Path Framework (M4, R6): element/route machinery is
-    // ngu_hanh-only — the WAY is the gate, so the post-M7 collapsed
-    // ('phap_tu','ngo_dao') shape cannot commit an element. The
-    // requiredWay stamp on PHAP_TU_NODES is the second layer.
-    if (!isPhapTuNguHanh(player)) {
+    // ngu_hanh-only - P1 - the declared 'phap_tu.elemental_casting'
+    // capability is the gate, so the post-M7 collapsed ('phap_tu',
+    // 'ngo_dao') shape cannot commit an element. The requiredWay stamp
+    // on PHAP_TU_NODES is the second layer.
+    if (!hasStaticPathCapability(player, 'phap_tu.elemental_casting')) {
       return false
     }
 
@@ -329,7 +327,7 @@ export class GameManagerProgressionOps {
     // enforces the same invariant; the op must not report success for
     // a rejected write.
     if (
-      !isPhapTuNguHanh(player) ||
+      !hasStaticPathCapability(player, 'phap_tu.elemental_casting') ||
       player.phapTu.element === null ||
       player.phapTu.route === null
     ) {
@@ -424,7 +422,8 @@ export class GameManagerProgressionOps {
   setKiemPhoPreset(player: PlayerData, preset: OrbId[]): boolean {
     // M6 — way membership is the gate (the retired kiemTu.mode
     // discriminator became cultivationWay; preset is hien machinery).
-    if (!player.kiemTu || !isKiemTuHien(player)) {
+    // P1 - the 'kiem_tu.kiem_pho' capability carries that membership.
+    if (!player.kiemTu || !hasStaticPathCapability(player, 'kiem_tu.kiem_pho')) {
       return false
     }
 

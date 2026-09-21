@@ -362,6 +362,61 @@ describe('validateGameSaveShape — phapTu atomic (element ↔ route)', () => {
   )
 })
 
+describe('validateGameSaveShape — module-owned persisted slices (P1-M6)', () => {
+  // The boundary iterates CULTIVATION_PATH_MODULES' validatePersistedState
+  // hooks generically - each module owns the rules for its own fields.
+  // These regressions pin the moved rules: phapTu is required on EVERY
+  // save (mortal and other-path included), kiemTu is required once the
+  // committed pair is kiem_tu, and a corrupt kiemTu is rejected wherever
+  // it appears.
+  it.each([['mortal'], ['kiem_tu'], ['the_tu']])(
+    'từ chối save thiếu player.phapTu (path/commit %s)',
+    (pathId) => {
+      const save = validSave()
+      const player = save.player as Record<string, unknown>
+
+      delete player.phapTu
+      if (pathId !== 'mortal') {
+        player.realmId = 'qi_refining'
+        player.cultivationPath = pathId
+        player.cultivationWay = 'hien'
+        if (pathId === 'kiem_tu') {
+          player.kiemTu = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
+        }
+      }
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.phapTu')
+    },
+  )
+
+  it.each([
+    ['phap_tu', 'ngu_hanh'],
+    ['the_tu', 'ung_the'],
+    ['mortal', undefined],
+  ])(
+    'từ chối kiemTu hỏng trên save ngoài kiem_tu (%s/%s) — shape-check chạy mọi save',
+    (pathId, wayId) => {
+      const save = validSave()
+      const player = save.player as Record<string, unknown>
+
+      if (pathId !== 'mortal') {
+        player.realmId = 'qi_refining'
+        player.cultivationPath = pathId
+        player.cultivationWay = wayId
+      }
+      player.kiemTu = { preset: 'not-an-array', kiemY: Number.NaN, kiemDaoCount: 0 }
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result).some((path) => path.startsWith('player.kiemTu'))).toBe(true)
+    },
+  )
+})
+
 describe('validateGameSaveShape — arrays bắt buộc', () => {
   it.each([
     'techniques',

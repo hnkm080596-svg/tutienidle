@@ -6,7 +6,7 @@ import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import { MAIN_STAT_KEYS, type MainStatKey } from '../stats/StatTypes'
 import { getMainStatCap } from '../stats/StatCap'
 import { addCultivation } from '../cultivation/CultivationSystem'
-import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
+import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 import { getRequiredCultivation } from '../realm/realmSystem'
 import type { BuffDefinition } from '../buff2/BuffDefinition'
 
@@ -150,10 +150,11 @@ export class PillSystem {
       (effect) => effect.type === 'regen' && (effect.mpPerSecond ?? 0) > 0,
     )
 
-    // M4 (R6): MP pills stay ngu_hanh-only — the WAY check is what
-    // excludes ngo_dao, since the bare path id cannot tell the two
-    // phap_tu ways apart.
-    if (hasManaRegen && !isPhapTuNguHanh(player)) {
+    // M4 (R6): MP pills stay ngu_hanh-only - P1 - the declared
+    // 'phap_tu.elemental_casting' capability is the check: it excludes
+    // ngo_dao (which owns no element machinery) without a concrete
+    // way predicate.
+    if (hasManaRegen && !hasStaticPathCapability(player, 'phap_tu.elemental_casting')) {
       return 'requires_phap_tu'
     }
 

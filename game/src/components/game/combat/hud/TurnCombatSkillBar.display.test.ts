@@ -10,6 +10,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
+import { hasPathCapability } from '@/core/player/CultivationPathSystem'
+import type { CultivationPathId, PathCapability } from '@/core/player/CultivationPathKit'
 
 const mocks = vi.hoisted(() => ({
   slotList: [] as TurnSkillPresentationEntry[],
@@ -18,6 +20,11 @@ const mocks = vi.hoisted(() => ({
   chooseSlot: vi.fn(),
   setBattleManualMode: vi.fn(),
   setCombatInputMode: vi.fn(),
+  // P1 - assigned after imports below; delegates to the REAL capability
+  // resolver so the emblem test pins real behavior, not a reimplemented
+  // gate. hasSkill: true models the post-ritual invariant (the ngo_dao
+  // kit assertion makes the dao passive always learned on that way).
+  hasPathCapability: undefined as unknown as (capability: PathCapability) => boolean,
 }))
 
 vi.mock('@/composables/useTurnCombatManual', () => ({
@@ -40,6 +47,7 @@ vi.mock('@/composables/useTurnCombatManual', () => ({
 vi.mock('@/composables/useGameState', () => ({
   useGameManager: () => ({
     setBattleManualMode: mocks.setBattleManualMode,
+    hasPathCapability: (capability: PathCapability) => mocks.hasPathCapability(capability),
   }),
 }))
 
@@ -62,6 +70,18 @@ vi.mock('@/stores/player', () => ({
 }))
 
 import TurnCombatSkillBar from './TurnCombatSkillBar.vue'
+
+// P1 - bind the facade after imports resolve (vi.mock factories run
+// lazily; the field must be live before the first mount).
+mocks.hasPathCapability = (capability) =>
+  hasPathCapability(
+    {
+      cultivationPath: mocks.cultivationPath as CultivationPathId | undefined,
+      cultivationWay: mocks.cultivationWay,
+    },
+    capability,
+    { hasSkill: () => true },
+  )
 
 afterEach(() => {
   mocks.cultivationPath = undefined

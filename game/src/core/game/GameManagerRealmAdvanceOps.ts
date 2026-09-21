@@ -5,10 +5,9 @@ import type { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData } from '../player/Player'
 import type { CultivationPathId, PathWayId } from '../player/CultivationPathKit'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
-import { isKiemTuNgu } from '../kiem-tu/KiemTuPath'
 import { CULTIVATION_PATH_MODULES } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
-import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward } from '../player/CultivationPathSystem'
+import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID, BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
@@ -83,7 +82,9 @@ export class GameManagerRealmAdvanceOps {
    */
   applyKiemTuRealmTransition(player: PlayerData): void {
     // M6 — way membership is the discriminator (kiemTu.mode retired).
-    if (player.kiemTu && isKiemTuNgu(player)) {
+    // P1 - the 'kiem_tu.ngu_kiem_dao' capability carries that membership;
+    // the slice presence check stays (corrupt saves fail closed).
+    if (player.kiemTu && hasStaticPathCapability(player, 'kiem_tu.ngu_kiem_dao')) {
       applyBreakthroughMerge(player.kiemTu)
     }
   }

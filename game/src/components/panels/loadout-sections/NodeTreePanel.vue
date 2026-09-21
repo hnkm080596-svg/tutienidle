@@ -28,7 +28,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
-import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
+import { getActiveRoute } from '@/core/player/CultivationPathSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
@@ -95,9 +95,10 @@ const PHAP_TU_ROUTE_IDS: readonly PhapTuRoute[] = ['dot', 'no']
 const phapTuRoute = computed<PhapTuRoute | null>(() => {
   stateVersion.value
 
-  // M4 (R6): route switching is ngu_hanh machinery — the WAY gate keeps
-  // the toggle hidden for a collapsed ('phap_tu','ngo_dao') player.
-  return isPhapTuNguHanh(player) ? (player.phapTu?.route ?? null) : null
+  // P1 - the canonical route read carries the way gate: the axis is
+  // declared on ngu_hanh and gated by 'phap_tu.elemental_casting', so a
+  // collapsed ('phap_tu','ngo_dao') player resolves nothing.
+  return getActiveRoute(player) ?? null
 })
 
 const inBattle = computed(() => {

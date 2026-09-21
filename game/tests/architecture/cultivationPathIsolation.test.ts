@@ -133,10 +133,6 @@ const SEAM_ALLOWLIST_FILES: readonly string[] = [
   // Typed NodeEffect channels (elementTag/routeTag, kiemDaoCap) — the
   // spec-accepted per-path consumer fields.
   'core/progression/NodeSystem.ts',
-  // MP pills are deliberately ngu_hanh-only (documented gate).
-  'core/pill/PillSystem.ts',
-  // ngu_hanh realm-technique grant inside the dead legacy block.
-  'core/tribulation/BreakthroughOutcomeService.ts',
   // PhapTuRoutes value helpers for cast-leveled phap machinery.
   'core/skill/SkillSystem.ts',
   // The Tu mechanic wiring (TheEconomy / external ward).
@@ -153,8 +149,37 @@ const SEAM_ALLOWLIST_FILES: readonly string[] = [
   // responsibility is registering every owner module's grant schemas,
   // including the-tu's typed payload validators (TheTuCapabilities).
   'core/battle/runtime/capability/DefaultCapabilityValidators.ts',
-  // Save boundary validates module-owned slices (orb ids, way ownership).
-  'services/save/saveShapeValidation.ts',
+  // P5 - the balance recipe declares the realm-reachable kiem-pho
+  // combo damage surface via the provider's derived
+  // reachableKiemPhoComboIds view (the catalog itself is INV-7-sealed).
+  // Recipe data needs the id list to classify kit vs non-kit damage;
+  // no mechanic is consumed.
+  'core/simulation/benchmark/BalanceBaselines.ts',
+  // P1 - PillSystem, BreakthroughOutcomeService, and saveShapeValidation
+  // were removed from this list: all three now consume the capability
+  // authority (hasPathCapability) or module-owned validators instead of
+  // importing path modules. A new path-module value import anywhere
+  // outside the dirs/files above fails this suite.
+]
+
+// ---------------------------------------------------------------------------
+// Check 4 - slice inference (P1): direct field reads INTO a module-owned
+// persisted slice are slice inference outside the owners. The canonical
+// reads (getActiveElement/getActiveRoute/getKiemTuPreset) and capability
+// checks in core/player are the only generic path into phapTu/kiemTu.
+// ---------------------------------------------------------------------------
+const SLICE_READ_PATTERN = /\.(?:kiemTu|phapTu)\b/
+
+// Legit slice readers: the write/commit ops (GameManagerProgressionOps
+// owns selectPhapTuElement/setKiemPhoPreset; RealmAdvanceOps owns the
+// ngu breakthrough merge), the typed NodeEffect channels (NodeSystem),
+// and the declared display slice contract (kiemBarBridge's
+// KiemBarPlayerState). Everything else resolves through the authority.
+const SLICE_READ_ALLOWLIST: readonly string[] = [
+  'core/game/GameManagerProgressionOps.ts',
+  'core/game/GameManagerRealmAdvanceOps.ts',
+  'core/progression/NodeSystem.ts',
+  'presentation/bridges/kiemBarBridge.ts',
 ]
 
 describe('cultivation path isolation (M10)', () => {
@@ -271,6 +296,49 @@ describe('cultivation path isolation (M10)', () => {
           if (PATH_MODULE_DIRS.some((dir) => normalized.startsWith(dir))) {
             violations.push(`${fromSrc} -> ${record.specifier} [unlisted-seam]`)
           }
+        }
+      }
+
+      expect(violations, violations.join('\n')).toEqual([])
+    },
+  )
+
+  it(
+    'module-owned slices are read only by their owners and declared seams (P1)',
+    { timeout: SCAN_TIMEOUT },
+    () => {
+      const scanned = [
+        ...listAllTs(join(SRC, 'core')),
+        ...listAllTs(join(SRC, 'components')),
+        ...listAllTs(join(SRC, 'composables')),
+        ...listAllTs(join(SRC, 'stores')),
+        ...listAllTs(join(SRC, 'services')),
+        ...listAllTs(join(SRC, 'presentation')),
+        ...listVue(join(SRC, 'components')),
+      ].filter((f) => !f.endsWith('.test.ts'))
+
+      const violations: string[] = []
+      for (const file of scanned) {
+        const fromSrc = relative(SRC, file).split(sep).join('/')
+
+        // The authority (core/player) and the path modules own the
+        // slices and their canonical reads.
+        if (
+          fromSrc.startsWith('core/player/') ||
+          PATH_MODULE_DIRS.some((dir) => fromSrc.startsWith(dir)) ||
+          (SLICE_READ_ALLOWLIST as readonly string[]).includes(fromSrc)
+        ) {
+          continue
+        }
+
+        const source = readTs(file)
+        // Strip comments so documentation mentions of the slice fields
+        // are not flagged as reads.
+        const code = source
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/(^|\s)\/\/[^\n]*/g, '$1')
+        for (const m of code.matchAll(new RegExp(SLICE_READ_PATTERN, 'g'))) {
+          violations.push(`${fromSrc}: ${m[0]}`)
         }
       }
 

@@ -1,5 +1,49 @@
 # Con đường tu luyện (Cultivation Path)
 
+> **P1 — Canonical Path Authority (2026-09-20):** phần dưới mô tả meta
+> cũ (route Kiếm Tu cũ đã retire). Kiến trúc hiện hành: 3 path
+> (`kiem_tu`, `phap_tu`, `the_tu`) × ways trong
+> `CULTIVATION_PATH_MODULES` (`core/player/CultivationPathKit.ts`);
+> `CultivationPathSystem` là authority duy nhất cho cặp
+> `(cultivationPath, cultivationWay)` — ghi nguyên tử trong Nghi Lễ
+> Nhập Môn, fail-closed khi pair hỏng/lệch.
+>
+> **Capability contract:** downstream systems không suy ra path từ
+> skill đã học / slice presence / node / UI. Chúng hỏi capability qua
+> `hasPathCapability(player, cap, deps)` (đầy đủ, cần
+> `PathCapabilityDeps.hasSkill` cho conditional) hoặc
+> `hasStaticPathCapability` (cùng resolver `resolvePathCapabilities`
+> ở mode `'static'` — một derivation authority duy nhất). Vocab:
+> `phap_tu.elemental_casting`, `phap_tu.the_pool`,
+> `phap_tu.empowered_ult` (conditional: node `linh_ngo_<element>`),
+> `phap_tu.reaction_aura` (conditional: passive `ngo_dao_hon_don`
+> learned), `kiem_tu.kiem_pho`, `kiem_tu.ngu_kiem_dao`,
+> `the_tu.the_economy`.
+>
+> **Branch reads:** `getActiveElement` / `getActiveRoute` /
+> `getKiemTuPreset` — axes `subpaths` do module khai báo, read qua
+> authority, fail-closed khi way không sở hữu axis.
+>
+> **Combat carriers:** aura Ngộ Đạo vẫn chạy qua
+> `grantsElementalReactionAura` (runtime semantic flag) — predicate
+> `has('ngo_dao_hon_don')` giờ bind vào capability
+> `phap_tu.reaction_aura` (1 source, 2 seams: entry grant + dormant
+> revive). Domain delta derivers khai báo trên `stats.deltaDerivers`,
+> framework đăng ký eager lúc module eval (cycle Kit -> SkillSystem đã
+> cắt bằng leaf `core/skill/CastLeveling.ts`).
+>
+> **Save boundary:** `saveShapeValidation` giữ enum/pair/mortal gate;
+> slice rules do module sở hữu qua `validatePersistedState(payload,
+> emit)` — `phap_tu` validate `player.phapTu` (required mọi save,
+> element/route chỉ dưới ngu_hanh), `kiem_tu` validate `player.kiemTu`
+> (optional shape, required khi pair là kiem_tu).
+>
+> Guard: `tests/architecture/cultivationPathIsolation.test.ts` (module
+> isolation + identity branching + seam allowlist + slice-inference
+> check) và `CultivationPathContract.test.ts`.
+
+
+
 **Trạng thái:** Live — 2 lựa chọn: Pháp Tu, Kiếm Tu. Thể Tu có plumbing/test nhưng **chưa** là lựa chọn chơi được.
 
 Union: `core/player/CultivationPathKit.ts` — `CultivationPathId = 'phap_tu' | 'kiem_tu'`. Chọn qua `GameManager.chooseCultivationPath()` — tự học + trang bị tâm pháp của path (ghi đè tâm pháp đang mang, kể cả Tụ Linh Quyết khởi đầu), cấp `statModifiers` nền của path, và (Kiếm Tu) gán 3 skill cố định vào loadout slot 0/1/2.

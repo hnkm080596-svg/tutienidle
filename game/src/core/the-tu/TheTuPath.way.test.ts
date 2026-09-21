@@ -184,10 +184,10 @@ describe('Thể Tu way definitions', () => {
     )
   })
 
-  it('ung_the way declares the Thế resource + the the_tu_an facet', () => {
+  it('ung_the way declares the Thế economy capability + the the_tu_an facet', () => {
     expect(THE_TU_UNG_THE_WAY.id).toBe('ung_the')
     expect(THE_TU_UNG_THE_WAY.pathId).toBe('the_tu')
-    expect(THE_TU_UNG_THE_WAY.usesTheResource).toBe(true)
+    expect(THE_TU_UNG_THE_WAY.capabilities?.static).toContain('the_tu.the_economy')
     expect(THE_TU_UNG_THE_WAY.stats?.domains).toEqual(['the_tu_an'])
     expect(THE_TU_UNG_THE_WAY.stats?.collectModifiers(ungThePlayer(), TOT10)).toEqual(
       theTuAnReactiveModifiers(TOT10, 'the_tu_an:attributes'),
@@ -481,7 +481,7 @@ describe('way-authored kits still compose from the node collectors', () => {
     expect(getActiveWayDefinition(theTuPlayer())?.id).toBe('hien')
     for (const [, build] of UNG_THE_SHAPES) {
       expect(getActiveWayDefinition(build())?.id).toBe('ung_the')
-      expect(getActiveWayDefinition(build())?.usesTheResource).toBe(true)
+      expect(getActiveWayDefinition(build())?.capabilities?.static).toContain('the_tu.the_economy')
     }
     expect(getActiveWayDefinition(createDefaultPlayer())).toBeUndefined()
   })

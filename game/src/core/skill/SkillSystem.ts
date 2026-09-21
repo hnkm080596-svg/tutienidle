@@ -15,6 +15,10 @@ import {
 import {
   SkillManager,
 } from './SkillManager'
+import {
+  CAST_LEVELING_THRESHOLDS,
+  getCastLeveledSkillLevel,
+} from './CastLeveling'
 
 import type { ActionTargeting } from '../battle/CombatAction'
 import type { SkillProgressionState } from '../skilldef/SkillProgressionState'
@@ -34,44 +38,16 @@ export function getHuyKiemFlatDamageBonus(totalExperience: number): number {
   return Math.floor(Math.max(0, totalExperience) / HUY_KIEM_CASTS_PER_LEVEL)
 }
 
-// Phap Tu Reimagined Task 2 + The Tu Reimagined (spec 2026-09-15, T6) —
-// THE table of skills that level ONLY by cast count (upgradeSkill
-// rejects them, INV-9): any id listed here auto-levels by
-// totalExperience in recordCast(). tram's curve is the existing one;
-// linh_bao/huy_quyen are the mortal-path actives — linh_bao Lv3 is the
-// ngo_dao offer gate, huy_quyen Lv3 the ung_the gate — so the
-// thresholds are also read directly by chooseCultivationPath.
-export const CAST_LEVELING_THRESHOLDS: Record<string, { lv2: number; lv3: number }> = {
-  tram:      { lv2: 1000, lv3: 10000 },
-  linh_bao:  { lv2: 1000, lv3: 10000 },
-  huy_quyen: { lv2: 1000, lv3: 10000 },
-}
-
-/**
- * Level a cast-leveled skill SHOULD be at for its total cast count, or
- * undefined when the skill is not cast-leveled (manual insight upgrade).
- */
-export function getCastLeveledSkillLevel(skillId: string, totalExperience: number): number | undefined {
-  const thresholds = CAST_LEVELING_THRESHOLDS[skillId]
-
-  if (!thresholds) {
-    return undefined
-  }
-
-  if (totalExperience >= thresholds.lv3) return 3
-  if (totalExperience >= thresholds.lv2) return 2
-  return 1
-}
-
-/** Ngưỡng cast Huy Kiếm đạt Lv3 — route Kiếm Tu chốt Bạt Kiếm khi
- * tram ≥ mốc này (spec 2026-08-29-kiem-the-kiem-y mục 1). Re-aliases
- * the threshold table — no second constant source. */
-export const HUY_KIEM_L3_CASTS = CAST_LEVELING_THRESHOLDS.tram!.lv3
-
-/** Ngưỡng cast Hủy Quyền đạt Lv3 — cổng offer way ung_the tại Nghi Lễ
- * Nhập Môn (spec 2026-09-15 T6, xem PathOfferGate trong
- * CultivationPathKit.ts). */
-export const HUY_QUYEN_L3_CASTS = CAST_LEVELING_THRESHOLDS.huy_quyen!.lv3
+// P1 - the cast-leveling table lives in ./CastLeveling (a leaf module):
+// CultivationPathKit evaluates offer gates through it, and NodeSystem
+// consumes the path authority - re-exported here so existing import
+// sites keep working. See CastLeveling.ts for the cycle note.
+export {
+  CAST_LEVELING_THRESHOLDS,
+  getCastLeveledSkillLevel,
+  HUY_KIEM_L3_CASTS,
+  HUY_QUYEN_L3_CASTS,
+} from './CastLeveling'
 
 export interface EffectiveSkill {
   effects: SkillEffect[]

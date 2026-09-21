@@ -1,10 +1,15 @@
 import type {
   CultivationPathId,
+  PathStateIssue,
   PathWayDefinition,
   PathWayId,
   PathWayStatFacet,
 } from '../player/CultivationPathKit'
 import type { StatModifier } from '../stats/StatCalculator'
+import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
+import { PHAP_TU_KIT_IDS, PHAP_TU_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
+import { VAN_PHAP_THAN_HOA_ID } from '../../data/buff/ReactionStatusBuffs'
+import { ELEMENT_ORDER } from '../element/ElementLabels'
 
 // Cultivation Path Framework (spec 2026-09-16, M4) — the Phap Tu path
 // module: the two way definitions + the path-domain machinery they own.
@@ -124,6 +129,77 @@ export function isPhapTuNgoDao(player: PhapTuWayRead | null | undefined): boolea
 }
 
 // ---------------------------------------------------------------------------
+// P1-M6 - module-owned persisted-slice validation. The save boundary
+// iterates this hook generically for EVERY save; the module owns ALL
+// rules for player.phapTu: required + shaped on every save (mortal and
+// other-path saves included - a missing/garbage object crashes
+// selectPhapTuElement/resolveRouteProfile reads downstream), and the
+// element/route pair is ngu_hanh-owned only. The payload is untrusted -
+// narrow with guards, never cast; the module reads the raw pair fields
+// itself for the ownership gate.
+// ---------------------------------------------------------------------------
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+export function validatePhapTuPersistedState(
+  playerPayload: unknown,
+  emit: (issue: PathStateIssue) => void,
+): void {
+  if (!isRecord(playerPayload)) {
+    return
+  }
+
+  const phapTu = playerPayload.phapTu
+
+  if (!isRecord(phapTu)) {
+    emit({ path: 'player.phapTu', message: 'phải là object' })
+    return
+  }
+
+  if (
+    phapTu.element !== null &&
+    !ELEMENT_ORDER.some((element) => element === phapTu.element)
+  ) {
+    emit({ path: 'player.phapTu.element', message: 'phải là ElementType hoặc null' })
+  }
+
+  if (
+    phapTu.route !== null &&
+    phapTu.route !== 'dot' &&
+    phapTu.route !== 'no'
+  ) {
+    emit({ path: 'player.phapTu.route', message: "phải là 'dot' | 'no' | null" })
+  }
+
+  // Atomic-pair invariant: writers commit {element, route} together
+  // (selectPhapTuElement), so a half-set pair is always corrupt - and
+  // only the ngu_hanh way owns the state at all (ngo_dao, kiem_tu,
+  // mortal must stay {null, null} or route stats leak cross-path).
+  const hasElement = phapTu.element !== null
+  const hasRoute = phapTu.route !== null
+  if (hasElement !== hasRoute) {
+    emit({
+      path: 'player.phapTu',
+      message: 'element và route phải cùng null hoặc cùng đã chọn (commit nguyên tử)',
+    })
+  } else if (
+    hasElement &&
+    !(
+      playerPayload.cultivationPath === 'phap_tu' &&
+      playerPayload.cultivationWay === 'ngu_hanh'
+    )
+  ) {
+    // Element/route ownership is ngu_hanh-only - a ('phap_tu','ngo_dao')
+    // pair, a way-less pair, and every foreign pair reject ownership.
+    emit({
+      path: 'player.phapTu',
+      message: "element/route chỉ thuộc way 'ngu_hanh' của path 'phap_tu'",
+    })
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Way definitions — consumed by CULTIVATION_PATH_MODULES.phap_tu.ways in
 // CultivationPathKit (the catalog is the single aggregation point).
 // ---------------------------------------------------------------------------
@@ -169,6 +245,49 @@ export const PHAP_TU_NGU_HANH_WAY: PathWayDefinition = {
       artifactId: 'ngu_hanh_chau',
     },
   },
+  // P1 - ngu_hanh owns the element/route machinery (elemental_casting:
+  // element commit, route switch, route profiles, MP pills, the element
+  // node-tree tabs) and the The resource pool. empowered_ult is
+  // conditional on owning the linh_ngo_<element> node of the COMMITTED
+  // element - node ownership stays in player.nodeLevels (NodeSystem);
+  // the predicate only reads it.
+  capabilities: {
+    static: ['phap_tu.elemental_casting', 'phap_tu.the_pool'],
+    conditional: {
+      'phap_tu.empowered_ult': (player) => {
+        const element = player.phapTu?.element
+        return (
+          element !== null &&
+          element !== undefined &&
+          (player.nodeLevels?.[`linh_ngo_${PHAP_TU_ULTIMATE_IDS[element]}`] ?? 0) > 0
+        )
+      },
+    },
+  },
+  // P1-M3 - the element/route axes live on player.phapTu (the slice owns
+  // the state; selectPhapTuElement is the atomic commit). Data-only
+  // declarations - the reads live in CultivationPathSystem and null-guard
+  // the slice for presentation contracts that omit it.
+  subpaths: {
+    element: {
+      requiresCapability: 'phap_tu.elemental_casting',
+      state: 'player.phapTu.element',
+    },
+    route: {
+      requiresCapability: 'phap_tu.elemental_casting',
+      state: 'player.phapTu.route',
+    },
+  },
+  // P1-M2 - every element kit tuple plus the route skills is
+  // ngu_hanh-exclusive content (ngo_dao never touches element
+  // machinery). The empowered god-ult defs are node-granted variants
+  // owned by the linh_ngo nodes, not the way's base kit.
+  ownedContent: {
+    skillIds: [
+      ...Object.values(PHAP_TU_KIT_IDS).flat(),
+      ...Object.values(PHAP_TU_ROUTE_SKILL_IDS).flat(),
+    ],
+  },
 }
 
 // Ngo Dao required kit (review round-4, MEDIUM) — the ritual grants
@@ -176,16 +295,14 @@ export const PHAP_TU_NGU_HANH_WAY: PathWayDefinition = {
 // passive carried by ngo_dao_chan_quyet.innateSkillId (the skillIds
 // list cannot express a passive member). Battle construction asserts
 // the full set is learned; a partial kit is corrupt progression state
-// and must fail loudly, never silently drop a slot. Re-exported from
-// CultivationPathKit so existing consumers keep their import site.
+// and must fail loudly, never silently drop a slot. P1-M2 — the kit's
+// declaration of record is the way's ownedContent.skillIds below;
+// PHAP_TU_AN_REQUIRED_SKILLS derives FROM it (single source) and is
+// re-exported from CultivationPathKit so existing consumers keep their
+// import site.
 export const PHAP_TU_AN_BASIC_ID = 'van_phap_tuy_tam'
 export const PHAP_TU_AN_SPECIAL_ID = 'da_phap_lien_tuyen'
 export const PHAP_TU_AN_PASSIVE_ID = 'ngo_dao_hon_don'
-export const PHAP_TU_AN_REQUIRED_SKILLS: readonly string[] = [
-  PHAP_TU_AN_BASIC_ID,
-  PHAP_TU_AN_SPECIAL_ID,
-  PHAP_TU_AN_PASSIVE_ID,
-]
 
 export const PHAP_TU_NGO_DAO_WAY: PathWayDefinition = {
   id: 'ngo_dao',
@@ -227,9 +344,33 @@ export const PHAP_TU_NGO_DAO_WAY: PathWayDefinition = {
     },
   ],
   stats: PHAP_TU_WAY_STATS,
+  // P1 - the reaction aura is the SAME conditional the runtime has always
+  // owned (grantsElementalReactionAura): the aura exists only while the
+  // ngo_dao_hon_don passive is learned. The predicate reads skill
+  // membership through the injected dep - learned skills live in
+  // SkillManager, never on PlayerData. Both grant seams (battle entry +
+  // dormant-source revive) consume this single capability.
+  capabilities: {
+    conditional: {
+      'phap_tu.reaction_aura': (_player, deps) => deps.hasSkill(PHAP_TU_AN_PASSIVE_ID),
+    },
+  },
+  // P1-M2 - the fixed kit plus the reaction-aura buff the runtime grant
+  // plants (carrier A: ownership is declared here, the APPLICATION stays
+  // with grantsElementalReactionAura).
+  ownedContent: {
+    skillIds: [PHAP_TU_AN_BASIC_ID, PHAP_TU_AN_SPECIAL_ID, PHAP_TU_AN_PASSIVE_ID],
+    buffIds: [VAN_PHAP_THAN_HOA_ID],
+  },
   offerGate: { requiresSkillCastLevel: { skillId: 'linh_bao', level: 3 } },
   // Sealed hidden-path card at the ritual (named way + permanent-choice
   // warning, no plain button) — the panel reads this flag, never the id.
   sealedOffer: true,
 }
+
+// P1-M2 - the kit's declaration of record is ownedContent.skillIds
+// above; this alias preserves the existing export site for the
+// registry's kit assertion and the runtime dep surfaces.
+export const PHAP_TU_AN_REQUIRED_SKILLS: readonly string[] =
+  PHAP_TU_NGO_DAO_WAY.ownedContent?.skillIds ?? []
 

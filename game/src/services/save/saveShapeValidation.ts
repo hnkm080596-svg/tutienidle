@@ -16,9 +16,7 @@ import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
 import { isHerbAge } from '../../core/production/ProductionTypes'
 import { createBaseStats } from '../../core/stats/StatBlock'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
-import { KIEM_PHO_ORB_IDS } from '../../core/kiem-tu/KiemTuState'
 import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
-import { isPhapTuNguHanh } from '../../core/phap-tu/PhapTuPath'
 import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
 import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
 import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
@@ -435,54 +433,14 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     })
   }
 
-  if (player.cultivationPath === 'kiem_tu' && player.kiemTu === undefined) {
-    issues.push({
-      path: 'player.kiemTu',
-      message: "bắt buộc khi cultivationPath là 'kiem_tu' (applyPathChoice tạo slice nguyên tử)",
-    })
-  }
-
-  // Phap Tu Reimagined — required PlayerData.phapTu: { element, route },
-  // both nullable until the atomic pick; a missing/garbage object would
-  // crash selectPhapTuElement/resolveRouteProfile reads downstream.
-  if (!isObject(player.phapTu)) {
-    issues.push({ path: 'player.phapTu', message: 'phải là object' })
-  } else {
-    if (
-      player.phapTu.element !== null &&
-      !['wood', 'fire', 'earth', 'metal', 'water'].includes(player.phapTu.element as string)
-    ) {
-      issues.push({ path: 'player.phapTu.element', message: 'phải là ElementType hoặc null' })
-    }
-    if (
-      player.phapTu.route !== null &&
-      player.phapTu.route !== 'dot' &&
-      player.phapTu.route !== 'no'
-    ) {
-      issues.push({ path: 'player.phapTu.route', message: "phải là 'dot' | 'no' | null" })
-    }
-
-    // Atomic-pair invariant: writers commit {element, route} together
-    // (selectPhapTuElement), so a half-set pair is always corrupt — and
-    // only the ngu_hanh way owns the state at all (ngo_dao, kiem_tu,
-    // mortal must stay {null, null} or route stats leak cross-path).
-    const hasElement = player.phapTu.element !== null
-    const hasRoute = player.phapTu.route !== null
-    if (hasElement !== hasRoute) {
-      issues.push({
-        path: 'player.phapTu',
-        message: 'element và route phải cùng null hoặc cùng đã chọn (commit nguyên tử)',
-      })
-    } else if (hasElement && !isPhapTuNguHanh(player)) {
-      // Cultivation Path Framework (M4/M8): element/route ownership is
-      // ngu_hanh-only — the module predicate owns the membership rule,
-      // so ('phap_tu','ngo_dao') and any way-less pair reject element
-      // ownership.
-      issues.push({
-        path: 'player.phapTu',
-        message: "element/route chỉ thuộc way 'ngu_hanh' của path 'phap_tu'",
-      })
-    }
+  // P1-M6 — persisted path-state validation is MODULE-OWNED: the
+  // boundary keeps the identity-pair contract above (enum, atomic
+  // pair, way membership, mortal gate) and iterates each module's
+  // validatePersistedState hook generically for its own slices
+  // (phap_tu -> player.phapTu, kiem_tu -> player.kiemTu; the_tu owns
+  // no slice). A new path carries its own rules — no save-layer edit.
+  for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
+    pathModule.validatePersistedState?.(player, (issue) => issues.push(issue))
   }
 
   // Talent v4 M2 (v61) — 5 field mới: ngân tu vi tràn (Hải Nạp), tầng
@@ -505,55 +463,6 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   requireNonNegativeNumber(player, 'phaGiapCarryStacks', 'player', issues)
   if (player.phaGiapCarryRealmId !== null && typeof player.phaGiapCarryRealmId !== 'string') {
     issues.push({ path: 'player.phaGiapCarryRealmId', message: 'phải là string hoặc null' })
-  }
-
-  // Kiem Tu Reimagined (v62) — kiemTu is optional (absent for non-kiem
-  // players) but a malformed present copy silently degraded hien combat
-  // (empty preset -> nextOrb NaN). Shape-check when present: preset
-  // 1-9 catalog-member OrbIds, non-negative numerics, and the ngu
-  // invariants (count >= 1, base >= 1) since no legit writer emits
-  // lower. M6: the mode union check is gone — cultivationWay carries
-  // the hien/ngu distinction.
-  if (player.kiemTu !== undefined) {
-    if (!isObject(player.kiemTu)) {
-      issues.push({ path: 'player.kiemTu', message: 'phải là object hoặc vắng mặt' })
-    } else {
-      const kiemTu = player.kiemTu
-
-      // M6 retired kiemTu.mode — a save still carrying it predates the
-      // way model (or was hand-edited); reject rather than persist the
-      // dead key forever.
-      if ('mode' in kiemTu) {
-        issues.push({ path: 'player.kiemTu.mode', message: 'field đã bị retire từ v66 (cultivationWay thay thế)' })
-      }
-
-      const preset = kiemTu.preset
-
-      if (!Array.isArray(preset) || preset.length < 1 || preset.length > 9) {
-        issues.push({ path: 'player.kiemTu.preset', message: 'phải là array 1-9 phần tử' })
-      } else {
-        for (const orbId of preset) {
-          if (!KIEM_PHO_ORB_IDS.some((id) => id === orbId)) {
-            issues.push({
-              path: 'player.kiemTu.preset',
-              message: `orb id không hợp lệ: ${String(orbId)}`,
-            })
-
-            break
-          }
-        }
-      }
-
-      requireNonNegativeNumber(kiemTu, 'kiemY', 'player.kiemTu', issues)
-
-      if (!isFiniteNumber(kiemTu.kiemDaoCount) || kiemTu.kiemDaoCount < 1) {
-        issues.push({ path: 'player.kiemTu.kiemDaoCount', message: 'phải là number hữu hạn >= 1' })
-      }
-
-      if (!isFiniteNumber(kiemTu.kiemDaoBase) || kiemTu.kiemDaoBase < 1) {
-        issues.push({ path: 'player.kiemTu.kiemDaoBase', message: 'phải là number hữu hạn >= 1' })
-      }
-    }
   }
 
   // Spec dot-pha-loi-kiep §6.1 — 4 field v54 (Bát Mạch, cửa sổ quái ẩn,

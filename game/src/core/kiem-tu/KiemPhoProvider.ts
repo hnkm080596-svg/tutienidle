@@ -43,6 +43,20 @@ export interface KiemPhoProviderHandle extends DynamicBasicProvider {
   snapshot(): KiemPhoBattleState
 }
 
+// The extra-impact deal_damage ops carry the bare combo id as originId.
+// This derived view exposes the combo ids REACHABLE at a realm - a
+// combo can only fire when every orb in its pattern is realm-unlocked -
+// so provenance surfaces (the simulation metric lane) classify combo
+// damage without reading the owner-sealed catalog (INV-7) or hardcoding
+// literals, and unreachable higher-realm combos classify as leakage
+// rather than kit.
+export function reachableKiemPhoComboIds(realmId: string): readonly string[] {
+  const unlocked = new Set(unlockedOrbs(getRealmIndex(realmId)))
+  return KIEM_PHO_COMBOS
+    .filter((c) => c.pattern.every((orb) => unlocked.has(orb)))
+    .map((c) => c.id)
+}
+
 export function isKiemPhoProviderHandle(
   provider: DynamicBasicProvider | undefined,
 ): provider is KiemPhoProviderHandle {

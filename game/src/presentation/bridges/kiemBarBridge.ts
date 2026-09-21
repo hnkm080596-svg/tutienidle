@@ -21,14 +21,16 @@ import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import { MAX_THE } from '@/core/combat/CombatTypes'
 import type { OrbId, KiemTuState } from '@/core/kiem-tu/KiemTuState'
 import { isKiemPhoProviderHandle } from '@/core/kiem-tu/KiemPhoProvider'
-import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
 import { forgeCost } from '@/core/kiem-tu/NguKiemDao'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import {
-  getActiveWayDefinition,
   type CultivationPathId,
   type PathWayId,
 } from '@/core/player/CultivationPathKit'
+import {
+  getKiemTuPreset,
+  hasStaticPathCapability,
+} from '@/core/player/CultivationPathSystem'
 import type { GameManager } from '@/core/game/GameManager'
 import {
   readOptionalGate,
@@ -65,10 +67,10 @@ export const KIEM_BAR_READER_KEY = 'kiemBarReader' as const
 export interface KiemBarPlayerState {
   kiemTu?: KiemTuState
   realmId: string
-  // The Tu Reimagined (T22) — the active way's usesTheResource flag
-  // decides whether the bar shows The; no path-id checks in the HUD.
-  // Read via getActiveWayDefinition — the persisted (path, way) pair
-  // resolves the way, and a way-less/corrupt pair resolves nothing.
+  // P1 - the bar mode is selected by declared capabilities
+  // ('the_tu.the_economy' / 'kiem_tu.kiem_pho' / 'kiem_tu.ngu_kiem_dao')
+  // resolved from the persisted pair - no path-id checks, no slice-
+  // presence inference in the HUD.
   cultivationPath?: CultivationPathId
   cultivationWay?: PathWayId
 }
@@ -100,30 +102,25 @@ export function makeKiemBarReader(
       ? { current: battleEntity.externalWard.amount, max: battleEntity.stats?.maxHp ?? 0 }
       : undefined
 
-    if (!kiemTu) {
-      // The Tu An (T22) — The proc-fuel pool, gated by the active way's
-      // flag so the HUD stays data-driven (no path-id checks outside
-      // way data). getActiveWayDefinition resolves both persisted eras.
-      if (getActiveWayDefinition(player)?.usesTheResource) {
-        return {
-          current: battleEntity?.currentThe ?? 0,
-          max: battleEntity?.maxThe ?? MAX_THE,
-          label: 'Thế',
-          externalWard,
-        }
+    // The Tu An (T22) - the The proc-fuel pool bar, gated by the declared
+    // capability (the way's owned discriminator; P1).
+    if (hasStaticPathCapability(player, 'the_tu.the_economy')) {
+      return {
+        current: battleEntity?.currentThe ?? 0,
+        max: battleEntity?.maxThe ?? MAX_THE,
+        label: 'Thế',
+        externalWard,
       }
-
-      // No resource pool for this path — still surface a live shield.
-      return externalWard ? { current: 0, max: 0, label: '', externalWard } : null
     }
 
-    if (isKiemTuHien(player)) {
+    if (kiemTu && hasStaticPathCapability(player, 'kiem_tu.kiem_pho')) {
       // The participant's provider owns the live cursor/log — the
       // persisted preset is the fallback when no provider is attached
-      // (e.g. mid-migration battles built before the hien wiring).
+      // (e.g. mid-migration battles built before the hien wiring). The
+      // preset reaches the HUD through the canonical subpath read.
       const provider = battle.players[0]?.dynamicBasic
       const snapshot = isKiemPhoProviderHandle(provider) ? provider.snapshot() : null
-      const preset = snapshot?.preset ?? kiemTu.preset
+      const preset = snapshot?.preset ?? getKiemTuPreset(player) ?? []
       const cursor = snapshot?.cursor ?? 0
 
       return {
@@ -139,7 +136,7 @@ export function makeKiemBarReader(
       }
     }
 
-    if (isKiemTuNgu(player)) {
+    if (kiemTu && hasStaticPathCapability(player, 'kiem_tu.ngu_kiem_dao')) {
       // ngu — bar = Kiem Y progress toward the next forge at the
       // CURRENT realm's forgeCost; label carries the live sword count.
       const realmIndex = getRealmIndex(player.realmId)
@@ -155,7 +152,8 @@ export function makeKiemBarReader(
       }
     }
 
-    // Corrupt/way-less pair with a kiemTu slice — fail closed, ward only.
+    // No resource capability, or a corrupt pair missing its slice -
+    // fail closed, ward only.
     return externalWard ? { current: 0, max: 0, label: '', externalWard } : null
   }
 }

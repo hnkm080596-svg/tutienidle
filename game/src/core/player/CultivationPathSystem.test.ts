@@ -4,16 +4,24 @@ import type { StatDomain } from '../stats/StatDomain'
 import { createDefaultPlayer, resolvePlayerFinalStats } from './Player'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { freshKiemTuState } from '../kiem-tu/KiemTuState'
-import type { CultivationPathId, PathWayId } from './CultivationPathKit'
+import type { CultivationPathId, PathCapabilityDeps, PathWayId } from './CultivationPathKit'
 // Importing the path system registers its phap_tu delta deriver with the
 // stats module (D12 contract) — the registration itself is under test.
 import {
   applyPathChoice,
   getActivePath,
   getActiveWay,
+  getActiveElement,
+  getActiveRoute,
+  getKiemTuPreset,
+  hasPathCapability,
+  hasStaticPathCapability,
+  isActivePath,
+  isActiveWay,
   listOfferableWays,
   PHAP_TU_ATTUNEMENT_MANA_REGEN_PER_POINT,
   PHAP_TU_ATTUNEMENT_MAX_MP_PER_POINT,
+  resolvePathCapabilities,
 } from './CultivationPathSystem'
 
 // Task 7 (D12/D19, INV-10): attunement feeds MP ONLY through the phap_tu
@@ -386,5 +394,217 @@ describe('getActivePath / getActiveWay — strict persisted-pair reads', () => {
 
     expect(getActivePath(player)).toBeUndefined()
     expect(getActiveWay(player)).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// P1 - Canonical Path Authority (spec 2026-09-20 section P1): capability resolution.
+// The capability layer is DERIVED - the committed (path, way) pair plus the
+// owning slice/skill/node state; it never mutates and never owns state.
+// ---------------------------------------------------------------------------
+
+const NO_DEPS: PathCapabilityDeps = { hasSkill: () => false }
+
+describe('resolvePathCapabilities / hasPathCapability - P1 capability authority', () => {
+  it('a mortal player resolves no capabilities', () => {
+    expect(resolvePathCapabilities(mortalPlayer(), NO_DEPS).size).toBe(0)
+  })
+
+  it.each([
+    ['kiem_tu', 'hien', ['kiem_tu.kiem_pho']],
+    ['kiem_tu', 'ngu', ['kiem_tu.ngu_kiem_dao']],
+    ['phap_tu', 'ngu_hanh', ['phap_tu.elemental_casting', 'phap_tu.the_pool']],
+    ['phap_tu', 'ngo_dao', []],
+    ['the_tu', 'hien', []],
+    ['the_tu', 'ung_the', ['the_tu.the_economy']],
+  ] as const)('(%s, %s) resolves exactly the declared static set: %j', (pathId, wayId, expected) => {
+    const player = mortalPlayer()
+    player.cultivationPath = pathId
+    player.cultivationWay = wayId
+
+    expect([...resolvePathCapabilities(player, NO_DEPS)].sort()).toEqual([...expected].sort())
+    for (const cap of expected) {
+      expect(hasPathCapability(player, cap, NO_DEPS)).toBe(true)
+    }
+  })
+
+  it('a capability owned by a different way never leaks through', () => {
+    const player = mortalPlayer()
+    player.cultivationPath = 'kiem_tu'
+    player.cultivationWay = 'hien'
+
+    expect(hasPathCapability(player, 'kiem_tu.ngu_kiem_dao', NO_DEPS)).toBe(false)
+    expect(hasPathCapability(player, 'the_tu.the_economy', NO_DEPS)).toBe(false)
+    expect(hasPathCapability(player, 'phap_tu.elemental_casting', NO_DEPS)).toBe(false)
+  })
+
+  it('a way-less or mismatched pair resolves nothing - fail closed', () => {
+    const wayLess = mortalPlayer()
+    wayLess.cultivationPath = 'kiem_tu'
+
+    expect(resolvePathCapabilities(wayLess, NO_DEPS).size).toBe(0)
+
+    const mismatched = mortalPlayer()
+    mismatched.cultivationPath = 'phap_tu'
+    mismatched.cultivationWay = 'ung_the'
+
+    expect(resolvePathCapabilities(mismatched, NO_DEPS).size).toBe(0)
+  })
+
+  it('phap_tu.reaction_aura requires the learned ngo_dao_hon_don passive - deps.hasSkill is the seam', () => {
+    const player = mortalPlayer()
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngo_dao'
+
+    expect(hasPathCapability(player, 'phap_tu.reaction_aura', NO_DEPS)).toBe(false)
+    expect(
+      hasPathCapability(player, 'phap_tu.reaction_aura', {
+        hasSkill: (id) => id === 'ngo_dao_hon_don',
+      }),
+    ).toBe(true)
+  })
+
+  it('phap_tu.reaction_aura stays false on ngu_hanh even with the passive learned', () => {
+    const player = mortalPlayer()
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
+
+    expect(
+      hasPathCapability(player, 'phap_tu.reaction_aura', { hasSkill: () => true }),
+    ).toBe(false)
+  })
+
+  it('phap_tu.empowered_ult requires the linh_ngo node of the COMMITTED element', () => {
+    const player = mortalPlayer()
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
+    player.phapTu.element = 'fire'
+
+    expect(hasPathCapability(player, 'phap_tu.empowered_ult', NO_DEPS)).toBe(false)
+
+    // A linh_ngo node for a different element does not empower fire's ult.
+    player.nodeLevels = { linh_ngo_bat_thu_can_quet: 1 }
+    expect(hasPathCapability(player, 'phap_tu.empowered_ult', NO_DEPS)).toBe(false)
+
+    player.nodeLevels = { linh_ngo_tat_phuong_giang_the: 1 }
+    expect(hasPathCapability(player, 'phap_tu.empowered_ult', NO_DEPS)).toBe(true)
+  })
+
+  it('empowered_ult stays false with no committed element', () => {
+    const player = mortalPlayer()
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
+    player.nodeLevels = { linh_ngo_tat_phuong_giang_the: 1 }
+
+    expect(hasPathCapability(player, 'phap_tu.empowered_ult', NO_DEPS)).toBe(false)
+  })
+
+  it('hasStaticPathCapability answers from the declared static list only - conditional caps return false', () => {
+    const player = mortalPlayer()
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngo_dao'
+
+    // reaction_aura is conditional: the static read cannot prove it, so it
+    // fails closed rather than lying.
+    expect(hasStaticPathCapability(player, 'phap_tu.reaction_aura')).toBe(false)
+
+    player.cultivationWay = 'ngu_hanh'
+    expect(hasStaticPathCapability(player, 'phap_tu.elemental_casting')).toBe(true)
+    expect(hasStaticPathCapability(player, 'phap_tu.empowered_ult')).toBe(false)
+    expect(hasStaticPathCapability(player, 'kiem_tu.kiem_pho')).toBe(false)
+  })
+})
+
+describe('isActivePath / isActiveWay - generic identity reads (P1)', () => {
+  it('resolve through the catalog and fail closed on a corrupt pair', () => {
+    const player = mortalPlayer()
+
+    expect(isActivePath(player, 'kiem_tu')).toBe(false)
+    expect(isActiveWay(player, 'hien')).toBe(false)
+
+    player.cultivationPath = 'kiem_tu'
+    player.cultivationWay = 'hien'
+
+    expect(isActivePath(player, 'kiem_tu')).toBe(true)
+    expect(isActivePath(player, 'phap_tu')).toBe(false)
+    expect(isActiveWay(player, 'hien')).toBe(true)
+    expect(isActiveWay(player, 'ngu')).toBe(false)
+
+    // A way id the kiem_tu module does not own corrupts the pair.
+    player.cultivationWay = 'ngo_dao'
+    expect(isActivePath(player, 'kiem_tu')).toBe(false)
+    expect(isActiveWay(player, 'ngo_dao')).toBe(false)
+  })
+})
+
+describe('canonical subpath reads (P1-M3) - module-owned axes, capability-gated', () => {
+  it('getActiveElement resolves only under an elemental_casting way', () => {
+    const player = mortalPlayer()
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
+
+    expect(getActiveElement(player)).toBeUndefined()
+
+    player.phapTu.element = 'water'
+    expect(getActiveElement(player)).toBe('water')
+
+    // ngo_dao owns no element axis even if stale slice data lingers.
+    player.cultivationWay = 'ngo_dao'
+    expect(getActiveElement(player)).toBeUndefined()
+  })
+
+  it('getActiveElement fails closed on a corrupt pair', () => {
+    const player = mortalPlayer()
+    player.cultivationPath = 'phap_tu' // way-less
+    player.phapTu.element = 'fire'
+
+    expect(getActiveElement(player)).toBeUndefined()
+  })
+
+  it('getActiveRoute resolves only under ngu_hanh', () => {
+    const player = mortalPlayer()
+    player.cultivationPath = 'phap_tu'
+    player.cultivationWay = 'ngu_hanh'
+
+    expect(getActiveRoute(player)).toBeUndefined()
+
+    player.phapTu.route = 'dot'
+    expect(getActiveRoute(player)).toBe('dot')
+
+    player.cultivationPath = 'kiem_tu'
+    player.cultivationWay = 'hien'
+    expect(getActiveRoute(player)).toBeUndefined()
+  })
+
+  it('getKiemTuPreset resolves the hien preset slice, defensive copy', () => {
+    const player = mortalPlayer()
+    player.cultivationPath = 'kiem_tu'
+    player.cultivationWay = 'hien'
+
+    expect(getKiemTuPreset(player)).toBeUndefined()
+
+    player.kiemTu = freshKiemTuState()
+    player.kiemTu.preset = ['orb_dam', 'orb_chem']
+
+    const preset = getKiemTuPreset(player)
+    expect(preset).toEqual(['orb_dam', 'orb_chem'])
+
+    // ngu owns no preset axis - the slice may exist but the read is empty.
+    player.cultivationWay = 'ngu'
+    expect(getKiemTuPreset(player)).toBeUndefined()
+  })
+
+  it('narrow presentation slices satisfy the read shapes', () => {
+    // TheBarPlayerState shape: pair + phapTu + nodeLevels, no kiemTu.
+    const bridgeState = {
+      cultivationPath: 'phap_tu' as const,
+      cultivationWay: 'ngu_hanh' as const,
+      phapTu: { element: 'fire' as const, route: 'no' as const },
+      nodeLevels: {},
+    }
+
+    expect(getActiveElement(bridgeState)).toBe('fire')
+    expect(getActiveRoute(bridgeState)).toBe('no')
+    expect(hasStaticPathCapability(bridgeState, 'phap_tu.elemental_casting')).toBe(true)
   })
 })

@@ -16,6 +16,29 @@ import {
   THE_TU_AN_VIT_PROTECT_PER_POINT,
   THE_TU_VITALITY_ENDURANCE_THRESHOLD_PER_POINT,
 } from '../stats/TheTuStatChannels'
+import {
+  BACH_UNG,
+  PHAN_KICH,
+  THAM_THE,
+  THE_TU_KIT_BY_ROOT,
+  TRO_KICH,
+  TRONG_PHAN_KICH,
+  TU_THE,
+} from '../../data/skill/TheTuSkills'
+import {
+  BACH_UNG_BUFF,
+  BAT_TU_BA_THE_BUFF,
+  HO_MON_MARKER,
+  HO_VE_BUFF,
+  KHIEM_KHICH_DEBUFF,
+  PHAN_CHINH_BUFF,
+  PHAN_MON_MARKER,
+  SON_NHAC_BUFF,
+  SON_NHAC_HO_THE_BUFF,
+  TRO_MON_MARKER,
+  TU_THE_BUFF,
+  UNG_THE_BUFF,
+} from '../../data/buff/TheTuBuffs'
 
 // Cultivation Path Framework (spec 2026-09-16, M5) — the The Tu path
 // module: the two way definitions + the path machinery they own.
@@ -189,6 +212,33 @@ export const THE_TU_HIEN_WAY: PathWayDefinition = {
   // basics so a lingering tram/huy_quyen cannot occupy the mortal slot.
   unequipSkillIds: ['tram', 'huy_quyen'],
   stats: THE_TU_HIEN_STATS,
+  // P1 - the fixed tree tag (cuong_chien XOR tran_the root-mutex tree).
+  nodeTreeTag: 'the_tu',
+  // P1-M3 - the root axis is an ownership record: the cuong_chien /
+  // tran_the mutex roots live on player.nodeLevels, written by
+  // NodeSystem's purchase path. No canonical reader exists - nothing
+  // outside the module consumes it (M0 inventory decision).
+  subpaths: {
+    root: { state: 'player.nodeLevels' },
+  },
+  // P1-M2 - both root kits (cuong_chien + tran_the) resolve at battle
+  // build from THE_TU_KIT_BY_ROOT; the buff list is what those kits
+  // plant (bat_tu_ba_the survival, phan_chinh reflect emblem, son_nhac
+  // ward + ho_the ally ward, khiem_khich taunt).
+  ownedContent: {
+    skillIds: Object.values(THE_TU_KIT_BY_ROOT).flatMap((kit) => [
+      kit.basic.id,
+      kit.special.id,
+      kit.ultimate.id,
+    ]),
+    buffIds: [
+      BAT_TU_BA_THE_BUFF.id,
+      PHAN_CHINH_BUFF.id,
+      SON_NHAC_BUFF.id,
+      SON_NHAC_HO_THE_BUFF.id,
+      KHIEM_KHICH_DEBUFF.id,
+    ],
+  },
 }
 
 export const THE_TU_UNG_THE_WAY: PathWayDefinition = {
@@ -198,11 +248,36 @@ export const THE_TU_UNG_THE_WAY: PathWayDefinition = {
   techniqueId: 'ung_the_than_quyet',
   // Former the_tu_an kit — hidden way. Offered at the Initiation
   // Ritual only when the mortal skill huy_quyen reaches Lv3. Owns the
-  // 'the_tu_an' stat domain (reactive chances) and the The pool
-  // (usesTheResource — the combat HUD reads this flag, never the path
-  // id).
+  // 'the_tu_an' stat domain (reactive chances) and the The pool.
   offerGate: { requiresSkillLevel: { skillId: 'huy_quyen', level: 3 } },
-  usesTheResource: true,
+  // P1 - ung_the owns the The-economy machinery (the combat HUD's The
+  // bar + participant The pool). The capability is the discriminator -
+  // the retired usesTheResource flag is gone.
+  capabilities: {
+    static: ['the_tu.the_economy'],
+  },
+  // P1-M2 - the fixed kit plus the reactive-payload defs, the hidden
+  // markers (ung_the economy + the three mon procs), and the buffs the
+  // kit plants (tu_the/bach_ung self-buffs, ho_ve intercept ward).
+  ownedContent: {
+    skillIds: [THAM_THE.id, TU_THE.id, BACH_UNG.id, PHAN_KICH.id, TRO_KICH.id, TRONG_PHAN_KICH.id],
+    buffIds: [
+      UNG_THE_BUFF.id,
+      HO_MON_MARKER.id,
+      PHAN_MON_MARKER.id,
+      TRO_MON_MARKER.id,
+      TU_THE_BUFF.id,
+      BACH_UNG_BUFF.id,
+      HO_VE_BUFF.id,
+    ],
+  },
+  // P1 - the hidden way's fixed tree tag (TheTuAnNodes).
+  nodeTreeTag: 'the_tu_an',
+  // P1-M3 - same root ownership record as hien; the ung_the roots are
+  // non-mutex but live on the same player.nodeLevels slice.
+  subpaths: {
+    root: { state: 'player.nodeLevels' },
+  },
   // M9 — same mortal-basic strip as hien.
   unequipSkillIds: ['tram', 'huy_quyen'],
   stats: THE_TU_UNG_THE_STATS,

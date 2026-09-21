@@ -1,10 +1,17 @@
 import type {
   CultivationPathId,
+  PathStateIssue,
   PathWayDefinition,
   PathWayId,
 } from '../player/CultivationPathKit'
 import type { PlayerData } from '../player/Player'
-import { freshKiemTuState, MORTAL_PRECURSOR_SKILL_IDS } from './KiemTuState'
+import { freshKiemTuState, KIEM_PHO_ORB_IDS, MORTAL_PRECURSOR_SKILL_IDS } from './KiemTuState'
+import { KIEM_PHO_BUFFS } from '../../data/buff/KiemPhoBuffs'
+import {
+  KIEM_DAO_CASCADE_EMBLEM,
+  NGU_KIEM_THUAT,
+  TU_KIEM_Y_EMBLEM,
+} from '../../data/skill/NguKiemDaoSkills'
 
 // Cultivation Path Framework (spec 2026-09-16, M6) — the Kiem Tu path
 // module: the two way definitions + the way membership predicates.
@@ -45,6 +52,88 @@ export interface KiemTuWayRead {
  */
 export function createKiemTuInitialState(player: PlayerData): void {
   player.kiemTu = freshKiemTuState()
+}
+
+// ---------------------------------------------------------------------------
+// P1-M6 - module-owned persisted-slice validation. The save boundary
+// iterates this hook generically for EVERY save; the module owns ALL
+// rules for player.kiemTu: optional shape (a malformed present copy
+// silently degraded hien combat - empty preset -> nextOrb NaN), and
+// REQUIRED once the committed pair is kiem_tu (applyPathChoice creates
+// the slice atomically; provider attach + NguKiemDao reads assume it).
+// The payload is untrusted - narrow with guards, never cast.
+// ---------------------------------------------------------------------------
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isNonNegativeFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+}
+
+export function validateKiemTuPersistedState(
+  playerPayload: unknown,
+  emit: (issue: PathStateIssue) => void,
+): void {
+  if (!isRecord(playerPayload)) {
+    return
+  }
+
+  if (playerPayload.cultivationPath === 'kiem_tu' && playerPayload.kiemTu === undefined) {
+    emit({
+      path: 'player.kiemTu',
+      message: "bắt buộc khi cultivationPath là 'kiem_tu' (applyPathChoice tạo slice nguyên tử)",
+    })
+  }
+
+  const kiemTu = playerPayload.kiemTu
+
+  if (kiemTu === undefined) {
+    return
+  }
+
+  if (!isRecord(kiemTu)) {
+    emit({ path: 'player.kiemTu', message: 'phải là object hoặc vắng mặt' })
+    return
+  }
+
+  // M6 retired kiemTu.mode - a save still carrying it predates the
+  // way model (or was hand-edited); reject rather than persist the
+  // dead key forever.
+  if ('mode' in kiemTu) {
+    emit({
+      path: 'player.kiemTu.mode',
+      message: 'field đã bị retire từ v66 (cultivationWay thay thế)',
+    })
+  }
+
+  const preset = kiemTu.preset
+
+  if (!Array.isArray(preset) || preset.length < 1 || preset.length > 9) {
+    emit({ path: 'player.kiemTu.preset', message: 'phải là array 1-9 phần tử' })
+  } else {
+    for (const orbId of preset) {
+      if (!KIEM_PHO_ORB_IDS.some((id) => id === orbId)) {
+        emit({
+          path: 'player.kiemTu.preset',
+          message: `orb id không hợp lệ: ${String(orbId)}`,
+        })
+        break
+      }
+    }
+  }
+
+  if (!isNonNegativeFiniteNumber(kiemTu.kiemY)) {
+    emit({ path: 'player.kiemTu.kiemY', message: 'phải là number hữu hạn >= 0' })
+  }
+
+  if (typeof kiemTu.kiemDaoCount !== 'number' || !Number.isFinite(kiemTu.kiemDaoCount) || kiemTu.kiemDaoCount < 1) {
+    emit({ path: 'player.kiemTu.kiemDaoCount', message: 'phải là number hữu hạn >= 1' })
+  }
+
+  if (typeof kiemTu.kiemDaoBase !== 'number' || !Number.isFinite(kiemTu.kiemDaoBase) || kiemTu.kiemDaoBase < 1) {
+    emit({ path: 'player.kiemTu.kiemDaoBase', message: 'phải là number hữu hạn >= 1' })
+  }
 }
 
 /**
@@ -97,6 +186,30 @@ export const KIEM_TU_HIEN_WAY: PathWayDefinition = {
     domains: ['kiem_tu'],
     collectModifiers: () => [],
   },
+  // P1 - hien owns the Kiem Pho preset-combo machinery: the preset write
+  // op, the preset HUD/editor surfaces, and the 'kiem_pho' node-tree tag.
+  capabilities: {
+    static: ['kiem_tu.kiem_pho'],
+  },
+  // P1-M2 - the orb defs the preset composes from and the kiem_thuong
+  // bleed the orbs plant; declared by reference so a def rename breaks
+  // the build instead of drifting.
+  ownedContent: {
+    skillIds: KIEM_PHO_ORB_IDS,
+    buffIds: KIEM_PHO_BUFFS.map((buff) => buff.id),
+  },
+  // P1-M3 - the preset axis lives on player.kiemTu (written by
+  // setKiemPhoPreset); hien owns it, ngu never reads it. Data-only
+  // declaration - the read lives in CultivationPathSystem.
+  subpaths: {
+    preset: {
+      requiresCapability: 'kiem_tu.kiem_pho',
+      state: 'player.kiemTu.preset',
+    },
+  },
+  // P1 - the fixed tree tag the panel renders (replaces the module
+  // predicate chain selecting 'kiem_pho').
+  nodeTreeTag: 'kiem_pho',
 }
 
 export const KIEM_TU_NGU_WAY: PathWayDefinition = {
@@ -117,4 +230,16 @@ export const KIEM_TU_NGU_WAY: PathWayDefinition = {
     domains: ['kiem_tu'],
     collectModifiers: () => [],
   },
+  // P1 - ngu owns the Ngu Kiem Dao machinery: the Kiem Y -> Kiem Dao
+  // economy + realm merge, the provider-injected combat action, the
+  // emblem slots, and the 'ngu_kiem' node-tree tag.
+  capabilities: {
+    static: ['kiem_tu.ngu_kiem_dao'],
+  },
+  // P1-M2 - the provider-injected action plus the two emblem defs the
+  // combat slots carry (emblemOnly markers, never real casts).
+  ownedContent: {
+    skillIds: [NGU_KIEM_THUAT.id, TU_KIEM_Y_EMBLEM.id, KIEM_DAO_CASCADE_EMBLEM.id],
+  },
+  nodeTreeTag: 'ngu_kiem',
 }

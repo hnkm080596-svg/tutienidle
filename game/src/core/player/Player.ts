@@ -423,10 +423,16 @@ export function createDefaultPlayer(): PlayerData {
  * passes its mirror field; the battle ops pass the fresh static aggregation
  * (`GameManagerPersistentEffectOps.getBattleBaseModifiers`).
  */
-export function resolvePlayerFinalStats(
+/**
+ * P2 - the stat assembly in two parts: the resolved Stats plus the way-facet
+ * modifier emission that fed it (the canonical build needs the channel
+ * contents for attribution). resolvePlayerFinalStats delegates - one formula
+ * owner, no parallel derivation.
+ */
+export function resolvePlayerStatAssembly(
   player: PlayerData,
   externalModifiers: StatModifier[],
-): Stats {
+): { stats: Stats; wayFacetModifiers: readonly StatModifier[] } {
   const allModifiers = [
     ...player.modifiers,
     ...externalModifiers,
@@ -444,7 +450,17 @@ export function resolvePlayerFinalStats(
   const attributeTotals = resolveAttributeTotals(player.baseStats, allModifiers)
   const pathModifiers = collectActiveWayStatModifiers(player, attributeTotals)
 
-  return calculateStats(player.baseStats, [...allModifiers, ...pathModifiers])
+  return {
+    stats: calculateStats(player.baseStats, [...allModifiers, ...pathModifiers]),
+    wayFacetModifiers: pathModifiers,
+  }
+}
+
+export function resolvePlayerFinalStats(
+  player: PlayerData,
+  externalModifiers: StatModifier[],
+): Stats {
+  return resolvePlayerStatAssembly(player, externalModifiers).stats
 }
 
 /**

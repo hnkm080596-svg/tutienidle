@@ -13,13 +13,14 @@
 
 import { MAX_THE } from '@/core/combat/CombatTypes'
 import { PHAP_TU_EMPOWERMENT_THE_THRESHOLD } from '@/core/phap-tu/PhapTuRoutes'
-import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
-import { PHAP_TU_ULTIMATE_IDS } from '@/data/skill/PhapTuUltimates'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { GameManager } from '@/core/game/GameManager'
-import type { ElementType } from '@/core/element/ElementType'
 import type { PhapTuState } from '@/core/phap-tu/PhapTuState'
 import type { CultivationPathId, PathWayId } from '@/core/player/CultivationPathKit'
+import {
+  getActiveElement,
+  hasStaticPathCapability,
+} from '@/core/player/CultivationPathSystem'
 import {
   readOptionalGate,
   writeGate,
@@ -72,14 +73,16 @@ export function makeTheBarReader(
 
     const player = getPlayer()
 
-    // M4 (R6): the The pool is ngu_hanh machinery — the element check
-    // below already excludes a clean ngo_dao state, but the WAY is the
-    // durable gate for the collapsed ('phap_tu','ngo_dao') shape.
-    if (!isPhapTuNguHanh(player)) {
+    // M4 (R6): the The pool is ngu_hanh machinery - P1 - the declared
+    // 'phap_tu.the_pool' capability is the gate, durable for the
+    // collapsed ('phap_tu','ngo_dao') shape.
+    if (!hasStaticPathCapability(player, 'phap_tu.the_pool')) {
       return null
     }
 
-    const element: ElementType | null = player.phapTu?.element ?? null
+    // Canonical subpath read - the committed element under the owning
+    // way's axis (undefined for ngo_dao / uncommitted / corrupt pairs).
+    const element = getActiveElement(player)
 
     if (!element) {
       return null
@@ -97,9 +100,11 @@ export function makeTheBarReader(
     const max = battleEntity.maxThe ?? MAX_THE
 
     // Empowered = the phap-tuong unlock node for this element is owned;
-    // at threshold the ult consumes the whole pool (spec §3.3).
-    const godUltId = PHAP_TU_ULTIMATE_IDS[element]
-    const empowered = (player.nodeLevels?.[`linh_ngo_${godUltId}`] ?? 0) > 0
+    // at threshold the ult consumes the whole pool (spec section 3.3). P1 -
+    // node ownership surfaces as the 'phap_tu.empowered_ult' capability;
+    // the bridge reads it through the bound facade (SkillManager is not
+    // a bridge dependency).
+    const empowered = gameManager.hasPathCapability('phap_tu.empowered_ult')
 
     return { current, max, threshold: PHAP_TU_EMPOWERMENT_THE_THRESHOLD, empowered, label: 'Thế' }
   }

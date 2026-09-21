@@ -11,7 +11,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
-import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
+import { isActivePath } from '@/core/player/CultivationPathSystem'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getMainStatCap } from '@/core/stats/StatCap'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
@@ -29,9 +29,10 @@ const { allocateAttributePoint } = useLoadoutActions()
 // triggerBreakthroughAction() trong useTribulation.ts (commandWheelCatalog.ts
 // đã bỏ slot quan_khi). Chỉ hiện khi đã chọn Kiếm Tu (route switch chỉ có
 // ý nghĩa ở đó).
-// M9 — the entry is kiem-way machinery, gated by the module predicates
-// (fail closed on a way-less/corrupt pair), never a raw path id.
-const showQuanKhiEntry = computed(() => isKiemTuHien(player) || isKiemTuNgu(player))
+// M9 - the entry is kiem-way machinery. P1 - the generic authority read
+// resolves the committed pair through the catalog (fail closed on a
+// way-less/corrupt pair), never a raw path id.
+const showQuanKhiEntry = computed(() => isActivePath(player, 'kiem_tu'))
 
 function openQuanKhi() {
   ui.openStandalonePanel('quan_khi')

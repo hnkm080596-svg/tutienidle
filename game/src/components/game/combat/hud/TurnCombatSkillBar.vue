@@ -13,8 +13,7 @@ import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 import { useGameManager } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
-import { usePlayerStore } from '@/stores/player'
-import { isPhapTuNgoDao } from '@/core/phap-tu/PhapTuPath'
+
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
@@ -43,7 +42,6 @@ function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefin
 // (persist per-device), đồng bộ GameManager flag (plain class, không
 // import Pinia — UI layer gọi setter, cùng pattern battleRunMode).
 const ui = useUiStore()
-const player = usePlayerStore()
 const gameManager = useGameManager()
 const {
   isAwaitingChoice,
@@ -60,9 +58,11 @@ const {
 // emblem (spec §3.3 — "NOT a button"; its agency lives in the
 // multicast storm). The emblem tooltip explains basic-slot-only
 // multicast — the one place the rule surfaces in combat.
-// M4 (R6): the hidden way drives the emblem — the strict ('phap_tu',
-// 'ngo_dao') pair is the durable check.
-const isAnPath = computed(() => isPhapTuNgoDao(player))
+// M4 (R6): the hidden way drives the emblem. P1 - the emblem IS the
+// aura indicator: it renders exactly when the 'phap_tu.reaction_aura'
+// capability resolves (ngo_dao + the learned dao passive), via the
+// bound GameManager facade.
+const isAnPath = computed(() => gameManager.hasPathCapability('phap_tu.reaction_aura'))
 
 const anEmblemMeta = computed(() => turnSkillDisplayMetaOf('ngo_dao_hon_don'))
 

@@ -28,7 +28,7 @@ import type { PlayerData } from '../player/Player'
 import type { TechniqueManager } from '../technique/TechniqueManager'
 import { advanceArtifactRealmLevel } from '../artifact/ArtifactProgression'
 import { resolveExpectedArtifactId } from '../artifact/Artifact'
-import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
+import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import { getCurrentRealm } from '../realm/realmSystem'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
@@ -108,7 +108,7 @@ export class BreakthroughOutcomeService {
       // grantCultivationPathRealmReward's phap_tu branch by design.
       // M4 (R6): the ngu_hanh realm technique is way-owned — a collapsed
       // ('phap_tu','ngo_dao') player must not inherit it.
-      if (isPhapTuNguHanh(player) && player.realmId === 'foundation_establishment') {
+      if (hasStaticPathCapability(player, 'phap_tu.elemental_casting') && player.realmId === 'foundation_establishment') {
         const inheritedInsight = context.techniqueManager.getEquipped()?.insight ?? 0
         context.learnTechnique('dai_ngu_hanh_quyet_truc_co')
         const nextTechnique = context.techniqueManager.get('dai_ngu_hanh_quyet_truc_co')

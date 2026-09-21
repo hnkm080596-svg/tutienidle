@@ -1,4 +1,7 @@
 import type { Technique } from '../technique/Technique'
+import type { ElementType } from '../element/ElementType'
+import type { PhapTuRoute } from '../phap-tu/PhapTuState'
+import type { OrbId } from '../kiem-tu/KiemTuState'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import type { PlayerData } from './Player'
 import {
@@ -6,6 +9,10 @@ import {
   getActiveWayDefinition,
   isCultivationPathOffered,
   type CultivationPathId,
+  type PathCapability,
+  type PathCapabilityDeps,
+  type PathConditionalRead,
+  type PathSubpathAxis,
   type PathWayDefinition,
   type PathWayId,
   type PathWayRead,
@@ -26,11 +33,17 @@ export {
 
 // M8 — mid-battle domain delta derivers are MODULE-DECLARED on each
 // way's PathWayStatFacet (deltaDerivers); the framework registers them
-// generically from the catalog at load. The derivers see attribute
+// generically from the catalog. The derivers see attribute
 // deltas for entities whose activeDomains already resolved the way's
 // domain (resolveActiveWayStatDomains), never the base — INV-10 holds:
 // a stacked attribute buff cannot double-count the assembly emission,
 // and a foreign-domain delta never leaks stats cross-way.
+// P1 - registration is EAGER at module eval, same lifecycle as the
+// pre-P1 framework: the Kit -> SkillSystem edge that closed the
+// NodeSystem -> here -> Kit -> SkillSystem -> PhapTuRoutes ->
+// NodeSystem cycle is severed (the cast-leveling table lives in the
+// leaf core/skill/CastLeveling.ts), so the catalog is fully
+// initialized before this module body runs.
 for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
   for (const way of Object.values(pathModule.ways)) {
     for (const [domain, deriver] of Object.entries(way.stats?.deltaDerivers ?? {})) {
@@ -113,7 +126,7 @@ export function listOfferableWays(player: PlayerData): readonly PathWayOffer[] {
  * (path, way) pair — the read fails closed through the same catalog
  * resolution as getActiveWayDefinition.
  */
-export function getActivePath(player: PlayerData): CultivationPathId | undefined {
+export function getActivePath(player: PathWayRead): CultivationPathId | undefined {
   return getActiveWayDefinition(player)?.pathId
 }
 
@@ -122,8 +135,137 @@ export function getActivePath(player: PlayerData): CultivationPathId | undefined
  * cultivationWay is authoritative; a way-less save is corrupt post-M7
  * and resolves nothing.
  */
-export function getActiveWay(player: PlayerData): PathWayId | undefined {
+export function getActiveWay(player: PathWayRead): PathWayId | undefined {
   return getActiveWayDefinition(player)?.id
+}
+
+/**
+ * P1 - generic identity membership reads for consumers that need "is the
+ * player on this path/way" without importing a concrete module predicate.
+ * Both resolve through the catalog (fail closed on a corrupt pair), so a
+ * way id the module does not own can never satisfy the check. The literal
+ * comparison lives HERE inside the authority - callers pass the id they
+ * need, keeping concrete-literal branches out of generic code.
+ */
+export function isActivePath(player: PathWayRead, path: CultivationPathId): boolean {
+  return getActiveWayDefinition(player)?.pathId === path
+}
+
+export function isActiveWay(player: PathWayRead, way: PathWayId): boolean {
+  return getActiveWayDefinition(player)?.id === way
+}
+
+/**
+ * P1 - the resolved capability set for the player's committed pair. Static
+ * capabilities come straight from the way definition; conditional ones run
+ * their module-owned predicate against the narrow read shape + injected
+ * deps (skill membership lives in SkillManager, not PlayerData). A mortal
+ * player, a way-less pair, or a mismatched pair resolves the empty set -
+ * fail closed, same as getActiveWayDefinition.
+ */
+/**
+ * THE capability derivation - the single resolver every capability check
+ * funnels through (pair -> active way -> declared facet -> resolved set).
+ * mode 'static' answers from the declared static list only: conditional
+ * predicates never run, so a conditional cap fails closed for callers
+ * that cannot supply PathCapabilityDeps (deps is ignored in that mode).
+ */
+export function resolvePathCapabilities(
+  player: PathConditionalRead,
+  deps: PathCapabilityDeps,
+  mode: 'all' | 'static' = 'all',
+): ReadonlySet<PathCapability> {
+  const facet = getActiveWayDefinition(player)?.capabilities
+
+  if (!facet) {
+    return new Set()
+  }
+
+  const caps = new Set<PathCapability>(facet.static ?? [])
+
+  if (mode === 'static') {
+    return caps
+  }
+
+  for (const [cap, predicate] of Object.entries(facet.conditional ?? {})) {
+    if (predicate?.(player, deps)) {
+      caps.add(cap as PathCapability)
+    }
+  }
+
+  return caps
+}
+
+/**
+ * Full capability check - the canonical consumer read for any capability
+ * that may be conditional. Presentation bridges reach this through the
+ * bound GameManager facade (deps + activePlayer pre-bound).
+ */
+export function hasPathCapability(
+  player: PathConditionalRead,
+  capability: PathCapability,
+  deps: PathCapabilityDeps,
+): boolean {
+  return resolvePathCapabilities(player, deps).has(capability)
+}
+
+// Static-mode resolution never consults deps - a fixed empty surface keeps
+// the signature honest without fabricating skill membership.
+const NO_CAPABILITY_DEPS: PathCapabilityDeps = { hasSkill: () => false }
+
+/**
+ * Deps-free capability check - the SAME resolver in 'static' mode, on the
+ * narrow PathWayRead pair shape (the bridge/kit-readable subset). A
+ * conditional capability returns false here: the static read cannot prove
+ * it, and failing closed is the honest answer - use hasPathCapability (or
+ * the facade) for conditional caps.
+ */
+export function hasStaticPathCapability(player: PathWayRead, capability: PathCapability): boolean {
+  return resolvePathCapabilities(player, NO_CAPABILITY_DEPS, 'static').has(capability)
+}
+
+// ---------------------------------------------------------------------------
+// P1-M3 - canonical subpath reads. Each in-way branch axis is declared on
+// the owning way as DATA-ONLY metadata (subpaths.{axis} = { state,
+// requiresCapability }); the concrete reads live HERE in the authority -
+// way definitions carry no executable callbacks (spec section 8.1).
+// Resolution gates on the axis's requiresCapability (a static capability
+// the same way declares) and fails closed on absent axes, absent slices,
+// and corrupt pairs. State ownership stays where it already is (phapTu
+// slice, kiemTu slice, nodeLevels) - these reads expose it, never write.
+// ---------------------------------------------------------------------------
+
+function subpathAxisResolves(player: PathWayRead, axis: PathSubpathAxis | undefined): boolean {
+  return (
+    axis !== undefined &&
+    (axis.requiresCapability === undefined ||
+      hasStaticPathCapability(player, axis.requiresCapability))
+  )
+}
+
+/** The committed element - ngu_hanh only; undefined for any other way. */
+export function getActiveElement(player: PathConditionalRead): ElementType | undefined {
+  if (!subpathAxisResolves(player, getActiveWayDefinition(player)?.subpaths?.element)) {
+    return undefined
+  }
+  return player.phapTu?.element ?? undefined
+}
+
+/** The committed route - ngu_hanh only; undefined for any other way. */
+export function getActiveRoute(player: PathConditionalRead): PhapTuRoute | undefined {
+  if (!subpathAxisResolves(player, getActiveWayDefinition(player)?.subpaths?.route)) {
+    return undefined
+  }
+  return player.phapTu?.route ?? undefined
+}
+
+/** The persisted Kiem Pho preset - kiem_tu hien only (defensive copy). */
+export function getKiemTuPreset(player: PathConditionalRead): readonly OrbId[] | undefined {
+  if (!subpathAxisResolves(player, getActiveWayDefinition(player)?.subpaths?.preset)) {
+    return undefined
+  }
+  const preset = player.kiemTu?.preset
+  return preset === undefined ? undefined : [...preset]
 }
 
 /**

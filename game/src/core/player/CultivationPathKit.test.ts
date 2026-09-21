@@ -125,12 +125,12 @@ describe('way definitions — authored content carried over from kits', () => {
     expect(way?.element).toBe('metal')
   })
 
-  it('the_tu ung_the carries the an kit: ung_the_than_quyet, huy_quyen gate, the resource flag', () => {
+  it('the_tu ung_the carries the an kit: ung_the_than_quyet, huy_quyen gate, the economy capability', () => {
     const way = CULTIVATION_PATH_MODULES.the_tu.ways.ung_the
 
     expect(way?.techniqueId).toBe('ung_the_than_quyet')
     expect(way?.offerGate).toEqual({ requiresSkillLevel: { skillId: 'huy_quyen', level: 3 } })
-    expect(way?.usesTheResource).toBe(true)
+    expect(way?.capabilities?.static).toContain('the_tu.the_economy')
   })
 })
 

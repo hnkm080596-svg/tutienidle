@@ -129,7 +129,7 @@ export class BattleLootSystem {
   private summary: BattleRewardSummary = createEmptyBattleRewardSummary()
 
   // Receiver để phát thưởng khi battle hiện tại kết thúc thắng —
-  // xem setSessionReceiver() và processDefeatedEnemies().
+ // xem setSessionReceiver() v- processDefeatedEnemies().
   private receiver: RewardReceiver | null = null
 
   // PlayerData của trận đang diễn ra — cần cho việc roll equipment
@@ -140,13 +140,26 @@ export class BattleLootSystem {
   // qua setChannel() rồi khôi phục sau mỗi cycle (Task 9 wiring).
   private channel: DropChannel = 'active'
 
+  /**
+  * P6 - loot/drop RNG seam. Economy randomness deliberately stays off
+   * the BATTLE rng (a seeded battle must not pin drops), but deterministic
+   * sessions still need replayable reward settlement: a session injects
+   * its own seeded stream here. Lazy Math.random default keeps test
+   * spies intercepting and production behavior unchanged.
+   */
+  private lootRng: () => number = () => Math.random()
+
+  setLootRng(rng: (() => number) | undefined): void {
+    this.lootRng = rng ?? (() => Math.random())
+  }
+
   constructor(private readonly deps: BattleLootSystemDeps) {}
 
   setChannel(channel: DropChannel) {
     this.channel = channel
   }
 
-  // Reset mỗi khi 1 TRẬN MỚI bắt đầu (startBattle) — xoá cả session.
+ // Reset m-i khi 1 TR-N M-I b-t --u (startBattle) - xo- c- session.
   beginBattle() {
     this.receiver = null
     this.player = null
@@ -233,6 +246,7 @@ export class BattleLootSystem {
               isElite: battleEnemy.entity.isElite === true,
             }),
             channel: this.channel,
+            rng: () => this.lootRng(),
           })
 
           // Thiên phú Tụ Bảo — nhân Linh Thạch TRƯỚC khi giveReward để

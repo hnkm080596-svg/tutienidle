@@ -208,6 +208,48 @@ async function saveAndRead(page: import('@playwright/test').Page): Promise<SaveS
   return save!
 }
 
+/**
+ * P1-M7 - starts a stage-1 battle through the real UI (command wheel ->
+ * teleport array -> stage select) and returns once the TurnBattle object
+ * exists in GameManager. Entry-phase state (build buffs, provider attach)
+ * is already live at that point - no need to wait for the fighting phase.
+ */
+async function startStageOneBattle(page: import('@playwright/test').Page): Promise<void> {
+  // Tab toggles the command wheel - press it only when the wheel is
+  // closed, or a second press would close it mid-flow (the caller may
+  // have left the wheel open from a prior wheel-slot assertion).
+  const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
+  if (!(await teleportSlot.isVisible().catch(() => false))) {
+    await page.keyboard.press('Tab')
+  }
+  await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
+  await teleportSlot.click()
+
+  const overlay = page.getByTestId('function-overlay-panel')
+  await expect(overlay).toBeVisible({ timeout: 10_000 })
+
+  const startButton = page.getByTestId('stage-start-button')
+  await expect(startButton).toBeEnabled({ timeout: 10_000 })
+  await startButton.click()
+
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const game = (window as Window & {
+            __tutienPhaserGame?: { registry: { get(key: string): unknown } }
+          }).__tutienPhaserGame
+          const manager = game?.registry.get('gameManager') as
+            | { getTurnBattle(): unknown }
+            | undefined
+
+          return manager?.getTurnBattle() !== null && manager?.getTurnBattle() !== undefined
+        }),
+      { timeout: 30_000, message: 'TurnBattle should exist shortly after stage start' },
+    )
+    .toBe(true)
+}
+
 /** Reopens the QuanKhiPanel via CharacterPanel's Kiếm Tu-only entry. */
 async function reopenQuanKhiViaCharacter(page: import('@playwright/test').Page): Promise<void> {
   await page.keyboard.press('Tab')
@@ -279,6 +321,35 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     await expect(
       page.locator('.quan-khi-panel__preset-slot:not(.quan-khi-panel__preset-slot--empty)'),
     ).toHaveCount(slotsBefore + 1)
+
+    // P1-M7 - combat assertion: the hien way attaches its Kiem Pho
+    // provider as the participant's dynamic basic at battle build (the
+    // matcher the kiem bar bridge reads). snapshot() + preset array is
+    // the provider-handle shape (isKiemPhoProviderHandle); its presence
+    // proves the way's combat machinery wired through the canonical seam.
+    await startStageOneBattle(page)
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const game = (window as Window & {
+              __tutienPhaserGame?: { registry: { get(key: string): unknown } }
+            }).__tutienPhaserGame
+            const manager = game?.registry.get('gameManager') as
+              | {
+                  getTurnBattle(): {
+                    players: { dynamicBasic?: { snapshot?: () => { preset?: unknown } } }[]
+                  } | null
+                }
+              | undefined
+            const provider = manager?.getTurnBattle()?.players?.[0]?.dynamicBasic
+            const preset = provider?.snapshot?.().preset
+
+            return typeof provider?.snapshot === 'function' && Array.isArray(preset)
+          }),
+        { timeout: 30_000, message: 'kiem hien KiemPho provider should be attached on players[0]' },
+      )
+      .toBe(true)
 
     assertNoBrowserErrors(collected)
   })
@@ -437,6 +508,42 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     const artifactSlot = page.locator('[data-wheel-slot="phap_bao"]')
     await expect(artifactSlot).toBeVisible({ timeout: 10_000 })
     await expect(artifactSlot).toHaveAttribute('aria-disabled', 'true')
+
+    // P1-M7 - combat assertion: entering battle grants van_phap_than_hoa
+    // to the An entity through the runtime-owned seam
+    // (grantsElementalReactionAura -> 'phap_tu.reaction_aura' capability,
+    // gated on the learned ngo_dao_hon_don passive the ritual granted).
+    // getBattleBuffs is the read-only live-buff query the combat UI uses.
+    await startStageOneBattle(page)
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const game = (window as Window & {
+              __tutienPhaserGame?: { registry: { get(key: string): unknown } }
+            }).__tutienPhaserGame
+            const manager = game?.registry.get('gameManager') as
+              | {
+                  getTurnBattle(): { players: { entity: { id: string } }[] } | null
+                  turnBattleOps: {
+                    getBattleBuffs(entityId: string): readonly { definitionId: string }[]
+                  }
+                }
+              | undefined
+            const battle = manager?.getTurnBattle()
+            const entityId = battle?.players?.[0]?.entity?.id
+
+            if (entityId === undefined) {
+              return false
+            }
+
+            return (manager?.turnBattleOps?.getBattleBuffs?.(entityId) ?? []).some(
+              (buff) => buff.definitionId === 'van_phap_than_hoa',
+            )
+          }),
+        { timeout: 30_000, message: 'ngo_dao reaction aura should be granted on the An entity at battle entry' },
+      )
+      .toBe(true)
 
     assertNoBrowserErrors(collected)
   })

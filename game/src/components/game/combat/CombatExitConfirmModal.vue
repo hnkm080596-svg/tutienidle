@@ -82,6 +82,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* The parent .combat-scene-overlay is pointer-events:none - without
+     this re-enable the confirm/cancel buttons were unclickable (P3 E2E
+     finding: Playwright hit-test showed canvas intercepting every
+     click). */
+  pointer-events: auto;
   background: color-mix(in srgb, var(--ink-950) 70%, transparent);
 }
 

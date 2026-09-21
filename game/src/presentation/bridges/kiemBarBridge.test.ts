@@ -139,7 +139,7 @@ describe('makeKiemBarReader — hien (Kiem Pho) mapping', () => {
 })
 
 describe('makeKiemBarReader — Thể Tu resource bar (Task 22)', () => {
-  it('ung_the way (kit usesTheResource) → {currentThe, maxThe ?? MAX_THE, "Thế"}', () => {
+  it('ung_the way (the_tu.the_economy capability) → {currentThe, maxThe ?? MAX_THE, "Thế"}', () => {
     const reader = makeReader(
       fakeBattle('fighting', undefined, { currentThe: 45, stats: { maxHp: 400 } }),
       { realmId: 'golden_core', cultivationPath: 'the_tu', cultivationWay: 'ung_the' },

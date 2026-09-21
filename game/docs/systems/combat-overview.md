@@ -82,9 +82,42 @@ Contract layer cho combat (spec `.superpowers/sdd/2026-09-17-combat-systems-cont
 
 Các sibling plan (skill / reaction / buff megaplan, seal batch) sẽ produce + consume trên layer này.
 
+## Vòng đời battle & teardown (P3 — verified)
+
+Loop canonical một trận stage (đã chứng minh end-to-end qua
+`GameManager.battleTeardown.test.ts`, `GameManager.verticalSlice.test.ts`,
+`tests/e2e/combat-vertical-slice.spec.ts`):
+
+`startStage` → `beginBattleCycleCommitted` → `resolveCombatBuild` (P2) →
+`mintCycleScheduler` + `new TurnBattleSystem` → intro/spawn → fighting →
+terminal (`settleCombatOutcome`) → reward → replay/return.
+
+Teardown invariants (mỗi path kết thúc battle phải giữ):
+
+- Mỗi cycle mint mới: `battleBuffRegistry`, elemental boards, scheduler,
+  `turnRuntime`, `turnBattleSystem` — battle-1 transient (seal/debuff)
+  không bao giờ xuất hiện trên battle-2; entry buffs (aura) được re-grant
+  mới mỗi trận.
+- `battle_end` emit đúng một lần per ended battle (once-guard trong
+  `rewardOps`); runtime subscription của cycle cũ chết cùng battle —
+  battle-2 event không chạm handler battle-1.
+- Terminal `turnBattle` được GIỮ cho result reads — query "đang đánh"
+  là `turnBattleOps.isTurnBattleInProgress()`, không phải
+  `getTurnBattle() !== null`.
+- Abandon (`exitCombatToHome({abandon:true})`) route THẲNG về home dưới
+  curtain — defeat panel chỉ là mặt của natural/engine defeat, không
+  phải của abandon.
+- Failed cycle (`discardFailedCycle`): drop nửa battle, không phát
+  battle_end, giải phóng lease + enemy + survive session + clock.
+
+E2E oracle phát hiện defect thật trong P3: `CombatExitConfirmModal` thiếu
+`pointer-events:auto` (parent overlay là `none`) — nút Xác Nhận/Ở Lại
+không click được trên production cho tới khi sửa.
+
 ## Liên quan
 
 - [damage-pipeline.md](./damage-pipeline.md) — damage resolve chi tiết.
+- [../architecture/2026-09-22-combat-vertical-slice-inventory.md](../architecture/2026-09-22-combat-vertical-slice-inventory.md) — census 14 bước + leak surfaces + audit outcome.
 - [buffs.md](./buffs.md), [skills.md](./skills.md), [elements-reactions.md](./elements-reactions.md).
 - [enemies-stages.md](./enemies-stages.md) — stage/wave/boss data.
 - [drops-loot.md](./drops-loot.md) — loot khi enemy chết.

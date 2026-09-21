@@ -6,6 +6,8 @@ import { describe, expect, it } from 'vitest'
 import { MAX_THE } from '@/core/combat/CombatTypes'
 import { PHAP_TU_EMPOWERMENT_THE_THRESHOLD } from '@/core/phap-tu/PhapTuRoutes'
 import { PHAP_TU_ULTIMATE_IDS } from '@/data/skill/PhapTuUltimates'
+import { hasPathCapability } from '@/core/player/CultivationPathSystem'
+import type { PathCapability } from '@/core/player/CultivationPathKit'
 import type { TurnBattle, TurnBattleState } from '@/core/battle/turn/TurnBattleSystem'
 import type { GameManager } from '@/core/game/GameManager'
 import {
@@ -34,7 +36,13 @@ function phapTuPlayer(overrides: Partial<TheBarPlayerState> = {}): TheBarPlayerS
 }
 
 function makeReader(battle: TurnBattle | null, player: TheBarPlayerState) {
-  const gameManager = { getTurnBattle: () => battle } as unknown as GameManager
+  // P1 - the bridge reads conditional capabilities through the bound
+  // facade; the fake binds the REAL resolver to the same player state.
+  const gameManager = {
+    getTurnBattle: () => battle,
+    hasPathCapability: (cap: PathCapability) =>
+      hasPathCapability(player, cap, { hasSkill: () => false }),
+  } as unknown as GameManager
 
   return makeTheBarReader(gameManager, () => player)
 }

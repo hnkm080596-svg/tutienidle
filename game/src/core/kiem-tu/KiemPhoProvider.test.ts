@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildKiemPhoProvider } from './KiemPhoProvider'
+import { buildKiemPhoProvider, reachableKiemPhoComboIds } from './KiemPhoProvider'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import type { OrbId } from './KiemTuState'
 import type { KiemPhoComboModifier } from './KiemPhoSystem'
@@ -124,5 +124,20 @@ describe('KiemPhoProvider', () => {
     const provider = buildKiemPhoProvider(hienPlayer(['orb_dam']), [])
     expect(provider.onCastResolved!(castCtx('ngu_kiem_thuat'))).toEqual([])
     expect(provider.onCastResolved!(castCtx('orb_dam'))).toEqual([]) // log has 1, not 2
+  })
+
+  it('reachableKiemPhoComboIds filters patterns to realm-unlocked orbs', () => {
+    // qi_refining unlocks orb_dam only -> tam_thich [D,D,D] is the sole
+    // reachable combo; every pattern needing chem/bo/hat/quet is out.
+    expect(reachableKiemPhoComboIds('qi_refining')).toEqual(['tam_thich'])
+
+    // foundation_establishment adds orb_chem -> pure C and C/D mixed
+    // patterns become reachable, B/H/Q patterns stay out.
+    const fe = reachableKiemPhoComboIds('foundation_establishment')
+    expect(fe).toContain('tam_tram')
+    expect(fe).toContain('nhi_thich_nhat_tram')
+    expect(fe).toContain('tram_thich_tram')
+    expect(fe).not.toContain('tam_phach')
+    expect(fe).not.toContain('nhi_lieu_nhat_thich')
   })
 })

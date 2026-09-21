@@ -144,9 +144,18 @@ import {
   resolveRouteProfile,
   type RouteProfile,
 } from '../phap-tu/PhapTuRoutes'
-import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
+import {
+  getActiveElement,
+  getActiveRoute,
+  hasPathCapability,
+  hasStaticPathCapability,
+  resolvePathCapabilities,
+} from '../player/CultivationPathSystem'
+import { resolveCombatBuild } from './CombatBuild'
+import { COMPANIONS } from '../../data/companion/Companions'
+import type { PathCapability, PathCapabilityDeps } from '../player/CultivationPathKit'
 
 
 
@@ -476,11 +485,12 @@ export class GameManager {
     this.routeProfileProvider = (skillId) => {
       const player = this.activePlayer
 
-      if (player === undefined || !isPhapTuNguHanh(player)) {
+      // P1 - the gate is the declared capability, not the way predicate.
+      if (player === undefined || !hasStaticPathCapability(player, 'phap_tu.elemental_casting')) {
         return NEUTRAL_ROUTE_PROFILE
       }
 
-      const element = player.phapTu.element
+      const element = getActiveElement(player)
 
       if (
         !element ||
@@ -490,7 +500,13 @@ export class GameManager {
         return NEUTRAL_ROUTE_PROFILE
       }
 
-      return resolveRouteProfile(player.phapTu)
+      const route = getActiveRoute(player)
+
+      if (!route) {
+        return NEUTRAL_ROUTE_PROFILE
+      }
+
+      return resolveRouteProfile({ element, route })
     }
 
     this.skillSystem.setRouteProfileProvider(this.routeProfileProvider)
@@ -747,14 +763,27 @@ export class GameManager {
       surviveLethalGuard: this.surviveLethalGuard,
       sessionAllocator: this.sessionAllocator,
       getActivePlayer: () => this.activePlayer,
-      getSkillLevels: () =>
-        Object.fromEntries(this.skillManager.getAll().map((skill) => [skill.id, skill.level])),
       resetPassiveStacks: () => this.passiveSystem.resetStacks(),
-      // ARCH-002 (M7) — battle base resolves HERE, post-reset, from the
-      // static partition only; the live partition reaches entity.stats via
-      // the engine's provider at every refresh.
-      resolvePlayerStats: (player) =>
-        resolvePlayerFinalStats(player, this.effectOps.getBattleBaseModifiers(player)),
+      // P2 - the canonical build resolver; GameManager binds the
+      // CombatBuildDeps (stat channels, capabilities, registries). Ops
+      // passes the source/runtime/override; the resolver composes the
+      // rest. Called inside the post-reset window (ARCH-002 M7): the
+      // static partition bakes baseStats, the live partition reaches
+      // entity.stats via build.liveModifiers at every refresh.
+      resolveCombatBuild: (source, runtime, primaryEntityOverride) =>
+        resolveCombatBuild(source, runtime, {
+          getBattleBaseChannels: (player) => this.effectOps.getBattleBaseChannels(player),
+          resolveCapabilities: (player) =>
+            resolvePathCapabilities(player, {
+              hasSkill: (skillId) => this.skillManager.has(skillId),
+            }),
+          getSkillLevels: () =>
+            Object.fromEntries(this.skillManager.getAll().map((skill) => [skill.id, skill.level])),
+          getProgressionNodes: () => this.nodeRegistry.getAll(),
+          getCompanionDefinition: (id) => COMPANIONS.find((candidate) => candidate.id === id),
+          getLiveBattleModifiers: (player) => this.effectOps.getLiveBattleModifiers(player),
+          getActivePlayer: () => this.activePlayer,
+        }, primaryEntityOverride),
       getLiveBattleModifiers: (player) => this.effectOps.getLiveBattleModifiers(player),
       bankPassiveCarry: (player) => this.passiveSystem.bankBattleCarryStacks(player),
       seedPassiveCarry: (player) => this.passiveSystem.seedBattleCarryStacks(player),
@@ -773,7 +802,6 @@ export class GameManager {
           routeProfileProvider: this.routeProfileProvider,
         }),
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
-      getProgressionNodes: () => this.nodeRegistry.getAll(),
     })
 
     // Tick orchestration (C3 split) - constructed LAST because it reads
@@ -833,6 +861,13 @@ export class GameManager {
    * by the SkillSystem provider and the post-conversion seam below. */
   private routeProfileProvider!: (skillId: string) => RouteProfile
 
+  // P1 - stable dep binding for the path-capability facade: learned-skill
+  // membership lives in SkillManager, not PlayerData, so conditional
+  // capabilities consume it through this injected predicate.
+  private readonly pathCapabilityDeps: PathCapabilityDeps = {
+    hasSkill: (skillId) => this.skillManager.has(skillId),
+  }
+
   /**
    * App.vue đăng ký player sau boot/load — update() dùng để tick expiry
    * timed effect theo Date.now().
@@ -847,6 +882,21 @@ export class GameManager {
     // talent combat ngay khi active player d?i (load save / restore /
     // sau L? Nh?p Mï¿½n t?o nhï¿½n v?t).
     this.progressionOps.syncTalentCombatPassive(player)
+  }
+
+  /**
+   * P1 - bound path-capability facade for presentation/feature consumers:
+   * resolves the ACTIVE player's capability set with skill membership
+   * already bound (skillManager.has). Bridges/panels call this instead of
+   * carrying PathCapabilityDeps themselves. False when no player is
+   * active - fail closed, same as the resolver.
+   */
+  hasPathCapability(capability: PathCapability): boolean {
+    const player = this.activePlayer
+    if (player === undefined) {
+      return false
+    }
+    return hasPathCapability(player, capability, this.pathCapabilityDeps)
   }
 
   // =========================
@@ -918,6 +968,16 @@ export class GameManager {
    */
   setBattleRngFactory(factory: (() => CombatRng) | undefined): void {
     this.turnBattleOps.setBattleRngFactory(factory)
+  }
+
+  /**
+   * P6 — seed the LOOT/economy drop rolls (resolveDrops per-kill lane).
+   * Deliberately a separate stream from setBattleRngFactory: a seeded
+   * battle must not pin drops, but deterministic sessions still need
+   * replayable reward settlement. `undefined` restores Math.random.
+   */
+  setLootRng(rng: (() => number) | undefined): void {
+    this.battleLoot.setLootRng(rng)
   }
 
   /**

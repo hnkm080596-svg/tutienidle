@@ -1,12 +1,11 @@
 import type { PlayerData } from '../player/Player'
 import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } from './ProgressionNode'
-import { isPhapTuNguHanh } from '../phap-tu/PhapTuPath'
+import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 
 import type { PhapTuRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
 import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
-import { isKiemTuNgu } from '../kiem-tu/KiemTuPath'
 
 /**
  * Node level hạ tầng dùng chung (combat-skill-flow-element-power-dot-plan.md
@@ -99,7 +98,7 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
       const state = player.kiemTu
       const realmIndex = getRealmIndex(player.realmId)
 
-      if (!state || !isKiemTuNgu(player) || realmIndex < 1) {
+      if (!state || !hasStaticPathCapability(player, 'kiem_tu.ngu_kiem_dao') || realmIndex < 1) {
         return false
       }
 
@@ -504,7 +503,7 @@ export function switchRoute(
   // null-check invariant; a non-phap_tu player's dirty route state would
   // also leak universal route stats via getRouteStatModifiers.
   if (
-    !isPhapTuNguHanh(player) ||
+    !hasStaticPathCapability(player, 'phap_tu.elemental_casting') ||
     player.phapTu.element === null ||
     oldRoute === null ||
     oldRoute === route
@@ -591,7 +590,7 @@ export function previewRouteSwitch(
   // Same gate as switchRoute (HIGH-2) — never preview a switch the
   // domain would reject.
   if (
-    !isPhapTuNguHanh(player) ||
+    !hasStaticPathCapability(player, 'phap_tu.elemental_casting') ||
     player.phapTu.element === null ||
     oldRoute === null
   ) {

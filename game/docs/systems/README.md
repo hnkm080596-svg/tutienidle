@@ -34,6 +34,8 @@ Nhãn trạng thái dùng xuyên suốt:
 ### Chiến đấu
 
 - [combat-overview.md](./combat-overview.md) — turn battle engine, phase, wave, ATB
+- [combat-build.md](./combat-build.md) — ResolvedCombatBuild, canonical build composition (P2)
+- [combat-simulation.md](./combat-simulation.md) — BattleSimulation, deterministic headless battle harness + metrics + balance matrix (P4/P5)
 - [damage-pipeline.md](./damage-pipeline.md) — resolveHit, armor/resistance/ward/endurance, crit
 - [stats.md](./stats.md) — StatType, StatModifier, StatCalculator
 - [skills.md](./skills.md) — skill system, cast count, execution policy

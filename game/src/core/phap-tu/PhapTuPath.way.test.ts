@@ -4,8 +4,10 @@ import { GameManager } from '../game/GameManager'
 import { createDefaultPlayer, resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 import {
   collectActiveWayStatModifiers,
+  hasPathCapability,
   PHAP_TU_ATTUNEMENT_MAX_MP_PER_POINT,
 } from '../player/CultivationPathSystem'
+import type { PathCapability } from '../player/CultivationPathKit'
 import {
   aggregateNodeStatModifiers,
   canPurchaseNode,
@@ -242,7 +244,14 @@ describe('the bar bridge — ngu_hanh way gate', () => {
   }
 
   it('ngu_hanh + committed element + fighting -> snapshot; ngo_dao (both shapes) -> null', () => {
-    const gameManager = { getTurnBattle: () => fightingBattle() } as unknown as GameManager
+    // P1 - the bridge consults the bound capability facade; bind the real
+    // resolver to the same player the reader sees.
+    let barState = barPlayer()
+    const gameManager = {
+      getTurnBattle: () => fightingBattle(),
+      hasPathCapability: (cap: PathCapability) =>
+        hasPathCapability(barState, cap, { hasSkill: () => false }),
+    } as unknown as GameManager
 
     const nguReader = makeTheBarReader(gameManager, () => barPlayer())
     expect(nguReader()?.current).toBe(40)
@@ -251,7 +260,8 @@ describe('the bar bridge — ngu_hanh way gate', () => {
       { cultivationPath: 'phap_tu', cultivationWay: 'ngo_dao' },
       { cultivationPath: 'the_tu', cultivationWay: 'ung_the' },
     ]) {
-      const reader = makeTheBarReader(gameManager, () => barPlayer(shape))
+      barState = barPlayer(shape)
+      const reader = makeTheBarReader(gameManager, () => barState)
       expect(reader(), JSON.stringify(shape)).toBeNull()
     }
   })

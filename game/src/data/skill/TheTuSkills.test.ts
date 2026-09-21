@@ -38,11 +38,13 @@ describe('the_tu kit data', () => {
     expect(CUONG_QUYEN.damage?.missingHpBonusCap).toBe(2.0)
   })
 
-  it('loan_dau — physical x2 special, cooldown 4, same scalar, NO self-cost', () => {
+  it('loan_dau — physical x2 special, cooldown 5, same scalar, NO self-cost', () => {
     expect(LOAN_DAU.damage?.multiplier).toBe(2)
     expect(LOAN_DAU.damage?.missingHpBonusPerMissingPercent).toBe(0.02)
     expect(LOAN_DAU.damage?.missingHpBonusCap).toBe(2.0)
-    expect(LOAN_DAU.cooldownTurns).toBe(4)
+    // P5 tuning: 4 -> 5 so the single-target weakness is strict
+    // (previously hidden inside the comparator eps tie-band).
+    expect(LOAN_DAU.cooldownTurns).toBe(5)
     expect(LOAN_DAU.resourceType === undefined || LOAN_DAU.resourceType === 'none').toBe(true)
     expect(LOAN_DAU.resourceCost ?? 0).toBe(0)
   })

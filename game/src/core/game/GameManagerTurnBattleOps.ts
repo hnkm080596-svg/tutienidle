@@ -1,7 +1,6 @@
 import type { SessionRef } from '../presentation/PresentationSession'
 import { isBattleInProgress } from '../battle/BattleTypes'
 import { BATTLE_CYCLE_POLICIES, type BattleCyclePolicy } from '../battle/BattleCyclePolicy'
-import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import {
@@ -64,7 +63,7 @@ import type {
   ReactionResolvedEvent,
   ReactionSkippedEvent,
 } from '../battle/contracts/events'
-import type { TurnSkillDefinition, ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
+import type { ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import { consumeResourceFor } from '../battle/turn/TurnSkillAction'
 import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
 import {
@@ -74,25 +73,18 @@ import {
 import { enemyToCombatEntity } from '../enemy/Enemy'
 import type { Enemy } from '../enemy/Enemy'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { SurviveLethalSource } from '../combat/CombatSystem'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 import { effectiveWaves } from '../stage/EffectiveWaves'
 import type { Stage } from '../stage/Stage'
 
 import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
-import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../data/buff/buffs'
 import type { FormationLoadout, PlayerData } from '../player/Player'
-import { playerToCombatEntity } from '../player/Player'
-import type { Stats } from '../stats/StatBlock'
 import type { StatModifier } from '../stats/StatCalculator'
-import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
-import { commitFormationLoadout, resolvePartyFormation } from './FormationPlacement'
+import { commitFormationLoadout } from './FormationPlacement'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
-import { companionToCombatEntity } from '../companion/CompanionCombat'
-import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
-import { COMPANIONS } from '../../data/companion/Companions'
+import { bindLiveModifiersProvider, type ResolvedCombatBuild } from './CombatBuild'
 import type { EventBus } from '../events/EventBus'
 import type { BattleLootSystem } from './BattleLootSystem'
 import type { StageWaveSystem } from './StageWaveSystem'
@@ -153,6 +145,11 @@ import { GameManagerAutoFarmOps } from './GameManagerAutoFarmOps'
 export class GameManagerTurnBattleOps {
   private turnBattleSystem: TurnBattleSystem
   private turnBattle: TurnBattle | null = null
+
+  // P2 - the canonical resolved build for the ACTIVE cycle. Set inside
+  // beginBattleCycleCommitted's post-reset window; cleared by
+  // clearCycleEntryState (which also covers discardFailedCycle/abandon).
+  private activeBuild: ResolvedCombatBuild | undefined
 
   /** Template of the most recently spawned stage enemy (spawn factory fallback). */
   private lastStageEnemyTemplate: Enemy | null = null
@@ -229,15 +226,16 @@ export class GameManagerTurnBattleOps {
    * aggregation owner live, so mid-battle stack/expiry changes fold at
    * the next effective-stat refresh.
    */
-  private readonly liveStatModifiers = (entity: CombatEntity): StatModifier[] => {
-    if (entity.id !== 'player') {
-      return []
-    }
-
-    const player = this.deps.getActivePlayer()
-
-    return player ? this.deps.getLiveBattleModifiers(player) : []
-  }
+  /**
+   * ARCH-002 (M7) -- the live-modifier provider for the bootstrap engine.
+   * The real per-cycle provider is build.liveModifiers (CombatBuild
+   * canonical binding); this bootstrap instance is replaced by the minted
+   * engine before any combat step. Both ride the same factory so the
+   * literal 'player' gate + live getActivePlayer read stay single-sourced.
+   * Assigned in the ctor - the deps parameter property is not visible to
+   * field initializers.
+   */
+  private readonly liveStatModifiers: (entity: CombatEntity) => StatModifier[]
 
   /** Completion callbacks for the steps currently parked on a renderer signal. */
   private pendingStepDone: Partial<Record<TurnStepSignal, () => void>> = {}
@@ -268,15 +266,17 @@ export class GameManagerTurnBattleOps {
     // Live player/registry reads - GameManager owns these authorities; the
     // ops only reads through accessors (A3: no duplicate state ownership).
     getActivePlayer: () => PlayerData | undefined
-    // SkillManager level snapshot for playerToCombatEntity (owned by GameManager).
-    getSkillLevels: () => Record<string, number>
     // PassiveSystem owns per-battle passive stacks; ops requests the reset.
     resetPassiveStacks: () => void
-    // ARCH-002 (M7) -- resolved-base authority for the battle snapshot:
-    // GameManager wires resolvePlayerFinalStats(player,
-    // effectOps.getBattleBaseModifiers(player)). Called INSIDE the
-    // post-reset window so ephemeral stacks can never bake into baseStats.
-    resolvePlayerStats: (player: PlayerData) => Stats
+    // P2 -- the canonical build resolver (CombatBuild.ts). GameManager
+    // binds the CombatBuildDeps; ops passes the build source, the
+    // override-aware runtime, and the raw-entity override. Called INSIDE
+    // the post-reset window so ephemeral stacks never bake into baseStats.
+    resolveCombatBuild: (
+      source: PlayerData | undefined,
+      runtime: CultivationPathRuntime | undefined,
+      primaryEntityOverride?: CombatEntity,
+    ) => ResolvedCombatBuild
     // ARCH-002 (M7) -- live runtime modifiers for the engine's
     // liveStatModifiers provider (passive stacks, persistent pool,
     // timed/socket effects). Same owner as the menu aggregation
@@ -297,10 +297,6 @@ export class GameManagerTurnBattleOps {
     // to turnBattle.players[0] so companion/enemy casts never write into
     // the player's skillCastCounts/skillLevels mirror).
     recordPrimaryPlayerCast?: (skillId: string) => void
-    // Kiem Tu Reimagined Task 11 -- registered node defs for the path
-    // runtime's collectors (combo capstones, cascade unlocks). Read-only
-    // access; the registry remains GameManager-owned (A3).
-    getProgressionNodes: () => readonly ProgressionNode[]
     /**
      * Mission C Task 8 -- mints the session RNG for ONE battle cycle
      * (combat-contract M4: typed CombatRng, consumed via roll()/
@@ -312,6 +308,7 @@ export class GameManagerTurnBattleOps {
      */
     createBattleRng?: () => CombatRng
   }) {
+    this.liveStatModifiers = bindLiveModifiersProvider(deps)
     this.turnBattleSystem = new TurnBattleSystem(
       deps.combatSystem,
       10_000,
@@ -955,7 +952,7 @@ export class GameManagerTurnBattleOps {
    * loadout commit. TranPhapPanel routes its draft here instead of writing
    * player.formationLoadout directly; the validation rules live in
    * FormationPlacement.commitFormationLoadout, next to the
-   * resolvePartyFormation() consumer whose assumptions they guard.
+   * party-formation resolution whose assumptions they guard.
    * Returns false without mutating the player when the draft is invalid.
    */
   setFormationLoadout(player: PlayerData, loadout: FormationLoadout): boolean {
@@ -1310,65 +1307,26 @@ export class GameManagerTurnBattleOps {
       return
     }
 
-    const entries: {
-      definitionId: string
-      sourceId: string
-      targetId: string
-      durationOverride?: number
-    }[] = []
+    // P2 - the build declares every entry buff (Tran Phap formation x
+    // allies, the phap_tu.reaction_aura grant x living allies, kit-clone
+    // grantsBuffsAtBuild from the effective post-emblem slots). The only
+    // remaining ops-side check is battle-local registry membership:
+    // unknown ids stay graceful-skipped (review Task 19) because the
+    // apply would throw on lookup.
+    const build = this.activeBuild
+    if (build === undefined) {
+      return
+    }
 
-    const playerPath = this.deps.getActivePlayer()
-    if (playerPath?.formationLoadout) {
-      const formationDefinition = TRAN_PHAP_FORMATIONS.find(
-        (candidate) => candidate.id === playerPath.formationLoadout!.formationId,
+    const entries = build.entryBuffs
+      .filter(
+        (entry) =>
+          entry.gracefulSkip !== true ||
+          registry.tryGet(entry.definitionId as BuffDefinitionId) !== undefined,
       )
-      const formationBuffId = formationDefinition?.buff.definitionId
-      // Unknown ids stay graceful-skipped (review Task 19) -- the apply
-      // would throw on registry lookup, so check membership first.
-      if (formationBuffId !== undefined && registry.tryGet(formationBuffId as BuffDefinitionId) !== undefined) {
-        for (const participant of battle.players) {
-          entries.push({
-            definitionId: formationBuffId,
-            sourceId: participant.entity.id,
-            targetId: participant.entity.id,
-          })
-        }
-      }
-    }
-
-    // Canonical-seals S3 (plan sec.9.4): the An's aura grants
-    // elemental-reaction capability to every living allied
-    // participant. The gate is the path runtime's semantic flag --
-    // CultivationPathRegistry owns the Ngo Dao + ngo_dao_hon_don
-    // predicate (battleLifecyclePathBoundary); the source is the An
-    // entity (players[0]); enemies never receive it.
-    const anSource = battle.players[0]
-    if (
-      anSource !== undefined &&
-      playerPath !== undefined &&
-      this.deps.resolvePathRuntime(playerPath).grantsElementalReactionAura?.(playerPath) === true
-    ) {
-      for (const participant of battle.players) {
-        if (!participant.entity.alive) continue
-        entries.push({
-          definitionId: VAN_PHAP_THAN_HOA_ID,
-          sourceId: anSource.entity.id,
-          targetId: participant.entity.id,
-        })
-      }
-    }
-
-    for (const participant of battle.players) {
-      for (const slot of [participant.basic, participant.special?.skill, participant.ultimate?.skill]) {
-        for (const clone of slot?.grantsBuffsAtBuild ?? []) {
-          entries.push({
-            definitionId: clone.id,
-            sourceId: participant.entity.id,
-            targetId: participant.entity.id,
-          })
-        }
-      }
-    }
+      // gracefulSkip is ops-consumed metadata; the apply lane takes the
+      // plain {definitionId, sourceId, targetId} shape it always did.
+      .map(({ definitionId, sourceId, targetId }) => ({ definitionId, sourceId, targetId }))
 
     system.applyBuildBuffs(battle, entries)
   }
@@ -1468,6 +1426,7 @@ export class GameManagerTurnBattleOps {
     this.turnToken.reset()
     this.presentationOps.runtime.resetPendingState()
     this.boundaryQueue = []
+    this.activeBuild = undefined
   }
 
   /**
@@ -1660,25 +1619,25 @@ export class GameManagerTurnBattleOps {
       this.turnBattleStartedAtMs = null
     }
 
-    // 3. Player side.
-    let playerEntity: CombatEntity | null = null
+    // 3. Player side - ONE canonical composition (P2). The build source
+    //    is request.player for player-backed battles; the raw-entity path
+    //    (devtools/test) still resolves party/kit declarations from the
+    //    active player while request.playerEntity stays untouched as the
+    //    primary. The runtime resolves through the override-aware method
+    //    (setPathRuntimeResolver seam preserved).
+    const buildSource = request.player ?? this.deps.getActivePlayer()
+    const build = this.deps.resolveCombatBuild(
+      buildSource,
+      buildSource ? this.resolvePathRuntime(buildSource) : undefined,
+      // Precedence parity with the retired if/else: a supplied PlayerData
+      // mints the entity; playerEntity is consulted only when no
+      // request.player exists (the raw-entity path). No caller supplies
+      // both today - this keeps the retired branch order exact.
+      request.player === undefined ? request.playerEntity : undefined,
+    )
+    this.activeBuild = build
 
-    if (request.player) {
-      const playerStats = this.deps.resolvePlayerStats(request.player)
-
-      playerEntity = playerToCombatEntity(
-        request.player,
-        playerStats,
-        this.deps.getSkillLevels(),
-      )
-
-      // Task 8 - snapshot the query-derived The cap (truong_the nodes,
-      // 'no' route). Non-phap_tu paths resolve to MAX_THE; the field
-      // stays the clamp source for this battle instance only.
-      playerEntity.maxThe = this.resolvePathRuntime(request.player).resolveMaxThe(request.player)
-    } else if (request.playerEntity) {
-      playerEntity = request.playerEntity
-    }
+    const playerEntity = build.entity ?? null
 
     if (!playerEntity) {
       // Structural fault: every entry path supplies a player source -
@@ -1694,7 +1653,7 @@ export class GameManagerTurnBattleOps {
       enemyEntities.push(enemyToCombatEntity(this.deps.enemySystem.spawn(request.initialEnemy)))
     }
 
-    this.turnBattle = this.buildTurnBattle(playerEntity, enemyEntities)
+    this.turnBattle = this.buildTurnBattle(build, enemyEntities)
     this.turnBattle.state = policy.entryState
 
     const stageRef =
@@ -1735,7 +1694,7 @@ export class GameManagerTurnBattleOps {
       stageRef ? this.buildStageSpawnFactory(stageRef) : undefined,
       runtime,
       this.onSkillCast,
-      this.liveStatModifiers,
+      build.liveModifiers,
       this.combatRng,
     )
 
@@ -1769,7 +1728,7 @@ export class GameManagerTurnBattleOps {
       // player's talents, then attach the session for
       // combatSystem.killIfDead(). players[0] is the human player
       // (companions append after index 0 in buildTurnBattle).
-      this.deps.surviveLethalGuard.beginBattle(player.selectedTalentIds)
+      this.deps.surviveLethalGuard.beginBattle(build.survive.talentIds)
 
       // The Tu Reimagined - Cuong Chien's Bat Tu Ba The ultimate is the
       // FIRST line of survival; the talent guard is the extra life once
@@ -1778,8 +1737,7 @@ export class GameManagerTurnBattleOps {
       const playerEntityId = playerParticipant?.entity.id as CombatEntityId | undefined
       const playerBuffs = runtime.buffs
       const extraSurviveSources = playerParticipant
-        ? this.resolvePathRuntime(player).buildSurviveSources?.(
-            player,
+        ? build.survive.extraSources?.(
             playerParticipant,
             // buff2 M4 -- live presence read against the battle's buff
             // authority (replaces the participant-local BuffPool scan).
@@ -1966,13 +1924,11 @@ export class GameManagerTurnBattleOps {
     return entity
   }
 
-  private buildTurnBattle(playerEntity: CombatEntity, enemyEntities: CombatEntity[]): TurnBattle {
-    const playerPath = this.deps.getActivePlayer()
-
-    // Party placement (Tran Phap spec sections 6-7) - positions read from the
-    // player's real formationLoadout via resolvePartyFormation(), falling
-    // back to DEFAULT_PARTY_FORMATION when unconfigured.
-    const formation = playerPath ? resolvePartyFormation(playerPath) : DEFAULT_PARTY_FORMATION
+  private buildTurnBattle(build: ResolvedCombatBuild, enemyEntities: CombatEntity[]): TurnBattle {
+    // P2 - the resolved build is the single source for the player side;
+    // this method only applies positions and mints participants.
+    const playerEntity = build.entity!
+    const formation = build.formation
 
     const playerSlot = formation.find((slot) => slot.combatantId === 'player')
 
@@ -1981,16 +1937,21 @@ export class GameManagerTurnBattleOps {
       playerEntity.x = playerSlot.column
     }
 
-    // Mission C Task 9 -- ALL path integration resolves through the
-    // runtime boundary; no path/way predicate may appear below.
-    const pathRuntime = playerPath ? this.resolvePathRuntime(playerPath) : undefined
-
+    // Mission C Task 9 -- ALL path integration arrives resolved through
+    // the build's kit; no path/way predicate may appear below. The
+    // adapter payload deliberately omits maxThe - the build already wrote
+    // entity.maxThe once (the adapter's stamp stays as a shared-surface
+    // no-op for non-build callers).
     const playerParticipant = toTurnBattleParticipant(
       playerEntity,
       0,
-      pathRuntime?.resolveBasic(playerPath!) ?? GENERIC_PHYSICAL_BASIC,
-      pathRuntime?.resolveStatDomains(playerPath!),
-      pathRuntime?.resolveSpecialUltimate(playerPath!),
+      build.kit.basic,
+      build.kit.statDomains,
+      {
+        special: build.kit.special,
+        ultimate: build.kit.ultimate,
+        reactivePayloads: build.kit.reactivePayloads,
+      },
     )
 
     // Dynamic-basic provider (Kiem Pho orbs / Ngu Kiem Dao multi-instance)
@@ -1998,20 +1959,17 @@ export class GameManagerTurnBattleOps {
     // live in the provider closure, not PlayerData. Rolls consume the
     // session RNG -- the captured object (not the mutable field) so the
     // provider stays bound to THIS cycle's stream exactly like the
-    // retired closure hand-off did.
+    // retired closure hand-off did. The node registry snapshot was taken
+    // at resolve time inside the build.
     const cycleRng = this.combatRng
-    const dynamicBasic = pathRuntime?.buildDynamicBasic?.(
-      playerPath!,
-      this.deps.getProgressionNodes(),
-      () => cycleRng.roll(),
-    )
+    const dynamicBasic = build.kit.buildDynamicBasic?.(() => cycleRng.roll())
     if (dynamicBasic) {
       playerParticipant.dynamicBasic = dynamicBasic
     }
 
     // Emblem/marker slot overrides (Ngu Kiem Dao -- spec §5.4: display
     // lanes, never resolvable actions).
-    const emblemSlots = pathRuntime?.emblemSlots?.()
+    const emblemSlots = build.kit.emblem
     if (emblemSlots?.special) {
       playerParticipant.special = { skill: emblemSlots.special, remainingCooldownTurns: 0 }
     }
@@ -2022,30 +1980,12 @@ export class GameManagerTurnBattleOps {
     // Companion Roster - each companion in player.companions is rebuilt as a
     // fresh CombatEntity/participant per battle. Missing definition or missing
     // formation slot is skipped instead of crashing the battle.
-    const companionParticipants = (playerPath?.companions ?? []).flatMap((instance, index) => {
-      const definition = COMPANIONS.find((candidate) => candidate.id === instance.definitionId)
-      const slot = formation.find((entry) => entry.combatantId === instance.definitionId)
-
-      if (!definition || !slot) {
-        return []
-      }
-
-      const entity = companionToCombatEntity(instance, definition)
-
-      entity.row = slot.row
-      entity.x = slot.column
-
-      // Resolved per-instance kit (companion-gacha Task 8): unlockThresholds
-      // gate special/ultimate, constellation skill_override perks applied.
-      const kit = resolveCompanionSkillKit(definition, instance)
-
-      return [
-        toTurnBattleParticipant(entity, index + 100, kit.basic, undefined, {
-          special: kit.special,
-          ultimate: kit.ultimate,
-        }),
-      ]
-    })
+    const companionParticipants = build.companions.map((companion) =>
+      toTurnBattleParticipant(companion.entity, companion.priority, companion.basic, undefined, {
+        special: companion.special,
+        ultimate: companion.ultimate,
+      }),
+    )
 
     // buff2 M4 -- the entry-apply lanes (Tran Phap formation buff +
     // kit-clone grantsBuffsAtBuild) moved out of this builder: they need

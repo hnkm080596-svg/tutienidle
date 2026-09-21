@@ -27,9 +27,11 @@ import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
 import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
-import { isPhapTuNguHanh } from '@/core/phap-tu/PhapTuPath'
-import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
-import { isTheTuHien, isTheTuUngThe } from '@/core/the-tu/TheTuPath'
+import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
+import {
+  getActiveElement,
+  hasStaticPathCapability,
+} from '@/core/player/CultivationPathSystem'
 import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { ElementType } from '@/core/element/ElementType'
@@ -50,39 +52,36 @@ const { stateVersion } = useStateVersion()
 // pass-through view qua viewBranchTags(), toàn bộ root (mutex cho Hiện,
 // non-mutex cho Ẩn) render trong cùng một tree.
 //
-// M5 — tree selection resolves on the WAY, never the raw path id: the
-// branchTag strings are display keys (the An tree keeps 'the_tu_an'
-// even though its nodes stamp the base 'the_tu' path family).
-const theTuTreeTag = computed(() => {
-  if (isTheTuHien(player)) return 'the_tu'
-  if (isTheTuUngThe(player)) return 'the_tu_an'
-  return undefined
-})
+// P1 - tree selection resolves on the WAY's declared nodeTreeTag, never
+// a concrete way predicate: kiem hien -> 'kiem_pho', ngu -> 'ngu_kiem',
+// the_tu hien -> 'the_tu', ung_the -> 'the_tu_an'. Ways without a fixed
+// tree (ngu_hanh - element-driven; ngo_dao - none) declare no tag; the
+// resolver fails closed on a corrupt pair.
+const wayNodeTreeTag = computed(() => getActiveWayDefinition(player)?.nodeTreeTag)
 
-const isKiemTuWay = computed(
-  // M9 — way-strict module predicates, never the raw path id: a
-  // way-less/corrupt kiem_tu save shows no tree (fail closed).
-  () => isKiemTuHien(player) || isKiemTuNgu(player),
+const hasElementalCasting = computed(
+  () => hasStaticPathCapability(player, 'phap_tu.elemental_casting'),
 )
 
 const showTree = computed(
   () =>
-    // M4 (R6): the Phap Tu element tree is ngu_hanh machinery — a
-    // collapsed ('phap_tu','ngo_dao') player owns no element branches.
-    isPhapTuNguHanh(player) ||
-    isKiemTuWay.value ||
-    theTuTreeTag.value !== undefined,
+    // M4 (R6): the Phap Tu element tree is ngu_hanh machinery - the
+    // 'phap_tu.elemental_casting' capability is the gate - a collapsed
+    // ('phap_tu','ngo_dao') player owns no element branches.
+    hasElementalCasting.value || wayNodeTreeTag.value !== undefined,
 )
 
 // ---- Nhánh phap_tu (Hành -> Node Tree) ----
 // Task 16: element tabs always visible for phap_tu — the element-root
 // pick happens IN the tree (element+route atomic commit), so the tree
 // must render before any elemental skill is learned. Default tab = the
-// committed element once phapTu.element exists.
-const selectedBranch = ref<ElementType>(player.phapTu?.element ?? 'fire')
+// committed element once the element axis resolves one.
+const committedElement = computed(() => getActiveElement(player))
+
+const selectedBranch = ref<ElementType>(committedElement.value ?? 'fire')
 
 watch(
-  () => player.phapTu?.element,
+  committedElement,
   element => {
     if (element) {
       selectedBranch.value = element
@@ -168,33 +167,15 @@ function skillElement(skill: Skill): ElementType | null {
 // root được chọn TRONG cây (element+route atomic commit), nên không
 // thể gate theo skill đang chọn (trước khi commit, player chưa có
 // skill elemental nào). Kiem Tu giữ nguyên — route chốt lúc chọn path.
-const selectedSkillHasTree = computed(() => {
-  if (!showTree.value) {
-    return false
-  }
+// showTree IS the whole gate today: every tree-owning way declares
+// nodeTreeTag or grants elemental_casting (the old skillElement fallback
+// was unreachable - it required showTree false). Keep the named computed
+// so the intent survives a future skill-driven tree.
+const selectedSkillHasTree = showTree
 
-  // Kiem Tu + ca hai The Tu: cay co dinh cua path — luon hien, khong
-  // phu thuoc skill dang chon o SkillPathList.
-  if (
-    isKiemTuWay.value ||
-    isPhapTuNguHanh(player) ||
-    theTuTreeTag.value !== undefined
-  ) {
-    return true
-  }
-
-  return selectedSkill.value !== null && skillElement(selectedSkill.value) !== null
-})
-
-const treeBranchTag = computed<string>(() => {
-  if (isKiemTuWay.value) {
-    // M6/M9 — module predicates are the discriminator; inside a
-    // validated kiem pair, non-ngu is hien.
-    return isKiemTuNgu(player) ? 'ngu_kiem' : 'kiem_pho'
-  }
-
-  return theTuTreeTag.value ?? selectedBranch.value
-})
+const treeBranchTag = computed<string>(
+  () => wayNodeTreeTag.value ?? selectedBranch.value,
+)
 
 function onSelectSkill(skill: Skill) {
   selectedSkillId.value = skill.id
@@ -227,7 +208,7 @@ function close() {
             <!-- Phap Tu element tabs (Task 16) — browse all 5 branches;
                  the committed element is marked, others render locked. -->
             <div
-              v-if="isPhapTuNguHanh(player)"
+              v-if="hasElementalCasting"
               class="skill-path-panel__element-tabs"
               role="group"
               :aria-label="t('panels.skillPath.elementTabs.aria')"
@@ -237,7 +218,7 @@ function close() {
                 :key="element"
                 type="button"
                 class="skill-path-panel__element-tab"
-                :class="{ 'is-selected': element === selectedBranch, 'is-committed': element === player.phapTu?.element }"
+                :class="{ 'is-selected': element === selectedBranch, 'is-committed': element === committedElement }"
                 :style="{ '--element-color': ELEMENT_COLOR_VARS[element] }"
                 @click="onSelectBranch(element)"
               >

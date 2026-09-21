@@ -19,8 +19,12 @@ import {
   type PathWayDefinition,
   type PathWayId,
 } from '@/core/player/CultivationPathKit'
-import { listOfferableWays } from '@/core/player/CultivationPathSystem'
-import { isKiemTuHien, isKiemTuNgu } from '@/core/kiem-tu/KiemTuPath'
+import {
+  getKiemTuPreset,
+  hasStaticPathCapability,
+  isActivePath,
+  listOfferableWays,
+} from '@/core/player/CultivationPathSystem'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
@@ -140,20 +144,18 @@ function close() {
 const isKiemTu = computed(() => {
   stateVersion.value
 
-  // M9 — way-strict module predicates, never the raw path id: a
-  // way-less/corrupt kiem_tu save is NOT treated as kiem (fail closed).
-  return isKiemTuHien(player) || isKiemTuNgu(player)
+  // P1 - the generic authority read resolves the committed pair through
+  // the catalog: a way-less/corrupt kiem_tu save is NOT kiem (fail closed).
+  return isActivePath(player, 'kiem_tu')
 })
 
 // Cultivation Path Framework (M6/M9) — the hien/ngu way is canonical on
-// PlayerData.cultivationWay, read through the module predicate (the
-// retired kiemTu.mode discriminator). 'hien' (Kiem Pho) is the visible
-// spec; 'ngu' (Ngu Kiem Dao) only ever reads 'ngu' for a player who
-// entered it at the ritual.
+// PlayerData.cultivationWay. P1 - read through the declared capability:
+// 'kiem_tu.ngu_kiem_dao' only resolves for the ('kiem_tu','ngu') pair.
 const kiemTuWay = computed(() => {
   stateVersion.value
 
-  return isKiemTuNgu(player) ? 'ngu' : 'hien'
+  return hasStaticPathCapability(player, 'kiem_tu.ngu_kiem_dao') ? 'ngu' : 'hien'
 })
 
 const specNameDisplay = computed(() =>
@@ -176,7 +178,7 @@ const realmIndex = computed(() => {
 const presetOrbs = computed<OrbId[]>(() => {
   stateVersion.value
 
-  return player.kiemTu?.preset ?? []
+  return [...(getKiemTuPreset(player) ?? [])]
 })
 
 const presetBattleLocked = computed(() => {
