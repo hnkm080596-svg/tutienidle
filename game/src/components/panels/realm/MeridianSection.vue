@@ -23,11 +23,10 @@ const chapterProgress = computed(() => {
 const meridianRows = computed(() => {
   stateVersion.value
 
-  const opened = new Set(player.$state.bodyProgression.meridian.openedIds)
   const completed = chapterProgress.value.completed
 
   return MERIDIANS.map((meridian, index) => {
-    const status = opened.has(meridian.id)
+    const status = index < completed
       ? 'opened'
       : index === completed
         ? 'next'

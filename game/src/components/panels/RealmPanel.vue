@@ -107,7 +107,7 @@ function majorBreakthrough() {
 </template>
 
 <style scoped>
-.realm-panel { min-height: 100%; display: flex; flex-direction: column; gap: 18px; padding: 20px; }
+.realm-panel { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 18px; padding: 20px; overflow-y: auto; }
 .realm-panel__cultivator { position: relative; display: flex; flex-direction: column; align-items: center; color: var(--paper-text-soft); }
 .realm-panel__cultivator strong { color: var(--paper-text); font-family: var(--font-display); }
 /* Tên/cảnh giới không có cỡ chữ tường minh trước đây (2026-08-30

@@ -49,5 +49,5 @@ Refined from the user's M1–M8 guideline. Each mission = one coherent authority
 | M4 | DONE | `05eba824` (v71) | verify + OCR + runtime + QA + P5 + external IMPL_PASS |
 | M5 | DONE | `c4b31df8` (v72) | verify + OCR + runtime (tick auto-invest live) + QA + P5 + external IMPL_PASS |
 | M6 | DONE | `8ff4c975` | verify + OCR + runtime (mirror republish + fail-closed live) + QA + P5 + external IMPL_PASS |
-| M7 | DONE | `d8c2cb42` | verify 719f/6337t + OCR clean + runtime 30/30 + QA + P5; external bridge down (SEND_FAILED, documented) |
+| M7 | DONE | `d8c2cb42` | verify 719f/6337t + OCR clean + runtime 30/30 + QA + P5; retro external review after bridge repair: IMPL_PASS (1 Medium + 2 Low fixed in follow-up) |
 | M8 | DONE | — | save decision: no bump (v72 boundary stands); dead-authority sweep clean; docs synced; final verify + merge |
