@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// AtlasIdleSprite — DOM mirror of the battle placeholder idle loop.
+// AtlasIdleSprite - DOM mirror of the battle placeholder idle loop.
 // jsdom cannot rasterize canvas 2d (getContext returns null), so these
 // tests pin the mount contract + the load-failure degradation, not pixels.
 import { afterEach, describe, expect, it } from 'vitest'

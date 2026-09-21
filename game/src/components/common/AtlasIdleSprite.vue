@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // DOM mirror of the battle placeholder idle: steps a trimmed, packed
 // texture atlas on a 2d canvas so queue/roster surfaces can show the same
-// looping idle the Phaser scenes play — without booting a scene.
+// looping idle the Phaser scenes play - without booting a scene.
 // Presentation only: reads public atlas JSON + PNG, owns no game state.
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
