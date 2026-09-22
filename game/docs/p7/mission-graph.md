@@ -108,6 +108,12 @@ Follow-up graph from the Luyện Khí chapter audit + reconciliation (decisions 
 | M-QI-11 | **Kiem Pho authored combo payloads** | 37-combo authored effect pass replacing length-tier scaffolds (sanctioned deferral); independent of authority chains. | — |
 | M-QI-12 | **LQ→TC E2E journey coverage** | Headless journey: initiation → chapter 10 → level 12 (+ Meridian invest, insight/node spend) → successful breakthrough; restore mid-chapter. | M-QI-01, M-QI-02, M-QI-03 |
 
+## M-QI completion ledger
+
+| # | Status | Commit | Gates |
+|---|---|---|---|
+| M-QI-01 | DONE | `69767cb6` | verify 81t scope + type-check + OCR + runtime (live invest: pill 5→4, nham_mach opened, next row actionable) + QA + P5 + external SPEC/IMPL (2 rounds) reviewed |
+
 ## Locked rulings carried into this graph
 
 - Fixed-kit actions exempt from Beta Basic-only (QI-D2); Basic-only = B/S/U role-unlock axis.
