@@ -13,6 +13,7 @@ import {
   MAX_CONSTELLATION_RANK,
   resolveCompanionSkillKit,
 } from './CompanionProgression'
+import { COMPANIONS } from '@/data/companion/Companions'
 import type { CompanionDefinition, CompanionInstance } from '@/data/companion/Companions'
 import type { Material } from '@/core/material/Material'
 import { SPIRIT_STONE_MATERIAL } from '@/core/material/SpiritStoneMaterial'
@@ -401,6 +402,77 @@ describe('resolveCompanionSkillKit', () => {
 
     const kit = resolveCompanionSkillKit(withPerks, makeInstance({ realmId: 'mortal', realmLevel: 1 }))
 
+    expect(kit.special).toBeUndefined()
+  })
+})
+
+// P7-M-G (beta companion roster) — real-definition gating for the two
+// beta support kits: than_nong (huyen, mortal-12 special / foundation-3
+// ultimate) and khai_minh (dia, mortal-8 special / foundation-5 ultimate,
+// rank-4 special cooldown override).
+describe('M-G beta roster kit gating', () => {
+  const thanNong = COMPANIONS.find((definition) => definition.id === 'than_nong')!
+  const khaiMinh = COMPANIONS.find((definition) => definition.id === 'khai_minh')!
+
+  it('than_nong special is locked below mortal 12 and unlocked at/above it', () => {
+    expect(
+      isCompanionSkillUnlocked(thanNong, makeInstance({ realmId: 'mortal', realmLevel: 11 }), 'special'),
+    ).toBe(false)
+    expect(
+      isCompanionSkillUnlocked(thanNong, makeInstance({ realmId: 'mortal', realmLevel: 12 }), 'special'),
+    ).toBe(true)
+    expect(
+      isCompanionSkillUnlocked(thanNong, makeInstance({ realmId: 'qi_refining', realmLevel: 1 }), 'special'),
+    ).toBe(true)
+  })
+
+  it('than_nong ultimate is locked below foundation 3 and unlocked at it', () => {
+    expect(
+      isCompanionSkillUnlocked(
+        thanNong,
+        makeInstance({ realmId: 'foundation_establishment', realmLevel: 2 }),
+        'ultimate',
+      ),
+    ).toBe(false)
+    expect(
+      isCompanionSkillUnlocked(
+        thanNong,
+        makeInstance({ realmId: 'foundation_establishment', realmLevel: 3 }),
+        'ultimate',
+      ),
+    ).toBe(true)
+  })
+
+  it('khai_minh special is locked below mortal 8 and unlocked at it; kit resolves only basic below threshold', () => {
+    expect(
+      isCompanionSkillUnlocked(khaiMinh, makeInstance({ realmId: 'mortal', realmLevel: 7 }), 'special'),
+    ).toBe(false)
+
+    const lockedKit = resolveCompanionSkillKit(khaiMinh, makeInstance({ realmId: 'mortal', realmLevel: 7 }))
+    expect(lockedKit.special).toBeUndefined()
+
+    const kit = resolveCompanionSkillKit(khaiMinh, makeInstance({ realmId: 'mortal', realmLevel: 8 }))
+    expect(kit.special?.id).toBe('khai_minh_ho_ve_thuat')
+    expect(kit.special?.cooldownTurns).toBe(5)
+  })
+
+  it('khai_minh rank-4 perk rewrites special cooldown on the resolved CLONE without mutating the definition', () => {
+    const instance = makeInstance({ realmId: 'mortal', realmLevel: 8, constellationRank: 4 })
+
+    const kit = resolveCompanionSkillKit(khaiMinh, instance)
+
+    expect(kit.special?.cooldownTurns).toBe(4)
+    // Source definition untouched.
+    expect(khaiMinh.special?.cooldownTurns).toBe(5)
+  })
+
+  it('grandfathered non-beta definitions still resolve kits through the full catalog (future content gates acquisition, never resolution)', () => {
+    const hoLyTinh = COMPANIONS.find((definition) => definition.id === 'ho_ly_tinh')!
+
+    const kit = resolveCompanionSkillKit(hoLyTinh, makeInstance({ realmId: 'mortal', realmLevel: 18 }))
+
+    expect(kit.basic.id).toBe('ho_ly_tinh_basic')
+    // Its special threshold is qi_refining 1 — stays locked at mortal.
     expect(kit.special).toBeUndefined()
   })
 })

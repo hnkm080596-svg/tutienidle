@@ -257,6 +257,32 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Cửu thiên vãn tinh lạc xuống ba cột, hút sinh cơ về bản thân.',
   },
 
+  // P7-M-G beta roster — Thần Nông (healer) + Khai Minh (buffer).
+  than_nong_basic: {
+    name: 'Dược Thảo Kích',
+    description: 'Thảo mộc hóa gai đâm một mục tiêu.',
+  },
+  than_nong_hoi_phuc_thuat: {
+    name: 'Hồi Phục Thuật',
+    description: 'Dược lực phủ khắp đồng đội — mỗi người hồi sinh lực dần theo lượt của mình.',
+  },
+  than_nong_than_dang: {
+    name: 'Thần Đằng Dược Vương',
+    description: 'Thần đằng dâng trào — hồi phục mạnh cho toàn đội và thanh tẩy khống chế.',
+  },
+  khai_minh_basic: {
+    name: 'Cửu Thủ Trảo',
+    description: 'Vuốt Khai Minh xé một mục tiêu.',
+  },
+  khai_minh_ho_ve_thuat: {
+    name: 'Hộ Vệ Thuật',
+    description: 'Cửu thủ gầm vang — toàn đội tăng công và thủ.',
+  },
+  khai_minh_thanh_an: {
+    name: 'Thanh Ấn Côn Lôn',
+    description: 'Ấn Côn Lôn che chở — mỗi đồng đội nhận một lớp giáp ngoài hấp thụ sát thương.',
+  },
+
   // Phap Tu An kit (Task 16) — dong bo tu Skills.ts; ngo_dao_hon_don's
   // description must carry the basic-slot-only multicast clause because
   // its HUD emblem tooltip is the only place the rule surfaces.

@@ -9,7 +9,7 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import type { PlayerData } from '../player/Player'
 import type { Material } from '../material/Material'
-import { COMPANIONS } from '../../data/companion/Companions'
+import { BETA_COMPANION_IDS, BETA_COMPANIONS, COMPANIONS } from '../../data/companion/Companions'
 import type { CompanionInstance } from '../../data/companion/Companions'
 import { REALMS } from '../../data/realms/realm'
 import { COMPANION_PULL_TOKEN_ID, EXCHANGE_COST } from './GameManagerCompanionOps'
@@ -47,9 +47,9 @@ function makeManager(realmId = 'foundation_establishment'): { manager: GameManag
 }
 
 // Math.random = 0 -> roll lands in the first pooled grade in GRADE_ORDER
-// (hoang) and pickDefinitionOfGrade takes index 0 of the hoang pool, so
-// every pull deterministically returns COMPANIONS[0] (roster order keeps
-// the 4 hoang definitions first).
+// present in the Beta pool (huyen) and pickDefinitionOfGrade takes index
+// 0 of the huyen pool, so every pull deterministically returns
+// BETA_COMPANIONS[0] (than_nong).
 function mockPullsToFirstDefinition(): void {
   vi.spyOn(Math, 'random').mockReturnValue(0)
 }
@@ -57,7 +57,7 @@ function mockPullsToFirstDefinition(): void {
 function ownedInstance(overrides: Partial<CompanionInstance> = {}): CompanionInstance {
   return {
     instanceId: 'inst-1',
-    definitionId: COMPANIONS[0]!.id,
+    definitionId: BETA_COMPANIONS[0]!.id,
     realmId: 'mortal',
     realmLevel: 1,
     exp: 0,
@@ -94,15 +94,15 @@ describe('pullCompanion', () => {
     }
 
     expect(result.outcome.kind).toBe('new')
-    expect(result.outcome.definition.id).toBe(COMPANIONS[0]!.id)
+    expect(result.outcome.definition.id).toBe(BETA_COMPANIONS[0]!.id)
     expect(manager.materialBag.getAmount(PULL_TOKEN.id)).toBe(1)
     expect(player.duyenPhan).toBe(1)
     expect(result.duyenPhan).toBe(1)
-    // hoang < dia -> pity counter keeps counting.
+    // huyen < dia -> pity counter keeps counting.
     expect(player.companionPullsSinceRare).toBe(1)
     expect(result.pullsSinceRare).toBe(1)
     expect(player.companions).toHaveLength(1)
-    expect(player.companions[0]!.definitionId).toBe(COMPANIONS[0]!.id)
+    expect(player.companions[0]!.definitionId).toBe(BETA_COMPANIONS[0]!.id)
     expect(player.companions[0]!.constellationRank).toBe(0)
   })
 
@@ -144,6 +144,43 @@ describe('pullCompanion', () => {
     expect(player.duyenPhan).toBe(6)
     expect(result.duyenPhan).toBe(6)
   })
+
+  it('every roll lands inside the Beta pool — the full catalog is never acquirable (P7-M-G)', () => {
+    const { manager, player } = makeManager()
+    manager.materialBag.add(PULL_TOKEN, 20)
+    // Sweep rolls across every effective-rate bucket: only huyen (< 2/3)
+    // and dia (< 1) definitions exist in the Beta pool.
+    const rolls = [0, 0.3, 0.5, 0.66, 0.67, 0.8, 0.99]
+    let index = 0
+    vi.spyOn(Math, 'random').mockImplementation(() => rolls[index++ % rolls.length]!)
+
+    for (let pull = 0; pull < rolls.length * 2; pull++) {
+      const result = manager.companionOps.pullCompanion()
+
+      if (!result.ok) {
+        throw new Error(`expected ok, got ${result.reason}`)
+      }
+
+      expect(BETA_COMPANION_IDS).toContain(result.outcome.definition.id)
+      expect(result.outcome.definition.id).not.toBe('ho_ly_tinh')
+    }
+  })
+
+  it('pity guarantees the only dia+ Beta definition — khai_minh (P7-M-G)', () => {
+    const { manager, player } = makeManager()
+    manager.materialBag.add(PULL_TOKEN, 1)
+    player.companionPullsSinceRare = 29
+    vi.spyOn(Math, 'random').mockReturnValue(0.99)
+
+    const result = manager.companionOps.pullCompanion()
+
+    if (!result.ok) {
+      throw new Error(`expected ok, got ${result.reason}`)
+    }
+
+    expect(result.outcome.definition.id).toBe('khai_minh')
+    expect(player.companionPullsSinceRare).toBe(0)
+  })
 })
 
 describe('exchangeCompanion', () => {
@@ -159,30 +196,30 @@ describe('exchangeCompanion', () => {
 
   it('rejects on insufficient Duyen Phan without deducting anything', () => {
     const { manager, player } = makeManager()
-    player.duyenPhan = EXCHANGE_COST.hoang - 1
+    player.duyenPhan = EXCHANGE_COST.huyen - 1
 
-    const result = manager.companionOps.exchangeCompanion(COMPANIONS[0]!.id)
+    const result = manager.companionOps.exchangeCompanion(BETA_COMPANIONS[0]!.id)
 
     expect(result).toEqual({ ok: false, reason: 'insufficient_duyen_phan' })
-    expect(player.duyenPhan).toBe(EXCHANGE_COST.hoang - 1)
+    expect(player.duyenPhan).toBe(EXCHANGE_COST.huyen - 1)
     expect(player.companions).toHaveLength(0)
   })
 
   it('pushes a fresh instance for an unowned companion', () => {
     const { manager, player } = makeManager()
-    player.duyenPhan = EXCHANGE_COST.hoang
+    player.duyenPhan = EXCHANGE_COST.huyen
 
-    const result = manager.companionOps.exchangeCompanion(COMPANIONS[0]!.id)
+    const result = manager.companionOps.exchangeCompanion(BETA_COMPANIONS[0]!.id)
 
     if (!result.ok) {
       throw new Error(`expected ok, got ${result.reason}`)
     }
 
     expect(result.kind).toBe('new')
-    expect(result.definition.id).toBe(COMPANIONS[0]!.id)
+    expect(result.definition.id).toBe(BETA_COMPANIONS[0]!.id)
     expect(result.duyenPhan).toBe(0)
     expect(player.companions).toHaveLength(1)
-    expect(player.companions[0]!.definitionId).toBe(COMPANIONS[0]!.id)
+    expect(player.companions[0]!.definitionId).toBe(BETA_COMPANIONS[0]!.id)
     expect(player.companions[0]!.realmId).toBe('mortal')
     expect(player.companions[0]!.realmLevel).toBe(1)
     expect(player.companions[0]!.constellationRank).toBe(0)
@@ -190,10 +227,10 @@ describe('exchangeCompanion', () => {
 
   it('raises constellation rank in place for an owned companion below C6', () => {
     const { manager, player } = makeManager()
-    player.duyenPhan = EXCHANGE_COST.hoang + 7
+    player.duyenPhan = EXCHANGE_COST.huyen + 7
     player.companions.push(ownedInstance({ constellationRank: 1 }))
 
-    const result = manager.companionOps.exchangeCompanion(COMPANIONS[0]!.id)
+    const result = manager.companionOps.exchangeCompanion(BETA_COMPANIONS[0]!.id)
 
     if (!result.ok) {
       throw new Error(`expected ok, got ${result.reason}`)
@@ -212,11 +249,26 @@ describe('exchangeCompanion', () => {
     // 0 DP on purpose: the constellation_maxed gate runs first.
     player.companions.push(ownedInstance({ constellationRank: MAX_CONSTELLATION_RANK }))
 
-    const result = manager.companionOps.exchangeCompanion(COMPANIONS[0]!.id)
+    const result = manager.companionOps.exchangeCompanion(BETA_COMPANIONS[0]!.id)
 
     expect(result).toEqual({ ok: false, reason: 'constellation_maxed' })
     expect(player.duyenPhan).toBe(0)
     expect(player.companions[0]!.constellationRank).toBe(MAX_CONSTELLATION_RANK)
+  })
+
+  it('rejects a full-catalog-but-non-Beta definition as unknown_definition (P7-M-G)', () => {
+    const { manager, player } = makeManager()
+    // ho_ly_tinh stays in COMPANIONS as future content but is not
+    // Beta-acquirable — the exchange must not mint it.
+    expect(COMPANIONS.some((definition) => definition.id === 'ho_ly_tinh')).toBe(true)
+    expect(BETA_COMPANION_IDS).not.toContain('ho_ly_tinh')
+    player.duyenPhan = 500
+
+    const result = manager.companionOps.exchangeCompanion('ho_ly_tinh')
+
+    expect(result).toEqual({ ok: false, reason: 'unknown_definition' })
+    expect(player.duyenPhan).toBe(500)
+    expect(player.companions).toHaveLength(0)
   })
 })
 
@@ -338,6 +390,24 @@ describe('feedCompanion', () => {
     expect(player.companions[0]!.realmLevel).toBe(2)
     expect(player.companions[0]!.exp).toBe(10)
   })
+
+  it('still feeds an owned non-Beta instance — full-catalog ownership survives (P7-M-G)', () => {
+    const { manager, player } = makeManager()
+    manager.materialRegistry.register(FEED_MATERIAL)
+    manager.materialBag.add(FEED_MATERIAL, 5)
+    // A player who somehow owns future-content ho_ly_tinh keeps full
+    // ownership ops — only acquisition is Beta-pool-gated.
+    player.companions.push(ownedInstance({ definitionId: 'ho_ly_tinh' }))
+
+    const result = manager.companionOps.feedCompanion('inst-1', FEED_MATERIAL.id, 5)
+
+    if (!result.ok) {
+      throw new Error(`expected ok, got ${result.reason}`)
+    }
+
+    expect(result.expGained).toBe(50)
+    expect(manager.materialBag.getAmount(FEED_MATERIAL.id)).toBe(0)
+  })
 })
 
 // P7-M9 (decision D4): the Companion domain begins at Tru Co. The realm
@@ -368,7 +438,7 @@ describe('companion realm gate', () => {
     const { manager, player } = makeManager('qi_refining')
     player.duyenPhan = 1000
 
-    expect(manager.companionOps.exchangeCompanion(COMPANIONS[0]!.id)).toEqual({
+    expect(manager.companionOps.exchangeCompanion(BETA_COMPANIONS[0]!.id)).toEqual({
       ok: false,
       reason: 'realm_locked',
     })
