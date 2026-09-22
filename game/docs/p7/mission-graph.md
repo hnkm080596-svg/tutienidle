@@ -69,3 +69,8 @@ Locked product decisions carried into this graph: no save migration (grandfather
 | M6 | DONE | `8ff4c975` | verify + OCR + runtime (mirror republish + fail-closed live) + QA + P5 + external IMPL_PASS |
 | M7 | DONE | `d8c2cb42` | verify 719f/6337t + OCR clean + runtime 30/30 + QA + P5; retro external review after bridge repair: IMPL_PASS (1 Medium + 2 Low fixed in follow-up) |
 | M8 | DONE | — | save decision: no bump (v72 boundary stands); dead-authority sweep clean; docs synced; final verify + merge |
+| M9 (A+B) | DONE | `28279570` | verify 563t + OCR + runtime (live gating verified) + QA + P5 + external SPEC/IMPL reviewed |
+| M-C | DONE | `9744dd53` | verify 12t + OCR + QA + P5 + external SPEC/IMPL reviewed |
+| M-E | DONE | `6854fe27` | verify 536t + OCR + runtime (3 page states live) + QA + P5 + external SPEC/IMPL reviewed |
+| M-F | DONE | `c1714dd0` | verify 226t + OCR + runtime (flat gains live) + QA + P5 + external SPEC/IMPL reviewed |
+| M-D | DONE | `c42d827b` | verify 15/15 (3-seed measured) + OCR + QA + P5 + external SPEC/IMPL reviewed — verdict: perfection infeasible under enumerated sources (shortfall 23) |
