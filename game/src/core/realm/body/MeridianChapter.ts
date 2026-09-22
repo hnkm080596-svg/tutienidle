@@ -2,11 +2,11 @@
 // Verbatim port of the retired MeridianSystem onto the canonical
 // chapter-keyed state (player.bodyProgression.meridian.openedIds).
 //
-// [M13 STATUS: PARKED] - invest has no production caller (no Thong Mach
-// Dan UI/gateway); the chapter contract is still fully implemented and
-// tested per the M5 spec. Same one-shot sequential strategy, same
-// qi_refining pace gate, same `bat-mach:` modifier emission - ownership
-// moved, rules did not.
+// [M-QI-01] - production caller wired: MeridianSection's next-row
+// invest button calls realmAdvanceOps.investBodyChapter (QI-D1 explicit
+// manual invest - never tick-driven). Same one-shot sequential
+// strategy, same qi_refining pace gate, same `bat-mach:` modifier
+// emission - ownership moved, rules did not.
 import {
   MERIDIANS,
   THIEN_DIA_CHI_KIEU_MATERIAL_ID,

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-// P7-M7 - read-only Bat Mach (meridian) list inside RealmPanel. The
-// invest path is M13-PARKED (no Thong Mach Dan gateway), so rows are
-// pure status display over the canonical chapter slice - no action.
+// P7-M7 + M-QI-01 (QI-D1) - Bat Mach (meridian) list inside RealmPanel.
+// The next row carries an explicit manual invest button wired to
+// realmAdvanceOps.investBodyChapter - the chapter stays the sole
+// authority (re-validates sequence/page/pace/cost/aux on every call);
+// the button only mirrors known preconditions. NO tick auto-invest.
 //
 // M-E (D2) - PAGED model: meridians group into per-realm pages. A page
 // whose realm the player has not reached renders as locked-preview
@@ -11,7 +13,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
-import { useStateVersion } from '@/composables/useGameState'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getBodyChapterProgress } from '@/core/realm/body/BodyProgressionSystem'
 import {
   isMeridianPageUnlocked,
@@ -19,9 +21,15 @@ import {
 } from '@/core/realm/body/MeridianPages'
 import { REALMS } from '@/data/realms/realm'
 import { statLabel } from '@/core/stats/StatLabels'
+import GameButton from '@/components/common/GameButton.vue'
+import {
+  THIEN_DIA_CHI_KIEU_MATERIAL_ID,
+  THONG_MACH_DAN_MATERIAL_ID,
+} from '@/data/realm/Meridians'
 
 const player = usePlayerStore()
-const { stateVersion } = useStateVersion()
+const gameManager = useGameManager()
+const { stateVersion, bumpState } = useStateVersion()
 const { t } = useI18n()
 
 // Static page structure - MERIDIANS is a catalog const; no reactivity
@@ -38,6 +46,8 @@ const pageViews = computed(() => {
   stateVersion.value
 
   const completed = chapterProgress.value.completed
+  const ownedPills = gameManager.pillBag.getAmount(THONG_MACH_DAN_MATERIAL_ID)
+  const ownedAux = gameManager.materialBag.getAmount(THIEN_DIA_CHI_KIEU_MATERIAL_ID)
 
   return pages.map((page) => {
     const unlocked = isMeridianPageUnlocked(player.$state, page.pageRealmId)
@@ -55,6 +65,15 @@ const pageViews = computed(() => {
             ? 'next'
             : 'locked'
 
+      // Presentation mirror of the chapter's invest preconditions -
+      // meridianChapter.invest re-validates all of them on click.
+      const paced = player.$state.realmId !== meridian.pageRealmId
+        || player.$state.realmLevel >= meridian.requiredRealmLevel
+      const canInvest = unlocked && status === 'next'
+        && ownedPills >= meridian.thongMachDanCost
+        && paced
+        && (!meridian.requiresThienDiaChiKieu || ownedAux >= 1)
+
       return {
         id: meridian.id,
         name: meridian.name,
@@ -70,12 +89,22 @@ const pageViews = computed(() => {
           ? meridian.requiredRealmLevel
           : null,
         requiresAux: unlocked && status === 'next' && meridian.requiresThienDiaChiKieu === true,
+        canInvest,
+        ownedPills,
       }
     })
 
     return { pageRealmId: page.pageRealmId, realmName, unlocked, rows }
   })
 })
+
+function invest(): void {
+  const consumed = gameManager.realmAdvanceOps.investBodyChapter(player.$state, 'meridian')
+
+  if (consumed > 0) {
+    bumpState()
+  }
+}
 </script>
 
 <template>
@@ -121,6 +150,19 @@ const pageViews = computed(() => {
             </template>
             <template v-if="row.requiresAux">· {{ t('panels.realm.meridian.auxGate') }}</template>
           </p>
+
+          <div v-if="row.status === 'next'" class="meridian-section__row-invest">
+            <GameButton
+              size="sm"
+              :disabled="!row.canInvest"
+              @click="invest"
+            >
+              {{ t('panels.realm.meridian.invest') }}
+            </GameButton>
+            <span class="meridian-section__row-owned">
+              {{ t('panels.realm.meridian.owned', { count: row.ownedPills }) }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -233,5 +275,17 @@ const pageViews = computed(() => {
   margin: 4px 0 0;
   font-size: var(--text-sm);
   color: var(--crimson);
+}
+
+.meridian-section__row-invest {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.meridian-section__row-owned {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }
 </style>

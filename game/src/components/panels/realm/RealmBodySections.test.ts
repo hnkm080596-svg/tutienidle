@@ -1,21 +1,29 @@
 // @vitest-environment jsdom
-// P7-M7 - RealmPanel's body chapter subviews: the Luyen The tier block
-// ported from the retired LuyenThePanel, and the new read-only Bat
-// Mach (meridian) list. Both read through chapter-scoped seams.
-import { describe, expect, it } from 'vitest'
+// P7-M7 + M-QI-01 - RealmPanel's body chapter subviews: the Luyen The
+// tier block ported from the retired LuyenThePanel, and the Bat Mach
+// (meridian) list whose next row carries the live manual invest action
+// (QI-D1). Both read through chapter-scoped seams.
+import { describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import BodyRefinementSection from './BodyRefinementSection.vue'
 import MeridianSection from './MeridianSection.vue'
 import { usePlayerStore } from '@/stores/player'
-import { STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
+import { STATE_VERSION_KEY, BUMP_STATE_KEY, GAME_MANAGER_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
 import { baseGainKeys, BODY_REFINEMENT_TIERS } from '@/data/realm/BodyRefinement'
 import { statLabel } from '@/core/stats/StatLabels'
+import { GameManager } from '@/core/game/GameManager'
+import { materials } from '@/data/materials/materials'
+import { pills } from '@/data/pill/pills'
+import { MERIDIANS } from '@/data/realm/Meridians'
 import type { Component } from 'vue'
 import type { BodyProgressionState } from '@/core/realm/body/BodyChapter'
 
-function mountSection(component: Component, setup: (player: ReturnType<typeof usePlayerStore>) => void) {
+function mountSection(
+  component: Component,
+  setup: (player: ReturnType<typeof usePlayerStore>, manager: GameManager) => void,
+) {
   const container = document.createElement('div')
   document.body.appendChild(container)
 
@@ -23,16 +31,29 @@ function mountSection(component: Component, setup: (player: ReturnType<typeof us
   const pinia = createPinia()
   app.use(pinia)
   app.use(i18n)
-  app.provide(STATE_VERSION_KEY, ref(0))
-  app.provide(BUMP_STATE_KEY, () => {})
+  const stateVersion = ref(0)
+  app.provide(STATE_VERSION_KEY, stateVersion)
+  // Mirror production: bumpState both records the call (spy assertion)
+  // AND increments stateVersion so stateVersion-gated computeds rerun.
+  const bumpState = vi.fn(() => {
+    stateVersion.value += 1
+  })
+  app.provide(BUMP_STATE_KEY, bumpState)
+
+  const manager = new GameManager()
+  manager.catalogOps.registerMaterials(materials)
+  manager.catalogOps.registerPills(pills)
+  app.provide(GAME_MANAGER_KEY, manager)
 
   const player = usePlayerStore(pinia)
-  setup(player)
+  setup(player, manager)
 
   app.mount(container)
 
   return {
     container,
+    manager,
+    bumpState,
     unmount: () => {
       app.unmount()
       container.remove()
@@ -230,5 +251,174 @@ describe('MeridianSection (P7-M7)', () => {
     )
 
     view.unmount()
+  })
+
+  // M-QI-01 (QI-D1) - the invest action wires MeridianSection's next
+  // row to realmAdvanceOps.investBodyChapter(player, 'meridian'). The
+  // button is presentation convenience only - the chapter stays sole
+  // authority and re-validates on every click.
+  describe('invest wiring (M-QI-01)', () => {
+    function qiPlayer(
+      player: ReturnType<typeof usePlayerStore>,
+      realmLevel = 18,
+      openedIds: string[] = [],
+    ) {
+      player.$state.realmId = 'qi_refining'
+      player.$state.realmLevel = realmLevel
+      setBodyProgression(player, { meridian: { openedIds } })
+    }
+
+    function nextRowButton(view: { container: HTMLElement }) {
+      const nextRow = view.container.querySelector('.meridian-section__row--next')
+      return nextRow?.querySelector('button') ?? null
+    }
+
+    it('invests the next meridian on click: openedIds grows, pill debited, bumpState fired', async () => {
+      let state!: ReturnType<typeof usePlayerStore>['$state']
+      const view = mountSection(MeridianSection, (player, manager) => {
+        state = player.$state
+        qiPlayer(player)
+        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+      })
+
+      await nextTick()
+
+      const button = nextRowButton(view)
+      expect(button).not.toBeNull()
+      expect(button!.disabled).toBe(false)
+
+      button!.click()
+      await nextTick()
+
+      expect(state.bodyProgression.meridian.openedIds).toEqual(['nham_mach'])
+      expect(view.bumpState).toHaveBeenCalledTimes(1)
+      expect(view.manager.pillBag.getAmount('thong_mach_dan')).toBe(4)
+      // The invested row flips to opened; the next sequential row
+      // becomes the new next.
+      const rows = view.container.querySelectorAll('.meridian-section__row')
+      expect(rows[0]!.classList.contains('meridian-section__row--opened')).toBe(true)
+      expect(rows[1]!.classList.contains('meridian-section__row--next')).toBe(true)
+
+      view.unmount()
+    })
+
+    it('disables the button when thong_mach_dan is insufficient', async () => {
+      const view = mountSection(MeridianSection, (player) => {
+        qiPlayer(player)
+      })
+
+      await nextTick()
+
+      const button = nextRowButton(view)
+      expect(button).not.toBeNull()
+      expect(button!.disabled).toBe(true)
+
+      view.unmount()
+    })
+
+    it('paces the button by in-page-realm level', async () => {
+      const low = mountSection(MeridianSection, (player, manager) => {
+        qiPlayer(player, 1) // nham_mach needs level 2
+        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+      })
+
+      await nextTick()
+      expect(nextRowButton(low)!.disabled).toBe(true)
+      low.unmount()
+
+      const high = mountSection(MeridianSection, (player, manager) => {
+        qiPlayer(player, 2)
+        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+      })
+
+      await nextTick()
+      expect(nextRowButton(high)!.disabled).toBe(false)
+      high.unmount()
+    })
+
+    it('keeps the lower page investable past its realm (no pace gate cross-realm)', async () => {
+      const view = mountSection(MeridianSection, (player, manager) => {
+        player.$state.realmId = 'foundation_establishment'
+        player.$state.realmLevel = 1
+        setBodyProgression(player, { meridian: { openedIds: [] } })
+        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+      })
+
+      await nextTick()
+
+      const button = nextRowButton(view)
+      expect(button).not.toBeNull()
+      expect(button!.disabled).toBe(false)
+
+      view.unmount()
+    })
+
+    it('gates the final meridian on thien_dia_chi_kieu possession (not consumed)', async () => {
+      const opened8 = MERIDIANS.slice(0, 8).map((m) => m.id)
+
+      const noAux = mountSection(MeridianSection, (player, manager) => {
+        qiPlayer(player)
+        setBodyProgression(player, { meridian: { openedIds: opened8 } })
+        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
+      })
+
+      await nextTick()
+      expect(nextRowButton(noAux)!.disabled).toBe(true)
+      noAux.unmount()
+
+      const withAux = mountSection(MeridianSection, (player, manager) => {
+        qiPlayer(player)
+        setBodyProgression(player, { meridian: { openedIds: opened8 } })
+        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
+        manager.materialBag.add(manager.materialRegistry.get('thien_dia_chi_kieu'), 1)
+      })
+
+      await nextTick()
+
+      const button = nextRowButton(withAux)
+      expect(button!.disabled).toBe(false)
+
+      button!.click()
+      await nextTick()
+
+      expect(withAux.bumpState).toHaveBeenCalledTimes(1)
+      expect(withAux.manager.materialBag.getAmount('thien_dia_chi_kieu')).toBe(1)
+      expect(withAux.manager.pillBag.getAmount('thong_mach_dan')).toBe(0)
+
+      withAux.unmount()
+    })
+
+    it('renders no invest button for a mortal player (locked page)', async () => {
+      const view = mountSection(MeridianSection, (player) => {
+        player.$state.realmId = 'mortal'
+        player.$state.realmLevel = 10
+        setBodyProgression(player, { meridian: { openedIds: [] } })
+      })
+
+      await nextTick()
+
+      expect(view.container.querySelector('.meridian-section__row--next')).toBeNull()
+      expect(view.container.querySelector('button')).toBeNull()
+
+      view.unmount()
+    })
+
+    it('renders no button on opened or locked rows', async () => {
+      const view = mountSection(MeridianSection, (player, manager) => {
+        qiPlayer(player, 6, ['nham_mach', 'doi_mach'])
+        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 10)
+      })
+
+      await nextTick()
+
+      const rows = view.container.querySelectorAll('.meridian-section__row')
+      expect(rows[0]!.querySelector('button')).toBeNull()
+      expect(rows[1]!.querySelector('button')).toBeNull()
+      expect(rows[3]!.querySelector('button')).toBeNull()
+      // Exactly one button exists - the single global next row.
+      expect(view.container.querySelectorAll('button').length).toBe(1)
+
+      view.unmount()
+    })
   })
 })
