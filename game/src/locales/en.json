@@ -495,7 +495,9 @@
         "cost": "{count} Meridian Pills",
         "realmGate": "{realm} floor {level}",
         "auxGate": "requires Heaven-Earth Bridge",
-        "pageLocked": "Unlocks at {realm}"
+        "pageLocked": "Unlocks at {realm}",
+        "invest": "Open Meridian",
+        "owned": "owned {count}"
       }
     },
     "settings": {

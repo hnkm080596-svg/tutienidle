@@ -50,7 +50,7 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     expect(player.modifiers.filter(m => m.id.startsWith('luyen-the:'))).toHaveLength(0)
   })
 
-  it('routes meridian investments (parked path) through the same dispatch', () => {
+  it('routes meridian investments through the same dispatch', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.realmLevel = 18

@@ -11,10 +11,11 @@ function createLuyenKhiPlayer(): PlayerData {
   return player
 }
 
-// [M13 STATUS: PARKED] - the invest path has no production caller; the
-// chapter contract is still implemented and tested (spec sec.4 non-goal:
-// no meridian UI/gateway). Ported verbatim from the retired
-// MeridianSystem.test.ts onto player.bodyProgression.meridian.openedIds.
+// [M-QI-01] - production caller exists: MeridianSection's next-row
+// invest button routes through realmAdvanceOps.investBodyChapter. The
+// chapter contract below stays the sole authority. Ported verbatim
+// from the retired MeridianSystem.test.ts onto
+// player.bodyProgression.meridian.openedIds.
 describe('MeridianChapter - Bat Mach (spec dot-pha-loi-kiep sec.4.1a)', () => {
   it('data: 9 duong dung thu tu Nham -> Doc + Ky Kinh tang 18, cost tang dan, KHONG cham mana', () => {
     expect(MERIDIANS.map((m) => m.id)).toEqual([

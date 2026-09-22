@@ -495,7 +495,9 @@
         "cost": "{count} Thông Mạch Đan",
         "realmGate": "{realm} tầng {level}",
         "auxGate": "cần Thiên Địa Chi Kiều",
-        "pageLocked": "Mở khóa ở {realm}"
+        "pageLocked": "Mở khóa ở {realm}",
+        "invest": "Mở Mạch",
+        "owned": "sở hữu {count}"
       }
     },
     "settings": {
