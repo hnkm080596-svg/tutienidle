@@ -12,7 +12,7 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
-import { getCurrentRealm, getNextRealm } from '@/core/realm/realmSystem'
+import { CORE_REALM_LEVEL, getCurrentRealm, getNextRealm } from '@/core/realm/realmSystem'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { REALM_PASSIVE_NODES } from '@/data/realm/RealmPassiveNodes'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
@@ -29,6 +29,14 @@ const { realmStatPassiveRows } = useRealmStatPassives()
 
 const currentTier = computed(() => getRealmTier(player.realmId))
 const canBreakthrough = computed(() => gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state))
+// M-QI-03 - normal Truc Co read-model: the visible requirement block is
+// scoped to qi_refining (the domain rows also drive the gate itself;
+// hidden foundation inputs are never rows - QI-D6).
+const requirements = computed(() =>
+  player.realmId === 'qi_refining'
+    ? gameManager.realmAdvanceOps.getBreakthroughRequirements(player.$state)
+    : [],
+)
 const nextRealmName = computed(() => getNextRealm(player.realmId)?.name ?? '')
 const realmName = computed(() => getCurrentRealm(player.realmId).name)
 const majorBreakthroughLabel = computed(() => {
@@ -68,6 +76,25 @@ function majorBreakthrough() {
 
       <div class="realm-panel__actions">
         <GameButton :disabled="!canBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>
+
+        <ul v-if="requirements.length" class="realm-requirements">
+        <li
+          v-for="row in requirements"
+          :key="row.key"
+          class="realm-requirement"
+          :class="{ 'realm-requirement--met': row.met }"
+        >
+          <span
+            class="realm-requirement__marker"
+            :aria-label="row.met ? t('panels.realm.requirements.met') : t('panels.realm.requirements.unmet')"
+          >{{ row.met ? '✓' : '✗' }}</span>
+          <span>{{
+            row.key === 'level'
+              ? t('panels.realm.requirements.level', { realm: realmName, level: CORE_REALM_LEVEL })
+              : t('panels.realm.requirements.chapterClear')
+          }}</span>
+        </li>
+      </ul>
       </div>
 
       <div class="realm-panel__nodes" :aria-label="t('panels.realm.nodes.aria')">
@@ -120,6 +147,11 @@ function majorBreakthrough() {
 .realm-panel__actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; }
 .realm-panel__actions :deep(button:disabled) { opacity: .38; filter: grayscale(1); }
 .realm-panel__actions label { color: var(--text-secondary); }
+/* M-QI-03 - normal Truc Co requirement lines (unmet muted / met jade). */
+.realm-requirements { flex: 0 0 100%; display: flex; flex-direction: column; gap: 4px; align-items: center; margin: 0; padding: 0; list-style: none; }
+.realm-requirement { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--text-muted); }
+.realm-requirement--met { color: var(--jade); }
+.realm-requirement__marker { font-weight: 700; width: 1em; text-align: center; }
 .realm-panel__cultivation { width: min(560px, 90%); margin: 0 auto; }
 .realm-panel__cultivation-bar { --bar-track: var(--ink-950); border: 1px solid var(--ink-line); }
 /* Fit-refactor đợt 3 — grid node cảnh giới auto-fit theo CARD: 9 cột khi

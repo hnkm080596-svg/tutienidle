@@ -479,6 +479,12 @@
         "unlocked": "Attuned",
         "locked": "Not unlocked"
       },
+      "requirements": {
+        "level": "{realm} floor {level}",
+        "chapterClear": "Chapter 10 complete",
+        "met": "Met",
+        "unmet": "Not met"
+      },
       "bodyRefinement": {
         "title": "Body Refinement",
         "summary": "Tiers completed: {completed}/6",

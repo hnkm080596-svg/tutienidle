@@ -43,6 +43,18 @@ import type {
 import type { GameManagerProgressionOps } from './GameManagerProgressionOps'
 import type { TemplateRegistry } from './TemplateRegistry'
 
+/**
+ * M-QI-03 - one row of the normal breakthrough requirement read-model.
+ * The UI renders a label per key; `met` is the live predicate flag.
+ * Hidden foundation/grade inputs (truc_co_dan, body tiers, meridian,
+ * perfection, talents) are intentionally NOT rows here - QI-D6 keeps
+ * them resolver-internal.
+ */
+export interface BreakthroughRequirementRow {
+  key: 'level' | 'chapterClear'
+  met: boolean
+}
+
 
 
 /**
@@ -453,6 +465,28 @@ export class GameManagerRealmAdvanceOps {
   }
 
   /**
+   * M-QI-03 - normal breakthrough requirement read-model: the SAME
+   * predicate rows that drive canTriggerBreakthrough, exposed so the UI
+   * can render unmet requirements instead of a bare disabled button.
+   * mortal: [level]; qi_refining: [level, chapterClear]; others: [].
+   */
+  getBreakthroughRequirements(player: PlayerData): BreakthroughRequirementRow[] {
+    if (player.realmId === 'mortal') {
+      return [{ key: 'level', met: player.realmLevel >= CORE_REALM_LEVEL }]
+    }
+    if (player.realmId === 'qi_refining') {
+      return [
+        { key: 'level', met: player.realmLevel >= CORE_REALM_LEVEL },
+        {
+          key: 'chapterClear',
+          met: player.completedStageIds.includes(QI_REFINING_BREAKTHROUGH_STAGE_ID),
+        },
+      ]
+    }
+    return []
+  }
+
+  /**
    * Unified breakthrough gate - one function for EVERY realm. Returns
    * true when the player meets the conditions to press Breakthrough
    * (Quan Khi / Truc Co / ...).
@@ -469,15 +503,7 @@ export class GameManagerRealmAdvanceOps {
    * lands.
    */
   canTriggerBreakthrough(player: PlayerData): boolean {
-    if (player.realmId === 'mortal') {
-      return player.realmLevel >= CORE_REALM_LEVEL
-    }
-    if (player.realmId === 'qi_refining') {
-      return (
-        player.realmLevel >= CORE_REALM_LEVEL &&
-        player.completedStageIds.includes(QI_REFINING_BREAKTHROUGH_STAGE_ID)
-      )
-    }
-    return false
+    const requirements = this.getBreakthroughRequirements(player)
+    return requirements.length > 0 && requirements.every((row) => row.met)
   }
 }
