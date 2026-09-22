@@ -295,9 +295,11 @@ export class EarlyGameSession {
 
   /** Real Quan Khi drive: tickOps.update + scripted correct answers.
    * M-C: canTriggerBreakthrough precheck first - the production entry
-   * (triggerBreakthroughAction) refuses below realmLevel 12 BEFORE
-   * reaching startTribulation; the session mirrors that contract so a
-   * journey can't drive a tribulation the game would never admit. */
+   * (triggerBreakthroughAction) refuses an ineligible player BEFORE
+   * reaching startTribulation (mortal: level 12; qi_refining per M-QI-02:
+   * level 12 + chapter-final stage clear). The session mirrors that
+   * contract so a journey can't drive a tribulation the game would
+   * never admit. */
   runTribulation(targetRealmId: string): TribulationRunResult {
     if (!this.gameManager.realmAdvanceOps.canTriggerBreakthrough(this.player)) {
       return 'refused'

@@ -75,6 +75,12 @@ describe('RealmPanel', () => {
     mounted.player.realmLevel = 12
     await nextTick()
 
+    // M-QI-02 - Truc Co admission needs the chapter-final clear too.
+    expect(ritualButton().disabled).toBe(true)
+
+    mounted.player.completedStageIds = ['qi_refining_abyssal_pool']
+    await nextTick()
+
     expect(ritualButton().disabled).toBe(false)
 
     mounted.player.realmId = 'foundation_establishment'

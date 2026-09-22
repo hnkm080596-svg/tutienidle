@@ -286,6 +286,20 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     expect(slotState.enhanceFailStreak).toBe(2)
   })
 
+  it('qi_refining tầng 12 chưa clear Quật 10 → triggerBreakthroughAction trả false, không tạo kiếp', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerPills(pills)
+    const player = usePlayerStore()
+
+    player.realmId = 'qi_refining'
+    player.realmLevel = 12
+
+    expect(triggerBreakthroughAction(player, gameManager)).toBe(false)
+    expect(gameManager.tribulationDirector.getState()).toBeNull()
+  })
+
   it('triggerBreakthroughAction auto-unequip TRƯỚC khi vào kiếp', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
@@ -295,6 +309,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
 
     player.realmId = 'qi_refining'
     player.realmLevel = 12
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats.defense = 10_000
     player.baseStats.maxHp = 500_000
 

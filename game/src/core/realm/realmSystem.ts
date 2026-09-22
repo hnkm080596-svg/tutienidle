@@ -43,6 +43,11 @@ export const BASE_CULTIVATION_PER_SECOND = 10
 // qi_refining → foundation_establishment (GameManager.canTriggerBreakthrough()).
 export const CORE_REALM_LEVEL = 12
 
+// QI-D5 - the Truc Co admission gate pins the qi_refining chapter-final
+// stage clear alongside CORE_REALM_LEVEL (both mandatory). Mortal keeps
+// the level-only gate: its initiation ritual is chooseCultivationPath.
+export const QI_REFINING_BREAKTHROUGH_STAGE_ID = 'qi_refining_abyssal_pool'
+
 export const EXTENDED_REALM_LEVEL = 18
 
 // Trong 1 đại cảnh giới, tầng cuối tốn thời gian lâu hơn tầng đầu theo
