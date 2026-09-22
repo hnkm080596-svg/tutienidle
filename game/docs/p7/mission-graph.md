@@ -74,3 +74,4 @@ Locked product decisions carried into this graph: no save migration (grandfather
 | M-E | DONE | `6854fe27` | verify 536t + OCR + runtime (3 page states live) + QA + P5 + external SPEC/IMPL reviewed |
 | M-F | DONE | `c1714dd0` | verify 226t + OCR + runtime (flat gains live) + QA + P5 + external SPEC/IMPL reviewed |
 | M-D | DONE | `c42d827b` | verify 15/15 (3-seed measured) + OCR + QA + P5 + external SPEC/IMPL reviewed — verdict: perfection infeasible under enumerated sources (shortfall 23) |
+| M-G | DONE | `ae57e931` | verify 294t + OCR + QA (8 hypotheses, 2nd externalWard producer closed) + P5 + external SPEC/IMPL reviewed — than_nong + khai_minh added; BETA_COMPANIONS acquisition pool split from full catalog |
