@@ -115,6 +115,7 @@ Follow-up graph from the Luyện Khí chapter audit + reconciliation (decisions 
 | M-QI-01 | DONE | `69767cb6` | verify 81t scope + type-check + OCR + runtime (live invest: pill 5→4, nham_mach opened, next row actionable) + QA + P5 + external SPEC/IMPL (2 rounds) reviewed |
 | M-QI-02 | DONE | `df2b232d` | verify 1213t scope + type-check + OCR + QA + P5 + external SPEC (2 rounds) / IMPL reviewed — qi_refining breakthrough = L12 + `qi_refining_abyssal_pool` clear (QI-D5) |
 | M-QI-03 | DONE | `f4ec23a8` | verify 13t focused / 1020t scope + type-check + OCR + runtime (live: unmet `✗ Chương 10` → seeded clear → `✓`, button disabled→enabled; mortal/foundation 0 rows) + QA + P5 + external SPEC (2 rounds) / IMPL (2 rounds) reviewed — `getBreakthroughRequirements` owns admission truth; `canTriggerBreakthrough` delegates; qi_refining-only requirement block (QI-D6) |
+| M-QI-04 | DONE | `2499e626` | verify 207t scope + type-check + OCR + QA + P5 + external SPEC (2 rounds) / IMPL (4 rounds) reviewed — `hoi_xuan` DEFERRED: daily retargeted to `tu_linh_thao_qi_refining_decade`, grotto pool prunes retired families, id tolerance kept (QI-D8) |
 
 ## Locked rulings carried into this graph
 
