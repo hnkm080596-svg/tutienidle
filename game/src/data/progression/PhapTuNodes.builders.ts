@@ -85,7 +85,7 @@ function growth(
   description: string,
   element: ElementType,
   modifiers: StatModifier[],
-  options: { maxLevel?: number; upgradeCost?: { base: number; perLevel: number }; prereqs?: NodePrerequisite[]; routeTag?: 'dot' | 'no' } = {},
+  options: { maxLevel?: number; upgradeCost?: { base: number; perLevel: number }; prereqs?: NodePrerequisite[]; routeTag?: 'dot' | 'no'; levelGates?: ProgressionNode['levelGates'] } = {},
 ): ProgressionNode {
   return {
     id,
@@ -96,6 +96,7 @@ function growth(
     insightCost: 1,
     maxLevel: options.maxLevel ?? 5,
     upgradeCost: options.upgradeCost ?? { base: 1, perLevel: 2 },
+    levelGates: options.levelGates,
     prerequisites: options.prereqs ?? [
       { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
     ],
@@ -134,14 +135,23 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
   return [
     elementRoot(element),
 
-    // Power growth — elementPower tuyen tinh 10 cap.
+    // Power growth - elementPower tuyen tinh 10 cap. M-QI-06 authored
+    // cap gates: deep mastery paces behind technique rank (mechanism-
+    // proving set, not a balance pass).
     growth(
       `minor_${element}_intensity`,
       `${label} Luc`,
       `+2 ${element}Power ${label}/cap.`,
       element,
       [stat(`minor_${element}_intensity`, `${element}Power`, 2, 2)],
-      { maxLevel: 10, upgradeCost: { base: 1, perLevel: 3 } },
+      {
+        maxLevel: 10,
+        upgradeCost: { base: 1, perLevel: 3 },
+        levelGates: [
+          { atLevel: 6, prerequisite: { kind: 'techniqueRank', rank: 3 } },
+          { atLevel: 9, prerequisite: { kind: 'techniqueRank', rank: 6 } },
+        ],
+      },
     ),
 
     // Ailment-leaning growth (shared — ap dung bat ke route).
@@ -185,7 +195,9 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
       ],
     },
 
-    // Phap Tuong (god-ult) unlock — sau special.
+    // Phap Tuong (god-ult) unlock - sau special. M-QI-06 authored
+    // unlock gate: god-ult mastery requires technique rank 5 (the
+    // realm gate arrives transitively through linh_ngo_<special>).
     {
       ...unlockNode(
         godUltId,
@@ -195,6 +207,10 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
         `linh_ngo_${specialId}`,
       ),
       insightCost: 3,
+      prerequisites: [
+        { kind: 'node', nodeId: `linh_ngo_${specialId}` },
+        { kind: 'techniqueRank', rank: 5 },
+      ],
     },
 
     // Tu The — The gain lane (basic + special +1/cap).

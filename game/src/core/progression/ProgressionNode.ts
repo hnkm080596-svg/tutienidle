@@ -43,7 +43,9 @@ export type NodePrerequisite =
   // kind:'realm' (progression gate, purchase-only - a bought node stays
   // bought even though advanceTechniqueGrade resets rank to 0). Reads
   // the read-only mirror player.techniqueProgress; absent mirror fails
-  // closed for any positive requirement. No authored gates yet.
+  // closed for any positive requirement. M-QI-06 authors the first
+  // techniqueRank gates (unlock + levelGates); techniqueGrade remains
+  // a supported but unauthored variant until a later content mission.
   | { kind: 'techniqueRank'; rank: number }
   | { kind: 'techniqueGrade'; grade: number }
 
@@ -187,6 +189,19 @@ export interface ProgressionNode {
      * Not declared -> insightCost applies to every purchase.
      */
   upgradeCost?: { base: number; perLevel: number }
+
+  /**
+   * M-QI-06 (QI-D3) - per-level gates: the L-1 -> L upgrade requires
+   * `prerequisite` to hold at purchase time. Gates the UPGRADE
+   * transaction only - owned levels never regress (a technique rank
+   * reset on grade advance freezes the level, it does not revoke it),
+   * and the 0->1 purchase is unaffected (`prerequisites` own that).
+   * Effective max = min(maxLevel, min over unsatisfied gates
+   * (atLevel - 1)); entries need not be sorted (evaluation takes the
+   * minimum, so authored order cannot change semantics). Data
+   * discipline: atLevel in [2, maxLevel]; entries outside are inert.
+   */
+  levelGates?: { atLevel: number; prerequisite: NodePrerequisite }[]
 
   prerequisites?: NodePrerequisite[]
 

@@ -93,10 +93,34 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     }
   })
 
-  // P7-M6 - the techniqueRank/techniqueGrade prerequisite kinds exist as
-  // schema + evaluator only; NO authored node may carry a technique gate
-  // yet (mission constraint - remove this pin when content authors one).
-  it('no authored node carries a technique-gated prerequisite yet (P7-M6 schema-only)', () => {
+  // M-QI-06 - constrained-authoring guard: the minimal proving set may
+  // carry techniqueRank gates on exactly the listed ids (9 unlock nodes
+  // in `prerequisites`, 8 cap nodes in `levelGates`); techniqueGrade and
+  // revealWhen technique gates remain forbidden everywhere until a later
+  // content mission extends the allowlist.
+  const TECHNIQUE_UNLOCK_ALLOWLIST = new Set([
+    'linh_ngo_tat_phuong_giang_the',
+    'linh_ngo_bat_thu_can_quet',
+    'linh_ngo_kien_moc_thong_thien',
+    'linh_ngo_kim_phat_thu_sat',
+    'linh_ngo_hau_tho_thanh_luy',
+    'major_bat_tu_tuc_menh',
+    'major_loan_dau_sat',
+    'major_khiem_khich_dien',
+    'major_son_nhac_bao_bi',
+  ])
+  const TECHNIQUE_CAP_ALLOWLIST = new Set([
+    'minor_fire_intensity',
+    'minor_water_intensity',
+    'minor_wood_intensity',
+    'minor_metal_intensity',
+    'minor_earth_intensity',
+    'ngu_kiem_sac',
+    'ngu_kiem_phong',
+    'ngu_kiem_sat',
+  ])
+
+  it('technique gates stay inside the M-QI-06 authored allowlist', () => {
     const allNodes = [
       ...PHAP_TU_NODES,
       ...PHAP_TU_AN_NODES,
@@ -107,10 +131,31 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
 
     for (const node of allNodes) {
       for (const prerequisite of node.prerequisites ?? []) {
-        expect(
-          prerequisite.kind === 'techniqueRank' || prerequisite.kind === 'techniqueGrade',
-          `${node.id} authors a technique gate before content missions allow it`,
-        ).toBe(false)
+        if (prerequisite.kind === 'techniqueRank') {
+          expect(
+            TECHNIQUE_UNLOCK_ALLOWLIST.has(node.id),
+            `${node.id} authors a techniqueRank prerequisite outside the M-QI-06 allowlist`,
+          ).toBe(true)
+        } else {
+          expect(
+            prerequisite.kind === 'techniqueGrade',
+            `${node.id} authors a techniqueGrade prerequisite before content missions allow it`,
+          ).toBe(false)
+        }
+      }
+
+      for (const gate of node.levelGates ?? []) {
+        if (gate.prerequisite.kind === 'techniqueRank') {
+          expect(
+            TECHNIQUE_CAP_ALLOWLIST.has(node.id),
+            `${node.id} authors a techniqueRank levelGate outside the M-QI-06 allowlist`,
+          ).toBe(true)
+        } else {
+          expect(
+            gate.prerequisite.kind === 'techniqueGrade',
+            `${node.id} authors a techniqueGrade levelGate before content missions allow it`,
+          ).toBe(false)
+        }
       }
 
       if (node.revealWhen) {

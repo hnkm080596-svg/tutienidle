@@ -167,6 +167,7 @@
           "techniqueGrade": "Requires technique grade {grade}",
           "skillUpgrade": "Upgrade the related skill"
         },
+        "upgradeGateHeader": "Upgrade blocked:",
         "routePick": {
           "title": "Choose Your Pháp Tu Stance",
           "hint": "The chosen element is permanent. The stance can be reforged out of combat — old stance nodes reset to 0 and refund 75% of the Insight paid.",

@@ -9,6 +9,7 @@ import {
   getNodeLevel as getNodeLevelSystem,
   getNextLevelCost as getNextLevelCostSystem,
   getNodeMaxLevel as getNodeMaxLevelSystem,
+  getEffectiveNodeMaxLevel as getEffectiveNodeMaxLevelSystem,
   purchaseNode as purchaseNodeSystem,
   switchRoute as switchRouteSystem,
   upgradeNode as upgradeNodeSystem,
@@ -409,7 +410,8 @@ export class GameManagerProgressionOps {
     return this.deps.nodeRegistry.has(nodeId) ? getNodeMaxLevelSystem(this.deps.nodeRegistry.get(nodeId)) : 0
   }
 
-  /** Cam Ngo cost of the NEXT purchase/upgrade - undefined when maxed. */
+  /** Cam Ngo cost of the NEXT purchase/upgrade - undefined when maxed
+   *  or parked at a level-gate effective cap (M-QI-06). */
   getNextNodeCost(nodeId: string, player: PlayerData): number | undefined {
     if (!this.deps.nodeRegistry.has(nodeId)) {
       return undefined
@@ -419,7 +421,7 @@ export class GameManagerProgressionOps {
 
     const level = getNodeLevelSystem(player, nodeId)
 
-    if (level >= getNodeMaxLevelSystem(node)) {
+    if (level >= getEffectiveNodeMaxLevelSystem(player, node)) {
       return undefined
     }
 
@@ -551,7 +553,10 @@ export class GameManagerProgressionOps {
 
     const level = getNodeLevelSystem(player, coreId)
 
-    if (level < 1 || level >= getNodeMaxLevelSystem(node)) {
+    // M-QI-06 - effective cap read: a gated core level never previews
+    // an Insight cost (cores carry no levelGates today, but the
+    // accessor must not contradict canUpgradeNode if one is authored).
+    if (level < 1 || level >= getEffectiveNodeMaxLevelSystem(player, node)) {
       return undefined
     }
 

@@ -41,14 +41,16 @@ function fixtureCombatant(id: string, statOverrides: Parameters<typeof createBas
 // mutex roots, realm gates, collector->kit delivery, INV-13 authoring ban.
 
 // Every node in this tree carries requiredCultivationPath 'body' +
-// requiredWay 'body_pathway' — the fixture player owns both so the purchase/
-// upgrade gates hold.
+// requiredWay 'body_pathway' - the fixture player owns both, plus
+// techniqueRank 5 (M-QI-06 authored major gates), so the purchase/upgrade
+// gates hold.
 function playerWith(overrides: Partial<ReturnType<typeof createDefaultPlayer>> = {}) {
   return {
     ...createDefaultPlayer(),
     skillInsight: 99,
     cultivationPath: 'body' as const,
     cultivationWay: 'body_pathway' as const,
+    techniqueProgress: { rank: 5, grade: 1 },
     ...overrides,
   }
 }
