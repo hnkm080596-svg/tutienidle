@@ -18,7 +18,12 @@ import { createDefaultBodyProgression } from '../realm/body/BodyChapter'
 // Fix: restoreFromSave doi chieu template de hoi phuc authored data.
 function buildLegacySave(skills: Skill[]): GameSave {
   return {
-    player: { bodyProgression: createDefaultBodyProgression() },
+    player: {
+      bodyProgression: createDefaultBodyProgression(),
+      // M-QI-07 (v74) - the minimal legacy-skill fixture still declares
+      // the required physique field at the current version.
+      physiqueGrade: 'pham',
+    },
     techniques: [],
     skills,
     materials: [],

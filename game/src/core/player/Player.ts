@@ -22,6 +22,7 @@ import {
   createDefaultBodyProgression,
   type BodyProgressionState,
 } from '../realm/body/BodyChapter'
+import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 
 export interface PlayerData {
   name: string
@@ -217,6 +218,15 @@ export interface PlayerData {
   // through it, never the slices directly.
   bodyProgression: BodyProgressionState
 
+  // M-QI-07 (QI-D4) - the persisted physique (The Phach) grade on the
+  // Pham -> Bao -> ... -> Tien ladder (data/realm/PhysiqueLadder.ts).
+  // Advanced EXACTLY ONE rung per completed physique-advancement body
+  // chapter (today: 6/6 body_refinement -> 'bao'), written inside the
+  // BodyProgressionSystem invest transaction - never derived from realm
+  // or re-derived at restore (save integrity REJECTS a grade that does
+  // not match the authored-transition derivation).
+  physiqueGrade: PhysiqueGradeId
+
   // Bac Nhap Dao (1-6) - chot DUY NHAT 1 lan luc Le Nhap Mon (Pham
   // Nhan -> Luyen Khi, xem GameManager.chooseCultivationPath()) tu so
   // tang body_refinement da hoan thanh tai thoi diem do, dung cho ca Nhap Dao
@@ -406,6 +416,7 @@ export function createDefaultPlayer(): PlayerData {
     nodeFreePurchaseRecord: {},
 
     bodyProgression: createDefaultBodyProgression(),
+    physiqueGrade: 'pham',
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
     tribulationBonusStacks: 0,

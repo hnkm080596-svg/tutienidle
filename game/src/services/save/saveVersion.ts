@@ -106,4 +106,10 @@
 // mirror + coverage of learned levelled skills, way coreSkillIds, and
 // owned-node grantsSkillCoreIds). Save v72 is rejected (dev phase, no
 // migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 73 as const
+// v74 (2026-09-23, M-QI-07 physique transformation authority):
+// PlayerData.physiqueGrade (Pham -> ... -> Tien ladder id) is required;
+// semantic coherence (persisted grade must equal the grade derived from
+// the authored physique-advancement chain) is enforced by the
+// BodyProgression integrity preflight. Save v73 is rejected (dev phase,
+// no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 74 as const

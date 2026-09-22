@@ -105,6 +105,7 @@ describe('validateGameSaveShape — player', () => {
     ['modifiers', 'player.modifiers'],
     ['selectedTalentIds', 'player.selectedTalentIds'],
     ['nodeLevels', 'player.nodeLevels'],
+    ['physiqueGrade', 'player.physiqueGrade'],
     ['lastSavedAt', 'player.lastSavedAt'],
   ])('từ chối khi thiếu %s, path "%s"', (field, expectedPath) => {
     const save = validSave()
@@ -135,6 +136,32 @@ describe('validateGameSaveShape — player', () => {
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('player.realmId')
+  })
+
+  // M-QI-07 (QI-D4) - physiqueGrade is a typed ladder member: shape
+  // validation accepts every authored rung and rejects non-members,
+  // non-strings, and missing values.
+  it('từ chối physiqueGrade không phải thành viên của thang thể phách', () => {
+    for (const bad of ['pham_the', 'TIEN', 'dao_the', '', 3, null, {}, ['bao']]) {
+      const save = validSave()
+      ;(save.player as Record<string, unknown>).physiqueGrade = bad
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.physiqueGrade')
+    }
+  })
+
+  it('chấp nhận mọi bậc thể phách hợp lệ của thang', () => {
+    for (const grade of ['pham', 'bao', 'phap', 'linh', 'huyen', 'chan', 'dao', 'than', 'thanh', 'tien']) {
+      const save = validSave()
+      ;(save.player as Record<string, unknown>).physiqueGrade = grade
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(true)
+    }
   })
 })
 

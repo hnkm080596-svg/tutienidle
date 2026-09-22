@@ -949,6 +949,10 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     ['non-array meridian openedIds', (p: PlayerData) => { p.bodyProgression.meridian.openedIds = 42 as never }],
     ['missing bodyProgression record', (p: PlayerData) => { p.bodyProgression = undefined as never }],
     ['missing meridian slice', (p: PlayerData) => { p.bodyProgression = { body_refinement: { completedTiers: 0, currentTierProgress: 0 } } as never }],
+    // M-QI-07: a missing advancement-owning slice must still fail through
+    // the aggregated integrity error - not a raw TypeError from the
+    // physique derivation walking the absent slice.
+    ['missing body_refinement slice', (p: PlayerData) => { p.bodyProgression = { meridian: { openedIds: [] } } as never }],
   ])('rejects %s before any owner mutation', (_label, corrupt) => {
     const manager = makeManager()
     const player = createDefaultPlayer()
@@ -1015,5 +1019,61 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     expect(ids.filter(id => id.startsWith('luyen-the:'))).toHaveLength(0)
     expect(ids).not.toContain('bat-mach:doc_mach:strength')
     expect(ids).toContain('bat-mach:nham_mach:maxHp')
+  })
+})
+
+// M-QI-07 (QI-D4) - physiqueGrade preflight: restore derives the exact
+// reachable grade by walking the authored contiguous-prefix chain and
+// REJECTS any persisted grade that does not match. No recompute, no
+// repair - the save is corrupt.
+describe('v74 physiqueGrade preflight (M-QI-07)', () => {
+  it('rejects a persisted grade unreachable from the authored chain', () => {
+    const manager = makeManager()
+    const live = createDefaultPlayer()
+    manager.setActivePlayer(live)
+
+    // 6/6 chapter done but the transform never applied - incoherent.
+    const stale = createDefaultPlayer()
+    stale.realmId = 'qi_refining'
+    stale.bodyProgression.body_refinement.completedTiers = 6
+    stale.physiqueGrade = 'pham'
+    expect(() => manager.saveOps.restoreFromSave(baseSave(stale))).toThrow(/physique/i)
+    // Preflight throws before owner mutation - the live player is untouched.
+    expect(live.bodyProgression.body_refinement.completedTiers).toBe(0)
+    expect(live.physiqueGrade).toBe('pham')
+
+    // Grade outrunning an incomplete chapter.
+    const ahead = createDefaultPlayer()
+    ahead.realmId = 'qi_refining'
+    ahead.bodyProgression.body_refinement.completedTiers = 5
+    ahead.physiqueGrade = 'bao'
+    expect(() => manager.saveOps.restoreFromSave(baseSave(ahead))).toThrow(/physique/i)
+
+    // Rung with no authored chain - unreachable, not just incoherent.
+    for (const rung of ['phap', 'tien'] as const) {
+      const unreachable = createDefaultPlayer()
+      unreachable.realmId = 'qi_refining'
+      unreachable.bodyProgression.body_refinement.completedTiers = 6
+      unreachable.physiqueGrade = rung
+      expect(() => manager.saveOps.restoreFromSave(baseSave(unreachable))).toThrow(/physique/i)
+    }
+  })
+
+  it('accepts the canonical pairs - restore is read-only, grade passes through unchanged', () => {
+    setActivePinia(createPinia())
+    const playerStore = usePlayerStore()
+    const manager = makeManager()
+
+    expect(() => manager.saveOps.restoreFromSave(baseSave(createDefaultPlayer()))).not.toThrow()
+
+    const done = createDefaultPlayer()
+    done.realmId = 'qi_refining'
+    done.bodyProgression.body_refinement.completedTiers = 6
+    done.physiqueGrade = 'bao'
+
+    const result = restoreGameSession(playerStore, manager, baseSave(done))
+    expect(result.status).toBe('ok')
+    // The grade crosses restore verbatim - no re-derive, no re-advance.
+    expect(playerStore.physiqueGrade).toBe('bao')
   })
 })

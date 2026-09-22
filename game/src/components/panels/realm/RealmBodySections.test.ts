@@ -72,6 +72,58 @@ function setBodyProgression(
 }
 
 describe('BodyRefinementSection (P7-M7)', () => {
+  // M-QI-07 (QI-D4) - the section surfaces the persisted physiqueGrade
+  // through the canonical read model: a localized physique line that
+  // stays a pure read (no transformation logic in the component).
+  it('renders the localized physique grade line for the seeded grade', async () => {
+    const fresh = mountSection(BodyRefinementSection, (player) => {
+      player.$state.realmId = 'mortal'
+    })
+    await nextTick()
+
+    expect(fresh.container.querySelector('.body-refinement__physique')?.textContent)
+      .toContain('Phàm Thể')
+    fresh.unmount()
+
+    const transformed = mountSection(BodyRefinementSection, (player) => {
+      player.$state.realmId = 'qi_refining'
+      player.$state.physiqueGrade = 'bao'
+      setBodyProgression(player, {
+        body_refinement: { completedTiers: 6, currentTierProgress: 0 },
+      })
+    })
+    await nextTick()
+
+    expect(transformed.container.querySelector('.body-refinement__physique')?.textContent)
+      .toContain('Bảo Thể')
+    transformed.unmount()
+  })
+
+  // QA sync hypothesis: the transform can fire while the panel is
+  // already mounted (tick auto-invest writes the grade on the reactive
+  // store state) - the line must update without a remount/reload.
+  it('updates the physique line when the grade flips mid-session', async () => {
+    let store: ReturnType<typeof usePlayerStore> | undefined
+    const view = mountSection(BodyRefinementSection, (player) => {
+      store = player
+      player.$state.realmId = 'mortal'
+    })
+    await nextTick()
+
+    expect(view.container.querySelector('.body-refinement__physique')?.textContent)
+      .toContain('Phàm Thể')
+
+    // Simulate the tick-time transform: the domain write lands on the
+    // store state and bumps stateVersion (same as every other op).
+    store!.$state.physiqueGrade = 'bao'
+    view.bumpState()
+    await nextTick()
+
+    expect(view.container.querySelector('.body-refinement__physique')?.textContent)
+      .toContain('Bảo Thể')
+    view.unmount()
+  })
+
   it('renders the tier rows with done/active/locked states from chapter state', async () => {
     const view = mountSection(BodyRefinementSection, (player) => {
       // Mortal floor 3 - tier 0 done, tier 1 (requiredRealmLevel 4)

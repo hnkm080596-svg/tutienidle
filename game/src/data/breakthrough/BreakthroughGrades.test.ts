@@ -17,6 +17,7 @@ function createGreatDaoPlayer(): PlayerData {
   player.realmLevel = 18
   player.selectedTalentIds = ['pham_cot']
   player.bodyProgression.body_refinement.completedTiers = 6
+  player.physiqueGrade = 'bao'
   player.mortalPerfectionAchieved = true
   player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id) // 9/9 gồm Kỳ Kinh
   // 5/5 main stat 30/30 (cap Luyện Khí — StatCap.ts)
@@ -50,11 +51,13 @@ describe('resolveKienCoGrade — 4 bậc Kiến Cơ (spec §4.2)', () => {
   it('Thiên Đạo: đan + Luyện Th thể 6/6 + 6/8 kinh mạch', () => {
     const player = createReadyPlayer()
     player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
     player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 6).map((m) => m.id)
     expect(resolveKienCoGrade(player, true)).toBe('heaven')
     // chỉ 5 đường → Địa
     const thin = createReadyPlayer()
     thin.bodyProgression.body_refinement.completedTiers = 6
+    thin.physiqueGrade = 'bao'
     thin.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 5).map((m) => m.id)
     expect(resolveKienCoGrade(thin, true)).toBe('earth')
   })

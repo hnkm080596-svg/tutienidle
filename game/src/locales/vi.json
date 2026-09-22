@@ -498,6 +498,21 @@
         "tierLock": "Khóa — cần Phàm Nhân tầng {level}",
         "empty": "Đã hoàn thành toàn bộ Luyện Thể."
       },
+      "physique": {
+        "line": "Thể Phách: {grade}",
+        "grades": {
+          "pham": "Phàm Thể",
+          "bao": "Bảo Thể",
+          "phap": "Pháp Thể",
+          "linh": "Linh Thể",
+          "huyen": "Huyền Thể",
+          "chan": "Chân Thể",
+          "dao": "Đạo Thể",
+          "than": "Thần Thể",
+          "thanh": "Thánh Thể",
+          "tien": "Tiên Thể"
+        }
+      },
       "meridian": {
         "title": "Kỳ Kinh Bát Mạch",
         "summary": "Đã mở: {completed}/{total}",

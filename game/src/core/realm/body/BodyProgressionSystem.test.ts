@@ -159,6 +159,8 @@ describe('BodyProgressionSystem - integrity gate', () => {
         p.bodyProgression.body_refinement.currentTierProgress = 51 // >= Luyen Bi cap (50)
       },
       p => {
+        // Grade coherent so ONLY the progress-at-6 violation fires.
+        p.physiqueGrade = 'bao'
         p.bodyProgression.body_refinement.completedTiers = 6
         p.bodyProgression.body_refinement.currentTierProgress = 1
       },
@@ -176,6 +178,9 @@ describe('BodyProgressionSystem - integrity gate', () => {
   it('accepts a fully-completed canonical state', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
+    // M-QI-07 - a 6/6 refinement chapter implies the transform already
+    // fired; the persisted grade mirrors it (INV-8).
+    player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
     expect(() => assertBodyProgressionIntegrity(player)).not.toThrow()
