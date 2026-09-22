@@ -43,6 +43,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     const player = usePlayerStore()
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
@@ -59,6 +60,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     const player = usePlayerStore()
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
     player.baseStats = { ...player.baseStats, strength: 9, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
@@ -88,6 +90,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     const player = usePlayerStore()
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
@@ -129,6 +132,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
@@ -178,6 +182,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
@@ -238,6 +243,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)

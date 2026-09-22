@@ -29,6 +29,7 @@ import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
+import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 
 // M-QI-05 (v73) - canonical Core Node lookups for the coverage checks:
 // a save that loads must leave every levelled learned skill, every
@@ -200,6 +201,21 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({
       path: 'player.realmId',
       message: `không tồn tại trong danh sách cảnh giới: ${player.realmId}`,
+    })
+  }
+
+  // M-QI-07 (v74, QI-D4) - physiqueGrade is required and must be a
+  // ladder member. Semantic coherence with completed chapters is the
+  // restore preflight's job (derivePhysiqueGrade), not shape's.
+  requireString(player, 'physiqueGrade', 'player', issues)
+
+  if (
+    typeof player.physiqueGrade === 'string' &&
+    !isPhysiqueGradeId(player.physiqueGrade)
+  ) {
+    issues.push({
+      path: 'player.physiqueGrade',
+      message: `không phải thành viên thang thể phách: ${player.physiqueGrade}`,
     })
   }
 

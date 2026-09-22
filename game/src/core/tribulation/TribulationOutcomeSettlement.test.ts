@@ -54,6 +54,7 @@ function investForGreatDao(player: ReturnType<typeof usePlayerStore>, gameManage
   player.selectedTalentIds = ['pham_cot']
   player.realmLevel = 12
   player.bodyProgression.body_refinement.completedTiers = 6
+  player.physiqueGrade = 'bao'
   player.mortalPerfectionAchieved = true
   player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
   gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)

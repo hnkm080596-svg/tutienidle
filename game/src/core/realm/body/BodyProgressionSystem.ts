@@ -12,8 +12,14 @@ import {
   type BodyChapterDefinition,
   type BodyChapterId,
   type BodyProgressionIssue,
+  type PhysiqueAdvancement,
 } from './BodyChapter'
 import { computeRefinementBreakthroughGrade } from './BodyRefinementChapter'
+import {
+  getPhysiqueGradeIndex,
+  isPhysiqueGradeId,
+  type PhysiqueGradeId,
+} from '../../../data/realm/PhysiqueLadder'
 
 // P7-M-F (D1) - the post-invest "rebuild" is kind-aware: modifier
 // chapters re-emit their StatModifier slice; base-stat chapters own no
@@ -31,10 +37,65 @@ function applyChapterEffect(player: PlayerData, chapter: BodyChapterDefinition):
   }
 }
 
+// M-QI-07 (QI-D4) - the physique source-grade gate (INV-5): a chapter
+// whose physiqueAdvancement names 'from' can only receive investment
+// while the player's grade is at or past that rung. Pure/testable so
+// synthetic future transitions (e.g. bao -> phap) can be exercised
+// without a real chapter; investBodyChapterState delegates here.
+export function canProgressPhysiqueChapter(
+  player: PlayerData,
+  advancement: PhysiqueAdvancement,
+): boolean {
+  return getPhysiqueGradeIndex(player.physiqueGrade) >= getPhysiqueGradeIndex(advancement.from)
+}
+
+// M-QI-07 (QI-D4) - the exact physique grade reachable from the
+// authored transition chain: start at 'pham', walk the contiguous
+// authored prefix in ladder order, advance across a transition only
+// while its owning chapter is complete, stop at the first incomplete
+// or non-adjacent one. Restore/preflight compares the persisted grade
+// to this derivation - it never recomputes or repairs the save.
+export function derivePhysiqueGrade(player: PlayerData): PhysiqueGradeId {
+  const advancements = BODY_CHAPTERS
+    .flatMap(chapter =>
+      chapter.physiqueAdvancement === undefined
+        ? []
+        : [{ chapter, advancement: chapter.physiqueAdvancement }],
+    )
+    .sort((a, b) =>
+      getPhysiqueGradeIndex(a.advancement.from) - getPhysiqueGradeIndex(b.advancement.from),
+    )
+
+  let derived: PhysiqueGradeId = 'pham'
+
+  for (const { chapter, advancement } of advancements) {
+    if (advancement.from !== derived || !chapter.isComplete(player)) {
+      break
+    }
+    derived = advancement.to
+  }
+
+  return derived
+}
+
+// Canonical physique read - the ONLY supported read for consumers
+// (panel, future essence gating). Never reach into player.physiqueGrade
+// for derived semantics.
+export function getPhysiqueGrade(player: PlayerData): PhysiqueGradeId {
+  return player.physiqueGrade
+}
+
 // Unified invest: chapter-owned mutation, then the chapter's stat-effect
 // rebuild exactly once - and ONLY on a successful mutation (consumed > 0)
 // per spec sec.3.5. Returns the currency units actually consumed so the
 // calling op can debit the right bag.
+//
+// M-QI-07 adds the physique transaction: the source-grade gate runs
+// BEFORE any mutation (a player below 'from' cannot invest at all -
+// returns 0, nothing consumed); the grade write runs only after a
+// successful consumption, only when the chapter just became complete
+// AND the current grade still equals 'from' (idempotent - an already
+// transformed player is never re-advanced or reverted).
 export function investBodyChapterState(
   player: PlayerData,
   chapterId: BodyChapterId,
@@ -42,9 +103,23 @@ export function investBodyChapterState(
   auxOwned = 0,
 ): number {
   const chapter = getBodyChapterDefinition(chapterId)
+  const advancement = chapter.physiqueAdvancement
+
+  if (advancement !== undefined && !canProgressPhysiqueChapter(player, advancement)) {
+    return 0
+  }
+
   const consumed = chapter.invest(player, available, auxOwned)
 
   if (consumed > 0) {
+    if (
+      advancement !== undefined &&
+      chapter.isComplete(player) &&
+      player.physiqueGrade === advancement.from
+    ) {
+      player.physiqueGrade = advancement.to
+    }
+
     applyChapterEffect(player, chapter)
   }
 
@@ -126,13 +201,38 @@ export function assertBodyProgressionIntegrity(player: PlayerData): void {
   if (typeof record !== 'object' || record === null) {
     issues.push('bodyProgression missing or not an object')
   } else {
+    // The derivation walks isComplete on every advancement-owning
+    // chapter - a missing such slice would TypeError on the way to the
+    // aggregated error, so a missing slice also blocks derivation.
+    let derivationBlocked = false
+
     for (const chapter of BODY_CHAPTERS) {
       const slice = (record as Record<string, unknown>)[chapter.id]
 
       if (typeof slice !== 'object' || slice === null) {
         issues.push(`${chapter.id} missing or not an object`)
+        if (chapter.physiqueAdvancement !== undefined) {
+          derivationBlocked = true
+        }
       } else {
         issues.push(...chapter.integrityIssues(player))
+      }
+    }
+
+    // M-QI-07 (INV-8) - the persisted grade must equal the EXACT grade
+    // derived from the authored transition chain: complete chapter but
+    // untransformed grade (6/6 + 'pham'), grade ahead of an incomplete
+    // chapter (5/6 + 'bao'), and unreachable rungs (6/6 + 'phap'/'tien')
+    // are all incoherent - fail closed, never recompute or repair.
+    if (!isPhysiqueGradeId(player.physiqueGrade)) {
+      issues.push(`physiqueGrade '${String(player.physiqueGrade)}' is not a ladder member`)
+    } else if (!derivationBlocked) {
+      const derived = derivePhysiqueGrade(player)
+      if (player.physiqueGrade !== derived) {
+        issues.push(
+          `physiqueGrade '${player.physiqueGrade}' does not match the grade derived ` +
+          `from completed physique chapters ('${derived}')`,
+        )
       }
     }
   }

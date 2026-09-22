@@ -113,6 +113,10 @@ export function getRefinementCurrentTierProgress(player: PlayerData): number {
 export const bodyRefinementChapter: BaseStatBodyChapter = {
   kind: 'baseStat',
   id: 'body_refinement',
+  // M-QI-07 (QI-D4) - filling all 6 tiers transforms the physique
+  // pham -> bao, once. The transform write itself lives in
+  // BodyProgressionSystem (the dispatch authority), not here.
+  physiqueAdvancement: { from: 'pham', to: 'bao' },
   legacyModifierPrefix: LEGACY_MODIFIER_PREFIX,
   currency: { bag: 'material', id: TINH_HOA_PHAM_THE_MATERIAL_ID },
 

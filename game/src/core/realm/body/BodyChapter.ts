@@ -19,10 +19,21 @@
 // never emitted as modifiers.
 import type { PlayerData } from '../../player/Player'
 import type { StatType } from '../../stats/StatTypes'
+import type { PhysiqueGradeId } from '../../../data/realm/PhysiqueLadder'
 import { bodyRefinementChapter } from './BodyRefinementChapter'
 import { meridianChapter } from './MeridianChapter'
 
 export type BodyChapterId = 'body_refinement' | 'meridian'
+
+// M-QI-07 (QI-D4) - a chapter may declare ONE physique advancement:
+// completing it moves player.physiqueGrade exactly from -> to (one
+// rung). Authored transitions must form a contiguous, gapless prefix
+// starting at 'pham' (adjacent pairs, unique 'from') - the ladder
+// test guards the authored shape.
+export interface PhysiqueAdvancement {
+  from: PhysiqueGradeId
+  to: PhysiqueGradeId
+}
 
 export interface BodyRefinementChapterState {
   completedTiers: number
@@ -57,6 +68,9 @@ interface BodyChapterShared {
   readonly id: BodyChapterId
   readonly currency: BodyChapterCurrency
   readonly auxCurrency?: BodyChapterCurrency
+  // M-QI-07 - absent on chapters that never transform the physique
+  // (meridian declares none; only body_refinement binds pham -> bao).
+  readonly physiqueAdvancement?: PhysiqueAdvancement
   // Applies available currency units to the chapter state, returns the
   // amount actually consumed. Does NOT rebuild stat effects - the system
   // dispatch owns the exactly-once rebuild after a successful mutation.

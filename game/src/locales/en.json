@@ -498,6 +498,21 @@
         "tierLock": "Locked — requires Mortal floor {level}",
         "empty": "All Body Refinement tiers completed."
       },
+      "physique": {
+        "line": "Physique: {grade}",
+        "grades": {
+          "pham": "Mortal Physique",
+          "bao": "Treasure Physique",
+          "phap": "Dharma Physique",
+          "linh": "Spirit Physique",
+          "huyen": "Mystic Physique",
+          "chan": "True Physique",
+          "dao": "Dao Physique",
+          "than": "Divine Physique",
+          "thanh": "Saint Physique",
+          "tien": "Immortal Physique"
+        }
+      },
       "meridian": {
         "title": "Eight Extraordinary Meridians",
         "summary": "Opened: {completed}/{total}",

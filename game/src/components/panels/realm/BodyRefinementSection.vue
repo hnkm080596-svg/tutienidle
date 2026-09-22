@@ -8,7 +8,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
 import { baseGainKeys, BODY_REFINEMENT_TIERS } from '@/data/realm/BodyRefinement'
 import { getActiveTierIndex, getRefinementCurrentTierProgress, getTierCap, isTierRequiredRealmLevelMet } from '@/core/realm/body/BodyRefinementChapter'
-import { getBodyChapterProgress } from '@/core/realm/body/BodyProgressionSystem'
+import { getBodyChapterProgress, getPhysiqueGrade } from '@/core/realm/body/BodyProgressionSystem'
 import { statLabel } from '@/core/stats/StatLabels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import Bar from '@/components/common/primitives/Bar.vue'
@@ -28,6 +28,15 @@ const chapterProgress = computed(() => {
   stateVersion.value
 
   return getBodyChapterProgress(player.$state, 'body_refinement')
+})
+
+// M-QI-07 (QI-D4) - persisted physique grade, pure read through the
+// canonical read model (the transform lives in BodyProgressionSystem,
+// never in this component).
+const physiqueGradeLabel = computed(() => {
+  stateVersion.value
+
+  return t(`panels.realm.physique.grades.${getPhysiqueGrade(player.$state)}`)
 })
 
 const tierRows = computed(() => {
@@ -69,6 +78,9 @@ const tierRows = computed(() => {
   <section class="body-refinement" :aria-label="t('panels.realm.bodyRefinement.title')">
     <div class="body-refinement__summary">
       <span>{{ t('panels.realm.bodyRefinement.summary', { completed: chapterProgress.completed }) }}</span>
+      <span class="body-refinement__physique">
+        {{ t('panels.realm.physique.line', { grade: physiqueGradeLabel }) }}
+      </span>
     </div>
 
     <p class="body-refinement__note">
@@ -119,6 +131,12 @@ const tierRows = computed(() => {
   justify-content: space-between;
   font: 700 var(--text-lg) var(--font-display);
   color: var(--paper-text);
+}
+
+.body-refinement__physique {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--jade);
 }
 
 .body-refinement__note {

@@ -30,6 +30,7 @@ function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
     purchasedNodeIds: [],
     completedStageIds: [],
     bodyProgression: { body_refinement: { completedTiers: 0, currentTierProgress: 0 }, meridian: { openedIds: [] } },
+    physiqueGrade: 'pham',
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
     persistentTimedEffects: [],

@@ -144,6 +144,12 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     player.bodyProgression = JSON.parse(JSON.stringify(state))
 
+    // M-QI-07 - a persisted 6/6 refinement chapter implies the
+    // transform already fired; keep the fixture grade coherent.
+    if (state.body_refinement.completedTiers === 6) {
+      player.physiqueGrade = 'bao'
+    }
+
     const save = buildGameSave(player, gameManager)
     const roundTripped: unknown = JSON.parse(JSON.stringify(save))
 
