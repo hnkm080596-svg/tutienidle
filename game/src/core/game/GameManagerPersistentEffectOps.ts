@@ -26,8 +26,8 @@ import type { TechniqueManager } from '../technique/TechniqueManager'
 import { getTechniqueEffects } from '../technique/TechniqueProgression'
 
 /**
- * Persistent/live modifier authority: static aggregation (buff + equipped
- * technique + passive skills + node levels), timed effects
+ * Persistent/live modifier authority: static aggregation (buff +
+ * way-owned technique + learned passive skills + node levels), timed effects
  * (PersistentTimedEffect on PlayerData), Tu Linh Tran, socket Phu/Tran
  * slot modifiers, and the out-of-combat persistent buff path.
  * Extracted from GameManager (large-file split); moved verbatim.
@@ -49,7 +49,7 @@ export class GameManagerPersistentEffectOps {
   ) {}
 
   /**
-   * Aggregated modifiers from Buff + equipped Technique + equipped passive
+   * Aggregated modifiers from Buff + way-owned Technique + learned passive
    * Skills. PassiveSystem stacks passiveModifiers directly onto the Skill
    * object (see PassiveSystem.ts) so they can be read straight from
    * skillManager - no separate "merge" step like the old comment mentioned.
@@ -89,7 +89,7 @@ export class GameManagerPersistentEffectOps {
       // player.modifiers.
       ...(player ? aggregateNodeStatModifiers(this.deps.nodeRegistry, player) : []),
       // combat-gate-teleport-autocast plan §9 - combatModifiers of the
-      // EQUIPPED technique: fixed, tier-independent, only while equipped.
+      // way-owned technique: fixed, band-independent, while the way owns it.
       // This is the ONLY aggregation path so it is never double-counted.
       // (No technique currently declares combatModifiers — the old +2
       // range grant retired with the attackRange stat in Task 3/D16.)
@@ -100,7 +100,7 @@ export class GameManagerPersistentEffectOps {
   /**
    * ARCH-002 (M7) - the STATIC partition of the aggregation: sources that
    * cannot change during a battle (technique tier, cultivation path, node
-   * levels, equipped-technique combat modifiers). The battle entry ops
+   * levels, way-owned-technique combat modifiers). The battle entry ops
    * resolve the entity's baseStats from this list via
    * resolvePlayerFinalStats() - duration/stack-bound sources are excluded
    * on purpose so they reach combat ONLY through getLiveBattleModifiers()
@@ -234,7 +234,7 @@ export class GameManagerPersistentEffectOps {
 
     // Requirement 2026-08-26 - default HP/turn & MP/turn of the technique: flat
     // directly onto the 2 per-turn regen stats, applied to EVERY
-    // technique declaring tierEffects.
+    // technique declaring gradeEffects.
     if (effect.hpRegenFlat !== undefined) {
       modifiers.push({
         id: `technique-tier:${technique!.id}:hpRegen`,

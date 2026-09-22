@@ -157,7 +157,7 @@ function applySpellPathEssenceGains(
 }
 
 /**
- * Task 10 — attach the god-ult empowerment to the equipped chain-E
+ * Task 10 — attach the god-ult empowerment to the root chain-E
  * ultimate at battle build. Gated on owning `linh_ngo_<godUltId>` (the
  * engine stays dumb — the gate lives in orchestration, A8); the route
  * profile picks the payload variant ('dot' -> detonate, 'no' -> nuke,

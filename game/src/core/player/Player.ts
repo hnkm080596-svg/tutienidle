@@ -580,9 +580,9 @@ export function resetBattleScopedResources(entity: CombatEntity): void {
 
 /**
  * `addSkillInsight` cong thang vao Cam ngo Ky nang (player.skillInsight)
- * - kenh reward truc tiep cho quest/direct grants (P7-M3: doi ten tu
- * addTechniqueInsight; technique gio an techniqueMastery qua
- * TechniqueSystem.gainMastery, KHONG qua receiver nay).
+ * - kenh reward truc tiep cho quest/direct grants (P7-M3: technique
+ * gio an techniqueMastery qua TechniqueSystem.gainMastery, KHONG qua
+ * receiver nay).
  *
  * `addSpiritStone` (plan Workstream F) - GameManager inject implementation
  * cong vao MaterialBag (SPIRIT_STONE_MATERIAL_ID); PlayerData khong con

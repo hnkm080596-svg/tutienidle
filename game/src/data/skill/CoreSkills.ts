@@ -329,10 +329,10 @@ export const CORE_SKILLS: Skill[] = [
     ],
 
     // Skill tree redesign (2026-08-21) â€” skill nÃ y lÃ  ROOT NODE cá»§a
-    // Há»a tree (xem PhapTuNodes.ts), CHIáº¾M 1 slot Loadout bÃ¬nh thÆ°á»ng
+    // Há»a tree (xem PhapTuNodes.ts), chiếm slot BASIC role
     // vÃ  cháº¡y qua scheduler auto-cast thá»‘ng nháº¥t nhÆ° má»i skill khÃ¡c.
     // Äiá»ƒm khÃ¡c biá»‡t DUY NHáº¤T cá»§a Há»a Cáº§u Thuáº­t vá»›i 4 hÃ nh kia lÃ  Ä‘Æ°á»£c
-    // tá»± há»c + trang bá»‹ sáºµn (cost 0, xem GameManager.chooseCultivationPath()).
+    // tá»± há»c + vào sẵn role basic (cost 0, xem GameManager.chooseCultivationPath()).
 
 
     resourceType: 'none',
@@ -390,7 +390,7 @@ export const CORE_SKILLS: Skill[] = [
     ],
 
     // Skill tree redesign (2026-08-21) â€” root node cá»§a Má»™c tree, chiáº¿m
-    // 1 slot Loadout bÃ¬nh thÆ°á»ng (xem hoa_cau_thuat's ghi chÃº).
+    // role BASIC (xem hoa_cau_thuat's ghi chÃº).
     resourceType: 'none',
 
     buildTag: 'core',
@@ -457,10 +457,9 @@ export const CORE_SKILLS: Skill[] = [
     ],
 
     // Skill tree redesign (2026-08-21) â€” skill nÃ y lÃ  ROOT NODE cá»§a
-    // element tree (xem PhapTuNodes.ts), CHIáº¾M 1 slot Loadout bÃ¬nh
-    // thÆ°á»ng vÃ  cháº¡y qua scheduler auto-cast thá»‘ng nháº¥t nhÆ° má»i skill
+    // element tree (xem PhapTuNodes.ts), chiáº¿m role BASIC vÃ  cháº¡y qua scheduler auto-cast thá»‘ng nháº¥t nhÆ° má»i skill
     // khÃ¡c. Äiá»ƒm khÃ¡c biá»‡t DUY NHáº¤T cá»§a Há»a Cáº§u Thuáº­t vá»›i 4 hÃ nh kia lÃ 
-    // Ä‘Æ°á»£c tá»± há»c + trang bá»‹ sáºµn (cost 0, xem GameManager.chooseCultivationPath()).
+    // Ä‘Æ°á»£c tá»± há»c + vào sẵn role basic (cost 0, xem GameManager.chooseCultivationPath()).
     resourceType: 'none',
 
     buildTag: 'core',
@@ -526,7 +525,7 @@ export const CORE_SKILLS: Skill[] = [
     ],
 
     // Skill tree redesign (2026-08-21) â€” root node cá»§a Kim tree, chiáº¿m
-    // 1 slot Loadout bÃ¬nh thÆ°á»ng (xem hoa_cau_thuat's ghi chÃº).
+    // role BASIC (xem hoa_cau_thuat's ghi chÃº).
     resourceType: 'none',
 
     buildTag: 'core',
@@ -591,7 +590,7 @@ export const CORE_SKILLS: Skill[] = [
     ],
 
     // Skill tree redesign (2026-08-21) â€” root node cá»§a Thá»• tree, chiáº¿m
-    // 1 slot Loadout bÃ¬nh thÆ°á»ng (xem hoa_cau_thuat's ghi chÃº).
+    // role BASIC (xem hoa_cau_thuat's ghi chÃº).
     resourceType: 'none',
 
     buildTag: 'core',

@@ -81,7 +81,7 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     // freshSwordPathState preset is functional at ritual - no writes.
     postRitual: [],
     // qi_refining (realmIndex 1) unlocks orb_dam only; the other orbs
-    // are learned into the loadout but unreachable as basics here.
+    // are learned into the role kit but unreachable as basics here.
     // Combo extra-impact ops carry the bare combo id as originId
     // (tam_thich fired 178 damage under 'tam_thich', not the preset id)
     // - they are the way's own mechanic and count as kit damage. Ids

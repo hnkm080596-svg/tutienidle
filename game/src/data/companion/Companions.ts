@@ -1,6 +1,6 @@
 // Companions (Companion Roster spec, 2026-09-05; MVP roster pass
 // 2026-09-12) - recruitable gacha allies with a FIXED skill kit (no
-// per-character Ngu Hanh node-tree/loadout) and NO equipment - stats
+// per-character Ngu Hanh node-tree/role picks) and NO equipment - stats
 // scale purely from grade + realmLevel + constellationRank (see
 // companionStatsAt in core/companion/CompanionProgression.ts).
 // Reuses ItemGrade (Hoang/Huyen/Dia/Thien/Tien Chat) as the rarity

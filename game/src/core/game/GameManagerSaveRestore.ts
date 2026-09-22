@@ -310,8 +310,8 @@ export class GameManagerSaveRestore {
       // mọi active thiếu execution ("không cast gì" dù tele/di chuyển
       // vẫn chạy). Đối chiếu template đã đăng ký để hồi phục AUTHORED
       // combat data (execution/targeting/AOE/VFX preset), giữ NGUYÊN
-      // progression state của instance (level/equipped/slot/cooldown/
-      // specialization). Template thiếu thì entry bị drop (dev-stage
+      // progression state của instance (level/cooldown/specialization).
+      // Template thiếu thì entry bị drop (dev-stage
       // rule: không migrate, không giữ object mồ côi).
       const template = this.deps.skillTemplates.get(skill.id)
 

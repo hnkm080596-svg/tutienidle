@@ -6,7 +6,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 // Technique (see data/technique/Techniques.ts + CultivationPathWay.
 // techniqueId). Progression vocabulary: `rank` (0..TECHNIQUE_RANK_CAP)
 // inside a `grade` (realm-gated, 1..getTechniqueGradeCeiling(realmId)),
-// fed by `mastery` (the renamed techniqueInsight reward channel), with
+// fed by `mastery` (the `techniqueMastery` battle-reward channel), with
 // `quality` = ItemQuality display axis. Rank bands still resolve to the
 // four legacy tiers (So Nhap/Tieu Thanh/Dai Thanh/Vien Man) via
 // getTechniqueTierForRank - see TechniqueProgression.ts.

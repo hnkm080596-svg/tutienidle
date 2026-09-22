@@ -273,9 +273,9 @@ export class SkillResolver {
       steps,
       snapshot,
       // Commit-scope fields ride the AUTHORED ROOT def (TBS parity:
-      // commitAction/consumeResourceFor read action.skill -- the equipped
+      // commitAction/consumeResourceFor read action.skill -- the root
       // base -- never the empowered/composite payload; the empowered
-      // def's own cadence/cost is inert in the equipped lane).
+      // def's own cadence/cost is inert in the root lane).
       cadence: input.definition.cadence,
       ...(input.definition.cost !== undefined
         ? { cost: input.definition.cost }
