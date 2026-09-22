@@ -10,7 +10,7 @@ import { MaterialRegistry } from '../material/MaterialRegistry'
 import { NotificationQueue } from './NotificationQueue'
 import type { PlayerData } from '../player/Player'
 import type { ItemGrade } from '../item/ItemGrade'
-import { COMPANIONS } from '../../data/companion/Companions'
+import { BETA_COMPANIONS } from '../../data/companion/Companions'
 import type { CompanionDefinition } from '../../data/companion/Companions'
 import {
   createCompanionInstance,
@@ -98,7 +98,9 @@ export class GameManagerCompanionOps {
     let rolled: ReturnType<typeof rollCompanionPull>
 
     try {
-      rolled = rollCompanionPull(player.companions, COMPANIONS, player.companionPullsSinceRare)
+      // P7-M-G: acquisition reads the Beta pool only - the full COMPANIONS
+      // catalog stays resolvable for owned/future-content instances.
+      rolled = rollCompanionPull(player.companions, BETA_COMPANIONS, player.companionPullsSinceRare)
     } catch (error) {
       // Belt-and-suspenders: effective rates are pool-filtered so the roll
       // cannot legitimately throw - refund anyway to keep the op atomic.
@@ -140,7 +142,9 @@ export class GameManagerCompanionOps {
       return { ok: false, reason: 'realm_locked' }
     }
 
-    const definition = COMPANIONS.find((entry) => entry.id === definitionId)
+    // P7-M-G: the exchange sells the Beta pool only - a full-catalog id
+    // that is not Beta-acquirable reports unknown_definition.
+    const definition = BETA_COMPANIONS.find((entry) => entry.id === definitionId)
 
     if (!definition) {
       return { ok: false, reason: 'unknown_definition' }

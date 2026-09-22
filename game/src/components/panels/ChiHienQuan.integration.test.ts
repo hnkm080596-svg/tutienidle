@@ -9,7 +9,7 @@
 //    slider → assignWorkers → state persist qua bumpState)
 // 3. Linh mạch card render khi outpost ĐÃ xây (sau xóa spirit_spring)
 //    + collect gọi collectBuilding
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import ProductionPanel from './ProductionPanel.vue'
@@ -19,7 +19,7 @@ import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composabl
 import { usePlayerStore } from '@/stores/player'
 import { buildings } from '@/data/building/buildings'
 import { materials } from '@/data/materials/materials'
-import { COMPANIONS } from '@/data/companion/Companions'
+import { BETA_COMPANIONS } from '@/data/companion/Companions'
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 
@@ -51,6 +51,7 @@ function makeDeps(panel: unknown) {
 
 afterEach(() => {
   document.body.innerHTML = ''
+  vi.restoreAllMocks()
 })
 
 describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
@@ -325,9 +326,10 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
   it('chieu_mo tab: duplicate pull renders reveal card with constellationRankAfter', async () => {
     const deps = mountWorkerLodge()
 
-    // Owning every definition in the pool makes any roll a duplicate -
-    // deterministic constellation_up at rank 1 without mocking random.
-    deps.player.companions = COMPANIONS.map((definition) => ({
+    // Owning every acquirable definition (P7-M-G: the Beta pool) makes
+    // any roll a duplicate - deterministic constellation_up at rank 1
+    // without mocking random.
+    deps.player.companions = BETA_COMPANIONS.map((definition) => ({
       instanceId: `inst_${definition.id}`,
       definitionId: definition.id,
       realmId: 'mortal',
@@ -337,6 +339,9 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
     }))
 
     deps.gameManager.materialBag.add(PULL_TOKEN, 1)
+    // Beta pool is {huyen, dia} — pin the roll to huyen (than_nong) so the
+    // pity counter deterministically keeps counting (a dia roll resets).
+    vi.spyOn(Math, 'random').mockReturnValue(0.1)
 
     await openTab(deps.container, 1)
 
@@ -370,7 +375,8 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
 
     const buttons = exchangeButtons(deps.container)
 
-    expect(buttons.length).toBe(COMPANIONS.length)
+    // P7-M-G: exchange rows mirror the Beta-acquirable pool only.
+    expect(buttons.length).toBe(BETA_COMPANIONS.length)
     expect(buttons.every((button) => button.disabled)).toBe(true)
 
     deps.app.unmount()
@@ -383,7 +389,7 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
     deps.player.companions = [
       {
         instanceId: 'inst_maxed',
-        definitionId: COMPANIONS[0]!.id,
+        definitionId: BETA_COMPANIONS[0]!.id,
         realmId: 'mortal',
         realmLevel: 1,
         exp: 0,
@@ -395,7 +401,7 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
 
     const rows = Array.from(deps.container.querySelectorAll<HTMLElement>('.duyen-phan__row'))
 
-    expect(rows.length).toBe(COMPANIONS.length)
+    expect(rows.length).toBe(BETA_COMPANIONS.length)
 
     const maxedRow = rows[0]!
     const maxedButton = maxedRow.querySelector<HTMLButtonElement>('.duyen-phan__exchange')!
@@ -415,7 +421,8 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
   it('duyen_phan tab: exchange spends Duyen Phan and grants the companion', async () => {
     const deps = mountWorkerLodge()
 
-    deps.player.duyenPhan = 20
+    // Beta pool row 0 = than_nong (huyen) — costs EXCHANGE_COST.huyen = 30.
+    deps.player.duyenPhan = 30
 
     await openTab(deps.container, 2)
 
@@ -427,9 +434,9 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
     await nextTick()
 
     expect(deps.player.duyenPhan).toBe(0)
-    expect(deps.player.companions.some((instance) => instance.definitionId === COMPANIONS[0]!.id)).toBe(
-      true,
-    )
+    expect(
+      deps.player.companions.some((instance) => instance.definitionId === BETA_COMPANIONS[0]!.id),
+    ).toBe(true)
 
     deps.app.unmount()
   })

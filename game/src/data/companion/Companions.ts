@@ -10,6 +10,11 @@
 // MVP roster (design spec section 8): 4 hoang / 3 huyen / 2 dia /
 // 1 thien / 0 tien - tien stays in COMPANION_BASE_RATES but is filtered
 // out of effectiveCompanionRates until a tien definition exists.
+// P7-M-G (beta roster): +than_nong (huyen healer) and +khai_minh (dia
+// buffer) take the catalog to 4/4/3/1/0. The existing ten stay in the
+// catalog as future content - owned instances, save validation, combat
+// build and art still resolve them - but Beta ACQUISITION (pull,
+// exchange, Duyen Phan rows) reads only BETA_COMPANIONS below.
 // growthRate (hoang 0.04 / huyen 0.05 / dia 0.06 / thien 0.08) and the
 // unlockThresholds below are starting balance constants for a later tune
 // pass: higher grades grow faster AND unlock earlier (hoang specials at
@@ -541,4 +546,116 @@ export const COMPANIONS: readonly CompanionDefinition[] = [
       { atRank: 6, kind: 'skill_override', slot: 'ultimate', overrides: { damageMultiplierPercent: 30 } },
     ],
   },
+
+  // -------------------------------------------------------------------------
+  // P7-M-G Beta roster (2) - the support kits. than_nong heals through
+  // hpRegenPerTurn stat buffs (allies recover on their own turn cadence);
+  // khai_minh reinforces the party and wards it through the proven
+  // son_nhac_ho_the externalWardGrant channel. First companion users of
+  // allies_except_self - all buffs resolve in BUFF_REGISTRY via
+  // data/buff/CompanionBuffs.ts.
+  // -------------------------------------------------------------------------
+
+  {
+    id: 'than_nong',
+    name: 'Thần Nông',
+    grade: 'huyen',
+    growthRate: 0.05,
+    unlockThresholds: {
+      special: { realmId: 'mortal', realmLevel: 12 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 3 },
+    },
+    baseStats: { maxHp: 105, might: 9, speed: 102 },
+    // The Divine Farmer - wood herb strikes on the basic, then herbal
+    // heals that keep working on each ally's own turn.
+    basic: {
+      id: 'than_nong_basic',
+      cooldownTurns: 0,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'wood', ratio: 1 }],
+        multiplier: 0.9,
+      },
+      targeting: { shape: 'single' },
+      presetId: 'wood_spikes',
+    },
+    special: {
+      id: 'than_nong_hoi_phuc_thuat',
+      cooldownTurns: 4,
+      targetScope: 'self',
+      targeting: { shape: 'single' },
+      appliesBuffs: [{ definitionId: 'than_nong_hoi_phuc', target: 'allies_except_self' }],
+      presetId: 'holy_radiance',
+    },
+    ultimate: {
+      id: 'than_nong_than_dang',
+      cooldownTurns: 8,
+      targetScope: 'self',
+      targeting: { shape: 'single' },
+      appliesBuffs: [{ definitionId: 'than_nong_than_dang_hoi_phuc', target: 'allies_except_self' }],
+      presetId: 'holy_radiance',
+    },
+  },
+
+  {
+    id: 'khai_minh',
+    name: 'Khai Minh',
+    grade: 'dia',
+    growthRate: 0.06,
+    unlockThresholds: {
+      special: { realmId: 'mortal', realmLevel: 8 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 5 },
+    },
+    baseStats: { maxHp: 180, might: 12, speed: 94 },
+    // The nine-headed guardian of Kunlun - claws on the basic, then
+    // party reinforcement and a sheltering ward over every ally.
+    basic: {
+      id: 'khai_minh_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      presetId: 'claw',
+    },
+    special: {
+      id: 'khai_minh_ho_ve_thuat',
+      cooldownTurns: 5,
+      targetScope: 'self',
+      targeting: { shape: 'single' },
+      appliesBuffs: [{ definitionId: 'khai_minh_ho_ve', target: 'allies_except_self' }],
+      presetId: 'holy_radiance',
+    },
+    ultimate: {
+      id: 'khai_minh_thanh_an',
+      cooldownTurns: 8,
+      targetScope: 'self',
+      targeting: { shape: 'single' },
+      appliesBuffs: [
+        {
+          definitionId: 'khai_minh_thanh_ho',
+          target: 'allies_except_self',
+          externalWardGrant: { sourceMaxHpRatio: 0.25 },
+        },
+      ],
+      presetId: 'holy_radiance',
+    },
+    constellationPerks: [
+      { atRank: 2, kind: 'stat', stat: 'maxHp', percent: 15 },
+      { atRank: 4, kind: 'skill_override', slot: 'special', overrides: { cooldownTurns: 4 } },
+      { atRank: 6, kind: 'stat', stat: 'might', flat: 8 },
+    ],
+  },
 ]
+
+// ---------------------------------------------------------------------------
+// P7-M-G Beta acquisition pool - the ONLY definitions pull/exchange/UI may
+// hand out in Beta. COMPANIONS above stays the full content catalog: the
+// existing ten are "future content" (owned instances, save validation,
+// combat build and art keep resolving them). Derived - never duplicated
+// def objects - so BETA_COMPANION_IDS stays the single source of truth.
+// ---------------------------------------------------------------------------
+
+export const BETA_COMPANION_IDS: readonly string[] = ['than_nong', 'khai_minh']
+
+export const BETA_COMPANIONS: readonly CompanionDefinition[] = COMPANIONS.filter((definition) =>
+  BETA_COMPANION_IDS.includes(definition.id),
+)

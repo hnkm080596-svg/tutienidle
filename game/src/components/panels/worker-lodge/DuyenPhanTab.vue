@@ -10,7 +10,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useNotificationStore } from '@/stores/notification'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
-import { COMPANIONS } from '@/data/companion/Companions'
+import { BETA_COMPANIONS } from '@/data/companion/Companions'
 import type { CompanionDefinition } from '@/data/companion/Companions'
 import { EXCHANGE_COST } from '@/core/game/GameManagerCompanionOps'
 import type { ExchangeCompanionResult } from '@/core/game/GameManagerCompanionOps'
@@ -71,7 +71,9 @@ const groups = computed<GradeGroup[]>(() => {
   return ITEM_GRADE_ORDER
     .map((grade) => ({
       grade,
-      rows: COMPANIONS.filter((definition) => definition.grade === grade).map(buildRow),
+      // P7-M-G: rows mirror the Beta-acquirable pool - offering an
+      // exchange row for a non-acquirable def would be a UI lie.
+      rows: BETA_COMPANIONS.filter((definition) => definition.grade === grade).map(buildRow),
     }))
     .filter((group) => group.rows.length > 0)
 })
