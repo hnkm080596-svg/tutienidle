@@ -479,6 +479,12 @@
         "unlocked": "Đã lĩnh ngộ",
         "locked": "Chưa mở"
       },
+      "requirements": {
+        "level": "{realm} tầng {level}",
+        "chapterClear": "Chương 10 hoàn thành",
+        "met": "Đã đạt",
+        "unmet": "Chưa đạt"
+      },
       "bodyRefinement": {
         "title": "Luyện Thể",
         "summary": "Bậc đã hoàn thành: {completed}/6",

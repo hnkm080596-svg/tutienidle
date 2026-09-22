@@ -79,3 +79,60 @@ describe('GameManager current realm progression scope', () => {
     expect(gameManager.realmAdvanceOps.canTriggerBreakthrough(player)).toBe(false)
   })
 })
+
+// M-QI-03 - domain read-model: the SAME predicate rows drive both the
+// admission gate and the normal UI requirement block.
+describe('GameManager breakthrough requirement read-model (M-QI-03)', () => {
+  it('mortal → [level] row only; met iff tầng 12', () => {
+    const gameManager = new GameManager()
+    const player = createDefaultPlayer()
+    player.realmId = 'mortal'
+
+    player.realmLevel = 11
+    expect(gameManager.realmAdvanceOps.getBreakthroughRequirements(player)).toEqual([
+      { key: 'level', met: false },
+    ])
+
+    player.realmLevel = 12
+    expect(gameManager.realmAdvanceOps.getBreakthroughRequirements(player)).toEqual([
+      { key: 'level', met: true },
+    ])
+  })
+
+  it('qi_refining → [level, chapterClear] flag matrix', () => {
+    const gameManager = new GameManager()
+    const player = createDefaultPlayer()
+    player.realmId = 'qi_refining'
+
+    player.realmLevel = 12
+    expect(gameManager.realmAdvanceOps.getBreakthroughRequirements(player)).toEqual([
+      { key: 'level', met: true },
+      { key: 'chapterClear', met: false },
+    ])
+
+    player.completedStageIds = ['qi_refining_abyssal_pool']
+    expect(gameManager.realmAdvanceOps.getBreakthroughRequirements(player)).toEqual([
+      { key: 'level', met: true },
+      { key: 'chapterClear', met: true },
+    ])
+
+    player.realmLevel = 11
+    expect(gameManager.realmAdvanceOps.getBreakthroughRequirements(player)).toEqual([
+      { key: 'level', met: false },
+      { key: 'chapterClear', met: true },
+    ])
+  })
+
+  it('foundation_establishment / placeholder → [] (gate stays false)', () => {
+    const gameManager = new GameManager()
+    const player = createDefaultPlayer()
+
+    player.realmId = 'foundation_establishment'
+    expect(gameManager.realmAdvanceOps.getBreakthroughRequirements(player)).toEqual([])
+    expect(gameManager.realmAdvanceOps.canTriggerBreakthrough(player)).toBe(false)
+
+    player.realmId = 'golden_core'
+    expect(gameManager.realmAdvanceOps.getBreakthroughRequirements(player)).toEqual([])
+    expect(gameManager.realmAdvanceOps.canTriggerBreakthrough(player)).toBe(false)
+  })
+})
