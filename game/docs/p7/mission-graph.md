@@ -113,6 +113,7 @@ Follow-up graph from the Luyện Khí chapter audit + reconciliation (decisions 
 | # | Status | Commit | Gates |
 |---|---|---|---|
 | M-QI-01 | DONE | `69767cb6` | verify 81t scope + type-check + OCR + runtime (live invest: pill 5→4, nham_mach opened, next row actionable) + QA + P5 + external SPEC/IMPL (2 rounds) reviewed |
+| M-QI-02 | DONE | `df2b232d` | verify 1213t scope + type-check + OCR + QA + P5 + external SPEC (2 rounds) / IMPL reviewed — qi_refining breakthrough = L12 + `qi_refining_abyssal_pool` clear (QI-D5) |
 
 ## Locked rulings carried into this graph
 
