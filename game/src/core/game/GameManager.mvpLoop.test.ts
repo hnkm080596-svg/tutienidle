@@ -9,6 +9,7 @@ import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import type { Stage } from '../stage/Stage'
 import type { BuffDefinition } from '../buff2/BuffDefinition'
 import { isBattleInProgress } from '../battle/BattleTypes'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Math.random là state TOÀN CỤC theo worker thread — file test chạy
 // trước trong cùng worker làm đổi chuỗi random của test này khiến trận
@@ -64,6 +65,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // it so node purchases in this loop behave like the real game (App.vue
     // registers the same table).
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
     const enrageBuff: BuffDefinition = {
       id: 'mvp_test_enrage',

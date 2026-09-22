@@ -15,6 +15,12 @@ import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { VAN_PHAP_THAN_HOA_ID } from '../../data/buff/ReactionStatusBuffs'
+import {
+  HIDDEN_SPELL_BASIC_ID,
+  HIDDEN_SPELL_PASSIVE_ID,
+  HIDDEN_SPELL_SPECIAL_ID,
+} from '../phap-tu/PhapTuPath'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // P3-M1 - cross-battle teardown audit (production combat vertical
 // slice). battleCycle.test.ts proves player-side field freshness; this
@@ -82,7 +88,7 @@ const STRONG_ENEMY = defineEnemy({
 
 // Immortal + harmless: a battle against it stays in 'fighting' until
 // abandoned, giving a deterministic window for manual seal application
-// (no organic procs - the fixture strips skillLevels).
+// (no organic procs - the fixture strips the learned kit skills).
 const PUNCHING_BAG = defineEnemy({
   id: 'teardown_bag', name: 'Punching Bag', level: 1, realmId: 'mortal', lane: 'ground',
   statsInput: {
@@ -111,7 +117,9 @@ function registerNgoDaoCatalogs(gameManager: GameManager, player: PlayerData) {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.setActivePlayer(player)
   expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'hidden_spell_pathway', player)).toBe(true)
 }
@@ -405,11 +413,22 @@ describe('cross-battle teardown - listener/event audit', () => {
     const { gameManager, combatSource } = harness()
     const ngoDaoPlayer = makeNgoDaoPlayer()
     registerNgoDaoCatalogs(gameManager, ngoDaoPlayer)
-    // Strip the granted kit AFTER the ritual: organic skill procs would
-    // add their own reactions and blur the count; the oracle needs every
-    // reaction to come from the manual pair. The aura grant is
-    // capability-driven, not kit-driven.
-    ngoDaoPlayer.skillLevels = {}
+    // Strip the granted kit's EFFECTS AFTER the ritual: organic skill
+    // procs would add their own reactions and blur the count; the
+    // oracle needs every reaction to come from the manual pair. The
+    // aura grant is capability-driven, not kit-driven. M-QI-05 - combat
+    // membership projects from SkillManager and assertNgoDaoKitLearned
+    // requires the kit present, so membership stays and only the proc
+    // content is cleared. The stub is a SELF no-op: an emptied non-self
+    // skill fails LegacySkillAdapter's damage/debuff requirement during
+    // combat-build resolution.
+    for (const skillId of [HIDDEN_SPELL_BASIC_ID, HIDDEN_SPELL_SPECIAL_ID, HIDDEN_SPELL_PASSIVE_ID]) {
+      const learned = gameManager.skillManager.get(skillId)
+      if (learned) {
+        learned.effects = []
+        learned.target = 'self'
+      }
+    }
     gameManager.setActivePlayer(ngoDaoPlayer)
 
     const resolved: ReactionVfxResolvedEvent[] = []

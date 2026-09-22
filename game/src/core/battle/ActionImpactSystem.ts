@@ -3,21 +3,21 @@
 // turn-engine contracts (TurnBattleSystem, TurnSkillAction,
 // SkillToTurnSkillConverter); `ScheduledBasicImpact` is the parked
 // artifact port's param type (ArtifactSystem calls scheduleBasic on it).
-// Gameplay không phụ thuộc VFX/Phaser — event chỉ mang dữ liệu grid.
+// Gameplay does not depend on VFX/Phaser - the event carries only grid data.
 import type { SkillDamageComponent } from '../skill/SkillDamageComponent'
 import type { CombatVfxPresetId } from './CombatAction'
 import type { CombatActionOrigin } from './BattleEvents'
 import type { DamageScalingConfig } from '../combat/DamageCalculator'
 
 /**
- * Thay thế MissileDamageInfo — cùng shape, tên trung lập hành động.
- * `scaling` (R3 re-audit, AR-03 gap) — carries the authored per-skill
+ * Replaces MissileDamageInfo - same shape, action-neutral name.
+ * `scaling` (R3 re-audit, AR-03 gap) - carries the authored per-skill
  * attributeScaling/manaScalingRatio through to
  * CombatSystem.resolveActionHit(), which is the only place with a live
  * `source` entity to evaluate them against.
  */
 /**
- * The Tu Reimagined (spec 2026-09-15 section 3.4) — Cuong Chien
+ * The Tu Reimagined (spec 2026-09-15 section 3.4) - Cuong Chien
  * missing-HP scalar: bonus physical damage proportional to the
  * attacker's LIVE missing-HP fraction, resolved per hit at impact
  * (never a stat). `missingHpBonusPerMissingPercent` 0.02 = +2% damage
@@ -29,17 +29,32 @@ interface ActionDamageMissingHpScalar {
   missingHpBonusCap?: number
 }
 
+/**
+ * M-QI-05 / QI-D3 - adapter-only metadata: when present,
+ * LegacySkillAdapter wraps the authored coefficient as
+ * `multiplier x (1 + (max(1, skill_level) - 1) x levelScaling)` so a
+ * native TurnSkillDefinition (constant multiplier, no ScalarExpression
+ * channel) consumes the canonical Core Node level. Never a gameplay
+ * input outside the adapter.
+ */
+interface ActionDamageLevelScaling {
+  levelScaling?: number
+}
+
 export type ActionDamageInfo =
-  | ({ kind: 'physical' | 'primordial'; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar)
-  | ({ kind: 'elemental'; components: SkillDamageComponent[]; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar)
+  | ({ kind: 'physical' | 'primordial'; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar & ActionDamageLevelScaling)
+  | ({ kind: 'elemental'; components: SkillDamageComponent[]; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar & ActionDamageLevelScaling)
 
 export function scaleActionDamage(
   info: ActionDamageInfo,
   percent: number,
 ): ActionDamageInfo {
-  const scalar: ActionDamageMissingHpScalar = {
+  const scalar: ActionDamageMissingHpScalar & ActionDamageLevelScaling = {
     missingHpBonusPerMissingPercent: info.missingHpBonusPerMissingPercent,
     missingHpBonusCap: info.missingHpBonusCap,
+    // M-QI-05 - preserve the level-scaling contract through the
+    // node-scale reconstruction (multiplier scales; metadata carries).
+    levelScaling: info.levelScaling,
   }
 
   if (info.kind === 'elemental') {
@@ -50,28 +65,28 @@ export function scaleActionDamage(
 }
 
 export interface HitResolveOptions {
-  /** undefined = hệ thống tự roll tại thời điểm resolve. */
+  /** undefined = the system rolls it at resolve time. */
   critical?: boolean
 
   skillId?: string
 
   knockbackDistance?: number
 
-  /** false = mục tiêu phụ trong AOE (áp secondaryPercent). */
+  /** false = secondary target in an AOE (gets secondaryPercent). */
   isPrimary: boolean
 
-  /** Bản Mệnh Pháp Bảo — attribution cho applyActionHit dispatch milestone. */
+  /** Ban Menh Phap Bao - attribution for the applyActionHit dispatch milestone. */
   origin?: CombatActionOrigin
 
   /**
-   * Kiem Tu Reimagined Task 2 — skip the accuracy/evasion roll entirely.
+   * Kiem Tu Reimagined Task 2 - skip the accuracy/evasion roll entirely.
    * Domain providers (e.g. Ngu Kiem Dao phi kiem) decide this; the engine
    * only executes the flag.
    */
   guaranteedHit?: boolean
 
   /**
-   * Resolved armor policy for PHYSICAL hits — the caller has already made
+   * Resolved armor policy for PHYSICAL hits - the caller has already made
    * its roll; the calculator only executes it. `armorBypass` drops the
    * mitigation term to 0; `armorPierceFraction` (0..1) multiplies the
    * mitigation down by that fraction. Ignored for elemental/primordial

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildKiemPhoProvider, reachableKiemPhoComboIds } from './KiemPhoProvider'
+import { adaptTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
+import { evaluateScalarExpression, type SkillReadContext } from '../skilldef/ScalarExpression'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import type { OrbId } from './KiemTuState'
 import type { KiemPhoComboModifier } from './KiemPhoSystem'
@@ -50,8 +52,56 @@ describe('KiemPhoProvider', () => {
     expect(extras[0]!.presetId).toBe('kiem_combo_tam_thich')
     expect(extras[0]!.damage?.multiplier).toBe(2.5)
 
+    // M-QI-05 - the generated extra carries BOTH halves of owner
+    // inheritance: progressionOwnerId transports the triggering orb's
+    // canonical core level, levelScaling consumes it (+5%/level).
+    expect(extras[0]!.progressionOwnerId).toBe('orb_dam')
+    expect(extras[0]!.damage?.levelScaling).toBe(0.05)
+
     // Log cleared — a 4th cast starts fresh.
     expect(provider.onCastResolved!(castCtx('orb_dam'))).toEqual([])
+  })
+
+  it('generated combo damage consumes the inherited orb level through the adapter (x1.25 at Lv6)', () => {
+    // The runtime resolves skill_level from the OWNER core
+    // (progressionOwnerId -> the triggering orb's nodeLevels entry);
+    // the adapter turns the stamped levelScaling into the canonical
+    // coefficient expression. Evaluating it at skill_level 1 vs 6
+    // proves the ratio without any core_<combo> state existing.
+    const provider = buildKiemPhoProvider(hienPlayer(['orb_dam']), [])
+
+    provider.onCastResolved!(castCtx('orb_dam'))
+    provider.onCastResolved!(castCtx('orb_dam'))
+    const extra = provider.onCastResolved!(castCtx('orb_dam'))[0]!
+
+    const ctxAtLevel = (level: number): SkillReadContext => ({
+      resolveTarget: () => undefined,
+      buffStacks: () => 0,
+      buffDuration: () => 0,
+      hpPercent: () => 1,
+      resourceCurrent: () => 0,
+      resourceMax: () => 0,
+      resourceSnapshot: () => 0,
+      statScalar: () => 0,
+      skillLevel: () => level,
+      readVar: () => 0,
+      alive: () => true,
+      critLanded: () => false,
+      anyTargetLanded: () => false,
+    })
+
+    const { root } = adaptTurnSkillDefinition(extra)
+    const hit = root.operations.find((op) => op.type === 'deal_damage')
+
+    if (hit === undefined || hit.type !== 'deal_damage' || hit.coefficient === undefined) {
+      throw new Error('expected the combo extra to adapt a deal_damage operation')
+    }
+
+    const lv1 = evaluateScalarExpression(hit.coefficient, ctxAtLevel(1))
+    const lv6 = evaluateScalarExpression(hit.coefficient, ctxAtLevel(6))
+
+    expect(lv1).toBeCloseTo(2.5, 6)
+    expect(lv6 / lv1).toBeCloseTo(1 + 5 * 0.05, 6)
   })
 
   it('combo extra def carries EVERY granted buff (multi-capstone composition)', () => {

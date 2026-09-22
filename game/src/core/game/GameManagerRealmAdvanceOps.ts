@@ -222,6 +222,24 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
+    // M-QI-05 - levelled kit skills must resolve their canonical Core
+    // Node (template maxLevel > 1 needs a registered core_<id> with
+    // matching levelsSkillId + maxLevel) BEFORE the path/way commit;
+    // the same preflight covers way-declared coreSkillIds (native
+    // defs). A missing/mismatched core is a data-integrity failure -
+    // never a partial kit on a committed path.
+    for (const skillId of [...grantedSkillIds, ...(way.passiveSkillIds ?? []), ...(way.starterBasicSkillId !== undefined ? [way.starterBasicSkillId] : [])]) {
+      if (!this.deps.progressionOps.preflightLearnableSkill(skillId)) {
+        return false
+      }
+    }
+
+    for (const skillId of way.coreSkillIds ?? []) {
+      if (!this.deps.progressionOps.preflightSkillCoreGrant(skillId)) {
+        return false
+      }
+    }
+
     // Path/way commit - the authority validates the pair, evaluates the
     // offerGate live, and writes cultivationWay + the base
     // cultivationPath id plus the path-state slice (sword). Zero
@@ -244,15 +262,21 @@ export class GameManagerRealmAdvanceOps {
     // hidden_spell_pathway's third kit member is a passiveSkillIds
     // passive, not an active.
     way.skillIds?.forEach((skillId) => {
-      this.deps.progressionOps.learnSkill(skillId)
+      this.deps.progressionOps.learnSkill(skillId, player)
     })
+
+    // M-QI-05 - way-owned native Core Nodes ride the same grant seam
+    // as node-effect grantsSkillCoreIds (level authority: nodeLevels).
+    for (const skillId of way.coreSkillIds ?? []) {
+      this.deps.progressionOps.grantSkillCoreBySkillId(player, skillId)
+    }
 
     // P7-M4 - starter learnedness pin: the way's starter basic is
     // learned inside the commit block (idempotent - boot already taught
     // it; this repairs a save whose starter entry is missing). A
     // successful initiation always yields a learned starter.
     if (way.starterBasicSkillId !== undefined) {
-      this.deps.progressionOps.learnSkill(way.starterBasicSkillId)
+      this.deps.progressionOps.learnSkill(way.starterBasicSkillId, player)
     }
 
     // P7-M2 - way-declared initiation passives (replaces the technique's
@@ -260,7 +284,7 @@ export class GameManagerRealmAdvanceOps {
     // apply (membership is the authority; no equip switch remains).
     for (const passiveId of way.passiveSkillIds ?? []) {
       if (!this.deps.skillManager.has(passiveId)) {
-        this.deps.progressionOps.learnSkill(passiveId)
+        this.deps.progressionOps.learnSkill(passiveId, player)
       }
     }
     // Phap Tu Reimagined (Task 6) - no auto-Fire starter: choosing
@@ -407,13 +431,9 @@ export class GameManagerRealmAdvanceOps {
       return
     }
 
-    const template = this.deps.skillTemplates.get(skillId)
-
-    if (!template) {
-      return
-    }
-
-    this.deps.skillSystem.learn(template)
+    // M-QI-05 - the canonical learn seam owns insertion (template
+    // existence + levelled-skill core preflight/grant inside learnSkill).
+    this.deps.progressionOps.learnSkill(skillId, player)
 
     // P7-M4 - learning alone activates the passive: learned passives
     // always apply (SkillManager membership is the authority; the

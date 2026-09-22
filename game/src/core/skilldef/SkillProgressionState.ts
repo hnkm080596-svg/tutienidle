@@ -8,7 +8,7 @@ import type { SkillId } from '../battle/contracts/ids'
 
 export interface SkillProgressionState {
   skillId: SkillId
-  /** Cam Ngo leveling (upgradeSkill) + cast-leveled auto-level inputs. */
+  /** Cam Ngo leveling (Core Node) + cast-leveled auto-level inputs. */
   level: number
   /** in-level experience toward the next Cam Ngo upgrade. */
   experience: number

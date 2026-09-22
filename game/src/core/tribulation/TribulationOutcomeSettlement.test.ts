@@ -23,6 +23,7 @@ import {
   TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM,
   TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM,
 } from '../../data/tribulation/TribulationChapters'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 /** Drive a started tribulation to its real terminal via the director's
  * own tick/answer contract. */
@@ -49,6 +50,7 @@ function investForGreatDao(player: ReturnType<typeof usePlayerStore>, gameManage
   // transaction boundary requires the template registered.
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   player.selectedTalentIds = ['pham_cot']
   player.realmLevel = 12
   player.bodyProgression.body_refinement.completedTiers = 6

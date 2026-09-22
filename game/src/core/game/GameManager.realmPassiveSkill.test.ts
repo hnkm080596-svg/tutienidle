@@ -5,6 +5,7 @@ import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { CANONICAL_REALM_PASSIVE_LADDER } from '../../data/progression/RealmPassiveLadder'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // P7-M2 - the realm-entry passive is WAY-owned: the committed way's
 // realmRewards[realm].passiveSkillId (composed from the canonical
@@ -21,6 +22,7 @@ function makeManager({ skipSkillIds = [] as string[] } = {}) {
   // sword ritual grants a node on commit - the transaction boundary
   // requires it registered (same fixture as the phapTuAnPath suite).
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   const player = createDefaultPlayer()
   player.realmId = 'mortal'
   player.realmLevel = 12

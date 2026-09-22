@@ -46,7 +46,9 @@ describe('NguKiemDaoProvider — resolveBasic', () => {
     const def = provider.resolveBasic({} as TurnBattleParticipant)
 
     expect(def.id).toBe('ngu_kiem_thuat')
-    expect(def.damage).toEqual({ kind: 'physical', multiplier: 2.2 })
+    // M-QI-05 - the provider spreads authored damage metadata and only
+    // overrides the live multiplier; levelScaling rides through.
+    expect(def.damage).toEqual({ kind: 'physical', multiplier: 2.2, levelScaling: 0.05 })
     expect(def.instances?.count).toBe(4)
   })
 

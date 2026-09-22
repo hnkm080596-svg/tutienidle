@@ -8,14 +8,14 @@
 //   có tree   -> giữa: NodeTreePanel (cây thật của skill/branch đó)
 //   khác      -> giữa: SkillDetailView (chi tiết skill đang chọn, đọc only)
 // Cột trái dùng chung SkillPathList cho mọi path; cột phải
-// (SkillRoleStrip, "Pháp Thuật Đang Vận Hành") và
+// (SkillRoleStrip, "Active Arts") and
 // NodeInspector (bottom, CHỈ có ý nghĩa khi có node để mua) không đổi.
 //
 // ElementLoadoutPicker.vue (equip Hành vào combat) đã GỠ HẲN (2026-08-20,
 // yêu cầu "dư thừa, không có tác dụng gì") — nó trùng chức năng với
-// SkillRoleStrip: 3 role cố định từ getResolvedSkillRoles mới là thứ
-// thật sự vận hành trong combat (xem role auto-cast scheduler của
-// TurnBattleSystem), "equip cả 1 Hành" không cộng thêm ý nghĩa nào khác.
+// SkillRoleStrip: the 3 fixed roles from getResolvedSkillRoles are what
+// actually runs in combat (see the role auto-cast scheduler in
+// TurnBattleSystem), "equipping a whole Element" adds no further meaning.
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
@@ -25,6 +25,7 @@ import NodeTreePanel from './skill-path/NodeTreePanel.vue'
 import NodeInspector from './skill-path/NodeInspector.vue'
 import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
+import NativeCoreDetail from './skill-path/NativeCoreDetail.vue'
 import SkillRoleStrip from './skill-path/SkillRoleStrip.vue'
 import TechniqueBand from './skill-path/TechniqueBand.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
@@ -37,6 +38,10 @@ import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/elemen
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { ElementType } from '@/core/element/ElementType'
 import type { Skill } from '@/core/skill/Skill'
+import type { SkillPathEntry, NativeSkillPathEntry } from './skill-path/SkillPathEntry'
+import { NATIVE_CORE_SKILL_IDS } from '@/data/progression/SkillCoreNodes'
+import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
+import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
 const { t } = useI18n()
@@ -131,6 +136,7 @@ function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: bo
   selectedNode.value = node
   selectedNodePurchased.value = purchased
   selectedNodePurchasable.value = purchasable
+  centerMode.value = 'tree'
 }
 
 // Node vừa mua xong vẫn đang là selectedNode — refresh trạng thái
@@ -148,18 +154,72 @@ watch(
   },
 )
 
-// Thư viện duy nhất: mọi active skill đã học, không phụ thuộc role/path.
-const learnedSkills = computed<Skill[]>(() => {
+// The single library: every learned active skill, independent of role/path.
+// M-QI-05 - the list renders the shared SkillPathEntry union: learned
+// Skill templates AND owned native cores (granted via kit roots /
+// way.coreSkillIds). Levels are canonical Core Node levels; fixed
+// Lv1 entries report 1.
+const skillPathEntries = computed<SkillPathEntry[]>(() => {
   stateVersion.value
-  return gameManager.skillManager.getAll().filter(skill => skill.type === 'active')
+
+  const entries: SkillPathEntry[] = gameManager.skillManager
+    .getAll()
+    .filter(skill => skill.type === 'active')
+    .map(skill => ({
+      kind: 'skill' as const,
+      id: skill.id,
+      name: skill.name,
+      description: skill.description,
+      level: Math.max(1, gameManager.progressionOps.getSkillLevel(skill.id, player.$state)),
+      maxLevel: skill.maxLevel,
+      realmId: skill.requiredRealmId ?? 'mortal',
+      skill,
+    }))
+
+  for (const skillId of NATIVE_CORE_SKILL_IDS) {
+    const level = getSkillCoreLevel(player.$state, skillId)
+
+    if (level < 1) {
+      continue
+    }
+
+    const meta = turnSkillDisplayMetaOf(skillId)
+    const maxLevel = gameManager.progressionOps.getSkillCoreMaxLevel(skillId)
+    const upgradeCost = gameManager.progressionOps.getSkillCoreUpgradeCost(skillId, player.$state)
+
+    entries.push({
+      kind: 'native',
+      id: skillId,
+      name: meta?.name ?? skillId,
+      description: meta?.description,
+      level,
+      maxLevel,
+      realmId: 'qi_refining',
+      upgradeCost,
+      canUpgrade: upgradeCost !== undefined && player.skillInsight >= upgradeCost,
+      ...(meta ? { meta } : {}),
+    })
+  }
+
+  return entries
 })
 
 const selectedSkillId = ref<string | null>(null)
 
-const selectedSkill = computed<Skill | null>(() => {
+const selectedEntry = computed<SkillPathEntry | null>(() => {
   stateVersion.value
 
-  return learnedSkills.value.find(skill => skill.id === selectedSkillId.value) ?? null
+  return skillPathEntries.value.find(entry => entry.id === selectedSkillId.value) ?? null
+})
+
+const selectedSkill = computed<Skill | null>(() => {
+  return selectedEntry.value?.kind === 'skill' ? selectedEntry.value.skill : null
+})
+
+// D7 - the detail surface is discriminated: SkillDetailView stays
+// Skill-typed; native cores render through NativeCoreDetail.
+const selectedNativeEntry = computed<NativeSkillPathEntry | null>(() => {
+  return selectedEntry.value?.kind === 'native' ? selectedEntry.value : null
 })
 
 function skillElement(skill: Skill): ElementType | null {
@@ -175,25 +235,39 @@ function skillElement(skill: Skill): ElementType | null {
 // root được chọn TRONG cây (element+route atomic commit), nên không
 // thể gate theo skill đang chọn (trước khi commit, player chưa có
 // skill elemental nào). Kiem Tu giữ nguyên — route chốt lúc chọn path.
-// showTree IS the whole gate today: every tree-owning way declares
-// nodeTreeTag or grants elemental_casting (the old skillElement fallback
-// was unreachable - it required showTree false). Keep the named computed
-// so the intent survives a future skill-driven tree.
-const selectedSkillHasTree = showTree
+
+// M-QI-05 (D7) - the center column has an explicit user-facing mode:
+// a visible Tree/Detail tab renders whenever showTree is true. A
+// native-core selection FORCES detail (natives own no tree); an
+// ordinary skill selection keeps the current mode (the Detail tab is
+// always reachable); selecting a tree node returns to the node view.
+const centerMode = ref<'tree' | 'detail'>('tree')
+
+const showDetail = computed(() => !showTree.value || centerMode.value === 'detail')
 
 const treeBranchTag = computed<string>(
   () => wayNodeTreeTag.value ?? selectedBranch.value,
 )
 
-function onSelectSkill(skill: Skill) {
-  selectedSkillId.value = skill.id
-  const element = skillElement(skill)
-  if (element) onSelectBranch(element)
+function onSelectEntry(entry: SkillPathEntry) {
+  selectedSkillId.value = entry.id
+
+  // D7 - natives own no tree: selection always reveals the detail
+  // surface. Ordinary skills keep the current mode; the player reaches
+  // their detail through the always-visible tab.
+  if (entry.kind === 'native') {
+    centerMode.value = 'detail'
+  }
+
+  if (entry.kind === 'skill') {
+    const element = skillElement(entry.skill)
+    if (element) onSelectBranch(element)
+  }
 }
 
-watch(learnedSkills, skills => {
-  if (!skills.some(skill => skill.id === selectedSkillId.value)) {
-    selectedSkillId.value = skills[0]?.id ?? null
+watch(skillPathEntries, entries => {
+  if (!entries.some(entry => entry.id === selectedSkillId.value)) {
+    selectedSkillId.value = entries[0]?.id ?? null
   }
 }, { immediate: true })
 
@@ -211,7 +285,7 @@ function close() {
 
         <div class="skill-path-panel__body">
           <div class="skill-path-panel__col skill-path-panel__col--left">
-            <SkillPathList :skills="learnedSkills" :selected-id="selectedSkillId" @select="onSelectSkill" />
+            <SkillPathList :entries="skillPathEntries" :selected-id="selectedSkillId" @select="onSelectEntry" />
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--center">
@@ -236,13 +310,43 @@ function close() {
               </button>
             </div>
 
+            <!-- M-QI-05 (D7) - Tree/Detail mode tabs: visible on every
+                 tree-owning way so the detail surface (and its upgrade
+                 affordance) stays reachable; Detail renders the
+                 selected entry, Tree restores the node view. -->
+            <div
+              v-if="showTree"
+              class="skill-path-panel__mode-tabs"
+              role="group"
+              :aria-label="t('panels.skillPath.centerTabs.aria')"
+            >
+              <button
+                type="button"
+                class="skill-path-panel__mode-tab"
+                :class="{ 'is-selected': centerMode === 'tree' }"
+                @click="centerMode = 'tree'"
+              >
+                {{ t('panels.skillPath.centerTabs.tree') }}
+              </button>
+              <button
+                type="button"
+                class="skill-path-panel__mode-tab"
+                :class="{ 'is-selected': centerMode === 'detail' }"
+                @click="centerMode = 'detail'"
+              >
+                {{ t('panels.skillPath.centerTabs.detail') }}
+              </button>
+            </div>
+
             <NodeTreePanel
-              v-if="selectedSkillHasTree"
+              v-if="showTree && !showDetail"
               :branch-tag="treeBranchTag"
               :selected-node-id="selectedNode?.id ?? null"
               :unlock-trigger="unlockTrigger"
               @select="onSelectNode"
             />
+
+            <NativeCoreDetail v-else-if="selectedNativeEntry" :entry="selectedNativeEntry" />
 
             <SkillDetailView v-else :skill="selectedSkill" />
           </div>
@@ -255,7 +359,7 @@ function close() {
         </div>
 
         <NodeInspector
-          v-if="selectedSkillHasTree"
+          v-if="showTree && !showDetail"
           :node="selectedNode"
           :purchased="selectedNodePurchased"
           :purchasable="selectedNodePurchasable"
@@ -355,6 +459,31 @@ function close() {
 
 .skill-path-panel__element-tab.is-committed {
   background: color-mix(in srgb, var(--element-color, var(--ink-800)) 22%, var(--ink-800));
+}
+
+/* M-QI-05 (D7) - center mode tabs; same chip family as element tabs. */
+.skill-path-panel__mode-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.skill-path-panel__mode-tab {
+  padding: 4px 12px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.skill-path-panel__mode-tab.is-selected {
+  border-color: var(--chrome-300);
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .skill-path-panel__col--right {

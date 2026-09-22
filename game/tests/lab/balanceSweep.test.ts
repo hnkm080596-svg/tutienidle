@@ -87,7 +87,7 @@ function buildPlayer(lab: Lab, realmId: string, floor: number, geared: boolean, 
   }
 
   if (realmId !== 'mortal') {
-    lab.manager.progressionOps.learnSkill('hoa_cau_thuat')
+    lab.manager.progressionOps.learnSkill('hoa_cau_thuat', lab.player)
   }
 
   if (!geared) return

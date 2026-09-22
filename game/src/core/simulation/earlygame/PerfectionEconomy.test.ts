@@ -1,5 +1,5 @@
 // M-D (decision D6) - PerfectionEconomy: deterministic measurement of
-// the mortal early-game economy — does the current authored source set
+// the mortal early-game economy - does the current authored source set
 // support "Pham Nhan hoan my optional, giu kho"? Driven through
 // EarlyGameSession production seams with combatCultivationParity on
 // (production cultivates + auto-breakthroughs + auto-invests during
@@ -73,7 +73,7 @@ describe('reachableStatSourceCensus — data-verifiable source census (spec §3.
 
 describe('analytic body expectations (spec §3.4)', () => {
   it('expectedEssencePerKill derives from the mortal stage drop table', () => {
-    // Mortal band guarantees tinh_hoa_pham_the 1..3 @ 0.7 → 1.4 expected.
+    // Mortal band guarantees tinh_hoa_pham_the 1..3 @ 0.7 -> 1.4 expected.
     expect(expectedEssencePerKill()).toBeCloseTo(0.7 * 2, 5)
   })
 
@@ -84,7 +84,7 @@ describe('analytic body expectations (spec §3.4)', () => {
 })
 
 describe('measureNormalRun — canonical loop sliced at the ritual (spec §2)', () => {
-  it('ends at qi_refining right after the ritual with measured counters', () => {
+  it('ends at qi_refining right after the ritual with measured counters', { timeout: 600_000 }, () => {
     const m = measureNormalRun(11)
     expect(m.realmId).toBe('qi_refining')
     expect(m.stageRuns).toBeGreaterThan(0)
@@ -103,11 +103,11 @@ describe('measurePerfectionRun — driven run owns the verdict (spec §3.3/§3.5
   it('runs to a measured outcome with full accounting', { timeout: 600_000 }, () => {
     const m = measurePerfectionRun(11)
 
-    // Kill accounting integrity — a single counted:false run would
+    // Kill accounting integrity - a single counted:false run would
     // invalidate the income/kill cross-check.
     expect(m.uncountedStageRuns).toBe(0)
 
-    // Under the CURRENT economy the run MUST resolve — spec §3.5 pins
+    // Under the CURRENT economy the run MUST resolve - spec sec.3.5 pins
     // 'achieved' or 'proven_infeasible' for the default bound; hitting
     // safety_bound is itself a finding, not a passable outcome.
     expect(m.outcome).not.toBe('safety_bound')
@@ -123,7 +123,7 @@ describe('measurePerfectionRun — driven run owns the verdict (spec §3.3/§3.5
       expect(m.bodyTiersCompleted).toBe(BODY_REFINEMENT_TIERS.length)
       expect(m.bodyAxisResolvedAtSeconds).not.toBeNull()
       // Measured end-state raw-stat deficit agrees with the analytic
-      // budget for the sources the driver exercises (spec §3.5).
+      // budget for the sources the driver exercises (spec sec.3.5).
       const cap = getMainStatCap('mortal')
       const measuredDeficit = MAIN_STAT_KEYS.reduce(
         (sum, stat) => sum + Math.max(0, cap - m.finalBaseStats[stat]),
@@ -137,11 +137,11 @@ describe('measurePerfectionRun — driven run owns the verdict (spec §3.3/§3.5
       expect(m.statAxisVerdict).toBe('achieved')
       expect(m.perfectionPredicateWouldPass).toBe(true)
       expect(m.bodyTiersCompleted).toBe(BODY_REFINEMENT_TIERS.length)
-      // No level-18 requirement — a feasible economy may cap earlier.
+      // No level-18 requirement - a feasible economy may cap earlier.
     }
 
     // Body-axis measurement is real regardless of outcome: kills within
-    // ±25% of analytic expectation, income within ±25% of expected/kill.
+    // +-25% of analytic expectation, income within +-25% of expected/kill.
     if (m.bodyTiersCompleted === BODY_REFINEMENT_TIERS.length) {
       const expectedKills = expectedKillsForBody()
       expect(m.enemiesDefeated).toBeGreaterThan(expectedKills * 0.75)
@@ -169,7 +169,7 @@ describe('measurePerfectionRun — driven run owns the verdict (spec §3.3/§3.5
 })
 
 describe('three-seed measurement evidence (spec §3.5)', () => {
-  // Per-seed kills/essence/income variance — the report's table is
+  // Per-seed kills/essence/income variance - the report's table is
   // sourced from this run. ~60s of sim time per seed.
   it.each([11, 23, 7])('seed %i resolves with income inside tolerance', { timeout: 600_000 }, (seed) => {
     const m = measurePerfectionRun(seed)

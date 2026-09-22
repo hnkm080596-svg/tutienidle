@@ -12,7 +12,7 @@ import { DETONATE_AMP, NUKE_THE_COEFF, type SpellPathUltimateVariant } from '../
 // Shape per entry:
 // - consumesAllThe: the empowered form burns the ENTIRE currentThe pool
 //   at commit (captured into execution.theBurned for Task 13 theScaling)
-// - cooldownTurns 0: the payload owns no cooldown — the root chain-E
+// - cooldownTurns 0: the payload owns no cooldown - the root chain-E
 //   slot's cooldown governs (root identity, INV-18)
 // - id = the god-ult id (tat_phuong_giang_the …) for presentation; it
 //   never appears in cast counts.

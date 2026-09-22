@@ -8,6 +8,7 @@ import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { SKILLS } from '../../data/skill/Skills'
 import type { Equipment } from '../equipment/Equipment'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 const TEST_WEAPON: Equipment = {
   id: 'build_snapshot_test_sword',
@@ -62,6 +63,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     gameManager.catalogOps.registerEquipment([TEST_WEAPON])
 
     const player = createDefaultPlayer()
@@ -100,7 +102,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // --- Pre-Battle Upgrade: nâng cấp 1 skill bất kỳ (Kiem Tu
     // Reimagined — hien basics come from the orb preset, so the generic
     // authored skill here is tam_muoi_chan_hoa).
-    gameManager.progressionOps.learnSkill('tam_muoi_chan_hoa')
+    gameManager.progressionOps.learnSkill('tam_muoi_chan_hoa', player)
 
     const rawSkill = gameManager.skillManager.get('tam_muoi_chan_hoa')!
 
@@ -130,11 +132,24 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
       id: 'snapshot_runtime_skill',
     }
     gameManager.skillManager.add(runtimeSkill)
+    // M-QI-05 - the canonical level authority is nodeLevels[core_<id>]:
+    // register the core so the combat projection picks it up.
+    gameManager.catalogOps.registerProgressionNodes([
+      {
+        id: 'core_snapshot_runtime_skill',
+        name: 'Core: Snapshot Runtime Skill',
+        type: 'minor',
+        insightCost: 0,
+        maxLevel: runtimeSkill.maxLevel,
+        levelsSkillId: runtimeSkill.id,
+        effect: {},
+      },
+    ])
 
     gameManager.startBattleWithPlayer(player, createTestEnemy())
-    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(runtimeSkill.level)
+    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(1)
 
-    runtimeSkill.level = 5
+    player.nodeLevels['core_snapshot_runtime_skill'] = 5
     expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(1)
 
     gameManager.startBattleWithPlayer(player, createTestEnemy())

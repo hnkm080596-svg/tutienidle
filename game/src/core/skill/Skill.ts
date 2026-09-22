@@ -138,8 +138,8 @@ export interface Skill {
   // UI cho passive skill (Skill.ts's Tâm Pháp summary panel nhóm
   // passive theo hướng build) — không ảnh hưởng runtime, chỉ tổ chức
   // hiển thị "Core/DOT/Burst" cho người chơi dễ hiểu build của mình.
-  // 'ult' (spec 2026-08-29-kiem-the-kiem-y) — ult manual Kiếm Tu;
-  // cùng nhãn presentation-only, không phải role ownership.
+  // 'ult' (spec 2026-08-29-kiem-the-kiem-y) - Kiem Tu manual ult;
+  // same presentation-only label, not role ownership.
   buildTag?: 'core' | 'dot' | 'burst' | 'ult'
 
   // "Nộ kỹ tạm thời chưa ra mắt" (2026-08-15) — reserved flag; the

@@ -15,6 +15,9 @@ import type { Skill } from '@/core/skill/Skill'
 // chế engine (hitCount/spread/zone/add_stack/remove_buff/
 // stacksPerAffectedTarget) từ describeSkillMechanics; skill thường
 // không có field → không có block mechanics.
+// M-QI-05 - the prop is Skill-typed again (spec D7: natives render in
+// NativeCoreDetail); level reads inside stay canonical via
+// progressionOps.getSkillLevel.
 function mountDetail(skill: Skill | null) {
   const container = document.createElement('div')
   const pinia = createPinia()

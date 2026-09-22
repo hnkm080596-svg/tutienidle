@@ -177,6 +177,11 @@
       "elementTabs": {
         "aria": "Chọn Hành Pháp Tu"
       },
+      "centerTabs": {
+        "aria": "Chế độ cột giữa",
+        "tree": "Cây Kỹ Năng",
+        "detail": "Chi Tiết"
+      },
       "detail": {
         "empty": "Chọn một kỹ năng để xem chi tiết.",
         "upgrade": "Nâng Cấp ({cost} Cảm Ngộ)",

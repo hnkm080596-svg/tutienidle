@@ -194,7 +194,7 @@ export class GameManagerCatalogOps {
     }
   }
 
-  registerProgressionNodes(nodes: ProgressionNode[]) {
+  registerProgressionNodes(nodes: readonly ProgressionNode[]) {
     for (const node of nodes) {
       if (!this.deps.nodeRegistry.has(node.id)) {
         this.deps.nodeRegistry.register(node)

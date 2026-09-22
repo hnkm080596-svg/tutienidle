@@ -25,6 +25,7 @@ import type { CombatEvent } from '../battle/contracts/events'
 import type { ResolvedCombatOperation } from '../battle/contracts/operations'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Canonical-seals/reaction megaplan S4 (plan sec.11) -- the
 // PRODUCTION-DATA re-proof matrix. The fixture-level reaction suite
@@ -84,7 +85,9 @@ function makeNgoDaoManager(withCompanion = false) {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   const player = createDefaultPlayer()
@@ -963,6 +966,7 @@ describe('S4 -- capability isolation', () => {
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = createDefaultPlayer()
     player.realmId = 'mortal'
     player.realmLevel = 12

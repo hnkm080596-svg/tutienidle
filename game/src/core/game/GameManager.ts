@@ -19,6 +19,8 @@ import { FunctionCombatRng } from '../battle/runtime/rng/FunctionCombatRng'
 import type { BuffDefinitionId } from '../battle/contracts/ids'
 
 import { NodeRegistry } from '../progression/NodeRegistry'
+import { getSkillCoreLevel, skillCoreNodeId } from '../progression/SkillCoreLevel'
+import { turnSkillDisplayMetaOf } from '../../data/skill/TurnSkillDisplayMeta'
 
 import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
@@ -253,21 +255,61 @@ export class GameManager {
   })
 
   readonly skillManager = new SkillManager()
-  readonly skillSystem = new SkillSystem(this.skillManager, (skill, levelsGained) => {
+  readonly skillSystem = new SkillSystem(this.skillManager)
+
+  /**
+   * M-QI-05 - the ONE battle-snapshot skill-level projection: reads
+   * nodeLevels through registered Core Nodes (levelsSkillId), then
+   * tops up learned templates lacking a core (fixed Lv1) with 1. Fed
+   * into CombatEntity.skillLevels at build; combat reads it verbatim.
+   */
+  private projectCanonicalSkillLevels(source: PlayerData | undefined): Record<string, number> {
+    const projected: Record<string, number> = {}
+
+    for (const [nodeId, level] of Object.entries(source?.nodeLevels ?? {})) {
+      if (level > 0 && this.nodeRegistry.has(nodeId)) {
+        const skillId = this.nodeRegistry.get(nodeId).levelsSkillId
+
+        if (skillId !== undefined) {
+          projected[skillId] = level
+        }
+      }
+    }
+
+    for (const skill of this.skillManager.getAll()) {
+      projected[skill.id] ??= 1
+    }
+
+    return projected
+  }
+
+  /**
+   * M-QI-05 - canonical skill level-up notification, shared by the
+   * Insight channel (progressionOps.levelUpSkill) and the cast channel
+   * (the castCountSink below). Name resolution: learned Skill template
+   * -> native TurnSkillDisplayMeta -> raw id.
+   */
+  private pushSkillLevelUpNotification(skillId: string, newLevel: number, levelsGained: number): void {
+    const name =
+      this.skillManager.get(skillId)?.name ??
+      this.skillTemplates.get(skillId)?.name ??
+      turnSkillDisplayMetaOf(skillId)?.name ??
+      skillId
+
     this.notifications.push({
       kind: 'upgrade',
       message:
         levelsGained === 1
-          ? `${skill.name} đạt cấp ${skill.level}`
-          : `${skill.name} tăng ${levelsGained} cấp, đạt cấp ${skill.level}`,
+          ? `${name} đạt cấp ${newLevel}`
+          : `${name} tăng ${levelsGained} cấp, đạt cấp ${newLevel}`,
       messageKey: levelsGained === 1 ? 'notifications.skillLevelUp' : 'notifications.skillLevelUpMulti',
       messageParams: {
-        name: skill.name,
-        level: String(skill.level),
+        name,
+        level: String(newLevel),
         gained: String(levelsGained),
       },
     })
-  })
+  }
   readonly passiveSystem = new PassiveSystem(
     this.eventBus,
     this.skillManager,
@@ -461,21 +503,44 @@ export class GameManager {
   readonly hiddenBeastSystem: HiddenBeastSystem
 
   constructor() {
-    // Kiếm Tu (2026-08-28) — mirror player.skillCastCounts/skillLevels
-    // mỗi lần cast, phục vụ NodeSystem prerequisite `skillCastCount`
+    // Kiếm Tu (2026-08-28) — mirror player.skillCastCounts mỗi lần
+    // cast, phục vụ NodeSystem prerequisite `skillCastCount`
     // (NodeSystem chỉ nhận PlayerData, không có SkillManager). Ghi vào
     // activePlayer (đăng ký qua setActivePlayer(), xem field bên dưới)
     // — no-op an toàn nếu chưa có player active (vd unit test dựng
-    // GameManager trần).
-    this.skillSystem.setCastCountSink((skillId, totalExperience, level) => {
+    // GameManager trần). M-QI-05 - the cast channel now writes the
+    // canonical Core Node level (nodeLevels[core_<id>]) when the cast
+    // target advances; the notification fires only on a true increase
+    // (delta reported for multi-level jumps).
+    this.skillSystem.setCastCountSink((skillId, totalExperience, targetLevel) => {
       if (!this.activePlayer) return
 
       this.activePlayer.skillCastCounts ??= {}
       this.activePlayer.skillCastCounts[skillId] = totalExperience
 
-      this.activePlayer.skillLevels ??= {}
-      this.activePlayer.skillLevels[skillId] = level
+      if (targetLevel === undefined) {
+        return
+      }
+
+      const coreId = skillCoreNodeId(skillId)
+      const priorLevel = this.activePlayer.nodeLevels?.[coreId] ?? 0
+
+      if (targetLevel > priorLevel) {
+        this.activePlayer.nodeLevels ??= {}
+        this.activePlayer.nodeLevels[coreId] = targetLevel
+        this.pushSkillLevelUpNotification(skillId, targetLevel, targetLevel - priorLevel)
+      }
     })
+
+    // M-QI-05 - canonical level provider: every live skill-level read
+    // (getEffectiveSkill/progressionOf/passive scaling) resolves
+    // nodeLevels[core_<id>] on the active player. A core read of 0 means
+    // the skill is fixed-level (maxLevel 1, no core granted) - the live
+    // level is still 1. Unwired/no-player contexts fall back to Lv1
+    // inside SkillSystem.
+    this.skillSystem.setSkillLevelProvider((skillId) =>
+      this.activePlayer ? getSkillCoreLevel(this.activePlayer, skillId) || 1 : 1,
+    )
 
     // P7-M6 - mirror player.techniqueProgress each time the canonical
     // holder's {rank, grade} can change (grant/rank-up/grade-advance/
@@ -587,6 +652,10 @@ export class GameManager {
       isTurnBattleInProgress: () => this.turnBattleOps?.isTurnBattleInProgress() ?? false,
       // Deferred closure - turnBattleOps is assigned later.
       getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
+      // M-QI-05 - Insight-channel level-up notification (cast channel
+      // notifies via the castCountSink above - one owner per channel).
+      onSkillLevelUp: (skillId, newLevel, levelsGained) =>
+        this.pushSkillLevelUpNotification(skillId, newLevel, levelsGained),
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({
@@ -809,8 +878,14 @@ export class GameManager {
             resolvePathCapabilities(player, {
               hasSkill: (skillId) => this.skillManager.has(skillId),
             }),
-          getSkillLevels: () =>
-            Object.fromEntries(this.skillManager.getAll().map((skill) => [skill.id, skill.level])),
+          // M-QI-05 - canonical snapshot projection: registered Core
+          // Nodes' levelsSkillId -> nodeLevels level (covers learned
+          // template skills AND native defs); learned fixed-Lv1
+          // templates without a core project 1. Unknown/unregistered
+          // core_* keys never project. Reads the BUILD SOURCE player -
+          // a supplied PlayerData battles with its own nodeLevels, not
+          // ambient activePlayer state.
+          getSkillLevels: () => this.projectCanonicalSkillLevels(source),
           getProgressionNodes: () => this.nodeRegistry.getAll(),
           getCompanionDefinition: (id) => COMPANIONS.find((candidate) => candidate.id === id),
           getLiveBattleModifiers: (player) => this.effectOps.getLiveBattleModifiers(player),

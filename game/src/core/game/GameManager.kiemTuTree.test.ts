@@ -12,6 +12,7 @@ import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
 import { getRealmIndex } from '../realm/realmSystem'
 import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Kiem Tu Reimagined Task 11 (spec 2026-09-15 §6, K20) — the new
 // progression tree end-to-end: Cuu Cung purchase grants flow through
@@ -38,6 +39,7 @@ function setup() {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'sword'

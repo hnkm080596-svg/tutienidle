@@ -46,7 +46,7 @@ export interface CommandWheelDisabledContext {
   hasArtifactDefinition: boolean
   // P7-M9: per-domain unlock booleans resolved in DongFuCommandWheel.vue
   // from the AUTHORITATIVE predicates (isCompanionDomainUnlocked /
-  // isFormationUnlocked) — the slots must not key off hasFoundationRealm
+  // isFormationUnlocked) - the slots must not key off hasFoundationRealm
   // or the wheel drifts from the domain gate when a threshold moves.
   companionDomainUnlocked: boolean
   formationUnlocked: boolean
@@ -130,8 +130,8 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   },
   // Trận Pháp (Combat Art Roster spec, 2026-09-05) — SHIPPED, mở
   // TranPhapPanel.vue để kéo-thả gán player/companion vào lưới 6x6.
-  // P7-M9 (decisions D3 + M9-F1): Trận unlocks cùng party/companion progression
-  // ở Trúc Cơ — render với lock badge trước đó (phap_bao precedent).
+  // P7-M9 (decisions D3 + M9-F1): Tran unlocks with party/companion progression
+  // at Truc Co - renders with a lock badge before that (phap_bao precedent).
   {
     id: 'formation_slot',
     ring: 2,

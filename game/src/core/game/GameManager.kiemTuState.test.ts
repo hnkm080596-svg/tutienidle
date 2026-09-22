@@ -9,6 +9,7 @@ import { MORTAL_PRECURSOR_SKILL_IDS } from '../skill/MortalPrecursors'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
 import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
 import { SWORD_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
 // surface is stubbed; nothing here is invoked for this path.
@@ -36,6 +37,7 @@ function setup() {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   return gameManager
 }
@@ -46,9 +48,9 @@ function setupMortalWithPathReady(tramTotalCasts: number) {
   player.realmId = 'mortal'
   player.realmLevel = 12
   player.skillCastCounts = { tram: tramTotalCasts }
-  player.skillLevels = { tram: tramTotalCasts >= 10000 ? 3 : tramTotalCasts >= 1000 ? 2 : 1 }
+  player.nodeLevels.core_tram = tramTotalCasts >= 10000 ? 3 : tramTotalCasts >= 1000 ? 2 : 1
 
-  gameManager.progressionOps.learnSkill('tram')
+  gameManager.progressionOps.learnSkill('tram', player)
 
   return { gameManager, player }
 }

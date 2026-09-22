@@ -26,6 +26,7 @@ import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
 import { buildings } from '@/data/building/buildings'
 import { PHAP_TU_NODES } from '@/data/progression/PhapTuNodes'
 import { KIEM_TU_NODES } from '@/data/progression/KiemTuNodes'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import { QUESTS } from '@/data/quest/quests'
 
 export function registerRealCatalogs(manager: GameManager): void {
@@ -45,5 +46,6 @@ export function registerRealCatalogs(manager: GameManager): void {
   manager.catalogOps.registerBuildings(buildings)
   manager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
   manager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+  manager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   manager.catalogOps.registerQuests(QUESTS)
 }

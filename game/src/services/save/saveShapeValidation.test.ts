@@ -3,6 +3,8 @@ import { validateGameSaveShape } from './saveShapeValidation'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { COMPANIONS } from '../../data/companion/Companions'
+import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
+import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 
 function validSave(): Record<string, unknown> {
   return {
@@ -143,6 +145,9 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
 
   // A post-ritual player: pair committed atomically and the realm has
   // already advanced (the ritual never leaves a mortal carrying a pair).
+  // M-QI-05 - the way's declared coreSkillIds are granted at commit:
+  // nodeLevels[core_<id>] = 1 plus purchasedNodeIds membership, exactly
+  // what grantSkillCore writes.
   function withPair(pathId: string, wayId: string): Record<string, unknown> {
     const save = validSave()
     const player = playerOf(save)
@@ -152,6 +157,16 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
     player.cultivationWay = wayId
     if (pathId === 'sword') {
       player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
+    }
+
+    const way = Object.values(
+      CULTIVATION_PATH_MODULES[pathId as CultivationPathId].ways,
+    ).find((candidate) => candidate?.id === wayId)
+
+    for (const skillId of way?.coreSkillIds ?? []) {
+      const coreId = skillCoreNodeId(skillId)
+      ;(player.nodeLevels as Record<string, number>)[coreId] = 1
+      ;(player.purchasedNodeIds as string[]).push(coreId)
     }
 
     return save
@@ -1729,21 +1744,25 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     expect(pathsOf(validateGameSaveShape(save))).toContain('player.combatAiStrategy')
   })
 
-  it.each([Number.NaN, -3])('từ chối skillLevels value = %j', (value) => {
+  // M-QI-05 (v73) - skillLevels is a retired field: ANY presence
+  // rejects at the field path, regardless of its contents.
+  it.each([{ skill_1: 1 }, { skill_1: null }, { skill_1: -3 }, {}])(
+    'từ chối skillLevels hiện diện = %j',
+    (value) => {
+      const save = validSave()
+
+      playerOf(save).skillLevels = value
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.skillLevels')
+    },
+  )
+
+  it('chấp nhận skillCastCounts vắng mặt (optional)', () => {
     const save = validSave()
 
-    playerOf(save).skillLevels = { skill_1: value }
-
-    const result = validateGameSaveShape(save)
-
-    expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('player.skillLevels.skill_1')
-  })
-
-  it('chấp nhận skillLevels/skillCastCounts vắng mặt (optional)', () => {
-    const save = validSave()
-
-    delete playerOf(save).skillLevels
     delete playerOf(save).skillCastCounts
 
     expect(validateGameSaveShape(save).ok).toBe(true)
@@ -1980,11 +1999,16 @@ describe('validateGameSaveShape — v71 retired skill fields', () => {
     return save.player as Record<string, unknown>
   }
 
+  // M-QI-05 (v73) - a learned levelled template (tram, maxLevel 3)
+  // carries its canonical core grant: nodeLevels.core_tram >= 1 plus
+  // purchasedNodeIds membership.
   function withSkillEntry(extra: Record<string, unknown>): Record<string, unknown> {
     const save = validSave()
     save.skills = [
       { id: 'tram', name: 'Trảm', type: 'active', level: 1, ...extra },
     ]
+    ;(playerOf(save).nodeLevels as Record<string, number>).core_tram = 1
+    ;(playerOf(save).purchasedNodeIds as string[]).push('core_tram')
 
     return save
   }
@@ -2021,5 +2045,140 @@ describe('validateGameSaveShape — v71 retired skill fields', () => {
 
     expect(playerOf(save).mortalBasicSkillId).toBeUndefined()
     expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('validateGameSaveShape — v73 core inverse ownership', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  // M-QI-05 (D9f) - every owned registered core must trace to a
+  // declared source: learned template, owned node's grantsSkillCoreIds,
+  // or the active way's coreSkillIds. A core with no source is a state
+  // no legal path produces - the boundary rejects, never repairs.
+  it('từ chối core_cuong_quyen orphan (cuong_chien không được sở hữu)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    ;(player.nodeLevels as Record<string, number>).core_cuong_quyen = 1
+    ;(player.purchasedNodeIds as string[]).push('core_cuong_quyen')
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.core_cuong_quyen')
+  })
+
+  it('từ chối core_tram orphan khi skills[] không có entry tram (learned-template core mất chủ)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    save.skills = []
+    ;(player.nodeLevels as Record<string, number>).core_tram = 1
+    ;(player.purchasedNodeIds as string[]).push('core_tram')
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.core_tram')
+  })
+
+  it('từ chối core orphan khi grant-node bị revoke nhưng core level sót lại', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'qi_refining'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+    ;(player.nodeLevels as Record<string, number>).core_cuong_quyen = 2
+    ;(player.purchasedNodeIds as string[]).push('core_cuong_quyen')
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.core_cuong_quyen')
+  })
+
+  it('chấp nhận core_cuong_quyen khi cuong_chien grant-node được sở hữu (canonical + mirror)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'qi_refining'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+
+    // A real purchase writes BOTH: nodeLevels.cuong_chien = 1 is the
+    // canonical ownership; purchasedNodeIds is the mirror. The
+    // forward check requires every grantsSkillCoreIds member present.
+    ;(player.nodeLevels as Record<string, number>).cuong_chien = 1
+    ;(player.purchasedNodeIds as string[]).push('cuong_chien')
+
+    for (const skillId of ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the']) {
+      const coreId = skillCoreNodeId(skillId)
+      ;(player.nodeLevels as Record<string, number>)[coreId] = 1
+      ;(player.purchasedNodeIds as string[]).push(coreId)
+    }
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  // Ownership is canonical (D9d): nodeLevels[id] >= 1 decides - the
+  // purchasedNodeIds mirror can never fabricate or hide ownership.
+  it('từ chối kit-core thiếu khi cuong_chien được sở hữu canonical dù mirror sót', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'qi_refining'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+    ;(player.nodeLevels as Record<string, number>).cuong_chien = 1
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.cuong_chien')
+  })
+
+  it('từ chối cores khi cuong_chien chỉ tồn tại trong mirror (canonical absent)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'qi_refining'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+
+    // Mirror claims ownership but nodeLevels.cuong_chien is absent -
+    // the grant source does not exist canonically, so every kit core
+    // is an orphan (D9f).
+    ;(player.purchasedNodeIds as string[]).push('cuong_chien')
+
+    for (const skillId of ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the']) {
+      const coreId = skillCoreNodeId(skillId)
+      ;(player.nodeLevels as Record<string, number>)[coreId] = 1
+      ;(player.purchasedNodeIds as string[]).push(coreId)
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.core_cuong_quyen')
+  })
+
+  it('từ chối core_cuong_quyen khi skills[] chứa entry giả id cuong_quyen (không phải learned template)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    // cuong_quyen is a native TurnSkillDefinition, not a learnable
+    // Skill template - a skills[] entry cannot satisfy the learned
+    // source for a native core (D9f).
+    save.skills = [{ id: 'cuong_quyen', name: 'Cương Quyền', type: 'active', level: 1 }]
+    ;(player.nodeLevels as Record<string, number>).core_cuong_quyen = 1
+    ;(player.purchasedNodeIds as string[]).push('core_cuong_quyen')
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.core_cuong_quyen')
   })
 })

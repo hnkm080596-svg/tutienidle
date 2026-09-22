@@ -212,6 +212,10 @@ export const SWORD_PATHWAY: PathWayDefinition = {
       state: 'player.swordPath.preset',
     },
   },
+  // M-QI-05 - every orb owns a canonical Core Node (granted at ritual
+  // commit; combo extras inherit the triggering orb's level via
+  // progressionOwnerId, never their own core).
+  coreSkillIds: [...KIEM_PHO_ORB_IDS],
   // P1 - the fixed tree tag the panel renders (replaces the module
   // predicate chain selecting 'kiem_pho').
   nodeTreeTag: 'kiem_pho',
@@ -226,9 +230,10 @@ export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
   // (myriad_swords_art carries none).
   realmRewards: composeRealmRewards(),
   // Ritual-only entry, permanent, FREE — the exact port of the retired
-  // kiem_tu_an node's skillCastCount {tram, 3} gate (reads the
-  // skillLevels mirror). A mortal without tram Lv3 at the ritual can
-  // never enter hidden_sword_pathway — there is no mid-progression flip any more.
+  // kiem_tu_an node's skillCastCount {tram, 3} gate (M-QI-05: reads the
+  // canonical core_tram node level). A mortal without tram Lv3 at the
+  // ritual can never enter hidden_sword_pathway — there is no
+  // mid-progression flip any more.
   offerGate: { requiresSkillLevel: { skillId: 'tram', level: 3 } },
   // P7-M4 - same mortal-precursor contract as sword_pathway (learned
   // skills kept; pick cleared at commit; mortal-only gate).
@@ -249,5 +254,8 @@ export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
   ownedContent: {
     skillIds: [NGU_KIEM_THUAT.id, TU_KIEM_Y_EMBLEM.id, KIEM_DAO_CASCADE_EMBLEM.id],
   },
+  // M-QI-05 - the provider action owns the way's canonical Core Node;
+  // the emblem defs are internal markers with no progression channel.
+  coreSkillIds: [NGU_KIEM_THUAT.id],
   nodeTreeTag: 'ngu_kiem',
 }

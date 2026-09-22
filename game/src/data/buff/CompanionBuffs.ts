@@ -1,10 +1,10 @@
 import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
 import type { CapabilityGrantDefinition } from '@/core/battle/contracts/capability'
 
-// P7-M-G (beta companion roster, 2026-10) — companion support buffs for
+// P7-M-G (beta companion roster, 2026-10) - companion support buffs for
 // the two Beta-acquirable definitions. than_nong heals through the
 // established hpRegenPerTurn stat channel (the ally recovers at the start
-// of THEIR OWN turn and healing-received amplifiers apply — D18/INV-13);
+// of THEIR OWN turn and healing-received amplifiers apply - D18/INV-13);
 // khai_minh reinforces party stats and wards allies through the proven
 // son_nhac_ho_the marker channel. No PeriodicHealDefinition use: it has
 // zero production users and the stat path is the smaller coherent choice.
@@ -13,7 +13,7 @@ import type { CapabilityGrantDefinition } from '@/core/battle/contracts/capabili
 // `application` resistance block and keep lifetime.scaling 'fixed' so the
 // HOLDER's own ailment resist/duration stats can never shorten or resist
 // a friendly buff (The Tu precedent). Stat/regen buffs are non-stacking
-// keep/refresh — a recast refreshes duration in place. The ward marker
+// keep/refresh - a recast refreshes duration in place. The ward marker
 // mirrors son_nhac_ho_the field-for-field: per_target + latest +
 // replace-instance, so a recast replaces the marker and the
 // reconcileExternalWard-bound pool shares one owner. Flat numbers are
@@ -72,7 +72,7 @@ export const KHAI_MINH_HO_VE_BUFF: BuffDefinition = {
 }
 
 /**
- * Khai Minh Thanh Ho — marker on each warded ally binding an
+ * Khai Minh Thanh Ho - marker on each warded ally binding an
  * externalWard pool to Khai Minh (spec 3.2). Mirrors son_nhac_ho_the:
  * per_target + latest so a newer grant replaces older-source markers and
  * marker/pool always share one owner; reconcileExternalWard clears the

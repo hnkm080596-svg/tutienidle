@@ -1,15 +1,15 @@
 import type { Skill } from '../../core/skill/Skill'
 
-// Skill execution policy rework (plan Â§8) â€” Má»ŒI active skill khai
-// `execution` tÆ°á»ng minh; runtime chá»‰ Ä‘á»c field nÃ y (khÃ´ng fallback
+// Skill execution policy rework (plan sec.8) - EVERY active skill declares
+// `execution` explicitly; runtime reads only this field (no fallback
 // isBasicAttack/castTime/path):
-// - Tráº£m + Ngá»± Kiáº¿m Thuáº­t â†’ 'attack_speed' (cadence theo Attack Speed,
-//   khÃ´ng ICD/khÃ´ng CDR/khÃ´ng cast time).
-// - 5 skill PhÃ¡p Tu cÃ³ cast time 1.2s giá»¯ nguyÃªn sá»‘ liá»‡u qua policy
-//   'cast_time' (cast time chá»‹u Cast Speed, cooldown chá»‹u CDR).
-// - Active cÃ²n láº¡i â†’ 'cooldown' vá»›i cooldown hiá»‡n cÃ³.
-// - 'attack_speed_cast' chÆ°a gÃ¡n cho skill nÃ o (chá»‰ author khi thiáº¿t káº¿
-//   cá»¥ thá»ƒ yÃªu cáº§u â€” plan Â§8.3).
+// - Tram + Ngu Kiem Thuat -> 'attack_speed' (cadence by Attack Speed,
+//   no ICD/no CDR/no cast time).
+// - the 5 Phap Tu skills with 1.2s cast time keep their numbers via the
+//   'cast_time' policy (cast time scales with Cast Speed, cooldown with CDR).
+// - remaining actives -> 'cooldown' with their existing cooldowns.
+// - 'attack_speed_cast' is assigned to no skill yet (author only when the
+//   design explicitly requires it - plan sec.8.3).
 export const CORE_SKILLS: Skill[] = [
   {
     id: 'tram',
@@ -50,7 +50,7 @@ export const CORE_SKILLS: Skill[] = [
       },
     ],
 
-    // Plan Â§8.3 â€” baseline báº£o toÃ n hÃ nh vi: Ä‘Ã²n nhá»‹p theo Attack Speed.
+    // Plan sec.8.3 - baseline preserves behavior: cadence follows Attack Speed.
     execution: { kind: 'attack_speed' },
 
     resourceType: 'none',
@@ -58,9 +58,9 @@ export const CORE_SKILLS: Skill[] = [
 
   },
 
-  // Phap Tu Reimagined Task 2 — the two mortal-path actives learned
+  // Phap Tu Reimagined Task 2 - the two mortal-path actives learned
   // alongside tram at character creation. Both level ONLY by cast count
-  // (CAST_LEVELING_THRESHOLDS; upgradeSkill rejects them, INV-9).
+  // (CAST_LEVELING_THRESHOLDS; their cores reject Insight upgrades, INV-9).
   // linh_bao Lv3 (10000 casts) is the ngo_dao ritual gate; its
   // primordial hit "ignores all defenses" like the Hon Nguyen stat.
   {
@@ -68,7 +68,7 @@ export const CORE_SKILLS: Skill[] = [
 
     name: 'Linh Bạo',
 
-    // Spec §11 discoverability hint — the one in-game tell that pushing
+    // Spec sec.11 discoverability hint - the one in-game tell that pushing
     // Linh Bao to its limit BEFORE the Initiation Ritual opens a road
     // others cannot see (ngo_dao). No locked card tease anywhere.
     description: 'Tụ linh khí bùng nổ, bỏ qua mọi phòng thủ. Nghe đồn kẻ đẩy nó đến cực hạn trước Nghi Lễ Nhập Môn sẽ thấy một con đường người khác không thấy.',
@@ -111,7 +111,7 @@ export const CORE_SKILLS: Skill[] = [
 
   },
 
-  // The Tu Reimagined (spec 2026-09-15, T6/section 2.3) — huy_quyen is
+  // The Tu Reimagined (spec 2026-09-15, T6/section 2.3) - huy_quyen is
   // also the ung_the ritual gate: reaching Lv3 (10.000 casts) is the
   // ONLY condition revealing that path at the Initiation Ritual.
   {
@@ -160,10 +160,10 @@ export const CORE_SKILLS: Skill[] = [
   },
 
   // ------------------------------------------------------------------
-  // Phap Tu An kit (Task 7, phap-tu-reimagined) — DATA SHELLS only:
+  // Phap Tu An kit (Task 7, phap-tu-reimagined) - DATA SHELLS only:
   // ids, slots, targeting, labels for the ritual grant. Resolution
   // semantics (composite element pick / repeat / multicast) land in the
-  // An-resolution task — the payloads below are placeholders.
+  // An-resolution task - the payloads below are placeholders.
   // ------------------------------------------------------------------
   {
     id: 'van_phap_tuy_tam',
@@ -216,7 +216,7 @@ export const CORE_SKILLS: Skill[] = [
 
     target: 'enemy',
 
-    // Placeholder damage (same convention as van_phap_tuy_tam) — the
+    // Placeholder damage (same convention as van_phap_tuy_tam) - the
     // strict Skill->TurnSkill gate requires a damage/debuff effect on a
     // non-self skill; applyAnKitToSpecial replaces the payload with the
     // composite pick + repeatCasts at battle build.
@@ -242,7 +242,7 @@ export const CORE_SKILLS: Skill[] = [
 
     name: 'Ngộ Đạo Hỗn Độn',
 
-    // Spec §3.3 + §11 — the HUD renders this as a passive emblem (no
+    // Spec sec.3.3 + sec.11 - the HUD renders this as a passive emblem (no
     // active button); the tooltip must explain basic-slot-only multicast.
     description: 'Ngộ đạo hỗn độn — chỉ đòn ở ô Thường (Vạn Pháp Tùy Tâm) mới có thể tự phân luồng (multicast). Đa Pháp Liên Tuyên không kích hoạt.',
 
@@ -265,14 +265,14 @@ export const CORE_SKILLS: Skill[] = [
 
 
 
-  // Há»a Tu (Plans/magicpathgeneral + Plans/FirePath, 2026-08-21) â€”
-  // THAY Háº²N kit 3-skill+1-passive cÅ© (xich_viem_chuong/viem_hai/
-  // bao_viem/passive_bao_viem_focus, Ä‘Ã£ xoÃ¡). Framework má»›i: 1 Active
-  // Skill DUY NHáº¤T má»—i hÃ nh (khÃ´ng cÃ²n multi-skill kit) â€” chiá»u sÃ¢u
-  // Ä‘áº¿n tá»« Node Tree (Minor Ä‘á»•i stat, Major Ä‘á»•i tag/behavior cá»§a
-  // CHÃNH skill nÃ y), xem data/progression/PhapTuNodes.ts. Há»c Sáº´N
-  // lÃºc chá»n path (GameManager.chooseCultivationPath(), KHÃ”NG cÃ²n qua
-  // node "LÄ©nh Ngá»™ Há»a" â€” node Ä‘Ã³ Ä‘Ã£ gá»¡ khá»i PhapTuNodes.ts).
+  // Hoa Tu (Plans/magicpathgeneral + Plans/FirePath, 2026-08-21) -
+  // FULLY REPLACES the old 3-skill+1-passive kit (xich_viem_chuong/viem_hai/
+  // bao_viem/passive_bao_viem_focus, removed). New framework: 1 Active
+  // Skill ONLY per element (no more multi-skill kit) - depth
+  // comes from the Node Tree (Minor changes stats, Major changes THIS skill's tag/behavior
+  // itself), see data/progression/PhapTuNodes.ts. Learned upfront
+  // at path choice (GameManager.chooseCultivationPath(), no longer via
+  // the "Linh Ngo Hoa" node - that node was removed from PhapTuNodes.ts).
   {
     id: 'hoa_cau_thuat',
 
@@ -286,15 +286,15 @@ export const CORE_SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    // Combat Balance Pass (2026-08-29, plan §3.3) — Hỏa (bùng nổ):
-    // cast 1.6s / cooldown 4s — đòn chậm mạnh, thay nhịp 1.2/1 cũ.
+    // Combat Balance Pass (2026-08-29, plan sec.3.3) - Fire (burst):
+    // cast 1.6s / cooldown 4s - slow heavy hit, replacing the old 1.2/1 cadence.
     cooldown: 4,
 
 
     castTime: 1.6,
 
-    // Plan §8.3 — policy 'cast_time' là nguồn sự thật runtime; field
-    // castTime trên giữ đồng bộ cho UI/tooltip.
+    // Plan sec.8.3 - the 'cast_time' policy is the runtime source of truth; the
+    // castTime field above stays in sync for UI/tooltips.
     execution: { kind: 'cast_time', castTime: 1.6 },
 
     target: 'enemy',
@@ -303,7 +303,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         type: 'damage',
 
-        // FirePath.md má»¥c 2 â€” "Damage: 100% Skill Power".
+        // FirePath.md sec.2 - "Damage: 100% Skill Power".
         value: 1,
 
         components: [{ kind: 'element', element: 'fire', ratio: 1 }],
@@ -318,21 +318,21 @@ export const CORE_SKILLS: Skill[] = [
 
         buffId: 'hoa_an',
 
-        // 2026-08-21 â€” Sá»¬A láº¡i quyáº¿t Ä‘á»‹nh ban Ä‘áº§u ("100% luÃ´n Ã¡p"):
-        // Há»a Cáº§u Thuáº­t gá»‘c chá»‰ 50% cÆ¡ há»™i Ã¡p ThiÃªu Äá»‘t, node "Dáº«n
-        // Há»a" (+15%) vÃ  "Há»a NguyÃªn" (+5%) á»Ÿ TrÃºc CÆ¡ cá»™ng thÃªm qua
+        // 2026-08-21 - REVISED the original decision ("always 100% apply"):
+        // original Hoa Cau Thuat only has a 50% chance to apply Burn; the "Dan
+        // Hoa" (+15%) and "Hoa Nguyen" (+5%) nodes at Truc Co add more via
         // stat elementApplicationPercent (xem resolveAilmentApplicationChance,
-        // data/progression/PhapTuNodes.ts) â€” Ä‘á»ƒ node Ä‘Ã³ cÃ³ Ã½ nghÄ©a
-        // tháº­t thay vÃ¬ cá»™ng vÃ o con sá»‘ Ä‘Ã£ max.
+        // data/progression/PhapTuNodes.ts) - so those nodes carry real
+        // meaning instead of stacking onto an already-maxed number.
         ailmentChance: 0.5,
       },
     ],
 
-    // Skill tree redesign (2026-08-21) â€” skill nÃ y lÃ  ROOT NODE cá»§a
-    // Há»a tree (xem PhapTuNodes.ts), chiếm slot BASIC role
-    // vÃ  cháº¡y qua scheduler auto-cast thá»‘ng nháº¥t nhÆ° má»i skill khÃ¡c.
-    // Äiá»ƒm khÃ¡c biá»‡t DUY NHáº¤T cá»§a Há»a Cáº§u Thuáº­t vá»›i 4 hÃ nh kia lÃ  Ä‘Æ°á»£c
-    // tá»± há»c + vào sẵn role basic (cost 0, xem GameManager.chooseCultivationPath()).
+    // Skill tree redesign (2026-08-21) - this skill is the ROOT NODE of the
+    // Fire tree (see PhapTuNodes.ts), occupying the BASIC role slot
+    // and running through the unified auto-cast scheduler like every other skill.
+    // The ONLY difference between Hoa Cau Thuat and the other 4 elements: it is
+    // self-learned + placed in the basic role slot (cost 0, see GameManager.chooseCultivationPath()).
 
 
     resourceType: 'none',
@@ -342,16 +342,16 @@ export const CORE_SKILLS: Skill[] = [
 
   },
 
-  // Má»™c Tu (Plans/PoisonPath, 2026-08-21) â€” THAY Háº²N kit 3-skill+1-
-  // passive cÅ© (dang_trao/doc_vu/hap_tinh_dai_phap/passive_hap_tinh_tuy,
-  // Ä‘Ã£ xoÃ¡). CÃ¹ng framework 1-Active-Skill/hÃ nh vá»›i Há»a/Thá»§y â€” chiá»u
-  // sÃ¢u Ä‘áº¿n tá»« Node Tree, xem data/progression/PhapTuNodes.ts. Há»c Sáº´N
-  // lÃºc chá»n path (GameManager.chooseCultivationPath()). KHÃC Há»a/Thá»§y:
-  // 0 direct damage (chá»‰ cÃ³ effect 'ailment', KHÃ”NG cÃ³ effect 'damage'
-  // nÃ o â€” PoisonPath.md má»¥c 1 "0 direct damage"), ailmentChance Cá» Äá»ŠNH
-  // 100% â€” Má»™c KHÃ”NG cÃ³ Element Application Chance/minor nÃ o chá»‰nh tá»‰
-  // lá»‡ nÃ y (khÃ¡c Há»a Cáº§u Thuáº­t/Thá»§y Tiá»…n Thuáº­t 50% base + node cá»™ng
-  // thÃªm), toÃ n bá»™ sÃ¡t thÆ°Æ¡ng Ä‘áº¿n tá»« TrÃºng Äá»™c DoT.
+  // Moc Tu (Plans/PoisonPath, 2026-08-21) - FULLY REPLACES the 3-skill+1-
+  // passive kit (dang_trao/doc_vu/hap_tinh_dai_phap/passive_hap_tinh_tuy,
+  // removed). Same 1-Active-Skill/element framework as Fire/Water - depth
+  // comes from the Node Tree, see data/progression/PhapTuNodes.ts. Learned
+  // upfront at path choice (GameManager.chooseCultivationPath()). UNLIKE Fire/Water:
+  // 0 direct damage (only the 'ailment' effect, NO 'damage' effect
+  // at all - PoisonPath.md sec.1 "0 direct damage"), ailmentChance FIXED
+  // 100% - Moc has NO Element Application Chance/minor adjusting this
+  // rate (unlike Hoa Cau Thuat/Thuy Tien Thuat 50% base + node-boosted
+  // extra); all damage comes from the Poison DoT.
   {
     id: 'doc_chuong',
 
@@ -366,15 +366,15 @@ export const CORE_SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    // Combat Balance Pass (2026-08-29, plan §3.3) — Mộc (DoT): cast
-    // 1.2s / cooldown 2s — áp độc mạnh, nhịp vừa.
+    // Combat Balance Pass (2026-08-29, plan sec.3.3) - Wood (DoT): cast
+    // 1.2s / cooldown 2s - strong poison application, mid cadence.
     cooldown: 2,
 
 
     castTime: 1.2,
 
-    // Plan §8.3 — policy 'cast_time' là nguồn sự thật runtime; field
-    // castTime trên giữ đồng bộ cho UI/tooltip.
+    // Plan sec.8.3 - the 'cast_time' policy is the runtime source of truth; the
+    // castTime field above stays in sync for UI/tooltips.
     execution: { kind: 'cast_time', castTime: 1.2 },
 
     target: 'enemy',
@@ -389,8 +389,8 @@ export const CORE_SKILLS: Skill[] = [
       },
     ],
 
-    // Skill tree redesign (2026-08-21) â€” root node cá»§a Má»™c tree, chiáº¿m
-    // role BASIC (xem hoa_cau_thuat's ghi chÃº).
+    // Skill tree redesign (2026-08-21) - root node of the Wood tree, taking
+    // BASIC role (see hoa_cau_thuat's note).
     resourceType: 'none',
 
     buildTag: 'core',
@@ -398,12 +398,12 @@ export const CORE_SKILLS: Skill[] = [
 
   },
 
-  // Thá»§y Tu (Plans/waterpath, 2026-08-21) â€” THAY Háº²N kit 3-skill+1-
-  // passive cÅ© (luu_thuy_chuong/han_trieu/tuyet_bang_pha/
-  // passive_luu_thuy_man, Ä‘Ã£ xoÃ¡). CÃ¹ng framework 1-Active-Skill/hÃ nh
-  // vá»›i Há»a (xem Skills.ts's ghi chÃº Ä‘áº§u khá»‘i hoa_cau_thuat) â€” chiá»u
-  // sÃ¢u Ä‘áº¿n tá»« Node Tree, xem data/progression/PhapTuNodes.ts. Há»c Sáº´N
-  // lÃºc chá»n path (GameManager.chooseCultivationPath()).
+  // Thuy Tu (Plans/waterpath, 2026-08-21) - FULLY REPLACES the 3-skill+1-
+  // passive kit (luu_thuy_chuong/han_trieu/tuyet_bang_pha/
+  // passive_luu_thuy_man, removed). Same 1-Active-Skill/element
+  // framework as Fire (see Skills.ts's note at hoa_cau_thuat) - depth
+  // comes from the Node Tree, see data/progression/PhapTuNodes.ts. Learned
+  // upfront at path choice (GameManager.chooseCultivationPath()).
   {
     id: 'thuy_tien_thuat',
 
@@ -417,15 +417,15 @@ export const CORE_SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    // Combat Balance Pass (2026-08-29, plan §3.3) — Thủy (duy trì):
-    // cast 0.9s / cooldown 1s — nhịp nhanh áp ailment.
+    // Combat Balance Pass (2026-08-29, plan sec.3.3) - Water (sustain):
+    // cast 0.9s / cooldown 1s - fast ailment-application cadence.
     cooldown: 1,
 
 
     castTime: 0.9,
 
-    // Plan §8.3 — policy 'cast_time' là nguồn sự thật runtime; field
-    // castTime trên giữ đồng bộ cho UI/tooltip.
+    // Plan sec.8.3 - the 'cast_time' policy is the runtime source of truth; the
+    // castTime field above stays in sync for UI/tooltips.
     execution: { kind: 'cast_time', castTime: 0.9 },
 
     target: 'enemy',
@@ -434,7 +434,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         type: 'damage',
 
-        // waterpath má»¥c II â€” "Damage: 100% Skill Power".
+        // waterpath sec.II - "Damage: 100% Skill Power".
         value: 1,
 
         components: [{ kind: 'element', element: 'water', ratio: 1 }],
@@ -449,17 +449,17 @@ export const CORE_SKILLS: Skill[] = [
 
         buffId: 'han_tuc',
 
-        // 2026-08-21 â€” cÃ¹ng quyáº¿t Ä‘á»‹nh vá»›i Há»a Cáº§u Thuáº­t (xem ghi chÃº
-        // á»Ÿ Ä‘Ã³): base 50%, KHÃ”NG luÃ´n luÃ´n Ã¡p â€” Thá»§y Dáº«n (Luyá»‡n KhÃ­)
-        // vÃ  Dáº«n LÆ°u (TrÃºc CÆ¡) cá»™ng thÃªm qua elementApplicationPercent.
+        // 2026-08-21 - same decision as Hoa Cau Thuat (see the note
+        // there): 50% base, does NOT always apply - Thuy Dan (Luyen Khi)
+        // and Dan Luu (Truc Co) add more via elementApplicationPercent.
         ailmentChance: 0.5,
       },
     ],
 
-    // Skill tree redesign (2026-08-21) â€” skill nÃ y lÃ  ROOT NODE cá»§a
-    // element tree (xem PhapTuNodes.ts), chiáº¿m role BASIC vÃ  cháº¡y qua scheduler auto-cast thá»‘ng nháº¥t nhÆ° má»i skill
-    // khÃ¡c. Äiá»ƒm khÃ¡c biá»‡t DUY NHáº¤T cá»§a Há»a Cáº§u Thuáº­t vá»›i 4 hÃ nh kia lÃ 
-    // Ä‘Æ°á»£c tá»± há»c + vào sẵn role basic (cost 0, xem GameManager.chooseCultivationPath()).
+    // Skill tree redesign (2026-08-21) - this skill is the ROOT NODE of the
+    // element tree (see PhapTuNodes.ts), taking the BASIC role and running through the unified auto-cast scheduler like every skill
+    // other. The ONLY difference between Hoa Cau Thuat and the other 4 elements is
+    // it is self-learned + placed in the basic role slot (cost 0, see GameManager.chooseCultivationPath()).
     resourceType: 'none',
 
     buildTag: 'core',
@@ -489,15 +489,15 @@ export const CORE_SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    // Combat Balance Pass (2026-08-29, plan §3.3) — Kim (xuyên): cast
-    // 1.0s / cooldown 2.5s — single-target nặng, nhịp nhanh-trung bình.
+    // Combat Balance Pass (2026-08-29, plan sec.3.3) - Metal (pierce): cast
+    // 1.0s / cooldown 2.5s - heavy single-target, fast-mid cadence.
     cooldown: 2.5,
 
 
     castTime: 1.0,
 
-    // Plan §8.3 — policy 'cast_time' là nguồn sự thật runtime; field
-    // castTime trên giữ đồng bộ cho UI/tooltip.
+    // Plan sec.8.3 - the 'cast_time' policy is the runtime source of truth; the
+    // castTime field above stays in sync for UI/tooltips.
     execution: { kind: 'cast_time', castTime: 1.0 },
 
     target: 'enemy',
@@ -524,8 +524,8 @@ export const CORE_SKILLS: Skill[] = [
       },
     ],
 
-    // Skill tree redesign (2026-08-21) â€” root node cá»§a Kim tree, chiáº¿m
-    // role BASIC (xem hoa_cau_thuat's ghi chÃº).
+    // Skill tree redesign (2026-08-21) - root node of the Metal tree, taking
+    // BASIC role (see hoa_cau_thuat's note).
     resourceType: 'none',
 
     buildTag: 'core',
@@ -533,14 +533,14 @@ export const CORE_SKILLS: Skill[] = [
 
   },
 
-  // Thá»• Tu (Plans/EarthPath, 2026-08-21) â€” THAY Háº²N kit 3-skill+1-
-  // passive cÅ© (ban_thach_quyen/thach_giap_tran/hau_tho_chan/
-  // passive_ban_thach_kien_nhan, Ä‘Ã£ xoÃ¡). CÃ¹ng framework 1-Active-
-  // Skill/hÃ nh vá»›i Há»a/Thá»§y/Má»™c â€” chiá»u sÃ¢u Ä‘áº¿n tá»« Node Tree, xem
-  // data/progression/PhapTuNodes.ts. Há»c Sáº´N lÃºc chá»n path
-  // (GameManager.chooseCultivationPath()). ailmentChance Cá» Äá»ŠNH 100%
-  // â€” Thá»• KHÃ”NG cÃ³ Earth Application Chance/Petrify Chance/Minor nÃ o
-  // chá»‰nh tá»‰ lá»‡ nÃ y (PoisonPath-style, giá»‘ng Má»™c), khÃ¡c Há»a/Thá»§y's
+  // Tho Tu (Plans/EarthPath, 2026-08-21) - FULLY REPLACES the 3-skill+1-
+  // passive kit (ban_thach_quyen/thach_giap_tran/hau_tho_chan/
+  // passive_ban_thach_kien_nhan, removed). Same 1-Active-
+  // Skill/element framework as Fire/Water/Wood - depth comes from the Node Tree, see
+  // data/progression/PhapTuNodes.ts. Learned upfront at path choice
+  // (GameManager.chooseCultivationPath()). ailmentChance FIXED 100%
+  // - Tho has NO Earth Application Chance/Petrify Chance/Minor adjusting
+  // this rate (PoisonPath-style, like Moc), unlike Fire/Water's
   {
     id: 'tho_cau_thuat',
 
@@ -554,15 +554,15 @@ export const CORE_SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    // Combat Balance Pass (2026-08-29, plan §3.3) — Thổ (khống chế):
-    // cast 1.4s / cooldown 5s — CC chậm, mạnh về điều khiển.
+    // Combat Balance Pass (2026-08-29, plan sec.3.3) - Earth (control):
+    // cast 1.4s / cooldown 5s - slow CC, control-focused.
     cooldown: 5,
 
 
     castTime: 1.4,
 
-    // Plan §8.3 — policy 'cast_time' là nguồn sự thật runtime; field
-    // castTime trên giữ đồng bộ cho UI/tooltip.
+    // Plan sec.8.3 - the 'cast_time' policy is the runtime source of truth; the
+    // castTime field above stays in sync for UI/tooltips.
     execution: { kind: 'cast_time', castTime: 1.4 },
 
     target: 'enemy',
@@ -589,8 +589,8 @@ export const CORE_SKILLS: Skill[] = [
       },
     ],
 
-    // Skill tree redesign (2026-08-21) â€” root node cá»§a Thá»• tree, chiáº¿m
-    // role BASIC (xem hoa_cau_thuat's ghi chÃº).
+    // Skill tree redesign (2026-08-21) - root node of the Earth tree, taking
+    // BASIC role (see hoa_cau_thuat's note).
     resourceType: 'none',
 
     buildTag: 'core',

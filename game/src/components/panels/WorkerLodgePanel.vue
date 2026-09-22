@@ -29,7 +29,7 @@ const { stateVersion } = useStateVersion()
 
 // P7-M9 (decision D4): the two gacha tabs only exist once the Companion
 // domain unlocks at Tru Co; nhan_cong (worker capacity) stays available
-// in every realm. The domain ops enforce the same gate — this is the
+// in every realm. The domain ops enforce the same gate - this is the
 // presentation mirror, not a second authority.
 const TABS = [
   { id: 'nhan_cong', label: t('workerLodge.tabs.nhanCong') },

@@ -8,13 +8,13 @@ import { COMPANIONS } from '../../../data/companion/Companions'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// P7-M-G (beta companion roster) — the two beta support kits through the
+// P7-M-G (beta companion roster) - the two beta support kits through the
 // REAL definitions + production BUFF_REGISTRY: than_nong heals via
 // hpRegenPerTurn stat buffs on allies_except_self (special) and a
 // stronger cleanse-carrying HoT (ultimate); khai_minh grants a
 // might%/defense% party buff (special) and a marker-bound externalWard
 // pool per ally (ultimate). No companion has used the
-// allies_except_self/externalWardGrant channels before — the only prior
+// allies_except_self/externalWardGrant channels before - the only prior
 // precedent is the The Tu SON_NHAC player kit.
 
 const thanNong = COMPANIONS.find((definition) => definition.id === 'than_nong')!
@@ -110,7 +110,7 @@ describe('than_nong — beta healer kit (P7-M-G)', () => {
     resolveNext(battle, combat, runtime)
     const first = buffsOf(runtime, ally, 'than_nong_hoi_phuc')
 
-    // Drive the caster again — the ally/enemy turns sit between casts.
+    // Drive the caster again - the ally/enemy turns sit between casts.
     new TurnBattleSystem(combat, 100, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
     new TurnBattleSystem(combat, 100, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
     new TurnBattleSystem(combat, 100, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
@@ -128,7 +128,7 @@ describe('than_nong — beta healer kit (P7-M-G)', () => {
 
     const { battle, combat, runtime } = makeBattle([caster, ally])
 
-    // The stun must sit on an ALLY — a hard-cc'd caster could never cast.
+    // The stun must sit on an ALLY - a hard-cc'd caster could never cast.
     runtime.applyBuff('choang', ally, caster)
     expect(buffsOf(runtime, ally, 'choang')).toHaveLength(1)
 
@@ -194,7 +194,7 @@ describe('khai_minh — beta buffer kit (P7-M-G)', () => {
     resolveNext(battle, combat, runtime)
     const first = buffsOf(runtime, ally, 'khai_minh_thanh_ho')
 
-    // Spend part of the pool, then recast — REPLACE refills to full.
+    // Spend part of the pool, then recast - REPLACE refills to full.
     ally.entity.externalWard!.amount = 30
     new TurnBattleSystem(combat, 100, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
     new TurnBattleSystem(combat, 100, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)

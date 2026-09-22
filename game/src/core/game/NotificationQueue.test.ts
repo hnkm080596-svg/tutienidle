@@ -131,8 +131,22 @@ describe('skill level-up notification (T4-37)', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 100
 
-    gm.skillSystem.learn(skillTemplate('test_skill'))
-    expect(gm.skillSystem.upgradeSkill('test_skill', player)).toBe(true)
+    // M-QI-05 - canonical path: template + registered core, learn
+    // grants the core, levelUpSkill drives the Insight channel.
+    gm.catalogOps.registerSkillTemplates([skillTemplate('test_skill')])
+    gm.catalogOps.registerProgressionNodes([{
+      id: 'core_test_skill',
+      name: 'Core: Test Skill',
+      type: 'minor',
+      insightCost: 0,
+      maxLevel: 10,
+      levelsSkillId: 'test_skill',
+      effect: {},
+    }])
+    gm.setActivePlayer(player)
+
+    expect(gm.progressionOps.learnSkill('test_skill', player)).toBe(true)
+    expect(gm.progressionOps.levelUpSkill('test_skill', player)).toBe(true)
 
     const events = gm.drainNotifications()
     const event = events.find((entry) => entry.kind === 'upgrade')
@@ -148,8 +162,24 @@ describe('skill level-up notification (T4-37)', () => {
 
   it('multi-level gain pushes messageKey notifications.skillLevelUpMulti', () => {
     const gm = new GameManager()
+    const player = createDefaultPlayer()
 
-    gm.skillSystem.learn(skillTemplate('tram'))
+    // Cast channel: the GameManager sink writes nodeLevels[core_tram]
+    // and reports the true delta (Lv1 -> Lv3 at 10.000 casts).
+    gm.catalogOps.registerSkillTemplates([skillTemplate('tram')])
+    gm.catalogOps.registerProgressionNodes([{
+      id: 'core_tram',
+      name: 'Core: Tram',
+      type: 'minor',
+      insightCost: 0,
+      maxLevel: 10,
+      levelsSkillId: 'tram',
+      effect: {},
+    }])
+    gm.setActivePlayer(player)
+
+    expect(gm.progressionOps.learnSkill('tram', player)).toBe(true)
+
     const learned = gm.skillManager.get('tram')!
     learned.totalExperience = 9999
 

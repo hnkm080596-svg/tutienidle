@@ -176,9 +176,12 @@ const branches = computed(() => {
   const nodeViewTag = (node: ProgressionNode): string | undefined => node.elementTag ?? node.branchTag
 
   const visibleTags = props.branchTag ? new Set<string>(viewBranchTags(props.branchTag)) : null
+  // M-QI-05 - Core Nodes (levelsSkillId) are progression state, never
+  // tree content: excluded in every view regardless of tag filtering.
+  const coreFiltered = allNodes.filter(node => node.levelsSkillId === undefined)
   const tagFiltered = visibleTags
-    ? allNodes.filter(node => nodeViewTag(node) !== undefined && visibleTags.has(nodeViewTag(node)!))
-    : allNodes.filter(node => !(nodeViewTag(node) !== undefined && (HIDDEN_BRANCH_TAGS as readonly string[]).includes(nodeViewTag(node)!)))
+    ? coreFiltered.filter(node => nodeViewTag(node) !== undefined && visibleTags.has(nodeViewTag(node)!))
+    : coreFiltered.filter(node => !(nodeViewTag(node) !== undefined && (HIDDEN_BRANCH_TAGS as readonly string[]).includes(nodeViewTag(node)!)))
 
   // Kiem Tu Reimagined — revealWhen hides the node until the prereq
   // holds against the live player (the hidden-path root never renders

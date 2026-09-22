@@ -34,6 +34,7 @@ import { defineEnemy } from '@/core/enemy/Enemy'
 import { createBaseStats } from '@/core/stats/StatBlock'
 import type { CombatEntity } from '@/core/combat/CombatEntity'
 import type { Skill } from '@/core/skill/Skill'
+import { createDefaultPlayer } from '@/core/player/Player'
 import TurnCombatSkillBar from './hud/TurnCombatSkillBar.vue'
 import BattleLogPanel from './BattleLogPanel.vue'
 import TurnOrderStrip from './TurnOrderStrip.vue'
@@ -139,7 +140,16 @@ describe('ARCH-005 (M12) — combat HUD reactivity over the in-place-mutated Tur
     const player = createPlayer()
 
     gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
-    gameManager.progressionOps.learnSkill('basic_test')
+    gameManager.catalogOps.registerProgressionNodes([{
+      id: 'core_basic_test',
+      name: 'Core: Basic',
+      type: 'minor',
+      insightCost: 0,
+      maxLevel: 10,
+      levelsSkillId: 'basic_test',
+      effect: {},
+    }])
+    gameManager.progressionOps.learnSkill('basic_test', createDefaultPlayer())
     const basicSkill = gameManager.skillManager.get('basic_test')!
     gameManager.setPathRuntimeResolver(() => ({
       resolveBasic: () =>

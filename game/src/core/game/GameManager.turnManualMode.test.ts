@@ -5,6 +5,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+import { createDefaultPlayer } from '../player/Player'
 import { toTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
 
 // Slice 7 (Completion Task 10) — manual mode: khi bật, engine PAUSE khi
@@ -79,7 +80,16 @@ function startManualBattle(): { gameManager: GameManager; combatSource: ManualCl
   const player = createPlayer()
 
   gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
-  gameManager.progressionOps.learnSkill('basic_test')
+  gameManager.catalogOps.registerProgressionNodes([{
+    id: 'core_basic_test',
+    name: 'Core: Basic',
+    type: 'minor',
+    insightCost: 0,
+    maxLevel: 10,
+    levelsSkillId: 'basic_test',
+    effect: {},
+  }])
+  gameManager.progressionOps.learnSkill('basic_test', createDefaultPlayer())
   const basicSkill = gameManager.skillManager.get('basic_test')!
   gameManager.setPathRuntimeResolver(() => ({
     resolveBasic: () =>

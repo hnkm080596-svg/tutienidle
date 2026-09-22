@@ -11,6 +11,7 @@ import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { ENEMIES } from '../../data/enemy/Enemies'
 import { STAGES } from '../../data/stage/Stages'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // P3-M3 - the deterministic production-combat proof for the vertical
 // slice. A REAL stage (mortal_dong_1 - chapter 1 floor 1, real enemy
@@ -35,7 +36,9 @@ function harness(seed: number) {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerEnemyTemplates(ENEMIES)
   gameManager.catalogOps.registerStages(STAGES)
 

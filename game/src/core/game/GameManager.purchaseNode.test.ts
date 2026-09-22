@@ -3,12 +3,25 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { SKILLS } from '../../data/skill/Skills'
 import type { ProgressionNode } from '../progression/ProgressionNode'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Pháp Tu Redesign (magicpath) — GameManager.purchaseNode() là phần
 // KHÔNG pure của Node Tree: gọi purchaseNode() thuần trước (đã test
 // riêng ở NodeSystem.test.ts), rồi tự làm nốt unlocksSkillIds (cần
 // skillTemplates — chỉ GameManager có).
 describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
+  // M-QI-05 - a levelled fixture skill (maxLevel > 1) only learns when
+  // its canonical core is registered; mirrors SKILL_CORE_NODES shape.
+  const specSkillCore: ProgressionNode = {
+    id: 'core_test_spec_skill',
+    name: 'Core: Test Spec Skill',
+    type: 'minor',
+    insightCost: 0,
+    maxLevel: 10,
+    levelsSkillId: 'test_spec_skill',
+    effect: {},
+  }
+
   it('node có unlocksSkillIds thì learnSkill() từng skill thật, dùng data skill có sẵn', () => {
     const gameManager = new GameManager()
 
@@ -23,6 +36,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     }
 
     gameManager.catalogOps.registerProgressionNodes([node])
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
     const player = createDefaultPlayer()
 
@@ -34,7 +48,9 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
 
     expect(gameManager.skillManager.has('tram')).toBe(true)
     expect(player.skillInsight).toBe(3)
-    expect(player.purchasedNodeIds).toEqual(['unlock_tru_tien'])
+    // M-QI-05 - learnSkill('tram') granted core_tram (level-1 grant,
+    // free): grants are ownership entries alongside the purchased node.
+    expect(player.purchasedNodeIds).toEqual(['unlock_tru_tien', 'core_tram'])
   })
 
   it('nodeId không tồn tại trong registry thì trả false, không throw', () => {
@@ -59,6 +75,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     }
 
     gameManager.catalogOps.registerProgressionNodes([node])
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
     const player = createDefaultPlayer()
 
@@ -113,7 +130,8 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       },
     }
 
-    gameManager.catalogOps.registerProgressionNodes([node])
+    gameManager.catalogOps.registerProgressionNodes([node, specSkillCore])
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
     const player = createDefaultPlayer()
 
@@ -139,7 +157,8 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       },
     }
 
-    gameManager.catalogOps.registerProgressionNodes([node])
+    gameManager.catalogOps.registerProgressionNodes([node, specSkillCore])
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
     const player = createDefaultPlayer()
 

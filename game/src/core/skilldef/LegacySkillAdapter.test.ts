@@ -6,8 +6,10 @@ import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import { adaptSkill, adaptTurnSkillDefinition } from './LegacySkillAdapter'
 import type { AuthoredSkillOperation } from './AuthoredOperation'
 import { validateSkillDefinition } from './SkillDefinitionRegistry'
+import { evaluateScalarExpression, type SkillReadContext } from './ScalarExpression'
 
 import { SKILLS } from '../../data/skill/Skills'
+import { PHAN_KICH, TRO_KICH, TRONG_PHAN_KICH } from '../../data/skill/TheTuSkills'
 import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 
@@ -462,5 +464,59 @@ describe('LegacySkillAdapter -- Skill/EffectiveSkill path', () => {
       chance: 1,
     })
     expect(Array.isArray(unsupported)).toBe(true)
+  })
+})
+
+// M-QI-05 / QI-D3 - internal actions inherit progression through
+// progressionOwnerId: the authored levelScaling on their damage is the
+// CONSUMING side, evaluated against the snapshot's skill_level (the
+// owner's canonical Core level resolved by the plan runtime). No
+// core_<internalId> exists - inheritance, not own state.
+describe('LegacySkillAdapter -- inherited owner-level scaling (M-QI-05)', () => {
+  function ctxAtLevel(level: number): SkillReadContext {
+    return {
+      resolveTarget: () => undefined,
+      buffStacks: () => 0,
+      buffDuration: () => 0,
+      hpPercent: () => 1,
+      resourceCurrent: () => 0,
+      resourceMax: () => 0,
+      resourceSnapshot: () => 0,
+      statScalar: () => 0,
+      skillLevel: () => level,
+      readVar: () => 0,
+      alive: () => true,
+      critLanded: () => false,
+      anyTargetLanded: () => false,
+    }
+  }
+
+  function damageCoefficientOf(def: TurnSkillDefinition, level: number): number {
+    const { root } = adaptTurnSkillDefinition(def)
+    const hit = root.operations.find((op) => op.type === 'deal_damage')
+
+    if (hit === undefined || hit.type !== 'deal_damage' || hit.coefficient === undefined) {
+      throw new Error(`expected a deal_damage operation on ${def.id}`)
+    }
+
+    return evaluateScalarExpression(hit.coefficient, ctxAtLevel(level))
+  }
+
+  it.each([
+    [PHAN_KICH, 1],
+    [TRO_KICH, 0.7],
+    [TRONG_PHAN_KICH, 1],
+  ])('%s inherits the tham_the core level: coefficient = multiplier x (1 + (L-1) x 0.05)', (def, multiplier) => {
+    // The runtime resolves skill_level from the OWNER core
+    // (progressionOwnerId 'tham_the'); the adapter only needs the
+    // authored levelScaling to scale the coefficient.
+    expect(def.progressionOwnerId).toBe('tham_the')
+
+    const lv1 = damageCoefficientOf(def, 1)
+    const lv6 = damageCoefficientOf(def, 6)
+
+    expect(lv1).toBeCloseTo(multiplier, 6)
+    expect(lv6).toBeCloseTo(multiplier * 1.25, 6)
+    expect(lv6 / lv1).toBeCloseTo(1 + 5 * 0.05, 6)
   })
 })

@@ -45,15 +45,15 @@ export function bootstrapEarlyGamePlayer(
   gameManager: GameManager,
   player: PlayerData,
 ): void {
-  // Nhan vat moi: hoc san skill (onNewCharacter core subset).
+  // New character: pre-learned skills (onNewCharacter core subset).
   // P7-M3 - NO technique at boot: mortals hold no canonical technique
   // (tu_linh_quyet retired); the Way grants its own at initiation.
   // P7-M4 - learn-only: the mortal runtime resolves an absent
   // mortalBasicSkillId pick as tram; boot writes no slot/pick.
-  gameManager.progressionOps.learnSkill('tram')
- // Phap Tu Reimagined Task 2 - mortal-path actives.
-  gameManager.progressionOps.learnSkill('linh_bao')
- // Huy Quyen - second mortal basic, learned; grinding it
+  gameManager.progressionOps.learnSkill('tram', player)
+  // Phap Tu Reimagined Task 2 - mortal-path actives.
+  gameManager.progressionOps.learnSkill('linh_bao', player)
+  // Huy Quyen - second mortal basic, learned; grinding it
   // to Lv3 (10.000 casts) is what reveals hidden_body_pathway at the ritual.
-  gameManager.progressionOps.learnSkill('huy_quyen')
+  gameManager.progressionOps.learnSkill('huy_quyen', player)
 }

@@ -10,11 +10,12 @@ import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Cultivation Path Framework M6 — the ngu way is entered through the
 // Initiation Ritual itself, gated by the way's offerGate
 // (requiresSkillLevel tram Lv3 — the exact port of the retired
-// kiem_tu_an node's skillCastCount level gate, reading the skillLevels
+// kiem_tu_an node's skillCastCount level gate, reading the canonical
 // mirror). There is no flip node any more: the commit is FREE (no
 // insight cost) and PERMANENT (the authority rejects any second
 // choice), and requiredWay — not a purchased root — isolates the hien
@@ -26,6 +27,7 @@ function makeManager() {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   const player = createDefaultPlayer()
   player.realmId = 'mortal'
@@ -36,12 +38,12 @@ function makeManager() {
 
 function mortalAtRitual(tramLevel: number) {
   const { gameManager, player } = makeManager()
-  player.skillLevels = { tram: tramLevel }
+  player.nodeLevels.core_tram = tramLevel
   player.skillCastCounts = { tram: tramLevel >= 3 ? 10_000 : 9_000 }
   player.skillInsight = 500
 
   gameManager.setActivePlayer(player)
-  gameManager.progressionOps.learnSkill('tram')
+  gameManager.progressionOps.learnSkill('tram', player)
 
   return { gameManager, player }
 }
@@ -127,7 +129,11 @@ describe('sword ngu way — ritual offer gate (tram Lv3)', () => {
     ).toBe(true)
 
     expect(player.skillInsight).toBe(insightBefore)
-    expect(player.purchasedNodeIds).toEqual([])
+    // M-QI-05 - the only owned nodes are granted cores (learnSkill
+    // tram -> core_tram at Lv1; way.coreSkillIds -> core_ngu_kiem_thuat).
+    // Grants are ownership entries for the revoke cascade, not Insight
+    // purchases - insightBefore is untouched above.
+    expect(player.purchasedNodeIds).toEqual(['core_tram', 'core_ngu_kiem_thuat'])
   })
 
   it('permanent: a second way choice is rejected by both the authority and the ritual', () => {
@@ -236,7 +242,9 @@ describe('sword ngu way — subtree isolation', () => {
     expect(player.skillInsight).toBe(insightBefore)
     expect(player.nodeLevels['ngu_kiem_sac']).toBeUndefined()
     expect(player.nodeLevels['cuu_cung_kham']).toBeUndefined()
-    expect(player.purchasedNodeIds).toEqual([])
+    // M-QI-05 - the way/learn core grants stay owned: they were granted
+    // by the ritual + learnSkill, not by any node inside the ngu branch.
+    expect(player.purchasedNodeIds).toEqual(['core_tram', 'core_ngu_kiem_thuat'])
 
     // The way itself is never refunded away — resetting the branch is
     // a node operation, not a path operation.

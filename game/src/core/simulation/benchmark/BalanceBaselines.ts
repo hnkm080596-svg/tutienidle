@@ -51,7 +51,7 @@ export function mortalSourcePlayer(): PlayerData {
   const player = createDefaultPlayer()
   player.realmId = 'mortal'
   player.realmLevel = 12 // CORE_REALM_LEVEL - the ritual gate
-  player.skillLevels = { tram: 3, huy_quyen: 3 }
+  player.nodeLevels = { ...player.nodeLevels, core_tram: 3, core_huy_quyen: 3 }
   player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 }
   // cuong_chien costs 1 insight; element roots cost 0. Headroom keeps
   // future recipe writes (more nodes) from silently under-funding.

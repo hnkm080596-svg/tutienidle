@@ -38,7 +38,7 @@ const MEASUREMENT_PROFILE: EarlyGameCreationProfile = {
 export type PerfectionOutcome = 'achieved' | 'proven_infeasible' | 'safety_bound'
 export type StatAxisVerdict = 'achieved' | 'proven_infeasible' | 'unresolved'
 
-/** Which guard fired when outcome === 'safety_bound' (spec §3.5) -
+/** Which guard fired when outcome === 'safety_bound' (spec sec.3.5) -
  * max_kills is the primary bound; the rest are stall guards that must
  * stay distinguishable so a degenerate loop isn't conflated with the
  * specified bound. 'transition_incomplete' marks a normal run that
@@ -87,7 +87,7 @@ export interface MortalStatBudget {
   breakthroughPoints: number
 }
 
-/** Enumerated-source budget (spec §3.4) - a cross-check describing the
+/** Enumerated-source budget (spec sec.3.4) - a cross-check describing the
  * sources enumerated TODAY, not a universal impossibility proof. */
 export function mortalStatBudget(): MortalStatBudget {
   const baseline = createBaseStats()
@@ -136,7 +136,7 @@ const REWARD_KEY_MAP: Record<keyof Reward, true> = {
 const REWARD_KEYS = Object.keys(REWARD_KEY_MAP)
 
 /** Data-verifiable census of raw-baseStats sources reachable at mortal
- * (spec §3.5). Deliberately enumerates only what exists today - a
+ * (spec sec.3.5). Deliberately enumerates only what exists today - a
  * future source flips one of these assertions, surfacing the change. */
 export function reachableStatSourceCensus(): StatSourceCensus {
   const rewardChannelsClosed = REWARD_KEYS.every(
@@ -270,13 +270,13 @@ export function measureNormalRun(seed: number): EconomyMeasurement {
 export interface PerfectionRunOptions {
   /** Kill bound guarding runaway measurement (default ~40k). */
   maxKills?: number
-  /** Secondary stall guard (default maxKills/4) — catches degenerate
+  /** Secondary stall guard (default maxKills/4) - catches degenerate
    * zero-kill loops a pure kill bound can't reach. */
   maxIterations?: number
 }
 
 /** Mortal prefix + perfection window (levels 12 -> 18). Two axes
- * resolve independently (spec §3.3): stat resolves on all-capped
+ * resolve independently (spec sec.3.3): stat resolves on all-capped
  * (achieved) or level-cap + starved pool (proven_infeasible); the body
  * axis resolves only at 6/6. Outcome precedence: achieved ->
  * safety_bound -> proven_infeasible. */
@@ -325,7 +325,7 @@ export function measurePerfectionRun(
   let iterations = 0
   let boundReason: SafetyBoundReason | null = null
   while (outcome === null) {
-    // Termination precedence (spec §3.3 step 5) - each bound records
+    // Termination precedence (spec sec.3.3 step 5) - each bound records
     // WHICH guard fired so a stall can't masquerade as maxKills.
     if (predicate()) {
       outcome = 'achieved'

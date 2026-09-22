@@ -65,7 +65,7 @@ describe('Body base-stat assembly (D1)', () => {
     expect(boosted.hpRegenPerTurn).toBeGreaterThan(baseline.hpRegenPerTurn)
   })
 
-  // Spec §3.3/Invariant 6 — way facets read the ASSEMBLED attribute
+  // Spec sec.3.3/Invariant 6 - way facets read the ASSEMBLED attribute
   // totals: a body_pathway player's vitality facet must scale with the
   // body-boosted vitality, not the persisted raw base.
   it('the active way facet sees body-boosted attribute totals (body_pathway vitality -> enduranceThreshold)', () => {

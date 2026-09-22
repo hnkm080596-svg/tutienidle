@@ -117,7 +117,7 @@ describe('RealmPanel', () => {
     expect(rowLabel(reqRows()[1]!)).toBe('Chương 10 hoàn thành')
     expect(rowMet(reqRows()[1]!)).toBe(false)
 
-    // Spec v2 §3.2: the block lives INSIDE realm-panel__actions, under
+    // Spec v2 sec.3.2: the block lives INSIDE realm-panel__actions, under
     // the breakthrough button.
     const block = mounted.container.querySelector<HTMLElement>('.realm-requirements')!
     expect(block.parentElement?.classList.contains('realm-panel__actions')).toBe(true)

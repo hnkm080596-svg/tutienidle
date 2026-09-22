@@ -5,6 +5,7 @@ import { createDefaultPlayer } from '../player/Player'
 import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Kiem Tu Reimagined Task 6 — hien wiring through the real build path:
 // the player participant carries a dynamicBasic provider, orbs resolve
@@ -38,6 +39,7 @@ function setup(preset: string[] = ['orb_dam', 'orb_dam', 'orb_dam']) {
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'sword'
@@ -46,7 +48,7 @@ function setup(preset: string[] = ['orb_dam', 'orb_dam', 'orb_dam']) {
   player.swordPath = { ...freshSwordPathState(), preset: preset as never }
 
   gameManager.setActivePlayer(player)
-  gameManager.progressionOps.learnSkill('tram')
+  gameManager.progressionOps.learnSkill('tram', player)
   gameManager.startBattleWithPlayer(player, makeDummyEnemy('kp_enemy'))
 
   return { gameManager, combatSource, player }

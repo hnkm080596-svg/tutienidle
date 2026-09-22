@@ -21,6 +21,7 @@ import { CompositeRenderer, createVueRouteAdapter } from './VueRouteAdapter'
 import { AssetBundleManager } from './assets/AssetBundleManager'
 import { createGamePresentation } from './createGamePresentation'
 import { triggerBreakthroughAction } from '../composables/useTribulation'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 /**
  * ARCH-004 / AUD-L03 regression suite - admitted session handoff.
@@ -149,6 +150,7 @@ describe('Admitted session handoff (ARCH-004 / L03)', () => {
     gameManager.catalogOps.registerStages(STAGES)
     gameManager.catalogOps.registerMaterials(materials)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     gameManager.catalogOps.registerBuffs(buffs)
     gameManager.catalogOps.registerEquipment(equipment)
     gameManager.catalogOps.registerAffixes(affixes)
@@ -163,7 +165,7 @@ describe('Admitted session handoff (ARCH-004 / L03)', () => {
     player.realmLevel = 12 // mortal Quan Khi breakthrough gate
     player.cultivation = 0
     gameManager.setActivePlayer(player)
-    gameManager.progressionOps.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram', player)
     gameManager.progressionOps.setMortalBasicSkill(player, 'tram')
     stats = calculateStats({ ...player.baseStats }, [])
     gameManager.setPresentationMode('interactive')

@@ -54,7 +54,7 @@ const selectedTalents = computed(() =>
 
 // UI redesign mục 11 (Character) — silhouette nhân vật ở cột giữa
 // header nhuộm màu theo hệ của path đã chọn (Kiếm Tu khai `element`
-// cố định; Pháp Tu để trống vì hệ sống ở player.spellPath.element — xem
+// fixed; spell pathway leaves it empty because the element lives on player.spellPath.element - see
 // CultivationPathKit.ts) — fallback vàng trung tính khi CHƯA chọn path
 // (còn ở Phàm Nhân) hoặc đã chọn Pháp Tu.
 const characterAuraColor = computed(() =>

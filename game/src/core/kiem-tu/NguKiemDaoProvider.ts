@@ -97,7 +97,11 @@ export function buildNguKiemDaoProvider(
 
   const resolveDef = (): TurnSkillDefinition => ({
     ...NGU_KIEM_THUAT,
-    damage: { kind: 'physical', multiplier: player.swordPath?.kiemDaoBase ?? 1 },
+    // M-QI-05 - spread the authored damage so adapter metadata
+    // (levelScaling) survives; only the live multiplier is overridden.
+    damage: NGU_KIEM_THUAT.damage
+      ? { ...NGU_KIEM_THUAT.damage, multiplier: player.swordPath?.kiemDaoBase ?? 1 }
+      : undefined,
     instances: {
       count: player.swordPath?.kiemDaoCount ?? 1,
       perInstanceOptions,

@@ -1,3 +1,4 @@
+import { SKILLS } from '../../data/skill/Skills'
 import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
@@ -50,6 +51,7 @@ function winBattle(manager: GameManager, clock: ManualClockSource) {
 describe('GameManager — Pha Giap carry wiring (M2)', () => {
   it('victory banks 50% stacks; tran sau seed lai dung so', () => {
     const manager = new GameManager()
+    manager.catalogOps.registerSkillTemplates(SKILLS)
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)
 
@@ -81,6 +83,7 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
 
   it('realm change giua 2 tran -> bank bi decay ve 0, khong seed', () => {
     const manager = new GameManager()
+    manager.catalogOps.registerSkillTemplates(SKILLS)
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)
 
@@ -107,6 +110,7 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
 
   it('thua tran cung bank (plan Slice 6: bat ke ket qua)', () => {
     const manager = new GameManager()
+    manager.catalogOps.registerSkillTemplates(SKILLS)
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)
 
@@ -137,6 +141,7 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
 
   it('khong co pha_giap -> victory khong tao carry', () => {
     const manager = new GameManager()
+    manager.catalogOps.registerSkillTemplates(SKILLS)
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)
 

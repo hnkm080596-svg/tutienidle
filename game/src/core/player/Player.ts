@@ -156,7 +156,7 @@ export interface PlayerData {
   // CultivationSystem.breakthrough()). Nhan tu chien dau (ha quai, xem
   // GameManager.grantBattleRewardIfNeeded()), tieu vao mo node tree
   // (NodeSystem.ts's insightCost) va nang cap skill
-  // (SkillSystem.upgradeSkill()) - 1 ho diem DUY NHAT cho ca 2 viec.
+  // (Core Node level qua progressionOps.levelUpSkill, M-QI-05) - 1 ho diem DUY NHAT cho ca 2 viec.
   skillInsight: number
 
   // Chi tang, khong giam - thong ke/dieu kien progression ve sau.
@@ -271,8 +271,6 @@ export interface PlayerData {
   // chi la ban sao doc-thoi phuc vu prerequisite `skillCastCount`.
   skillCastCounts?: Record<string, number>
 
-  skillLevels?: Record<string, number>
-
   // P7-M6 - read-only mirror of the canonical technique holder's
   // {rank, grade}. The holder lives in TechniqueManager (0-or-1, no
   // list/unequip); TechniqueSystem's progress sink republishes this pair
@@ -386,7 +384,6 @@ export function createDefaultPlayer(): PlayerData {
     // con (`skillCastCounts[skillId] = ...`) sau khi store da khoi
     // tao, nen object chua PHAI ton tai san lam key reactive tu dau.
     skillCastCounts: {},
-    skillLevels: {},
 
     // PHAI khai bao tuong minh (du `undefined`) - cung ly do
     // cultivationPath o tren (toRefs() snapshot + restore whitelist):
@@ -456,7 +453,7 @@ export function resolvePlayerStatAssembly(
     ...externalModifiers,
   ]
 
-  // P7-M-F (D1) — assembledBase: Body Refinement contributes FLAT BASE
+  // P7-M-F (D1) - assembledBase: Body Refinement contributes FLAT BASE
   // STAT deltas, merged additively per key ONTO the persisted raw
   // baseStats (never an overwrite: a stat with base 5 and delta 4
   // resolves from 9, not 4). Ephemeral - recomputed at every resolution

@@ -822,8 +822,8 @@ export const PHAP_TU_SKILLS: Skill[] = [
   },
 
   // ── 5 ULTIMATE Thuần hệ (spec §3) — Thế đầy 100 (+bonus) → reset 0.
-  // buildTag 'ult' — nhãn presentation-only; 5 def này là empowerment
-  // payload (god-ult identity), không phải root role. cooldown 0, cast
+  // buildTag 'ult' - presentation-only label; these 5 defs are empowerment
+  // payload (god-ult identity), not a root role. cooldown 0, cast
   // 1.5s, unlocked false (mở qua node ult — Task 11). Damage value
   // 4.0 chuẩn; hiệu ứng đặc trưng per-element qua engine E-1..E-6.
   {

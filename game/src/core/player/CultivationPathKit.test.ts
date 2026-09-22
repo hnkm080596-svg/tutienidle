@@ -180,15 +180,15 @@ describe('isCultivationPathOffered — way offer gates', () => {
     expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.body.ways.body_pathway!, player)).toBe(true)
   })
 
-  it('ung_the keeps the huy_quyen Lv3 requiresSkillLevel gate (skillLevels mirror)', () => {
+  it('ung_the keeps the huy_quyen Lv3 requiresSkillLevel gate (canonical core level)', () => {
     const way = CULTIVATION_PATH_MODULES.body.ways.hidden_body_pathway!
 
     const below = createDefaultPlayer()
-    below.skillLevels = { huy_quyen: 2 }
+    below.nodeLevels.core_huy_quyen = 2
     expect(isCultivationPathOffered(way, below)).toBe(false)
 
     const met = createDefaultPlayer()
-    met.skillLevels = { huy_quyen: 3 }
+    met.nodeLevels.core_huy_quyen = 3
     expect(isCultivationPathOffered(way, met)).toBe(true)
 
     // Missing mirror (never learned) hides the way.
@@ -207,10 +207,10 @@ describe('isCultivationPathOffered — way offer gates', () => {
     met.skillCastCounts = { linh_bao: lv3Casts }
     expect(isCultivationPathOffered(way, met)).toBe(true)
 
-    // Cast-count gate, not the skillLevels mirror: a Lv3 mirror with no
+    // Cast-count gate, not the core level: a Lv3 core with no
     // casts does NOT satisfy it.
     const levelsOnly = createDefaultPlayer()
-    levelsOnly.skillLevels = { linh_bao: 3 }
+    levelsOnly.nodeLevels.core_linh_bao = 3
     levelsOnly.skillCastCounts = {}
     expect(isCultivationPathOffered(way, levelsOnly)).toBe(false)
   })
@@ -219,11 +219,11 @@ describe('isCultivationPathOffered — way offer gates', () => {
     const ngu = CULTIVATION_PATH_MODULES.sword.ways.hidden_sword_pathway!
 
     const below = createDefaultPlayer()
-    below.skillLevels = { tram: 2 }
+    below.nodeLevels.core_tram = 2
     expect(isCultivationPathOffered(ngu, below)).toBe(false)
 
     const met = createDefaultPlayer()
-    met.skillLevels = { tram: 3 }
+    met.nodeLevels.core_tram = 3
     expect(isCultivationPathOffered(ngu, met)).toBe(true)
   })
 })
@@ -231,7 +231,8 @@ describe('isCultivationPathOffered — way offer gates', () => {
 describe('listOfferableWays — ritual offers', () => {
   it('lists all six (path, way) pairs: ungated first, gated last in path order', () => {
     const player = createDefaultPlayer()
-    player.skillLevels = { huy_quyen: 3, tram: 3 }
+    player.nodeLevels.core_huy_quyen = 3
+    player.nodeLevels.core_tram = 3
     player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 }
 
     const offered = listOfferableWays(player).map((offer) => `${offer.pathId}/${offer.wayId}`)
@@ -280,10 +281,10 @@ describe('listOfferableWays — ritual offers', () => {
     const ungThe = () =>
       listOfferableWays(player).find((o) => o.pathId === 'body' && o.wayId === 'hidden_body_pathway')
 
-    player.skillLevels = { huy_quyen: 2 }
+    player.nodeLevels.core_huy_quyen = 2
     expect(ungThe()?.eligible).toBe(false)
 
-    player.skillLevels.huy_quyen = 3
+    player.nodeLevels.core_huy_quyen = 3
     expect(ungThe()?.eligible).toBe(true)
   })
 })

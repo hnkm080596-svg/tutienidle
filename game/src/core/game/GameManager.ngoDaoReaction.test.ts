@@ -22,6 +22,7 @@ import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClo
 import { createDefaultCapabilityValidators } from '../battle/runtime/capability/DefaultCapabilityValidators'
 import { makeBuffSystemWorld, TEST_ENTITIES } from '../buff2/testing/BuffTestFixtures'
 import type { ApplyBuffRequest } from '../battle/contracts/operations'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Canonical-seals/reaction megaplan S3 (plan sec.9.4-9.6) -- the
 // production ACTIVATION proof. mintCycleScheduler now composes the
@@ -89,7 +90,9 @@ function makeNgoDaoManager(withCompanion = false) {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   const player = createDefaultPlayer()
   player.realmId = 'mortal'
   player.realmLevel = 12

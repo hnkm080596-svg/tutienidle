@@ -208,8 +208,8 @@ export class GameManagerTurnBattleOps {
   /**
    * 9.5 #9 -- engine-side cast notification, filtered to the primary
    * player. The engine reports every committed cast (enemy, companion,
-   * player); only players[0] writes into the skillCastCounts/skillLevels
-   * mirror via deps.recordPrimaryPlayerCast. Reads this.turnBattle live:
+   * player); only players[0] writes into the skillCastCounts mirror
+   * (+ the core_<id> node level) via deps.recordPrimaryPlayerCast. Reads this.turnBattle live:
    * players[0]'s participant identity is rebuilt per battle.
    */
   private readonly onSkillCast = (actor: TurnBattleParticipant, skillId: string): void => {
@@ -295,7 +295,7 @@ export class GameManagerTurnBattleOps {
     // 9.5 #9 -- committed-cast sink for the PRIMARY player only
     // (SkillSystem.recordCast; engine fires for every actor, ops filters
     // to turnBattle.players[0] so companion/enemy casts never write into
-    // the player's skillCastCounts/skillLevels mirror).
+    // the player's skillCastCounts mirror or core_<id> node level).
     recordPrimaryPlayerCast?: (skillId: string) => void
     /**
      * Mission C Task 8 -- mints the session RNG for ONE battle cycle

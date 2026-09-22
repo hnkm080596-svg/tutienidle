@@ -21,6 +21,7 @@ import { pills } from '../../data/pill/pills'
 import { talismans } from '../../data/talisman/talismans'
 import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 
 function makeWiredManager(): GameManager {
@@ -39,6 +40,7 @@ function makeWiredManager(): GameManager {
   manager.catalogOps.registerBuffs(buffs)
   manager.catalogOps.registerBuildings(buildings)
   manager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+  manager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   return manager
 }

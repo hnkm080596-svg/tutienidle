@@ -8,6 +8,7 @@ import { SKILLS } from '../../data/skill/Skills'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { SPELL_EMPOWERMENT_ESSENCE_THRESHOLD } from '../phap-tu/PhapTuRoutes'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Phap Tu Reimagined Task 10 — the empowerment ATTACH lives in
 // orchestration (A8): resolvePlayerSpecialUltimate adds `empowerment`
@@ -20,6 +21,7 @@ function makeManager() {
   gameManager.setCombatClockSource(new ManualClockSource())
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   const bossTemplate = defineEnemy({
     id: 'empower_boss', name: 'Empower Boss', level: 1, realmId: 'mortal', lane: 'ground', isBoss: true,
