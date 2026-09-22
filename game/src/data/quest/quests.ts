@@ -25,10 +25,13 @@ export const QUESTS: Quest[] = [
     cadence: 'once',
   },
   {
+    // QI-D8 - retargeted from the deferred Hoi Xuan Thao chain onto the
+    // live Tu Linh herb (feeds tu_linh_dan). The quest id is preserved
+    // so active progress/claimed state keyed by questId keeps resolving.
     id: 'daily_collect_hoi_xuan_thao',
-    name: '[Hàng Ngày] Thu Thập Hồi Xuân Thảo',
-    description: 'Nộp 5 Hồi Xuân Thảo mỗi ngày để nhận thưởng.',
-    condition: { kind: 'collect', materialId: 'hoi_xuan_thao_qi_refining_decade', amount: 5 },
+    name: '[Hàng Ngày] Thu Thập Tụ Linh Thảo',
+    description: 'Nộp 5 Tụ Linh Thảo mỗi ngày để nhận thưởng.',
+    condition: { kind: 'collect', materialId: 'tu_linh_thao_qi_refining_decade', amount: 5 },
     reward: { reward: { skillInsight: 15 } },
     cadence: 'daily',
   },

@@ -25,11 +25,12 @@ export interface PillFamilyDefinition {
 /** Nguồn sự thật duy nhất cho tám loại đan và tám loại linh thảo tương ứng. */
 export const PILL_FAMILIES: readonly PillFamilyDefinition[] = [
   { id: 'tu_linh_dan', name: 'Tụ Linh Đan', herbId: 'tu_linh_thao', herbName: 'Tụ Linh Thảo', effect: { kind: 'cultivation' } },
-  // Hoi Xuan Dan — retired 2026-09-14 per user decision (ARCH-008 / M10):
-  // the per-turn engine removed its HP-regen mechanic (PillSystem strips
-  // hpRegenPerTurn), so the pill was a silent zero-effect craft. The family
-  // data + herb chain (daily_collect_hoi_xuan_thao quest) stay live; the
-  // pill itself is unavailable until a replacement effect is designed.
+  // Hoi Xuan Dan - retired 2026-09-14 per user decision (ARCH-008 / M10);
+  // classified DEFERRED per QI-D8 (M-QI-04): identity/data tolerance kept
+  // (material defs, retired-marked recipes, old-save bag entries, in-flight
+  // alchemy jobs), but the family is removed from the live chapter loop -
+  // pruned from the Dong Thien grotto pool and its daily quest retargeted
+  // to Tu Linh Thao - until a real effect/sink is authored.
   { id: 'hoi_xuan_dan', name: 'Hồi Xuân Đan', herbId: 'hoi_xuan_thao', herbName: 'Hồi Xuân Thảo', effect: { kind: 'hp_regen' }, retired: true },
   { id: 'hoi_linh_dan', name: 'Hồi Linh Đan', herbId: 'hoi_linh_thao', herbName: 'Hồi Linh Thảo', effect: { kind: 'mp_regen' } },
   { id: 'phi_van_dan', name: 'Phi Vân Đan', herbId: 'phi_van_thao', herbName: 'Phi Vân Thảo', effect: { kind: 'permanent_stat', stat: 'dexterity' } },
