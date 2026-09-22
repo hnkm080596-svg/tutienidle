@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import { MERIDIANS } from '../../../data/realm/Meridians'
+import { BODY_REFINEMENT_TIERS } from '../../../data/realm/BodyRefinement'
 import { createDefaultPlayer } from '../../player/Player'
 import {
   applyAllBodyModifiers,
   assertBodyProgressionIntegrity,
+  collectBodyBaseStatDeltas,
   computeBreakthroughGrade,
   getBodyChapterProgress,
   getBodyRefinementCompletedTiers,
@@ -13,17 +15,24 @@ import {
 } from './BodyProgressionSystem'
 
 describe('BodyProgressionSystem - unified invest dispatch', () => {
-  it('routes to the addressed chapter, returns consumed, rebuilds chapter modifiers exactly-once on success', () => {
+  it('routes to the addressed chapter, returns consumed, emits NO luyen-the modifiers and scrubs stale ones on success (D1)', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
+    player.modifiers = [
+      {
+        id: 'luyen-the:luyen_bi:defense',
+        sourceId: 'luyen_bi',
+        sourceType: 'realm',
+        stat: 'defense',
+        percent: 0.08,
+      },
+    ]
 
     const consumed = investBodyChapterState(player, 'body_refinement', 10, 0)
 
     expect(consumed).toBe(10)
     expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(10)
-
-    const mods = player.modifiers.filter(m => m.id.startsWith('luyen-the:'))
-    expect(mods.length).toBeGreaterThan(0)
+    expect(player.modifiers.filter(m => m.id.startsWith('luyen-the:'))).toHaveLength(0)
 
     const countAfterFirst = player.modifiers.length
     investBodyChapterState(player, 'body_refinement', 5, 0)
@@ -55,7 +64,7 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
 })
 
 describe('BodyProgressionSystem - modifier rehydration + reads', () => {
-  it('applyAllBodyModifiers rebuilds both prefixes from canonical state and corrects stale entries', () => {
+  it('applyAllBodyModifiers scrubs luyen-the:* (D1: emitted none), rebuilds bat-mach:*, leaves unrelated slices', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.bodyProgression.body_refinement.completedTiers = 1
@@ -88,10 +97,20 @@ describe('BodyProgressionSystem - modifier rehydration + reads', () => {
 
     const ids = player.modifiers.map(m => m.id)
     expect(ids).toContain('equipment:kiem:might') // unrelated slices untouched
-    expect(ids).not.toContain('luyen-the:luyen_mach:maxHp') // stale corrected
+    expect(ids.filter(id => id.startsWith('luyen-the:'))).toHaveLength(0) // D1: never re-emitted
     expect(ids).not.toContain('bat-mach:doc_mach:strength')
-    expect(ids.filter(id => id.startsWith('luyen-the:luyen_bi:'))).toHaveLength(1)
     expect(ids).toContain('bat-mach:nham_mach:maxHp')
+  })
+
+  it('collectBodyBaseStatDeltas - zero state emits nothing; completed tiers sum their baseGains', () => {
+    const player = createDefaultPlayer()
+
+    expect(collectBodyBaseStatDeltas(player)).toEqual({})
+
+    player.bodyProgression.body_refinement.completedTiers = 1
+    const deltas = collectBodyBaseStatDeltas(player)
+
+    expect(deltas).toEqual(BODY_REFINEMENT_TIERS[0]!.baseGains)
   })
 
   it('getBodyChapterProgress + derived count reads come from canonical state', () => {

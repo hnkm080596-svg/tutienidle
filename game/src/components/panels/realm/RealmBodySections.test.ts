@@ -10,6 +10,8 @@ import MeridianSection from './MeridianSection.vue'
 import { usePlayerStore } from '@/stores/player'
 import { STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
+import { baseGainKeys, BODY_REFINEMENT_TIERS } from '@/data/realm/BodyRefinement'
+import { statLabel } from '@/core/stats/StatLabels'
 import type { Component } from 'vue'
 import type { BodyProgressionState } from '@/core/realm/body/BodyChapter'
 
@@ -69,6 +71,40 @@ describe('BodyRefinementSection (P7-M7)', () => {
     expect(rows.length).toBe(6)
     expect(rows[0]!.classList.contains('body-refinement__tier--done')).toBe(true)
     expect(rows[1]!.classList.contains('body-refinement__tier--realm_locked')).toBe(true)
+
+    view.unmount()
+  })
+
+  // M-F (D1) - tier stat labels derive from the typed baseGains keys
+  // (Luyen Mach renders both of its stats), never from the retired
+  // percent-modifier data shape.
+  it('renders each tier\'s stat labels from its baseGains keys', async () => {
+    const view = mountSection(BodyRefinementSection, (player) => {
+      player.$state.realmId = 'qi_refining'
+      setBodyProgression(player, {
+        body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      })
+    })
+
+    await nextTick()
+
+    const statSpans = view.container.querySelectorAll('.body-refinement__tier-stat')
+    expect(statSpans.length).toBe(BODY_REFINEMENT_TIERS.length)
+
+    BODY_REFINEMENT_TIERS.forEach((tier, index) => {
+      const expected = baseGainKeys(tier.baseGains)
+        .map(stat => statLabel(stat))
+        .join(' / ')
+      expect(statSpans[index]!.textContent).toBe(expected)
+    })
+
+    // The 2-stat Luyen Mach tier is the shape that forced baseGains to
+    // be a per-stat record - pin its joined label explicitly.
+    const machIndex = BODY_REFINEMENT_TIERS.findIndex(
+      tier => baseGainKeys(tier.baseGains).length === 2,
+    )
+    expect(machIndex).toBeGreaterThanOrEqual(0)
+    expect(statSpans[machIndex]!.textContent).toContain(' / ')
 
     view.unmount()
   })

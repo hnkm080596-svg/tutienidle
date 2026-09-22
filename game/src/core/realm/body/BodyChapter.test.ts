@@ -38,6 +38,11 @@ describe('BodyChapter - registry', () => {
     expect(BODY_CHAPTERS.map(c => c.id)).toEqual(['body_refinement', 'meridian'])
   })
 
+  it('chapter kinds: body_refinement is baseStat (D1), meridian is modifier', () => {
+    expect(BODY_CHAPTER_BY_ID.body_refinement.kind).toBe('baseStat')
+    expect(BODY_CHAPTER_BY_ID.meridian.kind).toBe('modifier')
+  })
+
   it('BODY_CHAPTER_BY_ID + getBodyChapterDefinition resolve every registered chapter', () => {
     for (const chapter of BODY_CHAPTERS) {
       expect(BODY_CHAPTER_BY_ID[chapter.id]).toBe(chapter)

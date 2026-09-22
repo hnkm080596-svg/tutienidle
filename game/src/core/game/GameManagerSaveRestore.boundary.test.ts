@@ -1010,9 +1010,10 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     manager.saveOps.restoreFromSave(baseSave(player))
 
     const ids = player.modifiers.map(m => m.id)
-    expect(ids).not.toContain('luyen-the:luyen_mach:maxHp')
+    // M-F (D1): luyen-the:* is never re-emitted - body gains live in the
+    // assembled base, so every persisted luyen-the slice is scrubbed.
+    expect(ids.filter(id => id.startsWith('luyen-the:'))).toHaveLength(0)
     expect(ids).not.toContain('bat-mach:doc_mach:strength')
-    expect(ids.some(id => id.startsWith('luyen-the:luyen_bi:'))).toBe(true)
     expect(ids).toContain('bat-mach:nham_mach:maxHp')
   })
 })

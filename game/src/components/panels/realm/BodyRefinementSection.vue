@@ -6,7 +6,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
-import { BODY_REFINEMENT_TIERS } from '@/data/realm/BodyRefinement'
+import { baseGainKeys, BODY_REFINEMENT_TIERS } from '@/data/realm/BodyRefinement'
 import { getActiveTierIndex, getRefinementCurrentTierProgress, getTierCap, isTierRequiredRealmLevelMet } from '@/core/realm/body/BodyRefinementChapter'
 import { getBodyChapterProgress } from '@/core/realm/body/BodyProgressionSystem'
 import { statLabel } from '@/core/stats/StatLabels'
@@ -54,7 +54,7 @@ const tierRows = computed(() => {
       id: tier.id,
       name: tier.name,
       description: tier.description,
-      statLabels: tier.stats.map(stat => statLabel(stat)).join(' / '),
+      statLabels: baseGainKeys(tier.baseGains).map(stat => statLabel(stat)).join(' / '),
       requiredRealmLevel: tier.requiredRealmLevel,
       progress,
       cap,

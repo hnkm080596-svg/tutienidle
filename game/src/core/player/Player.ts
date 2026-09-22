@@ -1,6 +1,7 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
 import { collectActiveWayStatModifiers } from './CultivationPathSystem'
-import { createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
+import { collectBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
+import { asBaseStats, createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
 import {
@@ -455,6 +456,19 @@ export function resolvePlayerStatAssembly(
     ...externalModifiers,
   ]
 
+  // P7-M-F (D1) — assembledBase: Body Refinement contributes FLAT BASE
+  // STAT deltas, merged additively per key ONTO the persisted raw
+  // baseStats (never an overwrite: a stat with base 5 and delta 4
+  // resolves from 9, not 4). Ephemeral - recomputed at every resolution
+  // from canonical bodyProgression state; player.baseStats is never
+  // mutated, so saves, mortal perfection's persisted-base read, and
+  // restore rehydration are unaffected.
+  const assembledBase = { ...player.baseStats }
+  for (const [stat, delta] of statDeltaEntries(collectBodyBaseStatDeltas(player))) {
+    assembledBase[stat] += delta
+  }
+  const pipelineBase = asBaseStats(assembledBase)
+
   // D12 ordering contract (spec section 5): the active way's stat facet
   // reads the resolved attribute totals and emits its gated modifiers
   // BEFORE calculateStats runs -- the totals read is not a second
@@ -464,11 +478,11 @@ export function resolvePlayerStatAssembly(
   // The Tu channels the same way - body_pathway's vitality->enduranceThreshold
   // and hidden_body_pathway's attribute->chance emissions are declared on the way
   // stat facets in core/the-tu/TheTuPath.ts, keyed by cultivationWay.
-  const attributeTotals = resolveAttributeTotals(player.baseStats, allModifiers)
+  const attributeTotals = resolveAttributeTotals(pipelineBase, allModifiers)
   const pathModifiers = collectActiveWayStatModifiers(player, attributeTotals)
 
   return {
-    stats: calculateStats(player.baseStats, [...allModifiers, ...pathModifiers]),
+    stats: calculateStats(pipelineBase, [...allModifiers, ...pathModifiers]),
     wayFacetModifiers: pathModifiers,
   }
 }

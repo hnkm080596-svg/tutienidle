@@ -4,6 +4,8 @@ import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { createSpellPathState } from '../phap-tu/PhapTuState'
 import type { StatModifier } from '../stats/StatCalculator'
 import { resolveAttributeTotals, calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
+import { collectBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
 import { collectActiveWayStatModifiers, resolvePathCapabilities } from '../player/CultivationPathSystem'
 import { resolvePartyFormation } from './FormationPlacement'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
@@ -81,7 +83,12 @@ describe('resolvePlayerStatAssembly (Player.ts extraction)', () => {
     const assembly = resolvePlayerStatAssembly(player, external)
 
     expect(assembly.stats).toEqual(resolvePlayerFinalStats(player, external))
-    const totals = resolveAttributeTotals(player.baseStats, [...player.modifiers, ...external])
+    // M-F (D1): attribute totals read the assembled base too.
+    const assembledBase = { ...player.baseStats }
+    for (const [stat, delta] of statDeltaEntries(collectBodyBaseStatDeltas(player))) {
+      assembledBase[stat] += delta
+    }
+    const totals = resolveAttributeTotals(asBaseStats(assembledBase), [...player.modifiers, ...external])
     expect(assembly.wayFacetModifiers).toEqual(collectActiveWayStatModifiers(player, totals))
   })
 
@@ -91,8 +98,15 @@ describe('resolvePlayerStatAssembly (Player.ts extraction)', () => {
       { id: 'test:ext2', sourceId: 'test', sourceType: 'buff', stat: 'speed', flat: 3 },
     ]
 
+    // M-F (D1): the pipeline base is the ASSEMBLED base (raw baseStats +
+    // body base-stat deltas), not raw player.baseStats.
+    const assembledBase = { ...player.baseStats }
+    for (const [stat, delta] of statDeltaEntries(collectBodyBaseStatDeltas(player))) {
+      assembledBase[stat] += delta
+    }
+
     expect(resolvePlayerFinalStats(player, external)).toEqual(
-      calculateStats(player.baseStats, [...player.modifiers, ...external, ...resolvePlayerStatAssembly(player, external).wayFacetModifiers]),
+      calculateStats(asBaseStats(assembledBase), [...player.modifiers, ...external, ...resolvePlayerStatAssembly(player, external).wayFacetModifiers]),
     )
   })
 })

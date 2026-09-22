@@ -6,10 +6,19 @@
 // bodyRefinementCurrentTierProgress / openedMeridianIds) are gone at v72.
 //
 // A BodyChapterDefinition is the chapter-local contract: the chapter owns
-// its invest rule, modifier emission, progress read, persisted-state shape
-// validation, and integrity checks. BodyProgressionSystem dispatches over
-// BODY_CHAPTERS - consumers never reach into `bodyProgression.*` slices.
+// its invest rule, stat-effect emission, progress read, persisted-state
+// shape validation, and integrity checks. BodyProgressionSystem
+// dispatches over BODY_CHAPTERS - consumers never reach into
+// `bodyProgression.*` slices.
+//
+// P7-M-F (D1) - the emission contract splits by kind: a MODIFIER chapter
+// (meridian) emits StatModifier percent entries into player.modifiers; a
+// BASE-STAT chapter (body_refinement) contributes flat base-stat deltas
+// via collectBaseStatDeltas - assembled into the pipeline base by
+// resolvePlayerStatAssembly, never persisted into player.baseStats and
+// never emitted as modifiers.
 import type { PlayerData } from '../../player/Player'
+import type { StatType } from '../../stats/StatTypes'
 import { bodyRefinementChapter } from './BodyRefinementChapter'
 import { meridianChapter } from './MeridianChapter'
 
@@ -42,16 +51,16 @@ export interface BodyProgressionIssue {
   message: string
 }
 
-export interface BodyChapterDefinition {
+// Shared chapter contract: invest/progress/persisted-validation/integrity
+// are identical for both emission kinds.
+interface BodyChapterShared {
   readonly id: BodyChapterId
-  readonly modifierPrefix: string
   readonly currency: BodyChapterCurrency
   readonly auxCurrency?: BodyChapterCurrency
   // Applies available currency units to the chapter state, returns the
-  // amount actually consumed. Does NOT rebuild modifiers - the system
+  // amount actually consumed. Does NOT rebuild stat effects - the system
   // dispatch owns the exactly-once rebuild after a successful mutation.
   invest(player: PlayerData, available: number, auxOwned: number): number
-  applyModifiers(player: PlayerData): void
   progress(player: PlayerData): { completed: number; total: number }
   isComplete(player: PlayerData): boolean
   // Chapter-owned persisted-shape validation for its own slice; emits
@@ -65,6 +74,30 @@ export interface BodyChapterDefinition {
   // system wraps them into the thrown preflight error).
   integrityIssues(player: PlayerData): string[]
 }
+
+// Modifier chapter: emits StatModifier percent entries under its id
+// prefix into player.modifiers; the system rebuilds the slice exactly
+// once per invest/restore.
+export interface ModifierBodyChapter extends BodyChapterShared {
+  readonly kind: 'modifier'
+  readonly modifierPrefix: string
+  applyModifiers(player: PlayerData): void
+}
+
+// Base-stat chapter (D1): contributes flat base-stat deltas, derived on
+// the fly from canonical chapter state - never emitted as modifiers and
+// never written into player.baseStats. `scrubLegacyModifiers` removes
+// stale prefix-owned slices left by the retired percent model so the
+// "chapter state is the only authority" invariant still holds at
+// invest/restore.
+export interface BaseStatBodyChapter extends BodyChapterShared {
+  readonly kind: 'baseStat'
+  readonly legacyModifierPrefix: string
+  collectBaseStatDeltas(player: PlayerData): Partial<Record<StatType, number>>
+  scrubLegacyModifiers(player: PlayerData): void
+}
+
+export type BodyChapterDefinition = ModifierBodyChapter | BaseStatBodyChapter
 
 export function createDefaultBodyProgression(): BodyProgressionState {
   // Canonical zero-state lives here (the record owner). A future chapter

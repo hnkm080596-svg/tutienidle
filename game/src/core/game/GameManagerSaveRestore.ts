@@ -557,10 +557,11 @@ export class GameManagerSaveRestore {
 
     // P7-M5 (v72) - body modifier rehydration: chapter state is the
     // authority, persisted player.modifiers body slices are NOT trusted.
-    // Rebuild the luyen-the:/bat-mach: slices exactly once from the
-    // restored canonical state (corrects stale/missing entries); runs
-    // BEFORE the hash commit so a rehydrate throw leaves the payload
-    // uncommitted.
+    // Rebuild the bat-mach: slice exactly once from the restored
+    // canonical state (corrects stale/missing entries); M-F (D1) - the
+    // retired luyen-the: slice is scrubbed, body gains live in the
+    // assembled base instead. Runs BEFORE the hash commit so a rehydrate
+    // throw leaves the payload uncommitted.
     const bodyPlayer = this.deps.getActivePlayer()
 
     if (bodyPlayer) {

@@ -14,7 +14,7 @@ import {
 } from '../../../data/realm/Meridians'
 import type { PlayerData } from '../../player/Player'
 import type { StatModifier } from '../../stats/StatCalculator'
-import type { BodyChapterDefinition, BodyProgressionIssue } from './BodyChapter'
+import type { BodyProgressionIssue, ModifierBodyChapter } from './BodyChapter'
 import { isMeridianPageUnlocked } from './MeridianPages'
 
 const MODIFIER_PREFIX = 'bat-mach:'
@@ -35,7 +35,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-export const meridianChapter: BodyChapterDefinition = {
+export const meridianChapter: ModifierBodyChapter = {
+  kind: 'modifier',
   id: 'meridian',
   modifierPrefix: MODIFIER_PREFIX,
   // thong_mach_dan is a type:'material' PILL (data/pill/pills.ts) -

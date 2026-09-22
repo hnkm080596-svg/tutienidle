@@ -10,6 +10,7 @@ import {
   isActiveTierUnlocked,
   isTierRequiredRealmLevelMet,
 } from './BodyRefinementChapter'
+import { baseGainKeys } from '../../../data/realm/BodyRefinement'
 
 // Luyen The KHONG con gioi han rieng Pham Nhan (2026-08-22) - nguoi
 // choi van dau tu duoc (len chi so) o canh gioi sau neu con ton Tinh
@@ -132,10 +133,11 @@ describe('BodyRefinementChapter - thien phu Luyen The Ky Tai (retired v4)', () =
   })
 })
 
-describe('BodyRefinementChapter - chapter contract', () => {
-  it('descriptor: id/prefix/currency channel', () => {
+describe('BodyRefinementChapter - chapter contract (D1 base-stat chapter)', () => {
+  it('descriptor: kind/id/legacy prefix/currency channel', () => {
+    expect(bodyRefinementChapter.kind).toBe('baseStat')
     expect(bodyRefinementChapter.id).toBe('body_refinement')
-    expect(bodyRefinementChapter.modifierPrefix).toBe('luyen-the:')
+    expect(bodyRefinementChapter.legacyModifierPrefix).toBe('luyen-the:')
     expect(bodyRefinementChapter.currency).toEqual({
       bag: 'material',
       id: 'tinh_hoa_pham_the',
@@ -143,7 +145,7 @@ describe('BodyRefinementChapter - chapter contract', () => {
     expect(bodyRefinementChapter.auxCurrency).toBeUndefined()
   })
 
-  it('invest does NOT rebuild modifiers (the system dispatch owns the rebuild)', () => {
+  it('invest does NOT emit modifiers (base-stat chapters own no modifier channel)', () => {
     const player = createDefaultPlayer()
 
     player.realmId = 'qi_refining'
@@ -155,7 +157,13 @@ describe('BodyRefinementChapter - chapter contract', () => {
     expect(player.modifiers.filter(m => m.id.startsWith('luyen-the:'))).toHaveLength(0)
   })
 
-  it('applyModifiers emits luyen-the:<tier>:<stat> ids - completed tiers full percent, active tier linear, rebuild idempotent', () => {
+  it('collectBaseStatDeltas - zero state emits nothing', () => {
+    const player = createDefaultPlayer()
+
+    expect(bodyRefinementChapter.collectBaseStatDeltas(player)).toEqual({})
+  })
+
+  it('collectBaseStatDeltas - completed tiers full baseGains, active tier linear ratio', () => {
     const player = createDefaultPlayer()
 
     player.realmId = 'qi_refining'
@@ -163,27 +171,64 @@ describe('BodyRefinementChapter - chapter contract', () => {
     player.bodyProgression.body_refinement.currentTierProgress =
       BODY_REFINEMENT_TIERS[1]!.cap / 2
 
-    bodyRefinementChapter.applyModifiers(player)
-
+    const deltas = bodyRefinementChapter.collectBaseStatDeltas(player)
     const tier0 = BODY_REFINEMENT_TIERS[0]!
     const tier1 = BODY_REFINEMENT_TIERS[1]!
-    const mods = player.modifiers.filter(m => m.id.startsWith('luyen-the:'))
 
-    for (const stat of tier0.stats) {
-      const mod = mods.find(m => m.id === `luyen-the:${tier0.id}:${stat}`)
-      expect(mod?.percent).toBeCloseTo(tier0.percentAtFullTier)
+    for (const stat of baseGainKeys(tier0.baseGains)) {
+      expect(deltas[stat]).toBeCloseTo(tier0.baseGains[stat] ?? 0)
     }
-    for (const stat of tier1.stats) {
-      const mod = mods.find(m => m.id === `luyen-the:${tier1.id}:${stat}`)
-      expect(mod?.percent).toBeCloseTo(tier1.percentAtFullTier * 0.5)
+    for (const stat of baseGainKeys(tier1.baseGains)) {
+      expect(deltas[stat]).toBeCloseTo((tier1.baseGains[stat] ?? 0) * 0.5)
     }
-
-    const firstCount = player.modifiers.length
-    bodyRefinementChapter.applyModifiers(player)
-    expect(player.modifiers).toHaveLength(firstCount)
   })
 
-  it('applyModifiers clears stale luyen-the: entries not backed by state', () => {
+  it('collectBaseStatDeltas - sums every completed tier; the 2-stat Luyen Mach tier emits both stats', () => {
+    const player = createDefaultPlayer()
+
+    player.bodyProgression.body_refinement.completedTiers = BODY_REFINEMENT_TIERS.length
+
+    const deltas = bodyRefinementChapter.collectBaseStatDeltas(player)
+    const luyenMach = BODY_REFINEMENT_TIERS[5]!
+
+    expect(baseGainKeys(luyenMach.baseGains)).toHaveLength(2)
+    // Shared stats (maxHp, hpRegenPerTurn) SUM across tiers - Luyen Cot
+    // and Luyen Mach both grant maxHp, Huyet and Mach grant hpRegen.
+    const expected: Record<string, number> = {}
+    for (const tier of BODY_REFINEMENT_TIERS) {
+      for (const stat of baseGainKeys(tier.baseGains)) {
+        expected[stat] = (expected[stat] ?? 0) + (tier.baseGains[stat] ?? 0)
+      }
+    }
+    expect(deltas).toEqual(expected)
+    // Shared-stat ownership derives from the tier definitions (mechanism,
+    // never pinned magnitudes): Luyen Cot + Luyen Mach grant maxHp;
+    // Luyen Huyet + Luyen Mach grant hpRegenPerTurn.
+    expect(deltas.maxHp).toBeCloseTo(
+      (BODY_REFINEMENT_TIERS[2]!.baseGains.maxHp ?? 0) +
+        (BODY_REFINEMENT_TIERS[5]!.baseGains.maxHp ?? 0),
+    )
+    expect(deltas.hpRegenPerTurn).toBeCloseTo(
+      (BODY_REFINEMENT_TIERS[3]!.baseGains.hpRegenPerTurn ?? 0) +
+        (BODY_REFINEMENT_TIERS[5]!.baseGains.hpRegenPerTurn ?? 0),
+    )
+  })
+
+  it('collectBaseStatDeltas - progress beyond the active tier cap clamps at full baseGains', () => {
+    const player = createDefaultPlayer()
+
+    player.bodyProgression.body_refinement.currentTierProgress =
+      BODY_REFINEMENT_TIERS[0]!.cap * 2
+
+    const deltas = bodyRefinementChapter.collectBaseStatDeltas(player)
+    const tier0 = BODY_REFINEMENT_TIERS[0]!
+
+    for (const stat of baseGainKeys(tier0.baseGains)) {
+      expect(deltas[stat]).toBeCloseTo(tier0.baseGains[stat] ?? 0)
+    }
+  })
+
+  it('scrubLegacyModifiers strips luyen-the:* and emits nothing - unrelated slices untouched, idempotent', () => {
     const player = createDefaultPlayer()
 
     player.modifiers = [
@@ -194,11 +239,23 @@ describe('BodyRefinementChapter - chapter contract', () => {
         stat: 'defense',
         percent: 0.08,
       },
+      {
+        id: 'equipment:kiem:might',
+        sourceId: 'kiem',
+        sourceType: 'equipment',
+        stat: 'might',
+        percent: 0.1,
+      },
     ]
 
-    bodyRefinementChapter.applyModifiers(player)
+    bodyRefinementChapter.scrubLegacyModifiers(player)
 
     expect(player.modifiers.filter(m => m.id.startsWith('luyen-the:'))).toHaveLength(0)
+    expect(player.modifiers.map(m => m.id)).toContain('equipment:kiem:might')
+
+    const countAfterFirst = player.modifiers.length
+    bodyRefinementChapter.scrubLegacyModifiers(player)
+    expect(player.modifiers).toHaveLength(countAfterFirst)
   })
 
   it('progress / isComplete / raw-state reads', () => {

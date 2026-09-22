@@ -5,15 +5,33 @@
 // panel, save boundary) call these functions - they never reach into
 // `player.bodyProgression.*` slices or reimplement chapter rules.
 import type { PlayerData } from '../../player/Player'
+import type { StatType } from '../../stats/StatTypes'
 import {
   BODY_CHAPTERS,
   getBodyChapterDefinition,
+  type BodyChapterDefinition,
   type BodyChapterId,
   type BodyProgressionIssue,
 } from './BodyChapter'
 import { computeRefinementBreakthroughGrade } from './BodyRefinementChapter'
 
-// Unified invest: chapter-owned mutation, then the chapter's modifier
+// P7-M-F (D1) - the post-invest "rebuild" is kind-aware: modifier
+// chapters re-emit their StatModifier slice; base-stat chapters own no
+// modifier channel, so their rebuild is a scrub of the retired prefix
+// (keeps chapter state the sole authority over its old slice).
+function applyChapterEffect(player: PlayerData, chapter: BodyChapterDefinition): void {
+  if (chapter.kind === 'modifier') {
+    chapter.applyModifiers(player)
+  } else if (chapter.kind === 'baseStat') {
+    chapter.scrubLegacyModifiers(player)
+  } else {
+    // Exhaustive over the kind union - a future chapter kind must name
+    // its emission contract here instead of falling through silently.
+    throw new Error(`BodyProgression: unknown chapter kind '${(chapter as BodyChapterDefinition).kind}'`)
+  }
+}
+
+// Unified invest: chapter-owned mutation, then the chapter's stat-effect
 // rebuild exactly once - and ONLY on a successful mutation (consumed > 0)
 // per spec sec.3.5. Returns the currency units actually consumed so the
 // calling op can debit the right bag.
@@ -27,19 +45,49 @@ export function investBodyChapterState(
   const consumed = chapter.invest(player, available, auxOwned)
 
   if (consumed > 0) {
-    chapter.applyModifiers(player)
+    applyChapterEffect(player, chapter)
   }
 
   return consumed
 }
 
 // Restore-time rehydration: chapter state is authoritative - persisted
-// player.modifiers body slices are rebuilt from it, correcting stale or
-// missing entries. Exactly one rebuild per chapter per restore.
+// player.modifiers body slices are rebuilt from it (modifier chapters)
+// or scrubbed (base-stat chapters emit none since D1), correcting stale
+// or missing entries. Exactly one rebuild per chapter per restore.
 export function applyAllBodyModifiers(player: PlayerData): void {
   for (const chapter of BODY_CHAPTERS) {
-    chapter.applyModifiers(player)
+    applyChapterEffect(player, chapter)
   }
+}
+
+// D1 - flat base-stat deltas from every base-stat chapter, summed per
+// stat. Consumed once by resolvePlayerStatAssembly to build the
+// ephemeral assembledBase; never persisted, never emitted as modifiers.
+export function collectBodyBaseStatDeltas(
+  player: PlayerData,
+): Partial<Record<StatType, number>> {
+  const deltas: Partial<Record<StatType, number>> = {}
+
+  for (const chapter of BODY_CHAPTERS) {
+    if (chapter.kind !== 'baseStat') {
+      continue
+    }
+
+    for (const [stat, delta] of statDeltaEntries(chapter.collectBaseStatDeltas(player))) {
+      deltas[stat] = (deltas[stat] ?? 0) + delta
+    }
+  }
+
+  return deltas
+}
+
+// Typed iteration seam for Partial<Record<StatType, number>> - the
+// single narrow so consumers never ad-hoc cast Object.entries.
+export function statDeltaEntries(
+  deltas: Partial<Record<StatType, number>>,
+): [StatType, number][] {
+  return Object.entries(deltas) as [StatType, number][]
 }
 
 export function getBodyChapterProgress(

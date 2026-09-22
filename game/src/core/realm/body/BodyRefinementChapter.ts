@@ -2,17 +2,23 @@
 // Verbatim port of the retired BodyRefinementSystem onto the canonical
 // chapter-keyed state (player.bodyProgression.body_refinement). Same
 // tier-progress strategy, same mortal-pace gate, same talent-multiplier
-// pipeline, same `luyen-the:` modifier emission - ownership moved, rules
-// did not.
-import { BODY_REFINEMENT_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../../data/realm/BodyRefinement'
+// pipeline.
+//
+// P7-M-F (D1) - emission kind changed: BASE-STAT chapter. The tier gains
+// are flat base-stat deltas derived on the fly by collectBaseStatDeltas
+// (assembled into the pipeline base by resolvePlayerStatAssembly), NOT
+// `luyen-the:` percent modifiers. scrubLegacyModifiers strips the
+// retired prefix so chapter state stays the sole authority at
+// invest/restore.
+import { baseGainKeys, BODY_REFINEMENT_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../../data/realm/BodyRefinement'
 import { clamp } from '../../math/clamp'
 import type { PlayerData } from '../../player/Player'
-import type { StatModifier } from '../../stats/StatCalculator'
+import type { StatType } from '../../stats/StatTypes'
 import { getBodyRefinementProgressMultiplier } from '../../talent/TalentEffects'
-import type { BodyChapterDefinition, BodyProgressionIssue } from './BodyChapter'
+import type { BaseStatBodyChapter, BodyProgressionIssue } from './BodyChapter'
 
 const TOTAL_TIERS = BODY_REFINEMENT_TIERS.length
-const MODIFIER_PREFIX = 'luyen-the:'
+const LEGACY_MODIFIER_PREFIX = 'luyen-the:'
 
 export function getTierCap(tierIndex: number): number {
   return BODY_REFINEMENT_TIERS[tierIndex]?.cap ?? 0
@@ -54,17 +60,14 @@ export function isActiveTierUnlocked(player: PlayerData): boolean {
   return isTierRequiredRealmLevelMet(player, activeTierIndex)
 }
 
-function modifierId(tierId: string, stat: string): string {
-  return `${MODIFIER_PREFIX}${tierId}:${stat}`
-}
-
-// Rebuild TOAN BO modifier Luyen The (moi tang da hoan thanh, day du
-// percentAtFullTier + tang dang do, scale tuyen tinh theo progress/cap)
-// - goi lai moi lan invest thanh cong de giu player.modifiers dung voi
-// state hien tai, cung cach usePill() merge permanent stat theo id.
-function buildTierModifiers(player: PlayerData): StatModifier[] {
+// Flat base-stat deltas for the whole chapter (D1): moi tang DA HOAN
+// THANH dong gop day du baseGains; tang DANG DO scale tuyen tinh theo
+// progress/cap - cung duong cong ty le voi percent emission cu, doi don
+// vi tu % sang flat base stat. Derived on the fly: the persisted
+// completedTiers/currentTierProgress record stays the sole authority.
+function collectTierBaseStatDeltas(player: PlayerData): Partial<Record<StatType, number>> {
   const state = player.bodyProgression.body_refinement
-  const modifiers: StatModifier[] = []
+  const deltas: Partial<Record<StatType, number>> = {}
 
   BODY_REFINEMENT_TIERS.forEach((tier, index) => {
     let ratio = 0
@@ -79,26 +82,12 @@ function buildTierModifiers(player: PlayerData): StatModifier[] {
       return
     }
 
-    for (const stat of tier.stats) {
-      modifiers.push({
-        id: modifierId(tier.id, stat),
-        sourceId: tier.id,
-        sourceType: 'realm',
-        stat,
-        percent: tier.percentAtFullTier * ratio,
-      })
+    for (const stat of baseGainKeys(tier.baseGains)) {
+      deltas[stat] = (deltas[stat] ?? 0) + (tier.baseGains[stat] ?? 0) * ratio
     }
   })
 
-  return modifiers
-}
-
-function applyTierModifiers(player: PlayerData) {
-  const rebuilt = buildTierModifiers(player)
-
-  player.modifiers = player.modifiers.filter(modifier => !modifier.id.startsWith(MODIFIER_PREFIX))
-
-  player.modifiers.push(...rebuilt)
+  return deltas
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -121,9 +110,10 @@ export function getRefinementCurrentTierProgress(player: PlayerData): number {
   return player.bodyProgression.body_refinement.currentTierProgress
 }
 
-export const bodyRefinementChapter: BodyChapterDefinition = {
+export const bodyRefinementChapter: BaseStatBodyChapter = {
+  kind: 'baseStat',
   id: 'body_refinement',
-  modifierPrefix: MODIFIER_PREFIX,
+  legacyModifierPrefix: LEGACY_MODIFIER_PREFIX,
   currency: { bag: 'material', id: TINH_HOA_PHAM_THE_MATERIAL_ID },
 
   // Dau tu Tinh Hoa Pham The (dang cam trong tui) vao tang DANG DO -
@@ -174,8 +164,17 @@ export const bodyRefinementChapter: BodyChapterDefinition = {
     return consumed
   },
 
-  applyModifiers(player: PlayerData): void {
-    applyTierModifiers(player)
+  collectBaseStatDeltas(player: PlayerData): Partial<Record<StatType, number>> {
+    return collectTierBaseStatDeltas(player)
+  },
+
+  // Strips the retired `luyen-the:*` modifier slice and emits nothing:
+  // the base-stat chapter owns no modifier channel, so the only correct
+  // "rebuild" of its old prefix is an empty one.
+  scrubLegacyModifiers(player: PlayerData): void {
+    player.modifiers = player.modifiers.filter(
+      modifier => !modifier.id.startsWith(LEGACY_MODIFIER_PREFIX),
+    )
   },
 
   progress(player: PlayerData): { completed: number; total: number } {
