@@ -76,3 +76,47 @@ Locked product decisions carried into this graph: no save migration (grandfather
 | M-D | DONE | `c42d827b` | verify 15/15 (3-seed measured) + OCR + QA + P5 + external SPEC/IMPL reviewed — verdict: perfection infeasible under enumerated sources (shortfall 23) |
 | M-G | DONE | `ae57e931` | verify 294t + OCR + QA (8 hypotheses, 2nd externalWard producer closed) + P5 + external SPEC/IMPL reviewed — than_nong + khai_minh added; BETA_COMPANIONS acquisition pool split from full catalog |
 | M-H | DONE | `0a0a742f` | verify 911t + OCR + QA + P5 (4 passes) + external SPEC (7 rounds) / IMPL (2 rounds) reviewed — loadout/equipped/insight residuals swept; formation + equipment KEEPs preserved |
+
+---
+
+# Luyện Khí Reconciliation Missions (M-QI)
+
+Follow-up graph from the Luyện Khí chapter audit + reconciliation (decisions D1–D8) and the subsequent blocking rulings — all locked in `decisions.md` under "Luyện Khí reconciliation — locked rulings". Same spec → plan → implement → gates → external review → merge workflow. Renumbers the reconciliation report's M-QI-01..11 candidates into dependency order.
+
+## Dependency analysis
+
+- **Canonical Core/Node authority first** (ruling): `M-QI-05` establishes Core Node Level = canonical Skill Level and migrates `skillLevels`/`Skill.level` into `nodeLevels`. No mission may author Skill-level content (technique gates, node caps, new levelled nodes) before it lands — they would entrench the duplicate authority.
+- **Physique transformation authority before grade-aware Body content** (ruling): `M-QI-07` owns `physiqueGrade` + the idempotent 6/6-chapter transformation; `M-QI-08` (essence family/costs/drops) resolves against it.
+- **Substitution contract + simulated ratio before drop-band swap** (ruling): `M-QI-09` locks the downward-substitution contract and the deterministic-simulated `conversionRatio[N]`; only then may `M-QI-10` shift the live drop band (LQ→Bảo, TC→Pháp) without stranding unfinished lower-grade Body progression. No placeholder ratios in final data.
+- **Standalone fixes** (`M-QI-01..04`, `M-QI-11`) are independent of both authority chains and may run in any order; each is one coherent boundary.
+- **E2E journey** (`M-QI-12`) consumes the committed gates and lands late by design.
+
+## Missions
+
+| # | Mission | Authority boundary | Depends on |
+|---|---|---|---|
+| M-QI-01 | **Meridian invest wiring** | `MeridianSection` invest action → `realmAdvanceOps.investBodyChapter` → `meridianChapter`; cost/gate surfacing; sequential + page-unlock + post-advancement lower-page invest contracts. Domain contract already exists (M5 parked). | — |
+| M-QI-02 | **Trúc Cơ chapter gate** | `canTriggerBreakthrough` gains Chapter-10 predicate (`completedStageIds ⊋ qi_refining_abyssal_pool`) alongside realmLevel ≥ 12. | — |
+| M-QI-03 | **Breakthrough requirement read-model** | Normal UI shows exactly `[LQ tầng 12]` + `[Chương 10 hoàn thành]`; hidden foundation inputs never surface. | M-QI-02 |
+| M-QI-04 | **`hoi_xuan_thao` deferred cleanup** | Quest retarget → `tu_linh_thao_qi_refining_decade`; retired family pruned from Động Thiên grotto pool; marked DEFERRED; id tolerance preserved. | — |
+| M-QI-05 | **Canonical Core Node Level authority** | D3.9 spec → single level authority (`nodeLevels[coreNodeId]`); deprecate `Skill.level`/`upgradeSkill` as independent authority; `skillLevels` handled by save-version rejection (no field translators); cast-exp skills = one canonical level with casts-only input, Insight rejected; passives: mechanism supports levelled, all current stay fixed; `skillCastCounts` mirror semantics kept; per-node `maxLevel`/`currentLevel`/per-level cost shape (final numbers deferred). | — |
+| M-QI-06 | **Technique node gates** | Technique-derived node unlock + node max-level cap mechanism (schema + evaluator) + minimal authored gate set per D3 spec — uses M-QI-05's authority. | M-QI-05 |
+| M-QI-07 | **Physique transformation authority** | Persisted `physiqueGrade` (default Phàm, migration); 6/6 Body-Refinement-chapter → transform transaction; persistent/deterministic/idempotent; late-completion valid; ladder data Phàm→Tiên; no stat bonuses (deferred). | — |
+| M-QI-08 | **Grade-aware Essence family** | `Tinh Hoa <Grade>` material family (Phàm/Bảo/Pháp authored now); grade-aware Body chapter costs; drop definitions per pinned band map (Mortal→Phàm, LQ→Bảo, TC→Pháp); legacy `tinh_hoa_pham_the` → Phàm-grade mapping. | M-QI-07 |
+| M-QI-09 | **Essence substitution contract + sim** | Downward-only substitution (higher→lower) resolved automatically at Body cost check — no exchange UI; data-driven adjacent `conversionRatio[N]`, monotonic, no-arbitrage; deterministic economy simulation locks final ratios before production data. | M-QI-08 |
+| M-QI-10 | **Essence drop-band production swap** | Live LQ drops shift to Bảo-grade, TC to Pháp-grade; lower-grade Body requirements stay completable through the M-QI-09 contract. | M-QI-09 |
+| M-QI-11 | **Kiem Pho authored combo payloads** | 37-combo authored effect pass replacing length-tier scaffolds (sanctioned deferral); independent of authority chains. | — |
+| M-QI-12 | **LQ→TC E2E journey coverage** | Headless journey: initiation → chapter 10 → level 12 (+ Meridian invest, insight/node spend) → successful breakthrough; restore mid-chapter. | M-QI-01, M-QI-02, M-QI-03 |
+
+## Locked rulings carried into this graph
+
+- Fixed-kit actions exempt from Beta Basic-only (QI-D2); Basic-only = B/S/U role-unlock axis.
+- Core Node Level = canonical Skill Level; `Skill.level`/`upgradeSkill` deprecated; `TurnSkillDefinition` progression lives on nodes, not on execution defs (QI-D3).
+- Physique transform = 6/6 Body Refinement chapter, idempotent + late-completion (QI-D4).
+- Essence: Mortal→Phàm, LQ→Bảo, TC→Pháp; downward substitution only; ratio sim-locked (QI-D4b/c).
+- `hoi_xuan_thao` = DEFERRED; quest → `tu_linh_thao`; retired family pruned from grotto pool (QI-D8).
+- Cast-exp skills (`tram`/`linh_bao`/`huy_quyen`): one canonical level, casts-only input, Insight can never raise (QI-D3 ruling).
+- Essence substitution = automatic at requirement resolution, no exchange UI (QI-D4c ruling).
+- No field migration anywhere in this graph — save-version rejection governs (QI-S).
+- Physique stat bonuses, remaining 7 grade→realm bands, insight cost curve/max levels, bidirectional essence exchange: deferred — no authoring without a future ruling.
+- No temporary compatibility hacks as final architecture.

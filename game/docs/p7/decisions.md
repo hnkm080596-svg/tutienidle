@@ -120,3 +120,84 @@ Human-approved resolutions to the six blocking notices (2026-09-21). This docume
 - Special breakthrough formulas deferred; no P7 architecture may be forced by them.
 - Save policy: version bump rejects old saves; no field translators.
 - Numerical balance/playtest outcomes are NOT completion criteria.
+
+---
+
+# Luyện Khí reconciliation — locked rulings
+
+Authoritative resolutions issued after the Luyện Khí chapter audit reconciliation (blocking-rulings directive). These bind the M-QI mission graph in `mission-graph.md`. Do not reopen unless repository evidence proves an internal contradiction making a ruling impossible — then emit `[C2C] NOTICE` with evidence.
+
+## QI-D1 — Kinh Mạch investment (unchanged from reconciliation)
+
+- Kinh Mạch is real Luyện Khí progression; explicit/manual invest via `MeridianSection` → Meridian chapter authority (`investBodyChapter`).
+- Sequential nodes; monotonic page unlock (`page.realmIndex <= player.currentRealmIndex`); earlier pages remain accessible AND investable after realm advancement.
+- No implicit tick auto-invest.
+
+## QI-D2 — Beta Basic-only scope: OPTION (a) — role-progression axis only
+
+- "Beta ships Basic only" applies to the canonical B/S/U **progression-unlock axis** (e.g. spell_pathway `linh_ngo_*` special/ult unlocks at golden_core).
+- Authored fixed-kit members are EXEMPT and stay usable at Luyện Khí exactly as authored: `bat_tu_ba_the`, `loan_dau`, `son_nhac`, `da_phap_lien_tuyen`, `ngu_kiem_thuat` + its authored emblems.
+- Internal/fixed-kit actions (stance, chained, emblem-triggered, generated) do not automatically become Special/Ultimate. Do not cut a fixed kit apart to enforce literal one-action gameplay.
+- Beta Basic-only ≠ only one executable action may exist.
+
+## QI-D3 — Canonical Skill/Core Node Level authority: OPTION (a)
+
+- Canonical Skill Level = **Core Node Level**; a real Core Node per levelled authored Skill (`Skill → Core Node → level`).
+- Legacy `Skill.level` / `upgradeSkill` as independent authority is **deprecated**; persisted `skillLevels` migrates/normalizes into `nodeLevels[coreNodeId]` per the mission's save strategy. Never two writable authorities for the same level.
+- Core Node = direct base progression (damage/heal/shield/DoT/duration/efficiency); Variation Node identity = what changes; Variation level = magnitude. Skill Insight raises levels of unlocked nodes only.
+- Technique provides stat% + node unlock gates + node max-level gates; it never owns a node's current level.
+- `TurnSkillDefinition` ways are NOT exempt from skill-level progression: Core/Variation Node owns progression state; the execution definition stays behavior-only; the combat resolver reads canonical node state when building the action. Applies to Body Ways, hidden Body, hidden Sword, orb-based skills where authored as top-level Skills.
+- Not every internal action is an independent Skill: chained/stance/emblem/generated sub-actions scale through the parent Core Node or an authored Variation Node — no automatic Core Node per runtime action.
+- Passive is orthogonal to levelled: `passive` ≠ `fixed Lv1`; whether a Passive is levelled comes from its authored definition.
+- **Cast-exp channel (ruling):** cast-levelled skills (`tram`/`linh_bao`/`huy_quyen`) are NOT a second level definition — the canonical level is one authority whose progression exp may arrive through different channels. For these skills the only valid input is casts; Skill Insight can never raise them. One canonical level, channel-restricted input — not a duplicate authority.
+- **Passives (ruling):** the mechanism supports `passive + levelled`, but all currently authored passives remain fixed Lv1 — no new levelled passive is authored in M-QI-05.
+- **M-QI-06 scope (ruling):** ship the technique unlock/cap mechanism PLUS a minimal authored gate set per spec — not mechanism-only.
+
+## QI-D4 — Physique transformation checkpoint: OPTION (a)
+
+- Physique Grade transforms exactly once when the associated **6-tier Body Refinement chapter reaches 6/6**. No new checkpoint abstraction; Kinh Mạch completion is NOT a trigger (separate domain).
+- Ladder (exact order): `Phàm → Bảo → Pháp → Linh → Huyền → Chân → Đạo → Thần → Thánh → Tiên`.
+- Transaction must be persistent, deterministic, idempotent — restoring a save with the chapter already complete must NOT re-advance the grade; persisted state must distinguish chapter completion from transformation-applied (or one canonical state proving both).
+- Late completion allowed: finishing an older Body chapter after realm advancement still triggers the transformation.
+
+## QI-D5/D6 — Normal Trúc Cơ gate + UI (unchanged from reconciliation)
+
+- Gate = Chapter 10 clear (`qi_refining_abyssal_pool`) + Luyện Khí level 12. Both mandatory; boss special loot is not a normal requirement.
+- Normal UI shows exactly those two lines; hidden foundation inputs stay resolver-internal.
+
+## QI-D7 — Sword (unchanged from reconciliation)
+
+- Implement per `docs/kiem-tu-profile.md`: Kiem Pho preset-combo, Basic-only, 5 realm-unlocked orbs, tail matcher, 37 authored combos, no Special/Ultimate, no discovery UI.
+- Combo effect payloads are a sanctioned deferred content pass (length-tier scaffolds until then).
+
+## QI-D8 — `hoi_xuan_thao`: DEFERRED + quest retarget
+
+- Classified **DEFERRED** (not legacy): keep identity/data tolerance; remove from the live chapter loop until a real effect/sink is authored.
+- Retarget `daily_collect_hoi_xuan_thao` → collect `tu_linh_thao_qi_refining_decade` (live LQ herb, feeds `tu_linh_dan` → cultivation).
+- **Production (ruling):** Động Thiên grotto pool prunes the retired family — `hoi_xuan_thao` stops being generated while deferred; quest retarget alone is insufficient.
+
+## QI-D4b — Realm → Essence grade mapping (first three bands pinned)
+
+- Mortal → `Tinh Hoa Phàm Thể`; Luyện Khí → `Tinh Hoa Bảo Thể`; Trúc Cơ → `Tinh Hoa Pháp Thể`.
+- Direction: dominant Essence in a band = the Physique grade being developed in that band (start Phàm; complete Mortal Body chapter → Bảo; complete LQ Body chapter → Pháp).
+- Do NOT extrapolate the remaining seven grades to realms — future authored data.
+- Drop band ≠ required current Physique: a player may enter LQ with the Mortal Body chapter unfinished; higher-grade Essence must still satisfy lower-grade requirements via substitution.
+
+## QI-D4c — Essence substitution: downward only, sim-locked ratio
+
+- Canonical direction: **higher-grade Essence may substitute for lower-grade requirements**. Up-conversion is NOT required and must not be assumed; bidirectional exchange would need a separate future ruling.
+- `conversionRatio[N]` must be data-driven, adjacent-grade based, monotonic, no-arbitrage, higher grade strictly more valuable. The exact ratio is **locked by deterministic economy simulation** before production balance data is authored — no placeholder ratios in final data.
+- Architecture/spec may be written before the final number.
+- **Mechanic (ruling):** automatic substitution at requirement resolution — a Body cost check accepts higher-grade Essence stacks per the locked ratio. No player-facing exchange action or conversion UI.
+
+## QI-D4d — Physique grade stat bonuses: DEFERRED
+
+- Per-grade benefits are a dedicated content/balance pass. Architecture must support authored per-grade benefits later; transformation must not block on them. Mission scope = grade identity + transformation + persistence + Essence economy.
+
+## QI-D3b — Insight cost curve / max-level numbers: DEFERRED
+
+- Final max Skill/Core level, Variation max levels, Insight cost curve, per-level scaling → dedicated D3.9 progression spec. Architecture must support per-node `maxLevel`/`currentLevel`/per-level cost + technique-derived unlock/cap without another authority rewrite.
+
+## QI-S — Save/migration policy (ruling)
+
+- **No field migration.** `physiqueGrade`, `nodeLevels[coreNodeId]` normalization, and every M-QI persisted-state cut rely on the locked save policy — version bump rejects old saves; no recompute-on-load, no translators.
