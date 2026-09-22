@@ -1,0 +1,203 @@
+// M-D (decision D6) - PerfectionEconomy: deterministic measurement of
+// the mortal early-game economy — does the current authored source set
+// support "Pham Nhan hoan my optional, giu kho"? Driven through
+// EarlyGameSession production seams with combatCultivationParity on
+// (production cultivates + auto-breakthroughs + auto-invests during
+// battles). The driven run owns the verdict; the analytic budget is a
+// cross-check, not the verdict owner.
+//
+// Spec: docs/p7/missions/md-perfection-sim.spec.md v12
+import { describe, expect, it } from 'vitest'
+import { MAIN_STAT_KEYS } from '../../stats/StatTypes'
+import { createBaseStats } from '../../stats/StatBlock'
+import { createDefaultPlayer } from '../../player/Player'
+import { getMainStatCap } from '../../stats/StatCap'
+import { REALMS } from '../../../data/realms/realm'
+import { CHARACTER_CREATION_ATTRIBUTE_POINTS } from '../../../services/character/CharacterCreationService'
+import { BODY_REFINEMENT_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../../data/realm/BodyRefinement'
+import {
+  expectedEssencePerKill,
+  expectedKillsForBody,
+  measureNormalRun,
+  measurePerfectionRun,
+  mortalStatBudget,
+  reachableStatSourceCensus,
+} from './PerfectionEconomy'
+
+describe('mortalStatBudget — enumerated-source budget (spec §3.4)', () => {
+  it('derives required from canonical baseline + cap, no magic numbers', () => {
+    const budget = mortalStatBudget()
+    const baseline = createBaseStats()
+    const cap = getMainStatCap('mortal')
+    const expectedRequired = MAIN_STAT_KEYS.reduce(
+      (sum, stat) => sum + (cap - baseline[stat]),
+      0,
+    )
+    expect(budget.required).toBe(expectedRequired)
+
+    const mortal = REALMS.find((r) => r.id === 'mortal')!
+    const expectedAvailable =
+      CHARACTER_CREATION_ATTRIBUTE_POINTS +
+      (mortal.maxLevel - createDefaultPlayer().realmLevel)
+    expect(budget.available).toBe(expectedAvailable)
+    expect(budget.shortfall).toBe(expectedRequired - expectedAvailable)
+  })
+
+  it('current enumerated sources fall short — available < required', () => {
+    const budget = mortalStatBudget()
+    expect(budget.available).toBeLessThan(budget.required)
+    expect(budget.shortfall).toBeGreaterThan(0)
+  })
+})
+
+describe('reachableStatSourceCensus — data-verifiable source census (spec §3.5)', () => {
+  it('no authored pill carries random_main_stat', () => {
+    const census = reachableStatSourceCensus()
+    expect(census.pillsWithRandomMainStat).toEqual([])
+  })
+
+  it('quest rewards have no attribute-point channel (closed Reward type)', () => {
+    const census = reachableStatSourceCensus()
+    expect(census.rewardChannelsClosed).toBe(true)
+  })
+
+  it('quest pill itemDrops resolve only through PILLS — transitively clean', () => {
+    const census = reachableStatSourceCensus()
+    // With pillsWithRandomMainStat empty, no quest-drop pill reaches baseStats.
+    expect(census.questItemDropPillIds).toBeDefined()
+    for (const pillId of census.questItemDropPillIds) {
+      expect(census.pillsWithRandomMainStat).not.toContain(pillId)
+    }
+  })
+})
+
+describe('analytic body expectations (spec §3.4)', () => {
+  it('expectedEssencePerKill derives from the mortal stage drop table', () => {
+    // Mortal band guarantees tinh_hoa_pham_the 1..3 @ 0.7 → 1.4 expected.
+    expect(expectedEssencePerKill()).toBeCloseTo(0.7 * 2, 5)
+  })
+
+  it('expectedKillsForBody = total tier cap / expected income', () => {
+    const totalCap = BODY_REFINEMENT_TIERS.reduce((sum, t) => sum + t.cap, 0)
+    expect(expectedKillsForBody()).toBeCloseTo(totalCap / expectedEssencePerKill(), 1)
+  })
+})
+
+describe('measureNormalRun — canonical loop sliced at the ritual (spec §2)', () => {
+  it('ends at qi_refining right after the ritual with measured counters', () => {
+    const m = measureNormalRun(11)
+    expect(m.realmId).toBe('qi_refining')
+    expect(m.stageRuns).toBeGreaterThan(0)
+    expect(m.victories).toBeGreaterThan(0)
+    expect(m.battleSeconds).toBeGreaterThan(0)
+    expect(m.enemiesDefeated).toBeGreaterThan(0)
+    expect(m.uncountedStageRuns).toBe(0)
+    // Parity model: battle-carried cultivation is inside battleSeconds;
+    // idle cultivation is measured separately, never double-counted.
+    expect(m.cultivationSeconds).toBeGreaterThanOrEqual(0)
+    expect(m.tinhHoaGained).toBeGreaterThan(0)
+  })
+})
+
+describe('measurePerfectionRun — driven run owns the verdict (spec §3.3/§3.5)', () => {
+  it('runs to a measured outcome with full accounting', { timeout: 600_000 }, () => {
+    const m = measurePerfectionRun(11)
+
+    // Kill accounting integrity — a single counted:false run would
+    // invalidate the income/kill cross-check.
+    expect(m.uncountedStageRuns).toBe(0)
+
+    // Under the CURRENT economy the run MUST resolve — spec §3.5 pins
+    // 'achieved' or 'proven_infeasible' for the default bound; hitting
+    // safety_bound is itself a finding, not a passable outcome.
+    expect(m.outcome).not.toBe('safety_bound')
+    expect(m.boundReason).toBeNull()
+
+    if (m.outcome === 'proven_infeasible') {
+      // Stat axis starved at the level cap with the pool dry.
+      expect(m.statAxisVerdict).toBe('proven_infeasible')
+      expect(m.realmLevelReached).toBe(18)
+      expect(m.statAxisResolvedAtSeconds).not.toBeNull()
+      expect(m.perfectionPredicateWouldPass).toBe(false)
+      // The run still measures the body axis to completion.
+      expect(m.bodyTiersCompleted).toBe(BODY_REFINEMENT_TIERS.length)
+      expect(m.bodyAxisResolvedAtSeconds).not.toBeNull()
+      // Measured end-state raw-stat deficit agrees with the analytic
+      // budget for the sources the driver exercises (spec §3.5).
+      const cap = getMainStatCap('mortal')
+      const measuredDeficit = MAIN_STAT_KEYS.reduce(
+        (sum, stat) => sum + Math.max(0, cap - m.finalBaseStats[stat]),
+        0,
+      )
+      expect(measuredDeficit).toBeGreaterThan(0)
+      expect(measuredDeficit).toBe(mortalStatBudget().shortfall)
+    }
+
+    if (m.outcome === 'achieved') {
+      expect(m.statAxisVerdict).toBe('achieved')
+      expect(m.perfectionPredicateWouldPass).toBe(true)
+      expect(m.bodyTiersCompleted).toBe(BODY_REFINEMENT_TIERS.length)
+      // No level-18 requirement — a feasible economy may cap earlier.
+    }
+
+    // Body-axis measurement is real regardless of outcome: kills within
+    // ±25% of analytic expectation, income within ±25% of expected/kill.
+    if (m.bodyTiersCompleted === BODY_REFINEMENT_TIERS.length) {
+      const expectedKills = expectedKillsForBody()
+      expect(m.enemiesDefeated).toBeGreaterThan(expectedKills * 0.75)
+      expect(m.enemiesDefeated).toBeLessThan(expectedKills * 1.25)
+      const incomePerKill = m.tinhHoaGained / m.enemiesDefeated
+      expect(incomePerKill).toBeGreaterThan(expectedEssencePerKill() * 0.75)
+      expect(incomePerKill).toBeLessThan(expectedEssencePerKill() * 1.25)
+    }
+  })
+
+  it('determinism: same seed → identical measurement', { timeout: 600_000 }, () => {
+    const a = measurePerfectionRun(23)
+    const b = measurePerfectionRun(23)
+    expect(b).toEqual(a)
+  })
+
+  it('a shrunk kill bound reports safety_bound with the max_kills reason', { timeout: 600_000 }, () => {
+    const m = measurePerfectionRun(11, { maxKills: 1 })
+    expect(m.outcome).toBe('safety_bound')
+    expect(m.boundReason).toBe('max_kills')
+    // Bound fired while axes were still unresolved - no fabricated verdict.
+    expect(m.statAxisVerdict).toBe('unresolved')
+    expect(m.bodyAxisResolvedAtSeconds).toBeNull()
+  })
+})
+
+describe('three-seed measurement evidence (spec §3.5)', () => {
+  // Per-seed kills/essence/income variance — the report's table is
+  // sourced from this run. ~60s of sim time per seed.
+  it.each([11, 23, 7])('seed %i resolves with income inside tolerance', { timeout: 600_000 }, (seed) => {
+    const m = measurePerfectionRun(seed)
+    expect(m.uncountedStageRuns).toBe(0)
+    expect(m.outcome).not.toBe('safety_bound')
+    expect(m.enemiesDefeated).toBeGreaterThan(0)
+    const incomePerKill = m.tinhHoaGained / m.enemiesDefeated
+    expect(incomePerKill).toBeGreaterThan(expectedEssencePerKill() * 0.75)
+    expect(incomePerKill).toBeLessThan(expectedEssencePerKill() * 1.25)
+    // eslint-disable-next-line no-console
+    console.log(
+      `[md-econ] seed=${seed} outcome=${m.outcome} kills=${m.enemiesDefeated} ` +
+        `essence=${m.tinhHoaGained} income=${incomePerKill.toFixed(4)} ` +
+        `wall=${m.wallSeconds} battle=${m.battleSeconds} idle=${m.cultivationSeconds} ` +
+        `stageRuns=${m.stageRuns} statAt=${m.statAxisResolvedAtSeconds} bodyAt=${m.bodyAxisResolvedAtSeconds}`,
+    )
+  })
+})
+
+describe('cross-run consistency', () => {
+  it('normal run reaches qi_refining while perfection stays mortal', { timeout: 600_000 }, () => {
+    const normal = measureNormalRun(11)
+    const perfection = measurePerfectionRun(11)
+    expect(normal.realmId).toBe('qi_refining')
+    expect(perfection.realmId).toBe('mortal')
+    // Same mortal prefix under identical parity → the shared window of
+    // the two runs sees comparable kill/economy magnitudes.
+    expect(normal.enemiesDefeated).toBeGreaterThan(0)
+    expect(perfection.enemiesDefeated).toBeGreaterThan(normal.enemiesDefeated)
+  })
+})

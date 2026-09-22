@@ -22,6 +22,11 @@ import { createDefaultPlayer, type PlayerData } from '../../player/Player'
 import { canBreakthrough, breakthrough } from '../../cultivation/CultivationSystem'
 import { cultivateTick } from '../../cultivation/CultivationTick'
 import { driveTurnBattleToTerminal } from '../BattleDriver'
+import { getBodyRefinementCompletedTiers } from '../../realm/body/BodyProgressionSystem'
+import {
+  BODY_REFINEMENT_TIERS,
+  TINH_HOA_PHAM_THE_MATERIAL_ID,
+} from '../../../data/realm/BodyRefinement'
 import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
 import {
   applyCreationProfile,
@@ -60,6 +65,37 @@ export interface EarlyGameSessionOptions {
 export type StageRunResult = 'victory' | 'defeat' | 'refused' | 'locked' | 'missing' | 'timeout'
 export type TribulationRunResult = 'victory' | 'defeat' | 'refused'
 
+/** M-D: cumulative measurement counters maintained at session authority.
+ * Canonical loop steps call runStage/cultivate/allocateAttribute/
+ * investRefinement/breakthroughIfReady INTERNALLY - per-run or
+ * final-bag reads cannot reconstruct these totals (essence is consumed
+ * by internal invests, allocations happen inside growth steps). */
+export interface SimRunTotals {
+  stageRuns: number
+  victories: number
+  defeats: number
+  enemiesDefeated: number
+  battleSeconds: number
+  idleCultivationSeconds: number
+  tinhHoaGained: number
+  attributePointsEarned: number
+  attributePointsSpent: number
+  uncountedStageRuns: number
+  bodyCompletedAtSeconds: number | null
+}
+
+/** M-D: per-run record populated at runStage terminal. `counted:false`
+ * means kills aren't trustworthy — either the terminal battle wasn't
+ * readable (missing-battle defeat) or the result was non-terminal
+ * ('timeout': dead entries in a live battle never settled loot, so they
+ * must not count). Flagged so a measurement can't treat 0 as a real
+ * count. */
+export interface StageRunStats {
+  result: StageRunResult
+  enemiesDefeated: number
+  counted: boolean
+}
+
 /** Normalized regression surface - volatile fields (entity ids, battle
  * durations, timestamps, material drops) are excluded per M0 census. */
 export interface EarlyGameSnapshot {
@@ -90,6 +126,28 @@ export class EarlyGameSession {
   player: PlayerData
   readonly nowMs: number
   readonly seedValue: number
+
+  // M-D sim-only seams (simulation infrastructure, never production
+  // ops): production-parity flag + measurement counters. Parity OFF by
+  // default keeps MortalChapterJourney/EarlyGameLoop behavior identical.
+  combatCultivationParity = false
+  readonly simRunTotals: SimRunTotals = {
+    stageRuns: 0,
+    victories: 0,
+    defeats: 0,
+    enemiesDefeated: 0,
+    battleSeconds: 0,
+    idleCultivationSeconds: 0,
+    tinhHoaGained: 0,
+    attributePointsEarned: 0,
+    attributePointsSpent: 0,
+    uncountedStageRuns: 0,
+    bodyCompletedAtSeconds: null,
+  }
+  lastRunStats: StageRunStats | null = null
+  /** True while a runStage drive is in flight - distinguishes parity
+   * cultivation (inside battleSeconds) from idle cultivation. */
+  private inStageDrive = false
 
   constructor(options: EarlyGameSessionOptions) {
     this.nowMs = options.nowMs ?? 1_700_000_000_000
@@ -135,41 +193,104 @@ export class EarlyGameSession {
     this.gameManager.setActivePlayer(this.player)
   }
 
-  /** Advance cultivation through the shared production tick (fixed clock). */
+  /** Advance cultivation through the shared production tick (fixed clock).
+   * M-D: counts as idle cultivation only when NOT inside a runStage
+   * drive - parity advances are already inside battleSeconds. */
   cultivate(seconds: number): number {
+    if (!this.inStageDrive) {
+      this.simRunTotals.idleCultivationSeconds += seconds
+    }
     return cultivateTick(this.player, seconds, this.nowMs)
   }
 
   breakthroughIfReady(): boolean {
+    const before = this.player.attributePoints
     if (!canBreakthrough(this.player)) return false
-    return breakthrough(this.player)
+    const ok = breakthrough(this.player)
+    if (ok) {
+      this.simRunTotals.attributePointsEarned += this.player.attributePoints - before
+    }
+    return ok
+  }
+
+  /** M-D measurement read - material bag amount via the typed API. */
+  materialAmount(id: string): number {
+    return this.gameManager.materialBag.getAmount(id)
   }
 
   /** Real stage entry + clock-driven battle; rewards settle on the
-   * combat clock (completedStageIds, loot) before this returns. */
+   * combat clock (completedStageIds, loot) before this returns.
+   * M-D parity lifecycle (spec §3.1, pinned ordering):
+   *   pre-stage drain -> essenceBefore -> startStage/battle ->
+   *   rewards settle -> essenceAfter/tinhHoaGained -> terminal counters
+   *   -> post-terminal drain. */
   runStage(stageId: string): StageRunResult {
     const stage = this.gameManager.catalogOps.getStage(stageId)
     if (!stage) return 'missing'
     if (!this.gameManager.catalogOps.isStageUnlocked(stageId, this.player)) {
       return 'locked'
     }
+    if (this.combatCultivationParity) {
+      this.drainRefinement()
+    }
+    const essenceBefore = this.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
     if (!this.gameManager.turnBattleOps.startStage(this.player, stage)) {
       return 'refused'
     }
     // Shared deterministic driver (P6-M1) - the same stepping loop as
     // the disposable benchmark battles; this host counts clock advances.
+    // Parity: per consumed combat step, cultivate + auto-breakthrough -
+    // the same work App.vue's frame loop does during battles.
     let advances = 0
-    return driveTurnBattleToTerminal({
-      gameManager: this.gameManager,
-      clock: this.clock,
-      maxConsumedSteps: MAX_DRIVE_STEPS,
-      countSteps: () => advances,
-      advanceChunkSeconds: COMBAT_STEP_SECONDS,
-      onMissingBattle: () => 'defeat',
-      onAdvance: () => {
-        advances++
-      },
-    })
+    this.inStageDrive = true
+    let result: StageRunResult
+    try {
+      result = driveTurnBattleToTerminal({
+        gameManager: this.gameManager,
+        clock: this.clock,
+        maxConsumedSteps: MAX_DRIVE_STEPS,
+        countSteps: () => advances,
+        advanceChunkSeconds: COMBAT_STEP_SECONDS,
+        onMissingBattle: () => 'defeat',
+        onAdvance: () => {
+          advances++
+          if (this.combatCultivationParity) {
+            this.cultivate(COMBAT_STEP_SECONDS)
+            this.breakthroughIfReady()
+          }
+        },
+      })
+    } finally {
+      this.inStageDrive = false
+    }
+
+    const essenceAfter = this.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
+    this.simRunTotals.tinhHoaGained += essenceAfter - essenceBefore
+
+    const totals = this.simRunTotals
+    totals.stageRuns++
+    totals.battleSeconds += advances * COMBAT_STEP_SECONDS
+    if (result === 'victory') totals.victories++
+    if (result === 'defeat') totals.defeats++
+
+    // Kill accounting over the LIVE turnBattle.enemies: rewardOps feeds
+    // processDefeatedEnemies a mapped copy, so dead participants remain
+    // in the live array with entity.alive === false. Pending telegraphs
+    // are never in enemies. Only TERMINAL results count - a 'timeout'
+    // leaves a live battle whose dead entries never settled loot.
+    const battle = this.gameManager.getTurnBattle()
+    const counted = battle != null && (result === 'victory' || result === 'defeat')
+    const kills = counted
+      ? battle.enemies.filter((enemy) => !enemy.entity.alive).length
+      : 0
+    totals.enemiesDefeated += kills
+    if (!counted) totals.uncountedStageRuns++
+    this.lastRunStats = { result, enemiesDefeated: kills, counted }
+
+    if (this.combatCultivationParity) {
+      this.drainRefinement()
+    }
+    return result
   }
 
   /** Real Quan Khi drive: tickOps.update + scripted correct answers.
@@ -209,13 +330,37 @@ export class EarlyGameSession {
   }
 
   allocateAttribute(stat: Parameters<GameManager['progressionOps']['allocateAttributePoint']>[1]): boolean {
-    return this.gameManager.progressionOps.allocateAttributePoint(this.player, stat)
+    const ok = this.gameManager.progressionOps.allocateAttributePoint(this.player, stat)
+    if (ok) this.simRunTotals.attributePointsSpent++
+    return ok
   }
 
   /** Invest held Tinh Hoa Pham The into body refinement - the
-   * material -> tier -> stats growth link, through the real op. */
+   * material -> tier -> stats growth link, through the real op.
+   * M-D: the first call that completes all tiers records
+   * bodyCompletedAtSeconds at the CURRENT T_wall instant - covers
+   * parity drains AND explicit sim invests, so a tier completing in a
+   * pre-stage drain isn't timestamped late by the battle that follows. */
   investRefinement(): number {
-    return this.gameManager.realmAdvanceOps.investBodyChapter(this.player, 'body_refinement')
+    const consumed = this.gameManager.realmAdvanceOps.investBodyChapter(
+      this.player,
+      'body_refinement',
+    )
+    const totals = this.simRunTotals
+    if (
+      totals.bodyCompletedAtSeconds == null &&
+      getBodyRefinementCompletedTiers(this.player) >= BODY_REFINEMENT_TIERS.length
+    ) {
+      totals.bodyCompletedAtSeconds = totals.battleSeconds + totals.idleCultivationSeconds
+    }
+    return consumed
+  }
+
+  /** M-D: production auto-invest parity - GameManagerTickOps.update()
+   * invests every world tick; a parity runStage drains before and after
+   * each battle to the same end state (stage-boundary granularity). */
+  private drainRefinement(): void {
+    while (this.investRefinement() > 0) { /* consume until dry */ }
   }
 
   /** Equip every unequipped bag item into its slot (best-first by item
