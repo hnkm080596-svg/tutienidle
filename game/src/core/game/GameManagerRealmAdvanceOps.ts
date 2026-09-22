@@ -21,7 +21,7 @@ import {
 } from '../realm/body/BodyChapter'
 import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
-import { CORE_REALM_LEVEL, getCurrentRealm } from '../realm/realmSystem'
+import { CORE_REALM_LEVEL, QI_REFINING_BREAKTHROUGH_STAGE_ID, getCurrentRealm } from '../realm/realmSystem'
 import type { Skill } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
@@ -457,13 +457,26 @@ export class GameManagerRealmAdvanceOps {
    * true when the player meets the conditions to press Breakthrough
    * (Quan Khi / Truc Co / ...).
    *
+   * QI-D5 - Truc Co admission has TWO mandatory inputs: realmLevel >=
+   * CORE_REALM_LEVEL AND the qi_refining chapter-final stage cleared
+   * (QI_REFINING_BREAKTHROUGH_STAGE_ID in completedStageIds). Hidden
+   * grade/foundation inputs stay resolver-internal - they are not part
+   * of this normal admission gate. Mortal stays level-only (its real
+   * transition is the initiation ritual, chooseCultivationPath).
+   *
    * PRODUCT SCOPE: the game is currently designed up to Truc Co tier 18.
    * Placeholder realms (Kim Dan+) return false until their content pass
    * lands.
    */
   canTriggerBreakthrough(player: PlayerData): boolean {
-    if (player.realmId === 'mortal' || player.realmId === 'qi_refining') {
+    if (player.realmId === 'mortal') {
       return player.realmLevel >= CORE_REALM_LEVEL
+    }
+    if (player.realmId === 'qi_refining') {
+      return (
+        player.realmLevel >= CORE_REALM_LEVEL &&
+        player.completedStageIds.includes(QI_REFINING_BREAKTHROUGH_STAGE_ID)
+      )
     }
     return false
   }

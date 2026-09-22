@@ -1,8 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { STAGES } from './Stages'
 import { ENEMIES } from '../enemy/Enemies'
+import { QI_REFINING_BREAKTHROUGH_STAGE_ID } from '../../core/realm/realmSystem'
 
 describe('stage encounter scaling', () => {
+  // M-QI-02 (QI-D5): the Truc Co admission gate pins this exact id - a
+  // stage rename without updating the constant would silently close the
+  // breakthrough forever.
+  it('QI_REFINING_BREAKTHROUGH_STAGE_ID resolves to the qi_refining chapter-final stage', () => {
+    const stage = STAGES.find((candidate) => candidate.id === QI_REFINING_BREAKTHROUGH_STAGE_ID)
+
+    expect(stage).toBeDefined()
+    expect(stage!.requiredRealmId).toBe('qi_refining')
+    expect(stage!.floor).toBe(10)
+  })
+
   it('tăng tuyến tính số quái từ tầng 1 đến tầng 10 ở mọi chapter', () => {
     for (const chapter of [1, 2, 3]) {
       const stages = STAGES.filter((stage) => stage.chapter === chapter).sort(

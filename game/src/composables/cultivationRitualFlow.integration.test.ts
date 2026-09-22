@@ -51,6 +51,9 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     expect(player.cultivationWay).toBe('spell_pathway')
 
     player.realmLevel = 12
+    // M-QI-02 - Truc Co admission also requires the chapter-final clear;
+    // the played LQ->TC journey is M-QI-12's scope, so this fixture seeds it.
+    player.completedStageIds = ['qi_refining_abyssal_pool']
 
     expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
     gameManager.tickOps.update(tribulationTotalSeconds('foundation_establishment'))
