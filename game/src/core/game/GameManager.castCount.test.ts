@@ -4,12 +4,16 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
+import { getSkillCoreLevel } from '../progression/SkillCoreLevel'
+import { getCastLeveledSkillLevel } from '../skill/CastLeveling'
+import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 
 // 9.5 #9 — production wiring regression: turn-engine casts of the
-// primary player feed player.skillCastCounts/skillLevels (the mirror
-// NodeSystem `skillCastCount` prerequisites + bat_kiem route gate read)
-// through TurnBattleSystem.onSkillCast → SkillSystem.recordCast →
-// castCountSink. Enemy/companion casts must NOT write into the mirror.
+// primary player feed player.skillCastCounts + the canonical Core Node
+// level (nodeLevels[core_<id>] - M-QI-05; NodeSystem `skillCastCount`
+// prerequisites + the offer gates read it) through
+// TurnBattleSystem.onSkillCast -> SkillSystem.recordCast -> castCountSink.
+// Enemy/companion casts must NOT write into the mirror.
 
 const ENEMY_STATS_INPUT = {
   maxHp: 10_000_000,
@@ -33,7 +37,7 @@ function makeDummyEnemy() {
 }
 
 describe('GameManager — turn-engine cast counting wiring (9.5 #9)', () => {
-  it('cast tram của player chính ghi vào skillCastCounts + totalExperience + skillLevels mirror', () => {
+  it('cast tram của player chính ghi vào skillCastCounts + totalExperience + core_tram level', () => {
     const gameManager = new GameManager()
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
@@ -42,8 +46,9 @@ describe('GameManager — turn-engine cast counting wiring (9.5 #9)', () => {
     player.cultivationPath = 'sword'
 
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     gameManager.setActivePlayer(player)
-    gameManager.progressionOps.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram', player)
 
     gameManager.startBattleWithPlayer(player, makeDummyEnemy())
 
@@ -59,7 +64,7 @@ describe('GameManager — turn-engine cast counting wiring (9.5 #9)', () => {
 
     expect(tramCasts).toBeGreaterThan(0)
     expect(tram.totalExperience).toBe(tramCasts)
-    expect(player.skillLevels?.['tram']).toBe(tram.level)
+    expect(getSkillCoreLevel(player, 'tram')).toBe(getCastLeveledSkillLevel('tram', tramCasts))
 
     // Chỉ cast của player chính được mirror — enemy 'generic_physical'
     // (và mọi actor khác) không bao giờ ghi vào đây.

@@ -290,10 +290,44 @@ function adaptDamageOp(
   def: TurnSkillDefinition,
 ): Extract<AuthoredSkillOperation, { type: 'deal_damage' }> {
   const info = def.damage!
+  // M-QI-05 / QI-D3 — native defs carry a CONSTANT multiplier; when the
+  // authored levelScaling metadata is present the adapter wraps it in
+  // the canonical-level expression:
+  //   multiplier x (1 + (max(1, skill_level) - 1) x levelScaling)
+  // skill_level is a first-class ScalarExpression query fed by the
+  // battle's CastSnapshot.statScalars.skill_level (the canonical core
+  // projection), so no def rewrites per level.
+  const coefficient: ScalarExpression =
+    info.levelScaling !== undefined
+      ? {
+          op: 'multiply',
+          values: [
+            info.multiplier,
+            {
+              op: 'add',
+              values: [
+                1,
+                {
+                  op: 'multiply',
+                  values: [
+                    {
+                      op: 'subtract',
+                      left: { op: 'max', values: [1, { query: 'skill_level' }] },
+                      right: 1,
+                    },
+                    info.levelScaling,
+                  ],
+                },
+              ],
+            },
+          ],
+        }
+      : (info.multiplier as ScalarExpression)
+
   const base = {
     type: 'deal_damage' as const,
     target: 'affected_targets' as SkillTargetIntent,
-    coefficient: info.multiplier as ScalarExpression,
+    coefficient,
     ...(info.scaling !== undefined ? { scaling: info.scaling } : {}),
     ...(info.missingHpBonusPerMissingPercent !== undefined
       ? { missingHpBonusPerMissingPercent: info.missingHpBonusPerMissingPercent }

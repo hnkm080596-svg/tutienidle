@@ -1,3 +1,4 @@
+import { SKILLS } from '../../data/skill/Skills'
 import { describe, expect, it, vi, type Mock } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { EventBus } from '../events/EventBus'
@@ -60,6 +61,7 @@ function stageFixture(id: string, enemyId: string): Stage {
 
 function setup(...enemies: ReturnType<typeof defineEnemy>[]) {
   const gameManager = new GameManager()
+  gameManager.catalogOps.registerSkillTemplates(SKILLS)
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   const player = createDefaultPlayer()

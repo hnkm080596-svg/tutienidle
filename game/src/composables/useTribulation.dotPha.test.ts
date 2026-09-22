@@ -12,6 +12,7 @@ import { SKILLS } from '../data/skill/Skills'
 import { MERIDIANS } from '../data/realm/Meridians'
 import { makeInstance } from '../core/equipment/EquipmentInstance.fixture'
 import { PROFESSION_GRADE_BY_REALM } from '../core/profession/ProfessionGrade'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Snapshot hoàn hảo Phàm Nhân + Phàm Nhân Chi Cốt (spec dot-pha-loi-kiep
 // §4.2/§4.4) — integration qua GameManager + useTribulation thật.
@@ -38,6 +39,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = usePlayerStore()
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
@@ -53,6 +55,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = usePlayerStore()
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
@@ -81,6 +84,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = usePlayerStore()
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
@@ -117,6 +121,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -166,6 +171,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -225,6 +231,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -290,6 +297,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -304,6 +312,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -342,6 +351,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
@@ -356,6 +366,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = usePlayerStore()
 
     player.realmId = 'foundation_establishment'

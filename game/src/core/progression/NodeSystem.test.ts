@@ -11,6 +11,7 @@ import {
   purchaseNode,
   upgradeNode,
 } from './NodeSystem'
+import { NodeRegistry } from './NodeRegistry'
 import { createDefaultPlayer } from '../player/Player'
 import type { ProgressionNode } from './ProgressionNode'
 
@@ -96,14 +97,13 @@ describe('hasPrerequisite — theo LEVEL (plan §6.1)', () => {
   })
 })
 
-// Kiếm Tu (2026-08-28) — gate Bạt Kiếm đọc mirror player.skillCastCounts/
-// skillLevels (skill instance thật sống trong SkillManager, không phải
-// PlayerData — xem Player.ts's skillCastCounts field).
+// Kiem Tu (2026-08-28) - Bat Kiem gate reads the player.skillCastCounts mirror
+// + the canonical Core Node level (M-QI-05 - nodeLevels[core_<id>]).
 describe('prerequisite skillCastCount', () => {
   it('thoả khi level skill đạt ngưỡng VÀ cast count đạt ngưỡng', () => {
     const player = playerWith({
       skillCastCounts: { tram: 9999 },
-      skillLevels: { tram: 3 },
+      nodeLevels: { core_tram: 3 },
     })
 
     expect(
@@ -123,7 +123,7 @@ describe('prerequisite skillCastCount', () => {
 // P7-M6 - technique-gated prerequisites read the read-only mirror
 // player.techniqueProgress (canonical holder lives in TechniqueManager;
 // TechniqueSystem's progress sink republishes the pair - same mirror
-// contract as skillCastCounts/skillLevels for `skillCastCount`).
+// contract as skillCastCounts for `skillCastCount`).
 describe('prerequisite techniqueRank / techniqueGrade (P7-M6)', () => {
   it('techniqueRank - passes at/above mirror rank, fails below, fails closed without a technique', () => {
     const player = playerWith({ techniqueProgress: { rank: 5, grade: 2 } })
@@ -438,7 +438,13 @@ describe('devResetBranch (plan §6.10)', () => {
       effect: {},
     })
 
-    return { registry: { getAll: () => [root, power, childOfPower] }, root, power, childOfPower }
+    const registry = new NodeRegistry()
+
+    for (const node of [root, power, childOfPower]) {
+      registry.register(node)
+    }
+
+    return { registry, root, power, childOfPower }
   }
 
   it('hoàn đúng tổng Cảm Ngộ đã tiêu, reset level về 0', () => {

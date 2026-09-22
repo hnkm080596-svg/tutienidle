@@ -13,7 +13,7 @@ import {
 } from './helpers'
 
 /**
- * P14 runtime oracle for the Cultivation Path Framework — the M10
+ * P14 runtime oracle for the Cultivation Path Framework - the M10
  * six-way ritual matrix, deferred out of the isolated worktree.
  *
  * Every test drives the real loop:
@@ -25,13 +25,13 @@ import {
  * Save-oracle fields: player.cultivationPath/cultivationWay (the atomic
  * pair), the way-owned slices (swordPath without the retired mode key,
  * spellPath pending the element pick), and the top-level
- * techniques/skills manager arrays (equipped technique + learned kit).
+ * techniques/skills manager arrays (the way's technique + learned kit).
  */
 const SAVE_KEY = GUEST_SAVE_KEY
 const BREAKTHROUGH_GATE_LEVEL = 12
 const FAST_FORWARD_SECONDS = 600
 
-// CAST_LEVELING_THRESHOLDS[skillId].lv3 (SkillSystem.ts) — the cast
+// CAST_LEVELING_THRESHOLDS[skillId].lv3 (SkillSystem.ts) - the cast
 // count that resolves cast-level 3 for the ngo_dao offer gate.
 const LINH_BAO_L3_CASTS = 10_000
 
@@ -53,11 +53,12 @@ interface SaveShape {
     }
     spellPath?: { element: string | null; route: string | null }
     artifact?: { artifactId?: string }
-    skillLevels?: Record<string, number>
+    nodeLevels?: Record<string, number>
+    purchasedNodeIds?: string[]
     skillCastCounts?: Record<string, number>
   }
-  techniques: { id: string; equipped?: boolean }[]
-  skills: { id: string; equipped?: boolean }[]
+  techniques: { id: string }[]
+  skills: { id: string }[]
 }
 
 interface TribulationDirectorHandle {
@@ -113,6 +114,17 @@ async function seedAndReload(
       realmLevel: BREAKTHROUGH_GATE_LEVEL,
       cultivation: 0,
       ...playerPatch,
+      // M-QI-05 - core seeds merge onto the live mirrors (a learnSkill
+      // grant writes BOTH nodeLevels + purchasedNodeIds), never replace
+      // the whole maps a real save already carries.
+      nodeLevels: {
+        ...(saveBefore!.player.nodeLevels ?? {}),
+        ...((playerPatch.nodeLevels as Record<string, number> | undefined) ?? {}),
+      },
+      purchasedNodeIds: [
+        ...(saveBefore!.player.purchasedNodeIds ?? []),
+        ...((playerPatch.purchasedNodeIds as string[] | undefined) ?? []),
+      ],
     },
   }
 
@@ -183,7 +195,7 @@ async function chooseWay(page: import('@playwright/test').Page, wayNamePattern: 
 
   await expect(page.locator('.overlay-panel')).toHaveCount(0, { timeout: 10_000 })
 
-  // The ceremony world announcement overlays home chrome — dismiss.
+  // The ceremony world announcement overlays home chrome - dismiss.
   const announcement = page.locator('.world-announcement')
   if (await announcement.isVisible().catch(() => false)) {
     await announcement.click()
@@ -264,7 +276,7 @@ async function reopenQuanKhiViaCharacter(page: import('@playwright/test').Page):
   await expect(page.locator('.overlay-panel')).toBeVisible({ timeout: 10_000 })
 }
 
-test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
+test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
   test('ungated offers only when no gate mirror is seeded', async ({ page }) => {
     test.setTimeout(210_000)
     const collected = collectBrowserErrors(page)
@@ -275,7 +287,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     await seedAndReload(page, {})
     await winQuanKhiAndOpenRitual(page)
 
-    // Exactly the three ungated base ways — ngo_dao/ung_the/ngu stay
+    // Exactly the three ungated base ways - ngo_dao/ung_the/ngu stay
     // hidden without their gates (no locked-card tease, spec §11).
     await expect(page.locator('.quan-khi-panel__choice')).toHaveCount(3)
     await expect(page.locator('.quan-khi-panel__hidden-card')).toHaveCount(0)
@@ -293,7 +305,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     await seedAndReload(page, {})
     await winQuanKhiAndOpenRitual(page)
 
-    // ngu is gated (tram Lv3) — without the seed it must not be offered.
+    // ngu is gated (tram Lv3) - without the seed it must not be offered.
     await expect(page.locator('.quan-khi-panel__choice')).toHaveCount(3)
 
     await chooseWay(page, /Ngự Kiếm Tâm Kinh/)
@@ -305,15 +317,15 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     expect(save.player.swordPath).toBeDefined()
     expect(save.player.swordPath!.mode).toBeUndefined()
     expect(Array.isArray(save.player.swordPath!.preset)).toBe(true)
-    expect(save.techniques.find((t) => t.id === 'ngu_kiem')?.equipped).toBe(true)
+    expect(save.techniques.map((t) => t.id)).toEqual(['sword_control_art'])
 
-    // Hien surface — the preset editor only renders for the hien way.
+    // Hien surface - the preset editor only renders for the hien way.
     await reopenQuanKhiViaCharacter(page)
     const palette = page.locator('.quan-khi-panel__preset-palette .quan-khi-panel__preset-orb')
     await expect(palette.first()).toBeVisible({ timeout: 10_000 })
 
     // Direct-op write through setKiemPhoPreset: append one unlocked orb
-    // (at qi_refining only orb_dam is unlocked — ORB_UNLOCK_REALM).
+    // (at qi_refining only orb_dam is unlocked - ORB_UNLOCK_REALM).
     const slotsBefore = await page.locator('.quan-khi-panel__preset-slot:not(.quan-khi-panel__preset-slot--empty)').count()
     const firstUnlocked = page.locator('.quan-khi-panel__preset-orb:not(.is-locked)').first()
     await expect(firstUnlocked).toBeVisible()
@@ -361,8 +373,9 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     await bootToGuestHome(page)
     await createCharacterThroughUi(page, 'E2E Kiếm Ngự')
     await enterHome(page)
-    // requiresSkillLevel { tram, 3 } reads player.skillLevels.
-    await seedAndReload(page, { skillLevels: { tram: 3 } })
+    // requiresSkillLevel { tram, 3 } reads the canonical core level
+    // (nodeLevels[core_tram] + the purchased mirror, M-QI-05).
+    await seedAndReload(page, { nodeLevels: { core_tram: 3 }, purchasedNodeIds: ['core_tram'] })
     await winQuanKhiAndOpenRitual(page)
 
     // The gated way now appears: 3 base + ngu.
@@ -379,9 +392,11 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     expect(save.player.swordPath!.kiemY).toBe(0)
     expect(save.player.swordPath!.kiemDaoCount).toBe(1)
     expect(save.player.swordPath!.kiemDaoBase).toBe(1)
-    expect(save.techniques.find((t) => t.id === 'van_kiem_quyet')?.equipped).toBe(true)
+    expect(save.techniques.map((t) => t.id)).toEqual(['myriad_swords_art'])
 
-    // Ngu surface — spec card names Ngự Kiếm Đạo, no preset editor.
+    // Ngu surface - the rendered name is the localized value of
+    // panels.quanKhi.specNames.nguKiemDao; user-visible text is NOT
+    // ASCII-normalized, so the assertion must match the locale value.
     await reopenQuanKhiViaCharacter(page)
     await expect(page.locator('.quan-khi-panel__route-name')).toHaveText(/Ngự Kiếm Đạo/, {
       timeout: 10_000,
@@ -408,9 +423,9 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     expect(save.player.cultivationPath).toBe('spell')
     expect(save.player.cultivationWay).toBe('spell_pathway')
     expect(save.player.spellPath).toEqual({ element: null, route: null })
-    expect(save.techniques.find((t) => t.id === 'dai_ngu_hanh_chan_quyet')?.equipped).toBe(true)
+    expect(save.techniques.map((t) => t.id)).toEqual(['five_elements_art'])
 
-    // Element tree surface — 5 element tabs render for ngu_hanh only.
+    // Element tree surface - 5 element tabs render for ngu_hanh only.
     await page.keyboard.press('Tab')
     const skillSlot = page.locator('[data-wheel-slot="skill"]')
     await expect(skillSlot).toBeVisible({ timeout: 10_000 })
@@ -419,7 +434,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     await expect(page.locator('.skill-path-panel__element-tab')).toHaveCount(5)
 
     // F1 oracle (positive): at foundation_establishment the way grants
-    // ngu_hanh_chau — the phap_bao wheel slot must be ENABLED and the
+    // ngu_hanh_chau - the phap_bao wheel slot must be ENABLED and the
     // artifact must materialize on restore.
     const current = await readSave(page)
     const advanced = {
@@ -474,7 +489,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     expect(save.player.realmId).toBe('qi_refining')
     expect(save.player.cultivationPath).toBe('spell')
     expect(save.player.cultivationWay).toBe('hidden_spell_pathway')
-    expect(save.techniques.find((t) => t.id === 'ngo_dao_chan_quyet')?.equipped).toBe(true)
+    expect(save.techniques.map((t) => t.id)).toEqual(['dao_insight_art'])
 
     const learnedIds = save.skills.map((skill) => skill.id)
     expect(learnedIds).toContain('van_phap_tuy_tam')
@@ -490,7 +505,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     await expect(page.locator('.skill-path-panel__element-tabs')).toHaveCount(0)
 
     // F1 oracle (negative): at foundation_establishment the way grants
-    // NO artifact — restore must not manufacture ngu_hanh_chau and the
+    // NO artifact - restore must not manufacture ngu_hanh_chau and the
     // phap_bao slot stays disabled.
     const current = await readSave(page)
     const advanced = {
@@ -569,7 +584,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     expect(save.player.realmId).toBe('qi_refining')
     expect(save.player.cultivationPath).toBe('body')
     expect(save.player.cultivationWay).toBe('body_pathway')
-    expect(save.techniques.find((t) => t.id === 'kim_cang_bat_hoai_the')?.equipped).toBe(true)
+    expect(save.techniques.map((t) => t.id)).toEqual(['diamond_body_art'])
 
     assertNoBrowserErrors(collected)
   })
@@ -581,8 +596,9 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     await bootToGuestHome(page)
     await createCharacterThroughUi(page, 'E2E Ứng Thế')
     await enterHome(page)
-    // requiresSkillLevel { huy_quyen, 3 } reads player.skillLevels.
-    await seedAndReload(page, { skillLevels: { huy_quyen: 3 } })
+    // requiresSkillLevel { huy_quyen, 3 } reads the canonical core
+    // level (nodeLevels[core_huy_quyen] + the purchased mirror, M-QI-05).
+    await seedAndReload(page, { nodeLevels: { core_huy_quyen: 3 }, purchasedNodeIds: ['core_huy_quyen'] })
     await winQuanKhiAndOpenRitual(page)
 
     // 3 base + ung_the.
@@ -594,7 +610,7 @@ test.describe('Cultivation Path ritual — six-way matrix (P14)', () => {
     expect(save.player.realmId).toBe('qi_refining')
     expect(save.player.cultivationPath).toBe('body')
     expect(save.player.cultivationWay).toBe('hidden_body_pathway')
-    expect(save.techniques.find((t) => t.id === 'ung_the_than_quyet')?.equipped).toBe(true)
+    expect(save.techniques.map((t) => t.id)).toEqual(['responsive_body_art'])
 
     assertNoBrowserErrors(collected)
   })

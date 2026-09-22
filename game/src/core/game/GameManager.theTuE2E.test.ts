@@ -17,6 +17,7 @@ import { COMPANIONS, type CompanionDefinition } from '../../data/companion/Compa
 import { CUONG_QUYEN_MISSING_HP_PER_PERCENT, SON_NHAC_WARD_RATIO } from '../../data/skill/TheTuSkills'
 import type { PlayerData } from '../player/Player'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // The Tu Reimagined (plan Task 13) — Hien end-to-end: real initiation
 // ritual -> node purchase -> GameManager battle build -> live combat
@@ -65,6 +66,7 @@ function makeManager() {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(THE_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   return { gameManager, combatSource }
@@ -179,7 +181,7 @@ describe('initiation ritual (T1/T6)', () => {
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
 
-    player.skillLevels = { huy_quyen: 3 }
+    player.nodeLevels.core_huy_quyen = 3
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)).toBe(true)
     expect(player.cultivationPath).toBe('body')
     expect(player.cultivationWay).toBe('hidden_body_pathway')
@@ -383,8 +385,9 @@ describe('hidden_body build wiring (Task 14)', () => {
   it('fixed kit slots populate; ung_the + owned-root markers land on the pool at build', () => {
     const { gameManager, combatSource } = makeManager()
     gameManager.catalogOps.registerProgressionNodes(THE_TU_AN_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = mortalAtGate()
-    player.skillLevels = { huy_quyen: 3 }
+    player.nodeLevels.core_huy_quyen = 3
     gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)
     gameManager.progressionOps.purchaseNode('phan_mon', player)
 

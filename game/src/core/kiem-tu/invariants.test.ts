@@ -47,6 +47,7 @@ import { createBaseStats } from '../stats/StatBlock'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
 import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
 import { SWORD_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
 // surface is stubbed; nothing here is invoked for this path.
@@ -365,7 +366,7 @@ describe('INV-7 — hardcore discovery', () => {
 describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', () => {
   // M6 — the kiem_tu_an flip node is retired: ngu entry is the
   // Initiation Ritual itself, gated by the way's offerGate
-  // (requiresSkillLevel tram Lv3 — reads the skillLevels mirror, the
+  // (requiresSkillLevel tram Lv3 - reads the canonical core level, the
   // same read the node's skillCastCount level prereq used). The commit
   // is FREE (no insight cost — no node purchase, no waive record) and
   // PERMANENT (applyPathChoice rejects any second choice); way
@@ -377,14 +378,15 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = createDefaultPlayer()
     player.realmId = 'mortal'
     player.realmLevel = 12
     player.skillInsight = 500
-    player.skillLevels = { tram: tramLevel }
+    player.nodeLevels.core_tram = tramLevel
     player.skillCastCounts = { tram: tramLevel >= 3 ? 10_000 : 9_000 }
     gameManager.setActivePlayer(player)
-    gameManager.progressionOps.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram', player)
     return { gameManager, player }
   }
 
@@ -463,13 +465,14 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
       TECHNIQUES.filter(technique => technique.id !== 'myriad_swords_art'),
     )
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = createDefaultPlayer()
     player.realmId = 'mortal'
     player.realmLevel = 12
     player.skillInsight = 500
-    player.skillLevels = { tram: 3 }
+    player.nodeLevels.core_tram = 3
     gameManager.setActivePlayer(player)
-    gameManager.progressionOps.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram', player)
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'hidden_sword_pathway', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
@@ -481,6 +484,7 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
   it('way membership isolates the subtrees — hien cannot buy ngu nodes, ngu cannot buy hien nodes', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
     const hien = hienPlayer(['orb_dam'], 'golden_core')
     hien.skillInsight = 500
@@ -693,13 +697,15 @@ describe('INV-15 — precursor lock (K3)', () => {
       const gameManager = new GameManager()
       gameManager.catalogOps.registerSkillTemplates(SKILLS)
       gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+      gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+      gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
       const player = createDefaultPlayer()
       player.realmId = 'mortal'
       player.realmLevel = 12
       player.skillCastCounts = { tram: 0 }
       gameManager.setActivePlayer(player)
-      gameManager.progressionOps.learnSkill('tram')
+      gameManager.progressionOps.learnSkill('tram', player)
       gameManager.progressionOps.setMortalBasicSkill(player, 'tram')
 
       expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
@@ -711,12 +717,14 @@ describe('INV-15 — precursor lock (K3)', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
     const player = createDefaultPlayer()
     player.realmId = 'mortal'
     player.realmLevel = 12
     gameManager.setActivePlayer(player)
-    gameManager.progressionOps.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram', player)
     gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)
 
     // Mission C Task 9 — resolution now lives behind the path-runtime

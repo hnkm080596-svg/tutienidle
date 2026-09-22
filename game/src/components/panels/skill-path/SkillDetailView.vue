@@ -6,6 +6,10 @@
 // ÁP DỤNG CHO MỌI skill đã học, không riêng nhánh spell — khác
 // NodeTreePanel.vue/NodeInspector.vue vốn là nơi MỞ node (unlock), còn
 // đây là nơi NÂNG CẤP skill đã mở.
+// M-QI-05 - Skill-typed detail surface for learned Skill templates
+// (spec D7: native TurnSkillDefinition actions render in
+// NativeCoreDetail instead - no pseudo-Skill projection here). Level
+// reads are canonical Core Node levels via progressionOps.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Skill } from '@/core/skill/Skill'
@@ -25,15 +29,25 @@ const props = defineProps<{
   skill: Skill | null
 }>()
 
-const resourceTypeLabel = computed(() => {
-  return skillResourceTypeLabel(props.skill?.resourceType)
-})
-
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
 
-const isMaxLevel = computed(() => !!props.skill && props.skill.level >= props.skill.maxLevel)
+const resourceTypeLabel = computed(() => {
+  return skillResourceTypeLabel(props.skill?.resourceType)
+})
+
+// M-QI-05 / QI-D3 - the displayed level is the canonical Core Node
+// level (nodeLevels[core_<id>]), not the frozen authored Skill.level.
+const currentLevel = computed(() => {
+  stateVersion.value
+
+  return props.skill
+    ? Math.max(1, gameManager.progressionOps.getSkillLevel(props.skill.id, player.$state))
+    : 0
+})
+
+const isMaxLevel = computed(() => !!props.skill && currentLevel.value >= props.skill.maxLevel)
 
 // Task 12 (2026-09-03) — dòng cơ chế engine (hitCount/spread/zone/
 // add_stack/remove_buff/stacksPerAffectedTarget) không có trong
@@ -52,7 +66,7 @@ const upgradeCost = computed(() => {
     return undefined
   }
 
-  return gameManager.progressionOps.getSkillUpgradeInsightCost(props.skill.id)
+  return gameManager.progressionOps.getSkillCoreUpgradeCost(props.skill.id, player.$state)
 })
 
 const canUpgrade = computed(() => {
@@ -62,9 +76,10 @@ const canUpgrade = computed(() => {
 })
 
 // Phap Tu Reimagined (Task 16) — cast-leveled skills (tram / linh_bao /
-// huy_quyen) level by cast count, not Insight (upgradeSkill rejects
-// them, INV-9): show the count → next-level threshold instead of the
-// upgrade button. player.skillCastCounts is the read-only mirror.
+// huy_quyen) level by cast count, not Insight (the cast-channel core
+// rejects Insight upgrades, INV-9): show the count -> next-level
+// threshold instead of the upgrade button. player.skillCastCounts is
+// the read-only mirror; the level read is the canonical core level.
 const castProgress = computed(() => {
   stateVersion.value
 
@@ -75,7 +90,7 @@ const castProgress = computed(() => {
   }
 
   const count = player.skillCastCounts?.[props.skill.id] ?? 0
-  const next = props.skill.level < 2 ? thresholds.lv2 : props.skill.level < 3 ? thresholds.lv3 : null
+  const next = currentLevel.value < 2 ? thresholds.lv2 : currentLevel.value < 3 ? thresholds.lv3 : null
 
   return { count, next }
 })
@@ -85,7 +100,7 @@ function onUpgrade() {
     return
   }
 
-  if (gameManager.progressionOps.upgradeSkill(props.skill.id, player.$state)) {
+  if (gameManager.progressionOps.levelUpSkill(props.skill.id, player.$state)) {
     bumpState()
   }
 }
@@ -105,7 +120,7 @@ function onUpgrade() {
       </ul>
 
       <div class="skill-detail__level">
-        <span class="skill-detail__level-label">Lv. {{ skill.level }}/{{ skill.maxLevel }}</span>
+        <span class="skill-detail__level-label">Lv. {{ currentLevel }}/{{ skill.maxLevel }}</span>
 
         <!-- Cast-leveled skill: progress to the next cast threshold
              instead of the Insight upgrade button (INV-9). -->
@@ -129,7 +144,7 @@ function onUpgrade() {
         <span v-else class="skill-detail__level-label">{{ t('panels.skillPath.detail.maxed') }}</span>
       </div>
 
-      <ul class="skill-detail__rows">
+      <ul v-if="skill" class="skill-detail__rows">
         <StatRow :label="t('panels.skillPath.detail.cooldown')" bordered>{{ skill.cooldown }}s</StatRow>
 
         <StatRow

@@ -16,6 +16,8 @@ import { GameManager } from '../../core/game/GameManager'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
 import { createDefaultPlayer, type PlayerData } from '../../core/player/Player'
 import { freshSwordPathState } from '../../core/kiem-tu/KiemTuState'
+import { SWORD_PATHWAY } from '../../core/kiem-tu/KiemTuPath'
+import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { usePlayerStore } from '../../stores/player'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
@@ -134,6 +136,13 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   player.swordPath = freshSwordPathState()
   player.realmId = 'qi_refining'
   player.realmLevel = 1
+  // M-QI-05 (v73) - the committed way's coreSkillIds are granted at the
+  // ritual: nodeLevels[core_<id>] = 1 plus purchasedNodeIds membership.
+  for (const skillId of SWORD_PATHWAY.coreSkillIds ?? []) {
+    const coreId = skillCoreNodeId(skillId)
+    player.nodeLevels[coreId] = 1
+    player.purchasedNodeIds.push(coreId)
+  }
   // P7-M6 - canonical seam: bind the player first so the progress sink
   // publishes techniqueProgress, exactly like production restore order.
   manager.setActivePlayer(player)

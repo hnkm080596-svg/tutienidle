@@ -6,6 +6,7 @@ import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import type { OrbId } from '../kiem-tu/KiemTuState'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Kiem Tu Reimagined Task 7 — the setKiemPhoPreset op contract:
 // realm-gated orb unlocks, 1..9 length, out-of-combat only, writes
@@ -36,6 +37,7 @@ function setup(realmId: string, way: 'sword_pathway' | 'hidden_sword_pathway' = 
   const gameManager = new GameManager()
   gameManager.setCombatClockSource(new ManualClockSource())
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'sword'
@@ -81,7 +83,7 @@ describe('setKiemPhoPreset', () => {
 
   it('rejects while a battle is in progress', () => {
     const { gameManager, player } = setup('foundation_establishment')
-    gameManager.progressionOps.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram', player)
     gameManager.startBattleWithPlayer(player, makeDummyEnemy('kpp_enemy'))
 
     expect(

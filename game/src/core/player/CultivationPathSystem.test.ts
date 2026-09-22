@@ -176,14 +176,14 @@ describe('listOfferableWays — (path, way) offer authority', () => {
 
   it('sword/hidden_sword_pathway is listed and becomes eligible at tram Lv3 (M6: ritual-only way)', () => {
     const player = mortalPlayer()
-    player.skillLevels = { tram: 2 }
+    player.nodeLevels.core_tram = 2
 
     const at = (p: typeof player) =>
       listOfferableWays(p).find((offer) => offer.wayId === 'hidden_sword_pathway')?.eligible
 
     expect(at(player)).toBe(false)
 
-    player.skillLevels.tram = 3
+    player.nodeLevels.core_tram = 3
     expect(at(player)).toBe(true)
   })
 
@@ -216,23 +216,24 @@ describe('listOfferableWays — (path, way) offer authority', () => {
     expect(at(player)).toBe(true)
   })
 
-  it('hidden_body_pathway becomes eligible exactly at huy_quyen Lv3 (skillLevels mirror)', () => {
+  it('hidden_body_pathway becomes eligible exactly at huy_quyen Lv3 (canonical core level)', () => {
     const player = mortalPlayer()
-    player.skillLevels = { huy_quyen: 2 }
+    player.nodeLevels.core_huy_quyen = 2
 
     const at = (p: typeof player) =>
       listOfferableWays(p).find((offer) => offer.wayId === 'hidden_body_pathway')?.eligible
 
     expect(at(player)).toBe(false)
 
-    player.skillLevels.huy_quyen = 3
+    player.nodeLevels.core_huy_quyen = 3
     expect(at(player)).toBe(true)
   })
 
   it('all six ways flag eligible once every gate is met', () => {
     const player = mortalPlayer()
     player.skillCastCounts = { linh_bao: LINH_BAO_L3 }
-    player.skillLevels = { huy_quyen: 3, tram: 3 }
+    player.nodeLevels.core_huy_quyen = 3
+    player.nodeLevels.core_tram = 3
 
     expect(listOfferableWays(player).every((offer) => offer.eligible)).toBe(true)
   })
@@ -284,7 +285,7 @@ describe('applyPathChoice — the sole path/way write authority', () => {
 
   it('rejects sword/hidden_sword_pathway below tram Lv3 — the offerGate runs inside the authority', () => {
     const player = mortalPlayer()
-    player.skillLevels = { tram: 2 }
+    player.nodeLevels.core_tram = 2
 
     const result = applyPathChoice(player, 'sword', 'hidden_sword_pathway')
 
@@ -296,7 +297,7 @@ describe('applyPathChoice — the sole path/way write authority', () => {
 
   it('accepts sword/hidden_sword_pathway at tram Lv3 — writes the BASE sword id + the way', () => {
     const player = mortalPlayer()
-    player.skillLevels = { tram: 3 }
+    player.nodeLevels.core_tram = 3
 
     expect(applyPathChoice(player, 'sword', 'hidden_sword_pathway').ok).toBe(true)
     expect(player.cultivationPath).toBe('sword')
@@ -335,7 +336,7 @@ describe('applyPathChoice — the sole path/way write authority', () => {
 
   it.each([
     ['spell', 'hidden_spell_pathway', { skillCastCounts: { linh_bao: LINH_BAO_L3 } }],
-    ['body', 'hidden_body_pathway', { skillLevels: { huy_quyen: 3 } }],
+    ['body', 'hidden_body_pathway', { nodeLevels: { core_huy_quyen: 3 } }],
   ] as const)(
     '(%s, %s) writes the BASE id + way once its gate is met — hidden ways are ways, not path ids',
     (pathId, wayId, mirrors) => {

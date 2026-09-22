@@ -14,6 +14,7 @@ import {
   applyRouteToTurnSkill,
   resolveRouteProfile,
 } from './PhapTuRoutes'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 describe('SpellPathRoutes', () => {
   it('dot route scales damage down and ailment chance up', () => {
@@ -112,11 +113,12 @@ describe('route scoping via SkillSystem provider', () => {
   it('dot route scales the selected kit basic but not linh_bao', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = spellPathPlayer('fire', 'dot')
     gameManager.setActivePlayer(player)
 
-    gameManager.progressionOps.learnSkill('hoa_cau_thuat')
-    gameManager.progressionOps.learnSkill('linh_bao')
+    gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
+    gameManager.progressionOps.learnSkill('linh_bao', player)
 
     const hoaCau = gameManager.skillManager.get('hoa_cau_thuat')!
     const linhBao = gameManager.skillManager.get('linh_bao')!
@@ -136,13 +138,14 @@ describe('route scoping via SkillSystem provider', () => {
   it('no element yet -> every skill resolves neutral even on spell', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
     player.spellPath = { element: null, route: null }
     gameManager.setActivePlayer(player)
 
-    gameManager.progressionOps.learnSkill('hoa_cau_thuat')
+    gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
     const hoaCau = gameManager.skillManager.get('hoa_cau_thuat')!
 
     expect(gameManager.skillSystem.getEffectiveSkill(hoaCau).effects[0]).toMatchObject({ value: 1 })
@@ -151,11 +154,12 @@ describe('route scoping via SkillSystem provider', () => {
   it('non-spell path never sees route factors', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = createDefaultPlayer()
     player.cultivationPath = 'sword'
     gameManager.setActivePlayer(player)
 
-    gameManager.progressionOps.learnSkill('hoa_cau_thuat')
+    gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
     const hoaCau = gameManager.skillManager.get('hoa_cau_thuat')!
 
     expect(gameManager.skillSystem.getEffectiveSkill(hoaCau).effects[0]).toMatchObject({ value: 1 })

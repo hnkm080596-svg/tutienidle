@@ -4,6 +4,7 @@ import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { selectAction, selectForcedAction } from '../battle/turn/TurnSkillAction'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // The Tu Reimagined (plan Task 6) — kit resolution reads the owned root
 // at participant build: cuong_chien -> Cuong Chien kit, tran_the ->
@@ -41,6 +42,7 @@ function makeManager() {
   const gameManager = new GameManager()
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerProgressionNodes([...ROOT_STUBS])
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   return gameManager
 }
 

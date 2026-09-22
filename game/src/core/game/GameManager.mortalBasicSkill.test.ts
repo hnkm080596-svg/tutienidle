@@ -6,6 +6,7 @@ import { SKILLS } from '../../data/skill/Skills'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { defineEnemy } from '../enemy/Enemy'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // P7-M4 - the mortal basic pick is persisted PlayerData
 // (mortalBasicSkillId) written through the ONE role-write op. The
@@ -17,6 +18,7 @@ function setup() {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   return gameManager
 }
@@ -36,7 +38,7 @@ describe('setMortalBasicSkill — the only role write', () => {
     const gameManager = setup()
     const player = createDefaultPlayer()
 
-    gameManager.progressionOps.learnSkill('linh_bao')
+    gameManager.progressionOps.learnSkill('linh_bao', player)
 
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')).toBe(true)
     expect(player.mortalBasicSkillId).toBe('linh_bao')
@@ -47,7 +49,7 @@ describe('setMortalBasicSkill — the only role write', () => {
     const player = createDefaultPlayer()
     player.realmLevel = 12
 
-    gameManager.progressionOps.learnSkill('linh_bao')
+    gameManager.progressionOps.learnSkill('linh_bao', player)
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
 
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')).toBe(false)
@@ -57,7 +59,7 @@ describe('setMortalBasicSkill — the only role write', () => {
     const gameManager = setup()
     const player = createDefaultPlayer()
 
-    gameManager.progressionOps.learnSkill('hoa_cau_thuat')
+    gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
 
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'hoa_cau_thuat')).toBe(false)
     expect(player.mortalBasicSkillId).toBeUndefined()
@@ -79,8 +81,8 @@ describe('mortal basic resolution through the persisted pick', () => {
     gameManager.setCombatClockSource(combatSource)
 
     const player = createDefaultPlayer()
-    gameManager.progressionOps.learnSkill('tram')
-    gameManager.progressionOps.learnSkill('linh_bao')
+    gameManager.progressionOps.learnSkill('tram', player)
+    gameManager.progressionOps.learnSkill('linh_bao', player)
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')).toBe(true)
 
     gameManager.setActivePlayer(player)
@@ -96,7 +98,7 @@ describe('mortal basic resolution through the persisted pick', () => {
     gameManager.setCombatClockSource(combatSource)
 
     const player = createDefaultPlayer()
-    gameManager.progressionOps.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram', player)
 
     gameManager.setActivePlayer(player)
     gameManager.startBattleWithPlayer(player, ENEMY)
@@ -132,6 +134,7 @@ describe('ritual starter guarantee', () => {
     )
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
     const player = createDefaultPlayer()
     player.realmLevel = 12
@@ -153,7 +156,7 @@ describe('getResolvedSkillRoles — the resolved-role display read', () => {
     const gameManager = setup()
     const player = createDefaultPlayer()
 
-    gameManager.progressionOps.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram', player)
 
     const roles = gameManager.progressionOps.getResolvedSkillRoles(player)
     expect(roles.basic).toMatchObject({ kind: 'def', def: { id: 'tram' } })

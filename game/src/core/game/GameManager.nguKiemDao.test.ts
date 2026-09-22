@@ -6,6 +6,7 @@ import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { forgeCost } from '../kiem-tu/NguKiemDao'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Kiem Tu Reimagined Task 9 — ngu wiring through the real build path:
 // emblem slots on the participant, multi-instance casts land N hits,
@@ -38,6 +39,7 @@ function setup(kiemDaoCount = 3) {
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'sword'
@@ -46,7 +48,7 @@ function setup(kiemDaoCount = 3) {
   player.swordPath = { ...freshSwordPathState(), kiemDaoCount }
 
   gameManager.setActivePlayer(player)
-  gameManager.progressionOps.learnSkill('tram')
+  gameManager.progressionOps.learnSkill('tram', player)
   gameManager.startBattleWithPlayer(player, makeDummyEnemy('ngu_enemy'))
 
   return { gameManager, combatSource, player }

@@ -20,10 +20,10 @@ function createDefaultState(): QuestManagerState {
 }
 
 /**
- * Quest KHÔNG giữ state trong PlayerData (giống productionSites/
- * alchemyJobs) — save như slice riêng trong GameSave (xem
- * SaveSystem.ts). QuestManager chỉ CRUD state runtime, mọi logic
- * (activate/claim/reset) nằm ở QuestSystem (stateless, giống
+ * Quests keep NO state in PlayerData (same as productionSites/
+ * alchemyJobs) - they save as a separate slice in GameSave (see
+ * SaveSystem.ts). QuestManager only CRUDs runtime state; all logic
+ * (activate/claim/reset) lives in QuestSystem (stateless, like
  * BuildingSystem).
  */
 export class QuestManager {
@@ -60,7 +60,7 @@ export class QuestManager {
   /**
    * Remove an active progress entry entirely (P7-M9). Used by
    * QuestSystem.reconcileActiveQuests to drop quests whose realm gate is
-   * no longer satisfied — stale progress restored from a save must not
+   * no longer satisfied - stale progress restored from a save must not
    * keep counting or pay out. 'once' completions live in
    * completedOnceIds and are unaffected.
    */
@@ -101,10 +101,11 @@ export class QuestManager {
   }
 
   /**
-   * Xoá progress 'daily' CHƯA claim, giữ nguyên completedOnceIds (quest
-   * 'once' không liên quan tới daily reset). newActiveDailyQuestIds là
-   * toàn bộ id quest 'daily' đang mở khoá hôm nay — QuestSystem tính
-   * trước rồi truyền vào để QuestManager không cần biết QuestRegistry.
+   * Removes progress for UNCLAIMED 'daily' quests, keeping
+   * completedOnceIds ('once' quests are unrelated to daily reset).
+   * newActiveDailyQuestIds is the full set of 'daily' quest ids unlocked
+   * today - QuestSystem computes it upfront and passes it in so
+   * QuestManager never needs QuestRegistry.
    */
   resetDaily(newActiveDailyQuestIds: string[], now: number): void {
     this.state.active = this.state.active.filter(
@@ -115,16 +116,16 @@ export class QuestManager {
   }
 
   /**
-   * M1 (ARCH-001) — restore replaces the whole state with a DETACHED
+   * M1 (ARCH-001) - restore replaces the whole state with a DETACHED
    * copy: the payload is a value, so mutating it afterwards must not
    * leak into live state (A3).
    */
   restore(state: QuestManagerState): void {
     // Mission A3 defense-in-depth: normalize instead of trusting the
-    // declared shape — a payload that bypassed the validator (active as
+    // declared shape - a payload that bypassed the validator (active as
     // a string, non-finite reset marker) must not crash consumers.
     this.state = {
-      // Canonicalize to the declared element shape — a bypassed payload
+      // Canonicalize to the declared element shape - a bypassed payload
       // carrying extra keys must not self-replicate into future saves
       // (same invariant as the player top-level whitelist, MA-R1-01).
       active: Array.isArray(state.active)

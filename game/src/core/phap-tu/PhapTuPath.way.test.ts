@@ -31,6 +31,7 @@ import {
   HIDDEN_SPELL_SPECIAL_ID,
 } from './PhapTuPath'
 import { getRouteStatModifiers, resolveMaxThe } from './PhapTuRoutes'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Cultivation Path Framework (M4+M7, spec 2026-09-16, audit R6) — way
 // identity drives ALL way-specific behavior. Every spell_pathway-only
@@ -66,6 +67,7 @@ function spellPathManager() {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   return gameManager
 }
 
@@ -379,9 +381,9 @@ describe('way stat facet — shared spell domain emission', () => {
 })
 
 describe('battle build — the way drives the kit branch', () => {
-  function learnAnKit(gameManager: GameManager) {
+  function learnAnKit(gameManager: GameManager, player: PlayerData) {
     for (const skillId of [HIDDEN_SPELL_BASIC_ID, HIDDEN_SPELL_SPECIAL_ID, HIDDEN_SPELL_PASSIVE_ID]) {
-      expect(gameManager.progressionOps.learnSkill(skillId)).toBe(true)
+      expect(gameManager.progressionOps.learnSkill(skillId, player)).toBe(true)
     }
   }
 
@@ -389,7 +391,7 @@ describe('battle build — the way drives the kit branch', () => {
     const gameManager = spellPathManager()
     const player = NGO_DAO_SHAPES.collapsed({ spellPath: { element: 'fire', route: 'no' } })
     gameManager.setActivePlayer(player)
-    learnAnKit(gameManager)
+    learnAnKit(gameManager, player)
 
     gameManager.startBattleWithPlayer(player, dummyEnemy())
 

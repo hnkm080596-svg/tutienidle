@@ -21,6 +21,34 @@ import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
 import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
 import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
 import { validateBodyProgressionPersistedState } from '../../core/realm/body/BodyProgressionSystem'
+import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
+import { SKILLS } from '../../data/skill/Skills'
+import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
+import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
+import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
+import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
+import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
+import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
+
+// M-QI-05 (v73) - canonical Core Node lookups for the coverage checks:
+// a save that loads must leave every levelled learned skill, every
+// way-declared core member, and every owned-node grant resolvable
+// against player.nodeLevels (+ the purchasedNodeIds mirror). Registered
+// metadata only - no nodeRegistry access at the save boundary.
+const SKILL_CORE_BY_ID = new Map(SKILL_CORE_NODES.map((node) => [node.id, node]))
+
+const LEVELLED_SKILL_IDS = new Set(SKILLS.filter((skill) => skill.maxLevel > 1).map((skill) => skill.id))
+
+const PROGRESSION_NODE_BY_ID = new Map(
+  [
+    ...PHAP_TU_NODES,
+    ...PHAP_TU_AN_NODES,
+    ...KIEM_TU_NODES,
+    ...THE_TU_NODES,
+    ...THE_TU_AN_NODES,
+    ...SKILL_CORE_NODES,
+  ].map((node) => [node.id, node]),
+)
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -303,9 +331,19 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.combatAiStrategy', message: 'phải thuộc COMBAT_AI_STRATEGIES' })
   }
 
-  // skillLevels/skillCastCounts are optional records — NaN/negative
-  // values leak into skill XP/UI the same way nodeLevels did.
-  for (const recordKey of ['skillLevels', 'skillCastCounts'] as const) {
+  // M-QI-05 (v73) - the retired dual authority must not persist: any
+  // surviving skillLevels key means the save predates the canonical
+  // Core Node model and is rejected (no migration, no translator).
+  if (Object.prototype.hasOwnProperty.call(player, 'skillLevels')) {
+    issues.push({
+      path: 'player.skillLevels',
+      message: 'field đã retire (v73 — canonical level lives in nodeLevels[core_<id>])',
+    })
+  }
+
+  // skillCastCounts is an optional record — NaN/negative
+  // values leak into cast gates the same way nodeLevels did.
+  for (const recordKey of ['skillCastCounts'] as const) {
     const record = player[recordKey]
 
     if (record === undefined) {
@@ -391,6 +429,36 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
           path: `player.nodeLevels.${nodeId}`,
           message: 'phải là số hữu hạn >= 0',
         })
+        continue
+      }
+
+      // M-QI-05 (v73) - core_<skillId> entries are stricter: registered
+      // catalog member, integer level inside [1, maxLevel], and present
+      // in the purchasedNodeIds mirror (grant = ownership).
+      if (nodeId.startsWith('core_')) {
+        const core = SKILL_CORE_BY_ID.get(nodeId)
+
+        if (core === undefined) {
+          issues.push({
+            path: `player.nodeLevels.${nodeId}`,
+            message: 'core node không tồn tại trong catalog đã đăng ký',
+          })
+          continue
+        }
+
+        if (!Number.isInteger(level) || level < 1 || level > (core.maxLevel ?? 1)) {
+          issues.push({
+            path: `player.nodeLevels.${nodeId}`,
+            message: `phải là số nguyên trong [1, ${core.maxLevel ?? 1}]`,
+          })
+        }
+
+        if (purchasedNodeIds && !purchasedNodeIds.includes(nodeId)) {
+          issues.push({
+            path: `player.nodeLevels.${nodeId}`,
+            message: 'core node đã grant phải nằm trong purchasedNodeIds',
+          })
+        }
       }
     }
   }
@@ -747,6 +815,128 @@ function validateSkillEntries(entries: unknown[], path: string, issues: ShapeIss
         issues.push({
           path: `${path}[${i}].${retiredKey}`,
           message: 'field đã retire (v71 - learned = membership; roles resolve from the way kit)',
+        })
+      }
+    }
+  }
+}
+
+/**
+ * M-QI-05 (v73) - Core Node coverage between the learned-skills array,
+ * the active way's coreSkillIds, and owned nodes' grantsSkillCoreIds on
+ * one side, and player.nodeLevels on the other. Runs only when both
+ * slices already shaped (missing nodeLevels is reported there).
+ */
+function validateSkillCoreCoverage(
+  player: Record<string, unknown>,
+  skills: unknown[],
+  issues: ShapeIssue[],
+) {
+  const nodeLevels = isObject(player.nodeLevels) ? player.nodeLevels : undefined
+
+  const coreGranted = (skillId: string): boolean =>
+    nodeLevels !== undefined &&
+    isNonNegativeFiniteNumber(nodeLevels[skillCoreNodeId(skillId)]) &&
+    (nodeLevels[skillCoreNodeId(skillId)] as number) >= 1
+
+  // 1. Every learned levelled template must own its core.
+  for (let i = 0; i < skills.length; i += 1) {
+    const entry = skills[i]
+
+    if (!isObject(entry) || typeof entry.id !== 'string' || !LEVELLED_SKILL_IDS.has(entry.id)) {
+      continue
+    }
+
+    if (!coreGranted(entry.id)) {
+      issues.push({
+        path: `skills[${i}].id`,
+        message: `skill đã học '${entry.id}' thiếu core node ${skillCoreNodeId(entry.id)} (level >= 1)`,
+      })
+    }
+  }
+
+  // 2. The committed way's coreSkillIds must be granted.
+  const pathId = typeof player.cultivationPath === 'string' ? player.cultivationPath : undefined
+  const wayId = typeof player.cultivationWay === 'string' ? player.cultivationWay : undefined
+  const way =
+    pathId !== undefined && wayId !== undefined && pathId in CULTIVATION_PATH_MODULES
+      ? Object.values(CULTIVATION_PATH_MODULES[pathId as CultivationPathId].ways).find(
+          (candidate) => candidate?.id === wayId,
+        )
+      : undefined
+
+  for (const skillId of way?.coreSkillIds ?? []) {
+    if (!coreGranted(skillId)) {
+      issues.push({
+        path: 'player.cultivationWay',
+        message: `way '${wayId}' sở hữu core '${skillId}' nhưng nodeLevels thiếu grant`,
+      })
+    }
+  }
+
+  // 3+4. Canonical ownership (D9d/D9f): a progression node is OWNED
+  // exactly when nodeLevels[id] >= 1 - purchasedNodeIds is only the
+  // mirror, never the ownership predicate. Collecting grant sources
+  // and forward requirements from the same canonical scan keeps a
+  // stale/phantom mirror from fabricating or hiding ownership.
+  const learnedSkillIds = new Set(
+    skills
+      .filter(
+        (entry): entry is Record<string, unknown> =>
+          isObject(entry) && typeof entry.id === 'string' && LEVELLED_SKILL_IDS.has(entry.id),
+      )
+      .map((entry) => entry.id as string),
+  )
+
+  const wayGrantedIds = new Set(way?.coreSkillIds ?? [])
+  const nodeGrantedIds = new Set<string>()
+
+  if (nodeLevels !== undefined) {
+    for (const [nodeId, level] of Object.entries(nodeLevels)) {
+      if (!isNonNegativeFiniteNumber(level) || level < 1) {
+        continue
+      }
+
+      const node = PROGRESSION_NODE_BY_ID.get(nodeId)
+
+      // 3. (D9d) Every owned node's grantsSkillCoreIds must be granted.
+      for (const skillId of node?.effect?.grantsSkillCoreIds ?? []) {
+        nodeGrantedIds.add(skillId)
+
+        if (!coreGranted(skillId)) {
+          issues.push({
+            path: `player.nodeLevels.${nodeId}`,
+            message: `node '${nodeId}' grant core '${skillId}' nhưng nodeLevels thiếu grant`,
+          })
+        }
+      }
+    }
+
+    // 4. (D9f) Inverse membership: every OWNED registered core must
+    // have at least one satisfied declared source - its levelsSkillId
+    // is a learned levelled Skill template, OR a canonically-owned
+    // node's grantsSkillCoreIds lists it, OR the active way's
+    // coreSkillIds lists it. An owned core with no source is a state
+    // no legal path can produce (e.g. core_cuong_quyen surviving its
+    // cuong_chien reset, or a fake skills[] entry pointing at a native
+    // def id - only LEVELLED_SKILL_IDS entries count as learned).
+    for (const [nodeId, level] of Object.entries(nodeLevels)) {
+      if (!nodeId.startsWith('core_') || !isNonNegativeFiniteNumber(level) || level < 1) {
+        continue
+      }
+
+      const skillId = SKILL_CORE_BY_ID.get(nodeId)?.levelsSkillId
+
+      // Unregistered cores are already reported by the key validation
+      // above; only registered ones reach the source check.
+      if (skillId === undefined) {
+        continue
+      }
+
+      if (!learnedSkillIds.has(skillId) && !nodeGrantedIds.has(skillId) && !wayGrantedIds.has(skillId)) {
+        issues.push({
+          path: `player.nodeLevels.${nodeId}`,
+          message: `core '${nodeId}' không có nguồn grant (learned skill / owned node grant / way.coreSkillIds)`,
         })
       }
     }
@@ -1262,6 +1452,14 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   if (skills) {
     validateSkillEntries(skills, 'skills', issues)
+  }
+
+  // M-QI-05 (v73) - Core Node coverage: the learned levelled skills,
+  // the active way's coreSkillIds, and every owned node's
+  // grantsSkillCoreIds must resolve to granted cores (level >= 1) in
+  // player.nodeLevels - restore never re-derives ownership.
+  if (skills && isObject(parsed.player)) {
+    validateSkillCoreCoverage(parsed.player, skills, issues)
   }
 
   if (buildings) {

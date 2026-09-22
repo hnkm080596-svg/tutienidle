@@ -99,4 +99,11 @@
 // shape validation delegates to the BodyProgression authority and the
 // restore preflight asserts chapter integrity before any owner mutation.
 // Save v71 is rejected (dev phase, no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 72 as const
+// v73 (2026-09-26, M-QI-05 canonical Core Node level): the retired
+// dual authority player.skillLevels is removed outright - presence is
+// rejected. nodeLevels gains core_<skillId> entries validated against
+// the registered SKILL_CORE_NODES catalog (integer range + purchased
+// mirror + coverage of learned levelled skills, way coreSkillIds, and
+// owned-node grantsSkillCoreIds). Save v72 is rejected (dev phase, no
+// migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 73 as const

@@ -286,6 +286,11 @@ export const HIDDEN_BODY_PATHWAY: PathWayDefinition = {
       HO_VE_BUFF.id,
     ],
   },
+  // M-QI-05 - the three top-level kit actions own canonical Core Nodes
+  // (granted at ritual commit); the reactive payloads are internal
+  // actions inheriting tham_the's level via progressionOwnerId, so
+  // they get no core.
+  coreSkillIds: [THAM_THE.id, TU_THE.id, BACH_UNG.id],
   // P1 - the hidden way's fixed tree tag (TheTuAnNodes).
   nodeTreeTag: 'the_tu_an',
   // P1-M3 - same root ownership record as body_pathway; the hidden_body_pathway roots are

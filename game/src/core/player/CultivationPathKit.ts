@@ -8,6 +8,7 @@ import type { MainStatKey } from '../stats/StatTypes'
 import type { ArtifactId } from '../artifact/Artifact'
 import type { PlayerData } from './Player'
 import { getCastLeveledSkillLevel } from '../skill/CastLeveling'
+import { getSkillCoreLevel } from '../progression/SkillCoreLevel'
 import {
   HIDDEN_SPELL_PATHWAY,
   SPELL_PATHWAY,
@@ -76,9 +77,9 @@ export interface CultivationPathRealmReward {
 }
 
 // Ritual-time offer gate, evaluated live against the player (never
-// stored). requiresSkillLevel reads the skillLevels mirror (hidden_body_pathway's
-// huy_quyen Lv3; hidden_sword_pathway's tram Lv3 - exact port of the kiem_tu_an node's
-// skillCastCount level gate, which reads skillLevels). The linh_bao
+// stored). requiresSkillLevel reads the canonical core level (hidden_body_pathway's
+// huy_quyen Lv3; hidden_sword_pathway's tram Lv3 - nodeLevels[core_<id>]
+// via getSkillCoreLevel, M-QI-05). The linh_bao
 // gate for hidden_spell_pathway is cast-count based, so it gets a bespoke field:
 // requiresSkillCastLevel is evaluated by isCultivationPathOffered via
 // skillCastCounts + CAST_LEVELING_THRESHOLDS (through
@@ -244,6 +245,16 @@ export interface PathWayDefinition {
   // hidden_spell_pathway kit rides this channel too; its third member
   // is a passive, not an active, so it lives on passiveSkillIds instead.
   skillIds?: readonly string[]
+
+  // M-QI-05 / QI-D3 - Core Nodes this way owns and grants at
+  // initiation: native TurnSkillDefinition actions (body/sword/hidden
+  // kits) have no Skill template, so their canonical level rides the
+  // nodeLevels authority directly via grantsSkillCore-style Core
+  // Nodes (core_<skillId>). chooseCultivationPath preflights every
+  // member's registered core BEFORE the irreversible path/way commit
+  // and grants them inside the commit block - a missing/mismatched
+  // core fails the whole ritual with zero mutation.
+  coreSkillIds?: readonly string[]
 
   // P7-M2 - passives learned at path initiation (replaces the retired
   // technique-carried innateSkillId).
@@ -452,13 +463,14 @@ export function getActiveWayDefinition(player: PathWayRead): PathWayDefinition |
 // (QuanKhiPanel.vue via listOfferableWays) and
 // chooseCultivationPath() so the UI can never show a choice the ritual
 // would reject. A way with no offerGate is always offered. Gates read
-// the live mirrors: requiresSkillLevel -> player.skillLevels;
-// requiresSkillCastLevel -> the cast-leveled skill's level derived from
-// player.skillCastCounts via CAST_LEVELING_THRESHOLDS.
+// the canonical mirrors: requiresSkillLevel -> nodeLevels[core_<id>]
+// via getSkillCoreLevel (M-QI-05); requiresSkillCastLevel -> the
+// cast-leveled skill's level derived from player.skillCastCounts via
+// CAST_LEVELING_THRESHOLDS.
 export function isCultivationPathOffered(way: PathWayDefinition, player: PlayerData): boolean {
   const requiredSkill = way.offerGate?.requiresSkillLevel
 
-  if (requiredSkill && (player.skillLevels?.[requiredSkill.skillId] ?? 0) < requiredSkill.level) {
+  if (requiredSkill && getSkillCoreLevel(player, requiredSkill.skillId) < requiredSkill.level) {
     return false
   }
 

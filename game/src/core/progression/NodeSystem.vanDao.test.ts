@@ -5,6 +5,7 @@ import {
   purchaseNode,
   upgradeNode,
 } from './NodeSystem'
+import { NodeRegistry } from './NodeRegistry'
 import { createDefaultPlayer } from '../player/Player'
 import type { ProgressionNode } from './ProgressionNode'
 
@@ -115,7 +116,8 @@ describe('NodeSystem — Van Dao free-purchase roll (M2)', () => {
     expect(player.skillInsight).toBe(13) // 20 - 7 paid
     expect(player.nodeFreePurchaseRecord['test_growth']).toBe(2)
 
-    const registry = { getAll: () => [node] }
+    const registry = new NodeRegistry()
+    registry.register(node)
     const refunded = devResetBranch(player, registry, 'test_branch')
 
     // Total level costs 2+3+4=9, waived 2 -> actual paid 7 refunded.
@@ -138,7 +140,8 @@ describe('NodeSystem — Van Dao free-purchase roll (M2)', () => {
 
     player.selectedTalentIds = [] // talent removed
 
-    const registry = { getAll: () => [node] }
+    const registry = new NodeRegistry()
+    registry.register(node)
     const refunded = devResetBranch(player, registry, 'test_branch')
 
     expect(refunded).toBe(0) // node was free — nothing paid, nothing refunded

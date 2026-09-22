@@ -7,6 +7,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import type { Stage } from '../stage/Stage'
 import type { StatusVfxAttachedEvent, StatusVfxRemovedEvent } from '../battle/BattleEvents'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Phase A6 (9.5 #7) — production wiring regression: a real turn-based
 // fight must emit status_vfx_* events so the Phaser buff-icon pipeline
@@ -64,13 +65,14 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     player.spellPath = { element: 'wood', route: 'dot' }
 
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     gameManager.catalogOps.registerEnemyTemplates([makeDummyEnemy()])
     gameManager.catalogOps.registerStages([stageFixture()])
     gameManager.setActivePlayer(player)
     // The element basic must be LEARNED — the committed element alone
     // does not grant it (selectSpellPathElement does, via the root's
     // unlocksSkillIds). The old static fallback masked the missing skill.
-    expect(gameManager.progressionOps.learnSkill('doc_chuong')).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('doc_chuong', player)).toBe(true)
 
     // ARCH-002 (M7): every engine construction now runs WITH
     // BUFF_REGISTRY — non-stage battles (startBattleWithPlayer) included,

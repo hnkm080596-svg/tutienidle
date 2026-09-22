@@ -7,6 +7,7 @@ import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { aggregateNodeStatModifiers } from '../../core/progression/NodeSystem'
 import type { ElementType } from '../../core/element/ElementType'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Phap Tu Reimagined (2026-09-15 plan, Task 6) — the new tree replaces
 // the old unlocksElement/keystoneReaction/reaction_path architecture:
@@ -166,6 +167,7 @@ describe('PhapTuNodes reimagined — element authority', () => {
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
@@ -224,6 +226,7 @@ describe('PhapTuNodes reimagined — element authority', () => {
       SKILLS.filter((skill) => skill.id !== 'hoa_cau_thuat'),
     )
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'

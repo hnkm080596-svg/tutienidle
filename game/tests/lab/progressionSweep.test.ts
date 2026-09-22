@@ -76,7 +76,7 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
         equipped.grade = 2
       }
     }
-    lab.manager.progressionOps.learnSkill('hoa_cau_thuat')
+    lab.manager.progressionOps.learnSkill('hoa_cau_thuat', lab.player)
     lab.manager.realmAdvanceOps.syncRealmPassive(lab.player)
 
     // Skill leveling + node tree - the intended qi/foundation power
@@ -98,7 +98,7 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
       if (!bought) break
     }
     for (let i = 0; i < 10; i++) {
-      if (!lab.manager.progressionOps.upgradeSkill('hoa_cau_thuat', lab.player)) break
+      if (!lab.manager.progressionOps.levelUpSkill('hoa_cau_thuat', lab.player)) break
     }
   }
 

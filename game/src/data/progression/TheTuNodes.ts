@@ -159,7 +159,11 @@ const CUONG_ROOT: ProgressionNode = {
     { kind: 'realm', realmId: 'qi_refining' },
     { kind: 'excludesNode', nodeId: 'tran_the' },
   ],
-  effect: {},
+  effect: {
+    // M-QI-05 - the Cuong Chien kit's Core Nodes ride the root grant
+    // (revoked with refunds if the branch is dev-reset).
+    grantsSkillCoreIds: ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the'],
+  },
   branchTag: 'the_tu',
 }
 
@@ -247,7 +251,10 @@ const TRAN_ROOT: ProgressionNode = {
     { kind: 'realm', realmId: 'qi_refining' },
     { kind: 'excludesNode', nodeId: 'cuong_chien' },
   ],
-  effect: {},
+  effect: {
+    // M-QI-05 - phan_chinh is an internal emblem action, not a core.
+    grantsSkillCoreIds: ['tran_ap', 'son_nhac'],
+  },
   branchTag: 'the_tu',
 }
 

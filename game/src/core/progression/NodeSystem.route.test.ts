@@ -16,6 +16,7 @@ import {
   switchRoute,
   upgradeNode,
 } from './NodeSystem'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Phap Tu Reimagined Task 4 — routeTag gating + switchRoute refund.
 // Route-tagged nodes only exist while the player's route matches;
@@ -292,7 +293,8 @@ describe('GameManagerProgressionOps.switchRoute', () => {
     // The committed element's basic must be learned — round-3 fail-fast
     // throws when a required basic is missing.
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
-    expect(gameManager.progressionOps.learnSkill('hoa_cau_thuat')).toBe(true)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    expect(gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)).toBe(true)
 
     gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('route_stage')!, false)
 
@@ -322,7 +324,8 @@ describe('GameManagerProgressionOps.switchRoute', () => {
 
     // Required basic for the committed element (round-3 fail-fast).
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
-    expect(gameManager.progressionOps.learnSkill('hoa_cau_thuat')).toBe(true)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    expect(gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)).toBe(true)
 
     gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('route_stage')!, false)
 

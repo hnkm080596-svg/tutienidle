@@ -6,6 +6,7 @@ import { equipment } from '../../data/equipment/equipment'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // QA-2026-09-02-001 — RESOLVED 2026-09-02 qua redesign Task 9.1 (spec v6):
 // chooseCultivationPath (Lễ Nhập Môn) là feature-unlock SAU đột phá
@@ -19,6 +20,7 @@ function setup() {
   manager.catalogOps.registerSkillTemplates(SKILLS)
   manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   manager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+  manager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   manager.catalogOps.registerEquipment(equipment)
   return manager
 }

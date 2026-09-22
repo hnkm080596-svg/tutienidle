@@ -3,33 +3,32 @@
 // (kể cả Phàm Nhân/Kiếm Tu): "chọn 1 trong các kỹ năng cố định để
 // xem chi tiết".
 import { computed } from 'vue'
-import type { Skill } from '@/core/skill/Skill'
+import type { SkillPathEntry } from './SkillPathEntry'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import { REALMS } from '@/data/realms/realm'
 
 const props = defineProps<{
-  skills: Skill[]
+  entries: SkillPathEntry[]
   selectedId: string | null
 }>()
 
 const emit = defineEmits<{
-  select: [skill: Skill]
+  select: [entry: SkillPathEntry]
 }>()
 
 const groups = computed(() => {
-  const byRealm = new Map<string, Skill[]>()
-  for (const skill of props.skills) {
-    const realmId = skill.requiredRealmId ?? 'mortal'
-    const skills = byRealm.get(realmId) ?? []
-    skills.push(skill)
-    byRealm.set(realmId, skills)
+  const byRealm = new Map<string, SkillPathEntry[]>()
+  for (const entry of props.entries) {
+    const entries = byRealm.get(entry.realmId) ?? []
+    entries.push(entry)
+    byRealm.set(entry.realmId, entries)
   }
   return [...byRealm.entries()]
     .sort(([left], [right]) => getRealmIndex(left) - getRealmIndex(right))
-    .map(([realmId, skills]) => ({
+    .map(([realmId, entries]) => ({
       realmId,
       label: REALMS.find(realm => realm.id === realmId)?.name ?? realmId,
-      skills,
+      entries,
     }))
 })
 </script>
@@ -39,15 +38,15 @@ const groups = computed(() => {
     <section v-for="group in groups" :key="group.realmId" class="skill-path-list__group">
       <span class="skill-path-list__title">{{ group.label }}</span>
       <button
-        v-for="skill in group.skills"
-        :key="skill.id"
+        v-for="entry in group.entries"
+        :key="entry.id"
         type="button"
         class="skill-path-list__card"
-        :class="{ 'is-selected': skill.id === selectedId }"
-        @click="emit('select', skill)"
+        :class="{ 'is-selected': entry.id === selectedId }"
+        @click="emit('select', entry)"
       >
-        <span class="skill-path-list__label">{{ skill.name }}</span>
-        <span class="skill-path-list__meta">Lv. {{ skill.level }}/{{ skill.maxLevel }}</span>
+        <span class="skill-path-list__label">{{ entry.name }}</span>
+        <span class="skill-path-list__meta">Lv. {{ entry.level }}/{{ entry.maxLevel }}</span>
       </button>
     </section>
   </div>

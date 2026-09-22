@@ -4,7 +4,7 @@ import { buffs } from './buffs'
 import { BUFF_REGISTRY } from './BuffRegistry'
 import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
 
-// P7-M-G (beta companion roster) — the four support buffs behind
+// P7-M-G (beta companion roster) - the four support buffs behind
 // than_nong (healer) and khai_minh (buffer). Friendly party buffs pin
 // non-stacking keep/refresh semantics; the ward marker mirrors
 // son_nhac_ho_the's replace-instance contract so a recast replaces the

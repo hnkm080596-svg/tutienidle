@@ -16,6 +16,7 @@ import { COMPANIONS, type CompanionDefinition } from '../../data/companion/Compa
 import { MAX_THE } from '../combat/CombatTypes'
 import type { PlayerData } from '../player/Player'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // The Tu Reimagined (plan Task 21, spec section 6) — An end-to-end:
 // gated ritual -> ho_mon/phan_mon purchase -> GameManager battle build
@@ -66,7 +67,9 @@ function makeManager() {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(THE_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerProgressionNodes(THE_TU_AN_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   return { gameManager, combatSource }
@@ -90,7 +93,7 @@ function mortalAtGate(): PlayerData {
   player.realmId = 'mortal'
   player.realmLevel = CORE_REALM_LEVEL
   player.skillInsight = 99
-  player.skillLevels = { huy_quyen: 3 }
+  player.nodeLevels.core_huy_quyen = 3
   return player
 }
 
@@ -296,7 +299,7 @@ describe('mortal basic wiring — huy_quyen is castable as the picked basic (spe
     player.realmLevel = CORE_REALM_LEVEL
     player.baseStats = asBaseStats({ ...player.baseStats, speed: 500 })
     for (const skillId of ['tram', 'huy_quyen'] as const) {
-      gameManager.progressionOps.learnSkill(skillId)
+      gameManager.progressionOps.learnSkill(skillId, player)
     }
     if (basicSkillId !== null) {
       gameManager.progressionOps.setMortalBasicSkill(player, basicSkillId)
@@ -326,7 +329,7 @@ describe('mortal basic wiring — huy_quyen is castable as the picked basic (spe
 
   it('a non-precursor pick is rejected and falls back to the creation-granted tram', () => {
     const { gameManager, combatSource, player } = mortalWithBasic(null)
-    gameManager.progressionOps.learnSkill('bat_kiem_thuat')
+    gameManager.progressionOps.learnSkill('bat_kiem_thuat', player)
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'bat_kiem_thuat')).toBe(false)
 
     const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_mortal_bk'))

@@ -5,6 +5,8 @@ import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { CULTIVATION_PATH_MODULES, isCultivationPathOffered } from '../player/CultivationPathKit'
 import { CAST_LEVELING_THRESHOLDS, HUY_QUYEN_L3_CASTS } from '../skill/SkillSystem'
+import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
+import { skillCoreNodeId } from '../progression/SkillCoreLevel'
 
 // The Tu Reimagined (spec 2026-09-15, T6 + section 2.3) — Task 2:
 // 1. huy_quyen is a mortal cast-leveled basic (Lv2@1k, Lv3@10k casts),
@@ -19,6 +21,7 @@ function setup() {
 
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   return gameManager
 }
@@ -29,10 +32,10 @@ function setupMortal(huyQuyenCasts = 0) {
   player.realmId = 'mortal'
   player.realmLevel = 12
   player.skillCastCounts = { huy_quyen: huyQuyenCasts }
-  player.skillLevels = { huy_quyen: huyQuyenCasts >= 10000 ? 3 : huyQuyenCasts >= 1000 ? 2 : 1 }
+  player.nodeLevels[skillCoreNodeId('huy_quyen')] = huyQuyenCasts >= 10000 ? 3 : huyQuyenCasts >= 1000 ? 2 : 1
 
-  gameManager.progressionOps.learnSkill('tram')
-  gameManager.progressionOps.learnSkill('huy_quyen')
+  gameManager.progressionOps.learnSkill('tram', player)
+  gameManager.progressionOps.learnSkill('huy_quyen', player)
 
   return { gameManager, player }
 }
@@ -49,22 +52,28 @@ describe('huy_quyen — mortal cast-leveled skill', () => {
 
   it('auto-levels by cast count: Lv2 at 1000, Lv3 at 10000, never Lv4', () => {
     const gameManager = setup()
-    gameManager.progressionOps.learnSkill('huy_quyen')
+    const player = createDefaultPlayer()
+    gameManager.setActivePlayer(player)
+    gameManager.progressionOps.learnSkill('huy_quyen', player)
     const skill = gameManager.skillManager.get('huy_quyen')!
+    const coreId = skillCoreNodeId('huy_quyen')
 
     for (let cast = 0; cast < 999; cast++) gameManager.skillSystem.recordCast('huy_quyen')
-    expect(skill.level).toBe(1)
+    expect(player.nodeLevels[coreId]).toBe(1)
 
     gameManager.skillSystem.recordCast('huy_quyen')
-    expect(skill.level).toBe(2)
+    expect(player.nodeLevels[coreId]).toBe(2)
 
     for (let cast = 1000; cast < 10000; cast++) gameManager.skillSystem.recordCast('huy_quyen')
-    expect(skill.level).toBe(3)
+    expect(player.nodeLevels[coreId]).toBe(3)
     expect(skill.totalExperience).toBe(10000)
 
     for (let cast = 0; cast < 5000; cast++) gameManager.skillSystem.recordCast('huy_quyen')
-    expect(skill.level).toBe(3)
+    expect(player.nodeLevels[coreId]).toBe(3)
     expect(skill.totalExperience).toBe(15000)
+
+    // Authored level stays frozen - canonical progress is the core.
+    expect(skill.level).toBe(1)
   })
 
   it('CAST_LEVELING_THRESHOLDS covers tram + huy_quyen; HUY_QUYEN_L3_CASTS reads the table', () => {
@@ -78,18 +87,18 @@ describe('huy_quyen — mortal cast-leveled skill', () => {
     const player = createDefaultPlayer()
     player.skillInsight = 999
 
-    gameManager.progressionOps.learnSkill('huy_quyen')
+    gameManager.progressionOps.learnSkill('huy_quyen', player)
 
-    expect(gameManager.skillSystem.getSkillUpgradeInsightCost('huy_quyen')).toBeUndefined()
-    expect(gameManager.skillSystem.upgradeSkill('huy_quyen', player)).toBe(false)
-    expect(gameManager.skillManager.get('huy_quyen')!.level).toBe(1)
+    expect(gameManager.progressionOps.getSkillCoreUpgradeCost('huy_quyen', player)).toBeUndefined()
+    expect(gameManager.progressionOps.levelUpSkill('huy_quyen', player)).toBe(false)
+    expect(player.nodeLevels[skillCoreNodeId('huy_quyen')]).toBe(1)
   })
 })
 
 describe('isCultivationPathOffered — ritual offer gate', () => {
   it('the hien ways are always offered; ung_the requires huy_quyen Lv3', () => {
     const below = createDefaultPlayer()
-    below.skillLevels = { huy_quyen: 2 }
+    below.nodeLevels[skillCoreNodeId('huy_quyen')] = 2
 
     expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.body.ways.body_pathway!, below)).toBe(true)
     expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.spell.ways.spell_pathway!, below)).toBe(true)
@@ -97,7 +106,7 @@ describe('isCultivationPathOffered — ritual offer gate', () => {
     expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.body.ways.hidden_body_pathway!, below)).toBe(false)
 
     const met = createDefaultPlayer()
-    met.skillLevels = { huy_quyen: 3 }
+    met.nodeLevels[skillCoreNodeId('huy_quyen')] = 3
 
     expect(isCultivationPathOffered(CULTIVATION_PATH_MODULES.body.ways.hidden_body_pathway!, met)).toBe(true)
   })
@@ -143,5 +152,75 @@ describe('chooseCultivationPath — body ritual', () => {
     expect(gameManager.skillManager.has('tram')).toBe(true)
     expect(gameManager.skillManager.has('huy_quyen')).toBe(true)
     expect(player.realmId).toBe('qi_refining')
+  })
+})
+
+describe('ritual preflight — core metadata atomicity (M-QI-05)', () => {
+  function setupWithTamperedCore(coreId: string, maxLevel: number) {
+    const gameManager = new GameManager()
+
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerProgressionNodes(
+      SKILL_CORE_NODES.map((node) => (node.id === coreId ? { ...node, maxLevel } : node)),
+    )
+
+    return gameManager
+  }
+
+  function ritualSnapshot(gameManager: GameManager, player: ReturnType<typeof createDefaultPlayer>) {
+    return {
+      player: structuredClone(player),
+      learnedIds: gameManager.skillManager.getAll().map((skill) => skill.id),
+      techniqueId: gameManager.techniqueManager.getActive()?.id,
+    }
+  }
+
+  function expectRitualUnchanged(
+    gameManager: GameManager,
+    player: ReturnType<typeof createDefaultPlayer>,
+    before: ReturnType<typeof ritualSnapshot>,
+  ) {
+    expect(player).toEqual(before.player)
+    expect(gameManager.skillManager.getAll().map((skill) => skill.id)).toEqual(before.learnedIds)
+    expect(gameManager.techniqueManager.getActive()?.id).toBe(before.techniqueId)
+  }
+
+  it('a tampered STARTER core (core_huy_quyen maxLevel) rejects the hien ritual with zero mutation', () => {
+    // starterBasicSkillId 'huy_quyen' sits in the atomic preflight list:
+    // template maxLevel 3 vs tampered core maxLevel 99 -> preflightLearnableSkill
+    // fails BEFORE applyPathChoice, so path/way/realm/technique/mortal
+    // pick/skills/nodeLevels stay byte-identical.
+    const gameManager = setupWithTamperedCore('core_huy_quyen', 99)
+    const player = createDefaultPlayer()
+    player.realmId = 'mortal'
+    player.realmLevel = 12
+    player.mortalBasicSkillId = 'tram'
+    gameManager.progressionOps.learnSkill('tram', player)
+
+    const before = ritualSnapshot(gameManager, player)
+
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)).toBe(false)
+    expectRitualUnchanged(gameManager, player, before)
+  })
+
+  it('a tampered NATIVE core (core_tham_the maxLevel) rejects the ung_the ritual with zero mutation', () => {
+    // preflightSkillCoreGrant compares the registered core against the
+    // authored catalog policy (10 for damage-bearing natives): a
+    // tampered/mismatched maxLevel fails BEFORE the path/way commit.
+    const gameManager = setupWithTamperedCore('core_tham_the', 99)
+    const player = createDefaultPlayer()
+    player.realmId = 'mortal'
+    player.realmLevel = 12
+    player.skillCastCounts = { huy_quyen: 10000 }
+    player.nodeLevels[skillCoreNodeId('huy_quyen')] = 3
+    player.mortalBasicSkillId = 'tram'
+    gameManager.progressionOps.learnSkill('tram', player)
+    gameManager.progressionOps.learnSkill('huy_quyen', player)
+
+    const before = ritualSnapshot(gameManager, player)
+
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)).toBe(false)
+    expectRitualUnchanged(gameManager, player, before)
   })
 })

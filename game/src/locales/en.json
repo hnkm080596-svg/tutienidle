@@ -177,6 +177,11 @@
       "elementTabs": {
         "aria": "Choose Pháp Tu element"
       },
+      "centerTabs": {
+        "aria": "Center column view",
+        "tree": "Node Tree",
+        "detail": "Detail"
+      },
       "detail": {
         "empty": "Select a skill to view details.",
         "upgrade": "Upgrade ({cost} Insight)",

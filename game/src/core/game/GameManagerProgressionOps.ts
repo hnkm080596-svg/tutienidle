@@ -12,7 +12,11 @@ import {
   purchaseNode as purchaseNodeSystem,
   switchRoute as switchRouteSystem,
   upgradeNode as upgradeNodeSystem,
+  grantSkillCore,
 } from '../progression/NodeSystem'
+import { getSkillCoreLevel, skillCoreNodeId } from '../progression/SkillCoreLevel'
+import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
+import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { Skill } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
@@ -31,7 +35,8 @@ import {
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { collectTalentEffects } from '../talent/TalentEffects'
-import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
+import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
+import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
@@ -71,6 +76,10 @@ export class GameManagerProgressionOps {
       // GameManager owns the override so combat + this UI accessor
       // resolve identically; setPathRuntimeResolver affects both).
       resolvePathRuntime: (player: PlayerData) => CultivationPathRuntime
+      // M-QI-05 - Insight-channel level-up notification (GameManager
+      // owns notifications; the cast channel notifies via the
+      // castCountSink instead - one owner per channel).
+      onSkillLevelUp?: (skillId: string, newLevel: number, levelsGained: number) => void
     },
   ) {}
 
@@ -94,16 +103,13 @@ export class GameManagerProgressionOps {
     }
 
     // Grant by FIRST talent (collectTalentEffects sorts by spec sec.3.2 id):
-    // each combat talent declares 1-2 combat_passive effects.
+    // each combat talent declares 1-2 combat_passive effects. M-QI-05 -
+    // the canonical learn funnel owns insertion (TALENT_PASSIVE_SKILLS
+    // are registered templates; learn()'s structuredClone covers the
+    // per-battle passiveModifiers copy the old direct add needed).
     for (const effect of collectTalentEffects(player.selectedTalentIds)) {
       if (effect.kind === 'combat_passive') {
-        const template = getTalentPassiveSkill(effect.passiveSkillId)
-
-        if (template) {
-          // Shallow copy - passiveModifiers stacks are per-battle runtime
-          // state, must not share the object with the template data.
-          this.deps.skillManager.add({ ...template, passiveModifiers: template.passiveModifiers?.map((modifier) => ({ ...modifier })) })
-        }
+        this.learnSkill(effect.passiveSkillId, player)
       }
     }
   }
@@ -122,14 +128,106 @@ export class GameManagerProgressionOps {
     return activePlayer === undefined ? undefined : getActiveElement(activePlayer)
   }
 
-  learnSkill(skillId: string): boolean {
+  /**
+   * M-QI-05 - canonical learn seam. Atomic preflight BEFORE any
+   * SkillManager mutation: a levelled template (maxLevel > 1) must
+   * resolve a registered Core Node (id convention + levelsSkillId +
+   * maxLevel match) - a missing/mismatched core is a data integrity
+   * failure, never a silent partial learn. On success the core is
+   * granted (nodeLevels[core] = 1 + mirror) via NodeSystem.
+   */
+  learnSkill(skillId: string, player: PlayerData): boolean {
     const template = this.deps.skillTemplates.get(skillId)
 
     if (!template) {
       return false
     }
 
-    return this.deps.skillSystem.learn(template)
+    const core = template.maxLevel > 1 ? this.resolveSkillCore(skillId) : undefined
+
+    if (template.maxLevel > 1 && (core === undefined || (core.maxLevel ?? 1) !== template.maxLevel)) {
+      return false
+    }
+
+    if (!this.deps.skillSystem.learn(template)) {
+      return false
+    }
+
+    if (template.maxLevel > 1) {
+      grantSkillCore(player, this.deps.nodeRegistry.get(skillCoreNodeId(skillId)))
+    }
+
+    return true
+  }
+
+  /** Registered core node for a skill, or undefined on any mismatch. */
+  private resolveSkillCore(skillId: string): ProgressionNode | undefined {
+    const coreId = skillCoreNodeId(skillId)
+
+    if (!this.deps.nodeRegistry.has(coreId)) {
+      return undefined
+    }
+
+    const node = this.deps.nodeRegistry.get(coreId)
+
+    return node.levelsSkillId === skillId ? node : undefined
+  }
+
+  /**
+   * M-QI-05 - preflight a learnable skill id: template must exist AND,
+   * when the template is levelled, its registered core must resolve
+   * (levelsSkillId + maxLevel match). Used by purchase/unlock/ritual
+   * preflights so a missing core fails the whole transaction BEFORE
+   * insight is spent or the path commits.
+   */
+  preflightLearnableSkill(skillId: string): boolean {
+    const template = this.deps.skillTemplates.get(skillId)
+
+    if (!template) {
+      return false
+    }
+
+    if (template.maxLevel <= 1) {
+      return true
+    }
+
+    const core = this.resolveSkillCore(skillId)
+
+    return core !== undefined && (core.maxLevel ?? 1) === template.maxLevel
+  }
+
+  /**
+   * Preflight a grantsSkillCoreIds / coreSkillIds member: registered
+   * core with matching levelsSkillId AND the authored catalog's
+   * maxLevel - a tampered/mismatched native core fails BEFORE the
+   * purchase/ritual commits (spec oracle 13).
+   */
+  preflightSkillCoreGrant(skillId: string): boolean {
+    const core = this.resolveSkillCore(skillId)
+    const authored = SKILL_CORE_NODES.find((node) => node.levelsSkillId === skillId)
+
+    return (
+      core !== undefined &&
+      authored !== undefined &&
+      (core.maxLevel ?? 1) === (authored.maxLevel ?? 1)
+    )
+  }
+
+  /**
+   * Grant a registered Core Node by skill id (ritual way.coreSkillIds,
+   * node grantsSkillCoreIds). Returns false on a missing/mismatched
+   * core - callers preflight so this never silently fails post-commit.
+   */
+  grantSkillCoreBySkillId(player: PlayerData, skillId: string): boolean {
+    const core = this.resolveSkillCore(skillId)
+
+    if (!core) {
+      return false
+    }
+
+    grantSkillCore(player, core)
+
+    return true
   }
 
   /**
@@ -161,6 +259,22 @@ export class GameManagerProgressionOps {
 
     const node = this.deps.nodeRegistry.get(nodeId)
 
+    // M-QI-05 - transaction boundary (same discipline as
+    // selectSpellPathElement): every unlocked skill must be learnable
+    // (template + levelled-skill core) and every granted core must be
+    // registered BEFORE insight is spent.
+    for (const skillId of node.effect.unlocksSkillIds ?? []) {
+      if (!this.preflightLearnableSkill(skillId)) {
+        return false
+      }
+    }
+
+    for (const skillId of node.effect.grantsSkillCoreIds ?? []) {
+      if (!this.preflightSkillCoreGrant(skillId)) {
+        return false
+      }
+    }
+
     if (!purchaseNodeSystem(player, node)) {
       return false
     }
@@ -168,7 +282,11 @@ export class GameManagerProgressionOps {
     // Skill-unlock effects only run on the 0 -> 1 transition -
     // purchaseNodeSystem only returns true exactly on that transition.
     for (const skillId of node.effect.unlocksSkillIds ?? []) {
-      this.learnSkill(skillId)
+      this.learnSkill(skillId, player)
+    }
+
+    for (const skillId of node.effect.grantsSkillCoreIds ?? []) {
+      grantSkillCore(player, this.deps.nodeRegistry.get(skillCoreNodeId(skillId)))
     }
 
     // Phap Tu Thuan He (E-8, 2026-09-03) - variant node: purchasing the
@@ -239,9 +357,17 @@ export class GameManagerProgressionOps {
     // Transaction boundary (review round-4, atomicity hardening): every
     // skill the root unlocks must be learnable BEFORE the purchase
     // spends insight + commits { element, route } - a missing template
-    // would leave the element committed without its basic.
+    // would leave the element committed without its basic. M-QI-05 -
+    // the same boundary now covers levelled-skill cores and
+    // grantsSkillCoreIds members.
     for (const skillId of root.effect.unlocksSkillIds ?? []) {
-      if (!this.deps.skillTemplates.has(skillId)) {
+      if (!this.preflightLearnableSkill(skillId)) {
+        return false
+      }
+    }
+
+    for (const skillId of root.effect.grantsSkillCoreIds ?? []) {
+      if (!this.preflightSkillCoreGrant(skillId)) {
         return false
       }
     }
@@ -251,7 +377,11 @@ export class GameManagerProgressionOps {
     }
 
     for (const skillId of root.effect.unlocksSkillIds ?? []) {
-      this.learnSkill(skillId)
+      this.learnSkill(skillId, player)
+    }
+
+    for (const skillId of root.effect.grantsSkillCoreIds ?? []) {
+      grantSkillCore(player, this.deps.nodeRegistry.get(skillCoreNodeId(skillId)))
     }
 
     commitSpellPathElementRoute(player, element, route)
@@ -355,12 +485,77 @@ export class GameManagerProgressionOps {
    * Skill Insight, pure passthrough to SkillSystem (already has
    * skillManager via its own constructor, needs nothing else here).
    */
-  upgradeSkill(skillId: string, player: PlayerData): boolean {
-    return this.deps.skillSystem.upgradeSkill(skillId, player)
+  /**
+   * M-QI-05 / QI-D3 - the canonical Insight channel for skill levels:
+   * resolves the skill's Core Node and upgrades it through NodeSystem
+   * (costs/gating/maxed checks live there - cast-channel cores reject
+   * at canUpgradeNode). Emits the level-up notification through the
+   * injected dep so GameManager stays the notification owner.
+   */
+  levelUpSkill(skillId: string, player: PlayerData): boolean {
+    const coreId = skillCoreNodeId(skillId)
+
+    if (!this.deps.nodeRegistry.has(coreId)) {
+      return false
+    }
+
+    const node = this.deps.nodeRegistry.get(coreId)
+
+    if (node.levelsSkillId !== skillId) {
+      return false
+    }
+
+    const prior = getNodeLevelSystem(player, coreId)
+
+    if (!upgradeNodeSystem(player, node)) {
+      return false
+    }
+
+    this.deps.onSkillLevelUp?.(skillId, prior + 1, 1)
+
+    return true
   }
 
-  getSkillUpgradeInsightCost(skillId: string): number | undefined {
-    return this.deps.skillSystem.getSkillUpgradeInsightCost(skillId)
+  /** Canonical level read for UI - 0 when the core is ungranted. */
+  getSkillLevel(skillId: string, player: PlayerData): number {
+    return getSkillCoreLevel(player, skillId)
+  }
+
+  /** Max level of the skill's registered core (1 when none exists). */
+  getSkillCoreMaxLevel(skillId: string): number {
+    const coreId = skillCoreNodeId(skillId)
+
+    return this.deps.nodeRegistry.has(coreId)
+      ? getNodeMaxLevelSystem(this.deps.nodeRegistry.get(coreId))
+      : 1
+  }
+
+  /**
+   * Insight cost of the NEXT core level - undefined when the core is
+   * ungranted, missing, maxed, or Insight-ineligible (cast channel).
+   * Deliberately NOT gated on current skillInsight - the detail UI shows
+   * the cost on a disabled button; affordability is canUpgrade's job.
+   */
+  getSkillCoreUpgradeCost(skillId: string, player: PlayerData): number | undefined {
+    const coreId = skillCoreNodeId(skillId)
+
+    if (!this.deps.nodeRegistry.has(coreId)) {
+      return undefined
+    }
+
+    const node = this.deps.nodeRegistry.get(coreId)
+
+    if (node.levelsSkillId !== skillId || CAST_LEVELING_THRESHOLDS[skillId] !== undefined) {
+      return undefined
+    }
+
+    const level = getNodeLevelSystem(player, coreId)
+
+    if (level < 1 || level >= getNodeMaxLevelSystem(node)) {
+      return undefined
+    }
+
+    return getNextLevelCostSystem(node, level)
   }
 
   /**

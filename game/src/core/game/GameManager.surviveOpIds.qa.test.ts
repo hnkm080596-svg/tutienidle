@@ -16,12 +16,14 @@ import { TECHNIQUES } from '../../data/technique/Techniques'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { CORE_REALM_LEVEL } from '../realm/realmSystem'
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../battle/contracts/ids'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 function makeManager() {
   const gameManager = new GameManager()
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(THE_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   return { gameManager, combatSource }

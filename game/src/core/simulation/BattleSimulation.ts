@@ -24,6 +24,7 @@ import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
+import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { ENEMIES } from '../../data/enemy/Enemies'
 import { STAGES } from '../../data/stage/Stages'
 import type { ElementType } from '../element/ElementType'
@@ -127,6 +128,7 @@ export function runBattle(input: BattleSimulationInput): BattleSimulationResult 
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
   gameManager.catalogOps.registerProgressionNodes(THE_TU_NODES)
   gameManager.catalogOps.registerProgressionNodes(THE_TU_AN_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerEnemyTemplates(ENEMIES)
   gameManager.catalogOps.registerStages(STAGES)
 

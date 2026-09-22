@@ -18,6 +18,7 @@ import type { ActiveTribulationState } from './TribulationDirector'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
 import { i18n } from '../../i18n'
 import enMessages from '../../locales/en.json'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 /** Walk a dotted i18n key in a raw messages object. */
 function messageAt(messages: object, key: string): unknown {
@@ -91,6 +92,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     gameManager.catalogOps.registerPills(pills)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = usePlayerStore()
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12

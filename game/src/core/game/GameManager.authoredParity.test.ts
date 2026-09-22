@@ -7,6 +7,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // ARCH-008 (M10) — authored-parity regression matrix through REAL
 // GameManager entry points (not converter isolation):
@@ -47,6 +48,7 @@ function makeManager() {
 
   gameManager.setCombatClockSource(combatSource)
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerPills(pills)
   gameManager.catalogOps.registerAlchemyRecipes(alchemyRecipes)
 
@@ -62,7 +64,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     player.swordPath = freshSwordPathState()
 
     gameManager.setActivePlayer(player)
-    gameManager.progressionOps.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram', player)
 
     const tram = gameManager.skillManager.get('tram')!
     tram.totalExperience = 10_000
@@ -86,7 +88,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const player = createDefaultPlayer()
 
     gameManager.setActivePlayer(player)
-    gameManager.progressionOps.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram', player)
 
     gameManager.startBattleWithPlayer(player, makeDummyEnemy('parity_mortal'))
 
@@ -109,7 +111,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     player.spellPath = { element: 'wood', route: null }
 
     gameManager.setActivePlayer(player)
-    gameManager.progressionOps.learnSkill('doc_chuong')
+    gameManager.progressionOps.learnSkill('doc_chuong', player)
 
     gameManager.startBattleWithPlayer(player, makeDummyEnemy('parity_wood'))
 
@@ -128,7 +130,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     player.spellPath = { element: 'fire', route: null }
 
     gameManager.setActivePlayer(player)
-    gameManager.progressionOps.learnSkill('hoa_cau_thuat')
+    gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
 
     gameManager.startBattleWithPlayer(player, makeDummyEnemy('parity_fire'))
 
@@ -188,10 +190,10 @@ describe('ARCH-008 — authored buff duration rides appliesBuff.duration', () =>
     player.spellPath = { element: 'water', route: null }
 
     gameManager.setActivePlayer(player)
-    gameManager.progressionOps.learnSkill('thanh_tuyen_duong_linh')
+    gameManager.progressionOps.learnSkill('thanh_tuyen_duong_linh', player)
     gameManager.progressionOps.selectSkillSpecialization('thanh_tuyen_duong_linh', 'duong_linh_tuyen')
     // Required basic for the committed element (round-3 fail-fast).
-    gameManager.progressionOps.learnSkill('thuy_tien_thuat')
+    gameManager.progressionOps.learnSkill('thuy_tien_thuat', player)
 
     gameManager.startBattleWithPlayer(player, makeDummyEnemy('parity_water'))
 

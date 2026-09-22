@@ -1,0 +1,94 @@
+import type { ProgressionNode } from '../../core/progression/ProgressionNode'
+import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
+import { SKILLS } from '../skill/Skills'
+import { turnSkillDisplayMetaOf } from '../skill/TurnSkillDisplayMeta'
+
+// M-QI-05 / QI-D3 - the Core Node catalog IS the progression-metadata
+// source: `player.nodeLevels[core_<skillId>]` is the only writable
+// skill-level authority, and this file is the only place cores are
+// declared.
+//
+// Three classes:
+//  1. Generated template cores - one per authored Skill template with
+//     maxLevel > 1 (id/maxLevel mirror the template; drift is a data
+//     bug pinned by SkillCoreNodes.test.ts).
+//  2. Authored native cores - the 14 eligible top-level native
+//     TurnSkillDefinition ids below (the census whitelist). Damage-
+//     bearing defs get maxLevel 10 + damage.levelScaling 0.05;
+//     non-damage defs get maxLevel 1 (canonical at Lv1, Insight-
+//     rejected - a direct progression channel must be authored before
+//     the cap rises).
+//  3. NOTHING ELSE - levelsSkillId must never target an internal
+//     chained/stance/emblem/reactive/generated sub-action (phan_chinh,
+//     phan_kich, tro_kich, trong_phan_kich, ngu_kiem emblem defs,
+//     combo extras). Internal actions inherit their parent's Core
+//     level via TurnSkillDefinition.progressionOwnerId. Extending the
+//     native whitelist requires an eligibility note here AND updating
+//     the census test.
+
+/** The 14 eligible native top-level def ids (QI-D3 census). */
+export const NATIVE_CORE_SKILL_IDS = [
+  // body_pathway kits - granted by the kit roots' grantsSkillCoreIds
+  'cuong_quyen',
+  'loan_dau',
+  'bat_tu_ba_the',
+  'tran_ap',
+  'son_nhac',
+  // hidden_body_pathway fixed kit - granted by way.coreSkillIds
+  'tham_the',
+  'tu_the',
+  'bach_ung',
+  // hidden_sword_pathway provider action - way.coreSkillIds
+  'ngu_kiem_thuat',
+  // sword_pathway orb actions - way.coreSkillIds
+  'orb_dam',
+  'orb_chem',
+  'orb_bo',
+  'orb_hat',
+  'orb_quet',
+] as const
+
+/** Native defs whose damage channel carries levelScaling: 0.05. */
+const NATIVE_DAMAGE_BEARING: ReadonlySet<string> = new Set([
+  'cuong_quyen',
+  'loan_dau',
+  'tran_ap',
+  'tham_the',
+  'ngu_kiem_thuat',
+  'orb_dam',
+  'orb_chem',
+  'orb_bo',
+  'orb_hat',
+  'orb_quet',
+])
+
+function coreNode(skillId: string, name: string, description: string | undefined, maxLevel: number): ProgressionNode {
+  return {
+    id: skillCoreNodeId(skillId),
+    name: `Core: ${name}`,
+    description,
+    // Spec D2 - 'major' is the pinned semantic type for every Core.
+    type: 'major',
+    insightCost: 0,
+    maxLevel,
+    levelsSkillId: skillId,
+    effect: {},
+  }
+}
+
+const templateCores: ProgressionNode[] = SKILLS.filter((skill) => skill.maxLevel > 1).map((skill) =>
+  coreNode(skill.id, skill.name, skill.description, skill.maxLevel),
+)
+
+const nativeCores: ProgressionNode[] = NATIVE_CORE_SKILL_IDS.map((skillId) => {
+  const meta = turnSkillDisplayMetaOf(skillId)
+
+  return coreNode(
+    skillId,
+    meta?.name ?? skillId,
+    meta?.description,
+    NATIVE_DAMAGE_BEARING.has(skillId) ? 10 : 1,
+  )
+})
+
+export const SKILL_CORE_NODES: readonly ProgressionNode[] = [...templateCores, ...nativeCores]

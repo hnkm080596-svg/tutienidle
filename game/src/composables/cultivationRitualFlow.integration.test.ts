@@ -11,6 +11,7 @@ import {
   checkTribulationOutcomeAction,
   triggerBreakthroughAction,
 } from './useTribulation'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 function tribulationTotalSeconds(targetRealmId: string): number {
   return getTribulationChapters(targetRealmId)!.reduce((total, chapter) => {
@@ -33,6 +34,7 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
     player.realmLevel = 12
     player.baseStats.defense = 10_000

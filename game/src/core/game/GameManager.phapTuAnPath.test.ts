@@ -14,6 +14,7 @@ import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { defineEnemy } from '../enemy/Enemy'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Phap Tu Reimagined (Task 7) + Cultivation Path Framework M7 — the
 // hidden Phap Tu variant is the 'hidden_spell_pathway' WAY under path 'spell',
@@ -33,10 +34,13 @@ function makeManager() {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   // sword ritual grants the kiem_tran_luong_nghi node on the kiem_tran
   // route — the round-4 transaction boundary requires it registered.
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   const player = createDefaultPlayer()
   player.realmId = 'mortal'
   player.realmLevel = 12
@@ -368,7 +372,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
 
     const authored = SKILLS.find((skill) => skill.id === 'hoa_cau_thuat')!
     gameManager.catalogOps.registerSkillTemplates([{ ...authored, effects: [] }])
-    expect(gameManager.progressionOps.learnSkill('hoa_cau_thuat')).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)).toBe(true)
 
     expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
   })
@@ -414,8 +418,8 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     gameManager.setActivePlayer(player)
     player.cultivationPath = 'spell'
     player.cultivationWay = 'hidden_spell_pathway'
-    expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam')).toBe(true)
-    expect(gameManager.progressionOps.learnSkill('ngo_dao_hon_don')).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam', player)).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('ngo_dao_hon_don', player)).toBe(true)
 
     expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
   })
@@ -425,8 +429,8 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     gameManager.setActivePlayer(player)
     player.cultivationPath = 'spell'
     player.cultivationWay = 'hidden_spell_pathway'
-    expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam')).toBe(true)
-    expect(gameManager.progressionOps.learnSkill('da_phap_lien_tuyen')).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam', player)).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('da_phap_lien_tuyen', player)).toBe(true)
 
     expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
   })

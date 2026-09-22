@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { SkillManager } from './SkillManager'
 import { SkillSystem, getHuyKiemFlatDamageBonus } from './SkillSystem'
 import { SKILLS } from '@/data/skill/Skills'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { createDefaultPlayer } from '../player/Player'
+import { canUpgradeNode } from '../progression/NodeSystem'
 
 describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
   it('mỗi 10 cast +1 flat damage, không trần', () => {
@@ -53,25 +56,32 @@ describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
   })
 })
 
-describe('Huy Kiếm — 3 level mốc 1000/10000 cast', () => {
-  it('Lv1→2 tại 1000 cast, Lv2→3 tại 10000 cast, không bao giờ Lv4', () => {
+// M-QI-05 - Skill.level is frozen authored data; the cast-channel
+// TARGET level rides the sink (canonical write: nodeLevels[core_tram],
+// covered end-to-end in SkillSystem.castCount.test.ts).
+describe('Huy Kiếm — cast-channel target levels (sink contract)', () => {
+  it('Lv2 target tại 1000 cast, Lv3 tại 10000, không bao giờ Lv4 (Skill.level frozen)', () => {
     const manager = new SkillManager()
     const system = new SkillSystem(manager)
+    const sink = vi.fn()
+    system.setCastCountSink(sink)
     const template = SKILLS.find((skill) => skill.id === 'tram')!
     system.learn(template)
     const skill = manager.get('tram')!
 
     for (let cast = 0; cast < 999; cast++) system.recordCast('tram')
+    expect(sink).toHaveBeenLastCalledWith('tram', 999, 1)
     expect(skill.level).toBe(1)
 
     system.recordCast('tram')
-    expect(skill.level).toBe(2)
+    expect(sink).toHaveBeenLastCalledWith('tram', 1000, 2)
 
     for (let cast = 0; cast < 9000; cast++) system.recordCast('tram')
-    expect(skill.level).toBe(3)
+    expect(sink).toHaveBeenLastCalledWith('tram', 10000, 3)
 
     for (let cast = 0; cast < 5000; cast++) system.recordCast('tram')
-    expect(skill.level).toBe(3)
+    expect(sink).toHaveBeenLastCalledWith('tram', 15000, 3)
+    expect(skill.level).toBe(1)
     expect(skill.totalExperience).toBe(15000)
   })
 
@@ -79,6 +89,13 @@ describe('Huy Kiếm — 3 level mốc 1000/10000 cast', () => {
     const manager = new SkillManager()
     const system = new SkillSystem(manager)
     system.learn(SKILLS.find((skill) => skill.id === 'tram')!)
-    expect(system.upgradeSkill('tram', { skillInsight: 999 } as never)).toBe(false)
+    // M-QI-05 - the cast-channel pin now lives at the node gate:
+    // core_tram rejects Insight upgrades outright (INV-9 unchanged).
+    const tramCore = SKILL_CORE_NODES.find((node) => node.levelsSkillId === 'tram')!
+    const player = createDefaultPlayer()
+    player.skillInsight = 999
+    player.nodeLevels[tramCore.id] = 1
+    player.purchasedNodeIds.push(tramCore.id)
+    expect(canUpgradeNode(player, tramCore)).toBe(false)
   })
 })

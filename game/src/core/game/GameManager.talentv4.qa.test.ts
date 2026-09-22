@@ -17,6 +17,7 @@ import { pills } from '../../data/pill/pills'
 import { talismans } from '../../data/talisman/talismans'
 import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // QA quick-mode adversarial checks (spec 2026-09-03 talent catalog v4
 // M1) - reproduction/invariant tests cho cac hypothesis rui ro cao nhat
@@ -37,6 +38,7 @@ function makeWiredManager(): GameManager {
   manager.catalogOps.registerBuffs(buffs)
   manager.catalogOps.registerBuildings(buildings)
   manager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+  manager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
   return manager
 }

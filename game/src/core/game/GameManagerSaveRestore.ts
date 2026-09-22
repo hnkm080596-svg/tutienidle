@@ -343,6 +343,11 @@ export class GameManagerSaveRestore {
       skill.passiveModifiers = structuredClone(template.passiveModifiers)
       skill.specializations = structuredClone(template.specializations)
 
+      // M-QI-05 - level is frozen authored data too: the canonical live
+      // level is nodeLevels[core_<id>], so a save's stored `level` must
+      // never survive as a second authority.
+      skill.level = template.level
+
       // effects/triggers are the same authored-combat-data class:
       // nothing mutates them on the instance (progression lives in
       // level/selectedSpecializationId; specialization overrides ride

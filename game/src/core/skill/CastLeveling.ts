@@ -1,6 +1,6 @@
 // Phap Tu Reimagined Task 2 + The Tu Reimagined (spec 2026-09-15, T6) -
-// THE table of skills that level ONLY by cast count (upgradeSkill
-// rejects them, INV-9): any id listed here auto-levels by
+// THE table of skills that level ONLY by cast count (their Core Nodes
+// reject Insight upgrades, INV-9): any id listed here auto-levels by
 // totalExperience in recordCast(). tram's curve is the existing one;
 // linh_bao/huy_quyen are the mortal-path actives - linh_bao Lv3 is the
 // hidden_spell_pathway offer gate, huy_quyen Lv3 the hidden_body_pathway gate - so the

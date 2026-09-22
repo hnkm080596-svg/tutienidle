@@ -205,7 +205,7 @@ describe('daily_chieu_hien_lenh quest', () => {
     manager.incrementProgress('daily_chieu_hien_lenh', 7)
     expect(manager.getProgress('daily_chieu_hien_lenh')?.progress).toBe(7)
 
-    // Realm gate now fails (save predates Truc Co / content moved) —
+    // Realm gate now fails (save predates Truc Co / content moved) -
     // reconcile removes the stale entry instead of letting it count.
     player.realmId = 'qi_refining'
     system.reconcileActiveQuests(registry, manager, player)

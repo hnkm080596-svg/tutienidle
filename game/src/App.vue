@@ -69,6 +69,7 @@ import { PHAP_TU_AN_NODES } from './data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from './data/progression/KiemTuNodes'
 import { THE_TU_NODES } from './data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from './data/progression/TheTuAnNodes'
+import { SKILL_CORE_NODES } from './data/progression/SkillCoreNodes'
 import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
@@ -297,6 +298,7 @@ gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
 gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 gameManager.catalogOps.registerProgressionNodes(THE_TU_NODES)
 gameManager.catalogOps.registerProgressionNodes(THE_TU_AN_NODES)
+gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 gameManager.catalogOps.registerQuests(QUESTS)
 
 const { breakthrough } = useBreakthrough(gameManager)
@@ -532,14 +534,14 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       // Fix (2026-08-20) - grant "Tram" save cu (idempotent). P7-M4:
       // learn-only - the mortal runtime resolves an absent pick as tram.
       if (!gameManager.skillManager.has('tram')) {
-        gameManager.progressionOps.learnSkill('tram')
+        gameManager.progressionOps.learnSkill('tram', player.$state)
       }
       // Phap Tu Reimagined Task 2 - mortal-path actives (idempotent).
       // huy_quyen (The Tu Reimagined sec.2.3) shares this seam - learned,
       // so the hidden_body_pathway offer gate reads it on old saves.
       for (const mortalSkillId of ['linh_bao', 'huy_quyen']) {
         if (!gameManager.skillManager.has(mortalSkillId)) {
-          gameManager.progressionOps.learnSkill(mortalSkillId)
+          gameManager.progressionOps.learnSkill(mortalSkillId, player.$state)
         }
       }
     },
@@ -549,12 +551,12 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       // canonical technique (tu_linh_quyet da retire); Way cap tai
       // initiation ritual. P7-M4: tram is the runtime default pick -
       // a fresh mortal carries no mortalBasicSkillId.
-      gameManager.progressionOps.learnSkill('tram')
+      gameManager.progressionOps.learnSkill('tram', player.$state)
       // Phap Tu Reimagined Task 2 - mortal-path actives.
-      gameManager.progressionOps.learnSkill('linh_bao')
+      gameManager.progressionOps.learnSkill('linh_bao', player.$state)
       // Huy Quyen - second mortal basic, learned; grinding it
       // to Lv3 (10.000 casts) is what reveals hidden_body_pathway at the ritual.
-      gameManager.progressionOps.learnSkill('huy_quyen')
+      gameManager.progressionOps.learnSkill('huy_quyen', player.$state)
 
       for (const buildingId of ['teleport_array', 'gathering_outpost']) {
         const instance = {

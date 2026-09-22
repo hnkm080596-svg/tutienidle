@@ -2,8 +2,6 @@ import type { Skill } from './Skill'
 import type { SkillEffect } from './SkillEffect'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { PassiveTrigger } from './SkillTypes'
-import type { PlayerData } from '../player/Player'
-import { getSkillUpgradeInsightCost } from './SkillUpgradeBalance'
 import type { TriggerBinding } from './SkillTrigger'
 import type { DealDamageAction } from './SkillAction'
 import {
@@ -73,18 +71,33 @@ export interface EffectiveSkill {
 export class SkillSystem {
   constructor(
     private readonly manager: SkillManager,
-    private readonly onLevelUp?: (skill: Skill, levelsGained: number) => void,
   ) {}
 
   // Kiem Tu (2026-08-28) - NodeSystem.hasPrerequisite() chi nhan
   // PlayerData (khong co SkillManager) nen khong doc totalExperience/
   // level cua skill truc tiep. Sink nay dong bo mirror
-  // player.skillCastCounts/skillLevels moi lan recordCast() - GameManager
-  // noi vao activePlayer (xem GameManager's constructor).
-  private castCountSink?: (skillId: string, totalExperience: number, level: number) => void
+  // player.skillCastCounts moi lan recordCast() - GameManager
+  // noi vao activePlayer (xem GameManager's constructor). M-QI-05 -
+  // the sink also receives the cast-channel TARGET level (undefined for
+  // non-cast-levelled skills); canonical advancement + notification are
+  // the sink owner's job (SkillSystem no longer holds a writable level).
+  private castCountSink?: (skillId: string, totalExperience: number, targetLevel: number | undefined) => void
 
-  setCastCountSink(sink: (skillId: string, totalExperience: number, level: number) => void): void {
+  setCastCountSink(sink: (skillId: string, totalExperience: number, targetLevel: number | undefined) => void): void {
     this.castCountSink = sink
+  }
+
+  // M-QI-05 - canonical level provider: every live level read funnels
+  // through this injected seam (wired by GameManager to
+  // nodeLevels[core_<id>]); Skill.level is frozen authored data.
+  private skillLevelProvider?: (skillId: string) => number
+
+  setSkillLevelProvider(provider: (skillId: string) => number): void {
+    this.skillLevelProvider = provider
+  }
+
+  private levelOf(skill: Skill): number {
+    return this.skillLevelProvider?.(skill.id) ?? 1
   }
 
   // Phap Tu Reimagined Task 3 - route profile provider. The GameManager
@@ -114,7 +127,7 @@ export class SkillSystem {
 
     const baseEffects = specialization?.effectsOverride ?? skill.effects
 
-    const effectiveLevel = levelOverride ?? skill.level
+    const effectiveLevel = levelOverride ?? this.levelOf(skill)
     const levelMultiplier = 1 + (effectiveLevel - 1) * ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL
 
     const isHuyKiem = skill.id === 'tram'
@@ -187,7 +200,7 @@ export class SkillSystem {
   progressionOf(skill: Skill): SkillProgressionState {
     return {
       skillId: skill.id as SkillId,
-      level: skill.level,
+      level: this.levelOf(skill),
       experience: skill.experience ?? 0,
       totalExperience: skill.totalExperience ?? 0,
       ...(skill.selectedSpecializationId !== undefined
@@ -232,9 +245,9 @@ export class SkillSystem {
         modifiers.push({
           ...modifier,
 
-          flat: (modifier.flat ?? 0) + (modifier.perLevelFlat ?? 0) * (skill.level - 1),
+          flat: (modifier.flat ?? 0) + (modifier.perLevelFlat ?? 0) * (this.levelOf(skill) - 1),
 
-          percent: (modifier.percent ?? 0) + (modifier.perLevelPercent ?? 0) * (skill.level - 1),
+          percent: (modifier.percent ?? 0) + (modifier.perLevelPercent ?? 0) * (this.levelOf(skill) - 1),
         })
       }
     }
@@ -250,44 +263,6 @@ export class SkillSystem {
     }
 
     skill.selectedSpecializationId = specializationId
-
-    return true
-  }
-
-  /** Chi phi Cam ngo Ky nang de nang skill nay len level ke tiep - undefined neu da toi da. */
-  getSkillUpgradeInsightCost(skillId: string): number | undefined {
-    const skill = this.manager.get(skillId)
-
-    if (!skill || CAST_LEVELING_THRESHOLDS[skill.id] !== undefined || skill.level >= skill.maxLevel) {
-      return undefined
-    }
-
-    return getSkillUpgradeInsightCost(skill)
-  }
-
-  /**
-   * skill-insight-and-auto-combat-hud-plan.md muc 5 - thay HAN
-   * gainExperience()/XP-per-cast cu: nguoi choi CHU DONG nang cap
-   * ngoai combat, tieu thang player.skillInsight. No-op hoan toan (KHONG
-   * mutate gi) neu skill khong ton tai/da max level/khong du Cam ngo.
-   */
-  upgradeSkill(skillId: string, player: PlayerData): boolean {
-    const skill = this.manager.get(skillId)
-
-    if (!skill || CAST_LEVELING_THRESHOLDS[skill.id] !== undefined || skill.level >= skill.maxLevel) {
-      return false
-    }
-
-    const cost = getSkillUpgradeInsightCost(skill)
-
-    if (player.skillInsight < cost) {
-      return false
-    }
-
-    player.skillInsight -= cost
-    skill.level++
-
-    this.onLevelUp?.(skill, 1)
 
     return true
   }
@@ -319,7 +294,7 @@ export class SkillSystem {
    * is the cast counter the PlayerData skillCastCounts mirror reflects.
    * CAST_LEVELING_THRESHOLDS skills (tram, huy_quyen) auto-level via
    * getCastLeveledSkillLevel; every other skill levels only through
-   * upgradeSkill (Cam Ngo). tram also keeps the legacy per-cast
+   * its Core Node (progressionOps.levelUpSkill, Cam Ngo). tram also keeps the legacy per-cast
    * experience tick feeding getHuyKiemFlatDamageBonus. No-op for
    * unknown/unlearned ids (e.g. 'generic_physical').
    */
@@ -333,22 +308,16 @@ export class SkillSystem {
     skill.totalExperience = (skill.totalExperience ?? 0) + 1
 
     // Cast-leveled skills (CAST_LEVELING_THRESHOLDS) auto-level by cast
-    // count - upgradeSkill rejects them. tram additionally keeps its
-    // legacy per-cast `experience` tick (save-mirror parity).
+    // count - the canonical nodeLevels[core] write + level-up
+    // notification are the sink owner's job (M-QI-05: SkillSystem holds
+    // no writable level authority). tram additionally keeps its legacy
+    // per-cast `experience` tick (save-mirror parity).
     const targetLevel = getCastLeveledSkillLevel(skill.id, skill.totalExperience)
 
-    if (targetLevel !== undefined) {
-      if (skill.id === 'tram') {
-        skill.experience = (skill.experience ?? 0) + 1
-      }
-
-      if (targetLevel > skill.level) {
-        const levelsGained = targetLevel - skill.level
-        skill.level = targetLevel
-        this.onLevelUp?.(skill, levelsGained)
-      }
+    if (targetLevel !== undefined && skill.id === 'tram') {
+      skill.experience = (skill.experience ?? 0) + 1
     }
 
-    this.castCountSink?.(skill.id, skill.totalExperience, skill.level)
+    this.castCountSink?.(skill.id, skill.totalExperience, targetLevel)
   }
 }

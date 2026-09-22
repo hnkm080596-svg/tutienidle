@@ -406,7 +406,7 @@ describe('resolveCompanionSkillKit', () => {
   })
 })
 
-// P7-M-G (beta companion roster) — real-definition gating for the two
+// P7-M-G (beta companion roster) - real-definition gating for the two
 // beta support kits: than_nong (huyen, mortal-12 special / foundation-3
 // ultimate) and khai_minh (dia, mortal-8 special / foundation-5 ultimate,
 // rank-4 special cooldown override).
@@ -472,7 +472,7 @@ describe('M-G beta roster kit gating', () => {
     const kit = resolveCompanionSkillKit(hoLyTinh, makeInstance({ realmId: 'mortal', realmLevel: 18 }))
 
     expect(kit.basic.id).toBe('ho_ly_tinh_basic')
-    // Its special threshold is qi_refining 1 — stays locked at mortal.
+    // Its special threshold is qi_refining 1 - stays locked at mortal.
     expect(kit.special).toBeUndefined()
   })
 })

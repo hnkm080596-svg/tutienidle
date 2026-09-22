@@ -56,7 +56,16 @@ function battleReady(): { gameManager: GameManager; combatSource: ManualClockSou
   const player = createPlayer()
 
   gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
-  gameManager.progressionOps.learnSkill('basic_test')
+  gameManager.catalogOps.registerProgressionNodes([{
+    id: 'core_basic_test',
+    name: 'Core: Basic',
+    type: 'minor',
+    insightCost: 0,
+    maxLevel: 10,
+    levelsSkillId: 'basic_test',
+    effect: {},
+  }])
+  gameManager.progressionOps.learnSkill('basic_test', createDefaultPlayer())
   const basicSkill = gameManager.skillManager.get('basic_test')!
   gameManager.setPathRuntimeResolver(() => ({
     resolveBasic: () =>

@@ -259,7 +259,7 @@ export class TurnSkillPlanRuntime {
       declaredTargetIds: declared.affected.map(
         (p) => p.entity.id as CombatEntityId,
       ),
-      progression: this.progressionStub(actor, rootDef.id, catalog.root.id),
+      progression: this.progressionStub(actor, rootDef.progressionOwnerId ?? rootDef.id, catalog.root.id),
       sourceStats: this.statPort(battle),
       entityQuery: this.entityQuery(battle),
       castId: `cast.${battle.totalTurnsElapsed}.${actor.id}.${tbs.mintOccurrence()}`,
@@ -319,7 +319,7 @@ export class TurnSkillPlanRuntime {
       declaredTargetIds: extraTargets.map(
         (p) => p.entity.id as CombatEntityId,
       ),
-      progression: this.progressionStub(actor, extraDef.id, catalog.root.id),
+      progression: this.progressionStub(actor, extraDef.progressionOwnerId ?? extraDef.id, catalog.root.id),
       sourceStats: this.statPort(battle),
       entityQuery: this.entityQuery(battle),
       castId: `cast.extra.${battle.totalTurnsElapsed}.${actor.id}.${tbs.mintOccurrence()}`,
@@ -368,8 +368,10 @@ export class TurnSkillPlanRuntime {
   }
 
   /** Battle-snapshotted progression stub -- CombatEntity.skillLevels is
-      the only progression read (`level`); extras/combo defs have no
-      progression entry and fall back to level 1 like routeCast. */
+      the only progression read (`level`), projected from the canonical
+      Core Node authority (M-QI-05). Internal/generated actions pass
+      `progressionOwnerId` as levelKey so they inherit the parent Core
+      level rather than falling back to 1 on their own id. */
   private progressionStub(
     actor: TurnBattleParticipant,
     levelKey: string,

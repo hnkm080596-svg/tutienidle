@@ -13,6 +13,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { SeededCombatRng } from '../battle/runtime/rng/SeededCombatRng'
 import type { CompanionInstance } from '../../data/companion/Companions'
 import type { Stage } from '../stage/Stage'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // M7.5 -- real production journeys. These tests drive the FULL production
 // composition (GameManager -> beginBattleCycle -> mintCycleScheduler ->
@@ -53,8 +54,11 @@ function makeManager(seed: number) {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   const player = createDefaultPlayer()
   player.realmId = 'mortal'
   player.realmLevel = 12
@@ -102,7 +106,7 @@ describe('M7.5a -- production journey: authored ailment skill through the canoni
       maxHp: 200_000, // survives the full DoT ramp -- the enemy dies first
     } as typeof player.baseStats
 
-    expect(gameManager.progressionOps.learnSkill('doc_chuong')).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('doc_chuong', player)).toBe(true)
 
     const enemy = makeEnemy('m75_poison_dummy', {
       maxHp: 30_000,

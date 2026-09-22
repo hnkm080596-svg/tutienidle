@@ -18,18 +18,24 @@ function isOrbId(skillId: string): skillId is OrbId {
   return skillId in KIEM_PHO_ORBS
 }
 
-function comboToExtraDef(combo: KiemPhoCombo): TurnSkillDefinition {
+function comboToExtraDef(combo: KiemPhoCombo, triggeringOrbId: string): TurnSkillDefinition {
   return {
     id: combo.id,
     cooldownTurns: 0,
     damage: combo.damage
-      ? { kind: 'physical', multiplier: combo.damage.multiplier }
+      ? // M-QI-05 - generated combo damage consumes the inherited owner
+        // level (progressionOwnerId below), +5%/level like every
+        // damage-bearing native channel.
+        { kind: 'physical', multiplier: combo.damage.multiplier, levelScaling: 0.05 }
       : undefined,
     // Spec §4.2 default: same target as the completing cast — 'single'
     // re-collects the deterministic primary target in applyExtraImpact.
     targeting: combo.targeting ?? { shape: 'single' },
     appliesBuffs: combo.appliesBuffs?.map((buff) => ({ ...buff })),
     presetId: combo.presetId,
+    // M-QI-05 - the combo payload inherits the triggering orb's Core
+    // level (QI-D3 internal-action ownership), never its own id.
+    progressionOwnerId: triggeringOrbId,
   }
 }
 
@@ -101,7 +107,7 @@ export function buildKiemPhoProvider(
     onCastResolved(ctx): readonly TurnSkillDefinition[] {
       if (!isOrbId(ctx.resolvedSkillId)) return []
       const combo = recordCastAndMatch(state, ctx.resolvedSkillId, KIEM_PHO_COMBOS, modifiers)
-      return combo ? [comboToExtraDef(combo)] : []
+      return combo ? [comboToExtraDef(combo, ctx.resolvedSkillId)] : []
     },
   }
 }

@@ -1,4 +1,4 @@
-// Turn-Based Combat Slice 2 (spec 2026-09-04) — skill selection, resource
+// Turn-Based Combat Slice 2 (spec 2026-09-04) - skill selection, resource
 // gating, and AOE target collection for TurnBattleSystem.resolveNextStep().
 // Kept in its own file (separate from TurnBattleSystem.ts) matching the
 // existing ActionGauge.ts/TurnQueue.ts one-concern-per-file pattern.
@@ -14,12 +14,12 @@ import { isCellInShape, type AoeShapeSpec } from './AoeShape'
 import { isActionAllowed } from './ActionValidator'
 
 /**
- * Slice 2 skill shape — deliberately NOT the live `Skill` interface
+ * Slice 2 skill shape - deliberately NOT the live `Skill` interface
  * (Skill.ts carries 30+ fields for progression/UI/passive concerns this
  * slice doesn't touch). Field names/types mirror the live fields this
  * slice DOES reuse (SkillResourceType, ActionDamageInfo, ActionTargeting)
  * so future content-mapping from real Skill objects is a straight field
- * copy, not a redesign — see design spec §3.
+ * copy, not a redesign - see design spec sec.3.
  */
 export interface TurnSkillAilmentApplication {
   buffDefinitionId: string
@@ -28,23 +28,23 @@ export interface TurnSkillAilmentApplication {
 }
 
 /**
- * The Tu Reimagined (plan Task 11 contract) — one buff application
+ * The Tu Reimagined (plan Task 11 contract) - one buff application
  * authored on a TurnSkillDefinition.
  */
 export interface TurnSkillBuffApplication {
   definitionId: string
   /**
    * 'target' is the legacy alias for 'action_targets' (Kiem Tu combo /
-   * Phap Tu empowered payloads) — both resolve to declared.affected.
+   * Phap Tu empowered payloads) - both resolve to declared.affected.
    */
   target: 'self' | 'target' | 'action_targets' | 'allies_except_self' | 'all_enemies'
   /** Legacy alias of durationOverride (Kiem Tu/Phap Tu payloads). */
   duration?: number
   durationOverride?: number
-  /** Kiem Tu combo capstones — apply() repeated N times (default 1). */
+  /** Kiem Tu combo capstones - apply() repeated N times (default 1). */
   stacks?: number
   /**
-   * Mission C Task 10a — ports SkillEffect.stacksPerAffectedTarget
+   * Mission C Task 10a - ports SkillEffect.stacksPerAffectedTarget
    * (Hau Tho Thanh Luy): the buff lands with stacks = the number of
    * action targets still ALIVE when the buff applies. Supersedes the
    * authored "0 target -> no buff" clause: a whiffed-into-corpse edge
@@ -58,7 +58,7 @@ export interface TurnSkillDefinition {
   id: string
   cooldownTurns: number
   /**
-   * R3 (AR-03) — Explicit target scope. Defaults to 'enemy'.
+   * R3 (AR-03) - Explicit target scope. Defaults to 'enemy'.
    * 'self' targets the caster without dealing damage.
    */
   targetScope?: 'enemy' | 'self'
@@ -67,15 +67,15 @@ export interface TurnSkillDefinition {
   damage?: ActionDamageInfo
   targeting: ActionTargeting
   /**
-   * R3 (AR-18) — Generic composite action policy. Replaces hardcoded
+   * R3 (AR-18) - Generic composite action policy. Replaces hardcoded
    * content ID checks in the turn engine.
    *
-   * 'element_basic' — Phap Tu An (Task 11): the orchestrator attaches the
+   * 'element_basic' - Phap Tu An (Task 11): the orchestrator attaches the
    * resolved pool ON the def; the engine picks `count` distinct defs
    * uniformly via the injected rng and resolves picks[0] as THE payload
-   * (damage/ailments/targeting — the pick executes as the cast). Any
+   * (damage/ailments/targeting - the pick executes as the cast). Any
    * extra picks (count > 1) apply damage+ailments through the shared
-   * composite-picks lane. The picked def never owns cast identity —
+   * composite-picks lane. The picked def never owns cast identity -
    * rootSkillId keeps cast count/cooldown (INV-18).
    */
   compositePicks?: {
@@ -84,7 +84,7 @@ export interface TurnSkillDefinition {
         pool: readonly TurnSkillDefinition[]
       }
   /**
-   * Phap Tu An (Task 11) — extra executions of this action, queued as
+   * Phap Tu An (Task 11) - extra executions of this action, queued as
    * follow-up executions at cast completion (source 'repeat'). Each
    * repeat re-resolves the payload (re-rolls compositePicks). Repeat
    * executions never re-commit cooldown/cast count and never roll
@@ -92,10 +92,10 @@ export interface TurnSkillDefinition {
    */
   repeatCasts?: number
   /**
-   * Phap Tu An (Task 11) — multicast passive (ngo_dao_hon_don), attached
+   * Phap Tu An (Task 11) - multicast passive (ngo_dao_hon_don), attached
    * to the An basic def by the orchestrator. After an original/composite
    * or multicast-sourced execution of this skill completes, roll
-   * `chance` via the injected rng — success queues one more execution
+   * `chance` via the injected rng - success queues one more execution
    * (source 'multicast'), which re-rolls its own pick and may roll again.
    * Total extra executions per cast are bounded by
    * min(maxExtraCasts, MAX_MULTICAST).
@@ -105,7 +105,7 @@ export interface TurnSkillDefinition {
     maxExtraCasts: number
   }
   /**
-   * The Tu Reimagined (plan Task 6/11) — multi-buff application contract
+   * The Tu Reimagined (plan Task 6/11) - multi-buff application contract
    * (replaces the singular appliesBuff). Each entry resolves its target
    * set at impact:
    * - 'self' -> the actor
@@ -120,7 +120,7 @@ export interface TurnSkillDefinition {
   /**
    * Legacy singular form (Kiem Tu combo payloads, Phap Tu empowered
    * ults, companion skills). Resolution normalizes
-   * `appliesBuffs ?? [appliesBuff]` — 'target' means the action's
+   * `appliesBuffs ?? [appliesBuff]` - 'target' means the action's
    * declared targets, `duration` is the base delivered to BuffSystem.
    */
   appliesBuff?: TurnSkillBuffApplication
@@ -139,23 +139,23 @@ export interface TurnSkillDefinition {
    */
   appliesBuffs?: TurnSkillBuffApplication[]
   /**
-   * The Tu Reimagined (plan Task 6) — buff definitions applied to the
+   * The Tu Reimagined (plan Task 6) - buff definitions applied to the
    * OWNER at participant build (the emblem-buff channel). The defs are
    * participant-local clones (node-adjusted via collectBodyKitModifiers),
    * so they ride the def object itself, not a registry id.
    */
   grantsBuffsAtBuild?: import('../../buff2/BuffDefinition').BuffDefinition[]
   /**
-   * Phase A1 (2026-09-07) — chance-gated ailment application.
+   * Phase A1 (2026-09-07) - chance-gated ailment application.
    * Deliberately separate from appliesBuff (unconditional, no chance
-   * roll) — different semantics, do not merge the two fields.
+   * roll) - different semantics, do not merge the two fields.
    */
   appliesAilment?: TurnSkillAilmentApplication
   /**
-   * R3 (AR-03) — Multiple ailment applications on landed hit.
+   * R3 (AR-03) - Multiple ailment applications on landed hit.
    */
   appliesAilments?: TurnSkillAilmentApplication[]
-  // Phase A3 — Pháp Tu Detonate: consume the target's stacks of this
+  // Phase A3 - Phap Tu Detonate: consume the target's stacks of this
   // ailment for bonus true damage (bypasses armor/resistance), then
   // clear them. Ported from legacy SkillEffect.consumesAilmentId/
   // damagePerStack. Only meaningful together with damagePerStack.
@@ -173,40 +173,51 @@ export interface TurnSkillDefinition {
   // the landed gate AFTER ailment applications, in authored order
   // (Phan Thien: apply -> manual tick -> potency modifier -> extend).
   ailmentInteractions?: readonly SkillAilmentInteraction[]
-  // Phase A3 — Thổ Tu "tự nổ khiên": consume the SOURCE's entire
+  // Phase A3 - Tho Tu "shield self-detonates": consume the SOURCE's entire
   // currentWard for bonus true damage, then zero it. Ported from legacy
   // SkillEffect.consumesWardForDamage/damagePerWardPoint. Only meaningful
   // together with damagePerWardPoint.
   consumesWardForDamage?: boolean
   damagePerWardPoint?: number
-  /** R3 (AR-03) — Leech healing: heals caster for % of final damage dealt. */
+  /** R3 (AR-03) - Leech healing: heals caster for % of final damage dealt. */
   healPercentOfDamage?: number
-  /** Future Systems Task 7 — skill charge N lượt (Thế) rồi tự resolve (Trảm). */
+  /** Future Systems Task 7 - skill charges for N turns (The) then self-resolves (Tram). */
   chargeTurns?: number
-  /** Action Playback (2026-09-05) — VFX preset cho action_impact. undefined = fallback preset mặc định (Task 4). */
+  /** Action Playback (2026-09-05) - VFX preset for action_impact. undefined = default fallback preset (Task 4). */
   presetId?: CombatVfxPresetId
-  /** Spec §7.1 — may this skill be answered by a counter? Defaults to false. */
+  /**
+   * M-QI-05 / QI-D3 - canonical progression owner for internal or
+   * generated sub-actions (Kiem Pho combo extras, hidden-body reactive
+   * payloads, emblem/stem clones). The level lookup resolves
+   * `progressionOwnerId ?? id` against the canonical skill-level
+   * projection, so an internal action inherits its parent Core Node
+   * level instead of silently falling back to 1. Top-level authored
+   * defs leave it undefined. The value must resolve to a registered
+   * Core Node's levelsSkillId - never to another internal action.
+   */
+  progressionOwnerId?: string
+  /** Spec sec.7.1 - may this skill be answered by a counter? Defaults to false. */
   counterable?: boolean
-  /** Spec §7.1 — which skill this actor counters with. Defaults to null. */
+  /** Spec sec.7.1 - which skill this actor counters with. Defaults to null. */
   counterSkillId?: string | null
   /**
-   * Phap Tu Reimagined Task 8 — The gain is SKILL-AUTHORED, not
+   * Phap Tu Reimagined Task 8 - The gain is SKILL-AUTHORED, not
    * slot-position-derived. Granted ONCE per cast action that lands on
-   * >=1 valid target (target/hit count never multiplies it — a
+   * >=1 valid target (target/hit count never multiplies it - a
    * 5-target AoE grants the value once). Clamped at
    * `entity.maxThe ?? MAX_THE` by the engine.
    */
   theGainOnLandedCast?: number
   /**
    * Extra The granted ONCE per cast action when any of its direct hits
-   * crits (same per-cast rule — a 5-target all-crit cast adds this
+   * crits (same per-cast rule - a 5-target all-crit cast adds this
    * once, not per target). Authored by the 'no' route profile.
    */
   theGainOnCrit?: number
   /**
-   * Phap Tu Reimagined Task 10 — ultimate empowerment. Attached at
+   * Phap Tu Reimagined Task 10 - ultimate empowerment. Attached at
    * battle build by the orchestrator ONLY when the owning
-   * `linh_ngo_<godUltId>` node is held (the engine stays dumb — A8).
+   * `linh_ngo_<godUltId>` node is held (the engine stays dumb - A8).
    * At cast time, `currentThe >= theThreshold` swaps the RESOLVED
    * payload to `empowered` while the root skill keeps cast
    * count/cooldown identity (execution source 'empowered').
@@ -219,13 +230,13 @@ export interface TurnSkillDefinition {
    * The empowered form carries this: at commit, the caster's ENTIRE
    * currentThe pool burns to 0 (a raised cap burns the whole pool, not
    * just the threshold). The pre-consume amount is captured into
-   * `execution.theBurned` at DECLARE for theScaling (Task 13) — the
+   * `execution.theBurned` at DECLARE for theScaling (Task 13) - the
    * pool is already 0 by the time damage resolves post-commit.
    */
   consumesAllThe?: boolean
   /**
-   * Phap Tu Reimagined Task 13 — detonate (the 'dot' route's empowered
-   * expression, spec §4). After the direct component AND the normal
+   * Phap Tu Reimagined Task 13 - detonate (the 'dot' route's empowered
+   * expression, spec sec.4). After the direct component AND the normal
    * ailment application land, consume every live ailment on each target
    * whose BuffDefinition carries a `dot` effect (utility ailments are
    * never touched); each pays (perTick x remainingTurns x stacks) x amp
@@ -236,15 +247,15 @@ export interface TurnSkillDefinition {
    */
   detonateDoT?: { amp: number }
   /**
-   * Phap Tu Reimagined Task 13 — nuke (the 'no' route's empowered
-   * expression, spec §4): the resolved damage packet scales by
+   * Phap Tu Reimagined Task 13 - nuke (the 'no' route's empowered
+   * expression, spec sec.4): the resolved damage packet scales by
    * (1 + theBurned/100 x coeff); theBurned is the pool captured at
-   * declare before consumesAllThe zeroes it. Linear by design —
+   * declare before consumesAllThe zeroes it. Linear by design -
    * Truong The cap-raises are additive payoff, not diminishing.
    */
   theScaling?: { coeff: number }
   /**
-   * Kiem Tu Reimagined Task 2 — multi-instance hit contract (Ngu Kiem Dao
+   * Kiem Tu Reimagined Task 2 - multi-instance hit contract (Ngu Kiem Dao
    * phi kiem). The turn engine resolves `count` INDEPENDENT landed-hit
    * pipelines per target through resolveDeclaredHit, stopping early when
    * the target dies. `perInstanceOptions` is called per (instance, live
@@ -272,14 +283,14 @@ export interface TurnSkillDefinition {
   /**
    * Emblem-occupying slot def: never selectable by
    * selectAction/selectForcedAction, never deals damage. Two producers:
-   * - Kiem Tu Reimagined Task 9 — Ngu Kiem Dao HUD emblem markers render
+   * - Kiem Tu Reimagined Task 9 - Ngu Kiem Dao HUD emblem markers render
    *   on the bar as slot occupants for presentation to label.
-   * - The Tu Reimagined (spec 2026-09-15 section 5.2) — passive emblems;
+   * - The Tu Reimagined (spec 2026-09-15 section 5.2) - passive emblems;
    *   their permanent buff lands via grantsBuffsAtBuild.
    */
   emblemOnly?: boolean
   /**
-   * Reaction M4 (contract sec.70-72) — the action's tag classification
+   * Reaction M4 (contract sec.70-72) - the action's tag classification
    * for restriction checks (Cam Cong's forbiddenActionTags). When absent
    * the engine infers ['attack'] iff the def carries `damage` (R-E2);
    * explicit tags always win (e.g. ['heal'] on a self-heal special).
@@ -288,10 +299,10 @@ export interface TurnSkillDefinition {
 }
 
 /**
- * Kiem Tu Reimagined Task 2 — post-resolution context handed to a
+ * Kiem Tu Reimagined Task 2 - post-resolution context handed to a
  * participant's dynamicBasic provider once the action's own hits have
  * landed. `resolvedSkillId` is the id of the definition that actually
- * executed (Hien: the OrbId of the cast orb) — never inferred from
+ * executed (Hien: the OrbId of the cast orb) - never inferred from
  * provider closure state. `resolveBuff` is the generic channel combo
  * `appliesBuff` content routes through; the provider returns extra hit
  * definitions the engine executes as additive declared impacts.
@@ -308,17 +319,17 @@ export interface DynamicBasicCastContext {
 }
 
 /**
- * Path-specific basic-attack owner (Kiem Pho preset loop / Ngự Kiem Dao).
+ * Path-specific basic-attack owner (Kiem Pho preset loop / Ngu Kiem Dao).
  * Attached to TurnBattleParticipant.dynamicBasic; when present it OWNS
- * the basic slot — participant.basic becomes inert.
+ * the basic slot - participant.basic becomes inert.
  */
 export interface DynamicBasicProvider {
-  /** Auto path — resolves the definition for the next auto basic cast. */
+  /** Auto path - resolves the definition for the next auto basic cast. */
   resolveBasic(participant: TurnBattleParticipant): TurnSkillDefinition
   /** Definitions the manual UI may legitimately submit. */
   manualOptions?(): readonly TurnSkillDefinition[]
   /**
-   * Manual submit path — validate defId against manualOptions() and return
+   * Manual submit path - validate defId against manualOptions() and return
    * the matching definition, or null to fall back to normal selection.
    * Must NOT advance auto-path state (cursor).
    */
@@ -333,7 +344,7 @@ export interface DynamicBasicProvider {
   onCastResolved?(ctx: DynamicBasicCastContext): readonly TurnSkillDefinition[]
 }
 
-/** Manual submit choice — a slot role or a dynamic-basic definition pick. */
+/** Manual submit choice - a slot role or a dynamic-basic definition pick. */
 export type ForcedTurnChoice = TurnSkillSlotRole | { kind: 'dynamic_basic'; defId: string }
 
 export interface TurnSkillSlot {
@@ -350,8 +361,8 @@ const RESOURCE_FIELD: Record<
 }
 
 /**
- * Simplification (design spec §3, "explicitly out of scope: content
- * migration") — checks the resource pool directly, no per-path
+ * Simplification (design spec sec.3, "explicitly out of scope: content
+ * migration") - checks the resource pool directly, no per-path
  * consumption order. Real content mapping resolves this later.
  */
 export function hasResourceFor(entity: CombatEntity, skill: TurnSkillDefinition): boolean {
@@ -361,7 +372,7 @@ export function hasResourceFor(entity: CombatEntity, skill: TurnSkillDefinition)
 
   const field = RESOURCE_FIELD[skill.resourceType]
 
-  // currentThe is optional on CombatEntity — an uninitialized pool reads as
+  // currentThe is optional on CombatEntity - an uninitialized pool reads as
   // undefined, which correctly blocks the cast (undefined >= cost is false).
   return (entity[field] ?? 0) >= skill.resourceCost
 }
@@ -388,22 +399,22 @@ export interface SelectedAction {
 }
 
 /**
- * Phap Tu Reimagined Task 9 — the cast's execution identity. Separates
+ * Phap Tu Reimagined Task 9 - the cast's execution identity. Separates
  * the skill that OWNS the cast (cast count, slot cooldown, root
- * identity, progression identity — always `rootSkillId`) from the
- * payload actually resolving (`resolvedSkill` — damage/ailments/
+ * identity, progression identity - always `rootSkillId`) from the
+ * payload actually resolving (`resolvedSkill` - damage/ailments/
  * targeting/runtime combat fields).
  *
  * source:
- * - 'original'   — a normal slot/basic cast (root === payload)
- * - 'empowered'  — the root ult's empowered payload resolved
+ * - 'original'   - a normal slot/basic cast (root === payload)
+ * - 'empowered'  - the root ult's empowered payload resolved
  *                  (root = the chain-E slot's root skill; the god-ult def
- *                  is payload only — never gains cast count/cooldown)
- * - 'composite'  — a composite cast whose payload was picked from a
+ *                  is payload only - never gains cast count/cooldown)
+ * - 'composite'  - a composite cast whose payload was picked from a
  *                  pool (e.g. van_phap_tuy_tam); the pick never gains
  *                  its own cast count
- * - 'repeat'     — an extra execution of the same cast (da_phap_lien_tuyen)
- * - 'multicast'  — an extra execution spawned by the multicast passive
+ * - 'repeat'     - an extra execution of the same cast (da_phap_lien_tuyen)
+ * - 'multicast'  - an extra execution spawned by the multicast passive
  *
  * 'repeat'/'multicast' executions are follow-ups: they must NOT
  * re-consume the slot cooldown or fire the cast sink (the root cast
@@ -417,13 +428,13 @@ export interface TurnSkillExecution {
   resolvedSkill: TurnSkillDefinition | null
   source: TurnExecutionSource
   /**
-   * Task 10 — the The pool captured pre-consume when a `consumesAllThe`
+   * Task 10 - the The pool captured pre-consume when a `consumesAllThe`
    * payload commits. Read by theScaling (Task 13); undefined for any
    * execution that did not burn the pool.
    */
   theBurned?: number
   /**
-   * Task 11 — multicast chain position: 0/undefined for the original
+   * Task 11 - multicast chain position: 0/undefined for the original
    * cast, N for the Nth multicast-sourced follow-up. Bounds the re-roll
    * (a multicast execution rolls again only while depth <
    * min(multicast.maxExtraCasts, MAX_MULTICAST)).
@@ -432,7 +443,7 @@ export interface TurnSkillExecution {
 }
 
 /**
- * Phap Tu An (Task 11) — a queued follow-up execution of an
+ * Phap Tu An (Task 11) - a queued follow-up execution of an
  * already-committed cast. Drained by the engine's follow-up path as a
  * gauge-free bypass action that re-resolves the root skill's payload
  * (composite picks re-roll per execution). Structurally bounded:
@@ -477,7 +488,7 @@ const FALLBACK_BASIC_SKILL: TurnSkillDefinition = {
 }
 
 /**
- * Reaction M4 (R-E) — the sealed no-action. Produced when every
+ * Reaction M4 (R-E) - the sealed no-action. Produced when every
  * candidate is forbidden by the actor's restriction set (Cam Cong):
  * NOT a stun -- declareActorAction converts skillId '' into the same
  * empty-turn shape as the existing no-action return (action: null).
@@ -490,16 +501,16 @@ export const NULL_ACTION: SelectedAction = {
 }
 
 /**
- * Ticks special/ultimate cooldowns down by 1, floored at 0 — cooldown
+ * Ticks special/ultimate cooldowns down by 1, floored at 0 - cooldown
  * counts the ACTOR's own turns (this rework's "tick at the holder's own
  * turn" convention, already used by BuffSystem). Call once per actor
  * per turn, BEFORE selectAction().
  *
- * `exclude` — slots to skip this tick: declareActorAction passes the
+ * `exclude` - slots to skip this tick: declareActorAction passes the
  * slots whose cooldown was (re)committed during THIS turn's pre-action
  * status phase (e.g. a lethal-DoT survive trigger spending the ult slot
  * inside BuffSystem.update). A fresh commit starts counting from the
- * holder's NEXT own turn — it must not lose a turn to the tick that
+ * holder's NEXT own turn - it must not lose a turn to the tick that
  * immediately follows the phase that committed it.
  */
 export function tickCooldowns(
@@ -526,7 +537,7 @@ function slotAction(slot: TurnSkillSlot): SelectedAction {
 }
 
 /**
- * Basic-slot resolution — the dynamicBasic provider OWNS the slot when
+ * Basic-slot resolution - the dynamicBasic provider OWNS the slot when
  * present (Kiem Tu Reimagined Task 2): participant.basic is inert for
  * those actors. Falls back to the static basic, then the hardcoded
  * Slice-1 fallback attack.
@@ -566,9 +577,9 @@ function slotReady(slot: TurnSkillSlot | undefined, participant: TurnBattleParti
  * Priority: ultimate (off cooldown + affordable) -> special (same) ->
  * basic (no cooldown/cost by construction) -> hardcoded fallback basic
  * attack when the participant has no `basic` set at all (Slice 1
- * backward compatibility — see plan Task 4).
+ * backward compatibility - see plan Task 4).
  *
- * Reaction M4 — `forbidden` is the actor's action-tag restriction set
+ * Reaction M4 - `forbidden` is the actor's action-tag restriction set
  * (Cam Cong via ActionValidator). Forbidden candidates are skipped in
  * priority order; when every candidate is sealed the actor gets the
  * NULL_ACTION empty turn (R-E), never a silently-forbidden pick.
@@ -599,29 +610,29 @@ export function selectAction(
 }
 
 /**
- * Slice 7 — 3 skill role cố định mà manual UI ép cast được. Basic luôn
- * ready (no cooldown/cost by construction); special/ultimate đi qua đúng
- * readiness checks của selectAction() (cooldown + resource) — slot không
- * sẵn sàng bị BỎ QUA im lặng (UI disable nút không sẵn sàng trước, đây
- * chỉ là defensive backstop, không phải error path — spec Slice 7 §2).
+ * Slice 7 - the 3 fixed skill roles the manual UI can force-cast. Basic is
+ * always ready (no cooldown/cost by construction); special/ultimate go through
+ * the real readiness checks of selectAction() (cooldown + resource) - an unready
+ * slot is silently SKIPPED (the UI disables unready buttons first; this is
+ * only a defensive backstop, not an error path - spec Slice 7 sec.2).
  */
 export type TurnSkillSlotRole = 'basic' | 'special' | 'ultimate'
 
 /**
- * Ép 1 slot role cụ thể khi role đó ready; ngược lại rơi về priority
- * thường (selectAction). Basic = participant.basic (hoặc fallback khi
- * không set), luôn ready by construction.
+ * Forces one specific role slot when that role is ready; otherwise falls back
+ * to normal priority (selectAction). Basic = participant.basic (or fallback
+ * when unset), always ready by construction.
  */
 export function selectForcedAction(
   participant: TurnBattleParticipant,
   forced: ForcedTurnChoice,
   forbidden?: ReadonlySet<string>,
 ): SelectedAction {
-  // Kiem Tu Reimagined Task 2 — a dynamic_basic pick travels the SAME
+  // Kiem Tu Reimagined Task 2 - a dynamic_basic pick travels the SAME
   // manual-submit channel as slot roles; the provider validates the id
   // against its own manualOptions (invalid -> normal selection). Manual
   // picks never advance the provider's auto cursor.
-  // Reaction M4 — a manual pick whose tags are forbidden is rejected
+  // Reaction M4 - a manual pick whose tags are forbidden is rejected
   // like any other invalid pick (falls to restricted selection; the
   // seal cannot be bypassed through the forced channel).
   if (typeof forced === 'object') {
@@ -670,10 +681,10 @@ export function selectForcedAction(
 }
 
 /**
- * Phap Tu An (Task 11) — uniform pick of `count` DISTINCT defs from a
+ * Phap Tu An (Task 11) - uniform pick of `count` DISTINCT defs from a
  * composite pool via the injected rng (partial Fisher-Yates). All new
- * An-kit randomness routes through the system's injected rng — never
- * global Math.random — so tests are deterministic.
+ * An-kit randomness routes through the system's injected rng - never
+ * global Math.random - so tests are deterministic.
  */
 export function pickCompositePool(
   pool: readonly TurnSkillDefinition[],
@@ -691,7 +702,7 @@ export function pickCompositePool(
   return picks
 }
 
-/** Sets the used slot on cooldown and consumes its resource — call AFTER a successful cast (a target was actually hit). No-op for the basic fallback (slot is null). */
+/** Sets the used slot on cooldown and consumes its resource - call AFTER a successful cast (a target was actually hit). No-op for the basic fallback (slot is null). */
 export function commitAction(entity: CombatEntity, action: SelectedAction): void {
   if (action.slot) {
     action.slot.remainingCooldownTurns = action.slot.skill.cooldownTurns

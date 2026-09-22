@@ -7,6 +7,7 @@ import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../battle/contracts/ids'
 import { PASSIVE_SKILLS } from '../../data/skill/PassiveSkills'
+import { SKILLS } from '../../data/skill/Skills'
 
 // ARCH-002 (M7) — regression coverage for the stat-refresh / battle-reset
 // repair, driven through the real GameManager entry paths (no internal
@@ -115,6 +116,7 @@ describe('ARCH-002 M7 — passive stacks are live in-fight and reset before the 
     manager.setCombatClockSource(clock)
 
     const player = makePlayer({ selectedTalentIds: ['tat_phong'] })
+    manager.catalogOps.registerSkillTemplates(SKILLS)
     manager.setActivePlayer(player)
     manager.progressionOps.syncTalentCombatPassive(player)
 
@@ -155,6 +157,7 @@ describe('ARCH-002 M7 — passive stacks are live in-fight and reset before the 
     manager.setCombatClockSource(clock)
 
     const player = makePlayer({ selectedTalentIds: ['tat_phong'] })
+    manager.catalogOps.registerSkillTemplates(SKILLS)
     manager.setActivePlayer(player)
     manager.progressionOps.syncTalentCombatPassive(player)
 
@@ -436,6 +439,7 @@ describe('ARCH-002 M7 — resolved base provenance', () => {
     manager.setCombatClockSource(clock)
 
     const player = makePlayer({ selectedTalentIds: ['tat_phong'] })
+    manager.catalogOps.registerSkillTemplates(SKILLS)
     manager.setActivePlayer(player)
     manager.progressionOps.syncTalentCombatPassive(player)
 

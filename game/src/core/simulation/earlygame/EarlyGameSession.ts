@@ -40,6 +40,7 @@ import { PHAP_TU_AN_NODES } from '../../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../../data/progression/TheTuAnNodes'
+import { SKILL_CORE_NODES } from '../../../data/progression/SkillCoreNodes'
 import { ENEMIES } from '../../../data/enemy/Enemies'
 import { STAGES } from '../../../data/stage/Stages'
 import { materials } from '../../../data/materials/materials'
@@ -85,7 +86,7 @@ export interface SimRunTotals {
 }
 
 /** M-D: per-run record populated at runStage terminal. `counted:false`
- * means kills aren't trustworthy — either the terminal battle wasn't
+ * means kills aren't trustworthy - either the terminal battle wasn't
  * readable (missing-battle defeat) or the result was non-terminal
  * ('timeout': dead entries in a live battle never settled loot, so they
  * must not count). Flagged so a measurement can't treat 0 as a real
@@ -185,6 +186,7 @@ export class EarlyGameSession {
     catalog.registerProgressionNodes(KIEM_TU_NODES)
     catalog.registerProgressionNodes(THE_TU_NODES)
     catalog.registerProgressionNodes(THE_TU_AN_NODES)
+    catalog.registerProgressionNodes(SKILL_CORE_NODES)
     catalog.registerQuests(QUESTS)
 
     this.player = createDefaultPlayer()
@@ -220,7 +222,7 @@ export class EarlyGameSession {
 
   /** Real stage entry + clock-driven battle; rewards settle on the
    * combat clock (completedStageIds, loot) before this returns.
-   * M-D parity lifecycle (spec §3.1, pinned ordering):
+   * M-D parity lifecycle (spec sec.3.1, pinned ordering):
    *   pre-stage drain -> essenceBefore -> startStage/battle ->
    *   rewards settle -> essenceAfter/tinhHoaGained -> terminal counters
    *   -> post-terminal drain. */

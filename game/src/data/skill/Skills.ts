@@ -4,12 +4,17 @@ import { CORE_SKILLS } from './CoreSkills'
 import { PASSIVE_SKILLS } from './PassiveSkills'
 import { PHAP_TU_SKILLS } from './PhapTuChainSkills'
 import { PHAP_TU_ROUTE_SKILLS } from './PhapTuRouteSkills'
+import { TALENT_PASSIVE_SKILLS } from './TalentPassives'
 
 export const SKILLS: Skill[] = [
   ...CORE_SKILLS,
   ...PASSIVE_SKILLS,
   ...PHAP_TU_SKILLS,
   ...PHAP_TU_ROUTE_SKILLS,
+  // M-QI-05 - talent passives are registered templates so the canonical
+  // learnSkill funnel (preflight + grant contract) owns their insertion;
+  // all are fixed Lv1 (no Core Nodes).
+  ...TALENT_PASSIVE_SKILLS,
 ]
 
 // Phap Tu Reimagined — the normal Phap Tu kit: [basic, special,

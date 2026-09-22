@@ -40,6 +40,8 @@ export const CUONG_QUYEN: TurnSkillDefinition = {
     multiplier: 1,
     missingHpBonusPerMissingPercent: CUONG_QUYEN_MISSING_HP_PER_PERCENT,
     missingHpBonusCap: CUONG_QUYEN_MISSING_HP_CAP,
+    // M-QI-05 - damage-bearing native core: +5% coefficient per level.
+    levelScaling: 0.05,
   },
   targeting: { shape: 'single' },
 }
@@ -56,6 +58,7 @@ export const LOAN_DAU: TurnSkillDefinition = {
     multiplier: 2,
     missingHpBonusPerMissingPercent: CUONG_QUYEN_MISSING_HP_PER_PERCENT,
     missingHpBonusCap: CUONG_QUYEN_MISSING_HP_CAP,
+    levelScaling: 0.05,
   },
   targeting: { shape: 'single' },
 }
@@ -83,7 +86,7 @@ export const BAT_TU_BA_THE: TurnSkillDefinition = {
 export const TRAN_AP: TurnSkillDefinition = {
   id: 'tran_ap',
   cooldownTurns: 0,
-  damage: { kind: 'physical', multiplier: 0.8 },
+  damage: { kind: 'physical', multiplier: 0.8, levelScaling: 0.05 },
   targeting: { shape: 'all_lanes' },
 }
 
@@ -133,7 +136,7 @@ export const SON_NHAC: TurnSkillDefinition = {
 export const THAM_THE: TurnSkillDefinition = {
   id: 'tham_the',
   cooldownTurns: 0,
-  damage: { kind: 'physical', multiplier: 1 },
+  damage: { kind: 'physical', multiplier: 1, levelScaling: 0.05 },
   targeting: { shape: 'single' },
 }
 
@@ -159,15 +162,20 @@ export const BACH_UNG: TurnSkillDefinition = {
 export const PHAN_KICH: TurnSkillDefinition = {
   id: 'phan_kich',
   cooldownTurns: 0,
-  damage: { kind: 'physical', multiplier: 1 },
+  damage: { kind: 'physical', multiplier: 1, levelScaling: 0.05 },
   targeting: { shape: 'single' },
+  // M-QI-05 - internal payload: inherits the parent Core's level
+  // (tham_the owns every hidden-body reactive channel in the current
+  // model), never resolves its own (nonexistent) core.
+  progressionOwnerId: 'tham_the',
 }
 
 export const TRO_KICH: TurnSkillDefinition = {
   id: 'tro_kich',
   cooldownTurns: 0,
-  damage: { kind: 'physical', multiplier: 0.7 },
+  damage: { kind: 'physical', multiplier: 0.7, levelScaling: 0.05 },
   targeting: { shape: 'single' },
+  progressionOwnerId: 'tham_the',
 }
 
 /**
@@ -181,8 +189,9 @@ export const TRO_KICH: TurnSkillDefinition = {
 export const TRONG_PHAN_KICH: TurnSkillDefinition = {
   id: 'trong_phan_kich',
   cooldownTurns: 0,
-  damage: { kind: 'physical', multiplier: 1 },
+  damage: { kind: 'physical', multiplier: 1, levelScaling: 0.05 },
   targeting: { shape: 'single' },
+  progressionOwnerId: 'tham_the',
 }
 
 export type TheTuAnRootId = 'ho_mon' | 'phan_mon' | 'tro_mon'

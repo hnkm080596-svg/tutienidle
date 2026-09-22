@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import type { Skill } from './Skill'
 import { SkillManager } from './SkillManager'
 import { SkillSystem } from './SkillSystem'
@@ -32,7 +32,13 @@ function skill(overrides: Partial<Skill> = {}): Skill {
 
 function setup(template = skill()) {
   const manager = new SkillManager()
-  const system = new SkillSystem(manager, vi.fn())
+  const system = new SkillSystem(manager)
+  // M-QI-05 - live levels come from the provider (GameManager wires it
+  // to nodeLevels[core_<id>]); the template's authored level stands in
+  // for the canonical core level here.
+  system.setSkillLevelProvider((skillId) =>
+    skillId === template.id ? (template.level ?? 1) : 1,
+  )
   system.learn(template)
   return { manager, system, learned: manager.get(template.id)! }
 }

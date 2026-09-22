@@ -35,14 +35,14 @@ export const KIEM_PHO_ORBS: Record<OrbId, TurnSkillDefinition> = {
   orb_dam: {
     id: 'orb_dam',
     cooldownTurns: 0,
-    damage: { kind: 'physical', multiplier: 1 },
+    damage: { kind: 'physical', multiplier: 1, levelScaling: 0.05 },
     targeting: { shape: 'single' },
     presetId: 'slash',
   },
   orb_chem: {
     id: 'orb_chem',
     cooldownTurns: 0,
-    damage: { kind: 'physical', multiplier: 1.2 },
+    damage: { kind: 'physical', multiplier: 1.2, levelScaling: 0.05 },
     targeting: { shape: 'single' },
     appliesAilments: [{ buffDefinitionId: 'kiem_thuong', chance: 1, stacks: 1 }],
     presetId: 'slash',
@@ -50,7 +50,7 @@ export const KIEM_PHO_ORBS: Record<OrbId, TurnSkillDefinition> = {
   orb_bo: {
     id: 'orb_bo',
     cooldownTurns: 0,
-    damage: { kind: 'physical', multiplier: 1.8 },
+    damage: { kind: 'physical', multiplier: 1.8, levelScaling: 0.05 },
     targeting: { shape: 'single' },
     // Simplest existing defense-down lever (spec §3: reuse, no new
     // mechanic) — suy_nhuoc: defense -25%, 5 turns, refresh.
@@ -60,7 +60,7 @@ export const KIEM_PHO_ORBS: Record<OrbId, TurnSkillDefinition> = {
   orb_hat: {
     id: 'orb_hat',
     cooldownTurns: 0,
-    damage: { kind: 'physical', multiplier: 0.6 },
+    damage: { kind: 'physical', multiplier: 0.6, levelScaling: 0.05 },
     targeting: { shape: 'single' },
     // Authored chance ~0.2 (spec §3, balance-tunable).
     appliesAilments: [{ buffDefinitionId: 'choang', chance: 0.2, stacks: 1 }],
@@ -70,7 +70,7 @@ export const KIEM_PHO_ORBS: Record<OrbId, TurnSkillDefinition> = {
     id: 'orb_quet',
     cooldownTurns: 0,
     // ×0.8 per target — full AoE, no split (spec §3).
-    damage: { kind: 'physical', multiplier: 0.8 },
+    damage: { kind: 'physical', multiplier: 0.8, levelScaling: 0.05 },
     targeting: { shape: 'all_lanes', columnRadius: GRID_COLUMN_COUNT },
     presetId: 'slash',
   },

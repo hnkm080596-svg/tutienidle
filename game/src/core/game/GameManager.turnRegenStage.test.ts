@@ -9,6 +9,7 @@ import type { Stage } from '../stage/Stage'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { EntityVitalsChangedEvent } from '../combat/EntityVitalsSystem'
 import type { StatusVfxAttachedEvent } from '../battle/BattleEvents'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // M8 (ARCH-003) — real stage-loop regression for the per-turn resource
 // contract: the REAL Phap Tu chain kits (resolved through
@@ -88,6 +89,7 @@ function buildHarness(element: 'water' | 'earth', playerSpeed: number): Harness 
   player.baseStats = asBaseStats({ ...player.baseStats, speed: playerSpeed })
 
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   gameManager.catalogOps.registerEnemyTemplates([makeEnemy()])
   gameManager.catalogOps.registerStages([stageFixture()])
   gameManager.setActivePlayer(player)
@@ -103,7 +105,7 @@ function buildHarness(element: 'water' | 'earth', playerSpeed: number): Harness 
   // The committed element's basic is required at battle build (round-3
   // fail-fast: missing required basic throws, no melee substitute).
   expect(
-    gameManager.progressionOps.learnSkill(SPELL_KIT_IDS[element][0]),
+    gameManager.progressionOps.learnSkill(SPELL_KIT_IDS[element][0], player),
   ).toBe(true)
 
   return {

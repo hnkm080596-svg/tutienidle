@@ -257,7 +257,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Cửu thiên vãn tinh lạc xuống ba cột, hút sinh cơ về bản thân.',
   },
 
-  // P7-M-G beta roster — Thần Nông (healer) + Khai Minh (buffer).
+  // P7-M-G beta roster - Than Nong (healer) + Khai Minh (buffer).
   than_nong_basic: {
     name: 'Dược Thảo Kích',
     description: 'Thảo mộc hóa gai đâm một mục tiêu.',

@@ -26,8 +26,9 @@ import { buildGameSave, restoreGameSession } from './SaveSystem'
 // talent_passive_* in skills[] - the defensive passive silently never
 // applies after any reload.
 //
-// it.fails pins the defect deterministically; when the ordering/registry
-// fix lands this flips green and must be converted to a normal it().
+// M-QI-05 - fixed: the canonical learnSkill funnel reads the registered
+// template catalog (TALENT_PASSIVE_SKILLS is part of SKILLS), so
+// restore-time syncTalentCombatPassive grants the passives again.
 function createRegisteredManager(): GameManager {
   const manager = new GameManager()
 
@@ -44,7 +45,7 @@ describe('Talent combat passives across save restore (QA regression)', () => {
     setActivePinia(createPinia())
   })
 
-  it.fails(
+  it(
     'restores the selected combat talent passives that were live at save time',
     () => {
       // Build a save that honestly captured the live state: can_than

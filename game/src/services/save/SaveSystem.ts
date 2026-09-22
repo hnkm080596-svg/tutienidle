@@ -164,7 +164,7 @@ export { CURRENT_SAVE_VERSION }
 // (nhận từ chiến đấu, không còn cấp khi đột phá tiểu cảnh giới, xem
 // CultivationSystem.breakthrough()). ProgressionNode.cost đổi tên thành
 // insightCost. Skill.experience/experienceRequired (XP-per-cast) đã xoá
-// hẳn — nâng cấp skill giờ tiêu skillInsight qua SkillSystem.upgradeSkill().
+// entirely - skill upgrades now spend skillInsight via Core Node level (M-QI-05).
 // Save cũ thiếu/lệch field — không viết migration, cùng convention mọi
 // version trước.
 // version 41 (Milestone naming pass 2026-08-24, xem

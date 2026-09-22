@@ -16,7 +16,7 @@ import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction
 export const NGU_KIEM_THUAT: TurnSkillDefinition = {
   id: 'ngu_kiem_thuat',
   cooldownTurns: 0,
-  damage: { kind: 'physical', multiplier: 1 },
+  damage: { kind: 'physical', multiplier: 1, levelScaling: 0.05 },
   targeting: { shape: 'single' },
   presetId: 'slash',
 }

@@ -46,6 +46,7 @@ import {
   hiddenBodyReactiveModifiers,
   bodyEnduranceModifiers,
 } from './TheTuPath'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 const TOT10 = { strength: 10, dexterity: 10, intelligence: 10, attunement: 0, vitality: 10 }
 
@@ -106,6 +107,7 @@ function makeManager() {
   gameManager.catalogOps.registerSkillTemplates(SKILLS)
   gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   gameManager.catalogOps.registerProgressionNodes([...THE_TU_NODES, ...THE_TU_AN_NODES])
+  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   return { gameManager, combatSource }
