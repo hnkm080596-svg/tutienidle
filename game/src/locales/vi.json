@@ -167,6 +167,7 @@
           "techniqueGrade": "Cần tâm pháp đạt phẩm {grade}",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
         },
+        "upgradeGateHeader": "Nâng cấp bị chặn:",
         "routePick": {
           "title": "Chọn Hướng Pháp Tu",
           "hint": "Hành đã chọn không thể đổi. Hướng có thể đổi ngoài chiến đấu — node hướng cũ về 0, hoàn lại 75% Cảm Ngộ đã bỏ ra.",

@@ -266,6 +266,9 @@ const NGU_GROWTH_NODES: ProgressionNode[] = [
     insightCost: 1,
     maxLevel: 5,
     upgradeCost: { base: 1, perLevel: 2 },
+    // M-QI-06 authored cap gate: the last mastery level needs
+    // technique rank 4 (mechanism-proving set).
+    levelGates: [{ atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } }],
     prerequisites: [],
     effect: { statModifiers: [stat('ngu_kiem_sac', 'skillDamagePercent', undefined, undefined, 0.03, 0.03)] },
     branchTag: 'ngu_kiem',
@@ -279,6 +282,9 @@ const NGU_GROWTH_NODES: ProgressionNode[] = [
     insightCost: 1,
     maxLevel: 5,
     upgradeCost: { base: 1, perLevel: 2 },
+    // M-QI-06 authored cap gate: the last mastery level needs
+    // technique rank 4 (mechanism-proving set).
+    levelGates: [{ atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } }],
     prerequisites: [],
     effect: { statModifiers: [stat('ngu_kiem_phong', 'chanceToIgnoreResistance', undefined, undefined, 0.02, 0.02)] },
     branchTag: 'ngu_kiem',
@@ -292,6 +298,9 @@ const NGU_GROWTH_NODES: ProgressionNode[] = [
     insightCost: 1,
     maxLevel: 5,
     upgradeCost: { base: 1, perLevel: 2 },
+    // M-QI-06 authored cap gate: the last mastery level needs
+    // technique rank 4 (mechanism-proving set).
+    levelGates: [{ atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } }],
     prerequisites: [],
     effect: { statModifiers: [stat('ngu_kiem_sat', 'criticalDamage', undefined, undefined, 0.03, 0.03)] },
     branchTag: 'ngu_kiem',

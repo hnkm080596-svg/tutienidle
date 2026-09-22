@@ -217,6 +217,8 @@ const CUONG_BRANCH: ProgressionNode[] = [
     prerequisites: [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'cuong_chien' },
+      // M-QI-06 authored unlock gate (mechanism-proving set).
+      { kind: 'techniqueRank', rank: 5 },
     ],
     effect: { bodyKitModifiers: { batTuDurationBonus: 1 } },
     branchTag: 'the_tu',
@@ -231,6 +233,8 @@ const CUONG_BRANCH: ProgressionNode[] = [
     prerequisites: [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'minor_cuong_huyet_no' },
+      // M-QI-06 authored unlock gate (mechanism-proving set).
+      { kind: 'techniqueRank', rank: 5 },
     ],
     effect: { bodyKitModifiers: { missingHpBonusBonus: 0.01 } },
     branchTag: 'the_tu',
@@ -308,6 +312,8 @@ const TRAN_BRANCH: ProgressionNode[] = [
     prerequisites: [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'tran_the' },
+      // M-QI-06 authored unlock gate (mechanism-proving set).
+      { kind: 'techniqueRank', rank: 5 },
     ],
     effect: { bodyKitModifiers: { tauntTurnsBonus: 1 } },
     branchTag: 'the_tu',
@@ -322,6 +328,8 @@ const TRAN_BRANCH: ProgressionNode[] = [
     prerequisites: [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'node', nodeId: 'tran_the' },
+      // M-QI-06 authored unlock gate (mechanism-proving set).
+      { kind: 'techniqueRank', rank: 5 },
     ],
     effect: { bodyKitModifiers: { sonNhacWardRatioBonus: 0.05 } },
     branchTag: 'the_tu',

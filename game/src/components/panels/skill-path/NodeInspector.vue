@@ -14,6 +14,8 @@ import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import {
   getNodeLevel,
   getNodeMaxLevel,
+  getEffectiveNodeMaxLevel,
+  getBlockingNodeLevelGates,
   getNextLevelCost,
   hasPrerequisite,
   canUpgradeNode,
@@ -26,7 +28,7 @@ import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import type { ElementType } from '@/core/element/ElementType'
 import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
-import type { ProgressionNode } from '@/core/progression/ProgressionNode'
+import type { NodePrerequisite, ProgressionNode } from '@/core/progression/ProgressionNode'
 
 const { t } = useI18n()
 
@@ -81,6 +83,66 @@ const upgradable = computed(() => {
 
 const isMaxed = computed(() => level.value >= maxLevel.value && maxLevel.value > 1)
 
+// M-QI-06 - effective ceiling for the selected node (level-gate caps);
+// used only to decide whether the upgrade is gate-blocked - the
+// `x/max` display stays authored.
+const effectiveMax = computed(() => {
+  stateVersion.value
+
+  return props.node ? getEffectiveNodeMaxLevel(player.$state, props.node) : 1
+})
+
+// M-QI-06 - ONE prereq -> localized reason formatter shared by
+// lockedReasons (level-0 purchase) and upgradeGateReasons (cap-
+// blocked upgrade). Not a source of truth - a presentation of
+// hasPrerequisite() outcomes.
+function nodePrereqReason(prereq: NodePrerequisite): string {
+  if (prereq.kind === 'node') {
+    return t('panels.skillPath.nodeInspector.lockedReasons.prerequisiteNode', {
+      name: gameManager.nodeRegistry.get(prereq.nodeId).name,
+    })
+  } else if (prereq.kind === 'realm') {
+    return t('panels.skillPath.nodeInspector.lockedReasons.realm')
+  } else if (prereq.kind === 'excludesNode') {
+    return t('panels.skillPath.nodeInspector.lockedReasons.excludesNode', {
+      name: gameManager.nodeRegistry.get(prereq.nodeId).name,
+    })
+  } else if (prereq.kind === 'nodeCount') {
+    return t('panels.skillPath.nodeInspector.lockedReasons.nodeCount', {
+      required: prereq.countRequired,
+      total: prereq.nodeIds.length,
+    })
+  } else if (prereq.kind === 'skillCastCount') {
+    const skillName = gameManager.skillManager.get(prereq.skillId)?.name ?? prereq.skillId
+    const levelPart = prereq.level !== undefined
+      ? t('panels.skillPath.nodeInspector.lockedReasons.skillLevel', { level: prereq.level })
+      : undefined
+    const countPart = prereq.count !== undefined
+      ? t('panels.skillPath.nodeInspector.lockedReasons.skillCastCount', { count: prereq.count })
+      : undefined
+    const requirement = [levelPart, countPart]
+      .filter(Boolean)
+      .join(t('panels.skillPath.nodeInspector.lockedReasons.skillJoin'))
+
+    return t('panels.skillPath.nodeInspector.lockedReasons.skill', {
+      skill: skillName,
+      requirement,
+    })
+  } else if (prereq.kind === 'kiemDaoBelowCap') {
+    return t('panels.skillPath.nodeInspector.lockedReasons.kiemDaoCap')
+  } else if (prereq.kind === 'techniqueRank') {
+    return t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', {
+      rank: prereq.rank,
+    })
+  } else if (prereq.kind === 'techniqueGrade') {
+    return t('panels.skillPath.nodeInspector.lockedReasons.techniqueGrade', {
+      grade: prereq.grade,
+    })
+  }
+
+  return t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade')
+}
+
 // Lý do khoá — thuần suy ra từ hasPrerequisite() đã có (không đụng
 // core), chỉ để hiện gợi ý, KHÔNG phải nguồn sự thật.
 const lockedReasons = computed(() => {
@@ -122,57 +184,30 @@ const lockedReasons = computed(() => {
   }
 
   for (const prereq of props.node.prerequisites ?? []) {
-    if (hasPrerequisite(player.$state, prereq)) {
-      continue
-    }
-
-    if (prereq.kind === 'node') {
-      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.prerequisiteNode', {
-        name: gameManager.nodeRegistry.get(prereq.nodeId).name,
-      }))
-    } else if (prereq.kind === 'realm') {
-      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.realm'))
-    } else if (prereq.kind === 'excludesNode') {
-      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.excludesNode', {
-        name: gameManager.nodeRegistry.get(prereq.nodeId).name,
-      }))
-    } else if (prereq.kind === 'nodeCount') {
-      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.nodeCount', {
-        required: prereq.countRequired,
-        total: prereq.nodeIds.length,
-      }))
-    } else if (prereq.kind === 'skillCastCount') {
-      const skillName = gameManager.skillManager.get(prereq.skillId)?.name ?? prereq.skillId
-      const levelPart = prereq.level !== undefined
-        ? t('panels.skillPath.nodeInspector.lockedReasons.skillLevel', { level: prereq.level })
-        : undefined
-      const countPart = prereq.count !== undefined
-        ? t('panels.skillPath.nodeInspector.lockedReasons.skillCastCount', { count: prereq.count })
-        : undefined
-      const requirement = [levelPart, countPart]
-        .filter(Boolean)
-        .join(t('panels.skillPath.nodeInspector.lockedReasons.skillJoin'))
-
-      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.skill', {
-        skill: skillName,
-        requirement,
-      }))
-    } else if (prereq.kind === 'kiemDaoBelowCap') {
-      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.kiemDaoCap'))
-    } else if (prereq.kind === 'techniqueRank') {
-      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', {
-        rank: prereq.rank,
-      }))
-    } else if (prereq.kind === 'techniqueGrade') {
-      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.techniqueGrade', {
-        grade: prereq.grade,
-      }))
-    } else {
-      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade'))
+    if (!hasPrerequisite(player.$state, prereq)) {
+      reasons.push(nodePrereqReason(prereq))
     }
   }
 
   return reasons
+})
+
+// M-QI-06 - upgrade-gate reasons: shown ONLY when the upgrade is
+// gate-blocked (level >= 1, below authored max, at/above the
+// effective cap). Renders the BINDING gate(s) via
+// getBlockingNodeLevelGates - the same authority that sets the
+// effective max - so frozen-surplus levels above the binding gate
+// still explain themselves. Never a forecast of later gates.
+const upgradeGateReasons = computed(() => {
+  stateVersion.value
+
+  if (!props.node || level.value < 1 || level.value >= maxLevel.value || level.value < effectiveMax.value) {
+    return []
+  }
+
+  return getBlockingNodeLevelGates(player.$state, props.node).map((gate) =>
+    nodePrereqReason(gate.prerequisite),
+  )
 })
 
 function onPurchase() {
@@ -248,11 +283,24 @@ function onUpgrade() {
         <li v-for="reason in lockedReasons" :key="reason">{{ reason }}</li>
       </ul>
 
+      <!-- M-QI-06 - binding level-gate reasons (upgrade-blocked only). -->
+      <div v-if="upgradeGateReasons.length > 0" class="node-inspector__gate-block">
+        <p class="node-inspector__gate-header">
+          {{ t('panels.skillPath.nodeInspector.upgradeGateHeader') }}
+        </p>
+        <ul class="node-inspector__gate-reasons">
+          <li v-for="reason in upgradeGateReasons" :key="reason">{{ reason }}</li>
+        </ul>
+      </div>
+
       <div class="node-inspector__actions">
-        <!-- Ẩn NỘI DUNG chi phí khi ĐÃ hiện trong danh sách lý do khoá
-             phía trên (2026-08-30 frontend-design pass: 2 chỗ cùng nói
-             "Cần X Cảm Ngộ" khi node đang khoá vì thiếu điểm) — giữ span
-             rỗng để layout space-between với nút không bị lệch. -->
+        <!-- Hide the cost content when it is already shown in the lock
+             reason list above (2026-08-30 frontend-design pass: two spots
+             repeated the same 'needs X Insight' text when a node was
+             point-locked) - keep the empty span so the space-between
+             layout with the button does not shift. M-QI-06: a
+             gate-blocked level (nextCost null below authored max) never
+             interpolates an upgrade cost either. -->
         <span class="node-inspector__cost">
           {{ lockedReasons.length > 0 && level === 0
             ? ''
@@ -260,7 +308,9 @@ function onUpgrade() {
               ? t('panels.skillPath.nodeInspector.cost.initial', { cost: nextCost ?? node.insightCost })
               : isMaxed
                 ? t('panels.skillPath.nodeInspector.cost.maxed')
-                : t('panels.skillPath.nodeInspector.cost.upgrade', { cost: nextCost }) }}
+                : nextCost === null
+                  ? ''
+                  : t('panels.skillPath.nodeInspector.cost.upgrade', { cost: nextCost }) }}
         </span>
 
         <GameButton

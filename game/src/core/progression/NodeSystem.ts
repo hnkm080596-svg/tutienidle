@@ -129,6 +129,52 @@ function meetsPrerequisites(player: PlayerData, node: ProgressionNode): boolean 
 }
 
 /**
+ * M-QI-06 (QI-D3) - the gate(s) currently BINDING this node's
+ * upgrade ceiling: the unsatisfied levelGates entry(ies) tied at the
+ * minimum relevant `atLevel`. "Relevant" = unsatisfied AND
+ * `2 <= atLevel <= getNodeMaxLevel(node)` - gates above the authored
+ * max are inert and never surface as blockers, so a caller may treat
+ * a non-empty result as "blocked" without re-filtering. THE authority
+ * for "which gate blocks now" - `getEffectiveNodeMaxLevel` derives
+ * from it and presentation consumes it; the min-selection algorithm
+ * lives here only.
+ */
+export function getBlockingNodeLevelGates(
+  player: PlayerData,
+  node: ProgressionNode,
+): { atLevel: number; prerequisite: NodePrerequisite }[] {
+  const authoredMax = getNodeMaxLevel(node)
+  const unsatisfied = (node.levelGates ?? []).filter(
+    (gate) =>
+      gate.atLevel >= 2 && gate.atLevel <= authoredMax && !hasPrerequisite(player, gate.prerequisite),
+  )
+
+  if (unsatisfied.length === 0) {
+    return []
+  }
+
+  const minAtLevel = Math.min(...unsatisfied.map((gate) => gate.atLevel))
+
+  return unsatisfied.filter((gate) => gate.atLevel === minAtLevel)
+}
+
+/**
+ * M-QI-06 (QI-D3) - effective reachable max under levelGates: the
+ * smallest unsatisfied relevant gate's `atLevel - 1`, floored by the
+ * authored maxLevel. UPGRADE semantics only - `getNodeMaxLevel` stays
+ * the authored/registered ceiling read by save validation, catalog
+ * checks, and true-completion display.
+ */
+export function getEffectiveNodeMaxLevel(player: PlayerData, node: ProgressionNode): number {
+  const authoredMax = getNodeMaxLevel(node)
+  const blocking = getBlockingNodeLevelGates(player, node)
+
+  return blocking.length === 0
+    ? authoredMax
+    : Math.min(authoredMax, Math.min(...blocking.map((gate) => gate.atLevel - 1)))
+}
+
+/**
  * Phap Tu Reimagined Task 4 - route membership: a routeTag node only
  * exists while the player's route matches (untagged nodes are always
  * active). Aggregators skip inactive-route nodes and purchase/upgrade
@@ -198,7 +244,9 @@ export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boole
 
   const level = getNodeLevel(player, node.id)
 
-  if (level < 1 || level >= getNodeMaxLevel(node)) {
+  // M-QI-06 - the level-gate effective ceiling replaces the authored
+  // read here: an unsatisfied gate blocks the L -> L+1 transaction.
+  if (level < 1 || level >= getEffectiveNodeMaxLevel(player, node)) {
     return false
   }
 

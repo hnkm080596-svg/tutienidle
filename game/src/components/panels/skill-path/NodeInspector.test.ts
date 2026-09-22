@@ -10,6 +10,12 @@ import NodeInspector from './NodeInspector.vue'
 import { usePlayerStore } from '@/stores/player'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
+import {
+  getEffectiveNodeMaxLevel,
+  getNextLevelCost,
+  getNodeLevel,
+} from '@/core/progression/NodeSystem'
+import type { PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { GameManager } from '@/core/game/GameManager'
 
@@ -128,6 +134,156 @@ describe('NodeInspector - technique prerequisite lock reasons (P7-M6)', () => {
     // Only the realm gate remains unsatisfied.
     expect(view.reasonTexts()).toEqual([
       i18n.global.t('panels.skillPath.nodeInspector.lockedReasons.realm'),
+    ])
+
+    view.unmount()
+  })
+})
+
+// M-QI-06 - upgrade-gate reasons: a purchased node parked below its
+// authored max by an unsatisfied levelGate shows the BINDING gate's
+// reason (including frozen-surplus levels above the binding gate),
+// never renders a null upgrade cost.
+function mountOwnedInspector(node: ProgressionNode, techniqueProgress?: { rank: number; grade: number }) {
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+
+  const gm: Partial<GameManager> = {
+    nodeRegistry: {
+      get: (id: string) => fixtureNode({ id, name: id }),
+    } as GameManager['nodeRegistry'],
+    skillManager: {
+      get: () => undefined,
+    } as unknown as GameManager['skillManager'],
+    progressionOps: {
+      getNextNodeCost: (nodeId: string, player: PlayerData) => {
+        const target = node.id === nodeId ? node : fixtureNode({ id: nodeId, name: nodeId })
+        const level = getNodeLevel(player, nodeId)
+
+        return level >= getEffectiveNodeMaxLevel(player, target) || level < 1
+          ? undefined
+          : getNextLevelCost(target, level)
+      },
+      purchaseNode: () => false,
+      upgradeNode: () => false,
+      selectSpellPathElement: () => false,
+      setMortalBasicSkill: () => false,
+      selectSkillSpecialization: () => false,
+      switchRoute: () => 0,
+      devResetBranch: () => 0,
+      allocateAttributePoint: () => false,
+    } as unknown as GameManager['progressionOps'],
+  }
+
+  const app = createApp({
+    render: () => h(NodeInspector, { node, purchased: true, purchasable: false }),
+  })
+
+  const pinia = createPinia()
+  app.use(pinia)
+  app.use(i18n)
+  app.provide(GAME_MANAGER_KEY, gm as GameManager)
+  app.provide(STATE_VERSION_KEY, ref(0))
+  app.provide(BUMP_STATE_KEY, () => {})
+
+  const player = usePlayerStore(pinia)
+  player.$state.techniqueProgress = techniqueProgress
+  player.$state.skillInsight = 500
+  player.$state.nodeLevels[node.id] = 1
+  player.$state.purchasedNodeIds.push(node.id)
+
+  app.mount(container)
+
+  return {
+    container,
+    player,
+    app,
+    unmount: () => {
+      app.unmount()
+      container.remove()
+    },
+    gateReasonTexts: () =>
+      [...container.querySelectorAll('.node-inspector__gate-reasons li')].map((li) => li.textContent),
+    gateHeader: () => container.querySelector('.node-inspector__gate-header')?.textContent ?? null,
+    costText: () => container.querySelector('.node-inspector__cost')?.textContent?.trim() ?? null,
+    upgradeButton: () =>
+      container.querySelector<HTMLButtonElement>('.node-inspector__buy'),
+  }
+}
+
+describe('NodeInspector - technique level-gate reasons (M-QI-06)', () => {
+  const gated = () =>
+    fixtureNode({
+      id: 'test_gated_node',
+      name: 'Gated Node',
+      maxLevel: 10,
+      upgradeCost: { base: 1, perLevel: 3 },
+      levelGates: [
+        { atLevel: 6, prerequisite: { kind: 'techniqueRank', rank: 3 } },
+        { atLevel: 9, prerequisite: { kind: 'techniqueRank', rank: 6 } },
+      ],
+    })
+
+  it('a node parked at its effective cap shows the binding rank reason and no upgrade cost', async () => {
+    const node = gated()
+    const view = mountOwnedInspector(node, { rank: 0, grade: 1 })
+    view.player.$state.nodeLevels[node.id] = 5
+
+    await nextTick()
+
+    expect(view.gateHeader()).toBe(
+      i18n.global.t('panels.skillPath.nodeInspector.upgradeGateHeader'),
+    )
+    expect(view.gateReasonTexts()).toEqual([
+      i18n.global.t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', { rank: 3 }),
+    ])
+    expect(view.upgradeButton()?.disabled).toBe(true)
+    expect(view.costText()).toBe('')
+
+    view.unmount()
+  })
+
+  it('frozen surplus: an owned level above the binding gate still explains the blocker', async () => {
+    const node = gated()
+    const view = mountOwnedInspector(node, { rank: 0, grade: 2 })
+    view.player.$state.nodeLevels[node.id] = 6
+
+    await nextTick()
+
+    expect(view.gateReasonTexts()).toEqual([
+      i18n.global.t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', { rank: 3 }),
+    ])
+    expect(view.upgradeButton()?.disabled).toBe(true)
+
+    view.unmount()
+  })
+
+  it('satisfying the gate re-enables the upgrade and clears the reasons', async () => {
+    const node = gated()
+    const view = mountOwnedInspector(node, { rank: 3, grade: 1 })
+    view.player.$state.nodeLevels[node.id] = 5
+
+    await nextTick()
+
+    expect(view.gateHeader()).toBeNull()
+    expect(view.gateReasonTexts()).toEqual([])
+    expect(view.upgradeButton()?.disabled).toBe(false)
+    expect(view.costText()).toContain(
+      i18n.global.t('panels.skillPath.nodeInspector.cost.upgrade', { cost: 2 }).trim(),
+    )
+
+    view.unmount()
+  })
+
+  it('a satisfied first gate still blocks at the later gate (no forecast, binding only)', async () => {
+    const node = gated()
+    const view = mountOwnedInspector(node, { rank: 3, grade: 1 })
+    view.player.$state.nodeLevels[node.id] = 8
+
+    await nextTick()
+
+    expect(view.gateReasonTexts()).toEqual([
+      i18n.global.t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', { rank: 6 }),
     ])
 
     view.unmount()

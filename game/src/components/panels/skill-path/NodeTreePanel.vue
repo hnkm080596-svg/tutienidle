@@ -27,7 +27,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
-import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
+import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getEffectiveNodeMaxLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
 import { getActiveRoute } from '@/core/player/CultivationPathSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
@@ -236,7 +236,9 @@ const branches = computed(() => {
         level,
         maxLevel,
         upgradable,
-        nextCost: level >= maxLevel ? null : getNextLevelCost(node, level),
+        // M-QI-06 - effective cap read: a gate-blocked level previews
+        // no cost (the x/max badge stays authored maxLevel above).
+        nextCost: level >= getEffectiveNodeMaxLevel(player.$state, node) ? null : getNextLevelCost(node, level),
         parentId: parentOf(node),
         depth: 0,
       })
@@ -298,6 +300,13 @@ function costLabel(entry: TreeEntry): string {
 
   if (entry.level >= entry.maxLevel) {
     return t('panels.nodeTree.labels.maxLevel')
+  }
+
+  // M-QI-06 - a gate-blocked level (nextCost null below authored max)
+  // renders no upgrade-cost text; the inspector's gate reasons carry
+  // the explanation.
+  if (entry.nextCost === null) {
+    return ''
   }
 
   return t('panels.nodeTree.labels.upgradeCost', { cost: entry.nextCost })
@@ -600,7 +609,7 @@ onBeforeUnmount(() => {
                   'is-major': tier.depth === 0,
                   'node-tree__node--child': tier.depth > 0,
                   'is-purchased': entry.purchased,
-                  'is-maxed': entry.purchased && !entry.upgradable && entry.maxLevel > 1,
+                  'is-maxed': entry.purchased && !entry.upgradable && entry.level >= entry.maxLevel && entry.maxLevel > 1,
                   'is-locked': !entry.purchased && !entry.purchasable,
                   'is-selected': entry.node.id === selectedNodeId,
                   'is-unlocking': entry.node.id === unlockingNodeId,
