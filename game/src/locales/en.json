@@ -129,7 +129,7 @@
         "gradeAction": "Advance Grade"
       },
       "colTitles": {
-        "loadoutActive": "Active Spell Arts"
+        "activeArts": "Active Spell Arts"
       },
       "nodeInspector": {
         "empty": "Select a node in the Spirit Vein to view details.",
@@ -717,7 +717,7 @@
       "continue": "Continue"
     },
     "rewards": {
-      "techniqueInsight": "Technique Insight",
+      "techniqueMastery": "Technique Insight",
       "skillInsight": "Skill Insight",
       "artifactInsight": "Artifact EXP",
       "spiritStone": "Spirit Stones"

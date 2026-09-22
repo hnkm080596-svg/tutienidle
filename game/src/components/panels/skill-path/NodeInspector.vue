@@ -8,7 +8,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { useLoadoutActions } from '@/composables/useLoadoutActions'
+import { useProgressionActions } from '@/composables/useProgressionActions'
 import GameButton from '@/components/common/GameButton.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import {
@@ -41,7 +41,7 @@ const emit = defineEmits<{ unlocked: [node: ProgressionNode] }>()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { purchaseNode, upgradeNode, selectSpellPathElement } = useLoadoutActions()
+const { purchaseNode, upgradeNode, selectSpellPathElement } = useProgressionActions()
 
 const ELEMENT_ROOT_ID_SET = new Set<string>(Object.values(PHAP_TU_ELEMENT_ROOT_IDS))
 const SPELL_PATH_ROUTE_IDS: readonly SpellPathRoute[] = ['dot', 'no']

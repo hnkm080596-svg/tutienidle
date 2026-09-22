@@ -133,7 +133,7 @@ function foundationBeast(params: {
     ? { hp: 1.6, atk: 1.4, armor: 1.3 }
     : { hp: 1, atk: 1, armor: 1 }
 
-  const insight = 40 + 6 * params.t
+  const techniqueMastery = 40 + 6 * params.t
   const stone = 8 + 2 * params.t
 
   return defineEnemy({
@@ -163,7 +163,7 @@ function foundationBeast(params: {
       elemental: { element: params.element, power: params.power },
     },
     rewards: {
-      techniqueMastery: insight,
+      techniqueMastery,
       spiritStone: stone,
     },
   })

@@ -26,7 +26,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, t
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { useLoadoutActions } from '@/composables/useLoadoutActions'
+import { useProgressionActions } from '@/composables/useProgressionActions'
 import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
 import { getActiveRoute } from '@/core/player/CultivationPathSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
@@ -57,7 +57,7 @@ const { t } = useI18n()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { switchSpellPathRoute } = useLoadoutActions()
+const { switchSpellPathRoute } = useProgressionActions()
 
 function branchLabel(branchTag: string | undefined): string {
   if (!branchTag) {

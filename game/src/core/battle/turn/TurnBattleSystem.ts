@@ -1790,7 +1790,7 @@ export class TurnBattleSystem {
 
       // Task 10 -- ultimate empowerment: enough The swaps the RESOLVED
       // payload to the empowered form. The ROOT identity (cooldown,
-      // cast count, charge state) stays the equipped skill; the pool
+      // cast count, charge state) stays the root skill; the pool
       // itself burns at commit time via consumesAllThe.
       const empowerment = action.skill?.empowerment
 

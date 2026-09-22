@@ -31,7 +31,7 @@ export interface EnemySpecialAttack {
 }
 
 export interface EnemyReward {
-  // Technique Mastery (P7-M3 rename of techniqueInsight) - tich luy
+  // Technique Mastery (`techniqueMastery` battle channel) - tich luy
   // pending roi flush vao canonical technique qua
   // TechniqueSystem.gainMastery o VICTORY (active) / per-cycle (idle).
   techniqueMastery: number

@@ -5,12 +5,14 @@ import type { ElementType } from '../core/element/ElementType'
 import type { SpellPathRoute } from '../core/phap-tu/PhapTuState'
 
 /**
- * Modifier tu technique/skill khong "tinh" nhu equipment - da duoc
- * gop lai moi tick qua getAggregatedModifiers() (xem tick() trong
- * App.vue), nen cac ghi progression o day chi can bumpState() de UI
- * re-render, khong can dong bo modifiers thu cong nhu useEquipmentActions.
+ * Generic progression actions (attributes, nodes, spell-path selection,
+ * specialization). Modifier tu technique/skill khong "tinh" nhu equipment
+ * - da duoc gop lai moi tick qua getAggregatedModifiers() (xem tick()
+ * trong App.vue), nen cac ghi progression o day chi can bumpState() de
+ * UI re-render, khong can dong bo modifiers thu cong nhu
+ * useEquipmentActions.
  */
-export function useLoadoutActions() {
+export function useProgressionActions() {
   const gameManager = useGameManager()
   const player = usePlayerStore()
   const { bumpState } = useStateVersion()

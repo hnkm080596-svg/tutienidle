@@ -129,7 +129,7 @@
         "gradeAction": "Nâng Cảnh"
       },
       "colTitles": {
-        "loadoutActive": "Pháp Thuật Đang Vận Hành"
+        "activeArts": "Pháp Thuật Đang Vận Hành"
       },
       "nodeInspector": {
         "empty": "Chọn một node trong Linh Mạch để xem chi tiết.",
@@ -717,7 +717,7 @@
       "continue": "Tiếp Tục"
     },
     "rewards": {
-      "techniqueInsight": "Cảm Ngộ Tâm Pháp",
+      "techniqueMastery": "Cảm Ngộ Tâm Pháp",
       "skillInsight": "Cảm Ngộ Kỹ Năng",
       "artifactInsight": "Kinh Nghiệm Pháp Bảo",
       "spiritStone": "Linh Thạch"

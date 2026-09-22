@@ -3,7 +3,7 @@
    hardcode rời rạc mỗi component) — file này chính thức hoá bảng màu
    tối giản/sang trọng kiếm hiệp đang dần được áp dụng, bắt đầu từ
    accent vàng #ffd54f vốn đã là màu lặp lại nhiều nhất trong code cũ.
-   Chỉ các panel thuộc đợt redesign (Character/Loadout/Bag/Equipment/
+   Chỉ các panel thuộc đợt redesign (Character/SkillPath/Bag/Equipment/
    Enhance/Exploration/chrome) dùng token này — panel khác giữ hex cũ,
    sẽ theo sau ở đợt polish riêng. */
 

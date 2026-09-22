@@ -47,7 +47,7 @@ withDefaults(defineProps<{
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
-const equipped = computed(() => {
+const technique = computed(() => {
   stateVersion.value
 
   return gameManager.techniqueManager.getActive()
@@ -55,95 +55,95 @@ const equipped = computed(() => {
 
 // Band badge: four-tier vocabulary suy tu rank + Canh (grade) hien tai.
 const currentTierLabel = computed(() => {
-  const technique = equipped.value
+  const active = technique.value
 
-  return technique ? `${TECHNIQUE_TIER_LABELS[getTechniqueTierForRank(technique.rank)]} · Cảnh ${technique.grade}` : ''
+  return active ? `${TECHNIQUE_TIER_LABELS[getTechniqueTierForRank(active.rank)]} · Cảnh ${active.grade}` : ''
 })
 
 // Thanh exp = mastery / cost(grade); rank cap -> full (không còn rank
 // kế để tiến).
 const tierExpValue = computed(() => {
-  const technique = equipped.value
+  const active = technique.value
 
-  return technique && technique.rank < TECHNIQUE_RANK_CAP ? technique.mastery : 1
+  return active && active.rank < TECHNIQUE_RANK_CAP ? active.mastery : 1
 })
 
 const tierExpMax = computed(() => {
-  const technique = equipped.value
+  const active = technique.value
 
-  return technique && technique.rank < TECHNIQUE_RANK_CAP
-    ? getTechniqueMasteryForNextRank(technique.grade)
+  return active && active.rank < TECHNIQUE_RANK_CAP
+    ? getTechniqueMasteryForNextRank(active.grade)
     : 1
 })
 
 const tierExpLabel = computed(() => {
-  const technique = equipped.value
+  const active = technique.value
 
-  if (!technique) {
+  if (!active) {
     return ''
   }
 
-  if (technique.rank >= TECHNIQUE_RANK_CAP) {
-    return `Cấp ${TECHNIQUE_RANK_CAP} · Viên Mãn · ${ITEM_QUALITY_LABELS[technique.quality]}`
+  if (active.rank >= TECHNIQUE_RANK_CAP) {
+    return `Cấp ${TECHNIQUE_RANK_CAP} · Viên Mãn · ${ITEM_QUALITY_LABELS[active.quality]}`
   }
 
-  return `Cấp ${technique.rank} · ${formatNumber(technique.mastery)} / ${formatNumber(getTechniqueMasteryForNextRank(technique.grade))} · ${ITEM_QUALITY_LABELS[technique.quality]}`
+  return `Cấp ${active.rank} · ${formatNumber(active.mastery)} / ${formatNumber(getTechniqueMasteryForNextRank(active.grade))} · ${ITEM_QUALITY_LABELS[active.quality]}`
 })
 
 const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
-  const technique = equipped.value
+  const active = technique.value
 
-  if (!technique) {
+  if (!active) {
     return undefined
   }
 
   return {
     kind: 'technique',
 
-    name: technique.name,
+    name: active.name,
 
-    imagePath: technique.icon,
+    imagePath: active.icon,
 
-    elementLabel: technique.element ? ELEMENT_LABELS[technique.element] : undefined,
+    elementLabel: active.element ? ELEMENT_LABELS[active.element] : undefined,
 
-    description: technique.description,
+    description: active.description,
 
-    sections: buildTechniqueSections(technique),
+    sections: buildTechniqueSections(active),
   }
 })
 </script>
 
 <template>
-  <div class="loadout-card" :class="{ 'loadout-card--hero': size === 'hero' }" v-tooltip="tooltipContent">
+  <div class="technique-card" :class="{ 'technique-card--hero': size === 'hero' }" v-tooltip="tooltipContent">
     <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
     <SlotView
-      class="loadout-card__icon"
-      :item="equipped ?? null"
-      :label="equipped?.name ?? label"
-      :icon="equipped?.icon"
+      class="technique-card__icon"
+      :item="technique ?? null"
+      :label="technique?.name ?? label"
+      :icon="technique?.icon"
     />
 
-    <div class="loadout-card__info">
-      <span class="loadout-card__name">
-        {{ equipped?.name ?? `— ${label} —` }}
-        <span v-if="equipped" class="loadout-card__tier">{{ currentTierLabel }}</span>
+    <div class="technique-card__info">
+      <span class="technique-card__name">
+        {{ technique?.name ?? `— ${label} —` }}
+        <span v-if="technique" class="technique-card__tier">{{ currentTierLabel }}</span>
       </span>
 
-      <span v-if="equipped" class="loadout-card__empty">{{ equipped.description }}</span>
+      <span v-if="technique" class="technique-card__empty">{{ technique.description }}</span>
 
-      <span v-else class="loadout-card__empty">Trống — tự cấp khi bước vào nghề nghiệp tu luyện</span>
+      <span v-else class="technique-card__empty">Trống — tự cấp khi bước vào nghề nghiệp tu luyện</span>
 
-      <Bar v-if="equipped" class="loadout-card__tier-bar" :value="tierExpValue" :max="tierExpMax" :height="4" />
+      <Bar v-if="technique" class="technique-card__tier-bar" :value="tierExpValue" :max="tierExpMax" :height="4" />
 
-      <span v-if="equipped" class="loadout-card__tier-label">{{ tierExpLabel }}</span>
+      <span v-if="technique" class="technique-card__tier-label">{{ tierExpLabel }}</span>
 
-      <span v-if="size === 'hero' && equipped" class="loadout-card__status">ĐANG TU LUYỆN</span>
+      <span v-if="size === 'hero' && technique" class="technique-card__status">ĐANG TU LUYỆN</span>
     </div>
   </div>
 </template>
 
 <style scoped>
-.loadout-card {
+.technique-card {
   position: relative;
   isolation: isolate;
   display: flex;
@@ -163,14 +163,14 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 /* Kích thước icon cố định tường minh — flex-basis (SlotView KHÔNG tự
    set flex) quyết định kích cỡ trên trục row, không còn dựa vào tie
    injection-order với width:100% nội bộ của SlotView.vue. */
-.loadout-card__icon {
+.technique-card__icon {
   position: relative;
   z-index: 3;
   flex: 0 0 56px;
   width: 56px;
 }
 
-.loadout-card__info {
+.technique-card__info {
   position: relative;
   z-index: 3;
   flex: 1;
@@ -180,7 +180,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   gap: 2px;
 }
 
-.loadout-card__name {
+.technique-card__name {
   font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
@@ -188,12 +188,12 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   text-overflow: ellipsis;
 }
 
-.loadout-card__empty {
+.technique-card__empty {
   font-size: var(--text-xs);
   color: var(--paper-text-soft);
 }
 
-.loadout-card__tier {
+.technique-card__tier {
   margin-left: 4px;
   padding: 1px 5px;
   font-size: var(--text-xs);
@@ -204,19 +204,19 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   white-space: nowrap;
 }
 
-.loadout-card__tier-bar {
+.technique-card__tier-bar {
   margin-top: 2px;
   border-radius: 2px;
 }
 
-.loadout-card__tier-label {
+.technique-card__tier-label {
   font-size: var(--text-xs);
   color: var(--paper-text-soft);
 }
 
 /* Biến thể hero (spec mục 15 "Tâm pháp hiện tại lớn") — layout dọc,
    icon lớn hẳn, tên có thể xuống dòng thay vì ellipsis. */
-.loadout-card--hero {
+.technique-card--hero {
   flex-direction: column;
   align-items: center;
   text-align: center;
@@ -227,30 +227,30 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   padding: 14px 10px;
 }
 
-.loadout-card--hero .loadout-card__icon {
+.technique-card--hero .technique-card__icon {
   flex: 0 0 auto;
   width: 46%;
 }
 
-.loadout-card--hero .loadout-card__info {
+.technique-card--hero .technique-card__info {
   align-items: center;
 }
 
-.loadout-card--hero .loadout-card__name {
+.technique-card--hero .technique-card__name {
   font-family: var(--font-display);
   font-size: var(--text-title);
   white-space: normal;
 }
 
-.loadout-card--hero .loadout-card__empty {
+.technique-card--hero .technique-card__empty {
   white-space: normal;
 }
 
-.loadout-card--hero .loadout-card__tier-bar {
+.technique-card--hero .technique-card__tier-bar {
   width: 80%;
 }
 
-.loadout-card__status {
+.technique-card__status {
   margin-top: 2px;
   padding: 2px 10px;
   font-size: var(--text-xs);

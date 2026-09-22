@@ -208,7 +208,7 @@ export interface TurnSkillDefinition {
    * battle build by the orchestrator ONLY when the owning
    * `linh_ngo_<godUltId>` node is held (the engine stays dumb — A8).
    * At cast time, `currentThe >= theThreshold` swaps the RESOLVED
-   * payload to `empowered` while the equipped skill keeps cast
+   * payload to `empowered` while the root skill keeps cast
    * count/cooldown identity (execution source 'empowered').
    */
   empowerment?: {
@@ -389,15 +389,15 @@ export interface SelectedAction {
 
 /**
  * Phap Tu Reimagined Task 9 — the cast's execution identity. Separates
- * the skill that OWNS the cast (cast count, slot cooldown, equipped
+ * the skill that OWNS the cast (cast count, slot cooldown, root
  * identity, progression identity — always `rootSkillId`) from the
  * payload actually resolving (`resolvedSkill` — damage/ailments/
  * targeting/runtime combat fields).
  *
  * source:
  * - 'original'   — a normal slot/basic cast (root === payload)
- * - 'empowered'  — the equipped ult's empowered payload resolved
- *                  (root = the equipped chain-E skill; the god-ult def
+ * - 'empowered'  — the root ult's empowered payload resolved
+ *                  (root = the chain-E slot's root skill; the god-ult def
  *                  is payload only — never gains cast count/cooldown)
  * - 'composite'  — a composite cast whose payload was picked from a
  *                  pool (e.g. van_phap_tuy_tam); the pick never gains

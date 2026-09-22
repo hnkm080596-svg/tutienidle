@@ -8,14 +8,14 @@
 //   có tree   -> giữa: NodeTreePanel (cây thật của skill/branch đó)
 //   khác      -> giữa: SkillDetailView (chi tiết skill đang chọn, đọc only)
 // Cột trái dùng chung SkillPathList cho mọi path; cột phải
-// (SkillLoadoutStrip, "Pháp Thuật Đang Vận Hành") và
+// (SkillRoleStrip, "Pháp Thuật Đang Vận Hành") và
 // NodeInspector (bottom, CHỈ có ý nghĩa khi có node để mua) không đổi.
 //
 // ElementLoadoutPicker.vue (equip Hành vào combat) đã GỠ HẲN (2026-08-20,
 // yêu cầu "dư thừa, không có tác dụng gì") — nó trùng chức năng với
-// SkillLoadoutStrip: skill nào equip vào 5 ô đó mới là thứ thật sự
-// vận hành trong combat (xem scheduler auto-cast thống nhất của
-// BattleSystem), "equip cả 1 Hành" không cộng thêm ý nghĩa nào khác.
+// SkillRoleStrip: 3 role cố định từ getResolvedSkillRoles mới là thứ
+// thật sự vận hành trong combat (xem role auto-cast scheduler của
+// TurnBattleSystem), "equip cả 1 Hành" không cộng thêm ý nghĩa nào khác.
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
@@ -25,7 +25,7 @@ import NodeTreePanel from './skill-path/NodeTreePanel.vue'
 import NodeInspector from './skill-path/NodeInspector.vue'
 import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
-import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
+import SkillRoleStrip from './skill-path/SkillRoleStrip.vue'
 import TechniqueBand from './skill-path/TechniqueBand.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
@@ -148,7 +148,7 @@ watch(
   },
 )
 
-// Thư viện duy nhất: mọi active skill đã học, không phụ thuộc loadout/path.
+// Thư viện duy nhất: mọi active skill đã học, không phụ thuộc role/path.
 const learnedSkills = computed<Skill[]>(() => {
   stateVersion.value
   return gameManager.skillManager.getAll().filter(skill => skill.type === 'active')
@@ -248,9 +248,9 @@ function close() {
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--right">
-            <span class="skill-path-panel__col-title">{{ t('panels.skillPath.colTitles.loadoutActive') }}</span>
+            <span class="skill-path-panel__col-title">{{ t('panels.skillPath.colTitles.activeArts') }}</span>
 
-            <SkillLoadoutStrip />
+            <SkillRoleStrip />
           </div>
         </div>
 

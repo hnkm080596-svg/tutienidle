@@ -45,9 +45,9 @@ Candidate invariant wording ("Grade cannot exceed realm ceiling", "Quality indep
 
 1. **`insight`** — RESOLVED (D1): technique-side accrual renamed `mastery`/`masteryProgress`; `skillInsight` stays the node/skill-upgrade pool.
 2. **`grade`** — `breakthroughGrade` (Nhập Đạo bậc 1–6), `ArtifactGrade`, `ProfessionGrade`, item `quality/grade` fields, incoming Technique Grade. Technique Grade rides the Phẩm axis (D1); keep the field name scoped (`technique.grade`/`grade`) and watch display collisions in shared stat/UI contexts.
-3. **`tier`** — TechniqueTier (`so_nhap…vien_man`) is RETIRED with the insight model (D1); body refinement tiers become chapter steps (D4). Remaining `tier` usages (node/realm/pill) are out of P7 scope.
+3. **`tier`** — the TechniqueTier **insight-progression arithmetic/module** is RETIRED with the insight model (D1); the four-value `TechniqueTier` vocabulary (`so_nhap|tieu_thanh|dai_thanh|vien_man`) SURVIVES as rank-band vocabulary (M3). Body refinement tiers become chapter steps (D4). Remaining `tier` usages (node/realm/pill) are out of P7 scope.
 4. **Path vs Way** — RESOLVED (D6): both value sets migrate together to English; `CultivationWayId` replaces `PathWayId` naming.
-5. **`equipped`** — RESOLVED (D3): loadout semantics die; technique grant becomes way-owned (no equip-as-choice); remaining `equipped` uses (equipment, passives) keep their owner-local meaning.
+5. **`equipped`** — RESOLVED (D3): loadout semantics die; technique grant becomes way-owned (no equip-as-choice); remaining `equipped` uses (equipment/artifact domain) keep their owner-local meaning.
 
 ## Proposed canonical phrases for new domain concepts
 
@@ -55,3 +55,11 @@ Candidate invariant wording ("Grade cannot exceed realm ceiling", "Quality indep
 - `CanonicalTechnique` / `wayTechnique` for the way-owned single technique concept.
 - `BodyProgression` umbrella; `BodyChapter` = body_refinement / meridian_opening / future realm chapters.
 - `MortalSkill` or keep `MORTAL_PRECURSOR_SKILL_IDS` (already semantic).
+
+## Post-sweep residuals (M-H, 2026-09-22)
+
+Renamed: `useLoadoutActions`→`useProgressionActions`; `SkillLoadoutStrip`→`SkillRoleStrip` (CSS `skill-role-strip`/`role-specializations*`); `TechniqueSlotCard` `equipped`→`technique` + `loadout-card*`→`technique-card*`; `TechniqueBand` `equippedTechnique`→`currentTechnique`; i18n keys `loadoutActive`→`activeArts`, `combat.rewards.techniqueInsight`→`techniqueMastery` (display values unchanged — canonical "Cảm Ngộ"). Root-skill vocabulary ("the root chain-E skill") replaces "the equipped skill" in turn-battle comments.
+
+KEEP record (do not re-litigate): `TuLinhTranBalance` (formation economy — not the retired technique); `artifactInsight` + `skillInsight` (canonical pools); `TechniqueTier` (rank-band vocabulary, see row 3); `formationLoadout`/`FormationLoadout`/`commitFormationLoadout`/`TranPhapPanel` (live formation system); `breakthroughGrade` (CANONICAL persisted field — any rename is a separate M4-class decision); `RETIRED_SKILL_ENTRY_KEYS` (rejection sentinel); VN leaf content ids (N2); equipment-domain `equipped` (`instance.equipped`, slot markers, `tribulation.stillEquipped`); `equippedElements` mentions (retired-field history only); retirement-history comments (`LoadoutManager` provenance, "was retired/đã gỡ" notes).
+
+Deferred product question: `combat.rewards.techniqueMastery` displays "Technique Insight"/"Cảm Ngộ Tâm Pháp" while `skillInsight` displays "Skill Insight"/"Cảm Ngộ Kỹ Năng" — same display word for two domain pools. Display-term changes are a product decision owned by this ledger, not the naming sweep.

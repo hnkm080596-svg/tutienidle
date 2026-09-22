@@ -32,7 +32,7 @@ import { BattleMetricsCollector, type BattleMetrics } from './BattleMetrics'
 
 // Detached post-ritual build identity - PlayerData alone is NOT enough:
 // path capabilities read skillManager.has(), kit resolution and scaled
-// passives read SkillSystem, equipped-technique combat modifiers read
+// passives read SkillSystem, way-owned-technique combat modifiers read
 // TechniqueManager. All three are restored per run via the canonical
 // M1 session-restore seams (restore() deep-clones its payload).
 export interface SimBuildSnapshot {

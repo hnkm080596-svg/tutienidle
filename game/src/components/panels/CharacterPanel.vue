@@ -14,14 +14,14 @@ import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import { isActivePath } from '@/core/player/CultivationPathSystem'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getMainStatCap } from '@/core/stats/StatCap'
-import { useLoadoutActions } from '@/composables/useLoadoutActions'
+import { useProgressionActions } from '@/composables/useProgressionActions'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 
 const { t } = useI18n()
 const player = usePlayerStore()
 const ui = useUiStore()
-const { allocateAttributePoint } = useLoadoutActions()
+const { allocateAttributePoint } = useProgressionActions()
 
 // Entry point Quán Khí (Task 7 review fix, Critical) — nút riêng trong
 // Character Panel này (openQuanKhi → ui.openStandalonePanel('quan_khi'))
@@ -54,7 +54,7 @@ const selectedTalents = computed(() =>
 
 // UI redesign mục 11 (Character) — silhouette nhân vật ở cột giữa
 // header nhuộm màu theo hệ của path đã chọn (Kiếm Tu khai `element`
-// cố định; Pháp Tu để trống vì đa hệ qua Element Loadout — xem
+// cố định; Pháp Tu để trống vì hệ sống ở player.spellPath.element — xem
 // CultivationPathKit.ts) — fallback vàng trung tính khi CHƯA chọn path
 // (còn ở Phàm Nhân) hoặc đã chọn Pháp Tu.
 const characterAuraColor = computed(() =>

@@ -749,7 +749,7 @@ onUnmounted(() => {
 <style>
 /* body co margin mac dinh 8px cua trinh duyet - .game-root (100vh)
    bi day lech xuong dung 8px do, khien phan duoi cung (bottom bar,
-   tab loadout...) bi tran khoi viewport. Reset o day vi ca app chua
+   tab bar...) bi tran khoi viewport. Reset o day vi ca app chua
    co global CSS reset nao khac. background/font-family/color ap token
    tu assets/theme.css (import trong main.ts) - tranh chop nen trang
    mac dinh truoc khi Vue mount, va moi component ke thua font/mau chu

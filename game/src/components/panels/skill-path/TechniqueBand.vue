@@ -24,14 +24,14 @@ const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
 const { t } = useI18n()
 
-const equippedTechnique = computed(() => {
+const currentTechnique = computed(() => {
   stateVersion.value
 
   return gameManager.techniqueManager.getActive()
 })
 
 const techniqueSections = computed(() => {
-  const technique = equippedTechnique.value
+  const technique = currentTechnique.value
 
   return technique ? buildTechniqueSections(technique) : []
 })
@@ -39,7 +39,7 @@ const techniqueSections = computed(() => {
 const gradeUpgradeCost = computed(() => {
   stateVersion.value
 
-  const technique = equippedTechnique.value
+  const technique = currentTechnique.value
 
   return technique && technique.grade < 99
     ? getTechniqueGradeUpgradeCost(technique.grade + 1, player.$state.realmId)
@@ -49,7 +49,7 @@ const gradeUpgradeCost = computed(() => {
 const canUpgradeGrade = computed(() => {
   stateVersion.value
 
-  const technique = equippedTechnique.value
+  const technique = currentTechnique.value
   const cost = gradeUpgradeCost.value
 
   return technique !== undefined && cost !== undefined
@@ -76,7 +76,7 @@ function upgradeGrade(): void {
 
 <template>
   <div class="technique-band">
-    <template v-if="equippedTechnique">
+    <template v-if="currentTechnique">
       <div class="technique-band__hero">
         <Eyebrow>{{ t('panels.skillPath.technique.title') }}</Eyebrow>
         <TechniqueSlotCard :label="t('panels.skillPath.technique.heroLabel')" size="hero" />
