@@ -101,6 +101,15 @@ talentIds:['hap_linh'], attributes:{strength:2,vitality:3}}` — the M-C
 PINNED profile; grade-leg fixtures use the committed seeded-state
 pattern instead).
 
+**Leg order (explicit — C2C-P2):** A → B → **D.1 + D.2 at TC L1**
+(body_refinement completion + meridian 9/9 run FIRST — post-LQ pace
+gates are lifted so no level gating blocks them) → **C** (the
+interleaved realm-level + zhou_tian ladder — zhou_tian only becomes
+investable once D's prerequisites complete, and its capacity coupling
+is observable only through leveling) → E → F → G → H → I → J → K → L.
+D.3 names only the prerequisite rejection contract (exercised before
+D.2 completes); it owns no circulation asserts of its own.
+
 **Leg A — LQ-side state to admission (documented fixture, NOT a
 replay):** the committed fixtures prove honest LQ completion is not
 reachable in suite time today — `mortal_dong_5` is a characterized
@@ -270,16 +279,22 @@ asserted state-unchanged):
 driver produce identical normalized snapshots (extended for TC
 fields — §4).
 
-**Leg K — Body-Perfection (mandatory):** M-F-BODY-PERFECTION's landed
-surface exercised end-to-end through real seams — authored material
-discovery (records into `bodyPerfection.discoveredMaterials` via the
-landed discovery path), perfection commit (`perfectedRealmIds`
-marking via the landed op), then persisted parity through a
-checkpoint restore (Leg G's machinery). The leg itself is NOT
-deferrable — the sibling is required-merged before phase 2; only its
-internal assertion details re-derive against the landed shape per
-expansion gate A13, and any piece that lands as an authored blank
-becomes a named expected-deferral row, never a silent absence.
+**Leg K — Body-Perfection (mandatory — NEGATIVE/structural leg):**
+the perfection registry `BODY_PERFECTION_REALM_MATERIALS` is all-empty
+`[]` per realm on the merged base — the designed final state of this
+wave (content pass lands materials later; coordinator ruling, pending
+user review). The leg therefore pins the pipeline's STRUCTURAL
+honesty on the empty registry: the discovery path exists and produces
+NO spurious `bodyPerfection.discoveredMaterials` entries;
+`canPerfectBodyRealm` returns false for every realm; no
+`perfectedRealmIds` entry can be authored through any exposed seam;
+AND the persisted slice round-trips through a checkpoint restore
+(Leg G's machinery) with parity. The POSITIVE discovery → perfection
+→ commit flow is an explicit expected-deferral row in the notes
+naming the content pass — deferred until
+`BODY_PERFECTION_REALM_MATERIALS` has ≥1 authored material reachable
+via ≥1 channel. Mandatory = the negative leg + parity (A14);
+deferred = the positive flow only.
 
 **Leg L — BODY-HIDDEN surface (conditional→mandatory):** keyed on
 M-F-BODY-HIDDEN's landed shape: any landed persisted or interactive
@@ -390,10 +405,12 @@ coverage. M8's decision block is the format.
   wiring/browser-facing surface. If the sweep uncovers a wiring defect
   needing runtime evidence, it goes to the report, not a fix.
 - **Stop condition** — a PRE-EXISTING production defect that blocks
-  any A1–A7 contract makes M-F-JOURNEY BLOCKED pending
-  coordinator-owned repair: the defect is reported with evidence; it
-  must NOT be weakened into a passing characterization, encoded as
-  expected behavior, or fixed inside this mission (P12 boundary).
+  any required journey leg/assertion — i.e. ANY mandatory acceptance
+  item (A1–A7 AND A13/A14, including the mandatory portions of legs
+  K/L) — makes M-F-JOURNEY BLOCKED pending coordinator-owned repair:
+  the defect is reported with evidence; it must NOT be weakened into
+  a passing characterization, encoded as expected behavior, or fixed
+  inside this mission (P12 boundary).
 - **P15** — new comments ASCII English.
 
 ## 9. Resolved at spec time / open items for C2C
@@ -454,5 +471,5 @@ Open items for C2C:
 | A11 | Gates: `npm run verify` green on the final state; OCR delegation run; P4 QA report committed under `docs/qa/`; P5 sequential evidence blocks; external review routed through coordinator. |
 | A12 | Zero production behavior change — the only non-test edits are `EarlyGameSession` seams + docs/notes; every pre-existing defect found is in the report with evidence, never silently fixed. |
 | A13 | Expansion gate: at implementation start (post-rebase) every `(conditional)` marker resolves into a concrete assertion or an explicit expected-deferral row naming the deferred surface — zero bare conditionals remain; resolutions recorded in the notes doc. |
-| A14 | Leg K (Body-Perfection) is mandatory once the sibling merges: discovery → perfection commit → persisted parity through real seams; leg L (BODY-HIDDEN) is conditional→mandatory keyed on the landed surface — expected-deferral only as a named row, never silent. |
-| A15 | Stop condition honored: a pre-existing production defect blocking any A1–A7 contract → mission reported BLOCKED pending coordinator-owned repair; never weakened to a passing characterization, encoded as expected, or fixed in-mission. |
+| A14 | Leg K (Body-Perfection) is mandatory as a NEGATIVE/structural leg on the empty `BODY_PERFECTION_REALM_MATERIALS` registry: no spurious `discoveredMaterials`/`perfectedRealmIds` entries, `canPerfectBodyRealm` false for every realm, persisted-slice parity through save/restore; the positive discovery → perfection → commit flow is a named expected-deferral until ≥1 authored material is reachable via ≥1 channel. Leg L (BODY-HIDDEN) is conditional→mandatory keyed on the landed surface — expected-deferral only as a named row, never silent. |
+| A15 | Stop condition honored: a pre-existing production defect blocking any required journey leg/assertion — any mandatory acceptance item (A1–A7, A13, A14, mandatory portions of legs K/L) — → mission reported BLOCKED pending coordinator-owned repair; never weakened to a passing characterization, encoded as expected, or fixed in-mission. |
