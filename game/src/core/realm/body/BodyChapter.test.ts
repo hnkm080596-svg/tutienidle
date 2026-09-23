@@ -110,9 +110,29 @@ describe('BodyChapter - validateBodyChapterRegistry (M-F-BODY-CORE)', () => {
     // future def tagged 'zhou_tian' passes kind validation (its state
     // slice would be authored with the chapter, so the slice issues it
     // reports here are expected noise, not a kind rejection).
-    const fake = fakeMeridianChapter({ chapterKind: 'zhou_tian' })
+    const fake = fakeMeridianChapter({ id: 'zhou_tian' as never, chapterKind: 'zhou_tian' })
     const issues = validateBodyChapterRegistry([refinement, fake])
-    expect(issues.some(i => i.path === 'bodyChapters.meridian.chapterKind')).toBe(false)
+    expect(issues.some(i => i.path === 'bodyChapters.zhou_tian.chapterKind')).toBe(false)
+  })
+
+  it('rejects a mis-classified authored chapter (expected-kind pin)', () => {
+    // A chapter claiming an authored id must carry that chapter's
+    // expected kind - a wrong-but-valid chapterKind fails authoring
+    // validation, not just the vocabulary check.
+    const mistagged = fakeMeridianChapter({ chapterKind: 'refinement' })
+    const issues = validateBodyChapterRegistry([refinement, mistagged])
+    expect(
+      issues.some(
+        i => i.path === 'bodyChapters.meridian.chapterKind' && i.message.includes("must be kind 'meridian'"),
+      ),
+    ).toBe(true)
+
+    const mistaggedRef = { ...refinement, chapterKind: 'meridian' } as BodyChapterDefinition
+    expect(
+      validateBodyChapterRegistry([mistaggedRef, meridian]).some(
+        i => i.path === 'bodyChapters.body_refinement.chapterKind' && i.message.includes("must be kind 'refinement'"),
+      ),
+    ).toBe(true)
   })
 
   it('rejects an emission kind outside the discriminant union', () => {

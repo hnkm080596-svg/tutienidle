@@ -51,6 +51,18 @@ export function isBodyChapterKind(value: unknown): value is BodyChapterKind {
   return typeof value === 'string' && BODY_CHAPTER_KIND_SET.has(value)
 }
 
+// M-F-BODY-CORE - expected classification per authored chapter id.
+// Registry validation pins every listed id to this kind (a mis-tagged
+// chapter fails authoring validation); ids absent from the map (e.g. a
+// future zhou_tian chapter) are unpinned until authored with their own
+// expected kind.
+export const EXPECTED_BODY_CHAPTER_KIND: Readonly<
+  Partial<Record<string, BodyChapterKind>>
+> = {
+  body_refinement: 'refinement',
+  meridian: 'meridian',
+}
+
 // M-QI-07 (QI-D4) - a chapter may declare ONE physique advancement:
 // completing it moves player.physiqueGrade exactly from -> to (one
 // rung). Authored transitions must form a contiguous, gapless prefix
@@ -212,6 +224,19 @@ export function validateBodyChapterRegistry(
       issues.push({
         path: `${path}.chapterKind`,
         message: `unknown chapter kind '${String(chapter.chapterKind)}'`,
+      })
+    } else if (
+      EXPECTED_BODY_CHAPTER_KIND[chapter.id] !== undefined &&
+      chapter.chapterKind !== EXPECTED_BODY_CHAPTER_KIND[chapter.id]
+    ) {
+      // Authored-id pin: a chapter claiming a known id must carry that
+      // chapter's expected classification - a mis-tagged chapterKind on
+      // an authored chapter fails authoring validation, not just the
+      // vocabulary check. Ids outside the map (future chapters) are
+      // unpinned until their own expected kind is declared with them.
+      issues.push({
+        path: `${path}.chapterKind`,
+        message: `chapter '${chapter.id}' must be kind '${EXPECTED_BODY_CHAPTER_KIND[chapter.id]}', got '${chapter.chapterKind}'`,
       })
     }
 

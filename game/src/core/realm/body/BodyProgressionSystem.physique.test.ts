@@ -209,6 +209,22 @@ describe('applyPhysiqueAdvancement (M-F-BODY-CORE completion seam)', () => {
 
     expect(getPhysiqueGrade(player)).toBe('bao')
   })
+
+  it('a torn persisted state is never auto-advanced by the restore rebuild (INV-2/INV-8)', () => {
+    // Completed chapter + grade still 'pham': the persisted grade is
+    // authoritative, so restore/rebuild must NOT run the advancement
+    // seam - applyAllBodyModifiers leaves the grade untouched and the
+    // preflight (assertBodyProgressionIntegrity exact-equality) rejects
+    // the torn state as a hard error instead of healing it.
+    const player = createDefaultPlayer()
+    player.realmId = 'qi_refining'
+    player.bodyProgression.body_refinement.completedTiers = 6
+
+    applyAllBodyModifiers(player)
+
+    expect(getPhysiqueGrade(player)).toBe('pham')
+    expect(() => assertBodyProgressionIntegrity(player)).toThrow(/physique/i)
+  })
 })
 
 describe('physique coherence at assertBodyProgressionIntegrity (INV-8)', () => {

@@ -94,6 +94,15 @@ export function getPhysiqueGrade(player: PlayerData): PhysiqueGradeId {
 // chapter that declares no physiqueAdvancement (or is not complete) is
 // a no-op. Late completion is valid - the hook is unconditional on
 // realm.
+//
+// NORMATIVE (restore contract): this seam runs ONLY on live completion
+// paths (invest today, zhou_tian tomorrow) - NEVER on restore/rebuild
+// (applyAllBodyModifiers). The persisted physiqueGrade is authoritative
+// at load: a completed chapter whose grade was already written is
+// accepted as-is, and a torn state (completed chapter + behind grade)
+// is a hard error that assertBodyProgressionIntegrity rejects at
+// preflight via derivePhysiqueGrade exact-equality (INV-8). Restore
+// must reject the torn save, never silently re-fire this advancement.
 export function applyPhysiqueAdvancement(
   player: PlayerData,
   chapter: BodyChapterDefinition,
