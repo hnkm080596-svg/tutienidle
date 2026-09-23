@@ -138,6 +138,18 @@ function majorBreakthrough() {
 .realm-panel { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 18px; padding: 20px; overflow-y: auto; }
 .realm-panel__cultivator { position: relative; display: flex; flex-direction: column; align-items: center; color: var(--paper-text-soft); }
 .realm-panel__cultivator strong { color: var(--paper-text); font-family: var(--font-display); }
+
+/* M-UI-SYSTEM: inside system modal chrome the paper family remaps to sys
+   values - same family-remap mechanism .ink-drawer owns for drawers (the
+   scoped pattern; --paper-* never gets redefined at :root elsewhere). */
+.overlay-panel__card--system .realm-panel {
+  --paper-text: var(--sys-text, var(--text-primary));
+  --paper-text-soft: var(--sys-text-muted, var(--text-secondary));
+  --paper-text-muted: var(--sys-text-dim, var(--text-muted));
+  --paper-eyebrow: var(--sys-cyan, var(--chrome-300));
+  --paper-line: var(--sys-line, var(--ink-line));
+  --paper-line-soft: var(--sys-line-soft, var(--ink-line-soft));
+}
 /* Tên/cảnh giới không có cỡ chữ tường minh trước đây (2026-08-30
    frontend-design pass: dòng nhận diện quan trọng nhất panel lại nhỏ
    nhất) — nâng lên đúng cỡ CharacterPanel's identity block dùng. */
